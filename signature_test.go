@@ -1,4 +1,4 @@
-package account
+package crypto
 
 import (
 	"bytes"

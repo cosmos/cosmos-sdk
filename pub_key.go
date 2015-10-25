@@ -1,14 +1,13 @@
-
-package account
+package crypto
 
 import (
 	"bytes"
 
 	"github.com/tendermint/ed25519"
 	"github.com/tendermint/ed25519/extra25519"
-	"golang.org/x/crypto/ripemd160"
-	"github.com/tendermint/go-wire"
 	. "github.com/tendermint/go-common"
+	"github.com/tendermint/go-wire"
+	"golang.org/x/crypto/ripemd160"
 )
 
 // PubKey is part of Account and Validator.

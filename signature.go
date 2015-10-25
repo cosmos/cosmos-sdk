@@ -1,10 +1,10 @@
-package account
+package crypto
 
 import (
 	"fmt"
 
-	"github.com/tendermint/go-wire"
 	. "github.com/tendermint/go-common"
+	"github.com/tendermint/go-wire"
 )
 
 // Signature is a part of Txs and consensus Votes.

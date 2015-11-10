@@ -37,7 +37,7 @@ type PubKeyEd25519 [32]byte
 // For now, we artificially append the type byte in front to give us backwards
 // compatibility for when the pubkey wasn't fixed length array
 func (pubKey PubKeyEd25519) Address() []byte {
-	w, n, err := new(bytes.Buffer), new(int64), new(error)
+	w, n, err := new(bytes.Buffer), new(int), new(error)
 	wire.WriteBinary(pubKey[:], w, n, err)
 	if *err != nil {
 		PanicCrisis(*err)

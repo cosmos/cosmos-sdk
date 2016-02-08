@@ -43,7 +43,7 @@ func TestBinaryDecode(t *testing.T) {
 	t.Logf("msg: %X, sig: %X", msg, sig)
 
 	buf, n, err := new(bytes.Buffer), new(int), new(error)
-	wire.WriteBinary(sig, buf, n, err)
+	wire.WriteBinary(struct{ Signature }{sig}, buf, n, err)
 	if *err != nil {
 		t.Fatalf("Failed to write Signature: %v", err)
 	}
@@ -56,13 +56,14 @@ func TestBinaryDecode(t *testing.T) {
 		t.Fatalf("Unexpected signature type byte")
 	}
 
-	sig2, ok := wire.ReadBinary(SignatureEd25519{}, buf, 0, n, err).(SignatureEd25519)
-	if !ok || *err != nil {
+	sigStruct := struct{ Signature }{}
+	sig2 := wire.ReadBinary(sigStruct, buf, 0, n, err)
+	if *err != nil {
 		t.Fatalf("Failed to read Signature: %v", err)
 	}
 
 	// Test the signature
-	if !pubKey.VerifyBytes(msg, sig2) {
+	if !pubKey.VerifyBytes(msg, sig2.(struct{ Signature }).Signature.(SignatureEd25519)) {
 		t.Errorf("Account message signature verification failed")
 	}
 }

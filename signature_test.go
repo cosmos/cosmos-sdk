@@ -42,7 +42,7 @@ func TestBinaryDecode(t *testing.T) {
 	sig := privKey.Sign(msg)
 	t.Logf("msg: %X, sig: %X", msg, sig)
 
-	buf, n, err := new(bytes.Buffer), new(int64), new(error)
+	buf, n, err := new(bytes.Buffer), new(int), new(error)
 	wire.WriteBinary(sig, buf, n, err)
 	if *err != nil {
 		t.Fatalf("Failed to write Signature: %v", err)
@@ -56,7 +56,7 @@ func TestBinaryDecode(t *testing.T) {
 		t.Fatalf("Unexpected signature type byte")
 	}
 
-	sig2, ok := wire.ReadBinary(SignatureEd25519{}, buf, n, err).(SignatureEd25519)
+	sig2, ok := wire.ReadBinary(SignatureEd25519{}, buf, 0, n, err).(SignatureEd25519)
 	if !ok || *err != nil {
 		t.Fatalf("Failed to read Signature: %v", err)
 	}

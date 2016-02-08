@@ -13,6 +13,7 @@ import (
 // PubKey is part of Account and Validator.
 type PubKey interface {
 	Address() []byte
+	KeyString() string
 	VerifyBytes(msg []byte, sig Signature) bool
 }
 

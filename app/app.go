@@ -1,4 +1,4 @@
-package blackstar
+package app
 
 import (
 	"github.com/tendermint/blackstar/types"
@@ -25,18 +25,13 @@ func (app *Blackstar) Info() string {
 	return "Blackstar v" + version
 }
 
-type SetAccount struct {
-	PubKey  crypto.PubKey
-	Account types.Account
-}
-
 func (app *Blackstar) SetOption(key string, value string) (log string) {
 	if key == "setAccount" {
 		var err error
-		var setAccount SetAccount
+		var setAccount types.PubAccount
 		wire.ReadJSONPtr(&setAccount, []byte(value), &err)
 		if err != nil {
-			return "Error decoding SetAccount message: " + err.Error()
+			return "Error decoding setAccount message: " + err.Error()
 		}
 		pubKeyBytes := wire.BinaryBytes(setAccount.PubKey)
 		accBytes := wire.BinaryBytes(setAccount.Account)
@@ -225,8 +220,8 @@ func allPubKeys(tx types.Tx) (pubKeys []crypto.PubKey) {
 }
 
 // Returns accounts in order of types.Tx inputs and outputs
-func execTx(tx types.Tx, accMap map[string]types.Account) (accs []types.Account, code tmsp.CodeType, errStr string) {
-	accs = make([]types.Account, 0, len(tx.Inputs)+len(tx.Outputs))
+func execTx(tx types.Tx, accMap map[string]types.PubAccount) (accs []types.PubAccount, code tmsp.CodeType, errStr string) {
+	accs = make([]types.PubAccount, 0, len(tx.Inputs)+len(tx.Outputs))
 	// Deduct from inputs
 	for _, input := range tx.Inputs {
 		var acc, ok = accMap[input.PubKey.KeyString()]
@@ -249,9 +244,11 @@ func execTx(tx types.Tx, accMap map[string]types.Account) (accs []types.Account,
 		var acc, ok = accMap[output.PubKey.KeyString()]
 		if !ok {
 			// Create new account if it doesn't already exist.
-			acc = types.Account{
-				PubKey:  output.PubKey,
-				Balance: output.Amount,
+			acc = types.PubAccount{
+				PubKey: output.PubKey,
+				Account: types.Account{
+					Balance: output.Amount,
+				},
 			}
 			accMap[output.PubKey.KeyString()] = acc
 			continue
@@ -268,9 +265,34 @@ func execTx(tx types.Tx, accMap map[string]types.Account) (accs []types.Account,
 
 //----------------------------------------
 
-func loadAccounts(eyesCli *eyes.MerkleEyesClient, pubKeys []crypto.PubKey) map[string]types.Account {
-	return nil
+func loadAccounts(eyesCli *eyes.MerkleEyesClient, pubKeys []crypto.PubKey) (accMap map[string]types.PubAccount) {
+	accMap = make(map[string]types.PubAccount, len(pubKeys))
+	for _, pubKey := range pubKeys {
+		keyString := pubKey.KeyString()
+		accBytes, err := eyesCli.GetSync([]byte(keyString))
+		if err != nil {
+			panic("Error loading account: " + err.Error())
+		}
+		var acc types.PubAccount
+		err = wire.ReadBinaryBytes(accBytes, &acc)
+		if err != nil {
+			panic("Error reading account: " + err.Error())
+		}
+		acc.PubKey = pubKey // Set volatile field
+		accMap[keyString] = acc
+	}
+	return
 }
 
-func storeAccounts(eyesCli *eyes.MerkleEyesClient, accs []types.Account) {
+// NOTE: accs must be stored in deterministic order.
+func storeAccounts(eyesCli *eyes.MerkleEyesClient, accs []types.PubAccount) {
+	for _, acc := range accs {
+		accBytes := wire.BinaryBytes(acc.Account)
+		err := eyesCli.SetSync([]byte(acc.PubKey.KeyString()), accBytes)
+		if err != nil {
+			panic("Error storing account: " + err.Error())
+		}
+	}
 }
+
+//----------------------------------------

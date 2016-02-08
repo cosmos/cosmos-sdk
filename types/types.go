@@ -24,7 +24,19 @@ type Output struct {
 type Account struct {
 	Sequence uint
 	Balance  uint64
+}
 
-	// For convenience
-	crypto.PubKey `json:"-"`
+type PubAccount struct {
+	crypto.PubKey
+	Account
+}
+
+type PrivAccount struct {
+	crypto.PubKey
+	crypto.PrivKey
+	Account
+}
+
+type GenesisState struct {
+	Accounts []PubAccount
 }

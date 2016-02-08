@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
 
 	"github.com/gorilla/websocket"
@@ -38,6 +37,7 @@ func main() {
 	sequence := uint(0)
 	// Make a bunch of PrivAccounts
 	privAccounts := tests.RandAccounts(1000, 1000000, 0)
+	privAccountSequences := make(map[string]int)
 
 	// Send coins to each account
 	for i := 0; i < len(privAccounts); i++ {
@@ -76,25 +76,51 @@ func main() {
 		}
 	}
 
-	/*
-		// Make a bunch of requests
-		for i := 0; ; i++ {
-			binary.BigEndian.PutUint64(buf, uint64(i))
-			//txBytes := hex.EncodeToString(buf[:n])
-			request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx", Arr(buf[:8]))
-			reqBytes := wire.JSONBytes(request)
-			//fmt.Println("!!", string(reqBytes))
-			fmt.Print(".")
-			err := ws.WriteMessage(websocket.TextMessage, reqBytes)
-			if err != nil {
-				Exit(err.Error())
-			}
-			if i%1000 == 0 {
-				fmt.Println(i)
-			}
-			time.Sleep(time.Microsecond * 1000)
+	// Now send coins between these accounts
+	for {
+		randA := RandInt() % len(privAccounts)
+		randB := RandInt() % len(privAccounts)
+		if randA == randB {
+			continue
 		}
-	*/
+
+		privAccountA := privAccounts[randA]
+		privAccountASequence := privAccountSequences[privAccountA.PubKey.KeyString()]
+		privAccountSequences[privAccountA.PubKey.KeyString()] = privAccountASequence + 1
+		privAccountB := privAccounts[randB]
+
+		tx := types.Tx{
+			Inputs: []types.Input{
+				types.Input{
+					PubKey:   privAccountA.PubKey,
+					Amount:   3,
+					Sequence: uint(privAccountASequence),
+				},
+			},
+			Outputs: []types.Output{
+				types.Output{
+					PubKey: privAccountB.PubKey,
+					Amount: 1,
+				},
+			},
+		}
+
+		// Sign request
+		signBytes := wire.BinaryBytes(tx)
+		sig := privAccountA.PrivKey.Sign(signBytes)
+		tx.Inputs[0].Signature = sig
+		//fmt.Println("tx:", tx)
+
+		// Write request
+		txBytes := wire.BinaryBytes(tx)
+		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", Arr(txBytes))
+		reqBytes := wire.JSONBytes(request)
+		//fmt.Print(".")
+		err := ws.WriteMessage(websocket.TextMessage, reqBytes)
+		if err != nil {
+			Exit("writing websocket request: " + err.Error())
+		}
+	}
 
 	ws.Stop()
 }

@@ -73,5 +73,6 @@ func GenPrivKeyEd25519FromSecret(secret string) PrivKeyEd25519 {
 	privKey32 := wire.BinarySha256(secret) // Not Ripemd160 because we want 32 bytes.
 	privKeyBytes := new([64]byte)
 	copy(privKeyBytes[:32], privKey32)
+	ed25519.MakePublicKey(privKeyBytes)
 	return PrivKeyEd25519(*privKeyBytes)
 }

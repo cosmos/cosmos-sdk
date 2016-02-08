@@ -59,10 +59,18 @@ func main() {
 		}
 		sequence += 1
 
+		// Sign request
+		signBytes := wire.BinaryBytes(tx)
+		fmt.Printf("SIGN: %X\n", signBytes)
+		sig := root.PrivKey.Sign(signBytes)
+		fmt.Println("VERIFY: ", root.PubKey.VerifyBytes(signBytes, sig))
+		tx.Inputs[0].Signature = sig
+		//fmt.Println("tx:", tx)
+
 		// Write request
 		txBytes := wire.BinaryBytes(tx)
 		fmt.Println("tx:", hex.EncodeToString(txBytes))
-		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx", Arr(txBytes))
+		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", Arr(txBytes))
 		reqBytes := wire.JSONBytes(request)
 		fmt.Println("req:", hex.EncodeToString(reqBytes))
 		//fmt.Print(".")

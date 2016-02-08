@@ -157,13 +157,18 @@ func validateTx(tx types.Tx) (code tmsp.CodeType, errStr string) {
 	return tmsp.CodeType_OK, ""
 }
 
-// NOTE: Tx is a struct, so it's copying the value
 func txSignBytes(tx types.Tx) []byte {
+	sigs := make([]crypto.Signature, len(tx.Inputs))
 	for i, input := range tx.Inputs {
+		sigs[i] = input.Signature
 		input.Signature = nil
 		tx.Inputs[i] = input
 	}
-	return wire.BinaryBytes(tx)
+	signBytes := wire.BinaryBytes(tx)
+	for i := range tx.Inputs {
+		tx.Inputs[i].Signature = sigs[i]
+	}
+	return signBytes
 }
 
 func validateInput(input types.Input, signBytes []byte) (code tmsp.CodeType, errStr string) {
@@ -174,7 +179,7 @@ func validateInput(input types.Input, signBytes []byte) (code tmsp.CodeType, err
 		return tmsp.CodeType_EncodingError, "Input pubKey cannot be nil"
 	}
 	if !input.PubKey.VerifyBytes(signBytes, input.Signature) {
-		return tmsp.CodeType_Unauthorized, "Invalid ignature"
+		return tmsp.CodeType_Unauthorized, "Invalid signature"
 	}
 	return tmsp.CodeType_OK, ""
 }

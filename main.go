@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/tendermint/blackstar/app"
 	"github.com/tendermint/blackstar/types"
@@ -39,13 +38,13 @@ func main() {
 		Exit("parsing genesis JSON: " + err.Error())
 	}
 	for _, account := range genesisState.Accounts {
-		pubKeyBytes := wire.BinaryBytes(account.PubKey)
+		// pubKeyBytes := wire.BinaryBytes(account.PubKey)
+		pubKeyString := account.PubKey.KeyString()
 		accBytes := wire.BinaryBytes(account.Account)
-		err = eyesCli.SetSync(pubKeyBytes, accBytes)
+		err = eyesCli.SetSync([]byte(pubKeyString), accBytes)
 		if err != nil {
 			Exit("loading genesis accounts: " + err.Error())
 		}
-		fmt.Println("Loaded ", account)
 	}
 
 	// Start the listener

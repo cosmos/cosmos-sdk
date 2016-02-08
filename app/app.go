@@ -214,7 +214,7 @@ func sumAmounts(inputs []types.Input, outputs []types.Output, more int) (total u
 }
 
 func allPubKeys(tx types.Tx) (pubKeys []crypto.PubKey) {
-	pubKeys = make([]crypto.PubKey, len(tx.Inputs)+len(tx.Outputs))
+	pubKeys = make([]crypto.PubKey, 0, len(tx.Inputs)+len(tx.Outputs))
 	for _, input := range tx.Inputs {
 		pubKeys = append(pubKeys, input.PubKey)
 	}
@@ -278,13 +278,18 @@ func loadAccounts(eyesCli *eyes.MerkleEyesClient, pubKeys []crypto.PubKey) (accM
 		if err != nil {
 			panic("Error loading account: " + err.Error())
 		}
-		var acc types.PubAccount
+		if len(accBytes) == 0 {
+			continue
+		}
+		var acc types.Account
 		err = wire.ReadBinaryBytes(accBytes, &acc)
 		if err != nil {
 			panic("Error reading account: " + err.Error())
 		}
-		acc.PubKey = pubKey // Set volatile field
-		accMap[keyString] = acc
+		accMap[keyString] = types.PubAccount{
+			Account: acc,
+			PubKey:  pubKey,
+		}
 	}
 	return
 }

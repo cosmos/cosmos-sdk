@@ -22,10 +22,12 @@ func NewBlackstar(eyesCli *eyes.MerkleEyesClient) *Blackstar {
 	}
 }
 
+// TMSP::Info
 func (app *Blackstar) Info() string {
 	return "Blackstar v" + version
 }
 
+// TMSP::SetOption
 func (app *Blackstar) SetOption(key string, value string) (log string) {
 	if key == "setAccount" {
 		var err error
@@ -45,6 +47,7 @@ func (app *Blackstar) SetOption(key string, value string) (log string) {
 	return "Unrecognized option key " + key
 }
 
+// TMSP::AppendTx
 func (app *Blackstar) AppendTx(txBytes []byte) (code tmsp.CodeType, result []byte, log string) {
 	if len(txBytes) > maxTxSize {
 		return tmsp.CodeType_EncodingError, nil, "Tx size exceeds maximum"
@@ -72,6 +75,7 @@ func (app *Blackstar) AppendTx(txBytes []byte) (code tmsp.CodeType, result []byt
 	return tmsp.CodeType_OK, nil, "Success"
 }
 
+// TMSP::CheckTx
 func (app *Blackstar) CheckTx(txBytes []byte) (code tmsp.CodeType, result []byte, log string) {
 	if len(txBytes) > maxTxSize {
 		return tmsp.CodeType_EncodingError, nil, "Tx size exceeds maximum"
@@ -97,6 +101,7 @@ func (app *Blackstar) CheckTx(txBytes []byte) (code tmsp.CodeType, result []byte
 	return tmsp.CodeType_OK, nil, "Success"
 }
 
+// TMSP::Query
 func (app *Blackstar) Query(query []byte) (code tmsp.CodeType, result []byte, log string) {
 	return tmsp.CodeType_OK, nil, ""
 	value, err := app.eyesCli.GetSync(query)
@@ -106,6 +111,7 @@ func (app *Blackstar) Query(query []byte) (code tmsp.CodeType, result []byte, lo
 	return tmsp.CodeType_OK, value, "Success"
 }
 
+// TMSP::GetHash
 func (app *Blackstar) GetHash() (hash []byte, log string) {
 	hash, log, err := app.eyesCli.GetHashSync()
 	if err != nil {

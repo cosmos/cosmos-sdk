@@ -111,9 +111,9 @@ func (app *Blackstar) Query(query []byte) (code tmsp.CodeType, result []byte, lo
 	return tmsp.CodeType_OK, value, "Success"
 }
 
-// TMSP::GetHash
-func (app *Blackstar) GetHash() (hash []byte, log string) {
-	hash, log, err := app.eyesCli.GetHashSync()
+// TMSP::Commit
+func (app *Blackstar) Commit() (hash []byte, log string) {
+	hash, log, err := app.eyesCli.CommitSync()
 	if err != nil {
 		panic("Error getting hash: " + err.Error())
 	}

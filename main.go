@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 
-	"github.com/tendermint/blackstar/app"
-	"github.com/tendermint/blackstar/types"
+	"github.com/tendermint/basecoin/app"
+	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
@@ -24,8 +24,8 @@ func main() {
 		Exit("connect to MerkleEyes: " + err.Error())
 	}
 
-	// Create BlackStar app
-	app := app.NewBlackstar(eyesCli)
+	// Create Basecoin app
+	app := app.NewBasecoin(eyesCli)
 
 	// Load GenesisState
 	jsonBytes, err := ReadFile(*genPtr)

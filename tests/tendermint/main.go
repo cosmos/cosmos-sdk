@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/tendermint/blackstar/tests"
-	"github.com/tendermint/blackstar/types"
+	"github.com/tendermint/basecoin/tests"
+	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-rpc/client"
 	"github.com/tendermint/go-rpc/types"

@@ -2,7 +2,7 @@ package app
 
 import (
 	"fmt"
-	"github.com/tendermint/blackstar/types"
+	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
@@ -12,23 +12,23 @@ import (
 const version = "0.1"
 const maxTxSize = 10240
 
-type Blackstar struct {
+type Basecoin struct {
 	eyesCli *eyes.MerkleEyesClient
 }
 
-func NewBlackstar(eyesCli *eyes.MerkleEyesClient) *Blackstar {
-	return &Blackstar{
+func NewBasecoin(eyesCli *eyes.MerkleEyesClient) *Basecoin {
+	return &Basecoin{
 		eyesCli: eyesCli,
 	}
 }
 
 // TMSP::Info
-func (app *Blackstar) Info() string {
-	return "Blackstar v" + version
+func (app *Basecoin) Info() string {
+	return "Basecoin v" + version
 }
 
 // TMSP::SetOption
-func (app *Blackstar) SetOption(key string, value string) (log string) {
+func (app *Basecoin) SetOption(key string, value string) (log string) {
 	if key == "setAccount" {
 		var err error
 		var setAccount types.PubAccount
@@ -48,7 +48,7 @@ func (app *Blackstar) SetOption(key string, value string) (log string) {
 }
 
 // TMSP::AppendTx
-func (app *Blackstar) AppendTx(txBytes []byte) (code tmsp.CodeType, result []byte, log string) {
+func (app *Basecoin) AppendTx(txBytes []byte) (code tmsp.CodeType, result []byte, log string) {
 	if len(txBytes) > maxTxSize {
 		return tmsp.CodeType_EncodingError, nil, "Tx size exceeds maximum"
 	}
@@ -76,7 +76,7 @@ func (app *Blackstar) AppendTx(txBytes []byte) (code tmsp.CodeType, result []byt
 }
 
 // TMSP::CheckTx
-func (app *Blackstar) CheckTx(txBytes []byte) (code tmsp.CodeType, result []byte, log string) {
+func (app *Basecoin) CheckTx(txBytes []byte) (code tmsp.CodeType, result []byte, log string) {
 	if len(txBytes) > maxTxSize {
 		return tmsp.CodeType_EncodingError, nil, "Tx size exceeds maximum"
 	}
@@ -102,7 +102,7 @@ func (app *Blackstar) CheckTx(txBytes []byte) (code tmsp.CodeType, result []byte
 }
 
 // TMSP::Query
-func (app *Blackstar) Query(query []byte) (code tmsp.CodeType, result []byte, log string) {
+func (app *Basecoin) Query(query []byte) (code tmsp.CodeType, result []byte, log string) {
 	return tmsp.CodeType_OK, nil, ""
 	value, err := app.eyesCli.GetSync(query)
 	if err != nil {
@@ -112,7 +112,7 @@ func (app *Blackstar) Query(query []byte) (code tmsp.CodeType, result []byte, lo
 }
 
 // TMSP::Commit
-func (app *Blackstar) Commit() (hash []byte, log string) {
+func (app *Basecoin) Commit() (hash []byte, log string) {
 	hash, log, err := app.eyesCli.CommitSync()
 	if err != nil {
 		panic("Error getting hash: " + err.Error())

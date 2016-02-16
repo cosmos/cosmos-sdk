@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"github.com/tendermint/blackstar/types"
+	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-crypto"
 )

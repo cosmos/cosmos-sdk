@@ -19,7 +19,7 @@ func main() {
 	flag.Parse()
 
 	// Connect to MerkleEyes
-	eyesCli, err := eyes.NewMerkleEyesClient(*eyesPtr)
+	eyesCli, err := eyes.NewClient(*eyesPtr)
 	if err != nil {
 		Exit("connect to MerkleEyes: " + err.Error())
 	}

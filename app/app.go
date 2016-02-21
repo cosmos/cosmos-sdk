@@ -13,10 +13,10 @@ const version = "0.1"
 const maxTxSize = 10240
 
 type Basecoin struct {
-	eyesCli *eyes.MerkleEyesClient
+	eyesCli *eyes.Client
 }
 
-func NewBasecoin(eyesCli *eyes.MerkleEyesClient) *Basecoin {
+func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
 	return &Basecoin{
 		eyesCli: eyesCli,
 	}
@@ -286,7 +286,7 @@ func execTx(tx types.Tx, accMap map[string]types.PubAccount, appendTx bool) (acc
 
 //----------------------------------------
 
-func loadAccounts(eyesCli *eyes.MerkleEyesClient, pubKeys []crypto.PubKey) (accMap map[string]types.PubAccount) {
+func loadAccounts(eyesCli *eyes.Client, pubKeys []crypto.PubKey) (accMap map[string]types.PubAccount) {
 	accMap = make(map[string]types.PubAccount, len(pubKeys))
 	for _, pubKey := range pubKeys {
 		keyString := pubKey.KeyString()
@@ -311,7 +311,7 @@ func loadAccounts(eyesCli *eyes.MerkleEyesClient, pubKeys []crypto.PubKey) (accM
 }
 
 // NOTE: accs must be stored in deterministic order.
-func storeAccounts(eyesCli *eyes.MerkleEyesClient, accs []types.PubAccount) {
+func storeAccounts(eyesCli *eyes.Client, accs []types.PubAccount) {
 	fmt.Println("STORE ACCOUNTS", accs)
 	for _, acc := range accs {
 		accBytes := wire.BinaryBytes(acc.Account)

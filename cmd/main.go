@@ -48,7 +48,7 @@ func main() {
 	}
 
 	// Start the listener
-	_, err = server.StartListener(*addrPtr, app)
+	svr, err := server.NewServer(*addrPtr, app)
 	if err != nil {
 		Exit("create listener: " + err.Error())
 	}
@@ -56,6 +56,7 @@ func main() {
 	// Wait forever
 	TrapSignal(func() {
 		// Cleanup
+		svr.Stop()
 	})
 
 }

@@ -15,13 +15,13 @@ var gRandInfo *randInfo
 
 func init() {
 	gRandInfo = &randInfo{}
-	gRandInfo.AddSeed(randBytes(32)) // Init
+	gRandInfo.MixEntropy(randBytes(32)) // Init
 }
 
-// Add additional bytes of randomness, e.g. from hardware, user-input, etc.
-// It is OK to call it multiple times.  It does not deminish security.
-func Seed(seedBytes []byte) {
-	gRandInfo.AddSeed(seedBytes)
+// Mix additional bytes of randomness, e.g. from hardware, user-input, etc.
+// It is OK to call it multiple times.  It does not diminish security.
+func MixEntropy(seedBytes []byte) {
+	gRandInfo.MixEntropy(seedBytes)
 }
 
 // This only uses the OS's randomness
@@ -66,7 +66,7 @@ type randInfo struct {
 
 // You can call this as many times as you'd like.
 // XXX TODO review
-func (ri *randInfo) AddSeed(seedBytes []byte) {
+func (ri *randInfo) MixEntropy(seedBytes []byte) {
 	ri.mtx.Lock()
 	defer ri.mtx.Unlock()
 	// Make new ri.seedBytes

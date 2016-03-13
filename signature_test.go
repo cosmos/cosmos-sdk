@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/tendermint/ed25519"
-	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
 )
 

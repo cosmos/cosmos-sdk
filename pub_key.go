@@ -15,6 +15,7 @@ type PubKey interface {
 	Address() []byte
 	KeyString() string
 	VerifyBytes(msg []byte, sig Signature) bool
+	Equals(PubKey) bool
 }
 
 // Types of PubKey implementations

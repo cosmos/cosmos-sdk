@@ -2,8 +2,9 @@ package crypto
 
 import (
 	"bytes"
-	"golang.org/x/crypto/bcrypt"
 	"testing"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func TestSimple(t *testing.T) {

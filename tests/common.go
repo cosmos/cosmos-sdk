@@ -9,7 +9,7 @@ import (
 // Creates a PrivAccount from secret.
 // The amount is not set.
 func PrivAccountFromSecret(secret string) types.PrivAccount {
-	privKey := crypto.GenPrivKeyEd25519FromSecret(secret)
+	privKey := crypto.GenPrivKeyEd25519FromSecret([]byte(secret))
 	privAccount := types.PrivAccount{
 		PrivKey: privKey,
 		PubKey:  privKey.PubKey(),

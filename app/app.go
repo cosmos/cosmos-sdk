@@ -2,9 +2,12 @@ package app
 
 import (
 	"fmt"
+
 	"github.com/tendermint/basecoin/types"
+	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
+	gov "github.com/tendermint/governmint/gov"
 	eyes "github.com/tendermint/merkleeyes/client"
 	tmsp "github.com/tendermint/tmsp/types"
 )
@@ -14,17 +17,19 @@ const maxTxSize = 10240
 
 type Basecoin struct {
 	eyesCli *eyes.Client
+	govMint *gov.Governmint
 }
 
 func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
 	return &Basecoin{
 		eyesCli: eyesCli,
+		govMint: gov.NewGovernmint(eyesCli),
 	}
 }
 
 // TMSP::Info
 func (app *Basecoin) Info() string {
-	return "Basecoin v" + version
+	return Fmt("Basecoin v%v\n - %v", version, app.govMint.Info())
 }
 
 // TMSP::SetOption
@@ -50,13 +55,13 @@ func (app *Basecoin) SetOption(key string, value string) (log string) {
 // TMSP::AppendTx
 func (app *Basecoin) AppendTx(txBytes []byte) (code tmsp.CodeType, result []byte, log string) {
 	if len(txBytes) > maxTxSize {
-		return tmsp.CodeType_EncodingError, nil, "Tx size exceeds maximum"
+		return tmsp.CodeType_BaseEncodingError, nil, "Tx size exceeds maximum"
 	}
 	// Decode tx
 	var tx types.Tx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
 	if err != nil {
-		return tmsp.CodeType_EncodingError, nil, "Error decoding tx: " + err.Error()
+		return tmsp.CodeType_BaseEncodingError, nil, "Error decoding tx: " + err.Error()
 	}
 	// Validate tx
 	code, errStr := validateTx(tx)
@@ -66,7 +71,7 @@ func (app *Basecoin) AppendTx(txBytes []byte) (code tmsp.CodeType, result []byte
 	// Load accounts
 	accMap := loadAccounts(app.eyesCli, allPubKeys(tx))
 	// Execute tx
-	accs, code, errStr := execTx(tx, accMap, false)
+	accs, code, errStr := runTx(tx, accMap, false)
 	if errStr != "" {
 		return code, nil, "Error executing tx: " + errStr
 	}
@@ -78,13 +83,13 @@ func (app *Basecoin) AppendTx(txBytes []byte) (code tmsp.CodeType, result []byte
 // TMSP::CheckTx
 func (app *Basecoin) CheckTx(txBytes []byte) (code tmsp.CodeType, result []byte, log string) {
 	if len(txBytes) > maxTxSize {
-		return tmsp.CodeType_EncodingError, nil, "Tx size exceeds maximum"
+		return tmsp.CodeType_BaseEncodingError, nil, "Tx size exceeds maximum"
 	}
 	// Decode tx
 	var tx types.Tx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
 	if err != nil {
-		return tmsp.CodeType_EncodingError, nil, "Error decoding tx: " + err.Error()
+		return tmsp.CodeType_BaseEncodingError, nil, "Error decoding tx: " + err.Error()
 	}
 	// Validate tx
 	code, errStr := validateTx(tx)
@@ -94,7 +99,7 @@ func (app *Basecoin) CheckTx(txBytes []byte) (code tmsp.CodeType, result []byte,
 	// Load accounts
 	accMap := loadAccounts(app.eyesCli, allPubKeys(tx))
 	// Execute tx
-	_, code, errStr = execTx(tx, accMap, false)
+	_, code, errStr = runTx(tx, accMap, false)
 	if errStr != "" {
 		return code, nil, "Error (mock) executing tx: " + errStr
 	}
@@ -120,83 +125,80 @@ func (app *Basecoin) Commit() (hash []byte, log string) {
 	return hash, "Success"
 }
 
+// TMSP::InitChain
+func (app *Basecoin) InitChain(validators []*tmsp.Validator) {
+	app.govMint.InitChain(validators)
+}
+
+// TMSP::EndBlock
+func (app *Basecoin) EndBlock(height uint64) []*tmsp.Validator {
+	return app.govMint.EndBlock(height)
+}
+
 //----------------------------------------
 
 func validateTx(tx types.Tx) (code tmsp.CodeType, errStr string) {
-	if len(tx.Inputs) == 0 {
-		return tmsp.CodeType_EncodingError, "Tx.Inputs length cannot be 0"
+	inputs, outputs := tx.GetInputs(), tx.GetOutputs()
+	if len(inputs) == 0 {
+		return tmsp.CodeType_BaseEncodingError, "Tx.Inputs length cannot be 0"
 	}
 	seenPubKeys := map[string]bool{}
-	signBytes := txSignBytes(tx)
-	for _, input := range tx.Inputs {
+	signBytes := tx.SignBytes()
+	for _, input := range inputs {
 		code, errStr = validateInput(input, signBytes)
 		if errStr != "" {
 			return
 		}
 		keyString := input.PubKey.KeyString()
 		if seenPubKeys[keyString] {
-			return tmsp.CodeType_EncodingError, "Duplicate input pubKey"
+			return tmsp.CodeType_BaseEncodingError, "Duplicate input pubKey"
 		}
 		seenPubKeys[keyString] = true
 	}
-	for _, output := range tx.Outputs {
+	for _, output := range outputs {
 		code, errStr = validateOutput(output)
 		if errStr != "" {
 			return
 		}
 		keyString := output.PubKey.KeyString()
 		if seenPubKeys[keyString] {
-			return tmsp.CodeType_EncodingError, "Duplicate output pubKey"
+			return tmsp.CodeType_BaseEncodingError, "Duplicate output pubKey"
 		}
 		seenPubKeys[keyString] = true
 	}
-	sumInputs, overflow := sumAmounts(tx.Inputs, nil, 0)
+	sumInputs, overflow := sumAmounts(inputs, nil, 0)
 	if overflow {
-		return tmsp.CodeType_EncodingError, "Input amount overflow"
+		return tmsp.CodeType_BaseEncodingError, "Input amount overflow"
 	}
-	sumOutputsPlus, overflow := sumAmounts(nil, tx.Outputs, len(tx.Inputs)+len(tx.Outputs))
+	sumOutputsPlus, overflow := sumAmounts(nil, outputs, len(inputs)+len(outputs))
 	if overflow {
-		return tmsp.CodeType_EncodingError, "Output amount overflow"
+		return tmsp.CodeType_BaseEncodingError, "Output amount overflow"
 	}
 	if sumInputs < sumOutputsPlus {
-		return tmsp.CodeType_InsufficientFees, "Insufficient fees"
+		return tmsp.CodeType_BaseInsufficientFees, "Insufficient fees"
 	}
 	return tmsp.CodeType_OK, ""
 }
 
-func txSignBytes(tx types.Tx) []byte {
-	sigs := make([]crypto.Signature, len(tx.Inputs))
-	for i, input := range tx.Inputs {
-		sigs[i] = input.Signature
-		input.Signature = nil
-		tx.Inputs[i] = input
-	}
-	signBytes := wire.BinaryBytes(tx)
-	for i := range tx.Inputs {
-		tx.Inputs[i].Signature = sigs[i]
-	}
-	return signBytes
-}
-
 func validateInput(input types.Input, signBytes []byte) (code tmsp.CodeType, errStr string) {
 	if input.Amount == 0 {
-		return tmsp.CodeType_EncodingError, "Input amount cannot be zero"
+		return tmsp.CodeType_BaseEncodingError, "Input amount cannot be zero"
 	}
 	if input.PubKey == nil {
-		return tmsp.CodeType_EncodingError, "Input pubKey cannot be nil"
+		return tmsp.CodeType_BaseEncodingError, "Input pubKey cannot be nil"
 	}
 	if !input.PubKey.VerifyBytes(signBytes, input.Signature) {
-		return tmsp.CodeType_Unauthorized, "Invalid signature"
+		return tmsp.CodeType_BaseUnauthorized, "Invalid signature"
 	}
 	return tmsp.CodeType_OK, ""
 }
 
 func validateOutput(output types.Output) (code tmsp.CodeType, errStr string) {
 	if output.Amount == 0 {
-		return tmsp.CodeType_EncodingError, "Output amount cannot be zero"
+		return tmsp.CodeType_BaseEncodingError, "Output amount cannot be zero"
 	}
 	if output.PubKey == nil {
-		return tmsp.CodeType_EncodingError, "Output pubKey cannot be nil"
+		return tmsp.CodeType_BaseEncodingError, "Output pubKey cannot be nil"
 	}
 	return tmsp.CodeType_OK, ""
 }
@@ -220,39 +222,40 @@ func sumAmounts(inputs []types.Input, outputs []types.Output, more int) (total u
 	return total, false
 }
 
-func allPubKeys(tx types.Tx) (pubKeys []crypto.PubKey) {
-	pubKeys = make([]crypto.PubKey, 0, len(tx.Inputs)+len(tx.Outputs))
-	for _, input := range tx.Inputs {
-		pubKeys = append(pubKeys, input.PubKey)
-	}
-	for _, output := range tx.Outputs {
-		pubKeys = append(pubKeys, output.PubKey)
-	}
-	return pubKeys
-}
-
 // Returns accounts in order of types.Tx inputs and outputs
 // appendTx: true if this is for AppendTx.
 // TODO: create more intelligent sequence-checking.  Current impl is just for a throughput demo.
-func execTx(tx types.Tx, accMap map[string]types.PubAccount, appendTx bool) (accs []types.PubAccount, code tmsp.CodeType, errStr string) {
-	accs = make([]types.PubAccount, 0, len(tx.Inputs)+len(tx.Outputs))
+func runTx(tx types.Tx, accMap map[string]types.PubAccount, appendTx bool) (accs []types.PubAccount, code tmsp.CodeType, errStr string) {
+	switch tx := tx.(type) {
+	case *types.SendTx:
+		return runSendTx(tx, accMap, appendTx)
+	case *types.GovTx:
+		return runGovTx(tx, accMap, appendTx)
+	}
+	return nil, tmsp.CodeType_InternalError, "Unknown transaction type"
+}
+
+func processInputsOutputs(tx types.Tx, accMap map[string]types.PubAccount, appendTx bool) (accs []types.PubAccount, code tmsp.CodeType, errStr string) {
+	inputs, outputs := tx.GetInputs(), tx.GetOutputs()
+	accs = make([]types.PubAccount, 0, len(inputs)+len(outputs))
 	// Deduct from inputs
-	for _, input := range tx.Inputs {
+	// TODO refactor, duplicated code.
+	for _, input := range inputs {
 		var acc, ok = accMap[input.PubKey.KeyString()]
 		if !ok {
-			return nil, tmsp.CodeType_UnknownAccount, "Input account does not exist"
+			return nil, tmsp.CodeType_BaseUnknownAccount, "Input account does not exist"
 		}
 		if appendTx {
 			if acc.Sequence != input.Sequence {
-				return nil, tmsp.CodeType_BadNonce, "Invalid sequence"
+				return nil, tmsp.CodeType_BaseBadNonce, "Invalid sequence"
 			}
 		} else {
 			if acc.Sequence > input.Sequence {
-				return nil, tmsp.CodeType_BadNonce, "Invalid sequence (too low)"
+				return nil, tmsp.CodeType_BaseBadNonce, "Invalid sequence (too low)"
 			}
 		}
 		if acc.Balance < input.Amount {
-			return nil, tmsp.CodeType_InsufficientFunds, "Insufficient funds"
+			return nil, tmsp.CodeType_BaseInsufficientFunds, "Insufficient funds"
 		}
 		// Good!
 		acc.Sequence++
@@ -260,7 +263,7 @@ func execTx(tx types.Tx, accMap map[string]types.PubAccount, appendTx bool) (acc
 		accs = append(accs, acc)
 	}
 	// Add to outputs
-	for _, output := range tx.Outputs {
+	for _, output := range outputs {
 		var acc, ok = accMap[output.PubKey.KeyString()]
 		if !ok {
 			// Create new account if it doesn't already exist.
@@ -275,13 +278,23 @@ func execTx(tx types.Tx, accMap map[string]types.PubAccount, appendTx bool) (acc
 		} else {
 			// Good!
 			if (acc.Balance + output.Amount) < acc.Balance {
-				return nil, tmsp.CodeType_InternalError, "Output balance overflow in execTx"
+				return nil, tmsp.CodeType_InternalError, "Output balance overflow in runTx"
 			}
 			acc.Balance += output.Amount
 			accs = append(accs, acc)
 		}
 	}
 	return accs, tmsp.CodeType_OK, ""
+}
+
+func runSendTx(tx types.Tx, accMap map[string]types.PubAccount, appendTx bool) (accs []types.PubAccount, code tmsp.CodeType, errStr string) {
+	return processInputsOutputs(tx, accMap, appendTx)
+}
+
+func runGovTx(tx *types.GovTx, accMap map[string]types.PubAccount, appendTx bool) (accs []types.PubAccount, code tmsp.CodeType, errStr string) {
+	accs, code, errStr = processInputsOutputs(tx, accMap, appendTx)
+	// XXX run GovTx
+	return
 }
 
 //----------------------------------------
@@ -323,3 +336,16 @@ func storeAccounts(eyesCli *eyes.Client, accs []types.PubAccount) {
 }
 
 //----------------------------------------
+
+func allPubKeys(tx types.Tx) (pubKeys []crypto.PubKey) {
+	inputs := tx.GetInputs()
+	outputs := tx.GetOutputs()
+	pubKeys = make([]crypto.PubKey, 0, len(inputs)+len(outputs))
+	for _, input := range inputs {
+		pubKeys = append(pubKeys, input.PubKey)
+	}
+	for _, output := range outputs {
+		pubKeys = append(pubKeys, output.PubKey)
+	}
+	return pubKeys
+}

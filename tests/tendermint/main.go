@@ -15,8 +15,7 @@ import (
 )
 
 func main() {
-	//ws := rpcclient.NewWSClient("ws://127.0.0.1:46657", "/websocket")
-	ws := rpcclient.NewWSClient("ws://104.131.151.26:46657", "/websocket")
+	ws := rpcclient.NewWSClient("127.0.0.1:46657", "/websocket")
 	_, err := ws.Start()
 	if err != nil {
 		Exit(err.Error())
@@ -44,7 +43,7 @@ func main() {
 	// Send coins to each account
 	for i := 0; i < len(privAccounts); i++ {
 		privAccount := privAccounts[i]
-		tx := types.Tx{
+		tx := &types.SendTx{
 			Inputs: []types.Input{
 				types.Input{
 					PubKey:   root.PubKey,
@@ -94,7 +93,7 @@ func main() {
 		privAccountSequences[privAccountA.PubKey.KeyString()] = privAccountASequence + 1
 		privAccountB := privAccounts[randB]
 
-		tx := types.Tx{
+		tx := &types.SendTx{
 			Inputs: []types.Input{
 				types.Input{
 					PubKey:   privAccountA.PubKey,

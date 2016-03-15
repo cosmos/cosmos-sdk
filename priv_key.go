@@ -9,6 +9,7 @@ import (
 
 // PrivKey is part of PrivAccount and state.PrivValidator.
 type PrivKey interface {
+	Bytes() []byte
 	Sign(msg []byte) Signature
 	PubKey() PubKey
 }
@@ -24,10 +25,19 @@ var _ = wire.RegisterInterface(
 	wire.ConcreteType{PrivKeyEd25519{}, PrivKeyTypeEd25519},
 )
 
+func PrivKeyFromBytes(privKeyBytes []byte) (privKey PrivKey, err error) {
+	err = wire.ReadBinaryBytes(privKeyBytes, &privKey)
+	return
+}
+
 //-------------------------------------
 
 // Implements PrivKey
 type PrivKeyEd25519 [64]byte
+
+func (privKey PrivKeyEd25519) Bytes() []byte {
+	return wire.BinaryBytes(struct{ PrivKey }{privKey})
+}
 
 func (key PrivKeyEd25519) Sign(msg []byte) Signature {
 	privKeyBytes := [64]byte(key)
@@ -69,8 +79,10 @@ func GenPrivKeyEd25519() PrivKeyEd25519 {
 	return PrivKeyEd25519(*privKeyBytes)
 }
 
-func GenPrivKeyEd25519FromSecret(secret string) PrivKeyEd25519 {
-	privKey32 := wire.BinarySha256(secret) // Not Ripemd160 because we want 32 bytes.
+// NOTE: secret should be the output of a KDF like bcrypt,
+// if it's derived from user input.
+func GenPrivKeyEd25519FromSecret(secret []byte) PrivKeyEd25519 {
+	privKey32 := Sha256(secret) // Not Ripemd160 because we want 32 bytes.
 	privKeyBytes := new([64]byte)
 	copy(privKeyBytes[:32], privKey32)
 	ed25519.MakePublicKey(privKeyBytes)

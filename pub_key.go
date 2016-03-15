@@ -13,6 +13,7 @@ import (
 // PubKey is part of Account and Validator.
 type PubKey interface {
 	Address() []byte
+	Bytes() []byte
 	KeyString() string
 	VerifyBytes(msg []byte, sig Signature) bool
 	Equals(PubKey) bool
@@ -29,26 +30,25 @@ var _ = wire.RegisterInterface(
 	wire.ConcreteType{PubKeyEd25519{}, PubKeyTypeEd25519},
 )
 
+func PubKeyFromBytes(pubKeyBytes []byte) (pubKey PubKey, err error) {
+	err = wire.ReadBinaryBytes(pubKeyBytes, &pubKey)
+	return
+}
+
 //-------------------------------------
 
 // Implements PubKey
 type PubKeyEd25519 [32]byte
 
-// TODO: Slicing the array gives us length prefixing but loses the type byte.
-// Revisit if we add more pubkey types.
-// For now, we artificially append the type byte in front to give us backwards
-// compatibility for when the pubkey wasn't fixed length array
 func (pubKey PubKeyEd25519) Address() []byte {
-	w, n, err := new(bytes.Buffer), new(int), new(error)
-	wire.WriteBinary(pubKey[:], w, n, err)
-	if *err != nil {
-		PanicCrisis(*err)
-	}
-	// append type byte
-	encodedPubkey := append([]byte{1}, w.Bytes()...)
+	pubKeyBytes := pubKey.Bytes()
 	hasher := ripemd160.New()
-	hasher.Write(encodedPubkey) // does not error
+	hasher.Write(pubKeyBytes) // does not error
 	return hasher.Sum(nil)
+}
+
+func (pubKey PubKeyEd25519) Bytes() []byte {
+	return wire.BinaryBytes(struct{ PubKey }{pubKey})
 }
 
 // TODO: Consider returning a reason for failure, or logging a runtime type mismatch.

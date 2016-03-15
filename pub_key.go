@@ -41,9 +41,15 @@ func PubKeyFromBytes(pubKeyBytes []byte) (pubKey PubKey, err error) {
 type PubKeyEd25519 [32]byte
 
 func (pubKey PubKeyEd25519) Address() []byte {
-	pubKeyBytes := pubKey.Bytes()
+	w, n, err := new(bytes.Buffer), new(int), new(error)
+	wire.WriteBinary(pubKey[:], w, n, err)
+	if *err != nil {
+		PanicCrisis(*err)
+	}
+	// append type byte
+	encodedPubkey := append([]byte{1}, w.Bytes()...)
 	hasher := ripemd160.New()
-	hasher.Write(pubKeyBytes) // does not error
+	hasher.Write(encodedPubkey) // does not error
 	return hasher.Sum(nil)
 }
 

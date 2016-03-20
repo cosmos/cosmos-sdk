@@ -35,7 +35,7 @@ func main() {
 
 	// Get the root account
 	root := tests.PrivAccountFromSecret("root")
-	sequence := uint(0)
+	sequence := int(0)
 	// Make a bunch of PrivAccounts
 	privAccounts := tests.RandAccounts(1000, 1000000, 0)
 	privAccountSequences := make(map[string]int)
@@ -44,17 +44,18 @@ func main() {
 	for i := 0; i < len(privAccounts); i++ {
 		privAccount := privAccounts[i]
 		tx := &types.SendTx{
-			Inputs: []types.Input{
-				types.Input{
-					PubKey:   root.PubKey,
+			Inputs: []types.TxInput{
+				types.TxInput{
+					Address:  root.Account.PubKey.Address(),
+					PubKey:   root.Account.PubKey, // TODO is this needed?
 					Amount:   1000002,
 					Sequence: sequence,
 				},
 			},
-			Outputs: []types.Output{
-				types.Output{
-					PubKey: privAccount.PubKey,
-					Amount: 1000000,
+			Outputs: []types.TxOutput{
+				types.TxOutput{
+					Address: privAccount.Account.PubKey.Address(),
+					Amount:  1000000,
 				},
 			},
 		}
@@ -89,22 +90,23 @@ func main() {
 		}
 
 		privAccountA := privAccounts[randA]
-		privAccountASequence := privAccountSequences[privAccountA.PubKey.KeyString()]
-		privAccountSequences[privAccountA.PubKey.KeyString()] = privAccountASequence + 1
+		privAccountASequence := privAccountSequences[privAccountA.Account.PubKey.KeyString()]
+		privAccountSequences[privAccountA.Account.PubKey.KeyString()] = privAccountASequence + 1
 		privAccountB := privAccounts[randB]
 
 		tx := &types.SendTx{
-			Inputs: []types.Input{
-				types.Input{
-					PubKey:   privAccountA.PubKey,
+			Inputs: []types.TxInput{
+				types.TxInput{
+					Address:  privAccountA.Account.PubKey.Address(),
+					PubKey:   privAccountA.Account.PubKey,
 					Amount:   3,
-					Sequence: uint(privAccountASequence),
+					Sequence: privAccountASequence,
 				},
 			},
-			Outputs: []types.Output{
-				types.Output{
-					PubKey: privAccountB.PubKey,
-					Amount: 1,
+			Outputs: []types.TxOutput{
+				types.TxOutput{
+					Address: privAccountB.Account.PubKey.Address(),
+					Amount:  1,
 				},
 			},
 		}

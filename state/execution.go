@@ -133,8 +133,7 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 		return types.ResultOK
 
 	default:
-		PanicSanity("Unknown Tx type")
-		return types.ErrInternalError
+		return types.ErrEncodingError.SetLog("Unknown tx type")
 	}
 }
 

@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"

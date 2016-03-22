@@ -149,28 +149,27 @@ func adjustByOutputs(accounts map[string]*types.Account, outs []types.TxOutput) 
 
 // If the tx is invalid, an error will be returned.
 // Unlike ExecBlock(), state will not be altered.
-func ExecTx(blockCache *BlockCache, tx types.Tx, runCall bool, evc events.Fireable) (err error) {
+func ExecTx(state *State, tx types.Tx, runCall bool, evc events.Fireable) (err error) {
 
 	// TODO: do something with fees
 	fees := int64(0)
-	_s := blockCache.State() // hack to access validators and block height
 
 	// Exec tx
 	switch tx := tx.(type) {
 	case *types.SendTx:
-		accounts, err := getInputs(blockCache, tx.Inputs)
+		accounts, err := getInputs(state, tx.Inputs)
 		if err != nil {
 			return err
 		}
 
 		// add outputs to accounts map
 		// if any outputs don't exist, all inputs must have CreateAccount perm
-		accounts, err = getOrMakeOutputs(blockCache, accounts, tx.Outputs)
+		accounts, err = getOrMakeOutputs(state, accounts, tx.Outputs)
 		if err != nil {
 			return err
 		}
 
-		signBytes := tx.SignBytes(_s.ChainID)
+		signBytes := tx.SignBytes(state.ChainID())
 		inTotal, err := validateInputs(accounts, signBytes, tx.Inputs)
 		if err != nil {
 			return err
@@ -189,7 +188,7 @@ func ExecTx(blockCache *BlockCache, tx types.Tx, runCall bool, evc events.Fireab
 		adjustByInputs(accounts, tx.Inputs)
 		adjustByOutputs(accounts, tx.Outputs)
 		for _, acc := range accounts {
-			blockCache.UpdateAccount(acc)
+			state.SetAccount(acc)
 		}
 
 		// if the evc is nil, nothing will happen
@@ -209,7 +208,7 @@ func ExecTx(blockCache *BlockCache, tx types.Tx, runCall bool, evc events.Fireab
 		var inAcc, outAcc *types.Account
 
 		// Validate input
-		inAcc = blockCache.GetAccount(tx.Input.Address)
+		inAcc = state.GetAccount(tx.Input.Address)
 		if inAcc == nil {
 			log.Info(Fmt("Can't find in account %X", tx.Input.Address))
 			return types.ErrInvalidAddress
@@ -220,7 +219,7 @@ func ExecTx(blockCache *BlockCache, tx types.Tx, runCall bool, evc events.Fireab
 			log.Info(Fmt("Can't find pubkey for %X", tx.Input.Address))
 			return err
 		}
-		signBytes := tx.SignBytes(_s.ChainID)
+		signBytes := tx.SignBytes(state.ChainID())
 		err := validateInput(inAcc, signBytes, tx.Input)
 		if err != nil {
 			log.Info(Fmt("validateInput failed on %X: %v", tx.Input.Address, err))
@@ -245,7 +244,7 @@ func ExecTx(blockCache *BlockCache, tx types.Tx, runCall bool, evc events.Fireab
 		// Output account may be nil if we are still in mempool and contract was created in same block as this tx
 		// but that's fine, because the account will be created properly when the create tx runs in the block
 		// and then this won't return nil. otherwise, we take their fee
-		outAcc = blockCache.GetAccount(tx.Address)
+		outAcc = state.GetAccount(tx.Address)
 
 		log.Info(Fmt("Out account: %v", outAcc))
 
@@ -253,26 +252,26 @@ func ExecTx(blockCache *BlockCache, tx types.Tx, runCall bool, evc events.Fireab
 		value := tx.Input.Amount - tx.Fee
 		inAcc.Sequence += 1
 		inAcc.Balance -= tx.Fee
-		blockCache.UpdateAccount(inAcc)
+		state.SetAccount(inAcc)
 
 		// The logic in runCall MUST NOT return.
 		if runCall {
 
 			// VM call variables
 			var (
-				gas int64 = tx.GasLimit
+				// gas int64 = tx.GasLimit
 				err error = nil
 				// caller  *vm.Account = toVMAccount(inAcc)
 				// callee  *vm.Account = nil // initialized below
 				// code    []byte = nil
 				// ret     []byte = nil
-				txCache = NewTxCache(blockCache)
+				// txCache = NewTxCache(state)
 				/*
 					params  = vm.Params{
-						BlockHeight: int64(_s.LastBlockHeight),
-						BlockHash:   LeftPadWord256(_s.LastBlockHash),
-						BlockTime:   _s.LastBlockTime.Unix(),
-						GasLimit:    _s.GetGasLimit(),
+						BlockHeight: int64(state.LastBlockHeight),
+						BlockHash:   LeftPadWord256(state.LastBlockHash),
+						BlockTime:   state.LastBlockTime.Unix(),
+						GasLimit:    state.GetGasLimit(),
 					}
 				*/
 			)
@@ -298,12 +297,12 @@ func ExecTx(blockCache *BlockCache, tx types.Tx, runCall bool, evc events.Fireab
 				log.Info(Fmt("Code for this contract: %X", code))
 			*/
 
-			// Run VM call and sync txCache to blockCache.
+			// Run VM call and sync txCache to state.
 			{ // Capture scope for goto.
 				// Write caller/callee to txCache.
-				// txCache.UpdateAccount(caller)
-				// txCache.UpdateAccount(callee)
-				// vmach := vm.NewVM(txCache, params, caller.Address, types.TxID(_s.ChainID, tx))
+				// txCache.SetAccount(caller)
+				// txCache.SetAccount(callee)
+				// vmach := vm.NewVM(txCache, params, caller.Address, types.TxID(state.ChainID(), tx))
 				// vmach.SetFireable(evc)
 				// NOTE: Call() transfers the value from caller to callee iff call succeeds.
 				// ret, err = vmach.Call(caller, callee, code, tx.Data, value, &gas)
@@ -313,7 +312,7 @@ func ExecTx(blockCache *BlockCache, tx types.Tx, runCall bool, evc events.Fireab
 					goto CALL_COMPLETE
 				}
 				log.Info("Successful execution")
-				txCache.Sync()
+				// txCache.Sync()
 			}
 
 		CALL_COMPLETE: // err may or may not be nil.
@@ -339,7 +338,7 @@ func ExecTx(blockCache *BlockCache, tx types.Tx, runCall bool, evc events.Fireab
 			// So mempool will skip the actual .Call(),
 			// and only deduct from the caller's balance.
 			inAcc.Balance -= value
-			blockCache.UpdateAccount(inAcc)
+			state.SetAccount(inAcc)
 		}
 
 		return nil

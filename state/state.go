@@ -23,6 +23,10 @@ func NewState(chainID string, eyesCli *eyes.Client) *State {
 	return s
 }
 
+func (s *State) ChainID() string {
+	return s.chainID
+}
+
 func (s *State) GetAccount(addr []byte) *types.Account {
 	accBytes, err := s.eyesCli.GetSync(addr)
 	if err != nil {

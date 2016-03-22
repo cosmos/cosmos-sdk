@@ -9,6 +9,7 @@ import (
 
 // Signature is a part of Txs and consensus Votes.
 type Signature interface {
+	Bytes() []byte
 	IsZero() bool
 	String() string
 }
@@ -28,6 +29,10 @@ var _ = wire.RegisterInterface(
 
 // Implements Signature
 type SignatureEd25519 [64]byte
+
+func (sig SignatureEd25519) Bytes() []byte {
+	return wire.BinaryBytes(struct{ Signature }{sig})
+}
 
 func (sig SignatureEd25519) IsZero() bool { return len(sig) == 0 }
 

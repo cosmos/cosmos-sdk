@@ -7,6 +7,7 @@ import (
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
+	tmsp "github.com/tendermint/tmsp/types"
 	"golang.org/x/crypto/ripemd160"
 )
 
@@ -45,14 +46,14 @@ type TxInput struct {
 	PubKey    crypto.PubKey    `json:"pub_key"`   // May be nil
 }
 
-func (txIn TxInput) ValidateBasic() error {
+func (txIn TxInput) ValidateBasic() tmsp.Result {
 	if len(txIn.Address) != 20 {
 		return ErrInvalidAddress
 	}
 	if txIn.Amount == 0 {
 		return ErrInvalidAmount
 	}
-	return nil
+	return ResultOK
 }
 
 func (txIn TxInput) SignBytes() []byte {
@@ -71,14 +72,14 @@ type TxOutput struct {
 	Amount  int64  `json:"amount"`  // The sum of all outputs must not exceed the inputs.
 }
 
-func (txOut TxOutput) ValidateBasic() error {
+func (txOut TxOutput) ValidateBasic() tmsp.Result {
 	if len(txOut.Address) != 20 {
 		return ErrInvalidAddress
 	}
 	if txOut.Amount == 0 {
 		return ErrInvalidAmount
 	}
-	return nil
+	return ResultOK
 }
 
 func (txOut TxOutput) SignBytes() []byte {

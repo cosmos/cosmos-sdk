@@ -5,6 +5,7 @@ import (
 )
 
 var (
+	ErrInternalError        = tmsp.NewError(tmsp.CodeType_InternalError, "Internal error")
 	ErrDuplicateAddress     = tmsp.NewError(tmsp.CodeType_BaseDuplicateAddress, "Error duplicate address")
 	ErrEncodingError        = tmsp.NewError(tmsp.CodeType_BaseEncodingError, "Error encoding error")
 	ErrInsufficientFees     = tmsp.NewError(tmsp.CodeType_BaseInsufficientFees, "Error insufficient fees")

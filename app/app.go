@@ -1,10 +1,11 @@
 package app
 
 import (
+	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
-	gov "github.com/tendermint/governmint/gov"
+	"github.com/tendermint/governmint/gov"
 	eyes "github.com/tendermint/merkleeyes/client"
 	tmsp "github.com/tendermint/tmsp/types"
 )
@@ -15,23 +16,29 @@ const maxTxSize = 10240
 type Basecoin struct {
 	eyesCli *eyes.Client
 	govMint *gov.Governmint
+	state   *state.State
 }
 
 func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
+	govMint := gov.NewGovernmint(eyesCli)
 	return &Basecoin{
 		eyesCli: eyesCli,
-		govMint: gov.NewGovernmint(eyesCli),
+		govMint: govMint,
+		state:   state.NewState(eyesCli),
 	}
 }
 
 // TMSP::Info
 func (app *Basecoin) Info() string {
-	return Fmt("Basecoin v%v\n - %v", version, app.govMint.Info())
+	return Fmt("Basecoin v%v", version)
 }
 
 // TMSP::SetOption
 func (app *Basecoin) SetOption(key string, value string) (log string) {
-	if key == "setAccount" {
+	switch key {
+	case "chainID":
+		app.state.SetChainID(value)
+	case "account":
 		var err error
 		var setAccount types.Account
 		wire.ReadJSONPtr(&setAccount, []byte(value), &err)
@@ -59,16 +66,11 @@ func (app *Basecoin) AppendTx(txBytes []byte) (res tmsp.Result) {
 	if err != nil {
 		return types.ErrEncodingError.AppendLog("Error decoding tx: " + err.Error())
 	}
-	// Validate tx
-	res = validateTx(tx)
+	// Validate and exec tx
+	res = state.ExecTx(app.state, tx, false, nil)
 	if !res.IsOK() {
-		return res.PrependLog("Error validating tx")
+		return res.PrependLog("Error in AppendTx")
 	}
-	// Execute tx
-	// TODO: get or make state with app.eeysCli, pass it to
-	// state.execution.go ExecTx
-	// Synchronize the txCache.
-	//storeAccounts(app.eyesCli, accs)
 	return types.ResultOK
 }
 
@@ -84,16 +86,11 @@ func (app *Basecoin) CheckTx(txBytes []byte) (res tmsp.Result) {
 		return types.ErrEncodingError.AppendLog("Error decoding tx: " + err.Error())
 	}
 	// Validate tx
-	res = validateTx(tx)
+	res = state.ExecTx(app.state, tx, true, nil)
 	if !res.IsOK() {
-		return res.PrependLog("Error validating tx")
+		return res.PrependLog("Error in CheckTx")
 	}
-	// Execute tx
-	// TODO: get or make state with app.eeysCli, pass it to
-	// state.execution.go ExecTx
-	// Synchronize the txCache.
-	//storeAccounts(app.eyesCli, accs)
-	return types.ResultOK.SetLog("Success")
+	return types.ResultOK
 }
 
 // TMSP::Query

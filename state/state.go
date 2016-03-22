@@ -2,30 +2,66 @@ package state
 
 import (
 	"github.com/tendermint/basecoin/types"
+	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
 )
 
 type State struct {
-	chainID string
-	eyesCli *eyes.Client
+	chainID    string
+	eyesCli    *eyes.Client
+	checkCache map[string]checkAccount
 
 	LastBlockHeight uint64
 	LastBlockHash   []byte
 	GasLimit        int64
 }
 
-func NewState(chainID string, eyesCli *eyes.Client) *State {
+func NewState(eyesCli *eyes.Client) *State {
 	s := &State{
-		chainID: chainID,
-		eyesCli: eyesCli,
+		chainID:    "",
+		eyesCli:    eyesCli,
+		checkCache: make(map[string]checkAccount),
 	}
 	return s
 }
 
-func (s *State) ChainID() string {
+func (s *State) SetChainID(chainID string) {
+	s.chainID = chainID
+}
+
+func (s *State) GetChainID() string {
+	if s.chainID == "" {
+		PanicSanity("Expected to have set SetChainID")
+	}
 	return s.chainID
 }
+
+//----------------------------------------
+// CheckTx state
+
+type checkAccount struct {
+	sequence int
+	balance  int64
+}
+
+func (s *State) GetCheckAccount(addr []byte, defaultSequence int, defaultBalance int64) (sequence int, balance int64) {
+	cAcc, ok := s.checkCache[string(addr)]
+	if !ok {
+		return defaultSequence, defaultBalance
+	}
+	return cAcc.sequence, cAcc.balance
+}
+
+func (s *State) SetCheckAccount(addr []byte, sequence int, balance int64) {
+	s.checkCache[string(addr)] = checkAccount{sequence, balance}
+}
+
+func (s *State) ResetCacheState() {
+	s.checkCache = make(map[string]checkAccount)
+}
+
+//----------------------------------------
 
 func (s *State) GetAccount(addr []byte) *types.Account {
 	accBytes, err := s.eyesCli.GetSync(addr)

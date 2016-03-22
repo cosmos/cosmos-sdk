@@ -1,6 +1,10 @@
-{"Accounts":[
+[
   {
-    "PubKey":[1,"31F4BF201D3606E33707B098B1EEA7D03A4BB9E9795F0116ED1A038D7B5A6BDE"],
-    "Account":{"Sequence":0,"Balance":2100000000000000}
+    "key":    "chainID",
+    "value":  "test_chain_id"
+  },
+  {
+    "key":    "account",
+    "value":  "{\"pub_key\":[1,\"3E8A80E5412FD1711995D5888F5FA2EFB26EDD0970F1E27CE0B55CD237439E18\"],\"balance\":1000}"
   }
-]}
+]

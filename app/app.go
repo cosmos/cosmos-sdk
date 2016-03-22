@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
@@ -38,6 +39,7 @@ func (app *Basecoin) SetOption(key string, value string) (log string) {
 	switch key {
 	case "chainID":
 		app.state.SetChainID(value)
+		return "Success"
 	case "account":
 		var err error
 		var setAccount types.Account
@@ -119,5 +121,6 @@ func (app *Basecoin) InitChain(validators []*tmsp.Validator) {
 
 // TMSP::EndBlock
 func (app *Basecoin) EndBlock(height uint64) []*tmsp.Validator {
+	app.state.ResetCacheState()
 	return app.govMint.EndBlock(height)
 }

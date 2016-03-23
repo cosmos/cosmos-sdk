@@ -59,58 +59,58 @@ func (app *Basecoin) SetOption(key string, value string) (log string) {
 // TMSP::AppendTx
 func (app *Basecoin) AppendTx(txBytes []byte) (res tmsp.Result) {
 	if len(txBytes) > maxTxSize {
-		return types.ErrEncodingError.AppendLog("Tx size exceeds maximum")
+		return tmsp.ErrBaseEncodingError.AppendLog("Tx size exceeds maximum")
 	}
 	// Decode tx
 	var tx types.Tx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
 	if err != nil {
-		return types.ErrEncodingError.AppendLog("Error decoding tx: " + err.Error())
+		return tmsp.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
 	}
 	// Validate and exec tx
 	res = state.ExecTx(app.state, tx, false, nil)
-	if !res.IsOK() {
+	if res.IsErr() {
 		return res.PrependLog("Error in AppendTx")
 	}
-	return types.ResultOK
+	return tmsp.OK
 }
 
 // TMSP::CheckTx
 func (app *Basecoin) CheckTx(txBytes []byte) (res tmsp.Result) {
 	if len(txBytes) > maxTxSize {
-		return types.ErrEncodingError.AppendLog("Tx size exceeds maximum")
+		return tmsp.ErrBaseEncodingError.AppendLog("Tx size exceeds maximum")
 	}
 	// Decode tx
 	var tx types.Tx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
 	if err != nil {
-		return types.ErrEncodingError.AppendLog("Error decoding tx: " + err.Error())
+		return tmsp.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
 	}
 	// Validate tx
 	res = state.ExecTx(app.state, tx, true, nil)
-	if !res.IsOK() {
+	if res.IsErr() {
 		return res.PrependLog("Error in CheckTx")
 	}
-	return types.ResultOK
+	return tmsp.OK
 }
 
 // TMSP::Query
 func (app *Basecoin) Query(query []byte) (res tmsp.Result) {
-	return types.ResultOK
-	value, err := app.eyesCli.GetSync(query)
-	if err != nil {
-		panic("Error making query: " + err.Error())
+	return tmsp.OK
+	res = app.eyesCli.GetSync(query)
+	if res.IsErr() {
+		return res.PrependLog("Error querying eyesCli")
 	}
-	return types.ResultOK.SetData(value).SetLog("Success")
+	return res
 }
 
 // TMSP::Commit
-func (app *Basecoin) Commit() (hash []byte, log string) {
-	hash, log, err := app.eyesCli.CommitSync()
-	if err != nil {
-		panic("Error getting hash: " + err.Error())
+func (app *Basecoin) Commit() (res tmsp.Result) {
+	res = app.eyesCli.CommitSync()
+	if res.IsErr() {
+		panic("Error getting hash: " + res.Error())
 	}
-	return hash, "Success"
+	return res
 }
 
 // TMSP::InitChain

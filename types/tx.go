@@ -48,12 +48,12 @@ type TxInput struct {
 
 func (txIn TxInput) ValidateBasic() tmsp.Result {
 	if len(txIn.Address) != 20 {
-		return ErrInvalidAddress
+		return tmsp.ErrBaseInvalidAddress
 	}
 	if txIn.Amount == 0 {
-		return ErrInvalidAmount
+		return tmsp.ErrBaseInvalidAmount
 	}
-	return ResultOK
+	return tmsp.OK
 }
 
 func (txIn TxInput) SignBytes() []byte {
@@ -74,12 +74,12 @@ type TxOutput struct {
 
 func (txOut TxOutput) ValidateBasic() tmsp.Result {
 	if len(txOut.Address) != 20 {
-		return ErrInvalidAddress
+		return tmsp.ErrBaseInvalidAddress
 	}
 	if txOut.Amount == 0 {
-		return ErrInvalidAmount
+		return tmsp.ErrBaseInvalidAmount
 	}
-	return ResultOK
+	return tmsp.OK
 }
 
 func (txOut TxOutput) SignBytes() []byte {

@@ -11,6 +11,7 @@ type State struct {
 	chainID    string
 	eyesCli    *eyes.Client
 	checkCache map[string]checkAccount
+	plugins    map[string]types.Plugin
 
 	LastBlockHeight uint64
 	LastBlockHash   []byte
@@ -35,6 +36,14 @@ func (s *State) GetChainID() string {
 		PanicSanity("Expected to have set SetChainID")
 	}
 	return s.chainID
+}
+
+func (s *State) RegisterPlugin(addr []byte, plugin types.Plugin) {
+	s.plugins[string(addr)] = plugin
+}
+
+func (s *State) GetPlugin(addr []byte) types.Plugin {
+	return s.plugins[string(addr)]
 }
 
 //----------------------------------------

@@ -40,5 +40,11 @@ type AccountGetter interface {
 
 type AccountGetterSetter interface {
 	GetAccount(addr []byte) *Account
-	SetAccount(acc *Account)
+	SetAccount(addr []byte, acc *Account)
+}
+
+type AccountCacher interface {
+	GetAccount(addr []byte) *Account
+	SetAccount(addr []byte, acc *Account)
+	Sync()
 }

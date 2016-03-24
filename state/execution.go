@@ -2,7 +2,6 @@ package state
 
 import (
 	"bytes"
-	"strings"
 
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
@@ -94,9 +93,8 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 		}
 
 		// Validate call address
-		if strings.HasPrefix(string(tx.Address), "gov/") {
-			// This is a gov call.
-		} else {
+		plugin := state.GetPlugin(tx.Address)
+		if plugin != nil {
 			return tmsp.ErrBaseUnknownAddress.AppendLog(Fmt("Unrecognized address %X", tx.Address))
 		}
 
@@ -105,16 +103,21 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 		inAcc.Sequence += 1
 		inAcc.Balance -= tx.Input.Amount
 		state.SetCheckAccount(tx.Input.Address, inAcc.Sequence, inAcc.Balance)
+		inAccCopy := inAcc.Copy()
 
 		// If this is AppendTx, actually save accounts
-		if !isCheckTx {
-			state.SetAccount(tx.Input.Address, inAcc)
-			// NOTE: value is dangling.
-			// XXX: don't just give it back
-			inAcc.Balance += value
-			// TODO: logic.
-			// TODO: persist
-			// state.SetAccount(tx.Input.Address, inAcc)
+		if isCheckTx {
+			return tmsp.OK
+		}
+
+		// Run the tx.
+		cache := NewAccountCache(state)
+		cache.SetAccount(tx.Input.Address, inAcc)
+		gas := int64(1) // TODO
+		ctx := types.NewCallContext(cache, inAcc, value, &gas)
+		res = plugin.CallTx(ctx, tx.Data)
+		if res.IsOK() {
+			cache.Sync()
 			log.Info("Successful execution")
 			// Fire events
 			/*
@@ -127,9 +130,14 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 					evc.FireEvent(types.EventStringAccOutput(tx.Address), types.EventDataTx{tx, ret, exception})
 				}
 			*/
+		} else {
+			log.Info("CallTx failed", "error", res)
+			// Just return the value and return.
+			// TODO: return gas?
+			inAccCopy.Balance += value
+			state.SetAccount(tx.Input.Address, inAccCopy)
 		}
-
-		return tmsp.OK
+		return res
 
 	default:
 		return tmsp.ErrBaseEncodingError.SetLog("Unknown tx type")

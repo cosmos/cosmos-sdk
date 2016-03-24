@@ -20,11 +20,13 @@ type Basecoin struct {
 }
 
 func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
+	state_ := state.NewState(eyesCli)
 	govMint := gov.NewGovernmint(eyesCli)
+	state_.RegisterPlugin([]byte("gov"), govMint)
 	return &Basecoin{
 		eyesCli: eyesCli,
 		govMint: govMint,
-		state:   state.NewState(eyesCli),
+		state:   state_,
 	}
 }
 

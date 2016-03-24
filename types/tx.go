@@ -48,10 +48,10 @@ type TxInput struct {
 
 func (txIn TxInput) ValidateBasic() tmsp.Result {
 	if len(txIn.Address) != 20 {
-		return tmsp.ErrBaseInvalidAddress
+		return tmsp.ErrBaseInvalidAddress.AppendLog("(in TxInput)")
 	}
 	if txIn.Amount == 0 {
-		return tmsp.ErrBaseInvalidAmount
+		return tmsp.ErrBaseInvalidAmount.AppendLog("(in TxInput)")
 	}
 	return tmsp.OK
 }
@@ -74,10 +74,10 @@ type TxOutput struct {
 
 func (txOut TxOutput) ValidateBasic() tmsp.Result {
 	if len(txOut.Address) != 20 {
-		return tmsp.ErrBaseInvalidAddress
+		return tmsp.ErrBaseInvalidAddress.AppendLog("(in TxOutput)")
 	}
 	if txOut.Amount == 0 {
-		return tmsp.ErrBaseInvalidAmount
+		return tmsp.ErrBaseInvalidAmount.AppendLog("(in TxOutput)")
 	}
 	return tmsp.OK
 }

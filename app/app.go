@@ -47,9 +47,9 @@ func (app *Basecoin) SetOption(key string, value string) (log string) {
 			return "Error decoding setAccount message: " + err.Error()
 		}
 		accBytes := wire.BinaryBytes(setAccount)
-		err = app.eyesCli.SetSync(setAccount.PubKey.Address(), accBytes)
-		if err != nil {
-			return "Error saving account: " + err.Error()
+		res := app.eyesCli.SetSync(setAccount.PubKey.Address(), accBytes)
+		if res.IsErr() {
+			return "Error saving account: " + res.Error()
 		}
 		return "Success"
 	}
@@ -96,7 +96,6 @@ func (app *Basecoin) CheckTx(txBytes []byte) (res tmsp.Result) {
 
 // TMSP::Query
 func (app *Basecoin) Query(query []byte) (res tmsp.Result) {
-	return tmsp.OK
 	res = app.eyesCli.GetSync(query)
 	if res.IsErr() {
 		return res.PrependLog("Error querying eyesCli")

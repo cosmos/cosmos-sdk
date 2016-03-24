@@ -79,9 +79,9 @@ func (s *State) GetAccount(addr []byte) *types.Account {
 	return &acc
 }
 
-func (s *State) SetAccount(acc *types.Account) {
+func (s *State) SetAccount(address []byte, acc *types.Account) {
 	accBytes := wire.BinaryBytes(acc)
-	res := s.eyesCli.SetSync(acc.PubKey.Address(), accBytes)
+	res := s.eyesCli.SetSync(address, accBytes)
 	if res.IsErr() {
 		panic("Error storing account: " + res.Error())
 	}

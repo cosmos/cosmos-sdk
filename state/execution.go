@@ -22,24 +22,24 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 		// First, get inputs
 		accounts, res := getInputs(state, tx.Inputs)
 		if res.IsErr() {
-			return res
+			return res.PrependLog("in getInputs()")
 		}
 
 		// Then, get or make outputs.
 		accounts, res = getOrMakeOutputs(state, accounts, tx.Outputs)
 		if res.IsErr() {
-			return res
+			return res.PrependLog("in getOrMakeOutputs()")
 		}
 
 		// Validate inputs and outputs
 		signBytes := tx.SignBytes(state.GetChainID())
 		inTotal, res := validateInputs(state, accounts, signBytes, tx.Inputs)
 		if res.IsErr() {
-			return res
+			return res.PrependLog("in validateInputs()")
 		}
 		outTotal, res := validateOutputs(tx.Outputs)
 		if res.IsErr() {
-			return res
+			return res.PrependLog("in validateOutputs()")
 		}
 		if outTotal > inTotal {
 			return tmsp.ErrBaseInsufficientFunds
@@ -73,8 +73,7 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 		// First, get input account
 		inAcc := state.GetAccount(tx.Input.Address)
 		if inAcc == nil {
-			log.Info(Fmt("Can't find in account %X", tx.Input.Address))
-			return tmsp.ErrBaseInvalidAddress
+			return tmsp.ErrBaseUnknownAddress
 		}
 
 		// Validate input
@@ -87,7 +86,7 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 		res := validateInput(state, inAcc, signBytes, tx.Input)
 		if res.IsErr() {
 			log.Info(Fmt("validateInput failed on %X: %v", tx.Input.Address, res))
-			return res
+			return res.PrependLog("in validateInput()")
 		}
 		if tx.Input.Amount < tx.Fee {
 			log.Info(Fmt("Sender did not send enough to cover the fee %X", tx.Input.Address))
@@ -98,7 +97,7 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 		if strings.HasPrefix(string(tx.Address), "gov/") {
 			// This is a gov call.
 		} else {
-			return tmsp.ErrBaseInvalidAddress.AppendLog(Fmt("Unrecognized address %X", tx.Address))
+			return tmsp.ErrBaseUnknownAddress.AppendLog(Fmt("Unrecognized address %X", tx.Address))
 		}
 
 		// Good!
@@ -109,13 +108,13 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 
 		// If this is AppendTx, actually save accounts
 		if !isCheckTx {
-			state.SetAccount(inAcc)
+			state.SetAccount(tx.Input.Address, inAcc)
 			// NOTE: value is dangling.
 			// XXX: don't just give it back
 			inAcc.Balance += value
 			// TODO: logic.
 			// TODO: persist
-			// state.SetAccount(inAcc)
+			// state.SetAccount(tx.Input.Address, inAcc)
 			log.Info("Successful execution")
 			// Fire events
 			/*
@@ -152,7 +151,7 @@ func getInputs(state types.AccountGetter, ins []types.TxInput) (map[string]*type
 		}
 		acc := state.GetAccount(in.Address)
 		if acc == nil {
-			return nil, tmsp.ErrBaseInvalidAddress
+			return nil, tmsp.ErrBaseUnknownAddress
 		}
 		// PubKey should be present in either "account" or "in"
 		if res := checkInputPubKey(in.Address, acc, in); res.IsErr() {
@@ -192,15 +191,18 @@ func getOrMakeOutputs(state types.AccountGetter, accounts map[string]*types.Acco
 func checkInputPubKey(address []byte, acc *types.Account, in types.TxInput) tmsp.Result {
 	if acc.PubKey == nil {
 		if in.PubKey == nil {
-			return tmsp.ErrBaseUnknownPubKey
+			return tmsp.ErrBaseUnknownPubKey.AppendLog("PubKey not present in either acc or input")
 		}
 		if !bytes.Equal(in.PubKey.Address(), address) {
-			return tmsp.ErrBaseInvalidPubKey
+			return tmsp.ErrBaseInvalidPubKey.AppendLog("Input PubKey address does not match address")
 		}
 		acc.PubKey = in.PubKey
 	} else {
 		if in.PubKey != nil {
-			return tmsp.ErrBaseInvalidPubKey
+			// NOTE: allow redundant pubkey.
+			if !bytes.Equal(in.PubKey.Address(), address) {
+				return tmsp.ErrBaseInvalidPubKey.AppendLog("Input PubKey address does not match address")
+			}
 		}
 	}
 	return tmsp.OK
@@ -240,7 +242,7 @@ func validateInput(state *State, acc *types.Account, signBytes []byte, in types.
 	}
 	// Check signatures
 	if !acc.PubKey.VerifyBytes(signBytes, in.Signature) {
-		return tmsp.ErrBaseInvalidSignature
+		return tmsp.ErrBaseInvalidSignature.AppendLog(Fmt("SignBytes: %X", signBytes))
 	}
 	return tmsp.OK
 }
@@ -271,7 +273,7 @@ func adjustByInputs(state *State, accounts map[string]*types.Account, ins []type
 		state.SetCheckAccount(in.Address, acc.Sequence, acc.Balance)
 		if !isCheckTx {
 			// NOTE: Must be set in deterministic order
-			state.SetAccount(acc)
+			state.SetAccount(in.Address, acc)
 		}
 	}
 }
@@ -286,7 +288,7 @@ func adjustByOutputs(state *State, accounts map[string]*types.Account, outs []ty
 		if !isCheckTx {
 			state.SetCheckAccount(out.Address, acc.Sequence, acc.Balance)
 			// NOTE: Must be set in deterministic order
-			state.SetAccount(acc)
+			state.SetAccount(out.Address, acc)
 		}
 	}
 }

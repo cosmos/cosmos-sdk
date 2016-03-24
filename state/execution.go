@@ -93,9 +93,9 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 		}
 
 		// Validate call address
-		plugin := state.GetPlugin(tx.Address)
+		plugin := state.GetPlugin(string(tx.Address))
 		if plugin != nil {
-			return tmsp.ErrBaseUnknownAddress.AppendLog(Fmt("Unrecognized address %X", tx.Address))
+			return tmsp.ErrBaseUnknownAddress.AppendLog(Fmt("Unrecognized address %X (%v)", tx.Address, string(tx.Address)))
 		}
 
 		// Good!

@@ -8,7 +8,15 @@ import (
 // Gas is a pointer to remainig gas.  Decrement as you go,
 // if any gas is left the user is
 type Plugin interface {
-	CallTx(ctx CallContext, txBytes []byte) tmsp.Result
+	SetOption(key string, value string) (log string)
+	CallTx(ctx CallContext, txBytes []byte) (res tmsp.Result)
+	Query(query []byte) (res tmsp.Result)
+	Commit() (res tmsp.Result)
+}
+
+type NamedPlugin struct {
+	Name string
+	Plugin
 }
 
 type CallContext struct {

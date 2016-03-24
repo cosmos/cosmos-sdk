@@ -1,6 +1,8 @@
 package app
 
 import (
+	"strings"
+
 	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
@@ -22,7 +24,7 @@ type Basecoin struct {
 func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
 	state_ := state.NewState(eyesCli)
 	govMint := gov.NewGovernmint(eyesCli)
-	state_.RegisterPlugin([]byte("gov"), govMint)
+	state_.RegisterPlugin("GOV", govMint)
 	return &Basecoin{
 		eyesCli: eyesCli,
 		govMint: govMint,
@@ -37,25 +39,37 @@ func (app *Basecoin) Info() string {
 
 // TMSP::SetOption
 func (app *Basecoin) SetOption(key string, value string) (log string) {
-	switch key {
-	case "chainID":
-		app.state.SetChainID(value)
-		return "Success"
-	case "account":
-		var err error
-		var setAccount types.Account
-		wire.ReadJSONPtr(&setAccount, []byte(value), &err)
-		if err != nil {
-			return "Error decoding setAccount message: " + err.Error()
+
+	pluginName, key := splitKey(key)
+	if pluginName != "BASE" {
+		// Set option on plugin
+		plugin := app.state.GetPlugin(pluginName)
+		if plugin == nil {
+			return "Invalid plugin name: " + pluginName
 		}
-		accBytes := wire.BinaryBytes(setAccount)
-		res := app.eyesCli.SetSync(setAccount.PubKey.Address(), accBytes)
-		if res.IsErr() {
-			return "Error saving account: " + res.Error()
+		return plugin.SetOption(key, value)
+	} else {
+		// Set option on basecoin
+		switch key {
+		case "chainID":
+			app.state.SetChainID(value)
+			return "Success"
+		case "account":
+			var err error
+			var setAccount types.Account
+			wire.ReadJSONPtr(&setAccount, []byte(value), &err)
+			if err != nil {
+				return "Error decoding setAccount message: " + err.Error()
+			}
+			accBytes := wire.BinaryBytes(setAccount)
+			res := app.eyesCli.SetSync(setAccount.PubKey.Address(), accBytes)
+			if res.IsErr() {
+				return "Error saving account: " + res.Error()
+			}
+			return "Success"
 		}
-		return "Success"
+		return "Unrecognized option key " + key
 	}
-	return "Unrecognized option key " + key
 }
 
 // TMSP::AppendTx
@@ -98,18 +112,36 @@ func (app *Basecoin) CheckTx(txBytes []byte) (res tmsp.Result) {
 
 // TMSP::Query
 func (app *Basecoin) Query(query []byte) (res tmsp.Result) {
-	res = app.eyesCli.GetSync(query)
-	if res.IsErr() {
-		return res.PrependLog("Error querying eyesCli")
+	pluginName, queryStr := splitKey(string(query))
+	if pluginName != "BASE" {
+		plugin := app.state.GetPlugin(pluginName)
+		if plugin == nil {
+			return tmsp.ErrBaseUnknownPlugin.SetLog(Fmt("Unknown plugin %v", pluginName))
+		}
+		return plugin.Query([]byte(queryStr))
+	} else {
+		// TODO turn Basecoin ops into a plugin?
+		res = app.eyesCli.GetSync([]byte(queryStr))
+		if res.IsErr() {
+			return res.PrependLog("Error querying eyesCli")
+		}
+		return res
 	}
-	return res
 }
 
 // TMSP::Commit
 func (app *Basecoin) Commit() (res tmsp.Result) {
+	// First, commit all the plugins
+	for _, plugin := range app.state.GetPlugins() {
+		res = plugin.Commit()
+		if res.IsErr() {
+			PanicSanity(Fmt("Error committing plugin %v", plugin.Name))
+		}
+	}
+	// Then, commit eyes.
 	res = app.eyesCli.CommitSync()
 	if res.IsErr() {
-		panic("Error getting hash: " + res.Error())
+		PanicSanity("Error getting hash: " + res.Error())
 	}
 	return res
 }
@@ -123,4 +155,16 @@ func (app *Basecoin) InitChain(validators []*tmsp.Validator) {
 func (app *Basecoin) EndBlock(height uint64) []*tmsp.Validator {
 	app.state.ResetCacheState()
 	return app.govMint.EndBlock(height)
+}
+
+//----------------------------------------
+
+// Splits the string at the first :.
+// if there are none, the second string is nil.
+func splitKey(key string) (prefix string, sufix string) {
+	if strings.Contains(key, ":") {
+		keyParts := strings.SplitN(key, ":", 2)
+		return keyParts[0], keyParts[1]
+	}
+	return key, ""
 }

@@ -12,23 +12,34 @@ import (
 	tmsp "github.com/tendermint/tmsp/types"
 )
 
-const version = "0.1"
-const maxTxSize = 10240
+const (
+	version   = "0.1"
+	maxTxSize = 10240
+
+	typeByteBase = 0x01
+	typeByteGov  = 0x02
+
+	pluginNameBase = "base"
+	pluginNameGov  = "gov"
+)
 
 type Basecoin struct {
 	eyesCli *eyes.Client
 	govMint *gov.Governmint
 	state   *state.State
+	plugins *types.Plugins
 }
 
 func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
-	state_ := state.NewState(eyesCli)
 	govMint := gov.NewGovernmint(eyesCli)
-	state_.RegisterPlugin("GOV", govMint)
+	state_ := state.NewState(eyesCli)
+	plugins := types.NewPlugins()
+	plugins.RegisterPlugin(typeByteGov, pluginNameGov, govMint) // TODO: make constants
 	return &Basecoin{
 		eyesCli: eyesCli,
 		govMint: govMint,
 		state:   state_,
+		plugins: plugins,
 	}
 }
 
@@ -39,11 +50,10 @@ func (app *Basecoin) Info() string {
 
 // TMSP::SetOption
 func (app *Basecoin) SetOption(key string, value string) (log string) {
-
 	pluginName, key := splitKey(key)
-	if pluginName != "BASE" {
+	if pluginName != pluginNameBase {
 		// Set option on plugin
-		plugin := app.state.GetPlugin(pluginName)
+		plugin := app.plugins.GetByName(pluginName)
 		if plugin == nil {
 			return "Invalid plugin name: " + pluginName
 		}
@@ -84,7 +94,7 @@ func (app *Basecoin) AppendTx(txBytes []byte) (res tmsp.Result) {
 		return tmsp.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
 	}
 	// Validate and exec tx
-	res = state.ExecTx(app.state, tx, false, nil)
+	res = state.ExecTx(app.state, app.plugins, tx, false, nil)
 	if res.IsErr() {
 		return res.PrependLog("Error in AppendTx")
 	}
@@ -103,7 +113,7 @@ func (app *Basecoin) CheckTx(txBytes []byte) (res tmsp.Result) {
 		return tmsp.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
 	}
 	// Validate tx
-	res = state.ExecTx(app.state, tx, true, nil)
+	res = state.ExecTx(app.state, app.plugins, tx, true, nil)
 	if res.IsErr() {
 		return res.PrependLog("Error in CheckTx")
 	}
@@ -113,8 +123,8 @@ func (app *Basecoin) CheckTx(txBytes []byte) (res tmsp.Result) {
 // TMSP::Query
 func (app *Basecoin) Query(query []byte) (res tmsp.Result) {
 	pluginName, queryStr := splitKey(string(query))
-	if pluginName != "BASE" {
-		plugin := app.state.GetPlugin(pluginName)
+	if pluginName != pluginNameBase {
+		plugin := app.plugins.GetByName(pluginName)
 		if plugin == nil {
 			return tmsp.ErrBaseUnknownPlugin.SetLog(Fmt("Unknown plugin %v", pluginName))
 		}
@@ -132,7 +142,7 @@ func (app *Basecoin) Query(query []byte) (res tmsp.Result) {
 // TMSP::Commit
 func (app *Basecoin) Commit() (res tmsp.Result) {
 	// First, commit all the plugins
-	for _, plugin := range app.state.GetPlugins() {
+	for _, plugin := range app.plugins.GetList() {
 		res = plugin.Commit()
 		if res.IsErr() {
 			PanicSanity(Fmt("Error committing plugin %v", plugin.Name))
@@ -162,8 +172,8 @@ func (app *Basecoin) EndBlock(height uint64) []*tmsp.Validator {
 // Splits the string at the first :.
 // if there are none, the second string is nil.
 func splitKey(key string) (prefix string, sufix string) {
-	if strings.Contains(key, ":") {
-		keyParts := strings.SplitN(key, ":", 2)
+	if strings.Contains(key, "/") {
+		keyParts := strings.SplitN(key, "/", 2)
 		return keyParts[0], keyParts[1]
 	}
 	return key, ""

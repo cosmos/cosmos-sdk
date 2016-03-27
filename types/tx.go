@@ -1,14 +1,12 @@
 package types
 
 import (
-	"bytes"
 	"encoding/json"
 
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 	tmsp "github.com/tendermint/tmsp/types"
-	"golang.org/x/crypto/ripemd160"
 )
 
 /*
@@ -16,7 +14,7 @@ Tx (Transaction) is an atomic operation on the ledger state.
 
 Account Types:
  - SendTx         Send coins to address
- - CallTx         Send a msg to a contract that runs in the vm
+ - AppTx         Send a msg to a contract that runs in the vm
 */
 
 type Tx interface {
@@ -27,13 +25,13 @@ type Tx interface {
 const (
 	// Account transactions
 	TxTypeSend = byte(0x01)
-	TxTypeCall = byte(0x02)
+	TxTypeApp  = byte(0x02)
 )
 
 var _ = wire.RegisterInterface(
 	struct{ Tx }{},
 	wire.ConcreteType{&SendTx{}, TxTypeSend},
-	wire.ConcreteType{&CallTx{}, TxTypeCall},
+	wire.ConcreteType{&AppTx{}, TxTypeApp},
 )
 
 //-----------------------------------------------------------------------------
@@ -54,11 +52,6 @@ func (txIn TxInput) ValidateBasic() tmsp.Result {
 		return tmsp.ErrBaseInvalidAmount.AppendLog("(in TxInput)")
 	}
 	return tmsp.OK
-}
-
-func (txIn TxInput) SignBytes() []byte {
-	return []byte(Fmt(`{"address":"%X","amount":%v,"sequence":%v}`,
-		txIn.Address, txIn.Amount, txIn.Sequence))
 }
 
 func (txIn TxInput) String() string {
@@ -82,11 +75,6 @@ func (txOut TxOutput) ValidateBasic() tmsp.Result {
 	return tmsp.OK
 }
 
-func (txOut TxOutput) SignBytes() []byte {
-	return []byte(Fmt(`{"address":"%X","amount":%v}`,
-		txOut.Address, txOut.Amount))
-}
-
 func (txOut TxOutput) String() string {
 	return Fmt("TxOutput{%X,%v}", txOut.Address, txOut.Amount)
 }
@@ -99,24 +87,17 @@ type SendTx struct {
 }
 
 func (tx *SendTx) SignBytes(chainID string) []byte {
-	var buf = new(bytes.Buffer)
-	buf.Write([]byte(Fmt(`{"chain_id":%s`, jsonEscape(chainID))))
-	buf.Write([]byte(Fmt(`,"tx":[%v,{"inputs":[`, TxTypeSend)))
-	for i, in := range tx.Inputs {
-		buf.Write(in.SignBytes())
-		if i != len(tx.Inputs)-1 {
-			buf.Write([]byte(","))
-		}
+	signBytes := wire.BinaryBytes(chainID)
+	sigz := make([]crypto.Signature, len(tx.Inputs))
+	for i, input := range tx.Inputs {
+		sigz[i] = input.Signature
+		tx.Inputs[i].Signature = nil
 	}
-	buf.Write([]byte(`],"outputs":[`))
-	for i, out := range tx.Outputs {
-		buf.Write(out.SignBytes())
-		if i != len(tx.Outputs)-1 {
-			buf.Write([]byte(","))
-		}
+	signBytes = append(signBytes, wire.BinaryBytes(tx)...)
+	for i := range tx.Inputs {
+		tx.Inputs[i].Signature = sigz[i]
 	}
-	buf.Write([]byte(`]}]}`))
-	return buf.Bytes()
+	return signBytes
 }
 
 func (tx *SendTx) String() string {
@@ -125,35 +106,25 @@ func (tx *SendTx) String() string {
 
 //-----------------------------------------------------------------------------
 
-type CallTx struct {
-	Input    TxInput `json:"input"`
-	Address  []byte  `json:"address"`
-	GasLimit int64   `json:"gas_limit"`
-	Fee      int64   `json:"fee"`
-	Data     []byte  `json:"data"`
+type AppTx struct {
+	Type  byte    `json:"type"` // Which app
+	Gas   int64   `json:"gas"`
+	Fee   int64   `json:"fee"`
+	Input TxInput `json:"input"`
+	Data  []byte  `json:"data"`
 }
 
-func (tx *CallTx) SignBytes(chainID string) []byte {
-	var buf = new(bytes.Buffer)
-	buf.Write([]byte(Fmt(`{"chain_id":%s`, jsonEscape(chainID))))
-	buf.Write([]byte(Fmt(`,"tx":[%v,{"address":"%X","data":"%X"`, TxTypeCall, tx.Address, tx.Data)))
-	buf.Write([]byte(Fmt(`,"fee":%v,"gas_limit":%v,"input":`, tx.Fee, tx.GasLimit)))
-	buf.Write(tx.Input.SignBytes())
-	buf.Write([]byte(`}]}`))
-	return buf.Bytes()
+func (tx *AppTx) SignBytes(chainID string) []byte {
+	signBytes := wire.BinaryBytes(chainID)
+	sig := tx.Input.Signature
+	tx.Input.Signature = nil
+	signBytes = append(signBytes, wire.BinaryBytes(tx)...)
+	tx.Input.Signature = sig
+	return signBytes
 }
 
-func (tx *CallTx) String() string {
-	return Fmt("CallTx{%v -> %x: %x}", tx.Input, tx.Address, tx.Data)
-}
-
-func NewContractAddress(caller []byte, nonce int) []byte {
-	temp := make([]byte, 32+8)
-	copy(temp, caller)
-	PutInt64BE(temp[32:], int64(nonce))
-	hasher := ripemd160.New()
-	hasher.Write(temp) // does not error
-	return hasher.Sum(nil)
+func (tx *AppTx) String() string {
+	return Fmt("AppTx{%v %v %v %v -> %X}", tx.Type, tx.Gas, tx.Fee, tx.Input, tx.Data)
 }
 
 //-----------------------------------------------------------------------------

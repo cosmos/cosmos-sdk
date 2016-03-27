@@ -8,11 +8,9 @@ import (
 )
 
 type State struct {
-	chainID     string
-	eyesCli     *eyes.Client
-	checkCache  map[string]checkAccount
-	plugins     map[string]types.Plugin
-	pluginsList []types.NamedPlugin
+	chainID    string
+	eyesCli    *eyes.Client
+	checkCache map[string]checkAccount
 
 	LastBlockHeight uint64
 	LastBlockHash   []byte
@@ -24,7 +22,6 @@ func NewState(eyesCli *eyes.Client) *State {
 		chainID:    "",
 		eyesCli:    eyesCli,
 		checkCache: make(map[string]checkAccount),
-		plugins:    make(map[string]types.Plugin),
 	}
 	return s
 }
@@ -38,22 +35,6 @@ func (s *State) GetChainID() string {
 		PanicSanity("Expected to have set SetChainID")
 	}
 	return s.chainID
-}
-
-func (s *State) RegisterPlugin(name string, plugin types.Plugin) {
-	s.plugins[name] = plugin
-	s.pluginsList = append(s.pluginsList, types.NamedPlugin{
-		Name:   name,
-		Plugin: plugin,
-	})
-}
-
-func (s *State) GetPlugin(name string) types.Plugin {
-	return s.plugins[name]
-}
-
-func (s *State) GetPlugins() []types.NamedPlugin {
-	return s.pluginsList
 }
 
 //----------------------------------------

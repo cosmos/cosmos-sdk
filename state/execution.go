@@ -10,7 +10,7 @@ import (
 )
 
 // If the tx is invalid, a TMSP error will be returned.
-func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp.Result {
+func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp.Result {
 
 	// TODO: do something with fees
 	fees := int64(0)
@@ -68,7 +68,7 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 
 		return tmsp.OK
 
-	case *types.CallTx:
+	case *types.AppTx:
 		// First, get input account
 		inAcc := state.GetAccount(tx.Input.Address)
 		if inAcc == nil {
@@ -93,9 +93,10 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 		}
 
 		// Validate call address
-		plugin := state.GetPlugin(string(tx.Address))
+		plugin := pgz.GetByByte(tx.Type)
 		if plugin != nil {
-			return tmsp.ErrBaseUnknownAddress.AppendLog(Fmt("Unrecognized address %X (%v)", tx.Address, string(tx.Address)))
+			return tmsp.ErrBaseUnknownAddress.AppendLog(
+				Fmt("Unrecognized type byte %v", tx.Type))
 		}
 
 		// Good!
@@ -105,7 +106,7 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 		state.SetCheckAccount(tx.Input.Address, inAcc.Sequence, inAcc.Balance)
 		inAccCopy := inAcc.Copy()
 
-		// If this is AppendTx, actually save accounts
+		// If this is a CheckTx, stop now.
 		if isCheckTx {
 			return tmsp.OK
 		}
@@ -115,7 +116,7 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 		cache.SetAccount(tx.Input.Address, inAcc)
 		gas := int64(1) // TODO
 		ctx := types.NewCallContext(cache, inAcc, value, &gas)
-		res = plugin.CallTx(ctx, tx.Data)
+		res = plugin.RunTx(ctx, tx.Data)
 		if res.IsOK() {
 			cache.Sync()
 			log.Info("Successful execution")
@@ -131,7 +132,7 @@ func ExecTx(state *State, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp
 				}
 			*/
 		} else {
-			log.Info("CallTx failed", "error", res)
+			log.Info("AppTx failed", "error", res)
 			// Just return the value and return.
 			// TODO: return gas?
 			inAccCopy.Balance += value

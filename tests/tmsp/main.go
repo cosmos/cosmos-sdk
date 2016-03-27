@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	//testSendTx()
+	testSendTx()
 	testGov()
 }
 
@@ -28,8 +28,8 @@ func testSendTx() {
 	// Seed Basecoin with account
 	tAcc := tPriv.Account
 	tAcc.Balance = 1000
-	bcApp.SetOption("chainID", "test_chain_id")
-	bcApp.SetOption("account", string(wire.JSONBytes(tAcc)))
+	fmt.Println(bcApp.SetOption("base/chainID", "test_chain_id"))
+	fmt.Println(bcApp.SetOption("base/account", string(wire.JSONBytes(tAcc))))
 
 	// Construct a SendTx signature
 	tx := &types.SendTx{
@@ -51,10 +51,11 @@ func testSendTx() {
 
 	// Sign request
 	signBytes := tx.SignBytes("test_chain_id")
-	fmt.Printf("SIGNBYTES %X", signBytes)
+	fmt.Printf("Sign bytes: %X\n", signBytes)
 	sig := tPriv.PrivKey.Sign(signBytes)
 	tx.Inputs[0].Signature = sig
 	//fmt.Println("tx:", tx)
+	fmt.Printf("Signed TX bytes: %X\n", wire.BinaryBytes(tx))
 
 	// Write request
 	txBytes := wire.BinaryBytes(tx)
@@ -78,7 +79,7 @@ func testGov() {
 		ID:     "",
 		PubKey: tAcc.PubKey,
 	}
-	log := bcApp.SetOption("GOV:admin", string(wire.JSONBytes(adminEntity)))
+	log := bcApp.SetOption("gov/admin", string(wire.JSONBytes(adminEntity)))
 	if log != "Success" {
 		Exit(Fmt("Failed to set option: %v", log))
 	}

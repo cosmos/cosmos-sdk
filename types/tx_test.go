@@ -34,31 +34,29 @@ func TestSendTxSignable(t *testing.T) {
 		},
 	}
 	signBytes := sendTx.SignBytes(chainID)
-	signStr := string(signBytes)
-	expected := Fmt(`{"chain_id":"%s","tx":[1,{"inputs":[{"address":"696E70757431","amount":12345,"sequence":67890},{"address":"696E70757432","amount":111,"sequence":222}],"outputs":[{"address":"6F757470757431","amount":333},{"address":"6F757470757432","amount":444}]}]}`,
-		chainID)
-	if signStr != expected {
-		t.Errorf("Got unexpected sign string for SendTx. Expected:\n%v\nGot:\n%v", expected, signStr)
+	signBytesHex := Fmt("%X", signBytes)
+	expected := "010A746573745F636861696E0101020106696E7075743100000000000030390301093200000106696E70757432000000000000006F01DE0000010201076F757470757431000000000000014D01076F75747075743200000000000001BC"
+	if signBytesHex != expected {
+		t.Errorf("Got unexpected sign string for SendTx. Expected:\n%v\nGot:\n%v", expected, signBytesHex)
 	}
 }
 
-func TestCallTxSignable(t *testing.T) {
-	callTx := &CallTx{
+func TestAppTxSignable(t *testing.T) {
+	callTx := &AppTx{
+		Type: 0x01,
+		Gas:  111,
+		Fee:  222,
 		Input: TxInput{
 			Address:  []byte("input1"),
 			Amount:   12345,
 			Sequence: 67890,
 		},
-		Address:  []byte("contract1"),
-		GasLimit: 111,
-		Fee:      222,
-		Data:     []byte("data1"),
+		Data: []byte("data1"),
 	}
 	signBytes := callTx.SignBytes(chainID)
-	signStr := string(signBytes)
-	expected := Fmt(`{"chain_id":"%s","tx":[2,{"address":"636F6E747261637431","data":"6461746131","fee":222,"gas_limit":111,"input":{"address":"696E70757431","amount":12345,"sequence":67890}}]}`,
-		chainID)
-	if signStr != expected {
-		t.Errorf("Got unexpected sign string for CallTx. Expected:\n%v\nGot:\n%v", expected, signStr)
+	signBytesHex := Fmt("%X", signBytes)
+	expected := "010A746573745F636861696E0101000000000000006F00000000000000DE0106696E70757431000000000000303903010932000001056461746131"
+	if signBytesHex != expected {
+		t.Errorf("Got unexpected sign string for AppTx. Expected:\n%v\nGot:\n%v", expected, signBytesHex)
 	}
 }

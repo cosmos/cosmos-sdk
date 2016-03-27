@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"reflect"
 
 	"github.com/tendermint/basecoin/app"
 	. "github.com/tendermint/go-common"
@@ -58,14 +59,36 @@ type KeyValue struct {
 }
 
 func loadGenesis(filePath string) (kvz []KeyValue) {
+	kvz_ := []interface{}{}
 	bytes, err := ReadFile(filePath)
 	if err != nil {
 		Exit("loading genesis file: " + err.Error())
 	}
-	fmt.Println(">>", string(bytes))
-	err = json.Unmarshal(bytes, &kvz)
+	err = json.Unmarshal(bytes, &kvz_)
 	if err != nil {
 		Exit("parsing genesis file: " + err.Error())
 	}
-	return
+	if len(kvz_)%2 != 0 {
+		Exit("genesis cannot have an odd number of items.  Format = [key1, value1, key2, value2, ...]")
+	}
+	for i := 0; i < len(kvz_)/2; i++ {
+		keyIfc := kvz_[i]
+		valueIfc := kvz_[i+1]
+		var key, value string
+		key, ok := keyIfc.(string)
+		if !ok {
+			Exit(Fmt("genesis had invalid key %v of type %v", keyIfc, reflect.TypeOf(keyIfc)))
+		}
+		if value_, ok := valueIfc.(string); ok {
+			value = value_
+		} else {
+			valueBytes, err := json.Marshal(value_)
+			if err != nil {
+				Exit(Fmt("genesis had invalid value %v: %v", value_, err.Error()))
+			}
+			value = string(valueBytes)
+		}
+		kvz = append(kvz, KeyValue{key, value})
+	}
+	return kvz
 }

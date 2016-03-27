@@ -1,10 +1,7 @@
 [
-  {
-    "key":    "chainID",
-    "value":  "test_chain_id"
-  },
-  {
-    "key":    "account",
-    "value":  "{\"pub_key\":[1,\"3E8A80E5412FD1711995D5888F5FA2EFB26EDD0970F1E27CE0B55CD237439E18\"],\"balance\":1000}"
+  "base/chainID", "test_chain_id",
+  "base/account", {
+    "pub_key", [1, "67D3B5EAF0C0BF6B5A602D359DAECC86A7A74053490EC37AE08E71360587C870"],
+    "balance": 1000
   }
 ]

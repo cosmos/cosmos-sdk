@@ -15,7 +15,7 @@ import (
 func main() {
 
 	addrPtr := flag.String("address", "tcp://0.0.0.0:46658", "Listen address")
-	eyesPtr := flag.String("eyes", "tcp://0.0.0.0:46659", "MerkleEyes address")
+	eyesPtr := flag.String("eyes", "local", "MerkleEyes address, or 'local' for embedded")
 	genFilePath := flag.String("genesis", "", "Genesis file, if any")
 	flag.Parse()
 

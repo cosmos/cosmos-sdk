@@ -15,7 +15,10 @@ import (
 )
 
 func main() {
-	ws := rpcclient.NewWSClient("127.0.0.1:46657", "/websocket")
+	// ws := rpcclient.NewWSClient("127.0.0.1:46657", "/websocket")
+	ws := rpcclient.NewWSClient("192.168.99.100:46657", "/websocket")
+	chainID := "test_chain_id"
+
 	_, err := ws.Start()
 	if err != nil {
 		Exit(err.Error())
@@ -34,7 +37,7 @@ func main() {
 	}()
 
 	// Get the root account
-	root := tests.PrivAccountFromSecret("root")
+	root := tests.PrivAccountFromSecret("test")
 	sequence := int(0)
 	// Make a bunch of PrivAccounts
 	privAccounts := tests.RandAccounts(1000, 1000000, 0)
@@ -62,7 +65,7 @@ func main() {
 		sequence += 1
 
 		// Sign request
-		signBytes := wire.BinaryBytes(tx)
+		signBytes := tx.SignBytes(chainID)
 		sig := root.PrivKey.Sign(signBytes)
 		tx.Inputs[0].Signature = sig
 		//fmt.Println("tx:", tx)
@@ -100,7 +103,7 @@ func main() {
 					Address:  privAccountA.Account.PubKey.Address(),
 					PubKey:   privAccountA.Account.PubKey,
 					Amount:   3,
-					Sequence: privAccountASequence,
+					Sequence: privAccountASequence + 1,
 				},
 			},
 			Outputs: []types.TxOutput{
@@ -112,7 +115,7 @@ func main() {
 		}
 
 		// Sign request
-		signBytes := wire.BinaryBytes(tx)
+		signBytes := tx.SignBytes(chainID)
 		sig := privAccountA.PrivKey.Sign(signBytes)
 		tx.Inputs[0].Signature = sig
 		//fmt.Println("tx:", tx)

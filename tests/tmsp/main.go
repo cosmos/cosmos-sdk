@@ -13,8 +13,9 @@ import (
 )
 
 func main() {
-	testSendTx()
-	testGov()
+	//testSendTx()
+	//testGov()
+	testSequence()
 }
 
 func testSendTx() {
@@ -84,4 +85,101 @@ func testGov() {
 		Exit(Fmt("Failed to set option: %v", log))
 	}
 	// TODO test proposals or something.
+}
+
+func testSequence() {
+	eyesCli := eyescli.NewLocalClient()
+	bcApp := app.NewBasecoin(eyesCli)
+	chainID := "test_chain_id"
+
+	// Get the root account
+	root := tests.PrivAccountFromSecret("test")
+	rootAcc := root.Account
+	rootAcc.Balance = 1 << 53
+	fmt.Println(bcApp.SetOption("base/chainID", "test_chain_id"))
+	fmt.Println(bcApp.SetOption("base/account", string(wire.JSONBytes(rootAcc))))
+
+	sequence := int(1)
+	// Make a bunch of PrivAccounts
+	privAccounts := tests.RandAccounts(1000, 1000000, 0)
+	privAccountSequences := make(map[string]int)
+
+	// Send coins to each account
+	for i := 0; i < len(privAccounts); i++ {
+		privAccount := privAccounts[i]
+		tx := &types.SendTx{
+			Inputs: []types.TxInput{
+				types.TxInput{
+					Address:  root.Account.PubKey.Address(),
+					PubKey:   root.Account.PubKey, // TODO is this needed?
+					Amount:   1000002,
+					Sequence: sequence,
+				},
+			},
+			Outputs: []types.TxOutput{
+				types.TxOutput{
+					Address: privAccount.Account.PubKey.Address(),
+					Amount:  1000000,
+				},
+			},
+		}
+		sequence += 1
+
+		// Sign request
+		signBytes := tx.SignBytes(chainID)
+		sig := root.PrivKey.Sign(signBytes)
+		tx.Inputs[0].Signature = sig
+		//fmt.Println("tx:", tx)
+
+		// Write request
+		txBytes := wire.BinaryBytes(tx)
+		res := bcApp.CheckTx(txBytes)
+		if res.IsErr() {
+			Exit("AppendTx error: " + res.Error())
+		}
+	}
+
+	// Now send coins between these accounts
+	for {
+		randA := RandInt() % len(privAccounts)
+		randB := RandInt() % len(privAccounts)
+		if randA == randB {
+			continue
+		}
+
+		privAccountA := privAccounts[randA]
+		privAccountASequence := privAccountSequences[privAccountA.Account.PubKey.KeyString()]
+		privAccountSequences[privAccountA.Account.PubKey.KeyString()] = privAccountASequence + 1
+		privAccountB := privAccounts[randB]
+
+		tx := &types.SendTx{
+			Inputs: []types.TxInput{
+				types.TxInput{
+					Address:  privAccountA.Account.PubKey.Address(),
+					PubKey:   privAccountA.Account.PubKey,
+					Amount:   3,
+					Sequence: privAccountASequence + 1,
+				},
+			},
+			Outputs: []types.TxOutput{
+				types.TxOutput{
+					Address: privAccountB.Account.PubKey.Address(),
+					Amount:  1,
+				},
+			},
+		}
+
+		// Sign request
+		signBytes := tx.SignBytes(chainID)
+		sig := privAccountA.PrivKey.Sign(signBytes)
+		tx.Inputs[0].Signature = sig
+		//fmt.Println("tx:", tx)
+
+		// Write request
+		txBytes := wire.BinaryBytes(tx)
+		res := bcApp.AppendTx(txBytes)
+		if res.IsErr() {
+			Exit("AppendTx error: " + res.Error())
+		}
+	}
 }

@@ -17,9 +17,11 @@ const (
 	maxTxSize = 10240
 
 	typeByteBase = 0x01
-	typeByteGov  = 0x02
+	typeByteEyes = 0x02
+	typeByteGov  = 0x03
 
 	pluginNameBase = "base"
+	pluginNameEyes = "eyes"
 	pluginNameGov  = "gov"
 )
 
@@ -122,21 +124,21 @@ func (app *Basecoin) CheckTx(txBytes []byte) (res tmsp.Result) {
 
 // TMSP::Query
 func (app *Basecoin) Query(query []byte) (res tmsp.Result) {
-	pluginName, queryStr := splitKey(string(query))
-	if pluginName != pluginNameBase {
-		plugin := app.plugins.GetByName(pluginName)
-		if plugin == nil {
-			return tmsp.ErrBaseUnknownPlugin.SetLog(Fmt("Unknown plugin %v", pluginName))
-		}
-		return plugin.Query([]byte(queryStr))
-	} else {
-		// TODO turn Basecoin ops into a plugin?
-		res = app.eyesCli.GetSync([]byte(queryStr))
-		if res.IsErr() {
-			return res.PrependLog("Error querying eyesCli")
-		}
-		return res
+	if len(query) == 0 {
+		return tmsp.ErrEncodingError.SetLog("Query cannot be zero length")
 	}
+	typeByte := query[0]
+	query = query[1:]
+	switch typeByte {
+	case typeByteBase:
+		return tmsp.OK.SetLog("This type of query not yet supported")
+	case typeByteEyes:
+		return app.eyesCli.QuerySync(query)
+	case typeByteGov:
+		return app.govMint.Query(query)
+	}
+	return tmsp.ErrBaseUnknownPlugin.SetLog(
+		Fmt("Unknown plugin with type byte %X", typeByte))
 }
 
 // TMSP::Commit

@@ -18,6 +18,7 @@ Account Types:
 */
 
 type Tx interface {
+	AssertIsTx()
 	SignBytes(chainID string) []byte
 }
 
@@ -27,6 +28,9 @@ const (
 	TxTypeSend = byte(0x01)
 	TxTypeApp  = byte(0x02)
 )
+
+func (_ *SendTx) AssertIsTx() {}
+func (_ *AppTx) AssertIsTx()  {}
 
 var _ = wire.RegisterInterface(
 	struct{ Tx }{},

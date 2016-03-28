@@ -68,16 +68,12 @@ func (app *Basecoin) SetOption(key string, value string) (log string) {
 			return "Success"
 		case "account":
 			var err error
-			var setAccount types.Account
-			wire.ReadJSONPtr(&setAccount, []byte(value), &err)
+			var acc *types.Account
+			wire.ReadJSONPtr(&acc, []byte(value), &err)
 			if err != nil {
-				return "Error decoding setAccount message: " + err.Error()
+				return "Error decoding acc message: " + err.Error()
 			}
-			accBytes := wire.BinaryBytes(setAccount)
-			res := app.eyesCli.SetSync(setAccount.PubKey.Address(), accBytes)
-			if res.IsErr() {
-				return "Error saving account: " + res.Error()
-			}
+			app.state.SetAccount(acc.PubKey.Address(), acc)
 			return "Success"
 		}
 		return "Unrecognized option key " + key

@@ -66,23 +66,23 @@ func (s *State) ResetCacheState() {
 func (s *State) GetAccount(addr []byte) *types.Account {
 	res := s.eyesCli.GetSync(addr)
 	if res.IsErr() {
-		panic("Error loading account: " + res.Error())
+		panic(Fmt("Error loading account addr %X error: %v", addr, res.Error()))
 	}
 	if len(res.Data) == 0 {
 		return nil
 	}
-	var acc types.Account
+	var acc *types.Account
 	err := wire.ReadBinaryBytes(res.Data, &acc)
 	if err != nil {
-		panic("Error reading account: " + err.Error())
+		panic(Fmt("Error reading account %X error: %v", res.Data, err.Error()))
 	}
-	return &acc
+	return acc
 }
 
 func (s *State) SetAccount(address []byte, acc *types.Account) {
 	accBytes := wire.BinaryBytes(acc)
 	res := s.eyesCli.SetSync(address, accBytes)
 	if res.IsErr() {
-		panic("Error storing account: " + res.Error())
+		panic(Fmt("Error storing account addr %X error: %v", address, res.Error()))
 	}
 }

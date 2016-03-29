@@ -1,23 +1,22 @@
-package state
+package types
 
 import (
-	"github.com/tendermint/basecoin/types"
 	"sort"
 )
 
 type AccountCache struct {
-	state    *State
-	accounts map[string]*types.Account
+	state    AccountGetterSetter
+	accounts map[string]*Account
 }
 
-func NewAccountCache(state *State) *AccountCache {
+func NewAccountCache(state AccountGetterSetter) *AccountCache {
 	return &AccountCache{
 		state:    state,
-		accounts: make(map[string]*types.Account),
+		accounts: make(map[string]*Account),
 	}
 }
 
-func (cache *AccountCache) GetAccount(addr []byte) *types.Account {
+func (cache *AccountCache) GetAccount(addr []byte) *Account {
 	acc, ok := cache.accounts[string(addr)]
 	if !ok {
 		acc = cache.state.GetAccount(addr)
@@ -26,7 +25,7 @@ func (cache *AccountCache) GetAccount(addr []byte) *types.Account {
 	return acc
 }
 
-func (cache *AccountCache) SetAccount(addr []byte, acc *types.Account) {
+func (cache *AccountCache) SetAccount(addr []byte, acc *Account) {
 	cache.accounts[string(addr)] = acc
 }
 
@@ -43,4 +42,16 @@ func (cache *AccountCache) Sync() {
 	for _, addr := range addrs {
 		cache.state.SetAccount([]byte(addr), cache.accounts[addr])
 	}
+
+	// Reset accounts
+	cache.accounts = make(map[string]*Account)
+}
+
+//----------------------------------------
+
+// NOT USED
+type AccountCacher interface {
+	GetAccount(addr []byte) *Account
+	SetAccount(addr []byte, acc *Account)
+	Sync()
 }

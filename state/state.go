@@ -10,7 +10,7 @@ import (
 type State struct {
 	chainID    string
 	eyesCli    *eyes.Client
-	checkCache map[string]checkAccount
+	checkCache *types.AccountCache
 
 	LastBlockHeight uint64
 	LastBlockHash   []byte
@@ -19,10 +19,10 @@ type State struct {
 
 func NewState(eyesCli *eyes.Client) *State {
 	s := &State{
-		chainID:    "",
-		eyesCli:    eyesCli,
-		checkCache: make(map[string]checkAccount),
+		chainID: "",
+		eyesCli: eyesCli,
 	}
+	s.checkCache = types.NewAccountCache(s)
 	return s
 }
 
@@ -36,32 +36,6 @@ func (s *State) GetChainID() string {
 	}
 	return s.chainID
 }
-
-//----------------------------------------
-// CheckTx state
-
-type checkAccount struct {
-	sequence int
-	balance  int64
-}
-
-func (s *State) GetCheckAccount(addr []byte, defaultSequence int, defaultBalance int64) (sequence int, balance int64) {
-	cAcc, ok := s.checkCache[string(addr)]
-	if !ok {
-		return defaultSequence, defaultBalance
-	}
-	return cAcc.sequence, cAcc.balance
-}
-
-func (s *State) SetCheckAccount(addr []byte, sequence int, balance int64) {
-	s.checkCache[string(addr)] = checkAccount{sequence, balance}
-}
-
-func (s *State) ResetCacheState() {
-	s.checkCache = make(map[string]checkAccount)
-}
-
-//----------------------------------------
 
 func (s *State) GetAccount(addr []byte) *types.Account {
 	res := s.eyesCli.GetSync(addr)
@@ -85,4 +59,12 @@ func (s *State) SetAccount(address []byte, acc *types.Account) {
 	if res.IsErr() {
 		panic(Fmt("Error storing account addr %X error: %v", address, res.Error()))
 	}
+}
+
+func (s *State) GetCheckCache() *types.AccountCache {
+	return s.checkCache
+}
+
+func (s *State) ResetCacheState() {
+	s.checkCache = types.NewAccountCache(s)
 }

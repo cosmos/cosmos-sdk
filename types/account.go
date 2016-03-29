@@ -38,13 +38,11 @@ type AccountGetter interface {
 	GetAccount(addr []byte) *Account
 }
 
-type AccountGetterSetter interface {
-	GetAccount(addr []byte) *Account
+type AccountSetter interface {
 	SetAccount(addr []byte, acc *Account)
 }
 
-type AccountCacher interface {
+type AccountGetterSetter interface {
 	GetAccount(addr []byte) *Account
 	SetAccount(addr []byte, acc *Account)
-	Sync()
 }

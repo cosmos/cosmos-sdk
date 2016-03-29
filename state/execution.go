@@ -10,10 +10,20 @@ import (
 )
 
 // If the tx is invalid, a TMSP error will be returned.
-func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp.Result {
+func ExecTx(s *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp.Result {
 
 	// TODO: do something with fees
 	fees := int64(0)
+	chainID := s.GetChainID()
+
+	// Get the state. If isCheckTx, then we use a cache.
+	// The idea is to throw away this cache after every EndBlock().
+	var state types.AccountGetterSetter
+	if isCheckTx {
+		state = s.GetCheckCache()
+	} else {
+		state = s
+	}
 
 	// Exec tx
 	switch tx := tx.(type) {
@@ -31,8 +41,8 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		}
 
 		// Validate inputs and outputs
-		signBytes := tx.SignBytes(state.GetChainID())
-		inTotal, res := validateInputs(state, accounts, signBytes, tx.Inputs)
+		signBytes := tx.SignBytes(chainID)
+		inTotal, res := validateInputs(accounts, signBytes, tx.Inputs)
 		if res.IsErr() {
 			return res.PrependLog("in validateInputs()")
 		}
@@ -49,7 +59,7 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		// TODO: Fee validation for SendTx
 
 		// Good! Adjust accounts
-		adjustByInputs(state, accounts, tx.Inputs, isCheckTx)
+		adjustByInputs(state, accounts, tx.Inputs)
 		adjustByOutputs(state, accounts, tx.Outputs, isCheckTx)
 
 		/*
@@ -81,8 +91,8 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 			log.Info(Fmt("Can't find pubkey for %X", tx.Input.Address))
 			return res
 		}
-		signBytes := tx.SignBytes(state.GetChainID())
-		res := validateInput(state, inAcc, signBytes, tx.Input)
+		signBytes := tx.SignBytes(chainID)
+		res := validateInput(inAcc, signBytes, tx.Input)
 		if res.IsErr() {
 			log.Info(Fmt("validateInput failed on %X: %v", tx.Input.Address, res))
 			return res.PrependLog("in validateInput()")
@@ -103,16 +113,18 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		value := tx.Input.Amount - tx.Fee
 		inAcc.Sequence += 1
 		inAcc.Balance -= tx.Input.Amount
-		state.SetCheckAccount(tx.Input.Address, inAcc.Sequence, inAcc.Balance)
-		inAccCopy := inAcc.Copy()
 
 		// If this is a CheckTx, stop now.
 		if isCheckTx {
+			state.SetAccount(tx.Input.Address, inAcc)
 			return tmsp.OK
 		}
 
+		// Create inAcc checkpoint
+		inAccCopy := inAcc.Copy()
+
 		// Run the tx.
-		cache := NewAccountCache(state)
+		cache := types.NewAccountCache(state)
 		cache.SetAccount(tx.Input.Address, inAcc)
 		gas := int64(1) // TODO
 		ctx := types.NewCallContext(cache, inAcc, value, &gas)
@@ -218,14 +230,14 @@ func checkInputPubKey(address []byte, acc *types.Account, in types.TxInput) tmsp
 }
 
 // Validate inputs and compute total amount
-func validateInputs(state *State, accounts map[string]*types.Account, signBytes []byte, ins []types.TxInput) (total int64, res tmsp.Result) {
+func validateInputs(accounts map[string]*types.Account, signBytes []byte, ins []types.TxInput) (total int64, res tmsp.Result) {
 
 	for _, in := range ins {
 		acc := accounts[string(in.Address)]
 		if acc == nil {
 			PanicSanity("validateInputs() expects account in accounts")
 		}
-		res = validateInput(state, acc, signBytes, in)
+		res = validateInput(acc, signBytes, in)
 		if res.IsErr() {
 			return
 		}
@@ -235,13 +247,13 @@ func validateInputs(state *State, accounts map[string]*types.Account, signBytes 
 	return total, tmsp.OK
 }
 
-func validateInput(state *State, acc *types.Account, signBytes []byte, in types.TxInput) (res tmsp.Result) {
+func validateInput(acc *types.Account, signBytes []byte, in types.TxInput) (res tmsp.Result) {
 	// Check TxInput basic
 	if res := in.ValidateBasic(); res.IsErr() {
 		return res
 	}
 	// Check sequence/balance
-	seq, balance := state.GetCheckAccount(in.Address, acc.Sequence, acc.Balance)
+	seq, balance := acc.Sequence, acc.Balance
 	if seq+1 != in.Sequence {
 		return tmsp.ErrBaseInvalidSequence.AppendLog(Fmt("Got %v, expected %v. (acc.seq=%v)", in.Sequence, seq+1, acc.Sequence))
 	}
@@ -268,7 +280,7 @@ func validateOutputs(outs []types.TxOutput) (total int64, res tmsp.Result) {
 	return total, tmsp.OK
 }
 
-func adjustByInputs(state *State, accounts map[string]*types.Account, ins []types.TxInput, isCheckTx bool) {
+func adjustByInputs(state types.AccountSetter, accounts map[string]*types.Account, ins []types.TxInput) {
 	for _, in := range ins {
 		acc := accounts[string(in.Address)]
 		if acc == nil {
@@ -279,15 +291,11 @@ func adjustByInputs(state *State, accounts map[string]*types.Account, ins []type
 		}
 		acc.Balance -= in.Amount
 		acc.Sequence += 1
-		state.SetCheckAccount(in.Address, acc.Sequence, acc.Balance)
-		if !isCheckTx {
-			// NOTE: Must be set in deterministic order
-			state.SetAccount(in.Address, acc)
-		}
+		state.SetAccount(in.Address, acc)
 	}
 }
 
-func adjustByOutputs(state *State, accounts map[string]*types.Account, outs []types.TxOutput, isCheckTx bool) {
+func adjustByOutputs(state types.AccountSetter, accounts map[string]*types.Account, outs []types.TxOutput, isCheckTx bool) {
 	for _, out := range outs {
 		acc := accounts[string(out.Address)]
 		if acc == nil {
@@ -295,8 +303,6 @@ func adjustByOutputs(state *State, accounts map[string]*types.Account, outs []ty
 		}
 		acc.Balance += out.Amount
 		if !isCheckTx {
-			state.SetCheckAccount(out.Address, acc.Sequence, acc.Balance)
-			// NOTE: Must be set in deterministic order
 			state.SetAccount(out.Address, acc)
 		}
 	}

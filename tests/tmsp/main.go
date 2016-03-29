@@ -129,15 +129,17 @@ func testSequence() {
 		signBytes := tx.SignBytes(chainID)
 		sig := root.PrivKey.Sign(signBytes)
 		tx.Inputs[0].Signature = sig
-		//fmt.Println("tx:", tx)
+		// fmt.Printf("ADDR: %X -> %X\n", tx.Inputs[0].Address, tx.Outputs[0].Address)
 
 		// Write request
 		txBytes := wire.BinaryBytes(tx)
-		res := bcApp.CheckTx(txBytes)
+		res := bcApp.AppendTx(txBytes)
 		if res.IsErr() {
 			Exit("AppendTx error: " + res.Error())
 		}
 	}
+
+	fmt.Println("-------------------- RANDOM SENDS --------------------")
 
 	// Now send coins between these accounts
 	for {
@@ -173,7 +175,7 @@ func testSequence() {
 		signBytes := tx.SignBytes(chainID)
 		sig := privAccountA.PrivKey.Sign(signBytes)
 		tx.Inputs[0].Signature = sig
-		//fmt.Println("tx:", tx)
+		// fmt.Printf("ADDR: %X -> %X\n", tx.Inputs[0].Address, tx.Outputs[0].Address)
 
 		// Write request
 		txBytes := wire.BinaryBytes(tx)

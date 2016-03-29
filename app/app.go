@@ -159,10 +159,17 @@ func (app *Basecoin) InitChain(validators []*tmsp.Validator) {
 	app.govMint.InitChain(validators)
 }
 
+// TMSP::BeginBlock
+func (app *Basecoin) BeginBlock(height uint64) {
+	// app.govMint.BeginBlock(height)
+	// TODO other plugins?
+}
+
 // TMSP::EndBlock
 func (app *Basecoin) EndBlock(height uint64) []*tmsp.Validator {
 	app.state.ResetCacheState()
 	return app.govMint.EndBlock(height)
+	// TODO other plugins?
 }
 
 //----------------------------------------

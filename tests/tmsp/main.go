@@ -56,10 +56,10 @@ func testSendTx() {
 	sig := tPriv.PrivKey.Sign(signBytes)
 	tx.Inputs[0].Signature = sig
 	//fmt.Println("tx:", tx)
-	fmt.Printf("Signed TX bytes: %X\n", wire.BinaryBytes(tx))
+	fmt.Printf("Signed TX bytes: %X\n", wire.BinaryBytes(struct{ types.Tx }{tx}))
 
 	// Write request
-	txBytes := wire.BinaryBytes(tx)
+	txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
 	res := bcApp.AppendTx(txBytes)
 	fmt.Println(res)
 	if res.IsErr() {
@@ -132,7 +132,7 @@ func testSequence() {
 		// fmt.Printf("ADDR: %X -> %X\n", tx.Inputs[0].Address, tx.Outputs[0].Address)
 
 		// Write request
-		txBytes := wire.BinaryBytes(tx)
+		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
 		res := bcApp.AppendTx(txBytes)
 		if res.IsErr() {
 			Exit("AppendTx error: " + res.Error())
@@ -178,7 +178,7 @@ func testSequence() {
 		// fmt.Printf("ADDR: %X -> %X\n", tx.Inputs[0].Address, tx.Outputs[0].Address)
 
 		// Write request
-		txBytes := wire.BinaryBytes(tx)
+		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
 		res := bcApp.AppendTx(txBytes)
 		if res.IsErr() {
 			Exit("AppendTx error: " + res.Error())

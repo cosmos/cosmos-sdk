@@ -71,7 +71,7 @@ func main() {
 		//fmt.Println("tx:", tx)
 
 		// Write request
-		txBytes := wire.BinaryBytes(tx)
+		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
 		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", Arr(txBytes))
 		reqBytes := wire.JSONBytes(request)
 		//fmt.Print(".")
@@ -121,7 +121,7 @@ func main() {
 		//fmt.Println("tx:", tx)
 
 		// Write request
-		txBytes := wire.BinaryBytes(tx)
+		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
 		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", Arr(txBytes))
 		reqBytes := wire.JSONBytes(request)
 		//fmt.Print(".")

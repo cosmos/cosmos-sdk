@@ -42,7 +42,7 @@ var _ = wire.RegisterInterface(
 
 type TxInput struct {
 	Address   []byte           `json:"address"`   // Hash of the PubKey
-	Amount    int64            `json:"amount"`    // Must not exceed account balance
+	Coins     Coins            `json:"coins"`     //
 	Sequence  int              `json:"sequence"`  // Must be 1 greater than the last committed TxInput
 	Signature crypto.Signature `json:"signature"` // Depends on the PubKey type and the whole Tx
 	PubKey    crypto.PubKey    `json:"pub_key"`   // May be nil
@@ -50,42 +50,50 @@ type TxInput struct {
 
 func (txIn TxInput) ValidateBasic() tmsp.Result {
 	if len(txIn.Address) != 20 {
-		return tmsp.ErrBaseInvalidAddress.AppendLog("(in TxInput)")
+		return tmsp.ErrBaseInvalidInput.AppendLog("Invalid address length")
 	}
-	if txIn.Amount == 0 {
-		return tmsp.ErrBaseInvalidAmount.AppendLog("(in TxInput)")
+	if !txIn.Coins.IsValid() {
+		return tmsp.ErrBaseInvalidInput.AppendLog(Fmt("Invalid coins %v", txIn.Coins))
+	}
+	if txIn.Coins.IsZero() {
+		return tmsp.ErrBaseInvalidInput.AppendLog("Coins cannot be zero")
 	}
 	return tmsp.OK
 }
 
 func (txIn TxInput) String() string {
-	return Fmt("TxInput{%X,%v,%v,%v,%v}", txIn.Address, txIn.Amount, txIn.Sequence, txIn.Signature, txIn.PubKey)
+	return Fmt("TxInput{%X,%v,%v,%v,%v}", txIn.Address, txIn.Coins, txIn.Sequence, txIn.Signature, txIn.PubKey)
 }
 
 //-----------------------------------------------------------------------------
 
 type TxOutput struct {
 	Address []byte `json:"address"` // Hash of the PubKey
-	Amount  int64  `json:"amount"`  // The sum of all outputs must not exceed the inputs.
+	Coins   Coins  `json:"coins"`   //
 }
 
 func (txOut TxOutput) ValidateBasic() tmsp.Result {
 	if len(txOut.Address) != 20 {
-		return tmsp.ErrBaseInvalidAddress.AppendLog("(in TxOutput)")
+		return tmsp.ErrBaseInvalidOutput.AppendLog("Invalid address length")
 	}
-	if txOut.Amount == 0 {
-		return tmsp.ErrBaseInvalidAmount.AppendLog("(in TxOutput)")
+	if !txOut.Coins.IsValid() {
+		return tmsp.ErrBaseInvalidOutput.AppendLog(Fmt("Invalid coins %v", txOut.Coins))
+	}
+	if txOut.Coins.IsZero() {
+		return tmsp.ErrBaseInvalidOutput.AppendLog("Coins cannot be zero")
 	}
 	return tmsp.OK
 }
 
 func (txOut TxOutput) String() string {
-	return Fmt("TxOutput{%X,%v}", txOut.Address, txOut.Amount)
+	return Fmt("TxOutput{%X,%v}", txOut.Address, txOut.Coins)
 }
 
 //-----------------------------------------------------------------------------
 
 type SendTx struct {
+	Fee     int64      `json:"fee"` // Fee
+	Gas     int64      `json:"gas"` // Gas
 	Inputs  []TxInput  `json:"inputs"`
 	Outputs []TxOutput `json:"outputs"`
 }
@@ -105,16 +113,16 @@ func (tx *SendTx) SignBytes(chainID string) []byte {
 }
 
 func (tx *SendTx) String() string {
-	return Fmt("SendTx{%v -> %v}", tx.Inputs, tx.Outputs)
+	return Fmt("SendTx{%v/%v %v->%v}", tx.Fee, tx.Gas, tx.Inputs, tx.Outputs)
 }
 
 //-----------------------------------------------------------------------------
 
 type AppTx struct {
-	Type  byte    `json:"type"` // Which app
-	Gas   int64   `json:"gas"`
-	Fee   int64   `json:"fee"`
-	Input TxInput `json:"input"`
+	Fee   int64   `json:"fee"`   // Fee
+	Gas   int64   `json:"gas"`   // Gas
+	Type  byte    `json:"type"`  // Which app
+	Input TxInput `json:"input"` // Hmmm do we want coins?
 	Data  []byte  `json:"data"`
 }
 
@@ -128,7 +136,7 @@ func (tx *AppTx) SignBytes(chainID string) []byte {
 }
 
 func (tx *AppTx) String() string {
-	return Fmt("AppTx{%v %v %v %v -> %X}", tx.Type, tx.Gas, tx.Fee, tx.Input, tx.Data)
+	return Fmt("AppTx{%v/%v %v %v %X}", tx.Fee, tx.Gas, tx.Type, tx.Input, tx.Data)
 }
 
 //-----------------------------------------------------------------------------

@@ -13,7 +13,7 @@ import (
 func ExecTx(s *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp.Result {
 
 	// TODO: do something with fees
-	fees := int64(0)
+	fees := types.Coins{}
 	chainID := s.GetChainID()
 
 	// Get the state. If isCheckTx, then we use a cache.
@@ -50,11 +50,10 @@ func ExecTx(s *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc event
 		if res.IsErr() {
 			return res.PrependLog("in validateOutputs()")
 		}
-		if outTotal > inTotal {
-			return tmsp.ErrBaseInsufficientFunds
+		if !inTotal.IsEqual(outTotal.Plus(types.Coins{{"", tx.Fee}})) {
+			return tmsp.ErrBaseInvalidOutput.AppendLog("Input total != output total + fees")
 		}
-		fee := inTotal - outTotal
-		fees += fee
+		fees = fees.Plus(types.Coins{{"", tx.Fee}})
 
 		// TODO: Fee validation for SendTx
 
@@ -97,7 +96,7 @@ func ExecTx(s *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc event
 			log.Info(Fmt("validateInput failed on %X: %v", tx.Input.Address, res))
 			return res.PrependLog("in validateInput()")
 		}
-		if tx.Input.Amount < tx.Fee {
+		if !tx.Input.Coins.IsGTE(types.Coins{{"", tx.Fee}}) {
 			log.Info(Fmt("Sender did not send enough to cover the fee %X", tx.Input.Address))
 			return tmsp.ErrBaseInsufficientFunds
 		}
@@ -110,9 +109,9 @@ func ExecTx(s *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc event
 		}
 
 		// Good!
-		value := tx.Input.Amount - tx.Fee
+		coins := tx.Input.Coins.Minus(types.Coins{{"", tx.Fee}})
 		inAcc.Sequence += 1
-		inAcc.Balance -= tx.Input.Amount
+		inAcc.Balance = inAcc.Balance.Minus(tx.Input.Coins)
 
 		// If this is a CheckTx, stop now.
 		if isCheckTx {
@@ -126,8 +125,7 @@ func ExecTx(s *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc event
 		// Run the tx.
 		cache := types.NewAccountCache(state)
 		cache.SetAccount(tx.Input.Address, inAcc)
-		gas := int64(1) // TODO
-		ctx := types.NewCallContext(cache, inAcc, value, &gas)
+		ctx := types.NewCallContext(cache, inAcc, coins)
 		res = plugin.RunTx(ctx, tx.Data)
 		if res.IsOK() {
 			cache.Sync()
@@ -145,9 +143,10 @@ func ExecTx(s *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc event
 			*/
 		} else {
 			log.Info("AppTx failed", "error", res)
-			// Just return the value and return.
-			// TODO: return gas?
-			inAccCopy.Balance += value
+			// Just return the coins and return.
+			inAccCopy.Balance = inAccCopy.Balance.Plus(coins)
+			// But take the gas
+			// TODO
 			state.SetAccount(tx.Input.Address, inAccCopy)
 		}
 		return res
@@ -199,7 +198,6 @@ func getOrMakeOutputs(state types.AccountGetter, accounts map[string]*types.Acco
 			acc = &types.Account{
 				PubKey:   nil,
 				Sequence: 0,
-				Balance:  0,
 			}
 		}
 		accounts[string(out.Address)] = acc
@@ -229,8 +227,8 @@ func checkInputPubKey(address []byte, acc *types.Account, in types.TxInput) tmsp
 	return tmsp.OK
 }
 
-// Validate inputs and compute total amount
-func validateInputs(accounts map[string]*types.Account, signBytes []byte, ins []types.TxInput) (total int64, res tmsp.Result) {
+// Validate inputs and compute total amount of coins
+func validateInputs(accounts map[string]*types.Account, signBytes []byte, ins []types.TxInput) (total types.Coins, res tmsp.Result) {
 
 	for _, in := range ins {
 		acc := accounts[string(in.Address)]
@@ -242,7 +240,7 @@ func validateInputs(accounts map[string]*types.Account, signBytes []byte, ins []
 			return
 		}
 		// Good. Add amount to total
-		total += in.Amount
+		total = total.Plus(in.Coins)
 	}
 	return total, tmsp.OK
 }
@@ -252,13 +250,13 @@ func validateInput(acc *types.Account, signBytes []byte, in types.TxInput) (res 
 	if res := in.ValidateBasic(); res.IsErr() {
 		return res
 	}
-	// Check sequence/balance
+	// Check sequence/coins
 	seq, balance := acc.Sequence, acc.Balance
 	if seq+1 != in.Sequence {
 		return tmsp.ErrBaseInvalidSequence.AppendLog(Fmt("Got %v, expected %v. (acc.seq=%v)", in.Sequence, seq+1, acc.Sequence))
 	}
 	// Check amount
-	if balance < in.Amount {
+	if !balance.IsGTE(in.Coins) {
 		return tmsp.ErrBaseInsufficientFunds
 	}
 	// Check signatures
@@ -268,14 +266,14 @@ func validateInput(acc *types.Account, signBytes []byte, in types.TxInput) (res 
 	return tmsp.OK
 }
 
-func validateOutputs(outs []types.TxOutput) (total int64, res tmsp.Result) {
+func validateOutputs(outs []types.TxOutput) (total types.Coins, res tmsp.Result) {
 	for _, out := range outs {
 		// Check TxOutput basic
 		if res := out.ValidateBasic(); res.IsErr() {
-			return 0, res
+			return nil, res
 		}
 		// Good. Add amount to total
-		total += out.Amount
+		total = total.Plus(out.Coins)
 	}
 	return total, tmsp.OK
 }
@@ -286,10 +284,10 @@ func adjustByInputs(state types.AccountSetter, accounts map[string]*types.Accoun
 		if acc == nil {
 			PanicSanity("adjustByInputs() expects account in accounts")
 		}
-		if acc.Balance < in.Amount {
+		if !acc.Balance.IsGTE(in.Coins) {
 			PanicSanity("adjustByInputs() expects sufficient funds")
 		}
-		acc.Balance -= in.Amount
+		acc.Balance = acc.Balance.Minus(in.Coins)
 		acc.Sequence += 1
 		state.SetAccount(in.Address, acc)
 	}
@@ -301,7 +299,7 @@ func adjustByOutputs(state types.AccountSetter, accounts map[string]*types.Accou
 		if acc == nil {
 			PanicSanity("adjustByOutputs() expects account in accounts")
 		}
-		acc.Balance += out.Amount
+		acc.Balance = acc.Balance.Plus(out.Coins)
 		if !isCheckTx {
 			state.SetAccount(out.Address, acc)
 		}

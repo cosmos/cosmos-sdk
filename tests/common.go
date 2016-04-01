@@ -15,7 +15,6 @@ func PrivAccountFromSecret(secret string) types.PrivAccount {
 		Account: types.Account{
 			PubKey:   privKey.PubKey(),
 			Sequence: 0,
-			Balance:  0,
 		},
 	}
 	return privAccount
@@ -38,7 +37,7 @@ func RandAccounts(num int, minAmount int64, maxAmount int64) []types.PrivAccount
 			Account: types.Account{
 				PubKey:   pubKey,
 				Sequence: 0,
-				Balance:  balance,
+				Balance:  types.Coins{types.Coin{"", balance}},
 			},
 		}
 	}

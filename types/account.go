@@ -9,7 +9,7 @@ import (
 type Account struct {
 	PubKey   crypto.PubKey `json:"pub_key"` // May be nil, if not known.
 	Sequence int           `json:"sequence"`
-	Balance  int64         `json:"balance"`
+	Balance  Coins         `json:"coins"`
 }
 
 func (acc *Account) Copy() *Account {

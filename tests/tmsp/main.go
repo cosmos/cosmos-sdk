@@ -28,24 +28,26 @@ func testSendTx() {
 
 	// Seed Basecoin with account
 	tAcc := tPriv.Account
-	tAcc.Balance = 1000
+	tAcc.Balance = types.Coins{{"", 1000}}
 	fmt.Println(bcApp.SetOption("base/chainID", "test_chain_id"))
 	fmt.Println(bcApp.SetOption("base/account", string(wire.JSONBytes(tAcc))))
 
 	// Construct a SendTx signature
 	tx := &types.SendTx{
+		Fee: 0,
+		Gas: 0,
 		Inputs: []types.TxInput{
 			types.TxInput{
 				Address:  tPriv.Account.PubKey.Address(),
 				PubKey:   tPriv.Account.PubKey, // TODO is this needed?
-				Amount:   1,
+				Coins:    types.Coins{{"", 1}},
 				Sequence: 1,
 			},
 		},
 		Outputs: []types.TxOutput{
 			types.TxOutput{
 				Address: tPriv2.Account.PubKey.Address(),
-				Amount:  1,
+				Coins:   types.Coins{{"", 1}},
 			},
 		},
 	}
@@ -95,7 +97,7 @@ func testSequence() {
 	// Get the root account
 	root := tests.PrivAccountFromSecret("test")
 	rootAcc := root.Account
-	rootAcc.Balance = 1 << 53
+	rootAcc.Balance = types.Coins{{"", 1 << 53}}
 	fmt.Println(bcApp.SetOption("base/chainID", "test_chain_id"))
 	fmt.Println(bcApp.SetOption("base/account", string(wire.JSONBytes(rootAcc))))
 
@@ -108,18 +110,20 @@ func testSequence() {
 	for i := 0; i < len(privAccounts); i++ {
 		privAccount := privAccounts[i]
 		tx := &types.SendTx{
+			Fee: 2,
+			Gas: 2,
 			Inputs: []types.TxInput{
 				types.TxInput{
 					Address:  root.Account.PubKey.Address(),
 					PubKey:   root.Account.PubKey, // TODO is this needed?
-					Amount:   1000002,
+					Coins:    types.Coins{{"", 1000002}},
 					Sequence: sequence,
 				},
 			},
 			Outputs: []types.TxOutput{
 				types.TxOutput{
 					Address: privAccount.Account.PubKey.Address(),
-					Amount:  1000000,
+					Coins:   types.Coins{{"", 1000000}},
 				},
 			},
 		}
@@ -155,18 +159,20 @@ func testSequence() {
 		privAccountB := privAccounts[randB]
 
 		tx := &types.SendTx{
+			Fee: 2,
+			Gas: 2,
 			Inputs: []types.TxInput{
 				types.TxInput{
 					Address:  privAccountA.Account.PubKey.Address(),
 					PubKey:   privAccountA.Account.PubKey,
-					Amount:   3,
+					Coins:    types.Coins{{"", 3}},
 					Sequence: privAccountASequence + 1,
 				},
 			},
 			Outputs: []types.TxOutput{
 				types.TxOutput{
 					Address: privAccountB.Account.PubKey.Address(),
-					Amount:  1,
+					Coins:   types.Coins{{"", 1}},
 				},
 			},
 		}

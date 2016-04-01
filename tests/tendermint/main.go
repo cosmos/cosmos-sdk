@@ -51,14 +51,14 @@ func main() {
 				types.TxInput{
 					Address:  root.Account.PubKey.Address(),
 					PubKey:   root.Account.PubKey, // TODO is this needed?
-					Amount:   1000002,
+					Coins:    types.Coins{{"", 1000002}},
 					Sequence: sequence,
 				},
 			},
 			Outputs: []types.TxOutput{
 				types.TxOutput{
 					Address: privAccount.Account.PubKey.Address(),
-					Amount:  1000000,
+					Coins:   types.Coins{{"", 1000000}},
 				},
 			},
 		}
@@ -102,14 +102,14 @@ func main() {
 				types.TxInput{
 					Address:  privAccountA.Account.PubKey.Address(),
 					PubKey:   privAccountA.Account.PubKey,
-					Amount:   3,
+					Coins:    types.Coins{{"", 3}},
 					Sequence: privAccountASequence + 1,
 				},
 			},
 			Outputs: []types.TxOutput{
 				types.TxOutput{
 					Address: privAccountB.Account.PubKey.Address(),
-					Amount:  1,
+					Coins:   types.Coins{{"", 1}},
 				},
 			},
 		}

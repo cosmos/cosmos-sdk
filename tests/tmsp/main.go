@@ -86,7 +86,10 @@ func testGov() {
 	if log != "Success" {
 		Exit(Fmt("Failed to set option: %v", log))
 	}
-	// TODO test proposals or something.
+
+	// Call InitChain to initialize the validator set
+
+	// TODO more tests...
 }
 
 func testSequence() {

@@ -174,9 +174,9 @@ func (app *Basecoin) EndBlock(height uint64) []*tmsp.Validator {
 
 //----------------------------------------
 
-// Splits the string at the first :.
+// Splits the string at the first '/'.
 // if there are none, the second string is nil.
-func splitKey(key string) (prefix string, sufix string) {
+func splitKey(key string) (prefix string, suffix string) {
 	if strings.Contains(key, "/") {
 		keyParts := strings.SplitN(key, "/", 2)
 		return keyParts[0], keyParts[1]

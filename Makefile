@@ -7,6 +7,7 @@ install: get_deps
 
 test:
 	go test github.com/tendermint/basecoin/...
+	go run tests/tmsp/*.go
 
 get_deps:
 	go get -d github.com/tendermint/basecoin/...

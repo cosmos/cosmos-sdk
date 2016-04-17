@@ -7,14 +7,17 @@ import (
 	"github.com/tendermint/basecoin/tests"
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
+	"github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
+	"github.com/tendermint/go-wire/expr"
 	govtypes "github.com/tendermint/governmint/types"
 	eyescli "github.com/tendermint/merkleeyes/client"
+	tmsp "github.com/tendermint/tmsp/types"
 )
 
 func main() {
-	//testSendTx()
-	//testGov()
+	testSendTx()
+	testGov()
 	testSequence()
 }
 
@@ -75,11 +78,14 @@ func testGov() {
 	fmt.Println(bcApp.Info())
 
 	tPriv := tests.PrivAccountFromSecret("test")
+	valPrivKey0 := crypto.GenPrivKeyEd25519FromSecret([]byte("val0"))
+	valPrivKey1 := crypto.GenPrivKeyEd25519FromSecret([]byte("val1"))
+	valPrivKey2 := crypto.GenPrivKeyEd25519FromSecret([]byte("val2"))
 
 	// Seed Basecoin with admin using PrivAccount
 	tAcc := tPriv.Account
 	adminEntity := govtypes.Entity{
-		ID:     "",
+		Addr:   tAcc.PubKey.Address(),
 		PubKey: tAcc.PubKey,
 	}
 	log := bcApp.SetOption("gov/admin", string(wire.JSONBytes(adminEntity)))
@@ -88,6 +94,24 @@ func testGov() {
 	}
 
 	// Call InitChain to initialize the validator set
+	bcApp.InitChain([]*tmsp.Validator{
+		{PubKey: valPrivKey0.PubKey().Bytes(), Power: 1},
+		{PubKey: valPrivKey1.PubKey().Bytes(), Power: 1},
+		{PubKey: valPrivKey2.PubKey().Bytes(), Power: 1},
+	})
+
+	// Query for validator set
+	res := bcApp.Query(expr.MustCompile(`x02 x01 "gov/g/validators"`))
+	if res.IsErr() {
+		Exit(Fmt("Failed: %v", res.Error()))
+	}
+	group := govtypes.Group{}
+	err := wire.ReadBinaryBytes(res.Data, &group)
+	if err != nil {
+		Exit(Fmt("Unexpected query response bytes: %X error: %v",
+			res.Data, err))
+	}
+	fmt.Println(">>", group)
 
 	// TODO more tests...
 }
@@ -149,7 +173,7 @@ func testSequence() {
 	fmt.Println("-------------------- RANDOM SENDS --------------------")
 
 	// Now send coins between these accounts
-	for {
+	for i := 0; i < 10000; i++ {
 		randA := RandInt() % len(privAccounts)
 		randB := RandInt() % len(privAccounts)
 		if randA == randB {

@@ -45,7 +45,7 @@ type TxInput struct {
 	Coins     Coins            `json:"coins"`     //
 	Sequence  int              `json:"sequence"`  // Must be 1 greater than the last committed TxInput
 	Signature crypto.Signature `json:"signature"` // Depends on the PubKey type and the whole Tx
-	PubKey    crypto.PubKey    `json:"pub_key"`   // May be nil
+	PubKey    crypto.PubKey    `json:"pub_key"`   // Is present iff Sequence == 0
 }
 
 func (txIn TxInput) ValidateBasic() tmsp.Result {
@@ -57,6 +57,15 @@ func (txIn TxInput) ValidateBasic() tmsp.Result {
 	}
 	if txIn.Coins.IsZero() {
 		return tmsp.ErrBaseInvalidInput.AppendLog("Coins cannot be zero")
+	}
+	if txIn.Sequence <= 0 {
+		return tmsp.ErrBaseInvalidInput.AppendLog("Sequence must be greater than 0")
+	}
+	if txIn.Sequence == 1 && txIn.PubKey == nil {
+		return tmsp.ErrBaseInvalidInput.AppendLog("PubKey must be present when Sequence == 1")
+	}
+	if txIn.Sequence > 1 && txIn.PubKey != nil {
+		return tmsp.ErrBaseInvalidInput.AppendLog("PubKey must be nil when Sequence > 1")
 	}
 	return tmsp.OK
 }
@@ -112,6 +121,16 @@ func (tx *SendTx) SignBytes(chainID string) []byte {
 	return signBytes
 }
 
+func (tx *SendTx) SetSignature(pubKey crypto.PubKey, sig crypto.Signature) bool {
+	for i, input := range tx.Inputs {
+		if input.PubKey.Equals(pubKey) {
+			tx.Inputs[i].Signature = sig
+			return true
+		}
+	}
+	return false
+}
+
 func (tx *SendTx) String() string {
 	return Fmt("SendTx{%v/%v %v->%v}", tx.Fee, tx.Gas, tx.Inputs, tx.Outputs)
 }
@@ -133,6 +152,12 @@ func (tx *AppTx) SignBytes(chainID string) []byte {
 	signBytes = append(signBytes, wire.BinaryBytes(tx)...)
 	tx.Input.Signature = sig
 	return signBytes
+}
+
+func (tx *AppTx) SetSignature(pubKey crypto.PubKey, sig crypto.Signature) bool {
+	// TODO
+	tx.Input.Signature = sig
+	return true
 }
 
 func (tx *AppTx) String() string {

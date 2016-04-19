@@ -112,7 +112,7 @@ func ExecTx(s *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc event
 
 		// Validate call address
 		plugin := pgz.GetByByte(tx.Type)
-		if plugin != nil {
+		if plugin == nil {
 			return tmsp.ErrBaseUnknownAddress.AppendLog(
 				Fmt("Unrecognized type byte %v", tx.Type))
 		}

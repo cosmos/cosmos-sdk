@@ -95,6 +95,15 @@ func testGov() {
 	if log != "Success" {
 		Exit(Fmt("Failed to set option: %v", log))
 	}
+	adminAccount := types.Account{
+		PubKey:   adminAcc.PubKey,
+		Sequence: 0,
+		Balance:  types.Coins{{"", 1 << 53}},
+	}
+	log = bcApp.SetOption("base/account", string(wire.JSONBytes(adminAccount)))
+	if log != "Success" {
+		Exit(Fmt("Failed to set option: %v", log))
+	}
 
 	// Call InitChain to initialize the validator set
 	bcApp.InitChain([]*tmsp.Validator{
@@ -119,11 +128,11 @@ func testGov() {
 	// Mutate the validator set.
 	proposal := govtypes.Proposal{
 		ID:          "my_proposal_id",
-		VoteGroupID: "gov/admin",
+		VoteGroupID: "admin",
 		StartHeight: 0,
 		EndHeight:   0,
 		Info: &govtypes.GroupUpdateProposalInfo{
-			UpdateGroupID: "gov/g/validators",
+			UpdateGroupID: "validators",
 			NextVersion:   0,
 			ChangedMembers: []govtypes.Member{
 				{nil, 1}, // TODO Fill this out.
@@ -143,8 +152,9 @@ func testGov() {
 			Address:  adminEntity.Addr,
 			Coins:    types.Coins{{"", 1}},
 			Sequence: 1,
+			PubKey:   adminEntity.PubKey,
 		},
-		Data: nil,
+		Data: wire.BinaryBytes(struct{ govtypes.Tx }{proposalTx}),
 	}
 	tx.SetSignature(nil, adminPrivAcc.Sign(tx.SignBytes(chainID)))
 	res = bcApp.AppendTx(wire.BinaryBytes(struct{ types.Tx }{tx}))

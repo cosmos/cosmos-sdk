@@ -40,6 +40,15 @@ func (sig SignatureEd25519) IsZero() bool { return len(sig) == 0 }
 
 func (sig SignatureEd25519) String() string { return fmt.Sprintf("/%X.../", Fingerprint(sig[:])) }
 
+func ReadSignatureEd25519(bz []byte) (SignatureEd25519, error) {
+	sig := struct{ Signature }{}
+	err := wire.ReadBinaryBytes(bz, &sig)
+	if err != nil {
+		return SignatureEd25519{}, err
+	}
+	return sig.Signature.(SignatureEd25519), nil
+}
+
 //-------------------------------------
 
 // Implements Signature
@@ -52,3 +61,12 @@ func (sig SignatureSecp256k1) Bytes() []byte {
 func (sig SignatureSecp256k1) IsZero() bool { return len(sig) == 0 }
 
 func (sig SignatureSecp256k1) String() string { return fmt.Sprintf("/%X.../", Fingerprint(sig[:])) }
+
+func ReadSignatureSecp256k1(bz []byte) (SignatureSecp256k1, error) {
+	sig := struct{ Signature }{}
+	err := wire.ReadBinaryBytes(bz, &sig)
+	if err != nil {
+		return nil, err
+	}
+	return sig.Signature.(SignatureSecp256k1), nil
+}

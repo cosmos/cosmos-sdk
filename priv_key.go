@@ -1,6 +1,8 @@
 package crypto
 
 import (
+	"bytes"
+
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/tendermint/ed25519"
 	"github.com/tendermint/ed25519/extra25519"
@@ -13,6 +15,7 @@ type PrivKey interface {
 	Bytes() []byte
 	Sign(msg []byte) Signature
 	PubKey() PubKey
+	Equals(PrivKey) bool
 }
 
 // Types of PrivKey implementations
@@ -51,6 +54,14 @@ func (privKey PrivKeyEd25519) Sign(msg []byte) Signature {
 func (privKey PrivKeyEd25519) PubKey() PubKey {
 	privKeyBytes := [64]byte(privKey)
 	return PubKeyEd25519(*ed25519.MakePublicKey(&privKeyBytes))
+}
+
+func (privKey PrivKeyEd25519) Equals(other PrivKey) bool {
+	if otherEd, ok := other.(PrivKeyEd25519); ok {
+		return bytes.Equal(privKey[:], otherEd[:])
+	} else {
+		return false
+	}
 }
 
 func (privKey PrivKeyEd25519) ToCurve25519() *[32]byte {
@@ -115,6 +126,14 @@ func (privKey PrivKeySecp256k1) PubKey() PubKey {
 	pub := [65]byte{}
 	copy(pub[:], pub__.SerializeUncompressed())
 	return PubKeySecp256k1(pub)
+}
+
+func (privKey PrivKeySecp256k1) Equals(other PrivKey) bool {
+	if otherSecp, ok := other.(PrivKeySecp256k1); ok {
+		return bytes.Equal(privKey[:], otherSecp[:])
+	} else {
+		return false
+	}
 }
 
 func (privKey PrivKeySecp256k1) String() string {

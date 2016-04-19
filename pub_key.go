@@ -148,8 +148,8 @@ func (pubKey PubKeySecp256k1) KeyString() string {
 }
 
 func (pubKey PubKeySecp256k1) Equals(other PubKey) bool {
-	if otherEd, ok := other.(PubKeySecp256k1); ok {
-		return bytes.Equal(pubKey[:], otherEd[:])
+	if otherSecp, ok := other.(PubKeySecp256k1); ok {
+		return bytes.Equal(pubKey[:], otherSecp[:])
 	} else {
 		return false
 	}

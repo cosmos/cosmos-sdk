@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/json"
 
 	. "github.com/tendermint/go-common"
@@ -121,9 +122,9 @@ func (tx *SendTx) SignBytes(chainID string) []byte {
 	return signBytes
 }
 
-func (tx *SendTx) SetSignature(pubKey crypto.PubKey, sig crypto.Signature) bool {
+func (tx *SendTx) SetSignature(addr []byte, sig crypto.Signature) bool {
 	for i, input := range tx.Inputs {
-		if input.PubKey.Equals(pubKey) {
+		if bytes.Equal(input.Address, addr) {
 			tx.Inputs[i].Signature = sig
 			return true
 		}
@@ -154,8 +155,7 @@ func (tx *AppTx) SignBytes(chainID string) []byte {
 	return signBytes
 }
 
-func (tx *AppTx) SetSignature(pubKey crypto.PubKey, sig crypto.Signature) bool {
-	// TODO
+func (tx *AppTx) SetSignature(sig crypto.Signature) bool {
 	tx.Input.Signature = sig
 	return true
 }

@@ -143,7 +143,7 @@ func testGov() {
 		EntityAddr: adminEntity.Addr,
 		Proposal:   proposal,
 	}
-	proposalTx.SetSignature(nil, adminPrivAcc.Sign(proposalTx.SignBytes()))
+	proposalTx.Signature = adminPrivAcc.Sign(proposalTx.SignBytes())
 	tx := &types.AppTx{
 		Fee:  1,
 		Gas:  1,
@@ -156,7 +156,7 @@ func testGov() {
 		},
 		Data: wire.BinaryBytes(struct{ govtypes.Tx }{proposalTx}),
 	}
-	tx.SetSignature(nil, adminPrivAcc.Sign(tx.SignBytes(chainID)))
+	tx.SetSignature(adminPrivAcc.Sign(tx.SignBytes(chainID)))
 	res = bcApp.AppendTx(wire.BinaryBytes(struct{ types.Tx }{tx}))
 	if res.IsErr() {
 		Exit(Fmt("Failed to mutate validators: %v", res.Error()))

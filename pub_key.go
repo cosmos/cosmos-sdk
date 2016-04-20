@@ -102,7 +102,7 @@ func (pubKey PubKeyEd25519) Equals(other PubKey) bool {
 //-------------------------------------
 
 // Implements PubKey
-type PubKeySecp256k1 [65]byte
+type PubKeySecp256k1 [64]byte
 
 func (pubKey PubKeySecp256k1) Address() []byte {
 	w, n, err := new(bytes.Buffer), new(int), new(error)
@@ -122,7 +122,7 @@ func (pubKey PubKeySecp256k1) Bytes() []byte {
 }
 
 func (pubKey PubKeySecp256k1) VerifyBytes(msg []byte, sig_ Signature) bool {
-	pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
+	pub__, err := secp256k1.ParsePubKey(append([]byte{0x04}, pubKey[:]...), secp256k1.S256())
 	if err != nil {
 		return false
 	}

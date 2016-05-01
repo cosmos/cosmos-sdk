@@ -8,20 +8,11 @@ import (
 )
 
 // If the tx is invalid, a TMSP error will be returned.
-func ExecTx(s *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp.Result {
+func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp.Result {
 
 	// TODO: do something with fees
 	fees := types.Coins{}
-	chainID := s.GetChainID()
-
-	// Get the state. If isCheckTx, then we use a cache.
-	// The idea is to throw away this cache after every EndBlock().
-	var state types.AccountGetterSetter
-	if isCheckTx {
-		state = s.GetCheckCache()
-	} else {
-		state = s
-	}
+	chainID := state.GetChainID()
 
 	// Exec tx
 	switch tx := tx.(type) {
@@ -129,15 +120,16 @@ func ExecTx(s *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc event
 		}
 
 		// Create inAcc checkpoint
-		inAccCopy := inAcc.Copy()
+		inAccDeducted := inAcc.Copy()
 
 		// Run the tx.
-		cache := types.NewAccountCache(state)
+		// XXX cache := types.NewStateCache(state)
+		cache := state.CacheWrap()
 		cache.SetAccount(tx.Input.Address, inAcc)
-		ctx := types.NewCallContext(cache, inAcc, coins)
-		res = plugin.RunTx(ctx, tx.Data)
+		ctx := types.NewCallContext(tx.Input.Address, coins)
+		res = plugin.RunTx(cache, ctx, tx.Data)
 		if res.IsOK() {
-			cache.Sync()
+			cache.CacheSync()
 			log.Info("Successful execution")
 			// Fire events
 			/*
@@ -153,10 +145,10 @@ func ExecTx(s *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc event
 		} else {
 			log.Info("AppTx failed", "error", res)
 			// Just return the coins and return.
-			inAccCopy.Balance = inAccCopy.Balance.Plus(coins)
+			inAccDeducted.Balance = inAccDeducted.Balance.Plus(coins)
 			// But take the gas
 			// TODO
-			state.SetAccount(tx.Input.Address, inAccCopy)
+			state.SetAccount(tx.Input.Address, inAccDeducted)
 		}
 		return res
 

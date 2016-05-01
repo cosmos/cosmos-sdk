@@ -3,7 +3,7 @@ package app
 import (
 	"strings"
 
-	"github.com/tendermint/basecoin/state"
+	sm "github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
@@ -26,22 +26,24 @@ const (
 )
 
 type Basecoin struct {
-	eyesCli *eyes.Client
-	govMint *gov.Governmint
-	state   *state.State
-	plugins *types.Plugins
+	eyesCli    *eyes.Client
+	govMint    *gov.Governmint
+	state      *sm.State
+	cacheState *sm.State
+	plugins    *types.Plugins
 }
 
 func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
-	govMint := gov.NewGovernmint(eyesCli)
-	state_ := state.NewState(eyesCli)
+	govMint := gov.NewGovernmint()
+	state := sm.NewState(eyesCli)
 	plugins := types.NewPlugins()
 	plugins.RegisterPlugin(PluginTypeByteGov, PluginNameGov, govMint)
 	return &Basecoin{
-		eyesCli: eyesCli,
-		govMint: govMint,
-		state:   state_,
-		plugins: plugins,
+		eyesCli:    eyesCli,
+		govMint:    govMint,
+		state:      state,
+		cacheState: nil,
+		plugins:    plugins,
 	}
 }
 
@@ -59,7 +61,7 @@ func (app *Basecoin) SetOption(key string, value string) (log string) {
 		if plugin == nil {
 			return "Invalid plugin name: " + PluginName
 		}
-		return plugin.SetOption(key, value)
+		return plugin.SetOption(app.state, key, value)
 	} else {
 		// Set option on basecoin
 		switch key {
@@ -92,7 +94,7 @@ func (app *Basecoin) AppendTx(txBytes []byte) (res tmsp.Result) {
 		return tmsp.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
 	}
 	// Validate and exec tx
-	res = state.ExecTx(app.state, app.plugins, tx, false, nil)
+	res = sm.ExecTx(app.state, app.plugins, tx, false, nil)
 	if res.IsErr() {
 		return res.PrependLog("Error in AppendTx")
 	}
@@ -111,7 +113,7 @@ func (app *Basecoin) CheckTx(txBytes []byte) (res tmsp.Result) {
 		return tmsp.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
 	}
 	// Validate tx
-	res = state.ExecTx(app.state, app.plugins, tx, true, nil)
+	res = sm.ExecTx(app.cacheState, app.plugins, tx, true, nil)
 	if res.IsErr() {
 		return res.PrependLog("Error in CheckTx")
 	}
@@ -130,8 +132,6 @@ func (app *Basecoin) Query(query []byte) (res tmsp.Result) {
 		return tmsp.OK.SetLog("This type of query not yet supported")
 	case PluginTypeByteEyes:
 		return app.eyesCli.QuerySync(query)
-	case PluginTypeByteGov:
-		return app.govMint.Query(query)
 	}
 	return tmsp.ErrBaseUnknownPlugin.SetLog(
 		Fmt("Unknown plugin with type byte %X", typeByte))
@@ -139,14 +139,7 @@ func (app *Basecoin) Query(query []byte) (res tmsp.Result) {
 
 // TMSP::Commit
 func (app *Basecoin) Commit() (res tmsp.Result) {
-	// First, commit all the plugins
-	for _, plugin := range app.plugins.GetList() {
-		res = plugin.Commit()
-		if res.IsErr() {
-			PanicSanity(Fmt("Error committing plugin %v", plugin.Name))
-		}
-	}
-	// Then, commit eyes.
+	// Commit eyes.
 	res = app.eyesCli.CommitSync()
 	if res.IsErr() {
 		PanicSanity("Error getting hash: " + res.Error())
@@ -157,32 +150,23 @@ func (app *Basecoin) Commit() (res tmsp.Result) {
 // TMSP::InitChain
 func (app *Basecoin) InitChain(validators []*tmsp.Validator) {
 	for _, plugin := range app.plugins.GetList() {
-		if _, ok := plugin.Plugin.(tmsp.BlockchainAware); ok {
-			plugin.Plugin.(tmsp.BlockchainAware).InitChain(validators)
-		}
+		plugin.Plugin.InitChain(app.state, validators)
 	}
 }
 
 // TMSP::BeginBlock
 func (app *Basecoin) BeginBlock(height uint64) {
-	app.state.ResetCacheState()
 	for _, plugin := range app.plugins.GetList() {
-		if _, ok := plugin.Plugin.(tmsp.BlockchainAware); ok {
-			plugin.Plugin.(tmsp.BlockchainAware).BeginBlock(height)
-		}
+		plugin.Plugin.BeginBlock(app.state, height)
 	}
+	app.cacheState = app.state.CacheWrap()
 }
 
 // TMSP::EndBlock
-func (app *Basecoin) EndBlock(height uint64) (vals []*tmsp.Validator) {
+func (app *Basecoin) EndBlock(height uint64) (diffs []*tmsp.Validator) {
 	for _, plugin := range app.plugins.GetList() {
-		if plugin.Plugin == app.govMint {
-			vals = plugin.Plugin.(tmsp.BlockchainAware).EndBlock(height)
-		} else {
-			if _, ok := plugin.Plugin.(tmsp.BlockchainAware); ok {
-				plugin.Plugin.(tmsp.BlockchainAware).EndBlock(height)
-			}
-		}
+		moreDiffs := plugin.Plugin.EndBlock(app.state, height)
+		diffs = append(diffs, moreDiffs...)
 	}
 	return
 }

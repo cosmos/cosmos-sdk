@@ -4,26 +4,21 @@ import (
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
-	eyes "github.com/tendermint/merkleeyes/client"
 )
 
+// CONTRACT: State should be quick to copy.
+// See CacheWrap().
 type State struct {
-	chainID    string
-	eyesCli    *eyes.Client
-	checkCache *types.AccountCache
-
-	LastBlockHeight uint64
-	LastBlockHash   []byte
-	GasLimit        int64
+	chainID string
+	store   types.KVStore
+	cache   *types.KVCache // optional
 }
 
-func NewState(eyesCli *eyes.Client) *State {
-	s := &State{
+func NewState(store types.KVStore) *State {
+	return &State{
 		chainID: "",
-		eyesCli: eyesCli,
+		store:   store,
 	}
-	s.checkCache = types.NewAccountCache(s)
-	return s
 }
 
 func (s *State) SetChainID(chainID string) {
@@ -37,40 +32,57 @@ func (s *State) GetChainID() string {
 	return s.chainID
 }
 
+func (s *State) Get(key []byte) (value []byte) {
+	return s.store.Get(key)
+}
+
+func (s *State) Set(key []byte, value []byte) {
+	s.store.Set(key, value)
+}
+
 func (s *State) GetAccount(addr []byte) *types.Account {
-	res := s.eyesCli.GetSync(AccountKey(addr))
-	if res.IsErr() {
-		panic(Fmt("Error loading account addr %X error: %v", addr, res.Error()))
-	}
-	if len(res.Data) == 0 {
-		return nil
-	}
-	var acc *types.Account
-	err := wire.ReadBinaryBytes(res.Data, &acc)
-	if err != nil {
-		panic(Fmt("Error reading account %X error: %v", res.Data, err.Error()))
-	}
-	return acc
+	return GetAccount(s.store, addr)
 }
 
 func (s *State) SetAccount(addr []byte, acc *types.Account) {
-	accBytes := wire.BinaryBytes(acc)
-	res := s.eyesCli.SetSync(AccountKey(addr), accBytes)
-	if res.IsErr() {
-		panic(Fmt("Error storing account addr %X error: %v", addr, res.Error()))
+	SetAccount(s.store, addr, acc)
+}
+
+func (s *State) CacheWrap() *State {
+	cache := types.NewKVCache(s.store)
+	return &State{
+		chainID: s.chainID,
+		store:   cache,
+		cache:   cache,
 	}
 }
 
-func (s *State) GetCheckCache() *types.AccountCache {
-	return s.checkCache
-}
-
-func (s *State) ResetCacheState() {
-	s.checkCache = types.NewAccountCache(s)
+// NOTE: errors if s is not from CacheWrap()
+func (s *State) CacheSync() {
+	s.cache.Sync()
 }
 
 //----------------------------------------
 
 func AccountKey(addr []byte) []byte {
 	return append([]byte("base/a/"), addr...)
+}
+
+func GetAccount(store types.KVStore, addr []byte) *types.Account {
+	data := store.Get(AccountKey(addr))
+	if len(data) == 0 {
+		return nil
+	}
+	var acc *types.Account
+	err := wire.ReadBinaryBytes(data, &acc)
+	if err != nil {
+		panic(Fmt("Error reading account %X error: %v",
+			data, err.Error()))
+	}
+	return acc
+}
+
+func SetAccount(store types.KVStore, addr []byte, acc *types.Account) {
+	accBytes := wire.BinaryBytes(acc)
+	store.Set(AccountKey(addr), accBytes)
 }

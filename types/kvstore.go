@@ -2,6 +2,9 @@ package types
 
 import (
 	"container/list"
+	"fmt"
+
+	. "github.com/tendermint/go-common"
 )
 
 type KVStore interface {
@@ -56,6 +59,7 @@ func (kvc *KVCache) Reset() *KVCache {
 }
 
 func (kvc *KVCache) Set(key []byte, value []byte) {
+	fmt.Println("Set [KVCache]", formatBytes(key), "=", formatBytes(value))
 	cacheValue, ok := kvc.cache[string(key)]
 	if ok {
 		kvc.keys.MoveToBack(cacheValue.e)
@@ -67,8 +71,19 @@ func (kvc *KVCache) Set(key []byte, value []byte) {
 }
 
 func (kvc *KVCache) Get(key []byte) (value []byte) {
-	cacheValue := kvc.cache[string(key)]
-	return cacheValue.v
+	cacheValue, ok := kvc.cache[string(key)]
+	if ok {
+		fmt.Println("GET [KVCache, hit]", formatBytes(key), "=", formatBytes(cacheValue.v))
+		return cacheValue.v
+	} else {
+		value := kvc.store.Get(key)
+		kvc.cache[string(key)] = kvCacheValue{
+			v: value,
+			e: kvc.keys.PushBack(key),
+		}
+		fmt.Println("GET [KVCache, miss]", formatBytes(key), "=", formatBytes(value))
+		return value
+	}
 }
 
 func (kvc *KVCache) Sync() {
@@ -78,4 +93,18 @@ func (kvc *KVCache) Sync() {
 		kvc.store.Set(key, value.v)
 	}
 	kvc.Reset()
+}
+
+//----------------------------------------
+
+func formatBytes(data []byte) string {
+	s := ""
+	for _, b := range data {
+		if 0x21 <= b && b < 0x7F {
+			s += Green(string(b))
+		} else {
+			s += Blue(Fmt("%X", b))
+		}
+	}
+	return s
 }

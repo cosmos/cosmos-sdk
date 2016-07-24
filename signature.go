@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"bytes"
 	"fmt"
 
 	. "github.com/tendermint/go-common"
@@ -12,6 +13,7 @@ type Signature interface {
 	Bytes() []byte
 	IsZero() bool
 	String() string
+	Equals(Signature) bool
 }
 
 // Types of Signature implementations
@@ -45,6 +47,14 @@ func (sig SignatureEd25519) IsZero() bool { return len(sig) == 0 }
 
 func (sig SignatureEd25519) String() string { return fmt.Sprintf("/%X.../", Fingerprint(sig[:])) }
 
+func (sig SignatureEd25519) Equals(other Signature) bool {
+	if otherEd, ok := other.(SignatureEd25519); ok {
+		return bytes.Equal(sig[:], otherEd[:])
+	} else {
+		return false
+	}
+}
+
 //-------------------------------------
 
 // Implements Signature
@@ -57,3 +67,11 @@ func (sig SignatureSecp256k1) Bytes() []byte {
 func (sig SignatureSecp256k1) IsZero() bool { return len(sig) == 0 }
 
 func (sig SignatureSecp256k1) String() string { return fmt.Sprintf("/%X.../", Fingerprint(sig[:])) }
+
+func (sig SignatureSecp256k1) Equals(other Signature) bool {
+	if otherEd, ok := other.(SignatureSecp256k1); ok {
+		return bytes.Equal(sig[:], otherEd[:])
+	} else {
+		return false
+	}
+}

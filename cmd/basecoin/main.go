@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/tendermint/basecoin/app"
 	. "github.com/tendermint/go-common"
@@ -15,12 +16,19 @@ import (
 func main() {
 
 	addrPtr := flag.String("address", "tcp://0.0.0.0:46658", "Listen address")
+	transportPtr := flag.String("transport", "socket", `How to serve tmsp ("socket" or "grpc")`)
 	eyesPtr := flag.String("eyes", "local", "MerkleEyes address, or 'local' for embedded")
 	genFilePath := flag.String("genesis", "", "Genesis file, if any")
 	flag.Parse()
 
+	// determine appropriate connection for merkeleyes based on location
+	eyeTrans := "socket"
+	if strings.HasPrefix(*eyesPtr, "tcp://") {
+		eyeTrans = "grpc"
+	}
+
 	// Connect to MerkleEyes
-	eyesCli, err := eyes.NewClient(*eyesPtr)
+	eyesCli, err := eyes.NewClient(*eyesPtr, eyeTrans)
 	if err != nil {
 		Exit("connect to MerkleEyes: " + err.Error())
 	}
@@ -38,7 +46,7 @@ func main() {
 	}
 
 	// Start the listener
-	svr, err := server.NewServer(*addrPtr, app)
+	svr, err := server.NewServer(*addrPtr, *transportPtr, app)
 	if err != nil {
 		Exit("create listener: " + err.Error())
 	}

@@ -113,12 +113,16 @@ func testGov() {
 	})
 
 	// Query for validator set
-	res := bcApp.Query(expr.MustCompile(`x02 x01 "gov/g/validators"`))
+	txQuery, err := expr.Compile(`x02 x01 "gov/g/validators"`)
+	if err != nil {
+		panic(err)
+	}
+	res := bcApp.Query(txQuery)
 	if res.IsErr() {
 		Exit(Fmt("Failed to query validators: %v", res.Error()))
 	}
 	group := govtypes.Group{}
-	err := wire.ReadBinaryBytes(res.Data, &group)
+	err = wire.ReadBinaryBytes(res.Data, &group)
 	if err != nil {
 		Exit(Fmt("Unexpected query response bytes: %X error: %v",
 			res.Data, err))

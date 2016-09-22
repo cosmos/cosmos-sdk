@@ -9,7 +9,6 @@ import (
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
-	"github.com/tendermint/go-wire/expr"
 	govtypes "github.com/tendermint/governmint/types"
 	eyescli "github.com/tendermint/merkleeyes/client"
 	tmsp "github.com/tendermint/tmsp/types"
@@ -113,7 +112,7 @@ func testGov() {
 	})
 
 	// Query for validator set
-	res := bcApp.Query(expr.MustCompile(`x02 x01 "gov/g/validators"`))
+	res := bcApp.Query([]byte("XXX"))
 	if res.IsErr() {
 		Exit(Fmt("Failed to query validators: %v", res.Error()))
 	}

@@ -20,7 +20,7 @@ func main() {
 	flag.Parse()
 
 	// Connect to MerkleEyes
-	eyesCli, err := eyes.NewClient(*eyesPtr)
+	eyesCli, err := eyes.NewClient(*eyesPtr, "socket")
 	if err != nil {
 		Exit("connect to MerkleEyes: " + err.Error())
 	}
@@ -38,7 +38,7 @@ func main() {
 	}
 
 	// Start the listener
-	svr, err := server.NewServer(*addrPtr, app)
+	svr, err := server.NewServer(*addrPtr, "socket", app)
 	if err != nil {
 		Exit("create listener: " + err.Error())
 	}

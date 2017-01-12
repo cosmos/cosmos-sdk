@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/basecoin/tests"
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
+	"github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
 )
@@ -41,12 +42,7 @@ func testSendTx() {
 		Fee: 0,
 		Gas: 0,
 		Inputs: []types.TxInput{
-			types.TxInput{
-				Address:  test1PrivAcc.Account.PubKey.Address(),
-				PubKey:   test1PrivAcc.Account.PubKey, // TODO is this needed?
-				Coins:    types.Coins{{"", 1}},
-				Sequence: 1,
-			},
+			makeInput(test1PrivAcc.Account.PubKey, types.Coins{{"", 1}}, 1),
 		},
 		Outputs: []types.TxOutput{
 			types.TxOutput{
@@ -100,26 +96,12 @@ func testSequence() {
 	for i := 0; i < len(privAccounts); i++ {
 		privAccount := privAccounts[i]
 
-		//Generate txInputs with or without public key
-		tempTxInputs := types.TxInput{
-			Address:  test1Acc.PubKey.Address(),
-			PubKey:   test1Acc.PubKey, // TODO is this needed?
-			Coins:    types.Coins{{"", 1000002}},
-			Sequence: sequence,
-		}
-
-		if sequence > 1 {
-			tempTxInputs = types.TxInput{
-				Address:  test1Acc.PubKey.Address(),
-				Coins:    types.Coins{{"", 1000002}},
-				Sequence: sequence,
-			}
-		}
-
 		tx := &types.SendTx{
-			Fee:    2,
-			Gas:    2,
-			Inputs: []types.TxInput{tempTxInputs},
+			Fee: 2,
+			Gas: 2,
+			Inputs: []types.TxInput{
+				makeInput(test1Acc.PubKey, types.Coins{{"", 1000002}}, sequence),
+			},
 			Outputs: []types.TxOutput{
 				types.TxOutput{
 					Address: privAccount.Account.PubKey.Address(),
@@ -168,12 +150,7 @@ func testSequence() {
 			Fee: 2,
 			Gas: 2,
 			Inputs: []types.TxInput{
-				types.TxInput{
-					Address:  privAccountA.Account.PubKey.Address(),
-					PubKey:   privAccountA.Account.PubKey,
-					Coins:    types.Coins{{"", 3}},
-					Sequence: privAccountASequence + 1,
-				},
+				makeInput(privAccountA.Account.PubKey, types.Coins{{"", 3}}, privAccountASequence+1),
 			},
 			Outputs: []types.TxOutput{
 				types.TxOutput{
@@ -196,4 +173,17 @@ func testSequence() {
 			Exit("AppendTx error: " + res.Error())
 		}
 	}
+}
+
+func makeInput(pubKey crypto.PubKey, coins types.Coins, sequence int) types.TxInput {
+	input := types.TxInput{
+		Address:  pubKey.Address(),
+		PubKey:   pubKey,
+		Coins:    coins,
+		Sequence: sequence,
+	}
+	if sequence > 1 {
+		input.PubKey = nil
+	}
+	return input
 }

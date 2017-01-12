@@ -9,15 +9,18 @@ import (
 // CONTRACT: State should be quick to copy.
 // See CacheWrap().
 type State struct {
-	chainID string
-	store   types.KVStore
-	cache   *types.KVCache // optional
+	chainID    string
+	store      types.KVStore
+	readCache  map[string][]byte // optional, for caching writes to store
+	writeCache *types.KVCache    // optional, for caching writes w/o writing to store
 }
 
 func NewState(store types.KVStore) *State {
 	return &State{
-		chainID: "",
-		store:   store,
+		chainID:    "",
+		store:      store,
+		readCache:  make(map[string][]byte),
+		writeCache: nil,
 	}
 }
 
@@ -33,33 +36,43 @@ func (s *State) GetChainID() string {
 }
 
 func (s *State) Get(key []byte) (value []byte) {
+	if s.readCache != nil {
+		value, ok := s.readCache[string(key)]
+		if ok {
+			return value
+		}
+	}
 	return s.store.Get(key)
 }
 
 func (s *State) Set(key []byte, value []byte) {
+	if s.readCache != nil {
+		s.readCache[string(key)] = value
+	}
 	s.store.Set(key, value)
 }
 
 func (s *State) GetAccount(addr []byte) *types.Account {
-	return GetAccount(s.store, addr)
+	return GetAccount(s, addr)
 }
 
 func (s *State) SetAccount(addr []byte, acc *types.Account) {
-	SetAccount(s.store, addr, acc)
+	SetAccount(s, addr, acc)
 }
 
 func (s *State) CacheWrap() *State {
-	cache := types.NewKVCache(s.store)
+	cache := types.NewKVCache(s)
 	return &State{
-		chainID: s.chainID,
-		store:   cache,
-		cache:   cache,
+		chainID:    s.chainID,
+		store:      cache,
+		readCache:  nil,
+		writeCache: cache,
 	}
 }
 
 // NOTE: errors if s is not from CacheWrap()
 func (s *State) CacheSync() {
-	s.cache.Sync()
+	s.writeCache.Sync()
 }
 
 //----------------------------------------

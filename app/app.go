@@ -131,6 +131,9 @@ func (app *Basecoin) Commit() (res tmsp.Result) {
 	// Commit eyes.
 	res = app.eyesCli.CommitSync()
 
+	// Wrap the committed state in cache for CheckTx
+	app.cacheState = app.state.CacheWrap()
+
 	if res.IsErr() {
 		PanicSanity("Error getting hash: " + res.Error())
 	}
@@ -149,7 +152,6 @@ func (app *Basecoin) BeginBlock(height uint64) {
 	for _, plugin := range app.plugins.GetList() {
 		plugin.Plugin.BeginBlock(app.state, height)
 	}
-	app.cacheState = app.state.CacheWrap()
 }
 
 // TMSP::EndBlock

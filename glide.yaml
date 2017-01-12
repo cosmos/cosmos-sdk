@@ -1,0 +1,28 @@
+package: github.com/tendermint/basecoin
+import:
+- package: github.com/gorilla/websocket
+  version: v1.1.0
+- package: github.com/tendermint/go-common
+- package: github.com/tendermint/go-crypto
+- package: github.com/tendermint/go-events
+- package: github.com/tendermint/go-logger
+- package: github.com/tendermint/go-rpc
+  subpackages:
+  - client
+  - types
+- package: github.com/tendermint/go-wire
+- package: github.com/tendermint/governmint
+  subpackages:
+  - gov
+  - types
+- package: github.com/tendermint/merkleeyes
+  subpackages:
+  - client
+- package: github.com/tendermint/tendermint
+  version: ~0.7.4
+  subpackages:
+  - rpc/core/types
+- package: github.com/tendermint/tmsp
+  subpackages:
+  - server
+  - types

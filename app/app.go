@@ -7,7 +7,6 @@ import (
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
-	"github.com/tendermint/governmint/gov"
 	eyes "github.com/tendermint/merkleeyes/client"
 	tmsp "github.com/tendermint/tmsp/types"
 )
@@ -18,29 +17,23 @@ const (
 
 	PluginTypeByteBase = 0x01
 	PluginTypeByteEyes = 0x02
-	PluginTypeByteGov  = 0x03
 
 	PluginNameBase = "base"
 	PluginNameEyes = "eyes"
-	PluginNameGov  = "gov"
 )
 
 type Basecoin struct {
 	eyesCli    *eyes.Client
-	govMint    *gov.Governmint
 	state      *sm.State
 	cacheState *sm.State
 	plugins    *types.Plugins
 }
 
 func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
-	govMint := gov.NewGovernmint()
 	state := sm.NewState(eyesCli)
 	plugins := types.NewPlugins()
-	plugins.RegisterPlugin(PluginTypeByteGov, PluginNameGov, govMint)
 	return &Basecoin{
 		eyesCli:    eyesCli,
-		govMint:    govMint,
 		state:      state,
 		cacheState: nil,
 		plugins:    plugins,
@@ -87,12 +80,14 @@ func (app *Basecoin) AppendTx(txBytes []byte) (res tmsp.Result) {
 	if len(txBytes) > maxTxSize {
 		return tmsp.ErrBaseEncodingError.AppendLog("Tx size exceeds maximum")
 	}
+
 	// Decode tx
 	var tx types.Tx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
 	if err != nil {
 		return tmsp.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
 	}
+
 	// Validate and exec tx
 	res = sm.ExecTx(app.state, app.plugins, tx, false, nil)
 	if res.IsErr() {
@@ -106,12 +101,14 @@ func (app *Basecoin) CheckTx(txBytes []byte) (res tmsp.Result) {
 	if len(txBytes) > maxTxSize {
 		return tmsp.ErrBaseEncodingError.AppendLog("Tx size exceeds maximum")
 	}
+
 	// Decode tx
 	var tx types.Tx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
 	if err != nil {
 		return tmsp.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
 	}
+
 	// Validate tx
 	res = sm.ExecTx(app.cacheState, app.plugins, tx, true, nil)
 	if res.IsErr() {
@@ -125,22 +122,15 @@ func (app *Basecoin) Query(query []byte) (res tmsp.Result) {
 	if len(query) == 0 {
 		return tmsp.ErrEncodingError.SetLog("Query cannot be zero length")
 	}
-	typeByte := query[0]
-	query = query[1:]
-	switch typeByte {
-	case PluginTypeByteBase:
-		return tmsp.OK.SetLog("This type of query not yet supported")
-	case PluginTypeByteEyes:
-		return app.eyesCli.QuerySync(query)
-	}
-	return tmsp.ErrBaseUnknownPlugin.SetLog(
-		Fmt("Unknown plugin with type byte %X", typeByte))
+
+	return app.eyesCli.QuerySync(query)
 }
 
 // TMSP::Commit
 func (app *Basecoin) Commit() (res tmsp.Result) {
 	// Commit eyes.
 	res = app.eyesCli.CommitSync()
+
 	if res.IsErr() {
 		PanicSanity("Error getting hash: " + res.Error())
 	}

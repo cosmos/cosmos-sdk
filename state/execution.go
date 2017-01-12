@@ -169,10 +169,12 @@ func getInputs(state types.AccountGetter, ins []types.TxInput) (map[string]*type
 		if _, ok := accounts[string(in.Address)]; ok {
 			return nil, tmsp.ErrBaseDuplicateAddress
 		}
+
 		acc := state.GetAccount(in.Address)
 		if acc == nil {
 			return nil, tmsp.ErrBaseUnknownAddress
 		}
+
 		if in.PubKey != nil {
 			acc.PubKey = in.PubKey
 		}

@@ -1,36 +1,29 @@
-package main
+package app
 
 import (
-	"fmt"
+	"testing"
 
-	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/tests"
+	cmn "github.com/tendermint/basecoin/common"
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
-	"github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
 )
 
-func main() {
-	testSendTx()
-	testSequence()
-}
-
-func testSendTx() {
+func TestSendTx(t *testing.T) {
 	eyesCli := eyescli.NewLocalClient()
 	chainID := "test_chain_id"
-	bcApp := app.NewBasecoin(eyesCli)
+	bcApp := NewBasecoin(eyesCli)
 	bcApp.SetOption("base/chainID", chainID)
-	fmt.Println(bcApp.Info())
+	t.Log(bcApp.Info())
 
-	test1PrivAcc := tests.PrivAccountFromSecret("test1")
-	test2PrivAcc := tests.PrivAccountFromSecret("test2")
+	test1PrivAcc := cmn.PrivAccountFromSecret("test1")
+	test2PrivAcc := cmn.PrivAccountFromSecret("test2")
 
 	// Seed Basecoin with account
 	test1Acc := test1PrivAcc.Account
 	test1Acc.Balance = types.Coins{{"", 1000}}
-	fmt.Println(bcApp.SetOption("base/account", string(wire.JSONBytes(test1Acc))))
+	t.Log(bcApp.SetOption("base/account", string(wire.JSONBytes(test1Acc))))
 
 	res := bcApp.Commit()
 	if res.IsErr() {
@@ -42,7 +35,7 @@ func testSendTx() {
 		Fee: 0,
 		Gas: 0,
 		Inputs: []types.TxInput{
-			makeInput(test1PrivAcc.Account.PubKey, types.Coins{{"", 1}}, 1),
+			cmn.MakeInput(test1PrivAcc.Account.PubKey, types.Coins{{"", 1}}, 1),
 		},
 		Outputs: []types.TxOutput{
 			types.TxOutput{
@@ -54,42 +47,41 @@ func testSendTx() {
 
 	// Sign request
 	signBytes := tx.SignBytes(chainID)
-	fmt.Printf("Sign bytes: %X\n", signBytes)
+	t.Log("Sign bytes: %X\n", signBytes)
 	sig := test1PrivAcc.PrivKey.Sign(signBytes)
 	tx.Inputs[0].Signature = sig
-	//fmt.Println("tx:", tx)
-	fmt.Printf("Signed TX bytes: %X\n", wire.BinaryBytes(struct{ types.Tx }{tx}))
+	t.Log("Signed TX bytes: %X\n", wire.BinaryBytes(struct{ types.Tx }{tx}))
 
 	// Write request
 	txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
 	res = bcApp.AppendTx(txBytes)
-	fmt.Println(res)
+	t.Log(res)
 	if res.IsErr() {
-		Exit(Fmt("Failed: %v", res.Error()))
+		t.Errorf(Fmt("Failed: %v", res.Error()))
 	}
 }
 
-func testSequence() {
+func TestSequence(t *testing.T) {
 	eyesCli := eyescli.NewLocalClient()
 	chainID := "test_chain_id"
-	bcApp := app.NewBasecoin(eyesCli)
+	bcApp := NewBasecoin(eyesCli)
 	bcApp.SetOption("base/chainID", chainID)
-	fmt.Println(bcApp.Info())
+	t.Log(bcApp.Info())
 
 	// Get the test account
-	test1PrivAcc := tests.PrivAccountFromSecret("test1")
+	test1PrivAcc := cmn.PrivAccountFromSecret("test1")
 	test1Acc := test1PrivAcc.Account
 	test1Acc.Balance = types.Coins{{"", 1 << 53}}
-	fmt.Println(bcApp.SetOption("base/account", string(wire.JSONBytes(test1Acc))))
+	t.Log(bcApp.SetOption("base/account", string(wire.JSONBytes(test1Acc))))
 
 	res := bcApp.Commit()
 	if res.IsErr() {
-		Exit(Fmt("Failed Commit: %v", res.Error()))
+		t.Errorf(Fmt("Failed Commit: %v", res.Error()))
 	}
 
 	sequence := int(1)
 	// Make a bunch of PrivAccounts
-	privAccounts := tests.RandAccounts(1000, 1000000, 0)
+	privAccounts := cmn.RandAccounts(1000, 1000000, 0)
 	privAccountSequences := make(map[string]int)
 	// Send coins to each account
 
@@ -100,7 +92,7 @@ func testSequence() {
 			Fee: 2,
 			Gas: 2,
 			Inputs: []types.TxInput{
-				makeInput(test1Acc.PubKey, types.Coins{{"", 1000002}}, sequence),
+				cmn.MakeInput(test1Acc.PubKey, types.Coins{{"", 1000002}}, sequence),
 			},
 			Outputs: []types.TxOutput{
 				types.TxOutput{
@@ -115,22 +107,22 @@ func testSequence() {
 		signBytes := tx.SignBytes(chainID)
 		sig := test1PrivAcc.PrivKey.Sign(signBytes)
 		tx.Inputs[0].Signature = sig
-		// fmt.Printf("ADDR: %X -> %X\n", tx.Inputs[0].Address, tx.Outputs[0].Address)
+		// t.Log("ADDR: %X -> %X\n", tx.Inputs[0].Address, tx.Outputs[0].Address)
 
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
 		res := bcApp.AppendTx(txBytes)
 		if res.IsErr() {
-			Exit("AppendTx error: " + res.Error())
+			t.Errorf("AppendTx error: " + res.Error())
 		}
 
 	}
 
-	fmt.Println("-------------------- RANDOM SENDS --------------------")
+	t.Log("-------------------- RANDOM SENDS --------------------")
 
 	res = bcApp.Commit()
 	if res.IsErr() {
-		Exit(Fmt("Failed Commit: %v", res.Error()))
+		t.Errorf(Fmt("Failed Commit: %v", res.Error()))
 	}
 
 	// Now send coins between these accounts
@@ -150,7 +142,7 @@ func testSequence() {
 			Fee: 2,
 			Gas: 2,
 			Inputs: []types.TxInput{
-				makeInput(privAccountA.Account.PubKey, types.Coins{{"", 3}}, privAccountASequence+1),
+				cmn.MakeInput(privAccountA.Account.PubKey, types.Coins{{"", 3}}, privAccountASequence+1),
 			},
 			Outputs: []types.TxOutput{
 				types.TxOutput{
@@ -164,26 +156,13 @@ func testSequence() {
 		signBytes := tx.SignBytes(chainID)
 		sig := privAccountA.PrivKey.Sign(signBytes)
 		tx.Inputs[0].Signature = sig
-		// fmt.Printf("ADDR: %X -> %X\n", tx.Inputs[0].Address, tx.Outputs[0].Address)
+		// t.Log("ADDR: %X -> %X\n", tx.Inputs[0].Address, tx.Outputs[0].Address)
 
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
 		res := bcApp.AppendTx(txBytes)
 		if res.IsErr() {
-			Exit("AppendTx error: " + res.Error())
+			t.Errorf("AppendTx error: " + res.Error())
 		}
 	}
-}
-
-func makeInput(pubKey crypto.PubKey, coins types.Coins, sequence int) types.TxInput {
-	input := types.TxInput{
-		Address:  pubKey.Address(),
-		PubKey:   pubKey,
-		Coins:    coins,
-		Sequence: sequence,
-	}
-	if sequence > 1 {
-		input.PubKey = nil
-	}
-	return input
 }

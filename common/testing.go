@@ -1,4 +1,5 @@
-package tests
+//functions used in testing throughout
+package common
 
 import (
 	"github.com/tendermint/basecoin/types"
@@ -43,4 +44,18 @@ func RandAccounts(num int, minAmount int64, maxAmount int64) []types.PrivAccount
 	}
 
 	return privAccs
+}
+
+//make input term for the AppTx or SendTx Types
+func MakeInput(pubKey crypto.PubKey, coins types.Coins, sequence int) types.TxInput {
+	input := types.TxInput{
+		Address:  pubKey.Address(),
+		PubKey:   pubKey,
+		Coins:    coins,
+		Sequence: sequence,
+	}
+	if sequence > 1 {
+		input.PubKey = nil
+	}
+	return input
 }

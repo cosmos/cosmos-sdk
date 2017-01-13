@@ -7,7 +7,6 @@ import (
 	"github.com/tendermint/basecoin/tests"
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
-	"github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
 )
@@ -42,7 +41,7 @@ func testSendTx() {
 		Fee: 0,
 		Gas: 0,
 		Inputs: []types.TxInput{
-			makeInput(test1PrivAcc.Account.PubKey, types.Coins{{"", 1}}, 1),
+			tests.MakeInput(test1PrivAcc.Account.PubKey, types.Coins{{"", 1}}, 1),
 		},
 		Outputs: []types.TxOutput{
 			types.TxOutput{
@@ -100,7 +99,7 @@ func testSequence() {
 			Fee: 2,
 			Gas: 2,
 			Inputs: []types.TxInput{
-				makeInput(test1Acc.PubKey, types.Coins{{"", 1000002}}, sequence),
+				tests.MakeInput(test1Acc.PubKey, types.Coins{{"", 1000002}}, sequence),
 			},
 			Outputs: []types.TxOutput{
 				types.TxOutput{
@@ -150,7 +149,7 @@ func testSequence() {
 			Fee: 2,
 			Gas: 2,
 			Inputs: []types.TxInput{
-				makeInput(privAccountA.Account.PubKey, types.Coins{{"", 3}}, privAccountASequence+1),
+				tests.MakeInput(privAccountA.Account.PubKey, types.Coins{{"", 3}}, privAccountASequence+1),
 			},
 			Outputs: []types.TxOutput{
 				types.TxOutput{
@@ -173,17 +172,4 @@ func testSequence() {
 			Exit("AppendTx error: " + res.Error())
 		}
 	}
-}
-
-func makeInput(pubKey crypto.PubKey, coins types.Coins, sequence int) types.TxInput {
-	input := types.TxInput{
-		Address:  pubKey.Address(),
-		PubKey:   pubKey,
-		Coins:    coins,
-		Sequence: sequence,
-	}
-	if sequence > 1 {
-		input.PubKey = nil
-	}
-	return input
 }

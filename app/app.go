@@ -17,9 +17,11 @@ const (
 
 	PluginTypeByteBase = 0x01
 	PluginTypeByteEyes = 0x02
+	PluginTypeByteVote = 0x03
 
 	PluginNameBase = "base"
 	PluginNameEyes = "eyes"
+	PluginNameVote = "vote"
 )
 
 type Basecoin struct {
@@ -43,6 +45,10 @@ func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
 // TMSP::Info
 func (app *Basecoin) Info() string {
 	return Fmt("Basecoin v%v", version)
+}
+
+func (app *Basecoin) RegisterPlugin(typeByte byte, name string, plugin types.Plugin) {
+	app.plugins.RegisterPlugin(typeByte, name, plugin)
 }
 
 // TMSP::SetOption

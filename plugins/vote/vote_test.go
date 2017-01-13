@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/tests"
+	cmn "github.com/tendermint/basecoin/common"
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
@@ -21,7 +21,7 @@ func TestVote(t *testing.T) {
 	fmt.Println(bcApp.Info())
 
 	//account initialization
-	test1PrivAcc := tests.PrivAccountFromSecret("test1")
+	test1PrivAcc := cmn.PrivAccountFromSecret("test1")
 
 	// Seed Basecoin with account
 	test1Acc := test1PrivAcc.Account
@@ -53,7 +53,7 @@ func TestVote(t *testing.T) {
 			Fee:   fees,
 			Gas:   0,
 			Type:  typeByte,
-			Input: tests.MakeInput(test1Acc.PubKey, types.Coins{{"", sendCoins}}, seqNum),
+			Input: cmn.MakeInput(test1Acc.PubKey, types.Coins{{"", sendCoins}}, seqNum),
 			Data:  wire.BinaryBytes(struct{ Tx }{Tx{voteYes: true}}), //a vote for human rights
 		}
 

@@ -9,7 +9,7 @@ install:
 
 test:
 	go test --race `${NOVENDOR}`
-	go run tests/tmsp/*.go
+	#go run tests/tendermint/*.go
 
 get_deps:
 	go get -d github.com/tendermint/basecoin/...

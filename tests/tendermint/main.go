@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/tendermint/basecoin/tests"
+	cmn "github.com/tendermint/basecoin/common"
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-rpc/client"
@@ -37,10 +37,10 @@ func main() {
 	}()
 
 	// Get the root account
-	root := tests.PrivAccountFromSecret("test")
+	root := cmn.PrivAccountFromSecret("test")
 	sequence := int(0)
 	// Make a bunch of PrivAccounts
-	privAccounts := tests.RandAccounts(1000, 1000000, 0)
+	privAccounts := cmn.RandAccounts(1000, 1000000, 0)
 	privAccountSequences := make(map[string]int)
 
 	// Send coins to each account

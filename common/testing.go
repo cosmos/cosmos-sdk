@@ -1,4 +1,5 @@
-package tests
+//functions used in testing throughout
+package common
 
 import (
 	"github.com/tendermint/basecoin/types"

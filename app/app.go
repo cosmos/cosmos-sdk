@@ -128,8 +128,9 @@ func (app *Basecoin) Query(query []byte) (res tmsp.Result) {
 
 // TMSP::Commit
 func (app *Basecoin) Commit() (res tmsp.Result) {
-	// Commit eyes.
-	res = app.eyesCli.CommitSync()
+
+	// Commit state
+	res = app.state.Commit()
 
 	// Wrap the committed state in cache for CheckTx
 	app.cacheState = app.state.CacheWrap()

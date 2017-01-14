@@ -13,7 +13,6 @@ type Plugin interface {
 }
 
 type NamedPlugin struct {
-	Byte byte
 	Name string
 	Plugin
 }
@@ -35,30 +34,22 @@ func NewCallContext(caller []byte, coins Coins) CallContext {
 //----------------------------------------
 
 type Plugins struct {
-	byByte map[byte]Plugin
 	byName map[string]Plugin
 	plist  []NamedPlugin
 }
 
 func NewPlugins() *Plugins {
 	return &Plugins{
-		byByte: make(map[byte]Plugin),
 		byName: make(map[string]Plugin),
 	}
 }
 
-func (pgz *Plugins) RegisterPlugin(typeByte byte, name string, plugin Plugin) {
-	pgz.byByte[typeByte] = plugin
+func (pgz *Plugins) RegisterPlugin(name string, plugin Plugin) {
 	pgz.byName[name] = plugin
 	pgz.plist = append(pgz.plist, NamedPlugin{
-		Byte:   typeByte,
 		Name:   name,
 		Plugin: plugin,
 	})
-}
-
-func (pgz *Plugins) GetByByte(typeByte byte) Plugin {
-	return pgz.byByte[typeByte]
 }
 
 func (pgz *Plugins) GetByName(name string) Plugin {

@@ -141,7 +141,7 @@ func (tx *SendTx) String() string {
 type AppTx struct {
 	Fee   int64   `json:"fee"`   // Fee
 	Gas   int64   `json:"gas"`   // Gas
-	Type  byte    `json:"type"`  // Which app
+	Name  string  `json:"type"`  // Which plugin
 	Input TxInput `json:"input"` // Hmmm do we want coins?
 	Data  []byte  `json:"data"`
 }
@@ -161,7 +161,7 @@ func (tx *AppTx) SetSignature(sig crypto.Signature) bool {
 }
 
 func (tx *AppTx) String() string {
-	return Fmt("AppTx{%v/%v %v %v %X}", tx.Fee, tx.Gas, tx.Type, tx.Input, tx.Data)
+	return Fmt("AppTx{%v/%v %v %v %X}", tx.Fee, tx.Gas, tx.Name, tx.Input, tx.Data)
 }
 
 //-----------------------------------------------------------------------------

@@ -12,6 +12,8 @@ import (
 	eyescli "github.com/tendermint/merkleeyes/client"
 )
 
+const PluginNameVote = "vote"
+
 func TestVote(t *testing.T) {
 	//base initialization
 	eyesCli := eyescli.NewLocalClient()
@@ -30,10 +32,8 @@ func TestVote(t *testing.T) {
 
 	//vote initialization
 	votePlugin := NewVoteInstance("humanRights")
-	var typeByte byte = app.PluginTypeByteVote
 	bcApp.RegisterPlugin(
-		typeByte,
-		app.PluginNameVote,
+		PluginNameVote,
 		votePlugin,
 	)
 
@@ -52,7 +52,7 @@ func TestVote(t *testing.T) {
 		tx := &types.AppTx{
 			Fee:   fees,
 			Gas:   0,
-			Type:  typeByte,
+			Name:  PluginNameVote,
 			Input: cmn.MakeInput(test1Acc.PubKey, types.Coins{{"", sendCoins}}, seqNum),
 			Data:  wire.BinaryBytes(struct{ Tx }{Tx{voteYes: true}}), //a vote for human rights
 		}

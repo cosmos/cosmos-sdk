@@ -15,13 +15,7 @@ const (
 	version   = "0.1"
 	maxTxSize = 10240
 
-	PluginTypeByteBase = 0x01
-	PluginTypeByteEyes = 0x02
-	PluginTypeByteVote = 0x03
-
 	PluginNameBase = "base"
-	PluginNameEyes = "eyes"
-	PluginNameVote = "vote"
 )
 
 type Basecoin struct {
@@ -47,8 +41,8 @@ func (app *Basecoin) Info() string {
 	return Fmt("Basecoin v%v", version)
 }
 
-func (app *Basecoin) RegisterPlugin(typeByte byte, name string, plugin types.Plugin) {
-	app.plugins.RegisterPlugin(typeByte, name, plugin)
+func (app *Basecoin) RegisterPlugin(name string, plugin types.Plugin) {
+	app.plugins.RegisterPlugin(name, plugin)
 }
 
 // TMSP::SetOption

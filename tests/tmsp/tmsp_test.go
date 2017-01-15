@@ -1,8 +1,9 @@
-package app
+package tmsp_test
 
 import (
 	"testing"
 
+	"github.com/tendermint/basecoin/app"
 	"github.com/tendermint/basecoin/testutils"
 	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/go-common"
@@ -13,7 +14,7 @@ import (
 func TestSendTx(t *testing.T) {
 	eyesCli := eyescli.NewLocalClient()
 	chainID := "test_chain_id"
-	bcApp := NewBasecoin(eyesCli)
+	bcApp := app.NewBasecoin(eyesCli)
 	bcApp.SetOption("base/chainID", chainID)
 	t.Log(bcApp.Info())
 
@@ -64,7 +65,7 @@ func TestSendTx(t *testing.T) {
 func TestSequence(t *testing.T) {
 	eyesCli := eyescli.NewLocalClient()
 	chainID := "test_chain_id"
-	bcApp := NewBasecoin(eyesCli)
+	bcApp := app.NewBasecoin(eyesCli)
 	bcApp.SetOption("base/chainID", chainID)
 	t.Log(bcApp.Info())
 

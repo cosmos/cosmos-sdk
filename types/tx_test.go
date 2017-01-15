@@ -10,8 +10,8 @@ var chainID string = "test_chain"
 
 func TestSendTxSignable(t *testing.T) {
 	sendTx := &SendTx{
-		Fee: 111,
 		Gas: 222,
+		Fee: Coin{"", 111},
 		Inputs: []TxInput{
 			TxInput{
 				Address:  []byte("input1"),
@@ -37,7 +37,7 @@ func TestSendTxSignable(t *testing.T) {
 	}
 	signBytes := sendTx.SignBytes(chainID)
 	signBytesHex := Fmt("%X", signBytes)
-	expected := "010A746573745F636861696E01000000000000006F00000000000000DE01020106696E7075743101010000000000000030390301093200000106696E70757432010100000000000000006F01DE0000010201076F757470757431010100000000000000014D01076F75747075743201010000000000000001BC"
+	expected := "010A746573745F636861696E0100000000000000DE00000000000000006F01020106696E7075743101010000000000000030390301093200000106696E70757432010100000000000000006F01DE0000010201076F757470757431010100000000000000014D01076F75747075743201010000000000000001BC"
 	if signBytesHex != expected {
 		t.Errorf("Got unexpected sign string for SendTx. Expected:\n%v\nGot:\n%v", expected, signBytesHex)
 	}
@@ -45,8 +45,8 @@ func TestSendTxSignable(t *testing.T) {
 
 func TestAppTxSignable(t *testing.T) {
 	callTx := &AppTx{
-		Fee:  111,
 		Gas:  222,
+		Fee:  Coin{"", 111},
 		Name: "X",
 		Input: TxInput{
 			Address:  []byte("input1"),
@@ -57,7 +57,7 @@ func TestAppTxSignable(t *testing.T) {
 	}
 	signBytes := callTx.SignBytes(chainID)
 	signBytesHex := Fmt("%X", signBytes)
-	expected := "010A746573745F636861696E01000000000000006F00000000000000DE0101580106696E70757431010100000000000000303903010932000001056461746131"
+	expected := "010A746573745F636861696E0100000000000000DE00000000000000006F0101580106696E70757431010100000000000000303903010932000001056461746131"
 	if signBytesHex != expected {
 		t.Errorf("Got unexpected sign string for AppTx. Expected:\n%v\nGot:\n%v", expected, signBytesHex)
 	}

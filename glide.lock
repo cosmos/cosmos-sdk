@@ -1,5 +1,5 @@
 hash: 3869944d14a8df914ffcad02c2ef3548173daba51c5ea697767f8af77c07b348
-updated: 2017-01-14T20:46:16.999965963-08:00
+updated: 2017-01-15T14:45:40.368426139-08:00
 imports:
 - name: github.com/btcsuite/btcd
   version: afec1bd1245a4a19e6dfe1306974b733e7cbb9b8
@@ -41,7 +41,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 6526ab2137fadd0f4d2e25002bbfc1784b4f3c27
+  version: 05096de3687ac582bec63860b3dd384acd9149aa
   subpackages:
   - client
   - server
@@ -68,9 +68,9 @@ imports:
 - name: github.com/tendermint/go-logger
   version: cefb3a45c0bf3c493a04e9bcd9b1540528be59f2
 - name: github.com/tendermint/go-merkle
-  version: 1bc9a24706d715cd45403593c6d0a870d70011bb
+  version: 2979c7eb8aa020fa1cf203654907dbb889703888
 - name: github.com/tendermint/go-p2p
-  version: eab2baa363de01b052b88c559e803776cd2c7dd6
+  version: 67c9086b7458eb45b1970483decd01cd744c477a
   subpackages:
   - upnp
 - name: github.com/tendermint/go-rpc
@@ -85,12 +85,12 @@ imports:
   subpackages:
   - term
 - name: github.com/tendermint/merkleeyes
-  version: db66769b34a950bb588919c94925724f21583925
+  version: 2cf87e5f049ab6131aa4ea188c1b5b629d9b3bf9
   subpackages:
   - app
   - client
 - name: github.com/tendermint/tendermint
-  version: 0aecfe2dae3269a9450b5d8b3bac8721a8dde7c7
+  version: cf0cb9558aaecbf3ddb071eb863df77e55d828ed
   subpackages:
   - rpc/core/types
   - types
@@ -131,4 +131,16 @@ imports:
   - stats
   - tap
   - transport
-testImports: []
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
+- name: github.com/stretchr/testify
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
+  subpackages:
+  - assert

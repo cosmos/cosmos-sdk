@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	cmn "github.com/tendermint/basecoin/common"
+	"github.com/tendermint/basecoin/testutils"
 	"github.com/tendermint/basecoin/types"
-	. "github.com/tendermint/go-common"
+	cmn "github.com/tendermint/go-common"
 	"github.com/tendermint/go-rpc/client"
 	"github.com/tendermint/go-rpc/types"
 	"github.com/tendermint/go-wire"
@@ -21,7 +21,7 @@ func main() {
 
 	_, err := ws.Start()
 	if err != nil {
-		Exit(err.Error())
+		cmn.Exit(err.Error())
 	}
 	var counter = 0
 
@@ -32,15 +32,15 @@ func main() {
 			if !ok {
 				break
 			}
-			fmt.Println(counter, "res:", Blue(string(res)))
+			fmt.Println(counter, "res:", cmn.Blue(string(res)))
 		}
 	}()
 
 	// Get the root account
-	root := cmn.PrivAccountFromSecret("test")
+	root := testutils.PrivAccountFromSecret("test")
 	sequence := int(0)
 	// Make a bunch of PrivAccounts
-	privAccounts := cmn.RandAccounts(1000, 1000000, 0)
+	privAccounts := testutils.RandAccounts(1000, 1000000, 0)
 	privAccountSequences := make(map[string]int)
 
 	// Send coins to each account
@@ -72,12 +72,12 @@ func main() {
 
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
-		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", Arr(txBytes))
+		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", cmn.Arr(txBytes))
 		reqBytes := wire.JSONBytes(request)
 		//fmt.Print(".")
 		err := ws.WriteMessage(websocket.TextMessage, reqBytes)
 		if err != nil {
-			Exit("writing websocket request: " + err.Error())
+			cmn.Exit("writing websocket request: " + err.Error())
 		}
 	}
 
@@ -86,8 +86,8 @@ func main() {
 		counter += 1
 		time.Sleep(time.Millisecond * 10)
 
-		randA := RandInt() % len(privAccounts)
-		randB := RandInt() % len(privAccounts)
+		randA := cmn.RandInt() % len(privAccounts)
+		randB := cmn.RandInt() % len(privAccounts)
 		if randA == randB {
 			continue
 		}
@@ -122,12 +122,12 @@ func main() {
 
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
-		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", Arr(txBytes))
+		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", cmn.Arr(txBytes))
 		reqBytes := wire.JSONBytes(request)
 		//fmt.Print(".")
 		err := ws.WriteMessage(websocket.TextMessage, reqBytes)
 		if err != nil {
-			Exit("writing websocket request: " + err.Error())
+			cmn.Exit("writing websocket request: " + err.Error())
 		}
 	}
 

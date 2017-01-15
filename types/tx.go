@@ -75,6 +75,19 @@ func (txIn TxInput) String() string {
 	return Fmt("TxInput{%X,%v,%v,%v,%v}", txIn.Address, txIn.Coins, txIn.Sequence, txIn.Signature, txIn.PubKey)
 }
 
+func NewTxInput(pubKey crypto.PubKey, coins Coins, sequence int) TxInput {
+	input := TxInput{
+		Address:  pubKey.Address(),
+		PubKey:   pubKey,
+		Coins:    coins,
+		Sequence: sequence,
+	}
+	if sequence > 1 {
+		input.PubKey = nil
+	}
+	return input
+}
+
 //-----------------------------------------------------------------------------
 
 type TxOutput struct {
@@ -102,8 +115,8 @@ func (txOut TxOutput) String() string {
 //-----------------------------------------------------------------------------
 
 type SendTx struct {
-	Fee     int64      `json:"fee"` // Fee
 	Gas     int64      `json:"gas"` // Gas
+	Fee     Coin       `json:"fee"` // Fee
 	Inputs  []TxInput  `json:"inputs"`
 	Outputs []TxOutput `json:"outputs"`
 }
@@ -133,14 +146,14 @@ func (tx *SendTx) SetSignature(addr []byte, sig crypto.Signature) bool {
 }
 
 func (tx *SendTx) String() string {
-	return Fmt("SendTx{%v/%v %v->%v}", tx.Fee, tx.Gas, tx.Inputs, tx.Outputs)
+	return Fmt("SendTx{%v/%v %v->%v}", tx.Gas, tx.Fee, tx.Inputs, tx.Outputs)
 }
 
 //-----------------------------------------------------------------------------
 
 type AppTx struct {
-	Fee   int64   `json:"fee"`   // Fee
 	Gas   int64   `json:"gas"`   // Gas
+	Fee   Coin    `json:"fee"`   // Fee
 	Name  string  `json:"type"`  // Which plugin
 	Input TxInput `json:"input"` // Hmmm do we want coins?
 	Data  []byte  `json:"data"`
@@ -161,7 +174,7 @@ func (tx *AppTx) SetSignature(sig crypto.Signature) bool {
 }
 
 func (tx *AppTx) String() string {
-	return Fmt("AppTx{%v/%v %v %v %X}", tx.Fee, tx.Gas, tx.Name, tx.Input, tx.Data)
+	return Fmt("AppTx{%v/%v %v %v %X}", tx.Gas, tx.Fee, tx.Name, tx.Input, tx.Data)
 }
 
 //-----------------------------------------------------------------------------

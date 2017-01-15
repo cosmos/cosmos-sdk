@@ -3,9 +3,9 @@ package app
 import (
 	"testing"
 
-	cmn "github.com/tendermint/basecoin/common"
+	"github.com/tendermint/basecoin/testutils"
 	"github.com/tendermint/basecoin/types"
-	. "github.com/tendermint/go-common"
+	cmn "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
 )
@@ -17,8 +17,8 @@ func TestSendTx(t *testing.T) {
 	bcApp.SetOption("base/chainID", chainID)
 	t.Log(bcApp.Info())
 
-	test1PrivAcc := cmn.PrivAccountFromSecret("test1")
-	test2PrivAcc := cmn.PrivAccountFromSecret("test2")
+	test1PrivAcc := testutils.PrivAccountFromSecret("test1")
+	test2PrivAcc := testutils.PrivAccountFromSecret("test2")
 
 	// Seed Basecoin with account
 	test1Acc := test1PrivAcc.Account
@@ -27,15 +27,15 @@ func TestSendTx(t *testing.T) {
 
 	res := bcApp.Commit()
 	if res.IsErr() {
-		Exit(Fmt("Failed Commit: %v", res.Error()))
+		cmn.Exit(cmn.Fmt("Failed Commit: %v", res.Error()))
 	}
 
 	// Construct a SendTx signature
 	tx := &types.SendTx{
-		Fee: 0,
 		Gas: 0,
+		Fee: types.Coin{"", 0},
 		Inputs: []types.TxInput{
-			cmn.MakeInput(test1PrivAcc.Account.PubKey, types.Coins{{"", 1}}, 1),
+			types.NewTxInput(test1PrivAcc.Account.PubKey, types.Coins{{"", 1}}, 1),
 		},
 		Outputs: []types.TxOutput{
 			types.TxOutput{
@@ -57,7 +57,7 @@ func TestSendTx(t *testing.T) {
 	res = bcApp.DeliverTx(txBytes)
 	t.Log(res)
 	if res.IsErr() {
-		t.Errorf(Fmt("Failed: %v", res.Error()))
+		t.Errorf("Failed: %v", res.Error())
 	}
 }
 
@@ -69,19 +69,19 @@ func TestSequence(t *testing.T) {
 	t.Log(bcApp.Info())
 
 	// Get the test account
-	test1PrivAcc := cmn.PrivAccountFromSecret("test1")
+	test1PrivAcc := testutils.PrivAccountFromSecret("test1")
 	test1Acc := test1PrivAcc.Account
 	test1Acc.Balance = types.Coins{{"", 1 << 53}}
 	t.Log(bcApp.SetOption("base/account", string(wire.JSONBytes(test1Acc))))
 
 	res := bcApp.Commit()
 	if res.IsErr() {
-		t.Errorf(Fmt("Failed Commit: %v", res.Error()))
+		t.Errorf("Failed Commit: %v", res.Error())
 	}
 
 	sequence := int(1)
 	// Make a bunch of PrivAccounts
-	privAccounts := cmn.RandAccounts(1000, 1000000, 0)
+	privAccounts := testutils.RandAccounts(1000, 1000000, 0)
 	privAccountSequences := make(map[string]int)
 	// Send coins to each account
 
@@ -89,10 +89,10 @@ func TestSequence(t *testing.T) {
 		privAccount := privAccounts[i]
 
 		tx := &types.SendTx{
-			Fee: 2,
 			Gas: 2,
+			Fee: types.Coin{"", 2},
 			Inputs: []types.TxInput{
-				cmn.MakeInput(test1Acc.PubKey, types.Coins{{"", 1000002}}, sequence),
+				types.NewTxInput(test1Acc.PubKey, types.Coins{{"", 1000002}}, sequence),
 			},
 			Outputs: []types.TxOutput{
 				types.TxOutput{
@@ -122,13 +122,13 @@ func TestSequence(t *testing.T) {
 
 	res = bcApp.Commit()
 	if res.IsErr() {
-		t.Errorf(Fmt("Failed Commit: %v", res.Error()))
+		t.Errorf("Failed Commit: %v", res.Error())
 	}
 
 	// Now send coins between these accounts
 	for i := 0; i < 10000; i++ {
-		randA := RandInt() % len(privAccounts)
-		randB := RandInt() % len(privAccounts)
+		randA := cmn.RandInt() % len(privAccounts)
+		randB := cmn.RandInt() % len(privAccounts)
 		if randA == randB {
 			continue
 		}
@@ -139,10 +139,10 @@ func TestSequence(t *testing.T) {
 		privAccountB := privAccounts[randB]
 
 		tx := &types.SendTx{
-			Fee: 2,
 			Gas: 2,
+			Fee: types.Coin{"", 2},
 			Inputs: []types.TxInput{
-				cmn.MakeInput(privAccountA.Account.PubKey, types.Coins{{"", 3}}, privAccountASequence+1),
+				types.NewTxInput(privAccountA.Account.PubKey, types.Coins{{"", 3}}, privAccountASequence+1),
 			},
 			Outputs: []types.TxOutput{
 				types.TxOutput{

@@ -1,10 +1,12 @@
 package types
 
 import (
+	"fmt"
 	abci "github.com/tendermint/abci/types"
 )
 
 type Plugin interface {
+	Name() string
 	SetOption(store KVStore, key string, value string) (log string)
 	RunTx(store KVStore, ctx CallContext, txBytes []byte) (res abci.Result)
 	InitChain(store KVStore, vals []*abci.Validator)
@@ -12,22 +14,21 @@ type Plugin interface {
 	EndBlock(store KVStore, height uint64) []*abci.Validator
 }
 
-type NamedPlugin struct {
-	Name string
-	Plugin
-}
-
 //----------------------------------------
 
+// CallContext.Caller's coins have been deducted by CallContext.Coins
+// Caller's Sequence has been incremented.
 type CallContext struct {
-	Caller []byte
-	Coins  Coins
+	CallerAddress []byte
+	CallerAccount *Account
+	Coins         Coins
 }
 
-func NewCallContext(caller []byte, coins Coins) CallContext {
+func NewCallContext(callerAddress []byte, callerAccount *Account, coins Coins) CallContext {
 	return CallContext{
-		Caller: caller,
-		Coins:  coins,
+		CallerAddress: callerAddress,
+		CallerAccount: callerAccount,
+		Coins:         coins,
 	}
 }
 
@@ -35,7 +36,7 @@ func NewCallContext(caller []byte, coins Coins) CallContext {
 
 type Plugins struct {
 	byName map[string]Plugin
-	plist  []NamedPlugin
+	plist  []Plugin
 }
 
 func NewPlugins() *Plugins {
@@ -44,18 +45,22 @@ func NewPlugins() *Plugins {
 	}
 }
 
-func (pgz *Plugins) RegisterPlugin(name string, plugin Plugin) {
+func (pgz *Plugins) RegisterPlugin(plugin Plugin) {
+	name := plugin.Name()
+	if name == "" {
+		panic("Plugin name cannot be blank")
+	}
+	if _, exists := pgz.byName[name]; exists {
+		panic(fmt.Sprintf("Plugin already exists by the name of %v", name))
+	}
 	pgz.byName[name] = plugin
-	pgz.plist = append(pgz.plist, NamedPlugin{
-		Name:   name,
-		Plugin: plugin,
-	})
+	pgz.plist = append(pgz.plist, plugin)
 }
 
 func (pgz *Plugins) GetByName(name string) Plugin {
 	return pgz.byName[name]
 }
 
-func (pgz *Plugins) GetList() []NamedPlugin {
+func (pgz *Plugins) GetList() []Plugin {
 	return pgz.plist
 }

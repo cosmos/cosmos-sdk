@@ -128,3 +128,15 @@ func (coins Coins) IsPositive() bool {
 	}
 	return true
 }
+
+func (coins Coins) IsNonnegative() bool {
+	if len(coins) == 0 {
+		return true
+	}
+	for _, coinAmount := range coins {
+		if coinAmount.Amount < 0 {
+			return false
+		}
+	}
+	return true
+}

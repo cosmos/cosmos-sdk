@@ -41,8 +41,8 @@ func (app *Basecoin) Info() abci.ResponseInfo {
 	return abci.ResponseInfo{Data: Fmt("Basecoin v%v", version)}
 }
 
-func (app *Basecoin) RegisterPlugin(name string, plugin types.Plugin) {
-	app.plugins.RegisterPlugin(name, plugin)
+func (app *Basecoin) RegisterPlugin(plugin types.Plugin) {
+	app.plugins.RegisterPlugin(plugin)
 }
 
 // TMSP::SetOption
@@ -144,21 +144,21 @@ func (app *Basecoin) Commit() (res abci.Result) {
 // TMSP::InitChain
 func (app *Basecoin) InitChain(validators []*abci.Validator) {
 	for _, plugin := range app.plugins.GetList() {
-		plugin.Plugin.InitChain(app.state, validators)
+		plugin.InitChain(app.state, validators)
 	}
 }
 
 // TMSP::BeginBlock
 func (app *Basecoin) BeginBlock(height uint64) {
 	for _, plugin := range app.plugins.GetList() {
-		plugin.Plugin.BeginBlock(app.state, height)
+		plugin.BeginBlock(app.state, height)
 	}
 }
 
 // TMSP::EndBlock
 func (app *Basecoin) EndBlock(height uint64) (diffs []*abci.Validator) {
 	for _, plugin := range app.plugins.GetList() {
-		moreDiffs := plugin.Plugin.EndBlock(app.state, height)
+		moreDiffs := plugin.EndBlock(app.state, height)
 		diffs = append(diffs, moreDiffs...)
 	}
 	return

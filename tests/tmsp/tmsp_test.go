@@ -26,11 +26,6 @@ func TestSendTx(t *testing.T) {
 	test1Acc.Balance = types.Coins{{"", 1000}}
 	t.Log(bcApp.SetOption("base/account", string(wire.JSONBytes(test1Acc))))
 
-	res := bcApp.Commit()
-	if res.IsErr() {
-		cmn.Exit(cmn.Fmt("Failed Commit: %v", res.Error()))
-	}
-
 	// Construct a SendTx signature
 	tx := &types.SendTx{
 		Gas: 0,
@@ -55,7 +50,7 @@ func TestSendTx(t *testing.T) {
 
 	// Write request
 	txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
-	res = bcApp.DeliverTx(txBytes)
+	res := bcApp.DeliverTx(txBytes)
 	t.Log(res)
 	if res.IsErr() {
 		t.Errorf("Failed: %v", res.Error())
@@ -74,11 +69,6 @@ func TestSequence(t *testing.T) {
 	test1Acc := test1PrivAcc.Account
 	test1Acc.Balance = types.Coins{{"", 1 << 53}}
 	t.Log(bcApp.SetOption("base/account", string(wire.JSONBytes(test1Acc))))
-
-	res := bcApp.Commit()
-	if res.IsErr() {
-		t.Errorf("Failed Commit: %v", res.Error())
-	}
 
 	sequence := int(1)
 	// Make a bunch of PrivAccounts
@@ -119,12 +109,12 @@ func TestSequence(t *testing.T) {
 
 	}
 
-	t.Log("-------------------- RANDOM SENDS --------------------")
-
-	res = bcApp.Commit()
+	res := bcApp.Commit()
 	if res.IsErr() {
 		t.Errorf("Failed Commit: %v", res.Error())
 	}
+
+	t.Log("-------------------- RANDOM SENDS --------------------")
 
 	// Now send coins between these accounts
 	for i := 0; i < 10000; i++ {

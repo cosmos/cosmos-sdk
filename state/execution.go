@@ -1,14 +1,14 @@
 package state
 
 import (
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-events"
-	tmsp "github.com/tendermint/tmsp/types"
 )
 
 // If the tx is invalid, a TMSP error will be returned.
-func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc events.Fireable) tmsp.Result {
+func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc events.Fireable) abci.Result {
 
 	// TODO: do something with fees
 	fees := types.Coins{}
@@ -47,7 +47,7 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		}
 		outTotal := sumOutputs(tx.Outputs)
 		if !inTotal.IsEqual(outTotal.Plus(types.Coins{{"", tx.Fee}})) {
-			return tmsp.ErrBaseInvalidOutput.AppendLog("Input total != output total + fees")
+			return abci.ErrBaseInvalidOutput.AppendLog("Input total != output total + fees")
 		}
 		fees = fees.Plus(types.Coins{{"", tx.Fee}})
 
@@ -71,7 +71,7 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 			}
 		*/
 
-		return tmsp.OK
+		return abci.OK
 
 	case *types.AppTx:
 		// Validate input, basic
@@ -83,7 +83,7 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		// Get input account
 		inAcc := state.GetAccount(tx.Input.Address)
 		if inAcc == nil {
-			return tmsp.ErrBaseUnknownAddress
+			return abci.ErrBaseUnknownAddress
 		}
 		if tx.Input.PubKey != nil {
 			inAcc.PubKey = tx.Input.PubKey
@@ -98,13 +98,13 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		}
 		if !tx.Input.Coins.IsGTE(types.Coins{{"", tx.Fee}}) {
 			log.Info(Fmt("Sender did not send enough to cover the fee %X", tx.Input.Address))
-			return tmsp.ErrBaseInsufficientFunds
+			return abci.ErrBaseInsufficientFunds
 		}
 
 		// Validate call address
 		plugin := pgz.GetByName(tx.Name)
 		if plugin == nil {
-			return tmsp.ErrBaseUnknownAddress.AppendLog(
+			return abci.ErrBaseUnknownAddress.AppendLog(
 				Fmt("Unrecognized plugin name%v", tx.Name))
 		}
 
@@ -116,7 +116,7 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		// If this is a CheckTx, stop now.
 		if isCheckTx {
 			state.SetAccount(tx.Input.Address, inAcc)
-			return tmsp.OK
+			return abci.OK
 		}
 
 		// Create inAcc checkpoint
@@ -153,7 +153,7 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		return res
 
 	default:
-		return tmsp.ErrBaseEncodingError.SetLog("Unknown tx type")
+		return abci.ErrBaseEncodingError.SetLog("Unknown tx type")
 	}
 }
 
@@ -162,17 +162,17 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 // The accounts from the TxInputs must either already have
 // crypto.PubKey.(type) != nil, (it must be known),
 // or it must be specified in the TxInput.
-func getInputs(state types.AccountGetter, ins []types.TxInput) (map[string]*types.Account, tmsp.Result) {
+func getInputs(state types.AccountGetter, ins []types.TxInput) (map[string]*types.Account, abci.Result) {
 	accounts := map[string]*types.Account{}
 	for _, in := range ins {
 		// Account shouldn't be duplicated
 		if _, ok := accounts[string(in.Address)]; ok {
-			return nil, tmsp.ErrBaseDuplicateAddress
+			return nil, abci.ErrBaseDuplicateAddress
 		}
 
 		acc := state.GetAccount(in.Address)
 		if acc == nil {
-			return nil, tmsp.ErrBaseUnknownAddress
+			return nil, abci.ErrBaseUnknownAddress
 		}
 
 		if in.PubKey != nil {
@@ -180,10 +180,10 @@ func getInputs(state types.AccountGetter, ins []types.TxInput) (map[string]*type
 		}
 		accounts[string(in.Address)] = acc
 	}
-	return accounts, tmsp.OK
+	return accounts, abci.OK
 }
 
-func getOrMakeOutputs(state types.AccountGetter, accounts map[string]*types.Account, outs []types.TxOutput) (map[string]*types.Account, tmsp.Result) {
+func getOrMakeOutputs(state types.AccountGetter, accounts map[string]*types.Account, outs []types.TxOutput) (map[string]*types.Account, abci.Result) {
 	if accounts == nil {
 		accounts = make(map[string]*types.Account)
 	}
@@ -191,7 +191,7 @@ func getOrMakeOutputs(state types.AccountGetter, accounts map[string]*types.Acco
 	for _, out := range outs {
 		// Account shouldn't be duplicated
 		if _, ok := accounts[string(out.Address)]; ok {
-			return nil, tmsp.ErrBaseDuplicateAddress
+			return nil, abci.ErrBaseDuplicateAddress
 		}
 		acc := state.GetAccount(out.Address)
 		// output account may be nil (new)
@@ -203,22 +203,22 @@ func getOrMakeOutputs(state types.AccountGetter, accounts map[string]*types.Acco
 		}
 		accounts[string(out.Address)] = acc
 	}
-	return accounts, tmsp.OK
+	return accounts, abci.OK
 }
 
 // Validate inputs basic structure
-func validateInputsBasic(ins []types.TxInput) (res tmsp.Result) {
+func validateInputsBasic(ins []types.TxInput) (res abci.Result) {
 	for _, in := range ins {
 		// Check TxInput basic
 		if res := in.ValidateBasic(); res.IsErr() {
 			return res
 		}
 	}
-	return tmsp.OK
+	return abci.OK
 }
 
 // Validate inputs and compute total amount of coins
-func validateInputsAdvanced(accounts map[string]*types.Account, signBytes []byte, ins []types.TxInput) (total types.Coins, res tmsp.Result) {
+func validateInputsAdvanced(accounts map[string]*types.Account, signBytes []byte, ins []types.TxInput) (total types.Coins, res abci.Result) {
 	for _, in := range ins {
 		acc := accounts[string(in.Address)]
 		if acc == nil {
@@ -231,34 +231,34 @@ func validateInputsAdvanced(accounts map[string]*types.Account, signBytes []byte
 		// Good. Add amount to total
 		total = total.Plus(in.Coins)
 	}
-	return total, tmsp.OK
+	return total, abci.OK
 }
 
-func validateInputAdvanced(acc *types.Account, signBytes []byte, in types.TxInput) (res tmsp.Result) {
+func validateInputAdvanced(acc *types.Account, signBytes []byte, in types.TxInput) (res abci.Result) {
 	// Check sequence/coins
 	seq, balance := acc.Sequence, acc.Balance
 	if seq+1 != in.Sequence {
-		return tmsp.ErrBaseInvalidSequence.AppendLog(Fmt("Got %v, expected %v. (acc.seq=%v)", in.Sequence, seq+1, acc.Sequence))
+		return abci.ErrBaseInvalidSequence.AppendLog(Fmt("Got %v, expected %v. (acc.seq=%v)", in.Sequence, seq+1, acc.Sequence))
 	}
 	// Check amount
 	if !balance.IsGTE(in.Coins) {
-		return tmsp.ErrBaseInsufficientFunds
+		return abci.ErrBaseInsufficientFunds
 	}
 	// Check signatures
 	if !acc.PubKey.VerifyBytes(signBytes, in.Signature) {
-		return tmsp.ErrBaseInvalidSignature.AppendLog(Fmt("SignBytes: %X", signBytes))
+		return abci.ErrBaseInvalidSignature.AppendLog(Fmt("SignBytes: %X", signBytes))
 	}
-	return tmsp.OK
+	return abci.OK
 }
 
-func validateOutputsBasic(outs []types.TxOutput) (res tmsp.Result) {
+func validateOutputsBasic(outs []types.TxOutput) (res abci.Result) {
 	for _, out := range outs {
 		// Check TxOutput basic
 		if res := out.ValidateBasic(); res.IsErr() {
 			return res
 		}
 	}
-	return tmsp.OK
+	return abci.OK
 }
 
 func sumOutputs(outs []types.TxOutput) (total types.Coins) {

@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 
+	abci "github.com/tendermint/abci/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
-	tmsp "github.com/tendermint/tmsp/types"
 )
 
 /*
@@ -49,26 +49,26 @@ type TxInput struct {
 	PubKey    crypto.PubKey    `json:"pub_key"`   // Is present iff Sequence == 0
 }
 
-func (txIn TxInput) ValidateBasic() tmsp.Result {
+func (txIn TxInput) ValidateBasic() abci.Result {
 	if len(txIn.Address) != 20 {
-		return tmsp.ErrBaseInvalidInput.AppendLog("Invalid address length")
+		return abci.ErrBaseInvalidInput.AppendLog("Invalid address length")
 	}
 	if !txIn.Coins.IsValid() {
-		return tmsp.ErrBaseInvalidInput.AppendLog(Fmt("Invalid coins %v", txIn.Coins))
+		return abci.ErrBaseInvalidInput.AppendLog(Fmt("Invalid coins %v", txIn.Coins))
 	}
 	if txIn.Coins.IsZero() {
-		return tmsp.ErrBaseInvalidInput.AppendLog("Coins cannot be zero")
+		return abci.ErrBaseInvalidInput.AppendLog("Coins cannot be zero")
 	}
 	if txIn.Sequence <= 0 {
-		return tmsp.ErrBaseInvalidInput.AppendLog("Sequence must be greater than 0")
+		return abci.ErrBaseInvalidInput.AppendLog("Sequence must be greater than 0")
 	}
 	if txIn.Sequence == 1 && txIn.PubKey == nil {
-		return tmsp.ErrBaseInvalidInput.AppendLog("PubKey must be present when Sequence == 1")
+		return abci.ErrBaseInvalidInput.AppendLog("PubKey must be present when Sequence == 1")
 	}
 	if txIn.Sequence > 1 && txIn.PubKey != nil {
-		return tmsp.ErrBaseInvalidInput.AppendLog("PubKey must be nil when Sequence > 1")
+		return abci.ErrBaseInvalidInput.AppendLog("PubKey must be nil when Sequence > 1")
 	}
-	return tmsp.OK
+	return abci.OK
 }
 
 func (txIn TxInput) String() string {
@@ -82,17 +82,17 @@ type TxOutput struct {
 	Coins   Coins  `json:"coins"`   //
 }
 
-func (txOut TxOutput) ValidateBasic() tmsp.Result {
+func (txOut TxOutput) ValidateBasic() abci.Result {
 	if len(txOut.Address) != 20 {
-		return tmsp.ErrBaseInvalidOutput.AppendLog("Invalid address length")
+		return abci.ErrBaseInvalidOutput.AppendLog("Invalid address length")
 	}
 	if !txOut.Coins.IsValid() {
-		return tmsp.ErrBaseInvalidOutput.AppendLog(Fmt("Invalid coins %v", txOut.Coins))
+		return abci.ErrBaseInvalidOutput.AppendLog(Fmt("Invalid coins %v", txOut.Coins))
 	}
 	if txOut.Coins.IsZero() {
-		return tmsp.ErrBaseInvalidOutput.AppendLog("Coins cannot be zero")
+		return abci.ErrBaseInvalidOutput.AppendLog("Coins cannot be zero")
 	}
-	return tmsp.OK
+	return abci.OK
 }
 
 func (txOut TxOutput) String() string {

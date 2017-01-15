@@ -3,12 +3,12 @@ package app
 import (
 	"strings"
 
+	abci "github.com/tendermint/abci/types"
 	sm "github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
-	tmsp "github.com/tendermint/tmsp/types"
 )
 
 const (
@@ -37,8 +37,8 @@ func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
 }
 
 // TMSP::Info
-func (app *Basecoin) Info() string {
-	return Fmt("Basecoin v%v", version)
+func (app *Basecoin) Info() abci.ResponseInfo {
+	return abci.ResponseInfo{Data: Fmt("Basecoin v%v", version)}
 }
 
 func (app *Basecoin) RegisterPlugin(name string, plugin types.Plugin) {
@@ -75,38 +75,38 @@ func (app *Basecoin) SetOption(key string, value string) (log string) {
 	}
 }
 
-// TMSP::AppendTx
-func (app *Basecoin) AppendTx(txBytes []byte) (res tmsp.Result) {
+// TMSP::DeliverTx
+func (app *Basecoin) DeliverTx(txBytes []byte) (res abci.Result) {
 	if len(txBytes) > maxTxSize {
-		return tmsp.ErrBaseEncodingError.AppendLog("Tx size exceeds maximum")
+		return abci.ErrBaseEncodingError.AppendLog("Tx size exceeds maximum")
 	}
 
 	// Decode tx
 	var tx types.Tx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
 	if err != nil {
-		return tmsp.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
+		return abci.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
 	}
 
 	// Validate and exec tx
 	res = sm.ExecTx(app.state, app.plugins, tx, false, nil)
 	if res.IsErr() {
-		return res.PrependLog("Error in AppendTx")
+		return res.PrependLog("Error in DeliverTx")
 	}
-	return tmsp.OK
+	return abci.OK
 }
 
 // TMSP::CheckTx
-func (app *Basecoin) CheckTx(txBytes []byte) (res tmsp.Result) {
+func (app *Basecoin) CheckTx(txBytes []byte) (res abci.Result) {
 	if len(txBytes) > maxTxSize {
-		return tmsp.ErrBaseEncodingError.AppendLog("Tx size exceeds maximum")
+		return abci.ErrBaseEncodingError.AppendLog("Tx size exceeds maximum")
 	}
 
 	// Decode tx
 	var tx types.Tx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
 	if err != nil {
-		return tmsp.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
+		return abci.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
 	}
 
 	// Validate tx
@@ -114,20 +114,20 @@ func (app *Basecoin) CheckTx(txBytes []byte) (res tmsp.Result) {
 	if res.IsErr() {
 		return res.PrependLog("Error in CheckTx")
 	}
-	return tmsp.OK
+	return abci.OK
 }
 
 // TMSP::Query
-func (app *Basecoin) Query(query []byte) (res tmsp.Result) {
+func (app *Basecoin) Query(query []byte) (res abci.Result) {
 	if len(query) == 0 {
-		return tmsp.ErrEncodingError.SetLog("Query cannot be zero length")
+		return abci.ErrEncodingError.SetLog("Query cannot be zero length")
 	}
 
 	return app.eyesCli.QuerySync(query)
 }
 
 // TMSP::Commit
-func (app *Basecoin) Commit() (res tmsp.Result) {
+func (app *Basecoin) Commit() (res abci.Result) {
 
 	// Commit state
 	res = app.state.Commit()
@@ -142,7 +142,7 @@ func (app *Basecoin) Commit() (res tmsp.Result) {
 }
 
 // TMSP::InitChain
-func (app *Basecoin) InitChain(validators []*tmsp.Validator) {
+func (app *Basecoin) InitChain(validators []*abci.Validator) {
 	for _, plugin := range app.plugins.GetList() {
 		plugin.Plugin.InitChain(app.state, validators)
 	}
@@ -156,7 +156,7 @@ func (app *Basecoin) BeginBlock(height uint64) {
 }
 
 // TMSP::EndBlock
-func (app *Basecoin) EndBlock(height uint64) (diffs []*tmsp.Validator) {
+func (app *Basecoin) EndBlock(height uint64) (diffs []*abci.Validator) {
 	for _, plugin := range app.plugins.GetList() {
 		moreDiffs := plugin.Plugin.EndBlock(app.state, height)
 		diffs = append(diffs, moreDiffs...)

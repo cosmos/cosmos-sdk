@@ -1,15 +1,15 @@
 package types
 
 import (
-	tmsp "github.com/tendermint/tmsp/types"
+	abci "github.com/tendermint/abci/types"
 )
 
 type Plugin interface {
 	SetOption(store KVStore, key string, value string) (log string)
-	RunTx(store KVStore, ctx CallContext, txBytes []byte) (res tmsp.Result)
-	InitChain(store KVStore, vals []*tmsp.Validator)
+	RunTx(store KVStore, ctx CallContext, txBytes []byte) (res abci.Result)
+	InitChain(store KVStore, vals []*abci.Validator)
 	BeginBlock(store KVStore, height uint64)
-	EndBlock(store KVStore, height uint64) []*tmsp.Validator
+	EndBlock(store KVStore, height uint64) []*abci.Validator
 }
 
 type NamedPlugin struct {

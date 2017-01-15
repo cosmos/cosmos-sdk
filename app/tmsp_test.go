@@ -54,7 +54,7 @@ func TestSendTx(t *testing.T) {
 
 	// Write request
 	txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
-	res = bcApp.AppendTx(txBytes)
+	res = bcApp.DeliverTx(txBytes)
 	t.Log(res)
 	if res.IsErr() {
 		t.Errorf(Fmt("Failed: %v", res.Error()))
@@ -111,9 +111,9 @@ func TestSequence(t *testing.T) {
 
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
-		res := bcApp.AppendTx(txBytes)
+		res := bcApp.DeliverTx(txBytes)
 		if res.IsErr() {
-			t.Errorf("AppendTx error: " + res.Error())
+			t.Errorf("DeliverTx error: " + res.Error())
 		}
 
 	}
@@ -160,9 +160,9 @@ func TestSequence(t *testing.T) {
 
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
-		res := bcApp.AppendTx(txBytes)
+		res := bcApp.DeliverTx(txBytes)
 		if res.IsErr() {
-			t.Errorf("AppendTx error: " + res.Error())
+			t.Errorf("DeliverTx error: " + res.Error())
 		}
 	}
 }

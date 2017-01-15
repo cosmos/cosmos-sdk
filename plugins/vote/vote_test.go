@@ -66,7 +66,7 @@ func TestVote(t *testing.T) {
 
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
-		res = bcApp.AppendTx(txBytes)
+		res = bcApp.DeliverTx(txBytes)
 		fmt.Println(res)
 
 		if res.IsOK() {

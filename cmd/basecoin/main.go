@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/tendermint/abci/server"
 	"github.com/tendermint/basecoin/app"
 	. "github.com/tendermint/go-common"
 	eyes "github.com/tendermint/merkleeyes/client"
-	"github.com/tendermint/tmsp/server"
 )
 
 func main() {

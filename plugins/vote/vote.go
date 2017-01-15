@@ -1,9 +1,9 @@
 package vote
 
 import (
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-wire"
-	tmsp "github.com/tendermint/tmsp/types"
 )
 
 type Vote struct {
@@ -35,13 +35,13 @@ func (app Vote) SetOption(store types.KVStore, key string, value string) (log st
 }
 
 //because no coins are being exchanged ctx is unused
-func (app Vote) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte) (res tmsp.Result) {
+func (app Vote) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
 
 	// Decode tx
 	var tx Tx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
 	if err != nil {
-		return tmsp.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
+		return abci.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
 	}
 
 	//Read the ballotBox from the store
@@ -52,7 +52,7 @@ func (app Vote) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte
 	if kvBytes != nil {
 		err := wire.ReadBinaryBytes(kvBytes, &tempBB)
 		if err != nil {
-			return tmsp.ErrBaseEncodingError.AppendLog("Error decoding BallotBox: " + err.Error())
+			return abci.ErrBaseEncodingError.AppendLog("Error decoding BallotBox: " + err.Error())
 		}
 	} else {
 
@@ -76,17 +76,17 @@ func (app Vote) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte
 	issueBytes := wire.BinaryBytes(struct{ ballotBox }{tempBB})
 	store.Set([]byte(app.bb.issue), issueBytes)
 
-	return tmsp.OK
+	return abci.OK
 }
 
 //unused
-func (app Vote) InitChain(store types.KVStore, vals []*tmsp.Validator) {
+func (app Vote) InitChain(store types.KVStore, vals []*abci.Validator) {
 }
 
 func (app Vote) BeginBlock(store types.KVStore, height uint64) {
 }
 
-func (app Vote) EndBlock(store types.KVStore, height uint64) []*tmsp.Validator {
-	var diffs []*tmsp.Validator
+func (app Vote) EndBlock(store types.KVStore, height uint64) []*abci.Validator {
+	var diffs []*abci.Validator
 	return diffs
 }

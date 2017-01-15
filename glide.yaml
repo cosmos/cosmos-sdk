@@ -3,26 +3,30 @@ import:
 - package: github.com/gorilla/websocket
   version: v1.1.0
 - package: github.com/tendermint/go-common
+  version: develop
 - package: github.com/tendermint/go-crypto
+  version: develop
 - package: github.com/tendermint/go-events
+  version: develop
 - package: github.com/tendermint/go-logger
+  version: develop
 - package: github.com/tendermint/go-rpc
+  version: develop
   subpackages:
   - client
   - types
 - package: github.com/tendermint/go-wire
-- package: github.com/tendermint/governmint
-  subpackages:
-  - gov
-  - types
+  version: develop
 - package: github.com/tendermint/merkleeyes
+  version: develop
   subpackages:
   - client
 - package: github.com/tendermint/tendermint
-  version: ~0.7.4
+  version: develop
   subpackages:
   - rpc/core/types
-- package: github.com/tendermint/tmsp
+- package: github.com/tendermint/abci
+  version: develop
   subpackages:
   - server
   - types

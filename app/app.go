@@ -142,6 +142,15 @@ func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 	return
 }
 
+// TMSP::Query
+func (app *Basecoin) Proof(key []byte, height uint64) (res abci.Result) {
+	if len(key) == 0 {
+		return abci.ErrEncodingError.SetLog("Key cannot be zero length")
+	}
+
+	return app.eyesCli.ProofSync(key, height)
+}
+
 // TMSP::Commit
 func (app *Basecoin) Commit() (res abci.Result) {
 

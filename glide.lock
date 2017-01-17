@@ -41,7 +41,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 05096de3687ac582bec63860b3dd384acd9149aa
+  version: fdc047ae7af0f0189dd9f21b932eb92ce455ffa5
   subpackages:
   - client
   - server
@@ -85,12 +85,12 @@ imports:
   subpackages:
   - term
 - name: github.com/tendermint/merkleeyes
-  version: 2cf87e5f049ab6131aa4ea188c1b5b629d9b3bf9
+  version: 4340a256d3d0fb44831826cf68aa1f6f4a2a151c
   subpackages:
   - app
   - client
 - name: github.com/tendermint/tendermint
-  version: cf0cb9558aaecbf3ddb071eb863df77e55d828ed
+  version: 00d4157b80b4052b21d27460b33e411bfe07d79d
   subpackages:
   - rpc/core/types
   - types

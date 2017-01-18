@@ -3,8 +3,11 @@
 all: test install
 
 NOVENDOR = go list github.com/tendermint/basecoin/... | grep -v /vendor/
-    
-install: 
+
+build:
+	go build github.com/tendermint/basecoin/cmd/...
+
+install:
 	go install github.com/tendermint/basecoin/cmd/...
 
 test:
@@ -20,4 +23,4 @@ update_deps:
 get_vendor_deps:
 	go get github.com/Masterminds/glide
 	glide install
-	
+

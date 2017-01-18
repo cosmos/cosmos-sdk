@@ -23,7 +23,7 @@ func TestCounterPlugin(t *testing.T) {
 
 	// Add Counter plugin
 	counterPluginName := "testcounter"
-	counterPlugin := NewCounterPlugin(counterPluginName)
+	counterPlugin := New(counterPluginName)
 	bcApp.RegisterPlugin(counterPlugin)
 
 	// Account initialization

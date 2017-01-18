@@ -6,9 +6,15 @@ import (
 )
 
 type Plugin interface {
+
+	// Name of this plugin, should be short.
 	Name() string
-	SetOption(store KVStore, key string, value string) (log string)
+
+	// Run a transaction from ABCI DeliverTx
 	RunTx(store KVStore, ctx CallContext, txBytes []byte) (res abci.Result)
+
+	// Other ABCI message handlers
+	SetOption(store KVStore, key string, value string) (log string)
 	InitChain(store KVStore, vals []*abci.Validator)
 	BeginBlock(store KVStore, height uint64)
 	EndBlock(store KVStore, height uint64) []*abci.Validator
@@ -16,12 +22,10 @@ type Plugin interface {
 
 //----------------------------------------
 
-// CallContext.Caller's coins have been deducted by CallContext.Coins
-// Caller's Sequence has been incremented.
 type CallContext struct {
-	CallerAddress []byte
-	CallerAccount *Account
-	Coins         Coins
+	CallerAddress []byte   // Caller's Address (hash of PubKey)
+	CallerAccount *Account // Caller's Account, w/ fee & TxInputs deducted
+	TxInput       Coins    // The coins that the caller wishes to spend, excluding fees
 }
 
 func NewCallContext(callerAddress []byte, callerAccount *Account, coins Coins) CallContext {

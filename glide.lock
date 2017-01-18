@@ -90,7 +90,7 @@ imports:
   - app
   - client
 - name: github.com/tendermint/tendermint
-  version: cf0cb9558aaecbf3ddb071eb863df77e55d828ed
+  version: 9a2dd8bc9279ed2a1a4d4f31cc151f8a621cceb3
   subpackages:
   - rpc/core/types
   - types

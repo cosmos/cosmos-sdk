@@ -25,10 +25,10 @@ type P2VPluginState struct {
 
 type P2VTx struct {
 	Valid            bool
-	Cost2Vote        types.Coins //Cost to vote
-	Cost2CreateIssue types.Coins //Cost to create a new issue
 	Issue            string      //Issue being voted for
 	ActionTypeByte   byte        //How is the vote being cast
+	Cost2Vote        types.Coins //Cost to vote
+	Cost2CreateIssue types.Coins //Cost to create a new issue
 }
 
 //--------------------------------------------------------------------------------
@@ -51,9 +51,9 @@ func New(name string) *P2VPlugin {
 	}
 }
 
-func newState(issue) P2VPluginState {
+func newState(issue string) P2VPluginState {
 	return P2VPluginState{
-		TotalCost:    0,
+		TotalCost:    types.Coins{},
 		Issue:        issue,
 		votesFor:     0,
 		votesAgainst: 0,
@@ -61,11 +61,11 @@ func newState(issue) P2VPluginState {
 	}
 }
 
-func (cp *P2VPlugin) SetOption(store types.KVStore, key string, value string) (log string) {
+func (p2v *P2VPlugin) SetOption(store types.KVStore, key string, value string) (log string) {
 	return ""
 }
 
-func (cp *P2VPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
+func (p2v *P2VPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
 
 	// Decode tx
 	var tx P2VTx
@@ -83,16 +83,21 @@ func (cp *P2VPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes [
 		return abci.ErrInternalError.AppendLog("P2VTx.Issue must have a length greater than 0")
 	}
 
-	checkCost := func(cost types.Coins) {
-		if !cost.IsValid() {
-			return abci.ErrInternalError.AppendLog("P2VTx.Cost is not sorted or has zero amounts")
-		}
-		if !cost.IsNonnegative() {
-			return abci.ErrInternalError.AppendLog("P2VTx.Cost must be nonnegative")
-		}
+	if !tx.Cost2Vote.IsValid() {
+		return abci.ErrInternalError.AppendLog("P2VTx.Cost2Vote is not sorted or has zero amounts")
 	}
-	checkCost(tx.Cost2Vote)
-	checkCost(tx.Cost2CreateIssue)
+
+	if !tx.Cost2Vote.IsNonnegative() {
+		return abci.ErrInternalError.AppendLog("P2VTx.Cost2Vote must be nonnegative")
+	}
+
+	if !tx.Cost2CreateIssue.IsValid() {
+		return abci.ErrInternalError.AppendLog("P2VTx.Cost2CreateIssue is not sorted or has zero amounts")
+	}
+
+	if !tx.Cost2CreateIssue.IsNonnegative() {
+		return abci.ErrInternalError.AppendLog("P2VTx.Cost2CreateIssue must be nonnegative")
+	}
 
 	// Load P2VPluginState
 	var p2vState P2VPluginState
@@ -110,7 +115,15 @@ func (cp *P2VPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes [
 		issueExists = false
 	}
 
-	switch true {
+	returnLeftover := func(cost types.Coins) {
+		leftoverCoins := ctx.Coins.Minus(cost)
+		if !leftoverCoins.IsZero() {
+			// TODO If there are any funds left over, return funds.
+			// ctx.CallerAccount is synced w/ store, so just modify that and store it.
+		}
+	}
+
+	switch {
 	case tx.ActionTypeByte == TypeByteCreateIssue && issueExists:
 		return abci.ErrInsufficientFunds.AppendLog("Cannot create an already existing issue")
 	case tx.ActionTypeByte != TypeByteCreateIssue && !issueExists:
@@ -120,11 +133,15 @@ func (cp *P2VPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes [
 		if !ctx.Coins.IsGTE(tx.Cost2CreateIssue) {
 			return abci.ErrInsufficientFunds.AppendLog("Tx Funds insufficient for creating a new issue")
 		}
-		store.Set(p2v.StateKey(tx.Issue), wire.BinaryBytes(newState(tx.Issue)))
 
-		// TODO If there are any funds left over, return funds.
-		// e.g. !ctx.Coins.Minus(tx.Cost).IsZero()
-		// ctx.CallerAccount is synced w/ store, so just modify that and store it.
+		// Update P2VPluginState
+		newP2VState := newState(tx.Issue)
+		newP2VState.TotalCost = newP2VState.TotalCost.Plus(tx.Cost2Vote)
+
+		// Save P2VPluginState
+		store.Set(p2v.StateKey(tx.Issue), wire.BinaryBytes(newP2VState))
+
+		returnLeftover(tx.Cost2CreateIssue)
 
 	case tx.ActionTypeByte != TypeByteCreateIssue && issueExists:
 		// Did the caller provide enough coins?
@@ -132,35 +149,35 @@ func (cp *P2VPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes [
 			return abci.ErrInsufficientFunds.AppendLog("Tx Funds insufficient for voting")
 		}
 
-		switch true {
-		case tx.ActionTypeByte == TypeByteVoteFor:
+		switch tx.ActionTypeByte {
+		case TypeByteVoteFor:
 			p2vState.votesFor += 1
-		case tx.ActionTypeByte == TypeByteVoteAgainst:
+		case TypeByteVoteAgainst:
 			p2vState.votesAgainst += 1
-		case tx.ActionTypeByte == TypeByteVoteSpoiled:
+		case TypeByteVoteSpoiled:
 			p2vState.votesSpoiled += 1
 		default:
 			return abci.ErrInternalError.AppendLog("P2VTx.ActionTypeByte was not recognized")
 		}
+
 		// Update P2VPluginState
-		p2vState.TotalCost = p2vState.TotalCost.Plus(tx.Cost)
+		p2vState.TotalCost = p2vState.TotalCost.Plus(tx.Cost2Vote)
+
 		// Save P2VPluginState
 		store.Set(p2v.StateKey(tx.Issue), wire.BinaryBytes(p2vState))
 
-		// TODO If there are any funds left over, return funds.
-		// e.g. !ctx.Coins.Minus(tx.Cost).IsZero()
-		// ctx.CallerAccount is synced w/ store, so just modify that and store it.
+		returnLeftover(tx.Cost2CreateIssue)
 	}
 
-	return abci.OK
+	return abci.NewResultOK(wire.BinaryBytes(p2vState), "")
 }
 
-func (cp *P2VPlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
+func (p2v *P2VPlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
 }
 
-func (cp *P2VPlugin) BeginBlock(store types.KVStore, height uint64) {
+func (p2v *P2VPlugin) BeginBlock(store types.KVStore, height uint64) {
 }
 
-func (cp *P2VPlugin) EndBlock(store types.KVStore, height uint64) []*abci.Validator {
+func (p2v *P2VPlugin) EndBlock(store types.KVStore, height uint64) []*abci.Validator {
 	return nil
 }

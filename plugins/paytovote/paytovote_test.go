@@ -31,7 +31,7 @@ func TestP2VPlugin(t *testing.T) {
 
 	// Seed Basecoin with account
 	test1Acc := test1PrivAcc.Account
-	test1Acc.Balance = types.Coins{{"voteToken", 1000}, {"issueToken", 1000}}
+	test1Acc.Balance = types.Coins{{"", 1000}, {"issueToken", 1000}, {"voteToken", 1000}}
 	bcApp.SetOption("base/account", string(wire.JSONBytes(test1Acc)))
 
 	DeliverTx := func(gas int64,
@@ -71,44 +71,57 @@ func TestP2VPlugin(t *testing.T) {
 		return bcApp.DeliverTx(txBytes)
 	}
 
+	//TODO: Generate tests which  query the results of an issue
+	/*	queryIssue := func(issue string) abci.Result {
+		key := P2VPlugin.StateKey(issue)
+		query := make([]byte, 1+wire.ByteSliceSize(key))
+		buf := query
+		buf[0] = 0x01 // Get TypeByte
+		buf = buf[1:]
+		wire.PutByteSlice(buf, key)
+		t.Log(len(query))
+		return bcApp.Query(query)
+	}*/
 	// REF: DeliverCounterTx(gas, fee, inputCoins, inputSequence, issue, action, cost2Vote, cost2CreateIssue)
 
-	// Test a basic send, no fee
-	res := DeliverTx(0, types.Coin{}, types.Coins{{"voteToken", 1}, {"issueToken", 1}}, 1,
-		"free internet", TypeByteCreateIssue, types.Coins{{"voteToken", 1}}, types.Coins{{"issueToken", 1}})
+	issue1 := "free internet"
+	issue2 := "commutate foobar"
+
+	// Test a basic issue generation
+	res := DeliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 1}}, 1,
+		issue1, TypeByteCreateIssue, types.Coins{{"voteToken", 1}}, types.Coins{{"issueToken", 1}})
 	assert.True(t, res.IsOK(), res.String())
 
-	/*
-		// Test fee prevented transaction
-		res = DeliverCounterTx(0, types.Coin{"", 2}, types.Coins{{"", 1}}, 2, types.Coins{})
-		assert.True(t, res.IsErr(), res.String())
+	// Test a basic votes
+	res = DeliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 1}}, 2,
+		issue1, TypeByteVoteFor, types.Coins{{"voteToken", 1}}, types.Coins{{"issueToken", 1}})
+	assert.True(t, res.IsOK(), res.String())
 
-		// Test input equals fee
-		res = DeliverCounterTx(0, types.Coin{"", 2}, types.Coins{{"", 2}}, 2, types.Coins{})
-		assert.True(t, res.IsOK(), res.String())
+	res = DeliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 1}}, 3,
+		issue1, TypeByteVoteAgainst, types.Coins{{"voteToken", 1}}, types.Coins{{"issueToken", 1}})
+	assert.True(t, res.IsOK(), res.String())
 
-		// Test more input than fee
-		res = DeliverCounterTx(0, types.Coin{"", 2}, types.Coins{{"", 3}}, 3, types.Coins{})
-		assert.True(t, res.IsOK(), res.String())
+	res = DeliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 1}}, 4,
+		issue1, TypeByteVoteSpoiled, types.Coins{{"voteToken", 1}}, types.Coins{{"issueToken", 1}})
+	assert.True(t, res.IsOK(), res.String())
 
-		// Test input equals fee+cost
-		res = DeliverCounterTx(0, types.Coin{"", 1}, types.Coins{{"", 3}, {"gold", 1}}, 4, types.Coins{{"", 2}, {"gold", 1}})
-		assert.True(t, res.IsOK(), res.String())
+	// Test prevented voting on non-existent issue
+	res = DeliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 1}}, 5,
+		issue2, TypeByteVoteFor, types.Coins{{"voteToken", 1}}, types.Coins{{"issueToken", 1}})
+	assert.True(t, res.IsErr(), res.String())
 
-		// Test fee+cost prevented transaction, not enough ""
-		res = DeliverCounterTx(0, types.Coin{"", 1}, types.Coins{{"", 2}, {"gold", 1}}, 5, types.Coins{{"", 2}, {"gold", 1}})
-		assert.True(t, res.IsErr(), res.String())
+	// Test prevented duplicate issue generation
+	res = DeliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 1}}, 5,
+		issue1, TypeByteCreateIssue, types.Coins{{"voteToken", 1}}, types.Coins{{"issueToken", 1}})
+	assert.True(t, res.IsErr(), res.String())
 
-		// Test fee+cost prevented transaction, not enough "gold"
-		res = DeliverCounterTx(0, types.Coin{"", 1}, types.Coins{{"", 3}, {"gold", 1}}, 5, types.Coins{{"", 2}, {"gold", 2}})
-		assert.True(t, res.IsErr(), res.String())
+	// Test prevented issue generation from insufficient funds
+	res = DeliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 1}}, 5,
+		issue2, TypeByteCreateIssue, types.Coins{{"voteToken", 1}}, types.Coins{{"issueToken", 2}})
+	assert.True(t, res.IsErr(), res.String())
 
-		// Test more input than fee, more ""
-		res = DeliverCounterTx(0, types.Coin{"", 1}, types.Coins{{"", 4}, {"gold", 1}}, 6, types.Coins{{"", 2}, {"gold", 1}})
-		assert.True(t, res.IsOK(), res.String())
-
-		// Test more input than fee, more "gold"
-		res = DeliverCounterTx(0, types.Coin{"", 1}, types.Coins{{"", 3}, {"gold", 2}}, 7, types.Coins{{"", 2}, {"gold", 1}})
-		assert.True(t, res.IsOK(), res.String())
-	*/
+	// Test prevented voting from insufficient funds
+	res = DeliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 1}}, 5,
+		issue1, TypeByteVoteFor, types.Coins{{"voteToken", 2}}, types.Coins{{"issueToken", 1}})
+	assert.True(t, res.IsErr(), res.String())
 }

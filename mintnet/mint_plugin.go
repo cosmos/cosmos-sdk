@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 	wire "github.com/tendermint/go-wire"
 )
@@ -37,14 +38,15 @@ func (mp MintPlugin) SetOption(store types.KVStore, key string, value string) (l
 
 	switch key {
 	case ADD_BANKER:
-		s := mp.LoadState(store)
+		s := mp.loadState(store)
 		s.AddBanker(addr)
-		mp.SaveState(store, s)
+		mp.saveState(store, s)
+		mp.saveState(store, s)
 		return fmt.Sprintf("Added: %s", addr)
 	case REMOVE_BANKER:
-		s := mp.LoadState(store)
+		s := mp.loadState(store)
 		s.RemoveBanker(addr)
-		mp.SaveState(store, s)
+		mp.saveState(store, s)
 		return fmt.Sprintf("Removed: %s", addr)
 	default:
 		return fmt.Sprintf("Unknown key: %s", key)
@@ -61,13 +63,28 @@ func (mp MintPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes [
 	}
 
 	// make sure it was signed by a banker
-	s := mp.LoadState(store)
+	s := mp.loadState(store)
 	if !s.IsBanker(ctx.CallerAddress) {
 		return abci.ErrUnauthorized
 	}
 
 	// now, send all this money!
-	// TODO
+	for _, winner := range tx.Winners {
+		// load or create account
+		acct := state.GetAccount(store, winner.Addr)
+		if acct == nil {
+			acct = &types.Account{
+				PubKey:   nil,
+				Sequence: 0,
+			}
+		}
+
+		// add the money
+		acct.Balance = acct.Balance.Plus(winner.Amount)
+
+		// and save the new balance
+		state.SetAccount(store, winner.Addr, acct)
+	}
 
 	return abci.Result{}
 }
@@ -86,7 +103,7 @@ func (mp MintPlugin) stateKey() []byte {
 	return []byte(key)
 }
 
-func (mp MintPlugin) LoadState(store types.KVStore) *MintState {
+func (mp MintPlugin) loadState(store types.KVStore) *MintState {
 	var s MintState
 	data := store.Get(mp.stateKey())
 	// here return an uninitialized state
@@ -102,7 +119,7 @@ func (mp MintPlugin) LoadState(store types.KVStore) *MintState {
 	return &s
 }
 
-func (mp MintPlugin) SaveState(store types.KVStore, state *MintState) {
-	value := wire.BinaryBytes(state)
+func (mp MintPlugin) saveState(store types.KVStore, state *MintState) {
+	value := wire.BinaryBytes(*state)
 	store.Set(mp.stateKey(), value)
 }

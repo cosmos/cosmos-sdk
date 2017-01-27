@@ -25,7 +25,7 @@ type Plugin interface {
 type CallContext struct {
 	CallerAddress []byte   // Caller's Address (hash of PubKey)
 	CallerAccount *Account // Caller's Account, w/ fee & TxInputs deducted
-	TxInput       Coins    // The coins that the caller wishes to spend, excluding fees
+	Coins         Coins    // The coins that the caller wishes to spend, excluding fees
 }
 
 func NewCallContext(callerAddress []byte, callerAccount *Account, coins Coins) CallContext {

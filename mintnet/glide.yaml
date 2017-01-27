@@ -1,0 +1,20 @@
+package: github.com/tendermint/basecoin-examples/mintnet
+import:
+- package: github.com/tendermint/basecoin
+  version: master
+- package: github.com/tendermint/abci
+  version: master
+- package: github.com/tendermint/merkleeyes
+  version: master
+- package: github.com/tendermint/go-common
+  version: master
+- package: github.com/tendermint/go-crypto
+  version: master
+- package: github.com/tendermint/go-events
+  version: master
+- package: github.com/tendermint/go-logger
+  version: master
+- package: github.com/tendermint/go-rpc
+  version: master
+- package: github.com/tendermint/go-wire
+  version: master

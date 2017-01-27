@@ -14,8 +14,7 @@ If you register the plugin with the default name "mint", two options keys are su
 
 To create money, we need to create a [MintTx](https://github.com/tendermint/basecoin-examples/blob/master/mintnet/mint_data.go#L39-L50) transaction, and then call Serialize() to get the app-specific tx bytes.  Then you must wrap it in a [basecoin AppTx](https://github.com/tendermint/basecoin/blob/master/types/tx.go#L154-L160), setting `Name` to "mint", and `Data` to the bytes returned by `Serialize`.  You can then sign this AppTx with the private key...
 
-**TODO** @jae maybe you can help me here... I need to create TxInput with the PubKey, then somehow magically generate the Signature?  No easy helper methods to sign, or am I missing them?
-
+A bit of a complex process, but look at [this test code](https://github.com/tendermint/basecoin/blob/master/plugins/counter/counter_test.go#L38-L58) for inspiration.  Hope to automate this a bit more soon.
 
 ## Testing with a CLI
 

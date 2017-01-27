@@ -21,9 +21,9 @@ Before beginning with these guides, please make sure you understand how to [inst
 
 ## Minting Coin
 
-You just read about the amazing [plugin system](https://github.com/tendermint/basecoin/blob/master/README.md#plugins), and want to use it to print your own money.  Me too!  Let's get started with a simple plugin extension to basecoin, called [mintcoin](./mintcoin).
+**Working Code Here**
 
-**TODO**
+You just read about the amazing [plugin system](https://github.com/tendermint/basecoin/blob/master/README.md#plugins), and want to use it to print your own money.  Me too!  Let's get started with a simple plugin extension to basecoin, called [mintnet](./mintnet/README.md).
 
 ## Financial Instruments
 

@@ -6,7 +6,16 @@ First, make sure everything is working on your system, by running `make all` in 
 
 ## Setting Initial State
 
-**TODO** document SetOption (over abci-cli) and the initial genesis block.  Also using plugin specific options.
+You first need to declare who the bankers are who can issue new coin. To do so, we make use of the `SetOption` abci command.  For debug purposes, we can run this over the `abci-cli`. When deployed as part of tendermint, you need to initialize this the same for all nodes, by passing in a [genesis file](https://github.com/tendermint/basecoin-examples/blob/master/mintnet/cmd/mintnet/main.go#L20) (this is different than a genesis block) upon starting the mintnet binary.
+
+If you register the plugin with the default name "mint", two options keys are supported - `mint/add` and `mint/remove`.  Both take a hex-encoded address as the second argument.  Once an address is added, the private key that belongs to that address can sign MintTx transactions, and thus create money.
+
+## Minting Money
+
+To create money, we need to create a [MintTx](https://github.com/tendermint/basecoin-examples/blob/master/mintnet/mint_data.go#L39-L50) transaction, and then call Serialize() to get the app-specific tx bytes.  Then you must wrap it in a [basecoin AppTx](https://github.com/tendermint/basecoin/blob/master/types/tx.go#L154-L160), setting `Name` to "mint", and `Data` to the bytes returned by `Serialize`.  You can then sign this AppTx with the private key...
+
+**TODO** @jae maybe you can help me here... I need to create TxInput with the PubKey, then somehow magically generate the Signature?  No easy helper methods to sign, or am I missing them?
+
 
 ## Testing with a CLI
 

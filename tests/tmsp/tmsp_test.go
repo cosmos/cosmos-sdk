@@ -12,7 +12,7 @@ import (
 )
 
 func TestSendTx(t *testing.T) {
-	eyesCli := eyescli.NewLocalClient()
+	eyesCli := eyescli.NewLocalClient("", 0)
 	chainID := "test_chain_id"
 	bcApp := app.NewBasecoin(eyesCli)
 	bcApp.SetOption("base/chainID", chainID)
@@ -58,7 +58,7 @@ func TestSendTx(t *testing.T) {
 }
 
 func TestSequence(t *testing.T) {
-	eyesCli := eyescli.NewLocalClient()
+	eyesCli := eyescli.NewLocalClient("", 0)
 	chainID := "test_chain_id"
 	bcApp := app.NewBasecoin(eyesCli)
 	bcApp.SetOption("base/chainID", chainID)

@@ -32,7 +32,7 @@ func (cp *CounterPlugin) StateKey() []byte {
 	return []byte(fmt.Sprintf("CounterPlugin{name=%v}.State", cp.name))
 }
 
-func NewCounterPlugin(name string) *CounterPlugin {
+func New(name string) *CounterPlugin {
 	return &CounterPlugin{
 		name: name,
 	}
@@ -43,7 +43,6 @@ func (cp *CounterPlugin) SetOption(store types.KVStore, key string, value string
 }
 
 func (cp *CounterPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
-
 	// Decode tx
 	var tx CounterTx
 	err := wire.ReadBinaryBytes(txBytes, &tx)

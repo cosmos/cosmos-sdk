@@ -15,7 +15,7 @@ import (
 func TestCounterPlugin(t *testing.T) {
 
 	// Basecoin initialization
-	eyesCli := eyescli.NewLocalClient()
+	eyesCli := eyescli.NewLocalClient("", 0)
 	chainID := "test_chain_id"
 	bcApp := app.NewBasecoin(eyesCli)
 	bcApp.SetOption("base/chainID", chainID)
@@ -23,7 +23,7 @@ func TestCounterPlugin(t *testing.T) {
 
 	// Add Counter plugin
 	counterPluginName := "testcounter"
-	counterPlugin := NewCounterPlugin(counterPluginName)
+	counterPlugin := New(counterPluginName)
 	bcApp.RegisterPlugin(counterPlugin)
 
 	// Account initialization

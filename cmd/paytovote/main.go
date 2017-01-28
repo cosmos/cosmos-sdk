@@ -5,6 +5,7 @@ import (
 
 	"github.com/tendermint/abci/server"
 	"github.com/tendermint/basecoin/app"
+	"github.com/tendermint/basecoin/plugins/counter"
 	cmn "github.com/tendermint/go-common"
 	eyes "github.com/tendermint/merkleeyes/client"
 )
@@ -12,25 +13,22 @@ import (
 func main() {
 	addrPtr := flag.String("address", "tcp://0.0.0.0:46658", "Listen address")
 	eyesPtr := flag.String("eyes", "local", "MerkleEyes address, or 'local' for embedded")
-	eyesDBNamePtr := flag.String("eyes-db-name", "local.db", "MerkleEyes db name, for embedded")
-	eyesCacheSizePtr := flag.Int("eyes-cache-size", 10000, "MerkleEyes db cache size, for embedded")
 	genFilePath := flag.String("genesis", "", "Genesis file, if any")
 	flag.Parse()
 
 	// Connect to MerkleEyes
-	var eyesCli *eyes.Client
-	if *eyesPtr == "local" {
-		eyesCli = eyes.NewLocalClient(*eyesDBNamePtr, *eyesCacheSizePtr)
-	} else {
-		var err error
-		eyesCli, err = eyes.NewClient(*eyesPtr)
-		if err != nil {
-			cmn.Exit("connect to MerkleEyes: " + err.Error())
-		}
+	eyesCli, err := eyes.NewClient(*eyesPtr)
+	if err != nil {
+		cmn.Exit("connect to MerkleEyes: " + err.Error())
 	}
 
 	// Create Basecoin app
 	app := app.NewBasecoin(eyesCli)
+
+	// add plugins
+	// TODO: add some more, like the cool voting app
+	counter := counter.New("counter")
+	app.RegisterPlugin(counter)
 
 	// If genesis file was specified, set key-value options
 	if *genFilePath != "" {

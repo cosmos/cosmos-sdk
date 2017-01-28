@@ -10,10 +10,10 @@ Basecoin is a sample [ABCI application](https://github.com/tendermint/abci) desi
 ## Contents
 
   1. [Installation](#installation)
-  1. [Learn Go](#learn_go)
-  1. [Using the plugin system](#plugins)
-  1. [Forking the codebase](#forking)
-  1. [Tutorials and other reading](#tutorials)
+  1. [Learn Go](#learn-go)
+  1. [Using the plugin system](#using-the-plugin-system)
+  1. [Forking the codebase](#forking-the-codebase)
+  1. [Tutorials and other reading](#tutorials-and-other-reading)
 
 ## Installation
 
@@ -32,7 +32,7 @@ This will create the `basecoin` binary.
 
 Check out our [guide to programming in Go](/docs/go_basics.md).
 
-## Plugins
+## Using the Plugin System
 
 Basecoin handles public-key authentication of transaction, maintaining the balance of arbitrary types of currency (BTC, ATOM, ETH, MYCOIN, ...), sending currency (one-to-one or n-to-n multisig), and providing merkle-proofs of the state. These are common factors that many people wish to have in a crypto-currency system, so instead of trying to start from scratch, you can take advantage of the basecoin plugin system.
 
@@ -55,7 +55,7 @@ An example is worth a 1000 words, so please take a look [at this example](https:
 
 There are a lot of changes on the dev branch, which should be merged in my early February, so experiment, but things will change soon....
 
-## Forking
+## Forking the Codebase
 
 If you do want to fork basecoin, we would be happy if this was done in a public repo and any enhancements made as PRs on github.  However, this is under the Apache license and you are free to keep the code private if you wish.
 
@@ -71,6 +71,6 @@ If you don't have much experience forking in go, there are a few tricks you want
     * `git fetch upstream`
     * `git rebase upstream/master` (or whatever branch you want)
 
-## Tutorials
+## Tutorials and Other Reading
 
 We are working on some tutorials that will show you how to set up the genesis block, build a plugin to add custom logic, deploy to a tendermint testnet, and connect a UI to your blockchain.  They should be published during the course of February 2017, so stay tuned....

@@ -10,7 +10,7 @@ Basecoin is a sample [ABCI application](https://github.com/tendermint/abci) desi
 ## Contents
 
   1. [Installation](#installation)
-  1. [(Advice for go novices)](./GoBasics.md)
+  1. [Learn Go](#learn_go)
   1. [Using the plugin system](#plugins)
   1. [Forking the codebase](#forking)
   1. [Tutorials and other reading](#tutorials)
@@ -27,6 +27,10 @@ make install
 ```
 
 This will create the `basecoin` binary.
+
+## Learn Go
+
+Check out our [guide to programming in Go](/docs/go_basics.md).
 
 ## Plugins
 
@@ -70,5 +74,3 @@ If you don't have much experience forking in go, there are a few tricks you want
 ## Tutorials
 
 We are working on some tutorials that will show you how to set up the genesis block, build a plugin to add custom logic, deploy to a tendermint testnet, and connect a UI to your blockchain.  They should be published during the course of February 2017, so stay tuned....
-
-

@@ -5,6 +5,7 @@ import (
 
 	"github.com/tendermint/abci/server"
 	"github.com/tendermint/basecoin/app"
+	"github.com/tendermint/basecoin/plugins/counter"
 	cmn "github.com/tendermint/go-common"
 	eyes "github.com/tendermint/merkleeyes/client"
 )
@@ -23,6 +24,11 @@ func main() {
 
 	// Create Basecoin app
 	app := app.NewBasecoin(eyesCli)
+
+	// add plugins
+	// TODO: add some more, like the cool voting app
+	counter := counter.New("counter")
+	app.RegisterPlugin(counter)
 
 	// If genesis file was specified, set key-value options
 	if *genFilePath != "" {

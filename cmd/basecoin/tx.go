@@ -7,7 +7,9 @@ import (
 
 	"github.com/urfave/cli"
 
+	"github.com/tendermint/basecoin/plugins/counter"
 	"github.com/tendermint/basecoin/types"
+
 	cmn "github.com/tendermint/go-common"
 	client "github.com/tendermint/go-rpc/client"
 	"github.com/tendermint/go-wire"
@@ -60,24 +62,26 @@ func cmdSendTx(c *cli.Context) error {
 	if err := broadcastTx(c, tx); err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func cmdAppTx(c *cli.Context) error {
+	// convert data to bytes
+	dataString := c.String("data")
+	data := []byte(dataString)
+	if isHex(dataString) {
+		data, _ = hex.DecodeString(dataString)
+	}
 	name := c.String("name")
+	return appTx(c, name, data)
+}
+
+func appTx(c *cli.Context, name string, data []byte) error {
 	fromFile := c.String("from")
 	amount := int64(c.Int("amount"))
 	coin := c.String("coin")
 	gas, fee := c.Int("gas"), int64(c.Int("fee"))
 	chainID := c.String("chain_id")
-	dataString := c.String("data")
-
-	// convert data to bytes
-	data := []byte(dataString)
-	if isHex(dataString) {
-		data, _ = hex.DecodeString(dataString)
-	}
 
 	privVal := tmtypes.LoadPrivValidator(fromFile)
 
@@ -107,16 +111,39 @@ func cmdAppTx(c *cli.Context) error {
 	return nil
 }
 
+func cmdCounterTx(c *cli.Context) error {
+	valid := c.Bool("valid")
+	parent := c.Parent()
+
+	counterTx := counter.CounterTx{
+		Valid: valid,
+		Fee: types.Coins{
+			{
+				Denom:  parent.String("coin"),
+				Amount: int64(parent.Int("fee")),
+			},
+		},
+	}
+
+	fmt.Println("CounterTx:", string(wire.JSONBytes(counterTx)))
+
+	data := wire.BinaryBytes(counterTx)
+	name := "counter"
+
+	return appTx(parent, name, data)
+}
+
 // broadcast the transaction to tendermint
 func broadcastTx(c *cli.Context, tx types.Tx) error {
 	tmResult := new(ctypes.TMResult)
 	tmAddr := c.String("tendermint")
 	clientURI := client.NewClientURI(tmAddr)
 
-	/*txBytes := []byte(wire.JSONBytes(struct {
+	// Don't you hate having to do this?
+	// How many times have I lost an hour over this trick?!
+	txBytes := []byte(wire.BinaryBytes(struct {
 		types.Tx `json:"unwrap"`
-	}{tx}))*/
-	txBytes := wire.BinaryBytes(tx)
+	}{tx}))
 	_, err := clientURI.Call("broadcast_tx_sync", map[string]interface{}{"tx": txBytes}, tmResult)
 	if err != nil {
 		return errors.New(cmn.Fmt("Error on broadcast tx: %v", err))

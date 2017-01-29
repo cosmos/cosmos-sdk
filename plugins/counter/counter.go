@@ -47,7 +47,7 @@ func (cp *CounterPlugin) RunTx(store types.KVStore, ctx types.CallContext, txByt
 	var tx CounterTx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
 	if err != nil {
-		return abci.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
+		return abci.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error()).PrependLog("CounterTx Error: ")
 	}
 
 	// Validate tx

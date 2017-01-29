@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"strings"
 
 	abci "github.com/tendermint/abci/types"
@@ -101,6 +102,8 @@ func (app *Basecoin) CheckTx(txBytes []byte) (res abci.Result) {
 	if len(txBytes) > maxTxSize {
 		return abci.ErrBaseEncodingError.AppendLog("Tx size exceeds maximum")
 	}
+
+	fmt.Printf("%X\n", txBytes)
 
 	// Decode tx
 	var tx types.Tx

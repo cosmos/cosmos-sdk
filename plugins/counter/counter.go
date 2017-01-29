@@ -10,12 +10,12 @@ import (
 
 type CounterPluginState struct {
 	Counter   int
-	TotalCost types.Coins
+	TotalFees types.Coins
 }
 
 type CounterTx struct {
 	Valid bool
-	Cost  types.Coins
+	Fee   types.Coins
 }
 
 //--------------------------------------------------------------------------------
@@ -54,20 +54,20 @@ func (cp *CounterPlugin) RunTx(store types.KVStore, ctx types.CallContext, txByt
 	if !tx.Valid {
 		return abci.ErrInternalError.AppendLog("CounterTx.Valid must be true")
 	}
-	if !tx.Cost.IsValid() {
-		return abci.ErrInternalError.AppendLog("CounterTx.Cost is not sorted or has zero amounts")
+	if !tx.Fee.IsValid() {
+		return abci.ErrInternalError.AppendLog("CounterTx.Fee is not sorted or has zero amounts")
 	}
-	if !tx.Cost.IsNonnegative() {
-		return abci.ErrInternalError.AppendLog("CounterTx.Cost must be nonnegative")
+	if !tx.Fee.IsNonnegative() {
+		return abci.ErrInternalError.AppendLog("CounterTx.Fee must be nonnegative")
 	}
 
 	// Did the caller provide enough coins?
-	if !ctx.Coins.IsGTE(tx.Cost) {
-		return abci.ErrInsufficientFunds.AppendLog("CounterTx.Cost was not provided")
+	if !ctx.Coins.IsGTE(tx.Fee) {
+		return abci.ErrInsufficientFunds.AppendLog("CounterTx.Fee was not provided")
 	}
 
 	// TODO If there are any funds left over, return funds.
-	// e.g. !ctx.Coins.Minus(tx.Cost).IsZero()
+	// e.g. !ctx.Coins.Minus(tx.Fee).IsZero()
 	// ctx.CallerAccount is synced w/ store, so just modify that and store it.
 
 	// Load CounterPluginState
@@ -82,7 +82,7 @@ func (cp *CounterPlugin) RunTx(store types.KVStore, ctx types.CallContext, txByt
 
 	// Update CounterPluginState
 	cpState.Counter += 1
-	cpState.TotalCost = cpState.TotalCost.Plus(tx.Cost)
+	cpState.TotalFees = cpState.TotalFees.Plus(tx.Fee)
 
 	// Save CounterPluginState
 	store.Set(cp.StateKey(), wire.BinaryBytes(cpState))

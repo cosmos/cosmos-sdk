@@ -1,10 +1,14 @@
 package ibc
 
 import (
-	"fmt"
+	"errors"
+	"net/url"
+	"strings"
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
+	cmn "github.com/tendermint/go-common"
+	merkle "github.com/tendermint/go-merkle"
 	"github.com/tendermint/go-wire"
 	tm "github.com/tendermint/tendermint/types"
 )
@@ -35,7 +39,7 @@ type BlockchainGenesis struct {
 
 type BlockchainState struct {
 	ChainID         string
-	Validators      []tm.Validator
+	Validators      []*tm.Validator
 	LastBlockHash   []byte
 	LastBlockHeight uint64
 }
@@ -76,7 +80,7 @@ type IBCRegisterChainTx struct {
 	BlockchainGenesis
 }
 
-func (IBCRegisterChainTx) ValidateBasic() abci.Result {
+func (IBCRegisterChainTx) ValidateBasic() (res abci.Result) {
 	// TODO - validate
 	return
 }
@@ -87,7 +91,7 @@ type IBCUpdateChainTx struct {
 	// TODO: NextValidators
 }
 
-func (IBCUpdateChainTx) ValidateBasic() abci.Result {
+func (IBCUpdateChainTx) ValidateBasic() (res abci.Result) {
 	// TODO - validate
 	return
 }
@@ -99,7 +103,7 @@ type IBCPacketTx struct {
 	Proof merkle.IAVLProof
 }
 
-func (IBCPacketTx) ValidateBasic() abci.Result {
+func (IBCPacketTx) ValidateBasic() (res abci.Result) {
 	// TODO - validate
 	return
 }
@@ -110,17 +114,15 @@ type IBCPlugin struct {
 }
 
 func (ibc *IBCPlugin) Name() string {
-	"IBC"
+	return "IBC"
 }
 
 func (ibc *IBCPlugin) StateKey() []byte {
-	return []byte(fmt.Sprintf("IBCPlugin.State", ibc.name))
+	return []byte("IBCPlugin.State")
 }
 
-func New(name string) *IBCPlugin {
-	return &IBCPlugin{
-		name: name,
-	}
+func New() *IBCPlugin {
+	return &IBCPlugin{}
 }
 
 func (ibc *IBCPlugin) SetOption(store types.KVStore, key string, value string) (log string) {
@@ -136,7 +138,7 @@ func (ibc *IBCPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes 
 	}
 
 	// Validate tx
-	res := tx.ValidateBasic()
+	res = tx.ValidateBasic()
 	if res.IsErr() {
 		return res.PrependLog("ValidateBasic Failed: ")
 	}
@@ -171,14 +173,14 @@ type IBCStateMachine struct {
 }
 
 func (sm *IBCStateMachine) runRegisterChainTx(tx IBCRegisterChainTx) {
-	chainGenKey := toKey(_IBC, _BLOCKCHAIN, _GENESIS, chain.ChainID)
-	chainStateKey := toKey(_IBC, _BLOCKCHAIN, _STATE, chain.ChainID)
+	chainGenKey := toKey(_IBC, _BLOCKCHAIN, _GENESIS, tx.ChainID)
+	chainStateKey := toKey(_IBC, _BLOCKCHAIN, _STATE, tx.ChainID)
 	chainGen := tx.BlockchainGenesis
 
 	// Parse genesis
 	var chainGenDoc = &tm.GenesisDoc{}
 	var err error
-	wire.ReadJSONPtr(&chainGenDoc, []byte(chianGen), &err)
+	wire.ReadJSONPtr(&chainGenDoc, []byte(chainGen.Genesis), &err)
 	if err != nil {
 		sm.res.AppendLog("Genesis doc couldn't be parsed: " + err.Error())
 		return
@@ -195,8 +197,8 @@ func (sm *IBCStateMachine) runRegisterChainTx(tx IBCRegisterChainTx) {
 
 	// Create new BlockchainState
 	chainState := BlockchainState{
-		ChainID:         chain.ChainID,
-		Validators:      make([]*tm.Validator, len(chainGen.Validators)),
+		ChainID:         chainGenDoc.ChainID,
+		Validators:      make([]*tm.Validator, len(chainGenDoc.Validators)),
 		LastBlockHash:   nil,
 		LastBlockHeight: 0,
 	}
@@ -204,7 +206,7 @@ func (sm *IBCStateMachine) runRegisterChainTx(tx IBCRegisterChainTx) {
 	for i, val := range chainGenDoc.Validators {
 		pubKey := val.PubKey
 		address := pubKey.Address()
-		chainState.Validators[i] = &types.Validator{
+		chainState.Validators[i] = &tm.Validator{
 			Address:     address,
 			PubKey:      pubKey,
 			VotingPower: val.Amount,
@@ -228,19 +230,31 @@ func (sm *IBCStateMachine) runUpdateChainTx(tx IBCUpdateChainTx) {
 	var chainState BlockchainState
 	exists, err := load(sm.store, chainStateKey, &chainState)
 	if err != nil {
-		sm.res = abci.ErrInternalError.AppendLog("Loading ChainState: %v", err.Error())
+		sm.res = abci.ErrInternalError.AppendLog(cmn.Fmt("Loading ChainState: %v", err.Error()))
+		return
+	}
+	if !exists {
+		sm.res = abci.ErrInternalError.AppendLog(cmn.Fmt("Missing ChainState"))
 		return
 	}
 
-	// Compute blockHash from Header
-	blockHash := tx.Header.Hash()
-	// TODO Check commit against validators
-	// NOTE: Commit's votes include ValidatorAddress, so can be matched up against chainState.Validators
-	//       for the demo we could assume that the validator set hadn't changed,
-	//       though we should check that explicitly.
-	// TODO Store blockhash
-	// TODO Update chainState
-	// TODO Store chainState
+	// Check commit against last known state & validators
+	err = verifyCommit(chainState, &tx.Header, &tx.Commit)
+	if err != nil {
+		sm.res = abci.ErrInternalError.AppendLog(cmn.Fmt("Invalid Commit: %v", err.Error()))
+		return
+	}
+
+	// Store header
+	headerKey := toKey(_IBC, _BLOCKCHAIN, _HEADER, chainID, cmn.Fmt("%v", tx.Header.Height))
+	save(sm.store, headerKey, tx.Header)
+
+	// Update chainState
+	chainState.LastBlockHash = tx.Header.Hash()
+	chainState.LastBlockHeight = uint64(tx.Header.Height)
+
+	// Store chainState
+	save(sm.store, chainStateKey, chainState)
 }
 
 func (sm *IBCStateMachine) runPacketTx(tx IBCPacketTx) {
@@ -279,7 +293,7 @@ func load(store types.KVStore, key []byte, ptr interface{}) (exists bool, err er
 		err = wire.ReadBinaryBytes(value, ptr)
 		if err != nil {
 			return true, errors.New(
-				Fmt("Error decoding key 0x%X = 0x%X: %v", key, value, err.Error()),
+				cmn.Fmt("Error decoding key 0x%X = 0x%X: %v", key, value, err.Error()),
 			)
 		}
 		return true, nil
@@ -300,4 +314,37 @@ func toKey(parts ...string) []byte {
 		escParts[i] = url.QueryEscape(part)
 	}
 	return []byte(strings.Join(escParts, ","))
+}
+
+// NOTE: Commit's votes include ValidatorAddress, so can be matched up
+// against chainState.Validators, even if the validator set had changed.
+// For the purpose of the demo, we assume that the validator set hadn't changed,
+// though we should check that explicitly.
+func verifyCommit(chainState BlockchainState, header *tm.Header, commit *tm.Commit) error {
+
+	// Ensure that chainState and header ChainID match.
+	if chainState.ChainID != header.ChainID {
+		return errors.New(cmn.Fmt("Expected header.ChainID %v, got %v", chainState.ChainID, header.ChainID))
+	}
+	if len(chainState.Validators) == 0 {
+		return errors.New(cmn.Fmt("Blockchain has no validators")) // NOTE: Why would this happen?
+	}
+	if len(commit.Precommits) == 0 {
+		return errors.New(cmn.Fmt("Commit has no signatures"))
+	}
+	chainID := chainState.ChainID
+	vote0 := commit.Precommits[0]
+	vals := chainState.Validators
+	valSet := tm.NewValidatorSet(vals)
+
+	// NOTE: Currently this only works with the exact same validator set.
+	// Not this, but perhaps "ValidatorSet.VerifyCommitAny" should expose
+	// the functionality to verify commits even after validator changes.
+	err := valSet.VerifyCommit(chainID, vote0.BlockID, vote0.Height, commit)
+	if err != nil {
+		return err
+	}
+
+	// All ok!
+	return nil
 }

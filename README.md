@@ -13,6 +13,7 @@ Basecoin is a sample [ABCI application](https://github.com/tendermint/abci) desi
   1. [Using the plugin system](#using-the-plugin-system)
   1. [Using the cli](#using-the-cli)
   1. [Tutorials and other reading](#tutorials-and-other-reading)
+  1. [Contributing](#contributing)
 
 ## Installation
 
@@ -69,3 +70,19 @@ See `basecoin --help` and `basecoin [cmd] --help` for more details`.
 See our [introductory blog post](https://cosmos.network/blog/cosmos-creating-interoperable-blockchains-part-1), which explains the motivation behind Basecoin.
 
 We are working on some tutorials that will show you how to set up the genesis block, build a plugin to add custom logic, deploy to a tendermint testnet, and connect a UI to your blockchain.  They should be published during the course of February 2017, so stay tuned....
+
+## Contributing
+
+We will merge in interesting plugin implementations and improvements to Basecoin.
+
+If you don't have much experience forking in go, there are a few tricks you want to keep in mind to avoid headaches. Basically, all imports in go are absolute from GOPATH, so if you fork a repo with more than one directory, and you put it under github.com/MYNAME/repo, all the code will start caling github.com/ORIGINAL/repo, which is very confusing.  My prefered solution to this is as follows:
+
+  * Create your own fork on github, using the fork button.
+  * Go to the original repo checked out locally (from `go get`)
+  * `git remote rename origin upstream`
+  * `git remote add origin git@github.com:YOUR-NAME/basecoin.git`
+  * `git push -u origin master`
+  * You can now push all changes to your fork and all code compiles, all other code referencing the original repo, now references your fork.
+  * If you want to pull in updates from the original repo:
+    * `git fetch upstream`
+    * `git rebase upstream/master` (or whatever branch you want)

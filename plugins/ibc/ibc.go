@@ -172,17 +172,47 @@ type IBCStateMachine struct {
 
 func (sm *IBCStateMachine) runRegisterChainTx(tx IBCRegisterChainTx) {
 	chainGenKey := toKey(_IBC, _BLOCKCHAIN, _GENESIS, chain.ChainID)
+	chainStateKey := toKey(_IBC, _BLOCKCHAIN, _STATE, chain.ChainID)
 	chainGen := tx.BlockchainGenesis
+
+	// Parse genesis
+	var chainGenDoc = &tm.GenesisDoc{}
+	var err error
+	wire.ReadJSONPtr(&chainGenDoc, []byte(chianGen), &err)
+	if err != nil {
+		sm.res.AppendLog("Genesis doc couldn't be parsed: " + err.Error())
+		return
+	}
 
 	// Make sure chainGen doesn't already exist
 	if exists(sm.store, chainGenKey) {
-		return // Already exists, do nothing
+		sm.res.AppendLog("Already exists")
+		return
 	}
 
 	// Save new BlockchainGenesis
 	save(sm.store, chainGenKey, chainGen)
 
-	// TODO - Create and save new BlockchainState
+	// Create new BlockchainState
+	chainState := BlockchainState{
+		ChainID:         chain.ChainID,
+		Validators:      make([]*tm.Validator, len(chainGen.Validators)),
+		LastBlockHash:   nil,
+		LastBlockHeight: 0,
+	}
+	// Make validators slice
+	for i, val := range chainGenDoc.Validators {
+		pubKey := val.PubKey
+		address := pubKey.Address()
+		chainState.Validators[i] = &types.Validator{
+			Address:     address,
+			PubKey:      pubKey,
+			VotingPower: val.Amount,
+		}
+	}
+
+	// Save new BlockchainState
+	save(sm.store, chainStateKey, chainState)
 }
 
 func (sm *IBCStateMachine) runUpdateChainTx(tx IBCUpdateChainTx) {

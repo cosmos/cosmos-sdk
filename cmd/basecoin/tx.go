@@ -24,7 +24,7 @@ func cmdSendTx(c *cli.Context) error {
 	chainID := c.String("chain_id")
 
 	// convert destination address to bytes
-	to, err := hex.DecodeString(toHex)
+	to, err := hex.DecodeString(stripHex(toHex))
 	if err != nil {
 		return errors.New("To address is invalid hex: " + err.Error())
 	}
@@ -75,7 +75,7 @@ func cmdAppTx(c *cli.Context) error {
 
 	// convert data to bytes
 	data := []byte(dataString)
-	if cmn.IsHex(dataString) {
+	if isHex(dataString) {
 		data, _ = hex.DecodeString(dataString)
 	}
 
@@ -135,34 +135,10 @@ func getSeq(c *cli.Context, address []byte) (int, error) {
 		return c.Int("sequence"), nil
 	}
 	tmAddr := c.String("tendermint")
-	clientURI := client.NewClientURI(tmAddr)
-	tmResult := new(ctypes.TMResult)
-
-	params := map[string]interface{}{
-		"path":  "/key",
-		"data":  append([]byte("base/a/"), address...),
-		"prove": false,
-	}
-	_, err := clientURI.Call("abci_query", params, tmResult)
+	acc, err := getAcc(tmAddr, address)
 	if err != nil {
-		return 0, errors.New(cmn.Fmt("Error calling /abci_query: %v", err))
+		return 0, err
 	}
-	res := (*tmResult).(*ctypes.ResultABCIQuery)
-	if !res.Response.Code.IsOK() {
-		return 0, errors.New(cmn.Fmt("Query got non-zero exit code: %v. %s", res.Response.Code, res.Response.Log))
-	}
-	accountBytes := res.Response.Value
-
-	if len(accountBytes) == 0 {
-		return 0, errors.New(cmn.Fmt("Account bytes are empty from query for address %X", address))
-	}
-	var acc *types.Account
-	err = wire.ReadBinaryBytes(accountBytes, &acc)
-	if err != nil {
-		return 0, errors.New(cmn.Fmt("Error reading account %X error: %v",
-			accountBytes, err.Error()))
-	}
-
 	return acc.Sequence + 1, nil
 }
 

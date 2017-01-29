@@ -15,7 +15,7 @@ const (
 	_BLOCKCHAIN = "blockchain"
 	_GENESIS    = "genesis"
 	_STATE      = "state"
-	_HASHES     = "hashes"
+	_HEADER     = "header"
 	_EGRESS     = "egress"
 	_CONNECTION = "connection"
 )
@@ -23,7 +23,7 @@ const (
 type IBCPluginState struct {
 	// @[:ibc, :blockchain, :genesis, ChainID] <~ BlockchainGenesis
 	// @[:ibc, :blockchain, :state, ChainID] <~ BlockchainState
-	// @[:ibc, :blockchain, :hashes, ChainID, Height] <~ some blockhash []byte
+	// @[:ibc, :blockchain, :header, ChainID, Height] <~ tm.Header
 	// @[:ibc, :egress, Src, Dst, Sequence] <~ Packet
 	// @[:ibc, :connection, Src, Dst] <~ Connection # TODO - keep connection state
 }
@@ -232,7 +232,8 @@ func (sm *IBCStateMachine) runUpdateChainTx(tx IBCUpdateChainTx) {
 		return
 	}
 
-	// TODO Compute blockHash from Header
+	// Compute blockHash from Header
+	blockHash := tx.Header.Hash()
 	// TODO Check commit against validators
 	// NOTE: Commit's votes include ValidatorAddress, so can be matched up against chainState.Validators
 	//       for the demo we could assume that the validator set hadn't changed,

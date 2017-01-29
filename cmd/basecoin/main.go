@@ -44,6 +44,12 @@ var (
 // tx flags
 
 var (
+	tmAddrFlag = cli.StringFlag{
+		Name:  "tendermint",
+		Value: "tcp://localhost:46657",
+		Usage: "Tendermint RPC address",
+	}
+
 	toFlag = cli.StringFlag{
 		Name:  "to",
 		Value: "",
@@ -97,6 +103,12 @@ var (
 		Value: "",
 		Usage: "Plugin to send the transaction to",
 	}
+
+	chainIDFlag = cli.StringFlag{
+		Name:  "chain_id",
+		Value: "test_chain_id",
+		Usage: "ID of the chain for replay protection",
+	}
 )
 
 func main() {
@@ -118,6 +130,7 @@ func main() {
 				eyesDBFlag,
 				genesisFlag,
 				inProcTMFlag,
+				chainIDFlag,
 			},
 		},
 
@@ -129,12 +142,15 @@ func main() {
 				return cmdSendTx(c)
 			},
 			Flags: []cli.Flag{
+				tmAddrFlag,
 				toFlag,
 				fromFlag,
 				amountFlag,
 				coinFlag,
 				gasFlag,
 				feeFlag,
+				chainIDFlag,
+				seqFlag,
 			},
 		},
 
@@ -146,6 +162,7 @@ func main() {
 				return cmdAppTx(c)
 			},
 			Flags: []cli.Flag{
+				tmAddrFlag,
 				nameFlag,
 				fromFlag,
 				amountFlag,
@@ -153,6 +170,19 @@ func main() {
 				gasFlag,
 				feeFlag,
 				dataFlag,
+				seqFlag,
+			},
+		},
+
+		{
+			Name:      "account",
+			Usage:     "Get details of an account",
+			ArgsUsage: "",
+			Action: func(c *cli.Context) error {
+				return cmdAccount(c)
+			},
+			Flags: []cli.Flag{
+				tmAddrFlag,
 			},
 		},
 	}

@@ -11,6 +11,7 @@ Basecoin is a sample [ABCI application](https://github.com/tendermint/abci) desi
 
   1. [Installation](#installation)
   1. [Using the plugin system](#using-the-plugin-system)
+  1. [Using the cli](#using-the-cli)
   1. [Tutorials and other reading](#tutorials-and-other-reading)
 
 ## Installation
@@ -55,6 +56,13 @@ Just make your own repo, add the implementation of your custom plugin, and then 
 An example is worth a 1000 words, so please take a look [at this example](https://github.com/tendermint/basecoin/blob/develop/cmd/paytovote/main.go#L25-L31). 
 Note for now it is in a dev branch.
 You can use the same technique in your own repo.
+
+## Using the CLI
+
+The basecoin cli can be used to start a stand-alone basecoin instance (`basecoin start`),
+or to start basecoin with tendermint in the same process (`basecoin start --in-proc`).
+It can also be used to send transactions, eg. `basecoin sendtx --to 0x4793A333846E5104C46DD9AB9A00E31821B2F301 --amount 100`
+See `basecoin --help` and `basecoin [cmd] --help` for more details`.
 
 ## Tutorials and Other Reading
 

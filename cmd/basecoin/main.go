@@ -177,7 +177,7 @@ func main() {
 		{
 			Name:      "account",
 			Usage:     "Get details of an account",
-			ArgsUsage: "",
+			ArgsUsage: "[address]",
 			Action: func(c *cli.Context) error {
 				return cmdAccount(c)
 			},

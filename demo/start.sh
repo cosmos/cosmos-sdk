@@ -35,7 +35,7 @@ basecoin start --address tcp://localhost:36658 --ibc-plugin --dir ./data/chain2/
 echo ""
 echo "... waiting for chains to start"
 echo ""
-sleep 5
+sleep 10
 
 echo "... registering chain1 on chain2"
 echo ""
@@ -57,18 +57,30 @@ QUERY_RESULT=$(basecoin query ibc,egress,$CHAIN_ID1,$CHAIN_ID2,1)
 HEIGHT=$(echo $QUERY_RESULT | jq .height)
 PACKET=$(echo $QUERY_RESULT | jq .value)
 PROOF=$(echo $QUERY_RESULT | jq .proof)
+PACKET=$(removeQuotes $PACKET)
+PROOF=$(removeQuotes $PROOF)
+echo ""
 echo "QUERY_RESULT: $QUERY_RESULT"
 echo "HEIGHT: $HEIGHT"
 echo "PACKET: $PACKET"
 echo "PROOF: $PROOF"
+
+
+echo ""
+echo "... waiting for some blocks to be mined"
+echo ""
+sleep 5
 
 echo ""
 echo "... querying for block data"
 echo ""
 # get the header and commit for the height
 HEADER_AND_COMMIT=$(basecoin block $HEIGHT) 
-HEADER=$(echo $HEADER_AND_COMMIT | jq.hex.header)
-COMMIT=$(echo $HEADER_AND_COMMIT | jq.hex.commit)
+HEADER=$(echo $HEADER_AND_COMMIT | jq .hex.header)
+HEADER=$(removeQuotes $HEADER)
+COMMIT=$(echo $HEADER_AND_COMMIT | jq .hex.commit)
+COMMIT=$(removeQuotes $COMMIT)
+echo ""
 echo "HEADER_AND_COMMIT: $HEADER_AND_COMMIT"
 echo "HEADER: $HEADER"
 echo "COMMIT: $COMMIT"
@@ -83,4 +95,10 @@ echo ""
 echo "... posting packet from chain1 on chain2"
 echo ""
 # post the packet from chain1 to chain2
-basecoin ibc --amount 10 $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height $HEIGHT --packet $PACKET --proof $PROOF
+basecoin ibc --amount 10 $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height $((HEIGHT + 1)) --packet 0x$PACKET --proof 0x$PROOF
+
+echo ""
+echo "... checking if the packet is present on chain2"
+echo ""
+# query for the packet on chain2 !
+basecoin query --node tcp://localhost:36657 ibc,ingress,test_chain_2,test_chain_1,1

@@ -44,8 +44,6 @@ func cmdIBCRegisterTx(c *cli.Context) error {
 }
 
 func cmdIBCUpdateTx(c *cli.Context) error {
-	parent := c.Parent()
-
 	headerBytes, err := hex.DecodeString(stripHex(c.String("header")))
 	if err != nil {
 		return errors.New(cmn.Fmt("Header (%v) is invalid hex: %v", c.String("header"), err))
@@ -77,7 +75,7 @@ func cmdIBCUpdateTx(c *cli.Context) error {
 	}{ibcTx}))
 	name := "IBC"
 
-	return appTx(parent, name, data)
+	return appTx(c.Parent(), name, data)
 }
 
 func cmdIBCPacketCreateTx(c *cli.Context) error {
@@ -126,7 +124,7 @@ func cmdIBCPacketPostTx(c *cli.Context) error {
 	}
 
 	var packet ibc.Packet
-	var proof merkle.IAVLProof
+	proof := new(merkle.IAVLProof)
 
 	if err := wire.ReadBinaryBytes(packetBytes, &packet); err != nil {
 		return errors.New(cmn.Fmt("Error unmarshalling packet: %v", err))

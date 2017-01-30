@@ -337,7 +337,7 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 	}
 	if !exists {
 		sm.res.Code = IBCCodeUnknownHeight
-		sm.res.Log = cmn.Fmt("Loading Header: %v", err.Error())
+		sm.res.Log = cmn.Fmt("Loading Header: Unknown height")
 		return
 	}
 

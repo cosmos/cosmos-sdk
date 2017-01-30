@@ -5,10 +5,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/testutils"
 	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
+	eyes "github.com/tendermint/merkleeyes/client"
 	tm "github.com/tendermint/tendermint/types"
 )
 
@@ -36,7 +38,8 @@ func genGenesisDoc(chainID string, numVals int) (*tm.GenesisDoc, []*tm.Validator
 
 func TestIBCPlugin(t *testing.T) {
 
-	store := types.NewKVCache(nil)
+	tree := eyes.NewLocalClient("", 0)
+	store := types.NewKVCache(tree)
 	store.SetLogging() // Log all activity
 
 	ibcPlugin := New()
@@ -68,7 +71,7 @@ func TestIBCPlugin(t *testing.T) {
 			Genesis: string(genDocJSON_1),
 		},
 	}}))
-	assert.True(t, res.IsOK(), res)
+	assert.True(t, res.IsOK(), res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -79,9 +82,42 @@ func TestIBCPlugin(t *testing.T) {
 			Genesis: string(genDocJSON_1),
 		},
 	}}))
-	assert.Equal(t, res.Code, IBCCodeChainAlreadyExists, res)
+	assert.Equal(t, res.Code, IBCCodeChainAlreadyExists, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
-	t.Log(">>", vals_1)
+	// Create a new packet (for testing)
+	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCPacketCreateTx{
+		Packet{
+			SrcChainID: "test_chain",
+			DstChainID: "dst_chain",
+			Sequence:   0,
+			Type:       "data",
+			Payload:    []byte("hello world"),
+		},
+	}}))
+	assert.Equal(t, res.Code, abci.CodeType(0), res.Log)
+	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
+	store.ClearLogLines()
+
+	// Post a duplicate packet
+	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCPacketCreateTx{
+		Packet{
+			SrcChainID: "test_chain",
+			DstChainID: "dst_chain",
+			Sequence:   0,
+			Type:       "data",
+			Payload:    []byte("hello world"),
+		},
+	}}))
+	assert.Equal(t, res.Code, IBCCodePacketAlreadyExists, res.Log)
+	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
+	store.ClearLogLines()
+
+	// Update a chain
+	//header, commit :=
+
+	store.Sync()
+	resCommit := tree.CommitSync()
+	t.Log(">>", vals_1, tree, resCommit.Data)
 }

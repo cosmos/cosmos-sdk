@@ -21,6 +21,7 @@ const (
 	_STATE      = "state"
 	_HEADER     = "header"
 	_EGRESS     = "egress"
+	_INGRESS    = "ingress"
 	_CONNECTION = "connection"
 )
 
@@ -29,6 +30,7 @@ type IBCPluginState struct {
 	// @[:ibc, :blockchain, :state, ChainID] <~ BlockchainState
 	// @[:ibc, :blockchain, :header, ChainID, Height] <~ tm.Header
 	// @[:ibc, :egress, Src, Dst, Sequence] <~ Packet
+	// @[:ibc, :ingress, Dst, Src, Sequence] <~ Packet
 	// @[:ibc, :connection, Src, Dst] <~ Connection # TODO - keep connection state
 }
 
@@ -60,8 +62,11 @@ const (
 	IBCTxTypePacketCreate  = byte(0x03)
 	IBCTxTypePacketPost    = byte(0x04)
 
-	IBCCodeEncodingError      = abci.CodeType(1001)
-	IBCCodeChainAlreadyExists = abci.CodeType(1002)
+	IBCCodeEncodingError       = abci.CodeType(1001)
+	IBCCodeChainAlreadyExists  = abci.CodeType(1002)
+	IBCCodePacketAlreadyExists = abci.CodeType(1003)
+	IBCCodeUnknownHeight       = abci.CodeType(1004)
+	IBCCodeInvalidProof        = abci.CodeType(1005)
 )
 
 var _ = wire.RegisterInterface(
@@ -277,15 +282,85 @@ func (sm *IBCStateMachine) runUpdateChainTx(tx IBCUpdateChainTx) {
 }
 
 func (sm *IBCStateMachine) runPacketCreateTx(tx IBCPacketCreateTx) {
-	// TODO Store packet in egress
+	packet := tx.Packet
+	packetKey := toKey(_IBC, _EGRESS,
+		packet.SrcChainID,
+		packet.DstChainID,
+		cmn.Fmt("%v", packet.Sequence),
+	)
+	// Make sure packet doesn't already exist
+	if exists(sm.store, packetKey) {
+		sm.res.Code = IBCCodePacketAlreadyExists
+		sm.res.AppendLog("Already exists")
+		return
+	}
+	// Save new Packet
+	save(sm.store, packetKey, wire.BinaryBytes(packet))
 }
 
 func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
-	// TODO Make sure packat doesn't already exist
-	// TODO Load associated blockHash and make sure it exists
-	// TODO compute packet key
-	// TODO Make sure packet's proof matches given (packet, key, blockhash)
-	// TODO Store packet
+	packet := tx.Packet
+	packetKeyEgress := toKey(_IBC, _EGRESS,
+		packet.SrcChainID,
+		packet.DstChainID,
+		cmn.Fmt("%v", packet.Sequence),
+	)
+	packetKeyIngress := toKey(_IBC, _INGRESS,
+		packet.DstChainID,
+		packet.SrcChainID,
+		cmn.Fmt("%v", packet.Sequence),
+	)
+	headerKey := toKey(_IBC, _BLOCKCHAIN, _HEADER,
+		tx.FromChainID,
+		cmn.Fmt("%v", tx.FromChainHeight),
+	)
+
+	// Make sure packet doesn't already exist
+	if exists(sm.store, packetKeyIngress) {
+		sm.res.Code = IBCCodePacketAlreadyExists
+		sm.res.AppendLog("Already exists")
+		return
+	}
+
+	// Save new Packet
+	save(sm.store, packetKeyIngress, wire.BinaryBytes(packet))
+
+	// Load Header and make sure it exists
+	var header tm.Header
+	exists, err := load(sm.store, headerKey, &header)
+	if err != nil {
+		sm.res = abci.ErrInternalError.AppendLog(cmn.Fmt("Loading Header: %v", err.Error()))
+		return
+	}
+	if !exists {
+		sm.res.Code = IBCCodeUnknownHeight
+		sm.res.AppendLog(cmn.Fmt("Loading Header: %v", err.Error()))
+		return
+	}
+
+	/*
+		// Read Proof
+		var proof *merkle.IAVLProof
+		err = wire.ReadBinaryBytes(tx.Proof, &proof)
+		if err != nil {
+			sm.res.Code = IBCEncodingError
+			sm.res.AppendLog(cmn.Fmt("Reading Proof: %v", err.Error()))
+			return
+		}
+	*/
+	proof := tx.Proof
+	packetBytes := wire.BinaryBytes(packet)
+
+	// Make sure packet's proof matches given (packet, key, blockhash)
+	ok := proof.Verify(packetKeyEgress, packetBytes, header.AppHash)
+	if !ok {
+		sm.res.Code = IBCCodeInvalidProof
+		sm.res.AppendLog("Proof is invalid")
+		return
+	}
+
+	return
+
 }
 
 func (ibc *IBCPlugin) InitChain(store types.KVStore, vals []*abci.Validator) {

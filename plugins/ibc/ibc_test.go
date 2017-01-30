@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/basecoin/testutils"
 	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/go-common"
+	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
 	tm "github.com/tendermint/tendermint/types"
@@ -87,7 +88,7 @@ func TestIBCPlugin(t *testing.T) {
 			Genesis: "<THIS IS NOT JSON>",
 		},
 	}}))
-	assert.Equal(t, res.Code, IBCCodeEncodingError)
+	assert.Equal(t, IBCCodeEncodingError, res.Code)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -109,7 +110,7 @@ func TestIBCPlugin(t *testing.T) {
 			Genesis: string(genDocJSON_1),
 		},
 	}}))
-	assert.Equal(t, res.Code, IBCCodeChainAlreadyExists, res.Log)
+	assert.Equal(t, IBCCodeChainAlreadyExists, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -123,7 +124,7 @@ func TestIBCPlugin(t *testing.T) {
 			Payload:    []byte("hello world"),
 		},
 	}}))
-	assert.Equal(t, res.Code, abci.CodeType(0), res.Log)
+	assert.Equal(t, abci.CodeType_OK, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -137,7 +138,7 @@ func TestIBCPlugin(t *testing.T) {
 			Payload:    []byte("hello world"),
 		},
 	}}))
-	assert.Equal(t, res.Code, IBCCodePacketAlreadyExists, res.Log)
+	assert.Equal(t, IBCCodePacketAlreadyExists, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -179,7 +180,20 @@ func TestIBCPlugin(t *testing.T) {
 		Header: header,
 		Commit: commit,
 	}}))
-	assert.Equal(t, res.Code, abci.CodeType(0), res.Log)
+	assert.Equal(t, abci.CodeType_OK, res.Code, res.Log)
+	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
+	store.ClearLogLines()
+
+	// Update a chain with a broken commit
+	// Modify the first byte of the first signature
+	sig := commit.Precommits[0].Signature.(crypto.SignatureEd25519)
+	sig[0] += 1
+	commit.Precommits[0].Signature = sig
+	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCUpdateChainTx{
+		Header: header,
+		Commit: commit,
+	}}))
+	assert.Equal(t, IBCCodeInvalidCommit, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 }

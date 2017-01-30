@@ -66,7 +66,8 @@ const (
 	IBCCodeChainAlreadyExists  = abci.CodeType(1002)
 	IBCCodePacketAlreadyExists = abci.CodeType(1003)
 	IBCCodeUnknownHeight       = abci.CodeType(1004)
-	IBCCodeInvalidProof        = abci.CodeType(1005)
+	IBCCodeInvalidCommit       = abci.CodeType(1005)
+	IBCCodeInvalidProof        = abci.CodeType(1006)
 )
 
 var _ = wire.RegisterInterface(
@@ -154,7 +155,7 @@ func (ibc *IBCPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes 
 	var tx IBCTx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
 	if err != nil {
-		return abci.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error()).PrependLog("IBCTx Error: ")
+		return abci.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
 	}
 
 	// Validate tx
@@ -265,7 +266,8 @@ func (sm *IBCStateMachine) runUpdateChainTx(tx IBCUpdateChainTx) {
 	// Check commit against last known state & validators
 	err = verifyCommit(chainState, &tx.Header, &tx.Commit)
 	if err != nil {
-		sm.res = abci.ErrInternalError.AppendLog(cmn.Fmt("Invalid Commit: %v", err.Error()))
+		sm.res.Code = IBCCodeInvalidCommit
+		sm.res.Log = cmn.Fmt("Invalid Commit: %v", err.Error())
 		return
 	}
 

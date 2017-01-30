@@ -1,7 +1,8 @@
 package ibc
 
 import (
-	"fmt"
+	"bytes"
+	"sort"
 	"strings"
 	"testing"
 
@@ -15,6 +16,8 @@ import (
 	tm "github.com/tendermint/tendermint/types"
 )
 
+// NOTE: PrivAccounts are sorted by Address,
+// GenesisDoc, not necessarily.
 func genGenesisDoc(chainID string, numVals int) (*tm.GenesisDoc, []types.PrivAccount) {
 	var privAccs []types.PrivAccount
 	genDoc := &tm.GenesisDoc{
@@ -33,8 +36,32 @@ func genGenesisDoc(chainID string, numVals int) (*tm.GenesisDoc, []types.PrivAcc
 		privAccs = append(privAccs, privAcc)
 	}
 
+	// Sort PrivAccounts
+	sort.Sort(PrivAccountsByAddress(privAccs))
+
 	return genDoc, privAccs
 }
+
+//-------------------------------------
+// Implements sort for sorting PrivAccount by address.
+
+type PrivAccountsByAddress []types.PrivAccount
+
+func (pas PrivAccountsByAddress) Len() int {
+	return len(pas)
+}
+
+func (pas PrivAccountsByAddress) Less(i, j int) bool {
+	return bytes.Compare(pas[i].Account.PubKey.Address(), pas[j].Account.PubKey.Address()) == -1
+}
+
+func (pas PrivAccountsByAddress) Swap(i, j int) {
+	it := pas[i]
+	pas[i] = pas[j]
+	pas[j] = it
+}
+
+//--------------------------------------------------------------------------------
 
 func TestIBCPlugin(t *testing.T) {
 
@@ -119,9 +146,10 @@ func TestIBCPlugin(t *testing.T) {
 	resCommit := tree.CommitSync()
 	appHash := resCommit.Data
 	header := tm.Header{
-		ChainID: "test_chain",
-		Height:  999,
-		AppHash: appHash,
+		ChainID:        "test_chain",
+		Height:         999,
+		AppHash:        appHash,
+		ValidatorsHash: []byte("must_exist"), // TODO make optional
 	}
 
 	// Construct a Commit that signs above header
@@ -138,12 +166,11 @@ func TestIBCPlugin(t *testing.T) {
 			Height:           999,
 			Round:            0,
 			Type:             tm.VoteTypePrecommit,
-			BlockID:          tm.BlockID{},
+			BlockID:          tm.BlockID{Hash: blockHash},
 		}
 		vote.Signature = privAcc.PrivKey.Sign(
 			tm.SignBytes("test_chain", vote),
 		)
-		fmt.Println(">>", i, privAcc, vote)
 		commit.Precommits[i] = vote
 	}
 

@@ -20,7 +20,7 @@ Basecoin is a sample [ABCI application](https://github.com/tendermint/abci) desi
 We use glide for dependency management.  The prefered way of compiling from source is the following:
 
 ```
-go get github.com/tendermint/basecoin
+go get -d github.com/tendermint/basecoin/cmd/basecoin
 cd $GOPATH/src/github.com/tendermint/basecoin
 make get_vendor_deps
 make install

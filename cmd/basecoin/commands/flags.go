@@ -36,11 +36,6 @@ var (
 		Name:  "ibc-plugin",
 		Usage: "Enable the ibc plugin",
 	}
-
-	CounterPluginFlag = cli.BoolFlag{
-		Name:  "counter-plugin",
-		Usage: "Enable the counter plugin",
-	}
 )
 
 // tx flags

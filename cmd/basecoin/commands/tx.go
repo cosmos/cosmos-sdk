@@ -67,9 +67,9 @@ var (
 	}
 )
 
-// RegisterPlugin is used to add another subcommand and create a custom
+// RegisterTxPlugin is used to add another subcommand and create a custom
 // apptx encoding.  Look at counter.go for an example
-func RegisterPlugin(cmd cli.Command) {
+func RegisterTxPlugin(cmd cli.Command) {
 	AppTxCmd.Subcommands = append(AppTxCmd.Subcommands, cmd)
 }
 
@@ -82,7 +82,7 @@ func cmdSendTx(c *cli.Context) error {
 	chainID := c.String("chain_id")
 
 	// convert destination address to bytes
-	to, err := hex.DecodeString(stripHex(toHex))
+	to, err := hex.DecodeString(StripHex(toHex))
 	if err != nil {
 		return errors.New("To address is invalid hex: " + err.Error())
 	}

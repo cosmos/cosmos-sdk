@@ -20,10 +20,17 @@ var (
 			ValidFlag,
 		},
 	}
+
+	CounterPluginFlag = cli.BoolFlag{
+		Name:  "counter-plugin",
+		Usage: "Enable the counter plugin",
+	}
 )
 
 func init() {
-	RegisterPlugin(CounterTxCmd)
+	RegisterTxPlugin(CounterTxCmd)
+	RegisterStartPlugin(CounterPluginFlag,
+		func() types.Plugin { return counter.New("counter") })
 }
 
 func cmdCounterTx(c *cli.Context) error {

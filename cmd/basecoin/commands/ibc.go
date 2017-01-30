@@ -136,11 +136,11 @@ func cmdIBCRegisterTx(c *cli.Context) error {
 }
 
 func cmdIBCUpdateTx(c *cli.Context) error {
-	headerBytes, err := hex.DecodeString(stripHex(c.String("header")))
+	headerBytes, err := hex.DecodeString(StripHex(c.String("header")))
 	if err != nil {
 		return errors.New(cmn.Fmt("Header (%v) is invalid hex: %v", c.String("header"), err))
 	}
-	commitBytes, err := hex.DecodeString(stripHex(c.String("commit")))
+	commitBytes, err := hex.DecodeString(StripHex(c.String("commit")))
 	if err != nil {
 		return errors.New(cmn.Fmt("Commit (%v) is invalid hex: %v", c.String("commit"), err))
 	}
@@ -174,7 +174,7 @@ func cmdIBCPacketCreateTx(c *cli.Context) error {
 	fromChain, toChain := c.String("from"), c.String("to")
 	packetType := c.String("type")
 
-	payloadBytes, err := hex.DecodeString(stripHex(c.String("payload")))
+	payloadBytes, err := hex.DecodeString(StripHex(c.String("payload")))
 	if err != nil {
 		return errors.New(cmn.Fmt("Payload (%v) is invalid hex: %v", c.String("payload"), err))
 	}
@@ -206,11 +206,11 @@ func cmdIBCPacketCreateTx(c *cli.Context) error {
 func cmdIBCPacketPostTx(c *cli.Context) error {
 	fromChain, fromHeight := c.String("from"), c.Int("height")
 
-	packetBytes, err := hex.DecodeString(stripHex(c.String("packet")))
+	packetBytes, err := hex.DecodeString(StripHex(c.String("packet")))
 	if err != nil {
 		return errors.New(cmn.Fmt("Packet (%v) is invalid hex: %v", c.String("packet"), err))
 	}
-	proofBytes, err := hex.DecodeString(stripHex(c.String("proof")))
+	proofBytes, err := hex.DecodeString(StripHex(c.String("proof")))
 	if err != nil {
 		return errors.New(cmn.Fmt("Proof (%v) is invalid hex: %v", c.String("proof"), err))
 	}

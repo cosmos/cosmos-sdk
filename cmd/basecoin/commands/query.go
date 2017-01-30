@@ -75,7 +75,7 @@ func cmdQuery(c *cli.Context) error {
 	if isHex(keyString) {
 		// convert key to bytes
 		var err error
-		key, err = hex.DecodeString(stripHex(keyString))
+		key, err = hex.DecodeString(StripHex(keyString))
 		if err != nil {
 			return errors.New(cmn.Fmt("Query key (%v) is invalid hex: %v", keyString, err))
 		}
@@ -107,7 +107,7 @@ func cmdAccount(c *cli.Context) error {
 	if len(c.Args()) != 1 {
 		return errors.New("account command requires an argument ([address])")
 	}
-	addrHex := stripHex(c.Args()[0])
+	addrHex := StripHex(c.Args()[0])
 
 	// convert destination address to bytes
 	addr, err := hex.DecodeString(addrHex)
@@ -175,7 +175,7 @@ func cmdVerify(c *cli.Context) error {
 	var err error
 	key := []byte(keyString)
 	if isHex(keyString) {
-		key, err = hex.DecodeString(stripHex(keyString))
+		key, err = hex.DecodeString(StripHex(keyString))
 		if err != nil {
 			return errors.New(cmn.Fmt("Key (%v) is invalid hex: %v", keyString, err))
 		}
@@ -183,18 +183,18 @@ func cmdVerify(c *cli.Context) error {
 
 	value := []byte(valueString)
 	if isHex(valueString) {
-		value, err = hex.DecodeString(stripHex(valueString))
+		value, err = hex.DecodeString(StripHex(valueString))
 		if err != nil {
 			return errors.New(cmn.Fmt("Value (%v) is invalid hex: %v", valueString, err))
 		}
 	}
 
-	root, err := hex.DecodeString(stripHex(c.String("root")))
+	root, err := hex.DecodeString(StripHex(c.String("root")))
 	if err != nil {
 		return errors.New(cmn.Fmt("Root (%v) is invalid hex: %v", c.String("root"), err))
 	}
 
-	proofBytes, err := hex.DecodeString(stripHex(c.String("proof")))
+	proofBytes, err := hex.DecodeString(StripHex(c.String("proof")))
 	if err != nil {
 		return errors.New(cmn.Fmt("Proof (%v) is invalid hex: %v", c.String("proof"), err))
 	}

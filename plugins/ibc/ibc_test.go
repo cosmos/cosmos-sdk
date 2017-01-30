@@ -183,6 +183,64 @@ func TestIBCPlugin(t *testing.T) {
 	assert.Equal(t, abci.CodeType_OK, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
+}
+
+func TestIBCPluginBadCommit(t *testing.T) {
+
+	tree := eyes.NewLocalClient("", 0)
+	store := types.NewKVCache(tree)
+	store.SetLogging() // Log all activity
+
+	ibcPlugin := New()
+	ctx := types.CallContext{
+		CallerAddress: nil,
+		CallerAccount: nil,
+		Coins:         types.Coins{},
+	}
+
+	chainID_1 := "test_chain"
+	genDoc_1, privAccs_1 := genGenesisDoc(chainID_1, 4)
+	genDocJSON_1 := wire.JSONBytesPretty(genDoc_1)
+
+	// Successfully register a chain
+	res := ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCRegisterChainTx{
+		BlockchainGenesis{
+			ChainID: "test_chain",
+			Genesis: string(genDocJSON_1),
+		},
+	}}))
+	assert.True(t, res.IsOK(), res.Log)
+	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
+	store.ClearLogLines()
+
+	// Construct a Header
+	header := tm.Header{
+		ChainID:        "test_chain",
+		Height:         999,
+		ValidatorsHash: []byte("must_exist"), // TODO make optional
+	}
+
+	// Construct a Commit that signs above header
+	blockHash := header.Hash()
+	blockID := tm.BlockID{Hash: blockHash}
+	commit := tm.Commit{
+		BlockID:    blockID,
+		Precommits: make([]*tm.Vote, len(privAccs_1)),
+	}
+	for i, privAcc := range privAccs_1 {
+		vote := &tm.Vote{
+			ValidatorAddress: privAcc.Account.PubKey.Address(),
+			ValidatorIndex:   i,
+			Height:           999,
+			Round:            0,
+			Type:             tm.VoteTypePrecommit,
+			BlockID:          tm.BlockID{Hash: blockHash},
+		}
+		vote.Signature = privAcc.PrivKey.Sign(
+			tm.SignBytes("test_chain", vote),
+		)
+		commit.Precommits[i] = vote
+	}
 
 	// Update a chain with a broken commit
 	// Modify the first byte of the first signature
@@ -196,4 +254,5 @@ func TestIBCPlugin(t *testing.T) {
 	assert.Equal(t, IBCCodeInvalidCommit, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
+
 }

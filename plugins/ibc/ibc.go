@@ -205,14 +205,14 @@ func (sm *IBCStateMachine) runRegisterChainTx(tx IBCRegisterChainTx) {
 	wire.ReadJSONPtr(&chainGenDoc, []byte(chainGen.Genesis), &err)
 	if err != nil {
 		sm.res.Code = IBCCodeEncodingError
-		sm.res.AppendLog("Genesis doc couldn't be parsed: " + err.Error())
+		sm.res.Log = "Genesis doc couldn't be parsed: " + err.Error()
 		return
 	}
 
 	// Make sure chainGen doesn't already exist
 	if exists(sm.store, chainGenKey) {
 		sm.res.Code = IBCCodeChainAlreadyExists
-		sm.res.AppendLog("Already exists")
+		sm.res.Log = "Already exists"
 		return
 	}
 
@@ -291,7 +291,8 @@ func (sm *IBCStateMachine) runPacketCreateTx(tx IBCPacketCreateTx) {
 	// Make sure packet doesn't already exist
 	if exists(sm.store, packetKey) {
 		sm.res.Code = IBCCodePacketAlreadyExists
-		sm.res.AppendLog("Already exists")
+		// TODO: .AppendLog() does not update sm.res
+		sm.res.Log = "Already exists"
 		return
 	}
 	// Save new Packet
@@ -318,7 +319,7 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 	// Make sure packet doesn't already exist
 	if exists(sm.store, packetKeyIngress) {
 		sm.res.Code = IBCCodePacketAlreadyExists
-		sm.res.AppendLog("Already exists")
+		sm.res.Log = "Already exists"
 		return
 	}
 
@@ -334,7 +335,7 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 	}
 	if !exists {
 		sm.res.Code = IBCCodeUnknownHeight
-		sm.res.AppendLog(cmn.Fmt("Loading Header: %v", err.Error()))
+		sm.res.Log = cmn.Fmt("Loading Header: %v", err.Error())
 		return
 	}
 
@@ -344,7 +345,7 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 		err = wire.ReadBinaryBytes(tx.Proof, &proof)
 		if err != nil {
 			sm.res.Code = IBCEncodingError
-			sm.res.AppendLog(cmn.Fmt("Reading Proof: %v", err.Error()))
+			sm.res.Log = cmn.Fmt("Reading Proof: %v", err.Error())
 			return
 		}
 	*/
@@ -355,7 +356,7 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 	ok := proof.Verify(packetKeyEgress, packetBytes, header.AppHash)
 	if !ok {
 		sm.res.Code = IBCCodeInvalidProof
-		sm.res.AppendLog("Proof is invalid")
+		sm.res.Log = "Proof is invalid"
 		return
 	}
 

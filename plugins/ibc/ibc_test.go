@@ -1,6 +1,7 @@
 package ibc
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -14,8 +15,8 @@ import (
 	tm "github.com/tendermint/tendermint/types"
 )
 
-func genGenesisDoc(chainID string, numVals int) (*tm.GenesisDoc, []*tm.Validator) {
-	var vals []*tm.Validator
+func genGenesisDoc(chainID string, numVals int) (*tm.GenesisDoc, []types.PrivAccount) {
+	var privAccs []types.PrivAccount
 	genDoc := &tm.GenesisDoc{
 		ChainID:    chainID,
 		Validators: nil,
@@ -23,17 +24,16 @@ func genGenesisDoc(chainID string, numVals int) (*tm.GenesisDoc, []*tm.Validator
 
 	for i := 0; i < numVals; i++ {
 		name := cmn.Fmt("%v_val_%v", chainID, i)
-		valPrivAcc := testutils.PrivAccountFromSecret(name)
-		val := tm.NewValidator(valPrivAcc.Account.PubKey, 1)
+		privAcc := testutils.PrivAccountFromSecret(name)
 		genDoc.Validators = append(genDoc.Validators, tm.GenesisValidator{
-			PubKey: val.PubKey,
+			PubKey: privAcc.Account.PubKey,
 			Amount: 1,
 			Name:   name,
 		})
-		vals = append(vals, val)
+		privAccs = append(privAccs, privAcc)
 	}
 
-	return genDoc, vals
+	return genDoc, privAccs
 }
 
 func TestIBCPlugin(t *testing.T) {
@@ -50,7 +50,7 @@ func TestIBCPlugin(t *testing.T) {
 	}
 
 	chainID_1 := "test_chain"
-	genDoc_1, vals_1 := genGenesisDoc(chainID_1, 4)
+	genDoc_1, privAccs_1 := genGenesisDoc(chainID_1, 4)
 	genDocJSON_1 := wire.JSONBytesPretty(genDoc_1)
 
 	// Register a malformed chain
@@ -114,10 +114,45 @@ func TestIBCPlugin(t *testing.T) {
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
-	// Update a chain
-	//header, commit :=
-
+	// Construct a Header that includes the above packet.
 	store.Sync()
 	resCommit := tree.CommitSync()
-	t.Log(">>", vals_1, tree, resCommit.Data)
+	appHash := resCommit.Data
+	header := tm.Header{
+		ChainID: "test_chain",
+		Height:  999,
+		AppHash: appHash,
+	}
+
+	// Construct a Commit that signs above header
+	blockHash := header.Hash()
+	blockID := tm.BlockID{Hash: blockHash}
+	commit := tm.Commit{
+		BlockID:    blockID,
+		Precommits: make([]*tm.Vote, len(privAccs_1)),
+	}
+	for i, privAcc := range privAccs_1 {
+		vote := &tm.Vote{
+			ValidatorAddress: privAcc.Account.PubKey.Address(),
+			ValidatorIndex:   i,
+			Height:           999,
+			Round:            0,
+			Type:             tm.VoteTypePrecommit,
+			BlockID:          tm.BlockID{},
+		}
+		vote.Signature = privAcc.PrivKey.Sign(
+			tm.SignBytes("test_chain", vote),
+		)
+		fmt.Println(">>", i, privAcc, vote)
+		commit.Precommits[i] = vote
+	}
+
+	// Update a chain
+	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCUpdateChainTx{
+		Header: header,
+		Commit: commit,
+	}}))
+	assert.Equal(t, res.Code, abci.CodeType(0), res.Log)
+	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
+	store.ClearLogLines()
 }

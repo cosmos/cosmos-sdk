@@ -1,5 +1,5 @@
-hash: 6c6d9e61a9c0fddc1b57bd648bfa2cfa9bb9be9b280cdd0d7af00c05014b97e3
-updated: 2017-01-27T19:04:45.666108135+01:00
+hash: b9a172c5787d313d8ebd037e3ef21f258cc9fc9ac61dbbc1091c1a645938dfca
+updated: 2017-01-30T16:04:50.152280515+01:00
 imports:
 - name: github.com/btcsuite/btcd
   version: afec1bd1245a4a19e6dfe1306974b733e7cbb9b8
@@ -21,6 +21,8 @@ imports:
   version: ed8eb9e318d7a84ce5915b495b7d35e0cfe7b5a8
 - name: github.com/mattn/go-isatty
   version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
+- name: github.com/pkg/errors
+  version: 248dadf4e9068a0b3e79f02ed0a610d935de5302
 - name: github.com/syndtr/goleveldb
   version: 6ae1797c0b42b9323fc27ff7dcf568df88f2f33d
   subpackages:
@@ -37,13 +39,13 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 05096de3687ac582bec63860b3dd384acd9149aa
+  version: 8df0bc3a40ccad0d2be10e33c62c404e65c92502
   subpackages:
   - client
   - server
   - types
 - name: github.com/tendermint/basecoin
-  version: 3945919fa04f4c6cd7bda011f916ea261df2cd29
+  version: 53786ab4ce1fbe36d09cdedc82808b91b772cc3e
   subpackages:
   - app
   - state
@@ -54,27 +56,27 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-common
-  version: e289af53b6bf6af28da129d9ef64389a4cf7987f
+  version: 339e135776142939d82bc8e699db0bf391fd938d
 - name: github.com/tendermint/go-crypto
   version: 4b11d62bdb324027ea01554e5767b71174680ba0
 - name: github.com/tendermint/go-db
   version: 2645626c33d8702739e52a61a55d705c2dfe4530
 - name: github.com/tendermint/go-events
-  version: fddee66d90305fccb6f6d84d16c34fa65ea5b7f6
+  version: 2337086736a6adeb2de6f66739b66ecd77535997
 - name: github.com/tendermint/go-logger
   version: cefb3a45c0bf3c493a04e9bcd9b1540528be59f2
 - name: github.com/tendermint/go-merkle
-  version: 2979c7eb8aa020fa1cf203654907dbb889703888
+  version: 653cb1f631528351ddbc359b994eb0c96f0341cd
 - name: github.com/tendermint/go-rpc
   version: fcea0cda21f64889be00a0f4b6d13266b1a76ee7
 - name: github.com/tendermint/go-wire
-  version: 2f3b7aafe21c80b19b6ee3210ecb3e3d07c7a471
+  version: 3216ec9d47bbdf8d4fc27d22169ea86a6688bc15
 - name: github.com/tendermint/log15
   version: 9545b249b3aacafa97f79e0838b02b274adc6f5f
   subpackages:
   - term
 - name: github.com/tendermint/merkleeyes
-  version: 4340a256d3d0fb44831826cf68aa1f6f4a2a151c
+  version: 7c1ec0ef86c42b7a461e3967efb6c35bd5652101
   subpackages:
   - app
   - client

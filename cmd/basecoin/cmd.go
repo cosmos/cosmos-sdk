@@ -144,6 +144,7 @@ var (
 			ibcToFlag,
 			ibcTypeFlag,
 			ibcPayloadFlag,
+			ibcSequenceFlag,
 		},
 	}
 
@@ -154,6 +155,8 @@ var (
 			return cmdIBCPacketPostTx(c)
 		},
 		Flags: []cli.Flag{
+			ibcFromFlag,
+			ibcHeightFlag,
 			ibcPacketFlag,
 			ibcProofFlag,
 		},

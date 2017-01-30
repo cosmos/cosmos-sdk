@@ -181,4 +181,16 @@ var (
 		Usage: "hex-encoded proof of IBC packet from source chain",
 		Value: "",
 	}
+
+	ibcSequenceFlag = cli.IntFlag{
+		Name:  "sequence",
+		Usage: "sequence number for IBC packet",
+		Value: 0,
+	}
+
+	ibcHeightFlag = cli.IntFlag{
+		Name:  "height",
+		Usage: "Height the packet became egress in source chain",
+		Value: 0,
+	}
 )

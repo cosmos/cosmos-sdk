@@ -77,38 +77,77 @@ func cmdIBCUpdateTx(c *cli.Context) error {
 }
 
 func cmdIBCPacketCreateTx(c *cli.Context) error {
-	return nil
-}
+	fromChain, toChain := c.String("from"), c.String("to")
+	packetType := c.String("type")
 
-func cmdIBCPacketPostTx(c *cli.Context) error {
-	parent := c.Parent()
+	payloadBytes, err := hex.DecodeString(stripHex(c.String("payload")))
+	if err != nil {
+		return errors.New(cmn.Fmt("Payload (%v) is invalid hex: %v", c.String("payload"), err))
+	}
 
-	var fromChain string
-	var fromHeight uint64
-	var proof merkle.IAVLProof
+	sequence, err := getIBCSequence(c)
+	if err != nil {
+		return err
+	}
 
-	var srcChain, dstChain string
-	var sequence uint64
-	var packetType string
-	var payload []byte
-
-	ibcTx := ibc.IBCPacketTx{
-		FromChainID:     fromChain,
-		FromChainHeight: fromHeight,
+	ibcTx := ibc.IBCPacketCreateTx{
 		Packet: ibc.Packet{
-			SrcChainID: srcChain,
-			DstChainID: dstChain,
+			SrcChainID: fromChain,
+			DstChainID: toChain,
 			Sequence:   sequence,
 			Type:       packetType,
-			Payload:    payload,
+			Payload:    payloadBytes,
 		},
-		Proof: proof,
 	}
 
 	fmt.Println("IBCTx:", string(wire.JSONBytes(ibcTx)))
 
 	data := wire.BinaryBytes(ibcTx)
-	name := "ibc"
 
-	return appTx(parent, name, data)
+	return appTx(c.Parent(), "ibc", data)
+}
+
+func cmdIBCPacketPostTx(c *cli.Context) error {
+	fromChain, fromHeight := c.String("from"), c.Int("height")
+
+	packetBytes, err := hex.DecodeString(stripHex(c.String("packet")))
+	if err != nil {
+		return errors.New(cmn.Fmt("Packet (%v) is invalid hex: %v", c.String("packet"), err))
+	}
+	proofBytes, err := hex.DecodeString(stripHex(c.String("proof")))
+	if err != nil {
+		return errors.New(cmn.Fmt("Proof (%v) is invalid hex: %v", c.String("proof"), err))
+	}
+
+	var packet ibc.Packet
+	var proof merkle.IAVLProof
+
+	if err := wire.ReadBinaryBytes(packetBytes, &packet); err != nil {
+		return errors.New(cmn.Fmt("Error unmarshalling packet: %v", err))
+	}
+	if err := wire.ReadBinaryBytes(proofBytes, &proof); err != nil {
+		return errors.New(cmn.Fmt("Error unmarshalling proof: %v", err))
+	}
+
+	ibcTx := ibc.IBCPacketPostTx{
+		FromChainID:     fromChain,
+		FromChainHeight: uint64(fromHeight),
+		Packet:          packet,
+		Proof:           proof,
+	}
+
+	fmt.Println("IBCTx:", string(wire.JSONBytes(ibcTx)))
+
+	data := wire.BinaryBytes(ibcTx)
+
+	return appTx(c.Parent(), "ibc", data)
+}
+
+func getIBCSequence(c *cli.Context) (uint64, error) {
+	if c.IsSet("sequence") {
+		return uint64(c.Int("sequence")), nil
+	}
+
+	// TODO: get sequence
+	return 0, nil
 }

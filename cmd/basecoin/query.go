@@ -9,6 +9,7 @@ import (
 	"github.com/urfave/cli"
 
 	cmn "github.com/tendermint/go-common"
+	"github.com/tendermint/go-merkle"
 	"github.com/tendermint/go-wire"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
@@ -114,4 +115,47 @@ type BlockHex struct {
 type BlockJSON struct {
 	Header *tmtypes.Header `json:"header"`
 	Commit *tmtypes.Commit `json:"commit"`
+}
+
+func cmdVerify(c *cli.Context) error {
+	keyString, valueString := c.String("key"), c.String("value")
+
+	var err error
+	key := []byte(keyString)
+	if isHex(keyString) {
+		key, err = hex.DecodeString(stripHex(keyString))
+		if err != nil {
+			return errors.New(cmn.Fmt("Key (%v) is invalid hex: %v", keyString, err))
+		}
+	}
+
+	value := []byte(valueString)
+	if isHex(valueString) {
+		value, err = hex.DecodeString(stripHex(valueString))
+		if err != nil {
+			return errors.New(cmn.Fmt("Value (%v) is invalid hex: %v", valueString, err))
+		}
+	}
+
+	root, err := hex.DecodeString(stripHex(c.String("root")))
+	if err != nil {
+		return errors.New(cmn.Fmt("Root (%v) is invalid hex: %v", c.String("root"), err))
+	}
+
+	proofBytes, err := hex.DecodeString(stripHex(c.String("proof")))
+	if err != nil {
+		return errors.New(cmn.Fmt("Proof (%v) is invalid hex: %v", c.String("proof"), err))
+	}
+
+	proof, err := merkle.ReadProof(proofBytes)
+	if err != nil {
+		return errors.New(cmn.Fmt("Error unmarshalling proof: %v", err))
+	}
+
+	if proof.Verify(key, value, root) {
+		fmt.Println("OK")
+	} else {
+		return errors.New("Proof does not verify")
+	}
+	return nil
 }

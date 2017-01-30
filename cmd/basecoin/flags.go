@@ -194,3 +194,30 @@ var (
 		Value: 0,
 	}
 )
+
+// proof flags
+var (
+	proofFlag = cli.StringFlag{
+		Name:  "proof",
+		Usage: "hex-encoded IAVL proof",
+		Value: "",
+	}
+
+	keyFlag = cli.StringFlag{
+		Name:  "key",
+		Usage: "key to the IAVL tree",
+		Value: "",
+	}
+
+	valueFlag = cli.StringFlag{
+		Name:  "value",
+		Usage: "value in the IAVL tree",
+		Value: "",
+	}
+
+	rootFlag = cli.StringFlag{
+		Name:  "root",
+		Usage: "root hash of the IAVL tree",
+		Value: "",
+	}
+)

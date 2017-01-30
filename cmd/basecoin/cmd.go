@@ -197,4 +197,18 @@ var (
 			nodeFlag,
 		},
 	}
+
+	verifyCmd = cli.Command{
+		Name:  "verify",
+		Usage: "Verify the IAVL proof",
+		Action: func(c *cli.Context) error {
+			return cmdVerify(c)
+		},
+		Flags: []cli.Flag{
+			proofFlag,
+			keyFlag,
+			valueFlag,
+			rootFlag,
+		},
+	}
 )

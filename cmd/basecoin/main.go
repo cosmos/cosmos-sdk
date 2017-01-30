@@ -17,6 +17,7 @@ func main() {
 		appTxCmd,
 		ibcCmd,
 		queryCmd,
+		verifyCmd,
 		blockCmd,
 		accountCmd,
 	}

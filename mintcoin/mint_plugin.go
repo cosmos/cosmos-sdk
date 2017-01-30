@@ -1,4 +1,4 @@
-package mintnet
+package mintcoin
 
 import (
 	"encoding/hex"
@@ -20,7 +20,7 @@ type MintPlugin struct {
 	name string
 }
 
-func NewMintPlugin(name string) MintPlugin {
+func New(name string) MintPlugin {
 	return MintPlugin{name: name}
 }
 

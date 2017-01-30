@@ -1,4 +1,4 @@
-package mintnet
+package mintcoin
 
 import (
 	"encoding/hex"
@@ -13,7 +13,7 @@ import (
 func TestSaveLoad(t *testing.T) {
 	assert := assert.New(t)
 	store := types.NewMemKVStore()
-	plugin := NewMintPlugin("cash")
+	plugin := New("cash")
 	addr1, addr2 := []byte("bigmoney"), []byte("litlefish")
 
 	s := plugin.loadState(store)
@@ -31,7 +31,7 @@ func TestSaveLoad(t *testing.T) {
 func TestSetOptions(t *testing.T) {
 	assert := assert.New(t)
 	store := types.NewMemKVStore()
-	plugin := NewMintPlugin("cash")
+	plugin := New("cash")
 
 	addr1, addr2 := []byte("bigmoney"), []byte("litlefish")
 	hex1 := hex.EncodeToString(addr1)
@@ -58,7 +58,7 @@ func TestSetOptions(t *testing.T) {
 func TestTransactions(t *testing.T) {
 	assert := assert.New(t)
 	store := types.NewMemKVStore()
-	plugin := NewMintPlugin("cash")
+	plugin := New("cash")
 
 	addr1, addr2 := []byte("bigmoney"), []byte("litlefish")
 	assert.Nil(state.GetAccount(store, addr1))

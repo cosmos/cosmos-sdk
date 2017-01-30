@@ -1,4 +1,4 @@
-package mintnet
+package mintcoin
 
 import (
 	"bytes"

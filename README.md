@@ -31,6 +31,10 @@ Sure, printing money and sending it is nice, but sometimes I don't fully trust t
 
 **TODO**
 
+## IBC
+
+Now, let's hook up your personal crypto-currency with the wide world of other currencies, in a distributed, proof-of-stake based exchange.  Hard, you say?  Well half the work is already done for you with the [IBC, InterBlockchain Communication, plugin](./ibc.md).  Now, we just need to get cosmos up and running and time to go and trade.
+
 ## Deployment
 
 Up until this point, we have only been testing the code as a stand-alone abci app, which is nice for developing, but it is no blockchain.  Just a blockchain-ready application.

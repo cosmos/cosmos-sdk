@@ -15,15 +15,15 @@ It also contains some step-by-step tutorials on getting stated... at least until
 
 ## Initial Setup
 
-Before beginning with these guides, please make sure you understand how to [install and compile](https://github.com/tendermint/basecoin/blob/master/README.md) the basecoin code. Then, we will go through initializing the state, inspecting the state, and sending money with a simple cli.
+Before beginning with these guides, please make sure you understand how to [install and compile](https://github.com/tendermint/basecoin/blob/develop/README.md) the basecoin code.
 
-**TODO**
+Then, check out the [basecoin cli introduction](./tutorial.md) will go through initializing the state, inspecting the state, and sending money with a simple cli.
 
 ## Minting Coin
 
 **Working Code Here**
 
-You just read about the amazing [plugin system](https://github.com/tendermint/basecoin/blob/master/README.md#plugins), and want to use it to print your own money.  Me too!  Let's get started with a simple plugin extension to basecoin, called [mintcoin](./mintcoin/README.md).
+You just read about the amazing [plugin system](https://github.com/tendermint/basecoin/blob/develop/Plugins.md), and want to use it to print your own money.  Me too!  Let's get started with a simple plugin extension to basecoin, called [mintcoin](./mintcoin/README.md). This plugin lets you register one or more accounts as "central bankers", who can unilaterally issue more currency into the system.  It also serves as a simple test-bed to see how one can not just build a plugin, but also take advantage of existing codebases to provide a simple cli to use it.
 
 ## Financial Instruments
 

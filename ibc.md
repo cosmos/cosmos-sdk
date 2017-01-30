@@ -7,108 +7,20 @@ The simplest example of using the IBC protocol is to send a data packet from one
 We implemented IBC as a basecoin plugin. In this tutorial,
 we'll show you how to use the Basecoin IBC-plugin to send a packet of data across blockchains!
 
-## Basecoin Plugins
-
-Basecoin is an extensible cryptocurrency module.
-Each Basecoin account contains a ED25519 public key,
-a balance in many different coin denominations, 
-and a strictly increasing sequence number for replay protection (like in Ethereum).
-Accounts are serialized and stored in a merkle tree using the account's address as the key,
-where the address is the RIPEMD160 hash of the public key.
-
-Sending tokens around is done via the `SendTx`, which takes a list of inputs and a list of outputs,
-and transfers all the tokens listed in the inputs from their corresponding accounts to the accounts listed in the output.
-The `SendTx` is structured as follows:
-
-```
-type SendTx struct {
-	Gas     int64      `json:"gas"` // Gas
-	Fee     Coin       `json:"fee"` // Fee
-	Inputs  []TxInput  `json:"inputs"`
-	Outputs []TxOutput `json:"outputs"`
-}
-
-type TxInput struct {
-	Address   []byte           `json:"address"`   // Hash of the PubKey
-	Coins     Coins            `json:"coins"`     //
-	Sequence  int              `json:"sequence"`  // Must be 1 greater than the last committed TxInput
-	Signature crypto.Signature `json:"signature"` // Depends on the PubKey type and the whole Tx
-	PubKey    crypto.PubKey    `json:"pub_key"`   // Is present iff Sequence == 0
-}
-
-type TxOutput struct {
-	Address []byte `json:"address"` // Hash of the PubKey
-	Coins   Coins  `json:"coins"`   //
-}
-
-type Coins []Coin
-
-type Coin struct {
-	Denom  string `json:"denom"`
-	Amount int64  `json:"amount"`
-}
-
-```
-
-Note it also includes a field for `Gas` and `Fee`. The `Gas` limits the total amount of computation that can be done by the transaction,
-while the `Fee` refers to the total amount paid in fees. This is slightly different from Ethereum's concept of `Gas` and `GasPrice`,
-where `Fee = Gas x GasPrice`. In Basecoin, the `Gas` and `Fee` are independent.
-
-
-Basecoin also defines another transaction type, the `AppTx`: 
-
-```
-type AppTx struct {
-	Gas   int64   `json:"gas"`   // Gas
-	Fee   Coin    `json:"fee"`   // Fee
-	Name  string  `json:"type"`  // Which plugin
-	Input TxInput `json:"input"` 
-	Data  []byte  `json:"data"`
-}
-```
-
-The `AppTx` enables arbitrary additional functionality through the use of plugins.
-A plugin is simply a Go package that implements the `Plugin` interface:
-
-```
-type Plugin interface {
-
-	// Name of this plugin, should be short.
-	Name() string
-
-	// Run a transaction from ABCI DeliverTx
-	RunTx(store KVStore, ctx CallContext, txBytes []byte) (res abci.Result)
-
-	// Other ABCI message handlers
-	SetOption(store KVStore, key string, value string) (log string)
-	InitChain(store KVStore, vals []*abci.Validator)
-	BeginBlock(store KVStore, height uint64)
-	EndBlock(store KVStore, height uint64) []*abci.Validator
-}
-
-type CallContext struct {
-	CallerAddress []byte   // Caller's Address (hash of PubKey)
-	CallerAccount *Account // Caller's Account, w/ fee & TxInputs deducted
-	Coins         Coins    // The coins that the caller wishes to spend, excluding fees
-}
-```
-
-The workhorse of the plugin is `RunTx`, which is called when an `AppTx` is processed.
-The `Name` field in the `AppTx` refers to the plugin name, and the `Data` field of the `AppTx` is 
-forward to the `RunTx` function.
+First, you should read up on [what a basecoin plugin is](https://github.com/tendermint/basecoin/blob/develop/Plugins.md).
 
 We implemented IBC as a plugin that defines a new set of transactions.
-This functionality is accessible through the `AppTx` by setting the `Name` field to `IBC`,
-and setting the `Data` field to the serialized IBC transaction.
+This functionality is accessible through the `AppTx` by setting the `Name` field to `IBC`, and setting the `Data` field to the serialized IBC transaction.
 
 We'll demonstrate exactly how this works below.
+
 
 ## IBC
 
 Let's review the IBC protocol.
 The purpose of IBC is to enable one blockchain to function as a light-client of another.
 Since we are using a classical Byzantine Fault Tolerant consensus algorithm,
-light-client verification is cheap and easy: 
+light-client verification is cheap and easy:
 all we have to do is check validator signatures on the latest block,
 and verify a merkle proof of the state.
 
@@ -119,9 +31,9 @@ and a field in the block header called `AppHash`, which refers to the merkle roo
 after processing the transactions from the previous block.
 So, if we want to verify some state from height H, we need the signatures and root hash from height H+1.
 
-Unlike Proof-of-Work, the light-client protocol does not need to download and check all the headers in the blockchain - 
+Unlike Proof-of-Work, the light-client protocol does not need to download and check all the headers in the blockchain -
 the client can always jump straight to the latest header available, so long as the validator set has not changed much.
-If the validator set is changing, the client needs to track these changes, which requires downloading headers for each block 
+If the validator set is changing, the client needs to track these changes, which requires downloading headers for each block
 in which there is a significant change. For now, we will assume the validator set is constant, and postpone handling
 validator set changes for another time.
 
@@ -140,7 +52,7 @@ Each of these steps involves a separate IBC transaction type. Let's take them up
 
 ### IBCRegisterChainTx
 
-The `IBCRegisterChainTx` is used to register one chain on another. 
+The `IBCRegisterChainTx` is used to register one chain on another.
 It contains the chain ID and genesis configuration of the chain to register:
 
 ```
@@ -213,7 +125,7 @@ type IBCPacketPostTx struct {
 
 The proof is a merkle proof in an IAVL tree, our implementation of a balanced, Merklized binary search tree.
 It contains a list of nodes in the tree, which can be hashed together to get the Merkle root hash.
-This hash must match the `AppHash` contained in the header at `FromChainHeight + 1` 
+This hash must match the `AppHash` contained in the header at `FromChainHeight + 1`
 - note the `+ 1` is necessary since `FromChainHeight` is the height in which the packet was committed,
 and the resulting state root is not included until the next block.
 
@@ -252,7 +164,7 @@ Now that we have all the background knowledge, let's actually walk through the t
 
 First, you'll need to install [tendermint]() and [basecoin]().
 
-Now let's start the two blockchains. 
+Now let's start the two blockchains.
 In this tutorial, each chain will have only a single validator,
 where the initial configuration files are already generated.
 Let's change directory so these files are easily accessible:
@@ -270,7 +182,7 @@ TMROOT=./data/chain1/tendermint tendermint node &> chain1_tendermint.log &
 basecoin start --ibc-plugin --dir ./data/chain1/basecoin &> chain1_basecoin.log &
 ```
 
-and 
+and
 
 ```
 TMROOT=./data/chain2/tendermint tendermint node --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> chain2_tendermint.log &
@@ -319,11 +231,11 @@ Now that the packet is committed in the chain, let's get some proof by querying:
 basecoin query ibc,egress,$CHAIN_ID1,$CHAIN_ID2,1
 ```
 
-The result contains the latest height, a value (ie. the hex-encoded binary serialization of our packet), 
+The result contains the latest height, a value (ie. the hex-encoded binary serialization of our packet),
 and a proof (ie. hex-encoded binary serialization of a list of nodes from the Merkle tree) that the value is in the Merkle tree.
 
 If we want to send this data to `test_chain_2`, we first have to update what it knows about `test_chain_1`.
-We'll need a recent block header and a set of commit signatures. 
+We'll need a recent block header and a set of commit signatures.
 Fortunately, we can get them with the `block` command:
 
 ```
@@ -350,7 +262,7 @@ of `test_chain_1`, it will be able to verify the proof!
 basecoin ibc --amount 10 $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height <height + 1> --packet 0x<packet> --proof 0x<proof>
 ```
 
-Here, `<height + 1>` is one greater than the height retuned by the previous `query` command, and `<packet>` and `<proof>` are the 
+Here, `<height + 1>` is one greater than the height retuned by the previous `query` command, and `<packet>` and `<proof>` are the
 `value` and `proof` returned in that same query.
 
 Tada!

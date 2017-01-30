@@ -121,7 +121,7 @@ type IBCPacketPostTx struct {
 	FromChainID     string // The immediate source of the packet, not always Packet.SrcChainID
 	FromChainHeight uint64 // The block height in which Packet was committed, to check Proof
 	Packet
-	Proof merkle.IAVLProof
+	Proof *merkle.IAVLProof
 }
 
 func (IBCPacketPostTx) ValidateBasic() (res abci.Result) {
@@ -298,7 +298,7 @@ func (sm *IBCStateMachine) runPacketCreateTx(tx IBCPacketCreateTx) {
 		return
 	}
 	// Save new Packet
-	save(sm.store, packetKey, wire.BinaryBytes(packet))
+	save(sm.store, packetKey, packet)
 }
 
 func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
@@ -326,7 +326,7 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 	}
 
 	// Save new Packet
-	save(sm.store, packetKeyIngress, wire.BinaryBytes(packet))
+	save(sm.store, packetKeyIngress, packet)
 
 	// Load Header and make sure it exists
 	var header tm.Header
@@ -352,6 +352,11 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 		}
 	*/
 	proof := tx.Proof
+	if proof == nil {
+		sm.res.Code = IBCCodeInvalidProof
+		sm.res.Log = "Proof is nil"
+		return
+	}
 	packetBytes := wire.BinaryBytes(packet)
 
 	// Make sure packet's proof matches given (packet, key, blockhash)

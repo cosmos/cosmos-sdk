@@ -31,32 +31,12 @@ This will create the `basecoin` binary in `$GOPATH/bin`.
 ## Using the Plugin System
 
 Basecoin is designed to serve as a common base layer for developers building cryptocurrency applications.
-It handles public-key authentication of transactions, maintaining the balance of arbitrary types of currency (BTC, ATOM, ETH, MYCOIN, ...), 
-sending currency (one-to-one or n-to-m multisig), and providing merkle-proofs of the state. 
-These are common factors that many people wish to have in a crypto-currency system, 
-so instead of trying to start from scratch, developers can extend the functionality of Basecoin using the plugin system!
+It handles public-key authentication of transactions, maintaining the balance of arbitrary types of currency (BTC, ATOM, ETH, MYCOIN, ...),
+sending currency (one-to-one or n-to-m multisig), and providing merkle-proofs of the state.
+These are common factors that many people wish to have in a crypto-currency system,
+so instead of trying to start from scratch, developers can extend the functionality of Basecoin using the plugin system, just writing the custom business logic they need, and leaving the rest to the basecoin system.
 
-The Plugin interface is defined in `types/plugin.go`:
-
-```
-type Plugin interface {
-  Name() string
-  SetOption(store KVStore, key string, value string) (log string)
-  RunTx(store KVStore, ctx CallContext, txBytes []byte) (res abci.Result)
-  InitChain(store KVStore, vals []*abci.Validator)
-  BeginBlock(store KVStore, height uint64)
-  EndBlock(store KVStore, height uint64) []*abci.Validator
-}
-```
-
-`RunTx` is where you can handle any special transactions directed to your application. 
-To see a very simple implementation, look at the demo [counter plugin](./plugins/counter/counter.go). 
-If you want to create your own currency using a plugin, you don't have to fork basecoin at all.  
-Just make your own repo, add the implementation of your custom plugin, and then build your own main script that instatiates Basecoin and registers your plugin.
-
-An example is worth a 1000 words, so please take a look [at this example](https://github.com/tendermint/basecoin/blob/develop/cmd/paytovote/main.go#L25-L31). 
-Note for now it is in a dev branch.
-You can use the same technique in your own repo.
+Interested in building a plugin?  Then [read more details here](./Plugins.md)
 
 ## Using the CLI
 

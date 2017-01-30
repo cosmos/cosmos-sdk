@@ -36,7 +36,7 @@ sending currency (one-to-one or n-to-m multisig), and providing merkle-proofs of
 These are common factors that many people wish to have in a crypto-currency system,
 so instead of trying to start from scratch, developers can extend the functionality of Basecoin using the plugin system, just writing the custom business logic they need, and leaving the rest to the basecoin system.
 
-Interested in building a plugin?  Then [read more details here](./Plugins.md)
+Interested in building a plugin?  Then [read more details here](./Plugins.md) and then you can follow a [simple tutorial](https://github.com/tendermint/basecoin-examples/blob/master/pluginDev/tutorial.md) to get your first plugin working.
 
 ## Using the CLI
 
@@ -44,6 +44,8 @@ The basecoin cli can be used to start a stand-alone basecoin instance (`basecoin
 or to start basecoin with tendermint in the same process (`basecoin start --in-proc`).
 It can also be used to send transactions, eg. `basecoin sendtx --to 0x4793A333846E5104C46DD9AB9A00E31821B2F301 --amount 100`
 See `basecoin --help` and `basecoin [cmd] --help` for more details`.
+
+Or follow through a [step-by-step introduction](https://github.com/tendermint/basecoin-examples/blob/master/tutorial.md) to testing basecoin locally.
 
 ## Tutorials and Other Reading
 

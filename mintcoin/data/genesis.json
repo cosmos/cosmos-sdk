@@ -1,0 +1,13 @@
+[
+  "base/chainID", "mint_chain_id",
+  "mint/add", "D397BC62B435F3CF50570FBAB4340FE52C60858F",
+  "base/account", {
+    "pub_key": [1, "B3588BDC92015ED3CDB6F57A86379E8C79A7111063610B7E625487C76496F4DF"],
+    "coins": [
+      {
+        "denom": "ETH",
+        "amount": 10
+      }
+    ]
+  }
+]

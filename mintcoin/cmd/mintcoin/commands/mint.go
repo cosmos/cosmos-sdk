@@ -13,9 +13,12 @@ import (
 )
 
 var (
+	MintToFlag = cli.StringFlag{
+		Name:  "mintto",
+		Usage: "Where to send the newly minted coins",
+	}
 	MintAmountFlag = cli.IntFlag{
 		Name:  "mint",
-		Value: 0,
 		Usage: "Amount of coins to mint",
 	}
 	MintCoinFlag = cli.StringFlag{
@@ -33,7 +36,7 @@ var (
 			return cmdMintTx(c)
 		},
 		Flags: []cli.Flag{
-			bcmd.ToFlag,
+			MintToFlag,
 			MintAmountFlag,
 			MintCoinFlag,
 		},
@@ -52,10 +55,9 @@ func init() {
 }
 
 func cmdMintTx(c *cli.Context) error {
-	// valid := c.Bool("valid")
-	toHex := c.String("to")
-	mintAmount := int64(c.Int("mint"))
-	mintCoin := c.String("mintcoin")
+	toHex := c.String(MintToFlag.Name)
+	mintAmount := int64(c.Int(MintAmountFlag.Name))
+	mintCoin := c.String(MintCoinFlag.Name)
 	parent := c.Parent()
 
 	// convert destination address to bytes

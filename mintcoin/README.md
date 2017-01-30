@@ -14,11 +14,39 @@ If you register the plugin with the default name "mint", two options keys are su
 
 To create money, we need to create a [MintTx](https://github.com/tendermint/basecoin-examples/blob/master/mintcoin/mint_data.go#L39-L50) transaction, and then call Serialize() to get the app-specific tx bytes.  Then you must wrap it in a [basecoin AppTx](https://github.com/tendermint/basecoin/blob/master/types/tx.go#L154-L160), setting `Name` to "mint", and `Data` to the bytes returned by `Serialize`.  You can then sign this AppTx with the private key...
 
-A bit of a complex process, but look at [this test code](https://github.com/tendermint/basecoin/blob/master/plugins/counter/counter_test.go#L38-L58) for inspiration.  Hope to automate this a bit more soon.
+Confused yet, luckily there is a shiny, new cli thanks to Bucky. So all this crypto power is just a few keystrokes away....
 
 ## Testing with a CLI
 
-**TODO** Once we authorized some keys to mint cash, let's do it.  And send those shiny new bills to our friends.
+Once we authorized some keys to mint cash, let's do it.  And send those shiny new bills to our friends.  But before playing with mintcoin, make sure you check out [the basecoin cli tutorial](../tutorial.md)
+
+Setup tendermint:
+
+```
+tendermint init
+tendermint unsafe_reset_all
+```
+
+Setup basecoin server with default genesis:
+
+```
+cd $GOPATH/src/github.com/tendermint/basecoin-examples/mintcoin/data
+mintcoin start --in-proc --mint-plugin --counter-plugin
+```
+
+Run basecoin client in another window:
+
+```
+cd $GOPATH/src/github.com/tendermint/basecoin-examples/mintcoin/data
+mintcoin account D397BC62B435F3CF50570FBAB4340FE52C60858F
+
+# apparently we need to send some coin with every transaction, even if the
+# app doesn't care
+mintcoin apptx --coin ETH --amount 1 mint --mintto D397BC62B435F3CF50570FBAB4340FE52C60858F --mint 1000 --mintcoin BTC
+```
+
+**TODO** get the sigs working here.
+
 
 ## Attaching a GUI
 

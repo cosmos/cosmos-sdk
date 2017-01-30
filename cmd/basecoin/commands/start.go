@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"errors"
@@ -19,13 +19,44 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/plugins/counter"
 	"github.com/tendermint/basecoin/plugins/ibc"
+	"github.com/tendermint/basecoin/types"
 )
 
 var config cfg.Config
 
 const EyesCacheSize = 10000
+
+var StartCmd = cli.Command{
+	Name:      "start",
+	Usage:     "Start basecoin",
+	ArgsUsage: "",
+	Action: func(c *cli.Context) error {
+		return cmdStart(c)
+	},
+	Flags: []cli.Flag{
+		AddrFlag,
+		EyesFlag,
+		DirFlag,
+		InProcTMFlag,
+		ChainIDFlag,
+		IbcPluginFlag,
+		// CounterPluginFlag,
+	},
+}
+
+type plugin struct {
+	name string
+	init func() types.Plugin
+}
+
+var plugins = []plugin{}
+
+// RegisterStartPlugin is used to add another
+func RegisterStartPlugin(flag cli.BoolFlag, init func() types.Plugin) {
+	StartCmd.Flags = append(StartCmd.Flags, flag)
+	plugins = append(plugins, plugin{name: flag.GetName(), init: init})
+}
 
 func cmdStart(c *cli.Context) error {
 
@@ -43,14 +74,15 @@ func cmdStart(c *cli.Context) error {
 
 	// Create Basecoin app
 	basecoinApp := app.NewBasecoin(eyesCli)
-
-	if c.Bool("counter-plugin") {
-		basecoinApp.RegisterPlugin(counter.New("counter"))
-	}
-
 	if c.Bool("ibc-plugin") {
 		basecoinApp.RegisterPlugin(ibc.New())
+	}
 
+	// loop through all registered plugins and enable if desired
+	for _, p := range plugins {
+		if c.Bool(p.name) {
+			basecoinApp.RegisterPlugin(p.init())
+		}
 	}
 
 	// If genesis file exists, set key-value options

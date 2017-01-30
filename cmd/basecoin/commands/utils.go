@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"encoding/hex"
@@ -28,7 +28,7 @@ func isHex(s string) bool {
 	return false
 }
 
-func stripHex(s string) string {
+func StripHex(s string) string {
 	if isHex(s) {
 		return s[2:]
 	}

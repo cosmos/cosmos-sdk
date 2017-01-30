@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"github.com/urfave/cli"
@@ -6,13 +6,13 @@ import (
 
 // start flags
 var (
-	addrFlag = cli.StringFlag{
+	AddrFlag = cli.StringFlag{
 		Name:  "address",
 		Value: "tcp://0.0.0.0:46658",
 		Usage: "Listen address",
 	}
 
-	eyesFlag = cli.StringFlag{
+	EyesFlag = cli.StringFlag{
 		Name:  "eyes",
 		Value: "local",
 		Usage: "MerkleEyes address, or 'local' for embedded",
@@ -21,98 +21,93 @@ var (
 	// TODO: move to config file
 	// eyesCacheSizePtr := flag.Int("eyes-cache-size", 10000, "MerkleEyes db cache size, for embedded")
 
-	dirFlag = cli.StringFlag{
+	DirFlag = cli.StringFlag{
 		Name:  "dir",
 		Value: ".",
 		Usage: "Root directory",
 	}
 
-	inProcTMFlag = cli.BoolFlag{
+	InProcTMFlag = cli.BoolFlag{
 		Name:  "in-proc",
 		Usage: "Run Tendermint in-process with the App",
 	}
 
-	ibcPluginFlag = cli.BoolFlag{
+	IbcPluginFlag = cli.BoolFlag{
 		Name:  "ibc-plugin",
 		Usage: "Enable the ibc plugin",
-	}
-
-	counterPluginFlag = cli.BoolFlag{
-		Name:  "counter-plugin",
-		Usage: "Enable the counter plugin",
 	}
 )
 
 // tx flags
 
 var (
-	nodeFlag = cli.StringFlag{
+	NodeFlag = cli.StringFlag{
 		Name:  "node",
 		Value: "tcp://localhost:46657",
 		Usage: "Tendermint RPC address",
 	}
 
-	toFlag = cli.StringFlag{
+	ToFlag = cli.StringFlag{
 		Name:  "to",
 		Value: "",
 		Usage: "Destination address for the transaction",
 	}
 
-	amountFlag = cli.IntFlag{
+	AmountFlag = cli.IntFlag{
 		Name:  "amount",
 		Value: 0,
 		Usage: "Amount of coins to send in the transaction",
 	}
 
-	fromFlag = cli.StringFlag{
+	FromFlag = cli.StringFlag{
 		Name:  "from",
 		Value: "priv_validator.json",
 		Usage: "Path to a private key to sign the transaction",
 	}
 
-	seqFlag = cli.IntFlag{
+	SeqFlag = cli.IntFlag{
 		Name:  "sequence",
 		Value: 0,
 		Usage: "Sequence number for the account",
 	}
 
-	coinFlag = cli.StringFlag{
+	CoinFlag = cli.StringFlag{
 		Name:  "coin",
 		Value: "blank",
 		Usage: "Specify a coin denomination",
 	}
 
-	gasFlag = cli.IntFlag{
+	GasFlag = cli.IntFlag{
 		Name:  "gas",
 		Value: 0,
 		Usage: "The amount of gas for the transaction",
 	}
 
-	feeFlag = cli.IntFlag{
+	FeeFlag = cli.IntFlag{
 		Name:  "fee",
 		Value: 0,
 		Usage: "The transaction fee",
 	}
 
-	dataFlag = cli.StringFlag{
+	DataFlag = cli.StringFlag{
 		Name:  "data",
 		Value: "",
 		Usage: "Data to send with the transaction",
 	}
 
-	nameFlag = cli.StringFlag{
+	NameFlag = cli.StringFlag{
 		Name:  "name",
 		Value: "",
 		Usage: "Plugin to send the transaction to",
 	}
 
-	chainIDFlag = cli.StringFlag{
+	ChainIDFlag = cli.StringFlag{
 		Name:  "chain_id",
 		Value: "test_chain_id",
 		Usage: "ID of the chain for replay protection",
 	}
 
-	validFlag = cli.BoolFlag{
+	ValidFlag = cli.BoolFlag{
 		Name:  "valid",
 		Usage: "Set valid field in CounterTx",
 	}
@@ -120,73 +115,73 @@ var (
 
 // ibc flags
 var (
-	ibcChainIDFlag = cli.StringFlag{
+	IbcChainIDFlag = cli.StringFlag{
 		Name:  "chain_id",
 		Usage: "ChainID for the new blockchain",
 		Value: "",
 	}
 
-	ibcGenesisFlag = cli.StringFlag{
+	IbcGenesisFlag = cli.StringFlag{
 		Name:  "genesis",
 		Usage: "Genesis file for the new blockchain",
 		Value: "",
 	}
 
-	ibcHeaderFlag = cli.StringFlag{
+	IbcHeaderFlag = cli.StringFlag{
 		Name:  "header",
 		Usage: "Block header for an ibc update",
 		Value: "",
 	}
 
-	ibcCommitFlag = cli.StringFlag{
+	IbcCommitFlag = cli.StringFlag{
 		Name:  "commit",
 		Usage: "Block commit for an ibc update",
 		Value: "",
 	}
 
-	ibcFromFlag = cli.StringFlag{
+	IbcFromFlag = cli.StringFlag{
 		Name:  "from",
 		Usage: "Source ChainID",
 		Value: "",
 	}
 
-	ibcToFlag = cli.StringFlag{
+	IbcToFlag = cli.StringFlag{
 		Name:  "to",
 		Usage: "Destination ChainID",
 		Value: "",
 	}
 
-	ibcTypeFlag = cli.StringFlag{
+	IbcTypeFlag = cli.StringFlag{
 		Name:  "type",
 		Usage: "IBC packet type (eg. coin)",
 		Value: "",
 	}
 
-	ibcPayloadFlag = cli.StringFlag{
+	IbcPayloadFlag = cli.StringFlag{
 		Name:  "payload",
 		Usage: "IBC packet payload",
 		Value: "",
 	}
 
-	ibcPacketFlag = cli.StringFlag{
+	IbcPacketFlag = cli.StringFlag{
 		Name:  "packet",
 		Usage: "hex-encoded IBC packet",
 		Value: "",
 	}
 
-	ibcProofFlag = cli.StringFlag{
+	IbcProofFlag = cli.StringFlag{
 		Name:  "proof",
 		Usage: "hex-encoded proof of IBC packet from source chain",
 		Value: "",
 	}
 
-	ibcSequenceFlag = cli.IntFlag{
+	IbcSequenceFlag = cli.IntFlag{
 		Name:  "sequence",
 		Usage: "sequence number for IBC packet",
 		Value: 0,
 	}
 
-	ibcHeightFlag = cli.IntFlag{
+	IbcHeightFlag = cli.IntFlag{
 		Name:  "height",
 		Usage: "Height the packet became egress in source chain",
 		Value: 0,
@@ -195,25 +190,25 @@ var (
 
 // proof flags
 var (
-	proofFlag = cli.StringFlag{
+	ProofFlag = cli.StringFlag{
 		Name:  "proof",
 		Usage: "hex-encoded IAVL proof",
 		Value: "",
 	}
 
-	keyFlag = cli.StringFlag{
+	KeyFlag = cli.StringFlag{
 		Name:  "key",
 		Usage: "key to the IAVL tree",
 		Value: "",
 	}
 
-	valueFlag = cli.StringFlag{
+	ValueFlag = cli.StringFlag{
 		Name:  "value",
 		Usage: "value in the IAVL tree",
 		Value: "",
 	}
 
-	rootFlag = cli.StringFlag{
+	RootFlag = cli.StringFlag{
 		Name:  "root",
 		Usage: "root hash of the IAVL tree",
 		Value: "",

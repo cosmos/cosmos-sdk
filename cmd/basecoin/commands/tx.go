@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"encoding/hex"
@@ -7,7 +7,6 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/tendermint/basecoin/plugins/counter"
 	"github.com/tendermint/basecoin/types"
 
 	cmn "github.com/tendermint/go-common"
@@ -16,6 +15,63 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
+
+var (
+	SendTxCmd = cli.Command{
+		Name:      "sendtx",
+		Usage:     "Broadcast a basecoin SendTx",
+		ArgsUsage: "",
+		Action: func(c *cli.Context) error {
+			return cmdSendTx(c)
+		},
+		Flags: []cli.Flag{
+			NodeFlag,
+			ChainIDFlag,
+
+			FromFlag,
+
+			AmountFlag,
+			CoinFlag,
+			GasFlag,
+			FeeFlag,
+			SeqFlag,
+
+			ToFlag,
+		},
+	}
+
+	AppTxCmd = cli.Command{
+		Name:      "apptx",
+		Usage:     "Broadcast a basecoin AppTx",
+		ArgsUsage: "",
+		Action: func(c *cli.Context) error {
+			return cmdAppTx(c)
+		},
+		Flags: []cli.Flag{
+			NodeFlag,
+			ChainIDFlag,
+
+			FromFlag,
+
+			AmountFlag,
+			CoinFlag,
+			GasFlag,
+			FeeFlag,
+			SeqFlag,
+
+			NameFlag,
+			DataFlag,
+		},
+		// Subcommands are dynamically registered with plugins as needed
+		Subcommands: []cli.Command{},
+	}
+)
+
+// RegisterTxPlugin is used to add another subcommand and create a custom
+// apptx encoding.  Look at counter.go for an example
+func RegisterTxPlugin(cmd cli.Command) {
+	AppTxCmd.Subcommands = append(AppTxCmd.Subcommands, cmd)
+}
 
 func cmdSendTx(c *cli.Context) error {
 	toHex := c.String("to")
@@ -26,7 +82,7 @@ func cmdSendTx(c *cli.Context) error {
 	chainID := c.String("chain_id")
 
 	// convert destination address to bytes
-	to, err := hex.DecodeString(stripHex(toHex))
+	to, err := hex.DecodeString(StripHex(toHex))
 	if err != nil {
 		return errors.New("To address is invalid hex: " + err.Error())
 	}
@@ -73,10 +129,10 @@ func cmdAppTx(c *cli.Context) error {
 		data, _ = hex.DecodeString(dataString)
 	}
 	name := c.String("name")
-	return appTx(c, name, data)
+	return AppTx(c, name, data)
 }
 
-func appTx(c *cli.Context, name string, data []byte) error {
+func AppTx(c *cli.Context, name string, data []byte) error {
 	fromFile := c.String("from")
 	amount := int64(c.Int("amount"))
 	coin := c.String("coin")
@@ -109,28 +165,6 @@ func appTx(c *cli.Context, name string, data []byte) error {
 	}
 
 	return nil
-}
-
-func cmdCounterTx(c *cli.Context) error {
-	valid := c.Bool("valid")
-	parent := c.Parent()
-
-	counterTx := counter.CounterTx{
-		Valid: valid,
-		Fee: types.Coins{
-			{
-				Denom:  parent.String("coin"),
-				Amount: int64(parent.Int("fee")),
-			},
-		},
-	}
-
-	fmt.Println("CounterTx:", string(wire.JSONBytes(counterTx)))
-
-	data := wire.BinaryBytes(counterTx)
-	name := "counter"
-
-	return appTx(parent, name, data)
 }
 
 // broadcast the transaction to tendermint

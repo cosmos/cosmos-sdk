@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"encoding/hex"
@@ -14,6 +14,98 @@ import (
 	"github.com/tendermint/go-merkle"
 	"github.com/tendermint/go-wire"
 	tmtypes "github.com/tendermint/tendermint/types"
+)
+
+var (
+	IbcCmd = cli.Command{
+		Name:  "ibc",
+		Usage: "Send a transaction to the interblockchain (ibc) plugin",
+		Flags: []cli.Flag{
+			NodeFlag,
+			ChainIDFlag,
+
+			FromFlag,
+
+			AmountFlag,
+			CoinFlag,
+			GasFlag,
+			FeeFlag,
+			SeqFlag,
+
+			NameFlag,
+			DataFlag,
+		},
+		Subcommands: []cli.Command{
+			IbcRegisterTxCmd,
+			IbcUpdateTxCmd,
+			IbcPacketTxCmd,
+		},
+	}
+
+	IbcRegisterTxCmd = cli.Command{
+		Name:  "register",
+		Usage: "Register a blockchain via IBC",
+		Action: func(c *cli.Context) error {
+			return cmdIBCRegisterTx(c)
+		},
+		Flags: []cli.Flag{
+			IbcChainIDFlag,
+			IbcGenesisFlag,
+		},
+	}
+
+	IbcUpdateTxCmd = cli.Command{
+		Name:  "update",
+		Usage: "Update the latest state of a blockchain via IBC",
+		Action: func(c *cli.Context) error {
+			return cmdIBCUpdateTx(c)
+		},
+		Flags: []cli.Flag{
+			IbcHeaderFlag,
+			IbcCommitFlag,
+		},
+	}
+
+	IbcPacketTxCmd = cli.Command{
+		Name:  "packet",
+		Usage: "Send a new packet via IBC",
+		Flags: []cli.Flag{
+		//
+		},
+		Subcommands: []cli.Command{
+			IbcPacketCreateTx,
+			IbcPacketPostTx,
+		},
+	}
+
+	IbcPacketCreateTx = cli.Command{
+		Name:  "create",
+		Usage: "Create an egress IBC packet",
+		Action: func(c *cli.Context) error {
+			return cmdIBCPacketCreateTx(c)
+		},
+		Flags: []cli.Flag{
+			IbcFromFlag,
+			IbcToFlag,
+			IbcTypeFlag,
+			IbcPayloadFlag,
+			IbcSequenceFlag,
+		},
+	}
+
+	IbcPacketPostTx = cli.Command{
+		Name:  "post",
+		Usage: "Deliver an IBC packet to another chain",
+		Action: func(c *cli.Context) error {
+			return cmdIBCPacketPostTx(c)
+		},
+		Flags: []cli.Flag{
+			IbcFromFlag,
+			IbcHeightFlag,
+			IbcPacketFlag,
+			IbcProofFlag,
+		},
+	}
 )
 
 func cmdIBCRegisterTx(c *cli.Context) error {
@@ -40,15 +132,15 @@ func cmdIBCRegisterTx(c *cli.Context) error {
 	}{ibcTx}))
 	name := "IBC"
 
-	return appTx(parent, name, data)
+	return AppTx(parent, name, data)
 }
 
 func cmdIBCUpdateTx(c *cli.Context) error {
-	headerBytes, err := hex.DecodeString(stripHex(c.String("header")))
+	headerBytes, err := hex.DecodeString(StripHex(c.String("header")))
 	if err != nil {
 		return errors.New(cmn.Fmt("Header (%v) is invalid hex: %v", c.String("header"), err))
 	}
-	commitBytes, err := hex.DecodeString(stripHex(c.String("commit")))
+	commitBytes, err := hex.DecodeString(StripHex(c.String("commit")))
 	if err != nil {
 		return errors.New(cmn.Fmt("Commit (%v) is invalid hex: %v", c.String("commit"), err))
 	}
@@ -75,14 +167,14 @@ func cmdIBCUpdateTx(c *cli.Context) error {
 	}{ibcTx}))
 	name := "IBC"
 
-	return appTx(c.Parent(), name, data)
+	return AppTx(c.Parent(), name, data)
 }
 
 func cmdIBCPacketCreateTx(c *cli.Context) error {
 	fromChain, toChain := c.String("from"), c.String("to")
 	packetType := c.String("type")
 
-	payloadBytes, err := hex.DecodeString(stripHex(c.String("payload")))
+	payloadBytes, err := hex.DecodeString(StripHex(c.String("payload")))
 	if err != nil {
 		return errors.New(cmn.Fmt("Payload (%v) is invalid hex: %v", c.String("payload"), err))
 	}
@@ -108,17 +200,17 @@ func cmdIBCPacketCreateTx(c *cli.Context) error {
 		ibc.IBCTx `json:"unwrap"`
 	}{ibcTx}))
 
-	return appTx(c.Parent().Parent(), "IBC", data)
+	return AppTx(c.Parent().Parent(), "IBC", data)
 }
 
 func cmdIBCPacketPostTx(c *cli.Context) error {
 	fromChain, fromHeight := c.String("from"), c.Int("height")
 
-	packetBytes, err := hex.DecodeString(stripHex(c.String("packet")))
+	packetBytes, err := hex.DecodeString(StripHex(c.String("packet")))
 	if err != nil {
 		return errors.New(cmn.Fmt("Packet (%v) is invalid hex: %v", c.String("packet"), err))
 	}
-	proofBytes, err := hex.DecodeString(stripHex(c.String("proof")))
+	proofBytes, err := hex.DecodeString(StripHex(c.String("proof")))
 	if err != nil {
 		return errors.New(cmn.Fmt("Proof (%v) is invalid hex: %v", c.String("proof"), err))
 	}
@@ -146,7 +238,7 @@ func cmdIBCPacketPostTx(c *cli.Context) error {
 		ibc.IBCTx `json:"unwrap"`
 	}{ibcTx}))
 
-	return appTx(c.Parent().Parent(), "IBC", data)
+	return AppTx(c.Parent().Parent(), "IBC", data)
 }
 
 func getIBCSequence(c *cli.Context) (uint64, error) {

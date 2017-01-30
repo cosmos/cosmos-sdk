@@ -1,0 +1,15 @@
+package: github.com/tendermint/basecoin-examples/pluginDev/completed
+import:
+- package: github.com/tendermint/abci
+  subpackages:
+  - server
+  - types
+- package: github.com/tendermint/basecoin
+  subpackages:
+  - app
+  - types
+- package: github.com/tendermint/go-common
+- package: github.com/tendermint/go-wire
+- package: github.com/tendermint/merkleeyes
+  subpackages:
+  - client

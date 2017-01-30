@@ -1,137 +1,103 @@
-# Develop and run a basecoin plugin
 
-Basecoin is a demonstration environment of a Tendermint powered blockchain crypto-currency. This tutorial will walk you through of how to write a basic plugin for basecoin and deploy your own instance of basecoin running your plugin.  
+# Basecoin Plugin Development Tutorial
 
-A completed copy of the source code described in this tutorial can be found [here][1]
+Basecoin is a demonstration environment of a Tendermint powered blockchain crypto-currency.
+This tutorial will walk you through of how to write a basic [plugin for basecoin][0] and deploy your own instance of basecoin running your plugin.
+Note that this tutorial assumes that you are familiar with golang. For more information on golang see [The Go Blog][1] and [Go Basics][2].
+A completed copy of the example code described in this tutorial can be found [here][3].
+[0]: https://github.com/tendermint/basecoin/blob/develop/Plugins.md
+[1]: https://blog.golang.org/
+[2]: https://github.com/tendermint/basecoin/blob/master/GoBasics.md
+[3]: https://github.com/tendermint/basecoin-examples/tree/master/pluginDev
 
-[1]: https://github.com/tendermint/basecoin-examples/blob/docs/pluginDev/
-
-### Prerequisite installation
-
-1. Make sure you [have Go installed][2] and [put $GOPATH/bin in your $PATH][3]
-2. Download basecoin using `go get github.com/tendermint/basecoin`
-3. Download basecoin's dependencies using `make get_vendor_deps`
-3. Install basecoin using `make install`
-
-[2]: https://golang.org/doc/install
-[3]: https://github.com/tendermint/tendermint/wiki/Setting-GOPATH 
- 
 ### Programming a custom basecoin application
 
-The first step is to create a new project under your github directory, start by naming your project bcTutorial  
-`mkdir $GOPATH/src/username/bcTutorial`  
-Here _username_ should be replaced with your github username.  
+First create a new project with an empty main package under your github directory.
+Within the main package add the following imports to the import block. 
 
-Create a new file under your new directory with the file name main.go. Within main.go add the following information
+```golang
+"flag"
+"github.com/tendermint/abci/server"
+"github.com/tendermint/basecoin/app"
+eyes "github.com/tendermint/merkleeyes/client"
+cmn "github.com/tendermint/go-common"
+```
 
-	package main
-	
-	import (
+Begin the main function by defining the following flags for example use within initialization of the basecoin app for starting the merkleeyes client, loading genesis, and starting the abci listener. 
 
-	)
-	
-	func main() {
-	}
+```golang
+eyesPtr := flag.String("eyes", "local", "MerkleEyes address, or 'local' for embedded")
+genFilePath := flag.String("genesis", "", "Genesis file, if any")
+addrPtr := flag.String("address", "tcp://0.0.0.0:46658", "Listen address")
+flag.Parse()
+```
 
-Under the main function initialize a new instance of basecoin, this is done by first connecting to a new [merkleeyes][4] client and further initializing basecoin with the merkleeyes client. Add the following lines to your import block: 
+Under the main function initialize a new instance of basecoin, this is done by first connecting to a
+new [merkleeyes][4] client and further initializing basecoin with it.
+Merkleeyes is an abci utility which serves data from a merkle-tree key-value store.
+The merkle-tree instance that is loaded into basecoin is used as a common data store the basecoin application and all of its plugins as a [KVStore](https://github.com/tendermint/basecoin/blob/master/types/kvstore.go#L10-L13).
+Having a central data store creates the potential for key collisions making it essential to use explicit key name spaces for each plugin.
 [4]: https://github.com/tendermint/merkleeyes
 
-	import(
-		"flag"
-		"github.com/tendermint/basecoin/app"
-		eyes "github.com/tendermint/merkleeyes/client"
-		cmn "github.com/tendermint/go-common"
-	)
+```golang
+// Connect to MerkleEyes
+eyesCli, err := eyes.NewClient(*eyesPtr, "socket")
+if err != nil {
+	cmn.Exit("connect to MerkleEyes: " + err.Error())
+}
 
-Add the following lines to your main function
-	
-	//flags
-	eyesPtr := flag.String("eyes", "local", "MerkleEyes address, or 'local' for embedded")
-	flag.Parse()
+// Create Basecoin
+bcApp := app.NewBasecoin(eyesCli)
+```
 
-	// Connect to MerkleEyes
-	eyesCli, err := eyes.NewClient(*eyesPtr, "socket")
+Next, set the initial state of the basecoin app load the genesis file (if any) for basecoin.  
+
+```golang
+// Connect to MerkleEyes
+eyesCli, err := eyes.NewClient(*eyesPtr, "socket")
+if err != nil {
+	cmn.Exit("connect to MerkleEyes: " + err.Error())
+}
+
+// Create Basecoin
+bcApp := app.NewBasecoin(eyesCli)
+
+// If genesis file was specified, set key-value options
+if *genFilePath != "" {
+	err := bcApp.LoadGenesis(*genFilePath)
 	if err != nil {
-		cmn.Exit("connect to MerkleEyes: " + err.Error())
+		cmn.Exit(cmn.Fmt("%+v", err))
 	}
+}
+```
 
-	// Create Basecoin
-	bcApp := app.NewBasecoin(eyesCli)
+Finally implement an [abci](https://github.com/tendermint/abci) listening server for the basecoin app. The listening server maintains a server connection to tendermint for blockchain communications between basecoin nodes. 
 
-Next, set the initial state of the basecoin app load the genesis file (if any) for basecoin. Your main function should now look as follows
+```golang
+c// Start the listener
+svr, err := server.NewServer(*addrPtr, "socket", bcApp)
+if err != nil {
+	cmn.Exit("create listener: " + err.Error())
+}
 
-	//flags
-	eyesPtr := flag.String("eyes", "local", "MerkleEyes address, or 'local' for embedded")
-	genFilePath := flag.String("genesis", "", "Genesis file, if any")
-	flag.Parse()
+// Wait forever
+cmn.TrapSignal(func() {
+	// Cleanup
+	svr.Stop()
+})
+```
 
-	// Connect to MerkleEyes
-	eyesCli, err := eyes.NewClient(*eyesPtr, "socket")
-	if err != nil {
-		cmn.Exit("connect to MerkleEyes: " + err.Error())
-	}
-
-	// Create Basecoin
-	bcApp := app.NewBasecoin(eyesCli)
-
-	// If genesis file was specified, set key-value options
-	if *genFilePath != "" {
-		err := bcApp.LoadGenesis(*genFilePath)
-		if err != nil {
-			cmn.Exit(cmn.Fmt("%+v", err))
-		}
-	}
-
-Finally implement an abci listening server for the basecoin app. Within your imports block add the following line
-	
-	"github.com/tendermint/abci/server"
-
-Within the main function add the listener, your main function should now look as follows
- 
-	//flags
-	addrPtr := flag.String("address", "tcp://0.0.0.0:46658", "Listen address")
-	eyesPtr := flag.String("eyes", "local", "MerkleEyes address, or 'local' for embedded")
-	genFilePath := flag.String("genesis", "", "Genesis file, if any")
-	flag.Parse()
-
-	// Connect to MerkleEyes
-	eyesCli, err := eyes.NewClient(*eyesPtr, "socket")
-	if err != nil {
-		cmn.Exit("connect to MerkleEyes: " + err.Error())
-	}
-
-	// Create Basecoin
-	bcApp := app.NewBasecoin(eyesCli)
-
-	// If genesis file was specified, set key-value options
-	if *genFilePath != "" {
-		err := bcApp.LoadGenesis(*genFilePath)
-		if err != nil {
-			cmn.Exit(cmn.Fmt("%+v", err))
-		}
-	}
-
-	// Start the listener
-	svr, err := server.NewServer(*addrPtr, "socket", bcApp)
-	if err != nil {
-		cmn.Exit("create listener: " + err.Error())
-	}
-
-	// Wait forever
-	cmn.TrapSignal(func() {
-		// Cleanup
-		svr.Stop()
-	})
-
-Great! Your application should be able to install and run, although you haven't yet added a plugin yet.
+Great! Your main.go file should look [like this][5] and should be able to install and run, although the plugin has not yet been created. 
+[5]: https://github.com/tendermint/basecoin-examples/blob/master/pluginDev/interim/main-noplugin.go
 
 ### Programming a basic plugin
  
-The next step is to actually make your plugin that can be run your custom instance of basecoin. First create a directory and an empty .go with the path `plugins/counter/counter.go`. By definition any basecoin plugin needs to satisfy the basecoin [Plugin interface][5]. The following is a description of the required functions:
-[5]: https://github.com/tendermint/basecoin/blob/master/types/plugin.go#L8-L15
+The next step is to create your plugin that can be run your custom instance of basecoin. The plugin package should be located in plugins/YourPlugin from the repo root. In this instance we will start our plugin from this [boilerplate][7] file by copying it to the directory`plugins/counter/counter.go`, and renaming the package _Counter_. By definition any basecoin plugin needs to satisfy the basecoin [Plugin interface][6]. The following is a description of the required functions:
+[6]: https://github.com/tendermint/basecoin/blob/master/types/plugin.go#L8-L15
+[7]: https://github.com/tendermint/basecoin-examples/blob/master/pluginDev/interim/plugin-blank.go
 
  - Name() string
-   - return the name of the application
+   - returns the name of the application
  - SetOption(store KVStore, key string, value string) (log string)
    - SetOption may be called during genesis of basecoin and can be used to set initial plugin parameters 
  - RunTx(store KVStore, ctx CallContext, txBytes []byte) (res abci.Result)
@@ -143,58 +109,55 @@ The next step is to actually make your plugin that can be run your custom instan
  - EndBlock(store KVStore, height uint64) []\*abci.Validator
    - Not-used within this tutorial
 
-For this example SetOption, InitChain, BeginBlock, and EndBlock are not used, but are still present to satisfy the basecoin Plugin interface. To begin add the following basic information to counter.go
+The boilerplate plugin file provided also includes a non-required function named _StateKey_.
+This function is used to define a unique keyspace specific to the plugins name that can be used to set and retrieve values from the KVStore.  
 
-	package counter
-	
-	import (
-		abci "github.com/tendermint/abci/types"
-	)
+Three plugin structs are provided the boilerplate file, each serving a unique function for the plugins operation.   
+  
+1. Plugin 
+  * Plugin struct which satisfies the [Plugin interface][6] as defined by basecoin
+  * Stores the name of the plugin instance
+  * Initialized using the _New_ func in the plugin-blank.go
+  * To be rename CounterPlugin in this tutorial
+  * resulting struct for this tutorial:   
+    
+    ```golang  
+    type CounterPlugin struct {  
+           name string  
+    }  
+    ```  
 
-	type CounterPlugin struct {
-	}
-	
-	func (cp *CounterPlugin) Name() string {
-		return ""
-	}
+2. PluginTx 
+  * Used by [go-wire][8] as the encoding/decoding struct to pass transaction data through txBytes in the _RunTx_ func. 
+[8]: https://github.com/tendermint/go-wire
+  * Stores transaction-specific plugin-defined information 
+  * to be renamed CounterTx in this tutorial and and include two custom transaction variables
+    * Valid: should the transaction be performed 
+    * Fee: cost that the CounterTx Plugin charges per interaction
+  * resulting struct for this tutorial: 
+   
+    ```golang
+    type CounterTx struct {
+         Valid bool
+         Fee  types.Coins
+    }
+    ```
 
-	func (cp *CounterPlugin) SetOption(store types.KVStore, key string, value string) (log string) {
-		return ""
-	}
-	
-	func (cp *CounterPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
-		return abci.OK
-	}
-	
-	func (cp *CounterPlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
-	}
-	
-	func (cp *CounterPlugin) BeginBlock(store types.KVStore, height uint64) {
-	}
-	
-	func (cp *CounterPlugin) EndBlock(store types.KVStore, height uint64) []*abci.Validator {
-		return nil
-	}
+3. PluginState
+  * Used by go-wire as the encoding/decoding struct to hold the plugin state data in the KVStore used within the _RunTx_ func. 
+  * Stores plugin-specific information
+  * to be renamed CounterPluginState in this tutorial and include two custom state variables
+    * Counter: count for the number of transactions 
+    * TotalFees: the total amount paid to the counter plugin through transactions 
+    ```golang
+    type CounterPluginState struct {
+         Counter   int
+         TotalFees types.Coins
+    }
+    ```
 
-Next, modify the Name() function to return a new variable that will be held within the CounterPlugin struct:
 
-	type CounterPlugin struct {
-		name string
-	}
-	
-	func (cp *CounterPlugin) Name() string {
-		return cp.name
-	}
-
-Add a new exposed function to initialize a new CounterPlugin instance
-
-	func New(name string) *CounterPlugin {
-		return &CounterPlugin{
-			name: name,
-		}
-	}
-
-We now can move onto programming the core tx logic within the RunTx function. RunTx contains three input fields:
+The core tx logic of the app is containted within the RunTx function. RunTx contains three input fields:
  - store types.KVStore
    - This term provides read/write capabilities to the merkelized data store which is accessible cross-plugin
  - ctx types.CallContext
@@ -202,187 +165,98 @@ We now can move onto programming the core tx logic within the RunTx function. Ru
  - txBytes []byte
    - This field can be used to send customized information from the basecoin application to your plugin
 
-To begin we will define and implement customized information to be read in from txBytes. This is accomplished by creating a new struct containing all the desired terms to be passed through the txBytes term and further decode the information from this term with [go-wire][6]. Note that because we are decoding txBytes, all transactions to our plugin will also need to contain the txBytes term as encoded by go-wire.
-[6]: https://github.com/tendermint/go-wire
+There are five basic steps in performing the app logic for a simple plugin such as counter. Within the RunTx function:  
+1. Decode the transaction bytes (txBytes)  
+2. Validate the transaction   
+3. Load and decode the app state from the KVStore  
+4. Perform plugin transaction logic  
+5. Update and save the app state to the KVStore  
 
-First add a new struct to counter.go. We will include two custom terms for this exercise:
- - Valid: should the transaction be performed 
- - Cost: cost that the CounterTx Plugin charges per interaction  
+Other more complex plugins may have a variant on the above logic including loading and saving multiple or variable states, or not including a state stored in the KVStore whatsoever. 
 
-	type CounterTx struct {
-		Valid bool
-		Cost  types.Coins
-	}
+As in the first step, decode the information from this term with [go-wire][8]. In this step we are attempting to write the txBytes to the variable tx or the type struct CounterTx, if the txBytes have not been properly encoded from a CounterTx struct wire will produce an error.
 
-Next, we need to import the go-wire library. Update the import section to the following
+```golang
+// Decode tx
+var tx CounterTx
+err := wire.ReadBinaryBytes(txBytes, &tx)
+if err != nil {
+	return abci.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
+}
+```
 
-	import (
-		abci "github.com/tendermint/abci/types"
-		"github.com/tendermint/go-wire"
-	)
+Step two is to perform some checks to validate the transaction. First check the _Valid_ term and terminate the process if it's set to false. Next check is the cost term is valid and non-negative as well as if the fee has been adequately covered by the coins sent within the transaction context (_ctx.Coins_).
 
-Next within the RunTx function add the following code to decode txBytes into a new instance of CounterTx
+```golang
+// Validate tx
+if !tx.Valid {
+	return abci.ErrInternalError.AppendLog("CounterTx.Valid must be true")
+}
 
-	// Decode tx
-	var tx CounterTx
-	err := wire.ReadBinaryBytes(txBytes, &tx)
+if !tx.Cost.IsValid() {
+	return abci.ErrInternalError.AppendLog("CounterTx.Cost is not sorted or has zero amounts")
+}
+if !tx.Cost.IsNonnegative() {
+	return abci.ErrInternalError.AppendLog("CounterTx.Cost must be nonnegative")
+}
+
+// Did the caller provide enough coins?
+if !ctx.Coins.IsGTE(tx.Fee) {
+	return abci.ErrInsufficientFunds.AppendLog("CounterTx.Cost was not provided")
+}
+```
+
+If all the checks have passed, the core transaction logic is calculated and saved with basecoin. The results is saved as to a new 'state' struct, encoded to a byte array using go-wire, and saved to basecoin using the KVStore term passed to RunTx through _store_ term. To accomplish this first load the state if exists as provided in the boilerplate example code. Note that if the state does not exist, the state bytes read into _cpStateBytes_ will have no members therefore returning a length of zero. If this is the case we will skip loading the initial state  
+
+```golang
+// Load CounterPluginState
+var cpState CounterPluginState
+cpStateBytes := store.Get(cp.StateKey())
+if len(cpStateBytes) > 0 {
+	err = wire.ReadBinaryBytes(cpStateBytes, &cpState)
 	if err != nil {
-		return abci.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
+		return abci.ErrInternalError.AppendLog("Error decoding state: " + err.Error())
 	}
+}
+```
 
-With all the basic information loaded in RunTx, we can perform some basic checks. First check the _Valid_ term and terminate the process if it's set to false. 
+Now we can perform our counter logic of the state variables to reflect the ongoing transaction, and save the transaction results back to the store. Here we will increase the state variable counter by one, and increase the TotalFees by the current Fee being charged by the transaction.
 
-	// Validate tx
-	if !tx.Valid {
-		return abci.ErrInternalError.AppendLog("CounterTx.Valid must be true")
-	}
+```golang	
+// Update CounterPluginState
+cpState.Counter += 1
+cpState.TotalFees = cpState.TotalCost.Plus(tx.Fee)
 
-Further check if the cost term is valid and non-negative.
+// Save CounterPluginState
+store.Set(cp.StateKey(), wire.BinaryBytes(cpState))
+```
 
-	if !tx.Cost.IsValid() {
-		return abci.ErrInternalError.AppendLog("CounterTx.Cost is not sorted or has zero amounts")
-	}
-	if !tx.Cost.IsNonnegative() {
-		return abci.ErrInternalError.AppendLog("CounterTx.Cost must be nonnegative")
-	}
+Great! The plugin package is now complete, it should look a bit like [this][9]. It's now possible to load the counter plugin into the instance of basecoin opened in main.go. Define and register your plugin with the basecoin instance, after you have defined the instance but before you have run the Tendermint listening server. 
+[9]: https://github.com/tendermint/basecoin-examples/blob/master/pluginDev/completed/plugins/counter/counter.go
 
-Check if the cost is been covered by the amount of coins sent through the context (_ctx.Coins_) 
+```golang
+// create/add plugins
+counter := counter.New("counter")
+bcApp.RegisterPlugin(counter)
+```
 
-	// Did the caller provide enough coins?
-	if !ctx.Coins.IsGTE(tx.Cost) {
-		return abci.ErrInsufficientFunds.AppendLog("CounterTx.Cost was not provided")
-	}
+The counter plugin package must be imported add the following to the main.go import block, where _username_ is replaced with your username, and _reponame_ is replaced by the name of you repo.
 
-Now that the checks are complete, the core-calculations can be calculated and saved with basecoin. The results of the core-calculation can be saved as to a new 'state' struct, encoded to a byte array using go-wire, and saved to basecoin using the KVStore term passed to RunTx through _store_ term. For this tutorial we will choose our core-calculation terms to be a count for the number of transactions, as well as the total amount paid to the counter plugin through transactions. To begin, define a new state struct  
+```golang	
+"github.com/username/reponame/plugins/counter"
+```
 
-	type CounterPluginState struct {
-		Counter   int
-		TotalCost types.Coins
-	}
+main.go should now look like [this][9]. A completed copy of the source code described in this tutorial can be found [here][1]
+[9]: https://github.com/tendermint/basecoin-examples/blob/master/pluginDev/completed/main.go
 
-Next, within the RunTx function load the state if exists. Note that if the state does not exist, the state bytes read into _cpStateBytes_ will have no members therefore returning a length of zero. If this is the case we will skip loading the initial state  
+### Initializing Dependencies
 
-	// Load CounterPluginState
-	var cpState CounterPluginState
-	cpStateBytes := store.Get(cp.StateKey())
-	if len(cpStateBytes) > 0 {
-		err = wire.ReadBinaryBytes(cpStateBytes, &cpState)
-		if err != nil {
-			return abci.ErrInternalError.AppendLog("Error decoding state: " + err.Error())
-		}
-	}
-
-Now we can update the values of the state variables to reflect the ongoing transaction, and save the transaction results back to the store. 
-	
-	// Update CounterPluginState
-	cpState.Counter += 1
-	cpState.TotalCost = cpState.TotalCost.Plus(tx.Cost)
-
-	// Save CounterPluginState
-	store.Set(cp.StateKey(), wire.BinaryBytes(cpState))
-
-Our final RunTx method should now look like this:
-
-	func (cp *CounterPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
-		// Decode tx
-		var tx CounterTx
-		err := wire.ReadBinaryBytes(txBytes, &tx)
-		if err != nil {
-			return abci.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
-		}
-	
-		// Validate tx
-		if !tx.Valid {
-			return abci.ErrInternalError.AppendLog("CounterTx.Valid must be true")
-		}
-		if !tx.Cost.IsValid() {
-			return abci.ErrInternalError.AppendLog("CounterTx.Cost is not sorted or has zero amounts")
-		}
-		if !tx.Cost.IsNonnegative() {
-			return abci.ErrInternalError.AppendLog("CounterTx.Cost must be nonnegative")
-		}
-	
-		// Did the caller provide enough coins?
-		if !ctx.Coins.IsGTE(tx.Cost) {
-			return abci.ErrInsufficientFunds.AppendLog("CounterTx.Cost was not provided")
-		}
-	
-		// Load CounterPluginState
-		var cpState CounterPluginState
-		cpStateBytes := store.Get(cp.StateKey())
-		if len(cpStateBytes) > 0 {
-			err = wire.ReadBinaryBytes(cpStateBytes, &cpState)
-			if err != nil {
-				return abci.ErrInternalError.AppendLog("Error decoding state: " + err.Error())
-			}
-		}
-	
-		// Update CounterPluginState
-		cpState.Counter += 1
-		cpState.TotalCost = cpState.TotalCost.Plus(tx.Cost)
-	
-		// Save CounterPluginState
-		store.Set(cp.StateKey(), wire.BinaryBytes(cpState))
-	
-		return abci.OK
-	}
-
-
-Lastly, we can implement our plugin into our main.go method. Within the main function define and register your plugin with the basecoin instance, after you have defined the instance but before you have run the Tendermint listening server. 
-
-	// create/add plugins
-	counter := counter.New("counter")
-	bcApp.RegisterPlugin(counter)
-
-In order for this code to work add the following line to your import block, where _username_ is replaced with your username.
-	
-	"github.com/username/bcTutorial/plugins/counter"
-
-Our main function within main.go should now look as follows
-
-	func main() {
-	
-		//flags
-		addrPtr := flag.String("address", "tcp://0.0.0.0:46658", "Listen address")
-		eyesPtr := flag.String("eyes", "local", "MerkleEyes address, or 'local' for embedded")
-		genFilePath := flag.String("genesis", "", "Genesis file, if any")
-		flag.Parse()
-	
-		// Connect to MerkleEyes
-		eyesCli, err := eyes.NewClient(*eyesPtr, "socket")
-		if err != nil {
-			cmn.Exit("connect to MerkleEyes: " + err.Error())
-		}
-	
-		// Create Basecoin
-		bcApp := app.NewBasecoin(eyesCli)
-	
-		// create/add plugins
-		counter := counter.New("counter")
-		bcApp.RegisterPlugin(counter)
-	
-		// If genesis file was specified, set key-value options
-		if *genFilePath != "" {
-			err := bcApp.LoadGenesis(*genFilePath)
-			if err != nil {
-				cmn.Exit(cmn.Fmt("%+v", err))
-			}
-		}
-	
-		// Start the listener
-		svr, err := server.NewServer(*addrPtr, "socket", bcApp)
-		if err != nil {
-			cmn.Exit("create listener: " + err.Error())
-		}
-	
-		// Wait forever
-		cmn.TrapSignal(func() {
-			// Cleanup
-			svr.Stop()
-		})
-	}
-
-A completed copy of the source code described in this tutorial can be found [here][1]
+The first step to running your application is to install your dependencies. For golang this can be done with [glide][7]
+[7]: https://github.com/Masterminds/glide
+ - retrieve glide `go get github.com/Masterminds/glide`
+ - initialize glide from your application's directory with `glide init`
+ - follow the instructions (for quick installation choose no on first prompt)
+ - install the dependencies with `glide install`
 
 ### Installing and running your application
 
@@ -392,4 +266,8 @@ To run your new application use the following steps:
 1. In a terminal window run `counter`
 2. Within a second terminal window run `tendermint node`
 
-Your blockchain basecoin application is now operating and can be communicated with through RPC calls!
+Your blockchain basecoin application is now operating and can be communicated with through the basecoin CLI!
+
+### Developing a Custom Plugin Command Line Interface
+
+Coming soon!

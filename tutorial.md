@@ -22,7 +22,7 @@ If you had previously run tendermint, make sure you reset the chain
 tendermint unsafe_reset_all
 ```
 
-Now we need some initialization files for basecoin. 
+Now we need some initialization files for basecoin.
 We have included some defaults in the basecoin directory, under `data`.
 For purposes of convenience, change to that directory:
 
@@ -37,14 +37,20 @@ The directory contains a genesis file and two private keys.
 Now we can start basecoin:
 
 ```
-basecoin start --genesis genesis.json --in-proc
+basecoin start --in-proc
+```
+
+This will initialize the chain with the `genesis.json` file from the current directory.  If you want to specify another location, you can run:
+
+```
+basecoin start --in-proc --dir PATH/TO/CUSTOM/DATA
 ```
 
 This will start basecoin with the Tendermint node running in the same process.
 To start Tendermint in a separate process instead, use:
 
 ```
-basecoin start --genesis genesis.json
+basecoin start
 ```
 
 and in another window:
@@ -76,7 +82,7 @@ Let's send funds from the first account to the second:
 basecoin sendtx --to 0x4793A333846E5104C46DD9AB9A00E31821B2F301 --amount 10
 ```
 
-By default, the CLI looks for a `priv_validator.json` to sign the transaction with, 
+By default, the CLI looks for a `priv_validator.json` to sign the transaction with,
 so this will only work if you are in the `$GOPATH/src/github.com/tendermint/basecoin/data`.
 To specify a different key, we can use the `--from` flag.
 

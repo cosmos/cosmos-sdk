@@ -15,6 +15,9 @@ func main() {
 		startCmd,
 		sendTxCmd,
 		appTxCmd,
+		ibcCmd,
+		queryCmd,
+		blockCmd,
 		accountCmd,
 	}
 	app.Run(os.Args)

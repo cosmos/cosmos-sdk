@@ -48,8 +48,8 @@ var (
 // tx flags
 
 var (
-	tmAddrFlag = cli.StringFlag{
-		Name:  "tendermint",
+	nodeFlag = cli.StringFlag{
+		Name:  "node",
 		Value: "tcp://localhost:46657",
 		Usage: "Tendermint RPC address",
 	}
@@ -117,5 +117,68 @@ var (
 	validFlag = cli.BoolFlag{
 		Name:  "valid",
 		Usage: "Set valid field in CounterTx",
+	}
+)
+
+// ibc flags
+var (
+	ibcChainIDFlag = cli.StringFlag{
+		Name:  "chain_id",
+		Usage: "ChainID for the new blockchain",
+		Value: "",
+	}
+
+	ibcGenesisFlag = cli.StringFlag{
+		Name:  "genesis",
+		Usage: "Genesis file for the new blockchain",
+		Value: "",
+	}
+
+	ibcHeaderFlag = cli.StringFlag{
+		Name:  "header",
+		Usage: "Block header for an ibc update",
+		Value: "",
+	}
+
+	ibcCommitFlag = cli.StringFlag{
+		Name:  "commit",
+		Usage: "Block commit for an ibc update",
+		Value: "",
+	}
+
+	ibcFromFlag = cli.StringFlag{
+		Name:  "from",
+		Usage: "Source ChainID",
+		Value: "",
+	}
+
+	ibcToFlag = cli.StringFlag{
+		Name:  "to",
+		Usage: "Destination ChainID",
+		Value: "",
+	}
+
+	ibcTypeFlag = cli.StringFlag{
+		Name:  "type",
+		Usage: "IBC packet type (eg. coin)",
+		Value: "",
+	}
+
+	ibcPayloadFlag = cli.StringFlag{
+		Name:  "payload",
+		Usage: "IBC packet payload",
+		Value: "",
+	}
+
+	ibcPacketFlag = cli.StringFlag{
+		Name:  "packet",
+		Usage: "hex-encoded IBC packet",
+		Value: "",
+	}
+
+	ibcProofFlag = cli.StringFlag{
+		Name:  "proof",
+		Usage: "hex-encoded proof of IBC packet from source chain",
+		Value: "",
 	}
 )

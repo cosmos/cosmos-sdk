@@ -136,7 +136,7 @@ func cmdCounterTx(c *cli.Context) error {
 // broadcast the transaction to tendermint
 func broadcastTx(c *cli.Context, tx types.Tx) error {
 	tmResult := new(ctypes.TMResult)
-	tmAddr := c.String("tendermint")
+	tmAddr := c.String("node")
 	clientURI := client.NewClientURI(tmAddr)
 
 	// Don't you hate having to do this?
@@ -161,7 +161,7 @@ func getSeq(c *cli.Context, address []byte) (int, error) {
 	if c.IsSet("sequence") {
 		return c.Int("sequence"), nil
 	}
-	tmAddr := c.String("tendermint")
+	tmAddr := c.String("node")
 	acc, err := getAcc(tmAddr, address)
 	if err != nil {
 		return 0, err

@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"encoding/hex"
@@ -15,6 +15,69 @@ import (
 	"github.com/tendermint/go-wire"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
+)
+
+var (
+	SendTxCmd = cli.Command{
+		Name:      "sendtx",
+		Usage:     "Broadcast a basecoin SendTx",
+		ArgsUsage: "",
+		Action: func(c *cli.Context) error {
+			return cmdSendTx(c)
+		},
+		Flags: []cli.Flag{
+			nodeFlag,
+			chainIDFlag,
+
+			fromFlag,
+
+			amountFlag,
+			coinFlag,
+			gasFlag,
+			feeFlag,
+			seqFlag,
+
+			toFlag,
+		},
+	}
+
+	AppTxCmd = cli.Command{
+		Name:      "apptx",
+		Usage:     "Broadcast a basecoin AppTx",
+		ArgsUsage: "",
+		Action: func(c *cli.Context) error {
+			return cmdAppTx(c)
+		},
+		Flags: []cli.Flag{
+			nodeFlag,
+			chainIDFlag,
+
+			fromFlag,
+
+			amountFlag,
+			coinFlag,
+			gasFlag,
+			feeFlag,
+			seqFlag,
+
+			nameFlag,
+			dataFlag,
+		},
+		Subcommands: []cli.Command{
+			CounterTxCmd,
+		},
+	}
+
+	CounterTxCmd = cli.Command{
+		Name:  "counter",
+		Usage: "Craft a transaction to the counter plugin",
+		Action: func(c *cli.Context) error {
+			return cmdCounterTx(c)
+		},
+		Flags: []cli.Flag{
+			validFlag,
+		},
+	}
 )
 
 func cmdSendTx(c *cli.Context) error {

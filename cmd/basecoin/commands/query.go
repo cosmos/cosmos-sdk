@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"encoding/hex"
@@ -12,6 +12,58 @@ import (
 	"github.com/tendermint/go-merkle"
 	"github.com/tendermint/go-wire"
 	tmtypes "github.com/tendermint/tendermint/types"
+)
+
+var (
+	QueryCmd = cli.Command{
+		Name:      "query",
+		Usage:     "Query the merkle tree",
+		ArgsUsage: "<key>",
+		Action: func(c *cli.Context) error {
+			return cmdQuery(c)
+		},
+		Flags: []cli.Flag{
+			nodeFlag,
+		},
+	}
+
+	AccountCmd = cli.Command{
+		Name:      "account",
+		Usage:     "Get details of an account",
+		ArgsUsage: "<address>",
+		Action: func(c *cli.Context) error {
+			return cmdAccount(c)
+		},
+		Flags: []cli.Flag{
+			nodeFlag,
+		},
+	}
+
+	BlockCmd = cli.Command{
+		Name:      "block",
+		Usage:     "Get the header and commit of a block",
+		ArgsUsage: "<height>",
+		Action: func(c *cli.Context) error {
+			return cmdBlock(c)
+		},
+		Flags: []cli.Flag{
+			nodeFlag,
+		},
+	}
+
+	VerifyCmd = cli.Command{
+		Name:  "verify",
+		Usage: "Verify the IAVL proof",
+		Action: func(c *cli.Context) error {
+			return cmdVerify(c)
+		},
+		Flags: []cli.Flag{
+			proofFlag,
+			keyFlag,
+			valueFlag,
+			rootFlag,
+		},
+	}
 )
 
 func cmdQuery(c *cli.Context) error {

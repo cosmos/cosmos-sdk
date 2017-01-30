@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"encoding/hex"
@@ -14,6 +14,98 @@ import (
 	"github.com/tendermint/go-merkle"
 	"github.com/tendermint/go-wire"
 	tmtypes "github.com/tendermint/tendermint/types"
+)
+
+var (
+	IbcCmd = cli.Command{
+		Name:  "ibc",
+		Usage: "Send a transaction to the interblockchain (ibc) plugin",
+		Flags: []cli.Flag{
+			nodeFlag,
+			chainIDFlag,
+
+			fromFlag,
+
+			amountFlag,
+			coinFlag,
+			gasFlag,
+			feeFlag,
+			seqFlag,
+
+			nameFlag,
+			dataFlag,
+		},
+		Subcommands: []cli.Command{
+			IbcRegisterTxCmd,
+			IbcUpdateTxCmd,
+			IbcPacketTxCmd,
+		},
+	}
+
+	IbcRegisterTxCmd = cli.Command{
+		Name:  "register",
+		Usage: "Register a blockchain via IBC",
+		Action: func(c *cli.Context) error {
+			return cmdIBCRegisterTx(c)
+		},
+		Flags: []cli.Flag{
+			ibcChainIDFlag,
+			ibcGenesisFlag,
+		},
+	}
+
+	IbcUpdateTxCmd = cli.Command{
+		Name:  "update",
+		Usage: "Update the latest state of a blockchain via IBC",
+		Action: func(c *cli.Context) error {
+			return cmdIBCUpdateTx(c)
+		},
+		Flags: []cli.Flag{
+			ibcHeaderFlag,
+			ibcCommitFlag,
+		},
+	}
+
+	IbcPacketTxCmd = cli.Command{
+		Name:  "packet",
+		Usage: "Send a new packet via IBC",
+		Flags: []cli.Flag{
+		//
+		},
+		Subcommands: []cli.Command{
+			IbcPacketCreateTx,
+			IbcPacketPostTx,
+		},
+	}
+
+	IbcPacketCreateTx = cli.Command{
+		Name:  "create",
+		Usage: "Create an egress IBC packet",
+		Action: func(c *cli.Context) error {
+			return cmdIBCPacketCreateTx(c)
+		},
+		Flags: []cli.Flag{
+			ibcFromFlag,
+			ibcToFlag,
+			ibcTypeFlag,
+			ibcPayloadFlag,
+			ibcSequenceFlag,
+		},
+	}
+
+	IbcPacketPostTx = cli.Command{
+		Name:  "post",
+		Usage: "Deliver an IBC packet to another chain",
+		Action: func(c *cli.Context) error {
+			return cmdIBCPacketPostTx(c)
+		},
+		Flags: []cli.Flag{
+			ibcFromFlag,
+			ibcHeightFlag,
+			ibcPacketFlag,
+			ibcProofFlag,
+		},
+	}
 )
 
 func cmdIBCRegisterTx(c *cli.Context) error {

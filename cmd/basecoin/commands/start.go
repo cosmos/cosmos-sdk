@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"errors"
@@ -26,6 +26,24 @@ import (
 var config cfg.Config
 
 const EyesCacheSize = 10000
+
+var StartCmd = cli.Command{
+	Name:      "start",
+	Usage:     "Start basecoin",
+	ArgsUsage: "",
+	Action: func(c *cli.Context) error {
+		return cmdStart(c)
+	},
+	Flags: []cli.Flag{
+		addrFlag,
+		eyesFlag,
+		dirFlag,
+		inProcTMFlag,
+		chainIDFlag,
+		ibcPluginFlag,
+		counterPluginFlag,
+	},
+}
 
 func cmdStart(c *cli.Context) error {
 

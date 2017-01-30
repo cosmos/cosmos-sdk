@@ -99,7 +99,7 @@ forward to the `RunTx` function.
 
 We implemented IBC as a plugin that defines a new set of transactions.
 This functionality is accessible through the `AppTx` by setting the `Name` field to `IBC`,
-and setting the `Data` field to the the serialized IBC transaction.
+and setting the `Data` field to the serialized IBC transaction.
 
 We'll demonstrate exactly how this works below.
 
@@ -133,7 +133,7 @@ We need to do the following:
 1. Register the details (ie. chain ID and genesis configuration) of `chain1` on `chain2`
 2. Within `chain1`, broadcast a transaction that creates an outgoing IBC packet destined for `chain2`
 3. Broadcast a transaction to `chain2` informing it of the latest state (ie. header and commit signatures) of `chain1`
-4. Post the outgoing packet from `chain1` to `chain2`, including the proof that it was indeed comitted on `chain1`
+4. Post the outgoing packet from `chain1` to `chain2`, including the proof that it was indeed committed on `chain1`
 ```
 
 Each of these steps involves a separate IBC transaction type. Let's take them up in turn.
@@ -194,7 +194,7 @@ type Packet struct {
 }
 ```
 
-We have yet to define the format for the payload, so for now it's just arbitrary bytes.
+We have yet to define the format for the payload, so, for now, it's just arbitrary bytes.
 
 ### IBCPacketPostTx
 
@@ -286,7 +286,7 @@ curl localhost:46657/status
 curl localhost:36657/status
 ```
 
-If either command fails, the nodes may have not finished starting up. Wait a couple seconds and try again.
+If either command fails, the nodes may not have finished starting up. Wait a couple seconds and try again.
 Once you see the status of both chains, it's time to move on.
 
 In this tutorial, we're going to send some data from `test_chain_1` to `test_chain_2`.
@@ -323,7 +323,7 @@ The result contains the latest height, a value (ie. the hex-encoded binary seria
 and a proof (ie. hex-encoded binary serialization of a list of nodes from the Merkle tree) that the value is in the Merkle tree.
 
 If we want to send this data to `test_chain_2`, we first have to update what it knows about `test_chain_1`.
-We'll need a recent block header and set of commit signatures. 
+We'll need a recent block header and a set of commit signatures. 
 Fortunately, we can get them with the `block` command:
 
 ```

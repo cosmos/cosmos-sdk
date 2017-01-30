@@ -58,6 +58,9 @@ const (
 	IBCTxTypeRegisterChain = byte(0x01)
 	IBCTxTypeUpdateChain   = byte(0x02)
 	IBCTxTypePacket        = byte(0x03)
+
+	IBCCodeEncodingError      = abci.CodeType(1001)
+	IBCCodeChainAlreadyExists = abci.CodeType(1002)
 )
 
 var _ = wire.RegisterInterface(
@@ -182,12 +185,14 @@ func (sm *IBCStateMachine) runRegisterChainTx(tx IBCRegisterChainTx) {
 	var err error
 	wire.ReadJSONPtr(&chainGenDoc, []byte(chainGen.Genesis), &err)
 	if err != nil {
+		sm.res.Code = IBCCodeEncodingError
 		sm.res.AppendLog("Genesis doc couldn't be parsed: " + err.Error())
 		return
 	}
 
 	// Make sure chainGen doesn't already exist
 	if exists(sm.store, chainGenKey) {
+		sm.res.Code = IBCCodeChainAlreadyExists
 		sm.res.AppendLog("Already exists")
 		return
 	}

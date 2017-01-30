@@ -11,8 +11,8 @@ import (
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "basecoin"
-	app.Usage = "basecoin [command] [args...]"
+	app.Name = "mintcoin"
+	app.Usage = "mintcoin [command] [args...]"
 	app.Version = "0.1.0"
 	app.Commands = []cli.Command{
 		commands.StartCmd,

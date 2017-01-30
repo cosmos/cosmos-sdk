@@ -18,6 +18,7 @@ import (
 
 	"github.com/tendermint/basecoin/app"
 	"github.com/tendermint/basecoin/plugins/counter"
+	"github.com/tendermint/basecoin/plugins/ibc"
 )
 
 var config cfg.Config
@@ -41,13 +42,13 @@ func cmdStart(c *cli.Context) error {
 	// Create Basecoin app
 	basecoinApp := app.NewBasecoin(eyesCli)
 
-	switch c.String("plugin") {
-	case "counter":
+	if c.Bool("counter-plugin") {
 		basecoinApp.RegisterPlugin(counter.New("counter"))
-	case "":
-		// no plugins to register
-	default:
-		return errors.New(cmn.Fmt("Unknown plugin: %v", c.String("plugin")))
+	}
+
+	if c.Bool("ibc-plugin") {
+		basecoinApp.RegisterPlugin(ibc.New())
+
 	}
 
 	// If genesis file was specified, set key-value options

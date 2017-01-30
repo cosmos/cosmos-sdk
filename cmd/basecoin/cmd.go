@@ -19,7 +19,8 @@ var (
 			genesisFlag,
 			inProcTMFlag,
 			chainIDFlag,
-			pluginFlag,
+			ibcPluginFlag,
+			counterPluginFlag,
 		},
 	}
 
@@ -89,6 +90,18 @@ var (
 		Usage: "Send a transaction to the interblockchain (ibc) plugin",
 		Flags: []cli.Flag{
 			nodeFlag,
+			chainIDFlag,
+
+			fromFlag,
+
+			amountFlag,
+			coinFlag,
+			gasFlag,
+			feeFlag,
+			seqFlag,
+
+			nameFlag,
+			dataFlag,
 		},
 		Subcommands: []cli.Command{
 			ibcRegisterTxCmd,

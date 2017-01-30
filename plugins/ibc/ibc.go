@@ -154,7 +154,7 @@ func (ibc *IBCPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes 
 	var tx IBCTx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
 	if err != nil {
-		return abci.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error())
+		return abci.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error()).PrependLog("IBCTx Error: ")
 	}
 
 	// Validate tx

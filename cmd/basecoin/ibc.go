@@ -35,8 +35,10 @@ func cmdIBCRegisterTx(c *cli.Context) error {
 
 	fmt.Println("IBCTx:", string(wire.JSONBytes(ibcTx)))
 
-	data := wire.BinaryBytes(ibcTx)
-	name := "ibc"
+	data := []byte(wire.BinaryBytes(struct {
+		ibc.IBCTx `json:"unwrap"`
+	}{ibcTx}))
+	name := "IBC"
 
 	return appTx(parent, name, data)
 }
@@ -53,8 +55,8 @@ func cmdIBCUpdateTx(c *cli.Context) error {
 		return errors.New(cmn.Fmt("Commit (%v) is invalid hex: %v", c.String("commit"), err))
 	}
 
-	var header tmtypes.Header
-	var commit tmtypes.Commit
+	header := new(tmtypes.Header)
+	commit := new(tmtypes.Commit)
 
 	if err := wire.ReadBinaryBytes(headerBytes, &header); err != nil {
 		return errors.New(cmn.Fmt("Error unmarshalling header: %v", err))
@@ -64,14 +66,16 @@ func cmdIBCUpdateTx(c *cli.Context) error {
 	}
 
 	ibcTx := ibc.IBCUpdateChainTx{
-		Header: header,
-		Commit: commit,
+		Header: *header,
+		Commit: *commit,
 	}
 
 	fmt.Println("IBCTx:", string(wire.JSONBytes(ibcTx)))
 
-	data := wire.BinaryBytes(ibcTx)
-	name := "ibc"
+	data := []byte(wire.BinaryBytes(struct {
+		ibc.IBCTx `json:"unwrap"`
+	}{ibcTx}))
+	name := "IBC"
 
 	return appTx(parent, name, data)
 }
@@ -102,9 +106,11 @@ func cmdIBCPacketCreateTx(c *cli.Context) error {
 
 	fmt.Println("IBCTx:", string(wire.JSONBytes(ibcTx)))
 
-	data := wire.BinaryBytes(ibcTx)
+	data := []byte(wire.BinaryBytes(struct {
+		ibc.IBCTx `json:"unwrap"`
+	}{ibcTx}))
 
-	return appTx(c.Parent(), "ibc", data)
+	return appTx(c.Parent(), "IBC", data)
 }
 
 func cmdIBCPacketPostTx(c *cli.Context) error {
@@ -138,9 +144,11 @@ func cmdIBCPacketPostTx(c *cli.Context) error {
 
 	fmt.Println("IBCTx:", string(wire.JSONBytes(ibcTx)))
 
-	data := wire.BinaryBytes(ibcTx)
+	data := []byte(wire.BinaryBytes(struct {
+		ibc.IBCTx `json:"unwrap"`
+	}{ibcTx}))
 
-	return appTx(c.Parent(), "ibc", data)
+	return appTx(c.Parent(), "IBC", data)
 }
 
 func getIBCSequence(c *cli.Context) (uint64, error) {

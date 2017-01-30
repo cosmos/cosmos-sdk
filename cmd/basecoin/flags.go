@@ -38,10 +38,14 @@ var (
 		Usage: "Run Tendermint in-process with the App",
 	}
 
-	pluginFlag = cli.StringFlag{
-		Name:  "plugin",
-		Value: "counter", // load the counter by default
-		Usage: "Plugin to enable",
+	ibcPluginFlag = cli.BoolFlag{
+		Name:  "ibc-plugin",
+		Usage: "Enable the ibc plugin",
+	}
+
+	counterPluginFlag = cli.BoolFlag{
+		Name:  "counter-plugin",
+		Usage: "Enable the counter plugin",
 	}
 )
 

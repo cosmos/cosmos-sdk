@@ -57,7 +57,8 @@ type Packet struct {
 const (
 	IBCTxTypeRegisterChain = byte(0x01)
 	IBCTxTypeUpdateChain   = byte(0x02)
-	IBCTxTypePacket        = byte(0x03)
+	IBCTxTypePacketCreate  = byte(0x03)
+	IBCTxTypePacketPost    = byte(0x04)
 
 	IBCCodeEncodingError      = abci.CodeType(1001)
 	IBCCodeChainAlreadyExists = abci.CodeType(1002)
@@ -67,7 +68,8 @@ var _ = wire.RegisterInterface(
 	struct{ IBCTx }{},
 	wire.ConcreteType{IBCRegisterChainTx{}, IBCTxTypeRegisterChain},
 	wire.ConcreteType{IBCUpdateChainTx{}, IBCTxTypeUpdateChain},
-	wire.ConcreteType{IBCPacketTx{}, IBCTxTypePacket},
+	wire.ConcreteType{IBCPacketCreateTx{}, IBCTxTypePacketCreate},
+	wire.ConcreteType{IBCPacketPostTx{}, IBCTxTypePacketPost},
 )
 
 type IBCTx interface {
@@ -77,7 +79,8 @@ type IBCTx interface {
 
 func (IBCRegisterChainTx) AssertIsIBCTx() {}
 func (IBCUpdateChainTx) AssertIsIBCTx()   {}
-func (IBCPacketTx) AssertIsIBCTx()        {}
+func (IBCPacketCreateTx) AssertIsIBCTx()  {}
+func (IBCPacketPostTx) AssertIsIBCTx()    {}
 
 type IBCRegisterChainTx struct {
 	BlockchainGenesis
@@ -99,14 +102,23 @@ func (IBCUpdateChainTx) ValidateBasic() (res abci.Result) {
 	return
 }
 
-type IBCPacketTx struct {
+type IBCPacketCreateTx struct {
+	Packet
+}
+
+func (IBCPacketCreateTx) ValidateBasic() (res abci.Result) {
+	// TODO - validate
+	return
+}
+
+type IBCPacketPostTx struct {
 	FromChainID     string // The immediate source of the packet, not always Packet.SrcChainID
 	FromChainHeight uint64 // The block height in which Packet was committed, to check Proof
 	Packet
 	Proof merkle.IAVLProof
 }
 
-func (IBCPacketTx) ValidateBasic() (res abci.Result) {
+func (IBCPacketPostTx) ValidateBasic() (res abci.Result) {
 	// TODO - validate
 	return
 }
@@ -162,8 +174,10 @@ func (ibc *IBCPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes 
 		sm.runRegisterChainTx(tx)
 	case IBCUpdateChainTx:
 		sm.runUpdateChainTx(tx)
-	case IBCPacketTx:
-		sm.runPacketTx(tx)
+	case IBCPacketCreateTx:
+		sm.runPacketCreateTx(tx)
+	case IBCPacketPostTx:
+		sm.runPacketPostTx(tx)
 	}
 
 	return sm.res
@@ -262,7 +276,11 @@ func (sm *IBCStateMachine) runUpdateChainTx(tx IBCUpdateChainTx) {
 	save(sm.store, chainStateKey, chainState)
 }
 
-func (sm *IBCStateMachine) runPacketTx(tx IBCPacketTx) {
+func (sm *IBCStateMachine) runPacketCreateTx(tx IBCPacketCreateTx) {
+	// TODO Store packet in egress
+}
+
+func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 	// TODO Make sure packat doesn't already exist
 	// TODO Load associated blockHash and make sure it exists
 	// TODO compute packet key

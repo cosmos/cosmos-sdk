@@ -23,7 +23,7 @@ var (
 			return cmdQuery(c)
 		},
 		Flags: []cli.Flag{
-			nodeFlag,
+			NodeFlag,
 		},
 	}
 
@@ -35,7 +35,7 @@ var (
 			return cmdAccount(c)
 		},
 		Flags: []cli.Flag{
-			nodeFlag,
+			NodeFlag,
 		},
 	}
 
@@ -47,7 +47,7 @@ var (
 			return cmdBlock(c)
 		},
 		Flags: []cli.Flag{
-			nodeFlag,
+			NodeFlag,
 		},
 	}
 
@@ -58,10 +58,10 @@ var (
 			return cmdVerify(c)
 		},
 		Flags: []cli.Flag{
-			proofFlag,
-			keyFlag,
-			valueFlag,
-			rootFlag,
+			ProofFlag,
+			KeyFlag,
+			ValueFlag,
+			RootFlag,
 		},
 	}
 )

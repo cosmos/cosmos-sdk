@@ -35,13 +35,13 @@ var StartCmd = cli.Command{
 		return cmdStart(c)
 	},
 	Flags: []cli.Flag{
-		addrFlag,
-		eyesFlag,
-		dirFlag,
-		inProcTMFlag,
-		chainIDFlag,
-		ibcPluginFlag,
-		counterPluginFlag,
+		AddrFlag,
+		EyesFlag,
+		DirFlag,
+		InProcTMFlag,
+		ChainIDFlag,
+		IbcPluginFlag,
+		CounterPluginFlag,
 	},
 }
 

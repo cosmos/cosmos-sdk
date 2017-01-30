@@ -21,19 +21,19 @@ var (
 		Name:  "ibc",
 		Usage: "Send a transaction to the interblockchain (ibc) plugin",
 		Flags: []cli.Flag{
-			nodeFlag,
-			chainIDFlag,
+			NodeFlag,
+			ChainIDFlag,
 
-			fromFlag,
+			FromFlag,
 
-			amountFlag,
-			coinFlag,
-			gasFlag,
-			feeFlag,
-			seqFlag,
+			AmountFlag,
+			CoinFlag,
+			GasFlag,
+			FeeFlag,
+			SeqFlag,
 
-			nameFlag,
-			dataFlag,
+			NameFlag,
+			DataFlag,
 		},
 		Subcommands: []cli.Command{
 			IbcRegisterTxCmd,
@@ -49,8 +49,8 @@ var (
 			return cmdIBCRegisterTx(c)
 		},
 		Flags: []cli.Flag{
-			ibcChainIDFlag,
-			ibcGenesisFlag,
+			IbcChainIDFlag,
+			IbcGenesisFlag,
 		},
 	}
 
@@ -61,8 +61,8 @@ var (
 			return cmdIBCUpdateTx(c)
 		},
 		Flags: []cli.Flag{
-			ibcHeaderFlag,
-			ibcCommitFlag,
+			IbcHeaderFlag,
+			IbcCommitFlag,
 		},
 	}
 
@@ -85,11 +85,11 @@ var (
 			return cmdIBCPacketCreateTx(c)
 		},
 		Flags: []cli.Flag{
-			ibcFromFlag,
-			ibcToFlag,
-			ibcTypeFlag,
-			ibcPayloadFlag,
-			ibcSequenceFlag,
+			IbcFromFlag,
+			IbcToFlag,
+			IbcTypeFlag,
+			IbcPayloadFlag,
+			IbcSequenceFlag,
 		},
 	}
 
@@ -100,10 +100,10 @@ var (
 			return cmdIBCPacketPostTx(c)
 		},
 		Flags: []cli.Flag{
-			ibcFromFlag,
-			ibcHeightFlag,
-			ibcPacketFlag,
-			ibcProofFlag,
+			IbcFromFlag,
+			IbcHeightFlag,
+			IbcPacketFlag,
+			IbcProofFlag,
 		},
 	}
 )

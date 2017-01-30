@@ -26,18 +26,18 @@ var (
 			return cmdSendTx(c)
 		},
 		Flags: []cli.Flag{
-			nodeFlag,
-			chainIDFlag,
+			NodeFlag,
+			ChainIDFlag,
 
-			fromFlag,
+			FromFlag,
 
-			amountFlag,
-			coinFlag,
-			gasFlag,
-			feeFlag,
-			seqFlag,
+			AmountFlag,
+			CoinFlag,
+			GasFlag,
+			FeeFlag,
+			SeqFlag,
 
-			toFlag,
+			ToFlag,
 		},
 	}
 
@@ -49,19 +49,19 @@ var (
 			return cmdAppTx(c)
 		},
 		Flags: []cli.Flag{
-			nodeFlag,
-			chainIDFlag,
+			NodeFlag,
+			ChainIDFlag,
 
-			fromFlag,
+			FromFlag,
 
-			amountFlag,
-			coinFlag,
-			gasFlag,
-			feeFlag,
-			seqFlag,
+			AmountFlag,
+			CoinFlag,
+			GasFlag,
+			FeeFlag,
+			SeqFlag,
 
-			nameFlag,
-			dataFlag,
+			NameFlag,
+			DataFlag,
 		},
 		Subcommands: []cli.Command{
 			CounterTxCmd,
@@ -75,7 +75,7 @@ var (
 			return cmdCounterTx(c)
 		},
 		Flags: []cli.Flag{
-			validFlag,
+			ValidFlag,
 		},
 	}
 )

@@ -59,7 +59,7 @@ func cmdSendTx(c *cli.Context) error {
 	fmt.Println(string(wire.JSONBytes(tx)))
 
 	// broadcast the transaction to tendermint
-	if err := broadcastTx(c, tx); err != nil {
+	if _, err := broadcastTx(c, tx); err != nil {
 		return err
 	}
 	return nil
@@ -104,7 +104,7 @@ func appTx(c *cli.Context, name string, data []byte) error {
 	fmt.Println("Signed AppTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))
 
-	if err := broadcastTx(c, tx); err != nil {
+	if _, err := broadcastTx(c, tx); err != nil {
 		return err
 	}
 
@@ -134,7 +134,7 @@ func cmdCounterTx(c *cli.Context) error {
 }
 
 // broadcast the transaction to tendermint
-func broadcastTx(c *cli.Context, tx types.Tx) error {
+func broadcastTx(c *cli.Context, tx types.Tx) ([]byte, error) {
 	tmResult := new(ctypes.TMResult)
 	tmAddr := c.String("node")
 	clientURI := client.NewClientURI(tmAddr)
@@ -144,15 +144,16 @@ func broadcastTx(c *cli.Context, tx types.Tx) error {
 	txBytes := []byte(wire.BinaryBytes(struct {
 		types.Tx `json:"unwrap"`
 	}{tx}))
-	_, err := clientURI.Call("broadcast_tx_sync", map[string]interface{}{"tx": txBytes}, tmResult)
+	_, err := clientURI.Call("broadcast_tx_commit", map[string]interface{}{"tx": txBytes}, tmResult)
 	if err != nil {
-		return errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
+		return nil, errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
 	}
-	res := (*tmResult).(*ctypes.ResultBroadcastTx)
-	if !res.Code.IsOK() {
-		return errors.New(cmn.Fmt("BroadcastTxSync got non-zero exit code: %v. %X; %s", res.Code, res.Data, res.Log))
+	res := (*tmResult).(*ctypes.ResultBroadcastTxCommit)
+	if !res.DeliverTx.Code.IsOK() {
+		r := res.DeliverTx
+		return nil, errors.New(cmn.Fmt("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log))
 	}
-	return nil
+	return res.DeliverTx.Data, nil
 }
 
 // if the sequence flag is set, return it;

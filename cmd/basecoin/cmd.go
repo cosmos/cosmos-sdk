@@ -15,8 +15,7 @@ var (
 		Flags: []cli.Flag{
 			addrFlag,
 			eyesFlag,
-			eyesDBFlag,
-			genesisFlag,
+			dirFlag,
 			inProcTMFlag,
 			chainIDFlag,
 			ibcPluginFlag,

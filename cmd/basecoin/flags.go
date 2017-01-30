@@ -18,19 +18,13 @@ var (
 		Usage: "MerkleEyes address, or 'local' for embedded",
 	}
 
-	eyesDBFlag = cli.StringFlag{
-		Name:  "eyes-db",
-		Value: "merkleeyes.db",
-		Usage: "MerkleEyes db name for embedded",
-	}
-
 	// TODO: move to config file
 	// eyesCacheSizePtr := flag.Int("eyes-cache-size", 10000, "MerkleEyes db cache size, for embedded")
 
-	genesisFlag = cli.StringFlag{
-		Name:  "genesis",
-		Value: "",
-		Usage: "Path to genesis file, if it exists",
+	dirFlag = cli.StringFlag{
+		Name:  "dir",
+		Value: ".",
+		Usage: "Root directory",
 	}
 
 	inProcTMFlag = cli.BoolFlag{

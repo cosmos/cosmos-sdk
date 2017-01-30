@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"os"
+	"path"
 
 	"github.com/urfave/cli"
 
@@ -30,7 +32,7 @@ func cmdStart(c *cli.Context) error {
 	// Connect to MerkleEyes
 	var eyesCli *eyes.Client
 	if c.String("eyes") == "local" {
-		eyesCli = eyes.NewLocalClient(c.String("eyes-db"), EyesCacheSize)
+		eyesCli = eyes.NewLocalClient(path.Join(c.String("dir"), "merkleeyes.db"), EyesCacheSize)
 	} else {
 		var err error
 		eyesCli, err = eyes.NewClient(c.String("eyes"))
@@ -51,9 +53,10 @@ func cmdStart(c *cli.Context) error {
 
 	}
 
-	// If genesis file was specified, set key-value options
-	if c.String("genesis") != "" {
-		err := basecoinApp.LoadGenesis(c.String("genesis"))
+	// If genesis file exists, set key-value options
+	genesisFile := path.Join(c.String("dir"), "genesis.json")
+	if _, err := os.Stat(genesisFile); err == nil {
+		err := basecoinApp.LoadGenesis(genesisFile)
 		if err != nil {
 			return errors.New(cmn.Fmt("%+v", err))
 		}

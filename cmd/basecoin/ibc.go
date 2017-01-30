@@ -110,7 +110,7 @@ func cmdIBCPacketCreateTx(c *cli.Context) error {
 		ibc.IBCTx `json:"unwrap"`
 	}{ibcTx}))
 
-	return appTx(c.Parent(), "IBC", data)
+	return appTx(c.Parent().Parent(), "IBC", data)
 }
 
 func cmdIBCPacketPostTx(c *cli.Context) error {
@@ -148,7 +148,7 @@ func cmdIBCPacketPostTx(c *cli.Context) error {
 		ibc.IBCTx `json:"unwrap"`
 	}{ibcTx}))
 
-	return appTx(c.Parent(), "IBC", data)
+	return appTx(c.Parent().Parent(), "IBC", data)
 }
 
 func getIBCSequence(c *cli.Context) (uint64, error) {

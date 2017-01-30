@@ -7,7 +7,6 @@ import (
 	"reflect"
 
 	"github.com/tendermint/abci/server"
-	"github.com/tendermint/basecoin-examples/mintnet"
 	"github.com/tendermint/basecoin/app"
 	cmn "github.com/tendermint/go-common"
 	eyes "github.com/tendermint/merkleeyes/client"
@@ -30,7 +29,7 @@ func main() {
 	coin := app.NewBasecoin(eyesCli)
 
 	// attach the plugin
-	mint := mintnet.NewMintPlugin("mint")
+	mint := mintcoin.NewMintPlugin("mint")
 	coin.RegisterPlugin(mint)
 
 	// If genesis file was specified, set key-value options

@@ -183,6 +183,11 @@ func broadcastTx(c *cli.Context, tx types.Tx) ([]byte, error) {
 		return nil, errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
 	}
 	res := (*tmResult).(*ctypes.ResultBroadcastTxCommit)
+	// if it fails check, we don't even get a delivertx back!
+	if !res.CheckTx.Code.IsOK() {
+		r := res.CheckTx
+		return nil, errors.New(cmn.Fmt("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log))
+	}
 	if !res.DeliverTx.Code.IsOK() {
 		r := res.DeliverTx
 		return nil, errors.New(cmn.Fmt("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log))

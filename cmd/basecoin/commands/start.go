@@ -41,7 +41,6 @@ var StartCmd = cli.Command{
 		InProcTMFlag,
 		ChainIDFlag,
 		IbcPluginFlag,
-		// CounterPluginFlag,
 	},
 }
 

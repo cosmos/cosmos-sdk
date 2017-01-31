@@ -28,7 +28,7 @@ func main() {
 
 	// create/add plugins
 	counter := counter.New("counter")
-	paytovote := paytovote.New("p2v")
+	paytovote := paytovote.New()
 	app.RegisterPlugin(counter)
 	app.RegisterPlugin(paytovote)
 

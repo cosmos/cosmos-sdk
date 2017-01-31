@@ -8,6 +8,16 @@ import (
 	"golang.org/x/crypto/ripemd160"
 )
 
+func init() {
+	// register tx implementations with gowire
+	wire.RegisterInterface(
+		txwrap{},
+		wire.ConcreteType{O: CreateEscrowTx{}, Byte: 0x01},
+		wire.ConcreteType{O: ResolveEscrowTx{}, Byte: 0x02},
+		wire.ConcreteType{O: ExpireEscrowTx{}, Byte: 0x03},
+	)
+}
+
 // EscrowData is our principal data structure in the db
 type EscrowData struct {
 	Sender     []byte

@@ -81,7 +81,7 @@ func cmdQuery(c *cli.Context) error {
 		}
 	}
 
-	resp, err := query(c.String("node"), key)
+	resp, err := Query(c.String("node"), key)
 	if err != nil {
 		return err
 	}

@@ -35,7 +35,7 @@ func StripHex(s string) string {
 	return s
 }
 
-func query(tmAddr string, key []byte) (*abci.ResponseQuery, error) {
+func Query(tmAddr string, key []byte) (*abci.ResponseQuery, error) {
 	clientURI := client.NewClientURI(tmAddr)
 	tmResult := new(ctypes.TMResult)
 
@@ -59,7 +59,7 @@ func query(tmAddr string, key []byte) (*abci.ResponseQuery, error) {
 func getAcc(tmAddr string, address []byte) (*types.Account, error) {
 
 	key := append([]byte("base/a/"), address...)
-	response, err := query(tmAddr, key)
+	response, err := Query(tmAddr, key)
 	if err != nil {
 		return nil, err
 	}

@@ -1,0 +1,26 @@
+package: github.com/tendermint/basecoin-examples/mintcoin
+import:
+- package: github.com/tendermint/basecoin
+  version: develop
+- package: github.com/tendermint/tendermint
+  version: develop
+- package: github.com/tendermint/abci
+  version: develop
+- package: github.com/tendermint/merkleeyes
+  version: develop
+- package: github.com/tendermint/go-config
+  version: master
+- package: github.com/tendermint/go-common
+  version: develop
+- package: github.com/tendermint/go-crypto
+  version: develop
+- package: github.com/tendermint/go-events
+  version: develop
+- package: github.com/tendermint/go-merkle
+  version: develop
+- package: github.com/tendermint/go-logger
+  version: develop
+- package: github.com/tendermint/go-rpc
+  version: develop
+- package: github.com/tendermint/go-wire
+  version: develop

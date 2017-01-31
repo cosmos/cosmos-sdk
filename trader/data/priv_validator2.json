@@ -1,0 +1,16 @@
+{
+        "address": "4793A333846E5104C46DD9AB9A00E31821B2F301",
+        "last_height": 0,
+        "last_round": 0,
+        "last_signature": null,
+        "last_signbytes": "",
+        "last_step": 0,
+        "priv_key": [
+                1,
+                "13A04A552ABAA2CCFA1F618CF9C97F1FD59FC3EE4968FE87DF3637C9B0F2FAAA93766F08BE7135E78DBFFA76B61BC7C52B96256EB4394A224B4EF8BCC954DE2E"
+        ],
+        "pub_key": [
+                1,
+                "93766F08BE7135E78DBFFA76B61BC7C52B96256EB4394A224B4EF8BCC954DE2E"
+        ]
+}

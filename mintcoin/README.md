@@ -41,12 +41,31 @@ cd $GOPATH/src/github.com/tendermint/basecoin-examples/mintcoin/data
 mintcoin account D397BC62B435F3CF50570FBAB4340FE52C60858F
 
 # apparently we need to send some coin with every transaction, even if the
-# app doesn't care
-mintcoin apptx --coin ETH --amount 1 mint --mintto D397BC62B435F3CF50570FBAB4340FE52C60858F --mint 1000 --mintcoin BTC
+# app doesn't care.  this also means the sending account must have at least
+# one of some currency in order to mint the first coins.
+
+# also note that we must specify the chain_id, as we are not using
+
+
+mintcoin apptx --chain_id mint_chain_id --amount 1 mint --mintto D397BC62B435F3CF50570FBAB4340FE52C60858F --mint 1000 --mintcoin BTC
+
+mintcoin apptx --chain_id mint_chain_id --amount 1 mint --mintto D397BC62B435F3CF50570FBAB4340FE52C60858F --mint 5 --mintcoin cosmo
+
+mintcoin apptx --chain_id mint_chain_id --amount 1 mint --mintto D397BC62B435F3CF50570FBAB4340FE52C60858F --mint 5000 --mintcoin FOOD
+
+mintcoin account D397BC62B435F3CF50570FBAB4340FE52C60858F
+
+# let's stop being greedy and pay back someone else
+
+mintcoin account 4793A333846E5104C46DD9AB9A00E31821B2F301
+mintcoin apptx --chain_id mint_chain_id --amount 1 mint --mintto 4793A333846E5104C46DD9AB9A00E31821B2F301 --mint 1234 --mintcoin BTC
+mintcoin account 4793A333846E5104C46DD9AB9A00E31821B2F301
+
+# and they can give us a little kickback
+mintcoin sendtx --chain_id mint_chain_id --from priv_validator2.json --to D397BC62B435F3CF50570FBAB4340FE52C60858F --amount 333 --coin BTC
+mintcoin account 4793A333846E5104C46DD9AB9A00E31821B2F301
+mintcoin account D397BC62B435F3CF50570FBAB4340FE52C60858F
 ```
-
-**TODO** get the sigs working here.
-
 
 ## Attaching a GUI
 

@@ -12,6 +12,8 @@ import (
 	"github.com/urfave/cli"
 )
 
+const MintName = "mint"
+
 var (
 	MintToFlag = cli.StringFlag{
 		Name:  "mintto",
@@ -51,7 +53,7 @@ var (
 func init() {
 	bcmd.RegisterTxPlugin(MintTxCmd)
 	bcmd.RegisterStartPlugin(MintPluginFlag,
-		func() types.Plugin { return mintcoin.New("mint") })
+		func() types.Plugin { return mintcoin.New(MintName) })
 }
 
 func cmdMintTx(c *cli.Context) error {
@@ -80,9 +82,7 @@ func cmdMintTx(c *cli.Context) error {
 		},
 	}
 	fmt.Println("MintTx:", string(wire.JSONBytes(mintTx)))
-
 	data := wire.BinaryBytes(mintTx)
-	name := "mint"
 
-	return bcmd.AppTx(parent, name, data)
+	return bcmd.AppTx(parent, MintName, data)
 }

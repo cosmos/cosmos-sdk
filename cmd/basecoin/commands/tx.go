@@ -160,9 +160,11 @@ func AppTx(c *cli.Context, name string, data []byte) error {
 	fmt.Println("Signed AppTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))
 
-	if _, err := broadcastTx(c, tx); err != nil {
+	res, err := broadcastTx(c, tx)
+	if err != nil {
 		return err
 	}
+	fmt.Printf("Response: %X\n", res)
 
 	return nil
 }

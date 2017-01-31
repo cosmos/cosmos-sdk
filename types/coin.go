@@ -35,6 +35,8 @@ func (coins Coins) IsValid() bool {
 			if coin.Amount == 0 {
 				return false
 			}
+			// we compare each coin against the last denom
+			lowDenom = coin.Denom
 		}
 		return true
 	}

@@ -1,6 +1,8 @@
 package escrow
 
 import (
+	"fmt"
+
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
@@ -46,6 +48,14 @@ func ParseData(data []byte) (EscrowData, error) {
 	d := EscrowData{}
 	err := wire.ReadBinaryBytes(data, &d)
 	return d, err
+}
+
+func LoadData(store types.KVStore, addr []byte) (EscrowData, error) {
+	data := store.Get(addr)
+	if len(data) == 0 {
+		return EscrowData{}, fmt.Errorf("No escrow at: %X", addr)
+	}
+	return ParseData(data)
 }
 
 // Payback is used to signal who to send the money to

@@ -1,8 +1,9 @@
 
 # Basecoin Plugin Development Tutorial
 
-Basecoin is a demonstration environment of a Tendermint powered blockchain crypto-currency.
-This tutorial will walk you through of how to write a basic [plugin for basecoin][0] and deploy your own instance of basecoin running your plugin.
+Basecoin is a demonstration environment of a Tendermint powered blockchain crypto-currency. 
+Within basecoin, utility can be extended through the use of custom plugins, which extend the type of transactions from simple coin exchange to anything your little heart can dream up (within the defined confines of the plugin space). The typical form of a plugin transaction includes sending coins with an associated account to the plugin along with custom transaction information, as well as fees and gas required per transaction. For details on the concepts behind basecoin plugins see [this][0].
+This tutorial will walk you through of how to write a basic plugin for basecoin and deploy your own instance of basecoin running your plugin.
 Note that this tutorial assumes that you are familiar with golang. For more information on golang see [The Go Blog][1] and [Go Basics][2].
 A completed copy of the example code described in this tutorial can be found [here][3].
 [0]: https://github.com/tendermint/basecoin/blob/develop/Plugins.md

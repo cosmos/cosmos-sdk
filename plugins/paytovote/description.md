@@ -15,7 +15,6 @@ A good way to get a general sense of the technical implementation of a paytovote
      - Create a non-existent issue
      - submit a vote for an existing issue
      - submit a vote against an existing issue
-     - submit a spoiled vote to an existing issue
  - CostToVote (types.Coins)
    - The cost charged by the plugin to submit a vote on an existing issue
  - CostToCreateIssue (types.Coins) 

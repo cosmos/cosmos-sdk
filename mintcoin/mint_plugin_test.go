@@ -38,18 +38,18 @@ func TestSetOptions(t *testing.T) {
 	hex2 := hex.EncodeToString(addr2)
 	assert.Equal("cash", plugin.Name())
 
-	plugin.SetOption(store, ADD_BANKER, hex1)
+	plugin.SetOption(store, AddBanker, hex1)
 	st := plugin.loadState(store)
 	assert.True(st.IsBanker(addr1))
 	assert.False(st.IsBanker(addr2))
 
-	plugin.SetOption(store, REMOVE_BANKER, hex2)
+	plugin.SetOption(store, RemoveBanker, hex2)
 	st = plugin.loadState(store)
 	assert.True(st.IsBanker(addr1))
 	assert.False(st.IsBanker(addr2))
 
-	plugin.SetOption(store, ADD_BANKER, hex2)
-	plugin.SetOption(store, REMOVE_BANKER, hex1)
+	plugin.SetOption(store, AddBanker, hex2)
+	plugin.SetOption(store, RemoveBanker, hex1)
 	st = plugin.loadState(store)
 	assert.False(st.IsBanker(addr1))
 	assert.True(st.IsBanker(addr2))
@@ -90,7 +90,7 @@ func TestTransactions(t *testing.T) {
 
 	// let's set the options and watch the cash flow!
 	hex1 := hex.EncodeToString(addr1)
-	plugin.SetOption(store, ADD_BANKER, hex1)
+	plugin.SetOption(store, AddBanker, hex1)
 	res = plugin.RunTx(store, ctx, txBytes)
 	assert.True(res.IsOK())
 	acct1 := state.GetAccount(store, addr1)

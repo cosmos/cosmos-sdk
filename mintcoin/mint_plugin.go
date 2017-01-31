@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	ADD_BANKER    = "add"
-	REMOVE_BANKER = "remove"
+	AddBanker    = "add"
+	RemoveBanker = "remove"
 )
 
 // MintPlugin is a plugin, storing all state prefixed with it's unique name
@@ -37,13 +37,13 @@ func (mp MintPlugin) SetOption(store types.KVStore, key string, value string) (l
 	}
 
 	switch key {
-	case ADD_BANKER:
+	case AddBanker:
 		s := mp.loadState(store)
 		s.AddBanker(addr)
 		mp.saveState(store, s)
 		mp.saveState(store, s)
 		return fmt.Sprintf("Added: %s", addr)
-	case REMOVE_BANKER:
+	case RemoveBanker:
 		s := mp.loadState(store)
 		s.RemoveBanker(addr)
 		mp.saveState(store, s)

@@ -111,7 +111,7 @@ func cmdEscrowCreateTx(c *cli.Context) error {
 	recvHex := c.String(EscrowRecvFlag.Name)
 	arbHex := c.String(EscrowArbiterFlag.Name)
 	expire := c.Uint64(EscrowExpireFlag.Name)
-	parent := c.Parent()
+	parent := c.Parent().Parent()
 
 	// convert destination address to bytes
 	recv, err := hex.DecodeString(bcmd.StripHex(recvHex))
@@ -137,7 +137,7 @@ func cmdEscrowCreateTx(c *cli.Context) error {
 func cmdEscrowResolveTx(c *cli.Context) error {
 	addrHex := c.String(EscrowAddrFlag.Name)
 	payout := c.Bool(EscrowPayoutFlag.Name)
-	parent := c.Parent()
+	parent := c.Parent().Parent()
 
 	// convert destination address to bytes
 	addr, err := hex.DecodeString(bcmd.StripHex(addrHex))
@@ -155,7 +155,7 @@ func cmdEscrowResolveTx(c *cli.Context) error {
 
 func cmdEscrowExpireTx(c *cli.Context) error {
 	addrHex := c.String(EscrowAddrFlag.Name)
-	parent := c.Parent()
+	parent := c.Parent().Parent()
 
 	// convert destination address to bytes
 	addr, err := hex.DecodeString(bcmd.StripHex(addrHex))

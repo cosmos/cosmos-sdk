@@ -77,7 +77,7 @@ func (p Payback) Pay(store types.KVStore) {
 	if len(p.Addr) == 20 {
 		acct := state.GetAccount(store, p.Addr)
 		if acct == nil {
-			// acct = state.
+			acct = &types.Account{}
 		}
 		acct.Balance = acct.Balance.Plus(p.Amount)
 		state.SetAccount(store, p.Addr, acct)

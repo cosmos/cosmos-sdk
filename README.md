@@ -29,7 +29,7 @@ You just read about the amazing [plugin system](https://github.com/tendermint/ba
 
 Sure, printing money and sending it is nice, but sometimes I don't fully trust the guy at the other end. Maybe we could add an escrow service? Or how about options for currency trading, since we support multiple currencies? No problem, this is also just a plugin away.  Checkout our [trader application](./trader).
 
-**TODO**
+**Running code, still WIP**
 
 ## IBC
 

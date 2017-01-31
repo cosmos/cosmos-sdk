@@ -7,7 +7,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-const EscrowName = "mint"
+const EscrowName = "escrow"
 
 // var (
 // 	MintToFlag = cli.StringFlag{

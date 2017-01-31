@@ -29,7 +29,7 @@ func (mp EscrowPlugin) SetOption(store types.KVStore, key string, value string) 
 
 // prefix let's us store all our info in a separate name-space
 func (mp EscrowPlugin) prefix(store types.KVStore) types.KVStore {
-	key := fmt.Sprintf("*%s*", mp.name)
+	key := fmt.Sprintf("%s/", mp.name)
 	return trader.PrefixStore(store, []byte(key))
 }
 

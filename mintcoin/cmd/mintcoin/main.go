@@ -4,7 +4,7 @@ import (
 	"os"
 
 	// import _ to register the mint plugin to apptx
-	_ "github.com/tendermint/basecoin-examples/mintcoin/cmd/mintcoin/commands"
+	_ "github.com/tendermint/basecoin-examples/mintcoin/commands"
 	"github.com/tendermint/basecoin/cmd/basecoin/commands"
 	"github.com/urfave/cli"
 )

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"path"
 
 	"github.com/tendermint/abci/server"
 	"github.com/tendermint/basecoin/app"
@@ -13,15 +14,11 @@ import (
 
 func main() {
 	addrPtr := flag.String("address", "tcp://0.0.0.0:46658", "Listen address")
-	eyesPtr := flag.String("eyes", "local", "MerkleEyes address, or 'local' for embedded")
 	genFilePath := flag.String("genesis", "", "Genesis file, if any")
 	flag.Parse()
 
 	// Connect to MerkleEyes
-	eyesCli, err := eyes.NewClient(*eyesPtr, "socket")
-	if err != nil {
-		cmn.Exit("connect to MerkleEyes: " + err.Error())
-	}
+	eyesCli := eyes.NewLocalClient(path.Join(".", "merkleeyes.db"), 0)
 
 	// Create Basecoin app
 	app := app.NewBasecoin(eyesCli)

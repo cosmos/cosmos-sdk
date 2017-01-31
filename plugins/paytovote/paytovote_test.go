@@ -1,6 +1,7 @@
 package paytovote
 
 import (
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,7 +16,7 @@ import (
 func TestP2VPlugin(t *testing.T) {
 
 	// Basecoin initialization
-	eyesCli := eyescli.NewLocalClient()
+	eyesCli := eyescli.NewLocalClient(path.Join(".", "merkleeyes.db"), 0)
 	chainID := "test_chain_id"
 	bcApp := app.NewBasecoin(eyesCli)
 	bcApp.SetOption("base/chainID", chainID)

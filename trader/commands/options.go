@@ -12,7 +12,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-const OptionName = "escrow"
+const OptionName = "options"
 
 var (
 	OptionAddrFlag = cli.StringFlag{

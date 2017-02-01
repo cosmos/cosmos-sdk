@@ -6,6 +6,10 @@
       {
         "denom": "blank",
         "amount": 1000
+      },
+      {
+        "denom": "ETH",
+        "amount": 500
       }
     ]
   },
@@ -15,6 +19,10 @@
       {
         "denom": "blank",
         "amount": 500
+      },
+      {
+        "denom": "BTC",
+        "amount": 6
       }
     ]
   }

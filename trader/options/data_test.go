@@ -12,15 +12,9 @@ import (
 func TestData(t *testing.T) {
 	assert := assert.New(t)
 	a, b, c := cmn.RandBytes(20), cmn.RandBytes(20), cmn.RandBytes(20)
-	bond := types.Coins{
-		{Amount: 1000, Denom: "ATOM"},
-	}
-	trade := types.Coins{
-		{Amount: 5, Denom: "BTC"},
-	}
-	price := types.Coins{
-		{Amount: 10, Denom: "ETH"},
-	}
+	bond := types.Coins{{Amount: 1000, Denom: "ATOM"}}
+	trade := types.Coins{{Amount: 5, Denom: "BTC"}}
+	price := types.Coins{{Amount: 10, Denom: "ETH"}}
 
 	data := OptionData{
 		OptionIssue: OptionIssue{
@@ -85,9 +79,7 @@ func TestTxParse(t *testing.T) {
 		{Amount: 5, Denom: "BTC"},
 		{Amount: 1000, Denom: "ATOM"},
 	}
-	price := types.Coins{
-		{Amount: 3, Denom: "ETH"},
-	}
+	price := types.Coins{{Amount: 3, Denom: "ETH"}}
 
 	txs := []Tx{
 		CreateOptionTx{

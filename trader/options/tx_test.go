@@ -17,18 +17,10 @@ func TestBasicFlow(t *testing.T) {
 	accts := Accountant{store}
 
 	a, b, c := cmn.RandBytes(20), cmn.RandBytes(20), cmn.RandBytes(20)
-	bond := types.Coins{
-		{Amount: 1000, Denom: "ATOM"},
-	}
-	trade := types.Coins{
-		{Amount: 5, Denom: "BTC"},
-	}
-	price := types.Coins{
-		{Amount: 10, Denom: "ETH"},
-	}
-	low := types.Coins{
-		{Amount: 8, Denom: "ETH"},
-	}
+	bond := types.Coins{{Amount: 1000, Denom: "ATOM"}}
+	trade := types.Coins{{Amount: 5, Denom: "BTC"}}
+	price := types.Coins{{Amount: 10, Denom: "ETH"}}
+	low := types.Coins{{Amount: 8, Denom: "ETH"}}
 
 	tx := CreateOptionTx{
 		Expiration: 100,

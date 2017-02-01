@@ -1,6 +1,7 @@
 package options
 
 import (
+	"bytes"
 	"fmt"
 
 	abci "github.com/tendermint/abci/types"
@@ -31,7 +32,7 @@ type OptionData struct {
 type OptionIssue struct {
 	// this is for the normal option functionality
 	Issuer     []byte
-	Serial     int64       // this serial number is from the apptx that created it
+	Serial     int         // this sequence number is from the apptx that created it
 	Expiration uint64      // height when the offer expires (0 = never)
 	Bond       types.Coins // this is stored upon creation of the option
 	Trade      types.Coins // this is the money that can exercise the option
@@ -45,23 +46,44 @@ type OptionHolder struct {
 	Price     types.Coins // required payment to transfer ownership
 }
 
-func (d OptionData) IsExpired(h uint64) bool {
-	return (d.Expiration != 0 && h > d.Expiration)
+func (i OptionIssue) IsExpired(h uint64) bool {
+	return (i.Expiration != 0 && h > i.Expiration)
 }
 
 // Address is the ripemd160 hash of the constant part of the option
-func (d OptionData) Address() []byte {
+func (i OptionIssue) Address() []byte {
 	hasher := ripemd160.New()
-	hasher.Write(d.OptionIssue.Bytes())
+	hasher.Write(i.Bytes())
 	return hasher.Sum(nil)
+}
+
+func (i OptionIssue) Bytes() []byte {
+	return wire.BinaryBytes(i)
 }
 
 func (d OptionData) Bytes() []byte {
 	return wire.BinaryBytes(d)
 }
 
-func (i OptionIssue) Bytes() []byte {
-	return wire.BinaryBytes(i)
+// To buy, this option must be for sale, and the buyer must be
+// listed (or an open sale)
+func (d OptionData) CanBuy(buyer []byte) bool {
+	return d.Price != nil &&
+		(d.NewHolder == nil || bytes.Equal(buyer, d.NewHolder))
+}
+
+func (d OptionData) CanSell(buyer []byte) bool {
+	return !bytes.Equal(buyer, d.Holder)
+}
+
+func (d OptionData) CanExercise(addr []byte, h uint64) bool {
+	return bytes.Equal(addr, d.Holder) && !d.IsExpired(h)
+}
+
+// CanDissolve if it is expired, or the holder, issue, and caller are the same
+func (d OptionData) CanDissolve(addr []byte, h uint64) bool {
+	return d.IsExpired(h) ||
+		(bytes.Equal(addr, d.Holder) && bytes.Equal(d.Holder, d.Issuer))
 }
 
 func ParseData(data []byte) (OptionData, error) {
@@ -76,6 +98,16 @@ func LoadData(store types.KVStore, addr []byte) (OptionData, error) {
 		return OptionData{}, fmt.Errorf("No option at: %X", addr)
 	}
 	return ParseData(data)
+}
+
+func StoreData(store types.KVStore, data OptionData) {
+	addr := data.Address()
+	store.Set(addr, data.Bytes())
+}
+
+func DeleteData(store types.KVStore, data OptionData) {
+	addr := data.Address()
+	store.Set(addr, nil)
 }
 
 // // Payback is used to signal who to send the money to
@@ -108,7 +140,7 @@ type Tx interface {
 	// store is the prefixed store for options
 	// accts lets us access all accounts
 	// ctx and height come from the calling block
-	Apply(store types.KVStore, accts types.AccountGetterSetter,
+	Apply(store types.KVStore, accts Accountant,
 		ctx types.CallContext, height uint64) abci.Result
 }
 

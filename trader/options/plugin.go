@@ -5,7 +5,6 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin-examples/trader"
-	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 )
 
@@ -36,19 +35,17 @@ func (p Plugin) prefix(store types.KVStore) types.KVStore {
 
 // parse out which tx we use and then run it
 func (p Plugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
+	accts := Accountant{store}
+
 	tx, err := ParseTx(txBytes)
 	if err != nil {
-		// TODO: how to pay back???
-		// paybackCtx(ctx).Pay(store)
+		accts.Refund(ctx) // pay back unused money
 		return abci.ErrEncodingError
 	}
 
-	// the tx only can mess with the escrow data due to the prefix
+	// the tx only can mess with the option data due to the prefix
 	tstore := p.prefix(store)
-	accts := state.NewState(store)
 	res = tx.Apply(tstore, accts, ctx, p.height)
-	// TODO: how to pay back???
-	// payback.Pay(store)
 	return res
 }
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"path"
 
 	"github.com/tendermint/abci/server"
 	"github.com/tendermint/basecoin/app"
@@ -18,7 +17,7 @@ func main() {
 	flag.Parse()
 
 	// Connect to MerkleEyes
-	eyesCli := eyes.NewLocalClient(path.Join(".", "merkleeyes.db"), 0)
+	eyesCli := eyes.NewLocalClient("", 0) //non-persistent instance of merkleeyes
 
 	// Create Basecoin app
 	app := app.NewBasecoin(eyesCli)

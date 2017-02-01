@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-wire"
 )
@@ -98,7 +99,12 @@ func (p2v *P2VPlugin) SetOption(store types.KVStore, key string, value string) (
 func (p2v *P2VPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
 
 	defer func() {
-		//TODO return the ctx coins to the wallet if there is an error
+		//Return the ctx coins to the wallet if there is an error
+		if res.IsErr() {
+			acc := ctx.CallerAccount
+			acc.Balance = acc.Balance.Plus(ctx.Coins)       // add the context transaction coins
+			state.SetAccount(store, ctx.CallerAddress, acc) // save the new balance
+		}
 	}()
 
 	//Determine the transaction type and then send to the appropriate transaction function
@@ -117,15 +123,43 @@ func (p2v *P2VPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes 
 	}
 }
 
-func chargeFee(ctx types.CallContext, fee types.Coins) {
+func chargeFee(store types.KVStore, ctx types.CallContext, fee types.Coins) {
+
+	//Charge the Fee from the context coins
 	leftoverCoins := ctx.Coins.Minus(fee)
 	if !leftoverCoins.IsZero() {
-		// TODO If there are any funds left over, return funds.
-		// ctx.CallerAccount is synced w/ store, so just modify that and store it.
+		lc := "leftoverCoins: "
+		for i := 0; i < len(leftoverCoins); i++ {
+			lc += " " + leftoverCoins[i].String()
+		}
+		fmt.Println(lc)
+		lc = "fee: "
+		for i := 0; i < len(fee); i++ {
+			lc += " " + fee[i].String()
+		}
+		fmt.Println(lc)
+
+		acc := ctx.CallerAccount
+		lc = "acc b4: "
+		for i := 0; i < len(acc.Balance); i++ {
+			lc += " " + acc.Balance[i].String()
+		}
+		fmt.Println(lc)
+
+		//return leftover coins
+		acc.Balance = acc.Balance.Plus(leftoverCoins)   // subtract fees
+		state.SetAccount(store, ctx.CallerAddress, acc) // save the new balance
+		lc = "acc aftr: "
+		for i := 0; i < len(acc.Balance); i++ {
+			lc += " " + acc.Balance[i].String()
+		}
+		fmt.Println(lc)
+
 	}
 }
 
 func (p2v *P2VPlugin) runTxCreateIssue(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
+
 	// Decode tx
 	var tx createIssueTx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
@@ -161,11 +195,12 @@ func (p2v *P2VPlugin) runTxCreateIssue(store types.KVStore, ctx types.CallContex
 	// Create and Save P2VIssue, charge fee, return
 	newP2VIssue := newP2VIssue(tx.Issue, tx.FeePerVote)
 	store.Set(p2v.IssueKey(tx.Issue), wire.BinaryBytes(newP2VIssue))
-	chargeFee(ctx, tx.Fee2CreateIssue)
+	chargeFee(store, ctx, tx.Fee2CreateIssue)
 	return abci.NewResultOK(wire.BinaryBytes(p2vIssue), "")
 }
 
 func (p2v *P2VPlugin) runTxVote(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
+
 	// Decode tx
 	var tx voteTx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
@@ -209,16 +244,12 @@ func (p2v *P2VPlugin) runTxVote(store types.KVStore, ctx types.CallContext, txBy
 
 	// Save P2VIssue, charge fee, return
 	store.Set(p2v.IssueKey(tx.Issue), wire.BinaryBytes(p2vIssue))
-	chargeFee(ctx, p2vIssue.FeePerVote)
+	chargeFee(store, ctx, p2vIssue.FeePerVote)
 	return abci.NewResultOK(wire.BinaryBytes(p2vIssue), "")
 }
 
-func (p2v *P2VPlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
-}
-
-func (p2v *P2VPlugin) BeginBlock(store types.KVStore, height uint64) {
-}
-
+func (p2v *P2VPlugin) InitChain(store types.KVStore, vals []*abci.Validator) {}
+func (p2v *P2VPlugin) BeginBlock(store types.KVStore, height uint64)         {}
 func (p2v *P2VPlugin) EndBlock(store types.KVStore, height uint64) []*abci.Validator {
 	return nil
 }

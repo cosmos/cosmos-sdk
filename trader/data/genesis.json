@@ -4,6 +4,10 @@
     "pub_key": [1, "B3588BDC92015ED3CDB6F57A86379E8C79A7111063610B7E625487C76496F4DF"],
     "coins": [
       {
+        "denom": "ETH",
+        "amount": 500
+      },
+      {
         "denom": "blank",
         "amount": 1000
       }
@@ -12,6 +16,10 @@
   "base/account", {
     "pub_key": [1, "93766F08BE7135E78DBFFA76B61BC7C52B96256EB4394A224B4EF8BCC954DE2E"],
     "coins": [
+      {
+        "denom": "BTC",
+        "amount": 6
+      },
       {
         "denom": "blank",
         "amount": 500

@@ -69,7 +69,7 @@ func (d OptionData) Bytes() []byte {
 // listed (or an open sale)
 func (d OptionData) CanBuy(buyer []byte) bool {
 	return d.Price != nil &&
-		(d.NewHolder == nil || bytes.Equal(buyer, d.NewHolder))
+		(len(d.NewHolder) == 0 || bytes.Equal(buyer, d.NewHolder))
 }
 
 func (d OptionData) CanSell(buyer []byte) bool {

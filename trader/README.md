@@ -165,7 +165,7 @@ trader account D397BC62B435F3CF50570FBAB4340FE52C60858F  # issuer
 trader account 4793A333846E5104C46DD9AB9A00E31821B2F301  # holder
 
 # let's make an option
-trader apptx --chain_id trader_chain_id --from priv_validator.json --coin ETH --amount 400 option create --trade 4 --trade-coin BTC
+trader apptx --chain_id trader_chain_id --from priv_validator.json --coin ETH --amount 400 options create --trade 4 --trade-coin BTC
 
 #-> TODO: need to get OPTION_ID locally, broadcastTx response....
 OPTION_ID=XXXXXXX

@@ -153,6 +153,7 @@ make all
 tendermint unsafe_reset_all
 cd data
 trader start --in-proc --options-plugin
+# dlv debug ../cmd/trader/main.go -- start --in-proc --options-plugin
 ```
 
 Run basecoin client in another window.  In this example, priv_validator.json will be the issuer, priv_validator2.json the holder.
@@ -166,6 +167,8 @@ trader account 4793A333846E5104C46DD9AB9A00E31821B2F301  # holder
 
 # let's make an option
 trader apptx --chain_id trader_chain_id --from priv_validator.json --coin ETH --amount 400 options create --trade 4 --trade-coin BTC
+# dlv debug ../cmd/trader/main.go -- apptx --chain_id trader_chain_id --from priv_validator.json --coin ETH --amount 400 options create --trade 4 --trade-coin BTC
+
 
 #-> TODO: need to get OPTION_ID locally, broadcastTx response....
 OPTION_ID=XXXXXXX

@@ -101,7 +101,7 @@ var (
 	}
 
 	OptionsExerciseTxCmd = cli.Command{
-		Name:  "Exercise",
+		Name:  "exercise",
 		Usage: "Exercise this option to trade currency at the given rate",
 		Flags: []cli.Flag{
 			OptionAddrFlag,
@@ -124,10 +124,13 @@ var (
 
 	OptionsQueryCmd = cli.Command{
 		Name:      "query",
-		Usage:     "Return the contents of the given escrow",
+		Usage:     "Return the contents of the given option",
 		ArgsUsage: "<address>",
 		Action: func(c *cli.Context) error {
 			return cmdOptionQuery(c)
+		},
+		Flags: []cli.Flag{
+			bcmd.NodeFlag,
 		},
 	}
 

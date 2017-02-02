@@ -93,6 +93,9 @@ var (
 		Action: func(c *cli.Context) error {
 			return cmdEscrowQuery(c)
 		},
+		Flags: []cli.Flag{
+			bcmd.NodeFlag,
+		},
 	}
 
 	EscrowPluginFlag = cli.BoolFlag{

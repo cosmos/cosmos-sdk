@@ -101,7 +101,9 @@ func (tx BuyOptionTx) Apply(store types.KVStore,
 		return abci.ErrInsufficientFunds.AppendLog("Must pay more for the option")
 	}
 
-	// finally, we make the sale
+	// send the money to the seller
+	accts.Pay(data.Holder, data.Price)
+	// transfer ownership
 	data.Holder = ctx.CallerAddress
 	data.NewHolder = nil
 	data.Price = nil

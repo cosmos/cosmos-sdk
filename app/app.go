@@ -94,7 +94,7 @@ func (app *Basecoin) DeliverTx(txBytes []byte) (res abci.Result) {
 	if res.IsErr() {
 		return res.PrependLog("Error in DeliverTx")
 	}
-	return abci.OK
+	return res
 }
 
 // TMSP::CheckTx

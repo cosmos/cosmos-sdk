@@ -4,12 +4,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	abci "github.com/tendermint/abci/types"
+
 	"github.com/tendermint/basecoin/app"
 	//cmds "github.com/tendermint/basecoin/cmd/basecoin/commands"
 	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/testutils"
 	"github.com/tendermint/basecoin/types"
+
+	abci "github.com/tendermint/abci/types"
+	cmn "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
 )
@@ -34,6 +37,7 @@ func TestP2VPlugin(t *testing.T) {
 	startBal := types.Coins{{"", 1000}, {"issueToken", 1000}, {"voteToken", 1000}}
 	test1Acc.Balance = startBal
 	bcApp.SetOption("base/account", string(wire.JSONBytes(test1Acc)))
+	bcApp.Commit()
 
 	deliverTx := func(gas int64,
 		fee types.Coin,
@@ -62,19 +66,9 @@ func TestP2VPlugin(t *testing.T) {
 
 	testBalance := func(expected types.Coins) {
 
-		acc := state.GetAccount(store, test1Acc.PubKey.Address())
-
-		//TODO debug testBalance (acc returns nil, bad store?)
-		/*acc, err := cmds.GetAcc(cmds.NodeFlag.Value, test1Acc.PubKey.Address())
-		if err != nil {
-			t.Errorf(cmds.NodeFlag.Value)
-			t.Errorf("error retrieving account for account balance check: %v", err.Error())
-			return
-		}*/
-
+		acc := state.GetAccount(bcApp.GetState(), test1Acc.PubKey.Address())
 		if acc == nil {
-			t.Errorf("nil account when trying compare balance")
-			return
+			panic("nil account when trying compare balance")
 		}
 
 		bal := acc.Balance
@@ -87,36 +81,35 @@ func TestP2VPlugin(t *testing.T) {
 				balStr += " " + bal[i].String()
 			}
 
-			t.Errorf("bad balance expected %v, got %v", expStr, balStr)
+			panic(cmn.Fmt("bad balance expected %v, got %v", expStr, balStr))
 		}
 	}
 
 	//test for an issue that shouldn't exist
 	testNoIssue := func(issue string) {
-		_, err := getIssue(store, issue)
+		_, err := getIssue(bcApp.GetState(), issue)
 		if err == nil {
-			t.Errorf("issue that shouldn't exist was found, issue: %v", issue)
+			panic(cmn.Fmt("issue that shouldn't exist was found, issue: %v", issue))
 		}
 	}
 
 	//test for an issue that should exist
 	testIssue := func(issue string, expFor, expAgainst int) {
-		p2vIssue, err := getIssue(store, issue)
+		p2vIssue, err := getIssue(bcApp.GetState(), issue)
 
-		return //TODO fix these tests, bad store being accessed
+		// return //TODO fix these tests, bad store being accessed
 
 		//test for errors
 		if err != nil {
-			t.Errorf("error loading issue %v for issue test, error: %v", issue, err.Error())
-			return
+			panic(cmn.Fmt("error loading issue %v for issue test, error: %v", issue, err.Error()))
 		}
 
-		if p2vIssue.votesFor != expFor {
-			t.Errorf("expected %v votes-for, got %v votes-for, for issue %v", expFor, p2vIssue.votesFor, issue)
+		if p2vIssue.VotesFor != expFor {
+			panic(cmn.Fmt("expected %v votes-for, got %v votes-for, for issue %v", expFor, p2vIssue.VotesFor, issue))
 		}
 
-		if p2vIssue.votesAgainst != expAgainst {
-			t.Errorf("expected %v votes-against, got %v votes-against, for issue %v", expAgainst, p2vIssue.votesAgainst, issue)
+		if p2vIssue.VotesAgainst != expAgainst {
+			panic(cmn.Fmt("expected %v votes-against, got %v votes-against, for issue %v", expAgainst, p2vIssue.VotesAgainst, issue))
 		}
 	}
 
@@ -130,7 +123,6 @@ func TestP2VPlugin(t *testing.T) {
 	res := deliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 2}}, 1,
 		NewCreateIssueTxBytes(issue1, types.Coins{{"voteToken", 2}}, types.Coins{{"issueToken", 1}}))
 	assert.True(t, res.IsOK(), res.String())
-	bcApp.Commit()
 	testBalance(startBal.Minus(types.Coins{{"issueToken", 1}}))
 	testIssue(issue1, 0, 0)
 
@@ -138,14 +130,12 @@ func TestP2VPlugin(t *testing.T) {
 	res = deliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 2}}, 2,
 		NewVoteTxBytes(issue1, TypeByteVoteFor))
 	assert.True(t, res.IsOK(), res.String())
-	bcApp.Commit()
 	testBalance(startBal.Minus(types.Coins{{"issueToken", 1}, {"voteToken", 2}}))
 	testIssue(issue1, 1, 0)
 
 	res = deliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 2}}, 3,
 		NewVoteTxBytes(issue1, TypeByteVoteAgainst))
 	assert.True(t, res.IsOK(), res.String())
-	bcApp.Commit()
 	testBalance(startBal.Minus(types.Coins{{"issueToken", 1}, {"voteToken", 4}}))
 	testIssue(issue1, 1, 1)
 
@@ -153,7 +143,6 @@ func TestP2VPlugin(t *testing.T) {
 	res = deliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 2}}, 4,
 		NewVoteTxBytes(issue2, TypeByteVoteFor))
 	assert.True(t, res.IsErr(), res.String())
-	bcApp.Commit()
 	testBalance(startBal.Minus(types.Coins{{"issueToken", 1}, {"voteToken", 4}}))
 	testNoIssue(issue2)
 
@@ -161,14 +150,12 @@ func TestP2VPlugin(t *testing.T) {
 	res = deliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 2}}, 5,
 		NewCreateIssueTxBytes(issue1, types.Coins{{"voteToken", 1}}, types.Coins{{"issueToken", 1}}))
 	assert.True(t, res.IsErr(), res.String())
-	bcApp.Commit()
 	testBalance(startBal.Minus(types.Coins{{"issueToken", 1}, {"voteToken", 4}}))
 
 	// Test prevented issue generation from insufficient funds
 	res = deliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 2}}, 6,
 		NewCreateIssueTxBytes(issue2, types.Coins{{"voteToken", 1}}, types.Coins{{"issueToken", 2}}))
 	assert.True(t, res.IsErr(), res.String())
-	bcApp.Commit()
 	testBalance(startBal.Minus(types.Coins{{"issueToken", 1}, {"voteToken", 4}}))
 	testNoIssue(issue2)
 
@@ -176,7 +163,6 @@ func TestP2VPlugin(t *testing.T) {
 	res = deliverTx(0, types.Coin{}, types.Coins{{"", 1}, {"issueToken", 1}, {"voteToken", 1}}, 7,
 		NewVoteTxBytes(issue1, TypeByteVoteFor))
 	assert.True(t, res.IsErr(), res.String())
-	bcApp.Commit()
 	testBalance(startBal.Minus(types.Coins{{"issueToken", 1}, {"voteToken", 4}}))
 	testIssue(issue1, 1, 1)
 }

@@ -1,11 +1,10 @@
 package paytovote
 
 import (
-	"fmt"
-
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
+	cmn "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
 )
 
@@ -66,16 +65,16 @@ func NewVoteTxBytes(issue string, voteTypeByte byte) []byte {
 type P2VIssue struct {
 	Issue        string
 	FeePerVote   types.Coins
-	votesFor     int
-	votesAgainst int
+	VotesFor     int
+	VotesAgainst int
 }
 
 func newP2VIssue(issue string, feePerVote types.Coins) P2VIssue {
 	return P2VIssue{
 		Issue:        issue,
 		FeePerVote:   feePerVote,
-		votesFor:     0,
-		votesAgainst: 0,
+		VotesFor:     0,
+		VotesAgainst: 0,
 	}
 }
 
@@ -83,7 +82,7 @@ func IssueKey(issue string) []byte {
 	//The state key is defined as only being affected by effected issue
 	// aka. if multiple paytovote plugins are initialized
 	// then all will have access to the same issue vote counts
-	return []byte(fmt.Sprintf("P2VPlugin{issue=%v}.State", issue))
+	return []byte(cmn.Fmt("P2VPlugin{issue=%v}.State", issue))
 }
 
 func getIssue(store types.KVStore, issue string) (p2vIssue P2VIssue, err error) {
@@ -215,14 +214,13 @@ func (p2v *P2VPlugin) runTxVote(store types.KVStore, ctx types.CallContext, txBy
 	//Transaction Logic
 	switch tx.VoteTypeByte {
 	case TypeByteVoteFor:
-		p2vIssue.votesFor += 1
+		p2vIssue.VotesFor += 1
 	case TypeByteVoteAgainst:
-		p2vIssue.votesAgainst += 1
+		p2vIssue.VotesAgainst += 1
 	default:
 		return abci.ErrInternalError.AppendLog("P2VTx.VoteTypeByte was not recognized")
 	}
 
-	fmt.Println(p2vIssue.votesFor)
 	// Save P2VIssue, charge fee, return
 	store.Set(IssueKey(tx.Issue), wire.BinaryBytes(p2vIssue))
 	chargeFee(store, ctx, p2vIssue.FeePerVote)

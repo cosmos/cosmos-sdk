@@ -21,8 +21,8 @@ const (
 
 type Basecoin struct {
 	eyesCli    *eyes.Client
-	state      *sm.State
-	cacheState *sm.State
+	state      *sm.State // for block processing (deliver tx, etc.)
+	cacheState *sm.State // just for checktx, derived from state on commit
 	plugins    *types.Plugins
 }
 

@@ -79,11 +79,26 @@ func newP2VIssue(issue string, feePerVote types.Coins) P2VIssue {
 	}
 }
 
-func (p2v *P2VPlugin) IssueKey(issue string) []byte {
+func IssueKey(issue string) []byte {
 	//The state key is defined as only being affected by effected issue
 	// aka. if multiple paytovote plugins are initialized
 	// then all will have access to the same issue vote counts
 	return []byte(fmt.Sprintf("P2VPlugin{issue=%v}.State", issue))
+}
+
+func getIssue(store types.KVStore, issue string) (p2vIssue P2VIssue, err error) {
+	p2vIssueBytes := store.Get(IssueKey(issue))
+
+	//Determine if the issue already exists and load
+	if len(p2vIssueBytes) > 0 { //is there a record of the issue existing?
+		err = wire.ReadBinaryBytes(p2vIssueBytes, &p2vIssue)
+		if err != nil {
+			err = abci.ErrInternalError.AppendLog("Error decoding state: " + err.Error())
+		}
+	} else {
+		err = abci.ErrInternalError.AppendLog("Tx Issue not found")
+	}
+	return
 }
 
 ///////////////////////////////////////////////////
@@ -128,33 +143,10 @@ func chargeFee(store types.KVStore, ctx types.CallContext, fee types.Coins) {
 	//Charge the Fee from the context coins
 	leftoverCoins := ctx.Coins.Minus(fee)
 	if !leftoverCoins.IsZero() {
-		lc := "leftoverCoins: "
-		for i := 0; i < len(leftoverCoins); i++ {
-			lc += " " + leftoverCoins[i].String()
-		}
-		fmt.Println(lc)
-		lc = "fee: "
-		for i := 0; i < len(fee); i++ {
-			lc += " " + fee[i].String()
-		}
-		fmt.Println(lc)
-
 		acc := ctx.CallerAccount
-		lc = "acc b4: "
-		for i := 0; i < len(acc.Balance); i++ {
-			lc += " " + acc.Balance[i].String()
-		}
-		fmt.Println(lc)
-
 		//return leftover coins
 		acc.Balance = acc.Balance.Plus(leftoverCoins)   // subtract fees
 		state.SetAccount(store, ctx.CallerAddress, acc) // save the new balance
-		lc = "acc aftr: "
-		for i := 0; i < len(acc.Balance); i++ {
-			lc += " " + acc.Balance[i].String()
-		}
-		fmt.Println(lc)
-
 	}
 }
 
@@ -183,20 +175,16 @@ func (p2v *P2VPlugin) runTxCreateIssue(store types.KVStore, ctx types.CallContex
 		return abci.ErrInsufficientFunds.AppendLog("Tx Funds insufficient for creating a new issue")
 	}
 
-	// Load P2VIssue
-	var p2vIssue P2VIssue
-	p2vIssueBytes := store.Get(p2v.IssueKey(tx.Issue))
-
-	//Return if the issue already exists
-	if len(p2vIssueBytes) > 0 {
-		return abci.ErrInsufficientFunds.AppendLog("Cannot create an already existing issue")
+	//Return if the issue already exists, aka no error was thrown
+	if _, err := getIssue(store, tx.Issue); err == nil {
+		return abci.ErrInternalError.AppendLog("Cannot create an already existing issue")
 	}
 
 	// Create and Save P2VIssue, charge fee, return
 	newP2VIssue := newP2VIssue(tx.Issue, tx.FeePerVote)
-	store.Set(p2v.IssueKey(tx.Issue), wire.BinaryBytes(newP2VIssue))
+	store.Set(IssueKey(tx.Issue), wire.BinaryBytes(newP2VIssue))
 	chargeFee(store, ctx, tx.Fee2CreateIssue)
-	return abci.NewResultOK(wire.BinaryBytes(p2vIssue), "")
+	return abci.OK
 }
 
 func (p2v *P2VPlugin) runTxVote(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
@@ -214,17 +202,9 @@ func (p2v *P2VPlugin) runTxVote(store types.KVStore, ctx types.CallContext, txBy
 	}
 
 	// Load P2VIssue
-	var p2vIssue P2VIssue
-	p2vIssueBytes := store.Get(p2v.IssueKey(tx.Issue))
-
-	//Determine if the issue already exists and load
-	if len(p2vIssueBytes) > 0 { //is there a record of the issue existing?
-		err = wire.ReadBinaryBytes(p2vIssueBytes, &p2vIssue)
-		if err != nil {
-			return abci.ErrInternalError.AppendLog("Error decoding state: " + err.Error())
-		}
-	} else {
-		return abci.ErrInsufficientFunds.AppendLog("Tx Issue not found")
+	p2vIssue, err := getIssue(store, tx.Issue)
+	if err != nil {
+		return abci.ErrInternalError.AppendLog("error loading issue: " + err.Error())
 	}
 
 	// Did the caller provide enough coins?
@@ -239,13 +219,14 @@ func (p2v *P2VPlugin) runTxVote(store types.KVStore, ctx types.CallContext, txBy
 	case TypeByteVoteAgainst:
 		p2vIssue.votesAgainst += 1
 	default:
-		return abci.ErrInternalError.AppendLog("P2VTx.ActionTypeByte was not recognized")
+		return abci.ErrInternalError.AppendLog("P2VTx.VoteTypeByte was not recognized")
 	}
 
+	fmt.Println(p2vIssue.votesFor)
 	// Save P2VIssue, charge fee, return
-	store.Set(p2v.IssueKey(tx.Issue), wire.BinaryBytes(p2vIssue))
+	store.Set(IssueKey(tx.Issue), wire.BinaryBytes(p2vIssue))
 	chargeFee(store, ctx, p2vIssue.FeePerVote)
-	return abci.NewResultOK(wire.BinaryBytes(p2vIssue), "")
+	return abci.OK
 }
 
 func (p2v *P2VPlugin) InitChain(store types.KVStore, vals []*abci.Validator) {}

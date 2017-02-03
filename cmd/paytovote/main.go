@@ -1,51 +1,27 @@
 package main
 
 import (
-	"flag"
+	"os"
 
-	"github.com/tendermint/abci/server"
-	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/plugins/counter"
-	"github.com/tendermint/basecoin/plugins/paytovote"
-	cmn "github.com/tendermint/go-common"
-	eyes "github.com/tendermint/merkleeyes/client"
+	"github.com/tendermint/basecoin/cmd/basecoin/commands"
+	_ "github.com/tendermint/basecoin/cmd/paytovote/commands"
+	"github.com/urfave/cli"
 )
 
 func main() {
-	addrPtr := flag.String("address", "tcp://0.0.0.0:46658", "Listen address")
-	genFilePath := flag.String("genesis", "", "Genesis file, if any")
-	flag.Parse()
-
-	// Connect to MerkleEyes
-	eyesCli := eyes.NewLocalClient("", 0) //non-persistent instance of merkleeyes
-
-	// Create Basecoin app
-	app := app.NewBasecoin(eyesCli)
-
-	// create/add plugins
-	counter := counter.New("counter")
-	paytovote := paytovote.New()
-	app.RegisterPlugin(counter)
-	app.RegisterPlugin(paytovote)
-
-	// If genesis file was specified, set key-value options
-	if *genFilePath != "" {
-		err := app.LoadGenesis(*genFilePath)
-		if err != nil {
-			cmn.Exit(cmn.Fmt("%+v", err))
-		}
+	app := cli.NewApp()
+	app.Name = "paytovote"
+	app.Usage = "paytovote [command] [args...]"
+	app.Version = "0.1.0"
+	app.Commands = []cli.Command{
+		commands.StartCmd,
+		commands.SendTxCmd,
+		commands.AppTxCmd,
+		commands.IbcCmd,
+		commands.QueryCmd,
+		commands.VerifyCmd,
+		commands.BlockCmd,
+		commands.AccountCmd,
 	}
-
-	// Start the listener
-	svr, err := server.NewServer(*addrPtr, "socket", app)
-	if err != nil {
-		cmn.Exit("create listener: " + err.Error())
-	}
-
-	// Wait forever
-	cmn.TrapSignal(func() {
-		// Cleanup
-		svr.Stop()
-	})
-
+	app.Run(os.Args)
 }

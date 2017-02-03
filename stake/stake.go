@@ -6,6 +6,7 @@ import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-wire"
+	"github.com/tendermint/go-crypto"
 )
 
 type StakeParams struct {
@@ -26,19 +27,6 @@ func (sp *StakePlugin) Name() string {
 }
 
 func (sp *StakePlugin) SetOption(store types.KVStore, key string, value string) (log string) {
-	state := loadState(store)
-	if state == nil {
-		state = &StakeState{}
-		state.Collateral = make(Collaterals, 0)
-		state.Unbonding = make([]Unbond, 0)
-	}
-
-	if key == "collateral" {
-		// TODO: unmarshal, then state.Collateral.Add()
-		saveState(store, state)
-		return fmt.Sprintf("got collateral option:\n%s\n", value)
-	}
-
 	panic(fmt.Sprintf("Unknown option key '%s'", key))
 }
 
@@ -93,8 +81,21 @@ func (sp *StakePlugin) runUnbondTx(tx UnbondTx, store types.KVStore, ctx types.C
 }
 
 func (sp *StakePlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
-	// TODO: ensure genesis validator set has bonded collateral,
-	// and voting power matches collateral amounts
+	state := &StakeState{
+		Collateral: make(Collaterals, 0),
+		Unbonding: make([]Unbond, 0),
+	}
+
+	// create collateral for initial validators
+	for _, v := range vals {
+		state.Collateral.Add(Collateral{
+			ValidatorPubKey: v.PubKey,
+			Address: crypto.Ripemd160(v.PubKey),
+			Amount: v.Power,
+		})
+	}
+
+	saveState(store, state)
 }
 
 func (sp *StakePlugin) BeginBlock(store types.KVStore, height uint64) {}

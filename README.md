@@ -40,6 +40,10 @@ so instead of trying to start from scratch, developers can extend the functional
 
 Interested in building a plugin?  Then [read more details here](./Plugins.md) and then you can follow a [simple tutorial](https://github.com/tendermint/basecoin-examples/blob/master/pluginDev/tutorial.md) to get your first plugin working.
 
+### Best Practices
+
+We are still trying out sort out the best practices for basecoin plugins, and ABCi apps in general.  Flexibility is very powerful once one has mastered a system, but when starting out, it is nice to have a set of guidelines to follow (and then expand beyond when no longer needed). I have attempted to gather some [good design practices](https://github.com/tendermint/basecoin-examples/tree/master/trader#code-design) I have discovered/invented while building progress. These are not hard rules, but should give you a good start.  And please give feedback to improve and extend them.
+
 ## Using the CLI
 
 The basecoin cli can be used to start a stand-alone basecoin instance (`basecoin start`),

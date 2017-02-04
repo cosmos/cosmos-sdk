@@ -38,7 +38,7 @@ func init() {
 		func() types.Plugin {
 			return stake.New(stake.StakeParams{
 				UnbondingPeriod: 100,
-				TokenDenom:      "ATOM",
+				TokenDenom:      "atom",
 			})
 		},
 	)

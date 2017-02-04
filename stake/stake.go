@@ -5,8 +5,8 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
-	"github.com/tendermint/go-wire"
 	"github.com/tendermint/go-crypto"
+	"github.com/tendermint/go-wire"
 )
 
 type StakeParams struct {
@@ -81,35 +81,34 @@ func (sp *StakePlugin) runUnbondTx(tx UnbondTx, store types.KVStore, ctx types.C
 }
 
 func (sp *StakePlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
-	state := &StakeState{
-		Collateral: make(Collaterals, 0),
-		Unbonding: make([]Unbond, 0),
-	}
+	state := loadState(store)
 
 	// create collateral for initial validators
 	for _, v := range vals {
 		state.Collateral.Add(Collateral{
 			ValidatorPubKey: v.PubKey,
-			Address: crypto.Ripemd160(v.PubKey),
-			Amount: v.Power,
+			Address:         crypto.Ripemd160(v.PubKey),
+			Amount:          v.Power,
 		})
 	}
 
 	saveState(store, state)
 }
 
-func (sp *StakePlugin) BeginBlock(store types.KVStore, height uint64) {}
+func (sp *StakePlugin) BeginBlock(store types.KVStore, hash []byte, header *abci.Header) {}
 
-func (sp *StakePlugin) EndBlock(store types.KVStore, height uint64) []*abci.Validator {
-	return loadState(store).Collateral.Validators()
+func (sp *StakePlugin) EndBlock(store types.KVStore, height uint64) (res abci.ResponseEndBlock) {
+	res.Diffs = loadState(store).Collateral.Validators()
+	return
 }
 
-func loadState(store types.KVStore) (state *StakeState) {
+func loadState(store types.KVStore) *StakeState {
 	bytes := store.Get([]byte("state"))
 	if len(bytes) == 0 {
-		return nil
+		return &StakeState{}
 	}
-	err := wire.ReadBinaryBytes(bytes, state)
+	var state *StakeState
+	err := wire.ReadBinaryBytes(bytes, &state)
 	if err != nil {
 		panic(err)
 	}
@@ -117,6 +116,6 @@ func loadState(store types.KVStore) (state *StakeState) {
 }
 
 func saveState(store types.KVStore, state *StakeState) {
-	bytes := wire.BinaryBytes(*state)
+	bytes := wire.BinaryBytes(state)
 	store.Set([]byte("state"), bytes)
 }

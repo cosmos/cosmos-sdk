@@ -188,3 +188,9 @@ func splitKey(key string) (prefix string, suffix string) {
 	}
 	return key, ""
 }
+
+// (not meant to be called)
+// assert that Basecoin implements `abci.BlockchainAware` at compile-time
+func _assertABCIBlockchainAware(basecoin *Basecoin) abci.BlockchainAware {
+	return basecoin
+}

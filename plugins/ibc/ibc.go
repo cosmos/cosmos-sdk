@@ -374,11 +374,11 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 func (ibc *IBCPlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
 }
 
-func (ibc *IBCPlugin) BeginBlock(store types.KVStore, height uint64) {
+func (cp *IBCPlugin) BeginBlock(store types.KVStore, hash []byte, header *abci.Header) {
 }
 
-func (ibc *IBCPlugin) EndBlock(store types.KVStore, height uint64) []*abci.Validator {
-	return nil
+func (cp *IBCPlugin) EndBlock(store types.KVStore, height uint64) (res abci.ResponseEndBlock) {
+	return
 }
 
 //--------------------------------------------------------------------------------

@@ -93,9 +93,9 @@ func (cp *CounterPlugin) RunTx(store types.KVStore, ctx types.CallContext, txByt
 func (cp *CounterPlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
 }
 
-func (cp *CounterPlugin) BeginBlock(store types.KVStore, height uint64) {
+func (cp *CounterPlugin) BeginBlock(store types.KVStore, hash []byte, header *abci.Header) {
 }
 
-func (cp *CounterPlugin) EndBlock(store types.KVStore, height uint64) []*abci.Validator {
-	return nil
+func (cp *CounterPlugin) EndBlock(store types.KVStore, height uint64) (res abci.ResponseEndBlock) {
+	return
 }

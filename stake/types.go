@@ -59,7 +59,7 @@ func (c Collaterals) Add(adding Collateral) Collaterals {
 				return c.insert(i, adding)
 			}
 			if addressCmp == 0 {
-				coll.Amount += adding.Amount
+				c[i].Amount += adding.Amount
 				return c
 			}
 		}

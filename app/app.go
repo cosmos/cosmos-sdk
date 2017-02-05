@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"strings"
 
 	abci "github.com/tendermint/abci/types"
@@ -42,7 +41,7 @@ func (app *Basecoin) GetState() *sm.State {
 	return app.state.CacheWrap()
 }
 
-// TMSP::Info
+// ABCI::Info
 func (app *Basecoin) Info() abci.ResponseInfo {
 	return abci.ResponseInfo{Data: Fmt("Basecoin v%v", version)}
 }
@@ -51,7 +50,7 @@ func (app *Basecoin) RegisterPlugin(plugin types.Plugin) {
 	app.plugins.RegisterPlugin(plugin)
 }
 
-// TMSP::SetOption
+// ABCI::SetOption
 func (app *Basecoin) SetOption(key string, value string) (log string) {
 	PluginName, key := splitKey(key)
 	if PluginName != PluginNameBase {
@@ -81,7 +80,7 @@ func (app *Basecoin) SetOption(key string, value string) (log string) {
 	}
 }
 
-// TMSP::DeliverTx
+// ABCI::DeliverTx
 func (app *Basecoin) DeliverTx(txBytes []byte) (res abci.Result) {
 	if len(txBytes) > maxTxSize {
 		return abci.ErrBaseEncodingError.AppendLog("Tx size exceeds maximum")
@@ -102,13 +101,11 @@ func (app *Basecoin) DeliverTx(txBytes []byte) (res abci.Result) {
 	return res
 }
 
-// TMSP::CheckTx
+// ABCI::CheckTx
 func (app *Basecoin) CheckTx(txBytes []byte) (res abci.Result) {
 	if len(txBytes) > maxTxSize {
 		return abci.ErrBaseEncodingError.AppendLog("Tx size exceeds maximum")
 	}
-
-	fmt.Printf("%X\n", txBytes)
 
 	// Decode tx
 	var tx types.Tx
@@ -125,7 +122,7 @@ func (app *Basecoin) CheckTx(txBytes []byte) (res abci.Result) {
 	return abci.OK
 }
 
-// TMSP::Query
+// ABCI::Query
 func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) {
 	if len(reqQuery.Data) == 0 {
 		resQuery.Log = "Query cannot be zero length"
@@ -142,7 +139,7 @@ func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 	return
 }
 
-// TMSP::Commit
+// ABCI::Commit
 func (app *Basecoin) Commit() (res abci.Result) {
 
 	// Commit state
@@ -157,25 +154,25 @@ func (app *Basecoin) Commit() (res abci.Result) {
 	return res
 }
 
-// TMSP::InitChain
+// ABCI::InitChain
 func (app *Basecoin) InitChain(validators []*abci.Validator) {
 	for _, plugin := range app.plugins.GetList() {
 		plugin.InitChain(app.state, validators)
 	}
 }
 
-// TMSP::BeginBlock
-func (app *Basecoin) BeginBlock(height uint64) {
+// ABCI::BeginBlock
+func (app *Basecoin) BeginBlock(hash []byte, header *abci.Header) {
 	for _, plugin := range app.plugins.GetList() {
-		plugin.BeginBlock(app.state, height)
+		plugin.BeginBlock(app.state, hash, header)
 	}
 }
 
-// TMSP::EndBlock
-func (app *Basecoin) EndBlock(height uint64) (diffs []*abci.Validator) {
+// ABCI::EndBlock
+func (app *Basecoin) EndBlock(height uint64) (res abci.ResponseEndBlock) {
 	for _, plugin := range app.plugins.GetList() {
-		moreDiffs := plugin.EndBlock(app.state, height)
-		diffs = append(diffs, moreDiffs...)
+		pluginRes := plugin.EndBlock(app.state, height)
+		res.Diffs = append(res.Diffs, pluginRes.Diffs...)
 	}
 	return
 }
@@ -190,4 +187,10 @@ func splitKey(key string) (prefix string, suffix string) {
 		return keyParts[0], keyParts[1]
 	}
 	return key, ""
+}
+
+// (not meant to be called)
+// assert that Basecoin implements `abci.BlockchainAware` at compile-time
+func _assertABCIBlockchainAware(basecoin *Basecoin) abci.BlockchainAware {
+	return basecoin
 }

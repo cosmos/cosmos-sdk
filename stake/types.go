@@ -11,7 +11,7 @@ type StakeState struct {
 	// bonded coins
 	Collateral Collaterals
 
-	// coins which are currently unbonding
+	// queue of coins in unbonding period
 	Unbonding []Unbond
 }
 
@@ -67,14 +67,34 @@ func (c Collaterals) Add(adding Collateral) Collaterals {
 	return append(c, adding)
 }
 
-func (c Collaterals) Remove(adding Collateral) Collaterals {
-	// TODO
-	return c
+func (c Collaterals) Get(address, validatorPubKey []byte) (*Collateral, int) {
+	for i, coll := range c {
+		validatorCmp := bytes.Compare(coll.ValidatorPubKey, validatorPubKey)
+		if validatorCmp == 1 {
+			return nil, -1
+		}
+		if validatorCmp == 0 {
+			addressCmp := bytes.Compare(coll.Address, address)
+			if addressCmp == 1 {
+				return nil, -1
+			}
+			if addressCmp == 0 {
+				return &coll, i
+			}
+		}
+	}
+	return nil, -1
 }
+
+func (c Collaterals) Remove(i int) Collaterals {
+	return append(c[:i], c[i+1:]...)
+}
+
+//--------------------------------------------------------------------------------
 
 type Unbond struct {
 	ValidatorPubKey []byte
-	Address         []byte // basecoin account address to pay out to
+	Address         []byte // basecoin account to pay out to
 	Amount          uint64
 	Height          uint64 // when the unbonding started
 }
@@ -89,7 +109,6 @@ type BondTx struct {
 
 type UnbondTx struct {
 	ValidatorPubKey []byte
-	Address         []byte // basecoin account address
 	Amount          uint64
 }
 

@@ -4,13 +4,14 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/abci/types"
+	bcs "github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 )
 
 type StakeParams struct {
-	UnbondingPeriod uint
+	UnbondingPeriod uint64
 	TokenDenom      string
 }
 
@@ -75,7 +76,42 @@ func (sp *StakePlugin) runUnbondTx(tx UnbondTx, store types.KVStore, ctx types.C
 		return abci.ErrInternalError.AppendLog(log)
 	}
 
-	// TODO
+	state := loadState(store)
+
+	coll, i := state.Collateral.Get(ctx.CallerAddress, tx.ValidatorPubKey)
+	if coll == nil {
+		log := fmt.Sprintf(
+			"Address %X does not have any collateral delegated to validator %X",
+			ctx.CallerAddress,
+			tx.ValidatorPubKey,
+		)
+		return abci.ErrBaseUnknownAddress.AppendLog(log)
+	}
+	if coll.Amount < tx.Amount {
+		log := fmt.Sprintf(
+			"Not enough coins bonded (requested=%v, balance=%v)",
+			tx.Amount,
+			coll.Amount,
+		)
+		return abci.ErrBaseInsufficientFunds.AppendLog(log)
+	}
+
+	// subtract coins from collateral
+	if coll.Amount > tx.Amount {
+		state.Collateral[i].Amount -= tx.Amount
+	} else {
+		state.Collateral = state.Collateral.Remove(i)
+	}
+
+	// create new unbond record
+	state.Unbonding = append(state.Unbonding, Unbond{
+		ValidatorPubKey: tx.ValidatorPubKey,
+		Amount:          tx.Amount,
+		Address:         ctx.CallerAddress,
+		Height:          0, // TODO
+	})
+
+	saveState(store, state)
 
 	return abci.OK
 }
@@ -95,7 +131,31 @@ func (sp *StakePlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
 	saveState(store, state)
 }
 
-func (sp *StakePlugin) BeginBlock(store types.KVStore, hash []byte, header *abci.Header) {}
+func (sp *StakePlugin) BeginBlock(store types.KVStore, hash []byte, header *abci.Header) {
+	state := loadState(store)
+
+	// if any unbonding requests have reached maturity,
+	// pay out coins into their basecoin accounts
+	unbonding := state.Unbonding
+	height := header.GetHeight()
+	for len(unbonding) > 0 {
+		if height-unbonding[0].Height < sp.params.UnbondingPeriod {
+			break
+		}
+		unbond := unbonding[0]
+		unbonding = unbonding[1:]
+		account := bcs.GetAccount(store, unbond.Address)
+		account.Balance = account.Balance.Plus(types.Coins{
+			types.Coin{
+				Denom:  sp.params.TokenDenom,
+				Amount: int64(unbond.Amount),
+			},
+		})
+		bcs.SetAccount(store, unbond.Address, account)
+	}
+
+	saveState(store, state)
+}
 
 func (sp *StakePlugin) EndBlock(store types.KVStore, height uint64) (res abci.ResponseEndBlock) {
 	res.Diffs = loadState(store).Collateral.Validators()

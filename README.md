@@ -40,7 +40,7 @@ See `basecoin --help` and `basecoin [cmd] --help` for more details`.
 1. Make your own [cryptocurrency using Basecoin plugins](/docs/guide/example-counter.md)
 1. Learn more about [plugin design](/docs/guide/plugin-design.md)
 1. See some [more example applications](/docs/guide/more-examples.md)
-1. Learn how to use [InterBlockchain Communication (IBC)](ibc.md)
+1. Learn how to use [InterBlockchain Communication (IBC)](/docs/guide/ibc.md)
 1. [Deploy testnets](deployment.md) running your basecoin application.
 
 

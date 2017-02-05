@@ -1,8 +1,17 @@
+# Plugin Examples
+
+Now that we've seen how to use Basecoin, talked about the design, 
+and looked at how to implement a simple plugin, let's take a look at some more interesting examples.
 
 ## Mintcoin
 
+Basecoin does not provide any functionality for adding new tokens to the system.
+The state is endowed with tokens by a `genesis.json` file which is read once when the system is first started.
+From there, tokens can be sent to other accounts, even new accounts, but it's impossible to add more tokens to the system.
+For this, we need a plugin.
 
-You just read about the amazing [plugin system](https://github.com/tendermint/basecoin/blob/develop/Plugins.md), and want to use it to print your own money.  Me too!  Let's get started with a simple plugin extension to basecoin, called [mintcoin](./mintcoin/README.md). This plugin lets you register one or more accounts as "central bankers", who can unilaterally issue more currency into the system.  It also serves as a simple test-bed to see how one can not just build a plugin, but also take advantage of existing codebases to provide a simple cli to use it.
+The `mintcoin` plugin lets you register one or more accounts as "central bankers", 
+who can unilaterally issue more currency into the system.  
 
 ## Financial Instruments
 

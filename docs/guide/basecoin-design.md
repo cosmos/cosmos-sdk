@@ -1,8 +1,8 @@
 # Basecoin Design
 
-Basecoin is designed to be a simple cryptocurrency application with limitted built-in functionality,
+Basecoin is designed to be a simple cryptocurrency application with limited built-in functionality,
 but with the capacity to be extended by arbitrary plugins.
-Its basic data structures are inspired by Ethereum, but it is much simpler, as there is no built in virtual machine.
+Its basic data structures are inspired by Ethereum, but it is much simpler, as there is no built-in virtual machine.
 
 ## Accounts
 

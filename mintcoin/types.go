@@ -8,27 +8,31 @@ import (
 )
 
 type MintState struct {
-	Bankers [][]byte
+	Issuers Issuers
 }
 
-func (s *MintState) AddBanker(addr []byte) {
-	if !s.IsBanker(addr) {
-		s.Bankers = append(s.Bankers, addr)
+type Issuer []byte
+
+type Issuers []Issuer
+
+func (s *MintState) AddIssuer(addr []byte) {
+	if !s.IsIssuer(addr) {
+		s.Issuers = append(s.Issuers, addr)
 	}
 }
 
-func (s *MintState) RemoveBanker(addr []byte) {
-	b := s.Bankers
+func (s *MintState) RemoveIssuer(addr []byte) {
+	b := s.Issuers
 	for i := range b {
 		if bytes.Equal(addr, b[i]) {
-			s.Bankers = append(b[:i], b[i+1:]...)
+			s.Issuers = append(b[:i], b[i+1:]...)
 			return
 		}
 	}
 }
 
-func (s *MintState) IsBanker(addr []byte) bool {
-	for _, b := range s.Bankers {
+func (s *MintState) IsIssuer(addr []byte) bool {
+	for _, b := range s.Issuers {
 		if bytes.Equal(b, addr) {
 			return true
 		}
@@ -37,10 +41,12 @@ func (s *MintState) IsBanker(addr []byte) bool {
 }
 
 type MintTx struct {
-	Winners []Winner
+	Credits Credits
 }
 
-type Winner struct {
+type Credits []Credit
+
+type Credit struct {
 	Addr   []byte
 	Amount types.Coins
 }

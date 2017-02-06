@@ -18,14 +18,14 @@ func TestSaveLoad(t *testing.T) {
 
 	s := plugin.loadState(store)
 	assert.NotNil(s)
-	assert.False(s.IsBanker(addr1))
-	s.AddBanker(addr1)
+	assert.False(s.IsIssuer(addr1))
+	s.AddIssuer(addr1)
 	plugin.saveState(store, s)
 
 	s2 := plugin.loadState(store)
 	assert.NotNil(s2)
-	assert.True(s2.IsBanker(addr1))
-	assert.False(s2.IsBanker(addr2))
+	assert.True(s2.IsIssuer(addr1))
+	assert.False(s2.IsIssuer(addr2))
 }
 
 func TestSetOptions(t *testing.T) {
@@ -38,21 +38,21 @@ func TestSetOptions(t *testing.T) {
 	hex2 := hex.EncodeToString(addr2)
 	assert.Equal("cash", plugin.Name())
 
-	plugin.SetOption(store, AddBanker, hex1)
+	plugin.SetOption(store, AddIssuer, hex1)
 	st := plugin.loadState(store)
-	assert.True(st.IsBanker(addr1))
-	assert.False(st.IsBanker(addr2))
+	assert.True(st.IsIssuer(addr1))
+	assert.False(st.IsIssuer(addr2))
 
-	plugin.SetOption(store, RemoveBanker, hex2)
+	plugin.SetOption(store, RemoveIssuer, hex2)
 	st = plugin.loadState(store)
-	assert.True(st.IsBanker(addr1))
-	assert.False(st.IsBanker(addr2))
+	assert.True(st.IsIssuer(addr1))
+	assert.False(st.IsIssuer(addr2))
 
-	plugin.SetOption(store, AddBanker, hex2)
-	plugin.SetOption(store, RemoveBanker, hex1)
+	plugin.SetOption(store, AddIssuer, hex2)
+	plugin.SetOption(store, RemoveIssuer, hex1)
 	st = plugin.loadState(store)
-	assert.False(st.IsBanker(addr1))
-	assert.True(st.IsBanker(addr2))
+	assert.False(st.IsIssuer(addr1))
+	assert.True(st.IsIssuer(addr2))
 }
 
 func TestTransactions(t *testing.T) {
@@ -64,7 +64,7 @@ func TestTransactions(t *testing.T) {
 	assert.Nil(state.GetAccount(store, addr1))
 
 	tx := MintTx{
-		Winners: []Winner{
+		Credits{
 			{
 				Addr: addr1,
 				Amount: types.Coins{
@@ -84,13 +84,13 @@ func TestTransactions(t *testing.T) {
 	ctx := types.CallContext{CallerAddress: addr1}
 	res := plugin.RunTx(store, ctx, txBytes)
 
-	// this won't work, cuz bigmoney isn't a banker yet
+	// this won't work, cuz bigmoney isn't a Issuer yet
 	assert.True(res.IsErr())
 	assert.Nil(state.GetAccount(store, addr1))
 
 	// let's set the options and watch the cash flow!
 	hex1 := hex.EncodeToString(addr1)
-	plugin.SetOption(store, AddBanker, hex1)
+	plugin.SetOption(store, AddIssuer, hex1)
 	res = plugin.RunTx(store, ctx, txBytes)
 	assert.True(res.IsOK())
 	acct1 := state.GetAccount(store, addr1)

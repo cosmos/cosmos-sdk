@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	AddBanker    = "add"
-	RemoveBanker = "remove"
+	AddIssuer    = "add"
+	RemoveIssuer = "remove"
 )
 
 // MintPlugin is a plugin, storing all state prefixed with it's unique name
@@ -37,15 +37,15 @@ func (mp MintPlugin) SetOption(store types.KVStore, key string, value string) (l
 	}
 
 	switch key {
-	case AddBanker:
+	case AddIssuer:
 		s := mp.loadState(store)
-		s.AddBanker(addr)
+		s.AddIssuer(addr)
 		mp.saveState(store, s)
 		mp.saveState(store, s)
 		return fmt.Sprintf("Added: %s", addr)
-	case RemoveBanker:
+	case RemoveIssuer:
 		s := mp.loadState(store)
-		s.RemoveBanker(addr)
+		s.RemoveIssuer(addr)
 		mp.saveState(store, s)
 		return fmt.Sprintf("Removed: %s", addr)
 	default:
@@ -62,16 +62,16 @@ func (mp MintPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes [
 		return abci.ErrEncodingError
 	}
 
-	// make sure it was signed by a banker
+	// make sure it was signed by a Issuer
 	s := mp.loadState(store)
-	if !s.IsBanker(ctx.CallerAddress) {
+	if !s.IsIssuer(ctx.CallerAddress) {
 		return abci.ErrUnauthorized
 	}
 
 	// now, send all this money!
-	for _, winner := range tx.Winners {
+	for _, credit := range tx.Credits {
 		// load or create account
-		acct := state.GetAccount(store, winner.Addr)
+		acct := state.GetAccount(store, credit.Addr)
 		if acct == nil {
 			acct = &types.Account{
 				PubKey:   nil,
@@ -80,10 +80,10 @@ func (mp MintPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes [
 		}
 
 		// add the money
-		acct.Balance = acct.Balance.Plus(winner.Amount)
+		acct.Balance = acct.Balance.Plus(credit.Amount)
 
 		// and save the new balance
-		state.SetAccount(store, winner.Addr, acct)
+		state.SetAccount(store, credit.Addr, acct)
 	}
 
 	return abci.Result{}

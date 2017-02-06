@@ -49,7 +49,7 @@ func TestBasicFlow(t *testing.T) {
 	assert.NotEmpty(addr)
 
 	// let's see the bond is set properly
-	data, err := types.LoadData(pstore, addr)
+	data, err := types.LoadOptionData(pstore, addr)
 	assert.Nil(err)
 	assert.Equal(addr, data.Address())
 	assert.Equal(bond, data.Bond)
@@ -130,7 +130,7 @@ func TestBasicFlow(t *testing.T) {
 	assert.True(res.IsOK(), res.Log)
 
 	// now, let's make sure the option is gone
-	data, err = types.LoadData(pstore, addr)
+	data, err = types.LoadOptionData(pstore, addr)
 	assert.NotNil(err)
 
 	// and the money is in everyone's account

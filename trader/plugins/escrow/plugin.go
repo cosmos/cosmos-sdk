@@ -38,26 +38,28 @@ func (p Plugin) prefix(store bc.KVStore) bc.KVStore {
 func (p Plugin) RunTx(store bc.KVStore, ctx bc.CallContext, txBytes []byte) (res abci.Result) {
 	tx, err := types.ParseEscrowTx(txBytes)
 	if err != nil {
-		paybackCtx(ctx).Pay(store)
+		trader.NewAccountant(store).Refund(ctx)
 		return abci.ErrEncodingError
 	}
 
 	// the tx only can mess with the escrow data due to the prefix
-	res, payback := p.Exec(p.prefix(store), ctx, tx)
-	payback.Pay(store)
+	res = p.Exec(store, ctx, tx)
 	return res
 }
 
-func (p Plugin) Exec(store bc.KVStore, ctx bc.CallContext, tx types.EscrowTx) (abci.Result, Payback) {
+func (p Plugin) Exec(store bc.KVStore, ctx bc.CallContext, tx types.EscrowTx) abci.Result {
+	accts := trader.NewAccountant(store)
+	pstore := p.prefix(store)
+
 	switch t := tx.(type) {
 	case types.CreateEscrowTx:
-		return p.runCreateEscrow(store, ctx, t)
+		return p.runCreateEscrow(pstore, accts, ctx, t)
 	case types.ResolveEscrowTx:
-		return p.runResolveEscrow(store, ctx, t)
+		return p.runResolveEscrow(pstore, accts, ctx, t)
 	case types.ExpireEscrowTx:
-		return p.runExpireEscrow(store, ctx, t)
+		return p.runExpireEscrow(pstore, accts, ctx, t)
 	default:
-		return abci.ErrUnknownRequest, Payback{}
+		return abci.ErrUnknownRequest
 	}
 }
 

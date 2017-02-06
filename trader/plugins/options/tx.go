@@ -32,7 +32,7 @@ func (p Plugin) runCreateOption(store bc.KVStore,
 		accts.Refund(ctx)
 		return abci.ErrEncodingError.AppendLog("Already expired")
 	}
-	types.StoreData(store, data)
+	types.StoreOptionData(store, data)
 	addr := data.Address()
 	return abci.NewResultOK(addr, fmt.Sprintf("new option: %X", addr))
 }
@@ -45,7 +45,7 @@ func (p Plugin) runSellOption(store bc.KVStore,
 	// always return money sent, no need
 	accts.Refund(ctx)
 
-	data, err := types.LoadData(store, tx.Addr)
+	data, err := types.LoadOptionData(store, tx.Addr)
 	if err != nil {
 		return abci.ErrEncodingError.AppendLog(err.Error())
 	}
@@ -57,7 +57,7 @@ func (p Plugin) runSellOption(store bc.KVStore,
 
 	data.NewHolder = tx.NewHolder
 	data.Price = tx.Price
-	types.StoreData(store, data)
+	types.StoreOptionData(store, data)
 	return abci.OK
 }
 
@@ -66,7 +66,7 @@ func (p Plugin) runBuyOption(store bc.KVStore,
 	ctx bc.CallContext,
 	tx types.BuyOptionTx) abci.Result {
 
-	data, err := types.LoadData(store, tx.Addr)
+	data, err := types.LoadOptionData(store, tx.Addr)
 	if err != nil {
 		accts.Refund(ctx)
 		return abci.ErrEncodingError.AppendLog(err.Error())
@@ -91,7 +91,7 @@ func (p Plugin) runBuyOption(store bc.KVStore,
 	data.Holder = ctx.CallerAddress
 	data.NewHolder = nil
 	data.Price = nil
-	types.StoreData(store, data)
+	types.StoreOptionData(store, data)
 	// and refund any overpayment
 	accts.Pay(ctx.CallerAddress, remain)
 
@@ -103,7 +103,7 @@ func (p Plugin) runExerciseOption(store bc.KVStore,
 	ctx bc.CallContext,
 	tx types.ExerciseOptionTx) abci.Result {
 
-	data, err := types.LoadData(store, tx.Addr)
+	data, err := types.LoadOptionData(store, tx.Addr)
 	if err != nil {
 		accts.Refund(ctx)
 		return abci.ErrEncodingError.AppendLog(err.Error())
@@ -129,7 +129,7 @@ func (p Plugin) runExerciseOption(store bc.KVStore,
 	accts.Pay(data.Issuer, data.Trade)
 
 	// and remove this option from history
-	types.DeleteData(store, data)
+	types.DeleteOptionData(store, data)
 
 	return abci.OK
 }
@@ -142,7 +142,7 @@ func (p Plugin) runDisolveOption(store bc.KVStore,
 	// no need for payments, always return
 	accts.Refund(ctx)
 
-	data, err := types.LoadData(store, tx.Addr)
+	data, err := types.LoadOptionData(store, tx.Addr)
 	if err != nil {
 		return abci.ErrEncodingError.AppendLog(err.Error())
 	}
@@ -155,7 +155,7 @@ func (p Plugin) runDisolveOption(store bc.KVStore,
 	// return bond to the issue
 	accts.Pay(data.Issuer, data.Bond)
 	// and remove this option from history
-	types.DeleteData(store, data)
+	types.DeleteOptionData(store, data)
 
 	return abci.OK
 }

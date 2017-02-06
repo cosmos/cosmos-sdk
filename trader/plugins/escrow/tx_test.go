@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/tendermint/basecoin-examples/trader"
 	"github.com/tendermint/basecoin-examples/trader/types"
 	bc "github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/go-common"
@@ -24,12 +25,10 @@ func TestTransactions(t *testing.T) {
 			Denom:  "BTC",
 		},
 	}
-	fees := bc.Coins{
-		{
-			Amount: 3,
-			Denom:  "ATOM",
-		},
-	}
+	fees := bc.Coins{{
+		Amount: 3,
+		Denom:  "ATOM",
+	}}
 
 	tx := types.CreateEscrowTx{
 		Recipient:  recv,
@@ -40,24 +39,30 @@ func TestTransactions(t *testing.T) {
 		CallerAddress: sender,
 		Coins:         money,
 	}
-	plugin := Plugin{height: uint64(123)}
+	plugin := Plugin{
+		height: 123,
+		name:   "escrow",
+	}
+	pstore := plugin.prefix(store)
+	accts := trader.NewAccountant(store)
 
 	// error if already expired
-	res, pay := plugin.Exec(store, ctx, tx)
+	as := accts.GetOrCreateAccount(sender).Balance
+	res := plugin.Exec(store, ctx, tx)
 	assert.True(res.IsErr())
-	assert.Equal(sender, pay.Addr)
-	assert.Equal(money, pay.Amount)
+	assert.Equal(as.Plus(ctx.Coins), accts.GetAccount(sender).Balance)
 
 	// we create the tx
 	tx.Expiration = 500
-	res, pay = plugin.Exec(store, ctx, tx)
+	as = accts.GetOrCreateAccount(sender).Balance
+	res = plugin.Exec(store, ctx, tx)
 	assert.False(res.IsErr())
-	assert.Empty(pay.Addr)
+	assert.Equal(as, accts.GetAccount(sender).Balance)
 	addr := res.Data
 	assert.NotEmpty(addr)
 
 	// load the escrow data and make sure it is happy
-	esc, err := types.LoadEscrow(store, addr)
+	esc, err := types.LoadEscrow(pstore, addr)
 	if assert.Nil(err) {
 		assert.Equal(addr, esc.Address())
 		assert.Equal(sender, esc.Sender)
@@ -76,11 +81,13 @@ func TestTransactions(t *testing.T) {
 		Escrow: addr,
 		Payout: false,
 	}
-	res, pay = plugin.Exec(store, ctx, rtx)
+	as = accts.GetAccount(sender).Balance
+	res = plugin.Exec(store, ctx, rtx)
 	assert.True(res.IsErr())
-	assert.Equal(ctx.CallerAddress, pay.Addr)
+	assert.Equal(as.Plus(ctx.Coins), accts.GetAccount(sender).Balance)
 
 	// and the wrong locations
+	ab := accts.GetOrCreateAccount(arb).Balance
 	ctx = bc.CallContext{
 		CallerAddress: arb,
 		Coins:         fees,
@@ -88,30 +95,30 @@ func TestTransactions(t *testing.T) {
 	rtx = types.ResolveEscrowTx{
 		Escrow: cmn.RandBytes(20),
 	}
-	res, pay = plugin.Exec(store, ctx, rtx)
+	res = plugin.Exec(store, ctx, rtx)
 	assert.True(res.IsErr())
-	assert.Equal(ctx.CallerAddress, pay.Addr)
+	assert.Equal(ab.Plus(ctx.Coins), accts.GetAccount(arb).Balance)
 
 	// try to expire, fails
 	etx := types.ExpireEscrowTx{
 		Escrow: addr,
 	}
-	res, pay = plugin.Exec(store, ctx, etx)
+	res = plugin.Exec(store, ctx, etx)
 	assert.True(res.IsErr())
-	assert.Equal(ctx.CallerAddress, pay.Addr)
+	// assert.Equal(ctx.CallerAddress, pay.Addr)
 
 	// complete as arbiter - yes!
+	ar := accts.GetOrCreateAccount(recv).Balance
 	rtx = types.ResolveEscrowTx{
 		Escrow: addr,
 		Payout: true,
 	}
-	res, pay = plugin.Exec(store, ctx, rtx)
+	res = plugin.Exec(store, ctx, rtx)
 	assert.False(res.IsErr())
-	assert.Equal(recv, pay.Addr)
-	assert.Equal(money, pay.Amount)
+	assert.Equal(ar.Plus(money), accts.GetAccount(recv).Balance)
 
 	// complete 2nd time -> error
-	res, pay = plugin.Exec(store, ctx, rtx)
+	res = plugin.Exec(store, ctx, rtx)
 	assert.True(res.IsErr())
 
 	// no data to be seen

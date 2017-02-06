@@ -6,8 +6,9 @@ import (
 	"fmt"
 
 	"github.com/tendermint/basecoin-examples/trader/plugins/options"
+	"github.com/tendermint/basecoin-examples/trader/types"
 	bcmd "github.com/tendermint/basecoin/cmd/basecoin/commands"
-	"github.com/tendermint/basecoin/types"
+	bc "github.com/tendermint/basecoin/types"
 	wire "github.com/tendermint/go-wire"
 	"github.com/urfave/cli"
 )
@@ -143,7 +144,7 @@ var (
 func init() {
 	bcmd.RegisterTxPlugin(OptionsTxCmd)
 	bcmd.RegisterStartPlugin(OptionsPluginFlag,
-		func() types.Plugin { return options.New(OptionName) })
+		func() bc.Plugin { return options.New(OptionName) })
 }
 
 func cmdOptionCreateTx(c *cli.Context) error {
@@ -152,14 +153,14 @@ func cmdOptionCreateTx(c *cli.Context) error {
 	expire := c.Uint64(EscrowExpireFlag.Name)
 	parent := c.Parent().Parent()
 
-	tx := options.CreateOptionTx{
+	tx := types.CreateOptionTx{
 		Expiration: expire,
-		Trade: types.Coins{{ // yes {{ an array with one element....
+		Trade: bc.Coins{{ // yes {{ an array with one element....
 			Denom:  optionCoin,
 			Amount: optionAmount,
 		}},
 	}
-	data := options.TxBytes(tx)
+	data := types.OptionsTxBytes(tx)
 	return bcmd.AppTx(parent, OptionName, data)
 }
 
@@ -181,15 +182,15 @@ func cmdOptionSellTx(c *cli.Context) error {
 		buyer = nil
 	}
 
-	tx := options.SellOptionTx{
+	tx := types.SellOptionTx{
 		Addr:      addr,
 		NewHolder: buyer,
-		Price: types.Coins{{ // yes {{ an array with one element....
+		Price: bc.Coins{{ // yes {{ an array with one element....
 			Denom:  optionCoin,
 			Amount: optionAmount,
 		}},
 	}
-	data := options.TxBytes(tx)
+	data := types.OptionsTxBytes(tx)
 	return bcmd.AppTx(parent, OptionName, data)
 }
 
@@ -203,10 +204,10 @@ func cmdOptionBuyTx(c *cli.Context) error {
 		return errors.New("Recv address is invalid hex: " + err.Error())
 	}
 
-	tx := options.BuyOptionTx{
+	tx := types.BuyOptionTx{
 		Addr: addr,
 	}
-	data := options.TxBytes(tx)
+	data := types.OptionsTxBytes(tx)
 	return bcmd.AppTx(parent, OptionName, data)
 }
 
@@ -220,10 +221,10 @@ func cmdOptionExerciseTx(c *cli.Context) error {
 		return errors.New("Recv address is invalid hex: " + err.Error())
 	}
 
-	tx := options.ExerciseOptionTx{
+	tx := types.ExerciseOptionTx{
 		Addr: addr,
 	}
-	data := options.TxBytes(tx)
+	data := types.OptionsTxBytes(tx)
 	return bcmd.AppTx(parent, OptionName, data)
 }
 
@@ -237,10 +238,10 @@ func cmdOptionDisolveTx(c *cli.Context) error {
 		return errors.New("Recv address is invalid hex: " + err.Error())
 	}
 
-	tx := options.DisolveOptionTx{
+	tx := types.DisolveOptionTx{
 		Addr: addr,
 	}
-	data := options.TxBytes(tx)
+	data := types.OptionsTxBytes(tx)
 	return bcmd.AppTx(parent, OptionName, data)
 }
 
@@ -264,7 +265,7 @@ func cmdOptionQuery(c *cli.Context) error {
 	return nil
 }
 
-func getOption(tmAddr string, address []byte) (*options.OptionData, error) {
+func getOption(tmAddr string, address []byte) (*types.OptionData, error) {
 	prefix := []byte(fmt.Sprintf("%s/", OptionName))
 	key := append(prefix, address...)
 	response, err := bcmd.Query(tmAddr, key)
@@ -277,7 +278,7 @@ func getOption(tmAddr string, address []byte) (*options.OptionData, error) {
 	if len(optionBytes) == 0 {
 		return nil, fmt.Errorf("Option bytes are empty for address: %X ", address)
 	}
-	opt, err := options.ParseData(optionBytes)
+	opt, err := types.ParseOptionData(optionBytes)
 	if err != nil {
 		return nil, fmt.Errorf("Error reading option %X error: %v",
 			optionBytes, err.Error())

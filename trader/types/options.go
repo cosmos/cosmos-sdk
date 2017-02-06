@@ -129,26 +129,26 @@ func (d OptionData) CanDissolve(addr []byte, h uint64) bool {
 		(bytes.Equal(addr, d.Holder) && bytes.Equal(d.Holder, d.Issuer))
 }
 
-func ParseData(data []byte) (OptionData, error) {
+func ParseOptionData(data []byte) (OptionData, error) {
 	d := OptionData{}
 	err := wire.ReadBinaryBytes(data, &d)
 	return d, err
 }
 
-func LoadData(store types.KVStore, addr []byte) (OptionData, error) {
+func LoadOptionData(store types.KVStore, addr []byte) (OptionData, error) {
 	data := store.Get(addr)
 	if len(data) == 0 {
 		return OptionData{}, fmt.Errorf("No option at: %X", addr)
 	}
-	return ParseData(data)
+	return ParseOptionData(data)
 }
 
-func StoreData(store types.KVStore, data OptionData) {
+func StoreOptionData(store types.KVStore, data OptionData) {
 	addr := data.Address()
 	store.Set(addr, data.Bytes())
 }
 
-func DeleteData(store types.KVStore, data OptionData) {
+func DeleteOptionData(store types.KVStore, data OptionData) {
 	addr := data.Address()
 	store.Set(addr, nil)
 }

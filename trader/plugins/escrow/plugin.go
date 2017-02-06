@@ -69,6 +69,6 @@ func (p *Plugin) BeginBlock(store bc.KVStore, height uint64) {
 	p.height = height
 }
 func (p *Plugin) EndBlock(store bc.KVStore, height uint64) []*abci.Validator {
-	p.height = height
+	p.height = height + 1
 	return nil
 }

@@ -8,7 +8,7 @@ import (
 	bc "github.com/tendermint/basecoin/types"
 )
 
-func TestData(t *testing.T) {
+func TestEscrowData(t *testing.T) {
 	assert := assert.New(t)
 	data := EscrowData{
 		Sender:    []byte("1234567890qwertyuiop"),
@@ -44,7 +44,7 @@ func TestData(t *testing.T) {
 	assert.Equal(addr, d2.Address())
 }
 
-func TestTxParse(t *testing.T) {
+func TestEscrowTxParse(t *testing.T) {
 	assert := assert.New(t)
 	ctx := CreateEscrowTx{
 		Recipient:  []byte("AS1234567890qwertyui"),

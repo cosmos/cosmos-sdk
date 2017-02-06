@@ -1,4 +1,4 @@
-package options
+package types
 
 import (
 	"strconv"
@@ -9,7 +9,7 @@ import (
 	cmn "github.com/tendermint/go-common"
 )
 
-func TestData(t *testing.T) {
+func TestOptionData(t *testing.T) {
 	assert := assert.New(t)
 	a, b, c := cmn.RandBytes(20), cmn.RandBytes(20), cmn.RandBytes(20)
 	bond := types.Coins{{Amount: 1000, Denom: "ATOM"}}
@@ -72,7 +72,7 @@ func TestData(t *testing.T) {
 	assert.False(data.CanDissolve(b, 10))
 }
 
-func TestTxParse(t *testing.T) {
+func TestOptionsTxParse(t *testing.T) {
 	assert := assert.New(t)
 
 	trade := types.Coins{
@@ -81,7 +81,7 @@ func TestTxParse(t *testing.T) {
 	}
 	price := types.Coins{{Amount: 3, Denom: "ETH"}}
 
-	txs := []Tx{
+	txs := []OptionsTx{
 		CreateOptionTx{
 			Expiration: 12345,
 			Trade:      trade,
@@ -110,9 +110,9 @@ func TestTxParse(t *testing.T) {
 	// make sure all of them serialize and deserialize fine
 	for i, tx := range txs {
 		idx := strconv.Itoa(i)
-		b := TxBytes(tx)
+		b := OptionsTxBytes(tx)
 		if assert.NotEmpty(b, idx) {
-			p, err := ParseTx(b)
+			p, err := ParseOptionsTx(b)
 			assert.Nil(err, idx)
 			assert.NotNil(p, idx)
 			assert.Equal(tx, p, idx)

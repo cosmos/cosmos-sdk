@@ -1,4 +1,4 @@
-package options
+package trader
 
 import (
 	"github.com/tendermint/basecoin/state"
@@ -8,6 +8,10 @@ import (
 // All concepts related to payments should go here
 type Accountant struct {
 	store types.KVStore
+}
+
+func NewAccountant(store types.KVStore) Accountant {
+	return Accountant{store}
 }
 
 func (a Accountant) GetAccount(addr []byte) *types.Account {

@@ -4,59 +4,48 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/basecoin-examples/trader"
+	"github.com/tendermint/basecoin-examples/trader/types"
 
-	"github.com/tendermint/basecoin/types"
+	bc "github.com/tendermint/basecoin/types"
 )
 
-// CreateOptionTx is used to create an option in the first place
-type CreateOptionTx struct {
-	Expiration uint64      // height when the offer expires
-	Trade      types.Coins // this is the money that can exercise the option
-}
+func (p Plugin) runCreateOption(store bc.KVStore,
+	accts trader.Accountant,
+	ctx bc.CallContext,
+	tx types.CreateOptionTx) abci.Result {
 
-func (tx CreateOptionTx) Apply(store types.KVStore,
-	accts Accountant,
-	ctx types.CallContext,
-	height uint64) abci.Result {
-
-	issue := OptionIssue{
+	issue := types.OptionIssue{
 		Issuer:     ctx.CallerAddress,
 		Serial:     ctx.CallerAccount.Sequence,
 		Expiration: tx.Expiration,
 		Bond:       ctx.Coins,
 		Trade:      tx.Trade,
 	}
-	data := OptionData{
+	data := types.OptionData{
 		OptionIssue: issue,
-		OptionHolder: OptionHolder{
+		OptionHolder: types.OptionHolder{
 			Holder: ctx.CallerAddress,
 		},
 	}
-	if data.IsExpired(height) {
+	if data.IsExpired(p.height) {
 		accts.Refund(ctx)
 		return abci.ErrEncodingError.AppendLog("Already expired")
 	}
-	StoreData(store, data)
+	types.StoreData(store, data)
 	addr := data.Address()
 	return abci.NewResultOK(addr, fmt.Sprintf("new option: %X", addr))
 }
 
-// SellOptionTx is used to offer the option for sale
-type SellOptionTx struct {
-	Addr      []byte      // address of the refered option
-	Price     types.Coins // required payment to transfer ownership
-	NewHolder []byte      // set to allow for only one buyer, empty for any buyer
-}
-
-func (tx SellOptionTx) Apply(store types.KVStore,
-	accts Accountant,
-	ctx types.CallContext,
-	height uint64) abci.Result {
+func (p Plugin) runSellOption(store bc.KVStore,
+	accts trader.Accountant,
+	ctx bc.CallContext,
+	tx types.SellOptionTx) abci.Result {
 
 	// always return money sent, no need
 	accts.Refund(ctx)
 
-	data, err := LoadData(store, tx.Addr)
+	data, err := types.LoadData(store, tx.Addr)
 	if err != nil {
 		return abci.ErrEncodingError.AppendLog(err.Error())
 	}
@@ -68,21 +57,16 @@ func (tx SellOptionTx) Apply(store types.KVStore,
 
 	data.NewHolder = tx.NewHolder
 	data.Price = tx.Price
-	StoreData(store, data)
+	types.StoreData(store, data)
 	return abci.OK
 }
 
-// BuyOptionTx is used to purchase the right to exercise the option
-type BuyOptionTx struct {
-	Addr []byte // address of the refered option
-}
+func (p Plugin) runBuyOption(store bc.KVStore,
+	accts trader.Accountant,
+	ctx bc.CallContext,
+	tx types.BuyOptionTx) abci.Result {
 
-func (tx BuyOptionTx) Apply(store types.KVStore,
-	accts Accountant,
-	ctx types.CallContext,
-	height uint64) abci.Result {
-
-	data, err := LoadData(store, tx.Addr)
+	data, err := types.LoadData(store, tx.Addr)
 	if err != nil {
 		accts.Refund(ctx)
 		return abci.ErrEncodingError.AppendLog(err.Error())
@@ -107,31 +91,26 @@ func (tx BuyOptionTx) Apply(store types.KVStore,
 	data.Holder = ctx.CallerAddress
 	data.NewHolder = nil
 	data.Price = nil
-	StoreData(store, data)
+	types.StoreData(store, data)
 	// and refund any overpayment
 	accts.Pay(ctx.CallerAddress, remain)
 
 	return abci.OK
 }
 
-// ExerciseOptionTx must send Trade and recieve Bond
-type ExerciseOptionTx struct {
-	Addr []byte // address of the refered option
-}
+func (p Plugin) runExerciseOption(store bc.KVStore,
+	accts trader.Accountant,
+	ctx bc.CallContext,
+	tx types.ExerciseOptionTx) abci.Result {
 
-func (tx ExerciseOptionTx) Apply(store types.KVStore,
-	accts Accountant,
-	ctx types.CallContext,
-	height uint64) abci.Result {
-
-	data, err := LoadData(store, tx.Addr)
+	data, err := types.LoadData(store, tx.Addr)
 	if err != nil {
 		accts.Refund(ctx)
 		return abci.ErrEncodingError.AppendLog(err.Error())
 	}
 
 	// make sure we can do this
-	if !data.CanExercise(ctx.CallerAddress, height) {
+	if !data.CanExercise(ctx.CallerAddress, p.height) {
 		accts.Refund(ctx)
 		return abci.ErrUnauthorized.AppendLog("Can't exercise this option")
 	}
@@ -150,38 +129,33 @@ func (tx ExerciseOptionTx) Apply(store types.KVStore,
 	accts.Pay(data.Issuer, data.Trade)
 
 	// and remove this option from history
-	DeleteData(store, data)
+	types.DeleteData(store, data)
 
 	return abci.OK
 }
 
-// DisolveOptionTx returns Bond to issue if expired or unpurchased
-type DisolveOptionTx struct {
-	Addr []byte // address of the refered option
-}
-
-func (tx DisolveOptionTx) Apply(store types.KVStore,
-	accts Accountant,
-	ctx types.CallContext,
-	height uint64) abci.Result {
+func (p Plugin) runDisolveOption(store bc.KVStore,
+	accts trader.Accountant,
+	ctx bc.CallContext,
+	tx types.DisolveOptionTx) abci.Result {
 
 	// no need for payments, always return
 	accts.Refund(ctx)
 
-	data, err := LoadData(store, tx.Addr)
+	data, err := types.LoadData(store, tx.Addr)
 	if err != nil {
 		return abci.ErrEncodingError.AppendLog(err.Error())
 	}
 
 	// make sure we can do this
-	if !data.CanDissolve(ctx.CallerAddress, height) {
+	if !data.CanDissolve(ctx.CallerAddress, p.height) {
 		return abci.ErrUnauthorized.AppendLog("Can't exercise this option")
 	}
 
 	// return bond to the issue
 	accts.Pay(data.Issuer, data.Bond)
 	// and remove this option from history
-	DeleteData(store, data)
+	types.DeleteData(store, data)
 
 	return abci.OK
 }

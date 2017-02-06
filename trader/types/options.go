@@ -1,10 +1,9 @@
-package options
+package types
 
 import (
 	"bytes"
 	"fmt"
 
-	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
 	wire "github.com/tendermint/go-wire"
 	"golang.org/x/crypto/ripemd160"
@@ -13,13 +12,57 @@ import (
 func init() {
 	// register tx implementations with gowire
 	wire.RegisterInterface(
-		txwrap{},
+		optionswrap{},
 		wire.ConcreteType{O: CreateOptionTx{}, Byte: 0x01},
 		wire.ConcreteType{O: SellOptionTx{}, Byte: 0x02},
 		wire.ConcreteType{O: BuyOptionTx{}, Byte: 0x03},
 		wire.ConcreteType{O: ExerciseOptionTx{}, Byte: 0x04},
 		wire.ConcreteType{O: DisolveOptionTx{}, Byte: 0x05},
 	)
+}
+
+type OptionsTx interface{}
+
+type optionswrap struct {
+	OptionsTx
+}
+
+func ParseOptionsTx(data []byte) (OptionsTx, error) {
+	holder := optionswrap{}
+	err := wire.ReadBinaryBytes(data, &holder)
+	return holder.OptionsTx, err
+}
+
+func OptionsTxBytes(tx OptionsTx) []byte {
+	return wire.BinaryBytes(optionswrap{tx})
+}
+
+// CreateOptionTx is used to create an option in the first place
+type CreateOptionTx struct {
+	Expiration uint64      // height when the offer expires
+	Trade      types.Coins // this is the money that can exercise the option
+}
+
+// SellOptionTx is used to offer the option for sale
+type SellOptionTx struct {
+	Addr      []byte      // address of the refered option
+	Price     types.Coins // required payment to transfer ownership
+	NewHolder []byte      // set to allow for only one buyer, empty for any buyer
+}
+
+// BuyOptionTx is used to purchase the right to exercise the option
+type BuyOptionTx struct {
+	Addr []byte // address of the refered option
+}
+
+// ExerciseOptionTx must send Trade and recieve Bond
+type ExerciseOptionTx struct {
+	Addr []byte // address of the refered option
+}
+
+// DisolveOptionTx returns Bond to issue if expired or unpurchased
+type DisolveOptionTx struct {
+	Addr []byte // address of the refered option
 }
 
 // OptionData is our principal data structure in the db
@@ -108,26 +151,4 @@ func StoreData(store types.KVStore, data OptionData) {
 func DeleteData(store types.KVStore, data OptionData) {
 	addr := data.Address()
 	store.Set(addr, nil)
-}
-
-type Tx interface {
-	// store is the prefixed store for options
-	// accts lets us access all accounts
-	// ctx and height come from the calling block
-	Apply(store types.KVStore, accts Accountant,
-		ctx types.CallContext, height uint64) abci.Result
-}
-
-type txwrap struct {
-	Tx
-}
-
-func ParseTx(data []byte) (Tx, error) {
-	holder := txwrap{}
-	err := wire.ReadBinaryBytes(data, &holder)
-	return holder.Tx, err
-}
-
-func TxBytes(tx Tx) []byte {
-	return wire.BinaryBytes(txwrap{tx})
 }

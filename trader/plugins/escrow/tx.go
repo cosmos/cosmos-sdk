@@ -4,22 +4,15 @@ import (
 	"bytes"
 
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/basecoin-examples/trader/types"
 
-	"github.com/tendermint/basecoin/types"
+	bc "github.com/tendermint/basecoin/types"
 )
 
-// CreateEscrowTx is used to create an escrow in the first place
-type CreateEscrowTx struct {
-	Recipient  []byte
-	Arbiter    []byte
-	Expiration uint64 // height when the offer expires
-	// Sender and Amount come from the basecoin context
-}
-
-func (tx CreateEscrowTx) Apply(store types.KVStore, ctx types.CallContext, height uint64) (abci.Result, Payback) {
+func (p Plugin) runCreateEscrow(store bc.KVStore, ctx bc.CallContext, tx types.CreateEscrowTx) (abci.Result, Payback) {
 	// TODO: require fees? limit the size of the escrow?
 
-	data := EscrowData{
+	data := types.EscrowData{
 		Sender:     ctx.CallerAddress,
 		Recipient:  tx.Recipient,
 		Arbiter:    tx.Arbiter,
@@ -27,7 +20,7 @@ func (tx CreateEscrowTx) Apply(store types.KVStore, ctx types.CallContext, heigh
 		Amount:     ctx.Coins,
 	}
 	// make sure all settings are valid, if not abort and return money
-	if data.IsExpired(height) {
+	if data.IsExpired(p.height) {
 		return abci.NewError(abci.CodeType_BaseInvalidInput, "Escrow already expired"), paybackCtx(ctx)
 	}
 	if len(data.Recipient) != 20 {
@@ -43,21 +36,14 @@ func (tx CreateEscrowTx) Apply(store types.KVStore, ctx types.CallContext, heigh
 	return abci.NewResultOK(addr, "Created Escrow"), Payback{}
 }
 
-// ResolveEscrowTx must be signed by the Arbiter and resolves the escrow
-// by sending the money to Sender or Recipient as specified
-type ResolveEscrowTx struct {
-	Escrow []byte
-	Payout bool // if true, to Recipient, else back to Sender
-}
-
-func (tx ResolveEscrowTx) Apply(store types.KVStore, ctx types.CallContext, height uint64) (abci.Result, Payback) {
+func (p Plugin) runResolveEscrow(store bc.KVStore, ctx bc.CallContext, tx types.ResolveEscrowTx) (abci.Result, Payback) {
 	// first load the data
 	data := store.Get(tx.Escrow)
 	if len(data) == 0 { // nil and []byte{}
 		return abci.ErrBaseUnknownAddress, paybackCtx(ctx)
 	}
 
-	esc, err := ParseData(data)
+	esc, err := types.ParseEscrow(data)
 	if err != nil {
 		return abci.NewError(abci.CodeType_BaseEncodingError, "Cannot parse data at location"), paybackCtx(ctx)
 	}
@@ -80,27 +66,20 @@ func (tx ResolveEscrowTx) Apply(store types.KVStore, ctx types.CallContext, heig
 	return abci.OK.AppendLog("Escrow settled"), pay
 }
 
-// ExpireEscrowTx can be signed by anyone, and only succeeds if the
-// Expiration height has passed.  All coins go back to the Sender
-// (Intended to be used by the sender to recover old payments)
-type ExpireEscrowTx struct {
-	Escrow []byte
-}
-
-func (tx ExpireEscrowTx) Apply(store types.KVStore, ctx types.CallContext, height uint64) (abci.Result, Payback) {
+func (p Plugin) runExpireEscrow(store bc.KVStore, ctx bc.CallContext, tx types.ExpireEscrowTx) (abci.Result, Payback) {
 	// first load the data
 	data := store.Get(tx.Escrow)
 	if len(data) == 0 { // nil and []byte{}
 		return abci.ErrBaseUnknownAddress, paybackCtx(ctx)
 	}
 
-	esc, err := ParseData(data)
+	esc, err := types.ParseEscrow(data)
 	if err != nil {
 		return abci.NewError(abci.CodeType_BaseEncodingError, "Cannot parse data at location"), paybackCtx(ctx)
 	}
 
 	// only resolve if expired
-	if !esc.IsExpired(height) {
+	if !esc.IsExpired(p.height) {
 		return abci.ErrUnauthorized, paybackCtx(ctx)
 	}
 

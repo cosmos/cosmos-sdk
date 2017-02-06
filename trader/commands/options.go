@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/tendermint/basecoin-examples/trader/options"
+	"github.com/tendermint/basecoin-examples/trader/plugins/options"
 	bcmd "github.com/tendermint/basecoin/cmd/basecoin/commands"
 	"github.com/tendermint/basecoin/types"
 	wire "github.com/tendermint/go-wire"

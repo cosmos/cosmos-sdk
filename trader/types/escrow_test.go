@@ -1,11 +1,11 @@
-package escrow
+package types
 
 import (
 	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/tendermint/basecoin/types"
+	bc "github.com/tendermint/basecoin/types"
 )
 
 func TestData(t *testing.T) {
@@ -14,7 +14,7 @@ func TestData(t *testing.T) {
 		Sender:    []byte("1234567890qwertyuiop"),
 		Recipient: []byte("AS1234567890qwertyui"),
 		Arbiter:   []byte("ASDF1234567890qwerty"),
-		Amount: types.Coins{
+		Amount: bc.Coins{
 			{
 				Amount: 1000,
 				Denom:  "ATOM",
@@ -36,7 +36,7 @@ func TestData(t *testing.T) {
 	// make sure serialization/deserialization works
 	b := data.Bytes()
 	assert.NotEmpty(b)
-	d2, err := ParseData(b)
+	d2, err := ParseEscrow(b)
 	assert.Nil(err)
 	assert.Equal(data, d2)
 
@@ -60,12 +60,12 @@ func TestTxParse(t *testing.T) {
 	}
 
 	// make sure all of them serialize and deserialize fine
-	txs := []Tx{ctx, rtx, etx}
+	txs := []EscrowTx{ctx, rtx, etx}
 	for i, tx := range txs {
 		idx := strconv.Itoa(i)
-		b := TxBytes(tx)
+		b := EscrowTxBytes(tx)
 		if assert.NotEmpty(b, idx) {
-			p, err := ParseTx(b)
+			p, err := ParseEscrowTx(b)
 			assert.Nil(err, idx)
 			assert.NotNil(p, idx)
 			assert.Equal(tx, p, idx)

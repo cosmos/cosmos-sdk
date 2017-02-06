@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/tendermint/basecoin-examples/trader/escrow"
+	"github.com/tendermint/basecoin-examples/trader/plugins/escrow"
+	"github.com/tendermint/basecoin-examples/trader/types"
 	bcmd "github.com/tendermint/basecoin/cmd/basecoin/commands"
-	"github.com/tendermint/basecoin/types"
+	bc "github.com/tendermint/basecoin/types"
 	wire "github.com/tendermint/go-wire"
 	"github.com/urfave/cli"
 )
@@ -107,7 +108,7 @@ var (
 func init() {
 	bcmd.RegisterTxPlugin(EscrowTxCmd)
 	bcmd.RegisterStartPlugin(EscrowPluginFlag,
-		func() types.Plugin { return escrow.New(EscrowName) })
+		func() bc.Plugin { return escrow.New(EscrowName) })
 }
 
 func cmdEscrowCreateTx(c *cli.Context) error {
@@ -128,12 +129,12 @@ func cmdEscrowCreateTx(c *cli.Context) error {
 		return errors.New("Arbiter address is invalid hex: " + err.Error())
 	}
 
-	tx := escrow.CreateEscrowTx{
+	tx := types.CreateEscrowTx{
 		Recipient:  recv,
 		Arbiter:    arb,
 		Expiration: expire,
 	}
-	data := escrow.TxBytes(tx)
+	data := types.EscrowTxBytes(tx)
 	return bcmd.AppTx(parent, EscrowName, data)
 }
 
@@ -148,11 +149,11 @@ func cmdEscrowResolveTx(c *cli.Context) error {
 		return errors.New("Recv address is invalid hex: " + err.Error())
 	}
 
-	tx := escrow.ResolveEscrowTx{
+	tx := types.ResolveEscrowTx{
 		Escrow: addr,
 		Payout: payout,
 	}
-	data := escrow.TxBytes(tx)
+	data := types.EscrowTxBytes(tx)
 	return bcmd.AppTx(parent, EscrowName, data)
 }
 
@@ -166,10 +167,10 @@ func cmdEscrowExpireTx(c *cli.Context) error {
 		return errors.New("Recv address is invalid hex: " + err.Error())
 	}
 
-	tx := escrow.ExpireEscrowTx{
+	tx := types.ExpireEscrowTx{
 		Escrow: addr,
 	}
-	data := escrow.TxBytes(tx)
+	data := types.EscrowTxBytes(tx)
 	return bcmd.AppTx(parent, EscrowName, data)
 }
 
@@ -193,7 +194,7 @@ func cmdEscrowQuery(c *cli.Context) error {
 	return nil
 }
 
-func getEscrow(tmAddr string, address []byte) (*escrow.EscrowData, error) {
+func getEscrow(tmAddr string, address []byte) (*types.EscrowData, error) {
 	prefix := []byte(fmt.Sprintf("%s/", EscrowName))
 	key := append(prefix, address...)
 	response, err := bcmd.Query(tmAddr, key)
@@ -206,7 +207,7 @@ func getEscrow(tmAddr string, address []byte) (*escrow.EscrowData, error) {
 	if len(escrowBytes) == 0 {
 		return nil, fmt.Errorf("Escrow bytes are empty for address: %X ", address)
 	}
-	esc, err := escrow.ParseData(escrowBytes)
+	esc, err := types.ParseEscrow(escrowBytes)
 	if err != nil {
 		return nil, fmt.Errorf("Error reading account %X error: %v",
 			escrowBytes, err.Error())

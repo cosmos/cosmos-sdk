@@ -19,7 +19,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/plugins/ibc"
 	"github.com/tendermint/basecoin/types"
 )
 
@@ -40,7 +39,6 @@ var StartCmd = cli.Command{
 		DirFlag,
 		InProcTMFlag,
 		ChainIDFlag,
-		IbcPluginFlag,
 	},
 }
 
@@ -51,10 +49,9 @@ type plugin struct {
 
 var plugins = []plugin{}
 
-// RegisterStartPlugin is used to add another
-func RegisterStartPlugin(flag cli.BoolFlag, init func() types.Plugin) {
-	StartCmd.Flags = append(StartCmd.Flags, flag)
-	plugins = append(plugins, plugin{name: flag.GetName(), init: init})
+// RegisterStartPlugin is used to enable a plugin
+func RegisterStartPlugin(name string, initFunc func() types.Plugin) {
+	plugins = append(plugins, plugin{name: name, init: initFunc})
 }
 
 func cmdStart(c *cli.Context) error {
@@ -73,15 +70,10 @@ func cmdStart(c *cli.Context) error {
 
 	// Create Basecoin app
 	basecoinApp := app.NewBasecoin(eyesCli)
-	if c.Bool("ibc-plugin") {
-		basecoinApp.RegisterPlugin(ibc.New())
-	}
 
-	// loop through all registered plugins and enable if desired
+	// register all plugins
 	for _, p := range plugins {
-		if c.Bool(p.name) {
-			basecoinApp.RegisterPlugin(p.init())
-		}
+		basecoinApp.RegisterPlugin(p.init())
 	}
 
 	// If genesis file exists, set key-value options

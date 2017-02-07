@@ -16,61 +16,56 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
+var TxFlags = []cli.Flag{
+	NodeFlag,
+	ChainIDFlag,
+
+	FromFlag,
+
+	AmountFlag,
+	CoinFlag,
+	GasFlag,
+	FeeFlag,
+	SeqFlag,
+}
+
 var (
+	TxCmd = cli.Command{
+		Name:      "tx",
+		Usage:     "Create, sign, and broadcast a transaction",
+		ArgsUsage: "",
+		Subcommands: []cli.Command{
+			SendTxCmd,
+			AppTxCmd,
+		},
+	}
+
 	SendTxCmd = cli.Command{
-		Name:      "sendtx",
-		Usage:     "Broadcast a basecoin SendTx",
+		Name:      "send",
+		Usage:     "Create, sign, and broadcast a SendTx transaction",
 		ArgsUsage: "",
 		Action: func(c *cli.Context) error {
 			return cmdSendTx(c)
 		},
-		Flags: []cli.Flag{
-			NodeFlag,
-			ChainIDFlag,
-
-			FromFlag,
-
-			AmountFlag,
-			CoinFlag,
-			GasFlag,
-			FeeFlag,
-			SeqFlag,
-
-			ToFlag,
-		},
+		Flags: append(TxFlags, ToFlag),
 	}
 
 	AppTxCmd = cli.Command{
-		Name:      "apptx",
-		Usage:     "Broadcast a basecoin AppTx",
+		Name:      "app",
+		Usage:     "Create, sign, and broadcast a raw AppTx transaction",
 		ArgsUsage: "",
 		Action: func(c *cli.Context) error {
 			return cmdAppTx(c)
 		},
-		Flags: []cli.Flag{
-			NodeFlag,
-			ChainIDFlag,
-
-			FromFlag,
-
-			AmountFlag,
-			CoinFlag,
-			GasFlag,
-			FeeFlag,
-			SeqFlag,
-
-			NameFlag,
-			DataFlag,
-		},
+		Flags: append(TxFlags, NameFlag, DataFlag),
 		// Subcommands are dynamically registered with plugins as needed
 		Subcommands: []cli.Command{},
 	}
 )
 
-// RegisterTxPlugin is used to add another subcommand and create a custom
-// apptx encoding.  Look at counter.go for an example
-func RegisterTxPlugin(cmd cli.Command) {
-	AppTxCmd.Subcommands = append(AppTxCmd.Subcommands, cmd)
+// Register a subcommand of TxCmd to craft transactions for plugins
+func RegisterTxSubcommand(cmd cli.Command) {
+	TxCmd.Subcommands = append(TxCmd.Subcommands, cmd)
 }
 
 func cmdSendTx(c *cli.Context) error {

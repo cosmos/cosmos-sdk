@@ -409,11 +409,12 @@ This is a Merkle proof that the state is what we say it is.
 In a latter [tutorial on Interblockchain Communication](ibc.md),
 we'll put this proof to work!
 
-## Conclusion
+## Next Stpes
 
 In this tutorial we demonstrated how to create a new plugin and how to extend the 
 basecoin CLI to activate the plugin on the blockchain and to send transactions to it.
 Hopefully by now you have some ideas for your own plugin, and feel comfortable implementing them.
+
 In the [next tutorial](more-examples.md), we tour through some other plugin examples,
 adding features for minting new coins, voting, and changin the Tendermint validator set.
-But first, you may want to learn a bit more about [the design of plugins](plugin-design.md)
+But first, you may want to learn a bit more about [the design of the plugin system](plugin-design.md)

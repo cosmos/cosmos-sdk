@@ -64,9 +64,8 @@ and also to store arbitrary other information in the state.
 In this way, the functionality and state of a Basecoin-derrived cryptocurrency can be greatly extended.
 One could imagine going so far as to implement the Ethereum Virtual Machine as a plugin!
 
+## Examples
 
-## Next steps
-
-1. Examples of [Basecoin plugins](more-examples.md)
-1. Learn how to use [InterBlockchain Communication (IBC)](ibc.md)
-1. [Deploy testnets](deployment.md) running your basecoin application.
+To get started with plugins, see [the example-plugin tutorial](example-plugin.md).
+For more examples, see [the advanced plugin tutorial](more-examples.md).
+If you're really brave, see the tutorial on [implementing Interblockchain Communication as a plugin](ibc.md).

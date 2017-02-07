@@ -14,11 +14,26 @@ This type of account was directly inspired by accounts in Ethereum,
 and is unlike Bitcoin's use of Unspent Transaction Outputs (UTXOs).
 Note Basecoin is a multi-asset cryptocurrency, so each account can have many different kinds of tokens.
 
+```
+type Account struct {
+	PubKey   crypto.PubKey `json:"pub_key"` // May be nil, if not known.
+	Sequence int           `json:"sequence"`
+	Balance  Coins         `json:"coins"`
+}
+
+type Coins []Coin
+
+type Coin struct {
+	Denom  string `json:"denom"`
+	Amount int64  `json:"amount"`
+}
+```
+
 Accounts are serialized and stored in a Merkle tree using the account's address as the key,
-where the address is the RIPEMD160 hash of the public key.
 In particular, an account is stored in the Merkle tree under the key `base/a/<address>`, 
-where `<address>` is the 20-byte address of the account.
-We use an implementation of a Merkle, balanced, binary search tree, also known as an [IAVL tree](https://github.com/tendermint/go-merkle).
+where `<address>` is the address of the account.
+In Basecoin, the address of an account is the 20-byte `RIPEMD160` hash of the public key.
+The Merkle tree used in Basecoin is a balanced, binary search tree, which we call an [IAVL tree](https://github.com/tendermint/go-merkle).
 
 ## Transactions
 
@@ -47,14 +62,6 @@ type TxOutput struct {
   Address []byte `json:"address"` // Hash of the PubKey
   Coins   Coins  `json:"coins"`   //
 }
-
-type Coins []Coin
-
-type Coin struct {
-  Denom  string `json:"denom"`
-  Amount int64  `json:"amount"`
-}
-
 ```
 
 There are a few things to note. First, the `SendTx` includes a field for `Gas` and `Fee`. 
@@ -72,10 +79,9 @@ as it uses a different elliptic curve scheme which enables the public key to be 
 Finally, note that the use of multiple inputs and multiple outputs allows us to send many different types of tokens between many different accounts
 at once in an atomic transaction. Thus, the `SendTx` can serve as a basic unit of decentralized exchange.
 
-## Next steps
+## Plugins
 
-1. Make your own [cryptocurrency using Basecoin plugins](example-counter.md)
-1. Learn more about [plugin design](plugin-design.md)
-1. See some [more example applications](more-examples.md)
-1. Learn how to use [InterBlockchain Communication (IBC)](ibc.md)
-1. [Deploy testnets](deployment.md) running your basecoin application.
+Basecoin actually defines a second transaction type, the `AppTx`, 
+which enables the functionality to be extended via custom plugins.
+To learn more about the `AppTx` and plugin system, see the [plugin design document](plugin-design.md).
+To implement your first plugin, see [plugin tutorial](example-plugin.md).

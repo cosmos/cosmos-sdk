@@ -125,7 +125,7 @@ which is only useful for moving tokens around.
 Fortunately, Basecoin supports another transaction type, the `AppTx`, 
 which can trigger code registered via a plugin system.
 
-In the [next tutorial](example-counter.md), 
+In the [next tutorial](example-plugin.md), 
 we demonstrate how to implement a plugin 
 and extend the CLI to support new transaction types!
 But first, you may want to learn a bit more about [Basecoin's design](basecoin-design.md)

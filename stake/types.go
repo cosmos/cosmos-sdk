@@ -151,8 +151,12 @@ type UnbondTx struct {
 	Amount          uint64
 }
 
+func wireConcreteType(O interface{}, Byte byte) wire.ConcreteType {
+	return wire.ConcreteType{O: O, Byte: Byte}
+}
+
 var _ = wire.RegisterInterface(
 	struct{ Tx }{},
-	wire.ConcreteType{BondTx{}, 0x01},
-	wire.ConcreteType{UnbondTx{}, 0x02},
+	wireConcreteType(BondTx{}, 0x01),
+	wireConcreteType(UnbondTx{}, 0x02),
 )

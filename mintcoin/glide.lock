@@ -1,12 +1,10 @@
-hash: aac59d9d23e13c56e23880faf4ab2a711cefce640d874b0313efa7d5ac32d9fe
-updated: 2017-01-30T16:43:21.90745321+01:00
+hash: 6078d9757dd7d6d6c0d08f35c4819b08fbfd8be2986fb062b6c7802d81bb2d7e
+updated: 2017-02-07T17:48:12.612899872-05:00
 imports:
 - name: github.com/btcsuite/btcd
-  version: afec1bd1245a4a19e6dfe1306974b733e7cbb9b8
+  version: d06c0bb181529331be8f8d9350288c420d9e60e4
   subpackages:
   - btcec
-- name: github.com/btcsuite/fastsha256
-  version: 637e656429416087660c84436a2a035d69d54e2e
 - name: github.com/BurntSushi/toml
   version: 99064174e013895bbd9b025c31100bd1d9b590ca
 - name: github.com/ebuchman/fail-test
@@ -14,23 +12,23 @@ imports:
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/golang/protobuf
-  version: 1f49d83d9aa00e6ce4fc8258c71cc7786aec968a
+  version: 8ee79997227bf9b34611aee7946ae64735e6fd93
   subpackages:
   - proto
 - name: github.com/golang/snappy
-  version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
+  version: 7db9049039a047d955fe8c19b83c8ff5abd765c7
 - name: github.com/gorilla/websocket
   version: 3ab3a8b8831546bd18fd182c20687ca853b2bb13
 - name: github.com/jmhodges/levigo
   version: c42d9e0ca023e2198120196f842701bb4c55d7b9
 - name: github.com/mattn/go-colorable
-  version: ed8eb9e318d7a84ce5915b495b7d35e0cfe7b5a8
+  version: d228849504861217f796da67fae4f6e347643f15
 - name: github.com/mattn/go-isatty
-  version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
+  version: 30a891c33c7cde7b02a981314b4228ec99380cca
 - name: github.com/pkg/errors
   version: 248dadf4e9068a0b3e79f02ed0a610d935de5302
 - name: github.com/syndtr/goleveldb
-  version: 6ae1797c0b42b9323fc27ff7dcf568df88f2f33d
+  version: 23851d93a2292dcc56e71a18ec9e0624d84a0f65
   subpackages:
   - leveldb
   - leveldb/cache
@@ -53,11 +51,10 @@ imports:
   - server
   - types
 - name: github.com/tendermint/basecoin
-  version: 2f7875dec03201de8121dd93c225078f282015ab
+  version: b7ef4652ed98179f9ee0377571bf723584bfbf58
   subpackages:
   - app
-  - cmd/basecoin/commands
-  - plugins/counter
+  - cmd/commands
   - plugins/ibc
   - state
   - types
@@ -101,7 +98,7 @@ imports:
 - name: github.com/tendermint/go-wire
   version: 3216ec9d47bbdf8d4fc27d22169ea86a6688bc15
 - name: github.com/tendermint/log15
-  version: 9545b249b3aacafa97f79e0838b02b274adc6f5f
+  version: ae0f3d6450da9eac7074b439c8e1c3cabf0d5ce6
   subpackages:
   - term
 - name: github.com/tendermint/merkleeyes
@@ -110,7 +107,7 @@ imports:
   - app
   - client
 - name: github.com/tendermint/tendermint
-  version: 67ab574e9889c0641ae959296d391e3cadec55e3
+  version: 77cc15a77a4ac2d8f60c678c9b46e3b5add2eecd
   subpackages:
   - blockchain
   - config/tendermint
@@ -125,9 +122,9 @@ imports:
   - types
   - version
 - name: github.com/urfave/cli
-  version: 8ef3805c9de2519805c3f060524b695bba2cd715
+  version: 347a9884a87374d000eec7e6445a34487c1f4a2b
 - name: golang.org/x/crypto
-  version: aa2481cbfe81d911eb62b642b7a6b5ec58bbea71
+  version: 59a182cab66ead4fe21e6472267504ac035edee2
   subpackages:
   - curve25519
   - nacl/box
@@ -138,20 +135,21 @@ imports:
   - ripemd160
   - salsa20/salsa
 - name: golang.org/x/net
-  version: cfe3c2a7525b50c3d707256e371c90938cfef98a
+  version: 236b8f043b920452504e263bc21d354427127473
   subpackages:
   - context
   - http2
   - http2/hpack
+  - idna
   - internal/timeseries
   - lex/httplex
   - trace
 - name: golang.org/x/sys
-  version: 30de6d19a3bd89a5f38ae4028e23aaa5582648af
+  version: 7a6e5648d140666db5d920909e082ca00a87ba2c
   subpackages:
   - unix
 - name: google.golang.org/grpc
-  version: 50955793b0183f9de69bd78e2ec251cf20aab121
+  version: f7011571680d9e541df1e0221b8d865bf34f4248
   subpackages:
   - codes
   - credentials
@@ -165,14 +163,15 @@ imports:
   - transport
 testImports:
 - name: github.com/davecgh/go-spew
-  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  version: 346938d642f2ec3594ed81d874461961cd0faa76
   subpackages:
   - spew
 - name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:
   - difflib
 - name: github.com/stretchr/testify
   version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
   - assert
+  - require

@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/tendermint/basecoin-examples/mintcoin"
-	bcmd "github.com/tendermint/basecoin/cmd/basecoin/commands"
+	bcmd "github.com/tendermint/basecoin/cmd/commands"
 	"github.com/tendermint/basecoin/types"
 	wire "github.com/tendermint/go-wire"
 	"github.com/urfave/cli"
@@ -37,22 +37,16 @@ var (
 		Action: func(c *cli.Context) error {
 			return cmdMintTx(c)
 		},
-		Flags: []cli.Flag{
+		Flags: append(bcmd.TxFlags,
 			MintToFlag,
 			MintAmountFlag,
-			MintCoinFlag,
-		},
-	}
-
-	MintPluginFlag = cli.BoolFlag{
-		Name:  "mint-plugin",
-		Usage: "Enable the mintcoin plugin",
+			MintCoinFlag),
 	}
 )
 
 func init() {
-	bcmd.RegisterTxPlugin(MintTxCmd)
-	bcmd.RegisterStartPlugin(MintPluginFlag,
+	bcmd.RegisterTxSubcommand(MintTxCmd)
+	bcmd.RegisterStartPlugin(MintName,
 		func() types.Plugin { return mintcoin.New(MintName) })
 }
 
@@ -60,7 +54,6 @@ func cmdMintTx(c *cli.Context) error {
 	toHex := c.String(MintToFlag.Name)
 	mintAmount := int64(c.Int(MintAmountFlag.Name))
 	mintCoin := c.String(MintCoinFlag.Name)
-	parent := c.Parent()
 
 	// convert destination address to bytes
 	to, err := hex.DecodeString(bcmd.StripHex(toHex))
@@ -69,7 +62,7 @@ func cmdMintTx(c *cli.Context) error {
 	}
 
 	mintTx := mintcoin.MintTx{
-		Winners: []mintcoin.Winner{
+		Credits: []mintcoin.Credit{
 			{
 				Addr: to,
 				Amount: types.Coins{
@@ -84,5 +77,5 @@ func cmdMintTx(c *cli.Context) error {
 	fmt.Println("MintTx:", string(wire.JSONBytes(mintTx)))
 	data := wire.BinaryBytes(mintTx)
 
-	return bcmd.AppTx(parent, MintName, data)
+	return bcmd.AppTx(c, MintName, data)
 }

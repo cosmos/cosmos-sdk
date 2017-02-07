@@ -10,28 +10,34 @@ import (
 	"github.com/tendermint/go-wire"
 )
 
-type StakeParams struct {
+// Params defines configurable parameters for the stake plugin
+type Params struct {
 	UnbondingPeriod uint64
 	TokenDenom      string
 }
 
-type StakePlugin struct {
-	params StakeParams
+// Plugin is a proof-of-stake plugin for Basecoin
+type Plugin struct {
+	params Params
 }
 
-func New(params StakeParams) *StakePlugin {
-	return &StakePlugin{params}
+// New creates a Plugin instance
+func New(params Params) *Plugin {
+	return &Plugin{params}
 }
 
-func (sp *StakePlugin) Name() string {
+// Name returns the name of the stake plugin
+func (sp *Plugin) Name() string {
 	return "stake"
 }
 
-func (sp *StakePlugin) SetOption(store types.KVStore, key string, value string) (log string) {
+// SetOption from ABCI
+func (sp *Plugin) SetOption(store types.KVStore, key string, value string) (log string) {
 	panic(fmt.Sprintf("Unknown option key '%s'", key))
 }
 
-func (sp *StakePlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
+// RunTx from ABCI
+func (sp *Plugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
 	var tx Tx
 	err := wire.ReadBinaryBytes(txBytes, &tx)
 	if err != nil {
@@ -44,7 +50,7 @@ func (sp *StakePlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes
 	return sp.runUnbondTx(tx.(UnbondTx), store, ctx)
 }
 
-func (sp *StakePlugin) runBondTx(tx BondTx, store types.KVStore, ctx types.CallContext) (res abci.Result) {
+func (sp *Plugin) runBondTx(tx BondTx, store types.KVStore, ctx types.CallContext) (res abci.Result) {
 	if len(ctx.Coins) != 1 {
 		log := "Must only use one denomination"
 		return abci.ErrInternalError.AppendLog(log)
@@ -70,7 +76,7 @@ func (sp *StakePlugin) runBondTx(tx BondTx, store types.KVStore, ctx types.CallC
 	return abci.OK
 }
 
-func (sp *StakePlugin) runUnbondTx(tx UnbondTx, store types.KVStore, ctx types.CallContext) (res abci.Result) {
+func (sp *Plugin) runUnbondTx(tx UnbondTx, store types.KVStore, ctx types.CallContext) (res abci.Result) {
 	if tx.Amount <= 0 {
 		log := "Unbond amount must be > 0"
 		return abci.ErrInternalError.AppendLog(log)
@@ -103,7 +109,7 @@ func (sp *StakePlugin) runUnbondTx(tx UnbondTx, store types.KVStore, ctx types.C
 		state.Collateral = state.Collateral.Remove(i)
 	}
 
-	// create new unbond record
+	// create new unbond record, and add to end of queue
 	state.Unbonding = append(state.Unbonding, Unbond{
 		ValidatorPubKey: tx.ValidatorPubKey,
 		Amount:          tx.Amount,
@@ -116,7 +122,8 @@ func (sp *StakePlugin) runUnbondTx(tx UnbondTx, store types.KVStore, ctx types.C
 	return abci.OK
 }
 
-func (sp *StakePlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
+// InitChain from ABCI
+func (sp *Plugin) InitChain(store types.KVStore, vals []*abci.Validator) {
 	state := loadState(store)
 
 	// create collateral for initial validators
@@ -131,11 +138,13 @@ func (sp *StakePlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
 	saveState(store, state)
 }
 
-func (sp *StakePlugin) BeginBlock(store types.KVStore, hash []byte, header *abci.Header) {
+// BeginBlock from ABCI
+func (sp *Plugin) BeginBlock(store types.KVStore, hash []byte, header *abci.Header) {
 	state := loadState(store)
 
-	// if any unbonding requests have reached maturity,
-	// pay out coins into their basecoin accounts
+	// If any unbonding requests have reached maturity, pay out coins into their
+	// basecoin accounts. `state.Unbonding` is a queue, so the lowest-index items
+	// should finish unbonding first.
 	unbonding := state.Unbonding
 	height := header.GetHeight()
 	for len(unbonding) > 0 {
@@ -143,7 +152,9 @@ func (sp *StakePlugin) BeginBlock(store types.KVStore, hash []byte, header *abci
 			break
 		}
 		unbond := unbonding[0]
-		unbonding = unbonding[1:]
+		unbonding = unbonding[1:] // shift first record off list
+
+		// add unbonded coins to basecoin account
 		account := bcs.GetAccount(store, unbond.Address)
 		account.Balance = account.Balance.Plus(types.Coins{
 			types.Coin{
@@ -157,17 +168,18 @@ func (sp *StakePlugin) BeginBlock(store types.KVStore, hash []byte, header *abci
 	saveState(store, state)
 }
 
-func (sp *StakePlugin) EndBlock(store types.KVStore, height uint64) (res abci.ResponseEndBlock) {
+// EndBlock from ABCI
+func (sp *Plugin) EndBlock(store types.KVStore, height uint64) (res abci.ResponseEndBlock) {
 	res.Diffs = loadState(store).Collateral.Validators()
 	return
 }
 
-func loadState(store types.KVStore) *StakeState {
+func loadState(store types.KVStore) *State {
 	bytes := store.Get([]byte("state"))
 	if len(bytes) == 0 {
-		return &StakeState{}
+		return &State{}
 	}
-	var state *StakeState
+	var state *State
 	err := wire.ReadBinaryBytes(bytes, &state)
 	if err != nil {
 		panic(err)
@@ -175,7 +187,7 @@ func loadState(store types.KVStore) *StakeState {
 	return state
 }
 
-func saveState(store types.KVStore, state *StakeState) {
+func saveState(store types.KVStore, state *State) {
 	bytes := wire.BinaryBytes(state)
 	store.Set([]byte("state"), bytes)
 }

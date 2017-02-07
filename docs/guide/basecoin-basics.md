@@ -35,6 +35,9 @@ The directory contains a genesis file and two private keys.
 
 You can generate your own private keys with `tendermint gen_validator`, 
 and construct the `genesis.json` as you like.
+Note, however, that you must be careful with the `chain_id` field, 
+as every transaction must contain the correct `chain_id` 
+(default is `test_chain_id`).
 
 ## Start
 
@@ -65,26 +68,28 @@ tendermint node
 ```
 
 In either case, you should see blocks start streaming in!
+Note, however, that currently basecoin currently requires the 
+`develop` branch of tendermint for this to work.
 
 ## Send transactions
 
 Now we are ready to send some transactions.
 If you take a look at the `genesis.json` file, you will see one account listed there.
-This account corresponds to the private key in `priv_validator.json`.
-We also included the private key for another account, in `priv_validator2.json`.
+This account corresponds to the private key in `key.json`.
+We also included the private key for another account, in `key2.json`.
 
 Let's check the balance of these two accounts:
 
 ```
-basecoin account 0xD397BC62B435F3CF50570FBAB4340FE52C60858F
-basecoin account 0x4793A333846E5104C46DD9AB9A00E31821B2F301
+basecoin account 0x1B1BE55F969F54064628A63B9559E7C21C925165
+basecoin account 0x1DA7C74F9C219229FD54CC9F7386D5A3839F0090
 ```
 
 The first account is flush with cash, while the second account doesn't exist.
 Let's send funds from the first account to the second:
 
 ```
-basecoin sendtx --to 0x4793A333846E5104C46DD9AB9A00E31821B2F301 --amount 10
+basecoin tx send --to 0x1DA7C74F9C219229FD54CC9F7386D5A3839F0090 --amount 10
 ```
 
 By default, the CLI looks for a `priv_validator.json` to sign the transaction with,
@@ -94,13 +99,13 @@ To specify a different key, we can use the `--from` flag.
 Now if we check the second account, it should have `10` coins!
 
 ```
-basecoin account 0x4793A333846E5104C46DD9AB9A00E31821B2F301
+basecoin account 0x1DA7C74F9C219229FD54CC9F7386D5A3839F0090
 ```
 
 We can send some of these coins back like so:
 
 ```
-basecoin sendtx --to 0xD397BC62B435F3CF50570FBAB4340FE52C60858F --from priv_validator2.json --amount 5
+basecoin tx send --to 0x1B1BE55F969F54064628A63B9559E7C21C925165 --from key2.json --amount 5
 ```
 
 Note how we use the `--from` flag to select a different account to send from.
@@ -108,38 +113,19 @@ Note how we use the `--from` flag to select a different account to send from.
 If we try to send too much, we'll get an error:
 
 ```
-basecoin sendtx --to 0xD397BC62B435F3CF50570FBAB4340FE52C60858F --from priv_validator2.json --amount 100
+basecoin tx send --to 0x1B1BE55F969F54064628A63B9559E7C21C925165 --from key2.json --amount 100
 ```
 
-See `basecoin sendtx --help` for additional details.
+See `basecoin tx send --help` for additional details.
 
 ## Plugins
 
-
-The `sendtx` command creates and broadcasts a transaction of type `SendTx`,
+The `tx send` command creates and broadcasts a transaction of type `SendTx`,
 which is only useful for moving tokens around.
 Fortunately, Basecoin supports another transaction type, the `AppTx`, 
 which can trigger code registered via a plugin system.
 
-For instance, we implemented a simple plugin called `counter`, 
-which just counts the number of transactions it processed.
-To run it, kill the other processes, run `tendermint unsafe_reset_all`, and then 
-
-```
-basecoin start --in-proc --counter-plugin
-```
-
-Now in another window, we can send transactions with:
-
-```
-TODO
-```
-
-## Next steps
-
-1. Learn more about [Basecoin's design](basecoin-design.md)
-1. Make your own [cryptocurrency using Basecoin plugins](example-counter.md)
-1. Learn more about [plugin design](plugin-design.md)
-1. See some [more example applications](more-examples.md)
-1. Learn how to use [InterBlockchain Communication (IBC)](ibc.md)
-1. [Deploy testnets](deployment.md) running your basecoin application.
+In the [next tutorial](example-counter.md), 
+we demonstrate how to implement a plugin 
+and extend the CLI to support new transaction types!
+But first, you may want to learn a bit more about [Basecoin's design](basecoin-design.md)

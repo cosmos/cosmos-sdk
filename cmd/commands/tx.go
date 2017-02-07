@@ -82,18 +82,17 @@ func cmdSendTx(c *cli.Context) error {
 		return errors.New("To address is invalid hex: " + err.Error())
 	}
 
-	// load the priv validator
-	// XXX: this is overkill for now, we need a keys solution
-	privVal := tmtypes.LoadPrivValidator(fromFile)
+	// load the priv key
+	privKey := LoadKey(fromFile)
 
 	// get the sequence number for the tx
-	sequence, err := getSeq(c, privVal.Address)
+	sequence, err := getSeq(c, privKey.Address)
 	if err != nil {
 		return err
 	}
 
 	// craft the tx
-	input := types.NewTxInput(privVal.PubKey, types.Coins{types.Coin{coin, amount}}, sequence)
+	input := types.NewTxInput(privKey.PubKey, types.Coins{types.Coin{coin, amount}}, sequence)
 	output := newOutput(to, coin, amount)
 	tx := &types.SendTx{
 		Gas:     int64(gas),
@@ -104,7 +103,7 @@ func cmdSendTx(c *cli.Context) error {
 
 	// sign that puppy
 	signBytes := tx.SignBytes(chainID)
-	tx.Inputs[0].Signature = privVal.Sign(signBytes)
+	tx.Inputs[0].Signature = privKey.Sign(signBytes)
 
 	fmt.Println("Signed SendTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))
@@ -134,14 +133,14 @@ func AppTx(c *cli.Context, name string, data []byte) error {
 	gas, fee := c.Int("gas"), int64(c.Int("fee"))
 	chainID := c.String("chain_id")
 
-	privVal := tmtypes.LoadPrivValidator(fromFile)
+	privKey := tmtypes.LoadPrivValidator(fromFile)
 
-	sequence, err := getSeq(c, privVal.Address)
+	sequence, err := getSeq(c, privKey.Address)
 	if err != nil {
 		return err
 	}
 
-	input := types.NewTxInput(privVal.PubKey, types.Coins{types.Coin{coin, amount}}, sequence)
+	input := types.NewTxInput(privKey.PubKey, types.Coins{types.Coin{coin, amount}}, sequence)
 	tx := &types.AppTx{
 		Gas:   int64(gas),
 		Fee:   types.Coin{coin, fee},
@@ -150,7 +149,7 @@ func AppTx(c *cli.Context, name string, data []byte) error {
 		Data:  data,
 	}
 
-	tx.Input.Signature = privVal.Sign(tx.SignBytes(chainID))
+	tx.Input.Signature = privKey.Sign(tx.SignBytes(chainID))
 
 	fmt.Println("Signed AppTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))

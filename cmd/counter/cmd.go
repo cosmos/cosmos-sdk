@@ -13,9 +13,7 @@ import (
 
 func init() {
 	commands.RegisterTxSubcommand(CounterTxCmd)
-	commands.RegisterStartPlugin("counter", func() types.Plugin {
-		return counter.New("counter")
-	})
+	commands.RegisterStartPlugin("counter", func() types.Plugin { return counter.New() })
 }
 
 var (

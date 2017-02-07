@@ -15,6 +15,7 @@ func main() {
 	app.Commands = []cli.Command{
 		commands.StartCmd,
 		commands.TxCmd,
+		commands.KeyCmd,
 		commands.QueryCmd,
 		commands.AccountCmd,
 	}

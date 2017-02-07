@@ -56,7 +56,7 @@ var (
 
 	FromFlag = cli.StringFlag{
 		Name:  "from",
-		Value: "priv_validator.json",
+		Value: "key.json",
 		Usage: "Path to a private key to sign the transaction",
 	}
 

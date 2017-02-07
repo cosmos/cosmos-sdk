@@ -43,15 +43,15 @@ var StartCmd = cli.Command{
 }
 
 type plugin struct {
-	name string
-	init func() types.Plugin
+	name      string
+	newPlugin func() types.Plugin
 }
 
 var plugins = []plugin{}
 
 // RegisterStartPlugin is used to enable a plugin
-func RegisterStartPlugin(name string, initFunc func() types.Plugin) {
-	plugins = append(plugins, plugin{name: name, init: initFunc})
+func RegisterStartPlugin(name string, newPlugin func() types.Plugin) {
+	plugins = append(plugins, plugin{name: name, newPlugin: newPlugin})
 }
 
 func cmdStart(c *cli.Context) error {
@@ -73,7 +73,7 @@ func cmdStart(c *cli.Context) error {
 
 	// register all plugins
 	for _, p := range plugins {
-		basecoinApp.RegisterPlugin(p.init())
+		basecoinApp.RegisterPlugin(p.newPlugin())
 	}
 
 	// If genesis file exists, set key-value options

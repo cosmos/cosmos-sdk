@@ -20,9 +20,7 @@ import (
 // Register the IBC plugin at start and for transactions
 func RegisterIBC() {
 	RegisterTxSubcommand(IbcCmd)
-	RegisterStartPlugin("ibc", func() types.Plugin {
-		return ibc.New()
-	})
+	RegisterStartPlugin("ibc", func() types.Plugin { return ibc.New() })
 }
 
 //---------------------------------------------------------------------

@@ -20,6 +20,7 @@ func main() {
 	app.Commands = []cli.Command{
 		commands.StartCmd,
 		commands.TxCmd,
+		commands.KeyCmd,
 		commands.QueryCmd,
 		commands.VerifyCmd, // TODO: move to merkleeyes?
 		commands.BlockCmd,

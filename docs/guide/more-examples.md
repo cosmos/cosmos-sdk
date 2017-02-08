@@ -1,25 +1,19 @@
 # Plugin Examples
 
-Now that we've seen how to use Basecoin, talked about the design, 
-and looked at how to implement a simple plugin, let's take a look at some more interesting examples.
+Now that we've seen [how to write a simple plugin](example-plugin.md)
+and taken a look at [how the plugin system is designed](plugin-design.md),
+it's time for some more advanced examples.
 
-## Mintcoin
+For now, most examples are contained in the `github.com/tendermint/basecoin-examples` repository.
+In particular, we have the following:
 
-Basecoin does not provide any functionality for adding new tokens to the system.
-The state is endowed with tokens by a `genesis.json` file which is read once when the system is first started.
-From there, tokens can be sent to other accounts, even new accounts, but it's impossible to add more tokens to the system.
-For this, we need a plugin.
-
-The `mintcoin` plugin lets you register one or more accounts as "central bankers", 
-who can unilaterally issue more currency into the system.  
-
-## Financial Instruments
-
-Sure, printing money and sending it is nice, but sometimes I don't fully trust the guy at the other end. Maybe we could add an escrow service? Or how about options for currency trading, since we support multiple currencies? No problem, this is also just a plugin away.  Checkout our [trader application](./trader).
-
-**Running code, still WIP**
-
-## IBC
-
-Now, let's hook up your personal crypto-currency with the wide world of other currencies, in a distributed, proof-of-stake based exchange.  Hard, you say?  Well half the work is already done for you with the [IBC, InterBlockchain Communication, plugin](./ibc.md).  Now, we just need to get cosmos up and running and time to go and trade.
-
+1. [Mintcoin][0] - a plugin for issuing new Basecoin tokens
+2. [Trader][1] - a plugin for adding escrow and options features to Basecoin
+3. [Stakecoin][2] - a plugin for bonding and unbonding Tendermint validators and updating the validator set accordingly
+4. [PayToVote][3] - a plugin for creating issues and voting on them
+5. [IBC][4] - a plugin for facilitating InterBlockchain Communication
+[0]: https://github.com/tendermint/basecoin-examples/tree/develop/mintcoin
+[1]: https://github.com/tendermint/basecoin-examples/tree/develop/trader
+[2]: https://github.com/tendermint/basecoin-examples/tree/develop/stake
+[3]: https://github.com/tendermint/basecoin-examples/tree/develop/paytovote
+[4]: ibc.md

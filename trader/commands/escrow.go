@@ -7,7 +7,7 @@ import (
 
 	"github.com/tendermint/basecoin-examples/trader/plugins/escrow"
 	"github.com/tendermint/basecoin-examples/trader/types"
-	bcmd "github.com/tendermint/basecoin/cmd/basecoin/commands"
+	bcmd "github.com/tendermint/basecoin/cmd/commands"
 	bc "github.com/tendermint/basecoin/types"
 	wire "github.com/tendermint/go-wire"
 	"github.com/urfave/cli"
@@ -54,11 +54,11 @@ var (
 	EscrowCreateTxCmd = cli.Command{
 		Name:  "create",
 		Usage: "Create a new escrow by sending money",
-		Flags: []cli.Flag{
+		Flags: append(bcmd.TxFlags,
 			EscrowRecvFlag,
 			EscrowArbiterFlag,
 			EscrowExpireFlag,
-		},
+		),
 		Action: func(c *cli.Context) error {
 			return cmdEscrowCreateTx(c)
 		},
@@ -67,10 +67,10 @@ var (
 	EscrowResolveTxCmd = cli.Command{
 		Name:  "pay",
 		Usage: "Resolve the escrow by paying out of returning the money",
-		Flags: []cli.Flag{
+		Flags: append(bcmd.TxFlags,
 			EscrowAddrFlag,
 			EscrowPayoutFlag,
-		},
+		),
 		Action: func(c *cli.Context) error {
 			return cmdEscrowResolveTx(c)
 		},
@@ -79,9 +79,9 @@ var (
 	EscrowExpireTxCmd = cli.Command{
 		Name:  "expire",
 		Usage: "Call to expire the escrow if no action in a given time",
-		Flags: []cli.Flag{
+		Flags: append(bcmd.TxFlags,
 			EscrowAddrFlag,
-		},
+		),
 		Action: func(c *cli.Context) error {
 			return cmdEscrowExpireTx(c)
 		},
@@ -98,16 +98,11 @@ var (
 			bcmd.NodeFlag,
 		},
 	}
-
-	EscrowPluginFlag = cli.BoolFlag{
-		Name:  "escrow-plugin",
-		Usage: "Enable the escrow plugin",
-	}
 )
 
 func init() {
-	bcmd.RegisterTxPlugin(EscrowTxCmd)
-	bcmd.RegisterStartPlugin(EscrowPluginFlag,
+	bcmd.RegisterTxSubcommand(EscrowTxCmd)
+	bcmd.RegisterStartPlugin(EscrowName,
 		func() bc.Plugin { return escrow.New(EscrowName) })
 }
 
@@ -115,7 +110,6 @@ func cmdEscrowCreateTx(c *cli.Context) error {
 	recvHex := c.String(EscrowRecvFlag.Name)
 	arbHex := c.String(EscrowArbiterFlag.Name)
 	expire := c.Uint64(EscrowExpireFlag.Name)
-	parent := c.Parent().Parent()
 
 	// convert destination address to bytes
 	recv, err := hex.DecodeString(bcmd.StripHex(recvHex))
@@ -135,13 +129,12 @@ func cmdEscrowCreateTx(c *cli.Context) error {
 		Expiration: expire,
 	}
 	data := types.EscrowTxBytes(tx)
-	return bcmd.AppTx(parent, EscrowName, data)
+	return bcmd.AppTx(c, EscrowName, data)
 }
 
 func cmdEscrowResolveTx(c *cli.Context) error {
 	addrHex := c.String(EscrowAddrFlag.Name)
 	payout := c.Bool(EscrowPayoutFlag.Name)
-	parent := c.Parent().Parent()
 
 	// convert destination address to bytes
 	addr, err := hex.DecodeString(bcmd.StripHex(addrHex))
@@ -154,12 +147,11 @@ func cmdEscrowResolveTx(c *cli.Context) error {
 		Payout: payout,
 	}
 	data := types.EscrowTxBytes(tx)
-	return bcmd.AppTx(parent, EscrowName, data)
+	return bcmd.AppTx(c, EscrowName, data)
 }
 
 func cmdEscrowExpireTx(c *cli.Context) error {
 	addrHex := c.String(EscrowAddrFlag.Name)
-	parent := c.Parent().Parent()
 
 	// convert destination address to bytes
 	addr, err := hex.DecodeString(bcmd.StripHex(addrHex))
@@ -171,7 +163,7 @@ func cmdEscrowExpireTx(c *cli.Context) error {
 		Escrow: addr,
 	}
 	data := types.EscrowTxBytes(tx)
-	return bcmd.AppTx(parent, EscrowName, data)
+	return bcmd.AppTx(c, EscrowName, data)
 }
 
 func cmdEscrowQuery(c *cli.Context) error {

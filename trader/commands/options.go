@@ -7,7 +7,7 @@ import (
 
 	"github.com/tendermint/basecoin-examples/trader/plugins/options"
 	"github.com/tendermint/basecoin-examples/trader/types"
-	bcmd "github.com/tendermint/basecoin/cmd/basecoin/commands"
+	bcmd "github.com/tendermint/basecoin/cmd/commands"
 	bc "github.com/tendermint/basecoin/types"
 	wire "github.com/tendermint/go-wire"
 	"github.com/urfave/cli"
@@ -66,11 +66,11 @@ var (
 	OptionsCreateTxCmd = cli.Command{
 		Name:  "create",
 		Usage: "Create a new option by sending money",
-		Flags: []cli.Flag{
+		Flags: append(bcmd.TxFlags,
 			OptionExpireFlag,
 			OptionTradeAmountFlag,
 			OptionTradeCoinFlag,
-		},
+		),
 		Action: func(c *cli.Context) error {
 			return cmdOptionCreateTx(c)
 		},
@@ -79,12 +79,12 @@ var (
 	OptionsSellTxCmd = cli.Command{
 		Name:  "sell",
 		Usage: "Offer to sell this option",
-		Flags: []cli.Flag{
+		Flags: append(bcmd.TxFlags,
 			OptionAddrFlag,
 			OptionSellToFlag,
 			OptionPriceAmountFlag,
 			OptionPriceCoinFlag,
-		},
+		),
 		Action: func(c *cli.Context) error {
 			return cmdOptionSellTx(c)
 		},
@@ -93,9 +93,9 @@ var (
 	OptionsBuyTxCmd = cli.Command{
 		Name:  "buy",
 		Usage: "Attempt to buy this option",
-		Flags: []cli.Flag{
+		Flags: append(bcmd.TxFlags,
 			OptionAddrFlag,
-		},
+		),
 		Action: func(c *cli.Context) error {
 			return cmdOptionBuyTx(c)
 		},
@@ -104,9 +104,9 @@ var (
 	OptionsExerciseTxCmd = cli.Command{
 		Name:  "exercise",
 		Usage: "Exercise this option to trade currency at the given rate",
-		Flags: []cli.Flag{
+		Flags: append(bcmd.TxFlags,
 			OptionAddrFlag,
-		},
+		),
 		Action: func(c *cli.Context) error {
 			return cmdOptionExerciseTx(c)
 		},
@@ -115,9 +115,9 @@ var (
 	OptionsDisolveTxCmd = cli.Command{
 		Name:  "disolve",
 		Usage: "Attempt to disolve this option (if never sold, or already expired)",
-		Flags: []cli.Flag{
+		Flags: append(bcmd.TxFlags,
 			OptionAddrFlag,
-		},
+		),
 		Action: func(c *cli.Context) error {
 			return cmdOptionDisolveTx(c)
 		},
@@ -134,16 +134,11 @@ var (
 			bcmd.NodeFlag,
 		},
 	}
-
-	OptionsPluginFlag = cli.BoolFlag{
-		Name:  "options-plugin",
-		Usage: "Enable the options plugin",
-	}
 )
 
 func init() {
-	bcmd.RegisterTxPlugin(OptionsTxCmd)
-	bcmd.RegisterStartPlugin(OptionsPluginFlag,
+	bcmd.RegisterTxSubcommand(OptionsTxCmd)
+	bcmd.RegisterStartPlugin(OptionName,
 		func() bc.Plugin { return options.New(OptionName) })
 }
 
@@ -151,7 +146,6 @@ func cmdOptionCreateTx(c *cli.Context) error {
 	optionAmount := int64(c.Int(OptionTradeAmountFlag.Name))
 	optionCoin := c.String(OptionTradeCoinFlag.Name)
 	expire := c.Uint64(EscrowExpireFlag.Name)
-	parent := c.Parent().Parent()
 
 	tx := types.CreateOptionTx{
 		Expiration: expire,
@@ -161,7 +155,7 @@ func cmdOptionCreateTx(c *cli.Context) error {
 		}},
 	}
 	data := types.OptionsTxBytes(tx)
-	return bcmd.AppTx(parent, OptionName, data)
+	return bcmd.AppTx(c, OptionName, data)
 }
 
 func cmdOptionSellTx(c *cli.Context) error {
@@ -169,7 +163,6 @@ func cmdOptionSellTx(c *cli.Context) error {
 	buyerHex := c.String(OptionSellToFlag.Name)
 	optionAmount := int64(c.Int(OptionPriceAmountFlag.Name))
 	optionCoin := c.String(OptionPriceCoinFlag.Name)
-	parent := c.Parent().Parent()
 
 	// convert destination address to bytes
 	addr, err := hex.DecodeString(bcmd.StripHex(addrHex))
@@ -191,12 +184,11 @@ func cmdOptionSellTx(c *cli.Context) error {
 		}},
 	}
 	data := types.OptionsTxBytes(tx)
-	return bcmd.AppTx(parent, OptionName, data)
+	return bcmd.AppTx(c, OptionName, data)
 }
 
 func cmdOptionBuyTx(c *cli.Context) error {
 	addrHex := c.String(OptionAddrFlag.Name)
-	parent := c.Parent().Parent()
 
 	// convert destination address to bytes
 	addr, err := hex.DecodeString(bcmd.StripHex(addrHex))
@@ -208,12 +200,11 @@ func cmdOptionBuyTx(c *cli.Context) error {
 		Addr: addr,
 	}
 	data := types.OptionsTxBytes(tx)
-	return bcmd.AppTx(parent, OptionName, data)
+	return bcmd.AppTx(c, OptionName, data)
 }
 
 func cmdOptionExerciseTx(c *cli.Context) error {
 	addrHex := c.String(OptionAddrFlag.Name)
-	parent := c.Parent().Parent()
 
 	// convert destination address to bytes
 	addr, err := hex.DecodeString(bcmd.StripHex(addrHex))
@@ -225,12 +216,11 @@ func cmdOptionExerciseTx(c *cli.Context) error {
 		Addr: addr,
 	}
 	data := types.OptionsTxBytes(tx)
-	return bcmd.AppTx(parent, OptionName, data)
+	return bcmd.AppTx(c, OptionName, data)
 }
 
 func cmdOptionDisolveTx(c *cli.Context) error {
 	addrHex := c.String(OptionAddrFlag.Name)
-	parent := c.Parent().Parent()
 
 	// convert destination address to bytes
 	addr, err := hex.DecodeString(bcmd.StripHex(addrHex))
@@ -242,7 +232,7 @@ func cmdOptionDisolveTx(c *cli.Context) error {
 		Addr: addr,
 	}
 	data := types.OptionsTxBytes(tx)
-	return bcmd.AppTx(parent, OptionName, data)
+	return bcmd.AppTx(c, OptionName, data)
 }
 
 func cmdOptionQuery(c *cli.Context) error {

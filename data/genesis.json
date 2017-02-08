@@ -1,7 +1,7 @@
 [
   "base/chainID", "test_chain_id",
   "base/account", {
-    "pub_key": [1, "B3588BDC92015ED3CDB6F57A86379E8C79A7111063610B7E625487C76496F4DF"],
+    "pub_key": [1, "619D3678599971ED29C7529DDD4DA537B97129893598A17C82E3AC9A8BA95279"],
     "coins": [
 	{
 	  "denom": "blank",

@@ -32,9 +32,9 @@ func (cp *CounterPlugin) StateKey() []byte {
 	return []byte(fmt.Sprintf("CounterPlugin{name=%v}.State", cp.name))
 }
 
-func New(name string) *CounterPlugin {
+func New() *CounterPlugin {
 	return &CounterPlugin{
-		name: name,
+		name: "counter",
 	}
 }
 

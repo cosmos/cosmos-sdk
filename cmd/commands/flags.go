@@ -31,11 +31,6 @@ var (
 		Name:  "in-proc",
 		Usage: "Run Tendermint in-process with the App",
 	}
-
-	IbcPluginFlag = cli.BoolFlag{
-		Name:  "ibc-plugin",
-		Usage: "Enable the ibc plugin",
-	}
 )
 
 // tx flags
@@ -61,7 +56,7 @@ var (
 
 	FromFlag = cli.StringFlag{
 		Name:  "from",
-		Value: "priv_validator.json",
+		Value: "key.json",
 		Usage: "Path to a private key to sign the transaction",
 	}
 
@@ -105,86 +100,6 @@ var (
 		Name:  "chain_id",
 		Value: "test_chain_id",
 		Usage: "ID of the chain for replay protection",
-	}
-
-	ValidFlag = cli.BoolFlag{
-		Name:  "valid",
-		Usage: "Set valid field in CounterTx",
-	}
-)
-
-// ibc flags
-var (
-	IbcChainIDFlag = cli.StringFlag{
-		Name:  "chain_id",
-		Usage: "ChainID for the new blockchain",
-		Value: "",
-	}
-
-	IbcGenesisFlag = cli.StringFlag{
-		Name:  "genesis",
-		Usage: "Genesis file for the new blockchain",
-		Value: "",
-	}
-
-	IbcHeaderFlag = cli.StringFlag{
-		Name:  "header",
-		Usage: "Block header for an ibc update",
-		Value: "",
-	}
-
-	IbcCommitFlag = cli.StringFlag{
-		Name:  "commit",
-		Usage: "Block commit for an ibc update",
-		Value: "",
-	}
-
-	IbcFromFlag = cli.StringFlag{
-		Name:  "from",
-		Usage: "Source ChainID",
-		Value: "",
-	}
-
-	IbcToFlag = cli.StringFlag{
-		Name:  "to",
-		Usage: "Destination ChainID",
-		Value: "",
-	}
-
-	IbcTypeFlag = cli.StringFlag{
-		Name:  "type",
-		Usage: "IBC packet type (eg. coin)",
-		Value: "",
-	}
-
-	IbcPayloadFlag = cli.StringFlag{
-		Name:  "payload",
-		Usage: "IBC packet payload",
-		Value: "",
-	}
-
-	IbcPacketFlag = cli.StringFlag{
-		Name:  "packet",
-		Usage: "hex-encoded IBC packet",
-		Value: "",
-	}
-
-	IbcProofFlag = cli.StringFlag{
-		Name:  "proof",
-		Usage: "hex-encoded proof of IBC packet from source chain",
-		Value: "",
-	}
-
-	IbcSequenceFlag = cli.IntFlag{
-		Name:  "sequence",
-		Usage: "sequence number for IBC packet",
-		Value: 0,
-	}
-
-	IbcHeightFlag = cli.IntFlag{
-		Name:  "height",
-		Usage: "Height the packet became egress in source chain",
-		Value: 0,
 	}
 )
 

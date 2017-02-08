@@ -1,6 +1,6 @@
 #! /bin/bash
 
-killall -9 basecoin tendermint
+killall -9 adam tendermint
 TMROOT=./data/chain1/tendermint tendermint unsafe_reset_all
 TMROOT=./data/chain2/tendermint tendermint unsafe_reset_all
 

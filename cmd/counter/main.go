@@ -9,16 +9,14 @@ import (
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "basecoin"
-	app.Usage = "basecoin [command] [args...]"
+	app.Name = "counter"
+	app.Usage = "counter [command] [args...]"
 	app.Version = "0.1.0"
 	app.Commands = []cli.Command{
 		commands.StartCmd,
 		commands.TxCmd,
-		commands.QueryCmd,
 		commands.KeyCmd,
-		commands.VerifyCmd, // TODO: move to merkleeyes?
-		commands.BlockCmd,  // TODO: move to adam?
+		commands.QueryCmd,
 		commands.AccountCmd,
 	}
 	app.Run(os.Args)

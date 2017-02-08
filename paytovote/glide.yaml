@@ -1,0 +1,25 @@
+package: github.com/tendermint/basecoin-examples/paytovote
+import:
+- package: github.com/tendermint/abci
+  version: develop
+  subpackages:
+  - types
+- package: github.com/tendermint/basecoin
+  version: docs
+  subpackages:
+  - cmd/commands
+  - state
+  - types
+- package: github.com/tendermint/go-common
+  version: develop
+- package: github.com/tendermint/go-wire
+  version: develop
+- package: github.com/urfave/cli
+testImport:
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
+- package: github.com/tendermint/merkleeyes
+  version: develop
+  subpackages:
+  - client

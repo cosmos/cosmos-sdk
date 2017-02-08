@@ -1,72 +1,115 @@
 # Mintcoin - minting your own crypto-cash
 
-This directory is an example of extending basecoin with a plugin architecture to allow minting your own money. This directory is designed to be stand-alone and can be copied to your own repo as a starting point.  Just make sure to change the import path in `./cmd/mintcoin`.
+Mintcoin is a Basecoin plugin that allows more coins to be created in the network 
+by registering some accounts as "Central Bankers" that can issue more money.
 
-First, make sure everything is working on your system, by running `make all` in this directory, this will update all dependencies, run the test quite, and install the `mintcoin` binary.  After that, you can run all commands with mintcoin.
+For more details about Basecoin, the tools, and the plugin architecture, [see the docs](https://github.com/tendermint/basecoin).
+
+## Install
+
+Run `make all` in this directory.
+This will update all dependencies, run the test suite, and install the `mintcoin` binary to your `$GOPATH/bin`.  
 
 ## Setting Initial State
 
-You first need to declare who the bankers are who can issue new coin. To do so, we make use of the `SetOption` abci command.  For debug purposes, we can run this over the `abci-cli`. When deployed as part of tendermint, you need to initialize this the same for all nodes, by passing in a [genesis file](https://github.com/tendermint/basecoin-examples/blob/master/mintcoin/cmd/mintcoin/main.go#L20) (this is different than a genesis block) upon starting the mintcoin binary.
+The state is initialized using a `genesis.json` containing a list of issuers.
+These are the accounts that can issue new coins.
+An example can be found in `data/genesis.json`.
 
-If you register the plugin with the default name "mint", two options keys are supported - `mint/add` and `mint/remove`.  Both take a hex-encoded address as the second argument.  Once an address is added, the private key that belongs to that address can sign MintTx transactions, and thus create money.
+`mintcoin` uses the `SetOption` plugin method to enable new issuers to be added or removed with the `add` and `remove` keys, respectively. The value must be the hex-encoded address of the issuer to add or remove.
+
+Once an address is added, the private key that belongs to that address can sign MintTx transactions
+that create money.
 
 ## Minting Money
 
-To create money, we need to create a [MintTx](https://github.com/tendermint/basecoin-examples/blob/master/mintcoin/types.go#L43-L52) transaction, and then call Serialize() to get the app-specific tx bytes.  Then you must wrap it in a [basecoin AppTx](https://github.com/tendermint/basecoin/blob/master/types/tx.go#L154-L160), setting `Name` to "mint", and `Data` to the bytes returned by `Serialize`.  You can then sign this AppTx with the private key...
+The `mintcoin` plugin expects the `Data` in the `AppTx` to contain a serialized `MintTx`:
 
-Confused yet, luckily there is a shiny, new cli thanks to Bucky. So all this crypto power is just a few keystrokes away....
+```
+type MintTx struct {
+	Credits Credits
+}
+
+type Credits []Credit
+
+type Credit struct {
+	Addr   []byte
+	Amount types.Coins
+}
+```
+
+If the sender of the `AppTx` is a registered issuer,
+the corresponding amounts in the embedded `MintTx` will be credited to the listed accounts.
 
 ## Testing with a CLI
 
-Once we authorized some keys to mint cash, let's do it.  And send those shiny new bills to our friends.  But before playing with mintcoin, make sure you check out [the basecoin cli tutorial](../tutorial.md)
+Alright, now let's set ourselves up as issuers and send some shiny new bills to our friends!
 
-Setup tendermint:
+First we do the usual tendermint reset routine:
 
 ```
 tendermint init
 tendermint unsafe_reset_all
 ```
 
-Setup basecoin server with default genesis:
+Now we can start Basecoin with the mintcoin plugin and the default genesis:
 
 ```
 cd $GOPATH/src/github.com/tendermint/basecoin-examples/mintcoin/data
-mintcoin start --in-proc --mint-plugin --counter-plugin
+mintcoin start --in-proc 
 ```
 
-Run basecoin client in another window:
+In another window, we can run the client tool:
 
 ```
 cd $GOPATH/src/github.com/tendermint/basecoin-examples/mintcoin/data
-mintcoin account D397BC62B435F3CF50570FBAB4340FE52C60858F
+mintcoin account 0xD397BC62B435F3CF50570FBAB4340FE52C60858F
+```
 
-# apparently we need to send some coin with every transaction, even if the
-# app doesn't care.  this also means the sending account must have at least
-# one of some currency in order to mint the first coins.
+This was the account registered in the genesis; it has the right number of coins.
 
-# also note that we must specify the chain_id, as we are not using
+Let's mint some new coins:
 
+```
+mintcoin tx mint --chain_id mint_chain_id --amount 1 --mintto D397BC62B435F3CF50570FBAB4340FE52C60858F --mint 1000 --mintcoin BTC
+mintcoin tx mint --chain_id mint_chain_id --amount 1 --mintto D397BC62B435F3CF50570FBAB4340FE52C60858F --mint 5 --mintcoin cosmo
+mintcoin tx mint --chain_id mint_chain_id --amount 1 --mintto D397BC62B435F3CF50570FBAB4340FE52C60858F --mint 5000 --mintcoin FOOD
+```
 
-mintcoin apptx --chain_id mint_chain_id --amount 1 mint --mintto D397BC62B435F3CF50570FBAB4340FE52C60858F --mint 1000 --mintcoin BTC
+Here, we're sending `1000 BTC`, `5 cosmo`, and `5000 FOOD` to the account with address `D397BC62B435F3CF50570FBAB4340FE52C60858`.
+Note that we have to provide some non-zero `--amount` for the transaction, and we have to specify the `--chain_id`,
+which must match the `chain_id` in the `genesis.json`.
 
-mintcoin apptx --chain_id mint_chain_id --amount 1 mint --mintto D397BC62B435F3CF50570FBAB4340FE52C60858F --mint 5 --mintcoin cosmo
+Let's take another look at the account:
 
-mintcoin apptx --chain_id mint_chain_id --amount 1 mint --mintto D397BC62B435F3CF50570FBAB4340FE52C60858F --mint 5000 --mintcoin FOOD
+```
+mintcoin account 0xD397BC62B435F3CF50570FBAB4340FE52C60858F
+```
 
-mintcoin account D397BC62B435F3CF50570FBAB4340FE52C60858F
+It's got all the coins!
 
-# let's stop being greedy and pay back someone else
+Alright, let's issue some coins to our friend:
 
+```
 mintcoin account 4793A333846E5104C46DD9AB9A00E31821B2F301
-mintcoin apptx --chain_id mint_chain_id --amount 1 mint --mintto 4793A333846E5104C46DD9AB9A00E31821B2F301 --mint 1234 --mintcoin BTC
+mintcoin tx mint --chain_id mint_chain_id --amount 1 --mintto 4793A333846E5104C46DD9AB9A00E31821B2F301 --mint 1234 --mintcoin BTC
 mintcoin account 4793A333846E5104C46DD9AB9A00E31821B2F301
+```
 
-# and they can give us a little kickback
-mintcoin sendtx --chain_id mint_chain_id --from priv_validator2.json --to D397BC62B435F3CF50570FBAB4340FE52C60858F --amount 333 --coin BTC
+Now they can send us some coins for our labour:
+
+```
+mintcoin tx send --chain_id mint_chain_id --from key2.json --to D397BC62B435F3CF50570FBAB4340FE52C60858F --amount 333 --coin BTC
 mintcoin account 4793A333846E5104C46DD9AB9A00E31821B2F301
 mintcoin account D397BC62B435F3CF50570FBAB4340FE52C60858F
+```
+
+If we try to issue coins from the wrong account, we'll get an error:
+
+```
+mintcoin tx mint --from key2.json --chain_id mint_chain_id --amount 1 --mintto 4793A333846E5104C46DD9AB9A00E31821B2F301 --mint 1234 --mintcoin BTC
 ```
 
 ## Attaching a GUI
 
-**TODO** showcase matt's ui and examples of how to extend it?
+Coming soon! For now, see [the repository](https://github.com/tendermint/js-basecoin)

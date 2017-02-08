@@ -1,4 +1,4 @@
-package: github.com/tendermint/basecoin-examples/trader
+package: github.com/tendermint/basecoin-examples/stake
 import:
 - package: github.com/tendermint/basecoin
   version: docs

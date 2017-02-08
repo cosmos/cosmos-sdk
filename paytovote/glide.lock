@@ -1,5 +1,5 @@
-hash: 2470b36e56d2d7df99c1121ab4d84612dcdb56242bec6afe197fcff521b9b967
-updated: 2017-02-07T18:13:01.410010419-05:00
+hash: 1926e874e4548d0fe7f0c698ae56b8284896fcbb175db58607f0709054ddcdc2
+updated: 2017-02-07T20:05:01.331654662-05:00
 imports:
 - name: github.com/btcsuite/btcd
   version: d06c0bb181529331be8f8d9350288c420d9e60e4
@@ -57,6 +57,7 @@ imports:
   - cmd/commands
   - plugins/ibc
   - state
+  - testutils
   - types
 - name: github.com/tendermint/ed25519
   version: 1f52c6f8b8a5c7908aff4497c186af344b428925

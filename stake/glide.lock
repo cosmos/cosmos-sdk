@@ -1,5 +1,5 @@
-hash: 2470b36e56d2d7df99c1121ab4d84612dcdb56242bec6afe197fcff521b9b967
-updated: 2017-02-07T18:13:01.410010419-05:00
+hash: 241e5334541c15ad4c02cdb307ba5d85eede4a53f32915bab0ad73ae7c9d4095
+updated: 2017-02-07T19:38:03.960390077-05:00
 imports:
 - name: github.com/btcsuite/btcd
   version: d06c0bb181529331be8f8d9350288c420d9e60e4
@@ -161,16 +161,4 @@ imports:
   - stats
   - tap
   - transport
-testImports:
-- name: github.com/davecgh/go-spew
-  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
-  subpackages:
-  - spew
-- name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
-  subpackages:
-  - difflib
-- name: github.com/stretchr/testify
-  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
-  subpackages:
-  - assert
+testImports: []

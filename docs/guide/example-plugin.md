@@ -41,9 +41,9 @@ func main() {
 It creates the CLI, exactly like the `basecoin` one.
 However, if we want our plugin to be active,
 we need to make sure it is registered with the application.
-In addition, if we want to send transactions to our plugin, 
+In addition, if we want to send transactions to our plugin,
 we need to add a new command to the CLI.
-This is where the `cmd.go` comes in. 
+This is where the `cmd.go` comes in.
 
 ## Commands
 
@@ -154,7 +154,7 @@ func cmdExamplePluginTx(c *cli.Context) error {
 
 We read the flag from the CLI library, and then create the example transaction.
 Remember that Basecoin itself only knows about two transaction types, `SendTx` and `AppTx`.
-All plugin data must be serialized (ie. encoded as a byte-array) 
+All plugin data must be serialized (ie. encoded as a byte-array)
 and sent as data in an `AppTx`. The `commands.AppTx` function does this for us -
 it creates an `AppTx` with the corresponding data, signs it, and sends it on to the blockchain.
 
@@ -162,9 +162,11 @@ it creates an `AppTx` with the corresponding data, signs it, and sends it on to 
 
 Ok, now we're ready to actually look at the implementation of the plugin in `plugin.go`.
 Note I'll leave out some of the methods as they don't serve any purpose for this example,
-but are necessary boilerplate. 
-Your plugin may have additional requirements that utilize these other plugins.
+but are necessary boilerplate.
+Your plugin may have additional requirements that utilize these other methods.
 Here's what's relevant for us:
+
+**TODO** make `StateKey` `stateKey`? No need to expose this outside the package.
 
 ```
 type ExamplePluginState struct {
@@ -276,7 +278,8 @@ if len(stateBytes) > 0 {
 }
 ```
 
-Note the state is stored under `ep.StateKey()`, which is defined above as `ExamplePlugin.State`.
+Note the state is stored under `ep.StateKey()`, which is defined above as `ExamplePlugin.State`. Also note, that we do nothing if there is no existing state data.  Is that a bug? No, we just make use of go's variable initialization, that `pluginState` will contain a `Counter` value of 0. If your app needs more initialization than empty variables, then do this logic here in an `else` block.
+
 Finally, we can update the state's `Counter`, and save the state back to the store:
 
 ```
@@ -353,7 +356,7 @@ tendermint unsafe_reset_all
 ```
 
 Great, now we're ready to go.
-To start the blockchain, simply run 
+To start the blockchain, simply run
 
 ```
 example-plugin start --in-proc
@@ -396,7 +399,7 @@ example-plugin query ExamplePlugin.State
 ```
 
 Note the `"value":"0101"` piece. This is the serialized form of the state,
-which contains only an integer. 
+which contains only an integer.
 If we send another transaction, and then query again, we'll see the value increment:
 
 ```
@@ -404,14 +407,14 @@ example-plugin tx example --valid --amount 1 --coin gold --chain_id example-chai
 example-plugin query ExamplePlugin.State
 ```
 
-Neat, right? Notice how the result of the query comes with a proof. 
+Neat, right? Notice how the result of the query comes with a proof.
 This is a Merkle proof that the state is what we say it is.
 In a latter [tutorial on Interblockchain Communication](ibc.md),
 we'll put this proof to work!
 
 ## Next Stpes
 
-In this tutorial we demonstrated how to create a new plugin and how to extend the 
+In this tutorial we demonstrated how to create a new plugin and how to extend the
 basecoin CLI to activate the plugin on the blockchain and to send transactions to it.
 Hopefully by now you have some ideas for your own plugin, and feel comfortable implementing them.
 

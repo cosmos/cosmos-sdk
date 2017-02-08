@@ -4,12 +4,12 @@ One of the most exciting elements of the Cosmos Network is the InterBlockchain C
 which enables interoperability across different blockchains.
 The simplest example of using the IBC protocol is to send a data packet from one blockchain to another.
 
-We implemented IBC as a basecoin plugin. 
+We implemented IBC as a basecoin plugin.
 and here we'll show you how to use the Basecoin IBC-plugin to send a packet of data across blockchains!
 
 Please note, this tutorial assumes you are familiar with [Basecoin plugins](/docs/guide/plugin-design.md)
 and with the [Basecoin CLI](/docs/guide/basecoin-basics), but we'll explain how IBC works.
-You may also want to see the tutorials on [a simple example plugin](example-plugin.md) 
+You may also want to see the tutorials on [a simple example plugin](example-plugin.md)
 and the list of [more advanced plugins](more-examples.md).
 
 The IBC plugin defines a new set of transactions as subtypes of the `AppTx`.
@@ -32,8 +32,8 @@ next block.  Thus, each block contains a field called `LastCommit`, which
 contains the votes responsible for committing the previous block, and a field
 in the block header called `AppHash`, which refers to the merkle root hash of
 the application after processing the transactions from the previous block.  So,
-if we want to verify some state from height H, we need the signatures and root
-hash from the header at height H+1.
+if we want to verify the `AppHash` from height H, we need the signatures from `LastCommit` at height H+1. (And remember that this `AppHash` only contains the results from all transactions up to and including block H-1)
+
 
 Unlike Proof-of-Work, the light-client protocol does not need to download and
 check all the headers in the blockchain - the client can always jump straight
@@ -147,7 +147,7 @@ and the resulting state root is not included until the next block.
 ### IBC State
 
 Now that we've seen all the transaction types, let's talk about the state.
-Each chain stores some IBC state in its merkle tree. 
+Each chain stores some IBC state in its merkle tree.
 For each chain being tracked by our chain, we store:
 
 ```
@@ -179,7 +179,7 @@ The results of a query can thus be used as proof in an `IBCPacketPostTx`.
 
 Now that we have all the background knowledge, let's actually walk through the tutorial.
 
-Make sure you have installed 
+Make sure you have installed
 [tendermint](https://tendermint.com/intro/getting-started/download) and
 [adam](/docs/guide/install.md).
 

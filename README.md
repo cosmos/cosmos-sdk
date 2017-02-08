@@ -2,12 +2,12 @@
 
 DISCLAIMER: Basecoin is not associated with Coinbase.com, an excellent Bitcoin/Ethereum service.
 
-Basecoin is an [ABCI application](https://github.com/tendermint/abci) designed to be used with the [tendermint consensus engine](https://tendermint.com/) to form a Proof-of-Stake cryptocurrency. 
+Basecoin is an [ABCI application](https://github.com/tendermint/abci) designed to be used with the [tendermint consensus engine](https://tendermint.com/) to form a Proof-of-Stake cryptocurrency.
 It also provides a general purpose framework for extending the feature-set of the cryptocurrency
 by implementing plugins.
 
 Basecoin serves as a reference implementation for how we build ABCI applications in Go,
-and is the framework in which we implement the [Cosmos Hub](https://cosmos.network). 
+and is the framework in which we implement the [Cosmos Hub](https://cosmos.network).
 It's easy to use, and doesn't require any forking - just implement your plugin, import the basecoin libraries,
 and away you go with a full-stack blockchain and command line tool for transacting.
 
@@ -18,8 +18,9 @@ WARNING: Currently uses plain-text private keys for transactions and is otherwis
 We use glide for dependency management.  The prefered way of compiling from source is the following:
 
 ```
-go get -d github.com/tendermint/basecoin/cmd/basecoin
+go get -u github.com/tendermint/basecoin
 cd $GOPATH/src/github.com/tendermint/basecoin
+git checkout develop # (until we release v0.9)
 make get_vendor_deps
 make install
 ```

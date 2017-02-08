@@ -7,6 +7,8 @@ Here we explain how to get started with a simple Basecoin blockchain, and how to
 Make sure you have [basecoin installed](install.md).
 You will also need to [install tendermint](https://tendermint.com/intro/getting-started/download).
 
+**Note** All code is on the 0.9 pre-release branch, you may have to [install tendermint from source](https://tendermint.com/docs/guides/install) until 0.9 is released.  (Make sure to add `git checkout develop` to the linked install instructions)
+
 ## Initialization
 
 Basecoin is an ABCI application that runs on Tendermint, so we first need to initialize Tendermint:
@@ -33,10 +35,10 @@ cd $GOPATH/src/github.com/tendermint/basecoin/data
 
 The directory contains a genesis file and two private keys.
 
-You can generate your own private keys with `tendermint gen_validator`, 
+You can generate your own private keys with `tendermint gen_validator`,
 and construct the `genesis.json` as you like.
-Note, however, that you must be careful with the `chain_id` field, 
-as every transaction must contain the correct `chain_id` 
+Note, however, that you must be careful with the `chain_id` field,
+as every transaction must contain the correct `chain_id`
 (default is `test_chain_id`).
 
 ## Start
@@ -53,7 +55,7 @@ This will initialize the chain with the `genesis.json` file from the current dir
 basecoin start --in-proc --dir PATH/TO/CUSTOM/DATA
 ```
 
-Note that `--in-proc` stands for "in process", which means 
+Note that `--in-proc` stands for "in process", which means
 basecoin will be started with the Tendermint node running in the same process.
 To start Tendermint in a separate process instead, use:
 
@@ -68,7 +70,7 @@ tendermint node
 ```
 
 In either case, you should see blocks start streaming in!
-Note, however, that currently basecoin currently requires the 
+Note, however, that currently basecoin currently requires the
 `develop` branch of tendermint for this to work.
 
 ## Send transactions
@@ -122,10 +124,10 @@ See `basecoin tx send --help` for additional details.
 
 The `tx send` command creates and broadcasts a transaction of type `SendTx`,
 which is only useful for moving tokens around.
-Fortunately, Basecoin supports another transaction type, the `AppTx`, 
+Fortunately, Basecoin supports another transaction type, the `AppTx`,
 which can trigger code registered via a plugin system.
 
-In the [next tutorial](example-plugin.md), 
-we demonstrate how to implement a plugin 
+In the [next tutorial](example-plugin.md),
+we demonstrate how to implement a plugin
 and extend the CLI to support new transaction types!
 But first, you may want to learn a bit more about [Basecoin's design](basecoin-design.md)

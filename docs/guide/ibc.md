@@ -9,6 +9,8 @@ and here we'll show you how to use the Basecoin IBC-plugin to send a packet of d
 
 Please note, this tutorial assumes you are familiar with [Basecoin plugins](/docs/guide/plugin-design.md)
 and with the [Basecoin CLI](/docs/guide/basecoin-basics), but we'll explain how IBC works.
+You may also want to see the tutorials on [a simple example plugin](example-plugin.md) 
+and the list of [more advanced plugins](more-examples.md).
 
 The IBC plugin defines a new set of transactions as subtypes of the `AppTx`.
 The plugin's functionality is accessed by setting the `AppTx.Name` field to `"IBC"`, and setting the `Data` field to the serialized IBC transaction type.
@@ -179,7 +181,10 @@ Now that we have all the background knowledge, let's actually walk through the t
 
 Make sure you have installed 
 [tendermint](https://tendermint.com/intro/getting-started/download) and
-[basecoin](/docs/guide/install.md).
+[adam](/docs/guide/install.md).
+
+`adam` is the name for the program that will become the Cosmos Hub.
+We call it Adam because it's the first blockchain in [the Cosmos Network](https://cosmos.network).
 
 Now let's start the two blockchains.
 In this tutorial, each chain will have only a single validator,
@@ -196,14 +201,14 @@ We can start the two chains as follows:
 
 ```
 TMROOT=./data/chain1/tendermint tendermint node &> chain1_tendermint.log &
-basecoin start --ibc-plugin --dir ./data/chain1/basecoin &> chain1_basecoin.log &
+adam start --dir ./data/chain1/basecoin &> chain1_adam.log &
 ```
 
 and
 
 ```
 TMROOT=./data/chain2/tendermint tendermint node --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> chain2_tendermint.log &
-basecoin start --address tcp://localhost:36658 --ibc-plugin --dir ./data/chain2/basecoin &> chain2_basecoin.log &
+adam start --address tcp://localhost:36658 --dir ./data/chain2/basecoin &> chain2_basecoin.log &
 ```
 
 Note how we refer to the relevant data directories. Also note how we have to set the various addresses for the second node so as not to conflict with the first.
@@ -225,27 +230,27 @@ For the sake of convenience, let's first set some environment variables:
 export CHAIN_ID1=test_chain_1
 export CHAIN_ID2=test_chain_2
 
-export CHAIN_FLAGS1="--chain_id $CHAIN_ID1 --from ./data/chain1/basecoin/priv_validator.json"
-export CHAIN_FLAGS2="--chain_id $CHAIN_ID2 --from ./data/chain2/basecoin/priv_validator.json --node tcp://localhost:36657"
+export CHAIN_FLAGS1="--chain_id $CHAIN_ID1 --from ./data/chain1/basecoin/key.json"
+export CHAIN_FLAGS2="--chain_id $CHAIN_ID2 --from ./data/chain2/basecoin/key.json --node tcp://localhost:36657"
 ```
 
 Let's start by registering `test_chain_1` on `test_chain_2`:
 
 ```
-basecoin ibc --amount 10 $CHAIN_FLAGS2 register --chain_id $CHAIN_ID1 --genesis ./data/chain1/tendermint/genesis.json
+adam tx ibc --amount 10 $CHAIN_FLAGS2 register --chain_id $CHAIN_ID1 --genesis ./data/chain1/tendermint/genesis.json
 ```
 
 Now we can create the outgoing packet on `test_chain_1`:
 
 ```
-basecoin ibc --amount 10 $CHAIN_FLAGS1 packet create --from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload 0xDEADBEEF --sequence 1
+adam tx ibc --amount 10 $CHAIN_FLAGS1 packet create --from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload 0xDEADBEEF --sequence 1
 ```
 
 Note our payload is just `DEADBEEF`.
 Now that the packet is committed in the chain, let's get some proof by querying:
 
 ```
-basecoin query ibc,egress,$CHAIN_ID1,$CHAIN_ID2,1
+adam query ibc,egress,$CHAIN_ID1,$CHAIN_ID2,1
 ```
 
 The result contains the latest height, a value (ie. the hex-encoded binary serialization of our packet),
@@ -256,7 +261,7 @@ We'll need a recent block header and a set of commit signatures.
 Fortunately, we can get them with the `block` command:
 
 ```
-basecoin block <height>
+adam block <height>
 ```
 
 where `<height>` is the height returned in the previous query.
@@ -266,7 +271,7 @@ The former is used as input for later commands; the latter is human-readable, so
 Let's send this updated information about `test_chain_1` to `test_chain_2`:
 
 ```
-basecoin ibc --amount 10 $CHAIN_FLAGS2 update --header 0x<header>--commit 0x<commit>
+adam tx ibc --amount 10 $CHAIN_FLAGS2 update --header 0x<header>--commit 0x<commit>
 ```
 
 where `<header>` and `<commit>` are the hex-encoded header and commit returned by the previous `block` command.
@@ -276,7 +281,7 @@ along with proof the packet was committed on `test_chain_1`. Since `test_chain_2
 of `test_chain_1`, it will be able to verify the proof!
 
 ```
-basecoin ibc --amount 10 $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height <height + 1> --packet 0x<packet> --proof 0x<proof>
+adam tx ibc --amount 10 $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height <height + 1> --packet 0x<packet> --proof 0x<proof>
 ```
 
 Here, `<height + 1>` is one greater than the height retuned by the previous `query` command, and `<packet>` and `<proof>` are the
@@ -286,3 +291,11 @@ Tada!
 
 
 ## Conclusion
+
+In this tutorial we explained how IBC works, and demonstrated how to use it to communicate between two chains.
+We did the simplest communciation possible: a one way transfer of data from chain1 to chain2.
+The most important part was that we updated chain2 with the latest state (ie. header and commit) of chain1,
+and then were able to post a proof to chain2 that a packet was committed to the outgoing state of chain1.
+
+In a future tutorial, we will demonstrate how to use IBC to actually transfer tokens between two blockchains,
+but we'll do it with real testnets deployed across multiple nodes on the network. Stay tuned!

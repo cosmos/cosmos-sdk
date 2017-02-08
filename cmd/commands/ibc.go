@@ -142,9 +142,6 @@ var (
 	IbcPacketTxCmd = cli.Command{
 		Name:  "packet",
 		Usage: "Send a new packet via IBC",
-		Flags: []cli.Flag{
-		//
-		},
 		Subcommands: []cli.Command{
 			IbcPacketCreateTx,
 			IbcPacketPostTx,

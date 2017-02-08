@@ -1,7 +1,7 @@
 package: github.com/tendermint/basecoin-examples/stake
 import:
 - package: github.com/tendermint/basecoin
-  version: develop
+  version: docs
 - package: github.com/tendermint/tendermint
   version: develop
 - package: github.com/tendermint/abci

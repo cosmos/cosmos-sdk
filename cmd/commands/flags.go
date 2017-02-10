@@ -51,7 +51,7 @@ var (
 	AmountFlag = cli.StringFlag{
 		Name:  "amount",
 		Value: "",
-		Usage: "Coins to send in transaction of the format <amt><coin>,<amt2><coin2>,... (eg: 1gold,2silver,5btc)",
+		Usage: "Coins to send in transaction of the format <amt><coin>,<amt2><coin2>,... (eg: 1btc,2gold,5silver)",
 	}
 
 	FromFlag = cli.StringFlag{
@@ -75,7 +75,7 @@ var (
 	FeeFlag = cli.StringFlag{
 		Name:  "fee",
 		Value: "",
-		Usage: "Coins for the transaction fee of the format <amt><coin>,<amt2><coin2>,... (eg: 1gold,2silver,5btc)",
+		Usage: "Coins for the transaction fee of the format <amt><coin>",
 	}
 
 	DataFlag = cli.StringFlag{

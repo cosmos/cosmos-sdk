@@ -39,7 +39,7 @@ func TestCounterPlugin(t *testing.T) {
 		tx := &types.AppTx{
 			Gas:   gas,
 			Fee:   fee,
-			Name:  "counter",
+			Name:  counterPlugin.Name(),
 			Input: types.NewTxInput(test1Acc.PubKey, inputCoins, inputSequence),
 			Data:  wire.BinaryBytes(CounterTx{Valid: true, Fee: appFee}),
 		}

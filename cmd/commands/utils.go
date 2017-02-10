@@ -3,9 +3,13 @@ package commands
 import (
 	"encoding/hex"
 	"errors"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/urfave/cli"
 
+	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 
 	abci "github.com/tendermint/abci/types"
@@ -35,6 +39,44 @@ func StripHex(s string) string {
 	return s
 }
 
+func ParseCoin(str string) (types.Coin, error) {
+
+	var coin types.Coin
+
+	coins, err := ParseCoins(str)
+
+	if err != nil {
+		return coin, err
+	}
+
+	if len(coins) > 0 {
+		coin = coins[0]
+	}
+
+	return coin, nil
+}
+
+//regex codes from
+var reAmt = regexp.MustCompile("(\\d+)")
+var reCoin = regexp.MustCompile("([^\\d\\W]+)")
+
+func ParseCoins(str string) (types.Coins, error) {
+
+	split := strings.Split(str, ",")
+	var coins []types.Coin
+
+	for _, el := range split {
+		amt, err := strconv.Atoi(reAmt.FindString(el))
+		if err != nil {
+			return coins, err
+		}
+		coin := reCoin.FindString(el)
+		coins = append(coins, types.Coin{coin, int64(amt)})
+	}
+
+	return coins, nil
+}
+
 func Query(tmAddr string, key []byte) (*abci.ResponseQuery, error) {
 	clientURI := client.NewClientURI(tmAddr)
 	tmResult := new(ctypes.TMResult)
@@ -58,7 +100,7 @@ func Query(tmAddr string, key []byte) (*abci.ResponseQuery, error) {
 // fetch the account by querying the app
 func getAcc(tmAddr string, address []byte) (*types.Account, error) {
 
-	key := append([]byte("base/a/"), address...)
+	key := state.AccountKey(address)
 	response, err := Query(tmAddr, key)
 	if err != nil {
 		return nil, err

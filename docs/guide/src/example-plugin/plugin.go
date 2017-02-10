@@ -69,7 +69,7 @@ func (ep *ExamplePlugin) RunTx(store types.KVStore, ctx types.CallContext, txByt
 	return abci.OK
 }
 
-func (ep *ExamplePlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
+func (cp *ExamplePlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
 }
 
 func (ep *ExamplePlugin) BeginBlock(store types.KVStore, hash []byte, header *abci.Header) {

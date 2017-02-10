@@ -39,26 +39,25 @@ func StripHex(s string) string {
 	return s
 }
 
+//regex codes for extracting coins from CLI input
+var reDenom = regexp.MustCompile("([^\\d\\W]+)")
+var reAmt = regexp.MustCompile("(\\d+)")
+
 func ParseCoin(str string) (types.Coin, error) {
 
 	var coin types.Coin
 
-	coins, err := ParseCoins(str)
-
-	if err != nil {
-		return coin, err
-	}
-
-	if len(coins) > 0 {
-		coin = coins[0]
+	if len(str) > 0 {
+		amt, err := strconv.Atoi(reAmt.FindString(str))
+		if err != nil {
+			return coin, err
+		}
+		denom := reDenom.FindString(str)
+		coin = types.Coin{denom, int64(amt)}
 	}
 
 	return coin, nil
 }
-
-//regex codes from
-var reAmt = regexp.MustCompile("(\\d+)")
-var reCoin = regexp.MustCompile("([^\\d\\W]+)")
 
 func ParseCoins(str string) (types.Coins, error) {
 
@@ -67,12 +66,11 @@ func ParseCoins(str string) (types.Coins, error) {
 
 	for _, el := range split {
 		if len(el) > 0 {
-			amt, err := strconv.Atoi(reAmt.FindString(el))
+			coin, err := ParseCoin(el)
 			if err != nil {
 				return coins, err
 			}
-			coin := reCoin.FindString(el)
-			coins = append(coins, types.Coin{coin, int64(amt)})
+			coins = append(coins, coin)
 		}
 	}
 

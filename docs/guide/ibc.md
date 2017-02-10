@@ -236,13 +236,13 @@ export CHAIN_FLAGS2="--chain_id $CHAIN_ID2 --from ./data/chain2/basecoin/key.jso
 Let's start by registering `test_chain_1` on `test_chain_2`:
 
 ```
-basecoin tx ibc --amount 10 $CHAIN_FLAGS2 register --chain_id $CHAIN_ID1 --genesis ./data/chain1/tendermint/genesis.json
+basecoin tx ibc --amount 10blank $CHAIN_FLAGS2 register --chain_id $CHAIN_ID1 --genesis ./data/chain1/tendermint/genesis.json
 ```
 
 Now we can create the outgoing packet on `test_chain_1`:
 
 ```
-basecoin tx ibc --amount 10 $CHAIN_FLAGS1 packet create --from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload 0xDEADBEEF --sequence 1
+basecoin tx ibc --amount 10blank $CHAIN_FLAGS1 packet create --from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload 0xDEADBEEF --sequence 1
 ```
 
 Note our payload is just `DEADBEEF`.
@@ -270,7 +270,7 @@ The former is used as input for later commands; the latter is human-readable, so
 Let's send this updated information about `test_chain_1` to `test_chain_2`:
 
 ```
-basecoin tx ibc --amount 10 $CHAIN_FLAGS2 update --header 0x<header>--commit 0x<commit>
+basecoin tx ibc --amount 10blank $CHAIN_FLAGS2 update --header 0x<header>--commit 0x<commit>
 ```
 
 where `<header>` and `<commit>` are the hex-encoded header and commit returned by the previous `block` command.
@@ -280,7 +280,7 @@ along with proof the packet was committed on `test_chain_1`. Since `test_chain_2
 of `test_chain_1`, it will be able to verify the proof!
 
 ```
-basecoin tx ibc --amount 10 $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height <height + 1> --packet 0x<packet> --proof 0x<proof>
+basecoin tx ibc --amount 10blank $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height <height + 1> --packet 0x<packet> --proof 0x<proof>
 ```
 
 Here, `<height + 1>` is one greater than the height retuned by the previous `query` command, and `<packet>` and `<proof>` are the

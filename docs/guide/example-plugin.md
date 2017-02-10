@@ -166,8 +166,6 @@ but are necessary boilerplate.
 Your plugin may have additional requirements that utilize these other methods.
 Here's what's relevant for us:
 
-**TODO** make `StateKey` `stateKey`? No need to expose this outside the package.
-
 ```
 type ExamplePluginState struct {
 	Counter int
@@ -278,7 +276,7 @@ if len(stateBytes) > 0 {
 }
 ```
 
-Note the state is stored under `ep.StateKey()`, which is defined above as `ExamplePlugin.State`. Also note, that we do nothing if there is no existing state data.  Is that a bug? No, we just make use of go's variable initialization, that `pluginState` will contain a `Counter` value of 0. If your app needs more initialization than empty variables, then do this logic here in an `else` block.
+Note the state is stored under `ep.StateKey()`, which is defined above as `ExamplePlugin.State`. Also note, that we do nothing if there is no existing state data.  Is that a bug? No, we just make use of Go's variable initialization, that `pluginState` will contain a `Counter` value of 0. If your app needs more initialization than empty variables, then do this logic here in an `else` block.
 
 Finally, we can update the state's `Counter`, and save the state back to the store:
 

@@ -66,6 +66,11 @@ var (
 	}
 )
 
+// Register a subcommand of TxCmd to craft transactions for plugins
+func RegisterQuerySubcommand(cmd cli.Command) {
+	QueryCmd.Subcommands = append(QueryCmd.Subcommands, cmd)
+}
+
 func cmdQuery(c *cli.Context) error {
 	if len(c.Args()) != 1 {
 		return errors.New("query command requires an argument ([key])")

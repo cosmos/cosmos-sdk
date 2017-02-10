@@ -66,12 +66,14 @@ func ParseCoins(str string) (types.Coins, error) {
 	var coins []types.Coin
 
 	for _, el := range split {
-		amt, err := strconv.Atoi(reAmt.FindString(el))
-		if err != nil {
-			return coins, err
+		if len(el) > 0 {
+			amt, err := strconv.Atoi(reAmt.FindString(el))
+			if err != nil {
+				return coins, err
+			}
+			coin := reCoin.FindString(el)
+			coins = append(coins, types.Coin{coin, int64(amt)})
 		}
-		coin := reCoin.FindString(el)
-		coins = append(coins, types.Coin{coin, int64(amt)})
 	}
 
 	return coins, nil

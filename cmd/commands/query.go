@@ -66,7 +66,7 @@ var (
 	}
 )
 
-// Register a subcommand of TxCmd to craft transactions for plugins
+// Register a subcommand of QueryCmd for plugin specific query functionality
 func RegisterQuerySubcommand(cmd cli.Command) {
 	QueryCmd.Subcommands = append(QueryCmd.Subcommands, cmd)
 }

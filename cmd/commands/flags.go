@@ -68,7 +68,7 @@ var (
 
 	CoinFlag = cli.StringFlag{
 		Name:  "coin",
-		Value: "blank",
+		Value: "mycoin",
 		Usage: "Specify a coin denomination",
 	}
 

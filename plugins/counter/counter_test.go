@@ -22,8 +22,7 @@ func TestCounterPlugin(t *testing.T) {
 	t.Log(bcApp.Info())
 
 	// Add Counter plugin
-	counterPluginName := "testcounter"
-	counterPlugin := New(counterPluginName)
+	counterPlugin := New()
 	bcApp.RegisterPlugin(counterPlugin)
 
 	// Account initialization
@@ -40,7 +39,7 @@ func TestCounterPlugin(t *testing.T) {
 		tx := &types.AppTx{
 			Gas:   gas,
 			Fee:   fee,
-			Name:  counterPluginName,
+			Name:  "counter",
 			Input: types.NewTxInput(test1Acc.PubKey, inputCoins, inputSequence),
 			Data:  wire.BinaryBytes(CounterTx{Valid: true, Fee: appFee}),
 		}

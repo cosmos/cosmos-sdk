@@ -181,10 +181,9 @@ Now that we have all the background knowledge, let's actually walk through the t
 
 Make sure you have installed
 [tendermint](https://tendermint.com/intro/getting-started/download) and
-[adam](/docs/guide/install.md).
+[basecoin](/docs/guide/install.md).
 
-`adam` is the name for the program that will become the Cosmos Hub.
-We call it Adam because it's the first blockchain in [the Cosmos Network](https://cosmos.network).
+`basecoin` is a framework for creating new cryptocurrency applications.
 
 Now let's start the two blockchains.
 In this tutorial, each chain will have only a single validator,
@@ -201,14 +200,14 @@ We can start the two chains as follows:
 
 ```
 TMROOT=./data/chain1/tendermint tendermint node &> chain1_tendermint.log &
-adam start --dir ./data/chain1/basecoin &> chain1_adam.log &
+basecoin start --dir ./data/chain1/basecoin &> chain1_basecoin.log &
 ```
 
 and
 
 ```
 TMROOT=./data/chain2/tendermint tendermint node --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> chain2_tendermint.log &
-adam start --address tcp://localhost:36658 --dir ./data/chain2/basecoin &> chain2_basecoin.log &
+basecoin start --address tcp://localhost:36658 --dir ./data/chain2/basecoin &> chain2_basecoin.log &
 ```
 
 Note how we refer to the relevant data directories. Also note how we have to set the various addresses for the second node so as not to conflict with the first.
@@ -237,20 +236,20 @@ export CHAIN_FLAGS2="--chain_id $CHAIN_ID2 --from ./data/chain2/basecoin/key.jso
 Let's start by registering `test_chain_1` on `test_chain_2`:
 
 ```
-adam tx ibc --amount 10 $CHAIN_FLAGS2 register --chain_id $CHAIN_ID1 --genesis ./data/chain1/tendermint/genesis.json
+basecoin tx ibc --amount 10 $CHAIN_FLAGS2 register --chain_id $CHAIN_ID1 --genesis ./data/chain1/tendermint/genesis.json
 ```
 
 Now we can create the outgoing packet on `test_chain_1`:
 
 ```
-adam tx ibc --amount 10 $CHAIN_FLAGS1 packet create --from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload 0xDEADBEEF --sequence 1
+basecoin tx ibc --amount 10 $CHAIN_FLAGS1 packet create --from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload 0xDEADBEEF --sequence 1
 ```
 
 Note our payload is just `DEADBEEF`.
 Now that the packet is committed in the chain, let's get some proof by querying:
 
 ```
-adam query ibc,egress,$CHAIN_ID1,$CHAIN_ID2,1
+basecoin query ibc,egress,$CHAIN_ID1,$CHAIN_ID2,1
 ```
 
 The result contains the latest height, a value (ie. the hex-encoded binary serialization of our packet),
@@ -261,7 +260,7 @@ We'll need a recent block header and a set of commit signatures.
 Fortunately, we can get them with the `block` command:
 
 ```
-adam block <height>
+basecoin block <height>
 ```
 
 where `<height>` is the height returned in the previous query.
@@ -271,7 +270,7 @@ The former is used as input for later commands; the latter is human-readable, so
 Let's send this updated information about `test_chain_1` to `test_chain_2`:
 
 ```
-adam tx ibc --amount 10 $CHAIN_FLAGS2 update --header 0x<header>--commit 0x<commit>
+basecoin tx ibc --amount 10 $CHAIN_FLAGS2 update --header 0x<header>--commit 0x<commit>
 ```
 
 where `<header>` and `<commit>` are the hex-encoded header and commit returned by the previous `block` command.
@@ -281,7 +280,7 @@ along with proof the packet was committed on `test_chain_1`. Since `test_chain_2
 of `test_chain_1`, it will be able to verify the proof!
 
 ```
-adam tx ibc --amount 10 $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height <height + 1> --packet 0x<packet> --proof 0x<proof>
+basecoin tx ibc --amount 10 $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height <height + 1> --packet 0x<packet> --proof 0x<proof>
 ```
 
 Here, `<height + 1>` is one greater than the height retuned by the previous `query` command, and `<packet>` and `<proof>` are the

@@ -21,21 +21,18 @@ type CounterTx struct {
 //--------------------------------------------------------------------------------
 
 type CounterPlugin struct {
-	name string
 }
 
 func (cp *CounterPlugin) Name() string {
-	return cp.name
+	return "counter"
 }
 
 func (cp *CounterPlugin) StateKey() []byte {
-	return []byte(fmt.Sprintf("CounterPlugin{name=%v}.State", cp.name))
+	return []byte(fmt.Sprintf("CounterPlugin.State"))
 }
 
 func New() *CounterPlugin {
-	return &CounterPlugin{
-		name: "counter",
-	}
+	return &CounterPlugin{}
 }
 
 func (cp *CounterPlugin) SetOption(store types.KVStore, key string, value string) (log string) {

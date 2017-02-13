@@ -26,11 +26,11 @@ echo "... starting chains"
 echo ""
 # start the first node
 TMROOT=./data/chain1/tendermint tendermint node &> chain1_tendermint.log &
-adam start --dir ./data/chain1/basecoin &> chain1_basecoin.log &
+basecoin start --dir ./data/chain1/basecoin &> chain1_basecoin.log &
 
 # start the second node
 TMROOT=./data/chain2/tendermint tendermint node --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> chain2_tendermint.log &
-adam start --address tcp://localhost:36658 --dir ./data/chain2/basecoin &> chain2_basecoin.log &
+basecoin start --address tcp://localhost:36658 --dir ./data/chain2/basecoin &> chain2_basecoin.log &
 
 echo ""
 echo "... waiting for chains to start"
@@ -40,20 +40,20 @@ sleep 10
 echo "... registering chain1 on chain2"
 echo ""
 # register chain1 on chain2
-adam tx ibc --amount 10 $CHAIN_FLAGS2 register --chain_id $CHAIN_ID1 --genesis ./data/chain1/tendermint/genesis.json
+basecoin tx ibc --amount 10 $CHAIN_FLAGS2 register --chain_id $CHAIN_ID1 --genesis ./data/chain1/tendermint/genesis.json
 
 echo ""
 echo "... creating egress packet on chain1"
 echo ""
 # create a packet on chain1 destined for chain2
 PAYLOAD="DEADBEEF" #TODO
-adam tx ibc --amount 10 $CHAIN_FLAGS1 packet create --from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload $PAYLOAD --sequence 1
+basecoin tx ibc --amount 10 $CHAIN_FLAGS1 packet create --from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload $PAYLOAD --sequence 1
 
 echo ""
 echo "... querying for packet data"
 echo ""
 # query for the packet data and proof
-QUERY_RESULT=$(adam query ibc,egress,$CHAIN_ID1,$CHAIN_ID2,1)
+QUERY_RESULT=$(basecoin query ibc,egress,$CHAIN_ID1,$CHAIN_ID2,1)
 HEIGHT=$(echo $QUERY_RESULT | jq .height)
 PACKET=$(echo $QUERY_RESULT | jq .value)
 PROOF=$(echo $QUERY_RESULT | jq .proof)
@@ -75,7 +75,7 @@ echo ""
 echo "... querying for block data"
 echo ""
 # get the header and commit for the height
-HEADER_AND_COMMIT=$(adam block $HEIGHT) 
+HEADER_AND_COMMIT=$(basecoin block $HEIGHT) 
 HEADER=$(echo $HEADER_AND_COMMIT | jq .hex.header)
 HEADER=$(removeQuotes $HEADER)
 COMMIT=$(echo $HEADER_AND_COMMIT | jq .hex.commit)
@@ -89,19 +89,19 @@ echo ""
 echo "... updating state of chain1 on chain2"
 echo ""
 # update the state of chain1 on chain2
-adam tx ibc --amount 10 $CHAIN_FLAGS2 update --header 0x$HEADER --commit 0x$COMMIT
+basecoin tx ibc --amount 10 $CHAIN_FLAGS2 update --header 0x$HEADER --commit 0x$COMMIT
 
 echo ""
 echo "... posting packet from chain1 on chain2"
 echo ""
 # post the packet from chain1 to chain2
-adam tx ibc --amount 10 $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height $((HEIGHT + 1)) --packet 0x$PACKET --proof 0x$PROOF
+basecoin tx ibc --amount 10 $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height $((HEIGHT + 1)) --packet 0x$PACKET --proof 0x$PROOF
 
 echo ""
 echo "... checking if the packet is present on chain2"
 echo ""
 # query for the packet on chain2 !
-adam query --node tcp://localhost:36657 ibc,ingress,test_chain_2,test_chain_1,1
+basecoin query --node tcp://localhost:36657 ibc,ingress,test_chain_2,test_chain_1,1
 
 echo ""
 echo "DONE!"

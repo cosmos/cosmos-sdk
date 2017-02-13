@@ -1,8 +1,8 @@
 # Basecoin
 
-DISCLAIMER: Basecoin is not associated with Coinbase.com, an excellent Bitcoin/Ethereum service.
+_DISCLAIMER: Basecoin is not associated with Coinbase.com, an excellent Bitcoin/Ethereum service._
 
-Basecoin is an [ABCI application](https://github.com/tendermint/abci) designed to be used with the [tendermint consensus engine](https://tendermint.com/) to form a Proof-of-Stake cryptocurrency.
+Basecoin is an [ABCI application](https://github.com/tendermint/abci) designed to be used with the [Tendermint consensus engine](https://tendermint.com/) to form a Proof-of-Stake cryptocurrency.
 It also provides a general purpose framework for extending the feature-set of the cryptocurrency
 by implementing plugins.
 
@@ -40,7 +40,7 @@ This will create the `basecoin` binary in `$GOPATH/bin`.
 ## Command Line Interface
 
 The basecoin CLI can be used to start a stand-alone basecoin instance (`basecoin start`),
-or to start basecoin with tendermint in the same process (`basecoin start --in-proc`).
+or to start basecoin with Tendermint in the same process (`basecoin start --in-proc`).
 It can also be used to send transactions, eg. `basecoin tx send --to 0x4793A333846E5104C46DD9AB9A00E31821B2F301 --amount 100`
 See `basecoin --help` and `basecoin [cmd] --help` for more details`.
 

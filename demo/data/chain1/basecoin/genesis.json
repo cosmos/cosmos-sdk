@@ -4,7 +4,7 @@
     "pub_key": [1, "B3588BDC92015ED3CDB6F57A86379E8C79A7111063610B7E625487C76496F4DF"],
     "coins": [
 	{
-	  "denom": "blank",
+	  "denom": "mycoin",
 	  "amount": 9007199254740992
 	}
     ]

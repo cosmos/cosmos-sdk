@@ -133,7 +133,7 @@ OPTIONS:
    --chain_id value  ID of the chain for replay protection (default: "test_chain_id")
    --from value      Path to a private key to sign the transaction (default: "key.json")
    --amount value    Amount of coins to send in the transaction (default: 0)
-   --coin value      Specify a coin denomination (default: "blank")
+   --coin value      Specify a coin denomination (default: "mycoin")
    --gas value       The amount of gas for the transaction (default: 0)
    --fee value       The transaction fee (default: 0)
    --sequence value  Sequence number for the account (default: 0)
@@ -367,7 +367,7 @@ example-plugin tx send --to 0x1B1BE55F969F54064628A63B9559E7C21C925165 --amount 
 ```
 
 Note the `--coin` and `--chain_id` flags. In the [previous tutorial](basecoin-basics.md),
-we didn't need them because we were using the default coin type ("blank") and chain ID ("test_chain_id").
+we didn't need them because we were using the default coin type ("mycoin") and chain ID ("test_chain_id").
 Now that we're using custom values, we need to specify them explicitly on the command line.
 
 Ok, so that's how we can send a `SendTx` transaction using our `example-plugin` CLI,

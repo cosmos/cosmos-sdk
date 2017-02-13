@@ -51,14 +51,15 @@ func (app *Basecoin) RegisterPlugin(plugin types.Plugin) {
 }
 
 // ABCI::SetOption
-func (app *Basecoin) SetOption(key string, value string) (log string) {
-	PluginName, key := splitKey(key)
-	if PluginName != PluginNameBase {
+func (app *Basecoin) SetOption(key string, value string) string {
+	pluginName, key := splitKey(key)
+	if pluginName != PluginNameBase {
 		// Set option on plugin
-		plugin := app.plugins.GetByName(PluginName)
+		plugin := app.plugins.GetByName(pluginName)
 		if plugin == nil {
-			return "Invalid plugin name: " + PluginName
+			return "Invalid plugin name: " + pluginName
 		}
+		log.Info("SetOption on plugin", "plugin", pluginName, "key", key, "value", value)
 		return plugin.SetOption(app.state, key, value)
 	} else {
 		// Set option on basecoin
@@ -74,6 +75,7 @@ func (app *Basecoin) SetOption(key string, value string) (log string) {
 				return "Error decoding acc message: " + err.Error()
 			}
 			app.state.SetAccount(acc.PubKey.Address(), acc)
+			log.Info("SetAccount", "addr", acc.PubKey.Address(), "acc", acc)
 			return "Success"
 		}
 		return "Unrecognized option key " + key

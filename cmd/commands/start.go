@@ -72,7 +72,10 @@ func cmdStart(c *cli.Context) error {
 	// Create Basecoin app
 	basecoinApp := app.NewBasecoin(eyesCli)
 
-	// register all plugins
+	// register IBC plugn
+	basecoinApp.RegisterPlugin(NewIBCPlugin())
+
+	// register all other plugins
 	for _, p := range plugins {
 		basecoinApp.RegisterPlugin(p.newPlugin())
 	}
@@ -91,7 +94,9 @@ func cmdStart(c *cli.Context) error {
 	if c.Bool("in-proc") {
 		startTendermint(c, basecoinApp)
 	} else {
-		startBasecoinABCI(c, basecoinApp)
+		if err := startBasecoinABCI(c, basecoinApp); err != nil {
+			return err
+		}
 	}
 
 	return nil

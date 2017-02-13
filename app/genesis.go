@@ -17,7 +17,7 @@ func (app *Basecoin) LoadGenesis(path string) error {
 	for _, kv := range kvz {
 		log := app.SetOption(kv.Key, kv.Value)
 		// TODO: remove debug output
-		fmt.Printf("Set %v=%v. Log: %v", kv.Key, kv.Value, log)
+		fmt.Printf("Set %v=%v. Log: %v\n", kv.Key, kv.Value, log)
 	}
 	return nil
 }

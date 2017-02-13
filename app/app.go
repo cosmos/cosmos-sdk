@@ -130,6 +130,12 @@ func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 		return
 	}
 
+	// handle special path for account info
+	if reqQuery.Path == "/account" {
+		reqQuery.Path = "/key"
+		reqQuery.Data = append([]byte("base/a/"), reqQuery.Data...)
+	}
+
 	resQuery, err := app.eyesCli.QuerySync(reqQuery)
 	if err != nil {
 		resQuery.Log = "Failed to query MerkleEyes: " + err.Error()

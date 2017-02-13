@@ -1,0 +1,15 @@
+{
+	"app_hash": "",
+	"chain_id": "test_chain_1",
+	"genesis_time": "0001-01-01T00:00:00.000Z",
+	"validators": [
+		{
+			"amount": 10,
+			"name": "",
+			"pub_key": [
+				1,
+				"D6EBB92440CF375054AA59BCF0C99D596DEEDFFB2543CAE1BA1908B72CF9676A"
+			]
+		}
+	]
+}

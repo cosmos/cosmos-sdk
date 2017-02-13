@@ -36,9 +36,11 @@ func (mkv *MemKVStore) Get(key []byte) (value []byte) {
 
 // A Cache that enforces deterministic sync order.
 type KVCache struct {
-	store KVStore
-	cache map[string]kvCacheValue
-	keys  *list.List
+	store    KVStore
+	cache    map[string]kvCacheValue
+	keys     *list.List
+	logging  bool
+	logLines []string
 }
 
 type kvCacheValue struct {
@@ -46,10 +48,26 @@ type kvCacheValue struct {
 	e *list.Element // The KVCache.keys element
 }
 
+// NOTE: If store is nil, creates a new MemKVStore
 func NewKVCache(store KVStore) *KVCache {
+	if store == nil {
+		store = NewMemKVStore()
+	}
 	return (&KVCache{
 		store: store,
 	}).Reset()
+}
+
+func (kvc *KVCache) SetLogging() {
+	kvc.logging = true
+}
+
+func (kvc *KVCache) GetLogLines() []string {
+	return kvc.logLines
+}
+
+func (kvc *KVCache) ClearLogLines() {
+	kvc.logLines = nil
 }
 
 func (kvc *KVCache) Reset() *KVCache {
@@ -59,7 +77,10 @@ func (kvc *KVCache) Reset() *KVCache {
 }
 
 func (kvc *KVCache) Set(key []byte, value []byte) {
-	fmt.Println("Set [KVCache]", formatBytes(key), "=", formatBytes(value))
+	if kvc.logging {
+		line := fmt.Sprintf("Set %v = %v", LegibleBytes(key), LegibleBytes(value))
+		kvc.logLines = append(kvc.logLines, line)
+	}
 	cacheValue, ok := kvc.cache[string(key)]
 	if ok {
 		kvc.keys.MoveToBack(cacheValue.e)
@@ -73,7 +94,10 @@ func (kvc *KVCache) Set(key []byte, value []byte) {
 func (kvc *KVCache) Get(key []byte) (value []byte) {
 	cacheValue, ok := kvc.cache[string(key)]
 	if ok {
-		fmt.Println("GET [KVCache, hit]", formatBytes(key), "=", formatBytes(cacheValue.v))
+		if kvc.logging {
+			line := fmt.Sprintf("Get (hit) %v = %v", LegibleBytes(key), LegibleBytes(cacheValue.v))
+			kvc.logLines = append(kvc.logLines, line)
+		}
 		return cacheValue.v
 	} else {
 		value := kvc.store.Get(key)
@@ -81,7 +105,10 @@ func (kvc *KVCache) Get(key []byte) (value []byte) {
 			v: value,
 			e: kvc.keys.PushBack(key),
 		}
-		fmt.Println("GET [KVCache, miss]", formatBytes(key), "=", formatBytes(value))
+		if kvc.logging {
+			line := fmt.Sprintf("Get (miss) %v = %v", LegibleBytes(key), LegibleBytes(value))
+			kvc.logLines = append(kvc.logLines, line)
+		}
 		return value
 	}
 }
@@ -97,13 +124,13 @@ func (kvc *KVCache) Sync() {
 
 //----------------------------------------
 
-func formatBytes(data []byte) string {
+func LegibleBytes(data []byte) string {
 	s := ""
 	for _, b := range data {
 		if 0x21 <= b && b < 0x7F {
 			s += Green(string(b))
 		} else {
-			s += Blue(Fmt("%X", b))
+			s += Blue(Fmt("%02X", b))
 		}
 	}
 	return s

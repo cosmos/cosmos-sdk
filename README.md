@@ -1,74 +1,57 @@
 # Basecoin
 
-DISCLAIMER: Basecoin is not associated with Coinbase.com, an excellent Bitcoin/Ethereum service.
+_DISCLAIMER: Basecoin is not associated with Coinbase.com, an excellent Bitcoin/Ethereum service._
 
-Basecoin is a sample [ABCI application](https://github.com/tendermint/abci) designed to be used with the [tendermint consensus engine](https://tendermint.com/) to form a Proof-of-Stake cryptocurrency. This project has two main purposes:
+Basecoin is an [ABCI application](https://github.com/tendermint/abci) designed to be used with the [Tendermint consensus engine](https://tendermint.com/) to form a Proof-of-Stake cryptocurrency.
+It also provides a general purpose framework for extending the feature-set of the cryptocurrency
+by implementing plugins.
 
-  1. As an example for anyone wishing to build a custom application using tendermint.
-  2. As a framework for anyone wishing to build a tendermint-based currency, extensible using the plugin system.
+Basecoin serves as a reference implementation for how we build ABCI applications in Go,
+and is the framework in which we implement the [Cosmos Hub](https://cosmos.network).
+It's easy to use, and doesn't require any forking - just implement your plugin, import the basecoin libraries,
+and away you go with a full-stack blockchain and command line tool for transacting.
 
-## Contents
-
-  1. [Installation](#installation)
-  1. [(Advice for go novices)](./GoBasics.md)
-  1. [Using the plugin system](#plugins)
-  1. [Forking the codebase](#forking)
-  1. [Tutorials and other reading](#tutorials)
+WARNING: Currently uses plain-text private keys for transactions and is otherwise not production ready.
 
 ## Installation
 
-We use glide for dependency management.  The prefered way of compiling from source is the following:
+On a good day, basecoin can be installed like a normal Go program:
 
 ```
-go get github.com/tendermint/basecoin
+go get -u github.com/tendermint/basecoin/cmd/basecoin
+```
+
+In some cases, if that fails, or if another branch is required,
+we use `glide` for dependency management.
+
+The guaranteed correct way of compiling from source, assuming you've already 
+run `go get` or otherwise cloned the repo, is:
+
+```
 cd $GOPATH/src/github.com/tendermint/basecoin
+git checkout develop # (until we release tendermint v0.9)
 make get_vendor_deps
 make install
 ```
 
-This will create the `basecoin` binary.
+This will create the `basecoin` binary in `$GOPATH/bin`.
 
-## Plugins
 
-Basecoin handles public-key authentication of transaction, maintaining the balance of arbitrary types of currency (BTC, ATOM, ETH, MYCOIN, ...), sending currency (one-to-one or n-to-n multisig), and providing merkle-proofs of the state. These are common factors that many people wish to have in a crypto-currency system, so instead of trying to start from scratch, you can take advantage of the basecoin plugin system.
+## Command Line Interface
 
-The Plugin interface is defined in `types/plugin.go`:
+The basecoin CLI can be used to start a stand-alone basecoin instance (`basecoin start`),
+or to start basecoin with Tendermint in the same process (`basecoin start --in-proc`).
+It can also be used to send transactions, eg. `basecoin tx send --to 0x4793A333846E5104C46DD9AB9A00E31821B2F301 --amount 100`
+See `basecoin --help` and `basecoin [cmd] --help` for more details`.
 
-```
-type Plugin interface {
-  Name() string
-  SetOption(store KVStore, key string, value string) (log string)
-  RunTx(store KVStore, ctx CallContext, txBytes []byte) (res abci.Result)
-  InitChain(store KVStore, vals []*abci.Validator)
-  BeginBlock(store KVStore, height uint64)
-  EndBlock(store KVStore, height uint64) []*abci.Validator
-}
-```
+## Learn more
 
-`RunTx` is where you can handle any special transactions directed to your application. To see a very simple implementation, look at the demo [counter plugin](./plugins/counter/counter.go). If you want to create your own currency using a plugin, you don't have to fork basecoin at all.  Just make your own repo, add the implementation of your custom plugin, and then build your own main script that instatiates BaseCoin and registers your plugin.
-
-An example is worth a 1000 words, so please take a look [at this example](https://github.com/tendermint/basecoin/blob/abci_proof/cmd/paytovote/main.go#L25-L31), in a dev branch for now.  You can use the same technique in your own repo.
-
-There are a lot of changes on the dev branch, which should be merged in my early February, so experiment, but things will change soon....
-
-## Forking
-
-If you do want to fork basecoin, we would be happy if this was done in a public repo and any enhancements made as PRs on github.  However, this is under the Apache license and you are free to keep the code private if you wish.
-
-If you don't have much experience forking in go, there are a few tricks you want to keep in mind to avoid headaches. Basically, all imports in go are absolute from GOPATH, so if you fork a repo with more than one directory, and you put it under github.com/MYNAME/repo, all the code will start caling github.com/ORIGINAL/repo, which is very confusing.  My prefered solution to this is as follows:
-
-  * Create your own fork on github, using the fork button.
-  * Go to the original repo checked out locally (from `go get`)
-  * `git remote rename origin upstream`
-  * `git remote add origin git@github.com:YOUR-NAME/basecoin.git`
-  * `git push -u origin master`
-  * You can now push all changes to your fork and all code compiles, all other code referencing the original repo, now references your fork.
-  * If you want to pull in updates from the original repo:
-    * `git fetch upstream`
-    * `git rebase upstream/master` (or whatever branch you want)
-
-## Tutorials
-
-We are working on some tutorials that will show you how to set up the genesis block, build a plugin to add custom logic, deploy to a tendermint testnet, and connect a UI to your blockchain.  They should be published during the course of February 2017, so stay tuned....
+1. Getting started with the [Basecoin tool](/docs/guide/basecoin-basics.md)
+1. Learn more about [Basecoin's design](/docs/guide/basecoin-design.md)
+1. Extend Basecoin [using the plugin system](/docs/guide/example-plugin.md)
+1. Learn more about [plugin design](/docs/guide/plugin-design.md)
+1. See some [more example applications](/docs/guide/more-examples.md)
+1. Learn how to use [InterBlockchain Communication (IBC)](/docs/guide/ibc.md)
+1. [Deploy testnets](deployment.md) running your basecoin application.
 
 

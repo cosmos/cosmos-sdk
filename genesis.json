@@ -1,7 +1,0 @@
-[
-  "base/chainID", "test_chain_id",
-  "base/account", {
-    "pub_key": [1, "67D3B5EAF0C0BF6B5A602D359DAECC86A7A74053490EC37AE08E71360587C870"],
-    "balance": 9007199254740992
-  }
-]

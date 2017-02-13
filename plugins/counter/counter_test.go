@@ -15,15 +15,14 @@ import (
 func TestCounterPlugin(t *testing.T) {
 
 	// Basecoin initialization
-	eyesCli := eyescli.NewLocalClient()
+	eyesCli := eyescli.NewLocalClient("", 0)
 	chainID := "test_chain_id"
 	bcApp := app.NewBasecoin(eyesCli)
 	bcApp.SetOption("base/chainID", chainID)
 	t.Log(bcApp.Info())
 
 	// Add Counter plugin
-	counterPluginName := "testcounter"
-	counterPlugin := NewCounterPlugin(counterPluginName)
+	counterPlugin := New()
 	bcApp.RegisterPlugin(counterPlugin)
 
 	// Account initialization
@@ -35,14 +34,14 @@ func TestCounterPlugin(t *testing.T) {
 	bcApp.SetOption("base/account", string(wire.JSONBytes(test1Acc)))
 
 	// Deliver a CounterTx
-	DeliverCounterTx := func(gas int64, fee types.Coin, inputCoins types.Coins, inputSequence int, cost types.Coins) abci.Result {
+	DeliverCounterTx := func(gas int64, fee types.Coin, inputCoins types.Coins, inputSequence int, appFee types.Coins) abci.Result {
 		// Construct an AppTx signature
 		tx := &types.AppTx{
 			Gas:   gas,
 			Fee:   fee,
-			Name:  counterPluginName,
+			Name:  "counter",
 			Input: types.NewTxInput(test1Acc.PubKey, inputCoins, inputSequence),
-			Data:  wire.BinaryBytes(CounterTx{Valid: true, Cost: cost}),
+			Data:  wire.BinaryBytes(CounterTx{Valid: true, Fee: appFee}),
 		}
 
 		// Sign request
@@ -57,7 +56,7 @@ func TestCounterPlugin(t *testing.T) {
 		return bcApp.DeliverTx(txBytes)
 	}
 
-	// REF: DeliverCounterTx(gas, fee, inputCoins, inputSequence, cost) {
+	// REF: DeliverCounterTx(gas, fee, inputCoins, inputSequence, appFee) {
 
 	// Test a basic send, no fee
 	res := DeliverCounterTx(0, types.Coin{}, types.Coins{{"", 1}}, 1, types.Coins{})
@@ -75,15 +74,15 @@ func TestCounterPlugin(t *testing.T) {
 	res = DeliverCounterTx(0, types.Coin{"", 2}, types.Coins{{"", 3}}, 3, types.Coins{})
 	assert.True(t, res.IsOK(), res.String())
 
-	// Test input equals fee+cost
+	// Test input equals fee+appFee
 	res = DeliverCounterTx(0, types.Coin{"", 1}, types.Coins{{"", 3}, {"gold", 1}}, 4, types.Coins{{"", 2}, {"gold", 1}})
 	assert.True(t, res.IsOK(), res.String())
 
-	// Test fee+cost prevented transaction, not enough ""
+	// Test fee+appFee prevented transaction, not enough ""
 	res = DeliverCounterTx(0, types.Coin{"", 1}, types.Coins{{"", 2}, {"gold", 1}}, 5, types.Coins{{"", 2}, {"gold", 1}})
 	assert.True(t, res.IsErr(), res.String())
 
-	// Test fee+cost prevented transaction, not enough "gold"
+	// Test fee+appFee prevented transaction, not enough "gold"
 	res = DeliverCounterTx(0, types.Coin{"", 1}, types.Coins{{"", 3}, {"gold", 1}}, 5, types.Coins{{"", 2}, {"gold", 2}})
 	assert.True(t, res.IsErr(), res.String())
 
@@ -95,5 +94,5 @@ func TestCounterPlugin(t *testing.T) {
 	res = DeliverCounterTx(0, types.Coin{"", 1}, types.Coins{{"", 3}, {"gold", 2}}, 7, types.Coins{{"", 2}, {"gold", 1}})
 	assert.True(t, res.IsOK(), res.String())
 
-	// REF: DeliverCounterTx(gas, fee, inputCoins, inputSequence, cost) {
+	// REF: DeliverCounterTx(gas, fee, inputCoins, inputSequence, appFee) {
 }

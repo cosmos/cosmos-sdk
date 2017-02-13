@@ -1,0 +1,12 @@
+[
+  "base/chainID", "test_chain_2",
+  "base/account", {
+    "pub_key": [1, "0628C8E6C2D50B15764B443394E06C6A64F3082CE966A2A8C1A55A4D63D0FC5D"],
+    "coins": [
+	{
+	  "denom": "mycoin",
+	  "amount": 9007199254740992
+	}
+    ]
+  }
+]

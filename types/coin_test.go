@@ -42,6 +42,19 @@ func TestCoinsBadSort(t *testing.T) {
 	}
 }
 
+func TestCoinsBadSort2(t *testing.T) {
+	// both are after the first one, but the second and third are in the wrong order
+	coins := Coins{
+		Coin{"GAS", 1},
+		Coin{"TREE", 1},
+		Coin{"MINERAL", 1},
+	}
+
+	if coins.IsValid() {
+		t.Fatal("Coins are not sorted")
+	}
+}
+
 func TestCoinsBadAmount(t *testing.T) {
 	coins := Coins{
 		Coin{"GAS", 1},

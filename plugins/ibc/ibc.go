@@ -431,21 +431,20 @@ func verifyCommit(chainState BlockchainState, header *tm.Header, commit *tm.Comm
 		return errors.New(cmn.Fmt("Commit has no signatures"))
 	}
 	chainID := chainState.ChainID
-	vote0 := commit.Precommits[0]
 	vals := chainState.Validators
 	valSet := tm.NewValidatorSet(vals)
-
-	// Ensure the commit is for the header
-	if !bytes.Equal(header.Hash(), vote0.BlockID.Hash) {
-		return errors.New(cmn.Fmt("Commit.BlockID.Hash (%X) does not match header.Hash (%X)", vote0.BlockID.Hash, header.Hash()))
-	}
 
 	// NOTE: Currently this only works with the exact same validator set.
 	// Not this, but perhaps "ValidatorSet.VerifyCommitAny" should expose
 	// the functionality to verify commits even after validator changes.
-	err := valSet.VerifyCommit(chainID, vote0.BlockID, vote0.Height, commit)
+	blockID, err := valSet.VerifyCommitReturnBlockID(chainID, header.Height, commit)
 	if err != nil {
 		return err
+	}
+
+	// Ensure the committed blockID matches the header
+	if !bytes.Equal(header.Hash(), blockID.Hash) {
+		return errors.New(cmn.Fmt("blockID.Hash (%X) does not match header.Hash (%X)", blockID.Hash, header.Hash()))
 	}
 
 	// All ok!

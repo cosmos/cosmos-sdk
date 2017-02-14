@@ -82,14 +82,14 @@ echo "... querying for packet data"
 echo ""
 # query for the packet data and proof
 QUERY_RESULT=$(basecoin query ibc,egress,$CHAIN_ID1,$CHAIN_ID2,1)
-LAST_HEIGHT=$(echo $QUERY_RESULT | jq .last_height)
+HEIGHT=$(echo $QUERY_RESULT | jq .height)
 PACKET=$(echo $QUERY_RESULT | jq .value)
 PROOF=$(echo $QUERY_RESULT | jq .proof)
 PACKET=$(removeQuotes $PACKET)
 PROOF=$(removeQuotes $PROOF)
 echo ""
 echo "QUERY_RESULT: $QUERY_RESULT"
-echo "LAST_HEIGHT: $LAST_HEIGHT"
+echo "HEIGHT: $HEIGHT"
 echo "PACKET: $PACKET"
 echo "PROOF: $PROOF"
 
@@ -101,9 +101,6 @@ sleep 5
 
 waitForBlock localhost:46657
 waitForBlock localhost:36657
-
-# we need the header at height H=LAST_HEIGHT + 1
-HEIGHT=$(($LAST_HEIGHT + 1))
 
 echo ""
 echo "... querying for block data"

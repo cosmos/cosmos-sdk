@@ -13,9 +13,9 @@ import:
 - package: github.com/tendermint/go-wire
   version: develop
 - package: github.com/tendermint/merkleeyes
-  version: last_height
+  version: develop
 - package: github.com/tendermint/tendermint
-  version: last_height
+  version: rpc-commit
 - package: github.com/tendermint/abci
   version: develop
 - package: github.com/gorilla/websocket

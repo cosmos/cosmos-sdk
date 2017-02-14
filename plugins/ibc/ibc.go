@@ -433,11 +433,12 @@ func verifyCommit(chainState BlockchainState, header *tm.Header, commit *tm.Comm
 	chainID := chainState.ChainID
 	vals := chainState.Validators
 	valSet := tm.NewValidatorSet(vals)
+	blockID := commit.Precommits[0].BlockID // XXX: incorrect
 
 	// NOTE: Currently this only works with the exact same validator set.
 	// Not this, but perhaps "ValidatorSet.VerifyCommitAny" should expose
 	// the functionality to verify commits even after validator changes.
-	blockID, err := valSet.VerifyCommitReturnBlockID(chainID, header.Height, commit)
+	err := valSet.VerifyCommit(chainID, blockID, header.Height, commit)
 	if err != nil {
 		return err
 	}

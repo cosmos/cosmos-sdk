@@ -9,6 +9,32 @@ function removeQuotes() {
 	echo "$temp"
 }
 
+function waitForNode() {
+        addr=$1
+	set +e
+        curl -s $addr/status > /dev/null
+        ERR=$?
+        while [ "$ERR" != 0 ]; do
+                sleep 1 
+                curl -s $addr/status > /dev/null
+                ERR=$?
+        done
+	set -e
+        echo "... node $addr is up"
+}
+
+function waitForBlock() {
+	addr=$1
+	b1=`curl -s $addr/status | jq .result[1].latest_block_height`
+	b2=$b1
+	while [ "$b2" != "$b1" ]; do
+                echo "Waiting for node $addr to commit a block ..."
+                sleep 1
+		b2=`curl -s $addr/status | jq .result[1].latest_block_height`
+	done
+}
+
+
 # grab the chain ids
 CHAIN_ID1=$(cat ./data/chain1/basecoin/genesis.json | jq .[1])
 CHAIN_ID1=$(removeQuotes $CHAIN_ID1)
@@ -35,7 +61,9 @@ basecoin start --address tcp://localhost:36658 --dir ./data/chain2/basecoin &> c
 echo ""
 echo "... waiting for chains to start"
 echo ""
-sleep 10
+
+waitForNode localhost:46657
+waitForNode localhost:36657
 
 echo "... registering chain1 on chain2"
 echo ""
@@ -54,14 +82,14 @@ echo "... querying for packet data"
 echo ""
 # query for the packet data and proof
 QUERY_RESULT=$(basecoin query ibc,egress,$CHAIN_ID1,$CHAIN_ID2,1)
-HEIGHT=$(echo $QUERY_RESULT | jq .height)
+LAST_HEIGHT=$(echo $QUERY_RESULT | jq .last_height)
 PACKET=$(echo $QUERY_RESULT | jq .value)
 PROOF=$(echo $QUERY_RESULT | jq .proof)
 PACKET=$(removeQuotes $PACKET)
 PROOF=$(removeQuotes $PROOF)
 echo ""
 echo "QUERY_RESULT: $QUERY_RESULT"
-echo "HEIGHT: $HEIGHT"
+echo "LAST_HEIGHT: $LAST_HEIGHT"
 echo "PACKET: $PACKET"
 echo "PROOF: $PROOF"
 
@@ -70,6 +98,12 @@ echo ""
 echo "... waiting for some blocks to be mined"
 echo ""
 sleep 5
+
+waitForBlock localhost:46657
+waitForBlock localhost:36657
+
+# we need the header at height H=LAST_HEIGHT + 1
+HEIGHT=$(($LAST_HEIGHT + 1))
 
 echo ""
 echo "... querying for block data"
@@ -95,12 +129,12 @@ echo ""
 echo "... posting packet from chain1 on chain2"
 echo ""
 # post the packet from chain1 to chain2
-basecoin tx ibc --amount 10 $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height $((HEIGHT + 1)) --packet 0x$PACKET --proof 0x$PROOF
+basecoin tx ibc --amount 10 $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height $HEIGHT --packet 0x$PACKET --proof 0x$PROOF
 
 echo ""
 echo "... checking if the packet is present on chain2"
 echo ""
-# query for the packet on chain2 !
+# query for the packet on chain2
 basecoin query --node tcp://localhost:36657 ibc,ingress,test_chain_2,test_chain_1,1
 
 echo ""

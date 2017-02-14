@@ -133,7 +133,7 @@ func cmdBlock(c *cli.Context) error {
 		return errors.New(cmn.Fmt("Height must be an int, got %v: %v", heightString, err))
 	}
 
-	nextBlock, err := getBlock(c, height)
+	header, commit, err := getHeaderAndCommit(c, height)
 	if err != nil {
 		return err
 	}
@@ -143,12 +143,12 @@ func cmdBlock(c *cli.Context) error {
 		JSON BlockJSON `json:"json"`
 	}{
 		BlockHex{
-			Header: wire.BinaryBytes(nextBlock.Header),
-			Commit: wire.BinaryBytes(nextBlock.LastCommit),
+			Header: wire.BinaryBytes(header),
+			Commit: wire.BinaryBytes(commit),
 		},
 		BlockJSON{
-			Header: nextBlock.Header,
-			Commit: nextBlock.LastCommit,
+			Header: header,
+			Commit: commit,
 		},
 	})))
 

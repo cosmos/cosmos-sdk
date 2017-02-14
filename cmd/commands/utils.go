@@ -80,15 +80,24 @@ func getAcc(tmAddr string, address []byte) (*types.Account, error) {
 	return acc, nil
 }
 
-func getBlock(c *cli.Context, height int) (*tmtypes.Block, error) {
+func getHeaderAndCommit(c *cli.Context, height int) (*tmtypes.Header, *tmtypes.Commit, error) {
 	tmResult := new(ctypes.TMResult)
 	tmAddr := c.String("node")
 	clientURI := client.NewClientURI(tmAddr)
 
 	_, err := clientURI.Call("block", map[string]interface{}{"height": height}, tmResult)
 	if err != nil {
-		return nil, errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
+		return nil, nil, errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
 	}
-	res := (*tmResult).(*ctypes.ResultBlock)
-	return res.Block, nil
+	resBlock := (*tmResult).(*ctypes.ResultBlock)
+	header := resBlock.Block.Header
+
+	_, err = clientURI.Call("commit", map[string]interface{}{"height": height}, tmResult)
+	if err != nil {
+		return nil, nil, errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
+	}
+	resCommit := (*tmResult).(*ctypes.ResultCommit)
+	commit := resCommit.Commit
+
+	return header, commit, nil
 }

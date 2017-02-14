@@ -52,7 +52,7 @@ func NewExamplePlugin() *ExamplePlugin {
 	}
 }
 
-// Return a byte array unique to this plugin which will be used as the key which
+// Return a byte array unique to this plugin which is used as the key
 // to store the plugin state (ExamplePluginState)
 func (ep *ExamplePlugin) StateKey() []byte {
 	return []byte("ExamplePlugin.State")

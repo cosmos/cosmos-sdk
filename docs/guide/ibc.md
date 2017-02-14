@@ -175,13 +175,8 @@ The results of a query can thus be used as proof in an `IBCPacketPostTx`.
 Now that we have all the background knowledge, let's actually walk through the tutorial.
 
 Make sure you have installed
-<<<<<<< 5be9db68dbd6a69ba886c5a6e55b90f2cecd2ca8
-[tendermint](https://tendermint.com/intro/getting-started/download) and
-[basecoin](/docs/guide/install.md).
-=======
 [Tendermint](https://tendermint.com/intro/getting-started/download) and
-[adam](/docs/guide/install.md).
->>>>>>> doc edits
+[basecoin](/docs/guide/install.md).
 
 `basecoin` is a framework for creating new cryptocurrency applications.
 

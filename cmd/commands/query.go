@@ -133,11 +133,7 @@ func cmdBlock(c *cli.Context) error {
 		return errors.New(cmn.Fmt("Height must be an int, got %v: %v", heightString, err))
 	}
 
-	/*block, err := getBlock(c, height)
-	if err != nil {
-		return err
-	}*/
-	nextBlock, err := getBlock(c, height+1)
+	nextBlock, err := getBlock(c, height)
 	if err != nil {
 		return err
 	}

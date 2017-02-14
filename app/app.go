@@ -196,9 +196,3 @@ func splitKey(key string) (prefix string, suffix string) {
 	}
 	return key, ""
 }
-
-// (not meant to be called)
-// assert that Basecoin implements `abci.Application` at compile-time
-func _assertABCIApplication(basecoin *Basecoin) abci.Application {
-	return basecoin
-}

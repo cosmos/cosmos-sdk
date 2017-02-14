@@ -2,11 +2,9 @@ hash: 3869944d14a8df914ffcad02c2ef3548173daba51c5ea697767f8af77c07b348
 updated: 2017-02-17T13:24:05.234809983+01:00
 imports:
 - name: github.com/btcsuite/btcd
-  version: afec1bd1245a4a19e6dfe1306974b733e7cbb9b8
+  version: d06c0bb181529331be8f8d9350288c420d9e60e4
   subpackages:
   - btcec
-- name: github.com/btcsuite/fastsha256
-  version: 637e656429416087660c84436a2a035d69d54e2e
 - name: github.com/BurntSushi/toml
   version: 99064174e013895bbd9b025c31100bd1d9b590ca
 - name: github.com/ebuchman/fail-test
@@ -156,14 +154,15 @@ imports:
   - transport
 testImports:
 - name: github.com/davecgh/go-spew
-  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  version: 346938d642f2ec3594ed81d874461961cd0faa76
   subpackages:
   - spew
 - name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:
   - difflib
 - name: github.com/stretchr/testify
   version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
   - assert
+  - require

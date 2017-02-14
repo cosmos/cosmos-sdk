@@ -85,18 +85,12 @@ func getHeaderAndCommit(c *cli.Context, height int) (*tmtypes.Header, *tmtypes.C
 	tmAddr := c.String("node")
 	clientURI := client.NewClientURI(tmAddr)
 
-	_, err := clientURI.Call("block", map[string]interface{}{"height": height}, tmResult)
-	if err != nil {
-		return nil, nil, errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
-	}
-	resBlock := (*tmResult).(*ctypes.ResultBlock)
-	header := resBlock.Block.Header
-
-	_, err = clientURI.Call("commit", map[string]interface{}{"height": height}, tmResult)
+	_, err := clientURI.Call("commit", map[string]interface{}{"height": height}, tmResult)
 	if err != nil {
 		return nil, nil, errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
 	}
 	resCommit := (*tmResult).(*ctypes.ResultCommit)
+	header := resCommit.Header
 	commit := resCommit.Commit
 
 	return header, commit, nil

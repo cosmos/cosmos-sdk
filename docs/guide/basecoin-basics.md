@@ -91,14 +91,14 @@ The first account is flush with cash, while the second account doesn't exist.
 Let's send funds from the first account to the second:
 
 ```
-basecoin tx send --to 0x1DA7C74F9C219229FD54CC9F7386D5A3839F0090 --amount 10blank
+basecoin tx send --to 0x1DA7C74F9C219229FD54CC9F7386D5A3839F0090 --amount 10mycoin
 ```
 
 By default, the CLI looks for a `priv_validator.json` to sign the transaction with,
 so this will only work if you are in the `$GOPATH/src/github.com/tendermint/basecoin/data`.
 To specify a different key, we can use the `--from` flag.
 
-Now if we check the second account, it should have `10` 'blank' coins!
+Now if we check the second account, it should have `10` 'mycoin' coins!
 
 ```
 basecoin account 0x1DA7C74F9C219229FD54CC9F7386D5A3839F0090
@@ -107,7 +107,7 @@ basecoin account 0x1DA7C74F9C219229FD54CC9F7386D5A3839F0090
 We can send some of these coins back like so:
 
 ```
-basecoin tx send --to 0x1B1BE55F969F54064628A63B9559E7C21C925165 --from key2.json --amount 5blank
+basecoin tx send --to 0x1B1BE55F969F54064628A63B9559E7C21C925165 --from key2.json --amount 5mycoin
 ```
 
 Note how we use the `--from` flag to select a different account to send from.
@@ -115,7 +115,7 @@ Note how we use the `--from` flag to select a different account to send from.
 If we try to send too much, we'll get an error:
 
 ```
-basecoin tx send --to 0x1B1BE55F969F54064628A63B9559E7C21C925165 --from key2.json --amount 100blank
+basecoin tx send --to 0x1B1BE55F969F54064628A63B9559E7C21C925165 --from key2.json --amount 100mycoin
 ```
 
 See `basecoin tx send --help` for additional details.

@@ -13,10 +13,9 @@ import (
 // Plugin State Struct
 //   * Intended to store the current state of the plugin
 //     * This example contains a field which holds the execution count
-//   * Used by go-wire as the encoding/decoding struct to hold the plugin state
-//   * All fields must be exposed (for go-wire)
-//   * The state is stored within the KVStore using the key retrieved
-//     from the ExamplePlugin.StateKey() function
+//   * Serialized (by go-wire) and stored within the KVStore using the key retrieved
+//     from the ExamplePlugin.StateKey() function/
+//   * All fields must be exposed for serialization by external libs (here go-wire)
 type ExamplePluginState struct {
 	Counter int
 }
@@ -25,9 +24,8 @@ type ExamplePluginState struct {
 //   * Stores transaction-specific plugin-customized information
 //     * This example contains a dummy field 'Valid' intended to specify
 //       if the transaction is a valid and should proceed
-//   * Used by go-wire as the encoding/decoding struct to pass transaction
-//   * All fields must be exposed (for go-wire)
-//   * Passed through txBytes in the RunTx func.
+//   * Deserialized (by go-wire) from txBytes in ExamplePlugin.RunTx
+//   * All fields must be exposed for serialization by external libs (here go-wire)
 type ExamplePluginTx struct {
 	Valid bool
 }
@@ -42,10 +40,7 @@ type ExamplePlugin struct {
 //-----------------------------------------
 // Non-Mandatory Functions
 
-// Return a new example plugin pointer with a hard-coded name. Within other
-// plugin implementations may choose to include other initialization
-// information to populate custom fields of your Plugin struct in this example
-// named ExamplePlugin
+// Return a new ExamplePlugin pointer with a hard-coded name
 func NewExamplePlugin() *ExamplePlugin {
 	return &ExamplePlugin{
 		name: "example-plugin",
@@ -81,13 +76,12 @@ func (ep *ExamplePlugin) SetOption(store types.KVStore, key string, value string
 // Input fields:
 // - store types.KVStore
 //   - This term provides read/write capabilities to the merkelized data store
-//     which is accessible cross-plugin
+//     which holds the basecoin state and is accessible to all plugins
 // - ctx types.CallContext
 //   - The ctx contains the callers address, a pointer to the callers account,
 //     and an amount of coins sent with the transaction
 // - txBytes []byte
-//   - Used to send customized information from the basecoin
-//     application to your plugin
+//   - Used to send customized information to your plugin
 //
 // Other more complex plugins may have a variant on the process order within this
 // example including loading and saving multiple or variable states, or not

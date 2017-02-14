@@ -329,6 +329,7 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 	save(sm.store, packetKeyIngress, packet)
 
 	// Load Header and make sure it exists
+	// If it exists, we already checked a valid commit for it in UpdateChainTx
 	var header tm.Header
 	exists, err := load(sm.store, headerKey, &header)
 	if err != nil {
@@ -341,16 +342,6 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 		return
 	}
 
-	/*
-		// Read Proof
-		var proof *merkle.IAVLProof
-		err = wire.ReadBinaryBytes(tx.Proof, &proof)
-		if err != nil {
-			sm.res.Code = IBCEncodingError
-			sm.res.Log = cmn.Fmt("Reading Proof: %v", err.Error())
-			return
-		}
-	*/
 	proof := tx.Proof
 	if proof == nil {
 		sm.res.Code = IBCCodeInvalidProof
@@ -368,7 +359,6 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 	}
 
 	return
-
 }
 
 func (ibc *IBCPlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
@@ -432,6 +422,7 @@ func verifyCommit(chainState BlockchainState, header *tm.Header, commit *tm.Comm
 	if chainState.ChainID != header.ChainID {
 		return errors.New(cmn.Fmt("Expected header.ChainID %v, got %v", chainState.ChainID, header.ChainID))
 	}
+	// Ensure things aren't empty
 	if len(chainState.Validators) == 0 {
 		return errors.New(cmn.Fmt("Blockchain has no validators")) // NOTE: Why would this happen?
 	}
@@ -442,6 +433,11 @@ func verifyCommit(chainState BlockchainState, header *tm.Header, commit *tm.Comm
 	vote0 := commit.Precommits[0]
 	vals := chainState.Validators
 	valSet := tm.NewValidatorSet(vals)
+
+	// Ensure the commit is for the header
+	if !bytes.Equal(header.Hash(), vote0.BlockID.Hash) {
+		return errors.New(cmn.Fmt("Commit.BlockID.Hash (%X) does not match header.Hash (%X)", vote0.BlockID.Hash, header.Hash()))
+	}
 
 	// NOTE: Currently this only works with the exact same validator set.
 	// Not this, but perhaps "ValidatorSet.VerifyCommitAny" should expose

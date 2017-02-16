@@ -85,9 +85,10 @@ func getHeaderAndCommit(c *cli.Context, height int) (*tmtypes.Header, *tmtypes.C
 	tmAddr := c.String("node")
 	clientURI := client.NewClientURI(tmAddr)
 
-	_, err := clientURI.Call("commit", map[string]interface{}{"height": height}, tmResult)
+	method := "commit"
+	_, err := clientURI.Call(method, map[string]interface{}{"height": height}, tmResult)
 	if err != nil {
-		return nil, nil, errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
+		return nil, nil, errors.New(cmn.Fmt("Error on %s: %v", method, err))
 	}
 	resCommit := (*tmResult).(*ctypes.ResultCommit)
 	header := resCommit.Header

@@ -27,7 +27,7 @@ function waitForBlock() {
 	addr=$1
 	b1=`curl -s $addr/status | jq .result[1].latest_block_height`
 	b2=$b1
-	while [ "$b2" != "$b1" ]; do
+	while [ "$b2" == "$b1" ]; do
                 echo "Waiting for node $addr to commit a block ..."
                 sleep 1
 		b2=`curl -s $addr/status | jq .result[1].latest_block_height`
@@ -94,10 +94,11 @@ echo "PACKET: $PACKET"
 echo "PROOF: $PROOF"
 
 
+# the query returns the height of the next block, which contains the app hash
+# but which may not be committed yet, so we have to wait for it to query the commit
 echo ""
-echo "... waiting for some blocks to be mined"
+echo "... waiting for a block to be committed"
 echo ""
-sleep 5
 
 waitForBlock localhost:46657
 waitForBlock localhost:36657

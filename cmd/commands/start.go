@@ -2,6 +2,7 @@ package commands
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path"
 
@@ -83,6 +84,8 @@ func cmdStart(c *cli.Context) error {
 		if err != nil {
 			return errors.New(cmn.Fmt("%+v", err))
 		}
+	} else {
+		fmt.Printf("No genesis file at %s, skipping...\n", genesisFile)
 	}
 
 	if c.Bool("in-proc") {

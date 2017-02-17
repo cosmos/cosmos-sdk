@@ -15,7 +15,7 @@ import:
 - package: github.com/tendermint/merkleeyes
   version: develop
 - package: github.com/tendermint/tendermint
-  version: rpc-commit
+  version: develop
 - package: github.com/tendermint/abci
   version: develop
 - package: github.com/gorilla/websocket

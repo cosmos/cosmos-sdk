@@ -90,10 +90,14 @@ func (mp MintPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes [
 }
 
 // placeholders empty to fulfill interface
-func (mp MintPlugin) InitChain(store types.KVStore, vals []*abci.Validator) {}
-func (mp MintPlugin) BeginBlock(store types.KVStore, height uint64)         {}
-func (mp MintPlugin) EndBlock(store types.KVStore, height uint64) []*abci.Validator {
-	return nil
+func (mp MintPlugin) InitChain(store types.KVStore, vals []*abci.Validator)            {}
+func (mp MintPlugin) BeginBlock(store types.KVStore, hash []byte, header *abci.Header) {}
+func (mp MintPlugin) EndBlock(store types.KVStore, height uint64) abci.ResponseEndBlock {
+	return abci.ResponseEndBlock{}
+}
+
+func (mp MintPlugin) assertPlugin() types.Plugin {
+	return mp
 }
 
 /*** implementation ***/

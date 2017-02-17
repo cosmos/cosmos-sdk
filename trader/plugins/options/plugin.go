@@ -70,10 +70,15 @@ func (p Plugin) Exec(store bc.KVStore, ctx bc.CallContext, tx types.OptionsTx) a
 func (p *Plugin) InitChain(store bc.KVStore, vals []*abci.Validator) {}
 
 // track the height for expiration
-func (p *Plugin) BeginBlock(store bc.KVStore, height uint64) {
-	p.height = height
+func (p *Plugin) BeginBlock(store bc.KVStore, hash []byte, header *abci.Header) {
+	p.height = header.Height
 }
-func (p *Plugin) EndBlock(store bc.KVStore, height uint64) []*abci.Validator {
+
+func (p *Plugin) EndBlock(store bc.KVStore, height uint64) abci.ResponseEndBlock {
 	p.height = height + 1
-	return nil
+	return abci.ResponseEndBlock{}
+}
+
+func (p *Plugin) assertPlugin() bc.Plugin {
+	return p
 }

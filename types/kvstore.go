@@ -113,6 +113,7 @@ func (kvc *KVCache) Get(key []byte) (value []byte) {
 	}
 }
 
+//Update the store with the values from the cache
 func (kvc *KVCache) Sync() {
 	for e := kvc.keys.Front(); e != nil; e = e.Next() {
 		key := e.Value.([]byte)

@@ -35,7 +35,7 @@ func New() *CounterPlugin {
 	return &CounterPlugin{}
 }
 
-func (cp *CounterPlugin) SetOption(store types.KVStore, key string, value string) (log string) {
+func (cp *CounterPlugin) SetOption(store types.KVStore, key, value string) (log string) {
 	return ""
 }
 

@@ -38,7 +38,7 @@ func (s *State) GetChainID() string {
 }
 
 func (s *State) Get(key []byte) (value []byte) {
-	if s.readCache != nil {
+	if s.readCache != nil { //if not a cachewrap
 		value, ok := s.readCache[string(key)]
 		if ok {
 			return value
@@ -48,7 +48,7 @@ func (s *State) Get(key []byte) (value []byte) {
 }
 
 func (s *State) Set(key []byte, value []byte) {
-	if s.readCache != nil {
+	if s.readCache != nil { //if not a cachewrap
 		s.readCache[string(key)] = value
 	}
 	s.store.Set(key, value)
@@ -78,8 +78,14 @@ func (s *State) CacheSync() {
 }
 
 func (s *State) Commit() abci.Result {
-	s.readCache = make(map[string][]byte)
-	return s.store.(*eyes.Client).CommitSync()
+	switch s.store.(type) {
+	case *eyes.Client:
+		s.readCache = make(map[string][]byte)
+		return s.store.(*eyes.Client).CommitSync()
+	default:
+		return abci.NewError(abci.CodeType_InternalError, "can only use commit is store is merkleeyes")
+	}
+
 }
 
 //----------------------------------------

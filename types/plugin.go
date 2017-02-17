@@ -15,7 +15,7 @@ type Plugin interface {
 	RunTx(store KVStore, ctx CallContext, txBytes []byte) (res abci.Result)
 
 	// Other ABCI message handlers
-	SetOption(store KVStore, key string, value string) (log string)
+	SetOption(store KVStore, key, value string) (log string)
 	InitChain(store KVStore, vals []*abci.Validator)
 	BeginBlock(store KVStore, hash []byte, header *abci.Header)
 	EndBlock(store KVStore, height uint64) abci.ResponseEndBlock

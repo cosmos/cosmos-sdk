@@ -1,11 +1,28 @@
 package commands
 
 import (
+	"encoding/hex"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/basecoin/types"
 )
+
+func TestHex(t *testing.T) {
+
+	//test isHex
+	hexNoPrefix := hex.EncodeToString([]byte("foobar"))
+	hexWPrefix := "0x" + hexNoPrefix
+	str := "foobar"
+	strWPrefix := "0xfoobar"
+	assert.True(t, isHex(hexWPrefix), "isHex not identifying hex with 0x prefix")
+	assert.True(t, !isHex(hexNoPrefix), "isHex shouldn't identify hex without 0x prefix")
+	assert.True(t, !isHex(str), "isHex shouldn't identify non-hex string")
+	assert.True(t, !isHex(strWPrefix), "isHex shouldn't identify non-hex string with 0x prefix")
+
+	//test strip hex
+	assert.True(t, StripHex(hexWPrefix) == hexNoPrefix, "StripHex doesn't remove first two characters")
+}
 
 //Test the parse coin and parse coins functionality
 func TestParse(t *testing.T) {

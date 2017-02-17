@@ -19,6 +19,11 @@ func TestCoins(t *testing.T) {
 		t.Fatalf("Expected coins to be positive: %v", coins)
 	}
 
+	emptyCoins := Coins{Coin{"GOLD", 0}}
+	if !coins.IsGTE(emptyCoins) {
+		t.Fatalf("Expected %v to be >= %v", coins, emptyCoins)
+	}
+
 	negCoins := coins.Negative()
 	if negCoins.IsPositive() {
 		t.Fatalf("Expected neg coins to not be positive: %v", negCoins)

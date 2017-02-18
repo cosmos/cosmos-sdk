@@ -21,7 +21,7 @@ plugin.go
 
 The `main.go` is very simple and does not need to be changed:
 
-```
+```golang
 func main() {
 	app := cli.NewApp()
 	app.Name = "example-plugin"
@@ -50,7 +50,7 @@ This is where the `cmd.go` comes in.
 First, we register the plugin:
 
 
-```
+```golang
 func init() {
 	commands.RegisterTxSubcommand(ExamplePluginTxCmd)
 	commands.RegisterStartPlugin("example-plugin", func() types.Plugin { return NewExamplePlugin() })
@@ -61,7 +61,7 @@ This creates a new subcommand under `tx` (defined below),
 and ensures the plugin is activated when we start the app.
 Now we actually define the new command:
 
-```
+```golang
 var (
 	ExampleFlag = cli.BoolFlag{
 		Name:  "valid",
@@ -88,13 +88,13 @@ func cmdExamplePluginTx(c *cli.Context) error {
 It's a simple command with one flag, which is just a boolean.
 However, it actually inherits more flags from the Basecoin framework:
 
-```
+```golang
 Flags: append(commands.TxFlags, ExampleFlag),
 ```
 
 The `commands.TxFlags` is defined in `cmd/commands/tx.go`:
 
-```
+```golang
 var TxFlags = []cli.Flag{
 	NodeFlag,
 	ChainIDFlag,
@@ -144,7 +144,7 @@ Cool, eh?
 
 Before we move on to `plugin.go`, let's look at the `cmdExamplePluginTx` function in `cmd.go`:
 
-```
+```golang
 func cmdExamplePluginTx(c *cli.Context) error {
 	exampleFlag := c.Bool("valid")
 	exampleTx := ExamplePluginTx{exampleFlag}
@@ -166,7 +166,7 @@ but are necessary boilerplate.
 Your plugin may have additional requirements that utilize these other methods.
 Here's what's relevant for us:
 
-```
+```golang
 type ExamplePluginState struct {
 	Counter int
 }
@@ -236,7 +236,7 @@ and then using the `RunTx` method to define how the transaction updates the stat
 Let's break down `RunTx` in parts. First, we deserialize the transaction:
 
 
-```
+```golang
 // Decode tx
 var tx ExamplePluginTx
 err := wire.ReadBinaryBytes(txBytes, &tx)
@@ -250,9 +250,9 @@ as defined in the `github.com/tendermint/go-wire` package.
 If it's not encoded properly, we return an error.
 
 
-If the transaction deserializes currectly, we can now check if it's valid:
+If the transaction deserializes correctly, we can now check if it's valid:
 
-```
+```golang
 // Validate tx
 if !tx.Valid {
 	return abci.ErrInternalError.AppendLog("Valid must be true")
@@ -264,7 +264,7 @@ Finally, we can update the state. In this example, the state simply counts how m
 we've processed. But the state itself is serialized and kept in some `store`, which is typically a Merkle tree.
 So first we have to load the state from the store and deserialize it:
 
-```
+```golang
 // Load PluginState
 var pluginState ExamplePluginState
 stateBytes := store.Get(ep.StateKey())
@@ -276,11 +276,14 @@ if len(stateBytes) > 0 {
 }
 ```
 
-Note the state is stored under `ep.StateKey()`, which is defined above as `ExamplePlugin.State`. Also note, that we do nothing if there is no existing state data.  Is that a bug? No, we just make use of Go's variable initialization, that `pluginState` will contain a `Counter` value of 0. If your app needs more initialization than empty variables, then do this logic here in an `else` block.
+Note the state is stored under `ep.StateKey()`, which is defined above as `ExamplePlugin.State`. 
+Also note, that we do nothing if there is no existing state data.  Is that a bug? No, we just make 
+use of Go's variable initialization, that `pluginState` will contain a `Counter` value of 0. 
+If your app needs more initialization than empty variables, then do this logic here in an `else` block.
 
 Finally, we can update the state's `Counter`, and save the state back to the store:
 
-```
+```golang
 //App Logic
 pluginState.Counter += 1
 
@@ -313,7 +316,7 @@ example-plugin key new > key.json
 
 Here's what my `key.json looks like:
 
-```
+```json
 {
 	"address": "15F591CA434CFCCBDEC1D206F3ED3EBA207BFE7D",
 	"priv_key": [
@@ -329,7 +332,7 @@ Here's what my `key.json looks like:
 
 Now we can make a `genesis.json` file and add an account with out public key:
 
-```
+```json
 [
   "base/chainID", "example-chain",
   "base/account", {
@@ -346,7 +349,7 @@ Now we can make a `genesis.json` file and add an account with out public key:
 
 Here we've granted ourselves `1000000000` units of the `gold` token.
 
-Before we can start the blockchain, we must initialize and/or reset the tendermint state for a new blockchain:
+Before we can start the blockchain, we must initialize and/or reset the Tendermint state for a new blockchain:
 
 ```
 tendermint init
@@ -410,7 +413,7 @@ This is a Merkle proof that the state is what we say it is.
 In a latter [tutorial on Interblockchain Communication](ibc.md),
 we'll put this proof to work!
 
-## Next Stpes
+## Next Steps
 
 In this tutorial we demonstrated how to create a new plugin and how to extend the
 basecoin CLI to activate the plugin on the blockchain and to send transactions to it.

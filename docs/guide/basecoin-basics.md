@@ -1,13 +1,16 @@
 # Basecoin Basics
 
-Here we explain how to get started with a simple Basecoin blockchain, and how to send transactions between accounts using the `basecoin` tool.
+Here we explain how to get started with a simple Basecoin blockchain, 
+and how to send transactions between accounts using the `basecoin` tool.
 
 ## Install
 
 Make sure you have [basecoin installed](install.md).
-You will also need to [install tendermint](https://tendermint.com/intro/getting-started/download).
+You will also need to [install Tendermint](https://tendermint.com/intro/getting-started/download).
 
-**Note** All code is on the 0.9 pre-release branch, you may have to [install tendermint from source](https://tendermint.com/docs/guides/install) until 0.9 is released.  (Make sure to add `git checkout develop` to the linked install instructions)
+**Note** All code is on the 0.9 pre-release branch, you may have to 
+[install Tendermint from source](https://tendermint.com/docs/guides/install) 
+until 0.9 is released.  (Make sure to add `git checkout develop` to the linked install instructions)
 
 ## Initialization
 
@@ -18,7 +21,7 @@ tendermint init
 ```
 
 This will create the necessary files for a single Tendermint node in `~/.tendermint`.
-If you had previously run tendermint, make sure you reset the chain
+If you had previously run Tendermint, make sure you reset the chain
 (note this will delete all chain data, so back it up if you need it):
 
 ```
@@ -49,7 +52,8 @@ Now we can start basecoin:
 basecoin start --in-proc
 ```
 
-This will initialize the chain with the `genesis.json` file from the current directory.  If you want to specify another location, you can run:
+This will initialize the chain with the `genesis.json` file from the current directory. 
+If you want to specify another location, you can run:
 
 ```
 basecoin start --in-proc --dir PATH/TO/CUSTOM/DATA
@@ -71,7 +75,7 @@ tendermint node
 
 In either case, you should see blocks start streaming in!
 Note, however, that currently basecoin currently requires the
-`develop` branch of tendermint for this to work.
+`develop` branch of Tendermint for this to work.
 
 ## Send transactions
 

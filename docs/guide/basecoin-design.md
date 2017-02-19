@@ -55,7 +55,7 @@ type TxInput struct {
   Coins     Coins            `json:"coins"`     //
   Sequence  int              `json:"sequence"`  // Must be 1 greater than the last committed TxInput
   Signature crypto.Signature `json:"signature"` // Depends on the PubKey type and the whole Tx
-  PubKey    crypto.PubKey    `json:"pub_key"`   // Is present if Sequence == 0
+  PubKey    crypto.PubKey    `json:"pub_key"`   // Is present iff Sequence == 0
 }
 
 type TxOutput struct {

@@ -67,8 +67,8 @@ One could imagine going so far as to implement the Ethereum Virtual Machine as a
 Any required plugin initialization should be constructed within `SetOption`.
 `SetOption` may be called during genesis of basecoin and can be used to set
 initial plugin parameters. Within genesis.json file entries are made in
-the format: "<plugin>/<key>", "<value>" Where <plugin> is the plugin name,
-and <key> and <value> are the strings passed into the plugin SetOption function. 
+the format: `"<plugin>/<key>", "<value>"`, where `<plugin>` is the plugin name,
+and `<key>` and `<value>` are the strings passed into the plugin SetOption function. 
 This function is intended to be used to set plugin specific information such 
 as the plugin state.
 

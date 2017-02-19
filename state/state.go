@@ -83,7 +83,7 @@ func (s *State) Commit() abci.Result {
 		s.readCache = make(map[string][]byte)
 		return s.store.(*eyes.Client).CommitSync()
 	default:
-		return abci.NewError(abci.CodeType_InternalError, "can only use commit is store is merkleeyes")
+		return abci.NewError(abci.CodeType_InternalError, "can only use Commit if store is merkleeyes")
 	}
 
 }

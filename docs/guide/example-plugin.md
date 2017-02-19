@@ -132,10 +132,9 @@ OPTIONS:
    --node value      Tendermint RPC address (default: "tcp://localhost:46657")
    --chain_id value  ID of the chain for replay protection (default: "test_chain_id")
    --from value      Path to a private key to sign the transaction (default: "key.json")
-   --amount value    Amount of coins to send in the transaction (default: 0)
-   --coin value      Specify a coin denomination (default: "mycoin")
+   --amount value    Coins to send in transaction of the format <amt><coin>,<amt2><coin2>,... (eg: 1btc,2gold,5silver)
    --gas value       The amount of gas for the transaction (default: 0)
-   --fee value       The transaction fee (default: 0)
+   --fee value       Coins for the transaction fee of the format <amt><coin>
    --sequence value  Sequence number for the account (default: 0)
    --valid           Set this to make the transaction valid
 ```
@@ -366,25 +365,25 @@ example-plugin start --in-proc
 In another window, we can try sending some transactions:
 
 ```
-example-plugin tx send --to 0x1B1BE55F969F54064628A63B9559E7C21C925165 --amount 100 --coin gold --chain_id example-chain
+example-plugin tx send --to 0x1B1BE55F969F54064628A63B9559E7C21C925165 --amount 100gold --chain_id example-chain
 ```
 
-Note the `--coin` and `--chain_id` flags. In the [previous tutorial](basecoin-basics.md),
-we didn't need them because we were using the default coin type ("mycoin") and chain ID ("test_chain_id").
-Now that we're using custom values, we need to specify them explicitly on the command line.
+Note the `--chain_id` flag. In the [previous tutorial](basecoin-basics.md),
+we didn't include it because we were using the default chain ID ("test_chain_id").
+Now that we're using a custom chain, we need to specify the chain explicitly on the command line.
 
 Ok, so that's how we can send a `SendTx` transaction using our `example-plugin` CLI,
 but we were already able to do that with the `basecoin` CLI.
 With our new CLI, however, we can also send an `ExamplePluginTx`:
 
 ```
-example-plugin tx example --amount 1 --coin gold --chain_id example-chain
+example-plugin tx example --amount 1gold --chain_id example-chain
 ```
 
 The transaction is invalid! That's because we didn't specify the `--valid` flag:
 
 ```
-example-plugin tx example --valid --amount 1 --coin gold --chain_id example-chain
+example-plugin tx example --valid --amount 1gold --chain_id example-chain
 ```
 
 Tada! We successfuly created, signed, broadcast, and processed our custom transaction type.
@@ -404,7 +403,7 @@ which contains only an integer.
 If we send another transaction, and then query again, we'll see the value increment:
 
 ```
-example-plugin tx example --valid --amount 1 --coin gold --chain_id example-chain
+example-plugin tx example --valid --amount 1gold --chain_id example-chain
 example-plugin query ExamplePlugin.State
 ```
 

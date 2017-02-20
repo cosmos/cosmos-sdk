@@ -1,5 +1,5 @@
 hash: e7fdc631da5b36e8aec9bc7c857b8ea02e92f1713588ecd6099506ff624b4bb0
-updated: 2017-02-17T13:39:23.079973643+01:00
+updated: 2017-02-20T17:24:38.099578246+01:00
 imports:
 - name: github.com/btcsuite/btcd
   version: d06c0bb181529331be8f8d9350288c420d9e60e4
@@ -50,7 +50,7 @@ imports:
   - server
   - types
 - name: github.com/tendermint/basecoin
-  version: 1d8f59644f80db6a3a22fc8ba0ea84a146d47389
+  version: 2728af1f3bba8e4225a5a27eb000ef567131cfe2
   subpackages:
   - app
   - cmd/commands

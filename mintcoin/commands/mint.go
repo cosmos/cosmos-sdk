@@ -19,14 +19,9 @@ var (
 		Name:  "mintto",
 		Usage: "Where to send the newly minted coins",
 	}
-	MintAmountFlag = cli.IntFlag{
+	MintAmountFlag = cli.StringFlag{
 		Name:  "mint",
-		Usage: "Amount of coins to mint",
-	}
-	MintCoinFlag = cli.StringFlag{
-		Name:  "mintcoin",
-		Value: "blank",
-		Usage: "Specify a coin denomination to mint",
+		Usage: "Amount of coins to mint in format <amt><coin>,<amt2><coin2>,...",
 	}
 )
 
@@ -39,8 +34,7 @@ var (
 		},
 		Flags: append(bcmd.TxFlags,
 			MintToFlag,
-			MintAmountFlag,
-			MintCoinFlag),
+			MintAmountFlag),
 	}
 )
 
@@ -52,8 +46,7 @@ func init() {
 
 func cmdMintTx(c *cli.Context) error {
 	toHex := c.String(MintToFlag.Name)
-	mintAmount := int64(c.Int(MintAmountFlag.Name))
-	mintCoin := c.String(MintCoinFlag.Name)
+	mintAmount := c.String(MintAmountFlag.Name)
 
 	// convert destination address to bytes
 	to, err := hex.DecodeString(bcmd.StripHex(toHex))
@@ -61,16 +54,16 @@ func cmdMintTx(c *cli.Context) error {
 		return errors.New("To address is invalid hex: " + err.Error())
 	}
 
+	amountCoins, err := bcmd.ParseCoins(mintAmount)
+	if err != nil {
+		return err
+	}
+
 	mintTx := mintcoin.MintTx{
 		Credits: []mintcoin.Credit{
 			{
-				Addr: to,
-				Amount: types.Coins{
-					{
-						Denom:  mintCoin,
-						Amount: mintAmount,
-					},
-				},
+				Addr:   to,
+				Amount: amountCoins,
 			},
 		},
 	}

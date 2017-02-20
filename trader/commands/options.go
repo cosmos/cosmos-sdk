@@ -29,23 +29,13 @@ var (
 		Name:  "sellto",
 		Usage: "Who to sell the options to (optional)",
 	}
-	OptionTradeAmountFlag = cli.IntFlag{
+	OptionTradeAmountFlag = cli.StringFlag{
 		Name:  "trade",
-		Usage: "Amount of coins to trade",
+		Usage: "Amount of coins to trade in format <amt><coin>,<amt2><coin2>,...",
 	}
-	OptionTradeCoinFlag = cli.StringFlag{
-		Name:  "trade-coin",
-		Value: "blank",
-		Usage: "Specify a coin denomination to trade",
-	}
-	OptionPriceAmountFlag = cli.IntFlag{
+	OptionPriceAmountFlag = cli.StringFlag{
 		Name:  "price",
-		Usage: "Amount of coins for price",
-	}
-	OptionPriceCoinFlag = cli.StringFlag{
-		Name:  "price-coin",
-		Value: "blank",
-		Usage: "Specify a coin denomination for price",
+		Usage: "Price to buy option in format <amt><coin>,<amt2><coin2>,...",
 	}
 )
 
@@ -69,7 +59,6 @@ var (
 		Flags: append(bcmd.TxFlags,
 			OptionExpireFlag,
 			OptionTradeAmountFlag,
-			OptionTradeCoinFlag,
 		),
 		Action: func(c *cli.Context) error {
 			return cmdOptionCreateTx(c)
@@ -83,7 +72,6 @@ var (
 			OptionAddrFlag,
 			OptionSellToFlag,
 			OptionPriceAmountFlag,
-			OptionPriceCoinFlag,
 		),
 		Action: func(c *cli.Context) error {
 			return cmdOptionSellTx(c)
@@ -143,16 +131,17 @@ func init() {
 }
 
 func cmdOptionCreateTx(c *cli.Context) error {
-	optionAmount := int64(c.Int(OptionTradeAmountFlag.Name))
-	optionCoin := c.String(OptionTradeCoinFlag.Name)
+	tradeAmount := c.String(OptionTradeAmountFlag.Name)
 	expire := c.Uint64(EscrowExpireFlag.Name)
+
+	tradeCoins, err := bcmd.ParseCoins(tradeAmount)
+	if err != nil {
+		return err
+	}
 
 	tx := types.CreateOptionTx{
 		Expiration: expire,
-		Trade: bc.Coins{{ // yes {{ an array with one element....
-			Denom:  optionCoin,
-			Amount: optionAmount,
-		}},
+		Trade:      tradeCoins,
 	}
 	data := types.OptionsTxBytes(tx)
 	return bcmd.AppTx(c, OptionName, data)
@@ -161,8 +150,7 @@ func cmdOptionCreateTx(c *cli.Context) error {
 func cmdOptionSellTx(c *cli.Context) error {
 	addrHex := c.String(OptionAddrFlag.Name)
 	buyerHex := c.String(OptionSellToFlag.Name)
-	optionAmount := int64(c.Int(OptionPriceAmountFlag.Name))
-	optionCoin := c.String(OptionPriceCoinFlag.Name)
+	price := c.String(OptionPriceAmountFlag.Name)
 
 	// convert destination address to bytes
 	addr, err := hex.DecodeString(bcmd.StripHex(addrHex))
@@ -175,13 +163,15 @@ func cmdOptionSellTx(c *cli.Context) error {
 		buyer = nil
 	}
 
+	priceCoins, err := bcmd.ParseCoins(price)
+	if err != nil {
+		return err
+	}
+
 	tx := types.SellOptionTx{
 		Addr:      addr,
 		NewHolder: buyer,
-		Price: bc.Coins{{ // yes {{ an array with one element....
-			Denom:  optionCoin,
-			Amount: optionAmount,
-		}},
+		Price:     priceCoins,
 	}
 	data := types.OptionsTxBytes(tx)
 	return bcmd.AppTx(c, OptionName, data)

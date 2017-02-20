@@ -5,7 +5,7 @@ import:
   subpackages:
   - types
 - package: github.com/tendermint/basecoin
-  version: docs
+  version: develop
   subpackages:
   - cmd/commands
   - state

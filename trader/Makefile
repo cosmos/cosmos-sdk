@@ -7,5 +7,5 @@ install:
 	go install ./cmd/...
 
 get_vendor_deps:
-	go get github.com/Masterminds/glide
+	@go get github.com/Masterminds/glide
 	glide install

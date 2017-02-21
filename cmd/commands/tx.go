@@ -36,12 +36,13 @@ var (
 		Subcommands: []cli.Command{
 			SendTxCmd,
 			AppTxCmd,
+			IbcTxCmd,
 		},
 	}
 
 	SendTxCmd = cli.Command{
 		Name:      "send",
-		Usage:     "Create, sign, and broadcast a SendTx transaction",
+		Usage:     "a SendTx transaction, for sending tokens around",
 		ArgsUsage: "",
 		Action: func(c *cli.Context) error {
 			return cmdSendTx(c)
@@ -51,7 +52,7 @@ var (
 
 	AppTxCmd = cli.Command{
 		Name:      "app",
-		Usage:     "Create, sign, and broadcast a raw AppTx transaction",
+		Usage:     "an AppTx transaction, for sending raw data to plugins",
 		ArgsUsage: "",
 		Action: func(c *cli.Context) error {
 			return cmdAppTx(c)

@@ -83,6 +83,11 @@ func (pubKey PubKeyEd25519) Bytes() []byte {
 }
 
 func (pubKey PubKeyEd25519) VerifyBytes(msg []byte, sig_ Signature) bool {
+	// unwrap if needed
+	if wrap, ok := sig_.(SignatureS); ok {
+		sig_ = wrap.Signature
+	}
+	// make sure we use the same algorithm to sign
 	sig, ok := sig_.(SignatureEd25519)
 	if !ok {
 		return false
@@ -155,12 +160,18 @@ func (pubKey PubKeySecp256k1) Bytes() []byte {
 }
 
 func (pubKey PubKeySecp256k1) VerifyBytes(msg []byte, sig_ Signature) bool {
-	pub__, err := secp256k1.ParsePubKey(append([]byte{0x04}, pubKey[:]...), secp256k1.S256())
-	if err != nil {
-		return false
+	// unwrap if needed
+	if wrap, ok := sig_.(SignatureS); ok {
+		sig_ = wrap.Signature
 	}
+	// and assert same algorithm to sign and verify
 	sig, ok := sig_.(SignatureSecp256k1)
 	if !ok {
+		return false
+	}
+
+	pub__, err := secp256k1.ParsePubKey(append([]byte{0x04}, pubKey[:]...), secp256k1.S256())
+	if err != nil {
 		return false
 	}
 	sig__, err := secp256k1.ParseDERSignature(sig[:], secp256k1.S256())

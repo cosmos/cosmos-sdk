@@ -91,7 +91,7 @@ func (p *SignatureEd25519) UnmarshalJSON(enc []byte) error {
 //-------------------------------------
 
 // Implements Signature
-type SignatureSecp256k1 data.Bytes
+type SignatureSecp256k1 []byte
 
 func (sig SignatureSecp256k1) Bytes() []byte {
 	return wire.BinaryBytes(struct{ Signature }{sig})
@@ -107,4 +107,11 @@ func (sig SignatureSecp256k1) Equals(other Signature) bool {
 	} else {
 		return false
 	}
+}
+func (p SignatureSecp256k1) MarshalJSON() ([]byte, error) {
+	return data.Encoder.Marshal(p)
+}
+
+func (p *SignatureSecp256k1) UnmarshalJSON(enc []byte) error {
+	return data.Encoder.Unmarshal((*[]byte)(p), enc)
 }

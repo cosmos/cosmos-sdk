@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/ed25519"
 	"github.com/tendermint/ed25519/extra25519"
 	. "github.com/tendermint/go-common"
+	data "github.com/tendermint/go-data"
 	"github.com/tendermint/go-wire"
 )
 
@@ -22,14 +23,35 @@ type PrivKey interface {
 const (
 	PrivKeyTypeEd25519   = byte(0x01)
 	PrivKeyTypeSecp256k1 = byte(0x02)
+	PrivKeyNameEd25519   = "ed25519"
+	PrivKeyNameSecp256k1 = "secp256k1"
 )
 
-// for wire.readReflect
-var _ = wire.RegisterInterface(
-	struct{ PrivKey }{},
-	wire.ConcreteType{PrivKeyEd25519{}, PrivKeyTypeEd25519},
-	wire.ConcreteType{PrivKeySecp256k1{}, PrivKeyTypeSecp256k1},
-)
+var privKeyMapper data.Mapper
+
+// register both private key types with go-data (and thus go-wire)
+func init() {
+	privKeyMapper = data.NewMapper(PrivKeyS{}).
+		RegisterInterface(PrivKeyEd25519{}, PrivKeyNameEd25519, PrivKeyTypeEd25519).
+		RegisterInterface(PrivKeySecp256k1{}, PrivKeyNameSecp256k1, PrivKeyTypeSecp256k1)
+}
+
+// PrivKeyS add json serialization to PrivKey
+type PrivKeyS struct {
+	PrivKey
+}
+
+func (p PrivKeyS) MarshalJSON() ([]byte, error) {
+	return privKeyMapper.ToJSON(p.PrivKey)
+}
+
+func (p *PrivKeyS) UnmarshalJSON(data []byte) (err error) {
+	parsed, err := privKeyMapper.FromJSON(data)
+	if err == nil {
+		p.PrivKey = parsed.(PrivKey)
+	}
+	return
+}
 
 func PrivKeyFromBytes(privKeyBytes []byte) (privKey PrivKey, err error) {
 	err = wire.ReadBinaryBytes(privKeyBytes, &privKey)
@@ -62,6 +84,17 @@ func (privKey PrivKeyEd25519) Equals(other PrivKey) bool {
 	} else {
 		return false
 	}
+}
+
+func (p PrivKeyEd25519) MarshalJSON() ([]byte, error) {
+	return data.Encoder.Marshal(p[:])
+}
+
+func (p *PrivKeyEd25519) UnmarshalJSON(enc []byte) error {
+	var ref []byte
+	err := data.Encoder.Unmarshal(&ref, enc)
+	copy(p[:], ref)
+	return err
 }
 
 func (privKey PrivKeyEd25519) ToCurve25519() *[32]byte {
@@ -134,6 +167,17 @@ func (privKey PrivKeySecp256k1) Equals(other PrivKey) bool {
 	} else {
 		return false
 	}
+}
+
+func (p PrivKeySecp256k1) MarshalJSON() ([]byte, error) {
+	return data.Encoder.Marshal(p[:])
+}
+
+func (p *PrivKeySecp256k1) UnmarshalJSON(enc []byte) error {
+	var ref []byte
+	err := data.Encoder.Unmarshal(&ref, enc)
+	copy(p[:], ref)
+	return err
 }
 
 func (privKey PrivKeySecp256k1) String() string {

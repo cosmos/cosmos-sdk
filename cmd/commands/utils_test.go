@@ -15,13 +15,24 @@ func TestHex(t *testing.T) {
 	hexWPrefix := "0x" + hexNoPrefix
 	str := "foobar"
 	strWPrefix := "0xfoobar"
-	assert.True(t, isHex(hexWPrefix), "isHex not identifying hex with 0x prefix")
-	assert.True(t, !isHex(hexNoPrefix), "isHex shouldn't identify hex without 0x prefix")
-	assert.True(t, !isHex(str), "isHex shouldn't identify non-hex string")
-	assert.True(t, !isHex(strWPrefix), "isHex shouldn't identify non-hex string with 0x prefix")
 
-	//test strip hex
-	assert.True(t, StripHex(hexWPrefix) == hexNoPrefix, "StripHex doesn't remove first two characters")
+	//define the list of coin tests
+	var testList = []struct {
+		testPass bool
+		errMsg   string
+	}{
+		{isHex(hexWPrefix), "isHex not identifying hex with 0x prefix"},
+		{!isHex(hexNoPrefix), "isHex shouldn't identify hex without 0x prefix"},
+		{!isHex(str), "isHex shouldn't identify non-hex string"},
+		{!isHex(strWPrefix), "isHex shouldn't identify non-hex string with 0x prefix"},
+		{StripHex(hexWPrefix) == hexNoPrefix, "StripHex doesn't remove first two characters"},
+	}
+
+	//execute the tests
+	for _, tl := range testList {
+		assert.True(t, tl.testPass, tl.errMsg)
+	}
+
 }
 
 //Test the parse coin and parse coins functionality
@@ -43,15 +54,27 @@ func TestParse(t *testing.T) {
 		return coin
 	}
 
-	//testing ParseCoin Function
-	assert.True(t, types.Coin{} == makeCoin(""), "parseCoin makes bad empty coin")
-	assert.True(t, types.Coin{"fooCoin", 1} == makeCoin("1fooCoin"), "parseCoin makes bad coins")
-	assert.True(t, types.Coin{"barCoin", 10} == makeCoin("10 barCoin"), "parseCoin makes bad coins")
+	//define the list of coin tests
+	var testList = []struct {
+		testPass bool
+		errMsg   string
+	}{
+		//testing ParseCoin Function
+		{types.Coin{} == makeCoin(""), "parseCoin makes bad empty coin"},
+		{types.Coin{"fooCoin", 1} == makeCoin("1fooCoin"), "parseCoin makes bad coins"},
+		{types.Coin{"barCoin", 10} == makeCoin("10 barCoin"), "parseCoin makes bad coins"},
 
-	//testing ParseCoins Function
-	assert.True(t, types.Coins{{"fooCoin", 1}}.IsEqual(makeCoins("1fooCoin")), "parseCoins doesn't parse a single coin")
-	assert.True(t, types.Coins{{"barCoin", 99}, {"fooCoin", 1}}.IsEqual(makeCoins("99barCoin,1fooCoin")),
-		"parseCoins doesn't properly parse two coins")
-	assert.True(t, types.Coins{{"barCoin", 99}, {"fooCoin", 1}}.IsEqual(makeCoins("99 barCoin, 1 fooCoin")),
-		"parseCoins doesn't properly parse two coins which use spaces")
+		//testing ParseCoins Function
+		{types.Coins{{"fooCoin", 1}}.IsEqual(makeCoins("1fooCoin")),
+			"parseCoins doesn't parse a single coin"},
+		{types.Coins{{"barCoin", 99}, {"fooCoin", 1}}.IsEqual(makeCoins("99barCoin,1fooCoin")),
+			"parseCoins doesn't properly parse two coins"},
+		{types.Coins{{"barCoin", 99}, {"fooCoin", 1}}.IsEqual(makeCoins("99 barCoin, 1 fooCoin")),
+			"parseCoins doesn't properly parse two coins which use spaces"},
+	}
+
+	//execute the tests
+	for _, tl := range testList {
+		assert.True(t, tl.testPass, tl.errMsg)
+	}
 }

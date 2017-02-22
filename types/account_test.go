@@ -16,10 +16,7 @@ func TestAccount(t *testing.T) {
 
 	//test Copy
 	accCopy := acc.Copy()
-	accCopy.Sequence = 1
-	t.Log(acc.Sequence)
-	t.Log(accCopy.Sequence)
-	assert.True(t, acc.Sequence != accCopy.Sequence, "Account Copy Error")
+	assert.True(t, &acc != accCopy, "Account Copy Error")
 
 	//test sending nils for panic
 	var nilAcc *Account

@@ -2,58 +2,78 @@ package types
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMemKVStore(t *testing.T) {
+func TestKVStore(t *testing.T) {
 
+	//stores to be tested
 	ms := NewMemKVStore()
-	ms.Set([]byte("foo"), []byte("snake"))
-	ms.Set([]byte("bar"), []byte("mouse"))
-	assert.True(t, bytes.Equal(ms.Get([]byte("foo")), []byte("snake")), "MemKVStore doesn't retrieve after Set")
-	assert.True(t, bytes.Equal(ms.Get([]byte("bar")), []byte("mouse")), "MemKVStore doesn't retrieve after Set")
-}
-
-func TestKVCache(t *testing.T) {
-
 	store := NewMemKVStore()
 	kvc := NewKVCache(store)
 
-	setRecords := func() {
-		kvc.Set([]byte("foo"), []byte("snake"))
-		kvc.Set([]byte("bar"), []byte("mouse"))
+	//key value pairs to be tested within the system
+	var keyvalue = []struct {
+		key   string
+		value string
+	}{
+		{"foo", "snake"},
+		{"bar", "mouse"},
 	}
 
-	//test read/write
-	setRecords()
-	assert.True(t, bytes.Equal(kvc.Get([]byte("foo")), []byte("snake")), "KVCache doesn't retrieve after Set")
-	assert.True(t, bytes.Equal(kvc.Get([]byte("bar")), []byte("mouse")), "KVCache doesn't retrieve after Set")
+	//set the kvc to have all the key value pairs
+	setRecords := func(kv KVStore) {
+		for _, n := range keyvalue {
+			kv.Set([]byte(n.key), []byte(n.value))
+		}
+	}
 
-	//test reset
-	kvc.Reset()
-	assert.True(t, !bytes.Equal(kvc.Get([]byte("foo")), []byte("snake")), "KVCache retrieving after reset")
-	assert.True(t, !bytes.Equal(kvc.Get([]byte("bar")), []byte("mouse")), "KVCache retrieving after reset")
+	//store has all the key value pairs
+	storeHasAll := func(kv KVStore) bool {
+		for _, n := range keyvalue {
+			if !bytes.Equal(kv.Get([]byte(n.key)), []byte(n.value)) {
+				return false
+			}
+		}
+		return true
+	}
 
-	//test sync
-	setRecords()
-	assert.True(t, !bytes.Equal(store.Get([]byte("foo")), []byte("snake")), "store retrieving before synced")
-	assert.True(t, !bytes.Equal(store.Get([]byte("bar")), []byte("mouse")), "store retrieving before synced")
-	kvc.Sync()
-	assert.True(t, bytes.Equal(store.Get([]byte("foo")), []byte("snake")), "store isn't retrieving after synced")
-	assert.True(t, bytes.Equal(store.Get([]byte("bar")), []byte("mouse")), "store isn't retrieving after synced")
+	//define the test list
+	var testList = []struct {
+		testPass func() bool
+		errMsg   string
+	}{
+		//test read/write for MemKVStore
+		{func() bool { setRecords(ms); return storeHasAll(ms) },
+			"MemKVStore doesn't retrieve after Set"},
 
-	//test logging
-	assert.True(t, len(kvc.GetLogLines()) == 0, "logging events existed before using SetLogging")
-	fmt.Println(len(kvc.GetLogLines()))
+		//test read/write for KVCache
+		{func() bool { setRecords(kvc); return storeHasAll(kvc) },
+			"KVCache doesn't retrieve after Set"},
 
-	kvc.SetLogging()
-	setRecords()
-	assert.True(t, len(kvc.GetLogLines()) == 2, "incorrect number of logging events recorded")
+		//test reset
+		{func() bool { kvc.Reset(); return !storeHasAll(kvc) },
+			"KVCache retrieving after reset"},
 
-	kvc.ClearLogLines()
-	assert.True(t, len(kvc.GetLogLines()) == 0, "logging events still exists after ClearLogLines")
+		//test sync
+		{func() bool { setRecords(kvc); return !storeHasAll(store) },
+			"store retrieving before synced"},
+		{func() bool { kvc.Sync(); return storeHasAll(store) },
+			"store isn't retrieving after synced"},
 
+		//test logging
+		{func() bool { return len(kvc.GetLogLines()) == 0 },
+			"logging events existed before using SetLogging"},
+		{func() bool { kvc.SetLogging(); setRecords(kvc); return len(kvc.GetLogLines()) == 2 },
+			"incorrect number of logging events recorded"},
+		{func() bool { kvc.ClearLogLines(); return len(kvc.GetLogLines()) == 0 },
+			"logging events still exists after ClearLogLines"},
+	}
+
+	//execute the tests
+	for _, tl := range testList {
+		assert.True(t, tl.testPass(), tl.errMsg)
+	}
 }

@@ -31,7 +31,7 @@ func (d *Dummy) EndBlock(store KVStore, height uint64) (res abci.ResponseEndBloc
 
 //----------------------------------
 
-func TestPlugin(t *testing.T) {
+/*func TestPlugin(t *testing.T) {
 
 	plugins := NewPlugins()
 	assert.True(t, len(plugins.GetList()) == 0, "plugins object init with a objects")
@@ -39,4 +39,28 @@ func TestPlugin(t *testing.T) {
 	assert.True(t, len(plugins.GetList()) == 1, "plugin wasn't added to plist after registered")
 	dum := plugins.GetByName("dummy")
 	assert.True(t, dum.Name() == "dummy", "plugin wasn't retrieved properly with GetByName")
+}*/
+
+func TestPlugin(t *testing.T) {
+
+	plugins := NewPlugins()
+
+	//define the test list
+	var testList = []struct {
+		testPass func() bool
+		errMsg   string
+	}{
+		{func() bool { return (len(plugins.GetList()) == 0) },
+			"plugins object init with a objects"},
+		{func() bool { plugins.RegisterPlugin(&Dummy{}); return (len(plugins.GetList()) == 1) },
+			"plugin wasn't added to plist after registered"},
+		{func() bool { return (plugins.GetByName("dummy").Name() == "dummy") },
+			"plugin wasn't retrieved properly with GetByName"},
+	}
+
+	//execute the tests
+	for _, tl := range testList {
+		assert.True(t, tl.testPass(), tl.errMsg)
+	}
+
 }

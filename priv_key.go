@@ -53,6 +53,10 @@ func (p *PrivKeyS) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
+func (p PrivKeyS) Empty() bool {
+	return p.PrivKey == nil
+}
+
 func PrivKeyFromBytes(privKeyBytes []byte) (privKey PrivKey, err error) {
 	err = wire.ReadBinaryBytes(privKeyBytes, &privKey)
 	return

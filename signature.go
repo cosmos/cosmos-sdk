@@ -51,6 +51,10 @@ func (p *SignatureS) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
+func (p SignatureS) Empty() bool {
+	return p.Signature == nil
+}
+
 func SignatureFromBytes(sigBytes []byte) (sig Signature, err error) {
 	err = wire.ReadBinaryBytes(sigBytes, &sig)
 	return

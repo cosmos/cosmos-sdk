@@ -55,6 +55,10 @@ func (p *PubKeyS) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
+func (p PubKeyS) Empty() bool {
+	return p.PubKey == nil
+}
+
 func PubKeyFromBytes(pubKeyBytes []byte) (pubKey PubKey, err error) {
 	err = wire.ReadBinaryBytes(pubKeyBytes, &pubKey)
 	return

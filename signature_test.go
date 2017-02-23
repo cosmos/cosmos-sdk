@@ -56,14 +56,14 @@ func TestSignatureEncodings(t *testing.T) {
 		{
 			privKey: PrivKeyS{GenPrivKeyEd25519()},
 			sigSize: ed25519.SignatureSize,
-			sigType: SignatureTypeEd25519,
-			sigName: SignatureNameEd25519,
+			sigType: TypeEd25519,
+			sigName: NameEd25519,
 		},
 		{
 			privKey: PrivKeyS{GenPrivKeySecp256k1()},
 			sigSize: 0, // unknown
-			sigType: SignatureTypeSecp256k1,
-			sigName: SignatureNameSecp256k1,
+			sigType: TypeSecp256k1,
+			sigName: NameSecp256k1,
 		},
 	}
 

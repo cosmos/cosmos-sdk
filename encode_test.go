@@ -56,13 +56,13 @@ func TestKeyEncodings(t *testing.T) {
 	}{
 		{
 			privKey: PrivKeyS{GenPrivKeyEd25519()},
-			keyType: PrivKeyTypeEd25519,
-			keyName: PrivKeyNameEd25519,
+			keyType: TypeEd25519,
+			keyName: NameEd25519,
 		},
 		{
 			privKey: PrivKeyS{GenPrivKeySecp256k1()},
-			keyType: PrivKeyTypeSecp256k1,
-			keyName: PrivKeyNameSecp256k1,
+			keyType: TypeSecp256k1,
+			keyName: NameSecp256k1,
 		},
 	}
 

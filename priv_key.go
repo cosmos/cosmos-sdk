@@ -19,12 +19,12 @@ type PrivKey interface {
 	Equals(PrivKey) bool
 }
 
-// Types of PrivKey implementations
+// Types of implementations
 const (
-	PrivKeyTypeEd25519   = byte(0x01)
-	PrivKeyTypeSecp256k1 = byte(0x02)
-	PrivKeyNameEd25519   = "ed25519"
-	PrivKeyNameSecp256k1 = "secp256k1"
+	TypeEd25519   = byte(0x01)
+	TypeSecp256k1 = byte(0x02)
+	NameEd25519   = "ed25519"
+	NameSecp256k1 = "secp256k1"
 )
 
 var privKeyMapper data.Mapper
@@ -32,8 +32,8 @@ var privKeyMapper data.Mapper
 // register both private key types with go-data (and thus go-wire)
 func init() {
 	privKeyMapper = data.NewMapper(PrivKeyS{}).
-		RegisterInterface(PrivKeyEd25519{}, PrivKeyNameEd25519, PrivKeyTypeEd25519).
-		RegisterInterface(PrivKeySecp256k1{}, PrivKeyNameSecp256k1, PrivKeyTypeSecp256k1)
+		RegisterInterface(PrivKeyEd25519{}, NameEd25519, TypeEd25519).
+		RegisterInterface(PrivKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
 }
 
 // PrivKeyS add json serialization to PrivKey

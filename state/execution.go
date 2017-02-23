@@ -87,7 +87,7 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		if inAcc == nil {
 			return abci.ErrBaseUnknownAddress
 		}
-		if tx.Input.PubKey != nil {
+		if !tx.Input.PubKey.Empty() {
 			inAcc.PubKey = tx.Input.PubKey
 		}
 
@@ -176,7 +176,7 @@ func getInputs(state types.AccountGetter, ins []types.TxInput) (map[string]*type
 			return nil, abci.ErrBaseUnknownAddress
 		}
 
-		if in.PubKey != nil {
+		if !in.PubKey.Empty() {
 			acc.PubKey = in.PubKey
 		}
 		accounts[string(in.Address)] = acc
@@ -197,10 +197,8 @@ func getOrMakeOutputs(state types.AccountGetter, accounts map[string]*types.Acco
 		acc := state.GetAccount(out.Address)
 		// output account may be nil (new)
 		if acc == nil {
-			acc = &types.Account{
-				PubKey:   nil,
-				Sequence: 0,
-			}
+			// zero value is valid, empty account
+			acc = &types.Account{}
 		}
 		accounts[string(out.Address)] = acc
 	}
@@ -246,7 +244,7 @@ func validateInputAdvanced(acc *types.Account, signBytes []byte, in types.TxInpu
 		return abci.ErrBaseInsufficientFunds.AppendLog(cmn.Fmt("balance is %v, tried to send %v", balance, in.Coins))
 	}
 	// Check signatures
-	if !acc.PubKey.VerifyBytes(signBytes, in.Signature) {
+	if !acc.PubKey.VerifyBytes(signBytes, in.Signature.Signature) {
 		return abci.ErrBaseInvalidSignature.AppendLog(cmn.Fmt("SignBytes: %X", signBytes))
 	}
 	return abci.OK

@@ -31,7 +31,7 @@ func genGenesisDoc(chainID string, numVals int) (*tm.GenesisDoc, []types.PrivAcc
 		name := cmn.Fmt("%v_val_%v", chainID, i)
 		privAcc := testutils.PrivAccountFromSecret(name)
 		genDoc.Validators = append(genDoc.Validators, tm.GenesisValidator{
-			PubKey: privAcc.Account.PubKey,
+			PubKey: privAcc.PubKey.PubKey,
 			Amount: 1,
 			Name:   name,
 		})

@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/basecoin/testutils"
 	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/go-common"
+	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-rpc/client"
 	"github.com/tendermint/go-rpc/types"
 	"github.com/tendermint/go-wire"
@@ -66,8 +67,8 @@ func main() {
 
 		// Sign request
 		signBytes := tx.SignBytes(chainID)
-		sig := root.PrivKey.Sign(signBytes)
-		tx.Inputs[0].Signature = sig
+		sig := root.Sign(signBytes)
+		tx.Inputs[0].Signature = crypto.SignatureS{sig}
 		//fmt.Println("tx:", tx)
 
 		// Write request
@@ -116,8 +117,8 @@ func main() {
 
 		// Sign request
 		signBytes := tx.SignBytes(chainID)
-		sig := privAccountA.PrivKey.Sign(signBytes)
-		tx.Inputs[0].Signature = sig
+		sig := privAccountA.Sign(signBytes)
+		tx.Inputs[0].Signature = crypto.SignatureS{sig}
 		//fmt.Println("tx:", tx)
 
 		// Write request

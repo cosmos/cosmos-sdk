@@ -7,6 +7,7 @@ import (
 	abci "github.com/tendermint/abci/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-crypto"
+	"github.com/tendermint/go-data"
 	"github.com/tendermint/go-wire"
 )
 
@@ -17,7 +18,6 @@ Account Types:
  - SendTx         Send coins to address
  - AppTx         Send a msg to a contract that runs in the vm
 */
-
 type Tx interface {
 	AssertIsTx()
 	SignBytes(chainID string) []byte
@@ -28,25 +28,47 @@ const (
 	// Account transactions
 	TxTypeSend = byte(0x01)
 	TxTypeApp  = byte(0x02)
+	TxNameSend = "send"
+	TxNameApp  = "app"
 )
 
 func (_ *SendTx) AssertIsTx() {}
 func (_ *AppTx) AssertIsTx()  {}
 
-var _ = wire.RegisterInterface(
-	struct{ Tx }{},
-	wire.ConcreteType{&SendTx{}, TxTypeSend},
-	wire.ConcreteType{&AppTx{}, TxTypeApp},
-)
+var txMapper data.Mapper
+
+// register both private key types with go-data (and thus go-wire)
+func init() {
+	txMapper = data.NewMapper(TxS{}).
+		RegisterInterface(&SendTx{}, TxNameSend, TxTypeSend).
+		RegisterInterface(&AppTx{}, TxNameApp, TxTypeApp)
+}
+
+// TxS add json serialization to Tx
+type TxS struct {
+	Tx
+}
+
+func (p TxS) MarshalJSON() ([]byte, error) {
+	return txMapper.ToJSON(p.Tx)
+}
+
+func (p *TxS) UnmarshalJSON(data []byte) (err error) {
+	parsed, err := txMapper.FromJSON(data)
+	if err == nil {
+		p.Tx = parsed.(Tx)
+	}
+	return
+}
 
 //-----------------------------------------------------------------------------
 
 type TxInput struct {
-	Address   []byte           `json:"address"`   // Hash of the PubKey
-	Coins     Coins            `json:"coins"`     //
-	Sequence  int              `json:"sequence"`  // Must be 1 greater than the last committed TxInput
-	Signature crypto.Signature `json:"signature"` // Depends on the PubKey type and the whole Tx
-	PubKey    crypto.PubKey    `json:"pub_key"`   // Is present iff Sequence == 0
+	Address   data.Bytes        `json:"address"`   // Hash of the PubKey
+	Coins     Coins             `json:"coins"`     //
+	Sequence  int               `json:"sequence"`  // Must be 1 greater than the last committed TxInput
+	Signature crypto.SignatureS `json:"signature"` // Depends on the PubKey type and the whole Tx
+	PubKey    crypto.PubKeyS    `json:"pub_key"`   // Is present iff Sequence == 0
 }
 
 func (txIn TxInput) ValidateBasic() abci.Result {
@@ -62,10 +84,10 @@ func (txIn TxInput) ValidateBasic() abci.Result {
 	if txIn.Sequence <= 0 {
 		return abci.ErrBaseInvalidInput.AppendLog("Sequence must be greater than 0")
 	}
-	if txIn.Sequence == 1 && txIn.PubKey == nil {
+	if txIn.Sequence == 1 && txIn.PubKey.Empty() {
 		return abci.ErrBaseInvalidInput.AppendLog("PubKey must be present when Sequence == 1")
 	}
-	if txIn.Sequence > 1 && txIn.PubKey != nil {
+	if txIn.Sequence > 1 && !txIn.PubKey.Empty() {
 		return abci.ErrBaseInvalidInput.AppendLog("PubKey must be nil when Sequence > 1")
 	}
 	return abci.OK
@@ -78,12 +100,17 @@ func (txIn TxInput) String() string {
 func NewTxInput(pubKey crypto.PubKey, coins Coins, sequence int) TxInput {
 	input := TxInput{
 		Address:  pubKey.Address(),
-		PubKey:   pubKey,
 		Coins:    coins,
 		Sequence: sequence,
 	}
-	if sequence > 1 {
-		input.PubKey = nil
+	if sequence == 1 {
+		// safely wrap if needed
+		// TODO: extract this as utility function?
+		ps, ok := pubKey.(crypto.PubKeyS)
+		if !ok {
+			ps = crypto.PubKeyS{pubKey}
+		}
+		input.PubKey = ps
 	}
 	return input
 }
@@ -91,8 +118,8 @@ func NewTxInput(pubKey crypto.PubKey, coins Coins, sequence int) TxInput {
 //-----------------------------------------------------------------------------
 
 type TxOutput struct {
-	Address []byte `json:"address"` // Hash of the PubKey
-	Coins   Coins  `json:"coins"`   //
+	Address data.Bytes `json:"address"` // Hash of the PubKey
+	Coins   Coins      `json:"coins"`   //
 }
 
 func (txOut TxOutput) ValidateBasic() abci.Result {
@@ -126,11 +153,11 @@ func (tx *SendTx) SignBytes(chainID string) []byte {
 	sigz := make([]crypto.Signature, len(tx.Inputs))
 	for i, input := range tx.Inputs {
 		sigz[i] = input.Signature
-		tx.Inputs[i].Signature = nil
+		tx.Inputs[i].Signature.Signature = nil
 	}
 	signBytes = append(signBytes, wire.BinaryBytes(tx)...)
 	for i := range tx.Inputs {
-		tx.Inputs[i].Signature = sigz[i]
+		tx.Inputs[i].Signature.Signature = sigz[i]
 	}
 	return signBytes
 }
@@ -138,7 +165,7 @@ func (tx *SendTx) SignBytes(chainID string) []byte {
 func (tx *SendTx) SetSignature(addr []byte, sig crypto.Signature) bool {
 	for i, input := range tx.Inputs {
 		if bytes.Equal(input.Address, addr) {
-			tx.Inputs[i].Signature = sig
+			tx.Inputs[i].Signature.Signature = sig
 			return true
 		}
 	}
@@ -152,24 +179,24 @@ func (tx *SendTx) String() string {
 //-----------------------------------------------------------------------------
 
 type AppTx struct {
-	Gas   int64   `json:"gas"`   // Gas
-	Fee   Coin    `json:"fee"`   // Fee
-	Name  string  `json:"type"`  // Which plugin
-	Input TxInput `json:"input"` // Hmmm do we want coins?
-	Data  []byte  `json:"data"`
+	Gas   int64           `json:"gas"`   // Gas
+	Fee   Coin            `json:"fee"`   // Fee
+	Name  string          `json:"type"`  // Which plugin
+	Input TxInput         `json:"input"` // Hmmm do we want coins?
+	Data  json.RawMessage `json:"data"`
 }
 
 func (tx *AppTx) SignBytes(chainID string) []byte {
 	signBytes := wire.BinaryBytes(chainID)
 	sig := tx.Input.Signature
-	tx.Input.Signature = nil
+	tx.Input.Signature.Signature = nil
 	signBytes = append(signBytes, wire.BinaryBytes(tx)...)
 	tx.Input.Signature = sig
 	return signBytes
 }
 
 func (tx *AppTx) SetSignature(sig crypto.Signature) bool {
-	tx.Input.Signature = sig
+	tx.Input.Signature.Signature = sig
 	return true
 }
 

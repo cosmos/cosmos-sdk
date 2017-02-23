@@ -8,6 +8,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/tendermint/basecoin/types"
+	crypto "github.com/tendermint/go-crypto"
 
 	cmn "github.com/tendermint/go-common"
 	client "github.com/tendermint/go-rpc/client"
@@ -113,7 +114,7 @@ func cmdSendTx(c *cli.Context) error {
 
 	// sign that puppy
 	signBytes := tx.SignBytes(chainID)
-	tx.Inputs[0].Signature = privKey.Sign(signBytes)
+	tx.Inputs[0].Signature = crypto.SignatureS{privKey.Sign(signBytes)}
 
 	fmt.Println("Signed SendTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))
@@ -169,7 +170,7 @@ func AppTx(c *cli.Context, name string, data []byte) error {
 		Data:  data,
 	}
 
-	tx.Input.Signature = privKey.Sign(tx.SignBytes(chainID))
+	tx.Input.Signature = crypto.SignatureS{privKey.Sign(tx.SignBytes(chainID))}
 
 	fmt.Println("Signed AppTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))

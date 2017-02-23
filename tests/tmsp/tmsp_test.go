@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/basecoin/testutils"
 	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/go-common"
+	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
 )
@@ -44,12 +45,12 @@ func TestSendTx(t *testing.T) {
 	// Sign request
 	signBytes := tx.SignBytes(chainID)
 	t.Log("Sign bytes: %X\n", signBytes)
-	sig := test1PrivAcc.PrivKey.Sign(signBytes)
-	tx.Inputs[0].Signature = sig
-	t.Log("Signed TX bytes: %X\n", wire.BinaryBytes(struct{ types.Tx }{tx}))
+	sig := test1PrivAcc.Sign(signBytes)
+	tx.Inputs[0].Signature = crypto.SignatureS{sig}
+	t.Log("Signed TX bytes: %X\n", wire.BinaryBytes(types.TxS{tx}))
 
 	// Write request
-	txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
+	txBytes := wire.BinaryBytes(types.TxS{tx})
 	res := bcApp.DeliverTx(txBytes)
 	t.Log(res)
 	if res.IsErr() {
@@ -96,8 +97,8 @@ func TestSequence(t *testing.T) {
 
 		// Sign request
 		signBytes := tx.SignBytes(chainID)
-		sig := test1PrivAcc.PrivKey.Sign(signBytes)
-		tx.Inputs[0].Signature = sig
+		sig := test1PrivAcc.Sign(signBytes)
+		tx.Inputs[0].Signature = crypto.SignatureS{sig}
 		// t.Log("ADDR: %X -> %X\n", tx.Inputs[0].Address, tx.Outputs[0].Address)
 
 		// Write request
@@ -133,11 +134,11 @@ func TestSequence(t *testing.T) {
 			Gas: 2,
 			Fee: types.Coin{"", 2},
 			Inputs: []types.TxInput{
-				types.NewTxInput(privAccountA.Account.PubKey, types.Coins{{"", 3}}, privAccountASequence+1),
+				types.NewTxInput(privAccountA.PubKey, types.Coins{{"", 3}}, privAccountASequence+1),
 			},
 			Outputs: []types.TxOutput{
 				types.TxOutput{
-					Address: privAccountB.Account.PubKey.Address(),
+					Address: privAccountB.PubKey.Address(),
 					Coins:   types.Coins{{"", 1}},
 				},
 			},
@@ -145,8 +146,8 @@ func TestSequence(t *testing.T) {
 
 		// Sign request
 		signBytes := tx.SignBytes(chainID)
-		sig := privAccountA.PrivKey.Sign(signBytes)
-		tx.Inputs[0].Signature = sig
+		sig := privAccountA.Sign(signBytes)
+		tx.Inputs[0].Signature = crypto.SignatureS{sig}
 		// t.Log("ADDR: %X -> %X\n", tx.Inputs[0].Address, tx.Outputs[0].Address)
 
 		// Write request

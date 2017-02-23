@@ -47,7 +47,7 @@ func (p PrivKeyS) MarshalJSON() ([]byte, error) {
 
 func (p *PrivKeyS) UnmarshalJSON(data []byte) (err error) {
 	parsed, err := privKeyMapper.FromJSON(data)
-	if err == nil {
+	if err == nil && parsed != nil {
 		p.PrivKey = parsed.(PrivKey)
 	}
 	return

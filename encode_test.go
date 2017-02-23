@@ -84,5 +84,29 @@ func TestKeyEncodings(t *testing.T) {
 		checkJSON(t, pubKey, &pub3, tc.keyName)
 		assert.EqualValues(t, pubKey, pub3)
 	}
+}
+
+func toFromJSON(t *testing.T, in interface{}, recvr interface{}) {
+	js, err := data.ToJSON(in)
+	require.Nil(t, err, "%+v", err)
+	err = data.FromJSON(js, recvr)
+	require.Nil(t, err, "%+v", err)
+}
+
+func TestNilEncodings(t *testing.T) {
+	// make sure sigs are okay with nil
+	a, b := SignatureS{}, SignatureS{}
+	toFromJSON(t, a, &b)
+	assert.EqualValues(t, a, b)
+
+	// make sure sigs are okay with nil
+	c, d := PubKeyS{}, PubKeyS{}
+	toFromJSON(t, c, &d)
+	assert.EqualValues(t, c, d)
+
+	// make sure sigs are okay with nil
+	e, f := PrivKeyS{}, PrivKeyS{}
+	toFromJSON(t, e, &f)
+	assert.EqualValues(t, e, f)
 
 }

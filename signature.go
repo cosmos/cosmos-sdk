@@ -45,7 +45,7 @@ func (p SignatureS) MarshalJSON() ([]byte, error) {
 
 func (p *SignatureS) UnmarshalJSON(data []byte) (err error) {
 	parsed, err := sigMapper.FromJSON(data)
-	if err == nil {
+	if err == nil && parsed != nil {
 		p.Signature = parsed.(Signature)
 	}
 	return

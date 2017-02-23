@@ -49,7 +49,7 @@ func (p PubKeyS) MarshalJSON() ([]byte, error) {
 
 func (p *PubKeyS) UnmarshalJSON(data []byte) (err error) {
 	parsed, err := pubKeyMapper.FromJSON(data)
-	if err == nil {
+	if err == nil && parsed != nil {
 		p.PubKey = parsed.(PubKey)
 	}
 	return

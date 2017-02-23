@@ -65,9 +65,9 @@ imports:
 - name: github.com/tendermint/go-config
   version: e64b424499acd0eb9856b88e10c0dff41628c0d6
 - name: github.com/tendermint/go-crypto
-  version: b6a2c5949f7ea1d064cbb9dc638eb0a3dca9af34
+  version: 8c9b889ccfe1f891ce8ab36c843f15794ce8f30f
 - name: github.com/tendermint/go-data
-  version: 35a95d275fa845b635e1208c3dd65b19c4eda811
+  version: f199ef165cd5a50d569b179201702c5ec8899013
 - name: github.com/tendermint/go-db
   version: 2645626c33d8702739e52a61a55d705c2dfe4530
 - name: github.com/tendermint/go-events

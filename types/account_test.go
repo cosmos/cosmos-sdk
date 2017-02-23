@@ -6,13 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccount(t *testing.T) {
+func TestNilAccount(t *testing.T) {
 
-	acc := Account{
-		PubKey:   nil,
-		Sequence: 0,
-		Balance:  nil,
-	}
+	acc := Account{}
 
 	//test Copy
 	accCopy := acc.Copy()

@@ -163,9 +163,13 @@ func (tx *SendTx) SignBytes(chainID string) []byte {
 }
 
 func (tx *SendTx) SetSignature(addr []byte, sig crypto.Signature) bool {
+	sigs, ok := sig.(crypto.SignatureS)
+	if !ok {
+		sigs = crypto.SignatureS{sig}
+	}
 	for i, input := range tx.Inputs {
 		if bytes.Equal(input.Address, addr) {
-			tx.Inputs[i].Signature.Signature = sig
+			tx.Inputs[i].Signature = sigs
 			return true
 		}
 	}
@@ -196,7 +200,11 @@ func (tx *AppTx) SignBytes(chainID string) []byte {
 }
 
 func (tx *AppTx) SetSignature(sig crypto.Signature) bool {
-	tx.Input.Signature.Signature = sig
+	sigs, ok := sig.(crypto.SignatureS)
+	if !ok {
+		sigs = crypto.SignatureS{sig}
+	}
+	tx.Input.Signature = sigs
 	return true
 }
 

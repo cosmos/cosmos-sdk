@@ -1,7 +1,6 @@
 package crypto
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -18,45 +17,33 @@ func TestSignAndValidateEd25519(t *testing.T) {
 
 	msg := CRandBytes(128)
 	sig := privKey.Sign(msg)
-	t.Logf("msg: %X, sig: %X", msg, sig)
 
 	// Test the signature
-	if !pubKey.VerifyBytes(msg, sig) {
-		t.Errorf("Account message signature verification failed")
-	}
+	assert.True(t, pubKey.VerifyBytes(msg, sig))
 
 	// Mutate the signature, just one bit.
 	sigEd := sig.(SignatureEd25519)
 	sigEd[0] ^= byte(0x01)
 	sig = Signature(sigEd)
 
-	if pubKey.VerifyBytes(msg, sig) {
-		t.Errorf("Account message signature verification should have failed but passed instead")
-	}
+	assert.False(t, pubKey.VerifyBytes(msg, sig))
 }
 
 func TestSignAndValidateSecp256k1(t *testing.T) {
-
 	privKey := GenPrivKeySecp256k1()
 	pubKey := privKey.PubKey()
 
 	msg := CRandBytes(128)
 	sig := privKey.Sign(msg)
-	t.Logf("msg: %X, sig: %X", msg, sig)
 
-	// Test the signature
-	if !pubKey.VerifyBytes(msg, sig) {
-		t.Errorf("Account message signature verification failed")
-	}
+	assert.True(t, pubKey.VerifyBytes(msg, sig))
 
 	// Mutate the signature, just one bit.
 	sigEd := sig.(SignatureSecp256k1)
 	sigEd[0] ^= byte(0x01)
 	sig = Signature(sigEd)
 
-	if pubKey.VerifyBytes(msg, sig) {
-		t.Errorf("Account message signature verification should have failed but passed instead")
-	}
+	assert.False(t, pubKey.VerifyBytes(msg, sig))
 }
 
 func TestSignatureEncodings(t *testing.T) {
@@ -106,7 +93,6 @@ func TestSignatureEncodings(t *testing.T) {
 		js, err := data.ToJSON(sig)
 		require.Nil(t, err, "%+v", err)
 		assert.True(t, strings.Contains(string(js), tc.sigName))
-		fmt.Println(string(js))
 
 		// and back
 		sig3 := SignatureS{}
@@ -114,5 +100,10 @@ func TestSignatureEncodings(t *testing.T) {
 		require.Nil(t, err, "%+v", err)
 		assert.EqualValues(t, sig, sig3)
 		assert.True(t, pubKey.VerifyBytes(msg, sig3))
+
+		// and make sure we can textify it
+		text, err := data.ToText(sig)
+		require.Nil(t, err, "%+v", err)
+		assert.True(t, strings.HasPrefix(text, tc.sigName))
 	}
 }

@@ -68,7 +68,7 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 			}
 		*/
 
-		return abci.OK
+		return abci.NewResultOK(types.TxID(chainID, tx), "")
 
 	case *types.AppTx:
 		// Validate input, basic
@@ -238,7 +238,7 @@ func validateInputAdvanced(acc *types.Account, signBytes []byte, in types.TxInpu
 	}
 	// Check amount
 	if !balance.IsGTE(in.Coins) {
-		return abci.ErrBaseInsufficientFunds.AppendLog(Fmt("balance is %d, tried to send %d", balance, in.Coins))
+		return abci.ErrBaseInsufficientFunds.AppendLog(Fmt("balance is %v, tried to send %v", balance, in.Coins))
 	}
 	// Check signatures
 	if !acc.PubKey.VerifyBytes(signBytes, in.Signature) {

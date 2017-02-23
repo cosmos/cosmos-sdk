@@ -119,7 +119,7 @@ func cmdSendTx(c *cli.Context) error {
 	fmt.Println(string(wire.JSONBytes(tx)))
 
 	// broadcast the transaction to tendermint
-	if _, err := broadcastTx(c, tx); err != nil {
+	if _, _, err := broadcastTx(c, tx); err != nil {
 		return err
 	}
 	return nil
@@ -174,17 +174,17 @@ func AppTx(c *cli.Context, name string, data []byte) error {
 	fmt.Println("Signed AppTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))
 
-	res, err := broadcastTx(c, tx)
+	data, log, err := broadcastTx(c, tx)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Response: %X\n", res)
+	fmt.Printf("Response: %X ; %s\n", data, log)
 
 	return nil
 }
 
 // broadcast the transaction to tendermint
-func broadcastTx(c *cli.Context, tx types.Tx) ([]byte, error) {
+func broadcastTx(c *cli.Context, tx types.Tx) ([]byte, string, error) {
 	tmResult := new(ctypes.TMResult)
 	tmAddr := c.String("node")
 	clientURI := client.NewClientURI(tmAddr)
@@ -196,19 +196,19 @@ func broadcastTx(c *cli.Context, tx types.Tx) ([]byte, error) {
 	}{tx}))
 	_, err := clientURI.Call("broadcast_tx_commit", map[string]interface{}{"tx": txBytes}, tmResult)
 	if err != nil {
-		return nil, errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
+		return nil, "", errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
 	}
 	res := (*tmResult).(*ctypes.ResultBroadcastTxCommit)
 	// if it fails check, we don't even get a delivertx back!
 	if !res.CheckTx.Code.IsOK() {
 		r := res.CheckTx
-		return nil, errors.New(cmn.Fmt("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log))
+		return nil, "", errors.New(cmn.Fmt("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log))
 	}
 	if !res.DeliverTx.Code.IsOK() {
 		r := res.DeliverTx
-		return nil, errors.New(cmn.Fmt("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log))
+		return nil, "", errors.New(cmn.Fmt("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log))
 	}
-	return res.DeliverTx.Data, nil
+	return res.DeliverTx.Data, res.DeliverTx.Log, nil
 }
 
 // if the sequence flag is set, return it;

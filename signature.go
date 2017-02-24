@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	. "github.com/tendermint/go-common"
+	data "github.com/tendermint/go-data"
 	"github.com/tendermint/go-wire"
 )
 
@@ -16,18 +17,35 @@ type Signature interface {
 	Equals(Signature) bool
 }
 
-// Types of Signature implementations
-const (
-	SignatureTypeEd25519   = byte(0x01)
-	SignatureTypeSecp256k1 = byte(0x02)
-)
+var sigMapper data.Mapper
 
-// for wire.readReflect
-var _ = wire.RegisterInterface(
-	struct{ Signature }{},
-	wire.ConcreteType{SignatureEd25519{}, SignatureTypeEd25519},
-	wire.ConcreteType{SignatureSecp256k1{}, SignatureTypeSecp256k1},
-)
+// register both public key types with go-data (and thus go-wire)
+func init() {
+	sigMapper = data.NewMapper(SignatureS{}).
+		RegisterInterface(SignatureEd25519{}, NameEd25519, TypeEd25519).
+		RegisterInterface(SignatureSecp256k1{}, NameSecp256k1, TypeSecp256k1)
+}
+
+// SignatureS add json serialization to Signature
+type SignatureS struct {
+	Signature
+}
+
+func (p SignatureS) MarshalJSON() ([]byte, error) {
+	return sigMapper.ToJSON(p.Signature)
+}
+
+func (p *SignatureS) UnmarshalJSON(data []byte) (err error) {
+	parsed, err := sigMapper.FromJSON(data)
+	if err == nil && parsed != nil {
+		p.Signature = parsed.(Signature)
+	}
+	return
+}
+
+func (p SignatureS) Empty() bool {
+	return p.Signature == nil
+}
 
 func SignatureFromBytes(sigBytes []byte) (sig Signature, err error) {
 	err = wire.ReadBinaryBytes(sigBytes, &sig)
@@ -55,6 +73,17 @@ func (sig SignatureEd25519) Equals(other Signature) bool {
 	}
 }
 
+func (p SignatureEd25519) MarshalJSON() ([]byte, error) {
+	return data.Encoder.Marshal(p[:])
+}
+
+func (p *SignatureEd25519) UnmarshalJSON(enc []byte) error {
+	var ref []byte
+	err := data.Encoder.Unmarshal(&ref, enc)
+	copy(p[:], ref)
+	return err
+}
+
 //-------------------------------------
 
 // Implements Signature
@@ -74,4 +103,11 @@ func (sig SignatureSecp256k1) Equals(other Signature) bool {
 	} else {
 		return false
 	}
+}
+func (p SignatureSecp256k1) MarshalJSON() ([]byte, error) {
+	return data.Encoder.Marshal(p)
+}
+
+func (p *SignatureSecp256k1) UnmarshalJSON(enc []byte) error {
+	return data.Encoder.Unmarshal((*[]byte)(p), enc)
 }

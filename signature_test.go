@@ -1,11 +1,13 @@
 package crypto
 
 import (
-	"bytes"
+	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/ed25519"
-	"github.com/tendermint/go-wire"
+	data "github.com/tendermint/go-data"
 )
 
 func TestSignAndValidateEd25519(t *testing.T) {
@@ -15,109 +17,93 @@ func TestSignAndValidateEd25519(t *testing.T) {
 
 	msg := CRandBytes(128)
 	sig := privKey.Sign(msg)
-	t.Logf("msg: %X, sig: %X", msg, sig)
 
 	// Test the signature
-	if !pubKey.VerifyBytes(msg, sig) {
-		t.Errorf("Account message signature verification failed")
-	}
+	assert.True(t, pubKey.VerifyBytes(msg, sig))
 
 	// Mutate the signature, just one bit.
 	sigEd := sig.(SignatureEd25519)
 	sigEd[0] ^= byte(0x01)
 	sig = Signature(sigEd)
 
-	if pubKey.VerifyBytes(msg, sig) {
-		t.Errorf("Account message signature verification should have failed but passed instead")
-	}
+	assert.False(t, pubKey.VerifyBytes(msg, sig))
 }
 
 func TestSignAndValidateSecp256k1(t *testing.T) {
-
 	privKey := GenPrivKeySecp256k1()
 	pubKey := privKey.PubKey()
 
 	msg := CRandBytes(128)
 	sig := privKey.Sign(msg)
-	t.Logf("msg: %X, sig: %X", msg, sig)
 
-	// Test the signature
-	if !pubKey.VerifyBytes(msg, sig) {
-		t.Errorf("Account message signature verification failed")
-	}
+	assert.True(t, pubKey.VerifyBytes(msg, sig))
 
 	// Mutate the signature, just one bit.
 	sigEd := sig.(SignatureSecp256k1)
 	sigEd[0] ^= byte(0x01)
 	sig = Signature(sigEd)
 
-	if pubKey.VerifyBytes(msg, sig) {
-		t.Errorf("Account message signature verification should have failed but passed instead")
-	}
+	assert.False(t, pubKey.VerifyBytes(msg, sig))
 }
 
-func TestBinaryDecodeEd25519(t *testing.T) {
-
-	privKey := GenPrivKeyEd25519()
-	pubKey := privKey.PubKey()
-
-	msg := CRandBytes(128)
-	sig := privKey.Sign(msg)
-	t.Logf("msg: %X, sig: %X", msg, sig)
-
-	buf, n, err := new(bytes.Buffer), new(int), new(error)
-	wire.WriteBinary(struct{ Signature }{sig}, buf, n, err)
-	if *err != nil {
-		t.Fatalf("Failed to write Signature: %v", err)
+func TestSignatureEncodings(t *testing.T) {
+	cases := []struct {
+		privKey PrivKeyS
+		sigSize int
+		sigType byte
+		sigName string
+	}{
+		{
+			privKey: PrivKeyS{GenPrivKeyEd25519()},
+			sigSize: ed25519.SignatureSize,
+			sigType: TypeEd25519,
+			sigName: NameEd25519,
+		},
+		{
+			privKey: PrivKeyS{GenPrivKeySecp256k1()},
+			sigSize: 0, // unknown
+			sigType: TypeSecp256k1,
+			sigName: NameSecp256k1,
+		},
 	}
 
-	if len(buf.Bytes()) != ed25519.SignatureSize+1 {
-		// 1 byte TypeByte, 64 bytes signature bytes
-		t.Fatalf("Unexpected signature write size: %v", len(buf.Bytes()))
-	}
-	if buf.Bytes()[0] != SignatureTypeEd25519 {
-		t.Fatalf("Unexpected signature type byte")
-	}
+	for _, tc := range cases {
+		// note we embed them from the beginning....
+		pubKey := PubKeyS{tc.privKey.PubKey()}
 
-	sigStruct := struct{ Signature }{}
-	sig2 := wire.ReadBinary(sigStruct, buf, 0, n, err)
-	if *err != nil {
-		t.Fatalf("Failed to read Signature: %v", err)
-	}
+		msg := CRandBytes(128)
+		sig := SignatureS{tc.privKey.Sign(msg)}
 
-	// Test the signature
-	if !pubKey.VerifyBytes(msg, sig2.(struct{ Signature }).Signature.(SignatureEd25519)) {
-		t.Errorf("Account message signature verification failed")
-	}
-}
+		// store as wire
+		bin, err := data.ToWire(sig)
+		require.Nil(t, err, "%+v", err)
+		if tc.sigSize != 0 {
+			assert.Equal(t, tc.sigSize+1, len(bin))
+		}
+		assert.Equal(t, tc.sigType, bin[0])
 
-func TestBinaryDecodeSecp256k1(t *testing.T) {
+		// and back
+		sig2 := SignatureS{}
+		err = data.FromWire(bin, &sig2)
+		require.Nil(t, err, "%+v", err)
+		assert.EqualValues(t, sig, sig2)
+		assert.True(t, pubKey.VerifyBytes(msg, sig2))
 
-	privKey := GenPrivKeySecp256k1()
-	pubKey := privKey.PubKey()
+		// store as json
+		js, err := data.ToJSON(sig)
+		require.Nil(t, err, "%+v", err)
+		assert.True(t, strings.Contains(string(js), tc.sigName))
 
-	msg := CRandBytes(128)
-	sig := privKey.Sign(msg)
-	t.Logf("msg: %X, sig: %X", msg, sig)
+		// and back
+		sig3 := SignatureS{}
+		err = data.FromJSON(js, &sig3)
+		require.Nil(t, err, "%+v", err)
+		assert.EqualValues(t, sig, sig3)
+		assert.True(t, pubKey.VerifyBytes(msg, sig3))
 
-	buf, n, err := new(bytes.Buffer), new(int), new(error)
-	wire.WriteBinary(struct{ Signature }{sig}, buf, n, err)
-	if *err != nil {
-		t.Fatalf("Failed to write Signature: %v", err)
-	}
-
-	if buf.Bytes()[0] != SignatureTypeSecp256k1 {
-		t.Fatalf("Unexpected signature type byte")
-	}
-
-	sigStruct := struct{ Signature }{}
-	sig2 := wire.ReadBinary(sigStruct, buf, 0, n, err)
-	if *err != nil {
-		t.Fatalf("Failed to read Signature: %v", err)
-	}
-
-	// Test the signature
-	if !pubKey.VerifyBytes(msg, sig2.(struct{ Signature }).Signature.(SignatureSecp256k1)) {
-		t.Errorf("Account message signature verification failed")
+		// and make sure we can textify it
+		text, err := data.ToText(sig)
+		require.Nil(t, err, "%+v", err)
+		assert.True(t, strings.HasPrefix(text, tc.sigName))
 	}
 }

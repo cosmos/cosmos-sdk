@@ -8,7 +8,7 @@ import (
 
 func TestNilAccount(t *testing.T) {
 
-	acc := Account{}
+	var acc Account
 
 	//test Copy
 	accCopy := acc.Copy()

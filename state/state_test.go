@@ -21,9 +21,8 @@ func TestState(t *testing.T) {
 	//Account and address for tests
 	dumAddr := []byte("dummyAddress")
 
-	acc := &types.Account{
-		Sequence: 1,
-	}
+	acc := new(types.Account)
+	acc.Sequence = 1
 
 	//reset the store/state/cache
 	reset := func() {

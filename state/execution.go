@@ -3,7 +3,7 @@ package state
 import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
-	. "github.com/tendermint/go-common"
+	cmn "github.com/tendermint/go-common"
 	"github.com/tendermint/go-events"
 )
 
@@ -44,8 +44,13 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 			return res.PrependLog("in validateInputsAdvanced()")
 		}
 		outTotal := sumOutputs(tx.Outputs)
-		if !inTotal.IsEqual(outTotal.Plus(types.Coins{tx.Fee})) {
-			return abci.ErrBaseInvalidOutput.AppendLog("Input total != output total + fees")
+		outPlusFees := outTotal
+		fees := types.Coins{tx.Fee}
+		if fees.IsValid() { // TODO: fix coins.Plus()
+			outPlusFees = outTotal.Plus(fees)
+		}
+		if !inTotal.IsEqual(outPlusFees) {
+			return abci.ErrBaseInvalidOutput.AppendLog(cmn.Fmt("Input total (%v) != output total + fees (%v)", inTotal, outPlusFees))
 		}
 
 		// TODO: Fee validation for SendTx
@@ -90,19 +95,19 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		signBytes := tx.SignBytes(chainID)
 		res = validateInputAdvanced(inAcc, signBytes, tx.Input)
 		if res.IsErr() {
-			log.Info(Fmt("validateInputAdvanced failed on %X: %v", tx.Input.Address, res))
+			log.Info(cmn.Fmt("validateInputAdvanced failed on %X: %v", tx.Input.Address, res))
 			return res.PrependLog("in validateInputAdvanced()")
 		}
 		if !tx.Input.Coins.IsGTE(types.Coins{tx.Fee}) {
-			log.Info(Fmt("Sender did not send enough to cover the fee %X", tx.Input.Address))
-			return abci.ErrBaseInsufficientFunds.AppendLog(Fmt("input coins is %d, but fee is %d", tx.Input.Coins, types.Coins{tx.Fee}))
+			log.Info(cmn.Fmt("Sender did not send enough to cover the fee %X", tx.Input.Address))
+			return abci.ErrBaseInsufficientFunds.AppendLog(cmn.Fmt("input coins is %d, but fee is %d", tx.Input.Coins, types.Coins{tx.Fee}))
 		}
 
 		// Validate call address
 		plugin := pgz.GetByName(tx.Name)
 		if plugin == nil {
 			return abci.ErrBaseUnknownAddress.AppendLog(
-				Fmt("Unrecognized plugin name%v", tx.Name))
+				cmn.Fmt("Unrecognized plugin name%v", tx.Name))
 		}
 
 		// Good!
@@ -218,7 +223,7 @@ func validateInputsAdvanced(accounts map[string]*types.Account, signBytes []byte
 	for _, in := range ins {
 		acc := accounts[string(in.Address)]
 		if acc == nil {
-			PanicSanity("validateInputsAdvanced() expects account in accounts")
+			cmn.PanicSanity("validateInputsAdvanced() expects account in accounts")
 		}
 		res = validateInputAdvanced(acc, signBytes, in)
 		if res.IsErr() {
@@ -234,15 +239,15 @@ func validateInputAdvanced(acc *types.Account, signBytes []byte, in types.TxInpu
 	// Check sequence/coins
 	seq, balance := acc.Sequence, acc.Balance
 	if seq+1 != in.Sequence {
-		return abci.ErrBaseInvalidSequence.AppendLog(Fmt("Got %v, expected %v. (acc.seq=%v)", in.Sequence, seq+1, acc.Sequence))
+		return abci.ErrBaseInvalidSequence.AppendLog(cmn.Fmt("Got %v, expected %v. (acc.seq=%v)", in.Sequence, seq+1, acc.Sequence))
 	}
 	// Check amount
 	if !balance.IsGTE(in.Coins) {
-		return abci.ErrBaseInsufficientFunds.AppendLog(Fmt("balance is %v, tried to send %v", balance, in.Coins))
+		return abci.ErrBaseInsufficientFunds.AppendLog(cmn.Fmt("balance is %v, tried to send %v", balance, in.Coins))
 	}
 	// Check signatures
 	if !acc.PubKey.VerifyBytes(signBytes, in.Signature) {
-		return abci.ErrBaseInvalidSignature.AppendLog(Fmt("SignBytes: %X", signBytes))
+		return abci.ErrBaseInvalidSignature.AppendLog(cmn.Fmt("SignBytes: %X", signBytes))
 	}
 	return abci.OK
 }
@@ -268,10 +273,10 @@ func adjustByInputs(state types.AccountSetter, accounts map[string]*types.Accoun
 	for _, in := range ins {
 		acc := accounts[string(in.Address)]
 		if acc == nil {
-			PanicSanity("adjustByInputs() expects account in accounts")
+			cmn.PanicSanity("adjustByInputs() expects account in accounts")
 		}
 		if !acc.Balance.IsGTE(in.Coins) {
-			PanicSanity("adjustByInputs() expects sufficient funds")
+			cmn.PanicSanity("adjustByInputs() expects sufficient funds")
 		}
 		acc.Balance = acc.Balance.Minus(in.Coins)
 		acc.Sequence += 1
@@ -283,7 +288,7 @@ func adjustByOutputs(state types.AccountSetter, accounts map[string]*types.Accou
 	for _, out := range outs {
 		acc := accounts[string(out.Address)]
 		if acc == nil {
-			PanicSanity("adjustByOutputs() expects account in accounts")
+			cmn.PanicSanity("adjustByOutputs() expects account in accounts")
 		}
 		acc.Balance = acc.Balance.Plus(out.Coins)
 		if !isCheckTx {

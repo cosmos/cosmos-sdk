@@ -42,6 +42,8 @@ func (coins Coins) IsValid() bool {
 	}
 }
 
+// TODO: handle empty coins!
+// Currently appends an empty coin ...
 func (coinsA Coins) Plus(coinsB Coins) Coins {
 	sum := []Coin{}
 	indexA, indexB := 0, 0

@@ -11,7 +11,7 @@ install:
 	go install github.com/tendermint/basecoin/cmd/...
 
 test:
-	go test --race `${NOVENDOR}`
+	go test `${NOVENDOR}`
 	#go run tests/tendermint/*.go
 
 get_deps:

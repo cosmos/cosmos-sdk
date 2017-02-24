@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/testutils"
 	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/go-common"
 	crypto "github.com/tendermint/go-crypto"
@@ -19,8 +18,8 @@ func TestSendTx(t *testing.T) {
 	bcApp.SetOption("base/chainID", chainID)
 	t.Log(bcApp.Info())
 
-	test1PrivAcc := testutils.PrivAccountFromSecret("test1")
-	test2PrivAcc := testutils.PrivAccountFromSecret("test2")
+	test1PrivAcc := types.PrivAccountFromSecret("test1")
+	test2PrivAcc := types.PrivAccountFromSecret("test2")
 
 	// Seed Basecoin with account
 	test1Acc := test1PrivAcc.Account
@@ -66,14 +65,14 @@ func TestSequence(t *testing.T) {
 	t.Log(bcApp.Info())
 
 	// Get the test account
-	test1PrivAcc := testutils.PrivAccountFromSecret("test1")
+	test1PrivAcc := types.PrivAccountFromSecret("test1")
 	test1Acc := test1PrivAcc.Account
 	test1Acc.Balance = types.Coins{{"", 1 << 53}}
 	t.Log(bcApp.SetOption("base/account", string(wire.JSONBytes(test1Acc))))
 
 	sequence := int(1)
 	// Make a bunch of PrivAccounts
-	privAccounts := testutils.RandAccounts(1000, 1000000, 0)
+	privAccounts := types.RandAccounts(1000, 1000000, 0)
 	privAccountSequences := make(map[string]int)
 	// Send coins to each account
 

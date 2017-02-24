@@ -67,21 +67,10 @@ func TestAppTxSignable(t *testing.T) {
 		cmn.Fmt("Got unexpected sign string for SendTx. Expected:\n%v\nGot:\n%v", expected, signBytesHex))
 }
 
-// d'oh, can't use the version in testutils due to circular imports :(
-func makePrivAcct() PrivAccount {
-	privKey := crypto.PrivKeyS{crypto.GenPrivKeyEd25519()}
-	return PrivAccount{
-		PrivKeyS: privKey,
-		Account: Account{
-			PubKey: crypto.PubKeyS{privKey.PubKey()},
-		},
-	}
-}
-
 func TestSendTxJSON(t *testing.T) {
 	chainID := "test_chain_id"
-	test1PrivAcc := makePrivAcct()
-	test2PrivAcc := makePrivAcct()
+	test1PrivAcc := PrivAccountFromSecret("sendtx1")
+	test2PrivAcc := PrivAccountFromSecret("sendtx2")
 
 	// Construct a SendTx signature
 	tx := &SendTx{

@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/testutils"
 	"github.com/tendermint/basecoin/types"
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
@@ -27,7 +26,7 @@ func TestCounterPlugin(t *testing.T) {
 	bcApp.RegisterPlugin(counterPlugin)
 
 	// Account initialization
-	test1PrivAcc := testutils.PrivAccountFromSecret("test1")
+	test1PrivAcc := types.PrivAccountFromSecret("test1")
 
 	// Seed Basecoin with account
 	test1Acc := test1PrivAcc.Account

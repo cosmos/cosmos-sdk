@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/basecoin/testutils"
 	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/go-common"
 	crypto "github.com/tendermint/go-crypto"
@@ -29,7 +28,7 @@ func genGenesisDoc(chainID string, numVals int) (*tm.GenesisDoc, []types.PrivAcc
 
 	for i := 0; i < numVals; i++ {
 		name := cmn.Fmt("%v_val_%v", chainID, i)
-		privAcc := testutils.PrivAccountFromSecret(name)
+		privAcc := types.PrivAccountFromSecret(name)
 		genDoc.Validators = append(genDoc.Validators, tm.GenesisValidator{
 			PubKey: privAcc.PubKey.PubKey,
 			Amount: 1,

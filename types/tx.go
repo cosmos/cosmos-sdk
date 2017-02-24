@@ -46,7 +46,7 @@ type TxInput struct {
 	Coins     Coins            `json:"coins"`     //
 	Sequence  int              `json:"sequence"`  // Must be 1 greater than the last committed TxInput
 	Signature crypto.Signature `json:"signature"` // Depends on the PubKey type and the whole Tx
-	PubKey    crypto.PubKey    `json:"pub_key"`   // Is present iff Sequence == 0
+	PubKey    crypto.PubKey    `json:"pub_key"`   // Is present iff Sequence == 1
 }
 
 func (txIn TxInput) ValidateBasic() abci.Result {
@@ -75,6 +75,41 @@ func (txIn TxInput) String() string {
 	return Fmt("TxInput{%X,%v,%v,%v,%v}", txIn.Address, txIn.Coins, txIn.Sequence, txIn.Signature, txIn.PubKey)
 }
 
+// WARNING: we don't accept signature over json (use wire.JSON if you want)
+func (txIn *TxInput) UnmarshalJSON(b []byte) (err error) {
+	// unmarshall with our new logic for strings
+	var t tmpTxInput
+	err = json.Unmarshal(b, &t)
+	if err != nil {
+		return err
+	}
+	// copy data over
+	txIn.Address = t.Address
+	txIn.Coins = t.Coins
+	txIn.Sequence = t.Sequence
+	txIn.PubKey = t.PubKey.PubKey
+	return nil
+}
+
+func (txIn TxInput) MarshalJSON() ([]byte, error) {
+	// unmarshall with our new logic for strings
+	t := tmpTxInput{
+		Address:  txIn.Address,
+		Coins:    txIn.Coins,
+		Sequence: txIn.Sequence,
+		PubKey:   JSONPubKey{txIn.PubKey},
+	}
+	return json.Marshal(t)
+}
+
+// WARNING: we do not handle signature at all in JSON, just drop it
+type tmpTxInput struct {
+	Address  HexData    `json:"address"`  // Hash of the PubKey
+	Coins    Coins      `json:"coins"`    //
+	Sequence int        `json:"sequence"` // Must be 1 greater than the last committed TxInput
+	PubKey   JSONPubKey `json:"pub_key"`  // Is present iff Sequence == 1
+}
+
 func NewTxInput(pubKey crypto.PubKey, coins Coins, sequence int) TxInput {
 	input := TxInput{
 		Address:  pubKey.Address(),
@@ -91,8 +126,8 @@ func NewTxInput(pubKey crypto.PubKey, coins Coins, sequence int) TxInput {
 //-----------------------------------------------------------------------------
 
 type TxOutput struct {
-	Address []byte `json:"address"` // Hash of the PubKey
-	Coins   Coins  `json:"coins"`   //
+	Address HexData `json:"address"` // Hash of the PubKey
+	Coins   Coins   `json:"coins"`   //
 }
 
 func (txOut TxOutput) ValidateBasic() abci.Result {

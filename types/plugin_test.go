@@ -31,16 +31,6 @@ func (d *Dummy) EndBlock(store KVStore, height uint64) (res abci.ResponseEndBloc
 
 //----------------------------------
 
-/*func TestPlugin(t *testing.T) {
-
-	plugins := NewPlugins()
-	assert.True(t, len(plugins.GetList()) == 0, "plugins object init with a objects")
-	plugins.RegisterPlugin(&Dummy{})
-	assert.True(t, len(plugins.GetList()) == 1, "plugin wasn't added to plist after registered")
-	dum := plugins.GetByName("dummy")
-	assert.True(t, dum.Name() == "dummy", "plugin wasn't retrieved properly with GetByName")
-}*/
-
 func TestPlugin(t *testing.T) {
 
 	plugins := NewPlugins()

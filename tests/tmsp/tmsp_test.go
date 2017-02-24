@@ -1,8 +1,11 @@
 package tmsp_test
 
 import (
+	"encoding/json"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/basecoin/app"
 	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/go-common"
@@ -16,7 +19,7 @@ func TestSendTx(t *testing.T) {
 	chainID := "test_chain_id"
 	bcApp := app.NewBasecoin(eyesCli)
 	bcApp.SetOption("base/chainID", chainID)
-	t.Log(bcApp.Info())
+	// t.Log(bcApp.Info())
 
 	test1PrivAcc := types.PrivAccountFromSecret("test1")
 	test2PrivAcc := types.PrivAccountFromSecret("test2")
@@ -24,7 +27,9 @@ func TestSendTx(t *testing.T) {
 	// Seed Basecoin with account
 	test1Acc := test1PrivAcc.Account
 	test1Acc.Balance = types.Coins{{"", 1000}}
-	t.Log(bcApp.SetOption("base/account", string(wire.JSONBytes(test1Acc))))
+	accOpt, err := json.Marshal(test1Acc)
+	require.Nil(t, err)
+	bcApp.SetOption("base/account", string(accOpt))
 
 	// Construct a SendTx signature
 	tx := &types.SendTx{
@@ -43,18 +48,16 @@ func TestSendTx(t *testing.T) {
 
 	// Sign request
 	signBytes := tx.SignBytes(chainID)
-	t.Log("Sign bytes: %X\n", signBytes)
+	// t.Log("Sign bytes: %X\n", signBytes)
 	sig := test1PrivAcc.Sign(signBytes)
 	tx.Inputs[0].Signature = crypto.SignatureS{sig}
-	t.Log("Signed TX bytes: %X\n", wire.BinaryBytes(types.TxS{tx}))
+	// t.Log("Signed TX bytes: %X\n", wire.BinaryBytes(types.TxS{tx}))
 
 	// Write request
 	txBytes := wire.BinaryBytes(types.TxS{tx})
 	res := bcApp.DeliverTx(txBytes)
-	t.Log(res)
-	if res.IsErr() {
-		t.Errorf("Failed: %v", res.Error())
-	}
+	// t.Log(res)
+	assert.False(t, res.IsErr(), "Failed: %v", res.Error())
 }
 
 func TestSequence(t *testing.T) {
@@ -62,13 +65,15 @@ func TestSequence(t *testing.T) {
 	chainID := "test_chain_id"
 	bcApp := app.NewBasecoin(eyesCli)
 	bcApp.SetOption("base/chainID", chainID)
-	t.Log(bcApp.Info())
+	// t.Log(bcApp.Info())
 
 	// Get the test account
 	test1PrivAcc := types.PrivAccountFromSecret("test1")
 	test1Acc := test1PrivAcc.Account
 	test1Acc.Balance = types.Coins{{"", 1 << 53}}
-	t.Log(bcApp.SetOption("base/account", string(wire.JSONBytes(test1Acc))))
+	accOpt, err := json.Marshal(test1Acc)
+	require.Nil(t, err)
+	bcApp.SetOption("base/account", string(accOpt))
 
 	sequence := int(1)
 	// Make a bunch of PrivAccounts
@@ -103,16 +108,11 @@ func TestSequence(t *testing.T) {
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
 		res := bcApp.DeliverTx(txBytes)
-		if res.IsErr() {
-			t.Errorf("DeliverTx error: " + res.Error())
-		}
-
+		assert.False(t, res.IsErr(), "DeliverTx error: %v", res.Error())
 	}
 
 	res := bcApp.Commit()
-	if res.IsErr() {
-		t.Errorf("Failed Commit: %v", res.Error())
-	}
+	assert.False(t, res.IsErr(), "Failed Commit: %v", res.Error())
 
 	t.Log("-------------------- RANDOM SENDS --------------------")
 
@@ -152,8 +152,6 @@ func TestSequence(t *testing.T) {
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
 		res := bcApp.DeliverTx(txBytes)
-		if res.IsErr() {
-			t.Errorf("DeliverTx error: " + res.Error())
-		}
+		assert.False(t, res.IsErr(), "DeliverTx error: %v", res.Error())
 	}
 }

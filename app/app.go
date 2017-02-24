@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"strings"
 
 	abci "github.com/tendermint/abci/types"
@@ -68,13 +69,12 @@ func (app *Basecoin) SetOption(key string, value string) string {
 			app.state.SetChainID(value)
 			return "Success"
 		case "account":
-			var err error
-			var acc *types.Account
-			wire.ReadJSONPtr(&acc, []byte(value), &err)
+			var acc types.Account
+			err := json.Unmarshal([]byte(value), &acc)
 			if err != nil {
 				return "Error decoding acc message: " + err.Error()
 			}
-			app.state.SetAccount(acc.PubKey.Address(), acc)
+			app.state.SetAccount(acc.PubKey.Address(), &acc)
 			log.Info("SetAccount", "addr", acc.PubKey.Address(), "acc", acc)
 			return "Success"
 		}

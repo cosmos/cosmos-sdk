@@ -60,7 +60,7 @@ func TestParse(t *testing.T) {
 		errMsg   string
 	}{
 		//testing ParseCoin Function
-		{types.Coin{} == makeCoin(""), "parseCoin makes bad empty coin"},
+		{types.Coin{"mycoin", 0} == makeCoin(""), "parseCoin makes bad empty coin"},
 		{types.Coin{"fooCoin", 1} == makeCoin("1fooCoin"), "parseCoin makes bad coins"},
 		{types.Coin{"barCoin", 10} == makeCoin("10 barCoin"), "parseCoin makes bad coins"},
 

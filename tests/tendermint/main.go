@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/tendermint/basecoin/testutils"
 	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/go-common"
+	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-rpc/client"
 	"github.com/tendermint/go-rpc/types"
 	"github.com/tendermint/go-wire"
@@ -37,10 +37,10 @@ func main() {
 	}()
 
 	// Get the root account
-	root := testutils.PrivAccountFromSecret("test")
+	root := types.PrivAccountFromSecret("test")
 	sequence := int(0)
 	// Make a bunch of PrivAccounts
-	privAccounts := testutils.RandAccounts(1000, 1000000, 0)
+	privAccounts := types.RandAccounts(1000, 1000000, 0)
 	privAccountSequences := make(map[string]int)
 
 	// Send coins to each account
@@ -66,8 +66,8 @@ func main() {
 
 		// Sign request
 		signBytes := tx.SignBytes(chainID)
-		sig := root.PrivKey.Sign(signBytes)
-		tx.Inputs[0].Signature = sig
+		sig := root.Sign(signBytes)
+		tx.Inputs[0].Signature = crypto.SignatureS{sig}
 		//fmt.Println("tx:", tx)
 
 		// Write request
@@ -116,8 +116,8 @@ func main() {
 
 		// Sign request
 		signBytes := tx.SignBytes(chainID)
-		sig := privAccountA.PrivKey.Sign(signBytes)
-		tx.Inputs[0].Signature = sig
+		sig := privAccountA.Sign(signBytes)
+		tx.Inputs[0].Signature = crypto.SignatureS{sig}
 		//fmt.Println("tx:", tx)
 
 		// Write request

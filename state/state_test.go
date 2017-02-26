@@ -22,9 +22,7 @@ func TestState(t *testing.T) {
 	dumAddr := []byte("dummyAddress")
 
 	acc := &types.Account{
-		PubKey:   nil,
 		Sequence: 1,
-		Balance:  nil,
 	}
 
 	//reset the store/state/cache

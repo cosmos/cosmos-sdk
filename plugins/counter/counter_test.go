@@ -1,13 +1,15 @@
 package counter
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/testutils"
 	"github.com/tendermint/basecoin/types"
+	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
 )
@@ -19,19 +21,21 @@ func TestCounterPlugin(t *testing.T) {
 	chainID := "test_chain_id"
 	bcApp := app.NewBasecoin(eyesCli)
 	bcApp.SetOption("base/chainID", chainID)
-	t.Log(bcApp.Info())
+	// t.Log(bcApp.Info())
 
 	// Add Counter plugin
 	counterPlugin := New()
 	bcApp.RegisterPlugin(counterPlugin)
 
 	// Account initialization
-	test1PrivAcc := testutils.PrivAccountFromSecret("test1")
+	test1PrivAcc := types.PrivAccountFromSecret("test1")
 
 	// Seed Basecoin with account
 	test1Acc := test1PrivAcc.Account
 	test1Acc.Balance = types.Coins{{"", 1000}, {"gold", 1000}}
-	bcApp.SetOption("base/account", string(wire.JSONBytes(test1Acc)))
+	accOpt, err := json.Marshal(test1Acc)
+	require.Nil(t, err)
+	bcApp.SetOption("base/account", string(accOpt))
 
 	// Deliver a CounterTx
 	DeliverCounterTx := func(gas int64, fee types.Coin, inputCoins types.Coins, inputSequence int, appFee types.Coins) abci.Result {
@@ -46,10 +50,10 @@ func TestCounterPlugin(t *testing.T) {
 
 		// Sign request
 		signBytes := tx.SignBytes(chainID)
-		t.Logf("Sign bytes: %X\n", signBytes)
-		sig := test1PrivAcc.PrivKey.Sign(signBytes)
-		tx.Input.Signature = sig
-		t.Logf("Signed TX bytes: %X\n", wire.BinaryBytes(struct{ types.Tx }{tx}))
+		// t.Logf("Sign bytes: %X\n", signBytes)
+		sig := test1PrivAcc.Sign(signBytes)
+		tx.Input.Signature = crypto.SignatureS{sig}
+		// t.Logf("Signed TX bytes: %X\n", wire.BinaryBytes(struct{ types.Tx }{tx}))
 
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})

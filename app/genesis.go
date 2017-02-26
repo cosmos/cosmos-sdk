@@ -2,8 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
-	"reflect"
 
 	"github.com/pkg/errors"
 	cmn "github.com/tendermint/go-common"
@@ -15,9 +13,7 @@ func (app *Basecoin) LoadGenesis(path string) error {
 		return err
 	}
 	for _, kv := range kvz {
-		log := app.SetOption(kv.Key, kv.Value)
-		// TODO: remove debug output
-		fmt.Printf("Set %v=%v. Log: %v\n", kv.Key, kv.Value, log)
+		app.SetOption(kv.Key, kv.Value)
 	}
 	return nil
 }
@@ -28,7 +24,7 @@ type keyValue struct {
 }
 
 func loadGenesis(filePath string) (kvz []keyValue, err error) {
-	kvz_ := []interface{}{}
+	kvz_ := []json.RawMessage{}
 	bytes, err := cmn.ReadFile(filePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "loading genesis file")
@@ -40,24 +36,21 @@ func loadGenesis(filePath string) (kvz []keyValue, err error) {
 	if len(kvz_)%2 != 0 {
 		return nil, errors.New("genesis cannot have an odd number of items.  Format = [key1, value1, key2, value2, ...]")
 	}
+
 	for i := 0; i < len(kvz_); i += 2 {
-		keyIfc := kvz_[i]
-		valueIfc := kvz_[i+1]
-		var key, value string
-		key, ok := keyIfc.(string)
-		if !ok {
-			return nil, errors.Errorf("genesis had invalid key %v of type %v", keyIfc, reflect.TypeOf(keyIfc))
+		kv := keyValue{}
+		rawK := []byte(kvz_[i])
+		err := json.Unmarshal(rawK, &(kv.Key))
+		if err != nil {
+			return nil, errors.Errorf("Non-string key: %s", string(rawK))
 		}
-		if value_, ok := valueIfc.(string); ok {
-			value = value_
-		} else {
-			valueBytes, err := json.Marshal(valueIfc)
-			if err != nil {
-				return nil, errors.Errorf("genesis had invalid value %v: %v", value_, err.Error())
-			}
-			value = string(valueBytes)
+		// convert value to string if possible (otherwise raw json)
+		rawV := kvz_[i+1]
+		err = json.Unmarshal(rawV, &(kv.Value))
+		if err != nil {
+			kv.Value = string(rawV)
 		}
-		kvz = append(kvz, keyValue{key, value})
+		kvz = append(kvz, kv)
 	}
 	return kvz, nil
 }

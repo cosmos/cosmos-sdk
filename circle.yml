@@ -17,10 +17,11 @@ dependencies:
     - go get github.com/Masterminds/glide
     - go version
     - glide --version
-    - "cd $REPO && glide install"
+    - "cd $REPO && glide install && go install ./cmd/basecoin"
 
 test:
   override:
     - "cd $REPO && make test"
+    - "cd $REPO/demo && bash start.sh"
 
 

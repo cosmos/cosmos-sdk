@@ -1,7 +1,26 @@
 #! /bin/bash
-set -eu
+set -e
 
 cd $GOPATH/src/github.com/tendermint/basecoin/demo
+
+LOG_DIR="."
+
+if [[ "$CIRCLECI" == "true" ]]; then
+	# set log dir
+	LOG_DIR="${CIRCLE_ARTIFACTS}"
+
+	# install tendermint
+	set +e
+	go get github.com/tendermint/tendermint
+	pushd $GOPATH/src/github.com/tendermint/tendermint
+	git checkout develop
+	glide install
+	go install ./cmd/tendermint
+	popd
+	set -e
+fi
+
+set -u
 
 function removeQuotes() {
 	temp="${1%\"}"
@@ -14,10 +33,17 @@ function waitForNode() {
 	set +e
         curl -s $addr/status > /dev/null
         ERR=$?
+	i=0
         while [ "$ERR" != 0 ]; do
+		if [[ "$i" == 10 ]]; then
+			echo "waited to long for chain to start"
+			exit 1
+		fi
+		echo "...... still waiting on $addr"
                 sleep 1 
                 curl -s $addr/status > /dev/null
                 ERR=$?
+		i=$((i+1))
         done
 	set -e
         echo "... node $addr is up"
@@ -51,12 +77,12 @@ echo ""
 echo "... starting chains"
 echo ""
 # start the first node
-TMROOT=./data/chain1/tendermint tendermint node &> chain1_tendermint.log &
-basecoin start --dir ./data/chain1/basecoin &> chain1_basecoin.log &
+TMROOT=./data/chain1/tendermint tendermint node --skip_upnp --log_level=info &> $LOG_DIR/chain1_tendermint.log &
+basecoin start --dir ./data/chain1/basecoin &> $LOG_DIR/chain1_basecoin.log &
 
 # start the second node
-TMROOT=./data/chain2/tendermint tendermint node --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> chain2_tendermint.log &
-basecoin start --address tcp://localhost:36658 --dir ./data/chain2/basecoin &> chain2_basecoin.log &
+TMROOT=./data/chain2/tendermint tendermint node --skip_upnp --log_level=info --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> $LOG_DIR/chain2_tendermint.log &
+basecoin start --address tcp://localhost:36658 --dir ./data/chain2/basecoin &> $LOG_DIR/chain2_basecoin.log &
 
 echo ""
 echo "... waiting for chains to start"

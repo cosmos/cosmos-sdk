@@ -5,13 +5,11 @@ import keys "github.com/tendermint/go-keys"
 // Manager combines encyption and storage implementation to provide
 // a full-featured key manager
 type Manager struct {
-	gen Generator
-	es  encryptedStorage
+	es encryptedStorage
 }
 
-func New(gen Generator, coder Encoder, store keys.Storage) Manager {
+func New(coder Encoder, store keys.Storage) Manager {
 	return Manager{
-		gen: gen,
 		es: encryptedStorage{
 			coder: coder,
 			store: store,
@@ -31,9 +29,16 @@ func (s Manager) assertKeyManager() keys.Manager {
 
 // Create adds a new key to the storage engine, returning error if
 // another key already stored under this name
-func (s Manager) Create(name, passphrase string) (keys.Info, error) {
-	key := s.gen.Generate()
-	err := s.es.Put(name, passphrase, key)
+//
+// algo must be a supported go-crypto algorithm:
+//
+func (s Manager) Create(name, passphrase, algo string) (keys.Info, error) {
+	gen, err := getGenerator(algo)
+	if err != nil {
+		return keys.Info{}, err
+	}
+	key := gen.Generate()
+	err = s.es.Put(name, passphrase, key)
 	return info(name, key), err
 }
 

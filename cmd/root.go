@@ -58,9 +58,9 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initEnv)
-	RootCmd.PersistentFlags().StringP("root", "r", os.ExpandEnv("$HOME/.tlc"), "root directory for config and data (default is TM_ROOT or $HOME/.tlc)")
+	RootCmd.PersistentFlags().StringP("root", "r", os.ExpandEnv("$HOME/.tlc"), "root directory for config and data")
 	RootCmd.PersistentFlags().StringP("output", "o", "text", "Output format (text|json)")
-	RootCmd.PersistentFlags().StringP("keydir", "", "keys", "Directory to store private keys (subdir of root)")
+	RootCmd.PersistentFlags().String("keydir", "keys", "Directory to store private keys (subdir of root)")
 }
 
 // initEnv sets to use ENV variables if set.
@@ -107,7 +107,6 @@ func validateFlags(cmd *cobra.Command) error {
 	}
 	// and construct the key manager
 	manager = cryptostore.New(
-		cryptostore.GenEd25519, // TODO - cli switch???
 		cryptostore.SecretBox,
 		filestorage.New(keyDir),
 	)

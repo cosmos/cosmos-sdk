@@ -1,6 +1,9 @@
 package cryptostore
 
-import crypto "github.com/tendermint/go-crypto"
+import (
+	"github.com/pkg/errors"
+	crypto "github.com/tendermint/go-crypto"
+)
 
 var (
 	// GenEd25519 produces Ed25519 private keys
@@ -27,4 +30,15 @@ func genEd25519() crypto.PrivKey {
 
 func genSecp256() crypto.PrivKey {
 	return crypto.GenPrivKeySecp256k1()
+}
+
+func getGenerator(algo string) (Generator, error) {
+	switch algo {
+	case crypto.NameEd25519:
+		return GenEd25519, nil
+	case crypto.NameSecp256k1:
+		return GenSecp256k1, nil
+	default:
+		return nil, errors.Errorf("Cannot generate keys for algorithm: %s", algo)
+	}
 }

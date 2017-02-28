@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // newCmd represents the new command
@@ -32,6 +33,7 @@ passed as a command line argument for security.`,
 
 func init() {
 	RootCmd.AddCommand(newCmd)
+	newCmd.Flags().StringP("type", "t", "ed25519", "Type of key (ed25519|secp256k1")
 }
 
 func newPassword(cmd *cobra.Command, args []string) {
@@ -40,6 +42,7 @@ func newPassword(cmd *cobra.Command, args []string) {
 		return
 	}
 	name := args[0]
+	algo := viper.GetString("type")
 
 	pass, err := getCheckPassword("Enter a passphrase:", "Repeat the passphrase:")
 	if err != nil {
@@ -47,7 +50,7 @@ func newPassword(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	info, err := manager.Create(name, pass)
+	info, err := manager.Create(name, pass, algo)
 	if err != nil {
 		fmt.Println(err.Error())
 		return

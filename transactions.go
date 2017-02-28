@@ -53,7 +53,7 @@ type Signer interface {
 
 // Manager allows simple CRUD on a keystore, as an aid to signing
 type Manager interface {
-	Create(name, passphrase string) (Info, error)
+	Create(name, passphrase, algo string) (Info, error)
 	List() (Infos, error)
 	Get(name string) (Info, error)
 	Update(name, oldpass, newpass string) error

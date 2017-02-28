@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-keys/cryptostore"
 	"github.com/tendermint/go-keys/storage/memstorage"
 )
@@ -15,11 +16,11 @@ func TestKeyManagement(t *testing.T) {
 
 	// make the storage with reasonable defaults
 	cstore := cryptostore.New(
-		cryptostore.GenSecp256k1,
 		cryptostore.SecretBox,
 		memstorage.New(),
 	)
 
+	algo := crypto.NameEd25519
 	n1, n2, n3 := "personal", "business", "other"
 	p1, p2 := "1234", "really-secure!@#$"
 
@@ -31,10 +32,10 @@ func TestKeyManagement(t *testing.T) {
 	// create some keys
 	_, err = cstore.Get(n1)
 	assert.NotNil(err)
-	i, err := cstore.Create(n1, p1)
+	i, err := cstore.Create(n1, p1, algo)
 	require.Equal(n1, i.Name)
 	require.Nil(err)
-	_, err = cstore.Create(n2, p2)
+	_, err = cstore.Create(n2, p2, algo)
 	require.Nil(err)
 
 	// we can get these keys
@@ -151,16 +152,16 @@ func TestAdvancedKeyManagement(t *testing.T) {
 
 	// make the storage with reasonable defaults
 	cstore := cryptostore.New(
-		cryptostore.GenSecp256k1,
 		cryptostore.SecretBox,
 		memstorage.New(),
 	)
 
+	algo := crypto.NameSecp256k1
 	n1, n2 := "old-name", "new name"
 	p1, p2, p3, pt := "1234", "foobar", "ding booms!", "really-secure!@#$"
 
 	// make sure key works with initial password
-	_, err := cstore.Create(n1, p1)
+	_, err := cstore.Create(n1, p1, algo)
 	require.Nil(err, "%+v", err)
 	assertPassword(assert, cstore, n1, p1, p2)
 

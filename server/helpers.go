@@ -1,11 +1,11 @@
 /*
-package proxy provides http handlers to construct a proxy server
+package server provides http handlers to construct a server server
 for key management, transaction signing, and query validation.
 
 Please read the README and godoc to see how to
 configure the server for your application.
 */
-package proxy
+package server
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 	"net/http"
 
 	data "github.com/tendermint/go-data"
-	"github.com/tendermint/go-keys/proxy/types"
+	"github.com/tendermint/go-keys/server/types"
 
 	"github.com/pkg/errors"
 )

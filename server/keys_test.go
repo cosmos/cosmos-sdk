@@ -1,4 +1,4 @@
-package proxy_test
+package server_test
 
 import (
 	"bytes"
@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 	keys "github.com/tendermint/go-keys"
 	"github.com/tendermint/go-keys/cryptostore"
-	"github.com/tendermint/go-keys/proxy"
-	"github.com/tendermint/go-keys/proxy/types"
+	"github.com/tendermint/go-keys/server"
+	"github.com/tendermint/go-keys/server/types"
 	"github.com/tendermint/go-keys/storage/memstorage"
 )
 
@@ -92,7 +92,7 @@ func setupServer() http.Handler {
 	)
 
 	// build your http server
-	ks := proxy.NewKeyServer(cstore, "ed25519")
+	ks := server.New(cstore, "ed25519")
 	r := mux.NewRouter()
 	sk := r.PathPrefix("/keys").Subrouter()
 	ks.Register(sk)

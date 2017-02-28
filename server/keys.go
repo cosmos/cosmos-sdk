@@ -1,4 +1,4 @@
-package proxy
+package server
 
 import (
 	"errors"
@@ -6,22 +6,22 @@ import (
 
 	"github.com/gorilla/mux"
 	keys "github.com/tendermint/go-keys"
-	"github.com/tendermint/go-keys/proxy/types"
+	"github.com/tendermint/go-keys/server/types"
 )
 
-type KeyServer struct {
+type Keys struct {
 	manager keys.Manager
 	algo    string
 }
 
-func NewKeyServer(manager keys.Manager, algo string) KeyServer {
-	return KeyServer{
+func New(manager keys.Manager, algo string) Keys {
+	return Keys{
 		manager: manager,
 		algo:    algo,
 	}
 }
 
-func (k KeyServer) GenerateKey(w http.ResponseWriter, r *http.Request) {
+func (k Keys) GenerateKey(w http.ResponseWriter, r *http.Request) {
 	req := types.CreateKeyRequest{
 		Algo: k.algo, // default key type from cli
 	}
@@ -40,7 +40,7 @@ func (k KeyServer) GenerateKey(w http.ResponseWriter, r *http.Request) {
 	writeSuccess(w, &key)
 }
 
-func (k KeyServer) GetKey(w http.ResponseWriter, r *http.Request) {
+func (k Keys) GetKey(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 	key, err := k.manager.Get(name)
@@ -51,7 +51,7 @@ func (k KeyServer) GetKey(w http.ResponseWriter, r *http.Request) {
 	writeSuccess(w, &key)
 }
 
-func (k KeyServer) ListKeys(w http.ResponseWriter, r *http.Request) {
+func (k Keys) ListKeys(w http.ResponseWriter, r *http.Request) {
 
 	keys, err := k.manager.List()
 	if err != nil {
@@ -61,7 +61,7 @@ func (k KeyServer) ListKeys(w http.ResponseWriter, r *http.Request) {
 	writeSuccess(w, keys)
 }
 
-func (k KeyServer) UpdateKey(w http.ResponseWriter, r *http.Request) {
+func (k Keys) UpdateKey(w http.ResponseWriter, r *http.Request) {
 	req := types.UpdateKeyRequest{}
 	err := readRequest(r, &req)
 	if err != nil {
@@ -90,7 +90,7 @@ func (k KeyServer) UpdateKey(w http.ResponseWriter, r *http.Request) {
 	writeSuccess(w, &key)
 }
 
-func (k KeyServer) DeleteKey(w http.ResponseWriter, r *http.Request) {
+func (k Keys) DeleteKey(w http.ResponseWriter, r *http.Request) {
 	req := types.DeleteKeyRequest{}
 	err := readRequest(r, &req)
 	if err != nil {
@@ -118,7 +118,7 @@ func (k KeyServer) DeleteKey(w http.ResponseWriter, r *http.Request) {
 	writeSuccess(w, &resp)
 }
 
-func (k KeyServer) Register(r *mux.Router) {
+func (k Keys) Register(r *mux.Router) {
 	r.HandleFunc("/", k.GenerateKey).Methods("POST")
 	r.HandleFunc("/", k.ListKeys).Methods("GET")
 	r.HandleFunc("/{name}", k.GetKey).Methods("GET")

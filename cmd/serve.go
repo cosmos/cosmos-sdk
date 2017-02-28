@@ -25,7 +25,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/go-keys/proxy"
+	"github.com/tendermint/go-keys/server"
 )
 
 // serveCmd represents the serve command
@@ -36,7 +36,7 @@ var serveCmd = &cobra.Command{
 private keys much more in depth than the cli can perform.
 In particular, this will allow you to sign transactions with
 the private keys in the store.`,
-	RunE: server,
+	RunE: serveHTTP,
 }
 
 func init() {
@@ -46,7 +46,7 @@ func init() {
 	serveCmd.Flags().StringP("type", "t", "ed25519", "Default key type (ed25519|secp256k1)")
 }
 
-func server(cmd *cobra.Command, args []string) error {
+func serveHTTP(cmd *cobra.Command, args []string) error {
 	var l net.Listener
 	var err error
 	socket := viper.GetString("socket")
@@ -64,7 +64,7 @@ func server(cmd *cobra.Command, args []string) error {
 	}
 
 	router := mux.NewRouter()
-	ks := proxy.NewKeyServer(manager, viper.GetString("type"))
+	ks := server.New(manager, viper.GetString("type"))
 	ks.Register(router)
 
 	// only set cors for tcp listener

@@ -19,12 +19,14 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
 	rootDir string
+	format  string
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -37,9 +39,6 @@ These keys may be in any format supported by go-crypto and can be
 used by light-clients, full nodes, or any other application that
 needs to sign with a private key.`,
 	PersistentPreRunE: bindFlags,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -53,7 +52,8 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initEnv)
-	RootCmd.PersistentFlags().StringP("root", "r", os.ExpandEnv("$HOME/.tlc"), "root directory for config and data (default is $HOME/.tlc)")
+	RootCmd.PersistentFlags().StringP("root", "r", os.ExpandEnv("$HOME/.tlc"), "root directory for config and data (default is TM_ROOT or $HOME/.tlc)")
+	RootCmd.PersistentFlags().StringP("format", "f", "text", "Output format (text|json)")
 }
 
 // initEnv sets to use ENV variables if set.
@@ -80,5 +80,16 @@ func bindFlags(cmd *cobra.Command, args []string) error {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
 
-	return nil
+	return validateFlags(cmd)
+}
+
+// validateFlags asserts all RootCmd flags are valid
+func validateFlags(cmd *cobra.Command) error {
+	format = viper.GetString("format")
+	switch format {
+	case "text", "json":
+		return nil
+	default:
+		return errors.Errorf("Unsupported format: %s", format)
+	}
 }

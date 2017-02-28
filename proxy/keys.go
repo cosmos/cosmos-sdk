@@ -11,16 +11,20 @@ import (
 
 type KeyServer struct {
 	manager keys.Manager
+	algo    string
 }
 
-func NewKeyServer(manager keys.Manager) KeyServer {
+func NewKeyServer(manager keys.Manager, algo string) KeyServer {
 	return KeyServer{
 		manager: manager,
+		algo:    algo,
 	}
 }
 
 func (k KeyServer) GenerateKey(w http.ResponseWriter, r *http.Request) {
-	req := types.CreateKeyRequest{}
+	req := types.CreateKeyRequest{
+		Algo: k.algo, // default key type from cli
+	}
 	err := readRequest(r, &req)
 	if err != nil {
 		writeError(w, err)

@@ -92,7 +92,7 @@ func setupServer() http.Handler {
 	)
 
 	// build your http server
-	ks := proxy.NewKeyServer(cstore)
+	ks := proxy.NewKeyServer(cstore, "ed25519")
 	r := mux.NewRouter()
 	sk := r.PathPrefix("/keys").Subrouter()
 	ks.Register(sk)

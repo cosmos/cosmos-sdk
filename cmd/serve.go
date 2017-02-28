@@ -16,8 +16,16 @@ package cmd
 
 import (
 	"fmt"
+	"net"
+	"net/http"
+	"os"
 
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/tendermint/go-keys/proxy"
 )
 
 // serveCmd represents the serve command
@@ -28,23 +36,71 @@ var serveCmd = &cobra.Command{
 private keys much more in depth than the cli can perform.
 In particular, this will allow you to sign transactions with
 the private keys in the store.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Println("serve called")
-	},
+	RunE: server,
 }
 
 func init() {
 	RootCmd.AddCommand(serveCmd)
+	serveCmd.Flags().IntP("port", "p", 8118, "TCP Port for listen for http server")
+	serveCmd.Flags().StringP("socket", "s", "", "UNIX socket for more secure http server")
+	serveCmd.Flags().StringP("type", "t", "ed25519", "Default key type (ed25519|secp256k1)")
+}
 
-	// Here you will define your flags and configuration settings.
+func server(cmd *cobra.Command, args []string) error {
+	var l net.Listener
+	var err error
+	socket := viper.GetString("socket")
+	if socket != "" {
+		l, err = createSocket(socket)
+		if err != nil {
+			return errors.Wrap(err, "Cannot create socket")
+		}
+	} else {
+		port := viper.GetInt("port")
+		l, err = net.Listen("tcp", fmt.Sprintf(":%d", port))
+		if err != nil {
+			return errors.Errorf("Cannot listen on port %d", port)
+		}
+	}
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// serveCmd.PersistentFlags().String("foo", "", "A help for foo")
+	router := mux.NewRouter()
+	ks := proxy.NewKeyServer(manager, viper.GetString("type"))
+	ks.Register(router)
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// only set cors for tcp listener
+	var h http.Handler
+	if socket == "" {
+		allowedHeaders := handlers.AllowedHeaders([]string{"Content-Type"})
+		h = handlers.CORS(allowedHeaders)(router)
+	} else {
+		h = router
+	}
 
+	err = http.Serve(l, h)
+	fmt.Printf("Server Killed: %+v\n", err)
+	return nil
+}
+
+// createSocket deletes existing socket if there, creates a new one,
+// starts a server on the socket, and sets permissions to 0600
+func createSocket(socket string) (net.Listener, error) {
+	err := os.Remove(socket)
+	if err != nil && !os.IsNotExist(err) {
+		// only fail if it does exist and cannot be deleted
+		return nil, err
+	}
+
+	l, err := net.Listen("unix", socket)
+	if err != nil {
+		return nil, err
+	}
+
+	mode := os.FileMode(0700) | os.ModeSocket
+	err = os.Chmod(socket, mode)
+	if err != nil {
+		l.Close()
+		return nil, err
+	}
+
+	return l, nil
 }

@@ -33,7 +33,7 @@ passed as a command line argument for security.`,
 
 func init() {
 	RootCmd.AddCommand(newCmd)
-	newCmd.Flags().StringP("type", "t", "ed25519", "Type of key (ed25519|secp256k1")
+	newCmd.Flags().StringP("type", "t", "ed25519", "Type of key (ed25519|secp256k1)")
 }
 
 func newPassword(cmd *cobra.Command, args []string) {

@@ -23,7 +23,7 @@ func TestBasicCRUD(t *testing.T) {
 	name := "bar"
 	key := []byte("secret-key-here")
 	pubkey := crypto.GenPrivKeyEd25519().PubKey()
-	info := keys.KeyInfo{
+	info := keys.Info{
 		Name:   name,
 		PubKey: crypto.PubKeyS{pubkey},
 	}

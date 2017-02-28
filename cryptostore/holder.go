@@ -24,28 +24,28 @@ func (s Manager) assertSigner() keys.Signer {
 	return s
 }
 
-// exists just to make sure we fulfill the KeyManager interface
-func (s Manager) assertKeyManager() keys.KeyManager {
+// exists just to make sure we fulfill the Manager interface
+func (s Manager) assertKeyManager() keys.Manager {
 	return s
 }
 
 // Create adds a new key to the storage engine, returning error if
 // another key already stored under this name
-func (s Manager) Create(name, passphrase string) error {
+func (s Manager) Create(name, passphrase string) (keys.Info, error) {
 	key := s.gen.Generate()
-	return s.es.Put(name, passphrase, key)
+	err := s.es.Put(name, passphrase, key)
+	return info(name, key), err
 }
 
 // List loads the keys from the storage and enforces alphabetical order
-func (s Manager) List() (keys.KeyInfos, error) {
-	k, err := s.es.List()
-	res := keys.KeyInfos(k)
+func (s Manager) List() (keys.Infos, error) {
+	res, err := s.es.List()
 	res.Sort()
 	return res, err
 }
 
 // Get returns the public information about one key
-func (s Manager) Get(name string) (keys.KeyInfo, error) {
+func (s Manager) Get(name string) (keys.Info, error) {
 	_, info, err := s.es.store.Get(name)
 	return info, err
 }

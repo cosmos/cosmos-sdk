@@ -11,7 +11,7 @@ import (
 )
 
 type data struct {
-	info keys.KeyInfo
+	info keys.Info
 	key  []byte
 }
 
@@ -29,7 +29,7 @@ func (s MemStore) assertStorage() keys.Storage {
 
 // Put adds the given key, returns an error if it another key
 // is already stored under this name
-func (s MemStore) Put(name string, key []byte, info keys.KeyInfo) error {
+func (s MemStore) Put(name string, key []byte, info keys.Info) error {
 	if _, ok := s[name]; ok {
 		return errors.Errorf("Key named '%s' already exists", name)
 	}
@@ -38,7 +38,7 @@ func (s MemStore) Put(name string, key []byte, info keys.KeyInfo) error {
 }
 
 // Get returns the key stored under the name, or returns an error if not present
-func (s MemStore) Get(name string) ([]byte, keys.KeyInfo, error) {
+func (s MemStore) Get(name string) ([]byte, keys.Info, error) {
 	var err error
 	d, ok := s[name]
 	if !ok {
@@ -48,8 +48,8 @@ func (s MemStore) Get(name string) ([]byte, keys.KeyInfo, error) {
 }
 
 // List returns the public info of all keys in the MemStore in unsorted order
-func (s MemStore) List() ([]keys.KeyInfo, error) {
-	res := make([]keys.KeyInfo, len(s))
+func (s MemStore) List() (keys.Infos, error) {
+	res := make([]keys.Info, len(s))
 	i := 0
 	for _, d := range s {
 		res[i] = d.info

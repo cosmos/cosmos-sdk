@@ -1,1 +1,2 @@
-format = "text"
+output = "text"
+keydir = ".mykeys"

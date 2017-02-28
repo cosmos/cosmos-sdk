@@ -31,9 +31,10 @@ func TestKeyManagement(t *testing.T) {
 	// create some keys
 	_, err = cstore.Get(n1)
 	assert.NotNil(err)
-	err = cstore.Create(n1, p1)
+	i, err := cstore.Create(n1, p1)
+	require.Equal(n1, i.Name)
 	require.Nil(err)
-	err = cstore.Create(n2, p2)
+	_, err = cstore.Create(n2, p2)
 	require.Nil(err)
 
 	// we can get these keys
@@ -159,7 +160,7 @@ func TestAdvancedKeyManagement(t *testing.T) {
 	p1, p2, p3, pt := "1234", "foobar", "ding booms!", "really-secure!@#$"
 
 	// make sure key works with initial password
-	err := cstore.Create(n1, p1)
+	_, err := cstore.Create(n1, p1)
 	require.Nil(err, "%+v", err)
 	assertPassword(assert, cstore, n1, p1, p2)
 

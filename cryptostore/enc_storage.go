@@ -21,7 +21,7 @@ func (es encryptedStorage) Put(name, pass string, key crypto.PrivKey) error {
 	return es.store.Put(name, secret, ki)
 }
 
-func (es encryptedStorage) Get(name, pass string) (crypto.PrivKey, keys.KeyInfo, error) {
+func (es encryptedStorage) Get(name, pass string) (crypto.PrivKey, keys.Info, error) {
 	secret, info, err := es.store.Get(name)
 	if err != nil {
 		return nil, info, err
@@ -30,7 +30,7 @@ func (es encryptedStorage) Get(name, pass string) (crypto.PrivKey, keys.KeyInfo,
 	return key, info, err
 }
 
-func (es encryptedStorage) List() ([]keys.KeyInfo, error) {
+func (es encryptedStorage) List() (keys.Infos, error) {
 	return es.store.List()
 }
 
@@ -39,8 +39,8 @@ func (es encryptedStorage) Delete(name string) error {
 }
 
 // info hardcodes the encoding of keys
-func info(name string, key crypto.PrivKey) keys.KeyInfo {
-	return keys.KeyInfo{
+func info(name string, key crypto.PrivKey) keys.Info {
+	return keys.Info{
 		Name:   name,
 		PubKey: crypto.PubKeyS{key.PubKey()},
 	}

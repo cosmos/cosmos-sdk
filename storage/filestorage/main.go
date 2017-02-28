@@ -49,7 +49,7 @@ func (s FileStore) assertStorage() keys.Storage {
 
 // Put creates two files, one with the public info as json, the other
 // with the (encoded) private key as gpg ascii-armor style
-func (s FileStore) Put(name string, key []byte, info keys.KeyInfo) error {
+func (s FileStore) Put(name string, key []byte, info keys.Info) error {
 	pub, priv := s.nameToPaths(name)
 
 	// write public info
@@ -62,10 +62,10 @@ func (s FileStore) Put(name string, key []byte, info keys.KeyInfo) error {
 	return write(priv, name, key)
 }
 
-// Get loads the keyinfo and (encoded) private key from the directory
+// Get loads the info and (encoded) private key from the directory
 // It uses `name` to generate the filename, and returns an error if the
 // files don't exist or are in the incorrect format
-func (s FileStore) Get(name string) ([]byte, keys.KeyInfo, error) {
+func (s FileStore) Get(name string) ([]byte, keys.Info, error) {
 	pub, priv := s.nameToPaths(name)
 
 	info, err := readInfo(pub)
@@ -78,8 +78,8 @@ func (s FileStore) Get(name string) ([]byte, keys.KeyInfo, error) {
 }
 
 // List parses the key directory for public info and returns a list of
-// KeyInfo for all keys located in this directory.
-func (s FileStore) List() ([]keys.KeyInfo, error) {
+// Info for all keys located in this directory.
+func (s FileStore) List() (keys.Infos, error) {
 	dir, err := os.Open(s.keyDir)
 	if err != nil {
 		return nil, errors.Wrap(err, "List Keys")
@@ -91,7 +91,7 @@ func (s FileStore) List() ([]keys.KeyInfo, error) {
 
 	// filter names for .pub ending and load them one by one
 	// half the files is a good guess for pre-allocating the slice
-	infos := make([]keys.KeyInfo, 0, len(names)/2)
+	infos := make([]keys.Info, 0, len(names)/2)
 	for _, name := range names {
 		if strings.HasSuffix(name, PubExt) {
 			p := path.Join(s.keyDir, name)
@@ -124,11 +124,11 @@ func (s FileStore) nameToPaths(name string) (pub, priv string) {
 	return path.Join(s.keyDir, pubName), path.Join(s.keyDir, privName)
 }
 
-func writeInfo(path string, info keys.KeyInfo) error {
+func writeInfo(path string, info keys.Info) error {
 	return write(path, info.Name, info.PubKey.Bytes())
 }
 
-func readInfo(path string) (info keys.KeyInfo, err error) {
+func readInfo(path string) (info keys.Info, err error) {
 	var data []byte
 	data, info.Name, err = read(path)
 	if err != nil {

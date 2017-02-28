@@ -6,19 +6,19 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
-// KeyInfo is the public information about a key
-type KeyInfo struct {
+// Info is the public information about a key
+type Info struct {
 	Name   string
 	PubKey crypto.PubKeyS
 }
 
-// KeyInfos is a wrapper to allows alphabetical sorting of the keys
-type KeyInfos []KeyInfo
+// Infos is a wrapper to allows alphabetical sorting of the keys
+type Infos []Info
 
-func (k KeyInfos) Len() int           { return len(k) }
-func (k KeyInfos) Less(i, j int) bool { return k[i].Name < k[j].Name }
-func (k KeyInfos) Swap(i, j int)      { k[i], k[j] = k[j], k[i] }
-func (k KeyInfos) Sort() {
+func (k Infos) Len() int           { return len(k) }
+func (k Infos) Less(i, j int) bool { return k[i].Name < k[j].Name }
+func (k Infos) Swap(i, j int)      { k[i], k[j] = k[j], k[i] }
+func (k Infos) Sort() {
 	if k != nil {
 		sort.Sort(k)
 	}
@@ -51,11 +51,11 @@ type Signer interface {
 	Sign(name, passphrase string, tx Signable) error
 }
 
-// KeyManager allows simple CRUD on a keystore, as an aid to signing
-type KeyManager interface {
-	Create(name, passphrase string) error
-	List() (KeyInfos, error)
-	Get(name string) (KeyInfo, error)
+// Manager allows simple CRUD on a keystore, as an aid to signing
+type Manager interface {
+	Create(name, passphrase string) (Info, error)
+	List() (Infos, error)
+	Get(name string) (Info, error)
 	Update(name, oldpass, newpass string) error
 	Delete(name, passphrase string) error
 }

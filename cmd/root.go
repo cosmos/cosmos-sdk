@@ -17,16 +17,22 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	keys "github.com/tendermint/go-keys"
+	"github.com/tendermint/go-keys/cryptostore"
+	"github.com/tendermint/go-keys/storage/filestorage"
 )
 
 var (
 	rootDir string
-	format  string
+	output  string
+	keyDir  string
+	manager keys.Manager
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -53,7 +59,8 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initEnv)
 	RootCmd.PersistentFlags().StringP("root", "r", os.ExpandEnv("$HOME/.tlc"), "root directory for config and data (default is TM_ROOT or $HOME/.tlc)")
-	RootCmd.PersistentFlags().StringP("format", "f", "text", "Output format (text|json)")
+	RootCmd.PersistentFlags().StringP("output", "o", "text", "Output format (text|json)")
+	RootCmd.PersistentFlags().StringP("keydir", "", "keys", "Directory to store private keys (subdir of root)")
 }
 
 // initEnv sets to use ENV variables if set.
@@ -85,11 +92,25 @@ func bindFlags(cmd *cobra.Command, args []string) error {
 
 // validateFlags asserts all RootCmd flags are valid
 func validateFlags(cmd *cobra.Command) error {
-	format = viper.GetString("format")
-	switch format {
+	// validate output format
+	output = viper.GetString("output")
+	switch output {
 	case "text", "json":
-		return nil
 	default:
-		return errors.Errorf("Unsupported format: %s", format)
+		return errors.Errorf("Unsupported output format: %s", output)
 	}
+
+	// store the keys directory
+	keyDir = viper.GetString("keydir")
+	if !filepath.IsAbs(keyDir) {
+		keyDir = filepath.Join(rootDir, keyDir)
+	}
+	// and construct the key manager
+	manager = cryptostore.New(
+		cryptostore.GenEd25519, // TODO - cli switch???
+		cryptostore.SecretBox,
+		filestorage.New(keyDir),
+	)
+
+	return nil
 }

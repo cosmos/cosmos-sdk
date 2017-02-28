@@ -22,28 +22,46 @@ import (
 
 // newCmd represents the new command
 var newCmd = &cobra.Command{
-	Use:   "new",
+	Use:   "new <name>",
 	Short: "Create a new public/private key pair",
 	Long: `Add a public/private key pair to the key store.
 The password muts be entered in the terminal and not
 passed as a command line argument for security.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Println("new called")
-	},
+	Run: newPassword,
 }
 
 func init() {
 	RootCmd.AddCommand(newCmd)
+}
 
-	// Here you will define your flags and configuration settings.
+func newPassword(cmd *cobra.Command, args []string) {
+	if len(args) != 1 || len(args[0]) == 0 {
+		fmt.Print("You must provide a name for the key")
+		return
+	}
+	name := args[0]
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// newCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// TODO: own function???
+	pass, err := getPassword("Enter a passphrase:")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	pass2, err := getPassword("Repeat the passphrase:")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	if pass != pass2 {
+		fmt.Println("Passphrases don't match")
+		return
+	}
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// newCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	info, err := manager.Create(name, pass)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
 
+	printInfo(info)
 }

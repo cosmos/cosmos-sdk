@@ -15,7 +15,7 @@ func TestSortKeys(t *testing.T) {
 
 	// alphabetical order is n3, n1, n2
 	n1, n2, n3 := "john", "mike", "alice"
-	infos := keys.KeyInfos{
+	infos := keys.Infos{
 		info(n1, gen()),
 		info(n2, gen()),
 		info(n3, gen()),

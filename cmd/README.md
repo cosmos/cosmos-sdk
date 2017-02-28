@@ -79,3 +79,39 @@ This CLI is too simple to warant such a structure, but I think eg. tendermint co
 * Overriding nested values with cli flags? (use `--log_config.level=info` ??)
 
 I'd love to see an example of this fully worked out in a more complex CLI.
+
+## Have your cake and eat it too
+
+It's easy to render data different ways.  Some better for viewing, some better for importing to other programs.  You can just add some global (persistent) flags to control the output formatting, and everyone gets what they want.
+
+```
+# keys list -e hex
+All keys:
+betty   d0789984492b1674e276b590d56b7ae077f81adc
+john    b77f4720b220d1411a649b6c7f1151eb6b1c226a
+
+# keys list -e btc
+All keys:
+betty   3uTF4r29CbtnzsNHZoPSYsE4BDwH
+john    3ZGp2Md35iw4XVtRvZDUaAEkCUZP
+
+# keys list -e b64 -o json
+[
+  {
+    "name": "betty",
+    "address": "0HiZhEkrFnTidrWQ1Wt64Hf4Gtw=",
+    "pubkey": {
+      "type": "secp256k1",
+      "data": "F83WvhT0KwttSoqQqd_0_r2ztUUaQix5EXdO8AZyREoV31Og780NW59HsqTAb2O4hZ-w-j0Z-4b2IjfdqqfhVQ=="
+    }
+  },
+  {
+    "name": "john",
+    "address": "t39HILIg0UEaZJtsfxFR62scImo=",
+    "pubkey": {
+      "type": "ed25519",
+      "data": "t1LFmbg_8UTwj-n1wkqmnTp6NfaOivokEhlYySlGYCY="
+    }
+  }
+]
+```

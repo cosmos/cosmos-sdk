@@ -23,6 +23,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	data "github.com/tendermint/go-data"
+	"github.com/tendermint/go-data/base58"
 	keys "github.com/tendermint/go-keys"
 	"github.com/tendermint/go-keys/cryptostore"
 	"github.com/tendermint/go-keys/storage/filestorage"
@@ -59,8 +61,9 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initEnv)
 	RootCmd.PersistentFlags().StringP("root", "r", os.ExpandEnv("$HOME/.tlc"), "root directory for config and data")
-	RootCmd.PersistentFlags().StringP("output", "o", "text", "Output format (text|json)")
 	RootCmd.PersistentFlags().String("keydir", "keys", "Directory to store private keys (subdir of root)")
+	RootCmd.PersistentFlags().StringP("output", "o", "text", "Output format (text|json)")
+	RootCmd.PersistentFlags().StringP("encoding", "e", "hex", "Binary encoding (hex|b64|btc)")
 }
 
 // initEnv sets to use ENV variables if set.
@@ -99,6 +102,19 @@ func validateFlags(cmd *cobra.Command) error {
 	case "text", "json":
 	default:
 		return errors.Errorf("Unsupported output format: %s", output)
+	}
+
+	// validate and set encoding
+	enc := viper.GetString("encoding")
+	switch enc {
+	case "hex":
+		data.Encoder = data.HexEncoder
+	case "b64":
+		data.Encoder = data.B64Encoder
+	case "btc":
+		data.Encoder = base58.BTCEncoder
+	default:
+		return errors.Errorf("Unsupported encoding: %s", enc)
 	}
 
 	// store the keys directory

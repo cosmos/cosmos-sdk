@@ -84,7 +84,8 @@ func bindFlags(cmd *cobra.Command, args []string) error {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		// stderr, so if we redirect output to json file, this doesn't appear
+		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
 
 	return validateFlags(cmd)

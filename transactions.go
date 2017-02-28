@@ -4,12 +4,21 @@ import (
 	"sort"
 
 	crypto "github.com/tendermint/go-crypto"
+	data "github.com/tendermint/go-data"
 )
 
 // Info is the public information about a key
 type Info struct {
-	Name   string
-	PubKey crypto.PubKeyS
+	Name    string         `json:"name"`
+	Address data.Bytes     `json:"address"`
+	PubKey  crypto.PubKeyS `json:"pubkey"`
+}
+
+func (i *Info) Format() Info {
+	if !i.PubKey.Empty() {
+		i.Address = i.PubKey.Address()
+	}
+	return *i
 }
 
 // Infos is a wrapper to allows alphabetical sorting of the keys

@@ -41,11 +41,15 @@ func getCheckPassword(prompt, prompt2 string) (string, error) {
 func printInfo(info keys.Info) {
 	switch output {
 	case "text":
-		key, err := data.ToText(info.PubKey)
+		addr, err := data.ToText(info.Address)
 		if err != nil {
 			panic(err) // really shouldn't happen...
 		}
-		fmt.Printf("%s\t%s\n", info.Name, key)
+		sep := "\t\t"
+		if len(info.Name) > 7 {
+			sep = "\t"
+		}
+		fmt.Printf("%s%s%s\n", info.Name, sep, addr)
 	case "json":
 		json, err := data.ToJSON(info)
 		if err != nil {

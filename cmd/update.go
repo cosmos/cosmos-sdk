@@ -22,7 +22,7 @@ import (
 
 // updateCmd represents the update command
 var updateCmd = &cobra.Command{
-	Use:   "update",
+	Use:   "update <name>",
 	Short: "Change the password for a private key",
 	Long:  `Change the password for a private key.`,
 	Run:   updatePassword,

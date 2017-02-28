@@ -10,6 +10,7 @@ the commands, and give feedback and changes.
 
 ```
 # keys help
+
 Keys allows you to manage your local keystore for tendermint.
 
 These keys may be in any format supported by go-crypto and can be
@@ -20,6 +21,7 @@ Usage:
   keys [command]
 
 Available Commands:
+  get         Get details of one key
   list        List all keys
   new         Create a new public/private key pair
   serve       Run the key manager as an http server
@@ -30,7 +32,8 @@ Flags:
   -o, --output string   Output format (text|json) (default "text")
   -r, --root string     root directory for config and data (default "/Users/ethan/.tlc")
 
-Use "keys [command] --help" for more information about a command.```
+Use "keys [command] --help" for more information about a command.
+```
 
 ## Getting the config file
 
@@ -41,6 +44,8 @@ The first step is to load in root, by checking the following in order:
 * default ($HOME/.tlc evaluated at runtime)
 
 Once the `rootDir` is established, the script looks for a config file named `keys.{json,toml,yaml,hcl}` in that directory and parses it.  These values will provide defaults for flags of the same name.
+
+There is an example config file for testing out locally, which writes keys to `./.mykeys`.  You can
 
 ## Getting/Setting variables
 

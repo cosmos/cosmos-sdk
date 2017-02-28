@@ -44,7 +44,7 @@ func (s MemStore) Get(name string) ([]byte, keys.Info, error) {
 	if !ok {
 		err = errors.Errorf("Key named '%s' doesn't exist", name)
 	}
-	return d.key, d.info, err
+	return d.key, d.info.Format(), err
 }
 
 // List returns the public info of all keys in the MemStore in unsorted order
@@ -52,7 +52,7 @@ func (s MemStore) List() (keys.Infos, error) {
 	res := make([]keys.Info, len(s))
 	i := 0
 	for _, d := range s {
-		res[i] = d.info
+		res[i] = d.info.Format()
 		i++
 	}
 	return res, nil

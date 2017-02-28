@@ -49,11 +49,13 @@ func TestBasicCRUD(t *testing.T) {
 	k, i, err := store.Get(name)
 	require.Nil(err, "%+v", err)
 	assert.Equal(key, k)
-	assert.Equal(info, i)
+	assert.Equal(info.Name, i.Name)
+	assert.Equal(info.PubKey, i.PubKey)
+	assert.NotEmpty(i.Address)
 	l, err = store.List()
 	require.Nil(err, "%+v", err)
 	assert.Equal(1, len(l))
-	assert.Equal(info, l[0])
+	assert.Equal(i, l[0])
 
 	// querying a non-existent key fails
 	_, _, err = store.Get("badname")

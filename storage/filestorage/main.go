@@ -74,7 +74,7 @@ func (s FileStore) Get(name string) ([]byte, keys.Info, error) {
 	}
 
 	key, _, err := read(priv)
-	return key, info, err
+	return key, info.Format(), err
 }
 
 // List parses the key directory for public info and returns a list of
@@ -99,7 +99,7 @@ func (s FileStore) List() (keys.Infos, error) {
 			if err != nil {
 				return nil, err
 			}
-			infos = append(infos, info)
+			infos = append(infos, info.Format())
 		}
 	}
 

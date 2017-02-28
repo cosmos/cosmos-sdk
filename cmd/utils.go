@@ -22,6 +22,22 @@ func getPassword(prompt string) (string, error) {
 	return pass, nil
 }
 
+func getCheckPassword(prompt, prompt2 string) (string, error) {
+	// TODO: own function???
+	pass, err := getPassword(prompt)
+	if err != nil {
+		return "", err
+	}
+	pass2, err := getPassword(prompt2)
+	if err != nil {
+		return "", err
+	}
+	if pass != pass2 {
+		return "", errors.New("Passphrases don't match")
+	}
+	return pass, nil
+}
+
 func printInfo(info keys.Info) {
 	switch output {
 	case "text":

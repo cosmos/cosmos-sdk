@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // updateCmd represents the update command
@@ -26,14 +25,35 @@ var updateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Change the password for a private key",
 	Long:  `Change the password for a private key.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Println(viper.Get("name"))
-		fmt.Println("update called")
-	},
+	Run:   updatePassword,
 }
 
 func init() {
 	RootCmd.AddCommand(updateCmd)
-	updateCmd.Flags().StringP("name", "n", "", "Name of key to update")
+}
+
+func updatePassword(cmd *cobra.Command, args []string) {
+	if len(args) != 1 || len(args[0]) == 0 {
+		fmt.Println("You must provide a name for the key")
+		return
+	}
+	name := args[0]
+
+	oldpass, err := getPassword("Enter the current passphrase:")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	newpass, err := getCheckPassword("Enter the new passphrase:", "Repeat the new passphrase:")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	err = manager.Update(name, oldpass, newpass)
+	if err != nil {
+		fmt.Println(err.Error())
+	} else {
+		fmt.Println("Password successfully updated!")
+	}
 }

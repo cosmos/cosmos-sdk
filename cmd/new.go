@@ -36,24 +36,14 @@ func init() {
 
 func newPassword(cmd *cobra.Command, args []string) {
 	if len(args) != 1 || len(args[0]) == 0 {
-		fmt.Print("You must provide a name for the key")
+		fmt.Println("You must provide a name for the key")
 		return
 	}
 	name := args[0]
 
-	// TODO: own function???
-	pass, err := getPassword("Enter a passphrase:")
+	pass, err := getCheckPassword("Enter a passphrase:", "Repeat the passphrase:")
 	if err != nil {
 		fmt.Println(err.Error())
-		return
-	}
-	pass2, err := getPassword("Repeat the passphrase:")
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	if pass != pass2 {
-		fmt.Println("Passphrases don't match")
 		return
 	}
 

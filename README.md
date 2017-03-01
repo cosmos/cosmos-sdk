@@ -13,6 +13,12 @@ and away you go with a full-stack blockchain and command line tool for transacti
 
 WARNING: Currently uses plain-text private keys for transactions and is otherwise not production ready.
 
+## Prerequisites
+
+* Go to https://golang.org/doc/install to install Golang. 
+* Once you have Golang installed you will also need to install the Golang package manager `glide`: https://github.com/Masterminds/glide. 
+* You will also need to set the $GOPATH environment variable as per the instructions [here](https://golang.org/doc/code.html#GOPATH).
+
 ## Installation
 
 On a good day, basecoin can be installed like a normal Go program:

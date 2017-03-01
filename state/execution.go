@@ -1,6 +1,8 @@
 package state
 
 import (
+	"fmt"
+
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/go-common"
@@ -219,6 +221,7 @@ func validateInputsBasic(ins []types.TxInput) (res abci.Result) {
 // Validate inputs and compute total amount of coins
 func validateInputsAdvanced(accounts map[string]*types.Account, signBytes []byte, ins []types.TxInput) (total types.Coins, res abci.Result) {
 	for _, in := range ins {
+		fmt.Println("IN", in)
 		acc := accounts[string(in.Address)]
 		if acc == nil {
 			cmn.PanicSanity("validateInputsAdvanced() expects account in accounts")
@@ -244,6 +247,9 @@ func validateInputAdvanced(acc *types.Account, signBytes []byte, in types.TxInpu
 		return abci.ErrBaseInsufficientFunds.AppendLog(cmn.Fmt("balance is %v, tried to send %v", balance, in.Coins))
 	}
 	// Check signatures
+	fmt.Printf("signbytes %X\n", signBytes)
+	fmt.Println("PUBKEY", acc.PubKey)
+	fmt.Println("")
 	if !acc.PubKey.VerifyBytes(signBytes, in.Signature.Signature) {
 		return abci.ErrBaseInvalidSignature.AppendLog(cmn.Fmt("SignBytes: %X", signBytes))
 	}

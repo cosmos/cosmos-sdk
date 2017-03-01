@@ -19,6 +19,14 @@ func (coin Coin) String() string {
 
 type Coins []Coin
 
+func (coins Coins) String() string {
+	out := ""
+	for _, coin := range coins {
+		out += fmt.Sprintf("(%v %v) ", coin.Denom, coin.Amount)
+	}
+	return out
+}
+
 // Must be sorted, and not have 0 amounts
 func (coins Coins) IsValid() bool {
 	switch len(coins) {

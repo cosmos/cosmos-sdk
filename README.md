@@ -16,7 +16,6 @@ WARNING: Currently uses plain-text private keys for transactions and is otherwis
 ## Prerequisites
 
 * Go to https://golang.org/doc/install to install Golang. 
-* Once you have Golang installed you will also need to install the Golang package manager `glide`: https://github.com/Masterminds/glide. 
 * You will also need to set the $GOPATH environment variable as per the instructions [here](https://golang.org/doc/code.html#GOPATH).
 
 ## Installation
@@ -27,14 +26,14 @@ On a good day, basecoin can be installed like a normal Go program:
 go get -u github.com/tendermint/basecoin/cmd/basecoin
 ```
 
-In some cases, if that fails, or if another branch is required,
-we use `glide` for dependency management.
 
-The guaranteed correct way of compiling from source, assuming you've already 
-run `go get` or otherwise cloned the repo, is:
+In some cases, if that fails, or if another branch is required, you may have to compile from source. 
+You will first need to install the Golang package manager [`glide`](https://github.com/Masterminds/glide). 
 
 ```
-cd $GOPATH/src/github.com/tendermint/basecoin
+cd $GOPATH
+git clone git@github.com:tendermint/basecoin.git
+cd src/github.com/tendermint/basecoin
 git checkout develop # (until we release tendermint v0.9)
 make get_vendor_deps
 make install

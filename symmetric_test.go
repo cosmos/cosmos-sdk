@@ -1,8 +1,10 @@
 package crypto
 
 import (
-	"bytes"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -14,16 +16,10 @@ func TestSimple(t *testing.T) {
 	plaintext := []byte("sometext")
 	secret := []byte("somesecretoflengththirtytwo===32")
 	ciphertext := EncryptSymmetric(plaintext, secret)
-
 	plaintext2, err := DecryptSymmetric(ciphertext, secret)
-	if err != nil {
-		t.Error(err)
-	}
 
-	if !bytes.Equal(plaintext, plaintext2) {
-		t.Errorf("Decrypted plaintext was %X, expected %X", plaintext2, plaintext)
-	}
-
+	require.Nil(t, err, "%+v", err)
+	assert.Equal(t, plaintext, plaintext2)
 }
 
 func TestSimpleWithKDF(t *testing.T) {
@@ -39,14 +35,8 @@ func TestSimpleWithKDF(t *testing.T) {
 	secret = Sha256(secret)
 
 	ciphertext := EncryptSymmetric(plaintext, secret)
-
 	plaintext2, err := DecryptSymmetric(ciphertext, secret)
-	if err != nil {
-		t.Error(err)
-	}
 
-	if !bytes.Equal(plaintext, plaintext2) {
-		t.Errorf("Decrypted plaintext was %X, expected %X", plaintext2, plaintext)
-	}
-
+	require.Nil(t, err, "%+v", err)
+	assert.Equal(t, plaintext, plaintext2)
 }

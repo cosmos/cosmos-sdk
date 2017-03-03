@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/ed25519"
 	"github.com/tendermint/ed25519/extra25519"
 	. "github.com/tendermint/go-common"
+	data "github.com/tendermint/go-data"
 	"github.com/tendermint/go-wire"
 	"golang.org/x/crypto/ripemd160"
 )
@@ -20,18 +21,35 @@ type PubKey interface {
 	Equals(PubKey) bool
 }
 
-// Types of PubKey implementations
-const (
-	PubKeyTypeEd25519   = byte(0x01)
-	PubKeyTypeSecp256k1 = byte(0x02)
-)
+var pubKeyMapper data.Mapper
 
-// for wire.readReflect
-var _ = wire.RegisterInterface(
-	struct{ PubKey }{},
-	wire.ConcreteType{PubKeyEd25519{}, PubKeyTypeEd25519},
-	wire.ConcreteType{PubKeySecp256k1{}, PubKeyTypeSecp256k1},
-)
+// register both public key types with go-data (and thus go-wire)
+func init() {
+	pubKeyMapper = data.NewMapper(PubKeyS{}).
+		RegisterInterface(PubKeyEd25519{}, NameEd25519, TypeEd25519).
+		RegisterInterface(PubKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
+}
+
+// PubKeyS add json serialization to PubKey
+type PubKeyS struct {
+	PubKey
+}
+
+func (p PubKeyS) MarshalJSON() ([]byte, error) {
+	return pubKeyMapper.ToJSON(p.PubKey)
+}
+
+func (p *PubKeyS) UnmarshalJSON(data []byte) (err error) {
+	parsed, err := pubKeyMapper.FromJSON(data)
+	if err == nil && parsed != nil {
+		p.PubKey = parsed.(PubKey)
+	}
+	return
+}
+
+func (p PubKeyS) Empty() bool {
+	return p.PubKey == nil
+}
 
 func PubKeyFromBytes(pubKeyBytes []byte) (pubKey PubKey, err error) {
 	err = wire.ReadBinaryBytes(pubKeyBytes, &pubKey)
@@ -50,7 +68,7 @@ func (pubKey PubKeyEd25519) Address() []byte {
 		PanicCrisis(*err)
 	}
 	// append type byte
-	encodedPubkey := append([]byte{PubKeyTypeEd25519}, w.Bytes()...)
+	encodedPubkey := append([]byte{TypeEd25519}, w.Bytes()...)
 	hasher := ripemd160.New()
 	hasher.Write(encodedPubkey) // does not error
 	return hasher.Sum(nil)
@@ -61,6 +79,11 @@ func (pubKey PubKeyEd25519) Bytes() []byte {
 }
 
 func (pubKey PubKeyEd25519) VerifyBytes(msg []byte, sig_ Signature) bool {
+	// unwrap if needed
+	if wrap, ok := sig_.(SignatureS); ok {
+		sig_ = wrap.Signature
+	}
+	// make sure we use the same algorithm to sign
 	sig, ok := sig_.(SignatureEd25519)
 	if !ok {
 		return false
@@ -68,6 +91,17 @@ func (pubKey PubKeyEd25519) VerifyBytes(msg []byte, sig_ Signature) bool {
 	pubKeyBytes := [32]byte(pubKey)
 	sigBytes := [64]byte(sig)
 	return ed25519.Verify(&pubKeyBytes, msg, &sigBytes)
+}
+
+func (p PubKeyEd25519) MarshalJSON() ([]byte, error) {
+	return data.Encoder.Marshal(p[:])
+}
+
+func (p *PubKeyEd25519) UnmarshalJSON(enc []byte) error {
+	var ref []byte
+	err := data.Encoder.Unmarshal(&ref, enc)
+	copy(p[:], ref)
+	return err
 }
 
 // For use with golang/crypto/nacl/box
@@ -111,7 +145,7 @@ func (pubKey PubKeySecp256k1) Address() []byte {
 		PanicCrisis(*err)
 	}
 	// append type byte
-	encodedPubkey := append([]byte{PubKeyTypeSecp256k1}, w.Bytes()...)
+	encodedPubkey := append([]byte{TypeSecp256k1}, w.Bytes()...)
 	hasher := ripemd160.New()
 	hasher.Write(encodedPubkey) // does not error
 	return hasher.Sum(nil)
@@ -122,12 +156,18 @@ func (pubKey PubKeySecp256k1) Bytes() []byte {
 }
 
 func (pubKey PubKeySecp256k1) VerifyBytes(msg []byte, sig_ Signature) bool {
-	pub__, err := secp256k1.ParsePubKey(append([]byte{0x04}, pubKey[:]...), secp256k1.S256())
-	if err != nil {
-		return false
+	// unwrap if needed
+	if wrap, ok := sig_.(SignatureS); ok {
+		sig_ = wrap.Signature
 	}
+	// and assert same algorithm to sign and verify
 	sig, ok := sig_.(SignatureSecp256k1)
 	if !ok {
+		return false
+	}
+
+	pub__, err := secp256k1.ParsePubKey(append([]byte{0x04}, pubKey[:]...), secp256k1.S256())
+	if err != nil {
 		return false
 	}
 	sig__, err := secp256k1.ParseDERSignature(sig[:], secp256k1.S256())
@@ -135,6 +175,17 @@ func (pubKey PubKeySecp256k1) VerifyBytes(msg []byte, sig_ Signature) bool {
 		return false
 	}
 	return sig__.Verify(Sha256(msg), pub__)
+}
+
+func (p PubKeySecp256k1) MarshalJSON() ([]byte, error) {
+	return data.Encoder.Marshal(p[:])
+}
+
+func (p *PubKeySecp256k1) UnmarshalJSON(enc []byte) error {
+	var ref []byte
+	err := data.Encoder.Unmarshal(&ref, enc)
+	copy(p[:], ref)
+	return err
 }
 
 func (pubKey PubKeySecp256k1) String() string {

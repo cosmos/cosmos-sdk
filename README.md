@@ -27,13 +27,11 @@ go get -u github.com/tendermint/basecoin/cmd/basecoin
 ```
 
 
-In some cases, if that fails, or if another branch is required, you may have to compile from source. 
+If that fails, or if another branch is required, you may have to compile from source. 
 You will first need to install the Golang package manager [`glide`](https://github.com/Masterminds/glide). 
 
 ```
-cd $GOPATH
-git clone git@github.com:tendermint/basecoin.git
-cd src/github.com/tendermint/basecoin
+cd $GOPATH/src/github.com/tendermint/basecoin
 git checkout develop # (until we release tendermint v0.9)
 make get_vendor_deps
 make install

@@ -1,5 +1,5 @@
-hash: c58fd706e6ebc2c1c1c5d8e0af20c8e3b6ce9a4dae6b7b85b1b7368e9683060e
-updated: 2017-03-06T04:45:25.988962093-05:00
+hash: 3869944d14a8df914ffcad02c2ef3548173daba51c5ea697767f8af77c07b348
+updated: 2017-03-06T05:37:03.828355251-05:00
 imports:
 - name: github.com/btcsuite/btcd
   version: d06c0bb181529331be8f8d9350288c420d9e60e4
@@ -100,7 +100,7 @@ imports:
   - app
   - client
 - name: github.com/tendermint/tendermint
-  version: e31ed6dc2fb7cd28beb531bc92862646688365d7
+  version: d4f625455109d88e7f55a999fdb25e208f174802
   subpackages:
   - blockchain
   - config/tendermint

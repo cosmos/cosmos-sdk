@@ -91,6 +91,10 @@ echo ""
 waitForNode localhost:46657
 waitForNode localhost:36657
 
+# TODO: remove the sleep
+# Without it we sometimes get "Account bytes are empty for address: 053BA0F19616AFF975C8756A2CBFF04F408B4D47"
+sleep 3 
+
 echo "... registering chain1 on chain2"
 echo ""
 # register chain1 on chain2

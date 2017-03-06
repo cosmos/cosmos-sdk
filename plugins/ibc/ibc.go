@@ -1,6 +1,7 @@
 package ibc
 
 import (
+	"bytes"
 	"errors"
 	"net/url"
 	"strings"
@@ -329,6 +330,7 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 	save(sm.store, packetKeyIngress, packet)
 
 	// Load Header and make sure it exists
+	// If it exists, we already checked a valid commit for it in UpdateChainTx
 	var header tm.Header
 	exists, err := load(sm.store, headerKey, &header)
 	if err != nil {
@@ -341,16 +343,6 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 		return
 	}
 
-	/*
-		// Read Proof
-		var proof *merkle.IAVLProof
-		err = wire.ReadBinaryBytes(tx.Proof, &proof)
-		if err != nil {
-			sm.res.Code = IBCEncodingError
-			sm.res.Log = cmn.Fmt("Reading Proof: %v", err.Error())
-			return
-		}
-	*/
 	proof := tx.Proof
 	if proof == nil {
 		sm.res.Code = IBCCodeInvalidProof
@@ -368,7 +360,6 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 	}
 
 	return
-
 }
 
 func (ibc *IBCPlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
@@ -432,6 +423,7 @@ func verifyCommit(chainState BlockchainState, header *tm.Header, commit *tm.Comm
 	if chainState.ChainID != header.ChainID {
 		return errors.New(cmn.Fmt("Expected header.ChainID %v, got %v", chainState.ChainID, header.ChainID))
 	}
+	// Ensure things aren't empty
 	if len(chainState.Validators) == 0 {
 		return errors.New(cmn.Fmt("Blockchain has no validators")) // NOTE: Why would this happen?
 	}
@@ -439,16 +431,21 @@ func verifyCommit(chainState BlockchainState, header *tm.Header, commit *tm.Comm
 		return errors.New(cmn.Fmt("Commit has no signatures"))
 	}
 	chainID := chainState.ChainID
-	vote0 := commit.Precommits[0]
 	vals := chainState.Validators
 	valSet := tm.NewValidatorSet(vals)
+	blockID := commit.Precommits[0].BlockID // XXX: incorrect
 
 	// NOTE: Currently this only works with the exact same validator set.
 	// Not this, but perhaps "ValidatorSet.VerifyCommitAny" should expose
 	// the functionality to verify commits even after validator changes.
-	err := valSet.VerifyCommit(chainID, vote0.BlockID, vote0.Height, commit)
+	err := valSet.VerifyCommit(chainID, blockID, header.Height, commit)
 	if err != nil {
 		return err
+	}
+
+	// Ensure the committed blockID matches the header
+	if !bytes.Equal(header.Hash(), blockID.Hash) {
+		return errors.New(cmn.Fmt("blockID.Hash (%X) does not match header.Hash (%X)", blockID.Hash, header.Hash()))
 	}
 
 	// All ok!

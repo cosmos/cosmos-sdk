@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"strings"
 
 	abci "github.com/tendermint/abci/types"
@@ -51,14 +52,15 @@ func (app *Basecoin) RegisterPlugin(plugin types.Plugin) {
 }
 
 // ABCI::SetOption
-func (app *Basecoin) SetOption(key string, value string) (log string) {
-	PluginName, key := splitKey(key)
-	if PluginName != PluginNameBase {
+func (app *Basecoin) SetOption(key string, value string) string {
+	pluginName, key := splitKey(key)
+	if pluginName != PluginNameBase {
 		// Set option on plugin
-		plugin := app.plugins.GetByName(PluginName)
+		plugin := app.plugins.GetByName(pluginName)
 		if plugin == nil {
-			return "Invalid plugin name: " + PluginName
+			return "Invalid plugin name: " + pluginName
 		}
+		log.Info("SetOption on plugin", "plugin", pluginName, "key", key, "value", value)
 		return plugin.SetOption(app.state, key, value)
 	} else {
 		// Set option on basecoin
@@ -67,13 +69,13 @@ func (app *Basecoin) SetOption(key string, value string) (log string) {
 			app.state.SetChainID(value)
 			return "Success"
 		case "account":
-			var err error
-			var acc *types.Account
-			wire.ReadJSONPtr(&acc, []byte(value), &err)
+			var acc types.Account
+			err := json.Unmarshal([]byte(value), &acc)
 			if err != nil {
 				return "Error decoding acc message: " + err.Error()
 			}
-			app.state.SetAccount(acc.PubKey.Address(), acc)
+			app.state.SetAccount(acc.PubKey.Address(), &acc)
+			log.Info("SetAccount", "addr", acc.PubKey.Address(), "acc", acc)
 			return "Success"
 		}
 		return "Unrecognized option key " + key
@@ -128,6 +130,12 @@ func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 		resQuery.Log = "Query cannot be zero length"
 		resQuery.Code = abci.CodeType_EncodingError
 		return
+	}
+
+	// handle special path for account info
+	if reqQuery.Path == "/account" {
+		reqQuery.Path = "/key"
+		reqQuery.Data = append([]byte("base/a/"), reqQuery.Data...)
 	}
 
 	resQuery, err := app.eyesCli.QuerySync(reqQuery)
@@ -187,10 +195,4 @@ func splitKey(key string) (prefix string, suffix string) {
 		return keyParts[0], keyParts[1]
 	}
 	return key, ""
-}
-
-// (not meant to be called)
-// assert that Basecoin implements `abci.BlockchainAware` at compile-time
-func _assertABCIBlockchainAware(basecoin *Basecoin) abci.BlockchainAware {
-	return basecoin
 }

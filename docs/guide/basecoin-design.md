@@ -14,7 +14,7 @@ This type of account was directly inspired by accounts in Ethereum,
 and is unlike Bitcoin's use of Unspent Transaction Outputs (UTXOs).
 Note Basecoin is a multi-asset cryptocurrency, so each account can have many different kinds of tokens.
 
-```
+```golang
 type Account struct {
 	PubKey   crypto.PubKey `json:"pub_key"` // May be nil, if not known.
 	Sequence int           `json:"sequence"`
@@ -42,7 +42,7 @@ The `SendTx` takes a list of inputs and a list of outputs,
 and transfers all the tokens listed in the inputs from their corresponding accounts to the accounts listed in the output.
 The `SendTx` is structured as follows:
 
-```
+```golang
 type SendTx struct {
   Gas     int64      `json:"gas"`
   Fee     Coin       `json:"fee"`
@@ -71,15 +71,21 @@ This is slightly different from Ethereum's concept of `Gas` and `GasPrice`,
 where `Fee = Gas x GasPrice`. In Basecoin, the `Gas` and `Fee` are independent,
 and the `GasPrice` is implicit.
 
-In tendermint, the `Fee` is meant to be used by the validators to inform the ordering of transactions, like in bitcoin.  And the `Gas` is meant to be used by the application plugin to control its execution.  There is currently no means to pass `Fee` information to the tendermint validators, but it will come soon...
+In Tendermint, the `Fee` is meant to be used by the validators to inform the ordering 
+of transactions, like in bitcoin.  And the `Gas` is meant to be used by the application 
+plugin to control its execution.  There is currently no means to pass `Fee` information 
+to the Tendermint validators, but it will come soon...
 
 Second, notice that the `PubKey` only needs to be sent for `Sequence == 0`.
 After that, it is stored under the account in the Merkle tree and subsequent transactions can exclude it,
 using only the `Address` to refer to the sender. Ethereum does not require public keys to be sent in transactions
-as it uses a different elliptic curve scheme which enables the public key to be derrived from the signature itself.
+as it uses a different elliptic curve scheme which enables the public key to be derived from the signature itself.
 
-Finally, note that the use of multiple inputs and multiple outputs allows us to send many different types of tokens between many different accounts
-at once in an atomic transaction. Thus, the `SendTx` can serve as a basic unit of decentralized exchange. When using multiple inputs and outputs, you must make sure that the sum of coins of the inputs equals the sum of coins of the outputs (no creating money), and that all accounts that provide inputs have signed the transaction.
+Finally, note that the use of multiple inputs and multiple outputs allows us to send many 
+different types of tokens between many different accounts at once in an atomic transaction. 
+Thus, the `SendTx` can serve as a basic unit of decentralized exchange. When using multiple 
+inputs and outputs, you must make sure that the sum of coins of the inputs equals the sum of 
+coins of the outputs (no creating money), and that all accounts that provide inputs have signed the transaction.
 
 ## Plugins
 

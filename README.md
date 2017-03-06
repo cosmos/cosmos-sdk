@@ -13,6 +13,11 @@ and away you go with a full-stack blockchain and command line tool for transacti
 
 WARNING: Currently uses plain-text private keys for transactions and is otherwise not production ready.
 
+## Prerequisites
+
+* Go to https://golang.org/doc/install to install Golang. 
+* You will also need to set the $GOPATH environment variable as per the instructions [here](https://golang.org/doc/code.html#GOPATH).
+
 ## Installation
 
 On a good day, basecoin can be installed like a normal Go program:
@@ -21,11 +26,9 @@ On a good day, basecoin can be installed like a normal Go program:
 go get -u github.com/tendermint/basecoin/cmd/basecoin
 ```
 
-In some cases, if that fails, or if another branch is required,
-we use `glide` for dependency management.
 
-The guaranteed correct way of compiling from source, assuming you've already 
-run `go get` or otherwise cloned the repo, is:
+If that fails, or if another branch is required, you may have to compile from source. 
+You will first need to install the Golang package manager [`glide`](https://github.com/Masterminds/glide). 
 
 ```
 cd $GOPATH/src/github.com/tendermint/basecoin
@@ -41,7 +44,7 @@ This will create the `basecoin` binary in `$GOPATH/bin`.
 
 The basecoin CLI can be used to start a stand-alone basecoin instance (`basecoin start`),
 or to start basecoin with Tendermint in the same process (`basecoin start --in-proc`).
-It can also be used to send transactions, eg. `basecoin tx send --to 0x4793A333846E5104C46DD9AB9A00E31821B2F301 --amount 100`
+It can also be used to send transactions, eg. `basecoin tx send --to 0x4793A333846E5104C46DD9AB9A00E31821B2F301 --amount 100btc,10gold`
 See `basecoin --help` and `basecoin [cmd] --help` for more details`.
 
 ## Learn more

@@ -7,12 +7,15 @@ import (
 )
 
 type Account struct {
-	PubKey   crypto.PubKey `json:"pub_key"` // May be nil, if not known.
-	Sequence int           `json:"sequence"`
-	Balance  Coins         `json:"coins"`
+	PubKey   crypto.PubKeyS `json:"pub_key"` // May be nil, if not known.
+	Sequence int            `json:"sequence"`
+	Balance  Coins          `json:"coins"`
 }
 
 func (acc *Account) Copy() *Account {
+	if acc == nil {
+		return nil
+	}
 	accCopy := *acc
 	return &accCopy
 }
@@ -28,7 +31,7 @@ func (acc *Account) String() string {
 //----------------------------------------
 
 type PrivAccount struct {
-	crypto.PrivKey
+	crypto.PrivKeyS
 	Account
 }
 

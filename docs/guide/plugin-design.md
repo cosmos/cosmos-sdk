@@ -9,7 +9,7 @@ Here we describe how that functionality can be achieved through a plugin system.
 
 In addition to the `SendTx`, Basecoin also defines another transaction type, the `AppTx`:
 
-```
+```golang
 type AppTx struct {
   Gas   int64   `json:"gas"`   
   Fee   Coin    `json:"fee"`   
@@ -20,7 +20,7 @@ type AppTx struct {
 ```
 
 The `AppTx` enables Basecoin to be extended with arbitrary additional functionality through the use of plugins.
-The `Name` field in the `AppTx` refers to the particular plugin which should process the transasaction, 
+The `Name` field in the `AppTx` refers to the particular plugin which should process the transaction, 
 and the `Data` field of the `AppTx` is the data to be forwarded to the plugin for processing.
 
 Note the `AppTx` also has a `Gas` and `Fee`, with the same meaning as for the `SendTx`.
@@ -31,7 +31,7 @@ and some coins that can be forwarded to the plugin as well.
 
 A plugin is simply a Go package that implements the `Plugin` interface:
 
-```
+```golang
 type Plugin interface {
 
   // Name of this plugin, should be short.
@@ -61,8 +61,16 @@ while the `Input` from the `AppTx` is used to populate the `CallContext`.
 Note that `RunTx` also takes a `KVStore` - this is an abstraction for the underlying Merkle tree which stores the account data.
 By passing this to the plugin, we enable plugins to update accounts in the Basecoin state directly, 
 and also to store arbitrary other information in the state.
-In this way, the functionality and state of a Basecoin-derrived cryptocurrency can be greatly extended.
+In this way, the functionality and state of a Basecoin-derived cryptocurrency can be greatly extended.
 One could imagine going so far as to implement the Ethereum Virtual Machine as a plugin!
+
+Any required plugin initialization should be constructed within `SetOption`.
+`SetOption` may be called during genesis of basecoin and can be used to set
+initial plugin parameters. Within genesis.json file entries are made in
+the format: `"<plugin>/<key>", "<value>"`, where `<plugin>` is the plugin name,
+and `<key>` and `<value>` are the strings passed into the plugin SetOption function. 
+This function is intended to be used to set plugin specific information such 
+as the plugin state.
 
 ## Examples
 

@@ -8,6 +8,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/tendermint/basecoin/types"
+	crypto "github.com/tendermint/go-crypto"
 
 	cmn "github.com/tendermint/go-common"
 	client "github.com/tendermint/go-rpc/client"
@@ -23,7 +24,6 @@ var TxFlags = []cli.Flag{
 	FromFlag,
 
 	AmountFlag,
-	CoinFlag,
 	GasFlag,
 	FeeFlag,
 	SeqFlag,
@@ -37,12 +37,13 @@ var (
 		Subcommands: []cli.Command{
 			SendTxCmd,
 			AppTxCmd,
+			IbcTxCmd,
 		},
 	}
 
 	SendTxCmd = cli.Command{
 		Name:      "send",
-		Usage:     "Create, sign, and broadcast a SendTx transaction",
+		Usage:     "a SendTx transaction, for sending tokens around",
 		ArgsUsage: "",
 		Action: func(c *cli.Context) error {
 			return cmdSendTx(c)
@@ -52,7 +53,7 @@ var (
 
 	AppTxCmd = cli.Command{
 		Name:      "app",
-		Usage:     "Create, sign, and broadcast a raw AppTx transaction",
+		Usage:     "an AppTx transaction, for sending raw data to plugins",
 		ArgsUsage: "",
 		Action: func(c *cli.Context) error {
 			return cmdAppTx(c)
@@ -71,9 +72,9 @@ func RegisterTxSubcommand(cmd cli.Command) {
 func cmdSendTx(c *cli.Context) error {
 	toHex := c.String("to")
 	fromFile := c.String("from")
-	amount := int64(c.Int("amount"))
-	coin := c.String("coin")
-	gas, fee := c.Int("gas"), int64(c.Int("fee"))
+	amount := c.String("amount")
+	gas := int64(c.Int("gas"))
+	fee := c.String("fee")
 	chainID := c.String("chain_id")
 
 	// convert destination address to bytes
@@ -91,25 +92,35 @@ func cmdSendTx(c *cli.Context) error {
 		return err
 	}
 
+	//parse the fee and amounts into coin types
+	feeCoin, err := ParseCoin(fee)
+	if err != nil {
+		return err
+	}
+	amountCoins, err := ParseCoins(amount)
+	if err != nil {
+		return err
+	}
+
 	// craft the tx
-	input := types.NewTxInput(privKey.PubKey, types.Coins{types.Coin{coin, amount}}, sequence)
-	output := newOutput(to, coin, amount)
+	input := types.NewTxInput(privKey.PubKey, amountCoins, sequence)
+	output := newOutput(to, amountCoins)
 	tx := &types.SendTx{
-		Gas:     int64(gas),
-		Fee:     types.Coin{coin, fee},
+		Gas:     gas,
+		Fee:     feeCoin,
 		Inputs:  []types.TxInput{input},
 		Outputs: []types.TxOutput{output},
 	}
 
 	// sign that puppy
 	signBytes := tx.SignBytes(chainID)
-	tx.Inputs[0].Signature = privKey.Sign(signBytes)
+	tx.Inputs[0].Signature = crypto.SignatureS{privKey.Sign(signBytes)}
 
 	fmt.Println("Signed SendTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))
 
 	// broadcast the transaction to tendermint
-	if _, err := broadcastTx(c, tx); err != nil {
+	if _, _, err := broadcastTx(c, tx); err != nil {
 		return err
 	}
 	return nil
@@ -128,9 +139,9 @@ func cmdAppTx(c *cli.Context) error {
 
 func AppTx(c *cli.Context, name string, data []byte) error {
 	fromFile := c.String("from")
-	amount := int64(c.Int("amount"))
-	coin := c.String("coin")
-	gas, fee := c.Int("gas"), int64(c.Int("fee"))
+	amount := c.String("amount")
+	fee := c.String("fee")
+	gas := int64(c.Int("gas"))
 	chainID := c.String("chain_id")
 
 	privKey := tmtypes.LoadPrivValidator(fromFile)
@@ -140,31 +151,41 @@ func AppTx(c *cli.Context, name string, data []byte) error {
 		return err
 	}
 
-	input := types.NewTxInput(privKey.PubKey, types.Coins{types.Coin{coin, amount}}, sequence)
+	//parse the fee and amounts into coin types
+	feeCoin, err := ParseCoin(fee)
+	if err != nil {
+		return err
+	}
+	amountCoins, err := ParseCoins(amount)
+	if err != nil {
+		return err
+	}
+
+	input := types.NewTxInput(privKey.PubKey, amountCoins, sequence)
 	tx := &types.AppTx{
-		Gas:   int64(gas),
-		Fee:   types.Coin{coin, fee},
+		Gas:   gas,
+		Fee:   feeCoin,
 		Name:  name,
 		Input: input,
 		Data:  data,
 	}
 
-	tx.Input.Signature = privKey.Sign(tx.SignBytes(chainID))
+	tx.Input.Signature = crypto.SignatureS{privKey.Sign(tx.SignBytes(chainID))}
 
 	fmt.Println("Signed AppTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))
 
-	res, err := broadcastTx(c, tx)
+	data, log, err := broadcastTx(c, tx)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Response: %X\n", res)
+	fmt.Printf("Response: %X ; %s\n", data, log)
 
 	return nil
 }
 
 // broadcast the transaction to tendermint
-func broadcastTx(c *cli.Context, tx types.Tx) ([]byte, error) {
+func broadcastTx(c *cli.Context, tx types.Tx) ([]byte, string, error) {
 	tmResult := new(ctypes.TMResult)
 	tmAddr := c.String("node")
 	clientURI := client.NewClientURI(tmAddr)
@@ -176,19 +197,19 @@ func broadcastTx(c *cli.Context, tx types.Tx) ([]byte, error) {
 	}{tx}))
 	_, err := clientURI.Call("broadcast_tx_commit", map[string]interface{}{"tx": txBytes}, tmResult)
 	if err != nil {
-		return nil, errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
+		return nil, "", errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
 	}
 	res := (*tmResult).(*ctypes.ResultBroadcastTxCommit)
 	// if it fails check, we don't even get a delivertx back!
 	if !res.CheckTx.Code.IsOK() {
 		r := res.CheckTx
-		return nil, errors.New(cmn.Fmt("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log))
+		return nil, "", errors.New(cmn.Fmt("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log))
 	}
 	if !res.DeliverTx.Code.IsOK() {
 		r := res.DeliverTx
-		return nil, errors.New(cmn.Fmt("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log))
+		return nil, "", errors.New(cmn.Fmt("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log))
 	}
-	return res.DeliverTx.Data, nil
+	return res.DeliverTx.Data, res.DeliverTx.Log, nil
 }
 
 // if the sequence flag is set, return it;
@@ -205,15 +226,10 @@ func getSeq(c *cli.Context, address []byte) (int, error) {
 	return acc.Sequence + 1, nil
 }
 
-func newOutput(to []byte, coin string, amount int64) types.TxOutput {
+func newOutput(to []byte, amount types.Coins) types.TxOutput {
 	return types.TxOutput{
 		Address: to,
-		Coins: types.Coins{
-			types.Coin{
-				Denom:  coin,
-				Amount: amount,
-			},
-		},
+		Coins:   amount,
 	}
 
 }

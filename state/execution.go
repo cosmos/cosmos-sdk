@@ -100,7 +100,7 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		}
 		if !tx.Input.Coins.IsGTE(types.Coins{tx.Fee}) {
 			log.Info(cmn.Fmt("Sender did not send enough to cover the fee %X", tx.Input.Address))
-			return abci.ErrBaseInsufficientFunds.AppendLog(cmn.Fmt("input coins is %d, but fee is %d", tx.Input.Coins, types.Coins{tx.Fee}))
+			return abci.ErrBaseInsufficientFunds.AppendLog(cmn.Fmt("input coins is %v, but fee is %v", tx.Input.Coins, types.Coins{tx.Fee}))
 		}
 
 		// Validate call address

@@ -1,27 +1,38 @@
 package commands
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path"
 
-	"github.com/urfave/cli"
+	"github.com/spf13/cobra"
 
 	cmn "github.com/tendermint/go-common"
 )
 
-var InitCmd = cli.Command{
-	Name:      "init",
-	Usage:     "Initialize a basecoin blockchain",
-	ArgsUsage: "",
-	Action: func(c *cli.Context) error {
-		return cmdInit(c)
-	},
-	Flags: []cli.Flag{
-		ChainIDFlag,
-	},
-}
+//commands
+var (
+	InitCmd = &cobra.Command{
+		Use:   "init",
+		Short: "Initialize a basecoin blockchain",
+		Run:   initCmd,
+	}
+)
 
-func cmdInit(c *cli.Context) error {
+//flags
+//var chainIDFlag string
+
+//func init() {
+//
+//	//register flags
+//	flags := []Flag2Register{
+//		{&chainIDFlag, "chain_id", "test_chain_id", "ID of the chain for replay protection"},
+//	}
+//	RegisterFlags(InitCmd, flags)
+//
+//}
+
+func initCmd(cmd *cobra.Command, args []string) {
 	rootDir := BasecoinRoot("")
 
 	cmn.EnsureDir(rootDir, 0777)
@@ -32,22 +43,27 @@ func cmdInit(c *cli.Context) error {
 	key1File := path.Join(rootDir, "key.json")
 	key2File := path.Join(rootDir, "key2.json")
 
-	if err := ioutil.WriteFile(genesisFile, []byte(genesisJSON), 0644); err != nil {
-		return err
+	err := ioutil.WriteFile(genesisFile, []byte(genesisJSON), 0644)
+	if err != nil {
+		cmn.Exit(fmt.Sprintf("%+v\n", err))
 	}
-	if err := ioutil.WriteFile(privValFile, []byte(privValJSON), 0400); err != nil {
-		return err
+
+	err = ioutil.WriteFile(privValFile, []byte(privValJSON), 0400)
+	if err != nil {
+		cmn.Exit(fmt.Sprintf("%+v\n", err))
 	}
-	if err := ioutil.WriteFile(key1File, []byte(key1JSON), 0400); err != nil {
-		return err
+
+	err = ioutil.WriteFile(key1File, []byte(key1JSON), 0400)
+	if err != nil {
+		cmn.Exit(fmt.Sprintf("%+v\n", err))
 	}
-	if err := ioutil.WriteFile(key2File, []byte(key2JSON), 0400); err != nil {
-		return err
+
+	err = ioutil.WriteFile(key2File, []byte(key2JSON), 0400)
+	if err != nil {
+		cmn.Exit(fmt.Sprintf("%+v\n", err))
 	}
 
 	log.Notice("Initialized Basecoin", "genesis", genesisFile, "key", key1File)
-
-	return nil
 }
 
 const privValJSON = `{

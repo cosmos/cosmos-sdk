@@ -25,18 +25,30 @@ The `main.go` is very simple and does not need to be changed:
 
 ```golang
 func main() {
-	app := cli.NewApp()
-	app.Name = "example-plugin"
-	app.Usage = "example-plugin [command] [args...]"
-	app.Version = "0.1.0"
-	app.Commands = []cli.Command{
+	//Initialize example-plugin root command
+	var RootCmd = &cobra.Command{
+		Use:   "example-plugin",
+		Short: "example-plugin usage description",
+	}
+
+	//Add the default basecoin commands to the root command
+	RootCmd.AddCommand(
+		commands.InitCmd,
 		commands.StartCmd,
 		commands.TxCmd,
-		commands.KeyCmd,
 		commands.QueryCmd,
+		commands.KeyCmd,
+		commands.VerifyCmd,
+		commands.BlockCmd,
 		commands.AccountCmd,
+		commands.UnsafeResetAllCmd,
+	)
+
+	//Run the root command
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
-	app.Run(os.Args)
 }
 ```
 
@@ -49,19 +61,40 @@ This is where the `cmd.go` comes in.
 
 ### cmd.go
 
-First, we register the plugin:
+First we define the new command and associated flag variables
 
+```golang
+var (
+	//CLI Flags
+	validFlag bool
+
+	//CLI Plugin Commands
+	ExamplePluginTxCmd = &cobra.Command{
+		Use:   "example",
+		Short: "Create, sign, and broadcast a transaction to the example plugin",
+		Run:   examplePluginTxCmd,
+	}
+)
+```
+
+Next we register the plugin:
 
 ```golang
 func init() {
+
+	//Set the Plugin Flags
+	ExamplePluginTxCmd.Flags().BoolVar(&validFlag, "valid", false, "Set this to make transaction valid")
+
+	//Register a plugin specific CLI command as a subcommand of the tx command
 	commands.RegisterTxSubcommand(ExamplePluginTxCmd)
+
+	//Register the example with basecoin at start
 	commands.RegisterStartPlugin("example-plugin", func() types.Plugin { return NewExamplePlugin() })
 }
 ```
 
 This creates a new subcommand under `tx` (defined below),
 and ensures the plugin is activated when we start the app.
-Now we actually define the new command:
 
 ```golang
 var (

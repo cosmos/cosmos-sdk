@@ -2,11 +2,10 @@ package commands
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"strconv"
 
-	"github.com/urfave/cli"
+	"github.com/spf13/cobra"
 
 	cmn "github.com/tendermint/go-common"
 	"github.com/tendermint/go-merkle"
@@ -14,85 +13,85 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
+//commands
 var (
-	QueryCmd = cli.Command{
-		Name:      "query",
-		Usage:     "Query the merkle tree",
-		ArgsUsage: "<key>",
-		Action: func(c *cli.Context) error {
-			return cmdQuery(c)
-		},
-		Flags: []cli.Flag{
-			NodeFlag,
-		},
+	QueryCmd = &cobra.Command{
+		Use:   "query [key]",
+		Short: "Query the merkle tree",
+		Run:   queryCmd,
 	}
 
-	AccountCmd = cli.Command{
-		Name:      "account",
-		Usage:     "Get details of an account",
-		ArgsUsage: "<address>",
-		Action: func(c *cli.Context) error {
-			return cmdAccount(c)
-		},
-		Flags: []cli.Flag{
-			NodeFlag,
-		},
+	AccountCmd = &cobra.Command{
+		Use:   "account [address]",
+		Short: "Get details of an account",
+		Run:   accountCmd,
 	}
 
-	BlockCmd = cli.Command{
-		Name:      "block",
-		Usage:     "Get the header and commit of a block",
-		ArgsUsage: "<height>",
-		Action: func(c *cli.Context) error {
-			return cmdBlock(c)
-		},
-		Flags: []cli.Flag{
-			NodeFlag,
-		},
+	BlockCmd = &cobra.Command{
+		Use:   "block [height]",
+		Short: "Get the header and commit of a block",
+		Run:   blockCmd,
 	}
 
-	VerifyCmd = cli.Command{
-		Name:  "verify",
-		Usage: "Verify the IAVL proof",
-		Action: func(c *cli.Context) error {
-			return cmdVerify(c)
-		},
-		Flags: []cli.Flag{
-			ProofFlag,
-			KeyFlag,
-			ValueFlag,
-			RootFlag,
-		},
+	VerifyCmd = &cobra.Command{
+		Use:   "verify",
+		Short: "Verify the IAVL proof",
+		Run:   verifyCmd,
 	}
 )
 
-// Register a subcommand of QueryCmd for plugin specific query functionality
-func RegisterQuerySubcommand(cmd cli.Command) {
-	QueryCmd.Subcommands = append(QueryCmd.Subcommands, cmd)
+//flags
+var (
+	nodeFlag  string
+	proofFlag string
+	keyFlag   string
+	valueFlag string
+	rootFlag  string
+)
+
+func init() {
+
+	commonFlags := []Flag2Register{
+		{&nodeFlag, "node", "tcp://localhost:46657", "Tendermint RPC address"},
+	}
+
+	verifyFlags := []Flag2Register{
+		{&proofFlag, "proof", "", "hex-encoded IAVL proof"},
+		{&keyFlag, "key", "", "key to the IAVL tree"},
+		{&valueFlag, "value", "", "value in the IAVL tree"},
+		{&rootFlag, "root", "", "root hash of the IAVL tree"},
+	}
+
+	RegisterFlags(QueryCmd, commonFlags)
+	RegisterFlags(AccountCmd, commonFlags)
+	RegisterFlags(BlockCmd, commonFlags)
+	RegisterFlags(VerifyCmd, verifyFlags)
 }
 
-func cmdQuery(c *cli.Context) error {
-	if len(c.Args()) != 1 {
-		return errors.New("query command requires an argument ([key])")
+func queryCmd(cmd *cobra.Command, args []string) {
+
+	if len(args) != 1 {
+		cmn.Exit("query command requires an argument ([key])")
 	}
-	keyString := c.Args()[0]
+
+	keyString := args[0]
 	key := []byte(keyString)
 	if isHex(keyString) {
 		// convert key to bytes
 		var err error
 		key, err = hex.DecodeString(StripHex(keyString))
 		if err != nil {
-			return errors.New(cmn.Fmt("Query key (%v) is invalid hex: %v", keyString, err))
+			cmn.Exit(fmt.Sprintf("Query key (%v) is invalid hex: %+v\n", keyString, err))
 		}
 	}
 
-	resp, err := Query(c.String("node"), key)
+	resp, err := Query(nodeFlag, key)
 	if err != nil {
-		return err
+		cmn.Exit(fmt.Sprintf("Query returns error: %+v\n", err))
 	}
 
 	if !resp.Code.IsOK() {
-		return errors.New(cmn.Fmt("Query for key (%v) returned non-zero code (%v): %v", keyString, resp.Code, resp.Log))
+		cmn.Exit(fmt.Sprintf("Query for key (%v) returned non-zero code (%v): %v", keyString, resp.Code, resp.Log))
 	}
 
 	val := resp.Value
@@ -104,43 +103,44 @@ func cmdQuery(c *cli.Context) error {
 		Proof  []byte `json:"proof"`
 		Height uint64 `json:"height"`
 	}{val, proof, height})))
-
-	return nil
 }
 
-func cmdAccount(c *cli.Context) error {
-	if len(c.Args()) != 1 {
-		return errors.New("account command requires an argument ([address])")
+func accountCmd(cmd *cobra.Command, args []string) {
+
+	if len(args) != 1 {
+		cmn.Exit("account command requires an argument ([address])")
 	}
-	addrHex := StripHex(c.Args()[0])
+
+	addrHex := StripHex(args[0])
 
 	// convert destination address to bytes
 	addr, err := hex.DecodeString(addrHex)
 	if err != nil {
-		return errors.New(cmn.Fmt("Account address (%v) is invalid hex: %v", addrHex, err))
+		cmn.Exit(fmt.Sprintf("Account address (%v) is invalid hex: %+v\n", addrHex, err))
 	}
 
-	acc, err := getAcc(c.String("node"), addr)
+	acc, err := getAcc(nodeFlag, addr)
 	if err != nil {
-		return err
+		cmn.Exit(fmt.Sprintf("%+v\n", err))
 	}
 	fmt.Println(string(wire.JSONBytes(acc)))
-	return nil
 }
 
-func cmdBlock(c *cli.Context) error {
-	if len(c.Args()) != 1 {
-		return errors.New("block command requires an argument ([height])")
-	}
-	heightString := c.Args()[0]
-	height, err := strconv.Atoi(heightString)
-	if err != nil {
-		return errors.New(cmn.Fmt("Height must be an int, got %v: %v", heightString, err))
+func blockCmd(cmd *cobra.Command, args []string) {
+
+	if len(args) != 1 {
+		cmn.Exit("block command requires an argument ([height])")
 	}
 
-	header, commit, err := getHeaderAndCommit(c, height)
+	heightString := args[0]
+	height, err := strconv.Atoi(heightString)
 	if err != nil {
-		return err
+		cmn.Exit(fmt.Sprintf("Height must be an int, got %v: %+v\n", heightString, err))
+	}
+
+	header, commit, err := getHeaderAndCommit(nodeFlag, height)
+	if err != nil {
+		cmn.Exit(fmt.Sprintf("%+v\n", err))
 	}
 
 	fmt.Println(string(wire.JSONBytes(struct {
@@ -156,8 +156,6 @@ func cmdBlock(c *cli.Context) error {
 			Commit: commit,
 		},
 	})))
-
-	return nil
 }
 
 type BlockHex struct {
@@ -170,15 +168,16 @@ type BlockJSON struct {
 	Commit *tmtypes.Commit `json:"commit"`
 }
 
-func cmdVerify(c *cli.Context) error {
-	keyString, valueString := c.String("key"), c.String("value")
+func verifyCmd(cmd *cobra.Command, args []string) {
+
+	keyString, valueString := keyFlag, valueFlag
 
 	var err error
 	key := []byte(keyString)
 	if isHex(keyString) {
 		key, err = hex.DecodeString(StripHex(keyString))
 		if err != nil {
-			return errors.New(cmn.Fmt("Key (%v) is invalid hex: %v", keyString, err))
+			cmn.Exit(fmt.Sprintf("Key (%v) is invalid hex: %+v\n", keyString, err))
 		}
 	}
 
@@ -186,29 +185,25 @@ func cmdVerify(c *cli.Context) error {
 	if isHex(valueString) {
 		value, err = hex.DecodeString(StripHex(valueString))
 		if err != nil {
-			return errors.New(cmn.Fmt("Value (%v) is invalid hex: %v", valueString, err))
+			cmn.Exit(fmt.Sprintf("Value (%v) is invalid hex: %+v\n", valueString, err))
 		}
 	}
 
-	root, err := hex.DecodeString(StripHex(c.String("root")))
+	root, err := hex.DecodeString(StripHex(rootFlag))
 	if err != nil {
-		return errors.New(cmn.Fmt("Root (%v) is invalid hex: %v", c.String("root"), err))
+		cmn.Exit(fmt.Sprintf("Root (%v) is invalid hex: %+v\n", rootFlag, err))
 	}
 
-	proofBytes, err := hex.DecodeString(StripHex(c.String("proof")))
-	if err != nil {
-		return errors.New(cmn.Fmt("Proof (%v) is invalid hex: %v", c.String("proof"), err))
-	}
+	proofBytes, err := hex.DecodeString(StripHex(proofFlag))
 
 	proof, err := merkle.ReadProof(proofBytes)
 	if err != nil {
-		return errors.New(cmn.Fmt("Error unmarshalling proof: %v", err))
+		cmn.Exit(fmt.Sprintf("Error unmarshalling proof: %+v\n", err))
 	}
 
 	if proof.Verify(key, value, root) {
 		fmt.Println("OK")
 	} else {
-		return errors.New("Proof does not verify")
+		cmn.Exit(fmt.Sprintf("Proof does not verify"))
 	}
-	return nil
 }

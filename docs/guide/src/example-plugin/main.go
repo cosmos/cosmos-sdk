@@ -1,24 +1,38 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/tendermint/basecoin/cmd/commands"
-	"github.com/urfave/cli"
 )
 
 func main() {
-	//Initialize an instance of basecoin with default basecoin commands
-	app := cli.NewApp()
-	app.Name = "example-plugin"
-	app.Usage = "example-plugin [command] [args...]"
-	app.Version = "0.1.0"
-	app.Commands = []cli.Command{
+
+	//Initialize example-plugin root command
+	var RootCmd = &cobra.Command{
+		Use:   "example-plugin",
+		Short: "example-plugin usage description",
+	}
+
+	//Add the default basecoin commands to the root command
+	RootCmd.AddCommand(
+		commands.InitCmd,
 		commands.StartCmd,
 		commands.TxCmd,
-		commands.KeyCmd,
 		commands.QueryCmd,
+		commands.KeyCmd,
+		commands.VerifyCmd,
+		commands.BlockCmd,
 		commands.AccountCmd,
+		commands.UnsafeResetAllCmd,
+	)
+
+	//Run the root command
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
-	app.Run(os.Args)
 }

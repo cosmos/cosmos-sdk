@@ -2,16 +2,17 @@ package commands
 
 import (
 	"encoding/hex"
-	"errors"
+	"fmt"
 	"os"
 
-	"github.com/urfave/cli"
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 
 	abci "github.com/tendermint/abci/types"
-	cmn "github.com/tendermint/go-common"
 	client "github.com/tendermint/go-rpc/client"
 	wire "github.com/tendermint/go-wire"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -26,6 +27,60 @@ func BasecoinRoot(rootDir string) string {
 		rootDir = os.Getenv("HOME") + "/.basecoin"
 	}
 	return rootDir
+}
+
+type Flag2Register struct {
+	Pointer interface{}
+	Use     string
+	Value   interface{}
+	Desc    string
+}
+
+//register flag utils
+func RegisterFlags(c *cobra.Command, flags []Flag2Register) {
+	registerFlags(c, flags, false)
+}
+
+func RegisterPersistentFlags(c *cobra.Command, flags []Flag2Register) {
+	registerFlags(c, flags, true)
+}
+
+func registerFlags(c *cobra.Command, flags []Flag2Register, persistent bool) {
+
+	var flagset *pflag.FlagSet
+	if persistent {
+		flagset = c.PersistentFlags()
+	} else {
+		flagset = c.Flags()
+	}
+
+	for _, f := range flags {
+
+		ok := false
+
+		switch f.Value.(type) {
+		case string:
+			if _, ok = f.Pointer.(*string); ok {
+				flagset.StringVar(f.Pointer.(*string), f.Use, f.Value.(string), f.Desc)
+			}
+		case int:
+			if _, ok = f.Pointer.(*int); ok {
+				flagset.IntVar(f.Pointer.(*int), f.Use, f.Value.(int), f.Desc)
+			}
+		case uint64:
+			if _, ok = f.Pointer.(*uint64); ok {
+				flagset.Uint64Var(f.Pointer.(*uint64), f.Use, f.Value.(uint64), f.Desc)
+			}
+		case bool:
+			if _, ok = f.Pointer.(*bool); ok {
+				flagset.BoolVar(f.Pointer.(*bool), f.Use, f.Value.(bool), f.Desc)
+			}
+		}
+
+		if !ok {
+			panic("improper use of RegisterFlags")
+		}
+	}
 }
 
 // Returns true for non-empty hex-string prefixed with "0x"
@@ -58,11 +113,11 @@ func Query(tmAddr string, key []byte) (*abci.ResponseQuery, error) {
 	}
 	_, err := uriClient.Call("abci_query", params, tmResult)
 	if err != nil {
-		return nil, errors.New(cmn.Fmt("Error calling /abci_query: %v", err))
+		return nil, errors.New(fmt.Sprintf("Error calling /abci_query: %v", err))
 	}
 	res := (*tmResult).(*ctypes.ResultABCIQuery)
 	if !res.Response.Code.IsOK() {
-		return nil, errors.New(cmn.Fmt("Query got non-zero exit code: %v. %s", res.Response.Code, res.Response.Log))
+		return nil, errors.New(fmt.Sprintf("Query got non-zero exit code: %v. %s", res.Response.Code, res.Response.Log))
 	}
 	return &res.Response, nil
 }
@@ -79,28 +134,27 @@ func getAcc(tmAddr string, address []byte) (*types.Account, error) {
 	accountBytes := response.Value
 
 	if len(accountBytes) == 0 {
-		return nil, errors.New(cmn.Fmt("Account bytes are empty for address: %X ", address))
+		return nil, errors.New(fmt.Sprintf("Account bytes are empty for address: %X ", address))
 	}
 
 	var acc *types.Account
 	err = wire.ReadBinaryBytes(accountBytes, &acc)
 	if err != nil {
-		return nil, errors.New(cmn.Fmt("Error reading account %X error: %v",
+		return nil, errors.New(fmt.Sprintf("Error reading account %X error: %v",
 			accountBytes, err.Error()))
 	}
 
 	return acc, nil
 }
 
-func getHeaderAndCommit(c *cli.Context, height int) (*tmtypes.Header, *tmtypes.Commit, error) {
+func getHeaderAndCommit(tmAddr string, height int) (*tmtypes.Header, *tmtypes.Commit, error) {
 	tmResult := new(ctypes.TMResult)
-	tmAddr := c.String("node")
 	uriClient := client.NewURIClient(tmAddr)
 
 	method := "commit"
 	_, err := uriClient.Call(method, map[string]interface{}{"height": height}, tmResult)
 	if err != nil {
-		return nil, nil, errors.New(cmn.Fmt("Error on %s: %v", method, err))
+		return nil, nil, errors.New(fmt.Sprintf("Error on %s: %v", method, err))
 	}
 	resCommit := (*tmResult).(*ctypes.ResultCommit)
 	header := resCommit.Header

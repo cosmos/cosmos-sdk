@@ -1,23 +1,34 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/tendermint/basecoin/cmd/commands"
-	"github.com/urfave/cli"
 )
 
 func main() {
-	app := cli.NewApp()
-	app.Name = "counter"
-	app.Usage = "counter [command] [args...]"
-	app.Version = "0.1.0"
-	app.Commands = []cli.Command{
+
+	var RootCmd = &cobra.Command{
+		Use:   "counter",
+		Short: "demo plugin for basecoin",
+	}
+
+	RootCmd.AddCommand(
 		commands.StartCmd,
 		commands.TxCmd,
-		commands.KeyCmd,
 		commands.QueryCmd,
+		commands.KeyCmd,
+		commands.VerifyCmd,
+		commands.BlockCmd,
 		commands.AccountCmd,
+		commands.QuickVersionCmd("0.1.0"),
+	)
+
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
-	app.Run(os.Args)
 }

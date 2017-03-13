@@ -3,6 +3,7 @@ package commands
 import (
 	"encoding/hex"
 	"errors"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,6 +20,16 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
+
+func BasecoinRoot(rootDir string) string {
+	if rootDir == "" {
+		rootDir = os.Getenv("BASECOIN_ROOT")
+	}
+	if rootDir == "" {
+		rootDir = os.Getenv("HOME") + "/.basecoin"
+	}
+	return rootDir
+}
 
 // Returns true for non-empty hex-string prefixed with "0x"
 func isHex(s string) bool {

@@ -14,6 +14,7 @@ func main() {
 	app.Usage = "basecoin [command] [args...]"
 	app.Version = version.Version
 	app.Commands = []cli.Command{
+		commands.InitCmd,
 		commands.StartCmd,
 		commands.TxCmd,
 		commands.QueryCmd,

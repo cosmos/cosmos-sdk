@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"io/ioutil"
+	"path"
 
 	"github.com/urfave/cli"
 
@@ -60,14 +61,15 @@ func genKey() *Key {
 	}
 }
 
-func LoadKey(filePath string) *Key {
+func LoadKey(keyFile string) *Key {
+	filePath := path.Join(BasecoinRoot(""), keyFile)
 	keyJSONBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		cmn.Exit(err.Error())
 	}
 	key := wire.ReadJSON(&Key{}, keyJSONBytes, &err).(*Key)
 	if err != nil {
-		cmn.Exit(cmn.Fmt("Error reading PrivValidator from %v: %v\n", filePath, err))
+		cmn.Exit(cmn.Fmt("Error reading key from %v: %v\n", filePath, err))
 	}
 	return key
 }

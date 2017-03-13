@@ -19,6 +19,8 @@ main.go
 plugin.go
 ```
 
+### main.go
+
 The `main.go` is very simple and does not need to be changed:
 
 ```golang
@@ -45,7 +47,7 @@ In addition, if we want to send transactions to our plugin,
 we need to add a new command to the CLI.
 This is where the `cmd.go` comes in.
 
-## Commands
+### cmd.go
 
 First, we register the plugin:
 
@@ -157,7 +159,7 @@ All plugin data must be serialized (ie. encoded as a byte-array)
 and sent as data in an `AppTx`. The `commands.AppTx` function does this for us -
 it creates an `AppTx` with the corresponding data, signs it, and sends it on to the blockchain.
 
-## RunTx
+### plugin.go
 
 Ok, now we're ready to actually look at the implementation of the plugin in `plugin.go`.
 Note I'll leave out some of the methods as they don't serve any purpose for this example,
@@ -296,94 +298,42 @@ And that's it! Now that we have a simple plugin, let's see how to run it.
 
 ## Running your plugin
 
-In the [previous tutorial](basecoin-basics.md),
-we used a pre-generated `genesis.json` and `priv_validator.json` for the application.
-This time, let's make our own.
-
-First, let's create a new directory and change into it:
+First, initialize the new blockchain with 
 
 ```
-mkdir example-data
-cd example-data
+basecoin init
 ```
 
-Now, let's create a new private key:
+If you've already run a basecoin blockchain, reset the data with
 
 ```
-example-plugin key new > key.json
+basecoin unsafe_reset_all
 ```
 
-Here's what my `key.json looks like:
-
-```json
-{
-	"address": "15F591CA434CFCCBDEC1D206F3ED3EBA207BFE7D",
-	"priv_key": [
-		1,
-		"737C629667A9EAADBB8E7CF792D5A8F63AA4BB51E06457DDD7FDCC6D7412AAAD43AA6C88034F9EB8D2717CA4BBFCBA745EFF19B13EFCD6F339EDBAAAFCD2F7B3"
-	],
-	"pub_key": [
-		1,
-		"43AA6C88034F9EB8D2717CA4BBFCBA745EFF19B13EFCD6F339EDBAAAFCD2F7B3"
-	]
-}
-```
-
-Now we can make a `genesis.json` file and add an account with out public key:
-
-```json
-[
-  "base/chainID", "example-chain",
-  "base/account", {
-    "pub_key": [1, "43AA6C88034F9EB8D2717CA4BBFCBA745EFF19B13EFCD6F339EDBAAAFCD2F7B3"],
-    "coins": [
-	{
-	  "denom": "gold",
-	  "amount": 1000000000,
-	}
-    ]
-  }
-]
-```
-
-Here we've granted ourselves `1000000000` units of the `gold` token.
-
-Before we can start the blockchain, we must initialize and/or reset the Tendermint state for a new blockchain:
-
-```
-tendermint init
-tendermint unsafe_reset_all
-```
-
-Great, now we're ready to go.
 To start the blockchain, simply run
 
 ```
-example-plugin start --in-proc
+example-plugin start 
 ```
 
 In another window, we can try sending some transactions:
 
 ```
-example-plugin tx send --to 0x1B1BE55F969F54064628A63B9559E7C21C925165 --amount 100gold --chain_id example-chain
+example-plugin tx send --to 0x1B1BE55F969F54064628A63B9559E7C21C925165 --amount 100gold 
 ```
-
-Note the `--chain_id` flag. In the [previous tutorial](basecoin-basics.md),
-we didn't include it because we were using the default chain ID ("test_chain_id").
-Now that we're using a custom chain, we need to specify the chain explicitly on the command line.
 
 Ok, so that's how we can send a `SendTx` transaction using our `example-plugin` CLI,
 but we were already able to do that with the `basecoin` CLI.
 With our new CLI, however, we can also send an `ExamplePluginTx`:
 
 ```
-example-plugin tx example --amount 1gold --chain_id example-chain
+example-plugin tx example --amount 1gold
 ```
 
 The transaction is invalid! That's because we didn't specify the `--valid` flag:
 
 ```
-example-plugin tx example --valid --amount 1gold --chain_id example-chain
+example-plugin tx example --valid --amount 1gold 
 ```
 
 Tada! We successfuly created, signed, broadcast, and processed our custom transaction type.
@@ -403,13 +353,13 @@ which contains only an integer.
 If we send another transaction, and then query again, we'll see the value increment:
 
 ```
-example-plugin tx example --valid --amount 1gold --chain_id example-chain
+example-plugin tx example --valid --amount 1gold 
 example-plugin query ExamplePlugin.State
 ```
 
 Neat, right? Notice how the result of the query comes with a proof.
 This is a Merkle proof that the state is what we say it is.
-In a latter [tutorial on Interblockchain Communication](ibc.md),
+In a latter [tutorial on InterBlockchain Communication](ibc.md),
 we'll put this proof to work!
 
 ## Next Steps
@@ -419,5 +369,5 @@ basecoin CLI to activate the plugin on the blockchain and to send transactions t
 Hopefully by now you have some ideas for your own plugin, and feel comfortable implementing them.
 
 In the [next tutorial](more-examples.md), we tour through some other plugin examples,
-adding features for minting new coins, voting, and changin the Tendermint validator set.
+adding features for minting new coins, voting, and changing the Tendermint validator set.
 But first, you may want to learn a bit more about [the design of the plugin system](plugin-design.md)

@@ -84,7 +84,7 @@ Now, let's create a new private key:
 basecoin key new > $BCHOME/key.json
 ```
 
-Here's what my `key.json looks like (TODO: change `keys` so it looks like this ...):
+Here's what my `key.json looks like:
 
 ```json
 {

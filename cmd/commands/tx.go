@@ -86,7 +86,7 @@ func cmdSendTx(c *cli.Context) error {
 	privKey := LoadKey(fromFile)
 
 	// get the sequence number for the tx
-	sequence, err := getSeq(c, privKey.Address)
+	sequence, err := getSeq(c, privKey.Address[:])
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func AppTx(c *cli.Context, name string, data []byte) error {
 
 	privKey := LoadKey(fromFile)
 
-	sequence, err := getSeq(c, privKey.Address)
+	sequence, err := getSeq(c, privKey.Address[:])
 	if err != nil {
 		return err
 	}

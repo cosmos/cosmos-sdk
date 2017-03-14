@@ -1,34 +1,34 @@
-hash: 3869944d14a8df914ffcad02c2ef3548173daba51c5ea697767f8af77c07b348
-updated: 2017-03-06T05:37:03.828355251-05:00
+hash: c71c0d6c409bfddb4c4b471d8445f59cebd2cd41e1635a90d6facd81bd09a5e0
+updated: 2017-03-14T17:02:44.512359631-04:00
 imports:
 - name: github.com/btcsuite/btcd
-  version: d06c0bb181529331be8f8d9350288c420d9e60e4
+  version: 583684b21bfbde9b5fc4403916fd7c807feb0289
   subpackages:
   - btcec
 - name: github.com/BurntSushi/toml
-  version: 99064174e013895bbd9b025c31100bd1d9b590ca
+  version: e643e9ef00b049d75de26e61109c5ea01885cd21
 - name: github.com/ebuchman/fail-test
-  version: 13f91f14c826314205cdbed1ec8ac8bf08e03381
+  version: 95f809107225be108efcf10a3509e4ea6ceef3c4
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/golang/protobuf
-  version: 8ee79997227bf9b34611aee7946ae64735e6fd93
+  version: c9c7427a2a70d2eb3bafa0ab2dc163e45f143317
   subpackages:
   - proto
 - name: github.com/golang/snappy
-  version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
+  version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/gorilla/websocket
   version: 3ab3a8b8831546bd18fd182c20687ca853b2bb13
 - name: github.com/jmhodges/levigo
   version: c42d9e0ca023e2198120196f842701bb4c55d7b9
 - name: github.com/mattn/go-colorable
-  version: d228849504861217f796da67fae4f6e347643f15
+  version: a392f450ea64cee2b268dfaacdc2502b50a22b18
 - name: github.com/mattn/go-isatty
-  version: 30a891c33c7cde7b02a981314b4228ec99380cca
+  version: 57fdcb988a5c543893cc61bce354a6e24ab70022
 - name: github.com/pkg/errors
-  version: 645ef00459ed84a119197bfb8d8205042c6df63d
+  version: bfd5150e4e41705ded2129ec33379de1cb90b513
 - name: github.com/syndtr/goleveldb
-  version: 23851d93a2292dcc56e71a18ec9e0624d84a0f65
+  version: 3c5717caf1475fd25964109a0fc640bd150fce43
   subpackages:
   - leveldb
   - leveldb/cache
@@ -43,7 +43,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 1236e8fb6eee3a63909f4014a8e84385ead7933d
+  version: af792eac777de757cd496349a5f6b5313738fcbc
   subpackages:
   - client
   - example/dummy
@@ -117,7 +117,7 @@ imports:
 - name: github.com/urfave/cli
   version: 0bdeddeeb0f650497d603c4ad7b20cfe685682f6
 - name: golang.org/x/crypto
-  version: 7c6cc321c680f03b9ef0764448e780704f486b51
+  version: 728b753d0135da6801d45a38e6f43ff55779c5c2
   subpackages:
   - curve25519
   - nacl/box
@@ -128,7 +128,7 @@ imports:
   - ripemd160
   - salsa20/salsa
 - name: golang.org/x/net
-  version: 61557ac0112b576429a0df080e1c2cef5dfbb642
+  version: a6577fac2d73be281a500b310739095313165611
   subpackages:
   - context
   - http2
@@ -138,16 +138,17 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/sys
-  version: d75a52659825e75fff6158388dddc6a5b04f9ba5
+  version: 99f16d856c9836c42d24e7ab64ea72916925fa97
   subpackages:
   - unix
 - name: google.golang.org/grpc
-  version: cbcceb2942a489498cf22b2f918536e819d33f0a
+  version: 0713829b980f4ddd276689a36235c5fcc82a21bf
   subpackages:
   - codes
   - credentials
   - grpclog
   - internal
+  - keepalive
   - metadata
   - naming
   - peer

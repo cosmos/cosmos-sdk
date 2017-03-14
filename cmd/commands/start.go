@@ -76,16 +76,24 @@ func cmdStart(c *cli.Context) error {
 		basecoinApp.RegisterPlugin(p.newPlugin())
 	}
 
-	// If genesis file exists, set key-value options
-	genesisFile := path.Join(basecoinDir, "genesis.json")
-	if _, err := os.Stat(genesisFile); err == nil {
-		err := basecoinApp.LoadGenesis(genesisFile)
-		if err != nil {
-			return errors.New(cmn.Fmt("%+v", err))
+	fmt.Println("CHAIN ID", basecoinApp.GetState().GetChainID())
+
+	// if chain_id has not been set yet, load the genesis.
+	// else, assume it's been loaded
+	if basecoinApp.GetState().GetChainID() == "" {
+		// If genesis file exists, set key-value options
+		genesisFile := path.Join(basecoinDir, "genesis.json")
+		if _, err := os.Stat(genesisFile); err == nil {
+			err := basecoinApp.LoadGenesis(genesisFile)
+			if err != nil {
+				return errors.New(cmn.Fmt("%+v", err))
+			}
+		} else {
+			fmt.Printf("No genesis file at %s, skipping...\n", genesisFile)
 		}
-	} else {
-		fmt.Printf("No genesis file at %s, skipping...\n", genesisFile)
 	}
+
+	fmt.Println("CHAIN ID", basecoinApp.GetState().GetChainID())
 
 	if c.Bool("without-tendermint") {
 		// run just the abci app/server

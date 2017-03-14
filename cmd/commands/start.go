@@ -33,7 +33,7 @@ var StartCmd = cli.Command{
 	Flags: []cli.Flag{
 		AddrFlag,
 		EyesFlag,
-		ABCIServerFlag,
+		WithoutTendermintFlag,
 		ChainIDFlag,
 	},
 }
@@ -87,7 +87,7 @@ func cmdStart(c *cli.Context) error {
 		fmt.Printf("No genesis file at %s, skipping...\n", genesisFile)
 	}
 
-	if c.Bool("abci-server") {
+	if c.Bool("without-tendermint") {
 		// run just the abci app/server
 		if err := startBasecoinABCI(c, basecoinApp); err != nil {
 			return err

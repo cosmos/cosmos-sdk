@@ -21,9 +21,9 @@ var (
 	// TODO: move to config file
 	// eyesCacheSizePtr := flag.Int("eyes-cache-size", 10000, "MerkleEyes db cache size, for embedded")
 
-	ABCIServerFlag = cli.BoolFlag{
-		Name:  "abci-server",
-		Usage: "Run the Basecoin app and ABCI server, but not Tendermint (run Tendermint in another process)",
+	WithoutTendermintFlag = cli.BoolFlag{
+		Name:  "without-tendermint",
+		Usage: "Run the Basecoin app without Tendermint",
 	}
 )
 

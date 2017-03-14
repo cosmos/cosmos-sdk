@@ -18,7 +18,7 @@ tendermint init
 In one window, run 
 
 ```
-basecoin start --abci-server
+basecoin start --without-tendermint
 ```
 
 and in another,

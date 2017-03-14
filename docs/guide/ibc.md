@@ -195,14 +195,14 @@ We can start the two chains as follows:
 
 ```
 TMROOT=./data/chain1/tendermint tendermint node &> chain1_tendermint.log &
-BASECOIN_ROOT=./data/chain1/basecoin basecoin start --abci-server &> chain1_basecoin.log &
+BASECOIN_ROOT=./data/chain1/basecoin basecoin start --without-tendermint &> chain1_basecoin.log &
 ```
 
 and
 
 ```
 TMROOT=./data/chain2/tendermint tendermint node --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> chain2_tendermint.log &
-BASECOIN_ROOT=./data/chain2/basecoin basecoin start --abci-server --address tcp://localhost:36658 &> chain2_basecoin.log &
+BASECOIN_ROOT=./data/chain2/basecoin basecoin start --without-tendermint --address tcp://localhost:36658 &> chain2_basecoin.log &
 ```
 
 Note how we refer to the relevant data directories. Also note how we have to set the various addresses for the second node so as not to conflict with the first.

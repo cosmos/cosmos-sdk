@@ -83,11 +83,11 @@ echo "... starting chains"
 echo ""
 # start the first node
 TMROOT=./data/chain1/tendermint tendermint node --skip_upnp --log_level=info &> $LOG_DIR/chain1_tendermint.log &
-BASECOIN_ROOT=$BCROOT1 basecoin start --abci-server &> $LOG_DIR/chain1_basecoin.log &
+BASECOIN_ROOT=$BCROOT1 basecoin start --without-tendermint &> $LOG_DIR/chain1_basecoin.log &
 
 # start the second node
 TMROOT=./data/chain2/tendermint tendermint node --skip_upnp --log_level=info --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> $LOG_DIR/chain2_tendermint.log &
-BASECOIN_ROOT=$BCROOT2 basecoin start --address tcp://localhost:36658 --abci-server &> $LOG_DIR/chain2_basecoin.log &
+BASECOIN_ROOT=$BCROOT2 basecoin start --address tcp://localhost:36658 --without-tendermint &> $LOG_DIR/chain2_basecoin.log &
 
 echo ""
 echo "... waiting for chains to start"

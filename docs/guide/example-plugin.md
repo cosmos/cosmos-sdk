@@ -310,7 +310,7 @@ If you've already run a basecoin blockchain, reset the data with
 basecoin unsafe_reset_all
 ```
 
-To start the blockchain, simply run
+To start the blockchain with your new plugin, simply run
 
 ```
 example-plugin start 

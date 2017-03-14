@@ -35,6 +35,6 @@ See the [install guide](/docs/guide/install.md) for more details.
 1. See some [more example applications](/docs/guide/more-examples.md)
 1. More features of the [Basecoin tool](/docs/guide/basecoin-tool.md)
 1. Learn how to use [InterBlockchain Communication (IBC)](/docs/guide/ibc.md)
-1. [Deploy testnets](deployment.md) running your basecoin application.
+1. [Deploy testnets](/docs/guide/deployment.md) running your basecoin application.
 
 

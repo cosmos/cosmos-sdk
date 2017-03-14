@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0 (March 13, 2017)
+
+BREAKING CHANGES:
+
+- Remove `--data` flag and use `BASECOIN_ROOT` to set the home directory (defaults to `~/.basecoin`)
+- Remove `--in-proc` flag and start Tendermint in-process by default (expect Tendermint files in $BASECOIN_ROOT/tendermint).
+To start just the ABCI app/server, use `basecoin start --abci-server`.
+
+FEATURES:
+
+- Introduce `basecoin init` and `basecoin unsafe_reset_all` 
+
 ## 0.2.0 (March 6, 2017)
 
 BREAKING CHANGES:

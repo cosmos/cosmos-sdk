@@ -2,18 +2,32 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/pkg/errors"
+	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/go-common"
+	"github.com/tendermint/go-wire"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 func (app *Basecoin) LoadGenesis(path string) error {
-	kvz, err := loadGenesis(path)
+	tmDoc, appDoc, err := loadGenesis(path)
 	if err != nil {
 		return err
 	}
-	for _, kv := range kvz {
-		app.SetOption(kv.Key, kv.Value)
+	fmt.Println("TMGendoc", tmDoc)
+	fmt.Println("AppGendoc", appDoc)
+
+	app.SetOption("base/chain_id", appDoc.ChainID)
+	for _, acc := range appDoc.Accounts {
+		accBytes, err := json.Marshal(acc)
+		if err != nil {
+			return err
+		}
+		r := app.SetOption("base/account", string(accBytes))
+		// TODO: SetOption returns an error
+		log.Notice("SetOption", "result", r)
 	}
 	return nil
 }
@@ -23,16 +37,37 @@ type keyValue struct {
 	Value string `json:"value"`
 }
 
-func loadGenesis(filePath string) (kvz []keyValue, err error) {
-	kvz_ := []json.RawMessage{}
+// includes tendermint (in the json, we ignore here)
+type FullGenesisDoc struct {
+	AppOptions *GenesisDoc `json:"app_options"`
+}
+
+type GenesisDoc struct {
+	ChainID  string          `json:"chain_id"`
+	Accounts []types.Account `json:"accounts"`
+}
+
+func loadGenesis(filePath string) (*tmtypes.GenesisDoc, *GenesisDoc, error) {
 	bytes, err := cmn.ReadFile(filePath)
 	if err != nil {
-		return nil, errors.Wrap(err, "loading genesis file")
+		return nil, nil, errors.Wrap(err, "loading genesis file")
 	}
-	err = json.Unmarshal(bytes, &kvz_)
+
+	tmGenesis := new(tmtypes.GenesisDoc)
+	appGenesis := new(FullGenesisDoc)
+
+	// the tendermint genesis is go-wire
+	err = wire.ReadJSONBytes(bytes, tmGenesis)
+
+	// the basecoin genesis go-data :)
+	err = json.Unmarshal(bytes, appGenesis)
 	if err != nil {
-		return nil, errors.Wrap(err, "parsing genesis file")
+		return nil, nil, errors.Wrap(err, "unmarshaling genesis file")
 	}
+	return tmGenesis, appGenesis.AppOptions, nil
+}
+
+func parseGenesisList(kvz_ []json.RawMessage) (kvz []keyValue, err error) {
 	if len(kvz_)%2 != 0 {
 		return nil, errors.New("genesis cannot have an odd number of items.  Format = [key1, value1, key2, value2, ...]")
 	}

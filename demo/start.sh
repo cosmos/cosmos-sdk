@@ -62,13 +62,13 @@ function waitForBlock() {
 
 # make basecoin root vars
 export BCHOME="."
-BCHOME1="./data/chain1/basecoin"
-BCHOME2="./data/chain2/basecoin"
+BCHOME1="./data/chain1"
+BCHOME2="./data/chain2"
 
 # grab the chain ids
-CHAIN_ID1=$(cat $BCHOME1/genesis.json | jq .[1])
+CHAIN_ID1=$(cat $BCHOME1/genesis.json | jq .chain_id)
 CHAIN_ID1=$(removeQuotes $CHAIN_ID1)
-CHAIN_ID2=$(cat $BCHOME2/genesis.json | jq .[1])
+CHAIN_ID2=$(cat $BCHOME2/genesis.json | jq .chain_id)
 CHAIN_ID2=$(removeQuotes $CHAIN_ID2)
 echo "CHAIN_ID1: $CHAIN_ID1"
 echo "CHAIN_ID2: $CHAIN_ID2"
@@ -82,11 +82,11 @@ echo ""
 echo "... starting chains"
 echo ""
 # start the first node
-TMROOT=./data/chain1/tendermint tendermint node --skip_upnp --log_level=info &> $LOG_DIR/chain1_tendermint.log &
+TMROOT=./data/chain1 tendermint node --skip_upnp --log_level=info &> $LOG_DIR/chain1_tendermint.log &
 BCHOME=$BCHOME1 basecoin start --without-tendermint &> $LOG_DIR/chain1_basecoin.log &
 
 # start the second node
-TMROOT=./data/chain2/tendermint tendermint node --skip_upnp --log_level=info --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> $LOG_DIR/chain2_tendermint.log &
+TMROOT=./data/chain2 tendermint node --skip_upnp --log_level=info --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> $LOG_DIR/chain2_tendermint.log &
 BCHOME=$BCHOME2 basecoin start --address tcp://localhost:36658 --without-tendermint &> $LOG_DIR/chain2_basecoin.log &
 
 echo ""
@@ -103,7 +103,7 @@ sleep 3
 echo "... registering chain1 on chain2"
 echo ""
 # register chain1 on chain2
-basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 register --chain_id $CHAIN_ID1 --genesis ./data/chain1/tendermint/genesis.json
+basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 register --chain_id $CHAIN_ID1 --genesis ./data/chain1/genesis.json
 
 echo ""
 echo "... creating egress packet on chain1"

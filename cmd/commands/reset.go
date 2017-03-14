@@ -21,7 +21,7 @@ var UnsafeResetAllCmd = cli.Command{
 
 func cmdUnsafeResetAll(c *cli.Context) error {
 	basecoinDir := BasecoinRoot("")
-	tmDir := path.Join(basecoinDir, "tendermint")
+	tmDir := path.Join(basecoinDir)
 	tmConfig := tmcfg.GetConfig(tmDir)
 
 	// Get and Reset PrivValidator
@@ -41,12 +41,7 @@ func cmdUnsafeResetAll(c *cli.Context) error {
 	// Remove all tendermint data
 	tmDataDir := tmConfig.GetString("db_dir")
 	os.RemoveAll(tmDataDir)
-	log.Notice("Removed Tendermint data", "dir", tmDataDir)
-
-	// Remove all basecoin data
-	basecoinDataDir := path.Join(basecoinDir, "merkleeyes.db")
-	os.RemoveAll(basecoinDataDir)
-	log.Notice("Removed Basecoin data", "dir", basecoinDataDir)
+	log.Notice("Removed all data", "dir", tmDataDir)
 
 	return nil
 }

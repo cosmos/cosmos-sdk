@@ -2,14 +2,11 @@ package commands
 
 import (
 	"io/ioutil"
-	"os"
 	"path"
 
 	"github.com/urfave/cli"
 
 	cmn "github.com/tendermint/go-common"
-	tmcfg "github.com/tendermint/tendermint/config/tendermint"
-	types "github.com/tendermint/tendermint/types"
 )
 
 var InitCmd = cli.Command{
@@ -25,42 +22,20 @@ var InitCmd = cli.Command{
 }
 
 func cmdInit(c *cli.Context) error {
-	basecoinDir := BasecoinRoot("")
-	tmDir := path.Join(basecoinDir, "tendermint")
+	rootDir := BasecoinRoot("")
 
-	// initalize tendermint
-	tmConfig := tmcfg.GetConfig(tmDir)
-
-	privValFile := tmConfig.GetString("priv_validator_file")
-	if _, err := os.Stat(privValFile); os.IsNotExist(err) {
-		privValidator := types.GenPrivValidator()
-		privValidator.SetFile(privValFile)
-		privValidator.Save()
-
-		genFile := tmConfig.GetString("genesis_file")
-
-		if _, err := os.Stat(genFile); os.IsNotExist(err) {
-			genDoc := types.GenesisDoc{
-				ChainID: cmn.Fmt("test-chain-%v", cmn.RandStr(6)),
-			}
-			genDoc.Validators = []types.GenesisValidator{types.GenesisValidator{
-				PubKey: privValidator.PubKey,
-				Amount: 10,
-			}}
-
-			genDoc.SaveAs(genFile)
-		}
-		log.Notice("Initialized Tendermint", "genesis", tmConfig.GetString("genesis_file"), "priv_validator", tmConfig.GetString("priv_validator_file"))
-	} else {
-		log.Notice("Already initialized Tendermint", "priv_validator", tmConfig.GetString("priv_validator_file"))
-	}
+	cmn.EnsureDir(rootDir, 0777)
 
 	// initalize basecoin
-	genesisFile := path.Join(basecoinDir, "genesis.json")
-	key1File := path.Join(basecoinDir, "key.json")
-	key2File := path.Join(basecoinDir, "key2.json")
+	genesisFile := path.Join(rootDir, "genesis.json")
+	privValFile := path.Join(rootDir, "priv_validator.json")
+	key1File := path.Join(rootDir, "key.json")
+	key2File := path.Join(rootDir, "key2.json")
 
 	if err := ioutil.WriteFile(genesisFile, []byte(genesisJSON), 0644); err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(privValFile, []byte(privValJSON), 0400); err != nil {
 		return err
 	}
 	if err := ioutil.WriteFile(key1File, []byte(key1JSON), 0400); err != nil {
@@ -75,21 +50,53 @@ func cmdInit(c *cli.Context) error {
 	return nil
 }
 
-const genesisJSON = `[
-  "base/chainID", "test_chain_id",
-  "base/account", {
-    "pub_key": {
-      "type": "ed25519",
-      "data": "619D3678599971ED29C7529DDD4DA537B97129893598A17C82E3AC9A8BA95279"
-    },
-    "coins": [
-    	{
-    	  "denom": "mycoin",
-    	  "amount": 9007199254740992
-    	}
-    ]
+const privValJSON = `{
+	"address": "7A956FADD20D3A5B2375042B2959F8AB172A058F",
+	"last_height": 0,
+	"last_round": 0,
+	"last_signature": null,
+	"last_signbytes": "",
+	"last_step": 0,
+	"priv_key": [
+		1,
+		"D07ABE82A8B15559A983B2DB5D4842B2B6E4D6AF58B080005662F424F17D68C17B90EA87E7DC0C7145C8C48C08992BE271C7234134343E8A8E8008E617DE7B30"
+	],
+	"pub_key": [
+		1,
+		"7B90EA87E7DC0C7145C8C48C08992BE271C7234134343E8A8E8008E617DE7B30"
+	]
+}`
+
+const genesisJSON = `{
+  "app_hash": "",
+  "chain_id": "test-chain-Ppk1h3",
+  "genesis_time": "0001-01-01T00:00:00.000Z",
+  "validators": [
+    {
+      "amount": 10,
+      "name": "",
+      "pub_key": [
+	1,
+	"7B90EA87E7DC0C7145C8C48C08992BE271C7234134343E8A8E8008E617DE7B30"
+      ]
+    }
+  ],
+  "app_options": {
+    "chain_id": "test_chain_id",
+    "accounts": [{
+      "pub_key": {
+        "type": "ed25519",
+        "data": "619D3678599971ED29C7529DDD4DA537B97129893598A17C82E3AC9A8BA95279"
+      },
+      "coins": [
+        {
+          "denom": "mycoin",
+          "amount": 9007199254740992
+        }
+      ]
+    }]
   }
-]`
+}`
 
 const key1JSON = `{
 	"address": "1B1BE55F969F54064628A63B9559E7C21C925165",

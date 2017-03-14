@@ -65,7 +65,7 @@ func (app *Basecoin) SetOption(key string, value string) string {
 	} else {
 		// Set option on basecoin
 		switch key {
-		case "chainID":
+		case "chain_id":
 			app.state.SetChainID(value)
 			return "Success"
 		case "account":
@@ -75,7 +75,8 @@ func (app *Basecoin) SetOption(key string, value string) string {
 				return "Error decoding acc message: " + err.Error()
 			}
 			app.state.SetAccount(acc.PubKey.Address(), &acc)
-			log.Info("SetAccount", "addr", acc.PubKey.Address(), "acc", acc)
+			log.Notice("SetAccount", "addr", acc.PubKey.Address(), "acc", acc)
+
 			return "Success"
 		}
 		return "Unrecognized option key " + key

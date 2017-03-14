@@ -56,7 +56,7 @@ func cmdStart(c *cli.Context) error {
 	// Connect to MerkleEyes
 	var eyesCli *eyes.Client
 	if c.String("eyes") == "local" {
-		eyesCli = eyes.NewLocalClient(path.Join(basecoinDir, "merkleeyes.db"), EyesCacheSize)
+		eyesCli = eyes.NewLocalClient(path.Join(basecoinDir, "data", "merkleeyes.db"), EyesCacheSize)
 	} else {
 		var err error
 		eyesCli, err = eyes.NewClient(c.String("eyes"))
@@ -117,7 +117,7 @@ func startBasecoinABCI(c *cli.Context, basecoinApp *app.Basecoin) error {
 
 func startTendermint(dir string, basecoinApp *app.Basecoin) {
 	// Get configuration
-	tmConfig := tmcfg.GetConfig(path.Join(dir, "tendermint"))
+	tmConfig := tmcfg.GetConfig(dir)
 
 	// logger.SetLogLevel("notice") //config.GetString("log_level"))
 

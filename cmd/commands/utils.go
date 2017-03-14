@@ -23,7 +23,7 @@ import (
 
 func BasecoinRoot(rootDir string) string {
 	if rootDir == "" {
-		rootDir = os.Getenv("BASECOIN_ROOT")
+		rootDir = os.Getenv("BCHOME")
 	}
 	if rootDir == "" {
 		rootDir = os.Getenv("HOME") + "/.basecoin"

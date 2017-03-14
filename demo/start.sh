@@ -61,21 +61,21 @@ function waitForBlock() {
 }
 
 # make basecoin root vars
-export BASECOIN_ROOT="."
-BCROOT1="./data/chain1/basecoin"
-BCROOT2="./data/chain2/basecoin"
+export BCHOME="."
+BCHOME1="./data/chain1/basecoin"
+BCHOME2="./data/chain2/basecoin"
 
 # grab the chain ids
-CHAIN_ID1=$(cat $BCROOT1/genesis.json | jq .[1])
+CHAIN_ID1=$(cat $BCHOME1/genesis.json | jq .[1])
 CHAIN_ID1=$(removeQuotes $CHAIN_ID1)
-CHAIN_ID2=$(cat $BCROOT2/genesis.json | jq .[1])
+CHAIN_ID2=$(cat $BCHOME2/genesis.json | jq .[1])
 CHAIN_ID2=$(removeQuotes $CHAIN_ID2)
 echo "CHAIN_ID1: $CHAIN_ID1"
 echo "CHAIN_ID2: $CHAIN_ID2"
 
 # make reusable chain flags
-CHAIN_FLAGS1="--chain_id $CHAIN_ID1 --from $BCROOT1/key.json"
-CHAIN_FLAGS2="--chain_id $CHAIN_ID2 --from $BCROOT2/key.json --node tcp://localhost:36657"
+CHAIN_FLAGS1="--chain_id $CHAIN_ID1 --from $BCHOME1/key.json"
+CHAIN_FLAGS2="--chain_id $CHAIN_ID2 --from $BCHOME2/key.json --node tcp://localhost:36657"
 
 
 echo ""
@@ -83,11 +83,11 @@ echo "... starting chains"
 echo ""
 # start the first node
 TMROOT=./data/chain1/tendermint tendermint node --skip_upnp --log_level=info &> $LOG_DIR/chain1_tendermint.log &
-BASECOIN_ROOT=$BCROOT1 basecoin start --without-tendermint &> $LOG_DIR/chain1_basecoin.log &
+BCHOME=$BCHOME1 basecoin start --without-tendermint &> $LOG_DIR/chain1_basecoin.log &
 
 # start the second node
 TMROOT=./data/chain2/tendermint tendermint node --skip_upnp --log_level=info --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> $LOG_DIR/chain2_tendermint.log &
-BASECOIN_ROOT=$BCROOT2 basecoin start --address tcp://localhost:36658 --without-tendermint &> $LOG_DIR/chain2_basecoin.log &
+BCHOME=$BCHOME2 basecoin start --address tcp://localhost:36658 --without-tendermint &> $LOG_DIR/chain2_basecoin.log &
 
 echo ""
 echo "... waiting for chains to start"

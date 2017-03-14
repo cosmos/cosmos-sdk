@@ -45,10 +45,10 @@ First, create a new directory:
 mkdir example-data
 ```
 
-We can tell `basecoin` to use this directory by exporting the `BASECOIN_ROOT` environment variable:
+We can tell `basecoin` to use this directory by exporting the `BCHOME` environment variable:
 
 ```
-export BASECOIN_ROOT=$(pwd)/example-data
+export BCHOME=$(pwd)/example-data
 ```
 
 If you're going to be using multiple terminal windows, make sure to add this variable to your shell startup scripts (eg. `~/.bashrc`).
@@ -56,7 +56,7 @@ If you're going to be using multiple terminal windows, make sure to add this var
 Now, let's create a new private key:
 
 ```
-basecoin key new > $BASECOIN_ROOT/key.json
+basecoin key new > $BCHOME/key.json
 ```
 
 Here's what my `key.json looks like:

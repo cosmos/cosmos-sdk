@@ -195,14 +195,14 @@ We can start the two chains as follows:
 
 ```
 TMROOT=./data/chain1/tendermint tendermint node &> chain1_tendermint.log &
-BASECOIN_ROOT=./data/chain1/basecoin basecoin start --without-tendermint &> chain1_basecoin.log &
+BCHOME=./data/chain1/basecoin basecoin start --without-tendermint &> chain1_basecoin.log &
 ```
 
 and
 
 ```
 TMROOT=./data/chain2/tendermint tendermint node --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> chain2_tendermint.log &
-BASECOIN_ROOT=./data/chain2/basecoin basecoin start --without-tendermint --address tcp://localhost:36658 &> chain2_basecoin.log &
+BCHOME=./data/chain2/basecoin basecoin start --without-tendermint --address tcp://localhost:36658 &> chain2_basecoin.log &
 ```
 
 Note how we refer to the relevant data directories. Also note how we have to set the various addresses for the second node so as not to conflict with the first.
@@ -227,7 +227,7 @@ export CHAIN_ID2=test_chain_2
 export CHAIN_FLAGS1="--chain_id $CHAIN_ID1 --from ./data/chain1/basecoin/key.json"
 export CHAIN_FLAGS2="--chain_id $CHAIN_ID2 --from ./data/chain2/basecoin/key.json --node tcp://localhost:36657"
 
-export BASECOIN_ROOT="."
+export BCHOME="."
 ```
 
 Let's start by registering `test_chain_1` on `test_chain_2`:

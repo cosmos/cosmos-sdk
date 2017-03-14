@@ -4,8 +4,8 @@
 
 BREAKING CHANGES:
 
-- Remove `--data` flag and use `BASECOIN_ROOT` to set the home directory (defaults to `~/.basecoin`)
-- Remove `--in-proc` flag and start Tendermint in-process by default (expect Tendermint files in $BASECOIN_ROOT/tendermint).
+- Remove `--data` flag and use `BCHOME` to set the home directory (defaults to `~/.basecoin`)
+- Remove `--in-proc` flag and start Tendermint in-process by default (expect Tendermint files in $BCHOME/tendermint).
 To start just the ABCI app/server, use `basecoin start --without-tendermint`.
 
 FEATURES:

@@ -69,7 +69,7 @@ const privValJSON = `{
 
 const genesisJSON = `{
   "app_hash": "",
-  "chain_id": "test-chain-Ppk1h3",
+  "chain_id": "test_chain_id",
   "genesis_time": "0001-01-01T00:00:00.000Z",
   "validators": [
     {
@@ -82,7 +82,6 @@ const genesisJSON = `{
     }
   ],
   "app_options": {
-    "chain_id": "test_chain_id",
     "accounts": [{
       "pub_key": {
         "type": "ed25519",

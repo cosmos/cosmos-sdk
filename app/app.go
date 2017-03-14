@@ -60,7 +60,7 @@ func (app *Basecoin) SetOption(key string, value string) string {
 		if plugin == nil {
 			return "Invalid plugin name: " + pluginName
 		}
-		log.Info("SetOption on plugin", "plugin", pluginName, "key", key, "value", value)
+		log.Notice("SetOption on plugin", "plugin", pluginName, "key", key, "value", value)
 		return plugin.SetOption(app.state, key, value)
 	} else {
 		// Set option on basecoin

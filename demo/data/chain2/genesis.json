@@ -13,7 +13,6 @@
     }
   ],
   "app_options": {
-    "chain_id": "test_chain_2",
     "accounts": [
       {
         "pub_key": {

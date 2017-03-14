@@ -22,6 +22,7 @@ func main() {
 		commands.VerifyCmd,
 		commands.BlockCmd,
 		commands.AccountCmd,
+		commands.UnsafeResetAllCmd,
 	}
 	app.Run(os.Args)
 }

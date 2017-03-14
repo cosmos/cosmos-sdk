@@ -319,7 +319,7 @@ example-plugin start
 In another window, we can try sending some transactions:
 
 ```
-example-plugin tx send --to 0x1B1BE55F969F54064628A63B9559E7C21C925165 --amount 100gold 
+example-plugin tx send --to 0x1DA7C74F9C219229FD54CC9F7386D5A3839F0090 --amount 100mycoin
 ```
 
 Ok, so that's how we can send a `SendTx` transaction using our `example-plugin` CLI,
@@ -327,13 +327,13 @@ but we were already able to do that with the `basecoin` CLI.
 With our new CLI, however, we can also send an `ExamplePluginTx`:
 
 ```
-example-plugin tx example --amount 1gold
+example-plugin tx example --amount 1mycoin
 ```
 
 The transaction is invalid! That's because we didn't specify the `--valid` flag:
 
 ```
-example-plugin tx example --valid --amount 1gold 
+example-plugin tx example --valid --amount 1mycoin
 ```
 
 Tada! We successfuly created, signed, broadcast, and processed our custom transaction type.
@@ -353,7 +353,7 @@ which contains only an integer.
 If we send another transaction, and then query again, we'll see the value increment:
 
 ```
-example-plugin tx example --valid --amount 1gold 
+example-plugin tx example --valid --amount 1mycoin
 example-plugin query ExamplePlugin.State
 ```
 

@@ -28,7 +28,7 @@ See the [install guide](/docs/guide/install.md) for more details.
 
 ## Guide
 
-1. Getting started with the [Basecoin tool](/docs/guide/basecoin-basics.md)
+1. Getting started with the [Basecoin basics](/docs/guide/basecoin-basics.md)
 1. Learn more about [Basecoin's design](/docs/guide/basecoin-design.md)
 1. Extend Basecoin [using the plugin system](/docs/guide/example-plugin.md)
 1. Learn more about [plugin design](/docs/guide/plugin-design.md)

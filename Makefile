@@ -1,22 +1,22 @@
 all: test install
 
-NOVENDOR = go list github.com/tendermint/basecoin/... | grep -v /vendor/
+NOVENDOR = go list ./... | grep -v /vendor/
 
 build:
-	go build github.com/tendermint/basecoin/cmd/...
+	go build ./cmd/...
 
 install:
-	go install github.com/tendermint/basecoin/cmd/...
+	go install ./cmd/...
 
 test:
 	go test `${NOVENDOR}`
 	#go run tests/tendermint/*.go
 
 get_deps:
-	go get -d github.com/tendermint/basecoin/...
+	go get -d ./...
 
 update_deps:
-	go get -d -u github.com/tendermint/basecoin/...
+	go get -d -u ./...
 
 get_vendor_deps:
 	go get github.com/Masterminds/glide

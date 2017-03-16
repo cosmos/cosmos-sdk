@@ -12,7 +12,7 @@ import (
 
 	cmn "github.com/tendermint/go-common"
 	client "github.com/tendermint/go-rpc/client"
-	"github.com/tendermint/go-wire"
+	wire "github.com/tendermint/go-wire"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -189,14 +189,14 @@ func AppTx(c *cli.Context, name string, data []byte) error {
 func broadcastTx(c *cli.Context, tx types.Tx) ([]byte, string, error) {
 	tmResult := new(ctypes.TMResult)
 	tmAddr := c.String("node")
-	clientURI := client.NewURIClient(tmAddr)
+	uriClient := client.NewURIClient(tmAddr)
 
 	// Don't you hate having to do this?
 	// How many times have I lost an hour over this trick?!
 	txBytes := []byte(wire.BinaryBytes(struct {
 		types.Tx `json:"unwrap"`
 	}{tx}))
-	_, err := clientURI.Call("broadcast_tx_commit", map[string]interface{}{"tx": txBytes}, tmResult)
+	_, err := uriClient.Call("broadcast_tx_commit", map[string]interface{}{"tx": txBytes}, tmResult)
 	if err != nil {
 		return nil, "", errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
 	}

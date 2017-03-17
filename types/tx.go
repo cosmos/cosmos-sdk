@@ -64,11 +64,11 @@ func (p *TxS) UnmarshalJSON(data []byte) (err error) {
 //-----------------------------------------------------------------------------
 
 type TxInput struct {
-	Address   data.Bytes        `json:"address"`   // Hash of the PubKey
-	Coins     Coins             `json:"coins"`     //
-	Sequence  int               `json:"sequence"`  // Must be 1 greater than the last committed TxInput
-	Signature crypto.SignatureS `json:"signature"` // Depends on the PubKey type and the whole Tx
-	PubKey    crypto.PubKeyS    `json:"pub_key"`   // Is present iff Sequence == 0
+	Address    data.Bytes        `json:"address"`   // Hash of the PubKey
+	Coins      Coins             `json:"coins"`     //
+	Sequence   int               `json:"sequence"`  // Must be 1 greater than the last committed TxInput
+	SignatureS crypto.SignatureS `json:"signature"` // Depends on the PubKey type and the whole Tx
+	PubKey     crypto.PubKeyS    `json:"pub_key"`   // Is present iff Sequence == 0
 }
 
 func (txIn TxInput) ValidateBasic() abci.Result {
@@ -94,7 +94,7 @@ func (txIn TxInput) ValidateBasic() abci.Result {
 }
 
 func (txIn TxInput) String() string {
-	return Fmt("TxInput{%X,%v,%v,%v,%v}", txIn.Address, txIn.Coins, txIn.Sequence, txIn.Signature, txIn.PubKey)
+	return Fmt("TxInput{%X,%v,%v,%v,%v}", txIn.Address, txIn.Coins, txIn.Sequence, txIn.SignatureS, txIn.PubKey)
 }
 
 func NewTxInput(pubKey crypto.PubKey, coins Coins, sequence int) TxInput {
@@ -152,12 +152,12 @@ func (tx *SendTx) SignBytes(chainID string) []byte {
 	signBytes := wire.BinaryBytes(chainID)
 	sigz := make([]crypto.Signature, len(tx.Inputs))
 	for i, input := range tx.Inputs {
-		sigz[i] = input.Signature.Signature
-		tx.Inputs[i].Signature.Signature = nil
+		sigz[i] = input.SignatureS.Signature
+		tx.Inputs[i].SignatureS.Signature = nil
 	}
 	signBytes = append(signBytes, wire.BinaryBytes(tx)...)
 	for i := range tx.Inputs {
-		tx.Inputs[i].Signature.Signature = sigz[i]
+		tx.Inputs[i].SignatureS.Signature = sigz[i]
 	}
 	return signBytes
 }
@@ -169,7 +169,7 @@ func (tx *SendTx) SetSignature(addr []byte, sig crypto.Signature) bool {
 	}
 	for i, input := range tx.Inputs {
 		if bytes.Equal(input.Address, addr) {
-			tx.Inputs[i].Signature = sigs
+			tx.Inputs[i].SignatureS = sigs
 			return true
 		}
 	}
@@ -192,10 +192,10 @@ type AppTx struct {
 
 func (tx *AppTx) SignBytes(chainID string) []byte {
 	signBytes := wire.BinaryBytes(chainID)
-	sig := tx.Input.Signature
-	tx.Input.Signature.Signature = nil
+	sig := tx.Input.SignatureS
+	tx.Input.SignatureS.Signature = nil
 	signBytes = append(signBytes, wire.BinaryBytes(tx)...)
-	tx.Input.Signature = sig
+	tx.Input.SignatureS = sig
 	return signBytes
 }
 
@@ -204,7 +204,7 @@ func (tx *AppTx) SetSignature(sig crypto.Signature) bool {
 	if !ok {
 		sigs = crypto.SignatureS{sig}
 	}
-	tx.Input.Signature = sigs
+	tx.Input.SignatureS = sigs
 	return true
 }
 

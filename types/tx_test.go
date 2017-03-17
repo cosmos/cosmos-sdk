@@ -121,5 +121,5 @@ func TestSendTxJSON(t *testing.T) {
 
 	// and make sure the sig is preserved
 	assert.Equal(t, tx, tx2)
-	assert.False(t, tx2.Inputs[0].Signature.Empty())
+	assert.False(t, tx2.Inputs[0].SignatureS.Empty())
 }

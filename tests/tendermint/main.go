@@ -67,7 +67,7 @@ func main() {
 		// Sign request
 		signBytes := tx.SignBytes(chainID)
 		sig := root.Sign(signBytes)
-		tx.Inputs[0].Signature = crypto.SignatureS{sig}
+		tx.Inputs[0].SignatureS = crypto.SignatureS{sig}
 		//fmt.Println("tx:", tx)
 
 		// Write request
@@ -117,7 +117,7 @@ func main() {
 		// Sign request
 		signBytes := tx.SignBytes(chainID)
 		sig := privAccountA.Sign(signBytes)
-		tx.Inputs[0].Signature = crypto.SignatureS{sig}
+		tx.Inputs[0].SignatureS = crypto.SignatureS{sig}
 		//fmt.Println("tx:", tx)
 
 		// Write request

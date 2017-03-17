@@ -113,7 +113,7 @@ func cmdSendTx(c *cli.Context) error {
 
 	// sign that puppy
 	signBytes := tx.SignBytes(chainID)
-	tx.Inputs[0].Signature = crypto.SignatureS{privKey.Sign(signBytes)}
+	tx.Inputs[0].SignatureS = crypto.SignatureS{privKey.Sign(signBytes)}
 
 	fmt.Println("Signed SendTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))
@@ -169,7 +169,7 @@ func AppTx(c *cli.Context, name string, data []byte) error {
 		Data:  data,
 	}
 
-	tx.Input.Signature = crypto.SignatureS{privKey.Sign(tx.SignBytes(chainID))}
+	tx.Input.SignatureS = crypto.SignatureS{privKey.Sign(tx.SignBytes(chainID))}
 
 	fmt.Println("Signed AppTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))

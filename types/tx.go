@@ -152,7 +152,7 @@ func (tx *SendTx) SignBytes(chainID string) []byte {
 	signBytes := wire.BinaryBytes(chainID)
 	sigz := make([]crypto.Signature, len(tx.Inputs))
 	for i, input := range tx.Inputs {
-		sigz[i] = input.Signature
+		sigz[i] = input.Signature.Signature
 		tx.Inputs[i].Signature.Signature = nil
 	}
 	signBytes = append(signBytes, wire.BinaryBytes(tx)...)

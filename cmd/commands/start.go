@@ -76,8 +76,6 @@ func cmdStart(c *cli.Context) error {
 		basecoinApp.RegisterPlugin(p.newPlugin())
 	}
 
-	fmt.Println("CHAIN ID", basecoinApp.GetState().GetChainID())
-
 	// if chain_id has not been set yet, load the genesis.
 	// else, assume it's been loaded
 	if basecoinApp.GetState().GetChainID() == "" {
@@ -93,16 +91,15 @@ func cmdStart(c *cli.Context) error {
 		}
 	}
 
-	fmt.Println("CHAIN ID", basecoinApp.GetState().GetChainID())
-
+	chainID := basecoinApp.GetState().GetChainID()
 	if c.Bool("without-tendermint") {
+		log.Notice("Starting Basecoin without Tendermint", "chain_id", chainID)
 		// run just the abci app/server
-		if err := startBasecoinABCI(c, basecoinApp); err != nil {
-			return err
-		}
+		return startBasecoinABCI(c, basecoinApp)
 	} else {
+		log.Notice("Starting Basecoin with Tendermint", "chain_id", chainID)
 		// start the app with tendermint in-process
-		startTendermint(basecoinDir, basecoinApp)
+		return startTendermint(basecoinDir, basecoinApp)
 	}
 
 	return nil
@@ -123,7 +120,7 @@ func startBasecoinABCI(c *cli.Context, basecoinApp *app.Basecoin) error {
 
 }
 
-func startTendermint(dir string, basecoinApp *app.Basecoin) {
+func startTendermint(dir string, basecoinApp *app.Basecoin) error {
 	// Get configuration
 	tmConfig := tmcfg.GetConfig(dir)
 
@@ -136,11 +133,16 @@ func startTendermint(dir string, basecoinApp *app.Basecoin) {
 	privValidator := tmtypes.LoadOrGenPrivValidator(privValidatorFile)
 	n := node.NewNode(tmConfig, privValidator, proxy.NewLocalClientCreator(basecoinApp))
 
-	n.Start()
+	_, err := n.Start()
+	if err != nil {
+		return err
+	}
 
 	// Wait forever
 	cmn.TrapSignal(func() {
 		// Cleanup
 		n.Stop()
 	})
+
+	return nil
 }

@@ -36,6 +36,13 @@ type PubKeyS struct {
 	PubKey
 }
 
+func WrapPubKey(pk PubKey) PubKeyS {
+	for ppk, ok := pk.(PubKeyS); ok; ppk, ok = pk.(PubKeyS) {
+		pk = ppk.PubKey
+	}
+	return PubKeyS{pk}
+}
+
 func (p PubKeyS) MarshalJSON() ([]byte, error) {
 	return pubKeyMapper.ToJSON(p.PubKey)
 }

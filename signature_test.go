@@ -107,3 +107,37 @@ func TestSignatureEncodings(t *testing.T) {
 		assert.True(t, strings.HasPrefix(text, tc.sigName))
 	}
 }
+
+func TestWrapping(t *testing.T) {
+	assert := assert.New(t)
+
+	// construct some basic constructs
+	msg := CRandBytes(128)
+	priv := GenPrivKeyEd25519()
+	pub := priv.PubKey()
+	sig := priv.Sign(msg)
+
+	// do some wrapping
+	pubs := []PubKeyS{
+		WrapPubKey(nil),
+		WrapPubKey(pub),
+		WrapPubKey(WrapPubKey(WrapPubKey(WrapPubKey(pub)))),
+		WrapPubKey(PubKeyS{PubKeyS{PubKeyS{pub}}}),
+	}
+	for _, p := range pubs {
+		_, ok := p.PubKey.(PubKeyS)
+		assert.False(ok)
+	}
+
+	sigs := []SignatureS{
+		WrapSignature(nil),
+		WrapSignature(sig),
+		WrapSignature(WrapSignature(WrapSignature(WrapSignature(sig)))),
+		WrapSignature(SignatureS{SignatureS{SignatureS{sig}}}),
+	}
+	for _, s := range sigs {
+		_, ok := s.Signature.(SignatureS)
+		assert.False(ok)
+	}
+
+}

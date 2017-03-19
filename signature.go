@@ -31,6 +31,13 @@ type SignatureS struct {
 	Signature
 }
 
+func WrapSignature(sig Signature) SignatureS {
+	for ssig, ok := sig.(SignatureS); ok; ssig, ok = sig.(SignatureS) {
+		sig = ssig.Signature
+	}
+	return SignatureS{sig}
+}
+
 func (p SignatureS) MarshalJSON() ([]byte, error) {
 	return sigMapper.ToJSON(p.Signature)
 }

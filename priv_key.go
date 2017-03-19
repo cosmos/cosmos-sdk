@@ -41,6 +41,13 @@ type PrivKeyS struct {
 	PrivKey
 }
 
+func WrapPrivKey(pk PrivKey) PrivKeyS {
+	for ppk, ok := pk.(PrivKeyS); ok; ppk, ok = pk.(PrivKeyS) {
+		pk = ppk.PrivKey
+	}
+	return PrivKeyS{pk}
+}
+
 func (p PrivKeyS) MarshalJSON() ([]byte, error) {
 	return privKeyMapper.ToJSON(p.PrivKey)
 }

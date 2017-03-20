@@ -83,15 +83,24 @@ func TestDirectoryHandling(t *testing.T) {
 	newDir := path.Join(os.TempDir(), "file-test-dir")
 	_, err := os.Open(newDir)
 	assert.True(os.IsNotExist(err))
+	defer os.RemoveAll(newDir)
+
+	// now, check with two levels deep....
+	parentDir := path.Join(os.TempDir(), "missing-dir")
+	nestedDir := path.Join(parentDir, "lots", "of", "levels", "here")
+	_, err = os.Open(parentDir)
+	assert.True(os.IsNotExist(err))
+	defer os.RemoveAll(parentDir)
 
 	// create a new storage, and verify it creates the directory with good permissions
-	New(newDir)
-	defer os.RemoveAll(newDir)
-	d, err := os.Open(newDir)
-	require.Nil(err)
-	defer d.Close()
+	for _, dir := range []string{newDir, nestedDir, newDir} {
+		New(dir)
+		d, err := os.Open(dir)
+		require.Nil(err)
+		defer d.Close()
 
-	stat, err := d.Stat()
-	require.Nil(err)
-	assert.Equal(dirPerm, stat.Mode()&os.ModePerm)
+		stat, err := d.Stat()
+		require.Nil(err)
+		assert.Equal(dirPerm, stat.Mode()&os.ModePerm)
+	}
 }

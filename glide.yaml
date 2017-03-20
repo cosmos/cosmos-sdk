@@ -1,0 +1,19 @@
+package: github.com/tendermint/go-keys
+import:
+- package: github.com/bgentry/speakeasy
+- package: github.com/gorilla/handlers
+- package: github.com/gorilla/mux
+- package: github.com/pkg/errors
+- package: github.com/spf13/cobra
+- package: github.com/spf13/viper
+- package: github.com/tendermint/go-crypto
+  version: develop
+- package: github.com/tendermint/go-data
+  subpackages:
+  - base58
+- package: gopkg.in/go-playground/validator.v9
+testImport:
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
+  - require

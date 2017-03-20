@@ -12,9 +12,9 @@ import (
 func PrivAccountFromSecret(secret string) PrivAccount {
 	privKey := crypto.GenPrivKeyEd25519FromSecret([]byte(secret))
 	privAccount := PrivAccount{
-		PrivKeyS: crypto.PrivKeyS{privKey},
+		PrivKeyS: crypto.WrapPrivKey(privKey),
 		Account: Account{
-			PubKey: crypto.PubKeyS{privKey.PubKey()},
+			PubKey: crypto.WrapPubKey(privKey.PubKey()),
 		},
 	}
 	return privAccount
@@ -31,9 +31,9 @@ func RandAccounts(num int, minAmount int64, maxAmount int64) []PrivAccount {
 		}
 
 		privKey := crypto.GenPrivKeyEd25519()
-		pubKey := crypto.PubKeyS{privKey.PubKey()}
+		pubKey := crypto.WrapPubKey(privKey.PubKey())
 		privAccs[i] = PrivAccount{
-			PrivKeyS: crypto.PrivKeyS{privKey},
+			PrivKeyS: crypto.WrapPrivKey(privKey),
 			Account: Account{
 				PubKey:  pubKey,
 				Balance: Coins{Coin{"", balance}},

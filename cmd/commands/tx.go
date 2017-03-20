@@ -123,7 +123,7 @@ func sendTxCmd(cmd *cobra.Command, args []string) error {
 
 	// sign that puppy
 	signBytes := tx.SignBytes(chainIDFlag)
-	tx.Inputs[0].Signature = crypto.SignatureS{privKey.Sign(signBytes)}
+	tx.Inputs[0].Signature = crypto.WrapSignature(privKey.Sign(signBytes))
 
 	fmt.Println("Signed SendTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))
@@ -179,7 +179,7 @@ func AppTx(name string, data []byte) error {
 		Data:  data,
 	}
 
-	tx.Input.Signature = crypto.SignatureS{privKey.Sign(tx.SignBytes(chainIDFlag))}
+	tx.Input.Signature = crypto.WrapSignature(privKey.Sign(tx.SignBytes(chainIDFlag)))
 
 	fmt.Println("Signed AppTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))

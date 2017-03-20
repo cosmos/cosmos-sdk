@@ -104,13 +104,7 @@ func NewTxInput(pubKey crypto.PubKey, coins Coins, sequence int) TxInput {
 		Sequence: sequence,
 	}
 	if sequence == 1 {
-		// safely wrap if needed
-		// TODO: extract this as utility function?
-		ps, ok := pubKey.(crypto.PubKeyS)
-		if !ok {
-			ps = crypto.PubKeyS{pubKey}
-		}
-		input.PubKey = ps
+		input.PubKey = crypto.WrapPubKey(pubKey)
 	}
 	return input
 }
@@ -151,25 +145,21 @@ type SendTx struct {
 func (tx *SendTx) SignBytes(chainID string) []byte {
 	signBytes := wire.BinaryBytes(chainID)
 	sigz := make([]crypto.Signature, len(tx.Inputs))
-	for i, input := range tx.Inputs {
-		sigz[i] = input.Signature.Signature
-		tx.Inputs[i].Signature.Signature = nil
+	for i := range tx.Inputs {
+		sigz[i] = tx.Inputs[i].Signature
+		tx.Inputs[i].Signature = crypto.Signature{}
 	}
 	signBytes = append(signBytes, wire.BinaryBytes(tx)...)
 	for i := range tx.Inputs {
-		tx.Inputs[i].Signature.Signature = sigz[i]
+		tx.Inputs[i].Signature = sigz[i]
 	}
 	return signBytes
 }
 
 func (tx *SendTx) SetSignature(addr []byte, sig crypto.Signature) bool {
-	sigs, ok := sig.(crypto.SignatureS)
-	if !ok {
-		sigs = crypto.SignatureS{sig}
-	}
 	for i, input := range tx.Inputs {
 		if bytes.Equal(input.Address, addr) {
-			tx.Inputs[i].Signature = sigs
+			tx.Inputs[i].Signature = crypto.WrapSignature(sig)
 			return true
 		}
 	}
@@ -193,18 +183,14 @@ type AppTx struct {
 func (tx *AppTx) SignBytes(chainID string) []byte {
 	signBytes := wire.BinaryBytes(chainID)
 	sig := tx.Input.Signature
-	tx.Input.Signature.Signature = nil
+	tx.Input.Signature = crypto.WrapSignature(nil)
 	signBytes = append(signBytes, wire.BinaryBytes(tx)...)
 	tx.Input.Signature = sig
 	return signBytes
 }
 
 func (tx *AppTx) SetSignature(sig crypto.Signature) bool {
-	sigs, ok := sig.(crypto.SignatureS)
-	if !ok {
-		sigs = crypto.SignatureS{sig}
-	}
-	tx.Input.Signature = sigs
+	tx.Input.Signature = crypto.WrapSignature(sig)
 	return true
 }
 

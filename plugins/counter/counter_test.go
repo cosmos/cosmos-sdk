@@ -53,7 +53,7 @@ func TestCounterPlugin(t *testing.T) {
 		signBytes := tx.SignBytes(chainID)
 		// t.Logf("Sign bytes: %X\n", signBytes)
 		sig := test1PrivAcc.Sign(signBytes)
-		tx.Input.Signature = crypto.SignatureS{sig}
+		tx.Input.Signature = crypto.WrapSignature(sig)
 		// t.Logf("Signed TX bytes: %X\n", wire.BinaryBytes(struct{ types.Tx }{tx}))
 
 		// Write request

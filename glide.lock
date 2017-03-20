@@ -70,7 +70,7 @@ imports:
 - name: github.com/tendermint/go-config
   version: 620dcbbd7d587cf3599dedbf329b64311b0c307a
 - name: github.com/tendermint/go-crypto
-  version: 0ca2c6fdb0706001ca4c4b9b80c9f428e8cf39da
+  version: 8ff4ce222d32c2328ff0d2bf121fcd34254c03c1
 - name: github.com/tendermint/go-data
   version: e7fcc6d081ec8518912fcdc103188275f83a3ee5
 - name: github.com/tendermint/go-db

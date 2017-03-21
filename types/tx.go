@@ -64,11 +64,11 @@ func (p *TxS) UnmarshalJSON(data []byte) (err error) {
 //-----------------------------------------------------------------------------
 
 type TxInput struct {
-	Address   data.Bytes        `json:"address"`   // Hash of the PubKey
-	Coins     Coins             `json:"coins"`     //
-	Sequence  int               `json:"sequence"`  // Must be 1 greater than the last committed TxInput
-	Signature crypto.SignatureS `json:"signature"` // Depends on the PubKey type and the whole Tx
-	PubKey    crypto.PubKeyS    `json:"pub_key"`   // Is present iff Sequence == 0
+	Address   data.Bytes       `json:"address"`   // Hash of the PubKey
+	Coins     Coins            `json:"coins"`     //
+	Sequence  int              `json:"sequence"`  // Must be 1 greater than the last committed TxInput
+	Signature crypto.Signature `json:"signature"` // Depends on the PubKey type and the whole Tx
+	PubKey    crypto.PubKey    `json:"pub_key"`   // Is present iff Sequence == 0
 }
 
 func (txIn TxInput) ValidateBasic() abci.Result {

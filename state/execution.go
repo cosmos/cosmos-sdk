@@ -244,7 +244,7 @@ func validateInputAdvanced(acc *types.Account, signBytes []byte, in types.TxInpu
 		return abci.ErrBaseInsufficientFunds.AppendLog(cmn.Fmt("balance is %v, tried to send %v", balance, in.Coins))
 	}
 	// Check signatures
-	if !acc.PubKey.VerifyBytes(signBytes, in.Signature.Signature) {
+	if !acc.PubKey.VerifyBytes(signBytes, in.Signature) {
 		return abci.ErrBaseInvalidSignature.AppendLog(cmn.Fmt("SignBytes: %X", signBytes))
 	}
 	return abci.OK

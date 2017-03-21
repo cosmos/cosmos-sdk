@@ -136,7 +136,7 @@ func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 	// handle special path for account info
 	if reqQuery.Path == "/account" {
 		reqQuery.Path = "/key"
-		reqQuery.Data = append([]byte("base/a/"), reqQuery.Data...)
+		reqQuery.Data = sm.AccountKey(reqQuery.Data)
 	}
 
 	resQuery, err := app.eyesCli.QuerySync(reqQuery)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-crypto"
 )
@@ -48,7 +49,7 @@ func TestExecution(t *testing.T) {
 		for _, acc := range accs {
 			tx := types.NewTxInput(
 				acc.Account.PubKey,
-				types.Coins{{"mycoin", 10}},
+				types.Coins{{"mycoin", 5}},
 				1)
 			txs = append(txs, tx)
 		}
@@ -61,7 +62,7 @@ func TestExecution(t *testing.T) {
 		for _, acc := range accs {
 			tx := types.TxOutput{
 				acc.Account.PubKey.Address(),
-				types.Coins{{"mycoin", 9}}}
+				types.Coins{{"mycoin", 4}}}
 			txs = append(txs, tx)
 		}
 		return txs
@@ -148,9 +149,7 @@ func TestExecution(t *testing.T) {
 			_, res1 := getOrMakeOutputs(state, nil, txs1)
 			mapRes2, res2 := getOrMakeOutputs(state, nil, txs2)
 
-			//TODO Fix this commented out test
 			//test the map results
-			//acc2, map2ok := mapRes2[string(txs2[0].Address)]
 			_, map2ok := mapRes2[string(txs2[0].Address)]
 
 			return []er{
@@ -158,7 +157,6 @@ func TestExecution(t *testing.T) {
 				{!res2.IsErr(), "getOrMakeOutputs: error when sending to new account"},
 				{map2ok, "getOrMakeOutputs: account output does not contain new account map item"},
 			}
-			//{accs2[0].PubKey.Equals(acc2.PubKey), "getOrMakeOutputs: account output does not contain new account pointer"}}
 		}},
 
 		//validate input basic
@@ -294,30 +292,48 @@ func TestExecution(t *testing.T) {
 				Outputs: accs2TxOutputs(accsBar),
 			}
 
-			initBalFoo := accsFooBar[0].Account.Balance
-			initBalBar := accsFooBar[1].Account.Balance
-			acc2State(accsFooBar)
+			acc2State(accsFoo)
+			acc2State(accsBar)
+			signSend(txs, accsFoo)
 
-			//sign that puppy
-			signBytes := txs.SignBytes(chainID)
-			sig := accsFoo[0].Sign(signBytes)
-			txs.Inputs[0].Signature = crypto.SignatureS{sig}
+			exec := func(checkTx bool) (ExecTxRes abci.Result, foo, fooExp, bar, barExp types.Coins) {
 
-			//TODO tests for CheckTx, some bad transactions
-			err := ExecTx(state, nil, txs, false, nil)
-			fmt.Println("ERR", err)
+				initBalFoo := state.GetAccount(accsFoo[0].Account.PubKey.Address()).Balance
+				initBalBar := state.GetAccount(accsBar[0].Account.PubKey.Address()).Balance
+				res := ExecTx(state, nil, txs, checkTx, nil)
+				endBalFoo := state.GetAccount(accsFoo[0].Account.PubKey.Address()).Balance
+				endBalBar := state.GetAccount(accsBar[0].Account.PubKey.Address()).Balance
+				decrBalFooExp := txs.Outputs[0].Coins.Plus(types.Coins{txs.Fee})
+				return res, endBalFoo, initBalFoo.Minus(decrBalFooExp), endBalBar, initBalBar.Plus(txs.Outputs[0].Coins)
+			}
 
-			endBalFoo := state.GetAccount(accsFooBar[0].Account.PubKey.Address()).Balance
-			endBalBar := state.GetAccount(accsFooBar[1].Account.PubKey.Address()).Balance
-			decrBalFoo := initBalFoo.Minus(endBalFoo)
-			decrBalFooExp := txs.Outputs[0].Coins.Plus(types.Coins{txs.Fee})
-			incrBalBar := endBalBar.Minus(initBalBar)
+			//Bad Balance
+			accsFoo[0].Balance = types.Coins{{"mycoin", 2}}
+			acc2State(accsFoo)
+			res1, _, _, _, _ := exec(true)
+			res2, foo2, fooexp2, bar2, barexp2 := exec(false)
+
+			//Regular CheckTx
+			reset()
+			acc2State(accsFoo)
+			acc2State(accsBar)
+			res3, _, _, _, _ := exec(true)
+
+			//Regular DeliverTx
+			reset()
+			acc2State(accsFoo)
+			acc2State(accsBar)
+			res4, foo4, fooexp4, bar4, barexp4 := exec(false)
 
 			return []er{
-				{decrBalFoo.IsEqual(decrBalFooExp),
-					fmt.Sprintf("ExecTx(sendTx): unexpected change in input coins. exp: %v, change: %v", decrBalFooExp.String(), decrBalFoo.String())},
-				{incrBalBar.IsEqual(txs.Outputs[0].Coins),
-					fmt.Sprintf("ExecTx(sendTx): unexpected change in output coins. exp: %v, change: %v", incrBalBar.String(), txs.Outputs[0].Coins.String())},
+				{res1.IsErr(), fmt.Sprintf("ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res1)},
+				{res2.IsErr(), fmt.Sprintf("ExecTx/Bad DeliverTx: Expected error return from ExecTx, returned: %v", res2)},
+				{!foo2.IsEqual(fooexp2), fmt.Sprintf("ExecTx/Bad DeliverTx: shouldn't be equal, foo: %v, fooExp: %v", foo2, fooexp2)},
+				{!bar2.IsEqual(barexp2), fmt.Sprintf("ExecTx/Bad DeliverTx: shouldn't be equal, bar: %v, barExp: %v", bar2, barexp2)},
+				{res3.IsOK(), fmt.Sprintf("ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", res3)},
+				{res4.IsOK(), fmt.Sprintf("ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res4)},
+				{foo4.IsEqual(fooexp4), fmt.Sprintf("ExecTx/good DeliverTx: unexpected change in input coins, foo: %v, fooExp: %v", foo4, fooexp4)},
+				{bar4.IsEqual(barexp4), fmt.Sprintf("ExecTx/good DeliverTx: unexpected change in output coins, bar: %v, barExp: %v", bar4, barexp4)},
 			}
 		}},
 	}

@@ -103,7 +103,6 @@ func TestEncodeDemo(t *testing.T) {
 	for i, tc := range cases {
 		// make sure it is proper to start
 		require.Equal(tc.expected, tc.in.Greet())
-		fmt.Println(tc.expected)
 
 		// now, try to encode as binary
 		b, err := data.ToWire(tc.in)

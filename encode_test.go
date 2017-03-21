@@ -50,17 +50,17 @@ func checkJSON(t *testing.T, in interface{}, reader interface{}, typ string) {
 
 func TestKeyEncodings(t *testing.T) {
 	cases := []struct {
-		privKey PrivKeyS
+		privKey PrivKey
 		keyType byte
 		keyName string
 	}{
 		{
-			privKey: PrivKeyS{GenPrivKeyEd25519()},
+			privKey: WrapPrivKey(GenPrivKeyEd25519()),
 			keyType: TypeEd25519,
 			keyName: NameEd25519,
 		},
 		{
-			privKey: PrivKeyS{GenPrivKeySecp256k1()},
+			privKey: WrapPrivKey(GenPrivKeySecp256k1()),
 			keyType: TypeSecp256k1,
 			keyName: NameSecp256k1,
 		},
@@ -68,19 +68,19 @@ func TestKeyEncodings(t *testing.T) {
 
 	for _, tc := range cases {
 		// check (de/en)codings of private key
-		priv2 := PrivKeyS{}
+		priv2 := PrivKey{}
 		checkWire(t, tc.privKey, &priv2, tc.keyType)
 		assert.EqualValues(t, tc.privKey, priv2)
-		priv3 := PrivKeyS{}
+		priv3 := PrivKey{}
 		checkJSON(t, tc.privKey, &priv3, tc.keyName)
 		assert.EqualValues(t, tc.privKey, priv3)
 
 		// check (de/en)codings of public key
-		pubKey := PubKeyS{tc.privKey.PubKey()}
-		pub2 := PubKeyS{}
+		pubKey := tc.privKey.PubKey()
+		pub2 := PubKey{}
 		checkWire(t, pubKey, &pub2, tc.keyType)
 		assert.EqualValues(t, pubKey, pub2)
-		pub3 := PubKeyS{}
+		pub3 := PubKey{}
 		checkJSON(t, pubKey, &pub3, tc.keyName)
 		assert.EqualValues(t, pubKey, pub3)
 	}
@@ -95,17 +95,17 @@ func toFromJSON(t *testing.T, in interface{}, recvr interface{}) {
 
 func TestNilEncodings(t *testing.T) {
 	// make sure sigs are okay with nil
-	a, b := SignatureS{}, SignatureS{}
+	a, b := Signature{}, Signature{}
 	toFromJSON(t, a, &b)
 	assert.EqualValues(t, a, b)
 
 	// make sure sigs are okay with nil
-	c, d := PubKeyS{}, PubKeyS{}
+	c, d := PubKey{}, PubKey{}
 	toFromJSON(t, c, &d)
 	assert.EqualValues(t, c, d)
 
 	// make sure sigs are okay with nil
-	e, f := PrivKeyS{}, PrivKeyS{}
+	e, f := PrivKey{}, PrivKey{}
 	toFromJSON(t, e, &f)
 	assert.EqualValues(t, e, f)
 

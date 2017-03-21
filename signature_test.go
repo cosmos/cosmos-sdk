@@ -22,9 +22,9 @@ func TestSignAndValidateEd25519(t *testing.T) {
 	assert.True(t, pubKey.VerifyBytes(msg, sig))
 
 	// Mutate the signature, just one bit.
-	sigEd := sig.(SignatureEd25519)
-	sigEd[0] ^= byte(0x01)
-	sig = Signature(sigEd)
+	sigEd := sig.Unwrap().(SignatureEd25519)
+	sigEd[7] ^= byte(0x01)
+	sig = WrapSignature(sigEd)
 
 	assert.False(t, pubKey.VerifyBytes(msg, sig))
 }
@@ -39,28 +39,28 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 	assert.True(t, pubKey.VerifyBytes(msg, sig))
 
 	// Mutate the signature, just one bit.
-	sigEd := sig.(SignatureSecp256k1)
-	sigEd[0] ^= byte(0x01)
-	sig = Signature(sigEd)
+	sigEd := sig.Unwrap().(SignatureSecp256k1)
+	sigEd[3] ^= byte(0x01)
+	sig = WrapSignature(sigEd)
 
 	assert.False(t, pubKey.VerifyBytes(msg, sig))
 }
 
 func TestSignatureEncodings(t *testing.T) {
 	cases := []struct {
-		privKey PrivKeyS
+		privKey PrivKey
 		sigSize int
 		sigType byte
 		sigName string
 	}{
 		{
-			privKey: PrivKeyS{GenPrivKeyEd25519()},
+			privKey: WrapPrivKey(GenPrivKeyEd25519()),
 			sigSize: ed25519.SignatureSize,
 			sigType: TypeEd25519,
 			sigName: NameEd25519,
 		},
 		{
-			privKey: PrivKeyS{GenPrivKeySecp256k1()},
+			privKey: WrapPrivKey(GenPrivKeySecp256k1()),
 			sigSize: 0, // unknown
 			sigType: TypeSecp256k1,
 			sigName: NameSecp256k1,
@@ -69,10 +69,10 @@ func TestSignatureEncodings(t *testing.T) {
 
 	for _, tc := range cases {
 		// note we embed them from the beginning....
-		pubKey := PubKeyS{tc.privKey.PubKey()}
+		pubKey := tc.privKey.PubKey()
 
 		msg := CRandBytes(128)
-		sig := SignatureS{tc.privKey.Sign(msg)}
+		sig := tc.privKey.Sign(msg)
 
 		// store as wire
 		bin, err := data.ToWire(sig)
@@ -83,7 +83,7 @@ func TestSignatureEncodings(t *testing.T) {
 		assert.Equal(t, tc.sigType, bin[0])
 
 		// and back
-		sig2 := SignatureS{}
+		sig2 := Signature{}
 		err = data.FromWire(bin, &sig2)
 		require.Nil(t, err, "%+v", err)
 		assert.EqualValues(t, sig, sig2)
@@ -95,7 +95,7 @@ func TestSignatureEncodings(t *testing.T) {
 		assert.True(t, strings.Contains(string(js), tc.sigName))
 
 		// and back
-		sig3 := SignatureS{}
+		sig3 := Signature{}
 		err = data.FromJSON(js, &sig3)
 		require.Nil(t, err, "%+v", err)
 		assert.EqualValues(t, sig, sig3)
@@ -118,25 +118,25 @@ func TestWrapping(t *testing.T) {
 	sig := priv.Sign(msg)
 
 	// do some wrapping
-	pubs := []PubKeyS{
+	pubs := []PubKey{
 		WrapPubKey(nil),
 		WrapPubKey(pub),
 		WrapPubKey(WrapPubKey(WrapPubKey(WrapPubKey(pub)))),
-		WrapPubKey(PubKeyS{PubKeyS{PubKeyS{pub}}}),
+		WrapPubKey(PubKey{PubKey{PubKey{pub}}}),
 	}
 	for _, p := range pubs {
-		_, ok := p.PubKey.(PubKeyS)
+		_, ok := p.PubKeyInner.(PubKey)
 		assert.False(ok)
 	}
 
-	sigs := []SignatureS{
+	sigs := []Signature{
 		WrapSignature(nil),
 		WrapSignature(sig),
 		WrapSignature(WrapSignature(WrapSignature(WrapSignature(sig)))),
-		WrapSignature(SignatureS{SignatureS{SignatureS{sig}}}),
+		WrapSignature(Signature{Signature{Signature{sig}}}),
 	}
 	for _, s := range sigs {
-		_, ok := s.Signature.(SignatureS)
+		_, ok := s.SignatureInner.(Signature)
 		assert.False(ok)
 	}
 

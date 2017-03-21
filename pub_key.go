@@ -27,8 +27,8 @@ var pubKeyMapper data.Mapper
 // register both public key types with go-data (and thus go-wire)
 func init() {
 	pubKeyMapper = data.NewMapper(PubKeyS{}).
-		RegisterInterface(PubKeyEd25519{}, NameEd25519, TypeEd25519).
-		RegisterInterface(PubKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
+		RegisterImplementation(PubKeyEd25519{}, NameEd25519, TypeEd25519).
+		RegisterImplementation(PubKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
 }
 
 // PubKeyS add json serialization to PubKey

@@ -32,8 +32,8 @@ var privKeyMapper data.Mapper
 // register both private key types with go-data (and thus go-wire)
 func init() {
 	privKeyMapper = data.NewMapper(PrivKeyS{}).
-		RegisterInterface(PrivKeyEd25519{}, NameEd25519, TypeEd25519).
-		RegisterInterface(PrivKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
+		RegisterImplementation(PrivKeyEd25519{}, NameEd25519, TypeEd25519).
+		RegisterImplementation(PrivKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
 }
 
 // PrivKeyS add json serialization to PrivKey

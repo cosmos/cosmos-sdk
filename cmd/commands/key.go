@@ -75,13 +75,14 @@ func (k *Key) Sign(msg []byte) crypto.Signature {
 // Generates a new validator with private key.
 func genKey() *Key {
 	privKey := crypto.GenPrivKeyEd25519()
-	addrBytes := privKey.PubKey().Address()
+	pubKey := privKey.PubKey()
+	addrBytes := pubKey.Address()
 	var addr Address
 	copy(addr[:], addrBytes)
 	return &Key{
 		Address: addr,
-		PubKey:  crypto.PubKeyS{privKey.PubKey()},
-		PrivKey: crypto.PrivKeyS{privKey},
+		PubKey:  pubKey,
+		PrivKey: privKey.Wrap(),
 	}
 }
 

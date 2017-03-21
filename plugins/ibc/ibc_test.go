@@ -30,7 +30,7 @@ func genGenesisDoc(chainID string, numVals int) (*tm.GenesisDoc, []types.PrivAcc
 		name := cmn.Fmt("%v_val_%v", chainID, i)
 		privAcc := types.PrivAccountFromSecret(name)
 		genDoc.Validators = append(genDoc.Validators, tm.GenesisValidator{
-			PubKey: privAcc.PubKey.PubKey,
+			PubKey: privAcc.PubKey,
 			Amount: 1,
 			Name:   name,
 		})
@@ -268,9 +268,9 @@ func TestIBCPluginBadCommit(t *testing.T) {
 
 	// Update a chain with a broken commit
 	// Modify the first byte of the first signature
-	sig := commit.Precommits[0].Signature.(crypto.SignatureEd25519)
+	sig := commit.Precommits[0].Signature.Unwrap().(crypto.SignatureEd25519)
 	sig[0] += 1
-	commit.Precommits[0].Signature = sig
+	commit.Precommits[0].Signature = crypto.WrapSignature(sig)
 	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCUpdateChainTx{
 		Header: header,
 		Commit: commit,

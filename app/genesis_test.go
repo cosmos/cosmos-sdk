@@ -38,7 +38,7 @@ func TestLoadGenesis(t *testing.T) {
 	assert.EqualValues("blank", acct.Balance[0].Denom)
 
 	// and public key is parsed properly
-	apk := acct.PubKey.PubKey
+	apk := acct.PubKey.Unwrap()
 	require.NotNil(apk)
 	epk, ok := apk.(crypto.PubKeyEd25519)
 	if assert.True(ok) {

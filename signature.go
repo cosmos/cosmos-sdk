@@ -29,7 +29,7 @@ func init() {
 
 // Signature add json serialization to Signature
 type Signature struct {
-	SignatureInner
+	SignatureInner `json:"unwrap"`
 }
 
 func WrapSignature(pk SignatureInner) Signature {

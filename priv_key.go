@@ -38,7 +38,7 @@ func init() {
 
 // PrivKey handles all encoding and exposes methods
 type PrivKey struct {
-	PrivKeyInner
+	PrivKeyInner `json:"unwrap"`
 }
 
 func WrapPrivKey(pk PrivKeyInner) PrivKey {

@@ -1,12 +1,14 @@
 package crypto
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	data "github.com/tendermint/go-data"
+	wire "github.com/tendermint/go-wire"
 )
 
 type byter interface {
@@ -48,6 +50,18 @@ func checkJSON(t *testing.T, in interface{}, reader interface{}, typ string) {
 	assert.True(t, strings.Contains(string(js), parts[1]))
 }
 
+// make sure go-wire json can still figure this out...
+func checkWireJSON(t *testing.T, in interface{}, reader interface{}, typ byte) {
+	// test to and from binary
+	var err error
+	js := wire.JSONBytes(in)
+	btyp := fmt.Sprintf("[%d,", typ)
+	assert.True(t, strings.HasPrefix(string(js), btyp), string(js))
+
+	wire.ReadJSON(reader, js, &err)
+	require.Nil(t, err, "%+v", err)
+}
+
 func TestKeyEncodings(t *testing.T) {
 	cases := []struct {
 		privKey PrivKey
@@ -74,6 +88,9 @@ func TestKeyEncodings(t *testing.T) {
 		priv3 := PrivKey{}
 		checkJSON(t, tc.privKey, &priv3, tc.keyName)
 		assert.EqualValues(t, tc.privKey, priv3)
+		priv4 := PrivKey{}
+		checkWireJSON(t, tc.privKey, &priv4, tc.keyType)
+		assert.EqualValues(t, tc.privKey, priv4)
 
 		// check (de/en)codings of public key
 		pubKey := tc.privKey.PubKey()
@@ -83,6 +100,9 @@ func TestKeyEncodings(t *testing.T) {
 		pub3 := PubKey{}
 		checkJSON(t, pubKey, &pub3, tc.keyName)
 		assert.EqualValues(t, pubKey, pub3)
+		pub4 := PubKey{}
+		checkWireJSON(t, pubKey, &pub4, tc.keyType)
+		assert.EqualValues(t, pubKey, pub4)
 	}
 }
 

@@ -36,7 +36,7 @@ function waitForNode() {
 	i=0
         while [ "$ERR" != 0 ]; do
 		if [[ "$i" == 10 ]]; then
-			echo "waited to long for chain to start"
+			echo "waited too long for chain to start"
 			exit 1
 		fi
 		echo "...... still waiting on $addr"

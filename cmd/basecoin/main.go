@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/tendermint/basecoin/cmd/commands"
@@ -24,5 +25,9 @@ func main() {
 		commands.AccountCmd,
 		commands.UnsafeResetAllCmd,
 	}
-	app.Run(os.Args)
+	err := app.Run(os.Args)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }

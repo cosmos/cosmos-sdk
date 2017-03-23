@@ -119,9 +119,11 @@ func cmdSendTx(c *cli.Context) error {
 	fmt.Println(string(wire.JSONBytes(tx)))
 
 	// broadcast the transaction to tendermint
-	if _, _, err := broadcastTx(c, tx); err != nil {
+	data, log, err := broadcastTx(c, tx)
+	if err != nil {
 		return err
 	}
+	fmt.Printf("Response: %X ; %s\n", data, log)
 	return nil
 }
 

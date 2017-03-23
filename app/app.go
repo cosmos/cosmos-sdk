@@ -60,12 +60,12 @@ func (app *Basecoin) SetOption(key string, value string) string {
 		if plugin == nil {
 			return "Invalid plugin name: " + pluginName
 		}
-		log.Info("SetOption on plugin", "plugin", pluginName, "key", key, "value", value)
+		log.Notice("SetOption on plugin", "plugin", pluginName, "key", key, "value", value)
 		return plugin.SetOption(app.state, key, value)
 	} else {
 		// Set option on basecoin
 		switch key {
-		case "chainID":
+		case "chain_id":
 			app.state.SetChainID(value)
 			return "Success"
 		case "account":
@@ -75,7 +75,8 @@ func (app *Basecoin) SetOption(key string, value string) string {
 				return "Error decoding acc message: " + err.Error()
 			}
 			app.state.SetAccount(acc.PubKey.Address(), &acc)
-			log.Info("SetAccount", "addr", acc.PubKey.Address(), "acc", acc)
+			log.Notice("SetAccount", "addr", acc.PubKey.Address(), "acc", acc)
+
 			return "Success"
 		}
 		return "Unrecognized option key " + key

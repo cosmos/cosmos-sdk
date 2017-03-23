@@ -20,7 +20,7 @@ func TestCounterPlugin(t *testing.T) {
 	eyesCli := eyescli.NewLocalClient("", 0)
 	chainID := "test_chain_id"
 	bcApp := app.NewBasecoin(eyesCli)
-	bcApp.SetOption("base/chainID", chainID)
+	bcApp.SetOption("base/chain_id", chainID)
 	// t.Log(bcApp.Info())
 
 	// Add Counter plugin

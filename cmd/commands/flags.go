@@ -21,15 +21,9 @@ var (
 	// TODO: move to config file
 	// eyesCacheSizePtr := flag.Int("eyes-cache-size", 10000, "MerkleEyes db cache size, for embedded")
 
-	DirFlag = cli.StringFlag{
-		Name:  "dir",
-		Value: ".",
-		Usage: "Root directory",
-	}
-
-	InProcTMFlag = cli.BoolFlag{
-		Name:  "in-proc",
-		Usage: "Run Tendermint in-process with the App",
+	WithoutTendermintFlag = cli.BoolFlag{
+		Name:  "without-tendermint",
+		Usage: "Run the Basecoin app without Tendermint",
 	}
 )
 

@@ -18,7 +18,7 @@ func TestSendTx(t *testing.T) {
 	eyesCli := eyescli.NewLocalClient("", 0)
 	chainID := "test_chain_id"
 	bcApp := app.NewBasecoin(eyesCli)
-	bcApp.SetOption("base/chainID", chainID)
+	bcApp.SetOption("base/chain_id", chainID)
 	// t.Log(bcApp.Info())
 
 	test1PrivAcc := types.PrivAccountFromSecret("test1")
@@ -64,7 +64,7 @@ func TestSequence(t *testing.T) {
 	eyesCli := eyescli.NewLocalClient("", 0)
 	chainID := "test_chain_id"
 	bcApp := app.NewBasecoin(eyesCli)
-	bcApp.SetOption("base/chainID", chainID)
+	bcApp.SetOption("base/chain_id", chainID)
 	// t.Log(bcApp.Info())
 
 	// Get the test account

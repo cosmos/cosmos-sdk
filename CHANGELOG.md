@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 (March 23, 2017)
+
+IMPROVEMENTS:
+
+- CLI returns exit code 1 and logs error before exiting
+
 ## 0.3.0 (March 23, 2017)
 
 BREAKING CHANGES:

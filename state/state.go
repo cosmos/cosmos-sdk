@@ -28,12 +28,14 @@ func NewState(store types.KVStore) *State {
 
 func (s *State) SetChainID(chainID string) {
 	s.chainID = chainID
+	s.store.Set([]byte("base/chain_id"), []byte(chainID))
 }
 
 func (s *State) GetChainID() string {
-	if s.chainID == "" {
-		PanicSanity("Expected to have set SetChainID")
+	if s.chainID != "" {
+		return s.chainID
 	}
+	s.chainID = string(s.store.Get([]byte("base/chain_id")))
 	return s.chainID
 }
 

@@ -194,15 +194,15 @@ The relevant data is now in the `data` directory.
 We can start the two chains as follows:
 
 ```
-TMROOT=./data/chain1/tendermint tendermint node &> chain1_tendermint.log &
-basecoin start --dir ./data/chain1/basecoin &> chain1_basecoin.log &
+TMROOT=./data/chain1 tendermint node &> chain1_tendermint.log &
+BCHOME=./data/chain1 basecoin start --without-tendermint &> chain1_basecoin.log &
 ```
 
 and
 
 ```
-TMROOT=./data/chain2/tendermint tendermint node --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> chain2_tendermint.log &
-basecoin start --address tcp://localhost:36658 --dir ./data/chain2/basecoin &> chain2_basecoin.log &
+TMROOT=./data/chain2 tendermint node --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> chain2_tendermint.log &
+BCHOME=./data/chain2 basecoin start --without-tendermint --address tcp://localhost:36658 &> chain2_basecoin.log &
 ```
 
 Note how we refer to the relevant data directories. Also note how we have to set the various addresses for the second node so as not to conflict with the first.
@@ -224,14 +224,16 @@ For the sake of convenience, let's first set some environment variables:
 export CHAIN_ID1=test_chain_1
 export CHAIN_ID2=test_chain_2
 
-export CHAIN_FLAGS1="--chain_id $CHAIN_ID1 --from ./data/chain1/basecoin/key.json"
-export CHAIN_FLAGS2="--chain_id $CHAIN_ID2 --from ./data/chain2/basecoin/key.json --node tcp://localhost:36657"
+export CHAIN_FLAGS1="--chain_id $CHAIN_ID1 --from ./data/chain1/key.json"
+export CHAIN_FLAGS2="--chain_id $CHAIN_ID2 --from ./data/chain2/key.json --node tcp://localhost:36657"
+
+export BCHOME="."
 ```
 
 Let's start by registering `test_chain_1` on `test_chain_2`:
 
 ```
-basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 register --chain_id $CHAIN_ID1 --genesis ./data/chain1/tendermint/genesis.json
+basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 register --chain_id $CHAIN_ID1 --genesis ./data/chain1/genesis.json
 ```
 
 Now we can create the outgoing packet on `test_chain_1`:
@@ -265,7 +267,7 @@ The former is used as input for later commands; the latter is human-readable, so
 Let's send this updated information about `test_chain_1` to `test_chain_2`:
 
 ```
-basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 update --header 0x<header>--commit 0x<commit>
+basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 update --header 0x<header> --commit 0x<commit>
 ```
 
 where `<header>` and `<commit>` are the hex-encoded header and commit returned by the previous `block` command.
@@ -275,10 +277,10 @@ along with proof the packet was committed on `test_chain_1`. Since `test_chain_2
 of `test_chain_1`, it will be able to verify the proof!
 
 ```
-basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height <height + 1> --packet 0x<packet> --proof 0x<proof>
+basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height <height> --packet 0x<packet> --proof 0x<proof>
 ```
 
-Here, `<height + 1>` is one greater than the height retuned by the previous `query` command, and `<packet>` and `<proof>` are the
+Here, `<height>` is the height retuned by the previous `query` command, and `<packet>` and `<proof>` are the
 `value` and `proof` returned in that same query.
 
 Tada!

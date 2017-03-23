@@ -14,7 +14,6 @@ import (
 	client "github.com/tendermint/go-rpc/client"
 	"github.com/tendermint/go-wire"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 var TxFlags = []cli.Flag{
@@ -87,7 +86,7 @@ func cmdSendTx(c *cli.Context) error {
 	privKey := LoadKey(fromFile)
 
 	// get the sequence number for the tx
-	sequence, err := getSeq(c, privKey.Address)
+	sequence, err := getSeq(c, privKey.Address[:])
 	if err != nil {
 		return err
 	}
@@ -144,9 +143,9 @@ func AppTx(c *cli.Context, name string, data []byte) error {
 	gas := int64(c.Int("gas"))
 	chainID := c.String("chain_id")
 
-	privKey := tmtypes.LoadPrivValidator(fromFile)
+	privKey := LoadKey(fromFile)
 
-	sequence, err := getSeq(c, privKey.Address)
+	sequence, err := getSeq(c, privKey.Address[:])
 	if err != nil {
 		return err
 	}

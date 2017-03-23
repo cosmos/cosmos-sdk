@@ -12,7 +12,6 @@ import (
 
 	cmn "github.com/tendermint/go-common"
 	"github.com/tendermint/go-crypto"
-	// "github.com/tendermint/go-wire"
 )
 
 var (
@@ -35,7 +34,6 @@ var (
 
 func cmdNewKey(c *cli.Context) error {
 	key := genKey()
-	// keyJSON := wire.JSONBytesPretty(key)
 	keyJSON, err := json.MarshalIndent(key, "", "\t")
 	if err != nil {
 		return err
@@ -94,7 +92,6 @@ func LoadKey(keyFile string) *Key {
 	}
 	key := new(Key)
 	err = json.Unmarshal(keyJSONBytes, key)
-	// key := wire.ReadJSON(&Key{}, keyJSONBytes, &err).(*Key)
 	if err != nil {
 		cmn.Exit(cmn.Fmt("Error reading key from %v: %v\n", filePath, err))
 	}

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 (March 14, 2017)
+## 0.3.0 (March 23, 2017)
 
 BREAKING CHANGES:
 
@@ -47,6 +47,7 @@ To start just the ABCI app/server, use `basecoin start --without-tendermint`.
 ```
 
 Note the array of key-value pairs is now under `app_options.plugin_options` while the `app_options` themselves are well formed.
+We also changed `chainID` to `chain_id` and consolidated to have just one of them.
 
 FEATURES:
 

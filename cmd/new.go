@@ -50,7 +50,7 @@ func newPassword(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	info, err := manager.Create(name, pass, algo)
+	info, err := Manager.Create(name, pass, algo)
 	if err != nil {
 		fmt.Println(err.Error())
 		return

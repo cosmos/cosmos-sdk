@@ -50,7 +50,7 @@ func updatePassword(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	err = manager.Update(name, oldpass, newpass)
+	err = Manager.Update(name, oldpass, newpass)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {

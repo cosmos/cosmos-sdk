@@ -27,7 +27,7 @@ var listCmd = &cobra.Command{
 	Long: `Return a list of all public keys stored by this key manager
 along with their associated name and address.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		infos, err := manager.List()
+		infos, err := Manager.List()
 		if err != nil {
 			fmt.Println(err.Error())
 			return

@@ -5,6 +5,7 @@ import (
 
 	"github.com/bgentry/speakeasy"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 	data "github.com/tendermint/go-data"
 	keys "github.com/tendermint/go-keys"
 )
@@ -39,7 +40,7 @@ func getCheckPassword(prompt, prompt2 string) (string, error) {
 }
 
 func printInfo(info keys.Info) {
-	switch output {
+	switch viper.Get(OutputFlag) {
 	case "text":
 		addr, err := data.ToText(info.Address)
 		if err != nil {
@@ -60,7 +61,7 @@ func printInfo(info keys.Info) {
 }
 
 func printInfos(infos keys.Infos) {
-	switch output {
+	switch viper.Get(OutputFlag) {
 	case "text":
 		fmt.Println("All keys:")
 		for _, i := range infos {

@@ -15,26 +15,19 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	data "github.com/tendermint/go-data"
-	"github.com/tendermint/go-data/base58"
 	keys "github.com/tendermint/go-keys"
 	"github.com/tendermint/go-keys/cryptostore"
 	"github.com/tendermint/go-keys/storage/filestorage"
 )
 
+const KeySubdir = "keys"
+
 var (
-	rootDir string
-	output  string
-	keyDir  string
-	manager keys.Manager
+	Manager keys.Manager
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -46,87 +39,19 @@ var RootCmd = &cobra.Command{
 These keys may be in any format supported by go-crypto and can be
 used by light-clients, full nodes, or any other application that
 needs to sign with a private key.`,
-	PersistentPreRunE: bindFlags,
 }
 
-// Execute adds all child commands to the root command sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
-}
-
-func init() {
-	cobra.OnInitialize(initEnv)
-	RootCmd.PersistentFlags().StringP("root", "r", os.ExpandEnv("$HOME/.tlc"), "root directory for config and data")
-	RootCmd.PersistentFlags().String("keydir", "keys", "Directory to store private keys (subdir of root)")
-	RootCmd.PersistentFlags().StringP("output", "o", "text", "Output format (text|json)")
-	RootCmd.PersistentFlags().StringP("encoding", "e", "hex", "Binary encoding (hex|b64|btc)")
-}
-
-// initEnv sets to use ENV variables if set.
-func initEnv() {
-	// env variables with TM prefix (eg. TM_ROOT)
-	viper.SetEnvPrefix("TM")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.AutomaticEnv()
-}
-
-func bindFlags(cmd *cobra.Command, args []string) error {
-	// cmd.Flags() includes flags from this command and all persistent flags from the parent
-	if err := viper.BindPFlags(cmd.Flags()); err != nil {
-		return err
-	}
-
-	// rootDir is command line flag, env variable, or default $HOME/.tlc
-	rootDir = viper.GetString("root")
-	viper.SetConfigName("keys")  // name of config file (without extension)
-	viper.AddConfigPath(rootDir) // search root directory
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		// stderr, so if we redirect output to json file, this doesn't appear
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-	}
-
-	return validateFlags(cmd)
-}
-
-// validateFlags asserts all RootCmd flags are valid
-func validateFlags(cmd *cobra.Command) error {
-	// validate output format
-	output = viper.GetString("output")
-	switch output {
-	case "text", "json":
-	default:
-		return errors.Errorf("Unsupported output format: %s", output)
-	}
-
-	// validate and set encoding
-	enc := viper.GetString("encoding")
-	switch enc {
-	case "hex":
-		data.Encoder = data.HexEncoder
-	case "b64":
-		data.Encoder = data.B64Encoder
-	case "btc":
-		data.Encoder = base58.BTCEncoder
-	default:
-		return errors.Errorf("Unsupported encoding: %s", enc)
-	}
-
+// SetupKeys must be registered in main() on the top level command
+// here this is RootCmd, but if we embed keys in eg. light-client,
+// that must be responsible for the update
+func SetupKeys(cmd *cobra.Command, args []string) error {
 	// store the keys directory
-	keyDir = viper.GetString("keydir")
-	if !filepath.IsAbs(keyDir) {
-		keyDir = filepath.Join(rootDir, keyDir)
-	}
+	rootDir := viper.GetString("root")
+	keyDir := filepath.Join(rootDir, KeySubdir)
 	// and construct the key manager
-	manager = cryptostore.New(
+	Manager = cryptostore.New(
 		cryptostore.SecretBox,
 		filestorage.New(keyDir),
 	)
-
 	return nil
 }

@@ -25,6 +25,7 @@ import (
 
 type addrData struct {
 	Mnemonic string
+	Master   string
 	Seed     string
 	Priv     string
 	Pub      string
@@ -66,25 +67,30 @@ func TestHDToAddr(t *testing.T) {
 		pubB, _ := hex.DecodeString(d.Pub)
 		addrB, _ := hex.DecodeString(d.Addr)
 		seedB, _ := hex.DecodeString(d.Seed)
+		masterB, _ := hex.DecodeString(d.Master)
 
 		seed := bip39.NewSeed(d.Mnemonic, "")
 
 		fmt.Println(i, d.Mnemonic)
 
-		priv, pub := tylerSmith(seed)
-		// priv, pub := btcsuite(seed)
+		//master, priv, pub := tylerSmith(seed)
+		master, priv, pub := btcsuite(seed)
 
 		fmt.Printf("\t%X %X\n", seedB, seed)
+		fmt.Printf("\t%X %X\n", masterB, master)
 		fmt.Printf("\t%X %X\n", privB, priv)
 		fmt.Printf("\t%X %X\n", pubB, pub)
 		_, _ = priv, privB
+
+		assert.Equal(t, master, masterB, fmt.Sprintf("Expected masters to match for %d", i))
+
 		// assert.Equal(t, priv, privB, "Expected priv keys to match")
-		assert.Equal(t, pub, pubB, "Expected pub keys to match")
+		assert.Equal(t, pub, pubB, fmt.Sprintf("Expected pub keys to match for %d", i))
 
 		var pubT crypto.PubKeySecp256k1
 		copy(pubT[:], pub)
 		addr := pubT.Address()
-		assert.Equal(t, addr, addrB, "Expected addresses to match")
+		assert.Equal(t, addr, addrB, fmt.Sprintf("Expected addresses to match %d", i))
 
 		/*		if i%10 == 0 {
 				fmt.Printf("ADDR %d: %s %X %X\n", i, d.Mnemonic, addr, addrB)
@@ -99,7 +105,7 @@ func ifExit(err error, n int) {
 	}
 }
 
-func btcsuite(seed []byte) ([]byte, []byte) {
+func btcsuite(seed []byte) ([]byte, []byte, []byte) {
 	fmt.Println("HD")
 	masterKey, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
 	if err != nil {
@@ -135,11 +141,12 @@ func btcsuite(seed []byte) ([]byte, []byte) {
 
 	priv := ecpriv.Serialize()
 	pub := ecpub.SerializeCompressed()
-	return priv, pub
+	mkey, _ := masterKey.ECPrivKey()
+	return mkey.Serialize(), priv, pub
 }
 
 // return priv and pub
-func tylerSmith(seed []byte) ([]byte, []byte) {
+func tylerSmith(seed []byte) ([]byte, []byte, []byte) {
 	masterKey, err := bip32.NewMasterKey(seed)
 	if err != nil {
 		hmac := hmac.New(sha512.New, []byte("Bitcoin seed"))
@@ -172,5 +179,5 @@ func tylerSmith(seed []byte) ([]byte, []byte) {
 
 	priv := k.Key
 	pub := k.PublicKey().Key
-	return priv, pub
+	return masterKey.Key, priv, pub
 }

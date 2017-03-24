@@ -1,14 +1,14 @@
 package types
 
 import (
+	"fmt"
 	"testing"
-
-	cmn "github.com/tendermint/go-common"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCoins(t *testing.T) {
+	assert := assert.New(t)
 
 	//Define the coins to be used in tests
 	good := Coins{
@@ -42,24 +42,14 @@ func TestCoins(t *testing.T) {
 		Coin{"MINERAL", 1},
 	}
 
-	//define the list of coin tests
-	var testList = []struct {
-		testPass bool
-		errMsg   string
-	}{
-		{good.IsValid(), "Coins are valid"},
-		{good.IsPositive(), cmn.Fmt("Expected coins to be positive: %v", good)},
-		{good.IsGTE(empty), cmn.Fmt("Expected %v to be >= %v", good, empty)},
-		{!neg.IsPositive(), cmn.Fmt("Expected neg coins to not be positive: %v", neg)},
-		{len(sum) == 0, "Expected 0 coins"},
-		{!badSort1.IsValid(), "Coins are not sorted"},
-		{!badSort2.IsValid(), "Coins are not sorted"},
-		{!badAmt.IsValid(), "Coins cannot include 0 amounts"},
-		{!dup.IsValid(), "Duplicate coin"},
-	}
+	assert.True(good.IsValid(), "Coins are valid")
+	assert.True(good.IsPositive(), fmt.Sprintf("Expected coins to be positive: %v", good))
+	assert.True(good.IsGTE(empty), fmt.Sprintf("Expected %v to be >= %v", good, empty))
+	assert.False(neg.IsPositive(), fmt.Sprintf("Expected neg coins to not be positive: %v", neg))
+	assert.Zero(len(sum), "Expected 0 coins")
+	assert.False(badSort1.IsValid(), "Coins are not sorted")
+	assert.False(badSort2.IsValid(), "Coins are not sorted")
+	assert.False(badAmt.IsValid(), "Coins cannot include 0 amounts")
+	assert.False(dup.IsValid(), "Duplicate coin")
 
-	//execute the tests
-	for _, tl := range testList {
-		assert.True(t, tl.testPass, tl.errMsg)
-	}
 }

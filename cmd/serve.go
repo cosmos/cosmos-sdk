@@ -64,7 +64,7 @@ func serveHTTP(cmd *cobra.Command, args []string) error {
 	}
 
 	router := mux.NewRouter()
-	ks := server.New(Manager, viper.GetString("type"))
+	ks := server.New(GetKeyManager(), viper.GetString("type"))
 	ks.Register(router)
 
 	// only set cors for tcp listener

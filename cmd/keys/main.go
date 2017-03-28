@@ -21,7 +21,6 @@ import (
 )
 
 func main() {
-	cmd.RootCmd.PersistentPreRunE = cmd.SetupKeys
 	cmd.PrepareMainCmd(cmd.RootCmd, "TM", os.ExpandEnv("$HOME/.tlc"))
 	cmd.RootCmd.Execute()
 	// exec()

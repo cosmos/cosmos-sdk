@@ -32,7 +32,7 @@ var getCmd = &cobra.Command{
 		}
 		name := args[0]
 
-		info, err := Manager.Get(name)
+		info, err := GetKeyManager().Get(name)
 		if err != nil {
 			fmt.Println(err.Error())
 			return

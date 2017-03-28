@@ -27,7 +27,7 @@ import (
 const KeySubdir = "keys"
 
 var (
-	Manager keys.Manager
+	manager keys.Manager
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -41,17 +41,17 @@ used by light-clients, full nodes, or any other application that
 needs to sign with a private key.`,
 }
 
-// SetupKeys must be registered in main() on the top level command
-// here this is RootCmd, but if we embed keys in eg. light-client,
-// that must be responsible for the update
-func SetupKeys(cmd *cobra.Command, args []string) error {
-	// store the keys directory
-	rootDir := viper.GetString("root")
-	keyDir := filepath.Join(rootDir, KeySubdir)
-	// and construct the key manager
-	Manager = cryptostore.New(
-		cryptostore.SecretBox,
-		filestorage.New(keyDir),
-	)
-	return nil
+// GetKeyManager initializes a key manager based on the configuration
+func GetKeyManager() keys.Manager {
+	if manager == nil {
+		// store the keys directory
+		rootDir := viper.GetString("root")
+		keyDir := filepath.Join(rootDir, KeySubdir)
+		// and construct the key manager
+		manager = cryptostore.New(
+			cryptostore.SecretBox,
+			filestorage.New(keyDir),
+		)
+	}
+	return manager
 }

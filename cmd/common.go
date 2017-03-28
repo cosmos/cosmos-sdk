@@ -22,14 +22,15 @@ It is here for experimentation of re-use between go-keys and light-client.
 *********/
 
 const (
-	RootFlag   = "root"
-	OutputFlag = "output"
+	RootFlag     = "root"
+	OutputFlag   = "output"
+	EncodingFlag = "encoding"
 )
 
 func PrepareMainCmd(cmd *cobra.Command, envPrefix, defautRoot string) func() {
 	cobra.OnInitialize(func() { initEnv(envPrefix) })
 	cmd.PersistentFlags().StringP(RootFlag, "r", defautRoot, "root directory for config and data")
-	cmd.PersistentFlags().StringP("encoding", "e", "hex", "Binary encoding (hex|b64|btc)")
+	cmd.PersistentFlags().StringP(EncodingFlag, "e", "hex", "Binary encoding (hex|b64|btc)")
 	cmd.PersistentFlags().StringP(OutputFlag, "o", "text", "Output format (text|json)")
 	cmd.PersistentPreRunE = multiE(bindFlags, setEncoding, validateOutput, cmd.PersistentPreRunE)
 	return func() { execute(cmd) }

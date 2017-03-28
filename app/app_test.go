@@ -215,24 +215,3 @@ func TestQuery(t *testing.T) {
 	fmt.Println(resQueryPostCommit)
 	assert.NotEqual(resQueryPreCommit, resQueryPostCommit, "Query should change before/after commit")
 }
-
-//func TestCommit(t *testing.T) {
-//	assert := assert.New(t)
-//	tv := testValues{t: t}
-//	tv.appInit()
-//
-//	//After Delivered TX foo should have no more coins to send,
-//	// but because the state hasn't yet been committed, checkTx should still
-//	// pass but after a commit it shouldn't
-//	res, _, _, _, _ := tv.exec(tv.getTx(1), false)
-//	assert.True(res.IsOK(), fmt.Sprintf("Commit, CheckTx: Expected OK return from CheckTx, Error: %v", res))
-//
-//	res, _, _, _, _ = tv.exec(tv.getTx(2), true)
-//	assert.True(res.IsOK(), fmt.Sprintf("Commit, CheckTx: Expected OK return from CheckTx, Error: %v", res))
-//
-//	res = tv.app.Commit()
-//	assert.True(res.IsOK(), res)
-//
-//	res, _, _, _, _ = tv.exec(tv.getTx(3), true)
-//	assert.True(res.IsErr(), fmt.Sprintf("Commit, CheckTx: Expected error return from CheckTx, returned: %v", res))
-//}

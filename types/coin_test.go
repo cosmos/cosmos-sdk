@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCoins(t *testing.T) {
@@ -52,4 +53,34 @@ func TestCoins(t *testing.T) {
 	assert.False(badAmt.IsValid(), "Coins cannot include 0 amounts")
 	assert.False(dup.IsValid(), "Duplicate coin")
 
+}
+
+//Test the parse coin and parse coins functionality
+func TestParse(t *testing.T) {
+	assert, require := assert.New(t), require.New(t)
+
+	makeCoin := func(str string) Coin {
+		coin, err := ParseCoin(str)
+		require.Nil(err)
+		return coin
+	}
+
+	makeCoins := func(str string) Coins {
+		coin, err := ParseCoins(str)
+		require.Nil(err)
+		return coin
+	}
+
+	//testing ParseCoin Function
+	assert.Equal(Coin{}, makeCoin(""), "ParseCoin makes bad empty coin")
+	assert.Equal(Coin{"fooCoin", 1}, makeCoin("1fooCoin"), "ParseCoin makes bad coins")
+	assert.Equal(Coin{"barCoin", 10}, makeCoin("10 barCoin"), "ParseCoin makes bad coins")
+
+	//testing ParseCoins Function
+	assert.True(Coins{{"fooCoin", 1}}.IsEqual(makeCoins("1fooCoin")),
+		"ParseCoins doesn't parse a single coin")
+	assert.True(Coins{{"barCoin", 99}, {"fooCoin", 1}}.IsEqual(makeCoins("99barCoin,1fooCoin")),
+		"ParseCoins doesn't properly parse two coins")
+	assert.True(Coins{{"barCoin", 99}, {"fooCoin", 1}}.IsEqual(makeCoins("99 barCoin, 1 fooCoin")),
+		"ParseCoins doesn't properly parse two coins which use spaces")
 }

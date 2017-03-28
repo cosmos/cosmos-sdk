@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -11,8 +13,27 @@ type Coin struct {
 }
 
 func (coin Coin) String() string {
-	return fmt.Sprintf("(%v %v)",
-		coin.Denom, coin.Amount)
+	return fmt.Sprintf("%v%v", coin.Amount, coin.Denom)
+}
+
+//regex codes for extracting coins from string
+var reDenom = regexp.MustCompile("([^\\d\\W]+)")
+var reAmt = regexp.MustCompile("(\\d+)")
+
+func ParseCoin(str string) (Coin, error) {
+
+	var coin Coin
+
+	if len(str) > 0 {
+		amt, err := strconv.Atoi(reAmt.FindString(str))
+		if err != nil {
+			return coin, err
+		}
+		denom := reDenom.FindString(str)
+		coin = Coin{denom, int64(amt)}
+	}
+
+	return coin, nil
 }
 
 //----------------------------------------
@@ -22,9 +43,27 @@ type Coins []Coin
 func (coins Coins) String() string {
 	out := ""
 	for _, coin := range coins {
-		out += fmt.Sprintf("(%v %v) ", coin.Denom, coin.Amount)
+		out += fmt.Sprintf("%v,", coin.String())
 	}
 	return out
+}
+
+func ParseCoins(str string) (Coins, error) {
+
+	split := strings.Split(str, ",")
+	var coins []Coin
+
+	for _, el := range split {
+		if len(el) > 0 {
+			coin, err := ParseCoin(el)
+			if err != nil {
+				return coins, err
+			}
+			coins = append(coins, coin)
+		}
+	}
+
+	return coins, nil
 }
 
 // Must be sorted, and not have 0 amounts

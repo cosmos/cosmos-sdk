@@ -8,131 +8,61 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
-	"github.com/tendermint/go-crypto"
 )
-
-//States and Stores for tests
-var (
-	store                                 types.KVStore
-	state                                 *State
-	accsFoo, accsBar, accsFooBar, accsDup []types.PrivAccount
-	chainID                               string = "test_chain_id"
-)
-
-func makeAccs(secrets []string) (accs []types.PrivAccount) {
-
-	for _, secret := range secrets {
-		privAcc := types.PrivAccountFromSecret(secret)
-		privAcc.Account.Balance = types.Coins{{"mycoin", 1000}}
-		accs = append(accs, privAcc)
-	}
-	return accs
-}
-
-func acc2State(accs []types.PrivAccount) {
-	for _, acc := range accs {
-		state.SetAccount(acc.Account.PubKey.Address(), &acc.Account)
-	}
-}
-
-//each tx input signs the tx bytes
-func signSend(tx *types.SendTx, accs []types.PrivAccount) {
-	signBytes := tx.SignBytes(chainID)
-	for i, _ := range tx.Inputs {
-		tx.Inputs[i].Signature = crypto.SignatureS{accs[i].Sign(signBytes)}
-	}
-}
-
-//turn a list of accounts into basic list of transaction inputs
-func accs2TxInputs(accs []types.PrivAccount) []types.TxInput {
-	var txs []types.TxInput
-	for _, acc := range accs {
-		tx := types.NewTxInput(
-			acc.Account.PubKey,
-			types.Coins{{"mycoin", 5}},
-			1)
-		txs = append(txs, tx)
-	}
-	return txs
-}
-
-//turn a list of accounts into basic list of transaction outputs
-func accs2TxOutputs(accs []types.PrivAccount) []types.TxOutput {
-	var txs []types.TxOutput
-	for _, acc := range accs {
-		tx := types.TxOutput{
-			acc.Account.PubKey.Address(),
-			types.Coins{{"mycoin", 4}}}
-		txs = append(txs, tx)
-	}
-	return txs
-}
-
-//reset the store/state/Inputs
-func reset() {
-	accsFoo = makeAccs([]string{"foo"})
-	accsBar = makeAccs([]string{"bar"})
-	accsFooBar = makeAccs([]string{"foo", "bar"})
-	accsDup = makeAccs([]string{"foo", "foo", "foo"})
-
-	store = types.NewMemKVStore()
-	state = NewState(store)
-	state.SetChainID(chainID)
-}
 
 func TestGetInputs(t *testing.T) {
 	assert := assert.New(t)
+	et := newExecTest()
 
 	//nil submissions
-	reset()
 	acc, res := getInputs(nil, nil)
-	assert.False(res.IsErr(), "getInputs: error on nil submission")
+	assert.True(res.IsOK(), "getInputs: error on nil submission")
 	assert.Zero(len(acc), "getInputs: accounts returned on nil submission")
 
 	//test getInputs for registered, non-registered account
-	reset()
-	txs := accs2TxInputs(accsFoo)
-	_, res = getInputs(state, txs)
-	assert.True(res.IsErr(), "getInputs: expected to getInput from registered Input")
+	et.reset()
+	txs := types.Accs2TxInputs(et.accsFoo, 1)
+	acc, res = getInputs(et.state, txs)
+	assert.True(res.IsErr(), "getInputs: expected error when using getInput with non-registered Input")
 
-	acc2State(accsFoo)
-	_, res = getInputs(state, txs)
-	assert.False(res.IsErr(), "getInputs: expected to getInput from registered Input")
+	et.acc2State(et.accsFoo)
+	acc, res = getInputs(et.state, txs)
+	assert.True(res.IsOK(), "getInputs: expected to getInput from registered Input")
 
 	//test sending duplicate accounts
-	reset()
-	acc2State(accsDup)
-	txs = accs2TxInputs(accsDup)
-	_, res = getInputs(state, txs)
+	et.reset()
+	et.acc2State(et.accsDup)
+	txs = types.Accs2TxInputs(et.accsDup, 1)
+	acc, res = getInputs(et.state, txs)
 	assert.True(res.IsErr(), "getInputs: expected error when sending duplicate accounts")
 }
 
 func TestGetOrMakeOutputs(t *testing.T) {
 	assert := assert.New(t)
+	et := newExecTest()
 
 	//nil submissions
-	reset()
 	acc, res := getOrMakeOutputs(nil, nil, nil)
-	assert.False(res.IsErr(), "getOrMakeOutputs: error on nil submission")
+	assert.True(res.IsOK(), "getOrMakeOutputs: error on nil submission")
 	assert.Zero(len(acc), "getOrMakeOutputs: accounts returned on nil submission")
 
 	//test sending duplicate accounts
-	reset()
-	txs := accs2TxOutputs(accsDup)
-	_, res = getOrMakeOutputs(state, nil, txs)
+	et.reset()
+	txs := types.Accs2TxOutputs(et.accsDup)
+	_, res = getOrMakeOutputs(et.state, nil, txs)
 	assert.True(res.IsErr(), "getOrMakeOutputs: expected error when sending duplicate accounts")
 
 	//test sending to existing/new account account
-	reset()
-	txs1 := accs2TxOutputs(accsFoo)
-	txs2 := accs2TxOutputs(accsBar)
+	et.reset()
+	txs1 := types.Accs2TxOutputs(et.accsFoo)
+	txs2 := types.Accs2TxOutputs(et.accsBar)
 
-	acc2State(accsFoo)
-	_, res = getOrMakeOutputs(state, nil, txs1)
-	assert.False(res.IsErr(), "getOrMakeOutputs: error when sending to existing account")
+	et.acc2State(et.accsFoo)
+	_, res = getOrMakeOutputs(et.state, nil, txs1)
+	assert.True(res.IsOK(), "getOrMakeOutputs: error when sending to existing account")
 
-	mapRes2, res := getOrMakeOutputs(state, nil, txs2)
-	assert.False(res.IsErr(), "getOrMakeOutputs: error when sending to new account")
+	mapRes2, res := getOrMakeOutputs(et.state, nil, txs2)
+	assert.True(res.IsOK(), "getOrMakeOutputs: error when sending to new account")
 
 	//test the map results
 	_, map2ok := mapRes2[string(txs2[0].Address)]
@@ -142,12 +72,12 @@ func TestGetOrMakeOutputs(t *testing.T) {
 
 func TestValidateInputsBasic(t *testing.T) {
 	assert := assert.New(t)
+	et := newExecTest()
 
 	//validate input basic
-	reset()
-	txs := accs2TxInputs(accsFoo)
+	txs := types.Accs2TxInputs(et.accsFoo, 1)
 	res := validateInputsBasic(txs)
-	assert.False(res.IsErr(), fmt.Sprintf("validateInputsBasic: expected no error on good tx input. Error: %v", res.Error()))
+	assert.True(res.IsOK(), fmt.Sprintf("validateInputsBasic: expected no error on good tx input. Error: %v", res.Error()))
 
 	txs[0].Coins[0].Amount = 0
 	res = validateInputsBasic(txs)
@@ -157,77 +87,68 @@ func TestValidateInputsBasic(t *testing.T) {
 
 func TestValidateInputsAdvanced(t *testing.T) {
 	assert := assert.New(t)
-	//validate inputs advanced
-	reset()
-	txs := types.SendTx{
-		Gas:     0,
-		Fee:     types.Coin{"mycoin", 1},
-		Inputs:  accs2TxInputs(accsFooBar),
-		Outputs: accs2TxOutputs(accsBar),
-	}
+	et := newExecTest()
 
-	acc2State(accsFooBar)
-	accMap, res := getInputs(state, txs.Inputs)
-	assert.False(res.IsErr(), fmt.Sprintf("validateInputsAdvanced: error retrieving accMap. Error: %v", res.Error()))
-	signBytes := txs.SignBytes(chainID)
+	//validate inputs advanced
+	txs := et.getTx(1, et.accsFooBar)
+
+	et.acc2State(et.accsFooBar)
+	accMap, res := getInputs(et.state, txs.Inputs)
+	assert.True(res.IsOK(), fmt.Sprintf("validateInputsAdvanced: error retrieving accMap. Error: %v", res.Error()))
+	signBytes := txs.SignBytes(et.chainID)
 
 	//test bad case, unsigned
 	totalCoins, res := validateInputsAdvanced(accMap, signBytes, txs.Inputs)
 	assert.True(res.IsErr(), "validateInputsAdvanced: expected an error on an unsigned tx input")
 
 	//test good case sgined
-	signSend(&txs, accsFooBar)
+	et.signTx(txs, et.accsFooBar)
 	totalCoins, res = validateInputsAdvanced(accMap, signBytes, txs.Inputs)
-	assert.False(res.IsErr(), fmt.Sprintf("validateInputsAdvanced: expected no error on good tx input. Error: %v", res.Error()))
+	assert.True(res.IsOK(), fmt.Sprintf("validateInputsAdvanced: expected no error on good tx input. Error: %v", res.Error()))
 	assert.True(totalCoins.IsEqual(txs.Inputs[0].Coins.Plus(txs.Inputs[1].Coins)), "ValidateInputsAdvanced: transaction total coins are not equal")
 }
 
 func TestValidateInputAdvanced(t *testing.T) {
 	assert := assert.New(t)
+	et := newExecTest()
 
 	//validate input advanced
-	reset()
-	txs := types.SendTx{
-		Gas:     0,
-		Fee:     types.Coin{"mycoin", 1},
-		Inputs:  accs2TxInputs(accsFooBar),
-		Outputs: accs2TxOutputs(accsBar),
-	}
+	txs := et.getTx(1, et.accsFooBar)
 
-	acc2State(accsFooBar)
-	signBytes := txs.SignBytes(chainID)
+	et.acc2State(et.accsFooBar)
+	signBytes := txs.SignBytes(et.chainID)
 
 	//unsigned case
-	res := validateInputAdvanced(&accsFooBar[0].Account, signBytes, txs.Inputs[0])
+	res := validateInputAdvanced(&et.accsFooBar[0].Account, signBytes, txs.Inputs[0])
 	assert.True(res.IsErr(), "validateInputAdvanced: expected error on tx input without signature")
 
 	//good signed case
-	signSend(&txs, accsFooBar)
-	res = validateInputAdvanced(&accsFooBar[0].Account, signBytes, txs.Inputs[0])
-	assert.False(res.IsErr(), fmt.Sprintf("validateInputAdvanced: expected no error on good tx input. Error: %v", res.Error()))
+	et.signTx(txs, et.accsFooBar)
+	res = validateInputAdvanced(&et.accsFooBar[0].Account, signBytes, txs.Inputs[0])
+	assert.True(res.IsOK(), fmt.Sprintf("validateInputAdvanced: expected no error on good tx input. Error: %v", res.Error()))
 
 	//bad sequence case
-	accsFooBar[0].Sequence = 2
-	signSend(&txs, accsFooBar)
-	res = validateInputAdvanced(&accsFooBar[0].Account, signBytes, txs.Inputs[0])
+	et.accsFooBar[0].Sequence = 2
+	et.signTx(txs, et.accsFooBar)
+	res = validateInputAdvanced(&et.accsFooBar[0].Account, signBytes, txs.Inputs[0])
 	assert.True(res.IsErr(), "validateInputAdvanced: expected error on tx input with bad sequence")
-	accsFooBar[0].Account.Sequence = 1 //restore sequence
+	et.accsFooBar[0].Account.Sequence = 1 //restore sequence
 
 	//bad balance case
-	accsFooBar[1].Balance = types.Coins{{"mycoin", 2}}
-	signSend(&txs, accsFooBar)
-	res = validateInputAdvanced(&accsFooBar[0].Account, signBytes, txs.Inputs[0])
+	et.accsFooBar[1].Balance = types.Coins{{"mycoin", 2}}
+	et.signTx(txs, et.accsFooBar)
+	res = validateInputAdvanced(&et.accsFooBar[0].Account, signBytes, txs.Inputs[0])
 	assert.True(res.IsErr(), "validateInputAdvanced: expected error on tx input with insufficient funds")
 }
 
 func TestValidateOutputsAdvanced(t *testing.T) {
 	assert := assert.New(t)
+	et := newExecTest()
 
 	//validateOutputsBasic
-	reset()
-	txs := accs2TxOutputs(accsFoo)
+	txs := types.Accs2TxOutputs(et.accsFoo)
 	res := validateOutputsBasic(txs)
-	assert.False(res.IsErr(), fmt.Sprintf("validateOutputsBasic: expected no error on good tx input. Error: %v", res.Error()))
+	assert.True(res.IsOK(), fmt.Sprintf("validateOutputsBasic: expected no error on good tx input. Error: %v", res.Error()))
 
 	txs[0].Coins[0].Amount = 0
 	res = validateOutputsBasic(txs)
@@ -236,34 +157,34 @@ func TestValidateOutputsAdvanced(t *testing.T) {
 
 func TestSumOutput(t *testing.T) {
 	assert := assert.New(t)
+	et := newExecTest()
 
 	//SumOutput
-	reset()
-	txs := accs2TxOutputs(accsFooBar)
+	txs := types.Accs2TxOutputs(et.accsFooBar)
 	total := sumOutputs(txs)
 	assert.True(total.IsEqual(txs[0].Coins.Plus(txs[1].Coins)), "sumOutputs: total coins are not equal")
 }
 
 func TestAdjustBy(t *testing.T) {
 	assert := assert.New(t)
+	et := newExecTest()
 
 	//adjustByInputs/adjustByOutputs
 	//sending transaction from Foo to Bar
-	reset()
-	initBalFoo := accsFooBar[0].Account.Balance
-	initBalBar := accsFooBar[1].Account.Balance
-	acc2State(accsFooBar)
+	initBalFoo := et.accsFooBar[0].Account.Balance
+	initBalBar := et.accsFooBar[1].Account.Balance
+	et.acc2State(et.accsFooBar)
 
-	txIn := accs2TxInputs(accsFoo)
-	txOut := accs2TxOutputs(accsBar)
-	accMap, _ := getInputs(state, txIn)
-	accMap, _ = getOrMakeOutputs(state, accMap, txOut)
+	txIn := types.Accs2TxInputs(et.accsFoo, 1)
+	txOut := types.Accs2TxOutputs(et.accsBar)
+	accMap, _ := getInputs(et.state, txIn)
+	accMap, _ = getOrMakeOutputs(et.state, accMap, txOut)
 
-	adjustByInputs(state, accMap, txIn)
-	adjustByOutputs(state, accMap, txOut, false)
+	adjustByInputs(et.state, accMap, txIn)
+	adjustByOutputs(et.state, accMap, txOut, false)
 
-	endBalFoo := accMap[string(accsFooBar[0].Account.PubKey.Address())].Balance
-	endBalBar := accMap[string(accsFooBar[1].Account.PubKey.Address())].Balance
+	endBalFoo := accMap[string(et.accsFooBar[0].Account.PubKey.Address())].Balance
+	endBalBar := accMap[string(et.accsFooBar[1].Account.PubKey.Address())].Balance
 	decrBalFoo := initBalFoo.Minus(endBalFoo)
 	incrBalBar := endBalBar.Minus(initBalBar)
 
@@ -276,54 +197,95 @@ func TestAdjustBy(t *testing.T) {
 
 func TestExecTx(t *testing.T) {
 	assert := assert.New(t)
+	et := newExecTest()
 
 	//ExecTx
-	reset()
-	txs := &types.SendTx{
-		Gas:     0,
-		Fee:     types.Coin{"mycoin", 1},
-		Inputs:  accs2TxInputs(accsFoo),
-		Outputs: accs2TxOutputs(accsBar),
-	}
-
-	acc2State(accsFoo)
-	acc2State(accsBar)
-	signSend(txs, accsFoo)
-
-	exec := func(checkTx bool) (ExecTxRes abci.Result, foo, fooExp, bar, barExp types.Coins) {
-		initBalFoo := state.GetAccount(accsFoo[0].Account.PubKey.Address()).Balance
-		initBalBar := state.GetAccount(accsBar[0].Account.PubKey.Address()).Balance
-		res := ExecTx(state, nil, txs, checkTx, nil)
-		endBalFoo := state.GetAccount(accsFoo[0].Account.PubKey.Address()).Balance
-		endBalBar := state.GetAccount(accsBar[0].Account.PubKey.Address()).Balance
-		decrBalFooExp := txs.Outputs[0].Coins.Plus(types.Coins{txs.Fee})
-		return res, endBalFoo, initBalFoo.Minus(decrBalFooExp), endBalBar, initBalBar.Plus(txs.Outputs[0].Coins)
-	}
+	txs := et.getTx(1, et.accsFoo)
+	et.acc2State(et.accsFoo)
+	et.acc2State(et.accsBar)
+	et.signTx(txs, et.accsFoo)
 
 	//Bad Balance
-	accsFoo[0].Balance = types.Coins{{"mycoin", 2}}
-	acc2State(accsFoo)
-	res, _, _, _, _ := exec(true)
+	et.accsFoo[0].Balance = types.Coins{{"mycoin", 2}}
+	et.acc2State(et.accsFoo)
+	res, _, _, _, _ := et.exec(txs, true)
 	assert.True(res.IsErr(), fmt.Sprintf("ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res))
-	res, foo, fooexp, bar, barexp := exec(false)
+	res, foo, fooexp, bar, barexp := et.exec(txs, false)
 	assert.True(res.IsErr(), fmt.Sprintf("ExecTx/Bad DeliverTx: Expected error return from ExecTx, returned: %v", res))
 	assert.False(foo.IsEqual(fooexp), fmt.Sprintf("ExecTx/Bad DeliverTx: shouldn't be equal, foo: %v, fooExp: %v", foo, fooexp))
 	assert.False(bar.IsEqual(barexp), fmt.Sprintf("ExecTx/Bad DeliverTx: shouldn't be equal, bar: %v, barExp: %v", bar, barexp))
 
 	//Regular CheckTx
-	reset()
-	acc2State(accsFoo)
-	acc2State(accsBar)
-	res, _, _, _, _ = exec(true)
+	et.reset()
+	et.acc2State(et.accsFoo)
+	et.acc2State(et.accsBar)
+	res, _, _, _, _ = et.exec(txs, true)
 	assert.True(res.IsOK(), fmt.Sprintf("ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", res))
 
 	//Regular DeliverTx
-	reset()
-	acc2State(accsFoo)
-	acc2State(accsBar)
-	res, foo, fooexp, bar, barexp = exec(false)
+	et.reset()
+	et.acc2State(et.accsFoo)
+	et.acc2State(et.accsBar)
+	res, foo, fooexp, bar, barexp = et.exec(txs, false)
 	assert.True(res.IsOK(), fmt.Sprintf("ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res))
 	assert.True(foo.IsEqual(fooexp), fmt.Sprintf("ExecTx/good DeliverTx: unexpected change in input coins, foo: %v, fooExp: %v", foo, fooexp))
 	assert.True(bar.IsEqual(barexp), fmt.Sprintf("ExecTx/good DeliverTx: unexpected change in output coins, bar: %v, barExp: %v", bar, barexp))
+}
 
+///////////////////////////////////////////////////////////////////
+
+type execTest struct {
+	chainID    string
+	store      types.KVStore
+	state      *State
+	accsFoo    []types.PrivAccount
+	accsBar    []types.PrivAccount
+	accsFooBar []types.PrivAccount
+	accsDup    []types.PrivAccount
+}
+
+func newExecTest() *execTest {
+	et := &execTest{
+		chainID: "test_chain_id",
+	}
+	et.reset()
+	return et
+}
+
+func (et *execTest) signTx(tx *types.SendTx, accsIn []types.PrivAccount) {
+	types.SignTx(et.chainID, tx, accsIn)
+}
+
+func (et *execTest) getTx(seq int, accsIn []types.PrivAccount) *types.SendTx {
+	return types.GetTx(seq, accsIn, et.accsBar)
+}
+
+func (et *execTest) exec(tx *types.SendTx, checkTx bool) (res abci.Result, foo, fooExp, bar, barExp types.Coins) {
+	initBalFoo := et.state.GetAccount(et.accsFoo[0].Account.PubKey.Address()).Balance
+	initBalBar := et.state.GetAccount(et.accsBar[0].Account.PubKey.Address()).Balance
+
+	res = ExecTx(et.state, nil, tx, checkTx, nil)
+
+	endBalFoo := et.state.GetAccount(et.accsFoo[0].Account.PubKey.Address()).Balance
+	endBalBar := et.state.GetAccount(et.accsBar[0].Account.PubKey.Address()).Balance
+	decrBalFooExp := tx.Outputs[0].Coins.Plus(types.Coins{tx.Fee})
+	return res, endBalFoo, initBalFoo.Minus(decrBalFooExp), endBalBar, initBalBar.Plus(tx.Outputs[0].Coins)
+}
+
+func (et *execTest) acc2State(accs []types.PrivAccount) {
+	for _, acc := range accs {
+		et.state.SetAccount(acc.Account.PubKey.Address(), &acc.Account)
+	}
+}
+
+//reset the store/et.state/Inputs
+func (et *execTest) reset() {
+	et.accsFoo = types.MakeAccs("foo")
+	et.accsBar = types.MakeAccs("bar")
+	et.accsFooBar = types.MakeAccs("foo", "bar")
+	et.accsDup = types.MakeAccs("foo", "foo", "foo")
+
+	et.store = types.NewMemKVStore()
+	et.state = NewState(et.store)
+	et.state.SetChainID(et.chainID)
 }

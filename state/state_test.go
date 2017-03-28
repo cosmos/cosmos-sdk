@@ -84,7 +84,7 @@ func TestState(t *testing.T) {
 	assert.True(storeHasAll(store), "store doesn't retrieve after CacheSync")
 
 	//Test Commit on state with non-merkle store
-	assert.False(state.Commit().IsOK(), "Commit shouldn't work with non-merkle store")
+	assert.True(state.Commit().IsErr(), "Commit shouldn't work with non-merkle store")
 
 	//Test CacheWrap with merkleeyes client store
 	useEyesCli()

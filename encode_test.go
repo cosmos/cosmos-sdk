@@ -82,25 +82,21 @@ func TestKeyEncodings(t *testing.T) {
 
 	for _, tc := range cases {
 		// check (de/en)codings of private key
-		priv2 := PrivKey{}
+		var priv2, priv3, priv4 PrivKey
 		checkWire(t, tc.privKey, &priv2, tc.keyType)
 		assert.EqualValues(t, tc.privKey, priv2)
-		priv3 := PrivKey{}
 		checkJSON(t, tc.privKey, &priv3, tc.keyName)
 		assert.EqualValues(t, tc.privKey, priv3)
-		priv4 := PrivKey{}
 		checkWireJSON(t, tc.privKey, &priv4, tc.keyType)
 		assert.EqualValues(t, tc.privKey, priv4)
 
 		// check (de/en)codings of public key
 		pubKey := tc.privKey.PubKey()
-		pub2 := PubKey{}
+		var pub2, pub3, pub4 PubKey
 		checkWire(t, pubKey, &pub2, tc.keyType)
 		assert.EqualValues(t, pubKey, pub2)
-		pub3 := PubKey{}
 		checkJSON(t, pubKey, &pub3, tc.keyName)
 		assert.EqualValues(t, pubKey, pub3)
-		pub4 := PubKey{}
 		checkWireJSON(t, pubKey, &pub4, tc.keyType)
 		assert.EqualValues(t, pubKey, pub4)
 	}
@@ -115,17 +111,17 @@ func toFromJSON(t *testing.T, in interface{}, recvr interface{}) {
 
 func TestNilEncodings(t *testing.T) {
 	// make sure sigs are okay with nil
-	a, b := Signature{}, Signature{}
+	var a, b Signature
 	toFromJSON(t, a, &b)
 	assert.EqualValues(t, a, b)
 
 	// make sure sigs are okay with nil
-	c, d := PubKey{}, PubKey{}
+	var c, d PubKey
 	toFromJSON(t, c, &d)
 	assert.EqualValues(t, c, d)
 
 	// make sure sigs are okay with nil
-	e, f := PrivKey{}, PrivKey{}
+	var e, f PrivKey
 	toFromJSON(t, e, &f)
 	assert.EqualValues(t, e, f)
 

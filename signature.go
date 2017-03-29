@@ -9,8 +9,14 @@ import (
 	"github.com/tendermint/go-wire"
 )
 
-// SignatureInner is now the interface itself.
-// Use Signature in all code
+/*
+DO NOT USE this interface.
+
+It is public by necessity but should never be used directly
+outside of this package.
+
+Only use the Signature, never the SignatureInner
+*/
 type SignatureInner interface {
 	Bytes() []byte
 	IsZero() bool
@@ -27,11 +33,13 @@ func init() {
 		RegisterImplementation(SignatureSecp256k1{}, NameSecp256k1, TypeSecp256k1)
 }
 
-// Signature add json serialization to Signature
+// Signature should be used instead of an interface in all external packages
+// unless you demand a concrete implementation, then use that directly.
 type Signature struct {
 	SignatureInner `json:"unwrap"`
 }
 
+// WrapSignature goes from concrete implementation to "interface" struct
 func WrapSignature(pk SignatureInner) Signature {
 	if wrap, ok := pk.(Signature); ok {
 		pk = wrap.Unwrap()
@@ -39,6 +47,7 @@ func WrapSignature(pk SignatureInner) Signature {
 	return Signature{pk}
 }
 
+// Unwrap recovers the concrete interface safely (regardless of levels of embeds)
 func (p Signature) Unwrap() SignatureInner {
 	pk := p.SignatureInner
 	for wrap, ok := pk.(Signature); ok; wrap, ok = pk.(Signature) {

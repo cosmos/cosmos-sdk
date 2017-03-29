@@ -11,7 +11,14 @@ import (
 	"github.com/tendermint/go-wire"
 )
 
-// PrivKeyInner is now the interface itself, use PrivKey in all code
+/*
+DO NOT USE this interface.
+
+It is public by necessity but should never be used directly
+outside of this package.
+
+Only use the PrivKey, never the PrivKeyInner
+*/
 type PrivKeyInner interface {
 	Bytes() []byte
 	Sign(msg []byte) Signature
@@ -36,11 +43,13 @@ func init() {
 		RegisterImplementation(PrivKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
 }
 
-// PrivKey handles all encoding and exposes methods
+// PrivKey should be used instead of an interface in all external packages
+// unless you demand a concrete implementation, then use that directly.
 type PrivKey struct {
 	PrivKeyInner `json:"unwrap"`
 }
 
+// WrapPrivKey goes from concrete implementation to "interface" struct
 func WrapPrivKey(pk PrivKeyInner) PrivKey {
 	if wrap, ok := pk.(PrivKey); ok {
 		pk = wrap.Unwrap()
@@ -48,6 +57,7 @@ func WrapPrivKey(pk PrivKeyInner) PrivKey {
 	return PrivKey{pk}
 }
 
+// Unwrap recovers the concrete interface safely (regardless of levels of embeds)
 func (p PrivKey) Unwrap() PrivKeyInner {
 	pk := p.PrivKeyInner
 	for wrap, ok := pk.(PrivKey); ok; wrap, ok = pk.(PrivKey) {

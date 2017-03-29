@@ -95,7 +95,11 @@ func TestEncodeDemo(t *testing.T) {
 	}{
 		{PubName{Foo{"pub-foo"}}, &PubName{}, "Foo: pub-foo"},
 		{PubName{Bar{7}}, &PubName{}, "Bar #7"},
+
 		// Note these fail - if you can figure a solution here, I'll buy you a beer :)
+		// (ebuchman is right, you must either break the reflection system, or modify go-wire)
+		// but such a mod would let us make REALLY sure that no one could construct like this
+
 		// {PrivName{Foo{"priv-foo"}}, &PrivName{}, "Foo: priv-foo"},
 		// {PrivName{Bar{9}}, &PrivName{}, "Bar #9"},
 	}

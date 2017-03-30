@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 
 	"github.com/spf13/cobra"
@@ -43,27 +44,31 @@ func initCmd(cmd *cobra.Command, args []string) {
 	key1File := path.Join(rootDir, "key.json")
 	key2File := path.Join(rootDir, "key2.json")
 
-	err := ioutil.WriteFile(genesisFile, []byte(genesisJSON), 0644)
-	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
-	}
+	if _, err := os.Stat(privValFile); os.IsNotExist(err) {
+		err := ioutil.WriteFile(genesisFile, []byte(genesisJSON), 0644)
+		if err != nil {
+			cmn.Exit(fmt.Sprintf("%+v\n", err))
+		}
 
-	err = ioutil.WriteFile(privValFile, []byte(privValJSON), 0400)
-	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
-	}
+		err = ioutil.WriteFile(privValFile, []byte(privValJSON), 0400)
+		if err != nil {
+			cmn.Exit(fmt.Sprintf("%+v\n", err))
+		}
 
-	err = ioutil.WriteFile(key1File, []byte(key1JSON), 0400)
-	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
-	}
+		err = ioutil.WriteFile(key1File, []byte(key1JSON), 0400)
+		if err != nil {
+			cmn.Exit(fmt.Sprintf("%+v\n", err))
+		}
 
-	err = ioutil.WriteFile(key2File, []byte(key2JSON), 0400)
-	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
-	}
+		err = ioutil.WriteFile(key2File, []byte(key2JSON), 0400)
+		if err != nil {
+			cmn.Exit(fmt.Sprintf("%+v\n", err))
+		}
 
-	log.Notice("Initialized Basecoin", "genesis", genesisFile, "key", key1File)
+		log.Notice("Initialized Basecoin", "genesis", genesisFile, "key", key1File)
+	} else {
+		log.Notice("Already initialized", "priv_validator", privValFile)
+	}
 }
 
 const privValJSON = `{

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0 (March 30, 2017)
+
+BREAKING CHANGES:
+
+- CLI now uses Cobra
+
+IMPROVEMENTS:
+
+- `basecoin init` doesn't generate error if already initialized
+
 ## 0.3.1 (March 23, 2017)
 
 IMPROVEMENTS:

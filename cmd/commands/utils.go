@@ -56,15 +56,18 @@ var reAmt = regexp.MustCompile("(\\d+)")
 
 func ParseCoin(str string) (types.Coin, error) {
 
-	var coin types.Coin
+	var coin types.Coin = types.Coin{ Amount: 0, Denom: "mycoin" }
 
 	if len(str) > 0 {
-		amt, err := strconv.Atoi(reAmt.FindString(str))
-		if err != nil {
-			return coin, err
+		amt, err := strconv.ParseInt(reAmt.FindString(str), 10, 64)
+		if err == nil {
+		    coin.Amount = amt
+
+		    denom := reDenom.FindString(str)
+		    if denom != "" {
+			coin.Denom = denom
+		    }
 		}
-		denom := reDenom.FindString(str)
-		coin = types.Coin{denom, int64(amt)}
 	}
 
 	return coin, nil

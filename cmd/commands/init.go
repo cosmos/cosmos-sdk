@@ -20,19 +20,6 @@ var (
 	}
 )
 
-//flags
-//var chainIDFlag string
-
-//func init() {
-//
-//	//register flags
-//	flags := []Flag2Register{
-//		{&chainIDFlag, "chain_id", "test_chain_id", "ID of the chain for replay protection"},
-//	}
-//	RegisterFlags(InitCmd, flags)
-//
-//}
-
 func initCmd(cmd *cobra.Command, args []string) {
 	rootDir := BasecoinRoot("")
 

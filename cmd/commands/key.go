@@ -31,6 +31,7 @@ var (
 func newKeyCmd(cmd *cobra.Command, args []string) {
 	key := genKey()
 	keyJSON, err := json.MarshalIndent(key, "", "\t")
+	fmt.Println(&key)
 	if err != nil {
 		cmn.Exit(fmt.Sprintf("%+v\n", err))
 	}

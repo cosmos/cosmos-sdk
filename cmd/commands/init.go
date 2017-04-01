@@ -32,22 +32,22 @@ func initCmd(cmd *cobra.Command, args []string) {
 	key2File := path.Join(rootDir, "key2.json")
 
 	if _, err := os.Stat(privValFile); os.IsNotExist(err) {
-		err := ioutil.WriteFile(genesisFile, []byte(genesisJSON), 0644)
+		err := ioutil.WriteFile(genesisFile, []byte(GenesisJSON), 0644)
 		if err != nil {
 			cmn.Exit(fmt.Sprintf("%+v\n", err))
 		}
 
-		err = ioutil.WriteFile(privValFile, []byte(privValJSON), 0400)
+		err = ioutil.WriteFile(privValFile, []byte(PrivValJSON), 0400)
 		if err != nil {
 			cmn.Exit(fmt.Sprintf("%+v\n", err))
 		}
 
-		err = ioutil.WriteFile(key1File, []byte(key1JSON), 0400)
+		err = ioutil.WriteFile(key1File, []byte(Key1JSON), 0400)
 		if err != nil {
 			cmn.Exit(fmt.Sprintf("%+v\n", err))
 		}
 
-		err = ioutil.WriteFile(key2File, []byte(key2JSON), 0400)
+		err = ioutil.WriteFile(key2File, []byte(Key2JSON), 0400)
 		if err != nil {
 			cmn.Exit(fmt.Sprintf("%+v\n", err))
 		}
@@ -58,7 +58,7 @@ func initCmd(cmd *cobra.Command, args []string) {
 	}
 }
 
-const privValJSON = `{
+var PrivValJSON = `{
 	"address": "7A956FADD20D3A5B2375042B2959F8AB172A058F",
 	"last_height": 0,
 	"last_round": 0,
@@ -75,7 +75,7 @@ const privValJSON = `{
 	]
 }`
 
-const genesisJSON = `{
+var GenesisJSON = `{
   "app_hash": "",
   "chain_id": "test_chain_id",
   "genesis_time": "0001-01-01T00:00:00.000Z",
@@ -105,7 +105,7 @@ const genesisJSON = `{
   }
 }`
 
-const key1JSON = `{
+var Key1JSON = `{
 	"address": "1B1BE55F969F54064628A63B9559E7C21C925165",
 	"priv_key": {
 		"type": "ed25519",
@@ -117,7 +117,7 @@ const key1JSON = `{
 	}
 }`
 
-const key2JSON = `{
+var Key2JSON = `{
 	"address": "1DA7C74F9C219229FD54CC9F7386D5A3839F0090",
 	"priv_key": {
 		"type": "ed25519",

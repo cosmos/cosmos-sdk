@@ -43,8 +43,8 @@ type Plugin interface {
   // Other ABCI message handlers
   SetOption(store KVStore, key string, value string) (log string)
   InitChain(store KVStore, vals []*abci.Validator)
-  BeginBlock(store KVStore, height uint64)
-  EndBlock(store KVStore, height uint64) []*abci.Validator
+  BeginBlock(store KVStore, hash []byte, header *abci.Header)
+  EndBlock(store KVStore, height uint64) (res abci.ResponseEndBlock)
 }
 
 type CallContext struct {

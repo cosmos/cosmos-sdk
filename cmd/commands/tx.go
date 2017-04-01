@@ -36,18 +36,20 @@ var (
 	}
 )
 
-//flags
 var (
+	//persistent flags
 	txNodeFlag  string
-	toFlag      string
 	amountFlag  string
 	fromFlag    string
 	seqFlag     int
 	gasFlag     int
 	feeFlag     string
-	dataFlag    string
-	nameFlag    string
 	chainIDFlag string
+
+	//non-persistent flags
+	toFlag   string
+	dataFlag string
+	nameFlag string
 )
 
 func init() {

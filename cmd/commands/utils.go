@@ -19,12 +19,16 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
+//This variable can be overwritten by plugin applications
+// if they require a different working directory
+var DefaultHome = "basecoin"
+
 func BasecoinRoot(rootDir string) string {
 	if rootDir == "" {
 		rootDir = os.Getenv("BCHOME")
 	}
 	if rootDir == "" {
-		rootDir = os.Getenv("HOME") + "/.basecoin"
+		rootDir = os.Getenv("HOME") + "/." + DefaultHome
 	}
 	return rootDir
 }

@@ -38,7 +38,7 @@ func cmdNewKey(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(keyJSON)
+	fmt.Println(string(keyJSON))
 	return nil
 }
 

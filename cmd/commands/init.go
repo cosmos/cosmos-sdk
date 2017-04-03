@@ -20,6 +20,20 @@ var (
 	}
 )
 
+// setupFile aborts on error... or should we return it??
+// returns 1 iff it set a file, otherwise 0 (so we can add them)
+func setupFile(path, data string, perm os.FileMode) int {
+	_, err := os.Stat(path)
+	if !os.IsNotExist(err) {
+		return 0
+	}
+	err = ioutil.WriteFile(path, []byte(data), perm)
+	if err != nil {
+		cmn.Exit(fmt.Sprintf("%+v\n", err))
+	}
+	return 1
+}
+
 func initCmd(cmd *cobra.Command, args []string) {
 	rootDir := BasecoinRoot("")
 
@@ -31,27 +45,12 @@ func initCmd(cmd *cobra.Command, args []string) {
 	key1File := path.Join(rootDir, "key.json")
 	key2File := path.Join(rootDir, "key2.json")
 
-	if _, err := os.Stat(privValFile); os.IsNotExist(err) {
-		err := ioutil.WriteFile(genesisFile, []byte(GenesisJSON), 0644)
-		if err != nil {
-			cmn.Exit(fmt.Sprintf("%+v\n", err))
-		}
+	mod := setupFile(genesisFile, GenesisJSON, 0644) +
+		setupFile(privValFile, PrivValJSON, 0400) +
+		setupFile(key1File, Key1JSON, 0400) +
+		setupFile(key2File, Key2JSON, 0400)
 
-		err = ioutil.WriteFile(privValFile, []byte(PrivValJSON), 0400)
-		if err != nil {
-			cmn.Exit(fmt.Sprintf("%+v\n", err))
-		}
-
-		err = ioutil.WriteFile(key1File, []byte(Key1JSON), 0400)
-		if err != nil {
-			cmn.Exit(fmt.Sprintf("%+v\n", err))
-		}
-
-		err = ioutil.WriteFile(key2File, []byte(Key2JSON), 0400)
-		if err != nil {
-			cmn.Exit(fmt.Sprintf("%+v\n", err))
-		}
-
+	if mod > 0 {
 		log.Notice("Initialized Basecoin", "genesis", genesisFile, "key", key1File)
 	} else {
 		log.Notice("Already initialized", "priv_validator", privValFile)

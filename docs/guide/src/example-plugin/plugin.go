@@ -123,12 +123,16 @@ func (ep *ExamplePlugin) RunTx(store types.KVStore, ctx types.CallContext, txByt
 	return abci.OK
 }
 
+//The next three functions deal with timed events:
+//InitChain is for things that execute when the chain is initialized
 func (ep *ExamplePlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
 }
 
+//BeginBlock deal with things that execute at the beginning of blocks, like arbitrary per-block financial stuff
 func (ep *ExamplePlugin) BeginBlock(store types.KVStore, hash []byte, header *abci.Header) {
 }
 
+//EndBlock is for things that execute at the ends of blocks, like validator set updates
 func (ep *ExamplePlugin) EndBlock(store types.KVStore, height uint64) abci.ResponseEndBlock {
 	return abci.ResponseEndBlock{}
 }

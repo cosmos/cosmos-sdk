@@ -2,20 +2,24 @@ package app
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	cmn "github.com/tendermint/go-common"
 	"github.com/tendermint/go-crypto"
 	eyescli "github.com/tendermint/merkleeyes/client"
 )
+
+const genesisFilepath = "./testdata/genesis.json"
 
 func TestLoadGenesis(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	eyesCli := eyescli.NewLocalClient("", 0)
 	app := NewBasecoin(eyesCli)
-	err := app.LoadGenesis("./testdata/genesis.json")
+	err := app.LoadGenesis(genesisFilepath)
 	require.Nil(err, "%+v", err)
 
 	// check the chain id
@@ -40,4 +44,25 @@ func TestLoadGenesis(t *testing.T) {
 	if assert.True(ok) {
 		assert.EqualValues(pkbyte, epk[:])
 	}
+}
+
+func TestParseGenesisList(t *testing.T) {
+	assert, require := assert.New(t), require.New(t)
+
+	bytes, err := cmn.ReadFile(genesisFilepath)
+	require.Nil(err, "loading genesis file %+v", err)
+
+	// the basecoin genesis go-data :)
+	genDoc := new(FullGenesisDoc)
+	err = json.Unmarshal(bytes, genDoc)
+	require.Nil(err, "unmarshaling genesis file %+v", err)
+
+	pluginOpts, err := parseGenesisList(genDoc.AppOptions.PluginOptions)
+	require.Nil(err, "%+v", err)
+	genDoc.AppOptions.pluginOptions = pluginOpts
+
+	assert.Equal(genDoc.AppOptions.pluginOptions[0].Key, "plugin1/key1")
+	assert.Equal(genDoc.AppOptions.pluginOptions[1].Key, "plugin1/key2")
+	assert.Equal(genDoc.AppOptions.pluginOptions[0].Value, "value1")
+	assert.Equal(genDoc.AppOptions.pluginOptions[1].Value, "value2")
 }

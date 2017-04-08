@@ -13,6 +13,7 @@ the correct way to install is:
 
 ```
 cd $GOPATH/src/github.com/tendermint/basecoin
+git pull origin master
 make get_vendor_deps
 make install
 ```

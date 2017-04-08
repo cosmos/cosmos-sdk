@@ -2,11 +2,10 @@ package commands
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io/ioutil"
 
-	"github.com/urfave/cli"
+	"github.com/spf13/cobra"
 
 	"github.com/tendermint/basecoin/plugins/ibc"
 
@@ -21,172 +20,110 @@ func NewIBCPlugin() *ibc.IBCPlugin {
 	return ibc.New()
 }
 
-//---------------------------------------------------------------------
-// ibc flags
-
+//commands
 var (
-	IbcChainIDFlag = cli.StringFlag{
-		Name:  "chain_id",
-		Usage: "ChainID for the new blockchain",
-		Value: "",
+	IBCTxCmd = &cobra.Command{
+		Use:   "ibc",
+		Short: "An IBC transaction, for InterBlockchain Communication",
 	}
 
-	IbcGenesisFlag = cli.StringFlag{
-		Name:  "genesis",
-		Usage: "Genesis file for the new blockchain",
-		Value: "",
+	IBCRegisterTxCmd = &cobra.Command{
+		Use:   "register",
+		Short: "Register a blockchain via IBC",
+		Run:   ibcRegisterTxCmd,
 	}
 
-	IbcHeaderFlag = cli.StringFlag{
-		Name:  "header",
-		Usage: "Block header for an ibc update",
-		Value: "",
+	IBCUpdateTxCmd = &cobra.Command{
+		Use:   "update",
+		Short: "Update the latest state of a blockchain via IBC",
+		Run:   ibcUpdateTxCmd,
 	}
 
-	IbcCommitFlag = cli.StringFlag{
-		Name:  "commit",
-		Usage: "Block commit for an ibc update",
-		Value: "",
+	IBCPacketTxCmd = &cobra.Command{
+		Use:   "packet",
+		Short: "Send a new packet via IBC",
 	}
 
-	IbcFromFlag = cli.StringFlag{
-		Name:  "from",
-		Usage: "Source ChainID",
-		Value: "",
+	IBCPacketCreateTxCmd = &cobra.Command{
+		Use:   "create",
+		Short: "Create an egress IBC packet",
+		Run:   ibcPacketCreateTxCmd,
 	}
 
-	IbcToFlag = cli.StringFlag{
-		Name:  "to",
-		Usage: "Destination ChainID",
-		Value: "",
-	}
-
-	IbcTypeFlag = cli.StringFlag{
-		Name:  "type",
-		Usage: "IBC packet type (eg. coin)",
-		Value: "",
-	}
-
-	IbcPayloadFlag = cli.StringFlag{
-		Name:  "payload",
-		Usage: "IBC packet payload",
-		Value: "",
-	}
-
-	IbcPacketFlag = cli.StringFlag{
-		Name:  "packet",
-		Usage: "hex-encoded IBC packet",
-		Value: "",
-	}
-
-	IbcProofFlag = cli.StringFlag{
-		Name:  "proof",
-		Usage: "hex-encoded proof of IBC packet from source chain",
-		Value: "",
-	}
-
-	IbcSequenceFlag = cli.IntFlag{
-		Name:  "sequence",
-		Usage: "sequence number for IBC packet",
-		Value: 0,
-	}
-
-	IbcHeightFlag = cli.IntFlag{
-		Name:  "height",
-		Usage: "Height the packet became egress in source chain",
-		Value: 0,
+	IBCPacketPostTxCmd = &cobra.Command{
+		Use:   "post",
+		Short: "Deliver an IBC packet to another chain",
+		Run:   ibcPacketPostTxCmd,
 	}
 )
 
-//---------------------------------------------------------------------
-// ibc commands
-
+//flags
 var (
-	IbcTxCmd = cli.Command{
-		Name:  "ibc",
-		Usage: "an IBC transaction, for InterBlockchain Communication",
-		Flags: TxFlags,
-		Subcommands: []cli.Command{
-			IbcRegisterTxCmd,
-			IbcUpdateTxCmd,
-			IbcPacketTxCmd,
-		},
-	}
-
-	IbcRegisterTxCmd = cli.Command{
-		Name:  "register",
-		Usage: "Register a blockchain via IBC",
-		Action: func(c *cli.Context) error {
-			return cmdIBCRegisterTx(c)
-		},
-		Flags: []cli.Flag{
-			IbcChainIDFlag,
-			IbcGenesisFlag,
-		},
-	}
-
-	IbcUpdateTxCmd = cli.Command{
-		Name:  "update",
-		Usage: "Update the latest state of a blockchain via IBC",
-		Action: func(c *cli.Context) error {
-			return cmdIBCUpdateTx(c)
-		},
-		Flags: []cli.Flag{
-			IbcHeaderFlag,
-			IbcCommitFlag,
-		},
-	}
-
-	IbcPacketTxCmd = cli.Command{
-		Name:  "packet",
-		Usage: "Send a new packet via IBC",
-		Subcommands: []cli.Command{
-			IbcPacketCreateTx,
-			IbcPacketPostTx,
-		},
-	}
-
-	IbcPacketCreateTx = cli.Command{
-		Name:  "create",
-		Usage: "Create an egress IBC packet",
-		Action: func(c *cli.Context) error {
-			return cmdIBCPacketCreateTx(c)
-		},
-		Flags: []cli.Flag{
-			IbcFromFlag,
-			IbcToFlag,
-			IbcTypeFlag,
-			IbcPayloadFlag,
-			IbcSequenceFlag,
-		},
-	}
-
-	IbcPacketPostTx = cli.Command{
-		Name:  "post",
-		Usage: "Deliver an IBC packet to another chain",
-		Action: func(c *cli.Context) error {
-			return cmdIBCPacketPostTx(c)
-		},
-		Flags: []cli.Flag{
-			IbcFromFlag,
-			IbcHeightFlag,
-			IbcPacketFlag,
-			IbcProofFlag,
-		},
-	}
+	ibcChainIDFlag  string
+	ibcGenesisFlag  string
+	ibcHeaderFlag   string
+	ibcCommitFlag   string
+	ibcFromFlag     string
+	ibcToFlag       string
+	ibcTypeFlag     string
+	ibcPayloadFlag  string
+	ibcPacketFlag   string
+	ibcProofFlag    string
+	ibcSequenceFlag int
+	ibcHeightFlag   int
 )
+
+func init() {
+
+	// register flags
+	registerFlags := []Flag2Register{
+		{&ibcChainIDFlag, "ibc_chain_id", "", "ChainID for the new blockchain"},
+		{&ibcGenesisFlag, "genesis", "", "Genesis file for the new blockchain"},
+	}
+
+	updateFlags := []Flag2Register{
+		{&ibcHeaderFlag, "header", "", "Block header for an ibc update"},
+		{&ibcCommitFlag, "commit", "", "Block commit for an ibc update"},
+	}
+
+	fromFlagReg := Flag2Register{&ibcFromFlag, "ibc_from", "", "Source ChainID"}
+
+	packetCreateFlags := []Flag2Register{
+		fromFlagReg,
+		{&ibcToFlag, "to", "", "Destination ChainID"},
+		{&ibcTypeFlag, "type", "", "IBC packet type (eg. coin},"},
+		{&ibcPayloadFlag, "payload", "", "IBC packet payload"},
+		{&ibcSequenceFlag, "ibc_sequence", -1, "sequence number for IBC packet"},
+	}
+
+	packetPostFlags := []Flag2Register{
+		fromFlagReg,
+		{&ibcHeightFlag, "height", 0, "Height the packet became egress in source chain"},
+		{&ibcPacketFlag, "packet", "", "hex-encoded IBC packet"},
+		{&ibcProofFlag, "proof", "", "hex-encoded proof of IBC packet from source chain"},
+	}
+
+	RegisterFlags(IBCRegisterTxCmd, registerFlags)
+	RegisterFlags(IBCUpdateTxCmd, updateFlags)
+	RegisterFlags(IBCPacketCreateTxCmd, packetCreateFlags)
+	RegisterFlags(IBCPacketPostTxCmd, packetPostFlags)
+
+	//register commands
+	IBCTxCmd.AddCommand(IBCRegisterTxCmd, IBCUpdateTxCmd, IBCPacketTxCmd)
+	IBCPacketTxCmd.AddCommand(IBCPacketCreateTxCmd, IBCPacketPostTxCmd)
+	RegisterTxSubcommand(IBCTxCmd)
+}
 
 //---------------------------------------------------------------------
 // ibc command implementations
 
-func cmdIBCRegisterTx(c *cli.Context) error {
-	chainID := c.String("chain_id")
-	genesisFile := c.String("genesis")
-	parent := c.Parent()
+func ibcRegisterTxCmd(cmd *cobra.Command, args []string) {
+	chainID := ibcChainIDFlag
+	genesisFile := ibcGenesisFlag
 
 	genesisBytes, err := ioutil.ReadFile(genesisFile)
 	if err != nil {
-		return errors.New(cmn.Fmt("Error reading genesis file %v: %v", genesisFile, err))
+		cmn.Exit(fmt.Sprintf("Error reading genesis file %v: %+v\n", genesisFile, err))
 	}
 
 	ibcTx := ibc.IBCRegisterChainTx{
@@ -203,27 +140,31 @@ func cmdIBCRegisterTx(c *cli.Context) error {
 	}{ibcTx}))
 	name := "IBC"
 
-	return AppTx(parent, name, data)
+	AppTx(name, data)
 }
 
-func cmdIBCUpdateTx(c *cli.Context) error {
-	headerBytes, err := hex.DecodeString(StripHex(c.String("header")))
+func ibcUpdateTxCmd(cmd *cobra.Command, args []string) {
+	headerBytes, err := hex.DecodeString(StripHex(ibcHeaderFlag))
 	if err != nil {
-		return errors.New(cmn.Fmt("Header (%v) is invalid hex: %v", c.String("header"), err))
+		cmn.Exit(fmt.Sprintf("Header (%v) is invalid hex: %+v\n", ibcHeaderFlag, err))
 	}
-	commitBytes, err := hex.DecodeString(StripHex(c.String("commit")))
+
+	commitBytes, err := hex.DecodeString(StripHex(ibcCommitFlag))
 	if err != nil {
-		return errors.New(cmn.Fmt("Commit (%v) is invalid hex: %v", c.String("commit"), err))
+		cmn.Exit(fmt.Sprintf("Commit (%v) is invalid hex: %+v\n", ibcCommitFlag, err))
 	}
 
 	header := new(tmtypes.Header)
 	commit := new(tmtypes.Commit)
 
-	if err := wire.ReadBinaryBytes(headerBytes, &header); err != nil {
-		return errors.New(cmn.Fmt("Error unmarshalling header: %v", err))
+	err = wire.ReadBinaryBytes(headerBytes, &header)
+	if err != nil {
+		cmn.Exit(fmt.Sprintf("Error unmarshalling header: %+v\n", err))
 	}
-	if err := wire.ReadBinaryBytes(commitBytes, &commit); err != nil {
-		return errors.New(cmn.Fmt("Error unmarshalling commit: %v", err))
+
+	err = wire.ReadBinaryBytes(commitBytes, &commit)
+	if err != nil {
+		cmn.Exit(fmt.Sprintf("Error unmarshalling commit: %+v\n", err))
 	}
 
 	ibcTx := ibc.IBCUpdateChainTx{
@@ -238,21 +179,21 @@ func cmdIBCUpdateTx(c *cli.Context) error {
 	}{ibcTx}))
 	name := "IBC"
 
-	return AppTx(c.Parent(), name, data)
+	AppTx(name, data)
 }
 
-func cmdIBCPacketCreateTx(c *cli.Context) error {
-	fromChain, toChain := c.String("from"), c.String("to")
-	packetType := c.String("type")
+func ibcPacketCreateTxCmd(cmd *cobra.Command, args []string) {
+	fromChain, toChain := ibcFromFlag, ibcToFlag
+	packetType := ibcTypeFlag
 
-	payloadBytes, err := hex.DecodeString(StripHex(c.String("payload")))
+	payloadBytes, err := hex.DecodeString(StripHex(ibcPayloadFlag))
 	if err != nil {
-		return errors.New(cmn.Fmt("Payload (%v) is invalid hex: %v", c.String("payload"), err))
+		cmn.Exit(fmt.Sprintf("Payload (%v) is invalid hex: %+v\n", ibcPayloadFlag, err))
 	}
 
-	sequence, err := getIBCSequence(c)
+	sequence, err := ibcSequenceCmd()
 	if err != nil {
-		return err
+		cmn.Exit(fmt.Sprintf("%+v\n", err))
 	}
 
 	ibcTx := ibc.IBCPacketCreateTx{
@@ -271,29 +212,33 @@ func cmdIBCPacketCreateTx(c *cli.Context) error {
 		ibc.IBCTx `json:"unwrap"`
 	}{ibcTx}))
 
-	return AppTx(c.Parent().Parent(), "IBC", data)
+	AppTx("IBC", data)
 }
 
-func cmdIBCPacketPostTx(c *cli.Context) error {
-	fromChain, fromHeight := c.String("from"), c.Int("height")
+func ibcPacketPostTxCmd(cmd *cobra.Command, args []string) {
+	fromChain, fromHeight := ibcFromFlag, ibcHeightFlag
 
-	packetBytes, err := hex.DecodeString(StripHex(c.String("packet")))
+	packetBytes, err := hex.DecodeString(StripHex(ibcPacketFlag))
 	if err != nil {
-		return errors.New(cmn.Fmt("Packet (%v) is invalid hex: %v", c.String("packet"), err))
+		cmn.Exit(fmt.Sprintf("Packet (%v) is invalid hex: %+v\n", ibcPacketFlag, err))
 	}
-	proofBytes, err := hex.DecodeString(StripHex(c.String("proof")))
+
+	proofBytes, err := hex.DecodeString(StripHex(ibcProofFlag))
 	if err != nil {
-		return errors.New(cmn.Fmt("Proof (%v) is invalid hex: %v", c.String("proof"), err))
+		cmn.Exit(fmt.Sprintf("Proof (%v) is invalid hex: %+v\n", ibcProofFlag, err))
 	}
 
 	var packet ibc.Packet
 	proof := new(merkle.IAVLProof)
 
-	if err := wire.ReadBinaryBytes(packetBytes, &packet); err != nil {
-		return errors.New(cmn.Fmt("Error unmarshalling packet: %v", err))
+	err = wire.ReadBinaryBytes(packetBytes, &packet)
+	if err != nil {
+		cmn.Exit(fmt.Sprintf("Error unmarshalling packet: %+v\n", err))
 	}
-	if err := wire.ReadBinaryBytes(proofBytes, &proof); err != nil {
-		return errors.New(cmn.Fmt("Error unmarshalling proof: %v", err))
+
+	err = wire.ReadBinaryBytes(proofBytes, &proof)
+	if err != nil {
+		cmn.Exit(fmt.Sprintf("Error unmarshalling proof: %+v\n", err))
 	}
 
 	ibcTx := ibc.IBCPacketPostTx{
@@ -309,12 +254,12 @@ func cmdIBCPacketPostTx(c *cli.Context) error {
 		ibc.IBCTx `json:"unwrap"`
 	}{ibcTx}))
 
-	return AppTx(c.Parent().Parent(), "IBC", data)
+	AppTx("IBC", data)
 }
 
-func getIBCSequence(c *cli.Context) (uint64, error) {
-	if c.IsSet("sequence") {
-		return uint64(c.Int("sequence")), nil
+func ibcSequenceCmd() (uint64, error) {
+	if ibcSequenceFlag >= 0 {
+		return uint64(ibcSequenceFlag), nil
 	}
 
 	// TODO: get sequence

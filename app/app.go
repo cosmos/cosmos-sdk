@@ -5,17 +5,17 @@ import (
 	"strings"
 
 	abci "github.com/tendermint/abci/types"
-	sm "github.com/tendermint/basecoin/state"
-	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
+
+	sm "github.com/tendermint/basecoin/state"
+	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/basecoin/version"
 )
 
 const (
-	version   = "0.1"
-	maxTxSize = 10240
-
+	maxTxSize      = 10240
 	PluginNameBase = "base"
 )
 
@@ -44,7 +44,7 @@ func (app *Basecoin) GetState() *sm.State {
 
 // ABCI::Info
 func (app *Basecoin) Info() abci.ResponseInfo {
-	return abci.ResponseInfo{Data: Fmt("Basecoin v%v", version)}
+	return abci.ResponseInfo{Data: Fmt("Basecoin v%v", version.Version)}
 }
 
 func (app *Basecoin) RegisterPlugin(plugin types.Plugin) {

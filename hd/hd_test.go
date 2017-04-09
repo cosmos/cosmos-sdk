@@ -1,4 +1,4 @@
-package crypto
+package hd
 
 import (
 	"bytes"
@@ -36,15 +36,6 @@ type addrData struct {
 var hdPath string = "m/44'/118'/0'/0/0"
 var hdToAddrTable []addrData
 
-/*{
-	{
-		Mnemonic: "spawn essence sudden gown library fire chalk edge start museum glimpse sea",
-		Priv:     "ab20a81c1b9002538e2269e1f1302d519901633d40408313211598899bc00fc6",
-		Pub:      "03eb89fb1c4582eed592e09c31c4665d3956154ea66fd269933d3f036e879abfe6",
-		Addr:     "f7d613738f0a665ec320306d14f5d62a850ff714",
-	},
-}*/
-
 func init() {
 
 	b, err := ioutil.ReadFile("test.json")
@@ -71,30 +62,30 @@ func TestHDToAddr(t *testing.T) {
 
 		seed := bip39.NewSeed(d.Mnemonic, "")
 
-		fmt.Println(i, d.Mnemonic)
+		fmt.Println("================================")
+		fmt.Println("ROUND:", i, "MNEMONIC:", d.Mnemonic)
 
-		//master, priv, pub := tylerSmith(seed)
-		master, priv, pub := btcsuite(seed)
+		// master, priv, pub := tylerSmith(seed)
+		// master, priv, pub := btcsuite(seed)
+		master, priv, pub := gocrypto(seed)
 
-		fmt.Printf("\t%X %X\n", seedB, seed)
-		fmt.Printf("\t%X %X\n", masterB, master)
-		fmt.Printf("\t%X %X\n", privB, priv)
-		fmt.Printf("\t%X %X\n", pubB, pub)
+		fmt.Printf("\tNODEJS GOLANG\n")
+		fmt.Printf("SEED \t%X %X\n", seedB, seed)
+		fmt.Printf("MSTR \t%X %X\n", masterB, master)
+		fmt.Printf("PRIV \t%X %X\n", privB, priv)
+		fmt.Printf("PUB  \t%X %X\n", pubB, pub)
 		_, _ = priv, privB
 
 		assert.Equal(t, master, masterB, fmt.Sprintf("Expected masters to match for %d", i))
-
-		// assert.Equal(t, priv, privB, "Expected priv keys to match")
+		assert.Equal(t, priv, privB, "Expected priv keys to match")
 		assert.Equal(t, pub, pubB, fmt.Sprintf("Expected pub keys to match for %d", i))
 
 		var pubT crypto.PubKeySecp256k1
 		copy(pubT[:], pub)
 		addr := pubT.Address()
+		fmt.Printf("ADDR  \t%X %X\n", addrB, addr)
 		assert.Equal(t, addr, addrB, fmt.Sprintf("Expected addresses to match %d", i))
 
-		/*		if i%10 == 0 {
-				fmt.Printf("ADDR %d: %s %X %X\n", i, d.Mnemonic, addr, addrB)
-			}*/
 	}
 }
 
@@ -103,6 +94,21 @@ func ifExit(err error, n int) {
 		fmt.Println(n, err)
 		os.Exit(1)
 	}
+}
+
+func gocrypto(seed []byte) ([]byte, []byte, []byte) {
+
+	_, priv, ch, _ := ComputeMastersFromSeed(string(seed))
+
+	privBytes := DerivePrivateKeyForPath(
+		HexDecode(priv),
+		HexDecode(ch),
+		"44'/118'/0'/0/0",
+	)
+
+	pubBytes := PubKeyBytesFromPrivKeyBytes(privBytes, true)
+
+	return HexDecode(priv), privBytes, pubBytes
 }
 
 func btcsuite(seed []byte) ([]byte, []byte, []byte) {

@@ -69,12 +69,12 @@ func TestKeyEncodings(t *testing.T) {
 		keyName string
 	}{
 		{
-			privKey: WrapPrivKey(GenPrivKeyEd25519()),
+			privKey: GenPrivKeyEd25519().Wrap(),
 			keyType: TypeEd25519,
 			keyName: NameEd25519,
 		},
 		{
-			privKey: WrapPrivKey(GenPrivKeySecp256k1()),
+			privKey: GenPrivKeySecp256k1().Wrap(),
 			keyType: TypeSecp256k1,
 			keyName: NameSecp256k1,
 		},

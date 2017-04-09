@@ -24,7 +24,7 @@ func TestSignAndValidateEd25519(t *testing.T) {
 	// Mutate the signature, just one bit.
 	sigEd := sig.Unwrap().(SignatureEd25519)
 	sigEd[7] ^= byte(0x01)
-	sig = WrapSignature(sigEd)
+	sig = sigEd.Wrap()
 
 	assert.False(t, pubKey.VerifyBytes(msg, sig))
 }
@@ -41,7 +41,7 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 	// Mutate the signature, just one bit.
 	sigEd := sig.Unwrap().(SignatureSecp256k1)
 	sigEd[3] ^= byte(0x01)
-	sig = WrapSignature(sigEd)
+	sig = sigEd.Wrap()
 
 	assert.False(t, pubKey.VerifyBytes(msg, sig))
 }
@@ -54,13 +54,13 @@ func TestSignatureEncodings(t *testing.T) {
 		sigName string
 	}{
 		{
-			privKey: WrapPrivKey(GenPrivKeyEd25519()),
+			privKey: GenPrivKeyEd25519().Wrap(),
 			sigSize: ed25519.SignatureSize,
 			sigType: TypeEd25519,
 			sigName: NameEd25519,
 		},
 		{
-			privKey: WrapPrivKey(GenPrivKeySecp256k1()),
+			privKey: GenPrivKeySecp256k1().Wrap(),
 			sigSize: 0, // unknown
 			sigType: TypeSecp256k1,
 			sigName: NameSecp256k1,
@@ -119,10 +119,10 @@ func TestWrapping(t *testing.T) {
 
 	// do some wrapping
 	pubs := []PubKey{
-		WrapPubKey(nil),
-		WrapPubKey(pub),
-		WrapPubKey(WrapPubKey(WrapPubKey(WrapPubKey(pub)))),
-		WrapPubKey(PubKey{PubKey{PubKey{pub}}}),
+		PubKey{nil},
+		pub.Wrap(),
+		pub.Wrap().Wrap().Wrap(),
+		PubKey{PubKey{PubKey{pub}}}.Wrap(),
 	}
 	for _, p := range pubs {
 		_, ok := p.PubKeyInner.(PubKey)
@@ -130,10 +130,10 @@ func TestWrapping(t *testing.T) {
 	}
 
 	sigs := []Signature{
-		WrapSignature(nil),
-		WrapSignature(sig),
-		WrapSignature(WrapSignature(WrapSignature(WrapSignature(sig)))),
-		WrapSignature(Signature{Signature{Signature{sig}}}),
+		Signature{nil},
+		sig.Wrap(),
+		sig.Wrap().Wrap().Wrap(),
+		Signature{Signature{Signature{sig}}}.Wrap(),
 	}
 	for _, s := range sigs {
 		_, ok := s.SignatureInner.(Signature)

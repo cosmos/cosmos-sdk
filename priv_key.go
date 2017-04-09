@@ -11,59 +11,26 @@ import (
 	"github.com/tendermint/go-wire"
 )
 
-/*
-DO NOT USE this interface.
-
-It is public by necessity but should never be used directly
-outside of this package.
-
-Only use the PrivKey, never the PrivKeyInner
-*/
-type PrivKeyInner interface {
-	Bytes() []byte
-	Sign(msg []byte) Signature
-	PubKey() PubKey
-	Equals(PrivKey) bool
+func PrivKeyFromBytes(privKeyBytes []byte) (privKey PrivKey, err error) {
+	err = wire.ReadBinaryBytes(privKeyBytes, &privKey)
+	return
 }
 
-// Types of implementations
-const (
-	TypeEd25519   = byte(0x01)
-	TypeSecp256k1 = byte(0x02)
-	NameEd25519   = "ed25519"
-	NameSecp256k1 = "secp256k1"
-)
+//----------------------------------------
 
-var privKeyMapper data.Mapper
-
-// register both private key types with go-data (and thus go-wire)
-func init() {
-	privKeyMapper = data.NewMapper(PrivKey{}).
-		RegisterImplementation(PrivKeyEd25519{}, NameEd25519, TypeEd25519).
-		RegisterImplementation(PrivKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
-}
-
-// PrivKey should be used instead of an interface in all external packages
-// unless you demand a concrete implementation, then use that directly.
 type PrivKey struct {
 	PrivKeyInner `json:"unwrap"`
 }
 
-// WrapPrivKey goes from concrete implementation to "interface" struct
-func WrapPrivKey(pk PrivKeyInner) PrivKey {
-	if wrap, ok := pk.(PrivKey); ok {
-		pk = wrap.Unwrap()
-	}
-	return PrivKey{pk}
-}
-
-// Unwrap recovers the concrete interface safely (regardless of levels of embeds)
-func (p PrivKey) Unwrap() PrivKeyInner {
-	pk := p.PrivKeyInner
-	for wrap, ok := pk.(PrivKey); ok; wrap, ok = pk.(PrivKey) {
-		pk = wrap.PrivKeyInner
-	}
-	return pk
+// DO NOT USE THIS INTERFACE.
+// You probably want to use PubKey
+type PrivKeyInner interface {
+	AssertIsPrivKeyInner()
+	Bytes() []byte
+	Sign(msg []byte) Signature
+	PubKey() PubKey
+	Equals(PrivKey) bool
+	Wrap() PrivKey
 }
 
 func (p PrivKey) MarshalJSON() ([]byte, error) {
@@ -78,19 +45,29 @@ func (p *PrivKey) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
+// Unwrap recovers the concrete interface safely (regardless of levels of embeds)
+func (p PrivKey) Unwrap() PrivKeyInner {
+	pk := p.PrivKeyInner
+	for wrap, ok := pk.(PrivKey); ok; wrap, ok = pk.(PrivKey) {
+		pk = wrap.PrivKeyInner
+	}
+	return pk
+}
+
 func (p PrivKey) Empty() bool {
 	return p.PrivKeyInner == nil
 }
 
-func PrivKeyFromBytes(privKeyBytes []byte) (privKey PrivKey, err error) {
-	err = wire.ReadBinaryBytes(privKeyBytes, &privKey)
-	return
-}
+var privKeyMapper = data.NewMapper(PrivKey{}).
+	RegisterImplementation(PrivKeyEd25519{}, NameEd25519, TypeEd25519).
+	RegisterImplementation(PrivKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
 
 //-------------------------------------
 
 // Implements PrivKey
 type PrivKeyEd25519 [64]byte
+
+func (privKey PrivKeyEd25519) AssertIsPrivKeyInner() {}
 
 func (privKey PrivKeyEd25519) Bytes() []byte {
 	return wire.BinaryBytes(PrivKey{privKey})
@@ -99,13 +76,13 @@ func (privKey PrivKeyEd25519) Bytes() []byte {
 func (privKey PrivKeyEd25519) Sign(msg []byte) Signature {
 	privKeyBytes := [64]byte(privKey)
 	signatureBytes := ed25519.Sign(&privKeyBytes, msg)
-	return WrapSignature(SignatureEd25519(*signatureBytes))
+	return SignatureEd25519(*signatureBytes).Wrap()
 }
 
 func (privKey PrivKeyEd25519) PubKey() PubKey {
 	privKeyBytes := [64]byte(privKey)
 	pubBytes := *ed25519.MakePublicKey(&privKeyBytes)
-	return WrapPubKey(PubKeyEd25519(pubBytes))
+	return PubKeyEd25519(pubBytes).Wrap()
 }
 
 func (privKey PrivKeyEd25519) Equals(other PrivKey) bool {
@@ -149,6 +126,10 @@ func (privKey PrivKeyEd25519) Generate(index int) PrivKeyEd25519 {
 	return PrivKeyEd25519(newKey)
 }
 
+func (privKey PrivKeyEd25519) Wrap() PrivKey {
+	return PrivKey{privKey}
+}
+
 func GenPrivKeyEd25519() PrivKeyEd25519 {
 	privKeyBytes := new([64]byte)
 	copy(privKeyBytes[:32], CRandBytes(32))
@@ -171,6 +152,8 @@ func GenPrivKeyEd25519FromSecret(secret []byte) PrivKeyEd25519 {
 // Implements PrivKey
 type PrivKeySecp256k1 [32]byte
 
+func (privKey PrivKeySecp256k1) AssertIsPrivKeyInner() {}
+
 func (privKey PrivKeySecp256k1) Bytes() []byte {
 	return wire.BinaryBytes(PrivKey{privKey})
 }
@@ -181,14 +164,14 @@ func (privKey PrivKeySecp256k1) Sign(msg []byte) Signature {
 	if err != nil {
 		PanicSanity(err)
 	}
-	return WrapSignature(SignatureSecp256k1(sig__.Serialize()))
+	return SignatureSecp256k1(sig__.Serialize()).Wrap()
 }
 
 func (privKey PrivKeySecp256k1) PubKey() PubKey {
 	_, pub__ := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey[:])
 	var pub PubKeySecp256k1
 	copy(pub[:], pub__.SerializeCompressed())
-	return WrapPubKey(pub)
+	return pub.Wrap()
 }
 
 func (privKey PrivKeySecp256k1) Equals(other PrivKey) bool {
@@ -212,6 +195,10 @@ func (p *PrivKeySecp256k1) UnmarshalJSON(enc []byte) error {
 
 func (privKey PrivKeySecp256k1) String() string {
 	return Fmt("PrivKeySecp256k1{*****}")
+}
+
+func (privKey PrivKeySecp256k1) Wrap() PrivKey {
+	return PrivKey{privKey}
 }
 
 /*

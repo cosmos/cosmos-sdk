@@ -13,79 +13,64 @@ import (
 	"golang.org/x/crypto/ripemd160"
 )
 
-/*
-DO NOT USE this interface.
+func PubKeyFromBytes(pubKeyBytes []byte) (pubKey PubKey, err error) {
+	err = wire.ReadBinaryBytes(pubKeyBytes, &pubKey)
+	return
+}
 
-It is public by necessity but should never be used directly
-outside of this package.
+//----------------------------------------
 
-Only use the PubKey, never the PubKeyInner
-*/
+type PubKey struct {
+	PubKeyInner `json:"unwrap"`
+}
+
+// DO NOT USE THIS INTERFACE.
+// You probably want to use PubKey
 type PubKeyInner interface {
+	AssertIsPubKeyInner()
 	Address() []byte
 	Bytes() []byte
 	KeyString() string
 	VerifyBytes(msg []byte, sig Signature) bool
 	Equals(PubKey) bool
+	Wrap() PubKey
 }
 
-var pubKeyMapper data.Mapper
-
-// register both public key types with go-data (and thus go-wire)
-func init() {
-	pubKeyMapper = data.NewMapper(PubKey{}).
-		RegisterImplementation(PubKeyEd25519{}, NameEd25519, TypeEd25519).
-		RegisterImplementation(PubKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
+func (pk PubKey) MarshalJSON() ([]byte, error) {
+	return pubKeyMapper.ToJSON(pk.PubKeyInner)
 }
 
-// PubKey should be used instead of an interface in all external packages
-// unless you demand a concrete implementation, then use that directly.
-type PubKey struct {
-	PubKeyInner `json:"unwrap"`
-}
-
-// WrapPubKey goes from concrete implementation to "interface" struct
-func WrapPubKey(pk PubKeyInner) PubKey {
-	if wrap, ok := pk.(PubKey); ok {
-		pk = wrap.Unwrap()
+func (pk *PubKey) UnmarshalJSON(data []byte) (err error) {
+	parsed, err := pubKeyMapper.FromJSON(data)
+	if err == nil && parsed != nil {
+		pk.PubKeyInner = parsed.(PubKeyInner)
 	}
-	return PubKey{pk}
+	return
 }
 
 // Unwrap recovers the concrete interface safely (regardless of levels of embeds)
-func (p PubKey) Unwrap() PubKeyInner {
-	pk := p.PubKeyInner
-	for wrap, ok := pk.(PubKey); ok; wrap, ok = pk.(PubKey) {
-		pk = wrap.PubKeyInner
+func (pk PubKey) Unwrap() PubKeyInner {
+	pkI := pk.PubKeyInner
+	for wrap, ok := pkI.(PubKey); ok; wrap, ok = pkI.(PubKey) {
+		pkI = wrap.PubKeyInner
 	}
-	return pk
-}
-
-func (p PubKey) MarshalJSON() ([]byte, error) {
-	return pubKeyMapper.ToJSON(p.PubKeyInner)
-}
-
-func (p *PubKey) UnmarshalJSON(data []byte) (err error) {
-	parsed, err := pubKeyMapper.FromJSON(data)
-	if err == nil && parsed != nil {
-		p.PubKeyInner = parsed.(PubKeyInner)
-	}
-	return
+	return pkI
 }
 
 func (p PubKey) Empty() bool {
 	return p.PubKeyInner == nil
 }
 
-func PubKeyFromBytes(pubKeyBytes []byte) (pubKey PubKey, err error) {
-	err = wire.ReadBinaryBytes(pubKeyBytes, &pubKey)
-	return
-}
+var pubKeyMapper = data.NewMapper(PubKey{}).
+	RegisterImplementation(PubKeyEd25519{}, NameEd25519, TypeEd25519).
+	RegisterImplementation(PubKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
 
 //-------------------------------------
 
 // Implements PubKeyInner
 type PubKeyEd25519 [32]byte
+
+func (pubKey PubKeyEd25519) AssertIsPubKeyInner() {}
 
 func (pubKey PubKeyEd25519) Address() []byte {
 	w, n, err := new(bytes.Buffer), new(int), new(error)
@@ -155,12 +140,18 @@ func (pubKey PubKeyEd25519) Equals(other PubKey) bool {
 	}
 }
 
+func (pubKey PubKeyEd25519) Wrap() PubKey {
+	return PubKey{pubKey}
+}
+
 //-------------------------------------
 
 // Implements PubKey.
 // Compressed pubkey (just the x-cord),
 // prefixed with 0x02 or 0x03, depending on the y-cord.
 type PubKeySecp256k1 [33]byte
+
+func (pubKey PubKeySecp256k1) AssertIsPubKeyInner() {}
 
 // Implements Bitcoin style addresses: RIPEMD160(SHA256(pubkey))
 func (pubKey PubKeySecp256k1) Address() []byte {
@@ -222,4 +213,8 @@ func (pubKey PubKeySecp256k1) Equals(other PubKey) bool {
 	} else {
 		return false
 	}
+}
+
+func (pubKey PubKeySecp256k1) Wrap() PubKey {
+	return PubKey{pubKey}
 }

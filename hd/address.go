@@ -219,7 +219,7 @@ func I64(key []byte, data []byte) ([]byte, []byte) {
 
 // This returns a Bitcoin-like address.
 func AddrFromPubKeyBytes(pubKeyBytes []byte) string {
-	prefix := byte(0x80) // TODO Make const or configurable
+	prefix := byte(0x00) // TODO Make const or configurable
 	h160 := CalcHash160(pubKeyBytes)
 	h160 = append([]byte{prefix}, h160...)
 	checksum := CalcHash256(h160)
@@ -228,7 +228,7 @@ func AddrFromPubKeyBytes(pubKeyBytes []byte) string {
 }
 
 func AddrBytesFromPubKeyBytes(pubKeyBytes []byte) (addrBytes []byte, checksum []byte) {
-	prefix := byte(0x80) // TODO Make const or configurable
+	prefix := byte(0x00) // TODO Make const or configurable
 	h160 := CalcHash160(pubKeyBytes)
 	_h160 := append([]byte{prefix}, h160...)
 	checksum = CalcHash256(_h160)[:4]

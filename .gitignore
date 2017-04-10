@@ -1,2 +1,7 @@
 *.swp
 *.swo
+vendor
+
+# these should be locked in the including repo, the dependencies are mainly
+# for testing and documentation
+glide.lock

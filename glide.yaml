@@ -1,0 +1,31 @@
+package: github.com/tendermint/go-crypto
+import:
+- package: github.com/btcsuite/btcd
+  subpackages:
+  - btcec
+- package: github.com/btcsuite/btcutil
+  subpackages:
+  - base58
+- package: github.com/tendermint/ed25519
+  subpackages:
+  - extra25519
+- package: github.com/tendermint/go-common
+- package: github.com/tendermint/go-data
+  version: develop
+- package: github.com/tendermint/go-wire
+  version: develop
+- package: golang.org/x/crypto
+  subpackages:
+  - blowfish
+  - nacl/secretbox
+  - openpgp/armor
+  - ripemd160
+testImport:
+- package: github.com/mndrix/btcutil
+- package: github.com/stretchr/testify
+  version: ^1.1.4
+  subpackages:
+  - assert
+  - require
+- package: github.com/tyler-smith/go-bip32
+- package: github.com/tyler-smith/go-bip39

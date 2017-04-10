@@ -6,4 +6,4 @@ docs:
 	godoc2md $(REPO) > README.md
 
 test:
-	go test ./...
+	go test `glide novendor`

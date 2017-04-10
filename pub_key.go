@@ -67,6 +67,8 @@ var pubKeyMapper = data.NewMapper(PubKey{}).
 
 //-------------------------------------
 
+var _ PubKeyInner = PubKeyEd25519{}
+
 // Implements PubKeyInner
 type PubKeyEd25519 [32]byte
 
@@ -145,6 +147,8 @@ func (pubKey PubKeyEd25519) Wrap() PubKey {
 }
 
 //-------------------------------------
+
+var _ PubKeyInner = PubKeySecp256k1{}
 
 // Implements PubKey.
 // Compressed pubkey (just the x-cord),

@@ -64,6 +64,8 @@ var privKeyMapper = data.NewMapper(PrivKey{}).
 
 //-------------------------------------
 
+var _ PrivKeyInner = PrivKeyEd25519{}
+
 // Implements PrivKey
 type PrivKeyEd25519 [64]byte
 
@@ -148,6 +150,8 @@ func GenPrivKeyEd25519FromSecret(secret []byte) PrivKeyEd25519 {
 }
 
 //-------------------------------------
+
+var _ PrivKeyInner = PrivKeySecp256k1{}
 
 // Implements PrivKey
 type PrivKeySecp256k1 [32]byte

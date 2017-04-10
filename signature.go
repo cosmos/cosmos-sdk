@@ -62,6 +62,8 @@ var sigMapper = data.NewMapper(Signature{}).
 
 //-------------------------------------
 
+var _ SignatureInner = SignatureEd25519{}
+
 // Implements Signature
 type SignatureEd25519 [64]byte
 
@@ -99,6 +101,8 @@ func (sig SignatureEd25519) Wrap() Signature {
 }
 
 //-------------------------------------
+
+var _ SignatureInner = SignatureSecp256k1{}
 
 // Implements Signature
 type SignatureSecp256k1 []byte

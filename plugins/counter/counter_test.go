@@ -9,7 +9,6 @@ import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/app"
 	"github.com/tendermint/basecoin/types"
-	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
 )
@@ -52,8 +51,7 @@ func TestCounterPlugin(t *testing.T) {
 		// Sign request
 		signBytes := tx.SignBytes(chainID)
 		// t.Logf("Sign bytes: %X\n", signBytes)
-		sig := test1PrivAcc.Sign(signBytes)
-		tx.Input.Signature = crypto.WrapSignature(sig)
+		tx.Input.Signature = test1PrivAcc.Sign(signBytes)
 		// t.Logf("Signed TX bytes: %X\n", wire.BinaryBytes(struct{ types.Tx }{tx}))
 
 		// Write request

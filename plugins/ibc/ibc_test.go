@@ -270,7 +270,7 @@ func TestIBCPluginBadCommit(t *testing.T) {
 	// Modify the first byte of the first signature
 	sig := commit.Precommits[0].Signature.Unwrap().(crypto.SignatureEd25519)
 	sig[0] += 1
-	commit.Precommits[0].Signature = crypto.WrapSignature(sig)
+	commit.Precommits[0].Signature = sig.Wrap()
 	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCUpdateChainTx{
 		Header: header,
 		Commit: commit,

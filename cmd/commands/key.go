@@ -62,9 +62,9 @@ func (a *Address) UnmarshalJSON(addrHex []byte) error {
 }
 
 type Key struct {
-	Address Address         `json:"address"`
-	PubKey  crypto.PubKeyS  `json:"pub_key"`
-	PrivKey crypto.PrivKeyS `json:"priv_key"`
+	Address Address        `json:"address"`
+	PubKey  crypto.PubKey  `json:"pub_key"`
+	PrivKey crypto.PrivKey `json:"priv_key"`
 }
 
 // Implements Signer

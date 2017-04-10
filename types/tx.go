@@ -104,7 +104,7 @@ func NewTxInput(pubKey crypto.PubKey, coins Coins, sequence int) TxInput {
 		Sequence: sequence,
 	}
 	if sequence == 1 {
-		input.PubKey = crypto.WrapPubKey(pubKey)
+		input.PubKey = pubKey
 	}
 	return input
 }
@@ -159,7 +159,7 @@ func (tx *SendTx) SignBytes(chainID string) []byte {
 func (tx *SendTx) SetSignature(addr []byte, sig crypto.Signature) bool {
 	for i, input := range tx.Inputs {
 		if bytes.Equal(input.Address, addr) {
-			tx.Inputs[i].Signature = crypto.WrapSignature(sig)
+			tx.Inputs[i].Signature = sig
 			return true
 		}
 	}
@@ -183,14 +183,14 @@ type AppTx struct {
 func (tx *AppTx) SignBytes(chainID string) []byte {
 	signBytes := wire.BinaryBytes(chainID)
 	sig := tx.Input.Signature
-	tx.Input.Signature = crypto.WrapSignature(nil)
+	tx.Input.Signature = crypto.Signature{}
 	signBytes = append(signBytes, wire.BinaryBytes(tx)...)
 	tx.Input.Signature = sig
 	return signBytes
 }
 
 func (tx *AppTx) SetSignature(sig crypto.Signature) bool {
-	tx.Input.Signature = crypto.WrapSignature(sig)
+	tx.Input.Signature = sig
 	return true
 }
 

@@ -1,18 +1,18 @@
-hash: c6e5febc35b5fd1003066820defb8a089db048b407239dad9faf44553fdc15e8
-updated: 2017-04-21T12:55:42.7004558-04:00
+hash: e7876b7cb70f79356bf2809547a78b1074b9f6f032e0ba861a65f8e7a6625832
+updated: 2017-04-10T20:27:50.460915186+02:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 4b348c1d33373d672edd83fc576892d0e46686d2
   subpackages:
   - btcec
 - name: github.com/BurntSushi/toml
-  version: b26d9c308763d68093482582cea63d69be07a0f0
+  version: 99064174e013895bbd9b025c31100bd1d9b590ca
 - name: github.com/ebuchman/fail-test
   version: 95f809107225be108efcf10a3509e4ea6ceef3c4
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/golang/protobuf
-  version: 2bba0603135d7d7f5cb73b2125beeda19c09f4ef
+  version: 69b215d01a5606c843240eab4937eab3acee6530
   subpackages:
   - proto
   - ptypes/any
@@ -25,15 +25,11 @@ imports:
 - name: github.com/jmhodges/levigo
   version: c42d9e0ca023e2198120196f842701bb4c55d7b9
 - name: github.com/mattn/go-colorable
-  version: ded68f7a9561c023e790de24279db7ebf473ea80
+  version: acb9493f2794fd0f820de7a27a217dafbb1b65ea
 - name: github.com/mattn/go-isatty
-  version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
+  version: 9622e0cc9d8f9be434ca605520ff9a16808fee47
 - name: github.com/pkg/errors
-  version: ff09b135c25aae272398c51a07235b90a75aa4f0
-- name: github.com/spf13/cobra
-  version: 10f6b9d7e1631a54ad07c5c0fb71c28a1abfd3c2
-- name: github.com/spf13/pflag
-  version: 2300d0f8576fe575f71aaa5b9bbe4e1b0dc2eb51
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/syndtr/goleveldb
   version: 8c81ea47d4c41a385645e133e15510fc6a2a74b4
   subpackages:
@@ -66,13 +62,13 @@ imports:
 - name: github.com/tendermint/go-clist
   version: 3baa390bbaf7634251c42ad69a8682e7e3990552
 - name: github.com/tendermint/go-common
-  version: f9e3db037330c8a8d61d3966de8473eaf01154fa
+  version: 6af2364fa91ef2f3afc8ba0db33b66d9d3ae006c
 - name: github.com/tendermint/go-config
   version: 620dcbbd7d587cf3599dedbf329b64311b0c307a
 - name: github.com/tendermint/go-crypto
-  version: 3e1dba7ab762bb689123eec30c468967f077a6a4
+  version: c410fc5e246e9accf95c6e80cb3c6aca2280755c
 - name: github.com/tendermint/go-data
-  version: 9fbf0684fefc4fad580992394a0bcf47c1b3d77e
+  version: e7fcc6d081ec8518912fcdc103188275f83a3ee5
 - name: github.com/tendermint/go-db
   version: 9643f60bc2578693844aacf380a7c32e4c029fee
 - name: github.com/tendermint/go-events
@@ -86,7 +82,7 @@ imports:
 - name: github.com/tendermint/go-merkle
   version: 714d4d04557fd068a7c2a1748241ce8428015a96
 - name: github.com/tendermint/go-p2p
-  version: a163fddbdd2541793d22402afb113e6ccb391774
+  version: b5f314ffed65c81bd019ba1dd2bae0e95f3937f3
   subpackages:
   - upnp
 - name: github.com/tendermint/go-rpc
@@ -107,7 +103,7 @@ imports:
   - app
   - client
 - name: github.com/tendermint/tendermint
-  version: 936e66867aecf92595b1f8615361b2867d9a69e6
+  version: c49b331ba8315725d213712ed0410b5c9eb5ba0f
   subpackages:
   - blockchain
   - cmd/tendermint/commands
@@ -126,7 +122,7 @@ imports:
   - types
   - version
 - name: golang.org/x/crypto
-  version: 96846453c37f0876340a66a47f3f75b1f3a6cd2d
+  version: 40541ccb1c6e64c947ed6f606b8a6cb4b67d7436
   subpackages:
   - curve25519
   - nacl/box
@@ -137,7 +133,7 @@ imports:
   - ripemd160
   - salsa20/salsa
 - name: golang.org/x/net
-  version: c8c74377599bd978aee1cf3b9b63a8634051cec2
+  version: d379faa25cbdc04d653984913a2ceb43b0bc46d7
   subpackages:
   - context
   - http2
@@ -147,7 +143,7 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/sys
-  version: ea9bcade75cb975a0b9738936568ab388b845617
+  version: e48874b42435b4347fc52bdee0424a52abc974d7
   subpackages:
   - unix
 - name: golang.org/x/text
@@ -162,13 +158,12 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 6914ab1e338c92da4218a23d27fcd03d0ad78d46
+  version: 7b399ed358736bc5522021cdc7d79a8ee9ac6f98
   subpackages:
   - codes
   - credentials
   - grpclog
   - internal
-  - keepalive
   - metadata
   - naming
   - peer

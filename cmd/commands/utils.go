@@ -89,7 +89,7 @@ func ParseCoins(str string) (types.Coins, error) {
 }
 
 func Query(tmAddr string, key []byte) (*abci.ResponseQuery, error) {
-	clientURI := client.NewClientURI(tmAddr)
+	clientURI := client.NewURIClient(tmAddr)
 	tmResult := new(ctypes.TMResult)
 
 	params := map[string]interface{}{
@@ -136,7 +136,7 @@ func getAcc(tmAddr string, address []byte) (*types.Account, error) {
 func getHeaderAndCommit(c *cli.Context, height int) (*tmtypes.Header, *tmtypes.Commit, error) {
 	tmResult := new(ctypes.TMResult)
 	tmAddr := c.String("node")
-	clientURI := client.NewClientURI(tmAddr)
+	clientURI := client.NewURIClient(tmAddr)
 
 	method := "commit"
 	_, err := clientURI.Call(method, map[string]interface{}{"height": height}, tmResult)

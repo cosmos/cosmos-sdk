@@ -189,7 +189,7 @@ func AppTx(c *cli.Context, name string, data []byte) error {
 func broadcastTx(c *cli.Context, tx types.Tx) ([]byte, string, error) {
 	tmResult := new(ctypes.TMResult)
 	tmAddr := c.String("node")
-	clientURI := client.NewClientURI(tmAddr)
+	clientURI := client.NewURIClient(tmAddr)
 
 	// Don't you hate having to do this?
 	// How many times have I lost an hour over this trick?!

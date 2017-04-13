@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"bytes"
+	"crypto/sha256"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/tendermint/ed25519"
@@ -26,13 +27,20 @@ var pubKeyMapper data.Mapper
 // register both public key types with go-data (and thus go-wire)
 func init() {
 	pubKeyMapper = data.NewMapper(PubKeyS{}).
-		RegisterInterface(PubKeyEd25519{}, NameEd25519, TypeEd25519).
-		RegisterInterface(PubKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
+		RegisterImplementation(PubKeyEd25519{}, NameEd25519, TypeEd25519).
+		RegisterImplementation(PubKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
 }
 
 // PubKeyS add json serialization to PubKey
 type PubKeyS struct {
 	PubKey
+}
+
+func WrapPubKey(pk PubKey) PubKeyS {
+	for ppk, ok := pk.(PubKeyS); ok; ppk, ok = pk.(PubKeyS) {
+		pk = ppk.PubKey
+	}
+	return PubKeyS{pk}
 }
 
 func (p PubKeyS) MarshalJSON() ([]byte, error) {
@@ -135,20 +143,20 @@ func (pubKey PubKeyEd25519) Equals(other PubKey) bool {
 
 //-------------------------------------
 
-// Implements PubKey
-type PubKeySecp256k1 [64]byte
+// Implements PubKey.
+// Compressed pubkey (just the x-cord),
+// prefixed with 0x02 or 0x03, depending on the y-cord.
+type PubKeySecp256k1 [33]byte
 
+// Implements Bitcoin style addresses: RIPEMD160(SHA256(pubkey))
 func (pubKey PubKeySecp256k1) Address() []byte {
-	w, n, err := new(bytes.Buffer), new(int), new(error)
-	wire.WriteBinary(pubKey[:], w, n, err)
-	if *err != nil {
-		PanicCrisis(*err)
-	}
-	// append type byte
-	encodedPubkey := append([]byte{TypeSecp256k1}, w.Bytes()...)
-	hasher := ripemd160.New()
-	hasher.Write(encodedPubkey) // does not error
-	return hasher.Sum(nil)
+	hasherSHA256 := sha256.New()
+	hasherSHA256.Write(pubKey[:]) // does not error
+	sha := hasherSHA256.Sum(nil)
+
+	hasherRIPEMD160 := ripemd160.New()
+	hasherRIPEMD160.Write(sha) // does not error
+	return hasherRIPEMD160.Sum(nil)
 }
 
 func (pubKey PubKeySecp256k1) Bytes() []byte {
@@ -166,7 +174,7 @@ func (pubKey PubKeySecp256k1) VerifyBytes(msg []byte, sig_ Signature) bool {
 		return false
 	}
 
-	pub__, err := secp256k1.ParsePubKey(append([]byte{0x04}, pubKey[:]...), secp256k1.S256())
+	pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
 	if err != nil {
 		return false
 	}

@@ -22,13 +22,20 @@ var sigMapper data.Mapper
 // register both public key types with go-data (and thus go-wire)
 func init() {
 	sigMapper = data.NewMapper(SignatureS{}).
-		RegisterInterface(SignatureEd25519{}, NameEd25519, TypeEd25519).
-		RegisterInterface(SignatureSecp256k1{}, NameSecp256k1, TypeSecp256k1)
+		RegisterImplementation(SignatureEd25519{}, NameEd25519, TypeEd25519).
+		RegisterImplementation(SignatureSecp256k1{}, NameSecp256k1, TypeSecp256k1)
 }
 
 // SignatureS add json serialization to Signature
 type SignatureS struct {
 	Signature
+}
+
+func WrapSignature(sig Signature) SignatureS {
+	for ssig, ok := sig.(SignatureS); ok; ssig, ok = sig.(SignatureS) {
+		sig = ssig.Signature
+	}
+	return SignatureS{sig}
 }
 
 func (p SignatureS) MarshalJSON() ([]byte, error) {

@@ -32,13 +32,20 @@ var privKeyMapper data.Mapper
 // register both private key types with go-data (and thus go-wire)
 func init() {
 	privKeyMapper = data.NewMapper(PrivKeyS{}).
-		RegisterInterface(PrivKeyEd25519{}, NameEd25519, TypeEd25519).
-		RegisterInterface(PrivKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
+		RegisterImplementation(PrivKeyEd25519{}, NameEd25519, TypeEd25519).
+		RegisterImplementation(PrivKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
 }
 
 // PrivKeyS add json serialization to PrivKey
 type PrivKeyS struct {
 	PrivKey
+}
+
+func WrapPrivKey(pk PrivKey) PrivKeyS {
+	for ppk, ok := pk.(PrivKeyS); ok; ppk, ok = pk.(PrivKeyS) {
+		pk = ppk.PrivKey
+	}
+	return PrivKeyS{pk}
 }
 
 func (p PrivKeyS) MarshalJSON() ([]byte, error) {
@@ -160,9 +167,9 @@ func (privKey PrivKeySecp256k1) Sign(msg []byte) Signature {
 
 func (privKey PrivKeySecp256k1) PubKey() PubKey {
 	_, pub__ := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey[:])
-	pub := [64]byte{}
-	copy(pub[:], pub__.SerializeUncompressed()[1:])
-	return PubKeySecp256k1(pub)
+	var pub PubKeySecp256k1
+	copy(pub[:], pub__.SerializeCompressed())
+	return pub
 }
 
 func (privKey PrivKeySecp256k1) Equals(other PrivKey) bool {

@@ -16,7 +16,7 @@ import (
 	abci "github.com/tendermint/abci/types"
 	cmn "github.com/tendermint/go-common"
 	client "github.com/tendermint/go-rpc/client"
-	"github.com/tendermint/go-wire"
+	wire "github.com/tendermint/go-wire"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
@@ -89,7 +89,7 @@ func ParseCoins(str string) (types.Coins, error) {
 }
 
 func Query(tmAddr string, key []byte) (*abci.ResponseQuery, error) {
-	clientURI := client.NewURIClient(tmAddr)
+	uriClient := client.NewURIClient(tmAddr)
 	tmResult := new(ctypes.TMResult)
 
 	params := map[string]interface{}{
@@ -97,7 +97,7 @@ func Query(tmAddr string, key []byte) (*abci.ResponseQuery, error) {
 		"data":  key,
 		"prove": true,
 	}
-	_, err := clientURI.Call("abci_query", params, tmResult)
+	_, err := uriClient.Call("abci_query", params, tmResult)
 	if err != nil {
 		return nil, errors.New(cmn.Fmt("Error calling /abci_query: %v", err))
 	}
@@ -136,10 +136,10 @@ func getAcc(tmAddr string, address []byte) (*types.Account, error) {
 func getHeaderAndCommit(c *cli.Context, height int) (*tmtypes.Header, *tmtypes.Commit, error) {
 	tmResult := new(ctypes.TMResult)
 	tmAddr := c.String("node")
-	clientURI := client.NewURIClient(tmAddr)
+	uriClient := client.NewURIClient(tmAddr)
 
 	method := "commit"
-	_, err := clientURI.Call(method, map[string]interface{}{"height": height}, tmResult)
+	_, err := uriClient.Call(method, map[string]interface{}{"height": height}, tmResult)
 	if err != nil {
 		return nil, nil, errors.New(cmn.Fmt("Error on %s: %v", method, err))
 	}

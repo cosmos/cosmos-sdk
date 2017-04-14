@@ -10,6 +10,69 @@ import (
 	"github.com/tendermint/basecoin/types"
 )
 
+//--------------------------------------------------------
+// test environment is a bunch of lists of accountns
+
+type execTest struct {
+	chainID    string
+	store      types.KVStore
+	state      *State
+	accsFoo    []types.PrivAccount
+	accsBar    []types.PrivAccount
+	accsFooBar []types.PrivAccount
+	accsDup    []types.PrivAccount
+}
+
+func newExecTest() *execTest {
+	et := &execTest{
+		chainID: "test_chain_id",
+	}
+	et.reset()
+	return et
+}
+
+func (et *execTest) signTx(tx *types.SendTx, accsIn []types.PrivAccount) {
+	types.SignTx(et.chainID, tx, accsIn)
+}
+
+// make tx from accsIn to et.accsBar
+func (et *execTest) getTx(seq int, accsIn []types.PrivAccount) *types.SendTx {
+	return types.GetTx(seq, accsIn, et.accsBar)
+}
+
+// returns the final balance and expected balance for input and output accounts
+func (et *execTest) exec(tx *types.SendTx, checkTx bool) (res abci.Result, inGot, inExp, outGot, outExp types.Coins) {
+	initBalFoo := et.state.GetAccount(et.accsFoo[0].Account.PubKey.Address()).Balance
+	initBalBar := et.state.GetAccount(et.accsBar[0].Account.PubKey.Address()).Balance
+
+	res = ExecTx(et.state, nil, tx, checkTx, nil)
+
+	endBalFoo := et.state.GetAccount(et.accsFoo[0].Account.PubKey.Address()).Balance
+	endBalBar := et.state.GetAccount(et.accsBar[0].Account.PubKey.Address()).Balance
+	decrBalFooExp := tx.Outputs[0].Coins.Plus(types.Coins{tx.Fee})
+	return res, endBalFoo, initBalFoo.Minus(decrBalFooExp), endBalBar, initBalBar.Plus(tx.Outputs[0].Coins)
+}
+
+func (et *execTest) acc2State(accs []types.PrivAccount) {
+	for _, acc := range accs {
+		et.state.SetAccount(acc.Account.PubKey.Address(), &acc.Account)
+	}
+}
+
+//reset everything. state is empty
+func (et *execTest) reset() {
+	et.accsFoo = types.MakeAccs("foo")
+	et.accsBar = types.MakeAccs("bar")
+	et.accsFooBar = types.MakeAccs("foo", "bar")
+	et.accsDup = types.MakeAccs("foo", "foo", "foo")
+
+	et.store = types.NewMemKVStore()
+	et.state = NewState(et.store)
+	et.state.SetChainID(et.chainID)
+}
+
+//--------------------------------------------------------
+
 func TestGetInputs(t *testing.T) {
 	assert := assert.New(t)
 	et := newExecTest()
@@ -230,62 +293,4 @@ func TestExecTx(t *testing.T) {
 	assert.True(res.IsOK(), fmt.Sprintf("ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res))
 	assert.True(foo.IsEqual(fooexp), fmt.Sprintf("ExecTx/good DeliverTx: unexpected change in input coins, foo: %v, fooExp: %v", foo, fooexp))
 	assert.True(bar.IsEqual(barexp), fmt.Sprintf("ExecTx/good DeliverTx: unexpected change in output coins, bar: %v, barExp: %v", bar, barexp))
-}
-
-///////////////////////////////////////////////////////////////////
-
-type execTest struct {
-	chainID    string
-	store      types.KVStore
-	state      *State
-	accsFoo    []types.PrivAccount
-	accsBar    []types.PrivAccount
-	accsFooBar []types.PrivAccount
-	accsDup    []types.PrivAccount
-}
-
-func newExecTest() *execTest {
-	et := &execTest{
-		chainID: "test_chain_id",
-	}
-	et.reset()
-	return et
-}
-
-func (et *execTest) signTx(tx *types.SendTx, accsIn []types.PrivAccount) {
-	types.SignTx(et.chainID, tx, accsIn)
-}
-
-func (et *execTest) getTx(seq int, accsIn []types.PrivAccount) *types.SendTx {
-	return types.GetTx(seq, accsIn, et.accsBar)
-}
-
-func (et *execTest) exec(tx *types.SendTx, checkTx bool) (res abci.Result, foo, fooExp, bar, barExp types.Coins) {
-	initBalFoo := et.state.GetAccount(et.accsFoo[0].Account.PubKey.Address()).Balance
-	initBalBar := et.state.GetAccount(et.accsBar[0].Account.PubKey.Address()).Balance
-
-	res = ExecTx(et.state, nil, tx, checkTx, nil)
-
-	endBalFoo := et.state.GetAccount(et.accsFoo[0].Account.PubKey.Address()).Balance
-	endBalBar := et.state.GetAccount(et.accsBar[0].Account.PubKey.Address()).Balance
-	decrBalFooExp := tx.Outputs[0].Coins.Plus(types.Coins{tx.Fee})
-	return res, endBalFoo, initBalFoo.Minus(decrBalFooExp), endBalBar, initBalBar.Plus(tx.Outputs[0].Coins)
-}
-
-func (et *execTest) acc2State(accs []types.PrivAccount) {
-	for _, acc := range accs {
-		et.state.SetAccount(acc.Account.PubKey.Address(), &acc.Account)
-	}
-}
-
-//reset the store/et.state/Inputs
-func (et *execTest) reset() {
-	et.accsFoo = types.MakeAccs("foo")
-	et.accsBar = types.MakeAccs("bar")
-	et.accsFooBar = types.MakeAccs("foo", "bar")
-	et.accsDup = types.MakeAccs("foo", "foo", "foo")
-
-	et.store = types.NewMemKVStore()
-	et.state = NewState(et.store)
-	et.state.SetChainID(et.chainID)
 }

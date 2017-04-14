@@ -14,13 +14,11 @@ import (
 // test environment is a bunch of lists of accountns
 
 type execTest struct {
-	chainID    string
-	store      types.KVStore
-	state      *State
-	accsFoo    []types.PrivAccount
-	accsBar    []types.PrivAccount
-	accsFooBar []types.PrivAccount
-	accsDup    []types.PrivAccount
+	chainID string
+	store   types.KVStore
+	state   *State
+	accIn   types.PrivAccount
+	accOut  types.PrivAccount
 }
 
 func newExecTest() *execTest {
@@ -31,29 +29,29 @@ func newExecTest() *execTest {
 	return et
 }
 
-func (et *execTest) signTx(tx *types.SendTx, accsIn []types.PrivAccount) {
-	types.SignTx(et.chainID, tx, accsIn)
+func (et *execTest) signTx(tx *types.SendTx, accsIn ...types.PrivAccount) {
+	types.SignTx(et.chainID, tx, accsIn...)
 }
 
-// make tx from accsIn to et.accsBar
-func (et *execTest) getTx(seq int, accsIn []types.PrivAccount) *types.SendTx {
-	return types.GetTx(seq, accsIn, et.accsBar)
+// make tx from accsIn to et.accOut
+func (et *execTest) getTx(seq int, accsIn ...types.PrivAccount) *types.SendTx {
+	return types.GetTx(seq, et.accOut, accsIn...)
 }
 
 // returns the final balance and expected balance for input and output accounts
 func (et *execTest) exec(tx *types.SendTx, checkTx bool) (res abci.Result, inGot, inExp, outGot, outExp types.Coins) {
-	initBalFoo := et.state.GetAccount(et.accsFoo[0].Account.PubKey.Address()).Balance
-	initBalBar := et.state.GetAccount(et.accsBar[0].Account.PubKey.Address()).Balance
+	initBalIn := et.state.GetAccount(et.accIn.Account.PubKey.Address()).Balance
+	initBalOut := et.state.GetAccount(et.accOut.Account.PubKey.Address()).Balance
 
 	res = ExecTx(et.state, nil, tx, checkTx, nil)
 
-	endBalFoo := et.state.GetAccount(et.accsFoo[0].Account.PubKey.Address()).Balance
-	endBalBar := et.state.GetAccount(et.accsBar[0].Account.PubKey.Address()).Balance
-	decrBalFooExp := tx.Outputs[0].Coins.Plus(types.Coins{tx.Fee})
-	return res, endBalFoo, initBalFoo.Minus(decrBalFooExp), endBalBar, initBalBar.Plus(tx.Outputs[0].Coins)
+	endBalIn := et.state.GetAccount(et.accIn.Account.PubKey.Address()).Balance
+	endBalOut := et.state.GetAccount(et.accOut.Account.PubKey.Address()).Balance
+	decrBalInExp := tx.Outputs[0].Coins.Plus(types.Coins{tx.Fee}) //expected decrease in balance In
+	return res, endBalIn, initBalIn.Minus(decrBalInExp), endBalOut, initBalOut.Plus(tx.Outputs[0].Coins)
 }
 
-func (et *execTest) acc2State(accs []types.PrivAccount) {
+func (et *execTest) acc2State(accs ...types.PrivAccount) {
 	for _, acc := range accs {
 		et.state.SetAccount(acc.Account.PubKey.Address(), &acc.Account)
 	}
@@ -61,10 +59,8 @@ func (et *execTest) acc2State(accs []types.PrivAccount) {
 
 //reset everything. state is empty
 func (et *execTest) reset() {
-	et.accsFoo = types.MakeAccs("foo")
-	et.accsBar = types.MakeAccs("bar")
-	et.accsFooBar = types.MakeAccs("foo", "bar")
-	et.accsDup = types.MakeAccs("foo", "foo", "foo")
+	et.accIn = types.MakeAcc("foo")
+	et.accOut = types.MakeAcc("bar")
 
 	et.store = types.NewMemKVStore()
 	et.state = NewState(et.store)
@@ -84,18 +80,18 @@ func TestGetInputs(t *testing.T) {
 
 	//test getInputs for registered, non-registered account
 	et.reset()
-	txs := types.Accs2TxInputs(et.accsFoo, 1)
+	txs := types.Accs2TxInputs(1, et.accIn)
 	acc, res = getInputs(et.state, txs)
 	assert.True(res.IsErr(), "getInputs: expected error when using getInput with non-registered Input")
 
-	et.acc2State(et.accsFoo)
+	et.acc2State(et.accIn)
 	acc, res = getInputs(et.state, txs)
 	assert.True(res.IsOK(), "getInputs: expected to getInput from registered Input")
 
 	//test sending duplicate accounts
 	et.reset()
-	et.acc2State(et.accsDup)
-	txs = types.Accs2TxInputs(et.accsDup, 1)
+	et.acc2State(et.accIn, et.accIn, et.accIn)
+	txs = types.Accs2TxInputs(1, et.accIn, et.accIn, et.accIn)
 	acc, res = getInputs(et.state, txs)
 	assert.True(res.IsErr(), "getInputs: expected error when sending duplicate accounts")
 }
@@ -111,16 +107,16 @@ func TestGetOrMakeOutputs(t *testing.T) {
 
 	//test sending duplicate accounts
 	et.reset()
-	txs := types.Accs2TxOutputs(et.accsDup)
+	txs := types.Accs2TxOutputs(et.accIn, et.accIn, et.accIn)
 	_, res = getOrMakeOutputs(et.state, nil, txs)
 	assert.True(res.IsErr(), "getOrMakeOutputs: expected error when sending duplicate accounts")
 
 	//test sending to existing/new account account
 	et.reset()
-	txs1 := types.Accs2TxOutputs(et.accsFoo)
-	txs2 := types.Accs2TxOutputs(et.accsBar)
+	txs1 := types.Accs2TxOutputs(et.accIn)
+	txs2 := types.Accs2TxOutputs(et.accOut)
 
-	et.acc2State(et.accsFoo)
+	et.acc2State(et.accIn)
 	_, res = getOrMakeOutputs(et.state, nil, txs1)
 	assert.True(res.IsOK(), "getOrMakeOutputs: error when sending to existing account")
 
@@ -138,7 +134,7 @@ func TestValidateInputsBasic(t *testing.T) {
 	et := newExecTest()
 
 	//validate input basic
-	txs := types.Accs2TxInputs(et.accsFoo, 1)
+	txs := types.Accs2TxInputs(1, et.accIn)
 	res := validateInputsBasic(txs)
 	assert.True(res.IsOK(), fmt.Sprintf("validateInputsBasic: expected no error on good tx input. Error: %v", res.Error()))
 
@@ -153,9 +149,9 @@ func TestValidateInputsAdvanced(t *testing.T) {
 	et := newExecTest()
 
 	//validate inputs advanced
-	txs := et.getTx(1, et.accsFooBar)
+	txs := et.getTx(1, et.accIn, et.accOut)
 
-	et.acc2State(et.accsFooBar)
+	et.acc2State(et.accIn, et.accOut)
 	accMap, res := getInputs(et.state, txs.Inputs)
 	assert.True(res.IsOK(), fmt.Sprintf("validateInputsAdvanced: error retrieving accMap. Error: %v", res.Error()))
 	signBytes := txs.SignBytes(et.chainID)
@@ -165,7 +161,7 @@ func TestValidateInputsAdvanced(t *testing.T) {
 	assert.True(res.IsErr(), "validateInputsAdvanced: expected an error on an unsigned tx input")
 
 	//test good case sgined
-	et.signTx(txs, et.accsFooBar)
+	et.signTx(txs, et.accIn, et.accOut)
 	totalCoins, res = validateInputsAdvanced(accMap, signBytes, txs.Inputs)
 	assert.True(res.IsOK(), fmt.Sprintf("validateInputsAdvanced: expected no error on good tx input. Error: %v", res.Error()))
 	assert.True(totalCoins.IsEqual(txs.Inputs[0].Coins.Plus(txs.Inputs[1].Coins)), "ValidateInputsAdvanced: transaction total coins are not equal")
@@ -176,31 +172,31 @@ func TestValidateInputAdvanced(t *testing.T) {
 	et := newExecTest()
 
 	//validate input advanced
-	txs := et.getTx(1, et.accsFooBar)
+	txs := et.getTx(1, et.accIn, et.accOut)
 
-	et.acc2State(et.accsFooBar)
+	et.acc2State(et.accIn, et.accOut)
 	signBytes := txs.SignBytes(et.chainID)
 
 	//unsigned case
-	res := validateInputAdvanced(&et.accsFooBar[0].Account, signBytes, txs.Inputs[0])
+	res := validateInputAdvanced(&et.accIn.Account, signBytes, txs.Inputs[0])
 	assert.True(res.IsErr(), "validateInputAdvanced: expected error on tx input without signature")
 
 	//good signed case
-	et.signTx(txs, et.accsFooBar)
-	res = validateInputAdvanced(&et.accsFooBar[0].Account, signBytes, txs.Inputs[0])
+	et.signTx(txs, et.accIn, et.accOut)
+	res = validateInputAdvanced(&et.accIn.Account, signBytes, txs.Inputs[0])
 	assert.True(res.IsOK(), fmt.Sprintf("validateInputAdvanced: expected no error on good tx input. Error: %v", res.Error()))
 
 	//bad sequence case
-	et.accsFooBar[0].Sequence = 2
-	et.signTx(txs, et.accsFooBar)
-	res = validateInputAdvanced(&et.accsFooBar[0].Account, signBytes, txs.Inputs[0])
+	et.accIn.Sequence = 2
+	et.signTx(txs, et.accIn, et.accOut)
+	res = validateInputAdvanced(&et.accIn.Account, signBytes, txs.Inputs[0])
 	assert.True(res.IsErr(), "validateInputAdvanced: expected error on tx input with bad sequence")
-	et.accsFooBar[0].Account.Sequence = 1 //restore sequence
+	et.accIn.Sequence = 1 //restore sequence
 
 	//bad balance case
-	et.accsFooBar[1].Balance = types.Coins{{"mycoin", 2}}
-	et.signTx(txs, et.accsFooBar)
-	res = validateInputAdvanced(&et.accsFooBar[0].Account, signBytes, txs.Inputs[0])
+	et.accOut.Balance = types.Coins{{"mycoin", 2}}
+	et.signTx(txs, et.accIn, et.accOut)
+	res = validateInputAdvanced(&et.accIn.Account, signBytes, txs.Inputs[0])
 	assert.True(res.IsErr(), "validateInputAdvanced: expected error on tx input with insufficient funds")
 }
 
@@ -209,7 +205,7 @@ func TestValidateOutputsAdvanced(t *testing.T) {
 	et := newExecTest()
 
 	//validateOutputsBasic
-	txs := types.Accs2TxOutputs(et.accsFoo)
+	txs := types.Accs2TxOutputs(et.accIn)
 	res := validateOutputsBasic(txs)
 	assert.True(res.IsOK(), fmt.Sprintf("validateOutputsBasic: expected no error on good tx input. Error: %v", res.Error()))
 
@@ -223,7 +219,7 @@ func TestSumOutput(t *testing.T) {
 	et := newExecTest()
 
 	//SumOutput
-	txs := types.Accs2TxOutputs(et.accsFooBar)
+	txs := types.Accs2TxOutputs(et.accIn, et.accOut)
 	total := sumOutputs(txs)
 	assert.True(total.IsEqual(txs[0].Coins.Plus(txs[1].Coins)), "sumOutputs: total coins are not equal")
 }
@@ -233,28 +229,28 @@ func TestAdjustBy(t *testing.T) {
 	et := newExecTest()
 
 	//adjustByInputs/adjustByOutputs
-	//sending transaction from Foo to Bar
-	initBalFoo := et.accsFooBar[0].Account.Balance
-	initBalBar := et.accsFooBar[1].Account.Balance
-	et.acc2State(et.accsFooBar)
+	//sending transaction from accIn to accOut
+	initBalIn := et.accIn.Account.Balance
+	initBalOut := et.accOut.Account.Balance
+	et.acc2State(et.accIn, et.accOut)
 
-	txIn := types.Accs2TxInputs(et.accsFoo, 1)
-	txOut := types.Accs2TxOutputs(et.accsBar)
+	txIn := types.Accs2TxInputs(1, et.accIn)
+	txOut := types.Accs2TxOutputs(et.accOut)
 	accMap, _ := getInputs(et.state, txIn)
 	accMap, _ = getOrMakeOutputs(et.state, accMap, txOut)
 
 	adjustByInputs(et.state, accMap, txIn)
 	adjustByOutputs(et.state, accMap, txOut, false)
 
-	endBalFoo := accMap[string(et.accsFooBar[0].Account.PubKey.Address())].Balance
-	endBalBar := accMap[string(et.accsFooBar[1].Account.PubKey.Address())].Balance
-	decrBalFoo := initBalFoo.Minus(endBalFoo)
-	incrBalBar := endBalBar.Minus(initBalBar)
+	endBalIn := accMap[string(et.accIn.Account.PubKey.Address())].Balance
+	endBalOut := accMap[string(et.accOut.Account.PubKey.Address())].Balance
+	decrBalIn := initBalIn.Minus(endBalIn)
+	incrBalOut := endBalOut.Minus(initBalOut)
 
-	assert.True(decrBalFoo.IsEqual(txIn[0].Coins),
-		fmt.Sprintf("adjustByInputs: total coins are not equal. diff: %v, tx: %v", decrBalFoo.String(), txIn[0].Coins.String()))
-	assert.True(incrBalBar.IsEqual(txOut[0].Coins),
-		fmt.Sprintf("adjustByInputs: total coins are not equal. diff: %v, tx: %v", incrBalBar.String(), txOut[0].Coins.String()))
+	assert.True(decrBalIn.IsEqual(txIn[0].Coins),
+		fmt.Sprintf("adjustByInputs: total coins are not equal. diff: %v, tx: %v", decrBalIn.String(), txIn[0].Coins.String()))
+	assert.True(incrBalOut.IsEqual(txOut[0].Coins),
+		fmt.Sprintf("adjustByInputs: total coins are not equal. diff: %v, tx: %v", incrBalOut.String(), txOut[0].Coins.String()))
 
 }
 
@@ -263,34 +259,42 @@ func TestExecTx(t *testing.T) {
 	et := newExecTest()
 
 	//ExecTx
-	txs := et.getTx(1, et.accsFoo)
-	et.acc2State(et.accsFoo)
-	et.acc2State(et.accsBar)
-	et.signTx(txs, et.accsFoo)
+	txs := et.getTx(1, et.accIn)
+	et.acc2State(et.accIn)
+	et.acc2State(et.accOut)
+	et.signTx(txs, et.accIn)
 
 	//Bad Balance
-	et.accsFoo[0].Balance = types.Coins{{"mycoin", 2}}
-	et.acc2State(et.accsFoo)
+	et.accIn.Balance = types.Coins{{"mycoin", 2}}
+	et.acc2State(et.accIn)
 	res, _, _, _, _ := et.exec(txs, true)
-	assert.True(res.IsErr(), fmt.Sprintf("ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res))
-	res, foo, fooexp, bar, barexp := et.exec(txs, false)
-	assert.True(res.IsErr(), fmt.Sprintf("ExecTx/Bad DeliverTx: Expected error return from ExecTx, returned: %v", res))
-	assert.False(foo.IsEqual(fooexp), fmt.Sprintf("ExecTx/Bad DeliverTx: shouldn't be equal, foo: %v, fooExp: %v", foo, fooexp))
-	assert.False(bar.IsEqual(barexp), fmt.Sprintf("ExecTx/Bad DeliverTx: shouldn't be equal, bar: %v, barExp: %v", bar, barexp))
+	assert.True(res.IsErr(),
+		fmt.Sprintf("ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res))
+
+	res, balIn, balInExp, balOut, balOutExp := et.exec(txs, false)
+	assert.True(res.IsErr(),
+		fmt.Sprintf("ExecTx/Bad DeliverTx: Expected error return from ExecTx, returned: %v", res))
+	assert.False(balIn.IsEqual(balInExp),
+		fmt.Sprintf("ExecTx/Bad DeliverTx: balance shouldn't be equal for accIn: got %v, expected: %v", balIn, balInExp))
+	assert.False(balOut.IsEqual(balOutExp),
+		fmt.Sprintf("ExecTx/Bad DeliverTx: balance shouldn't be equal for accOut: got %v, expected: %v", balOut, balOutExp))
 
 	//Regular CheckTx
 	et.reset()
-	et.acc2State(et.accsFoo)
-	et.acc2State(et.accsBar)
+	et.acc2State(et.accIn)
+	et.acc2State(et.accOut)
 	res, _, _, _, _ = et.exec(txs, true)
 	assert.True(res.IsOK(), fmt.Sprintf("ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", res))
 
 	//Regular DeliverTx
 	et.reset()
-	et.acc2State(et.accsFoo)
-	et.acc2State(et.accsBar)
-	res, foo, fooexp, bar, barexp = et.exec(txs, false)
-	assert.True(res.IsOK(), fmt.Sprintf("ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res))
-	assert.True(foo.IsEqual(fooexp), fmt.Sprintf("ExecTx/good DeliverTx: unexpected change in input coins, foo: %v, fooExp: %v", foo, fooexp))
-	assert.True(bar.IsEqual(barexp), fmt.Sprintf("ExecTx/good DeliverTx: unexpected change in output coins, bar: %v, barExp: %v", bar, barexp))
+	et.acc2State(et.accIn)
+	et.acc2State(et.accOut)
+	res, balIn, balInExp, balOut, balOutExp = et.exec(txs, false)
+	assert.True(res.IsOK(),
+		fmt.Sprintf("ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res))
+	assert.True(balIn.IsEqual(balInExp),
+		fmt.Sprintf("ExecTx/good DeliverTx: unexpected change in input balance, got: %v, expected: %v", balIn, balInExp))
+	assert.True(balOut.IsEqual(balOutExp),
+		fmt.Sprintf("ExecTx/good DeliverTx: unexpected change in output balance, got: %v, expected: %v", balOut, balOutExp))
 }

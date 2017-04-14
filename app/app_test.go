@@ -21,8 +21,8 @@ type appTest struct {
 	t       *testing.T
 	chainID string
 	app     *Basecoin
-	accsIn  []types.PrivAccount
-	accsOut []types.PrivAccount
+	accIn   types.PrivAccount
+	accOut  types.PrivAccount
 }
 
 func newAppTest(t *testing.T) *appTest {
@@ -34,10 +34,10 @@ func newAppTest(t *testing.T) *appTest {
 	return at
 }
 
-// make a tx sending 5mycoin from each accsIn to accsOut
-func (ap *appTest) getTx(seq int) *types.SendTx {
-	tx := types.GetTx(seq, ap.accsIn, ap.accsOut)
-	types.SignTx(ap.chainID, tx, ap.accsIn)
+// make a tx sending 5mycoin from each accIn to accOut
+func (at *appTest) getTx(seq int) *types.SendTx {
+	tx := types.GetTx(seq, at.accOut, at.accIn)
+	types.SignTx(at.chainID, tx, at.accIn)
 	return tx
 }
 
@@ -51,8 +51,8 @@ func (at *appTest) acc2app(acc types.Account) {
 
 // reset the in and out accs to be one account each with 7mycoin
 func (at *appTest) reset() {
-	at.accsIn = types.MakeAccs("input0")
-	at.accsOut = types.MakeAccs("output0")
+	at.accIn = types.MakeAcc("input0")
+	at.accOut = types.MakeAcc("output0")
 
 	eyesCli := eyes.NewLocalClient("", 0)
 	at.app = NewBasecoin(eyesCli)
@@ -60,8 +60,8 @@ func (at *appTest) reset() {
 	res := at.app.SetOption("base/chain_id", at.chainID)
 	require.EqualValues(at.t, res, "Success")
 
-	at.acc2app(at.accsIn[0].Account)
-	at.acc2app(at.accsOut[0].Account)
+	at.acc2app(at.accIn.Account)
+	at.acc2app(at.accOut.Account)
 
 	resabci := at.app.Commit()
 	require.True(at.t, resabci.IsOK(), resabci)
@@ -70,8 +70,8 @@ func (at *appTest) reset() {
 // returns the final balance and expected balance for input and output accounts
 func (at *appTest) exec(tx *types.SendTx, checkTx bool) (res abci.Result, inputGot, inputExp, outputGot, outputExpected types.Coins) {
 
-	initBalFoo := at.app.GetState().GetAccount(at.accsIn[0].Account.PubKey.Address()).Balance
-	initBalBar := at.app.GetState().GetAccount(at.accsOut[0].Account.PubKey.Address()).Balance
+	initBalFoo := at.app.GetState().GetAccount(at.accIn.Account.PubKey.Address()).Balance
+	initBalBar := at.app.GetState().GetAccount(at.accOut.Account.PubKey.Address()).Balance
 
 	txBytes := []byte(wire.BinaryBytes(struct{ types.Tx }{tx}))
 	if checkTx {
@@ -80,8 +80,8 @@ func (at *appTest) exec(tx *types.SendTx, checkTx bool) (res abci.Result, inputG
 		res = at.app.DeliverTx(txBytes)
 	}
 
-	endBalFoo := at.app.GetState().GetAccount(at.accsIn[0].Account.PubKey.Address()).Balance
-	endBalBar := at.app.GetState().GetAccount(at.accsOut[0].Account.PubKey.Address()).Balance
+	endBalFoo := at.app.GetState().GetAccount(at.accIn.Account.PubKey.Address()).Balance
+	endBalBar := at.app.GetState().GetAccount(at.accOut.Account.PubKey.Address()).Balance
 	decrBalFooExp := tx.Outputs[0].Coins.Plus(types.Coins{tx.Fee})
 	return res, endBalFoo, initBalFoo.Minus(decrBalFooExp), endBalBar, initBalBar.Plus(tx.Outputs[0].Coins)
 }
@@ -111,8 +111,8 @@ func TestSetOption(t *testing.T) {
 	assert.EqualValues(app.GetState().GetChainID(), chainID)
 	assert.EqualValues(res, "Success")
 
-	accsIn := types.MakeAccs("input0")
-	accsInBytes, err := json.Marshal(accsIn[0].Account)
+	accIn := types.MakeAcc("input0")
+	accsInBytes, err := json.Marshal(accIn.Account)
 	assert.Nil(err)
 	res = app.SetOption("base/account", string(accsInBytes))
 	assert.EqualValues(res, "Success")
@@ -133,8 +133,8 @@ func TestTx(t *testing.T) {
 	at := newAppTest(t)
 
 	//Bad Balance
-	at.accsIn[0].Balance = types.Coins{{"mycoin", 2}}
-	at.acc2app(at.accsIn[0].Account)
+	at.accIn.Balance = types.Coins{{"mycoin", 2}}
+	at.acc2app(at.accIn.Account)
 	res, _, _, _, _ := at.exec(at.getTx(1), true)
 	assert.True(res.IsErr(), fmt.Sprintf("ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res))
 	res, inGot, inExp, outGot, outExp := at.exec(at.getTx(1), false)
@@ -164,7 +164,7 @@ func TestQuery(t *testing.T) {
 
 	resQueryPreCommit := at.app.Query(abci.RequestQuery{
 		Path: "/account",
-		Data: at.accsIn[0].Account.PubKey.Address(),
+		Data: at.accIn.Account.PubKey.Address(),
 	})
 
 	res = at.app.Commit()
@@ -172,7 +172,7 @@ func TestQuery(t *testing.T) {
 
 	resQueryPostCommit := at.app.Query(abci.RequestQuery{
 		Path: "/account",
-		Data: at.accsIn[0].Account.PubKey.Address(),
+		Data: at.accIn.Account.PubKey.Address(),
 	})
 	fmt.Println(resQueryPreCommit)
 	fmt.Println(resQueryPostCommit)

@@ -41,6 +41,10 @@ func ParseCoin(str string) (Coin, error) {
 type Coins []Coin
 
 func (coins Coins) String() string {
+	if len(coins) == 0 {
+		return ""
+	}
+
 	out := ""
 	for _, coin := range coins {
 		out += fmt.Sprintf("%v,", coin.String())

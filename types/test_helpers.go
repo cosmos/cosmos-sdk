@@ -46,16 +46,22 @@ func RandAccounts(num int, minAmount int64, maxAmount int64) []PrivAccount {
 
 /////////////////////////////////////////////////////////////////
 
-func MakeAccs(secrets ...string) (accs []PrivAccount) {
-	for _, secret := range secrets {
-		privAcc := PrivAccountFromSecret(secret)
-		privAcc.Account.Balance = Coins{{"mycoin", 7}}
-		accs = append(accs, privAcc)
-	}
-	return
+//func MakeAccs(secrets ...string) (accs []PrivAccount) {
+//	for _, secret := range secrets {
+//		privAcc := PrivAccountFromSecret(secret)
+//		privAcc.Account.Balance = Coins{{"mycoin", 7}}
+//		accs = append(accs, privAcc)
+//	}
+//	return
+//}
+
+func MakeAcc(secret string) PrivAccount {
+	privAcc := PrivAccountFromSecret(secret)
+	privAcc.Account.Balance = Coins{{"mycoin", 7}}
+	return privAcc
 }
 
-func Accs2TxInputs(accs []PrivAccount, seq int) []TxInput {
+func Accs2TxInputs(seq int, accs ...PrivAccount) []TxInput {
 	var txs []TxInput
 	for _, acc := range accs {
 		tx := NewTxInput(
@@ -68,7 +74,7 @@ func Accs2TxInputs(accs []PrivAccount, seq int) []TxInput {
 }
 
 //turn a list of accounts into basic list of transaction outputs
-func Accs2TxOutputs(accs []PrivAccount) []TxOutput {
+func Accs2TxOutputs(accs ...PrivAccount) []TxOutput {
 	var txs []TxOutput
 	for _, acc := range accs {
 		tx := TxOutput{
@@ -79,18 +85,18 @@ func Accs2TxOutputs(accs []PrivAccount) []TxOutput {
 	return txs
 }
 
-func GetTx(seq int, accsIn, accsOut []PrivAccount) *SendTx {
+func GetTx(seq int, accOut PrivAccount, accsIn ...PrivAccount) *SendTx {
 	txs := &SendTx{
 		Gas:     0,
 		Fee:     Coin{"mycoin", 1},
-		Inputs:  Accs2TxInputs(accsIn, seq),
-		Outputs: Accs2TxOutputs(accsOut),
+		Inputs:  Accs2TxInputs(seq, accsIn...),
+		Outputs: Accs2TxOutputs(accOut),
 	}
 
 	return txs
 }
 
-func SignTx(chainID string, tx *SendTx, accs []PrivAccount) {
+func SignTx(chainID string, tx *SendTx, accs ...PrivAccount) {
 	signBytes := tx.SignBytes(chainID)
 	for i, _ := range tx.Inputs {
 		tx.Inputs[i].Signature = crypto.SignatureS{accs[i].Sign(signBytes)}

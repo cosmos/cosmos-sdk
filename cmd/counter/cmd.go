@@ -9,14 +9,13 @@ import (
 	"github.com/tendermint/basecoin/cmd/commands"
 	"github.com/tendermint/basecoin/plugins/counter"
 	"github.com/tendermint/basecoin/types"
-	cmn "github.com/tendermint/go-common"
 )
 
 //commands
 var CounterTxCmd = &cobra.Command{
 	Use:   "counter",
 	Short: "Create, sign, and broadcast a transaction to the counter plugin",
-	Run:   counterTxCmd,
+	RunE:  counterTxCmd,
 }
 
 //flags
@@ -34,11 +33,11 @@ func init() {
 	commands.RegisterStartPlugin("counter", func() types.Plugin { return counter.New() })
 }
 
-func counterTxCmd(cmd *cobra.Command, args []string) {
+func counterTxCmd(cmd *cobra.Command, args []string) error {
 
 	countFee, err := commands.ParseCoins(countFeeFlag)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return err
 	}
 
 	counterTx := counter.CounterTx{
@@ -51,5 +50,5 @@ func counterTxCmd(cmd *cobra.Command, args []string) {
 	data := wire.BinaryBytes(counterTx)
 	name := "counter"
 
-	commands.AppTx(name, data)
+	return commands.AppTx(name, data)
 }

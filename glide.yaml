@@ -11,7 +11,7 @@ import:
 - package: github.com/tendermint/go-data
   version: master
 - package: github.com/tendermint/go-rpc
-  version: master
+  version: develop
 - package: github.com/tendermint/go-wire
   version: master
 - package: github.com/tendermint/merkleeyes

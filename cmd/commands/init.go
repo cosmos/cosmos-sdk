@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -16,25 +15,25 @@ var (
 	InitCmd = &cobra.Command{
 		Use:   "init",
 		Short: "Initialize a basecoin blockchain",
-		Run:   initCmd,
+		RunE:  initCmd,
 	}
 )
 
 // setupFile aborts on error... or should we return it??
 // returns 1 iff it set a file, otherwise 0 (so we can add them)
-func setupFile(path, data string, perm os.FileMode) int {
+func setupFile(path, data string, perm os.FileMode) (int, error) {
 	_, err := os.Stat(path)
 	if !os.IsNotExist(err) {
-		return 0
+		return 0, nil
 	}
 	err = ioutil.WriteFile(path, []byte(data), perm)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return 0, err
 	}
-	return 1
+	return 1, nil
 }
 
-func initCmd(cmd *cobra.Command, args []string) {
+func initCmd(cmd *cobra.Command, args []string) error {
 	rootDir := BasecoinRoot("")
 
 	cmn.EnsureDir(rootDir, 0777)
@@ -45,16 +44,30 @@ func initCmd(cmd *cobra.Command, args []string) {
 	key1File := path.Join(rootDir, "key.json")
 	key2File := path.Join(rootDir, "key2.json")
 
-	mod := setupFile(genesisFile, GenesisJSON, 0644) +
-		setupFile(privValFile, PrivValJSON, 0400) +
-		setupFile(key1File, Key1JSON, 0400) +
-		setupFile(key2File, Key2JSON, 0400)
+	mod1, err := setupFile(genesisFile, GenesisJSON, 0644)
+	if err != nil {
+		return err
+	}
+	mod2, err := setupFile(privValFile, PrivValJSON, 0400)
+	if err != nil {
+		return err
+	}
+	mod3, err := setupFile(key1File, Key1JSON, 0400)
+	if err != nil {
+		return err
+	}
+	mod4, err := setupFile(key2File, Key2JSON, 0400)
+	if err != nil {
+		return err
+	}
 
-	if mod > 0 {
+	if (mod1 + mod2 + mod3 + mod4) > 0 {
 		log.Notice("Initialized Basecoin", "genesis", genesisFile, "key", key1File)
 	} else {
 		log.Notice("Already initialized", "priv_validator", privValFile)
 	}
+
+	return nil
 }
 
 var PrivValJSON = `{

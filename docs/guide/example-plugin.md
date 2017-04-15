@@ -46,10 +46,7 @@ func main() {
 	)
 
 	//Run the root command
-	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	commands.ExecuteWithDebug(RootCmd)
 }
 ```
 
@@ -71,7 +68,7 @@ var (
 	ExamplePluginTxCmd = &cobra.Command{
 		Use:   "example",
 		Short: "Create, sign, and broadcast a transaction to the example plugin",
-		Run:   examplePluginTxCmd,
+		RunE:   examplePluginTxCmd,
 	}
 )
 ```
@@ -98,10 +95,10 @@ func init() {
 We now define the actual function which is called by our CLI command. 
 
 ```golang
-func examplePluginTxCmd(cmd *cobra.Command, args []string) {
+func examplePluginTxCmd(cmd *cobra.Command, args []string) error {
 	exampleTx := ExamplePluginTx{validFlag}
 	exampleTxBytes := wire.BinaryBytes(exampleTx)
-	commands.AppTx("example-plugin", exampleTxBytes)
+	return commands.AppTx("example-plugin", exampleTxBytes)
 }
 ```
 

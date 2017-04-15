@@ -13,6 +13,7 @@ import (
 	"github.com/tendermint/basecoin/types"
 
 	abci "github.com/tendermint/abci/types"
+	cmn "github.com/tendermint/go-common"
 	client "github.com/tendermint/go-rpc/client"
 	wire "github.com/tendermint/go-wire"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -31,6 +32,19 @@ func BasecoinRoot(rootDir string) string {
 		rootDir = os.Getenv("HOME") + "/." + DefaultHome
 	}
 	return rootDir
+}
+
+//Add debugging flag and execute the root command
+func ExecuteWithDebug(RootCmd *cobra.Command) {
+
+	var debug bool
+	RootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enables stack trace error messages")
+
+	//note that Execute() prints the error if encountered, so no need to reprint the error,
+	//  only if we want the full stack trace
+	if err := RootCmd.Execute(); err != nil && debug {
+		cmn.Exit(fmt.Sprintf("%+v\n", err))
+	}
 }
 
 type Flag2Register struct {
@@ -117,11 +131,11 @@ func Query(tmAddr string, key []byte) (*abci.ResponseQuery, error) {
 	}
 	_, err := uriClient.Call("abci_query", params, tmResult)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error calling /abci_query: %v", err))
+		return nil, errors.Errorf("Error calling /abci_query: %v", err)
 	}
 	res := (*tmResult).(*ctypes.ResultABCIQuery)
 	if !res.Response.Code.IsOK() {
-		return nil, errors.New(fmt.Sprintf("Query got non-zero exit code: %v. %s", res.Response.Code, res.Response.Log))
+		return nil, errors.Errorf("Query got non-zero exit code: %v. %s", res.Response.Code, res.Response.Log)
 	}
 	return &res.Response, nil
 }
@@ -138,14 +152,14 @@ func getAcc(tmAddr string, address []byte) (*types.Account, error) {
 	accountBytes := response.Value
 
 	if len(accountBytes) == 0 {
-		return nil, errors.New(fmt.Sprintf("Account bytes are empty for address: %X ", address))
+		return nil, fmt.Errorf("Account bytes are empty for address: %X ", address) //never stack trace
 	}
 
 	var acc *types.Account
 	err = wire.ReadBinaryBytes(accountBytes, &acc)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error reading account %X error: %v",
-			accountBytes, err.Error()))
+		return nil, errors.Errorf("Error reading account %X error: %v",
+			accountBytes, err.Error())
 	}
 
 	return acc, nil
@@ -158,7 +172,7 @@ func getHeaderAndCommit(tmAddr string, height int) (*tmtypes.Header, *tmtypes.Co
 	method := "commit"
 	_, err := uriClient.Call(method, map[string]interface{}{"height": height}, tmResult)
 	if err != nil {
-		return nil, nil, errors.New(fmt.Sprintf("Error on %s: %v", method, err))
+		return nil, nil, errors.Errorf("Error on %s: %v", method, err)
 	}
 	resCommit := (*tmResult).(*ctypes.ResultCommit)
 	header := resCommit.Header

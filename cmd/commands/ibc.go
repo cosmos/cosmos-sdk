@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/basecoin/plugins/ibc"
 
-	cmn "github.com/tendermint/go-common"
 	"github.com/tendermint/go-merkle"
 	"github.com/tendermint/go-wire"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -30,13 +30,13 @@ var (
 	IBCRegisterTxCmd = &cobra.Command{
 		Use:   "register",
 		Short: "Register a blockchain via IBC",
-		Run:   ibcRegisterTxCmd,
+		RunE:  ibcRegisterTxCmd,
 	}
 
 	IBCUpdateTxCmd = &cobra.Command{
 		Use:   "update",
 		Short: "Update the latest state of a blockchain via IBC",
-		Run:   ibcUpdateTxCmd,
+		RunE:  ibcUpdateTxCmd,
 	}
 
 	IBCPacketTxCmd = &cobra.Command{
@@ -47,13 +47,13 @@ var (
 	IBCPacketCreateTxCmd = &cobra.Command{
 		Use:   "create",
 		Short: "Create an egress IBC packet",
-		Run:   ibcPacketCreateTxCmd,
+		RunE:  ibcPacketCreateTxCmd,
 	}
 
 	IBCPacketPostTxCmd = &cobra.Command{
 		Use:   "post",
 		Short: "Deliver an IBC packet to another chain",
-		Run:   ibcPacketPostTxCmd,
+		RunE:  ibcPacketPostTxCmd,
 	}
 )
 
@@ -117,13 +117,13 @@ func init() {
 //---------------------------------------------------------------------
 // ibc command implementations
 
-func ibcRegisterTxCmd(cmd *cobra.Command, args []string) {
+func ibcRegisterTxCmd(cmd *cobra.Command, args []string) error {
 	chainID := ibcChainIDFlag
 	genesisFile := ibcGenesisFlag
 
 	genesisBytes, err := ioutil.ReadFile(genesisFile)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Error reading genesis file %v: %+v\n", genesisFile, err))
+		return errors.Errorf("Error reading genesis file %v: %v\n", genesisFile, err)
 	}
 
 	ibcTx := ibc.IBCRegisterChainTx{
@@ -140,18 +140,18 @@ func ibcRegisterTxCmd(cmd *cobra.Command, args []string) {
 	}{ibcTx}))
 	name := "IBC"
 
-	AppTx(name, data)
+	return AppTx(name, data)
 }
 
-func ibcUpdateTxCmd(cmd *cobra.Command, args []string) {
+func ibcUpdateTxCmd(cmd *cobra.Command, args []string) error {
 	headerBytes, err := hex.DecodeString(StripHex(ibcHeaderFlag))
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Header (%v) is invalid hex: %+v\n", ibcHeaderFlag, err))
+		return errors.Errorf("Header (%v) is invalid hex: %v\n", ibcHeaderFlag, err)
 	}
 
 	commitBytes, err := hex.DecodeString(StripHex(ibcCommitFlag))
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Commit (%v) is invalid hex: %+v\n", ibcCommitFlag, err))
+		return errors.Errorf("Commit (%v) is invalid hex: %v\n", ibcCommitFlag, err)
 	}
 
 	header := new(tmtypes.Header)
@@ -159,12 +159,12 @@ func ibcUpdateTxCmd(cmd *cobra.Command, args []string) {
 
 	err = wire.ReadBinaryBytes(headerBytes, &header)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Error unmarshalling header: %+v\n", err))
+		return errors.Errorf("Error unmarshalling header: %v\n", err)
 	}
 
 	err = wire.ReadBinaryBytes(commitBytes, &commit)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Error unmarshalling commit: %+v\n", err))
+		return errors.Errorf("Error unmarshalling commit: %v\n", err)
 	}
 
 	ibcTx := ibc.IBCUpdateChainTx{
@@ -179,21 +179,21 @@ func ibcUpdateTxCmd(cmd *cobra.Command, args []string) {
 	}{ibcTx}))
 	name := "IBC"
 
-	AppTx(name, data)
+	return AppTx(name, data)
 }
 
-func ibcPacketCreateTxCmd(cmd *cobra.Command, args []string) {
+func ibcPacketCreateTxCmd(cmd *cobra.Command, args []string) error {
 	fromChain, toChain := ibcFromFlag, ibcToFlag
 	packetType := ibcTypeFlag
 
 	payloadBytes, err := hex.DecodeString(StripHex(ibcPayloadFlag))
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Payload (%v) is invalid hex: %+v\n", ibcPayloadFlag, err))
+		return errors.Errorf("Payload (%v) is invalid hex: %v\n", ibcPayloadFlag, err)
 	}
 
 	sequence, err := ibcSequenceCmd()
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return err
 	}
 
 	ibcTx := ibc.IBCPacketCreateTx{
@@ -212,20 +212,20 @@ func ibcPacketCreateTxCmd(cmd *cobra.Command, args []string) {
 		ibc.IBCTx `json:"unwrap"`
 	}{ibcTx}))
 
-	AppTx("IBC", data)
+	return AppTx("IBC", data)
 }
 
-func ibcPacketPostTxCmd(cmd *cobra.Command, args []string) {
+func ibcPacketPostTxCmd(cmd *cobra.Command, args []string) error {
 	fromChain, fromHeight := ibcFromFlag, ibcHeightFlag
 
 	packetBytes, err := hex.DecodeString(StripHex(ibcPacketFlag))
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Packet (%v) is invalid hex: %+v\n", ibcPacketFlag, err))
+		return errors.Errorf("Packet (%v) is invalid hex: %v\n", ibcPacketFlag, err)
 	}
 
 	proofBytes, err := hex.DecodeString(StripHex(ibcProofFlag))
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Proof (%v) is invalid hex: %+v\n", ibcProofFlag, err))
+		return errors.Errorf("Proof (%v) is invalid hex: %v\n", ibcProofFlag, err)
 	}
 
 	var packet ibc.Packet
@@ -233,12 +233,12 @@ func ibcPacketPostTxCmd(cmd *cobra.Command, args []string) {
 
 	err = wire.ReadBinaryBytes(packetBytes, &packet)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Error unmarshalling packet: %+v\n", err))
+		return errors.Errorf("Error unmarshalling packet: %v\n", err)
 	}
 
 	err = wire.ReadBinaryBytes(proofBytes, &proof)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Error unmarshalling proof: %+v\n", err))
+		return errors.Errorf("Error unmarshalling proof: %v\n", err)
 	}
 
 	ibcTx := ibc.IBCPacketPostTx{
@@ -254,7 +254,7 @@ func ibcPacketPostTxCmd(cmd *cobra.Command, args []string) {
 		ibc.IBCTx `json:"unwrap"`
 	}{ibcTx}))
 
-	AppTx("IBC", data)
+	return AppTx("IBC", data)
 }
 
 func ibcSequenceCmd() (uint64, error) {

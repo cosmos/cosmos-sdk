@@ -10,7 +10,6 @@ import (
 	"github.com/tendermint/basecoin/types"
 	crypto "github.com/tendermint/go-crypto"
 
-	cmn "github.com/tendermint/go-common"
 	client "github.com/tendermint/go-rpc/client"
 	wire "github.com/tendermint/go-wire"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -26,13 +25,13 @@ var (
 	SendTxCmd = &cobra.Command{
 		Use:   "send",
 		Short: "A SendTx transaction, for sending tokens around",
-		Run:   sendTxCmd,
+		RunE:  sendTxCmd,
 	}
 
 	AppTxCmd = &cobra.Command{
 		Use:   "app",
 		Short: "An AppTx transaction, for sending raw data to plugins",
-		Run:   appTxCmd,
+		RunE:  appTxCmd,
 	}
 )
 
@@ -82,31 +81,34 @@ func init() {
 	TxCmd.AddCommand(SendTxCmd, AppTxCmd)
 }
 
-func sendTxCmd(cmd *cobra.Command, args []string) {
+func sendTxCmd(cmd *cobra.Command, args []string) error {
 
 	// convert destination address to bytes
 	to, err := hex.DecodeString(StripHex(toFlag))
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("To address is invalid hex: %+v\n", err))
+		return errors.Errorf("To address is invalid hex: %v\n", err)
 	}
 
 	// load the priv key
-	privKey := LoadKey(fromFlag)
+	privKey, err := LoadKey(fromFlag)
+	if err != nil {
+		return err
+	}
 
 	// get the sequence number for the tx
 	sequence, err := getSeq(privKey.Address[:])
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return err
 	}
 
 	//parse the fee and amounts into coin types
 	feeCoin, err := types.ParseCoin(feeFlag)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return err
 	}
 	amountCoins, err := types.ParseCoins(amountFlag)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return err
 	}
 
 	// craft the tx
@@ -129,39 +131,43 @@ func sendTxCmd(cmd *cobra.Command, args []string) {
 	// broadcast the transaction to tendermint
 	data, log, err := broadcastTx(tx)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return err
 	}
 	fmt.Printf("Response: %X ; %s\n", data, log)
+	return nil
 }
 
-func appTxCmd(cmd *cobra.Command, args []string) {
+func appTxCmd(cmd *cobra.Command, args []string) error {
 	// convert data to bytes
 	data := []byte(dataFlag)
 	if isHex(dataFlag) {
 		data, _ = hex.DecodeString(dataFlag)
 	}
 	name := nameFlag
-	AppTx(name, data)
+	return AppTx(name, data)
 }
 
-func AppTx(name string, data []byte) {
+func AppTx(name string, data []byte) error {
 
-	privKey := LoadKey(fromFlag)
+	privKey, err := LoadKey(fromFlag)
+	if err != nil {
+		return err
+	}
 
 	sequence, err := getSeq(privKey.Address[:])
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return err
 	}
 
 	//parse the fee and amounts into coin types
 	feeCoin, err := types.ParseCoin(feeFlag)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return err
 	}
 
 	amountCoins, err := types.ParseCoins(amountFlag)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return err
 	}
 
 	input := types.NewTxInput(privKey.PubKey, amountCoins, sequence)
@@ -180,9 +186,10 @@ func AppTx(name string, data []byte) {
 
 	data, log, err := broadcastTx(tx)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return err
 	}
 	fmt.Printf("Response: %X ; %s\n", data, log)
+	return nil
 }
 
 // broadcast the transaction to tendermint
@@ -199,7 +206,7 @@ func broadcastTx(tx types.Tx) ([]byte, string, error) {
 
 	_, err := uriClient.Call("broadcast_tx_commit", map[string]interface{}{"tx": txBytes}, tmResult)
 	if err != nil {
-		return nil, "", errors.New(cmn.Fmt("Error on broadcast tx: %v", err))
+		return nil, "", errors.Errorf("Error on broadcast tx: %v", err)
 	}
 
 	res := (*tmResult).(*ctypes.ResultBroadcastTxCommit)
@@ -207,12 +214,12 @@ func broadcastTx(tx types.Tx) ([]byte, string, error) {
 	// if it fails check, we don't even get a delivertx back!
 	if !res.CheckTx.Code.IsOK() {
 		r := res.CheckTx
-		return nil, "", errors.New(cmn.Fmt("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log))
+		return nil, "", errors.Errorf("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log)
 	}
 
 	if !res.DeliverTx.Code.IsOK() {
 		r := res.DeliverTx
-		return nil, "", errors.New(cmn.Fmt("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log))
+		return nil, "", errors.Errorf("BroadcastTxCommit got non-zero exit code: %v. %X; %s", r.Code, r.Data, r.Log)
 	}
 
 	return res.DeliverTx.Data, res.DeliverTx.Log, nil

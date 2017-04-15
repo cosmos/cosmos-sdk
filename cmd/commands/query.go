@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	cmn "github.com/tendermint/go-common"
 	"github.com/tendermint/go-merkle"
 	"github.com/tendermint/go-wire"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -18,25 +18,25 @@ var (
 	QueryCmd = &cobra.Command{
 		Use:   "query [key]",
 		Short: "Query the merkle tree",
-		Run:   queryCmd,
+		RunE:  queryCmd,
 	}
 
 	AccountCmd = &cobra.Command{
 		Use:   "account [address]",
 		Short: "Get details of an account",
-		Run:   accountCmd,
+		RunE:  accountCmd,
 	}
 
 	BlockCmd = &cobra.Command{
 		Use:   "block [height]",
 		Short: "Get the header and commit of a block",
-		Run:   blockCmd,
+		RunE:  blockCmd,
 	}
 
 	VerifyCmd = &cobra.Command{
 		Use:   "verify",
 		Short: "Verify the IAVL proof",
-		Run:   verifyCmd,
+		RunE:  verifyCmd,
 	}
 )
 
@@ -68,10 +68,10 @@ func init() {
 	RegisterFlags(VerifyCmd, verifyFlags)
 }
 
-func queryCmd(cmd *cobra.Command, args []string) {
+func queryCmd(cmd *cobra.Command, args []string) error {
 
 	if len(args) != 1 {
-		cmn.Exit("query command requires an argument ([key])")
+		return fmt.Errorf("query command requires an argument ([key])") //never stack trace
 	}
 
 	keyString := args[0]
@@ -81,17 +81,17 @@ func queryCmd(cmd *cobra.Command, args []string) {
 		var err error
 		key, err = hex.DecodeString(StripHex(keyString))
 		if err != nil {
-			cmn.Exit(fmt.Sprintf("Query key (%v) is invalid hex: %+v\n", keyString, err))
+			return errors.Errorf("Query key (%v) is invalid hex: %v\n", keyString, err)
 		}
 	}
 
 	resp, err := Query(nodeFlag, key)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Query returns error: %+v\n", err))
+		return errors.Errorf("Query returns error: %v\n", err)
 	}
 
 	if !resp.Code.IsOK() {
-		cmn.Exit(fmt.Sprintf("Query for key (%v) returned non-zero code (%v): %v", keyString, resp.Code, resp.Log))
+		return errors.Errorf("Query for key (%v) returned non-zero code (%v): %v", keyString, resp.Code, resp.Log)
 	}
 
 	val := resp.Value
@@ -103,12 +103,13 @@ func queryCmd(cmd *cobra.Command, args []string) {
 		Proof  []byte `json:"proof"`
 		Height uint64 `json:"height"`
 	}{val, proof, height})))
+	return nil
 }
 
-func accountCmd(cmd *cobra.Command, args []string) {
+func accountCmd(cmd *cobra.Command, args []string) error {
 
 	if len(args) != 1 {
-		cmn.Exit("account command requires an argument ([address])")
+		return fmt.Errorf("account command requires an argument ([address])") //never stack trace
 	}
 
 	addrHex := StripHex(args[0])
@@ -116,31 +117,32 @@ func accountCmd(cmd *cobra.Command, args []string) {
 	// convert destination address to bytes
 	addr, err := hex.DecodeString(addrHex)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Account address (%v) is invalid hex: %+v\n", addrHex, err))
+		return errors.Errorf("Account address (%v) is invalid hex: %v\n", addrHex, err)
 	}
 
 	acc, err := getAcc(nodeFlag, addr)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return err
 	}
 	fmt.Println(string(wire.JSONBytes(acc)))
+	return nil
 }
 
-func blockCmd(cmd *cobra.Command, args []string) {
+func blockCmd(cmd *cobra.Command, args []string) error {
 
 	if len(args) != 1 {
-		cmn.Exit("block command requires an argument ([height])")
+		return fmt.Errorf("block command requires an argument ([height])") //never stack trace
 	}
 
 	heightString := args[0]
 	height, err := strconv.Atoi(heightString)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Height must be an int, got %v: %+v\n", heightString, err))
+		return errors.Errorf("Height must be an int, got %v: %v\n", heightString, err)
 	}
 
 	header, commit, err := getHeaderAndCommit(nodeFlag, height)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return err
 	}
 
 	fmt.Println(string(wire.JSONBytes(struct {
@@ -156,6 +158,7 @@ func blockCmd(cmd *cobra.Command, args []string) {
 			Commit: commit,
 		},
 	})))
+	return nil
 }
 
 type BlockHex struct {
@@ -168,7 +171,7 @@ type BlockJSON struct {
 	Commit *tmtypes.Commit `json:"commit"`
 }
 
-func verifyCmd(cmd *cobra.Command, args []string) {
+func verifyCmd(cmd *cobra.Command, args []string) error {
 
 	keyString, valueString := keyFlag, valueFlag
 
@@ -177,7 +180,7 @@ func verifyCmd(cmd *cobra.Command, args []string) {
 	if isHex(keyString) {
 		key, err = hex.DecodeString(StripHex(keyString))
 		if err != nil {
-			cmn.Exit(fmt.Sprintf("Key (%v) is invalid hex: %+v\n", keyString, err))
+			return errors.Errorf("Key (%v) is invalid hex: %v\n", keyString, err)
 		}
 	}
 
@@ -185,25 +188,26 @@ func verifyCmd(cmd *cobra.Command, args []string) {
 	if isHex(valueString) {
 		value, err = hex.DecodeString(StripHex(valueString))
 		if err != nil {
-			cmn.Exit(fmt.Sprintf("Value (%v) is invalid hex: %+v\n", valueString, err))
+			return errors.Errorf("Value (%v) is invalid hex: %v\n", valueString, err)
 		}
 	}
 
 	root, err := hex.DecodeString(StripHex(rootFlag))
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Root (%v) is invalid hex: %+v\n", rootFlag, err))
+		return errors.Errorf("Root (%v) is invalid hex: %v\n", rootFlag, err)
 	}
 
 	proofBytes, err := hex.DecodeString(StripHex(proofFlag))
 
 	proof, err := merkle.ReadProof(proofBytes)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Error unmarshalling proof: %+v\n", err))
+		return errors.Errorf("Error unmarshalling proof: %v\n", err)
 	}
 
 	if proof.Verify(key, value, root) {
 		fmt.Println("OK")
 	} else {
-		cmn.Exit(fmt.Sprintf("Proof does not verify"))
+		return errors.New("Proof does not verify")
 	}
+	return nil
 }

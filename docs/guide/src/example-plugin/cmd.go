@@ -17,7 +17,7 @@ var (
 	ExamplePluginTxCmd = &cobra.Command{
 		Use:   "example",
 		Short: "Create, sign, and broadcast a transaction to the example plugin",
-		Run:   examplePluginTxCmd,
+		RunE:  examplePluginTxCmd,
 	}
 )
 
@@ -35,7 +35,7 @@ func init() {
 }
 
 //Send a transaction
-func examplePluginTxCmd(cmd *cobra.Command, args []string) {
+func examplePluginTxCmd(cmd *cobra.Command, args []string) error {
 
 	// Create a transaction using the flag.
 	// The tx passes on custom information to the plugin
@@ -58,5 +58,5 @@ func examplePluginTxCmd(cmd *cobra.Command, args []string) {
 	//  - Once deserialized, the tx is passed to `state.ExecTx` (state/execution.go)
 	//  - If the tx passes various checks, the `tx.Data` is forwarded as `txBytes` to `plugin.RunTx` (docs/guide/src/example-plugin/plugin.go)
 	//  - Finally, it deserialized back to the ExamplePluginTx
-	commands.AppTx("example-plugin", exampleTxBytes)
+	return commands.AppTx("example-plugin", exampleTxBytes)
 }

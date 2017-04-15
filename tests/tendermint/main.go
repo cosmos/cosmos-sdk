@@ -72,7 +72,7 @@ func main() {
 
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
-		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", cmn.Arr(txBytes))
+		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", map[string]interface{}{"tx": txBytes})
 		//request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", map[string]interface{}{"tx": txBytes})
 		reqBytes := wire.JSONBytes(request)
 		//fmt.Print(".")
@@ -123,7 +123,7 @@ func main() {
 
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
-		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", cmn.Arr(txBytes))
+		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", map[string]interface{}{"tx": txBytes})
 		reqBytes := wire.JSONBytes(request)
 		//fmt.Print(".")
 		err := ws.WriteMessage(websocket.TextMessage, reqBytes)

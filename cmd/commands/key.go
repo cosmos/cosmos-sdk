@@ -8,9 +8,9 @@ import (
 	"path"
 	"strings"
 
+	//"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	cmn "github.com/tendermint/go-common"
 	"github.com/tendermint/go-crypto"
 )
 
@@ -24,18 +24,19 @@ var (
 	NewKeyCmd = &cobra.Command{
 		Use:   "new",
 		Short: "Create a new private key",
-		Run:   newKeyCmd,
+		RunE:  newKeyCmd,
 	}
 )
 
-func newKeyCmd(cmd *cobra.Command, args []string) {
+func newKeyCmd(cmd *cobra.Command, args []string) error {
 	key := genKey()
 	keyJSON, err := json.MarshalIndent(key, "", "\t")
 	fmt.Println(&key)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return err
 	}
 	fmt.Println(string(keyJSON))
+	return nil
 }
 
 func init() {
@@ -85,18 +86,18 @@ func genKey() *Key {
 	}
 }
 
-func LoadKey(keyFile string) *Key {
+func LoadKey(keyFile string) (*Key, error) {
 	filePath := path.Join(BasecoinRoot(""), keyFile)
 	keyJSONBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return nil, err
 	}
 
 	key := new(Key)
 	err = json.Unmarshal(keyJSONBytes, key)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Error reading key from %v: %v\n", filePath, err))
+		return nil, fmt.Errorf("Error reading key from %v: %v\n", filePath, err) //never stack trace
 	}
 
-	return key
+	return key, nil
 }

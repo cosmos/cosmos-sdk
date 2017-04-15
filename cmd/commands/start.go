@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/abci/server"
@@ -22,7 +23,7 @@ import (
 var StartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start basecoin",
-	Run:   startCmd,
+	RunE:  startCmd,
 }
 
 //flags
@@ -42,7 +43,7 @@ func init() {
 		{&addrFlag, "address", "tcp://0.0.0.0:46658", "Listen address"},
 		{&eyesFlag, "eyes", "local", "MerkleEyes address, or 'local' for embedded"},
 		{&dirFlag, "dir", ".", "Root directory"},
-		{&withoutTendermintFlag, "without-tendermint", false, "Run Tendermint in-process with the App"},
+		{&withoutTendermintFlag, "without-tendermint", false, "RunE Tendermint in-process with the App"},
 	}
 	RegisterFlags(StartCmd, flags)
 
@@ -50,7 +51,7 @@ func init() {
 	// eyesCacheSizePtr := flag.Int("eyes-cache-size", 10000, "MerkleEyes db cache size, for embedded")
 }
 
-func startCmd(cmd *cobra.Command, args []string) {
+func startCmd(cmd *cobra.Command, args []string) error {
 	basecoinDir := BasecoinRoot("")
 
 	// Connect to MerkleEyes
@@ -61,7 +62,7 @@ func startCmd(cmd *cobra.Command, args []string) {
 		var err error
 		eyesCli, err = eyes.NewClient(eyesFlag)
 		if err != nil {
-			cmn.Exit(fmt.Sprintf("Error connecting to MerkleEyes: %+v\n", err))
+			return errors.Errorf("Error connecting to MerkleEyes: %v\n", err)
 		}
 	}
 
@@ -84,7 +85,7 @@ func startCmd(cmd *cobra.Command, args []string) {
 		if _, err := os.Stat(genesisFile); err == nil {
 			err := basecoinApp.LoadGenesis(genesisFile)
 			if err != nil {
-				cmn.Exit(fmt.Sprintf("Error in LoadGenesis: %+v\n", err))
+				return errors.Errorf("Error in LoadGenesis: %v\n", err)
 			}
 		} else {
 			fmt.Printf("No genesis file at %s, skipping...\n", genesisFile)
@@ -95,20 +96,20 @@ func startCmd(cmd *cobra.Command, args []string) {
 	if withoutTendermintFlag {
 		log.Notice("Starting Basecoin without Tendermint", "chain_id", chainID)
 		// run just the abci app/server
-		startBasecoinABCI(basecoinApp)
+		return startBasecoinABCI(basecoinApp)
 	} else {
 		log.Notice("Starting Basecoin with Tendermint", "chain_id", chainID)
 		// start the app with tendermint in-process
-		startTendermint(basecoinDir, basecoinApp)
+		return startTendermint(basecoinDir, basecoinApp)
 	}
 }
 
-func startBasecoinABCI(basecoinApp *app.Basecoin) {
+func startBasecoinABCI(basecoinApp *app.Basecoin) error {
 
 	// Start the ABCI listener
 	svr, err := server.NewServer(addrFlag, "socket", basecoinApp)
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("Error creating listener: %+v\n", err))
+		return errors.Errorf("Error creating listener: %v\n", err)
 	}
 
 	// Wait forever
@@ -116,9 +117,10 @@ func startBasecoinABCI(basecoinApp *app.Basecoin) {
 		// Cleanup
 		svr.Stop()
 	})
+	return nil
 }
 
-func startTendermint(dir string, basecoinApp *app.Basecoin) {
+func startTendermint(dir string, basecoinApp *app.Basecoin) error {
 
 	// Get configuration
 	tmConfig := tmcfg.GetConfig(dir)
@@ -132,7 +134,7 @@ func startTendermint(dir string, basecoinApp *app.Basecoin) {
 
 	_, err := n.Start()
 	if err != nil {
-		cmn.Exit(fmt.Sprintf("%+v\n", err))
+		return errors.Errorf("%v\n", err)
 	}
 
 	// Wait forever
@@ -140,4 +142,5 @@ func startTendermint(dir string, basecoinApp *app.Basecoin) {
 		// Cleanup
 		n.Stop()
 	})
+	return nil
 }

@@ -1,9 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/basecoin/cmd/commands"
@@ -27,8 +24,5 @@ func main() {
 		commands.QuickVersionCmd("0.1.0"),
 	)
 
-	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	commands.ExecuteWithDebug(RootCmd)
 }

@@ -1,10 +1,10 @@
 # Changelog
 
-## 0.4.0 (March 30, 2017)
+## 0.4.0 (TBD)
 
 BREAKING CHANGES:
 
-- CLI now uses Cobra
+- CLI now uses Cobra, which forced changes to some of the flag names and orderings
 
 IMPROVEMENTS:
 

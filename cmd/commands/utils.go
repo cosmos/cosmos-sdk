@@ -38,6 +38,7 @@ func BasecoinRoot(rootDir string) string {
 func ExecuteWithDebug(RootCmd *cobra.Command) {
 
 	var debug bool
+	RootCmd.SilenceUsage = true
 	RootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enables stack trace error messages")
 
 	//note that Execute() prints the error if encountered, so no need to reprint the error,

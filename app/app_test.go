@@ -136,23 +136,25 @@ func TestTx(t *testing.T) {
 	at.accIn.Balance = types.Coins{{"mycoin", 2}}
 	at.acc2app(at.accIn.Account)
 	res, _, _, _, _ := at.exec(at.getTx(1), true)
-	assert.True(res.IsErr(), fmt.Sprintf("ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res))
+	assert.True(res.IsErr(), "ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res)
 	res, inGot, inExp, outGot, outExp := at.exec(at.getTx(1), false)
-	assert.True(res.IsErr(), fmt.Sprintf("ExecTx/Bad DeliverTx: Expected error return from ExecTx, returned: %v", res))
-	assert.False(inGot.IsEqual(inExp), fmt.Sprintf("ExecTx/Bad DeliverTx: shouldn't be equal, inGot: %v, inExp: %v", inGot, inExp))
-	assert.False(outGot.IsEqual(outExp), fmt.Sprintf("ExecTx/Bad DeliverTx: shouldn't be equal, outGot: %v, outExp: %v", outGot, outExp))
+	assert.True(res.IsErr(), "ExecTx/Bad DeliverTx: Expected error return from ExecTx, returned: %v", res)
+	assert.False(inGot.IsEqual(inExp), "ExecTx/Bad DeliverTx: shouldn't be equal, inGot: %v, inExp: %v", inGot, inExp)
+	assert.False(outGot.IsEqual(outExp), "ExecTx/Bad DeliverTx: shouldn't be equal, outGot: %v, outExp: %v", outGot, outExp)
 
 	//Regular CheckTx
 	at.reset()
 	res, _, _, _, _ = at.exec(at.getTx(1), true)
-	assert.True(res.IsOK(), fmt.Sprintf("ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", res))
+	assert.True(res.IsOK(), "ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", res)
 
 	//Regular DeliverTx
 	at.reset()
 	res, inGot, inExp, outGot, outExp = at.exec(at.getTx(1), false)
-	assert.True(res.IsOK(), fmt.Sprintf("ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res))
-	assert.True(inGot.IsEqual(inExp), fmt.Sprintf("ExecTx/good DeliverTx: unexpected change in input coins, inGot: %v, inExp: %v", inGot, inExp))
-	assert.True(outGot.IsEqual(outExp), fmt.Sprintf("ExecTx/good DeliverTx: unexpected change in output coins, outGot: %v, outExp: %v", outGot, outExp))
+	assert.True(res.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res)
+	assert.True(inGot.IsEqual(inExp),
+		"ExecTx/good DeliverTx: unexpected change in input coins, inGot: %v, inExp: %v", inGot, inExp)
+	assert.True(outGot.IsEqual(outExp),
+		"ExecTx/good DeliverTx: unexpected change in output coins, outGot: %v, outExp: %v", outGot, outExp)
 }
 
 func TestQuery(t *testing.T) {
@@ -160,7 +162,7 @@ func TestQuery(t *testing.T) {
 	at := newAppTest(t)
 
 	res, _, _, _, _ := at.exec(at.getTx(1), false)
-	assert.True(res.IsOK(), fmt.Sprintf("Commit, DeliverTx: Expected OK return from DeliverTx, Error: %v", res))
+	assert.True(res.IsOK(), "Commit, DeliverTx: Expected OK return from DeliverTx, Error: %v", res)
 
 	resQueryPreCommit := at.app.Query(abci.RequestQuery{
 		Path: "/account",

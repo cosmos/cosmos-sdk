@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -44,9 +43,9 @@ func TestCoins(t *testing.T) {
 	}
 
 	assert.True(good.IsValid(), "Coins are valid")
-	assert.True(good.IsPositive(), fmt.Sprintf("Expected coins to be positive: %v", good))
-	assert.True(good.IsGTE(empty), fmt.Sprintf("Expected %v to be >= %v", good, empty))
-	assert.False(neg.IsPositive(), fmt.Sprintf("Expected neg coins to not be positive: %v", neg))
+	assert.True(good.IsPositive(), "Expected coins to be positive: %v", good)
+	assert.True(good.IsGTE(empty), "Expected %v to be >= %v", good, empty)
+	assert.False(neg.IsPositive(), "Expected neg coins to not be positive: %v", neg)
 	assert.Zero(len(sum), "Expected 0 coins")
 	assert.False(badSort1.IsValid(), "Coins are not sorted")
 	assert.False(badSort2.IsValid(), "Coins are not sorted")

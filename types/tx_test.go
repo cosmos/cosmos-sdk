@@ -44,7 +44,7 @@ func TestSendTxSignable(t *testing.T) {
 	expected := "010A746573745F636861696E0100000000000000DE00000000000000006F01020106696E7075743101010000000000000030390301093200000106696E70757432010100000000000000006F01DE0000010201076F757470757431010100000000000000014D01076F75747075743201010000000000000001BC"
 
 	assert.Equal(t, signBytesHex, expected,
-		fmt.Sprintf("Got unexpected sign string for SendTx. Expected:\n%v\nGot:\n%v", expected, signBytesHex))
+		"Got unexpected sign string for SendTx. Expected:\n%v\nGot:\n%v", expected, signBytesHex)
 }
 
 func TestAppTxSignable(t *testing.T) {
@@ -64,7 +64,7 @@ func TestAppTxSignable(t *testing.T) {
 	expected := "010A746573745F636861696E0100000000000000DE00000000000000006F0101580106696E70757431010100000000000000303903010932000001056461746131"
 
 	assert.Equal(t, signBytesHex, expected,
-		fmt.Sprintf("Got unexpected sign string for SendTx. Expected:\n%v\nGot:\n%v", expected, signBytesHex))
+		"Got unexpected sign string for SendTx. Expected:\n%v\nGot:\n%v", expected, signBytesHex)
 }
 
 func TestSendTxJSON(t *testing.T) {

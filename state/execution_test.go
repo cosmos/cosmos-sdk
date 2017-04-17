@@ -1,7 +1,6 @@
 package state
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,8 +33,8 @@ func (et *execTest) signTx(tx *types.SendTx, accsIn ...types.PrivAccount) {
 }
 
 // make tx from accsIn to et.accOut
-func (et *execTest) getTx(seq int, accsIn ...types.PrivAccount) *types.SendTx {
-	return types.GetTx(seq, et.accOut, accsIn...)
+func (et *execTest) getTx(seq int, accOut types.PrivAccount, accsIn ...types.PrivAccount) *types.SendTx {
+	return types.GetTx(seq, accOut, accsIn...)
 }
 
 // returns the final balance and expected balance for input and output accounts
@@ -140,7 +139,7 @@ func TestValidateInputsBasic(t *testing.T) {
 	//validate input basic
 	txs := types.Accs2TxInputs(1, et.accIn)
 	res := validateInputsBasic(txs)
-	assert.True(res.IsOK(), fmt.Sprintf("validateInputsBasic: expected no error on good tx input. Error: %v", res.Error()))
+	assert.True(res.IsOK(), "validateInputsBasic: expected no error on good tx input. Error: %v", res.Error())
 
 	txs[0].Coins[0].Amount = 0
 	res = validateInputsBasic(txs)
@@ -152,12 +151,17 @@ func TestValidateInputsAdvanced(t *testing.T) {
 	assert := assert.New(t)
 	et := newExecTest()
 
-	//validate inputs advanced
-	txs := et.getTx(1, et.accIn, et.accOut)
+	//create three temp accounts for the test
+	accIn1 := types.MakeAcc("foox")
+	accIn2 := types.MakeAcc("fooy")
+	accIn3 := types.MakeAcc("fooz")
 
-	et.acc2State(et.accIn, et.accOut)
+	//validate inputs advanced
+	txs := et.getTx(1, et.accOut, accIn1, accIn2, accIn3)
+
+	et.acc2State(accIn1, accIn2, accIn3, et.accOut)
 	accMap, res := getInputs(et.state, txs.Inputs)
-	assert.True(res.IsOK(), fmt.Sprintf("validateInputsAdvanced: error retrieving accMap. Error: %v", res.Error()))
+	assert.True(res.IsOK(), "validateInputsAdvanced: error retrieving accMap. Error: %v", res.Error())
 	signBytes := txs.SignBytes(et.chainID)
 
 	//test bad case, unsigned
@@ -165,10 +169,15 @@ func TestValidateInputsAdvanced(t *testing.T) {
 	assert.True(res.IsErr(), "validateInputsAdvanced: expected an error on an unsigned tx input")
 
 	//test good case sgined
-	et.signTx(txs, et.accIn, et.accOut)
+	et.signTx(txs, accIn1, accIn2, accIn3, et.accOut)
 	totalCoins, res = validateInputsAdvanced(accMap, signBytes, txs.Inputs)
-	assert.True(res.IsOK(), fmt.Sprintf("validateInputsAdvanced: expected no error on good tx input. Error: %v", res.Error()))
-	assert.True(totalCoins.IsEqual(txs.Inputs[0].Coins.Plus(txs.Inputs[1].Coins)), "ValidateInputsAdvanced: transaction total coins are not equal")
+	assert.True(res.IsOK(), "validateInputsAdvanced: expected no error on good tx input. Error: %v", res.Error())
+
+	txsTotalCoins := txs.Inputs[0].Coins.Plus(txs.Inputs[1].Coins)
+	txsTotalCoins = txsTotalCoins.Plus(txs.Inputs[2].Coins)
+
+	assert.True(totalCoins.IsEqual(txsTotalCoins),
+		"ValidateInputsAdvanced: transaction total coins are not equal: got %v, expected %v", txsTotalCoins, totalCoins)
 }
 
 func TestValidateInputAdvanced(t *testing.T) {
@@ -176,7 +185,7 @@ func TestValidateInputAdvanced(t *testing.T) {
 	et := newExecTest()
 
 	//validate input advanced
-	txs := et.getTx(1, et.accIn, et.accOut)
+	txs := et.getTx(1, et.accOut, et.accIn)
 
 	et.acc2State(et.accIn, et.accOut)
 	signBytes := txs.SignBytes(et.chainID)
@@ -188,20 +197,21 @@ func TestValidateInputAdvanced(t *testing.T) {
 	//good signed case
 	et.signTx(txs, et.accIn, et.accOut)
 	res = validateInputAdvanced(&et.accIn.Account, signBytes, txs.Inputs[0])
-	assert.True(res.IsOK(), fmt.Sprintf("validateInputAdvanced: expected no error on good tx input. Error: %v", res.Error()))
+	assert.True(res.IsOK(), "validateInputAdvanced: expected no error on good tx input. Error: %v", res.Error())
 
 	//bad sequence case
-	et.accIn.Sequence = 2
+	et.accIn.Sequence = 1
 	et.signTx(txs, et.accIn, et.accOut)
 	res = validateInputAdvanced(&et.accIn.Account, signBytes, txs.Inputs[0])
-	assert.True(res.IsErr(), "validateInputAdvanced: expected error on tx input with bad sequence")
-	et.accIn.Sequence = 1 //restore sequence
+	assert.Equal(abci.CodeType_BaseInvalidSequence, res.Code, "validateInputAdvanced: expected error on tx input with bad sequence")
+	et.accIn.Sequence = 0 //restore sequence
 
 	//bad balance case
-	et.accOut.Balance = types.Coins{{"mycoin", 2}}
+	et.accIn.Balance = types.Coins{{"mycoin", 2}}
 	et.signTx(txs, et.accIn, et.accOut)
 	res = validateInputAdvanced(&et.accIn.Account, signBytes, txs.Inputs[0])
-	assert.True(res.IsErr(), "validateInputAdvanced: expected error on tx input with insufficient funds")
+	assert.Equal(abci.CodeType_BaseInsufficientFunds, res.Code,
+		"validateInputAdvanced: expected error on tx input with insufficient funds %v", et.accIn.Sequence)
 }
 
 func TestValidateOutputsAdvanced(t *testing.T) {
@@ -211,11 +221,11 @@ func TestValidateOutputsAdvanced(t *testing.T) {
 	//validateOutputsBasic
 	txs := types.Accs2TxOutputs(et.accIn)
 	res := validateOutputsBasic(txs)
-	assert.True(res.IsOK(), fmt.Sprintf("validateOutputsBasic: expected no error on good tx output. Error: %v", res.Error()))
+	assert.True(res.IsOK(), "validateOutputsBasic: expected no error on good tx output. Error: %v", res.Error())
 
 	txs[0].Coins[0].Amount = 0
 	res = validateOutputsBasic(txs)
-	assert.True(res.IsErr(), fmt.Sprintf("validateInputBasic: expected error on bad tx output. Error: %v", res.Error()))
+	assert.True(res.IsErr(), "validateInputBasic: expected error on bad tx output. Error: %v", res.Error())
 }
 
 func TestSumOutput(t *testing.T) {
@@ -252,9 +262,9 @@ func TestAdjustBy(t *testing.T) {
 	incrBalOut := endBalOut.Minus(initBalOut)
 
 	assert.True(decrBalIn.IsEqual(txIn[0].Coins),
-		fmt.Sprintf("adjustByInputs: total coins are not equal. diff: %v, tx: %v", decrBalIn.String(), txIn[0].Coins.String()))
+		"adjustByInputs: total coins are not equal. diff: %v, tx: %v", decrBalIn.String(), txIn[0].Coins.String())
 	assert.True(incrBalOut.IsEqual(txOut[0].Coins),
-		fmt.Sprintf("adjustByInputs: total coins are not equal. diff: %v, tx: %v", incrBalOut.String(), txOut[0].Coins.String()))
+		"adjustByInputs: total coins are not equal. diff: %v, tx: %v", incrBalOut.String(), txOut[0].Coins.String())
 
 }
 
@@ -263,7 +273,7 @@ func TestExecTx(t *testing.T) {
 	et := newExecTest()
 
 	//ExecTx
-	txs := et.getTx(1, et.accIn)
+	txs := et.getTx(1, et.accOut, et.accIn)
 	et.acc2State(et.accIn)
 	et.acc2State(et.accOut)
 	et.signTx(txs, et.accIn)
@@ -272,33 +282,30 @@ func TestExecTx(t *testing.T) {
 	et.accIn.Balance = types.Coins{{"mycoin", 2}}
 	et.acc2State(et.accIn)
 	res, _, _, _, _ := et.exec(txs, true)
-	assert.True(res.IsErr(),
-		fmt.Sprintf("ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res))
+	assert.True(res.IsErr(), "ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res)
 
 	res, balIn, balInExp, balOut, balOutExp := et.exec(txs, false)
-	assert.True(res.IsErr(),
-		fmt.Sprintf("ExecTx/Bad DeliverTx: Expected error return from ExecTx, returned: %v", res))
+	assert.True(res.IsErr(), "ExecTx/Bad DeliverTx: Expected error return from ExecTx, returned: %v", res)
 	assert.False(balIn.IsEqual(balInExp),
-		fmt.Sprintf("ExecTx/Bad DeliverTx: balance shouldn't be equal for accIn: got %v, expected: %v", balIn, balInExp))
+		"ExecTx/Bad DeliverTx: balance shouldn't be equal for accIn: got %v, expected: %v", balIn, balInExp)
 	assert.False(balOut.IsEqual(balOutExp),
-		fmt.Sprintf("ExecTx/Bad DeliverTx: balance shouldn't be equal for accOut: got %v, expected: %v", balOut, balOutExp))
+		"ExecTx/Bad DeliverTx: balance shouldn't be equal for accOut: got %v, expected: %v", balOut, balOutExp)
 
 	//Regular CheckTx
 	et.reset()
 	et.acc2State(et.accIn)
 	et.acc2State(et.accOut)
 	res, _, _, _, _ = et.exec(txs, true)
-	assert.True(res.IsOK(), fmt.Sprintf("ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", res))
+	assert.True(res.IsOK(), "ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", res)
 
 	//Regular DeliverTx
 	et.reset()
 	et.acc2State(et.accIn)
 	et.acc2State(et.accOut)
 	res, balIn, balInExp, balOut, balOutExp = et.exec(txs, false)
-	assert.True(res.IsOK(),
-		fmt.Sprintf("ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res))
+	assert.True(res.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res)
 	assert.True(balIn.IsEqual(balInExp),
-		fmt.Sprintf("ExecTx/good DeliverTx: unexpected change in input balance, got: %v, expected: %v", balIn, balInExp))
+		"ExecTx/good DeliverTx: unexpected change in input balance, got: %v, expected: %v", balIn, balInExp)
 	assert.True(balOut.IsEqual(balOutExp),
-		fmt.Sprintf("ExecTx/good DeliverTx: unexpected change in output balance, got: %v, expected: %v", balOut, balOutExp))
+		"ExecTx/good DeliverTx: unexpected change in output balance, got: %v, expected: %v", balOut, balOutExp)
 }

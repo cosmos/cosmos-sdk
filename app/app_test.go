@@ -70,8 +70,8 @@ func (at *appTest) reset() {
 // returns the final balance and expected balance for input and output accounts
 func (at *appTest) exec(tx *types.SendTx, checkTx bool) (res abci.Result, inputGot, inputExp, outputGot, outputExpected types.Coins) {
 
-	initBalFoo := at.app.GetState().GetAccount(at.accIn.Account.PubKey.Address()).Balance
-	initBalBar := at.app.GetState().GetAccount(at.accOut.Account.PubKey.Address()).Balance
+	initBalIn := at.app.GetState().GetAccount(at.accIn.Account.PubKey.Address()).Balance
+	initBalOut := at.app.GetState().GetAccount(at.accOut.Account.PubKey.Address()).Balance
 
 	txBytes := []byte(wire.BinaryBytes(struct{ types.Tx }{tx}))
 	if checkTx {
@@ -80,10 +80,10 @@ func (at *appTest) exec(tx *types.SendTx, checkTx bool) (res abci.Result, inputG
 		res = at.app.DeliverTx(txBytes)
 	}
 
-	endBalFoo := at.app.GetState().GetAccount(at.accIn.Account.PubKey.Address()).Balance
-	endBalBar := at.app.GetState().GetAccount(at.accOut.Account.PubKey.Address()).Balance
-	decrBalFooExp := tx.Outputs[0].Coins.Plus(types.Coins{tx.Fee})
-	return res, endBalFoo, initBalFoo.Minus(decrBalFooExp), endBalBar, initBalBar.Plus(tx.Outputs[0].Coins)
+	endBalIn := at.app.GetState().GetAccount(at.accIn.Account.PubKey.Address()).Balance
+	endBalOut := at.app.GetState().GetAccount(at.accOut.Account.PubKey.Address()).Balance
+	decrBalInExp := tx.Outputs[0].Coins.Plus(types.Coins{tx.Fee})
+	return res, endBalIn, initBalIn.Minus(decrBalInExp), endBalOut, initBalOut.Plus(tx.Outputs[0].Coins)
 }
 
 //--------------------------------------------------------

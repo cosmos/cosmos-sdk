@@ -65,6 +65,10 @@ func (et *execTest) reset() {
 	et.store = types.NewMemKVStore()
 	et.state = NewState(et.store)
 	et.state.SetChainID(et.chainID)
+
+	// NOTE we dont run acc2State here
+	// so we can test non-existing accounts
+
 }
 
 //--------------------------------------------------------
@@ -111,7 +115,7 @@ func TestGetOrMakeOutputs(t *testing.T) {
 	_, res = getOrMakeOutputs(et.state, nil, txs)
 	assert.True(res.IsErr(), "getOrMakeOutputs: expected error when sending duplicate accounts")
 
-	//test sending to existing/new account account
+	//test sending to existing/new account
 	et.reset()
 	txs1 := types.Accs2TxOutputs(et.accIn)
 	txs2 := types.Accs2TxOutputs(et.accOut)
@@ -207,11 +211,11 @@ func TestValidateOutputsAdvanced(t *testing.T) {
 	//validateOutputsBasic
 	txs := types.Accs2TxOutputs(et.accIn)
 	res := validateOutputsBasic(txs)
-	assert.True(res.IsOK(), fmt.Sprintf("validateOutputsBasic: expected no error on good tx input. Error: %v", res.Error()))
+	assert.True(res.IsOK(), fmt.Sprintf("validateOutputsBasic: expected no error on good tx output. Error: %v", res.Error()))
 
 	txs[0].Coins[0].Amount = 0
 	res = validateOutputsBasic(txs)
-	assert.True(res.IsErr(), fmt.Sprintf("validateInputBasic: expected error on bad tx inputi. Error: %v", res.Error()))
+	assert.True(res.IsErr(), fmt.Sprintf("validateInputBasic: expected error on bad tx output. Error: %v", res.Error()))
 }
 
 func TestSumOutput(t *testing.T) {

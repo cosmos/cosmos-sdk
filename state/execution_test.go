@@ -173,8 +173,9 @@ func TestValidateInputsAdvanced(t *testing.T) {
 	totalCoins, res = validateInputsAdvanced(accMap, signBytes, txs.Inputs)
 	assert.True(res.IsOK(), "validateInputsAdvanced: expected no error on good tx input. Error: %v", res.Error())
 
-	txsTotalCoins := txs.Inputs[0].Coins.Plus(txs.Inputs[1].Coins)
-	txsTotalCoins = txsTotalCoins.Plus(txs.Inputs[2].Coins)
+	txsTotalCoins := txs.Inputs[0].Coins.
+		Plus(txs.Inputs[1].Coins).
+		Plus(txs.Inputs[2].Coins)
 
 	assert.True(totalCoins.IsEqual(txsTotalCoins),
 		"ValidateInputsAdvanced: transaction total coins are not equal: got %v, expected %v", txsTotalCoins, totalCoins)

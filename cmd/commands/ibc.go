@@ -91,7 +91,7 @@ func init() {
 	packetCreateFlags := []Flag2Register{
 		fromFlagReg,
 		{&ibcToFlag, "to", "", "Destination ChainID"},
-		{&ibcTypeFlag, "type", "", "IBC packet type (eg. coin},"},
+		{&ibcTypeFlag, "type", "", "IBC packet type (eg. coin)"},
 		{&ibcPayloadFlag, "payload", "", "IBC packet payload"},
 		{&ibcSequenceFlag, "ibc_sequence", -1, "sequence number for IBC packet"},
 	}

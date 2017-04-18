@@ -19,11 +19,10 @@ var (
 	}
 )
 
-// setupFile aborts on error... or should we return it??
 // returns 1 iff it set a file, otherwise 0 (so we can add them)
 func setupFile(path, data string, perm os.FileMode) (int, error) {
 	_, err := os.Stat(path)
-	if !os.IsNotExist(err) {
+	if !os.IsNotExist(err) { //permission errors generated if use os.IsExist
 		return 0, nil
 	}
 	err = ioutil.WriteFile(path, []byte(data), perm)

@@ -4,6 +4,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -22,14 +26,14 @@ import (
 
 //This variable can be overwritten by plugin applications
 // if they require a different working directory
-var DefaultHome = "basecoin"
+var DefaultHome = ".basecoin"
 
 func BasecoinRoot(rootDir string) string {
 	if rootDir == "" {
 		rootDir = os.Getenv("BCHOME")
 	}
 	if rootDir == "" {
-		rootDir = os.Getenv("HOME") + "/." + DefaultHome
+		rootDir = path.Join(os.Getenv("HOME"), DefaultHome)
 	}
 	return rootDir
 }
@@ -48,6 +52,14 @@ func ExecuteWithDebug(RootCmd *cobra.Command) {
 	}
 }
 
+//Quickly registering flags can be quickly achieved through using the utility functions
+//RegisterFlags, and RegisterPersistentFlags. Ex:
+//	flags := []Flag2Register{
+//		{&myStringFlag, "mystringflag", "foobar", "description of what this flag does"},
+//		{&myBoolFlag, "myboolflag", false, "description of what this flag does"},
+//		{&myInt64Flag, "myintflag", 333, "description of what this flag does"},
+//	}
+//	RegisterFlags(MyCobraCmd, flags)
 type Flag2Register struct {
 	Pointer interface{}
 	Use     string

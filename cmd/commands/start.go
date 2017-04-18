@@ -43,12 +43,9 @@ func init() {
 		{&addrFlag, "address", "tcp://0.0.0.0:46658", "Listen address"},
 		{&eyesFlag, "eyes", "local", "MerkleEyes address, or 'local' for embedded"},
 		{&dirFlag, "dir", ".", "Root directory"},
-		{&withoutTendermintFlag, "without-tendermint", false, "RunE Tendermint in-process with the App"},
+		{&withoutTendermintFlag, "without-tendermint", false, "Run Tendermint in-process with the App"},
 	}
 	RegisterFlags(StartCmd, flags)
-
-	// TODO: move to config file
-	// eyesCacheSizePtr := flag.Int("eyes-cache-size", 10000, "MerkleEyes db cache size, for embedded")
 }
 
 func startCmd(cmd *cobra.Command, args []string) error {
@@ -134,7 +131,7 @@ func startTendermint(dir string, basecoinApp *app.Basecoin) error {
 
 	_, err := n.Start()
 	if err != nil {
-		return errors.Errorf("%v\n", err)
+		return err
 	}
 
 	// Wait forever

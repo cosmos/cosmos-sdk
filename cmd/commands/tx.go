@@ -92,11 +92,11 @@ func cmdSendTx(c *cli.Context) error {
 	}
 
 	//parse the fee and amounts into coin types
-	feeCoin, err := ParseCoin(fee)
+	feeCoin, err := types.ParseCoin(fee)
 	if err != nil {
 		return err
 	}
-	amountCoins, err := ParseCoins(amount)
+	amountCoins, err := types.ParseCoins(amount)
 	if err != nil {
 		return err
 	}
@@ -153,11 +153,11 @@ func AppTx(c *cli.Context, name string, data []byte) error {
 	}
 
 	//parse the fee and amounts into coin types
-	feeCoin, err := ParseCoin(fee)
+	feeCoin, err := types.ParseCoin(fee)
 	if err != nil {
 		return err
 	}
-	amountCoins, err := ParseCoins(amount)
+	amountCoins, err := types.ParseCoins(amount)
 	if err != nil {
 		return err
 	}

@@ -57,7 +57,7 @@ func TestSendTx(t *testing.T) {
 	txBytes := wire.BinaryBytes(types.TxS{tx})
 	res := bcApp.DeliverTx(txBytes)
 	// t.Log(res)
-	assert.False(t, res.IsErr(), "Failed: %v", res.Error())
+	assert.True(t, res.IsOK(), "Failed: %v", res.Error())
 }
 
 func TestSequence(t *testing.T) {
@@ -108,11 +108,11 @@ func TestSequence(t *testing.T) {
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
 		res := bcApp.DeliverTx(txBytes)
-		assert.False(t, res.IsErr(), "DeliverTx error: %v", res.Error())
+		assert.True(t, res.IsOK(), "DeliverTx error: %v", res.Error())
 	}
 
 	res := bcApp.Commit()
-	assert.False(t, res.IsErr(), "Failed Commit: %v", res.Error())
+	assert.True(t, res.IsOK(), "Failed Commit: %v", res.Error())
 
 	t.Log("-------------------- RANDOM SENDS --------------------")
 
@@ -152,6 +152,6 @@ func TestSequence(t *testing.T) {
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
 		res := bcApp.DeliverTx(txBytes)
-		assert.False(t, res.IsErr(), "DeliverTx error: %v", res.Error())
+		assert.True(t, res.IsOK(), "DeliverTx error: %v", res.Error())
 	}
 }

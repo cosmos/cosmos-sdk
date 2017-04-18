@@ -11,6 +11,7 @@ import (
 )
 
 func TestState(t *testing.T) {
+	assert := assert.New(t)
 
 	//States and Stores for tests
 	store := types.NewMemKVStore()
@@ -63,44 +64,33 @@ func TestState(t *testing.T) {
 		return true
 	}
 
-	//define the test list
-	testList := []struct {
-		testPass func() bool
-		errMsg   string
-	}{
-		//test chainID
-		{func() bool { state.SetChainID("testchain"); return state.GetChainID() == "testchain" },
-			"ChainID is improperly stored"},
+	//test chainID
+	state.SetChainID("testchain")
+	assert.Equal(state.GetChainID(), "testchain", "ChainID is improperly stored")
 
-		//test basic retrieve
-		{func() bool { setRecords(state); return storeHasAll(state) },
-			"state doesn't retrieve after Set"},
+	//test basic retrieve
+	setRecords(state)
+	assert.True(storeHasAll(state), "state doesn't retrieve after Set")
 
-		// Test account retrieve
-		{func() bool { state.SetAccount(dumAddr, acc); return state.GetAccount(dumAddr).Sequence == 1 },
-			"GetAccount not retrieving"},
+	// Test account retrieve
+	state.SetAccount(dumAddr, acc)
+	assert.Equal(state.GetAccount(dumAddr).Sequence, 1, "GetAccount not retrieving")
 
-		//Test CacheWrap with local mem store
-		{func() bool { reset(); setRecords(cache); return !storeHasAll(store) },
-			"store retrieving before CacheSync"},
-		{func() bool { cache.CacheSync(); return storeHasAll(store) },
-			"store doesn't retrieve after CacheSync"},
+	//Test CacheWrap with local mem store
+	reset()
+	setRecords(cache)
+	assert.False(storeHasAll(store), "store retrieving before CacheSync")
+	cache.CacheSync()
+	assert.True(storeHasAll(store), "store doesn't retrieve after CacheSync")
 
-		//Test Commit on state with non-merkle store
-		{func() bool { return !state.Commit().IsOK() },
-			"Commit shouldn't work with non-merkle store"},
+	//Test Commit on state with non-merkle store
+	assert.True(state.Commit().IsErr(), "Commit shouldn't work with non-merkle store")
 
-		//Test CacheWrap with merkleeyes client store
-		{func() bool { useEyesCli(); setRecords(cache); return !storeHasAll(eyesCli) },
-			"eyesCli retrieving before Commit"},
-		{func() bool { cache.CacheSync(); return state.Commit().IsOK() },
-			"Bad Commit"},
-		{func() bool { return storeHasAll(eyesCli) },
-			"eyesCli doesn't retrieve after Commit"},
-	}
-
-	//execute the tests
-	for _, tl := range testList {
-		assert.True(t, tl.testPass(), tl.errMsg)
-	}
+	//Test CacheWrap with merkleeyes client store
+	useEyesCli()
+	setRecords(cache)
+	assert.False(storeHasAll(eyesCli), "eyesCli retrieving before Commit")
+	cache.CacheSync()
+	assert.True(state.Commit().IsOK(), "Bad Commit")
+	assert.True(storeHasAll(eyesCli), "eyesCli doesn't retrieve after Commit")
 }

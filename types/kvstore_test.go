@@ -8,6 +8,7 @@ import (
 )
 
 func TestKVStore(t *testing.T) {
+	assert := assert.New(t)
 
 	//stores to be tested
 	ms := NewMemKVStore()
@@ -40,40 +41,30 @@ func TestKVStore(t *testing.T) {
 		return true
 	}
 
-	//define the test list
-	var testList = []struct {
-		testPass func() bool
-		errMsg   string
-	}{
-		//test read/write for MemKVStore
-		{func() bool { setRecords(ms); return storeHasAll(ms) },
-			"MemKVStore doesn't retrieve after Set"},
+	//test read/write for MemKVStore
+	setRecords(ms)
+	assert.True(storeHasAll(ms), "MemKVStore doesn't retrieve after Set")
 
-		//test read/write for KVCache
-		{func() bool { setRecords(kvc); return storeHasAll(kvc) },
-			"KVCache doesn't retrieve after Set"},
+	//test read/write for KVCache
+	setRecords(kvc)
+	assert.True(storeHasAll(kvc), "KVCache doesn't retrieve after Set")
 
-		//test reset
-		{func() bool { kvc.Reset(); return !storeHasAll(kvc) },
-			"KVCache retrieving after reset"},
+	//test reset
+	kvc.Reset()
+	assert.False(storeHasAll(kvc), "KVCache retrieving after reset")
 
-		//test sync
-		{func() bool { setRecords(kvc); return !storeHasAll(store) },
-			"store retrieving before synced"},
-		{func() bool { kvc.Sync(); return storeHasAll(store) },
-			"store isn't retrieving after synced"},
+	//test sync
+	setRecords(kvc)
+	assert.False(storeHasAll(store), "store retrieving before synced")
+	kvc.Sync()
+	assert.True(storeHasAll(store), "store isn't retrieving after synced")
 
-		//test logging
-		{func() bool { return len(kvc.GetLogLines()) == 0 },
-			"logging events existed before using SetLogging"},
-		{func() bool { kvc.SetLogging(); setRecords(kvc); return len(kvc.GetLogLines()) == 2 },
-			"incorrect number of logging events recorded"},
-		{func() bool { kvc.ClearLogLines(); return len(kvc.GetLogLines()) == 0 },
-			"logging events still exists after ClearLogLines"},
-	}
+	//test logging
+	assert.Zero(len(kvc.GetLogLines()), "logging events existed before using SetLogging")
+	kvc.SetLogging()
+	setRecords(kvc)
+	assert.Equal(len(kvc.GetLogLines()), 2, "incorrect number of logging events recorded")
+	kvc.ClearLogLines()
+	assert.Zero(len(kvc.GetLogLines()), "logging events still exists after ClearLogLines")
 
-	//execute the tests
-	for _, tl := range testList {
-		assert.True(t, tl.testPass(), tl.errMsg)
-	}
 }

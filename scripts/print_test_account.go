@@ -15,8 +15,8 @@ Address: D9B727742AA29FA638DC63D70813C976014C4CE0
 */
 func main() {
 	tAcc := tests.PrivAccountFromSecret("test")
-	fmt.Println("PrivKey:", fmt.Sprintf("%X", tAcc.PrivKey.Bytes()))
-	fmt.Println("PubKey:", fmt.Sprintf("%X", tAcc.Account.PubKey.Bytes()))
-	fmt.Println("Address:", fmt.Sprintf("%X", tAcc.Account.PubKey.Address()))
+	fmt.Printf("PrivKey:%X\n", tAcc.PrivKey.Bytes())
+	fmt.Printf("PubKey:%X\n", tAcc.Account.PubKey.Bytes())
+	fmt.Printf("Address:%X\n", tAcc.Account.PubKey.Address())
 	fmt.Println(string(wire.JSONBytesPretty(tAcc)))
 }

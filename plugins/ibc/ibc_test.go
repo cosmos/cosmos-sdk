@@ -65,6 +65,7 @@ func (pas PrivAccountsByAddress) Swap(i, j int) {
 //--------------------------------------------------------------------------------
 
 func TestIBCPlugin(t *testing.T) {
+	assert := assert.New(t)
 
 	eyesClient := eyes.NewLocalClient("", 0)
 	store := types.NewKVCache(eyesClient)
@@ -88,7 +89,7 @@ func TestIBCPlugin(t *testing.T) {
 			Genesis: "<THIS IS NOT JSON>",
 		},
 	}}))
-	assert.Equal(t, IBCCodeEncodingError, res.Code)
+	assert.Equal(IBCCodeEncodingError, res.Code)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -99,7 +100,7 @@ func TestIBCPlugin(t *testing.T) {
 			Genesis: string(genDocJSON_1),
 		},
 	}}))
-	assert.True(t, res.IsOK(), res.Log)
+	assert.True(res.IsOK(), res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -110,7 +111,7 @@ func TestIBCPlugin(t *testing.T) {
 			Genesis: string(genDocJSON_1),
 		},
 	}}))
-	assert.Equal(t, IBCCodeChainAlreadyExists, res.Code, res.Log)
+	assert.Equal(IBCCodeChainAlreadyExists, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -125,7 +126,7 @@ func TestIBCPlugin(t *testing.T) {
 	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCPacketCreateTx{
 		Packet: packet,
 	}}))
-	assert.Equal(t, abci.CodeType_OK, res.Code, res.Log)
+	assert.Equal(abci.CodeType_OK, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -133,7 +134,7 @@ func TestIBCPlugin(t *testing.T) {
 	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCPacketCreateTx{
 		Packet: packet,
 	}}))
-	assert.Equal(t, IBCCodePacketAlreadyExists, res.Code, res.Log)
+	assert.Equal(IBCCodePacketAlreadyExists, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -175,7 +176,7 @@ func TestIBCPlugin(t *testing.T) {
 		Header: header,
 		Commit: commit,
 	}}))
-	assert.Equal(t, abci.CodeType_OK, res.Code, res.Log)
+	assert.Equal(abci.CodeType_OK, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -190,10 +191,10 @@ func TestIBCPlugin(t *testing.T) {
 		Data:  packetKey,
 		Prove: true,
 	})
-	assert.Nil(t, err)
+	assert.Nil(err)
 	var proof *merkle.IAVLProof
 	err = wire.ReadBinaryBytes(resQuery.Proof, &proof)
-	assert.Nil(t, err)
+	assert.Nil(err)
 
 	// Post a packet
 	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCPacketPostTx{
@@ -202,12 +203,13 @@ func TestIBCPlugin(t *testing.T) {
 		Packet:          packet,
 		Proof:           proof,
 	}}))
-	assert.Equal(t, abci.CodeType_OK, res.Code, res.Log)
+	assert.Equal(abci.CodeType_OK, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 }
 
 func TestIBCPluginBadCommit(t *testing.T) {
+	assert := assert.New(t)
 
 	eyesClient := eyes.NewLocalClient("", 0)
 	store := types.NewKVCache(eyesClient)
@@ -231,7 +233,7 @@ func TestIBCPluginBadCommit(t *testing.T) {
 			Genesis: string(genDocJSON_1),
 		},
 	}}))
-	assert.True(t, res.IsOK(), res.Log)
+	assert.True(res.IsOK(), res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -273,13 +275,14 @@ func TestIBCPluginBadCommit(t *testing.T) {
 		Header: header,
 		Commit: commit,
 	}}))
-	assert.Equal(t, IBCCodeInvalidCommit, res.Code, res.Log)
+	assert.Equal(IBCCodeInvalidCommit, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
 }
 
 func TestIBCPluginBadProof(t *testing.T) {
+	assert := assert.New(t)
 
 	eyesClient := eyes.NewLocalClient("", 0)
 	store := types.NewKVCache(eyesClient)
@@ -303,7 +306,7 @@ func TestIBCPluginBadProof(t *testing.T) {
 			Genesis: string(genDocJSON_1),
 		},
 	}}))
-	assert.True(t, res.IsOK(), res.Log)
+	assert.True(res.IsOK(), res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -318,7 +321,7 @@ func TestIBCPluginBadProof(t *testing.T) {
 	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCPacketCreateTx{
 		Packet: packet,
 	}}))
-	assert.Equal(t, abci.CodeType_OK, res.Code, res.Log)
+	assert.Equal(abci.CodeType_OK, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -360,7 +363,7 @@ func TestIBCPluginBadProof(t *testing.T) {
 		Header: header,
 		Commit: commit,
 	}}))
-	assert.Equal(t, abci.CodeType_OK, res.Code, res.Log)
+	assert.Equal(abci.CodeType_OK, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 
@@ -375,10 +378,10 @@ func TestIBCPluginBadProof(t *testing.T) {
 		Data:  packetKey,
 		Prove: true,
 	})
-	assert.Nil(t, err)
+	assert.Nil(err)
 	var proof *merkle.IAVLProof
 	err = wire.ReadBinaryBytes(resQuery.Proof, &proof)
-	assert.Nil(t, err)
+	assert.Nil(err)
 
 	// Mutate the proof
 	proof.InnerNodes[0].Height += 1
@@ -390,7 +393,7 @@ func TestIBCPluginBadProof(t *testing.T) {
 		Packet:          packet,
 		Proof:           proof,
 	}}))
-	assert.Equal(t, IBCCodeInvalidProof, res.Code, res.Log)
+	assert.Equal(IBCCodeInvalidProof, res.Code, res.Log)
 	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
 	store.ClearLogLines()
 }

@@ -199,7 +199,7 @@ func verifyCmd(cmd *cobra.Command, args []string) error {
 
 	proofBytes, err := hex.DecodeString(StripHex(proofFlag))
 	if err != nil {
-		return errors.Errorf("Proof (%v) is invalid hex: %v\n", proofBytes, err)
+		return errors.Errorf("Proof (%v) is invalid hex: %v\n", proofFlag, err)
 	}
 
 	proof, err := merkle.ReadProof(proofBytes)

@@ -22,7 +22,7 @@ var (
 // returns 1 iff it set a file, otherwise 0 (so we can add them)
 func setupFile(path, data string, perm os.FileMode) (int, error) {
 	_, err := os.Stat(path)
-	if !os.IsNotExist(err) { //permission errors generated if use os.IsExist
+	if !os.IsNotExist(err) { //note, os.IsExist(err) != !os.IsNotExist(err)
 		return 0, nil
 	}
 	err = ioutil.WriteFile(path, []byte(data), perm)

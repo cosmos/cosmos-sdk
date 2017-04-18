@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
-	. "github.com/tendermint/go-common"
-	data "github.com/tendermint/go-data"
+	. "github.com/tendermint/tmlibs/common"
+	data "github.com/tendermint/go-wire/data"
 	"github.com/tendermint/go-wire"
 )
 

@@ -6,8 +6,8 @@ import (
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/tendermint/ed25519"
 	"github.com/tendermint/ed25519/extra25519"
-	. "github.com/tendermint/go-common"
-	data "github.com/tendermint/go-data"
+	. "github.com/tendermint/tmlibs/common"
+	data "github.com/tendermint/go-wire/data"
 	"github.com/tendermint/go-wire"
 )
 

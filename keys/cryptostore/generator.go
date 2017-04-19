@@ -25,11 +25,11 @@ func (f GenFunc) Generate() crypto.PrivKey {
 }
 
 func genEd25519() crypto.PrivKey {
-	return crypto.GenPrivKeyEd25519()
+	return crypto.GenPrivKeyEd25519().Wrap()
 }
 
 func genSecp256() crypto.PrivKey {
-	return crypto.GenPrivKeySecp256k1()
+	return crypto.GenPrivKeySecp256k1().Wrap()
 }
 
 func getGenerator(algo string) (Generator, error) {

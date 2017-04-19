@@ -37,7 +37,7 @@ func (e secretbox) Decrypt(data []byte, pass string) (crypto.PrivKey, error) {
 	s := secret(pass)
 	private, err := crypto.DecryptSymmetric(data, s)
 	if err != nil {
-		return nil, errors.Wrap(err, "Invalid Passphrase")
+		return crypto.PrivKey{}, errors.Wrap(err, "Invalid Passphrase")
 	}
 	key, err := crypto.PrivKeyFromBytes(private)
 	return key, errors.Wrap(err, "Invalid Passphrase")

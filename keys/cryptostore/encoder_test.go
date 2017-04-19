@@ -50,7 +50,7 @@ func TestSecretBox(t *testing.T) {
 	// decoding with a different pass is an error
 	pk, err := enc.Decrypt(b, "decode")
 	require.NotNil(err)
-	require.Nil(pk)
+	require.True(pk.Empty())
 
 	// but decoding with the same passphrase gets us our key
 	pk, err = enc.Decrypt(b, pass)

@@ -24,7 +24,7 @@ func (es encryptedStorage) Put(name, pass string, key crypto.PrivKey) error {
 func (es encryptedStorage) Get(name, pass string) (crypto.PrivKey, keys.Info, error) {
 	secret, info, err := es.store.Get(name)
 	if err != nil {
-		return nil, info, err
+		return crypto.PrivKey{}, info, err
 	}
 	key, err := es.coder.Decrypt(secret, pass)
 	return key, info, err
@@ -44,6 +44,6 @@ func info(name string, key crypto.PrivKey) keys.Info {
 	return keys.Info{
 		Name:    name,
 		Address: pub.Address(),
-		PubKey:  crypto.PubKeyS{pub},
+		PubKey:  pub,
 	}
 }

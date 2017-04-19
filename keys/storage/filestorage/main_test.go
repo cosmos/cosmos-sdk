@@ -25,7 +25,7 @@ func TestBasicCRUD(t *testing.T) {
 	pubkey := crypto.GenPrivKeyEd25519().PubKey()
 	info := keys.Info{
 		Name:   name,
-		PubKey: crypto.PubKeyS{pubkey},
+		PubKey: pubkey.Wrap(),
 	}
 
 	// No data: Get and Delete return nothing

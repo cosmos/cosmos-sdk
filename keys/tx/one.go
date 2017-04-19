@@ -3,7 +3,7 @@ package tx
 import (
 	"github.com/pkg/errors"
 	crypto "github.com/tendermint/go-crypto"
-	data "github.com/tendermint/go-data"
+	data "github.com/tendermint/go-wire/data"
 )
 
 // OneSig lets us wrap arbitrary data with a go-crypto signature
@@ -31,7 +31,7 @@ func (s *OneSig) SignBytes() []byte {
 // Depending on the Signable, one may be able to call this multiple times for multisig
 // Returns error if called with invalid data or too many times
 func (s *OneSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
-	if pubkey == nil || sig == nil {
+	if pubkey.Empty() || sig.Empty() {
 		return errors.New("Signature or Key missing")
 	}
 	if !s.Sig.Empty() {
@@ -39,8 +39,7 @@ func (s *OneSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
 	}
 
 	// set the value once we are happy
-	s.Pubkey = crypto.PubKeyS{pubkey}
-	s.Sig = crypto.SignatureS{sig}
+	s.Signed = Signed{sig, pubkey}
 	return nil
 }
 

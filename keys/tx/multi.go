@@ -3,7 +3,7 @@ package tx
 import (
 	"github.com/pkg/errors"
 	crypto "github.com/tendermint/go-crypto"
-	data "github.com/tendermint/go-data"
+	data "github.com/tendermint/go-wire/data"
 )
 
 // MultiSig lets us wrap arbitrary data with a go-crypto signature
@@ -16,8 +16,8 @@ type MultiSig struct {
 }
 
 type Signed struct {
-	Sig    crypto.SignatureS
-	Pubkey crypto.PubKeyS
+	Sig    crypto.Signature
+	Pubkey crypto.PubKey
 }
 
 var _ SigInner = &MultiSig{}
@@ -36,12 +36,12 @@ func (s *MultiSig) SignBytes() []byte {
 // Depending on the Signable, one may be able to call this multiple times for multisig
 // Returns error if called with invalid data or too many times
 func (s *MultiSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
-	if pubkey == nil || sig == nil {
+	if pubkey.Empty() || sig.Empty() {
 		return errors.New("Signature or Key missing")
 	}
 
 	// set the value once we are happy
-	x := Signed{crypto.SignatureS{sig}, crypto.PubKeyS{pubkey}}
+	x := Signed{sig, pubkey}
 	s.Sigs = append(s.Sigs, x)
 	return nil
 }

@@ -4,14 +4,14 @@ import (
 	"sort"
 
 	crypto "github.com/tendermint/go-crypto"
-	data "github.com/tendermint/go-data"
+	data "github.com/tendermint/go-wire/data"
 )
 
 // Info is the public information about a key
 type Info struct {
 	Name    string         `json:"name"`
 	Address data.Bytes     `json:"address"`
-	PubKey  crypto.PubKeyS `json:"pubkey"`
+	PubKey  crypto.PubKey `json:"pubkey"`
 }
 
 func (i *Info) Format() Info {

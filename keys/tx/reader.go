@@ -2,8 +2,8 @@ package tx
 
 import (
 	crypto "github.com/tendermint/go-crypto"
-	data "github.com/tendermint/go-data"
 	keys "github.com/tendermint/go-crypto/keys"
+	data "github.com/tendermint/go-wire/data"
 )
 
 const (
@@ -18,8 +18,8 @@ var TxMapper data.Mapper
 
 func init() {
 	TxMapper = data.NewMapper(Sig{}).
-		RegisterInterface(&OneSig{}, nameOneSig, typeOneSig).
-		RegisterInterface(&MultiSig{}, nameMultiSig, typeMultiSig)
+		RegisterImplementation(&OneSig{}, nameOneSig, typeOneSig).
+		RegisterImplementation(&MultiSig{}, nameMultiSig, typeMultiSig)
 }
 
 /*

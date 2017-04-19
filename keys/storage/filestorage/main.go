@@ -135,7 +135,7 @@ func readInfo(path string) (info keys.Info, err error) {
 		return
 	}
 	pk, err := crypto.PubKeyFromBytes(data)
-	info.PubKey = crypto.PubKeyS{pk}
+	info.PubKey = pk
 	return
 }
 

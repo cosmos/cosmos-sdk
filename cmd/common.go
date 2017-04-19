@@ -8,8 +8,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	data "github.com/tendermint/go-data"
 	"github.com/tendermint/go-data/base58"
+	data "github.com/tendermint/go-wire/data"
 )
 
 /*******

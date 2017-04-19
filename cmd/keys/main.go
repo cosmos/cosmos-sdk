@@ -17,7 +17,7 @@ package main
 import (
 	"os"
 
-	"github.com/tendermint/go-crypto/keys/cmd"
+	"github.com/tendermint/go-crypto/cmd"
 )
 
 func main() {

@@ -17,7 +17,7 @@ import:
 - package: github.com/tendermint/merkleeyes
   version: master
 - package: github.com/tendermint/tendermint
-  version: cli_change
+  version: viper
 - package: github.com/tendermint/abci
   version: master
 - package: github.com/gorilla/websocket

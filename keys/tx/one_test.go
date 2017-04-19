@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	crypto "github.com/tendermint/go-crypto"
-	keys "github.com/tendermint/go-keys"
-	"github.com/tendermint/go-keys/cryptostore"
-	"github.com/tendermint/go-keys/storage/memstorage"
+	keys "github.com/tendermint/go-crypto/keys"
+	"github.com/tendermint/go-crypto/keys/cryptostore"
+	"github.com/tendermint/go-crypto/keys/storage/memstorage"
 )
 
 func TestOneSig(t *testing.T) {

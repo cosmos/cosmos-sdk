@@ -14,7 +14,7 @@ import (
 
 	"github.com/pkg/errors"
 	crypto "github.com/tendermint/go-crypto"
-	keys "github.com/tendermint/go-keys"
+	keys "github.com/tendermint/go-crypto/keys"
 )
 
 const (

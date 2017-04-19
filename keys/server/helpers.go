@@ -13,7 +13,7 @@ import (
 	"net/http"
 
 	data "github.com/tendermint/go-data"
-	"github.com/tendermint/go-keys/server/types"
+	"github.com/tendermint/go-crypto/keys/server/types"
 
 	"github.com/pkg/errors"
 )

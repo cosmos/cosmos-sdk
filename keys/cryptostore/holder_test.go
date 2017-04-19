@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-keys/cryptostore"
-	"github.com/tendermint/go-keys/storage/memstorage"
+	"github.com/tendermint/go-crypto/keys/cryptostore"
+	"github.com/tendermint/go-crypto/keys/storage/memstorage"
 )
 
 // TestKeyManagement makes sure we can manipulate these keys well

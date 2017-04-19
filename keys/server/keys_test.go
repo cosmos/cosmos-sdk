@@ -10,11 +10,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	keys "github.com/tendermint/go-keys"
-	"github.com/tendermint/go-keys/cryptostore"
-	"github.com/tendermint/go-keys/server"
-	"github.com/tendermint/go-keys/server/types"
-	"github.com/tendermint/go-keys/storage/memstorage"
+	keys "github.com/tendermint/go-crypto/keys"
+	"github.com/tendermint/go-crypto/keys/cryptostore"
+	"github.com/tendermint/go-crypto/keys/server"
+	"github.com/tendermint/go-crypto/keys/server/types"
+	"github.com/tendermint/go-crypto/keys/storage/memstorage"
 )
 
 func TestKeyServer(t *testing.T) {

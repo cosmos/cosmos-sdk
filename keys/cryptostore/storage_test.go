@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	keys "github.com/tendermint/go-keys"
+	keys "github.com/tendermint/go-crypto/keys"
 )
 
 func TestSortKeys(t *testing.T) {

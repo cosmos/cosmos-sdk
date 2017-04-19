@@ -3,7 +3,7 @@ package tx
 import (
 	crypto "github.com/tendermint/go-crypto"
 	data "github.com/tendermint/go-data"
-	keys "github.com/tendermint/go-keys"
+	keys "github.com/tendermint/go-crypto/keys"
 )
 
 const (

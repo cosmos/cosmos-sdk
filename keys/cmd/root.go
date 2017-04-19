@@ -19,9 +19,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	keys "github.com/tendermint/go-keys"
-	"github.com/tendermint/go-keys/cryptostore"
-	"github.com/tendermint/go-keys/storage/filestorage"
+	keys "github.com/tendermint/go-crypto/keys"
+	"github.com/tendermint/go-crypto/keys/cryptostore"
+	"github.com/tendermint/go-crypto/keys/storage/filestorage"
 )
 
 const KeySubdir = "keys"

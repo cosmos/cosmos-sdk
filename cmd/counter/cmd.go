@@ -35,7 +35,7 @@ func init() {
 
 func counterTxCmd(cmd *cobra.Command, args []string) error {
 
-	countFee, err := commands.ParseCoins(countFeeFlag)
+	countFee, err := types.ParseCoins(countFeeFlag)
 	if err != nil {
 		return err
 	}

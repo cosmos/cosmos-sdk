@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"regexp"
-	"strconv"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"

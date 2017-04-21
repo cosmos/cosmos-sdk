@@ -1,20 +1,16 @@
-.PHONEY: all docs test install get_vendor_deps ensure_tools
-
 GOTOOLS = \
+	github.com/mitchellh/gox \
 	github.com/Masterminds/glide
-REPO:=github.com/tendermint/go-crypto
 
-docs:
-	@go get github.com/davecheney/godoc2md
-	godoc2md $(REPO) > README.md
+.PHONEY: all test install get_vendor_deps ensure_tools
 
 all: install test
 
+test:
+	go test `glide novendor` 
+
 install:
 	go install ./cmd/keys
-
-test:
-	go test `glide novendor`
 
 get_vendor_deps: ensure_tools
 	@rm -rf vendor/
@@ -23,5 +19,4 @@ get_vendor_deps: ensure_tools
 
 ensure_tools:
 	go get $(GOTOOLS)
-
 

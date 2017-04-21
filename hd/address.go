@@ -22,21 +22,13 @@ import (
 	"golang.org/x/crypto/ripemd160"
 )
 
-const (
-	// BIP32 chainpath prefix
-	CHAINPATH_PREFIX_DEPOSIT   = 0
-	CHAINPATH_PREFIX_CHANGE    = 1
-	CHAINPATH_PREFIX_SWEEP     = 2
-	CHAINPATH_PREFIX_SWEEP_DRY = 102
-)
-
-func ComputeAddress(coin string, pubKeyHex string, chainHex string, path string, index int32) string {
+func ComputeAddress(pubKeyHex string, chainHex string, path string, index int32) string {
 	pubKeyBytes := DerivePublicKeyForPath(
 		HexDecode(pubKeyHex),
 		HexDecode(chainHex),
 		fmt.Sprintf("%v/%v", path, index),
 	)
-	return AddrFromPubKeyBytes(coin, pubKeyBytes)
+	return AddrFromPubKeyBytes(pubKeyBytes)
 }
 
 func ComputePrivateKey(mprivHex string, chainHex string, path string, index int32) string {
@@ -48,9 +40,9 @@ func ComputePrivateKey(mprivHex string, chainHex string, path string, index int3
 	return HexEncode(privKeyBytes)
 }
 
-func ComputeAddressForPrivKey(coin string, privKey string) string {
+func ComputeAddressForPrivKey(privKey string) string {
 	pubKeyBytes := PubKeyBytesFromPrivKeyBytes(HexDecode(privKey), true)
-	return AddrFromPubKeyBytes(coin, pubKeyBytes)
+	return AddrFromPubKeyBytes(pubKeyBytes)
 }
 
 func SignMessage(privKey string, message string, compress bool) string {
@@ -86,8 +78,8 @@ func ComputeMastersFromSeed(seed string) (string, string, string, string) {
 	return HexEncode(pubKeyBytes), HexEncode(secret), HexEncode(chain), HexEncode(secret)
 }
 
-func ComputeWIF(coin string, privKey string, compress bool) string {
-	return WIFFromPrivKeyBytes(coin, HexDecode(privKey), compress)
+func ComputeWIF(privKey string, compress bool) string {
+	return WIFFromPrivKeyBytes(HexDecode(privKey), compress)
 }
 
 func ComputeTxId(rawTxHex string) string {
@@ -100,7 +92,7 @@ func printKeyInfo(privKeyBytes []byte, pubKeyBytes []byte, chain []byte) {
 	if pubKeyBytes == nil {
 		pubKeyBytes = PubKeyBytesFromPrivKeyBytes(privKeyBytes, true)
 	}
-	addr := AddrFromPubKeyBytes("BTC", pubKeyBytes)
+	addr := AddrFromPubKeyBytes(pubKeyBytes)
 	log.Println("\nprikey:\t%v\npubKeyBytes:\t%v\naddr:\t%v\nchain:\t%v",
 		HexEncode(privKeyBytes),
 		HexEncode(pubKeyBytes),
@@ -225,7 +217,8 @@ func I64(key []byte, data []byte) ([]byte, []byte) {
 	return I[:32], I[32:]
 }
 
-func AddrFromPubKeyBytes(coin string, pubKeyBytes []byte) string {
+// This returns a Bitcoin-like address.
+func AddrFromPubKeyBytes(pubKeyBytes []byte) string {
 	prefix := byte(0x00) // TODO Make const or configurable
 	h160 := CalcHash160(pubKeyBytes)
 	h160 = append([]byte{prefix}, h160...)
@@ -234,7 +227,15 @@ func AddrFromPubKeyBytes(coin string, pubKeyBytes []byte) string {
 	return base58.Encode(b)
 }
 
-func WIFFromPrivKeyBytes(coin string, privKeyBytes []byte, compress bool) string {
+func AddrBytesFromPubKeyBytes(pubKeyBytes []byte) (addrBytes []byte, checksum []byte) {
+	prefix := byte(0x00) // TODO Make const or configurable
+	h160 := CalcHash160(pubKeyBytes)
+	_h160 := append([]byte{prefix}, h160...)
+	checksum = CalcHash256(_h160)[:4]
+	return h160, checksum
+}
+
+func WIFFromPrivKeyBytes(privKeyBytes []byte, compress bool) string {
 	prefix := byte(0x80) // TODO Make const or configurable
 	bytes := append([]byte{prefix}, privKeyBytes...)
 	if compress {

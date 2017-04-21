@@ -1,5 +1,5 @@
-hash: 8a63c035134ec024df64d8cc43a732712e48e4cfc5de30d45c1b692b3e9a75b8
-updated: 2017-04-19T17:06:49.640329917+02:00
+hash: 3bcee9fbccf29d21217b24b6a83ec51e1514f37b2ae5d8718cf6c5df80f4fb2c
+updated: 2017-04-21T16:09:28.762932633-04:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 675b82c74c0ed12283ee81ba8a534c8982c07b85
@@ -51,9 +51,9 @@ imports:
 - name: github.com/magiconair/properties
   version: 51463bfca2576e06c62a8504b5c0f06d61312647
 - name: github.com/mattn/go-colorable
-  version: a392f450ea64cee2b268dfaacdc2502b50a22b18
+  version: d228849504861217f796da67fae4f6e347643f15
 - name: github.com/mattn/go-isatty
-  version: 57fdcb988a5c543893cc61bce354a6e24ab70022
+  version: 30a891c33c7cde7b02a981314b4228ec99380cca
 - name: github.com/mitchellh/mapstructure
   version: 53818660ed4955e899c0bcafa97299a388bd7c8e
 - name: github.com/pelletier/go-buffruneio
@@ -81,12 +81,8 @@ imports:
   subpackages:
   - edwards25519
   - extra25519
-- name: github.com/tendermint/go-data
-  version: e7fcc6d081ec8518912fcdc103188275f83a3ee5
-  subpackages:
-  - base58
 - name: github.com/tendermint/go-wire
-  version: 9127836cbb6dd99e020cb840a0cedcedc4671468
+  version: 334005c236d19c632fb5f073f9de3b0fab6a522b
   subpackages:
   - data
   - data/base58
@@ -95,12 +91,12 @@ imports:
   subpackages:
   - term
 - name: github.com/tendermint/tmlibs
-  version: 2f8551d3b614dd0c0c6c114c42ab25901cc41a52
+  version: 1ea866fd691ded9c1de16408934927d133550efc
   subpackages:
   - common
   - logger
 - name: golang.org/x/crypto
-  version: 728b753d0135da6801d45a38e6f43ff55779c5c2
+  version: 7c6cc321c680f03b9ef0764448e780704f486b51
   subpackages:
   - bcrypt
   - blowfish
@@ -112,7 +108,7 @@ imports:
   - ripemd160
   - salsa20/salsa
 - name: golang.org/x/sys
-  version: 99f16d856c9836c42d24e7ab64ea72916925fa97
+  version: d75a52659825e75fff6158388dddc6a5b04f9ba5
   subpackages:
   - unix
 - name: golang.org/x/text

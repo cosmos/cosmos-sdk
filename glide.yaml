@@ -10,9 +10,9 @@ import:
   subpackages:
   - extra25519
 - package: github.com/tendermint/tmlibs
-  version: unstable
+  version: develop
 - package: github.com/tendermint/go-wire
-  version: unstable
+  version: develop
   subpackages:
   - data
   - data/base58

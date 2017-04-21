@@ -41,6 +41,7 @@ If you take a look at the `genesis.json` file, you will see one account listed t
 This account corresponds to the private key in `key.json`.
 We also included the private key for another account, in `key2.json`.
 
+Leave basecoin running and open a new terminal window.
 Let's check the balance of these two accounts:
 
 ```

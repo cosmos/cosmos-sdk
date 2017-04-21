@@ -1,0 +1,21 @@
+machine:
+  environment:
+    GOPATH: /home/ubuntu/.go_workspace
+    PROJECT_PARENT_PATH: "$GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME"
+    PROJECT_PATH: $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
+    GO15VENDOREXPERIMENT: 1
+  hosts:
+    circlehost: 127.0.0.1
+    localhost: 127.0.0.1
+
+dependencies:
+  override:
+    - mkdir -p "$PROJECT_PARENT_PATH"
+    - ln -sf "$HOME/$CIRCLE_PROJECT_REPONAME/" "$PROJECT_PATH"
+  post:
+    - go version
+
+test:
+  override:
+    - "go version"
+    - "cd $PROJECT_PATH && make get_vendor_deps && make test"

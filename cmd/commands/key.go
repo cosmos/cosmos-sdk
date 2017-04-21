@@ -8,38 +8,39 @@ import (
 	"path"
 	"strings"
 
-	"github.com/urfave/cli"
+	//"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 
-	cmn "github.com/tendermint/go-common"
 	"github.com/tendermint/go-crypto"
 )
 
+//commands
 var (
-	KeyCmd = cli.Command{
-		Name:        "key",
-		Usage:       "Manage keys",
-		ArgsUsage:   "",
-		Subcommands: []cli.Command{NewKeyCmd},
+	KeyCmd = &cobra.Command{
+		Use:   "key",
+		Short: "Manage keys",
 	}
 
-	NewKeyCmd = cli.Command{
-		Name:      "new",
-		Usage:     "Create a new private key",
-		ArgsUsage: "",
-		Action: func(c *cli.Context) error {
-			return cmdNewKey(c)
-		},
+	NewKeyCmd = &cobra.Command{
+		Use:   "new",
+		Short: "Create a new private key",
+		RunE:  newKeyCmd,
 	}
 )
 
-func cmdNewKey(c *cli.Context) error {
+func newKeyCmd(cmd *cobra.Command, args []string) error {
 	key := genKey()
 	keyJSON, err := json.MarshalIndent(key, "", "\t")
 	if err != nil {
 		return err
 	}
-	fmt.Println(keyJSON)
+	fmt.Println(string(keyJSON))
 	return nil
+}
+
+func init() {
+	//register commands
+	KeyCmd.AddCommand(NewKeyCmd)
 }
 
 //---------------------------------------------
@@ -84,16 +85,18 @@ func genKey() *Key {
 	}
 }
 
-func LoadKey(keyFile string) *Key {
+func LoadKey(keyFile string) (*Key, error) {
 	filePath := path.Join(BasecoinRoot(""), keyFile)
 	keyJSONBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		cmn.Exit(err.Error())
+		return nil, err
 	}
+
 	key := new(Key)
 	err = json.Unmarshal(keyJSONBytes, key)
 	if err != nil {
-		cmn.Exit(cmn.Fmt("Error reading key from %v: %v\n", filePath, err))
+		return nil, fmt.Errorf("Error reading key from %v: %v\n", filePath, err) //never stack trace
 	}
-	return key
+
+	return key, nil
 }

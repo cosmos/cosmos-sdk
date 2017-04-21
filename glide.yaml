@@ -1,22 +1,24 @@
 package: github.com/tendermint/basecoin
 import:
 - package: github.com/tendermint/go-common
-  version: master
+  version: develop
 - package: github.com/tendermint/go-crypto
-  version: master
+  version: develop
 - package: github.com/tendermint/go-events
-  version: master
+  version: develop
 - package: github.com/tendermint/go-logger
-  version: master
+  version: develop
+- package: github.com/tendermint/go-data
+  version: develop
 - package: github.com/tendermint/go-rpc
-  version: master
+  version: develop
 - package: github.com/tendermint/go-wire
-  version: master
+  version: develop
 - package: github.com/tendermint/merkleeyes
-  version: master
+  version: develop
 - package: github.com/tendermint/tendermint
-  version: master
+  version: develop
 - package: github.com/tendermint/abci
-  version: master
+  version: develop
 - package: github.com/gorilla/websocket
   version: v1.1.0

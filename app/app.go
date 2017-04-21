@@ -5,17 +5,17 @@ import (
 	"strings"
 
 	abci "github.com/tendermint/abci/types"
-	sm "github.com/tendermint/basecoin/state"
-	"github.com/tendermint/basecoin/types"
 	. "github.com/tendermint/go-common"
 	"github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
+
+	sm "github.com/tendermint/basecoin/state"
+	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/basecoin/version"
 )
 
 const (
-	version   = "0.1"
-	maxTxSize = 10240
-
+	maxTxSize      = 10240
 	PluginNameBase = "base"
 )
 
@@ -37,14 +37,14 @@ func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
 	}
 }
 
-// For testing, not thread safe!
+// XXX For testing, not thread safe!
 func (app *Basecoin) GetState() *sm.State {
 	return app.state.CacheWrap()
 }
 
 // ABCI::Info
 func (app *Basecoin) Info() abci.ResponseInfo {
-	return abci.ResponseInfo{Data: Fmt("Basecoin v%v", version)}
+	return abci.ResponseInfo{Data: Fmt("Basecoin v%v", version.Version)}
 }
 
 func (app *Basecoin) RegisterPlugin(plugin types.Plugin) {
@@ -136,7 +136,7 @@ func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 	// handle special path for account info
 	if reqQuery.Path == "/account" {
 		reqQuery.Path = "/key"
-		reqQuery.Data = append([]byte("base/a/"), reqQuery.Data...)
+		reqQuery.Data = sm.AccountKey(reqQuery.Data)
 	}
 
 	resQuery, err := app.eyesCli.QuerySync(reqQuery)

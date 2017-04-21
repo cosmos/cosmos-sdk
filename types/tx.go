@@ -40,8 +40,8 @@ var txMapper data.Mapper
 // register both private key types with go-data (and thus go-wire)
 func init() {
 	txMapper = data.NewMapper(TxS{}).
-		RegisterInterface(&SendTx{}, TxNameSend, TxTypeSend).
-		RegisterInterface(&AppTx{}, TxNameApp, TxTypeApp)
+		RegisterImplementation(&SendTx{}, TxNameSend, TxTypeSend).
+		RegisterImplementation(&AppTx{}, TxNameApp, TxTypeApp)
 }
 
 // TxS add json serialization to Tx

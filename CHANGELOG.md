@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0 (TBD)
+
+BREAKING CHANGES:
+
+- CLI now uses Cobra, which forced changes to some of the flag names and orderings
+
+IMPROVEMENTS:
+
+- `basecoin init` doesn't generate error if already initialized
+- Much more testing
+
 ## 0.3.1 (March 23, 2017)
 
 IMPROVEMENTS:

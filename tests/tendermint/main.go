@@ -8,9 +8,9 @@ import (
 	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/go-common"
 	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-rpc/client"
+	rpcclient "github.com/tendermint/go-rpc/client"
 	"github.com/tendermint/go-rpc/types"
-	"github.com/tendermint/go-wire"
+	wire "github.com/tendermint/go-wire"
 	_ "github.com/tendermint/tendermint/rpc/core/types" // Register RPCResponse > Result types
 )
 
@@ -72,7 +72,8 @@ func main() {
 
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
-		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", cmn.Arr(txBytes))
+		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", map[string]interface{}{"tx": txBytes})
+		//request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", map[string]interface{}{"tx": txBytes})
 		reqBytes := wire.JSONBytes(request)
 		//fmt.Print(".")
 		err := ws.WriteMessage(websocket.TextMessage, reqBytes)
@@ -122,7 +123,7 @@ func main() {
 
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
-		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", cmn.Arr(txBytes))
+		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", map[string]interface{}{"tx": txBytes})
 		reqBytes := wire.JSONBytes(request)
 		//fmt.Print(".")
 		err := ws.WriteMessage(websocket.TextMessage, reqBytes)

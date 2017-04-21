@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	. "github.com/tendermint/go-common"
+	cmn "github.com/tendermint/go-common"
 	"github.com/tendermint/go-rpc/client"
 	"github.com/tendermint/go-rpc/types"
 	"github.com/tendermint/go-wire"
@@ -21,7 +21,7 @@ func main() {
 
 	_, err := ws.Start()
 	if err != nil {
-		Exit(err.Error())
+		cmn.Exit(err.Error())
 	}
 
 	// Read a bunch of responses
@@ -50,7 +50,7 @@ func main() {
 		reqBytes := wire.JSONBytes(request)
 		err = ws.WriteMessage(websocket.TextMessage, reqBytes)
 		if err != nil {
-			Exit("writing websocket request: " + err.Error())
+			cmn.Exit("writing websocket request: " + err.Error())
 		}
 	}
 

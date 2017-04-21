@@ -1,20 +1,18 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"github.com/spf13/cobra"
 
 	"github.com/tendermint/basecoin/cmd/commands"
-	"github.com/tendermint/basecoin/version"
-	"github.com/urfave/cli"
 )
 
 func main() {
-	app := cli.NewApp()
-	app.Name = "basecoin"
-	app.Usage = "basecoin [command] [args...]"
-	app.Version = version.Version
-	app.Commands = []cli.Command{
+	var RootCmd = &cobra.Command{
+		Use:   "basecoin",
+		Short: "A cryptocurrency framework in Golang based on Tendermint-Core",
+	}
+
+	RootCmd.AddCommand(
 		commands.InitCmd,
 		commands.StartCmd,
 		commands.TxCmd,
@@ -24,10 +22,8 @@ func main() {
 		commands.BlockCmd,
 		commands.AccountCmd,
 		commands.UnsafeResetAllCmd,
-	}
-	err := app.Run(os.Args)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+		commands.VersionCmd,
+	)
+
+	commands.ExecuteWithDebug(RootCmd)
 }

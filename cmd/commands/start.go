@@ -1,12 +1,12 @@
 package commands
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path"
 
-	"github.com/urfave/cli"
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 
 	"github.com/tendermint/abci/server"
 	cmn "github.com/tendermint/go-common"
@@ -18,50 +18,48 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/types"
 )
 
+var StartCmd = &cobra.Command{
+	Use:   "start",
+	Short: "Start basecoin",
+	RunE:  startCmd,
+}
+
+//flags
+var (
+	addrFlag              string
+	eyesFlag              string
+	dirFlag               string
+	withoutTendermintFlag bool
+)
+
+// TODO: move to config file
 const EyesCacheSize = 10000
 
-var StartCmd = cli.Command{
-	Name:      "start",
-	Usage:     "Start basecoin",
-	ArgsUsage: "",
-	Action: func(c *cli.Context) error {
-		return cmdStart(c)
-	},
-	Flags: []cli.Flag{
-		AddrFlag,
-		EyesFlag,
-		WithoutTendermintFlag,
-		ChainIDFlag,
-	},
+func init() {
+
+	flags := []Flag2Register{
+		{&addrFlag, "address", "tcp://0.0.0.0:46658", "Listen address"},
+		{&eyesFlag, "eyes", "local", "MerkleEyes address, or 'local' for embedded"},
+		{&dirFlag, "dir", ".", "Root directory"},
+		{&withoutTendermintFlag, "without-tendermint", false, "Run Tendermint in-process with the App"},
+	}
+	RegisterFlags(StartCmd, flags)
 }
 
-type plugin struct {
-	name      string
-	newPlugin func() types.Plugin
-}
-
-var plugins = []plugin{}
-
-// RegisterStartPlugin is used to enable a plugin
-func RegisterStartPlugin(name string, newPlugin func() types.Plugin) {
-	plugins = append(plugins, plugin{name: name, newPlugin: newPlugin})
-}
-
-func cmdStart(c *cli.Context) error {
+func startCmd(cmd *cobra.Command, args []string) error {
 	basecoinDir := BasecoinRoot("")
 
 	// Connect to MerkleEyes
 	var eyesCli *eyes.Client
-	if c.String("eyes") == "local" {
+	if eyesFlag == "local" {
 		eyesCli = eyes.NewLocalClient(path.Join(basecoinDir, "data", "merkleeyes.db"), EyesCacheSize)
 	} else {
 		var err error
-		eyesCli, err = eyes.NewClient(c.String("eyes"))
+		eyesCli, err = eyes.NewClient(eyesFlag)
 		if err != nil {
-			return errors.New("connect to MerkleEyes: " + err.Error())
+			return errors.Errorf("Error connecting to MerkleEyes: %v\n", err)
 		}
 	}
 
@@ -84,7 +82,7 @@ func cmdStart(c *cli.Context) error {
 		if _, err := os.Stat(genesisFile); err == nil {
 			err := basecoinApp.LoadGenesis(genesisFile)
 			if err != nil {
-				return errors.New(cmn.Fmt("%+v", err))
+				return errors.Errorf("Error in LoadGenesis: %v\n", err)
 			}
 		} else {
 			fmt.Printf("No genesis file at %s, skipping...\n", genesisFile)
@@ -92,40 +90,38 @@ func cmdStart(c *cli.Context) error {
 	}
 
 	chainID := basecoinApp.GetState().GetChainID()
-	if c.Bool("without-tendermint") {
+	if withoutTendermintFlag {
 		log.Notice("Starting Basecoin without Tendermint", "chain_id", chainID)
 		// run just the abci app/server
-		return startBasecoinABCI(c, basecoinApp)
+		return startBasecoinABCI(basecoinApp)
 	} else {
 		log.Notice("Starting Basecoin with Tendermint", "chain_id", chainID)
 		// start the app with tendermint in-process
 		return startTendermint(basecoinDir, basecoinApp)
 	}
-
-	return nil
 }
 
-func startBasecoinABCI(c *cli.Context, basecoinApp *app.Basecoin) error {
+func startBasecoinABCI(basecoinApp *app.Basecoin) error {
+
 	// Start the ABCI listener
-	svr, err := server.NewServer(c.String("address"), "socket", basecoinApp)
+	svr, err := server.NewServer(addrFlag, "socket", basecoinApp)
 	if err != nil {
-		return errors.New("create listener: " + err.Error())
+		return errors.Errorf("Error creating listener: %v\n", err)
 	}
+
 	// Wait forever
 	cmn.TrapSignal(func() {
 		// Cleanup
 		svr.Stop()
 	})
 	return nil
-
 }
 
 func startTendermint(dir string, basecoinApp *app.Basecoin) error {
+
 	// Get configuration
 	tmConfig := tmcfg.GetConfig(dir)
-
 	// logger.SetLogLevel("notice") //config.GetString("log_level"))
-
 	// parseFlags(config, args[1:]) // Command line overrides
 
 	// Create & start tendermint node
@@ -143,6 +139,5 @@ func startTendermint(dir string, basecoinApp *app.Basecoin) error {
 		// Cleanup
 		n.Stop()
 	})
-
 	return nil
 }

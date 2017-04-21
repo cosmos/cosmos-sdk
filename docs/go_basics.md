@@ -11,6 +11,8 @@ learn a new project quickly as they all have the same enforced layout,
 programming following these conventions allows for interoperability with much
 of the go tooling, and a much more fluid development experience.
 
+## Setup
+
 First of all, you should read through [Effective
 Go](https://golang.org/doc/effective_go.html) to get a feel for the language
 and the constructs. And maybe pick up a book, read a tutorial, or do what you
@@ -36,6 +38,8 @@ github repos. If you put your code outside of GOPATH/src or have a path other
 than the url of the repo, you can expect errors.  There are ways to do this,
 but quite complex and not worth the bother.
 
+## Compiling from source
+
 Third, every repo in `$GOPATH/src` is checkout out of a version control system
 (commonly git), and you can go into those directories and manipulate them like
 any git repo (`git checkout develop`, `git pull`, `git remote set-url origin
@@ -44,7 +48,7 @@ master branch and recompile if needed.  If you work on develop, get used to
 using the git commands directly in these repos.
 [Here](https://tendermint.com/docs/guides/contributing) are some more tips on
 using git with open source go projects with absolute dependencies such as
-Tendermint. 
+Tendermint.
 
 Fourth, installing a go program is rather easy if you know what to do.  First
 to note is all programs compiles with `go install` and end up in `$GOPATH/bin`.
@@ -55,6 +59,8 @@ command name as the directory name.  To compile these commands, you can go
 something like `go install github.com/tendermint/basecoin/cmd/basecoin` or to
 compile all the commands `go install github.com/tendermint/basecoin/cmd/...`
 (... is a go tooling shortcut for all subdirs, like `*`).
+
+## Dependencies
 
 Fifth, there isn't good dependency management built into go. By default, when
 compiling a go program which imports another repo, go will compile using the
@@ -79,6 +85,47 @@ make test
 install` will compile all commands.  `make test` is good to run the test suite
 and make sure things are working with your environment... failing tests are
 much easier to debug than a malfunctioning program.
+
+## Custom versions.
+
+Sometimes compiling the master branch isn't enough. Let's say you just heard the new `develop` branch of tendermint has an awesome new feature and you want to try it out before it makes it into master (in a few weeks).  That is pretty simple.  Simply go into the `tendermint`, `basecoin`, etc. repo and compile as above.  (Note in tendermint and basecoin, make install automatically gets the newest vendor deps, so you can skip that step)
+
+```
+git checkout develop # or other branch
+git pull
+make get_vendor_deps
+make install
+make test
+```
+
+Great! Now when I run `tendermint` I have the newest of the new, the develop branch! But please not that this branch is not considered production ready and may have issues.  This should only be done if you want to develop code for the future and run locally.
+
+But wait, I want to mix and match.  There is a bugfix in `go-p2p:persistent_peer` that I want to use with tendermint.  How to compile this.  I will show with a simple example, please update the repo and commit numbers for your usecase. Also, make sure these branches are compatible, so if `persistent_peer` is close to `master` it should work. But if it is 15 commits ahead, you will probably need the `develop` branch of tendermint to compile with it.  But I assume you know your way around git and can figure that out.
+
+In the dependent repo:
+```
+cd $GOPATH/src/github.com/tendermint/go-p2p
+git checkout persistent_peer
+git pull
+# double-check this makes sense or if it is too far off
+git log --oneline --decorate --graph
+# get the full commit number here
+git log | head -1
+```
+
+In the main repo (tendermint, basecoin, ...) where the binary will be built:
+```
+cd $GOPATH/src/github.com/tendermint/tendermin
+git checkout master
+git pull
+# -> edit glide.lock, set the version of go-p2p (for example)
+# to the commit number you got above (the 40 char version)
+make get_vendor_deps
+make install
+make test
+```
+
+Great, now you just compiled the master branch of tendermint along with the bugfix for one of the dependencies! Maybe you don't have to wait until the next bugfix release after all.
 
 Okay, that's it, with this info you should be able to follow along and
 trouble-shoot any issues you have with the rest of the guide.

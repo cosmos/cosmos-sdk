@@ -103,14 +103,14 @@ sleep 3
 echo "... registering chain1 on chain2"
 echo ""
 # register chain1 on chain2
-basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 register --chain_id $CHAIN_ID1 --genesis ./data/chain1/genesis.json
+basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 register --ibc_chain_id $CHAIN_ID1 --genesis ./data/chain1/genesis.json
 
 echo ""
 echo "... creating egress packet on chain1"
 echo ""
 # create a packet on chain1 destined for chain2
 PAYLOAD="DEADBEEF" #TODO
-basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS1 packet create --from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload $PAYLOAD --sequence 1
+basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS1 packet create --ibc_from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload $PAYLOAD --ibc_sequence 1
 
 echo ""
 echo "... querying for packet data"
@@ -162,7 +162,7 @@ echo ""
 echo "... posting packet from chain1 on chain2"
 echo ""
 # post the packet from chain1 to chain2
-basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height $HEIGHT --packet 0x$PACKET --proof 0x$PROOF
+basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 packet post --ibc_from $CHAIN_ID1 --height $HEIGHT --packet 0x$PACKET --proof 0x$PROOF
 
 echo ""
 echo "... checking if the packet is present on chain2"

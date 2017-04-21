@@ -2,26 +2,37 @@ package commands
 
 import (
 	"io/ioutil"
+	"os"
 	"path"
 
-	"github.com/urfave/cli"
+	"github.com/spf13/cobra"
 
 	cmn "github.com/tendermint/go-common"
 )
 
-var InitCmd = cli.Command{
-	Name:      "init",
-	Usage:     "Initialize a basecoin blockchain",
-	ArgsUsage: "",
-	Action: func(c *cli.Context) error {
-		return cmdInit(c)
-	},
-	Flags: []cli.Flag{
-		ChainIDFlag,
-	},
+//commands
+var (
+	InitCmd = &cobra.Command{
+		Use:   "init",
+		Short: "Initialize a basecoin blockchain",
+		RunE:  initCmd,
+	}
+)
+
+// returns 1 iff it set a file, otherwise 0 (so we can add them)
+func setupFile(path, data string, perm os.FileMode) (int, error) {
+	_, err := os.Stat(path)
+	if !os.IsNotExist(err) { //note, os.IsExist(err) != !os.IsNotExist(err)
+		return 0, nil
+	}
+	err = ioutil.WriteFile(path, []byte(data), perm)
+	if err != nil {
+		return 0, err
+	}
+	return 1, nil
 }
 
-func cmdInit(c *cli.Context) error {
+func initCmd(cmd *cobra.Command, args []string) error {
 	rootDir := BasecoinRoot("")
 
 	cmn.EnsureDir(rootDir, 0777)
@@ -32,25 +43,33 @@ func cmdInit(c *cli.Context) error {
 	key1File := path.Join(rootDir, "key.json")
 	key2File := path.Join(rootDir, "key2.json")
 
-	if err := ioutil.WriteFile(genesisFile, []byte(genesisJSON), 0644); err != nil {
+	mod1, err := setupFile(genesisFile, GenesisJSON, 0644)
+	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(privValFile, []byte(privValJSON), 0400); err != nil {
+	mod2, err := setupFile(privValFile, PrivValJSON, 0400)
+	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(key1File, []byte(key1JSON), 0400); err != nil {
+	mod3, err := setupFile(key1File, Key1JSON, 0400)
+	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(key2File, []byte(key2JSON), 0400); err != nil {
+	mod4, err := setupFile(key2File, Key2JSON, 0400)
+	if err != nil {
 		return err
 	}
 
-	log.Notice("Initialized Basecoin", "genesis", genesisFile, "key", key1File)
+	if (mod1 + mod2 + mod3 + mod4) > 0 {
+		log.Notice("Initialized Basecoin", "genesis", genesisFile, "key", key1File)
+	} else {
+		log.Notice("Already initialized", "priv_validator", privValFile)
+	}
 
 	return nil
 }
 
-const privValJSON = `{
+var PrivValJSON = `{
 	"address": "7A956FADD20D3A5B2375042B2959F8AB172A058F",
 	"last_height": 0,
 	"last_round": 0,
@@ -67,7 +86,7 @@ const privValJSON = `{
 	]
 }`
 
-const genesisJSON = `{
+var GenesisJSON = `{
   "app_hash": "",
   "chain_id": "test_chain_id",
   "genesis_time": "0001-01-01T00:00:00.000Z",
@@ -97,7 +116,7 @@ const genesisJSON = `{
   }
 }`
 
-const key1JSON = `{
+var Key1JSON = `{
 	"address": "1B1BE55F969F54064628A63B9559E7C21C925165",
 	"priv_key": {
 		"type": "ed25519",
@@ -109,7 +128,7 @@ const key1JSON = `{
 	}
 }`
 
-const key2JSON = `{
+var Key2JSON = `{
 	"address": "1DA7C74F9C219229FD54CC9F7386D5A3839F0090",
 	"priv_key": {
 		"type": "ed25519",

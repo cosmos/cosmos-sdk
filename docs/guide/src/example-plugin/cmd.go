@@ -1,15 +1,31 @@
 package main
 
 import (
+	"github.com/spf13/cobra"
+
 	wire "github.com/tendermint/go-wire"
-	"github.com/urfave/cli"
 
 	"github.com/tendermint/basecoin/cmd/commands"
 	"github.com/tendermint/basecoin/types"
 )
 
+var (
+	//CLI Flags
+	validFlag bool
+
+	//CLI Plugin Commands
+	ExamplePluginTxCmd = &cobra.Command{
+		Use:   "example",
+		Short: "Create, sign, and broadcast a transaction to the example plugin",
+		RunE:  examplePluginTxCmd,
+	}
+)
+
 //Called during CLI initialization
 func init() {
+
+	//Set the Plugin Flags
+	ExamplePluginTxCmd.Flags().BoolVar(&validFlag, "valid", false, "Set this to make transaction valid")
 
 	//Register a plugin specific CLI command as a subcommand of the tx command
 	commands.RegisterTxSubcommand(ExamplePluginTxCmd)
@@ -18,32 +34,12 @@ func init() {
 	commands.RegisterStartPlugin("example-plugin", func() types.Plugin { return NewExamplePlugin() })
 }
 
-var (
-	//CLI Flags
-	ExampleFlag = cli.BoolFlag{
-		Name:  "valid",
-		Usage: "Set this to make the transaction valid",
-	}
-
-	//CLI Plugin Commands
-	ExamplePluginTxCmd = cli.Command{
-		Name:  "example",
-		Usage: "Create, sign, and broadcast a transaction to the example plugin",
-		Action: func(c *cli.Context) error {
-			return cmdExamplePluginTx(c)
-		},
-		Flags: append(commands.TxFlags, ExampleFlag),
-	}
-)
-
 //Send a transaction
-func cmdExamplePluginTx(c *cli.Context) error {
-	//Retrieve any flag results
-	exampleFlag := c.Bool("valid")
+func examplePluginTxCmd(cmd *cobra.Command, args []string) error {
 
 	// Create a transaction using the flag.
 	// The tx passes on custom information to the plugin
-	exampleTx := ExamplePluginTx{exampleFlag}
+	exampleTx := ExamplePluginTx{validFlag}
 
 	// The tx is passed to the plugin in the form of
 	// a byte array. This is achieved by serializing the object using go-wire.
@@ -62,5 +58,5 @@ func cmdExamplePluginTx(c *cli.Context) error {
 	//  - Once deserialized, the tx is passed to `state.ExecTx` (state/execution.go)
 	//  - If the tx passes various checks, the `tx.Data` is forwarded as `txBytes` to `plugin.RunTx` (docs/guide/src/example-plugin/plugin.go)
 	//  - Finally, it deserialized back to the ExamplePluginTx
-	return commands.AppTx(c, "example-plugin", exampleTxBytes)
+	return commands.AppTx("example-plugin", exampleTxBytes)
 }

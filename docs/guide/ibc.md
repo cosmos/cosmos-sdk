@@ -13,7 +13,8 @@ You may also want to see the tutorials on [a simple example plugin](example-plug
 and the list of [more advanced plugins](more-examples.md).
 
 The IBC plugin defines a new set of transactions as subtypes of the `AppTx`.
-The plugin's functionality is accessed by setting the `AppTx.Name` field to `"IBC"`, and setting the `Data` field to the serialized IBC transaction type.
+The plugin's functionality is accessed by setting the `AppTx.Name` field to `"IBC"`, 
+and setting the `Data` field to the serialized IBC transaction type.
 
 We'll demonstrate exactly how this works below.
 
@@ -33,7 +34,8 @@ contains the votes responsible for committing the previous block, and a field
 in the block header called `AppHash`, which refers to the Merkle root hash of
 the application after processing the transactions from the previous block.  So,
 if we want to verify the `AppHash` from height H, we need the signatures from `LastCommit` 
-at height H+1. (And remember that this `AppHash` only contains the results from all transactions up to and including block H-1)
+at height H+1. (And remember that this `AppHash` only contains the results from all 
+transactions up to and including block H-1)
 
 Unlike Proof-of-Work, the light-client protocol does not need to download and
 check all the headers in the blockchain - the client can always jump straight

@@ -9,6 +9,7 @@ BREAKING CHANGES:
 IMPROVEMENTS:
 
 - `basecoin init` doesn't generate error if already initialized
+- Much more testing
 
 ## 0.3.1 (March 23, 2017)
 

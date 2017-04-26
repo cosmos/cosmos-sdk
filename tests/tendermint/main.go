@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tendermint/rpc/client"
 	"github.com/tendermint/tendermint/rpc/types"
 	wire "github.com/tendermint/go-wire"
-	_ "github.com/tendermint/tendermint/rpc/core/types" // Register RPCResponse > Result types
+	_ "github.com/tendermint/tendermint/rpc/tendermint/core/types" // Register RPCResponse > Result types
 )
 
 func main() {

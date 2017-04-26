@@ -3,8 +3,8 @@ package types
 // Helper functions for testing
 
 import (
-	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/go-crypto"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 // Creates a PrivAccount from secret.
@@ -100,6 +100,6 @@ func GetTx(seq int, accOut PrivAccount, accsIn ...PrivAccount) *SendTx {
 func SignTx(chainID string, tx *SendTx, accs ...PrivAccount) {
 	signBytes := tx.SignBytes(chainID)
 	for i, _ := range tx.Inputs {
-		tx.Inputs[i].Signature = crypto.SignatureS{accs[i].Sign(signBytes)}
+		tx.Inputs[i].Signature = accs[i].Sign(signBytes)
 	}
 }

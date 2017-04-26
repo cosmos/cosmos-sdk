@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
-	cmn "github.com/tendermint/tmlibs/common"
 	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
+	"github.com/tendermint/merkleeyes/iavl"
 	tm "github.com/tendermint/tendermint/types"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 // NOTE: PrivAccounts are sorted by Address,
@@ -192,7 +192,7 @@ func TestIBCPlugin(t *testing.T) {
 		Prove: true,
 	})
 	assert.Nil(err)
-	var proof *merkle.IAVLProof
+	var proof *iavl.IAVLProof
 	err = wire.ReadBinaryBytes(resQuery.Proof, &proof)
 	assert.Nil(err)
 
@@ -379,7 +379,7 @@ func TestIBCPluginBadProof(t *testing.T) {
 		Prove: true,
 	})
 	assert.Nil(err)
-	var proof *merkle.IAVLProof
+	var proof *iavl.IAVLProof
 	err = wire.ReadBinaryBytes(resQuery.Proof, &proof)
 	assert.Nil(err)
 

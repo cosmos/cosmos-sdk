@@ -11,7 +11,7 @@ import (
 
 	client "github.com/tendermint/tendermint/rpc/client"
 	wire "github.com/tendermint/go-wire"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	ctypes "github.com/tendermint/tendermint/rpc/tendermint/core/types"
 )
 
 //commands

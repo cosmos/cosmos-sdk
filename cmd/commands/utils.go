@@ -17,7 +17,7 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 	client "github.com/tendermint/tendermint/rpc/client"
 	wire "github.com/tendermint/go-wire"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	ctypes "github.com/tendermint/tendermint/rpc/tendermint/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 

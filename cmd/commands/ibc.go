@@ -10,8 +10,8 @@ import (
 
 	"github.com/tendermint/basecoin/plugins/ibc"
 
-	"github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/go-wire"
+	"github.com/tendermint/merkleeyes/iavl"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -229,7 +229,7 @@ func ibcPacketPostTxCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	var packet ibc.Packet
-	proof := new(merkle.IAVLProof)
+	proof := new(iavl.IAVLProof)
 
 	err = wire.ReadBinaryBytes(packetBytes, &packet)
 	if err != nil {

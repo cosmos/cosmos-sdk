@@ -10,7 +10,7 @@ import (
 
 	"github.com/tendermint/basecoin/plugins/ibc"
 
-	"github.com/tendermint/go-merkle"
+	"github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/go-wire"
 	tmtypes "github.com/tendermint/tendermint/types"
 )

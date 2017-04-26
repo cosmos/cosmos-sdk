@@ -4,7 +4,7 @@ import (
 	"container/list"
 	"fmt"
 
-	. "github.com/tendermint/go-common"
+	. "github.com/tendermint/tmlibs/common"
 )
 
 type KVStore interface {

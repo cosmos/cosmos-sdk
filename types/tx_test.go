@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	cmn "github.com/tendermint/go-common"
-	data "github.com/tendermint/go-data"
+	cmn "github.com/tendermint/tmlibs/common"
+	data "github.com/tendermint/go-wire/data"
 )
 
 var chainID string = "test_chain"

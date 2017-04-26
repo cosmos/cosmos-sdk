@@ -6,9 +6,9 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/tendermint/basecoin/types"
-	cmn "github.com/tendermint/go-common"
-	"github.com/tendermint/go-rpc/client"
-	"github.com/tendermint/go-rpc/types"
+	cmn "github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tendermint/rpc/client"
+	"github.com/tendermint/tendermint/rpc/types"
 	wire "github.com/tendermint/go-wire"
 	_ "github.com/tendermint/tendermint/rpc/core/types" // Register RPCResponse > Result types
 )

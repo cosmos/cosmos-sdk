@@ -14,8 +14,8 @@ import (
 	"github.com/tendermint/basecoin/types"
 
 	abci "github.com/tendermint/abci/types"
-	cmn "github.com/tendermint/go-common"
-	client "github.com/tendermint/go-rpc/client"
+	cmn "github.com/tendermint/tmlibs/common"
+	client "github.com/tendermint/tendermint/rpc/client"
 	wire "github.com/tendermint/go-wire"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"

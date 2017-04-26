@@ -8,8 +8,8 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
-	cmn "github.com/tendermint/go-common"
-	merkle "github.com/tendermint/go-merkle"
+	cmn "github.com/tendermint/tmlibs/common"
+	merkle "github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/go-wire"
 	tm "github.com/tendermint/tendermint/types"
 )

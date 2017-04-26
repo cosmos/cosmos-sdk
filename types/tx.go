@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 
 	abci "github.com/tendermint/abci/types"
-	. "github.com/tendermint/go-common"
+	. "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-data"
+	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/go-wire"
 )
 
@@ -37,7 +37,7 @@ func (_ *AppTx) AssertIsTx()  {}
 
 var txMapper data.Mapper
 
-// register both private key types with go-data (and thus go-wire)
+// register both private key types with go-wire/data (and thus go-wire)
 func init() {
 	txMapper = data.NewMapper(TxS{}).
 		RegisterImplementation(&SendTx{}, TxNameSend, TxTypeSend).

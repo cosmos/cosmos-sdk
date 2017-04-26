@@ -3,8 +3,8 @@ package state
 import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
-	cmn "github.com/tendermint/go-common"
-	"github.com/tendermint/go-events"
+	cmn "github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tmlibs/events"
 )
 
 // If the tx is invalid, a TMSP error will be returned.

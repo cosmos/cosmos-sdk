@@ -3,7 +3,7 @@ package types
 // Helper functions for testing
 
 import (
-	cmn "github.com/tendermint/go-common"
+	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/go-crypto"
 )
 

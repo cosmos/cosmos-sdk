@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"path"
-
 	"github.com/spf13/cobra"
 
 	tmcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -17,9 +15,7 @@ var UnsafeResetAllCmd = &cobra.Command{
 
 func unsafeResetAllCmd(cmd *cobra.Command, args []string) error {
 	basecoinDir := BasecoinRoot("")
-	tmDir := path.Join(basecoinDir)
-	tmConfig := tmcfg.GetConfig(tmDir)
-
+	tmConfig := tmcfg.GetConfig(basecoinDir)
 	tmcmd.ResetAll(tmConfig, log)
 	return nil
 }

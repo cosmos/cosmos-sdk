@@ -107,7 +107,7 @@ imports:
   - app
   - client
 - name: github.com/tendermint/tendermint
-  version: e8cad948e366cd1d0a9ebef642073f4ade9899e9
+  version: 6bcd4242f1f336e2b2ef4f644fabaf56222b34d0
   subpackages:
   - blockchain
   - cmd/tendermint/commands

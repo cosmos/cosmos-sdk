@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0 (TBD)
+## 0.4.0 (April 21, 2017)
 
 BREAKING CHANGES:
 

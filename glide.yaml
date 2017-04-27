@@ -27,9 +27,9 @@ import:
   - config/tendermint
   - node
   - proxy
-  - rpc/tendermint/core/types
-  - rpc/tendermint/client
-  - rpc/types
+  - rpc/core/types
+  - rpc/lib/client
+  - rpc/lib/types
   - types
 - package: github.com/tendermint/tmlibs
   version: develop

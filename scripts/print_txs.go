@@ -10,10 +10,10 @@ import (
 
 	"github.com/gorilla/websocket"
 	cmn "github.com/tendermint/tmlibs/common"
-	"github.com/tendermint/tendermint/rpc/client"
-	"github.com/tendermint/tendermint/rpc/types"
+	"github.com/tendermint/tendermint/rpc/lib/client"
+	"github.com/tendermint/tendermint/rpc/lib/types"
 	"github.com/tendermint/go-wire"
-	_ "github.com/tendermint/tendermint/rpc/tendermint/core/types" // Register RPCResponse > Result types
+	_ "github.com/tendermint/tendermint/rpc/core/types" // Register RPCResponse > Result types
 )
 
 func main() {

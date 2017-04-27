@@ -9,9 +9,9 @@ import (
 
 	"github.com/tendermint/basecoin/types"
 
-	client "github.com/tendermint/tendermint/rpc/client"
+	client "github.com/tendermint/tendermint/rpc/lib/client"
 	wire "github.com/tendermint/go-wire"
-	ctypes "github.com/tendermint/tendermint/rpc/tendermint/core/types"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 //commands

@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.4.0 (TBD)
+## 0.4.1 (April 26, 2017)
+
+BUG FIXES:
+
+- Fix bug in `basecoin unsafe_reset_X` where the `priv_validator.json` was not being reset
+
+## 0.4.0 (April 21, 2017)
 
 BREAKING CHANGES:
 

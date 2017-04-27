@@ -2,6 +2,6 @@ package version
 
 const Maj = "0"
 const Min = "4"
-const Fix = "0"
+const Fix = "1"
 
-const Version = Maj + "." + Min + "." + Fix
+const Version = "0.4.1"

@@ -140,3 +140,14 @@ You can reset all blockchain data by running:
 ```
 basecoin unsafe_reset_all
 ```
+
+
+# Genesis
+
+Any required plugin initialization should be constructed using `SetOption` on genesis.
+When starting a new chain for the first time, `SetOption` will be called for each item the genesis file.
+Within genesis.json file entries are made in the format: `"<plugin>/<key>", "<value>"`, where `<plugin>` is the plugin name,
+and `<key>` and `<value>` are the strings passed into the plugin SetOption function. 
+This function is intended to be used to set plugin specific information such 
+as the plugin state.
+

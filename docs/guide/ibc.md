@@ -7,10 +7,8 @@ The simplest example of using the IBC protocol is to send a data packet from one
 We implemented IBC as a basecoin plugin.
 and here we'll show you how to use the Basecoin IBC-plugin to send a packet of data across blockchains!
 
-Please note, this tutorial assumes you are familiar with [Basecoin plugins](/docs/guide/plugin-design.md)
-and with the [Basecoin CLI](/docs/guide/basecoin-basics), but we'll explain how IBC works.
-You may also want to see the tutorials on [a simple example plugin](example-plugin.md)
-and the list of [more advanced plugins](more-examples.md).
+Please note, this tutorial assumes you are familiar with [Basecoin plugins](/docs/guide/basecoin-plugins.md),
+but we'll explain how IBC works. You may also want to see [our repository of example plugins](https://github.com/tendermint/basecoin-examples).
 
 The IBC plugin defines a new set of transactions as subtypes of the `AppTx`.
 The plugin's functionality is accessed by setting the `AppTx.Name` field to `"IBC"`, 
@@ -181,6 +179,7 @@ Make sure you have installed
 [basecoin](/docs/guide/install.md).
 
 `basecoin` is a framework for creating new cryptocurrency applications.
+It comes with an `IBC` plugin enabled by default.
 
 Now let's start the two blockchains.
 In this tutorial, each chain will have only a single validator,
@@ -192,22 +191,38 @@ cd $GOPATH/src/github.com/tendermint/basecoin/demo
 ```
 
 The relevant data is now in the `data` directory.
+Before we begin, let's set some environment variables for convenience:
 
+```
+export BCHOME="."
+BCHOME1="./data/chain1"
+BCHOME2="./data/chain2"
+
+export CHAIN_ID1=test_chain_1
+export CHAIN_ID2=test_chain_2
+
+CHAIN_FLAGS1="--chain_id $CHAIN_ID1 --from $BCHOME1/key.json"
+CHAIN_FLAGS2="--chain_id $CHAIN_ID2 --from $BCHOME2/key.json --node tcp://localhost:36657"
+```
+
+In previous examples, we started basecoin in-process with tendermint.
+Here, we will run them in different processes, using the `--without-tendermint` flag,
+as described in the [guide to the basecoin tool](basecoin-tool.md).
 We can start the two chains as follows:
 
 ```
-TMROOT=./data/chain1 tendermint node &> chain1_tendermint.log &
-BCHOME=./data/chain1 basecoin start --without-tendermint &> chain1_basecoin.log &
+TMROOT=$BCHOME1 tendermint node --log_level=info &> chain1_tendermint.log &
+BCHOME=$BCHOME1 basecoin start --without-tendermint &> chain1_basecoin.log &
 ```
 
 and
 
 ```
-TMROOT=./data/chain2 tendermint node --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> chain2_tendermint.log &
-BCHOME=./data/chain2 basecoin start --without-tendermint --address tcp://localhost:36658 &> chain2_basecoin.log &
+TMROOT=$BCHOME2 tendermint node --log_level=info --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> chain2_tendermint.log &
+BCHOME=$BCHOME2 basecoin start --address tcp://localhost:36658 --without-tendermint &> chain2_basecoin.log &
 ```
 
-Note how we refer to the relevant data directories. Also note how we have to set the various addresses for the second node so as not to conflict with the first.
+Note how we refer to the relevant data directories, and how we set the various addresses for the second node so as not to conflict with the first.
 
 We can now check on the status of the two chains:
 
@@ -220,28 +235,16 @@ If either command fails, the nodes may not have finished starting up. Wait a cou
 Once you see the status of both chains, it's time to move on.
 
 In this tutorial, we're going to send some data from `test_chain_1` to `test_chain_2`.
-For the sake of convenience, let's first set some environment variables:
+We begin by registering `test_chain_1` on `test_chain_2`:
 
 ```
-export CHAIN_ID1=test_chain_1
-export CHAIN_ID2=test_chain_2
-
-export CHAIN_FLAGS1="--chain_id $CHAIN_ID1 --from ./data/chain1/key.json"
-export CHAIN_FLAGS2="--chain_id $CHAIN_ID2 --from ./data/chain2/key.json --node tcp://localhost:36657"
-
-export BCHOME="."
-```
-
-Let's start by registering `test_chain_1` on `test_chain_2`:
-
-```
-basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 register --chain_id $CHAIN_ID1 --genesis ./data/chain1/genesis.json
+basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 register --ibc_chain_id $CHAIN_ID1 --genesis $BCHOME1/genesis.json
 ```
 
 Now we can create the outgoing packet on `test_chain_1`:
 
 ```
-basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS1 packet create --from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload 0xDEADBEEF --sequence 1
+basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS1 packet create --ibc_from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload 0xDEADBEEF --ibc_sequence 1
 ```
 
 Note our payload is just `DEADBEEF`.

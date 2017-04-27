@@ -37,10 +37,10 @@ You should see blocks start streaming in!
 
 ## Send transactions
 
-Now we are ready to send some transactions.
-If you take a look at the `genesis.json` file, you will see one account listed there.
-This account corresponds to the private key in `key.json`.
-We also included the private key for another account, in `key2.json`.
+Now we are ready to send some transactions. First, open another window.
+If you take a look at the `~/.basecoin/genesis.json` file, you will see one account listed under the `app_options`.
+This account corresponds to the private key in `~/.basecoin/key.json`.
+We also included the private key for another account, in `~/.basecoin/key2.json`.
 
 Let's check the balance of these two accounts:
 
@@ -86,7 +86,7 @@ For a better understanding of the options, it helps to understand the underlying
 ## Accounts
 
 The Basecoin state consists entirely of a set of accounts.
-Each account contains an ED25519 public key,
+Each account contains a public key,
 a balance in many different coin denominations,
 and a strictly increasing sequence number for replay protection.
 This type of account was directly inspired by accounts in Ethereum,

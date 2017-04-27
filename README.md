@@ -29,12 +29,9 @@ See the [install guide](/docs/guide/install.md) for more details.
 ## Guide
 
 1. Getting started with the [Basecoin basics](/docs/guide/basecoin-basics.md)
-1. Learn more about [Basecoin's design](/docs/guide/basecoin-design.md)
-1. Extend Basecoin [using the plugin system](/docs/guide/example-plugin.md)
-1. Learn more about [plugin design](/docs/guide/plugin-design.md)
-1. See some [more example applications](/docs/guide/more-examples.md)
+1. Learning to [use the plugin system](/docs/guide/basecoin-plugins.md)
 1. More features of the [Basecoin tool](/docs/guide/basecoin-tool.md)
 1. Learn how to use [InterBlockchain Communication (IBC)](/docs/guide/ibc.md)
-1. [Deploy testnets](/docs/guide/deployment.md) running your basecoin application.
 
 
+To deploy a testnet, see our [repository of deployment tools](https://github.com/tendermint/tools).

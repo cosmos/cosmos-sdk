@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	cmn "github.com/tendermint/go-common"
+	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/go-crypto"
 	eyescli "github.com/tendermint/merkleeyes/client"
 )
@@ -38,7 +38,7 @@ func TestLoadGenesis(t *testing.T) {
 	assert.EqualValues("blank", acct.Balance[0].Denom)
 
 	// and public key is parsed properly
-	apk := acct.PubKey.PubKey
+	apk := acct.PubKey.Unwrap()
 	require.NotNil(apk)
 	epk, ok := apk.(crypto.PubKeyEd25519)
 	if assert.True(ok) {
@@ -52,7 +52,7 @@ func TestParseGenesisList(t *testing.T) {
 	bytes, err := cmn.ReadFile(genesisFilepath)
 	require.Nil(err, "loading genesis file %+v", err)
 
-	// the basecoin genesis go-data :)
+	// the basecoin genesis go-wire/data :)
 	genDoc := new(FullGenesisDoc)
 	err = json.Unmarshal(bytes, genDoc)
 	require.Nil(err, "unmarshaling genesis file %+v", err)

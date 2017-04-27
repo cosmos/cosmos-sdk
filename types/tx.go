@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 
 	abci "github.com/tendermint/abci/types"
-	. "github.com/tendermint/go-common"
+	. "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-data"
+	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/go-wire"
 )
 
@@ -37,7 +37,7 @@ func (_ *AppTx) AssertIsTx()  {}
 
 var txMapper data.Mapper
 
-// register both private key types with go-data (and thus go-wire)
+// register both private key types with go-wire/data (and thus go-wire)
 func init() {
 	txMapper = data.NewMapper(TxS{}).
 		RegisterImplementation(&SendTx{}, TxNameSend, TxTypeSend).
@@ -64,11 +64,11 @@ func (p *TxS) UnmarshalJSON(data []byte) (err error) {
 //-----------------------------------------------------------------------------
 
 type TxInput struct {
-	Address   data.Bytes        `json:"address"`   // Hash of the PubKey
-	Coins     Coins             `json:"coins"`     //
-	Sequence  int               `json:"sequence"`  // Must be 1 greater than the last committed TxInput
-	Signature crypto.SignatureS `json:"signature"` // Depends on the PubKey type and the whole Tx
-	PubKey    crypto.PubKeyS    `json:"pub_key"`   // Is present iff Sequence == 0
+	Address   data.Bytes       `json:"address"`   // Hash of the PubKey
+	Coins     Coins            `json:"coins"`     //
+	Sequence  int              `json:"sequence"`  // Must be 1 greater than the last committed TxInput
+	Signature crypto.Signature `json:"signature"` // Depends on the PubKey type and the whole Tx
+	PubKey    crypto.PubKey    `json:"pub_key"`   // Is present iff Sequence == 0
 }
 
 func (txIn TxInput) ValidateBasic() abci.Result {
@@ -104,13 +104,7 @@ func NewTxInput(pubKey crypto.PubKey, coins Coins, sequence int) TxInput {
 		Sequence: sequence,
 	}
 	if sequence == 1 {
-		// safely wrap if needed
-		// TODO: extract this as utility function?
-		ps, ok := pubKey.(crypto.PubKeyS)
-		if !ok {
-			ps = crypto.PubKeyS{pubKey}
-		}
-		input.PubKey = ps
+		input.PubKey = pubKey
 	}
 	return input
 }
@@ -151,25 +145,21 @@ type SendTx struct {
 func (tx *SendTx) SignBytes(chainID string) []byte {
 	signBytes := wire.BinaryBytes(chainID)
 	sigz := make([]crypto.Signature, len(tx.Inputs))
-	for i, input := range tx.Inputs {
-		sigz[i] = input.Signature.Signature
-		tx.Inputs[i].Signature.Signature = nil
+	for i := range tx.Inputs {
+		sigz[i] = tx.Inputs[i].Signature
+		tx.Inputs[i].Signature = crypto.Signature{}
 	}
 	signBytes = append(signBytes, wire.BinaryBytes(tx)...)
 	for i := range tx.Inputs {
-		tx.Inputs[i].Signature.Signature = sigz[i]
+		tx.Inputs[i].Signature = sigz[i]
 	}
 	return signBytes
 }
 
 func (tx *SendTx) SetSignature(addr []byte, sig crypto.Signature) bool {
-	sigs, ok := sig.(crypto.SignatureS)
-	if !ok {
-		sigs = crypto.SignatureS{sig}
-	}
 	for i, input := range tx.Inputs {
 		if bytes.Equal(input.Address, addr) {
-			tx.Inputs[i].Signature = sigs
+			tx.Inputs[i].Signature = sig
 			return true
 		}
 	}
@@ -193,18 +183,14 @@ type AppTx struct {
 func (tx *AppTx) SignBytes(chainID string) []byte {
 	signBytes := wire.BinaryBytes(chainID)
 	sig := tx.Input.Signature
-	tx.Input.Signature.Signature = nil
+	tx.Input.Signature = crypto.Signature{}
 	signBytes = append(signBytes, wire.BinaryBytes(tx)...)
 	tx.Input.Signature = sig
 	return signBytes
 }
 
 func (tx *AppTx) SetSignature(sig crypto.Signature) bool {
-	sigs, ok := sig.(crypto.SignatureS)
-	if !ok {
-		sigs = crypto.SignatureS{sig}
-	}
-	tx.Input.Signature = sigs
+	tx.Input.Signature = sig
 	return true
 }
 

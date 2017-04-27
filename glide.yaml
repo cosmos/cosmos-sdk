@@ -1,24 +1,44 @@
 package: github.com/tendermint/basecoin
 import:
-- package: github.com/tendermint/go-common
+- package: github.com/gorilla/websocket
+- package: github.com/pkg/errors
+- package: github.com/spf13/cobra
+- package: github.com/spf13/pflag
+- package: github.com/tendermint/abci
   version: develop
+  subpackages:
+  - server
+  - types
 - package: github.com/tendermint/go-crypto
-  version: develop
-- package: github.com/tendermint/go-events
-  version: develop
-- package: github.com/tendermint/go-logger
-  version: develop
-- package: github.com/tendermint/go-data
-  version: develop
-- package: github.com/tendermint/go-rpc
   version: develop
 - package: github.com/tendermint/go-wire
   version: develop
+  subpackages:
+  - data
 - package: github.com/tendermint/merkleeyes
   version: develop
+  subpackages:
+  - client
+  - iavl
 - package: github.com/tendermint/tendermint
   version: develop
-- package: github.com/tendermint/abci
+  subpackages:
+  - cmd/tendermint/commands
+  - config/tendermint
+  - node
+  - proxy
+  - rpc/core/types
+  - rpc/lib/client
+  - rpc/lib/types
+  - types
+- package: github.com/tendermint/tmlibs
   version: develop
-- package: github.com/gorilla/websocket
-  version: v1.1.0
+  subpackages:
+  - common
+  - events
+  - logger
+testImport:
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
+  - require

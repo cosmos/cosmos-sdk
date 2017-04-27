@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tendermint/basecoin/types"
-	cmn "github.com/tendermint/go-common"
+	cmn "github.com/tendermint/tmlibs/common"
 	//tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -65,7 +65,7 @@ func loadGenesis(filePath string) (*FullGenesisDoc, error) {
 	// tmGenesis := new(tmtypes.GenesisDoc)
 	// err = wire.ReadJSONBytes(bytes, tmGenesis)
 
-	// the basecoin genesis go-data :)
+	// the basecoin genesis go-wire/data :)
 	genDoc := new(FullGenesisDoc)
 	err = json.Unmarshal(bytes, genDoc)
 	if err != nil {

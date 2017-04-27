@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	cmn "github.com/tendermint/go-common"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 //commands

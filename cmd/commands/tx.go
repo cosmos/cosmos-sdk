@@ -8,9 +8,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/basecoin/types"
-	crypto "github.com/tendermint/go-crypto"
 
-	client "github.com/tendermint/go-rpc/client"
+	client "github.com/tendermint/tendermint/rpc/lib/client"
 	wire "github.com/tendermint/go-wire"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
@@ -123,7 +122,7 @@ func sendTxCmd(cmd *cobra.Command, args []string) error {
 
 	// sign that puppy
 	signBytes := tx.SignBytes(chainIDFlag)
-	tx.Inputs[0].Signature = crypto.SignatureS{privKey.Sign(signBytes)}
+	tx.Inputs[0].Signature = privKey.Sign(signBytes)
 
 	fmt.Println("Signed SendTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))
@@ -179,7 +178,7 @@ func AppTx(name string, data []byte) error {
 		Data:  data,
 	}
 
-	tx.Input.Signature = crypto.SignatureS{privKey.Sign(tx.SignBytes(chainIDFlag))}
+	tx.Input.Signature = privKey.Sign(tx.SignBytes(chainIDFlag))
 
 	fmt.Println("Signed AppTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))

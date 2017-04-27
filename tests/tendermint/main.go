@@ -6,10 +6,9 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/tendermint/basecoin/types"
-	cmn "github.com/tendermint/go-common"
-	crypto "github.com/tendermint/go-crypto"
-	rpcclient "github.com/tendermint/go-rpc/client"
-	"github.com/tendermint/go-rpc/types"
+	cmn "github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tendermint/rpc/lib/client"
+	"github.com/tendermint/tendermint/rpc/lib/types"
 	wire "github.com/tendermint/go-wire"
 	_ "github.com/tendermint/tendermint/rpc/core/types" // Register RPCResponse > Result types
 )
@@ -67,7 +66,7 @@ func main() {
 		// Sign request
 		signBytes := tx.SignBytes(chainID)
 		sig := root.Sign(signBytes)
-		tx.Inputs[0].Signature = crypto.SignatureS{sig}
+		tx.Inputs[0].Signature = sig
 		//fmt.Println("tx:", tx)
 
 		// Write request
@@ -118,7 +117,7 @@ func main() {
 		// Sign request
 		signBytes := tx.SignBytes(chainID)
 		sig := privAccountA.Sign(signBytes)
-		tx.Inputs[0].Signature = crypto.SignatureS{sig}
+		tx.Inputs[0].Signature = sig
 		//fmt.Println("tx:", tx)
 
 		// Write request

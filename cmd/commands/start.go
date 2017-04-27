@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/abci/server"
-	cmn "github.com/tendermint/go-common"
+	cmn "github.com/tendermint/tmlibs/common"
 	eyes "github.com/tendermint/merkleeyes/client"
 
 	tmcfg "github.com/tendermint/tendermint/config/tendermint"

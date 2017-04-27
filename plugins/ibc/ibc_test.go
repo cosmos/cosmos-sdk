@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
-	cmn "github.com/tendermint/go-common"
 	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-merkle"
 	"github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
+	"github.com/tendermint/merkleeyes/iavl"
 	tm "github.com/tendermint/tendermint/types"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 // NOTE: PrivAccounts are sorted by Address,
@@ -30,7 +30,7 @@ func genGenesisDoc(chainID string, numVals int) (*tm.GenesisDoc, []types.PrivAcc
 		name := cmn.Fmt("%v_val_%v", chainID, i)
 		privAcc := types.PrivAccountFromSecret(name)
 		genDoc.Validators = append(genDoc.Validators, tm.GenesisValidator{
-			PubKey: privAcc.PubKey.PubKey,
+			PubKey: privAcc.PubKey,
 			Amount: 1,
 			Name:   name,
 		})
@@ -192,7 +192,7 @@ func TestIBCPlugin(t *testing.T) {
 		Prove: true,
 	})
 	assert.Nil(err)
-	var proof *merkle.IAVLProof
+	var proof *iavl.IAVLProof
 	err = wire.ReadBinaryBytes(resQuery.Proof, &proof)
 	assert.Nil(err)
 
@@ -268,9 +268,9 @@ func TestIBCPluginBadCommit(t *testing.T) {
 
 	// Update a chain with a broken commit
 	// Modify the first byte of the first signature
-	sig := commit.Precommits[0].Signature.(crypto.SignatureEd25519)
+	sig := commit.Precommits[0].Signature.Unwrap().(crypto.SignatureEd25519)
 	sig[0] += 1
-	commit.Precommits[0].Signature = sig
+	commit.Precommits[0].Signature = sig.Wrap()
 	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCUpdateChainTx{
 		Header: header,
 		Commit: commit,
@@ -379,7 +379,7 @@ func TestIBCPluginBadProof(t *testing.T) {
 		Prove: true,
 	})
 	assert.Nil(err)
-	var proof *merkle.IAVLProof
+	var proof *iavl.IAVLProof
 	err = wire.ReadBinaryBytes(resQuery.Proof, &proof)
 	assert.Nil(err)
 

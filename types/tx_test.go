@@ -6,8 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	crypto "github.com/tendermint/go-crypto"
-	data "github.com/tendermint/go-data"
+	data "github.com/tendermint/go-wire/data"
 )
 
 var chainID string = "test_chain"
@@ -109,7 +108,7 @@ func TestSendTxJSON(t *testing.T) {
 	sig := test1PrivAcc.Sign(signBytes)
 	// we handle both raw sig and wrapped sig the same
 	tx.SetSignature(test1PrivAcc.PubKey.Address(), sig)
-	tx2.SetSignature(test1PrivAcc.PubKey.Address(), crypto.SignatureS{sig})
+	tx2.SetSignature(test1PrivAcc.PubKey.Address(), sig)
 	assert.Equal(tx, tx2)
 
 	// let's marshal / unmarshal this with signature

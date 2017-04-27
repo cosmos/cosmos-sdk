@@ -181,6 +181,8 @@ Make sure you have installed
 `basecoin` is a framework for creating new cryptocurrency applications.
 It comes with an `IBC` plugin enabled by default.
 
+You will also want to install the [jq](https://stedolan.github.io/jq/) for handling JSON at the command line.
+
 Now let's start the two blockchains.
 In this tutorial, each chain will have only a single validator,
 where the initial configuration files are already generated.
@@ -251,44 +253,60 @@ Note our payload is just `DEADBEEF`.
 Now that the packet is committed in the chain, let's get some proof by querying:
 
 ```
-basecoin query ibc,egress,$CHAIN_ID1,$CHAIN_ID2,1
+QUERY=$(basecoin query ibc,egress,$CHAIN_ID1,$CHAIN_ID2,1)
+echo $QUERY
 ```
 
 The result contains the latest height, a value (i.e. the hex-encoded binary serialization of our packet),
 and a proof (i.e. hex-encoded binary serialization of a list of nodes from the Merkle tree) that the value is in the Merkle tree.
+We keep the result in the `QUERY` variable so we can easily reference subfields using the `jq` tool.
 
 If we want to send this data to `test_chain_2`, we first have to update what it knows about `test_chain_1`.
 We'll need a recent block header and a set of commit signatures.
 Fortunately, we can get them with the `block` command:
 
 ```
-basecoin block <height>
+BLOCK=$(basecoin block $(echo $QUERY | jq .height))
+echo $BLOCK
 ```
 
-where `<height>` is the height returned in the previous query.
+Here, we are passing `basecoin block` the `height` from our earlier query.
 Note the result contains both a hex-encoded and json-encoded version of the header and the commit.
 The former is used as input for later commands; the latter is human-readable, so you know what's going on!
 
-Let's send this updated information about `test_chain_1` to `test_chain_2`:
+Let's send this updated information about `test_chain_1` to `test_chain_2`.
+First, output the header and commit for reference:
+
+```
+echo $BLOCK | jq .hex.header
+echo $BLOCK | jq .hex.commit
+```
+
+And now forward those values to `test_chain_2`:
 
 ```
 basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 update --header 0x<header> --commit 0x<commit>
 ```
 
-where `<header>` and `<commit>` are the hex-encoded header and commit returned by the previous `block` command.
-
 Now that `test_chain_2` knows about some recent state of `test_chain_1`, we can post the packet to `test_chain_2`,
 along with proof the packet was committed on `test_chain_1`. Since `test_chain_2` knows about some recent state
 of `test_chain_1`, it will be able to verify the proof!
 
+First, output the height, packet, and proof for reference:
+
 ```
-basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 packet post --from $CHAIN_ID1 --height <height> --packet 0x<packet> --proof 0x<proof>
+echo $QUERY | jq .height
+echo $QUERY | jq .value
+echo $QUERY | jq .proof
 ```
 
-Here, `<height>` is the height retuned by the previous `query` command, and `<packet>` and `<proof>` are the
-`value` and `proof` returned in that same query.
+And forward those values to `test_chain_2`:
 
-Tada!
+```
+basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 packet post --ibc_from $CHAIN_ID1 --height <height> --packet 0x<packet> --proof 0x<proof>
+```
+
+If the command does not return an error, then we have successfuly transfered data from `test_chain_1` to `test_chain_2`. Tada!
 
 ## Conclusion
 

@@ -24,6 +24,8 @@ var (
 //Called during CLI initialization
 func init() {
 
+	commands.DefaultHome = ".basecoin-example-plugin"
+
 	//Set the Plugin Flags
 	ExamplePluginTxCmd.Flags().BoolVar(&validFlag, "valid", false, "Set this to make transaction valid")
 

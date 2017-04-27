@@ -4,6 +4,7 @@ set -e
 cd $GOPATH/src/github.com/tendermint/basecoin/demo
 
 LOG_DIR="."
+TM_VERSION="v0.9.2"
 
 if [[ "$CIRCLECI" == "true" ]]; then
 	# set log dir
@@ -13,7 +14,7 @@ if [[ "$CIRCLECI" == "true" ]]; then
 	set +e
 	go get github.com/tendermint/tendermint
 	pushd $GOPATH/src/github.com/tendermint/tendermint
-	git checkout develop
+	git checkout $TM_VERSION
 	glide install
 	go install ./cmd/tendermint
 	popd
@@ -82,11 +83,11 @@ echo ""
 echo "... starting chains"
 echo ""
 # start the first node
-TMROOT=./data/chain1 tendermint node --skip_upnp --log_level=info &> $LOG_DIR/chain1_tendermint.log &
+TMROOT=$BCHOME1 tendermint node --skip_upnp --log_level=info &> $LOG_DIR/chain1_tendermint.log &
 BCHOME=$BCHOME1 basecoin start --without-tendermint &> $LOG_DIR/chain1_basecoin.log &
 
 # start the second node
-TMROOT=./data/chain2 tendermint node --skip_upnp --log_level=info --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> $LOG_DIR/chain2_tendermint.log &
+TMROOT=$BCHOME2 tendermint node --skip_upnp --log_level=info --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> $LOG_DIR/chain2_tendermint.log &
 BCHOME=$BCHOME2 basecoin start --address tcp://localhost:36658 --without-tendermint &> $LOG_DIR/chain2_basecoin.log &
 
 echo ""
@@ -103,7 +104,7 @@ sleep 3
 echo "... registering chain1 on chain2"
 echo ""
 # register chain1 on chain2
-basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 register --ibc_chain_id $CHAIN_ID1 --genesis ./data/chain1/genesis.json
+basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 register --ibc_chain_id $CHAIN_ID1 --genesis $BCHOME1/genesis.json
 
 echo ""
 echo "... creating egress packet on chain1"

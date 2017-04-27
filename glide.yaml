@@ -21,14 +21,14 @@ import:
   - client
   - iavl
 - package: github.com/tendermint/tendermint
-  version: unstable
+  version: develop
   subpackages:
   - cmd/tendermint/commands
   - config/tendermint
   - node
   - proxy
-  - rpc/client
-  - rpc/core/types
+  - rpc/tendermint/core/types
+  - rpc/tendermint/client
   - rpc/types
   - types
 - package: github.com/tendermint/tmlibs

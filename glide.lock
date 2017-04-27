@@ -1,5 +1,5 @@
-hash: 5c7309b2f219a9bb24b39b57531478ee12341c358d373ee070ff0381fcb92752
-updated: 2017-04-26T01:15:31.969288035-04:00
+hash: 782a5a86373a2d9521fc03129ce6c6ee6c7ab7ffcdaf0d0afb7fecc5e2cfdb97
+updated: 2017-04-27T16:08:07.098092597+02:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 4b348c1d33373d672edd83fc576892d0e46686d2
@@ -107,7 +107,7 @@ imports:
   - client
   - iavl
 - name: github.com/tendermint/tendermint
-  version: 098646c5ff604705b7b082a89227ee78f3547fed
+  version: 1781a521470f47872876b031d2c6098be4c9c7e9
   subpackages:
   - blockchain
   - cmd/tendermint/commands
@@ -120,8 +120,8 @@ imports:
   - proxy
   - rpc
   - rpc/client
-  - rpc/core/types
   - rpc/server
+  - rpc/tendermint/client
   - rpc/tendermint/core
   - rpc/tendermint/core/types
   - rpc/tendermint/grpc

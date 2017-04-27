@@ -9,8 +9,8 @@ import (
 
 // Info is the public information about a key
 type Info struct {
-	Name    string         `json:"name"`
-	Address data.Bytes     `json:"address"`
+	Name    string        `json:"name"`
+	Address data.Bytes    `json:"address"`
 	PubKey  crypto.PubKey `json:"pubkey"`
 }
 
@@ -62,6 +62,7 @@ type Signer interface {
 
 // Manager allows simple CRUD on a keystore, as an aid to signing
 type Manager interface {
+	Signer
 	Create(name, passphrase, algo string) (Info, error)
 	List() (Infos, error)
 	Get(name string) (Info, error)

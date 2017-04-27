@@ -4,6 +4,7 @@ set -e
 cd $GOPATH/src/github.com/tendermint/basecoin/demo
 
 LOG_DIR="."
+TM_VERSION="v0.9.2"
 
 if [[ "$CIRCLECI" == "true" ]]; then
 	# set log dir
@@ -13,7 +14,7 @@ if [[ "$CIRCLECI" == "true" ]]; then
 	set +e
 	go get github.com/tendermint/tendermint
 	pushd $GOPATH/src/github.com/tendermint/tendermint
-	git checkout develop
+	git checkout $TM_VERSION
 	glide install
 	go install ./cmd/tendermint
 	popd

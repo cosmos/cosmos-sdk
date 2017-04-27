@@ -11,10 +11,23 @@ import:
   - types
 - package: github.com/tendermint/go-crypto
   version: develop
+  subpackages:
+  - keys/cmd
+  - keys/cryptostore
+  - keys/server
+  - keys/storage/filestorage
+  - keys/storage/memstorage
 - package: github.com/tendermint/go-wire
   version: develop
   subpackages:
   - data
+- package: github.com/tendermint/light-client
+  version: develop
+  subpackages:
+  - commands
+  - commands/proofs
+  - commands/seeds
+  - commands/tx
 - package: github.com/tendermint/merkleeyes
   version: develop
   subpackages:

@@ -144,7 +144,7 @@ to whatever your plugin tool is going to be called.
 
 Next is the `cmd.go`. This is where we extend the tool with any new commands and flags we need to send transactions to our plugin.
 Note the `init()` function, where we register a new transaction subcommand with `RegisterTxSubcommand`, 
-and where we load the plugin into the basecoin app with `RegisterStartPlugin`.
+and where we load the plugin into the Basecoin app with `RegisterStartPlugin`.
 
 Finally is the `plugin.go`, where we provide an implementation of the `Plugin` interface.
 The most important part of the implementation is the `RunTx` method, which determines the meaning of the data

@@ -14,11 +14,11 @@ import (
 	"github.com/tendermint/basecoin/types"
 
 	abci "github.com/tendermint/abci/types"
-	cmn "github.com/tendermint/tmlibs/common"
-	client "github.com/tendermint/tendermint/rpc/lib/client"
 	wire "github.com/tendermint/go-wire"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	client "github.com/tendermint/tendermint/rpc/lib/client"
 	tmtypes "github.com/tendermint/tendermint/types"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 //This variable can be overwritten by plugin applications
@@ -130,7 +130,7 @@ func StripHex(s string) string {
 	return s
 }
 
-func Query(tmAddr string, key []byte) (*abci.ResponseQuery, error) {
+func Query(tmAddr string, key []byte) (*abci.ResultQuery, error) {
 	uriClient := client.NewURIClient(tmAddr)
 	tmResult := new(ctypes.TMResult)
 
@@ -144,10 +144,10 @@ func Query(tmAddr string, key []byte) (*abci.ResponseQuery, error) {
 		return nil, errors.Errorf("Error calling /abci_query: %v", err)
 	}
 	res := (*tmResult).(*ctypes.ResultABCIQuery)
-	if !res.Response.Code.IsOK() {
-		return nil, errors.Errorf("Query got non-zero exit code: %v. %s", res.Response.Code, res.Response.Log)
+	if !res.Code.IsOK() {
+		return nil, errors.Errorf("Query got non-zero exit code: %v. %s", res.Code, res.Log)
 	}
-	return &res.Response, nil
+	return res.ResultQuery, nil
 }
 
 // fetch the account by querying the app

@@ -44,7 +44,7 @@ import:
   - rpc/lib/types
   - types
 - package: github.com/tendermint/tmlibs
-  version: develop
+  version: basecoin-cli
   subpackages:
   - cli
   - common

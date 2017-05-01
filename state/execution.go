@@ -5,10 +5,11 @@ import (
 	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/events"
+	"github.com/tendermint/tmlibs/log"
 )
 
 // If the tx is invalid, a TMSP error will be returned.
-func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc events.Fireable) abci.Result {
+func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc events.Fireable, logger log.Logger) abci.Result {
 
 	chainID := state.GetChainID()
 
@@ -95,11 +96,11 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		signBytes := tx.SignBytes(chainID)
 		res = validateInputAdvanced(inAcc, signBytes, tx.Input)
 		if res.IsErr() {
-			log.Info(cmn.Fmt("validateInputAdvanced failed on %X: %v", tx.Input.Address, res))
+			logger.Info(cmn.Fmt("validateInputAdvanced failed on %X: %v", tx.Input.Address, res))
 			return res.PrependLog("in validateInputAdvanced()")
 		}
 		if !tx.Input.Coins.IsGTE(types.Coins{tx.Fee}) {
-			log.Info(cmn.Fmt("Sender did not send enough to cover the fee %X", tx.Input.Address))
+			logger.Info(cmn.Fmt("Sender did not send enough to cover the fee %X", tx.Input.Address))
 			return abci.ErrBaseInsufficientFunds.AppendLog(cmn.Fmt("input coins is %v, but fee is %v", tx.Input.Coins, types.Coins{tx.Fee}))
 		}
 
@@ -131,7 +132,7 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		res = plugin.RunTx(cache, ctx, tx.Data)
 		if res.IsOK() {
 			cache.CacheSync()
-			log.Info("Successful execution")
+			logger.Info("Successful execution")
 			// Fire events
 			/*
 				if evc != nil {
@@ -144,7 +145,7 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 				}
 			*/
 		} else {
-			log.Info("AppTx failed", "error", res)
+			logger.Info("AppTx failed", "error", res)
 			// Just return the coins and return.
 			inAccCopy.Balance = inAccCopy.Balance.Plus(coins)
 			// But take the gas

@@ -62,9 +62,9 @@ func initCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	if (mod1 + mod2 + mod3 + mod4) > 0 {
-		log.Notice("Initialized Basecoin", "genesis", genesisFile, "key", key1File)
+		logger.Info("Initialized Basecoin", "genesis", genesisFile, "key", key1File)
 	} else {
-		log.Notice("Already initialized", "priv_validator", privValFile)
+		logger.Info("Already initialized", "priv_validator", privValFile)
 	}
 
 	return nil

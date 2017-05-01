@@ -8,15 +8,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/basecoin/app"
 	"github.com/tendermint/basecoin/types"
-	cmn "github.com/tendermint/tmlibs/common"
-	"github.com/tendermint/go-wire"
+	wire "github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
+	cmn "github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tmlibs/log"
 )
 
 func TestSendTx(t *testing.T) {
 	eyesCli := eyescli.NewLocalClient("", 0)
 	chainID := "test_chain_id"
 	bcApp := app.NewBasecoin(eyesCli)
+	bcApp.SetLogger(log.TestingLogger().With("module", "app"))
 	bcApp.SetOption("base/chain_id", chainID)
 	// t.Log(bcApp.Info())
 

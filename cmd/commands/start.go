@@ -13,7 +13,7 @@ import (
 	eyes "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
-	"github.com/tendermint/tmlibs/logger"
+	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/node"
@@ -68,6 +68,7 @@ func startCmd(cmd *cobra.Command, args []string) error {
 
 	// Create Basecoin app
 	basecoinApp := app.NewBasecoin(eyesCli)
+	basecoinApp.SetLogger(logger.With("module", "app"))
 
 	// register IBC plugn
 	basecoinApp.RegisterPlugin(NewIBCPlugin())
@@ -94,11 +95,11 @@ func startCmd(cmd *cobra.Command, args []string) error {
 
 	chainID := basecoinApp.GetState().GetChainID()
 	if withoutTendermintFlag {
-		log.Notice("Starting Basecoin without Tendermint", "chain_id", chainID)
+		logger.Info("Starting Basecoin without Tendermint", "chain_id", chainID)
 		// run just the abci app/server
 		return startBasecoinABCI(basecoinApp)
 	} else {
-		log.Notice("Starting Basecoin with Tendermint", "chain_id", chainID)
+		logger.Info("Starting Basecoin with Tendermint", "chain_id", chainID)
 		// start the app with tendermint in-process
 		return startTendermint(rootDir, basecoinApp)
 	}
@@ -110,6 +111,7 @@ func startBasecoinABCI(basecoinApp *app.Basecoin) error {
 	if err != nil {
 		return errors.Errorf("Error creating listener: %v\n", err)
 	}
+	svr.SetLogger(logger.With("module", "abci-server"))
 
 	// Wait forever
 	cmn.TrapSignal(func() {
@@ -127,11 +129,22 @@ func startTendermint(dir string, basecoinApp *app.Basecoin) error {
 	}
 	cfg.SetRoot(cfg.RootDir)
 	config.EnsureRoot(cfg.RootDir)
-	logger.SetLogLevel(cfg.LogLevel)
+
+	var tmLogger log.Logger
+	switch cfg.LogLevel {
+	case "info":
+		tmLogger = log.NewFilter(logger, log.AllowInfo())
+	case "debug":
+		tmLogger = log.NewFilter(logger, log.AllowDebug())
+	case "error":
+		tmLogger = log.NewFilter(logger, log.AllowError())
+	default:
+		panic(fmt.Sprintf("Unexpected log level \"%v\", expect either \"info\", \"debug\" or \"error\""))
+	}
 
 	// Create & start tendermint node
-	privValidator := types.LoadOrGenPrivValidator(cfg.PrivValidatorFile())
-	n := node.NewNode(cfg, privValidator, proxy.NewLocalClientCreator(basecoinApp))
+	privValidator := types.LoadOrGenPrivValidator(cfg.PrivValidatorFile(), tmLogger)
+	n := node.NewNode(cfg, privValidator, proxy.NewLocalClientCreator(basecoinApp), tmLogger.With("module", "node"))
 
 	_, err = n.Start()
 	if err != nil {

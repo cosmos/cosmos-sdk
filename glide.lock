@@ -91,10 +91,11 @@ imports:
   subpackages:
   - term
 - name: github.com/tendermint/tmlibs
-  version: 1ea866fd691ded9c1de16408934927d133550efc
+  version: d4ab9679d71c8fc174284696d15930cb799fa24f
   subpackages:
   - common
   - logger
+  - cli
 - name: golang.org/x/crypto
   version: 7c6cc321c680f03b9ef0764448e780704f486b51
   subpackages:

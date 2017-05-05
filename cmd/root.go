@@ -22,6 +22,7 @@ import (
 	keys "github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/go-crypto/keys/cryptostore"
 	"github.com/tendermint/go-crypto/keys/storage/filestorage"
+	"github.com/tendermint/tmlibs/cli"
 )
 
 const KeySubdir = "keys"
@@ -45,7 +46,7 @@ needs to sign with a private key.`,
 func GetKeyManager() keys.Manager {
 	if manager == nil {
 		// store the keys directory
-		rootDir := viper.GetString("root")
+		rootDir := viper.GetString(cli.HomeFlag)
 		keyDir := filepath.Join(rootDir, KeySubdir)
 		// and construct the key manager
 		manager = cryptostore.New(

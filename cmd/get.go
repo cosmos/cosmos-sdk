@@ -15,7 +15,7 @@
 package cmd
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
 )
@@ -25,20 +25,17 @@ var getCmd = &cobra.Command{
 	Use:   "get <name>",
 	Short: "Get details of one key",
 	Long:  `Return public details of one local key.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 || len(args[0]) == 0 {
-			fmt.Println("You must provide a name for the key")
-			return
+			return errors.New("You must provide a name for the key")
 		}
 		name := args[0]
 
 		info, err := GetKeyManager().Get(name)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
+		if err == nil {
+			printInfo(info)
 		}
-
-		printInfo(info)
+		return err
 	},
 }
 

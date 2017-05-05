@@ -22,7 +22,6 @@ import (
 )
 
 func main() {
-	cli.PrepareMainCmd(cmd.RootCmd, "TM", os.ExpandEnv("$HOME/.tlc"))
-	cmd.RootCmd.Execute()
-	// exec()
+	root := cli.PrepareMainCmd(cmd.RootCmd, "TM", os.ExpandEnv("$HOME/.tlc"))
+	root.Execute()
 }

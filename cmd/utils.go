@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 	keys "github.com/tendermint/go-crypto/keys"
 	data "github.com/tendermint/go-wire/data"
+	"github.com/tendermint/tmlibs/cli"
 )
 
 const PassLength = 10
@@ -40,7 +41,7 @@ func getCheckPassword(prompt, prompt2 string) (string, error) {
 }
 
 func printInfo(info keys.Info) {
-	switch viper.Get(OutputFlag) {
+	switch viper.Get(cli.OutputFlag) {
 	case "text":
 		addr, err := data.ToText(info.Address)
 		if err != nil {
@@ -61,7 +62,7 @@ func printInfo(info keys.Info) {
 }
 
 func printInfos(infos keys.Infos) {
-	switch viper.Get(OutputFlag) {
+	switch viper.Get(cli.OutputFlag) {
 	case "text":
 		fmt.Println("All keys:")
 		for _, i := range infos {

@@ -15,7 +15,7 @@
 package cmd
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -28,7 +28,7 @@ var newCmd = &cobra.Command{
 	Long: `Add a public/private key pair to the key store.
 The password muts be entered in the terminal and not
 passed as a command line argument for security.`,
-	Run: newPassword,
+	RunE: newPassword,
 }
 
 func init() {
@@ -36,25 +36,21 @@ func init() {
 	newCmd.Flags().StringP("type", "t", "ed25519", "Type of key (ed25519|secp256k1)")
 }
 
-func newPassword(cmd *cobra.Command, args []string) {
+func newPassword(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 || len(args[0]) == 0 {
-		fmt.Println("You must provide a name for the key")
-		return
+		return errors.New("You must provide a name for the key")
 	}
 	name := args[0]
 	algo := viper.GetString("type")
 
 	pass, err := getCheckPassword("Enter a passphrase:", "Repeat the passphrase:")
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		return err
 	}
 
 	info, err := GetKeyManager().Create(name, pass, algo)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
+	if err == nil {
+		printInfo(info)
 	}
-
-	printInfo(info)
+	return err
 }

@@ -17,6 +17,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 )
 
@@ -25,35 +27,32 @@ var updateCmd = &cobra.Command{
 	Use:   "update <name>",
 	Short: "Change the password for a private key",
 	Long:  `Change the password for a private key.`,
-	Run:   updatePassword,
+	RunE:  updatePassword,
 }
 
 func init() {
 	RootCmd.AddCommand(updateCmd)
 }
 
-func updatePassword(cmd *cobra.Command, args []string) {
+func updatePassword(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 || len(args[0]) == 0 {
-		fmt.Println("You must provide a name for the key")
-		return
+		return errors.New("You must provide a name for the key")
 	}
 	name := args[0]
 
 	oldpass, err := getPassword("Enter the current passphrase:")
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		return err
 	}
 	newpass, err := getCheckPassword("Enter the new passphrase:", "Repeat the new passphrase:")
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		return err
 	}
 
 	err = GetKeyManager().Update(name, oldpass, newpass)
 	if err != nil {
-		fmt.Println(err.Error())
-	} else {
-		fmt.Println("Password successfully updated!")
+		return err
 	}
+	fmt.Println("Password successfully updated!")
+	return nil
 }

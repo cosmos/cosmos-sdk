@@ -9,9 +9,8 @@ import (
 
 	"github.com/tendermint/basecoin/types"
 
-	client "github.com/tendermint/tendermint/rpc/lib/client"
 	wire "github.com/tendermint/go-wire"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tendermint/rpc/client"
 )
 
 //commands
@@ -193,22 +192,16 @@ func AppTx(name string, data []byte) error {
 
 // broadcast the transaction to tendermint
 func broadcastTx(tx types.Tx) ([]byte, string, error) {
-
-	tmResult := new(ctypes.TMResult)
-	uriClient := client.NewURIClient(txNodeFlag)
-
+	httpClient := client.NewHTTP(txNodeFlag, "/websocket")
 	// Don't you hate having to do this?
 	// How many times have I lost an hour over this trick?!
 	txBytes := []byte(wire.BinaryBytes(struct {
 		types.Tx `json:"unwrap"`
 	}{tx}))
-
-	_, err := uriClient.Call("broadcast_tx_commit", map[string]interface{}{"tx": txBytes}, tmResult)
+	res, err := httpClient.BroadcastTxCommit(txBytes)
 	if err != nil {
 		return nil, "", errors.Errorf("Error on broadcast tx: %v", err)
 	}
-
-	res := (*tmResult).(*ctypes.ResultBroadcastTxCommit)
 
 	// if it fails check, we don't even get a delivertx back!
 	if !res.CheckTx.Code.IsOK() {

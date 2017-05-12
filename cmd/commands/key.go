@@ -10,8 +10,10 @@ import (
 
 	//"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/tendermint/go-crypto"
+	"github.com/tendermint/tmlibs/cli"
 )
 
 //commands
@@ -87,7 +89,8 @@ func genKey() *Key {
 }
 
 func LoadKey(keyFile string) (*Key, error) {
-	filePath := path.Join(BasecoinRoot(""), keyFile)
+	rootDir := viper.GetString(cli.HomeFlag)
+	filePath := path.Join(rootDir, keyFile)
 	keyJSONBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err

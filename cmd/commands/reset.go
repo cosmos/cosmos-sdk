@@ -1,10 +1,13 @@
 package commands
 
 import (
-	"github.com/spf13/cobra"
+	"os"
 
-	tmcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	tmcfg "github.com/tendermint/tendermint/config/tendermint"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	"github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tmlibs/cli"
 )
 
 var UnsafeResetAllCmd = &cobra.Command{
@@ -14,8 +17,9 @@ var UnsafeResetAllCmd = &cobra.Command{
 }
 
 func unsafeResetAllCmd(cmd *cobra.Command, args []string) error {
-	basecoinDir := BasecoinRoot("")
-	tmConfig := tmcfg.GetConfig(basecoinDir)
-	tmcmd.ResetAll(tmConfig, log)
+	rootDir := viper.GetString(cli.HomeFlag)
+	// wipe out rootdir if it exists before recreating it
+	os.RemoveAll(rootDir)
+	config.EnsureRoot(rootDir)
 	return nil
 }

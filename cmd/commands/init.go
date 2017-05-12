@@ -6,7 +6,9 @@ import (
 	"path"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
+	"github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
@@ -33,8 +35,7 @@ func setupFile(path, data string, perm os.FileMode) (int, error) {
 }
 
 func initCmd(cmd *cobra.Command, args []string) error {
-	rootDir := BasecoinRoot("")
-
+	rootDir := viper.GetString(cli.HomeFlag)
 	cmn.EnsureDir(rootDir, 0777)
 
 	// initalize basecoin

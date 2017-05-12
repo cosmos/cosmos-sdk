@@ -18,7 +18,7 @@ import (
 	"github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/proxy"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/tendermint/tendermint/types"
 
 	"github.com/tendermint/basecoin/app"
 )
@@ -130,7 +130,7 @@ func startTendermint(dir string, basecoinApp *app.Basecoin) error {
 	logger.SetLogLevel(cfg.LogLevel)
 
 	// Create & start tendermint node
-	privValidator := tmtypes.LoadOrGenPrivValidator(cfg.PrivValidator)
+	privValidator := types.LoadOrGenPrivValidator(cfg.PrivValidatorFile())
 	n := node.NewNode(cfg, privValidator, proxy.NewLocalClientCreator(basecoinApp))
 
 	_, err = n.Start()
@@ -138,10 +138,7 @@ func startTendermint(dir string, basecoinApp *app.Basecoin) error {
 		return err
 	}
 
-	// Wait forever
-	cmn.TrapSignal(func() {
-		// Cleanup
-		n.Stop()
-	})
+	// Trap signal, run forever.
+	n.RunForever()
 	return nil
 }

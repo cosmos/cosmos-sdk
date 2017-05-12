@@ -6,11 +6,11 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/tendermint/basecoin/types"
-	cmn "github.com/tendermint/tmlibs/common"
-	"github.com/tendermint/tendermint/rpc/lib/client"
-	"github.com/tendermint/tendermint/rpc/lib/types"
 	wire "github.com/tendermint/go-wire"
 	_ "github.com/tendermint/tendermint/rpc/core/types" // Register RPCResponse > Result types
+	"github.com/tendermint/tendermint/rpc/lib/client"
+	"github.com/tendermint/tendermint/rpc/lib/types"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 func main() {
@@ -71,11 +71,13 @@ func main() {
 
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
-		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", map[string]interface{}{"tx": txBytes})
-		//request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", map[string]interface{}{"tx": txBytes})
+		request, err := rpctypes.MapToRequest("fakeid", "broadcast_tx_sync", map[string]interface{}{"tx": txBytes})
+		if err != nil {
+			cmn.Exit("cannot encode request: " + err.Error())
+		}
 		reqBytes := wire.JSONBytes(request)
 		//fmt.Print(".")
-		err := ws.WriteMessage(websocket.TextMessage, reqBytes)
+		err = ws.WriteMessage(websocket.TextMessage, reqBytes)
 		if err != nil {
 			cmn.Exit("writing websocket request: " + err.Error())
 		}
@@ -122,10 +124,13 @@ func main() {
 
 		// Write request
 		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
-		request := rpctypes.NewRPCRequest("fakeid", "broadcast_tx_sync", map[string]interface{}{"tx": txBytes})
+		request, err := rpctypes.MapToRequest("fakeid", "broadcast_tx_sync", map[string]interface{}{"tx": txBytes})
+		if err != nil {
+			cmn.Exit("cannot encode request: " + err.Error())
+		}
 		reqBytes := wire.JSONBytes(request)
 		//fmt.Print(".")
-		err := ws.WriteMessage(websocket.TextMessage, reqBytes)
+		err = ws.WriteMessage(websocket.TextMessage, reqBytes)
 		if err != nil {
 			cmn.Exit("writing websocket request: " + err.Error())
 		}

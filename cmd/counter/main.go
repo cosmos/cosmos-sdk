@@ -1,9 +1,12 @@
 package main
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/basecoin/cmd/commands"
+	"github.com/tendermint/tmlibs/cli"
 )
 
 func main() {
@@ -24,5 +27,6 @@ func main() {
 		commands.QuickVersionCmd("0.1.0"),
 	)
 
-	commands.ExecuteWithDebug(RootCmd)
+	cmd := cli.PrepareMainCmd(RootCmd, "BC", os.ExpandEnv("$HOME/.basecoin"))
+	cmd.Execute()
 }

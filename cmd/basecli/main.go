@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/light-client/commands/proofs"
 	"github.com/tendermint/light-client/commands/seeds"
 	"github.com/tendermint/light-client/commands/txs"
+	"github.com/tendermint/tmlibs/cli"
 )
 
 // BaseCli represents the base command when called without any subcommands
@@ -38,10 +39,6 @@ func init() {
 }
 
 func main() {
-	keycmd.PrepareMainCmd(BaseCli, "BC", os.ExpandEnv("$HOME/.basecli"))
-	BaseCli.Execute()
-	// err := BaseCli.Execute()
-	// if err != nil {
-	// 	fmt.Printf("%+v\n", err)
-	// }
+	cmd := cli.PrepareMainCmd(BaseCli, "BC", os.ExpandEnv("$HOME/.basecli"))
+	cmd.Execute()
 }

@@ -41,7 +41,7 @@ function waitForNode() {
 			exit 1
 		fi
 		echo "...... still waiting on $addr"
-                sleep 1 
+                sleep 1
                 curl -s $addr/status > /dev/null
                 ERR=$?
 		i=$((i+1))
@@ -52,12 +52,12 @@ function waitForNode() {
 
 function waitForBlock() {
 	addr=$1
-	b1=`curl -s $addr/status | jq .result[1].latest_block_height`
+	b1=`curl -s $addr/status | jq .result.latest_block_height`
 	b2=$b1
 	while [ "$b2" == "$b1" ]; do
                 echo "Waiting for node $addr to commit a block ..."
                 sleep 1
-		b2=`curl -s $addr/status | jq .result[1].latest_block_height`
+		b2=`curl -s $addr/status | jq .result.latest_block_height`
 	done
 }
 
@@ -83,11 +83,11 @@ echo ""
 echo "... starting chains"
 echo ""
 # start the first node
-TMROOT=$BCHOME1 tendermint node --skip_upnp --log_level=info &> $LOG_DIR/chain1_tendermint.log &
+TMROOT=$BCHOME1 tendermint node --p2p.skip_upnp --log_level=info &> $LOG_DIR/chain1_tendermint.log &
 BCHOME=$BCHOME1 basecoin start --without-tendermint &> $LOG_DIR/chain1_basecoin.log &
 
 # start the second node
-TMROOT=$BCHOME2 tendermint node --skip_upnp --log_level=info --node_laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> $LOG_DIR/chain2_tendermint.log &
+TMROOT=$BCHOME2 tendermint node --p2p.skip_upnp --log_level=info --p2p.laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> $LOG_DIR/chain2_tendermint.log &
 BCHOME=$BCHOME2 basecoin start --address tcp://localhost:36658 --without-tendermint &> $LOG_DIR/chain2_basecoin.log &
 
 echo ""
@@ -99,7 +99,7 @@ waitForNode localhost:36657
 
 # TODO: remove the sleep
 # Without it we sometimes get "Account bytes are empty for address: 053BA0F19616AFF975C8756A2CBFF04F408B4D47"
-sleep 3 
+sleep 3
 
 echo "... registering chain1 on chain2"
 echo ""
@@ -143,7 +143,7 @@ echo ""
 echo "... querying for block data"
 echo ""
 # get the header and commit for the height
-HEADER_AND_COMMIT=$(basecoin block $HEIGHT) 
+HEADER_AND_COMMIT=$(basecoin block $HEIGHT)
 HEADER=$(echo $HEADER_AND_COMMIT | jq .hex.header)
 HEADER=$(removeQuotes $HEADER)
 COMMIT=$(echo $HEADER_AND_COMMIT | jq .hex.commit)

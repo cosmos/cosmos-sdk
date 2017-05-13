@@ -130,16 +130,9 @@ func startTendermint(dir string, basecoinApp *app.Basecoin) error {
 	cfg.SetRoot(cfg.RootDir)
 	config.EnsureRoot(cfg.RootDir)
 
-	var tmLogger log.Logger
-	switch cfg.LogLevel {
-	case "info":
-		tmLogger = log.NewFilter(logger, log.AllowInfo())
-	case "debug":
-		tmLogger = log.NewFilter(logger, log.AllowDebug())
-	case "error":
-		tmLogger = log.NewFilter(logger, log.AllowError())
-	default:
-		panic(fmt.Sprintf("Unexpected log level \"%v\", expect either \"info\", \"debug\" or \"error\""))
+	tmLogger, err := log.NewFilterByLevel(logger, cfg.LogLevel)
+	if err != nil {
+		return err
 	}
 
 	// Create & start tendermint node

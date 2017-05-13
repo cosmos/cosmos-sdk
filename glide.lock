@@ -136,7 +136,7 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: e55dc347586218ba5691267d3dc959c6f4943836
+  version: 6a786b321c0634e801e692af93491b75866cb0cd
 - name: github.com/tendermint/log15
   version: ae0f3d6450da9eac7074b439c8e1c3cabf0d5ce6
   subpackages:
@@ -149,7 +149,7 @@ imports:
   - iavl
   - testutil
 - name: github.com/tendermint/tendermint
-  version: d2ae7e164af0bb9eb3dbeec3e0b54bbee440f537
+  version: 07fe3e2f1345767fda9f31045da19bd277935afb
   subpackages:
   - blockchain
   - config/tendermint_test

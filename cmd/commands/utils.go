@@ -10,13 +10,11 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	wire "github.com/tendermint/go-wire"
-	cmn "github.com/tendermint/tmlibs/common"
 
 	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	client "github.com/tendermint/tendermint/rpc/lib/client"
+	client "github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 

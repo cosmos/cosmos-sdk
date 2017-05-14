@@ -7,5 +7,5 @@ node_laddr = "tcp://0.0.0.0:46656"
 seeds = ""
 fast_sync = true
 db_backend = "leveldb"
-log_level = "notice"
+log_level = "info"
 rpc_laddr = "tcp://0.0.0.0:46657"

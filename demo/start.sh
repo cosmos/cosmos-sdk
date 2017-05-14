@@ -23,6 +23,13 @@ fi
 
 set -u
 
+function ifExit() {
+	if [[ "$?" != 0 ]]; then
+		echo "FAIL"
+		exit 1
+	fi 
+}
+
 function removeQuotes() {
 	temp="${1%\"}"
 	temp="${temp#\"}"
@@ -84,11 +91,15 @@ echo "... starting chains"
 echo ""
 # start the first node
 TMROOT=$BCHOME1 tendermint node --p2p.skip_upnp --log_level=info &> $LOG_DIR/chain1_tendermint.log &
+ifExit
 BCHOME=$BCHOME1 basecoin start --without-tendermint &> $LOG_DIR/chain1_basecoin.log &
+ifExit
 
 # start the second node
 TMROOT=$BCHOME2 tendermint node --p2p.skip_upnp --log_level=info --p2p.laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> $LOG_DIR/chain2_tendermint.log &
+ifExit
 BCHOME=$BCHOME2 basecoin start --address tcp://localhost:36658 --without-tendermint &> $LOG_DIR/chain2_basecoin.log &
+ifExit
 
 echo ""
 echo "... waiting for chains to start"
@@ -105,6 +116,7 @@ echo "... registering chain1 on chain2"
 echo ""
 # register chain1 on chain2
 basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 register --ibc_chain_id $CHAIN_ID1 --genesis $BCHOME1/genesis.json
+ifExit
 
 echo ""
 echo "... creating egress packet on chain1"
@@ -112,12 +124,14 @@ echo ""
 # create a packet on chain1 destined for chain2
 PAYLOAD="DEADBEEF" #TODO
 basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS1 packet create --ibc_from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload $PAYLOAD --ibc_sequence 1
+ifExit
 
 echo ""
 echo "... querying for packet data"
 echo ""
 # query for the packet data and proof
 QUERY_RESULT=$(basecoin query ibc,egress,$CHAIN_ID1,$CHAIN_ID2,1)
+ifExit
 HEIGHT=$(echo $QUERY_RESULT | jq .height)
 PACKET=$(echo $QUERY_RESULT | jq .value)
 PROOF=$(echo $QUERY_RESULT | jq .proof)
@@ -144,6 +158,7 @@ echo "... querying for block data"
 echo ""
 # get the header and commit for the height
 HEADER_AND_COMMIT=$(basecoin block $HEIGHT)
+ifExit
 HEADER=$(echo $HEADER_AND_COMMIT | jq .hex.header)
 HEADER=$(removeQuotes $HEADER)
 COMMIT=$(echo $HEADER_AND_COMMIT | jq .hex.commit)
@@ -158,18 +173,21 @@ echo "... updating state of chain1 on chain2"
 echo ""
 # update the state of chain1 on chain2
 basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 update --header 0x$HEADER --commit 0x$COMMIT
+ifExit
 
 echo ""
 echo "... posting packet from chain1 on chain2"
 echo ""
 # post the packet from chain1 to chain2
 basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 packet post --ibc_from $CHAIN_ID1 --height $HEIGHT --packet 0x$PACKET --proof 0x$PROOF
+ifExit
 
 echo ""
 echo "... checking if the packet is present on chain2"
 echo ""
 # query for the packet on chain2
 basecoin query --node tcp://localhost:36657 ibc,ingress,test_chain_2,test_chain_1,1
+ifExit
 
 echo ""
 echo "DONE!"

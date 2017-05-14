@@ -2,15 +2,17 @@ package ibc
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"net/url"
 	"strings"
 
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/basecoin/types"
-	cmn "github.com/tendermint/tmlibs/common"
-	merkle "github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/go-wire"
+	merkle "github.com/tendermint/merkleeyes/iavl"
+	cmn "github.com/tendermint/tmlibs/common"
+
+	"github.com/tendermint/basecoin/types"
 	tm "github.com/tendermint/tendermint/types"
 )
 
@@ -202,9 +204,8 @@ func (sm *IBCStateMachine) runRegisterChainTx(tx IBCRegisterChainTx) {
 	chainGen := tx.BlockchainGenesis
 
 	// Parse genesis
-	var chainGenDoc = &tm.GenesisDoc{}
-	var err error
-	wire.ReadJSONPtr(&chainGenDoc, []byte(chainGen.Genesis), &err)
+	chainGenDoc := new(tm.GenesisDoc)
+	err := json.Unmarshal([]byte(chainGen.Genesis), chainGenDoc)
 	if err != nil {
 		sm.res.Code = IBCCodeEncodingError
 		sm.res.Log = "Genesis doc couldn't be parsed: " + err.Error()

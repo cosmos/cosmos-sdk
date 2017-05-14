@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 
 	"github.com/pkg/errors"
+
 	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/tmlibs/common"
-	//tmtypes "github.com/tendermint/tendermint/types"
 )
 
 func (app *Basecoin) LoadGenesis(path string) error {
@@ -60,10 +60,6 @@ func loadGenesis(filePath string) (*FullGenesisDoc, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "loading genesis file")
 	}
-
-	// the tendermint genesis is go-wire
-	// tmGenesis := new(tmtypes.GenesisDoc)
-	// err = wire.ReadJSONBytes(bytes, tmGenesis)
 
 	// the basecoin genesis go-wire/data :)
 	genDoc := new(FullGenesisDoc)

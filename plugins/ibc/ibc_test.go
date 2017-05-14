@@ -2,19 +2,23 @@ package ibc
 
 import (
 	"bytes"
+	"encoding/json"
 	"sort"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/basecoin/types"
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/merkleeyes/iavl"
-	tm "github.com/tendermint/tendermint/types"
 	cmn "github.com/tendermint/tmlibs/common"
+
+	"github.com/tendermint/basecoin/types"
+	tm "github.com/tendermint/tendermint/types"
 )
 
 // NOTE: PrivAccounts are sorted by Address,
@@ -64,8 +68,68 @@ func (pas PrivAccountsByAddress) Swap(i, j int) {
 
 //--------------------------------------------------------------------------------
 
+var testGenesisDoc = `{
+  "app_hash": "",
+  "chain_id": "test_chain_1",
+  "genesis_time": "0001-01-01T00:00:00.000Z",
+  "validators": [
+    {
+      "amount": 10,
+      "name": "",
+      "pub_key": {
+          "type": "ed25519",
+          "data":"D6EBB92440CF375054AA59BCF0C99D596DEEDFFB2543CAE1BA1908B72CF9676A"
+      }
+    }
+  ],
+  "app_options": {
+    "accounts": [
+      {
+        "pub_key": {
+          "type": "ed25519",
+          "data": "B3588BDC92015ED3CDB6F57A86379E8C79A7111063610B7E625487C76496F4DF"
+        },
+        "coins": [
+          {
+            "denom": "mycoin",
+            "amount": 9007199254740992
+          }
+        ]
+      }
+    ]
+  }
+}`
+
+func TestIBCGenesisFromString(t *testing.T) {
+	assert := assert.New(t)
+
+	eyesClient := eyes.NewLocalClient("", 0)
+	store := types.NewKVCache(eyesClient)
+	store.SetLogging() // Log all activity
+
+	ibcPlugin := New()
+	ctx := types.CallContext{
+		CallerAddress: nil,
+		CallerAccount: nil,
+		Coins:         types.Coins{},
+	}
+
+	res := ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCRegisterChainTx{
+		BlockchainGenesis{
+			ChainID: "test_chain",
+			Genesis: testGenesisDoc,
+		},
+	}}))
+	assert.True(res.IsOK(), res.Log)
+	t.Log(">>", strings.Join(store.GetLogLines(), "\n"))
+	store.ClearLogLines()
+}
+
+//--------------------------------------------------------------------------------
+
 func TestIBCPlugin(t *testing.T) {
 	assert := assert.New(t)
+	require := require.New(t)
 
 	eyesClient := eyes.NewLocalClient("", 0)
 	store := types.NewKVCache(eyesClient)
@@ -80,7 +144,8 @@ func TestIBCPlugin(t *testing.T) {
 
 	chainID_1 := "test_chain"
 	genDoc_1, privAccs_1 := genGenesisDoc(chainID_1, 4)
-	genDocJSON_1 := wire.JSONBytesPretty(genDoc_1)
+	genDocJSON_1, err := json.Marshal(genDoc_1)
+	require.Nil(err)
 
 	// Register a malformed chain
 	res := ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCRegisterChainTx{
@@ -210,6 +275,7 @@ func TestIBCPlugin(t *testing.T) {
 
 func TestIBCPluginBadCommit(t *testing.T) {
 	assert := assert.New(t)
+	require := require.New(t)
 
 	eyesClient := eyes.NewLocalClient("", 0)
 	store := types.NewKVCache(eyesClient)
@@ -224,7 +290,8 @@ func TestIBCPluginBadCommit(t *testing.T) {
 
 	chainID_1 := "test_chain"
 	genDoc_1, privAccs_1 := genGenesisDoc(chainID_1, 4)
-	genDocJSON_1 := wire.JSONBytesPretty(genDoc_1)
+	genDocJSON_1, err := json.Marshal(genDoc_1)
+	require.Nil(err)
 
 	// Successfully register a chain
 	res := ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCRegisterChainTx{
@@ -283,6 +350,7 @@ func TestIBCPluginBadCommit(t *testing.T) {
 
 func TestIBCPluginBadProof(t *testing.T) {
 	assert := assert.New(t)
+	require := require.New(t)
 
 	eyesClient := eyes.NewLocalClient("", 0)
 	store := types.NewKVCache(eyesClient)
@@ -297,7 +365,8 @@ func TestIBCPluginBadProof(t *testing.T) {
 
 	chainID_1 := "test_chain"
 	genDoc_1, privAccs_1 := genGenesisDoc(chainID_1, 4)
-	genDocJSON_1 := wire.JSONBytesPretty(genDoc_1)
+	genDocJSON_1, err := json.Marshal(genDoc_1)
+	require.Nil(err)
 
 	// Successfully register a chain
 	res := ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCRegisterChainTx{

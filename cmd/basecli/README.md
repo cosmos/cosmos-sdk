@@ -40,7 +40,7 @@ $ basecoin start
 ## Connect your basecli the first time
 
 ```
-% basecli init --chainid test_chain_id --node localhost:45567
+% basecli init --chainid test_chain_id --node tcp://localhost:46657
 ```
 
 ## Check your balances...
@@ -65,4 +65,9 @@ $ basecoin start
 
 ```
 % basecli seeds show --height 1767
+% basecli proxy --serve tcp://localhost:7890
+...
+
+curl localhost:7890/status
+curl localhost:7890/block\?height=20
 ```

@@ -43,7 +43,7 @@ func (et *execTest) exec(tx *types.SendTx, checkTx bool) (res abci.Result, inGot
 	initBalIn := et.state.GetAccount(et.accIn.Account.PubKey.Address()).Balance
 	initBalOut := et.state.GetAccount(et.accOut.Account.PubKey.Address()).Balance
 
-	res = ExecTx(et.state, nil, tx, checkTx, nil, log.TestingLogger().With("module", "state"))
+	res = ExecTx(et.state, nil, tx, checkTx, nil)
 
 	endBalIn := et.state.GetAccount(et.accIn.Account.PubKey.Address()).Balance
 	endBalOut := et.state.GetAccount(et.accOut.Account.PubKey.Address()).Balance
@@ -64,6 +64,7 @@ func (et *execTest) reset() {
 
 	et.store = types.NewMemKVStore()
 	et.state = NewState(et.store)
+	et.state.SetLogger(log.TestingLogger())
 	et.state.SetChainID(et.chainID)
 
 	// NOTE we dont run acc2State here

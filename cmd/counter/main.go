@@ -7,15 +7,9 @@ import (
 
 	"github.com/tendermint/basecoin/cmd/commands"
 	"github.com/tendermint/tmlibs/cli"
-	"github.com/tendermint/tmlibs/log"
-)
-
-var (
-	logger = log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "main")
 )
 
 func main() {
-
 	var RootCmd = &cobra.Command{
 		Use:   "counter",
 		Short: "demo plugin for basecoin",

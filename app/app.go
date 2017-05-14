@@ -42,6 +42,7 @@ func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
 
 func (app *Basecoin) SetLogger(l log.Logger) {
 	app.logger = l
+	app.state.SetLogger(l.With("module", "state"))
 }
 
 // XXX For testing, not thread safe!
@@ -104,7 +105,7 @@ func (app *Basecoin) DeliverTx(txBytes []byte) (res abci.Result) {
 	}
 
 	// Validate and exec tx
-	res = sm.ExecTx(app.state, app.plugins, tx, false, nil, app.logger.With("module", "state"))
+	res = sm.ExecTx(app.state, app.plugins, tx, false, nil)
 	if res.IsErr() {
 		return res.PrependLog("Error in DeliverTx")
 	}
@@ -125,7 +126,7 @@ func (app *Basecoin) CheckTx(txBytes []byte) (res abci.Result) {
 	}
 
 	// Validate tx
-	res = sm.ExecTx(app.cacheState, app.plugins, tx, true, nil, app.logger.With("module", "state"))
+	res = sm.ExecTx(app.cacheState, app.plugins, tx, true, nil)
 	if res.IsErr() {
 		return res.PrependLog("Error in CheckTx")
 	}

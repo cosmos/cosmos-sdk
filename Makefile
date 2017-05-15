@@ -25,11 +25,12 @@ ensure_tools:
 	go get $(GOTOOLS)
 
 prepgen: install
-	cd ../go-wire && make tools
 	go install ./vendor/github.com/btcsuite/btcutil/base58
 	go install ./vendor/github.com/stretchr/testify/assert
 	go install ./vendor/github.com/stretchr/testify/require
 	go install ./vendor/golang.org/x/crypto/bcrypt
 
-codegen: prepgen
-	gen
+codegen: 
+	@echo "--> regenerating all interface wrappers"
+	@gen
+	@echo "Done!"

@@ -13,7 +13,7 @@ import (
 // Copyright (c) 2017 Ethan Frey (ethan.frey@tendermint.com)
 
 type PubKey struct {
-	PubKeyInner
+	PubKeyInner "json:\"unwrap\""
 }
 
 var PubKeyMapper = data.NewMapper(PubKey{})
@@ -46,7 +46,7 @@ func (h PubKey) Empty() bool {
 /*** below are bindings for each implementation ***/
 
 func init() {
-	PubKeyMapper.RegisterImplementation(PubKeyEd25519{}, "pubkeyed25519", 0x1)
+	PubKeyMapper.RegisterImplementation(PubKeyEd25519{}, "ed25519", 0x1)
 }
 
 func (hi PubKeyEd25519) Wrap() PubKey {
@@ -54,7 +54,7 @@ func (hi PubKeyEd25519) Wrap() PubKey {
 }
 
 func init() {
-	PubKeyMapper.RegisterImplementation(PubKeySecp256k1{}, "pubkeysecp256k1", 0x2)
+	PubKeyMapper.RegisterImplementation(PubKeySecp256k1{}, "secp256k1", 0x2)
 }
 
 func (hi PubKeySecp256k1) Wrap() PubKey {

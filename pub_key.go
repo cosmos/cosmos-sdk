@@ -22,8 +22,7 @@ func PubKeyFromBytes(pubKeyBytes []byte) (pubKey PubKey, err error) {
 
 // DO NOT USE THIS INTERFACE.
 // You probably want to use PubKey
-
-// +gen holder:"PubKey,Impl[PubKeyEd25519,PubKeySecp256k1]"
+// +gen holder:"PubKey,Impl[PubKeyEd25519,PubKeySecp256k1],ed25519,secp256k1"
 type PubKeyInner interface {
 	AssertIsPubKeyInner()
 	Address() []byte

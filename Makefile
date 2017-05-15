@@ -1,4 +1,4 @@
-.PHONEY: all docs test install get_vendor_deps ensure_tools
+.PHONEY: all docs test install get_vendor_deps ensure_tools codegen
 
 GOTOOLS = \
 	github.com/Masterminds/glide
@@ -24,4 +24,12 @@ get_vendor_deps: ensure_tools
 ensure_tools:
 	go get $(GOTOOLS)
 
+prepgen: install
+	cd ../go-wire && make tools
+	go install ./vendor/github.com/btcsuite/btcutil/base58
+	go install ./vendor/github.com/stretchr/testify/assert
+	go install ./vendor/github.com/stretchr/testify/require
+	go install ./vendor/golang.org/x/crypto/bcrypt
 
+codegen: prepgen
+	gen

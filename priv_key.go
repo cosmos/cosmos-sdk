@@ -6,9 +6,9 @@ import (
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/tendermint/ed25519"
 	"github.com/tendermint/ed25519/extra25519"
-	. "github.com/tendermint/tmlibs/common"
-	data "github.com/tendermint/go-wire/data"
 	"github.com/tendermint/go-wire"
+	data "github.com/tendermint/go-wire/data"
+	. "github.com/tendermint/tmlibs/common"
 )
 
 func PrivKeyFromBytes(privKeyBytes []byte) (privKey PrivKey, err error) {
@@ -18,12 +18,9 @@ func PrivKeyFromBytes(privKeyBytes []byte) (privKey PrivKey, err error) {
 
 //----------------------------------------
 
-type PrivKey struct {
-	PrivKeyInner `json:"unwrap"`
-}
-
 // DO NOT USE THIS INTERFACE.
 // You probably want to use PubKey
+// +gen holder:"PrivKey,Impl[PrivKeyEd25519,PrivKeySecp256k1],ed25519,secp256k1"
 type PrivKeyInner interface {
 	AssertIsPrivKeyInner()
 	Bytes() []byte
@@ -32,35 +29,6 @@ type PrivKeyInner interface {
 	Equals(PrivKey) bool
 	Wrap() PrivKey
 }
-
-func (p PrivKey) MarshalJSON() ([]byte, error) {
-	return privKeyMapper.ToJSON(p.PrivKeyInner)
-}
-
-func (p *PrivKey) UnmarshalJSON(data []byte) (err error) {
-	parsed, err := privKeyMapper.FromJSON(data)
-	if err == nil && parsed != nil {
-		p.PrivKeyInner = parsed.(PrivKeyInner)
-	}
-	return
-}
-
-// Unwrap recovers the concrete interface safely (regardless of levels of embeds)
-func (p PrivKey) Unwrap() PrivKeyInner {
-	pk := p.PrivKeyInner
-	for wrap, ok := pk.(PrivKey); ok; wrap, ok = pk.(PrivKey) {
-		pk = wrap.PrivKeyInner
-	}
-	return pk
-}
-
-func (p PrivKey) Empty() bool {
-	return p.PrivKeyInner == nil
-}
-
-var privKeyMapper = data.NewMapper(PrivKey{}).
-	RegisterImplementation(PrivKeyEd25519{}, NameEd25519, TypeEd25519).
-	RegisterImplementation(PrivKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
 
 //-------------------------------------
 
@@ -126,10 +94,6 @@ func (privKey PrivKeyEd25519) Generate(index int) PrivKeyEd25519 {
 	var newKey [64]byte
 	copy(newKey[:], newBytes)
 	return PrivKeyEd25519(newKey)
-}
-
-func (privKey PrivKeyEd25519) Wrap() PrivKey {
-	return PrivKey{privKey}
 }
 
 func GenPrivKeyEd25519() PrivKeyEd25519 {
@@ -199,10 +163,6 @@ func (p *PrivKeySecp256k1) UnmarshalJSON(enc []byte) error {
 
 func (privKey PrivKeySecp256k1) String() string {
 	return Fmt("PrivKeySecp256k1{*****}")
-}
-
-func (privKey PrivKeySecp256k1) Wrap() PrivKey {
-	return PrivKey{privKey}
 }
 
 /*

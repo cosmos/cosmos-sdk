@@ -1,26 +1,26 @@
 machine:
   environment:
-    GOPATH: /home/ubuntu/.go_workspace
-    REPO: $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
+    GOPATH: "$HOME/.go_workspace"
+    PROJECT_PARENT_PATH: "$GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME"
+    REPO: "$PROJECT_PARENT_PATH/$CIRCLE_PROJECT_REPONAME"
+    PATH: "$GOPATH/bin:$PATH"
   hosts:
     circlehost: 127.0.0.1
     localhost: 127.0.0.1
-
-checkout:
-  post:
-    - rm -rf $REPO
-    - mkdir -p $HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME
-    - mv $HOME/$CIRCLE_PROJECT_REPONAME $REPO
 
 dependencies:
   override:
     - go get github.com/Masterminds/glide
     - go version
     - glide --version
-    - "cd $REPO && glide install && go install ./cmd/basecoin"
+    - mkdir -p "$PROJECT_PARENT_PATH"
+    - ln -sf "$HOME/$CIRCLE_PROJECT_REPONAME/" "$REPO"
+    - env
 
 test:
   override:
+    - "cd $REPO && glide install && go install ./cmd/basecoin"
+    - ls $GOPATH/bin
     - "cd $REPO && make test"
     - "cd $REPO/demo && bash start.sh"
 

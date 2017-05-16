@@ -10,8 +10,9 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
-	"github.com/tendermint/go-wire"
+	wire "github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
+	"github.com/tendermint/tmlibs/log"
 )
 
 //--------------------------------------------------------
@@ -56,6 +57,7 @@ func (at *appTest) reset() {
 
 	eyesCli := eyes.NewLocalClient("", 0)
 	at.app = NewBasecoin(eyesCli)
+	at.app.SetLogger(log.TestingLogger().With("module", "app"))
 
 	res := at.app.SetOption("base/chain_id", at.chainID)
 	require.EqualValues(at.t, res, "Success")
@@ -104,6 +106,7 @@ func TestSetOption(t *testing.T) {
 
 	eyesCli := eyes.NewLocalClient("", 0)
 	app := NewBasecoin(eyesCli)
+	app.SetLogger(log.TestingLogger().With("module", "app"))
 
 	//testing ChainID
 	chainID := "testChain"

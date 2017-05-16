@@ -7,6 +7,7 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/tmlibs/log"
 )
 
 //--------------------------------------------------------
@@ -63,6 +64,7 @@ func (et *execTest) reset() {
 
 	et.store = types.NewMemKVStore()
 	et.state = NewState(et.store)
+	et.state.SetLogger(log.TestingLogger())
 	et.state.SetChainID(et.chainID)
 
 	// NOTE we dont run acc2State here

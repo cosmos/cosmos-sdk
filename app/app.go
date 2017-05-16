@@ -5,9 +5,10 @@ import (
 	"strings"
 
 	abci "github.com/tendermint/abci/types"
-	. "github.com/tendermint/tmlibs/common"
-	"github.com/tendermint/go-wire"
+	wire "github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
+	. "github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tmlibs/log"
 
 	sm "github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
@@ -24,6 +25,7 @@ type Basecoin struct {
 	state      *sm.State
 	cacheState *sm.State
 	plugins    *types.Plugins
+	logger     log.Logger
 }
 
 func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
@@ -34,7 +36,13 @@ func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
 		state:      state,
 		cacheState: nil,
 		plugins:    plugins,
+		logger:     log.NewNopLogger(),
 	}
+}
+
+func (app *Basecoin) SetLogger(l log.Logger) {
+	app.logger = l
+	app.state.SetLogger(l.With("module", "state"))
 }
 
 // XXX For testing, not thread safe!
@@ -60,7 +68,7 @@ func (app *Basecoin) SetOption(key string, value string) string {
 		if plugin == nil {
 			return "Invalid plugin name: " + pluginName
 		}
-		log.Notice("SetOption on plugin", "plugin", pluginName, "key", key, "value", value)
+		app.logger.Info("SetOption on plugin", "plugin", pluginName, "key", key, "value", value)
 		return plugin.SetOption(app.state, key, value)
 	} else {
 		// Set option on basecoin
@@ -75,7 +83,7 @@ func (app *Basecoin) SetOption(key string, value string) string {
 				return "Error decoding acc message: " + err.Error()
 			}
 			app.state.SetAccount(acc.PubKey.Address(), &acc)
-			log.Notice("SetAccount", "addr", acc.PubKey.Address(), "acc", acc)
+			app.logger.Info("SetAccount", "addr", acc.PubKey.Address(), "acc", acc)
 
 			return "Success"
 		}

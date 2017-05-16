@@ -6,6 +6,7 @@ import (
 
 	"github.com/tendermint/basecoin/types"
 	eyes "github.com/tendermint/merkleeyes/client"
+	"github.com/tendermint/tmlibs/log"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -16,6 +17,7 @@ func TestState(t *testing.T) {
 	//States and Stores for tests
 	store := types.NewMemKVStore()
 	state := NewState(store)
+	state.SetLogger(log.TestingLogger())
 	cache := state.CacheWrap()
 	eyesCli := eyes.NewLocalClient("", 0)
 
@@ -29,12 +31,14 @@ func TestState(t *testing.T) {
 	reset := func() {
 		store = types.NewMemKVStore()
 		state = NewState(store)
+		state.SetLogger(log.TestingLogger())
 		cache = state.CacheWrap()
 	}
 
 	//set the state to using the eyesCli instead of MemKVStore
 	useEyesCli := func() {
 		state = NewState(eyesCli)
+		state.SetLogger(log.TestingLogger())
 		cache = state.CacheWrap()
 	}
 

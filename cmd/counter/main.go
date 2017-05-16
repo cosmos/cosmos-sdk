@@ -10,7 +10,6 @@ import (
 )
 
 func main() {
-
 	var RootCmd = &cobra.Command{
 		Use:   "counter",
 		Short: "demo plugin for basecoin",

@@ -8,12 +8,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	abci "github.com/tendermint/abci/types"
+	wire "github.com/tendermint/go-wire"
+
 	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 
-	abci "github.com/tendermint/abci/types"
-	wire "github.com/tendermint/go-wire"
-	"github.com/tendermint/tendermint/rpc/client"
+	client "github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 

@@ -25,22 +25,24 @@ tmcli to work for any custom abci app.
 `,
 }
 
-func init() {
+func main() {
 	commands.AddBasicFlags(BaseCli)
 
-	// set up the various commands to use
-	BaseCli.AddCommand(keycmd.RootCmd)
-	BaseCli.AddCommand(commands.InitCmd)
-	BaseCli.AddCommand(seeds.RootCmd)
+	//initialize proofs and txs
 	proofs.StatePresenters.Register("account", AccountPresenter{})
 	proofs.TxPresenters.Register("base", BaseTxPresenter{})
-	BaseCli.AddCommand(proofs.RootCmd)
 	txs.Register("send", SendTxMaker{})
-	BaseCli.AddCommand(txs.RootCmd)
-	BaseCli.AddCommand(proxy.RootCmd)
-}
 
-func main() {
+	// set up the various commands to use
+	BaseCli.AddCommand(
+		keycmd.RootCmd,
+		commands.InitCmd,
+		seeds.RootCmd,
+		proofs.RootCmd,
+		txs.RootCmd,
+		proxy.RootCmd,
+	)
+
 	cmd := cli.PrepareMainCmd(BaseCli, "BC", os.ExpandEnv("$HOME/.basecli"))
 	cmd.Execute()
 }

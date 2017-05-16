@@ -7,7 +7,10 @@ import (
 	"github.com/pkg/errors"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"github.com/tendermint/basecoin/state"
 	btypes "github.com/tendermint/basecoin/types"
+
 	keycmd "github.com/tendermint/go-crypto/cmd"
 	wire "github.com/tendermint/go-wire"
 	lightclient "github.com/tendermint/light-client"
@@ -20,7 +23,7 @@ type AccountPresenter struct{}
 func (_ AccountPresenter) MakeKey(str string) ([]byte, error) {
 	res, err := hex.DecodeString(str)
 	if err == nil {
-		res = append([]byte("base/a/"), res...)
+		res = state.AccountKey(res)
 	}
 	return res, err
 }
@@ -41,21 +44,6 @@ func (_ BaseTxPresenter) ParseData(raw []byte) (interface{}, error) {
 	return tx, err
 }
 
-// SendTXReader allows us to create SendTx
-type SendTxReader struct {
-	ChainID string
-}
-
-func (t SendTxReader) ReadTxJSON(data []byte) (interface{}, error) {
-	var tx btypes.SendTx
-	err := json.Unmarshal(data, &tx)
-	send := SendTx{
-		chainID: t.ChainID,
-		Tx:      &tx,
-	}
-	return &send, errors.Wrap(err, "parse sendtx")
-}
-
 type SendTxMaker struct{}
 
 func (m SendTxMaker) MakeReader() (lightclient.TxReader, error) {
@@ -72,13 +60,29 @@ type SendFlags struct {
 }
 
 func (m SendTxMaker) Flags() (*flag.FlagSet, interface{}) {
-	fs := flag.NewFlagSet("foobar", flag.ContinueOnError)
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
 	fs.String("to", "", "Destination address for the bits")
 	fs.String("amount", "", "Coins to send in the format <amt><coin>,<amt><coin>...")
 	fs.String("fee", "", "Coins for the transaction fee of the format <amt><coin>")
 	fs.Int64("gas", 0, "Amount of gas for this transaction")
 	fs.Int("sequence", -1, "Sequence number for this transaction")
 	return fs, &SendFlags{}
+}
+
+// SendTXReader allows us to create SendTx
+type SendTxReader struct {
+	ChainID string
+}
+
+func (t SendTxReader) ReadTxJSON(data []byte) (interface{}, error) {
+	var tx btypes.SendTx
+	err := json.Unmarshal(data, &tx)
+	send := SendTx{
+		chainID: t.ChainID,
+		Tx:      &tx,
+	}
+	return &send, errors.Wrap(err, "parse sendtx")
 }
 
 func (t SendTxReader) ReadTxFlags(flags interface{}) (interface{}, error) {
@@ -134,7 +138,7 @@ func (t SendTxReader) ReadTxFlags(flags interface{}) (interface{}, error) {
 	return &send, nil
 }
 
-/** copied from basecoin cli - put in common somewhere? **/
+/** TODO copied from basecoin cli - put in common somewhere? **/
 
 // Returns true for non-empty hex-string prefixed with "0x"
 func isHex(s string) bool {

@@ -18,7 +18,7 @@ func SignatureFromBytes(sigBytes []byte) (sig Signature, err error) {
 
 // DO NOT USE THIS INTERFACE.
 // You probably want to use Signature.
-// +gen holder:"Signature,Impl[SignatureEd25519,SignatureSecp256k1],ed25519,secp256k1"
+// +gen wrapper:"Signature,Impl[SignatureEd25519,SignatureSecp256k1],ed25519,secp256k1"
 type SignatureInner interface {
 	AssertIsSignatureInner()
 	Bytes() []byte

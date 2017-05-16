@@ -20,7 +20,7 @@ func PrivKeyFromBytes(privKeyBytes []byte) (privKey PrivKey, err error) {
 
 // DO NOT USE THIS INTERFACE.
 // You probably want to use PubKey
-// +gen holder:"PrivKey,Impl[PrivKeyEd25519,PrivKeySecp256k1],ed25519,secp256k1"
+// +gen wrapper:"PrivKey,Impl[PrivKeyEd25519,PrivKeySecp256k1],ed25519,secp256k1"
 type PrivKeyInner interface {
 	AssertIsPrivKeyInner()
 	Bytes() []byte

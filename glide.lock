@@ -88,7 +88,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-wire
-  version: 59ba5af720a8cbaf5594595e1d8aae23bfd18e31
+  version: 97beaedf0f4dbc035309157c92be3b30cc6e5d74
   subpackages:
   - data
   - data/base58

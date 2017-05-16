@@ -30,6 +30,7 @@ func main() {
 
 	//initialize proofs and txs
 	proofs.StatePresenters.Register("account", AccountPresenter{})
+	proofs.StatePresenters.Register("counter", CounterPresenter{})
 	proofs.TxPresenters.Register("base", BaseTxPresenter{})
 	txs.Register("send", SendTxMaker{})
 

@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 
 	abci "github.com/tendermint/abci/types"
-	. "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/go-wire"
+	"github.com/tendermint/go-wire/data"
+	. "github.com/tendermint/tmlibs/common"
 )
 
 /*
@@ -46,7 +46,7 @@ func init() {
 
 // TxS add json serialization to Tx
 type TxS struct {
-	Tx
+	Tx `json:"unwrap"`
 }
 
 func (p TxS) MarshalJSON() ([]byte, error) {

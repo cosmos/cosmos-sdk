@@ -4,7 +4,8 @@ set -e
 cd $GOPATH/src/github.com/tendermint/basecoin/demo
 
 LOG_DIR="."
-TM_VERSION="v0.9.2"
+TM_VERSION="develop"
+#TM_VERSION="v0.10.0"
 
 if [[ "$CIRCLECI" == "true" ]]; then
 	# set log dir

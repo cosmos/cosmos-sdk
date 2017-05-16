@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"encoding/hex"
@@ -8,7 +8,7 @@ import (
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	keycmd "github.com/tendermint/go-crypto/cmd"
+	crypto "github.com/tendermint/go-crypto"
 	wire "github.com/tendermint/go-wire"
 	lightclient "github.com/tendermint/light-client"
 	"github.com/tendermint/light-client/commands"
@@ -77,7 +77,8 @@ type SendTxReader struct {
 	ChainID string
 }
 
-func (t SendTxReader) ReadTxJSON(data []byte) (interface{}, error) {
+func (t SendTxReader) ReadTxJSON(data []byte, pk crypto.PubKey) (interface{}, error) {
+	// TODO: use pk info to help construct data
 	var tx btypes.SendTx
 	err := json.Unmarshal(data, &tx)
 	send := SendTx{
@@ -87,7 +88,7 @@ func (t SendTxReader) ReadTxJSON(data []byte) (interface{}, error) {
 	return &send, errors.Wrap(err, "parse sendtx")
 }
 
-func (t SendTxReader) ReadTxFlags(flags interface{}) (interface{}, error) {
+func (t SendTxReader) ReadTxFlags(flags interface{}, pk crypto.PubKey) (interface{}, error) {
 	data := flags.(*SendFlags)
 
 	// parse to and from addresses
@@ -95,12 +96,6 @@ func (t SendTxReader) ReadTxFlags(flags interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, errors.Errorf("To address is invalid hex: %v\n", err)
 	}
-
-	// TODO: figure out a cleaner way to do this... until then
-	// just close your eyes and continue...
-	manager := keycmd.GetKeyManager()
-	name := viper.GetString("name")
-	info, err := manager.Get(name)
 
 	//parse the fee and amounts into coin types
 	feeCoin, err := btypes.ParseCoin(data.Fee)
@@ -114,12 +109,12 @@ func (t SendTxReader) ReadTxFlags(flags interface{}) (interface{}, error) {
 
 	// craft the tx
 	input := btypes.TxInput{
-		Address:  info.Address,
+		Address:  pk.Address(),
 		Coins:    amountCoins,
 		Sequence: data.Sequence,
 	}
 	if data.Sequence == 1 {
-		input.PubKey = info.PubKey
+		input.PubKey = pk
 	}
 	output := btypes.TxOutput{
 		Address: to,
@@ -164,17 +159,11 @@ type AppTxReader struct {
 	ChainID string
 }
 
-func (t AppTxReader) ReadTxJSON(data []byte) (interface{}, error) {
+func (t AppTxReader) ReadTxJSON(data []byte, pk crypto.PubKey) (interface{}, error) {
 	return nil, errors.New("Not implemented...")
 }
 
-func (t AppTxReader) ReadTxFlags(data *AppFlags, app string, appData []byte) (interface{}, error) {
-	// TODO: figure out a cleaner way to do this... until then
-	// just close your eyes and continue...
-	manager := keycmd.GetKeyManager()
-	name := viper.GetString("name")
-	info, err := manager.Get(name)
-
+func (t AppTxReader) ReadTxFlags(data *AppFlags, app string, appData []byte, pk crypto.PubKey) (interface{}, error) {
 	//parse the fee and amounts into coin types
 	feeCoin, err := btypes.ParseCoin(data.Fee)
 	if err != nil {
@@ -187,12 +176,12 @@ func (t AppTxReader) ReadTxFlags(data *AppFlags, app string, appData []byte) (in
 
 	// craft the tx
 	input := btypes.TxInput{
-		Address:  info.Address,
+		Address:  pk.Address(),
 		Coins:    amountCoins,
 		Sequence: data.Sequence,
 	}
 	if data.Sequence == 1 {
-		input.PubKey = info.PubKey
+		input.PubKey = pk
 	}
 	tx := btypes.AppTx{
 		Gas:   data.Gas,

@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
 	keycmd "github.com/tendermint/go-crypto/cmd"
 	"github.com/tendermint/light-client/commands"
 	"github.com/tendermint/light-client/commands/proofs"
@@ -11,6 +12,9 @@ import (
 	"github.com/tendermint/light-client/commands/seeds"
 	"github.com/tendermint/light-client/commands/txs"
 	"github.com/tendermint/tmlibs/cli"
+
+	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
+	bcount "github.com/tendermint/basecoin/cmd/basecli/counter"
 )
 
 // BaseCli represents the base command when called without any subcommands
@@ -29,12 +33,12 @@ func main() {
 	commands.AddBasicFlags(BaseCli)
 
 	//initialize proofs and txs
-	proofs.StatePresenters.Register("account", AccountPresenter{})
-	proofs.StatePresenters.Register("counter", CounterPresenter{})
-	proofs.TxPresenters.Register("base", BaseTxPresenter{})
+	proofs.StatePresenters.Register("account", bcmd.AccountPresenter{})
+	proofs.TxPresenters.Register("base", bcmd.BaseTxPresenter{})
+	proofs.StatePresenters.Register("counter", bcount.CounterPresenter{})
 
-	txs.Register("send", SendTxMaker{})
-	txs.Register("counter", CounterTxMaker{})
+	txs.Register("send", bcmd.SendTxMaker{})
+	txs.Register("counter", bcount.CounterTxMaker{})
 
 	// set up the various commands to use
 	BaseCli.AddCommand(

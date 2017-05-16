@@ -1,14 +1,16 @@
-package main
+package counter
 
 import (
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
+	crypto "github.com/tendermint/go-crypto"
 	wire "github.com/tendermint/go-wire"
 	lightclient "github.com/tendermint/light-client"
 	"github.com/tendermint/light-client/commands"
 	"github.com/tendermint/light-client/commands/txs"
 
+	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
 	"github.com/tendermint/basecoin/plugins/counter"
 	btypes "github.com/tendermint/basecoin/types"
 )
@@ -37,19 +39,19 @@ type CounterTxMaker struct{}
 
 func (m CounterTxMaker) MakeReader() (lightclient.TxReader, error) {
 	chainID := viper.GetString(commands.ChainFlag)
-	return CounterTxReader{AppTxReader{ChainID: chainID}}, nil
+	return CounterTxReader{bcmd.AppTxReader{ChainID: chainID}}, nil
 }
 
 // define flags
 
 type CounterFlags struct {
-	AppFlags `mapstructure:",squash"`
-	Valid    bool
-	CountFee string
+	bcmd.AppFlags `mapstructure:",squash"`
+	Valid         bool
+	CountFee      string
 }
 
 func (m CounterTxMaker) Flags() (*flag.FlagSet, interface{}) {
-	fs, app := AppFlagSet()
+	fs, app := bcmd.AppFlagSet()
 	fs.String("countfee", "", "Coins to send in the format <amt><coin>,<amt><coin>...")
 	fs.Bool("valid", false, "Is count valid?")
 	return fs, &CounterFlags{AppFlags: app}
@@ -58,15 +60,15 @@ func (m CounterTxMaker) Flags() (*flag.FlagSet, interface{}) {
 // parse flags
 
 type CounterTxReader struct {
-	App AppTxReader
+	App bcmd.AppTxReader
 }
 
-func (t CounterTxReader) ReadTxJSON(data []byte) (interface{}, error) {
+func (t CounterTxReader) ReadTxJSON(data []byte, pk crypto.PubKey) (interface{}, error) {
 	// TODO: something.  maybe?
-	return t.App.ReadTxJSON(data)
+	return t.App.ReadTxJSON(data, pk)
 }
 
-func (t CounterTxReader) ReadTxFlags(flags interface{}) (interface{}, error) {
+func (t CounterTxReader) ReadTxFlags(flags interface{}, pk crypto.PubKey) (interface{}, error) {
 	data := flags.(*CounterFlags)
 	countFee, err := btypes.ParseCoins(data.CountFee)
 	if err != nil {
@@ -79,5 +81,5 @@ func (t CounterTxReader) ReadTxFlags(flags interface{}) (interface{}, error) {
 	}
 	txBytes := wire.BinaryBytes(ctx)
 
-	return t.App.ReadTxFlags(&data.AppFlags, counter.New().Name(), txBytes)
+	return t.App.ReadTxFlags(&data.AppFlags, counter.New().Name(), txBytes, pk)
 }

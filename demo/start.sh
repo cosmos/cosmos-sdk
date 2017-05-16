@@ -18,14 +18,6 @@ if [[ "$CIRCLECI" == "true" ]]; then
 	git checkout $TM_VERSION
 	glide install
 	go install ./cmd/tendermint
-  echo "----"
-  echo $PATH
-  echo $GOPATH/bin
-  ls -l $GOPATH/bin
-  which basecoin
-  ls -l $(dirname `which basecoin`)
-  which tendermint
-  echo "----"
 	popd
 	set -e
 fi

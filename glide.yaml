@@ -33,7 +33,7 @@ import:
   - client
   - iavl
 - package: github.com/tendermint/tendermint
-  version: feature/new-logging
+  version: develop
   subpackages:
   - config
   - node

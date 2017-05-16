@@ -3,6 +3,7 @@ machine:
     GOPATH: "$HOME/.go_workspace"
     PROJECT_PARENT_PATH: "$GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME"
     REPO: "$PROJECT_PARENT_PATH/$CIRCLE_PROJECT_REPONAME"
+    PATH: "$GOPATH/bin:$PATH"
   hosts:
     circlehost: 127.0.0.1
     localhost: 127.0.0.1

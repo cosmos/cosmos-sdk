@@ -112,6 +112,7 @@ func startBasecoinABCI(basecoinApp *app.Basecoin) error {
 		return errors.Errorf("Error creating listener: %v\n", err)
 	}
 	svr.SetLogger(logger.With("module", "abci-server"))
+	svr.Start()
 
 	// Wait forever
 	cmn.TrapSignal(func() {

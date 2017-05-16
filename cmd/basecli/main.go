@@ -7,6 +7,7 @@ import (
 	keycmd "github.com/tendermint/go-crypto/cmd"
 	"github.com/tendermint/light-client/commands"
 	"github.com/tendermint/light-client/commands/proofs"
+	"github.com/tendermint/light-client/commands/proxy"
 	"github.com/tendermint/light-client/commands/seeds"
 	"github.com/tendermint/light-client/commands/txs"
 	"github.com/tendermint/tmlibs/cli"
@@ -39,6 +40,7 @@ func main() {
 		seeds.RootCmd,
 		proofs.RootCmd,
 		txs.RootCmd,
+		proxy.RootCmd,
 	)
 
 	cmd := cli.PrepareMainCmd(BaseCli, "BC", os.ExpandEnv("$HOME/.basecli"))

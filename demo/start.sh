@@ -18,6 +18,7 @@ if [[ "$CIRCLECI" == "true" ]]; then
 	git checkout $TM_VERSION
 	glide install
 	go install ./cmd/tendermint
+  ls $GOPATH/bin
 	popd
 	set -e
 fi
@@ -28,7 +29,7 @@ function ifExit() {
 	if [[ "$?" != 0 ]]; then
 		echo "FAIL"
 		exit 1
-	fi 
+	fi
 }
 
 function removeQuotes() {

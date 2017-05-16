@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	data "github.com/tendermint/go-wire/data"
 	wire "github.com/tendermint/go-wire"
+	data "github.com/tendermint/go-wire/data"
 )
 
 type byter interface {
@@ -58,7 +58,7 @@ func checkWireJSON(t *testing.T, in interface{}, reader interface{}, typ byte) {
 	var err error
 	js := wire.JSONBytes(in)
 	btyp := fmt.Sprintf("[%d,", typ)
-	assert.True(t, strings.HasPrefix(string(js), btyp), string(js))
+	assert.True(t, strings.HasPrefix(string(js), btyp), string(js), btyp)
 
 	wire.ReadJSON(reader, js, &err)
 	require.Nil(t, err, "%+v", err)

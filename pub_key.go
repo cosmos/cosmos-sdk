@@ -7,9 +7,9 @@ import (
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/tendermint/ed25519"
 	"github.com/tendermint/ed25519/extra25519"
-	. "github.com/tendermint/tmlibs/common"
-	data "github.com/tendermint/go-wire/data"
 	"github.com/tendermint/go-wire"
+	data "github.com/tendermint/go-wire/data"
+	. "github.com/tendermint/tmlibs/common"
 	"golang.org/x/crypto/ripemd160"
 )
 
@@ -20,12 +20,9 @@ func PubKeyFromBytes(pubKeyBytes []byte) (pubKey PubKey, err error) {
 
 //----------------------------------------
 
-type PubKey struct {
-	PubKeyInner `json:"unwrap"`
-}
-
 // DO NOT USE THIS INTERFACE.
 // You probably want to use PubKey
+// +gen wrapper:"PubKey,Impl[PubKeyEd25519,PubKeySecp256k1],ed25519,secp256k1"
 type PubKeyInner interface {
 	AssertIsPubKeyInner()
 	Address() []byte
@@ -35,35 +32,6 @@ type PubKeyInner interface {
 	Equals(PubKey) bool
 	Wrap() PubKey
 }
-
-func (pk PubKey) MarshalJSON() ([]byte, error) {
-	return pubKeyMapper.ToJSON(pk.PubKeyInner)
-}
-
-func (pk *PubKey) UnmarshalJSON(data []byte) (err error) {
-	parsed, err := pubKeyMapper.FromJSON(data)
-	if err == nil && parsed != nil {
-		pk.PubKeyInner = parsed.(PubKeyInner)
-	}
-	return
-}
-
-// Unwrap recovers the concrete interface safely (regardless of levels of embeds)
-func (pk PubKey) Unwrap() PubKeyInner {
-	pkI := pk.PubKeyInner
-	for wrap, ok := pkI.(PubKey); ok; wrap, ok = pkI.(PubKey) {
-		pkI = wrap.PubKeyInner
-	}
-	return pkI
-}
-
-func (p PubKey) Empty() bool {
-	return p.PubKeyInner == nil
-}
-
-var pubKeyMapper = data.NewMapper(PubKey{}).
-	RegisterImplementation(PubKeyEd25519{}, NameEd25519, TypeEd25519).
-	RegisterImplementation(PubKeySecp256k1{}, NameSecp256k1, TypeSecp256k1)
 
 //-------------------------------------
 
@@ -142,10 +110,6 @@ func (pubKey PubKeyEd25519) Equals(other PubKey) bool {
 	}
 }
 
-func (pubKey PubKeyEd25519) Wrap() PubKey {
-	return PubKey{pubKey}
-}
-
 //-------------------------------------
 
 var _ PubKeyInner = PubKeySecp256k1{}
@@ -217,8 +181,4 @@ func (pubKey PubKeySecp256k1) Equals(other PubKey) bool {
 	} else {
 		return false
 	}
-}
-
-func (pubKey PubKeySecp256k1) Wrap() PubKey {
-	return PubKey{pubKey}
 }

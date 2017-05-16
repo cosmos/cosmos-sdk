@@ -78,6 +78,7 @@ func (s *State) CacheWrap() *State {
 		store:      cache,
 		readCache:  nil,
 		writeCache: cache,
+		logger:     s.logger,
 	}
 }
 

@@ -1,6 +1,6 @@
 machine:
   environment:
-    GOPATH: "$HOME/.go_project"
+    GOPATH: "$HOME/.go_workspace"
     PROJECT_PARENT_PATH: "$GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME"
     REPO: "$PROJECT_PARENT_PATH/$CIRCLE_PROJECT_REPONAME"
   hosts:

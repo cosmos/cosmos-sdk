@@ -140,6 +140,76 @@ func (t SendTxReader) ReadTxFlags(flags interface{}) (interface{}, error) {
 	return &send, nil
 }
 
+/******** AppTx *********/
+
+type AppFlags struct {
+	Fee      string
+	Gas      int64
+	Amount   string
+	Sequence int
+}
+
+func AppFlagSet() (*flag.FlagSet, AppFlags) {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.String("amount", "", "Coins to send in the format <amt><coin>,<amt><coin>...")
+	fs.String("fee", "", "Coins for the transaction fee of the format <amt><coin>")
+	fs.Int64("gas", 0, "Amount of gas for this transaction")
+	fs.Int("sequence", -1, "Sequence number for this transaction")
+	return fs, AppFlags{}
+}
+
+// AppTxReader allows us to create AppTx
+type AppTxReader struct {
+	ChainID string
+}
+
+func (t AppTxReader) ReadTxJSON(data []byte) (interface{}, error) {
+	return nil, errors.New("Not implemented...")
+}
+
+func (t AppTxReader) ReadTxFlags(data *AppFlags, app string, appData []byte) (interface{}, error) {
+	// TODO: figure out a cleaner way to do this... until then
+	// just close your eyes and continue...
+	manager := keycmd.GetKeyManager()
+	name := viper.GetString("name")
+	info, err := manager.Get(name)
+
+	//parse the fee and amounts into coin types
+	feeCoin, err := btypes.ParseCoin(data.Fee)
+	if err != nil {
+		return nil, err
+	}
+	amountCoins, err := btypes.ParseCoins(data.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	// craft the tx
+	input := btypes.TxInput{
+		Address:  info.Address,
+		Coins:    amountCoins,
+		Sequence: data.Sequence,
+	}
+	if data.Sequence == 1 {
+		input.PubKey = info.PubKey
+	}
+	tx := btypes.AppTx{
+		Gas:   data.Gas,
+		Fee:   feeCoin,
+		Input: input,
+		Name:  app,
+		Data:  appData,
+	}
+
+	// wrap it in the proper signer thing...
+	send := AppTx{
+		chainID: t.ChainID,
+		Tx:      &tx,
+	}
+	return &send, nil
+}
+
 /** TODO copied from basecoin cli - put in common somewhere? **/
 
 // Returns true for non-empty hex-string prefixed with "0x"

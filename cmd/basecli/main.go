@@ -32,7 +32,9 @@ func main() {
 	proofs.StatePresenters.Register("account", AccountPresenter{})
 	proofs.StatePresenters.Register("counter", CounterPresenter{})
 	proofs.TxPresenters.Register("base", BaseTxPresenter{})
+
 	txs.Register("send", SendTxMaker{})
+	txs.Register("counter", CounterTxMaker{})
 
 	// set up the various commands to use
 	BaseCli.AddCommand(

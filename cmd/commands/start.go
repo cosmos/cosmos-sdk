@@ -131,10 +131,13 @@ func startTendermint(dir string, basecoinApp *app.Basecoin) error {
 	cfg.SetRoot(cfg.RootDir)
 	config.EnsureRoot(cfg.RootDir)
 
-	tmLogger, err := log.NewFilterByLevel(logger, cfg.LogLevel)
+	// TODO: parse the log level from the config properly (multi modules)
+	// but some tm code must be refactored for better usability
+	lvl, err := log.AllowLevel(cfg.LogLevel)
 	if err != nil {
 		return err
 	}
+	tmLogger := log.NewFilter(logger, lvl)
 
 	// Create & start tendermint node
 	privValidator := types.LoadOrGenPrivValidator(cfg.PrivValidatorFile(), tmLogger)

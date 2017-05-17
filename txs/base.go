@@ -2,6 +2,7 @@ package txs
 
 import (
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-wire/data"
 )
 
@@ -27,12 +28,31 @@ const (
 	TypeMultiSig = "multisig"
 )
 
-// let's register data.Bytes as a "raw" tx, for tests or
-// other data we don't want to post....
 func init() {
-	basecoin.TxMapper.RegisterImplementation(data.Bytes{}, TypeRaw, ByteRaw)
+	basecoin.TxMapper.
+		RegisterImplementation(data.Bytes{}, TypeRaw, ByteRaw).
+		RegisterImplementation(&Fee{}, TypeFees, ByteFees)
 }
 
+// WrapBytes converts data.Bytes into a Tx, so we
+// can just pass raw bytes and display in hex in json
 func WrapBytes(d []byte) basecoin.Tx {
 	return basecoin.Tx{data.Bytes(d)}
+}
+
+/**** One Sig ****/
+
+// OneSig lets us wrap arbitrary data with a go-crypto signature
+type Fee struct {
+	Tx  basecoin.Tx `json:"tx"`
+	Fee types.Coin  `json:"fee"`
+	// Gas types.Coin `json:"gas"`  // ?????
+}
+
+func NewFee(tx basecoin.Tx, fee types.Coin) *Fee {
+	return &Fee{Tx: tx, Fee: fee}
+}
+
+func (f *Fee) Wrap() basecoin.Tx {
+	return basecoin.Tx{f}
 }

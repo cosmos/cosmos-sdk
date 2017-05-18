@@ -3,7 +3,7 @@ package crypto
 import (
 	"errors"
 
-	. "github.com/tendermint/go-common"
+	. "github.com/tendermint/tmlibs/common"
 	"golang.org/x/crypto/nacl/secretbox"
 )
 

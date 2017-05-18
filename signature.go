@@ -4,68 +4,41 @@ import (
 	"bytes"
 	"fmt"
 
-	. "github.com/tendermint/go-common"
-	data "github.com/tendermint/go-data"
 	"github.com/tendermint/go-wire"
+	data "github.com/tendermint/go-wire/data"
+	. "github.com/tendermint/tmlibs/common"
 )
-
-// Signature is a part of Txs and consensus Votes.
-type Signature interface {
-	Bytes() []byte
-	IsZero() bool
-	String() string
-	Equals(Signature) bool
-}
-
-var sigMapper data.Mapper
-
-// register both public key types with go-data (and thus go-wire)
-func init() {
-	sigMapper = data.NewMapper(SignatureS{}).
-		RegisterImplementation(SignatureEd25519{}, NameEd25519, TypeEd25519).
-		RegisterImplementation(SignatureSecp256k1{}, NameSecp256k1, TypeSecp256k1)
-}
-
-// SignatureS add json serialization to Signature
-type SignatureS struct {
-	Signature
-}
-
-func WrapSignature(sig Signature) SignatureS {
-	for ssig, ok := sig.(SignatureS); ok; ssig, ok = sig.(SignatureS) {
-		sig = ssig.Signature
-	}
-	return SignatureS{sig}
-}
-
-func (p SignatureS) MarshalJSON() ([]byte, error) {
-	return sigMapper.ToJSON(p.Signature)
-}
-
-func (p *SignatureS) UnmarshalJSON(data []byte) (err error) {
-	parsed, err := sigMapper.FromJSON(data)
-	if err == nil && parsed != nil {
-		p.Signature = parsed.(Signature)
-	}
-	return
-}
-
-func (p SignatureS) Empty() bool {
-	return p.Signature == nil
-}
 
 func SignatureFromBytes(sigBytes []byte) (sig Signature, err error) {
 	err = wire.ReadBinaryBytes(sigBytes, &sig)
 	return
 }
 
+//----------------------------------------
+
+// DO NOT USE THIS INTERFACE.
+// You probably want to use Signature.
+// +gen wrapper:"Signature,Impl[SignatureEd25519,SignatureSecp256k1],ed25519,secp256k1"
+type SignatureInner interface {
+	AssertIsSignatureInner()
+	Bytes() []byte
+	IsZero() bool
+	String() string
+	Equals(Signature) bool
+	Wrap() Signature
+}
+
 //-------------------------------------
+
+var _ SignatureInner = SignatureEd25519{}
 
 // Implements Signature
 type SignatureEd25519 [64]byte
 
+func (sig SignatureEd25519) AssertIsSignatureInner() {}
+
 func (sig SignatureEd25519) Bytes() []byte {
-	return wire.BinaryBytes(struct{ Signature }{sig})
+	return wire.BinaryBytes(Signature{sig})
 }
 
 func (sig SignatureEd25519) IsZero() bool { return len(sig) == 0 }
@@ -73,31 +46,35 @@ func (sig SignatureEd25519) IsZero() bool { return len(sig) == 0 }
 func (sig SignatureEd25519) String() string { return fmt.Sprintf("/%X.../", Fingerprint(sig[:])) }
 
 func (sig SignatureEd25519) Equals(other Signature) bool {
-	if otherEd, ok := other.(SignatureEd25519); ok {
+	if otherEd, ok := other.Unwrap().(SignatureEd25519); ok {
 		return bytes.Equal(sig[:], otherEd[:])
 	} else {
 		return false
 	}
 }
 
-func (p SignatureEd25519) MarshalJSON() ([]byte, error) {
-	return data.Encoder.Marshal(p[:])
+func (sig SignatureEd25519) MarshalJSON() ([]byte, error) {
+	return data.Encoder.Marshal(sig[:])
 }
 
-func (p *SignatureEd25519) UnmarshalJSON(enc []byte) error {
+func (sig *SignatureEd25519) UnmarshalJSON(enc []byte) error {
 	var ref []byte
 	err := data.Encoder.Unmarshal(&ref, enc)
-	copy(p[:], ref)
+	copy(sig[:], ref)
 	return err
 }
 
 //-------------------------------------
 
+var _ SignatureInner = SignatureSecp256k1{}
+
 // Implements Signature
 type SignatureSecp256k1 []byte
 
+func (sig SignatureSecp256k1) AssertIsSignatureInner() {}
+
 func (sig SignatureSecp256k1) Bytes() []byte {
-	return wire.BinaryBytes(struct{ Signature }{sig})
+	return wire.BinaryBytes(Signature{sig})
 }
 
 func (sig SignatureSecp256k1) IsZero() bool { return len(sig) == 0 }
@@ -105,16 +82,17 @@ func (sig SignatureSecp256k1) IsZero() bool { return len(sig) == 0 }
 func (sig SignatureSecp256k1) String() string { return fmt.Sprintf("/%X.../", Fingerprint(sig[:])) }
 
 func (sig SignatureSecp256k1) Equals(other Signature) bool {
-	if otherEd, ok := other.(SignatureSecp256k1); ok {
+	if otherEd, ok := other.Unwrap().(SignatureSecp256k1); ok {
 		return bytes.Equal(sig[:], otherEd[:])
 	} else {
 		return false
 	}
 }
-func (p SignatureSecp256k1) MarshalJSON() ([]byte, error) {
-	return data.Encoder.Marshal(p)
+
+func (sig SignatureSecp256k1) MarshalJSON() ([]byte, error) {
+	return data.Encoder.Marshal(sig)
 }
 
-func (p *SignatureSecp256k1) UnmarshalJSON(enc []byte) error {
-	return data.Encoder.Unmarshal((*[]byte)(p), enc)
+func (sig *SignatureSecp256k1) UnmarshalJSON(enc []byte) error {
+	return data.Encoder.Unmarshal((*[]byte)(sig), enc)
 }

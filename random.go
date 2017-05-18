@@ -8,7 +8,7 @@ import (
 	"io"
 	"sync"
 
-	. "github.com/tendermint/go-common"
+	. "github.com/tendermint/tmlibs/common"
 )
 
 var gRandInfo *randInfo

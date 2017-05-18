@@ -30,29 +30,50 @@ const (
 
 func init() {
 	basecoin.TxMapper.
-		RegisterImplementation(data.Bytes{}, TypeRaw, ByteRaw).
+		RegisterImplementation(Raw{}, TypeRaw, ByteRaw).
 		RegisterImplementation(&Fee{}, TypeFees, ByteFees)
 }
 
-// WrapBytes converts data.Bytes into a Tx, so we
-// can just pass raw bytes and display in hex in json
-func WrapBytes(d []byte) basecoin.Tx {
-	return basecoin.Tx{data.Bytes(d)}
+// Raw just contains bytes that can be hex-ified
+type Raw struct {
+	data.Bytes
 }
 
-/**** One Sig ****/
+func (r Raw) Wrap() basecoin.Tx {
+	return basecoin.Tx{r}
+}
 
-// OneSig lets us wrap arbitrary data with a go-crypto signature
+func NewRaw(d []byte) Raw {
+	return Raw{data.Bytes(d)}
+}
+
+/**** Fee ****/
+
+// Fee attaches a fee payment to the embedded tx
 type Fee struct {
-	Tx  basecoin.Tx `json:"tx"`
-	Fee types.Coin  `json:"fee"`
+	Tx    basecoin.Tx `json:"tx"`
+	Fee   types.Coin  `json:"fee"`
+	Payer data.Bytes  `json:"payer"` // the address who pays the fee
 	// Gas types.Coin `json:"gas"`  // ?????
 }
 
-func NewFee(tx basecoin.Tx, fee types.Coin) *Fee {
-	return &Fee{Tx: tx, Fee: fee}
+func NewFee(tx basecoin.Tx, fee types.Coin, addr []byte) *Fee {
+	return &Fee{Tx: tx, Fee: fee, Payer: addr}
 }
 
 func (f *Fee) Wrap() basecoin.Tx {
 	return basecoin.Tx{f}
+}
+
+/**** MultiTx  ******/
+type MultiTx struct {
+	Txs []basecoin.Tx `json:"txs"`
+}
+
+func NewMultiTx(txs ...basecoin.Tx) *MultiTx {
+	return &MultiTx{Txs: txs}
+}
+
+func (mt *MultiTx) Wrap() basecoin.Tx {
+	return basecoin.Tx{mt}
 }

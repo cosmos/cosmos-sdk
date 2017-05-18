@@ -31,7 +31,8 @@ const (
 func init() {
 	basecoin.TxMapper.
 		RegisterImplementation(Raw{}, TypeRaw, ByteRaw).
-		RegisterImplementation(&Fee{}, TypeFees, ByteFees)
+		RegisterImplementation(&Fee{}, TypeFees, ByteFees).
+		RegisterImplementation(&MultiTx{}, TypeMulti, ByteMulti)
 }
 
 // Raw just contains bytes that can be hex-ified

@@ -102,6 +102,15 @@ func SaveNewIBCPacket(state types.KVStore, src, dst string, payload Payload) {
 	save(state, packetKey, packet)
 }
 
+func GetIBCPacket(state types.KVStore, src, dst string, seq uint64) (Packet, error) {
+	packetKey := toKey(_IBC, _EGRESS, src, dst, cmn.Fmt("%v", seq))
+	packetBytes := state.Get(packetKey)
+
+	var packet Packet
+	err := wire.ReadBinaryBytes(packetBytes, &packet)
+	return packet, err
+}
+
 //--------------------------------------------------------------------------------
 
 const (

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -12,6 +13,7 @@ import (
 	merkle "github.com/tendermint/merkleeyes/iavl"
 	cmn "github.com/tendermint/tmlibs/common"
 
+	bcsm "github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 	tm "github.com/tendermint/tendermint/types"
 )
@@ -54,7 +56,44 @@ type Packet struct {
 	DstChainID string
 	Sequence   uint64
 	Type       string
-	Payload    []byte
+	Payload    Payload
+}
+
+//--------------------------------------------------------------------------------
+
+const (
+	PayloadTypeBytes = byte(0x01)
+	PayloadTypeCoins = byte(0x02)
+)
+
+var _ = wire.RegisterInterface(
+	struct{ Payload }{},
+	wire.ConcreteType{BytesPayload{}, PayloadTypeBytes},
+	wire.ConcreteType{CoinsPayload{}, PayloadTypeCoins},
+)
+
+type Payload interface {
+	AssertIsPayload()
+	ValidateBasic() abci.Result
+}
+
+func (BytesPayload) AssertIsPayload() {}
+func (CoinsPayload) AssertIsPayload() {}
+
+type BytesPayload []byte
+
+func (p BytesPayload) ValidateBasic() abci.Result {
+	return abci.OK
+}
+
+type CoinsPayload struct {
+	Address []byte
+	Coins   types.Coins
+}
+
+func (p CoinsPayload) ValidateBasic() abci.Result {
+	// TODO: validate
+	return abci.OK
 }
 
 //--------------------------------------------------------------------------------
@@ -299,6 +338,23 @@ func (sm *IBCStateMachine) runPacketCreateTx(tx IBCPacketCreateTx) {
 		sm.res.Log = "Already exists"
 		return
 	}
+
+	// Execute the payload
+	switch payload := tx.Packet.Payload.(type) {
+	case BytesPayload:
+		// do nothing
+	case CoinsPayload:
+		// ensure enough coins were sent in tx to cover the payload coins
+		if !sm.ctx.Coins.IsGTE(payload.Coins) {
+			sm.res.Code = abci.CodeType_InsufficientFunds
+			sm.res.Log = fmt.Sprintf("Not enough funds sent in tx (%v) to send %v via IBC", sm.ctx.Coins, payload.Coins)
+			return
+		}
+
+		// deduct coins from context
+		sm.ctx.Coins = sm.ctx.Coins.Minus(payload.Coins)
+	}
+
 	// Save new Packet
 	save(sm.store, packetKey, packet)
 }
@@ -327,7 +383,7 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 		return
 	}
 
-	// Save new Packet
+	// Save new Packet (just for fun)
 	save(sm.store, packetKeyIngress, packet)
 
 	// Load Header and make sure it exists
@@ -358,6 +414,17 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 		sm.res.Code = IBCCodeInvalidProof
 		sm.res.Log = "Proof is invalid"
 		return
+	}
+
+	// Execute payload
+	switch payload := packet.Payload.(type) {
+	case BytesPayload:
+		// do nothing
+	case CoinsPayload:
+		// Add coins to destination account
+		acc := bcsm.GetAccount(sm.store, payload.Address)
+		acc.Balance = acc.Balance.Plus(payload.Coins)
+		bcsm.SetAccount(sm.store, payload.Address, acc)
 	}
 
 	return

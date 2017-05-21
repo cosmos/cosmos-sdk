@@ -59,6 +59,16 @@ type Packet struct {
 	Payload    Payload
 }
 
+func NewPacket(src, dst string, seq uint64, ty string, payload Payload) Packet {
+	return Packet{
+		SrcChainID: src,
+		DstChainID: dst,
+		Sequence:   seq,
+		Type:       ty,
+		Payload:    payload,
+	}
+}
+
 //--------------------------------------------------------------------------------
 
 const (

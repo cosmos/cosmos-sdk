@@ -17,7 +17,6 @@ import (
 	"github.com/tendermint/merkleeyes/iavl"
 	cmn "github.com/tendermint/tmlibs/common"
 
-	sm "github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 	tm "github.com/tendermint/tendermint/types"
 )
@@ -170,7 +169,7 @@ func TestIBCPluginPost(t *testing.T) {
 	registerChain(t, ibcPlugin, store, ctx, "test_chain", string(genDocJSON_1))
 
 	// Create a new packet (for testing)
-	packet := NewPacket("test_chain", "dst_chain", 0, "data", BytesPayload([]byte("hello world")))
+	packet := NewPacket("test_chain", "dst_chain", 0, DataPayload([]byte("hello world")))
 	res := ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCPacketCreateTx{
 		Packet: packet,
 	}}))
@@ -203,7 +202,7 @@ func TestIBCPluginPayloadBytes(t *testing.T) {
 	registerChain(t, ibcPlugin, store, ctx, "test_chain", string(genDocJSON_1))
 
 	// Create a new packet (for testing)
-	packet := NewPacket("test_chain", "dst_chain", 0, "data", BytesPayload([]byte("hello world")))
+	packet := NewPacket("test_chain", "dst_chain", 0, DataPayload([]byte("hello world")))
 	res := ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCPacketCreateTx{
 		Packet: packet,
 	}}))
@@ -282,7 +281,7 @@ func TestIBCPluginPayloadCoins(t *testing.T) {
 	coinsGood := types.Coins{types.Coin{"mycoin", 1}}
 
 	// Try to send too many coins
-	packet := NewPacket("test_chain", "dst_chain", 0, "data", CoinsPayload{
+	packet := NewPacket("test_chain", "dst_chain", 0, CoinsPayload{
 		Address: destinationAddr,
 		Coins:   coinsBad,
 	})
@@ -292,7 +291,7 @@ func TestIBCPluginPayloadCoins(t *testing.T) {
 	assertAndLog(t, store, res, abci.CodeType_InsufficientFunds)
 
 	// Send a small enough number of coins
-	packet = NewPacket("test_chain", "dst_chain", 0, "data", CoinsPayload{
+	packet = NewPacket("test_chain", "dst_chain", 0, CoinsPayload{
 		Address: destinationAddr,
 		Coins:   coinsGood,
 	})
@@ -334,7 +333,7 @@ func TestIBCPluginPayloadCoins(t *testing.T) {
 	assert.Nil(err)
 
 	// Account should be empty before the tx
-	acc := sm.GetAccount(store, destinationAddr)
+	acc := types.GetAccount(store, destinationAddr)
 	assert.Nil(acc)
 
 	// Post a packet
@@ -347,7 +346,7 @@ func TestIBCPluginPayloadCoins(t *testing.T) {
 	assertAndLog(t, store, res, abci.CodeType_OK)
 
 	// Account should now have some coins
-	acc = sm.GetAccount(store, destinationAddr)
+	acc = types.GetAccount(store, destinationAddr)
 	assert.Equal(acc.Balance, coinsGood)
 }
 
@@ -408,7 +407,7 @@ func TestIBCPluginBadProof(t *testing.T) {
 	registerChain(t, ibcPlugin, store, ctx, "test_chain", string(genDocJSON_1))
 
 	// Create a new packet (for testing)
-	packet := NewPacket("test_chain", "dst_chain", 0, "data", BytesPayload([]byte("hello world")))
+	packet := NewPacket("test_chain", "dst_chain", 0, DataPayload([]byte("hello world")))
 	res := ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCPacketCreateTx{
 		Packet: packet,
 	}}))

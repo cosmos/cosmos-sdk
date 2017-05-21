@@ -3,9 +3,7 @@ package state
 import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
-	wire "github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
-	. "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 )
 
@@ -64,11 +62,11 @@ func (s *State) Set(key []byte, value []byte) {
 }
 
 func (s *State) GetAccount(addr []byte) *types.Account {
-	return GetAccount(s, addr)
+	return types.GetAccount(s, addr)
 }
 
 func (s *State) SetAccount(addr []byte, acc *types.Account) {
-	SetAccount(s, addr, acc)
+	types.SetAccount(s, addr, acc)
 }
 
 func (s *State) CacheWrap() *State {
@@ -96,29 +94,4 @@ func (s *State) Commit() abci.Result {
 		return abci.NewError(abci.CodeType_InternalError, "can only use Commit if store is merkleeyes")
 	}
 
-}
-
-//----------------------------------------
-
-func AccountKey(addr []byte) []byte {
-	return append([]byte("base/a/"), addr...)
-}
-
-func GetAccount(store types.KVStore, addr []byte) *types.Account {
-	data := store.Get(AccountKey(addr))
-	if len(data) == 0 {
-		return nil
-	}
-	var acc *types.Account
-	err := wire.ReadBinaryBytes(data, &acc)
-	if err != nil {
-		panic(Fmt("Error reading account %X error: %v",
-			data, err.Error()))
-	}
-	return acc
-}
-
-func SetAccount(store types.KVStore, addr []byte, acc *types.Account) {
-	accBytes := wire.BinaryBytes(acc)
-	store.Set(AccountKey(addr), accBytes)
 }

@@ -23,7 +23,7 @@ type AccountPresenter struct{}
 func (_ AccountPresenter) MakeKey(str string) ([]byte, error) {
 	res, err := hex.DecodeString(str)
 	if err == nil {
-		res = state.AccountKey(res)
+		res = btypes.AccountKey(res)
 	}
 	return res, err
 }

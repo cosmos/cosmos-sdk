@@ -11,7 +11,6 @@ import (
 	abci "github.com/tendermint/abci/types"
 	wire "github.com/tendermint/go-wire"
 
-	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 
 	client "github.com/tendermint/tendermint/rpc/client"
@@ -114,7 +113,7 @@ func Query(tmAddr string, key []byte) (*abci.ResultQuery, error) {
 // fetch the account by querying the app
 func getAcc(tmAddr string, address []byte) (*types.Account, error) {
 
-	key := state.AccountKey(address)
+	key := types.AccountKey(address)
 	response, err := Query(tmAddr, key)
 	if err != nil {
 		return nil, err

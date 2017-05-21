@@ -433,6 +433,9 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 	case CoinsPayload:
 		// Add coins to destination account
 		acc := bcsm.GetAccount(sm.store, payload.Address)
+		if acc == nil {
+			acc = &types.Account{}
+		}
 		acc.Balance = acc.Balance.Plus(payload.Coins)
 		bcsm.SetAccount(sm.store, payload.Address, acc)
 	}

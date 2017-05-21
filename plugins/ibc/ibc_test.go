@@ -17,6 +17,7 @@ import (
 	"github.com/tendermint/merkleeyes/iavl"
 	cmn "github.com/tendermint/tmlibs/common"
 
+	sm "github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 	tm "github.com/tendermint/tendermint/types"
 )
@@ -182,7 +183,7 @@ func TestIBCPluginPost(t *testing.T) {
 	assertAndLog(t, store, res, IBCCodePacketAlreadyExists)
 }
 
-func TestIBCPlugin(t *testing.T) {
+func TestIBCPluginPayloadBytes(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -207,12 +208,6 @@ func TestIBCPlugin(t *testing.T) {
 		Packet: packet,
 	}}))
 	assertAndLog(t, store, res, abci.CodeType_OK)
-
-	// Post a duplicate packet
-	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCPacketCreateTx{
-		Packet: packet,
-	}}))
-	assertAndLog(t, store, res, IBCCodePacketAlreadyExists)
 
 	// Construct a Header that includes the above packet.
 	store.Sync()
@@ -254,6 +249,106 @@ func TestIBCPlugin(t *testing.T) {
 		Proof:           proof,
 	}}))
 	assertAndLog(t, store, res, abci.CodeType_OK)
+}
+
+func TestIBCPluginPayloadCoins(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	eyesClient := eyes.NewLocalClient("", 0)
+	store := types.NewKVCache(eyesClient)
+	store.SetLogging() // Log all activity
+
+	ibcPlugin := New()
+	coins := types.Coins{
+		types.Coin{
+			Denom:  "mycoin",
+			Amount: 100,
+		},
+	}
+	ctx := types.NewCallContext(nil, nil, coins)
+
+	chainID_1 := "test_chain"
+	genDoc_1, privAccs_1 := genGenesisDoc(chainID_1, 4)
+	genDocJSON_1, err := json.Marshal(genDoc_1)
+	require.Nil(err)
+
+	// Register a chain
+	registerChain(t, ibcPlugin, store, ctx, "test_chain", string(genDocJSON_1))
+
+	// send coins to this addr on the other chain
+	destinationAddr := []byte("some address")
+	coinsBad := types.Coins{types.Coin{"mycoin", 200}}
+	coinsGood := types.Coins{types.Coin{"mycoin", 1}}
+
+	// Try to send too many coins
+	packet := NewPacket("test_chain", "dst_chain", 0, "data", CoinsPayload{
+		Address: destinationAddr,
+		Coins:   coinsBad,
+	})
+	res := ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCPacketCreateTx{
+		Packet: packet,
+	}}))
+	assertAndLog(t, store, res, abci.CodeType_InsufficientFunds)
+
+	// Send a small enough number of coins
+	packet = NewPacket("test_chain", "dst_chain", 0, "data", CoinsPayload{
+		Address: destinationAddr,
+		Coins:   coinsGood,
+	})
+	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCPacketCreateTx{
+		Packet: packet,
+	}}))
+	assertAndLog(t, store, res, abci.CodeType_OK)
+
+	// Construct a Header that includes the above packet.
+	store.Sync()
+	resCommit := eyesClient.CommitSync()
+	appHash := resCommit.Data
+	header := newHeader("test_chain", 999, appHash, []byte("must_exist"))
+
+	// Construct a Commit that signs above header
+	commit := constructCommit(privAccs_1, header)
+
+	// Update a chain
+	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCUpdateChainTx{
+		Header: header,
+		Commit: commit,
+	}}))
+	assertAndLog(t, store, res, abci.CodeType_OK)
+
+	// Get proof for the packet
+	packetKey := toKey(_IBC, _EGRESS,
+		packet.SrcChainID,
+		packet.DstChainID,
+		cmn.Fmt("%v", packet.Sequence),
+	)
+	resQuery, err := eyesClient.QuerySync(abci.RequestQuery{
+		Path:  "/store",
+		Data:  packetKey,
+		Prove: true,
+	})
+	assert.Nil(err)
+	var proof *iavl.IAVLProof
+	err = wire.ReadBinaryBytes(resQuery.Proof, &proof)
+	assert.Nil(err)
+
+	// Account should be empty before the tx
+	acc := sm.GetAccount(store, destinationAddr)
+	assert.Nil(acc)
+
+	// Post a packet
+	res = ibcPlugin.RunTx(store, ctx, wire.BinaryBytes(struct{ IBCTx }{IBCPacketPostTx{
+		FromChainID:     "test_chain",
+		FromChainHeight: 999,
+		Packet:          packet,
+		Proof:           proof,
+	}}))
+	assertAndLog(t, store, res, abci.CodeType_OK)
+
+	// Account should now have some coins
+	acc = sm.GetAccount(store, destinationAddr)
+	assert.Equal(acc.Balance, coinsGood)
 }
 
 func TestIBCPluginBadCommit(t *testing.T) {

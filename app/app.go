@@ -82,6 +82,7 @@ func (app *Basecoin) SetOption(key string, value string) string {
 			if err != nil {
 				return "Error decoding acc message: " + err.Error()
 			}
+			acc.Balance.Sort()
 			app.state.SetAccount(acc.PubKey.Address(), &acc)
 			app.logger.Info("SetAccount", "addr", acc.PubKey.Address(), "acc", acc)
 

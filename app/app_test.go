@@ -1,14 +1,15 @@
 package app
 
 import (
+	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 	wire "github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
@@ -103,6 +104,7 @@ func TestSplitKey(t *testing.T) {
 
 func TestSetOption(t *testing.T) {
 	assert := assert.New(t)
+	require := require.New(t)
 
 	eyesCli := eyes.NewLocalClient("", 0)
 	app := NewBasecoin(eyesCli)
@@ -114,11 +116,43 @@ func TestSetOption(t *testing.T) {
 	assert.EqualValues(app.GetState().GetChainID(), chainID)
 	assert.EqualValues(res, "Success")
 
+	// make a nice account...
 	accIn := types.MakeAcc("input0")
 	accsInBytes, err := json.Marshal(accIn.Account)
 	assert.Nil(err)
 	res = app.SetOption("base/account", string(accsInBytes))
-	assert.EqualValues(res, "Success")
+	require.EqualValues(res, "Success")
+	// make sure it is set correctly, with some balance
+	acct := state.GetAccount(app.GetState(), accIn.PubKey.Address())
+	require.NotNil(acct)
+	assert.Equal(accIn.Balance, acct.Balance)
+
+	// let's parse an account with badly sorted coins...
+	unsortAddr, err := hex.DecodeString("C471FB670E44D219EE6DF2FC284BE38793ACBCE1")
+	require.Nil(err)
+	unsortCoins := types.Coins{{"BTC", 789}, {"eth", 123}}
+	unsortAcc := `{
+  "pub_key": {
+    "type": "ed25519",
+    "data": "AD084F0572C116D618B36F2EB08240D1BAB4B51716CCE0E7734B89C8936DCE9A"
+  },
+  "coins": [
+    {
+      "denom": "eth",
+      "amount": 123
+    },
+    {
+      "denom": "BTC",
+      "amount": 789
+    }
+  ]
+}`
+	res = app.SetOption("base/account", unsortAcc)
+	require.EqualValues(res, "Success")
+	acct = state.GetAccount(app.GetState(), unsortAddr)
+	require.NotNil(acct)
+	assert.True(acct.Balance.IsValid())
+	assert.Equal(unsortCoins, acct.Balance)
 
 	res = app.SetOption("base/dslfkgjdas", "")
 	assert.NotEqual(res, "Success")
@@ -128,6 +162,7 @@ func TestSetOption(t *testing.T) {
 
 	res = app.SetOption("dslfkgjdas/szfdjzs", "")
 	assert.NotEqual(res, "Success")
+
 }
 
 // Test CheckTx and DeliverTx with insufficient and sufficient balance
@@ -179,7 +214,5 @@ func TestQuery(t *testing.T) {
 		Path: "/account",
 		Data: at.accIn.Account.PubKey.Address(),
 	})
-	fmt.Println(resQueryPreCommit)
-	fmt.Println(resQueryPostCommit)
 	assert.NotEqual(resQueryPreCommit, resQueryPostCommit, "Query should change before/after commit")
 }

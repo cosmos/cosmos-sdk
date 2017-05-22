@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/go-crypto"
 	eyescli "github.com/tendermint/merkleeyes/client"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 const genesisFilepath = "./testdata/genesis.json"
@@ -34,8 +34,12 @@ func TestLoadGenesis(t *testing.T) {
 
 	// make sure balance is proper
 	assert.Equal(2, len(acct.Balance))
-	assert.EqualValues(12345, acct.Balance[0].Amount)
-	assert.EqualValues("blank", acct.Balance[0].Denom)
+	assert.True(acct.Balance.IsValid())
+	// note, that we now sort them to be valid
+	assert.EqualValues(654321, acct.Balance[0].Amount)
+	assert.EqualValues("ETH", acct.Balance[0].Denom)
+	assert.EqualValues(12345, acct.Balance[1].Amount)
+	assert.EqualValues("blank", acct.Balance[1].Denom)
 
 	// and public key is parsed properly
 	apk := acct.PubKey.Unwrap()

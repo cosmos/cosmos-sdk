@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestCoins(t *testing.T) {
@@ -56,30 +55,79 @@ func TestCoins(t *testing.T) {
 
 //Test the parse coin and parse coins functionality
 func TestParse(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert := assert.New(t)
 
-	makeCoin := func(str string) Coin {
-		coin, err := ParseCoin(str)
-		require.Nil(err)
-		return coin
+	cases := []struct {
+		input    string
+		valid    bool  // if false, we expect an error on parse
+		expected Coins // if valid is true, make sure this is returned
+	}{
+		{"", true, nil},
+		{"1foo", true, Coins{{"foo", 1}}},
+		{"10bar", true, Coins{{"bar", 10}}},
+		{"99bar,1foo", true, Coins{{"bar", 99}, {"foo", 1}}},
+		{"98 bar , 1 foo  ", true, Coins{{"bar", 98}, {"foo", 1}}},
+		{"2foo, 97 bar", true, Coins{{"bar", 97}, {"foo", 2}}},
 	}
 
-	makeCoins := func(str string) Coins {
-		coin, err := ParseCoins(str)
-		require.Nil(err)
-		return coin
+	for _, tc := range cases {
+		res, err := ParseCoins(tc.input)
+		if !tc.valid {
+			assert.NotNil(err, tc.input)
+		} else if assert.Nil(err, "%s: %+v", tc.input, err) {
+			assert.Equal(tc.expected, res)
+		}
 	}
 
-	//testing ParseCoin Function
-	assert.Equal(Coin{}, makeCoin(""), "ParseCoin makes bad empty coin")
-	assert.Equal(Coin{"fooCoin", 1}, makeCoin("1fooCoin"), "ParseCoin makes bad coins")
-	assert.Equal(Coin{"barCoin", 10}, makeCoin("10 barCoin"), "ParseCoin makes bad coins")
+}
 
-	//testing ParseCoins Function
-	assert.True(Coins{{"fooCoin", 1}}.IsEqual(makeCoins("1fooCoin")),
-		"ParseCoins doesn't parse a single coin")
-	assert.True(Coins{{"barCoin", 99}, {"fooCoin", 1}}.IsEqual(makeCoins("99barCoin,1fooCoin")),
-		"ParseCoins doesn't properly parse two coins")
-	assert.True(Coins{{"barCoin", 99}, {"fooCoin", 1}}.IsEqual(makeCoins("99 barCoin, 1 fooCoin")),
-		"ParseCoins doesn't properly parse two coins which use spaces")
+func TestSortCoins(t *testing.T) {
+	assert := assert.New(t)
+
+	good := Coins{
+		Coin{"GAS", 1},
+		Coin{"MINERAL", 1},
+		Coin{"TREE", 1},
+	}
+	empty := Coins{
+		Coin{"GOLD", 0},
+	}
+	badSort1 := Coins{
+		Coin{"TREE", 1},
+		Coin{"GAS", 1},
+		Coin{"MINERAL", 1},
+	}
+	badSort2 := Coins{ // both are after the first one, but the second and third are in the wrong order
+		Coin{"GAS", 1},
+		Coin{"TREE", 1},
+		Coin{"MINERAL", 1},
+	}
+	badAmt := Coins{
+		Coin{"GAS", 1},
+		Coin{"TREE", 0},
+		Coin{"MINERAL", 1},
+	}
+	dup := Coins{
+		Coin{"GAS", 1},
+		Coin{"GAS", 1},
+		Coin{"MINERAL", 1},
+	}
+
+	cases := []struct {
+		coins         Coins
+		before, after bool // valid before/after sort
+	}{
+		{good, true, true},
+		{empty, false, false},
+		{badSort1, false, true},
+		{badSort2, false, true},
+		{badAmt, false, false},
+		{dup, false, false},
+	}
+
+	for _, tc := range cases {
+		assert.Equal(tc.before, tc.coins.IsValid())
+		tc.coins.Sort()
+		assert.Equal(tc.after, tc.coins.IsValid())
+	}
 }

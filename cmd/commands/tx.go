@@ -3,6 +3,7 @@ package commands
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -81,10 +82,27 @@ func init() {
 
 func sendTxCmd(cmd *cobra.Command, args []string) error {
 
+	var toHex string
+	var chainPrefix string
+	spl := strings.Split(toFlag, "/")
+	switch len(spl) {
+	case 1:
+		toHex = spl[0]
+	case 2:
+		chainPrefix = spl[0]
+		toHex = spl[1]
+	default:
+		return errors.Errorf("To address has too many slashes")
+	}
+
 	// convert destination address to bytes
-	to, err := hex.DecodeString(StripHex(toFlag))
+	to, err := hex.DecodeString(StripHex(toHex))
 	if err != nil {
 		return errors.Errorf("To address is invalid hex: %v\n", err)
+	}
+
+	if chainPrefix != "" {
+		to = []byte(chainPrefix + "/" + string(to))
 	}
 
 	// load the priv key

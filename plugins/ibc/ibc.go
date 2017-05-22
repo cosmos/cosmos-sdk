@@ -69,7 +69,9 @@ func NewPacket(src, dst string, seq uint64, payload Payload) Packet {
 	}
 }
 
-// GetSequenceNumber gets the sequence number for packets being sent from the src chain to the dst chain
+// GetSequenceNumber gets the sequence number for packets being sent from the src chain to the dst chain.
+// The sequence number counts how many packets have been sent.
+// The next packet must include the latest sequence number.
 func GetSequenceNumber(store types.KVStore, src, dst string) uint64 {
 	sequenceKey := toKey(_IBC, _EGRESS, src, dst)
 	seqBytes := store.Get(sequenceKey)

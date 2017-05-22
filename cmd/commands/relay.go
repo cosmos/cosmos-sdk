@@ -90,6 +90,11 @@ OUTER:
 			logger.Error("Error parsing sequence number from query", "query.Value", query.Value, "error", err.Error())
 			continue OUTER
 		}
+		seq -= 1 // seq is the packet count. -1 because 0-indexed
+
+		if nextSeq <= int(seq) {
+			logger.Info("Got new packets", "last-sequence", nextSeq-1, "new-sequence", seq)
+		}
 
 		// get all packets since the last one we relayed
 		for ; nextSeq <= int(seq); nextSeq++ {

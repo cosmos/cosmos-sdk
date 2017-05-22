@@ -107,9 +107,15 @@ func (t SendTxReader) ReadTxFlags(flags interface{}, pk crypto.PubKey) (interfac
 		return nil, err
 	}
 
+	// get addr if available
+	var addr []byte
+	if !pk.Empty() {
+		addr = pk.Address()
+	}
+
 	// craft the tx
 	input := btypes.TxInput{
-		Address:  pk.Address(),
+		Address:  addr,
 		Coins:    amountCoins,
 		Sequence: data.Sequence,
 	}
@@ -174,9 +180,15 @@ func (t AppTxReader) ReadTxFlags(data *AppFlags, app string, appData []byte, pk 
 		return nil, err
 	}
 
+	// get addr if available
+	var addr []byte
+	if !pk.Empty() {
+		addr = pk.Address()
+	}
+
 	// craft the tx
 	input := btypes.TxInput{
-		Address:  pk.Address(),
+		Address:  addr,
 		Coins:    amountCoins,
 		Sequence: data.Sequence,
 	}

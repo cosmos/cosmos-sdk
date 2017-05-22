@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"strings"
 
@@ -77,13 +78,18 @@ func (app *Basecoin) SetOption(key string, value string) string {
 			app.state.SetChainID(value)
 			return "Success"
 		case "account":
-			var acc types.Account
+			var acc GenesisAccount
 			err := json.Unmarshal([]byte(value), &acc)
 			if err != nil {
 				return "Error decoding acc message: " + err.Error()
 			}
-			app.state.SetAccount(acc.PubKey.Address(), &acc)
-			app.logger.Info("SetAccount", "addr", acc.PubKey.Address(), "acc", acc)
+			acc.Balance.Sort()
+			addr, err := acc.GetAddr()
+			if err != nil {
+				return "Invalid address: " + err.Error()
+			}
+			app.state.SetAccount(addr, acc.ToAccount())
+			app.logger.Info("SetAccount", "addr", hex.EncodeToString(addr), "acc", acc)
 
 			return "Success"
 		}

@@ -89,8 +89,13 @@ func genKey() *Key {
 }
 
 func LoadKey(keyFile string) (*Key, error) {
-	rootDir := viper.GetString(cli.HomeFlag)
-	filePath := path.Join(rootDir, keyFile)
+	filePath := keyFile
+
+	if !strings.HasPrefix(keyFile, "/") && !strings.HasPrefix(keyFile, ".") {
+		rootDir := viper.GetString(cli.HomeFlag)
+		filePath = path.Join(rootDir, keyFile)
+	}
+
 	keyJSONBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err

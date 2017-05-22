@@ -14,7 +14,6 @@ import (
 	"github.com/tendermint/light-client/commands"
 	"github.com/tendermint/light-client/proofs"
 
-	"github.com/tendermint/basecoin/state"
 	btypes "github.com/tendermint/basecoin/types"
 )
 

@@ -1,5 +1,5 @@
-hash: 997e4cc3339141ee01aa2adf656425a49ebf117e6ca9e81ba72b8f94fee3e86e
-updated: 2017-05-17T12:25:00.580569867+02:00
+hash: 9d06ae13959cbb2835f5ae400a4b65e4bc329a567c949aec4aeab318c271da39
+updated: 2017-05-21T21:31:06.796806933-04:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -101,7 +101,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 5dabeffb35c027d7087a12149685daa68989168b
+  version: 864d1f80b36b440bde030a5c18d8ac3aa8c2949d
   subpackages:
   - client
   - example/dummy
@@ -113,7 +113,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 438b16f1f84ef002d7408ecd6fc3a3974cbc9559
+  version: 7dff40942a64cdeefefa9446b2d104750b349f8a
   subpackages:
   - cmd
   - keys
@@ -122,7 +122,7 @@ imports:
   - keys/server/types
   - keys/storage/filestorage
 - name: github.com/tendermint/go-wire
-  version: 97beaedf0f4dbc035309157c92be3b30cc6e5d74
+  version: 5f88da3dbc1a72844e6dfaf274ce87f851d488eb
   subpackages:
   - data
   - data/base58
@@ -139,13 +139,13 @@ imports:
   - commands/txs
   - proofs
 - name: github.com/tendermint/merkleeyes
-  version: c722818b460381bc5b82e38c73ff6e22a9df624d
+  version: a0e73e1ac3e18e12a007520a4ea2c9822256e307
   subpackages:
   - app
   - client
   - iavl
 - name: github.com/tendermint/tendermint
-  version: 11b5d11e9eec170e1d3dce165f0270d5c0759d69
+  version: 267f134d44e76efb2adef5f0c993da8a5d5bd1b8
   subpackages:
   - blockchain
   - config
@@ -170,7 +170,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: 8af1c70a8be17543eb33e9bfbbcdd8371e3201cc
+  version: 306795ae1d8e4f4a10dcc8bdb32a00455843c9d5
   subpackages:
   - autofile
   - cli

@@ -52,7 +52,7 @@ func init() {
 }
 
 func loop(addr1, addr2, id1, id2 string) {
-	latestSeq := -1
+	nextSeq := 0
 
 	// load the priv key
 	privKey, err := LoadKey(fromFlag)
@@ -62,7 +62,11 @@ func loop(addr1, addr2, id1, id2 string) {
 	}
 
 	// relay from chain1 to chain2
-	thisRelayer := relayer{privKey, id2, addr2}
+	thisRelayer := newRelayer(privKey, id2, addr2)
+
+	logger.Info(fmt.Sprintf("Relaying from chain %v on %v to chain %v on %v", id1, addr1, id2, addr2))
+
+	httpClient := client.NewHTTP(addr1, "/websocket")
 
 OUTER:
 	for {
@@ -71,69 +75,83 @@ OUTER:
 
 		// get the latest ibc packet sequence number
 		key := fmt.Sprintf("ibc,egress,%v,%v", id1, id2)
-		query, err := Query(addr1, []byte(key))
+		query, err := queryWithClient(httpClient, []byte(key))
 		if err != nil {
-			logger.Error(err.Error())
+			logger.Error("Error querying for latest sequence", "key", key, "error", err.Error())
 			continue OUTER
 		}
+		if len(query.Value) == 0 {
+			// nothing yet
+			continue OUTER
+		}
+
 		seq, err := strconv.ParseUint(string(query.Value), 10, 64)
 		if err != nil {
-			logger.Error(err.Error())
+			logger.Error("Error parsing sequence number from query", "query.Value", query.Value, "error", err.Error())
 			continue OUTER
-		}
-
-		// if there's a new packet, relay the header and commit data
-		if latestSeq < int(seq) {
-			header, commit, err := getHeaderAndCommit(addr1, int(query.Height))
-			if err != nil {
-				logger.Error(err.Error())
-				continue OUTER
-			}
-
-			// update the chain state on the other chain
-			ibcTx := ibc.IBCUpdateChainTx{
-				Header: *header,
-				Commit: *commit,
-			}
-			if err := thisRelayer.appTx(ibcTx); err != nil {
-				logger.Error(err.Error())
-				continue OUTER
-			}
 		}
 
 		// get all packets since the last one we relayed
-		for ; latestSeq < int(seq); latestSeq++ {
-			key := fmt.Sprintf("ibc,egress,%v,%v,%d", id1, id2, latestSeq)
-			query, err := Query(addr1, []byte(key))
+		for ; nextSeq <= int(seq); nextSeq++ {
+			key := fmt.Sprintf("ibc,egress,%v,%v,%d", id1, id2, nextSeq)
+			query, err := queryWithClient(httpClient, []byte(key))
 			if err != nil {
-				logger.Error(err.Error())
+				logger.Error("Error querying for packet", "seqeuence", nextSeq, "key", key, "error", err.Error())
 				continue OUTER
 			}
 
 			var packet ibc.Packet
 			err = wire.ReadBinaryBytes(query.Value, &packet)
 			if err != nil {
-				logger.Error(err.Error())
+				logger.Error("Error unmarshalling packet", "key", key, "query.Value", query.Value, "error", err.Error())
 				continue OUTER
 			}
 
 			proof := new(iavl.IAVLProof)
-			err = wire.ReadBinaryBytes(query.Proof, proof)
+			err = wire.ReadBinaryBytes(query.Proof, &proof)
 			if err != nil {
-				logger.Error(err.Error())
+				logger.Error("Error unmarshalling proof", "query.Proof", query.Proof, "error", err.Error())
+				continue OUTER
+			}
+
+			// query.Height is actually for the next block,
+			// so wait a block before we fetch the header & commit
+			if err := waitForBlock(httpClient); err != nil {
+				logger.Error("Error waiting for a block", "addr", addr1, "error", err.Error())
+				continue OUTER
+			}
+
+			// get the header and commit from the height the query was done at
+			res, err := httpClient.Commit(int(query.Height))
+			if err != nil {
+				logger.Error("Error fetching header and commits", "height", query.Height, "error", err.Error())
+				continue OUTER
+			}
+
+			// update the chain state on the other chain
+			updateTx := ibc.IBCUpdateChainTx{
+				Header: *res.Header,
+				Commit: *res.Commit,
+			}
+			logger.Info("Updating chain", "src-chain", id1, "height", res.Header.Height, "appHash", res.Header.AppHash)
+			if err := thisRelayer.appTx(updateTx); err != nil {
+				logger.Error("Error creating/sending IBCUpdateChainTx", "error", err.Error())
 				continue OUTER
 			}
 
 			// relay the packet and proof
-			ibcTx := ibc.IBCPacketPostTx{
+			logger.Info("Relaying packet", "src-chain", id1, "height", query.Height, "sequence", nextSeq)
+			postTx := ibc.IBCPacketPostTx{
 				FromChainID:     id1,
-				FromChainHeight: uint64(query.Height),
+				FromChainHeight: query.Height,
 				Packet:          packet,
 				Proof:           proof,
 			}
-			if err := thisRelayer.appTx(ibcTx); err != nil {
-				logger.Error(err.Error())
-				continue OUTER
+
+			if err := thisRelayer.appTx(postTx); err != nil {
+				logger.Error("Error creating/sending IBCPacketPostTx", "error", err.Error())
+				// dont `continue OUTER` here. the error might be eg. Already exists
+				// TODO: catch this programmatically ?
 			}
 		}
 	}
@@ -143,22 +161,36 @@ type relayer struct {
 	privKey  *Key
 	chainID  string
 	nodeAddr string
+	client   *client.HTTP
+}
+
+func newRelayer(privKey *Key, chainID, nodeAddr string) *relayer {
+	httpClient := client.NewHTTP(nodeAddr, "/websocket")
+	return &relayer{
+		privKey:  privKey,
+		chainID:  chainID,
+		nodeAddr: nodeAddr,
+		client:   httpClient,
+	}
 }
 
 func (r *relayer) appTx(ibcTx ibc.IBCTx) error {
-	sequence, err := getSeq(r.privKey.Address[:])
+	acc, err := getAccWithClient(r.client, r.privKey.Address[:])
 	if err != nil {
 		return err
 	}
+	sequence := acc.Sequence + 1
 
 	data := []byte(wire.BinaryBytes(struct {
 		ibc.IBCTx `json:"unwrap"`
 	}{ibcTx}))
 
-	input := types.NewTxInput(r.privKey.PubKey, types.Coins{}, sequence)
+	smallCoins := types.Coin{"mycoin", 1}
+
+	input := types.NewTxInput(r.privKey.PubKey, types.Coins{smallCoins}, sequence)
 	tx := &types.AppTx{
 		Gas:   0,
-		Fee:   types.Coin{"mycoin", 1},
+		Fee:   smallCoins,
 		Name:  "IBC",
 		Input: input,
 		Data:  data,
@@ -169,17 +201,16 @@ func (r *relayer) appTx(ibcTx ibc.IBCTx) error {
 		types.Tx `json:"unwrap"`
 	}{tx}))
 
-	data, log, err := broadcastTxToNode(r.nodeAddr, txBytes)
+	data, log, err := broadcastTxWithClient(r.client, txBytes)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Response: %X ; %s\n", data, log)
+	_, _ = data, log
 	return nil
 }
 
 // broadcast the transaction to tendermint
-func broadcastTxToNode(nodeAddr string, tx tmtypes.Tx) ([]byte, string, error) {
-	httpClient := client.NewHTTP(nodeAddr, "/websocket")
+func broadcastTxWithClient(httpClient *client.HTTP, tx tmtypes.Tx) ([]byte, string, error) {
 	res, err := httpClient.BroadcastTxCommit(tx)
 	if err != nil {
 		return nil, "", errors.Errorf("Error on broadcast tx: %v", err)

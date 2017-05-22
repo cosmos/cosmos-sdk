@@ -123,8 +123,8 @@ echo ""
 echo "... creating egress packet on chain1"
 echo ""
 # create a packet on chain1 destined for chain2
-PAYLOAD="DEADBEEF" #TODO
-basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS1 packet create --ibc_from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload $PAYLOAD --ibc_sequence 1
+PAYLOAD="010104DEADBEEF" #TODO
+basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS1 packet create --ibc_from $CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload $PAYLOAD --ibc_sequence 0
 ifExit
 
 echo ""

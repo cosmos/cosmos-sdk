@@ -220,12 +220,12 @@ func broadcastTx(tx types.Tx) ([]byte, string, error) {
 // if the sequence flag is set, return it;
 // else, fetch the account by querying the app and return the sequence number
 func getSeq(address []byte) (int, error) {
-
 	if seqFlag >= 0 {
 		return seqFlag, nil
 	}
 
-	acc, err := getAcc(txNodeFlag, address)
+	httpClient := client.NewHTTP(txNodeFlag, "/websocket")
+	acc, err := getAccWithClient(httpClient, address)
 	if err != nil {
 		return 0, err
 	}

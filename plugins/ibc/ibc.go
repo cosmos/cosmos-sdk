@@ -418,6 +418,9 @@ func (sm *IBCStateMachine) runPacketCreateTx(tx IBCPacketCreateTx) {
 
 	// Save new Packet
 	save(sm.store, packetKey, packet)
+
+	// set the sequence number
+	SetSequenceNumber(sm.store, packet.SrcChainID, packet.DstChainID, packet.Sequence)
 }
 
 func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
@@ -473,7 +476,7 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 	ok := proof.Verify(packetKeyEgress, packetBytes, header.AppHash)
 	if !ok {
 		sm.res.Code = IBCCodeInvalidProof
-		sm.res.Log = "Proof is invalid"
+		sm.res.Log = fmt.Sprintf("Proof is invalid. key: %s; packetByes %X; header %v; proof %v", packetKeyEgress, packetBytes, header, proof)
 		return
 	}
 

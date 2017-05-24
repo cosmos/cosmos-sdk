@@ -11,7 +11,6 @@ import (
 	abci "github.com/tendermint/abci/types"
 	wire "github.com/tendermint/go-wire"
 
-	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 
 	client "github.com/tendermint/tendermint/rpc/client"
@@ -101,6 +100,10 @@ func StripHex(s string) string {
 
 func Query(tmAddr string, key []byte) (*abci.ResultQuery, error) {
 	httpClient := client.NewHTTP(tmAddr, "/websocket")
+	return queryWithClient(httpClient, key)
+}
+
+func queryWithClient(httpClient *client.HTTP, key []byte) (*abci.ResultQuery, error) {
 	res, err := httpClient.ABCIQuery("/key", key, true)
 	if err != nil {
 		return nil, errors.Errorf("Error calling /abci_query: %v", err)
@@ -112,10 +115,10 @@ func Query(tmAddr string, key []byte) (*abci.ResultQuery, error) {
 }
 
 // fetch the account by querying the app
-func getAcc(tmAddr string, address []byte) (*types.Account, error) {
+func getAccWithClient(httpClient *client.HTTP, address []byte) (*types.Account, error) {
 
-	key := state.AccountKey(address)
-	response, err := Query(tmAddr, key)
+	key := types.AccountKey(address)
+	response, err := queryWithClient(httpClient, key)
 	if err != nil {
 		return nil, err
 	}
@@ -146,4 +149,24 @@ func getHeaderAndCommit(tmAddr string, height int) (*tmtypes.Header, *tmtypes.Co
 	commit := res.Commit
 
 	return header, commit, nil
+}
+
+func waitForBlock(httpClient *client.HTTP) error {
+	res, err := httpClient.Status()
+	if err != nil {
+		return err
+	}
+
+	lastHeight := res.LatestBlockHeight
+	for {
+		res, err := httpClient.Status()
+		if err != nil {
+			return err
+		}
+		if res.LatestBlockHeight > lastHeight {
+			break
+		}
+
+	}
+	return nil
 }

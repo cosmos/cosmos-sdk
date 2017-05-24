@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 	wire "github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
@@ -38,7 +37,7 @@ func newAppTest(t *testing.T) *appTest {
 
 // make a tx sending 5mycoin from each accIn to accOut
 func (at *appTest) getTx(seq int) *types.SendTx {
-	tx := types.GetTx(seq, at.accOut, at.accIn)
+	tx := types.MakeSendTx(seq, at.accOut, at.accIn)
 	types.SignTx(at.chainID, tx, at.accIn)
 	return tx
 }
@@ -123,7 +122,7 @@ func TestSetOption(t *testing.T) {
 	res = app.SetOption("base/account", string(accsInBytes))
 	require.EqualValues(res, "Success")
 	// make sure it is set correctly, with some balance
-	acct := state.GetAccount(app.GetState(), accIn.PubKey.Address())
+	acct := types.GetAccount(app.GetState(), accIn.PubKey.Address())
 	require.NotNil(acct)
 	assert.Equal(accIn.Balance, acct.Balance)
 
@@ -149,7 +148,7 @@ func TestSetOption(t *testing.T) {
 }`
 	res = app.SetOption("base/account", unsortAcc)
 	require.EqualValues(res, "Success")
-	acct = state.GetAccount(app.GetState(), unsortAddr)
+	acct = types.GetAccount(app.GetState(), unsortAddr)
 	require.NotNil(acct)
 	assert.True(acct.Balance.IsValid())
 	assert.Equal(unsortCoins, acct.Balance)

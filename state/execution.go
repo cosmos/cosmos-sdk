@@ -2,9 +2,11 @@ package state
 
 import (
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/basecoin/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/events"
+
+	"github.com/tendermint/basecoin/plugins/ibc"
+	"github.com/tendermint/basecoin/types"
 )
 
 // If the tx is invalid, a TMSP error will be returned.
@@ -189,17 +191,23 @@ func getOrMakeOutputs(state types.AccountGetter, accounts map[string]*types.Acco
 	}
 
 	for _, out := range outs {
+		chain, outAddress, _ := out.ChainAndAddress() // already validated
+		if chain != nil {
+			// we dont need an account for the other chain.
+			// we'll just create an outgoing ibc packet
+			continue
+		}
 		// Account shouldn't be duplicated
-		if _, ok := accounts[string(out.Address)]; ok {
+		if _, ok := accounts[string(outAddress)]; ok {
 			return nil, abci.ErrBaseDuplicateAddress
 		}
-		acc := state.GetAccount(out.Address)
+		acc := state.GetAccount(outAddress)
 		// output account may be nil (new)
 		if acc == nil {
 			// zero value is valid, empty account
 			acc = &types.Account{}
 		}
-		accounts[string(out.Address)] = acc
+		accounts[string(outAddress)] = acc
 	}
 	return accounts, abci.OK
 }
@@ -281,15 +289,22 @@ func adjustByInputs(state types.AccountSetter, accounts map[string]*types.Accoun
 	}
 }
 
-func adjustByOutputs(state types.AccountSetter, accounts map[string]*types.Account, outs []types.TxOutput, isCheckTx bool) {
+func adjustByOutputs(state *State, accounts map[string]*types.Account, outs []types.TxOutput, isCheckTx bool) {
 	for _, out := range outs {
-		acc := accounts[string(out.Address)]
+		destChain, outAddress, _ := out.ChainAndAddress() // already validated
+		if destChain != nil {
+			payload := ibc.CoinsPayload{outAddress, out.Coins}
+			ibc.SaveNewIBCPacket(state, state.GetChainID(), string(destChain), payload)
+			continue
+		}
+
+		acc := accounts[string(outAddress)]
 		if acc == nil {
 			cmn.PanicSanity("adjustByOutputs() expects account in accounts")
 		}
 		acc.Balance = acc.Balance.Plus(out.Coins)
 		if !isCheckTx {
-			state.SetAccount(out.Address, acc)
+			state.SetAccount(outAddress, acc)
 		}
 	}
 }

@@ -86,15 +86,15 @@ func Accs2TxOutputs(accs ...PrivAccount) []TxOutput {
 	return txs
 }
 
-func GetTx(seq int, accOut PrivAccount, accsIn ...PrivAccount) *SendTx {
-	txs := &SendTx{
+func MakeSendTx(seq int, accOut PrivAccount, accsIn ...PrivAccount) *SendTx {
+	tx := &SendTx{
 		Gas:     0,
 		Fee:     Coin{"mycoin", 1},
 		Inputs:  Accs2TxInputs(seq, accsIn...),
 		Outputs: Accs2TxOutputs(accOut),
 	}
 
-	return txs
+	return tx
 }
 
 func SignTx(chainID string, tx *SendTx, accs ...PrivAccount) {

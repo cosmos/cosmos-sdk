@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	abci "github.com/tendermint/abci/types"
@@ -53,8 +55,108 @@ type Packet struct {
 	SrcChainID string
 	DstChainID string
 	Sequence   uint64
-	Type       string
-	Payload    []byte
+	Type       string // redundant now that Type() is a method on Payload ?
+	Payload    Payload
+}
+
+func NewPacket(src, dst string, seq uint64, payload Payload) Packet {
+	return Packet{
+		SrcChainID: src,
+		DstChainID: dst,
+		Sequence:   seq,
+		Type:       payload.Type(),
+		Payload:    payload,
+	}
+}
+
+// GetSequenceNumber gets the sequence number for packets being sent from the src chain to the dst chain.
+// The sequence number counts how many packets have been sent.
+// The next packet must include the latest sequence number.
+func GetSequenceNumber(store types.KVStore, src, dst string) uint64 {
+	sequenceKey := toKey(_IBC, _EGRESS, src, dst)
+	seqBytes := store.Get(sequenceKey)
+	if seqBytes == nil {
+		return 0
+	}
+	seq, err := strconv.ParseUint(string(seqBytes), 10, 64)
+	if err != nil {
+		cmn.PanicSanity(err.Error())
+	}
+	return seq
+}
+
+// SetSequenceNumber sets the sequence number for packets being sent from the src chain to the dst chain
+func SetSequenceNumber(store types.KVStore, src, dst string, seq uint64) {
+	sequenceKey := toKey(_IBC, _EGRESS, src, dst)
+	store.Set(sequenceKey, []byte(strconv.FormatUint(seq, 10)))
+}
+
+// SaveNewIBCPacket creates an IBC packet with the given payload from the src chain to the dst chain
+// using the correct sequence number. It also increments the sequence number by 1
+func SaveNewIBCPacket(state types.KVStore, src, dst string, payload Payload) {
+	// fetch sequence number and increment by 1
+	seq := GetSequenceNumber(state, src, dst)
+	SetSequenceNumber(state, src, dst, seq+1)
+
+	// save ibc packet
+	packetKey := toKey(_IBC, _EGRESS, src, dst, cmn.Fmt("%v", seq))
+	packet := NewPacket(src, dst, uint64(seq), payload)
+	save(state, packetKey, packet)
+}
+
+func GetIBCPacket(state types.KVStore, src, dst string, seq uint64) (Packet, error) {
+	packetKey := toKey(_IBC, _EGRESS, src, dst, cmn.Fmt("%v", seq))
+	packetBytes := state.Get(packetKey)
+
+	var packet Packet
+	err := wire.ReadBinaryBytes(packetBytes, &packet)
+	return packet, err
+}
+
+//--------------------------------------------------------------------------------
+
+const (
+	PayloadTypeBytes = byte(0x01)
+	PayloadTypeCoins = byte(0x02)
+)
+
+var _ = wire.RegisterInterface(
+	struct{ Payload }{},
+	wire.ConcreteType{DataPayload{}, PayloadTypeBytes},
+	wire.ConcreteType{CoinsPayload{}, PayloadTypeCoins},
+)
+
+type Payload interface {
+	AssertIsPayload()
+	Type() string
+	ValidateBasic() abci.Result
+}
+
+func (DataPayload) AssertIsPayload()  {}
+func (CoinsPayload) AssertIsPayload() {}
+
+type DataPayload []byte
+
+func (p DataPayload) Type() string {
+	return "data"
+}
+
+func (p DataPayload) ValidateBasic() abci.Result {
+	return abci.OK
+}
+
+type CoinsPayload struct {
+	Address []byte
+	Coins   types.Coins
+}
+
+func (p CoinsPayload) Type() string {
+	return "coin"
+}
+
+func (p CoinsPayload) ValidateBasic() abci.Result {
+	// TODO: validate
+	return abci.OK
 }
 
 //--------------------------------------------------------------------------------
@@ -299,8 +401,28 @@ func (sm *IBCStateMachine) runPacketCreateTx(tx IBCPacketCreateTx) {
 		sm.res.Log = "Already exists"
 		return
 	}
+
+	// Execute the payload
+	switch payload := tx.Packet.Payload.(type) {
+	case DataPayload:
+		// do nothing
+	case CoinsPayload:
+		// ensure enough coins were sent in tx to cover the payload coins
+		if !sm.ctx.Coins.IsGTE(payload.Coins) {
+			sm.res.Code = abci.CodeType_InsufficientFunds
+			sm.res.Log = fmt.Sprintf("Not enough funds sent in tx (%v) to send %v via IBC", sm.ctx.Coins, payload.Coins)
+			return
+		}
+
+		// deduct coins from context
+		sm.ctx.Coins = sm.ctx.Coins.Minus(payload.Coins)
+	}
+
 	// Save new Packet
 	save(sm.store, packetKey, packet)
+
+	// set the sequence number
+	SetSequenceNumber(sm.store, packet.SrcChainID, packet.DstChainID, packet.Sequence)
 }
 
 func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
@@ -327,7 +449,7 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 		return
 	}
 
-	// Save new Packet
+	// Save new Packet (just for fun)
 	save(sm.store, packetKeyIngress, packet)
 
 	// Load Header and make sure it exists
@@ -356,8 +478,22 @@ func (sm *IBCStateMachine) runPacketPostTx(tx IBCPacketPostTx) {
 	ok := proof.Verify(packetKeyEgress, packetBytes, header.AppHash)
 	if !ok {
 		sm.res.Code = IBCCodeInvalidProof
-		sm.res.Log = "Proof is invalid"
+		sm.res.Log = fmt.Sprintf("Proof is invalid. key: %s; packetByes %X; header %v; proof %v", packetKeyEgress, packetBytes, header, proof)
 		return
+	}
+
+	// Execute payload
+	switch payload := packet.Payload.(type) {
+	case DataPayload:
+		// do nothing
+	case CoinsPayload:
+		// Add coins to destination account
+		acc := types.GetAccount(sm.store, payload.Address)
+		if acc == nil {
+			acc = &types.Account{}
+		}
+		acc.Balance = acc.Balance.Plus(payload.Coins)
+		types.SetAccount(sm.store, payload.Address, acc)
 	}
 
 	return

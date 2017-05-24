@@ -6,17 +6,14 @@ import:
 - package: github.com/spf13/pflag
 - package: github.com/spf13/viper
 - package: github.com/tendermint/abci
-  version: develop
   subpackages:
   - server
   - types
 - package: github.com/tendermint/go-crypto
-  version: develop
   subpackages:
   - cmd
   - keys
 - package: github.com/tendermint/go-wire
-  version: develop
   subpackages:
   - data
 - package: github.com/tendermint/light-client
@@ -28,7 +25,6 @@ import:
   - commands/txs
   - proofs
 - package: github.com/tendermint/merkleeyes
-  version: develop
   subpackages:
   - client
   - iavl
@@ -44,7 +40,6 @@ import:
   - rpc/lib/types
   - types
 - package: github.com/tendermint/tmlibs
-  version: develop
   subpackages:
   - cli
   - common

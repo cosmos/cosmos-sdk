@@ -10,6 +10,7 @@ import (
 
 	"github.com/tendermint/go-wire"
 	"github.com/tendermint/merkleeyes/iavl"
+	"github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -120,7 +121,8 @@ func accountCmd(cmd *cobra.Command, args []string) error {
 		return errors.Errorf("Account address (%v) is invalid hex: %v\n", addrHex, err)
 	}
 
-	acc, err := getAcc(nodeFlag, addr)
+	httpClient := client.NewHTTP(nodeFlag, "/websocket")
+	acc, err := getAccWithClient(httpClient, addr)
 	if err != nil {
 		return err
 	}

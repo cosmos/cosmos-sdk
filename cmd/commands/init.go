@@ -6,10 +6,6 @@ import (
 	"path"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	"github.com/tendermint/tmlibs/cli"
-	cmn "github.com/tendermint/tmlibs/common"
 )
 
 //commands
@@ -35,14 +31,17 @@ func setupFile(path, data string, perm os.FileMode) (int, error) {
 }
 
 func initCmd(cmd *cobra.Command, args []string) error {
-	rootDir := viper.GetString(cli.HomeFlag)
-	cmn.EnsureDir(rootDir, 0777)
+	// this will ensure that config.toml is there if not yet created, and create dir
+	cfg, err := getTendermintConfig()
+	if err != nil {
+		return err
+	}
 
 	// initalize basecoin
-	genesisFile := path.Join(rootDir, "genesis.json")
-	privValFile := path.Join(rootDir, "priv_validator.json")
-	key1File := path.Join(rootDir, "key.json")
-	key2File := path.Join(rootDir, "key2.json")
+	genesisFile := cfg.GenesisFile()
+	privValFile := cfg.PrivValidatorFile()
+	key1File := path.Join(cfg.RootDir, "key.json")
+	key2File := path.Join(cfg.RootDir, "key2.json")
 
 	mod1, err := setupFile(genesisFile, GenesisJSON, 0644)
 	if err != nil {

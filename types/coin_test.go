@@ -68,6 +68,11 @@ func TestParse(t *testing.T) {
 		{"99bar,1foo", true, Coins{{"bar", 99}, {"foo", 1}}},
 		{"98 bar , 1 foo  ", true, Coins{{"bar", 98}, {"foo", 1}}},
 		{"2foo, 97 bar", true, Coins{{"bar", 97}, {"foo", 2}}},
+		{"5 mycoin,", false, nil},             // no empty coins in a list
+		{"2 3foo, 97 bar", false, nil},        // 3foo is invalid coin name
+		{"11me coin, 12you coin", false, nil}, // no spaces in coin names
+		{"1.2btc", false, nil},                // amount must be integer
+		{"5foo-bar", false, nil},              // once more, only letters in coin name
 	}
 
 	for _, tc := range cases {

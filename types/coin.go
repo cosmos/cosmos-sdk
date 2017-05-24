@@ -24,18 +24,18 @@ var reDenom = regexp.MustCompile("([^\\d\\W]+)")
 var reAmt = regexp.MustCompile("(\\d+)")
 
 func ParseCoin(str string) (Coin, error) {
-
 	var coin Coin
 
-	if len(str) > 0 {
-		amt, err := strconv.Atoi(reAmt.FindString(str))
-		if err != nil {
-			return coin, err
-		}
-		denom := reDenom.FindString(str)
-		coin = Coin{denom, int64(amt)}
+	if len(str) == 0 {
+		return coin, errors.New("Empty string is invalid coin")
 	}
 
+	amt, err := strconv.Atoi(reAmt.FindString(str))
+	if err != nil {
+		return coin, err
+	}
+	denom := reDenom.FindString(str)
+	coin = Coin{denom, int64(amt)}
 	return coin, nil
 }
 
@@ -56,17 +56,20 @@ func (coins Coins) String() string {
 }
 
 func ParseCoins(str string) (Coins, error) {
+	// empty string is empty list...
+	if len(str) == 0 {
+		return nil, nil
+	}
+
 	split := strings.Split(str, ",")
 	var coins Coins
 
 	for _, el := range split {
-		if len(el) > 0 {
-			coin, err := ParseCoin(el)
-			if err != nil {
-				return coins, err
-			}
-			coins = append(coins, coin)
+		coin, err := ParseCoin(el)
+		if err != nil {
+			return coins, err
 		}
+		coins = append(coins, coin)
 	}
 
 	// ensure they are in proper order, to avoid random failures later

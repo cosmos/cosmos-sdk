@@ -20,22 +20,26 @@ func (coin Coin) String() string {
 }
 
 //regex codes for extracting coins from string
-var reDenom = regexp.MustCompile("([^\\d\\W]+)")
+var reDenom = regexp.MustCompile("")
 var reAmt = regexp.MustCompile("(\\d+)")
+
+var reCoin = regexp.MustCompile("^([[:digit:]]+)[[:space:]]*([[:alpha:]]+)$")
 
 func ParseCoin(str string) (Coin, error) {
 	var coin Coin
 
-	if len(str) == 0 {
-		return coin, errors.New("Empty string is invalid coin")
+	matches := reCoin.FindStringSubmatch(strings.TrimSpace(str))
+	if matches == nil {
+		return coin, errors.Errorf("%s is invalid coin definition", str)
 	}
 
-	amt, err := strconv.Atoi(reAmt.FindString(str))
+	// parse the amount (should always parse properly)
+	amt, err := strconv.Atoi(matches[1])
 	if err != nil {
 		return coin, err
 	}
-	denom := reDenom.FindString(str)
-	coin = Coin{denom, int64(amt)}
+
+	coin = Coin{matches[2], int64(amt)}
 	return coin, nil
 }
 

@@ -59,7 +59,7 @@ func init() {
 		{&fromFlag, "from", "key.json", "Path to a private key to sign the transaction"},
 		{&amountFlag, "amount", "", "Coins to send in transaction of the format <amt><coin>,<amt2><coin2>,... (eg: 1btc,2gold,5silver)"},
 		{&gasFlag, "gas", 0, "The amount of gas for the transaction"},
-		{&feeFlag, "fee", "", "Coins for the transaction fee of the format <amt><coin>"},
+		{&feeFlag, "fee", "0coin", "Coins for the transaction fee of the format <amt><coin>"},
 		{&seqFlag, "sequence", -1, "Sequence number for the account (-1 to autocalculate)"},
 	}
 

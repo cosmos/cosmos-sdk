@@ -10,8 +10,8 @@ import (
 
 	"github.com/tendermint/basecoin/plugins/ibc"
 
-	"github.com/tendermint/go-merkle"
 	"github.com/tendermint/go-wire"
+	"github.com/tendermint/merkleeyes/iavl"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -196,13 +196,18 @@ func ibcPacketCreateTxCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var payload ibc.Payload
+	if err := wire.ReadBinaryBytes(payloadBytes, &payload); err != nil {
+		return err
+	}
+
 	ibcTx := ibc.IBCPacketCreateTx{
 		Packet: ibc.Packet{
 			SrcChainID: fromChain,
 			DstChainID: toChain,
 			Sequence:   sequence,
 			Type:       packetType,
-			Payload:    payloadBytes,
+			Payload:    payload,
 		},
 	}
 
@@ -229,7 +234,7 @@ func ibcPacketPostTxCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	var packet ibc.Packet
-	proof := new(merkle.IAVLProof)
+	proof := new(iavl.IAVLProof)
 
 	err = wire.ReadBinaryBytes(packetBytes, &packet)
 	if err != nil {

@@ -3,8 +3,11 @@ package types
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 type Coin struct {
@@ -17,22 +20,26 @@ func (coin Coin) String() string {
 }
 
 //regex codes for extracting coins from string
-var reDenom = regexp.MustCompile("([^\\d\\W]+)")
+var reDenom = regexp.MustCompile("")
 var reAmt = regexp.MustCompile("(\\d+)")
 
-func ParseCoin(str string) (Coin, error) {
+var reCoin = regexp.MustCompile("^([[:digit:]]+)[[:space:]]*([[:alpha:]]+)$")
 
+func ParseCoin(str string) (Coin, error) {
 	var coin Coin
 
-	if len(str) > 0 {
-		amt, err := strconv.Atoi(reAmt.FindString(str))
-		if err != nil {
-			return coin, err
-		}
-		denom := reDenom.FindString(str)
-		coin = Coin{denom, int64(amt)}
+	matches := reCoin.FindStringSubmatch(strings.TrimSpace(str))
+	if matches == nil {
+		return coin, errors.Errorf("%s is invalid coin definition", str)
 	}
 
+	// parse the amount (should always parse properly)
+	amt, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return coin, err
+	}
+
+	coin = Coin{matches[2], int64(amt)}
 	return coin, nil
 }
 
@@ -53,18 +60,26 @@ func (coins Coins) String() string {
 }
 
 func ParseCoins(str string) (Coins, error) {
+	// empty string is empty list...
+	if len(str) == 0 {
+		return nil, nil
+	}
 
 	split := strings.Split(str, ",")
-	var coins []Coin
+	var coins Coins
 
 	for _, el := range split {
-		if len(el) > 0 {
-			coin, err := ParseCoin(el)
-			if err != nil {
-				return coins, err
-			}
-			coins = append(coins, coin)
+		coin, err := ParseCoin(el)
+		if err != nil {
+			return coins, err
 		}
+		coins = append(coins, coin)
+	}
+
+	// ensure they are in proper order, to avoid random failures later
+	coins.Sort()
+	if !coins.IsValid() {
+		return nil, errors.Errorf("ParseCoins invalid: %#v", coins)
 	}
 
 	return coins, nil
@@ -195,3 +210,10 @@ func (coins Coins) IsNonnegative() bool {
 	}
 	return true
 }
+
+/*** Implement Sort interface ***/
+
+func (c Coins) Len() int           { return len(c) }
+func (c Coins) Less(i, j int) bool { return c[i].Denom < c[j].Denom }
+func (c Coins) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
+func (c Coins) Sort()              { sort.Sort(c) }

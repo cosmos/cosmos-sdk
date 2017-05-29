@@ -2,14 +2,15 @@ package state
 
 import (
 	abci "github.com/tendermint/abci/types"
+	cmn "github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tmlibs/events"
+
+	"github.com/tendermint/basecoin/plugins/ibc"
 	"github.com/tendermint/basecoin/types"
-	cmn "github.com/tendermint/go-common"
-	"github.com/tendermint/go-events"
 )
 
 // If the tx is invalid, a TMSP error will be returned.
 func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc events.Fireable) abci.Result {
-
 	chainID := state.GetChainID()
 
 	// Exec tx
@@ -95,11 +96,11 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		signBytes := tx.SignBytes(chainID)
 		res = validateInputAdvanced(inAcc, signBytes, tx.Input)
 		if res.IsErr() {
-			log.Info(cmn.Fmt("validateInputAdvanced failed on %X: %v", tx.Input.Address, res))
+			state.logger.Info(cmn.Fmt("validateInputAdvanced failed on %X: %v", tx.Input.Address, res))
 			return res.PrependLog("in validateInputAdvanced()")
 		}
 		if !tx.Input.Coins.IsGTE(types.Coins{tx.Fee}) {
-			log.Info(cmn.Fmt("Sender did not send enough to cover the fee %X", tx.Input.Address))
+			state.logger.Info(cmn.Fmt("Sender did not send enough to cover the fee %X", tx.Input.Address))
 			return abci.ErrBaseInsufficientFunds.AppendLog(cmn.Fmt("input coins is %v, but fee is %v", tx.Input.Coins, types.Coins{tx.Fee}))
 		}
 
@@ -131,7 +132,7 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 		res = plugin.RunTx(cache, ctx, tx.Data)
 		if res.IsOK() {
 			cache.CacheSync()
-			log.Info("Successful execution")
+			state.logger.Info("Successful execution")
 			// Fire events
 			/*
 				if evc != nil {
@@ -144,7 +145,7 @@ func ExecTx(state *State, pgz *types.Plugins, tx types.Tx, isCheckTx bool, evc e
 				}
 			*/
 		} else {
-			log.Info("AppTx failed", "error", res)
+			state.logger.Info("AppTx failed", "error", res)
 			// Just return the coins and return.
 			inAccCopy.Balance = inAccCopy.Balance.Plus(coins)
 			// But take the gas
@@ -190,17 +191,23 @@ func getOrMakeOutputs(state types.AccountGetter, accounts map[string]*types.Acco
 	}
 
 	for _, out := range outs {
+		chain, outAddress, _ := out.ChainAndAddress() // already validated
+		if chain != nil {
+			// we dont need an account for the other chain.
+			// we'll just create an outgoing ibc packet
+			continue
+		}
 		// Account shouldn't be duplicated
-		if _, ok := accounts[string(out.Address)]; ok {
+		if _, ok := accounts[string(outAddress)]; ok {
 			return nil, abci.ErrBaseDuplicateAddress
 		}
-		acc := state.GetAccount(out.Address)
+		acc := state.GetAccount(outAddress)
 		// output account may be nil (new)
 		if acc == nil {
 			// zero value is valid, empty account
 			acc = &types.Account{}
 		}
-		accounts[string(out.Address)] = acc
+		accounts[string(outAddress)] = acc
 	}
 	return accounts, abci.OK
 }
@@ -244,7 +251,7 @@ func validateInputAdvanced(acc *types.Account, signBytes []byte, in types.TxInpu
 		return abci.ErrBaseInsufficientFunds.AppendLog(cmn.Fmt("balance is %v, tried to send %v", balance, in.Coins))
 	}
 	// Check signatures
-	if !acc.PubKey.VerifyBytes(signBytes, in.Signature.Signature) {
+	if !acc.PubKey.VerifyBytes(signBytes, in.Signature) {
 		return abci.ErrBaseInvalidSignature.AppendLog(cmn.Fmt("SignBytes: %X", signBytes))
 	}
 	return abci.OK
@@ -282,15 +289,22 @@ func adjustByInputs(state types.AccountSetter, accounts map[string]*types.Accoun
 	}
 }
 
-func adjustByOutputs(state types.AccountSetter, accounts map[string]*types.Account, outs []types.TxOutput, isCheckTx bool) {
+func adjustByOutputs(state *State, accounts map[string]*types.Account, outs []types.TxOutput, isCheckTx bool) {
 	for _, out := range outs {
-		acc := accounts[string(out.Address)]
+		destChain, outAddress, _ := out.ChainAndAddress() // already validated
+		if destChain != nil {
+			payload := ibc.CoinsPayload{outAddress, out.Coins}
+			ibc.SaveNewIBCPacket(state, state.GetChainID(), string(destChain), payload)
+			continue
+		}
+
+		acc := accounts[string(outAddress)]
 		if acc == nil {
 			cmn.PanicSanity("adjustByOutputs() expects account in accounts")
 		}
 		acc.Balance = acc.Balance.Plus(out.Coins)
 		if !isCheckTx {
-			state.SetAccount(out.Address, acc)
+			state.SetAccount(outAddress, acc)
 		}
 	}
 }

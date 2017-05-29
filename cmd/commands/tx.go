@@ -3,16 +3,15 @@ package commands
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/basecoin/types"
-	crypto "github.com/tendermint/go-crypto"
 
-	client "github.com/tendermint/go-rpc/client"
 	wire "github.com/tendermint/go-wire"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tendermint/rpc/client"
 )
 
 //commands
@@ -60,7 +59,7 @@ func init() {
 		{&fromFlag, "from", "key.json", "Path to a private key to sign the transaction"},
 		{&amountFlag, "amount", "", "Coins to send in transaction of the format <amt><coin>,<amt2><coin2>,... (eg: 1btc,2gold,5silver)"},
 		{&gasFlag, "gas", 0, "The amount of gas for the transaction"},
-		{&feeFlag, "fee", "", "Coins for the transaction fee of the format <amt><coin>"},
+		{&feeFlag, "fee", "0coin", "Coins for the transaction fee of the format <amt><coin>"},
 		{&seqFlag, "sequence", -1, "Sequence number for the account (-1 to autocalculate)"},
 	}
 
@@ -83,10 +82,27 @@ func init() {
 
 func sendTxCmd(cmd *cobra.Command, args []string) error {
 
+	var toHex string
+	var chainPrefix string
+	spl := strings.Split(toFlag, "/")
+	switch len(spl) {
+	case 1:
+		toHex = spl[0]
+	case 2:
+		chainPrefix = spl[0]
+		toHex = spl[1]
+	default:
+		return errors.Errorf("To address has too many slashes")
+	}
+
 	// convert destination address to bytes
-	to, err := hex.DecodeString(StripHex(toFlag))
+	to, err := hex.DecodeString(StripHex(toHex))
 	if err != nil {
 		return errors.Errorf("To address is invalid hex: %v\n", err)
+	}
+
+	if chainPrefix != "" {
+		to = []byte(chainPrefix + "/" + string(to))
 	}
 
 	// load the priv key
@@ -123,7 +139,7 @@ func sendTxCmd(cmd *cobra.Command, args []string) error {
 
 	// sign that puppy
 	signBytes := tx.SignBytes(chainIDFlag)
-	tx.Inputs[0].Signature = crypto.SignatureS{privKey.Sign(signBytes)}
+	tx.Inputs[0].Signature = privKey.Sign(signBytes)
 
 	fmt.Println("Signed SendTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))
@@ -179,7 +195,7 @@ func AppTx(name string, data []byte) error {
 		Data:  data,
 	}
 
-	tx.Input.Signature = crypto.SignatureS{privKey.Sign(tx.SignBytes(chainIDFlag))}
+	tx.Input.Signature = privKey.Sign(tx.SignBytes(chainIDFlag))
 
 	fmt.Println("Signed AppTx:")
 	fmt.Println(string(wire.JSONBytes(tx)))
@@ -194,22 +210,16 @@ func AppTx(name string, data []byte) error {
 
 // broadcast the transaction to tendermint
 func broadcastTx(tx types.Tx) ([]byte, string, error) {
-
-	tmResult := new(ctypes.TMResult)
-	uriClient := client.NewURIClient(txNodeFlag)
-
+	httpClient := client.NewHTTP(txNodeFlag, "/websocket")
 	// Don't you hate having to do this?
 	// How many times have I lost an hour over this trick?!
 	txBytes := []byte(wire.BinaryBytes(struct {
 		types.Tx `json:"unwrap"`
 	}{tx}))
-
-	_, err := uriClient.Call("broadcast_tx_commit", map[string]interface{}{"tx": txBytes}, tmResult)
+	res, err := httpClient.BroadcastTxCommit(txBytes)
 	if err != nil {
 		return nil, "", errors.Errorf("Error on broadcast tx: %v", err)
 	}
-
-	res := (*tmResult).(*ctypes.ResultBroadcastTxCommit)
 
 	// if it fails check, we don't even get a delivertx back!
 	if !res.CheckTx.Code.IsOK() {
@@ -228,12 +238,12 @@ func broadcastTx(tx types.Tx) ([]byte, string, error) {
 // if the sequence flag is set, return it;
 // else, fetch the account by querying the app and return the sequence number
 func getSeq(address []byte) (int, error) {
-
 	if seqFlag >= 0 {
 		return seqFlag, nil
 	}
 
-	acc, err := getAcc(txNodeFlag, address)
+	httpClient := client.NewHTTP(txNodeFlag, "/websocket")
+	acc, err := getAccWithClient(httpClient, address)
 	if err != nil {
 		return 0, err
 	}

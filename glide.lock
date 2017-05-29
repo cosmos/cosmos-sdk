@@ -1,39 +1,92 @@
-hash: c6e5febc35b5fd1003066820defb8a089db048b407239dad9faf44553fdc15e8
-updated: 2017-04-21T12:55:42.7004558-04:00
+hash: 9d06ae13959cbb2835f5ae400a4b65e4bc329a567c949aec4aeab318c271da39
+updated: 2017-05-24T15:11:32.643553723+02:00
 imports:
+- name: github.com/bgentry/speakeasy
+  version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
 - name: github.com/btcsuite/btcd
-  version: 4b348c1d33373d672edd83fc576892d0e46686d2
+  version: b8df516b4b267acf2de46be593a9d948d1d2c420
   subpackages:
   - btcec
+- name: github.com/btcsuite/fastsha256
+  version: 637e656429416087660c84436a2a035d69d54e2e
 - name: github.com/BurntSushi/toml
   version: b26d9c308763d68093482582cea63d69be07a0f0
 - name: github.com/ebuchman/fail-test
   version: 95f809107225be108efcf10a3509e4ea6ceef3c4
+- name: github.com/fsnotify/fsnotify
+  version: 4da3e2cfbabc9f751898f250b49f2439785783a1
+- name: github.com/go-kit/kit
+  version: d67bb4c202e3b91377d1079b110a6c9ce23ab2f8
+  subpackages:
+  - log
+  - log/level
+  - log/term
+- name: github.com/go-logfmt/logfmt
+  version: 390ab7935ee28ec6b286364bba9b4dd6410cb3d5
+- name: github.com/go-playground/locales
+  version: 1e5f1161c6416a5ff48840eb8724a394e48cc534
+  subpackages:
+  - currency
+- name: github.com/go-playground/universal-translator
+  version: 71201497bace774495daed26a3874fd339e0b538
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/golang/protobuf
-  version: 2bba0603135d7d7f5cb73b2125beeda19c09f4ef
+  version: 18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8
   subpackages:
   - proto
   - ptypes/any
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/handlers
+  version: 3a5767ca75ece5f7f1440b1d16975247f8d8b221
+- name: github.com/gorilla/mux
+  version: bcd8bc72b08df0f70df986b97f95590779502d31
 - name: github.com/gorilla/websocket
-  version: 3ab3a8b8831546bd18fd182c20687ca853b2bb13
+  version: a91eba7f97777409bc2c443f5534d41dd20c5720
+- name: github.com/hashicorp/hcl
+  version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
+  subpackages:
+  - hcl/ast
+  - hcl/parser
+  - hcl/scanner
+  - hcl/strconv
+  - hcl/token
+  - json/parser
+  - json/scanner
+  - json/token
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jmhodges/levigo
   version: c42d9e0ca023e2198120196f842701bb4c55d7b9
-- name: github.com/mattn/go-colorable
-  version: ded68f7a9561c023e790de24279db7ebf473ea80
-- name: github.com/mattn/go-isatty
-  version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
+- name: github.com/kr/logfmt
+  version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
+- name: github.com/magiconair/properties
+  version: 51463bfca2576e06c62a8504b5c0f06d61312647
+- name: github.com/mitchellh/mapstructure
+  version: cc8532a8e9a55ea36402aa21efdf403a60d34096
+- name: github.com/pelletier/go-buffruneio
+  version: c37440a7cf42ac63b919c752ca73a85067e05992
+- name: github.com/pelletier/go-toml
+  version: 13d49d4606eb801b8f01ae542b4afc4c6ee3d84a
 - name: github.com/pkg/errors
   version: ff09b135c25aae272398c51a07235b90a75aa4f0
+- name: github.com/spf13/afero
+  version: 9be650865eab0c12963d8753212f4f9c66cdcf12
+  subpackages:
+  - mem
+- name: github.com/spf13/cast
+  version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 10f6b9d7e1631a54ad07c5c0fb71c28a1abfd3c2
+  version: 3454e0e28e69c1b8effa6b5123c8e4185e20d696
+- name: github.com/spf13/jwalterweatherman
+  version: 8f07c835e5cc1450c082fe3a439cf87b0cbb2d99
 - name: github.com/spf13/pflag
-  version: 2300d0f8576fe575f71aaa5b9bbe4e1b0dc2eb51
+  version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
+- name: github.com/spf13/viper
+  version: 0967fc9aceab2ce9da34061253ac10fb99bba5b2
 - name: github.com/syndtr/goleveldb
   version: 8c81ea47d4c41a385645e133e15510fc6a2a74b4
   subpackages:
@@ -50,7 +103,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 56e13d87f4e3ec1ea756957d6b23caa6ebcf0998
+  version: 5dabeffb35c027d7087a12149685daa68989168b
   subpackages:
   - client
   - example/dummy
@@ -61,72 +114,80 @@ imports:
   subpackages:
   - edwards25519
   - extra25519
-- name: github.com/tendermint/go-autofile
-  version: 48b17de82914e1ec2f134ce823ba426337d2c518
-- name: github.com/tendermint/go-clist
-  version: 3baa390bbaf7634251c42ad69a8682e7e3990552
-- name: github.com/tendermint/go-common
-  version: f9e3db037330c8a8d61d3966de8473eaf01154fa
-- name: github.com/tendermint/go-config
-  version: 620dcbbd7d587cf3599dedbf329b64311b0c307a
 - name: github.com/tendermint/go-crypto
-  version: 0ca2c6fdb0706001ca4c4b9b80c9f428e8cf39da
-- name: github.com/tendermint/go-data
-  version: e7fcc6d081ec8518912fcdc103188275f83a3ee5
-- name: github.com/tendermint/go-db
-  version: 9643f60bc2578693844aacf380a7c32e4c029fee
-- name: github.com/tendermint/go-events
-  version: f8ffbfb2be3483e9e7927495590a727f51c0c11f
-- name: github.com/tendermint/go-flowrate
-  version: a20c98e61957faa93b4014fbd902f20ab9317a6a
+  version: 438b16f1f84ef002d7408ecd6fc3a3974cbc9559
   subpackages:
-  - flowrate
-- name: github.com/tendermint/go-logger
-  version: cefb3a45c0bf3c493a04e9bcd9b1540528be59f2
-- name: github.com/tendermint/go-merkle
-  version: 714d4d04557fd068a7c2a1748241ce8428015a96
-- name: github.com/tendermint/go-p2p
-  version: 17124989a93774833df33107fbf17157a7f8ef31
-  subpackages:
-  - upnp
-- name: github.com/tendermint/go-rpc
-  version: 559613689d56eaa423b19a3a4158546beb4857de
-  subpackages:
-  - client
-  - server
-  - types
+  - cmd
+  - keys
+  - keys/cryptostore
+  - keys/server
+  - keys/server/types
+  - keys/storage/filestorage
 - name: github.com/tendermint/go-wire
-  version: c1c9a57ab8038448ddea1714c0698f8051e5748c
-- name: github.com/tendermint/log15
-  version: ae0f3d6450da9eac7074b439c8e1c3cabf0d5ce6
+  version: 97beaedf0f4dbc035309157c92be3b30cc6e5d74
   subpackages:
-  - term
+  - data
+  - data/base58
+- name: github.com/tendermint/light-client
+  version: 478876ca34b360df62f941d5e20cdd608fa0a466
+  subpackages:
+  - certifiers
+  - certifiers/client
+  - certifiers/files
+  - commands
+  - commands/proofs
+  - commands/proxy
+  - commands/seeds
+  - commands/txs
+  - proofs
 - name: github.com/tendermint/merkleeyes
-  version: 9fb76efa5aebe773a598f97e68e75fe53d520e70
+  version: c722818b460381bc5b82e38c73ff6e22a9df624d
   subpackages:
   - app
   - client
+  - iavl
 - name: github.com/tendermint/tendermint
-  version: 6bcd4242f1f336e2b2ef4f644fabaf56222b34d0
+  version: 11b5d11e9eec170e1d3dce165f0270d5c0759d69
   subpackages:
   - blockchain
   - cmd/tendermint/commands
-  - config/tendermint
+  - cmd/tendermint/commands/flags
+  - config
   - consensus
   - mempool
   - node
+  - p2p
+  - p2p/upnp
   - proxy
+  - rpc/client
   - rpc/core
   - rpc/core/types
   - rpc/grpc
+  - rpc/lib
+  - rpc/lib/client
+  - rpc/lib/server
+  - rpc/lib/types
   - state
   - state/txindex
   - state/txindex/kv
   - state/txindex/null
   - types
   - version
+- name: github.com/tendermint/tmlibs
+  version: 8af1c70a8be17543eb33e9bfbbcdd8371e3201cc
+  subpackages:
+  - autofile
+  - cli
+  - clist
+  - common
+  - db
+  - events
+  - flowrate
+  - log
+  - logger
+  - merkle
 - name: golang.org/x/crypto
-  version: 96846453c37f0876340a66a47f3f75b1f3a6cd2d
+  version: c7af5bf2638a1164f2eb5467c39c6cffbd13a02e
   subpackages:
   - curve25519
   - nacl/box
@@ -137,7 +198,7 @@ imports:
   - ripemd160
   - salsa20/salsa
 - name: golang.org/x/net
-  version: c8c74377599bd978aee1cf3b9b63a8634051cec2
+  version: feeb485667d1fdabe727840fe00adc22431bc86e
   subpackages:
   - context
   - http2
@@ -147,11 +208,11 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/sys
-  version: ea9bcade75cb975a0b9738936568ab388b845617
+  version: 9c9d83fe39ed3fd2d9249fcf6b755891fff54b03
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: 19e3104b43db45fca0303f489a9536087b184802
+  version: 470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4
   subpackages:
   - secure/bidirule
   - transform
@@ -162,10 +223,11 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 6914ab1e338c92da4218a23d27fcd03d0ad78d46
+  version: 844f573616520565fdc6fb4db242321b5456fd6d
   subpackages:
   - codes
   - credentials
+  - grpclb/grpc_lb_v1
   - grpclog
   - internal
   - keepalive
@@ -176,6 +238,10 @@ imports:
   - status
   - tap
   - transport
+- name: gopkg.in/go-playground/validator.v9
+  version: 6d8c18553ea1ac493d049edd6f102f52e618f085
+- name: gopkg.in/yaml.v2
+  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports:
 - name: github.com/davecgh/go-spew
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9

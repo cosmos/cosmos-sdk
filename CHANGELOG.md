@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.5.0 (May 27, 2017)
+
+BREAKING CHANGES:
+- only those related to the tendermint 0.9 -> 0.10 upgrade
+
+ENHANCEMENTS:
+- basecoin cli
+  - integrates tendermint 0.10.0 and unifies cli (init, unsafe_reset_all, ...)
+  - integrate viper, all command line flags can also be defined in environmental variables or config.toml
+- genesis file
+  - you can define accounts with either address or pub_key
+  - sorts coins for you, so no silent errors if not in alphabetical order
+- [light-client](https://github.com/tendermint/light-client) integration
+  - no longer must you trust the node you connect to, prove everything!
+  - new [basecli command](./cmd/basecli/README.md)
+  - integrated [key management](https://github.com/tendermint/go-crypto/blob/master/cmd/README.md), stored encrypted locally
+  - tracks validator set changes and proves everything from one initial validator seed
+  - `basecli proof state` gets complete proofs for any abci state
+  - `basecli proof tx` gets complete proof where a tx was stored in the chain
+  - `basecli proxy` exposes tendermint rpc, but only passes through results after doing complete verification
+
+BUG FIXES:
+- no more silently ignored error with invalid coin names (eg. "17.22foo coin" used to parse as "17 foo", not warning/error)
+
+
 ## 0.4.1 (April 26, 2017)
 
 BUG FIXES:
@@ -74,7 +99,7 @@ We also changed `chainID` to `chain_id` and consolidated to have just one of the
 
 FEATURES:
 
-- Introduce `basecoin init` and `basecoin unsafe_reset_all` 
+- Introduce `basecoin init` and `basecoin unsafe_reset_all`
 
 ## 0.2.0 (March 6, 2017)
 
@@ -86,8 +111,8 @@ BREAKING CHANGES:
 
 FEATURES:
 
-- CLI for sending transactions and querying the state, 
-designed to be easily extensible as plugins are implemented 
+- CLI for sending transactions and querying the state,
+designed to be easily extensible as plugins are implemented
 - Run Basecoin in-process with Tendermint
 - Add `/account` path in Query
 - IBC plugin for InterBlockchain Communication

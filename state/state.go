@@ -3,9 +3,8 @@ package state
 import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/types"
-	. "github.com/tendermint/go-common"
-	"github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
+	"github.com/tendermint/tmlibs/log"
 )
 
 // CONTRACT: State should be quick to copy.
@@ -15,6 +14,7 @@ type State struct {
 	store      types.KVStore
 	readCache  map[string][]byte // optional, for caching writes to store
 	writeCache *types.KVCache    // optional, for caching writes w/o writing to store
+	logger     log.Logger
 }
 
 func NewState(store types.KVStore) *State {
@@ -23,7 +23,12 @@ func NewState(store types.KVStore) *State {
 		store:      store,
 		readCache:  make(map[string][]byte),
 		writeCache: nil,
+		logger:     log.NewNopLogger(),
 	}
+}
+
+func (s *State) SetLogger(l log.Logger) {
+	s.logger = l
 }
 
 func (s *State) SetChainID(chainID string) {
@@ -57,11 +62,11 @@ func (s *State) Set(key []byte, value []byte) {
 }
 
 func (s *State) GetAccount(addr []byte) *types.Account {
-	return GetAccount(s, addr)
+	return types.GetAccount(s, addr)
 }
 
 func (s *State) SetAccount(addr []byte, acc *types.Account) {
-	SetAccount(s, addr, acc)
+	types.SetAccount(s, addr, acc)
 }
 
 func (s *State) CacheWrap() *State {
@@ -71,6 +76,7 @@ func (s *State) CacheWrap() *State {
 		store:      cache,
 		readCache:  nil,
 		writeCache: cache,
+		logger:     s.logger,
 	}
 }
 
@@ -88,29 +94,4 @@ func (s *State) Commit() abci.Result {
 		return abci.NewError(abci.CodeType_InternalError, "can only use Commit if store is merkleeyes")
 	}
 
-}
-
-//----------------------------------------
-
-func AccountKey(addr []byte) []byte {
-	return append([]byte("base/a/"), addr...)
-}
-
-func GetAccount(store types.KVStore, addr []byte) *types.Account {
-	data := store.Get(AccountKey(addr))
-	if len(data) == 0 {
-		return nil
-	}
-	var acc *types.Account
-	err := wire.ReadBinaryBytes(data, &acc)
-	if err != nil {
-		panic(Fmt("Error reading account %X error: %v",
-			data, err.Error()))
-	}
-	return acc
-}
-
-func SetAccount(store types.KVStore, addr []byte, acc *types.Account) {
-	accBytes := wire.BinaryBytes(acc)
-	store.Set(AccountKey(addr), accBytes)
 }

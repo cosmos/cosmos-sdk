@@ -1,7 +1,7 @@
 # The Basecoin Tool
 
-In previous tutorials we learned the [basics of the `basecoin` CLI](/docs/guides/basecoin-basics)
-and [how to implement a plugin](/docs/guides/example-plugin).
+In previous tutorials we learned the [basics of the `basecoin` CLI](/docs/guide/basecoin-basics.md)
+and [how to implement a plugin](/docs/guide/basecoin-plugins.md).
 In this tutorial, we provide more details on using the `basecoin` tool.
 
 # Data Directory
@@ -14,7 +14,7 @@ basecoin init
 basecoin start
 ```
 
-or 
+or
 
 ```
 BCHOME=~/.my_basecoin_data basecoin init
@@ -33,7 +33,7 @@ basecoin init
 
 This will create a single `genesis.json` file in `~/.basecoin` with the information for both Basecoin and Tendermint.
 
-Now, In one window, run 
+Now, In one window, run
 
 ```
 basecoin start --without-tendermint
@@ -147,7 +147,7 @@ basecoin unsafe_reset_all
 Any required plugin initialization should be constructed using `SetOption` on genesis.
 When starting a new chain for the first time, `SetOption` will be called for each item the genesis file.
 Within genesis.json file entries are made in the format: `"<plugin>/<key>", "<value>"`, where `<plugin>` is the plugin name,
-and `<key>` and `<value>` are the strings passed into the plugin SetOption function. 
-This function is intended to be used to set plugin specific information such 
+and `<key>` and `<value>` are the strings passed into the plugin SetOption function.
+This function is intended to be used to set plugin specific information such
 as the plugin state.
 

@@ -98,7 +98,7 @@ make install
 make test
 ```
 
-Great! Now when I run `tendermint` I have the newest of the new, the develop branch! But please not that this branch is not considered production ready and may have issues.  This should only be done if you want to develop code for the future and run locally.
+Great! Now when I run `tendermint` I have the newest of the new, the develop branch! But please note that this branch is not considered production ready and may have issues.  This should only be done if you want to develop code for the future and run locally.
 
 But wait, I want to mix and match.  There is a bugfix in `go-p2p:persistent_peer` that I want to use with tendermint.  How to compile this.  I will show with a simple example, please update the repo and commit numbers for your usecase. Also, make sure these branches are compatible, so if `persistent_peer` is close to `master` it should work. But if it is 15 commits ahead, you will probably need the `develop` branch of tendermint to compile with it.  But I assume you know your way around git and can figure that out.
 
@@ -129,4 +129,3 @@ Great, now you just compiled the master branch of tendermint along with the bugf
 
 Okay, that's it, with this info you should be able to follow along and
 trouble-shoot any issues you have with the rest of the guide.
-

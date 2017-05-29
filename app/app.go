@@ -1,13 +1,15 @@
 package app
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"strings"
 
 	abci "github.com/tendermint/abci/types"
-	. "github.com/tendermint/go-common"
-	"github.com/tendermint/go-wire"
+	wire "github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
+	. "github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tmlibs/log"
 
 	sm "github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
@@ -24,6 +26,7 @@ type Basecoin struct {
 	state      *sm.State
 	cacheState *sm.State
 	plugins    *types.Plugins
+	logger     log.Logger
 }
 
 func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
@@ -34,7 +37,13 @@ func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
 		state:      state,
 		cacheState: nil,
 		plugins:    plugins,
+		logger:     log.NewNopLogger(),
 	}
+}
+
+func (app *Basecoin) SetLogger(l log.Logger) {
+	app.logger = l
+	app.state.SetLogger(l.With("module", "state"))
 }
 
 // XXX For testing, not thread safe!
@@ -60,7 +69,7 @@ func (app *Basecoin) SetOption(key string, value string) string {
 		if plugin == nil {
 			return "Invalid plugin name: " + pluginName
 		}
-		log.Notice("SetOption on plugin", "plugin", pluginName, "key", key, "value", value)
+		app.logger.Info("SetOption on plugin", "plugin", pluginName, "key", key, "value", value)
 		return plugin.SetOption(app.state, key, value)
 	} else {
 		// Set option on basecoin
@@ -69,13 +78,18 @@ func (app *Basecoin) SetOption(key string, value string) string {
 			app.state.SetChainID(value)
 			return "Success"
 		case "account":
-			var acc types.Account
+			var acc GenesisAccount
 			err := json.Unmarshal([]byte(value), &acc)
 			if err != nil {
 				return "Error decoding acc message: " + err.Error()
 			}
-			app.state.SetAccount(acc.PubKey.Address(), &acc)
-			log.Notice("SetAccount", "addr", acc.PubKey.Address(), "acc", acc)
+			acc.Balance.Sort()
+			addr, err := acc.GetAddr()
+			if err != nil {
+				return "Invalid address: " + err.Error()
+			}
+			app.state.SetAccount(addr, acc.ToAccount())
+			app.logger.Info("SetAccount", "addr", hex.EncodeToString(addr), "acc", acc)
 
 			return "Success"
 		}
@@ -136,7 +150,7 @@ func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 	// handle special path for account info
 	if reqQuery.Path == "/account" {
 		reqQuery.Path = "/key"
-		reqQuery.Data = sm.AccountKey(reqQuery.Data)
+		reqQuery.Data = types.AccountKey(reqQuery.Data)
 	}
 
 	resQuery, err := app.eyesCli.QuerySync(reqQuery)

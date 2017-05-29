@@ -111,7 +111,7 @@ type Coin struct {
 
 Accounts are serialized and stored in a Merkle tree under the key `base/a/<address>`, where `<address>` is the address of the account.
 Typically, the address of the account is the 20-byte `RIPEMD160` hash of the public key, but other formats are acceptable as well,
-as defined in the [tendermint crypto library](https://github.com/tendermint/go-crypto).
+as defined in the [Tendermint crypto library](https://github.com/tendermint/go-crypto).
 The Merkle tree used in Basecoin is a balanced, binary search tree, which we call an [IAVL tree](https://github.com/tendermint/go-merkle).
 
 ## Transactions
@@ -150,8 +150,8 @@ This is slightly different from Ethereum's concept of `Gas` and `GasPrice`,
 where `Fee = Gas x GasPrice`. In Basecoin, the `Gas` and `Fee` are independent,
 and the `GasPrice` is implicit.
 
-In Tendermint, the `Fee` is meant to be used by the validators to inform the ordering 
-of transactions, like in bitcoin.  And the `Gas` is meant to be used by the application 
+In Basecoin, the `Fee` is meant to be used by the validators to inform the ordering 
+of transactions, like in Bitcoin.  And the `Gas` is meant to be used by the application 
 plugin to control its execution.  There is currently no means to pass `Fee` information 
 to the Tendermint validators, but it will come soon...
 

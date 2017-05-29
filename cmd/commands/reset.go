@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	tmcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	tmcfg "github.com/tendermint/tendermint/config/tendermint"
 )
 
 var UnsafeResetAllCmd = &cobra.Command{
@@ -14,8 +13,10 @@ var UnsafeResetAllCmd = &cobra.Command{
 }
 
 func unsafeResetAllCmd(cmd *cobra.Command, args []string) error {
-	basecoinDir := BasecoinRoot("")
-	tmConfig := tmcfg.GetConfig(basecoinDir)
-	tmcmd.ResetAll(tmConfig, log)
+	cfg, err := getTendermintConfig()
+	if err != nil {
+		return err
+	}
+	tmcmd.ResetAll(cfg.DBDir(), cfg.PrivValidatorFile(), logger)
 	return nil
 }

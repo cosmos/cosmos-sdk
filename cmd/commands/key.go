@@ -10,8 +10,10 @@ import (
 
 	//"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/tendermint/go-crypto"
+	"github.com/tendermint/tmlibs/cli"
 )
 
 //commands
@@ -62,9 +64,9 @@ func (a *Address) UnmarshalJSON(addrHex []byte) error {
 }
 
 type Key struct {
-	Address Address         `json:"address"`
-	PubKey  crypto.PubKeyS  `json:"pub_key"`
-	PrivKey crypto.PrivKeyS `json:"priv_key"`
+	Address Address        `json:"address"`
+	PubKey  crypto.PubKey  `json:"pub_key"`
+	PrivKey crypto.PrivKey `json:"priv_key"`
 }
 
 // Implements Signer
@@ -75,18 +77,25 @@ func (k *Key) Sign(msg []byte) crypto.Signature {
 // Generates a new validator with private key.
 func genKey() *Key {
 	privKey := crypto.GenPrivKeyEd25519()
-	addrBytes := privKey.PubKey().Address()
+	pubKey := privKey.PubKey()
+	addrBytes := pubKey.Address()
 	var addr Address
 	copy(addr[:], addrBytes)
 	return &Key{
 		Address: addr,
-		PubKey:  crypto.PubKeyS{privKey.PubKey()},
-		PrivKey: crypto.PrivKeyS{privKey},
+		PubKey:  pubKey,
+		PrivKey: privKey.Wrap(),
 	}
 }
 
 func LoadKey(keyFile string) (*Key, error) {
-	filePath := path.Join(BasecoinRoot(""), keyFile)
+	filePath := keyFile
+
+	if !strings.HasPrefix(keyFile, "/") && !strings.HasPrefix(keyFile, ".") {
+		rootDir := viper.GetString(cli.HomeFlag)
+		filePath = path.Join(rootDir, keyFile)
+	}
+
 	keyJSONBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err

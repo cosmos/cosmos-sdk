@@ -8,16 +8,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/basecoin/app"
 	"github.com/tendermint/basecoin/types"
-	cmn "github.com/tendermint/go-common"
-	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-wire"
+	wire "github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
+	cmn "github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tmlibs/log"
 )
 
 func TestSendTx(t *testing.T) {
 	eyesCli := eyescli.NewLocalClient("", 0)
 	chainID := "test_chain_id"
 	bcApp := app.NewBasecoin(eyesCli)
+	bcApp.SetLogger(log.TestingLogger().With("module", "app"))
 	bcApp.SetOption("base/chain_id", chainID)
 	// t.Log(bcApp.Info())
 
@@ -50,7 +51,7 @@ func TestSendTx(t *testing.T) {
 	signBytes := tx.SignBytes(chainID)
 	// t.Log("Sign bytes: %X\n", signBytes)
 	sig := test1PrivAcc.Sign(signBytes)
-	tx.Inputs[0].Signature = crypto.SignatureS{sig}
+	tx.Inputs[0].Signature = sig
 	// t.Log("Signed TX bytes: %X\n", wire.BinaryBytes(types.TxS{tx}))
 
 	// Write request
@@ -102,7 +103,7 @@ func TestSequence(t *testing.T) {
 		// Sign request
 		signBytes := tx.SignBytes(chainID)
 		sig := test1PrivAcc.Sign(signBytes)
-		tx.Inputs[0].Signature = crypto.SignatureS{sig}
+		tx.Inputs[0].Signature = sig
 		// t.Log("ADDR: %X -> %X\n", tx.Inputs[0].Address, tx.Outputs[0].Address)
 
 		// Write request
@@ -146,7 +147,7 @@ func TestSequence(t *testing.T) {
 		// Sign request
 		signBytes := tx.SignBytes(chainID)
 		sig := privAccountA.Sign(signBytes)
-		tx.Inputs[0].Signature = crypto.SignatureS{sig}
+		tx.Inputs[0].Signature = sig
 		// t.Log("ADDR: %X -> %X\n", tx.Inputs[0].Address, tx.Outputs[0].Address)
 
 		// Write request

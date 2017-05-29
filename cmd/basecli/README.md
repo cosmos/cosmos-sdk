@@ -61,13 +61,3 @@ $ basecoin start
 % basecli proof state get --key $YOU --app account
 ```
 
-## Any questions???
-
-```
-% basecli seeds show --height 1767
-% basecli proxy --serve tcp://localhost:7890
-...
-
-curl localhost:7890/status
-curl localhost:7890/block\?height=20
-```

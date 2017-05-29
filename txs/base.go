@@ -11,6 +11,7 @@ const (
 	ByteRaw   = 0x1
 	ByteFees  = 0x2
 	ByteMulti = 0x3
+	ByteChain = 0x4
 
 	// for signatures
 	ByteSig      = 0x16
@@ -22,6 +23,7 @@ const (
 	TypeRaw   = "raw"
 	TypeFees  = "fee"
 	TypeMulti = "multi"
+	TypeChain = "chain"
 
 	// for signatures
 	TypeSig      = "sig"
@@ -32,7 +34,8 @@ func init() {
 	basecoin.TxMapper.
 		RegisterImplementation(Raw{}, TypeRaw, ByteRaw).
 		RegisterImplementation(&Fee{}, TypeFees, ByteFees).
-		RegisterImplementation(&MultiTx{}, TypeMulti, ByteMulti)
+		RegisterImplementation(&MultiTx{}, TypeMulti, ByteMulti).
+		RegisterImplementation(&Chain{}, TypeChain, ByteChain)
 }
 
 // Raw just contains bytes that can be hex-ified
@@ -77,4 +80,20 @@ func NewMultiTx(txs ...basecoin.Tx) *MultiTx {
 
 func (mt *MultiTx) Wrap() basecoin.Tx {
 	return basecoin.Tx{mt}
+}
+
+/*** Chain ****/
+
+// Chain locks this tx to one chain, wrap with this before signing
+type Chain struct {
+	Tx      basecoin.Tx `json:"tx"`
+	ChainID string      `json:"chain_id"`
+}
+
+func NewChain(tx basecoin.Tx, chainID string) *Chain {
+	return &Chain{Tx: tx, ChainID: chainID}
+}
+
+func (c *Chain) Wrap() basecoin.Tx {
+	return basecoin.Tx{c}
 }

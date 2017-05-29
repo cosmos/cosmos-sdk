@@ -1,5 +1,5 @@
-hash: 9d06ae13959cbb2835f5ae400a4b65e4bc329a567c949aec4aeab318c271da39
-updated: 2017-05-24T15:11:32.643553723+02:00
+hash: 6fe7f47866652e5e30218a29dcb26a35ff1d4e0be16d9589a07143bd55309577
+updated: 2017-05-29T15:49:33.34896889+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -72,7 +72,7 @@ imports:
 - name: github.com/pelletier/go-toml
   version: 13d49d4606eb801b8f01ae542b4afc4c6ee3d84a
 - name: github.com/pkg/errors
-  version: ff09b135c25aae272398c51a07235b90a75aa4f0
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/spf13/afero
   version: 9be650865eab0c12963d8753212f4f9c66cdcf12
   subpackages:
@@ -103,7 +103,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 5dabeffb35c027d7087a12149685daa68989168b
+  version: 864d1f80b36b440bde030a5c18d8ac3aa8c2949d
   subpackages:
   - client
   - example/dummy
@@ -115,7 +115,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 438b16f1f84ef002d7408ecd6fc3a3974cbc9559
+  version: 7dff40942a64cdeefefa9446b2d104750b349f8a
   subpackages:
   - cmd
   - keys
@@ -124,12 +124,12 @@ imports:
   - keys/server/types
   - keys/storage/filestorage
 - name: github.com/tendermint/go-wire
-  version: 97beaedf0f4dbc035309157c92be3b30cc6e5d74
+  version: 5f88da3dbc1a72844e6dfaf274ce87f851d488eb
   subpackages:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: 478876ca34b360df62f941d5e20cdd608fa0a466
+  version: 424905d3813586ce7e64e18690676250a0595ad4
   subpackages:
   - certifiers
   - certifiers/client
@@ -141,13 +141,13 @@ imports:
   - commands/txs
   - proofs
 - name: github.com/tendermint/merkleeyes
-  version: c722818b460381bc5b82e38c73ff6e22a9df624d
+  version: a0e73e1ac3e18e12a007520a4ea2c9822256e307
   subpackages:
   - app
   - client
   - iavl
 - name: github.com/tendermint/tendermint
-  version: 11b5d11e9eec170e1d3dce165f0270d5c0759d69
+  version: 2b5b0172531319ebc255a0ba638f6be666e5e46c
   subpackages:
   - blockchain
   - cmd/tendermint/commands
@@ -174,7 +174,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: 8af1c70a8be17543eb33e9bfbbcdd8371e3201cc
+  version: 306795ae1d8e4f4a10dcc8bdb32a00455843c9d5
   subpackages:
   - autofile
   - cli

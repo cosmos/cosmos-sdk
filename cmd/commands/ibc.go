@@ -139,7 +139,7 @@ func ibcRegisterTxCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Println("IBCTx:", string(out))
+	fmt.Printf("IBCTx: %s\n", string(out))
 
 	data := []byte(wire.BinaryBytes(struct {
 		ibc.IBCTx `json:"unwrap"`
@@ -182,7 +182,7 @@ func ibcUpdateTxCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("IBCTx:", string(out))
+	fmt.Printf("IBCTx: %s\n", string(out))
 
 	data := []byte(wire.BinaryBytes(struct {
 		ibc.IBCTx `json:"unwrap"`
@@ -225,7 +225,7 @@ func ibcPacketCreateTxCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("IBCTx:", string(out))
+	fmt.Printf("IBCTx: %s\n", string(out))
 
 	data := []byte(wire.BinaryBytes(struct {
 		ibc.IBCTx `json:"unwrap"`
@@ -271,7 +271,7 @@ func ibcPacketPostTxCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("IBCTx:", string(out))
+	fmt.Printf("IBCTx: %s\n", string(out))
 
 	data := []byte(wire.BinaryBytes(struct {
 		ibc.IBCTx `json:"unwrap"`

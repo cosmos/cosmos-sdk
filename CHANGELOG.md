@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.1 (May 30, 2017)
+
+BUG FIXES:
+- fix ibc demo app to use proper tendermint flags, 0.10.0-rc2 compatibility
+- Make sure all cli uses new json.Marshal not wire.JSONBytes
+
 ## 0.5.0 (May 27, 2017)
 
 BREAKING CHANGES:

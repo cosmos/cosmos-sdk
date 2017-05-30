@@ -2,7 +2,6 @@ package commands
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -142,13 +141,9 @@ func sendTxCmd(cmd *cobra.Command, args []string) error {
 	signBytes := tx.SignBytes(chainIDFlag)
 	tx.Inputs[0].Signature = privKey.Sign(signBytes)
 
-	out, err := json.Marshal(tx)
-	if err != nil {
-		return err
-	}
-
+	out := wire.BinaryBytes(tx)
 	fmt.Println("Signed SendTx:")
-	fmt.Println(string(out))
+	fmt.Printf("%X\n", out)
 
 	// broadcast the transaction to tendermint
 	data, log, err := broadcastTx(tx)
@@ -203,13 +198,9 @@ func AppTx(name string, data []byte) error {
 
 	tx.Input.Signature = privKey.Sign(tx.SignBytes(chainIDFlag))
 
-	out, err := json.Marshal(tx)
-	if err != nil {
-		return err
-	}
-
+	out := wire.BinaryBytes(tx)
 	fmt.Println("Signed AppTx:")
-	fmt.Println(string(out))
+	fmt.Printf("%X\n", out)
 
 	data, log, err := broadcastTx(tx)
 	if err != nil {

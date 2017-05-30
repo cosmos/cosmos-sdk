@@ -91,13 +91,13 @@ echo ""
 echo "... starting chains"
 echo ""
 # start the first node
-TMROOT=$BCHOME1 tendermint node --p2p.skip_upnp --log_level=info &> $LOG_DIR/chain1_tendermint.log &
+TMHOME=$BCHOME1 tendermint node --p2p.skip_upnp --log_level=info &> $LOG_DIR/chain1_tendermint.log &
 ifExit
 BCHOME=$BCHOME1 basecoin start --without-tendermint &> $LOG_DIR/chain1_basecoin.log &
 ifExit
 
 # start the second node
-TMROOT=$BCHOME2 tendermint node --p2p.skip_upnp --log_level=info --p2p.laddr tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> $LOG_DIR/chain2_tendermint.log &
+TMHOME=$BCHOME2 tendermint node --p2p.skip_upnp --log_level=info --p2p.laddr tcp://localhost:36656 --rpc.laddr tcp://localhost:36657 --proxy_app tcp://localhost:36658 &> $LOG_DIR/chain2_tendermint.log &
 ifExit
 BCHOME=$BCHOME2 basecoin start --address tcp://localhost:36658 --without-tendermint &> $LOG_DIR/chain2_basecoin.log &
 ifExit
@@ -124,7 +124,7 @@ echo "... creating egress packet on chain1"
 echo ""
 # send coins from chain1 to an address on chain2
 # TODO: dont hardcode the address
-basecoin tx send --amount 10mycoin $CHAIN_FLAGS1 --to $CHAIN_ID2/053BA0F19616AFF975C8756A2CBFF04F408B4D47 
+basecoin tx send --amount 10mycoin $CHAIN_FLAGS1 --to $CHAIN_ID2/053BA0F19616AFF975C8756A2CBFF04F408B4D47
 ifExit
 
 # alternative way to create packets (for testing)

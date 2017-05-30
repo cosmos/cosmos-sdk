@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -45,7 +46,11 @@ func counterTxCmd(cmd *cobra.Command, args []string) error {
 		Fee:   countFee,
 	}
 
-	fmt.Println("CounterTx:", string(wire.JSONBytes(counterTx)))
+	out, err := json.Marshal(counterTx)
+	if err != nil {
+		return err
+	}
+	fmt.Println("CounterTx:", string(out))
 
 	data := wire.BinaryBytes(counterTx)
 	name := "counter"

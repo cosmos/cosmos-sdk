@@ -2,6 +2,7 @@ package commands
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 
@@ -133,7 +134,12 @@ func ibcRegisterTxCmd(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	fmt.Println("IBCTx:", string(wire.JSONBytes(ibcTx)))
+	out, err := json.Marshal(ibcTx)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("IBCTx:", string(out))
 
 	data := []byte(wire.BinaryBytes(struct {
 		ibc.IBCTx `json:"unwrap"`
@@ -172,7 +178,11 @@ func ibcUpdateTxCmd(cmd *cobra.Command, args []string) error {
 		Commit: *commit,
 	}
 
-	fmt.Println("IBCTx:", string(wire.JSONBytes(ibcTx)))
+	out, err := json.Marshal(ibcTx)
+	if err != nil {
+		return err
+	}
+	fmt.Println("IBCTx:", string(out))
 
 	data := []byte(wire.BinaryBytes(struct {
 		ibc.IBCTx `json:"unwrap"`
@@ -211,7 +221,11 @@ func ibcPacketCreateTxCmd(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	fmt.Println("IBCTx:", string(wire.JSONBytes(ibcTx)))
+	out, err := json.Marshal(ibcTx)
+	if err != nil {
+		return err
+	}
+	fmt.Println("IBCTx:", string(out))
 
 	data := []byte(wire.BinaryBytes(struct {
 		ibc.IBCTx `json:"unwrap"`
@@ -253,7 +267,11 @@ func ibcPacketPostTxCmd(cmd *cobra.Command, args []string) error {
 		Proof:           proof,
 	}
 
-	fmt.Println("IBCTx:", string(wire.JSONBytes(ibcTx)))
+	out, err := json.Marshal(ibcTx)
+	if err != nil {
+		return err
+	}
+	fmt.Println("IBCTx:", string(out))
 
 	data := []byte(wire.BinaryBytes(struct {
 		ibc.IBCTx `json:"unwrap"`

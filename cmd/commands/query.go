@@ -2,6 +2,7 @@ package commands
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -99,11 +100,16 @@ func queryCmd(cmd *cobra.Command, args []string) error {
 	proof := resp.Proof
 	height := resp.Height
 
-	fmt.Println(string(wire.JSONBytes(struct {
+	out, err := json.Marshal(struct {
 		Value  []byte `json:"value"`
 		Proof  []byte `json:"proof"`
 		Height uint64 `json:"height"`
-	}{val, proof, height})))
+	}{val, proof, height})
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(out))
 	return nil
 }
 
@@ -126,7 +132,11 @@ func accountCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(wire.JSONBytes(acc)))
+	out, err := json.Marshal(acc)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(out))
 	return nil
 }
 
@@ -147,7 +157,7 @@ func blockCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Println(string(wire.JSONBytes(struct {
+	out, err := json.Marshal(struct {
 		Hex  BlockHex  `json:"hex"`
 		JSON BlockJSON `json:"json"`
 	}{
@@ -159,7 +169,12 @@ func blockCmd(cmd *cobra.Command, args []string) error {
 			Header: header,
 			Commit: commit,
 		},
-	})))
+	})
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(out))
 	return nil
 }
 

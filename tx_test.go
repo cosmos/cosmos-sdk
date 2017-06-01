@@ -11,13 +11,15 @@ type Demo struct{}
 
 var _ TxLayer = Demo{}
 
-func (d Demo) Next() Tx { return Tx{} }
-func (d Demo) Wrap() Tx { return Tx{d} }
+func (d Demo) Next() Tx             { return Tx{} }
+func (d Demo) Wrap() Tx             { return Tx{d} }
+func (d Demo) ValidateBasic() error { return nil }
 
 // define a Fake struct that doesn't implement TxLayer
 type Fake struct{}
 
-func (f Fake) Wrap() Tx { return Tx{f} }
+func (f Fake) Wrap() Tx             { return Tx{f} }
+func (f Fake) ValidateBasic() error { return nil }
 
 // Make sure the layer
 func TestLayer(t *testing.T) {

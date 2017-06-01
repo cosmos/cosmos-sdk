@@ -7,14 +7,17 @@ package errors
 import abci "github.com/tendermint/abci/types"
 
 const (
-	msgDecoding        = "Error decoding input"
-	msgUnauthorized    = "Unauthorized"
-	msgInvalidAddress  = "Invalid Address"
-	msgInvalidCoins    = "Invalid Coins"
-	msgInvalidSequence = "Invalid Sequence"
-	msgNoInputs        = "No Input Coins"
-	msgNoOutputs       = "No Output Coins"
-	msgTooLarge        = "Input size too large"
+	msgDecoding          = "Error decoding input"
+	msgUnauthorized      = "Unauthorized"
+	msgInvalidAddress    = "Invalid Address"
+	msgInvalidCoins      = "Invalid Coins"
+	msgInvalidSequence   = "Invalid Sequence"
+	msgInvalidSignature  = "Invalid Signature"
+	msgNoInputs          = "No Input Coins"
+	msgNoOutputs         = "No Output Coins"
+	msgTooLarge          = "Input size too large"
+	msgMissingSignature  = "Signature missing"
+	msgTooManySignatures = "Too many signatures"
 )
 
 func DecodingError() TMError {
@@ -23,6 +26,18 @@ func DecodingError() TMError {
 
 func Unauthorized() TMError {
 	return New(msgUnauthorized, abci.CodeType_Unauthorized)
+}
+
+func MissingSignature() TMError {
+	return New(msgMissingSignature, abci.CodeType_Unauthorized)
+}
+
+func TooManySignatures() TMError {
+	return New(msgTooManySignatures, abci.CodeType_Unauthorized)
+}
+
+func InvalidSignature() TMError {
+	return New(msgInvalidSignature, abci.CodeType_Unauthorized)
 }
 
 func InvalidAddress() TMError {

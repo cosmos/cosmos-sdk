@@ -14,15 +14,12 @@ a basecoin.Tx.
 package txs
 
 import (
-	// TODO: merge in usage of pkg/errors into basecoin/errors and remove this
-	"github.com/pkg/errors"
-
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/go-wire/data"
 
 	"github.com/tendermint/basecoin"
-	berrs "github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/errors"
 )
 
 // Signed holds one signature of the data
@@ -64,7 +61,7 @@ func (s *OneSig) Wrap() basecoin.Tx {
 func (s *OneSig) ValidateBasic() error {
 	// TODO: VerifyBytes here, we do it in Signers?
 	if s.Empty() || !s.Pubkey.VerifyBytes(s.SignBytes(), s.Sig) {
-		return berrs.Unauthorized()
+		return errors.Unauthorized()
 	}
 	return s.Tx.ValidateBasic()
 }
@@ -90,10 +87,10 @@ func (s *OneSig) SignBytes() []byte {
 func (s *OneSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
 	signed := Signed{sig, pubkey}
 	if signed.Empty() {
-		return errors.New("Signature or Key missing")
+		return errors.MissingSignature()
 	}
 	if !s.Empty() {
-		return errors.New("Transaction can only be signed once")
+		return errors.TooManySignatures()
 	}
 	// set the value once we are happy
 	s.Signed = signed
@@ -105,10 +102,10 @@ func (s *OneSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
 // including if there are no signatures
 func (s *OneSig) Signers() ([]crypto.PubKey, error) {
 	if s.Empty() {
-		return nil, errors.New("Never signed")
+		return nil, errors.MissingSignature()
 	}
 	if !s.Pubkey.VerifyBytes(s.SignBytes(), s.Sig) {
-		return nil, errors.New("Signature doesn't match")
+		return nil, errors.InvalidSignature()
 	}
 	return []crypto.PubKey{s.Pubkey}, nil
 }
@@ -135,8 +132,7 @@ func (s *MultiSig) ValidateBasic() error {
 	// TODO: more efficient
 	_, err := s.Signers()
 	if err != nil {
-		// TODO: better return value
-		return berrs.Unauthorized()
+		return err
 	}
 	return s.Tx.ValidateBasic()
 }
@@ -162,7 +158,7 @@ func (s *MultiSig) SignBytes() []byte {
 func (s *MultiSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
 	signed := Signed{sig, pubkey}
 	if signed.Empty() {
-		return errors.New("Signature or Key missing")
+		return errors.MissingSignature()
 	}
 	// set the value once we are happy
 	s.Sigs = append(s.Sigs, signed)
@@ -174,7 +170,7 @@ func (s *MultiSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
 // including if there are no signatures
 func (s *MultiSig) Signers() ([]crypto.PubKey, error) {
 	if len(s.Sigs) == 0 {
-		return nil, errors.New("Never signed")
+		return nil, errors.MissingSignature()
 	}
 	// verify all the signatures before returning them
 	keys := make([]crypto.PubKey, len(s.Sigs))
@@ -182,7 +178,7 @@ func (s *MultiSig) Signers() ([]crypto.PubKey, error) {
 	for i := range s.Sigs {
 		ms := s.Sigs[i]
 		if !ms.Pubkey.VerifyBytes(data, ms.Sig) {
-			return nil, errors.Errorf("Signature %d doesn't match (key: %X)", i, ms.Pubkey.Bytes())
+			return nil, errors.InvalidSignature()
 		}
 		keys[i] = ms.Pubkey
 	}

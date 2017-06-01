@@ -14,6 +14,7 @@ a basecoin.Tx.
 package txs
 
 import (
+	// TODO: merge in usage of pkg/errors into basecoin/errors and remove this
 	"github.com/pkg/errors"
 
 	crypto "github.com/tendermint/go-crypto"
@@ -21,6 +22,7 @@ import (
 	"github.com/tendermint/go-wire/data"
 
 	"github.com/tendermint/basecoin"
+	berrs "github.com/tendermint/basecoin/errors"
 )
 
 // Signed holds one signature of the data
@@ -57,6 +59,14 @@ func NewSig(tx basecoin.Tx) *OneSig {
 
 func (s *OneSig) Wrap() basecoin.Tx {
 	return basecoin.Tx{s}
+}
+
+func (s *OneSig) ValidateBasic() error {
+	// TODO: VerifyBytes here, we do it in Signers?
+	if s.Empty() || !s.Pubkey.VerifyBytes(s.SignBytes(), s.Sig) {
+		return berrs.Unauthorized()
+	}
+	return s.Tx.ValidateBasic()
 }
 
 // TxBytes returns the full data with signatures
@@ -119,6 +129,16 @@ func NewMulti(tx basecoin.Tx) *MultiSig {
 
 func (s *MultiSig) Wrap() basecoin.Tx {
 	return basecoin.Tx{s}
+}
+
+func (s *MultiSig) ValidateBasic() error {
+	// TODO: more efficient
+	_, err := s.Signers()
+	if err != nil {
+		// TODO: better return value
+		return berrs.Unauthorized()
+	}
+	return s.Tx.ValidateBasic()
 }
 
 // TxBytes returns the full data with signatures

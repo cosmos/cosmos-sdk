@@ -14,6 +14,7 @@ const (
 	msgInvalidSequence = "Invalid Sequence"
 	msgNoInputs        = "No Input Coins"
 	msgNoOutputs       = "No Output Coins"
+	msgTooLarge        = "Input size too large"
 )
 
 func DecodingError() TMError {
@@ -42,4 +43,8 @@ func NoInputs() TMError {
 
 func NoOutputs() TMError {
 	return New(msgNoOutputs, abci.CodeType_BaseInvalidOutput)
+}
+
+func TooLarge() TMError {
+	return New(msgTooLarge, abci.CodeType_EncodingError)
 }

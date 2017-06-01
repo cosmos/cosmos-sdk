@@ -4,6 +4,7 @@ package basecoin
 // +gen wrapper:"Tx"
 type TxInner interface {
 	Wrap() Tx
+	ValidateBasic() error
 }
 
 // TxLayer provides a standard way to deal with "middleware" tx,

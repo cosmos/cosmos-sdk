@@ -2,6 +2,7 @@ package txs
 
 import (
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-wire/data"
 )
@@ -30,6 +31,10 @@ const (
 	TypeMultiSig = "multisig"
 )
 
+const (
+	rawMaxSize = 2000 * 1000
+)
+
 func init() {
 	basecoin.TxMapper.
 		RegisterImplementation(Raw{}, TypeRaw, ByteRaw).
@@ -45,6 +50,13 @@ type Raw struct {
 
 func (r Raw) Wrap() basecoin.Tx {
 	return basecoin.Tx{r}
+}
+
+func (r Raw) ValidateBasic() error {
+	if len(r.Bytes) > rawMaxSize {
+		return errors.TooLarge()
+	}
+	return nil
 }
 
 func NewRaw(d []byte) Raw {
@@ -65,6 +77,11 @@ func NewFee(tx basecoin.Tx, fee types.Coin, addr []byte) *Fee {
 	return &Fee{Tx: tx, Fee: fee, Payer: addr}
 }
 
+func (f *Fee) ValidateBasic() error {
+	// TODO: more checks
+	return f.Tx.ValidateBasic()
+}
+
 func (f *Fee) Wrap() basecoin.Tx {
 	return basecoin.Tx{f}
 }
@@ -82,6 +99,16 @@ func (mt *MultiTx) Wrap() basecoin.Tx {
 	return basecoin.Tx{mt}
 }
 
+func (mt *MultiTx) ValidateBasic() error {
+	for _, t := range mt.Txs {
+		err := t.ValidateBasic()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 /*** Chain ****/
 
 // Chain locks this tx to one chain, wrap with this before signing
@@ -96,4 +123,9 @@ func NewChain(tx basecoin.Tx, chainID string) *Chain {
 
 func (c *Chain) Wrap() basecoin.Tx {
 	return basecoin.Tx{c}
+}
+
+func (c *Chain) ValidateBasic() error {
+	// TODO: more checks? chainID?
+	return c.Tx.ValidateBasic()
 }

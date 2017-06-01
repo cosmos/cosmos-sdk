@@ -86,6 +86,10 @@ func (f *Fee) Wrap() basecoin.Tx {
 	return basecoin.Tx{f}
 }
 
+func (f *Fee) Next() basecoin.Tx {
+	return f.Tx
+}
+
 /**** MultiTx  ******/
 type MultiTx struct {
 	Txs []basecoin.Tx `json:"txs"`

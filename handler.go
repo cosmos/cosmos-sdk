@@ -1,6 +1,8 @@
 package basecoin
 
 import (
+	"bytes"
+
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire/data"
@@ -36,6 +38,24 @@ func (c Context) AddSigners(keys ...crypto.PubKey) Context {
 
 func (c Context) GetSigners() []crypto.PubKey {
 	return c.sigs
+}
+
+func (c Context) IsSignerAddr(addr []byte) bool {
+	for _, pk := range c.sigs {
+		if bytes.Equal(addr, pk.Address()) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c Context) IsSignerKey(key crypto.PubKey) bool {
+	for _, pk := range c.sigs {
+		if key.Equals(pk) {
+			return true
+		}
+	}
+	return false
 }
 
 // Result captures any non-error abci result

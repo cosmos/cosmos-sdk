@@ -1,61 +1,77 @@
 package handlers
 
 import (
-	crypto "github.com/tendermint/go-crypto"
-
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/txs"
 	"github.com/tendermint/basecoin/types"
 )
 
-type SignedHandler struct {
-	AllowMultiSig bool
-	Inner         basecoin.Handler
+type AccountChecker interface {
+	// Get amount checks the current amount
+	GetAmount(store types.KVStore, addr []byte) (types.Coins, error)
+
+	// ChangeAmount modifies the balance by the given amount and returns the new balance
+	// always returns an error if leading to negative balance
+	ChangeAmount(store types.KVStore, addr []byte, coins types.Coins) (types.Coins, error)
 }
 
-func (h SignedHandler) Next() basecoin.Handler {
+type SimpleFeeHandler struct {
+	AccountChecker
+	MinFee types.Coins
+	Inner  basecoin.Handler
+}
+
+func (h SimpleFeeHandler) Next() basecoin.Handler {
 	return h.Inner
 }
 
-var _ basecoin.Handler = SignedHandler{}
+var _ basecoin.Handler = SimpleFeeHandler{}
 
-type Signed interface {
-	basecoin.TxLayer
-	Signers() ([]crypto.PubKey, error)
-}
+// Yes, I know refactor a bit... really too late already
 
-func (h SignedHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
-	var sigs []crypto.PubKey
-
-	stx, ok := tx.Unwrap().(Signed)
+func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	feeTx, ok := tx.Unwrap().(*txs.Fee)
 	if !ok {
+		return res, errors.InvalidFormat()
+	}
+
+	fees := types.Coins{feeTx.Fee}
+	if !fees.IsGTE(h.MinFee) {
+		return res, errors.InsufficientFees()
+	}
+
+	if !ctx.IsSignerAddr(feeTx.Payer) {
 		return res, errors.Unauthorized()
 	}
 
-	sigs, err = stx.Signers()
+	_, err = h.ChangeAmount(store, feeTx.Payer, fees.Negative())
 	if err != nil {
 		return res, err
 	}
 
-	// add the signers to the context and continue
-	ctx2 := ctx.AddSigners(sigs...)
-	return h.Next().CheckTx(ctx2, store, stx.Next())
+	return basecoin.Result{Log: "Valid tx"}, nil
 }
 
-func (h SignedHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
-	var sigs []crypto.PubKey
-
-	stx, ok := tx.Unwrap().(Signed)
+func (h SimpleFeeHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	feeTx, ok := tx.Unwrap().(*txs.Fee)
 	if !ok {
+		return res, errors.InvalidFormat()
+	}
+
+	fees := types.Coins{feeTx.Fee}
+	if !fees.IsGTE(h.MinFee) {
+		return res, errors.InsufficientFees()
+	}
+
+	if !ctx.IsSignerAddr(feeTx.Payer) {
 		return res, errors.Unauthorized()
 	}
 
-	sigs, err = stx.Signers()
+	_, err = h.ChangeAmount(store, feeTx.Payer, fees.Negative())
 	if err != nil {
 		return res, err
 	}
 
-	// add the signers to the context and continue
-	ctx2 := ctx.AddSigners(sigs...)
-	return h.Next().DeliverTx(ctx2, store, stx.Next())
+	return h.Next().DeliverTx(ctx, store, feeTx.Next())
 }

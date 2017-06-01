@@ -11,8 +11,10 @@ const (
 	msgUnauthorized      = "Unauthorized"
 	msgInvalidAddress    = "Invalid Address"
 	msgInvalidCoins      = "Invalid Coins"
+	msgInvalidFormat     = "Invalid Format"
 	msgInvalidSequence   = "Invalid Sequence"
 	msgInvalidSignature  = "Invalid Signature"
+	msgInsufficientFees  = "Insufficient Fees"
 	msgNoInputs          = "No Input Coins"
 	msgNoOutputs         = "No Output Coins"
 	msgTooLarge          = "Input size too large"
@@ -48,8 +50,16 @@ func InvalidCoins() TMError {
 	return New(msgInvalidCoins, abci.CodeType_BaseInvalidInput)
 }
 
+func InvalidFormat() TMError {
+	return New(msgInvalidFormat, abci.CodeType_BaseInvalidInput)
+}
+
 func InvalidSequence() TMError {
 	return New(msgInvalidSequence, abci.CodeType_BaseInvalidInput)
+}
+
+func InsufficientFees() TMError {
+	return New(msgInsufficientFees, abci.CodeType_BaseInvalidInput)
 }
 
 func NoInputs() TMError {

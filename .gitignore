@@ -1,3 +1,4 @@
 *.swp
 vendor
 merkleeyes.db
+build

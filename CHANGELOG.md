@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.2 (June 2, 2017)
+
+BUG FIXES:
+- fix parsing of the log level from Tendermint config (#97)
+
 ## 0.5.1 (May 30, 2017)
 
 BUG FIXES:

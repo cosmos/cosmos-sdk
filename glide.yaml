@@ -40,6 +40,7 @@ import:
   - rpc/lib/types
   - types
 - package: github.com/tendermint/tmlibs
+  version: develop
   subpackages:
   - cli
   - common

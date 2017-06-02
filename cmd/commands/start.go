@@ -12,8 +12,8 @@ import (
 	"github.com/tendermint/abci/server"
 	eyes "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/cli"
+	cliflags "github.com/tendermint/tmlibs/cli/flags"
 	cmn "github.com/tendermint/tmlibs/common"
-	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/node"
@@ -139,13 +139,10 @@ func startTendermint(dir string, basecoinApp *app.Basecoin) error {
 		return err
 	}
 
-	// TODO: parse the log level from the config properly (multi modules)
-	// but some tm code must be refactored for better usability
-	lvl, err := log.AllowLevel(cfg.LogLevel)
+	tmLogger, err := cliflags.ParseLogLevel(cfg.LogLevel, logger, config.DefaultConfig().LogLevel)
 	if err != nil {
 		return err
 	}
-	tmLogger := log.NewFilter(logger, lvl)
 
 	// Create & start tendermint node
 	privValidator := types.LoadOrGenPrivValidator(cfg.PrivValidatorFile(), tmLogger)

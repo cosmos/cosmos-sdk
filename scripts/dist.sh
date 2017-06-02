@@ -21,6 +21,11 @@ DIR="$( cd -P "$( dirname "$SOURCE" )/.." && pwd )"
 # Change into that dir because we expect that.
 cd "$DIR"
 
+# Delete the old dir
+echo "==> Removing old directory..."
+rm -rf build/pkg
+mkdir -p build/pkg
+
 # Do a hermetic build inside a Docker container.
 docker build -t tendermint/${REPO_NAME}-builder scripts/${REPO_NAME}-builder/
 docker run --rm -e "BUILD_TAGS=$BUILD_TAGS" -v "$(pwd)":/go/src/github.com/tendermint/${REPO_NAME} tendermint/${REPO_NAME}-builder ./scripts/dist_build.sh

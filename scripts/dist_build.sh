@@ -18,11 +18,6 @@ GIT_IMPORT="github.com/tendermint/basecoin/version"
 XC_ARCH=${XC_ARCH:-"386 amd64 arm"}
 XC_OS=${XC_OS:-"solaris darwin freebsd linux windows"}
 
-# Delete the old dir
-echo "==> Removing old directory..."
-rm -rf build/pkg
-mkdir -p build/pkg
-
 # Make sure build tools are available.
 make tools
 

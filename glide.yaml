@@ -49,6 +49,7 @@ import:
   version: ~0.2.0
   subpackages:
   - cli
+  - cli/flags
   - common
   - events
   - log

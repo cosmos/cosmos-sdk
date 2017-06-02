@@ -8,6 +8,10 @@ build:
 install:
 	go install ./cmd/...
 
+dist:
+	@ sudo bash scripts/dist.sh
+	@ bash scripts/publish.sh
+
 test:
 	go test `${NOVENDOR}`
 	#go run tests/tendermint/*.go

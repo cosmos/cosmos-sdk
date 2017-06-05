@@ -4,8 +4,7 @@ One of the most exciting elements of the Cosmos Network is the InterBlockchain C
 which enables interoperability across different blockchains.
 The simplest example of using the IBC protocol is to send a data packet from one blockchain to another.
 
-We implemented IBC as a basecoin plugin.
-and here we'll show you how to use the Basecoin IBC-plugin to send a packet of data across blockchains!
+We implemented IBC as a basecoin plugin and here we'll show you how to use the Basecoin IBC-plugin to send a packet of data across blockchains!
 
 Please note, this tutorial assumes you are familiar with [Basecoin plugins](/docs/guide/basecoin-plugins.md),
 but we'll explain how IBC works. You may also want to see [our repository of example plugins](https://github.com/tendermint/basecoin-examples).

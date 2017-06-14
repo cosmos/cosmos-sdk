@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	wire "github.com/tendermint/go-wire"
 
 	"github.com/tendermint/basecoin/cmd/commands"
@@ -19,16 +20,15 @@ var CounterTxCmd = &cobra.Command{
 	RunE:  counterTxCmd,
 }
 
-//flags
-var (
-	validFlag    bool
-	countFeeFlag string
+const (
+	flagValid    = "valid"
+	flagCountFee = "countfee"
 )
 
 func init() {
 
-	CounterTxCmd.Flags().BoolVar(&validFlag, "valid", false, "Set valid field in CounterTx")
-	CounterTxCmd.Flags().StringVar(&countFeeFlag, "countfee", "", "Coins for the counter fee of the format <amt><coin>")
+	CounterTxCmd.Flags().Bool(flagValid, false, "Set valid field in CounterTx")
+	CounterTxCmd.Flags().String(flagCountFee, "", "Coins for the counter fee of the format <amt><coin>")
 
 	commands.RegisterTxSubcommand(CounterTxCmd)
 	commands.RegisterStartPlugin("counter", func() types.Plugin { return counter.New() })
@@ -36,13 +36,13 @@ func init() {
 
 func counterTxCmd(cmd *cobra.Command, args []string) error {
 
-	countFee, err := types.ParseCoins(countFeeFlag)
+	countFee, err := types.ParseCoins(viper.GetString(flagCountFee))
 	if err != nil {
 		return err
 	}
 
 	counterTx := counter.CounterTx{
-		Valid: validFlag,
+		Valid: viper.GetBool(flagValid),
 		Fee:   countFee,
 	}
 

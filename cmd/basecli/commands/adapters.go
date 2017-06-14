@@ -17,22 +17,6 @@ import (
 	btypes "github.com/tendermint/basecoin/types"
 )
 
-type AccountPresenter struct{}
-
-func (_ AccountPresenter) MakeKey(str string) ([]byte, error) {
-	res, err := hex.DecodeString(str)
-	if err == nil {
-		res = btypes.AccountKey(res)
-	}
-	return res, err
-}
-
-func (_ AccountPresenter) ParseData(raw []byte) (interface{}, error) {
-	var acc *btypes.Account
-	err := wire.ReadBinaryBytes(raw, &acc)
-	return acc, err
-}
-
 type BaseTxPresenter struct {
 	proofs.RawPresenter // this handles MakeKey as hex bytes
 }
@@ -65,7 +49,7 @@ func (m SendTxMaker) Flags() (*flag.FlagSet, interface{}) {
 
 	fs.String("to", "", "Destination address for the bits")
 	fs.String("amount", "", "Coins to send in the format <amt><coin>,<amt><coin>...")
-	fs.String("fee", "", "Coins for the transaction fee of the format <amt><coin>")
+	fs.String("fee", "0mycoin", "Coins for the transaction fee of the format <amt><coin>")
 	fs.Int64("gas", 0, "Amount of gas for this transaction")
 	fs.Int("sequence", -1, "Sequence number for this transaction")
 	return fs, &SendFlags{}

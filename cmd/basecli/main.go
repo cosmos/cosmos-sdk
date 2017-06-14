@@ -33,9 +33,9 @@ func main() {
 	commands.AddBasicFlags(BaseCli)
 
 	//initialize proofs and txs
-	proofs.StatePresenters.Register("account", bcmd.AccountPresenter{})
+	//proofs.StatePresenters.Register("account", bcmd.AccountPresenter{})
 	proofs.TxPresenters.Register("base", bcmd.BaseTxPresenter{})
-	proofs.StatePresenters.Register("counter", bcount.CounterPresenter{})
+	//proofs.StatePresenters.Register("counter", bcount.CounterPresenter{})
 
 	txs.Register("send", bcmd.SendTxMaker{})
 	txs.Register("counter", bcount.CounterTxMaker{})

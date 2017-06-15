@@ -127,7 +127,7 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: 83bede2a7f150fc7f8aedde1aecd30d2bdf043e8
+  version: 4ad913f2728307ec13a3b602b040c29b6a2117b8
   subpackages:
   - certifiers
   - certifiers/client

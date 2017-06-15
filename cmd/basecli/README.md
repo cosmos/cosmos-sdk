@@ -40,7 +40,7 @@ $ basecoin start
 ## Connect your basecli the first time
 
 ```
-% basecli init --chainid test_chain_id --node tcp://localhost:46657
+% basecli init --chain-id test_chain_id --node tcp://localhost:46657
 ```
 
 ## Check your balances...

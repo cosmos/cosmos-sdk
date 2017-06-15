@@ -66,7 +66,7 @@ initServer() {
 initClient() {
   echo "Attaching client..."
   # hard-code the expected validator hash
-  basecli init --chainid=test_chain_id --node=tcp://localhost:46657 --valhash=EB168E17E45BAEB194D4C79067FFECF345C64DE6
+  basecli init --chain-id=test_chain_id --node=tcp://localhost:46657 --valhash=EB168E17E45BAEB194D4C79067FFECF345C64DE6
   assertTrue "initialized light-client" $?
 }
 

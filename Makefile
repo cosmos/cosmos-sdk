@@ -16,16 +16,6 @@ dist:
 
 test: test_unit test_cli
 
-clitest/shunit2:
-	wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2" \
-		-q -O clitest/shunit2
-
-test_cli: clitest/shunit2
-	# sudo apt-get install jq
-	@./clitest/basictx.sh
-	@./clitest/counter.sh
-	# @./clitest/ibc.sh
-
 test_unit:
 	go test $(PACKAGES)
 	#go run tests/tendermint/*.go
@@ -35,6 +25,7 @@ test_cli:
 		-q -O tests/cli/shunit2
 	# sudo apt-get install jq
 	@./tests/cli/basictx.sh
+	@./tests/cli/counter.sh
 	# @./clitest/ibc.sh
 
 get_vendor_deps: tools

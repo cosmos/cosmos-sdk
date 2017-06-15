@@ -8,7 +8,6 @@ import (
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/light-client/commands"
 	txcmd "github.com/tendermint/light-client/commands/txs"
 
@@ -71,7 +70,7 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 
 func readSendTxFlags(tx *btypes.SendTx) error {
 	// parse to address
-	to, err := hex.DecodeString(StripHex(viper.GetString(ToFlag)))
+	to, err := ParseHexFlag(ToFlag)
 	if err != nil {
 		return errors.Errorf("To address is invalid hex: %v\n", err)
 	}
@@ -104,75 +103,51 @@ func readSendTxFlags(tx *btypes.SendTx) error {
 
 /******** AppTx *********/
 
-type AppFlags struct {
-	Fee      string
-	Gas      int64
-	Amount   string
-	Sequence int
+func AddAppTxFlags(fs *flag.FlagSet) {
+	fs.String(AmountFlag, "", "Coins to send in the format <amt><coin>,<amt><coin>...")
+	fs.String(FeeFlag, "0mycoin", "Coins for the transaction fee of the format <amt><coin>")
+	fs.Int64(GasFlag, 0, "Amount of gas for this transaction")
+	fs.Int(SequenceFlag, -1, "Sequence number for this transaction")
 }
 
-func AppFlagSet() (*flag.FlagSet, AppFlags) {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
-	fs.String("amount", "", "Coins to send in the format <amt><coin>,<amt><coin>...")
-	fs.String("fee", "", "Coins for the transaction fee of the format <amt><coin>")
-	fs.Int64("gas", 0, "Amount of gas for this transaction")
-	fs.Int("sequence", -1, "Sequence number for this transaction")
-	return fs, AppFlags{}
-}
-
-// AppTxReader allows us to create AppTx
-type AppTxReader struct {
-	ChainID string
-}
-
-func (t AppTxReader) ReadTxJSON(data []byte, pk crypto.PubKey) (interface{}, error) {
-	return nil, errors.New("Not implemented...")
-}
-
-func (t AppTxReader) ReadTxFlags(data *AppFlags, app string, appData []byte, pk crypto.PubKey) (interface{}, error) {
+// ReadAppTxFlags reads in the standard flags
+// your command should parse info to set tx.Name and tx.Data
+func ReadAppTxFlags(tx *btypes.AppTx) error {
 	//parse the fee and amounts into coin types
-	feeCoin, err := btypes.ParseCoin(data.Fee)
+	var err error
+	tx.Fee, err = btypes.ParseCoin(viper.GetString(FeeFlag))
 	if err != nil {
-		return nil, err
+		return err
 	}
-	amountCoins, err := btypes.ParseCoins(data.Amount)
+	amountCoins, err := btypes.ParseCoins(viper.GetString(AmountFlag))
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// get addr if available
-	var addr []byte
-	if !pk.Empty() {
-		addr = pk.Address()
-	}
+	// set the gas
+	tx.Gas = viper.GetInt64(GasFlag)
 
-	// craft the tx
-	input := btypes.TxInput{
-		Address:  addr,
+	// craft the inputs and outputs
+	tx.Input = btypes.TxInput{
 		Coins:    amountCoins,
-		Sequence: data.Sequence,
-	}
-	if data.Sequence == 1 {
-		input.PubKey = pk
-	}
-	tx := btypes.AppTx{
-		Gas:   data.Gas,
-		Fee:   feeCoin,
-		Input: input,
-		Name:  app,
-		Data:  appData,
+		Sequence: viper.GetInt(SequenceFlag),
 	}
 
-	// wrap it in the proper signer thing...
-	send := AppTx{
-		chainID: t.ChainID,
-		Tx:      &tx,
+	return nil
+}
+
+func WrapAppTx(tx *btypes.AppTx) *AppTx {
+	return &AppTx{
+		chainID: viper.GetString(commands.ChainFlag),
+		Tx:      tx,
 	}
-	return &send, nil
 }
 
 /** TODO copied from basecoin cli - put in common somewhere? **/
+
+func ParseHexFlag(flag string) ([]byte, error) {
+	return hex.DecodeString(StripHex(viper.GetString(flag)))
+}
 
 // Returns true for non-empty hex-string prefixed with "0x"
 func isHex(s string) bool {

@@ -1,5 +1,5 @@
-hash: b31c6e45072e1015b04b5a201fb5ffcbadb837f21fe4a499f3b7e93229ee1c45
-updated: 2017-06-02T09:22:48.505187474Z
+hash: 6eb1119dccf2ab4d0adb870a14cb4408047119be53c8ec4afeaa281bd1d2b457
+updated: 2017-06-15T17:51:21.867322849+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -39,9 +39,9 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/handlers
-  version: 13d73096a474cac93275c679c7b8a2dc17ddba82
+  version: a4043c62cc2329bacda331d33fc908ab11ef0ec3
 - name: github.com/gorilla/mux
-  version: 392c28fe23e1c45ddba891b0320b3b5df220beea
+  version: bcd8bc72b08df0f70df986b97f95590779502d31
 - name: github.com/gorilla/websocket
   version: a91eba7f97777409bc2c443f5534d41dd20c5720
 - name: github.com/hashicorp/hcl
@@ -101,7 +101,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: b86da575718079396af1f7fe3609ea34be6f855d
+  version: 7f5f48b6b9ec3964de4b07b6c3cd05d7c91aeee5
   subpackages:
   - client
   - example/dummy
@@ -127,7 +127,7 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: 424905d3813586ce7e64e18690676250a0595ad4
+  version: 83bede2a7f150fc7f8aedde1aecd30d2bdf043e8
   subpackages:
   - certifiers
   - certifiers/client
@@ -139,17 +139,16 @@ imports:
   - commands/txs
   - proofs
 - name: github.com/tendermint/merkleeyes
-  version: 6b06ad654956c951b3d27e38bb566ae45aae1ff7
+  version: feb2c3fadac8221f96fbfce65a63af034327f972
   subpackages:
   - app
   - client
   - iavl
 - name: github.com/tendermint/tendermint
-  version: 2b5b0172531319ebc255a0ba638f6be666e5e46c
+  version: 4f0f50c62d41d39ad64e07ad642f705cc13c8229
   subpackages:
   - blockchain
   - cmd/tendermint/commands
-  - cmd/tendermint/commands/flags
   - config
   - consensus
   - mempool
@@ -172,7 +171,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: 6b619742ac69388dd591c30f55aaee46197b086e
+  version: 59a77e7bef092eef0e1f9b44c983dc9e35eed0d6
   subpackages:
   - autofile
   - cli

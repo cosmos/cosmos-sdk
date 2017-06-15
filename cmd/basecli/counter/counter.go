@@ -1,85 +1,79 @@
 package counter
 
 import (
-	flag "github.com/spf13/pflag"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	crypto "github.com/tendermint/go-crypto"
 	wire "github.com/tendermint/go-wire"
-	lightclient "github.com/tendermint/light-client"
-	"github.com/tendermint/light-client/commands"
-	"github.com/tendermint/light-client/commands/txs"
+	txcmd "github.com/tendermint/light-client/commands/txs"
 
 	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
 	"github.com/tendermint/basecoin/plugins/counter"
 	btypes "github.com/tendermint/basecoin/types"
 )
 
-type CounterPresenter struct{}
+var CounterTxCmd = &cobra.Command{
+	Use:   "counter",
+	Short: "add a vote to the counter",
+	Long: `Add a vote to the counter.
 
-func (_ CounterPresenter) MakeKey(str string) ([]byte, error) {
-	key := counter.New().StateKey()
-	return key, nil
+You must pass --valid for it to count and the countfee will be added to the counter.`,
+	RunE: doCounterTx,
 }
 
-func (_ CounterPresenter) ParseData(raw []byte) (interface{}, error) {
-	var cp counter.CounterPluginState
-	err := wire.ReadBinaryBytes(raw, &cp)
-	return cp, err
-}
-
-/**** build out the tx ****/
-
-var (
-	_ txs.ReaderMaker      = CounterTxMaker{}
-	_ lightclient.TxReader = CounterTxReader{}
+const (
+	CountFeeFlag = "countfee"
+	ValidFlag    = "valid"
 )
 
-type CounterTxMaker struct{}
-
-func (m CounterTxMaker) MakeReader() (lightclient.TxReader, error) {
-	chainID := viper.GetString(commands.ChainFlag)
-	return CounterTxReader{bcmd.AppTxReader{ChainID: chainID}}, nil
+func init() {
+	fs := CounterTxCmd.Flags()
+	bcmd.AddAppTxFlags(fs)
+	fs.String(CountFeeFlag, "", "Coins to send in the format <amt><coin>,<amt><coin>...")
+	fs.Bool(ValidFlag, false, "Is count valid?")
 }
 
-// define flags
+func doCounterTx(cmd *cobra.Command, args []string) error {
+	tx := new(btypes.AppTx)
+	// Note: we don't support loading apptx from json currently, so skip that
 
-type CounterFlags struct {
-	bcmd.AppFlags `mapstructure:",squash"`
-	Valid         bool
-	CountFee      string
-}
-
-func (m CounterTxMaker) Flags() (*flag.FlagSet, interface{}) {
-	fs, app := bcmd.AppFlagSet()
-	fs.String("countfee", "", "Coins to send in the format <amt><coin>,<amt><coin>...")
-	fs.Bool("valid", false, "Is count valid?")
-	return fs, &CounterFlags{AppFlags: app}
-}
-
-// parse flags
-
-type CounterTxReader struct {
-	App bcmd.AppTxReader
-}
-
-func (t CounterTxReader) ReadTxJSON(data []byte, pk crypto.PubKey) (interface{}, error) {
-	// TODO: something.  maybe?
-	return t.App.ReadTxJSON(data, pk)
-}
-
-func (t CounterTxReader) ReadTxFlags(flags interface{}, pk crypto.PubKey) (interface{}, error) {
-	data := flags.(*CounterFlags)
-	countFee, err := btypes.ParseCoins(data.CountFee)
+	// read the standard flags
+	err := bcmd.ReadAppTxFlags(tx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
+	// now read the app-specific flags
+	err = readCounterFlags(tx)
+	if err != nil {
+		return err
+	}
+
+	app := bcmd.WrapAppTx(tx)
+	app.AddSigner(txcmd.GetSigner())
+
+	// Sign if needed and post.  This it the work-horse
+	bres, err := txcmd.SignAndPostTx(app)
+	if err != nil {
+		return err
+	}
+
+	// output result
+	return txcmd.OutputTx(bres)
+}
+
+// readCounterFlags sets the app-specific data in the AppTx
+func readCounterFlags(tx *btypes.AppTx) error {
+	countFee, err := btypes.ParseCoins(viper.GetString(CountFeeFlag))
+	if err != nil {
+		return err
+	}
 	ctx := counter.CounterTx{
-		Valid: viper.GetBool("valid"),
+		Valid: viper.GetBool(ValidFlag),
 		Fee:   countFee,
 	}
-	txBytes := wire.BinaryBytes(ctx)
 
-	return t.App.ReadTxFlags(&data.AppFlags, counter.New().Name(), txBytes, pk)
+	tx.Name = counter.New().Name()
+	tx.Data = wire.BinaryBytes(ctx)
+	return nil
 }

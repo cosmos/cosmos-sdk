@@ -57,3 +57,42 @@ func (s *AppTx) TxBytes() ([]byte, error) {
 	txBytes := wire.BinaryBytes(bc.TxS{s.Tx})
 	return txBytes, nil
 }
+
+// AddSigner sets address and pubkey info on the tx based on the key that
+// will be used for signing
+func (a *AppTx) AddSigner(pk crypto.PubKey) {
+	// get addr if available
+	var addr []byte
+	if !pk.Empty() {
+		addr = pk.Address()
+	}
+
+	// set the send address, and pubkey if needed
+	in := &a.Tx.Input
+	in.Address = addr
+	if in.Sequence == 1 {
+		in.PubKey = pk
+	}
+}
+
+// TODO: this should really be in the basecoin.types SendTx,
+// but that code is too ugly now, needs refactor..
+func (a *AppTx) ValidateBasic() error {
+	if a.chainID == "" {
+		return errors.New("No chainId specified")
+	}
+	in := a.Tx.Input
+	if len(in.Address) != 20 {
+		return errors.Errorf("Invalid input address length: %d", len(in.Address))
+	}
+	if !in.Coins.IsValid() {
+		return errors.Errorf("Invalid input coins %v", in.Coins)
+	}
+	if in.Coins.IsZero() {
+		return errors.New("Input coins cannot be zero")
+	}
+	if in.Sequence <= 0 {
+		return errors.New("Sequence must be greater than 0")
+	}
+	return nil
+}

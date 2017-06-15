@@ -7,22 +7,22 @@ import:
 - package: github.com/spf13/pflag
 - package: github.com/spf13/viper
 - package: github.com/tendermint/abci
-  version: ~0.5.0
+  version: develop
   version:
   subpackages:
   - server
   - types
 - package: github.com/tendermint/go-crypto
-  version: ~0.2.0
+  version: develop
   subpackages:
   - cmd
   - keys
 - package: github.com/tendermint/go-wire
-  version: ~0.6.2
+  version: develop
   subpackages:
   - data
 - package: github.com/tendermint/light-client
-  version: ~0.10.0
+  version: develop
   subpackages:
   - commands
   - commands/proofs
@@ -30,12 +30,12 @@ import:
   - commands/txs
   - proofs
 - package: github.com/tendermint/merkleeyes
-  version: ~0.2.0
+  version: develop
   subpackages:
   - client
   - iavl
 - package: github.com/tendermint/tendermint
-  version: ~0.10.0
+  version: develop
   subpackages:
   - config
   - node
@@ -46,7 +46,7 @@ import:
   - rpc/lib/types
   - types
 - package: github.com/tendermint/tmlibs
-  version: ~0.2.0
+  version: develop
   subpackages:
   - cli
   - cli/flags

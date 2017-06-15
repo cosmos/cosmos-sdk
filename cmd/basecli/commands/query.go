@@ -41,3 +41,15 @@ func doAccountQuery(cmd *cobra.Command, args []string) error {
 
 	return proofcmd.OutputProof(acc, proof.BlockHeight())
 }
+
+/*** this decodes the basecoin tx ***/
+
+type BaseTxPresenter struct {
+	proofs.RawPresenter // this handles MakeKey as hex bytes
+}
+
+func (_ BaseTxPresenter) ParseData(raw []byte) (interface{}, error) {
+	var tx btypes.TxS
+	err := wire.ReadBinaryBytes(raw, &tx)
+	return tx, err
+}

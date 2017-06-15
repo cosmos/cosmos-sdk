@@ -2,126 +2,104 @@ package commands
 
 import (
 	"encoding/hex"
-	"encoding/json"
 
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	crypto "github.com/tendermint/go-crypto"
-	wire "github.com/tendermint/go-wire"
-	lightclient "github.com/tendermint/light-client"
 	"github.com/tendermint/light-client/commands"
-	"github.com/tendermint/light-client/proofs"
+	txcmd "github.com/tendermint/light-client/commands/txs"
 
 	btypes "github.com/tendermint/basecoin/types"
 )
 
-type BaseTxPresenter struct {
-	proofs.RawPresenter // this handles MakeKey as hex bytes
+/*** Here is the sendtx command ***/
+
+var SendTxCmd = &cobra.Command{
+	Use:   "send",
+	Short: "send tokens from one account to another",
+	RunE:  doSendTx,
 }
 
-func (_ BaseTxPresenter) ParseData(raw []byte) (interface{}, error) {
-	var tx btypes.TxS
-	err := wire.ReadBinaryBytes(raw, &tx)
-	return tx, err
+const (
+	ToFlag       = "to"
+	AmountFlag   = "amount"
+	FeeFlag      = "fee"
+	GasFlag      = "gas"
+	SequenceFlag = "sequence"
+)
+
+func init() {
+	flags := SendTxCmd.Flags()
+	flags.String(ToFlag, "", "Destination address for the bits")
+	flags.String(AmountFlag, "", "Coins to send in the format <amt><coin>,<amt><coin>...")
+	flags.String(FeeFlag, "0mycoin", "Coins for the transaction fee of the format <amt><coin>")
+	flags.Int64(GasFlag, 0, "Amount of gas for this transaction")
+	flags.Int(SequenceFlag, -1, "Sequence number for this transaction")
 }
 
-/******** SendTx *********/
+// runDemo is an example of how to make a tx
+func doSendTx(cmd *cobra.Command, args []string) error {
+	tx := new(btypes.SendTx)
 
-type SendTxMaker struct{}
-
-func (m SendTxMaker) MakeReader() (lightclient.TxReader, error) {
-	chainID := viper.GetString(commands.ChainFlag)
-	return SendTxReader{ChainID: chainID}, nil
-}
-
-type SendFlags struct {
-	To       string
-	Amount   string
-	Fee      string
-	Gas      int64
-	Sequence int
-}
-
-func (m SendTxMaker) Flags() (*flag.FlagSet, interface{}) {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
-	fs.String("to", "", "Destination address for the bits")
-	fs.String("amount", "", "Coins to send in the format <amt><coin>,<amt><coin>...")
-	fs.String("fee", "0mycoin", "Coins for the transaction fee of the format <amt><coin>")
-	fs.Int64("gas", 0, "Amount of gas for this transaction")
-	fs.Int("sequence", -1, "Sequence number for this transaction")
-	return fs, &SendFlags{}
-}
-
-// SendTXReader allows us to create SendTx
-type SendTxReader struct {
-	ChainID string
-}
-
-func (t SendTxReader) ReadTxJSON(data []byte, pk crypto.PubKey) (interface{}, error) {
-	// TODO: use pk info to help construct data
-	var tx btypes.SendTx
-	err := json.Unmarshal(data, &tx)
-	send := SendTx{
-		chainID: t.ChainID,
-		Tx:      &tx,
+	// load data from json or flags
+	found, err := txcmd.LoadJSON(tx)
+	if !found {
+		err = readSendTxFlags(tx)
 	}
-	return &send, errors.Wrap(err, "parse sendtx")
+	if err != nil {
+		return err
+	}
+
+	send := &SendTx{
+		chainID: viper.GetString(commands.ChainFlag),
+		Tx:      tx,
+	}
+	send.AddSigner(txcmd.GetSigner())
+
+	// Sign if needed and post.  This it the work-horse
+	bres, err := txcmd.SignAndPostTx(send)
+	if err != nil {
+		return err
+	}
+
+	// output result
+	return txcmd.OutputTx(bres)
 }
 
-func (t SendTxReader) ReadTxFlags(flags interface{}, pk crypto.PubKey) (interface{}, error) {
-	data := flags.(*SendFlags)
-
-	// parse to and from addresses
-	to, err := hex.DecodeString(StripHex(data.To))
+func readSendTxFlags(tx *btypes.SendTx) error {
+	// parse to address
+	to, err := hex.DecodeString(StripHex(viper.GetString(ToFlag)))
 	if err != nil {
-		return nil, errors.Errorf("To address is invalid hex: %v\n", err)
+		return errors.Errorf("To address is invalid hex: %v\n", err)
 	}
 
 	//parse the fee and amounts into coin types
-	feeCoin, err := btypes.ParseCoin(data.Fee)
+	tx.Fee, err = btypes.ParseCoin(viper.GetString(FeeFlag))
 	if err != nil {
-		return nil, err
+		return err
 	}
-	amountCoins, err := btypes.ParseCoins(data.Amount)
+	amountCoins, err := btypes.ParseCoins(viper.GetString(AmountFlag))
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// get addr if available
-	var addr []byte
-	if !pk.Empty() {
-		addr = pk.Address()
-	}
+	// set the gas
+	tx.Gas = viper.GetInt64(GasFlag)
 
-	// craft the tx
-	input := btypes.TxInput{
-		Address:  addr,
+	// craft the inputs and outputs
+	tx.Inputs = []btypes.TxInput{{
 		Coins:    amountCoins,
-		Sequence: data.Sequence,
-	}
-	if data.Sequence == 1 {
-		input.PubKey = pk
-	}
-	output := btypes.TxOutput{
+		Sequence: viper.GetInt(SequenceFlag),
+	}}
+	tx.Outputs = []btypes.TxOutput{{
 		Address: to,
 		Coins:   amountCoins,
-	}
-	tx := btypes.SendTx{
-		Gas:     data.Gas,
-		Fee:     feeCoin,
-		Inputs:  []btypes.TxInput{input},
-		Outputs: []btypes.TxOutput{output},
-	}
+	}}
 
-	// wrap it in the proper signer thing...
-	send := SendTx{
-		chainID: t.ChainID,
-		Tx:      &tx,
-	}
-	return &send, nil
+	return nil
 }
 
 /******** AppTx *********/

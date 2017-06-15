@@ -58,3 +58,55 @@ func (s *SendTx) TxBytes() ([]byte, error) {
 	}{s.Tx})
 	return txBytes, nil
 }
+
+// AddSigner sets address and pubkey info on the tx based on the key that
+// will be used for signing
+func (s *SendTx) AddSigner(pk crypto.PubKey) {
+	// get addr if available
+	var addr []byte
+	if !pk.Empty() {
+		addr = pk.Address()
+	}
+
+	// set the send address, and pubkey if needed
+	in := s.Tx.Inputs
+	in[0].Address = addr
+	if in[0].Sequence == 1 {
+		in[0].PubKey = pk
+	}
+}
+
+// TODO: this should really be in the basecoin.types SendTx,
+// but that code is too ugly now, needs refactor..
+func (s *SendTx) ValidateBasic() error {
+	if s.chainID == "" {
+		return errors.New("No chainId specified")
+	}
+	for _, in := range s.Tx.Inputs {
+		if len(in.Address) != 20 {
+			return errors.Errorf("Invalid input address length: %d", len(in.Address))
+		}
+		if !in.Coins.IsValid() {
+			return errors.Errorf("Invalid input coins %v", in.Coins)
+		}
+		if in.Coins.IsZero() {
+			return errors.New("Input coins cannot be zero")
+		}
+		if in.Sequence <= 0 {
+			return errors.New("Sequence must be greater than 0")
+		}
+	}
+	for _, out := range s.Tx.Outputs {
+		if len(out.Address) != 20 {
+			return errors.Errorf("Invalid output address length: %d", len(out.Address))
+		}
+		if !out.Coins.IsValid() {
+			return errors.Errorf("Invalid output coins %v", out.Coins)
+		}
+		if out.Coins.IsZero() {
+			return errors.New("Output coins cannot be zero")
+		}
+	}
+
+	return nil
+}

@@ -14,7 +14,6 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
-	bcount "github.com/tendermint/basecoin/cmd/basecli/counter"
 )
 
 // BaseCli represents the base command when called without any subcommands
@@ -38,18 +37,18 @@ func main() {
 	pr.AddCommand(proofs.TxCmd)
 	pr.AddCommand(proofs.KeyCmd)
 	pr.AddCommand(bcmd.AccountQueryCmd)
-	pr.AddCommand(bcount.CounterQueryCmd)
+	// pr.AddCommand(bcount.CounterQueryCmd)
 
 	// here is how you would add the custom txs... but don't really add demo in your app
+	proofs.TxPresenters.Register("base", bcmd.BaseTxPresenter{})
 	tr := txs.RootCmd
-	// tr.AddCommand(txs.DemoCmd)
+	tr.AddCommand(bcmd.SendTxCmd)
+	// tr.AddCommand(bcmd.AppTxCmd)
 
 	// TODO
-	proofs.TxPresenters.Register("base", bcmd.BaseTxPresenter{})
-	//proofs.StatePresenters.Register("counter", bcount.CounterPresenter{})
 
-	txs.Register("send", bcmd.SendTxMaker{})
-	txs.Register("counter", bcount.CounterTxMaker{})
+	// txs.Register("send", bcmd.SendTxMaker{})
+	// txs.Register("counter", bcount.CounterTxMaker{})
 
 	// set up the various commands to use
 	BaseCli.AddCommand(

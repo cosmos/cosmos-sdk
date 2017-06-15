@@ -11,24 +11,18 @@ import (
 	"github.com/tendermint/basecoin/plugins/counter"
 )
 
-var CounterTxCmd = &cobra.Command{
+var CounterQueryCmd = &cobra.Command{
 	Use:   "counter",
-	Short: "query counter state",
-	RunE:  counterTxCmd,
+	Short: "Query counter state, with proof",
+	RunE:  doCounterQuery,
 }
 
-func init() {
-	//first modify the full node account query command for the light client
-	proofcmd.RootCmd.AddCommand(CounterTxCmd)
-}
-
-func counterTxCmd(cmd *cobra.Command, args []string) error {
-
-	// get the proof -> this will be used by all prover commands
+func doCounterQuery(cmd *cobra.Command, args []string) error {
 	height := proofcmd.GetHeight()
+	key := counter.New().StateKey()
+
 	node := commands.GetNode()
 	prover := proofs.NewAppProver(node)
-	key := counter.New().StateKey()
 	proof, err := proofcmd.GetProof(node, prover, key, height)
 	if err != nil {
 		return err

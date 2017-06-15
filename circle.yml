@@ -19,7 +19,7 @@ dependencies:
 
 test:
   override:
-    - "cd $REPO && glide install && go install ./cmd/basecoin"
+    - "cd $REPO && glide install && go install ./cmd/..."
     - ls $GOPATH/bin
     - "cd $REPO && make test"
     - "cd $REPO/demo && bash start.sh"

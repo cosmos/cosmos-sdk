@@ -1,5 +1,5 @@
 hash: 6eb1119dccf2ab4d0adb870a14cb4408047119be53c8ec4afeaa281bd1d2b457
-updated: 2017-06-15T12:09:30.832243232+02:00
+updated: 2017-06-15T17:51:21.867322849+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -113,7 +113,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 438b16f1f84ef002d7408ecd6fc3a3974cbc9559
+  version: 7dff40942a64cdeefefa9446b2d104750b349f8a
   subpackages:
   - cmd
   - keys
@@ -122,12 +122,12 @@ imports:
   - keys/server/types
   - keys/storage/filestorage
 - name: github.com/tendermint/go-wire
-  version: 97beaedf0f4dbc035309157c92be3b30cc6e5d74
+  version: 5f88da3dbc1a72844e6dfaf274ce87f851d488eb
   subpackages:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: a4dbbcacfd2d0a53da1393cbe176c0a81cab42e7
+  version: 83bede2a7f150fc7f8aedde1aecd30d2bdf043e8
   subpackages:
   - certifiers
   - certifiers/client
@@ -139,17 +139,16 @@ imports:
   - commands/txs
   - proofs
 - name: github.com/tendermint/merkleeyes
-  version: c722818b460381bc5b82e38c73ff6e22a9df624d
+  version: feb2c3fadac8221f96fbfce65a63af034327f972
   subpackages:
   - app
   - client
   - iavl
 - name: github.com/tendermint/tendermint
-  version: 11b5d11e9eec170e1d3dce165f0270d5c0759d69
+  version: 4f0f50c62d41d39ad64e07ad642f705cc13c8229
   subpackages:
   - blockchain
   - cmd/tendermint/commands
-  - cmd/tendermint/commands/flags
   - config
   - consensus
   - mempool

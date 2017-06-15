@@ -53,7 +53,7 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 	}
 
 	send := &SendTx{
-		chainID: viper.GetString(commands.ChainFlag),
+		chainID: commands.GetChainID(),
 		Tx:      tx,
 	}
 	send.AddSigner(txcmd.GetSigner())
@@ -138,7 +138,7 @@ func ReadAppTxFlags(tx *btypes.AppTx) error {
 
 func WrapAppTx(tx *btypes.AppTx) *AppTx {
 	return &AppTx{
-		chainID: viper.GetString(commands.ChainFlag),
+		chainID: commands.GetChainID(),
 		Tx:      tx,
 	}
 }

@@ -20,6 +20,7 @@ clitest/shunit2:
 		-q -O clitest/shunit2
 
 test_cli: clitest/shunit2
+	# sudo apt-get install jq
 	@./clitest/basictx.sh
 	# @./clitest/ibc.sh
 

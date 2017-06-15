@@ -1,5 +1,5 @@
-hash: b31c6e45072e1015b04b5a201fb5ffcbadb837f21fe4a499f3b7e93229ee1c45
-updated: 2017-06-02T09:22:48.505187474Z
+hash: 6eb1119dccf2ab4d0adb870a14cb4408047119be53c8ec4afeaa281bd1d2b457
+updated: 2017-06-15T12:09:30.832243232+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -39,9 +39,9 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/handlers
-  version: 13d73096a474cac93275c679c7b8a2dc17ddba82
+  version: a4043c62cc2329bacda331d33fc908ab11ef0ec3
 - name: github.com/gorilla/mux
-  version: 392c28fe23e1c45ddba891b0320b3b5df220beea
+  version: bcd8bc72b08df0f70df986b97f95590779502d31
 - name: github.com/gorilla/websocket
   version: a91eba7f97777409bc2c443f5534d41dd20c5720
 - name: github.com/hashicorp/hcl
@@ -101,7 +101,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: b86da575718079396af1f7fe3609ea34be6f855d
+  version: 7f5f48b6b9ec3964de4b07b6c3cd05d7c91aeee5
   subpackages:
   - client
   - example/dummy
@@ -113,7 +113,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 7dff40942a64cdeefefa9446b2d104750b349f8a
+  version: 438b16f1f84ef002d7408ecd6fc3a3974cbc9559
   subpackages:
   - cmd
   - keys
@@ -122,12 +122,12 @@ imports:
   - keys/server/types
   - keys/storage/filestorage
 - name: github.com/tendermint/go-wire
-  version: 5f88da3dbc1a72844e6dfaf274ce87f851d488eb
+  version: 97beaedf0f4dbc035309157c92be3b30cc6e5d74
   subpackages:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: d993d8a9ba6cb51f05faf6e527016288e38c2853
+  version: c90f1a90b28977431c6291a0162228e9e4250401
   subpackages:
   - certifiers
   - certifiers/client
@@ -139,13 +139,13 @@ imports:
   - commands/txs
   - proofs
 - name: github.com/tendermint/merkleeyes
-  version: 6b06ad654956c951b3d27e38bb566ae45aae1ff7
+  version: c722818b460381bc5b82e38c73ff6e22a9df624d
   subpackages:
   - app
   - client
   - iavl
 - name: github.com/tendermint/tendermint
-  version: 2b5b0172531319ebc255a0ba638f6be666e5e46c
+  version: 11b5d11e9eec170e1d3dce165f0270d5c0759d69
   subpackages:
   - blockchain
   - cmd/tendermint/commands
@@ -172,7 +172,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: 6b619742ac69388dd591c30f55aaee46197b086e
+  version: 0ecb38c6da95a1e8f60117b2bd4a6f76c7a0f944
   subpackages:
   - autofile
   - cli

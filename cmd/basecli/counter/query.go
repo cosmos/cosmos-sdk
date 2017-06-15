@@ -36,3 +36,18 @@ func doCounterQuery(cmd *cobra.Command, args []string) error {
 
 	return proofcmd.OutputProof(cp, proof.BlockHeight())
 }
+
+/*** doesn't seem to be needed anymore??? ***/
+
+// type CounterPresenter struct{}
+
+// func (_ CounterPresenter) MakeKey(str string) ([]byte, error) {
+//   key := counter.New().StateKey()
+//   return key, nil
+// }
+
+// func (_ CounterPresenter) ParseData(raw []byte) (interface{}, error) {
+//   var cp counter.CounterPluginState
+//   err := wire.ReadBinaryBytes(raw, &cp)
+//   return cp, err
+// }

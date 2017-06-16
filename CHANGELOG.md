@@ -2,6 +2,9 @@
 
 ## 0.6.0 (???)
 
+Make the basecli command the only way to use client-side, to enforce best
+security practices. Lots of enhancements to get it up to production quality.
+
 BREAKING CHANGES:
 - basecli
   - `basecli proof state get` -> `basecli query key`

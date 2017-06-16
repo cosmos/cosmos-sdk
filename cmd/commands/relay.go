@@ -24,8 +24,19 @@ import (
 
 var RelayCmd = &cobra.Command{
 	Use:   "relay",
+	Short: "Relay ibc packets between two chains",
+}
+
+var RelayStartCmd = &cobra.Command{
+	Use:   "start",
 	Short: "Start basecoin relayer to relay IBC packets between chains",
-	RunE:  relayCmd,
+	RunE:  relayStartCmd,
+}
+
+var RelayInitCmd = &cobra.Command{
+	Use:   "init",
+	Short: "Register both chains with each other, to prepare the relayer to run",
+	RunE:  relayInitCmd,
 }
 
 //flags
@@ -37,10 +48,12 @@ var (
 	chain2IDFlag string
 
 	fromFileFlag string
+
+	genesisFile1Flag string
+	genesisFile2Flag string
 )
 
 func init() {
-
 	flags := []Flag2Register{
 		{&chain1AddrFlag, "chain1-addr", "tcp://localhost:46657", "Node address for chain1"},
 		{&chain2AddrFlag, "chain2-addr", "tcp://localhost:36657", "Node address for chain2"},
@@ -48,7 +61,33 @@ func init() {
 		{&chain2IDFlag, "chain2-id", "test_chain_2", "ChainID for chain2"},
 		{&fromFileFlag, "from", "key.json", "Path to a private key to sign the transaction"},
 	}
-	RegisterFlags(RelayCmd, flags)
+	RegisterPersistentFlags(RelayCmd, flags)
+
+	initFlags := []Flag2Register{
+		{&genesisFile1Flag, "genesis1", "", "Path to genesis file for chain1"},
+		{&genesisFile2Flag, "genesis2", "", "Path to genesis file for chain2"},
+	}
+	RegisterFlags(RelayInitCmd, initFlags)
+
+	RelayCmd.AddCommand(RelayStartCmd)
+	RelayCmd.AddCommand(RelayInitCmd)
+}
+
+func relayInitCmd(cmd *cobra.Command, args []string) error {
+	fmt.Println("not implemented")
+	return nil
+}
+
+func relayStartCmd(cmd *cobra.Command, args []string) error {
+
+	go loop(chain1AddrFlag, chain2AddrFlag, chain1IDFlag, chain2IDFlag)
+	go loop(chain2AddrFlag, chain1AddrFlag, chain2IDFlag, chain1IDFlag)
+
+	cmn.TrapSignal(func() {
+		// TODO: Cleanup
+	})
+	return nil
+
 }
 
 func loop(addr1, addr2, id1, id2 string) {
@@ -232,16 +271,4 @@ func broadcastTxWithClient(httpClient *client.HTTP, tx tmtypes.Tx) ([]byte, stri
 	}
 
 	return res.DeliverTx.Data, res.DeliverTx.Log, nil
-}
-
-func relayCmd(cmd *cobra.Command, args []string) error {
-
-	go loop(chain1AddrFlag, chain2AddrFlag, chain1IDFlag, chain2IDFlag)
-	go loop(chain2AddrFlag, chain1AddrFlag, chain2IDFlag, chain1IDFlag)
-
-	cmn.TrapSignal(func() {
-		// TODO: Cleanup
-	})
-	return nil
-
 }

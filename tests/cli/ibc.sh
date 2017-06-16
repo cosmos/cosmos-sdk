@@ -121,6 +121,8 @@ test01SendIBCTx() {
   BC_HOME=${CLIENT_2} checkAccount $RECV "0" "20002"
 
   # stop relay
+  echo "stoping relay"
+  echo
   kill -9 $PID_RELAY
 }
 
@@ -163,7 +165,7 @@ startRelay() {
   # now start the relay! (this remains a server command)
   # TODO: bucky, why does this die if I don't provide home???
   # It doesn't use the --from flag????
-  ${SERVER_EXE} relay --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
+  ${SERVER_EXE} relay start --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
     --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
     --home=${BASE_DIR_1}/server --from=$RELAY_KEY > ${BASE_DIR_1}/../relay.log &
   PID_RELAY=$!

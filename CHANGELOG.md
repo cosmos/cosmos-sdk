@@ -16,6 +16,13 @@ BREAKING CHANGES:
   - no longer supports counter app (see new countercli)
 - basecoin
   - removed all client side functionality from it (use basecli now for proofs)
+    - no tx subcommand
+    - no query subcommand
+    - no account (query) subcommand
+    - a few other random ones...
+  - enhanced relay subcommand
+    - relay start did what relay used to do
+    - relay init registers both chains on one another (to set it up so relay start just works)
 
 ENHANCEMENTS:
 - intergrates tendermint 0.10.0 (not the rc-2, but the real thing)

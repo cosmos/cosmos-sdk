@@ -24,7 +24,7 @@ test_cli: tests/cli/shunit2
 	# sudo apt-get install jq
 	@./tests/cli/basictx.sh
 	@./tests/cli/counter.sh
-	@./clitest/ibc.sh
+	@./tests/cli/ibc.sh
 
 get_vendor_deps: tools
 	glide install

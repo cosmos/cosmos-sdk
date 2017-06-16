@@ -41,7 +41,6 @@ initServer() {
   echo "Starting ${SERVER_EXE} server..."
   ${SERVER_EXE} start --home=$SERVE_DIR >>$SERVER_LOG 2>&1 &
   sleep 5
-  PID_SERVER=$!
 }
 
 # initClient requires chain_id arg, port is optional (default 4665{5,6,7})

@@ -56,12 +56,11 @@ test01SendTx() {
 
   assertFalse "missing dest" "${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 2>/dev/null"
   assertFalse "bad password" "echo foo | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH 2>/dev/null"
-  # we have to remove the password request from stdout, to just get the json
-  RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH 2>/dev/null | tail -n +2)
-  txSucceeded "$RES"
-
-  HASH=$(echo $RES | jq .hash | tr -d \")
-  TX_HEIGHT=$(echo $RES | jq .height)
+  RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH 2>/dev/null)
+  txSucceeded $? "$RES"
+  TX=`echo $RES | cut -d: -f2-`
+  HASH=$(echo $TX | jq .hash | tr -d \")
+  TX_HEIGHT=$(echo $TX | jq .height)
 
   checkAccount $SENDER "1" "9007199254740000"
   checkAccount $RECV "0" "992"

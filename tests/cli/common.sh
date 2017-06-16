@@ -78,14 +78,19 @@ checkAccount() {
   assertTrue "must have genesis account" $?
   assertEquals "proper sequence" "$2" $(echo $ACCT | jq .data.sequence)
   assertEquals "proper money" "$3" $(echo $ACCT | jq .data.coins[0].amount)
+  return $?
 }
 
-# txSucceeded $RES
+# txSucceeded $? "$RES"
 # must be called right after the `tx` command, makes sure it got a success response
 txSucceeded() {
-  assertTrue "sent tx" $?
-  assertEquals "good check" "0" $(echo $1 | jq .check_tx.code)
-  assertEquals "good deliver" "0" $(echo $1 | jq .deliver_tx.code)
+  if (assertTrue "sent tx: $2" $1); then
+    TX=`echo $2 | cut -d: -f2-` # strip off first line asking for password
+    assertEquals "good check: $TX" "0" $(echo $TX | jq .check_tx.code)
+    assertEquals "good deliver: $TX" "0" $(echo $TX | jq .deliver_tx.code)
+  else
+    return 1
+  fi
 }
 
 # checkSendTx $HASH $HEIGHT $SENDER $AMOUNT
@@ -98,5 +103,20 @@ checkSendTx() {
   assertEquals "type=send" '"send"' $(echo $TX | jq .data.type)
   assertEquals "proper sender" "\"$3\"" $(echo $TX | jq .data.data.inputs[0].address)
   assertEquals "proper out amount" "$4" $(echo $TX | jq .data.data.outputs[0].coins[0].amount)
+  return $?
 }
+
+# waitForBlock $port
+# waits until the block height on that node increases by one
+waitForBlock() {
+  addr=http://localhost:$1
+  b1=`curl -s $addr/status | jq .result.latest_block_height`
+  b2=$b1
+  while [ "$b2" == "$b1" ]; do
+                echo "Waiting for node $addr to commit a block ..."
+                sleep 1
+    b2=`curl -s $addr/status | jq .result.latest_block_height`
+  done
+}
+
 

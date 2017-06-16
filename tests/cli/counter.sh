@@ -2,7 +2,7 @@
 
 # these are two globals to control all scripts (can use eg. counter instead)
 SERVER_EXE=counter
-CLIENT_EXE=basecli  # TODO: move to countercli
+CLIENT_EXE=countercli
 
 oneTimeSetUp() {
   # these are passed in as args

@@ -19,9 +19,10 @@ oneTimeSetUp() {
 
   # start basecoin server (with counter)
   initServer $BASE_DIR $CHAIN_ID 1234
-  PID_SERVER=$!
+  if [ $? != 0 ]; then return 1; fi
 
   initClient $CHAIN_ID 12347
+  if [ $? != 0 ]; then return 1; fi
 
   echo "...Testing may begin!"
   echo

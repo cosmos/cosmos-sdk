@@ -33,15 +33,19 @@ oneTimeSetUp() {
 
   # start basecoin server, giving money to the key in the first client
   BC_HOME=${CLIENT_1} initServer $BASE_DIR_1 $CHAIN_ID_1 $PREFIX_1
-  PID_SERVER_1=$!
+  if [ $? != 0 ]; then return 1; fi
+  PID_SERVER_1=$PID_SERVER
 
   # start second basecoin server, giving money to the key in the second client
   BC_HOME=${CLIENT_2} initServer $BASE_DIR_2 $CHAIN_ID_2 $PREFIX_2
-  PID_SERVER_2=$!
+  if [ $? != 0 ]; then return 1; fi
+  PID_SERVER_2=$PID_SERVER
 
   # connect both clients
   BC_HOME=${CLIENT_1} initClient $CHAIN_ID_1 $PORT_1
+  if [ $? != 0 ]; then return 1; fi
   BC_HOME=${CLIENT_2} initClient $CHAIN_ID_2 $PORT_2
+  if [ $? != 0 ]; then return 1; fi
 
   echo "...Testing may begin!"
   echo

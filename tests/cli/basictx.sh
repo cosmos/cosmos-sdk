@@ -19,7 +19,7 @@ oneTimeSetUp() {
 
   # start basecoin server (with counter)
   initServer $BASE_DIR $CHAIN_ID 3456
-  PID_SERVER=$!
+  if [ $? != 0 ]; then return 1; fi
 
   initClient $CHAIN_ID 34567
 

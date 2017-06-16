@@ -14,6 +14,7 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
+	bcount "github.com/tendermint/basecoin/cmd/countercli/commands"
 )
 
 // BaseCli represents the base command when called without any subcommands
@@ -33,15 +34,20 @@ func main() {
 
 	// Prepare queries
 	pr := proofs.RootCmd
-	// These are default parsers, but optional in your app (you can remove key)
+	// These are default parsers, but you optional in your app
 	pr.AddCommand(proofs.TxCmd)
 	pr.AddCommand(proofs.KeyCmd)
 	pr.AddCommand(bcmd.AccountQueryCmd)
 
-	// you will always want this for the base send command
+	// IMPORTANT: here is how you add custom query commands in your app
+	pr.AddCommand(bcount.CounterQueryCmd)
+
 	proofs.TxPresenters.Register("base", bcmd.BaseTxPresenter{})
 	tr := txs.RootCmd
 	tr.AddCommand(bcmd.SendTxCmd)
+
+	// IMPORTANT: here is how you add custom tx construction for your app
+	tr.AddCommand(bcount.CounterTxCmd)
 
 	// Set up the various commands to use
 	BaseCli.AddCommand(

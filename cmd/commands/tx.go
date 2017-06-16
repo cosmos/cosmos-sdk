@@ -1,9 +1,7 @@
 package commands
 
 import (
-	"encoding/hex"
 	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -20,18 +18,6 @@ var (
 		Use:   "tx",
 		Short: "Create, sign, and broadcast a transaction",
 	}
-
-	SendTxCmd = &cobra.Command{
-		Use:   "send",
-		Short: "A SendTx transaction, for sending tokens around",
-		RunE:  sendTxCmd,
-	}
-
-	AppTxCmd = &cobra.Command{
-		Use:   "app",
-		Short: "An AppTx transaction, for sending raw data to plugins",
-		RunE:  appTxCmd,
-	}
 )
 
 var (
@@ -43,11 +29,6 @@ var (
 	gasFlag     int
 	feeFlag     string
 	chainIDFlag string
-
-	//non-persistent flags
-	toFlag   string
-	dataFlag string
-	nameFlag string
 )
 
 func init() {
@@ -62,106 +43,7 @@ func init() {
 		{&feeFlag, "fee", "0coin", "Coins for the transaction fee of the format <amt><coin>"},
 		{&seqFlag, "sequence", -1, "Sequence number for the account (-1 to autocalculate)"},
 	}
-
-	sendTxFlags := []Flag2Register{
-		{&toFlag, "to", "", "Destination address for the transaction"},
-	}
-
-	appTxFlags := []Flag2Register{
-		{&nameFlag, "name", "", "Plugin to send the transaction to"},
-		{&dataFlag, "data", "", "Data to send with the transaction"},
-	}
-
 	RegisterPersistentFlags(TxCmd, cmdTxFlags)
-	RegisterFlags(SendTxCmd, sendTxFlags)
-	RegisterFlags(AppTxCmd, appTxFlags)
-
-	//register commands
-	TxCmd.AddCommand(SendTxCmd, AppTxCmd)
-}
-
-func sendTxCmd(cmd *cobra.Command, args []string) error {
-
-	var toHex string
-	var chainPrefix string
-	spl := strings.Split(toFlag, "/")
-	switch len(spl) {
-	case 1:
-		toHex = spl[0]
-	case 2:
-		chainPrefix = spl[0]
-		toHex = spl[1]
-	default:
-		return errors.Errorf("To address has too many slashes")
-	}
-
-	// convert destination address to bytes
-	to, err := hex.DecodeString(StripHex(toHex))
-	if err != nil {
-		return errors.Errorf("To address is invalid hex: %v\n", err)
-	}
-
-	if chainPrefix != "" {
-		to = []byte(chainPrefix + "/" + string(to))
-	}
-
-	// load the priv key
-	privKey, err := LoadKey(fromFlag)
-	if err != nil {
-		return err
-	}
-
-	// get the sequence number for the tx
-	sequence, err := getSeq(privKey.Address[:])
-	if err != nil {
-		return err
-	}
-
-	//parse the fee and amounts into coin types
-	feeCoin, err := types.ParseCoin(feeFlag)
-	if err != nil {
-		return err
-	}
-	amountCoins, err := types.ParseCoins(amountFlag)
-	if err != nil {
-		return err
-	}
-
-	// craft the tx
-	input := types.NewTxInput(privKey.PubKey, amountCoins, sequence)
-	output := newOutput(to, amountCoins)
-	tx := &types.SendTx{
-		Gas:     int64(gasFlag),
-		Fee:     feeCoin,
-		Inputs:  []types.TxInput{input},
-		Outputs: []types.TxOutput{output},
-	}
-
-	// sign that puppy
-	signBytes := tx.SignBytes(chainIDFlag)
-	tx.Inputs[0].Signature = privKey.Sign(signBytes)
-
-	out := wire.BinaryBytes(tx)
-	fmt.Println("Signed SendTx:")
-	fmt.Printf("%X\n", out)
-
-	// broadcast the transaction to tendermint
-	data, log, err := broadcastTx(tx)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Response: %X ; %s\n", data, log)
-	return nil
-}
-
-func appTxCmd(cmd *cobra.Command, args []string) error {
-	// convert data to bytes
-	data := []byte(dataFlag)
-	if isHex(dataFlag) {
-		data, _ = hex.DecodeString(dataFlag)
-	}
-	name := nameFlag
-	return AppTx(name, data)
 }
 
 func AppTx(name string, data []byte) error {

@@ -19,11 +19,6 @@ func main() {
 		commands.InitCmd,
 		commands.StartCmd,
 		commands.TxCmd,
-		commands.QueryCmd,
-		commands.KeyCmd,
-		commands.VerifyCmd,
-		commands.BlockCmd,
-		commands.AccountCmd,
 		commands.UnsafeResetAllCmd,
 		commands.VersionCmd,
 	)

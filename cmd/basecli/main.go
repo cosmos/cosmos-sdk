@@ -32,26 +32,25 @@ tmcli to work for any custom abci app.
 func main() {
 	commands.AddBasicFlags(BaseCli)
 
-	// prepare queries
+	// Prepare queries
 	pr := proofs.RootCmd
-	// these are default parsers, but you optional in your app
+	// These are default parsers, but you optional in your app
 	pr.AddCommand(proofs.TxCmd)
 	pr.AddCommand(proofs.KeyCmd)
 	pr.AddCommand(bcmd.AccountQueryCmd)
 	pr.AddCommand(bcount.CounterQueryCmd)
 
-	// here is how you would add the custom txs... but don't really add demo in your app
+	// Here is how you add custom txs... but don't really add counter in your app
 	proofs.TxPresenters.Register("base", bcmd.BaseTxPresenter{})
 	tr := txs.RootCmd
 	tr.AddCommand(bcmd.SendTxCmd)
 	tr.AddCommand(bcount.CounterTxCmd)
 
 	// TODO
-
 	// txs.Register("send", bcmd.SendTxMaker{})
 	// txs.Register("counter", bcount.CounterTxMaker{})
 
-	// set up the various commands to use
+	// Set up the various commands to use
 	BaseCli.AddCommand(
 		commands.InitCmd,
 		commands.ResetCmd,

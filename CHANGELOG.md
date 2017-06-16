@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.6.0 (???)
+
+Make the basecli command the only way to use client-side, to enforce best
+security practices. Lots of enhancements to get it up to production quality.
+
+BREAKING CHANGES:
+- basecli
+  - `basecli proof state get` -> `basecli query key`
+  - `basecli proof tx get` -> `basecli query tx`
+  - `basecli proof state get --app=account` -> `basecli query account`
+  - use `--chain-id` not `--chainid` for consistency
+  - update to use `--trace` not `--debug` for stack traces on errors
+  - complete overhaul on how tx and query subcommands are added. (see counter or trackomatron for examples)
+  - no longer supports counter app (see new countercli)
+- basecoin
+  - removed all client side functionality from it (use basecli now for proofs)
+
+ENHANCEMENTS:
+- intergrates tendermint 0.10.0 (not the rc-2, but the real thing)
+- commands return error code (1) on failure for easier script testing
+- add `reset_all` to basecli, and never delete keys on `init`
+- new shutil based unit tests, with better coverage of the cli actions
+
+BUG FIXES:
+- no longer panics on missing app_options in genesis (thanks, anton)
+
+
 ## 0.5.2 (June 2, 2017)
 
 BUG FIXES:

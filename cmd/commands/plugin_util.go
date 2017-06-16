@@ -19,11 +19,6 @@ func RegisterStartPlugin(name string, newPlugin func() types.Plugin) {
 	plugins = append(plugins, plugin{name: name, newPlugin: newPlugin})
 }
 
-// Register a subcommand of QueryCmd for plugin specific query functionality
-func RegisterQuerySubcommand(cmd *cobra.Command) {
-	QueryCmd.AddCommand(cmd)
-}
-
 // Register a subcommand of TxCmd to craft transactions for plugins
 func RegisterTxSubcommand(cmd *cobra.Command) {
 	TxCmd.AddCommand(cmd)

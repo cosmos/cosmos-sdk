@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strconv"
 	"time"
 
@@ -73,13 +74,7 @@ func init() {
 	RelayCmd.AddCommand(RelayInitCmd)
 }
 
-func relayInitCmd(cmd *cobra.Command, args []string) error {
-	fmt.Println("not implemented")
-	return nil
-}
-
 func relayStartCmd(cmd *cobra.Command, args []string) error {
-
 	go loop(chain1AddrFlag, chain2AddrFlag, chain1IDFlag, chain2IDFlag)
 	go loop(chain2AddrFlag, chain1AddrFlag, chain2IDFlag, chain1IDFlag)
 
@@ -87,7 +82,36 @@ func relayStartCmd(cmd *cobra.Command, args []string) error {
 		// TODO: Cleanup
 	})
 	return nil
+}
 
+func relayInitCmd(cmd *cobra.Command, args []string) error {
+	err := registerChain(chain1IDFlag, chain1AddrFlag, chain2IDFlag, genesisFile2Flag, fromFileFlag)
+	if err != nil {
+		return err
+	}
+	err = registerChain(chain2IDFlag, chain2AddrFlag, chain1IDFlag, genesisFile1Flag, fromFileFlag)
+	return err
+}
+
+func registerChain(chainID, node, registerChainID, registerGenesis, keyFile string) error {
+	genesisBytes, err := ioutil.ReadFile(registerGenesis)
+	if err != nil {
+		return errors.Errorf("Error reading genesis file %v: %v\n", registerGenesis, err)
+	}
+
+	ibcTx := ibc.IBCRegisterChainTx{
+		ibc.BlockchainGenesis{
+			ChainID: registerChainID,
+			Genesis: string(genesisBytes),
+		},
+	}
+
+	privKey, err := LoadKey(keyFile)
+	if err != nil {
+		return err
+	}
+	relay := newRelayer(privKey, chainID, node)
+	return relay.appTx(ibcTx)
 }
 
 func loop(addr1, addr2, id1, id2 string) {

@@ -108,7 +108,7 @@ test01SendIBCTx() {
   # start the relay and wait a few blocks...
   # (already sent a tx on chain1, so use higher sequence)
   startRelay 2 1
-  if [ $? != 0 ]; then echo "can't start relay!"; return 1; fi
+  if [ $? != 0 ]; then echo "can't start relay"; cat ${BASE_DIR_1}/../relay.log; return 1; fi
 
   # give it a little time, then make sure the money arrived
   echo "waiting for relay..."
@@ -148,21 +148,14 @@ startRelay() {
   txSucceeded $? "$RES"
   if [ $? != 0 ]; then echo "can't pay chain2!"; return 1; fi
 
-  # now we need to register the chains
-  # TODO: do this with basecli!!!!
-  basecoin tx ibc --amount 10mycoin --from=$RELAY_KEY --chain_id=$CHAIN_ID_2 \
-    --node=tcp://localhost:${PORT_2} \
-    register --ibc_chain_id=$CHAIN_ID_1 --genesis=$BASE_DIR_1/server/genesis.json \
-    >/dev/null
-  if [ $? != 0 ]; then echo "can't register chain1 on chain 2"; return 1; fi
+  # initialize the relay (register both chains)
+  ${SERVER_EXE} relay init --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
+    --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
+    --genesis1=${BASE_DIR_1}/server/genesis.json --genesis2=${BASE_DIR_2}/server/genesis.json \
+    --home=${BASE_DIR_1}/server --from=$RELAY_KEY > ${BASE_DIR_1}/../relay.log &
+  if [ $? != 0 ]; then echo "can't initialize relays"; cat ${BASE_DIR_1}/../relay.log; return 1; fi
 
-  basecoin tx ibc --amount 10mycoin --from=$RELAY_KEY --chain_id=$CHAIN_ID_1 \
-    --node=tcp://localhost:${PORT_1} \
-    register --ibc_chain_id=$CHAIN_ID_2 --genesis=$BASE_DIR_2/server/genesis.json \
-    >/dev/null
-  if [ $? != 0 ]; then echo "can't register chain2 on chain 1"; return 1; fi
-
-  # now start the relay! (this remains a server command)
+  # now start the relay (constantly send packets)
   # TODO: bucky, why does this die if I don't provide home???
   # It doesn't use the --from flag????
   ${SERVER_EXE} relay start --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \

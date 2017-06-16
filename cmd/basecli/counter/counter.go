@@ -12,68 +12,72 @@ import (
 	btypes "github.com/tendermint/basecoin/types"
 )
 
+//CounterTxCmd is the CLI command to execute the counter
+//  through the appTx Command
 var CounterTxCmd = &cobra.Command{
 	Use:   "counter",
 	Short: "add a vote to the counter",
 	Long: `Add a vote to the counter.
 
 You must pass --valid for it to count and the countfee will be added to the counter.`,
-	RunE: doCounterTx,
+	RunE: counterTxCmd,
 }
 
 const (
-	CountFeeFlag = "countfee"
-	ValidFlag    = "valid"
+	flagCountFee = "countfee"
+	flagValid    = "valid"
 )
 
 func init() {
 	fs := CounterTxCmd.Flags()
 	bcmd.AddAppTxFlags(fs)
-	fs.String(CountFeeFlag, "", "Coins to send in the format <amt><coin>,<amt><coin>...")
-	fs.Bool(ValidFlag, false, "Is count valid?")
+	fs.String(flagCountFee, "", "Coins to send in the format <amt><coin>,<amt><coin>...")
+	fs.Bool(flagValid, false, "Is count valid?")
 }
 
-func doCounterTx(cmd *cobra.Command, args []string) error {
-	tx := new(btypes.AppTx)
+func counterTxCmd(cmd *cobra.Command, args []string) error {
 	// Note: we don't support loading apptx from json currently, so skip that
 
-	// read the standard flags
-	err := bcmd.ReadAppTxFlags(tx)
+	// Read the app-specific flags
+	name, data, err := getAppData()
 	if err != nil {
 		return err
 	}
 
-	// now read the app-specific flags
-	err = readCounterFlags(tx)
+	// Read the standard app-tx flags
+	gas, fee, txInput, err := bcmd.ReadAppTxFlags()
 	if err != nil {
 		return err
 	}
 
-	app := bcmd.WrapAppTx(tx)
-	app.AddSigner(txcmd.GetSigner())
-
-	// Sign if needed and post.  This it the work-horse
-	bres, err := txcmd.SignAndPostTx(app)
+	// Create AppTx and broadcast
+	tx := &btypes.AppTx{
+		Gas:   gas,
+		Fee:   fee,
+		Name:  name,
+		Input: txInput,
+		Data:  data,
+	}
+	res, err := bcmd.BroadcastAppTx(tx)
 	if err != nil {
 		return err
 	}
 
-	// output result
-	return txcmd.OutputTx(bres)
+	// Output result
+	return txcmd.OutputTx(res)
 }
 
-// readCounterFlags sets the app-specific data in the AppTx
-func readCounterFlags(tx *btypes.AppTx) error {
-	countFee, err := btypes.ParseCoins(viper.GetString(CountFeeFlag))
+func getAppData() (name string, data []byte, err error) {
+	countFee, err := btypes.ParseCoins(viper.GetString(flagCountFee))
 	if err != nil {
-		return err
+		return
 	}
 	ctx := counter.CounterTx{
-		Valid: viper.GetBool(ValidFlag),
+		Valid: viper.GetBool(flagValid),
 		Fee:   countFee,
 	}
 
-	tx.Name = counter.New().Name()
-	tx.Data = wire.BinaryBytes(ctx)
-	return nil
+	name = counter.New().Name()
+	data = wire.BinaryBytes(ctx)
+	return
 }

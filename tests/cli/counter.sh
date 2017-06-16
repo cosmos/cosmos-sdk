@@ -37,22 +37,19 @@ oneTimeTearDown() {
   sleep 1
 }
 
-# blatently copied to make sure it works with counter as well
+
 test00GetAccount() {
   SENDER=$(getAddr $RICH)
   RECV=$(getAddr $POOR)
 
   assertFalse "requires arg" "${CLIENT_EXE} query account"
-  ACCT=$(${CLIENT_EXE} query account $SENDER)
-  assertTrue "must have proper genesis account" $?
-  assertEquals "no tx" "0" $(echo $ACCT | jq .data.sequence)
-  assertEquals "has money" "9007199254740992" $(echo $ACCT | jq .data.coins[0].amount)
+
+  checkAccount $SENDER "0" "9007199254740992"
 
   ACCT2=$(${CLIENT_EXE} query account $RECV)
   assertFalse "has no genesis account" $?
 }
 
-# blatently copied to make sure it works with counter as well
 test01SendTx() {
   SENDER=$(getAddr $RICH)
   RECV=$(getAddr $POOR)
@@ -61,36 +58,30 @@ test01SendTx() {
   assertFalse "bad password" "echo foo | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH 2>/dev/null"
   # we have to remove the password request from stdout, to just get the json
   RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH 2>/dev/null | tail -n +2)
-  assertTrue "sent tx" $?
+  txSucceeded "$RES"
   HASH=$(echo $RES | jq .hash | tr -d \")
   TX_HEIGHT=$(echo $RES | jq .height)
-  assertEquals "good check" "0" $(echo $RES | jq .check_tx.code)
-  assertEquals "good deliver" "0" $(echo $RES | jq .deliver_tx.code)
 
-  # make sure sender goes down
-  ACCT=$(${CLIENT_EXE} query account $SENDER)
-  assertTrue "must have genesis account" $?
-  assertEquals "one tx" "1" $(echo $ACCT | jq .data.sequence)
-  assertEquals "has money" "9007199254740000" $(echo $ACCT | jq .data.coins[0].amount)
-
-  # make sure recipient goes up
-  ACCT2=$(${CLIENT_EXE} query account $RECV)
-  assertTrue "must have new account" $?
-  assertEquals "no tx" "0" $(echo $ACCT2 | jq .data.sequence)
-  assertEquals "has money" "992" $(echo $ACCT2 | jq .data.coins[0].amount)
+  checkAccount $SENDER "1" "9007199254740000"
+  checkAccount $RECV "0" "992"
 
   # make sure tx is indexed
-  TX=$(${CLIENT_EXE} query tx $HASH)
-  assertTrue "found tx" $?
-  assertEquals "proper height" $TX_HEIGHT $(echo $TX | jq .height)
-  assertEquals "type=send" '"send"' $(echo $TX | jq .data.type)
-  assertEquals "proper sender" "\"$SENDER\"" $(echo $TX | jq .data.data.inputs[0].address)
-  assertEquals "proper out amount" "992" $(echo $TX | jq .data.data.outputs[0].coins[0].amount)
+  checkSendTx $HASH $TX_HEIGHT $SENDER "992"
 }
 
 test02GetCounter() {
   COUNT=$(${CLIENT_EXE} query counter)
   assertFalse "no default count" $?
+}
+
+# checkAccount $COUNT $BALANCE
+# assumes just one coin, checks the balance of first coin in any case
+checkCounter() {
+  # make sure sender goes down
+  ACCT=$(${CLIENT_EXE} query counter)
+  assertTrue "count is set" $?
+  assertEquals "proper count" "$1" $(echo $ACCT | jq .data.Counter)
+  assertEquals "proper money" "$2" $(echo $ACCT | jq .data.TotalFees[0].amount)
 }
 
 test02AddCount() {
@@ -99,17 +90,11 @@ test02AddCount() {
 
   # we have to remove the password request from stdout, to just get the json
   RES=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --amount=10mycoin --sequence=2 --name=${RICH} --valid --countfee=5mycoin 2>/dev/null | tail -n +2)
-  assertTrue "sent tx" $?
+  txSucceeded "$RES"
   HASH=$(echo $RES | jq .hash | tr -d \")
   TX_HEIGHT=$(echo $RES | jq .height)
-  assertEquals "good check" "0" $(echo $RES | jq .check_tx.code)
-  assertEquals "good deliver" "0" $(echo $RES | jq .deliver_tx.code)
 
-  # check new state
-  COUNT=$(${CLIENT_EXE} query counter)
-  assertTrue "count now set" $?
-  assertEquals "one tx" "1" $(echo $COUNT | jq .data.Counter)
-  assertEquals "has money" "5" $(echo $COUNT | jq .data.TotalFees[0].amount)
+  checkCounter "1" "5"
 
   # FIXME: cannot load apptx properly.
   # Look at the stack trace

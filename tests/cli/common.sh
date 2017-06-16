@@ -70,3 +70,34 @@ getAddr() {
   # print the addr
   echo $RAW | cut -d' ' -f2
 }
+
+# checkAccount $ADDR $SEQUENCE $BALANCE
+# assumes just one coin, checks the balance of first coin in any case
+checkAccount() {
+  # make sure sender goes down
+  ACCT=$(${CLIENT_EXE} query account $1)
+  assertTrue "must have genesis account" $?
+  assertEquals "proper sequence" "$2" $(echo $ACCT | jq .data.sequence)
+  assertEquals "proper money" "$3" $(echo $ACCT | jq .data.coins[0].amount)
+}
+
+# txSucceeded $RES
+# must be called right after the `tx` command, makes sure it got a success response
+txSucceeded() {
+  assertTrue "sent tx" $?
+  assertEquals "good check" "0" $(echo $1 | jq .check_tx.code)
+  assertEquals "good deliver" "0" $(echo $1 | jq .deliver_tx.code)
+}
+
+# checkSendTx $HASH $HEIGHT $SENDER $AMOUNT
+# this looks up the tx by hash, and makes sure the height and type match
+# and that the first input was from this sender for this amount
+checkSendTx() {
+  TX=$(${CLIENT_EXE} query tx $1)
+  assertTrue "found tx" $?
+  assertEquals "proper height" $2 $(echo $TX | jq .height)
+  assertEquals "type=send" '"send"' $(echo $TX | jq .data.type)
+  assertEquals "proper sender" "\"$3\"" $(echo $TX | jq .data.data.inputs[0].address)
+  assertEquals "proper out amount" "$4" $(echo $TX | jq .data.data.outputs[0].coins[0].amount)
+}
+

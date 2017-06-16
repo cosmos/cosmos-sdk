@@ -18,7 +18,6 @@ func main() {
 	RootCmd.AddCommand(
 		commands.InitCmd,
 		commands.StartCmd,
-		commands.TxCmd,
 		commands.UnsafeResetAllCmd,
 		commands.VersionCmd,
 	)

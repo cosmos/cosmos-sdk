@@ -19,7 +19,6 @@ func main() {
 		commands.InitCmd,
 		commands.StartCmd,
 		commands.RelayCmd,
-		commands.TxCmd,
 		commands.UnsafeResetAllCmd,
 		commands.VersionCmd,
 	)

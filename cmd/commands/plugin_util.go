@@ -19,11 +19,6 @@ func RegisterStartPlugin(name string, newPlugin func() types.Plugin) {
 	plugins = append(plugins, plugin{name: name, newPlugin: newPlugin})
 }
 
-// Register a subcommand of TxCmd to craft transactions for plugins
-func RegisterTxSubcommand(cmd *cobra.Command) {
-	TxCmd.AddCommand(cmd)
-}
-
 //Returns a version command based on version input
 func QuickVersionCmd(version string) *cobra.Command {
 	return &cobra.Command{

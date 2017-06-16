@@ -118,7 +118,7 @@ func loop(addr1, addr2, id1, id2 string) {
 	nextSeq := 0
 
 	// load the priv key
-	privKey, err := LoadKey(fromFlag)
+	privKey, err := LoadKey(fromFileFlag)
 	if err != nil {
 		logger.Error(err.Error())
 		cmn.PanicCrisis(err.Error())

@@ -9,41 +9,12 @@ import (
 	"strings"
 
 	//"github.com/pkg/errors"
-	"github.com/spf13/cobra"
+
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/go-crypto"
 	"github.com/tendermint/tmlibs/cli"
 )
-
-//commands
-var (
-	KeyCmd = &cobra.Command{
-		Use:   "key",
-		Short: "Manage keys",
-	}
-
-	NewKeyCmd = &cobra.Command{
-		Use:   "new",
-		Short: "Create a new private key",
-		RunE:  newKeyCmd,
-	}
-)
-
-func newKeyCmd(cmd *cobra.Command, args []string) error {
-	key := genKey()
-	keyJSON, err := json.MarshalIndent(key, "", "\t")
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(keyJSON))
-	return nil
-}
-
-func init() {
-	//register commands
-	KeyCmd.AddCommand(NewKeyCmd)
-}
 
 //---------------------------------------------
 // simple implementation of a key
@@ -72,20 +43,6 @@ type Key struct {
 // Implements Signer
 func (k *Key) Sign(msg []byte) crypto.Signature {
 	return k.PrivKey.Sign(msg)
-}
-
-// Generates a new validator with private key.
-func genKey() *Key {
-	privKey := crypto.GenPrivKeyEd25519()
-	pubKey := privKey.PubKey()
-	addrBytes := pubKey.Address()
-	var addr Address
-	copy(addr[:], addrBytes)
-	return &Key{
-		Address: addr,
-		PubKey:  pubKey,
-		PrivKey: privKey.Wrap(),
-	}
 }
 
 func LoadKey(keyFile string) (*Key, error) {

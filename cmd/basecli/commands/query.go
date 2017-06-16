@@ -32,8 +32,7 @@ func doAccountQuery(cmd *cobra.Command, args []string) error {
 	return proofcmd.OutputProof(acc, proof.BlockHeight())
 }
 
-/*** this decodes all basecoin tx ***/
-
+// BaseTxPresenter this decodes all basecoin tx
 type BaseTxPresenter struct {
 	proofs.RawPresenter // this handles MakeKey as hex bytes
 }

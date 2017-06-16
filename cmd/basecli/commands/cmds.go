@@ -17,7 +17,8 @@ import (
 	btypes "github.com/tendermint/basecoin/types"
 )
 
-/******** SendTx *********/
+//-------------------------
+// SendTx
 
 // SendTxCmd is CLI command to send tokens between basecoin accounts
 var SendTxCmd = &cobra.Command{
@@ -136,7 +137,8 @@ func parseChainAddress(toFlag string) ([]byte, error) {
 	return to, nil
 }
 
-/******** AppTx *********/
+//-------------------------
+// AppTx
 
 // BroadcastAppTx wraps, signs, and executes an app tx basecoin transaction
 func BroadcastAppTx(tx *btypes.AppTx) (*ctypes.ResultBroadcastTxCommit, error) {

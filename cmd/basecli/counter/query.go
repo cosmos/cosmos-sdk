@@ -8,13 +8,14 @@ import (
 	"github.com/tendermint/basecoin/plugins/counter"
 )
 
+//CounterQueryCmd CLI command to query the counter state
 var CounterQueryCmd = &cobra.Command{
 	Use:   "counter",
 	Short: "Query counter state, with proof",
-	RunE:  doCounterQuery,
+	RunE:  counterQueryCmd,
 }
 
-func doCounterQuery(cmd *cobra.Command, args []string) error {
+func counterQueryCmd(cmd *cobra.Command, args []string) error {
 	key := counter.New().StateKey()
 
 	var cp counter.CounterPluginState
@@ -25,18 +26,3 @@ func doCounterQuery(cmd *cobra.Command, args []string) error {
 
 	return proofcmd.OutputProof(cp, proof.BlockHeight())
 }
-
-/*** doesn't seem to be needed anymore??? ***/
-
-// type CounterPresenter struct{}
-
-// func (_ CounterPresenter) MakeKey(str string) ([]byte, error) {
-//   key := counter.New().StateKey()
-//   return key, nil
-// }
-
-// func (_ CounterPresenter) ParseData(raw []byte) (interface{}, error) {
-//   var cp counter.CounterPluginState
-//   err := wire.ReadBinaryBytes(raw, &cp)
-//   return cp, err
-// }

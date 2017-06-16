@@ -5,6 +5,8 @@
 # these are two globals to control all scripts (can use eg. counter instead)
 SERVER_EXE=basecoin
 CLIENT_EXE=basecli
+# just uncomment this line for full stack traces in error output
+# CLIENT_EXE="basecli --trace"
 
 oneTimeSetUp() {
   # these are passed in as args

@@ -97,7 +97,8 @@ func (s *SendTx) ValidateBasic() error {
 		}
 	}
 	for _, out := range s.Tx.Outputs {
-		if len(out.Address) != 20 {
+		// we now allow chain/addr, so it can be more than 20 bytes
+		if len(out.Address) < 20 {
 			return errors.Errorf("Invalid output address length: %d", len(out.Address))
 		}
 		if !out.Coins.IsValid() {

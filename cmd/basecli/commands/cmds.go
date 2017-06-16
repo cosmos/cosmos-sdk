@@ -2,6 +2,7 @@ package commands
 
 import (
 	"encoding/hex"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -78,9 +79,9 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 
 func readSendTxFlags(tx *btypes.SendTx) error {
 	// parse to address
-	to, err := ParseHexFlag(FlagTo)
+	to, err := parseChainAddress(viper.GetString(FlagTo))
 	if err != nil {
-		return errors.Errorf("To address is invalid hex: %v\n", err)
+		return err
 	}
 
 	//parse the fee and amounts into coin types
@@ -107,6 +108,32 @@ func readSendTxFlags(tx *btypes.SendTx) error {
 	}}
 
 	return nil
+}
+
+func parseChainAddress(toFlag string) ([]byte, error) {
+	var toHex string
+	var chainPrefix string
+	spl := strings.Split(toFlag, "/")
+	switch len(spl) {
+	case 1:
+		toHex = spl[0]
+	case 2:
+		chainPrefix = spl[0]
+		toHex = spl[1]
+	default:
+		return nil, errors.Errorf("To address has too many slashes")
+	}
+
+	// convert destination address to bytes
+	to, err := hex.DecodeString(cmn.StripHex(toHex))
+	if err != nil {
+		return nil, errors.Errorf("To address is invalid hex: %v\n", err)
+	}
+
+	if chainPrefix != "" {
+		to = []byte(chainPrefix + "/" + string(to))
+	}
+	return to, nil
 }
 
 /******** AppTx *********/

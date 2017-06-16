@@ -43,12 +43,12 @@ initServer() {
   sleep 5
 }
 
-# initClient requires chain_id arg, port is optional (default 4665{5,6,7})
+# initClient requires chain_id arg, port is optional (default 46657)
 initClient() {
   echo "Attaching ${CLIENT_EXE} client..."
-  PORT=${2:-4665}
+  PORT=${2:-46657}
   # hard-code the expected validator hash
-  ${CLIENT_EXE} init --chain-id=$1 --node=tcp://localhost:${PORT}7 --valhash=EB168E17E45BAEB194D4C79067FFECF345C64DE6
+  ${CLIENT_EXE} init --chain-id=$1 --node=tcp://localhost:${PORT} --valhash=EB168E17E45BAEB194D4C79067FFECF345C64DE6
   assertTrue "initialized light-client" $?
 }
 

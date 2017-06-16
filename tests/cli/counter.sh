@@ -21,7 +21,7 @@ oneTimeSetUp() {
   initServer $BASE_DIR $CHAIN_ID 1234
   PID_SERVER=$!
 
-  initClient $CHAIN_ID 1234
+  initClient $CHAIN_ID 12347
 
   echo "...Testing may begin!"
   echo

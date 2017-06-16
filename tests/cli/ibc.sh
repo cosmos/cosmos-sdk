@@ -13,12 +13,14 @@ oneTimeSetUp() {
   BASE_DIR_1=$HOME/.basecoin_test_ibc/chain1
   CHAIN_ID_1=test-chain-1
   CLIENT_1=${BASE_DIR_1}/client
-  PORT_1=1234
+  PREFIX_1=1234
+  PORT_1=${PREFIX_1}7
 
   BASE_DIR_2=$HOME/.basecoin_test_ibc/chain2
   CHAIN_ID_2=test-chain-2
   CLIENT_2=${BASE_DIR_2}/client
-  PORT_2=2345
+  PREFIX_2=2345
+  PORT_2=${PREFIX_2}7
 
   # clean up and create the test dirs
   rm -rf $BASE_DIR_1 $BASE_DIR_2 2>/dev/null
@@ -30,11 +32,11 @@ oneTimeSetUp() {
   BC_HOME=${CLIENT_2} prepareClient
 
   # start basecoin server, giving money to the key in the first client
-  BC_HOME=${CLIENT_1} initServer $BASE_DIR_1 $CHAIN_ID_1 $PORT_1
+  BC_HOME=${CLIENT_1} initServer $BASE_DIR_1 $CHAIN_ID_1 $PREFIX_1
   PID_SERVER_1=$!
 
   # start second basecoin server, giving money to the key in the second client
-  BC_HOME=${CLIENT_2} initServer $BASE_DIR_2 $CHAIN_ID_2 $PORT_2
+  BC_HOME=${CLIENT_2} initServer $BASE_DIR_2 $CHAIN_ID_2 $PREFIX_2
   PID_SERVER_2=$!
 
   # connect both clients
@@ -100,14 +102,78 @@ test01SendIBCTx() {
   checkSendTx $HASH $TX_HEIGHT $SENDER "20002"
 
   # # make sure nothing arrived - yet
-  waitForBlock ${PORT_1}7
+  waitForBlock ${PORT_1}
   assertFalse "no relay running" "BC_HOME=${CLIENT_2} ${CLIENT_EXE} query account $RECV"
 
   # start the relay and wait a few blocks...
+  # (already sent a tx on chain1, so use higher sequence)
+  startRelay 2 1
+  if [ $? != 0 ]; then echo "can't start relay!"; return 1; fi
 
-  # then make sure the money arrived
+  # give it a little time, then make sure the money arrived
+  echo "waiting for relay..."
+  sleep 1
+  waitForBlock ${PORT_1}
+  waitForBlock ${PORT_2}
+
+  # check the new account
+  echo "checking ibc recipient..."
+  BC_HOME=${CLIENT_2} checkAccount $RECV "0" "20002"
+
+  # stop relay
+  kill -9 $PID_RELAY
 }
 
+# startRelay $seq1 $seq2
+# startRelay hooks up a relay between chain1 and chain2
+# it needs the proper sequence number for $RICH on chain1 and chain2 as args
+startRelay() {
+  # send some cash to the default key, so it can send messages
+  RELAY_KEY=${BASE_DIR_1}/server/key.json
+  RELAY_ADDR=$(cat $RELAY_KEY | jq .address | tr -d \")
+
+  # get paid on chain1
+  export BC_HOME=${CLIENT_1}
+  SENDER=$(getAddr $RICH)
+  RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000mycoin --sequence=$1 --to=$RELAY_ADDR --name=$RICH 2>/dev/null)
+  txSucceeded $? "$RES"
+  if [ $? != 0 ]; then echo "can't pay chain1!"; return 1; fi
+
+  # get paid on chain2
+  export BC_HOME=${CLIENT_2}
+  SENDER=$(getAddr $RICH)
+  RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000mycoin --sequence=$2 --to=$RELAY_ADDR --name=$RICH 2>/dev/null)
+  txSucceeded $? "$RES"
+  if [ $? != 0 ]; then echo "can't pay chain2!"; return 1; fi
+
+  # now we need to register the chains
+  # TODO: do this with basecli!!!!
+  basecoin tx ibc --amount 10mycoin --from=$RELAY_KEY --chain_id=$CHAIN_ID_2 \
+    --node=tcp://localhost:${PORT_2} \
+    register --ibc_chain_id=$CHAIN_ID_1 --genesis=$BASE_DIR_1/server/genesis.json \
+    >/dev/null
+  if [ $? != 0 ]; then echo "can't register chain1 on chain 2"; return 1; fi
+
+  basecoin tx ibc --amount 10mycoin --from=$RELAY_KEY --chain_id=$CHAIN_ID_1 \
+    --node=tcp://localhost:${PORT_1} \
+    register --ibc_chain_id=$CHAIN_ID_2 --genesis=$BASE_DIR_2/server/genesis.json \
+    >/dev/null
+  if [ $? != 0 ]; then echo "can't register chain2 on chain 1"; return 1; fi
+
+  # now start the relay! (this remains a server command)
+  # TODO: bucky, why does this die if I don't provide home???
+  # It doesn't use the --from flag????
+  ${SERVER_EXE} relay --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
+    --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
+    --home=${BASE_DIR_1}/server --from=$RELAY_KEY > ${BASE_DIR_1}/../relay.log &
+  PID_RELAY=$!
+  echo starting relay $PID_RELAY ...
+
+  # return an error if it dies in the first two seconds to make sure it is running
+  sleep 2
+  ps $PID_RELAY >/dev/null
+  return $?
+}
 
 # load and run these tests with shunit2!
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #get this files directory

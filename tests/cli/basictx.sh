@@ -12,7 +12,6 @@ oneTimeSetUp() {
   rm -rf $BASE_DIR 2>/dev/null
   mkdir -p $BASE_DIR
 
-
   # set up client - make sure you use the proper prefix if you set
   # a custom CLIENT_EXE
   export BC_HOME=${BASE_DIR}/client
@@ -22,7 +21,7 @@ oneTimeSetUp() {
   initServer $BASE_DIR $CHAIN_ID 3456
   PID_SERVER=$!
 
-  initClient $CHAIN_ID 3456
+  initClient $CHAIN_ID 34567
 
   echo "...Testing may begin!"
   echo

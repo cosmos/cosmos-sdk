@@ -9,6 +9,7 @@ build:
 
 install:
 	go install ./cmd/...
+	go install ./docs/guide/counter/cmd/...
 
 dist:
 	@bash scripts/dist.sh

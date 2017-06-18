@@ -125,8 +125,8 @@ Now we can make a `genesis.json` file and add an account with our public key:
 ```
 
 Here we've granted ourselves `1000000000` units of the `gold` token.
-Note that we've also set the `chain_id` to be `example-chain`.
-All transactions must therefore include the `--chain_id example-chain` in order to make sure they are valid for this chain.
+Note that we've also set the `chain-id` to be `example-chain`.
+All transactions must therefore include the `--chain-id example-chain` in order to make sure they are valid for this chain.
 Previously, we didn't need this flag because we were using the default chain ID ("test_chain_id").
 Now that we're using a custom chain, we need to specify the chain explicitly on the command line.
 

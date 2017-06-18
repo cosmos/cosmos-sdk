@@ -115,7 +115,7 @@ git log | head -1
 
 In the main repo (tendermint, basecoin, ...) where the binary will be built:
 ```
-cd $GOPATH/src/github.com/tendermint/tendermin
+cd $GOPATH/src/github.com/tendermint/tendermint
 git checkout master
 git pull
 # -> edit glide.lock, set the version of go-p2p (for example)

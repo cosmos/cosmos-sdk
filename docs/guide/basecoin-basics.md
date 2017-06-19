@@ -1,6 +1,6 @@
 # Basecoin Basics
 
-Here we explain how to get started with a simple Basecoin blockchain, 
+Here we explain how to get started with a simple Basecoin blockchain,
 how to send transactions between accounts using the `basecoin` tool,
 and what is happening under the hood.
 
@@ -9,7 +9,7 @@ and what is happening under the hood.
 Installing Basecoin is simple:
 
 ```
-go get -u github.com/tendermint/basecoin/cmd/basecoin
+go get -u github.com/tendermint/basecoin/cmd/...
 ```
 
 If you have trouble, see the [installation guide](install.md).
@@ -19,7 +19,10 @@ If you have trouble, see the [installation guide](install.md).
 To initialize a new Basecoin blockchain, run:
 
 ```
-basecoin init 
+# WARNING: this will wipe out any existing info in the ~/.basecoin dir
+# don't run if you have lots of local state already
+rm -rf ~/.basecoin
+basecoin init
 ```
 
 This will create the necessary files for a Basecoin blockchain with one
@@ -30,6 +33,9 @@ For this example, we will change the genesis account to a new account named
 `cool`. First create a new account:
 
 ```
+# WARNING: this will wipe out any existing info in the ~/.basecli dir
+# including private keys, don't run if you have lots of local state already
+basecli reset_all
 basecli keys new cool
 ```
 
@@ -46,16 +52,17 @@ basecli keys get cool -o=json
 vi ~/.basecoin/genesis.json
 -> cut/paste your pubkey from the results above
 ```
-or alternatively, without manual copy pasting:  
+or alternatively, without manual copy pasting:
 ```
 GENKEY=`basecli keys get cool -o json | jq .pubkey.data`
 GENJSON=`cat ~/.basecoin/genesis.json`
-echo $GENJSON | jq '.app_options.accounts[0].pub_key.data='$GENKEY > ~/.basecoin/genesis.json 
+echo $GENJSON | jq '.app_options.accounts[0].pub_key.data='$GENKEY > ~/.basecoin/genesis.json
 ```
 
 Hurray! you are very rich and cool on this blockchain now.
 
 ## Start
+
 
 Now we can start Basecoin:
 
@@ -106,7 +113,7 @@ basecli query account $YOU
 We can send some of these coins back like so:
 
 ```
-basecli tx send --name=friend --amount=500mycoin --to=0x$ME --sequence=1
+basecli tx send --name=friend --amount=500mycoin --to=$ME --sequence=1
 ```
 
 Note how we use the `--name` flag to select a different account to send from.
@@ -114,7 +121,16 @@ Note how we use the `--name` flag to select a different account to send from.
 If we try to send too much, we'll get an error:
 
 ```
-basecli tx send --name=friend --amount=500000mycoin --to=0x$ME --sequence=1
+basecli tx send --name=friend --amount=500000mycoin --to=$ME --sequence=1
+```
+
+And if you want to see the original tx, as well as verifying that it
+really is in the blockchain, look at the send response:
+
+```
+basecli tx send --name=cool --amount=2345mycoin --to=$YOU --sequence=2
+# TXHASH from the json output
+basecli query tx $TXHASH
 ```
 
 See `basecli tx send --help` for additional details.

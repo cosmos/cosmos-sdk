@@ -23,6 +23,8 @@ BREAKING CHANGES:
   - enhanced relay subcommand
     - relay start did what relay used to do
     - relay init registers both chains on one another (to set it up so relay start just works)
+- docs
+  - removed `example-plugin`, put `counter` inside `docs/guide`
 
 ENHANCEMENTS:
 - intergrates tendermint 0.10.0 (not the rc-2, but the real thing)
@@ -33,6 +35,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 - no longer panics on missing app_options in genesis (thanks, anton)
+- updated all docs... again
 
 
 ## 0.5.2 (June 2, 2017)

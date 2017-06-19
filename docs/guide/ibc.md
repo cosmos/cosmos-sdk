@@ -158,6 +158,22 @@ the key and value are contained in the Merkle tree.
 
 The results of a query can thus be used as proof in an `IBCPacketPostTx`.
 
+## Relay
+
+While we need all these packet types internally to keep track of all the
+proofs on both chains in a secure manner, for the normal work-flow, where
+we just use the FIFO queue on each side for pending message to send as soon
+as possible.
+
+In this case, there are only two steps.  First `basecoin relay init`,
+which must be run once to register each chain with the other one,
+and make sure they are ready to send and recieve. And then
+`basecoin relay start`, which is a long-running process polling the queue
+on each side, and relaying all new message to the other block.
+
+This requires that the relay has access to accounts with some funds on both
+chains to pay for all the ibc packets it will be forwarding.
+
 ## Try it out
 
 Now that we have all the background knowledge, let's actually walk through the
@@ -173,116 +189,197 @@ comes with an `IBC` plugin enabled by default.
 You will also want to install the [jq](https://stedolan.github.io/jq/) for
 handling JSON at the command line.
 
-Now let's start the two blockchains.  In this tutorial, each chain will have
-only a single validator, where the initial configuration files are already
-generated.  Let's change directory so these files are easily accessible:
+If you have any trouble with this, you can also look at the
+[test scripts](/tests/cli/ibc.sh) or just run `make test_cli` in basecoin repo.
+Otherwise, open up 5 (yes 5!) terminal tabs....
 
-``` cd $GOPATH/src/github.com/tendermint/basecoin/demo ```
+### Setup Chain 1
 
-The relevant data is now in the `data` directory.  Before we begin, let's set
-some environment variables for convenience:
-
-``` export BCHOME="." BCHOME1="./data/chain1" BCHOME2="./data/chain2"
-
-export CHAIN_ID1=test_chain_1 export CHAIN_ID2=test_chain_2
-
-CHAIN_FLAGS1="--chain_id $CHAIN_ID1 --from $BCHOME1/key.json"
-CHAIN_FLAGS2="--chain_id $CHAIN_ID2 --from $BCHOME2/key.json --node
-tcp://localhost:36657" ```
-
-In previous examples, we started basecoin in-process with tendermint.  Here, we
-will run them in different processes, using the `--without-tendermint` flag, as
-described in the [guide to the basecoin tool](basecoin-tool.md).  We can start
-the two chains as follows:
-
-``` TMROOT=$BCHOME1 tendermint node --log_level=info &> chain1_tendermint.log &
-BCHOME=$BCHOME1 basecoin start --without-tendermint &> chain1_basecoin.log &
-```
-
-and
-
-``` TMROOT=$BCHOME2 tendermint node --log_level=info --node_laddr
-tcp://localhost:36656 --rpc_laddr tcp://localhost:36657 --proxy_app
-tcp://localhost:36658 &> chain2_tendermint.log & BCHOME=$BCHOME2 basecoin start
---address tcp://localhost:36658 --without-tendermint &> chain2_basecoin.log &
-```
-
-Note how we refer to the relevant data directories, and how we set the various
-addresses for the second node so as not to conflict with the first.
-
-We can now check on the status of the two chains:
-
-``` curl localhost:46657/status curl localhost:36657/status ```
-
-If either command fails, the nodes may not have finished starting up. Wait a
-couple seconds and try again.  Once you see the status of both chains, it's
-time to move on.
-
-In this tutorial, we're going to send some data from `test_chain_1` to
-`test_chain_2`.  We begin by registering `test_chain_1` on `test_chain_2`:
-
-``` basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 register --ibc_chain_id
-$CHAIN_ID1 --genesis $BCHOME1/genesis.json ```
-
-Now we can create the outgoing packet on `test_chain_1`:
-
-``` basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS1 packet create --ibc_from
-$CHAIN_ID1 --to $CHAIN_ID2 --type coin --payload 0xDEADBEEF --ibc_sequence 1
-```
-
-Note our payload is just `DEADBEEF`.  Now that the packet is committed in the
-chain, let's get some proof by querying:
-
-``` QUERY=$(basecoin query ibc,egress,$CHAIN_ID1,$CHAIN_ID2,1) echo $QUERY ```
-
-The result contains the latest height, a value (i.e. the hex-encoded binary
-serialization of our packet), and a proof (i.e. hex-encoded binary
-serialization of a list of nodes from the Merkle tree) that the value is in the
-Merkle tree.  We keep the result in the `QUERY` variable so we can easily
-reference subfields using the `jq` tool.
-
-If we want to send this data to `test_chain_2`, we first have to update what it
-knows about `test_chain_1`.  We'll need a recent block header and a set of
-commit signatures.  Fortunately, we can get them with the `block` command:
-
-``` BLOCK=$(basecoin block $(echo $QUERY | jq .height)) echo $BLOCK ```
-
-Here, we are passing `basecoin block` the `height` from our earlier query.
-Note the result contains both a hex-encoded and json-encoded version of the
-header and the commit.  The former is used as input for later commands; the
-latter is human-readable, so you know what's going on!
-
-Let's send this updated information about `test_chain_1` to `test_chain_2`.
-First, output the header and commit for reference:
-
-``` echo $BLOCK | jq .hex.header echo $BLOCK | jq .hex.commit ```
-
-And now forward those values to `test_chain_2`:
-
-``` basecoin tx ibc --amount 10mycoin $CHAIN_FLAGS2 update --header 0x<header>
---commit 0x<commit> ```
-
-Now that `test_chain_2` knows about some recent state of `test_chain_1`, we can
-post the packet to `test_chain_2`, along with proof the packet was committed on
-`test_chain_1`. Since `test_chain_2` knows about some recent state of
-`test_chain_1`, it will be able to verify the proof!
-
-First, output the height, packet, and proof for reference:
+All commands will be prefixed by the name of the terminal window in which to
+run it...
 
 ```
-echo $QUERY | jq .height
-echo $QUERY | jq .value
-echo $QUERY | jq .proof
+# first, clean up any old garbage for a fresh slate...
+rm -rf ~/.ibcdemo/
 ```
 
-And forward those values to `test_chain_2`:
+Set up some accounts so we can init everything nicely:
+
+**Client1**
+```
+export BCHOME=~/.ibcdemo/chain1/client
+CHAIN_ID=test-chain-1
+PORT=12347
+basecli keys new money
+basecli keys new gotnone
+```
+
+Prepare the genesis block and start the server:
+
+**Server1**
+```
+# set up the directory, chainid and port of this chain...
+export BCHOME=~/.ibcdemo/chain1/server
+CHAIN_ID=test-chain-1
+PREFIX=1234
+basecoin init
+
+GENKEY=`basecli keys get money -o json --home=$HOME/.ibcdemo/chain1/client | jq .pubkey.data`
+GENJSON=`cat $BCHOME/genesis.json`
+echo $GENJSON | jq '.app_options.accounts[0].pub_key.data='$GENKEY | jq ".chain_id=\"$CHAIN_ID\"" > $BCHOME/genesis.json
+
+sed -ie "s/4665/$PREFIX/" $BCHOME/config.toml
+
+basecoin start
+```
+
+Attach the client to the chain and confirm state.  The first account should
+have money, the second none:
+
+**Client1**
+```
+basecli init --chain-id=${CHAIN_ID} --node=tcp://localhost:${PORT}
+ME=`basecli keys get money -o=json | jq .address | tr -d '"'`
+YOU=`basecli keys get gotnone -o=json | jq .address | tr -d '"'`
+basecli query account $ME
+basecli query account $YOU
+```
+
+### Setup Chain 2
+
+This is the same as above, except in two new terminal windows with
+different chain ids, ports, etc. Note that you need to make new accounts
+on this chain, as the "cool" key only has money on chain 1.
+
+
+**Client2**
+```
+export BCHOME=~/.ibcdemo/chain2/client
+CHAIN_ID=test-chain-2
+PORT=23457
+basecli keys new moremoney
+basecli keys new broke
+```
+
+Prepare the genesis block and start the server:
+
+**Server2**
+```
+# set up the directory, chainid and port of this chain...
+export BCHOME=~/.ibcdemo/chain2/server
+CHAIN_ID=test-chain-2
+PREFIX=2345
+basecoin init
+
+
+GENKEY=`basecli keys get moremoney -o json --home=$HOME/.ibcdemo/chain2/client | jq .pubkey.data`
+GENJSON=`cat $BCHOME/genesis.json`
+echo $GENJSON | jq '.app_options.accounts[0].pub_key.data='$GENKEY | jq ".chain_id=\"$CHAIN_ID\"" > $BCHOME/genesis.json
+
+sed -ie "s/4665/$PREFIX/" $BCHOME/config.toml
+
+basecoin start
+```
+
+Attach the client to the chain and confirm state.  The first account should
+have money, the second none:
+
+**Client2**
+```
+basecli init --chain-id=${CHAIN_ID} --node=tcp://localhost:${PORT}
+ME=`basecli keys get moremoney -o=json | jq .address | tr -d '"'`
+YOU=`basecli keys get broke -o=json | jq .address | tr -d '"'`
+basecli query account $ME
+basecli query account $YOU
+```
+
+### Connect these chains
+
+Great, so we have two chains running on your local machine, with different
+keys on each.  Now it is time to hook them up together.  Let's start
+a relay to forward the messages.
+
+The relay account needs some money in it to pay for the ibc messages, so
+for now, we have to transfer some cash from the rich accounts before we start
+the actual relay.
+
+**Client1**
+```
+# note that this key.json file is a hardcoded demo for all chains, this will
+# be updated in a future release
+RELAY_KEY=${BCHOME}/../server/key.json
+RELAY_ADDR=$(cat $RELAY_KEY | jq .address | tr -d \")
+basecli tx send --amount=100000mycoin --sequence=1 --to=$RELAY_ADDR --name=money
+basecli query account $RELAY_ADDR
+```
+
+**Client2**
+```
+# note that this key.json file is a hardcoded demo for all chains, this will
+# be updated in a future release
+RELAY_KEY=${BCHOME}/../server/key.json
+RELAY_ADDR=$(cat $RELAY_KEY | jq .address | tr -d \")
+basecli tx send --amount=100000mycoin --sequence=1 --to=$RELAY_ADDR --name=moremoney
+basecli query account $RELAY_ADDR
+```
+
+**Relay**
+```
+# lots of config...
+SERVER_1=~/.ibcdemo/chain1/server
+SERVER_2=~/.ibcdemo/chain2/server
+CHAIN_ID_1=test-chain-1
+CHAIN_ID_2=test-chain-2
+PORT_1=12347
+PORT_2=23457
+RELAY_KEY=${SERVER_1}/key.json
+
+basecoin relay init --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
+  --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
+  --genesis1=${SERVER_1}/genesis.json --genesis2=${SERVER_2}/genesis.json \
+  --from=$RELAY_KEY
+
+basecoin relay start --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
+  --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
+  --from=$RELAY_KEY
+```
+
+This should start up the relay, and assuming no error messages came out,
+the two chains are now fully connected over IBC.  Let's use this to send
+our first tx accross the chains...
+
+### Sending cross-chain payments
+
+The hard part is over, we set up two blockchains, a few private keys, and
+a secure relay between them.  Now we can enjoy the fruits of our labor...
+
+**Client2**
 
 ```
-basecoin tx ibc --amount=10mycoin $CHAIN_FLAGS2 packet post --ibc_from $CHAIN_ID1 --height <height> --packet 0x<packet> --proof 0x<proof>
+# this should be empty
+basecli query account $YOU
+# now, we get the key to copy to the other terminal
+echo $YOU
 ```
 
-If the command does not return an error, then we have successfuly transfered
-data from `test_chain_1` to `test_chain_2`. Tada!
+**Client1**
+
+```
+# set TARGET to be $YOU from the other chain
+basecli tx send --amount=12345mycoin --sequence=2 --to=test-chain-2/$TARGET --name=money
+```
+
+**Client2**
+
+```
+# give it time to arrive...
+sleep 1
+# now you should see 12345 coins!
+basecli query account $YOU
+```
+
+Cool, huh?  Now have fun exploring and sending coins across the chains.  And
+making more accounts as you want to.
 
 ## Conclusion
 

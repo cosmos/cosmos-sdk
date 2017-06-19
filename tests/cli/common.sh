@@ -42,6 +42,7 @@ initServer() {
   ${SERVER_EXE} start --home=$SERVE_DIR >>$SERVER_LOG 2>&1 &
   sleep 5
   PID_SERVER=$!
+  disown
   if ! ps $PID_SERVER >/dev/null; then
     echo "**FAILED**"
     # cat $SERVER_LOG

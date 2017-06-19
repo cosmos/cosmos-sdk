@@ -137,6 +137,7 @@ startRelay() {
   # send some cash to the default key, so it can send messages
   RELAY_KEY=${BASE_DIR_1}/server/key.json
   RELAY_ADDR=$(cat $RELAY_KEY | jq .address | tr -d \")
+  echo starting relay $PID_RELAY ...
 
   # get paid on chain1
   export BC_HOME=${CLIENT_1}
@@ -163,11 +164,11 @@ startRelay() {
   ${SERVER_EXE} relay start --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
     --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
     --from=$RELAY_KEY > ${BASE_DIR_1}/../relay.log &
+  sleep 2
   PID_RELAY=$!
-  echo starting relay $PID_RELAY ...
+  disown
 
   # return an error if it dies in the first two seconds to make sure it is running
-  sleep 2
   ps $PID_RELAY >/dev/null
   return $?
 }

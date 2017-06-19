@@ -29,6 +29,7 @@ ENHANCEMENTS:
 - commands return error code (1) on failure for easier script testing
 - add `reset_all` to basecli, and never delete keys on `init`
 - new shutil based unit tests, with better coverage of the cli actions
+- just `make fresh` when things are getting stale ;)
 
 BUG FIXES:
 - no longer panics on missing app_options in genesis (thanks, anton)

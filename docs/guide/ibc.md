@@ -66,9 +66,11 @@ up in turn.
 The `IBCRegisterChainTx` is used to register one chain on another.  It contains
 the chain ID and genesis configuration of the chain to register:
 
-```golang type IBCRegisterChainTx struct { BlockchainGenesis }
+```golang
+type IBCRegisterChainTx struct { BlockchainGenesis }
 
-type BlockchainGenesis struct { ChainID string Genesis string } ```
+type BlockchainGenesis struct { ChainID string Genesis string }
+```
 
 This transaction should only be sent once for a given chain ID, and successive
 sends will return an error.
@@ -79,7 +81,11 @@ sends will return an error.
 The `IBCUpdateChainTx` is used to update the state of one chain on another.  It
 contains the header and commit signatures for some block in the chain:
 
-```golang type IBCUpdateChainTx struct { Header tm.Header Commit tm.Commit }
+```golang
+type IBCUpdateChainTx struct {
+  Header tm.Header
+  Commit tm.Commit
+}
 ```
 
 In the future, it needs to be updated to include changes to the validator set
@@ -93,10 +99,19 @@ packet itself contains the source and destination chain IDs, a sequence number
 (i.e. an integer that increments with every message sent between this pair of
 chains), a packet type (e.g. coin, data, etc.), and a payload.
 
-```golang type IBCPacketCreateTx struct { Packet }
+```golang
+type IBCPacketCreateTx struct {
+  Packet
+}
 
-type Packet struct { SrcChainID string DstChainID string Sequence   uint64 Type
-string Payload    []byte } ```
+type Packet struct {
+  SrcChainID string
+  DstChainID string
+  Sequence   uint64
+  Type string
+  Payload    []byte
+}
+```
 
 We have yet to define the format for the payload, so, for now, it's just
 arbitrary bytes.
@@ -114,10 +129,13 @@ The `IBCPacketPostTx` is used to post an outgoing packet from one chain to
 another.  It contains the packet and a proof that the packet was committed into
 the state of the sending chain:
 
-```golang type IBCPacketPostTx struct { FromChainID     string // The immediate
-source of the packet, not always Packet.SrcChainID FromChainHeight uint64 //
-The block height in which Packet was committed, to check Proof Packet Proof
-*merkle.IAVLProof } ```
+```golang
+type IBCPacketPostTx struct {
+  FromChainID     string // The immediate source of the packet, not always Packet.SrcChainID
+  FromChainHeight uint64 // The block height in which Packet was committed, to check Proof Packet
+  Proof *merkle.IAVLProof
+}
+```
 
 The proof is a Merkle proof in an IAVL tree, our implementation of a balanced,
 Merklized binary search tree.  It contains a list of nodes in the tree, which
@@ -198,7 +216,7 @@ Otherwise, open up 5 (yes 5!) terminal tabs....
 All commands will be prefixed by the name of the terminal window in which to
 run it...
 
-```
+```bash
 # first, clean up any old garbage for a fresh slate...
 rm -rf ~/.ibcdemo/
 ```
@@ -206,7 +224,7 @@ rm -rf ~/.ibcdemo/
 Set up some accounts so we can init everything nicely:
 
 **Client1**
-```
+```bash
 export BCHOME=~/.ibcdemo/chain1/client
 CHAIN_ID=test-chain-1
 PORT=12347
@@ -217,7 +235,7 @@ basecli keys new gotnone
 Prepare the genesis block and start the server:
 
 **Server1**
-```
+```bash
 # set up the directory, chainid and port of this chain...
 export BCHOME=~/.ibcdemo/chain1/server
 CHAIN_ID=test-chain-1
@@ -237,7 +255,7 @@ Attach the client to the chain and confirm state.  The first account should
 have money, the second none:
 
 **Client1**
-```
+```bash
 basecli init --chain-id=${CHAIN_ID} --node=tcp://localhost:${PORT}
 ME=`basecli keys get money -o=json | jq .address | tr -d '"'`
 YOU=`basecli keys get gotnone -o=json | jq .address | tr -d '"'`
@@ -253,7 +271,7 @@ on this chain, as the "cool" key only has money on chain 1.
 
 
 **Client2**
-```
+```bash
 export BCHOME=~/.ibcdemo/chain2/client
 CHAIN_ID=test-chain-2
 PORT=23457
@@ -264,7 +282,7 @@ basecli keys new broke
 Prepare the genesis block and start the server:
 
 **Server2**
-```
+```bash
 # set up the directory, chainid and port of this chain...
 export BCHOME=~/.ibcdemo/chain2/server
 CHAIN_ID=test-chain-2
@@ -285,7 +303,7 @@ Attach the client to the chain and confirm state.  The first account should
 have money, the second none:
 
 **Client2**
-```
+```bash
 basecli init --chain-id=${CHAIN_ID} --node=tcp://localhost:${PORT}
 ME=`basecli keys get moremoney -o=json | jq .address | tr -d '"'`
 YOU=`basecli keys get broke -o=json | jq .address | tr -d '"'`
@@ -304,7 +322,7 @@ for now, we have to transfer some cash from the rich accounts before we start
 the actual relay.
 
 **Client1**
-```
+```bash
 # note that this key.json file is a hardcoded demo for all chains, this will
 # be updated in a future release
 RELAY_KEY=${BCHOME}/../server/key.json
@@ -314,7 +332,7 @@ basecli query account $RELAY_ADDR
 ```
 
 **Client2**
-```
+```bash
 # note that this key.json file is a hardcoded demo for all chains, this will
 # be updated in a future release
 RELAY_KEY=${BCHOME}/../server/key.json
@@ -324,7 +342,7 @@ basecli query account $RELAY_ADDR
 ```
 
 **Relay**
-```
+```bash
 # lots of config...
 SERVER_1=~/.ibcdemo/chain1/server
 SERVER_2=~/.ibcdemo/chain2/server
@@ -355,7 +373,7 @@ a secure relay between them.  Now we can enjoy the fruits of our labor...
 
 **Client2**
 
-```
+```bash
 # this should be empty
 basecli query account $YOU
 # now, we get the key to copy to the other terminal
@@ -364,14 +382,14 @@ echo $YOU
 
 **Client1**
 
-```
+```bash
 # set TARGET to be $YOU from the other chain
 basecli tx send --amount=12345mycoin --sequence=2 --to=test-chain-2/$TARGET --name=money
 ```
 
 **Client2**
 
-```
+```bash
 # give it time to arrive...
 sleep 1
 # now you should see 12345 coins!

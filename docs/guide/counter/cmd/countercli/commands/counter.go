@@ -8,7 +8,7 @@ import (
 	txcmd "github.com/tendermint/light-client/commands/txs"
 
 	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
-	"github.com/tendermint/basecoin/plugins/counter"
+	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
 	btypes "github.com/tendermint/basecoin/types"
 )
 

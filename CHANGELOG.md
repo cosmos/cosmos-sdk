@@ -23,15 +23,19 @@ BREAKING CHANGES:
   - enhanced relay subcommand
     - relay start did what relay used to do
     - relay init registers both chains on one another (to set it up so relay start just works)
+- docs
+  - removed `example-plugin`, put `counter` inside `docs/guide`
 
 ENHANCEMENTS:
 - intergrates tendermint 0.10.0 (not the rc-2, but the real thing)
 - commands return error code (1) on failure for easier script testing
 - add `reset_all` to basecli, and never delete keys on `init`
 - new shutil based unit tests, with better coverage of the cli actions
+- just `make fresh` when things are getting stale ;)
 
 BUG FIXES:
 - no longer panics on missing app_options in genesis (thanks, anton)
+- updated all docs... again
 
 
 ## 0.5.2 (June 2, 2017)

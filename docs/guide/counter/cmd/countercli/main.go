@@ -14,12 +14,12 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
-	bcount "github.com/tendermint/basecoin/cmd/countercli/commands"
+	bcount "github.com/tendermint/basecoin/docs/guide/counter/cmd/countercli/commands"
 )
 
 // BaseCli represents the base command when called without any subcommands
 var BaseCli = &cobra.Command{
-	Use:   "basecli",
+	Use:   "countercli",
 	Short: "Light client for tendermint",
 	Long: `Basecli is an version of tmcli including custom logic to
 present a nice (not raw hex) interface to the basecoin blockchain structure.
@@ -33,21 +33,25 @@ func main() {
 	commands.AddBasicFlags(BaseCli)
 
 	// Prepare queries
-	pr := proofs.RootCmd
-	// These are default parsers, but you optional in your app
-	pr.AddCommand(proofs.TxCmd)
-	pr.AddCommand(proofs.KeyCmd)
-	pr.AddCommand(bcmd.AccountQueryCmd)
+	proofs.RootCmd.AddCommand(
+		// These are default parsers, optional in your app
+		proofs.TxCmd,
+		proofs.KeyCmd,
+		bcmd.AccountQueryCmd,
 
-	// IMPORTANT: here is how you add custom query commands in your app
-	pr.AddCommand(bcount.CounterQueryCmd)
+		// XXX IMPORTANT: here is how you add custom query commands in your app
+		bcount.CounterQueryCmd,
+	)
 
+	// Prepare transactions
 	proofs.TxPresenters.Register("base", bcmd.BaseTxPresenter{})
-	tr := txs.RootCmd
-	tr.AddCommand(bcmd.SendTxCmd)
+	txs.RootCmd.AddCommand(
+		// This is the default transaction, optional in your app
+		bcmd.SendTxCmd,
 
-	// IMPORTANT: here is how you add custom tx construction for your app
-	tr.AddCommand(bcount.CounterTxCmd)
+		// XXX IMPORTANT: here is how you add custom tx construction for your app
+		bcount.CounterTxCmd,
+	)
 
 	// Set up the various commands to use
 	BaseCli.AddCommand(
@@ -55,10 +59,11 @@ func main() {
 		commands.ResetCmd,
 		keycmd.RootCmd,
 		seeds.RootCmd,
-		pr,
-		tr,
-		proxy.RootCmd)
+		proofs.RootCmd,
+		txs.RootCmd,
+		proxy.RootCmd,
+	)
 
-	cmd := cli.PrepareMainCmd(BaseCli, "BC", os.ExpandEnv("$HOME/.basecli"))
+	cmd := cli.PrepareMainCmd(BaseCli, "CTL", os.ExpandEnv("$HOME/.countercli"))
 	cmd.Execute()
 }

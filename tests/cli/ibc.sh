@@ -137,6 +137,7 @@ startRelay() {
   # send some cash to the default key, so it can send messages
   RELAY_KEY=${BASE_DIR_1}/server/key.json
   RELAY_ADDR=$(cat $RELAY_KEY | jq .address | tr -d \")
+  echo starting relay $PID_RELAY ...
 
   # get paid on chain1
   export BC_HOME=${CLIENT_1}
@@ -156,18 +157,18 @@ startRelay() {
   ${SERVER_EXE} relay init --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
     --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
     --genesis1=${BASE_DIR_1}/server/genesis.json --genesis2=${BASE_DIR_2}/server/genesis.json \
-    --from=$RELAY_KEY > ${BASE_DIR_1}/../relay.log &
+    --from=$RELAY_KEY > ${BASE_DIR_1}/../relay.log
   if [ $? != 0 ]; then echo "can't initialize relays"; cat ${BASE_DIR_1}/../relay.log; return 1; fi
 
   # now start the relay (constantly send packets)
   ${SERVER_EXE} relay start --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
     --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
-    --from=$RELAY_KEY > ${BASE_DIR_1}/../relay.log &
+    --from=$RELAY_KEY >> ${BASE_DIR_1}/../relay.log &
+  sleep 2
   PID_RELAY=$!
-  echo starting relay $PID_RELAY ...
+  disown
 
   # return an error if it dies in the first two seconds to make sure it is running
-  sleep 2
   ps $PID_RELAY >/dev/null
   return $?
 }

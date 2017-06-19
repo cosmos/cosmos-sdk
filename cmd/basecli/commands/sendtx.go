@@ -80,7 +80,7 @@ func (s *SendTx) AddSigner(pk crypto.PubKey) {
 // but that code is too ugly now, needs refactor..
 func (s *SendTx) ValidateBasic() error {
 	if s.chainID == "" {
-		return errors.New("No chainId specified")
+		return errors.New("No chain-id specified")
 	}
 	for _, in := range s.Tx.Inputs {
 		if len(in.Address) != 20 {

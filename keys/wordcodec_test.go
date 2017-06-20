@@ -54,16 +54,16 @@ func TestEncodeDecode(t *testing.T) {
 	require.Nil(err, "%+v", err)
 
 	cases := [][]byte{
-		// {7, 8, 9},        // TODO: 3 words -> 3 or 4 bytes
-		{12, 54, 99, 11}, // TODO: 3 words -> 3 or 4 bytes
-		{0, 54, 99, 11},  // TODO: 3 words -> 3 or 4 bytes, detect leading 0
-		{1, 2, 3, 4, 5},  // normal
-		// {0, 0, 0, 0, 122, 23, 82, 195},   // leading 0s (8 chars, unclear)
-		{0, 0, 0, 0, 5, 22, 123, 55, 22}, // leading 0s (9 chars, clear)
-		{22, 44, 55, 1, 13, 0, 0, 0, 0},  // trailing 0s (9 chars, clear)
-		{0, 5, 253, 2, 0},                // leading and trailing zeros
-		{255, 196, 172, 234, 192, 255},   // big numbers
-		// {255, 196, 172, 1, 234, 192, 255}, // big numbers, two length choices
+		{7, 8, 9},                         // TODO: 3 words -> 3 or 4 bytes
+		{12, 54, 99, 11},                  // TODO: 3 words -> 3 or 4 bytes
+		{0, 54, 99, 11},                   // TODO: 3 words -> 3 or 4 bytes, detect leading 0
+		{1, 2, 3, 4, 5},                   // normal
+		{0, 0, 0, 0, 122, 23, 82, 195},    // leading 0s (8 chars, unclear)
+		{0, 0, 0, 0, 5, 22, 123, 55, 22},  // leading 0s (9 chars, clear)
+		{22, 44, 55, 1, 13, 0, 0, 0, 0},   // trailing 0s (9 chars, clear)
+		{0, 5, 253, 2, 0},                 // leading and trailing zeros
+		{255, 196, 172, 234, 192, 255},    // big numbers
+		{255, 196, 172, 1, 234, 192, 255}, // big numbers, two length choices
 		// others?
 	}
 

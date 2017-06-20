@@ -21,6 +21,7 @@ type Codec interface {
 type WordCodec struct {
 	words []string
 	bytes map[string]int
+	check ECC
 }
 
 var _ Codec = WordCodec{}
@@ -30,7 +31,13 @@ func NewCodec(words []string) (codec WordCodec, err error) {
 		return codec, errors.Errorf("Bank must have %d words, found %d", BankSize, len(words))
 	}
 
-	return WordCodec{words: words}, nil
+	res := WordCodec{
+		words: words,
+		// TODO: configure this outside???
+		check: NewIEEECRC32(),
+	}
+
+	return res, nil
 }
 
 func LoadCodec(bank string) (codec WordCodec, err error) {
@@ -70,6 +77,7 @@ func getData(filename string) (string, error) {
 
 // given this many bytes, we will produce this many words
 func wordlenFromBytes(numBytes int) int {
+	// 2048 words per bank, which is 2^11.
 	// 8 bits per byte, and we add +10 so it rounds up
 	return (8*numBytes + 10) / 11
 }
@@ -88,8 +96,9 @@ func bytelenFromWords(numWords int) (length int, maybeShorter bool) {
 }
 
 // TODO: add checksum
-func (c WordCodec) BytesToWords(data []byte) (words []string, err error) {
-	// 2048 words per bank, which is 2^11.
+func (c WordCodec) BytesToWords(raw []byte) (words []string, err error) {
+	// always add a checksum to the data
+	data := c.check.AddECC(raw)
 	numWords := wordlenFromBytes(len(data))
 
 	n2048 := big.NewInt(2048)
@@ -106,12 +115,6 @@ func (c WordCodec) BytesToWords(data []byte) (words []string, err error) {
 }
 
 func (c WordCodec) WordsToBytes(words []string) ([]byte, error) {
-	// // 2048 words per bank, which is 2^11.
-	// numWords := (8*len(dest) + 10) / 11
-	// if numWords != len(words) {
-	//   return errors.New(Fmt("Expected %v words for %v dest bytes", numWords, len(dest)))
-	// }
-
 	l := len(words)
 	n2048 := big.NewInt(2048)
 	nData := big.NewInt(0)
@@ -131,10 +134,20 @@ func (c WordCodec) WordsToBytes(words []string) ([]byte, error) {
 	// are lots of leading 0s
 	dataBytes := nData.Bytes()
 
-	outLen, _ := bytelenFromWords(len(words))
-	output := make([]byte, outLen)
-	copy(output[outLen-len(dataBytes):], dataBytes)
-	return output, nil
+	// copy into the container we have with the expected size
+	outLen, flex := bytelenFromWords(len(words))
+	toCheck := make([]byte, outLen)
+	copy(toCheck[outLen-len(dataBytes):], dataBytes)
+
+	// validate the checksum...
+	output, err := c.check.CheckECC(toCheck)
+	if flex && err != nil {
+		// if flex, try again one shorter....
+		toCheck = toCheck[1:]
+		output, err = c.check.CheckECC(toCheck)
+	}
+
+	return output, err
 }
 
 // GetIndex finds the index of the words to create bytes

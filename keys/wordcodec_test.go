@@ -130,6 +130,52 @@ func TestCheckInvalidLists(t *testing.T) {
 
 }
 
+func getRandWord(c WordCodec) string {
+	idx := cmn.RandInt() % BankSize
+	return c.words[idx]
+}
+
+func getDiffWord(c WordCodec, not string) string {
+	w := getRandWord(c)
+	if w == not {
+		w = getRandWord(c)
+	}
+	return w
+}
+
 func TestCheckTypoDetection(t *testing.T) {
+	assert, require := assert.New(t), require.New(t)
+
+	banks := []string{"english"}
+
+	for _, bank := range banks {
+		codec, err := LoadCodec(bank)
+		require.Nil(err, "%s: %+v", bank, err)
+		for i := 0; i < 10; i++ {
+			numBytes := cmn.RandInt()%60 + 1
+			data := cmn.RandBytes(numBytes)
+
+			words, err := codec.BytesToWords(data)
+			assert.Nil(err, "%s: %+v", bank, err)
+			good, err := codec.WordsToBytes(words)
+			assert.Nil(err, "%s: %+v", bank, err)
+			assert.Equal(data, good, bank)
+
+			// now try some tweaks...
+			cut := words[1:]
+			_, err = codec.WordsToBytes(cut)
+			assert.NotNil(err, "%s: %s", bank, words)
+
+			// swap a word within the bank, should fails
+			words[3] = getDiffWord(codec, words[3])
+			_, err = codec.WordsToBytes(words)
+			assert.NotNil(err, "%s: %s", bank, words)
+
+			// put a random word here, must fail
+			words[3] = cmn.RandStr(10)
+			_, err = codec.WordsToBytes(words)
+			assert.NotNil(err, "%s: %s", bank, words)
+		}
+	}
 
 }

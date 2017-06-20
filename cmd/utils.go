@@ -76,6 +76,12 @@ func getPassword(prompt string) (pass string, err error) {
 	return pass, nil
 }
 
+func getSeed(prompt string) (seed string, err error) {
+	seed, err = stdinPassword()
+	seed = strings.TrimSpace(seed)
+	return
+}
+
 func getCheckPassword(prompt, prompt2 string) (string, error) {
 	// simple read on no-tty
 	if !inputIsTty() {

@@ -15,14 +15,20 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
+	"github.com/tendermint/go-crypto/keys"
+	"github.com/tendermint/go-wire/data"
+	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 const (
-	flagType = "type"
+	flagType     = "type"
+	flagNoBackup = "no-backup"
 )
 
 // newCmd represents the new command
@@ -37,6 +43,7 @@ passed as a command line argument for security.`,
 
 func init() {
 	newCmd.Flags().StringP(flagType, "t", "ed25519", "Type of key (ed25519|secp256k1)")
+	newCmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 }
 
 func runNewCmd(cmd *cobra.Command, args []string) error {
@@ -51,9 +58,37 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	info, _, err := GetKeyManager().Create(name, pass, algo)
+	info, seed, err := GetKeyManager().Create(name, pass, algo)
 	if err == nil {
-		printInfo(info)
+		printCreate(info, seed)
 	}
 	return err
+}
+
+type NewOutput struct {
+	Key  keys.Info `json:"key"`
+	Seed string    `json:"seed"`
+}
+
+func printCreate(info keys.Info, seed string) {
+	switch viper.Get(cli.OutputFlag) {
+	case "text":
+		printInfo(info)
+		// print seed unless requested not to.
+		if !viper.GetBool(flagNoBackup) {
+			fmt.Println("**Important** write this seed phrase in a safe place.")
+			fmt.Println("It is the only way to recover your account if you ever forget your password.\n")
+			fmt.Println(seed)
+		}
+	case "json":
+		out := NewOutput{Key: info}
+		if !viper.GetBool(flagNoBackup) {
+			out.Seed = seed
+		}
+		json, err := data.ToJSON(out)
+		if err != nil {
+			panic(err) // really shouldn't happen...
+		}
+		fmt.Println(string(json))
+	}
 }

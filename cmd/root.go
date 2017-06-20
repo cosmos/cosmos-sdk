@@ -41,6 +41,8 @@ func init() {
 	RootCmd.AddCommand(listCmd)
 	RootCmd.AddCommand(newCmd)
 	RootCmd.AddCommand(updateCmd)
+	RootCmd.AddCommand(deleteCmd)
+	RootCmd.AddCommand(recoverCmd)
 }
 
 func RegisterServer() {

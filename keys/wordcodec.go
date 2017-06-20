@@ -24,14 +24,14 @@ type WordCodec struct {
 	check ECC
 }
 
-var _ Codec = WordCodec{}
+var _ Codec = &WordCodec{}
 
-func NewCodec(words []string) (codec WordCodec, err error) {
+func NewCodec(words []string) (codec *WordCodec, err error) {
 	if len(words) != BankSize {
 		return codec, errors.Errorf("Bank must have %d words, found %d", BankSize, len(words))
 	}
 
-	res := WordCodec{
+	res := &WordCodec{
 		words: words,
 		// TODO: configure this outside???
 		check: NewIEEECRC32(),
@@ -40,7 +40,7 @@ func NewCodec(words []string) (codec WordCodec, err error) {
 	return res, nil
 }
 
-func LoadCodec(bank string) (codec WordCodec, err error) {
+func LoadCodec(bank string) (codec *WordCodec, err error) {
 	words, err := loadBank(bank)
 	if err != nil {
 		return codec, err
@@ -96,7 +96,7 @@ func bytelenFromWords(numWords int) (length int, maybeShorter bool) {
 }
 
 // TODO: add checksum
-func (c WordCodec) BytesToWords(raw []byte) (words []string, err error) {
+func (c *WordCodec) BytesToWords(raw []byte) (words []string, err error) {
 	// always add a checksum to the data
 	data := c.check.AddECC(raw)
 	numWords := wordlenFromBytes(len(data))
@@ -120,7 +120,7 @@ func (c WordCodec) BytesToWords(raw []byte) (words []string, err error) {
 	return words, nil
 }
 
-func (c WordCodec) WordsToBytes(words []string) ([]byte, error) {
+func (c *WordCodec) WordsToBytes(words []string) ([]byte, error) {
 	l := len(words)
 
 	if l == 0 {
@@ -167,7 +167,7 @@ func (c WordCodec) WordsToBytes(words []string) ([]byte, error) {
 // GetIndex finds the index of the words to create bytes
 // Generates a map the first time it is loaded, to avoid needless
 // computation when list is not used.
-func (c WordCodec) GetIndex(word string) (int, error) {
+func (c *WordCodec) GetIndex(word string) (int, error) {
 	// generate the first time
 	if c.bytes == nil {
 		b := map[string]int{}

@@ -130,12 +130,12 @@ func TestCheckInvalidLists(t *testing.T) {
 
 }
 
-func getRandWord(c WordCodec) string {
+func getRandWord(c *WordCodec) string {
 	idx := cmn.RandInt() % BankSize
 	return c.words[idx]
 }
 
-func getDiffWord(c WordCodec, not string) string {
+func getDiffWord(c *WordCodec, not string) string {
 	w := getRandWord(c)
 	if w == not {
 		w = getRandWord(c)
@@ -151,7 +151,7 @@ func TestCheckTypoDetection(t *testing.T) {
 	for _, bank := range banks {
 		codec, err := LoadCodec(bank)
 		require.Nil(err, "%s: %+v", bank, err)
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 1000; i++ {
 			numBytes := cmn.RandInt()%60 + 1
 			data := cmn.RandBytes(numBytes)
 
@@ -177,5 +177,34 @@ func TestCheckTypoDetection(t *testing.T) {
 			assert.NotNil(err, "%s: %s", bank, words)
 		}
 	}
+}
 
+func warmupCodec(bank string) *WordCodec {
+	codec, err := LoadCodec(bank)
+	if err != nil {
+		panic(err)
+	}
+	_, err = codec.GetIndex(codec.words[123])
+	if err != nil {
+		panic(err)
+	}
+	return codec
+}
+
+func BenchmarkWordGeneration(b *testing.B) {
+	// banks := []string{"english", "spanish", "japanese", "chinese_simplified"}
+	bank := "english"
+
+	codec := warmupCodec(bank)
+	b.ResetTimer()
+
+	numBytes := 32
+	data := cmn.RandBytes(numBytes)
+
+	for i := 1; i <= b.N; i++ {
+		_, err := codec.BytesToWords(data)
+		if err != nil {
+			panic(err)
+		}
+	}
 }

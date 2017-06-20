@@ -9,17 +9,13 @@ this example we explore a simple plugin named `counter`.
 
 ## Example Plugin
 
-The design of the `basecoin` and `basecli` tools makes it easy to extend for custom
-functionality. We provide examples of such extensions in the basecoin repository under `docs/guide/counter`.
-You can install them from the basecoin directory with:
-
-```
-`go install ./docs/guide/counter/cmd/... 
-```
-
-This will give you both the `counter` and `countercli` binaries.
-The former is just like `basecoin`, but with the counter plugin activated.
-The latter is just like `basecli`, but with support for sending transactions to the counter plugin.
+The design of the `basecoin` tool makes it easy to extend for custom
+functionality.  The Counter plugin is bundled with basecoin, so if you have
+already [installed basecoin](install.md) and run `make install` then you should
+be able to run a full node with `counter` and the a light-client `countercli`
+from terminal.   The Counter plugin is just like the `basecoin` tool.  They
+both use the same library of commands, including one for signing and
+broadcasting `SendTx`.
 
 Counter transactions take two custom inputs, a boolean argument named `valid`,
 and a coin amount named `countfee`.  The transaction is only accepted if both
@@ -83,7 +79,7 @@ The Counter value should be 2, because we sent a second valid transaction.
 And this time, since we sent a countfee (which must be less than or equal to the
 total amount sent with the tx), it stores the `TotalFees` on the counter as well.
 
-Keep it mind that, just like with `basecli`, the `countercli` verifies a proof 
+Keep it mind that, just like with `basecli`, the `countercli` verifies a proof
 that the query response is correct and up-to-date.
 
 Now, before we implement our own plugin and tooling, it helps to understand the
@@ -170,7 +166,7 @@ alone, but you should change any occurrences of `counter` to whatever your
 plugin tool is going to be called. You must also register your plugin(s) with
 the basecoin app with `RegisterStartPlugin`.
 
-The light-client is located in `cmd/countercli/main.go` and allows for 
+The light-client is located in `cmd/countercli/main.go` and allows for
 transaction and query commands. This file can also be left mostly alone besides replacing the application name and adding
 references to new plugin commands.
 

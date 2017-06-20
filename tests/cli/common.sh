@@ -1,9 +1,11 @@
-# this is not executable, but helper functions for the other scripts
+# This is not executable, but helper functions for the other scripts
 
-# these are general accounts to be prepared
-ACCOUNTS=(jae ethan bucky rigel igor)
-RICH=${ACCOUNTS[0]}
-POOR=${ACCOUNTS[4]}
+# XXX XXX XXX XXX XXX
+# The following global variables must be defined before calling common functions: 
+# SERVER_EXE=foobar       # Server binary name
+# CLIENT_EXE=foobarcli    # Client binary name
+# ACCOUNTS=(foo bar)      # List of accounts for initialization 
+# RICH=${ACCOUNTS[0]}     # Account to assign genesis balance
 
 prepareClient() {
   echo "Preparing client keys..."
@@ -15,9 +17,10 @@ prepareClient() {
   done
 }
 
-# initServer takes two args - (root dir, chain_id)
-# and optionally port prefix as a third arg (default is 4665{6,7,8})
-# it grabs the first account to give it the money
+# XXX Ex Usage1: initServer $ROOTDIR $CHAINID
+# XXX Ex Usage2: initServer $ROOTDIR $CHAINID $PORTPREFIX
+# Desc: Grabs the Rich account and gives it all genesis money
+#       port-prefix default is 4665{6,7,8}
 initServer() {
   echo "Setting up genesis..."
   SERVE_DIR=$1/server
@@ -46,7 +49,10 @@ initServer() {
   fi
 }
 
-# initClient requires chain_id arg, port is optional (default 46657)
+# XXX Ex Usage1: initClient $CHAINID
+# XXX Ex Usage2: initClient $CHAINID $PORTPREFIX
+# Desc: Initialize the client program
+#       port-prefix default is 46657
 initClient() {
   echo "Attaching ${CLIENT_EXE} client..."
   PORT=${2:-46657}
@@ -55,7 +61,9 @@ initClient() {
   assertTrue "initialized light-client" $?
 }
 
-# newKeys makes a key for a given username, second arg optional password
+# XXX Ex Usage1: newKey $NAME
+# XXX Ex Usage2: newKey $NAME $PASSWORD
+# Desc: Generates key for given username and password
 newKey(){
   assertNotNull "keyname required" "$1"
   KEYPASS=${2:-qwertyuiop}
@@ -64,7 +72,8 @@ newKey(){
   assertTrue "$1 doesn't exist" "${CLIENT_EXE} keys get $1"
 }
 
-# getAddr gets the address for a key name
+# XXX Ex Usage: getAddr $NAME
+# Desc: Gets the address for a key name
 getAddr() {
   assertNotNull "keyname required" "$1"
   RAW=$(${CLIENT_EXE} keys get $1)
@@ -73,8 +82,7 @@ getAddr() {
   echo $RAW | cut -d' ' -f2
 }
 
-# checkAccount $ADDR $SEQUENCE $BALANCE
-# assumes just one coin, checks the balance of first coin in any case
+# Desc: Assumes just one coin, checks the balance of first coin in any case
 checkAccount() {
   # make sure sender goes down
   ACCT=$(${CLIENT_EXE} query account $1)
@@ -84,8 +92,8 @@ checkAccount() {
   return $?
 }
 
-# txSucceeded $? "$RES"
-# must be called right after the `tx` command, makes sure it got a success response
+# XXX Ex Usage: txSucceeded $? "$RES"
+# Desc: Must be called right after the `tx` command, makes sure it got a success response
 txSucceeded() {
   if (assertTrue "sent tx: $2" $1); then
     TX=`echo $2 | cut -d: -f2-` # strip off first line asking for password
@@ -96,9 +104,9 @@ txSucceeded() {
   fi
 }
 
-# checkSendTx $HASH $HEIGHT $SENDER $AMOUNT
-# this looks up the tx by hash, and makes sure the height and type match
-# and that the first input was from this sender for this amount
+# XXX Ex Usage: checkSendTx $HASH $HEIGHT $SENDER $AMOUNT
+# Desc: This looks up the tx by hash, and makes sure the height and type match
+#       and that the first input was from this sender for this amount
 checkSendTx() {
   TX=$(${CLIENT_EXE} query tx $1)
   assertTrue "found tx" $?
@@ -109,8 +117,8 @@ checkSendTx() {
   return $?
 }
 
-# waitForBlock $port
-# waits until the block height on that node increases by one
+# XXX Ex Usage: waitForBlock $port
+# Desc: Waits until the block height on that node increases by one
 waitForBlock() {
   addr=http://localhost:$1
   b1=`curl -s $addr/status | jq .result.latest_block_height`

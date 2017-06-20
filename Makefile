@@ -1,7 +1,8 @@
-.PHONEY: all docs test install get_vendor_deps ensure_tools codegen
+.PHONEY: all docs test install get_vendor_deps ensure_tools codegen wordlist
 
 GOTOOLS = \
-	github.com/Masterminds/glide
+	github.com/Masterminds/glide \
+	github.com/jteeuwen/go-bindata/go-bindata
 REPO:=github.com/tendermint/go-crypto
 
 docs:
@@ -34,6 +35,9 @@ get_vendor_deps: ensure_tools
 
 ensure_tools:
 	go get $(GOTOOLS)
+
+wordlist:
+	go-bindata -ignore ".*\.go" -o keys/wordlist/wordlist.go -pkg "wordlist" keys/wordlist/...
 
 prepgen: install
 	go install ./vendor/github.com/btcsuite/btcutil/base58

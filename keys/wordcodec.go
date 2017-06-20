@@ -1,12 +1,12 @@
 package keys
 
 import (
-	"io/ioutil"
 	"math/big"
-	"os"
 	"strings"
 
 	"github.com/pkg/errors"
+
+	"github.com/tendermint/go-crypto/keys/wordlist"
 )
 
 const BankSize = 2048
@@ -50,30 +50,30 @@ func LoadCodec(bank string) (codec *WordCodec, err error) {
 
 // loadBank opens a wordlist file and returns all words inside
 func loadBank(bank string) ([]string, error) {
-	filename := "wordlist/" + bank + ".txt"
-	words, err := getData(filename)
+	filename := "keys/wordlist/" + bank + ".txt"
+	words, err := wordlist.Asset(filename)
 	if err != nil {
 		return nil, err
 	}
-	wordsAll := strings.Split(strings.TrimSpace(words), "\n")
+	wordsAll := strings.Split(strings.TrimSpace(string(words)), "\n")
 	return wordsAll, nil
 }
 
-// TODO: read from go-bind assets
-func getData(filename string) (string, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	defer f.Close()
+// // TODO: read from go-bind assets
+// func getData(filename string) (string, error) {
+// 	f, err := os.Open(filename)
+// 	if err != nil {
+// 		return "", errors.WithStack(err)
+// 	}
+// 	defer f.Close()
 
-	data, err := ioutil.ReadAll(f)
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
+// 	data, err := ioutil.ReadAll(f)
+// 	if err != nil {
+// 		return "", errors.WithStack(err)
+// 	}
 
-	return string(data), nil
-}
+// 	return string(data), nil
+// }
 
 // given this many bytes, we will produce this many words
 func wordlenFromBytes(numBytes int) int {

@@ -178,33 +178,3 @@ func TestCheckTypoDetection(t *testing.T) {
 		}
 	}
 }
-
-func warmupCodec(bank string) *WordCodec {
-	codec, err := LoadCodec(bank)
-	if err != nil {
-		panic(err)
-	}
-	_, err = codec.GetIndex(codec.words[123])
-	if err != nil {
-		panic(err)
-	}
-	return codec
-}
-
-func BenchmarkWordGeneration(b *testing.B) {
-	// banks := []string{"english", "spanish", "japanese", "chinese_simplified"}
-	bank := "english"
-
-	codec := warmupCodec(bank)
-	b.ResetTimer()
-
-	numBytes := 32
-	data := cmn.RandBytes(numBytes)
-
-	for i := 1; i <= b.N; i++ {
-		_, err := codec.BytesToWords(data)
-		if err != nil {
-			panic(err)
-		}
-	}
-}

@@ -32,14 +32,20 @@ func (s Manager) assertKeyManager() keys.Manager {
 //
 // algo must be a supported go-crypto algorithm:
 //
-func (s Manager) Create(name, passphrase, algo string) (keys.Info, error) {
+func (s Manager) Create(name, passphrase, algo string) (keys.Info, string, error) {
 	gen, err := getGenerator(algo)
 	if err != nil {
-		return keys.Info{}, err
+		return keys.Info{}, "", err
 	}
 	key := gen.Generate()
 	err = s.es.Put(name, passphrase, key)
-	return info(name, key), err
+	// TODO
+	return info(name, key), "", err
+}
+
+func (s Manager) Recover(name, passphrase, seedphrase string) (keys.Info, error) {
+	// TODO
+	return keys.Info{}, nil
 }
 
 // List loads the keys from the storage and enforces alphabetical order

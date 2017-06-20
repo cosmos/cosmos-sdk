@@ -40,13 +40,15 @@ func TestKeyServer(t *testing.T) {
 	key, code, err := createKey(r, n1, p1, algo)
 	require.Nil(err, "%+v", err)
 	require.Equal(http.StatusOK, code)
-	require.Equal(key.Name, n1)
+	require.Equal(n1, key.Key.Name)
+	require.NotEmpty(n1, key.Seed)
 
 	// the other one works
 	key2, code, err := createKey(r, n2, p2, algo)
 	require.Nil(err, "%+v", err)
 	require.Equal(http.StatusOK, code)
-	require.Equal(key2.Name, n2)
+	require.Equal(key2.Key.Name, n2)
+	require.NotEmpty(n2, key.Seed)
 
 	// let's abstract this out a bit....
 	keys, code, err = listKeys(r)
@@ -62,9 +64,9 @@ func TestKeyServer(t *testing.T) {
 	k, code, err := getKey(r, n1)
 	require.Nil(err, "%+v", err)
 	require.Equal(http.StatusOK, code)
-	assert.Equal(k.Name, n1)
+	assert.Equal(n1, k.Name)
 	assert.NotNil(k.Address)
-	assert.Equal(k.Address, key.Address)
+	assert.Equal(key.Key.Address, k.Address)
 
 	// delete with proper key
 	_, code, err = deleteKey(r, n1, p1)
@@ -134,7 +136,7 @@ func getKey(h http.Handler, name string) (*keys.Info, int, error) {
 	return &data, rr.Code, err
 }
 
-func createKey(h http.Handler, name, passphrase, algo string) (*keys.Info, int, error) {
+func createKey(h http.Handler, name, passphrase, algo string) (*types.CreateKeyResponse, int, error) {
 	rr := httptest.NewRecorder()
 	post := types.CreateKeyRequest{
 		Name:       name,
@@ -157,9 +159,9 @@ func createKey(h http.Handler, name, passphrase, algo string) (*keys.Info, int, 
 		return nil, rr.Code, nil
 	}
 
-	data := keys.Info{}
-	err = json.Unmarshal(rr.Body.Bytes(), &data)
-	return &data, rr.Code, err
+	data := new(types.CreateKeyResponse)
+	err = json.Unmarshal(rr.Body.Bytes(), data)
+	return data, rr.Code, err
 }
 
 func deleteKey(h http.Handler, name, passphrase string) (*types.ErrorResponse, int, error) {

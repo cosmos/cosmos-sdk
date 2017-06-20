@@ -1,13 +1,13 @@
 # This is not executable, but helper functions for the other scripts
 
 # XXX XXX XXX XXX XXX
-# The following global variables must be defined before calling common functions: 
+# The following global variables must be defined before calling common functions:
 # SERVER_EXE=foobar       # Server binary name
 # CLIENT_EXE=foobarcli    # Client binary name
-# ACCOUNTS=(foo bar)      # List of accounts for initialization 
+# ACCOUNTS=(foo bar)      # List of accounts for initialization
 # RICH=${ACCOUNTS[0]}     # Account to assign genesis balance
 
-# XXX Ex Usage: quickSetup $WORK_NAME $CHAIN_ID 
+# XXX Ex Usage: quickSetup $WORK_NAME $CHAIN_ID
 # Desc: Start the program, use with shunit2 OneTimeSetUp()
 quickSetup() {
   # These are passed in as args
@@ -73,15 +73,28 @@ initServer() {
   fi
 
   echo "Starting ${SERVER_EXE} server..."
-  ${SERVER_EXE} start --home=$SERVE_DIR >>$SERVER_LOG 2>&1 &
+  startServer $SERVE_DIR $SERVER_LOG
+  return $?
+}
+
+# usage: startServer SERVE_DIR SERVER_LOG
+startServer() {
+  ${SERVER_EXE} start --home=$1 >>$2 2>&1 &
   sleep 5
   PID_SERVER=$!
   disown
   if ! ps $PID_SERVER >/dev/null; then
     echo "**FAILED**"
-    # cat $SERVER_LOG
-    # return 1
+    cat $SERVER_LOG
+    return 1
   fi
+}
+
+# XXX Ex Usage: stopServer $PID_SERVER
+stopServer() {
+  echo "stopping $SERVER_EXE test server..."
+  kill -9 $1 >/dev/null 2>&1
+  sleep 1
 }
 
 # XXX Ex Usage1: initClient $CHAINID
@@ -121,7 +134,11 @@ getAddr() {
 checkAccount() {
   # make sure sender goes down
   ACCT=$(${CLIENT_EXE} query account $1)
-  assertTrue "must have genesis account" $?
+  if ! assertTrue "account must exist: $ACCT" $?; then
+    return 1
+  fi
+
+  if [ -n "$DEBUG" ]; then echo $ACCT; echo; fi
   assertEquals "proper sequence" "$2" $(echo $ACCT | jq .data.sequence)
   assertEquals "proper money" "$3" $(echo $ACCT | jq .data.coins[0].amount)
   return $?
@@ -145,6 +162,8 @@ txSucceeded() {
 checkSendTx() {
   TX=$(${CLIENT_EXE} query tx $1)
   assertTrue "found tx" $?
+  if [ -n "$DEBUG" ]; then echo $TX; echo; fi
+
   assertEquals "proper height" $2 $(echo $TX | jq .height)
   assertEquals "type=send" '"send"' $(echo $TX | jq .data.type)
   assertEquals "proper sender" "\"$3\"" $(echo $TX | jq .data.data.inputs[0].address)

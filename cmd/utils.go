@@ -77,6 +77,9 @@ func getPassword(prompt string) (pass string, err error) {
 }
 
 func getSeed(prompt string) (seed string, err error) {
+	if inputIsTty() {
+		fmt.Println(prompt)
+	}
 	seed, err = stdinPassword()
 	seed = strings.TrimSpace(seed)
 	return

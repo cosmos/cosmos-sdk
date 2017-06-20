@@ -39,7 +39,7 @@ func runRecoverCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// not really a password... huh?
-	seed, err := getSeed("Enter your recovery seed phrase")
+	seed, err := getSeed("Enter your recovery seed phrase:")
 	if err != nil {
 		return err
 	}

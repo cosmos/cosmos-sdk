@@ -22,9 +22,9 @@ func TestOneSig(t *testing.T) {
 	n, p := "foo", "bar"
 	n2, p2 := "other", "thing"
 
-	acct, err := cstore.Create(n, p, algo)
+	acct, _, err := cstore.Create(n, p, algo)
 	require.Nil(err, "%+v", err)
-	acct2, err := cstore.Create(n2, p2, algo)
+	acct2, _, err := cstore.Create(n2, p2, algo)
 	require.Nil(err, "%+v", err)
 
 	cases := []struct {

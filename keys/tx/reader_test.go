@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	crypto "github.com/tendermint/go-crypto"
-	data "github.com/tendermint/go-wire/data"
 	"github.com/tendermint/go-crypto/keys/cryptostore"
 	"github.com/tendermint/go-crypto/keys/storage/memstorage"
+	data "github.com/tendermint/go-wire/data"
 )
 
 func TestReader(t *testing.T) {
@@ -23,9 +23,9 @@ func TestReader(t *testing.T) {
 	u := sigs{"alice", "1234"}
 	u2 := sigs{"bob", "foobar"}
 
-	_, err := cstore.Create(u.name, u.pass, algo)
+	_, _, err := cstore.Create(u.name, u.pass, algo)
 	require.Nil(err, "%+v", err)
-	_, err = cstore.Create(u2.name, u2.pass, algo)
+	_, _, err = cstore.Create(u2.name, u2.pass, algo)
 	require.Nil(err, "%+v", err)
 
 	cases := []struct {

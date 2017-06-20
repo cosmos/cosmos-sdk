@@ -1,7 +1,6 @@
 package keys
 
 import (
-	"fmt"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -31,15 +30,7 @@ func NewCodec(words []string) (codec WordCodec, err error) {
 		return codec, errors.Errorf("Bank must have %d words, found %d", BankSize, len(words))
 	}
 
-	b := map[string]int{}
-	for i, w := range words {
-		if _, ok := b[w]; ok {
-			return codec, errors.Errorf("Duplicate word in list: %s", w)
-		}
-		b[w] = i
-	}
-
-	return WordCodec{words, b}, nil
+	return WordCodec{words: words}, nil
 }
 
 func LoadCodec(bank string) (codec WordCodec, err error) {
@@ -111,7 +102,6 @@ func (c WordCodec) BytesToWords(data []byte) (words []string, err error) {
 		rem := nRem.Int64()
 		words = append(words, c.words[rem])
 	}
-	fmt.Println(words)
 	return words, nil
 }
 
@@ -128,25 +118,45 @@ func (c WordCodec) WordsToBytes(words []string) ([]byte, error) {
 	// since we output words based on the remainder, the first word has the lowest
 	// value... we must load them in reverse order
 	for i := 1; i <= l; i++ {
-		w := words[l-i]
-		rem, ok := c.bytes[w]
-		if !ok {
-			return nil, errors.Errorf("Unrecognized word: %s", w)
+		rem, err := c.GetIndex(words[l-i])
+		if err != nil {
+			return nil, err
 		}
 		nRem := big.NewInt(int64(rem))
 		nData.Mul(nData, n2048)
 		nData.Add(nData, nRem)
-		fmt.Printf("+%d: %v\n", rem, nData)
 	}
 
 	// we copy into a slice of the expected size, so it is not shorter if there
 	// are lots of leading 0s
 	dataBytes := nData.Bytes()
-	fmt.Printf("%#v\n", dataBytes)
 
 	outLen, _ := bytelenFromWords(len(words))
 	output := make([]byte, outLen)
 	copy(output[outLen-len(dataBytes):], dataBytes)
-	fmt.Printf("%#v\n", output)
 	return output, nil
+}
+
+// GetIndex finds the index of the words to create bytes
+// Generates a map the first time it is loaded, to avoid needless
+// computation when list is not used.
+func (c WordCodec) GetIndex(word string) (int, error) {
+	// generate the first time
+	if c.bytes == nil {
+		b := map[string]int{}
+		for i, w := range c.words {
+			if _, ok := b[w]; ok {
+				return -1, errors.Errorf("Duplicate word in list: %s", w)
+			}
+			b[w] = i
+		}
+		c.bytes = b
+	}
+
+	// get the index, or an error
+	rem, ok := c.bytes[word]
+	if !ok {
+		return -1, errors.Errorf("Unrecognized word: %s", word)
+	}
+	return rem, nil
 }

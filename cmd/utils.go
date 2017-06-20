@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/bgentry/speakeasy"
@@ -15,9 +16,31 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	keys "github.com/tendermint/go-crypto/keys"
+	"github.com/tendermint/go-crypto/keys/cryptostore"
+	"github.com/tendermint/go-crypto/keys/storage/filestorage"
 )
 
-const PassLength = 10
+const MinPassLength = 10
+
+// GetKeyManager initializes a key manager based on the configuration
+func GetKeyManager() keys.Manager {
+	if manager == nil {
+		// store the keys directory
+		rootDir := viper.GetString(cli.HomeFlag)
+		keyDir := filepath.Join(rootDir, KeySubdir)
+
+		// TODO: smarter loading??? with language and fallback?
+		codec := keys.MustLoadCodec("english")
+
+		// and construct the key manager
+		manager = cryptostore.New(
+			cryptostore.SecretBox,
+			filestorage.New(keyDir),
+			codec,
+		)
+	}
+	return manager
+}
 
 // if we read from non-tty, we just need to init the buffer reader once,
 // in case we try to read multiple passwords (eg. update)
@@ -47,8 +70,8 @@ func getPassword(prompt string) (pass string, err error) {
 	if err != nil {
 		return "", err
 	}
-	if len(pass) < PassLength {
-		return "", errors.Errorf("Password must be at least %d characters", PassLength)
+	if len(pass) < MinPassLength {
+		return "", errors.Errorf("Password must be at least %d characters", MinPassLength)
 	}
 	return pass, nil
 }

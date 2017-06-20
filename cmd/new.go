@@ -21,6 +21,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	flagType = "type"
+)
+
 // newCmd represents the new command
 var newCmd = &cobra.Command{
 	Use:   "new <name>",
@@ -28,20 +32,19 @@ var newCmd = &cobra.Command{
 	Long: `Add a public/private key pair to the key store.
 The password muts be entered in the terminal and not
 passed as a command line argument for security.`,
-	RunE: newPassword,
+	RunE: runNewCmd,
 }
 
 func init() {
-	RootCmd.AddCommand(newCmd)
-	newCmd.Flags().StringP("type", "t", "ed25519", "Type of key (ed25519|secp256k1)")
+	newCmd.Flags().StringP(flagType, "t", "ed25519", "Type of key (ed25519|secp256k1)")
 }
 
-func newPassword(cmd *cobra.Command, args []string) error {
+func runNewCmd(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 || len(args[0]) == 0 {
 		return errors.New("You must provide a name for the key")
 	}
 	name := args[0]
-	algo := viper.GetString("type")
+	algo := viper.GetString(flagType)
 
 	pass, err := getCheckPassword("Enter a passphrase:", "Repeat the passphrase:")
 	if err != nil {

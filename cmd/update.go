@@ -26,15 +26,10 @@ import (
 var updateCmd = &cobra.Command{
 	Use:   "update <name>",
 	Short: "Change the password for a private key",
-	Long:  `Change the password for a private key.`,
-	RunE:  updatePassword,
+	RunE:  runUpdateCmd,
 }
 
-func init() {
-	RootCmd.AddCommand(updateCmd)
-}
-
-func updatePassword(cmd *cobra.Command, args []string) error {
+func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 || len(args[0]) == 0 {
 		return errors.New("You must provide a name for the key")
 	}

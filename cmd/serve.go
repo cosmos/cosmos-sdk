@@ -28,6 +28,11 @@ import (
 	"github.com/tendermint/go-crypto/keys/server"
 )
 
+const (
+	flagPort   = "port"
+	flagSocket = "socket"
+)
+
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
 	Use:   "serve",
@@ -36,27 +41,26 @@ var serveCmd = &cobra.Command{
 private keys much more in depth than the cli can perform.
 In particular, this will allow you to sign transactions with
 the private keys in the store.`,
-	RunE: serveHTTP,
+	RunE: runServeCmd,
 }
 
 func init() {
-	RootCmd.AddCommand(serveCmd)
-	serveCmd.Flags().IntP("port", "p", 8118, "TCP Port for listen for http server")
-	serveCmd.Flags().StringP("socket", "s", "", "UNIX socket for more secure http server")
-	serveCmd.Flags().StringP("type", "t", "ed25519", "Default key type (ed25519|secp256k1)")
+	serveCmd.Flags().IntP(flagPort, "p", 8118, "TCP Port for listen for http server")
+	serveCmd.Flags().StringP(flagSocket, "s", "", "UNIX socket for more secure http server")
+	serveCmd.Flags().StringP(flagType, "t", "ed25519", "Default key type (ed25519|secp256k1)")
 }
 
-func serveHTTP(cmd *cobra.Command, args []string) error {
+func runServeCmd(cmd *cobra.Command, args []string) error {
 	var l net.Listener
 	var err error
-	socket := viper.GetString("socket")
+	socket := viper.GetString(flagSocket)
 	if socket != "" {
 		l, err = createSocket(socket)
 		if err != nil {
 			return errors.Wrap(err, "Cannot create socket")
 		}
 	} else {
-		port := viper.GetInt("port")
+		port := viper.GetInt(flagPort)
 		l, err = net.Listen("tcp", fmt.Sprintf(":%d", port))
 		if err != nil {
 			return errors.Errorf("Cannot listen on port %d", port)
@@ -64,7 +68,7 @@ func serveHTTP(cmd *cobra.Command, args []string) error {
 	}
 
 	router := mux.NewRouter()
-	ks := server.New(GetKeyManager(), viper.GetString("type"))
+	ks := server.New(GetKeyManager(), viper.GetString(flagType))
 	ks.Register(router)
 
 	// only set cors for tcp listener

@@ -146,7 +146,7 @@ func getDiffWord(c WordCodec, not string) string {
 func TestCheckTypoDetection(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
-	banks := []string{"english"}
+	banks := []string{"english", "spanish", "japanese", "chinese_simplified"}
 
 	for _, bank := range banks {
 		codec, err := LoadCodec(bank)

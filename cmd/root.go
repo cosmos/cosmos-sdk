@@ -48,10 +48,15 @@ func GetKeyManager() keys.Manager {
 		// store the keys directory
 		rootDir := viper.GetString(cli.HomeFlag)
 		keyDir := filepath.Join(rootDir, KeySubdir)
+
+		// TODO: smarter loading??? with language and fallback?
+		codec := keys.MustLoadCodec("english")
+
 		// and construct the key manager
 		manager = cryptostore.New(
 			cryptostore.SecretBox,
 			filestorage.New(keyDir),
+			codec,
 		)
 	}
 	return manager

@@ -48,7 +48,7 @@ func newPassword(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	info, err := GetKeyManager().Create(name, pass, algo)
+	info, _, err := GetKeyManager().Create(name, pass, algo)
 	if err == nil {
 		printInfo(info)
 	}

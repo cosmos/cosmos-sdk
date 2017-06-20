@@ -1,19 +1,26 @@
 package cryptostore
 
-import keys "github.com/tendermint/go-crypto/keys"
+import (
+	"strings"
+
+	crypto "github.com/tendermint/go-crypto"
+	keys "github.com/tendermint/go-crypto/keys"
+)
 
 // Manager combines encyption and storage implementation to provide
 // a full-featured key manager
 type Manager struct {
-	es encryptedStorage
+	es    encryptedStorage
+	codec keys.Codec
 }
 
-func New(coder Encoder, store keys.Storage) Manager {
+func New(coder Encoder, store keys.Storage, codec keys.Codec) Manager {
 	return Manager{
 		es: encryptedStorage{
 			coder: coder,
 			store: store,
 		},
+		codec: codec,
 	}
 }
 
@@ -39,13 +46,29 @@ func (s Manager) Create(name, passphrase, algo string) (keys.Info, string, error
 	}
 	key := gen.Generate()
 	err = s.es.Put(name, passphrase, key)
-	// TODO
-	return info(name, key), "", err
+	if err != nil {
+		return keys.Info{}, "", err
+	}
+	seed, err := s.codec.BytesToWords(key.Bytes())
+	phrase := strings.Join(seed, " ")
+	return info(name, key), phrase, err
 }
 
 func (s Manager) Recover(name, passphrase, seedphrase string) (keys.Info, error) {
-	// TODO
-	return keys.Info{}, nil
+	words := strings.Split(strings.TrimSpace(seedphrase), " ")
+	data, err := s.codec.WordsToBytes(words)
+	if err != nil {
+		return keys.Info{}, err
+	}
+
+	key, err := crypto.PrivKeyFromBytes(data)
+	if err != nil {
+		return keys.Info{}, err
+	}
+
+	// d00d, it worked!  create the bugger....
+	err = s.es.Put(name, passphrase, key)
+	return info(name, key), err
 }
 
 // List loads the keys from the storage and enforces alphabetical order

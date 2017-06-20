@@ -18,6 +18,7 @@ func TestOneSig(t *testing.T) {
 	cstore := cryptostore.New(
 		cryptostore.SecretBox,
 		memstorage.New(),
+		keys.MustLoadCodec("english"),
 	)
 	n, p := "foo", "bar"
 	n2, p2 := "other", "thing"

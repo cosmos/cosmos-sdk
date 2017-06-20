@@ -91,6 +91,7 @@ func setupServer() http.Handler {
 	cstore := cryptostore.New(
 		cryptostore.SecretBox,
 		memstorage.New(),
+		keys.MustLoadCodec("english"),
 	)
 
 	// build your http server

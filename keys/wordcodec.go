@@ -40,12 +40,22 @@ func NewCodec(words []string) (codec *WordCodec, err error) {
 	return res, nil
 }
 
+// LoadCodec loads a pre-compiled language file
 func LoadCodec(bank string) (codec *WordCodec, err error) {
 	words, err := loadBank(bank)
 	if err != nil {
 		return codec, err
 	}
 	return NewCodec(words)
+}
+
+// MustLoadCodec panics if word bank is missing, only for tests
+func MustLoadCodec(bank string) *WordCodec {
+	codec, err := LoadCodec(bank)
+	if err != nil {
+		panic(err)
+	}
+	return codec
 }
 
 // loadBank opens a wordlist file and returns all words inside

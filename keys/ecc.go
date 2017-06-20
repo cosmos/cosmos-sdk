@@ -26,14 +26,19 @@ func (_ NoECC) AddECC(input []byte) []byte            { return input }
 func (_ NoECC) CheckECC(input []byte) ([]byte, error) { return input, nil }
 
 // CRC32 does the ieee crc32 polynomial check
-type CRC32 struct{}
+type CRC32 struct {
+	Poly  uint32
+	table *crc32.Table
+}
 
-var _ ECC = CRC32{}
+var _ ECC = &CRC32{}
 
-func (_ CRC32) AddECC(input []byte) []byte {
+func (c *CRC32) AddECC(input []byte) []byte {
+	table := c.getTable()
+
 	// get crc and convert to some bytes...
-	crc := crc32.ChecksumIEEE(input)
-	check := make([]byte, 4)
+	crc := crc32.Checksum(input, table)
+	check := make([]byte, crc32.Size)
 	binary.BigEndian.PutUint32(check, crc)
 
 	// append it to the input
@@ -41,16 +46,28 @@ func (_ CRC32) AddECC(input []byte) []byte {
 	return output
 }
 
-func (_ CRC32) CheckECC(input []byte) ([]byte, error) {
-	if len(input) <= 4 {
+func (c *CRC32) CheckECC(input []byte) ([]byte, error) {
+	table := c.getTable()
+
+	if len(input) <= crc32.Size {
 		return nil, errors.New("input too short, no checksum present")
 	}
-	cut := len(input) - 4
+	cut := len(input) - crc32.Size
 	data, check := input[:cut], input[cut:]
 	crc := binary.BigEndian.Uint32(check)
-	calc := crc32.ChecksumIEEE(data)
+	calc := crc32.Checksum(data, table)
 	if crc != calc {
 		return nil, errors.New("Checksum does not match")
 	}
 	return data, nil
+}
+
+func (c *CRC32) getTable() *crc32.Table {
+	if c.table == nil {
+		if c.Poly == 0 {
+			c.Poly = crc32.IEEE
+		}
+		c.table = crc32.MakeTable(c.Poly)
+	}
+	return c.table
 }

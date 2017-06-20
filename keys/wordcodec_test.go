@@ -5,6 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 func TestLengthCalc(t *testing.T) {
@@ -80,7 +82,51 @@ func TestEncodeDecode(t *testing.T) {
 }
 
 func TestCheckInvalidLists(t *testing.T) {
-	// assert, require := assert.New(t), require.New(t)
+	assert := assert.New(t)
+
+	trivial := []string{"abc", "def"}
+	short := make([]string, 1234)
+	long := make([]string, BankSize+1)
+	right := make([]string, BankSize)
+	dups := make([]string, BankSize)
+
+	for _, list := range [][]string{short, long, right, dups} {
+		for i := range list {
+			list[i] = cmn.RandStr(8)
+		}
+	}
+	// create one single duplicate
+	dups[192] = dups[782]
+
+	cases := []struct {
+		words    []string
+		loadable bool
+		valid    bool
+	}{
+		{trivial, false, false},
+		{short, false, false},
+		{long, false, false},
+		{dups, true, false}, // we only check dups on first use...
+		{right, true, true},
+	}
+
+	for i, tc := range cases {
+		codec, err := NewCodec(tc.words)
+		if !tc.loadable {
+			assert.NotNil(err, "%d", i)
+		} else if assert.Nil(err, "%d: %+v", i, err) {
+			data := cmn.RandBytes(32)
+			w, err := codec.BytesToWords(data)
+			if tc.valid {
+				assert.Nil(err, "%d: %+v", i, err)
+				b, err := codec.WordsToBytes(w)
+				assert.Nil(err, "%d: %+v", i, err)
+				assert.Equal(data, b)
+			} else {
+				assert.NotNil(err, "%d", i)
+			}
+		}
+	}
 
 }
 

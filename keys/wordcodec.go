@@ -109,7 +109,13 @@ func (c WordCodec) BytesToWords(raw []byte) (words []string, err error) {
 	for i := 0; i < numWords; i++ {
 		nData.DivMod(nData, n2048, nRem)
 		rem := nRem.Int64()
-		words = append(words, c.words[rem])
+		w := c.words[rem]
+		// double-check bank on generation...
+		_, err := c.GetIndex(w)
+		if err != nil {
+			return nil, err
+		}
+		words = append(words, w)
 	}
 	return words, nil
 }

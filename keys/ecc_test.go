@@ -1,7 +1,6 @@
 package keys
 
 import (
-	"hash/crc32"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,7 +12,14 @@ import (
 func TestECCPasses(t *testing.T) {
 	assert := assert.New(t)
 
-	checks := []ECC{NoECC{}, &CRC32{}, &CRC32{Poly: crc32.Castagnoli}}
+	checks := []ECC{
+		NoECC{},
+		NewIEEECRC32(),
+		NewCastagnoliCRC32(),
+		NewKoopmanCRC32(),
+		NewISOCRC64(),
+		NewECMACRC64(),
+	}
 
 	for _, check := range checks {
 		for i := 0; i < 2000; i++ {
@@ -22,7 +28,7 @@ func TestECCPasses(t *testing.T) {
 
 			checked := check.AddECC(data)
 			res, err := check.CheckECC(checked)
-			if assert.Nil(err, "%v: %+v", check, err) {
+			if assert.Nil(err, "%#v: %+v", check, err) {
 				assert.Equal(data, res, "%v", check)
 			}
 		}
@@ -33,7 +39,13 @@ func TestECCPasses(t *testing.T) {
 func TestECCFails(t *testing.T) {
 	assert := assert.New(t)
 
-	checks := []ECC{&CRC32{}, &CRC32{Poly: crc32.Castagnoli}}
+	checks := []ECC{
+		NewIEEECRC32(),
+		NewCastagnoliCRC32(),
+		NewKoopmanCRC32(),
+		NewISOCRC64(),
+		NewECMACRC64(),
+	}
 
 	attempts := 2000
 

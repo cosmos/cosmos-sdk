@@ -24,13 +24,7 @@ initServer() {
   assertNotNull "no chain" $2
   CHAIN=$2
   SERVER_LOG=$1/${SERVER_EXE}.log
-  ${SERVER_EXE} init --home=$SERVE_DIR >>$SERVER_LOG
-
-  #change the genesis to the first account
-  GENKEY=$(${CLIENT_EXE} keys get ${RICH} -o json | jq .pubkey.data)
-  GENJSON=$(cat $SERVE_DIR/genesis.json)
-  echo $GENJSON | jq '.app_options.accounts[0].pub_key.data='$GENKEY \
-    | jq ".chain_id=\"$2\"" > $SERVE_DIR/genesis.json
+  ${SERVER_EXE} init --chain-id $CHAIN $(${CLIENT_EXE} keys get ${RICH} | awk '{print $2}') --home=$SERVE_DIR >>$SERVER_LOG
 
   # optionally set the port
   if [ -n "$3" ]; then

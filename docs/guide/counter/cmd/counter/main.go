@@ -7,7 +7,7 @@ import (
 
 	"github.com/tendermint/tmlibs/cli"
 
-	"github.com/tendermint/basecoin/cmd/commands"
+	"github.com/tendermint/basecoin/cmd/basecoin/commands"
 	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
 	"github.com/tendermint/basecoin/types"
 )

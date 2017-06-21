@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 
 	"github.com/spf13/cobra"
 )
@@ -16,6 +17,18 @@ var (
 		RunE:  initCmd,
 	}
 )
+
+//flags
+var (
+	chainIDFlag string
+)
+
+func init() {
+	flags := []Flag2Register{
+		{&chainIDFlag, "chain-id", "test_chain_id", "Chain ID"},
+	}
+	RegisterFlags(InitCmd, flags)
+}
 
 // returns 1 iff it set a file, otherwise 0 (so we can add them)
 func setupFile(path, data string, perm os.FileMode) (int, error) {
@@ -47,7 +60,7 @@ func initCmd(cmd *cobra.Command, args []string) error {
 	privValFile := cfg.PrivValidatorFile()
 	keyFile := path.Join(cfg.RootDir, "key.json")
 
-	mod1, err := setupFile(genesisFile, GetGenesisJSON(userAddr), 0644)
+	mod1, err := setupFile(genesisFile, GetGenesisJSON(chainIDFlag, userAddr), 0644)
 	if err != nil {
 		return err
 	}
@@ -55,7 +68,7 @@ func initCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	mod3, err := setupFile(key1File, KeyJSON, 0400)
+	mod3, err := setupFile(keyFile, KeyJSON, 0400)
 	if err != nil {
 		return err
 	}
@@ -89,10 +102,10 @@ var PrivValJSON = `{
 // GetGenesisJSON returns a new tendermint genesis with Basecoin app_options
 // that grant a large amount of "mycoin" to a single address
 // TODO: A better UX for generating genesis files
-func GetGenesisJSON(addr string) string {
+func GetGenesisJSON(chainID, addr string) string {
 	return fmt.Sprintf(`{
   "app_hash": "",
-  "chain_id": "test_chain_id",
+  "chain_id": "%s",
   "genesis_time": "0001-01-01T00:00:00.000Z",
   "validators": [
     {
@@ -115,7 +128,7 @@ func GetGenesisJSON(addr string) string {
       ]
     }]
   }
-}`, addr)
+}`, chainID, addr)
 }
 
 // TODO: remove this once not needed for relay

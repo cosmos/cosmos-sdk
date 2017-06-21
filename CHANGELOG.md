@@ -29,6 +29,7 @@ BREAKING CHANGES:
   - removed `example-plugin`, put `counter` inside `docs/guide`
 
 ENHANCEMENTS:
+- `basecoin init` support `--chain-id`
 - intergrates tendermint 0.10.0 (not the rc-2, but the real thing)
 - commands return error code (1) on failure for easier script testing
 - add `reset_all` to basecli, and never delete keys on `init`

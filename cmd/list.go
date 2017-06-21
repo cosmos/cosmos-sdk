@@ -22,15 +22,13 @@ var listCmd = &cobra.Command{
 	Short: "List all keys",
 	Long: `Return a list of all public keys stored by this key manager
 along with their associated name and address.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		infos, err := GetKeyManager().List()
-		if err == nil {
-			printInfos(infos)
-		}
-		return err
-	},
+	RunE: runListCmd,
 }
 
-func init() {
-	RootCmd.AddCommand(listCmd)
+func runListCmd(cmd *cobra.Command, args []string) error {
+	infos, err := GetKeyManager().List()
+	if err == nil {
+		printInfos(infos)
+	}
+	return err
 }

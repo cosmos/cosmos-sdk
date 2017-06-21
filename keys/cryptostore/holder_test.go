@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/go-crypto/keys/cryptostore"
 	"github.com/tendermint/go-crypto/keys/storage/memstorage"
 )
@@ -18,6 +19,7 @@ func TestKeyManagement(t *testing.T) {
 	cstore := cryptostore.New(
 		cryptostore.SecretBox,
 		memstorage.New(),
+		keys.MustLoadCodec("english"),
 	)
 
 	algo := crypto.NameEd25519
@@ -32,10 +34,10 @@ func TestKeyManagement(t *testing.T) {
 	// create some keys
 	_, err = cstore.Get(n1)
 	assert.NotNil(err)
-	i, err := cstore.Create(n1, p1, algo)
+	i, _, err := cstore.Create(n1, p1, algo)
 	require.Equal(n1, i.Name)
 	require.Nil(err)
-	_, err = cstore.Create(n2, p2, algo)
+	_, _, err = cstore.Create(n2, p2, algo)
 	require.Nil(err)
 
 	// we can get these keys
@@ -154,6 +156,7 @@ func TestAdvancedKeyManagement(t *testing.T) {
 	cstore := cryptostore.New(
 		cryptostore.SecretBox,
 		memstorage.New(),
+		keys.MustLoadCodec("english"),
 	)
 
 	algo := crypto.NameSecp256k1
@@ -161,7 +164,7 @@ func TestAdvancedKeyManagement(t *testing.T) {
 	p1, p2, p3, pt := "1234", "foobar", "ding booms!", "really-secure!@#$"
 
 	// make sure key works with initial password
-	_, err := cstore.Create(n1, p1, algo)
+	_, _, err := cstore.Create(n1, p1, algo)
 	require.Nil(err, "%+v", err)
 	assertPassword(assert, cstore, n1, p1, p2)
 
@@ -197,6 +200,41 @@ func TestAdvancedKeyManagement(t *testing.T) {
 	// make sure both passwords are now properly set (not to the transfer pass)
 	assertPassword(assert, cstore, n1, p2, pt)
 	assertPassword(assert, cstore, n2, p3, pt)
+}
+
+// TestSeedPhrase verifies restoring from a seed phrase
+func TestSeedPhrase(t *testing.T) {
+	assert, require := assert.New(t), require.New(t)
+
+	// make the storage with reasonable defaults
+	cstore := cryptostore.New(
+		cryptostore.SecretBox,
+		memstorage.New(),
+		keys.MustLoadCodec("english"),
+	)
+
+	algo := crypto.NameEd25519
+	n1, n2 := "lost-key", "found-again"
+	p1, p2 := "1234", "foobar"
+
+	// make sure key works with initial password
+	info, seed, err := cstore.Create(n1, p1, algo)
+	require.Nil(err, "%+v", err)
+	assert.Equal(n1, info.Name)
+	assert.NotEmpty(seed)
+
+	// now, let us delete this key
+	err = cstore.Delete(n1, p1)
+	require.Nil(err, "%+v", err)
+	_, err = cstore.Get(n1)
+	require.NotNil(err)
+
+	// let us re-create it from the seed-phrase
+	newInfo, err := cstore.Recover(n2, p2, seed)
+	require.Nil(err, "%+v", err)
+	assert.Equal(n2, newInfo.Name)
+	assert.Equal(info.Address, newInfo.Address)
+	assert.Equal(info.PubKey, newInfo.PubKey)
 }
 
 // func ExampleStore() {

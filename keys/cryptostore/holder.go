@@ -1,19 +1,26 @@
 package cryptostore
 
-import keys "github.com/tendermint/go-crypto/keys"
+import (
+	"strings"
+
+	crypto "github.com/tendermint/go-crypto"
+	keys "github.com/tendermint/go-crypto/keys"
+)
 
 // Manager combines encyption and storage implementation to provide
 // a full-featured key manager
 type Manager struct {
-	es encryptedStorage
+	es    encryptedStorage
+	codec keys.Codec
 }
 
-func New(coder Encoder, store keys.Storage) Manager {
+func New(coder Encoder, store keys.Storage, codec keys.Codec) Manager {
 	return Manager{
 		es: encryptedStorage{
 			coder: coder,
 			store: store,
 		},
+		codec: codec,
 	}
 }
 
@@ -30,14 +37,41 @@ func (s Manager) assertKeyManager() keys.Manager {
 // Create adds a new key to the storage engine, returning error if
 // another key already stored under this name
 //
-// algo must be a supported go-crypto algorithm:
-//
-func (s Manager) Create(name, passphrase, algo string) (keys.Info, error) {
+// algo must be a supported go-crypto algorithm: ed25519, secp256k1
+func (s Manager) Create(name, passphrase, algo string) (keys.Info, string, error) {
 	gen, err := getGenerator(algo)
+	if err != nil {
+		return keys.Info{}, "", err
+	}
+	key := gen.Generate()
+	err = s.es.Put(name, passphrase, key)
+	if err != nil {
+		return keys.Info{}, "", err
+	}
+	seed, err := s.codec.BytesToWords(key.Bytes())
+	phrase := strings.Join(seed, " ")
+	return info(name, key), phrase, err
+}
+
+// Recover takes a seed phrase and tries to recover the private key.
+//
+// If the seed phrase is valid, it will create the private key and store
+// it under name, protected by passphrase.
+//
+// Result similar to New(), except it doesn't return the seed again...
+func (s Manager) Recover(name, passphrase, seedphrase string) (keys.Info, error) {
+	words := strings.Split(strings.TrimSpace(seedphrase), " ")
+	data, err := s.codec.WordsToBytes(words)
 	if err != nil {
 		return keys.Info{}, err
 	}
-	key := gen.Generate()
+
+	key, err := crypto.PrivKeyFromBytes(data)
+	if err != nil {
+		return keys.Info{}, err
+	}
+
+	// d00d, it worked!  create the bugger....
 	err = s.es.Put(name, passphrase, key)
 	return info(name, key), err
 }

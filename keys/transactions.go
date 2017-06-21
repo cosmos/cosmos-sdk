@@ -63,7 +63,10 @@ type Signer interface {
 // Manager allows simple CRUD on a keystore, as an aid to signing
 type Manager interface {
 	Signer
-	Create(name, passphrase, algo string) (Info, error)
+	// Create also returns a seed phrase for cold-storage
+	Create(name, passphrase, algo string) (Info, string, error)
+	// Recover takes a seedphrase and loads in the private key
+	Recover(name, passphrase, seedphrase string) (Info, error)
 	List() (Infos, error)
 	Get(name string) (Info, error)
 	Update(name, oldpass, newpass string) error

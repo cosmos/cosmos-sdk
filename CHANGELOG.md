@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.1 (June 21, 2017)
+
+- Improve keys command
+  - No password prompts in non-interactive mode (echo 'foobar' | keys new foo)
+  - Added support for seed phrases
+    - Seed phrase now returned on `keys new`
+    - Add `keys restore` to restore private key from key phrase
+    - Checksum to verify typos in the seed phrase (rather than just a useless key)
+  - Add `keys delete` to remove a key if needed
+
 ## 0.2.0 (May 18, 2017)
 
 BREAKING CHANGES:

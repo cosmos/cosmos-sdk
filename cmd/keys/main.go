@@ -22,6 +22,9 @@ import (
 )
 
 func main() {
+	// for demos, we enable the key server, probably don't want this
+	// in most binaries we embed the key management into
+	cmd.RegisterServer()
 	root := cli.PrepareMainCmd(cmd.RootCmd, "TM", os.ExpandEnv("$HOME/.tlc"))
 	root.Execute()
 }

@@ -14,7 +14,27 @@ go get -u github.com/tendermint/basecoin/cmd/...
 
 If you have trouble, see the [installation guide](install.md).
 
+Note the above command installs two binaries: `basecoin` and `basecli`.
+The former is the running node. The latter is a command-line light-client.
+
+## Generate some keys
+
+Let's generate two keys, one to receive an initial allocation of coins, 
+and one to send some coins to later:
+
+```
+# WARNING: this will wipe out any existing info in the ~/.basecli dir
+# including private keys, don't run if you have lots of local state already
+basecli reset_all
+basecli keys new cool
+basecli keys new friend
+```
+
+You'll need to enter passwords. You can view your key names and addresses with `basecli keys list`,
+or see a particular key's address with `basecli keys get <NAME>`.
+
 ## Initialize Basecoin
+
 
 To initialize a new Basecoin blockchain, run:
 
@@ -22,47 +42,22 @@ To initialize a new Basecoin blockchain, run:
 # WARNING: this will wipe out any existing info in the ~/.basecoin dir
 # don't run if you have lots of local state already
 rm -rf ~/.basecoin
-basecoin init
+basecoin init <ADDRESS>
+```
+
+If you prefer not to copy-paste, you can provide the address programatically:
+
+```
+basecoin init $(basecli keys get cool | awk '{print $2}')
 ```
 
 This will create the necessary files for a Basecoin blockchain with one
-validator and one account in `~/.basecoin`.  For more options on setup, see the
+validator and one account (corresponding to your key) in `~/.basecoin`.  For more options on setup, see the
 [guide to using the Basecoin tool](/docs/guide/basecoin-tool.md).
 
-For this example, we will change the genesis account to a new account named
-`cool`. First create a new account:
-
-```
-# WARNING: this will wipe out any existing info in the ~/.basecli dir
-# including private keys, don't run if you have lots of local state already
-basecli reset_all
-basecli keys new cool
-```
-
-While we're at it let's setup a second account which we will use later in the tutorial
-
-```
-basecli keys new friend
-```
-
-Next we need to copy in the public address from our new key into the genesis block:
-
-```
-basecli keys get cool -o=json
-vi ~/.basecoin/genesis.json
--> cut/paste your pubkey from the results above
-```
-or alternatively, without manual copy pasting:
-```
-GENKEY=`basecli keys get cool -o json | jq .pubkey.data`
-GENJSON=`cat ~/.basecoin/genesis.json`
-echo $GENJSON | jq '.app_options.accounts[0].pub_key.data='$GENKEY > ~/.basecoin/genesis.json
-```
-
-Hurray! you are very rich and cool on this blockchain now.
+If you like, you can manually add some more accounts to the blockchain by generating keys and editing the `~/.basecoin/genesis.json`.
 
 ## Start
-
 
 Now we can start Basecoin:
 
@@ -74,22 +69,26 @@ You should see blocks start streaming in!
 
 ## Initialize Light-Client
 
-Now that Basecoin is running we can initialize the light-client utility named
-`basecli`. Basecli is used for sending transactions and querying the state.
+Now that Basecoin is running we can initialize `basecli`, the light-client utility.
+Basecli is used for sending transactions and querying the state.
 Leave Basecoin running and open a new terminal window. Here run:
 
 ```
 basecli init --chain-id=test_chain_id --node=tcp://localhost:46657
 ```
 
+Note it will ask you to verify the validator hash. For a blockchain on your local computer, don't worry about it.
+If you're connecting to a blockchain over the internet, you should verify that the validator hash is correct.
+This is so that all queries done with `basecli` can be cryptographically proven to be correct according to a known validator set.
+
 ## Send transactions
 
 Now we are ready to send some transactions. First Let's check the balance of
-the two accounts we setup earlier these two accounts:
+the two accounts we setup earlier:
 
 ```
-ME=`basecli keys get cool -o=json | jq .address | tr -d '"'`
-YOU=`basecli keys get friend -o=json | jq .address | tr -d '"'`
+ME=$(basecli keys get cool | awk '{print $2}')
+YOU=$(basecli keys get friend | awk '{print $2}')
 basecli query account $ME
 basecli query account $YOU
 ```
@@ -100,9 +99,6 @@ Let's send funds from the first account to the second:
 ```
 basecli tx send --name=cool --amount=1000mycoin --to=0x$YOU --sequence=1
 ```
-
-By default, the CLI looks for a `key.json` to sign the transaction with.
-To specify a different key, we can use the `--from` flag.
 
 Now if we check the second account, it should have `1000` 'mycoin' coins!
 
@@ -124,21 +120,42 @@ If we try to send too much, we'll get an error:
 basecli tx send --name=friend --amount=500000mycoin --to=$ME --sequence=1
 ```
 
-And if you want to see the original tx, as well as verifying that it
-really is in the blockchain, look at the send response:
+Let's send another transaction:
 
 ```
 basecli tx send --name=cool --amount=2345mycoin --to=$YOU --sequence=2
-# TXHASH from the json output
-basecli query tx $TXHASH
+```
+
+Note the `hash` value in the response - this is the hash of the transaction.
+We can query for the transaction by this hash:
+
+```
+basecli query tx <HASH>
 ```
 
 See `basecli tx send --help` for additional details.
 
-For a better understanding of the options, it helps to understand the
+## Proof
+
+Even if you don't see it in the UI, the result of every query comes with a proof.
+This is a Merkle proof that the result of the query is actually contained in the state.
+and the state's Merkle root is contained in a recent block header.
+Behind the scenes, `countercli` will not only verify that this state matches the header, 
+but also that the header is properly signed by the known validator set. 
+It will even update the validator set as needed, so long
+as there have not been major changes and it is secure to do so. So, if you wonder
+why the query may take a second... there is a lot of work going on in the
+background to make sure even a lying full node can't trick your client.
+
+In a latter [guide on InterBlockchainCommunication](ibc.md), we'll use these
+proofs to post transactions to other chains.
+
+## Accounts and Transactions
+
+For a better understanding of how to further use the tools, it helps to understand the
 underlying data structures.
 
-## Accounts
+### Accounts
 
 The Basecoin state consists entirely of a set of accounts.  Each account
 contains a public key, a balance in many different coin denominations, and a
@@ -162,6 +179,9 @@ type Coin struct {
 }
 ```
 
+If you want to add more coins to a blockchain, you can do so manually in the `~/.basecoin/genesis.json` before
+you start the blockchain for the first time.
+
 Accounts are serialized and stored in a Merkle tree under the key
 `base/a/<address>`, where `<address>` is the address of the account.
 Typically, the address of the account is the 20-byte `RIPEMD160` hash of the
@@ -170,7 +190,7 @@ public key, but other formats are acceptable as well, as defined in the
 Merkle tree used in Basecoin is a balanced, binary search tree, which we call
 an [IAVL tree](https://github.com/tendermint/go-merkle).
 
-## Transactions
+### Transactions
 
 Basecoin defines a simple transaction type, the `SendTx`, which allows tokens
 to be sent to other accounts.  The `SendTx` takes a list of inputs and a list
@@ -229,9 +249,9 @@ transaction.
 
 ## Conclusion
 
-In this guide, we introduced the `basecoin` tool, demonstrated how to use it to
-send tokens between accounts, and discussed the underlying data types for
-accounts and transactions, specifically the `Account` and the `SendTx`.  In the
-[next guide](basecoin-plugins.md), we introduce the Basecoin plugin system,
+In this guide, we introduced the `basecoin` and `basecli` tools, 
+demonstrated how to start a new basecoin blockchain and how to send tokens between accounts, 
+and discussed the underlying data types for accounts and transactions, specifically the `Account` and the `SendTx`.  
+In the [next guide](basecoin-plugins.md), we introduce the Basecoin plugin system,
 which uses a new transaction type, the `AppTx`, to extend the functionality of
 the Basecoin system with arbitrary logic.

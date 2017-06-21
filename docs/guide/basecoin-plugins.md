@@ -1,27 +1,32 @@
 # Basecoin Plugins
 
 In the [previous guide](basecoin-basics.md), we saw how to use the `basecoin`
-tool to start a blockchain and send transactions.  We also learned about
+tool to start a blockchain and the `basecli` tools to send transactions.  We also learned about
 `Account` and `SendTx`, the basic data types giving us a multi-asset
-cryptocurrency.  Here, we will demonstrate how to extend the `basecoin` tool to
-use another transaction type, the `AppTx`, to send data to a custom plugin.  In
-this example we explore a simple plugin name `counter`.
+cryptocurrency.  Here, we will demonstrate how to extend the tools to
+use another transaction type, the `AppTx`, so we can send data to a custom plugin.  In
+this example we explore a simple plugin named `counter`.
 
 ## Example Plugin
 
-The design of the `basecoin` tool makes it easy to extend for custom
-functionality.  The Counter plugin is bundled with basecoin, so if you have
-already [installed basecoin](install.md) then you should be able to run a full
-node with `counter` and the a light-client `countercli` from terminal.   The
-Counter plugin is just like the `basecoin` tool.  They both use the same
-library of commands, including one for signing and broadcasting `SendTx`.
+The design of the `basecoin` and `basecli` tools makes it easy to extend for custom
+functionality. We provide examples of such extensions in the basecoin repository under `docs/guide/counter`.
+You can install them from the basecoin directory with:
+
+```
+`go install ./docs/guide/counter/cmd/... 
+```
+
+This will give you both the `counter` and `countercli` binaries.
+The former is just like `basecoin`, but with the counter plugin activated.
+The latter is just like `basecli`, but with support for sending transactions to the counter plugin.
 
 Counter transactions take two custom inputs, a boolean argument named `valid`,
 and a coin amount named `countfee`.  The transaction is only accepted if both
 `valid` is set to true and the transaction input coins is greater than
 `countfee` that the user provides.
 
-A new blockchain can be initialized and started just like with in the [previous
+A new blockchain can be initialized and started just like in the [previous
 guide](basecoin-basics.md):
 
 ```
@@ -29,16 +34,12 @@ guide](basecoin-basics.md):
 rm -rf ~/.counter
 countercli reset_all
 
-counter init
 countercli keys new cool
 countercli keys new friend
 
-GENKEY=`countercli keys get cool -o json | jq .pubkey.data`
-GENJSON=`cat ~/.counter/genesis.json`
-echo $GENJSON | jq '.app_options.accounts[0].pub_key.data='$GENKEY > ~/.counter/genesis.json
+counter init $(countercli keys get cool | awk '{print $2}')
 
 counter start
-
 ```
 
 The default files are stored in `~/.counter`.  In another window we can
@@ -47,7 +48,7 @@ initialize the light-client and send a transaction:
 ```
 countercli init --chain-id=test_chain_id --node=tcp://localhost:46657
 
-YOU=`countercli keys get friend -o=json | jq .address | tr -d '"'`
+YOU=$(countercli keys get friend | awk '{print $2}')
 countercli tx send --name=cool --amount=1000mycoin --to=0x$YOU --sequence=1
 ```
 
@@ -78,21 +79,12 @@ countercli tx counter --name cool --amount=2mycoin --sequence=4 --valid --countf
 countercli query counter
 ```
 
-The value Counter value should be 2, because we sent a second valid transaction.
+The Counter value should be 2, because we sent a second valid transaction.
 And this time, since we sent a countfee (which must be less than or equal to the
 total amount sent with the tx), it stores the `TotalFees` on the counter as well.
 
-Even if you don't see it in the UI, the result of the query comes with a proof.
-This is a Merkle proof that the state is what we say it is, and ties that query
-to a particular header. Behind the scenes, `countercli` will not only verify that
-this state matches the header, but also that the header is properly signed by
-the known validator set. It will even update the validator set as needed, so long
-as there have not been major changes and it is secure to do so. So, if you wonder
-why the query may take a second... there is a lot of work going on in the
-background to make sure even a lying full node can't trick your client.
-
-In a latter [guide on InterBlockchainCommunication](ibc.md), we'll use these
-proofs to post transactions to other chains.
+Keep it mind that, just like with `basecli`, the `countercli` verifies a proof 
+that the query response is correct and up-to-date.
 
 Now, before we implement our own plugin and tooling, it helps to understand the
 `AppTx` and the design of the plugin system.
@@ -178,12 +170,11 @@ alone, but you should change any occurrences of `counter` to whatever your
 plugin tool is going to be called. You must also register your plugin(s) with
 the basecoin app with `RegisterStartPlugin`.
 
-The light-client which is located in `cmd/countercli/main.go` allows for is
-where transaction and query commands are designated. Similarity this command
-can be mostly left alone besides replacing the application name and adding
-references to new plugin commands
+The light-client is located in `cmd/countercli/main.go` and allows for 
+transaction and query commands. This file can also be left mostly alone besides replacing the application name and adding
+references to new plugin commands.
 
-Next is the custom commands in `cmd/countercli/commands/`.  These files is
+Next is the custom commands in `cmd/countercli/commands/`.  These files are
 where we extend the tool with any new commands and flags we need to send
 transactions or queries to our plugin. You define custom `tx` and `query`
 subcommands, which are registered in `main.go` (avoiding `init()`

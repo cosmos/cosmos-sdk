@@ -8,31 +8,11 @@ RICH=${ACCOUNTS[0]}
 POOR=${ACCOUNTS[4]}
 
 oneTimeSetUp() {
-  # These are passed in as args
-  BASE_DIR=$HOME/.basecoin_test_basictx
-  CHAIN_ID=my-test-chain
-
-  rm -rf $BASE_DIR 2>/dev/null
-  mkdir -p $BASE_DIR
-
-  # Set up client - make sure you use the proper prefix if you set
-  #   a custom CLIENT_EXE
-  export BC_HOME=${BASE_DIR}/client
-  prepareClient
-
-  # start basecoin server (with counter)
-  initServer $BASE_DIR $CHAIN_ID 3456
-  if [ $? != 0 ]; then return 1; fi
-
-  initClient $CHAIN_ID 34567
-
-  printf "...Testing may begin!\n\n\n"
+  quickSetup .basecoin_test_basictx basictx-chain
 }
 
 oneTimeTearDown() {
-  printf "\n\nstopping $SERVER_EXE test server..."
-  kill -9 $PID_SERVER >/dev/null 2>&1
-  sleep 1
+  quickTearDown
 }
 
 test00GetAccount() {

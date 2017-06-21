@@ -7,6 +7,41 @@
 # ACCOUNTS=(foo bar)      # List of accounts for initialization 
 # RICH=${ACCOUNTS[0]}     # Account to assign genesis balance
 
+# XXX Ex Usage: quickSetup $WORK_NAME $CHAIN_ID 
+# Desc: Start the program, use with shunit2 OneTimeSetUp()
+quickSetup() {
+  # These are passed in as args
+  BASE_DIR=$HOME/$1
+  CHAIN_ID=$2
+
+  rm -rf $BASE_DIR 2>/dev/null
+  mkdir -p $BASE_DIR
+
+  # Set up client - make sure you use the proper prefix if you set
+  #   a custom CLIENT_EXE
+  export BC_HOME=${BASE_DIR}/client
+  prepareClient
+
+  # start basecoin server (with counter)
+  initServer $BASE_DIR $CHAIN_ID
+  if [ $? != 0 ]; then return 1; fi
+
+  initClient $CHAIN_ID
+  if [ $? != 0 ]; then return 1; fi
+
+  printf "...Testing may begin!\n\n\n"
+}
+
+# XXX Ex Usage: quickTearDown
+# Desc: close the test server, use with shunit2 OneTimeTearDown()
+quickTearDown() {
+  printf "\n\nstopping $SERVER_EXE test server..."
+  kill -9 $PID_SERVER >/dev/null 2>&1
+  sleep 1
+}
+
+############################################################
+
 prepareClient() {
   echo "Preparing client keys..."
   ${CLIENT_EXE} reset_all

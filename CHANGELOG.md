@@ -15,6 +15,8 @@ BREAKING CHANGES:
   - complete overhaul on how tx and query subcommands are added. (see counter or trackomatron for examples)
   - no longer supports counter app (see new countercli)
 - basecoin
+  - `basecoin init` takes an argument, an address to allocate funds to in the genesis
+  - removed key2.json
   - removed all client side functionality from it (use basecli now for proofs)
     - no tx subcommand
     - no query subcommand

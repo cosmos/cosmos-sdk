@@ -1,43 +1,19 @@
 #!/bin/bash
 
-# these are two globals to control all scripts (can use eg. counter instead)
+# These global variables are required for common.sh
 SERVER_EXE=counter
 CLIENT_EXE=countercli
+ACCOUNTS=(jae ethan bucky rigel igor)
+RICH=${ACCOUNTS[0]}
+POOR=${ACCOUNTS[4]}
 
 oneTimeSetUp() {
-  # these are passed in as args
-  BASE_DIR=$HOME/.basecoin_test_counter
-  CHAIN_ID="counter-chain"
-
-  rm -rf $BASE_DIR 2>/dev/null
-  mkdir -p $BASE_DIR
-
-  # set up client - make sure you use the proper prefix if you set
-  # a custom CLIENT_EXE
-  export BC_HOME=${BASE_DIR}/client
-  prepareClient
-
-  # start basecoin server (with counter)
-  initServer $BASE_DIR $CHAIN_ID 1234
-  if [ $? != 0 ]; then return 1; fi
-
-  initClient $CHAIN_ID 12347
-  if [ $? != 0 ]; then return 1; fi
-
-  echo "...Testing may begin!"
-  echo
-  echo
-  echo
+  quickSetup .basecoin_test_counter counter-chain
 }
 
 oneTimeTearDown() {
-  echo
-  echo
-  echo "stopping $SERVER_EXE test server..."
-  kill -9 $PID_SERVER >/dev/null 2>&1
-  sleep 1
+  quickTearDown
 }
-
 
 test00GetAccount() {
   SENDER=$(getAddr $RICH)
@@ -75,8 +51,8 @@ test02GetCounter() {
   assertFalse "no default count" $?
 }
 
-# checkAccount $COUNT $BALANCE
-# assumes just one coin, checks the balance of first coin in any case
+# checkCounter $COUNT $BALANCE
+# Assumes just one coin, checks the balance of first coin in any case
 checkCounter() {
   # make sure sender goes down
   ACCT=$(${CLIENT_EXE} query counter)
@@ -85,7 +61,7 @@ checkCounter() {
   assertEquals "proper money" "$2" $(echo $ACCT | jq .data.TotalFees[0].amount)
 }
 
-test02AddCount() {
+test03AddCount() {
   SENDER=$(getAddr $RICH)
   assertFalse "bad password" "echo hi | ${CLIENT_EXE} tx counter --amount=1000mycoin --sequence=2 --name=${RICH} 2>/dev/null"
 
@@ -114,10 +90,7 @@ test02AddCount() {
   # echo $TX
 }
 
-# load and run these tests with shunit2!
+# Load common then run these tests with shunit2!
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #get this files directory
-
-# load common helpers
 . $DIR/common.sh
-
 . $DIR/shunit2

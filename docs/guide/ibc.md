@@ -210,7 +210,7 @@ Otherwise, open up 5 (yes 5!) terminal tabs....
 All commands will be prefixed by the name of the terminal window in which to
 run it...
 
-```bash
+```
 # first, clean up any old garbage for a fresh slate...
 rm -rf ~/.ibcdemo/
 ```
@@ -218,7 +218,7 @@ rm -rf ~/.ibcdemo/
 Set up some accounts so we can init everything nicely:
 
 **Client1**
-```bash
+```
 export BCHOME=~/.ibcdemo/chain1/client
 CHAIN_ID=test-chain-1
 PORT=12347
@@ -229,7 +229,7 @@ basecli keys new gotnone
 Prepare the genesis block and start the server:
 
 **Server1**
-```bash
+```
 # set up the directory, chainid and port of this chain...
 export BCHOME=~/.ibcdemo/chain1/server
 CHAIN_ID=test-chain-1
@@ -245,7 +245,7 @@ Attach the client to the chain and confirm state.  The first account should
 have money, the second none:
 
 **Client1**
-```bash
+```
 basecli init --chain-id=${CHAIN_ID} --node=tcp://localhost:${PORT}
 ME=$(basecli keys get money | awk '{print $2}')
 YOU=$(basecli keys get gotnone | awk '{print $2}')
@@ -261,7 +261,7 @@ on this chain, as the "cool" key only has money on chain 1.
 
 
 **Client2**
-```bash
+```
 export BCHOME=~/.ibcdemo/chain2/client
 CHAIN_ID=test-chain-2
 PORT=23457
@@ -272,7 +272,7 @@ basecli keys new broke
 Prepare the genesis block and start the server:
 
 **Server2**
-```bash
+```
 # set up the directory, chainid and port of this chain...
 export BCHOME=~/.ibcdemo/chain2/server
 CHAIN_ID=test-chain-2
@@ -288,7 +288,7 @@ Attach the client to the chain and confirm state.  The first account should
 have money, the second none:
 
 **Client2**
-```bash
+```
 basecli init --chain-id=${CHAIN_ID} --node=tcp://localhost:${PORT}
 ME=$(basecli keys get moremoney | awk '{print $2}')
 YOU=$(basecli keys get broke | awk '{print $2}')
@@ -307,7 +307,7 @@ for now, we have to transfer some cash from the rich accounts before we start
 the actual relay.
 
 **Client1**
-```bash
+```
 # note that this key.json file is a hardcoded demo for all chains, this will
 # be updated in a future release
 RELAY_KEY=${BCHOME}/../server/key.json
@@ -317,7 +317,7 @@ basecli query account $RELAY_ADDR
 ```
 
 **Client2**
-```bash
+```
 # note that this key.json file is a hardcoded demo for all chains, this will
 # be updated in a future release
 RELAY_KEY=${BCHOME}/../server/key.json
@@ -327,7 +327,7 @@ basecli query account $RELAY_ADDR
 ```
 
 **Relay**
-```bash
+```
 # lots of config...
 SERVER_1=~/.ibcdemo/chain1/server
 SERVER_2=~/.ibcdemo/chain2/server
@@ -358,7 +358,7 @@ a secure relay between them.  Now we can enjoy the fruits of our labor...
 
 **Client2**
 
-```bash
+```
 # this should be empty
 basecli query account $YOU
 # now, we get the key to copy to the other terminal
@@ -367,14 +367,14 @@ echo $YOU
 
 **Client1**
 
-```bash
+```
 # set TARGET to be $YOU from the other chain
 basecli tx send --amount=12345mycoin --sequence=2 --to=test-chain-2/$TARGET --name=money
 ```
 
 **Client2**
 
-```bash
+```
 # give it time to arrive...
 sleep 1
 # now you should see 12345 coins!

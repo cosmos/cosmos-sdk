@@ -51,7 +51,7 @@ test02GetCounter() {
   assertFalse "no default count" $?
 }
 
-# CheckAccount $COUNT $BALANCE
+# checkCounter $COUNT $BALANCE
 # Assumes just one coin, checks the balance of first coin in any case
 checkCounter() {
   # make sure sender goes down

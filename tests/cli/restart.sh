@@ -69,7 +69,7 @@ test01OnRestart() {
   # wait til we have quite a few blocks... like at least 20,
   # so the query command won't just wait for the next eg. 7 blocks to verify the result
   echo "waiting to generate lots of blocks..."
-  sleep 20
+  sleep 5
   echo "done waiting!"
 
   # last minute tx just at the block cut-off...

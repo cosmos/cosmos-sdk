@@ -8,7 +8,7 @@ import (
 	abci "github.com/tendermint/abci/types"
 	wire "github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
-	. "github.com/tendermint/tmlibs/common"
+	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
 	sm "github.com/tendermint/basecoin/state"
@@ -53,7 +53,15 @@ func (app *Basecoin) GetState() *sm.State {
 
 // ABCI::Info
 func (app *Basecoin) Info() abci.ResponseInfo {
-	return abci.ResponseInfo{Data: Fmt("Basecoin v%v", version.Version)}
+	resp, err := app.eyesCli.InfoSync()
+	if err != nil {
+		cmn.PanicCrisis(err)
+	}
+	return abci.ResponseInfo{
+		Data:             cmn.Fmt("Basecoin v%v", version.Version),
+		LastBlockHeight:  resp.LastBlockHeight,
+		LastBlockAppHash: resp.LastBlockAppHash,
+	}
 }
 
 func (app *Basecoin) RegisterPlugin(plugin types.Plugin) {
@@ -172,7 +180,7 @@ func (app *Basecoin) Commit() (res abci.Result) {
 	app.cacheState = app.state.CacheWrap()
 
 	if res.IsErr() {
-		PanicSanity("Error getting hash: " + res.Error())
+		cmn.PanicSanity("Error getting hash: " + res.Error())
 	}
 	return res
 }

@@ -20,23 +20,34 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// getCmd represents the get command
-var getCmd = &cobra.Command{
-	Use:   "get [name]",
-	Short: "Get details of one key",
-	Long:  `Return public details of one local key.`,
-	RunE:  runGetCmd,
+// recoverCmd represents the recover command
+var recoverCmd = &cobra.Command{
+	Use:   "recover [name]",
+	Short: "Change the password for a private key",
+	RunE:  runRecoverCmd,
 }
 
-func runGetCmd(cmd *cobra.Command, args []string) error {
+func runRecoverCmd(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 || len(args[0]) == 0 {
 		return errors.New("You must provide a name for the key")
 	}
 	name := args[0]
 
-	info, err := GetKeyManager().Get(name)
-	if err == nil {
-		printInfo(info)
+	pass, err := getPassword("Enter the new passphrase:")
+	if err != nil {
+		return err
 	}
-	return err
+
+	// not really a password... huh?
+	seed, err := getSeed("Enter your recovery seed phrase:")
+	if err != nil {
+		return err
+	}
+
+	info, err := GetKeyManager().Recover(name, pass, seed)
+	if err != nil {
+		return err
+	}
+	printInfo(info)
+	return nil
 }

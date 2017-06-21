@@ -15,28 +15,35 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
 )
 
-// getCmd represents the get command
-var getCmd = &cobra.Command{
-	Use:   "get [name]",
-	Short: "Get details of one key",
-	Long:  `Return public details of one local key.`,
-	RunE:  runGetCmd,
+// deleteCmd represents the delete command
+var deleteCmd = &cobra.Command{
+	Use:   "delete [name]",
+	Short: "DANGER: Delete a private key from your system",
+	RunE:  runDeleteCmd,
 }
 
-func runGetCmd(cmd *cobra.Command, args []string) error {
+func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 || len(args[0]) == 0 {
 		return errors.New("You must provide a name for the key")
 	}
 	name := args[0]
 
-	info, err := GetKeyManager().Get(name)
-	if err == nil {
-		printInfo(info)
+	oldpass, err := getPassword("DANGER - enter password to permanently delete key:")
+	if err != nil {
+		return err
 	}
-	return err
+
+	err = GetKeyManager().Delete(name, oldpass)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Password deleted forever (uh oh!)")
+	return nil
 }

@@ -1,5 +1,5 @@
 hash: 3bcee9fbccf29d21217b24b6a83ec51e1514f37b2ae5d8718cf6c5df80f4fb2c
-updated: 2017-05-15T09:40:53.073691731-04:00
+updated: 2017-06-19T17:16:58.037568333+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -17,8 +17,6 @@ imports:
   - hdkeychain
 - name: github.com/btcsuite/fastsha256
   version: 637e656429416087660c84436a2a035d69d54e2e
-- name: github.com/clipperhouse/typewriter
-  version: c1a48da378ebb7db1db9f35981b5cc24bf2e5b85
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/go-kit/kit
@@ -60,6 +58,8 @@ imports:
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/magiconair/properties
   version: 51463bfca2576e06c62a8504b5c0f06d61312647
+- name: github.com/mattn/go-isatty
+  version: 9622e0cc9d8f9be434ca605520ff9a16808fee47
 - name: github.com/mitchellh/mapstructure
   version: cc8532a8e9a55ea36402aa21efdf403a60d34096
 - name: github.com/pelletier/go-buffruneio
@@ -88,12 +88,12 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-wire
-  version: 97beaedf0f4dbc035309157c92be3b30cc6e5d74
+  version: 5f88da3dbc1a72844e6dfaf274ce87f851d488eb
   subpackages:
   - data
   - data/base58
 - name: github.com/tendermint/tmlibs
-  version: 8f5a175ff4c869fedde710615a11f5745ff69bf3
+  version: bd9d0d1637dadf1330e167189d5e5031aadcda6f
   subpackages:
   - cli
   - common
@@ -119,11 +119,6 @@ imports:
   subpackages:
   - transform
   - unicode/norm
-- name: golang.org/x/tools
-  version: 144c6642b5d832d6c44a53dad6ee61665dd432ce
-  subpackages:
-  - go/ast/astutil
-  - imports
 - name: gopkg.in/go-playground/validator.v9
   version: 6d8c18553ea1ac493d049edd6f102f52e618f085
 - name: gopkg.in/yaml.v2

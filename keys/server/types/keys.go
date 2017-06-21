@@ -1,5 +1,7 @@
 package types
 
+import "github.com/tendermint/go-crypto/keys"
+
 // CreateKeyRequest is sent to create a new key
 type CreateKeyRequest struct {
 	Name       string `json:"name" validate:"required,min=4,printascii"`
@@ -25,4 +27,9 @@ type ErrorResponse struct {
 	Success bool   `json:"success"`
 	Error   string `json:"error"` // error message if Success is false
 	Code    int    `json:"code"`  // error code if Success is false
+}
+
+type CreateKeyResponse struct {
+	Key  keys.Info `json:"key"`
+	Seed string    `json:"seed_phrase"`
 }

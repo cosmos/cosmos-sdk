@@ -31,13 +31,14 @@ func (k Keys) GenerateKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key, err := k.manager.Create(req.Name, req.Passphrase, req.Algo)
+	key, seed, err := k.manager.Create(req.Name, req.Passphrase, req.Algo)
 	if err != nil {
 		writeError(w, err)
 		return
 	}
 
-	writeSuccess(w, &key)
+	res := types.CreateKeyResponse{key, seed}
+	writeSuccess(w, &res)
 }
 
 func (k Keys) GetKey(w http.ResponseWriter, r *http.Request) {

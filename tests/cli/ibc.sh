@@ -89,15 +89,13 @@ test01SendIBCTx() {
   SENDER=$(BC_HOME=${CLIENT_1} getAddr $RICH)
   RECV=$(BC_HOME=${CLIENT_2} getAddr $POOR)
 
-  # we have to remove the password request from stdout, to just get the json
   export BC_HOME=${CLIENT_1}
-  RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=20002mycoin \
-      --sequence=1 --to=${CHAIN_ID_2}/${RECV} --name=$RICH 2>/dev/null)
-  txSucceeded $? "$RES"
+  TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=20002mycoin \
+      --sequence=1 --to=${CHAIN_ID_2}/${RECV} --name=$RICH)
+  txSucceeded $? "$TX"
   # an example to quit early if there is no point in more tests
   if [ $? != 0 ]; then echo "aborting!"; return 1; fi
 
-  TX=`echo $RES | cut -d: -f2-`
   HASH=$(echo $TX | jq .hash | tr -d \")
   TX_HEIGHT=$(echo $TX | jq .height)
 
@@ -142,7 +140,7 @@ startRelay() {
   export BC_HOME=${CLIENT_1}
   SENDER=$(getAddr $RICH)
   RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000mycoin \
-      --sequence=$1 --to=$RELAY_ADDR --name=$RICH 2>/dev/null)
+      --sequence=$1 --to=$RELAY_ADDR --name=$RICH)
   txSucceeded $? "$RES"
   if [ $? != 0 ]; then echo "can't pay chain1!"; return 1; fi
 
@@ -150,7 +148,7 @@ startRelay() {
   export BC_HOME=${CLIENT_2}
   SENDER=$(getAddr $RICH)
   RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000mycoin \
-      --sequence=$2 --to=$RELAY_ADDR --name=$RICH 2>/dev/null)
+      --sequence=$2 --to=$RELAY_ADDR --name=$RICH)
   txSucceeded $? "$RES"
   if [ $? != 0 ]; then echo "can't pay chain2!"; return 1; fi
 

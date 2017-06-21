@@ -1,12 +1,14 @@
 hash: 6eb1119dccf2ab4d0adb870a14cb4408047119be53c8ec4afeaa281bd1d2b457
-updated: 2017-06-20T20:55:16.122030554-04:00
+updated: 2017-06-21T19:51:10.330315159+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
 - name: github.com/btcsuite/btcd
-  version: 1ae306021e323ae11c71ffb8546fbd9019e6cb6f
+  version: b8df516b4b267acf2de46be593a9d948d1d2c420
   subpackages:
   - btcec
+- name: github.com/btcsuite/fastsha256
+  version: 637e656429416087660c84436a2a035d69d54e2e
 - name: github.com/BurntSushi/toml
   version: b26d9c308763d68093482582cea63d69be07a0f0
 - name: github.com/ebuchman/fail-test
@@ -28,7 +30,7 @@ imports:
 - name: github.com/go-playground/universal-translator
   version: 71201497bace774495daed26a3874fd339e0b538
 - name: github.com/go-stack/stack
-  version: 7a2f19628aabfe68f0766b59e74d6315f8347d22
+  version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/golang/protobuf
   version: b50ceb1fa9818fa4d78b016c2d4ae025593a7ce3
   subpackages:
@@ -45,7 +47,7 @@ imports:
 - name: github.com/gorilla/websocket
   version: a91eba7f97777409bc2c443f5534d41dd20c5720
 - name: github.com/hashicorp/hcl
-  version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
+  version: a4b07c25de5ff55ad3b8936cea69a79a3d95a855
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -63,6 +65,8 @@ imports:
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/magiconair/properties
   version: 51463bfca2576e06c62a8504b5c0f06d61312647
+- name: github.com/mattn/go-isatty
+  version: 9622e0cc9d8f9be434ca605520ff9a16808fee47
 - name: github.com/mitchellh/mapstructure
   version: cc8532a8e9a55ea36402aa21efdf403a60d34096
 - name: github.com/pelletier/go-buffruneio
@@ -78,11 +82,11 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 3454e0e28e69c1b8effa6b5123c8e4185e20d696
+  version: db6b9a8b3f3f400c8ecb4a4d7d02245b8facad66
 - name: github.com/spf13/jwalterweatherman
-  version: 8f07c835e5cc1450c082fe3a439cf87b0cbb2d99
+  version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
 - name: github.com/spf13/pflag
-  version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
+  version: 80fe0fb4eba54167e2ccae1c6c950e72abf61b73
 - name: github.com/spf13/viper
   version: 0967fc9aceab2ce9da34061253ac10fb99bba5b2
 - name: github.com/syndtr/goleveldb
@@ -113,7 +117,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 7dff40942a64cdeefefa9446b2d104750b349f8a
+  version: ad70b2222698a2018c4bf18bab86f3727621f492
   subpackages:
   - cmd
   - keys
@@ -121,13 +125,14 @@ imports:
   - keys/server
   - keys/server/types
   - keys/storage/filestorage
+  - keys/wordlist
 - name: github.com/tendermint/go-wire
   version: 5f88da3dbc1a72844e6dfaf274ce87f851d488eb
   subpackages:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: 5ba3d0bce406b4b4ce694ca4387b9d086ac0c10f
+  version: b66b57d193d2fdeda7b999aebfdc9531cbee39b0
   subpackages:
   - certifiers
   - certifiers/client
@@ -139,7 +144,7 @@ imports:
   - commands/txs
   - proofs
 - name: github.com/tendermint/merkleeyes
-  version: 5df9e851e1af64b4fbc7ecab89a9735010ed30fa
+  version: ce7de05896f560ddcc9207f65fea9901835dd238
   subpackages:
   - app
   - client
@@ -185,7 +190,7 @@ imports:
   - logger
   - merkle
 - name: golang.org/x/crypto
-  version: ab89591268e0c8b748cbe4047b00197516011af5
+  version: c7af5bf2638a1164f2eb5467c39c6cffbd13a02e
   subpackages:
   - curve25519
   - nacl/box
@@ -206,7 +211,7 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/sys
-  version: 9c9d83fe39ed3fd2d9249fcf6b755891fff54b03
+  version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
   subpackages:
   - unix
 - name: golang.org/x/text
@@ -242,7 +247,7 @@ imports:
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports:
 - name: github.com/davecgh/go-spew
-  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
 - name: github.com/pmezard/go-difflib
@@ -250,7 +255,7 @@ testImports:
   subpackages:
   - difflib
 - name: github.com/stretchr/testify
-  version: 4d4bfba8f1d1027c4fdbe371823030df51419987
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
   - assert
   - require

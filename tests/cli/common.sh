@@ -137,11 +137,11 @@ checkAccount() {
   return $?
 }
 
-# XXX Ex Usage: txSucceeded $? "$RES"
+# XXX Ex Usage: txSucceeded $? "$TX"
 # Desc: Must be called right after the `tx` command, makes sure it got a success response
 txSucceeded() {
   if (assertTrue "sent tx: $2" $1); then
-    TX=`echo $2 | cut -d: -f2-` # strip off first line asking for password
+    TX=$2
     assertEquals "good check: $TX" "0" $(echo $TX | jq .check_tx.code)
     assertEquals "good deliver: $TX" "0" $(echo $TX | jq .deliver_tx.code)
   else

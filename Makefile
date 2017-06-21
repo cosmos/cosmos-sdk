@@ -40,7 +40,7 @@ tests/cli/shunit2:
 		-q -O tests/cli/shunit2
 
 tools:
-	go get -u -v $(GOTOOLS)
+	@go get $(GOTOOLS)
 
 clean:
 	# maybe cleaning up cache and vendor is overkill, but sometimes

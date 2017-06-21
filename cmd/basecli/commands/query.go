@@ -1,8 +1,7 @@
 package commands
 
 import (
-	"fmt"
-
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	wire "github.com/tendermint/go-wire"
@@ -29,7 +28,7 @@ func doAccountQuery(cmd *cobra.Command, args []string) error {
 	acc := new(btypes.Account)
 	proof, err := proofcmd.GetAndParseAppProof(key, &acc)
 	if lc.IsNoDataErr(err) {
-		return fmt.Errorf("Account bytes are empty for address %X ", addr)
+		return errors.Errorf("Account bytes are empty for address %X ", addr)
 	} else if err != nil {
 		return err
 	}

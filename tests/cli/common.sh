@@ -24,7 +24,9 @@ initServer() {
   assertNotNull "no chain" $2
   CHAIN=$2
   SERVER_LOG=$1/${SERVER_EXE}.log
-  ${SERVER_EXE} init --chain-id $CHAIN $(${CLIENT_EXE} keys get ${RICH} | awk '{print $2}') --home=$SERVE_DIR >>$SERVER_LOG
+
+  GENKEY=$(${CLIENT_EXE} keys get ${RICH} | awk '{print $2}')
+  ${SERVER_EXE} init --chain-id $CHAIN $GENKEY --home=$SERVE_DIR >>$SERVER_LOG
 
   # optionally set the port
   if [ -n "$3" ]; then

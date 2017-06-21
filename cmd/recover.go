@@ -22,7 +22,7 @@ import (
 
 // recoverCmd represents the recover command
 var recoverCmd = &cobra.Command{
-	Use:   "recover <name>",
+	Use:   "recover [name]",
 	Short: "Change the password for a private key",
 	RunE:  runRecoverCmd,
 }

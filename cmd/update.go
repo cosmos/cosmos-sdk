@@ -24,7 +24,7 @@ import (
 
 // updateCmd represents the update command
 var updateCmd = &cobra.Command{
-	Use:   "update <name>",
+	Use:   "update [name]",
 	Short: "Change the password for a private key",
 	RunE:  runUpdateCmd,
 }

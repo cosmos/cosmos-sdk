@@ -37,8 +37,7 @@ func (s Manager) assertKeyManager() keys.Manager {
 // Create adds a new key to the storage engine, returning error if
 // another key already stored under this name
 //
-// algo must be a supported go-crypto algorithm:
-//
+// algo must be a supported go-crypto algorithm: ed25519, secp256k1
 func (s Manager) Create(name, passphrase, algo string) (keys.Info, string, error) {
 	gen, err := getGenerator(algo)
 	if err != nil {
@@ -54,6 +53,12 @@ func (s Manager) Create(name, passphrase, algo string) (keys.Info, string, error
 	return info(name, key), phrase, err
 }
 
+// Recover takes a seed phrase and tries to recover the private key.
+//
+// If the seed phrase is valid, it will create the private key and store
+// it under name, protected by passphrase.
+//
+// Result similar to New(), except it doesn't return the seed again...
 func (s Manager) Recover(name, passphrase, seedphrase string) (keys.Info, error) {
 	words := strings.Split(strings.TrimSpace(seedphrase), " ")
 	data, err := s.codec.WordsToBytes(words)

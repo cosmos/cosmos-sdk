@@ -33,7 +33,7 @@ const (
 
 // newCmd represents the new command
 var newCmd = &cobra.Command{
-	Use:   "new <name>",
+	Use:   "new [name]",
 	Short: "Create a new public/private key pair",
 	Long: `Add a public/private key pair to the key store.
 The password muts be entered in the terminal and not

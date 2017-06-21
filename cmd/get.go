@@ -22,7 +22,7 @@ import (
 
 // getCmd represents the get command
 var getCmd = &cobra.Command{
-	Use:   "get <name>",
+	Use:   "get [name]",
 	Short: "Get details of one key",
 	Long:  `Return public details of one local key.`,
 	RunE:  runGetCmd,

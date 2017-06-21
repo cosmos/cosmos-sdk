@@ -24,7 +24,7 @@ import (
 
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
-	Use:   "delete <name>",
+	Use:   "delete [name]",
 	Short: "DANGER: Delete a private key from your system",
 	RunE:  runDeleteCmd,
 }

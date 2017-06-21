@@ -45,6 +45,7 @@ func initCmd(cmd *cobra.Command, args []string) error {
 	// initalize basecoin
 	genesisFile := cfg.GenesisFile()
 	privValFile := cfg.PrivValidatorFile()
+	keyFile := path.Join(cfg.RootDir, "key.json")
 
 	mod1, err := setupFile(genesisFile, GetGenesisJSON(userAddr), 0644)
 	if err != nil {
@@ -54,8 +55,12 @@ func initCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	mod3, err := setupFile(key1File, KeyJSON, 0400)
+	if err != nil {
+		return err
+	}
 
-	if (mod1 + mod2) > 0 {
+	if (mod1 + mod2 + mod3) > 0 {
 		logger.Info("Initialized Basecoin", "genesis", genesisFile, "priv_validator", privValFile)
 	} else {
 		logger.Info("Already initialized", "priv_validator", privValFile)
@@ -112,3 +117,16 @@ func GetGenesisJSON(addr string) string {
   }
 }`, addr)
 }
+
+// TODO: remove this once not needed for relay
+var KeyJSON = `{
+  "address": "1B1BE55F969F54064628A63B9559E7C21C925165",
+  "priv_key": {
+    "type": "ed25519",
+    "data": "C70D6934B4F55F1B7BC33B56B9CA8A2061384AFC19E91E44B40C4BBA182953D1619D3678599971ED29C7529DDD4DA537B97129893598A17C82E3AC9A8BA95279"
+  },
+  "pub_key": {
+    "type": "ed25519",
+    "data": "619D3678599971ED29C7529DDD4DA537B97129893598A17C82E3AC9A8BA95279"
+  }
+}`

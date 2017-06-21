@@ -139,7 +139,7 @@ imports:
   - commands/txs
   - proofs
 - name: github.com/tendermint/merkleeyes
-  version: feb2c3fadac8221f96fbfce65a63af034327f972
+  version: 5df9e851e1af64b4fbc7ecab89a9735010ed30fa
   subpackages:
   - app
   - client

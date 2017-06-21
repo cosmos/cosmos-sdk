@@ -5,6 +5,15 @@ CLI](/docs/guide/basecoin-basics.md) and [how to implement a
 plugin](/docs/guide/basecoin-plugins.md).  In this tutorial, we provide more
 details on using the Basecoin tool.
 
+# Generate a Key
+
+Generate a key using the `basecli` tool:
+
+```
+basecli keys new mykey
+ME=$(basecli keys get mykey | awk '{print $2}')
+```
+
 # Data Directory
 
 By default, `basecoin` works out of `~/.basecoin`. To change this, set the
@@ -12,14 +21,14 @@ By default, `basecoin` works out of `~/.basecoin`. To change this, set the
 
 ```
 export BCHOME=~/.my_basecoin_data
-basecoin init
+basecoin init $ME
 basecoin start
 ```
 
 or
 
 ```
-BCHOME=~/.my_basecoin_data basecoin init
+BCHOME=~/.my_basecoin_data basecoin init $ME
 BCHOME=~/.my_basecoin_data basecoin start
 ```
 
@@ -30,7 +39,7 @@ we use ABCI, we can actually run them in different processes.  First,
 initialize them:
 
 ```
-basecoin init
+basecoin init $ME
 ```
 
 This will create a single `genesis.json` file in `~/.basecoin` with the
@@ -168,7 +177,7 @@ You can reset all blockchain data by running:
 basecoin unsafe_reset_all
 ```
 
-Similarity you can reset client data by running:
+Similarly, you can reset client data by running:
  
 ```
 basecli reset_all

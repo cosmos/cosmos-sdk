@@ -4,13 +4,6 @@ To keep things clear, let's have two shells...
 
 `$` is for basecoin (server), `%` is for basecli (client)
 
-## Set up a clean basecoin, but don't start the chain
-
-```
-$ export BCHOME=~/.demoserve
-$ basecoin init
-```
-
 ## Set up your basecli with a new key
 
 ```
@@ -24,16 +17,15 @@ And set up a few more keys for fun...
 ```
 % basecli keys new buddy
 % basecli keys list
-% ME=`basecli keys get demo -o json | jq .address | tr -d '"'`
-% YOU=`basecli keys get buddy -o json | jq .address | tr -d '"'`
+% ME=$(basecli keys get demo | awk '{print $2}')
+% YOU=$(basecli keys get buddy | awk '{print $2}')
 ```
 
-## Update genesis so you are rich, and start
+## Set up a clean basecoin, initialized with your account
 
 ```
-$ vi $BCHOME/genesis.json
--> cut/paste your pubkey from the results above
-
+$ export BCHOME=~/.demoserve
+$ basecoin init $ME
 $ basecoin start
 ```
 
@@ -46,8 +38,8 @@ $ basecoin start
 ## Check your balances...
 
 ```
-% basecli proof state get --app=account --key=$ME
-% basecli proof state get --app=account --key=$YOU
+% basecli query account $ME
+% basecli query account $YOU
 ```
 
 ## Send the money
@@ -55,9 +47,7 @@ $ basecoin start
 ```
 % basecli tx send --name demo --amount 1000mycoin --sequence 1 --to $YOU
 -> copy hash to HASH
-% basecli proof tx get --key $HASH
-
-% basecli proof tx get --key $HASH --app base
-% basecli proof state get --key $YOU --app account
+% basecli query tx $HASH
+% basecli query account $YOU
 ```
 

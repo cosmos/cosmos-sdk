@@ -205,146 +205,148 @@ If you have any trouble with this, you can also look at the
 [test scripts](/tests/cli/ibc.sh) or just run `make test_cli` in basecoin repo.
 Otherwise, open up 5 (yes 5!) terminal tabs....
 
-### Setup Chain 1
-
-All commands will be prefixed by the name of the terminal window in which to
-run it...
+### Preliminaries
 
 ```
 # first, clean up any old garbage for a fresh slate...
 rm -rf ~/.ibcdemo/
 ```
 
-Set up some accounts so we can init everything nicely:
+Let's start by setting up some environment variables and aliases:
 
-**Client1**
 ```
-export BCHOME=~/.ibcdemo/chain1/client
-CHAIN_ID=test-chain-1
-PORT=12347
-basecli keys new money
-basecli keys new gotnone
-```
-
-Prepare the genesis block and start the server:
-
-**Server1**
-```
-# set up the directory, chainid and port of this chain...
-export BCHOME=~/.ibcdemo/chain1/server
-CHAIN_ID=test-chain-1
-PREFIX=1234
-basecoin init $(basecli keys get money | awk '{print $2}')
-
-sed -ie "s/4665/$PREFIX/" $BCHOME/config.toml
-
-basecoin start
+export BCHOME1_CLIENT=~/.ibcdemo/chain1/client
+export BCHOME1_SERVER=~/.ibcdemo/chain1/server
+export BCHOME2_CLIENT=~/.ibcdemo/chain2/client
+export BCHOME2_SERVER=~/.ibcdemo/chain2/server
+alias basecli1="basecli --home $BCHOME1_CLIENT"
+alias basecli2="basecli --home $BCHOME2_CLIENT"
+alias basecoin1="basecoin --home $BCHOME1_SERVER"
+alias basecoin2="basecoin --home $BCHOME2_SERVER"
 ```
 
-Attach the client to the chain and confirm state.  The first account should
-have money, the second none:
+This will give us some new commands to use instead of raw `basecli` and `basecoin` to ensure we're using the right configuration for the chain we want to talk to.
 
-**Client1**
+We also want to set some chain IDs:
+
 ```
-basecli init --chain-id=${CHAIN_ID} --node=tcp://localhost:${PORT}
-ME=$(basecli keys get money | awk '{print $2}')
-YOU=$(basecli keys get gotnone | awk '{print $2}')
-basecli query account $ME
-basecli query account $YOU
+export CHAINID1="test-chain-1"
+export CHAINID2="test-chain-2"
+```
+
+And since we will run two different chains on one machine, we need to maintain different sets of ports:
+
+```
+export PORT_PREFIX1=1234
+export PORT_PREFIX2=2345
+export RPC_PORT1=${PORT_PREFIX1}7
+export RPC_PORT2=${PORT_PREFIX2}7
+```
+
+### Setup Chain 1
+
+Now, let's create some keys that we can use for accounts on test-chain-1:
+
+```
+basecli1 keys new money
+basecli1 keys new gotnone
+export MONEY=$(basecli1 keys get money | awk '{print $2}')
+export GOTNONE=$(basecli1 keys get gotnone | awk '{print $2}')
+```
+
+and create an initial configuration giving lots of coins to the $MONEY key:
+
+```
+basecoin1 init --chain-id $CHAINID1 $MONEY
+```
+
+Now start basecoin:
+
+```
+sed -ie "s/4665/$PORT_PREFIX1/" $BCHOME1_SERVER/config.toml
+
+basecoin1 start &> basecoin1.log &
+```
+
+Note the `sed` command to replace the ports in the config file.
+You can follow the logs with `tail -f basecoin1.log`
+
+Now we can attach the client to the chain and verify the state.  
+The first account should have money, the second none:
+
+```
+basecli1 init --chain-id=$CHAINID1 --node=tcp://localhost:${RPC_PORT1}
+basecli1 query account $MONEY
+basecli1 query account $GOTNONE
 ```
 
 ### Setup Chain 2
 
-This is the same as above, except in two new terminal windows with
-different chain ids, ports, etc. Note that you need to make new accounts
-on this chain, as the "cool" key only has money on chain 1.
+This is the same as above, except with `basecli2`, `basecoin2`, and `$CHAINID2`.
+We will also need to change the ports, since we're running another chain on the same local machine.
 
+Let's create new keys for test-chain-2:
 
-**Client2**
 ```
-export BCHOME=~/.ibcdemo/chain2/client
-CHAIN_ID=test-chain-2
-PORT=23457
-basecli keys new moremoney
-basecli keys new broke
+basecli2 keys new moremoney
+basecli2 keys new broke
+MOREMONEY=$(basecli2 keys get moremoney | awk '{print $2}')
+BROKE=$(basecli2 keys get broke | awk '{print $2}')
 ```
 
-Prepare the genesis block and start the server:
+And prepare the genesis block, and start the server:
 
-**Server2**
 ```
-# set up the directory, chainid and port of this chain...
-export BCHOME=~/.ibcdemo/chain2/server
-CHAIN_ID=test-chain-2
-PREFIX=2345
-basecoin init $(basecli keys get moremoney | awk '{print $2}')
+basecoin2 init --chain-id $CHAINID2 $(basecli2 keys get moremoney | awk '{print $2}')
 
-sed -ie "s/4665/$PREFIX/" $BCHOME/config.toml
+sed -ie "s/4665/$PORT_PREFIX2/" $BCHOME2_SERVER/config.toml
 
-basecoin start
+basecoin2 start &> basecoin2.log &
 ```
 
-Attach the client to the chain and confirm state.  The first account should
-have money, the second none:
+Now attach the client to the chain and verify the state.  
+The first account should have money, the second none:
 
-**Client2**
 ```
-basecli init --chain-id=${CHAIN_ID} --node=tcp://localhost:${PORT}
-ME=$(basecli keys get moremoney | awk '{print $2}')
-YOU=$(basecli keys get broke | awk '{print $2}')
-basecli query account $ME
-basecli query account $YOU
+basecli2 init --chain-id=$CHAINID2 --node=tcp://localhost:${RPC_PORT2}
+basecli2 query account $MOREMONEY
+basecli2 query account $BROKE
 ```
 
 ### Connect these chains
 
-Great, so we have two chains running on your local machine, with different
-keys on each.  Now it is time to hook them up together.  Let's start
-a relay to forward the messages.
+OK! So we have two chains running on your local machine, with different
+keys on each.  Let's hook them up together by starting a relay process to 
+forward messages from one chain to the other.
 
 The relay account needs some money in it to pay for the ibc messages, so
 for now, we have to transfer some cash from the rich accounts before we start
 the actual relay.
 
-**Client1**
 ```
 # note that this key.json file is a hardcoded demo for all chains, this will
 # be updated in a future release
-RELAY_KEY=${BCHOME}/../server/key.json
+RELAY_KEY=$BCHOME1_SERVER/key.json
 RELAY_ADDR=$(cat $RELAY_KEY | jq .address | tr -d \")
-basecli tx send --amount=100000mycoin --sequence=1 --to=$RELAY_ADDR --name=money
-basecli query account $RELAY_ADDR
+
+basecli1 tx send --amount=100000mycoin --sequence=1 --to=$RELAY_ADDR--name=money
+basecli1 query account $RELAY_ADDR
+
+basecli2 tx send --amount=100000mycoin --sequence=1 --to=$RELAY_ADDR --name=moremoney
+basecli2 query account $RELAY_ADDR
 ```
 
-**Client2**
-```
-# note that this key.json file is a hardcoded demo for all chains, this will
-# be updated in a future release
-RELAY_KEY=${BCHOME}/../server/key.json
-RELAY_ADDR=$(cat $RELAY_KEY | jq .address | tr -d \")
-basecli tx send --amount=100000mycoin --sequence=1 --to=$RELAY_ADDR --name=moremoney
-basecli query account $RELAY_ADDR
-```
+Now we can start the relay process. 
 
-**Relay**
 ```
-# lots of config...
-SERVER_1=~/.ibcdemo/chain1/server
-SERVER_2=~/.ibcdemo/chain2/server
-CHAIN_ID_1=test-chain-1
-CHAIN_ID_2=test-chain-2
-PORT_1=12347
-PORT_2=23457
-RELAY_KEY=${SERVER_1}/key.json
-
-basecoin relay init --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
-  --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
-  --genesis1=${SERVER_1}/genesis.json --genesis2=${SERVER_2}/genesis.json \
+basecoin relay init --chain1-id=$CHAINID1 --chain2-id=$CHAINID2 \
+  --chain1-addr=tcp://localhost:${RPC_PORT1} --chain2-addr=tcp://localhost:${RPC_PORT2} \
+  --genesis1=${BCHOME1_SERVER}/genesis.json --genesis2=${BCHOME2_SERVER}/genesis.json \
   --from=$RELAY_KEY
 
-basecoin relay start --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
-  --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
-  --from=$RELAY_KEY
+basecoin relay start --chain1-id=$CHAINID1 --chain2-id=$CHAINID2 \
+  --chain1-addr=tcp://localhost:${RPC_PORT1} --chain2-addr=tcp://localhost:${RPC_PORT2} \
+  --from=$RELAY_KEY &> relay.log &
 ```
 
 This should start up the relay, and assuming no error messages came out,
@@ -356,33 +358,26 @@ our first tx accross the chains...
 The hard part is over, we set up two blockchains, a few private keys, and
 a secure relay between them.  Now we can enjoy the fruits of our labor...
 
-**Client2**
-
 ```
-# this should be empty
-basecli query account $YOU
-# now, we get the key to copy to the other terminal
-echo $YOU
+# Here's an emptt account on test-chain-2
+basecli2 query account $BROKE
 ```
 
-**Client1**
-
 ```
-# set TARGET to be $YOU from the other chain
-basecli tx send --amount=12345mycoin --sequence=2 --to=test-chain-2/$TARGET --name=money
+# Let's send some funds from test-chain-1
+basecli1 tx send --amount=12345mycoin --sequence=2 --to=test-chain-2/$BROKE --name=money
 ```
-
-**Client2**
 
 ```
 # give it time to arrive...
-sleep 1
+sleep 2
 # now you should see 12345 coins!
-basecli query account $YOU
+basecli2 query account $BROKE
 ```
 
-Cool, huh?  Now have fun exploring and sending coins across the chains.  And
-making more accounts as you want to.
+You're no longer broke! Cool, huh?  
+Now have fun exploring and sending coins across the chains.  
+And making more accounts as you want to.
 
 ## Conclusion
 

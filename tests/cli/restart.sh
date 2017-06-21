@@ -3,36 +3,16 @@
 # these are two globals to control all scripts (can use eg. counter instead)
 SERVER_EXE=basecoin
 CLIENT_EXE=basecli
+ACCOUNTS=(jae ethan bucky rigel igor)
+RICH=${ACCOUNTS[0]}
+POOR=${ACCOUNTS[4]}
 
 oneTimeSetUp() {
-  # these are passed in as args
-  BASE_DIR=$HOME/.basecoin_test_restart
-  CHAIN_ID=restart-chain
-
-  rm -rf $BASE_DIR 2>/dev/null
-  mkdir -p $BASE_DIR
-
-  # set up client - make sure you use the proper prefix if you set
-  # a custom CLIENT_EXE
-  export BC_HOME=${BASE_DIR}/client
-  prepareClient
-
-  # start basecoin server (with counter)
-  initServer $BASE_DIR $CHAIN_ID 3456
-  if [ $? != 0 ]; then return 1; fi
-
-  initClient $CHAIN_ID 34567
-
-  echo "...Testing may begin!"
-  echo
-  echo
-  echo
+  quickSetup .basecoin_test_restart restart-chain
 }
 
 oneTimeTearDown() {
-  echo
-  echo
-  stopServer $PID_SERVER
+  quickTearDown
 }
 
 test00PreRestart() {
@@ -52,7 +32,6 @@ test00PreRestart() {
   checkSendTx $HASH $TX_HEIGHT $SENDER "992"
 
 }
-
 
 test01OnRestart() {
   SENDER=$(getAddr $RICH)
@@ -78,11 +57,12 @@ test01OnRestart() {
   if [ $? != 0 ]; then echo "can't make second tx!"; return 1; fi
 
   # now we do a restart...
-  stopServer $PID_SERVER
+  quickTearDown
   startServer $BASE_DIR/server $BASE_DIR/${SERVER_EXE}.log
   if [ $? != 0 ]; then echo "can't restart server!"; return 1; fi
 
   # make sure queries still work properly, with all 3 tx now executed
+  echo "Checking state after restart..."
   checkAccount $SENDER "3" "9007199254710000"
   checkAccount $RECV "0" "30992"
 

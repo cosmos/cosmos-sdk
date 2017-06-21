@@ -77,7 +77,7 @@ initServer() {
   return $?
 }
 
-# usage: startServer SERVE_DIR SERVER_LOG
+# XXX Ex Usage: startServer $SERVE_DIR $SERVER_LOG
 startServer() {
   ${SERVER_EXE} start --home=$1 >>$2 2>&1 &
   sleep 5
@@ -88,13 +88,6 @@ startServer() {
     cat $SERVER_LOG
     return 1
   fi
-}
-
-# XXX Ex Usage: stopServer $PID_SERVER
-stopServer() {
-  echo "stopping $SERVER_EXE test server..."
-  kill -9 $1 >/dev/null 2>&1
-  sleep 1
 }
 
 # XXX Ex Usage1: initClient $CHAINID

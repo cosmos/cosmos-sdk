@@ -50,7 +50,7 @@ func (s *SendTx) Signers() ([]crypto.PubKey, error) {
 func (s *SendTx) TxBytes() ([]byte, error) {
 	// TODO: verify it is signed
 
-	// Code and comment from: basecoin/cmd/commands/tx.go
+	// Code and comment from: basecoin/cmd/basecoin/commands/tx.go
 	// Don't you hate having to do this?
 	// How many times have I lost an hour over this trick?!
 	txBytes := wire.BinaryBytes(struct {

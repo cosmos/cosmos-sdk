@@ -2,11 +2,8 @@
 
 One of the most exciting elements of the Cosmos Network is the InterBlockchain
 Communication (IBC) protocol, which enables interoperability across different
-blockchains.  The simplest example of using the IBC protocol is to send a data
-packet from one blockchain to another.
-
-We implemented IBC as a basecoin plugin.  and here we'll show you how to use
-the Basecoin IBC-plugin to send a packet of data across blockchains!
+blockchains. We implemented IBC as a basecoin plugin, and we'll show you
+how to use it to send tokens across blockchains!
 
 Please note, this tutorial assumes you are familiar with [Basecoin
 plugins](/docs/guide/basecoin-plugins.md), but we'll explain how IBC works. You
@@ -179,9 +176,8 @@ The results of a query can thus be used as proof in an `IBCPacketPostTx`.
 ## Relay
 
 While we need all these packet types internally to keep track of all the
-proofs on both chains in a secure manner, for the normal work-flow, where
-we just use the FIFO queue on each side for pending message to send as soon
-as possible.
+proofs on both chains in a secure manner, for the normal work-flow, 
+we can run a relay node that handles the cross-chain interaction.
 
 In this case, there are only two steps.  First `basecoin relay init`,
 which must be run once to register each chain with the other one,
@@ -197,11 +193,9 @@ chains to pay for all the ibc packets it will be forwarding.
 Now that we have all the background knowledge, let's actually walk through the
 tutorial.
 
-Make sure you have installed
-[Tendermint](https://tendermint.com/intro/getting-started/download) and
-[basecoin](/docs/guide/install.md).
+Make sure you have installed [basecoin and basecli](/docs/guide/install.md).
 
-`basecoin` is a framework for creating new cryptocurrency applications.  It
+Basecoin is a framework for creating new cryptocurrency applications.  It
 comes with an `IBC` plugin enabled by default.
 
 You will also want to install the [jq](https://stedolan.github.io/jq/) for
@@ -240,11 +234,7 @@ Prepare the genesis block and start the server:
 export BCHOME=~/.ibcdemo/chain1/server
 CHAIN_ID=test-chain-1
 PREFIX=1234
-basecoin init
-
-GENKEY=`basecli keys get money -o json --home=$HOME/.ibcdemo/chain1/client | jq .pubkey.data`
-GENJSON=`cat $BCHOME/genesis.json`
-echo $GENJSON | jq '.app_options.accounts[0].pub_key.data='$GENKEY | jq ".chain_id=\"$CHAIN_ID\"" > $BCHOME/genesis.json
+basecoin init $(basecli keys get money | awk '{print $2}')
 
 sed -ie "s/4665/$PREFIX/" $BCHOME/config.toml
 
@@ -257,8 +247,8 @@ have money, the second none:
 **Client1**
 ```bash
 basecli init --chain-id=${CHAIN_ID} --node=tcp://localhost:${PORT}
-ME=`basecli keys get money -o=json | jq .address | tr -d '"'`
-YOU=`basecli keys get gotnone -o=json | jq .address | tr -d '"'`
+ME=$(basecli keys get money | awk '{print $2}')
+YOU=$(basecli keys get gotnone | awk '{print $2}')
 basecli query account $ME
 basecli query account $YOU
 ```
@@ -287,12 +277,7 @@ Prepare the genesis block and start the server:
 export BCHOME=~/.ibcdemo/chain2/server
 CHAIN_ID=test-chain-2
 PREFIX=2345
-basecoin init
-
-
-GENKEY=`basecli keys get moremoney -o json --home=$HOME/.ibcdemo/chain2/client | jq .pubkey.data`
-GENJSON=`cat $BCHOME/genesis.json`
-echo $GENJSON | jq '.app_options.accounts[0].pub_key.data='$GENKEY | jq ".chain_id=\"$CHAIN_ID\"" > $BCHOME/genesis.json
+basecoin init $(basecli keys get moremoney | awk '{print $2}')
 
 sed -ie "s/4665/$PREFIX/" $BCHOME/config.toml
 
@@ -305,8 +290,8 @@ have money, the second none:
 **Client2**
 ```bash
 basecli init --chain-id=${CHAIN_ID} --node=tcp://localhost:${PORT}
-ME=`basecli keys get moremoney -o=json | jq .address | tr -d '"'`
-YOU=`basecli keys get broke -o=json | jq .address | tr -d '"'`
+ME=$(basecli keys get moremoney | awk '{print $2}')
+YOU=$(basecli keys get broke | awk '{print $2}')
 basecli query account $ME
 basecli query account $YOU
 ```

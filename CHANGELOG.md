@@ -15,6 +15,8 @@ BREAKING CHANGES:
   - complete overhaul on how tx and query subcommands are added. (see counter or trackomatron for examples)
   - no longer supports counter app (see new countercli)
 - basecoin
+  - `basecoin init` takes an argument, an address to allocate funds to in the genesis
+  - removed key2.json
   - removed all client side functionality from it (use basecli now for proofs)
     - no tx subcommand
     - no query subcommand
@@ -27,6 +29,7 @@ BREAKING CHANGES:
   - removed `example-plugin`, put `counter` inside `docs/guide`
 
 ENHANCEMENTS:
+- `basecoin init` support `--chain-id`
 - intergrates tendermint 0.10.0 (not the rc-2, but the real thing)
 - commands return error code (1) on failure for easier script testing
 - add `reset_all` to basecli, and never delete keys on `init`

@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -16,6 +17,18 @@ var (
 		RunE:  initCmd,
 	}
 )
+
+//flags
+var (
+	chainIDFlag string
+)
+
+func init() {
+	flags := []Flag2Register{
+		{&chainIDFlag, "chain-id", "test_chain_id", "Chain ID"},
+	}
+	RegisterFlags(InitCmd, flags)
+}
 
 // returns 1 iff it set a file, otherwise 0 (so we can add them)
 func setupFile(path, data string, perm os.FileMode) (int, error) {
@@ -37,13 +50,17 @@ func initCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if len(args) != 1 {
+		return fmt.Errorf("`init` takes one argument, a basecoin account address. Generate one using `basecli keys new mykey`")
+	}
+	userAddr := args[0]
+
 	// initalize basecoin
 	genesisFile := cfg.GenesisFile()
 	privValFile := cfg.PrivValidatorFile()
-	key1File := path.Join(cfg.RootDir, "key.json")
-	key2File := path.Join(cfg.RootDir, "key2.json")
+	keyFile := path.Join(cfg.RootDir, "key.json")
 
-	mod1, err := setupFile(genesisFile, GenesisJSON, 0644)
+	mod1, err := setupFile(genesisFile, GetGenesisJSON(chainIDFlag, userAddr), 0644)
 	if err != nil {
 		return err
 	}
@@ -51,17 +68,13 @@ func initCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	mod3, err := setupFile(key1File, Key1JSON, 0400)
-	if err != nil {
-		return err
-	}
-	mod4, err := setupFile(key2File, Key2JSON, 0400)
+	mod3, err := setupFile(keyFile, KeyJSON, 0400)
 	if err != nil {
 		return err
 	}
 
-	if (mod1 + mod2 + mod3 + mod4) > 0 {
-		logger.Info("Initialized Basecoin", "genesis", genesisFile, "key", key1File)
+	if (mod1 + mod2 + mod3) > 0 {
+		logger.Info("Initialized Basecoin", "genesis", genesisFile, "priv_validator", privValFile)
 	} else {
 		logger.Info("Already initialized", "priv_validator", privValFile)
 	}
@@ -86,9 +99,13 @@ var PrivValJSON = `{
   }
 }`
 
-var GenesisJSON = `{
+// GetGenesisJSON returns a new tendermint genesis with Basecoin app_options
+// that grant a large amount of "mycoin" to a single address
+// TODO: A better UX for generating genesis files
+func GetGenesisJSON(chainID, addr string) string {
+	return fmt.Sprintf(`{
   "app_hash": "",
-  "chain_id": "test_chain_id",
+  "chain_id": "%s",
   "genesis_time": "0001-01-01T00:00:00.000Z",
   "validators": [
     {
@@ -102,10 +119,7 @@ var GenesisJSON = `{
   ],
   "app_options": {
     "accounts": [{
-      "pub_key": {
-        "type": "ed25519",
-        "data": "619D3678599971ED29C7529DDD4DA537B97129893598A17C82E3AC9A8BA95279"
-      },
+      "address": "%s",
       "coins": [
         {
           "denom": "mycoin",
@@ -114,9 +128,11 @@ var GenesisJSON = `{
       ]
     }]
   }
-}`
+}`, chainID, addr)
+}
 
-var Key1JSON = `{
+// TODO: remove this once not needed for relay
+var KeyJSON = `{
   "address": "1B1BE55F969F54064628A63B9559E7C21C925165",
   "priv_key": {
     "type": "ed25519",
@@ -125,17 +141,5 @@ var Key1JSON = `{
   "pub_key": {
     "type": "ed25519",
     "data": "619D3678599971ED29C7529DDD4DA537B97129893598A17C82E3AC9A8BA95279"
-  }
-}`
-
-var Key2JSON = `{
-  "address": "1DA7C74F9C219229FD54CC9F7386D5A3839F0090",
-  "priv_key": {
-    "type": "ed25519",
-    "data": "34BAE9E65CE8245FAD035A0E3EED9401BDE8785FFB3199ACCF8F5B5DDF7486A8352195DA90CB0B90C24295B90AEBA25A5A71BC61BAB2FE2387241D439698B7B8"
-  },
-  "pub_key": {
-    "type": "ed25519",
-    "data": "352195DA90CB0B90C24295B90AEBA25A5A71BC61BAB2FE2387241D439698B7B8"
   }
 }`

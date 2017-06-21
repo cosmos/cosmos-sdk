@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/tendermint/basecoin/cmd/commands"
+	"github.com/tendermint/basecoin/cmd/basecoin/commands"
 	"github.com/tendermint/tmlibs/cli"
 )
 

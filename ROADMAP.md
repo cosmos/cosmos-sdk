@@ -12,7 +12,7 @@ Patch release here involve improving the usability of the cli tools, adding subc
 
 **Breaking changes**
 
-* Renaming likely this release may well lead to a renaming of the repository to emphasize that it is a generalized framework.  `basecoin` and `basecli` executables will remain with generally unchanged usage.
+* Renaming likely: this release may well lead to a [renaming of the repository](https://github.com/tendermint/basecoin/issues/119) to emphasize that it is a generalized framework.  `basecoin` and `basecli` executables will remain with generally unchanged usage.
 * This will also provide a tx structure that is very different than the current one, and a non-trivial upgrade of running chains.
 
 The next release cycle involves a big upgrade to the core, especially how one can write modules (aka plugins) as well as configure a basecoin-based executable.  The main goal is to leave us with basecoin as a single executable with a similar API, but create a new module/middleware system with a number of standard modules provided (and easy addition of third party modules), so developers can quickly mix-and-match pieces and add custom business logic for there chain.
@@ -30,9 +30,9 @@ This will be done in conjunction with some sample apps also building on this fra
 
 ## Next steps
 
-The following are three planned steps, the order of which may change.  At least one or two of these will most likely occur before any other developments. Clearly, any other feature that
+The following are three planned steps, the order of which may change.  At least one or two of these will most likely occur before any other developments. Clearly, any other feature that are urgent for cosmos can jump the list in priority, but all these pieces are part of the cosmos roadmap, especially the first two.
 
-### ?? - Local client API for UI
+### 0.8.x??? - Local client API for UI
 
 Beyond the CLI, we want to add more interfaces for easily building a UI on top of the basecoin client.  One clear example is a local REST API, so you can easily integrate with an electron app, or a chrome app, just as if you wrote a normal Single-Page Application, but connecting to a local proxy to do full crypto-graphic proofs.
 
@@ -40,13 +40,13 @@ Another **possible** development is providing an SDK, which we can compile with 
 
 Further, when the planned enhancements to real-time events happen in tendermint core, we should expose that via a simple subscriber/listener model in these local APIs.
 
-### ?? - Proof of Stake and Voting Modules
+### 0.9.x??? - Proof of Stake and Voting Modules
 
 We should integrate developments on a [proof-of-stake module](https://github.com/tendermint/basecoin-stake) (currently a work-in-progress) and basic voting modules (currently planned) into properly supported for modules.  These would provide the basis for dynamic validator set changes with bondign periods, and the basis for making governance decisions (eg. voting to change the block reward).
 
 At this point we would have to give full support to these plugins, and third-party devs can build on them to add more complex delegation or governance logic.
 
-### ??  - Database enhancements
+### 0.10.x??? - Database enhancements
 
 Depending on developments with merkleeyes, we would like to increase the expressiveness of the storage layer while maintaining provability of all queries.  We would also add a number of new primatives to the key-value store, to allow some general data-structures.
 

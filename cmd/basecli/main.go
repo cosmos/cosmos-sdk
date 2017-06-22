@@ -14,6 +14,7 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
+	coincmd "github.com/tendermint/basecoin/cmd/basecoin/commands"
 )
 
 // BaseCli represents the base command when called without any subcommands
@@ -51,7 +52,9 @@ func main() {
 		seeds.RootCmd,
 		pr,
 		tr,
-		proxy.RootCmd)
+		proxy.RootCmd,
+		coincmd.VersionCmd,
+	)
 
 	cmd := cli.PrepareMainCmd(BaseCli, "BC", os.ExpandEnv("$HOME/.basecli"))
 	cmd.Execute()

@@ -25,7 +25,7 @@ make tools
 make get_vendor_deps
 
 # Build!
-echo "==> Building..."
+echo "==> Building basecoin..."
 "$(which gox)" \
 		-os="${XC_OS}" \
 		-arch="${XC_ARCH}" \
@@ -34,6 +34,16 @@ echo "==> Building..."
 		-output "build/pkg/{{.OS}}_{{.Arch}}/basecoin" \
 		-tags="${BUILD_TAGS}" \
 		github.com/tendermint/basecoin/cmd/basecoin
+
+echo "==> Building basecli..."
+"$(which gox)" \
+    -os="${XC_OS}" \
+    -arch="${XC_ARCH}" \
+    -osarch="!darwin/arm !solaris/amd64 !freebsd/amd64" \
+    -ldflags "-X ${GIT_IMPORT}.GitCommit='${GIT_COMMIT}' -X ${GIT_IMPORT}.GitDescribe='${GIT_DESCRIBE}'" \
+    -output "build/pkg/{{.OS}}_{{.Arch}}/basecli" \
+    -tags="${BUILD_TAGS}" \
+    github.com/tendermint/basecoin/cmd/basecli
 
 # Zip all the files.
 echo "==> Packaging..."

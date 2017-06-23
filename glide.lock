@@ -1,5 +1,5 @@
-hash: 6eb1119dccf2ab4d0adb870a14cb4408047119be53c8ec4afeaa281bd1d2b457
-updated: 2017-06-21T19:51:10.330315159+02:00
+hash: f8c4f3d097e0a5cd4b02d9badcd04558779d98bfbc03fd6f9652998fe47c4ce2
+updated: 2017-06-23T09:17:44.882466959+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -32,7 +32,7 @@ imports:
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/golang/protobuf
-  version: b50ceb1fa9818fa4d78b016c2d4ae025593a7ce3
+  version: 18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8
   subpackages:
   - proto
   - ptypes/any
@@ -117,7 +117,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: ad70b2222698a2018c4bf18bab86f3727621f492
+  version: 95b7c9e09c49b91bfbb71bb63dd514eb55450f16
   subpackages:
   - cmd
   - keys
@@ -132,7 +132,7 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: b66b57d193d2fdeda7b999aebfdc9531cbee39b0
+  version: fd21efb1bfc1ac5a1eb569b3f6ce849683d690e8
   subpackages:
   - certifiers
   - certifiers/client
@@ -144,16 +144,17 @@ imports:
   - commands/txs
   - proofs
 - name: github.com/tendermint/merkleeyes
-  version: ce7de05896f560ddcc9207f65fea9901835dd238
+  version: 6acc3a2663d9a3ec85cd654e01eaa7d7d7c6e99b
   subpackages:
   - app
   - client
   - iavl
 - name: github.com/tendermint/tendermint
-  version: 4f0f50c62d41d39ad64e07ad642f705cc13c8229
+  version: ca632c9e90cf06a67bacedd43d76407ce7b3614e
   subpackages:
   - blockchain
   - cmd/tendermint/commands
+  - cmd/tendermint/commands/flags
   - config
   - consensus
   - mempool
@@ -176,7 +177,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: bd9d0d1637dadf1330e167189d5e5031aadcda6f
+  version: 7ce4da1eee6004d627e780c8fe91e96d9b99e459
   subpackages:
   - autofile
   - cli
@@ -201,7 +202,7 @@ imports:
   - ripemd160
   - salsa20/salsa
 - name: golang.org/x/net
-  version: c9b681d35165f1995d6f3034e61f8761d4b90c99
+  version: feeb485667d1fdabe727840fe00adc22431bc86e
   subpackages:
   - context
   - http2
@@ -226,7 +227,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: a0c3e72252b6fbf4826bb143e450eb05588a9d6d
+  version: 844f573616520565fdc6fb4db242321b5456fd6d
   subpackages:
   - codes
   - credentials

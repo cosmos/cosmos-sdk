@@ -1,11 +1,12 @@
 # Changelog
 
-## 0.6.0 (???)
+## 0.6.0 (June 22, 2017)
 
 Make the basecli command the only way to use client-side, to enforce best
 security practices. Lots of enhancements to get it up to production quality.
 
 BREAKING CHANGES:
+- ./cmd/commands -> ./cmd/basecoin/commands
 - basecli
   - `basecli proof state get` -> `basecli query key`
   - `basecli proof tx get` -> `basecli query tx`
@@ -27,6 +28,8 @@ BREAKING CHANGES:
     - relay init registers both chains on one another (to set it up so relay start just works)
 - docs
   - removed `example-plugin`, put `counter` inside `docs/guide`
+- app
+  - Implements ABCI handshake by proxying merkleeyes.Info()
 
 ENHANCEMENTS:
 - `basecoin init` support `--chain-id`
@@ -37,9 +40,9 @@ ENHANCEMENTS:
 - just `make fresh` when things are getting stale ;)
 
 BUG FIXES:
-- no longer panics on missing app_options in genesis (thanks, anton)
-- updated all docs... again
-
+- app: no longer panics on missing app_options in genesis (thanks, anton)
+- docs: updated all docs... again
+- ibc: fix panic on getting BlockID from commit without 100% precommits (still a TODO)
 
 ## 0.5.2 (June 2, 2017)
 

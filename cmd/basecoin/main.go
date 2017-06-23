@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/tendermint/basecoin/cmd/commands"
+	"github.com/tendermint/basecoin/cmd/basecoin/commands"
 	"github.com/tendermint/tmlibs/cli"
 )
 
@@ -19,12 +19,6 @@ func main() {
 		commands.InitCmd,
 		commands.StartCmd,
 		commands.RelayCmd,
-		commands.TxCmd,
-		commands.QueryCmd,
-		commands.KeyCmd,
-		commands.VerifyCmd,
-		commands.BlockCmd,
-		commands.AccountCmd,
 		commands.UnsafeResetAllCmd,
 		commands.VersionCmd,
 	)

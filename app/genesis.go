@@ -37,6 +37,7 @@ func (app *Basecoin) LoadGenesis(path string) error {
 		r := app.SetOption(kv.Key, kv.Value)
 		app.logger.Info("Done setting Plugin key-value pair via SetOption", "result", r, "k", kv.Key, "v", kv.Value)
 	}
+
 	return nil
 }
 
@@ -69,6 +70,10 @@ func loadGenesis(filePath string) (*FullGenesisDoc, error) {
 	err = json.Unmarshal(bytes, genDoc)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshaling genesis file")
+	}
+
+	if genDoc.AppOptions == nil {
+		genDoc.AppOptions = new(GenesisDoc)
 	}
 
 	pluginOpts, err := parseGenesisList(genDoc.AppOptions.PluginOptions)

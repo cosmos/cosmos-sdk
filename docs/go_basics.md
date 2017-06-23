@@ -100,12 +100,12 @@ make test
 
 Great! Now when I run `tendermint` I have the newest of the new, the develop branch! But please note that this branch is not considered production ready and may have issues.  This should only be done if you want to develop code for the future and run locally.
 
-But wait, I want to mix and match.  There is a bugfix in `go-p2p:persistent_peer` that I want to use with tendermint.  How to compile this.  I will show with a simple example, please update the repo and commit numbers for your usecase. Also, make sure these branches are compatible, so if `persistent_peer` is close to `master` it should work. But if it is 15 commits ahead, you will probably need the `develop` branch of tendermint to compile with it.  But I assume you know your way around git and can figure that out.
+But wait, I want to mix and match.  There is a bugfix in `go-crypto:unstable` that I want to use with tendermint.  How to compile this.  I will show with a simple example, please update the repo and commit numbers for your usecase. Also, make sure these branches are compatible, so if `unstable` is close to `master` it should work. But if it is 15 commits ahead, you will probably need the `develop` branch of tendermint to compile with it.  But I assume you know your way around git and can figure that out.
 
 In the dependent repo:
 ```
-cd $GOPATH/src/github.com/tendermint/go-p2p
-git checkout persistent_peer
+cd $GOPATH/src/github.com/tendermint/go-crypto
+git checkout unstable
 git pull
 # double-check this makes sense or if it is too far off
 git log --oneline --decorate --graph
@@ -115,10 +115,10 @@ git log | head -1
 
 In the main repo (tendermint, basecoin, ...) where the binary will be built:
 ```
-cd $GOPATH/src/github.com/tendermint/tendermin
+cd $GOPATH/src/github.com/tendermint/tendermint
 git checkout master
 git pull
-# -> edit glide.lock, set the version of go-p2p (for example)
+# -> edit glide.lock, set the version of go-crypto (for example)
 # to the commit number you got above (the 40 char version)
 make get_vendor_deps
 make install

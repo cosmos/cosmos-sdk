@@ -21,7 +21,7 @@ Just initialize your client with the proper validator set as in the [README](REA
 
 ```
 $ export BCHOME=~/.lightnode
-$ basecli init --node tcp://<host>:<port> --chainid <chain>
+$ basecli init --node tcp://<host>:<port> --chain-id <chain>
 ```
 
 ## Running

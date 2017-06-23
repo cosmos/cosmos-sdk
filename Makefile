@@ -1,36 +1,56 @@
-all: test install
+GOTOOLS =	github.com/mitchellh/gox \
+			github.com/Masterminds/glide
 
-NOVENDOR = go list ./... | grep -v /vendor/
+all: get_vendor_deps install test
 
 build:
 	go build ./cmd/...
 
 install:
 	go install ./cmd/...
+	go install ./docs/guide/counter/cmd/...
 
 dist:
-	@ sudo bash scripts/dist.sh
-	@ bash scripts/publish.sh
+	@bash scripts/dist.sh
+	@bash scripts/publish.sh
 
-test:
-	go test `${NOVENDOR}`
+test: test_unit test_cli
+
+test_unit:
+	go test `glide novendor`
 	#go run tests/tendermint/*.go
 
-get_deps:
-	go get -d ./...
+test_cli: tests/cli/shunit2
+	# sudo apt-get install jq
+	@./tests/cli/basictx.sh
+	@./tests/cli/counter.sh
+	@./tests/cli/restart.sh
+	@./tests/cli/ibc.sh
 
-update_deps:
-	go get -d -u ./...
-
-get_vendor_deps:
-	go get github.com/Masterminds/glide
+get_vendor_deps: tools
 	glide install
 
 build-docker:
-	docker run -it --rm -v "$(PWD):/go/src/github.com/tendermint/basecoin" -w "/go/src/github.com/tendermint/basecoin" -e "CGO_ENABLED=0" golang:alpine go build ./cmd/basecoin
+	docker run -it --rm -v "$(PWD):/go/src/github.com/tendermint/basecoin" -w \
+		"/go/src/github.com/tendermint/basecoin" -e "CGO_ENABLED=0" golang:alpine go build ./cmd/basecoin
 	docker build -t "tendermint/basecoin" .
 
-clean:
-	@rm -f ./basecoin
+tests/cli/shunit2:
+	wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2" \
+		-q -O tests/cli/shunit2
 
-.PHONY: all build install test get_deps update_deps get_vendor_deps build-docker clean
+tools:
+	@go get $(GOTOOLS)
+
+clean:
+	# maybe cleaning up cache and vendor is overkill, but sometimes
+	# you don't get the most recent versions with lots of branches, changes, rebases...
+	@rm -rf ~/.glide/cache/src/https-github.com-tendermint-*
+	@rm -rf ./vendor
+	@rm -f $GOPATH/bin/{basecoin,basecli,counter,countercli}
+
+# when your repo is getting a little stale... just make fresh
+fresh: clean get_vendor_deps install
+	@if [[ `git status -s` ]]; then echo; echo "Warning: uncommited changes"; git status -s; fi
+
+.PHONY: all build install test test_cli test_unit get_vendor_deps build-docker clean fresh

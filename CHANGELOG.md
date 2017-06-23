@@ -1,5 +1,49 @@
 # Changelog
 
+## 0.6.0 (June 22, 2017)
+
+Make the basecli command the only way to use client-side, to enforce best
+security practices. Lots of enhancements to get it up to production quality.
+
+BREAKING CHANGES:
+- ./cmd/commands -> ./cmd/basecoin/commands
+- basecli
+  - `basecli proof state get` -> `basecli query key`
+  - `basecli proof tx get` -> `basecli query tx`
+  - `basecli proof state get --app=account` -> `basecli query account`
+  - use `--chain-id` not `--chainid` for consistency
+  - update to use `--trace` not `--debug` for stack traces on errors
+  - complete overhaul on how tx and query subcommands are added. (see counter or trackomatron for examples)
+  - no longer supports counter app (see new countercli)
+- basecoin
+  - `basecoin init` takes an argument, an address to allocate funds to in the genesis
+  - removed key2.json
+  - removed all client side functionality from it (use basecli now for proofs)
+    - no tx subcommand
+    - no query subcommand
+    - no account (query) subcommand
+    - a few other random ones...
+  - enhanced relay subcommand
+    - relay start did what relay used to do
+    - relay init registers both chains on one another (to set it up so relay start just works)
+- docs
+  - removed `example-plugin`, put `counter` inside `docs/guide`
+- app
+  - Implements ABCI handshake by proxying merkleeyes.Info()
+
+ENHANCEMENTS:
+- `basecoin init` support `--chain-id`
+- intergrates tendermint 0.10.0 (not the rc-2, but the real thing)
+- commands return error code (1) on failure for easier script testing
+- add `reset_all` to basecli, and never delete keys on `init`
+- new shutil based unit tests, with better coverage of the cli actions
+- just `make fresh` when things are getting stale ;)
+
+BUG FIXES:
+- app: no longer panics on missing app_options in genesis (thanks, anton)
+- docs: updated all docs... again
+- ibc: fix panic on getting BlockID from commit without 100% precommits (still a TODO)
+
 ## 0.5.2 (June 2, 2017)
 
 BUG FIXES:

@@ -570,7 +570,17 @@ func verifyCommit(chainState BlockchainState, header *tm.Header, commit *tm.Comm
 	chainID := chainState.ChainID
 	vals := chainState.Validators
 	valSet := tm.NewValidatorSet(vals)
-	blockID := commit.Precommits[0].BlockID // XXX: incorrect
+
+	var blockID tm.BlockID
+	for _, pc := range commit.Precommits {
+		// XXX: incorrect. we want the one for +2/3, not just the first one
+		if pc != nil {
+			blockID = pc.BlockID
+		}
+	}
+	if blockID.IsZero() {
+		return errors.New("All precommits are nil!")
+	}
 
 	// NOTE: Currently this only works with the exact same validator set.
 	// Not this, but perhaps "ValidatorSet.VerifyCommitAny" should expose

@@ -23,8 +23,16 @@ import (
 // recoverCmd represents the recover command
 var recoverCmd = &cobra.Command{
 	Use:   "recover [name]",
-	Short: "Change the password for a private key",
-	RunE:  runRecoverCmd,
+	Short: "Recover a private key from a seed phrase",
+	Long: `Recover a private key from a seed phrase.
+
+I really hope you wrote this down when you created the new key.
+The seed is only displayed on creation, never again.
+
+You can also use this to copy a key between multiple testnets,
+simply by "recovering" the key in the other nets you want to copy
+to.  Of course, it has no coins on the other nets, just the same address.`,
+	RunE: runRecoverCmd,
 }
 
 func runRecoverCmd(cmd *cobra.Command, args []string) error {

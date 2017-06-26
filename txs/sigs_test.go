@@ -34,13 +34,14 @@ func TestOneSig(t *testing.T) {
 	cstore := cryptostore.New(
 		cryptostore.SecretBox,
 		memstorage.New(),
+		keys.MustLoadCodec("english"),
 	)
 	n, p := "foo", "bar"
 	n2, p2 := "other", "thing"
 
-	acct, err := cstore.Create(n, p, algo)
+	acct, _, err := cstore.Create(n, p, algo)
 	require.Nil(err, "%+v", err)
-	acct2, err := cstore.Create(n2, p2, algo)
+	acct2, _, err := cstore.Create(n2, p2, algo)
 	require.Nil(err, "%+v", err)
 
 	cases := []struct {
@@ -96,13 +97,14 @@ func TestMultiSig(t *testing.T) {
 	cstore := cryptostore.New(
 		cryptostore.SecretBox,
 		memstorage.New(),
+		keys.MustLoadCodec("english"),
 	)
 	n, p := "foo", "bar"
 	n2, p2 := "other", "thing"
 
-	acct, err := cstore.Create(n, p, algo)
+	acct, _, err := cstore.Create(n, p, algo)
 	require.Nil(err, "%+v", err)
-	acct2, err := cstore.Create(n2, p2, algo)
+	acct2, _, err := cstore.Create(n2, p2, algo)
 	require.Nil(err, "%+v", err)
 
 	type signer struct {

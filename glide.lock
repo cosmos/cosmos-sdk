@@ -1,5 +1,5 @@
 hash: 4cef4b780c9acbedce588a7221903fa1c63c2ddef1237522bcf6b045c35f9c56
-updated: 2017-06-26T15:17:46.371112085+02:00
+updated: 2017-06-26T17:17:15.64503878+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -32,7 +32,7 @@ imports:
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/golang/protobuf
-  version: b50ceb1fa9818fa4d78b016c2d4ae025593a7ce3
+  version: 18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8
   subpackages:
   - proto
   - ptypes/any
@@ -47,7 +47,7 @@ imports:
 - name: github.com/gorilla/websocket
   version: a91eba7f97777409bc2c443f5534d41dd20c5720
 - name: github.com/hashicorp/hcl
-  version: a4b07c25de5ff55ad3b8936cea69a79a3d95a855
+  version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -82,11 +82,11 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: db6b9a8b3f3f400c8ecb4a4d7d02245b8facad66
+  version: 4cdb38c072b86bf795d2c81de50784d9fdd6eb77
 - name: github.com/spf13/jwalterweatherman
-  version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
+  version: 8f07c835e5cc1450c082fe3a439cf87b0cbb2d99
 - name: github.com/spf13/pflag
-  version: 80fe0fb4eba54167e2ccae1c6c950e72abf61b73
+  version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
 - name: github.com/spf13/viper
   version: 0967fc9aceab2ce9da34061253ac10fb99bba5b2
 - name: github.com/syndtr/goleveldb
@@ -132,7 +132,7 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: 9ab40b5d358c79cd0327daf48e6dd311a85cabea
+  version: 76aeff9b049179b67e69805555c1dd1481c57781
   subpackages:
   - certifiers
   - certifiers/client
@@ -150,7 +150,7 @@ imports:
   - client
   - iavl
 - name: github.com/tendermint/tendermint
-  version: 6b38abd57bd9d35b219227552262787076bfdd53
+  version: e4caf96bcb1ab80fc3b5dca4c9a8f0648653929b
   subpackages:
   - blockchain
   - cmd/tendermint/commands
@@ -201,7 +201,7 @@ imports:
   - ripemd160
   - salsa20/salsa
 - name: golang.org/x/net
-  version: c9b681d35165f1995d6f3034e61f8761d4b90c99
+  version: feeb485667d1fdabe727840fe00adc22431bc86e
   subpackages:
   - context
   - http2
@@ -211,7 +211,7 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/sys
-  version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
+  version: e62c3de784db939836898e5c19ffd41bece347da
   subpackages:
   - unix
 - name: golang.org/x/text
@@ -226,7 +226,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: a0c3e72252b6fbf4826bb143e450eb05588a9d6d
+  version: 844f573616520565fdc6fb4db242321b5456fd6d
   subpackages:
   - codes
   - credentials

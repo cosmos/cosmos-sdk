@@ -24,7 +24,7 @@ import (
 var SendTxCmd = &cobra.Command{
 	Use:   "send",
 	Short: "send tokens from one account to another",
-	RunE:  doSendTx,
+	RunE:  commands.RequireInit(doSendTx),
 }
 
 //nolint
@@ -47,10 +47,6 @@ func init() {
 
 // runDemo is an example of how to make a tx
 func doSendTx(cmd *cobra.Command, args []string) error {
-	if err := commands.RequireInit(cmd); err != nil {
-		return err
-	}
-
 	// load data from json or flags
 	tx := new(btypes.SendTx)
 	found, err := txcmd.LoadJSON(tx)

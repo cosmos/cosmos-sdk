@@ -16,14 +16,10 @@ import (
 var AccountQueryCmd = &cobra.Command{
 	Use:   "account [address]",
 	Short: "Get details of an account, with proof",
-	RunE:  doAccountQuery,
+	RunE:  lcmd.RequireInit(doAccountQuery),
 }
 
 func doAccountQuery(cmd *cobra.Command, args []string) error {
-	if err := lcmd.RequireInit(cmd); err != nil {
-		return err
-	}
-
 	addr, err := proofcmd.ParseHexKey(args, "address")
 	if err != nil {
 		return err

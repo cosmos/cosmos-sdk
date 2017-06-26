@@ -10,6 +10,7 @@ import (
 	bc "github.com/tendermint/basecoin/types"
 )
 
+// AppTx Application transaction structure for client
 type AppTx struct {
 	chainID string
 	signers []crypto.PubKey
@@ -56,23 +57,6 @@ func (s *AppTx) TxBytes() ([]byte, error) {
 	// How many times have I lost an hour over this trick?!
 	txBytes := wire.BinaryBytes(bc.TxS{s.Tx})
 	return txBytes, nil
-}
-
-// AddSigner sets address and pubkey info on the tx based on the key that
-// will be used for signing
-func (a *AppTx) AddSigner(pk crypto.PubKey) {
-	// get addr if available
-	var addr []byte
-	if !pk.Empty() {
-		addr = pk.Address()
-	}
-
-	// set the send address, and pubkey if needed
-	in := &a.Tx.Input
-	in.Address = addr
-	if in.Sequence == 1 {
-		in.PubKey = pk
-	}
 }
 
 // TODO: this should really be in the basecoin.types SendTx,

@@ -12,11 +12,9 @@ import (
 	"github.com/tendermint/abci/server"
 	eyes "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/cli"
-	cliflags "github.com/tendermint/tmlibs/cli/flags"
 	cmn "github.com/tendermint/tmlibs/common"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	"github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/types"
@@ -127,14 +125,9 @@ func startTendermint(dir string, basecoinApp *app.Basecoin) error {
 		return err
 	}
 
-	tmLogger, err := cliflags.ParseLogLevel(cfg.LogLevel, logger, config.DefaultConfig().LogLevel)
-	if err != nil {
-		return err
-	}
-
 	// Create & start tendermint node
-	privValidator := types.LoadOrGenPrivValidator(cfg.PrivValidatorFile(), tmLogger)
-	n := node.NewNode(cfg, privValidator, proxy.NewLocalClientCreator(basecoinApp), tmLogger.With("module", "node"))
+	privValidator := types.LoadOrGenPrivValidator(cfg.PrivValidatorFile(), logger)
+	n := node.NewNode(cfg, privValidator, proxy.NewLocalClientCreator(basecoinApp), logger.With("module", "node"))
 
 	_, err = n.Start()
 	if err != nil {

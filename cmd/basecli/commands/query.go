@@ -6,6 +6,7 @@ import (
 
 	wire "github.com/tendermint/go-wire"
 	lc "github.com/tendermint/light-client"
+	lcmd "github.com/tendermint/light-client/commands"
 	proofcmd "github.com/tendermint/light-client/commands/proofs"
 	"github.com/tendermint/light-client/proofs"
 
@@ -15,7 +16,7 @@ import (
 var AccountQueryCmd = &cobra.Command{
 	Use:   "account [address]",
 	Short: "Get details of an account, with proof",
-	RunE:  doAccountQuery,
+	RunE:  lcmd.RequireInit(doAccountQuery),
 }
 
 func doAccountQuery(cmd *cobra.Command, args []string) error {

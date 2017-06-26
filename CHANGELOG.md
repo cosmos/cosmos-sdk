@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.6.1 (TBD)
+
+Make lots of small cli fixes that arose when people were using the tools for
+the testnet.
+
+IMPROVEMENTS:
+- basecoin
+  - `basecoin start` supports all flags that `tendermint node` does, such as
+  `--rpc.laddr`, `--p2p.seeds`, and `--p2p.skip_upnp`
+  - fully supports `--log_level` and `--trace` for logger configuration
+- basecli
+  - `basecli query account` accepts hex account address with or without `0x`
+  prefix
+  - `basecli init` is more intelligent and only complains if there really was
+  a connected chain, not just random files
+  - support `localhost:46657` or `http://localhost:46657` format for nodes,
+  not just `tcp://localhost:46657`
+  - gives error message when running commands on an unitialized chain, rather
+  than some unintelligable panic
+  - Add `--genesis` to init
+  - Example: `basecli init --node=localhost:46657 --genesis=$HOME/.basecoin/genesis.json`
+
+
 ## 0.6.0 (June 22, 2017)
 
 Make the basecli command the only way to use client-side, to enforce best
@@ -31,7 +54,7 @@ BREAKING CHANGES:
 - app
   - Implements ABCI handshake by proxying merkleeyes.Info()
 
-ENHANCEMENTS:
+IMPROVEMENTS:
 - `basecoin init` support `--chain-id`
 - intergrates tendermint 0.10.0 (not the rc-2, but the real thing)
 - commands return error code (1) on failure for easier script testing
@@ -60,7 +83,7 @@ BUG FIXES:
 BREAKING CHANGES:
 - only those related to the tendermint 0.9 -> 0.10 upgrade
 
-ENHANCEMENTS:
+IMPROVEMENTS:
 - basecoin cli
   - integrates tendermint 0.10.0 and unifies cli (init, unsafe_reset_all, ...)
   - integrate viper, all command line flags can also be defined in environmental variables or config.toml

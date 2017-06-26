@@ -23,7 +23,7 @@ test00GetAccount() {
 
   checkAccount $SENDER "0" "9007199254740992"
 
-  ACCT2=$(${CLIENT_EXE} query account $RECV)
+  ACCT2=$(${CLIENT_EXE} query account $RECV 2>/dev/null)
   assertFalse "has no genesis account" $?
 }
 
@@ -46,7 +46,7 @@ test01SendTx() {
 }
 
 test02GetCounter() {
-  COUNT=$(${CLIENT_EXE} query counter)
+  COUNT=$(${CLIENT_EXE} query counter 2>/dev/null)
   assertFalse "no default count" $?
 }
 

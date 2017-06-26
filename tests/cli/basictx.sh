@@ -39,6 +39,8 @@ test01SendTx() {
   TX_HEIGHT=$(echo $TX | jq .height)
 
   checkAccount $SENDER "1" "9007199254740000"
+  # make sure 0x prefix also works
+  checkAccount "0x$SENDER" "1" "9007199254740000"
   checkAccount $RECV "0" "992"
 
   # Make sure tx is indexed

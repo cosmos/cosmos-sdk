@@ -6,6 +6,7 @@ import (
 
 	wire "github.com/tendermint/go-wire"
 	lc "github.com/tendermint/light-client"
+	lcmd "github.com/tendermint/light-client/commands"
 	proofcmd "github.com/tendermint/light-client/commands/proofs"
 	"github.com/tendermint/light-client/proofs"
 
@@ -19,6 +20,10 @@ var AccountQueryCmd = &cobra.Command{
 }
 
 func doAccountQuery(cmd *cobra.Command, args []string) error {
+	if err := lcmd.RequireInit(cmd); err != nil {
+		return err
+	}
+
 	addr, err := proofcmd.ParseHexKey(args, "address")
 	if err != nil {
 		return err

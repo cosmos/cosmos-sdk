@@ -19,6 +19,8 @@ ENHANCEMENTS:
   not just `tcp://localhost:46657`
   - gives error message when running commands on an unitialized chain, rather
   than some unintelligable panic
+  - Add `--genesis` to init
+  - Example: `basecli init --node=localhost:46657 --genesis=$HOME/.basecoin/genesis.json`
 
 
 ## 0.6.0 (June 22, 2017)

@@ -1,5 +1,5 @@
 hash: 4cef4b780c9acbedce588a7221903fa1c63c2ddef1237522bcf6b045c35f9c56
-updated: 2017-06-26T17:17:15.64503878+02:00
+updated: 2017-06-26T17:36:35.75642408+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -132,7 +132,7 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: 76aeff9b049179b67e69805555c1dd1481c57781
+  version: 3d9d9b1a9cde59c8b72f5955e3686a17efe7f6f2
   subpackages:
   - certifiers
   - certifiers/client

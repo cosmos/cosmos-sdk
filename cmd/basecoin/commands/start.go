@@ -15,6 +15,7 @@ import (
 	cliflags "github.com/tendermint/tmlibs/cli/flags"
 	cmn "github.com/tendermint/tmlibs/common"
 
+	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/proxy"
@@ -33,7 +34,6 @@ var StartCmd = &cobra.Command{
 var (
 	addrFlag              string
 	eyesFlag              string
-	dirFlag               string
 	withoutTendermintFlag bool
 )
 
@@ -45,7 +45,6 @@ func init() {
 	flags := []Flag2Register{
 		{&addrFlag, "address", "tcp://0.0.0.0:46658", "Listen address"},
 		{&eyesFlag, "eyes", "local", "MerkleEyes address, or 'local' for embedded"},
-		{&dirFlag, "dir", ".", "Root directory"},
 		{&withoutTendermintFlag, "without-tendermint", false, "Run Tendermint in-process with the App"},
 	}
 	RegisterFlags(StartCmd, flags)
@@ -122,19 +121,8 @@ func startBasecoinABCI(basecoinApp *app.Basecoin) error {
 	return nil
 }
 
-func getTendermintConfig() (*config.Config, error) {
-	cfg := config.DefaultConfig()
-	err := viper.Unmarshal(cfg)
-	if err != nil {
-		return nil, err
-	}
-	cfg.SetRoot(cfg.RootDir)
-	config.EnsureRoot(cfg.RootDir)
-	return cfg, nil
-}
-
 func startTendermint(dir string, basecoinApp *app.Basecoin) error {
-	cfg, err := getTendermintConfig()
+	cfg, err := tcmd.ParseConfig()
 	if err != nil {
 		return err
 	}

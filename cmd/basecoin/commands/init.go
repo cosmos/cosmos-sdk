@@ -7,6 +7,8 @@ import (
 	"path"
 
 	"github.com/spf13/cobra"
+
+	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 )
 
 //commands
@@ -45,7 +47,7 @@ func setupFile(path, data string, perm os.FileMode) (int, error) {
 
 func initCmd(cmd *cobra.Command, args []string) error {
 	// this will ensure that config.toml is there if not yet created, and create dir
-	cfg, err := getTendermintConfig()
+	cfg, err := tcmd.ParseConfig()
 	if err != nil {
 		return err
 	}

@@ -28,36 +28,36 @@ var StartCmd = &cobra.Command{
 	RunE:  startCmd,
 }
 
-//flags
-var (
-	addrFlag              string
-	eyesFlag              string
-	withoutTendermintFlag bool
-)
-
 // TODO: move to config file
 const EyesCacheSize = 10000
 
-func init() {
+//nolint
+const (
+	FlagAddress           = "address"
+	FlagEyes              = "eyes"
+	FlagWithoutTendermint = "without-tendermint"
+)
 
-	flags := []Flag2Register{
-		{&addrFlag, "address", "tcp://0.0.0.0:46658", "Listen address"},
-		{&eyesFlag, "eyes", "local", "MerkleEyes address, or 'local' for embedded"},
-		{&withoutTendermintFlag, "without-tendermint", false, "Run Tendermint in-process with the App"},
-	}
-	RegisterFlags(StartCmd, flags)
+func init() {
+	flags := StartCmd.Flags()
+	flags.String(FlagAddress, "tcp://0.0.0.0:46658", "Listen address")
+	flags.String(FlagEyes, "local", "MerkleEyes address, or 'local' for embedded")
+	flags.Bool(FlagWithoutTendermint, false, "Only run basecoin abci app, assume external tendermint process")
+	// add all standard 'tendermint node' flags
+	tcmd.AddNodeFlags(StartCmd)
 }
 
 func startCmd(cmd *cobra.Command, args []string) error {
 	rootDir := viper.GetString(cli.HomeFlag)
+	meyes := viper.GetString(FlagEyes)
 
 	// Connect to MerkleEyes
 	var eyesCli *eyes.Client
-	if eyesFlag == "local" {
+	if meyes == "local" {
 		eyesCli = eyes.NewLocalClient(path.Join(rootDir, "data", "merkleeyes.db"), EyesCacheSize)
 	} else {
 		var err error
-		eyesCli, err = eyes.NewClient(eyesFlag)
+		eyesCli, err = eyes.NewClient(meyes)
 		if err != nil {
 			return errors.Errorf("Error connecting to MerkleEyes: %v\n", err)
 		}
@@ -91,7 +91,7 @@ func startCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	chainID := basecoinApp.GetState().GetChainID()
-	if withoutTendermintFlag {
+	if viper.GetBool(FlagWithoutTendermint) {
 		logger.Info("Starting Basecoin without Tendermint", "chain_id", chainID)
 		// run just the abci app/server
 		return startBasecoinABCI(basecoinApp)
@@ -104,7 +104,8 @@ func startCmd(cmd *cobra.Command, args []string) error {
 
 func startBasecoinABCI(basecoinApp *app.Basecoin) error {
 	// Start the ABCI listener
-	svr, err := server.NewServer(addrFlag, "socket", basecoinApp)
+	addr := viper.GetString(FlagAddress)
+	svr, err := server.NewServer(addr, "socket", basecoinApp)
 	if err != nil {
 		return errors.Errorf("Error creating listener: %v\n", err)
 	}

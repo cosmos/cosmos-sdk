@@ -18,7 +18,6 @@ test: test_unit test_cli
 
 test_unit:
 	go test `glide novendor`
-	#go run tests/tendermint/*.go
 
 test_cli: tests/cli/shunit2
 	# sudo apt-get install jq

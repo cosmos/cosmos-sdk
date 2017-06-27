@@ -4,7 +4,6 @@ import (
 	"bytes"
 
 	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire/data"
 
 	"github.com/tendermint/basecoin/types"
@@ -22,40 +21,45 @@ type Handler interface {
 	// EndBlock(store types.KVStore, height uint64) abci.ResponseEndBlock
 }
 
+// different apps to authorize
+const (
+	Sigs = "sigs"
+	IBC  = "ibc"
+	Role = "role"
+)
+
+// TODO: handle this in some secure way, only certain apps can add permissions
+type Permission struct {
+	App     string // Which app authorized this?
+	Address []byte // App-specific identifier
+}
+
 // TODO: Context is a place-holder, soon we add some request data here from the
 // higher-levels (like tell an app who signed).
 // Trust me, we will need it like CallContext now...
 type Context struct {
-	sigs []crypto.PubKey
+	perms []Permission
 }
 
 // TOTALLY insecure.  will redo later, but you get the point
-func (c Context) AddSigners(keys ...crypto.PubKey) Context {
+func (c Context) AddPermissions(perms ...Permission) Context {
 	return Context{
-		sigs: append(c.sigs, keys...),
+		perms: append(c.perms, perms...),
 	}
 }
 
-func (c Context) GetSigners() []crypto.PubKey {
-	return c.sigs
-}
-
-func (c Context) IsSignerAddr(addr []byte) bool {
-	for _, pk := range c.sigs {
-		if bytes.Equal(addr, pk.Address()) {
+func (c Context) HasPermission(app string, addr []byte) bool {
+	for _, p := range c.perms {
+		if app == p.App && bytes.Equal(addr, p.Address) {
 			return true
 		}
 	}
 	return false
 }
 
-func (c Context) IsSignerKey(key crypto.PubKey) bool {
-	for _, pk := range c.sigs {
-		if key.Equals(pk) {
-			return true
-		}
-	}
-	return false
+// New should give a fresh context, and know what info makes sense to carry over
+func (c Context) New() Context {
+	return Context{}
 }
 
 // Result captures any non-error abci result

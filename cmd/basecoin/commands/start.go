@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/abci/server"
+	eyesApp "github.com/tendermint/merkleeyes/app"
 	eyes "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
@@ -54,6 +55,7 @@ func startCmd(cmd *cobra.Command, args []string) error {
 	// Connect to MerkleEyes
 	var eyesCli *eyes.Client
 	if meyes == "local" {
+		eyesApp.SetLogger(logger.With("module", "merkleeyes"))
 		eyesCli = eyes.NewLocalClient(path.Join(rootDir, "data", "merkleeyes.db"), EyesCacheSize)
 	} else {
 		var err error

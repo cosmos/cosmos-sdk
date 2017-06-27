@@ -30,12 +30,12 @@ import:
   - commands/txs
   - proofs
 - package: github.com/tendermint/merkleeyes
-  version: develop
+  version: feature/26-add-logger
   subpackages:
   - client
   - iavl
 - package: github.com/tendermint/tendermint
-  version: feature/554-embed-commands
+  version: develop
   subpackages:
   - config
   - node

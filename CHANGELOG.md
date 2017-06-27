@@ -10,6 +10,9 @@ IMPROVEMENTS:
   - `basecoin start` supports all flags that `tendermint node` does, such as
   `--rpc.laddr`, `--p2p.seeds`, and `--p2p.skip_upnp`
   - fully supports `--log_level` and `--trace` for logger configuration
+  - merkleeyes no longers spams the logs... unless you want it
+    - Example: `basecoin start --log_level="merkleeyes:info,state:info,*:error"`
+    - Example: `basecoin start --log_level="merkleeyes:debug,state:info,*:error"`
 - basecli
   - `basecli query account` accepts hex account address with or without `0x`
   prefix
@@ -19,8 +22,9 @@ IMPROVEMENTS:
   not just `tcp://localhost:46657`
   - gives error message when running commands on an unitialized chain, rather
   than some unintelligable panic
-  - Add `--genesis` to init
-  - Example: `basecli init --node=localhost:46657 --genesis=$HOME/.basecoin/genesis.json`
+  - Add `--genesis` to init to specify chain-id and validator hash
+    - Example: `basecli init --node=localhost:46657 --genesis=$HOME/.basecoin/genesis.json`
+
 
 
 ## 0.6.0 (June 22, 2017)

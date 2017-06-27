@@ -23,22 +23,17 @@ type AccountChecker interface {
 type SimpleFeeHandler struct {
 	AccountChecker
 	MinFee types.Coins
-	Inner  basecoin.Handler
-}
-
-func (h SimpleFeeHandler) Next() basecoin.Handler {
-	return h.Inner
 }
 
 func (_ SimpleFeeHandler) Name() string {
 	return NameFee
 }
 
-var _ basecoin.Handler = SimpleFeeHandler{}
+var _ basecoin.Middleware = SimpleFeeHandler{}
 
 // Yes, I know refactor a bit... really too late already
 
-func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	feeTx, ok := tx.Unwrap().(*txs.Fee)
 	if !ok {
 		return res, errors.InvalidFormat()
@@ -61,7 +56,7 @@ func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx 
 	return basecoin.Result{Log: "Valid tx"}, nil
 }
 
-func (h SimpleFeeHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h SimpleFeeHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	feeTx, ok := tx.Unwrap().(*txs.Fee)
 	if !ok {
 		return res, errors.InvalidFormat()
@@ -81,5 +76,5 @@ func (h SimpleFeeHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, t
 		return res, err
 	}
 
-	return h.Next().DeliverTx(ctx, store, feeTx.Next())
+	return next.DeliverTx(ctx, store, feeTx.Next())
 }

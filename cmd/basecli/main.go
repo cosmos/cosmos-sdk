@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/light-client/commands"
 	"github.com/tendermint/light-client/commands/proofs"
 	"github.com/tendermint/light-client/commands/proxy"
+	rpccmd "github.com/tendermint/light-client/commands/rpc"
 	"github.com/tendermint/light-client/commands/seeds"
 	"github.com/tendermint/light-client/commands/txs"
 	"github.com/tendermint/tmlibs/cli"
@@ -50,6 +51,7 @@ func main() {
 		commands.ResetCmd,
 		keycmd.RootCmd,
 		seeds.RootCmd,
+		rpccmd.RootCmd,
 		pr,
 		tr,
 		proxy.RootCmd,

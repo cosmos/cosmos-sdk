@@ -22,7 +22,7 @@ import:
   subpackages:
   - data
 - package: github.com/tendermint/light-client
-  version: develop
+  version: feature/32-add-rpc-cli
   subpackages:
   - commands
   - commands/proofs
@@ -30,7 +30,7 @@ import:
   - commands/txs
   - proofs
 - package: github.com/tendermint/merkleeyes
-  version: feature/26-add-logger
+  version: develop
   subpackages:
   - client
   - iavl

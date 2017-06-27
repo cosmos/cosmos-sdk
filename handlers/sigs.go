@@ -9,11 +9,17 @@ import (
 )
 
 // app name for auth
-const Sigs = "sigs"
+const (
+	NameSigs = "sigs"
+)
 
 type SignedHandler struct {
 	AllowMultiSig bool
 	Inner         basecoin.Handler
+}
+
+func (_ SignedHandler) Name() string {
+	return NameSigs
 }
 
 func (h SignedHandler) Next() basecoin.Handler {
@@ -65,7 +71,7 @@ func (h SignedHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx b
 func addSigners(ctx basecoin.Context, sigs []crypto.PubKey) basecoin.Context {
 	perms := make([]basecoin.Permission, len(sigs))
 	for i, s := range sigs {
-		perms[i] = basecoin.Permission{App: Sigs, Address: s.Address()}
+		perms[i] = basecoin.Permission{App: NameSigs, Address: s.Address()}
 	}
 
 	// add the signers to the context and continue

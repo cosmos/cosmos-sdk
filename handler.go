@@ -9,11 +9,31 @@ import (
 	"github.com/tendermint/basecoin/types"
 )
 
+type Named interface {
+	Name() string
+}
+
+type Checker interface {
+	CheckTx(ctx Context, store types.KVStore, tx Tx) (Result, error)
+}
+
+type Deliver interface {
+	DeliverTx(ctx Context, store types.KVStore, tx Tx) (Result, error)
+}
+
+type CheckerMiddle interface {
+	CheckTx(ctx Context, store types.KVStore, tx Tx, next Checker) (Result, error)
+}
+
+type DeliverMiddle interface {
+	DeliverTx(ctx Context, store types.KVStore, tx Tx, next Deliver) (Result, error)
+}
+
 // Handler is anything that processes a transaction
 type Handler interface {
-	CheckTx(ctx Context, store types.KVStore, tx Tx) (Result, error)
-	DeliverTx(ctx Context, store types.KVStore, tx Tx) (Result, error)
-
+	Checker
+	Deliver
+	Named
 	// TODO: flesh these out as well
 	// SetOption(store types.KVStore, key, value string) (log string)
 	// InitChain(store types.KVStore, vals []*abci.Validator)
@@ -21,12 +41,15 @@ type Handler interface {
 	// EndBlock(store types.KVStore, height uint64) abci.ResponseEndBlock
 }
 
-// different apps to authorize
-const (
-	Sigs = "sigs"
-	IBC  = "ibc"
-	Role = "role"
-)
+// Middleware is anything that wraps another handler to enhance functionality.
+//
+// You can use utilities in handlers to construct them, the interfaces
+// are exposed in the top-level package to avoid import loops.
+type Middleware interface {
+	CheckerMiddle
+	DeliverMiddle
+	Named
+}
 
 // TODO: handle this in some secure way, only certain apps can add permissions
 type Permission struct {

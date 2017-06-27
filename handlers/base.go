@@ -7,6 +7,10 @@ import (
 	"github.com/tendermint/basecoin/types"
 )
 
+const (
+	NameFee = "fee"
+)
+
 type AccountChecker interface {
 	// Get amount checks the current amount
 	GetAmount(store types.KVStore, addr []byte) (types.Coins, error)
@@ -26,6 +30,10 @@ func (h SimpleFeeHandler) Next() basecoin.Handler {
 	return h.Inner
 }
 
+func (_ SimpleFeeHandler) Name() string {
+	return NameFee
+}
+
 var _ basecoin.Handler = SimpleFeeHandler{}
 
 // Yes, I know refactor a bit... really too late already
@@ -41,7 +49,7 @@ func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx 
 		return res, errors.InsufficientFees()
 	}
 
-	if !ctx.HasPermission(Sigs, feeTx.Payer) {
+	if !ctx.HasPermission(NameSigs, feeTx.Payer) {
 		return res, errors.Unauthorized()
 	}
 
@@ -64,7 +72,7 @@ func (h SimpleFeeHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, t
 		return res, errors.InsufficientFees()
 	}
 
-	if !ctx.HasPermission(Sigs, feeTx.Payer) {
+	if !ctx.HasPermission(NameSigs, feeTx.Payer) {
 		return res, errors.Unauthorized()
 	}
 

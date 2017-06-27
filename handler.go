@@ -1,8 +1,6 @@
 package basecoin
 
 import (
-	"bytes"
-
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-wire/data"
 
@@ -17,17 +15,35 @@ type Checker interface {
 	CheckTx(ctx Context, store types.KVStore, tx Tx) (Result, error)
 }
 
-type Deliver interface {
-	DeliverTx(ctx Context, store types.KVStore, tx Tx) (Result, error)
-}
-
 type CheckerMiddle interface {
 	CheckTx(ctx Context, store types.KVStore, tx Tx, next Checker) (Result, error)
+}
+
+// CheckerFunc (like http.HandlerFunc) is a shortcut for making wrapers
+type CheckerFunc func(Context, types.KVStore, Tx) (Result, error)
+
+func (c CheckerFunc) CheckTx(ctx Context, store types.KVStore, tx Tx) (Result, error) {
+	return c(ctx, store, tx)
+}
+
+var _ Checker = CheckerFunc(nil)
+
+type Deliver interface {
+	DeliverTx(ctx Context, store types.KVStore, tx Tx) (Result, error)
 }
 
 type DeliverMiddle interface {
 	DeliverTx(ctx Context, store types.KVStore, tx Tx, next Deliver) (Result, error)
 }
+
+// DeliverFunc (like http.HandlerFunc) is a shortcut for making wrapers
+type DeliverFunc func(Context, types.KVStore, Tx) (Result, error)
+
+func (c DeliverFunc) DeliverTx(ctx Context, store types.KVStore, tx Tx) (Result, error) {
+	return c(ctx, store, tx)
+}
+
+var _ Deliver = DeliverFunc(nil)
 
 // Handler is anything that processes a transaction
 type Handler interface {
@@ -49,40 +65,6 @@ type Middleware interface {
 	CheckerMiddle
 	DeliverMiddle
 	Named
-}
-
-// TODO: handle this in some secure way, only certain apps can add permissions
-type Permission struct {
-	App     string // Which app authorized this?
-	Address []byte // App-specific identifier
-}
-
-// TODO: Context is a place-holder, soon we add some request data here from the
-// higher-levels (like tell an app who signed).
-// Trust me, we will need it like CallContext now...
-type Context struct {
-	perms []Permission
-}
-
-// TOTALLY insecure.  will redo later, but you get the point
-func (c Context) AddPermissions(perms ...Permission) Context {
-	return Context{
-		perms: append(c.perms, perms...),
-	}
-}
-
-func (c Context) HasPermission(app string, addr []byte) bool {
-	for _, p := range c.perms {
-		if app == p.App && bytes.Equal(addr, p.Address) {
-			return true
-		}
-	}
-	return false
-}
-
-// New should give a fresh context, and know what info makes sense to carry over
-func (c Context) New() Context {
-	return Context{}
 }
 
 // Result captures any non-error abci result

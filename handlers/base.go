@@ -44,7 +44,7 @@ func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx 
 		return res, errors.InsufficientFees()
 	}
 
-	if !ctx.HasPermission(NameSigs, feeTx.Payer) {
+	if !ctx.HasPermission(SigPerm(feeTx.Payer)) {
 		return res, errors.Unauthorized()
 	}
 
@@ -67,7 +67,7 @@ func (h SimpleFeeHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, t
 		return res, errors.InsufficientFees()
 	}
 
-	if !ctx.HasPermission(NameSigs, feeTx.Payer) {
+	if !ctx.HasPermission(SigPerm(feeTx.Payer)) {
 		return res, errors.Unauthorized()
 	}
 

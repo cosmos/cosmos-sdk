@@ -1,5 +1,7 @@
 GOTOOLS =	github.com/mitchellh/gox \
-			github.com/Masterminds/glide
+			github.com/Masterminds/glide \
+			github.com/rigelrozanski/shelldown/cmd/shelldown
+TUTORIALS=$(shell find docs/guide -name "*md" -type f)
 
 all: get_vendor_deps install test
 
@@ -26,6 +28,13 @@ test_cli: tests/cli/shunit2
 	@./tests/cli/counter.sh
 	@./tests/cli/restart.sh
 	@./tests/cli/ibc.sh
+
+test_tutorial:
+	shelldown ${TUTORIALS}
+	for script in ${TUTORIALS} ; do \
+		echo "\n\n\nRunning test for script: $$script.sh" ; \
+		bash $$script.sh ; \
+	done
 
 get_vendor_deps: tools
 	glide install

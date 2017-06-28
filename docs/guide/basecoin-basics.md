@@ -19,7 +19,7 @@ The former is the running node. The latter is a command-line light-client.
 
 ## Generate some keys
 
-Let's generate two keys, one to receive an initial allocation of coins, 
+Let's generate two keys, one to receive an initial allocation of coins,
 and one to send some coins to later:
 
 ```
@@ -74,12 +74,17 @@ Basecli is used for sending transactions and querying the state.
 Leave Basecoin running and open a new terminal window. Here run:
 
 ```
-basecli init --chain-id=test_chain_id --node=tcp://localhost:46657
+basecli init --node=tcp://localhost:46657 --genesis=$HOME/.basecoin/genesis.json
 ```
 
-Note it will ask you to verify the validator hash. For a blockchain on your local computer, don't worry about it.
-If you're connecting to a blockchain over the internet, you should verify that the validator hash is correct.
-This is so that all queries done with `basecli` can be cryptographically proven to be correct according to a known validator set.
+If you provide the genesis file to basecli, it can calculate the proper chainID
+and validator hash.  Basecli needs to get this information from some trusted
+source, so all queries done with `basecli` can be cryptographically proven to
+be correct according to a known validator set.
+
+Note: that --genesis only works if there have been no validator set changes
+since genesis.  If there are validator set changes, you need to find the current
+set through some other method.
 
 ## Send transactions
 
@@ -97,7 +102,7 @@ The first account is flush with cash, while the second account doesn't exist.
 Let's send funds from the first account to the second:
 
 ```
-basecli tx send --name=cool --amount=1000mycoin --to=0x$YOU --sequence=1
+basecli tx send --name=cool --amount=1000mycoin --to=$YOU --sequence=1
 ```
 
 Now if we check the second account, it should have `1000` 'mycoin' coins!
@@ -140,8 +145,8 @@ See `basecli tx send --help` for additional details.
 Even if you don't see it in the UI, the result of every query comes with a proof.
 This is a Merkle proof that the result of the query is actually contained in the state.
 and the state's Merkle root is contained in a recent block header.
-Behind the scenes, `countercli` will not only verify that this state matches the header, 
-but also that the header is properly signed by the known validator set. 
+Behind the scenes, `countercli` will not only verify that this state matches the header,
+but also that the header is properly signed by the known validator set.
 It will even update the validator set as needed, so long
 as there have not been major changes and it is secure to do so. So, if you wonder
 why the query may take a second... there is a lot of work going on in the
@@ -249,9 +254,9 @@ transaction.
 
 ## Conclusion
 
-In this guide, we introduced the `basecoin` and `basecli` tools, 
-demonstrated how to start a new basecoin blockchain and how to send tokens between accounts, 
-and discussed the underlying data types for accounts and transactions, specifically the `Account` and the `SendTx`.  
+In this guide, we introduced the `basecoin` and `basecli` tools,
+demonstrated how to start a new basecoin blockchain and how to send tokens between accounts,
+and discussed the underlying data types for accounts and transactions, specifically the `Account` and the `SendTx`.
 In the [next guide](basecoin-plugins.md), we introduce the Basecoin plugin system,
 which uses a new transaction type, the `AppTx`, to extend the functionality of
 the Basecoin system with arbitrary logic.

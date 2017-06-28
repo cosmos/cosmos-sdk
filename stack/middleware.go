@@ -1,4 +1,4 @@
-package handlers
+package stack
 
 import (
 	"github.com/tendermint/basecoin"

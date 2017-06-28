@@ -1,21 +1,22 @@
 <!--- shelldown script template, see github.com/rigelrozanski/shelldown
 #!/bin/bash
 
-test00Install() {
-  #shelldown[0][-1]
-}
-
-OneTimeSetup() {
-  #shelldown[1][3]
-  KEYPASS=${2:-qwertyuiop}
+oneTimeSetup() {
+  #shelldown[1][2]
+  KEYPASS=qwertyuiop
+  (echo $KEYPASS; echo $KEYPASS) | #shelldown[1][3] $1 >/dev/null 2>/dev/null
   (echo $KEYPASS; echo $KEYPASS) | #shelldown[1][4] $1 >/dev/null 2>/dev/null
-  (echo $KEYPASS; echo $KEYPASS) | #shelldown[1][5] $1 >/dev/null 2>/dev/null
   
   #shelldown[3][-1]
   
   #shelldown[4][-1] &
   sleep 5
   PID_SERVER=$!
+}
+
+oneTimeTearDown() {
+  kill -9 $PID_SERVER >/dev/null 2>&1
+  sleep 1
 }
 
 test01SendTX() {
@@ -26,11 +27,6 @@ test01SendTX() {
   #shelldown[9][-1]
   #shelldown[10][-1]
   #shelldown[11][-1]
-}
-
-OneTimeTearDown() {
-  kill -9 $PID_SERVER >/dev/null 2>&1
-  sleep 1
 }
 
 # load and run these tests with shunit2!

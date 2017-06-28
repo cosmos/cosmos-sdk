@@ -56,6 +56,7 @@ func main() {
 		tr,
 		proxy.RootCmd,
 		coincmd.VersionCmd,
+		bcmd.AutoCompleteCmd,
 	)
 
 	cmd := cli.PrepareMainCmd(BaseCli, "BC", os.ExpandEnv("$HOME/.basecli"))

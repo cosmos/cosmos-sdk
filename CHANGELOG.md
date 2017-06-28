@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.6.1 (TBD)
+## 0.6.1 (June 28, 2017)
 
 Make lots of small cli fixes that arose when people were using the tools for
 the testnet.
@@ -14,17 +14,20 @@ IMPROVEMENTS:
     - Example: `basecoin start --log_level="merkleeyes:info,state:info,*:error"`
     - Example: `basecoin start --log_level="merkleeyes:debug,state:info,*:error"`
 - basecli
-  - `basecli query account` accepts hex account address with or without `0x`
-  prefix
   - `basecli init` is more intelligent and only complains if there really was
   a connected chain, not just random files
   - support `localhost:46657` or `http://localhost:46657` format for nodes,
   not just `tcp://localhost:46657`
-  - gives error message when running commands on an unitialized chain, rather
-  than some unintelligable panic
   - Add `--genesis` to init to specify chain-id and validator hash
     - Example: `basecli init --node=localhost:46657 --genesis=$HOME/.basecoin/genesis.json`
+  - `basecli rpc` has a number of methods to easily accept tendermint rpc, and verifies what it can
 
+BUG FIXES:
+- basecli
+  - `basecli query account` accepts hex account address with or without `0x`
+  prefix
+  - gives error message when running commands on an unitialized chain, rather
+  than some unintelligable panic
 
 
 ## 0.6.0 (June 22, 2017)

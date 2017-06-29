@@ -31,10 +31,14 @@ test_cli: tests/cli/shunit2
 
 test_tutorial:
 	shelldown ${TUTORIALS}
-	for script in ${TUTORIALS} ; do \
-		echo "\n\n\nRunning test for script: $$script.sh" ; \
-		bash $$script.sh ; \
+	for script in docs/guide/*.sh ; do \
+		bash $$script ; \
 	done
+
+tests/cli/shunit2:
+	wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2" \
+    	-q -O tests/cli/shunit2
+	cp tests/cli/shunit2 docs/guide/shunit2
 
 get_vendor_deps: tools
 	glide install
@@ -43,10 +47,6 @@ build-docker:
 	docker run -it --rm -v "$(PWD):/go/src/github.com/tendermint/basecoin" -w \
 		"/go/src/github.com/tendermint/basecoin" -e "CGO_ENABLED=0" golang:alpine go build ./cmd/basecoin
 	docker build -t "tendermint/basecoin" .
-
-tests/cli/shunit2:
-	wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2" \
-		-q -O tests/cli/shunit2
 
 tools:
 	@go get $(GOTOOLS)

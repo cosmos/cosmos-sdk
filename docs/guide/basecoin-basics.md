@@ -2,60 +2,60 @@
 #!/bin/bash
 
 testTutorial_BasecoinBasics() {
-
-  rm -rf ~/.basecoin 2>/dev/null
-  rm -rf ~/.basecli 2>/dev/null
-  KEYPASS=qwertyuiop
-
-  #shelldown[1][2]
-  RES=$((echo $KEYPASS; echo $KEYPASS) | #shelldown[1][3])
-  assertTrue "Line $LINENO: Expected to contain safe, got $RES" '[[ $RES == *safe* ]]'
-  RES=$((echo $KEYPASS; echo $KEYPASS) | #shelldown[1][4])
-  assertTrue "Line $LINENO: Expected to contain safe, got $RES" '[[ $RES == *safe* ]]'
-  assertTrue "Expected true for line $LINENO" $?
-
-  #shelldown[3][-1]
-  assertTrue "Expected true for line $LINENO" $?
   
-  #shelldown[4][-1] >>/dev/null 2>&1 &
-  sleep 5
-  PID_SERVER=$!
-  disown
-
-  RES=$((echo y) | #shelldown[5][-1] $1)
-  assertTrue "Line $LINENO: Expected to contain validator, got $RES" '[[ $RES == *validator* ]]'
+    rm -rf ~/.basecoin 2>/dev/null
+    rm -rf ~/.basecli 2>/dev/null
+    KEYPASS=qwertyuiop
   
-  #shelldown[6][0]
-  #shelldown[6][1]
-  RES="$(#shelldown[6][2])"
-  assertTrue "Line $LINENO: Expected to contain mycoin, got $RES" '[[ $RES == *mycoin* ]]'
-  RES="$(#shelldown[6][3] 2>&1)"
-  assertTrue "Line $LINENO: Expected to contain ERROR, got $RES" '[[ $RES == *ERROR* ]]'
+    #shelldown[1][2]
+    RES=$((echo $KEYPASS; echo $KEYPASS) | #shelldown[1][3])
+    assertTrue "Line $LINENO: Expected to contain safe, got $RES" '[[ $RES == *safe* ]]'
+    RES=$((echo $KEYPASS; echo $KEYPASS) | #shelldown[1][4])
+    assertTrue "Line $LINENO: Expected to contain safe, got $RES" '[[ $RES == *safe* ]]'
+    assertTrue "Expected true for line $LINENO" $?
   
-  RES=$((echo $KEYPASS) | #shelldown[7][-1] | jq '.deliver_tx.code')
-  assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
+    #shelldown[3][-1]
+    assertTrue "Expected true for line $LINENO" $?
+    
+    #shelldown[4][-1] >>/dev/null 2>&1 &
+    sleep 5
+    PID_SERVER=$!
+    disown
   
-  RES=$(#shelldown[8][-1])
-  assertTrue "Line $LINENO: Expected to contain 1000 mycoin, got $RES" '[[ $RES == *1000* ]]'
-  assertTrue "Line $LINENO: Expected to not contain Error, got $RES" '[[ $RES != *Error* ]]'
-  
-  RES=$((echo $KEYPASS) | #shelldown[9][-1] | jq '.deliver_tx.code')
-  assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
-  
-  RES=$((echo $KEYPASS) | #shelldown[10][-1])
-  assertTrue "Line $LINENO: Expected to contain insufficient funds error, got $RES" \
-    '[[ $RES == *"insufficient funds"* ]]'
-  
-  #perform a substitution within the final tests
-  HASH=$((echo $KEYPASS) | #shelldown[11][-1] | jq '.hash' | tr -d '"')
-  PRESUB="#shelldown[12][-1]"
-  RES=$(eval ${PRESUB/<HASH>/$HASH})
-  assertTrue "Line $LINENO: Expected to not contain Error, got $RES" '[[ $RES != *Error* ]]'
+    RES=$((echo y) | #shelldown[5][-1] $1)
+    assertTrue "Line $LINENO: Expected to contain validator, got $RES" '[[ $RES == *validator* ]]'
+    
+    #shelldown[6][0]
+    #shelldown[6][1]
+    RES="$(#shelldown[6][2])"
+    assertTrue "Line $LINENO: Expected to contain mycoin, got $RES" '[[ $RES == *mycoin* ]]'
+    RES="$(#shelldown[6][3] 2>&1)"
+    assertTrue "Line $LINENO: Expected to contain ERROR, got $RES" '[[ $RES == *ERROR* ]]'
+    
+    RES=$((echo $KEYPASS) | #shelldown[7][-1] | jq '.deliver_tx.code')
+    assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
+    
+    RES=$(#shelldown[8][-1])
+    assertTrue "Line $LINENO: Expected to contain 1000 mycoin, got $RES" '[[ $RES == *1000* ]]'
+    assertTrue "Line $LINENO: Expected to not contain Error, got $RES" '[[ $RES != *Error* ]]'
+    
+    RES=$((echo $KEYPASS) | #shelldown[9][-1] | jq '.deliver_tx.code')
+    assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
+    
+    RES=$((echo $KEYPASS) | #shelldown[10][-1])
+    assertTrue "Line $LINENO: Expected to contain insufficient funds error, got $RES" \
+        '[[ $RES == *"insufficient funds"* ]]'
+    
+    #perform a substitution within the final tests
+    HASH=$((echo $KEYPASS) | #shelldown[11][-1] | jq '.hash' | tr -d '"')
+    PRESUB="#shelldown[12][-1]"
+    RES=$(eval ${PRESUB/<HASH>/$HASH})
+    assertTrue "Line $LINENO: Expected to not contain Error, got $RES" '[[ $RES != *Error* ]]'
 }
 
 oneTimeTearDown() {
-  kill -9 $PID_SERVER >/dev/null 2>&1
-  sleep 1
+    kill -9 $PID_SERVER >/dev/null 2>&1
+    sleep 1
 }
 
 # load and run these tests with shunit2!

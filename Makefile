@@ -16,7 +16,7 @@ dist:
 	@bash scripts/dist.sh
 	@bash scripts/publish.sh
 
-test: test_unit test_cli
+test: test_unit test_cli test_tutorial
 
 test_unit:
 	go test `glide novendor`

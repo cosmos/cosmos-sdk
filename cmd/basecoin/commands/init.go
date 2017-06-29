@@ -14,7 +14,7 @@ import (
 //commands
 var (
 	InitCmd = &cobra.Command{
-		Use:   "init",
+		Use:   "init [address]",
 		Short: "Initialize a basecoin blockchain",
 		RunE:  initCmd,
 	}

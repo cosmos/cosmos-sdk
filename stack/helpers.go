@@ -2,6 +2,9 @@ package stack
 
 import (
 	"github.com/pkg/errors"
+
+	"github.com/tendermint/go-wire/data"
+
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/types"
 )
@@ -10,6 +13,7 @@ const (
 	NameOK    = "ok"
 	NameFail  = "fail"
 	NamePanic = "panic"
+	NameEcho  = "echo"
 )
 
 // OKHandler just used to return okay to everything
@@ -31,6 +35,27 @@ func (ok OKHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx baseco
 // DeliverTx always returns an empty success tx
 func (ok OKHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	return basecoin.Result{Log: ok.Log}, nil
+}
+
+// EchoHandler returns success, echoing res.Data = tx bytes
+type EchoHandler struct{}
+
+var _ basecoin.Handler = EchoHandler{}
+
+func (_ EchoHandler) Name() string {
+	return NameEcho
+}
+
+// CheckTx always returns an empty success tx
+func (_ EchoHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	data, err := data.ToWire(tx)
+	return basecoin.Result{Data: data}, err
+}
+
+// DeliverTx always returns an empty success tx
+func (_ EchoHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	data, err := data.ToWire(tx)
+	return basecoin.Result{Data: data}, err
 }
 
 // FailHandler always returns an error

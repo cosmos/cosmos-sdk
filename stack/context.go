@@ -35,6 +35,7 @@ var _ basecoin.Context = secureContext{}
 func (c secureContext) WithPermissions(perms ...basecoin.Actor) basecoin.Context {
 	// the guard makes sure you only set permissions for the app you are inside
 	for _, p := range perms {
+		// TODO: also check chainID, limit only certain middleware can set IBC?
 		if p.App != c.app {
 			err := errors.Errorf("Cannot set permission for %s from %s", c.app, p.App)
 			panic(err)

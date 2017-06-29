@@ -1,8 +1,6 @@
 package stack
 
 import (
-	"fmt"
-
 	crypto "github.com/tendermint/go-crypto"
 
 	"github.com/tendermint/basecoin"
@@ -53,9 +51,7 @@ func (h Signatures) DeliverTx(ctx basecoin.Context, store types.KVStore, tx base
 
 func addSigners(ctx basecoin.Context, sigs []crypto.PubKey) basecoin.Context {
 	perms := make([]basecoin.Actor, len(sigs))
-	fmt.Printf("Add %d signers\n", len(sigs))
 	for i, s := range sigs {
-		fmt.Printf("Add %X\n", s.Address())
 		perms[i] = SigPerm(s.Address())
 	}
 	// add the signers to the context and continue
@@ -63,10 +59,8 @@ func addSigners(ctx basecoin.Context, sigs []crypto.PubKey) basecoin.Context {
 }
 
 func getSigners(tx basecoin.Tx) ([]crypto.PubKey, basecoin.Tx, error) {
-	fmt.Println("getSigners")
 	stx, ok := tx.Unwrap().(Signed)
 	if !ok {
-		fmt.Printf("Not okay: %#v\n", tx)
 		return nil, basecoin.Tx{}, errors.Unauthorized()
 	}
 	sig, err := stx.Signers()

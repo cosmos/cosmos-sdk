@@ -5,6 +5,8 @@ package errors
 **/
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 
 	abci "github.com/tendermint/abci/types"
@@ -35,6 +37,17 @@ func (t tmerror) ErrorCode() abci.CodeType {
 
 func (t tmerror) Message() string {
 	return t.msg
+}
+
+// Format handles "%+v" to expose the full stack trace
+// concept from pkg/errors
+func (t tmerror) Format(s fmt.State, verb rune) {
+	// special case also show all info
+	if verb == 'v' && s.Flag('+') {
+		fmt.Fprintf(s, "%+v\n", t.stackTracer)
+	}
+	// always print the normal error
+	fmt.Fprintf(s, "(%d) %s\n", t.code, t.msg)
 }
 
 // Result converts any error into a abci.Result, preserving as much info

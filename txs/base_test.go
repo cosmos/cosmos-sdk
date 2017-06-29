@@ -20,7 +20,10 @@ func TestEncoding(t *testing.T) {
 	raw := NewRaw([]byte{0x34, 0xa7}).Wrap()
 	raw2 := NewRaw([]byte{0x73, 0x86, 0x22}).Wrap()
 	coin := types.Coin{Denom: "atom", Amount: 123}
-	addr := []byte{0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef}
+	addr := basecoin.Actor{
+		App:     "cash",
+		Address: []byte{0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef},
+	}
 
 	cases := []struct {
 		Tx basecoin.Tx

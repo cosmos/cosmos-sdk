@@ -32,7 +32,7 @@ func TestRecovery(t *testing.T) {
 		i := strconv.Itoa(idx)
 		fail := PanicHandler{Msg: tc.msg, Err: tc.err}
 		rec := Recovery{}
-		app := NewStack(rec).Use(fail)
+		app := New(rec).Use(fail)
 
 		// make sure check returns error, not a panic crash
 		_, err := app.CheckTx(ctx, store, tx)

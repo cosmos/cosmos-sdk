@@ -46,9 +46,9 @@ type Stack struct {
 
 var _ basecoin.Handler = &Stack{}
 
-// NewStack prepares a middleware stack, you must `.Use()` a Handler
+// New prepares a middleware stack, you must `.Use()` a Handler
 // before you can execute it.
-func NewStack(middlewares ...Middleware) *Stack {
+func New(middlewares ...Middleware) *Stack {
 	return &Stack{
 		middles: middlewares,
 	}

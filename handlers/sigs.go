@@ -5,6 +5,7 @@ import (
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/types"
 )
 
@@ -21,7 +22,7 @@ func (_ SignedHandler) Name() string {
 	return NameSigs
 }
 
-var _ basecoin.Middleware = SignedHandler{}
+var _ stack.Middleware = SignedHandler{}
 
 func SigPerm(addr []byte) basecoin.Actor {
 	return basecoin.NewActor(NameSigs, addr)

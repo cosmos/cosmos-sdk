@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/txs"
 	"github.com/tendermint/basecoin/types"
 )
@@ -29,7 +30,7 @@ func (_ SimpleFeeHandler) Name() string {
 	return NameFee
 }
 
-var _ basecoin.Middleware = SimpleFeeHandler{}
+var _ stack.Middleware = SimpleFeeHandler{}
 
 // Yes, I know refactor a bit... really too late already
 

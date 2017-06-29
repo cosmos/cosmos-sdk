@@ -9,7 +9,7 @@ import (
 //
 // heavily inspired by negroni's design
 type middleware struct {
-	middleware basecoin.Middleware
+	middleware Middleware
 	next       basecoin.Handler
 }
 
@@ -39,7 +39,7 @@ func (m *middleware) DeliverTx(ctx basecoin.Context, store types.KVStore, tx bas
 
 // Stack is the entire application stack
 type Stack struct {
-	middles          []basecoin.Middleware
+	middles          []Middleware
 	handler          basecoin.Handler
 	basecoin.Handler // the compiled version, which we expose
 }
@@ -48,7 +48,7 @@ var _ basecoin.Handler = &Stack{}
 
 // NewStack prepares a middleware stack, you must `.Use()` a Handler
 // before you can execute it.
-func NewStack(middlewares ...basecoin.Middleware) *Stack {
+func NewStack(middlewares ...Middleware) *Stack {
 	return &Stack{
 		middles: middlewares,
 	}
@@ -64,7 +64,7 @@ func (s *Stack) Use(handler basecoin.Handler) *Stack {
 	return s
 }
 
-func build(mid []basecoin.Middleware, end basecoin.Handler) basecoin.Handler {
+func build(mid []Middleware, end basecoin.Handler) basecoin.Handler {
 	if len(mid) == 0 {
 		return end
 	}

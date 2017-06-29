@@ -1,11 +1,72 @@
+<!--- shelldown script template, see github.com/rigelrozanski/shelldown
+#!/bin/bash
+
+testTutorial_BasecoinPlugins() {
+  
+    #Initialization
+    #shelldown[0][1]
+    #shelldown[0][2]
+    KEYPASS=qwertyuiop
+ 
+    #Making Keys 
+    RES=$((echo $KEYPASS; echo $KEYPASS) | #shelldown[0][4])
+    assertTrue "Line $LINENO: Expected to contain safe, got $RES" '[[ $RES == *safe* ]]'
+    RES=$((echo $KEYPASS; echo $KEYPASS) | #shelldown[0][5])
+    assertTrue "Line $LINENO: Expected to contain safe, got $RES" '[[ $RES == *safe* ]]'
+  
+    #shelldown[0][7] >/dev/null
+    assertTrue "Expected true for line $LINENO" $?
+    
+    #shelldown[0][9] >>/dev/null 2>&1 &
+    sleep 5
+    PID_SERVER=$!
+    disown
+  
+    RES=$((echo y) | #shelldown[1][0] $1)
+    assertTrue "Line $LINENO: Expected to contain validator, got $RES" '[[ $RES == *validator* ]]'
+    
+    #shelldown[1][2]
+    assertTrue "Expected true for line $LINENO" $?
+    RES=$((echo $KEYPASS) | #shelldown[1][3] | jq '.deliver_tx.code')
+    assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
+    
+    RES=$((echo $KEYPASS) | #shelldown[2][0])
+    assertTrue "Line $LINENO: Expected to contain Valid error, got $RES" \
+        '[[ $RES == *"Valid must be true"* ]]'
+    
+    RES=$((echo $KEYPASS) | #shelldown[2][1] | jq '.deliver_tx.code')
+    assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
+
+    RES=$(#shelldown[3][-1] | jq '.data.Counter')
+    assertTrue "Line $LINENO: Expected Counter of 1, got $RES" '[[ $RES == 1 ]]'
+
+    RES=$((echo $KEYPASS) | #shelldown[4][0] | jq '.deliver_tx.code')
+    assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
+    RES=$(#shelldown[4][1])
+    RESCOUNT=$(printf "$RES" | jq '.data.Counter')
+    RESFEE=$(printf "$RES" | jq '.data.TotalFees[0].amount')
+    assertTrue "Line $LINENO: Expected Counter of 2, got $RES" '[[ $RESCOUNT == 2 ]]'
+    assertTrue "Line $LINENO: Expected TotalFees of 2, got $RES" '[[ $RESFEE == 2 ]]'
+}
+
+oneTimeTearDown() {
+    kill -9 $PID_SERVER >/dev/null 2>&1
+    sleep 1
+}
+
+# load and run these tests with shunit2!
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #get this files directory
+. $DIR/shunit2
+-->
+
 # Basecoin Plugins
 
 In the [previous guide](basecoin-basics.md), we saw how to use the `basecoin`
-tool to start a blockchain and the `basecli` tools to send transactions.  We also learned about
-`Account` and `SendTx`, the basic data types giving us a multi-asset
-cryptocurrency.  Here, we will demonstrate how to extend the tools to
-use another transaction type, the `AppTx`, so we can send data to a custom plugin.  In
-this example we explore a simple plugin named `counter`.
+tool to start a blockchain and the `basecli` tools to send transactions.  We
+also learned about `Account` and `SendTx`, the basic data types giving us a
+multi-asset cryptocurrency.  Here, we will demonstrate how to extend the tools
+to use another transaction type, the `AppTx`, so we can send data to a custom
+plugin.  In this example we explore a simple plugin named `counter`.
 
 ## Example Plugin
 
@@ -25,7 +86,7 @@ and a coin amount named `countfee`.  The transaction is only accepted if both
 A new blockchain can be initialized and started just like in the [previous
 guide](basecoin-basics.md):
 
-```
+```shelldown[0]
 # WARNING: this wipes out data - but counter is only for demos...
 rm -rf ~/.counter
 countercli reset_all
@@ -41,7 +102,7 @@ counter start
 The default files are stored in `~/.counter`.  In another window we can
 initialize the light-client and send a transaction:
 
-```
+```shelldown[1]
 countercli init --node=tcp://localhost:46657 --genesis=$HOME/.counter/genesis.json
 
 YOU=$(countercli keys get friend | awk '{print $2}')
@@ -51,7 +112,7 @@ countercli tx send --name=cool --amount=1000mycoin --to=$YOU --sequence=1
 But the Counter has an additional command, `countercli tx counter`, which
 crafts an `AppTx` specifically for this plugin:
 
-```
+```shelldown[2]
 countercli tx counter --name cool --amount=1mycoin --sequence=2
 countercli tx counter --name cool --amount=1mycoin --sequence=3 --valid
 ```
@@ -61,7 +122,7 @@ valid, while the second transaction passes.  We can build plugins that take
 many arguments of different types, and easily extend the tool to accomodate
 them.  Of course, we can also expose queries on our plugin:
 
-```
+```shelldown[3]
 countercli query counter
 ```
 
@@ -70,7 +131,7 @@ should see a Counter value of 1 representing the number of valid transactions.
 If we send another transaction, and then query again, we will see the value
 increment:
 
-```
+```shelldown[4]
 countercli tx counter --name cool --amount=2mycoin --sequence=4 --valid --countfee=2mycoin
 countercli query counter
 ```

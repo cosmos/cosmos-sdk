@@ -1,4 +1,4 @@
-package txs
+package coin
 
 import (
 	"fmt"

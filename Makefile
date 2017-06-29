@@ -22,7 +22,7 @@ test_unit:
 	go test `glide novendor`
 	#go run tests/tendermint/*.go
 
-test_cli: tests/cli/shunit2
+test_cli: get_shunit2
 	# sudo apt-get install jq
 	@./tests/cli/basictx.sh
 	@./tests/cli/counter.sh
@@ -35,7 +35,7 @@ test_tutorial:
 		bash $$script ; \
 	done
 
-tests/cli/shunit2:
+get_shunit2:
 	wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2" \
     	-q -O tests/cli/shunit2
 	cp tests/cli/shunit2 docs/guide/shunit2

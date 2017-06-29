@@ -1,5 +1,5 @@
-hash: 6eb1119dccf2ab4d0adb870a14cb4408047119be53c8ec4afeaa281bd1d2b457
-updated: 2017-06-28T13:09:42.542992443+02:00
+hash: e3a38901e925cf769d53f0b83be8c3d21680970ae833756d166eb26a50fcea28
+updated: 2017-06-29T12:11:43.534163781+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -72,7 +72,7 @@ imports:
 - name: github.com/pelletier/go-buffruneio
   version: c37440a7cf42ac63b919c752ca73a85067e05992
 - name: github.com/pelletier/go-toml
-  version: 13d49d4606eb801b8f01ae542b4afc4c6ee3d84a
+  version: 5ccdfb18c776b740aecaf085c4d9a2779199c279
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/spf13/afero
@@ -117,7 +117,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: d31cfbaeaa4d930798ec327b52917975f3203c11
+  version: 95b7c9e09c49b91bfbb71bb63dd514eb55450f16
   subpackages:
   - cmd
   - keys
@@ -132,7 +132,7 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: 489b726d8b358dbd9d8f6a15d18e8b9fe0a39269
+  version: af904c818caae9f5dfe56eebbcfae5101f1b5b5c
   subpackages:
   - certifiers
   - certifiers/client
@@ -151,7 +151,7 @@ imports:
   - client
   - iavl
 - name: github.com/tendermint/tendermint
-  version: 3065059da7bb57714f08c7a6fcb97e4b36be0194
+  version: 7f3c697b6e4c624aa0f8d29ff97e9bfe20deb8f9
   subpackages:
   - blockchain
   - cmd/tendermint/commands
@@ -177,7 +177,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: efb56aaea7517220bb3f42ff87b8004d554a17ff
+  version: 7ce4da1eee6004d627e780c8fe91e96d9b99e459
   subpackages:
   - autofile
   - cli

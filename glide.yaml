@@ -22,7 +22,7 @@ import:
   subpackages:
   - data
 - package: github.com/tendermint/light-client
-  version: ~0.10.2
+  version: ~0.10.3
   subpackages:
   - commands
   - commands/proofs
@@ -30,12 +30,12 @@ import:
   - commands/txs
   - proofs
 - package: github.com/tendermint/merkleeyes
-  version: ~0.2.3
+  version: ~0.2.4
   subpackages:
   - client
   - iavl
 - package: github.com/tendermint/tendermint
-  version: ~0.10.0
+  version: ~0.10.1
   subpackages:
   - config
   - node

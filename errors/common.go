@@ -22,6 +22,10 @@ const (
 	msgTooManySignatures = "Too many signatures"
 )
 
+func InternalError(msg string) TMError {
+	return New(msg, abci.CodeType_InternalError)
+}
+
 func DecodingError() TMError {
 	return New(msgDecoding, abci.CodeType_EncodingError)
 }

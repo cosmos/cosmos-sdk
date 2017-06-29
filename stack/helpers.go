@@ -7,75 +7,77 @@ import (
 )
 
 const (
-	NameVoid  = "void"
+	NameOK    = "ok"
 	NameFail  = "fail"
 	NamePanic = "panic"
 )
 
-// voidHandler just used to return okay to everything
-type voidHandler struct{}
+// OKHandler just used to return okay to everything
+type OKHandler struct {
+	Log string
+}
 
-var _ basecoin.Handler = voidHandler{}
+var _ basecoin.Handler = OKHandler{}
 
-func (_ voidHandler) Name() string {
-	return NameVoid
+func (_ OKHandler) Name() string {
+	return NameOK
 }
 
 // CheckTx always returns an empty success tx
-func (_ voidHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
-	return
+func (ok OKHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	return basecoin.Result{Log: ok.Log}, nil
 }
 
 // DeliverTx always returns an empty success tx
-func (_ voidHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
-	return
+func (ok OKHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	return basecoin.Result{Log: ok.Log}, nil
 }
 
-// failHandler always returns an error
-type failHandler struct {
-	err error
+// FailHandler always returns an error
+type FailHandler struct {
+	Err error
 }
 
-var _ basecoin.Handler = failHandler{}
+var _ basecoin.Handler = FailHandler{}
 
-func (_ failHandler) Name() string {
+func (_ FailHandler) Name() string {
 	return NameFail
 }
 
 // CheckTx always returns the given error
-func (f failHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
-	return res, errors.WithStack(f.err)
+func (f FailHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	return res, errors.WithStack(f.Err)
 }
 
 // DeliverTx always returns the given error
-func (f failHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
-	return res, errors.WithStack(f.err)
+func (f FailHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	return res, errors.WithStack(f.Err)
 }
 
-// panicHandler always panics, using the given error (first choice) or msg (fallback)
-type panicHandler struct {
-	msg string
-	err error
+// PanicHandler always panics, using the given error (first choice) or msg (fallback)
+type PanicHandler struct {
+	Msg string
+	Err error
 }
 
-var _ basecoin.Handler = panicHandler{}
+var _ basecoin.Handler = PanicHandler{}
 
-func (_ panicHandler) Name() string {
+func (_ PanicHandler) Name() string {
 	return NamePanic
 }
 
 // CheckTx always panics
-func (p panicHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
-	if p.err != nil {
-		panic(p.err)
+func (p PanicHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	if p.Err != nil {
+		panic(p.Err)
 	}
-	panic(p.msg)
+	panic(p.Msg)
 }
 
 // DeliverTx always panics
-func (p panicHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
-	if p.err != nil {
-		panic(p.err)
+func (p PanicHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	if p.Err != nil {
+		panic(p.Err)
 	}
-	panic(p.msg)
+	panic(p.Msg)
 }

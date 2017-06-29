@@ -3,16 +3,14 @@
 
 testTutorial_BasecoinBasics() {
   
-    rm -rf ~/.basecoin 2>/dev/null
-    rm -rf ~/.basecli 2>/dev/null
+    #shelldown[1][3] >/dev/null 
+    #shelldown[1][4] >/dev/null 
     KEYPASS=qwertyuiop
   
-    #shelldown[1][2]
-    RES=$((echo $KEYPASS; echo $KEYPASS) | #shelldown[1][3])
+    RES=$((echo $KEYPASS; echo $KEYPASS) | #shelldown[1][6])
     assertTrue "Line $LINENO: Expected to contain safe, got $RES" '[[ $RES == *safe* ]]'
-    RES=$((echo $KEYPASS; echo $KEYPASS) | #shelldown[1][4])
+    RES=$((echo $KEYPASS; echo $KEYPASS) | #shelldown[1][7])
     assertTrue "Line $LINENO: Expected to contain safe, got $RES" '[[ $RES == *safe* ]]'
-    assertTrue "Expected true for line $LINENO" $?
   
     #shelldown[3][-1]
     assertTrue "Expected true for line $LINENO" $?
@@ -27,17 +25,16 @@ testTutorial_BasecoinBasics() {
     
     #shelldown[6][0]
     #shelldown[6][1]
-    RES="$(#shelldown[6][2])"
-    assertTrue "Line $LINENO: Expected to contain mycoin, got $RES" '[[ $RES == *mycoin* ]]'
+    RES=$(#shelldown[6][2] | jq '.data.coins[0].denom' | tr -d '"')
+    assertTrue "Line $LINENO: Expected to have mycoins, got $RES" '[[ $RES == mycoin ]]'
     RES="$(#shelldown[6][3] 2>&1)"
     assertTrue "Line $LINENO: Expected to contain ERROR, got $RES" '[[ $RES == *ERROR* ]]'
     
     RES=$((echo $KEYPASS) | #shelldown[7][-1] | jq '.deliver_tx.code')
     assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
     
-    RES=$(#shelldown[8][-1])
-    assertTrue "Line $LINENO: Expected to contain 1000 mycoin, got $RES" '[[ $RES == *1000* ]]'
-    assertTrue "Line $LINENO: Expected to not contain Error, got $RES" '[[ $RES != *Error* ]]'
+    RES=$(#shelldown[8][-1] | jq '.data.coins[0].amount')
+    assertTrue "Line $LINENO: Expected to contain 1000 mycoin, got $RES" '[[ $RES == 1000 ]]'
     
     RES=$((echo $KEYPASS) | #shelldown[9][-1] | jq '.deliver_tx.code')
     assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
@@ -90,7 +87,10 @@ and one to send some coins to later:
 ```shelldown[1]
 # WARNING: this will wipe out any existing info in the ~/.basecli dir
 # including private keys, don't run if you have lots of local state already
+# while we're at it let's remove the working directory for the full node too
 basecli reset_all
+rm -rf ~/.basecoin
+
 basecli keys new cool
 basecli keys new friend
 ```

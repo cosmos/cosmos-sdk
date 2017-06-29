@@ -138,13 +138,13 @@ checkAccount() {
     return $?
 }
 
-# XXX Ex Usage: txSucceeded $? "$TX"
+# XXX Ex Usage: txSucceeded $? "$TX" "$RECIEVER"
 # Desc: Must be called right after the `tx` command, makes sure it got a success response
 txSucceeded() {
-    if (assertTrue "sent tx: $2" $1); then
+    if (assertTrue "sent tx ($3): $2" $1); then
         TX=$2
-        assertEquals "good check: $TX" "0" $(echo $TX | jq .check_tx.code)
-        assertEquals "good deliver: $TX" "0" $(echo $TX | jq .deliver_tx.code)
+        assertEquals "good check ($3): $TX" "0" $(echo $TX | jq .check_tx.code)
+        assertEquals "good deliver ($3): $TX" "0" $(echo $TX | jq .deliver_tx.code)
     else
         return 1
     fi

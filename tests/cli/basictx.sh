@@ -34,7 +34,7 @@ test01SendTx() {
     assertFalse "missing dest" "${CLIENT_EXE} tx send --amount=992mycoin --sequence=1"
     assertFalse "bad password" "echo foo | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH"
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH)
-    txSucceeded $? "$TX"
+    txSucceeded $? "$TX" "$RECV"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 

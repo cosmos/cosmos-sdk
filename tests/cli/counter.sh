@@ -34,7 +34,7 @@ test01SendTx() {
     assertFalse "missing dest" "${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 2>/dev/null"
     assertFalse "bad password" "echo foo | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH 2>/dev/null"
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH 2>/dev/null)
-    txSucceeded $? "$TX"
+    txSucceeded $? "$TX" "$RECV"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 
@@ -65,7 +65,7 @@ test03AddCount() {
     assertFalse "bad password" "echo hi | ${CLIENT_EXE} tx counter --amount=1000mycoin --sequence=2 --name=${RICH} 2>/dev/null"
 
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --amount=10mycoin --sequence=2 --name=${RICH} --valid --countfee=5mycoin)
-    txSucceeded $? "$TX"
+    txSucceeded $? "$TX" "counter"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 

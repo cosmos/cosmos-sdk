@@ -92,7 +92,7 @@ test01SendIBCTx() {
     export BC_HOME=${CLIENT_1}
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=20002mycoin \
         --sequence=1 --to=${CHAIN_ID_2}/${RECV} --name=$RICH)
-    txSucceeded $? "$TX"
+    txSucceeded $? "$TX" "${CHAIN_ID_2}/${RECV}"
     # an example to quit early if there is no point in more tests
     if [ $? != 0 ]; then echo "aborting!"; return 1; fi
 
@@ -141,7 +141,7 @@ startRelay() {
     SENDER=$(getAddr $RICH)
     RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000mycoin \
         --sequence=$1 --to=$RELAY_ADDR --name=$RICH)
-    txSucceeded $? "$RES"
+    txSucceeded $? "$RES" "$RELAY_ADDR"
     if [ $? != 0 ]; then echo "can't pay chain1!"; return 1; fi
 
     # Get paid on chain2
@@ -149,7 +149,7 @@ startRelay() {
     SENDER=$(getAddr $RICH)
     RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000mycoin \
         --sequence=$2 --to=$RELAY_ADDR --name=$RICH)
-    txSucceeded $? "$RES"
+    txSucceeded $? "$RES" "$RELAY_ADDR"
     if [ $? != 0 ]; then echo "can't pay chain2!"; return 1; fi
 
     # Initialize the relay (register both chains)

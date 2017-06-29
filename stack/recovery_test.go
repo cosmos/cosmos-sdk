@@ -8,13 +8,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/tmlibs/log"
 )
 
 func TestRecovery(t *testing.T) {
 	assert := assert.New(t)
 
 	// generic args here...
-	ctx := NewContext()
+	ctx := NewContext(log.NewNopLogger())
 	store := types.NewMemKVStore()
 	tx := basecoin.Tx{}
 

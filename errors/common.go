@@ -4,7 +4,11 @@ package errors
 *    Copyright (C) 2017 Ethan Frey
 **/
 
-import abci "github.com/tendermint/abci/types"
+import (
+	"fmt"
+
+	abci "github.com/tendermint/abci/types"
+)
 
 const (
 	msgDecoding          = "Error decoding input"
@@ -20,6 +24,8 @@ const (
 	msgTooLarge          = "Input size too large"
 	msgMissingSignature  = "Signature missing"
 	msgTooManySignatures = "Too many signatures"
+	msgNoChain           = "No chain id provided"
+	msgWrongChain        = "Tx belongs to different chain - %s"
 )
 
 func InternalError(msg string) TMError {
@@ -44,6 +50,15 @@ func TooManySignatures() TMError {
 
 func InvalidSignature() TMError {
 	return New(msgInvalidSignature, abci.CodeType_Unauthorized)
+}
+
+func NoChain() TMError {
+	return New(msgNoChain, abci.CodeType_Unauthorized)
+}
+
+func WrongChain(chain string) TMError {
+	msg := fmt.Sprintf(msgWrongChain, chain)
+	return New(msg, abci.CodeType_Unauthorized)
 }
 
 func InvalidAddress() TMError {

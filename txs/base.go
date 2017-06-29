@@ -121,7 +121,7 @@ type Chain struct {
 	ChainID string      `json:"chain_id"`
 }
 
-func NewChain(tx basecoin.Tx, chainID string) *Chain {
+func NewChain(chainID string, tx basecoin.Tx) *Chain {
 	return &Chain{Tx: tx, ChainID: chainID}
 }
 

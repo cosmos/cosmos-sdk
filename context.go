@@ -1,6 +1,9 @@
 package basecoin
 
-import "github.com/tendermint/go-wire/data"
+import (
+	"github.com/tendermint/go-wire/data"
+	"github.com/tendermint/tmlibs/log"
+)
 
 // Actor abstracts any address that can authorize actions, hold funds,
 // or initiate any sort of transaction.
@@ -21,6 +24,7 @@ func NewActor(app string, addr []byte) Actor {
 // rely on private fields to control the actions
 type Context interface {
 	// context.Context
+	log.Logger
 	WithPermissions(perms ...Actor) Context
 	HasPermission(perm Actor) bool
 	IsParent(ctx Context) bool

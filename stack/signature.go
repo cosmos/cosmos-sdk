@@ -1,11 +1,10 @@
-package handlers
+package stack
 
 import (
 	crypto "github.com/tendermint/go-crypto"
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/types"
 )
 
@@ -22,7 +21,7 @@ func (_ SignedHandler) Name() string {
 	return NameSigs
 }
 
-var _ stack.Middleware = SignedHandler{}
+var _ Middleware = SignedHandler{}
 
 func SigPerm(addr []byte) basecoin.Actor {
 	return basecoin.NewActor(NameSigs, addr)

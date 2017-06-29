@@ -54,6 +54,20 @@ func New(middlewares ...Middleware) *Stack {
 	}
 }
 
+// NewDefault sets up the common middlewares before your custom stack.
+//
+// This is logger, recovery, signature, and chain
+func NewDefault(chainID string, middlewares ...Middleware) *Stack {
+	mids := []Middleware{
+		Logger{},
+		Recovery{},
+		SignedHandler{true},
+		Chain{chainID},
+	}
+	mids = append(mids, middlewares...)
+	return New(mids...)
+}
+
 // Use sets the final handler for the stack and prepares it for use
 func (s *Stack) Use(handler basecoin.Handler) *Stack {
 	if handler == nil {

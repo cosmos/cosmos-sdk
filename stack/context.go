@@ -5,6 +5,9 @@ import (
 	"math/rand"
 
 	"github.com/pkg/errors"
+
+	"github.com/tendermint/tmlibs/log"
+
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/types"
 )
@@ -16,11 +19,13 @@ type secureContext struct {
 	id    nonce
 	app   string
 	perms []basecoin.Actor
+	log.Logger
 }
 
-func NewContext() basecoin.Context {
+func NewContext(logger log.Logger) basecoin.Context {
 	return secureContext{
-		id: nonce(rand.Int63()),
+		id:     nonce(rand.Int63()),
+		Logger: logger,
 	}
 }
 
@@ -37,8 +42,10 @@ func (c secureContext) WithPermissions(perms ...basecoin.Actor) basecoin.Context
 	}
 
 	return secureContext{
-		id:    c.id,
-		perms: append(c.perms, perms...),
+		id:     c.id,
+		app:    c.app,
+		perms:  append(c.perms, perms...),
+		Logger: c.Logger,
 	}
 }
 
@@ -60,12 +67,14 @@ func (c secureContext) IsParent(other basecoin.Context) bool {
 	return c.id == so.id
 }
 
-// Reset should give a fresh context,
+// Reset should clear out all permissions,
 // but carry on knowledge that this is a child
 func (c secureContext) Reset() basecoin.Context {
 	return secureContext{
-		id:  c.id,
-		app: c.app,
+		id:     c.id,
+		app:    c.app,
+		perms:  nil,
+		Logger: c.Logger,
 	}
 }
 
@@ -77,9 +86,10 @@ func withApp(ctx basecoin.Context, app string) basecoin.Context {
 		return ctx
 	}
 	return secureContext{
-		id:    sc.id,
-		app:   app,
-		perms: sc.perms,
+		id:     sc.id,
+		app:    app,
+		perms:  sc.perms,
+		Logger: sc.Logger,
 	}
 }
 

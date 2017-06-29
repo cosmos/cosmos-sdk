@@ -67,14 +67,14 @@ func NewRaw(d []byte) Raw {
 
 // Fee attaches a fee payment to the embedded tx
 type Fee struct {
-	Tx    basecoin.Tx `json:"tx"`
-	Fee   types.Coin  `json:"fee"`
-	Payer data.Bytes  `json:"payer"` // the address who pays the fee
+	Tx    basecoin.Tx    `json:"tx"`
+	Fee   types.Coin     `json:"fee"`
+	Payer basecoin.Actor `json:"payer"` // the address who pays the fee
 	// Gas types.Coin `json:"gas"`  // ?????
 }
 
-func NewFee(tx basecoin.Tx, fee types.Coin, addr []byte) *Fee {
-	return &Fee{Tx: tx, Fee: fee, Payer: addr}
+func NewFee(tx basecoin.Tx, fee types.Coin, payer basecoin.Actor) *Fee {
+	return &Fee{Tx: tx, Fee: fee, Payer: payer}
 }
 
 func (f *Fee) ValidateBasic() error {

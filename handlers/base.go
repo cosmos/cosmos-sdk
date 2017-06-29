@@ -13,11 +13,11 @@ const (
 
 type AccountChecker interface {
 	// Get amount checks the current amount
-	GetAmount(store types.KVStore, addr []byte) (types.Coins, error)
+	GetAmount(store types.KVStore, addr basecoin.Actor) (types.Coins, error)
 
 	// ChangeAmount modifies the balance by the given amount and returns the new balance
 	// always returns an error if leading to negative balance
-	ChangeAmount(store types.KVStore, addr []byte, coins types.Coins) (types.Coins, error)
+	ChangeAmount(store types.KVStore, addr basecoin.Actor, coins types.Coins) (types.Coins, error)
 }
 
 type SimpleFeeHandler struct {
@@ -44,7 +44,7 @@ func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx 
 		return res, errors.InsufficientFees()
 	}
 
-	if !ctx.HasPermission(SigPerm(feeTx.Payer)) {
+	if !ctx.HasPermission(feeTx.Payer) {
 		return res, errors.Unauthorized()
 	}
 
@@ -67,7 +67,7 @@ func (h SimpleFeeHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, t
 		return res, errors.InsufficientFees()
 	}
 
-	if !ctx.HasPermission(SigPerm(feeTx.Payer)) {
+	if !ctx.HasPermission(feeTx.Payer) {
 		return res, errors.Unauthorized()
 	}
 

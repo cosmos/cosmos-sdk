@@ -15,7 +15,7 @@ type nonce int64
 type secureContext struct {
 	id    nonce
 	app   string
-	perms []basecoin.Permission
+	perms []basecoin.Actor
 }
 
 func NewContext() basecoin.Context {
@@ -27,7 +27,7 @@ func NewContext() basecoin.Context {
 var _ basecoin.Context = secureContext{}
 
 // WithPermissions will panic if they try to set permission without the proper app
-func (c secureContext) WithPermissions(perms ...basecoin.Permission) basecoin.Context {
+func (c secureContext) WithPermissions(perms ...basecoin.Actor) basecoin.Context {
 	// the guard makes sure you only set permissions for the app you are inside
 	for _, p := range perms {
 		if p.App != c.app {
@@ -42,7 +42,7 @@ func (c secureContext) WithPermissions(perms ...basecoin.Permission) basecoin.Co
 	}
 }
 
-func (c secureContext) HasPermission(perm basecoin.Permission) bool {
+func (c secureContext) HasPermission(perm basecoin.Actor) bool {
 	for _, p := range c.perms {
 		if perm.App == p.App && bytes.Equal(perm.Address, p.Address) {
 			return true

@@ -23,8 +23,8 @@ func (_ SignedHandler) Name() string {
 
 var _ basecoin.Middleware = SignedHandler{}
 
-func SigPerm(addr []byte) basecoin.Permission {
-	return basecoin.Permission{App: NameSigs, Address: addr}
+func SigPerm(addr []byte) basecoin.Actor {
+	return basecoin.NewActor(NameSigs, addr)
 }
 
 // Signed allows us to use txs.OneSig and txs.MultiSig (and others??)
@@ -52,7 +52,7 @@ func (h SignedHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx b
 }
 
 func addSigners(ctx basecoin.Context, sigs []crypto.PubKey) basecoin.Context {
-	perms := make([]basecoin.Permission, len(sigs))
+	perms := make([]basecoin.Actor, len(sigs))
 	for i, s := range sigs {
 		perms[i] = SigPerm(s.Address())
 	}

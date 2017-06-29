@@ -49,6 +49,7 @@ type OneSig struct {
 }
 
 var _ keys.Signable = &OneSig{}
+var _ basecoin.TxLayer = &OneSig{}
 
 func NewSig(tx basecoin.Tx) *OneSig {
 	return &OneSig{Tx: tx}
@@ -56,6 +57,10 @@ func NewSig(tx basecoin.Tx) *OneSig {
 
 func (s *OneSig) Wrap() basecoin.Tx {
 	return basecoin.Tx{s}
+}
+
+func (s *OneSig) Next() basecoin.Tx {
+	return s.Tx
 }
 
 func (s *OneSig) ValidateBasic() error {
@@ -119,6 +124,7 @@ type MultiSig struct {
 }
 
 var _ keys.Signable = &MultiSig{}
+var _ basecoin.TxLayer = &MultiSig{}
 
 func NewMulti(tx basecoin.Tx) *MultiSig {
 	return &MultiSig{Tx: tx}
@@ -126,6 +132,10 @@ func NewMulti(tx basecoin.Tx) *MultiSig {
 
 func (s *MultiSig) Wrap() basecoin.Tx {
 	return basecoin.Tx{s}
+}
+
+func (s *MultiSig) Next() basecoin.Tx {
+	return s.Tx
 }
 
 func (s *MultiSig) ValidateBasic() error {
@@ -184,4 +194,11 @@ func (s *MultiSig) Signers() ([]crypto.PubKey, error) {
 	}
 
 	return keys, nil
+}
+
+func Sign(tx keys.Signable, key crypto.PrivKey) error {
+	msg := tx.SignBytes()
+	pubkey := key.PubKey()
+	sig := key.Sign(msg)
+	return tx.Sign(pubkey, sig)
 }

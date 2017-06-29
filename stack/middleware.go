@@ -61,7 +61,7 @@ func NewDefault(chainID string, middlewares ...Middleware) *Stack {
 	mids := []Middleware{
 		Logger{},
 		Recovery{},
-		SignedHandler{true},
+		Signatures{},
 		Chain{chainID},
 	}
 	mids = append(mids, middlewares...)

@@ -9,7 +9,8 @@ import (
 
 const (
 	// for utils...
-	ByteRaw   = 0x1
+	ByteRaw = 0x1
+	// TODO: move fees into a module, multiplexer is standard
 	ByteFees  = 0x2
 	ByteMulti = 0x3
 	ByteChain = 0x4

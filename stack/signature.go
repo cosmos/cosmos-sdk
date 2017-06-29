@@ -1,6 +1,8 @@
 package stack
 
 import (
+	"fmt"
+
 	crypto "github.com/tendermint/go-crypto"
 
 	"github.com/tendermint/basecoin"
@@ -13,15 +15,13 @@ const (
 	NameSigs = "sigs"
 )
 
-type SignedHandler struct {
-	AllowMultiSig bool
-}
+type Signatures struct{}
 
-func (_ SignedHandler) Name() string {
+func (_ Signatures) Name() string {
 	return NameSigs
 }
 
-var _ Middleware = SignedHandler{}
+var _ Middleware = Signatures{}
 
 func SigPerm(addr []byte) basecoin.Actor {
 	return basecoin.NewActor(NameSigs, addr)
@@ -33,7 +33,7 @@ type Signed interface {
 	Signers() ([]crypto.PubKey, error)
 }
 
-func (h SignedHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (h Signatures) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	sigs, tnext, err := getSigners(tx)
 	if err != nil {
 		return res, err
@@ -42,7 +42,7 @@ func (h SignedHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx bas
 	return next.CheckTx(ctx2, store, tnext)
 }
 
-func (h SignedHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (h Signatures) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	sigs, tnext, err := getSigners(tx)
 	if err != nil {
 		return res, err
@@ -53,7 +53,9 @@ func (h SignedHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx b
 
 func addSigners(ctx basecoin.Context, sigs []crypto.PubKey) basecoin.Context {
 	perms := make([]basecoin.Actor, len(sigs))
+	fmt.Printf("Add %d signers\n", len(sigs))
 	for i, s := range sigs {
+		fmt.Printf("Add %X\n", s.Address())
 		perms[i] = SigPerm(s.Address())
 	}
 	// add the signers to the context and continue
@@ -61,8 +63,10 @@ func addSigners(ctx basecoin.Context, sigs []crypto.PubKey) basecoin.Context {
 }
 
 func getSigners(tx basecoin.Tx) ([]crypto.PubKey, basecoin.Tx, error) {
+	fmt.Println("getSigners")
 	stx, ok := tx.Unwrap().(Signed)
 	if !ok {
+		fmt.Printf("Not okay: %#v\n", tx)
 		return nil, basecoin.Tx{}, errors.Unauthorized()
 	}
 	sig, err := stx.Signers()

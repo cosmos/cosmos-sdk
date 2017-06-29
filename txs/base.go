@@ -3,17 +3,14 @@ package txs
 import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-wire/data"
 )
 
 const (
 	// for utils...
-	ByteRaw = 0x1
-	// TODO: move fees into a module, multiplexer is standard
-	ByteFees  = 0x2
-	ByteMulti = 0x3
-	ByteChain = 0x4
+	ByteRaw   = 0x1
+	ByteMulti = 0x2
+	ByteChain = 0x3
 
 	// for signatures
 	ByteSig      = 0x16
@@ -23,7 +20,6 @@ const (
 const (
 	// for utils...
 	TypeRaw   = "raw"
-	TypeFees  = "fee"
 	TypeMulti = "multi"
 	TypeChain = "chain"
 
@@ -39,7 +35,6 @@ const (
 func init() {
 	basecoin.TxMapper.
 		RegisterImplementation(Raw{}, TypeRaw, ByteRaw).
-		RegisterImplementation(&Fee{}, TypeFees, ByteFees).
 		RegisterImplementation(&MultiTx{}, TypeMulti, ByteMulti).
 		RegisterImplementation(&Chain{}, TypeChain, ByteChain)
 }
@@ -62,33 +57,6 @@ func (r Raw) ValidateBasic() error {
 
 func NewRaw(d []byte) Raw {
 	return Raw{data.Bytes(d)}
-}
-
-/**** Fee ****/
-
-// Fee attaches a fee payment to the embedded tx
-type Fee struct {
-	Tx    basecoin.Tx    `json:"tx"`
-	Fee   types.Coin     `json:"fee"`
-	Payer basecoin.Actor `json:"payer"` // the address who pays the fee
-	// Gas types.Coin `json:"gas"`  // ?????
-}
-
-func NewFee(tx basecoin.Tx, fee types.Coin, payer basecoin.Actor) *Fee {
-	return &Fee{Tx: tx, Fee: fee, Payer: payer}
-}
-
-func (f *Fee) ValidateBasic() error {
-	// TODO: more checks
-	return f.Tx.ValidateBasic()
-}
-
-func (f *Fee) Wrap() basecoin.Tx {
-	return basecoin.Tx{f}
-}
-
-func (f *Fee) Next() basecoin.Tx {
-	return f.Tx
 }
 
 /**** MultiTx  ******/

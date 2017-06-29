@@ -1,10 +1,9 @@
-package handlers
+package fee
 
 import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/txs"
 	"github.com/tendermint/basecoin/types"
 )
 
@@ -35,7 +34,7 @@ var _ stack.Middleware = SimpleFeeHandler{}
 // Yes, I know refactor a bit... really too late already
 
 func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
-	feeTx, ok := tx.Unwrap().(*txs.Fee)
+	feeTx, ok := tx.Unwrap().(*Fee)
 	if !ok {
 		return res, errors.InvalidFormat()
 	}
@@ -58,7 +57,7 @@ func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx 
 }
 
 func (h SimpleFeeHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
-	feeTx, ok := tx.Unwrap().(*txs.Fee)
+	feeTx, ok := tx.Unwrap().(*Fee)
 	if !ok {
 		return res, errors.InvalidFormat()
 	}

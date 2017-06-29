@@ -127,7 +127,7 @@ getAddr() {
 checkAccount() {
   # make sure sender goes down
   ACCT=$(${CLIENT_EXE} query account $1)
-  if ! assertTrue "account must exist: $ACCT" $?; then
+  if ! assertTrue "account must exist" $?; then
     return 1
   fi
 

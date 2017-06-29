@@ -42,10 +42,10 @@ The default files are stored in `~/.counter`.  In another window we can
 initialize the light-client and send a transaction:
 
 ```
-countercli init --chain-id=test_chain_id --node=tcp://localhost:46657
+countercli init --node=tcp://localhost:46657 --genesis=$HOME/.counter/genesis.json
 
 YOU=$(countercli keys get friend | awk '{print $2}')
-countercli tx send --name=cool --amount=1000mycoin --to=0x$YOU --sequence=1
+countercli tx send --name=cool --amount=1000mycoin --to=$YOU --sequence=1
 ```
 
 But the Counter has an additional command, `countercli tx counter`, which

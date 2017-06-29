@@ -24,7 +24,7 @@ import (
 var SendTxCmd = &cobra.Command{
 	Use:   "send",
 	Short: "send tokens from one account to another",
-	RunE:  doSendTx,
+	RunE:  commands.RequireInit(doSendTx),
 }
 
 //nolint
@@ -47,7 +47,6 @@ func init() {
 
 // runDemo is an example of how to make a tx
 func doSendTx(cmd *cobra.Command, args []string) error {
-
 	// load data from json or flags
 	tx := new(btypes.SendTx)
 	found, err := txcmd.LoadJSON(tx)
@@ -143,12 +142,8 @@ func parseChainAddress(toFlag string) ([]byte, error) {
 // BroadcastAppTx wraps, signs, and executes an app tx basecoin transaction
 func BroadcastAppTx(tx *btypes.AppTx) (*ctypes.ResultBroadcastTxCommit, error) {
 
-	// Generate app transaction to be broadcast
-	appTx := WrapAppTx(tx)
-	appTx.AddSigner(txcmd.GetSigner())
-
 	// Sign if needed and post to the node.  This it the work-horse
-	return txcmd.SignAndPostTx(appTx)
+	return txcmd.SignAndPostTx(WrapAppTx(tx))
 }
 
 // AddAppTxFlags adds flags required by apptx
@@ -172,17 +167,32 @@ func ReadAppTxFlags() (gas int64, fee btypes.Coin, txInput btypes.TxInput, err e
 		return
 	}
 
-	// craft the inputs
+	// retrieve the amount
 	var amount btypes.Coins
 	amount, err = btypes.ParseCoins(viper.GetString(FlagAmount))
 	if err != nil {
 		return
 	}
+
+	// get the PubKey of the signer
+	pk := txcmd.GetSigner()
+
+	// get addr if available
+	var addr []byte
+	if !pk.Empty() {
+		addr = pk.Address()
+	}
+
+	// set the output
 	txInput = btypes.TxInput{
 		Coins:    amount,
 		Sequence: viper.GetInt(FlagSequence),
+		Address:  addr,
 	}
-
+	// set the pubkey if needed
+	if txInput.Sequence == 1 {
+		txInput.PubKey = pk
+	}
 	return
 }
 

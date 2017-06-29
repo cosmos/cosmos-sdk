@@ -176,7 +176,7 @@ The results of a query can thus be used as proof in an `IBCPacketPostTx`.
 ## Relay
 
 While we need all these packet types internally to keep track of all the
-proofs on both chains in a secure manner, for the normal work-flow, 
+proofs on both chains in a secure manner, for the normal work-flow,
 we can run a relay node that handles the cross-chain interaction.
 
 In this case, there are only two steps.  First `basecoin relay init`,
@@ -271,11 +271,11 @@ basecoin1 start &> basecoin1.log &
 Note the `sed` command to replace the ports in the config file.
 You can follow the logs with `tail -f basecoin1.log`
 
-Now we can attach the client to the chain and verify the state.  
+Now we can attach the client to the chain and verify the state.
 The first account should have money, the second none:
 
 ```
-basecli1 init --chain-id=$CHAINID1 --node=tcp://localhost:${RPC_PORT1}
+basecli1 init --node=tcp://localhost:${RPC_PORT1} --genesis=${BCHOME1_SERVER}/genesis.json
 basecli1 query account $MONEY
 basecli1 query account $GOTNONE
 ```
@@ -304,11 +304,11 @@ sed -ie "s/4665/$PORT_PREFIX2/" $BCHOME2_SERVER/config.toml
 basecoin2 start &> basecoin2.log &
 ```
 
-Now attach the client to the chain and verify the state.  
+Now attach the client to the chain and verify the state.
 The first account should have money, the second none:
 
 ```
-basecli2 init --chain-id=$CHAINID2 --node=tcp://localhost:${RPC_PORT2}
+basecli2 init --node=tcp://localhost:${RPC_PORT2} --genesis=${BCHOME2_SERVER}/genesis.json
 basecli2 query account $MOREMONEY
 basecli2 query account $BROKE
 ```
@@ -316,7 +316,7 @@ basecli2 query account $BROKE
 ### Connect these chains
 
 OK! So we have two chains running on your local machine, with different
-keys on each.  Let's hook them up together by starting a relay process to 
+keys on each.  Let's hook them up together by starting a relay process to
 forward messages from one chain to the other.
 
 The relay account needs some money in it to pay for the ibc messages, so
@@ -336,7 +336,7 @@ basecli2 tx send --amount=100000mycoin --sequence=1 --to=$RELAY_ADDR --name=more
 basecli2 query account $RELAY_ADDR
 ```
 
-Now we can start the relay process. 
+Now we can start the relay process.
 
 ```
 basecoin relay init --chain1-id=$CHAINID1 --chain2-id=$CHAINID2 \
@@ -359,7 +359,7 @@ The hard part is over, we set up two blockchains, a few private keys, and
 a secure relay between them.  Now we can enjoy the fruits of our labor...
 
 ```
-# Here's an emptt account on test-chain-2
+# Here's an empty account on test-chain-2
 basecli2 query account $BROKE
 ```
 
@@ -375,8 +375,8 @@ sleep 2
 basecli2 query account $BROKE
 ```
 
-You're no longer broke! Cool, huh?  
-Now have fun exploring and sending coins across the chains.  
+You're no longer broke! Cool, huh?
+Now have fun exploring and sending coins across the chains.
 And making more accounts as you want to.
 
 ## Conclusion

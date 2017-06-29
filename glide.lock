@@ -1,5 +1,5 @@
-hash: f8c4f3d097e0a5cd4b02d9badcd04558779d98bfbc03fd6f9652998fe47c4ce2
-updated: 2017-06-23T09:17:44.882466959+02:00
+hash: 6eb1119dccf2ab4d0adb870a14cb4408047119be53c8ec4afeaa281bd1d2b457
+updated: 2017-06-28T13:09:42.542992443+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -47,7 +47,7 @@ imports:
 - name: github.com/gorilla/websocket
   version: a91eba7f97777409bc2c443f5534d41dd20c5720
 - name: github.com/hashicorp/hcl
-  version: a4b07c25de5ff55ad3b8936cea69a79a3d95a855
+  version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -82,11 +82,11 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: db6b9a8b3f3f400c8ecb4a4d7d02245b8facad66
+  version: 4cdb38c072b86bf795d2c81de50784d9fdd6eb77
 - name: github.com/spf13/jwalterweatherman
-  version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
+  version: 8f07c835e5cc1450c082fe3a439cf87b0cbb2d99
 - name: github.com/spf13/pflag
-  version: 80fe0fb4eba54167e2ccae1c6c950e72abf61b73
+  version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
 - name: github.com/spf13/viper
   version: 0967fc9aceab2ce9da34061253ac10fb99bba5b2
 - name: github.com/syndtr/goleveldb
@@ -117,7 +117,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 95b7c9e09c49b91bfbb71bb63dd514eb55450f16
+  version: d31cfbaeaa4d930798ec327b52917975f3203c11
   subpackages:
   - cmd
   - keys
@@ -132,7 +132,7 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: fd21efb1bfc1ac5a1eb569b3f6ce849683d690e8
+  version: 489b726d8b358dbd9d8f6a15d18e8b9fe0a39269
   subpackages:
   - certifiers
   - certifiers/client
@@ -140,21 +140,21 @@ imports:
   - commands
   - commands/proofs
   - commands/proxy
+  - commands/rpc
   - commands/seeds
   - commands/txs
   - proofs
 - name: github.com/tendermint/merkleeyes
-  version: 6acc3a2663d9a3ec85cd654e01eaa7d7d7c6e99b
+  version: 102aaf5a8ffda1846413fb22805a94def2045b9f
   subpackages:
   - app
   - client
   - iavl
 - name: github.com/tendermint/tendermint
-  version: ca632c9e90cf06a67bacedd43d76407ce7b3614e
+  version: 3065059da7bb57714f08c7a6fcb97e4b36be0194
   subpackages:
   - blockchain
   - cmd/tendermint/commands
-  - cmd/tendermint/commands/flags
   - config
   - consensus
   - mempool
@@ -177,7 +177,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: 7ce4da1eee6004d627e780c8fe91e96d9b99e459
+  version: efb56aaea7517220bb3f42ff87b8004d554a17ff
   subpackages:
   - autofile
   - cli
@@ -212,7 +212,7 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/sys
-  version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
+  version: e62c3de784db939836898e5c19ffd41bece347da
   subpackages:
   - unix
 - name: golang.org/x/text

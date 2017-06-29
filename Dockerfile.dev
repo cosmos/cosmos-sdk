@@ -1,5 +1,7 @@
 FROM golang:latest
 
+RUN apt-get update && apt-get install -y jq
+
 RUN mkdir -p /go/src/github.com/tendermint/basecoin
 WORKDIR /go/src/github.com/tendermint/basecoin
 

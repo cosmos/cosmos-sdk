@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/hex"
 	"fmt"
 	"testing"
 
@@ -123,4 +124,54 @@ func TestSendTxJSON(t *testing.T) {
 	// and make sure the sig is preserved
 	assert.Equal(tx, tx2)
 	assert.False(tx2.Inputs[0].Signature.Empty())
+}
+
+func TestSendTxIBC(t *testing.T) {
+	assert, require := assert.New(t), require.New(t)
+
+	good, err := hex.DecodeString("1960CA7E170862837AA8F22A947194F41F61860B")
+	require.Nil(err)
+	short, err := hex.DecodeString("1960CA7E170862837AA8F22F947194F41F610B")
+	require.Nil(err)
+	long, err := hex.DecodeString("1960CA7E170862837AA8F22A947194F41F6186120B")
+	require.Nil(err)
+	slash, err := hex.DecodeString("F40ECECEA86F29D0FDF2980EF72F1708687BD4BF")
+	require.Nil(err)
+
+	coins := Coins{{"atom", 5}}
+
+	addrs := []struct {
+		addr  []byte
+		valid bool
+	}{
+		{good, true},
+		{slash, true},
+		{long, false},
+		{short, false},
+	}
+
+	prefixes := []struct {
+		prefix []byte
+		valid  bool
+	}{
+		{nil, true},
+		{[]byte("chain-1/"), true},
+		{[]byte("chain/with/paths/"), false},
+		{[]byte("no-slash-here"), false},
+	}
+
+	for i, tc := range addrs {
+		for j, pc := range prefixes {
+			addr := append(pc.prefix, tc.addr...)
+			output := TxOutput{Address: addr, Coins: coins}
+			res := output.ValidateBasic()
+
+			if tc.valid && pc.valid {
+				assert.True(res.IsOK(), "%d,%d: %s", i, j, res.Log)
+			} else {
+				assert.False(res.IsOK(), "%d,%d: %s", i, j, res.Log)
+			}
+		}
+	}
+
 }

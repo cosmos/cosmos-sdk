@@ -123,12 +123,12 @@ func (txOut TxOutput) ChainAndAddress() ([]byte, []byte, abci.Result) {
 	var chainPrefix []byte
 	address := txOut.Address
 	if len(address) > 20 {
-		spl := bytes.Split(address, []byte("/"))
-		if len(spl) < 2 {
+		spl := bytes.SplitN(address, []byte("/"), 2)
+		if len(spl) != 2 {
 			return nil, nil, abci.ErrBaseInvalidOutput.AppendLog("Invalid address format")
 		}
 		chainPrefix = spl[0]
-		address = bytes.Join(spl[1:], nil)
+		address = spl[1]
 	}
 
 	if len(address) != 20 {

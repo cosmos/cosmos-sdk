@@ -133,7 +133,7 @@ func TestSendTxIBC(t *testing.T) {
 	require.Nil(err)
 	short, err := hex.DecodeString("1960CA7E170862837AA8F22F947194F41F610B")
 	require.Nil(err)
-	long, err := hex.DecodeString("1960CA7E170862837AA8F22A947194F41F6186120B")
+	long, err := hex.DecodeString("1960CA7E170862837AA8F22F947194F41F6186120B")
 	require.Nil(err)
 	slash, err := hex.DecodeString("F40ECECEA86F29D0FDF2980EF72F1708687BD4BF")
 	require.Nil(err)

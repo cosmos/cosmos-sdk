@@ -83,3 +83,91 @@ func TestTxValidateOutput(t *testing.T) {
 		}
 	}
 }
+
+func TestTxValidateTx(t *testing.T) {
+	assert := assert.New(t)
+
+	addr1 := basecoin.Actor{App: "coin", Address: []byte{1, 2}}
+	addr2 := basecoin.Actor{App: "coin", Address: []byte{3, 4}, ChainID: "over-there"}
+	addr3 := basecoin.Actor{App: "role", Address: []byte{7, 8}}
+	noAddr := basecoin.Actor{}
+
+	noCoins := types.Coins{}
+	someCoins := types.Coins{{"atom", 123}}
+	moreCoins := types.Coins{{"atom", 124}}
+	otherCoins := types.Coins{{"btc", 15}}
+	bothCoins := someCoins.Plus(otherCoins)
+	minusCoins := types.Coins{{"eth", -34}}
+
+	// cases: all valid (one), all valid (multi)
+	// no input, no outputs, invalid inputs, invalid outputs
+	// totals don't match
+	cases := []struct {
+		valid bool
+		tx    SendTx
+	}{
+		// 0-2. valid cases
+		{true, SendTx{
+			Inputs:  []TxInput{NewTxInput(addr1, someCoins, 2)},
+			Outputs: []TxOutput{NewTxOutput(addr2, someCoins)},
+		}},
+		{true, SendTx{
+			Inputs:  []TxInput{NewTxInput(addr1, someCoins, 2), NewTxInput(addr2, otherCoins, 5)},
+			Outputs: []TxOutput{NewTxOutput(addr3, bothCoins)},
+		}},
+		{true, SendTx{
+			Inputs:  []TxInput{NewTxInput(addr1, bothCoins, 42)},
+			Outputs: []TxOutput{NewTxOutput(addr2, someCoins), NewTxOutput(addr3, otherCoins)},
+		}},
+
+		// 3-4. missing cases
+		{false, SendTx{
+			Outputs: []TxOutput{NewTxOutput(addr2, someCoins)},
+		}},
+		{false, SendTx{
+			Inputs: []TxInput{NewTxInput(addr1, someCoins, 2)},
+		}},
+
+		// 5-8. invalid inputs
+		{false, SendTx{
+			Inputs:  []TxInput{NewTxInput(noAddr, someCoins, 2)},
+			Outputs: []TxOutput{NewTxOutput(addr2, someCoins)},
+		}},
+		{false, SendTx{
+			Inputs:  []TxInput{NewTxInput(addr1, someCoins, -1)},
+			Outputs: []TxOutput{NewTxOutput(addr2, someCoins)},
+		}},
+		{false, SendTx{
+			Inputs:  []TxInput{NewTxInput(addr1, noCoins, 2)},
+			Outputs: []TxOutput{NewTxOutput(addr2, noCoins)},
+		}},
+		{false, SendTx{
+			Inputs:  []TxInput{NewTxInput(addr1, minusCoins, 2)},
+			Outputs: []TxOutput{NewTxOutput(addr2, minusCoins)},
+		}},
+
+		// 9-11. totals don't match
+		{false, SendTx{
+			Inputs:  []TxInput{NewTxInput(addr1, someCoins, 7)},
+			Outputs: []TxOutput{NewTxOutput(addr2, moreCoins)},
+		}},
+		{false, SendTx{
+			Inputs:  []TxInput{NewTxInput(addr1, someCoins, 2), NewTxInput(addr2, minusCoins, 5)},
+			Outputs: []TxOutput{NewTxOutput(addr3, someCoins)},
+		}},
+		{false, SendTx{
+			Inputs:  []TxInput{NewTxInput(addr1, someCoins, 2), NewTxInput(addr2, moreCoins, 5)},
+			Outputs: []TxOutput{NewTxOutput(addr3, bothCoins)},
+		}},
+	}
+
+	for i, tc := range cases {
+		err := tc.tx.ValidateBasic()
+		if tc.valid {
+			assert.Nil(err, "%d: %+v", i, err)
+		} else {
+			assert.NotNil(err, "%d", i)
+		}
+	}
+
+}

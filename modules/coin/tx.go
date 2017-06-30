@@ -110,13 +110,13 @@ func (tx SendTx) ValidateBasic() error {
 		if err := in.ValidateBasic(); err != nil {
 			return err
 		}
-		totalIn.Plus(in.Coins)
+		totalIn = totalIn.Plus(in.Coins)
 	}
 	for _, out := range tx.Outputs {
 		if err := out.ValidateBasic(); err != nil {
 			return err
 		}
-		totalOut.Plus(out.Coins)
+		totalOut = totalOut.Plus(out.Coins)
 	}
 	// make sure inputs and outputs match
 	if !totalIn.IsEqual(totalOut) {

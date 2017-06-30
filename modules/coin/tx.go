@@ -18,14 +18,17 @@ type TxInput struct {
 }
 
 func (txIn TxInput) ValidateBasic() error {
-	// TODO: knowledge of app-specific codings?
 	if txIn.Address.App == "" {
+		return errors.InvalidAddress()
+	}
+	// TODO: knowledge of app-specific codings?
+	if len(txIn.Address.Address) == 0 {
 		return errors.InvalidAddress()
 	}
 	if !txIn.Coins.IsValid() {
 		return errors.InvalidCoins()
 	}
-	if txIn.Coins.IsZero() {
+	if !txIn.Coins.IsPositive() {
 		return errors.InvalidCoins()
 	}
 	if txIn.Sequence <= 0 {
@@ -55,14 +58,17 @@ type TxOutput struct {
 }
 
 func (txOut TxOutput) ValidateBasic() error {
-	// TODO: knowledge of app-specific codings?
 	if txOut.Address.App == "" {
+		return errors.InvalidAddress()
+	}
+	// TODO: knowledge of app-specific codings?
+	if len(txOut.Address.Address) == 0 {
 		return errors.InvalidAddress()
 	}
 	if !txOut.Coins.IsValid() {
 		return errors.InvalidCoins()
 	}
-	if txOut.Coins.IsZero() {
+	if !txOut.Coins.IsPositive() {
 		return errors.InvalidCoins()
 	}
 	return nil

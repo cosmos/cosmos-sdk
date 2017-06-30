@@ -9,6 +9,16 @@ import (
 	"github.com/tendermint/basecoin/types"
 )
 
+func init() {
+	basecoin.TxMapper.RegisterImplementation(SendTx{}, TypeSend, ByteSend)
+}
+
+// we reserve the 0x20-0x3f range for standard modules
+const (
+	ByteSend = 0x20
+	TypeSend = "send"
+)
+
 //-----------------------------------------------------------------------------
 
 type TxInput struct {

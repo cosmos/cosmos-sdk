@@ -4,8 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/go-wire/data"
 )
 
 // these are some constructs for the test cases
@@ -169,5 +171,33 @@ func TestTxValidateTx(t *testing.T) {
 			assert.NotNil(err, "%d", i)
 		}
 	}
+}
+
+func TestTxSerializeTx(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	addr1 := basecoin.Actor{App: "coin", Address: []byte{1, 2}}
+	addr2 := basecoin.Actor{App: "coin", Address: []byte{3, 4}}
+	someCoins := types.Coins{{"atom", 123}}
+
+	send := SendTx{
+		Inputs:  []TxInput{NewTxInput(addr1, someCoins, 2)},
+		Outputs: []TxOutput{NewTxOutput(addr2, someCoins)},
+	}.Wrap()
+
+	js, err := data.ToJSON(send)
+	require.Nil(err)
+	var tx basecoin.Tx
+	err = data.FromJSON(js, &tx)
+	require.Nil(err)
+	assert.Equal(send, tx)
+
+	bin, err := data.ToWire(send)
+	require.Nil(err)
+	var tx2 basecoin.Tx
+	err = data.FromWire(bin, &tx2)
+	require.Nil(err)
+	assert.Equal(send, tx2)
 
 }

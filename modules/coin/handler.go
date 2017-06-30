@@ -43,21 +43,21 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoi
 	return basecoin.Result{}, nil
 }
 
-func checkTx(ctx basecoin.Context, tx basecoin.Tx) (*SendTx, error) {
+func checkTx(ctx basecoin.Context, tx basecoin.Tx) (send SendTx, err error) {
 	// check if the tx is proper type and valid
-	send, ok := tx.Unwrap().(*SendTx)
+	send, ok := tx.Unwrap().(SendTx)
 	if !ok {
-		return nil, errors.UnknownTxType(tx)
+		return send, errors.UnknownTxType(tx)
 	}
-	err := send.ValidateBasic()
+	err = send.ValidateBasic()
 	if err != nil {
-		return nil, err
+		return send, err
 	}
 
 	// check if all inputs have permission
 	for _, in := range send.Inputs {
 		if !ctx.HasPermission(in.Address) {
-			return nil, errors.Unauthorized()
+			return send, errors.Unauthorized()
 		}
 	}
 	return send, nil

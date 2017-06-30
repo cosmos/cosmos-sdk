@@ -20,6 +20,7 @@ const (
 	msgInvalidSequence   = "Invalid Sequence"
 	msgInvalidSignature  = "Invalid Signature"
 	msgInsufficientFees  = "Insufficient Fees"
+	msgInsufficientFunds = "Insufficient Funds"
 	msgNoInputs          = "No Input Coins"
 	msgNoOutputs         = "No Output Coins"
 	msgTooLarge          = "Input size too large"
@@ -86,6 +87,10 @@ func InvalidSequence() TMError {
 
 func InsufficientFees() TMError {
 	return New(msgInsufficientFees, abci.CodeType_BaseInvalidInput)
+}
+
+func InsufficientFunds() TMError {
+	return New(msgInsufficientFunds, abci.CodeType_BaseInvalidInput)
 }
 
 func NoInputs() TMError {

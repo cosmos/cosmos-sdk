@@ -98,15 +98,23 @@ func (tx SendTx) ValidateBasic() error {
 	if len(tx.Outputs) == 0 {
 		return errors.NoOutputs()
 	}
+	// make sure all inputs and outputs are individually valid
+	var totalIn, totalOut types.Coins
 	for _, in := range tx.Inputs {
 		if err := in.ValidateBasic(); err != nil {
 			return err
 		}
+		totalIn.Plus(in.Coins)
 	}
 	for _, out := range tx.Outputs {
 		if err := out.ValidateBasic(); err != nil {
 			return err
 		}
+		totalOut.Plus(out.Coins)
+	}
+	// make sure inputs and outputs match
+	if !totalIn.IsEqual(totalOut) {
+		return errors.InvalidCoins()
 	}
 	return nil
 }

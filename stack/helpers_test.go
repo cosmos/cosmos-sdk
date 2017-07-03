@@ -15,7 +15,7 @@ import (
 func TestOK(t *testing.T) {
 	assert := assert.New(t)
 
-	ctx := NewContext(log.NewNopLogger())
+	ctx := NewContext("test-chain", log.NewNopLogger())
 	store := types.NewMemKVStore()
 	data := "this looks okay"
 	tx := basecoin.Tx{}
@@ -33,7 +33,7 @@ func TestOK(t *testing.T) {
 func TestFail(t *testing.T) {
 	assert := assert.New(t)
 
-	ctx := NewContext(log.NewNopLogger())
+	ctx := NewContext("test-chain", log.NewNopLogger())
 	store := types.NewMemKVStore()
 	msg := "big problem"
 	tx := basecoin.Tx{}
@@ -53,7 +53,7 @@ func TestFail(t *testing.T) {
 func TestPanic(t *testing.T) {
 	assert := assert.New(t)
 
-	ctx := NewContext(log.NewNopLogger())
+	ctx := NewContext("test-chain", log.NewNopLogger())
 	store := types.NewMemKVStore()
 	msg := "system crash!"
 	tx := basecoin.Tx{}

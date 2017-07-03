@@ -34,4 +34,5 @@ type Context interface {
 	HasPermission(perm Actor) bool
 	IsParent(ctx Context) bool
 	Reset() Context
+	ChainID() string
 }

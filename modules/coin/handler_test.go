@@ -68,7 +68,7 @@ func TestHandlerValidation(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		ctx := stack.MockContext().WithPermissions(tc.perms...)
+		ctx := stack.MockContext("base-chain").WithPermissions(tc.perms...)
 		_, err := checkTx(ctx, tc.tx)
 		if tc.valid {
 			assert.Nil(err, "%d: %+v", i, err)
@@ -142,7 +142,7 @@ func TestDeliverTx(t *testing.T) {
 			require.Nil(err, "%d: %+v", i, err)
 		}
 
-		ctx := stack.MockContext().WithPermissions(tc.perms...)
+		ctx := stack.MockContext("base-chain").WithPermissions(tc.perms...)
 		_, err := h.DeliverTx(ctx, store, tc.tx)
 		if len(tc.final) > 0 { // valid
 			assert.Nil(err, "%d: %+v", i, err)

@@ -17,7 +17,7 @@ func TestSignatureChecks(t *testing.T) {
 	assert := assert.New(t)
 
 	// generic args
-	ctx := NewContext(log.NewNopLogger())
+	ctx := NewContext("test-chain", log.NewNopLogger())
 	store := types.NewMemKVStore()
 	raw := txs.NewRaw([]byte{1, 2, 3, 4})
 

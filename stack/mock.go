@@ -10,16 +10,22 @@ import (
 
 type mockContext struct {
 	perms []basecoin.Actor
+	chain string
 	log.Logger
 }
 
-func MockContext() basecoin.Context {
+func MockContext(chain string) basecoin.Context {
 	return mockContext{
+		chain:  chain,
 		Logger: log.NewNopLogger(),
 	}
 }
 
 var _ basecoin.Context = mockContext{}
+
+func (c mockContext) ChainID() string {
+	return c.chain
+}
 
 // WithPermissions will panic if they try to set permission without the proper app
 func (c mockContext) WithPermissions(perms ...basecoin.Actor) basecoin.Context {

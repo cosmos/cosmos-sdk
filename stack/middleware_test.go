@@ -17,7 +17,7 @@ func TestPermissionSandbox(t *testing.T) {
 	require := require.New(t)
 
 	// generic args
-	ctx := NewContext(log.NewNopLogger())
+	ctx := NewContext("test-chain", log.NewNopLogger())
 	store := types.NewMemKVStore()
 	raw := txs.NewRaw([]byte{1, 2, 3, 4})
 	rawBytes, err := data.ToWire(raw)

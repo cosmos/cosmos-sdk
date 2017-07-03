@@ -57,12 +57,12 @@ func New(middlewares ...Middleware) *Stack {
 // NewDefault sets up the common middlewares before your custom stack.
 //
 // This is logger, recovery, signature, and chain
-func NewDefault(chainID string, middlewares ...Middleware) *Stack {
+func NewDefault(middlewares ...Middleware) *Stack {
 	mids := []Middleware{
 		Logger{},
 		Recovery{},
 		Signatures{},
-		Chain{chainID},
+		Chain{},
 	}
 	mids = append(mids, middlewares...)
 	return New(mids...)

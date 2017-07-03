@@ -56,7 +56,8 @@ func (at *appTest) reset() {
 	at.accOut = types.MakeAcc("output0")
 
 	eyesCli := eyes.NewLocalClient("", 0)
-	at.app = NewBasecoin(eyesCli, log.TestingLogger().With("module", "app"))
+	at.app = NewBasecoin(DefaultHandler(), eyesCli,
+		log.TestingLogger().With("module", "app"))
 
 	res := at.app.SetOption("base/chain_id", at.chainID)
 	require.EqualValues(at.t, res, "Success")
@@ -105,7 +106,8 @@ func TestSetOption(t *testing.T) {
 	require := require.New(t)
 
 	eyesCli := eyes.NewLocalClient("", 0)
-	app := NewBasecoin(eyesCli, log.TestingLogger().With("module", "app"))
+	app := NewBasecoin(DefaultHandler(), eyesCli,
+		log.TestingLogger().With("module", "app"))
 
 	//testing ChainID
 	chainID := "testChain"

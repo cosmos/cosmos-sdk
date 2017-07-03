@@ -17,19 +17,25 @@ type nonce int64
 
 type secureContext struct {
 	id    nonce
+	chain string
 	app   string
 	perms []basecoin.Actor
 	log.Logger
 }
 
-func NewContext(logger log.Logger) basecoin.Context {
+func NewContext(chain string, logger log.Logger) basecoin.Context {
 	return secureContext{
 		id:     nonce(rand.Int63()),
+		chain:  chain,
 		Logger: logger,
 	}
 }
 
 var _ basecoin.Context = secureContext{}
+
+func (c secureContext) ChainID() string {
+	return c.chain
+}
 
 // WithPermissions will panic if they try to set permission without the proper app
 func (c secureContext) WithPermissions(perms ...basecoin.Actor) basecoin.Context {
@@ -44,6 +50,7 @@ func (c secureContext) WithPermissions(perms ...basecoin.Actor) basecoin.Context
 
 	return secureContext{
 		id:     c.id,
+		chain:  c.chain,
 		app:    c.app,
 		perms:  append(c.perms, perms...),
 		Logger: c.Logger,
@@ -73,6 +80,7 @@ func (c secureContext) IsParent(other basecoin.Context) bool {
 func (c secureContext) Reset() basecoin.Context {
 	return secureContext{
 		id:     c.id,
+		chain:  c.chain,
 		app:    c.app,
 		perms:  nil,
 		Logger: c.Logger,
@@ -88,6 +96,7 @@ func withApp(ctx basecoin.Context, app string) basecoin.Context {
 	}
 	return secureContext{
 		id:     sc.id,
+		chain:  sc.chain,
 		app:    app,
 		perms:  sc.perms,
 		Logger: sc.Logger,

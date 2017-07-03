@@ -25,9 +25,9 @@ test_unit:
 test_cli: tests/cli/shunit2
 	# sudo apt-get install jq
 	@./tests/cli/basictx.sh
-	@./tests/cli/counter.sh
+	# @./tests/cli/counter.sh
 	@./tests/cli/restart.sh
-	@./tests/cli/ibc.sh
+	# @./tests/cli/ibc.sh
 
 test_tutorial: docs/guide/shunit2
 	shelldown ${TUTORIALS}

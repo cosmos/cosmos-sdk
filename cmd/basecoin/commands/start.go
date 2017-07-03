@@ -70,7 +70,7 @@ func startCmd(cmd *cobra.Command, args []string) error {
 	basecoinApp.SetLogger(logger.With("module", "app"))
 
 	// register IBC plugn
-	basecoinApp.RegisterPlugin(NewIBCPlugin())
+	// basecoinApp.RegisterPlugin(NewIBCPlugin())
 
 	// register all other plugins
 	for _, p := range plugins {

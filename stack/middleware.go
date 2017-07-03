@@ -1,6 +1,8 @@
 package stack
 
 import (
+	"github.com/tendermint/tmlibs/log"
+
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/types"
 )
@@ -35,6 +37,10 @@ func (m *middleware) DeliverTx(ctx basecoin.Context, store types.KVStore, tx bas
 	// set the permissions for this app
 	ctx = withApp(ctx, m.Name())
 	return m.middleware.DeliverTx(ctx, store, tx, next)
+}
+
+func (m *middleware) SetOption(l log.Logger, store types.KVStore, key, value string) (string, error) {
+	return m.middleware.SetOption(l, store, key, value, m.next)
 }
 
 // Stack is the entire application stack

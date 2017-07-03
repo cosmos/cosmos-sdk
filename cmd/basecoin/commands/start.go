@@ -55,7 +55,7 @@ func init() {
 func getHandler() basecoin.Handler {
 	// use the default stack
 	h := coin.NewHandler()
-	app := stack.NewDefault("change-this").Use(h)
+	app := stack.NewDefault().Use(h)
 	return app
 
 	// register IBC plugn

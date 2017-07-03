@@ -34,7 +34,7 @@ func TestChain(t *testing.T) {
 	store := types.NewMemKVStore()
 
 	// build the stack
-	ok := OKHandler{msg}
+	ok := OKHandler{Log: msg}
 	app := New(Chain{}).Use(ok)
 
 	for idx, tc := range cases {

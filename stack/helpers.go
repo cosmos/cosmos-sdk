@@ -19,6 +19,7 @@ const (
 // OKHandler just used to return okay to everything
 type OKHandler struct {
 	Log string
+	basecoin.NopOption
 }
 
 var _ basecoin.Handler = OKHandler{}
@@ -38,7 +39,9 @@ func (ok OKHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx base
 }
 
 // EchoHandler returns success, echoing res.Data = tx bytes
-type EchoHandler struct{}
+type EchoHandler struct {
+	basecoin.NopOption
+}
 
 var _ basecoin.Handler = EchoHandler{}
 
@@ -61,6 +64,7 @@ func (_ EchoHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx bas
 // FailHandler always returns an error
 type FailHandler struct {
 	Err error
+	basecoin.NopOption
 }
 
 var _ basecoin.Handler = FailHandler{}
@@ -83,6 +87,7 @@ func (f FailHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx bas
 type PanicHandler struct {
 	Msg string
 	Err error
+	basecoin.NopOption
 }
 
 var _ basecoin.Handler = PanicHandler{}

@@ -58,7 +58,7 @@ func TestSignatureChecks(t *testing.T) {
 		app := New(
 			Recovery{}, // we need this so panics turn to errors
 			Signatures{},
-			CheckMiddleware{tc.check},
+			CheckMiddleware{Required: tc.check},
 		).Use(OKHandler{})
 
 		var tx basecoin.Tx

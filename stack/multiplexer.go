@@ -14,7 +14,9 @@ const (
 	NameMultiplexer = "mplx"
 )
 
-type Multiplexer struct{}
+type Multiplexer struct {
+	PassOption
+}
 
 func (_ Multiplexer) Name() string {
 	return NameMultiplexer

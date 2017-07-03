@@ -20,7 +20,7 @@ func TestOK(t *testing.T) {
 	data := "this looks okay"
 	tx := basecoin.Tx{}
 
-	ok := OKHandler{data}
+	ok := OKHandler{Log: data}
 	res, err := ok.CheckTx(ctx, store, tx)
 	assert.Nil(err, "%+v", err)
 	assert.Equal(data, res.Log)
@@ -38,7 +38,7 @@ func TestFail(t *testing.T) {
 	msg := "big problem"
 	tx := basecoin.Tx{}
 
-	fail := FailHandler{errors.New(msg)}
+	fail := FailHandler{Err: errors.New(msg)}
 	_, err := fail.CheckTx(ctx, store, tx)
 	if assert.NotNil(err) {
 		assert.Equal(msg, err.Error())

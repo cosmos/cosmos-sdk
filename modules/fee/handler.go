@@ -23,6 +23,7 @@ type AccountChecker interface {
 type SimpleFeeHandler struct {
 	AccountChecker
 	MinFee types.Coins
+	stack.PassOption
 }
 
 func (_ SimpleFeeHandler) Name() string {

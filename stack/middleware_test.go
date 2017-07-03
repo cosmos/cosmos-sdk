@@ -42,8 +42,8 @@ func TestPermissionSandbox(t *testing.T) {
 	for i, tc := range cases {
 		app := New(
 			Recovery{}, // we need this so panics turn to errors
-			GrantMiddleware{tc.grant},
-			CheckMiddleware{tc.require},
+			GrantMiddleware{Auth: tc.grant},
+			CheckMiddleware{Required: tc.require},
 		).Use(EchoHandler{})
 
 		res, err := app.CheckTx(ctx, store, raw)

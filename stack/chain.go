@@ -12,7 +12,9 @@ const (
 )
 
 // Chain enforces that this tx was bound to the named chain
-type Chain struct{}
+type Chain struct {
+	PassOption
+}
 
 func (_ Chain) Name() string {
 	return NameRecovery

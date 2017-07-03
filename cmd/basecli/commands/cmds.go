@@ -6,13 +6,11 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/light-client/commands"
 	txcmd "github.com/tendermint/light-client/commands/txs"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	cmn "github.com/tendermint/tmlibs/common"
 
 	"github.com/tendermint/basecoin/modules/coin"
@@ -143,74 +141,6 @@ func parseChainAddress(toFlag string) (string, []byte, error) {
 	}
 
 	return chainPrefix, to, nil
-}
-
-//-------------------------
-// AppTx
-
-// BroadcastAppTx wraps, signs, and executes an app tx basecoin transaction
-func BroadcastAppTx(tx *btypes.AppTx) (*ctypes.ResultBroadcastTxCommit, error) {
-
-	// Sign if needed and post to the node.  This it the work-horse
-	return txcmd.SignAndPostTx(WrapAppTx(tx))
-}
-
-// AddAppTxFlags adds flags required by apptx
-func AddAppTxFlags(fs *flag.FlagSet) {
-	fs.String(FlagAmount, "", "Coins to send in the format <amt><coin>,<amt><coin>...")
-	fs.String(FlagFee, "0mycoin", "Coins for the transaction fee of the format <amt><coin>")
-	fs.Int64(FlagGas, 0, "Amount of gas for this transaction")
-	fs.Int(FlagSequence, -1, "Sequence number for this transaction")
-}
-
-// ReadAppTxFlags reads in the standard flags
-// your command should parse info to set tx.Name and tx.Data
-func ReadAppTxFlags() (gas int64, fee btypes.Coin, txInput btypes.TxInput, err error) {
-
-	// Set the gas
-	gas = viper.GetInt64(FlagGas)
-
-	// Parse the fee and amounts into coin types
-	fee, err = btypes.ParseCoin(viper.GetString(FlagFee))
-	if err != nil {
-		return
-	}
-
-	// retrieve the amount
-	var amount btypes.Coins
-	amount, err = btypes.ParseCoins(viper.GetString(FlagAmount))
-	if err != nil {
-		return
-	}
-
-	// get the PubKey of the signer
-	pk := txcmd.GetSigner()
-
-	// get addr if available
-	var addr []byte
-	if !pk.Empty() {
-		addr = pk.Address()
-	}
-
-	// set the output
-	txInput = btypes.TxInput{
-		Coins:    amount,
-		Sequence: viper.GetInt(FlagSequence),
-		Address:  addr,
-	}
-	// set the pubkey if needed
-	if txInput.Sequence == 1 {
-		txInput.PubKey = pk
-	}
-	return
-}
-
-// WrapAppTx wraps the transaction with chain id
-func WrapAppTx(tx *btypes.AppTx) *AppTx {
-	return &AppTx{
-		chainID: commands.GetChainID(),
-		Tx:      tx,
-	}
 }
 
 /** TODO copied from basecoin cli - put in common somewhere? **/

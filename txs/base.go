@@ -50,7 +50,7 @@ func (r Raw) Wrap() basecoin.Tx {
 
 func (r Raw) ValidateBasic() error {
 	if len(r.Bytes) > rawMaxSize {
-		return errors.TooLarge()
+		return errors.ErrTooLarge()
 	}
 	return nil
 }

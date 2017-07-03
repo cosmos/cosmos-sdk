@@ -31,12 +31,12 @@ func TestPermissionSandbox(t *testing.T) {
 		grant       basecoin.Actor
 		require     basecoin.Actor
 		expectedRes data.Bytes
-		expectedErr error
+		expected    func(error) bool
 	}{
 		{grantee, grantee, rawBytes, nil},
-		{grantee, grantee2, nil, errors.Unauthorized()},
-		{grantee, signer, nil, errors.Unauthorized()},
-		{signer, signer, nil, errors.InternalError("panic")},
+		{grantee, grantee2, nil, errors.IsUnauthorizedErr},
+		{grantee, signer, nil, errors.IsUnauthorizedErr},
+		{signer, signer, nil, errors.IsInternalErr},
 	}
 
 	for i, tc := range cases {
@@ -47,24 +47,22 @@ func TestPermissionSandbox(t *testing.T) {
 		).Use(EchoHandler{})
 
 		res, err := app.CheckTx(ctx, store, raw)
-		checkPerm(t, i, tc.expectedRes, tc.expectedErr, res, err)
+		checkPerm(t, i, tc.expectedRes, tc.expected, res, err)
 
 		res, err = app.DeliverTx(ctx, store, raw)
-		checkPerm(t, i, tc.expectedRes, tc.expectedErr, res, err)
+		checkPerm(t, i, tc.expectedRes, tc.expected, res, err)
 	}
 }
 
-func checkPerm(t *testing.T, idx int, data []byte, expected error, res basecoin.Result, err error) {
+func checkPerm(t *testing.T, idx int, data []byte, check func(error) bool, res basecoin.Result, err error) {
 	assert := assert.New(t)
 
-	if expected == nil {
+	if len(data) > 0 {
 		assert.Nil(err, "%d: %+v", idx, err)
 		assert.EqualValues(data, res.Data)
 	} else {
 		assert.NotNil(err, "%d", idx)
 		// check error code!
-		shouldCode := errors.Wrap(expected).ErrorCode()
-		isCode := errors.Wrap(err).ErrorCode()
-		assert.Equal(shouldCode, isCode, "%d: %+v", idx, err)
+		assert.True(check(err), "%d: %+v", idx, err)
 	}
 }

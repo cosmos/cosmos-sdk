@@ -15,8 +15,12 @@ type Accountant struct {
 }
 
 func (a Accountant) GetAccount(store types.KVStore, addr basecoin.Actor) (Account, error) {
-	// TODO: how to handle empty accounts??
-	return loadAccount(store, a.makeKey(addr))
+	acct, err := loadAccount(store, a.makeKey(addr))
+	// for empty accounts, don't return an error, but rather an empty account
+	if IsNoAccountErr(err) {
+		err = nil
+	}
+	return acct, err
 }
 
 // CheckCoins makes sure there are funds, but doesn't change anything
@@ -47,14 +51,14 @@ func (a Accountant) updateCoins(store types.KVStore, addr basecoin.Actor, coins 
 
 	// check sequence
 	if seq != acct.Sequence+1 {
-		return acct, errors.InvalidSequence()
+		return acct, ErrInvalidSequence()
 	}
 	acct.Sequence += 1
 
 	// check amount
 	final := acct.Coins.Minus(coins)
 	if !final.IsNonnegative() {
-		return acct, errors.InsufficientFunds()
+		return acct, ErrInsufficientFunds()
 	}
 
 	acct.Coins = final
@@ -77,13 +81,12 @@ type Account struct {
 func loadAccount(store types.KVStore, key []byte) (acct Account, err error) {
 	data := store.Get(key)
 	if len(data) == 0 {
-		// TODO: error or empty????
-		return acct, errors.InternalError("No account found")
+		return acct, ErrNoAccount()
 	}
 	err = wire.ReadBinaryBytes(data, &acct)
 	if err != nil {
 		msg := fmt.Sprintf("Error reading account %X", key)
-		return acct, errors.InternalError(msg)
+		return acct, errors.ErrInternal(msg)
 	}
 	return acct, nil
 }

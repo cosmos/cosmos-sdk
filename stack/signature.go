@@ -61,7 +61,7 @@ func addSigners(ctx basecoin.Context, sigs []crypto.PubKey) basecoin.Context {
 func getSigners(tx basecoin.Tx) ([]crypto.PubKey, basecoin.Tx, error) {
 	stx, ok := tx.Unwrap().(Signed)
 	if !ok {
-		return nil, basecoin.Tx{}, errors.Unauthorized()
+		return nil, basecoin.Tx{}, errors.ErrUnauthorized()
 	}
 	sig, err := stx.Signers()
 	return sig, stx.Next(), err

@@ -42,10 +42,10 @@ func (c Chain) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.
 func (c Chain) checkChain(tx basecoin.Tx) (basecoin.Tx, error) {
 	ctx, ok := tx.Unwrap().(*txs.Chain)
 	if !ok {
-		return tx, errors.NoChain()
+		return tx, errors.ErrNoChain()
 	}
 	if ctx.ChainID != c.ChainID {
-		return tx, errors.WrongChain(ctx.ChainID)
+		return tx, errors.ErrWrongChain(ctx.ChainID)
 	}
 	return ctx.Tx, nil
 }

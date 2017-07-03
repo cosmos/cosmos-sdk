@@ -11,9 +11,17 @@ const (
 )
 
 // Handler writes
-type Handler struct{}
+type Handler struct {
+	Accountant
+}
 
 var _ basecoin.Handler = Handler{}
+
+func NewHandler() Handler {
+	return Handler{
+		Accountant: Accountant{Prefix: []byte(NameCoin + "/")},
+	}
+}
 
 func (_ Handler) Name() string {
 	return NameCoin
@@ -47,7 +55,7 @@ func checkTx(ctx basecoin.Context, tx basecoin.Tx) (send SendTx, err error) {
 	// check if the tx is proper type and valid
 	send, ok := tx.Unwrap().(SendTx)
 	if !ok {
-		return send, errors.UnknownTxType(tx)
+		return send, errors.ErrInvalidFormat(tx)
 	}
 	err = send.ValidateBasic()
 	if err != nil {
@@ -57,7 +65,7 @@ func checkTx(ctx basecoin.Context, tx basecoin.Tx) (send SendTx, err error) {
 	// check if all inputs have permission
 	for _, in := range send.Inputs {
 		if !ctx.HasPermission(in.Address) {
-			return send, errors.Unauthorized()
+			return send, errors.ErrUnauthorized()
 		}
 	}
 	return send, nil

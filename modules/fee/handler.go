@@ -36,16 +36,16 @@ var _ stack.Middleware = SimpleFeeHandler{}
 func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	feeTx, ok := tx.Unwrap().(*Fee)
 	if !ok {
-		return res, errors.InvalidFormat()
+		return res, errors.ErrInvalidFormat(tx)
 	}
 
 	fees := types.Coins{feeTx.Fee}
 	if !fees.IsGTE(h.MinFee) {
-		return res, errors.InsufficientFees()
+		return res, ErrInsufficientFees()
 	}
 
 	if !ctx.HasPermission(feeTx.Payer) {
-		return res, errors.Unauthorized()
+		return res, errors.ErrUnauthorized()
 	}
 
 	_, err = h.ChangeAmount(store, feeTx.Payer, fees.Negative())
@@ -59,16 +59,16 @@ func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx 
 func (h SimpleFeeHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	feeTx, ok := tx.Unwrap().(*Fee)
 	if !ok {
-		return res, errors.InvalidFormat()
+		return res, errors.ErrInvalidFormat(tx)
 	}
 
 	fees := types.Coins{feeTx.Fee}
 	if !fees.IsGTE(h.MinFee) {
-		return res, errors.InsufficientFees()
+		return res, ErrInsufficientFees()
 	}
 
 	if !ctx.HasPermission(feeTx.Payer) {
-		return res, errors.Unauthorized()
+		return res, errors.ErrUnauthorized()
 	}
 
 	_, err = h.ChangeAmount(store, feeTx.Payer, fees.Negative())

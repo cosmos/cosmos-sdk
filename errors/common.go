@@ -16,21 +16,14 @@ import (
 var (
 	errDecoding          = rawerr.New("Error decoding input")
 	errUnauthorized      = rawerr.New("Unauthorized")
-	errInvalidAddress    = rawerr.New("Invalid Address")
-	errInvalidCoins      = rawerr.New("Invalid Coins")
-	errInvalidFormat     = rawerr.New("Invalid Format")
-	errInvalidSequence   = rawerr.New("Invalid Sequence")
 	errInvalidSignature  = rawerr.New("Invalid Signature")
-	errInsufficientFees  = rawerr.New("Insufficient Fees")
-	errInsufficientFunds = rawerr.New("Insufficient Funds")
-	errNoInputs          = rawerr.New("No Input Coins")
-	errNoOutputs         = rawerr.New("No Output Coins")
 	errTooLarge          = rawerr.New("Input size too large")
 	errMissingSignature  = rawerr.New("Signature missing")
 	errTooManySignatures = rawerr.New("Too many signatures")
 	errNoChain           = rawerr.New("No chain id provided")
 	errWrongChain        = rawerr.New("Wrong chain for tx")
 	errUnknownTxType     = rawerr.New("Tx type unknown")
+	errInvalidFormat     = rawerr.New("Invalid format")
 )
 
 func ErrUnknownTxType(tx basecoin.Tx) TMError {
@@ -38,9 +31,17 @@ func ErrUnknownTxType(tx basecoin.Tx) TMError {
 	w := errors.Wrap(errUnknownTxType, msg)
 	return WithCode(w, abci.CodeType_UnknownRequest)
 }
-
 func IsUnknownTxTypeErr(err error) bool {
 	return IsSameError(errUnknownTxType, err)
+}
+
+func ErrInvalidFormat(tx basecoin.Tx) TMError {
+	msg := fmt.Sprintf("%T", tx.Unwrap())
+	w := errors.Wrap(errInvalidFormat, msg)
+	return WithCode(w, abci.CodeType_UnknownRequest)
+}
+func IsInvalidFormatErr(err error) bool {
+	return IsSameError(errInvalidFormat, err)
 }
 
 func ErrInternal(msg string) TMError {
@@ -55,7 +56,6 @@ func IsInternalErr(err error) bool {
 func ErrDecoding() TMError {
 	return WithCode(errDecoding, abci.CodeType_EncodingError)
 }
-
 func IsDecodingErr(err error) bool {
 	return IsSameError(errDecoding, err)
 }
@@ -73,7 +73,6 @@ func IsUnauthorizedErr(err error) bool {
 func ErrMissingSignature() TMError {
 	return WithCode(errMissingSignature, abci.CodeType_Unauthorized)
 }
-
 func IsMissingSignatureErr(err error) bool {
 	return IsSameError(errMissingSignature, err)
 }
@@ -81,7 +80,6 @@ func IsMissingSignatureErr(err error) bool {
 func ErrTooManySignatures() TMError {
 	return WithCode(errTooManySignatures, abci.CodeType_Unauthorized)
 }
-
 func IsTooManySignaturesErr(err error) bool {
 	return IsSameError(errTooManySignatures, err)
 }
@@ -89,7 +87,6 @@ func IsTooManySignaturesErr(err error) bool {
 func ErrInvalidSignature() TMError {
 	return WithCode(errInvalidSignature, abci.CodeType_Unauthorized)
 }
-
 func IsInvalidSignatureErr(err error) bool {
 	return IsSameError(errInvalidSignature, err)
 }
@@ -97,7 +94,6 @@ func IsInvalidSignatureErr(err error) bool {
 func ErrNoChain() TMError {
 	return WithCode(errNoChain, abci.CodeType_Unauthorized)
 }
-
 func IsNoChainErr(err error) bool {
 	return IsSameError(errNoChain, err)
 }
@@ -106,47 +102,13 @@ func ErrWrongChain(chain string) TMError {
 	msg := errors.Wrap(errWrongChain, chain)
 	return WithCode(msg, abci.CodeType_Unauthorized)
 }
-
 func IsWrongChainErr(err error) bool {
 	return IsSameError(errWrongChain, err)
-}
-
-func InvalidAddress() TMError {
-	return WithCode(errInvalidAddress, abci.CodeType_BaseInvalidInput)
-}
-
-func InvalidCoins() TMError {
-	return WithCode(errInvalidCoins, abci.CodeType_BaseInvalidInput)
-}
-
-func InvalidFormat() TMError {
-	return WithCode(errInvalidFormat, abci.CodeType_BaseInvalidInput)
-}
-
-func InvalidSequence() TMError {
-	return WithCode(errInvalidSequence, abci.CodeType_BaseInvalidInput)
-}
-
-func InsufficientFees() TMError {
-	return WithCode(errInsufficientFees, abci.CodeType_BaseInvalidInput)
-}
-
-func InsufficientFunds() TMError {
-	return WithCode(errInsufficientFunds, abci.CodeType_BaseInvalidInput)
-}
-
-func NoInputs() TMError {
-	return WithCode(errNoInputs, abci.CodeType_BaseInvalidInput)
-}
-
-func NoOutputs() TMError {
-	return WithCode(errNoOutputs, abci.CodeType_BaseInvalidOutput)
 }
 
 func ErrTooLarge() TMError {
 	return WithCode(errTooLarge, abci.CodeType_EncodingError)
 }
-
 func IsTooLargeErr(err error) bool {
 	return IsSameError(errTooLarge, err)
 }

@@ -66,7 +66,7 @@ func (s *OneSig) Next() basecoin.Tx {
 func (s *OneSig) ValidateBasic() error {
 	// TODO: VerifyBytes here, we do it in Signers?
 	if s.Empty() || !s.Pubkey.VerifyBytes(s.SignBytes(), s.Sig) {
-		return errors.Unauthorized()
+		return errors.ErrUnauthorized()
 	}
 	return s.Tx.ValidateBasic()
 }
@@ -92,10 +92,10 @@ func (s *OneSig) SignBytes() []byte {
 func (s *OneSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
 	signed := Signed{sig, pubkey}
 	if signed.Empty() {
-		return errors.MissingSignature()
+		return errors.ErrMissingSignature()
 	}
 	if !s.Empty() {
-		return errors.TooManySignatures()
+		return errors.ErrTooManySignatures()
 	}
 	// set the value once we are happy
 	s.Signed = signed
@@ -107,10 +107,10 @@ func (s *OneSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
 // including if there are no signatures
 func (s *OneSig) Signers() ([]crypto.PubKey, error) {
 	if s.Empty() {
-		return nil, errors.MissingSignature()
+		return nil, errors.ErrMissingSignature()
 	}
 	if !s.Pubkey.VerifyBytes(s.SignBytes(), s.Sig) {
-		return nil, errors.InvalidSignature()
+		return nil, errors.ErrInvalidSignature()
 	}
 	return []crypto.PubKey{s.Pubkey}, nil
 }
@@ -168,7 +168,7 @@ func (s *MultiSig) SignBytes() []byte {
 func (s *MultiSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
 	signed := Signed{sig, pubkey}
 	if signed.Empty() {
-		return errors.MissingSignature()
+		return errors.ErrMissingSignature()
 	}
 	// set the value once we are happy
 	s.Sigs = append(s.Sigs, signed)
@@ -180,7 +180,7 @@ func (s *MultiSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
 // including if there are no signatures
 func (s *MultiSig) Signers() ([]crypto.PubKey, error) {
 	if len(s.Sigs) == 0 {
-		return nil, errors.MissingSignature()
+		return nil, errors.ErrMissingSignature()
 	}
 	// verify all the signatures before returning them
 	keys := make([]crypto.PubKey, len(s.Sigs))
@@ -188,7 +188,7 @@ func (s *MultiSig) Signers() ([]crypto.PubKey, error) {
 	for i := range s.Sigs {
 		ms := s.Sigs[i]
 		if !ms.Pubkey.VerifyBytes(data, ms.Sig) {
-			return nil, errors.InvalidSignature()
+			return nil, errors.ErrInvalidSignature()
 		}
 		keys[i] = ms.Pubkey
 	}

@@ -25,7 +25,7 @@ func TestChain(t *testing.T) {
 		errorMsg string
 	}{
 		{txs.NewChain(chainID, raw).Wrap(), true, ""},
-		{txs.NewChain("someone-else", raw).Wrap(), false, "Tx belongs to different chain - someone-else"},
+		{txs.NewChain("someone-else", raw).Wrap(), false, "someone-else"},
 		{raw, false, "No chain id provided"},
 	}
 
@@ -47,7 +47,7 @@ func TestChain(t *testing.T) {
 			assert.Equal(msg, res.Log, i)
 		} else {
 			if assert.NotNil(err, i) {
-				assert.Equal(tc.errorMsg, err.Error(), i)
+				assert.Contains(err.Error(), tc.errorMsg, i)
 			}
 		}
 
@@ -58,7 +58,7 @@ func TestChain(t *testing.T) {
 			assert.Equal(msg, res.Log, i)
 		} else {
 			if assert.NotNil(err, i) {
-				assert.Equal(tc.errorMsg, err.Error(), i)
+				assert.Contains(err.Error(), tc.errorMsg, i)
 			}
 		}
 	}

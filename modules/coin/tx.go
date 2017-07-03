@@ -5,7 +5,6 @@ import (
 
 	"github.com/tendermint/basecoin"
 
-	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/types"
 )
 
@@ -29,20 +28,20 @@ type TxInput struct {
 
 func (txIn TxInput) ValidateBasic() error {
 	if txIn.Address.App == "" {
-		return errors.InvalidAddress()
+		return ErrInvalidAddress()
 	}
 	// TODO: knowledge of app-specific codings?
 	if len(txIn.Address.Address) == 0 {
-		return errors.InvalidAddress()
+		return ErrInvalidAddress()
 	}
 	if !txIn.Coins.IsValid() {
-		return errors.InvalidCoins()
+		return ErrInvalidCoins()
 	}
 	if !txIn.Coins.IsPositive() {
-		return errors.InvalidCoins()
+		return ErrInvalidCoins()
 	}
 	if txIn.Sequence <= 0 {
-		return errors.InvalidSequence()
+		return ErrInvalidSequence()
 	}
 	return nil
 }
@@ -69,17 +68,17 @@ type TxOutput struct {
 
 func (txOut TxOutput) ValidateBasic() error {
 	if txOut.Address.App == "" {
-		return errors.InvalidAddress()
+		return ErrInvalidAddress()
 	}
 	// TODO: knowledge of app-specific codings?
 	if len(txOut.Address.Address) == 0 {
-		return errors.InvalidAddress()
+		return ErrInvalidAddress()
 	}
 	if !txOut.Coins.IsValid() {
-		return errors.InvalidCoins()
+		return ErrInvalidCoins()
 	}
 	if !txOut.Coins.IsPositive() {
-		return errors.InvalidCoins()
+		return ErrInvalidCoins()
 	}
 	return nil
 }
@@ -109,10 +108,10 @@ func (tx SendTx) ValidateBasic() error {
 	// this just makes sure all the inputs and outputs are properly formatted,
 	// not that they actually have the money inside
 	if len(tx.Inputs) == 0 {
-		return errors.NoInputs()
+		return ErrNoInputs()
 	}
 	if len(tx.Outputs) == 0 {
-		return errors.NoOutputs()
+		return ErrNoOutputs()
 	}
 	// make sure all inputs and outputs are individually valid
 	var totalIn, totalOut types.Coins
@@ -130,7 +129,7 @@ func (tx SendTx) ValidateBasic() error {
 	}
 	// make sure inputs and outputs match
 	if !totalIn.IsEqual(totalOut) {
-		return errors.InvalidCoins()
+		return ErrInvalidCoins()
 	}
 	return nil
 }

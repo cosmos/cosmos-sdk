@@ -25,14 +25,14 @@ func (_ CheckMiddleware) Name() string {
 
 func (p CheckMiddleware) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	if !ctx.HasPermission(p.Required) {
-		return res, errors.Unauthorized()
+		return res, errors.ErrUnauthorized()
 	}
 	return next.CheckTx(ctx, store, tx)
 }
 
 func (p CheckMiddleware) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	if !ctx.HasPermission(p.Required) {
-		return res, errors.Unauthorized()
+		return res, errors.ErrUnauthorized()
 	}
 	return next.DeliverTx(ctx, store, tx)
 }

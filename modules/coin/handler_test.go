@@ -12,7 +12,7 @@ import (
 func TestHandlerPermissions(t *testing.T) {
 	assert := assert.New(t)
 	// TODO: need to update this when we actually have token store
-	h := Handler{}
+	h := NewHandler()
 
 	// these are all valid, except for minusCoins
 	addr1 := basecoin.Actor{App: "coin", Address: []byte{1, 2}}

@@ -45,5 +45,5 @@ func normalizePanic(p interface{}) error {
 		return errors.Wrap(err)
 	}
 	msg := fmt.Sprintf("%v", p)
-	return errors.InternalError(msg)
+	return errors.ErrInternal(msg)
 }

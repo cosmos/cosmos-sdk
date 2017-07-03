@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/basecoin/types"
-	crypto "github.com/tendermint/go-crypto"
 	eyescli "github.com/tendermint/merkleeyes/client"
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
@@ -37,27 +36,19 @@ func TestLoadGenesis(t *testing.T) {
 
 	// and check the account info - previously calculated values
 	addr, _ := hex.DecodeString("eb98e0688217cfdeb70eddf4b33cdcc37fc53197")
-	pkbyte, _ := hex.DecodeString("6880db93598e283a67c4d88fc67a8858aa2de70f713fe94a5109e29c137100c2")
 
-	acct := app.GetState().GetAccount(addr)
-	require.NotNil(acct)
+	coins, err := getAddr(addr, app.state)
+	require.Nil(err)
+	assert.True(coins.IsPositive())
 
 	// make sure balance is proper
-	assert.Equal(2, len(acct.Balance))
-	assert.True(acct.Balance.IsValid())
+	assert.Equal(2, len(coins))
+	assert.True(coins.IsValid())
 	// note, that we now sort them to be valid
-	assert.EqualValues(654321, acct.Balance[0].Amount)
-	assert.EqualValues("ETH", acct.Balance[0].Denom)
-	assert.EqualValues(12345, acct.Balance[1].Amount)
-	assert.EqualValues("blank", acct.Balance[1].Denom)
-
-	// and public key is parsed properly
-	apk := acct.PubKey.Unwrap()
-	require.NotNil(apk)
-	epk, ok := apk.(crypto.PubKeyEd25519)
-	if assert.True(ok) {
-		assert.EqualValues(pkbyte, epk[:])
-	}
+	assert.EqualValues(654321, coins[0].Amount)
+	assert.EqualValues("ETH", coins[0].Denom)
+	assert.EqualValues(12345, coins[1].Amount)
+	assert.EqualValues("blank", coins[1].Denom)
 }
 
 // Fix for issue #89, change the parse format for accounts in genesis.json
@@ -90,17 +81,17 @@ func TestLoadGenesisAccountAddress(t *testing.T) {
 		{"979F080B1DD046C452C2A8A250D18646C6B669D4", true, true, types.Coins{{"four", 444}}},
 	}
 
-	for _, tc := range cases {
+	for i, tc := range cases {
 		addr, err := hex.DecodeString(tc.addr)
 		require.Nil(err, tc.addr)
-		acct := app.GetState().GetAccount(addr)
+		coins, err := getAddr(addr, app.state)
+		require.Nil(err, "%+v", err)
 		if !tc.exists {
-			assert.Nil(acct, tc.addr)
-		} else if assert.NotNil(acct, tc.addr) {
+			assert.True(coins.IsZero(), "%d", i)
+		} else if assert.False(coins.IsZero(), "%d", i) {
 			// it should and does exist...
-			assert.True(acct.Balance.IsValid())
-			assert.Equal(tc.coins, acct.Balance)
-			assert.Equal(!tc.hasPubkey, acct.PubKey.Empty(), tc.addr)
+			assert.True(coins.IsValid())
+			assert.Equal(tc.coins, coins)
 		}
 	}
 }

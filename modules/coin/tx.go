@@ -102,7 +102,11 @@ type SendTx struct {
 	Outputs []TxOutput `json:"outputs"`
 }
 
-var _ basecoin.Tx = SendTx{}.Wrap()
+var _ basecoin.Tx = NewSendTx(nil, nil)
+
+func NewSendTx(in []TxInput, out []TxOutput) basecoin.Tx {
+	return SendTx{Inputs: in, Outputs: out}.Wrap()
+}
 
 func (tx SendTx) ValidateBasic() error {
 	// this just makes sure all the inputs and outputs are properly formatted,

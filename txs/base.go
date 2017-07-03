@@ -55,8 +55,8 @@ func (r Raw) ValidateBasic() error {
 	return nil
 }
 
-func NewRaw(d []byte) Raw {
-	return Raw{data.Bytes(d)}
+func NewRaw(d []byte) basecoin.Tx {
+	return Raw{data.Bytes(d)}.Wrap()
 }
 
 /**** MultiTx  ******/
@@ -64,8 +64,8 @@ type MultiTx struct {
 	Txs []basecoin.Tx `json:"txs"`
 }
 
-func NewMultiTx(txs ...basecoin.Tx) *MultiTx {
-	return &MultiTx{Txs: txs}
+func NewMultiTx(txs ...basecoin.Tx) basecoin.Tx {
+	return (&MultiTx{Txs: txs}).Wrap()
 }
 
 func (mt *MultiTx) Wrap() basecoin.Tx {
@@ -90,8 +90,8 @@ type Chain struct {
 	ChainID string      `json:"chain_id"`
 }
 
-func NewChain(chainID string, tx basecoin.Tx) *Chain {
-	return &Chain{Tx: tx, ChainID: chainID}
+func NewChain(chainID string, tx basecoin.Tx) basecoin.Tx {
+	return (&Chain{Tx: tx, ChainID: chainID}).Wrap()
 }
 
 func (c *Chain) Wrap() basecoin.Tx {

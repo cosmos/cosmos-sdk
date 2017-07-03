@@ -16,15 +16,15 @@ func TestEncoding(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	raw := NewRaw([]byte{0x34, 0xa7}).Wrap()
-	raw2 := NewRaw([]byte{0x73, 0x86, 0x22}).Wrap()
+	raw := NewRaw([]byte{0x34, 0xa7})
+	raw2 := NewRaw([]byte{0x73, 0x86, 0x22})
 
 	cases := []struct {
 		Tx basecoin.Tx
 	}{
 		{raw},
-		{NewMultiTx(raw, raw2).Wrap()},
-		{NewChain("foobar", raw).Wrap()},
+		{NewMultiTx(raw, raw2)},
+		{NewChain("foobar", raw)},
 	}
 
 	for idx, tc := range cases {

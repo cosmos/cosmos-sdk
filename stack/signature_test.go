@@ -19,7 +19,7 @@ func TestSignatureChecks(t *testing.T) {
 	// generic args
 	ctx := NewContext(log.NewNopLogger())
 	store := types.NewMemKVStore()
-	raw := txs.NewRaw([]byte{1, 2, 3, 4}).Wrap()
+	raw := txs.NewRaw([]byte{1, 2, 3, 4})
 
 	// let's make some keys....
 	priv1 := crypto.GenPrivKeyEd25519().Wrap()

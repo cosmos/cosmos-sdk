@@ -25,8 +25,8 @@ type Fee struct {
 	// Gas types.Coin `json:"gas"`  // ?????
 }
 
-func NewFee(tx basecoin.Tx, fee types.Coin, payer basecoin.Actor) *Fee {
-	return &Fee{Tx: tx, Fee: fee, Payer: payer}
+func NewFee(tx basecoin.Tx, fee types.Coin, payer basecoin.Actor) basecoin.Tx {
+	return (&Fee{Tx: tx, Fee: fee, Payer: payer}).Wrap()
 }
 
 func (f *Fee) ValidateBasic() error {

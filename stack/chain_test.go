@@ -18,14 +18,14 @@ func TestChain(t *testing.T) {
 	msg := "got it"
 	chainID := "my-chain"
 
-	raw := txs.NewRaw([]byte{1, 2, 3, 4}).Wrap()
+	raw := txs.NewRaw([]byte{1, 2, 3, 4})
 	cases := []struct {
 		tx       basecoin.Tx
 		valid    bool
 		errorMsg string
 	}{
-		{txs.NewChain(chainID, raw).Wrap(), true, ""},
-		{txs.NewChain("someone-else", raw).Wrap(), false, "someone-else"},
+		{txs.NewChain(chainID, raw), true, ""},
+		{txs.NewChain("someone-else", raw), false, "someone-else"},
 		{raw, false, "No chain id provided"},
 	}
 

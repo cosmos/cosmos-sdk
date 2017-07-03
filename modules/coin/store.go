@@ -45,18 +45,24 @@ func (a Accountant) ChangeCoins(store types.KVStore, addr basecoin.Actor, coins 
 // it doesn't save anything, that is up to you to decide (Check/Change Coins)
 func (a Accountant) updateCoins(store types.KVStore, addr basecoin.Actor, coins types.Coins, seq int) (acct Account, err error) {
 	acct, err = loadAccount(store, a.makeKey(addr))
+	// we can increase an empty account...
+	if IsNoAccountErr(err) && coins.IsPositive() {
+		err = nil
+	}
 	if err != nil {
 		return acct, err
 	}
 
-	// check sequence
-	if seq != acct.Sequence+1 {
-		return acct, ErrInvalidSequence()
+	// check sequence if we are deducting... ugh, need a cleaner replay protection
+	if !coins.IsPositive() {
+		if seq != acct.Sequence+1 {
+			return acct, ErrInvalidSequence()
+		}
+		acct.Sequence += 1
 	}
-	acct.Sequence += 1
 
 	// check amount
-	final := acct.Coins.Minus(coins)
+	final := acct.Coins.Plus(coins)
 	if !final.IsNonnegative() {
 		return acct, ErrInsufficientFunds()
 	}

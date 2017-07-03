@@ -29,12 +29,18 @@ func (_ Handler) Name() string {
 
 // CheckTx checks if there is enough money in the account
 func (h Handler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
-	_, err = checkTx(ctx, tx)
+	send, err := checkTx(ctx, tx)
 	if err != nil {
 		return res, err
 	}
 
 	// now make sure there is money
+	for _, in := range send.Inputs {
+		_, err = h.CheckCoins(store, in.Address, in.Coins, in.Sequence)
+		if err != nil {
+			return res, err
+		}
+	}
 
 	// otherwise, we are good
 	return res, nil
@@ -42,12 +48,29 @@ func (h Handler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.
 
 // DeliverTx moves the money
 func (h Handler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
-	_, err = checkTx(ctx, tx)
+	send, err := checkTx(ctx, tx)
 	if err != nil {
 		return res, err
 	}
 
-	// now move the money
+	// deduct from all input accounts
+	for _, in := range send.Inputs {
+		_, err = h.ChangeCoins(store, in.Address, in.Coins.Negative(), in.Sequence)
+		if err != nil {
+			return res, err
+		}
+	}
+
+	// add to all output accounts
+	for _, out := range send.Outputs {
+		// note: sequence number is ignored when adding coins, only checked for subtracting
+		_, err = h.ChangeCoins(store, out.Address, out.Coins, 0)
+		if err != nil {
+			return res, err
+		}
+	}
+
+	// a-ok!
 	return basecoin.Result{}, nil
 }
 

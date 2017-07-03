@@ -17,18 +17,14 @@ type State struct {
 	logger     log.Logger
 }
 
-func NewState(store types.KVStore) *State {
+func NewState(store types.KVStore, l log.Logger) *State {
 	return &State{
 		chainID:    "",
 		store:      store,
 		readCache:  make(map[string][]byte),
 		writeCache: nil,
-		logger:     log.NewNopLogger(),
+		logger:     l,
 	}
-}
-
-func (s *State) SetLogger(l log.Logger) {
-	s.logger = l
 }
 
 func (s *State) SetChainID(chainID string) {

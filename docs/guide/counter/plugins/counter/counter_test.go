@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
+	"github.com/tendermint/tmlibs/log"
 )
 
 func TestCounterPlugin(t *testing.T) {
@@ -19,7 +20,7 @@ func TestCounterPlugin(t *testing.T) {
 	// Basecoin initialization
 	eyesCli := eyescli.NewLocalClient("", 0)
 	chainID := "test_chain_id"
-	bcApp := app.NewBasecoin(eyesCli)
+	bcApp := app.NewBasecoin(eyesCli, log.TestingLogger().With("module", "app"))
 	bcApp.SetOption("base/chain_id", chainID)
 	// t.Log(bcApp.Info())
 

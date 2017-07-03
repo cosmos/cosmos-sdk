@@ -11,6 +11,7 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 	eyescli "github.com/tendermint/merkleeyes/client"
 	cmn "github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tmlibs/log"
 )
 
 const genesisFilepath = "./testdata/genesis.json"
@@ -18,7 +19,7 @@ const genesisAcctFilepath = "./testdata/genesis2.json"
 
 func TestLoadGenesisDoNotFailIfAppOptionsAreMissing(t *testing.T) {
 	eyesCli := eyescli.NewLocalClient("", 0)
-	app := NewBasecoin(eyesCli)
+	app := NewBasecoin(eyesCli, log.TestingLogger())
 	err := app.LoadGenesis("./testdata/genesis3.json")
 	require.Nil(t, err, "%+v", err)
 }
@@ -27,7 +28,7 @@ func TestLoadGenesis(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	eyesCli := eyescli.NewLocalClient("", 0)
-	app := NewBasecoin(eyesCli)
+	app := NewBasecoin(eyesCli, log.TestingLogger())
 	err := app.LoadGenesis(genesisFilepath)
 	require.Nil(err, "%+v", err)
 
@@ -64,7 +65,7 @@ func TestLoadGenesisAccountAddress(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	eyesCli := eyescli.NewLocalClient("", 0)
-	app := NewBasecoin(eyesCli)
+	app := NewBasecoin(eyesCli, log.TestingLogger())
 	err := app.LoadGenesis(genesisAcctFilepath)
 	require.Nil(err, "%+v", err)
 

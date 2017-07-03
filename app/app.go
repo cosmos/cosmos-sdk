@@ -29,21 +29,17 @@ type Basecoin struct {
 	logger     log.Logger
 }
 
-func NewBasecoin(eyesCli *eyes.Client) *Basecoin {
-	state := sm.NewState(eyesCli)
+func NewBasecoin(eyesCli *eyes.Client, l log.Logger) *Basecoin {
+	state := sm.NewState(eyesCli, l.With("module", "state"))
+
 	plugins := types.NewPlugins()
 	return &Basecoin{
 		eyesCli:    eyesCli,
 		state:      state,
 		cacheState: nil,
 		plugins:    plugins,
-		logger:     log.NewNopLogger(),
+		logger:     l,
 	}
-}
-
-func (app *Basecoin) SetLogger(l log.Logger) {
-	app.logger = l
-	app.state.SetLogger(l.With("module", "state"))
 }
 
 // XXX For testing, not thread safe!

@@ -19,6 +19,10 @@ type stackTracer interface {
 	StackTrace() errors.StackTrace
 }
 
+type causer interface {
+	Cause() error
+}
+
 type TMError interface {
 	stackTracer
 	ErrorCode() abci.CodeType
@@ -31,12 +35,24 @@ type tmerror struct {
 	msg  string
 }
 
+var (
+	_ causer = tmerror{}
+	_ error  = tmerror{}
+)
+
 func (t tmerror) ErrorCode() abci.CodeType {
 	return t.code
 }
 
 func (t tmerror) Message() string {
 	return t.msg
+}
+
+func (t tmerror) Cause() error {
+	if c, ok := t.stackTracer.(causer); ok {
+		return c.Cause()
+	}
+	return t.stackTracer
 }
 
 // Format handles "%+v" to expose the full stack trace
@@ -101,4 +117,19 @@ func New(msg string, code abci.CodeType) TMError {
 		code:        code,
 		msg:         msg,
 	}
+}
+
+// IsSameError returns true if these errors have the same root cause.
+// pattern is the expected error type and should always be non-nil
+// err may be anything and returns true if it is a wrapped version of pattern
+func IsSameError(pattern error, err error) bool {
+	return err != nil && (errors.Cause(err) == errors.Cause(pattern))
+}
+
+// HasErrorCode checks if this error would return the named error code
+func HasErrorCode(err error, code abci.CodeType) bool {
+	if tm, ok := err.(TMError); ok {
+		return tm.ErrorCode() == code
+	}
+	return code == defaultErrCode
 }

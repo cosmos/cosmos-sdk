@@ -24,8 +24,8 @@ func TestCreateResult(t *testing.T) {
 		{New("nonce", abci.CodeType_BadNonce), "nonce", abci.CodeType_BadNonce},
 		{Wrap(stderr.New("wrap")), "wrap", defaultErrCode},
 		{WithCode(stderr.New("coded"), abci.CodeType_BaseInvalidInput), "coded", abci.CodeType_BaseInvalidInput},
-		{DecodingError(), msgDecoding, abci.CodeType_EncodingError},
-		{Unauthorized(), msgUnauthorized, abci.CodeType_Unauthorized},
+		{ErrDecoding(), errDecoding.Error(), abci.CodeType_EncodingError},
+		{ErrUnauthorized(), errUnauthorized.Error(), abci.CodeType_Unauthorized},
 	}
 
 	for idx, tc := range cases {

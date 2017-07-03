@@ -18,6 +18,7 @@ import (
 
 const (
 	PluginNameBase = "base"
+	ChainKey       = "base/chain_id"
 )
 
 type Basecoin struct {
@@ -67,41 +68,16 @@ func (app *Basecoin) Info() abci.ResponseInfo {
 
 // ABCI::SetOption
 func (app *Basecoin) SetOption(key string, value string) string {
-	// TODO
-	return "todo"
-	// pluginName, key := splitKey(key)
-	// if pluginName != PluginNameBase {
-	// 	// Set option on plugin
-	// 	plugin := app.plugins.GetByName(pluginName)
-	// 	if plugin == nil {
-	// 		return "Invalid plugin name: " + pluginName
-	// 	}
-	// 	app.logger.Info("SetOption on plugin", "plugin", pluginName, "key", key, "value", value)
-	// 	return plugin.SetOption(app.state, key, value)
-	// } else {
-	// 	// Set option on basecoin
-	// 	switch key {
-	// 	case "chain_id":
-	// 		app.state.SetChainID(value)
-	// 		return "Success"
-	// 	case "account":
-	// 		var acc GenesisAccount
-	// 		err := json.Unmarshal([]byte(value), &acc)
-	// 		if err != nil {
-	// 			return "Error decoding acc message: " + err.Error()
-	// 		}
-	// 		acc.Balance.Sort()
-	// 		addr, err := acc.GetAddr()
-	// 		if err != nil {
-	// 			return "Invalid address: " + err.Error()
-	// 		}
-	// 		app.state.SetAccount(addr, acc.ToAccount())
-	// 		app.logger.Info("SetAccount", "addr", hex.EncodeToString(addr), "acc", acc)
+	if key == ChainKey {
+		app.state.SetChainID(value)
+		return "Success"
+	}
 
-	// 		return "Success"
-	// 	}
-	// 	return "Unrecognized option key " + key
-	// }
+	log, err := app.handler.SetOption(app.logger, app.state, key, value)
+	if err == nil {
+		return log
+	}
+	return "Error: " + err.Error()
 }
 
 // ABCI::DeliverTx

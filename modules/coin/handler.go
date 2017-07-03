@@ -1,6 +1,9 @@
 package coin
 
 import (
+	"fmt"
+
+	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
@@ -77,8 +80,28 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoi
 }
 
 func (h Handler) SetOption(l log.Logger, store types.KVStore, key, value string) (log string, err error) {
-	// TODO
-	return "ok", nil
+	if key == "base/account" {
+		var acc GenesisAccount
+		err = data.FromJSON([]byte(value), &acc)
+		if err != nil {
+			return "", err
+		}
+		acc.Balance.Sort()
+		addr, err := acc.GetAddr()
+		if err != nil {
+			return "", ErrInvalidAddress()
+		}
+		actor := basecoin.Actor{App: NameCoin, Address: addr}
+		err = storeAccount(store, h.makeKey(actor), acc.ToAccount())
+		if err != nil {
+			return "", err
+		}
+		return "Success", nil
+
+	} else {
+		msg := fmt.Sprintf("Unknown key: %s", key)
+		return "", errors.ErrInternal(msg)
+	}
 }
 
 func checkTx(ctx basecoin.Context, tx basecoin.Tx) (send SendTx, err error) {

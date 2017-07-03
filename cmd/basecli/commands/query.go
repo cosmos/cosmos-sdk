@@ -10,6 +10,8 @@ import (
 	proofcmd "github.com/tendermint/light-client/commands/proofs"
 	"github.com/tendermint/light-client/proofs"
 
+	"github.com/tendermint/basecoin/modules/coin"
+	"github.com/tendermint/basecoin/stack"
 	btypes "github.com/tendermint/basecoin/types"
 )
 
@@ -24,9 +26,9 @@ func doAccountQuery(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	key := btypes.AccountKey(addr)
+	key := coin.NewAccountant("").MakeKey(stack.SigPerm(addr))
 
-	acc := new(btypes.Account)
+	acc := coin.Account{}
 	proof, err := proofcmd.GetAndParseAppProof(key, &acc)
 	if lc.IsNoDataErr(err) {
 		return errors.Errorf("Account bytes are empty for address %X ", addr)

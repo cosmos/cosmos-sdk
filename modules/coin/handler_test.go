@@ -143,7 +143,7 @@ func TestDeliverTx(t *testing.T) {
 		store := types.NewMemKVStore()
 		for _, m := range tc.init {
 			acct := Account{Coins: m.coins}
-			err := storeAccount(store, h.makeKey(m.addr), acct)
+			err := storeAccount(store, h.MakeKey(m.addr), acct)
 			require.Nil(err, "%d: %+v", i, err)
 		}
 
@@ -153,7 +153,7 @@ func TestDeliverTx(t *testing.T) {
 			assert.Nil(err, "%d: %+v", i, err)
 			// make sure the final balances are correct
 			for _, f := range tc.final {
-				acct, err := loadAccount(store, h.makeKey(f.addr))
+				acct, err := loadAccount(store, h.MakeKey(f.addr))
 				assert.Nil(err, "%d: %+v", i, err)
 				assert.Equal(f.coins, acct.Coins)
 			}
@@ -210,7 +210,7 @@ func TestSetOption(t *testing.T) {
 
 		// check state is proper
 		for _, f := range tc.expected {
-			acct, err := loadAccount(store, h.makeKey(f.addr))
+			acct, err := loadAccount(store, h.MakeKey(f.addr))
 			assert.Nil(err, "%d: %+v", i, err)
 			assert.Equal(f.coins, acct.Coins)
 		}

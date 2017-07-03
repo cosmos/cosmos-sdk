@@ -1,8 +1,6 @@
 package app
 
 import (
-	"strings"
-
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin"
 	eyes "github.com/tendermint/merkleeyes/client"
@@ -89,8 +87,10 @@ func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
 
 	// TODO: can we abstract this setup and commit logic??
 	cache := app.state.CacheWrap()
-	ctx := stack.NewContext(app.state.GetChainID(),
-		app.logger.With("call", "delivertx"))
+	ctx := stack.NewContext(
+		app.state.GetChainID(),
+		app.logger.With("call", "delivertx"),
+	)
 	res, err := app.handler.DeliverTx(ctx, cache, tx)
 
 	if err != nil {
@@ -110,8 +110,10 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 	}
 
 	// TODO: can we abstract this setup and commit logic??
-	ctx := stack.NewContext(app.state.GetChainID(),
-		app.logger.With("call", "checktx"))
+	ctx := stack.NewContext(
+		app.state.GetChainID(),
+		app.logger.With("call", "checktx"),
+	)
 	// checktx generally shouldn't touch the state, but we don't care
 	// here on the framework level, since the cacheState is thrown away next block
 	res, err := app.handler.CheckTx(ctx, app.cacheState, tx)
@@ -175,16 +177,4 @@ func (app *Basecoin) EndBlock(height uint64) (res abci.ResponseEndBlock) {
 	// 	res.Diffs = append(res.Diffs, pluginRes.Diffs...)
 	// }
 	return
-}
-
-//----------------------------------------
-
-// Splits the string at the first '/'.
-// if there are none, the second string is nil.
-func splitKey(key string) (prefix string, suffix string) {
-	if strings.Contains(key, "/") {
-		keyParts := strings.SplitN(key, "/", 2)
-		return keyParts[0], keyParts[1]
-	}
-	return key, ""
 }

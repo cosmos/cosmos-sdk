@@ -14,8 +14,17 @@ type Accountant struct {
 	Prefix []byte
 }
 
+func NewAccountant(prefix string) Accountant {
+	if prefix == "" {
+		prefix = NameCoin
+	}
+	return Accountant{
+		Prefix: []byte(prefix + "/"),
+	}
+}
+
 func (a Accountant) GetAccount(store types.KVStore, addr basecoin.Actor) (Account, error) {
-	acct, err := loadAccount(store, a.makeKey(addr))
+	acct, err := loadAccount(store, a.MakeKey(addr))
 	// for empty accounts, don't return an error, but rather an empty account
 	if IsNoAccountErr(err) {
 		err = nil
@@ -36,7 +45,7 @@ func (a Accountant) ChangeCoins(store types.KVStore, addr basecoin.Actor, coins 
 		return acct.Coins, err
 	}
 
-	err = storeAccount(store, a.makeKey(addr), acct)
+	err = storeAccount(store, a.MakeKey(addr), acct)
 	return acct.Coins, err
 }
 
@@ -44,7 +53,7 @@ func (a Accountant) ChangeCoins(store types.KVStore, addr basecoin.Actor, coins 
 //
 // it doesn't save anything, that is up to you to decide (Check/Change Coins)
 func (a Accountant) updateCoins(store types.KVStore, addr basecoin.Actor, coins types.Coins, seq int) (acct Account, err error) {
-	acct, err = loadAccount(store, a.makeKey(addr))
+	acct, err = loadAccount(store, a.MakeKey(addr))
 	// we can increase an empty account...
 	if IsNoAccountErr(err) && coins.IsPositive() {
 		err = nil
@@ -71,7 +80,7 @@ func (a Accountant) updateCoins(store types.KVStore, addr basecoin.Actor, coins 
 	return acct, nil
 }
 
-func (a Accountant) makeKey(addr basecoin.Actor) []byte {
+func (a Accountant) MakeKey(addr basecoin.Actor) []byte {
 	key := addr.Bytes()
 	if len(a.Prefix) > 0 {
 		key = append(a.Prefix, key...)

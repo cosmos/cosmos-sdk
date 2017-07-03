@@ -8,6 +8,7 @@ import (
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/types"
 )
 
@@ -24,7 +25,7 @@ var _ basecoin.Handler = Handler{}
 
 func NewHandler() Handler {
 	return Handler{
-		Accountant: Accountant{Prefix: []byte(NameCoin + "/")},
+		Accountant: NewAccountant(""),
 	}
 }
 
@@ -41,7 +42,7 @@ func (h Handler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.
 
 	// now make sure there is money
 	for _, in := range send.Inputs {
-		_, err = h.CheckCoins(store, in.Address, in.Coins, in.Sequence)
+		_, err = h.CheckCoins(store, in.Address, in.Coins.Negative(), in.Sequence)
 		if err != nil {
 			return res, err
 		}
@@ -91,8 +92,9 @@ func (h Handler) SetOption(l log.Logger, store types.KVStore, key, value string)
 		if err != nil {
 			return "", ErrInvalidAddress()
 		}
-		actor := basecoin.Actor{App: NameCoin, Address: addr}
-		err = storeAccount(store, h.makeKey(actor), acc.ToAccount())
+		// this sets the permission for a public key signature, use that app
+		actor := stack.SigPerm(addr)
+		err = storeAccount(store, h.MakeKey(actor), acc.ToAccount())
 		if err != nil {
 			return "", err
 		}

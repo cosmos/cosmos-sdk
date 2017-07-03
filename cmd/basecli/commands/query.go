@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
+	"github.com/tendermint/basecoin"
 	wire "github.com/tendermint/go-wire"
 	lc "github.com/tendermint/light-client"
 	lcmd "github.com/tendermint/light-client/commands"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/stack"
-	btypes "github.com/tendermint/basecoin/types"
 )
 
 var AccountQueryCmd = &cobra.Command{
@@ -45,7 +45,7 @@ type BaseTxPresenter struct {
 }
 
 func (_ BaseTxPresenter) ParseData(raw []byte) (interface{}, error) {
-	var tx btypes.TxS
+	var tx basecoin.Tx
 	err := wire.ReadBinaryBytes(raw, &tx)
 	return tx, err
 }

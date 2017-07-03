@@ -12,9 +12,9 @@ import (
 // It doesn't just have to be a pubkey on this chain, it could stem from
 // another app (like multi-sig account), or even another chain (via IBC)
 type Actor struct {
-	ChainID string     // this is empty unless it comes from a different chain
-	App     string     // the app that the actor belongs to
-	Address data.Bytes // arbitrary app-specific unique id
+	ChainID string     `json:"chain"` // this is empty unless it comes from a different chain
+	App     string     `json:"app"`   // the app that the actor belongs to
+	Address data.Bytes `json:"addr"`  // arbitrary app-specific unique id
 }
 
 func NewActor(app string, addr []byte) Actor {

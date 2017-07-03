@@ -64,16 +64,12 @@ func (s *OneSig) Next() basecoin.Tx {
 }
 
 func (s *OneSig) ValidateBasic() error {
-	// TODO: VerifyBytes here, we do it in Signers?
-	if s.Empty() || !s.Pubkey.VerifyBytes(s.SignBytes(), s.Sig) {
-		return errors.ErrUnauthorized()
-	}
 	return s.Tx.ValidateBasic()
 }
 
 // TxBytes returns the full data with signatures
 func (s *OneSig) TxBytes() ([]byte, error) {
-	return data.ToWire(s)
+	return data.ToWire(s.Wrap())
 }
 
 // SignBytes returns the original data passed into `NewSig`
@@ -139,17 +135,12 @@ func (s *MultiSig) Next() basecoin.Tx {
 }
 
 func (s *MultiSig) ValidateBasic() error {
-	// TODO: more efficient
-	_, err := s.Signers()
-	if err != nil {
-		return err
-	}
 	return s.Tx.ValidateBasic()
 }
 
 // TxBytes returns the full data with signatures
 func (s *MultiSig) TxBytes() ([]byte, error) {
-	return data.ToWire(s)
+	return data.ToWire(s.Wrap())
 }
 
 // SignBytes returns the original data passed into `NewSig`

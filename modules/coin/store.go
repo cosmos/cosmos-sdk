@@ -90,7 +90,7 @@ func (a Accountant) MakeKey(addr basecoin.Actor) []byte {
 
 type Account struct {
 	Coins    types.Coins `json:"coins"`
-	Sequence int         `json:"seq"`
+	Sequence int         `json:"sequence"`
 }
 
 func loadAccount(store types.KVStore, key []byte) (acct Account, err error) {

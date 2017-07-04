@@ -2,47 +2,47 @@
 #!/bin/bash
 
 testTutorial_BasecoinBasics() {
-  
-    #shelldown[1][3] >/dev/null 
-    #shelldown[1][4] >/dev/null 
+
+    #shelldown[1][3] >/dev/null
+    #shelldown[1][4] >/dev/null
     KEYPASS=qwertyuiop
-  
+
     RES=$((echo $KEYPASS; echo $KEYPASS) | #shelldown[1][6])
     assertTrue "Line $LINENO: Expected to contain safe, got $RES" '[[ $RES == *safe* ]]'
     RES=$((echo $KEYPASS; echo $KEYPASS) | #shelldown[1][7])
     assertTrue "Line $LINENO: Expected to contain safe, got $RES" '[[ $RES == *safe* ]]'
-  
+
     #shelldown[3][-1]
     assertTrue "Expected true for line $LINENO" $?
-    
+
     #shelldown[4][-1] >>/dev/null 2>&1 &
     sleep 5
     PID_SERVER=$!
     disown
-  
+
     RES=$((echo y) | #shelldown[5][-1] $1)
     assertTrue "Line $LINENO: Expected to contain validator, got $RES" '[[ $RES == *validator* ]]'
-    
+
     #shelldown[6][0]
     #shelldown[6][1]
     RES=$(#shelldown[6][2] | jq '.data.coins[0].denom' | tr -d '"')
     assertTrue "Line $LINENO: Expected to have mycoins, got $RES" '[[ $RES == mycoin ]]'
     RES="$(#shelldown[6][3] 2>&1)"
     assertTrue "Line $LINENO: Expected to contain ERROR, got $RES" '[[ $RES == *ERROR* ]]'
-    
+
     RES=$((echo $KEYPASS) | #shelldown[7][-1] | jq '.deliver_tx.code')
     assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
-    
+
     RES=$(#shelldown[8][-1] | jq '.data.coins[0].amount')
     assertTrue "Line $LINENO: Expected to contain 1000 mycoin, got $RES" '[[ $RES == 1000 ]]'
-    
+
     RES=$((echo $KEYPASS) | #shelldown[9][-1] | jq '.deliver_tx.code')
     assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
-    
+
     RES=$((echo $KEYPASS) | #shelldown[10][-1])
     assertTrue "Line $LINENO: Expected to contain insufficient funds error, got $RES" \
-        '[[ $RES == *"insufficient funds"* ]]'
-    
+        '[[ $RES == *"Insufficient Funds"* ]]'
+
     #perform a substitution within the final tests
     HASH=$((echo $KEYPASS) | #shelldown[11][-1] | jq '.hash' | tr -d '"')
     PRESUB="#shelldown[12][-1]"

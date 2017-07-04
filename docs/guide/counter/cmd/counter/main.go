@@ -7,10 +7,8 @@ import (
 
 	"github.com/tendermint/tmlibs/cli"
 
-	"github.com/tendermint/basecoin/app"
 	"github.com/tendermint/basecoin/cmd/basecoin/commands"
 	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
-	"github.com/tendermint/basecoin/types"
 )
 
 func main() {
@@ -20,7 +18,7 @@ func main() {
 	}
 
 	// TODO: register the counter here
-	commands.Handler = app.DefaultHandler()
+	commands.Handler = counter.NewCounterHandler()
 
 	RootCmd.AddCommand(
 		commands.InitCmd,
@@ -29,7 +27,6 @@ func main() {
 		commands.VersionCmd,
 	)
 
-	commands.RegisterStartPlugin("counter", func() types.Plugin { return counter.New() })
 	cmd := cli.PrepareMainCmd(RootCmd, "CT", os.ExpandEnv("$HOME/.counter"))
 	cmd.Execute()
 }

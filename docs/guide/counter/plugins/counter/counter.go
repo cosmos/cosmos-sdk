@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/modules/coin"
+	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/types"
 )
 
@@ -78,6 +79,17 @@ func ErrDecoding() error {
 // CounterHandler
 //--------------------------------------------------------------------------------
 
+func NewCounterHandler() basecoin.Handler {
+	// use the default stack
+	coin := coin.NewHandler()
+	counter := CounterHandler{}
+	dispatcher := stack.NewDispatcher(
+		stack.WrapHandler(coin),
+		stack.WrapHandler(counter),
+	)
+	return stack.NewDefault().Use(dispatcher)
+}
+
 type CounterHandler struct {
 	basecoin.NopOption
 }
@@ -107,6 +119,7 @@ func (h CounterHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx 
 	}
 
 	// TODO: handle coin movement.... ugh, need sequence to do this, right?
+	// like, actually decrement the other account
 
 	// update the counter
 	state, err := LoadState(store)
@@ -135,16 +148,16 @@ func checkTx(ctx basecoin.Context, tx basecoin.Tx) (ctr CounterTx, err error) {
 // CounterStore
 //--------------------------------------------------------------------------------
 
-type CounterPluginState struct {
-	Counter   int
-	TotalFees types.Coins
+type CounterState struct {
+	Counter   int         `json:"counter"`
+	TotalFees types.Coins `json:"total_fees"`
 }
 
 func StateKey() []byte {
 	return []byte(NameCounter + "/state")
 }
 
-func LoadState(store types.KVStore) (state CounterPluginState, err error) {
+func LoadState(store types.KVStore) (state CounterState, err error) {
 	bytes := store.Get(StateKey())
 	if len(bytes) > 0 {
 		err = wire.ReadBinaryBytes(bytes, &state)
@@ -155,7 +168,7 @@ func LoadState(store types.KVStore) (state CounterPluginState, err error) {
 	return state, nil
 }
 
-func StoreState(store types.KVStore, state CounterPluginState) error {
+func StoreState(store types.KVStore, state CounterState) error {
 	bytes := wire.BinaryBytes(state)
 	store.Set(StateKey(), bytes)
 	return nil

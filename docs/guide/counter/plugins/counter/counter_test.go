@@ -7,28 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/txs"
 	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/log"
 )
-
-// TODO: actually handle the counter here...
-func NewCounterHandler() basecoin.Handler {
-	// use the default stack
-	coin := coin.NewHandler()
-	counter := CounterHandler{}
-	dispatcher := stack.NewDispatcher(
-		stack.WrapHandler(coin),
-		stack.WrapHandler(counter),
-	)
-	return stack.NewDefault().Use(dispatcher)
-}
 
 func TestCounterPlugin(t *testing.T) {
 	assert := assert.New(t)

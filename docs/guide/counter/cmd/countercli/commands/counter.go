@@ -4,11 +4,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	wire "github.com/tendermint/go-wire"
+	"github.com/tendermint/basecoin"
+	"github.com/tendermint/light-client/commands"
 	txcmd "github.com/tendermint/light-client/commands/txs"
 
-	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
 	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
+	"github.com/tendermint/basecoin/txs"
 	btypes "github.com/tendermint/basecoin/types"
 )
 
@@ -20,64 +21,59 @@ var CounterTxCmd = &cobra.Command{
 	Long: `Add a vote to the counter.
 
 You must pass --valid for it to count and the countfee will be added to the counter.`,
-	RunE: counterTxCmd,
+	RunE: doCounterTx,
 }
 
 const (
-	flagCountFee = "countfee"
-	flagValid    = "valid"
+	FlagCountFee = "countfee"
+	FlagValid    = "valid"
+	FlagSequence = "sequence" // FIXME: currently not supported...
 )
 
 func init() {
 	fs := CounterTxCmd.Flags()
-	bcmd.AddAppTxFlags(fs)
-	fs.String(flagCountFee, "", "Coins to send in the format <amt><coin>,<amt><coin>...")
-	fs.Bool(flagValid, false, "Is count valid?")
+	fs.String(FlagCountFee, "", "Coins to send in the format <amt><coin>,<amt><coin>...")
+	fs.Bool(FlagValid, false, "Is count valid?")
+	fs.Int(FlagSequence, -1, "Sequence number for this transaction")
 }
 
-func counterTxCmd(cmd *cobra.Command, args []string) error {
-	// Note: we don't support loading apptx from json currently, so skip that
-
-	// Read the app-specific flags
-	name, data, err := getAppData()
+// TODO: doCounterTx is very similar to the sendtx one,
+// maybe we can pull out some common patterns?
+func doCounterTx(cmd *cobra.Command, args []string) error {
+	// load data from json or flags
+	var tx basecoin.Tx
+	found, err := txcmd.LoadJSON(&tx)
+	if err != nil {
+		return err
+	}
+	if !found {
+		tx, err = readCounterTxFlags()
+	}
 	if err != nil {
 		return err
 	}
 
-	// Read the standard app-tx flags
-	gas, fee, txInput, err := bcmd.ReadAppTxFlags()
-	if err != nil {
-		return err
-	}
+	// TODO: make this more flexible for middleware
+	// add the chain info
+	tx = txs.NewChain(commands.GetChainID(), tx)
+	stx := txs.NewSig(tx)
 
-	// Create AppTx and broadcast
-	tx := &btypes.AppTx{
-		Gas:   gas,
-		Fee:   fee,
-		Name:  name,
-		Input: txInput,
-		Data:  data,
-	}
-	res, err := bcmd.BroadcastAppTx(tx)
+	// Sign if needed and post.  This it the work-horse
+	bres, err := txcmd.SignAndPostTx(stx)
 	if err != nil {
 		return err
 	}
 
 	// Output result
-	return txcmd.OutputTx(res)
+	return txcmd.OutputTx(bres)
 }
 
-func getAppData() (name string, data []byte, err error) {
-	countFee, err := btypes.ParseCoins(viper.GetString(flagCountFee))
+func readCounterTxFlags() (tx basecoin.Tx, err error) {
+	feeCoins, err := btypes.ParseCoins(viper.GetString(FlagCountFee))
 	if err != nil {
-		return
-	}
-	ctx := counter.CounterTx{
-		Valid: viper.GetBool(flagValid),
-		Fee:   countFee,
+		return tx, err
 	}
 
-	name = counter.New().Name()
-	data = wire.BinaryBytes(ctx)
-	return
+	tx = counter.NewCounterTx(viper.GetBool(FlagValid), feeCoins)
+	return tx, nil
 }

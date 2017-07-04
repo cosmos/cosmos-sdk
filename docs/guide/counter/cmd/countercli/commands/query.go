@@ -16,9 +16,9 @@ var CounterQueryCmd = &cobra.Command{
 }
 
 func counterQueryCmd(cmd *cobra.Command, args []string) error {
-	key := counter.New().StateKey()
+	key := counter.StateKey()
 
-	var cp counter.CounterPluginState
+	var cp counter.CounterState
 	proof, err := proofcmd.GetAndParseAppProof(key, &cp)
 	if err != nil {
 		return err

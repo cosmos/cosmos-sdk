@@ -55,21 +55,22 @@ test02GetCounter() {
 checkCounter() {
     # make sure sender goes down
     ACCT=$(${CLIENT_EXE} query counter)
-    assertTrue "count is set" $?
-    assertEquals "proper count" "$1" $(echo $ACCT | jq .data.Counter)
-    assertEquals "proper money" "$2" $(echo $ACCT | jq .data.TotalFees[0].amount)
+    if assertTrue "count is set" $?; then
+      assertEquals "proper count" "$1" $(echo $ACCT | jq .data.counter)
+      assertEquals "proper money" "$2" $(echo $ACCT | jq .data.total_fees[0].amount)
+    fi
 }
 
 test03AddCount() {
     SENDER=$(getAddr $RICH)
-    assertFalse "bad password" "echo hi | ${CLIENT_EXE} tx counter --amount=1000mycoin --sequence=2 --name=${RICH} 2>/dev/null"
+    assertFalse "bad password" "echo hi | ${CLIENT_EXE} tx counter --countfee=100mycoin --sequence=2 --name=${RICH} 2>/dev/null"
 
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --amount=10mycoin --sequence=2 --name=${RICH} --valid --countfee=5mycoin)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --countfee=10mycoin --sequence=2 --name=${RICH} --valid)
     txSucceeded $? "$TX" "counter"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 
-    checkCounter "1" "5"
+    checkCounter "1" "10"
 
     # FIXME: cannot load apptx properly.
     # Look at the stack trace

@@ -39,8 +39,8 @@ func (m *middleware) DeliverTx(ctx basecoin.Context, store types.KVStore, tx bas
 	return m.middleware.DeliverTx(ctx, store, tx, next)
 }
 
-func (m *middleware) SetOption(l log.Logger, store types.KVStore, key, value string) (string, error) {
-	return m.middleware.SetOption(l, store, key, value, m.next)
+func (m *middleware) SetOption(l log.Logger, store types.KVStore, module, key, value string) (string, error) {
+	return m.middleware.SetOption(l, store, module, key, value, m.next)
 }
 
 // Stack is the entire application stack

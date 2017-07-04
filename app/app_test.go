@@ -58,7 +58,7 @@ func (at *appTest) getTx(seq int, coins types.Coins) basecoin.Tx {
 func (at *appTest) acc2app(acc types.Account) {
 	accBytes, err := json.Marshal(acc)
 	require.Nil(at.t, err)
-	res := at.app.SetOption("base/account", string(accBytes))
+	res := at.app.SetOption("coin/account", string(accBytes))
 	require.EqualValues(at.t, res, "Success")
 }
 
@@ -137,7 +137,7 @@ func TestSetOption(t *testing.T) {
 	accIn := types.MakeAcc("input0").Account
 	accsInBytes, err := json.Marshal(accIn)
 	assert.Nil(err)
-	res = app.SetOption("base/account", string(accsInBytes))
+	res = app.SetOption("coin/account", string(accsInBytes))
 	require.EqualValues(res, "Success")
 
 	// make sure it is set correctly, with some balance
@@ -165,7 +165,7 @@ func TestSetOption(t *testing.T) {
     }
   ]
 }`
-	res = app.SetOption("base/account", unsortAcc)
+	res = app.SetOption("coin/account", unsortAcc)
 	require.EqualValues(res, "Success")
 
 	coins, err = getAddr(unsortAddr, app.state)
@@ -233,4 +233,20 @@ func TestQuery(t *testing.T) {
 		Data: at.accIn.Account.PubKey.Address(),
 	})
 	assert.NotEqual(resQueryPreCommit, resQueryPostCommit, "Query should change before/after commit")
+}
+
+func TestSplitKey(t *testing.T) {
+	assert := assert.New(t)
+	prefix, suffix := splitKey("foo/bar")
+	assert.EqualValues("foo", prefix)
+	assert.EqualValues("bar", suffix)
+
+	prefix, suffix = splitKey("foobar")
+	assert.EqualValues("base", prefix)
+	assert.EqualValues("foobar", suffix)
+
+	prefix, suffix = splitKey("some/complex/issue")
+	assert.EqualValues("some", prefix)
+	assert.EqualValues("complex/issue", suffix)
+
 }

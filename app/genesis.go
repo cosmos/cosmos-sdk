@@ -19,7 +19,7 @@ func (app *Basecoin) LoadGenesis(path string) error {
 
 	// set accounts
 	for _, acct := range genDoc.AppOptions.Accounts {
-		_ = app.SetOption("base/account", string(acct))
+		_ = app.SetOption("coin/account", string(acct))
 	}
 
 	// set plugin options

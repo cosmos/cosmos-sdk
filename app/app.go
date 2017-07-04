@@ -1,6 +1,9 @@
 package app
 
 import (
+	"fmt"
+	"strings"
+
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin"
 	eyes "github.com/tendermint/merkleeyes/client"
@@ -15,8 +18,8 @@ import (
 )
 
 const (
-	PluginNameBase = "base"
-	ChainKey       = "base/chain_id"
+	ModuleNameBase = "base"
+	ChainKey       = "chain_id"
 )
 
 type Basecoin struct {
@@ -66,16 +69,24 @@ func (app *Basecoin) Info() abci.ResponseInfo {
 
 // ABCI::SetOption
 func (app *Basecoin) SetOption(key string, value string) string {
-	if key == ChainKey {
-		app.state.SetChainID(value)
-		return "Success"
+	module, prefix := splitKey(key)
+	if module == ModuleNameBase {
+		return app.setBaseOption(prefix, value)
 	}
 
-	log, err := app.handler.SetOption(app.logger, app.state, key, value)
+	log, err := app.handler.SetOption(app.logger, app.state, module, prefix, value)
 	if err == nil {
 		return log
 	}
 	return "Error: " + err.Error()
+}
+
+func (app *Basecoin) setBaseOption(key, value string) string {
+	if key == ChainKey {
+		app.state.SetChainID(value)
+		return "Success"
+	}
+	return fmt.Sprintf("Error: unknown base option: %s", key)
 }
 
 // ABCI::DeliverTx
@@ -177,4 +188,14 @@ func (app *Basecoin) EndBlock(height uint64) (res abci.ResponseEndBlock) {
 	// 	res.Diffs = append(res.Diffs, pluginRes.Diffs...)
 	// }
 	return
+}
+
+// Splits the string at the first '/'.
+// if there are none, assign default module ("base").
+func splitKey(key string) (string, string) {
+	if strings.Contains(key, "/") {
+		keyParts := strings.SplitN(key, "/", 2)
+		return keyParts[0], keyParts[1]
+	}
+	return ModuleNameBase, key
 }

@@ -47,14 +47,14 @@ func (c DeliverFunc) DeliverTx(ctx Context, store types.KVStore, tx Tx) (Result,
 }
 
 type SetOptioner interface {
-	SetOption(l log.Logger, store types.KVStore, key, value string) (string, error)
+	SetOption(l log.Logger, store types.KVStore, module, key, value string) (string, error)
 }
 
 // SetOptionFunc (like http.HandlerFunc) is a shortcut for making wrapers
-type SetOptionFunc func(log.Logger, types.KVStore, string, string) (string, error)
+type SetOptionFunc func(log.Logger, types.KVStore, string, string, string) (string, error)
 
-func (c SetOptionFunc) SetOption(l log.Logger, store types.KVStore, key, value string) (string, error) {
-	return c(l, store, key, value)
+func (c SetOptionFunc) SetOption(l log.Logger, store types.KVStore, module, key, value string) (string, error) {
+	return c(l, store, module, key, value)
 }
 
 // Result captures any non-error abci result
@@ -83,6 +83,6 @@ func (_ NopDeliver) DeliverTx(Context, types.KVStore, Tx) (r Result, e error) { 
 
 type NopOption struct{}
 
-func (_ NopOption) SetOption(log.Logger, types.KVStore, string, string) (string, error) {
+func (_ NopOption) SetOption(log.Logger, types.KVStore, string, string, string) (string, error) {
 	return "", nil
 }

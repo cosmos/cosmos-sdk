@@ -80,8 +80,11 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoi
 	return basecoin.Result{}, nil
 }
 
-func (h Handler) SetOption(l log.Logger, store types.KVStore, key, value string) (log string, err error) {
-	if key == "base/account" {
+func (h Handler) SetOption(l log.Logger, store types.KVStore, module, key, value string) (log string, err error) {
+	if module != NameCoin {
+		return "", errors.ErrUnknownModule(module)
+	}
+	if key == "account" {
 		var acc GenesisAccount
 		err = data.FromJSON([]byte(value), &acc)
 		if err != nil {

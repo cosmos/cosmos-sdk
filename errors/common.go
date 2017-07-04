@@ -24,6 +24,7 @@ var (
 	errWrongChain        = rawerr.New("Wrong chain for tx")
 	errUnknownTxType     = rawerr.New("Tx type unknown")
 	errInvalidFormat     = rawerr.New("Invalid format")
+	errUnknownModule     = rawerr.New("Unknown module")
 )
 
 func ErrUnknownTxType(tx basecoin.Tx) TMError {
@@ -42,6 +43,14 @@ func ErrInvalidFormat(tx basecoin.Tx) TMError {
 }
 func IsInvalidFormatErr(err error) bool {
 	return IsSameError(errInvalidFormat, err)
+}
+
+func ErrUnknownModule(mod string) TMError {
+	w := errors.Wrap(errUnknownModule, mod)
+	return WithCode(w, abci.CodeType_UnknownRequest)
+}
+func IsUnknownModuleErr(err error) bool {
+	return IsSameError(errUnknownModule, err)
 }
 
 func ErrInternal(msg string) TMError {

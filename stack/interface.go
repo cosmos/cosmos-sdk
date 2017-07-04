@@ -39,13 +39,13 @@ func (d DeliverMiddleFunc) DeliverTx(ctx basecoin.Context, store types.KVStore, 
 }
 
 type SetOptionMiddle interface {
-	SetOption(l log.Logger, store types.KVStore, key, value string, next basecoin.SetOptioner) (string, error)
+	SetOption(l log.Logger, store types.KVStore, module, key, value string, next basecoin.SetOptioner) (string, error)
 }
 
-type SetOptionMiddleFunc func(log.Logger, types.KVStore, string, string, basecoin.SetOptioner) (string, error)
+type SetOptionMiddleFunc func(log.Logger, types.KVStore, string, string, string, basecoin.SetOptioner) (string, error)
 
-func (c SetOptionMiddleFunc) SetOption(l log.Logger, store types.KVStore, key, value string, next basecoin.SetOptioner) (string, error) {
-	return c(l, store, key, value, next)
+func (c SetOptionMiddleFunc) SetOption(l log.Logger, store types.KVStore, module, key, value string, next basecoin.SetOptioner) (string, error) {
+	return c(l, store, module, key, value, next)
 }
 
 // holders
@@ -63,6 +63,43 @@ func (_ PassDeliver) DeliverTx(ctx basecoin.Context, store types.KVStore, tx bas
 
 type PassOption struct{}
 
-func (_ PassOption) SetOption(l log.Logger, store types.KVStore, key, value string, next basecoin.SetOptioner) (string, error) {
-	return next.SetOption(l, store, key, value)
+func (_ PassOption) SetOption(l log.Logger, store types.KVStore, module, key, value string, next basecoin.SetOptioner) (string, error) {
+	return next.SetOption(l, store, module, key, value)
+}
+
+// Dispatchable is like middleware, except the meaning of "next" is different.
+// Whereas in the middleware, it is the next handler that we should pass the same tx into,
+// for dispatchers, it is a dispatcher, which it can use to
+type Dispatchable interface {
+	Middleware
+	AssertDispatcher()
+}
+
+// WrapHandler turns a basecoin.Handler into a Dispatchable interface
+func WrapHandler(h basecoin.Handler) Dispatchable {
+	return wrapped{h}
+}
+
+type wrapped struct {
+	h basecoin.Handler
+}
+
+var _ Dispatchable = wrapped{}
+
+func (w wrapped) AssertDispatcher() {}
+
+func (w wrapped) Name() string {
+	return w.h.Name()
+}
+
+func (w wrapped) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, _ basecoin.Checker) (basecoin.Result, error) {
+	return w.h.CheckTx(ctx, store, tx)
+}
+
+func (w wrapped) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, _ basecoin.Deliver) (basecoin.Result, error) {
+	return w.h.DeliverTx(ctx, store, tx)
+}
+
+func (w wrapped) SetOption(l log.Logger, store types.KVStore, module, key, value string, _ basecoin.SetOptioner) (string, error) {
+	return w.h.SetOption(l, store, module, key, value)
 }

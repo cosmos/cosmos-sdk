@@ -94,6 +94,7 @@ type Account struct {
 }
 
 func loadAccount(store types.KVStore, key []byte) (acct Account, err error) {
+	// fmt.Printf("load:  %X\n", key)
 	data := store.Get(key)
 	if len(data) == 0 {
 		return acct, ErrNoAccount()
@@ -107,6 +108,7 @@ func loadAccount(store types.KVStore, key []byte) (acct Account, err error) {
 }
 
 func storeAccount(store types.KVStore, key []byte, acct Account) error {
+	// fmt.Printf("store: %X\n", key)
 	bin := wire.BinaryBytes(acct)
 	store.Set(key, bin)
 	return nil // real stores can return error...

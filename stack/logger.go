@@ -50,12 +50,12 @@ func (_ Logger) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin
 	return
 }
 
-func (_ Logger) SetOption(l log.Logger, store types.KVStore, key, value string, next basecoin.SetOptioner) (string, error) {
+func (_ Logger) SetOption(l log.Logger, store types.KVStore, module, key, value string, next basecoin.SetOptioner) (string, error) {
 	start := time.Now()
-	res, err := next.SetOption(l, store, key, value)
+	res, err := next.SetOption(l, store, module, key, value)
 	delta := time.Now().Sub(start)
 	// TODO: log the value being set also?
-	l = l.With("duration", micros(delta)).With("key", key)
+	l = l.With("duration", micros(delta)).With("mod", module).With("key", key)
 	if err == nil {
 		l.Info("SetOption", "log", res)
 	} else {

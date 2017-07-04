@@ -172,8 +172,7 @@ func TestSetOption(t *testing.T) {
 	// some sample settings
 	pk := crypto.GenPrivKeySecp256k1().Wrap()
 	addr := pk.PubKey().Address()
-	actor := basecoin.Actor{App: "coin", Address: addr}
-	// actor2 := basecoin.Actor{App: "foo", Address: addr}
+	actor := basecoin.Actor{App: stack.NameSigs, Address: addr}
 
 	someCoins := types.Coins{{"atom", 123}}
 	otherCoins := types.Coins{{"eth", 11}}
@@ -198,13 +197,13 @@ func TestSetOption(t *testing.T) {
 	l := log.NewNopLogger()
 	for i, tc := range cases {
 		store := types.NewMemKVStore()
-		key := "base/account"
+		key := "account"
 
 		// set the options
 		for j, gen := range tc.init {
 			value, err := json.Marshal(gen)
 			require.Nil(err, "%d,%d: %+v", i, j, err)
-			_, err = h.SetOption(l, store, key, string(value))
+			_, err = h.SetOption(l, store, NameCoin, key, string(value))
 			require.Nil(err)
 		}
 

@@ -56,8 +56,9 @@ func (d *Dispatcher) CheckTx(ctx basecoin.Context, store types.KVStore, tx basec
 	if err != nil {
 		return res, err
 	}
-	// TODO: callback
-	return r.CheckTx(ctx, store, tx, nil)
+	// TODO: check on callback
+	cb := d
+	return r.CheckTx(ctx, store, tx, cb)
 }
 
 func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
@@ -65,8 +66,9 @@ func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store types.KVStore, tx bas
 	if err != nil {
 		return res, err
 	}
-	// TODO: callback
-	return r.DeliverTx(ctx, store, tx, nil)
+	// TODO: check on callback
+	cb := d
+	return r.DeliverTx(ctx, store, tx, cb)
 }
 
 func (d *Dispatcher) SetOption(l log.Logger, store types.KVStore, module, key, value string) (string, error) {
@@ -74,8 +76,9 @@ func (d *Dispatcher) SetOption(l log.Logger, store types.KVStore, module, key, v
 	if err != nil {
 		return "", err
 	}
-	// TODO: callback
-	return r.SetOption(l, store, module, key, value, nil)
+	// TODO: check on callback
+	cb := d
+	return r.SetOption(l, store, module, key, value, cb)
 }
 
 func (d *Dispatcher) lookupTx(tx basecoin.Tx) (Dispatchable, error) {

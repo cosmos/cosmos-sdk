@@ -32,6 +32,7 @@ type Context interface {
 	log.Logger
 	WithPermissions(perms ...Actor) Context
 	HasPermission(perm Actor) bool
+	GetPermissions(chain, app string) []Actor
 	IsParent(ctx Context) bool
 	Reset() Context
 	ChainID() string

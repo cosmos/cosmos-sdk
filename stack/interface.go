@@ -67,6 +67,12 @@ func (_ PassOption) SetOption(l log.Logger, store types.KVStore, module, key, va
 	return next.SetOption(l, store, module, key, value)
 }
 
+type NopOption struct{}
+
+func (_ NopOption) SetOption(l log.Logger, store types.KVStore, module, key, value string, next basecoin.SetOptioner) (string, error) {
+	return "", nil
+}
+
 // Dispatchable is like middleware, except the meaning of "next" is different.
 // Whereas in the middleware, it is the next handler that we should pass the same tx into,
 // for dispatchers, it is a dispatcher, which it can use to

@@ -30,14 +30,16 @@ func init() {
 }
 
 type CounterTx struct {
-	Valid bool        `json:"valid"`
-	Fee   types.Coins `json:"fee"`
+	Valid    bool        `json:"valid"`
+	Fee      types.Coins `json:"fee"`
+	Sequence int         `json:"sequence"`
 }
 
-func NewCounterTx(valid bool, fee types.Coins) basecoin.Tx {
+func NewCounterTx(valid bool, fee types.Coins, sequence int) basecoin.Tx {
 	return CounterTx{
-		Valid: valid,
-		Fee:   fee,
+		Valid:    valid,
+		Fee:      fee,
+		Sequence: sequence,
 	}.Wrap()
 }
 
@@ -85,29 +87,31 @@ func NewCounterHandler() basecoin.Handler {
 	counter := CounterHandler{}
 	dispatcher := stack.NewDispatcher(
 		stack.WrapHandler(coin),
-		stack.WrapHandler(counter),
+		counter,
 	)
 	return stack.NewDefault().Use(dispatcher)
 }
 
 type CounterHandler struct {
-	basecoin.NopOption
+	stack.NopOption
 }
 
-var _ basecoin.Handler = CounterHandler{}
+var _ stack.Dispatchable = CounterHandler{}
 
 func (_ CounterHandler) Name() string {
 	return NameCounter
 }
 
+func (_ CounterHandler) AssertDispatcher() {}
+
 // CheckTx checks if the tx is properly structured
-func (h CounterHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h CounterHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, _ basecoin.Checker) (res basecoin.Result, err error) {
 	_, err = checkTx(ctx, tx)
 	return
 }
 
 // DeliverTx executes the tx if valid
-func (h CounterHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h CounterHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, dispatch basecoin.Deliver) (res basecoin.Result, err error) {
 	ctr, err := checkTx(ctx, tx)
 	if err != nil {
 		return res, err
@@ -118,8 +122,22 @@ func (h CounterHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx 
 		return res, ErrInvalidCounter()
 	}
 
-	// TODO: handle coin movement.... ugh, need sequence to do this, right?
-	// like, actually decrement the other account
+	// handle coin movement.... like, actually decrement the other account
+	if !ctr.Fee.IsZero() {
+		// take the coins and put them in out account!
+		senders := ctx.GetPermissions("", stack.NameSigs)
+		if len(senders) == 0 {
+			return res, errors.ErrMissingSignature()
+		}
+		in := []coin.TxInput{{Address: senders[0], Coins: ctr.Fee, Sequence: ctr.Sequence}}
+		out := []coin.TxOutput{{Address: CounterAcct(), Coins: ctr.Fee}}
+		send := coin.NewSendTx(in, out)
+		// if the deduction fails (too high), abort the command
+		_, err = dispatch.DeliverTx(ctx, store, send)
+		if err != nil {
+			return res, err
+		}
+	}
 
 	// update the counter
 	state, err := LoadState(store)
@@ -147,6 +165,10 @@ func checkTx(ctx basecoin.Context, tx basecoin.Tx) (ctr CounterTx, err error) {
 
 // CounterStore
 //--------------------------------------------------------------------------------
+
+func CounterAcct() basecoin.Actor {
+	return basecoin.Actor{App: NameCounter, Address: []byte{0x04, 0x20}}
+}
 
 type CounterState struct {
 	Counter   int         `json:"counter"`

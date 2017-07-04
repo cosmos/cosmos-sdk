@@ -74,6 +74,6 @@ func readCounterTxFlags() (tx basecoin.Tx, err error) {
 		return tx, err
 	}
 
-	tx = counter.NewCounterTx(viper.GetBool(FlagValid), feeCoins)
+	tx = counter.NewCounterTx(viper.GetBool(FlagValid), feeCoins, viper.GetInt(FlagSequence))
 	return tx, nil
 }

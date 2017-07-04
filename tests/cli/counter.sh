@@ -70,7 +70,11 @@ test03AddCount() {
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 
+    # make sure the counter was updated
     checkCounter "1" "10"
+
+    # make sure the account was debited
+    checkAccount $SENDER "2" "9007199254739990"
 
     # make sure tx is indexed
     TX=$(${CLIENT_EXE} query tx $HASH --trace)

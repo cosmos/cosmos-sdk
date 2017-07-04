@@ -66,6 +66,17 @@ func (c secureContext) HasPermission(perm basecoin.Actor) bool {
 	return false
 }
 
+func (c secureContext) GetPermissions(chain, app string) (res []basecoin.Actor) {
+	for _, p := range c.perms {
+		if chain == p.ChainID {
+			if app == "" || app == p.App {
+				res = append(res, p)
+			}
+		}
+	}
+	return res
+}
+
 // IsParent ensures that this is derived from the given secureClient
 func (c secureContext) IsParent(other basecoin.Context) bool {
 	so, ok := other.(secureContext)

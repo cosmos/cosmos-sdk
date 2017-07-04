@@ -1,16 +1,31 @@
 package counter
 
 import (
-	"fmt"
+	rawerr "errors"
 
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-wire"
+
+	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/modules/coin"
+	"github.com/tendermint/basecoin/types"
 )
 
-type CounterPluginState struct {
-	Counter   int
-	TotalFees types.Coins
+// CounterTx
+//--------------------------------------------------------------------------------
+
+// register the tx type with it's validation logic
+// make sure to use the name of the handler as the prefix in the tx type,
+// so it gets routed properly
+const (
+	NameCounter = "cntr"
+	ByteTx      = 0x21
+	TypeTx      = NameCounter + "/count"
+)
+
+func init() {
+	basecoin.TxMapper.RegisterImplementation(CounterTx{}, TypeTx, ByteTx)
 }
 
 type CounterTx struct {
@@ -18,81 +33,130 @@ type CounterTx struct {
 	Fee   types.Coins
 }
 
+func NewCounterTx(valid bool, fee types.Coins) basecoin.Tx {
+	return CounterTx{
+		Valid: valid,
+		Fee:   fee,
+	}.Wrap()
+}
+
+func (c CounterTx) Wrap() basecoin.Tx {
+	return basecoin.Tx{c}
+}
+
+// ValidateBasic just makes sure the Fee is a valid, non-negative value
+func (c CounterTx) ValidateBasic() error {
+	if !c.Fee.IsValid() {
+		return coin.ErrInvalidCoins()
+	}
+	if !c.Fee.IsNonnegative() {
+		return coin.ErrInvalidCoins()
+	}
+	return nil
+}
+
+// Custom errors
 //--------------------------------------------------------------------------------
 
-type CounterPlugin struct {
+var (
+	errInvalidCounter = rawerr.New("Counter Tx marked invalid")
+)
+
+// This is a custom error class
+func ErrInvalidCounter() error {
+	return errors.WithCode(errInvalidCounter, abci.CodeType_BaseInvalidInput)
+}
+func IsInvalidCounterErr(err error) bool {
+	return errors.IsSameError(errInvalidCounter, err)
 }
 
-func (cp *CounterPlugin) Name() string {
-	return "counter"
+// This is just a helper function to return a generic "internal error"
+func ErrDecoding() error {
+	return errors.ErrInternal("Error decoding state")
 }
 
-func (cp *CounterPlugin) StateKey() []byte {
-	return []byte(fmt.Sprintf("CounterPlugin.State"))
+// CounterHandler
+//--------------------------------------------------------------------------------
+
+type CounterHandler struct {
+	basecoin.NopOption
 }
 
-func New() *CounterPlugin {
-	return &CounterPlugin{}
+var _ basecoin.Handler = CounterHandler{}
+
+func (_ CounterHandler) Name() string {
+	return NameCounter
 }
 
-func (cp *CounterPlugin) SetOption(store types.KVStore, key, value string) (log string) {
-	return ""
+// CheckTx checks if the tx is properly structured
+func (h CounterHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	_, err = checkTx(ctx, tx)
+	return
 }
 
-func (cp *CounterPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
-	// Decode tx
-	var tx CounterTx
-	err := wire.ReadBinaryBytes(txBytes, &tx)
+// DeliverTx executes the tx if valid
+func (h CounterHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	ctr, err := checkTx(ctx, tx)
 	if err != nil {
-		return abci.ErrBaseEncodingError.AppendLog("Error decoding tx: " + err.Error()).PrependLog("CounterTx Error: ")
+		return res, err
+	}
+	// note that we don't assert this on CheckTx (ValidateBasic),
+	// as we allow them to be writen to the chain
+	if !ctr.Valid {
+		return res, ErrInvalidCounter()
 	}
 
-	// Validate tx
-	if !tx.Valid {
-		return abci.ErrInternalError.AppendLog("CounterTx.Valid must be true")
-	}
-	if !tx.Fee.IsValid() {
-		return abci.ErrInternalError.AppendLog("CounterTx.Fee is not sorted or has zero amounts")
-	}
-	if !tx.Fee.IsNonnegative() {
-		return abci.ErrInternalError.AppendLog("CounterTx.Fee must be nonnegative")
-	}
+	// TODO: handle coin movement.... ugh, need sequence to do this, right?
 
-	// Did the caller provide enough coins?
-	if !ctx.Coins.IsGTE(tx.Fee) {
-		return abci.ErrInsufficientFunds.AppendLog("CounterTx.Fee was not provided")
+	// update the counter
+	state, err := LoadState(store)
+	if err != nil {
+		return res, err
 	}
+	state.Counter += 1
+	state.TotalFees = state.TotalFees.Plus(ctr.Fee)
+	err = StoreState(store, state)
 
-	// TODO If there are any funds left over, return funds.
-	// e.g. !ctx.Coins.Minus(tx.Fee).IsZero()
-	// ctx.CallerAccount is synced w/ store, so just modify that and store it.
+	return res, err
+}
 
-	// Load CounterPluginState
-	var cpState CounterPluginState
-	cpStateBytes := store.Get(cp.StateKey())
-	if len(cpStateBytes) > 0 {
-		err = wire.ReadBinaryBytes(cpStateBytes, &cpState)
+func checkTx(ctx basecoin.Context, tx basecoin.Tx) (ctr CounterTx, err error) {
+	ctr, ok := tx.Unwrap().(CounterTx)
+	if !ok {
+		return ctr, errors.ErrInvalidFormat(tx)
+	}
+	err = ctr.ValidateBasic()
+	if err != nil {
+		return ctr, err
+	}
+	return ctr, nil
+}
+
+// CounterStore
+//--------------------------------------------------------------------------------
+
+type CounterPluginState struct {
+	Counter   int
+	TotalFees types.Coins
+}
+
+func StateKey() []byte {
+	return []byte(NameCounter + "/state")
+}
+
+func LoadState(store types.KVStore) (state CounterPluginState, err error) {
+	bytes := store.Get(StateKey())
+	if len(bytes) > 0 {
+		err = wire.ReadBinaryBytes(bytes, &state)
 		if err != nil {
-			return abci.ErrInternalError.AppendLog("Error decoding state: " + err.Error())
+			return state, errors.ErrDecoding()
 		}
 	}
-
-	// Update CounterPluginState
-	cpState.Counter += 1
-	cpState.TotalFees = cpState.TotalFees.Plus(tx.Fee)
-
-	// Save CounterPluginState
-	store.Set(cp.StateKey(), wire.BinaryBytes(cpState))
-
-	return abci.OK
+	return state, nil
 }
 
-func (cp *CounterPlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
-}
-
-func (cp *CounterPlugin) BeginBlock(store types.KVStore, hash []byte, header *abci.Header) {
-}
-
-func (cp *CounterPlugin) EndBlock(store types.KVStore, height uint64) (res abci.ResponseEndBlock) {
-	return
+func StoreState(store types.KVStore, state CounterPluginState) error {
+	bytes := wire.BinaryBytes(state)
+	store.Set(StateKey(), bytes)
+	return nil
 }

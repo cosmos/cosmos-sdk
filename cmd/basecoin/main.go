@@ -3,12 +3,15 @@ package main
 import (
 	"os"
 
+	"github.com/tendermint/basecoin/app"
 	"github.com/tendermint/basecoin/cmd/basecoin/commands"
 	"github.com/tendermint/tmlibs/cli"
 )
 
 func main() {
 	rt := commands.RootCmd
+
+	commands.Handler = app.DefaultHandler()
 
 	rt.AddCommand(
 		commands.InitCmd,

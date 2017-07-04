@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/basecoin/app"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/stack"
+	"github.com/tendermint/basecoin/txs"
 	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
@@ -18,10 +19,15 @@ import (
 )
 
 // TODO: actually handle the counter here...
-func CounterHandler() basecoin.Handler {
+func NewCounterHandler() basecoin.Handler {
 	// use the default stack
-	h := coin.NewHandler()
-	return stack.NewDefault().Use(h)
+	coin := coin.NewHandler()
+	counter := CounterHandler{}
+	dispatcher := stack.NewDispatcher(
+		stack.WrapHandler(coin),
+		stack.WrapHandler(counter),
+	)
+	return stack.NewDefault().Use(dispatcher)
 }
 
 func TestCounterPlugin(t *testing.T) {
@@ -30,8 +36,11 @@ func TestCounterPlugin(t *testing.T) {
 	// Basecoin initialization
 	eyesCli := eyescli.NewLocalClient("", 0)
 	chainID := "test_chain_id"
-	bcApp := app.NewBasecoin(CounterHandler(), eyesCli,
-		log.TestingLogger().With("module", "app"))
+	bcApp := app.NewBasecoin(
+		NewCounterHandler(),
+		eyesCli,
+		log.TestingLogger().With("module", "app"),
+	)
 	bcApp.SetOption("base/chain_id", chainID)
 	// t.Log(bcApp.Info())
 
@@ -43,68 +52,32 @@ func TestCounterPlugin(t *testing.T) {
 	test1Acc.Balance = types.Coins{{"", 1000}, {"gold", 1000}}
 	accOpt, err := json.Marshal(test1Acc)
 	require.Nil(t, err)
-	bcApp.SetOption("base/account", string(accOpt))
+	log := bcApp.SetOption("coin/account", string(accOpt))
+	require.Equal(t, "Success", log)
 
 	// Deliver a CounterTx
-	DeliverCounterTx := func(gas int64, fee types.Coin, inputCoins types.Coins, inputSequence int, appFee types.Coins) abci.Result {
-		// Construct an AppTx signature
-		tx := &types.AppTx{
-			Gas:   gas,
-			Fee:   fee,
-			Name:  "counter",
-			Input: types.NewTxInput(test1Acc.PubKey, inputCoins, inputSequence),
-			Data:  wire.BinaryBytes(CounterTx{Valid: true, Fee: appFee}),
-		}
-
-		// Sign request
-		signBytes := tx.SignBytes(chainID)
-		// t.Logf("Sign bytes: %X\n", signBytes)
-		tx.Input.Signature = test1PrivAcc.Sign(signBytes)
-		// t.Logf("Signed TX bytes: %X\n", wire.BinaryBytes(struct{ types.Tx }{tx}))
-
-		// Write request
-		txBytes := wire.BinaryBytes(struct{ types.Tx }{tx})
+	DeliverCounterTx := func(valid bool, counterFee types.Coins, inputSequence int) abci.Result {
+		tx := NewCounterTx(valid, counterFee)
+		tx = txs.NewChain(chainID, tx)
+		stx := txs.NewSig(tx)
+		txs.Sign(stx, test1PrivAcc.PrivKey)
+		txBytes := wire.BinaryBytes(stx.Wrap())
 		return bcApp.DeliverTx(txBytes)
 	}
 
-	// REF: DeliverCounterTx(gas, fee, inputCoins, inputSequence, appFee) {
-
 	// Test a basic send, no fee
-	res := DeliverCounterTx(0, types.Coin{}, types.Coins{{"", 1}}, 1, types.Coins{})
+	res := DeliverCounterTx(true, types.Coins{}, 1)
 	assert.True(res.IsOK(), res.String())
 
-	// Test fee prevented transaction
-	res = DeliverCounterTx(0, types.Coin{"", 2}, types.Coins{{"", 1}}, 2, types.Coins{})
+	// Test an invalid send, no fee
+	res = DeliverCounterTx(false, types.Coins{}, 1)
 	assert.True(res.IsErr(), res.String())
 
-	// Test input equals fee
-	res = DeliverCounterTx(0, types.Coin{"", 2}, types.Coins{{"", 2}}, 2, types.Coins{})
+	// Test the fee
+	res = DeliverCounterTx(true, types.Coins{{"gold", 100}}, 2)
 	assert.True(res.IsOK(), res.String())
 
-	// Test more input than fee
-	res = DeliverCounterTx(0, types.Coin{"", 2}, types.Coins{{"", 3}}, 3, types.Coins{})
-	assert.True(res.IsOK(), res.String())
-
-	// Test input equals fee+appFee
-	res = DeliverCounterTx(0, types.Coin{"", 1}, types.Coins{{"", 3}, {"gold", 1}}, 4, types.Coins{{"", 2}, {"gold", 1}})
-	assert.True(res.IsOK(), res.String())
-
-	// Test fee+appFee prevented transaction, not enough ""
-	res = DeliverCounterTx(0, types.Coin{"", 1}, types.Coins{{"", 2}, {"gold", 1}}, 5, types.Coins{{"", 2}, {"gold", 1}})
-	assert.True(res.IsErr(), res.String())
-
-	// Test fee+appFee prevented transaction, not enough "gold"
-	res = DeliverCounterTx(0, types.Coin{"", 1}, types.Coins{{"", 3}, {"gold", 1}}, 5, types.Coins{{"", 2}, {"gold", 2}})
-	assert.True(res.IsErr(), res.String())
-
-	// Test more input than fee, more ""
-	res = DeliverCounterTx(0, types.Coin{"", 1}, types.Coins{{"", 4}, {"gold", 1}}, 6, types.Coins{{"", 2}, {"gold", 1}})
-	assert.True(res.IsOK(), res.String())
-
-	// Test more input than fee, more "gold"
-	res = DeliverCounterTx(0, types.Coin{"", 1}, types.Coins{{"", 3}, {"gold", 2}}, 7, types.Coins{{"", 2}, {"gold", 1}})
-	assert.True(res.IsOK(), res.String())
-
-	// REF: DeliverCounterTx(gas, fee, inputCoins, inputSequence, appFee) {w
-
+	// TODO: Test unsupported fee
+	// res = DeliverCounterTx(true, types.Coins{{"silver", 100}}, 3)
+	// assert.True(res.IsErr(), res.String())
 }

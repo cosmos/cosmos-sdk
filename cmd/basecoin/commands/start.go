@@ -22,8 +22,6 @@ import (
 	"github.com/tendermint/tendermint/types"
 
 	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/stack"
 )
 
 var StartCmd = &cobra.Command{
@@ -42,6 +40,12 @@ const (
 	FlagWithoutTendermint = "without-tendermint"
 )
 
+var (
+	// use a global to store the handler, so we can set it in main.
+	// TODO: figure out a cleaner way to register plugins
+	Handler basecoin.Handler
+)
+
 func init() {
 	flags := StartCmd.Flags()
 	flags.String(FlagAddress, "tcp://0.0.0.0:46658", "Listen address")
@@ -49,22 +53,6 @@ func init() {
 	flags.Bool(FlagWithoutTendermint, false, "Only run basecoin abci app, assume external tendermint process")
 	// add all standard 'tendermint node' flags
 	tcmd.AddNodeFlags(StartCmd)
-}
-
-// TODO: setup handler instead of Plugins
-func getHandler() basecoin.Handler {
-	// use the default stack
-	h := coin.NewHandler()
-	app := stack.NewDefault().Use(h)
-	return app
-
-	// register IBC plugn
-	// basecoinApp.RegisterPlugin(NewIBCPlugin())
-
-	// register all other plugins
-	// for _, p := range plugins {
-	//  basecoinApp.RegisterPlugin(p.newPlugin())
-	// }
 }
 
 func startCmd(cmd *cobra.Command, args []string) error {
@@ -85,8 +73,7 @@ func startCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create Basecoin app
-	h := app.DefaultHandler()
-	basecoinApp := app.NewBasecoin(h, eyesCli, logger.With("module", "app"))
+	basecoinApp := app.NewBasecoin(Handler, eyesCli, logger.With("module", "app"))
 
 	// if chain_id has not been set yet, load the genesis.
 	// else, assume it's been loaded

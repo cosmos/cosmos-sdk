@@ -2,6 +2,7 @@ package stack
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tendermint/tmlibs/log"
 
@@ -23,7 +24,9 @@ type Dispatcher struct {
 }
 
 func NewDispatcher(routes ...Dispatchable) *Dispatcher {
-	d := &Dispatcher{}
+	d := &Dispatcher{
+		routes: map[string]Dispatchable{},
+	}
 	d.AddRoutes(routes...)
 	return d
 }
@@ -76,8 +79,12 @@ func (d *Dispatcher) SetOption(l log.Logger, store types.KVStore, module, key, v
 }
 
 func (d *Dispatcher) lookupTx(tx basecoin.Tx) (Dispatchable, error) {
-	// TODO
-	name := "foo"
+	kind, err := tx.GetKind()
+	if err != nil {
+		return nil, err
+	}
+	// grab everything before the /
+	name := strings.SplitN(kind, "/", 2)[0]
 	r, ok := d.routes[name]
 	if !ok {
 		return nil, errors.ErrUnknownTxType(tx)

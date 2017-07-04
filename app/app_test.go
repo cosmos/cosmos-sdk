@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/hex"
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -68,8 +69,14 @@ func (at *appTest) reset() {
 	at.accOut = types.MakeAcc("output0")
 
 	eyesCli := eyes.NewLocalClient("", 0)
-	at.app = NewBasecoin(DefaultHandler(), eyesCli,
-		log.TestingLogger().With("module", "app"))
+	// l := log.TestingLogger().With("module", "app"),
+	l := log.NewTMLogger(os.Stdout).With("module", "app")
+	l = log.NewTracingLogger(l)
+	at.app = NewBasecoin(
+		DefaultHandler(),
+		eyesCli,
+		l,
+	)
 
 	res := at.app.SetOption("base/chain_id", at.chainID)
 	require.EqualValues(at.t, res, "Success")

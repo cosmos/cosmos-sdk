@@ -46,7 +46,8 @@ func NewBasecoin(h basecoin.Handler, eyesCli *eyes.Client, l log.Logger) *Baseco
 func DefaultHandler() basecoin.Handler {
 	// use the default stack
 	h := coin.NewHandler()
-	return stack.NewDefault().Use(h)
+	d := stack.NewDispatcher(stack.WrapHandler(h))
+	return stack.NewDefault().Use(d)
 }
 
 // XXX For testing, not thread safe!

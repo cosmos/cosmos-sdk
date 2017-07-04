@@ -163,7 +163,7 @@ checkSendTx() {
     CTX=$(echo $TX | jq .data.data.tx)
     assertEquals "type=chain" '"chain"' $(echo $CTX | jq .type)
     STX=$(echo $CTX | jq .data.tx)
-    assertEquals "type=send" '"send"' $(echo $STX | jq .type)
+    assertEquals "type=coin/send" '"coin/send"' $(echo $STX | jq .type)
     assertEquals "proper sender" "\"$3\"" $(echo $STX | jq .data.inputs[0].address.addr)
     assertEquals "proper out amount" "$4" $(echo $STX | jq .data.outputs[0].coins[0].amount)
     return $?

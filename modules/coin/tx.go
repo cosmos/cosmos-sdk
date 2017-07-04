@@ -15,7 +15,7 @@ func init() {
 // we reserve the 0x20-0x3f range for standard modules
 const (
 	ByteSend = 0x20
-	TypeSend = "send"
+	TypeSend = NameCoin + "/send"
 )
 
 //-----------------------------------------------------------------------------

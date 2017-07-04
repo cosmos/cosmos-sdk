@@ -55,3 +55,25 @@ func (t Tx) GetLayer() TxLayer {
 	l, _ := t.Unwrap().(TxLayer)
 	return l
 }
+
+// env lets us parse an envelope and just grab the type
+type env struct {
+	Kind string `json:"type"`
+}
+
+// TODO: put this functionality into go-data in a cleaner and more efficient way
+func (t Tx) GetKind() (string, error) {
+	// render as json
+	d, err := data.ToJSON(t)
+	if err != nil {
+		return "", err
+	}
+	// parse json
+	text := env{}
+	err = data.FromJSON(d, &text)
+	if err != nil {
+		return "", err
+	}
+	// grab the type we used in json
+	return text.Kind, nil
+}

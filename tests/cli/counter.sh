@@ -72,21 +72,17 @@ test03AddCount() {
 
     checkCounter "1" "10"
 
-    # FIXME: cannot load apptx properly.
-    # Look at the stack trace
-    # This cannot be fixed with the current ugly apptx structure...
-    # Leave for refactoring
-
     # make sure tx is indexed
-    # echo hash $HASH
-    # TX=$(${CLIENT_EXE} query tx $HASH --trace)
-    # echo tx $TX
-    # if [-z assertTrue "found tx" $?]; then
-    #   assertEquals "proper height" $TX_HEIGHT $(echo $TX | jq .height)
-    #   assertEquals "type=app" '"app"' $(echo $TX | jq .data.type)
-    #   assertEquals "proper sender" "\"$SENDER\"" $(echo $TX | jq .data.data.input.address)
-    # fi
-    # echo $TX
+    TX=$(${CLIENT_EXE} query tx $HASH --trace)
+    if assertTrue "found tx" $?; then
+      assertEquals "proper height" $TX_HEIGHT $(echo $TX | jq .height)
+      assertEquals "type=sig" '"sig"' $(echo $TX | jq .data.type)
+      CTX=$(echo $TX | jq .data.data.tx)
+      assertEquals "type=chain" '"chain"' $(echo $CTX | jq .type)
+      CNTX=$(echo $CTX | jq .data.tx)
+      assertEquals "type=cntr/count" '"cntr/count"' $(echo $CNTX | jq .type)
+      assertEquals "proper fee" "10" $(echo $CNTX | jq .data.fee[0].amount)
+    fi
 }
 
 # Load common then run these tests with shunit2!

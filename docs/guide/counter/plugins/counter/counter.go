@@ -30,8 +30,8 @@ func init() {
 }
 
 type CounterTx struct {
-	Valid bool
-	Fee   types.Coins
+	Valid bool        `json:"valid"`
+	Fee   types.Coins `json:"fee"`
 }
 
 func NewCounterTx(valid bool, fee types.Coins) basecoin.Tx {

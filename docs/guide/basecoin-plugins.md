@@ -113,8 +113,8 @@ But the Counter has an additional command, `countercli tx counter`, which
 crafts an `AppTx` specifically for this plugin:
 
 ```shelldown[2]
-countercli tx counter --name cool --sequence=2
-countercli tx counter --name cool --sequence=3 --valid
+countercli tx counter --name cool
+countercli tx counter --name cool --valid
 ```
 
 The first transaction is rejected by the plugin because it was not marked as
@@ -129,10 +129,11 @@ countercli query counter
 Tada! We can now see that our custom counter plugin tx went through.  You
 should see a Counter value of 1 representing the number of valid transactions.
 If we send another transaction, and then query again, we will see the value
-increment:
+increment.  Note that we need the sequence number here to send the coins
+(it didn't increment when we just pinged the counter)
 
 ```shelldown[4]
-countercli tx counter --name cool --countfee=2mycoin --sequence=4 --valid
+countercli tx counter --name cool --countfee=2mycoin --sequence=2 --valid
 countercli query counter
 ```
 

@@ -27,7 +27,7 @@ func TestCounterPlugin(t *testing.T) {
 	l := log.NewTMLogger(os.Stdout).With("module", "app")
 	// l = log.NewTracingLogger(l)
 	bcApp := app.NewBasecoin(
-		NewCounterHandler(),
+		NewHandler(),
 		eyesCli,
 		l,
 	)
@@ -39,7 +39,7 @@ func TestCounterPlugin(t *testing.T) {
 
 	// Seed Basecoin with account
 	test1Acc := test1PrivAcc.Account
-	test1Acc.Balance = types.Coins{{"", 1000}, {"gold", 1000}}
+	test1Acc.Balance = types.Coins{{"", 1000}, {"gold", 1000}} //nolint
 	accOpt, err := json.Marshal(test1Acc)
 	require.Nil(t, err)
 	log := bcApp.SetOption("coin/account", string(accOpt))
@@ -47,7 +47,7 @@ func TestCounterPlugin(t *testing.T) {
 
 	// Deliver a CounterTx
 	DeliverCounterTx := func(valid bool, counterFee types.Coins, inputSequence int) abci.Result {
-		tx := NewCounterTx(valid, counterFee, inputSequence)
+		tx := NewTx(valid, counterFee, inputSequence)
 		tx = txs.NewChain(chainID, tx)
 		stx := txs.NewSig(tx)
 		txs.Sign(stx, test1PrivAcc.PrivKey)
@@ -64,10 +64,10 @@ func TestCounterPlugin(t *testing.T) {
 	assert.True(res.IsErr(), res.String())
 
 	// Test the fee (increments sequence)
-	res = DeliverCounterTx(true, types.Coins{{"gold", 100}}, 1)
+	res = DeliverCounterTx(true, types.Coins{{"gold", 100}}, 1) //nolint
 	assert.True(res.IsOK(), res.String())
 
 	// Test unsupported fee
-	res = DeliverCounterTx(true, types.Coins{{"silver", 100}}, 2)
+	res = DeliverCounterTx(true, types.Coins{{"silver", 100}}, 2) //nolint
 	assert.True(res.IsErr(), res.String())
 }

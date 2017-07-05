@@ -24,6 +24,7 @@ You must pass --valid for it to count and the countfee will be added to the coun
 	RunE: doCounterTx,
 }
 
+// nolint - flags names
 const (
 	FlagCountFee = "countfee"
 	FlagValid    = "valid"
@@ -74,6 +75,6 @@ func readCounterTxFlags() (tx basecoin.Tx, err error) {
 		return tx, err
 	}
 
-	tx = counter.NewCounterTx(viper.GetBool(FlagValid), feeCoins, viper.GetInt(FlagSequence))
+	tx = counter.NewTx(viper.GetBool(FlagValid), feeCoins, viper.GetInt(FlagSequence))
 	return tx, nil
 }

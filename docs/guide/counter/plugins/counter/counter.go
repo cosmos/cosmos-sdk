@@ -13,7 +13,7 @@ import (
 	"github.com/tendermint/basecoin/types"
 )
 
-// CounterTx
+// Tx
 //--------------------------------------------------------------------------------
 
 // register the tx type with it's validation logic
@@ -21,34 +21,37 @@ import (
 // so it gets routed properly
 const (
 	NameCounter = "cntr"
-	ByteTx      = 0x21
+	ByteTx      = 0x21 //TODO What does this byte represent should use typebytes probably
 	TypeTx      = NameCounter + "/count"
 )
 
 func init() {
-	basecoin.TxMapper.RegisterImplementation(CounterTx{}, TypeTx, ByteTx)
+	basecoin.TxMapper.RegisterImplementation(Tx{}, TypeTx, ByteTx)
 }
 
-type CounterTx struct {
+// Tx - struct for all counter transactions
+type Tx struct {
 	Valid    bool        `json:"valid"`
 	Fee      types.Coins `json:"fee"`
 	Sequence int         `json:"sequence"`
 }
 
-func NewCounterTx(valid bool, fee types.Coins, sequence int) basecoin.Tx {
-	return CounterTx{
+// NewTx - return a new counter transaction struct wrapped as a basecoin transaction
+func NewTx(valid bool, fee types.Coins, sequence int) basecoin.Tx {
+	return Tx{
 		Valid:    valid,
 		Fee:      fee,
 		Sequence: sequence,
 	}.Wrap()
 }
 
-func (c CounterTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{c}
+// Wrap - Wrap a Tx as a Basecoin Tx, used to satisfy the XXX interface
+func (c Tx) Wrap() basecoin.Tx {
+	return basecoin.Tx{TxInner: c}
 }
 
 // ValidateBasic just makes sure the Fee is a valid, non-negative value
-func (c CounterTx) ValidateBasic() error {
+func (c Tx) ValidateBasic() error {
 	if !c.Fee.IsValid() {
 		return coin.ErrInvalidCoins()
 	}
@@ -65,26 +68,29 @@ var (
 	errInvalidCounter = rawerr.New("Counter Tx marked invalid")
 )
 
-// This is a custom error class
+// ErrInvalidCounter - custom error class
 func ErrInvalidCounter() error {
 	return errors.WithCode(errInvalidCounter, abci.CodeType_BaseInvalidInput)
 }
+
+// IsInvalidCounterErr - custom error class check
 func IsInvalidCounterErr(err error) bool {
 	return errors.IsSameError(errInvalidCounter, err)
 }
 
-// This is just a helper function to return a generic "internal error"
+// ErrDecoding - This is just a helper function to return a generic "internal error"
 func ErrDecoding() error {
 	return errors.ErrInternal("Error decoding state")
 }
 
-// CounterHandler
+// Counter Handler
 //--------------------------------------------------------------------------------
 
-func NewCounterHandler() basecoin.Handler {
+// NewHandler returns a new counter transaction processing handler
+func NewHandler() basecoin.Handler {
 	// use the default stack
 	coin := coin.NewHandler()
-	counter := CounterHandler{}
+	counter := Handler{}
 	dispatcher := stack.NewDispatcher(
 		stack.WrapHandler(coin),
 		counter,
@@ -92,26 +98,29 @@ func NewCounterHandler() basecoin.Handler {
 	return stack.NewDefault().Use(dispatcher)
 }
 
-type CounterHandler struct {
+// Handler the counter transaction processing handler
+type Handler struct {
 	stack.NopOption
 }
 
-var _ stack.Dispatchable = CounterHandler{}
+var _ stack.Dispatchable = Handler{}
 
-func (_ CounterHandler) Name() string {
+// Name - return counter namespace
+func (h Handler) Name() string {
 	return NameCounter
 }
 
-func (_ CounterHandler) AssertDispatcher() {}
+// AssertDispatcher - placeholder to satisfy XXX
+func (h Handler) AssertDispatcher() {}
 
 // CheckTx checks if the tx is properly structured
-func (h CounterHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, _ basecoin.Checker) (res basecoin.Result, err error) {
+func (h Handler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, _ basecoin.Checker) (res basecoin.Result, err error) {
 	_, err = checkTx(ctx, tx)
 	return
 }
 
 // DeliverTx executes the tx if valid
-func (h CounterHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, dispatch basecoin.Deliver) (res basecoin.Result, err error) {
+func (h Handler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, dispatch basecoin.Deliver) (res basecoin.Result, err error) {
 	ctr, err := checkTx(ctx, tx)
 	if err != nil {
 		return res, err
@@ -130,7 +139,7 @@ func (h CounterHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx 
 			return res, errors.ErrMissingSignature()
 		}
 		in := []coin.TxInput{{Address: senders[0], Coins: ctr.Fee, Sequence: ctr.Sequence}}
-		out := []coin.TxOutput{{Address: CounterAcct(), Coins: ctr.Fee}}
+		out := []coin.TxOutput{{Address: StoreActor(), Coins: ctr.Fee}}
 		send := coin.NewSendTx(in, out)
 		// if the deduction fails (too high), abort the command
 		_, err = dispatch.DeliverTx(ctx, store, send)
@@ -144,15 +153,15 @@ func (h CounterHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx 
 	if err != nil {
 		return res, err
 	}
-	state.Counter += 1
+	state.Counter++
 	state.TotalFees = state.TotalFees.Plus(ctr.Fee)
-	err = StoreState(store, state)
+	err = SaveState(store, state)
 
 	return res, err
 }
 
-func checkTx(ctx basecoin.Context, tx basecoin.Tx) (ctr CounterTx, err error) {
-	ctr, ok := tx.Unwrap().(CounterTx)
+func checkTx(ctx basecoin.Context, tx basecoin.Tx) (ctr Tx, err error) {
+	ctr, ok := tx.Unwrap().(Tx)
 	if !ok {
 		return ctr, errors.ErrInvalidFormat(tx)
 	}
@@ -166,20 +175,24 @@ func checkTx(ctx basecoin.Context, tx basecoin.Tx) (ctr CounterTx, err error) {
 // CounterStore
 //--------------------------------------------------------------------------------
 
-func CounterAcct() basecoin.Actor {
-	return basecoin.Actor{App: NameCounter, Address: []byte{0x04, 0x20}}
+// StoreActor - return the basecoin actor for the account
+func StoreActor() basecoin.Actor {
+	return basecoin.Actor{App: NameCounter, Address: []byte{0x04, 0x20}} //XXX what do these bytes represent? - should use typebyte variables
 }
 
-type CounterState struct {
+// State - state of the counter applicaton
+type State struct {
 	Counter   int         `json:"counter"`
 	TotalFees types.Coins `json:"total_fees"`
 }
 
+// StateKey - store key for the counter state
 func StateKey() []byte {
 	return []byte(NameCounter + "/state")
 }
 
-func LoadState(store types.KVStore) (state CounterState, err error) {
+// LoadState - retrieve the counter state from the store
+func LoadState(store types.KVStore) (state State, err error) {
 	bytes := store.Get(StateKey())
 	if len(bytes) > 0 {
 		err = wire.ReadBinaryBytes(bytes, &state)
@@ -190,7 +203,8 @@ func LoadState(store types.KVStore) (state CounterState, err error) {
 	return state, nil
 }
 
-func StoreState(store types.KVStore, state CounterState) error {
+// SaveState - save the counter state to the provided store
+func SaveState(store types.KVStore, state State) error {
 	bytes := wire.BinaryBytes(state)
 	store.Set(StateKey(), bytes)
 	return nil

@@ -25,6 +25,7 @@ func NewAccountant(prefix string) Accountant {
 
 func (a Accountant) GetAccount(store types.KVStore, addr basecoin.Actor) (Account, error) {
 	acct, err := loadAccount(store, a.MakeKey(addr))
+
 	// for empty accounts, don't return an error, but rather an empty account
 	if IsNoAccountErr(err) {
 		err = nil

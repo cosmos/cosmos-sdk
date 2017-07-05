@@ -15,6 +15,7 @@ import (
 	"github.com/tendermint/basecoin/stack"
 )
 
+// AccountQueryCmd - command to query an account
 var AccountQueryCmd = &cobra.Command{
 	Use:   "account [address]",
 	Short: "Get details of an account, with proof",
@@ -44,7 +45,8 @@ type BaseTxPresenter struct {
 	proofs.RawPresenter // this handles MakeKey as hex bytes
 }
 
-func (_ BaseTxPresenter) ParseData(raw []byte) (interface{}, error) {
+// ParseData - parse BaseTxPresenter Data
+func (b BaseTxPresenter) ParseData(raw []byte) (interface{}, error) {
 	var tx basecoin.Tx
 	err := wire.ReadBinaryBytes(raw, &tx)
 	return tx, err

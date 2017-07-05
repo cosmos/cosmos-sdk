@@ -14,12 +14,12 @@ type plugin struct {
 
 var plugins = []plugin{}
 
-// RegisterStartPlugin is used to enable a plugin
+// RegisterStartPlugin - used to enable a plugin
 func RegisterStartPlugin(name string, newPlugin func() types.Plugin) {
 	plugins = append(plugins, plugin{name: name, newPlugin: newPlugin})
 }
 
-//Returns a version command based on version input
+// QuickVersionCmd - returns a version command based on version input
 func QuickVersionCmd(version string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",

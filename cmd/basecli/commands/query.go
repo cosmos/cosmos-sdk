@@ -45,7 +45,7 @@ type BaseTxPresenter struct {
 	proofs.RawPresenter // this handles MakeKey as hex bytes
 }
 
-// ParseData - parse BaseTxPresenter Data
+// ParseData - unmarshal raw bytes to a basecoin tx
 func (b BaseTxPresenter) ParseData(raw []byte) (interface{}, error) {
 	var tx basecoin.Tx
 	err := wire.ReadBinaryBytes(raw, &tx)

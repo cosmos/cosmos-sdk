@@ -11,23 +11,21 @@ import (
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 )
 
-//commands
-var (
-	InitCmd = &cobra.Command{
-		Use:   "init [address]",
-		Short: "Initialize a basecoin blockchain",
-		RunE:  initCmd,
-	}
-)
+// InitCmd - node initialization command
+var InitCmd = &cobra.Command{
+	Use:   "init [address]",
+	Short: "Initialize a basecoin blockchain",
+	RunE:  initCmd,
+}
 
 //flags
 var (
-	chainIDFlag string
+	flagChainID string
 )
 
 func init() {
 	flags := []Flag2Register{
-		{&chainIDFlag, "chain-id", "test_chain_id", "Chain ID"},
+		{&flagChainID, "chain-id", "test_chain_id", "Chain ID"},
 	}
 	RegisterFlags(InitCmd, flags)
 }
@@ -62,7 +60,7 @@ func initCmd(cmd *cobra.Command, args []string) error {
 	privValFile := cfg.PrivValidatorFile()
 	keyFile := path.Join(cfg.RootDir, "key.json")
 
-	mod1, err := setupFile(genesisFile, GetGenesisJSON(chainIDFlag, userAddr), 0644)
+	mod1, err := setupFile(genesisFile, GetGenesisJSON(flagChainID, userAddr), 0644)
 	if err != nil {
 		return err
 	}
@@ -85,6 +83,7 @@ func initCmd(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// PrivValJSON - validator private key file contents in json
 var PrivValJSON = `{
   "address": "7A956FADD20D3A5B2375042B2959F8AB172A058F",
   "last_height": 0,
@@ -134,7 +133,7 @@ func GetGenesisJSON(chainID, addr string) string {
 }`, chainID, addr)
 }
 
-// TODO: remove this once not needed for relay
+// KeyJSON - TODO: remove this once not needed for relay
 var KeyJSON = `{
   "address": "1B1BE55F969F54064628A63B9559E7C21C925165",
   "priv_key": {

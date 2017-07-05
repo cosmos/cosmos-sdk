@@ -5,8 +5,6 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 
 	abci "github.com/tendermint/abci/types"
 	wire "github.com/tendermint/go-wire"
@@ -16,68 +14,6 @@ import (
 	client "github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
-
-//Quickly registering flags can be quickly achieved through using the utility functions
-//RegisterFlags, and RegisterPersistentFlags. Ex:
-//	flags := []Flag2Register{
-//		{&myStringFlag, "mystringflag", "foobar", "description of what this flag does"},
-//		{&myBoolFlag, "myboolflag", false, "description of what this flag does"},
-//		{&myInt64Flag, "myintflag", 333, "description of what this flag does"},
-//	}
-//	RegisterFlags(MyCobraCmd, flags)
-type Flag2Register struct {
-	Pointer interface{}
-	Use     string
-	Value   interface{}
-	Desc    string
-}
-
-//register flag utils
-func RegisterFlags(c *cobra.Command, flags []Flag2Register) {
-	registerFlags(c, flags, false)
-}
-
-func RegisterPersistentFlags(c *cobra.Command, flags []Flag2Register) {
-	registerFlags(c, flags, true)
-}
-
-func registerFlags(c *cobra.Command, flags []Flag2Register, persistent bool) {
-
-	var flagset *pflag.FlagSet
-	if persistent {
-		flagset = c.PersistentFlags()
-	} else {
-		flagset = c.Flags()
-	}
-
-	for _, f := range flags {
-
-		ok := false
-
-		switch f.Value.(type) {
-		case string:
-			if _, ok = f.Pointer.(*string); ok {
-				flagset.StringVar(f.Pointer.(*string), f.Use, f.Value.(string), f.Desc)
-			}
-		case int:
-			if _, ok = f.Pointer.(*int); ok {
-				flagset.IntVar(f.Pointer.(*int), f.Use, f.Value.(int), f.Desc)
-			}
-		case uint64:
-			if _, ok = f.Pointer.(*uint64); ok {
-				flagset.Uint64Var(f.Pointer.(*uint64), f.Use, f.Value.(uint64), f.Desc)
-			}
-		case bool:
-			if _, ok = f.Pointer.(*bool); ok {
-				flagset.BoolVar(f.Pointer.(*bool), f.Use, f.Value.(bool), f.Desc)
-			}
-		}
-
-		if !ok {
-			panic("improper use of RegisterFlags")
-		}
-	}
-}
 
 // Returns true for non-empty hex-string prefixed with "0x"
 func isHex(s string) bool {
@@ -91,6 +27,7 @@ func isHex(s string) bool {
 	return false
 }
 
+// StripHex remove the first two hex bytes
 func StripHex(s string) string {
 	if isHex(s) {
 		return s[2:]
@@ -98,6 +35,7 @@ func StripHex(s string) string {
 	return s
 }
 
+// Query - send an abci query
 func Query(tmAddr string, key []byte) (*abci.ResultQuery, error) {
 	httpClient := client.NewHTTP(tmAddr, "/websocket")
 	return queryWithClient(httpClient, key)

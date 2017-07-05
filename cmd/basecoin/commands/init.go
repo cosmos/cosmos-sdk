@@ -7,6 +7,7 @@ import (
 	"path"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 )
@@ -18,16 +19,13 @@ var InitCmd = &cobra.Command{
 	RunE:  initCmd,
 }
 
-//flags
+//nolint - flags
 var (
-	flagChainID string
+	FlagChainID = "chain-id" //TODO group with other flags or remove? is this already a flag here?
 )
 
 func init() {
-	flags := []Flag2Register{
-		{&flagChainID, "chain-id", "test_chain_id", "Chain ID"},
-	}
-	RegisterFlags(InitCmd, flags)
+	InitCmd.Flags().String(FlagChainID, "test_chain_id", "Chain ID")
 }
 
 // returns 1 iff it set a file, otherwise 0 (so we can add them)
@@ -60,7 +58,7 @@ func initCmd(cmd *cobra.Command, args []string) error {
 	privValFile := cfg.PrivValidatorFile()
 	keyFile := path.Join(cfg.RootDir, "key.json")
 
-	mod1, err := setupFile(genesisFile, GetGenesisJSON(flagChainID, userAddr), 0644)
+	mod1, err := setupFile(genesisFile, GetGenesisJSON(viper.GetString(FlagChainID), userAddr), 0644)
 	if err != nil {
 		return err
 	}

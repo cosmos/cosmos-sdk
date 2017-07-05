@@ -39,7 +39,7 @@ func TestCounterPlugin(t *testing.T) {
 
 	// Seed Basecoin with account
 	test1Acc := test1PrivAcc.Account
-	test1Acc.Balance = types.Coins{{"", 1000}, {"gold", 1000}} //nolint
+	test1Acc.Balance = types.Coins{{"", 1000}, {"gold", 1000}}
 	accOpt, err := json.Marshal(test1Acc)
 	require.Nil(t, err)
 	log := bcApp.SetOption("coin/account", string(accOpt))
@@ -64,10 +64,10 @@ func TestCounterPlugin(t *testing.T) {
 	assert.True(res.IsErr(), res.String())
 
 	// Test the fee (increments sequence)
-	res = DeliverCounterTx(true, types.Coins{{"gold", 100}}, 1) //nolint
+	res = DeliverCounterTx(true, types.Coins{{"gold", 100}}, 1)
 	assert.True(res.IsOK(), res.String())
 
 	// Test unsupported fee
-	res = DeliverCounterTx(true, types.Coins{{"silver", 100}}, 2) //nolint
+	res = DeliverCounterTx(true, types.Coins{{"silver", 100}}, 2)
 	assert.True(res.IsErr(), res.String())
 }

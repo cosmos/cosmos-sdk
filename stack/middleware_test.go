@@ -17,7 +17,7 @@ func TestPermissionSandbox(t *testing.T) {
 	require := require.New(t)
 
 	// generic args
-	ctx := NewContext(log.NewNopLogger())
+	ctx := NewContext("test-chain", log.NewNopLogger())
 	store := types.NewMemKVStore()
 	raw := txs.NewRaw([]byte{1, 2, 3, 4})
 	rawBytes, err := data.ToWire(raw)
@@ -42,8 +42,8 @@ func TestPermissionSandbox(t *testing.T) {
 	for i, tc := range cases {
 		app := New(
 			Recovery{}, // we need this so panics turn to errors
-			GrantMiddleware{tc.grant},
-			CheckMiddleware{tc.require},
+			GrantMiddleware{Auth: tc.grant},
+			CheckMiddleware{Required: tc.require},
 		).Use(EchoHandler{})
 
 		res, err := app.CheckTx(ctx, store, raw)

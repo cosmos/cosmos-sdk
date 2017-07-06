@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/basecoin/version"
 )
 
+// VersionCmd - command to show the application version
 var VersionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Show version info",

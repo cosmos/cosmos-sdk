@@ -15,12 +15,12 @@ import (
 func TestOK(t *testing.T) {
 	assert := assert.New(t)
 
-	ctx := NewContext(log.NewNopLogger())
+	ctx := NewContext("test-chain", log.NewNopLogger())
 	store := types.NewMemKVStore()
 	data := "this looks okay"
 	tx := basecoin.Tx{}
 
-	ok := OKHandler{data}
+	ok := OKHandler{Log: data}
 	res, err := ok.CheckTx(ctx, store, tx)
 	assert.Nil(err, "%+v", err)
 	assert.Equal(data, res.Log)
@@ -33,12 +33,12 @@ func TestOK(t *testing.T) {
 func TestFail(t *testing.T) {
 	assert := assert.New(t)
 
-	ctx := NewContext(log.NewNopLogger())
+	ctx := NewContext("test-chain", log.NewNopLogger())
 	store := types.NewMemKVStore()
 	msg := "big problem"
 	tx := basecoin.Tx{}
 
-	fail := FailHandler{errors.New(msg)}
+	fail := FailHandler{Err: errors.New(msg)}
 	_, err := fail.CheckTx(ctx, store, tx)
 	if assert.NotNil(err) {
 		assert.Equal(msg, err.Error())
@@ -53,7 +53,7 @@ func TestFail(t *testing.T) {
 func TestPanic(t *testing.T) {
 	assert := assert.New(t)
 
-	ctx := NewContext(log.NewNopLogger())
+	ctx := NewContext("test-chain", log.NewNopLogger())
 	store := types.NewMemKVStore()
 	msg := "system crash!"
 	tx := basecoin.Tx{}

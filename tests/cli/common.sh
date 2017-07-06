@@ -159,9 +159,13 @@ checkSendTx() {
     if [ -n "$DEBUG" ]; then echo $TX; echo; fi
 
     assertEquals "proper height" $2 $(echo $TX | jq .height)
-    assertEquals "type=send" '"send"' $(echo $TX | jq .data.type)
-    assertEquals "proper sender" "\"$3\"" $(echo $TX | jq .data.data.inputs[0].address)
-    assertEquals "proper out amount" "$4" $(echo $TX | jq .data.data.outputs[0].coins[0].amount)
+    assertEquals "type=sig" '"sig"' $(echo $TX | jq .data.type)
+    CTX=$(echo $TX | jq .data.data.tx)
+    assertEquals "type=chain" '"chain"' $(echo $CTX | jq .type)
+    STX=$(echo $CTX | jq .data.tx)
+    assertEquals "type=coin/send" '"coin/send"' $(echo $STX | jq .type)
+    assertEquals "proper sender" "\"$3\"" $(echo $STX | jq .data.inputs[0].address.addr)
+    assertEquals "proper out amount" "$4" $(echo $STX | jq .data.outputs[0].coins[0].amount)
     return $?
 }
 

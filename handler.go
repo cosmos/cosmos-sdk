@@ -3,9 +3,22 @@ package basecoin
 import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-wire/data"
+	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin/types"
 )
+
+// Handler is anything that processes a transaction
+type Handler interface {
+	Checker
+	Deliver
+	SetOptioner
+	Named
+	// TODO: flesh these out as well
+	// InitChain(store types.KVStore, vals []*abci.Validator)
+	// BeginBlock(store types.KVStore, hash []byte, header *abci.Header)
+	// EndBlock(store types.KVStore, height uint64) abci.ResponseEndBlock
+}
 
 type Named interface {
 	Name() string
@@ -33,16 +46,15 @@ func (c DeliverFunc) DeliverTx(ctx Context, store types.KVStore, tx Tx) (Result,
 	return c(ctx, store, tx)
 }
 
-// Handler is anything that processes a transaction
-type Handler interface {
-	Checker
-	Deliver
-	Named
-	// TODO: flesh these out as well
-	// SetOption(store types.KVStore, key, value string) (log string)
-	// InitChain(store types.KVStore, vals []*abci.Validator)
-	// BeginBlock(store types.KVStore, hash []byte, header *abci.Header)
-	// EndBlock(store types.KVStore, height uint64) abci.ResponseEndBlock
+type SetOptioner interface {
+	SetOption(l log.Logger, store types.KVStore, module, key, value string) (string, error)
+}
+
+// SetOptionFunc (like http.HandlerFunc) is a shortcut for making wrapers
+type SetOptionFunc func(log.Logger, types.KVStore, string, string, string) (string, error)
+
+func (c SetOptionFunc) SetOption(l log.Logger, store types.KVStore, module, key, value string) (string, error) {
+	return c(l, store, module, key, value)
 }
 
 // Result captures any non-error abci result
@@ -57,4 +69,20 @@ func (r Result) ToABCI() abci.Result {
 		Data: r.Data,
 		Log:  r.Log,
 	}
+}
+
+// placeholders
+// holders
+type NopCheck struct{}
+
+func (_ NopCheck) CheckTx(Context, types.KVStore, Tx) (r Result, e error) { return }
+
+type NopDeliver struct{}
+
+func (_ NopDeliver) DeliverTx(Context, types.KVStore, Tx) (r Result, e error) { return }
+
+type NopOption struct{}
+
+func (_ NopOption) SetOption(log.Logger, types.KVStore, string, string, string) (string, error) {
+	return "", nil
 }

@@ -18,7 +18,7 @@ import (
 	coincmd "github.com/tendermint/basecoin/cmd/basecoin/commands"
 )
 
-// BaseCli represents the base command when called without any subcommands
+// BaseCli - main basecoin client command
 var BaseCli = &cobra.Command{
 	Use:   "basecli",
 	Short: "Light client for tendermint",
@@ -34,16 +34,19 @@ func main() {
 	commands.AddBasicFlags(BaseCli)
 
 	// Prepare queries
-	pr := proofs.RootCmd
-	// These are default parsers, but optional in your app (you can remove key)
-	pr.AddCommand(proofs.TxCmd)
-	pr.AddCommand(proofs.KeyCmd)
-	pr.AddCommand(bcmd.AccountQueryCmd)
+	proofs.RootCmd.AddCommand(
+		// These are default parsers, but optional in your app (you can remove key)
+		proofs.TxCmd,
+		proofs.KeyCmd,
+		bcmd.AccountQueryCmd,
+	)
 
 	// you will always want this for the base send command
 	proofs.TxPresenters.Register("base", bcmd.BaseTxPresenter{})
-	tr := txs.RootCmd
-	tr.AddCommand(bcmd.SendTxCmd)
+	txs.RootCmd.AddCommand(
+		// This is the default transaction, optional in your app
+		bcmd.SendTxCmd,
+	)
 
 	// Set up the various commands to use
 	BaseCli.AddCommand(
@@ -52,8 +55,8 @@ func main() {
 		keycmd.RootCmd,
 		seeds.RootCmd,
 		rpccmd.RootCmd,
-		pr,
-		tr,
+		proofs.RootCmd,
+		txs.RootCmd,
 		proxy.RootCmd,
 		coincmd.VersionCmd,
 		bcmd.AutoCompleteCmd,

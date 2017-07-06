@@ -6,20 +6,20 @@ TUTORIALS=$(shell find docs/guide -name "*md" -type f)
 all: get_vendor_deps install test
 
 build:
-	go build ./cmd/...
+	@go build ./cmd/...
 
 install:
-	go install ./cmd/...
-	go install ./docs/guide/counter/cmd/...
+	@go install ./cmd/...
+	@go install ./docs/guide/counter/cmd/...
 
 dist:
-	@bash scripts/dist.sh
-	@bash scripts/publish.sh
+	@bash publish/dist.sh
+	@bash publish/publish.sh
 
 test: test_unit test_cli test_tutorial
 
 test_unit:
-	go test `glide novendor`
+	@go test `glide novendor`
 	#go run tests/tendermint/*.go
 
 test_cli: tests/cli/shunit2
@@ -27,29 +27,29 @@ test_cli: tests/cli/shunit2
 	@./tests/cli/basictx.sh
 	@./tests/cli/counter.sh
 	@./tests/cli/restart.sh
-	@./tests/cli/ibc.sh
+	# @./tests/cli/ibc.sh
 
 test_tutorial: docs/guide/shunit2
-	shelldown ${TUTORIALS}
-	for script in docs/guide/*.sh ; do \
+	@shelldown ${TUTORIALS}
+	@for script in docs/guide/*.sh ; do \
 		bash $$script ; \
 	done
 
 tests/cli/shunit2:
-	wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2" \
+	@wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2" \
     	-q -O tests/cli/shunit2
 
 docs/guide/shunit2:
-	wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2" \
+	@wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2" \
     	-q -O docs/guide/shunit2
 
 get_vendor_deps: tools
-	glide install
+	@glide install
 
 build-docker:
-	docker run -it --rm -v "$(PWD):/go/src/github.com/tendermint/basecoin" -w \
+	@docker run -it --rm -v "$(PWD):/go/src/github.com/tendermint/basecoin" -w \
 		"/go/src/github.com/tendermint/basecoin" -e "CGO_ENABLED=0" golang:alpine go build ./cmd/basecoin
-	docker build -t "tendermint/basecoin" .
+	@docker build -t "tendermint/basecoin" .
 
 tools:
 	@go get $(GOTOOLS)

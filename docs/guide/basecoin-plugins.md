@@ -2,49 +2,49 @@
 #!/bin/bash
 
 testTutorial_BasecoinPlugins() {
-  
+
     #Initialization
     #shelldown[0][1]
     #shelldown[0][2]
     KEYPASS=qwertyuiop
- 
-    #Making Keys 
+
+    #Making Keys
     RES=$((echo $KEYPASS; echo $KEYPASS) | #shelldown[0][4])
     assertTrue "Line $LINENO: Expected to contain safe, got $RES" '[[ $RES == *safe* ]]'
     RES=$((echo $KEYPASS; echo $KEYPASS) | #shelldown[0][5])
     assertTrue "Line $LINENO: Expected to contain safe, got $RES" '[[ $RES == *safe* ]]'
-  
+
     #shelldown[0][7] >/dev/null
     assertTrue "Expected true for line $LINENO" $?
-    
+
     #shelldown[0][9] >>/dev/null 2>&1 &
     sleep 5
     PID_SERVER=$!
     disown
-  
+
     RES=$((echo y) | #shelldown[1][0] $1)
     assertTrue "Line $LINENO: Expected to contain validator, got $RES" '[[ $RES == *validator* ]]'
-    
+
     #shelldown[1][2]
     assertTrue "Expected true for line $LINENO" $?
     RES=$((echo $KEYPASS) | #shelldown[1][3] | jq '.deliver_tx.code')
     assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
-    
+
     RES=$((echo $KEYPASS) | #shelldown[2][0])
     assertTrue "Line $LINENO: Expected to contain Valid error, got $RES" \
-        '[[ $RES == *"Valid must be true"* ]]'
-    
+        '[[ $RES == *"Counter Tx marked invalid"* ]]'
+
     RES=$((echo $KEYPASS) | #shelldown[2][1] | jq '.deliver_tx.code')
     assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
 
-    RES=$(#shelldown[3][-1] | jq '.data.Counter')
+    RES=$(#shelldown[3][-1] | jq '.data.counter')
     assertTrue "Line $LINENO: Expected Counter of 1, got $RES" '[[ $RES == 1 ]]'
 
     RES=$((echo $KEYPASS) | #shelldown[4][0] | jq '.deliver_tx.code')
     assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
     RES=$(#shelldown[4][1])
-    RESCOUNT=$(printf "$RES" | jq '.data.Counter')
-    RESFEE=$(printf "$RES" | jq '.data.TotalFees[0].amount')
+    RESCOUNT=$(printf "$RES" | jq '.data.counter')
+    RESFEE=$(printf "$RES" | jq '.data.total_fees[0].amount')
     assertTrue "Line $LINENO: Expected Counter of 2, got $RES" '[[ $RESCOUNT == 2 ]]'
     assertTrue "Line $LINENO: Expected TotalFees of 2, got $RES" '[[ $RESFEE == 2 ]]'
 }
@@ -113,8 +113,8 @@ But the Counter has an additional command, `countercli tx counter`, which
 crafts an `AppTx` specifically for this plugin:
 
 ```shelldown[2]
-countercli tx counter --name cool --amount=1mycoin --sequence=2
-countercli tx counter --name cool --amount=1mycoin --sequence=3 --valid
+countercli tx counter --name cool
+countercli tx counter --name cool --valid
 ```
 
 The first transaction is rejected by the plugin because it was not marked as
@@ -129,10 +129,11 @@ countercli query counter
 Tada! We can now see that our custom counter plugin tx went through.  You
 should see a Counter value of 1 representing the number of valid transactions.
 If we send another transaction, and then query again, we will see the value
-increment:
+increment.  Note that we need the sequence number here to send the coins
+(it didn't increment when we just pinged the counter)
 
 ```shelldown[4]
-countercli tx counter --name cool --amount=2mycoin --sequence=4 --valid --countfee=2mycoin
+countercli tx counter --name cool --countfee=2mycoin --sequence=2 --valid
 countercli query counter
 ```
 

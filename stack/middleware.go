@@ -1,6 +1,8 @@
 package stack
 
 import (
+	"github.com/tendermint/tmlibs/log"
+
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/types"
 )
@@ -37,6 +39,10 @@ func (m *middleware) DeliverTx(ctx basecoin.Context, store types.KVStore, tx bas
 	return m.middleware.DeliverTx(ctx, store, tx, next)
 }
 
+func (m *middleware) SetOption(l log.Logger, store types.KVStore, module, key, value string) (string, error) {
+	return m.middleware.SetOption(l, store, module, key, value, m.next)
+}
+
 // Stack is the entire application stack
 type Stack struct {
 	middles          []Middleware
@@ -57,12 +63,12 @@ func New(middlewares ...Middleware) *Stack {
 // NewDefault sets up the common middlewares before your custom stack.
 //
 // This is logger, recovery, signature, and chain
-func NewDefault(chainID string, middlewares ...Middleware) *Stack {
+func NewDefault(middlewares ...Middleware) *Stack {
 	mids := []Middleware{
 		Logger{},
 		Recovery{},
 		Signatures{},
-		Chain{chainID},
+		Chain{},
 	}
 	mids = append(mids, middlewares...)
 	return New(mids...)

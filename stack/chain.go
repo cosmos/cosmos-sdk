@@ -13,7 +13,7 @@ const (
 
 // Chain enforces that this tx was bound to the named chain
 type Chain struct {
-	ChainID string
+	PassOption
 }
 
 func (_ Chain) Name() string {
@@ -23,7 +23,7 @@ func (_ Chain) Name() string {
 var _ Middleware = Chain{}
 
 func (c Chain) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
-	stx, err := c.checkChain(tx)
+	stx, err := c.checkChain(ctx.ChainID(), tx)
 	if err != nil {
 		return res, err
 	}
@@ -31,7 +31,7 @@ func (c Chain) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx
 }
 
 func (c Chain) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
-	stx, err := c.checkChain(tx)
+	stx, err := c.checkChain(ctx.ChainID(), tx)
 	if err != nil {
 		return res, err
 	}
@@ -39,12 +39,12 @@ func (c Chain) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.
 }
 
 // checkChain makes sure the tx is a txs.Chain and
-func (c Chain) checkChain(tx basecoin.Tx) (basecoin.Tx, error) {
+func (c Chain) checkChain(chainID string, tx basecoin.Tx) (basecoin.Tx, error) {
 	ctx, ok := tx.Unwrap().(*txs.Chain)
 	if !ok {
 		return tx, errors.ErrNoChain()
 	}
-	if ctx.ChainID != c.ChainID {
+	if ctx.ChainID != chainID {
 		return tx, errors.ErrWrongChain(ctx.ChainID)
 	}
 	return ctx.Tx, nil

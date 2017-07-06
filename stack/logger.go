@@ -3,6 +3,8 @@ package stack
 import (
 	"time"
 
+	"github.com/tendermint/tmlibs/log"
+
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/types"
 )
@@ -46,6 +48,20 @@ func (_ Logger) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin
 		l.Error("DeliverTx", "err", err)
 	}
 	return
+}
+
+func (_ Logger) SetOption(l log.Logger, store types.KVStore, module, key, value string, next basecoin.SetOptioner) (string, error) {
+	start := time.Now()
+	res, err := next.SetOption(l, store, module, key, value)
+	delta := time.Now().Sub(start)
+	// TODO: log the value being set also?
+	l = l.With("duration", micros(delta)).With("mod", module).With("key", key)
+	if err == nil {
+		l.Info("SetOption", "log", res)
+	} else {
+		l.Error("SetOption", "err", err)
+	}
+	return res, err
 }
 
 // micros returns how many microseconds passed in a call

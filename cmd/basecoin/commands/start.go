@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/abci/server"
+	"github.com/tendermint/basecoin"
 	eyesApp "github.com/tendermint/merkleeyes/app"
 	eyes "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/cli"
@@ -23,13 +24,14 @@ import (
 	"github.com/tendermint/basecoin/app"
 )
 
+// StartCmd - command to start running the basecoin node!
 var StartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start basecoin",
 	RunE:  startCmd,
 }
 
-// TODO: move to config file
+// nolint TODO: move to config file
 const EyesCacheSize = 10000
 
 //nolint
@@ -37,6 +39,12 @@ const (
 	FlagAddress           = "address"
 	FlagEyes              = "eyes"
 	FlagWithoutTendermint = "without-tendermint"
+)
+
+var (
+	// Handler - use a global to store the handler, so we can set it in main.
+	// TODO: figure out a cleaner way to register plugins
+	Handler basecoin.Handler
 )
 
 func init() {
@@ -66,16 +74,7 @@ func startCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create Basecoin app
-	basecoinApp := app.NewBasecoin(eyesCli)
-	basecoinApp.SetLogger(logger.With("module", "app"))
-
-	// register IBC plugn
-	basecoinApp.RegisterPlugin(NewIBCPlugin())
-
-	// register all other plugins
-	for _, p := range plugins {
-		basecoinApp.RegisterPlugin(p.newPlugin())
-	}
+	basecoinApp := app.NewBasecoin(Handler, eyesCli, logger.With("module", "app"))
 
 	// if chain_id has not been set yet, load the genesis.
 	// else, assume it's been loaded
@@ -97,11 +96,10 @@ func startCmd(cmd *cobra.Command, args []string) error {
 		logger.Info("Starting Basecoin without Tendermint", "chain_id", chainID)
 		// run just the abci app/server
 		return startBasecoinABCI(basecoinApp)
-	} else {
-		logger.Info("Starting Basecoin with Tendermint", "chain_id", chainID)
-		// start the app with tendermint in-process
-		return startTendermint(rootDir, basecoinApp)
 	}
+	logger.Info("Starting Basecoin with Tendermint", "chain_id", chainID)
+	// start the app with tendermint in-process
+	return startTendermint(rootDir, basecoinApp)
 }
 
 func startBasecoinABCI(basecoinApp *app.Basecoin) error {

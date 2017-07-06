@@ -1,10 +1,15 @@
 package coin
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tmlibs/log"
+
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/types"
@@ -68,7 +73,7 @@ func TestHandlerValidation(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		ctx := stack.MockContext().WithPermissions(tc.perms...)
+		ctx := stack.MockContext("base-chain").WithPermissions(tc.perms...)
 		_, err := checkTx(ctx, tc.tx)
 		if tc.valid {
 			assert.Nil(err, "%d: %+v", i, err)
@@ -138,17 +143,17 @@ func TestDeliverTx(t *testing.T) {
 		store := types.NewMemKVStore()
 		for _, m := range tc.init {
 			acct := Account{Coins: m.coins}
-			err := storeAccount(store, h.makeKey(m.addr), acct)
+			err := storeAccount(store, h.MakeKey(m.addr), acct)
 			require.Nil(err, "%d: %+v", i, err)
 		}
 
-		ctx := stack.MockContext().WithPermissions(tc.perms...)
+		ctx := stack.MockContext("base-chain").WithPermissions(tc.perms...)
 		_, err := h.DeliverTx(ctx, store, tc.tx)
 		if len(tc.final) > 0 { // valid
 			assert.Nil(err, "%d: %+v", i, err)
 			// make sure the final balances are correct
 			for _, f := range tc.final {
-				acct, err := loadAccount(store, h.makeKey(f.addr))
+				acct, err := loadAccount(store, h.MakeKey(f.addr))
 				assert.Nil(err, "%d: %+v", i, err)
 				assert.Equal(f.coins, acct.Coins)
 			}
@@ -157,6 +162,57 @@ func TestDeliverTx(t *testing.T) {
 			// TODO: make sure balances unchanged!
 		}
 
+	}
+}
+
+func TestSetOption(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	// some sample settings
+	pk := crypto.GenPrivKeySecp256k1().Wrap()
+	addr := pk.PubKey().Address()
+	actor := basecoin.Actor{App: stack.NameSigs, Address: addr}
+
+	someCoins := types.Coins{{"atom", 123}}
+	otherCoins := types.Coins{{"eth", 11}}
+	mixedCoins := someCoins.Plus(otherCoins)
+
+	type money struct {
+		addr  basecoin.Actor
+		coins types.Coins
+	}
+
+	cases := []struct {
+		init     []GenesisAccount
+		expected []money
+	}{
+		{
+			[]GenesisAccount{{Address: addr, Balance: mixedCoins}},
+			[]money{{actor, mixedCoins}},
+		},
+	}
+
+	h := NewHandler()
+	l := log.NewNopLogger()
+	for i, tc := range cases {
+		store := types.NewMemKVStore()
+		key := "account"
+
+		// set the options
+		for j, gen := range tc.init {
+			value, err := json.Marshal(gen)
+			require.Nil(err, "%d,%d: %+v", i, j, err)
+			_, err = h.SetOption(l, store, NameCoin, key, string(value))
+			require.Nil(err)
+		}
+
+		// check state is proper
+		for _, f := range tc.expected {
+			acct, err := loadAccount(store, h.MakeKey(f.addr))
+			assert.Nil(err, "%d: %+v", i, err)
+			assert.Equal(f.coins, acct.Coins)
+		}
 	}
 
 }

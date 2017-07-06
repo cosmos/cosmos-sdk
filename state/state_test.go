@@ -16,8 +16,7 @@ func TestState(t *testing.T) {
 
 	//States and Stores for tests
 	store := types.NewMemKVStore()
-	state := NewState(store)
-	state.SetLogger(log.TestingLogger())
+	state := NewState(store, log.TestingLogger())
 	cache := state.CacheWrap()
 	eyesCli := eyes.NewLocalClient("", 0)
 
@@ -30,15 +29,13 @@ func TestState(t *testing.T) {
 	//reset the store/state/cache
 	reset := func() {
 		store = types.NewMemKVStore()
-		state = NewState(store)
-		state.SetLogger(log.TestingLogger())
+		state = NewState(store, log.TestingLogger())
 		cache = state.CacheWrap()
 	}
 
 	//set the state to using the eyesCli instead of MemKVStore
 	useEyesCli := func() {
-		state = NewState(eyesCli)
-		state.SetLogger(log.TestingLogger())
+		state = NewState(eyesCli, log.TestingLogger())
 		cache = state.CacheWrap()
 	}
 

@@ -13,7 +13,9 @@ const (
 	NameSigs = "sigs"
 )
 
-type Signatures struct{}
+type Signatures struct {
+	PassOption
+}
 
 func (_ Signatures) Name() string {
 	return NameSigs

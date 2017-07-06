@@ -17,7 +17,7 @@ func TestSignatureChecks(t *testing.T) {
 	assert := assert.New(t)
 
 	// generic args
-	ctx := NewContext(log.NewNopLogger())
+	ctx := NewContext("test-chain", log.NewNopLogger())
 	store := types.NewMemKVStore()
 	raw := txs.NewRaw([]byte{1, 2, 3, 4})
 
@@ -58,7 +58,7 @@ func TestSignatureChecks(t *testing.T) {
 		app := New(
 			Recovery{}, // we need this so panics turn to errors
 			Signatures{},
-			CheckMiddleware{tc.check},
+			CheckMiddleware{Required: tc.check},
 		).Use(OKHandler{})
 
 		var tx basecoin.Tx

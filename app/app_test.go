@@ -3,13 +3,19 @@ package app
 import (
 	"encoding/hex"
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/modules/coin"
+	"github.com/tendermint/basecoin/stack"
+	"github.com/tendermint/basecoin/txs"
 	"github.com/tendermint/basecoin/types"
+	crypto "github.com/tendermint/go-crypto"
 	wire "github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/log"
@@ -36,17 +42,24 @@ func newAppTest(t *testing.T) *appTest {
 }
 
 // make a tx sending 5mycoin from each accIn to accOut
-func (at *appTest) getTx(seq int) *types.SendTx {
-	tx := types.MakeSendTx(seq, at.accOut, at.accIn)
-	types.SignTx(at.chainID, tx, at.accIn)
-	return tx
+func (at *appTest) getTx(seq int, coins types.Coins) basecoin.Tx {
+	addrIn := at.accIn.Account.PubKey.Address()
+	addrOut := at.accOut.Account.PubKey.Address()
+
+	in := []coin.TxInput{{Address: stack.SigPerm(addrIn), Coins: coins, Sequence: seq}}
+	out := []coin.TxOutput{{Address: stack.SigPerm(addrOut), Coins: coins}}
+	tx := coin.NewSendTx(in, out)
+	tx = txs.NewChain(at.chainID, tx)
+	stx := txs.NewMulti(tx)
+	txs.Sign(stx, at.accIn.PrivKey)
+	return stx.Wrap()
 }
 
 // set the account on the app through SetOption
 func (at *appTest) acc2app(acc types.Account) {
 	accBytes, err := json.Marshal(acc)
 	require.Nil(at.t, err)
-	res := at.app.SetOption("base/account", string(accBytes))
+	res := at.app.SetOption("coin/account", string(accBytes))
 	require.EqualValues(at.t, res, "Success")
 }
 
@@ -56,8 +69,14 @@ func (at *appTest) reset() {
 	at.accOut = types.MakeAcc("output0")
 
 	eyesCli := eyes.NewLocalClient("", 0)
-	at.app = NewBasecoin(eyesCli)
-	at.app.SetLogger(log.TestingLogger().With("module", "app"))
+	// logger := log.TestingLogger().With("module", "app"),
+	logger := log.NewTMLogger(os.Stdout).With("module", "app")
+	logger = log.NewTracingLogger(logger)
+	at.app = NewBasecoin(
+		DefaultHandler(),
+		eyesCli,
+		logger,
+	)
 
 	res := at.app.SetOption("base/chain_id", at.chainID)
 	require.EqualValues(at.t, res, "Success")
@@ -69,45 +88,51 @@ func (at *appTest) reset() {
 	require.True(at.t, resabci.IsOK(), resabci)
 }
 
+func getBalance(pk crypto.PubKey, state types.KVStore) (types.Coins, error) {
+	return getAddr(pk.Address(), state)
+}
+
+func getAddr(addr []byte, state types.KVStore) (types.Coins, error) {
+	actor := stack.SigPerm(addr)
+	acct, err := coin.NewAccountant("").GetAccount(state, actor)
+	return acct.Coins, err
+}
+
 // returns the final balance and expected balance for input and output accounts
-func (at *appTest) exec(tx *types.SendTx, checkTx bool) (res abci.Result, inputGot, inputExp, outputGot, outputExpected types.Coins) {
+func (at *appTest) exec(t *testing.T, tx basecoin.Tx, checkTx bool) (res abci.Result, diffIn, diffOut types.Coins) {
+	require := require.New(t)
 
-	initBalIn := at.app.GetState().GetAccount(at.accIn.Account.PubKey.Address()).Balance
-	initBalOut := at.app.GetState().GetAccount(at.accOut.Account.PubKey.Address()).Balance
+	initBalIn, err := getBalance(at.accIn.Account.PubKey, at.app.GetState())
+	require.Nil(err, "%+v", err)
+	initBalOut, err := getBalance(at.accOut.Account.PubKey, at.app.GetState())
+	require.Nil(err, "%+v", err)
 
-	txBytes := []byte(wire.BinaryBytes(struct{ types.Tx }{tx}))
+	txBytes := wire.BinaryBytes(tx)
 	if checkTx {
 		res = at.app.CheckTx(txBytes)
 	} else {
 		res = at.app.DeliverTx(txBytes)
 	}
 
-	endBalIn := at.app.GetState().GetAccount(at.accIn.Account.PubKey.Address()).Balance
-	endBalOut := at.app.GetState().GetAccount(at.accOut.Account.PubKey.Address()).Balance
-	decrBalInExp := tx.Outputs[0].Coins.Plus(types.Coins{tx.Fee})
-	return res, endBalIn, initBalIn.Minus(decrBalInExp), endBalOut, initBalOut.Plus(tx.Outputs[0].Coins)
+	endBalIn, err := getBalance(at.accIn.Account.PubKey, at.app.GetState())
+	require.Nil(err, "%+v", err)
+	endBalOut, err := getBalance(at.accOut.Account.PubKey, at.app.GetState())
+	require.Nil(err, "%+v", err)
+	return res, endBalIn.Minus(initBalIn), endBalOut.Minus(initBalOut)
 }
 
 //--------------------------------------------------------
-
-func TestSplitKey(t *testing.T) {
-	assert := assert.New(t)
-	prefix, suffix := splitKey("foo/bar")
-	assert.EqualValues("foo", prefix)
-	assert.EqualValues("bar", suffix)
-
-	prefix, suffix = splitKey("foobar")
-	assert.EqualValues("foobar", prefix)
-	assert.EqualValues("", suffix)
-}
 
 func TestSetOption(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
 	eyesCli := eyes.NewLocalClient("", 0)
-	app := NewBasecoin(eyesCli)
-	app.SetLogger(log.TestingLogger().With("module", "app"))
+	app := NewBasecoin(
+		DefaultHandler(),
+		eyesCli,
+		log.TestingLogger().With("module", "app"),
+	)
 
 	//testing ChainID
 	chainID := "testChain"
@@ -116,15 +141,16 @@ func TestSetOption(t *testing.T) {
 	assert.EqualValues(res, "Success")
 
 	// make a nice account...
-	accIn := types.MakeAcc("input0")
-	accsInBytes, err := json.Marshal(accIn.Account)
+	accIn := types.MakeAcc("input0").Account
+	accsInBytes, err := json.Marshal(accIn)
 	assert.Nil(err)
-	res = app.SetOption("base/account", string(accsInBytes))
+	res = app.SetOption("coin/account", string(accsInBytes))
 	require.EqualValues(res, "Success")
+
 	// make sure it is set correctly, with some balance
-	acct := types.GetAccount(app.GetState(), accIn.PubKey.Address())
-	require.NotNil(acct)
-	assert.Equal(accIn.Balance, acct.Balance)
+	coins, err := getBalance(accIn.PubKey, app.state)
+	require.Nil(err)
+	assert.Equal(accIn.Balance, coins)
 
 	// let's parse an account with badly sorted coins...
 	unsortAddr, err := hex.DecodeString("C471FB670E44D219EE6DF2FC284BE38793ACBCE1")
@@ -146,12 +172,13 @@ func TestSetOption(t *testing.T) {
     }
   ]
 }`
-	res = app.SetOption("base/account", unsortAcc)
+	res = app.SetOption("coin/account", unsortAcc)
 	require.EqualValues(res, "Success")
-	acct = types.GetAccount(app.GetState(), unsortAddr)
-	require.NotNil(acct)
-	assert.True(acct.Balance.IsValid())
-	assert.Equal(unsortCoins, acct.Balance)
+
+	coins, err = getAddr(unsortAddr, app.state)
+	require.Nil(err)
+	assert.True(coins.IsValid())
+	assert.Equal(unsortCoins, coins)
 
 	res = app.SetOption("base/dslfkgjdas", "")
 	assert.NotEqual(res, "Success")
@@ -172,33 +199,32 @@ func TestTx(t *testing.T) {
 	//Bad Balance
 	at.accIn.Balance = types.Coins{{"mycoin", 2}}
 	at.acc2app(at.accIn.Account)
-	res, _, _, _, _ := at.exec(at.getTx(1), true)
+	res, _, _ := at.exec(t, at.getTx(1, types.Coins{{"mycoin", 5}}), true)
 	assert.True(res.IsErr(), "ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res)
-	res, inGot, inExp, outGot, outExp := at.exec(at.getTx(1), false)
+	res, diffIn, diffOut := at.exec(t, at.getTx(1, types.Coins{{"mycoin", 5}}), false)
 	assert.True(res.IsErr(), "ExecTx/Bad DeliverTx: Expected error return from ExecTx, returned: %v", res)
-	assert.False(inGot.IsEqual(inExp), "ExecTx/Bad DeliverTx: shouldn't be equal, inGot: %v, inExp: %v", inGot, inExp)
-	assert.False(outGot.IsEqual(outExp), "ExecTx/Bad DeliverTx: shouldn't be equal, outGot: %v, outExp: %v", outGot, outExp)
+	assert.True(diffIn.IsZero())
+	assert.True(diffOut.IsZero())
 
 	//Regular CheckTx
 	at.reset()
-	res, _, _, _, _ = at.exec(at.getTx(1), true)
+	res, _, _ = at.exec(t, at.getTx(1, types.Coins{{"mycoin", 5}}), true)
 	assert.True(res.IsOK(), "ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", res)
 
 	//Regular DeliverTx
 	at.reset()
-	res, inGot, inExp, outGot, outExp = at.exec(at.getTx(1), false)
+	amt := types.Coins{{"mycoin", 3}}
+	res, diffIn, diffOut = at.exec(t, at.getTx(1, amt), false)
 	assert.True(res.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res)
-	assert.True(inGot.IsEqual(inExp),
-		"ExecTx/good DeliverTx: unexpected change in input coins, inGot: %v, inExp: %v", inGot, inExp)
-	assert.True(outGot.IsEqual(outExp),
-		"ExecTx/good DeliverTx: unexpected change in output coins, outGot: %v, outExp: %v", outGot, outExp)
+	assert.Equal(amt.Negative(), diffIn)
+	assert.Equal(amt, diffOut)
 }
 
 func TestQuery(t *testing.T) {
 	assert := assert.New(t)
 	at := newAppTest(t)
 
-	res, _, _, _, _ := at.exec(at.getTx(1), false)
+	res, _, _ := at.exec(t, at.getTx(1, types.Coins{{"mycoin", 5}}), false)
 	assert.True(res.IsOK(), "Commit, DeliverTx: Expected OK return from DeliverTx, Error: %v", res)
 
 	resQueryPreCommit := at.app.Query(abci.RequestQuery{
@@ -214,4 +240,20 @@ func TestQuery(t *testing.T) {
 		Data: at.accIn.Account.PubKey.Address(),
 	})
 	assert.NotEqual(resQueryPreCommit, resQueryPostCommit, "Query should change before/after commit")
+}
+
+func TestSplitKey(t *testing.T) {
+	assert := assert.New(t)
+	prefix, suffix := splitKey("foo/bar")
+	assert.EqualValues("foo", prefix)
+	assert.EqualValues("bar", suffix)
+
+	prefix, suffix = splitKey("foobar")
+	assert.EqualValues("base", prefix)
+	assert.EqualValues("foobar", suffix)
+
+	prefix, suffix = splitKey("some/complex/issue")
+	assert.EqualValues("some", prefix)
+	assert.EqualValues("complex/issue", suffix)
+
 }

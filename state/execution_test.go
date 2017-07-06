@@ -60,8 +60,7 @@ func (et *execTest) reset() {
 	et.accOut = types.MakeAcc("bar")
 
 	et.store = types.NewMemKVStore()
-	et.state = NewState(et.store)
-	et.state.SetLogger(log.TestingLogger())
+	et.state = NewState(et.store, log.TestingLogger())
 	et.state.SetChainID(et.chainID)
 
 	// NOTE we dont run acc2State here

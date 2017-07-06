@@ -7,12 +7,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+// AutoCompleteCmd - command to generate bash autocompletions
 var AutoCompleteCmd = &cobra.Command{
 	Use:   "complete",
 	Short: "generate bash autocompletions",
 	RunE:  doAutoComplete,
 }
 
+// nolint - flags
 const (
 	FlagOutput = "file"
 )

@@ -30,12 +30,12 @@ func TestChain(t *testing.T) {
 	}
 
 	// generic args here...
-	ctx := NewContext(log.NewNopLogger())
+	ctx := NewContext(chainID, log.NewNopLogger())
 	store := types.NewMemKVStore()
 
 	// build the stack
-	ok := OKHandler{msg}
-	app := New(Chain{chainID}).Use(ok)
+	ok := OKHandler{Log: msg}
+	app := New(Chain{}).Use(ok)
 
 	for idx, tc := range cases {
 		i := strconv.Itoa(idx)

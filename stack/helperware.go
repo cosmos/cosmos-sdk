@@ -15,6 +15,7 @@ const (
 // Required Actor, otherwise passes along the call untouched
 type CheckMiddleware struct {
 	Required basecoin.Actor
+	PassOption
 }
 
 var _ Middleware = CheckMiddleware{}
@@ -40,6 +41,7 @@ func (p CheckMiddleware) DeliverTx(ctx basecoin.Context, store types.KVStore, tx
 // GrantMiddleware tries to set the permission to this Actor, which may be prohibited
 type GrantMiddleware struct {
 	Auth basecoin.Actor
+	PassOption
 }
 
 var _ Middleware = GrantMiddleware{}

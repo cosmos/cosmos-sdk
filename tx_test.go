@@ -4,6 +4,20 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func init() {
+	TxMapper.
+		RegisterImplementation(Demo{}, TypeDemo, ByteDemo).
+		RegisterImplementation(Fake{}, TypeFake, ByteFake)
+}
+
+const (
+	ByteDemo = 0xF0
+	TypeDemo = "test/demo"
+	ByteFake = 0xF1
+	TypeFake = "test/fake"
 )
 
 // define a Demo struct that implements TxLayer
@@ -34,4 +48,20 @@ func TestLayer(t *testing.T) {
 	l := Demo{}.Wrap()
 	assert.True(l.IsLayer())
 	assert.NotNil(l.GetLayer())
+}
+
+func TestKind(t *testing.T) {
+	cases := []struct {
+		tx   Tx
+		kind string
+	}{
+		{Demo{}.Wrap(), TypeDemo},
+		{Fake{}.Wrap(), TypeFake},
+	}
+
+	for _, tc := range cases {
+		kind, err := tc.tx.GetKind()
+		require.Nil(t, err, "%+v", err)
+		assert.Equal(t, tc.kind, kind)
+	}
 }

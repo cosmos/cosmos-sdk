@@ -1,11 +1,7 @@
+//nolint
 package errors
 
-/**
-*    Copyright (C) 2017 Ethan Frey
-**/
-
 import (
-	rawerr "errors"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -14,16 +10,17 @@ import (
 )
 
 var (
-	errDecoding          = rawerr.New("Error decoding input")
-	errUnauthorized      = rawerr.New("Unauthorized")
-	errInvalidSignature  = rawerr.New("Invalid Signature")
-	errTooLarge          = rawerr.New("Input size too large")
-	errMissingSignature  = rawerr.New("Signature missing")
-	errTooManySignatures = rawerr.New("Too many signatures")
-	errNoChain           = rawerr.New("No chain id provided")
-	errWrongChain        = rawerr.New("Wrong chain for tx")
-	errUnknownTxType     = rawerr.New("Tx type unknown")
-	errInvalidFormat     = rawerr.New("Invalid format")
+	errDecoding          = fmt.Errorf("Error decoding input")
+	errUnauthorized      = fmt.Errorf("Unauthorized")
+	errInvalidSignature  = fmt.Errorf("Invalid Signature")
+	errTooLarge          = fmt.Errorf("Input size too large")
+	errMissingSignature  = fmt.Errorf("Signature missing")
+	errTooManySignatures = fmt.Errorf("Too many signatures")
+	errNoChain           = fmt.Errorf("No chain id provided")
+	errWrongChain        = fmt.Errorf("Wrong chain for tx")
+	errUnknownTxType     = fmt.Errorf("Tx type unknown")
+	errInvalidFormat     = fmt.Errorf("Invalid format")
+	errUnknownModule     = fmt.Errorf("Unknown module")
 )
 
 func ErrUnknownTxType(tx basecoin.Tx) TMError {
@@ -42,6 +39,14 @@ func ErrInvalidFormat(tx basecoin.Tx) TMError {
 }
 func IsInvalidFormatErr(err error) bool {
 	return IsSameError(errInvalidFormat, err)
+}
+
+func ErrUnknownModule(mod string) TMError {
+	w := errors.Wrap(errUnknownModule, mod)
+	return WithCode(w, abci.CodeType_UnknownRequest)
+}
+func IsUnknownModuleErr(err error) bool {
+	return IsSameError(errUnknownModule, err)
 }
 
 func ErrInternal(msg string) TMError {

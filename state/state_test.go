@@ -20,9 +20,6 @@ func TestState(t *testing.T) {
 	cache := state.CacheWrap()
 	eyesCli := eyes.NewLocalClient("", 0)
 
-	//Account and address for tests
-	dumAddr := []byte("dummyAddress")
-
 	acc := new(types.Account)
 	acc.Sequence = 1
 
@@ -72,10 +69,6 @@ func TestState(t *testing.T) {
 	//test basic retrieve
 	setRecords(state)
 	assert.True(storeHasAll(state), "state doesn't retrieve after Set")
-
-	// Test account retrieve
-	state.SetAccount(dumAddr, acc)
-	assert.Equal(state.GetAccount(dumAddr).Sequence, 1, "GetAccount not retrieving")
 
 	//Test CacheWrap with local mem store
 	reset()

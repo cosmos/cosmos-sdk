@@ -57,14 +57,6 @@ func (s *State) Set(key []byte, value []byte) {
 	s.store.Set(key, value)
 }
 
-func (s *State) GetAccount(addr []byte) *types.Account {
-	return types.GetAccount(s, addr)
-}
-
-func (s *State) SetAccount(addr []byte, acc *types.Account) {
-	types.SetAccount(s, addr, acc)
-}
-
 func (s *State) CacheWrap() *State {
 	cache := types.NewKVCache(s)
 	return &State{

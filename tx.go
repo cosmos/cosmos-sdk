@@ -1,8 +1,9 @@
 package basecoin
 
 import (
-	"github.com/pkg/errors"
 	"github.com/tendermint/go-wire/data"
+
+	"github.com/tendermint/basecoin/errors"
 )
 
 const maxTxSize = 10240
@@ -23,12 +24,9 @@ type TxInner interface {
 }
 
 // LoadTx parses a tx from data
-//
-// TODO: label both errors with abci.CodeType_EncodingError
-// need to move errors to avoid import cycle
 func LoadTx(bin []byte) (tx Tx, err error) {
 	if len(bin) > maxTxSize {
-		return tx, errors.New("Tx size exceeds maximum")
+		return tx, errors.ErrTooLarge()
 	}
 
 	// Decode tx

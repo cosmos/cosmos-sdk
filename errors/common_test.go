@@ -5,15 +5,26 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/tendermint/basecoin"
 )
+
+type validate interface {
+	ValidateBasic() error
+}
+
+type holder struct {
+	validate
+}
+
+func (h holder) Unwrap() validate {
+	return h.validate
+}
 
 type DemoTx struct {
 	Age int
 }
 
-func (t DemoTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{t}
+func (t DemoTx) Wrap() holder {
+	return holder{t}
 }
 
 func (t DemoTx) ValidateBasic() error {
@@ -32,7 +43,8 @@ func TestErrorMatches(t *testing.T) {
 		{errMissingSignature, ErrUnauthorized(), false},
 		{errMissingSignature, ErrMissingSignature(), true},
 		{errWrongChain, ErrWrongChain("hakz"), true},
-		{errUnknownTxType, ErrUnknownTxType(basecoin.Tx{}), true},
+		{errUnknownTxType, ErrUnknownTxType(holder{}), true},
+		{errUnknownTxType, ErrUnknownTxType("some text here..."), true},
 		{errUnknownTxType, ErrUnknownTxType(DemoTx{5}.Wrap()), true},
 	}
 

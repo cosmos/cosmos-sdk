@@ -3,10 +3,10 @@ package errors
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/basecoin"
 )
 
 var (
@@ -23,8 +23,21 @@ var (
 	errUnknownModule     = fmt.Errorf("Unknown module")
 )
 
-func ErrUnknownTxType(tx basecoin.Tx) TMError {
-	msg := fmt.Sprintf("%T", tx.Unwrap())
+// some crazy reflection to unwrap any generated struct.
+func unwrap(i interface{}) interface{} {
+	v := reflect.ValueOf(i)
+	m := v.MethodByName("Unwrap")
+	if m.IsValid() {
+		out := m.Call(nil)
+		if len(out) == 1 {
+			return out[0].Interface()
+		}
+	}
+	return i
+}
+
+func ErrUnknownTxType(tx interface{}) TMError {
+	msg := fmt.Sprintf("%T", unwrap(tx))
 	w := errors.Wrap(errUnknownTxType, msg)
 	return WithCode(w, abci.CodeType_UnknownRequest)
 }
@@ -32,8 +45,8 @@ func IsUnknownTxTypeErr(err error) bool {
 	return IsSameError(errUnknownTxType, err)
 }
 
-func ErrInvalidFormat(tx basecoin.Tx) TMError {
-	msg := fmt.Sprintf("%T", tx.Unwrap())
+func ErrInvalidFormat(tx interface{}) TMError {
+	msg := fmt.Sprintf("%T", unwrap(tx))
 	w := errors.Wrap(errInvalidFormat, msg)
 	return WithCode(w, abci.CodeType_UnknownRequest)
 }

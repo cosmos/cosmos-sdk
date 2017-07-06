@@ -1,4 +1,4 @@
-package txs
+package auth
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/tendermint/basecoin/stack"
 	crypto "github.com/tendermint/go-crypto"
 	keys "github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/go-crypto/keys/cryptostore"
@@ -22,7 +23,7 @@ func checkSignBytes(t *testing.T, bytes []byte, expected string) {
 	require.Nil(t, err)
 
 	// now make sure this tx is data.Bytes with the info we want
-	raw, ok := preTx.Unwrap().(Raw)
+	raw, ok := preTx.Unwrap().(stack.RawTx)
 	require.True(t, ok)
 	assert.Equal(t, expected, string(raw.Bytes))
 }
@@ -55,7 +56,7 @@ func TestOneSig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		inner := NewRaw([]byte(tc.data)).Wrap()
+		inner := stack.NewRawTx([]byte(tc.data)).Wrap()
 		tx := NewSig(inner)
 		// unsigned version
 		_, err = tx.Signers()
@@ -121,7 +122,7 @@ func TestMultiSig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		inner := NewRaw([]byte(tc.data)).Wrap()
+		inner := stack.NewRawTx([]byte(tc.data)).Wrap()
 		tx := NewMulti(inner)
 		// unsigned version
 		_, err = tx.Signers()

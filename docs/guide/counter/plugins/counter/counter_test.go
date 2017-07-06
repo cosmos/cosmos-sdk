@@ -8,8 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/app"
+	"github.com/tendermint/basecoin/modules/auth"
+	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/txs"
 	"github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/log"
@@ -41,9 +42,9 @@ func TestCounterPlugin(t *testing.T) {
 	// Deliver a CounterTx
 	DeliverCounterTx := func(valid bool, counterFee coin.Coins, inputSequence int) abci.Result {
 		tx := NewTx(valid, counterFee, inputSequence)
-		tx = txs.NewChain(chainID, tx)
-		stx := txs.NewSig(tx)
-		txs.Sign(stx, acct.Key)
+		tx = base.NewChainTx(chainID, tx)
+		stx := auth.NewSig(tx)
+		auth.Sign(stx, acct.Key)
 		txBytes := wire.BinaryBytes(stx.Wrap())
 		return bcApp.DeliverTx(txBytes)
 	}

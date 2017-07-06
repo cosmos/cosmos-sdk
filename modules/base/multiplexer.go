@@ -9,7 +9,6 @@ import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
-	"github.com/tendermint/basecoin/txs"
 )
 
 //nolint
@@ -31,7 +30,7 @@ var _ stack.Middleware = Multiplexer{}
 
 // CheckTx splits the input tx and checks them all - fulfills Middlware interface
 func (Multiplexer) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
-	if mtx, ok := tx.Unwrap().(*txs.MultiTx); ok {
+	if mtx, ok := tx.Unwrap().(*MultiTx); ok {
 		return runAll(ctx, store, mtx.Txs, next.CheckTx)
 	}
 	return next.CheckTx(ctx, store, tx)
@@ -39,7 +38,7 @@ func (Multiplexer) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 
 // DeliverTx splits the input tx and checks them all - fulfills Middlware interface
 func (Multiplexer) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
-	if mtx, ok := tx.Unwrap().(*txs.MultiTx); ok {
+	if mtx, ok := tx.Unwrap().(*MultiTx); ok {
 		return runAll(ctx, store, mtx.Txs, next.DeliverTx)
 	}
 	return next.DeliverTx(ctx, store, tx)

@@ -9,8 +9,9 @@ import (
 	txcmd "github.com/tendermint/light-client/commands/txs"
 
 	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
+	"github.com/tendermint/basecoin/modules/auth"
+	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/txs"
 )
 
 //CounterTxCmd is the CLI command to execute the counter
@@ -56,8 +57,8 @@ func counterTx(cmd *cobra.Command, args []string) error {
 
 	// TODO: make this more flexible for middleware
 	// add the chain info
-	tx = txs.NewChain(commands.GetChainID(), tx)
-	stx := txs.NewSig(tx)
+	tx = base.NewChainTx(commands.GetChainID(), tx)
+	stx := auth.NewSig(tx)
 
 	// Sign if needed and post.  This it the work-horse
 	bres, err := txcmd.SignAndPostTx(stx)

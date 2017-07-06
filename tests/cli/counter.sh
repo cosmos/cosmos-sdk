@@ -82,9 +82,9 @@ test03AddCount() {
     TX=$(${CLIENT_EXE} query tx $HASH --trace)
     if assertTrue "found tx" $?; then
       assertEquals "proper height" $TX_HEIGHT $(echo $TX | jq .height)
-      assertEquals "type=sig" '"sig"' $(echo $TX | jq .data.type)
+      assertEquals "type=sigs/one" '"sigs/one"' $(echo $TX | jq .data.type)
       CTX=$(echo $TX | jq .data.data.tx)
-      assertEquals "type=chain" '"chain"' $(echo $CTX | jq .type)
+      assertEquals "type=chain/tx" '"chain/tx"' $(echo $CTX | jq .type)
       CNTX=$(echo $CTX | jq .data.tx)
       assertEquals "type=cntr/count" '"cntr/count"' $(echo $CNTX | jq .type)
       assertEquals "proper fee" "10" $(echo $CNTX | jq .data.fee[0].amount)

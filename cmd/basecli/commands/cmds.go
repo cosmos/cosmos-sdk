@@ -14,8 +14,8 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 
 	"github.com/tendermint/basecoin/modules/auth"
+	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/txs"
 )
 
 //-------------------------
@@ -63,8 +63,8 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 
 	// TODO: make this more flexible for middleware
 	// add the chain info
-	tx = txs.NewChain(commands.GetChainID(), tx)
-	stx := txs.NewSig(tx)
+	tx = base.NewChainTx(commands.GetChainID(), tx)
+	stx := auth.NewSig(tx)
 
 	// Sign if needed and post.  This it the work-horse
 	bres, err := txcmd.SignAndPostTx(stx)

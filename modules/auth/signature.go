@@ -32,8 +32,8 @@ func SigPerm(addr []byte) basecoin.Actor {
 	return basecoin.NewActor(NameSigs, addr)
 }
 
-// Signed allows us to use txs.OneSig and txs.MultiSig (and others??)
-type Signed interface {
+// Signable allows us to use txs.OneSig and txs.MultiSig (and others??)
+type Signable interface {
 	basecoin.TxLayer
 	Signers() ([]crypto.PubKey, error)
 }
@@ -68,7 +68,7 @@ func addSigners(ctx basecoin.Context, sigs []crypto.PubKey) basecoin.Context {
 }
 
 func getSigners(tx basecoin.Tx) ([]crypto.PubKey, basecoin.Tx, error) {
-	stx, ok := tx.Unwrap().(Signed)
+	stx, ok := tx.Unwrap().(Signable)
 	if !ok {
 		return nil, basecoin.Tx{}, errors.ErrUnauthorized()
 	}

@@ -1,5 +1,5 @@
 /*
-package tx contains generic Signable implementations that can be used
+package auth contains generic Signable implementations that can be used
 by your application or tests to handle authentication needs.
 
 It currently supports transaction data as opaque bytes and either single
@@ -11,7 +11,7 @@ You can create them with NewSig() and NewMultiSig(), and they fulfill
 the keys.Signable interface. You can then .Wrap() them to create
 a basecoin.Tx.
 */
-package txs
+package auth
 
 import (
 	crypto "github.com/tendermint/go-crypto"
@@ -22,12 +22,27 @@ import (
 	"github.com/tendermint/basecoin/errors"
 )
 
+// nolint
+const (
+	// for signatures
+	ByteSingleTx = 0x16
+	ByteMultiSig = 0x17
+)
+
+// nolint
+const (
+	// for signatures
+	TypeSingleTx = NameSigs + "/one"
+	TypeMultiSig = NameSigs + "/multi"
+)
+
 // Signed holds one signature of the data
 type Signed struct {
 	Sig    crypto.Signature
 	Pubkey crypto.PubKey
 }
 
+// Empty returns true if there is not enough signature info
 func (s Signed) Empty() bool {
 	return s.Sig.Empty() || s.Pubkey.Empty()
 }
@@ -36,7 +51,7 @@ func (s Signed) Empty() bool {
 
 func init() {
 	basecoin.TxMapper.
-		RegisterImplementation(&OneSig{}, TypeSig, ByteSig).
+		RegisterImplementation(&OneSig{}, TypeSingleTx, ByteSingleTx).
 		RegisterImplementation(&MultiSig{}, TypeMultiSig, ByteMultiSig)
 }
 
@@ -51,6 +66,7 @@ type OneSig struct {
 var _ keys.Signable = &OneSig{}
 var _ basecoin.TxLayer = &OneSig{}
 
+// NewSig wraps the tx with a Signable that accepts exactly one signature
 func NewSig(tx basecoin.Tx) *OneSig {
 	return &OneSig{Tx: tx}
 }
@@ -122,6 +138,7 @@ type MultiSig struct {
 var _ keys.Signable = &MultiSig{}
 var _ basecoin.TxLayer = &MultiSig{}
 
+// NewMulti wraps the tx with a Signable that accepts arbitrary numbers of signatures
 func NewMulti(tx basecoin.Tx) *MultiSig {
 	return &MultiSig{Tx: tx}
 }

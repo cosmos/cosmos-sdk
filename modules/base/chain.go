@@ -5,12 +5,11 @@ import (
 	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
-	"github.com/tendermint/basecoin/txs"
 )
 
 //nolint
 const (
-	NameChain = "chan"
+	NameChain = "chain"
 )
 
 // Chain enforces that this tx was bound to the named chain
@@ -43,9 +42,9 @@ func (c Chain) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.
 	return next.DeliverTx(ctx, store, stx)
 }
 
-// checkChain makes sure the tx is a txs.Chain and
+// checkChain makes sure the tx is a Chain Tx and is on the proper chain
 func (c Chain) checkChain(chainID string, tx basecoin.Tx) (basecoin.Tx, error) {
-	ctx, ok := tx.Unwrap().(*txs.Chain)
+	ctx, ok := tx.Unwrap().(ChainTx)
 	if !ok {
 		return tx, errors.ErrNoChain()
 	}

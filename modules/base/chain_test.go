@@ -11,7 +11,6 @@ import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
-	"github.com/tendermint/basecoin/txs"
 )
 
 func TestChain(t *testing.T) {
@@ -19,14 +18,14 @@ func TestChain(t *testing.T) {
 	msg := "got it"
 	chainID := "my-chain"
 
-	raw := txs.NewRaw([]byte{1, 2, 3, 4})
+	raw := stack.NewRawTx([]byte{1, 2, 3, 4})
 	cases := []struct {
 		tx       basecoin.Tx
 		valid    bool
 		errorMsg string
 	}{
-		{txs.NewChain(chainID, raw), true, ""},
-		{txs.NewChain("someone-else", raw), false, "someone-else"},
+		{NewChainTx(chainID, raw), true, ""},
+		{NewChainTx("someone-else", raw), false, "someone-else"},
 		{raw, false, "No chain id provided"},
 	}
 

@@ -11,9 +11,9 @@ import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/modules/auth"
+	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/state"
-	"github.com/tendermint/basecoin/txs"
 	wire "github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/log"
@@ -44,9 +44,9 @@ func (at *appTest) getTx(seq int, coins coin.Coins) basecoin.Tx {
 	in := []coin.TxInput{{Address: at.acctIn.Actor(), Coins: coins, Sequence: seq}}
 	out := []coin.TxOutput{{Address: at.acctOut.Actor(), Coins: coins}}
 	tx := coin.NewSendTx(in, out)
-	tx = txs.NewChain(at.chainID, tx)
-	stx := txs.NewMulti(tx)
-	txs.Sign(stx, at.acctIn.Key)
+	tx = base.NewChainTx(at.chainID, tx)
+	stx := auth.NewMulti(tx)
+	auth.Sign(stx, at.acctIn.Key)
 	return stx.Wrap()
 }
 

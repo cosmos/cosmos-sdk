@@ -1,20 +1,52 @@
 package stack
 
 import (
-	"github.com/pkg/errors"
-
 	"github.com/tendermint/go-wire/data"
 
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/state"
 )
 
+//nolint
 const (
 	NameOK    = "ok"
 	NameFail  = "fail"
 	NamePanic = "panic"
 	NameEcho  = "echo"
 )
+
+//nolint
+const (
+	ByteRawTx  = 0x1
+	TypeRawTx  = "raw"
+	rawMaxSize = 2000 * 1000
+)
+
+func init() {
+	basecoin.TxMapper.
+		RegisterImplementation(RawTx{}, TypeRawTx, ByteRawTx)
+}
+
+// RawTx just contains bytes that can be hex-ified
+type RawTx struct {
+	data.Bytes
+}
+
+func (r RawTx) Wrap() basecoin.Tx {
+	return basecoin.Tx{r}
+}
+
+func (r RawTx) ValidateBasic() error {
+	if len(r.Bytes) > rawMaxSize {
+		return errors.ErrTooLarge()
+	}
+	return nil
+}
+
+func NewRawTx(d []byte) basecoin.Tx {
+	return RawTx{data.Bytes(d)}.Wrap()
+}
 
 // OKHandler just used to return okay to everything
 type OKHandler struct {
@@ -75,12 +107,12 @@ func (_ FailHandler) Name() string {
 
 // CheckTx always returns the given error
 func (f FailHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
-	return res, errors.WithStack(f.Err)
+	return res, errors.Wrap(f.Err)
 }
 
 // DeliverTx always returns the given error
 func (f FailHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
-	return res, errors.WithStack(f.Err)
+	return res, errors.Wrap(f.Err)
 }
 
 // PanicHandler always panics, using the given error (first choice) or msg (fallback)

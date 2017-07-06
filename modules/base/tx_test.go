@@ -1,4 +1,4 @@
-package txs
+package base
 
 import (
 	"strconv"
@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/go-wire/data"
 
 	"github.com/tendermint/basecoin"
@@ -16,15 +17,15 @@ func TestEncoding(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	raw := NewRaw([]byte{0x34, 0xa7})
-	raw2 := NewRaw([]byte{0x73, 0x86, 0x22})
+	raw := stack.NewRawTx([]byte{0x34, 0xa7})
+	raw2 := stack.NewRawTx([]byte{0x73, 0x86, 0x22})
 
 	cases := []struct {
 		Tx basecoin.Tx
 	}{
 		{raw},
 		{NewMultiTx(raw, raw2)},
-		{NewChain("foobar", raw)},
+		{NewChainTx("foobar", raw)},
 	}
 
 	for idx, tc := range cases {

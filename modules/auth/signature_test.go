@@ -12,7 +12,6 @@ import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
-	"github.com/tendermint/basecoin/txs"
 )
 
 func TestSignatureChecks(t *testing.T) {
@@ -21,7 +20,7 @@ func TestSignatureChecks(t *testing.T) {
 	// generic args
 	ctx := stack.NewContext("test-chain", log.NewNopLogger())
 	store := state.NewMemKVStore()
-	raw := txs.NewRaw([]byte{1, 2, 3, 4})
+	raw := stack.NewRawTx([]byte{1, 2, 3, 4})
 
 	// let's make some keys....
 	priv1 := crypto.GenPrivKeyEd25519().Wrap()
@@ -65,16 +64,16 @@ func TestSignatureChecks(t *testing.T) {
 		var tx basecoin.Tx
 		// this does the signing as needed
 		if tc.useMultiSig {
-			mtx := txs.NewMulti(raw)
+			mtx := NewMulti(raw)
 			for _, k := range tc.keys {
-				err := txs.Sign(mtx, k)
+				err := Sign(mtx, k)
 				assert.Nil(err, "%d: %+v", i, err)
 			}
 			tx = mtx.Wrap()
 		} else {
-			otx := txs.NewSig(raw)
+			otx := NewSig(raw)
 			for _, k := range tc.keys {
-				err := txs.Sign(otx, k)
+				err := Sign(otx, k)
 				assert.Nil(err, "%d: %+v", i, err)
 			}
 			tx = otx.Wrap()

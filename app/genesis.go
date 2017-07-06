@@ -8,7 +8,7 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
-// LoadGenesis - Load the genesis json file
+// LoadGenesis - Load the genesis file into memory
 func (app *Basecoin) LoadGenesis(path string) error {
 	genDoc, err := loadGenesis(path)
 	if err != nil {

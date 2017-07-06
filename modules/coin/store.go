@@ -10,10 +10,13 @@ import (
 	"github.com/tendermint/basecoin/types"
 )
 
+// Accountant - custom object to manage coins for the coin module
+// TODO prefix should be post-fix if maintaining the same key space
 type Accountant struct {
 	Prefix []byte
 }
 
+// NewAccountant - create the new accountant with prefix information
 func NewAccountant(prefix string) Accountant {
 	if prefix == "" {
 		prefix = NameCoin
@@ -23,6 +26,7 @@ func NewAccountant(prefix string) Accountant {
 	}
 }
 
+// GetAccount - Get account from store and address
 func (a Accountant) GetAccount(store types.KVStore, addr basecoin.Actor) (Account, error) {
 	acct, err := loadAccount(store, a.MakeKey(addr))
 
@@ -68,7 +72,7 @@ func (a Accountant) updateCoins(store types.KVStore, addr basecoin.Actor, coins 
 		if seq != acct.Sequence+1 {
 			return acct, ErrInvalidSequence()
 		}
-		acct.Sequence += 1
+		acct.Sequence++
 	}
 
 	// check amount
@@ -81,6 +85,8 @@ func (a Accountant) updateCoins(store types.KVStore, addr basecoin.Actor, coins 
 	return acct, nil
 }
 
+// MakeKey - generate key bytes from address using accountant prefix
+// TODO Prefix -> PostFix for consistent namespace
 func (a Accountant) MakeKey(addr basecoin.Actor) []byte {
 	key := addr.Bytes()
 	if len(a.Prefix) > 0 {
@@ -89,6 +95,7 @@ func (a Accountant) MakeKey(addr basecoin.Actor) []byte {
 	return key
 }
 
+// Account - coin account structure
 type Account struct {
 	Coins    types.Coins `json:"coins"`
 	Sequence int         `json:"sequence"`

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/tendermint/basecoin"
-
 	"github.com/tendermint/basecoin/types"
 )
 
@@ -20,12 +19,14 @@ const (
 
 //-----------------------------------------------------------------------------
 
+// TxInput - expected coin movement outputs, used with SendTx
 type TxInput struct {
 	Address  basecoin.Actor `json:"address"`
 	Coins    types.Coins    `json:"coins"`
 	Sequence int            `json:"sequence"` // Nonce: Must be 1 greater than the last committed TxInput
 }
 
+// ValidateBasic - validate transaction input
 func (txIn TxInput) ValidateBasic() error {
 	if txIn.Address.App == "" {
 		return ErrInvalidAddress()
@@ -50,6 +51,7 @@ func (txIn TxInput) String() string {
 	return fmt.Sprintf("TxInput{%v,%v,%v}", txIn.Address, txIn.Coins, txIn.Sequence)
 }
 
+// NewTxInput - create a transaction input, used with SendTx
 func NewTxInput(addr basecoin.Actor, coins types.Coins, sequence int) TxInput {
 	input := TxInput{
 		Address:  addr,
@@ -61,11 +63,13 @@ func NewTxInput(addr basecoin.Actor, coins types.Coins, sequence int) TxInput {
 
 //-----------------------------------------------------------------------------
 
+// TxOutput - expected coin movement output, used with SendTx
 type TxOutput struct {
 	Address basecoin.Actor `json:"address"`
 	Coins   types.Coins    `json:"coins"`
 }
 
+// ValidateBasic - validate transaction output
 func (txOut TxOutput) ValidateBasic() error {
 	if txOut.Address.App == "" {
 		return ErrInvalidAddress()
@@ -87,6 +91,7 @@ func (txOut TxOutput) String() string {
 	return fmt.Sprintf("TxOutput{%X,%v}", txOut.Address, txOut.Coins)
 }
 
+// NewTxOutput - create a transaction output, used with SendTx
 func NewTxOutput(addr basecoin.Actor, coins types.Coins) TxOutput {
 	output := TxOutput{
 		Address: addr,
@@ -97,6 +102,8 @@ func NewTxOutput(addr basecoin.Actor, coins types.Coins) TxOutput {
 
 //-----------------------------------------------------------------------------
 
+// SendTx - high level transaction of the coin module
+// Satisfies: TxInner
 type SendTx struct {
 	Inputs  []TxInput  `json:"inputs"`
 	Outputs []TxOutput `json:"outputs"`
@@ -104,10 +111,12 @@ type SendTx struct {
 
 var _ basecoin.Tx = NewSendTx(nil, nil)
 
+// NewSendTx - new SendTx
 func NewSendTx(in []TxInput, out []TxOutput) basecoin.Tx {
 	return SendTx{Inputs: in, Outputs: out}.Wrap()
 }
 
+// ValidateBasic - validate the send transaction
 func (tx SendTx) ValidateBasic() error {
 	// this just makes sure all the inputs and outputs are properly formatted,
 	// not that they actually have the money inside
@@ -142,6 +151,7 @@ func (tx SendTx) String() string {
 	return fmt.Sprintf("SendTx{%v->%v}", tx.Inputs, tx.Outputs)
 }
 
+// Wrap - used to satisfy TxInner
 func (tx SendTx) Wrap() basecoin.Tx {
 	return basecoin.Tx{tx}
 }

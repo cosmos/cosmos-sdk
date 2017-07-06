@@ -12,24 +12,25 @@ import (
 	"github.com/tendermint/basecoin/types"
 )
 
-const (
-	NameCoin = "coin"
-)
+//NameCoin - name space of the coin module
+const NameCoin = "coin"
 
-// Handler writes
+// Handler includes an accountant
 type Handler struct {
 	Accountant
 }
 
 var _ basecoin.Handler = Handler{}
 
+// NewHandler - new accountant handler for the coin module
 func NewHandler() Handler {
 	return Handler{
 		Accountant: NewAccountant(""),
 	}
 }
 
-func (_ Handler) Name() string {
+// Name - return name space
+func (h Handler) Name() string {
 	return NameCoin
 }
 
@@ -80,6 +81,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoi
 	return basecoin.Result{}, nil
 }
 
+// SetOption - sets the genesis account balance
 func (h Handler) SetOption(l log.Logger, store types.KVStore, module, key, value string) (log string, err error) {
 	if module != NameCoin {
 		return "", errors.ErrUnknownModule(module)
@@ -103,10 +105,9 @@ func (h Handler) SetOption(l log.Logger, store types.KVStore, module, key, value
 		}
 		return "Success", nil
 
-	} else {
-		msg := fmt.Sprintf("Unknown key: %s", key)
-		return "", errors.ErrInternal(msg)
 	}
+	msg := fmt.Sprintf("Unknown key: %s", key)
+	return "", errors.ErrInternal(msg)
 }
 
 func checkTx(ctx basecoin.Context, tx basecoin.Tx) (send SendTx, err error) {

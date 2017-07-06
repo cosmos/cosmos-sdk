@@ -8,7 +8,9 @@ RICH=${ACCOUNTS[0]}
 POOR=${ACCOUNTS[4]}
 
 oneTimeSetUp() {
-    quickSetup .basecoin_test_counter counter-chain
+    if ! quickSetup .basecoin_test_counter counter-chain; then
+        exit 1;
+    fi
 }
 
 oneTimeTearDown() {

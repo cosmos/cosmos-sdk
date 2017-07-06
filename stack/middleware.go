@@ -4,7 +4,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/basecoin/state"
 )
 
 // middleware lets us wrap a whole stack up into one Handler
@@ -22,7 +22,7 @@ func (m *middleware) Name() string {
 }
 
 // CheckTx always returns an empty success tx
-func (m *middleware) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (basecoin.Result, error) {
+func (m *middleware) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (basecoin.Result, error) {
 	// make sure we pass in proper context to child
 	next := secureCheck(m.next, ctx)
 	// set the permissions for this app
@@ -31,7 +31,7 @@ func (m *middleware) CheckTx(ctx basecoin.Context, store types.KVStore, tx basec
 }
 
 // DeliverTx always returns an empty success tx
-func (m *middleware) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (m *middleware) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	// make sure we pass in proper context to child
 	next := secureDeliver(m.next, ctx)
 	// set the permissions for this app
@@ -39,7 +39,7 @@ func (m *middleware) DeliverTx(ctx basecoin.Context, store types.KVStore, tx bas
 	return m.middleware.DeliverTx(ctx, store, tx, next)
 }
 
-func (m *middleware) SetOption(l log.Logger, store types.KVStore, module, key, value string) (string, error) {
+func (m *middleware) SetOption(l log.Logger, store state.KVStore, module, key, value string) (string, error) {
 	return m.middleware.SetOption(l, store, module, key, value, m.next)
 }
 

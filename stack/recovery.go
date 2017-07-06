@@ -7,7 +7,7 @@ import (
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/basecoin/state"
 )
 
 const (
@@ -23,7 +23,7 @@ func (_ Recovery) Name() string {
 
 var _ Middleware = Recovery{}
 
-func (_ Recovery) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (_ Recovery) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)
@@ -32,7 +32,7 @@ func (_ Recovery) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin
 	return next.CheckTx(ctx, store, tx)
 }
 
-func (_ Recovery) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (_ Recovery) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)
@@ -41,7 +41,7 @@ func (_ Recovery) DeliverTx(ctx basecoin.Context, store types.KVStore, tx baseco
 	return next.DeliverTx(ctx, store, tx)
 }
 
-func (_ Recovery) SetOption(l log.Logger, store types.KVStore, module, key, value string, next basecoin.SetOptioner) (log string, err error) {
+func (_ Recovery) SetOption(l log.Logger, store state.KVStore, module, key, value string, next basecoin.SetOptioner) (log string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)

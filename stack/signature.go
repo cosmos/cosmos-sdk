@@ -5,7 +5,7 @@ import (
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/basecoin/state"
 )
 
 // app name for auth
@@ -33,7 +33,7 @@ type Signed interface {
 	Signers() ([]crypto.PubKey, error)
 }
 
-func (h Signatures) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (h Signatures) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	sigs, tnext, err := getSigners(tx)
 	if err != nil {
 		return res, err
@@ -42,7 +42,7 @@ func (h Signatures) CheckTx(ctx basecoin.Context, store types.KVStore, tx baseco
 	return next.CheckTx(ctx2, store, tnext)
 }
 
-func (h Signatures) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (h Signatures) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	sigs, tnext, err := getSigners(tx)
 	if err != nil {
 		return res, err

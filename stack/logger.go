@@ -6,7 +6,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/basecoin/state"
 )
 
 const (
@@ -22,7 +22,7 @@ func (_ Logger) Name() string {
 
 var _ Middleware = Logger{}
 
-func (_ Logger) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (_ Logger) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	start := time.Now()
 	res, err = next.CheckTx(ctx, store, tx)
 	delta := time.Now().Sub(start)
@@ -36,7 +36,7 @@ func (_ Logger) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.T
 	return
 }
 
-func (_ Logger) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (_ Logger) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	start := time.Now()
 	res, err = next.DeliverTx(ctx, store, tx)
 	delta := time.Now().Sub(start)
@@ -50,7 +50,7 @@ func (_ Logger) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin
 	return
 }
 
-func (_ Logger) SetOption(l log.Logger, store types.KVStore, module, key, value string, next basecoin.SetOptioner) (string, error) {
+func (_ Logger) SetOption(l log.Logger, store state.KVStore, module, key, value string, next basecoin.SetOptioner) (string, error) {
 	start := time.Now()
 	res, err := next.SetOption(l, store, module, key, value)
 	delta := time.Now().Sub(start)

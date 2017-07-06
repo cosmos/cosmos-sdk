@@ -9,8 +9,8 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/txs"
-	"github.com/tendermint/basecoin/types"
 )
 
 func TestChain(t *testing.T) {
@@ -31,7 +31,7 @@ func TestChain(t *testing.T) {
 
 	// generic args here...
 	ctx := NewContext(chainID, log.NewNopLogger())
-	store := types.NewMemKVStore()
+	store := state.NewMemKVStore()
 
 	// build the stack
 	ok := OKHandler{Log: msg}

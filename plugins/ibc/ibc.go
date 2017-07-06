@@ -72,7 +72,7 @@ package ibc
 // // GetSequenceNumber gets the sequence number for packets being sent from the src chain to the dst chain.
 // // The sequence number counts how many packets have been sent.
 // // The next packet must include the latest sequence number.
-// func GetSequenceNumber(store types.KVStore, src, dst string) uint64 {
+// func GetSequenceNumber(store state.KVStore, src, dst string) uint64 {
 // 	sequenceKey := toKey(_IBC, _EGRESS, src, dst)
 // 	seqBytes := store.Get(sequenceKey)
 // 	if seqBytes == nil {
@@ -86,14 +86,14 @@ package ibc
 // }
 
 // // SetSequenceNumber sets the sequence number for packets being sent from the src chain to the dst chain
-// func SetSequenceNumber(store types.KVStore, src, dst string, seq uint64) {
+// func SetSequenceNumber(store state.KVStore, src, dst string, seq uint64) {
 // 	sequenceKey := toKey(_IBC, _EGRESS, src, dst)
 // 	store.Set(sequenceKey, []byte(strconv.FormatUint(seq, 10)))
 // }
 
 // // SaveNewIBCPacket creates an IBC packet with the given payload from the src chain to the dst chain
 // // using the correct sequence number. It also increments the sequence number by 1
-// func SaveNewIBCPacket(state types.KVStore, src, dst string, payload Payload) {
+// func SaveNewIBCPacket(state state.KVStore, src, dst string, payload Payload) {
 // 	// fetch sequence number and increment by 1
 // 	seq := GetSequenceNumber(state, src, dst)
 // 	SetSequenceNumber(state, src, dst, seq+1)
@@ -104,7 +104,7 @@ package ibc
 // 	save(state, packetKey, packet)
 // }
 
-// func GetIBCPacket(state types.KVStore, src, dst string, seq uint64) (Packet, error) {
+// func GetIBCPacket(state state.KVStore, src, dst string, seq uint64) (Packet, error) {
 // 	packetKey := toKey(_IBC, _EGRESS, src, dst, cmn.Fmt("%v", seq))
 // 	packetBytes := state.Get(packetKey)
 
@@ -251,11 +251,11 @@ package ibc
 // 	return &IBCPlugin{}
 // }
 
-// func (ibc *IBCPlugin) SetOption(store types.KVStore, key string, value string) (log string) {
+// func (ibc *IBCPlugin) SetOption(store state.KVStore, key string, value string) (log string) {
 // 	return ""
 // }
 
-// func (ibc *IBCPlugin) RunTx(store types.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
+// func (ibc *IBCPlugin) RunTx(store state.KVStore, ctx types.CallContext, txBytes []byte) (res abci.Result) {
 // 	// Decode tx
 // 	var tx IBCTx
 // 	err := wire.ReadBinaryBytes(txBytes, &tx)
@@ -295,7 +295,7 @@ package ibc
 // }
 
 // type IBCStateMachine struct {
-// 	store types.KVStore
+// 	store state.KVStore
 // 	ctx   types.CallContext
 // 	res   abci.Result
 // }
@@ -499,13 +499,13 @@ package ibc
 // 	return
 // }
 
-// func (ibc *IBCPlugin) InitChain(store types.KVStore, vals []*abci.Validator) {
+// func (ibc *IBCPlugin) InitChain(store state.KVStore, vals []*abci.Validator) {
 // }
 
-// func (cp *IBCPlugin) BeginBlock(store types.KVStore, hash []byte, header *abci.Header) {
+// func (cp *IBCPlugin) BeginBlock(store state.KVStore, hash []byte, header *abci.Header) {
 // }
 
-// func (cp *IBCPlugin) EndBlock(store types.KVStore, height uint64) (res abci.ResponseEndBlock) {
+// func (cp *IBCPlugin) EndBlock(store state.KVStore, height uint64) (res abci.ResponseEndBlock) {
 // 	return
 // }
 
@@ -513,7 +513,7 @@ package ibc
 // // TODO: move to utils
 
 // // Returns true if exists, false if nil.
-// func exists(store types.KVStore, key []byte) (exists bool) {
+// func exists(store state.KVStore, key []byte) (exists bool) {
 // 	value := store.Get(key)
 // 	return len(value) > 0
 // }
@@ -521,7 +521,7 @@ package ibc
 // // Load bytes from store by reading value for key and read into ptr.
 // // Returns true if exists, false if nil.
 // // Returns err if decoding error.
-// func load(store types.KVStore, key []byte, ptr interface{}) (exists bool, err error) {
+// func load(store state.KVStore, key []byte, ptr interface{}) (exists bool, err error) {
 // 	value := store.Get(key)
 // 	if len(value) > 0 {
 // 		err = wire.ReadBinaryBytes(value, ptr)
@@ -537,7 +537,7 @@ package ibc
 // }
 
 // // Save bytes to store by writing obj's go-wire binary bytes.
-// func save(store types.KVStore, key []byte, obj interface{}) {
+// func save(store state.KVStore, key []byte, obj interface{}) {
 // 	store.Set(key, wire.BinaryBytes(obj))
 // }
 

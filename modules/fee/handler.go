@@ -4,6 +4,7 @@ import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/stack"
+	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 )
 
@@ -13,11 +14,11 @@ const NameFee = "fee"
 // AccountChecker - interface used by SimpleFeeHandler
 type AccountChecker interface {
 	// Get amount checks the current amount
-	GetAmount(store types.KVStore, addr basecoin.Actor) (types.Coins, error)
+	GetAmount(store state.KVStore, addr basecoin.Actor) (types.Coins, error)
 
 	// ChangeAmount modifies the balance by the given amount and returns the new balance
 	// always returns an error if leading to negative balance
-	ChangeAmount(store types.KVStore, addr basecoin.Actor, coins types.Coins) (types.Coins, error)
+	ChangeAmount(store state.KVStore, addr basecoin.Actor, coins types.Coins) (types.Coins, error)
 }
 
 // SimpleFeeHandler - checker object for fee checking
@@ -37,7 +38,7 @@ var _ stack.Middleware = SimpleFeeHandler{}
 // Yes, I know refactor a bit... really too late already
 
 // CheckTx - check the transaction
-func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	feeTx, ok := tx.Unwrap().(*Fee)
 	if !ok {
 		return res, errors.ErrInvalidFormat(tx)
@@ -61,7 +62,7 @@ func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx 
 }
 
 // DeliverTx - send the fee handler transaction
-func (h SimpleFeeHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (h SimpleFeeHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	feeTx, ok := tx.Unwrap().(*Fee)
 	if !ok {
 		return res, errors.ErrInvalidFormat(tx)

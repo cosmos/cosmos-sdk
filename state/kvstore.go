@@ -1,4 +1,4 @@
-package types
+package state
 
 import (
 	"container/list"

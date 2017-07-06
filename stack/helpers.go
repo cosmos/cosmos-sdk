@@ -6,7 +6,7 @@ import (
 	"github.com/tendermint/go-wire/data"
 
 	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/basecoin/state"
 )
 
 const (
@@ -29,12 +29,12 @@ func (_ OKHandler) Name() string {
 }
 
 // CheckTx always returns an empty success tx
-func (ok OKHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (ok OKHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	return basecoin.Result{Log: ok.Log}, nil
 }
 
 // DeliverTx always returns an empty success tx
-func (ok OKHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (ok OKHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	return basecoin.Result{Log: ok.Log}, nil
 }
 
@@ -50,13 +50,13 @@ func (_ EchoHandler) Name() string {
 }
 
 // CheckTx always returns an empty success tx
-func (_ EchoHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (_ EchoHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	data, err := data.ToWire(tx)
 	return basecoin.Result{Data: data}, err
 }
 
 // DeliverTx always returns an empty success tx
-func (_ EchoHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (_ EchoHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	data, err := data.ToWire(tx)
 	return basecoin.Result{Data: data}, err
 }
@@ -74,12 +74,12 @@ func (_ FailHandler) Name() string {
 }
 
 // CheckTx always returns the given error
-func (f FailHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (f FailHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	return res, errors.WithStack(f.Err)
 }
 
 // DeliverTx always returns the given error
-func (f FailHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (f FailHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	return res, errors.WithStack(f.Err)
 }
 
@@ -97,7 +97,7 @@ func (_ PanicHandler) Name() string {
 }
 
 // CheckTx always panics
-func (p PanicHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (p PanicHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	if p.Err != nil {
 		panic(p.Err)
 	}
@@ -105,7 +105,7 @@ func (p PanicHandler) CheckTx(ctx basecoin.Context, store types.KVStore, tx base
 }
 
 // DeliverTx always panics
-func (p PanicHandler) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (p PanicHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	if p.Err != nil {
 		panic(p.Err)
 	}

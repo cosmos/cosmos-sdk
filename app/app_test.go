@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/stack"
+	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/txs"
 	"github.com/tendermint/basecoin/types"
 	wire "github.com/tendermint/go-wire"
@@ -81,12 +82,12 @@ func (at *appTest) reset() {
 	require.True(at.t, resabci.IsOK(), resabci)
 }
 
-func getBalance(key basecoin.Actor, state types.KVStore) (types.Coins, error) {
+func getBalance(key basecoin.Actor, state state.KVStore) (types.Coins, error) {
 	acct, err := coin.NewAccountant("").GetAccount(state, key)
 	return acct.Coins, err
 }
 
-func getAddr(addr []byte, state types.KVStore) (types.Coins, error) {
+func getAddr(addr []byte, state state.KVStore) (types.Coins, error) {
 	actor := stack.SigPerm(addr)
 	return getBalance(actor, state)
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 )
 
@@ -27,7 +28,7 @@ func NewAccountant(prefix string) Accountant {
 }
 
 // GetAccount - Get account from store and address
-func (a Accountant) GetAccount(store types.KVStore, addr basecoin.Actor) (Account, error) {
+func (a Accountant) GetAccount(store state.KVStore, addr basecoin.Actor) (Account, error) {
 	acct, err := loadAccount(store, a.MakeKey(addr))
 
 	// for empty accounts, don't return an error, but rather an empty account
@@ -38,13 +39,13 @@ func (a Accountant) GetAccount(store types.KVStore, addr basecoin.Actor) (Accoun
 }
 
 // CheckCoins makes sure there are funds, but doesn't change anything
-func (a Accountant) CheckCoins(store types.KVStore, addr basecoin.Actor, coins types.Coins, seq int) (types.Coins, error) {
+func (a Accountant) CheckCoins(store state.KVStore, addr basecoin.Actor, coins types.Coins, seq int) (types.Coins, error) {
 	acct, err := a.updateCoins(store, addr, coins, seq)
 	return acct.Coins, err
 }
 
 // ChangeCoins changes the money, returns error if it would be negative
-func (a Accountant) ChangeCoins(store types.KVStore, addr basecoin.Actor, coins types.Coins, seq int) (types.Coins, error) {
+func (a Accountant) ChangeCoins(store state.KVStore, addr basecoin.Actor, coins types.Coins, seq int) (types.Coins, error) {
 	acct, err := a.updateCoins(store, addr, coins, seq)
 	if err != nil {
 		return acct.Coins, err
@@ -57,7 +58,7 @@ func (a Accountant) ChangeCoins(store types.KVStore, addr basecoin.Actor, coins 
 // updateCoins will load the account, make all checks, and return the updated account.
 //
 // it doesn't save anything, that is up to you to decide (Check/Change Coins)
-func (a Accountant) updateCoins(store types.KVStore, addr basecoin.Actor, coins types.Coins, seq int) (acct Account, err error) {
+func (a Accountant) updateCoins(store state.KVStore, addr basecoin.Actor, coins types.Coins, seq int) (acct Account, err error) {
 	acct, err = loadAccount(store, a.MakeKey(addr))
 	// we can increase an empty account...
 	if IsNoAccountErr(err) && coins.IsPositive() {
@@ -101,7 +102,7 @@ type Account struct {
 	Sequence int         `json:"sequence"`
 }
 
-func loadAccount(store types.KVStore, key []byte) (acct Account, err error) {
+func loadAccount(store state.KVStore, key []byte) (acct Account, err error) {
 	// fmt.Printf("load:  %X\n", key)
 	data := store.Get(key)
 	if len(data) == 0 {
@@ -115,7 +116,7 @@ func loadAccount(store types.KVStore, key []byte) (acct Account, err error) {
 	return acct, nil
 }
 
-func storeAccount(store types.KVStore, key []byte, acct Account) error {
+func storeAccount(store state.KVStore, key []byte, acct Account) error {
 	// fmt.Printf("store: %X\n", key)
 	bin := wire.BinaryBytes(acct)
 	store.Set(key, bin)

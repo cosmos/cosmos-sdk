@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/txs"
-	"github.com/tendermint/basecoin/types"
 )
 
 func TestSignatureChecks(t *testing.T) {
@@ -18,7 +19,7 @@ func TestSignatureChecks(t *testing.T) {
 
 	// generic args
 	ctx := NewContext("test-chain", log.NewNopLogger())
-	store := types.NewMemKVStore()
+	store := state.NewMemKVStore()
 	raw := txs.NewRaw([]byte{1, 2, 3, 4})
 
 	// let's make some keys....

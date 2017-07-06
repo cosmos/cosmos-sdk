@@ -5,12 +5,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/txs"
-	"github.com/tendermint/basecoin/types"
+
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
+
+	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/state"
+	"github.com/tendermint/basecoin/txs"
 )
 
 func TestPermissionSandbox(t *testing.T) {
@@ -18,7 +20,7 @@ func TestPermissionSandbox(t *testing.T) {
 
 	// generic args
 	ctx := NewContext("test-chain", log.NewNopLogger())
-	store := types.NewMemKVStore()
+	store := state.NewMemKVStore()
 	raw := txs.NewRaw([]byte{1, 2, 3, 4})
 	rawBytes, err := data.ToWire(raw)
 	require.Nil(err)

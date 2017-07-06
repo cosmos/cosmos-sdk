@@ -8,7 +8,7 @@ import (
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/basecoin/state"
 )
 
 // nolint
@@ -64,7 +64,7 @@ func (d *Dispatcher) Name() string {
 // Tries to find a registered module (Dispatchable) based on the name of the tx.
 // The tx name (as registered with go-data) should be in the form `<module name>/XXXX`,
 // where `module name` must match the name of a dispatchable and XXX can be any string.
-func (d *Dispatcher) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (d *Dispatcher) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	r, err := d.lookupTx(tx)
 	if err != nil {
 		return res, err
@@ -79,7 +79,7 @@ func (d *Dispatcher) CheckTx(ctx basecoin.Context, store types.KVStore, tx basec
 // Tries to find a registered module (Dispatchable) based on the name of the tx.
 // The tx name (as registered with go-data) should be in the form `<module name>/XXXX`,
 // where `module name` must match the name of a dispatchable and XXX can be any string.
-func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	r, err := d.lookupTx(tx)
 	if err != nil {
 		return res, err
@@ -93,7 +93,7 @@ func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store types.KVStore, tx bas
 //
 // Tries to find a registered module (Dispatchable) based on the
 // module name from SetOption of the tx.
-func (d *Dispatcher) SetOption(l log.Logger, store types.KVStore, module, key, value string) (string, error) {
+func (d *Dispatcher) SetOption(l log.Logger, store state.KVStore, module, key, value string) (string, error) {
 	r, err := d.lookupModule(module)
 	if err != nil {
 		return "", err

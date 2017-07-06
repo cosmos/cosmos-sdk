@@ -3,8 +3,8 @@ package stack
 import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/txs"
-	"github.com/tendermint/basecoin/types"
 )
 
 const (
@@ -22,7 +22,7 @@ func (_ Chain) Name() string {
 
 var _ Middleware = Chain{}
 
-func (c Chain) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (c Chain) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	stx, err := c.checkChain(ctx.ChainID(), tx)
 	if err != nil {
 		return res, err
@@ -30,7 +30,7 @@ func (c Chain) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx
 	return next.CheckTx(ctx, store, stx)
 }
 
-func (c Chain) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (c Chain) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	stx, err := c.checkChain(ctx.ChainID(), tx)
 	if err != nil {
 		return res, err

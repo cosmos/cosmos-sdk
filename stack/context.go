@@ -9,7 +9,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/basecoin/state"
 )
 
 // store nonce as it's own type so no one can even try to fake it
@@ -115,7 +115,7 @@ func withApp(ctx basecoin.Context, app string) basecoin.Context {
 }
 
 func secureCheck(h basecoin.Checker, parent basecoin.Context) basecoin.Checker {
-	next := func(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	next := func(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 		if !parent.IsParent(ctx) {
 			return res, errors.New("Passing in non-child Context")
 		}
@@ -125,7 +125,7 @@ func secureCheck(h basecoin.Checker, parent basecoin.Context) basecoin.Checker {
 }
 
 func secureDeliver(h basecoin.Deliver, parent basecoin.Context) basecoin.Deliver {
-	next := func(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	next := func(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 		if !parent.IsParent(ctx) {
 			return res, errors.New("Passing in non-child Context")
 		}

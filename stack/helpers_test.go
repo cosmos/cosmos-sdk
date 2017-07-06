@@ -9,14 +9,14 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/basecoin/state"
 )
 
 func TestOK(t *testing.T) {
 	assert := assert.New(t)
 
 	ctx := NewContext("test-chain", log.NewNopLogger())
-	store := types.NewMemKVStore()
+	store := state.NewMemKVStore()
 	data := "this looks okay"
 	tx := basecoin.Tx{}
 
@@ -34,7 +34,7 @@ func TestFail(t *testing.T) {
 	assert := assert.New(t)
 
 	ctx := NewContext("test-chain", log.NewNopLogger())
-	store := types.NewMemKVStore()
+	store := state.NewMemKVStore()
 	msg := "big problem"
 	tx := basecoin.Tx{}
 
@@ -54,7 +54,7 @@ func TestPanic(t *testing.T) {
 	assert := assert.New(t)
 
 	ctx := NewContext("test-chain", log.NewNopLogger())
-	store := types.NewMemKVStore()
+	store := state.NewMemKVStore()
 	msg := "system crash!"
 	tx := basecoin.Tx{}
 

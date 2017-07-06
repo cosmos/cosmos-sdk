@@ -2,7 +2,6 @@ package state
 
 import (
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/basecoin/types"
 	eyes "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/log"
 )
@@ -11,13 +10,13 @@ import (
 // See CacheWrap().
 type State struct {
 	chainID    string
-	store      types.KVStore
+	store      KVStore
 	readCache  map[string][]byte // optional, for caching writes to store
-	writeCache *types.KVCache    // optional, for caching writes w/o writing to store
+	writeCache *KVCache          // optional, for caching writes w/o writing to store
 	logger     log.Logger
 }
 
-func NewState(store types.KVStore, l log.Logger) *State {
+func NewState(store KVStore, l log.Logger) *State {
 	return &State{
 		chainID:    "",
 		store:      store,
@@ -58,7 +57,7 @@ func (s *State) Set(key []byte, value []byte) {
 }
 
 func (s *State) CacheWrap() *State {
-	cache := types.NewKVCache(s)
+	cache := NewKVCache(s)
 	return &State{
 		chainID:    s.chainID,
 		store:      cache,

@@ -12,6 +12,7 @@ import (
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/stack"
+	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/types"
 )
 
@@ -140,7 +141,7 @@ func TestDeliverTx(t *testing.T) {
 	h := NewHandler()
 	for i, tc := range cases {
 		// setup the cases....
-		store := types.NewMemKVStore()
+		store := state.NewMemKVStore()
 		for _, m := range tc.init {
 			acct := Account{Coins: m.coins}
 			err := storeAccount(store, h.MakeKey(m.addr), acct)
@@ -196,7 +197,7 @@ func TestSetOption(t *testing.T) {
 	h := NewHandler()
 	l := log.NewNopLogger()
 	for i, tc := range cases {
-		store := types.NewMemKVStore()
+		store := state.NewMemKVStore()
 		key := "account"
 
 		// set the options

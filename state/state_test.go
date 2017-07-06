@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/tendermint/basecoin/types"
 	eyes "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/log"
 
@@ -15,14 +14,14 @@ func TestState(t *testing.T) {
 	assert := assert.New(t)
 
 	//States and Stores for tests
-	store := types.NewMemKVStore()
+	store := NewMemKVStore()
 	state := NewState(store, log.TestingLogger())
 	cache := state.CacheWrap()
 	eyesCli := eyes.NewLocalClient("", 0)
 
 	//reset the store/state/cache
 	reset := func() {
-		store = types.NewMemKVStore()
+		store = NewMemKVStore()
 		state = NewState(store, log.TestingLogger())
 		cache = state.CacheWrap()
 	}
@@ -43,14 +42,14 @@ func TestState(t *testing.T) {
 	}
 
 	//set the kvc to have all the key value pairs
-	setRecords := func(kv types.KVStore) {
+	setRecords := func(kv KVStore) {
 		for _, n := range keyvalue {
 			kv.Set([]byte(n.key), []byte(n.value))
 		}
 	}
 
 	//store has all the key value pairs
-	storeHasAll := func(kv types.KVStore) bool {
+	storeHasAll := func(kv KVStore) bool {
 		for _, n := range keyvalue {
 			if !bytes.Equal(kv.Get([]byte(n.key)), []byte(n.value)) {
 				return false

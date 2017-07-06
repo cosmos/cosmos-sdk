@@ -30,7 +30,7 @@ func NewHandler() Handler {
 }
 
 // Name - return name space
-func (h Handler) Name() string {
+func (Handler) Name() string {
 	return NameCoin
 }
 

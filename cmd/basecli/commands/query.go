@@ -46,7 +46,7 @@ type BaseTxPresenter struct {
 }
 
 // ParseData - unmarshal raw bytes to a basecoin tx
-func (b BaseTxPresenter) ParseData(raw []byte) (interface{}, error) {
+func (BaseTxPresenter) ParseData(raw []byte) (interface{}, error) {
 	var tx basecoin.Tx
 	err := wire.ReadBinaryBytes(raw, &tx)
 	return tx, err

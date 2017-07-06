@@ -10,6 +10,7 @@ import (
 	"github.com/tendermint/basecoin/state"
 )
 
+// nolint
 const (
 	NameRecovery = "rcvr"
 )
@@ -17,13 +18,15 @@ const (
 // Recovery catches any panics and returns them as errors instead
 type Recovery struct{}
 
-func (_ Recovery) Name() string {
+// Name of the module - fulfills Middleware interface
+func (Recovery) Name() string {
 	return NameRecovery
 }
 
 var _ Middleware = Recovery{}
 
-func (_ Recovery) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+// CheckTx catches any panic and converts to error - fulfills Middlware interface
+func (Recovery) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)
@@ -32,7 +35,8 @@ func (_ Recovery) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin
 	return next.CheckTx(ctx, store, tx)
 }
 
-func (_ Recovery) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+// DeliverTx catches any panic and converts to error - fulfills Middlware interface
+func (Recovery) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)
@@ -41,7 +45,8 @@ func (_ Recovery) DeliverTx(ctx basecoin.Context, store state.KVStore, tx baseco
 	return next.DeliverTx(ctx, store, tx)
 }
 
-func (_ Recovery) SetOption(l log.Logger, store state.KVStore, module, key, value string, next basecoin.SetOptioner) (log string, err error) {
+// SetOption catches any panic and converts to error - fulfills Middlware interface
+func (Recovery) SetOption(l log.Logger, store state.KVStore, module, key, value string, next basecoin.SetOptioner) (log string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)

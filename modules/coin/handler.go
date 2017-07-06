@@ -8,7 +8,7 @@ import (
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/stack"
+	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/state"
 )
 
@@ -98,7 +98,7 @@ func (h Handler) SetOption(l log.Logger, store state.KVStore, module, key, value
 			return "", ErrInvalidAddress()
 		}
 		// this sets the permission for a public key signature, use that app
-		actor := stack.SigPerm(addr)
+		actor := auth.SigPerm(addr)
 		err = storeAccount(store, h.MakeKey(actor), acc.ToAccount())
 		if err != nil {
 			return "", err

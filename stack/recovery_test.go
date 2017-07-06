@@ -27,7 +27,7 @@ func TestRecovery(t *testing.T) {
 		expected string // expected text in panic
 	}{
 		{"buzz", nil, "buzz"},
-		{"", errors.New("owa!"), "owa!"},
+		{"", errors.New("some text"), "some text"},
 		{"text", errors.New("error"), "error"},
 	}
 

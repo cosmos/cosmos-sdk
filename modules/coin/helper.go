@@ -1,11 +1,11 @@
 package coin
 
 import (
+	"github.com/tendermint/basecoin/modules/auth"
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire/data"
 
 	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
 )
 
 // AccountWithKey is a helper for tests, that includes and account
@@ -31,7 +31,7 @@ func (a *AccountWithKey) Address() []byte {
 
 // Actor returns the basecoin actor associated with this account
 func (a *AccountWithKey) Actor() basecoin.Actor {
-	return stack.SigPerm(a.Key.PubKey().Address())
+	return auth.SigPerm(a.Key.PubKey().Address())
 }
 
 // MakeOption returns a string to use with SetOption to initialize this account

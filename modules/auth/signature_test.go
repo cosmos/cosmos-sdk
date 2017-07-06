@@ -1,4 +1,4 @@
-package stack
+package auth
 
 import (
 	"strconv"
@@ -10,6 +10,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/txs"
 )
@@ -18,7 +19,7 @@ func TestSignatureChecks(t *testing.T) {
 	assert := assert.New(t)
 
 	// generic args
-	ctx := NewContext("test-chain", log.NewNopLogger())
+	ctx := stack.NewContext("test-chain", log.NewNopLogger())
 	store := state.NewMemKVStore()
 	raw := txs.NewRaw([]byte{1, 2, 3, 4})
 
@@ -56,11 +57,10 @@ func TestSignatureChecks(t *testing.T) {
 		idx := strconv.Itoa(i)
 
 		// make the stack check for the given permission
-		app := New(
-			Recovery{}, // we need this so panics turn to errors
+		app := stack.New(
 			Signatures{},
-			CheckMiddleware{Required: tc.check},
-		).Use(OKHandler{})
+			stack.CheckMiddleware{Required: tc.check},
+		).Use(stack.OKHandler{})
 
 		var tx basecoin.Tx
 		// this does the signing as needed
@@ -80,11 +80,8 @@ func TestSignatureChecks(t *testing.T) {
 			tx = otx.Wrap()
 		}
 
-		// this will trivial expose the printing error...
-		// _, err := app.CheckTx(ctx, store, raw)
 		_, err := app.CheckTx(ctx, store, tx)
 		if tc.valid {
-			// TODO: why doen't tmerror print properly???
 			assert.Nil(err, "%d: %+v", i, err)
 		} else {
 			assert.NotNil(err, idx)

@@ -10,8 +10,8 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/txs"
 	wire "github.com/tendermint/go-wire"
@@ -87,7 +87,7 @@ func getBalance(key basecoin.Actor, state state.KVStore) (coin.Coins, error) {
 }
 
 func getAddr(addr []byte, state state.KVStore) (coin.Coins, error) {
-	actor := stack.SigPerm(addr)
+	actor := auth.SigPerm(addr)
 	return getBalance(actor, state)
 }
 

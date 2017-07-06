@@ -1,28 +1,33 @@
-package stack
+package auth
 
 import (
 	crypto "github.com/tendermint/go-crypto"
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 )
 
-// app name for auth
+//nolint
 const (
 	NameSigs = "sigs"
 )
 
+// Signatures parses out go-crypto signatures and adds permissions to the
+// context for use inside the application
 type Signatures struct {
-	PassOption
+	stack.PassOption
 }
 
-func (_ Signatures) Name() string {
+// Name of the module - fulfills Middleware interface
+func (Signatures) Name() string {
 	return NameSigs
 }
 
-var _ Middleware = Signatures{}
+var _ stack.Middleware = Signatures{}
 
+// SigPerm takes the binary address from PubKey.Address and makes it an Actor
 func SigPerm(addr []byte) basecoin.Actor {
 	return basecoin.NewActor(NameSigs, addr)
 }
@@ -33,7 +38,8 @@ type Signed interface {
 	Signers() ([]crypto.PubKey, error)
 }
 
-func (h Signatures) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+// CheckTx verifies the signatures are correct - fulfills Middlware interface
+func (Signatures) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	sigs, tnext, err := getSigners(tx)
 	if err != nil {
 		return res, err
@@ -42,7 +48,8 @@ func (h Signatures) CheckTx(ctx basecoin.Context, store state.KVStore, tx baseco
 	return next.CheckTx(ctx2, store, tnext)
 }
 
-func (h Signatures) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+// DeliverTx verifies the signatures are correct - fulfills Middlware interface
+func (Signatures) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	sigs, tnext, err := getSigners(tx)
 	if err != nil {
 		return res, err

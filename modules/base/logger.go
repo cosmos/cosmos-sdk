@@ -1,4 +1,4 @@
-package stack
+package base
 
 import (
 	"time"
@@ -6,9 +6,11 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 )
 
+// nolint
 const (
 	NameLogger = "lggr"
 )
@@ -16,13 +18,15 @@ const (
 // Logger catches any panics and returns them as errors instead
 type Logger struct{}
 
-func (_ Logger) Name() string {
+// Name of the module - fulfills Middleware interface
+func (Logger) Name() string {
 	return NameLogger
 }
 
-var _ Middleware = Logger{}
+var _ stack.Middleware = Logger{}
 
-func (_ Logger) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+// CheckTx logs time and result - fulfills Middlware interface
+func (Logger) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	start := time.Now()
 	res, err = next.CheckTx(ctx, store, tx)
 	delta := time.Now().Sub(start)
@@ -36,7 +40,8 @@ func (_ Logger) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.T
 	return
 }
 
-func (_ Logger) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+// DeliverTx logs time and result - fulfills Middlware interface
+func (Logger) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	start := time.Now()
 	res, err = next.DeliverTx(ctx, store, tx)
 	delta := time.Now().Sub(start)
@@ -50,7 +55,8 @@ func (_ Logger) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin
 	return
 }
 
-func (_ Logger) SetOption(l log.Logger, store state.KVStore, module, key, value string, next basecoin.SetOptioner) (string, error) {
+// SetOption logs time and result - fulfills Middlware interface
+func (Logger) SetOption(l log.Logger, store state.KVStore, module, key, value string, next basecoin.SetOptioner) (string, error) {
 	start := time.Now()
 	res, err := next.SetOption(l, store, module, key, value)
 	delta := time.Now().Sub(start)

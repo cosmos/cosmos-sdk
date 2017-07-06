@@ -8,6 +8,8 @@ import (
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/modules/auth"
+	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
@@ -95,7 +97,12 @@ func NewHandler() basecoin.Handler {
 		stack.WrapHandler(coin),
 		counter,
 	)
-	return stack.NewDefault().Use(dispatcher)
+	return stack.New(
+		base.Logger{},
+		stack.Recovery{},
+		auth.Signatures{},
+		base.Chain{},
+	).Use(dispatcher)
 }
 
 // Handler the counter transaction processing handler
@@ -134,7 +141,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 	// handle coin movement.... like, actually decrement the other account
 	if !ctr.Fee.IsZero() {
 		// take the coins and put them in out account!
-		senders := ctx.GetPermissions("", stack.NameSigs)
+		senders := ctx.GetPermissions("", auth.NameSigs)
 		if len(senders) == 0 {
 			return res, errors.ErrMissingSignature()
 		}

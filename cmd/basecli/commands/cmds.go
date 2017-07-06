@@ -13,8 +13,8 @@ import (
 	txcmd "github.com/tendermint/light-client/commands/txs"
 	cmn "github.com/tendermint/tmlibs/common"
 
+	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/txs"
 )
 
@@ -82,7 +82,7 @@ func readSendTxFlags() (tx basecoin.Tx, err error) {
 	if err != nil {
 		return tx, err
 	}
-	toAddr := stack.SigPerm(to)
+	toAddr := auth.SigPerm(to)
 	toAddr.ChainID = chain
 
 	// //parse the fee and amounts into coin types
@@ -102,7 +102,7 @@ func readSendTxFlags() (tx basecoin.Tx, err error) {
 	var fromAddr basecoin.Actor
 	signer := txcmd.GetSigner()
 	if !signer.Empty() {
-		fromAddr = stack.SigPerm(signer.Address())
+		fromAddr = auth.SigPerm(signer.Address())
 	}
 
 	// craft the inputs and outputs

@@ -1,27 +1,31 @@
-package stack
+package base
 
 import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/txs"
 )
 
+//nolint
 const (
 	NameChain = "chan"
 )
 
 // Chain enforces that this tx was bound to the named chain
 type Chain struct {
-	PassOption
+	stack.PassOption
 }
 
-func (_ Chain) Name() string {
-	return NameRecovery
+// Name of the module - fulfills Middleware interface
+func (Chain) Name() string {
+	return NameChain
 }
 
-var _ Middleware = Chain{}
+var _ stack.Middleware = Chain{}
 
+// CheckTx makes sure we are on the proper chain - fulfills Middlware interface
 func (c Chain) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	stx, err := c.checkChain(ctx.ChainID(), tx)
 	if err != nil {
@@ -30,6 +34,7 @@ func (c Chain) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx
 	return next.CheckTx(ctx, store, stx)
 }
 
+// DeliverTx makes sure we are on the proper chain - fulfills Middlware interface
 func (c Chain) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	stx, err := c.checkChain(ctx.ChainID(), tx)
 	if err != nil {

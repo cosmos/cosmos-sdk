@@ -15,6 +15,10 @@ import (
 	"github.com/tendermint/basecoin/txs"
 )
 
+const (
+	nameSigner = "signer"
+)
+
 func TestPermissionSandbox(t *testing.T) {
 	require := require.New(t)
 
@@ -28,7 +32,7 @@ func TestPermissionSandbox(t *testing.T) {
 	// test cases to make sure permissioning is solid
 	grantee := basecoin.Actor{App: NameGrant, Address: []byte{1}}
 	grantee2 := basecoin.Actor{App: NameGrant, Address: []byte{2}}
-	signer := basecoin.Actor{App: NameSigs, Address: []byte{1}}
+	signer := basecoin.Actor{App: nameSigner, Address: []byte{1}}
 	cases := []struct {
 		grant       basecoin.Actor
 		require     basecoin.Actor

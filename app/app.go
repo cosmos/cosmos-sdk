@@ -11,6 +11,8 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/modules/auth"
+	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/stack"
 	sm "github.com/tendermint/basecoin/state"
@@ -50,7 +52,12 @@ func DefaultHandler() basecoin.Handler {
 	// use the default stack
 	h := coin.NewHandler()
 	d := stack.NewDispatcher(stack.WrapHandler(h))
-	return stack.NewDefault().Use(d)
+	return stack.New(
+		base.Logger{},
+		stack.Recovery{},
+		auth.Signatures{},
+		base.Chain{},
+	).Use(d)
 }
 
 // GetState - XXX For testing, not thread safe!

@@ -1,4 +1,4 @@
-package stack
+package base
 
 import (
 	"strconv"
@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/txs"
 )
@@ -30,12 +31,12 @@ func TestChain(t *testing.T) {
 	}
 
 	// generic args here...
-	ctx := NewContext(chainID, log.NewNopLogger())
+	ctx := stack.NewContext(chainID, log.NewNopLogger())
 	store := state.NewMemKVStore()
 
 	// build the stack
-	ok := OKHandler{Log: msg}
-	app := New(Chain{}).Use(ok)
+	ok := stack.OKHandler{Log: msg}
+	app := stack.New(Chain{}).Use(ok)
 
 	for idx, tc := range cases {
 		i := strconv.Itoa(idx)

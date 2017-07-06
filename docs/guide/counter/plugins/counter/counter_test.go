@@ -23,16 +23,15 @@ func TestCounterPlugin(t *testing.T) {
 	eyesCli := eyescli.NewLocalClient("", 0)
 	chainID := "test_chain_id"
 
-	// l := log.TestingLogger().With("module", "app"),
-	l := log.NewTMLogger(os.Stdout).With("module", "app")
-	// l = log.NewTracingLogger(l)
+	// logger := log.TestingLogger().With("module", "app"),
+	logger := log.NewTMLogger(os.Stdout).With("module", "app")
+	// logger = log.NewTracingLogger(logger)
 	bcApp := app.NewBasecoin(
 		NewHandler(),
 		eyesCli,
-		l,
+		logger,
 	)
 	bcApp.SetOption("base/chain_id", chainID)
-	// t.Log(bcApp.Info())
 
 	// Account initialization
 	test1PrivAcc := types.PrivAccountFromSecret("test1")

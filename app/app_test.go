@@ -69,13 +69,13 @@ func (at *appTest) reset() {
 	at.accOut = types.MakeAcc("output0")
 
 	eyesCli := eyes.NewLocalClient("", 0)
-	// l := log.TestingLogger().With("module", "app"),
-	l := log.NewTMLogger(os.Stdout).With("module", "app")
-	l = log.NewTracingLogger(l)
+	// logger := log.TestingLogger().With("module", "app"),
+	logger := log.NewTMLogger(os.Stdout).With("module", "app")
+	logger = log.NewTracingLogger(logger)
 	at.app = NewBasecoin(
 		DefaultHandler(),
 		eyesCli,
-		l,
+		logger,
 	)
 
 	res := at.app.SetOption("base/chain_id", at.chainID)

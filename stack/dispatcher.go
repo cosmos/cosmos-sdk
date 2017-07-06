@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/basecoin/types"
 )
 
+// nolint
 const (
 	NameDispatcher = "disp"
 )
@@ -19,10 +20,16 @@ const (
 //
 // It will route tx to the proper locations and also allows them to call each
 // other synchronously through the same tx methods.
+//
+// Please note that iterating through a map is a non-deteministic operation
+// and, as such, should never be done in the context of an ABCI app.  Only
+// use this map to look up an exact route by name.
 type Dispatcher struct {
 	routes map[string]Dispatchable
 }
 
+// NewDispatcher creates a dispatcher and adds the given routes.
+// You can also add routes later with .AddRoutes()
 func NewDispatcher(routes ...Dispatchable) *Dispatcher {
 	d := &Dispatcher{
 		routes: map[string]Dispatchable{},
@@ -47,10 +54,16 @@ func (d *Dispatcher) AddRoutes(routes ...Dispatchable) {
 	}
 }
 
+// Name - defines the name of this module
 func (d *Dispatcher) Name() string {
 	return NameDispatcher
 }
 
+// CheckTx - implements Handler interface
+//
+// Tries to find a registered module (Dispatchable) based on the name of the tx.
+// The tx name (as registered with go-data) should be in the form `<module name>/XXXX`,
+// where `module name` must match the name of a dispatchable and XXX can be any string.
 func (d *Dispatcher) CheckTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	r, err := d.lookupTx(tx)
 	if err != nil {
@@ -61,6 +74,11 @@ func (d *Dispatcher) CheckTx(ctx basecoin.Context, store types.KVStore, tx basec
 	return r.CheckTx(ctx, store, tx, cb)
 }
 
+// DeliverTx - implements Handler interface
+//
+// Tries to find a registered module (Dispatchable) based on the name of the tx.
+// The tx name (as registered with go-data) should be in the form `<module name>/XXXX`,
+// where `module name` must match the name of a dispatchable and XXX can be any string.
 func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store types.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	r, err := d.lookupTx(tx)
 	if err != nil {
@@ -71,6 +89,10 @@ func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store types.KVStore, tx bas
 	return r.DeliverTx(ctx, store, tx, cb)
 }
 
+// SetOption - implements Handler interface
+//
+// Tries to find a registered module (Dispatchable) based on the
+// module name from SetOption of the tx.
 func (d *Dispatcher) SetOption(l log.Logger, store types.KVStore, module, key, value string) (string, error) {
 	r, err := d.lookupModule(module)
 	if err != nil {

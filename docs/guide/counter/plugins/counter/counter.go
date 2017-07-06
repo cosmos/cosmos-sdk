@@ -1,7 +1,7 @@
 package counter
 
 import (
-	rawerr "errors"
+	"fmt"
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-wire"
@@ -65,7 +65,7 @@ func (c Tx) ValidateBasic() error {
 //--------------------------------------------------------------------------------
 
 var (
-	errInvalidCounter = rawerr.New("Counter Tx marked invalid")
+	errInvalidCounter = fmt.Errorf("Counter Tx marked invalid")
 )
 
 // ErrInvalidCounter - custom error class

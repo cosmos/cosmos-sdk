@@ -17,11 +17,13 @@ import (
 	"github.com/tendermint/basecoin/version"
 )
 
+//nolint
 const (
 	ModuleNameBase = "base"
 	ChainKey       = "chain_id"
 )
 
+// Basecoin - The ABCI application
 type Basecoin struct {
 	eyesCli    *eyes.Client
 	state      *sm.State
@@ -30,19 +32,20 @@ type Basecoin struct {
 	logger     log.Logger
 }
 
-func NewBasecoin(h basecoin.Handler, eyesCli *eyes.Client, l log.Logger) *Basecoin {
-	state := sm.NewState(eyesCli, l.With("module", "state"))
+// NewBasecoin - create a new instance of the basecoin application
+func NewBasecoin(handler basecoin.Handler, eyesCli *eyes.Client, logger log.Logger) *Basecoin {
+	state := sm.NewState(eyesCli, logger.With("module", "state"))
 
 	return &Basecoin{
-		handler:    h,
+		handler:    handler,
 		eyesCli:    eyesCli,
 		state:      state,
 		cacheState: nil,
-		logger:     l,
+		logger:     logger,
 	}
 }
 
-// placeholder to just handle sendtx
+// DefaultHandler - placeholder to just handle sendtx
 func DefaultHandler() basecoin.Handler {
 	// use the default stack
 	h := coin.NewHandler()
@@ -50,47 +53,45 @@ func DefaultHandler() basecoin.Handler {
 	return stack.NewDefault().Use(d)
 }
 
-// XXX For testing, not thread safe!
+// GetState - XXX For testing, not thread safe!
 func (app *Basecoin) GetState() *sm.State {
 	return app.state.CacheWrap()
 }
 
-// ABCI::Info
+// Info - ABCI
 func (app *Basecoin) Info() abci.ResponseInfo {
 	resp, err := app.eyesCli.InfoSync()
 	if err != nil {
 		cmn.PanicCrisis(err)
 	}
 	return abci.ResponseInfo{
-		Data:             cmn.Fmt("Basecoin v%v", version.Version),
+		Data:             fmt.Sprintf("Basecoin v%v", version.Version),
 		LastBlockHeight:  resp.LastBlockHeight,
 		LastBlockAppHash: resp.LastBlockAppHash,
 	}
 }
 
-// ABCI::SetOption
+// SetOption - ABCI
 func (app *Basecoin) SetOption(key string, value string) string {
-	module, prefix := splitKey(key)
+
+	module, key := splitKey(key)
+
 	if module == ModuleNameBase {
-		return app.setBaseOption(prefix, value)
+		if key == ChainKey {
+			app.state.SetChainID(value)
+			return "Success"
+		}
+		return fmt.Sprintf("Error: unknown base option: %s", key)
 	}
 
-	log, err := app.handler.SetOption(app.logger, app.state, module, prefix, value)
+	log, err := app.handler.SetOption(app.logger, app.state, module, key, value)
 	if err == nil {
 		return log
 	}
 	return "Error: " + err.Error()
 }
 
-func (app *Basecoin) setBaseOption(key, value string) string {
-	if key == ChainKey {
-		app.state.SetChainID(value)
-		return "Success"
-	}
-	return fmt.Sprintf("Error: unknown base option: %s", key)
-}
-
-// ABCI::DeliverTx
+// DeliverTx - ABCI
 func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
 	tx, err := basecoin.LoadTx(txBytes)
 	if err != nil {
@@ -114,7 +115,7 @@ func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
 	return res.ToABCI()
 }
 
-// ABCI::CheckTx
+// CheckTx - ABCI
 func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 	tx, err := basecoin.LoadTx(txBytes)
 	if err != nil {
@@ -136,7 +137,7 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 	return res.ToABCI()
 }
 
-// ABCI::Query
+// Query - ABCI
 func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) {
 	if len(reqQuery.Data) == 0 {
 		resQuery.Log = "Query cannot be zero length"
@@ -153,7 +154,7 @@ func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 	return
 }
 
-// ABCI::Commit
+// Commit - ABCI
 func (app *Basecoin) Commit() (res abci.Result) {
 
 	// Commit state
@@ -168,21 +169,21 @@ func (app *Basecoin) Commit() (res abci.Result) {
 	return res
 }
 
-// ABCI::InitChain
+// InitChain - ABCI
 func (app *Basecoin) InitChain(validators []*abci.Validator) {
 	// for _, plugin := range app.plugins.GetList() {
 	// 	plugin.InitChain(app.state, validators)
 	// }
 }
 
-// ABCI::BeginBlock
+// BeginBlock - ABCI
 func (app *Basecoin) BeginBlock(hash []byte, header *abci.Header) {
 	// for _, plugin := range app.plugins.GetList() {
 	// 	plugin.BeginBlock(app.state, hash, header)
 	// }
 }
 
-// ABCI::EndBlock
+// EndBlock - ABCI
 func (app *Basecoin) EndBlock(height uint64) (res abci.ResponseEndBlock) {
 	// for _, plugin := range app.plugins.GetList() {
 	// 	pluginRes := plugin.EndBlock(app.state, height)
@@ -190,6 +191,8 @@ func (app *Basecoin) EndBlock(height uint64) (res abci.ResponseEndBlock) {
 	// }
 	return
 }
+
+//TODO move split key to tmlibs?
 
 // Splits the string at the first '/'.
 // if there are none, assign default module ("base").

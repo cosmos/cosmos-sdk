@@ -18,7 +18,7 @@ func main() {
 	}
 
 	// TODO: register the counter here
-	commands.Handler = counter.NewCounterHandler()
+	commands.Handler = counter.NewHandler()
 
 	RootCmd.AddCommand(
 		commands.InitCmd,

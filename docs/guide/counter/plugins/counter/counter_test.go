@@ -27,7 +27,7 @@ func TestCounterPlugin(t *testing.T) {
 	l := log.NewTMLogger(os.Stdout).With("module", "app")
 	// l = log.NewTracingLogger(l)
 	bcApp := app.NewBasecoin(
-		NewCounterHandler(),
+		NewHandler(),
 		eyesCli,
 		l,
 	)
@@ -47,7 +47,7 @@ func TestCounterPlugin(t *testing.T) {
 
 	// Deliver a CounterTx
 	DeliverCounterTx := func(valid bool, counterFee types.Coins, inputSequence int) abci.Result {
-		tx := NewCounterTx(valid, counterFee, inputSequence)
+		tx := NewTx(valid, counterFee, inputSequence)
 		tx = txs.NewChain(chainID, tx)
 		stx := txs.NewSig(tx)
 		txs.Sign(stx, test1PrivAcc.PrivKey)

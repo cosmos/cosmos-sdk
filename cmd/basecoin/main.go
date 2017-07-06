@@ -16,13 +16,11 @@ func main() {
 	rt.AddCommand(
 		commands.InitCmd,
 		commands.StartCmd,
-		// commands.RelayCmd,
+		//commands.RelayCmd,
 		commands.UnsafeResetAllCmd,
 		commands.VersionCmd,
 	)
 
 	cmd := cli.PrepareMainCmd(rt, "BC", os.ExpandEnv("$HOME/.basecoin"))
-	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
-	}
+	cmd.Execute()
 }

@@ -24,13 +24,14 @@ import (
 	"github.com/tendermint/basecoin/app"
 )
 
+// StartCmd - command to start running the basecoin node!
 var StartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start basecoin",
 	RunE:  startCmd,
 }
 
-// TODO: move to config file
+// nolint TODO: move to config file
 const EyesCacheSize = 10000
 
 //nolint
@@ -41,7 +42,7 @@ const (
 )
 
 var (
-	// use a global to store the handler, so we can set it in main.
+	// Handler - use a global to store the handler, so we can set it in main.
 	// TODO: figure out a cleaner way to register plugins
 	Handler basecoin.Handler
 )
@@ -95,11 +96,10 @@ func startCmd(cmd *cobra.Command, args []string) error {
 		logger.Info("Starting Basecoin without Tendermint", "chain_id", chainID)
 		// run just the abci app/server
 		return startBasecoinABCI(basecoinApp)
-	} else {
-		logger.Info("Starting Basecoin with Tendermint", "chain_id", chainID)
-		// start the app with tendermint in-process
-		return startTendermint(rootDir, basecoinApp)
 	}
+	logger.Info("Starting Basecoin with Tendermint", "chain_id", chainID)
+	// start the app with tendermint in-process
+	return startTendermint(rootDir, basecoinApp)
 }
 
 func startBasecoinABCI(basecoinApp *app.Basecoin) error {

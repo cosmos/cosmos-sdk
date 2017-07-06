@@ -13,6 +13,7 @@ import (
 
 /**** code to parse accounts from genesis docs ***/
 
+// GenesisAccount - genesis account parameters
 type GenesisAccount struct {
 	Address data.Bytes `json:"address"`
 	// this from types.Account (don't know how to embed this properly)
@@ -21,6 +22,7 @@ type GenesisAccount struct {
 	Balance  types.Coins   `json:"coins"`
 }
 
+// ToAccount - GenesisAccount struct to a basecoin Account
 func (g GenesisAccount) ToAccount() Account {
 	return Account{
 		Sequence: g.Sequence,
@@ -28,6 +30,7 @@ func (g GenesisAccount) ToAccount() Account {
 	}
 }
 
+// GetAddr - Get the address of the genesis account
 func (g GenesisAccount) GetAddr() ([]byte, error) {
 	noAddr, noPk := len(g.Address) == 0, g.PubKey.Empty()
 

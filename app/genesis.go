@@ -8,6 +8,7 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
+// LoadGenesis - Load the genesis file into memory
 func (app *Basecoin) LoadGenesis(path string) error {
 	genDoc, err := loadGenesis(path)
 	if err != nil {
@@ -35,12 +36,13 @@ type keyValue struct {
 	Value string `json:"value"`
 }
 
-// includes tendermint (in the json, we ignore here)
+// FullGenesisDoc - includes tendermint (in the json, we ignore here)
 type FullGenesisDoc struct {
 	ChainID    string      `json:"chain_id"`
 	AppOptions *GenesisDoc `json:"app_options"`
 }
 
+// GenesisDoc - All genesis values
 type GenesisDoc struct {
 	Accounts      []json.RawMessage `json:"accounts"`
 	PluginOptions []json.RawMessage `json:"plugin_options"`
@@ -73,20 +75,20 @@ func loadGenesis(filePath string) (*FullGenesisDoc, error) {
 	return genDoc, nil
 }
 
-func parseGenesisList(kvz_ []json.RawMessage) (kvz []keyValue, err error) {
-	if len(kvz_)%2 != 0 {
+func parseGenesisList(kvzIn []json.RawMessage) (kvz []keyValue, err error) {
+	if len(kvzIn)%2 != 0 {
 		return nil, errors.New("genesis cannot have an odd number of items.  Format = [key1, value1, key2, value2, ...]")
 	}
 
-	for i := 0; i < len(kvz_); i += 2 {
+	for i := 0; i < len(kvzIn); i += 2 {
 		kv := keyValue{}
-		rawK := []byte(kvz_[i])
+		rawK := []byte(kvzIn[i])
 		err := json.Unmarshal(rawK, &(kv.Key))
 		if err != nil {
 			return nil, errors.Errorf("Non-string key: %s", string(rawK))
 		}
 		// convert value to string if possible (otherwise raw json)
-		rawV := kvz_[i+1]
+		rawV := kvzIn[i+1]
 		err = json.Unmarshal(rawV, &(kv.Value))
 		if err != nil {
 			kv.Value = string(rawV)

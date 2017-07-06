@@ -21,9 +21,10 @@ var CounterTxCmd = &cobra.Command{
 	Long: `Add a vote to the counter.
 
 You must pass --valid for it to count and the countfee will be added to the counter.`,
-	RunE: doCounterTx,
+	RunE: counterTx,
 }
 
+// nolint - flags names
 const (
 	FlagCountFee = "countfee"
 	FlagValid    = "valid"
@@ -37,9 +38,9 @@ func init() {
 	fs.Int(FlagSequence, -1, "Sequence number for this transaction")
 }
 
-// TODO: doCounterTx is very similar to the sendtx one,
+// TODO: counterTx is very similar to the sendtx one,
 // maybe we can pull out some common patterns?
-func doCounterTx(cmd *cobra.Command, args []string) error {
+func counterTx(cmd *cobra.Command, args []string) error {
 	// load data from json or flags
 	var tx basecoin.Tx
 	found, err := txcmd.LoadJSON(&tx)
@@ -74,6 +75,6 @@ func readCounterTxFlags() (tx basecoin.Tx, err error) {
 		return tx, err
 	}
 
-	tx = counter.NewCounterTx(viper.GetBool(FlagValid), feeCoins, viper.GetInt(FlagSequence))
+	tx = counter.NewTx(viper.GetBool(FlagValid), feeCoins, viper.GetInt(FlagSequence))
 	return tx, nil
 }

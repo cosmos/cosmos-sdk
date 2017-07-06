@@ -6,6 +6,7 @@ import (
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 )
 
+// UnsafeResetAllCmd - extension of the tendermint command, resets initialization
 var UnsafeResetAllCmd = &cobra.Command{
 	Use:   "unsafe_reset_all",
 	Short: "Reset all blockchain data",

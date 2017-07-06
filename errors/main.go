@@ -1,9 +1,5 @@
 package errors
 
-/**
-*    Copyright (C) 2017 Ethan Frey
-**/
-
 import (
 	"fmt"
 
@@ -23,6 +19,7 @@ type causer interface {
 	Cause() error
 }
 
+// TMError is the tendermint abci return type with stack trace
 type TMError interface {
 	stackTracer
 	ErrorCode() abci.CodeType

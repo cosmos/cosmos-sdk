@@ -8,7 +8,6 @@ import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/state"
-	"github.com/tendermint/basecoin/types"
 )
 
 // Accountant - custom object to manage coins for the coin module
@@ -39,13 +38,13 @@ func (a Accountant) GetAccount(store state.KVStore, addr basecoin.Actor) (Accoun
 }
 
 // CheckCoins makes sure there are funds, but doesn't change anything
-func (a Accountant) CheckCoins(store state.KVStore, addr basecoin.Actor, coins types.Coins, seq int) (types.Coins, error) {
+func (a Accountant) CheckCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int) (Coins, error) {
 	acct, err := a.updateCoins(store, addr, coins, seq)
 	return acct.Coins, err
 }
 
 // ChangeCoins changes the money, returns error if it would be negative
-func (a Accountant) ChangeCoins(store state.KVStore, addr basecoin.Actor, coins types.Coins, seq int) (types.Coins, error) {
+func (a Accountant) ChangeCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int) (Coins, error) {
 	acct, err := a.updateCoins(store, addr, coins, seq)
 	if err != nil {
 		return acct.Coins, err
@@ -58,7 +57,7 @@ func (a Accountant) ChangeCoins(store state.KVStore, addr basecoin.Actor, coins 
 // updateCoins will load the account, make all checks, and return the updated account.
 //
 // it doesn't save anything, that is up to you to decide (Check/Change Coins)
-func (a Accountant) updateCoins(store state.KVStore, addr basecoin.Actor, coins types.Coins, seq int) (acct Account, err error) {
+func (a Accountant) updateCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int) (acct Account, err error) {
 	acct, err = loadAccount(store, a.MakeKey(addr))
 	// we can increase an empty account...
 	if IsNoAccountErr(err) && coins.IsPositive() {
@@ -98,8 +97,8 @@ func (a Accountant) MakeKey(addr basecoin.Actor) []byte {
 
 // Account - coin account structure
 type Account struct {
-	Coins    types.Coins `json:"coins"`
-	Sequence int         `json:"sequence"`
+	Coins    Coins `json:"coins"`
+	Sequence int   `json:"sequence"`
 }
 
 func loadAccount(store state.KVStore, key []byte) (acct Account, err error) {

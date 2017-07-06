@@ -7,8 +7,6 @@ import (
 
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire/data"
-
-	"github.com/tendermint/basecoin/types"
 )
 
 /**** code to parse accounts from genesis docs ***/
@@ -19,7 +17,7 @@ type GenesisAccount struct {
 	// this from types.Account (don't know how to embed this properly)
 	PubKey   crypto.PubKey `json:"pub_key"` // May be nil, if not known.
 	Sequence int           `json:"sequence"`
-	Balance  types.Coins   `json:"coins"`
+	Balance  Coins         `json:"coins"`
 }
 
 // ToAccount - GenesisAccount struct to a basecoin Account

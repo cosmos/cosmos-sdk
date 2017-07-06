@@ -11,7 +11,6 @@ import (
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
-	"github.com/tendermint/basecoin/types"
 )
 
 // Tx
@@ -32,13 +31,13 @@ func init() {
 
 // Tx - struct for all counter transactions
 type Tx struct {
-	Valid    bool        `json:"valid"`
-	Fee      types.Coins `json:"fee"`
-	Sequence int         `json:"sequence"`
+	Valid    bool       `json:"valid"`
+	Fee      coin.Coins `json:"fee"`
+	Sequence int        `json:"sequence"`
 }
 
 // NewTx - return a new counter transaction struct wrapped as a basecoin transaction
-func NewTx(valid bool, fee types.Coins, sequence int) basecoin.Tx {
+func NewTx(valid bool, fee coin.Coins, sequence int) basecoin.Tx {
 	return Tx{
 		Valid:    valid,
 		Fee:      fee,
@@ -183,8 +182,8 @@ func StoreActor() basecoin.Actor {
 
 // State - state of the counter applicaton
 type State struct {
-	Counter   int         `json:"counter"`
-	TotalFees types.Coins `json:"total_fees"`
+	Counter   int        `json:"counter"`
+	TotalFees coin.Coins `json:"total_fees"`
 }
 
 // StateKey - store key for the counter state

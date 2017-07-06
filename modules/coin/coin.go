@@ -1,4 +1,4 @@
-package types
+package coin
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Coin hold some amount of one currency
 type Coin struct {
 	Denom  string `json:"denom"`
 	Amount int64  `json:"amount"`
@@ -25,6 +26,8 @@ var reAmt = regexp.MustCompile("(\\d+)")
 
 var reCoin = regexp.MustCompile("^([[:digit:]]+)[[:space:]]*([[:alpha:]]+)$")
 
+// ParseCoin parses a cli input for one coin type, returning errors if invalid.
+// This returns an error on an empty string as well.
 func ParseCoin(str string) (Coin, error) {
 	var coin Coin
 
@@ -45,6 +48,7 @@ func ParseCoin(str string) (Coin, error) {
 
 //----------------------------------------
 
+// Coins is a set of Coin, one per currency
 type Coins []Coin
 
 func (coins Coins) String() string {
@@ -59,6 +63,8 @@ func (coins Coins) String() string {
 	return out[:len(out)-1]
 }
 
+// ParseCoins will parse out a list of coins separated by commas.
+// If nothing is provided, it returns an empty array
 func ParseCoins(str string) (Coins, error) {
 	// empty string is empty list...
 	if len(str) == 0 {
@@ -85,7 +91,7 @@ func ParseCoins(str string) (Coins, error) {
 	return coins, nil
 }
 
-// Must be sorted, and not have 0 amounts
+// IsValid asserts the Coins are sorted, and don't have 0 amounts
 func (coins Coins) IsValid() bool {
 	switch len(coins) {
 	case 0:
@@ -108,6 +114,8 @@ func (coins Coins) IsValid() bool {
 	}
 }
 
+// Plus combines to sets of coins
+//
 // TODO: handle empty coins!
 // Currently appends an empty coin ...
 func (coinsA Coins) Plus(coinsB Coins) Coins {
@@ -118,9 +126,8 @@ func (coinsA Coins) Plus(coinsB Coins) Coins {
 		if indexA == lenA {
 			if indexB == lenB {
 				return sum
-			} else {
-				return append(sum, coinsB[indexB:]...)
 			}
+			return append(sum, coinsB[indexB:]...)
 		} else if indexB == lenB {
 			return append(sum, coinsA[indexA:]...)
 		}
@@ -128,7 +135,7 @@ func (coinsA Coins) Plus(coinsB Coins) Coins {
 		switch strings.Compare(coinA.Denom, coinB.Denom) {
 		case -1:
 			sum = append(sum, coinA)
-			indexA += 1
+			indexA++
 		case 0:
 			if coinA.Amount+coinB.Amount == 0 {
 				// ignore 0 sum coin type
@@ -138,16 +145,17 @@ func (coinsA Coins) Plus(coinsB Coins) Coins {
 					Amount: coinA.Amount + coinB.Amount,
 				})
 			}
-			indexA += 1
-			indexB += 1
+			indexA++
+			indexB++
 		case 1:
 			sum = append(sum, coinB)
-			indexB += 1
+			indexB++
 		}
 	}
 	return sum
 }
 
+// Negative returns a set of coins with all amount negative
 func (coins Coins) Negative() Coins {
 	res := make([]Coin, 0, len(coins))
 	for _, coin := range coins {
@@ -159,10 +167,14 @@ func (coins Coins) Negative() Coins {
 	return res
 }
 
+// Minus subtracts a set of coins from another (adds the inverse)
 func (coinsA Coins) Minus(coinsB Coins) Coins {
 	return coinsA.Plus(coinsB.Negative())
 }
 
+// IsGTE returns True iff coinsA is NonNegative(), and for every
+// currency in coinsB, the currency is present at an equal or greater
+// amount in coinsB
 func (coinsA Coins) IsGTE(coinsB Coins) bool {
 	diff := coinsA.Minus(coinsB)
 	if len(diff) == 0 {
@@ -171,10 +183,12 @@ func (coinsA Coins) IsGTE(coinsB Coins) bool {
 	return diff.IsNonnegative()
 }
 
+// IsZero returns true if there are no coins
 func (coins Coins) IsZero() bool {
 	return len(coins) == 0
 }
 
+// IsEqual returns true if the two sets of Coins have the same value
 func (coinsA Coins) IsEqual(coinsB Coins) bool {
 	if len(coinsA) != len(coinsB) {
 		return false
@@ -187,6 +201,8 @@ func (coinsA Coins) IsEqual(coinsB Coins) bool {
 	return true
 }
 
+// IsPositive returns true if there is at least one coin, and all
+// currencies have a positive value
 func (coins Coins) IsPositive() bool {
 	if len(coins) == 0 {
 		return false
@@ -199,6 +215,8 @@ func (coins Coins) IsPositive() bool {
 	return true
 }
 
+// IsNonnegative returns true if there is no currency with a negative value
+// (even no coins is true here)
 func (coins Coins) IsNonnegative() bool {
 	if len(coins) == 0 {
 		return true
@@ -213,7 +231,12 @@ func (coins Coins) IsNonnegative() bool {
 
 /*** Implement Sort interface ***/
 
-func (c Coins) Len() int           { return len(c) }
-func (c Coins) Less(i, j int) bool { return c[i].Denom < c[j].Denom }
-func (c Coins) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
-func (c Coins) Sort()              { sort.Sort(c) }
+//nolint
+func (coins Coins) Len() int           { return len(coins) }
+func (coins Coins) Less(i, j int) bool { return coins[i].Denom < coins[j].Denom }
+func (coins Coins) Swap(i, j int)      { coins[i], coins[j] = coins[j], coins[i] }
+
+var _ sort.Interface = Coins{}
+
+// Sort is a helper function to sort the set of coins inplace
+func (coins Coins) Sort() { sort.Sort(coins) }

@@ -5,9 +5,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/types"
+
 	"github.com/tendermint/go-wire/data"
+
+	"github.com/tendermint/basecoin"
 )
 
 // these are some constructs for the test cases
@@ -24,22 +25,22 @@ var actors = []struct {
 }
 
 var (
-	zeroCoin = types.Coin{"zeros", 0}
-	plusCoin = types.Coin{"plus", 23}
-	negCoin  = types.Coin{"neg", -42}
+	zeroCoin = Coin{"zeros", 0}
+	plusCoin = Coin{"plus", 23}
+	negCoin  = Coin{"neg", -42}
 )
 
 var coins = []struct {
-	coins types.Coins
+	coins Coins
 	valid bool
 }{
-	{types.Coins{}, false},
-	{types.Coins{zeroCoin}, false},
-	{types.Coins{plusCoin}, true},
-	{types.Coins{negCoin}, false},
-	{types.Coins{plusCoin, plusCoin}, false},
-	{types.Coins{plusCoin, zeroCoin}, false},
-	{types.Coins{negCoin, plusCoin}, false},
+	{Coins{}, false},
+	{Coins{zeroCoin}, false},
+	{Coins{plusCoin}, true},
+	{Coins{negCoin}, false},
+	{Coins{plusCoin, plusCoin}, false},
+	{Coins{plusCoin, zeroCoin}, false},
+	{Coins{negCoin, plusCoin}, false},
 }
 
 func TestTxValidateInput(t *testing.T) {
@@ -94,12 +95,12 @@ func TestTxValidateTx(t *testing.T) {
 	addr3 := basecoin.Actor{App: "role", Address: []byte{7, 8}}
 	noAddr := basecoin.Actor{}
 
-	noCoins := types.Coins{}
-	someCoins := types.Coins{{"atom", 123}}
-	moreCoins := types.Coins{{"atom", 124}}
-	otherCoins := types.Coins{{"btc", 15}}
+	noCoins := Coins{}
+	someCoins := Coins{{"atom", 123}}
+	moreCoins := Coins{{"atom", 124}}
+	otherCoins := Coins{{"btc", 15}}
 	bothCoins := someCoins.Plus(otherCoins)
-	minusCoins := types.Coins{{"eth", -34}}
+	minusCoins := Coins{{"eth", -34}}
 
 	// cases: all valid (one), all valid (multi)
 	// no input, no outputs, invalid inputs, invalid outputs
@@ -181,7 +182,7 @@ func TestTxSerializeTx(t *testing.T) {
 
 	addr1 := basecoin.Actor{App: "coin", Address: []byte{1, 2}}
 	addr2 := basecoin.Actor{App: "coin", Address: []byte{3, 4}}
-	someCoins := types.Coins{{"atom", 123}}
+	someCoins := Coins{{"atom", 123}}
 
 	send := NewSendTx(
 		[]TxInput{NewTxInput(addr1, someCoins, 2)},

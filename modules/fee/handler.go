@@ -3,9 +3,9 @@ package fee
 import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
-	"github.com/tendermint/basecoin/types"
 )
 
 // NameFee - namespace for the fee module
@@ -14,17 +14,17 @@ const NameFee = "fee"
 // AccountChecker - interface used by SimpleFeeHandler
 type AccountChecker interface {
 	// Get amount checks the current amount
-	GetAmount(store state.KVStore, addr basecoin.Actor) (types.Coins, error)
+	GetAmount(store state.KVStore, addr basecoin.Actor) (coin.Coins, error)
 
 	// ChangeAmount modifies the balance by the given amount and returns the new balance
 	// always returns an error if leading to negative balance
-	ChangeAmount(store state.KVStore, addr basecoin.Actor, coins types.Coins) (types.Coins, error)
+	ChangeAmount(store state.KVStore, addr basecoin.Actor, coins coin.Coins) (coin.Coins, error)
 }
 
 // SimpleFeeHandler - checker object for fee checking
 type SimpleFeeHandler struct {
 	AccountChecker
-	MinFee types.Coins
+	MinFee coin.Coins
 	stack.PassOption
 }
 
@@ -44,7 +44,7 @@ func (h SimpleFeeHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx 
 		return res, errors.ErrInvalidFormat(tx)
 	}
 
-	fees := types.Coins{feeTx.Fee}
+	fees := coin.Coins{feeTx.Fee}
 	if !fees.IsGTE(h.MinFee) {
 		return res, ErrInsufficientFees()
 	}
@@ -68,7 +68,7 @@ func (h SimpleFeeHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, t
 		return res, errors.ErrInvalidFormat(tx)
 	}
 
-	fees := types.Coins{feeTx.Fee}
+	fees := coin.Coins{feeTx.Fee}
 	if !fees.IsGTE(h.MinFee) {
 		return res, ErrInsufficientFees()
 	}

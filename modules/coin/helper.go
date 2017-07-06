@@ -1,11 +1,11 @@
 package coin
 
 import (
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/types"
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire/data"
+
+	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/stack"
 )
 
 // AccountWithKey is a helper for tests, that includes and account
@@ -17,7 +17,7 @@ type AccountWithKey struct {
 
 // NewAccountWithKey creates an account with the given balance
 // and a random private key
-func NewAccountWithKey(coins types.Coins) *AccountWithKey {
+func NewAccountWithKey(coins Coins) *AccountWithKey {
 	return &AccountWithKey{
 		Key:     crypto.GenPrivKeyEd25519().Wrap(),
 		Account: Account{Coins: coins},

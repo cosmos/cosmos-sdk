@@ -106,7 +106,7 @@ package ibc
 // 	store.SetLogging() // Log all activity
 
 // 	ibcPlugin := New()
-// 	ctx := types.NewCallContext(nil, nil, types.Coins{})
+// 	ctx := types.NewCallContext(nil, nil, coin.Coins{})
 
 // 	registerChain(t, ibcPlugin, store, ctx, "test_chain", testGenesisDoc)
 // }
@@ -121,7 +121,7 @@ package ibc
 // 	store.SetLogging() // Log all activity
 
 // 	ibcPlugin := New()
-// 	ctx := types.NewCallContext(nil, nil, types.Coins{})
+// 	ctx := types.NewCallContext(nil, nil, coin.Coins{})
 
 // 	chainID_1 := "test_chain"
 // 	genDoc_1, _ := genGenesisDoc(chainID_1, 4)
@@ -158,7 +158,7 @@ package ibc
 // 	store.SetLogging() // Log all activity
 
 // 	ibcPlugin := New()
-// 	ctx := types.NewCallContext(nil, nil, types.Coins{})
+// 	ctx := types.NewCallContext(nil, nil, coin.Coins{})
 
 // 	chainID_1 := "test_chain"
 // 	genDoc_1, _ := genGenesisDoc(chainID_1, 4)
@@ -191,7 +191,7 @@ package ibc
 // 	store.SetLogging() // Log all activity
 
 // 	ibcPlugin := New()
-// 	ctx := types.NewCallContext(nil, nil, types.Coins{})
+// 	ctx := types.NewCallContext(nil, nil, coin.Coins{})
 
 // 	chainID_1 := "test_chain"
 // 	genDoc_1, privAccs_1 := genGenesisDoc(chainID_1, 4)
@@ -259,8 +259,8 @@ package ibc
 // 	store.SetLogging() // Log all activity
 
 // 	ibcPlugin := New()
-// 	coins := types.Coins{
-// 		types.Coin{
+// 	coins := coin.Coins{
+// 		coin.Coin{
 // 			Denom:  "mycoin",
 // 			Amount: 100,
 // 		},
@@ -277,8 +277,8 @@ package ibc
 
 // 	// send coins to this addr on the other chain
 // 	destinationAddr := []byte("some address")
-// 	coinsBad := types.Coins{types.Coin{"mycoin", 200}}
-// 	coinsGood := types.Coins{types.Coin{"mycoin", 1}}
+// 	coinsBad := coin.Coins{coin.Coin{"mycoin", 200}}
+// 	coinsGood := coin.Coins{coin.Coin{"mycoin", 1}}
 
 // 	// Try to send too many coins
 // 	packet := NewPacket("test_chain", "dst_chain", 0, CoinsPayload{
@@ -358,7 +358,7 @@ package ibc
 // 	store.SetLogging() // Log all activity
 
 // 	ibcPlugin := New()
-// 	ctx := types.NewCallContext(nil, nil, types.Coins{})
+// 	ctx := types.NewCallContext(nil, nil, coin.Coins{})
 
 // 	chainID_1 := "test_chain"
 // 	genDoc_1, privAccs_1 := genGenesisDoc(chainID_1, 4)
@@ -396,7 +396,7 @@ package ibc
 // 	store.SetLogging() // Log all activity
 
 // 	ibcPlugin := New()
-// 	ctx := types.NewCallContext(nil, nil, types.Coins{})
+// 	ctx := types.NewCallContext(nil, nil, coin.Coins{})
 
 // 	chainID_1 := "test_chain"
 // 	genDoc_1, privAccs_1 := genGenesisDoc(chainID_1, 4)

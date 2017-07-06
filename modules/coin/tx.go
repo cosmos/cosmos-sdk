@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/types"
 )
 
 func init() {
@@ -22,7 +21,7 @@ const (
 // TxInput - expected coin movement outputs, used with SendTx
 type TxInput struct {
 	Address  basecoin.Actor `json:"address"`
-	Coins    types.Coins    `json:"coins"`
+	Coins    Coins          `json:"coins"`
 	Sequence int            `json:"sequence"` // Nonce: Must be 1 greater than the last committed TxInput
 }
 
@@ -52,7 +51,7 @@ func (txIn TxInput) String() string {
 }
 
 // NewTxInput - create a transaction input, used with SendTx
-func NewTxInput(addr basecoin.Actor, coins types.Coins, sequence int) TxInput {
+func NewTxInput(addr basecoin.Actor, coins Coins, sequence int) TxInput {
 	input := TxInput{
 		Address:  addr,
 		Coins:    coins,
@@ -66,7 +65,7 @@ func NewTxInput(addr basecoin.Actor, coins types.Coins, sequence int) TxInput {
 // TxOutput - expected coin movement output, used with SendTx
 type TxOutput struct {
 	Address basecoin.Actor `json:"address"`
-	Coins   types.Coins    `json:"coins"`
+	Coins   Coins          `json:"coins"`
 }
 
 // ValidateBasic - validate transaction output
@@ -92,7 +91,7 @@ func (txOut TxOutput) String() string {
 }
 
 // NewTxOutput - create a transaction output, used with SendTx
-func NewTxOutput(addr basecoin.Actor, coins types.Coins) TxOutput {
+func NewTxOutput(addr basecoin.Actor, coins Coins) TxOutput {
 	output := TxOutput{
 		Address: addr,
 		Coins:   coins,
@@ -127,7 +126,7 @@ func (tx SendTx) ValidateBasic() error {
 		return ErrNoOutputs()
 	}
 	// make sure all inputs and outputs are individually valid
-	var totalIn, totalOut types.Coins
+	var totalIn, totalOut Coins
 	for _, in := range tx.Inputs {
 		if err := in.ValidateBasic(); err != nil {
 			return err

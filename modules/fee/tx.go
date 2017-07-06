@@ -2,9 +2,10 @@ package fee
 
 import (
 	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/basecoin/modules/coin"
 )
 
+// nolint
 const (
 	ByteFees = 0x20
 	TypeFees = "fee"
@@ -20,12 +21,12 @@ func init() {
 // Fee attaches a fee payment to the embedded tx
 type Fee struct {
 	Tx    basecoin.Tx    `json:"tx"`
-	Fee   types.Coin     `json:"fee"`
+	Fee   coin.Coin      `json:"fee"`
 	Payer basecoin.Actor `json:"payer"` // the address who pays the fee
-	// Gas types.Coin `json:"gas"`  // ?????
+	// Gas coin.Coin `json:"gas"`  // ?????
 }
 
-func NewFee(tx basecoin.Tx, fee types.Coin, payer basecoin.Actor) basecoin.Tx {
+func NewFee(tx basecoin.Tx, fee coin.Coin, payer basecoin.Actor) basecoin.Tx {
 	return (&Fee{Tx: tx, Fee: fee, Payer: payer}).Wrap()
 }
 

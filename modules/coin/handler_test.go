@@ -13,7 +13,6 @@ import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
-	"github.com/tendermint/basecoin/types"
 )
 
 // this makes sure that txs are rejected with invalid data or permissions
@@ -23,9 +22,9 @@ func TestHandlerValidation(t *testing.T) {
 	// these are all valid, except for minusCoins
 	addr1 := basecoin.Actor{App: "coin", Address: []byte{1, 2}}
 	addr2 := basecoin.Actor{App: "role", Address: []byte{7, 8}}
-	someCoins := types.Coins{{"atom", 123}}
-	doubleCoins := types.Coins{{"atom", 246}}
-	minusCoins := types.Coins{{"eth", -34}}
+	someCoins := Coins{{"atom", 123}}
+	doubleCoins := Coins{{"atom", 246}}
+	minusCoins := Coins{{"eth", -34}}
 
 	cases := []struct {
 		valid bool
@@ -93,15 +92,15 @@ func TestDeliverTx(t *testing.T) {
 	addr2 := basecoin.Actor{App: "role", Address: []byte{7, 8}}
 	addr3 := basecoin.Actor{App: "coin", Address: []byte{6, 5, 4, 3}}
 
-	someCoins := types.Coins{{"atom", 123}}
-	moreCoins := types.Coins{{"atom", 6487}}
+	someCoins := Coins{{"atom", 123}}
+	moreCoins := Coins{{"atom", 6487}}
 	diffCoins := moreCoins.Minus(someCoins)
-	otherCoins := types.Coins{{"eth", 11}}
+	otherCoins := Coins{{"eth", 11}}
 	mixedCoins := someCoins.Plus(otherCoins)
 
 	type money struct {
 		addr  basecoin.Actor
-		coins types.Coins
+		coins Coins
 	}
 
 	cases := []struct {
@@ -175,13 +174,13 @@ func TestSetOption(t *testing.T) {
 	addr := pk.PubKey().Address()
 	actor := basecoin.Actor{App: stack.NameSigs, Address: addr}
 
-	someCoins := types.Coins{{"atom", 123}}
-	otherCoins := types.Coins{{"eth", 11}}
+	someCoins := Coins{{"atom", 123}}
+	otherCoins := Coins{{"eth", 11}}
 	mixedCoins := someCoins.Plus(otherCoins)
 
 	type money struct {
 		addr  basecoin.Actor
-		coins types.Coins
+		coins Coins
 	}
 
 	cases := []struct {

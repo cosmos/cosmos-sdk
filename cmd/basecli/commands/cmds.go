@@ -16,7 +16,6 @@ import (
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/txs"
-	btypes "github.com/tendermint/basecoin/types"
 )
 
 //-------------------------
@@ -94,7 +93,7 @@ func readSendTxFlags() (tx basecoin.Tx, err error) {
 	// // set the gas
 	// tx.Gas = viper.GetInt64(FlagGas)
 
-	amountCoins, err := btypes.ParseCoins(viper.GetString(FlagAmount))
+	amountCoins, err := coin.ParseCoins(viper.GetString(FlagAmount))
 	if err != nil {
 		return tx, err
 	}

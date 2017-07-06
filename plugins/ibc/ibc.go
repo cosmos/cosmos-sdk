@@ -147,7 +147,7 @@ package ibc
 
 // type CoinsPayload struct {
 // 	Address []byte
-// 	Coins   types.Coins
+// 	Coins   coin.Coins
 // }
 
 // func (p CoinsPayload) Type() string {

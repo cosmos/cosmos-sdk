@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/basecoin/types"
+	"github.com/tendermint/basecoin/modules/coin"
 	eyescli "github.com/tendermint/merkleeyes/client"
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
@@ -68,17 +68,17 @@ func TestLoadGenesisAccountAddress(t *testing.T) {
 		addr      string
 		exists    bool
 		hasPubkey bool
-		coins     types.Coins
+		coins     coin.Coins
 	}{
 		// this comes from a public key, should be stored proper (alice)
-		{"62035D628DE7543332544AA60D90D3693B6AD51B", true, true, types.Coins{{"one", 111}}},
+		{"62035D628DE7543332544AA60D90D3693B6AD51B", true, true, coin.Coins{{"one", 111}}},
 		// this comes from an address, should be stored proper (bob)
-		{"C471FB670E44D219EE6DF2FC284BE38793ACBCE1", true, false, types.Coins{{"two", 222}}},
+		{"C471FB670E44D219EE6DF2FC284BE38793ACBCE1", true, false, coin.Coins{{"two", 222}}},
 		// this one had a mismatched address and pubkey, should not store under either (carl)
 		{"1234ABCDD18E8EFE3FFC4B0506BF9BF8E5B0D9E9", false, false, nil}, // this is given addr
 		{"700BEC5ED18E8EFE3FFC4B0506BF9BF8E5B0D9E9", false, false, nil}, // this is addr of the given pubkey
 		// this comes from a secp256k1 public key, should be stored proper (sam)
-		{"979F080B1DD046C452C2A8A250D18646C6B669D4", true, true, types.Coins{{"four", 444}}},
+		{"979F080B1DD046C452C2A8A250D18646C6B669D4", true, true, coin.Coins{{"four", 444}}},
 	}
 
 	for i, tc := range cases {

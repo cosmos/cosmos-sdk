@@ -10,7 +10,6 @@ import (
 	"github.com/tendermint/basecoin/app"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/txs"
-	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-wire"
 	eyescli "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/log"
@@ -34,13 +33,13 @@ func TestCounterPlugin(t *testing.T) {
 	bcApp.SetOption("base/chain_id", chainID)
 
 	// Account initialization
-	bal := types.Coins{{"", 1000}, {"gold", 1000}}
+	bal := coin.Coins{{"", 1000}, {"gold", 1000}}
 	acct := coin.NewAccountWithKey(bal)
 	log := bcApp.SetOption("coin/account", acct.MakeOption())
 	require.Equal(t, "Success", log)
 
 	// Deliver a CounterTx
-	DeliverCounterTx := func(valid bool, counterFee types.Coins, inputSequence int) abci.Result {
+	DeliverCounterTx := func(valid bool, counterFee coin.Coins, inputSequence int) abci.Result {
 		tx := NewTx(valid, counterFee, inputSequence)
 		tx = txs.NewChain(chainID, tx)
 		stx := txs.NewSig(tx)
@@ -58,10 +57,10 @@ func TestCounterPlugin(t *testing.T) {
 	assert.True(res.IsErr(), res.String())
 
 	// Test the fee (increments sequence)
-	res = DeliverCounterTx(true, types.Coins{{"gold", 100}}, 1)
+	res = DeliverCounterTx(true, coin.Coins{{"gold", 100}}, 1)
 	assert.True(res.IsOK(), res.String())
 
 	// Test unsupported fee
-	res = DeliverCounterTx(true, types.Coins{{"silver", 100}}, 2)
+	res = DeliverCounterTx(true, coin.Coins{{"silver", 100}}, 2)
 	assert.True(res.IsErr(), res.String())
 }

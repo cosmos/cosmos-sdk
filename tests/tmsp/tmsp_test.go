@@ -28,7 +28,7 @@ package tmsp_test
 
 // 	// Seed Basecoin with account
 // 	test1Acc := test1PrivAcc.Account
-// 	test1Acc.Balance = types.Coins{{"", 1000}}
+// 	test1Acc.Balance = coin.Coins{{"", 1000}}
 // 	accOpt, err := json.Marshal(test1Acc)
 // 	require.Nil(t, err)
 // 	bcApp.SetOption("base/account", string(accOpt))
@@ -36,14 +36,14 @@ package tmsp_test
 // 	// Construct a SendTx signature
 // 	tx := &types.SendTx{
 // 		Gas: 0,
-// 		Fee: types.Coin{"", 0},
+// 		Fee: coin.Coin{"", 0},
 // 		Inputs: []types.TxInput{
-// 			types.NewTxInput(test1PrivAcc.Account.PubKey, types.Coins{{"", 1}}, 1),
+// 			types.NewTxInput(test1PrivAcc.Account.PubKey, coin.Coins{{"", 1}}, 1),
 // 		},
 // 		Outputs: []types.TxOutput{
 // 			types.TxOutput{
 // 				Address: test2PrivAcc.Account.PubKey.Address(),
-// 				Coins:   types.Coins{{"", 1}},
+// 				Coins:   coin.Coins{{"", 1}},
 // 			},
 // 		},
 // 	}
@@ -72,7 +72,7 @@ package tmsp_test
 // 	// Get the test account
 // 	test1PrivAcc := types.PrivAccountFromSecret("test1")
 // 	test1Acc := test1PrivAcc.Account
-// 	test1Acc.Balance = types.Coins{{"", 1 << 53}}
+// 	test1Acc.Balance = coin.Coins{{"", 1 << 53}}
 // 	accOpt, err := json.Marshal(test1Acc)
 // 	require.Nil(t, err)
 // 	bcApp.SetOption("base/account", string(accOpt))
@@ -88,14 +88,14 @@ package tmsp_test
 
 // 		tx := &types.SendTx{
 // 			Gas: 2,
-// 			Fee: types.Coin{"", 2},
+// 			Fee: coin.Coin{"", 2},
 // 			Inputs: []types.TxInput{
-// 				types.NewTxInput(test1Acc.PubKey, types.Coins{{"", 1000002}}, sequence),
+// 				types.NewTxInput(test1Acc.PubKey, coin.Coins{{"", 1000002}}, sequence),
 // 			},
 // 			Outputs: []types.TxOutput{
 // 				types.TxOutput{
 // 					Address: privAccount.Account.PubKey.Address(),
-// 					Coins:   types.Coins{{"", 1000000}},
+// 					Coins:   coin.Coins{{"", 1000000}},
 // 				},
 // 			},
 // 		}
@@ -133,14 +133,14 @@ package tmsp_test
 
 // 		tx := &types.SendTx{
 // 			Gas: 2,
-// 			Fee: types.Coin{"", 2},
+// 			Fee: coin.Coin{"", 2},
 // 			Inputs: []types.TxInput{
-// 				types.NewTxInput(privAccountA.PubKey, types.Coins{{"", 3}}, privAccountASequence+1),
+// 				types.NewTxInput(privAccountA.PubKey, coin.Coins{{"", 3}}, privAccountASequence+1),
 // 			},
 // 			Outputs: []types.TxOutput{
 // 				types.TxOutput{
 // 					Address: privAccountB.PubKey.Address(),
-// 					Coins:   types.Coins{{"", 1}},
+// 					Coins:   coin.Coins{{"", 1}},
 // 				},
 // 			},
 // 		}

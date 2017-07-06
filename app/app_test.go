@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"os"
 	"testing"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/txs"
 	"github.com/tendermint/basecoin/types"
-	crypto "github.com/tendermint/go-crypto"
 	wire "github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/log"
@@ -28,8 +26,8 @@ type appTest struct {
 	t       *testing.T
 	chainID string
 	app     *Basecoin
-	accIn   types.PrivAccount
-	accOut  types.PrivAccount
+	acctIn  *coin.AccountWithKey
+	acctOut *coin.AccountWithKey
 }
 
 func newAppTest(t *testing.T) *appTest {
@@ -41,32 +39,27 @@ func newAppTest(t *testing.T) *appTest {
 	return at
 }
 
-// make a tx sending 5mycoin from each accIn to accOut
+// make a tx sending 5mycoin from each acctIn to acctOut
 func (at *appTest) getTx(seq int, coins types.Coins) basecoin.Tx {
-	addrIn := at.accIn.Account.PubKey.Address()
-	addrOut := at.accOut.Account.PubKey.Address()
-
-	in := []coin.TxInput{{Address: stack.SigPerm(addrIn), Coins: coins, Sequence: seq}}
-	out := []coin.TxOutput{{Address: stack.SigPerm(addrOut), Coins: coins}}
+	in := []coin.TxInput{{Address: at.acctIn.Actor(), Coins: coins, Sequence: seq}}
+	out := []coin.TxOutput{{Address: at.acctOut.Actor(), Coins: coins}}
 	tx := coin.NewSendTx(in, out)
 	tx = txs.NewChain(at.chainID, tx)
 	stx := txs.NewMulti(tx)
-	txs.Sign(stx, at.accIn.PrivKey)
+	txs.Sign(stx, at.acctIn.Key)
 	return stx.Wrap()
 }
 
 // set the account on the app through SetOption
-func (at *appTest) acc2app(acc types.Account) {
-	accBytes, err := json.Marshal(acc)
-	require.Nil(at.t, err)
-	res := at.app.SetOption("coin/account", string(accBytes))
+func (at *appTest) initAccount(acct *coin.AccountWithKey) {
+	res := at.app.SetOption("coin/account", acct.MakeOption())
 	require.EqualValues(at.t, res, "Success")
 }
 
 // reset the in and out accs to be one account each with 7mycoin
 func (at *appTest) reset() {
-	at.accIn = types.MakeAcc("input0")
-	at.accOut = types.MakeAcc("output0")
+	at.acctIn = coin.NewAccountWithKey(types.Coins{{"mycoin", 7}})
+	at.acctOut = coin.NewAccountWithKey(types.Coins{{"mycoin", 7}})
 
 	eyesCli := eyes.NewLocalClient("", 0)
 	// logger := log.TestingLogger().With("module", "app"),
@@ -81,30 +74,30 @@ func (at *appTest) reset() {
 	res := at.app.SetOption("base/chain_id", at.chainID)
 	require.EqualValues(at.t, res, "Success")
 
-	at.acc2app(at.accIn.Account)
-	at.acc2app(at.accOut.Account)
+	at.initAccount(at.acctIn)
+	at.initAccount(at.acctOut)
 
 	resabci := at.app.Commit()
 	require.True(at.t, resabci.IsOK(), resabci)
 }
 
-func getBalance(pk crypto.PubKey, state types.KVStore) (types.Coins, error) {
-	return getAddr(pk.Address(), state)
+func getBalance(key basecoin.Actor, state types.KVStore) (types.Coins, error) {
+	acct, err := coin.NewAccountant("").GetAccount(state, key)
+	return acct.Coins, err
 }
 
 func getAddr(addr []byte, state types.KVStore) (types.Coins, error) {
 	actor := stack.SigPerm(addr)
-	acct, err := coin.NewAccountant("").GetAccount(state, actor)
-	return acct.Coins, err
+	return getBalance(actor, state)
 }
 
 // returns the final balance and expected balance for input and output accounts
 func (at *appTest) exec(t *testing.T, tx basecoin.Tx, checkTx bool) (res abci.Result, diffIn, diffOut types.Coins) {
 	require := require.New(t)
 
-	initBalIn, err := getBalance(at.accIn.Account.PubKey, at.app.GetState())
+	initBalIn, err := getBalance(at.acctIn.Actor(), at.app.GetState())
 	require.Nil(err, "%+v", err)
-	initBalOut, err := getBalance(at.accOut.Account.PubKey, at.app.GetState())
+	initBalOut, err := getBalance(at.acctOut.Actor(), at.app.GetState())
 	require.Nil(err, "%+v", err)
 
 	txBytes := wire.BinaryBytes(tx)
@@ -114,9 +107,9 @@ func (at *appTest) exec(t *testing.T, tx basecoin.Tx, checkTx bool) (res abci.Re
 		res = at.app.DeliverTx(txBytes)
 	}
 
-	endBalIn, err := getBalance(at.accIn.Account.PubKey, at.app.GetState())
+	endBalIn, err := getBalance(at.acctIn.Actor(), at.app.GetState())
 	require.Nil(err, "%+v", err)
-	endBalOut, err := getBalance(at.accOut.Account.PubKey, at.app.GetState())
+	endBalOut, err := getBalance(at.acctOut.Actor(), at.app.GetState())
 	require.Nil(err, "%+v", err)
 	return res, endBalIn.Minus(initBalIn), endBalOut.Minus(initBalOut)
 }
@@ -141,16 +134,15 @@ func TestSetOption(t *testing.T) {
 	assert.EqualValues(res, "Success")
 
 	// make a nice account...
-	accIn := types.MakeAcc("input0").Account
-	accsInBytes, err := json.Marshal(accIn)
-	assert.Nil(err)
-	res = app.SetOption("coin/account", string(accsInBytes))
+	bal := types.Coins{{"atom", 77}, {"eth", 12}}
+	acct := coin.NewAccountWithKey(bal)
+	res = app.SetOption("coin/account", acct.MakeOption())
 	require.EqualValues(res, "Success")
 
 	// make sure it is set correctly, with some balance
-	coins, err := getBalance(accIn.PubKey, app.state)
+	coins, err := getBalance(acct.Actor(), app.state)
 	require.Nil(err)
-	assert.Equal(accIn.Balance, coins)
+	assert.Equal(bal, coins)
 
 	// let's parse an account with badly sorted coins...
 	unsortAddr, err := hex.DecodeString("C471FB670E44D219EE6DF2FC284BE38793ACBCE1")
@@ -197,8 +189,8 @@ func TestTx(t *testing.T) {
 	at := newAppTest(t)
 
 	//Bad Balance
-	at.accIn.Balance = types.Coins{{"mycoin", 2}}
-	at.acc2app(at.accIn.Account)
+	at.acctIn.Coins = types.Coins{{"mycoin", 2}}
+	at.initAccount(at.acctIn)
 	res, _, _ := at.exec(t, at.getTx(1, types.Coins{{"mycoin", 5}}), true)
 	assert.True(res.IsErr(), "ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res)
 	res, diffIn, diffOut := at.exec(t, at.getTx(1, types.Coins{{"mycoin", 5}}), false)
@@ -229,7 +221,7 @@ func TestQuery(t *testing.T) {
 
 	resQueryPreCommit := at.app.Query(abci.RequestQuery{
 		Path: "/account",
-		Data: at.accIn.Account.PubKey.Address(),
+		Data: at.acctIn.Address(),
 	})
 
 	res = at.app.Commit()
@@ -237,7 +229,7 @@ func TestQuery(t *testing.T) {
 
 	resQueryPostCommit := at.app.Query(abci.RequestQuery{
 		Path: "/account",
-		Data: at.accIn.Account.PubKey.Address(),
+		Data: at.acctIn.Address(),
 	})
 	assert.NotEqual(resQueryPreCommit, resQueryPostCommit, "Query should change before/after commit")
 }

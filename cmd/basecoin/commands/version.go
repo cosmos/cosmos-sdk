@@ -16,3 +16,14 @@ var VersionCmd = &cobra.Command{
 		fmt.Println(version.Version)
 	},
 }
+
+// QuickVersionCmd - returns a version command based on version input
+func QuickVersionCmd(version string) *cobra.Command {
+	return &cobra.Command{
+		Use:   "version",
+		Short: "Show version info",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(version)
+		},
+	}
+}

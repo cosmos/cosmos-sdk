@@ -1,7 +1,6 @@
 package counter
 
 import (
-	"encoding/json"
 	"os"
 	"testing"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/app"
+	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/txs"
 	"github.com/tendermint/basecoin/types"
 	"github.com/tendermint/go-wire"
@@ -34,14 +34,9 @@ func TestCounterPlugin(t *testing.T) {
 	bcApp.SetOption("base/chain_id", chainID)
 
 	// Account initialization
-	test1PrivAcc := types.PrivAccountFromSecret("test1")
-
-	// Seed Basecoin with account
-	test1Acc := test1PrivAcc.Account
-	test1Acc.Balance = types.Coins{{"", 1000}, {"gold", 1000}}
-	accOpt, err := json.Marshal(test1Acc)
-	require.Nil(t, err)
-	log := bcApp.SetOption("coin/account", string(accOpt))
+	bal := types.Coins{{"", 1000}, {"gold", 1000}}
+	acct := coin.NewAccountWithKey(bal)
+	log := bcApp.SetOption("coin/account", acct.MakeOption())
 	require.Equal(t, "Success", log)
 
 	// Deliver a CounterTx
@@ -49,7 +44,7 @@ func TestCounterPlugin(t *testing.T) {
 		tx := NewTx(valid, counterFee, inputSequence)
 		tx = txs.NewChain(chainID, tx)
 		stx := txs.NewSig(tx)
-		txs.Sign(stx, test1PrivAcc.PrivKey)
+		txs.Sign(stx, acct.Key)
 		txBytes := wire.BinaryBytes(stx.Wrap())
 		return bcApp.DeliverTx(txBytes)
 	}

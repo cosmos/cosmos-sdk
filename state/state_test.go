@@ -20,9 +20,6 @@ func TestState(t *testing.T) {
 	cache := state.CacheWrap()
 	eyesCli := eyes.NewLocalClient("", 0)
 
-	acc := new(types.Account)
-	acc.Sequence = 1
-
 	//reset the store/state/cache
 	reset := func() {
 		store = types.NewMemKVStore()

@@ -1,5 +1,5 @@
 /*
-package auth contains generic Signable implementations that can be used
+Package auth contains generic Signable implementations that can be used
 by your application or tests to handle authentication needs.
 
 It currently supports transaction data as opaque bytes and either single
@@ -63,6 +63,7 @@ type OneSig struct {
 	Signed `json:"signature"`
 }
 
+//Interfaces to fulfill
 var _ keys.Signable = &OneSig{}
 var _ basecoin.TxLayer = &OneSig{}
 
@@ -71,14 +72,13 @@ func NewSig(tx basecoin.Tx) *OneSig {
 	return &OneSig{Tx: tx}
 }
 
+//nolint
 func (s *OneSig) Wrap() basecoin.Tx {
 	return basecoin.Tx{s}
 }
-
 func (s *OneSig) Next() basecoin.Tx {
 	return s.Tx
 }
-
 func (s *OneSig) ValidateBasic() error {
 	return s.Tx.ValidateBasic()
 }
@@ -135,6 +135,7 @@ type MultiSig struct {
 	Sigs []Signed    `json:"signatures"`
 }
 
+//Interfaces to fulfill
 var _ keys.Signable = &MultiSig{}
 var _ basecoin.TxLayer = &MultiSig{}
 
@@ -143,14 +144,13 @@ func NewMulti(tx basecoin.Tx) *MultiSig {
 	return &MultiSig{Tx: tx}
 }
 
+// nolint
 func (s *MultiSig) Wrap() basecoin.Tx {
 	return basecoin.Tx{s}
 }
-
 func (s *MultiSig) Next() basecoin.Tx {
 	return s.Tx
 }
-
 func (s *MultiSig) ValidateBasic() error {
 	return s.Tx.ValidateBasic()
 }
@@ -204,6 +204,7 @@ func (s *MultiSig) Signers() ([]crypto.PubKey, error) {
 	return keys, nil
 }
 
+// Sign - sign the transaction with private key
 func Sign(tx keys.Signable, key crypto.PrivKey) error {
 	msg := tx.SignBytes()
 	pubkey := key.PubKey()

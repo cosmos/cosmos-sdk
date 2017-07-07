@@ -18,6 +18,8 @@ func init() {
 
 /**** Fee ****/
 
+var _ basecoin.TxLayer = &Fee{}
+
 // Fee attaches a fee payment to the embedded tx
 type Fee struct {
 	Tx    basecoin.Tx    `json:"tx"`
@@ -26,19 +28,17 @@ type Fee struct {
 	// Gas coin.Coin `json:"gas"`  // ?????
 }
 
+// nolint - TxInner Functions
 func NewFee(tx basecoin.Tx, fee coin.Coin, payer basecoin.Actor) basecoin.Tx {
 	return (&Fee{Tx: tx, Fee: fee, Payer: payer}).Wrap()
 }
-
 func (f *Fee) ValidateBasic() error {
 	// TODO: more checks
 	return f.Tx.ValidateBasic()
 }
-
 func (f *Fee) Wrap() basecoin.Tx {
 	return basecoin.Tx{f}
 }
-
 func (f *Fee) Next() basecoin.Tx {
 	return f.Tx
 }

@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	cmn "github.com/tendermint/tmlibs/common"
-	"github.com/tendermint/tendermint/rpc/lib/client"
-	"github.com/tendermint/tendermint/rpc/lib/types"
 	"github.com/tendermint/go-wire"
 	_ "github.com/tendermint/tendermint/rpc/core/types" // Register RPCResponse > Result types
+	"github.com/tendermint/tendermint/rpc/lib/client"
+	"github.com/tendermint/tendermint/rpc/lib/types"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 func main() {

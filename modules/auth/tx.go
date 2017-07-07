@@ -63,7 +63,6 @@ type OneSig struct {
 	Signed `json:"signature"`
 }
 
-//Interfaces to fulfill
 var _ keys.Signable = &OneSig{}
 var _ basecoin.TxLayer = &OneSig{}
 
@@ -135,7 +134,6 @@ type MultiSig struct {
 	Sigs []Signed    `json:"signatures"`
 }
 
-//Interfaces to fulfill
 var _ keys.Signable = &MultiSig{}
 var _ basecoin.TxLayer = &MultiSig{}
 

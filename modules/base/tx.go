@@ -21,16 +21,14 @@ func init() {
 		RegisterImplementation(ChainTx{}, TypeChainTx, ByteChainTx)
 }
 
-//Interfaces to fulfill
-var _ basecoin.TxInner = &MultiTx{}
-var _ basecoin.TxInner = &ChainTx{}
-
 /**** MultiTx  ******/
 
 // MultiTx - a transaction containing multiple transactions
 type MultiTx struct {
 	Txs []basecoin.Tx `json:"txs"`
 }
+
+var _ basecoin.TxInner = &MultiTx{}
 
 //nolint - TxInner Functions
 func NewMultiTx(txs ...basecoin.Tx) basecoin.Tx {
@@ -56,6 +54,8 @@ type ChainTx struct {
 	Tx      basecoin.Tx `json:"tx"`
 	ChainID string      `json:"chain_id"`
 }
+
+var _ basecoin.TxInner = &ChainTx{}
 
 //nolint - TxInner Functions
 func NewChainTx(chainID string, tx basecoin.Tx) basecoin.Tx {

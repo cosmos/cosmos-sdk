@@ -1,5 +1,5 @@
 /*
-package auth contains generic Signable implementations that can be used
+Package auth contains generic Signable implementations that can be used
 by your application or tests to handle authentication needs.
 
 It currently supports transaction data as opaque bytes and either single
@@ -71,14 +71,13 @@ func NewSig(tx basecoin.Tx) *OneSig {
 	return &OneSig{Tx: tx}
 }
 
+//nolint
 func (s *OneSig) Wrap() basecoin.Tx {
 	return basecoin.Tx{s}
 }
-
 func (s *OneSig) Next() basecoin.Tx {
 	return s.Tx
 }
-
 func (s *OneSig) ValidateBasic() error {
 	return s.Tx.ValidateBasic()
 }
@@ -143,14 +142,13 @@ func NewMulti(tx basecoin.Tx) *MultiSig {
 	return &MultiSig{Tx: tx}
 }
 
+// nolint
 func (s *MultiSig) Wrap() basecoin.Tx {
 	return basecoin.Tx{s}
 }
-
 func (s *MultiSig) Next() basecoin.Tx {
 	return s.Tx
 }
-
 func (s *MultiSig) ValidateBasic() error {
 	return s.Tx.ValidateBasic()
 }
@@ -204,6 +202,7 @@ func (s *MultiSig) Signers() ([]crypto.PubKey, error) {
 	return keys, nil
 }
 
+// Sign - sign the transaction with private key
 func Sign(tx keys.Signable, key crypto.PrivKey) error {
 	msg := tx.SignBytes()
 	pubkey := key.PubKey()

@@ -19,15 +19,15 @@ func (h holder) Unwrap() validate {
 	return h.validate
 }
 
-type DemoTx struct {
+type demoTx struct {
 	Age int
 }
 
-func (t DemoTx) Wrap() holder {
+func (t demoTx) Wrap() holder {
 	return holder{t}
 }
 
-func (t DemoTx) ValidateBasic() error {
+func (t demoTx) ValidateBasic() error {
 	return nil
 }
 
@@ -45,7 +45,7 @@ func TestErrorMatches(t *testing.T) {
 		{errWrongChain, ErrWrongChain("hakz"), true},
 		{errUnknownTxType, ErrUnknownTxType(holder{}), true},
 		{errUnknownTxType, ErrUnknownTxType("some text here..."), true},
-		{errUnknownTxType, ErrUnknownTxType(DemoTx{5}.Wrap()), true},
+		{errUnknownTxType, ErrUnknownTxType(demoTx{5}.Wrap()), true},
 	}
 
 	for i, tc := range cases {

@@ -34,6 +34,8 @@ type Basecoin struct {
 	logger     log.Logger
 }
 
+var _ abci.Application = &Basecoin{}
+
 // NewBasecoin - create a new instance of the basecoin application
 func NewBasecoin(handler basecoin.Handler, eyesCli *eyes.Client, logger log.Logger) *Basecoin {
 	state := sm.NewState(eyesCli, logger.With("module", "state"))

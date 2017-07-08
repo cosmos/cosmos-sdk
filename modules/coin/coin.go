@@ -118,10 +118,10 @@ func (coins Coins) IsValid() bool {
 //
 // TODO: handle empty coins!
 // Currently appends an empty coin ...
-func (coinsA Coins) Plus(coinsB Coins) Coins {
+func (coins Coins) Plus(coinsB Coins) Coins {
 	sum := []Coin{}
 	indexA, indexB := 0, 0
-	lenA, lenB := len(coinsA), len(coinsB)
+	lenA, lenB := len(coins), len(coinsB)
 	for {
 		if indexA == lenA {
 			if indexB == lenB {
@@ -129,9 +129,9 @@ func (coinsA Coins) Plus(coinsB Coins) Coins {
 			}
 			return append(sum, coinsB[indexB:]...)
 		} else if indexB == lenB {
-			return append(sum, coinsA[indexA:]...)
+			return append(sum, coins[indexA:]...)
 		}
-		coinA, coinB := coinsA[indexA], coinsB[indexB]
+		coinA, coinB := coins[indexA], coinsB[indexB]
 		switch strings.Compare(coinA.Denom, coinB.Denom) {
 		case -1:
 			sum = append(sum, coinA)
@@ -168,15 +168,15 @@ func (coins Coins) Negative() Coins {
 }
 
 // Minus subtracts a set of coins from another (adds the inverse)
-func (coinsA Coins) Minus(coinsB Coins) Coins {
-	return coinsA.Plus(coinsB.Negative())
+func (coins Coins) Minus(coinsB Coins) Coins {
+	return coins.Plus(coinsB.Negative())
 }
 
-// IsGTE returns True iff coinsA is NonNegative(), and for every
+// IsGTE returns True iff coins is NonNegative(), and for every
 // currency in coinsB, the currency is present at an equal or greater
 // amount in coinsB
-func (coinsA Coins) IsGTE(coinsB Coins) bool {
-	diff := coinsA.Minus(coinsB)
+func (coins Coins) IsGTE(coinsB Coins) bool {
+	diff := coins.Minus(coinsB)
 	if len(diff) == 0 {
 		return true
 	}
@@ -189,12 +189,12 @@ func (coins Coins) IsZero() bool {
 }
 
 // IsEqual returns true if the two sets of Coins have the same value
-func (coinsA Coins) IsEqual(coinsB Coins) bool {
-	if len(coinsA) != len(coinsB) {
+func (coins Coins) IsEqual(coinsB Coins) bool {
+	if len(coins) != len(coinsB) {
 		return false
 	}
-	for i := 0; i < len(coinsA); i++ {
-		if coinsA[i] != coinsB[i] {
+	for i := 0; i < len(coins); i++ {
+		if coins[i] != coinsB[i] {
 			return false
 		}
 	}

@@ -33,19 +33,20 @@ type RawTx struct {
 	data.Bytes
 }
 
+var _ basecoin.TxInner = RawTx{}
+
+// nolint
+func NewRawTx(d []byte) basecoin.Tx {
+	return RawTx{data.Bytes(d)}.Wrap()
+}
 func (r RawTx) Wrap() basecoin.Tx {
 	return basecoin.Tx{r}
 }
-
 func (r RawTx) ValidateBasic() error {
 	if len(r.Bytes) > rawMaxSize {
 		return errors.ErrTooLarge()
 	}
 	return nil
-}
-
-func NewRawTx(d []byte) basecoin.Tx {
-	return RawTx{data.Bytes(d)}.Wrap()
 }
 
 // OKHandler just used to return okay to everything
@@ -56,7 +57,8 @@ type OKHandler struct {
 
 var _ basecoin.Handler = OKHandler{}
 
-func (_ OKHandler) Name() string {
+// Name - return handler's name
+func (OKHandler) Name() string {
 	return NameOK
 }
 
@@ -77,18 +79,19 @@ type EchoHandler struct {
 
 var _ basecoin.Handler = EchoHandler{}
 
-func (_ EchoHandler) Name() string {
+// Name - return handler's name
+func (EchoHandler) Name() string {
 	return NameEcho
 }
 
 // CheckTx always returns an empty success tx
-func (_ EchoHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (EchoHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	data, err := data.ToWire(tx)
 	return basecoin.Result{Data: data}, err
 }
 
 // DeliverTx always returns an empty success tx
-func (_ EchoHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (EchoHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	data, err := data.ToWire(tx)
 	return basecoin.Result{Data: data}, err
 }
@@ -101,7 +104,8 @@ type FailHandler struct {
 
 var _ basecoin.Handler = FailHandler{}
 
-func (_ FailHandler) Name() string {
+// Name - return handler's name
+func (FailHandler) Name() string {
 	return NameFail
 }
 
@@ -124,7 +128,8 @@ type PanicHandler struct {
 
 var _ basecoin.Handler = PanicHandler{}
 
-func (_ PanicHandler) Name() string {
+// Name - return handler's name
+func (PanicHandler) Name() string {
 	return NamePanic
 }
 

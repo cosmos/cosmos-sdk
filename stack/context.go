@@ -23,6 +23,7 @@ type secureContext struct {
 	log.Logger
 }
 
+// NewContext - create a new secureContext
 func NewContext(chain string, logger log.Logger) basecoin.Context {
 	return secureContext{
 		id:     nonce(rand.Int63()),

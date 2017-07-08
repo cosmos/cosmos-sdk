@@ -5,7 +5,7 @@ REPO_NAME="basecoin"
 
 # Get the version from the environment, or try to figure it out.
 if [ -z $VERSION ]; then
-	VERSION=$(awk -F\" '/Version =/ { print $2; exit }' < version/version.go)
+    VERSION=$(awk -F\" '/Version =/ { print $2; exit }' < version/version.go)
 fi
 if [ -z "$VERSION" ]; then
     echo "Please specify a version."
@@ -34,8 +34,8 @@ docker run --rm -e "BUILD_TAGS=$BUILD_TAGS" -v "$(pwd)":/go/src/github.com/tende
 rm -rf ./build/dist
 mkdir -p ./build/dist
 for FILENAME in $(find ./build/pkg -mindepth 1 -maxdepth 1 -type f); do
-  FILENAME=$(basename "$FILENAME")
-	cp "./build/pkg/${FILENAME}" "./build/dist/${REPO_NAME}_${VERSION}_${FILENAME}"
+    FILENAME=$(basename "$FILENAME")
+    cp "./build/pkg/${FILENAME}" "./build/dist/${REPO_NAME}_${VERSION}_${FILENAME}"
 done
 
 # Make the checksums.

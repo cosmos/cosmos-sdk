@@ -15,8 +15,11 @@ var (
 	errInsufficientSigs = fmt.Errorf("Not enough signatures")
 	errNoMembers        = fmt.Errorf("No members specified")
 	errTooManyMembers   = fmt.Errorf("Too many members specified")
+	errNotEnoughMembers = fmt.Errorf("Not enough members specified")
 )
 
+// TODO: codegen?
+// ex: err-gen NoRole,"No such role",CodeType_Unauthorized
 func ErrNoRole() errors.TMError {
 	return errors.WithCode(errNoRole, abci.CodeType_Unauthorized)
 }
@@ -57,4 +60,11 @@ func ErrTooManyMembers() errors.TMError {
 }
 func IsTooManyMembersErr(err error) bool {
 	return errors.IsSameError(errTooManyMembers, err)
+}
+
+func ErrNotEnoughMembers() errors.TMError {
+	return errors.WithCode(errNotEnoughMembers, abci.CodeType_Unauthorized)
+}
+func IsNotEnoughMembersErr(err error) bool {
+	return errors.IsSameError(errNotEnoughMembers, err)
 }

@@ -15,6 +15,37 @@ type Role struct {
 	Signers []basecoin.Actor `json:"signers"`
 }
 
+func NewRole(min uint32, signers []basecoin.Actor) Role {
+	return Role{
+		MinSigs: min,
+		Signers: signers,
+	}
+}
+
+// IsSigner checks if the given Actor is allowed to sign this role
+func (r Role) IsSigner(a basecoin.Actor) bool {
+	for _, s := range r.Signers {
+		if a.Equals(s) {
+			return true
+		}
+	}
+	return false
+}
+
+// IsAuthorized checks if the context has permission to assume the role
+func (r Role) IsAuthorized(ctx basecoin.Context) bool {
+	needed := r.MinSigs
+	for _, s := range r.Signers {
+		if ctx.HasPermission(s) {
+			needed--
+			if needed <= 0 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // MakeKey creates the lookup key for a role
 func MakeKey(role []byte) []byte {
 	prefix := []byte(NameRole + "/")
@@ -34,6 +65,7 @@ func loadRole(store state.KVStore, key []byte) (role Role, err error) {
 	return role, nil
 }
 
+// we only have create here, no update, since we don't allow update yet
 func createRole(store state.KVStore, key []byte, role Role) error {
 	if _, err := loadRole(store, key); !IsNoRoleErr(err) {
 		return ErrRoleExists()

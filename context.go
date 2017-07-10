@@ -1,6 +1,8 @@
 package basecoin
 
 import (
+	"bytes"
+
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
@@ -21,8 +23,16 @@ func NewActor(app string, addr []byte) Actor {
 	return Actor{App: app, Address: addr}
 }
 
+// Bytes makes a binary coding, useful for turning this into a key in the store
 func (a Actor) Bytes() []byte {
 	return wire.BinaryBytes(a)
+}
+
+// Equals checks if two actors are the same
+func (a Actor) Equals(b Actor) bool {
+	return a.ChainID == b.ChainID &&
+		a.App == b.App &&
+		bytes.Equal(a.Address, b.Address)
 }
 
 // Context is an interface, so we can implement "secure" variants that

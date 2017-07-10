@@ -7,6 +7,10 @@ import (
 	"github.com/tendermint/basecoin/errors"
 )
 
+const (
+	MaxMembers = 10
+)
+
 // AssumeRoleTx is a layered tx that can wrap your normal tx to give it
 // the authority to use a given role.
 type AssumeRoleTx struct {
@@ -60,6 +64,12 @@ func (tx CreateRoleTx) ValidateBasic() error {
 	}
 	if len(tx.Signers) == 0 {
 		return ErrNoMembers()
+	}
+	if len(tx.Signers) < int(tx.MinSigs) {
+		return ErrNotEnoughMembers()
+	}
+	if len(tx.Signers) > MaxMembers {
+		return ErrTooManyMembers()
 	}
 	return nil
 }

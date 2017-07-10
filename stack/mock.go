@@ -1,7 +1,6 @@
 package stack
 
 import (
-	"bytes"
 	"math/rand"
 
 	"github.com/tendermint/tmlibs/log"
@@ -52,7 +51,7 @@ func (c naiveContext) WithPermissions(perms ...basecoin.Actor) basecoin.Context 
 
 func (c naiveContext) HasPermission(perm basecoin.Actor) bool {
 	for _, p := range c.perms {
-		if perm.App == p.App && bytes.Equal(perm.Address, p.Address) {
+		if p.Equals(perm) {
 			return true
 		}
 	}

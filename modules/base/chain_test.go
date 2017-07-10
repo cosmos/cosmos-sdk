@@ -48,6 +48,7 @@ func TestChain(t *testing.T) {
 	assert := assert.New(t)
 	msg := "got it"
 	chainID := "my-chain"
+	height := uint64(100)
 
 	raw := stack.NewRawTx([]byte{1, 2, 3, 4})
 	cases := []struct {
@@ -55,13 +56,22 @@ func TestChain(t *testing.T) {
 		valid    bool
 		errorMsg string
 	}{
+		// check the chain ids are validated
 		{NewChainTx(chainID, 0, raw), true, ""},
-		{NewChainTx("someone-else", 0, raw), false, "someone-else"},
+		// non-matching chainid, or impossible chain id
+		{NewChainTx("someone-else", 0, raw), false, "someone-else: Wrong chain"},
+		{NewChainTx("Inval$$d:CH%%n", 0, raw), false, "Wrong chain"},
+		// Wrong tx type
 		{raw, false, "No chain id provided"},
+		// Check different heights - must be 0 or higher than current height
+		{NewChainTx(chainID, height+1, raw), true, ""},
+		{NewChainTx(chainID, height, raw), false, "Tx expired"},
+		{NewChainTx(chainID, 1, raw), false, "expired"},
+		{NewChainTx(chainID, 0, raw), true, ""},
 	}
 
 	// generic args here...
-	ctx := stack.NewContext(chainID, 100, log.NewNopLogger())
+	ctx := stack.NewContext(chainID, height, log.NewNopLogger())
 	store := state.NewMemKVStore()
 
 	// build the stack

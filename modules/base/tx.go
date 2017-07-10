@@ -69,7 +69,12 @@ var (
 
 //nolint - TxInner Functions
 func NewChainTx(chainID string, expires uint64, tx basecoin.Tx) basecoin.Tx {
-	return (ChainTx{Tx: tx, ChainID: chainID}).Wrap()
+	c := ChainTx{
+		ChainID:   chainID,
+		ExpiresAt: expires,
+		Tx:        tx,
+	}
+	return c.Wrap()
 }
 func (c ChainTx) Wrap() basecoin.Tx {
 	return basecoin.Tx{c}

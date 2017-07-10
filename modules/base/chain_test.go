@@ -61,7 +61,7 @@ func TestChain(t *testing.T) {
 	}
 
 	// generic args here...
-	ctx := stack.NewContext(chainID, log.NewNopLogger())
+	ctx := stack.NewContext(chainID, 100, log.NewNopLogger())
 	store := state.NewMemKVStore()
 
 	// build the stack

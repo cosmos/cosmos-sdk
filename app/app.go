@@ -31,6 +31,7 @@ type Basecoin struct {
 	state      *sm.State
 	cacheState *sm.State
 	handler    basecoin.Handler
+	height     uint64
 	logger     log.Logger
 }
 
@@ -45,6 +46,7 @@ func NewBasecoin(handler basecoin.Handler, eyesCli *eyes.Client, logger log.Logg
 		eyesCli:    eyesCli,
 		state:      state,
 		cacheState: nil,
+		height:     0,
 		logger:     logger,
 	}
 }
@@ -73,6 +75,7 @@ func (app *Basecoin) Info() abci.ResponseInfo {
 	if err != nil {
 		cmn.PanicCrisis(err)
 	}
+	app.height = resp.LastBlockHeight
 	return abci.ResponseInfo{
 		Data:             fmt.Sprintf("Basecoin v%v", version.Version),
 		LastBlockHeight:  resp.LastBlockHeight,
@@ -111,6 +114,7 @@ func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
 	cache := app.state.CacheWrap()
 	ctx := stack.NewContext(
 		app.state.GetChainID(),
+		app.height,
 		app.logger.With("call", "delivertx"),
 	)
 	res, err := app.handler.DeliverTx(ctx, cache, tx)
@@ -134,6 +138,7 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 	// TODO: can we abstract this setup and commit logic??
 	ctx := stack.NewContext(
 		app.state.GetChainID(),
+		app.height,
 		app.logger.With("call", "checktx"),
 	)
 	// checktx generally shouldn't touch the state, but we don't care
@@ -187,6 +192,7 @@ func (app *Basecoin) InitChain(validators []*abci.Validator) {
 
 // BeginBlock - ABCI
 func (app *Basecoin) BeginBlock(hash []byte, header *abci.Header) {
+	app.height++
 	// for _, plugin := range app.plugins.GetList() {
 	// 	plugin.BeginBlock(app.state, hash, header)
 	// }

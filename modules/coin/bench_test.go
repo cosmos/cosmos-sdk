@@ -34,7 +34,7 @@ func BenchmarkSimpleTransfer(b *testing.B) {
 
 	// now, loop...
 	for i := 1; i <= b.N; i++ {
-		ctx := stack.MockContext("foo").WithPermissions(sender)
+		ctx := stack.MockContext("foo", 100).WithPermissions(sender)
 		tx := makeSimpleTx(sender, receiver, Coins{{"mycoin", 2}}, i)
 		_, err := h.DeliverTx(ctx, store, tx)
 		// never should error

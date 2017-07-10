@@ -9,6 +9,13 @@ import (
 	wire "github.com/tendermint/go-wire"
 )
 
+func NewPerm(role []byte) basecoin.Actor {
+	return basecoin.Actor{
+		App:     NameRole,
+		Address: role,
+	}
+}
+
 // Role - structure to hold permissioning
 type Role struct {
 	MinSigs uint32           `json:"min_sigs"`

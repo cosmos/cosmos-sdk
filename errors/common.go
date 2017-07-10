@@ -22,6 +22,7 @@ var (
 	errInvalidFormat     = fmt.Errorf("Invalid format")
 	errUnknownModule     = fmt.Errorf("Unknown module")
 	errExpired           = fmt.Errorf("Tx expired")
+	errUnknownKey        = fmt.Errorf("Unknown key")
 )
 
 // some crazy reflection to unwrap any generated struct.
@@ -61,6 +62,14 @@ func ErrUnknownModule(mod string) TMError {
 }
 func IsUnknownModuleErr(err error) bool {
 	return IsSameError(errUnknownModule, err)
+}
+
+func ErrUnknownKey(mod string) TMError {
+	w := errors.Wrap(errUnknownKey, mod)
+	return WithCode(w, abci.CodeType_UnknownRequest)
+}
+func IsUnknownKeyErr(err error) bool {
+	return IsSameError(errUnknownKey, err)
 }
 
 func ErrInternal(msg string) TMError {

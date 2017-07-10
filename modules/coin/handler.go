@@ -1,8 +1,6 @@
 package coin
 
 import (
-	"fmt"
-
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
 
@@ -106,8 +104,7 @@ func (h Handler) SetOption(l log.Logger, store state.KVStore, module, key, value
 		return "Success", nil
 
 	}
-	msg := fmt.Sprintf("Unknown key: %s", key)
-	return "", errors.ErrInternal(msg)
+	return errors.ErrUnknownKey(key)
 }
 
 func checkTx(ctx basecoin.Context, tx basecoin.Tx) (send SendTx, err error) {

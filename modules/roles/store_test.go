@@ -52,7 +52,7 @@ func TestRole(t *testing.T) {
 			assert.True(role.IsSigner(a), i)
 		}
 		// make sure IsAuthorized works
-		ctx := stack.MockContext("chain-id").WithPermissions(tc.signers...)
+		ctx := stack.MockContext("chain-id", 100).WithPermissions(tc.signers...)
 		allowed := role.IsAuthorized(ctx)
 		assert.Equal(tc.valid, allowed, i)
 	}

@@ -42,7 +42,7 @@ func TestCounterPlugin(t *testing.T) {
 	// Deliver a CounterTx
 	DeliverCounterTx := func(valid bool, counterFee coin.Coins, inputSequence int) abci.Result {
 		tx := NewTx(valid, counterFee, inputSequence)
-		tx = base.NewChainTx(chainID, tx)
+		tx = base.NewChainTx(chainID, 0, tx)
 		stx := auth.NewSig(tx)
 		auth.Sign(stx, acct.Key)
 		txBytes := wire.BinaryBytes(stx.Wrap())

@@ -44,10 +44,19 @@ func (c Chain) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.
 
 // checkChain makes sure the tx is a Chain Tx and is on the proper chain
 func (c Chain) checkChain(chainID string, tx basecoin.Tx) (basecoin.Tx, error) {
+	// make sure it is a chaintx
 	ctx, ok := tx.Unwrap().(ChainTx)
 	if !ok {
 		return tx, errors.ErrNoChain()
 	}
+
+	// basic validation
+	err := ctx.ValidateBasic()
+	if err != nil {
+		return tx, err
+	}
+
+	// compare against state
 	if ctx.ChainID != chainID {
 		return tx, errors.ErrWrongChain(ctx.ChainID)
 	}

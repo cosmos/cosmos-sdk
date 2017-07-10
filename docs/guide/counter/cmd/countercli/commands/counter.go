@@ -4,13 +4,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/light-client/commands"
 	txcmd "github.com/tendermint/light-client/commands/txs"
 
+	"github.com/tendermint/basecoin"
+	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
 	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
 	"github.com/tendermint/basecoin/modules/auth"
-	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
 )
 
@@ -57,7 +56,10 @@ func counterTx(cmd *cobra.Command, args []string) error {
 
 	// TODO: make this more flexible for middleware
 	// add the chain info
-	tx = base.NewChainTx(commands.GetChainID(), tx)
+	tx, err = bcmd.WrapChainTx(tx)
+	if err != nil {
+		return err
+	}
 	stx := auth.NewSig(tx)
 
 	// Sign if needed and post.  This it the work-horse

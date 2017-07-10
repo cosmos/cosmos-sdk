@@ -2,20 +2,20 @@
 package coin
 
 import (
-	rawerr "errors"
+	"fmt"
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/errors"
 )
 
 var (
-	errNoAccount         = rawerr.New("No such account")
-	errInsufficientFunds = rawerr.New("Insufficient Funds")
-	errNoInputs          = rawerr.New("No Input Coins")
-	errNoOutputs         = rawerr.New("No Output Coins")
-	errInvalidAddress    = rawerr.New("Invalid Address")
-	errInvalidCoins      = rawerr.New("Invalid Coins")
-	errInvalidSequence   = rawerr.New("Invalid Sequence")
+	errNoAccount         = fmt.Errorf("No such account")
+	errInsufficientFunds = fmt.Errorf("Insufficient Funds")
+	errNoInputs          = fmt.Errorf("No Input Coins")
+	errNoOutputs         = fmt.Errorf("No Output Coins")
+	errInvalidAddress    = fmt.Errorf("Invalid Address")
+	errInvalidCoins      = fmt.Errorf("Invalid Coins")
+	errInvalidSequence   = fmt.Errorf("Invalid Sequence")
 )
 
 var (

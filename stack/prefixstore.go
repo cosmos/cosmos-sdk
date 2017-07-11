@@ -10,12 +10,12 @@ type prefixStore struct {
 var _ state.KVStore = prefixStore{}
 
 func (p prefixStore) Set(key, value []byte) {
-	key = append(key, p.prefix...)
+	key = append(p.prefix, key...)
 	p.store.Set(key, value)
 }
 
 func (p prefixStore) Get(key []byte) (value []byte) {
-	key = append(key, p.prefix...)
+	key = append(p.prefix, key...)
 	return p.store.Get(key)
 }
 

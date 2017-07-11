@@ -27,6 +27,8 @@ func (m *middleware) CheckTx(ctx basecoin.Context, store state.KVStore, tx basec
 	next := secureCheck(m.next, ctx)
 	// set the permissions for this app
 	ctx = withApp(ctx, m.Name())
+	store = stateSpace(store, m.Name())
+
 	return m.middleware.CheckTx(ctx, store, tx, next)
 }
 
@@ -36,10 +38,15 @@ func (m *middleware) DeliverTx(ctx basecoin.Context, store state.KVStore, tx bas
 	next := secureDeliver(m.next, ctx)
 	// set the permissions for this app
 	ctx = withApp(ctx, m.Name())
+	store = stateSpace(store, m.Name())
+
 	return m.middleware.DeliverTx(ctx, store, tx, next)
 }
 
 func (m *middleware) SetOption(l log.Logger, store state.KVStore, module, key, value string) (string, error) {
+	// set the namespace for the app
+	store = stateSpace(store, m.Name())
+
 	return m.middleware.SetOption(l, store, module, key, value, m.next)
 }
 

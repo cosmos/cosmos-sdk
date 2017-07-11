@@ -8,7 +8,10 @@ import (
 )
 
 const (
-	MaxMembers = 10
+	// MaxMembers it the maximum number of members in a Role.  Used to avoid
+	// extremely large roles.
+	// Value is arbitrary, please adjust as needed
+	MaxMembers = 20
 )
 
 // AssumeRoleTx is a layered tx that can wrap your normal tx to give it

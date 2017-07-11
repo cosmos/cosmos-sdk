@@ -1,8 +1,6 @@
 package roles
 
 import (
-	"github.com/tendermint/tmlibs/log"
-
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/state"
@@ -11,7 +9,10 @@ import (
 //NameRole - name space of the roles module
 const NameRole = "role"
 
-type Handler struct{}
+// Handler allows us to create new roles
+type Handler struct {
+	basecoin.NopOption
+}
 
 var _ basecoin.Handler = Handler{}
 
@@ -25,13 +26,15 @@ func (Handler) Name() string {
 	return NameRole
 }
 
-// CheckTx checks if there is enough money in the account
+// CheckTx verifies if the transaction is properly formated
 func (h Handler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	_, err = checkTx(ctx, tx)
 	return res, err
 }
 
-// DeliverTx moves the money
+// DeliverTx tries to create a new role.
+//
+// Returns an error if the role already exists
 func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	create, err := checkTx(ctx, tx)
 	if err != nil {
@@ -42,14 +45,6 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 	role := NewRole(create.MinSigs, create.Signers)
 	err = createRole(store, MakeKey(create.Role), role)
 	return res, err
-}
-
-// SetOption - sets the genesis account balance
-func (h Handler) SetOption(l log.Logger, store state.KVStore, module, key, value string) (log string, err error) {
-	if module != NameRole {
-		return "", errors.ErrUnknownModule(module)
-	}
-	return "", errors.ErrUnknownKey(key)
 }
 
 func checkTx(ctx basecoin.Context, tx basecoin.Tx) (create CreateRoleTx, err error) {

@@ -9,6 +9,7 @@ import (
 	wire "github.com/tendermint/go-wire"
 )
 
+// NewPerm creates a role permission with the given label
 func NewPerm(role []byte) basecoin.Actor {
 	return basecoin.Actor{
 		App:     NameRole,
@@ -22,6 +23,7 @@ type Role struct {
 	Signers []basecoin.Actor `json:"signers"`
 }
 
+// NewRole creates a Role structure to store the permissioning
 func NewRole(min uint32, signers []basecoin.Actor) Role {
 	return Role{
 		MinSigs: min,

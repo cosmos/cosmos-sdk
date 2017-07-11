@@ -56,8 +56,10 @@ func (mt MultiTx) ValidateBasic() error {
 
 // ChainTx locks this tx to one chainTx, wrap with this before signing
 type ChainTx struct {
-	ChainID   string      `json:"chain_id"`   // name of chain, must be [A-Za-z0-9_-]+
-	ExpiresAt uint64      `json:"expires_at"` // block height at which it is no longer valid
+	// name of chain, must be [A-Za-z0-9_-]+
+	ChainID string `json:"chain_id"`
+	// block height at which it is no longer valid, 0 means no expiration
+	ExpiresAt uint64      `json:"expires_at"`
 	Tx        basecoin.Tx `json:"tx"`
 }
 
@@ -67,7 +69,8 @@ var (
 	chainPattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 )
 
-//nolint - TxInner Functions
+// NewChainTx wraps a particular tx with the ChainTx wrapper,
+// to enforce chain and height
 func NewChainTx(chainID string, expires uint64, tx basecoin.Tx) basecoin.Tx {
 	c := ChainTx{
 		ChainID:   chainID,
@@ -76,6 +79,8 @@ func NewChainTx(chainID string, expires uint64, tx basecoin.Tx) basecoin.Tx {
 	}
 	return c.Wrap()
 }
+
+//nolint - TxInner Functions
 func (c ChainTx) Wrap() basecoin.Tx {
 	return basecoin.Tx{c}
 }

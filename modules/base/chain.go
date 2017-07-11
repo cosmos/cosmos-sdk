@@ -26,7 +26,7 @@ var _ stack.Middleware = Chain{}
 
 // CheckTx makes sure we are on the proper chain - fulfills Middlware interface
 func (c Chain) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
-	stx, err := c.checkChain(ctx.ChainID(), ctx.BlockHeight(), tx)
+	stx, err := c.checkChainTx(ctx.ChainID(), ctx.BlockHeight(), tx)
 	if err != nil {
 		return res, err
 	}
@@ -35,15 +35,16 @@ func (c Chain) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx
 
 // DeliverTx makes sure we are on the proper chain - fulfills Middlware interface
 func (c Chain) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
-	stx, err := c.checkChain(ctx.ChainID(), ctx.BlockHeight(), tx)
+	stx, err := c.checkChainTx(ctx.ChainID(), ctx.BlockHeight(), tx)
 	if err != nil {
 		return res, err
 	}
 	return next.DeliverTx(ctx, store, stx)
 }
 
-// checkChain makes sure the tx is a Chain Tx and is on the proper chain
-func (c Chain) checkChain(chainID string, height uint64, tx basecoin.Tx) (basecoin.Tx, error) {
+// checkChainTx makes sure the tx is a Chain Tx, it is on the proper chain,
+// and it has not expired.
+func (c Chain) checkChainTx(chainID string, height uint64, tx basecoin.Tx) (basecoin.Tx, error) {
 	// make sure it is a chaintx
 	ctx, ok := tx.Unwrap().(ChainTx)
 	if !ok {

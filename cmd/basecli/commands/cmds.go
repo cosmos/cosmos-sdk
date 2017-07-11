@@ -44,7 +44,7 @@ func init() {
 	flags.String(FlagAmount, "", "Coins to send in the format <amt><coin>,<amt><coin>...")
 	flags.String(FlagFee, "0mycoin", "Coins for the transaction fee of the format <amt><coin>")
 	flags.Uint64(FlagGas, 0, "Amount of gas for this transaction")
-	flags.Int64(FlagExpires, 0, "Block height at which this tx expires")
+	flags.Uint64(FlagExpires, 0, "Block height at which this tx expires")
 	flags.Int(FlagSequence, -1, "Sequence number for this transaction")
 }
 
@@ -86,10 +86,11 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 // WrapChainTx will wrap the tx with a ChainTx from the standard flags
 func WrapChainTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
 	expires := viper.GetInt64(FlagExpires)
-	if expires < 0 {
-		return res, errors.New("expires must be >= 0")
+	chain := commands.GetChainID()
+	if chain == "" {
+		return res, errors.New("No chain-id provided")
 	}
-	res = base.NewChainTx(commands.GetChainID(), uint64(expires), tx)
+	res = base.NewChainTx(chain, uint64(expires), tx)
 	return res, nil
 }
 

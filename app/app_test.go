@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -83,17 +82,10 @@ func (at *appTest) reset() {
 	require.True(at.t, resabci.IsOK(), resabci)
 }
 
-func getBalance(key basecoin.Actor, state state.KVStore) (coin.Coins, error) {
-	var acct coin.Account
-	k := stack.PrefixedKey(coin.NameCoin, key.Bytes())
-	v := state.Get(k)
-	// empty if no data
-	if len(v) == 0 {
-		return nil, nil
-	}
-	// otherwise read it
-	err := wire.ReadBinaryBytes(v, &acct)
-	return acct.Coins, errors.WithStack(err)
+func getBalance(key basecoin.Actor, store state.KVStore) (coin.Coins, error) {
+	cspace := stack.PrefixedStore(coin.NameCoin, store)
+	acct, err := coin.GetAccount(cspace, key)
+	return acct.Coins, err
 }
 
 func getAddr(addr []byte, state state.KVStore) (coin.Coins, error) {

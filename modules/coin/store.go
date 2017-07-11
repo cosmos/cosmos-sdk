@@ -10,25 +10,9 @@ import (
 	"github.com/tendermint/basecoin/state"
 )
 
-// Accountant - custom object to manage coins for the coin module
-// TODO prefix should be post-fix if maintaining the same key space
-type Accountant struct {
-	Prefix []byte
-}
-
-// NewAccountant - create the new accountant with prefix information
-func NewAccountant(prefix string) Accountant {
-	if prefix == "" {
-		prefix = NameCoin
-	}
-	return Accountant{
-		Prefix: []byte(prefix + "/"),
-	}
-}
-
 // GetAccount - Get account from store and address
-func (a Accountant) GetAccount(store state.KVStore, addr basecoin.Actor) (Account, error) {
-	acct, err := loadAccount(store, a.MakeKey(addr))
+func GetAccount(store state.KVStore, addr basecoin.Actor) (Account, error) {
+	acct, err := loadAccount(store, addr.Bytes())
 
 	// for empty accounts, don't return an error, but rather an empty account
 	if IsNoAccountErr(err) {
@@ -38,27 +22,27 @@ func (a Accountant) GetAccount(store state.KVStore, addr basecoin.Actor) (Accoun
 }
 
 // CheckCoins makes sure there are funds, but doesn't change anything
-func (a Accountant) CheckCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int) (Coins, error) {
-	acct, err := a.updateCoins(store, addr, coins, seq)
+func CheckCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int) (Coins, error) {
+	acct, err := updateCoins(store, addr, coins, seq)
 	return acct.Coins, err
 }
 
 // ChangeCoins changes the money, returns error if it would be negative
-func (a Accountant) ChangeCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int) (Coins, error) {
-	acct, err := a.updateCoins(store, addr, coins, seq)
+func ChangeCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int) (Coins, error) {
+	acct, err := updateCoins(store, addr, coins, seq)
 	if err != nil {
 		return acct.Coins, err
 	}
 
-	err = storeAccount(store, a.MakeKey(addr), acct)
+	err = storeAccount(store, addr.Bytes(), acct)
 	return acct.Coins, err
 }
 
 // updateCoins will load the account, make all checks, and return the updated account.
 //
 // it doesn't save anything, that is up to you to decide (Check/Change Coins)
-func (a Accountant) updateCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int) (acct Account, err error) {
-	acct, err = loadAccount(store, a.MakeKey(addr))
+func updateCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int) (acct Account, err error) {
+	acct, err = loadAccount(store, addr.Bytes())
 	// we can increase an empty account...
 	if IsNoAccountErr(err) && coins.IsPositive() {
 		err = nil
@@ -83,16 +67,6 @@ func (a Accountant) updateCoins(store state.KVStore, addr basecoin.Actor, coins 
 
 	acct.Coins = final
 	return acct, nil
-}
-
-// MakeKey - generate key bytes from address using accountant prefix
-// TODO Prefix -> PostFix for consistent namespace
-func (a Accountant) MakeKey(addr basecoin.Actor) []byte {
-	key := addr.Bytes()
-	if len(a.Prefix) > 0 {
-		key = append(a.Prefix, key...)
-	}
-	return key
 }
 
 // Account - coin account structure

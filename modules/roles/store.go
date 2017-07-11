@@ -55,12 +55,6 @@ func (r Role) IsAuthorized(ctx basecoin.Context) bool {
 	return false
 }
 
-// MakeKey creates the lookup key for a role
-func MakeKey(role []byte) []byte {
-	prefix := []byte(NameRole + "/")
-	return append(prefix, role...)
-}
-
 func loadRole(store state.KVStore, key []byte) (role Role, err error) {
 	data := store.Get(key)
 	if len(data) == 0 {

@@ -43,7 +43,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 
 	// lets try...
 	role := NewRole(create.MinSigs, create.Signers)
-	err = createRole(store, MakeKey(create.Role), role)
+	err = createRole(store, create.Role, role)
 	return res, err
 }
 

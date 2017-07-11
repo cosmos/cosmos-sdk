@@ -68,7 +68,7 @@ func assumeRole(ctx basecoin.Context, store state.KVStore, assume AssumeRoleTx) 
 		return nil, err
 	}
 
-	role, err := loadRole(store, MakeKey(assume.Role))
+	role, err := loadRole(store, assume.Role)
 	if err != nil {
 		return nil, err
 	}

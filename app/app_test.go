@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
+	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 	wire "github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
@@ -82,8 +84,16 @@ func (at *appTest) reset() {
 }
 
 func getBalance(key basecoin.Actor, state state.KVStore) (coin.Coins, error) {
-	acct, err := coin.NewAccountant("").GetAccount(state, key)
-	return acct.Coins, err
+	var acct coin.Account
+	k := stack.PrefixedKey(coin.NameCoin, key.Bytes())
+	v := state.Get(k)
+	// empty if no data
+	if len(v) == 0 {
+		return nil, nil
+	}
+	// otherwise read it
+	err := wire.ReadBinaryBytes(v, &acct)
+	return acct.Coins, errors.WithStack(err)
 }
 
 func getAddr(addr []byte, state state.KVStore) (coin.Coins, error) {

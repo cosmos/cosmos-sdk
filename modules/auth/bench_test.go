@@ -40,7 +40,7 @@ func BenchmarkCheckOneSig(b *testing.B) {
 	h := makeHandler()
 	store := state.NewMemKVStore()
 	for i := 1; i <= b.N; i++ {
-		ctx := stack.NewContext("foo", log.NewNopLogger())
+		ctx := stack.NewContext("foo", 100, log.NewNopLogger())
 		_, err := h.DeliverTx(ctx, store, tx)
 		// never should error
 		if err != nil {
@@ -64,7 +64,7 @@ func benchmarkCheckMultiSig(b *testing.B, cnt int) {
 	h := makeHandler()
 	store := state.NewMemKVStore()
 	for i := 1; i <= b.N; i++ {
-		ctx := stack.NewContext("foo", log.NewNopLogger())
+		ctx := stack.NewContext("foo", 100, log.NewNopLogger())
 		_, err := h.DeliverTx(ctx, store, tx)
 		// never should error
 		if err != nil {

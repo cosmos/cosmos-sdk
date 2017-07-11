@@ -44,7 +44,7 @@ func (at *appTest) getTx(seq int, coins coin.Coins) basecoin.Tx {
 	in := []coin.TxInput{{Address: at.acctIn.Actor(), Coins: coins, Sequence: seq}}
 	out := []coin.TxOutput{{Address: at.acctOut.Actor(), Coins: coins}}
 	tx := coin.NewSendTx(in, out)
-	tx = base.NewChainTx(at.chainID, tx)
+	tx = base.NewChainTx(at.chainID, 0, tx)
 	stx := auth.NewMulti(tx)
 	auth.Sign(stx, at.acctIn.Key)
 	return stx.Wrap()

@@ -1,6 +1,11 @@
 package base
 
-import "github.com/tendermint/basecoin"
+import (
+	"regexp"
+
+	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/errors"
+)
 
 // nolint
 const (
@@ -51,20 +56,44 @@ func (mt MultiTx) ValidateBasic() error {
 
 // ChainTx locks this tx to one chainTx, wrap with this before signing
 type ChainTx struct {
-	Tx      basecoin.Tx `json:"tx"`
-	ChainID string      `json:"chain_id"`
+	// name of chain, must be [A-Za-z0-9_-]+
+	ChainID string `json:"chain_id"`
+	// block height at which it is no longer valid, 0 means no expiration
+	ExpiresAt uint64      `json:"expires_at"`
+	Tx        basecoin.Tx `json:"tx"`
 }
 
 var _ basecoin.TxInner = &ChainTx{}
 
-//nolint - TxInner Functions
-func NewChainTx(chainID string, tx basecoin.Tx) basecoin.Tx {
-	return (ChainTx{Tx: tx, ChainID: chainID}).Wrap()
+var (
+	chainPattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
+)
+
+// NewChainTx wraps a particular tx with the ChainTx wrapper,
+// to enforce chain and height
+func NewChainTx(chainID string, expires uint64, tx basecoin.Tx) basecoin.Tx {
+	c := ChainTx{
+		ChainID:   chainID,
+		ExpiresAt: expires,
+		Tx:        tx,
+	}
+	return c.Wrap()
 }
+
+//nolint - TxInner Functions
 func (c ChainTx) Wrap() basecoin.Tx {
 	return basecoin.Tx{c}
 }
 func (c ChainTx) ValidateBasic() error {
+	if c.ChainID == "" {
+		return errors.ErrNoChain()
+	}
+	if !chainPattern.MatchString(c.ChainID) {
+		return errors.ErrWrongChain(c.ChainID)
+	}
+	if c.Tx.Empty() {
+		return errors.ErrUnknownTxType(c.Tx)
+	}
 	// TODO: more checks? chainID?
 	return c.Tx.ValidateBasic()
 }

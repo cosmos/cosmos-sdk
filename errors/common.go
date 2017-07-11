@@ -21,6 +21,7 @@ var (
 	errUnknownTxType     = fmt.Errorf("Tx type unknown")
 	errInvalidFormat     = fmt.Errorf("Invalid format")
 	errUnknownModule     = fmt.Errorf("Unknown module")
+	errExpired           = fmt.Errorf("Tx expired")
 )
 
 // some crazy reflection to unwrap any generated struct.
@@ -129,4 +130,11 @@ func ErrTooLarge() TMError {
 }
 func IsTooLargeErr(err error) bool {
 	return IsSameError(errTooLarge, err)
+}
+
+func ErrExpired() TMError {
+	return WithCode(errExpired, abci.CodeType_Unauthorized)
+}
+func IsExpiredErr(err error) bool {
+	return IsSameError(errExpired, err)
 }

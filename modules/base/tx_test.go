@@ -25,7 +25,7 @@ func TestEncoding(t *testing.T) {
 	}{
 		{raw},
 		{NewMultiTx(raw, raw2)},
-		{NewChainTx("foobar", raw)},
+		{NewChainTx("foobar", 0, raw)},
 	}
 
 	for idx, tc := range cases {

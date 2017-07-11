@@ -1,9 +1,6 @@
 package stack
 
 import (
-	"bytes"
-	"math/rand"
-
 	"github.com/pkg/errors"
 
 	"github.com/tendermint/tmlibs/log"
@@ -16,27 +13,19 @@ import (
 type nonce int64
 
 type secureContext struct {
-	id    nonce
-	chain string
-	app   string
-	perms []basecoin.Actor
-	log.Logger
+	app string
+	// this exposes the log.Logger and all other methods we don't override
+	naiveContext
 }
 
 // NewContext - create a new secureContext
-func NewContext(chain string, logger log.Logger) basecoin.Context {
+func NewContext(chain string, height uint64, logger log.Logger) basecoin.Context {
 	return secureContext{
-		id:     nonce(rand.Int63()),
-		chain:  chain,
-		Logger: logger,
+		naiveContext: MockContext(chain, height).(naiveContext),
 	}
 }
 
 var _ basecoin.Context = secureContext{}
-
-func (c secureContext) ChainID() string {
-	return c.chain
-}
 
 // WithPermissions will panic if they try to set permission without the proper app
 func (c secureContext) WithPermissions(perms ...basecoin.Actor) basecoin.Context {
@@ -50,32 +39,18 @@ func (c secureContext) WithPermissions(perms ...basecoin.Actor) basecoin.Context
 	}
 
 	return secureContext{
-		id:     c.id,
-		chain:  c.chain,
-		app:    c.app,
-		perms:  append(c.perms, perms...),
-		Logger: c.Logger,
+		app:          c.app,
+		naiveContext: c.naiveContext.WithPermissions(perms...).(naiveContext),
 	}
 }
 
-func (c secureContext) HasPermission(perm basecoin.Actor) bool {
-	for _, p := range c.perms {
-		if perm.App == p.App && bytes.Equal(perm.Address, p.Address) {
-			return true
-		}
+// Reset should clear out all permissions,
+// but carry on knowledge that this is a child
+func (c secureContext) Reset() basecoin.Context {
+	return secureContext{
+		app:          c.app,
+		naiveContext: c.naiveContext.Reset().(naiveContext),
 	}
-	return false
-}
-
-func (c secureContext) GetPermissions(chain, app string) (res []basecoin.Actor) {
-	for _, p := range c.perms {
-		if chain == p.ChainID {
-			if app == "" || app == p.App {
-				res = append(res, p)
-			}
-		}
-	}
-	return res
 }
 
 // IsParent ensures that this is derived from the given secureClient
@@ -84,19 +59,7 @@ func (c secureContext) IsParent(other basecoin.Context) bool {
 	if !ok {
 		return false
 	}
-	return c.id == so.id
-}
-
-// Reset should clear out all permissions,
-// but carry on knowledge that this is a child
-func (c secureContext) Reset() basecoin.Context {
-	return secureContext{
-		id:     c.id,
-		chain:  c.chain,
-		app:    c.app,
-		perms:  nil,
-		Logger: c.Logger,
-	}
+	return c.naiveContext.IsParent(so.naiveContext)
 }
 
 // withApp is a private method that we can use to properly set the
@@ -107,11 +70,8 @@ func withApp(ctx basecoin.Context, app string) basecoin.Context {
 		return ctx
 	}
 	return secureContext{
-		id:     sc.id,
-		chain:  sc.chain,
-		app:    app,
-		perms:  sc.perms,
-		Logger: sc.Logger,
+		app:          app,
+		naiveContext: sc.naiveContext,
 	}
 }
 

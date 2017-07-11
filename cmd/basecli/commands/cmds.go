@@ -34,6 +34,7 @@ const (
 	FlagAmount   = "amount"
 	FlagFee      = "fee"
 	FlagGas      = "gas"
+	FlagExpires  = "expires"
 	FlagSequence = "sequence"
 )
 
@@ -42,7 +43,8 @@ func init() {
 	flags.String(FlagTo, "", "Destination address for the bits")
 	flags.String(FlagAmount, "", "Coins to send in the format <amt><coin>,<amt><coin>...")
 	flags.String(FlagFee, "0mycoin", "Coins for the transaction fee of the format <amt><coin>")
-	flags.Int64(FlagGas, 0, "Amount of gas for this transaction")
+	flags.Uint64(FlagGas, 0, "Amount of gas for this transaction")
+	flags.Uint64(FlagExpires, 0, "Block height at which this tx expires")
 	flags.Int(FlagSequence, -1, "Sequence number for this transaction")
 }
 
@@ -63,7 +65,12 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 
 	// TODO: make this more flexible for middleware
 	// add the chain info
-	tx = base.NewChainTx(commands.GetChainID(), tx)
+	tx, err = WrapChainTx(tx)
+	if err != nil {
+		return err
+	}
+
+	// Note: this is single sig (no multi sig yet)
 	stx := auth.NewSig(tx)
 
 	// Sign if needed and post.  This it the work-horse
@@ -74,6 +81,17 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 
 	// Output result
 	return txcmd.OutputTx(bres)
+}
+
+// WrapChainTx will wrap the tx with a ChainTx from the standard flags
+func WrapChainTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
+	expires := viper.GetInt64(FlagExpires)
+	chain := commands.GetChainID()
+	if chain == "" {
+		return res, errors.New("No chain-id provided")
+	}
+	res = base.NewChainTx(chain, uint64(expires), tx)
+	return res, nil
 }
 
 func readSendTxFlags() (tx basecoin.Tx, err error) {

@@ -17,7 +17,7 @@ func TestRecovery(t *testing.T) {
 	assert := assert.New(t)
 
 	// generic args here...
-	ctx := NewContext("test-chain", log.NewNopLogger())
+	ctx := NewContext("test-chain", 20, log.NewNopLogger())
 	store := state.NewMemKVStore()
 	tx := basecoin.Tx{}
 

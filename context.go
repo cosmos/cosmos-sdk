@@ -36,4 +36,5 @@ type Context interface {
 	IsParent(ctx Context) bool
 	Reset() Context
 	ChainID() string
+	BlockHeight() uint64
 }

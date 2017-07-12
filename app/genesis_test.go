@@ -18,7 +18,7 @@ const genesisAcctFilepath = "./testdata/genesis2.json"
 
 func TestLoadGenesisDoNotFailIfAppOptionsAreMissing(t *testing.T) {
 	eyesCli := eyescli.NewLocalClient("", 0)
-	app := NewBasecoin(DefaultHandler(), eyesCli, log.TestingLogger())
+	app := NewBasecoin(DefaultHandler("mycoin"), eyesCli, log.TestingLogger())
 	err := app.LoadGenesis("./testdata/genesis3.json")
 	require.Nil(t, err, "%+v", err)
 }
@@ -27,7 +27,7 @@ func TestLoadGenesis(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	eyesCli := eyescli.NewLocalClient("", 0)
-	app := NewBasecoin(DefaultHandler(), eyesCli, log.TestingLogger())
+	app := NewBasecoin(DefaultHandler("mycoin"), eyesCli, log.TestingLogger())
 	err := app.LoadGenesis(genesisFilepath)
 	require.Nil(err, "%+v", err)
 
@@ -56,7 +56,7 @@ func TestLoadGenesisAccountAddress(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	eyesCli := eyescli.NewLocalClient("", 0)
-	app := NewBasecoin(DefaultHandler(), eyesCli, log.TestingLogger())
+	app := NewBasecoin(DefaultHandler("mycoin"), eyesCli, log.TestingLogger())
 	err := app.LoadGenesis(genesisAcctFilepath)
 	require.Nil(err, "%+v", err)
 

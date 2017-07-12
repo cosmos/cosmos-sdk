@@ -11,6 +11,10 @@ import (
 // NameFee - namespace for the fee module
 const NameFee = "fee"
 
+// Bank is a default location for the fees, but pass anything into
+// the middleware constructor
+var Bank = basecoin.Actor{App: NameFee, Address: []byte("bank")}
+
 // SimpleFeeMiddleware - middleware for fee checking, constant amount
 // It used modules.coin to move the money
 type SimpleFeeMiddleware struct {

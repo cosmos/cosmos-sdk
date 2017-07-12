@@ -29,7 +29,7 @@ func TestFeeChecks(t *testing.T) {
 	pure := atoms(46657)
 
 	// these are some accounts
-	collector := basecoin.Actor{App: fee.NameFee, Address: []byte("bank")}
+	collector := basecoin.Actor{App: fee.NameFee, Address: []byte("mine")}
 	key1 := coin.NewAccountWithKey(mixed)
 	key2 := coin.NewAccountWithKey(pure)
 	act1, act2 := key1.Actor(), key2.Actor()

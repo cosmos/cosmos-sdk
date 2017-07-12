@@ -23,7 +23,7 @@ import (
 // so it gets routed properly
 const (
 	NameCounter = "cntr"
-	ByteTx      = 0x21 //TODO What does this byte represent should use typebytes probably
+	ByteTx      = 0x2F //TODO What does this byte represent should use typebytes probably
 	TypeTx      = NameCounter + "/count"
 )
 

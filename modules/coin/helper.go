@@ -39,9 +39,8 @@ func (a *AccountWithKey) Actor() basecoin.Actor {
 // This is intended for use in test cases
 func (a *AccountWithKey) MakeOption() string {
 	info := GenesisAccount{
-		Address:  a.Address(),
-		Sequence: a.Sequence,
-		Balance:  a.Coins,
+		Address: a.Address(),
+		Balance: a.Coins,
 	}
 	js, err := data.ToJSON(info)
 	if err != nil {

@@ -23,7 +23,7 @@ test00GetAccount() {
 
     assertFalse "requires arg" "${CLIENT_EXE} query account"
 
-    checkAccount $SENDER "0" "9007199254740992"
+    checkAccount $SENDER "9007199254740992"
 
     ACCT2=$(${CLIENT_EXE} query account $RECV 2>/dev/null)
     assertFalse "has no genesis account" $?
@@ -40,8 +40,8 @@ test01SendTx() {
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 
-    checkAccount $SENDER "1" "9007199254740000"
-    checkAccount $RECV "0" "992"
+    checkAccount $SENDER "9007199254740000"
+    checkAccount $RECV "992"
 
     # make sure tx is indexed
     checkSendTx $HASH $TX_HEIGHT $SENDER "992"
@@ -76,7 +76,7 @@ test03AddCount() {
     checkCounter "1" "10"
 
     # make sure the account was debited
-    checkAccount $SENDER "2" "9007199254739990"
+    checkAccount $SENDER "9007199254739990"
 
     # make sure tx is indexed
     TX=$(${CLIENT_EXE} query tx $HASH --trace)

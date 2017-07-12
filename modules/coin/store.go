@@ -63,8 +63,7 @@ func updateCoins(store state.KVStore, addr basecoin.Actor, coins Coins) (acct Ac
 
 // Account - coin account structure
 type Account struct {
-	Coins    Coins `json:"coins"`
-	Sequence int   `json:"sequence"`
+	Coins Coins `json:"coins"`
 }
 
 func loadAccount(store state.KVStore, key []byte) (acct Account, err error) {

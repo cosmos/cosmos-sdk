@@ -124,6 +124,7 @@ getAddr() {
     echo $RAW | cut -d' ' -f2
 }
 
+# XXX Ex Usage: checkAccount $ADDR $AMOUNT
 # Desc: Assumes just one coin, checks the balance of first coin in any case
 checkAccount() {
     # make sure sender goes down
@@ -133,8 +134,7 @@ checkAccount() {
     fi
 
     if [ -n "$DEBUG" ]; then echo $ACCT; echo; fi
-    assertEquals "proper sequence" "$2" $(echo $ACCT | jq .data.sequence)
-    assertEquals "proper money" "$3" $(echo $ACCT | jq .data.coins[0].amount)
+    assertEquals "proper money" "$2" $(echo $ACCT | jq .data.coins[0].amount)
     return $?
 }
 

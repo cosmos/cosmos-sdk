@@ -23,7 +23,7 @@ test00GetAccount() {
 
     assertFalse "requires arg" "${CLIENT_EXE} query account"
 
-    checkAccount $SENDER "0" "9007199254740992"
+    checkAccount $SENDER "9007199254740992"
 
     ACCT2=$(${CLIENT_EXE} query account $RECV 2>/dev/null)
     assertFalse "has no genesis account" $?
@@ -40,10 +40,10 @@ test01SendTx() {
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 
-    checkAccount $SENDER "1" "9007199254740000"
+    checkAccount $SENDER "9007199254740000"
     # make sure 0x prefix also works
-    checkAccount "0x$SENDER" "1" "9007199254740000"
-    checkAccount $RECV "0" "992"
+    checkAccount "0x$SENDER" "9007199254740000"
+    checkAccount $RECV "992"
 
     # Make sure tx is indexed
     checkSendTx $HASH $TX_HEIGHT $SENDER "992"

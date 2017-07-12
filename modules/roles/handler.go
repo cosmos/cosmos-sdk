@@ -56,7 +56,7 @@ func checkTx(ctx basecoin.Context, tx basecoin.Tx) (create CreateRoleTx, err err
 	// check if the tx is proper type and valid
 	create, ok := tx.Unwrap().(CreateRoleTx)
 	if !ok {
-		return create, errors.ErrInvalidFormat(tx)
+		return create, errors.ErrInvalidFormat(TypeCreateRoleTx, tx)
 	}
 	err = create.ValidateBasic()
 	return create, err

@@ -2,14 +2,14 @@
 package fee
 
 import (
-	rawerr "errors"
+	"fmt"
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/errors"
 )
 
 var (
-	errInsufficientFees = rawerr.New("Insufficient Fees")
+	errInsufficientFees = fmt.Errorf("Insufficient Fees")
 )
 
 func ErrInsufficientFees() errors.TMError {

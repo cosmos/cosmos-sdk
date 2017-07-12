@@ -17,6 +17,7 @@ import (
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/modules/fee"
+	"github.com/tendermint/basecoin/modules/nonce"
 )
 
 //-------------------------
@@ -73,6 +74,9 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	// XXX - what is the nonceAccount here!!!
+	tx = nonce.NewTx(tx, viper.GetInt(FlagSequence), nonceAccount)
 
 	// Note: this is single sig (no multi sig yet)
 	stx := auth.NewSig(tx)

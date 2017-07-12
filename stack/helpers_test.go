@@ -62,3 +62,38 @@ func TestPanic(t *testing.T) {
 	assert.Panics(func() { fail.CheckTx(ctx, store, tx) })
 	assert.Panics(func() { fail.DeliverTx(ctx, store, tx) })
 }
+
+func TestCheck(t *testing.T) {
+	assert := assert.New(t)
+
+	ctx := MockContext("check-chain", 123)
+	store := state.NewMemKVStore()
+	h := CheckHandler{}
+
+	a := basecoin.Actor{App: "foo", Address: []byte("baz")}
+	b := basecoin.Actor{App: "si-ly", Address: []byte("bar")}
+
+	cases := []struct {
+		valid             bool
+		signers, required []basecoin.Actor
+	}{
+		{true, []basecoin.Actor{a}, []basecoin.Actor{a}},
+		{true, []basecoin.Actor{a, b}, []basecoin.Actor{a}},
+		{false, []basecoin.Actor{a}, []basecoin.Actor{a, b}},
+		{false, []basecoin.Actor{a}, []basecoin.Actor{b}},
+	}
+
+	for i, tc := range cases {
+		tx := CheckTx{tc.required}.Wrap()
+		myCtx := ctx.WithPermissions(tc.signers...)
+		_, err := h.CheckTx(myCtx, store, tx)
+		_, err2 := h.DeliverTx(myCtx, store, tx)
+		if tc.valid {
+			assert.Nil(err, "%d: %+v", i, err)
+			assert.Nil(err2, "%d: %+v", i, err2)
+		} else {
+			assert.NotNil(err, "%d", i)
+			assert.NotNil(err2, "%d", i)
+		}
+	}
+}

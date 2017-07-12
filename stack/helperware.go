@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	NameCheck = "chck"
-	NameGrant = "grnt"
+	NameCheck = "check"
+	NameGrant = "grant"
 )
 
 // CheckMiddleware returns an error if the tx doesn't have auth of this

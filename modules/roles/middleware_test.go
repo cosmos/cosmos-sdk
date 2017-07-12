@@ -53,14 +53,17 @@ func TestAssumeRole(t *testing.T) {
 	require.Nil(err)
 
 	// deploy requires a dev role, or supreme authority
+	// shows how we can build larger constructs, eg. (A and B) OR C
 	deploy := data.Bytes("deploy")
-	_, err = createRole(app, store, deploy, 1, a, pdev)
+	pdeploy, err := createRole(app, store, deploy, 1, a, pdev)
 	require.Nil(err)
 
 	// now, let's test the roles are set properly
 	cases := []struct {
-		valid    bool
-		roles    []data.Bytes     // which roles we try to assume (can be multiple!)
+		valid bool
+		// which roles we try to assume (can be multiple!)
+		// note: that wrapping is FILO, so tries to assume last role first
+		roles    []data.Bytes
 		signers  []basecoin.Actor // which people sign the  tx
 		required []basecoin.Actor // which permission we require to succeed
 	}{
@@ -70,6 +73,14 @@ func TestAssumeRole(t *testing.T) {
 		{false, nil, ba{b}, ba{b, c}},
 
 		// simple role check
+		{false, []data.Bytes{devs}, ba{a, b}, ba{pdev}},        // not enough sigs
+		{false, nil, ba{b, c}, ba{pdev}},                       // must explicitly request group status
+		{true, []data.Bytes{devs}, ba{b, c}, ba{pdev}},         // ahh... better
+		{true, []data.Bytes{deploy}, ba{a, b}, ba{b, pdeploy}}, // deploy also works
+
+		// multiple levels of roles - must be in correct order - assume dev, then deploy
+		{false, []data.Bytes{devs, deploy}, ba{c, d}, ba{pdeploy}},
+		{true, []data.Bytes{deploy, devs}, ba{c, d}, ba{pdev, pdeploy}},
 	}
 
 	for i, tc := range cases {

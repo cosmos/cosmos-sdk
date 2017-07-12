@@ -24,9 +24,10 @@ var _ stack.Middleware = SimpleFeeMiddleware{}
 // NewSimpleFeeMiddleware returns a fee handler with a fixed minimum fee.
 //
 // If minFee is 0, then the FeeTx is optional
-func NewSimpleFeeMiddleware(minFee coin.Coin) SimpleFeeMiddleware {
+func NewSimpleFeeMiddleware(minFee coin.Coin, collector basecoin.Actor) SimpleFeeMiddleware {
 	return SimpleFeeMiddleware{
-		MinFee: minFee,
+		MinFee:    minFee,
+		Collector: collector,
 	}
 }
 

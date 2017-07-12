@@ -90,7 +90,7 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 	if seq < 0 {
 		return fmt.Errorf("sequence must be greater than 0")
 	}
-	tx = nonce.NewTx(tx, uint32(seq), nonceAccount) // XXX - what is the nonceAccount here!!!
+	tx = nonce.NewTx(uint32(seq), nonceAccount, tx)
 
 	// Note: this is single sig (no multi sig yet)
 	stx := auth.NewSig(tx)

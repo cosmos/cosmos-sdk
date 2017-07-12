@@ -12,7 +12,6 @@ import (
 
 var (
 	errDecoding          = fmt.Errorf("Error decoding input")
-	errNoAccount         = fmt.Errorf("No such account")
 	errUnauthorized      = fmt.Errorf("Unauthorized")
 	errInvalidSignature  = fmt.Errorf("Invalid Signature")
 	errTooLarge          = fmt.Errorf("Input size too large")
@@ -139,15 +138,11 @@ func IsNoChainErr(err error) bool {
 func ErrNoNonce() TMError {
 	return WithCode(errNoNonce, unauthorized)
 }
-func ErrBadNonce() TMError {
-	return WithCode(errBadNonce, unauthorized)
+func ErrBadNonce(got, expected uint32) TMError {
+	return WithCode(fmt.Errorf("Bad nonce seqence, got %d, expected %d", got, expected), unauthorized)
 }
 func ErrNotMember() TMError {
 	return WithCode(errBadNonce, unauthorized)
-}
-
-func ErrNoAccount() TMError {
-	return WithCode(errNoAccount, unknownAddress)
 }
 
 func ErrWrongChain(chain string) TMError {

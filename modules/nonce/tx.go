@@ -20,31 +20,24 @@ const (
 )
 
 func init() {
-	basecoin.TxMapper.RegisterImplementation(&Tx{}, TypeNonce, ByteNonce)
+	basecoin.TxMapper.RegisterImplementation(Tx{}, TypeNonce, ByteNonce)
 }
 
 // Tx - XXX fill in
 type Tx struct {
-	Tx       basecoin.Tx `json:p"tx"`
-	Sequence uint32
-	Signers  []basecoin.Actor // or simple []data.Bytes (they are only pubkeys...)
-	seqKey   []byte           //key to store the sequence number
+	Sequence uint32           `json:"sequence"`
+	Signers  []basecoin.Actor `json:"signers"`
+	Tx       basecoin.Tx      `json:"tx"`
 }
 
 var _ basecoin.TxInner = &Tx{}
 
 // NewTx wraps the tx with a signable nonce
-func NewTx(tx basecoin.Tx, sequence uint32, signers []basecoin.Actor) basecoin.Tx {
-
-	//Generate the sequence key as the hash of the list of signers, sorted by address
-	sort.Sort(basecoin.ByAddress(signers))
-	seqKey := merkle.SimpleHashFromBinary(signers)
-
+func NewTx(sequence uint32, signers []basecoin.Actor, tx basecoin.Tx) basecoin.Tx {
 	return (Tx{
-		Tx:       tx,
 		Sequence: sequence,
 		Signers:  signers,
-		seqKey:   seqKey,
+		Tx:       tx,
 	}).Wrap()
 }
 
@@ -59,13 +52,17 @@ func (n Tx) ValidateBasic() error {
 // CheckIncrementSeq - XXX fill in
 func (n Tx) CheckIncrementSeq(ctx basecoin.Context, store state.KVStore) error {
 
+	//Generate the sequence key as the hash of the list of signers, sorted by address
+	sort.Sort(basecoin.ByAddress(n.Signers))
+	seqKey := merkle.SimpleHashFromBinary(n.Signers)
+
 	// check the current state
-	cur, err := getSeq(store, n.seqKey)
+	cur, err := getSeq(store, seqKey)
 	if err != nil {
 		return err
 	}
 	if n.Sequence != cur+1 {
-		return errors.ErrBadNonce()
+		return errors.ErrBadNonce(n.Sequence, cur+1)
 	}
 
 	// make sure they all signed
@@ -76,7 +73,7 @@ func (n Tx) CheckIncrementSeq(ctx basecoin.Context, store state.KVStore) error {
 	}
 
 	//finally increment the sequence by 1
-	err = setSeq(store, n.seqKey, cur+1)
+	err = setSeq(store, seqKey, cur+1)
 	if err != nil {
 		return err
 	}

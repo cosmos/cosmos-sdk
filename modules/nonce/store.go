@@ -10,10 +10,10 @@ import (
 )
 
 func getSeq(store state.KVStore, key []byte) (seq uint32, err error) {
-	// fmt.Printf("load:  %X\n", key)
 	data := store.Get(key)
 	if len(data) == 0 {
-		return seq, errors.ErrNoAccount()
+		//if the key is not stored, its a new key with a sequence of zero!
+		return 0, nil
 	}
 	err = wire.ReadBinaryBytes(data, &seq)
 	if err != nil {

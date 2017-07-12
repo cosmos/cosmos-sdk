@@ -49,6 +49,24 @@ test01SendTx() {
     checkSendTx $HASH $TX_HEIGHT $SENDER "992"
 }
 
+test02SendTxWithFee() {
+    SENDER=$(getAddr $RICH)
+    RECV=$(getAddr $POOR)
+
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --sequence=2 --to=$RECV --name=$RICH)
+    txSucceeded $? "$TX" "$RECV"
+    HASH=$(echo $TX | jq .hash | tr -d \")
+    TX_HEIGHT=$(echo $TX | jq .height)
+
+    # deduct 100 from sender, add 90 to receiver... fees "vanish"
+    checkAccount $SENDER "9007199254739900"
+    checkAccount $RECV "1082"
+
+    # Make sure tx is indexed
+    # checkSendFeeTx $HASH $TX_HEIGHT $SENDER "90" "10"
+}
+
+
 # Load common then run these tests with shunit2!
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #get this files directory
 . $DIR/common.sh

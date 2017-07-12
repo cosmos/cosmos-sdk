@@ -63,7 +63,7 @@ test02SendTxWithFee() {
     checkAccount $RECV "1082"
 
     # Make sure tx is indexed
-    # checkSendFeeTx $HASH $TX_HEIGHT $SENDER "90" "10"
+    checkSendFeeTx $HASH $TX_HEIGHT $SENDER "90" "10"
 }
 
 

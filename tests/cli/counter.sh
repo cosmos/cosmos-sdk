@@ -89,6 +89,16 @@ test03AddCount() {
       assertEquals "type=cntr/count" '"cntr/count"' $(echo $CNTX | jq .type)
       assertEquals "proper fee" "10" $(echo $CNTX | jq .data.fee[0].amount)
     fi
+
+    # test again with fees...
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --countfee=7mycoin --fee=4mycoin --sequence=3 --name=${RICH} --valid)
+    txSucceeded $? "$TX" "counter"
+
+    # make sure the counter was updated, added 7
+    checkCounter "2" "17"
+
+    # make sure the account was debited 11
+    checkAccount $SENDER "9007199254739979"
 }
 
 # Load common then run these tests with shunit2!

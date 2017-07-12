@@ -18,7 +18,7 @@ func main() {
 	}
 
 	// TODO: register the counter here
-	commands.Handler = counter.NewHandler()
+	commands.Handler = counter.NewHandler("mycoin")
 
 	RootCmd.AddCommand(
 		commands.InitCmd,

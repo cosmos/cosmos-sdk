@@ -169,6 +169,30 @@ checkSendTx() {
     return $?
 }
 
+# XXX Ex Usage: checkSendFeeTx $HASH $HEIGHT $SENDER $AMOUNT $FEE
+# Desc: This is like checkSendTx, but asserts a feetx wrapper with $FEE value.
+#       This looks up the tx by hash, and makes sure the height and type match
+#       and that the first input was from this sender for this amount
+checkSendFeeTx() {
+    TX=$(${CLIENT_EXE} query tx $1)
+    assertTrue "found tx" $?
+    if [ -n "$DEBUG" ]; then echo $TX; echo; fi
+
+    assertEquals "proper height" $2 $(echo $TX | jq .height)
+    assertEquals "type=sigs/one" '"sigs/one"' $(echo $TX | jq .data.type)
+    CTX=$(echo $TX | jq .data.data.tx)
+    assertEquals "type=chain/tx" '"chain/tx"' $(echo $CTX | jq .type)
+    FTX=$(echo $CTX | jq .data.tx)
+    assertEquals "type=fee/tx" '"fee/tx"' $(echo $FTX | jq .type)
+    assertEquals "proper fee" "$5" $(echo $FTX | jq .data.fee.amount)
+    STX=$(echo $FTX | jq .data.tx)
+    assertEquals "type=coin/send" '"coin/send"' $(echo $STX | jq .type)
+    assertEquals "proper sender" "\"$3\"" $(echo $STX | jq .data.inputs[0].address.addr)
+    assertEquals "proper out amount" "$4" $(echo $STX | jq .data.outputs[0].coins[0].amount)
+    return $?
+}
+
+
 # XXX Ex Usage: waitForBlock $port
 # Desc: Waits until the block height on that node increases by one
 waitForBlock() {

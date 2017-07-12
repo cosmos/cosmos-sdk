@@ -2,6 +2,7 @@ package commands
 
 import (
 	"encoding/hex"
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -50,7 +51,7 @@ func init() {
 	flags.Int(FlagSequence, -1, "Sequence number for this transaction")
 }
 
-// runDemo is an example of how to make a tx
+// doSendTx is an example of how to make a tx
 func doSendTx(cmd *cobra.Command, args []string) error {
 	// load data from json or flags
 	var tx basecoin.Tx
@@ -65,6 +66,15 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	sendTx, ok := tx.Unwrap().(coin.SendTx)
+	if !ok {
+		return errors.New("tx not SendTx")
+	}
+	var nonceAccount []basecoin.Actor
+	for _, input := range sendTx.Inputs {
+		nonceAccount = append(nonceAccount, input.Address)
+	}
+
 	// TODO: make this more flexible for middleware
 	tx, err = WrapFeeTx(tx)
 	if err != nil {
@@ -75,8 +85,12 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// XXX - what is the nonceAccount here!!!
-	tx = nonce.NewTx(tx, viper.GetInt(FlagSequence), nonceAccount)
+	//add the nonce tx layer to the tx
+	seq := viper.GetInt(FlagSequence)
+	if seq < 0 {
+		return fmt.Errorf("sequence must be greater than 0")
+	}
+	tx = nonce.NewTx(tx, uint32(seq), nonceAccount) // XXX - what is the nonceAccount here!!!
 
 	// Note: this is single sig (no multi sig yet)
 	stx := auth.NewSig(tx)

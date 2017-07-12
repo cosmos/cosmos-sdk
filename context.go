@@ -2,6 +2,8 @@ package basecoin
 
 import (
 	"bytes"
+	"fmt"
+	"sort"
 
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
@@ -19,6 +21,7 @@ type Actor struct {
 	Address data.Bytes `json:"addr"`  // arbitrary app-specific unique id
 }
 
+// NewActor - create a new actor
 func NewActor(app string, addr []byte) Actor {
 	return Actor{App: app, Address: addr}
 }
@@ -48,3 +51,21 @@ type Context interface {
 	ChainID() string
 	BlockHeight() uint64
 }
+
+//////////////////////////////// Sort Interface
+// USAGE sort.Sort(ByAddress(<actor instance>))
+
+func (a Actor) String() string {
+	return fmt.Sprintf("%x", a.Address)
+}
+
+// ByAddress implements sort.Interface for []Actor based on
+// the Address field.
+type ByAddress []Actor
+
+// Verify the sort interface at compile time
+var _ sort.Interface = ByAddress{}
+
+func (a ByAddress) Len() int           { return len(a) }
+func (a ByAddress) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByAddress) Less(i, j int) bool { return bytes.Compare(a[i].Address, a[j].Address) == -1 }

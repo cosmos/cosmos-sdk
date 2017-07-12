@@ -36,15 +36,14 @@ func init() {
 type Tx struct {
 	Valid    bool       `json:"valid"`
 	Fee      coin.Coins `json:"fee"`
-	Sequence int        `json:"sequence"`
+	Sequence int        `json:""`
 }
 
 // NewTx - return a new counter transaction struct wrapped as a basecoin transaction
-func NewTx(valid bool, fee coin.Coins, sequence int) basecoin.Tx {
+func NewTx(valid bool, fee coin.Coins) basecoin.Tx {
 	return Tx{
-		Valid:    valid,
-		Fee:      fee,
-		Sequence: sequence,
+		Valid: valid,
+		Fee:   fee,
 	}.Wrap()
 }
 

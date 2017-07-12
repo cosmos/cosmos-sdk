@@ -8,14 +8,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/modules/fee"
+	"github.com/tendermint/basecoin/modules/nonce"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
+
+	abci "github.com/tendermint/abci/types"
 	wire "github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/log"
@@ -58,6 +60,7 @@ func (at *appTest) signTx(tx basecoin.Tx) basecoin.Tx {
 func (at *appTest) getTx(coins coin.Coins) basecoin.Tx {
 	tx := at.baseTx(coins)
 	tx = base.NewChainTx(at.chainID, 0, tx)
+	tx = nonce.NewTx(tx, 0, []basecoin.Actor{at.acctIn.Actor()})
 	return at.signTx(tx)
 }
 

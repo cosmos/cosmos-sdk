@@ -40,8 +40,8 @@ func TestCounterPlugin(t *testing.T) {
 	require.Equal(t, "Success", log)
 
 	// Deliver a CounterTx
-	DeliverCounterTx := func(valid bool, counterFee coin.Coins, inputSequence int) abci.Result {
-		tx := NewTx(valid, counterFee, inputSequence)
+	DeliverCounterTx := func(valid bool, counterFee coin.Coins) abci.Result {
+		tx := NewTx(valid, counterFee)
 		tx = base.NewChainTx(chainID, 0, tx)
 		stx := auth.NewSig(tx)
 		auth.Sign(stx, acct.Key)
@@ -49,19 +49,19 @@ func TestCounterPlugin(t *testing.T) {
 		return bcApp.DeliverTx(txBytes)
 	}
 
-	// Test a basic send, no fee (doesn't update sequence as no money spent)
-	res := DeliverCounterTx(true, nil, 1)
+	// Test a basic send, no fee
+	res := DeliverCounterTx(true, nil)
 	assert.True(res.IsOK(), res.String())
 
 	// Test an invalid send, no fee
-	res = DeliverCounterTx(false, nil, 1)
+	res = DeliverCounterTx(false, nil)
 	assert.True(res.IsErr(), res.String())
 
-	// Test the fee (increments sequence)
-	res = DeliverCounterTx(true, coin.Coins{{"gold", 100}}, 1)
+	// Test an invalid send, with supported fee
+	res = DeliverCounterTx(true, coin.Coins{{"gold", 100}})
 	assert.True(res.IsOK(), res.String())
 
 	// Test unsupported fee
-	res = DeliverCounterTx(true, coin.Coins{{"silver", 100}}, 2)
+	res = DeliverCounterTx(true, coin.Coins{{"silver", 100}})
 	assert.True(res.IsErr(), res.String())
 }

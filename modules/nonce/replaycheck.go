@@ -2,6 +2,7 @@ package nonce
 
 import (
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 )
@@ -11,8 +12,7 @@ const (
 	NameNonce = "nonce"
 )
 
-// ReplayCheck parses out go-crypto signatures and adds permissions to the
-// context for use inside the application
+// ReplayCheck uses the sequence to check for replay attacks
 type ReplayCheck struct {
 	stack.PassOption
 }
@@ -24,22 +24,42 @@ func (ReplayCheck) Name() string {
 
 var _ stack.Middleware = ReplayCheck{}
 
-// CheckTx verifies the signatures are correct - fulfills Middlware interface
-func (ReplayCheck) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
-	sigs, tnext, err := getSigners(tx)
+// CheckTx verifies tx is not being replayed - fulfills Middlware interface
+func (r ReplayCheck) CheckTx(ctx basecoin.Context, store state.KVStore,
+	tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+
+	stx, err := r.checkNonceTx(ctx, store, tx)
 	if err != nil {
 		return res, err
 	}
-	ctx2 := addSigners(ctx, sigs)
-	return next.CheckTx(ctx2, store, tnext)
+	return next.CheckTx(ctx, store, stx)
 }
 
-// DeliverTx verifies the signatures are correct - fulfills Middlware interface
-func (ReplayCheck) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
-	sigs, tnext, err := getSigners(tx)
+// DeliverTx verifies tx is not being replayed - fulfills Middlware interface
+func (r ReplayCheck) DeliverTx(ctx basecoin.Context, store state.KVStore,
+	tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+
+	stx, err := r.checkNonceTx(ctx, store, tx)
 	if err != nil {
 		return res, err
 	}
-	ctx2 := addSigners(ctx, sigs)
-	return next.DeliverTx(ctx2, store, tnext)
+	return next.DeliverTx(ctx, store, stx)
+}
+
+// checkNonceTx varifies the nonce sequence
+func (r ReplayCheck) checkNonceTx(ctx basecoin.Context, store state.KVStore,
+	tx basecoin.Tx) (basecoin.Tx, error) {
+
+	// make sure it is a the nonce Tx (Tx from this package)
+	nonceTx, ok := tx.Unwrap().(Tx)
+	if !ok {
+		return tx, errors.ErrNoNonce()
+	}
+
+	// check the nonce sequence number
+	err := nonceTx.CheckIncrementSeq(ctx, store)
+	if err != nil {
+		return tx, err
+	}
+	return nonceTx.Tx, nil
 }

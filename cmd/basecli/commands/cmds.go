@@ -125,9 +125,8 @@ func readSendTxFlags() (tx basecoin.Tx, err error) {
 
 	// craft the inputs and outputs
 	ins := []coin.TxInput{{
-		Address:  fromAddr,
-		Coins:    amountCoins,
-		Sequence: viper.GetInt(FlagSequence),
+		Address: fromAddr,
+		Coins:   amountCoins,
 	}}
 	outs := []coin.TxOutput{{
 		Address: toAddr,

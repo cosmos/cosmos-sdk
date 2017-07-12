@@ -47,8 +47,8 @@ func IsUnknownTxTypeErr(err error) bool {
 	return IsSameError(errUnknownTxType, err)
 }
 
-func ErrInvalidFormat(tx interface{}) TMError {
-	msg := fmt.Sprintf("%T", unwrap(tx))
+func ErrInvalidFormat(expected string, tx interface{}) TMError {
+	msg := fmt.Sprintf("%T not %s", unwrap(tx), expected)
 	w := errors.Wrap(errInvalidFormat, msg)
 	return WithCode(w, abci.CodeType_UnknownRequest)
 }

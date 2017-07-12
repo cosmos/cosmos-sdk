@@ -15,8 +15,8 @@ func makeHandler() basecoin.Handler {
 	return NewHandler()
 }
 
-func makeSimpleTx(from, to basecoin.Actor, amount Coins, seq int) basecoin.Tx {
-	in := []TxInput{{Address: from, Coins: amount, Sequence: seq}}
+func makeSimpleTx(from, to basecoin.Actor, amount Coins) basecoin.Tx {
+	in := []TxInput{{Address: from, Coins: amount}}
 	out := []TxOutput{{Address: to, Coins: amount}}
 	return NewSendTx(in, out)
 }
@@ -35,7 +35,7 @@ func BenchmarkSimpleTransfer(b *testing.B) {
 	// now, loop...
 	for i := 1; i <= b.N; i++ {
 		ctx := stack.MockContext("foo", 100).WithPermissions(sender)
-		tx := makeSimpleTx(sender, receiver, Coins{{"mycoin", 2}}, i)
+		tx := makeSimpleTx(sender, receiver, Coins{{"mycoin", 2}})
 		_, err := h.DeliverTx(ctx, store, tx)
 		// never should error
 		if err != nil {

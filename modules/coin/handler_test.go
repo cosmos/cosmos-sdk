@@ -35,40 +35,40 @@ func TestHandlerValidation(t *testing.T) {
 		// auth works with different apps
 		{true,
 			NewSendTx(
-				[]TxInput{NewTxInput(addr1, someCoins, 2)},
+				[]TxInput{NewTxInput(addr1, someCoins)},
 				[]TxOutput{NewTxOutput(addr2, someCoins)}),
 			[]basecoin.Actor{addr1}},
 		{true,
 			NewSendTx(
-				[]TxInput{NewTxInput(addr2, someCoins, 2)},
+				[]TxInput{NewTxInput(addr2, someCoins)},
 				[]TxOutput{NewTxOutput(addr1, someCoins)}),
 			[]basecoin.Actor{addr1, addr2}},
 		// check multi-input with both sigs
 		{true,
 			NewSendTx(
-				[]TxInput{NewTxInput(addr1, someCoins, 2), NewTxInput(addr2, someCoins, 3)},
+				[]TxInput{NewTxInput(addr1, someCoins), NewTxInput(addr2, someCoins)},
 				[]TxOutput{NewTxOutput(addr1, doubleCoins)}),
 			[]basecoin.Actor{addr1, addr2}},
 		// wrong permissions fail
 		{false,
 			NewSendTx(
-				[]TxInput{NewTxInput(addr1, someCoins, 2)},
+				[]TxInput{NewTxInput(addr1, someCoins)},
 				[]TxOutput{NewTxOutput(addr2, someCoins)}),
 			[]basecoin.Actor{}},
 		{false,
 			NewSendTx(
-				[]TxInput{NewTxInput(addr1, someCoins, 2)},
+				[]TxInput{NewTxInput(addr1, someCoins)},
 				[]TxOutput{NewTxOutput(addr2, someCoins)}),
 			[]basecoin.Actor{addr2}},
 		{false,
 			NewSendTx(
-				[]TxInput{NewTxInput(addr1, someCoins, 2), NewTxInput(addr2, someCoins, 3)},
+				[]TxInput{NewTxInput(addr1, someCoins), NewTxInput(addr2, someCoins)},
 				[]TxOutput{NewTxOutput(addr1, doubleCoins)}),
 			[]basecoin.Actor{addr1}},
 		// invalid input fails
 		{false,
 			NewSendTx(
-				[]TxInput{NewTxInput(addr1, minusCoins, 2)},
+				[]TxInput{NewTxInput(addr1, minusCoins)},
 				[]TxOutput{NewTxOutput(addr2, minusCoins)}),
 			[]basecoin.Actor{addr2}},
 	}
@@ -113,7 +113,7 @@ func TestDeliverTx(t *testing.T) {
 		{
 			[]money{{addr1, moreCoins}},
 			NewSendTx(
-				[]TxInput{NewTxInput(addr1, someCoins, 1)},
+				[]TxInput{NewTxInput(addr1, someCoins)},
 				[]TxOutput{NewTxOutput(addr2, someCoins)}),
 			[]basecoin.Actor{addr1},
 			[]money{{addr1, diffCoins}, {addr2, someCoins}},
@@ -122,7 +122,7 @@ func TestDeliverTx(t *testing.T) {
 		{
 			[]money{{addr1, mixedCoins}, {addr2, moreCoins}},
 			NewSendTx(
-				[]TxInput{NewTxInput(addr1, otherCoins, 1), NewTxInput(addr2, someCoins, 1)},
+				[]TxInput{NewTxInput(addr1, otherCoins), NewTxInput(addr2, someCoins)},
 				[]TxOutput{NewTxOutput(addr3, mixedCoins)}),
 			[]basecoin.Actor{addr1, addr2},
 			[]money{{addr1, someCoins}, {addr2, diffCoins}, {addr3, mixedCoins}},
@@ -131,7 +131,7 @@ func TestDeliverTx(t *testing.T) {
 		{
 			[]money{{addr1, moreCoins.Plus(otherCoins)}},
 			NewSendTx(
-				[]TxInput{NewTxInput(addr1, otherCoins, 1), NewTxInput(addr1, someCoins, 2)},
+				[]TxInput{NewTxInput(addr1, otherCoins), NewTxInput(addr1, someCoins)},
 				[]TxOutput{NewTxOutput(addr2, mixedCoins)}),
 			[]basecoin.Actor{addr1},
 			[]money{{addr1, diffCoins}, {addr2, mixedCoins}},

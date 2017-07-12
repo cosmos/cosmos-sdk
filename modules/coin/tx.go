@@ -20,9 +20,8 @@ const (
 
 // TxInput - expected coin movement outputs, used with SendTx
 type TxInput struct {
-	Address  basecoin.Actor `json:"address"`
-	Coins    Coins          `json:"coins"`
-	Sequence int            `json:"sequence"` // Nonce: Must be 1 greater than the last committed TxInput
+	Address basecoin.Actor `json:"address"`
+	Coins   Coins          `json:"coins"`
 }
 
 // ValidateBasic - validate transaction input
@@ -40,22 +39,18 @@ func (txIn TxInput) ValidateBasic() error {
 	if !txIn.Coins.IsPositive() {
 		return ErrInvalidCoins()
 	}
-	if txIn.Sequence <= 0 {
-		return ErrInvalidSequence()
-	}
 	return nil
 }
 
 func (txIn TxInput) String() string {
-	return fmt.Sprintf("TxInput{%v,%v,%v}", txIn.Address, txIn.Coins, txIn.Sequence)
+	return fmt.Sprintf("TxInput{%v,%v}", txIn.Address, txIn.Coins)
 }
 
 // NewTxInput - create a transaction input, used with SendTx
-func NewTxInput(addr basecoin.Actor, coins Coins, sequence int) TxInput {
+func NewTxInput(addr basecoin.Actor, coins Coins) TxInput {
 	input := TxInput{
-		Address:  addr,
-		Coins:    coins,
-		Sequence: sequence,
+		Address: addr,
+		Coins:   coins,
 	}
 	return input
 }
@@ -110,8 +105,16 @@ type SendTx struct {
 
 var _ basecoin.Tx = NewSendTx(nil, nil)
 
-// NewSendTx - new SendTx
+// NewSendTx - construct arbitrary multi-in, multi-out sendtx
 func NewSendTx(in []TxInput, out []TxOutput) basecoin.Tx {
+	return SendTx{Inputs: in, Outputs: out}.Wrap()
+}
+
+// NewSendOneTx is a helper for the standard (?) case where there is exactly
+// one sender and one recipient
+func NewSendOneTx(sender, recipient basecoin.Actor, amount Coins) basecoin.Tx {
+	in := []TxInput{{Address: sender, Coins: amount}}
+	out := []TxOutput{{Address: recipient, Coins: amount}}
 	return SendTx{Inputs: in, Outputs: out}.Wrap()
 }
 

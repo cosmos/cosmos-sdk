@@ -145,7 +145,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 		if len(senders) == 0 {
 			return res, errors.ErrMissingSignature()
 		}
-		in := []coin.TxInput{{Address: senders[0], Coins: ctr.Fee, Sequence: ctr.Sequence}}
+		in := []coin.TxInput{{Address: senders[0], Coins: ctr.Fee}}
 		out := []coin.TxOutput{{Address: StoreActor(), Coins: ctr.Fee}}
 		send := coin.NewSendTx(in, out)
 		// if the deduction fails (too high), abort the command
@@ -170,7 +170,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 func checkTx(ctx basecoin.Context, tx basecoin.Tx) (ctr Tx, err error) {
 	ctr, ok := tx.Unwrap().(Tx)
 	if !ok {
-		return ctr, errors.ErrInvalidFormat(tx)
+		return ctr, errors.ErrInvalidFormat(TypeTx, tx)
 	}
 	err = ctr.ValidateBasic()
 	if err != nil {

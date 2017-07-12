@@ -46,26 +46,14 @@ var coins = []struct {
 func TestTxValidateInput(t *testing.T) {
 	assert := assert.New(t)
 
-	seqs := []struct {
-		seq   int
-		valid bool
-	}{
-		{-3, false},
-		{0, false},
-		{1, true},
-		{6571265735, true},
-	}
-
 	for i, act := range actors {
 		for j, coin := range coins {
-			for k, seq := range seqs {
-				input := NewTxInput(act.actor, coin.coins, seq.seq)
-				err := input.ValidateBasic()
-				if act.valid && coin.valid && seq.valid {
-					assert.Nil(err, "%d,%d,%d: %+v", i, j, k, err)
-				} else {
-					assert.NotNil(err, "%d,%d,%d", i, j, k)
-				}
+			input := NewTxInput(act.actor, coin.coins)
+			err := input.ValidateBasic()
+			if act.valid && coin.valid {
+				assert.Nil(err, "%d,%d: %+v", i, j, err)
+			} else {
+				assert.NotNil(err, "%d,%d", i, j)
 			}
 		}
 	}
@@ -111,15 +99,15 @@ func TestTxValidateTx(t *testing.T) {
 	}{
 		// 0-2. valid cases
 		{true, NewSendTx(
-			[]TxInput{NewTxInput(addr1, someCoins, 2)},
+			[]TxInput{NewTxInput(addr1, someCoins)},
 			[]TxOutput{NewTxOutput(addr2, someCoins)},
 		)},
 		{true, NewSendTx(
-			[]TxInput{NewTxInput(addr1, someCoins, 2), NewTxInput(addr2, otherCoins, 5)},
+			[]TxInput{NewTxInput(addr1, someCoins), NewTxInput(addr2, otherCoins)},
 			[]TxOutput{NewTxOutput(addr3, bothCoins)},
 		)},
 		{true, NewSendTx(
-			[]TxInput{NewTxInput(addr1, bothCoins, 42)},
+			[]TxInput{NewTxInput(addr1, bothCoins)},
 			[]TxOutput{NewTxOutput(addr2, someCoins), NewTxOutput(addr3, otherCoins)},
 		)},
 
@@ -129,39 +117,35 @@ func TestTxValidateTx(t *testing.T) {
 			[]TxOutput{NewTxOutput(addr2, someCoins)},
 		)},
 		{false, NewSendTx(
-			[]TxInput{NewTxInput(addr1, someCoins, 2)},
+			[]TxInput{NewTxInput(addr1, someCoins)},
 			nil,
 		)},
 
-		// 5-8. invalid inputs
+		// 5-7. invalid inputs
 		{false, NewSendTx(
-			[]TxInput{NewTxInput(noAddr, someCoins, 2)},
+			[]TxInput{NewTxInput(noAddr, someCoins)},
 			[]TxOutput{NewTxOutput(addr2, someCoins)},
 		)},
 		{false, NewSendTx(
-			[]TxInput{NewTxInput(addr1, someCoins, -1)},
-			[]TxOutput{NewTxOutput(addr2, someCoins)},
-		)},
-		{false, NewSendTx(
-			[]TxInput{NewTxInput(addr1, noCoins, 2)},
+			[]TxInput{NewTxInput(addr1, noCoins)},
 			[]TxOutput{NewTxOutput(addr2, noCoins)},
 		)},
 		{false, NewSendTx(
-			[]TxInput{NewTxInput(addr1, minusCoins, 2)},
+			[]TxInput{NewTxInput(addr1, minusCoins)},
 			[]TxOutput{NewTxOutput(addr2, minusCoins)},
 		)},
 
-		// 9-11. totals don't match
+		// 8-10. totals don't match
 		{false, NewSendTx(
-			[]TxInput{NewTxInput(addr1, someCoins, 7)},
+			[]TxInput{NewTxInput(addr1, someCoins)},
 			[]TxOutput{NewTxOutput(addr2, moreCoins)},
 		)},
 		{false, NewSendTx(
-			[]TxInput{NewTxInput(addr1, someCoins, 2), NewTxInput(addr2, minusCoins, 5)},
+			[]TxInput{NewTxInput(addr1, someCoins), NewTxInput(addr2, minusCoins)},
 			[]TxOutput{NewTxOutput(addr3, someCoins)},
 		)},
 		{false, NewSendTx(
-			[]TxInput{NewTxInput(addr1, someCoins, 2), NewTxInput(addr2, moreCoins, 5)},
+			[]TxInput{NewTxInput(addr1, someCoins), NewTxInput(addr2, moreCoins)},
 			[]TxOutput{NewTxOutput(addr3, bothCoins)},
 		)},
 	}
@@ -185,7 +169,7 @@ func TestTxSerializeTx(t *testing.T) {
 	someCoins := Coins{{"atom", 123}}
 
 	send := NewSendTx(
-		[]TxInput{NewTxInput(addr1, someCoins, 2)},
+		[]TxInput{NewTxInput(addr1, someCoins)},
 		[]TxOutput{NewTxOutput(addr2, someCoins)},
 	)
 

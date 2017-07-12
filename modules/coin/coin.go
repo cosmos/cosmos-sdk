@@ -16,8 +16,21 @@ type Coin struct {
 	Amount int64  `json:"amount"`
 }
 
+// String provides a human-readable representation of a coin
 func (coin Coin) String() string {
 	return fmt.Sprintf("%v%v", coin.Amount, coin.Denom)
+}
+
+// IsZero returns if this represents no money
+func (coin Coin) IsZero() bool {
+	return coin.Amount == 0
+}
+
+// IsGTE returns true if they are the same type and the receiver is
+// an equal or greater value
+func (coin Coin) IsGTE(other Coin) bool {
+	return (coin.Denom == other.Denom) &&
+		(coin.Amount >= other.Amount)
 }
 
 //regex codes for extracting coins from string

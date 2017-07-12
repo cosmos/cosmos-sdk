@@ -46,14 +46,22 @@ func (n Tx) Wrap() basecoin.Tx {
 	return basecoin.Tx{n}
 }
 func (n Tx) ValidateBasic() error {
+	// rigel: check if Sequence ==  0, len(Signers) == 0, or Tx.Empty()
+	// these are all invalid, regardless of the state
+	// (also add max sequence number to prevent overflow?)
 	return n.Tx.ValidateBasic()
 }
 
 // CheckIncrementSeq - XXX fill in
 func (n Tx) CheckIncrementSeq(ctx basecoin.Context, store state.KVStore) error {
 
+	// rigel: nice with the sort, problem is this modifies the TX in place...
+	// if we reserialize the tx after this function, it will be a different
+	// representations... copy n.Signers before sorting them please
+
 	//Generate the sequence key as the hash of the list of signers, sorted by address
 	sort.Sort(basecoin.ByAddress(n.Signers))
+	// rigel: nice sort, no need for a merkle hash... something simpler also works
 	seqKey := merkle.SimpleHashFromBinary(n.Signers)
 
 	// check the current state
@@ -71,6 +79,10 @@ func (n Tx) CheckIncrementSeq(ctx basecoin.Context, store state.KVStore) error {
 			return errors.ErrNotMember()
 		}
 	}
+
+	// rigel: this should be separate.  we check the sequence on CheckTx and DeliverTx
+	// BEFORE we execute the wrapped tx.
+	// we increment the sequence in DeliverTx AFTER it returns success (not on error)
 
 	//finally increment the sequence by 1
 	err = setSeq(store, seqKey, cur+1)

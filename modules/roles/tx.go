@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/basecoin/errors"
 )
 
-const (
+var (
 	// MaxMembers it the maximum number of members in a Role.  Used to avoid
 	// extremely large roles.
 	// Value is arbitrary, please adjust as needed

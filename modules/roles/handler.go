@@ -28,8 +28,13 @@ func (Handler) Name() string {
 
 // CheckTx verifies if the transaction is properly formated
 func (h Handler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
-	_, err = checkTx(ctx, tx)
-	return res, err
+	var cr CreateRoleTx
+	cr, err = checkTx(ctx, tx)
+	if err != nil {
+		return
+	}
+	err = checkNoRole(store, cr.Role)
+	return
 }
 
 // DeliverTx tries to create a new role.

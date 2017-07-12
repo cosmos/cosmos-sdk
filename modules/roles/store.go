@@ -68,10 +68,17 @@ func loadRole(store state.KVStore, key []byte) (role Role, err error) {
 	return role, nil
 }
 
-// we only have create here, no update, since we don't allow update yet
-func createRole(store state.KVStore, key []byte, role Role) error {
+func checkNoRole(store state.KVStore, key []byte) error {
 	if _, err := loadRole(store, key); !IsNoRoleErr(err) {
 		return ErrRoleExists()
+	}
+	return nil
+}
+
+// we only have create here, no update, since we don't allow update yet
+func createRole(store state.KVStore, key []byte, role Role) error {
+	if err := checkNoRole(store, key); err != nil {
+		return err
 	}
 	bin := wire.BinaryBytes(role)
 	store.Set(key, bin)

@@ -13,6 +13,7 @@ import (
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
+	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 	wire "github.com/tendermint/go-wire"
 	eyes "github.com/tendermint/merkleeyes/client"
@@ -81,8 +82,9 @@ func (at *appTest) reset() {
 	require.True(at.t, resabci.IsOK(), resabci)
 }
 
-func getBalance(key basecoin.Actor, state state.KVStore) (coin.Coins, error) {
-	acct, err := coin.NewAccountant("").GetAccount(state, key)
+func getBalance(key basecoin.Actor, store state.KVStore) (coin.Coins, error) {
+	cspace := stack.PrefixedStore(coin.NameCoin, store)
+	acct, err := coin.GetAccount(cspace, key)
 	return acct.Coins, err
 }
 

@@ -18,14 +18,19 @@ const (
 
 //nolint
 const (
-	ByteRawTx  = 0x1
-	TypeRawTx  = "raw"
+	ByteRawTx   = 0xF0
+	ByteCheckTx = 0xF1
+
+	TypeRawTx   = "raw"
+	TypeCheckTx = NameCheck + "/tx"
+
 	rawMaxSize = 2000 * 1000
 )
 
 func init() {
 	basecoin.TxMapper.
-		RegisterImplementation(RawTx{}, TypeRawTx, ByteRawTx)
+		RegisterImplementation(RawTx{}, TypeRawTx, ByteRawTx).
+		RegisterImplementation(CheckTx{}, TypeCheckTx, ByteCheckTx)
 }
 
 // RawTx just contains bytes that can be hex-ified
@@ -46,6 +51,24 @@ func (r RawTx) ValidateBasic() error {
 	if len(r.Bytes) > rawMaxSize {
 		return errors.ErrTooLarge()
 	}
+	return nil
+}
+
+// CheckTx contains a list of permissions to be tested
+type CheckTx struct {
+	Required []basecoin.Actor
+}
+
+var _ basecoin.TxInner = CheckTx{}
+
+// nolint
+func NewCheckTx(req []basecoin.Actor) basecoin.Tx {
+	return CheckTx{req}.Wrap()
+}
+func (c CheckTx) Wrap() basecoin.Tx {
+	return basecoin.Tx{c}
+}
+func (CheckTx) ValidateBasic() error {
 	return nil
 }
 
@@ -147,4 +170,37 @@ func (p PanicHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx ba
 		panic(p.Err)
 	}
 	panic(p.Msg)
+}
+
+// CheckHandler accepts CheckTx and verifies the permissions
+type CheckHandler struct {
+	basecoin.NopOption
+}
+
+var _ basecoin.Handler = CheckHandler{}
+
+// Name - return handler's name
+func (CheckHandler) Name() string {
+	return NameCheck
+}
+
+// CheckTx verifies the permissions
+func (c CheckHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	check, ok := tx.Unwrap().(CheckTx)
+	if !ok {
+		return res, errors.ErrUnknownTxType(tx)
+	}
+
+	for _, perm := range check.Required {
+		if !ctx.HasPermission(perm) {
+			return res, errors.ErrUnauthorized()
+		}
+	}
+	return res, nil
+}
+
+// DeliverTx verifies the permissions
+func (c CheckHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+	// until something changes, just do the same as check
+	return c.CheckTx(ctx, store, tx)
 }

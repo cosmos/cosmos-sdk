@@ -195,7 +195,7 @@ type State struct {
 
 // StateKey - store key for the counter state
 func StateKey() []byte {
-	return []byte(NameCounter + "/state")
+	return []byte("state")
 }
 
 // LoadState - retrieve the counter state from the store

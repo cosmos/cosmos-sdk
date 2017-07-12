@@ -69,8 +69,14 @@ func (d *Dispatcher) CheckTx(ctx basecoin.Context, store state.KVStore, tx basec
 	if err != nil {
 		return res, err
 	}
-	// TODO: check on callback
-	cb := d
+
+	// make sure no monkey business with the context
+	cb := secureCheck(d, ctx)
+
+	// and isolate the permissions and the data store for this app
+	ctx = withApp(ctx, r.Name())
+	store = stateSpace(store, r.Name())
+
 	return r.CheckTx(ctx, store, tx, cb)
 }
 
@@ -84,8 +90,14 @@ func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store state.KVStore, tx bas
 	if err != nil {
 		return res, err
 	}
-	// TODO: check on callback
-	cb := d
+
+	// make sure no monkey business with the context
+	cb := secureDeliver(d, ctx)
+
+	// and isolate the permissions and the data store for this app
+	ctx = withApp(ctx, r.Name())
+	store = stateSpace(store, r.Name())
+
 	return r.DeliverTx(ctx, store, tx, cb)
 }
 
@@ -98,8 +110,12 @@ func (d *Dispatcher) SetOption(l log.Logger, store state.KVStore, module, key, v
 	if err != nil {
 		return "", err
 	}
-	// TODO: check on callback
+
+	// no ctx, so secureCheck not needed
 	cb := d
+	// but isolate data space
+	store = stateSpace(store, r.Name())
+
 	return r.SetOption(l, store, module, key, value, cb)
 }
 

@@ -1,8 +1,6 @@
 package coin
 
 import (
-	"fmt"
-
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
 
@@ -16,17 +14,13 @@ import (
 const NameCoin = "coin"
 
 // Handler includes an accountant
-type Handler struct {
-	Accountant
-}
+type Handler struct{}
 
 var _ basecoin.Handler = Handler{}
 
 // NewHandler - new accountant handler for the coin module
 func NewHandler() Handler {
-	return Handler{
-		Accountant: NewAccountant(""),
-	}
+	return Handler{}
 }
 
 // Name - return name space
@@ -43,7 +37,7 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.
 
 	// now make sure there is money
 	for _, in := range send.Inputs {
-		_, err = h.CheckCoins(store, in.Address, in.Coins.Negative(), in.Sequence)
+		_, err = CheckCoins(store, in.Address, in.Coins.Negative(), in.Sequence)
 		if err != nil {
 			return res, err
 		}
@@ -62,7 +56,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 
 	// deduct from all input accounts
 	for _, in := range send.Inputs {
-		_, err = h.ChangeCoins(store, in.Address, in.Coins.Negative(), in.Sequence)
+		_, err = ChangeCoins(store, in.Address, in.Coins.Negative(), in.Sequence)
 		if err != nil {
 			return res, err
 		}
@@ -71,7 +65,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 	// add to all output accounts
 	for _, out := range send.Outputs {
 		// note: sequence number is ignored when adding coins, only checked for subtracting
-		_, err = h.ChangeCoins(store, out.Address, out.Coins, 0)
+		_, err = ChangeCoins(store, out.Address, out.Coins, 0)
 		if err != nil {
 			return res, err
 		}
@@ -99,15 +93,14 @@ func (h Handler) SetOption(l log.Logger, store state.KVStore, module, key, value
 		}
 		// this sets the permission for a public key signature, use that app
 		actor := auth.SigPerm(addr)
-		err = storeAccount(store, h.MakeKey(actor), acc.ToAccount())
+		err = storeAccount(store, actor.Bytes(), acc.ToAccount())
 		if err != nil {
 			return "", err
 		}
 		return "Success", nil
 
 	}
-	msg := fmt.Sprintf("Unknown key: %s", key)
-	return "", errors.ErrInternal(msg)
+	return "", errors.ErrUnknownKey(key)
 }
 
 func checkTx(ctx basecoin.Context, tx basecoin.Tx) (send SendTx, err error) {

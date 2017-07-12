@@ -14,6 +14,21 @@ var (
 	MaxMembers = 20
 )
 
+//nolint
+const (
+	ByteAssumeRoleTx = 0x23
+	ByteCreateRoleTx = 0x24
+
+	TypeAssumeRoleTx = NameRole + "/assume" // no prefix needed as it is middleware
+	TypeCreateRoleTx = NameRole + "/create" // prefix needed for dispatcher
+)
+
+func init() {
+	basecoin.TxMapper.
+		RegisterImplementation(AssumeRoleTx{}, TypeAssumeRoleTx, ByteAssumeRoleTx).
+		RegisterImplementation(CreateRoleTx{}, TypeCreateRoleTx, ByteCreateRoleTx)
+}
+
 // AssumeRoleTx is a layered tx that can wrap your normal tx to give it
 // the authority to use a given role.
 type AssumeRoleTx struct {

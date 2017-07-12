@@ -77,6 +77,7 @@ func TestCheck(t *testing.T) {
 		valid             bool
 		signers, required []basecoin.Actor
 	}{
+		{true, nil, nil},
 		{true, []basecoin.Actor{a}, []basecoin.Actor{a}},
 		{true, []basecoin.Actor{a, b}, []basecoin.Actor{a}},
 		{false, []basecoin.Actor{a}, []basecoin.Actor{a, b}},

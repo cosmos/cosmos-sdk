@@ -174,8 +174,10 @@ func (p PanicHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx ba
 
 // CheckHandler accepts CheckTx and verifies the permissions
 type CheckHandler struct {
-	PassOption
+	basecoin.NopOption
 }
+
+var _ basecoin.Handler = CheckHandler{}
 
 // Name - return handler's name
 func (CheckHandler) Name() string {

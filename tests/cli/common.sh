@@ -161,6 +161,7 @@ checkSendTx() {
     assertEquals "proper height" $2 $(echo $TX | jq .height)
     assertEquals "type=sigs/one" '"sigs/one"' $(echo $TX | jq .data.type)
     CTX=$(echo $TX | jq .data.data.tx)
+    assertEquals "type=nonce" '"nonce"' $(echo $CTX | jq .type)
     assertEquals "type=chain/tx" '"chain/tx"' $(echo $CTX | jq .type)
     STX=$(echo $CTX | jq .data.tx)
     assertEquals "type=coin/send" '"coin/send"' $(echo $STX | jq .type)

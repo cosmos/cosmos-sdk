@@ -15,12 +15,15 @@ var (
 	errUnauthorized      = fmt.Errorf("Unauthorized")
 	errInvalidSignature  = fmt.Errorf("Invalid Signature")
 	errTooLarge          = fmt.Errorf("Input size too large")
+	errNoSigners         = fmt.Errorf("There are no signers")
 	errMissingSignature  = fmt.Errorf("Signature missing")
 	errTooManySignatures = fmt.Errorf("Too many signatures")
 	errNoChain           = fmt.Errorf("No chain id provided")
 	errNoNonce           = fmt.Errorf("Tx doesn't contain nonce")
 	errNotMember         = fmt.Errorf("nonce contains non-permissioned member")
-	errBadNonce          = fmt.Errorf("Bad nonce seqence")
+	errBadNonce          = fmt.Errorf("Bad nonce sequence")
+	errTxEmpty           = fmt.Errorf("The provided Tx is empty")
+	errZeroSequence      = fmt.Errorf("Sequence number cannot be zero")
 	errWrongChain        = fmt.Errorf("Wrong chain for tx")
 	errUnknownTxType     = fmt.Errorf("Tx type unknown")
 	errInvalidFormat     = fmt.Errorf("Invalid format")
@@ -107,6 +110,10 @@ func IsUnauthorizedErr(err error) bool {
 	return HasErrorCode(err, unauthorized)
 }
 
+func ErrNoSigners() TMError {
+	return WithCode(errNoSigners, unauthorized)
+}
+
 func ErrMissingSignature() TMError {
 	return WithCode(errMissingSignature, unauthorized)
 }
@@ -139,10 +146,18 @@ func ErrNoNonce() TMError {
 	return WithCode(errNoNonce, unauthorized)
 }
 func ErrBadNonce(got, expected uint32) TMError {
-	return WithCode(fmt.Errorf("Bad nonce seqence, got %d, expected %d", got, expected), unauthorized)
+	return WithCode(fmt.Errorf("Bad nonce sequence, got %d, expected %d", got, expected), unauthorized)
 }
 func ErrNotMember() TMError {
 	return WithCode(errBadNonce, unauthorized)
+}
+
+func ErrZeroSequence() TMError {
+	return WithCode(errZeroSequence, unauthorized)
+}
+
+func ErrTxEmpty() TMError {
+	return WithCode(errTxEmpty, unauthorized)
 }
 
 func ErrWrongChain(chain string) TMError {

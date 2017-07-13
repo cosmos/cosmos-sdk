@@ -1,5 +1,9 @@
 /*
-Package nonce XXX
+Package nonce - This module allows replay protection to be added to process stack.
+This is achieved through the use of a sequence number for each unique set of signers.
+Note that the sequence number for the single signing account "foo" will be unique
+from the sequence number for a multi-sig account {"foo", "bar"} which would also be
+unique from a different multi-sig account {"foo", "soup"}
 */
 package nonce
 
@@ -9,8 +13,6 @@ import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/state"
-
-	"github.com/tendermint/tmlibs/merkle"
 )
 
 // nolint
@@ -23,7 +25,7 @@ func init() {
 	basecoin.TxMapper.RegisterImplementation(Tx{}, TypeNonce, ByteNonce)
 }
 
-// Tx - XXX fill in
+// Tx - Nonce transaction structure, contains list of signers and current sequence number
 type Tx struct {
 	Sequence uint32           `json:"sequence"`
 	Signers  []basecoin.Actor `json:"signers"`
@@ -46,23 +48,22 @@ func (n Tx) Wrap() basecoin.Tx {
 	return basecoin.Tx{n}
 }
 func (n Tx) ValidateBasic() error {
-	// rigel: check if Sequence ==  0, len(Signers) == 0, or Tx.Empty()
-	// these are all invalid, regardless of the state
-	// (also add max sequence number to prevent overflow?)
+	switch {
+	case n.Tx.Empty():
+		return errors.ErrTxEmpty()
+	case n.Sequence == 0:
+		return errors.ErrZeroSequence()
+	case len(n.Signers) == 0:
+		return errors.ErrNoSigners()
+	}
 	return n.Tx.ValidateBasic()
 }
 
-// CheckIncrementSeq - XXX fill in
-func (n Tx) CheckIncrementSeq(ctx basecoin.Context, store state.KVStore) error {
+// CheckSeq - Check that the sequence number is one more than the state sequence number
+// and further increment the sequence number
+func (n Tx) CheckSeq(ctx basecoin.Context, store state.KVStore) error {
 
-	// rigel: nice with the sort, problem is this modifies the TX in place...
-	// if we reserialize the tx after this function, it will be a different
-	// representations... copy n.Signers before sorting them please
-
-	//Generate the sequence key as the hash of the list of signers, sorted by address
-	sort.Sort(basecoin.ByAddress(n.Signers))
-	// rigel: nice sort, no need for a merkle hash... something simpler also works
-	seqKey := merkle.SimpleHashFromBinary(n.Signers)
+	seqKey := n.getSeqKey()
 
 	// check the current state
 	cur, err := getSeq(store, seqKey)
@@ -79,16 +80,40 @@ func (n Tx) CheckIncrementSeq(ctx basecoin.Context, store state.KVStore) error {
 			return errors.ErrNotMember()
 		}
 	}
+	return nil
+}
 
-	// rigel: this should be separate.  we check the sequence on CheckTx and DeliverTx
-	// BEFORE we execute the wrapped tx.
-	// we increment the sequence in DeliverTx AFTER it returns success (not on error)
+// IncrementSeq - increment the sequence for a group of actors
+func (n Tx) IncrementSeq(ctx basecoin.Context, store state.KVStore) error {
 
-	//finally increment the sequence by 1
+	seqKey := n.getSeqKey()
+
+	// check the current state
+	cur, err := getSeq(store, seqKey)
+	if err != nil {
+		return err
+	}
+
+	// increment the sequence by 1
 	err = setSeq(store, seqKey, cur+1)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// Generate the sequence key as the concatenated list of signers, sorted by address.
+func (n Tx) getSeqKey() (seqKey []byte) {
+
+	// First copy the list of signers to sort as sort is done in place
+	signers2sort := make([]basecoin.Actor, len(n.Signers))
+	copy(signers2sort, n.Signers)
+	sort.Sort(basecoin.ByAddress(n.Signers))
+
+	for _, signer := range n.Signers {
+		seqKey = append(seqKey, signer.Address...)
+	}
+	//seqKey = merkle.SimpleHashFromBinary(n.Signers)
+	return
 }

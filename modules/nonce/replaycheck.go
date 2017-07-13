@@ -32,7 +32,17 @@ func (r ReplayCheck) CheckTx(ctx basecoin.Context, store state.KVStore,
 	if err != nil {
 		return res, err
 	}
-	return next.CheckTx(ctx, store, stx)
+
+	res, err = next.CheckTx(ctx, store, stx)
+	if err != nil {
+		return res, err
+	}
+
+	err = r.incrementNonceTx(ctx, store, tx)
+	if err != nil {
+		return res, err
+	}
+	return
 }
 
 // DeliverTx verifies tx is not being replayed - fulfills Middlware interface
@@ -43,7 +53,17 @@ func (r ReplayCheck) DeliverTx(ctx basecoin.Context, store state.KVStore,
 	if err != nil {
 		return res, err
 	}
-	return next.DeliverTx(ctx, store, stx)
+
+	res, err = next.DeliverTx(ctx, store, stx)
+	if err != nil {
+		return res, err
+	}
+
+	err = r.incrementNonceTx(ctx, store, tx)
+	if err != nil {
+		return res, err
+	}
+	return
 }
 
 // checkNonceTx varifies the nonce sequence
@@ -57,9 +77,27 @@ func (r ReplayCheck) checkNonceTx(ctx basecoin.Context, store state.KVStore,
 	}
 
 	// check the nonce sequence number
-	err := nonceTx.CheckIncrementSeq(ctx, store)
+	err := nonceTx.CheckSeq(ctx, store)
 	if err != nil {
 		return tx, err
 	}
 	return nonceTx.Tx, nil
+}
+
+// incrementNonceTx increases the nonce sequence number
+func (r ReplayCheck) incrementNonceTx(ctx basecoin.Context, store state.KVStore,
+	tx basecoin.Tx) error {
+
+	// make sure it is a the nonce Tx (Tx from this package)
+	nonceTx, ok := tx.Unwrap().(Tx)
+	if !ok {
+		return errors.ErrNoNonce()
+	}
+
+	// check the nonce sequence number
+	err := nonceTx.IncrementSeq(ctx, store)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -18,14 +18,12 @@ func TestNonce(t *testing.T) {
 	// generic args here...
 	chainID := "my-chain"
 	height := uint64(100)
-	// rigel: use MockContext, so we can add permissions
 	ctx := stack.MockContext(chainID, height)
 	store := state.NewMemKVStore()
 
-	// rigel: you can leave chainID blank for the actors, note the comment on Actor struct
-	act1 := basecoin.Actor{ChainID: chainID, App: "fooz", Address: []byte{1, 2, 3, 4}}
-	act2 := basecoin.Actor{ChainID: chainID, App: "fooz", Address: []byte{1, 1, 1, 1}}
-	act3 := basecoin.Actor{ChainID: chainID, App: "fooz", Address: []byte{3, 3, 3, 3}}
+	act1 := basecoin.Actor{App: "fooz", Address: []byte{1, 2, 3, 4}}
+	act2 := basecoin.Actor{App: "fooz", Address: []byte{1, 1, 1, 1}}
+	act3 := basecoin.Actor{App: "fooz", Address: []byte{3, 3, 3, 3}}
 
 	// let's construct some tests to make the table a bit less verbose
 	set0 := []basecoin.Actor{}
@@ -36,12 +34,10 @@ func TestNonce(t *testing.T) {
 	set123 := []basecoin.Actor{act1, act2, act3}
 	set321 := []basecoin.Actor{act3, act2, act1}
 
-	// rigel: test cases look good, but also add reordering
 	testList := []struct {
-		valid  bool
-		seq    uint32
-		actors []basecoin.Actor
-		// rigel: you forgot to sign the tx, of course the get rejected...
+		valid   bool
+		seq     uint32
+		actors  []basecoin.Actor
 		signers []basecoin.Actor
 	}{
 		// one signer
@@ -72,17 +68,17 @@ func TestNonce(t *testing.T) {
 		{false, 2, set321, set321}, // no repetition
 	}
 
-	// rigel: don't wrap nil, it's bad, wrap a raw byte thing
 	raw := stack.NewRawTx([]byte{42})
 	for i, test := range testList {
-		// rigel: set the permissions
+
+		// set the permissions
 		myCtx := ctx.WithPermissions(test.signers...)
 
 		tx := NewTx(test.seq, test.actors, raw)
 		nonceTx, ok := tx.Unwrap().(Tx)
 		require.True(ok)
 
-		err := nonceTx.CheckIncrementSeq(myCtx, store)
+		err := nonceTx.CheckSeq(myCtx, store)
 		if test.valid {
 			assert.Nil(err, "%d: %+v", i, err)
 		} else {

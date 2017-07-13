@@ -59,9 +59,11 @@ func (n Tx) ValidateBasic() error {
 	return n.Tx.ValidateBasic()
 }
 
-// CheckSeq - Check that the sequence number is one more than the state sequence number
+// CheckIncrementSeq - Check that the sequence number is one more than the state sequence number
 // and further increment the sequence number
-func (n Tx) CheckSeq(ctx basecoin.Context, store state.KVStore) error {
+// NOTE It is okay to modify the sequence before running the wrapped TX because if the
+// wrapped Tx fails, the state changes are not applied
+func (n Tx) CheckIncrementSeq(ctx basecoin.Context, store state.KVStore) error {
 
 	seqKey := n.getSeqKey()
 
@@ -79,19 +81,6 @@ func (n Tx) CheckSeq(ctx basecoin.Context, store state.KVStore) error {
 		if !ctx.HasPermission(s) {
 			return errors.ErrNotMember()
 		}
-	}
-	return nil
-}
-
-// IncrementSeq - increment the sequence for a group of actors
-func (n Tx) IncrementSeq(ctx basecoin.Context, store state.KVStore) error {
-
-	seqKey := n.getSeqKey()
-
-	// check the current state
-	cur, err := getSeq(store, seqKey)
-	if err != nil {
-		return err
 	}
 
 	// increment the sequence by 1

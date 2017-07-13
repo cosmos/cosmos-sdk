@@ -28,46 +28,30 @@ var _ stack.Middleware = ReplayCheck{}
 func (r ReplayCheck) CheckTx(ctx basecoin.Context, store state.KVStore,
 	tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 
-	stx, err := r.checkNonceTx(ctx, store, tx)
+	stx, err := r.checkIncrementNonceTx(ctx, store, tx)
 	if err != nil {
 		return res, err
 	}
 
-	res, err = next.CheckTx(ctx, store, stx)
-	if err != nil {
-		return res, err
-	}
-
-	err = r.incrementNonceTx(ctx, store, tx)
-	if err != nil {
-		return res, err
-	}
-	return
+	return next.CheckTx(ctx, store, stx)
 }
 
 // DeliverTx verifies tx is not being replayed - fulfills Middlware interface
+// NOTE It is okay to modify the sequence before running the wrapped TX because if the
+// wrapped Tx fails, the state changes are not applied
 func (r ReplayCheck) DeliverTx(ctx basecoin.Context, store state.KVStore,
 	tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 
-	stx, err := r.checkNonceTx(ctx, store, tx)
+	stx, err := r.checkIncrementNonceTx(ctx, store, tx)
 	if err != nil {
 		return res, err
 	}
 
-	res, err = next.DeliverTx(ctx, store, stx)
-	if err != nil {
-		return res, err
-	}
-
-	err = r.incrementNonceTx(ctx, store, tx)
-	if err != nil {
-		return res, err
-	}
-	return
+	return next.DeliverTx(ctx, store, stx)
 }
 
-// checkNonceTx varifies the nonce sequence
-func (r ReplayCheck) checkNonceTx(ctx basecoin.Context, store state.KVStore,
+// checkNonceTx varifies the nonce sequence, an increment sequence number
+func (r ReplayCheck) checkIncrementNonceTx(ctx basecoin.Context, store state.KVStore,
 	tx basecoin.Tx) (basecoin.Tx, error) {
 
 	// make sure it is a the nonce Tx (Tx from this package)
@@ -77,27 +61,9 @@ func (r ReplayCheck) checkNonceTx(ctx basecoin.Context, store state.KVStore,
 	}
 
 	// check the nonce sequence number
-	err := nonceTx.CheckSeq(ctx, store)
+	err := nonceTx.CheckIncrementSeq(ctx, store)
 	if err != nil {
 		return tx, err
 	}
 	return nonceTx.Tx, nil
-}
-
-// incrementNonceTx increases the nonce sequence number
-func (r ReplayCheck) incrementNonceTx(ctx basecoin.Context, store state.KVStore,
-	tx basecoin.Tx) error {
-
-	// make sure it is a the nonce Tx (Tx from this package)
-	nonceTx, ok := tx.Unwrap().(Tx)
-	if !ok {
-		return errors.ErrNoNonce()
-	}
-
-	// check the nonce sequence number
-	err := nonceTx.IncrementSeq(ctx, store)
-	if err != nil {
-		return err
-	}
-	return nil
 }

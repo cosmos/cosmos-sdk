@@ -78,7 +78,7 @@ func TestNonce(t *testing.T) {
 		nonceTx, ok := tx.Unwrap().(Tx)
 		require.True(ok)
 
-		err := nonceTx.CheckSeq(myCtx, store)
+		err := nonceTx.CheckIncrementSeq(myCtx, store)
 		if test.valid {
 			assert.Nil(err, "%d: %+v", i, err)
 		} else {

@@ -18,7 +18,11 @@ var Bank = basecoin.Actor{App: NameFee, Address: []byte("bank")}
 // SimpleFeeMiddleware - middleware for fee checking, constant amount
 // It used modules.coin to move the money
 type SimpleFeeMiddleware struct {
-	MinFee    coin.Coin //
+	// the fee must be the same denomination and >= this amount
+	// if the amount is 0, then the fee tx wrapper is optional
+	MinFee coin.Coin
+	// all fees go here, which could be a dump (Bank) or something reachable
+	// by other app logic
 	Collector basecoin.Actor
 	stack.PassOption
 }
@@ -60,8 +64,11 @@ func (h SimpleFeeMiddleware) doTx(ctx basecoin.Context, store state.KVStore, tx 
 		return res, errors.ErrInvalidFormat(TypeFees, tx)
 	}
 
-	// see if it is big enough...
+	// see if it is the proper denom and big enough
 	fee := feeTx.Fee
+	if fee.Denom != h.MinFee.Denom {
+		return res, ErrWrongFeeDenom(h.MinFee.Denom)
+	}
 	if !fee.IsGTE(h.MinFee) {
 		return res, ErrInsufficientFees()
 	}

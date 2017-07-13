@@ -6,12 +6,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/tendermint/tmlibs/log"
+
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/modules/fee"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
-	"github.com/tendermint/tmlibs/log"
 )
 
 func TestFeeChecks(t *testing.T) {

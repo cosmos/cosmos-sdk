@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/coin"
+	"github.com/tendermint/basecoin/modules/nonce"
 )
 
 //CounterTxCmd is the CLI command to execute the counter
@@ -55,6 +58,10 @@ func counterTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	//get the nonce accounts
+	var addr []byte
+	nonceAccount := []basecoin.Actor{basecoin.NewActor(counter.NameCounter, addr)}
+
 	// TODO: make this more flexible for middleware
 	tx, err = bcmd.WrapFeeTx(tx)
 	if err != nil {
@@ -64,6 +71,13 @@ func counterTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	//add the nonce tx layer to the tx
+	seq := viper.GetInt(FlagSequence)
+	if seq < 0 {
+		return fmt.Errorf("sequence must be greater than 0")
+	}
+	tx = nonce.NewTx(uint32(seq), nonceAccount, tx)
 
 	stx := auth.NewSig(tx)
 

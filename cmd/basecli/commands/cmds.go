@@ -66,6 +66,7 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	//get the nonce accounts
 	sendTx, ok := tx.Unwrap().(coin.SendTx)
 	if !ok {
 		return errors.New("tx not SendTx")

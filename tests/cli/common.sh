@@ -46,7 +46,7 @@ quickTearDown() {
 prepareClient() {
     echo "Preparing client keys..."
     ${CLIENT_EXE} reset_all
-    assertTrue $?
+    assertTrue "line=${LINENO}, prepare client" $?
 
     for i in "${!ACCOUNTS[@]}"; do
         newKey ${ACCOUNTS[$i]}
@@ -60,7 +60,7 @@ prepareClient() {
 initServer() {
     echo "Setting up genesis..."
     SERVE_DIR=$1/server
-    assertNotNull "no chain" $2
+    assertNotNull "line=${LINENO}, no chain" $2
     CHAIN=$2
     SERVER_LOG=$1/${SERVER_EXE}.log
 
@@ -100,26 +100,26 @@ initClient() {
     PORT=${2:-46657}
     # hard-code the expected validator hash
     ${CLIENT_EXE} init --chain-id=$1 --node=tcp://localhost:${PORT} --valhash=EB168E17E45BAEB194D4C79067FFECF345C64DE6
-    assertTrue "initialized light-client" $?
+    assertTrue "line=${LINENO}, initialized light-client" $?
 }
 
 # XXX Ex Usage1: newKey $NAME
 # XXX Ex Usage2: newKey $NAME $PASSWORD
 # Desc: Generates key for given username and password
 newKey(){
-    assertNotNull "keyname required" "$1"
+    assertNotNull "line=${LINENO}, keyname required" "$1"
     KEYPASS=${2:-qwertyuiop}
     (echo $KEYPASS; echo $KEYPASS) | ${CLIENT_EXE} keys new $1 >/dev/null 2>/dev/null
-    assertTrue "created $1" $?
-    assertTrue "$1 doesn't exist" "${CLIENT_EXE} keys get $1"
+    assertTrue "line=${LINENO}, created $1" $?
+    assertTrue "line=${LINENO}, $1 doesn't exist" "${CLIENT_EXE} keys get $1"
 }
 
 # XXX Ex Usage: getAddr $NAME
 # Desc: Gets the address for a key name
 getAddr() {
-    assertNotNull "keyname required" "$1"
+    assertNotNull "line=${LINENO}, keyname required" "$1"
     RAW=$(${CLIENT_EXE} keys get $1)
-    assertTrue "no key for $1" $?
+    assertTrue "line=${LINENO}, no key for $1" $?
     # print the addr
     echo $RAW | cut -d' ' -f2
 }
@@ -129,12 +129,12 @@ getAddr() {
 checkAccount() {
     # make sure sender goes down
     ACCT=$(${CLIENT_EXE} query account $1)
-    if ! assertTrue "account must exist" $?; then
+    if ! assertTrue "line=${LINENO}, account must exist" $?; then
         return 1
     fi
 
     if [ -n "$DEBUG" ]; then echo $ACCT; echo; fi
-    assertEquals "proper money" "$2" $(echo $ACCT | jq .data.coins[0].amount)
+    assertEquals "line=${LINENO}, proper money" "$2" $(echo $ACCT | jq .data.coins[0].amount)
     return $?
 }
 
@@ -143,8 +143,8 @@ checkAccount() {
 txSucceeded() {
     if (assertTrue "sent tx ($3): $2" $1); then
         TX=$2
-        assertEquals "good check ($3): $TX" "0" $(echo $TX | jq .check_tx.code)
-        assertEquals "good deliver ($3): $TX" "0" $(echo $TX | jq .deliver_tx.code)
+        assertEquals "line=${LINENO}, good check ($3): $TX" "0" $(echo $TX | jq .check_tx.code)
+        assertEquals "line=${LINENO}, good deliver ($3): $TX" "0" $(echo $TX | jq .deliver_tx.code)
     else
         return 1
     fi
@@ -155,18 +155,19 @@ txSucceeded() {
 #       and that the first input was from this sender for this amount
 checkSendTx() {
     TX=$(${CLIENT_EXE} query tx $1)
-    assertTrue "found tx" $?
+    assertTrue "line=${LINENO}, found tx" $?
     if [ -n "$DEBUG" ]; then echo $TX; echo; fi
 
-    assertEquals "proper height" $2 $(echo $TX | jq .height)
-    assertEquals "type=sigs/one" '"sigs/one"' $(echo $TX | jq .data.type)
-    CTX=$(echo $TX | jq .data.data.tx)
-    assertEquals "type=nonce" '"nonce"' $(echo $CTX | jq .type)
-    assertEquals "type=chain/tx" '"chain/tx"' $(echo $CTX | jq .type)
+    assertEquals "line=${LINENO}, proper height" $2 $(echo $TX | jq .height)
+    assertEquals "line=${LINENO}, type=sigs/one" '"sigs/one"' $(echo $TX | jq .data.type)
+    NTX=$(echo $TX | jq .data.data.tx)
+    assertEquals "line=${LINENO}, type=nonce" '"nonce"' $(echo $NTX | jq .type)
+    CTX=$(echo $NTX | jq .data.tx)
+    assertEquals "line=${LINENO}, type=chain/tx" '"chain/tx"' $(echo $CTX | jq .type)
     STX=$(echo $CTX | jq .data.tx)
-    assertEquals "type=coin/send" '"coin/send"' $(echo $STX | jq .type)
-    assertEquals "proper sender" "\"$3\"" $(echo $STX | jq .data.inputs[0].address.addr)
-    assertEquals "proper out amount" "$4" $(echo $STX | jq .data.outputs[0].coins[0].amount)
+    assertEquals "line=${LINENO}, type=coin/send" '"coin/send"' $(echo $STX | jq .type)
+    assertEquals "line=${LINENO}, proper sender" "\"$3\"" $(echo $STX | jq .data.inputs[0].address.addr)
+    assertEquals "line=${LINENO}, proper out amount" "$4" $(echo $STX | jq .data.outputs[0].coins[0].amount)
     return $?
 }
 
@@ -179,17 +180,19 @@ checkSendFeeTx() {
     assertTrue "found tx" $?
     if [ -n "$DEBUG" ]; then echo $TX; echo; fi
 
-    assertEquals "proper height" $2 $(echo $TX | jq .height)
-    assertEquals "type=sigs/one" '"sigs/one"' $(echo $TX | jq .data.type)
-    CTX=$(echo $TX | jq .data.data.tx)
-    assertEquals "type=chain/tx" '"chain/tx"' $(echo $CTX | jq .type)
+    assertEquals "line=${LINENO}, proper height" $2 $(echo $TX | jq .height)
+    assertEquals "line=${LINENO}, type=sigs/one" '"sigs/one"' $(echo $TX | jq .data.type)
+    NTX=$(echo $TX | jq .data.data.tx)
+    assertEquals "line=${LINENO}, type=nonce" '"nonce"' $(echo $NTX | jq .type)
+    CTX=$(echo $NTX | jq .data.tx)
+    assertEquals "line=${LINENO}, type=chain/tx" '"chain/tx"' $(echo $CTX | jq .type)
     FTX=$(echo $CTX | jq .data.tx)
-    assertEquals "type=fee/tx" '"fee/tx"' $(echo $FTX | jq .type)
-    assertEquals "proper fee" "$5" $(echo $FTX | jq .data.fee.amount)
+    assertEquals "line=${LINENO}, type=fee/tx" '"fee/tx"' $(echo $FTX | jq .type)
+    assertEquals "line=${LINENO}, proper fee" "$5" $(echo $FTX | jq .data.fee.amount)
     STX=$(echo $FTX | jq .data.tx)
-    assertEquals "type=coin/send" '"coin/send"' $(echo $STX | jq .type)
-    assertEquals "proper sender" "\"$3\"" $(echo $STX | jq .data.inputs[0].address.addr)
-    assertEquals "proper out amount" "$4" $(echo $STX | jq .data.outputs[0].coins[0].amount)
+    assertEquals "line=${LINENO}, type=coin/send" '"coin/send"' $(echo $STX | jq .type)
+    assertEquals "line=${LINENO}, proper sender" "\"$3\"" $(echo $STX | jq .data.inputs[0].address.addr)
+    assertEquals "line=${LINENO}, proper out amount" "$4" $(echo $STX | jq .data.outputs[0].coins[0].amount)
     return $?
 }
 

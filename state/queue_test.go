@@ -9,6 +9,11 @@ import (
 func TestQueue(t *testing.T) {
 	assert := assert.New(t)
 
+	lots := make([][]byte, 500)
+	for i := range lots {
+		lots[i] = []byte{1, 8, 7}
+	}
+
 	cases := []struct {
 		pushes [][]byte
 		pops   [][]byte
@@ -28,6 +33,8 @@ func TestQueue(t *testing.T) {
 			[][]byte{{1}, {2}, {4}},
 			[][]byte{{1}, {2}, {4}, nil, nil, nil},
 		},
+		// let's play with lots....
+		{lots, append(lots, nil)},
 	}
 
 	for i, tc := range cases {

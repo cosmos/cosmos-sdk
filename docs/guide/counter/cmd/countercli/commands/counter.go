@@ -83,10 +83,6 @@ func readCounterTxFlags() (tx basecoin.Tx, err error) {
 		return tx, err
 	}
 
-<<<<<<< HEAD
-	tx = counter.NewTx(viper.GetBool(FlagValid), feeCoins, viper.GetInt(bcmd.FlagSequence))
-=======
 	tx = counter.NewTx(viper.GetBool(FlagValid), feeCoins)
->>>>>>> working sequence number with errors
 	return tx, nil
 }

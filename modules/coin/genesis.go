@@ -15,16 +15,14 @@ import (
 type GenesisAccount struct {
 	Address data.Bytes `json:"address"`
 	// this from types.Account (don't know how to embed this properly)
-	PubKey   crypto.PubKey `json:"pub_key"` // May be nil, if not known.
-	Sequence int           `json:"sequence"`
-	Balance  Coins         `json:"coins"`
+	PubKey  crypto.PubKey `json:"pub_key"` // May be nil, if not known.
+	Balance Coins         `json:"coins"`
 }
 
 // ToAccount - GenesisAccount struct to a basecoin Account
 func (g GenesisAccount) ToAccount() Account {
 	return Account{
-		Sequence: g.Sequence,
-		Coins:    g.Balance,
+		Coins: g.Balance,
 	}
 }
 

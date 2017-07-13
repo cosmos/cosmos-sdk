@@ -37,7 +37,7 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.
 
 	// now make sure there is money
 	for _, in := range send.Inputs {
-		_, err = CheckCoins(store, in.Address, in.Coins.Negative(), in.Sequence)
+		_, err = CheckCoins(store, in.Address, in.Coins.Negative())
 		if err != nil {
 			return res, err
 		}
@@ -56,7 +56,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 
 	// deduct from all input accounts
 	for _, in := range send.Inputs {
-		_, err = ChangeCoins(store, in.Address, in.Coins.Negative(), in.Sequence)
+		_, err = ChangeCoins(store, in.Address, in.Coins.Negative())
 		if err != nil {
 			return res, err
 		}
@@ -64,8 +64,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 
 	// add to all output accounts
 	for _, out := range send.Outputs {
-		// note: sequence number is ignored when adding coins, only checked for subtracting
-		_, err = ChangeCoins(store, out.Address, out.Coins, 0)
+		_, err = ChangeCoins(store, out.Address, out.Coins)
 		if err != nil {
 			return res, err
 		}
@@ -107,7 +106,7 @@ func checkTx(ctx basecoin.Context, tx basecoin.Tx) (send SendTx, err error) {
 	// check if the tx is proper type and valid
 	send, ok := tx.Unwrap().(SendTx)
 	if !ok {
-		return send, errors.ErrInvalidFormat(tx)
+		return send, errors.ErrInvalidFormat(TypeSend, tx)
 	}
 	err = send.ValidateBasic()
 	if err != nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
+	"github.com/tendermint/basecoin/modules/fee"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 	wire "github.com/tendermint/go-wire"
@@ -40,15 +41,31 @@ func newAppTest(t *testing.T) *appTest {
 	return at
 }
 
-// make a tx sending 5mycoin from each acctIn to acctOut
-func (at *appTest) getTx(seq int, coins coin.Coins) basecoin.Tx {
-	in := []coin.TxInput{{Address: at.acctIn.Actor(), Coins: coins, Sequence: seq}}
+// baseTx is the
+func (at *appTest) baseTx(coins coin.Coins) basecoin.Tx {
+	in := []coin.TxInput{{Address: at.acctIn.Actor(), Coins: coins}}
 	out := []coin.TxOutput{{Address: at.acctOut.Actor(), Coins: coins}}
 	tx := coin.NewSendTx(in, out)
-	tx = base.NewChainTx(at.chainID, 0, tx)
+	return tx
+}
+
+func (at *appTest) signTx(tx basecoin.Tx) basecoin.Tx {
 	stx := auth.NewMulti(tx)
 	auth.Sign(stx, at.acctIn.Key)
 	return stx.Wrap()
+}
+
+func (at *appTest) getTx(coins coin.Coins) basecoin.Tx {
+	tx := at.baseTx(coins)
+	tx = base.NewChainTx(at.chainID, 0, tx)
+	return at.signTx(tx)
+}
+
+func (at *appTest) feeTx(coins coin.Coins, toll coin.Coin) basecoin.Tx {
+	tx := at.baseTx(coins)
+	tx = fee.NewFee(tx, toll, at.acctIn.Actor())
+	tx = base.NewChainTx(at.chainID, 0, tx)
+	return at.signTx(tx)
 }
 
 // set the account on the app through SetOption
@@ -67,7 +84,7 @@ func (at *appTest) reset() {
 	logger := log.NewTMLogger(os.Stdout).With("module", "app")
 	logger = log.NewTracingLogger(logger)
 	at.app = NewBasecoin(
-		DefaultHandler(),
+		DefaultHandler("mycoin"),
 		eyesCli,
 		logger,
 	)
@@ -124,7 +141,7 @@ func TestSetOption(t *testing.T) {
 
 	eyesCli := eyes.NewLocalClient("", 0)
 	app := NewBasecoin(
-		DefaultHandler(),
+		DefaultHandler("atom"),
 		eyesCli,
 		log.TestingLogger().With("module", "app"),
 	)
@@ -193,32 +210,43 @@ func TestTx(t *testing.T) {
 	//Bad Balance
 	at.acctIn.Coins = coin.Coins{{"mycoin", 2}}
 	at.initAccount(at.acctIn)
-	res, _, _ := at.exec(t, at.getTx(1, coin.Coins{{"mycoin", 5}}), true)
+	res, _, _ := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}), true)
 	assert.True(res.IsErr(), "ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res)
-	res, diffIn, diffOut := at.exec(t, at.getTx(1, coin.Coins{{"mycoin", 5}}), false)
+	res, diffIn, diffOut := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}), false)
 	assert.True(res.IsErr(), "ExecTx/Bad DeliverTx: Expected error return from ExecTx, returned: %v", res)
 	assert.True(diffIn.IsZero())
 	assert.True(diffOut.IsZero())
 
 	//Regular CheckTx
 	at.reset()
-	res, _, _ = at.exec(t, at.getTx(1, coin.Coins{{"mycoin", 5}}), true)
+	res, _, _ = at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}), true)
 	assert.True(res.IsOK(), "ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", res)
 
 	//Regular DeliverTx
 	at.reset()
 	amt := coin.Coins{{"mycoin", 3}}
-	res, diffIn, diffOut = at.exec(t, at.getTx(1, amt), false)
+	res, diffIn, diffOut = at.exec(t, at.getTx(amt), false)
 	assert.True(res.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res)
 	assert.Equal(amt.Negative(), diffIn)
 	assert.Equal(amt, diffOut)
+
+	//DeliverTx with fee.... 4 get to recipient, 1 extra taxed
+	at.reset()
+	amt = coin.Coins{{"mycoin", 4}}
+	toll := coin.Coin{"mycoin", 1}
+	res, diffIn, diffOut = at.exec(t, at.feeTx(amt, toll), false)
+	assert.True(res.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res)
+	payment := amt.Plus(coin.Coins{toll}).Negative()
+	assert.Equal(payment, diffIn)
+	assert.Equal(amt, diffOut)
+
 }
 
 func TestQuery(t *testing.T) {
 	assert := assert.New(t)
 	at := newAppTest(t)
 
-	res, _, _ := at.exec(t, at.getTx(1, coin.Coins{{"mycoin", 5}}), false)
+	res, _, _ := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}), false)
 	assert.True(res.IsOK(), "Commit, DeliverTx: Expected OK return from DeliverTx, Error: %v", res)
 
 	resQueryPreCommit := at.app.Query(abci.RequestQuery{

@@ -28,14 +28,15 @@ You must pass --valid for it to count and the countfee will be added to the coun
 const (
 	FlagCountFee = "countfee"
 	FlagValid    = "valid"
-	FlagSequence = "sequence" // FIXME: currently not supported...
 )
 
 func init() {
 	fs := CounterTxCmd.Flags()
 	fs.String(FlagCountFee, "", "Coins to send in the format <amt><coin>,<amt><coin>...")
 	fs.Bool(FlagValid, false, "Is count valid?")
-	fs.Int(FlagSequence, -1, "Sequence number for this transaction")
+
+	fs.String(bcmd.FlagFee, "0mycoin", "Coins for the transaction fee of the format <amt><coin>")
+	fs.Int(bcmd.FlagSequence, -1, "Sequence number for this transaction")
 }
 
 // TODO: counterTx is very similar to the sendtx one,
@@ -55,11 +56,15 @@ func counterTx(cmd *cobra.Command, args []string) error {
 	}
 
 	// TODO: make this more flexible for middleware
-	// add the chain info
+	tx, err = bcmd.WrapFeeTx(tx)
+	if err != nil {
+		return err
+	}
 	tx, err = bcmd.WrapChainTx(tx)
 	if err != nil {
 		return err
 	}
+
 	stx := auth.NewSig(tx)
 
 	// Sign if needed and post.  This it the work-horse
@@ -78,6 +83,6 @@ func readCounterTxFlags() (tx basecoin.Tx, err error) {
 		return tx, err
 	}
 
-	tx = counter.NewTx(viper.GetBool(FlagValid), feeCoins, viper.GetInt(FlagSequence))
+	tx = counter.NewTx(viper.GetBool(FlagValid), feeCoins, viper.GetInt(bcmd.FlagSequence))
 	return tx, nil
 }

@@ -27,7 +27,7 @@ func TestCounterPlugin(t *testing.T) {
 	logger := log.NewTMLogger(os.Stdout).With("module", "app")
 	// logger = log.NewTracingLogger(logger)
 	bcApp := app.NewBasecoin(
-		NewHandler(),
+		NewHandler("gold"),
 		eyesCli,
 		logger,
 	)

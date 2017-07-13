@@ -21,7 +21,7 @@ const (
 	ByteRawTx   = 0xF0
 	ByteCheckTx = 0xF1
 
-	TypeRawTx   = "raw"
+	TypeRawTx   = NameOK + "/raw" // this will just say a-ok to RawTx
 	TypeCheckTx = NameCheck + "/tx"
 
 	rawMaxSize = 2000 * 1000

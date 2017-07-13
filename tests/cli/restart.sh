@@ -26,8 +26,8 @@ test00PreRestart() {
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 
-    checkAccount $SENDER "1" "9007199254740000"
-    checkAccount $RECV "0" "992"
+    checkAccount $SENDER "9007199254740000"
+    checkAccount $RECV "992"
 
     # make sure tx is indexed
     checkSendTx $HASH $TX_HEIGHT $SENDER "992"
@@ -63,8 +63,8 @@ test01OnRestart() {
 
     # make sure queries still work properly, with all 3 tx now executed
     echo "Checking state after restart..."
-    checkAccount $SENDER "3" "9007199254710000"
-    checkAccount $RECV "0" "30992"
+    checkAccount $SENDER "9007199254710000"
+    checkAccount $RECV "30992"
 
     # make sure tx is indexed
     checkSendTx $HASH $TX_HEIGHT $SENDER "10000"

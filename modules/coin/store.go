@@ -22,14 +22,14 @@ func GetAccount(store state.KVStore, addr basecoin.Actor) (Account, error) {
 }
 
 // CheckCoins makes sure there are funds, but doesn't change anything
-func CheckCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int) (Coins, error) {
-	acct, err := updateCoins(store, addr, coins, seq)
+func CheckCoins(store state.KVStore, addr basecoin.Actor, coins Coins) (Coins, error) {
+	acct, err := updateCoins(store, addr, coins)
 	return acct.Coins, err
 }
 
 // ChangeCoins changes the money, returns error if it would be negative
-func ChangeCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int) (Coins, error) {
-	acct, err := updateCoins(store, addr, coins, seq)
+func ChangeCoins(store state.KVStore, addr basecoin.Actor, coins Coins) (Coins, error) {
+	acct, err := updateCoins(store, addr, coins)
 	if err != nil {
 		return acct.Coins, err
 	}
@@ -41,7 +41,7 @@ func ChangeCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int)
 // updateCoins will load the account, make all checks, and return the updated account.
 //
 // it doesn't save anything, that is up to you to decide (Check/Change Coins)
-func updateCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int) (acct Account, err error) {
+func updateCoins(store state.KVStore, addr basecoin.Actor, coins Coins) (acct Account, err error) {
 	acct, err = loadAccount(store, addr.Bytes())
 	// we can increase an empty account...
 	if IsNoAccountErr(err) && coins.IsPositive() {
@@ -49,14 +49,6 @@ func updateCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int)
 	}
 	if err != nil {
 		return acct, err
-	}
-
-	// check sequence if we are deducting... ugh, need a cleaner replay protection
-	if !coins.IsPositive() {
-		if seq != acct.Sequence+1 {
-			return acct, ErrInvalidSequence()
-		}
-		acct.Sequence++
 	}
 
 	// check amount
@@ -71,8 +63,7 @@ func updateCoins(store state.KVStore, addr basecoin.Actor, coins Coins, seq int)
 
 // Account - coin account structure
 type Account struct {
-	Coins    Coins `json:"coins"`
-	Sequence int   `json:"sequence"`
+	Coins Coins `json:"coins"`
 }
 
 func loadAccount(store state.KVStore, key []byte) (acct Account, err error) {

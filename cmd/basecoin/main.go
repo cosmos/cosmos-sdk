@@ -11,7 +11,8 @@ import (
 func main() {
 	rt := commands.RootCmd
 
-	commands.Handler = app.DefaultHandler()
+	// require all fees in mycoin - change this in your app!
+	commands.Handler = app.DefaultHandler("mycoin")
 
 	rt.AddCommand(
 		commands.InitCmd,

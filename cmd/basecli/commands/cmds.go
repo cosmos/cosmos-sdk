@@ -16,6 +16,7 @@ import (
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
+	"github.com/tendermint/basecoin/modules/fee"
 )
 
 //-------------------------
@@ -64,7 +65,10 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 	}
 
 	// TODO: make this more flexible for middleware
-	// add the chain info
+	tx, err = WrapFeeTx(tx)
+	if err != nil {
+		return err
+	}
 	tx, err = WrapChainTx(tx)
 	if err != nil {
 		return err
@@ -83,6 +87,21 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 	return txcmd.OutputTx(bres)
 }
 
+// WrapFeeTx checks for FlagFee and if present wraps the tx with a
+// FeeTx of the given amount, paid by the signer
+func WrapFeeTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
+	//parse the fee and amounts into coin types
+	toll, err := coin.ParseCoin(viper.GetString(FlagFee))
+	if err != nil {
+		return res, err
+	}
+	// if no fee, do nothing, otherwise wrap it
+	if toll.IsZero() {
+		return tx, nil
+	}
+	return fee.NewFee(tx, toll, getSignerAddr()), nil
+}
+
 // WrapChainTx will wrap the tx with a ChainTx from the standard flags
 func WrapChainTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
 	expires := viper.GetInt64(FlagExpires)
@@ -94,6 +113,15 @@ func WrapChainTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
 	return res, nil
 }
 
+func getSignerAddr() (res basecoin.Actor) {
+	// this could be much cooler with multisig...
+	signer := txcmd.GetSigner()
+	if !signer.Empty() {
+		res = auth.SigPerm(signer.Address())
+	}
+	return res
+}
+
 func readSendTxFlags() (tx basecoin.Tx, err error) {
 	// parse to address
 	chain, to, err := parseChainAddress(viper.GetString(FlagTo))
@@ -103,31 +131,15 @@ func readSendTxFlags() (tx basecoin.Tx, err error) {
 	toAddr := auth.SigPerm(to)
 	toAddr.ChainID = chain
 
-	// //parse the fee and amounts into coin types
-	// tx.Fee, err = btypes.ParseCoin(viper.GetString(FlagFee))
-	// if err != nil {
-	// 	return err
-	// }
-	// // set the gas
-	// tx.Gas = viper.GetInt64(FlagGas)
-
 	amountCoins, err := coin.ParseCoins(viper.GetString(FlagAmount))
 	if err != nil {
 		return tx, err
 	}
 
-	// this could be much cooler with multisig...
-	var fromAddr basecoin.Actor
-	signer := txcmd.GetSigner()
-	if !signer.Empty() {
-		fromAddr = auth.SigPerm(signer.Address())
-	}
-
 	// craft the inputs and outputs
 	ins := []coin.TxInput{{
-		Address:  fromAddr,
-		Coins:    amountCoins,
-		Sequence: viper.GetInt(FlagSequence),
+		Address: getSignerAddr(),
+		Coins:   amountCoins,
 	}}
 	outs := []coin.TxOutput{{
 		Address: toAddr,

@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
+	"github.com/tendermint/basecoin/modules/fee"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 )
@@ -23,7 +24,7 @@ import (
 // so it gets routed properly
 const (
 	NameCounter = "cntr"
-	ByteTx      = 0x21 //TODO What does this byte represent should use typebytes probably
+	ByteTx      = 0x2F //TODO What does this byte represent should use typebytes probably
 	TypeTx      = NameCounter + "/count"
 )
 
@@ -89,12 +90,12 @@ func ErrDecoding() error {
 //--------------------------------------------------------------------------------
 
 // NewHandler returns a new counter transaction processing handler
-func NewHandler() basecoin.Handler {
+func NewHandler(feeDenom string) basecoin.Handler {
 	// use the default stack
-	coin := coin.NewHandler()
+	ch := coin.NewHandler()
 	counter := Handler{}
 	dispatcher := stack.NewDispatcher(
-		stack.WrapHandler(coin),
+		stack.WrapHandler(ch),
 		counter,
 	)
 	return stack.New(
@@ -102,6 +103,7 @@ func NewHandler() basecoin.Handler {
 		stack.Recovery{},
 		auth.Signatures{},
 		base.Chain{},
+		fee.NewSimpleFeeMiddleware(coin.Coin{feeDenom, 0}, fee.Bank),
 	).Use(dispatcher)
 }
 
@@ -145,7 +147,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 		if len(senders) == 0 {
 			return res, errors.ErrMissingSignature()
 		}
-		in := []coin.TxInput{{Address: senders[0], Coins: ctr.Fee, Sequence: ctr.Sequence}}
+		in := []coin.TxInput{{Address: senders[0], Coins: ctr.Fee}}
 		out := []coin.TxOutput{{Address: StoreActor(), Coins: ctr.Fee}}
 		send := coin.NewSendTx(in, out)
 		// if the deduction fails (too high), abort the command
@@ -170,7 +172,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 func checkTx(ctx basecoin.Context, tx basecoin.Tx) (ctr Tx, err error) {
 	ctr, ok := tx.Unwrap().(Tx)
 	if !ok {
-		return ctr, errors.ErrInvalidFormat(tx)
+		return ctr, errors.ErrInvalidFormat(TypeTx, tx)
 	}
 	err = ctr.ValidateBasic()
 	if err != nil {

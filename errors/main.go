@@ -104,6 +104,13 @@ func WithCode(err error, code abci.CodeType) TMError {
 	}
 }
 
+// WithMessage prepends some text to the error, then calls WithCode
+// It wraps the original error, so IsSameError will still match on err
+func WithMessage(prefix string, err error, code abci.CodeType) TMError {
+	e2 := errors.WithMessage(err, prefix)
+	return WithCode(e2, code)
+}
+
 // New adds a stacktrace if necessary and sets the code and msg,
 // overriding the state if err was already TMError
 func New(msg string, code abci.CodeType) TMError {

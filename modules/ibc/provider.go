@@ -1,17 +1,24 @@
 package ibc
 
 import (
+	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/light-client/certifiers"
 
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 )
 
+const (
+	prefixHash   = "v"
+	prefixHeight = "h"
+	prefixPacket = "p"
+)
+
 // newCertifier loads up the current state of this chain to make a proper
 func newCertifier(chainID string, store state.KVStore) (*certifiers.InquiringCertifier, error) {
 	// each chain has their own prefixed subspace
 	space := stack.PrefixedStore(chainID, store)
-	p := dbProvider{space}
+	p := newDBProvider(space)
 
 	// this gets the most recent verified seed
 	seed, err := certifiers.LatestSeed(p)
@@ -27,18 +34,41 @@ func newCertifier(chainID string, store state.KVStore) (*certifiers.InquiringCer
 
 // dbProvider wraps our kv store so it integrates with light-client verification
 type dbProvider struct {
-	store state.KVStore
+	byHash   state.KVStore
+	byHeight *state.Span
 }
 
-var _ certifiers.Provider = dbProvider{}
+func newDBProvider(store state.KVStore) *dbProvider {
+	return &dbProvider{
+		byHash:   stack.PrefixedStore(prefixHash, store),
+		byHeight: state.NewSpan(stack.PrefixedStore(prefixHeight, store)),
+	}
+}
 
-func (d dbProvider) StoreSeed(seed certifiers.Seed) error {
+var _ certifiers.Provider = &dbProvider{}
+
+func (d *dbProvider) StoreSeed(seed certifiers.Seed) error {
+	// TODO: don't duplicate data....
+	b := wire.BinaryBytes(seed)
+	d.byHash.Set(seed.Hash(), b)
+	d.byHeight.Set(uint64(seed.Height()), b)
 	return nil
 }
 
-func (d dbProvider) GetByHeight(h int) (certifiers.Seed, error) {
-	return certifiers.Seed{}, certifiers.ErrSeedNotFound()
+func (d *dbProvider) GetByHeight(h int) (seed certifiers.Seed, err error) {
+	b, _ := d.byHeight.LTE(uint64(h))
+	if b == nil {
+		return seed, certifiers.ErrSeedNotFound()
+	}
+	err = wire.ReadBinaryBytes(b, &seed)
+	return
 }
-func (d dbProvider) GetByHash(hash []byte) (certifiers.Seed, error) {
-	return certifiers.Seed{}, certifiers.ErrSeedNotFound()
+
+func (d *dbProvider) GetByHash(hash []byte) (seed certifiers.Seed, err error) {
+	b := d.byHash.Get(hash)
+	if b == nil {
+		return seed, certifiers.ErrSeedNotFound()
+	}
+	err = wire.ReadBinaryBytes(b, &seed)
+	return
 }

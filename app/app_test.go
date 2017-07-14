@@ -58,16 +58,16 @@ func (at *appTest) signTx(tx basecoin.Tx) basecoin.Tx {
 
 func (at *appTest) getTx(coins coin.Coins) basecoin.Tx {
 	tx := at.baseTx(coins)
-	tx = base.NewChainTx(at.chainID, 0, tx)
 	tx = nonce.NewTx(1, []basecoin.Actor{at.acctIn.Actor()}, tx)
+	tx = base.NewChainTx(at.chainID, 0, tx)
 	return at.signTx(tx)
 }
 
 func (at *appTest) feeTx(coins coin.Coins, toll coin.Coin) basecoin.Tx {
 	tx := at.baseTx(coins)
 	tx = fee.NewFee(tx, toll, at.acctIn.Actor())
-	tx = base.NewChainTx(at.chainID, 0, tx)
 	tx = nonce.NewTx(1, []basecoin.Actor{at.acctIn.Actor()}, tx)
+	tx = base.NewChainTx(at.chainID, 0, tx)
 	return at.signTx(tx)
 }
 

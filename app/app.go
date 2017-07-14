@@ -62,8 +62,8 @@ func DefaultHandler(feeDenom string) basecoin.Handler {
 		base.Logger{},
 		stack.Recovery{},
 		auth.Signatures{},
-		nonce.ReplayCheck{},
 		base.Chain{},
+		nonce.ReplayCheck{},
 		fee.NewSimpleFeeMiddleware(coin.Coin{feeDenom, 0}, fee.Bank),
 	).Use(d)
 }

@@ -60,11 +60,11 @@ func counterTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	tx, err = bcmd.WrapChainTx(tx)
+	tx, err = bcmd.WrapNonceTx(tx)
 	if err != nil {
 		return err
 	}
-	tx, err = bcmd.WrapNonceTx(tx)
+	tx, err = bcmd.WrapChainTx(tx)
 	if err != nil {
 		return err
 	}

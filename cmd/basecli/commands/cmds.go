@@ -73,11 +73,11 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	tx, err = WrapChainTx(tx)
+	tx, err = WrapNonceTx(tx)
 	if err != nil {
 		return err
 	}
-	tx, err = WrapNonceTx(tx)
+	tx, err = WrapChainTx(tx)
 	if err != nil {
 		return err
 	}

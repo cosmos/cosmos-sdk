@@ -31,8 +31,8 @@ func (q *Queue) Tail() uint64 {
 }
 
 // Size returns how many elements are in the queue
-func (q *Queue) Size() uint64 {
-	return q.tail - q.head
+func (q *Queue) Size() int {
+	return int(q.tail - q.head)
 }
 
 // Push adds an element to the tail of the queue and returns it's location

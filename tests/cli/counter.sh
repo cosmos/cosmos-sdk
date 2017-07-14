@@ -83,7 +83,9 @@ test03AddCount() {
     if assertTrue "Line=${LINENO}, found tx" $?; then
         assertEquals "Line=${LINENO}, proper height" $TX_HEIGHT $(echo $TX | jq .height)
         assertEquals "Line=${LINENO}, type=sigs/one" '"sigs/one"' $(echo $TX | jq .data.type)
-        CTX=$(echo $TX | jq .data.data.tx)
+        NTX=$(echo $TX | jq .data.data.tx)
+        assertEquals "line=${LINENO}, type=nonce" '"nonce"' $(echo $NTX | jq .type)
+        CTX=$(echo $NTX | jq .data.tx)
         assertEquals "Line=${LINENO}, type=chain/tx" '"chain/tx"' $(echo $CTX | jq .type)
         CNTX=$(echo $CTX | jq .data.tx)
         assertEquals "Line=${LINENO}, type=cntr/count" '"cntr/count"' $(echo $CNTX | jq .type)
@@ -98,6 +100,12 @@ test03AddCount() {
     checkCounter "2" "17"
 
     # make sure the account was debited 11
+    checkAccount $SENDER "9007199254739979"
+
+    # make sure we cannot replay the counter, no state change
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --countfee=10mycoin --sequence=2 --name=${RICH} --valid 2>/dev/null)
+    assertFalse "replay: $TX" $?
+    checkCounter "2" "17"
     checkAccount $SENDER "9007199254739979"
 }
 

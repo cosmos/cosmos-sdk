@@ -66,7 +66,7 @@ test02SendTxWithFee() {
     checkSendFeeTx $HASH $TX_HEIGHT $SENDER "90" "10"
 
     # assert replay protection
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --sequence=2 --to=$RECV --name=$RICH)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --sequence=2 --to=$RECV --name=$RICH 2>/dev/null)
     assertFalse "replay: $TX" $?
     checkAccount $SENDER "9007199254739900"
     checkAccount $RECV "1082"

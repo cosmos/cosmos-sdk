@@ -76,6 +76,9 @@ func counterTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	if err = bcmd.ValidateResult(bres); err != nil {
+		return err
+	}
 
 	// Output result
 	return txcmd.OutputTx(bres)

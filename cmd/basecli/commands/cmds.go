@@ -120,8 +120,8 @@ func WrapNonceTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
 		return res, fmt.Errorf("sequence must be greater than 0")
 	}
 	signers := []basecoin.Actor{GetSignerAct()}
-	tx = nonce.NewTx(uint32(seq), signers, tx)
-	return tx, nil
+	res = nonce.NewTx(uint32(seq), signers, tx)
+	return
 }
 
 // WrapFeeTx checks for FlagFee and if present wraps the tx with a
@@ -136,7 +136,8 @@ func WrapFeeTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
 	if toll.IsZero() {
 		return tx, nil
 	}
-	return fee.NewFee(tx, toll, GetSignerAct()), nil
+	res = fee.NewFee(tx, toll, GetSignerAct())
+	return
 }
 
 // WrapChainTx will wrap the tx with a ChainTx from the standard flags
@@ -147,7 +148,7 @@ func WrapChainTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
 		return res, errors.New("No chain-id provided")
 	}
 	res = base.NewChainTx(chain, uint64(expires), tx)
-	return res, nil
+	return
 }
 
 // GetSignerAct returns the address of the signer of the tx

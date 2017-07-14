@@ -83,11 +83,11 @@ test03AddCount() {
     if assertTrue "Line=${LINENO}, found tx" $?; then
         assertEquals "Line=${LINENO}, proper height" $TX_HEIGHT $(echo $TX | jq .height)
         assertEquals "Line=${LINENO}, type=sigs/one" '"sigs/one"' $(echo $TX | jq .data.type)
-        NTX=$(echo $TX | jq .data.data.tx)
-        assertEquals "line=${LINENO}, type=nonce" '"nonce"' $(echo $NTX | jq .type)
-        CTX=$(echo $NTX | jq .data.tx)
+        CTX=$(echo $TX | jq .data.data.tx)
         assertEquals "Line=${LINENO}, type=chain/tx" '"chain/tx"' $(echo $CTX | jq .type)
-        CNTX=$(echo $CTX | jq .data.tx)
+        NTX=$(echo $CTX | jq .data.tx)
+        assertEquals "line=${LINENO}, type=nonce" '"nonce"' $(echo $NTX | jq .type)
+        CNTX=$(echo $NTX | jq .data.tx)
         assertEquals "Line=${LINENO}, type=cntr/count" '"cntr/count"' $(echo $CNTX | jq .type)
         assertEquals "Line=${LINENO}, proper fee" "10" $(echo $CNTX | jq .data.fee[0].amount)
     fi

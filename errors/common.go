@@ -19,20 +19,14 @@ var (
 	errMissingSignature  = fmt.Errorf("Signature missing")
 	errTooManySignatures = fmt.Errorf("Too many signatures")
 	errNoChain           = fmt.Errorf("No chain id provided")
-	errNoNonce           = fmt.Errorf("Tx doesn't contain nonce")
-	errNotMember         = fmt.Errorf("nonce contains non-permissioned member")
-	errBadNonce          = fmt.Errorf("Bad nonce sequence")
 	errTxEmpty           = fmt.Errorf("The provided Tx is empty")
-	errZeroSequence      = fmt.Errorf("Sequence number cannot be zero")
 	errWrongChain        = fmt.Errorf("Wrong chain for tx")
 	errUnknownTxType     = fmt.Errorf("Tx type unknown")
 	errInvalidFormat     = fmt.Errorf("Invalid format")
 	errUnknownModule     = fmt.Errorf("Unknown module")
 	errExpired           = fmt.Errorf("Tx expired")
 	errUnknownKey        = fmt.Errorf("Unknown key")
-)
 
-var (
 	internalErr    = abci.CodeType_InternalError
 	encodingErr    = abci.CodeType_EncodingError
 	unauthorized   = abci.CodeType_Unauthorized
@@ -140,20 +134,6 @@ func ErrNoChain() TMError {
 }
 func IsNoChainErr(err error) bool {
 	return IsSameError(errNoChain, err)
-}
-
-func ErrNoNonce() TMError {
-	return WithCode(errNoNonce, unauthorized)
-}
-func ErrBadNonce(got, expected uint32) TMError {
-	return WithCode(fmt.Errorf("Bad nonce sequence, got %d, expected %d", got, expected), unauthorized)
-}
-func ErrNotMember() TMError {
-	return WithCode(errBadNonce, unauthorized)
-}
-
-func ErrZeroSequence() TMError {
-	return WithCode(errZeroSequence, unauthorized)
 }
 
 func ErrTxEmpty() TMError {

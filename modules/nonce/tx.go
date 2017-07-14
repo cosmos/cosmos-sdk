@@ -52,7 +52,7 @@ func (n Tx) ValidateBasic() error {
 	case n.Tx.Empty():
 		return errors.ErrTxEmpty()
 	case n.Sequence == 0:
-		return errors.ErrZeroSequence()
+		return ErrZeroSequence()
 	case len(n.Signers) == 0:
 		return errors.ErrNoSigners()
 	}
@@ -73,13 +73,13 @@ func (n Tx) CheckIncrementSeq(ctx basecoin.Context, store state.KVStore) error {
 		return err
 	}
 	if n.Sequence != cur+1 {
-		return errors.ErrBadNonce(n.Sequence, cur+1)
+		return ErrBadNonce(n.Sequence, cur+1)
 	}
 
 	// make sure they all signed
 	for _, s := range n.Signers {
 		if !ctx.HasPermission(s) {
-			return errors.ErrNotMember()
+			return ErrNotMember()
 		}
 	}
 

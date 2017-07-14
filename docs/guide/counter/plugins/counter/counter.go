@@ -35,9 +35,8 @@ func init() {
 
 // Tx - struct for all counter transactions
 type Tx struct {
-	Valid    bool       `json:"valid"`
-	Fee      coin.Coins `json:"fee"`
-	Sequence int        `json:""`
+	Valid bool       `json:"valid"`
+	Fee   coin.Coins `json:"fee"`
 }
 
 // NewTx - return a new counter transaction struct wrapped as a basecoin transaction

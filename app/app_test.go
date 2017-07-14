@@ -56,17 +56,17 @@ func (at *appTest) signTx(tx basecoin.Tx) basecoin.Tx {
 	return stx.Wrap()
 }
 
-func (at *appTest) getTx(coins coin.Coins) basecoin.Tx {
+func (at *appTest) getTx(coins coin.Coins, sequence uint32) basecoin.Tx {
 	tx := at.baseTx(coins)
-	tx = nonce.NewTx(1, []basecoin.Actor{at.acctIn.Actor()}, tx)
+	tx = nonce.NewTx(sequence, []basecoin.Actor{at.acctIn.Actor()}, tx)
 	tx = base.NewChainTx(at.chainID, 0, tx)
 	return at.signTx(tx)
 }
 
-func (at *appTest) feeTx(coins coin.Coins, toll coin.Coin) basecoin.Tx {
+func (at *appTest) feeTx(coins coin.Coins, toll coin.Coin, sequence uint32) basecoin.Tx {
 	tx := at.baseTx(coins)
 	tx = fee.NewFee(tx, toll, at.acctIn.Actor())
-	tx = nonce.NewTx(1, []basecoin.Actor{at.acctIn.Actor()}, tx)
+	tx = nonce.NewTx(sequence, []basecoin.Actor{at.acctIn.Actor()}, tx)
 	tx = base.NewChainTx(at.chainID, 0, tx)
 	return at.signTx(tx)
 }
@@ -213,22 +213,22 @@ func TestTx(t *testing.T) {
 	//Bad Balance
 	at.acctIn.Coins = coin.Coins{{"mycoin", 2}}
 	at.initAccount(at.acctIn)
-	res, _, _ := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}), true)
+	res, _, _ := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1), true)
 	assert.True(res.IsErr(), "ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res)
-	res, diffIn, diffOut := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}), false)
+	res, diffIn, diffOut := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1), false)
 	assert.True(res.IsErr(), "ExecTx/Bad DeliverTx: Expected error return from ExecTx, returned: %v", res)
 	assert.True(diffIn.IsZero())
 	assert.True(diffOut.IsZero())
 
 	//Regular CheckTx
 	at.reset()
-	res, _, _ = at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}), true)
+	res, _, _ = at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1), true)
 	assert.True(res.IsOK(), "ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", res)
 
 	//Regular DeliverTx
 	at.reset()
 	amt := coin.Coins{{"mycoin", 3}}
-	res, diffIn, diffOut = at.exec(t, at.getTx(amt), false)
+	res, diffIn, diffOut = at.exec(t, at.getTx(amt, 1), false)
 	assert.True(res.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res)
 	assert.Equal(amt.Negative(), diffIn)
 	assert.Equal(amt, diffOut)
@@ -237,7 +237,7 @@ func TestTx(t *testing.T) {
 	at.reset()
 	amt = coin.Coins{{"mycoin", 4}}
 	toll := coin.Coin{"mycoin", 1}
-	res, diffIn, diffOut = at.exec(t, at.feeTx(amt, toll), false)
+	res, diffIn, diffOut = at.exec(t, at.feeTx(amt, toll, 1), false)
 	assert.True(res.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res)
 	payment := amt.Plus(coin.Coins{toll}).Negative()
 	assert.Equal(payment, diffIn)
@@ -249,7 +249,7 @@ func TestQuery(t *testing.T) {
 	assert := assert.New(t)
 	at := newAppTest(t)
 
-	res, _, _ := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}), false)
+	res, _, _ := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1), false)
 	assert.True(res.IsOK(), "Commit, DeliverTx: Expected OK return from DeliverTx, Error: %v", res)
 
 	resQueryPreCommit := at.app.Query(abci.RequestQuery{

@@ -14,14 +14,22 @@ const (
 	prefixPacket = "p"
 )
 
-// newCertifier loads up the current state of this chain to make a proper
-func newCertifier(chainID string, store state.KVStore) (*certifiers.InquiringCertifier, error) {
+// newCertifier loads up the current state of this chain to make a proper certifier
+// it will load the most recent height before block h if h is positive
+// if h < 0, it will load the latest height
+func newCertifier(store state.KVStore, chainID string, h int) (*certifiers.InquiringCertifier, error) {
 	// each chain has their own prefixed subspace
-	space := stack.PrefixedStore(chainID, store)
-	p := newDBProvider(space)
+	p := newDBProvider(store)
 
-	// this gets the most recent verified seed
-	seed, err := certifiers.LatestSeed(p)
+	var seed certifiers.Seed
+	var err error
+	if h > 0 {
+		// this gets the most recent verified seed below the specified height
+		seed, err = p.GetByHeight(h)
+	} else {
+		// 0 or negative means start at latest seed
+		seed, err = certifiers.LatestSeed(p)
+	}
 	if err != nil {
 		return nil, err
 	}

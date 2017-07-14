@@ -1,7 +1,6 @@
 package ibc
 
 import (
-	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/light-client/certifiers"
 	merkle "github.com/tendermint/merkleeyes/iavl"
 
@@ -21,13 +20,6 @@ const (
 	TypeUpdateChain   = NameIBC + "/update"
 	TypePacketCreate  = NameIBC + "/create"
 	TypePacketPost    = NameIBC + "/post"
-
-	IBCCodeEncodingError       = abci.CodeType(1001)
-	IBCCodeChainAlreadyExists  = abci.CodeType(1002)
-	IBCCodePacketAlreadyExists = abci.CodeType(1003)
-	IBCCodeUnknownHeight       = abci.CodeType(1004)
-	IBCCodeInvalidCommit       = abci.CodeType(1005)
-	IBCCodeInvalidProof        = abci.CodeType(1006)
 )
 
 func init() {
@@ -71,6 +63,11 @@ func (u UpdateChainTx) ChainID() string {
 // ValidateBasic makes sure this is consistent, without checking the sigs
 func (u UpdateChainTx) ValidateBasic() error {
 	return u.Seed.ValidateBasic(u.ChainID())
+}
+
+// Wrap - used to satisfy TxInner
+func (u UpdateChainTx) Wrap() basecoin.Tx {
+	return basecoin.Tx{u}
 }
 
 // PacketCreateTx is meant to be called by IPC, another module...

@@ -66,16 +66,6 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	//get the nonce accounts
-	sendTx, ok := tx.Unwrap().(coin.SendTx)
-	if !ok {
-		return errors.New("tx not SendTx")
-	}
-	var nonceAccount []basecoin.Actor
-	for _, input := range sendTx.Inputs {
-		nonceAccount = append(nonceAccount, input.Address)
-	}
-
 	// TODO: make this more flexible for middleware
 	tx, err = WrapFeeTx(tx)
 	if err != nil {
@@ -85,13 +75,10 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	//add the nonce tx layer to the tx
-	seq := viper.GetInt(FlagSequence)
-	if seq < 0 {
-		return fmt.Errorf("sequence must be greater than 0")
+	tx, err = WrapNonceTx(tx)
+	if err != nil {
+		return err
 	}
-	tx = nonce.NewTx(uint32(seq), nonceAccount, tx)
 
 	// Note: this is single sig (no multi sig yet)
 	stx := auth.NewSig(tx)
@@ -106,6 +93,20 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 	return txcmd.OutputTx(bres)
 }
 
+// WrapNonceTx grabs the sequence number from the flag and wraps
+// the tx with this nonce.  Grabs the permission from the signer,
+// as we still only support single sig on the cli
+func WrapNonceTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
+	//add the nonce tx layer to the tx
+	seq := viper.GetInt(FlagSequence)
+	if seq < 0 {
+		return res, fmt.Errorf("sequence must be greater than 0")
+	}
+	signers := []basecoin.Actor{GetSignerAct()}
+	tx = nonce.NewTx(uint32(seq), signers, tx)
+	return tx, nil
+}
+
 // WrapFeeTx checks for FlagFee and if present wraps the tx with a
 // FeeTx of the given amount, paid by the signer
 func WrapFeeTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
@@ -118,7 +119,7 @@ func WrapFeeTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
 	if toll.IsZero() {
 		return tx, nil
 	}
-	return fee.NewFee(tx, toll, getSignerAddr()), nil
+	return fee.NewFee(tx, toll, GetSignerAct()), nil
 }
 
 // WrapChainTx will wrap the tx with a ChainTx from the standard flags
@@ -132,7 +133,9 @@ func WrapChainTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
 	return res, nil
 }
 
-func getSignerAddr() (res basecoin.Actor) {
+// GetSignerAct returns the address of the signer of the tx
+// (as we still only support single sig)
+func GetSignerAct() (res basecoin.Actor) {
 	// this could be much cooler with multisig...
 	signer := txcmd.GetSigner()
 	if !signer.Empty() {
@@ -157,7 +160,7 @@ func readSendTxFlags() (tx basecoin.Tx, err error) {
 
 	// craft the inputs and outputs
 	ins := []coin.TxInput{{
-		Address: getSignerAddr(),
+		Address: GetSignerAct(),
 		Coins:   amountCoins,
 	}}
 	outs := []coin.TxOutput{{

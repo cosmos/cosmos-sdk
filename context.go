@@ -38,6 +38,10 @@ func (a Actor) Equals(b Actor) bool {
 		bytes.Equal(a.Address, b.Address)
 }
 
+func (a Actor) Empty() bool {
+	return a.ChainID == "" && a.App == "" && len(a.Address) == 0
+}
+
 // Context is an interface, so we can implement "secure" variants that
 // rely on private fields to control the actions
 type Context interface {

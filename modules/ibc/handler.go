@@ -13,6 +13,9 @@ const (
 )
 
 // Handler allows us to update the chain state or create a packet
+//
+// TODO: require auth for registration, the authorized actor (or role)
+// should be defined in the handler, and set via SetOption
 type Handler struct {
 	basecoin.NopOption
 }
@@ -56,6 +59,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 
 	switch t := tx.Unwrap().(type) {
 	case RegisterChainTx:
+		// TODO: do we want some permissioning for this???
 		return h.initSeed(ctx, store, t)
 	case UpdateChainTx:
 		return h.updateSeed(ctx, store, t)

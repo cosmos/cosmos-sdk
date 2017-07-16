@@ -70,6 +70,15 @@ test02SendTxWithFee() {
     assertFalse "replay: $TX" $?
     checkAccount $SENDER "9007199254739900"
     checkAccount $RECV "1082"
+
+    # make sure we can query the proper nonce
+    NONCE=$(${CLIENT_EXE} query nonce $SENDER)
+    if [ -n "$DEBUG" ]; then echo $NONCE; echo; fi
+    # TODO: note that cobra returns error code 0 on parse failure,
+    # so currently this check passes even if there is no nonce query command
+    if assertTrue "no nonce query" $?; then
+        assertEquals "line=${LINENO}, proper nonce" "2" $(echo $NONCE | jq .data)
+    fi
 }
 
 

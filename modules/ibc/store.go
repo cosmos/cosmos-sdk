@@ -1,6 +1,7 @@
 package ibc
 
 import (
+	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 	wire "github.com/tendermint/go-wire"
@@ -46,4 +47,18 @@ func (c ChainSet) Register(chainID string, ourHeight uint64, theirHeight int) er
 	data := wire.BinaryBytes(info)
 	c.Set.Set([]byte(chainID), data)
 	return nil
+}
+
+// Packet is a wrapped transaction and permission that we want to
+// send off to another chain.
+type Packet struct {
+	DestChain   string           `json:"dest_chain"`
+	Sequence    int              `json:"sequence"`
+	Permissions []basecoin.Actor `json:"permissions"`
+	Tx          basecoin.Tx      `json:"tx"`
+}
+
+// Bytes returns a serialization of the Packet
+func (p Packet) Bytes() []byte {
+	return wire.BinaryBytes(p)
 }

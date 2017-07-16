@@ -13,21 +13,21 @@ const (
 	// 0x3? series for ibc
 	ByteRegisterChain = byte(0x30)
 	ByteUpdateChain   = byte(0x31)
-	BytePacketCreate  = byte(0x32)
-	BytePacketPost    = byte(0x33)
+	ByteCreatePacket  = byte(0x32)
+	BytePostPacket    = byte(0x33)
 
 	TypeRegisterChain = NameIBC + "/register"
 	TypeUpdateChain   = NameIBC + "/update"
-	TypePacketCreate  = NameIBC + "/create"
-	TypePacketPost    = NameIBC + "/post"
+	TypeCreatePacket  = NameIBC + "/create"
+	TypePostPacket    = NameIBC + "/post"
 )
 
 func init() {
 	basecoin.TxMapper.
 		RegisterImplementation(RegisterChainTx{}, TypeRegisterChain, ByteRegisterChain).
 		RegisterImplementation(UpdateChainTx{}, TypeUpdateChain, ByteUpdateChain).
-		RegisterImplementation(PacketCreateTx{}, TypePacketCreate, BytePacketCreate).
-		RegisterImplementation(PacketPostTx{}, TypePacketPost, BytePacketPost)
+		RegisterImplementation(CreatePacketTx{}, TypeCreatePacket, ByteCreatePacket).
+		RegisterImplementation(PostPacketTx{}, TypePostPacket, BytePostPacket)
 }
 
 // RegisterChainTx allows you to register a new chain on this blockchain
@@ -70,20 +70,21 @@ func (u UpdateChainTx) Wrap() basecoin.Tx {
 	return basecoin.Tx{u}
 }
 
-// PacketCreateTx is meant to be called by IPC, another module...
+// CreatePacketTx is meant to be called by IPC, another module...
 //
 // this is the tx that will be sent to another app and the permissions it
 // comes with (which must be a subset of the permissions on the current tx)
 //
-// TODO: how to control who can create packets (can I just signed create packet?)
-type PacketCreateTx struct {
+// If must have the special `AllowIBC` permission from the app
+// that can send this packet (so only coins can request SendTx packet)
+type CreatePacketTx struct {
 	DestChain   string           `json:"dest_chain"`
 	Permissions []basecoin.Actor `json:"permissions"`
 	Tx          basecoin.Tx      `json:"tx"`
 }
 
 // ValidateBasic makes sure this is consistent - used to satisfy TxInner
-func (p PacketCreateTx) ValidateBasic() error {
+func (p CreatePacketTx) ValidateBasic() error {
 	if p.DestChain == "" {
 		return errors.ErrNoChain()
 	}
@@ -94,27 +95,32 @@ func (p PacketCreateTx) ValidateBasic() error {
 }
 
 // Wrap - used to satisfy TxInner
-func (p PacketCreateTx) Wrap() basecoin.Tx {
+func (p CreatePacketTx) Wrap() basecoin.Tx {
 	return basecoin.Tx{p}
 }
 
-// PacketPostTx takes a wrapped packet from another chain and
+// PostPacketTx takes a wrapped packet from another chain and
 // TODO!!!
-type PacketPostTx struct {
+// also think... which chains can relay packets???
+// right now, enforce that these packets are only sent directly,
+// not routed over the hub.  add routing later.
+type PostPacketTx struct {
+	// make sure we have this header...
 	FromChainID     string // The immediate source of the packet, not always Packet.SrcChainID
 	FromChainHeight uint64 // The block height in which Packet was committed, to check Proof
-	Proof           *merkle.IAVLProof
-	// Packet
+	// this proof must match the header and the packet.Bytes()
+	Proof  *merkle.IAVLProof
+	Packet Packet
 }
 
 // ValidateBasic makes sure this is consistent - used to satisfy TxInner
-func (p PacketPostTx) ValidateBasic() error {
+func (p PostPacketTx) ValidateBasic() error {
 	// TODO
 	return nil
 }
 
 // Wrap - used to satisfy TxInner
-func (p PacketPostTx) Wrap() basecoin.Tx {
+func (p PostPacketTx) Wrap() basecoin.Tx {
 	return basecoin.Tx{p}
 }
 

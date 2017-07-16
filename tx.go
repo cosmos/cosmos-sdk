@@ -1,6 +1,8 @@
 package basecoin
 
 import (
+	"strings"
+
 	"github.com/tendermint/go-wire/data"
 
 	"github.com/tendermint/basecoin/errors"
@@ -74,4 +76,17 @@ func (t Tx) GetKind() (string, error) {
 	}
 	// grab the type we used in json
 	return text.Kind, nil
+}
+
+func (t Tx) GetMod() (string, error) {
+	kind, err := t.GetKind()
+	if err != nil {
+		return "", err
+	}
+	parts := strings.SplitN(kind, "/", 2)
+	if len(parts) != 2 {
+		// TODO: return "base"?
+		return "", errors.ErrUnknownTxType(t)
+	}
+	return parts[0], nil
 }

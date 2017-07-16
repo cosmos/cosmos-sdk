@@ -101,6 +101,7 @@ func (n Tx) getSeqKey() (seqKey []byte) {
 	sort.Sort(basecoin.ByAddress(n.Signers))
 
 	for _, signer := range n.Signers {
+		// rigel: use signer.Bytes()... instead of signer.Address
 		seqKey = append(seqKey, signer.Address...)
 	}
 	//seqKey = merkle.SimpleHashFromBinary(n.Signers)

@@ -29,25 +29,23 @@ func AllowIBC(app string) basecoin.Actor {
 }
 
 // Handler allows us to update the chain state or create a packet
-type Handler struct {
-	Registrar basecoin.Actor
-}
+type Handler struct{}
 
-var _ basecoin.Handler = &Handler{}
+var _ basecoin.Handler = Handler{}
 
 // NewHandler makes a Handler that allows all chains to connect via IBC.
 // Set a Registrar via SetOption to restrict it.
-func NewHandler() *Handler {
-	return new(Handler)
+func NewHandler() Handler {
+	return Handler{}
 }
 
 // Name - return name space
-func (*Handler) Name() string {
+func (Handler) Name() string {
 	return NameIBC
 }
 
 // SetOption - sets the registrar for IBC
-func (h *Handler) SetOption(l log.Logger, store state.KVStore, module, key, value string) (log string, err error) {
+func (h Handler) SetOption(l log.Logger, store state.KVStore, module, key, value string) (log string, err error) {
 	if module != NameIBC {
 		return "", errors.ErrUnknownModule(module)
 	}
@@ -57,8 +55,9 @@ func (h *Handler) SetOption(l log.Logger, store state.KVStore, module, key, valu
 		if err != nil {
 			return "", err
 		}
-		h.Registrar = act
-		// TODO: save/load from disk!
+		// Save the data
+		info := HandlerInfo{act}
+		info.Save(store)
 		return "Success", nil
 	}
 	return "", errors.ErrUnknownKey(key)
@@ -66,7 +65,7 @@ func (h *Handler) SetOption(l log.Logger, store state.KVStore, module, key, valu
 
 // CheckTx verifies the packet is formated correctly, and has the proper sequence
 // for a registered chain
-func (h *Handler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h Handler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	err = tx.ValidateBasic()
 	if err != nil {
 		return res, err
@@ -85,7 +84,7 @@ func (h *Handler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin
 
 // DeliverTx verifies all signatures on the tx and updated the chain state
 // apropriately
-func (h *Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	err = tx.ValidateBasic()
 	if err != nil {
 		return res, err
@@ -106,12 +105,13 @@ func (h *Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx baseco
 // accepts it as the root of trust.
 //
 // only the registrar, if set, is allowed to do this
-func (h *Handler) initSeed(ctx basecoin.Context, store state.KVStore,
+func (h Handler) initSeed(ctx basecoin.Context, store state.KVStore,
 	t RegisterChainTx) (res basecoin.Result, err error) {
 
 	// check permission to attach
 	// nothing set, means anyone can connect
-	if !h.Registrar.Empty() && !ctx.HasPermission(h.Registrar) {
+	info := LoadInfo(store)
+	if !info.Registrar.Empty() && !ctx.HasPermission(info.Registrar) {
 		return res, errors.ErrUnauthorized()
 	}
 
@@ -130,7 +130,7 @@ func (h *Handler) initSeed(ctx basecoin.Context, store state.KVStore,
 
 // updateSeed checks the seed against the existing chain data and rejects it if it
 // doesn't fit (or no chain data)
-func (h *Handler) updateSeed(ctx basecoin.Context, store state.KVStore,
+func (h Handler) updateSeed(ctx basecoin.Context, store state.KVStore,
 	t UpdateChainTx) (res basecoin.Result, err error) {
 
 	chainID := t.ChainID()
@@ -153,7 +153,7 @@ func (h *Handler) updateSeed(ctx basecoin.Context, store state.KVStore,
 
 // createPacket makes sure all permissions are good and the destination
 // chain is registed.  If so, it appends it to the outgoing queue
-func (h *Handler) createPacket(ctx basecoin.Context, store state.KVStore,
+func (h Handler) createPacket(ctx basecoin.Context, store state.KVStore,
 	t CreatePacketTx) (res basecoin.Result, err error) {
 
 	// make sure the chain is registed

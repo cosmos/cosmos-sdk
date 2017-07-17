@@ -14,6 +14,30 @@ const (
 	prefixChains = "**"
 )
 
+var (
+	handlerKey = []byte{0x2}
+)
+
+// HandlerInfo is the global state of the ibc.Handler
+type HandlerInfo struct {
+	Registrar basecoin.Actor `json:"registrar"`
+}
+
+// Save the HandlerInfo to the store
+func (h HandlerInfo) Save(store state.KVStore) {
+	b := wire.BinaryBytes(h)
+	store.Set(handlerKey, b)
+}
+
+// LoadInfo loads the HandlerInfo from the data store
+func LoadInfo(store state.KVStore) (h HandlerInfo) {
+	b := store.Get(handlerKey)
+	if len(b) > 0 {
+		wire.ReadBinaryBytes(b, &h)
+	}
+	return
+}
+
 // ChainInfo is the global info we store for each registered chain,
 // besides the headers, proofs, and packets
 type ChainInfo struct {

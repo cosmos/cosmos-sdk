@@ -12,8 +12,12 @@ const (
 	// we otherwise use the chainid as prefix, so this must not be an
 	// alpha-numeric byte
 	prefixChains = "**"
+
+	prefixInput  = "i"
+	prefixOutput = "o"
 )
 
+// this is used for the global handler info
 var (
 	handlerKey = []byte{0x2}
 )
@@ -77,7 +81,7 @@ func (c ChainSet) Register(chainID string, ourHeight uint64, theirHeight int) er
 // send off to another chain.
 type Packet struct {
 	DestChain   string           `json:"dest_chain"`
-	Sequence    int              `json:"sequence"`
+	Sequence    uint64           `json:"sequence"`
 	Permissions []basecoin.Actor `json:"permissions"`
 	Tx          basecoin.Tx      `json:"tx"`
 }
@@ -85,4 +89,18 @@ type Packet struct {
 // Bytes returns a serialization of the Packet
 func (p Packet) Bytes() []byte {
 	return wire.BinaryBytes(p)
+}
+
+// InputQueue returns the queue of input packets from this chain
+func InputQueue(store state.KVStore, chainID string) *state.Queue {
+	ch := stack.PrefixedStore(chainID, store)
+	space := stack.PrefixedStore(prefixInput, ch)
+	return state.NewQueue(space)
+}
+
+// OutputQueue returns the queue of output packets destined for this chain
+func OutputQueue(store state.KVStore, chainID string) *state.Queue {
+	ch := stack.PrefixedStore(chainID, store)
+	space := stack.PrefixedStore(prefixOutput, ch)
+	return state.NewQueue(space)
 }

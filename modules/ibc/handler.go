@@ -173,7 +173,7 @@ func (h Handler) createPacket(ctx basecoin.Context, store state.KVStore,
 
 	// start making the packet to send
 	packet := Packet{
-		DestChain:   t.DestChain,
+		DestChain:   dest,
 		Tx:          t.Tx,
 		Permissions: make([]basecoin.Actor, len(t.Permissions)),
 	}
@@ -188,6 +188,9 @@ func (h Handler) createPacket(ctx basecoin.Context, store state.KVStore,
 	}
 
 	// now add it to the output queue....
-	// TODO: where to store, also set the sequence....
+	q := OutputQueue(store, dest)
+	packet.Sequence = q.Tail()
+	q.Push(packet.Bytes())
+
 	return res, nil
 }

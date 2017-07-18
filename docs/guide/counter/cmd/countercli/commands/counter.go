@@ -9,7 +9,6 @@ import (
 	"github.com/tendermint/basecoin"
 	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
 	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
-	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/coin"
 )
 
@@ -34,45 +33,23 @@ func init() {
 	fs := CounterTxCmd.Flags()
 	fs.String(FlagCountFee, "", "Coins to send in the format <amt><coin>,<amt><coin>...")
 	fs.Bool(FlagValid, false, "Is count valid?")
-
-	fs.String(bcmd.FlagFee, "0mycoin", "Coins for the transaction fee of the format <amt><coin>")
-	fs.Int(bcmd.FlagSequence, -1, "Sequence number for this transaction")
 }
 
 // TODO: counterTx is very similar to the sendtx one,
 // maybe we can pull out some common patterns?
 func counterTx(cmd *cobra.Command, args []string) error {
-	// load data from json or flags
-	var tx basecoin.Tx
-	found, err := txcmd.LoadJSON(&tx)
-	if err != nil {
-		return err
-	}
-	if !found {
-		tx, err = readCounterTxFlags()
-	}
+	tx, err := readCounterTxFlags()
 	if err != nil {
 		return err
 	}
 
-	// TODO: make this more flexible for middleware
-	tx, err = bcmd.WrapFeeTx(tx)
+	tx, err = bcmd.Middleware.Wrap(tx)
 	if err != nil {
 		return err
 	}
-	tx, err = bcmd.WrapNonceTx(tx)
-	if err != nil {
-		return err
-	}
-	tx, err = bcmd.WrapChainTx(tx)
-	if err != nil {
-		return err
-	}
-
-	stx := auth.NewSig(tx)
 
 	// Sign if needed and post.  This it the work-horse
-	bres, err := txcmd.SignAndPostTx(stx)
+	bres, err := txcmd.SignAndPostTx(tx.Unwrap())
 	if err != nil {
 		return err
 	}

@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 
+	"github.com/tendermint/abci/version"
 	keycmd "github.com/tendermint/go-crypto/cmd"
 	"github.com/tendermint/light-client/commands"
 	"github.com/tendermint/light-client/commands/proofs"
@@ -15,7 +17,11 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
-	coincmd "github.com/tendermint/basecoin/cmd/basecoin/commands"
+	authcmd "github.com/tendermint/basecoin/modules/auth/commands"
+	basecmd "github.com/tendermint/basecoin/modules/base/commands"
+	coincmd "github.com/tendermint/basecoin/modules/coin/commands"
+	feecmd "github.com/tendermint/basecoin/modules/fee/commands"
+	noncecmd "github.com/tendermint/basecoin/modules/nonce/commands"
 )
 
 // BaseCli - main basecoin client command
@@ -30,6 +36,15 @@ tmcli to work for any custom abci app.
 `,
 }
 
+// VersionCmd - command to show the application version
+var VersionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Show version info",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(version.Version)
+	},
+}
+
 func main() {
 	commands.AddBasicFlags(BaseCli)
 
@@ -38,15 +53,24 @@ func main() {
 		// These are default parsers, but optional in your app (you can remove key)
 		proofs.TxCmd,
 		proofs.KeyCmd,
-		bcmd.AccountQueryCmd,
-		bcmd.NonceQueryCmd,
+		coincmd.AccountQueryCmd,
+		noncecmd.NonceQueryCmd,
 	)
+
+	// set up the middleware
+	bcmd.Middleware = bcmd.Wrappers{
+		feecmd.FeeWrapper{},
+		noncecmd.NonceWrapper{},
+		basecmd.ChainWrapper{},
+		authcmd.SigWrapper{},
+	}
+	bcmd.Middleware.Register(txs.RootCmd.PersistentFlags())
 
 	// you will always want this for the base send command
 	proofs.TxPresenters.Register("base", bcmd.BaseTxPresenter{})
 	txs.RootCmd.AddCommand(
 		// This is the default transaction, optional in your app
-		bcmd.SendTxCmd,
+		coincmd.SendTxCmd,
 	)
 
 	// Set up the various commands to use
@@ -59,7 +83,7 @@ func main() {
 		proofs.RootCmd,
 		txs.RootCmd,
 		proxy.RootCmd,
-		coincmd.VersionCmd,
+		VersionCmd,
 		bcmd.AutoCompleteCmd,
 	)
 

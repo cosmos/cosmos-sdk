@@ -15,6 +15,11 @@ import (
 
 	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
 	bcount "github.com/tendermint/basecoin/docs/guide/counter/cmd/countercli/commands"
+	authcmd "github.com/tendermint/basecoin/modules/auth/commands"
+	basecmd "github.com/tendermint/basecoin/modules/base/commands"
+	coincmd "github.com/tendermint/basecoin/modules/coin/commands"
+	feecmd "github.com/tendermint/basecoin/modules/fee/commands"
+	noncecmd "github.com/tendermint/basecoin/modules/nonce/commands"
 )
 
 // BaseCli represents the base command when called without any subcommands
@@ -37,17 +42,27 @@ func main() {
 		// These are default parsers, optional in your app
 		proofs.TxCmd,
 		proofs.KeyCmd,
-		bcmd.AccountQueryCmd,
+		coincmd.AccountQueryCmd,
+		noncecmd.NonceQueryCmd,
 
 		// XXX IMPORTANT: here is how you add custom query commands in your app
 		bcount.CounterQueryCmd,
 	)
 
+	// set up the middleware
+	bcmd.Middleware = bcmd.Wrappers{
+		feecmd.FeeWrapper{},
+		noncecmd.NonceWrapper{},
+		basecmd.ChainWrapper{},
+		authcmd.SigWrapper{},
+	}
+	bcmd.Middleware.Register(txs.RootCmd.PersistentFlags())
+
 	// Prepare transactions
 	proofs.TxPresenters.Register("base", bcmd.BaseTxPresenter{})
 	txs.RootCmd.AddCommand(
 		// This is the default transaction, optional in your app
-		bcmd.SendTxCmd,
+		coincmd.SendTxCmd,
 
 		// XXX IMPORTANT: here is how you add custom tx construction for your app
 		bcount.CounterTxCmd,

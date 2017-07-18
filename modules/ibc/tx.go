@@ -86,9 +86,9 @@ func (u UpdateChainTx) Wrap() basecoin.Tx {
 // If must have the special `AllowIBC` permission from the app
 // that can send this packet (so only coins can request SendTx packet)
 type CreatePacketTx struct {
-	DestChain   string           `json:"dest_chain"`
-	Permissions []basecoin.Actor `json:"permissions"`
-	Tx          basecoin.Tx      `json:"tx"`
+	DestChain   string          `json:"dest_chain"`
+	Permissions basecoin.Actors `json:"permissions"`
+	Tx          basecoin.Tx     `json:"tx"`
 }
 
 // ValidateBasic makes sure this is consistent - used to satisfy TxInner

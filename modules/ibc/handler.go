@@ -1,6 +1,8 @@
 package ibc
 
 import (
+	"fmt"
+
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
 
@@ -192,5 +194,6 @@ func (h Handler) createPacket(ctx basecoin.Context, store state.KVStore,
 	packet.Sequence = q.Tail()
 	q.Push(packet.Bytes())
 
-	return res, nil
+	res = basecoin.Result{Log: fmt.Sprintf("Packet %s %d", dest, packet.Sequence)}
+	return
 }

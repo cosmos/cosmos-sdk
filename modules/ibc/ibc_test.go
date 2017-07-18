@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/light-client/certifiers"
 	"github.com/tendermint/tmlibs/log"
 
@@ -230,11 +231,120 @@ func TestIBCUpdate(t *testing.T) {
 	}
 }
 
+// try to create an ibc packet and verify the number we get back
 func TestIBCCreatePacket(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
 
+	// this is the root seed, that others are evaluated against
+	keys := certifiers.GenValKeys(7)
+	appHash := []byte{1, 2, 3, 4}
+	start := 100 // initial height
+	chainID := "cosmos-hub"
+	root := genEmptySeed(keys, chainID, start, appHash, len(keys))
+
+	// create the app and register the root of trust (for chain-1)
+	ctx := stack.MockContext("hub", 50)
+	store := state.NewMemKVStore()
+	app := stack.New().Dispatch(stack.WrapHandler(NewHandler()))
+	tx := RegisterChainTx{root}.Wrap()
+	_, err := app.DeliverTx(ctx, store, tx)
+	require.Nil(err, "%+v", err)
+
+	// this is the tx we send, and the needed permission to send it
+	raw := stack.NewRawTx([]byte{0xbe, 0xef})
+	ibcPerm := AllowIBC(stack.NameOK)
+	somePerm := basecoin.Actor{App: "some", Address: []byte("perm")}
+
+	cases := []struct {
+		dest     string
+		ibcPerms basecoin.Actors
+		ctxPerms basecoin.Actors
+		checker  checkErr
+	}{
+		// wrong chain -> error
+		{
+			dest:     "some-other-chain",
+			ctxPerms: basecoin.Actors{ibcPerm},
+			checker:  IsNotRegisteredErr,
+		},
+
+		// no ibc permission -> error
+		{
+			dest:    chainID,
+			checker: IsNeedsIBCPermissionErr,
+		},
+
+		// correct -> nice sequence
+		{
+			dest:     chainID,
+			ctxPerms: basecoin.Actors{ibcPerm},
+			checker:  noErr,
+		},
+
+		// requesting invalid permissions -> error
+		{
+			dest:     chainID,
+			ibcPerms: basecoin.Actors{somePerm},
+			ctxPerms: basecoin.Actors{ibcPerm},
+			checker:  IsCannotSetPermissionErr,
+		},
+
+		// requesting extra permissions when present
+		{
+			dest:     chainID,
+			ibcPerms: basecoin.Actors{somePerm},
+			ctxPerms: basecoin.Actors{ibcPerm, somePerm},
+			checker:  noErr,
+		},
+	}
+
+	for i, tc := range cases {
+		tx := CreatePacketTx{
+			DestChain:   tc.dest,
+			Permissions: tc.ibcPerms,
+			Tx:          raw,
+		}.Wrap()
+
+		myCtx := ctx.WithPermissions(tc.ctxPerms...)
+		_, err = app.DeliverTx(myCtx, store, tx)
+		assert.True(tc.checker(err), "%d: %+v", i, err)
+	}
+
+	// query packet state - make sure both packets are properly writen
+	p := stack.PrefixedStore(NameIBC, store)
+	q := OutputQueue(p, chainID)
+	if assert.Equal(2, q.Size()) {
+		expected := []struct {
+			seq  uint64
+			perm basecoin.Actors
+		}{
+			{0, nil},
+			{1, basecoin.Actors{somePerm}},
+		}
+
+		for _, tc := range expected {
+			var packet Packet
+			err = wire.ReadBinaryBytes(q.Pop(), &packet)
+			require.Nil(err, "%+v", err)
+			assert.Equal(chainID, packet.DestChain)
+			assert.EqualValues(tc.seq, packet.Sequence)
+			assert.Equal(raw, packet.Tx)
+			assert.Equal(len(tc.perm), len(packet.Permissions))
+		}
+	}
 }
 
 func TestIBCPostPacket(t *testing.T) {
+	// make proofs
+
+	// bad chain -> error
+	// no matching header -> error
+	// bad proof -> error
+	// out of order -> error
+	// invalid permissions -> error
+
+	// all good -> execute tx
 
 }
 

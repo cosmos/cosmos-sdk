@@ -39,3 +39,8 @@ into various applications.
 ## Further reading
 
 * [Glossary of the terms](glossary.md)
+* [Standard modules](stdlib.md)
+* Guide to building a module
+* Demo of cli tool
+* IBC in detail
+* Diagrams!!!

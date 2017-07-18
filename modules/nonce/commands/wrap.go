@@ -27,16 +27,16 @@ var _ bcmd.Wrapper = NonceWrapper{}
 // the tx with this nonce.  Grabs the permission from the signer,
 // as we still only support single sig on the cli
 func (NonceWrapper) Wrap(tx basecoin.Tx) (res basecoin.Tx, err error) {
-	//add the nonce tx layer to the tx
-	seq := viper.GetInt(FlagSequence)
-	if seq < 0 {
-		return res, fmt.Errorf("sequence must be greater than 0")
+	seq, err := readSequence()
+	if err != nil {
+		return res, err
 	}
+
 	signers, err := readNonceKey()
 	if err != nil {
 		return res, err
 	}
-	res = nonce.NewTx(uint32(seq), signers, tx)
+	res = nonce.NewTx(seq, signers, tx)
 	return
 }
 
@@ -46,14 +46,17 @@ func (NonceWrapper) Register(fs *pflag.FlagSet) {
 	fs.String(FlagNonceKey, "", "Set of comma-separated addresses for the nonce (for multisig)")
 }
 
-func readNonceKey() (signers []basecoin.Actor, err error) {
+func readNonceKey() ([]basecoin.Actor, error) {
 	nonce := viper.GetString(FlagNonceKey)
 	if nonce == "" {
 		return []basecoin.Actor{bcmd.GetSignerAct()}, nil
 	}
+	return parseActors(nonce)
+}
 
+func parseActors(key string) (signers []basecoin.Actor, err error) {
 	var act basecoin.Actor
-	for _, k := range strings.Split(nonce, ",") {
+	for _, k := range strings.Split(key, ",") {
 		act, err = bcmd.ParseAddress(k)
 		if err != nil {
 			return
@@ -61,4 +64,15 @@ func readNonceKey() (signers []basecoin.Actor, err error) {
 		signers = append(signers, act)
 	}
 	return
+}
+
+func readSequence() (uint32, error) {
+	//add the nonce tx layer to the tx
+	seq := viper.GetInt(FlagSequence)
+	if seq > 0 {
+		return uint32(seq), nil
+	}
+
+	// TODO: try to download from query..
+	return 0, fmt.Errorf("sequence must be greater than 0")
 }

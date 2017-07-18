@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -8,8 +10,6 @@ import (
 	lcmd "github.com/tendermint/light-client/commands"
 	proofcmd "github.com/tendermint/light-client/commands/proofs"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/nonce"
 	"github.com/tendermint/basecoin/stack"
 )
@@ -22,22 +22,21 @@ var NonceQueryCmd = &cobra.Command{
 }
 
 func doNonceQuery(cmd *cobra.Command, args []string) error {
-	addr, err := proofcmd.ParseHexKey(args, "address")
+	if len(args) == 0 {
+		return errors.New("Missing required argument [address]")
+	}
+	addr := strings.Join(args, ",")
+	act, err := parseActors(addr)
 	if err != nil {
 		return err
 	}
-
-	act := []basecoin.Actor{basecoin.NewActor(
-		auth.NameSigs,
-		addr,
-	)}
 
 	key := stack.PrefixedKey(nonce.NameNonce, nonce.GetSeqKey(act))
 
 	var seq uint32
 	proof, err := proofcmd.GetAndParseAppProof(key, &seq)
 	if lc.IsNoDataErr(err) {
-		return errors.Errorf("Sequence is empty for address %X ", addr)
+		return errors.Errorf("Sequence is empty for address %s ", addr)
 	} else if err != nil {
 		return err
 	}

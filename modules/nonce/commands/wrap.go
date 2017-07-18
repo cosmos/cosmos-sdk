@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -14,6 +15,7 @@ import (
 // nolint
 const (
 	FlagSequence = "sequence"
+	FlagNonceKey = "nonce-key"
 )
 
 // NonceWrapper wraps a tx with a nonce
@@ -30,7 +32,10 @@ func (NonceWrapper) Wrap(tx basecoin.Tx) (res basecoin.Tx, err error) {
 	if seq < 0 {
 		return res, fmt.Errorf("sequence must be greater than 0")
 	}
-	signers := []basecoin.Actor{bcmd.GetSignerAct()}
+	signers, err := readNonceKey()
+	if err != nil {
+		return res, err
+	}
 	res = nonce.NewTx(uint32(seq), signers, tx)
 	return
 }
@@ -38,4 +43,22 @@ func (NonceWrapper) Wrap(tx basecoin.Tx) (res basecoin.Tx, err error) {
 // Register adds the sequence flags to the cli
 func (NonceWrapper) Register(fs *pflag.FlagSet) {
 	fs.Int(FlagSequence, -1, "Sequence number for this transaction")
+	fs.String(FlagNonceKey, "", "Set of comma-separated addresses for the nonce (for multisig)")
+}
+
+func readNonceKey() (signers []basecoin.Actor, err error) {
+	nonce := viper.GetString(FlagNonceKey)
+	if nonce == "" {
+		return []basecoin.Actor{bcmd.GetSignerAct()}, nil
+	}
+
+	var act basecoin.Actor
+	for _, k := range strings.Split(nonce, ",") {
+		act, err = bcmd.ParseAddress(k)
+		if err != nil {
+			return
+		}
+		signers = append(signers, act)
+	}
+	return
 }

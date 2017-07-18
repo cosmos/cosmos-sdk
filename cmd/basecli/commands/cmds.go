@@ -73,6 +73,7 @@ func ValidateResult(res *ctypes.ResultBroadcastTxCommit) error {
 // If app is not specified or "", then assume auth.NameSigs
 func ParseAddress(input string) (res basecoin.Actor, err error) {
 	chain, app := "", auth.NameSigs
+	input = strings.TrimSpace(input)
 	spl := strings.SplitN(input, ":", 3)
 
 	if len(spl) == 3 {

@@ -12,7 +12,8 @@ import (
 
 //nolint
 const (
-	FlagFee = "fee"
+	FlagFee   = "fee"
+	FlagPayer = "payer"
 )
 
 // FeeWrapper wraps a tx with an optional fee payment
@@ -32,11 +33,26 @@ func (FeeWrapper) Wrap(tx basecoin.Tx) (res basecoin.Tx, err error) {
 	if toll.IsZero() {
 		return tx, nil
 	}
-	res = fee.NewFee(tx, toll, bcmd.GetSignerAct())
+
+	payer, err := readPayer()
+	if err != nil {
+		return res, err
+	}
+
+	res = fee.NewFee(tx, toll, payer)
 	return
 }
 
 // Register adds the sequence flags to the cli
 func (FeeWrapper) Register(fs *pflag.FlagSet) {
 	fs.String(FlagFee, "0mycoin", "Coins for the transaction fee of the format <amt><coin>")
+	fs.String(FlagPayer, "", "Account to pay fee if not current signer (for multisig)")
+}
+
+func readPayer() (basecoin.Actor, error) {
+	payer := viper.GetString(FlagPayer)
+	if payer == "" {
+		return bcmd.GetSignerAct(), nil
+	}
+	return bcmd.ParseAddress(payer)
 }

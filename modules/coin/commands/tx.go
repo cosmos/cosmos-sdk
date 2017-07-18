@@ -23,12 +23,14 @@ var SendTxCmd = &cobra.Command{
 const (
 	FlagTo     = "to"
 	FlagAmount = "amount"
+	FlagFrom   = "from"
 )
 
 func init() {
 	flags := SendTxCmd.Flags()
 	flags.String(FlagTo, "", "Destination address for the bits")
 	flags.String(FlagAmount, "", "Coins to send in the format <amt><coin>,<amt><coin>...")
+	flags.String(FlagFrom, "", "Address sending coins, if not first signer")
 }
 
 // doSendTx is an example of how to make a tx
@@ -70,6 +72,11 @@ func readSendTxFlags() (tx basecoin.Tx, err error) {
 		return tx, err
 	}
 
+	fromAddr, err := readFromAddr()
+	if err != nil {
+		return tx, err
+	}
+
 	amountCoins, err := coin.ParseCoins(viper.GetString(FlagAmount))
 	if err != nil {
 		return tx, err
@@ -77,7 +84,7 @@ func readSendTxFlags() (tx basecoin.Tx, err error) {
 
 	// craft the inputs and outputs
 	ins := []coin.TxInput{{
-		Address: bcmd.GetSignerAct(),
+		Address: fromAddr,
 		Coins:   amountCoins,
 	}}
 	outs := []coin.TxOutput{{
@@ -86,4 +93,12 @@ func readSendTxFlags() (tx basecoin.Tx, err error) {
 	}}
 
 	return coin.NewSendTx(ins, outs), nil
+}
+
+func readFromAddr() (basecoin.Actor, error) {
+	from := viper.GetString(FlagFrom)
+	if from == "" {
+		return bcmd.GetSignerAct(), nil
+	}
+	return bcmd.ParseAddress(from)
 }

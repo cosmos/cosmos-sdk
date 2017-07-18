@@ -18,6 +18,7 @@ var (
 	errPacketAlreadyExists = fmt.Errorf("Packet already handled")
 	errPacketOutOfOrder    = fmt.Errorf("Packet out of order")
 	errInvalidProof        = fmt.Errorf("Invalid merkle proof")
+	msgInvalidCommit       = "Invalid header and commit"
 
 	IBCCodeChainNotRegistered    = abci.CodeType(1001)
 	IBCCodeChainAlreadyExists    = abci.CodeType(1002)
@@ -39,7 +40,7 @@ func IsNotRegisteredErr(err error) bool {
 func ErrAlreadyRegistered(chainID string) error {
 	return errors.WithMessage(chainID, errChainAlreadyExists, IBCCodeChainAlreadyExists)
 }
-func IsAlreadyRegistetedErr(err error) bool {
+func IsAlreadyRegisteredErr(err error) bool {
 	return errors.IsSameError(errChainAlreadyExists, err)
 }
 
@@ -92,4 +93,15 @@ func ErrInvalidProof() error {
 }
 func IsInvalidProofErr(err error) bool {
 	return errors.IsSameError(errInvalidProof, err)
+}
+
+func ErrInvalidCommit(err error) error {
+	e := errors.WithMessage(msgInvalidCommit, err, IBCCodeInvalidCommit)
+	fmt.Println("make", e.ErrorCode())
+	return e
+}
+func IsInvalidCommitErr(err error) bool {
+	// fmt.Println("check", err.(errors.TMError).ErrorCode(), IBCCodeInvalidCommit)
+	fmt.Println("check", IBCCodeInvalidCommit)
+	return errors.HasErrorCode(err, IBCCodeInvalidCommit)
 }

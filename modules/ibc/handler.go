@@ -114,6 +114,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 func (h Handler) initSeed(ctx basecoin.Context, store state.KVStore,
 	t RegisterChainTx) (res basecoin.Result, err error) {
 
+	// verify that the header looks reasonable
 	chainID := t.ChainID()
 	s := NewChainSet(store)
 	err = s.Register(chainID, ctx.BlockHeight(), t.Seed.Height())

@@ -42,7 +42,11 @@ func (r RegisterChainTx) ChainID() string {
 
 // ValidateBasic makes sure this is consistent, without checking the sigs
 func (r RegisterChainTx) ValidateBasic() error {
-	return r.Seed.ValidateBasic(r.ChainID())
+	err := r.Seed.ValidateBasic(r.ChainID())
+	if err != nil {
+		err = ErrInvalidCommit(err)
+	}
+	return err
 }
 
 // Wrap - used to satisfy TxInner
@@ -62,7 +66,11 @@ func (u UpdateChainTx) ChainID() string {
 
 // ValidateBasic makes sure this is consistent, without checking the sigs
 func (u UpdateChainTx) ValidateBasic() error {
-	return u.Seed.ValidateBasic(u.ChainID())
+	err := u.Seed.ValidateBasic(u.ChainID())
+	if err != nil {
+		err = ErrInvalidCommit(err)
+	}
+	return err
 }
 
 // Wrap - used to satisfy TxInner

@@ -19,7 +19,8 @@ dist:
 benchmark:
 	@go test -bench=. ./modules/...
 
-test: test_unit test_cli test_tutorial
+#test: test_unit test_cli test_tutorial
+test: test_unit test_cli
 
 test_unit:
 	@go test `glide novendor`

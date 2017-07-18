@@ -12,7 +12,7 @@ import (
 	"github.com/tendermint/tendermint/rpc/client"
 
 	lc "github.com/tendermint/light-client"
-	"github.com/tendermint/basecoin/commands"
+	"github.com/tendermint/basecoin/client/commands"
 	"github.com/tendermint/light-client/proofs"
 )
 

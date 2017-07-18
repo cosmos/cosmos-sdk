@@ -5,8 +5,8 @@ import (
 	"github.com/spf13/cobra"
 
 	lc "github.com/tendermint/light-client"
-	lcmd "github.com/tendermint/basecoin/commands"
-	proofcmd "github.com/tendermint/basecoin/commands/proofs"
+	lcmd "github.com/tendermint/basecoin/client/commands"
+	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
 
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/coin"

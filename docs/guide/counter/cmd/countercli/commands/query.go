@@ -3,7 +3,7 @@ package commands
 import (
 	"github.com/spf13/cobra"
 
-	proofcmd "github.com/tendermint/basecoin/commands/proofs"
+	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
 
 	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
 	"github.com/tendermint/basecoin/stack"

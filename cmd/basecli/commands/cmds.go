@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 
-	txcmd "github.com/tendermint/basecoin/commands/txs"
+	txcmd "github.com/tendermint/basecoin/client/commands/txs"
 	cmn "github.com/tendermint/tmlibs/common"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"

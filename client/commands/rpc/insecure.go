@@ -2,7 +2,7 @@ package rpc
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/tendermint/basecoin/commands"
+	"github.com/tendermint/basecoin/client/commands"
 )
 
 var statusCmd = &cobra.Command{

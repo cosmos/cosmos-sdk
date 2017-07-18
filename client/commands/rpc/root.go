@@ -9,7 +9,7 @@ import (
 	"github.com/tendermint/tendermint/rpc/client"
 
 	certclient "github.com/tendermint/light-client/certifiers/client"
-	"github.com/tendermint/basecoin/commands"
+	"github.com/tendermint/basecoin/client/commands"
 )
 
 const (

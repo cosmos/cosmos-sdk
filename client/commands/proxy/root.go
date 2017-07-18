@@ -15,7 +15,7 @@ import (
 	rpc "github.com/tendermint/tendermint/rpc/lib/server"
 
 	certclient "github.com/tendermint/light-client/certifiers/client"
-	"github.com/tendermint/basecoin/commands"
+	"github.com/tendermint/basecoin/client/commands"
 )
 
 // RootCmd represents the base command when called without any subcommands

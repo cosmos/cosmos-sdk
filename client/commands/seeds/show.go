@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/light-client/certifiers"
-	"github.com/tendermint/basecoin/commands"
+	"github.com/tendermint/basecoin/client/commands"
 )
 
 const (

@@ -14,7 +14,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin/commands"
+	"github.com/tendermint/basecoin/client/commands"
 	crypto "github.com/tendermint/go-crypto"
 	keycmd "github.com/tendermint/go-crypto/cmd"
 	"github.com/tendermint/go-crypto/keys"

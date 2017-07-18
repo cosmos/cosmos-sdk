@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin/commands"
+	"github.com/tendermint/basecoin/client/commands"
 
 	"github.com/tendermint/basecoin"
 	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"

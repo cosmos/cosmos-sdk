@@ -5,7 +5,7 @@ import (
 
 	"github.com/tendermint/go-wire/data"
 
-	"github.com/tendermint/basecoin/commands"
+	"github.com/tendermint/basecoin/client/commands"
 	"github.com/tendermint/light-client/proofs"
 )
 

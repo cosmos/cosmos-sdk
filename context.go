@@ -38,6 +38,7 @@ func (a Actor) Equals(b Actor) bool {
 		bytes.Equal(a.Address, b.Address)
 }
 
+// Empty checks if the actor is not initialized
 func (a Actor) Empty() bool {
 	return a.ChainID == "" && a.App == "" && len(a.Address) == 0
 }
@@ -57,19 +58,34 @@ type Context interface {
 }
 
 //////////////////////////////// Sort Interface
-// USAGE sort.Sort(ByAddress(<actor instance>))
+// USAGE sort.Sort(ByAll(<actor instance>))
 
 func (a Actor) String() string {
 	return fmt.Sprintf("%x", a.Address)
 }
 
-// ByAddress implements sort.Interface for []Actor based on
-// the Address field.
-type ByAddress []Actor
+// ByAll implements sort.Interface for []Actor.
+// It sorts be the ChainID, followed by the App, followed by the Address
+type ByAll []Actor
 
 // Verify the sort interface at compile time
-var _ sort.Interface = ByAddress{}
+var _ sort.Interface = ByAll{}
 
-func (a ByAddress) Len() int           { return len(a) }
-func (a ByAddress) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByAddress) Less(i, j int) bool { return bytes.Compare(a[i].Address, a[j].Address) == -1 }
+func (a ByAll) Len() int      { return len(a) }
+func (a ByAll) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByAll) Less(i, j int) bool {
+
+	if a[i].ChainID < a[j].ChainID {
+		return true
+	}
+	if a[i].ChainID > a[j].ChainID {
+		return false
+	}
+	if a[i].App < a[j].App {
+		return true
+	}
+	if a[i].App > a[j].App {
+		return false
+	}
+	return bytes.Compare(a[i].Address, a[j].Address) == -1
+}

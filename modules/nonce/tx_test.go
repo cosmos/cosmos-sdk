@@ -85,15 +85,13 @@ func TestNonce(t *testing.T) {
 		{true, 2, set321, set321},  // other order is the same
 		{false, 2, set321, set321}, // no repetition
 
-		// signers from different chain and apps
+		// signers with different chain-IDs and apps from actors
 		{false, 3, set123, set123Chain2},      // sign with different chain actors
 		{false, 3, set123, set123App2},        // sign with different app actors
 		{false, 3, set123, set123MixedChains}, // sign with mixed chain actor
 		{false, 3, set123, set123MixedApps},   // sign with mixed app actors
 
-		// Rigel: this is the problem I was refering to.
-		// The sig checks are proper.  But the seqkey is not unique
-		// all of these demand 3, as that what is expected for set123
+		// signers from different chain-IDs and apps, working
 		{true, 1, set123Chain2, set123Chain2},
 		{true, 1, set123App2, set123App2},
 		{true, 1, set123MixedChains, set123MixedChains},

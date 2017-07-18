@@ -80,3 +80,16 @@ func (d *dbProvider) GetByHash(hash []byte) (seed certifiers.Seed, err error) {
 	err = wire.ReadBinaryBytes(b, &seed)
 	return
 }
+
+// GetExactHeight is like GetByHeight, but returns an error instead of
+// closest match if there is no exact match
+func (d *dbProvider) GetExactHeight(h int) (seed certifiers.Seed, err error) {
+	seed, err = d.GetByHeight(h)
+	if err != nil {
+		return
+	}
+	if seed.Height() != h {
+		err = ErrHeaderNotFound(h)
+	}
+	return
+}

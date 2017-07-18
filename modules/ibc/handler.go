@@ -92,6 +92,12 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 
 	switch t := tx.Unwrap().(type) {
 	case RegisterChainTx:
+		// check permission to attach, do it here, so no permission check
+		// by SetOption
+		info := LoadInfo(store)
+		if !info.Registrar.Empty() && !ctx.HasPermission(info.Registrar) {
+			return res, errors.ErrUnauthorized()
+		}
 		return h.initSeed(ctx, store, t)
 	case UpdateChainTx:
 		return h.updateSeed(ctx, store, t)
@@ -107,13 +113,6 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 // only the registrar, if set, is allowed to do this
 func (h Handler) initSeed(ctx basecoin.Context, store state.KVStore,
 	t RegisterChainTx) (res basecoin.Result, err error) {
-
-	// check permission to attach
-	// nothing set, means anyone can connect
-	info := LoadInfo(store)
-	if !info.Registrar.Empty() && !ctx.HasPermission(info.Registrar) {
-		return res, errors.ErrUnauthorized()
-	}
 
 	chainID := t.ChainID()
 	s := NewChainSet(store)

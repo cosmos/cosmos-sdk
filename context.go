@@ -50,6 +50,17 @@ func (a Actor) WithChain(chainID string) (b Actor) {
 	return
 }
 
+type Actors []Actor
+
+func (a Actors) AllHaveChain(chainID string) bool {
+	for _, b := range a {
+		if b.ChainID != chainID {
+			return false
+		}
+	}
+	return true
+}
+
 // Context is an interface, so we can implement "secure" variants that
 // rely on private fields to control the actions
 type Context interface {

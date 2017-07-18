@@ -1,8 +1,6 @@
 package ibc
 
 import (
-	"errors"
-
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
@@ -68,40 +66,48 @@ func (m Middleware) verifyPost(ctx basecoin.Context, store state.KVStore,
 	// make sure the chain is registered
 	from := tx.FromChainID
 	if !NewChainSet(store).Exists([]byte(from)) {
-		err = ErrNotRegistered(from)
-		return
+		return ictx, itx, ErrNotRegistered(from)
+	}
+
+	// TODO: how to deal with routing/relaying???
+	packet := tx.Packet
+	if packet.DestChain != ctx.ChainID() {
+		return ictx, itx, ErrWrongDestChain(packet.DestChain)
+	}
+
+	// verify packet.Permissions all come from the other chain
+	if !packet.Permissions.AllHaveChain(tx.FromChainID) {
+		return ictx, itx, ErrCannotSetPermission()
 	}
 
 	// make sure this sequence number is the next in the list
 	q := InputQueue(store, from)
-	packet := tx.Packet
-	if q.Tail() != packet.Sequence {
-		err = errors.New("Incorrect sequence number - out of order") // TODO
-		return
+	tail := q.Tail()
+	if packet.Sequence < tail {
+		return ictx, itx, ErrPacketAlreadyExists()
+	}
+	if packet.Sequence > tail {
+		return ictx, itx, ErrPacketOutOfOrder(tail)
 	}
 
 	// look up the referenced header
 	space := stack.PrefixedStore(from, store)
 	provider := newDBProvider(space)
-	// TODO: GetExactHeight helper?
-	seed, err := provider.GetByHeight(int(tx.FromChainHeight))
+	seed, err := provider.GetExactHeight(int(tx.FromChainHeight))
 	if err != nil {
 		return ictx, itx, err
-	}
-	if seed.Height() != int(tx.FromChainHeight) {
-		err = errors.New("no such height") // TODO
-		return
 	}
 
 	// verify the merkle hash....
 	root := seed.Header.AppHash
-	key := []byte("?????") // TODO!
-	tx.Proof.Verify(key, packet.Bytes(), root)
-
-	// TODO: verify packet.Permissions
+	pBytes := packet.Bytes()
+	valid := tx.Proof.Verify(tx.Key, pBytes, root)
+	if !valid {
+		return ictx, itx, ErrInvalidProof()
+	}
 
 	// add to input queue
-	q.Push(packet.Bytes())
+	q.Push(pBytes)
 
 	// return the wrapped tx along with the extra permissions
 	ictx = ictx.WithPermissions(packet.Permissions...)

@@ -110,6 +110,7 @@ type PostPacketTx struct {
 	FromChainHeight uint64 // The block height in which Packet was committed, to check Proof
 	// this proof must match the header and the packet.Bytes()
 	Proof  *merkle.IAVLProof
+	Key    []byte
 	Packet Packet
 }
 
@@ -123,33 +124,3 @@ func (p PostPacketTx) ValidateBasic() error {
 func (p PostPacketTx) Wrap() basecoin.Tx {
 	return basecoin.Tx{p}
 }
-
-// proof := tx.Proof
-// if proof == nil {
-//   sm.res.Code = IBCCodeInvalidProof
-//   sm.res.Log = "Proof is nil"
-//   return
-// }
-// packetBytes := wire.BinaryBytes(packet)
-
-// // Make sure packet's proof matches given (packet, key, blockhash)
-// ok := proof.Verify(packetKeyEgress, packetBytes, header.AppHash)
-// if !ok {
-//   sm.res.Code = IBCCodeInvalidProof
-//   sm.res.Log = fmt.Sprintf("Proof is invalid. key: %s; packetByes %X; header %v; proof %v", packetKeyEgress, packetBytes, header, proof)
-//   return
-// }
-
-// // Execute payload
-// switch payload := packet.Payload.(type) {
-// case DataPayload:
-//   // do nothing
-// case CoinsPayload:
-//   // Add coins to destination account
-//   acc := types.GetAccount(sm.store, payload.Address)
-//   if acc == nil {
-//     acc = &types.Account{}
-//   }
-//   acc.Balance = acc.Balance.Plus(payload.Coins)
-//   types.SetAccount(sm.store, payload.Address, acc)
-// }

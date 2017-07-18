@@ -11,21 +11,22 @@ import (
 var (
 	errChainNotRegistered  = fmt.Errorf("Chain not registered")
 	errChainAlreadyExists  = fmt.Errorf("Chain already exists")
+	errWrongDestChain      = fmt.Errorf("This is not the destination")
 	errNeedsIBCPermission  = fmt.Errorf("Needs app-permission to send IBC")
 	errCannotSetPermission = fmt.Errorf("Requesting invalid permission on IBC")
-	// errNotMember        = fmt.Errorf("Not a member")
-	// errInsufficientSigs = fmt.Errorf("Not enough signatures")
-	// errNoMembers        = fmt.Errorf("No members specified")
-	// errTooManyMembers   = fmt.Errorf("Too many members specified")
-	// errNotEnoughMembers = fmt.Errorf("Not enough members specified")
+	errHeaderNotFound      = fmt.Errorf("Header not found")
+	errPacketAlreadyExists = fmt.Errorf("Packet already handled")
+	errPacketOutOfOrder    = fmt.Errorf("Packet out of order")
+	errInvalidProof        = fmt.Errorf("Invalid merkle proof")
 
-	IBCCodeChainNotRegistered  = abci.CodeType(1001)
-	IBCCodeChainAlreadyExists  = abci.CodeType(1002)
-	IBCCodePacketAlreadyExists = abci.CodeType(1003)
-	IBCCodeUnknownHeight       = abci.CodeType(1004)
-	IBCCodeInvalidCommit       = abci.CodeType(1005)
-	IBCCodeInvalidProof        = abci.CodeType(1006)
-	IBCCodeInvalidCall         = abci.CodeType(1007)
+	IBCCodeChainNotRegistered    = abci.CodeType(1001)
+	IBCCodeChainAlreadyExists    = abci.CodeType(1002)
+	IBCCodeUnknownChain          = abci.CodeType(1003)
+	IBCCodeInvalidPacketSequence = abci.CodeType(1004)
+	IBCCodeUnknownHeight         = abci.CodeType(1005)
+	IBCCodeInvalidCommit         = abci.CodeType(1006)
+	IBCCodeInvalidProof          = abci.CodeType(1007)
+	IBCCodeInvalidCall           = abci.CodeType(1008)
 )
 
 func ErrNotRegistered(chainID string) error {
@@ -42,6 +43,13 @@ func IsAlreadyRegistetedErr(err error) bool {
 	return errors.IsSameError(errChainAlreadyExists, err)
 }
 
+func ErrWrongDestChain(chainID string) error {
+	return errors.WithMessage(chainID, errWrongDestChain, IBCCodeUnknownChain)
+}
+func IsWrongDestChainErr(err error) bool {
+	return errors.IsSameError(errWrongDestChain, err)
+}
+
 func ErrNeedsIBCPermission() error {
 	return errors.WithCode(errNeedsIBCPermission, IBCCodeInvalidCall)
 }
@@ -54,4 +62,34 @@ func ErrCannotSetPermission() error {
 }
 func IsCannotSetPermissionErr(err error) bool {
 	return errors.IsSameError(errCannotSetPermission, err)
+}
+
+func ErrHeaderNotFound(h int) error {
+	msg := fmt.Sprintf("height %d", h)
+	return errors.WithMessage(msg, errHeaderNotFound, IBCCodeUnknownHeight)
+}
+func IsHeaderNotFoundErr(err error) bool {
+	return errors.IsSameError(errHeaderNotFound, err)
+}
+
+func ErrPacketAlreadyExists() error {
+	return errors.WithCode(errPacketAlreadyExists, IBCCodeInvalidPacketSequence)
+}
+func IsPacketAlreadyExistsErr(err error) bool {
+	return errors.IsSameError(errPacketAlreadyExists, err)
+}
+
+func ErrPacketOutOfOrder(seq uint64) error {
+	msg := fmt.Sprintf("expected %d", seq)
+	return errors.WithMessage(msg, errPacketOutOfOrder, IBCCodeInvalidPacketSequence)
+}
+func IsPacketOutOfOrderErr(err error) bool {
+	return errors.IsSameError(errPacketOutOfOrder, err)
+}
+
+func ErrInvalidProof() error {
+	return errors.WithCode(errInvalidProof, IBCCodeInvalidProof)
+}
+func IsInvalidProofErr(err error) bool {
+	return errors.IsSameError(errInvalidProof, err)
 }

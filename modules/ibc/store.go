@@ -80,10 +80,10 @@ func (c ChainSet) Register(chainID string, ourHeight uint64, theirHeight int) er
 // Packet is a wrapped transaction and permission that we want to
 // send off to another chain.
 type Packet struct {
-	DestChain   string           `json:"dest_chain"`
-	Sequence    uint64           `json:"sequence"`
-	Permissions []basecoin.Actor `json:"permissions"`
-	Tx          basecoin.Tx      `json:"tx"`
+	DestChain   string          `json:"dest_chain"`
+	Sequence    uint64          `json:"sequence"`
+	Permissions basecoin.Actors `json:"permissions"`
+	Tx          basecoin.Tx     `json:"tx"`
 }
 
 // Bytes returns a serialization of the Packet

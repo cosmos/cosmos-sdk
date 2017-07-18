@@ -96,12 +96,11 @@ func IsInvalidProofErr(err error) bool {
 }
 
 func ErrInvalidCommit(err error) error {
-	e := errors.WithMessage(msgInvalidCommit, err, IBCCodeInvalidCommit)
-	fmt.Println("make", e.ErrorCode())
-	return e
+	if err == nil {
+		return nil
+	}
+	return errors.WithMessage(msgInvalidCommit, err, IBCCodeInvalidCommit)
 }
 func IsInvalidCommitErr(err error) bool {
-	// fmt.Println("check", err.(errors.TMError).ErrorCode(), IBCCodeInvalidCommit)
-	fmt.Println("check", IBCCodeInvalidCommit)
 	return errors.HasErrorCode(err, IBCCodeInvalidCommit)
 }

@@ -77,7 +77,7 @@ func TestIBCRegister(t *testing.T) {
 	}
 }
 
-// this tests registration without registrar permissions
+// this tests permission controls on ibc registration
 func TestIBCRegisterPermissions(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
@@ -155,8 +155,79 @@ func TestIBCRegisterPermissions(t *testing.T) {
 	}
 }
 
+// this verifies that we can properly update the headers on the chain
 func TestIBCUpdate(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
 
+	// this is the root seed, that others are evaluated against
+	keys := certifiers.GenValKeys(7)
+	appHash := []byte{0, 4, 7, 23}
+	start := 100 // initial height
+	root := genEmptySeed(keys, "chain-1", 100, appHash, len(keys))
+
+	keys2 := keys.Extend(2)
+	keys3 := keys2.Extend(2)
+
+	// create the app and register the root of trust (for chain-1)
+	ctx := stack.MockContext("hub", 50)
+	store := state.NewMemKVStore()
+	app := stack.New().Dispatch(stack.WrapHandler(NewHandler()))
+	tx := RegisterChainTx{root}.Wrap()
+	_, err := app.DeliverTx(ctx, store, tx)
+	require.Nil(err, "%+v", err)
+
+	cases := []struct {
+		seed    certifiers.Seed
+		checker checkErr
+	}{
+		// same validator, higher up
+		{
+			genEmptySeed(keys, "chain-1", start+50, []byte{22}, len(keys)),
+			noErr,
+		},
+		// same validator, between existing (not most recent)
+		{
+			genEmptySeed(keys, "chain-1", start+5, []byte{15, 43}, len(keys)),
+			noErr,
+		},
+		// same validators, before root of trust
+		{
+			genEmptySeed(keys, "chain-1", start-8, []byte{11, 77}, len(keys)),
+			IsHeaderNotFoundErr,
+		},
+		// insufficient signatures
+		{
+			genEmptySeed(keys, "chain-1", start+60, []byte{24}, len(keys)/2),
+			IsInvalidCommitErr,
+		},
+		// unregistered chain
+		{
+			genEmptySeed(keys, "chain-2", start+60, []byte{24}, len(keys)/2),
+			IsNotRegisteredErr,
+		},
+		// too much change (keys -> keys3)
+		{
+			genEmptySeed(keys3, "chain-1", start+100, []byte{22}, len(keys3)),
+			IsInvalidCommitErr,
+		},
+		// legit update to validator set (keys -> keys2)
+		{
+			genEmptySeed(keys2, "chain-1", start+90, []byte{33}, len(keys2)),
+			noErr,
+		},
+		// now impossible jump works (keys -> keys2 -> keys3)
+		{
+			genEmptySeed(keys3, "chain-1", start+100, []byte{44}, len(keys3)),
+			noErr,
+		},
+	}
+
+	for i, tc := range cases {
+		tx := UpdateChainTx{tc.seed}.Wrap()
+		_, err := app.DeliverTx(ctx, store, tx)
+		assert.True(tc.checker(err), "%d: %+v", i, err)
+	}
 }
 
 func TestIBCCreatePacket(t *testing.T) {

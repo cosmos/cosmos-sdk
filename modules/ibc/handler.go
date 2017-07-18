@@ -148,7 +148,7 @@ func (h Handler) updateSeed(ctx basecoin.Context, store state.KVStore,
 
 	// this will import the seed if it is valid in the current context
 	err = cert.Update(seed.Checkpoint, seed.Validators)
-	return res, err
+	return res, ErrInvalidCommit(err)
 }
 
 // createPacket makes sure all permissions are good and the destination

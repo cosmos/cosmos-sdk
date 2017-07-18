@@ -31,7 +31,7 @@ func newCertifier(store state.KVStore, chainID string, h int) (*certifiers.Inqui
 		seed, err = certifiers.LatestSeed(p)
 	}
 	if err != nil {
-		return nil, err
+		return nil, ErrHeaderNotFound(h)
 	}
 
 	// we have no source for untrusted keys, but use the db to load trusted history

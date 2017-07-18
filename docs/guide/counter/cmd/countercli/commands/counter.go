@@ -4,10 +4,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	txcmd "github.com/tendermint/basecoin/client/commands/txs"
-
 	"github.com/tendermint/basecoin"
-	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
+	txcmd "github.com/tendermint/basecoin/client/commands/txs"
 	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
 	"github.com/tendermint/basecoin/modules/coin"
 )
@@ -43,7 +41,7 @@ func counterTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	tx, err = bcmd.Middleware.Wrap(tx)
+	tx, err = txcmd.Middleware.Wrap(tx)
 	if err != nil {
 		return err
 	}
@@ -53,7 +51,7 @@ func counterTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if err = bcmd.ValidateResult(bres); err != nil {
+	if err = txcmd.ValidateResult(bres); err != nil {
 		return err
 	}
 

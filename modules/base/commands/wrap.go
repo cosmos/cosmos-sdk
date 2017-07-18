@@ -9,7 +9,7 @@ import (
 	"github.com/tendermint/basecoin/client/commands"
 
 	"github.com/tendermint/basecoin"
-	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
+	txcmd "github.com/tendermint/basecoin/client/commands/txs"
 	"github.com/tendermint/basecoin/modules/base"
 )
 
@@ -21,7 +21,7 @@ const (
 // ChainWrapper wraps a tx with an chain info and optional expiration
 type ChainWrapper struct{}
 
-var _ bcmd.Wrapper = ChainWrapper{}
+var _ txcmd.Wrapper = ChainWrapper{}
 
 // Wrap will wrap the tx with a ChainTx from the standard flags
 func (ChainWrapper) Wrap(tx basecoin.Tx) (res basecoin.Tx, err error) {

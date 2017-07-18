@@ -8,15 +8,15 @@ import (
 
 	"github.com/tendermint/abci/version"
 	keycmd "github.com/tendermint/go-crypto/cmd"
+	"github.com/tendermint/tmlibs/cli"
+
 	"github.com/tendermint/basecoin/client/commands"
+	"github.com/tendermint/basecoin/client/commands/auto"
 	"github.com/tendermint/basecoin/client/commands/proofs"
 	"github.com/tendermint/basecoin/client/commands/proxy"
 	rpccmd "github.com/tendermint/basecoin/client/commands/rpc"
 	"github.com/tendermint/basecoin/client/commands/seeds"
-	"github.com/tendermint/basecoin/client/commands/txs"
-	"github.com/tendermint/tmlibs/cli"
-
-	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
+	txcmd "github.com/tendermint/basecoin/client/commands/txs"
 	authcmd "github.com/tendermint/basecoin/modules/auth/commands"
 	basecmd "github.com/tendermint/basecoin/modules/base/commands"
 	coincmd "github.com/tendermint/basecoin/modules/coin/commands"
@@ -56,19 +56,19 @@ func main() {
 		coincmd.AccountQueryCmd,
 		noncecmd.NonceQueryCmd,
 	)
+	proofs.TxPresenters.Register("base", txcmd.BaseTxPresenter{})
 
 	// set up the middleware
-	bcmd.Middleware = bcmd.Wrappers{
+	txcmd.Middleware = txcmd.Wrappers{
 		feecmd.FeeWrapper{},
 		noncecmd.NonceWrapper{},
 		basecmd.ChainWrapper{},
 		authcmd.SigWrapper{},
 	}
-	bcmd.Middleware.Register(txs.RootCmd.PersistentFlags())
+	txcmd.Middleware.Register(txcmd.RootCmd.PersistentFlags())
 
 	// you will always want this for the base send command
-	proofs.TxPresenters.Register("base", bcmd.BaseTxPresenter{})
-	txs.RootCmd.AddCommand(
+	txcmd.RootCmd.AddCommand(
 		// This is the default transaction, optional in your app
 		coincmd.SendTxCmd,
 	)
@@ -81,10 +81,10 @@ func main() {
 		seeds.RootCmd,
 		rpccmd.RootCmd,
 		proofs.RootCmd,
-		txs.RootCmd,
+		txcmd.RootCmd,
 		proxy.RootCmd,
 		VersionCmd,
-		bcmd.AutoCompleteCmd,
+		auto.AutoCompleteCmd,
 	)
 
 	cmd := cli.PrepareMainCmd(BaseCli, "BC", os.ExpandEnv("$HOME/.basecli"))

@@ -6,14 +6,13 @@ import (
 	"github.com/spf13/cobra"
 
 	keycmd "github.com/tendermint/go-crypto/cmd"
+	"github.com/tendermint/tmlibs/cli"
+
 	"github.com/tendermint/basecoin/client/commands"
 	"github.com/tendermint/basecoin/client/commands/proofs"
 	"github.com/tendermint/basecoin/client/commands/proxy"
 	"github.com/tendermint/basecoin/client/commands/seeds"
-	"github.com/tendermint/basecoin/client/commands/txs"
-	"github.com/tendermint/tmlibs/cli"
-
-	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
+	txcmd "github.com/tendermint/basecoin/client/commands/txs"
 	bcount "github.com/tendermint/basecoin/docs/guide/counter/cmd/countercli/commands"
 	authcmd "github.com/tendermint/basecoin/modules/auth/commands"
 	basecmd "github.com/tendermint/basecoin/modules/base/commands"
@@ -50,17 +49,17 @@ func main() {
 	)
 
 	// set up the middleware
-	bcmd.Middleware = bcmd.Wrappers{
+	txcmd.Middleware = txcmd.Wrappers{
 		feecmd.FeeWrapper{},
 		noncecmd.NonceWrapper{},
 		basecmd.ChainWrapper{},
 		authcmd.SigWrapper{},
 	}
-	bcmd.Middleware.Register(txs.RootCmd.PersistentFlags())
+	txcmd.Middleware.Register(txcmd.RootCmd.PersistentFlags())
 
 	// Prepare transactions
-	proofs.TxPresenters.Register("base", bcmd.BaseTxPresenter{})
-	txs.RootCmd.AddCommand(
+	proofs.TxPresenters.Register("base", txcmd.BaseTxPresenter{})
+	txcmd.RootCmd.AddCommand(
 		// This is the default transaction, optional in your app
 		coincmd.SendTxCmd,
 
@@ -75,7 +74,7 @@ func main() {
 		keycmd.RootCmd,
 		seeds.RootCmd,
 		proofs.RootCmd,
-		txs.RootCmd,
+		txcmd.RootCmd,
 		proxy.RootCmd,
 	)
 

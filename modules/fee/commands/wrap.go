@@ -5,7 +5,8 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/basecoin"
-	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
+	"github.com/tendermint/basecoin/client/commands"
+	txcmd "github.com/tendermint/basecoin/client/commands/txs"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/modules/fee"
 )
@@ -19,7 +20,7 @@ const (
 // FeeWrapper wraps a tx with an optional fee payment
 type FeeWrapper struct{}
 
-var _ bcmd.Wrapper = FeeWrapper{}
+var _ txcmd.Wrapper = FeeWrapper{}
 
 // Wrap checks for FlagFee and if present wraps the tx with a
 // FeeTx of the given amount, paid by the signer
@@ -52,7 +53,7 @@ func (FeeWrapper) Register(fs *pflag.FlagSet) {
 func readPayer() (basecoin.Actor, error) {
 	payer := viper.GetString(FlagPayer)
 	if payer == "" {
-		return bcmd.GetSignerAct(), nil
+		return txcmd.GetSignerAct(), nil
 	}
-	return bcmd.ParseAddress(payer)
+	return commands.ParseAddress(payer)
 }

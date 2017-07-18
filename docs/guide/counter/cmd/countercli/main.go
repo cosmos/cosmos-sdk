@@ -6,11 +6,11 @@ import (
 	"github.com/spf13/cobra"
 
 	keycmd "github.com/tendermint/go-crypto/cmd"
-	"github.com/tendermint/light-client/commands"
-	"github.com/tendermint/light-client/commands/proofs"
-	"github.com/tendermint/light-client/commands/proxy"
-	"github.com/tendermint/light-client/commands/seeds"
-	"github.com/tendermint/light-client/commands/txs"
+	"github.com/tendermint/basecoin/commands"
+	"github.com/tendermint/basecoin/commands/proofs"
+	"github.com/tendermint/basecoin/commands/proxy"
+	"github.com/tendermint/basecoin/commands/seeds"
+	"github.com/tendermint/basecoin/commands/txs"
 	"github.com/tendermint/tmlibs/cli"
 
 	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"

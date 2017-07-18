@@ -56,7 +56,7 @@ func doNonceQuery(cmd *cobra.Command, args []string) error {
 	}
 
 	act := []basecoin.Actor{basecoin.NewActor(
-		nonce.NameNonce,
+		auth.NameSigs,
 		addr,
 	)}
 

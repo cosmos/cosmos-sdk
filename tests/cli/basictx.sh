@@ -73,7 +73,6 @@ test02SendTxWithFee() {
 
     # make sure we can query the proper nonce
     NONCE=$(${CLIENT_EXE} query nonce $SENDER)
-    echo $NONCE
     if [ -n "$DEBUG" ]; then echo $NONCE; echo; fi
     # TODO: note that cobra returns error code 0 on parse failure,
     # so currently this check passes even if there is no nonce query command

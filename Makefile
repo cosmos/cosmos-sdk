@@ -27,6 +27,9 @@ test_unit:
 
 test_cli: tests/cli/shunit2
 	# sudo apt-get install jq
+	./tests/cli/keys.sh
+	./tests/cli/rpc.sh
+	./tests/cli/init.sh
 	./tests/cli/basictx.sh
 	./tests/cli/counter.sh
 	./tests/cli/restart.sh

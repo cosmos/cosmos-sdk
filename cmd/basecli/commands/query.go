@@ -13,6 +13,7 @@ import (
 
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/coin"
+	"github.com/tendermint/basecoin/modules/nonce"
 	"github.com/tendermint/basecoin/stack"
 )
 
@@ -39,6 +40,37 @@ func doAccountQuery(cmd *cobra.Command, args []string) error {
 	}
 
 	return proofcmd.OutputProof(acc, proof.BlockHeight())
+}
+
+// NonceQueryCmd - command to query an nonce account
+var NonceQueryCmd = &cobra.Command{
+	Use:   "nonce [address]",
+	Short: "Get details of a nonce sequence number, with proof",
+	RunE:  lcmd.RequireInit(doNonceQuery),
+}
+
+func doNonceQuery(cmd *cobra.Command, args []string) error {
+	addr, err := proofcmd.ParseHexKey(args, "address")
+	if err != nil {
+		return err
+	}
+
+	act := []basecoin.Actor{basecoin.NewActor(
+		nonce.NameNonce,
+		addr,
+	)}
+
+	key := stack.PrefixedKey(nonce.NameNonce, nonce.GetSeqKey(act))
+
+	var seq uint32
+	proof, err := proofcmd.GetAndParseAppProof(key, &seq)
+	if lc.IsNoDataErr(err) {
+		return errors.Errorf("Sequence is empty for address %X ", addr)
+	} else if err != nil {
+		return err
+	}
+
+	return proofcmd.OutputProof(seq, proof.BlockHeight())
 }
 
 // BaseTxPresenter this decodes all basecoin tx

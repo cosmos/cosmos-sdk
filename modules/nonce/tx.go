@@ -92,17 +92,21 @@ func (n Tx) CheckIncrementSeq(ctx basecoin.Context, store state.KVStore) error {
 	return nil
 }
 
-// Generate the sequence key as the concatenated list of signers, sorted by address.
 func (n Tx) getSeqKey() (seqKey []byte) {
+	return GetSeqKey(n.Signers)
+}
+
+// GetSeqKey - Generate the sequence key as the concatenated list of signers, sorted by address.
+func GetSeqKey(signers []basecoin.Actor) (seqKey []byte) {
 
 	// First copy the list of signers to sort as sort is done in place
-	signers2sort := make([]basecoin.Actor, len(n.Signers))
-	copy(signers2sort, n.Signers)
-	sort.Sort(basecoin.ByAll(n.Signers))
+	signers2sort := make([]basecoin.Actor, len(signers))
+	copy(signers2sort, signers)
+	sort.Sort(basecoin.ByAll(signers))
 
-	for _, signer := range n.Signers {
+	for _, signer := range signers {
 		seqKey = append(seqKey, signer.Bytes()...)
 	}
-	//seqKey = merkle.SimpleHashFromBinary(n.Signers)
+
 	return
 }

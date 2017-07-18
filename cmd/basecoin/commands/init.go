@@ -1,11 +1,13 @@
 package commands
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -56,6 +58,14 @@ func initCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("`init` takes one argument, a basecoin account address. Generate one using `basecli keys new mykey`")
 	}
 	userAddr := args[0]
+	// verify this account is correct
+	data, err := hex.DecodeString(StripHex(userAddr))
+	if err != nil {
+		return errors.Wrap(err, "Invalid address")
+	}
+	if len(data) != 20 {
+		return errors.New("Address must be 20-bytes in hex")
+	}
 
 	// initalize basecoin
 	genesisFile := cfg.GenesisFile()

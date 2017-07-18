@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/basecoin"
-	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
+	txcmd "github.com/tendermint/basecoin/client/commands/txs"
 	"github.com/tendermint/basecoin/modules/auth"
 )
 
@@ -17,7 +17,7 @@ const (
 // SigWrapper wraps a tx with a signature layer to hold pubkey sigs
 type SigWrapper struct{}
 
-var _ bcmd.Wrapper = SigWrapper{}
+var _ txcmd.Wrapper = SigWrapper{}
 
 // Wrap will wrap the tx with OneSig or MultiSig depending on flags
 func (SigWrapper) Wrap(tx basecoin.Tx) (res basecoin.Tx, err error) {

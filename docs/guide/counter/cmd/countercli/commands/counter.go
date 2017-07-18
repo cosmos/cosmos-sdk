@@ -60,6 +60,10 @@ func counterTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	tx, err = bcmd.WrapNonceTx(tx)
+	if err != nil {
+		return err
+	}
 	tx, err = bcmd.WrapChainTx(tx)
 	if err != nil {
 		return err
@@ -70,6 +74,9 @@ func counterTx(cmd *cobra.Command, args []string) error {
 	// Sign if needed and post.  This it the work-horse
 	bres, err := txcmd.SignAndPostTx(stx)
 	if err != nil {
+		return err
+	}
+	if err = bcmd.ValidateResult(bres); err != nil {
 		return err
 	}
 
@@ -83,6 +90,6 @@ func readCounterTxFlags() (tx basecoin.Tx, err error) {
 		return tx, err
 	}
 
-	tx = counter.NewTx(viper.GetBool(FlagValid), feeCoins, viper.GetInt(bcmd.FlagSequence))
+	tx = counter.NewTx(viper.GetBool(FlagValid), feeCoins)
 	return tx, nil
 }

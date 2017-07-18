@@ -60,13 +60,6 @@ func IsInvalidCoinsErr(err error) bool {
 	return errors.IsSameError(errInvalidCoins, err)
 }
 
-func ErrInvalidSequence() errors.TMError {
-	return errors.WithCode(errInvalidSequence, invalidInput)
-}
-func IsInvalidSequenceErr(err error) bool {
-	return errors.IsSameError(errInvalidSequence, err)
-}
-
 func ErrInsufficientFunds() errors.TMError {
 	return errors.WithCode(errInsufficientFunds, invalidInput)
 }

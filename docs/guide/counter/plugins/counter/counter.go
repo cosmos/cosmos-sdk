@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/modules/fee"
+	"github.com/tendermint/basecoin/modules/nonce"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 )
@@ -34,17 +35,15 @@ func init() {
 
 // Tx - struct for all counter transactions
 type Tx struct {
-	Valid    bool       `json:"valid"`
-	Fee      coin.Coins `json:"fee"`
-	Sequence int        `json:"sequence"`
+	Valid bool       `json:"valid"`
+	Fee   coin.Coins `json:"fee"`
 }
 
 // NewTx - return a new counter transaction struct wrapped as a basecoin transaction
-func NewTx(valid bool, fee coin.Coins, sequence int) basecoin.Tx {
+func NewTx(valid bool, fee coin.Coins) basecoin.Tx {
 	return Tx{
-		Valid:    valid,
-		Fee:      fee,
-		Sequence: sequence,
+		Valid: valid,
+		Fee:   fee,
 	}.Wrap()
 }
 
@@ -103,6 +102,7 @@ func NewHandler(feeDenom string) basecoin.Handler {
 		stack.Recovery{},
 		auth.Signatures{},
 		base.Chain{},
+		nonce.ReplayCheck{},
 		fee.NewSimpleFeeMiddleware(coin.Coin{feeDenom, 0}, fee.Bank),
 	).Use(dispatcher)
 }

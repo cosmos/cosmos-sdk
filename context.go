@@ -2,6 +2,8 @@ package basecoin
 
 import (
 	"bytes"
+	"fmt"
+	"sort"
 
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
@@ -19,6 +21,7 @@ type Actor struct {
 	Address data.Bytes `json:"addr"`  // arbitrary app-specific unique id
 }
 
+// NewActor - create a new actor
 func NewActor(app string, addr []byte) Actor {
 	return Actor{App: app, Address: addr}
 }
@@ -35,6 +38,11 @@ func (a Actor) Equals(b Actor) bool {
 		bytes.Equal(a.Address, b.Address)
 }
 
+// Empty checks if the actor is not initialized
+func (a Actor) Empty() bool {
+	return a.ChainID == "" && a.App == "" && len(a.Address) == 0
+}
+
 // Context is an interface, so we can implement "secure" variants that
 // rely on private fields to control the actions
 type Context interface {
@@ -47,4 +55,37 @@ type Context interface {
 	Reset() Context
 	ChainID() string
 	BlockHeight() uint64
+}
+
+//////////////////////////////// Sort Interface
+// USAGE sort.Sort(ByAll(<actor instance>))
+
+func (a Actor) String() string {
+	return fmt.Sprintf("%x", a.Address)
+}
+
+// ByAll implements sort.Interface for []Actor.
+// It sorts be the ChainID, followed by the App, followed by the Address
+type ByAll []Actor
+
+// Verify the sort interface at compile time
+var _ sort.Interface = ByAll{}
+
+func (a ByAll) Len() int      { return len(a) }
+func (a ByAll) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByAll) Less(i, j int) bool {
+
+	if a[i].ChainID < a[j].ChainID {
+		return true
+	}
+	if a[i].ChainID > a[j].ChainID {
+		return false
+	}
+	if a[i].App < a[j].App {
+		return true
+	}
+	if a[i].App > a[j].App {
+		return false
+	}
+	return bytes.Compare(a[i].Address, a[j].Address) == -1
 }

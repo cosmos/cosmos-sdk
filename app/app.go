@@ -15,6 +15,7 @@ import (
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/modules/fee"
+	"github.com/tendermint/basecoin/modules/nonce"
 	"github.com/tendermint/basecoin/stack"
 	sm "github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/version"
@@ -62,6 +63,7 @@ func DefaultHandler(feeDenom string) basecoin.Handler {
 		stack.Recovery{},
 		auth.Signatures{},
 		base.Chain{},
+		nonce.ReplayCheck{},
 		fee.NewSimpleFeeMiddleware(coin.Coin{feeDenom, 0}, fee.Bank),
 	).Use(d)
 }

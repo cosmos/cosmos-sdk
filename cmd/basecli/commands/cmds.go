@@ -2,21 +2,25 @@ package commands
 
 import (
 	"encoding/hex"
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin"
 	"github.com/tendermint/light-client/commands"
 	txcmd "github.com/tendermint/light-client/commands/txs"
 	cmn "github.com/tendermint/tmlibs/common"
 
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/modules/fee"
+	"github.com/tendermint/basecoin/modules/nonce"
 )
 
 //-------------------------
@@ -49,7 +53,7 @@ func init() {
 	flags.Int(FlagSequence, -1, "Sequence number for this transaction")
 }
 
-// runDemo is an example of how to make a tx
+// doSendTx is an example of how to make a tx
 func doSendTx(cmd *cobra.Command, args []string) error {
 	// load data from json or flags
 	var tx basecoin.Tx
@@ -69,6 +73,10 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	tx, err = WrapNonceTx(tx)
+	if err != nil {
+		return err
+	}
 	tx, err = WrapChainTx(tx)
 	if err != nil {
 		return err
@@ -82,9 +90,38 @@ func doSendTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	if err = ValidateResult(bres); err != nil {
+		return err
+	}
 
 	// Output result
 	return txcmd.OutputTx(bres)
+}
+
+// ValidateResult returns an appropriate error if the server rejected the
+// tx in CheckTx or DeliverTx
+func ValidateResult(res *ctypes.ResultBroadcastTxCommit) error {
+	if res.CheckTx.IsErr() {
+		return fmt.Errorf("CheckTx: (%d): %s", res.CheckTx.Code, res.CheckTx.Log)
+	}
+	if res.DeliverTx.IsErr() {
+		return fmt.Errorf("DeliverTx: (%d): %s", res.DeliverTx.Code, res.DeliverTx.Log)
+	}
+	return nil
+}
+
+// WrapNonceTx grabs the sequence number from the flag and wraps
+// the tx with this nonce.  Grabs the permission from the signer,
+// as we still only support single sig on the cli
+func WrapNonceTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
+	//add the nonce tx layer to the tx
+	seq := viper.GetInt(FlagSequence)
+	if seq < 0 {
+		return res, fmt.Errorf("sequence must be greater than 0")
+	}
+	signers := []basecoin.Actor{GetSignerAct()}
+	res = nonce.NewTx(uint32(seq), signers, tx)
+	return
 }
 
 // WrapFeeTx checks for FlagFee and if present wraps the tx with a
@@ -99,7 +136,8 @@ func WrapFeeTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
 	if toll.IsZero() {
 		return tx, nil
 	}
-	return fee.NewFee(tx, toll, getSignerAddr()), nil
+	res = fee.NewFee(tx, toll, GetSignerAct())
+	return
 }
 
 // WrapChainTx will wrap the tx with a ChainTx from the standard flags
@@ -110,10 +148,12 @@ func WrapChainTx(tx basecoin.Tx) (res basecoin.Tx, err error) {
 		return res, errors.New("No chain-id provided")
 	}
 	res = base.NewChainTx(chain, uint64(expires), tx)
-	return res, nil
+	return
 }
 
-func getSignerAddr() (res basecoin.Actor) {
+// GetSignerAct returns the address of the signer of the tx
+// (as we still only support single sig)
+func GetSignerAct() (res basecoin.Actor) {
 	// this could be much cooler with multisig...
 	signer := txcmd.GetSigner()
 	if !signer.Empty() {
@@ -138,7 +178,7 @@ func readSendTxFlags() (tx basecoin.Tx, err error) {
 
 	// craft the inputs and outputs
 	ins := []coin.TxInput{{
-		Address: getSignerAddr(),
+		Address: GetSignerAct(),
 		Coins:   amountCoins,
 	}}
 	outs := []coin.TxOutput{{

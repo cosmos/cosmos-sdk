@@ -39,6 +39,7 @@ func main() {
 		proofs.TxCmd,
 		proofs.KeyCmd,
 		bcmd.AccountQueryCmd,
+		bcmd.NonceQueryCmd,
 	)
 
 	// you will always want this for the base send command

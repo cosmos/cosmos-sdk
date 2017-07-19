@@ -21,32 +21,35 @@ const (
 )
 
 var (
+	// Semi-random bytes that shouldn't conflict with keys (20 bytes)
+	// or any strings (non-ascii).
+	// TODO: consider how to make this more collision-proof....
 	allowIBC = []byte{0x42, 0xbe, 0xef, 0x1}
 )
 
-// AllowIBC is the special code that an app must set to
-// enable sending IBC packets for this app-type
+// AllowIBC returns a specially crafted Actor that
+// enables sending IBC packets for this app type
 func AllowIBC(app string) basecoin.Actor {
 	return basecoin.Actor{App: app, Address: allowIBC}
 }
 
-// Handler allows us to update the chain state or create a packet
+// Handler updates the chain state or creates an ibc packet
 type Handler struct{}
 
 var _ basecoin.Handler = Handler{}
 
-// NewHandler makes a Handler that allows all chains to connect via IBC.
+// NewHandler returns a Handler that allows all chains to connect via IBC.
 // Set a Registrar via SetOption to restrict it.
 func NewHandler() Handler {
 	return Handler{}
 }
 
-// Name - return name space
+// Name returns name space
 func (Handler) Name() string {
 	return NameIBC
 }
 
-// SetOption - sets the registrar for IBC
+// SetOption sets the registrar for IBC
 func (h Handler) SetOption(l log.Logger, store state.KVStore, module, key, value string) (log string, err error) {
 	if module != NameIBC {
 		return "", errors.ErrUnknownModule(module)
@@ -75,6 +78,12 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.
 
 	switch t := tx.Unwrap().(type) {
 	case RegisterChainTx:
+		// check permission to attach, do it here, so no permission check
+		// by SetOption
+		info := LoadInfo(store)
+		if !info.Registrar.Empty() && !ctx.HasPermission(info.Registrar) {
+			return res, errors.ErrUnauthorized()
+		}
 		return h.initSeed(ctx, store, t)
 	case UpdateChainTx:
 		return h.updateSeed(ctx, store, t)
@@ -84,7 +93,7 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.
 	return res, errors.ErrUnknownTxType(tx.Unwrap())
 }
 
-// DeliverTx verifies all signatures on the tx and updated the chain state
+// DeliverTx verifies all signatures on the tx and updates the chain state
 // apropriately
 func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
 	err = tx.ValidateBasic()

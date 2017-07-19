@@ -16,7 +16,6 @@ var (
 	errNoOutputs         = fmt.Errorf("No output coins")
 	errInvalidAddress    = fmt.Errorf("Invalid address")
 	errInvalidCoins      = fmt.Errorf("Invalid coins")
-	errUnknownKey        = fmt.Errorf("Unknown key")
 
 	invalidInput   = abci.CodeType_BaseInvalidInput
 	invalidOutput  = abci.CodeType_BaseInvalidOutput
@@ -79,11 +78,4 @@ func ErrNoOutputs() errors.TMError {
 }
 func IsNoOutputsErr(err error) bool {
 	return errors.IsSameError(errNoOutputs, err)
-}
-
-func ErrUnknownKey(mod string) errors.TMError {
-	return errors.WithMessage(mod, errUnknownKey, unknownRequest)
-}
-func IsUnknownKeyErr(err error) bool {
-	return errors.IsSameError(errUnknownKey, err)
 }

@@ -99,7 +99,7 @@ func (h Handler) SetOption(l log.Logger, store state.SimpleDB, module, key, valu
 		return "Success", nil
 
 	}
-	return "", ErrUnknownKey(key)
+	return "", errors.ErrUnknownKey(key)
 }
 
 func checkTx(ctx basecoin.Context, tx basecoin.Tx) (send SendTx, err error) {

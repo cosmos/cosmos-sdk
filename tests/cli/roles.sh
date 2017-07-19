@@ -24,15 +24,17 @@ test01SetupRole() {
     THREE=$(getAddr $DUDE)
     MEMBERS=${ONE},${TWO},${THREE}
 
+    SIGS=1
+
     assertFalse "line=${LINENO}, missing min-sigs" "echo qwertyuiop | ${CLIENT_EXE} tx create-role --role=bank --members=${MEMBERS} --sequence=1 --name=$RICH"
     assertFalse "line=${LINENO}, missing members" "echo qwertyuiop | ${CLIENT_EXE} tx create-role --role=bank --min-sigs=2 --sequence=1 --name=$RICH"
     assertFalse "line=${LINENO}, missing role" "echo qwertyuiop | ${CLIENT_EXE} tx create-role --min-sigs=2 --members=${MEMBERS} --sequence=1 --name=$RICH"
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx create-role --role=bank --min-sigs=2  --members=${MEMBERS} --sequence=1 --name=$RICH)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx create-role --role=bank --min-sigs=$SIGS  --members=${MEMBERS} --sequence=1 --name=$RICH)
     txSucceeded $? "$TX" "bank"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 
-    checkRole bank 2 3
+    checkRole bank $SIGS 3
 
     # Make sure tx is indexed
     checkRoleTx $HASH $TX_HEIGHT "bank" 3
@@ -40,8 +42,10 @@ test01SetupRole() {
 
 test02SendTxToRole() {
     SENDER=$(getAddr $RICH)
-    HEXROLE=$(toHex bank)
-    RECV="role:$HEXROLE"
+    RECV=role:$(toHex bank)
+
+    # HEXROLE=$(toHex bank)
+    # RECV="role:$HEXROLE"
 
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --fee=90mycoin --amount=10000mycoin --to=$RECV --sequence=2 --name=$RICH)
     txSucceeded $? "$TX" "bank"
@@ -53,6 +57,26 @@ test02SendTxToRole() {
     checkAccount $RECV "10000"
 
     checkSendFeeTx $HASH $TX_HEIGHT $SENDER "10000" "90"
+}
+
+test03SendMultiFromRole() {
+    ONE=$(getAddr $RICH)
+    TWO=$(getAddr $POOR)
+    THREE=$(getAddr $DUDE)
+    BANK=role:$(toHex bank)
+
+    # no money to start mr. poor...
+    assertFalse "line=${LINENO}, has no money yet" "${CLIENT_EXE} query account $TWO 2>/dev/null"
+
+    # let's try to send money from the role directly without multisig
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=1 --name=$POOR 2>/dev/null)
+    assertFalse "need to assume role" $?
+    # echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=1 --assume-role=bank --name=$POOR --prepare=-
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=1 --assume-role=bank --name=$POOR)
+    txSucceeded $? "$TX" "from-bank"
+
+    checkAccount $TWO "6000"
+    checkAccount $BANK "4000"
 }
 
 # test02SendTxWithFee() {

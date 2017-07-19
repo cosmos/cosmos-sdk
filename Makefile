@@ -32,6 +32,7 @@ test_cli: tests/cli/shunit2
 	./tests/cli/rpc.sh
 	./tests/cli/init.sh
 	./tests/cli/basictx.sh
+	./tests/cli/roles.sh
 	./tests/cli/counter.sh
 	./tests/cli/restart.sh
 	# @./tests/cli/ibc.sh

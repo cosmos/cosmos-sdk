@@ -145,7 +145,9 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 		return errors.Result(err)
 	}
 
-	// TODO: can we abstract this setup and commit logic??
+	// we also need to discard error changes, so we don't increment checktx
+	// sequence on error, but not delivertx
+	cache := app.cacheState.CacheWrap()
 	ctx := stack.NewContext(
 		app.state.GetChainID(),
 		app.height,
@@ -153,11 +155,12 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 	)
 	// checktx generally shouldn't touch the state, but we don't care
 	// here on the framework level, since the cacheState is thrown away next block
-	res, err := app.handler.CheckTx(ctx, app.cacheState, tx)
+	res, err := app.handler.CheckTx(ctx, cache, tx)
 
 	if err != nil {
 		return errors.Result(err)
 	}
+	cache.CacheSync()
 	return res.ToABCI()
 }
 

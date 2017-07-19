@@ -55,5 +55,5 @@ func readPayer() (basecoin.Actor, error) {
 	if payer == "" {
 		return txcmd.GetSignerAct(), nil
 	}
-	return commands.ParseAddress(payer)
+	return commands.ParseActor(payer)
 }

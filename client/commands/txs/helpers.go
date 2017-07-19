@@ -52,6 +52,37 @@ func GetSignerAct() (res basecoin.Actor) {
 	return res
 }
 
+// DoTx is a helper function for the lazy :)
+//
+// It uses only public functions and goes through the standard sequence of
+// wrapping the tx with middleware layers, signing it, either preparing it,
+// or posting it and displaying the result.
+//
+// If you want a non-standard flow, just call the various functions directly.
+// eg. if you already set the middleware layers in your code, or want to
+// output in another format.
+func DoTx(tx basecoin.Tx) (err error) {
+	tx, err = Middleware.Wrap(tx)
+	if err != nil {
+		return err
+	}
+
+	err = SignTx(tx)
+	if err != nil {
+		return err
+	}
+
+	bres, err := PrepareOrPostTx(tx)
+	if err != nil {
+		return err
+	}
+	if bres == nil {
+		return nil // successful prep, nothing left to do
+	}
+	return OutputTx(bres) // print response of the post
+
+}
+
 // SignTx will validate the tx, and signs it if it is wrapping a Signable.
 // Modifies tx in place, and returns an error if it should sign but couldn't
 func SignTx(tx basecoin.Tx) error {

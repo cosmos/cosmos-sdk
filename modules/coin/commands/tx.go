@@ -37,31 +37,12 @@ func sendTxCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	tx, err = txcmd.Middleware.Wrap(tx)
-	if err != nil {
-		return err
-	}
-
-	err = txcmd.SignTx(tx)
-	if err != nil {
-		return err
-	}
-
-	// otherwise, post it and display response
-	bres, err := txcmd.PrepareOrPostTx(tx)
-	if err != nil {
-		return err
-	}
-	if bres == nil {
-		return nil // successful prep, nothing left to do
-	}
-	return txcmd.OutputTx(bres) // print response of the post
+	return txcmd.DoTx(tx)
 }
 
 func readSendTxFlags() (tx basecoin.Tx, err error) {
 	// parse to address
-	toAddr, err := commands.ParseAddress(viper.GetString(FlagTo))
+	toAddr, err := commands.ParseActor(viper.GetString(FlagTo))
 	if err != nil {
 		return tx, err
 	}
@@ -94,5 +75,5 @@ func readFromAddr() (basecoin.Actor, error) {
 	if from == "" {
 		return txcmd.GetSignerAct(), nil
 	}
-	return commands.ParseAddress(from)
+	return commands.ParseActor(from)
 }

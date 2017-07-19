@@ -33,32 +33,12 @@ func init() {
 	fs.Bool(FlagValid, false, "Is count valid?")
 }
 
-// TODO: counterTx is very similar to the sendtx one,
-// maybe we can pull out some common patterns?
 func counterTx(cmd *cobra.Command, args []string) error {
 	tx, err := readCounterTxFlags()
 	if err != nil {
 		return err
 	}
-
-	tx, err = txcmd.Middleware.Wrap(tx)
-	if err != nil {
-		return err
-	}
-
-	err = txcmd.SignTx(tx)
-	if err != nil {
-		return err
-	}
-
-	bres, err := txcmd.PrepareOrPostTx(tx)
-	if err != nil {
-		return err
-	}
-	if bres == nil {
-		return nil // successful prep, nothing left to do
-	}
-	return txcmd.OutputTx(bres) // print response of the post
+	return txcmd.DoTx(tx)
 }
 
 func readCounterTxFlags() (tx basecoin.Tx, err error) {

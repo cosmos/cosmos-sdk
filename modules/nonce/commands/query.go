@@ -9,7 +9,7 @@ import (
 	lc "github.com/tendermint/light-client"
 
 	"github.com/tendermint/basecoin"
-	lcmd "github.com/tendermint/basecoin/client/commands"
+	"github.com/tendermint/basecoin/client/commands"
 	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
 	"github.com/tendermint/basecoin/modules/nonce"
 	"github.com/tendermint/basecoin/stack"
@@ -19,7 +19,7 @@ import (
 var NonceQueryCmd = &cobra.Command{
 	Use:   "nonce [address]",
 	Short: "Get details of a nonce sequence number, with proof",
-	RunE:  lcmd.RequireInit(nonceQueryCmd),
+	RunE:  commands.RequireInit(nonceQueryCmd),
 }
 
 func nonceQueryCmd(cmd *cobra.Command, args []string) error {
@@ -28,7 +28,7 @@ func nonceQueryCmd(cmd *cobra.Command, args []string) error {
 	}
 	addr := strings.Join(args, ",")
 
-	signers, err := parseActors(addr)
+	signers, err := commands.ParseActors(addr)
 	if err != nil {
 		return err
 	}

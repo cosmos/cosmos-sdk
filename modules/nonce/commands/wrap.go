@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -54,19 +53,7 @@ func readNonceKey() ([]basecoin.Actor, error) {
 	if nonce == "" {
 		return []basecoin.Actor{txcmd.GetSignerAct()}, nil
 	}
-	return parseActors(nonce)
-}
-
-func parseActors(key string) (signers []basecoin.Actor, err error) {
-	var act basecoin.Actor
-	for _, k := range strings.Split(key, ",") {
-		act, err = commands.ParseAddress(k)
-		if err != nil {
-			return
-		}
-		signers = append(signers, act)
-	}
-	return
+	return commands.ParseActors(nonce)
 }
 
 // read the sequence from the flag or query for it if flag is -1

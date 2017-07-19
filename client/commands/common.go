@@ -83,11 +83,11 @@ func GetCertifier() (*certifiers.InquiringCertifier, error) {
 	return cert, nil
 }
 
-// ParseAddress parses an address of form:
+// ParseActor parses an address of form:
 // [<chain>:][<app>:]<hex address>
 // into a basecoin.Actor.
 // If app is not specified or "", then assume auth.NameSigs
-func ParseAddress(input string) (res basecoin.Actor, err error) {
+func ParseActor(input string) (res basecoin.Actor, err error) {
 	chain, app := "", auth.NameSigs
 	input = strings.TrimSpace(input)
 	spl := strings.SplitN(input, ":", 3)
@@ -111,6 +111,20 @@ func ParseAddress(input string) (res basecoin.Actor, err error) {
 		ChainID: chain,
 		App:     app,
 		Address: addr,
+	}
+	return
+}
+
+// ParseActors takes a comma-separated list of actors and parses them into
+// a slice
+func ParseActors(key string) (signers []basecoin.Actor, err error) {
+	var act basecoin.Actor
+	for _, k := range strings.Split(key, ",") {
+		act, err = ParseActor(k)
+		if err != nil {
+			return
+		}
+		signers = append(signers, act)
 	}
 	return
 }

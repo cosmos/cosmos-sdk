@@ -47,7 +47,8 @@ func doNonceQuery(signers []basecoin.Actor) (sequence uint32, proof lc.Proof, er
 
 	proof, err = proofcmd.GetAndParseAppProof(key, &sequence)
 	if lc.IsNoDataErr(err) {
-		err = errors.Errorf("Sequence is empty for key %s ", key)
+		// no data, return sequence 0
+		return 0, proof, nil
 	}
 
 	return

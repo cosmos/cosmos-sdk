@@ -12,6 +12,8 @@ import (
 
 // GetAccount - Get account from store and address
 func GetAccount(store state.SimpleDB, addr basecoin.Actor) (Account, error) {
+	// if the actor is another chain, we use one address for the chain....
+	addr = ChainAddr(addr)
 	acct, err := loadAccount(store, addr.Bytes())
 
 	// for empty accounts, don't return an error, but rather an empty account
@@ -23,12 +25,18 @@ func GetAccount(store state.SimpleDB, addr basecoin.Actor) (Account, error) {
 
 // CheckCoins makes sure there are funds, but doesn't change anything
 func CheckCoins(store state.SimpleDB, addr basecoin.Actor, coins Coins) (Coins, error) {
+	// if the actor is another chain, we use one address for the chain....
+	addr = ChainAddr(addr)
+
 	acct, err := updateCoins(store, addr, coins)
 	return acct.Coins, err
 }
 
 // ChangeCoins changes the money, returns error if it would be negative
 func ChangeCoins(store state.SimpleDB, addr basecoin.Actor, coins Coins) (Coins, error) {
+	// if the actor is another chain, we use one address for the chain....
+	addr = ChainAddr(addr)
+
 	acct, err := updateCoins(store, addr, coins)
 	if err != nil {
 		return acct.Coins, err
@@ -55,9 +63,6 @@ func ChainAddr(addr basecoin.Actor) basecoin.Actor {
 //
 // it doesn't save anything, that is up to you to decide (Check/Change Coins)
 func updateCoins(store state.SimpleDB, addr basecoin.Actor, coins Coins) (acct Account, err error) {
-	// if the actor is another chain, we use one address for the chain....
-	addr = ChainAddr(addr)
-
 	acct, err = loadAccount(store, addr.Bytes())
 	// we can increase an empty account...
 	if IsNoAccountErr(err) && coins.IsPositive() {

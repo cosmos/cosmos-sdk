@@ -391,6 +391,26 @@ func TestIBCPostPacket(t *testing.T) {
 	_, err := app.DeliverTx(ctx, store, tx)
 	require.Nil(err, "%+v", err)
 
+	// set up a rich guy on this chain
+	wealth := coin.Coins{{"btc", 300}, {"eth", 2000}, {"ltc", 5000}}
+	rich := coin.NewAccountWithKey(wealth)
+	_, err = app.SetOption(log.NewNopLogger(), store,
+		"coin", "account", rich.MakeOption())
+	require.Nil(err, "%+v", err)
+
+	// sends money to another guy on a different chain, now other chain has credit
+	buddy := basecoin.Actor{ChainID: otherID, App: auth.NameSigs, Address: []byte("dude")}
+	outTx := coin.NewSendOneTx(rich.Actor(), buddy, wealth)
+	_, err = app.DeliverTx(ctx.WithPermissions(rich.Actor()), store, outTx)
+	require.Nil(err, "%+v", err)
+
+	// make sure the money moved to the other chain...
+	cstore := stack.PrefixedStore(coin.NameCoin, store)
+	acct, err := coin.GetAccount(cstore, coin.ChainAddr(buddy))
+	require.Nil(err, "%+v", err)
+	require.Equal(wealth, acct.Coins)
+
+	// these are the people for testing incoming ibc from the other chain
 	recipient := basecoin.Actor{ChainID: ourID, App: auth.NameSigs, Address: []byte("bar")}
 	sender := basecoin.Actor{ChainID: otherID, App: auth.NameSigs, Address: []byte("foo")}
 	coinTx := coin.NewSendOneTx(
@@ -398,14 +418,6 @@ func TestIBCPostPacket(t *testing.T) {
 		recipient,
 		coin.Coins{{"eth", 100}, {"ltc", 300}},
 	)
-
-	// set some cash on this chain (TODO: via set options...)
-	otherAddr := coin.ChainAddr(sender)
-	acct := coin.Account{
-		Coins: coin.Coins{{"btc", 300}, {"eth", 2000}, {"ltc", 5000}},
-	}
-	cstore := stack.PrefixedStore(coin.NameCoin, store)
-	cstore.Set(otherAddr.Bytes(), wire.BinaryBytes(acct))
 
 	// make proofs for some packets....
 	tree := iavl.NewIAVLTree(0, nil)

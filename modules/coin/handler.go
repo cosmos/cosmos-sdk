@@ -99,7 +99,7 @@ func (h Handler) SetOption(l log.Logger, store state.KVStore, module, key, value
 		return "Success", nil
 
 	}
-	return "", errors.ErrUnknownKey(key)
+	return "", ErrUnknownKey(key)
 }
 
 func checkTx(ctx basecoin.Context, tx basecoin.Tx) (send SendTx, err error) {

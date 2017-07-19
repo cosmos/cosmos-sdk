@@ -86,10 +86,10 @@ func (c ChainTx) Wrap() basecoin.Tx {
 }
 func (c ChainTx) ValidateBasic() error {
 	if c.ChainID == "" {
-		return errors.ErrNoChain()
+		return ErrNoChain()
 	}
 	if !chainPattern.MatchString(c.ChainID) {
-		return errors.ErrWrongChain(c.ChainID)
+		return ErrWrongChain(c.ChainID)
 	}
 	if c.Tx.Empty() {
 		return errors.ErrUnknownTxType(c.Tx)

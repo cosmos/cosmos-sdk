@@ -6,9 +6,8 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin/client/commands"
-
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/client/commands"
 	txcmd "github.com/tendermint/basecoin/client/commands/txs"
 	"github.com/tendermint/basecoin/modules/base"
 )

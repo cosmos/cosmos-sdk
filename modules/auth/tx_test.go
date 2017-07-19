@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/basecoin/stack"
 	crypto "github.com/tendermint/go-crypto"
 	keys "github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/go-crypto/keys/cryptostore"
@@ -14,6 +13,7 @@ import (
 	wire "github.com/tendermint/go-wire"
 
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/stack"
 )
 
 func checkSignBytes(t *testing.T, bytes []byte, expected string) {

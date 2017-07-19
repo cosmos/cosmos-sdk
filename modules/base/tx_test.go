@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/go-wire/data"
 
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/stack"
 )
 
 func TestEncoding(t *testing.T) {

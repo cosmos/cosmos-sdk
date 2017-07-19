@@ -11,7 +11,6 @@ import (
 	"sort"
 
 	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/state"
 )
 
@@ -50,11 +49,11 @@ func (n Tx) Wrap() basecoin.Tx {
 func (n Tx) ValidateBasic() error {
 	switch {
 	case n.Tx.Empty():
-		return errors.ErrTxEmpty()
+		return ErrTxEmpty()
 	case n.Sequence == 0:
 		return ErrZeroSequence()
 	case len(n.Signers) == 0:
-		return errors.ErrNoSigners()
+		return ErrNoSigners()
 	}
 	return n.Tx.ValidateBasic()
 }

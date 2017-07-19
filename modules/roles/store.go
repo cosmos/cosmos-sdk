@@ -3,10 +3,11 @@ package roles
 import (
 	"fmt"
 
+	wire "github.com/tendermint/go-wire"
+
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/state"
-	wire "github.com/tendermint/go-wire"
 )
 
 // NewPerm creates a role permission with the given label

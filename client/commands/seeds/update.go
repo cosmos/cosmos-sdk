@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
 	"github.com/tendermint/light-client/certifiers"
+
 	"github.com/tendermint/basecoin/client/commands"
 )
 

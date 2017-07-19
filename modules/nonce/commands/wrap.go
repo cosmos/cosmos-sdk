@@ -28,15 +28,17 @@ var _ txcmd.Wrapper = NonceWrapper{}
 // the tx with this nonce.  Grabs the permission from the signer,
 // as we still only support single sig on the cli
 func (NonceWrapper) Wrap(tx basecoin.Tx) (res basecoin.Tx, err error) {
-	seq, err := readSequence()
-	if err != nil {
-		return res, err
-	}
 
 	signers, err := readNonceKey()
 	if err != nil {
 		return res, err
 	}
+
+	seq, err := readSequence(signers)
+	if err != nil {
+		return res, err
+	}
+
 	res = nonce.NewTx(seq, signers, tx)
 	return
 }
@@ -67,13 +69,28 @@ func parseActors(key string) (signers []basecoin.Actor, err error) {
 	return
 }
 
-func readSequence() (uint32, error) {
+// read the sequence from the flag or query for it if flag is -1
+func readSequence(signers []basecoin.Actor) (seq uint32, err error) {
 	//add the nonce tx layer to the tx
-	seq := viper.GetInt(FlagSequence)
-	if seq > 0 {
-		return uint32(seq), nil
+	seqFlag := viper.GetInt(FlagSequence)
+
+	switch {
+	case seqFlag > 0:
+		seq = uint32(seqFlag)
+
+	case seqFlag == -1:
+		//autocalculation for default sequence
+		seq, _, err = doNonceQuery(signers)
+		if err != nil {
+			return
+		}
+
+		//increase the sequence by 1!
+		seq++
+
+	default:
+		err = fmt.Errorf("sequence must be either greater than 0, or -1 for autocalculation")
 	}
 
-	// TODO: try to download from query..
-	return 0, fmt.Errorf("sequence must be greater than 0")
+	return
 }

@@ -33,9 +33,10 @@ test01SendTx() {
     SENDER=$(getAddr $RICH)
     RECV=$(getAddr $POOR)
 
-    assertFalse "Line=${LINENO}, missing dest" "${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 2>/dev/null"
-    assertFalse "Line=${LINENO}, bad password" "echo foo | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH 2>/dev/null"
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH)
+    # sequence should work well for first time also
+    assertFalse "Line=${LINENO}, missing dest" "${CLIENT_EXE} tx send --amount=992mycoin 2>/dev/null"
+    assertFalse "Line=${LINENO}, bad password" "echo foo | ${CLIENT_EXE} tx send --amount=992mycoin --to=$RECV --name=$RICH 2>/dev/null"
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=992mycoin --to=$RECV --name=$RICH)
     txSucceeded $? "$TX" "$RECV"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)

@@ -54,7 +54,7 @@ test02SendTxWithFee() {
     RECV=$(getAddr $POOR)
 
     # Test to see if the auto-sequencing works, the sequence here should be calculated to be 2
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --sequence=-1 --to=$RECV --name=$RICH)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --to=$RECV --name=$RICH)
     txSucceeded $? "$TX" "$RECV"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)

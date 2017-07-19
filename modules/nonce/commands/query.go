@@ -28,7 +28,6 @@ func nonceQueryCmd(cmd *cobra.Command, args []string) error {
 	}
 	addr := strings.Join(args, ",")
 
-	var signers []basecoin.Actor
 	signers, err := parseActors(addr)
 	if err != nil {
 		return err

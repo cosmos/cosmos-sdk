@@ -24,7 +24,7 @@ test01SetupRole() {
     THREE=$(getAddr $DUDE)
     MEMBERS=${ONE},${TWO},${THREE}
 
-    SIGS=1
+    SIGS=2
 
     assertFalse "line=${LINENO}, missing min-sigs" "echo qwertyuiop | ${CLIENT_EXE} tx create-role --role=bank --members=${MEMBERS} --sequence=1 --name=$RICH"
     assertFalse "line=${LINENO}, missing members" "echo qwertyuiop | ${CLIENT_EXE} tx create-role --role=bank --min-sigs=2 --sequence=1 --name=$RICH"
@@ -43,9 +43,6 @@ test01SetupRole() {
 test02SendTxToRole() {
     SENDER=$(getAddr $RICH)
     RECV=role:$(toHex bank)
-
-    # HEXROLE=$(toHex bank)
-    # RECV="role:$HEXROLE"
 
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --fee=90mycoin --amount=10000mycoin --to=$RECV --sequence=2 --name=$RICH)
     txSucceeded $? "$TX" "bank"
@@ -69,48 +66,25 @@ test03SendMultiFromRole() {
     assertFalse "line=${LINENO}, has no money yet" "${CLIENT_EXE} query account $TWO 2>/dev/null"
 
     # let's try to send money from the role directly without multisig
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=1 --name=$POOR 2>/dev/null)
+    FAIL=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=1 --name=$POOR 2>/dev/null)
     assertFalse "need to assume role" $?
-    # echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=1 --assume-role=bank --name=$POOR --prepare=-
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=1 --assume-role=bank --name=$POOR)
-    txSucceeded $? "$TX" "from-bank"
+    FAIL=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=1 --assume-role=bank --name=$POOR 2>/dev/null)
+    assertFalse "need two signatures" $?
+
+    # okay, begin a multisig transaction mr. poor...
+    TX_FILE=$BASE_DIR/tx.json
+    echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=1 --assume-role=bank --name=$POOR --multi --prepare=$TX_FILE
+    assertTrue "line=${LINENO}, successfully prepare tx" $?
+    # and get some dude to sign it
+    FAIL=$(echo qwertyuiop | ${CLIENT_EXE} tx --in=$TX_FILE --name=$POOR 2>/dev/null)
+    assertFalse "line=${LINENO}, double signing doesn't get bank" $?
+    # and get some dude to sign it for the full access
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx --in=$TX_FILE --name=$DUDE)
+    txSucceeded $? "$TX" "multi-bank"
 
     checkAccount $TWO "6000"
     checkAccount $BANK "4000"
 }
-
-# test02SendTxWithFee() {
-#     SENDER=$(getAddr $RICH)
-#     RECV=$(getAddr $POOR)
-
-#     # Test to see if the auto-sequencing works, the sequence here should be calculated to be 2
-#     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --to=$RECV --name=$RICH)
-#     txSucceeded $? "$TX" "$RECV"
-#     HASH=$(echo $TX | jq .hash | tr -d \")
-#     TX_HEIGHT=$(echo $TX | jq .height)
-
-#     # deduct 100 from sender, add 90 to receiver... fees "vanish"
-#     checkAccount $SENDER "9007199254739900"
-#     checkAccount $RECV "1082"
-
-#     # Make sure tx is indexed
-#     checkSendFeeTx $HASH $TX_HEIGHT $SENDER "90" "10"
-
-#     # assert replay protection
-#     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --sequence=2 --to=$RECV --name=$RICH 2>/dev/null)
-#     assertFalse "line=${LINENO}, replay: $TX" $?
-#     checkAccount $SENDER "9007199254739900"
-#     checkAccount $RECV "1082"
-
-#     # make sure we can query the proper nonce
-#     NONCE=$(${CLIENT_EXE} query nonce $SENDER)
-#     if [ -n "$DEBUG" ]; then echo $NONCE; echo; fi
-#     # TODO: note that cobra returns error code 0 on parse failure,
-#     # so currently this check passes even if there is no nonce query command
-#     if assertTrue "line=${LINENO}, no nonce query" $?; then
-#         assertEquals "line=${LINENO}, proper nonce" "2" $(echo $NONCE | jq .data)
-#     fi
-# }
 
 
 # Load common then run these tests with shunit2!

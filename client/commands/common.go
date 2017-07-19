@@ -128,3 +128,14 @@ func ParseActors(key string) (signers []basecoin.Actor, err error) {
 	}
 	return
 }
+
+// GetOneArg makes sure there is exactly one positional argument
+func GetOneArg(args []string, argname string) (string, error) {
+	if len(args) == 0 {
+		return "", errors.Errorf("Missing required argument [%s]", argname)
+	}
+	if len(args) > 1 {
+		return "", errors.Errorf("Only accepts one argument [%s]", argname)
+	}
+	return args[0], nil
+}

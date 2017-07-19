@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 
-	"github.com/tendermint/abci/version"
 	keycmd "github.com/tendermint/go-crypto/cmd"
 	"github.com/tendermint/tmlibs/cli"
 
@@ -37,15 +35,6 @@ tmcli to work for any custom abci app.
 `,
 }
 
-// VersionCmd - command to show the application version
-var VersionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Show version info",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(version.Version)
-	},
-}
-
 func main() {
 	commands.AddBasicFlags(BaseCli)
 
@@ -56,6 +45,7 @@ func main() {
 		proofs.KeyQueryCmd,
 		coincmd.AccountQueryCmd,
 		noncecmd.NonceQueryCmd,
+		rolecmd.RoleQueryCmd,
 	)
 	proofs.TxPresenters.Register("base", txcmd.BaseTxPresenter{})
 
@@ -73,6 +63,8 @@ func main() {
 	txcmd.RootCmd.AddCommand(
 		// This is the default transaction, optional in your app
 		coincmd.SendTxCmd,
+		// this enables creating roles
+		rolecmd.CreateRoleTxCmd,
 	)
 
 	// Set up the various commands to use
@@ -85,7 +77,7 @@ func main() {
 		proofs.RootCmd,
 		txcmd.RootCmd,
 		proxy.RootCmd,
-		VersionCmd,
+		commands.VersionCmd,
 		auto.AutoCompleteCmd,
 	)
 

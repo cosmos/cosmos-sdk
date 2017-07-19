@@ -6,9 +6,8 @@ import (
 
 	lc "github.com/tendermint/light-client"
 
-	lcmd "github.com/tendermint/basecoin/client/commands"
+	"github.com/tendermint/basecoin/client/commands"
 	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
-	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/stack"
 )
@@ -17,15 +16,19 @@ import (
 var AccountQueryCmd = &cobra.Command{
 	Use:   "account [address]",
 	Short: "Get details of an account, with proof",
-	RunE:  lcmd.RequireInit(accountQueryCmd),
+	RunE:  commands.RequireInit(accountQueryCmd),
 }
 
 func accountQueryCmd(cmd *cobra.Command, args []string) error {
-	addr, err := proofcmd.ParseHexKey(args, "address")
+	addr, err := commands.GetOneArg(args, "address")
 	if err != nil {
 		return err
 	}
-	key := stack.PrefixedKey(coin.NameCoin, auth.SigPerm(addr).Bytes())
+	act, err := commands.ParseActor(addr)
+	if err != nil {
+		return err
+	}
+	key := stack.PrefixedKey(coin.NameCoin, act.Bytes())
 
 	acc := coin.Account{}
 	proof, err := proofcmd.GetAndParseAppProof(key, &acc)

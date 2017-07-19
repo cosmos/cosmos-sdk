@@ -13,8 +13,8 @@ import (
 
 // CreateRoleTxCmd is CLI command to send tokens between basecoin accounts
 var CreateRoleTxCmd = &cobra.Command{
-	Use:   "send",
-	Short: "send tokens from one account to another",
+	Use:   "create-role",
+	Short: "Create a new role",
 	RunE:  commands.RequireInit(createRoleTxCmd),
 }
 

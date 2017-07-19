@@ -104,7 +104,7 @@ test03AddCount() {
 
     # make sure we cannot replay the counter, no state change
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --countfee=10mycoin --sequence=2 --name=${RICH} --valid 2>/dev/null)
-    assertFalse "replay: $TX" $?
+    assertFalse "line=${LINENO}, replay: $TX" $?
     checkCounter "2" "17"
     checkAccount $SENDER "9007199254739979"
 }

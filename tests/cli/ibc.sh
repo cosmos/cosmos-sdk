@@ -66,21 +66,21 @@ test00GetAccount() {
     RECV_1=$(BC_HOME=${CLIENT_1} getAddr $POOR)
     export BC_HOME=${CLIENT_1}
 
-    assertFalse "requires arg" "${CLIENT_EXE} query account 2>/dev/null"
-    assertFalse "has no genesis account" "${CLIENT_EXE} query account $RECV_1 2>/dev/null"
+    assertFalse "line=${LINENO}, requires arg" "${CLIENT_EXE} query account 2>/dev/null"
+    assertFalse "line=${LINENO}, has no genesis account" "${CLIENT_EXE} query account $RECV_1 2>/dev/null"
     checkAccount $SENDER_1 "0" "9007199254740992"
 
     export BC_HOME=${CLIENT_2}
     SENDER_2=$(getAddr $RICH)
     RECV_2=$(getAddr $POOR)
 
-    assertFalse "requires arg" "${CLIENT_EXE} query account 2>/dev/null"
-    assertFalse "has no genesis account" "${CLIENT_EXE} query account $RECV_2 2>/dev/null"
+    assertFalse "line=${LINENO}, requires arg" "${CLIENT_EXE} query account 2>/dev/null"
+    assertFalse "line=${LINENO}, has no genesis account" "${CLIENT_EXE} query account $RECV_2 2>/dev/null"
     checkAccount $SENDER_2 "0" "9007199254740992"
 
     # Make sure that they have different addresses on both chains (they are random keys)
-    assertNotEquals "sender keys must be different" "$SENDER_1" "$SENDER_2"
-    assertNotEquals "recipient keys must be different" "$RECV_1" "$RECV_2"
+    assertNotEquals "line=${LINENO}, sender keys must be different" "$SENDER_1" "$SENDER_2"
+    assertNotEquals "line=${LINENO}, recipient keys must be different" "$RECV_1" "$RECV_2"
 }
 
 test01SendIBCTx() {
@@ -105,7 +105,7 @@ test01SendIBCTx() {
 
     # Make sure nothing arrived - yet
     waitForBlock ${PORT_1}
-    assertFalse "no relay running" "BC_HOME=${CLIENT_2} ${CLIENT_EXE} query account $RECV"
+    assertFalse "line=${LINENO}, no relay running" "BC_HOME=${CLIENT_2} ${CLIENT_EXE} query account $RECV"
 
     # Start the relay and wait a few blocks...
     # (already sent a tx on chain1, so use higher sequence)

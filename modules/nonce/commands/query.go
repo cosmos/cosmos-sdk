@@ -6,9 +6,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	lc "github.com/tendermint/light-client"
+	"github.com/tendermint/basecoin"
 	lcmd "github.com/tendermint/basecoin/client/commands"
 	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
+	lc "github.com/tendermint/light-client"
 
 	"github.com/tendermint/basecoin/modules/nonce"
 	"github.com/tendermint/basecoin/stack"
@@ -18,28 +19,37 @@ import (
 var NonceQueryCmd = &cobra.Command{
 	Use:   "nonce [address]",
 	Short: "Get details of a nonce sequence number, with proof",
-	RunE:  lcmd.RequireInit(doNonceQuery),
+	RunE:  lcmd.RequireInit(nonceQueryCmd),
 }
 
-func doNonceQuery(cmd *cobra.Command, args []string) error {
+func nonceQueryCmd(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.New("Missing required argument [address]")
 	}
 	addr := strings.Join(args, ",")
-	act, err := parseActors(addr)
+
+	var signers []basecoin.Actor
+	signers, err := parseActors(addr)
 	if err != nil {
 		return err
 	}
 
-	key := stack.PrefixedKey(nonce.NameNonce, nonce.GetSeqKey(act))
-
-	var seq uint32
-	proof, err := proofcmd.GetAndParseAppProof(key, &seq)
-	if lc.IsNoDataErr(err) {
-		return errors.Errorf("Sequence is empty for address %s ", addr)
-	} else if err != nil {
+	seq, proof, err := doNonceQuery(signers)
+	if err != nil {
 		return err
 	}
 
 	return proofcmd.OutputProof(seq, proof.BlockHeight())
+}
+
+func doNonceQuery(signers []basecoin.Actor) (sequence uint32, proof lc.Proof, err error) {
+
+	key := stack.PrefixedKey(nonce.NameNonce, nonce.GetSeqKey(signers))
+
+	proof, err = proofcmd.GetAndParseAppProof(key, &sequence)
+	if lc.IsNoDataErr(err) {
+		err = errors.Errorf("Sequence is empty for key %s ", key)
+	}
+
+	return
 }

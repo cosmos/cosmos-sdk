@@ -141,7 +141,7 @@ checkAccount() {
 # XXX Ex Usage: txSucceeded $? "$TX" "$RECIEVER"
 # Desc: Must be called right after the `tx` command, makes sure it got a success response
 txSucceeded() {
-    if (assertTrue "sent tx ($3): $2" $1); then
+    if (assertTrue "line=${LINENO}, sent tx ($3): $2" $1); then
         TX=$2
         assertEquals "line=${LINENO}, good check ($3): $TX" "0" $(echo $TX | jq .check_tx.code)
         assertEquals "line=${LINENO}, good deliver ($3): $TX" "0" $(echo $TX | jq .deliver_tx.code)
@@ -177,7 +177,7 @@ checkSendTx() {
 #       and that the first input was from this sender for this amount
 checkSendFeeTx() {
     TX=$(${CLIENT_EXE} query tx $1)
-    assertTrue "found tx" $?
+    assertTrue "line=${LINENO}, found tx" $?
     if [ -n "$DEBUG" ]; then echo $TX; echo; fi
 
     assertEquals "line=${LINENO}, proper height" $2 $(echo $TX | jq .height)

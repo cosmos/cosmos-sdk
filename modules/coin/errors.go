@@ -15,7 +15,6 @@ var (
 	errNoOutputs         = fmt.Errorf("No Output Coins")
 	errInvalidAddress    = fmt.Errorf("Invalid Address")
 	errInvalidCoins      = fmt.Errorf("Invalid Coins")
-	errInvalidSequence   = fmt.Errorf("Invalid Sequence")
 )
 
 var (

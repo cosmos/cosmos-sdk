@@ -38,10 +38,26 @@ func ChangeCoins(store state.SimpleDB, addr basecoin.Actor, coins Coins) (Coins,
 	return acct.Coins, err
 }
 
+// ChainAddr collapses all addresses from another chain into one, so we can
+// keep an over-all balance
+//
+// TODO: is there a better way to do this?
+func ChainAddr(addr basecoin.Actor) basecoin.Actor {
+	if addr.ChainID == "" {
+		return addr
+	}
+	addr.App = ""
+	addr.Address = nil
+	return addr
+}
+
 // updateCoins will load the account, make all checks, and return the updated account.
 //
 // it doesn't save anything, that is up to you to decide (Check/Change Coins)
 func updateCoins(store state.SimpleDB, addr basecoin.Actor, coins Coins) (acct Account, err error) {
+	// if the actor is another chain, we use one address for the chain....
+	addr = ChainAddr(addr)
+
 	acct, err = loadAccount(store, addr.Bytes())
 	// we can increase an empty account...
 	if IsNoAccountErr(err) && coins.IsPositive() {

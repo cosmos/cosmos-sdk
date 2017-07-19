@@ -355,6 +355,7 @@ func makePostPacket(tree *iavl.IAVLTree, packet Packet, fromID string, fromHeigh
 		Packet:          packet,
 	}
 }
+
 func updateChain(app basecoin.Handler, store state.KVStore, keys certifiers.ValKeys,
 	chain string, h int, appHash []byte) error {
 	seed := genEmptySeed(keys, chain, h, appHash, len(keys))
@@ -398,6 +399,14 @@ func TestIBCPostPacket(t *testing.T) {
 		coin.Coins{{"eth", 100}, {"ltc", 300}},
 	)
 
+	// set some cash on this chain (TODO: via set options...)
+	otherAddr := coin.ChainAddr(sender)
+	acct := coin.Account{
+		Coins: coin.Coins{{"btc", 300}, {"eth", 2000}, {"ltc", 5000}},
+	}
+	cstore := stack.PrefixedStore(coin.NameCoin, store)
+	cstore.Set(otherAddr.Bytes(), wire.BinaryBytes(acct))
+
 	// make proofs for some packets....
 	tree := iavl.NewIAVLTree(0, nil)
 	pbad := Packet{
@@ -419,6 +428,13 @@ func TestIBCPostPacket(t *testing.T) {
 		Permissions: basecoin.Actors{sender},
 		Tx:          coinTx,
 	}
+	// this sends money we don't have registered
+	p2 := Packet{
+		DestChain:   ourID,
+		Sequence:    2,
+		Permissions: basecoin.Actors{sender},
+		Tx:          coin.NewSendOneTx(sender, recipient, coin.Coins{{"missing", 20}}),
+	}
 
 	packet0 := makePostPacket(tree, p0, otherID, start+5)
 	err = updateChain(app, store, keys, otherID, start+5, tree.Hash())
@@ -433,6 +449,10 @@ func TestIBCPostPacket(t *testing.T) {
 
 	packet1badProof := packet1
 	packet1badProof.Key = []byte("random-data")
+
+	packet2 := makePostPacket(tree, p2, otherID, start+50)
+	err = updateChain(app, store, keys, otherID, start+50, tree.Hash())
+	require.Nil(err, "%+v", err)
 
 	ibcPerm := basecoin.Actors{AllowIBC(coin.NameCoin)}
 	cases := []struct {
@@ -463,6 +483,9 @@ func TestIBCPostPacket(t *testing.T) {
 
 		// repeat -> error
 		{packet0, ibcPerm, IsPacketAlreadyExistsErr},
+
+		// packet 2 attempts to spend money this chain doesn't have
+		{packet2, ibcPerm, coin.IsInsufficientFundsErr},
 	}
 
 	for i, tc := range cases {

@@ -80,6 +80,15 @@ func (m Middleware) verifyPost(ctx basecoin.Context, store state.KVStore,
 		return ictx, itx, ErrCannotSetPermission()
 	}
 
+	// make sure it has AllowIBC
+	mod, err := packet.Tx.GetMod()
+	if err != nil {
+		return ictx, itx, err
+	}
+	if !ctx.HasPermission(AllowIBC(mod)) {
+		return ictx, itx, ErrNeedsIBCPermission()
+	}
+
 	// make sure this sequence number is the next in the list
 	q := InputQueue(store, from)
 	tail := q.Tail()
@@ -110,7 +119,7 @@ func (m Middleware) verifyPost(ctx basecoin.Context, store state.KVStore,
 	q.Push(pBytes)
 
 	// return the wrapped tx along with the extra permissions
-	ictx = ictx.WithPermissions(packet.Permissions...)
+	ictx = ctx.WithPermissions(packet.Permissions...)
 	itx = packet.Tx
 	return
 }

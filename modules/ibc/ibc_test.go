@@ -2,6 +2,7 @@ package ibc
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,10 +10,13 @@ import (
 
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/light-client/certifiers"
+	"github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
+	"github.com/tendermint/basecoin/modules/auth"
+	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 )
@@ -335,19 +339,146 @@ func TestIBCCreatePacket(t *testing.T) {
 	}
 }
 
-func TestIBCPostPacket(t *testing.T) {
-	// make proofs
+func makePostPacket(tree *iavl.IAVLTree, packet Packet, fromID string, fromHeight int) PostPacketTx {
+	key := []byte(fmt.Sprintf("some-long-prefix-%06d", packet.Sequence))
+	tree.Set(key, packet.Bytes())
+	_, proof := tree.ConstructProof(key)
+	if proof == nil {
+		panic("wtf?")
+	}
 
-	// bad chain -> error
-	// no matching header -> error
-	// bad proof -> error
-	// out of order -> error
-	// invalid permissions -> error
-
-	// all good -> execute tx
-
+	return PostPacketTx{
+		FromChainID:     fromID,
+		FromChainHeight: uint64(fromHeight),
+		Proof:           proof,
+		Key:             key,
+		Packet:          packet,
+	}
+}
+func updateChain(app basecoin.Handler, store state.KVStore, keys certifiers.ValKeys,
+	chain string, h int, appHash []byte) error {
+	seed := genEmptySeed(keys, chain, h, appHash, len(keys))
+	tx := UpdateChainTx{seed}.Wrap()
+	ctx := stack.MockContext("foo", 123)
+	_, err := app.DeliverTx(ctx, store, tx)
+	return err
 }
 
-func TestIBCSendTx(t *testing.T) {
+func TestIBCPostPacket(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
 
+	otherID := "chain-1"
+	ourID := "hub"
+
+	// this is the root seed, that others are evaluated against
+	keys := certifiers.GenValKeys(7)
+	appHash := []byte("this is just random garbage")
+	start := 100 // initial height
+	root := genEmptySeed(keys, otherID, start, appHash, len(keys))
+
+	// create the app and register the root of trust (for chain-1)
+	ctx := stack.MockContext(ourID, 50)
+	store := state.NewMemKVStore()
+	app := stack.New().
+		IBC(NewMiddleware()).
+		Dispatch(
+			stack.WrapHandler(NewHandler()),
+			stack.WrapHandler(coin.NewHandler()),
+		)
+	tx := RegisterChainTx{root}.Wrap()
+	_, err := app.DeliverTx(ctx, store, tx)
+	require.Nil(err, "%+v", err)
+
+	recipient := basecoin.Actor{ChainID: ourID, App: auth.NameSigs, Address: []byte("bar")}
+	sender := basecoin.Actor{ChainID: otherID, App: auth.NameSigs, Address: []byte("foo")}
+	coinTx := coin.NewSendOneTx(
+		sender,
+		recipient,
+		coin.Coins{{"eth", 100}, {"ltc", 300}},
+	)
+
+	// make proofs for some packets....
+	tree := iavl.NewIAVLTree(0, nil)
+	pbad := Packet{
+		DestChain: "something-else",
+		Sequence:  0,
+		Tx:        coinTx,
+	}
+	packetBad := makePostPacket(tree, pbad, "something-else", 123)
+
+	p0 := Packet{
+		DestChain:   ourID,
+		Sequence:    0,
+		Permissions: basecoin.Actors{sender},
+		Tx:          coinTx,
+	}
+	p1 := Packet{
+		DestChain:   ourID,
+		Sequence:    1,
+		Permissions: basecoin.Actors{sender},
+		Tx:          coinTx,
+	}
+
+	packet0 := makePostPacket(tree, p0, otherID, start+5)
+	err = updateChain(app, store, keys, otherID, start+5, tree.Hash())
+	require.Nil(err, "%+v", err)
+
+	packet0badHeight := packet0
+	packet0badHeight.FromChainHeight -= 2
+
+	packet1 := makePostPacket(tree, p1, otherID, start+25)
+	err = updateChain(app, store, keys, otherID, start+25, tree.Hash())
+	require.Nil(err, "%+v", err)
+
+	packet1badProof := packet1
+	packet1badProof.Key = []byte("random-data")
+
+	ibcPerm := basecoin.Actors{AllowIBC(coin.NameCoin)}
+	cases := []struct {
+		packet      PostPacketTx
+		permissions basecoin.Actors
+		checker     checkErr
+	}{
+		// bad chain -> error
+		{packetBad, ibcPerm, IsNotRegisteredErr},
+
+		// invalid permissions -> error
+		{packet0, nil, IsNeedsIBCPermissionErr},
+
+		// no matching header -> error
+		{packet0badHeight, ibcPerm, IsHeaderNotFoundErr},
+
+		// out of order -> error
+		{packet1, ibcPerm, IsPacketOutOfOrderErr},
+
+		// all good -> execute tx	}
+		{packet0, ibcPerm, noErr},
+
+		// bad proof -> error
+		{packet1badProof, ibcPerm, IsInvalidProofErr},
+
+		// all good -> execute tx }
+		{packet1, ibcPerm, noErr},
+
+		// repeat -> error
+		{packet0, ibcPerm, IsPacketAlreadyExistsErr},
+	}
+
+	for i, tc := range cases {
+		// cache wrap it like an app, so no state change on error...
+		myStore := state.NewKVCache(store)
+
+		myCtx := ctx
+		if len(tc.permissions) > 0 {
+			myCtx = myCtx.WithPermissions(tc.permissions...)
+		}
+		_, err := app.DeliverTx(myCtx, myStore, tc.packet.Wrap())
+		assert.True(tc.checker(err), "%d: %+v", i, err)
+
+		// only commit changes on success
+		if err == nil {
+			myStore.Sync()
+		}
+	}
 }

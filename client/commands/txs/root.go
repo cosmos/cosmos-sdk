@@ -2,9 +2,6 @@ package txs
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
-	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -47,34 +44,19 @@ func doRawTx(cmd *cobra.Command, args []string) error {
 		return errors.WithStack(err)
 	}
 
-	// Sign if needed and post.  This it the work-horse
-	bres, err := SignAndPostTx(tx.Unwrap())
+	// sign it
+	err = SignTx(tx)
 	if err != nil {
 		return err
 	}
-	if err = ValidateResult(bres); err != nil {
+
+	// otherwise, post it and display response
+	bres, err := PrepareOrPostTx(tx)
+	if err != nil {
 		return err
 	}
-
-	// Output result
-	return OutputTx(bres)
-}
-
-func readInput(file string) ([]byte, error) {
-	var reader io.Reader
-	// get the input stream
-	if file == "" || file == "-" {
-		reader = os.Stdin
-	} else {
-		f, err := os.Open(file)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		defer f.Close()
-		reader = f
+	if bres == nil {
+		return nil // successful prep, nothing left to do
 	}
-
-	// and read it all!
-	data, err := ioutil.ReadAll(reader)
-	return data, errors.WithStack(err)
+	return OutputTx(bres) // print response of the post
 }

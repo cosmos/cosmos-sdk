@@ -33,13 +33,6 @@ func init() {
 
 // sendTxCmd is an example of how to make a tx
 func sendTxCmd(cmd *cobra.Command, args []string) error {
-	// load data from json or flags
-	// var tx basecoin.Tx
-	// found, err := txcmd.LoadJSON(&tx)
-	// if err != nil {
-	// 	return err
-	// }
-
 	tx, err := readSendTxFlags()
 	if err != nil {
 		return err
@@ -50,17 +43,20 @@ func sendTxCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Sign if needed and post.  This it the work-horse
-	bres, err := txcmd.SignAndPostTx(tx.Unwrap())
+	err = txcmd.SignTx(tx)
 	if err != nil {
 		return err
 	}
-	if err = txcmd.ValidateResult(bres); err != nil {
+
+	// otherwise, post it and display response
+	bres, err := txcmd.PrepareOrPostTx(tx)
+	if err != nil {
 		return err
 	}
-
-	// Output result
-	return txcmd.OutputTx(bres)
+	if bres == nil {
+		return nil // successful prep, nothing left to do
+	}
+	return txcmd.OutputTx(bres) // print response of the post
 }
 
 func readSendTxFlags() (tx basecoin.Tx, err error) {

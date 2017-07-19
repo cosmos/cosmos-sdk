@@ -39,8 +39,8 @@ func main() {
 	// Prepare queries
 	proofs.RootCmd.AddCommand(
 		// These are default parsers, optional in your app
-		proofs.TxCmd,
-		proofs.KeyCmd,
+		proofs.TxQueryCmd,
+		proofs.KeyQueryCmd,
 		coincmd.AccountQueryCmd,
 		noncecmd.NonceQueryCmd,
 

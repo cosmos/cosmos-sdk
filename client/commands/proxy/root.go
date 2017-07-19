@@ -7,14 +7,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	cmn "github.com/tendermint/tmlibs/common"
-	"github.com/tendermint/tmlibs/log"
-
+	certclient "github.com/tendermint/light-client/certifiers/client"
 	"github.com/tendermint/tendermint/rpc/client"
 	"github.com/tendermint/tendermint/rpc/core"
 	rpc "github.com/tendermint/tendermint/rpc/lib/server"
+	cmn "github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/tmlibs/log"
 
-	certclient "github.com/tendermint/light-client/certifiers/client"
 	"github.com/tendermint/basecoin/client/commands"
 )
 

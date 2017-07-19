@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/modules/roles"
 	"github.com/tendermint/basecoin/stack"

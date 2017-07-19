@@ -8,12 +8,11 @@ import (
 
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
-
+	lc "github.com/tendermint/light-client"
+	"github.com/tendermint/light-client/proofs"
 	"github.com/tendermint/tendermint/rpc/client"
 
-	lc "github.com/tendermint/light-client"
 	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/light-client/proofs"
 )
 
 // GetAndParseAppProof does most of the work of the query commands, but is quite

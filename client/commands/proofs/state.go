@@ -4,24 +4,25 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/go-wire/data"
+	"github.com/tendermint/light-client/proofs"
 
 	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/light-client/proofs"
 )
 
-var KeyCmd = &cobra.Command{
+// KeyQueryCmd - CLI command to query a state by key with proof
+var KeyQueryCmd = &cobra.Command{
 	Use:   "key [key]",
 	Short: "Handle proofs for state of abci app",
 	Long: `This will look up a given key in the abci app, verify the proof,
 and output it as hex.
 
 If you want json output, use an app-specific command that knows key and value structure.`,
-	RunE: commands.RequireInit(doKeyQuery),
+	RunE: commands.RequireInit(keyQueryCmd),
 }
 
 // Note: we cannot yse GetAndParseAppProof here, as we don't use go-wire to
 // parse the object, but rather return the raw bytes
-func doKeyQuery(cmd *cobra.Command, args []string) error {
+func keyQueryCmd(cmd *cobra.Command, args []string) error {
 	// parse cli
 	height := GetHeight()
 	key, err := ParseHexKey(args, "key")

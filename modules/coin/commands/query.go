@@ -4,10 +4,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	lcmd "github.com/tendermint/basecoin/client/commands"
-	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
 	lc "github.com/tendermint/light-client"
 
+	lcmd "github.com/tendermint/basecoin/client/commands"
+	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/stack"

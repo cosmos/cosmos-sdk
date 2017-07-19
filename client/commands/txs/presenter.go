@@ -2,6 +2,7 @@ package txs
 
 import (
 	"github.com/pkg/errors"
+
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/light-client/proofs"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"

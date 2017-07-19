@@ -6,11 +6,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
+	lc "github.com/tendermint/light-client"
+
 	"github.com/tendermint/basecoin"
 	lcmd "github.com/tendermint/basecoin/client/commands"
 	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
-	lc "github.com/tendermint/light-client"
-
 	"github.com/tendermint/basecoin/modules/nonce"
 	"github.com/tendermint/basecoin/stack"
 )

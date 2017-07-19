@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/state"
-	"github.com/tendermint/go-wire/data"
 )
 
 // writerMid is a middleware that writes the given bytes on CheckTx and DeliverTx

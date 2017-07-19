@@ -4,9 +4,8 @@ package base
 import (
 	"fmt"
 
-	pkgerrors "github.com/pkg/errors"
-
 	abci "github.com/tendermint/abci/types"
+
 	"github.com/tendermint/basecoin/errors"
 )
 
@@ -25,13 +24,11 @@ func IsNoChainErr(err error) bool {
 	return errors.IsSameError(errNoChain, err)
 }
 func ErrWrongChain(chain string) errors.TMError {
-	msg := pkgerrors.Wrap(errWrongChain, chain)
-	return errors.WithCode(msg, unauthorized)
+	return errors.WithMessage(chain, errWrongChain, unauthorized)
 }
 func IsWrongChainErr(err error) bool {
 	return errors.IsSameError(errWrongChain, err)
 }
-
 func ErrExpired() errors.TMError {
 	return errors.WithCode(errExpired, unauthorized)
 }

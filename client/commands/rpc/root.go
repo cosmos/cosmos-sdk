@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/go-wire/data"
+	certclient "github.com/tendermint/light-client/certifiers/client"
 	"github.com/tendermint/tendermint/rpc/client"
 
-	certclient "github.com/tendermint/light-client/certifiers/client"
 	"github.com/tendermint/basecoin/client/commands"
 )
 

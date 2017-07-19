@@ -4,23 +4,25 @@ package coin
 import (
 	"fmt"
 
+	pkgerrors "github.com/pkg/errors"
+
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin/errors"
 )
 
 var (
 	errNoAccount         = fmt.Errorf("No such account")
-	errInsufficientFunds = fmt.Errorf("Insufficient Funds")
-	errNoInputs          = fmt.Errorf("No Input Coins")
-	errNoOutputs         = fmt.Errorf("No Output Coins")
-	errInvalidAddress    = fmt.Errorf("Invalid Address")
-	errInvalidCoins      = fmt.Errorf("Invalid Coins")
-)
+	errInsufficientFunds = fmt.Errorf("Insufficient funds")
+	errNoInputs          = fmt.Errorf("No input coins")
+	errNoOutputs         = fmt.Errorf("No output coins")
+	errInvalidAddress    = fmt.Errorf("Invalid address")
+	errInvalidCoins      = fmt.Errorf("Invalid coins")
+	errUnknownKey        = fmt.Errorf("Unknown key")
 
-var (
 	invalidInput   = abci.CodeType_BaseInvalidInput
 	invalidOutput  = abci.CodeType_BaseInvalidOutput
 	unknownAddress = abci.CodeType_BaseUnknownAddress
+	unknownRequest = abci.CodeType_UnknownRequest
 )
 
 // here are some generic handlers to grab classes of errors based on code
@@ -78,4 +80,12 @@ func ErrNoOutputs() errors.TMError {
 }
 func IsNoOutputsErr(err error) bool {
 	return errors.IsSameError(errNoOutputs, err)
+}
+
+func ErrUnknownKey(mod string) errors.TMError {
+	w := pkgerrors.Wrap(errUnknownKey, mod)
+	return errors.WithCode(w, unknownRequest)
+}
+func IsUnknownKeyErr(err error) bool {
+	return errors.IsSameError(errUnknownKey, err)
 }

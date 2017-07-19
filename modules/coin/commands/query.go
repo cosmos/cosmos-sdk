@@ -4,9 +4,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	lc "github.com/tendermint/light-client"
 	lcmd "github.com/tendermint/basecoin/client/commands"
 	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
+	lc "github.com/tendermint/light-client"
 
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/coin"
@@ -17,10 +17,10 @@ import (
 var AccountQueryCmd = &cobra.Command{
 	Use:   "account [address]",
 	Short: "Get details of an account, with proof",
-	RunE:  lcmd.RequireInit(doAccountQuery),
+	RunE:  lcmd.RequireInit(accountQueryCmd),
 }
 
-func doAccountQuery(cmd *cobra.Command, args []string) error {
+func accountQueryCmd(cmd *cobra.Command, args []string) error {
 	addr, err := proofcmd.ParseHexKey(args, "address")
 	if err != nil {
 		return err

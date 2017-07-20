@@ -3,9 +3,10 @@ package main
 import (
 	"os"
 
+	"github.com/tendermint/tmlibs/cli"
+
 	"github.com/tendermint/basecoin/app"
 	"github.com/tendermint/basecoin/cmd/basecoin/commands"
-	"github.com/tendermint/tmlibs/cli"
 )
 
 func main() {

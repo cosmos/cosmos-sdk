@@ -138,10 +138,27 @@ checkAccount() {
     return $?
 }
 
+# XXX Ex Usage: checkRole $ROLE $SIGS $NUM_SIGNERS
+# Desc: Ensures this named role exists, and has the number of members and required signatures as above
+checkRole() {
+    # make sure sender goes down
+    ROLE=$(${CLIENT_EXE} query role $1)
+    if ! assertTrue "line=${LINENO}, role must exist" $?; then
+        return 1
+    fi
+
+    if [ -n "$DEBUG" ]; then echo $ROLE; echo; fi
+    assertEquals "line=${LINENO}, proper sigs" "$2" $(echo $ROLE | jq .data.min_sigs)
+    assertEquals "line=${LINENO}, proper app" '"sigs"' $(echo $ROLE | jq '.data.signers[0].app' )
+    assertEquals "line=${LINENO}, proper signers" "$3" $(echo $ROLE | jq '.data.signers | length')
+    return $?
+}
+
+
 # XXX Ex Usage: txSucceeded $? "$TX" "$RECIEVER"
 # Desc: Must be called right after the `tx` command, makes sure it got a success response
 txSucceeded() {
-    if (assertTrue "sent tx ($3): $2" $1); then
+    if (assertTrue "line=${LINENO}, sent tx ($3): $2" $1); then
         TX=$2
         assertEquals "line=${LINENO}, good check ($3): $TX" "0" $(echo $TX | jq .check_tx.code)
         assertEquals "line=${LINENO}, good deliver ($3): $TX" "0" $(echo $TX | jq .deliver_tx.code)
@@ -171,13 +188,43 @@ checkSendTx() {
     return $?
 }
 
+# XXX Ex Usage: toHex "my-name"
+# converts the string into the hex representation of the bytes
+toHex() {
+    echo -n $1 | od -A n -t x1 | sed 's/ //g' | tr 'a-f' 'A-F'
+}
+
+# XXX Ex Usage: checkRoleTx $HASH $HEIGHT $NAME $NUM_SIGNERS
+# Desc: This looks up the tx by hash, and makes sure the height and type match
+#       and that the it refers to the proper role
+checkRoleTx() {
+    TX=$(${CLIENT_EXE} query tx $1)
+    assertTrue "line=${LINENO}, found tx" $?
+    if [ -n "$DEBUG" ]; then echo $TX; echo; fi
+
+
+    assertEquals "line=${LINENO}, proper height" $2 $(echo $TX | jq .height)
+    assertEquals "line=${LINENO}, type=sigs/one" '"sigs/one"' $(echo $TX | jq .data.type)
+    CTX=$(echo $TX | jq .data.data.tx)
+    assertEquals "line=${LINENO}, type=chain/tx" '"chain/tx"' $(echo $CTX | jq .type)
+    NTX=$(echo $CTX | jq .data.tx)
+    assertEquals "line=${LINENO}, type=nonce" '"nonce"' $(echo $NTX | jq .type)
+    RTX=$(echo $NTX | jq .data.tx)
+    assertEquals "line=${LINENO}, type=role/create" '"role/create"' $(echo $RTX | jq .type)
+    HEXNAME=$(toHex $3)
+    assertEquals "line=${LINENO}, proper name" "\"$HEXNAME\"" $(echo $RTX | jq .data.role)
+    assertEquals "line=${LINENO}, proper num signers" "$4" $(echo $RTX | jq '.data.signers | length')
+    return $?
+}
+
+
 # XXX Ex Usage: checkSendFeeTx $HASH $HEIGHT $SENDER $AMOUNT $FEE
 # Desc: This is like checkSendTx, but asserts a feetx wrapper with $FEE value.
 #       This looks up the tx by hash, and makes sure the height and type match
 #       and that the first input was from this sender for this amount
 checkSendFeeTx() {
     TX=$(${CLIENT_EXE} query tx $1)
-    assertTrue "found tx" $?
+    assertTrue "line=${LINENO}, found tx" $?
     if [ -n "$DEBUG" ]; then echo $TX; echo; fi
 
     assertEquals "line=${LINENO}, proper height" $2 $(echo $TX | jq .height)

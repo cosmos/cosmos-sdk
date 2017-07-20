@@ -2,7 +2,6 @@ package base
 
 import (
 	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 )
@@ -48,7 +47,7 @@ func (c Chain) checkChainTx(chainID string, height uint64, tx basecoin.Tx) (base
 	// make sure it is a chaintx
 	ctx, ok := tx.Unwrap().(ChainTx)
 	if !ok {
-		return tx, errors.ErrNoChain()
+		return tx, ErrNoChain()
 	}
 
 	// basic validation
@@ -59,10 +58,10 @@ func (c Chain) checkChainTx(chainID string, height uint64, tx basecoin.Tx) (base
 
 	// compare against state
 	if ctx.ChainID != chainID {
-		return tx, errors.ErrWrongChain(ctx.ChainID)
+		return tx, ErrWrongChain(ctx.ChainID)
 	}
 	if ctx.ExpiresAt != 0 && ctx.ExpiresAt <= height {
-		return tx, errors.ErrExpired()
+		return tx, ErrExpired()
 	}
 	return ctx.Tx, nil
 }

@@ -42,7 +42,6 @@ func TestErrorMatches(t *testing.T) {
 		{errUnauthorized, ErrUnauthorized(), true},
 		{errMissingSignature, ErrUnauthorized(), false},
 		{errMissingSignature, ErrMissingSignature(), true},
-		{errWrongChain, ErrWrongChain("hakz"), true},
 		{errUnknownTxType, ErrUnknownTxType(holder{}), true},
 		{errUnknownTxType, ErrUnknownTxType("some text here..."), true},
 		{errUnknownTxType, ErrUnknownTxType(demoTx{5}.Wrap()), true},
@@ -66,13 +65,6 @@ func TestChecks(t *testing.T) {
 		{ErrDecoding(), IsDecodingErr, true},
 		{ErrUnauthorized(), IsDecodingErr, false},
 		{ErrUnauthorized(), IsUnauthorizedErr, true},
-		{ErrInvalidSignature(), IsInvalidSignatureErr, true},
-		// unauthorized includes InvalidSignature, but not visa versa
-		{ErrInvalidSignature(), IsUnauthorizedErr, true},
-		{ErrUnauthorized(), IsInvalidSignatureErr, false},
-		// make sure WrongChain works properly
-		{ErrWrongChain("fooz"), IsUnauthorizedErr, true},
-		{ErrWrongChain("barz"), IsWrongChainErr, true},
 		// make sure lots of things match InternalErr, but not everything
 		{ErrInternal("bad db connection"), IsInternalErr, true},
 		{Wrap(errors.New("wrapped")), IsInternalErr, true},

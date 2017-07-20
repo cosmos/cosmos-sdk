@@ -22,13 +22,12 @@ import:
   subpackages:
   - data
 - package: github.com/tendermint/light-client
-  version: develop
+  version: unstable
   subpackages:
-  - commands
-  - commands/proofs
-  - commands/seeds
-  - commands/txs
   - proofs
+  - certifiers
+  - certifiers/client
+  - certifiers/files
 - package: github.com/tendermint/merkleeyes
   version: develop
   subpackages:

@@ -21,20 +21,20 @@ test00GetAccount() {
     SENDER=$(getAddr $RICH)
     RECV=$(getAddr $POOR)
 
-    assertFalse "requires arg" "${CLIENT_EXE} query account"
+    assertFalse "line=${LINENO}, requires arg" "${CLIENT_EXE} query account"
 
     checkAccount $SENDER "9007199254740992"
 
     ACCT2=$(${CLIENT_EXE} query account $RECV 2>/dev/null)
-    assertFalse "has no genesis account" $?
+    assertFalse "line=${LINENO}, has no genesis account" $?
 }
 
 test01SendTx() {
     SENDER=$(getAddr $RICH)
     RECV=$(getAddr $POOR)
 
-    assertFalse "missing dest" "${CLIENT_EXE} tx send --amount=992mycoin --sequence=1"
-    assertFalse "bad password" "echo foo | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH"
+    assertFalse "line=${LINENO}, missing dest" "${CLIENT_EXE} tx send --amount=992mycoin --sequence=1"
+    assertFalse "line=${LINENO}, bad password" "echo foo | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH"
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH)
     txSucceeded $? "$TX" "$RECV"
     HASH=$(echo $TX | jq .hash | tr -d \")
@@ -53,7 +53,8 @@ test02SendTxWithFee() {
     SENDER=$(getAddr $RICH)
     RECV=$(getAddr $POOR)
 
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --sequence=2 --to=$RECV --name=$RICH)
+    # Test to see if the auto-sequencing works, the sequence here should be calculated to be 2
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --to=$RECV --name=$RICH)
     txSucceeded $? "$TX" "$RECV"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
@@ -67,7 +68,7 @@ test02SendTxWithFee() {
 
     # assert replay protection
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --sequence=2 --to=$RECV --name=$RICH 2>/dev/null)
-    assertFalse "replay: $TX" $?
+    assertFalse "line=${LINENO}, replay: $TX" $?
     checkAccount $SENDER "9007199254739900"
     checkAccount $RECV "1082"
 
@@ -76,7 +77,7 @@ test02SendTxWithFee() {
     if [ -n "$DEBUG" ]; then echo $NONCE; echo; fi
     # TODO: note that cobra returns error code 0 on parse failure,
     # so currently this check passes even if there is no nonce query command
-    if assertTrue "no nonce query" $?; then
+    if assertTrue "line=${LINENO}, no nonce query" $?; then
         assertEquals "line=${LINENO}, proper nonce" "2" $(echo $NONCE | jq .data)
     fi
 }

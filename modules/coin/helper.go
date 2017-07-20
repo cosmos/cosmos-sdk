@@ -1,11 +1,11 @@
 package coin
 
 import (
-	"github.com/tendermint/basecoin/modules/auth"
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire/data"
 
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/modules/auth"
 )
 
 // AccountWithKey is a helper for tests, that includes and account

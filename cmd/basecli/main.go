@@ -6,16 +6,21 @@ import (
 	"github.com/spf13/cobra"
 
 	keycmd "github.com/tendermint/go-crypto/cmd"
-	"github.com/tendermint/light-client/commands"
-	"github.com/tendermint/light-client/commands/proofs"
-	"github.com/tendermint/light-client/commands/proxy"
-	rpccmd "github.com/tendermint/light-client/commands/rpc"
-	"github.com/tendermint/light-client/commands/seeds"
-	"github.com/tendermint/light-client/commands/txs"
 	"github.com/tendermint/tmlibs/cli"
 
-	bcmd "github.com/tendermint/basecoin/cmd/basecli/commands"
-	coincmd "github.com/tendermint/basecoin/cmd/basecoin/commands"
+	"github.com/tendermint/basecoin/client/commands"
+	"github.com/tendermint/basecoin/client/commands/auto"
+	"github.com/tendermint/basecoin/client/commands/proofs"
+	"github.com/tendermint/basecoin/client/commands/proxy"
+	rpccmd "github.com/tendermint/basecoin/client/commands/rpc"
+	"github.com/tendermint/basecoin/client/commands/seeds"
+	txcmd "github.com/tendermint/basecoin/client/commands/txs"
+	authcmd "github.com/tendermint/basecoin/modules/auth/commands"
+	basecmd "github.com/tendermint/basecoin/modules/base/commands"
+	coincmd "github.com/tendermint/basecoin/modules/coin/commands"
+	feecmd "github.com/tendermint/basecoin/modules/fee/commands"
+	noncecmd "github.com/tendermint/basecoin/modules/nonce/commands"
+	rolecmd "github.com/tendermint/basecoin/modules/roles/commands"
 )
 
 // BaseCli - main basecoin client command
@@ -36,17 +41,30 @@ func main() {
 	// Prepare queries
 	proofs.RootCmd.AddCommand(
 		// These are default parsers, but optional in your app (you can remove key)
-		proofs.TxCmd,
-		proofs.KeyCmd,
-		bcmd.AccountQueryCmd,
-		bcmd.NonceQueryCmd,
+		proofs.TxQueryCmd,
+		proofs.KeyQueryCmd,
+		coincmd.AccountQueryCmd,
+		noncecmd.NonceQueryCmd,
+		rolecmd.RoleQueryCmd,
 	)
+	proofs.TxPresenters.Register("base", txcmd.BaseTxPresenter{})
+
+	// set up the middleware
+	txcmd.Middleware = txcmd.Wrappers{
+		feecmd.FeeWrapper{},
+		rolecmd.RoleWrapper{},
+		noncecmd.NonceWrapper{},
+		basecmd.ChainWrapper{},
+		authcmd.SigWrapper{},
+	}
+	txcmd.Middleware.Register(txcmd.RootCmd.PersistentFlags())
 
 	// you will always want this for the base send command
-	proofs.TxPresenters.Register("base", bcmd.BaseTxPresenter{})
-	txs.RootCmd.AddCommand(
+	txcmd.RootCmd.AddCommand(
 		// This is the default transaction, optional in your app
-		bcmd.SendTxCmd,
+		coincmd.SendTxCmd,
+		// this enables creating roles
+		rolecmd.CreateRoleTxCmd,
 	)
 
 	// Set up the various commands to use
@@ -57,10 +75,10 @@ func main() {
 		seeds.RootCmd,
 		rpccmd.RootCmd,
 		proofs.RootCmd,
-		txs.RootCmd,
+		txcmd.RootCmd,
 		proxy.RootCmd,
-		coincmd.VersionCmd,
-		bcmd.AutoCompleteCmd,
+		commands.VersionCmd,
+		auto.AutoCompleteCmd,
 	)
 
 	cmd := cli.PrepareMainCmd(BaseCli, "BC", os.ExpandEnv("$HOME/.basecli"))

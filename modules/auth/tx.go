@@ -106,7 +106,7 @@ func (s *OneSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
 		return errors.ErrMissingSignature()
 	}
 	if !s.Empty() {
-		return errors.ErrTooManySignatures()
+		return ErrTooManySignatures()
 	}
 	// set the value once we are happy
 	s.Signed = signed
@@ -121,7 +121,7 @@ func (s *OneSig) Signers() ([]crypto.PubKey, error) {
 		return nil, errors.ErrMissingSignature()
 	}
 	if !s.Pubkey.VerifyBytes(s.SignBytes(), s.Sig) {
-		return nil, errors.ErrInvalidSignature()
+		return nil, ErrInvalidSignature()
 	}
 	return []crypto.PubKey{s.Pubkey}, nil
 }
@@ -194,7 +194,7 @@ func (s *MultiSig) Signers() ([]crypto.PubKey, error) {
 	for i := range s.Sigs {
 		ms := s.Sigs[i]
 		if !ms.Pubkey.VerifyBytes(data, ms.Sig) {
-			return nil, errors.ErrInvalidSignature()
+			return nil, ErrInvalidSignature()
 		}
 		keys[i] = ms.Pubkey
 	}

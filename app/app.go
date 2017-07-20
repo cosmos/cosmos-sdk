@@ -16,6 +16,7 @@ import (
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/modules/fee"
 	"github.com/tendermint/basecoin/modules/nonce"
+	"github.com/tendermint/basecoin/modules/roles"
 	"github.com/tendermint/basecoin/stack"
 	sm "github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/version"
@@ -56,14 +57,19 @@ func NewBasecoin(handler basecoin.Handler, eyesCli *eyes.Client, logger log.Logg
 // DefaultHandler - placeholder to just handle sendtx
 func DefaultHandler(feeDenom string) basecoin.Handler {
 	// use the default stack
-	h := coin.NewHandler()
-	d := stack.NewDispatcher(stack.WrapHandler(h))
+	c := coin.NewHandler()
+	r := roles.NewHandler()
+	d := stack.NewDispatcher(
+		stack.WrapHandler(c),
+		stack.WrapHandler(r),
+	)
 	return stack.New(
 		base.Logger{},
 		stack.Recovery{},
 		auth.Signatures{},
 		base.Chain{},
 		nonce.ReplayCheck{},
+		roles.NewMiddleware(),
 		fee.NewSimpleFeeMiddleware(coin.Coin{feeDenom, 0}, fee.Bank),
 	).Use(d)
 }
@@ -139,7 +145,9 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 		return errors.Result(err)
 	}
 
-	// TODO: can we abstract this setup and commit logic??
+	// we also need to discard error changes, so we don't increment checktx
+	// sequence on error, but not delivertx
+	cache := app.cacheState.CacheWrap()
 	ctx := stack.NewContext(
 		app.state.GetChainID(),
 		app.height,
@@ -147,11 +155,12 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 	)
 	// checktx generally shouldn't touch the state, but we don't care
 	// here on the framework level, since the cacheState is thrown away next block
-	res, err := app.handler.CheckTx(ctx, app.cacheState, tx)
+	res, err := app.handler.CheckTx(ctx, cache, tx)
 
 	if err != nil {
 		return errors.Result(err)
 	}
+	cache.CacheSync()
 	return res.ToABCI()
 }
 

@@ -19,7 +19,8 @@ dist:
 benchmark:
 	@go test -bench=. ./modules/...
 
-test: test_unit test_cli test_tutorial
+#test: test_unit test_cli test_tutorial
+test: test_unit test_cli
 
 test_unit:
 	@go test `glide novendor`
@@ -27,7 +28,11 @@ test_unit:
 
 test_cli: tests/cli/shunit2
 	# sudo apt-get install jq
+	./tests/cli/keys.sh
+	./tests/cli/rpc.sh
+	./tests/cli/init.sh
 	./tests/cli/basictx.sh
+	./tests/cli/roles.sh
 	./tests/cli/counter.sh
 	./tests/cli/restart.sh
 	# @./tests/cli/ibc.sh

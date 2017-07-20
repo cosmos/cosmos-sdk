@@ -34,7 +34,7 @@ import:
   - client
   - iavl
 - package: github.com/tendermint/tendermint
-  version: develop
+  version: no-internet
   subpackages:
   - config
   - node

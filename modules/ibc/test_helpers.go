@@ -1,0 +1,129 @@
+package ibc
+
+import (
+	"fmt"
+
+	"github.com/tendermint/light-client/certifiers"
+	"github.com/tendermint/merkleeyes/iavl"
+	"github.com/tendermint/tmlibs/log"
+
+	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/stack"
+	"github.com/tendermint/basecoin/state"
+)
+
+// MockChain is used to simulate a chain for ibc tests.
+// It is able to produce ibc packets and all verification for
+// them, but cannot respond to any responses.
+type MockChain struct {
+	keys    certifiers.ValKeys
+	chainID string
+	tree    *iavl.IAVLTree
+}
+
+// NewMockChain initializes a teststore and test validators
+func NewMockChain(chainID string, numKeys int) MockChain {
+	return MockChain{
+		keys:    certifiers.GenValKeys(numKeys),
+		chainID: chainID,
+		tree:    iavl.NewIAVLTree(0, nil),
+	}
+}
+
+// GetRegistrationTx returns a valid tx to register this chain
+func (m MockChain) GetRegistrationTx(h int) RegisterChainTx {
+	seed := genEmptySeed(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
+	return RegisterChainTx{seed}
+}
+
+// MakePostPacket commits the packet locally and returns the proof,
+// in the form of two packets to update the header and prove this packet.
+func (m MockChain) MakePostPacket(packet Packet, h int) (
+	PostPacketTx, UpdateChainTx) {
+
+	post := makePostPacket(m.tree, packet, m.chainID, h)
+	seed := genEmptySeed(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
+	update := UpdateChainTx{seed}
+
+	return post, update
+}
+
+func genEmptySeed(keys certifiers.ValKeys, chain string, h int,
+	appHash []byte, count int) certifiers.Seed {
+
+	vals := keys.ToValidators(10, 0)
+	cp := keys.GenCheckpoint(chain, h, nil, vals, appHash, 0, count)
+	return certifiers.Seed{cp, vals}
+}
+
+func makePostPacket(tree *iavl.IAVLTree, packet Packet, fromID string, fromHeight int) PostPacketTx {
+	key := []byte(fmt.Sprintf("some-long-prefix-%06d", packet.Sequence))
+	tree.Set(key, packet.Bytes())
+	_, proof := tree.ConstructProof(key)
+	if proof == nil {
+		panic("wtf?")
+	}
+
+	return PostPacketTx{
+		FromChainID:     fromID,
+		FromChainHeight: uint64(fromHeight),
+		Proof:           proof,
+		Key:             key,
+		Packet:          packet,
+	}
+}
+
+// AppChain is ready to handle tx
+type AppChain struct {
+	chainID string
+	app     basecoin.Handler
+	store   state.KVStore
+	height  int
+}
+
+// NewAppChain returns a chain that is ready to respond to tx
+func NewAppChain(app basecoin.Handler, chainID string) *AppChain {
+	return &AppChain{
+		chainID: chainID,
+		app:     app,
+		store:   state.NewMemKVStore(),
+		height:  123,
+	}
+}
+
+// IncrementHeight allows us to jump heights, more than the auto-step
+// of 1.  It returns the new height we are at.
+func (a *AppChain) IncrementHeight(delta int) int {
+	a.height += delta
+	return a.height
+}
+
+// DeliverTx runs the tx and commits the new tree, incrementing height
+// by one.
+func (a *AppChain) DeliverTx(tx basecoin.Tx, perms ...basecoin.Actor) (basecoin.Result, error) {
+	ctx := stack.MockContext(a.chainID, uint64(a.height)).WithPermissions(perms...)
+	store := state.NewKVCache(a.store)
+	res, err := a.app.DeliverTx(ctx, store, tx)
+	if err == nil {
+		// commit data on success
+		store.Sync()
+	}
+	return res, err
+}
+
+// Update is a shortcut to DeliverTx with this.  Also one return value
+// to test inline
+func (a *AppChain) Update(tx UpdateChainTx) error {
+	_, err := a.DeliverTx(tx.Wrap())
+	return err
+}
+
+// SetOption sets the option on our app
+func (a *AppChain) SetOption(mod, key, value string) (string, error) {
+	return a.app.SetOption(log.NewNopLogger(), a.store, mod, key, value)
+}
+
+// GetStore is used to get the app-specific sub-store
+func (a *AppChain) GetStore(app string) state.KVStore {
+	return stack.PrefixedStore(app, a.store)
+}

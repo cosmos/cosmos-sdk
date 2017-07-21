@@ -2,7 +2,6 @@ package ibc
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,7 +9,6 @@ import (
 
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/light-client/certifiers"
-	"github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
@@ -25,14 +23,6 @@ type checkErr func(error) bool
 
 func noErr(err error) bool {
 	return err == nil
-}
-
-func genEmptySeed(keys certifiers.ValKeys, chain string, h int,
-	appHash []byte, count int) certifiers.Seed {
-
-	vals := keys.ToValidators(10, 0)
-	cp := keys.GenCheckpoint(chain, h, nil, vals, appHash, 0, count)
-	return certifiers.Seed{cp, vals}
 }
 
 // this tests registration without registrar permissions
@@ -339,73 +329,43 @@ func TestIBCCreatePacket(t *testing.T) {
 	}
 }
 
-func makePostPacket(tree *iavl.IAVLTree, packet Packet, fromID string, fromHeight int) PostPacketTx {
-	key := []byte(fmt.Sprintf("some-long-prefix-%06d", packet.Sequence))
-	tree.Set(key, packet.Bytes())
-	_, proof := tree.ConstructProof(key)
-	if proof == nil {
-		panic("wtf?")
-	}
-
-	return PostPacketTx{
-		FromChainID:     fromID,
-		FromChainHeight: uint64(fromHeight),
-		Proof:           proof,
-		Key:             key,
-		Packet:          packet,
-	}
-}
-
-func updateChain(app basecoin.Handler, store state.KVStore, keys certifiers.ValKeys,
-	chain string, h int, appHash []byte) error {
-	seed := genEmptySeed(keys, chain, h, appHash, len(keys))
-	tx := UpdateChainTx{seed}.Wrap()
-	ctx := stack.MockContext("foo", 123)
-	_, err := app.DeliverTx(ctx, store, tx)
-	return err
-}
-
 func TestIBCPostPacket(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
 	otherID := "chain-1"
 	ourID := "hub"
+	start := 200
 
-	// this is the root seed, that others are evaluated against
-	keys := certifiers.GenValKeys(7)
-	appHash := []byte("this is just random garbage")
-	start := 100 // initial height
-	root := genEmptySeed(keys, otherID, start, appHash, len(keys))
-
-	// create the app and register the root of trust (for chain-1)
-	ctx := stack.MockContext(ourID, 50)
-	store := state.NewMemKVStore()
+	// create the app and our chain
 	app := stack.New().
 		IBC(NewMiddleware()).
 		Dispatch(
 			stack.WrapHandler(NewHandler()),
 			stack.WrapHandler(coin.NewHandler()),
 		)
-	tx := RegisterChainTx{root}.Wrap()
-	_, err := app.DeliverTx(ctx, store, tx)
+	ourChain := NewAppChain(app, ourID)
+
+	// set up the other chain and register it with us
+	otherChain := NewMockChain(otherID, 7)
+	registerTx := otherChain.GetRegistrationTx(start).Wrap()
+	_, err := ourChain.DeliverTx(registerTx)
 	require.Nil(err, "%+v", err)
 
 	// set up a rich guy on this chain
 	wealth := coin.Coins{{"btc", 300}, {"eth", 2000}, {"ltc", 5000}}
 	rich := coin.NewAccountWithKey(wealth)
-	_, err = app.SetOption(log.NewNopLogger(), store,
-		"coin", "account", rich.MakeOption())
+	_, err = ourChain.SetOption("coin", "account", rich.MakeOption())
 	require.Nil(err, "%+v", err)
 
 	// sends money to another guy on a different chain, now other chain has credit
 	buddy := basecoin.Actor{ChainID: otherID, App: auth.NameSigs, Address: []byte("dude")}
 	outTx := coin.NewSendOneTx(rich.Actor(), buddy, wealth)
-	_, err = app.DeliverTx(ctx.WithPermissions(rich.Actor()), store, outTx)
+	_, err = ourChain.DeliverTx(outTx, rich.Actor())
 	require.Nil(err, "%+v", err)
 
 	// make sure the money moved to the other chain...
-	cstore := stack.PrefixedStore(coin.NameCoin, store)
+	cstore := ourChain.GetStore(coin.NameCoin)
 	acct, err := coin.GetAccount(cstore, coin.ChainAddr(buddy))
 	require.Nil(err, "%+v", err)
 	require.Equal(wealth, acct.Coins)
@@ -418,53 +378,29 @@ func TestIBCPostPacket(t *testing.T) {
 		recipient,
 		coin.Coins{{"eth", 100}, {"ltc", 300}},
 	)
+	wrongCoin := coin.NewSendOneTx(sender, recipient, coin.Coins{{"missing", 20}})
 
-	// make proofs for some packets....
-	tree := iavl.NewIAVLTree(0, nil)
-	pbad := Packet{
-		DestChain: "something-else",
-		Sequence:  0,
-		Tx:        coinTx,
-	}
-	packetBad := makePostPacket(tree, pbad, "something-else", 123)
+	randomChain := NewMockChain("something-else", 4)
+	pbad := NewPacket(coinTx, "something-else", 0)
+	packetBad, _ := randomChain.MakePostPacket(pbad, 123)
 
-	p0 := Packet{
-		DestChain:   ourID,
-		Sequence:    0,
-		Permissions: basecoin.Actors{sender},
-		Tx:          coinTx,
-	}
-	p1 := Packet{
-		DestChain:   ourID,
-		Sequence:    1,
-		Permissions: basecoin.Actors{sender},
-		Tx:          coinTx,
-	}
-	// this sends money we don't have registered
-	p2 := Packet{
-		DestChain:   ourID,
-		Sequence:    2,
-		Permissions: basecoin.Actors{sender},
-		Tx:          coin.NewSendOneTx(sender, recipient, coin.Coins{{"missing", 20}}),
-	}
-
-	packet0 := makePostPacket(tree, p0, otherID, start+5)
-	err = updateChain(app, store, keys, otherID, start+5, tree.Hash())
-	require.Nil(err, "%+v", err)
+	p0 := NewPacket(coinTx, ourID, 0, sender)
+	packet0, update0 := otherChain.MakePostPacket(p0, start+5)
+	require.Nil(ourChain.Update(update0))
 
 	packet0badHeight := packet0
 	packet0badHeight.FromChainHeight -= 2
 
-	packet1 := makePostPacket(tree, p1, otherID, start+25)
-	err = updateChain(app, store, keys, otherID, start+25, tree.Hash())
-	require.Nil(err, "%+v", err)
+	p1 := NewPacket(coinTx, ourID, 1, sender)
+	packet1, update1 := otherChain.MakePostPacket(p1, start+25)
+	require.Nil(ourChain.Update(update1))
 
 	packet1badProof := packet1
 	packet1badProof.Key = []byte("random-data")
 
-	packet2 := makePostPacket(tree, p2, otherID, start+50)
-	err = updateChain(app, store, keys, otherID, start+50, tree.Hash())
-	require.Nil(err, "%+v", err)
+	p2 := NewPacket(wrongCoin, ourID, 2, sender)
+	packet2, update2 := otherChain.MakePostPacket(p2, start+50)
+	require.Nil(ourChain.Update(update2))
 
 	ibcPerm := basecoin.Actors{AllowIBC(coin.NameCoin)}
 	cases := []struct {
@@ -501,19 +437,7 @@ func TestIBCPostPacket(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		// cache wrap it like an app, so no state change on error...
-		myStore := state.NewKVCache(store)
-
-		myCtx := ctx
-		if len(tc.permissions) > 0 {
-			myCtx = myCtx.WithPermissions(tc.permissions...)
-		}
-		_, err := app.DeliverTx(myCtx, myStore, tc.packet.Wrap())
+		_, err := ourChain.DeliverTx(tc.packet.Wrap(), tc.permissions...)
 		assert.True(tc.checker(err), "%d: %+v", i, err)
-
-		// only commit changes on success
-		if err == nil {
-			myStore.Sync()
-		}
 	}
 }

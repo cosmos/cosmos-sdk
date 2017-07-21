@@ -86,6 +86,16 @@ type Packet struct {
 	Tx          basecoin.Tx     `json:"tx"`
 }
 
+// NewPacket creates a new outgoing packet
+func NewPacket(tx basecoin.Tx, dest string, seq uint64, perm ...basecoin.Actor) Packet {
+	return Packet{
+		DestChain:   dest,
+		Sequence:    seq,
+		Permissions: perm,
+		Tx:          tx,
+	}
+}
+
 // Bytes returns a serialization of the Packet
 func (p Packet) Bytes() []byte {
 	return wire.BinaryBytes(p)

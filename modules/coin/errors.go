@@ -10,12 +10,13 @@ import (
 )
 
 var (
-	errNoAccount         = fmt.Errorf("No such account")
-	errInsufficientFunds = fmt.Errorf("Insufficient funds")
-	errNoInputs          = fmt.Errorf("No input coins")
-	errNoOutputs         = fmt.Errorf("No output coins")
-	errInvalidAddress    = fmt.Errorf("Invalid address")
-	errInvalidCoins      = fmt.Errorf("Invalid coins")
+	errNoAccount          = fmt.Errorf("No such account")
+	errInsufficientFunds  = fmt.Errorf("Insufficient funds")
+	errInsufficientCredit = fmt.Errorf("Insufficient credit")
+	errNoInputs           = fmt.Errorf("No input coins")
+	errNoOutputs          = fmt.Errorf("No output coins")
+	errInvalidAddress     = fmt.Errorf("Invalid address")
+	errInvalidCoins       = fmt.Errorf("Invalid coins")
 
 	invalidInput   = abci.CodeType_BaseInvalidInput
 	invalidOutput  = abci.CodeType_BaseInvalidOutput
@@ -64,6 +65,13 @@ func ErrInsufficientFunds() errors.TMError {
 }
 func IsInsufficientFundsErr(err error) bool {
 	return errors.IsSameError(errInsufficientFunds, err)
+}
+
+func ErrInsufficientCredit() errors.TMError {
+	return errors.WithCode(errInsufficientCredit, invalidInput)
+}
+func IsInsufficientCreditErr(err error) bool {
+	return errors.IsSameError(errInsufficientCredit, err)
 }
 
 func ErrNoInputs() errors.TMError {

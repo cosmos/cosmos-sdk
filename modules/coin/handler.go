@@ -37,28 +37,57 @@ func (Handler) AssertDispatcher() {}
 func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 	tx basecoin.Tx, _ basecoin.Checker) (res basecoin.Result, err error) {
 
-	send, err := checkTx(ctx, tx)
+	err = tx.ValidateBasic()
 	if err != nil {
 		return res, err
 	}
 
-	// now make sure there is money
-	for _, in := range send.Inputs {
-		_, err = CheckCoins(store, in.Address, in.Coins.Negative())
-		if err != nil {
-			return res, err
-		}
+	switch t := tx.Unwrap().(type) {
+	case SendTx:
+		return res, h.checkSendTx(ctx, store, t)
+	case CreditTx:
+		return h.creditTx(ctx, store, t)
 	}
-
-	// otherwise, we are good
-	return res, nil
+	return res, errors.ErrUnknownTxType(tx.Unwrap())
 }
 
 // DeliverTx moves the money
 func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 	tx basecoin.Tx, cb basecoin.Deliver) (res basecoin.Result, err error) {
 
-	send, err := checkTx(ctx, tx)
+	err = tx.ValidateBasic()
+	if err != nil {
+		return res, err
+	}
+
+	switch t := tx.Unwrap().(type) {
+	case SendTx:
+		return h.sendTx(ctx, store, t, cb)
+	case CreditTx:
+		return h.creditTx(ctx, store, t)
+	}
+	return res, errors.ErrUnknownTxType(tx.Unwrap())
+}
+
+// SetOption - sets the genesis account balance
+func (h Handler) SetOption(l log.Logger, store state.SimpleDB,
+	module, key, value string, cb basecoin.SetOptioner) (log string, err error) {
+	if module != NameCoin {
+		return "", errors.ErrUnknownModule(module)
+	}
+	switch key {
+	case "account":
+		return setAccount(store, value)
+	case "issuer":
+		return setIssuer(store, value)
+	}
+	return "", errors.ErrUnknownKey(key)
+}
+
+func (h Handler) sendTx(ctx basecoin.Context, store state.SimpleDB,
+	send SendTx, cb basecoin.Deliver) (res basecoin.Result, err error) {
+
+	err = checkTx(ctx, send)
 	if err != nil {
 		return res, err
 	}
@@ -107,43 +136,65 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 	return res, nil
 }
 
-// SetOption - sets the genesis account balance
-func (h Handler) SetOption(l log.Logger, store state.SimpleDB,
-	module, key, value string, _ basecoin.SetOptioner) (log string, err error) {
+func (h Handler) creditTx(ctx basecoin.Context, store state.SimpleDB,
+	credit CreditTx) (res basecoin.Result, err error) {
 
-	if module != NameCoin {
-		return "", errors.ErrUnknownModule(module)
+	// first check permissions!!
+	info, err := loadHandlerInfo(store)
+	if err != nil {
+		return res, err
 	}
-	switch key {
-	case "account":
-		return setAccount(store, value)
-	case "issuer":
-		return setIssuer(store, value)
+	if info.Issuer.Empty() || !ctx.HasPermission(info.Issuer) {
+		return res, errors.ErrUnauthorized()
 	}
-	return "", errors.ErrUnknownKey(key)
+
+	// load up the account
+	addr := ChainAddr(credit.Debitor)
+	acct, err := GetAccount(store, addr)
+	if err != nil {
+		return res, err
+	}
+
+	// make and check changes
+	acct.Coins = acct.Coins.Plus(credit.Credit)
+	if !acct.Coins.IsNonnegative() {
+		return res, ErrInsufficientFunds()
+	}
+	acct.Credit = acct.Credit.Plus(credit.Credit)
+	if !acct.Credit.IsNonnegative() {
+		return res, ErrInsufficientCredit()
+	}
+
+	err = storeAccount(store, addr.Bytes(), acct)
+	return res, err
 }
 
-func checkTx(ctx basecoin.Context, tx basecoin.Tx) (send SendTx, err error) {
-	// check if the tx is proper type and valid
-	send, ok := tx.Unwrap().(SendTx)
-	if !ok {
-		return send, errors.ErrInvalidFormat(TypeSend, tx)
-	}
-	err = send.ValidateBasic()
-	if err != nil {
-		return send, err
-	}
-
+func checkTx(ctx basecoin.Context, send SendTx) error {
 	// check if all inputs have permission
 	for _, in := range send.Inputs {
 		if !ctx.HasPermission(in.Address) {
-			return send, errors.ErrUnauthorized()
+			return errors.ErrUnauthorized()
 		}
 	}
-	return send, nil
+	return nil
 }
 
-func setAccount(store state.KVStore, value string) (log string, err error) {
+func (Handler) checkSendTx(ctx basecoin.Context, store state.SimpleDB, send SendTx) error {
+	err := checkTx(ctx, send)
+	if err != nil {
+		return err
+	}
+	// now make sure there is money
+	for _, in := range send.Inputs {
+		_, err := CheckCoins(store, in.Address, in.Coins.Negative())
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func setAccount(store state.SimpleDB, value string) (log string, err error) {
 	var acc GenesisAccount
 	err = data.FromJSON([]byte(value), &acc)
 	if err != nil {
@@ -165,7 +216,7 @@ func setAccount(store state.KVStore, value string) (log string, err error) {
 
 // setIssuer sets a permission for some super-powerful account to
 // mint money
-func setIssuer(store state.KVStore, value string) (log string, err error) {
+func setIssuer(store state.SimpleDB, value string) (log string, err error) {
 	var issuer basecoin.Actor
 	err = data.FromJSON([]byte(value), &issuer)
 	if err != nil {

@@ -117,7 +117,7 @@ func TestIBCPostPacket(t *testing.T) {
 
 }
 
-func assertPacket(t *testing.T, istore state.KVStore, destID string, amount Coins) {
+func assertPacket(t *testing.T, istore state.SimpleDB, destID string, amount Coins) {
 	assert := assert.New(t)
 	require := require.New(t)
 

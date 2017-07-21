@@ -78,12 +78,6 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin
 
 	switch t := tx.Unwrap().(type) {
 	case RegisterChainTx:
-		// check permission to attach, do it here, so no permission check
-		// by SetOption
-		info := LoadInfo(store)
-		if !info.Registrar.Empty() && !ctx.HasPermission(info.Registrar) {
-			return res, errors.ErrUnauthorized()
-		}
 		return h.initSeed(ctx, store, t)
 	case UpdateChainTx:
 		return h.updateSeed(ctx, store, t)
@@ -103,12 +97,6 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx baseco
 
 	switch t := tx.Unwrap().(type) {
 	case RegisterChainTx:
-		// check permission to attach, do it here, so no permission check
-		// by SetOption
-		info := LoadInfo(store)
-		if !info.Registrar.Empty() && !ctx.HasPermission(info.Registrar) {
-			return res, errors.ErrUnauthorized()
-		}
 		return h.initSeed(ctx, store, t)
 	case UpdateChainTx:
 		return h.updateSeed(ctx, store, t)
@@ -124,6 +112,11 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx baseco
 // only the registrar, if set, is allowed to do this
 func (h Handler) initSeed(ctx basecoin.Context, store state.SimpleDB,
 	t RegisterChainTx) (res basecoin.Result, err error) {
+
+	info := LoadInfo(store)
+	if !info.Registrar.Empty() && !ctx.HasPermission(info.Registrar) {
+		return res, errors.ErrUnauthorized()
+	}
 
 	// verify that the header looks reasonable
 	chainID := t.ChainID()

@@ -13,17 +13,9 @@ import (
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/modules/auth"
-	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 )
-
-type checkErr func(error) bool
-
-func noErr(err error) bool {
-	return err == nil
-}
 
 // this tests registration without registrar permissions
 func TestIBCRegister(t *testing.T) {
@@ -41,11 +33,11 @@ func TestIBCRegister(t *testing.T) {
 
 	cases := []struct {
 		seed    certifiers.Seed
-		checker checkErr
+		checker errors.CheckErr
 	}{
 		{
 			genEmptySeed(keys, "chain-1", 100, appHash, len(keys)),
-			noErr,
+			errors.NoErr,
 		},
 		{
 			genEmptySeed(keys, "chain-1", 200, appHash, len(keys)),
@@ -57,7 +49,7 @@ func TestIBCRegister(t *testing.T) {
 		},
 		{
 			genEmptySeed(keys2, "chain-2", 123, appHash2, 5),
-			noErr,
+			errors.NoErr,
 		},
 	}
 
@@ -89,18 +81,18 @@ func TestIBCRegisterPermissions(t *testing.T) {
 		seed      certifiers.Seed
 		registrar basecoin.Actor
 		signer    basecoin.Actor
-		checker   checkErr
+		checker   errors.CheckErr
 	}{
 		// no sig, no registrar
 		{
 			seed:    genEmptySeed(keys, "chain-1", 100, appHash, len(keys)),
-			checker: noErr,
+			checker: errors.NoErr,
 		},
 		// sig, no registrar
 		{
 			seed:    genEmptySeed(keys, "chain-2", 100, appHash, len(keys)),
 			signer:  foobaz,
-			checker: noErr,
+			checker: errors.NoErr,
 		},
 		// registrar, no sig
 		{
@@ -127,7 +119,7 @@ func TestIBCRegisterPermissions(t *testing.T) {
 			seed:      genEmptySeed(keys, "chain-6", 100, appHash, len(keys)),
 			signer:    foobar,
 			registrar: foobar,
-			checker:   noErr,
+			checker:   errors.NoErr,
 		},
 	}
 
@@ -174,17 +166,17 @@ func TestIBCUpdate(t *testing.T) {
 
 	cases := []struct {
 		seed    certifiers.Seed
-		checker checkErr
+		checker errors.CheckErr
 	}{
 		// same validator, higher up
 		{
 			genEmptySeed(keys, "chain-1", start+50, []byte{22}, len(keys)),
-			noErr,
+			errors.NoErr,
 		},
 		// same validator, between existing (not most recent)
 		{
 			genEmptySeed(keys, "chain-1", start+5, []byte{15, 43}, len(keys)),
-			noErr,
+			errors.NoErr,
 		},
 		// same validators, before root of trust
 		{
@@ -209,12 +201,12 @@ func TestIBCUpdate(t *testing.T) {
 		// legit update to validator set (keys -> keys2)
 		{
 			genEmptySeed(keys2, "chain-1", start+90, []byte{33}, len(keys2)),
-			noErr,
+			errors.NoErr,
 		},
 		// now impossible jump works (keys -> keys2 -> keys3)
 		{
 			genEmptySeed(keys3, "chain-1", start+100, []byte{44}, len(keys3)),
-			noErr,
+			errors.NoErr,
 		},
 	}
 
@@ -254,7 +246,7 @@ func TestIBCCreatePacket(t *testing.T) {
 		dest     string
 		ibcPerms basecoin.Actors
 		ctxPerms basecoin.Actors
-		checker  checkErr
+		checker  errors.CheckErr
 	}{
 		// wrong chain -> error
 		{
@@ -273,7 +265,7 @@ func TestIBCCreatePacket(t *testing.T) {
 		{
 			dest:     chainID,
 			ctxPerms: basecoin.Actors{ibcPerm},
-			checker:  noErr,
+			checker:  errors.NoErr,
 		},
 
 		// requesting invalid permissions -> error
@@ -289,7 +281,7 @@ func TestIBCCreatePacket(t *testing.T) {
 			dest:     chainID,
 			ibcPerms: basecoin.Actors{somePerm},
 			ctxPerms: basecoin.Actors{ibcPerm, somePerm},
-			checker:  noErr,
+			checker:  errors.NoErr,
 		},
 	}
 
@@ -336,13 +328,14 @@ func TestIBCPostPacket(t *testing.T) {
 	otherID := "chain-1"
 	ourID := "hub"
 	start := 200
+	msg := "it's okay"
 
 	// create the app and our chain
 	app := stack.New().
 		IBC(NewMiddleware()).
 		Dispatch(
 			stack.WrapHandler(NewHandler()),
-			stack.WrapHandler(coin.NewHandler()),
+			stack.WrapHandler(stack.OKHandler{Log: msg}),
 		)
 	ourChain := NewAppChain(app, ourID)
 
@@ -352,61 +345,38 @@ func TestIBCPostPacket(t *testing.T) {
 	_, err := ourChain.DeliverTx(registerTx)
 	require.Nil(err, "%+v", err)
 
-	// set up a rich guy on this chain
-	wealth := coin.Coins{{"btc", 300}, {"eth", 2000}, {"ltc", 5000}}
-	rich := coin.NewAccountWithKey(wealth)
-	_, err = ourChain.SetOption("coin", "account", rich.MakeOption())
-	require.Nil(err, "%+v", err)
-
-	// sends money to another guy on a different chain, now other chain has credit
-	buddy := basecoin.Actor{ChainID: otherID, App: auth.NameSigs, Address: []byte("dude")}
-	outTx := coin.NewSendOneTx(rich.Actor(), buddy, wealth)
-	_, err = ourChain.DeliverTx(outTx, rich.Actor())
-	require.Nil(err, "%+v", err)
-
-	// make sure the money moved to the other chain...
-	cstore := ourChain.GetStore(coin.NameCoin)
-	acct, err := coin.GetAccount(cstore, coin.ChainAddr(buddy))
-	require.Nil(err, "%+v", err)
-	require.Equal(wealth, acct.Coins)
-
-	// these are the people for testing incoming ibc from the other chain
-	recipient := basecoin.Actor{ChainID: ourID, App: auth.NameSigs, Address: []byte("bar")}
-	sender := basecoin.Actor{ChainID: otherID, App: auth.NameSigs, Address: []byte("foo")}
-	coinTx := coin.NewSendOneTx(
-		sender,
-		recipient,
-		coin.Coins{{"eth", 100}, {"ltc", 300}},
-	)
-	wrongCoin := coin.NewSendOneTx(sender, recipient, coin.Coins{{"missing", 20}})
+	// make a random tx that is to be passed
+	rawTx := stack.NewRawTx([]byte{17, 24, 3, 8})
 
 	randomChain := NewMockChain("something-else", 4)
-	pbad := NewPacket(coinTx, "something-else", 0)
+	pbad := NewPacket(rawTx, "something-else", 0)
 	packetBad, _ := randomChain.MakePostPacket(pbad, 123)
 
-	p0 := NewPacket(coinTx, ourID, 0, sender)
+	p0 := NewPacket(rawTx, ourID, 0)
 	packet0, update0 := otherChain.MakePostPacket(p0, start+5)
 	require.Nil(ourChain.Update(update0))
 
 	packet0badHeight := packet0
 	packet0badHeight.FromChainHeight -= 2
 
-	p1 := NewPacket(coinTx, ourID, 1, sender)
+	theirActor := basecoin.Actor{ChainID: otherID, App: "foo", Address: []byte{1}}
+	p1 := NewPacket(rawTx, ourID, 1, theirActor)
 	packet1, update1 := otherChain.MakePostPacket(p1, start+25)
 	require.Nil(ourChain.Update(update1))
 
 	packet1badProof := packet1
 	packet1badProof.Key = []byte("random-data")
 
-	p2 := NewPacket(wrongCoin, ourID, 2, sender)
+	ourActor := basecoin.Actor{ChainID: ourID, App: "bar", Address: []byte{2}}
+	p2 := NewPacket(rawTx, ourID, 2, ourActor)
 	packet2, update2 := otherChain.MakePostPacket(p2, start+50)
 	require.Nil(ourChain.Update(update2))
 
-	ibcPerm := basecoin.Actors{AllowIBC(coin.NameCoin)}
+	ibcPerm := basecoin.Actors{AllowIBC(stack.NameOK)}
 	cases := []struct {
 		packet      PostPacketTx
 		permissions basecoin.Actors
-		checker     checkErr
+		checker     errors.CheckErr
 	}{
 		// bad chain -> error
 		{packetBad, ibcPerm, IsNotRegisteredErr},
@@ -421,23 +391,26 @@ func TestIBCPostPacket(t *testing.T) {
 		{packet1, ibcPerm, IsPacketOutOfOrderErr},
 
 		// all good -> execute tx	}
-		{packet0, ibcPerm, noErr},
+		{packet0, ibcPerm, errors.NoErr},
 
 		// bad proof -> error
 		{packet1badProof, ibcPerm, IsInvalidProofErr},
 
 		// all good -> execute tx }
-		{packet1, ibcPerm, noErr},
+		{packet1, ibcPerm, errors.NoErr},
 
 		// repeat -> error
 		{packet0, ibcPerm, IsPacketAlreadyExistsErr},
 
-		// packet 2 attempts to spend money this chain doesn't have
-		{packet2, ibcPerm, coin.IsInsufficientFundsErr},
+		// packet2 contains invalid permissions
+		{packet2, ibcPerm, IsCannotSetPermissionErr},
 	}
 
 	for i, tc := range cases {
-		_, err := ourChain.DeliverTx(tc.packet.Wrap(), tc.permissions...)
+		res, err := ourChain.DeliverTx(tc.packet.Wrap(), tc.permissions...)
 		assert.True(tc.checker(err), "%d: %+v", i, err)
+		if err == nil {
+			assert.Equal(msg, res.Log)
+		}
 	}
 }

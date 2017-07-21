@@ -84,7 +84,11 @@ func updateCoins(store state.SimpleDB, addr basecoin.Actor, coins Coins) (acct A
 
 // Account - coin account structure
 type Account struct {
+	// Coins is how much is on the account
 	Coins Coins `json:"coins"`
+	// Credit is how much has been "fronted" to the account
+	// (this is usually 0 except for trusted chains)
+	Credit Coins `json:"credit"`
 }
 
 func loadAccount(store state.SimpleDB, key []byte) (acct Account, err error) {
@@ -105,5 +109,37 @@ func storeAccount(store state.SimpleDB, key []byte, acct Account) error {
 	// fmt.Printf("store: %X\n", key)
 	bin := wire.BinaryBytes(acct)
 	store.Set(key, bin)
+	return nil // real stores can return error...
+}
+
+// HandlerInfo - this is global info on the coin handler
+type HandlerInfo struct {
+	Issuer basecoin.Actor `json:"issuer"`
+}
+
+// TODO: where to store these special pieces??
+var handlerKey = []byte{12, 34}
+
+func loadHandlerInfo(store state.KVStore) (info HandlerInfo, err error) {
+	data := store.Get(handlerKey)
+	if len(data) == 0 {
+		return info, nil
+	}
+	err = wire.ReadBinaryBytes(data, &info)
+	if err != nil {
+		msg := "Error reading handler info"
+		return info, errors.ErrInternal(msg)
+	}
+	return info, nil
+}
+
+func storeIssuer(store state.KVStore, issuer basecoin.Actor) error {
+	info, err := loadHandlerInfo(store)
+	if err != nil {
+		return err
+	}
+	info.Issuer = issuer
+	d := wire.BinaryBytes(info)
+	store.Set(handlerKey, d)
 	return nil // real stores can return error...
 }

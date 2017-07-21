@@ -157,3 +157,30 @@ func (tx SendTx) String() string {
 func (tx SendTx) Wrap() basecoin.Tx {
 	return basecoin.Tx{tx}
 }
+
+//-----------------------------------------------------------------------------
+
+// CreditTx - this allows a special issuer to give an account credit
+// Satisfies: TxInner
+type CreditTx struct {
+	Debitor basecoin.Actor `json:"debitor"`
+	// Credit is the amount to change the credit...
+	// This may be negative to remove some over-issued credit,
+	// but can never bring the credit or the balance to negative
+	Credit Coins `json:"credit"`
+}
+
+// NewCreditTx - modify the credit granted to a given account
+func NewCreditTx(debitor basecoin.Actor, credit Coins) basecoin.Tx {
+	return CreditTx{Debitor: debitor, Credit: credit}.Wrap()
+}
+
+// Wrap - used to satisfy TxInner
+func (tx CreditTx) Wrap() basecoin.Tx {
+	return basecoin.Tx{tx}
+}
+
+// ValidateBasic - used to satisfy TxInner
+func (tx CreditTx) ValidateBasic() error {
+	return nil
+}

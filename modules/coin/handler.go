@@ -1,8 +1,6 @@
 package coin
 
 import (
-	"fmt"
-
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
 
@@ -83,7 +81,6 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 			out.Address.ChainID = ""
 		}
 
-		fmt.Printf("Giving %#v to %#v\n\n", out.Coins, out.Address)
 		_, err = ChangeCoins(store, out.Address, out.Coins)
 		if err != nil {
 			return res, err
@@ -117,25 +114,11 @@ func (h Handler) SetOption(l log.Logger, store state.SimpleDB,
 	if module != NameCoin {
 		return "", errors.ErrUnknownModule(module)
 	}
-	if key == "account" {
-		var acc GenesisAccount
-		err = data.FromJSON([]byte(value), &acc)
-		if err != nil {
-			return "", err
-		}
-		acc.Balance.Sort()
-		addr, err := acc.GetAddr()
-		if err != nil {
-			return "", ErrInvalidAddress()
-		}
-		// this sets the permission for a public key signature, use that app
-		actor := auth.SigPerm(addr)
-		err = storeAccount(store, actor.Bytes(), acc.ToAccount())
-		if err != nil {
-			return "", err
-		}
-		return "Success", nil
-
+	switch key {
+	case "account":
+		return setAccount(store, value)
+	case "issuer":
+		return setIssuer(store, value)
 	}
 	return "", errors.ErrUnknownKey(key)
 }
@@ -158,4 +141,39 @@ func checkTx(ctx basecoin.Context, tx basecoin.Tx) (send SendTx, err error) {
 		}
 	}
 	return send, nil
+}
+
+func setAccount(store state.KVStore, value string) (log string, err error) {
+	var acc GenesisAccount
+	err = data.FromJSON([]byte(value), &acc)
+	if err != nil {
+		return "", err
+	}
+	acc.Balance.Sort()
+	addr, err := acc.GetAddr()
+	if err != nil {
+		return "", ErrInvalidAddress()
+	}
+	// this sets the permission for a public key signature, use that app
+	actor := auth.SigPerm(addr)
+	err = storeAccount(store, actor.Bytes(), acc.ToAccount())
+	if err != nil {
+		return "", err
+	}
+	return "Success", nil
+}
+
+// setIssuer sets a permission for some super-powerful account to
+// mint money
+func setIssuer(store state.KVStore, value string) (log string, err error) {
+	var issuer basecoin.Actor
+	err = data.FromJSON([]byte(value), &issuer)
+	if err != nil {
+		return "", err
+	}
+	err = storeIssuer(store, issuer)
+	if err != nil {
+		return "", err
+	}
+	return "Success", nil
 }

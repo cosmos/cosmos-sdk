@@ -216,3 +216,34 @@ func TestSetOption(t *testing.T) {
 		}
 	}
 }
+
+func TestSetIssuer(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	cases := []struct {
+		issuer basecoin.Actor
+	}{
+		{basecoin.Actor{App: "sig", Address: []byte("gwkfgk")}},
+		// and set back to empty (nil is valid, but assert.Equals doesn't match)
+		{basecoin.Actor{Address: []byte{}}},
+		{basecoin.Actor{ChainID: "other", App: "role", Address: []byte("vote")}},
+	}
+
+	h := NewHandler()
+	l := log.NewNopLogger()
+	for i, tc := range cases {
+		store := state.NewMemKVStore()
+		key := "issuer"
+
+		value, err := json.Marshal(tc.issuer)
+		require.Nil(err, "%d,%d: %+v", i, err)
+		_, err = h.SetOption(l, store, NameCoin, key, string(value), nil)
+		require.Nil(err, "%+v", err)
+
+		// check state is proper
+		info, err := loadHandlerInfo(store)
+		assert.Nil(err, "%d: %+v", i, err)
+		assert.Equal(tc.issuer, info.Issuer)
+	}
+}

@@ -62,6 +62,27 @@ func (c ChainSet) Register(chainID string, ourHeight uint64, theirHeight int) er
 	return nil
 }
 
+// Update sets the new tracked height on this chain
+// returns error if not present
+func (c ChainSet) Update(chainID string, theirHeight int) error {
+	d := c.Set.Get([]byte(chainID))
+	if len(d) == 0 {
+		return ErrNotRegistered(chainID)
+	}
+	// load the data
+	var info ChainInfo
+	err := wire.ReadBinaryBytes(d, &info)
+	if err != nil {
+		return err
+	}
+
+	// change the remote block and save it
+	info.RemoteBlock = theirHeight
+	d = wire.BinaryBytes(info)
+	c.Set.Set([]byte(chainID), d)
+	return nil
+}
+
 // Packet is a wrapped transaction and permission that we want to
 // send off to another chain.
 type Packet struct {

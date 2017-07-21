@@ -88,7 +88,7 @@ func ibcQueryCmd(cmd *cobra.Command, args []string) error {
 
 func chainsQueryCmd(cmd *cobra.Command, args []string) error {
 	list := [][]byte{}
-	key := stack.PrefixedKey(ibc.NameIBC, ibc.HandlerKey())
+	key := stack.PrefixedKey(ibc.NameIBC, ibc.ChainsKey())
 	proof, err := proofcmd.GetAndParseAppProof(key, &list)
 	if err != nil {
 		return err

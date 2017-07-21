@@ -9,8 +9,8 @@ ACCOUNTS=(jae ethan bucky rigel igor)
 RICH=${ACCOUNTS[0]}
 POOR=${ACCOUNTS[4]}
 
-# Uncomment the following line for full stack traces in error output
-# CLIENT_EXE="basecli --trace"
+# For full stack traces in error output, run
+# BC_TRACE=1 ./ibc.sh
 
 oneTimeSetUp() {
     # These are passed in as args
@@ -99,6 +99,8 @@ test01RegisterChains() {
     txSucceeded $? "$TX" "register chain2 on chain 1"
     # an example to quit early if there is no point in more tests
     if [ $? != 0 ]; then echo "aborting!"; return 1; fi
+    # this is used later to check data
+    REG_HEIGHT=$(echo $TX | jq .height)
 
     # register chain1 on chain2 (no money needed... yet)
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-register \
@@ -122,6 +124,9 @@ test02UpdateChains() {
     ${CLIENT_EXE} seeds export $UPDATE_2 --home=${CLIENT_2}
     assertTrue "line=${LINENO}, export seed failed" $?
     assertNewHeight "line=${LINENO}" $ROOT_2 $UPDATE_2
+    # this is used later to check query data
+    REGISTER_2_HEIGHT=$(cat $ROOT_2 | jq .checkpoint.header.height)
+    UPDATE_2_HEIGHT=$(cat $UPDATE_2 | jq .checkpoint.header.height)
 
     # update chain2 on chain1
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-update \
@@ -138,8 +143,23 @@ test02UpdateChains() {
     if [ $? != 0 ]; then echo "aborting!"; return 1; fi
 }
 
+# make sure all query commands about ibc work...
 test03QueryIBC() {
+    # just test on one chain, as they are all symetrical
+    export BC_HOME=${CLIENT_1}
 
+    # make sure we can list all chains
+    CHAINS=$(${CLIENT_EXE} query ibc chains)
+    assertTrue "line=${LINENO}, cannot query chains" $?
+    assertEquals "1" $(echo $CHAINS | jq '.data | length')
+    assertEquals "line=${LINENO}" "\"$CHAIN_ID_2\"" $(echo $CHAINS | jq '.data[0]')
+
+    # error on unknown chain, data on proper chain
+    assertFalse "line=${LINENO}, unknown chain" "${CLIENT_EXE} query ibc chain random 2>/dev/null"
+    CHAIN_INFO=$(${CLIENT_EXE} query ibc chain $CHAIN_ID_2)
+    assertTrue "line=${LINENO}, cannot query chain $CHAIN_ID_2" $?
+    assertEquals "line=${LINENO}, register height" $REG_HEIGHT $(echo $CHAIN_INFO | jq .data.registered_at)
+    assertEquals "line=${LINENO}, tracked height" $UPDATE_2_HEIGHT $(echo $CHAIN_INFO | jq .data.remote_block)
 }
 
 # XXX Ex Usage: assertNewHeight $MSG $SEED_1 $SEED_2

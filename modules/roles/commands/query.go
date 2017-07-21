@@ -1,10 +1,9 @@
 package commands
 
 import (
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	lcmd "github.com/tendermint/basecoin/client/commands"
+	"github.com/tendermint/basecoin/client/commands"
 	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
 	"github.com/tendermint/basecoin/modules/roles"
 	"github.com/tendermint/basecoin/stack"
@@ -14,17 +13,15 @@ import (
 var RoleQueryCmd = &cobra.Command{
 	Use:   "role [name]",
 	Short: "Get details of a role, with proof",
-	RunE:  lcmd.RequireInit(roleQueryCmd),
+	RunE:  commands.RequireInit(roleQueryCmd),
 }
 
 func roleQueryCmd(cmd *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		return errors.New("Missing required argument [name]")
-	} else if len(args) > 1 {
-		return errors.New("Command only supports one name")
+	arg, err := commands.GetOneArg(args, "name")
+	if err != nil {
+		return err
 	}
-
-	role, err := parseRole(args[0])
+	role, err := parseRole(arg)
 	if err != nil {
 		return err
 	}

@@ -12,6 +12,10 @@ import (
 	"github.com/tendermint/basecoin/stack"
 )
 
+// TODO: other test making sure tx is output on send, balance is updated
+
+// This makes sure we respond properly to posttx
+// TODO: set credit limit
 func TestIBCPostPacket(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)

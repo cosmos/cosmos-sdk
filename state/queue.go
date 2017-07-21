@@ -8,6 +8,21 @@ var (
 	dataKey = []byte("d")
 )
 
+// QueueHeadKey gives us the key for the height at head of the queue
+func QueueHeadKey() []byte {
+	return headKey
+}
+
+// QueueTailKey gives us the key for the height at tail of the queue
+func QueueTailKey() []byte {
+	return tailKey
+}
+
+// QueueItemKey gives us the key to look up one item by sequence
+func QueueItemKey(i uint64) []byte {
+	return makeKey(i)
+}
+
 // Queue allows us to fill up a range of the db, and grab from either end
 type Queue struct {
 	store KVStore

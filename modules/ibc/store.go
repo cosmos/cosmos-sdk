@@ -7,21 +7,6 @@ import (
 	wire "github.com/tendermint/go-wire"
 )
 
-const (
-	// this is the prefix for the list of chains
-	// we otherwise use the chainid as prefix, so this must not be an
-	// alpha-numeric byte
-	prefixChains = "**"
-
-	prefixInput  = "i"
-	prefixOutput = "o"
-)
-
-// this is used for the global handler info
-var (
-	handlerKey = []byte{0x2}
-)
-
 // HandlerInfo is the global state of the ibc.Handler
 type HandlerInfo struct {
 	Registrar basecoin.Actor `json:"registrar"`
@@ -30,12 +15,12 @@ type HandlerInfo struct {
 // Save the HandlerInfo to the store
 func (h HandlerInfo) Save(store state.KVStore) {
 	b := wire.BinaryBytes(h)
-	store.Set(handlerKey, b)
+	store.Set(HandlerKey(), b)
 }
 
 // LoadInfo loads the HandlerInfo from the data store
 func LoadInfo(store state.KVStore) (h HandlerInfo) {
-	b := store.Get(handlerKey)
+	b := store.Get(HandlerKey())
 	if len(b) > 0 {
 		wire.ReadBinaryBytes(b, &h)
 	}

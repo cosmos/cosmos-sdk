@@ -7,6 +7,11 @@ import (
 	wire "github.com/tendermint/go-wire"
 )
 
+// SetKey returns the key to get all members of this set
+func SetKey() []byte {
+	return keys
+}
+
 // Set allows us to add arbitrary k-v pairs, check existence,
 // as well as iterate through the set (always in key order)
 //
@@ -29,7 +34,7 @@ func NewSet(store KVStore) *Set {
 // Set puts a value at a given height.
 // If the value is nil, or an empty slice, remove the key from the list
 func (s *Set) Set(key []byte, value []byte) {
-	s.store.Set(makeBKey(key), value)
+	s.store.Set(MakeBKey(key), value)
 	if len(value) > 0 {
 		s.addKey(key)
 	} else {
@@ -40,7 +45,7 @@ func (s *Set) Set(key []byte, value []byte) {
 
 // Get returns the element with a key if it exists
 func (s *Set) Get(key []byte) []byte {
-	return s.store.Get(makeBKey(key))
+	return s.store.Get(MakeBKey(key))
 }
 
 // Remove deletes this key from the set (same as setting value = nil)
@@ -122,8 +127,8 @@ func (s *Set) storeKeys() {
 	s.store.Set(keys, b)
 }
 
-// makeBKey prefixes the byte slice for the storage key
-func makeBKey(key []byte) []byte {
+// MakeBKey prefixes the byte slice for the storage key
+func MakeBKey(key []byte) []byte {
 	return append(dataKey, key...)
 }
 

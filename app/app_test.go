@@ -13,12 +13,42 @@ import (
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/modules/fee"
+	"github.com/tendermint/basecoin/modules/ibc"
 	"github.com/tendermint/basecoin/modules/nonce"
+	"github.com/tendermint/basecoin/modules/roles"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/tmlibs/log"
 )
+
+// DefaultHandler for the tests (coin, roles, ibc)
+func DefaultHandler(feeDenom string) basecoin.Handler {
+	// use the default stack
+	c := coin.NewHandler()
+	r := roles.NewHandler()
+	i := ibc.NewHandler()
+
+	return stack.New(
+		base.Logger{},
+		stack.Recovery{},
+		auth.Signatures{},
+		base.Chain{},
+		stack.Checkpoint{OnCheck: true},
+		nonce.ReplayCheck{},
+	).
+		IBC(ibc.NewMiddleware()).
+		Apps(
+			roles.NewMiddleware(),
+			fee.NewSimpleFeeMiddleware(coin.Coin{feeDenom, 0}, fee.Bank),
+			stack.Checkpoint{OnDeliver: true},
+		).
+		Dispatch(
+			stack.WrapHandler(c),
+			stack.WrapHandler(r),
+			stack.WrapHandler(i),
+		)
+}
 
 //--------------------------------------------------------
 // test environment is a list of input and output accounts

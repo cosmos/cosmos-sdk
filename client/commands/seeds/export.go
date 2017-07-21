@@ -1,11 +1,15 @@
 package seeds
 
 import (
+	"encoding/json"
+	"os"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/basecoin/client/commands"
+	"github.com/tendermint/light-client/certifiers"
 )
 
 var exportCmd = &cobra.Command{
@@ -40,5 +44,20 @@ func exportSeed(cmd *cobra.Command, args []string) error {
 	}
 
 	// now get the output file and write it
-	return seed.Write(path)
+	return writeSeed(seed, path)
+}
+
+func writeSeed(seed certifiers.Seed, path string) (err error) {
+	var f *os.File
+	f, err = os.Create(path)
+	if err == nil {
+		stream := json.NewEncoder(f)
+		err = stream.Encode(seed)
+		f.Close()
+	}
+	// we don't write, but this is not an error
+	if os.IsExist(err) {
+		return nil
+	}
+	return errors.WithStack(err)
 }

@@ -62,13 +62,13 @@ oneTimeTearDown() {
 }
 
 test00GetAccount() {
-    SENDER_1=$(BC_HOME=${CLIENT_1} getAddr $RICH)
-    RECV_1=$(BC_HOME=${CLIENT_1} getAddr $POOR)
     export BC_HOME=${CLIENT_1}
+    SENDER_1=$(getAddr $RICH)
+    RECV_1=$(getAddr $POOR)
 
     assertFalse "line=${LINENO}, requires arg" "${CLIENT_EXE} query account 2>/dev/null"
     assertFalse "line=${LINENO}, has no genesis account" "${CLIENT_EXE} query account $RECV_1 2>/dev/null"
-    checkAccount $SENDER_1 "0" "9007199254740992"
+    checkAccount $SENDER_1 "9007199254740992"
 
     export BC_HOME=${CLIENT_2}
     SENDER_2=$(getAddr $RICH)
@@ -76,101 +76,169 @@ test00GetAccount() {
 
     assertFalse "line=${LINENO}, requires arg" "${CLIENT_EXE} query account 2>/dev/null"
     assertFalse "line=${LINENO}, has no genesis account" "${CLIENT_EXE} query account $RECV_2 2>/dev/null"
-    checkAccount $SENDER_2 "0" "9007199254740992"
+    checkAccount $SENDER_2 "9007199254740992"
 
     # Make sure that they have different addresses on both chains (they are random keys)
     assertNotEquals "line=${LINENO}, sender keys must be different" "$SENDER_1" "$SENDER_2"
     assertNotEquals "line=${LINENO}, recipient keys must be different" "$RECV_1" "$RECV_2"
 }
 
-test01SendIBCTx() {
-    # Trigger a cross-chain sendTx... from RICH on chain1 to POOR on chain2
-    #   we make sure the money was reduced, but nothing arrived
-    SENDER=$(BC_HOME=${CLIENT_1} getAddr $RICH)
-    RECV=$(BC_HOME=${CLIENT_2} getAddr $POOR)
+test01RegisterChains() {
+    # let's get the root seeds to cross-register them
+    ROOT_1="$BASE_DIR_1/root_seed.json"
+    ${CLIENT_EXE} seeds export $ROOT_1 --home=${CLIENT_1}
+    assertTrue "line=${LINENO}, export seed failed" $?
 
-    export BC_HOME=${CLIENT_1}
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=20002mycoin \
-        --sequence=1 --to=${CHAIN_ID_2}/${RECV} --name=$RICH)
-    txSucceeded $? "$TX" "${CHAIN_ID_2}/${RECV}"
+    ROOT_2="$BASE_DIR_2/root_seed.json"
+    ${CLIENT_EXE} seeds export $ROOT_2 --home=${CLIENT_2}
+    assertTrue "line=${LINENO}, export seed failed" $?
+
+    # register chain2 on chain1
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-register \
+        --sequence=1 --seed=${ROOT_2} --name=$POOR --home=${CLIENT_1})
+    txSucceeded $? "$TX" "register chain2 on chain 1"
     # an example to quit early if there is no point in more tests
     if [ $? != 0 ]; then echo "aborting!"; return 1; fi
 
-    HASH=$(echo $TX | jq .hash | tr -d \")
-    TX_HEIGHT=$(echo $TX | jq .height)
-
-    # Make sure balance went down and tx is indexed
-    checkAccount $SENDER "1" "9007199254720990"
-    checkSendTx $HASH $TX_HEIGHT $SENDER "20002"
-
-    # Make sure nothing arrived - yet
-    waitForBlock ${PORT_1}
-    assertFalse "line=${LINENO}, no relay running" "BC_HOME=${CLIENT_2} ${CLIENT_EXE} query account $RECV"
-
-    # Start the relay and wait a few blocks...
-    # (already sent a tx on chain1, so use higher sequence)
-    startRelay 2 1
-    if [ $? != 0 ]; then echo "can't start relay"; cat ${BASE_DIR_1}/../relay.log; return 1; fi
-
-    # Give it a little time, then make sure the money arrived
-    echo "waiting for relay..."
-    sleep 1
-    waitForBlock ${PORT_1}
-    waitForBlock ${PORT_2}
-
-    # Check the new account
-    echo "checking ibc recipient..."
-    BC_HOME=${CLIENT_2} checkAccount $RECV "0" "20002"
-
-    # Stop relay
-    printf "stoping relay\n"
-    kill -9 $PID_RELAY
+    # register chain1 on chain2 (no money needed... yet)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-register \
+        --sequence=1 --seed=${ROOT_1} --name=$POOR --home=${CLIENT_2})
+    txSucceeded $? "$TX" "register chain1 on chain 2"
+    # an example to quit early if there is no point in more tests
+    if [ $? != 0 ]; then echo "aborting!"; return 1; fi
 }
 
-# StartRelay $seq1 $seq2
-# startRelay hooks up a relay between chain1 and chain2
-# it needs the proper sequence number for $RICH on chain1 and chain2 as args
-startRelay() {
-    # Send some cash to the default key, so it can send messages
-    RELAY_KEY=${BASE_DIR_1}/server/key.json
-    RELAY_ADDR=$(cat $RELAY_KEY | jq .address | tr -d \")
-    echo starting relay $PID_RELAY ...
+test02UpdateChains() {
+    # let's get the root seeds to cross-register them
+    UPDATE_1="$BASE_DIR_1/seed_1.json"
+    ${CLIENT_EXE} seeds update --home=${CLIENT_1}  > /dev/null
+    ${CLIENT_EXE} seeds export $UPDATE_1 --home=${CLIENT_1}
+    assertTrue "line=${LINENO}, export seed failed" $?
+    # make sure it is newer than the other....
+    assertNewHeight "line=${LINENO}" $ROOT_1 $UPDATE_1
 
-    # Get paid on chain1
-    export BC_HOME=${CLIENT_1}
-    SENDER=$(getAddr $RICH)
-    RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000mycoin \
-        --sequence=$1 --to=$RELAY_ADDR --name=$RICH)
-    txSucceeded $? "$RES" "$RELAY_ADDR"
-    if [ $? != 0 ]; then echo "can't pay chain1!"; return 1; fi
+    UPDATE_2="$BASE_DIR_2/seed_2.json"
+    ${CLIENT_EXE} seeds update --home=${CLIENT_2} > /dev/null
+    ${CLIENT_EXE} seeds export $UPDATE_2 --home=${CLIENT_2}
+    assertTrue "line=${LINENO}, export seed failed" $?
+    assertNewHeight "line=${LINENO}" $ROOT_2 $UPDATE_2
 
-    # Get paid on chain2
-    export BC_HOME=${CLIENT_2}
-    SENDER=$(getAddr $RICH)
-    RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000mycoin \
-        --sequence=$2 --to=$RELAY_ADDR --name=$RICH)
-    txSucceeded $? "$RES" "$RELAY_ADDR"
-    if [ $? != 0 ]; then echo "can't pay chain2!"; return 1; fi
+    # update chain2 on chain1
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-update \
+        --sequence=2 --seed=${UPDATE_2} --name=$POOR --home=${CLIENT_1})
+    txSucceeded $? "$TX" "update chain2 on chain 1"
+    # an example to quit early if there is no point in more tests
+    if [ $? != 0 ]; then echo "aborting!"; return 1; fi
 
-    # Initialize the relay (register both chains)
-    ${SERVER_EXE} relay init --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
-        --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
-        --genesis1=${BASE_DIR_1}/server/genesis.json --genesis2=${BASE_DIR_2}/server/genesis.json \
-        --from=$RELAY_KEY > ${BASE_DIR_1}/../relay.log
-    if [ $? != 0 ]; then echo "can't initialize relays"; cat ${BASE_DIR_1}/../relay.log; return 1; fi
+    # update chain1 on chain2 (no money needed... yet)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-update \
+        --sequence=2 --seed=${UPDATE_1} --name=$POOR --home=${CLIENT_2})
+    txSucceeded $? "$TX" "update chain1 on chain 2"
+    # an example to quit early if there is no point in more tests
+    if [ $? != 0 ]; then echo "aborting!"; return 1; fi
+}
 
-    # Now start the relay (constantly send packets)
-    ${SERVER_EXE} relay start --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
-        --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
-        --from=$RELAY_KEY >> ${BASE_DIR_1}/../relay.log &
-    sleep 2
-    PID_RELAY=$!
-    disown
+test03QueryIBC() {
 
-    # Return an error if it dies in the first two seconds to make sure it is running
-    ps $PID_RELAY >/dev/null
+}
+
+# XXX Ex Usage: assertNewHeight $MSG $SEED_1 $SEED_2
+# Desc: Asserts that seed2 has a higher block height than seed 1
+assertNewHeight() {
+    H1=$(cat $2 | jq .checkpoint.header.height)
+    H2=$(cat $3 | jq .checkpoint.header.height)
+    assertTrue "$MSG" "test $H2 -gt $H1"
     return $?
 }
+
+# test01SendIBCTx() {
+#     # Trigger a cross-chain sendTx... from RICH on chain1 to POOR on chain2
+#     #   we make sure the money was reduced, but nothing arrived
+#     SENDER=$(BC_HOME=${CLIENT_1} getAddr $RICH)
+#     RECV=$(BC_HOME=${CLIENT_2} getAddr $POOR)
+
+#     export BC_HOME=${CLIENT_1}
+#     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=20002mycoin \
+#         --sequence=1 --to=${CHAIN_ID_2}/${RECV} --name=$RICH)
+#     txSucceeded $? "$TX" "${CHAIN_ID_2}/${RECV}"
+#     # an example to quit early if there is no point in more tests
+#     if [ $? != 0 ]; then echo "aborting!"; return 1; fi
+
+#     HASH=$(echo $TX | jq .hash | tr -d \")
+#     TX_HEIGHT=$(echo $TX | jq .height)
+
+#     # Make sure balance went down and tx is indexed
+#     checkAccount $SENDER "1" "9007199254720990"
+#     checkSendTx $HASH $TX_HEIGHT $SENDER "20002"
+
+#     # Make sure nothing arrived - yet
+#     waitForBlock ${PORT_1}
+#     assertFalse "line=${LINENO}, no relay running" "BC_HOME=${CLIENT_2} ${CLIENT_EXE} query account $RECV"
+
+#     # Start the relay and wait a few blocks...
+#     # (already sent a tx on chain1, so use higher sequence)
+#     startRelay 2 1
+#     if [ $? != 0 ]; then echo "can't start relay"; cat ${BASE_DIR_1}/../relay.log; return 1; fi
+
+#     # Give it a little time, then make sure the money arrived
+#     echo "waiting for relay..."
+#     sleep 1
+#     waitForBlock ${PORT_1}
+#     waitForBlock ${PORT_2}
+
+#     # Check the new account
+#     echo "checking ibc recipient..."
+#     BC_HOME=${CLIENT_2} checkAccount $RECV "0" "20002"
+
+#     # Stop relay
+#     printf "stoping relay\n"
+#     kill -9 $PID_RELAY
+# }
+
+# # StartRelay $seq1 $seq2
+# # startRelay hooks up a relay between chain1 and chain2
+# # it needs the proper sequence number for $RICH on chain1 and chain2 as args
+# startRelay() {
+#     # Send some cash to the default key, so it can send messages
+#     RELAY_KEY=${BASE_DIR_1}/server/key.json
+#     RELAY_ADDR=$(cat $RELAY_KEY | jq .address | tr -d \")
+#     echo starting relay $PID_RELAY ...
+
+#     # Get paid on chain1
+#     export BC_HOME=${CLIENT_1}
+#     SENDER=$(getAddr $RICH)
+#     RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000mycoin \
+#         --sequence=$1 --to=$RELAY_ADDR --name=$RICH)
+#     txSucceeded $? "$RES" "$RELAY_ADDR"
+#     if [ $? != 0 ]; then echo "can't pay chain1!"; return 1; fi
+
+#     # Get paid on chain2
+#     export BC_HOME=${CLIENT_2}
+#     SENDER=$(getAddr $RICH)
+#     RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000mycoin \
+#         --sequence=$2 --to=$RELAY_ADDR --name=$RICH)
+#     txSucceeded $? "$RES" "$RELAY_ADDR"
+#     if [ $? != 0 ]; then echo "can't pay chain2!"; return 1; fi
+
+#     # Initialize the relay (register both chains)
+#     ${SERVER_EXE} relay init --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
+#         --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
+#         --genesis1=${BASE_DIR_1}/server/genesis.json --genesis2=${BASE_DIR_2}/server/genesis.json \
+#         --from=$RELAY_KEY > ${BASE_DIR_1}/../relay.log
+#     if [ $? != 0 ]; then echo "can't initialize relays"; cat ${BASE_DIR_1}/../relay.log; return 1; fi
+
+#     # Now start the relay (constantly send packets)
+#     ${SERVER_EXE} relay start --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
+#         --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
+#         --from=$RELAY_KEY >> ${BASE_DIR_1}/../relay.log &
+#     sleep 2
+#     PID_RELAY=$!
+#     disown
+
+#     # Return an error if it dies in the first two seconds to make sure it is running
+#     ps $PID_RELAY >/dev/null
+#     return $?
+# }
 
 # Load common then run these tests with shunit2!
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #get this files directory

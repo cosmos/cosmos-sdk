@@ -1,12 +1,16 @@
 package coin
 
 import (
+	"fmt"
+
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/modules/auth"
+	"github.com/tendermint/basecoin/modules/ibc"
+	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 )
 
@@ -16,7 +20,7 @@ const NameCoin = "coin"
 // Handler includes an accountant
 type Handler struct{}
 
-var _ basecoin.Handler = Handler{}
+var _ stack.Dispatchable = Handler{}
 
 // NewHandler - new accountant handler for the coin module
 func NewHandler() Handler {
@@ -28,8 +32,13 @@ func (Handler) Name() string {
 	return NameCoin
 }
 
+// AssertDispatcher - to fulfill Dispatchable interface
+func (Handler) AssertDispatcher() {}
+
 // CheckTx checks if there is enough money in the account
-func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB,
+	tx basecoin.Tx, _ basecoin.Checker) (res basecoin.Result, err error) {
+
 	send, err := checkTx(ctx, tx)
 	if err != nil {
 		return res, err
@@ -48,34 +57,63 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin
 }
 
 // DeliverTx moves the money
-func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
+	tx basecoin.Tx, cb basecoin.Deliver) (res basecoin.Result, err error) {
+
 	send, err := checkTx(ctx, tx)
 	if err != nil {
 		return res, err
 	}
 
 	// deduct from all input accounts
+	senders := basecoin.Actors{}
 	for _, in := range send.Inputs {
 		_, err = ChangeCoins(store, in.Address, in.Coins.Negative())
 		if err != nil {
 			return res, err
 		}
+		senders = append(senders, in.Address)
 	}
 
 	// add to all output accounts
 	for _, out := range send.Outputs {
+		// TODO: cleaner way, this makes sure we don't consider
+		// incoming ibc packets with our chain to be remote packets
+		if out.Address.ChainID == ctx.ChainID() {
+			out.Address.ChainID = ""
+		}
+
+		fmt.Printf("Giving %#v to %#v\n\n", out.Coins, out.Address)
 		_, err = ChangeCoins(store, out.Address, out.Coins)
 		if err != nil {
 			return res, err
 		}
+		// now send ibc packet if needed...
+		if out.Address.ChainID != "" {
+			// FIXME: if there are many outputs, we need to adjust inputs
+			// so the amounts in and out match.  how?
+			outTx := NewSendTx(send.Inputs, []TxOutput{out})
+			packet := ibc.CreatePacketTx{
+				DestChain:   out.Address.ChainID,
+				Permissions: senders,
+				Tx:          outTx,
+			}
+			ibcCtx := ctx.WithPermissions(ibc.AllowIBC(NameCoin))
+			_, err := cb.DeliverTx(ibcCtx, store, packet.Wrap())
+			if err != nil {
+				return res, err
+			}
+		}
 	}
 
 	// a-ok!
-	return basecoin.Result{}, nil
+	return res, nil
 }
 
 // SetOption - sets the genesis account balance
-func (h Handler) SetOption(l log.Logger, store state.SimpleDB, module, key, value string) (log string, err error) {
+func (h Handler) SetOption(l log.Logger, store state.SimpleDB,
+	module, key, value string, _ basecoin.SetOptioner) (log string, err error) {
+
 	if module != NameCoin {
 		return "", errors.ErrUnknownModule(module)
 	}

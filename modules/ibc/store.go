@@ -13,13 +13,13 @@ type HandlerInfo struct {
 }
 
 // Save the HandlerInfo to the store
-func (h HandlerInfo) Save(store state.KVStore) {
+func (h HandlerInfo) Save(store state.SimpleDB) {
 	b := wire.BinaryBytes(h)
 	store.Set(HandlerKey(), b)
 }
 
 // LoadInfo loads the HandlerInfo from the data store
-func LoadInfo(store state.KVStore) (h HandlerInfo) {
+func LoadInfo(store state.SimpleDB) (h HandlerInfo) {
 	b := store.Get(HandlerKey())
 	if len(b) > 0 {
 		wire.ReadBinaryBytes(b, &h)
@@ -40,7 +40,7 @@ type ChainSet struct {
 }
 
 // NewChainSet loads or initialized the ChainSet
-func NewChainSet(store state.KVStore) ChainSet {
+func NewChainSet(store state.SimpleDB) ChainSet {
 	space := stack.PrefixedStore(prefixChains, store)
 	return ChainSet{
 		Set: state.NewSet(space),
@@ -108,14 +108,14 @@ func (p Packet) Bytes() []byte {
 }
 
 // InputQueue returns the queue of input packets from this chain
-func InputQueue(store state.KVStore, chainID string) *state.Queue {
+func InputQueue(store state.SimpleDB, chainID string) *state.Queue {
 	ch := stack.PrefixedStore(chainID, store)
 	space := stack.PrefixedStore(prefixInput, ch)
 	return state.NewQueue(space)
 }
 
 // OutputQueue returns the queue of output packets destined for this chain
-func OutputQueue(store state.KVStore, chainID string) *state.Queue {
+func OutputQueue(store state.SimpleDB, chainID string) *state.Queue {
 	ch := stack.PrefixedStore(chainID, store)
 	space := stack.PrefixedStore(prefixOutput, ch)
 	return state.NewQueue(space)

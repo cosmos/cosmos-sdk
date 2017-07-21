@@ -19,11 +19,6 @@ import (
 
 // BuildApp constructs the stack we want to use for this app
 func BuildApp(feeDenom string) basecoin.Handler {
-	// use the default stack
-	c := coin.NewHandler()
-	r := roles.NewHandler()
-	i := ibc.NewHandler()
-
 	return stack.New(
 		base.Logger{},
 		stack.Recovery{},
@@ -39,9 +34,9 @@ func BuildApp(feeDenom string) basecoin.Handler {
 			stack.Checkpoint{OnDeliver: true},
 		).
 		Dispatch(
-			stack.WrapHandler(c),
-			stack.WrapHandler(r),
-			stack.WrapHandler(i),
+			coin.NewHandler(),
+			stack.WrapHandler(roles.NewHandler()),
+			stack.WrapHandler(ibc.NewHandler()),
 		)
 }
 

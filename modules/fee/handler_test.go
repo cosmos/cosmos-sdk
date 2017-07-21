@@ -40,7 +40,7 @@ func TestFeeChecks(t *testing.T) {
 		// OKHandler will just return success to a RawTx
 		stack.WrapHandler(stack.OKHandler{}),
 		// coin is needed to handle the IPC call from Fee middleware
-		stack.WrapHandler(coin.NewHandler()),
+		coin.NewHandler(),
 	)
 	// app1 requires no fees
 	app1 := stack.New(fee.NewSimpleFeeMiddleware(atom(0), collector)).Use(disp)

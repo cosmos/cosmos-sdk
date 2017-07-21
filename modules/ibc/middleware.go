@@ -26,7 +26,7 @@ func (Middleware) Name() string {
 
 // CheckTx verifies the named chain and height is present, and verifies
 // the merkle proof in the packet
-func (m Middleware) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (m Middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	// if it is not a PostPacket, just let it go through
 	post, ok := tx.Unwrap().(PostPacketTx)
 	if !ok {
@@ -43,7 +43,7 @@ func (m Middleware) CheckTx(ctx basecoin.Context, store state.KVStore, tx baseco
 
 // DeliverTx verifies the named chain and height is present, and verifies
 // the merkle proof in the packet
-func (m Middleware) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (m Middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	// if it is not a PostPacket, just let it go through
 	post, ok := tx.Unwrap().(PostPacketTx)
 	if !ok {
@@ -60,7 +60,7 @@ func (m Middleware) DeliverTx(ctx basecoin.Context, store state.KVStore, tx base
 
 // verifyPost accepts a message bound for this chain...
 // TODO: think about relay
-func (m Middleware) verifyPost(ctx basecoin.Context, store state.KVStore,
+func (m Middleware) verifyPost(ctx basecoin.Context, store state.SimpleDB,
 	tx PostPacketTx) (ictx basecoin.Context, itx basecoin.Tx, err error) {
 
 	// make sure the chain is registered

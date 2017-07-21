@@ -71,6 +71,14 @@ func (q *Queue) Pop() []byte {
 	return value
 }
 
+// Item looks at any element in the queue, without modifying anything
+func (q *Queue) Item(seq uint64) []byte {
+	if seq >= q.tail || seq < q.head {
+		return nil
+	}
+	return q.store.Get(makeKey(seq))
+}
+
 func (q *Queue) setCount(key []byte, val uint64) {
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, val)

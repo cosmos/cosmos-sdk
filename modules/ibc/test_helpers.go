@@ -77,7 +77,7 @@ func makePostPacket(tree *iavl.IAVLTree, packet Packet, fromID string, fromHeigh
 type AppChain struct {
 	chainID string
 	app     basecoin.Handler
-	store   state.KVStore
+	store   state.SimpleDB
 	height  int
 }
 
@@ -102,11 +102,11 @@ func (a *AppChain) IncrementHeight(delta int) int {
 // by one.
 func (a *AppChain) DeliverTx(tx basecoin.Tx, perms ...basecoin.Actor) (basecoin.Result, error) {
 	ctx := stack.MockContext(a.chainID, uint64(a.height)).WithPermissions(perms...)
-	store := state.NewKVCache(a.store)
+	store := a.store.Checkpoint()
 	res, err := a.app.DeliverTx(ctx, store, tx)
 	if err == nil {
 		// commit data on success
-		store.Sync()
+		a.store.Commit(store)
 	}
 	return res, err
 }
@@ -124,6 +124,6 @@ func (a *AppChain) SetOption(mod, key, value string) (string, error) {
 }
 
 // GetStore is used to get the app-specific sub-store
-func (a *AppChain) GetStore(app string) state.KVStore {
+func (a *AppChain) GetStore(app string) state.SimpleDB {
 	return stack.PrefixedStore(app, a.store)
 }

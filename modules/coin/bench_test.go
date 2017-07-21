@@ -11,7 +11,7 @@ import (
 	"github.com/tendermint/basecoin/state"
 )
 
-func makeHandler() basecoin.Handler {
+func makeHandler() stack.Dispatchable {
 	return NewHandler()
 }
 
@@ -28,7 +28,7 @@ func BenchmarkSimpleTransfer(b *testing.B) {
 
 	// set the initial account
 	acct := NewAccountWithKey(Coins{{"mycoin", 1234567890}})
-	h.SetOption(logger, store, NameCoin, "account", acct.MakeOption())
+	h.SetOption(logger, store, NameCoin, "account", acct.MakeOption(), nil)
 	sender := acct.Actor()
 	receiver := basecoin.Actor{App: "foo", Address: cmn.RandBytes(20)}
 
@@ -36,7 +36,7 @@ func BenchmarkSimpleTransfer(b *testing.B) {
 	for i := 1; i <= b.N; i++ {
 		ctx := stack.MockContext("foo", 100).WithPermissions(sender)
 		tx := makeSimpleTx(sender, receiver, Coins{{"mycoin", 2}})
-		_, err := h.DeliverTx(ctx, store, tx)
+		_, err := h.DeliverTx(ctx, store, tx, nil)
 		// never should error
 		if err != nil {
 			panic(err)

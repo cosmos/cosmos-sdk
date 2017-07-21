@@ -10,6 +10,8 @@ import (
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/ibc"
 	"github.com/tendermint/basecoin/stack"
+	"github.com/tendermint/basecoin/state"
+	wire "github.com/tendermint/go-wire"
 )
 
 // TODO: other test making sure tx is output on send, balance is updated
@@ -28,7 +30,7 @@ func TestIBCPostPacket(t *testing.T) {
 	app := stack.New().
 		IBC(ibc.NewMiddleware()).
 		Dispatch(
-			stack.WrapHandler(NewHandler()),
+			NewHandler(),
 			stack.WrapHandler(ibc.NewHandler()),
 		)
 	ourChain := ibc.NewAppChain(app, ourID)
@@ -57,14 +59,15 @@ func TestIBCPostPacket(t *testing.T) {
 	require.Nil(err, "%+v", err)
 	require.Equal(wealth, acct.Coins)
 
+	// make sure there is a proper packet for this....
+	istore := ourChain.GetStore(ibc.NameIBC)
+	assertPacket(t, istore, otherID, wealth)
+
 	// these are the people for testing incoming ibc from the other chain
 	recipient := basecoin.Actor{ChainID: ourID, App: auth.NameSigs, Address: []byte("bar")}
 	sender := basecoin.Actor{ChainID: otherID, App: auth.NameSigs, Address: []byte("foo")}
-	coinTx := NewSendOneTx(
-		sender,
-		recipient,
-		Coins{{"eth", 100}, {"ltc", 300}},
-	)
+	payment := Coins{{"eth", 100}, {"ltc", 300}}
+	coinTx := NewSendOneTx(sender, recipient, payment)
 	wrongCoin := NewSendOneTx(sender, recipient, Coins{{"missing", 20}})
 
 	p0 := ibc.NewPacket(coinTx, ourID, 0, sender)
@@ -101,5 +104,37 @@ func TestIBCPostPacket(t *testing.T) {
 	for i, tc := range cases {
 		_, err := ourChain.DeliverTx(tc.packet.Wrap(), tc.permissions...)
 		assert.True(tc.checker(err), "%d: %+v", i, err)
+	}
+
+	// now, make sure the recipient got credited for the 2 successful sendtx
+	cstore = ourChain.GetStore(NameCoin)
+	// FIXME: we need to strip off this when it is local chain-id...
+	// think this throw and handle this better
+	local := recipient.WithChain("")
+	acct, err = GetAccount(cstore, local)
+	require.Nil(err, "%+v", err)
+	assert.Equal(payment.Plus(payment), acct.Coins)
+
+}
+
+func assertPacket(t *testing.T, istore state.KVStore, destID string, amount Coins) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	iq := ibc.InputQueue(istore, destID)
+	require.Equal(0, iq.Size())
+
+	q := ibc.OutputQueue(istore, destID)
+	require.Equal(1, q.Size())
+	d := q.Item(0)
+	var res ibc.Packet
+	err := wire.ReadBinaryBytes(d, &res)
+	require.Nil(err, "%+v", err)
+	assert.Equal(destID, res.DestChain)
+	assert.EqualValues(0, res.Sequence)
+	stx, ok := res.Tx.Unwrap().(SendTx)
+	if assert.True(ok) {
+		assert.Equal(1, len(stx.Outputs))
+		assert.Equal(amount, stx.Outputs[0].Coins)
 	}
 }

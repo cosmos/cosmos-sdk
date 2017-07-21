@@ -149,7 +149,7 @@ func TestDeliverTx(t *testing.T) {
 		}
 
 		ctx := stack.MockContext("base-chain", 100).WithPermissions(tc.perms...)
-		_, err := h.DeliverTx(ctx, store, tc.tx)
+		_, err := h.DeliverTx(ctx, store, tc.tx, nil)
 		if len(tc.final) > 0 { // valid
 			assert.Nil(err, "%d: %+v", i, err)
 			// make sure the final balances are correct
@@ -204,7 +204,7 @@ func TestSetOption(t *testing.T) {
 		for j, gen := range tc.init {
 			value, err := json.Marshal(gen)
 			require.Nil(err, "%d,%d: %+v", i, j, err)
-			_, err = h.SetOption(l, store, NameCoin, key, string(value))
+			_, err = h.SetOption(l, store, NameCoin, key, string(value), nil)
 			require.Nil(err)
 		}
 
@@ -215,5 +215,4 @@ func TestSetOption(t *testing.T) {
 			assert.Equal(f.coins, acct.Coins)
 		}
 	}
-
 }

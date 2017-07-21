@@ -17,7 +17,7 @@ const (
 // newCertifier loads up the current state of this chain to make a proper certifier
 // it will load the most recent height before block h if h is positive
 // if h < 0, it will load the latest height
-func newCertifier(store state.KVStore, chainID string, h int) (*certifiers.InquiringCertifier, error) {
+func newCertifier(store state.SimpleDB, chainID string, h int) (*certifiers.InquiringCertifier, error) {
 	// each chain has their own prefixed subspace
 	p := newDBProvider(store)
 
@@ -42,11 +42,11 @@ func newCertifier(store state.KVStore, chainID string, h int) (*certifiers.Inqui
 
 // dbProvider wraps our kv store so it integrates with light-client verification
 type dbProvider struct {
-	byHash   state.KVStore
+	byHash   state.SimpleDB
 	byHeight *state.Span
 }
 
-func newDBProvider(store state.KVStore) *dbProvider {
+func newDBProvider(store state.SimpleDB) *dbProvider {
 	return &dbProvider{
 		byHash:   stack.PrefixedStore(prefixHash, store),
 		byHeight: state.NewSpan(stack.PrefixedStore(prefixHeight, store)),

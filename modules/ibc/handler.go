@@ -50,7 +50,7 @@ func (Handler) Name() string {
 }
 
 // SetOption sets the registrar for IBC
-func (h Handler) SetOption(l log.Logger, store state.KVStore, module, key, value string) (log string, err error) {
+func (h Handler) SetOption(l log.Logger, store state.SimpleDB, module, key, value string) (log string, err error) {
 	if module != NameIBC {
 		return "", errors.ErrUnknownModule(module)
 	}
@@ -70,7 +70,7 @@ func (h Handler) SetOption(l log.Logger, store state.KVStore, module, key, value
 
 // CheckTx verifies the packet is formated correctly, and has the proper sequence
 // for a registered chain
-func (h Handler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	err = tx.ValidateBasic()
 	if err != nil {
 		return res, err
@@ -95,7 +95,7 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.
 
 // DeliverTx verifies all signatures on the tx and updates the chain state
 // apropriately
-func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	err = tx.ValidateBasic()
 	if err != nil {
 		return res, err
@@ -122,7 +122,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 // accepts it as the root of trust.
 //
 // only the registrar, if set, is allowed to do this
-func (h Handler) initSeed(ctx basecoin.Context, store state.KVStore,
+func (h Handler) initSeed(ctx basecoin.Context, store state.SimpleDB,
 	t RegisterChainTx) (res basecoin.Result, err error) {
 
 	// verify that the header looks reasonable
@@ -141,7 +141,7 @@ func (h Handler) initSeed(ctx basecoin.Context, store state.KVStore,
 
 // updateSeed checks the seed against the existing chain data and rejects it if it
 // doesn't fit (or no chain data)
-func (h Handler) updateSeed(ctx basecoin.Context, store state.KVStore,
+func (h Handler) updateSeed(ctx basecoin.Context, store state.SimpleDB,
 	t UpdateChainTx) (res basecoin.Result, err error) {
 
 	chainID := t.ChainID()
@@ -171,7 +171,7 @@ func (h Handler) updateSeed(ctx basecoin.Context, store state.KVStore,
 
 // createPacket makes sure all permissions are good and the destination
 // chain is registed.  If so, it appends it to the outgoing queue
-func (h Handler) createPacket(ctx basecoin.Context, store state.KVStore,
+func (h Handler) createPacket(ctx basecoin.Context, store state.SimpleDB,
 	t CreatePacketTx) (res basecoin.Result, err error) {
 
 	// make sure the chain is registed

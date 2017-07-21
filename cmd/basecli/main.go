@@ -67,6 +67,9 @@ func main() {
 		coincmd.SendTxCmd,
 		// this enables creating roles
 		rolecmd.CreateRoleTxCmd,
+		// these are for handling ibc
+		ibccmd.RegisterChainTxCmd,
+		ibccmd.UpdateChainTxCmd,
 	)
 
 	// Set up the various commands to use

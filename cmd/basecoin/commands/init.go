@@ -122,7 +122,7 @@ func GetGenesisJSON(chainID, addr string) string {
       ]
     }],
     "plugin_options": [
-      "coin/issuer", {"app": "sigs", "address": "%s"}
+      "coin/issuer", {"app": "sigs", "addr": "%s"}
     ]
   }
 }`, chainID, addr, addr)

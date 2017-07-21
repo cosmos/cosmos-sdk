@@ -65,6 +65,7 @@ func main() {
 	txcmd.RootCmd.AddCommand(
 		// This is the default transaction, optional in your app
 		coincmd.SendTxCmd,
+		coincmd.CreditTxCmd,
 		// this enables creating roles
 		rolecmd.CreateRoleTxCmd,
 		// these are for handling ibc

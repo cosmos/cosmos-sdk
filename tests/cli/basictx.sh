@@ -83,6 +83,23 @@ test02SendTxWithFee() {
 }
 
 
+test03CreditTx() {
+    SENDER=$(getAddr $RICH)
+    RECV=$(getAddr $POOR)
+
+    # make sure we are controlled by permissions (only rich can issue credit)
+    assertFalse "line=${LINENO}, bad password" "echo qwertyuiop | ${CLIENT_EXE} tx credit --amount=1000mycoin --sequence=1 --to=$RECV --name=$POOR"
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx credit --amount=1000mycoin --sequence=3 --to=$RECV --name=$RICH)
+    txSucceeded $? "$TX" "$RECV"
+    HASH=$(echo $TX | jq .hash | tr -d \")
+    TX_HEIGHT=$(echo $TX | jq .height)
+
+    # receiver got cash, sender didn't lose any (1000 more than last check)
+    checkAccount $RECV "2082"
+    checkAccount $SENDER "9007199254739900"
+}
+
+
 # Load common then run these tests with shunit2!
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #get this files directory
 . $DIR/common.sh

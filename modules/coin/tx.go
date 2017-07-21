@@ -7,13 +7,17 @@ import (
 )
 
 func init() {
-	basecoin.TxMapper.RegisterImplementation(SendTx{}, TypeSend, ByteSend)
+	basecoin.TxMapper.
+		RegisterImplementation(SendTx{}, TypeSend, ByteSend).
+		RegisterImplementation(CreditTx{}, TypeCredit, ByteCredit)
 }
 
 // we reserve the 0x20-0x3f range for standard modules
 const (
-	ByteSend = 0x20
-	TypeSend = NameCoin + "/send"
+	ByteSend   = 0x20
+	TypeSend   = NameCoin + "/send"
+	ByteCredit = 0x21
+	TypeCredit = NameCoin + "/credit"
 )
 
 //-----------------------------------------------------------------------------

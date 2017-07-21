@@ -14,15 +14,15 @@ interacts with is the current state of the chain (key-value store), and it must
 have a deterministic action. The tx is the main piece of one request.
 
 We currently make heavy use of [go-wire](https://github.com/tendermint/go-wire)
-and [go-data](https://github.com/tendermint/tmlibs/data) to provide binary and
-json encodings and decodings for `struct` or  interface` objects.  Here,
-encoding and decoding operations are designed to operate with interfaces nested
-any amount times (like an onion!). There is one public `TxMapper` in the
+and [data](https://github.com/tendermint/go-wire/tree/master/data) to provide
+binary and json encodings and decodings for `struct` or  interface` objects.
+Here, encoding and decoding operations are designed to operate with interfaces
+nested any amount times (like an onion!). There is one public `TxMapper` in the
 basecoin root package, and all modules can register their own transaction types
 there. This allows us to deserialize the entire tx in one location (even with
 types defined in other repos), to easily embed an arbitrary tx inside another
-without specifying the type, and provide an automatic json
-representation to provide to users (or apps) to inspect the chain.
+without specifying the type, and provide an automatic json representation to
+provide to users (or apps) to inspect the chain.
 
 Note how we can wrap any other transaction, add a fee level, and not worry
 about the encoding in our module any more?
@@ -63,8 +63,9 @@ kv-store interface.
 
 One of the main arguments for blockchain is security.  So while we encourage
 the use of third-party modules, all developers must be vigilant against
-security holes.  If you use the [stack](xxx) package, it will provide two
-different types of compartmentalization security.
+security holes.  If you use the
+[stack](https://github.com/tendermint/basecoin/tree/unstable/stack) package, it
+will provide two different types of compartmentalization security.
 
 The first is to limit the working kv-store space of each module. When
 `DeliverTx` is called for a module, it is never given the entire data store,
@@ -77,13 +78,15 @@ belonging to separate module.
 
 The second is to add permissions to the transaction context.  The tx context
 can specify that the tx has been signed by one or multiple specific
-[actors](XXX). A tx will only be executed if the permission requirements have
-been fulfilled. For example the sender of funds must have signed, or 2 out of 3
-multi-signature actors must have signed a joint account.  To prevent the
-forgery of account signatures from unintended modules each permission is
-associated with the module that granted it (in this case [auth](xxx)), and if a
-module tries to add a permission for another module, it will panic.  There is
-also protection if a module creates a brand new fake context to trick the
+[actors](https://github.com/tendermint/basecoin/blob/unstable/context.go#L18).
+A tx will only be executed if the permission requirements have been fulfilled.
+For example the sender of funds must have signed, or 2 out of 3 multi-signature
+actors must have signed a joint account.  To prevent the forgery of account
+signatures from unintended modules each permission is associated with the
+module that granted it (in this case
+[auth](https://github.com/tendermint/basecoin/tree/unstable/modules/auth)), and
+if a module tries to add a permission for another module, it will panic.  There
+is also protection if a module creates a brand new fake context to trick the
 downstream modules. (FREY - need to explain the technical element of this a bit
 more)
 

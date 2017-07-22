@@ -14,6 +14,9 @@ func TestECCPasses(t *testing.T) {
 
 	checks := []ECC{
 		NoECC{},
+		NewIBMCRC16(),
+		NewSCSICRC16(),
+		NewCCITTCRC16(),
 		NewIEEECRC32(),
 		NewCastagnoliCRC32(),
 		NewKoopmanCRC32(),
@@ -40,6 +43,9 @@ func TestECCFails(t *testing.T) {
 	assert := assert.New(t)
 
 	checks := []ECC{
+		NewIBMCRC16(),
+		NewSCSICRC16(),
+		NewCCITTCRC16(),
 		NewIEEECRC32(),
 		NewCastagnoliCRC32(),
 		NewKoopmanCRC32(),

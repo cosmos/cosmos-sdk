@@ -5,6 +5,8 @@ import (
 	"errors"
 	"hash/crc32"
 	"hash/crc64"
+
+	"github.com/howeyc/crc16"
 )
 
 // ECC is used for anything that calculates an error-correcting code
@@ -25,6 +27,67 @@ var _ ECC = NoECC{}
 
 func (_ NoECC) AddECC(input []byte) []byte            { return input }
 func (_ NoECC) CheckECC(input []byte) ([]byte, error) { return input, nil }
+
+// CRC16 does the ieee crc16 polynomial check
+type CRC16 struct {
+	Poly  uint16
+	table *crc16.Table
+}
+
+var _ ECC = &CRC16{}
+
+const crc16Size = 2
+
+func NewIBMCRC16() *CRC16 {
+	return &CRC16{Poly: crc16.IBM}
+}
+
+func NewSCSICRC16() *CRC16 {
+	return &CRC16{Poly: crc16.SCSI}
+}
+
+func NewCCITTCRC16() *CRC16 {
+	return &CRC16{Poly: crc16.CCITT}
+}
+
+func (c *CRC16) AddECC(input []byte) []byte {
+	table := c.getTable()
+
+	// get crc and convert to some bytes...
+	crc := crc16.Checksum(input, table)
+	check := make([]byte, crc16Size)
+	binary.BigEndian.PutUint16(check, crc)
+
+	// append it to the input
+	output := append(input, check...)
+	return output
+}
+
+func (c *CRC16) CheckECC(input []byte) ([]byte, error) {
+	table := c.getTable()
+
+	if len(input) <= crc16Size {
+		return nil, errors.New("input too short, no checksum present")
+	}
+	cut := len(input) - crc16Size
+	data, check := input[:cut], input[cut:]
+	crc := binary.BigEndian.Uint16(check)
+	calc := crc16.Checksum(data, table)
+	if crc != calc {
+		return nil, errors.New("Checksum does not match")
+	}
+	return data, nil
+}
+
+func (c *CRC16) getTable() *crc16.Table {
+	if c.table == nil {
+		if c.Poly == 0 {
+			c.Poly = crc16.IBM
+		}
+		c.table = crc16.MakeTable(c.Poly)
+	}
+	return c.table
+}
 
 // CRC32 does the ieee crc32 polynomial check
 type CRC32 struct {

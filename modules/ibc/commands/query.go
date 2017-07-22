@@ -16,6 +16,8 @@ import (
 	"github.com/tendermint/merkleeyes/iavl"
 )
 
+// TODO: query seeds (register/update)
+
 // IBCQueryCmd - parent command to query ibc info
 var IBCQueryCmd = &cobra.Command{
 	Use:   "ibc",

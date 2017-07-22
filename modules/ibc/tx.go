@@ -1,6 +1,7 @@
 package ibc
 
 import (
+	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/light-client/certifiers"
 	merkle "github.com/tendermint/merkleeyes/iavl"
 
@@ -109,13 +110,14 @@ func (p CreatePacketTx) Wrap() basecoin.Tx {
 // right now, enforce that these packets are only sent directly,
 // not routed over the hub.  add routing later.
 type PostPacketTx struct {
-	// make sure we have this header...
-	FromChainID     string // The immediate source of the packet, not always Packet.SrcChainID
-	FromChainHeight uint64 // The block height in which Packet was committed, to check Proof
+	// The immediate source of the packet, not always Packet.SrcChainID
+	FromChainID string `json:"src_chain"`
+	// The block height in which Packet was committed, to check Proof
+	FromChainHeight uint64 `json:"src_height"`
 	// this proof must match the header and the packet.Bytes()
-	Proof  *merkle.IAVLProof
-	Key    []byte
-	Packet Packet
+	Proof  *merkle.IAVLProof `json:"proof"`
+	Key    data.Bytes        `json:"key"`
+	Packet Packet            `json:"packet"`
 }
 
 // ValidateBasic makes sure this is consistent - used to satisfy TxInner

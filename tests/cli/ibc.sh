@@ -195,10 +195,11 @@ test04SendIBCPacket() {
     # and look at the packet itself
     PACKET=$(${CLIENT_EXE} query ibc packet --to=$CHAIN_ID_2 --sequence=0)
     assertTrue "line=${LINENO}, packet query" $?
-    echo $PACKET | jq .
+    assertEquals "line=${LINENO}, proper src" "\"$CHAIN_ID_1\"" $(echo $PACKET | jq .src_chain)
+    assertEquals "line=${LINENO}, proper dest" "\"$CHAIN_ID_2\"" $(echo $PACKET | jq .packet.dest_chain)
+    assertEquals "line=${LINENO}, proper sequence" "0" $(echo $PACKET | jq .packet.sequence)
 
     # nothing arrived
-    # look, we wrote a packet
     ARRIVED=$(${CLIENT_EXE} query ibc packets --from=$CHAIN_ID_1 --home=$CLIENT_2 2>/dev/null)
     assertFalse "line=${LINENO}, packet query" $?
     assertFalse "line=${LINENO}, no relay running" "BC_HOME=${CLIENT_2} ${CLIENT_EXE} query account $RECV"
@@ -212,7 +213,35 @@ test05ReceiveIBCPacket() {
     txSucceeded $? "$TX" "${CHAIN_ID_2}::${RECV}"
     checkAccount $CHAIN_2:: "60006"
 
-    # now, we try to post it....
+    # now, we try to post it.... (this is PACKET from last test)
+
+    # get the seed and post it
+    SRC_HEIGHT=$(echo $PACKET | jq .src_height)
+    PACKET_SEED="$BASE_DIR_1/packet_seed.json"
+    ${CLIENT_EXE} seeds export $PACKET_SEED --home=${CLIENT_1} --height=$SRC_HEIGHT
+    assertTrue "line=${LINENO}, export seed failed" $?
+
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-update \
+        --seed=${PACKET_SEED} --name=$POOR)
+    txSucceeded $? "$TX" "prepare packet chain1 on chain 2"
+    # an example to quit early if there is no point in more tests
+    if [ $? != 0 ]; then echo "aborting!"; return 1; fi
+
+    # write the packet to the file
+    POST_PACKET="$BASE_DIR_1/post_packet.json"
+    echo $PACKET > $POST_PACKET
+
+    # post it as a tx (cross-fingers)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-post \
+        --packet=${POST_PACKET} --name=$POOR)
+    txSucceeded $? "$TX" "post packet from chain1 on chain 2"
+
+    # TODO: more queries on stuff...
+
+    # look, we wrote a packet
+    PACKETS=$(${CLIENT_EXE} query ibc packets --from=$CHAIN_ID_1)
+    assertTrue "line=${LINENO}, packets query" $?
+    assertEquals "line=${LINENO}, packet count" 1 $(echo $PACKETS | jq .data)
 }
 
 

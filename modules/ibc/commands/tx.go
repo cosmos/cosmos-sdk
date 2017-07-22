@@ -28,13 +28,19 @@ var UpdateChainTxCmd = &cobra.Command{
 	RunE:  commands.RequireInit(updateChainTxCmd),
 }
 
-// TODO: post packet (query and all that jazz)
+// PostPacketTxCmd is CLI command to post ibc packet on the destination chain
+var PostPacketTxCmd = &cobra.Command{
+	Use:   "ibc-post",
+	Short: "Post an ibc packet on the destination chain",
+	RunE:  commands.RequireInit(postPacketTxCmd),
+}
 
 // TODO: relay!
 
 //nolint
 const (
-	FlagSeed = "seed"
+	FlagSeed   = "seed"
+	FlagPacket = "packet"
 )
 
 func init() {
@@ -43,6 +49,9 @@ func init() {
 
 	fs2 := UpdateChainTxCmd.Flags()
 	fs2.String(FlagSeed, "", "Filename with a seed file")
+
+	fs3 := PostPacketTxCmd.Flags()
+	fs3.String(FlagPacket, "", "Filename with a packet to post")
 }
 
 func registerChainTxCmd(cmd *cobra.Command, args []string) error {
@@ -63,45 +72,44 @@ func updateChainTxCmd(cmd *cobra.Command, args []string) error {
 	return txcmd.DoTx(tx)
 }
 
+func postPacketTxCmd(cmd *cobra.Command, args []string) error {
+	post, err := readPostPacket()
+	if err != nil {
+		return err
+	}
+	return txcmd.DoTx(post.Wrap())
+}
+
 func readSeed() (seed certifiers.Seed, err error) {
 	name := viper.GetString(FlagSeed)
 	if name == "" {
 		return seed, errors.New("You must specify a seed file")
 	}
 
+	err = readFile(name, &seed)
+	return
+}
+
+func readPostPacket() (post ibc.PostPacketTx, err error) {
+	name := viper.GetString(FlagPacket)
+	if name == "" {
+		return post, errors.New("You must specify a packet file")
+	}
+
+	err = readFile(name, &post)
+	return
+}
+
+func readFile(name string, input interface{}) (err error) {
 	var f *os.File
 	f, err = os.Open(name)
 	if err != nil {
-		return seed, errors.Wrap(err, "Cannot read seed file")
+		return errors.WithStack(err)
 	}
 	defer f.Close()
 
 	// read the file as json into a seed
 	j := json.NewDecoder(f)
-	err = j.Decode(&seed)
-	err = errors.Wrap(err, "Invalid seed file")
-	return
+	err = j.Decode(input)
+	return errors.Wrap(err, "Invalid file")
 }
-
-// func readCreateRoleTxFlags() (tx basecoin.Tx, err error) {
-// 	role, err := parseRole(viper.GetString(FlagRole))
-// 	if err != nil {
-// 		return tx, err
-// 	}
-
-// 	sigs := viper.GetInt(FlagMinSigs)
-// 	if sigs < 1 {
-// 		return tx, errors.Errorf("--%s must be at least 1", FlagMinSigs)
-// 	}
-
-// 	signers, err := commands.ParseActors(viper.GetString(FlagMembers))
-// 	if err != nil {
-// 		return tx, err
-// 	}
-// 	if len(signers) == 0 {
-// 		return tx, errors.New("must specify at least one member")
-// 	}
-
-// 	tx = roles.NewCreateRoleTx(role, uint32(sigs), signers)
-// 	return tx, nil
-// }

@@ -21,8 +21,10 @@ type secureContext struct {
 
 // NewContext - create a new secureContext
 func NewContext(chain string, height uint64, logger log.Logger) basecoin.Context {
+	mock := MockContext(chain, height).(naiveContext)
+	mock.Logger = logger
 	return secureContext{
-		naiveContext: MockContext(chain, height).(naiveContext),
+		naiveContext: mock,
 	}
 }
 

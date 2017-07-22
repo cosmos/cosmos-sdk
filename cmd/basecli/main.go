@@ -71,6 +71,7 @@ func main() {
 		// these are for handling ibc
 		ibccmd.RegisterChainTxCmd,
 		ibccmd.UpdateChainTxCmd,
+		ibccmd.PostPacketTxCmd,
 	)
 
 	// Set up the various commands to use

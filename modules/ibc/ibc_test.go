@@ -381,29 +381,26 @@ func TestIBCPostPacket(t *testing.T) {
 		// bad chain -> error
 		{packetBad, ibcPerm, IsNotRegisteredErr},
 
-		// invalid permissions -> error
-		{packet0, nil, IsNeedsIBCPermissionErr},
-
 		// no matching header -> error
-		{packet0badHeight, ibcPerm, IsHeaderNotFoundErr},
+		{packet0badHeight, nil, IsHeaderNotFoundErr},
 
 		// out of order -> error
 		{packet1, ibcPerm, IsPacketOutOfOrderErr},
 
-		// all good -> execute tx	}
+		// all good -> execute tx
 		{packet0, ibcPerm, errors.NoErr},
 
 		// bad proof -> error
 		{packet1badProof, ibcPerm, IsInvalidProofErr},
 
-		// all good -> execute tx }
-		{packet1, ibcPerm, errors.NoErr},
+		// all good -> execute tx (no special permission needed)
+		{packet1, nil, errors.NoErr},
 
 		// repeat -> error
-		{packet0, ibcPerm, IsPacketAlreadyExistsErr},
+		{packet0, nil, IsPacketAlreadyExistsErr},
 
 		// packet2 contains invalid permissions
-		{packet2, ibcPerm, IsCannotSetPermissionErr},
+		{packet2, nil, IsCannotSetPermissionErr},
 	}
 
 	for i, tc := range cases {

@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -9,6 +11,9 @@ import (
 	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
 	"github.com/tendermint/basecoin/modules/ibc"
 	"github.com/tendermint/basecoin/stack"
+	"github.com/tendermint/go-wire/data"
+	"github.com/tendermint/light-client/proofs"
+	"github.com/tendermint/merkleeyes/iavl"
 )
 
 // IBCQueryCmd - parent command to query ibc info
@@ -175,11 +180,45 @@ func packetQueryCmd(cmd *cobra.Command, args []string) error {
 		key = stack.PrefixedKey(ibc.NameIBC, ibc.QueueOutPacketKey(to, uint64(seq)))
 	}
 
-	var res ibc.Packet
-	proof, err := proofcmd.GetAndParseAppProof(key, &res)
+	// Input queue just display the results
+	if from != "" {
+		var packet ibc.Packet
+		proof, err := proofcmd.GetAndParseAppProof(key, &packet)
+		if err != nil {
+			return err
+		}
+		return proofcmd.OutputProof(packet, proof.BlockHeight())
+	}
+
+	// output queue, create a post packet
+	var packet ibc.Packet
+	proof, err := proofcmd.GetAndParseAppProof(key, &packet)
 	if err != nil {
 		return err
 	}
 
-	return proofcmd.OutputProof(res, proof.BlockHeight())
+	// TODO: oh so ugly.  fix before merge!
+	// wait, i want to change go-merkle too....
+	appProof := proof.(proofs.AppProof)
+	extractedProof, err := iavl.ReadProof(appProof.Proof)
+	if err != nil {
+		return err
+	}
+
+	// create the post packet here.
+	post := ibc.PostPacketTx{
+		FromChainID:     commands.GetChainID(),
+		FromChainHeight: proof.BlockHeight(),
+		Key:             key,
+		Packet:          packet,
+		Proof:           extractedProof,
+	}
+
+	// print json direct, as we don't need to wrap with the height
+	res, err := data.ToJSON(post)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(res))
+	return nil
 }

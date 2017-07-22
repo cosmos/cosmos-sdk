@@ -118,7 +118,13 @@ func (h Handler) sendTx(ctx basecoin.Context, store state.SimpleDB,
 		if out.Address.ChainID != "" {
 			// FIXME: if there are many outputs, we need to adjust inputs
 			// so the amounts in and out match.  how?
-			outTx := NewSendTx(send.Inputs, []TxOutput{out})
+			inputs := make([]TxInput, len(send.Inputs))
+			for i := range send.Inputs {
+				inputs[i] = send.Inputs[i]
+				inputs[i].Address = inputs[i].Address.WithChain(ctx.ChainID())
+			}
+
+			outTx := NewSendTx(inputs, []TxOutput{out})
 			packet := ibc.CreatePacketTx{
 				DestChain:   out.Address.ChainID,
 				Permissions: senders,

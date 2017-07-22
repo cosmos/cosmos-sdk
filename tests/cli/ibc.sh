@@ -162,6 +162,60 @@ test03QueryIBC() {
     assertEquals "line=${LINENO}, tracked height" $UPDATE_2_HEIGHT $(echo $CHAIN_INFO | jq .data.remote_block)
 }
 
+# Trigger a cross-chain sendTx... from RICH on chain1 to POOR on chain2
+#   we make sure the money was reduced, but nothing arrived
+test04SendIBCPacket() {
+    export BC_HOME=${CLIENT_1}
+
+    # make sure there are no packets yet
+    PACKETS=$(${CLIENT_EXE} query ibc packets --to=$CHAIN_ID_2 2>/dev/null)
+    assertFalse "line=${LINENO}, packet query" $?
+
+    SENDER=$(getAddr $RICH)
+    RECV=$(BC_HOME=${CLIENT_2} getAddr $POOR)
+
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=20002mycoin \
+        --to=${CHAIN_ID_2}::${RECV} --name=$RICH)
+    txSucceeded $? "$TX" "${CHAIN_ID_2}::${RECV}"
+    # quit early if there is no point in more tests
+    if [ $? != 0 ]; then echo "aborting!"; return 1; fi
+
+    HASH=$(echo $TX | jq .hash | tr -d \")
+    TX_HEIGHT=$(echo $TX | jq .height)
+
+    # Make sure balance went down and tx is indexed
+    checkAccount $SENDER "9007199254720990"
+    checkSendTx $HASH $TX_HEIGHT $SENDER "20002"
+
+    # look, we wrote a packet
+    PACKETS=$(${CLIENT_EXE} query ibc packets --to=$CHAIN_ID_2)
+    assertTrue "line=${LINENO}, packets query" $?
+    assertEquals "line=${LINENO}, packet count" 1 $(echo $PACKETS | jq .data)
+
+    # and look at the packet itself
+    PACKET=$(${CLIENT_EXE} query ibc packet --to=$CHAIN_ID_2 --sequence=0)
+    assertTrue "line=${LINENO}, packet query" $?
+    echo $PACKET | jq .
+
+    # nothing arrived
+    # look, we wrote a packet
+    ARRIVED=$(${CLIENT_EXE} query ibc packets --from=$CHAIN_ID_1 --home=$CLIENT_2 2>/dev/null)
+    assertFalse "line=${LINENO}, packet query" $?
+    assertFalse "line=${LINENO}, no relay running" "BC_HOME=${CLIENT_2} ${CLIENT_EXE} query account $RECV"
+}
+
+test05ReceiveIBCPacket() {
+    export BC_HOME=${CLIENT_2}
+
+    # make some credit, so we can accept the packet
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx credit --amount=60006mycoin --to=$CHAIN_1:: --name=$RICH)
+    txSucceeded $? "$TX" "${CHAIN_ID_2}::${RECV}"
+    checkAccount $CHAIN_2:: "60006"
+
+    # now, we try to post it....
+}
+
+
 # XXX Ex Usage: assertNewHeight $MSG $SEED_1 $SEED_2
 # Desc: Asserts that seed2 has a higher block height than seed 1
 assertNewHeight() {

@@ -73,7 +73,7 @@ func init() {
 	fs2 := PacketQueryCmd.Flags()
 	fs2.String(FlagFromChain, "", "Name of the input chain (where packets came from)")
 	fs2.String(FlagToChain, "", "Name of the output chain (where packets go to)")
-	fs2.Int(FlagSequence, -1, "Name of the output chain (where packets go to)")
+	fs2.Int(FlagSequence, -1, "Index of the packet in the queue (starts with 0)")
 }
 
 func ibcQueryCmd(cmd *cobra.Command, args []string) error {

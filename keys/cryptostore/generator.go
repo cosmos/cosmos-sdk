@@ -14,22 +14,22 @@ var (
 
 // Generator determines the type of private key the keystore creates
 type Generator interface {
-	Generate() crypto.PrivKey
+	Generate(secret []byte) crypto.PrivKey
 }
 
 // GenFunc is a helper to transform a function into a Generator
-type GenFunc func() crypto.PrivKey
+type GenFunc func(secret []byte) crypto.PrivKey
 
-func (f GenFunc) Generate() crypto.PrivKey {
-	return f()
+func (f GenFunc) Generate(secret []byte) crypto.PrivKey {
+	return f(secret)
 }
 
-func genEd25519() crypto.PrivKey {
-	return crypto.GenPrivKeyEd25519().Wrap()
+func genEd25519(secret []byte) crypto.PrivKey {
+	return crypto.GenPrivKeyEd25519FromSecret(secret).Wrap()
 }
 
-func genSecp256() crypto.PrivKey {
-	return crypto.GenPrivKeySecp256k1().Wrap()
+func genSecp256(secret []byte) crypto.PrivKey {
+	return crypto.GenPrivKeySecp256k1FromSecret(secret).Wrap()
 }
 
 func getGenerator(algo string) (Generator, error) {

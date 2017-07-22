@@ -43,12 +43,16 @@ func (s Manager) Create(name, passphrase, algo string) (keys.Info, string, error
 	if err != nil {
 		return keys.Info{}, "", err
 	}
-	key := gen.Generate()
+
+	// 128-bits the the all the randomness we can make use of
+	secret := crypto.CRandBytes(16)
+	key := gen.Generate(secret)
 	err = s.es.Put(name, passphrase, key)
 	if err != nil {
 		return keys.Info{}, "", err
 	}
-	seed, err := s.codec.BytesToWords(key.Bytes())
+
+	seed, err := s.codec.BytesToWords(secret)
 	phrase := strings.Join(seed, " ")
 	return info(name, key), phrase, err
 }
@@ -61,15 +65,18 @@ func (s Manager) Create(name, passphrase, algo string) (keys.Info, string, error
 // Result similar to New(), except it doesn't return the seed again...
 func (s Manager) Recover(name, passphrase, seedphrase string) (keys.Info, error) {
 	words := strings.Split(strings.TrimSpace(seedphrase), " ")
-	data, err := s.codec.WordsToBytes(words)
+	secret, err := s.codec.WordsToBytes(words)
 	if err != nil {
 		return keys.Info{}, err
 	}
 
-	key, err := crypto.PrivKeyFromBytes(data)
-	if err != nil {
-		return keys.Info{}, err
-	}
+	// TODO: flag this???
+	gen := GenEd25519
+	// gen, err := getGenerator(algo)
+	// if err != nil {
+	//   return keys.Info{}, "", err
+	// }
+	key := gen.Generate(secret)
 
 	// d00d, it worked!  create the bugger....
 	err = s.es.Put(name, passphrase, key)

@@ -152,7 +152,7 @@ func TestCheckTypoDetection(t *testing.T) {
 		codec, err := LoadCodec(bank)
 		require.Nil(err, "%s: %+v", bank, err)
 		for i := 0; i < 1000; i++ {
-			numBytes := cmn.RandInt()%60 + 1
+			numBytes := cmn.RandInt()%60 + 4
 			data := cmn.RandBytes(numBytes)
 
 			words, err := codec.BytesToWords(data)

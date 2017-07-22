@@ -48,16 +48,12 @@ func exportSeed(cmd *cobra.Command, args []string) error {
 }
 
 func writeSeed(seed certifiers.Seed, path string) (err error) {
-	var f *os.File
-	f, err = os.Create(path)
-	if err == nil {
-		stream := json.NewEncoder(f)
-		err = stream.Encode(seed)
-		f.Close()
+	f, err := os.Create(path)
+	if err != nil {
+		return errors.WithStack(err)
 	}
-	// we don't write, but this is not an error
-	if os.IsExist(err) {
-		return nil
-	}
+	defer f.Close()
+	stream := json.NewEncoder(f)
+	err = stream.Encode(seed)
 	return errors.WithStack(err)
 }

@@ -42,3 +42,14 @@ func getGenerator(algo string) (Generator, error) {
 		return nil, errors.Errorf("Cannot generate keys for algorithm: %s", algo)
 	}
 }
+
+func getGeneratorByType(typ byte) (Generator, error) {
+	switch typ {
+	case crypto.TypeEd25519:
+		return GenEd25519, nil
+	case crypto.TypeSecp256k1:
+		return GenSecp256k1, nil
+	default:
+		return nil, errors.Errorf("Cannot generate keys for algorithm: %X", typ)
+	}
+}

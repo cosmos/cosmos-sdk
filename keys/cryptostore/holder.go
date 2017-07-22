@@ -52,6 +52,10 @@ func (s Manager) Create(name, passphrase, algo string) (keys.Info, string, error
 		return keys.Info{}, "", err
 	}
 
+	// TODO: clean up type/kind handling with go-data
+	typ := key.Bytes()[0]
+	secret = append(secret, typ)
+
 	seed, err := s.codec.BytesToWords(secret)
 	phrase := strings.Join(seed, " ")
 	return info(name, key), phrase, err
@@ -70,12 +74,13 @@ func (s Manager) Recover(name, passphrase, seedphrase string) (keys.Info, error)
 		return keys.Info{}, err
 	}
 
-	// TODO: flag this???
-	gen := GenEd25519
-	// gen, err := getGenerator(algo)
-	// if err != nil {
-	//   return keys.Info{}, "", err
-	// }
+	l := len(secret)
+	secret, typ := secret[:l-1], secret[l-1]
+
+	gen, err := getGeneratorByType(typ)
+	if err != nil {
+		return keys.Info{}, err
+	}
 	key := gen.Generate(secret)
 
 	// d00d, it worked!  create the bugger....

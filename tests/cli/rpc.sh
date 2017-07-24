@@ -98,7 +98,7 @@ test02GetSecure() {
     # assertFalse "missing height" "${CLIENT_EXE} rpc headers"
     HEADERS=$(${CLIENT_EXE} rpc headers --min=$CHEIGHT --max=$HEIGHT)
     assertTrue "line=${LINENO}, get headers" "$?"
-    assertEquals "line=${LINENO}, proper height" "$HEIGHT" $(echo $HEADERS | jq '.last_height')
+    assertEquals "line=${LINENO}, proper height" "$HEIGHT" $(echo $HEADERS | jq '.block_metas[0].header.height')
     assertEquals "line=${LINENO}, two headers" "2" $(echo $HEADERS | jq '.block_metas | length')
     # should we check these headers?
     CHEAD=$(echo $COMMIT | jq .header)

@@ -79,7 +79,7 @@ func GetCertifier() (*certifiers.InquiringCertifier, error) {
 		return nil, err
 	}
 	cert := certifiers.NewInquiring(
-		viper.GetString(ChainFlag), seed.Validators, trust, source)
+		viper.GetString(ChainFlag), seed, trust, source)
 	return cert, nil
 }
 

@@ -35,7 +35,7 @@ func newCertifier(store state.SimpleDB, chainID string, h int) (*certifiers.Inqu
 	}
 
 	// we have no source for untrusted keys, but use the db to load trusted history
-	cert := certifiers.NewInquiring(chainID, seed.Validators, p,
+	cert := certifiers.NewInquiring(chainID, seed, p,
 		certifiers.MissingProvider{})
 	return cert, nil
 }

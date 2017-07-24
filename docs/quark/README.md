@@ -1,6 +1,6 @@
 # Quark
 
-Quarks are the fundamental building blocks of atoms, through which DNA, life,
+Quarks are the fundamental building blocks of atoms through which DNA, life,
 and matter arise. Similarly this package is the core framework for constructing
 the atom tokens which will power [The Cosmos Network](https://cosmos.network/).
 
@@ -10,10 +10,10 @@ Cosmos Hub. Quark is an abstraction of [Tendermint](https://tendermint.com/)
 which provides the core consensus engine for your blockchain. Beyond consensus,
 Quark provides a blockchain development 'starter-pack' of common blockchain
 modules while not enforcing their use thus giving maximum flexibility for
-application customization (do you require fees, how do you want to log
-messages, do you enable IBC, do you even have a cryptocurrency?)
+application customization. For example, do you require fees, how do you
+want to log messages, do you enable IBC, do you even have a cryptocurrency?
 
-Disclaimer, when power and flexibility meet, the result is also some level of
+Disclaimer: when power and flexibility meet, the result is also some level of
 complexity and a learning curve.  Here is an introduction to the core concepts
 embedded in Quark.
 

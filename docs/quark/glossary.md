@@ -10,19 +10,19 @@ combine these concepts to build a particular application.
 
 A transaction is a packet of binary data that contains all information to
 validate and perform an action on the blockchain. The only other data that it
-interacts with is the current state of the chain (key-value store), and it must
-have a deterministic action. The tx is the main piece of one request.
+interacts with is the current state of the chain (key-value store), and
+it must have a deterministic action. The tx is the main piece of one request.
 
 We currently make heavy use of [go-wire](https://github.com/tendermint/go-wire)
 and [data](https://github.com/tendermint/go-wire/tree/master/data) to provide
 binary and json encodings and decodings for `struct` or  interface` objects.
 Here, encoding and decoding operations are designed to operate with interfaces
-nested any amount times (like an onion!). There is one public `TxMapper` in the
-basecoin root package, and all modules can register their own transaction types
-there. This allows us to deserialize the entire tx in one location (even with
-types defined in other repos), to easily embed an arbitrary tx inside another
-without specifying the type, and provide an automatic json representation to
-provide to users (or apps) to inspect the chain.
+nested any amount times (like an onion!). There is one public `TxMapper`
+in the basecoin root package, and all modules can register their own transaction types there. This allows us to deserialize the entire tx in
+one location (even with types defined in other repos), to easily embed
+an arbitrary tx inside another without specifying the type, and provide
+an automatic json representation to provide to users (or apps) to
+inspect the chain.
 
 Note how we can wrap any other transaction, add a fee level, and not worry
 about the encoding in our module any more?
@@ -64,37 +64,39 @@ kv-store interface.
 One of the main arguments for blockchain is security.  So while we encourage
 the use of third-party modules, all developers must be vigilant against
 security holes.  If you use the
-[stack](https://github.com/tendermint/basecoin/tree/unstable/stack) package, it
-will provide two different types of compartmentalization security.
+[stack](https://github.com/tendermint/basecoin/tree/unstable/stack)
+package, it will provide two different types of compartmentalization security.
 
 The first is to limit the working kv-store space of each module. When
 `DeliverTx` is called for a module, it is never given the entire data store,
 but rather only its own prefixed subset of the store. This is achieved by
 prefixing all keys transparently with `<module name> + 0x0`, using the null
 byte as a separator.  Since the module name must be a string, no malicious
-naming scheme can ever lead to a collision. Inside a module, we can write using
-any key value we desire without the possibility that we have modified data
-belonging to separate module.
+naming scheme can ever lead to a collision. Inside a module, we can
+write using any key value we desire without the possibility that we
+have modified data belonging to separate module.
 
 The second is to add permissions to the transaction context.  The tx context
 can specify that the tx has been signed by one or multiple specific
 [actors](https://github.com/tendermint/basecoin/blob/unstable/context.go#L18).
 A tx will only be executed if the permission requirements have been fulfilled.
-For example the sender of funds must have signed, or 2 out of 3 multi-signature
-actors must have signed a joint account.  To prevent the forgery of account
-signatures from unintended modules each permission is associated with the
-module that granted it (in this case
-[auth](https://github.com/tendermint/basecoin/tree/unstable/modules/auth)), and
-if a module tries to add a permission for another module, it will panic.  There
-is also protection if a module creates a brand new fake context to trick the
-downstream modules. (FREY - need to explain the technical element of this a bit
-more)
+For example the sender of funds must have signed, or 2 out of 3
+multi-signature actors must have signed a joint account.  To prevent the
+forgery of account signatures from unintended modules each permission
+is associated with the module that granted it (in this case
+[auth](https://github.com/tendermint/basecoin/tree/unstable/modules/auth)),
+and if a module tries to add a permission for another module, it will
+panic.  There is also protection if a module creates a brand new fake
+context to trick the downstream modules. Each context enforces
+the rules on how to make child contexts, and the stack middleware builder
+enforces that the context passed from one level to the next is a valid
+child of the original one.
 
 These security measures ensure that modules can confidently write to their
 local section of the database and trust the permissions associated with the
-context, without concern of interference from other modules.  (Okay, if you see
-a bunch of C-code in the module traversing through all the memory space of the
-application, then get worried....)
+context, without concern of interference from other modules.  (Okay,
+if you see a bunch of C-code in the module traversing through all the
+memory space of the application, then get worried....)
 
 ## Handler
 
@@ -110,9 +112,9 @@ interface, which provides four methods:
   SetOption(l log.Logger, store state.KVStore, module, key, value string) (string, error)
 ```
 
-Note the `Context`, `KVStore`, and `Tx` as principal carriers of information. And
-that Result is always success, and we have a second error return for errors
-(which is much more standard golang that `res.IsErr()`)
+Note the `Context`, `KVStore`, and `Tx` as principal carriers of information.
+And that Result is always success, and we have a second error return
+for errors (which is much more standard golang that `res.IsErr()`)
 
 The `Handler` interface is designed to be the basis for all modules that
 execute transactions, and this can provide a large degree of code
@@ -260,9 +262,9 @@ similar problem, and maybe could provide some inspiration.
 ## Replay Protection
 
 In order to prevent [replay
-attacks](https://en.wikipedia.org/wiki/Replay_attack) a multi node nonce system
-has been constructed and is implemented as a module and can be found in
-`modules/nonce`.  By adding each the nonce module to the stack, each
+attacks](https://en.wikipedia.org/wiki/Replay_attack) a multi account nonce system
+has been constructed as a module, which can be found in
+`modules/nonce`.  By adding the nonce module to the stack, each
 transaction is verified for authenticity against replay attacks. This is
 achieved by requiring that a new signed copy of the sequence number which must
 be exactly 1 greater than the sequence number of the previous transaction. A
@@ -284,14 +286,14 @@ By distinguishing sequence numbers across groups of Signers, multi-signature
 Actors need not lock up use of their Address while waiting for all the members
 of a multi-sig transaction to occur. Instead only the multi-sig account will
 be locked, while other accounts belonging to that signer can be used and signed
-with other sequence numbers.  
+with other sequence numbers.
 
 By abstracting out the nonce module in the stack, entire series of transactions
 can occur without needing to verify the nonce for each member of the series. An
 common example is a stack which will send coins and charge a fee. Within Quark
 this can be achieved using separate modules in a stack, one to send the coins
 and the other to charge the fee, however both modules do not need to check the
-nonce, this can occur as a separate module earlier in the stack.
+nonce. This can occur as a separate module earlier in the stack.
 
 ## IBC (Inter-Blockchain Communication)
 

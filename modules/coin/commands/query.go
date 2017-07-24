@@ -28,6 +28,7 @@ func accountQueryCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	act = coin.ChainAddr(act)
 	key := stack.PrefixedKey(coin.NameCoin, act.Bytes())
 
 	acc := coin.Account{}

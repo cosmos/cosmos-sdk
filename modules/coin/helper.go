@@ -11,7 +11,8 @@ import (
 // AccountWithKey is a helper for tests, that includes and account
 // along with the private key to access it.
 type AccountWithKey struct {
-	Key crypto.PrivKey
+	Key      crypto.PrivKey
+	Sequence uint32
 	Account
 }
 
@@ -32,6 +33,12 @@ func (a *AccountWithKey) Address() []byte {
 // Actor returns the basecoin actor associated with this account
 func (a *AccountWithKey) Actor() basecoin.Actor {
 	return auth.SigPerm(a.Key.PubKey().Address())
+}
+
+// NextSequence returns the next sequence to sign with
+func (a *AccountWithKey) NextSequence() uint32 {
+	a.Sequence++
+	return a.Sequence
 }
 
 // MakeOption returns a string to use with SetOption to initialize this account

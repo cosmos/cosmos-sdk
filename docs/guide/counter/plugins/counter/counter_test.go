@@ -1,7 +1,6 @@
 package counter
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,11 +24,12 @@ func TestCounterPlugin(t *testing.T) {
 	eyesCli := eyescli.NewLocalClient("", 0)
 	chainID := "test_chain_id"
 
-	// logger := log.TestingLogger().With("module", "app"),
-	logger := log.NewTMLogger(os.Stdout).With("module", "app")
-	// logger = log.NewTracingLogger(logger)
+	logger := log.TestingLogger().With("module", "app")
+	// logger := log.NewTMLogger(os.Stdout).With("module", "app")
+	logger = log.NewTracingLogger(logger)
+	h := NewHandler("gold")
 	bcApp := app.NewBasecoin(
-		NewHandler("gold"),
+		h,
 		eyesCli,
 		logger,
 	)
@@ -60,11 +60,15 @@ func TestCounterPlugin(t *testing.T) {
 	res = DeliverCounterTx(false, nil, 2)
 	assert.True(res.IsErr(), res.String())
 
-	// Test an invalid send, with supported fee
-	res = DeliverCounterTx(true, coin.Coins{{"gold", 100}}, 2)
+	// Test an invalid sequence
+	res = DeliverCounterTx(true, nil, 2)
+	assert.True(res.IsErr(), res.String())
+
+	// Test an valid send, with supported fee
+	res = DeliverCounterTx(true, coin.Coins{{"gold", 100}}, 3)
 	assert.True(res.IsOK(), res.String())
 
 	// Test unsupported fee
-	res = DeliverCounterTx(true, coin.Coins{{"silver", 100}}, 3)
+	res = DeliverCounterTx(true, coin.Coins{{"silver", 100}}, 4)
 	assert.True(res.IsErr(), res.String())
 }

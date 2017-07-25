@@ -71,6 +71,7 @@ func DefaultHandler(feeDenom string) basecoin.Handler {
 		nonce.ReplayCheck{},
 		roles.NewMiddleware(),
 		fee.NewSimpleFeeMiddleware(coin.Coin{feeDenom, 0}, fee.Bank),
+		base.Checkpoint{},
 	).Use(d)
 }
 
@@ -120,21 +121,18 @@ func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
 		return errors.Result(err)
 	}
 
-	// TODO: can we abstract this setup and commit logic??
-	cache := app.state.CacheWrap()
 	ctx := stack.NewContext(
 		app.state.GetChainID(),
 		app.height,
 		app.logger.With("call", "delivertx"),
 	)
-	res, err := app.handler.DeliverTx(ctx, cache, tx)
+	fmt.Printf("state: %#v\n", app.state)
+	res, err := app.handler.DeliverTx(ctx, app.state, tx)
 
 	if err != nil {
 		// discard the cache...
 		return errors.Result(err)
 	}
-	// commit the cache and return result
-	cache.CacheSync()
 	return res.ToABCI()
 }
 
@@ -145,22 +143,17 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 		return errors.Result(err)
 	}
 
-	// we also need to discard error changes, so we don't increment checktx
-	// sequence on error, but not delivertx
-	cache := app.cacheState.CacheWrap()
 	ctx := stack.NewContext(
 		app.state.GetChainID(),
 		app.height,
 		app.logger.With("call", "checktx"),
 	)
-	// checktx generally shouldn't touch the state, but we don't care
-	// here on the framework level, since the cacheState is thrown away next block
-	res, err := app.handler.CheckTx(ctx, cache, tx)
+	fmt.Printf("state: %#v\n", app.cacheState)
+	res, err := app.handler.CheckTx(ctx, app.cacheState, tx)
 
 	if err != nil {
 		return errors.Result(err)
 	}
-	cache.CacheSync()
 	return res.ToABCI()
 }
 

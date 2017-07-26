@@ -1,0 +1,19 @@
+BenchmarkMakeTx-4           	    2000	    660064 ns/op
+BenchmarkSimpleTransfer/100-10-nofee-memdb-4         	    5000	    338378 ns/op
+BenchmarkSimpleTransfer/100-10-fee-memdb-4           	    5000	    380171 ns/op
+BenchmarkSimpleTransfer/100-200-nofee-memdb-4        	    5000	    306365 ns/op
+BenchmarkSimpleTransfer/100-200-fee-memdb-4          	    5000	    359344 ns/op
+BenchmarkSimpleTransfer/10000-10-nofee-memdb-4       	    5000	    366057 ns/op
+BenchmarkSimpleTransfer/10000-10-fee-memdb-4         	    3000	    433549 ns/op
+BenchmarkSimpleTransfer/10000-200-nofee-memdb-4      	    5000	    351662 ns/op
+BenchmarkSimpleTransfer/10000-200-fee-memdb-4        	    3000	    421573 ns/op
+BenchmarkSimpleTransfer/100-10-nofee-persist-4       	    3000	    479848 ns/op
+BenchmarkSimpleTransfer/100-10-fee-persist-4         	    3000	    544164 ns/op
+BenchmarkSimpleTransfer/100-200-nofee-persist-4      	    5000	    327999 ns/op
+BenchmarkSimpleTransfer/100-200-fee-persist-4        	    5000	    385751 ns/op
+BenchmarkSimpleTransfer/10000-10-nofee-persist-4     	    2000	    852128 ns/op
+BenchmarkSimpleTransfer/10000-10-fee-persist-4       	    2000	   1055130 ns/op
+BenchmarkSimpleTransfer/10000-200-nofee-persist-4    	    5000	    642872 ns/op
+BenchmarkSimpleTransfer/10000-200-fee-persist-4      	    3000	    686337 ns/op
+PASS
+ok  	github.com/tendermint/basecoin/benchmarks	91.717s

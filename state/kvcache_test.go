@@ -1,70 +1,124 @@
 package state
 
 import (
-	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestKVCache(t *testing.T) {
+func TestCache(t *testing.T) {
 	assert := assert.New(t)
 
-	//stores to be tested
-	ms := NewMemKVStore()
-	store := NewMemKVStore()
-	kvc := NewKVCache(store)
+	cases := []struct {
+		init   []Model
+		toGet  []Model
+		toList []listQuery
 
-	//key value pairs to be tested within the system
-	var keyvalue = []struct {
-		key   string
-		value string
+		setCache    []Model
+		removeCache []Model
+		getCache    []Model
+		listCache   []listQuery
 	}{
-		{"foo", "snake"},
-		{"bar", "mouse"},
+		// simple add
+		{
+			init:  []Model{m("a", "1"), m("c", "2")},
+			toGet: []Model{m("a", "1"), m("c", "2"), m("d", "")},
+			toList: []listQuery{{
+				"a", "e", 0,
+				[]Model{m("a", "1"), m("c", "2")},
+				m("c", "2"),
+			}},
+			setCache:    []Model{m("d", "3")},
+			removeCache: []Model{m("a", "1")},
+			getCache:    []Model{m("a", ""), m("c", "2"), m("d", "3")},
+			listCache: []listQuery{{
+				"a", "e", 0,
+				[]Model{m("c", "2"), m("d", "3")},
+				m("d", "3"),
+			}},
+		},
 	}
 
-	//set the kvc to have all the key value pairs
-	setRecords := func(kv KVStore) {
-		for _, n := range keyvalue {
-			kv.Set([]byte(n.key), []byte(n.value))
+	checkGet := func(db SimpleDB, m Model, msg string) {
+		val := db.Get(m.Key)
+		assert.EqualValues(m.Value, val, msg)
+		has := db.Has(m.Key)
+		assert.Equal(len(m.Value) != 0, has, msg)
+	}
+
+	checkList := func(db SimpleDB, lq listQuery, msg string) {
+		start, end := []byte(lq.start), []byte(lq.end)
+		list := db.List(start, end, lq.limit)
+		if assert.EqualValues(lq.expected, list, msg) {
+			var first Model
+			if len(lq.expected) > 0 {
+				first = lq.expected[0]
+			}
+			f := db.First(start, end)
+			assert.EqualValues(first, f, msg)
+			l := db.Last(start, end)
+			assert.EqualValues(lq.last, l, msg)
 		}
 	}
 
-	//store has all the key value pairs
-	storeHasAll := func(kv KVStore) bool {
-		for _, n := range keyvalue {
-			if !bytes.Equal(kv.Get([]byte(n.key)), []byte(n.value)) {
-				return false
+	for i, tc := range cases {
+		for j, db := range GetDBs() {
+			for _, s := range tc.init {
+				db.Set(s.Key, s.Value)
+			}
+			for k, g := range tc.toGet {
+				msg := fmt.Sprintf("%d/%d/%d", i, j, k)
+				checkGet(db, g, msg)
+			}
+			for k, lq := range tc.toList {
+				msg := fmt.Sprintf("%d/%d/%d", i, j, k)
+				checkList(db, lq, msg)
+			}
+
+			// make cache
+			cache := db.Checkpoint()
+
+			for _, s := range tc.setCache {
+				cache.Set(s.Key, s.Value)
+			}
+			for k, r := range tc.removeCache {
+				val := cache.Remove(r.Key)
+				assert.EqualValues(r.Value, val, "%d/%d/%d", i, j, k)
+			}
+
+			// make sure data is in cache
+			for k, g := range tc.getCache {
+				msg := fmt.Sprintf("%d/%d/%d", i, j, k)
+				checkGet(cache, g, msg)
+			}
+			for k, lq := range tc.listCache {
+				msg := fmt.Sprintf("%d/%d/%d", i, j, k)
+				checkList(cache, lq, msg)
+			}
+
+			// data not in basic store
+			for k, g := range tc.toGet {
+				msg := fmt.Sprintf("%d/%d/%d", i, j, k)
+				checkGet(db, g, msg)
+			}
+			for k, lq := range tc.toList {
+				msg := fmt.Sprintf("%d/%d/%d", i, j, k)
+				checkList(db, lq, msg)
+			}
+
+			// commit
+			db.Commit(cache)
+
+			// make sure data is in cache
+			for k, g := range tc.getCache {
+				msg := fmt.Sprintf("%d/%d/%d", i, j, k)
+				checkGet(db, g, msg)
+			}
+			for k, lq := range tc.listCache {
+				msg := fmt.Sprintf("%d/%d/%d", i, j, k)
+				checkList(db, lq, msg)
 			}
 		}
-		return true
 	}
-
-	//test read/write for MemKVStore
-	setRecords(ms)
-	assert.True(storeHasAll(ms), "MemKVStore doesn't retrieve after Set")
-
-	//test read/write for KVCache
-	setRecords(kvc)
-	assert.True(storeHasAll(kvc), "KVCache doesn't retrieve after Set")
-
-	//test reset
-	kvc.Reset()
-	assert.False(storeHasAll(kvc), "KVCache retrieving after reset")
-
-	//test sync
-	setRecords(kvc)
-	assert.False(storeHasAll(store), "store retrieving before synced")
-	kvc.Sync()
-	assert.True(storeHasAll(store), "store isn't retrieving after synced")
-
-	//test logging
-	assert.Zero(len(kvc.GetLogLines()), "logging events existed before using SetLogging")
-	kvc.SetLogging()
-	setRecords(kvc)
-	assert.Equal(len(kvc.GetLogLines()), 2, "incorrect number of logging events recorded")
-	kvc.ClearLogLines()
-	assert.Zero(len(kvc.GetLogLines()), "logging events still exists after ClearLogLines")
-
 }

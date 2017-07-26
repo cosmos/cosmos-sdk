@@ -1,19 +1,12 @@
 package state
 
-import (
-	"container/list"
-	"fmt"
-
-	cmn "github.com/tendermint/tmlibs/common"
-)
+import "container/list"
 
 // KVCache is a cache that enforces deterministic sync order.
 type KVCache struct {
-	store    KVStore
-	cache    map[string]kvCacheValue
-	keys     *list.List
-	logging  bool
-	logLines []string
+	store KVStore
+	cache map[string]kvCacheValue
+	keys  *list.List
 }
 
 type kvCacheValue struct {
@@ -31,18 +24,6 @@ func NewKVCache(store KVStore) *KVCache {
 	}).Reset()
 }
 
-func (kvc *KVCache) SetLogging() {
-	kvc.logging = true
-}
-
-func (kvc *KVCache) GetLogLines() []string {
-	return kvc.logLines
-}
-
-func (kvc *KVCache) ClearLogLines() {
-	kvc.logLines = nil
-}
-
 func (kvc *KVCache) Reset() *KVCache {
 	kvc.cache = make(map[string]kvCacheValue)
 	kvc.keys = list.New()
@@ -50,10 +31,6 @@ func (kvc *KVCache) Reset() *KVCache {
 }
 
 func (kvc *KVCache) Set(key []byte, value []byte) {
-	if kvc.logging {
-		line := fmt.Sprintf("Set %v = %v", LegibleBytes(key), LegibleBytes(value))
-		kvc.logLines = append(kvc.logLines, line)
-	}
 	cacheValue, ok := kvc.cache[string(key)]
 	if ok {
 		kvc.keys.MoveToBack(cacheValue.e)
@@ -67,20 +44,12 @@ func (kvc *KVCache) Set(key []byte, value []byte) {
 func (kvc *KVCache) Get(key []byte) (value []byte) {
 	cacheValue, ok := kvc.cache[string(key)]
 	if ok {
-		if kvc.logging {
-			line := fmt.Sprintf("Get (hit) %v = %v", LegibleBytes(key), LegibleBytes(cacheValue.v))
-			kvc.logLines = append(kvc.logLines, line)
-		}
 		return cacheValue.v
 	} else {
 		value := kvc.store.Get(key)
 		kvc.cache[string(key)] = kvCacheValue{
 			v: value,
 			e: kvc.keys.PushBack(key),
-		}
-		if kvc.logging {
-			line := fmt.Sprintf("Get (miss) %v = %v", LegibleBytes(key), LegibleBytes(value))
-			kvc.logLines = append(kvc.logLines, line)
 		}
 		return value
 	}
@@ -94,18 +63,4 @@ func (kvc *KVCache) Sync() {
 		kvc.store.Set(key, value.v)
 	}
 	kvc.Reset()
-}
-
-//----------------------------------------
-
-func LegibleBytes(data []byte) string {
-	s := ""
-	for _, b := range data {
-		if 0x21 <= b && b < 0x7F {
-			s += cmn.Green(string(b))
-		} else {
-			s += cmn.Blue(cmn.Fmt("%02X", b))
-		}
-	}
-	return s
 }

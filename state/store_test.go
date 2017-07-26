@@ -9,7 +9,7 @@ import (
 
 func GetDBs() []SimpleDB {
 	return []SimpleDB{
-		NewMemKVStore(),
+		// NewMemKVStore(),
 		NewBonsai(iavl.NewIAVLTree(0, nil)),
 	}
 }
@@ -28,20 +28,20 @@ func m(k, v string) Model {
 	}
 }
 
+type listQuery struct {
+	// this is the list query
+	start, end string
+	limit      int
+	// expected result from List, first element also expected for First
+	expected []Model
+	// expected result from Last
+	last Model
+}
+
 // TestKVStore makes sure that get/set/remove operations work,
 // as well as list
 func TestKVStore(t *testing.T) {
 	assert := assert.New(t)
-
-	type listQuery struct {
-		// this is the list query
-		start, end string
-		limit      int
-		// expected result from List, first element also expected for First
-		expected []Model
-		// expected result from Last
-		last Model
-	}
 
 	cases := []struct {
 		toSet    []Model

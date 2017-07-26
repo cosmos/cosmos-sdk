@@ -34,14 +34,14 @@ type SimpleDB interface {
 	First(start, end []byte) Model
 	Last(start, end []byte) Model
 
-	// // Checkpoint returns the same state, but where writes
-	// // are buffered and don't affect the parent
-	// Checkpoint() SimpleDB
+	// Checkpoint returns the same state, but where writes
+	// are buffered and don't affect the parent
+	Checkpoint() SimpleDB
 
-	// // Commit will take all changes from the checkpoint and write
-	// // them to the parent.
-	// // Returns an error if this is not a child of this one
-	// Commit(SimpleDB) error
+	// Commit will take all changes from the checkpoint and write
+	// them to the parent.
+	// Returns an error if this is not a child of this one
+	Commit(SimpleDB) error
 
 	// Discard will remove reference to this
 	Discard()
@@ -56,7 +56,7 @@ type MemKVStore struct {
 	m map[string][]byte
 }
 
-var _ SimpleDB = NewMemKVStore()
+// var _ SimpleDB = NewMemKVStore()
 
 // NewMemKVStore initializes a MemKVStore
 func NewMemKVStore() *MemKVStore {

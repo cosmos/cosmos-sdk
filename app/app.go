@@ -64,10 +64,11 @@ func DefaultHandler(feeDenom string) basecoin.Handler {
 		stack.Recovery{},
 		auth.Signatures{},
 		base.Chain{},
+		stack.Checkpoint{OnCheck: true},
 		nonce.ReplayCheck{},
 		roles.NewMiddleware(),
 		fee.NewSimpleFeeMiddleware(coin.Coin{feeDenom, 0}, fee.Bank),
-		stack.Checkpoint{},
+		stack.Checkpoint{OnDeliver: true},
 	).Use(d)
 }
 

@@ -12,6 +12,8 @@ const (
 
 // Checkpoint isolates all data store below this
 type Checkpoint struct {
+	OnCheck   bool
+	OnDeliver bool
 	PassOption
 }
 
@@ -24,6 +26,9 @@ var _ Middleware = Checkpoint{}
 
 // CheckTx reverts all data changes if there was an error
 func (c Checkpoint) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+	if !c.OnCheck {
+		return next.CheckTx(ctx, store, tx)
+	}
 	ps := state.NewKVCache(unwrap(store))
 	res, err = next.CheckTx(ctx, ps, tx)
 	if err == nil {
@@ -34,6 +39,9 @@ func (c Checkpoint) CheckTx(ctx basecoin.Context, store state.KVStore, tx baseco
 
 // DeliverTx reverts all data changes if there was an error
 func (c Checkpoint) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+	if !c.OnDeliver {
+		return next.DeliverTx(ctx, store, tx)
+	}
 	ps := state.NewKVCache(unwrap(store))
 	res, err = next.DeliverTx(ctx, ps, tx)
 	if err == nil {

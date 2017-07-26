@@ -1,10 +1,7 @@
-package base
+package stack
 
 import (
-	"fmt"
-
 	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 )
 
@@ -15,7 +12,7 @@ const (
 
 // Checkpoint isolates all data store below this
 type Checkpoint struct {
-	stack.PassOption
+	PassOption
 }
 
 // Name of the module - fulfills Middleware interface
@@ -23,11 +20,11 @@ func (Checkpoint) Name() string {
 	return NameCheckpoint
 }
 
-var _ stack.Middleware = Chain{}
+var _ Middleware = Checkpoint{}
 
 // CheckTx reverts all data changes if there was an error
 func (c Checkpoint) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
-	ps := state.NewKVCache(store)
+	ps := state.NewKVCache(unwrap(store))
 	res, err = next.CheckTx(ctx, ps, tx)
 	if err == nil {
 		ps.Sync()
@@ -37,13 +34,10 @@ func (c Checkpoint) CheckTx(ctx basecoin.Context, store state.KVStore, tx baseco
 
 // DeliverTx reverts all data changes if there was an error
 func (c Checkpoint) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
-	ps := state.NewKVCache(store)
+	ps := state.NewKVCache(unwrap(store))
 	res, err = next.DeliverTx(ctx, ps, tx)
 	if err == nil {
-		fmt.Println("sync")
 		ps.Sync()
-	} else {
-		fmt.Println("reject")
 	}
 	return res, err
 }

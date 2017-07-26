@@ -12,8 +12,8 @@ import (
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/modules/nonce"
+	"github.com/tendermint/basecoin/state/merkle"
 	"github.com/tendermint/go-wire"
-	eyescli "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/log"
 )
 
@@ -21,17 +21,16 @@ func TestCounterPlugin(t *testing.T) {
 	assert := assert.New(t)
 
 	// Basecoin initialization
-	eyesCli := eyescli.NewLocalClient("", 0)
 	chainID := "test_chain_id"
+	logger := log.TestingLogger()
+	// logger := log.NewTracingLogger(log.NewTMLogger(os.Stdout))
 
-	logger := log.TestingLogger().With("module", "app")
-	// logger := log.NewTMLogger(os.Stdout).With("module", "app")
-	logger = log.NewTracingLogger(logger)
+	store := merkle.NewStore("", 0, logger.With("module", "store"))
 	h := NewHandler("gold")
 	bcApp := app.NewBasecoin(
 		h,
-		eyesCli,
-		logger,
+		store,
+		logger.With("module", "app"),
 	)
 	bcApp.SetOption("base/chain_id", chainID)
 

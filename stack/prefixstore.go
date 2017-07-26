@@ -31,6 +31,14 @@ func stateSpace(store state.KVStore, app string) state.KVStore {
 	return PrefixedStore(app, store)
 }
 
+func unwrap(store state.KVStore) state.KVStore {
+	// unwrap one-level if wrapped
+	if pstore, ok := store.(prefixStore); ok {
+		store = pstore.store
+	}
+	return store
+}
+
 // PrefixedStore allows one to create an isolated state-space for a given
 // app prefix, but it cannot easily be unwrapped
 //

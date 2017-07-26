@@ -104,7 +104,7 @@ func NewHandler(feeDenom string) basecoin.Handler {
 		base.Chain{},
 		nonce.ReplayCheck{},
 		fee.NewSimpleFeeMiddleware(coin.Coin{feeDenom, 0}, fee.Bank),
-		base.Checkpoint{},
+		stack.Checkpoint{},
 	).Use(dispatcher)
 }
 

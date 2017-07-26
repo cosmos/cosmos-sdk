@@ -49,12 +49,16 @@ type SimpleDB interface {
 
 //----------------------------------------
 
+// MemKVStore is a simple implementation of SimpleDB.
+// It is only intended for quick testing, not to be used
+// in production or with large data stores.
 type MemKVStore struct {
 	m map[string][]byte
 }
 
 var _ SimpleDB = NewMemKVStore()
 
+// NewMemKVStore initializes a MemKVStore
 func NewMemKVStore() *MemKVStore {
 	return &MemKVStore{
 		m: make(map[string][]byte, 0),
@@ -83,7 +87,12 @@ func (mkv *MemKVStore) Remove(key []byte) (value []byte) {
 func (mkv *MemKVStore) List(start, end []byte, limit int) []Model {
 	keys := mkv.keysInRange(start, end)
 	sort.Strings(keys)
-	keys = keys[:limit]
+	if limit > 0 && len(keys) > 0 {
+		if limit > len(keys) {
+			limit = len(keys)
+		}
+		keys = keys[:limit]
+	}
 
 	res := make([]Model, len(keys))
 	for i, k := range keys {

@@ -4,11 +4,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/tendermint/merkleeyes/iavl"
 )
 
 func GetDBs() []SimpleDB {
 	return []SimpleDB{
 		NewMemKVStore(),
+		NewBonsai(iavl.NewIAVLTree(0, nil)),
 	}
 }
 

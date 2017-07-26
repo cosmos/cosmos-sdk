@@ -1,10 +1,9 @@
-package merkle
+package state
 
 import (
 	"errors"
 	"math/rand"
 
-	"github.com/tendermint/basecoin/state"
 	"github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/tmlibs/merkle"
 )
@@ -79,7 +78,7 @@ type Bonsai struct {
 	merkle.Tree
 }
 
-var _ state.SimpleDB = &Bonsai{}
+var _ SimpleDB = &Bonsai{}
 
 func NewBonsai(tree merkle.Tree) *Bonsai {
 	return &Bonsai{
@@ -104,38 +103,39 @@ func (b *Bonsai) Remove(key []byte) (value []byte) {
 	return
 }
 
-func (b *Bonsai) List(start, end []byte, limit int) []state.Model {
-	var res []state.Model
+func (b *Bonsai) List(start, end []byte, limit int) []Model {
+	res := []Model{}
 	stopAtCount := func(key []byte, value []byte) (stop bool) {
-		m := state.Model{key, value}
+		m := Model{key, value}
 		res = append(res, m)
-		return len(res) >= limit
+		// return false
+		return limit > 0 && len(res) >= limit
 	}
 	b.Tree.IterateRange(start, end, true, stopAtCount)
 	return res
 }
 
-func (b *Bonsai) First(start, end []byte) state.Model {
-	var m state.Model
+func (b *Bonsai) First(start, end []byte) Model {
+	var m Model
 	stopAtFirst := func(key []byte, value []byte) (stop bool) {
-		m = state.Model{key, value}
+		m = Model{key, value}
 		return true
 	}
 	b.Tree.IterateRange(start, end, true, stopAtFirst)
 	return m
 }
 
-func (b *Bonsai) Last(start, end []byte) state.Model {
-	var m state.Model
+func (b *Bonsai) Last(start, end []byte) Model {
+	var m Model
 	stopAtFirst := func(key []byte, value []byte) (stop bool) {
-		m = state.Model{key, value}
+		m = Model{key, value}
 		return true
 	}
 	b.Tree.IterateRange(start, end, false, stopAtFirst)
 	return m
 }
 
-func (b *Bonsai) Checkpoint() state.SimpleDB {
+func (b *Bonsai) Checkpoint() SimpleDB {
 	return &Bonsai{
 		id:   b.id,
 		Tree: b.Tree.Copy(),
@@ -145,7 +145,7 @@ func (b *Bonsai) Checkpoint() state.SimpleDB {
 // Commit will take all changes from the checkpoint and write
 // them to the parent.
 // Returns an error if this is not a child of this one
-func (b *Bonsai) Commit(sub state.SimpleDB) error {
+func (b *Bonsai) Commit(sub SimpleDB) error {
 	bb, ok := sub.(*Bonsai)
 	if !ok || (b.id != bb.id) {
 		return errors.New("Not a sub-transaction")

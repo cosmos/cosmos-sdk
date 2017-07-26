@@ -16,7 +16,6 @@ import (
 	"github.com/tendermint/basecoin/modules/nonce"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
-	"github.com/tendermint/basecoin/state/merkle"
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/tmlibs/log"
 )
@@ -84,7 +83,7 @@ func (at *appTest) reset() {
 	// Note: switch logger if you want to get more info
 	logger := log.TestingLogger()
 	// logger := log.NewTracingLogger(log.NewTMLogger(os.Stdout))
-	store := merkle.NewStore("", 0, logger.With("module", "store"))
+	store := NewStore("", 0, logger.With("module", "store"))
 	at.app = NewBasecoin(
 		DefaultHandler("mycoin"),
 		store,
@@ -142,7 +141,7 @@ func TestSetOption(t *testing.T) {
 	require := require.New(t)
 
 	logger := log.TestingLogger()
-	store := merkle.NewStore("", 0, logger.With("module", "store"))
+	store := NewStore("", 0, logger.With("module", "store"))
 	app := NewBasecoin(
 		DefaultHandler("atom"),
 		store,

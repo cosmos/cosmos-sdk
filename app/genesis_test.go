@@ -12,7 +12,6 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/state/merkle"
 )
 
 const genesisFilepath = "./testdata/genesis.json"
@@ -20,7 +19,7 @@ const genesisAcctFilepath = "./testdata/genesis2.json"
 
 func TestLoadGenesisDoNotFailIfAppOptionsAreMissing(t *testing.T) {
 	logger := log.TestingLogger()
-	store := merkle.NewStore("", 0, logger)
+	store := NewStore("", 0, logger)
 	app := NewBasecoin(DefaultHandler("mycoin"), store, logger)
 	err := app.LoadGenesis("./testdata/genesis3.json")
 	require.Nil(t, err, "%+v", err)
@@ -30,7 +29,7 @@ func TestLoadGenesis(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	logger := log.TestingLogger()
-	store := merkle.NewStore("", 0, logger)
+	store := NewStore("", 0, logger)
 	app := NewBasecoin(DefaultHandler("mycoin"), store, logger)
 	err := app.LoadGenesis(genesisFilepath)
 	require.Nil(err, "%+v", err)
@@ -60,7 +59,7 @@ func TestLoadGenesisAccountAddress(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	logger := log.TestingLogger()
-	store := merkle.NewStore("", 0, logger)
+	store := NewStore("", 0, logger)
 	app := NewBasecoin(DefaultHandler("mycoin"), store, logger)
 	err := app.LoadGenesis(genesisAcctFilepath)
 	require.Nil(err, "%+v", err)

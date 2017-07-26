@@ -18,7 +18,6 @@ import (
 	"github.com/tendermint/basecoin/modules/roles"
 	"github.com/tendermint/basecoin/stack"
 	sm "github.com/tendermint/basecoin/state"
-	"github.com/tendermint/basecoin/state/merkle"
 	"github.com/tendermint/basecoin/version"
 )
 
@@ -32,7 +31,7 @@ const (
 type Basecoin struct {
 	info *sm.ChainState
 
-	state *merkle.Store
+	state *Store
 
 	handler basecoin.Handler
 	height  uint64
@@ -42,7 +41,7 @@ type Basecoin struct {
 var _ abci.Application = &Basecoin{}
 
 // NewBasecoin - create a new instance of the basecoin application
-func NewBasecoin(handler basecoin.Handler, store *merkle.Store, logger log.Logger) *Basecoin {
+func NewBasecoin(handler basecoin.Handler, store *Store, logger log.Logger) *Basecoin {
 	return &Basecoin{
 		handler: handler,
 		info:    sm.NewChainState(),

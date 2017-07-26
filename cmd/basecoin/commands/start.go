@@ -20,7 +20,6 @@ import (
 	"github.com/tendermint/tendermint/types"
 
 	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/state/merkle"
 )
 
 // StartCmd - command to start running the basecoin node!
@@ -56,7 +55,7 @@ func init() {
 func startCmd(cmd *cobra.Command, args []string) error {
 	rootDir := viper.GetString(cli.HomeFlag)
 
-	store := merkle.NewStore(
+	store := app.NewStore(
 		path.Join(rootDir, "data", "merkleeyes.db"),
 		EyesCacheSize,
 		logger.With("module", "store"),

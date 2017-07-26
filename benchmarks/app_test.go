@@ -18,7 +18,6 @@ import (
 	"github.com/tendermint/basecoin/modules/nonce"
 	"github.com/tendermint/basecoin/modules/roles"
 	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state/merkle"
 )
 
 type BenchApp struct {
@@ -55,13 +54,13 @@ func NewBenchApp(h basecoin.Handler, chainID string, n int,
 	// logger = log.NewTracingLogger(logger)
 
 	// TODO: disk writing
-	var store *merkle.Store
+	var store *app.Store
 
 	if persist {
 		tmpDir, _ := ioutil.TempDir("", "bc-app-benchmark")
-		store = merkle.NewStore(tmpDir, 500, logger)
+		store = app.NewStore(tmpDir, 500, logger)
 	} else {
-		store = merkle.NewStore("", 0, logger)
+		store = app.NewStore("", 0, logger)
 	}
 
 	app := app.NewBasecoin(

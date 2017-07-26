@@ -5,16 +5,17 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/go-wire"
+	"github.com/tendermint/tmlibs/log"
+
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/app"
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
 	"github.com/tendermint/basecoin/modules/nonce"
-	"github.com/tendermint/basecoin/state/merkle"
-	"github.com/tendermint/go-wire"
-	"github.com/tendermint/tmlibs/log"
 )
 
 func TestCounterPlugin(t *testing.T) {
@@ -25,7 +26,7 @@ func TestCounterPlugin(t *testing.T) {
 	logger := log.TestingLogger()
 	// logger := log.NewTracingLogger(log.NewTMLogger(os.Stdout))
 
-	store := merkle.NewStore("", 0, logger.With("module", "store"))
+	store := app.NewStore("", 0, logger.With("module", "store"))
 	h := NewHandler("gold")
 	bcApp := app.NewBasecoin(
 		h,

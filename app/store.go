@@ -1,4 +1,4 @@
-package merkle
+package app
 
 import (
 	"bytes"
@@ -9,16 +9,17 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-wire"
+	"github.com/tendermint/merkleeyes/iavl"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/merkleeyes/iavl"
+	"github.com/tendermint/basecoin/state"
 )
 
 // Store contains the merkle tree, and all info to handle abci requests
 type Store struct {
-	State
+	state.State
 	height    uint64
 	hash      []byte
 	persisted bool
@@ -48,7 +49,7 @@ func NewStore(dbName string, cacheSize int, logger log.Logger) *Store {
 			nil,
 		)
 		return &Store{
-			State:  NewState(tree, false),
+			State:  state.NewState(tree, false),
 			height: initialHeight,
 			logger: logger,
 		}
@@ -94,7 +95,7 @@ func NewStore(dbName string, cacheSize int, logger log.Logger) *Store {
 	}
 
 	return &Store{
-		State:     NewState(tree, true),
+		State:     state.NewState(tree, true),
 		height:    chainState.Height,
 		hash:      chainState.Hash,
 		persisted: true,

@@ -1,6 +1,7 @@
 package state
 
 import (
+	"errors"
 	"sort"
 
 	"github.com/tendermint/go-wire/data"
@@ -56,7 +57,7 @@ type MemKVStore struct {
 	m map[string][]byte
 }
 
-// var _ SimpleDB = NewMemKVStore()
+var _ SimpleDB = NewMemKVStore()
 
 // NewMemKVStore initializes a MemKVStore
 func NewMemKVStore() *MemKVStore {
@@ -65,28 +66,27 @@ func NewMemKVStore() *MemKVStore {
 	}
 }
 
-func (mkv *MemKVStore) Set(key []byte, value []byte) {
-	mkv.m[string(key)] = value
+func (m *MemKVStore) Set(key []byte, value []byte) {
+	m.m[string(key)] = value
 }
 
-func (mkv *MemKVStore) Get(key []byte) (value []byte) {
-	return mkv.m[string(key)]
+func (m *MemKVStore) Get(key []byte) (value []byte) {
+	return m.m[string(key)]
 }
 
-func (mkv *MemKVStore) Has(key []byte) (has bool) {
-	_, ok := mkv.m[string(key)]
+func (m *MemKVStore) Has(key []byte) (has bool) {
+	_, ok := m.m[string(key)]
 	return ok
 }
 
-func (mkv *MemKVStore) Remove(key []byte) (value []byte) {
-	val := mkv.m[string(key)]
-	delete(mkv.m, string(key))
+func (m *MemKVStore) Remove(key []byte) (value []byte) {
+	val := m.m[string(key)]
+	delete(m.m, string(key))
 	return val
 }
 
-func (mkv *MemKVStore) List(start, end []byte, limit int) []Model {
-	keys := mkv.keysInRange(start, end)
-	sort.Strings(keys)
+func (m *MemKVStore) List(start, end []byte, limit int) []Model {
+	keys := m.keysInRange(start, end)
 	if limit > 0 && len(keys) > 0 {
 		if limit > len(keys) {
 			limit = len(keys)
@@ -98,16 +98,16 @@ func (mkv *MemKVStore) List(start, end []byte, limit int) []Model {
 	for i, k := range keys {
 		res[i] = Model{
 			Key:   []byte(k),
-			Value: mkv.m[k],
+			Value: m.m[k],
 		}
 	}
 	return res
 }
 
 // First iterates through all keys to find the one that matches
-func (mkv *MemKVStore) First(start, end []byte) Model {
+func (m *MemKVStore) First(start, end []byte) Model {
 	key := ""
-	for _, k := range mkv.keysInRange(start, end) {
+	for _, k := range m.keysInRange(start, end) {
 		if key == "" || k < key {
 			key = k
 		}
@@ -117,13 +117,13 @@ func (mkv *MemKVStore) First(start, end []byte) Model {
 	}
 	return Model{
 		Key:   []byte(key),
-		Value: mkv.m[key],
+		Value: m.m[key],
 	}
 }
 
-func (mkv *MemKVStore) Last(start, end []byte) Model {
+func (m *MemKVStore) Last(start, end []byte) Model {
 	key := ""
-	for _, k := range mkv.keysInRange(start, end) {
+	for _, k := range m.keysInRange(start, end) {
 		if key == "" || k > key {
 			key = k
 		}
@@ -133,20 +133,39 @@ func (mkv *MemKVStore) Last(start, end []byte) Model {
 	}
 	return Model{
 		Key:   []byte(key),
-		Value: mkv.m[key],
+		Value: m.m[key],
 	}
 }
 
-func (mkv *MemKVStore) Discard() {
-	mkv.m = make(map[string][]byte, 0)
+func (m *MemKVStore) Discard() {
+	m.m = make(map[string][]byte, 0)
 }
 
-func (mkv *MemKVStore) keysInRange(start, end []byte) (res []string) {
+func (m *MemKVStore) Checkpoint() SimpleDB {
+	return NewMemKVCache(m)
+}
+
+func (m *MemKVStore) Commit(sub SimpleDB) error {
+	cache, ok := sub.(*MemKVCache)
+	if !ok {
+		return errors.New("sub is not a cache")
+	}
+	// TODO: see if it points to us
+
+	// apply the cached data to us
+	cache.applyCache()
+	return nil
+}
+
+func (m *MemKVStore) keysInRange(start, end []byte) (res []string) {
 	s, e := string(start), string(end)
-	for k := range mkv.m {
-		if k >= s && k < e {
+	for k := range m.m {
+		afterStart := s == "" || k >= s
+		beforeEnd := e == "" || k < e
+		if afterStart && beforeEnd {
 			res = append(res, k)
 		}
 	}
+	sort.Strings(res)
 	return
 }

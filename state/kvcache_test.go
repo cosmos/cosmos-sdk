@@ -68,7 +68,7 @@ func TestCache(t *testing.T) {
 				db.Set(s.Key, s.Value)
 			}
 			for k, g := range tc.toGet {
-				msg := fmt.Sprintf("%d/%d/%d", i, j, k)
+				msg := fmt.Sprintf("%d/%d/%d: %#v", i, j, k, g)
 				checkGet(db, g, msg)
 			}
 			for k, lq := range tc.toList {
@@ -84,12 +84,12 @@ func TestCache(t *testing.T) {
 			}
 			for k, r := range tc.removeCache {
 				val := cache.Remove(r.Key)
-				assert.EqualValues(r.Value, val, "%d/%d/%d", i, j, k)
+				assert.EqualValues(r.Value, val, "%d/%d/%d: %#v", i, j, k, r)
 			}
 
 			// make sure data is in cache
 			for k, g := range tc.getCache {
-				msg := fmt.Sprintf("%d/%d/%d", i, j, k)
+				msg := fmt.Sprintf("%d/%d/%d: %#v", i, j, k, g)
 				checkGet(cache, g, msg)
 			}
 			for k, lq := range tc.listCache {
@@ -99,7 +99,7 @@ func TestCache(t *testing.T) {
 
 			// data not in basic store
 			for k, g := range tc.toGet {
-				msg := fmt.Sprintf("%d/%d/%d", i, j, k)
+				msg := fmt.Sprintf("%d/%d/%d: %#v", i, j, k, g)
 				checkGet(db, g, msg)
 			}
 			for k, lq := range tc.toList {

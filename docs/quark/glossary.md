@@ -156,7 +156,7 @@ self-sufficient. Common elements of a module are:
 To enable a module, you must add the appropriate middleware (if any) to the
 stack in `main.go` for the client application (Quark default:
 `basecli/main.go`), as well as adding the handler (if any) to the dispatcher
-(Quark default: `app/app.go).  Once the stack is compiled into a `Handler`,
+(Quark default: `app/app.go`).  Once the stack is compiled into a `Handler`,
 then each tx is handled by the appropriate module.
 
 ## Dispatcher

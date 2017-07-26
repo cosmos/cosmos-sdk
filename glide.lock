@@ -1,5 +1,5 @@
 hash: 45eed61138603d4d03518ea822068cf32b45d0a219bb7f3b836e52129f2a3a2b
-updated: 2017-07-26T16:26:38.678294279-04:00
+updated: 2017-07-26T19:44:39.753066441-04:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -105,7 +105,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 864d1f80b36b440bde030a5c18d8ac3aa8c2949d
+  version: 7f5f48b6b9ec3964de4b07b6c3cd05d7c91aeee5
   subpackages:
   - client
   - example/dummy
@@ -140,7 +140,7 @@ imports:
   - certifiers/files
   - proofs
 - name: github.com/tendermint/merkleeyes
-  version: fef0a1fc729f5b50c58a2dce04b4525aa06c2247
+  version: 0310013053953eef80def3619aeb1e3a3254f452
   subpackages:
   - client
   - iavl

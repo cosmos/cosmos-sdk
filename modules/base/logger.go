@@ -26,7 +26,7 @@ func (Logger) Name() string {
 var _ stack.Middleware = Logger{}
 
 // CheckTx logs time and result - fulfills Middlware interface
-func (Logger) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (Logger) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	start := time.Now()
 	res, err = next.CheckTx(ctx, store, tx)
 	delta := time.Now().Sub(start)
@@ -41,7 +41,7 @@ func (Logger) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx,
 }
 
 // DeliverTx logs time and result - fulfills Middlware interface
-func (Logger) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (Logger) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	start := time.Now()
 	res, err = next.DeliverTx(ctx, store, tx)
 	delta := time.Now().Sub(start)
@@ -56,7 +56,7 @@ func (Logger) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.T
 }
 
 // SetOption logs time and result - fulfills Middlware interface
-func (Logger) SetOption(l log.Logger, store state.KVStore, module, key, value string, next basecoin.SetOptioner) (string, error) {
+func (Logger) SetOption(l log.Logger, store state.SimpleDB, module, key, value string, next basecoin.SetOptioner) (string, error) {
 	start := time.Now()
 	res, err := next.SetOption(l, store, module, key, value)
 	delta := time.Now().Sub(start)

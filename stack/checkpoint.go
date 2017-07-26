@@ -25,27 +25,27 @@ func (Checkpoint) Name() string {
 var _ Middleware = Checkpoint{}
 
 // CheckTx reverts all data changes if there was an error
-func (c Checkpoint) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (c Checkpoint) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	if !c.OnCheck {
 		return next.CheckTx(ctx, store, tx)
 	}
-	ps := state.NewKVCache(unwrap(store))
+	ps := store.Checkpoint()
 	res, err = next.CheckTx(ctx, ps, tx)
 	if err == nil {
-		ps.Sync()
+		err = store.Commit(ps)
 	}
 	return res, err
 }
 
 // DeliverTx reverts all data changes if there was an error
-func (c Checkpoint) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (c Checkpoint) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	if !c.OnDeliver {
 		return next.DeliverTx(ctx, store, tx)
 	}
-	ps := state.NewKVCache(unwrap(store))
+	ps := store.Checkpoint()
 	res, err = next.DeliverTx(ctx, ps, tx)
 	if err == nil {
-		ps.Sync()
+		err = store.Commit(ps)
 	}
 	return res, err
 }

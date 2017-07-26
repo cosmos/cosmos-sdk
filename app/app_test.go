@@ -100,13 +100,13 @@ func (at *appTest) reset() {
 	require.True(at.t, resabci.IsOK(), resabci)
 }
 
-func getBalance(key basecoin.Actor, store state.KVStore) (coin.Coins, error) {
+func getBalance(key basecoin.Actor, store state.SimpleDB) (coin.Coins, error) {
 	cspace := stack.PrefixedStore(coin.NameCoin, store)
 	acct, err := coin.GetAccount(cspace, key)
 	return acct.Coins, err
 }
 
-func getAddr(addr []byte, state state.KVStore) (coin.Coins, error) {
+func getAddr(addr []byte, state state.SimpleDB) (coin.Coins, error) {
 	actor := auth.SigPerm(addr)
 	return getBalance(actor, state)
 }

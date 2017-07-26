@@ -39,7 +39,7 @@ type Signable interface {
 }
 
 // CheckTx verifies the signatures are correct - fulfills Middlware interface
-func (Signatures) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (Signatures) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	sigs, tnext, err := getSigners(tx)
 	if err != nil {
 		return res, err
@@ -49,7 +49,7 @@ func (Signatures) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin
 }
 
 // DeliverTx verifies the signatures are correct - fulfills Middlware interface
-func (Signatures) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (Signatures) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	sigs, tnext, err := getSigners(tx)
 	if err != nil {
 		return res, err

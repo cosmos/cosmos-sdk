@@ -1,27 +1,28 @@
 package state
 
 import (
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/tendermint/merkleeyes/iavl"
-	// dbm "github.com/tendermint/tmlibs/db"
+	dbm "github.com/tendermint/tmlibs/db"
 )
 
 func GetDBs() []SimpleDB {
-	// // tree with persistence....
-	// tmpDir, err := ioutil.TempDir("", "state-tests")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// db := dbm.NewDB("test-get-dbs", dbm.LevelDBBackendStr, tmpDir)
-	// persist := iavl.NewIAVLTree(500, db)
+	// tree with persistence....
+	tmpDir, err := ioutil.TempDir("", "state-tests")
+	if err != nil {
+		panic(err)
+	}
+	db := dbm.NewDB("test-get-dbs", dbm.LevelDBBackendStr, tmpDir)
+	persist := iavl.NewIAVLTree(500, db)
 
 	return []SimpleDB{
 		NewMemKVStore(),
 		NewBonsai(iavl.NewIAVLTree(0, nil)),
-		// NewBonsai(persist),
+		NewBonsai(persist),
 	}
 }
 

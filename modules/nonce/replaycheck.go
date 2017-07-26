@@ -24,7 +24,7 @@ func (ReplayCheck) Name() string {
 var _ stack.Middleware = ReplayCheck{}
 
 // CheckTx verifies tx is not being replayed - fulfills Middlware interface
-func (r ReplayCheck) CheckTx(ctx basecoin.Context, store state.KVStore,
+func (r ReplayCheck) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 	tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 
 	stx, err := r.checkIncrementNonceTx(ctx, store, tx)
@@ -38,7 +38,7 @@ func (r ReplayCheck) CheckTx(ctx basecoin.Context, store state.KVStore,
 // DeliverTx verifies tx is not being replayed - fulfills Middlware interface
 // NOTE It is okay to modify the sequence before running the wrapped TX because if the
 // wrapped Tx fails, the state changes are not applied
-func (r ReplayCheck) DeliverTx(ctx basecoin.Context, store state.KVStore,
+func (r ReplayCheck) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 	tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 
 	stx, err := r.checkIncrementNonceTx(ctx, store, tx)
@@ -50,7 +50,7 @@ func (r ReplayCheck) DeliverTx(ctx basecoin.Context, store state.KVStore,
 }
 
 // checkNonceTx varifies the nonce sequence, an increment sequence number
-func (r ReplayCheck) checkIncrementNonceTx(ctx basecoin.Context, store state.KVStore,
+func (r ReplayCheck) checkIncrementNonceTx(ctx basecoin.Context, store state.SimpleDB,
 	tx basecoin.Tx) (basecoin.Tx, error) {
 
 	// make sure it is a the nonce Tx (Tx from this package)

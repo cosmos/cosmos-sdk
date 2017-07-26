@@ -29,7 +29,7 @@ func (Handler) Name() string {
 }
 
 // CheckTx checks if there is enough money in the account
-func (h Handler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	send, err := checkTx(ctx, tx)
 	if err != nil {
 		return res, err
@@ -48,7 +48,7 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.
 }
 
 // DeliverTx moves the money
-func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	send, err := checkTx(ctx, tx)
 	if err != nil {
 		return res, err
@@ -75,7 +75,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 }
 
 // SetOption - sets the genesis account balance
-func (h Handler) SetOption(l log.Logger, store state.KVStore, module, key, value string) (log string, err error) {
+func (h Handler) SetOption(l log.Logger, store state.SimpleDB, module, key, value string) (log string, err error) {
 	if module != NameCoin {
 		return "", errors.ErrUnknownModule(module)
 	}

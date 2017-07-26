@@ -78,7 +78,7 @@ func (app *Basecoin) GetChainID() string {
 }
 
 // GetState is back... please kill me
-func (app *Basecoin) GetState() sm.KVStore {
+func (app *Basecoin) GetState() sm.SimpleDB {
 	return app.state.Append()
 }
 

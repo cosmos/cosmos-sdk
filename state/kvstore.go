@@ -4,12 +4,44 @@ import (
 	"container/list"
 	"fmt"
 
+	"github.com/tendermint/go-wire/data"
 	. "github.com/tendermint/tmlibs/common"
 )
 
 type KVStore interface {
 	Set(key, value []byte)
 	Get(key []byte) (value []byte)
+}
+
+//----------------------------------------
+
+type Model struct {
+	Key   data.Bytes
+	Value data.Bytes
+}
+
+// What I wished to have...
+type SimpleDB interface {
+	KVStore
+
+	Has(key []byte) (has bool)
+	Remove(key []byte) (value []byte) // returns old value if there was one
+
+	List(start, end []byte, limit int) []Model
+	First(start, end []byte) Model
+	Last(start, end []byte) Model
+
+	// Checkpoint returns the same state, but where writes
+	// are buffered and don't affect the parent
+	Checkpoint() SimpleDB
+
+	// Commit will take all changes from the checkpoint and write
+	// them to the parent.
+	// Returns an error if this is not a child of this one
+	Commit(SimpleDB) error
+
+	// Discard will remove reference to this
+	Discard()
 }
 
 //----------------------------------------

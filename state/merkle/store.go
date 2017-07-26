@@ -28,8 +28,8 @@ type Store struct {
 
 var stateKey = []byte("merkle:state") // Database key for merkle tree save value db values
 
-// MerkleState contains the latest Merkle root hash and the number of times `Commit` has been called
-type MerkleState struct {
+// ChainState contains the latest Merkle root hash and the number of times `Commit` has been called
+type ChainState struct {
 	Hash   []byte
 	Height uint64
 }
@@ -74,29 +74,29 @@ func NewStore(dbName string, cacheSize int, logger log.Logger) *Store {
 	db := dbm.NewDB(name, dbm.LevelDBBackendStr, dir)
 	tree := iavl.NewIAVLTree(cacheSize, db)
 
-	var eyesState MerkleState
+	var chainState ChainState
 	if empty {
 		logger.Info("no existing db, creating new db")
-		eyesState = MerkleState{
+		chainState = ChainState{
 			Hash:   tree.Save(),
 			Height: initialHeight,
 		}
-		db.Set(stateKey, wire.BinaryBytes(eyesState))
+		db.Set(stateKey, wire.BinaryBytes(chainState))
 	} else {
 		logger.Info("loading existing db")
 		eyesStateBytes := db.Get(stateKey)
-		err = wire.ReadBinaryBytes(eyesStateBytes, &eyesState)
+		err = wire.ReadBinaryBytes(eyesStateBytes, &chainState)
 		if err != nil {
 			logger.Error("error reading MerkleEyesState", "err", err)
 			panic(err)
 		}
-		tree.Load(eyesState.Hash)
+		tree.Load(chainState.Hash)
 	}
 
 	return &Store{
 		State:     NewState(tree, true),
-		height:    eyesState.Height,
-		hash:      eyesState.Hash,
+		height:    chainState.Height,
+		hash:      chainState.Hash,
 		persisted: true,
 		logger:    logger,
 	}
@@ -112,7 +112,9 @@ func NewStore(dbName string, cacheSize int, logger log.Logger) *Store {
 // Info implements abci.Application. It returns the height, hash and size (in the data).
 // The height is the block that holds the transactions, not the apphash itself.
 func (s *Store) Info() abci.ResponseInfo {
-	s.logger.Info("Info synced", "height", s.height, "hash", fmt.Sprintf("%X", s.hash))
+	s.logger.Info("Info synced",
+		"height", s.height,
+		"hash", fmt.Sprintf("%X", s.hash))
 	return abci.ResponseInfo{
 		Data:             cmn.Fmt("size:%v", s.State.Committed().Size()),
 		LastBlockHeight:  s.height - 1,
@@ -124,9 +126,11 @@ func (s *Store) Info() abci.ResponseInfo {
 func (s *Store) Commit() abci.Result {
 	s.hash = s.State.Hash()
 	s.height++
-	s.logger.Debug("Commit synced", "height", s.height, "hash", fmt.Sprintf("%X", s.hash))
+	s.logger.Debug("Commit synced",
+		"height", s.height,
+		"hash", fmt.Sprintf("%X", s.hash))
 
-	s.State.BatchSet(stateKey, wire.BinaryBytes(MerkleState{
+	s.State.BatchSet(stateKey, wire.BinaryBytes(ChainState{
 		Hash:   s.hash,
 		Height: s.height,
 	}))
@@ -144,10 +148,6 @@ func (s *Store) Commit() abci.Result {
 
 // Query implements abci.Application
 func (s *Store) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) {
-	if len(reqQuery.Data) == 0 {
-		return
-	}
-	tree := s.State.Committed()
 
 	if reqQuery.Height != 0 {
 		// TODO: support older commits
@@ -158,6 +158,8 @@ func (s *Store) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) 
 
 	// set the query response height to current
 	resQuery.Height = s.height
+
+	tree := s.State.Committed()
 
 	switch reqQuery.Path {
 	case "/store", "/key": // Get by key
@@ -170,23 +172,10 @@ func (s *Store) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) 
 			}
 			resQuery.Value = value
 			resQuery.Proof = proof
-			// TODO: return index too?
 		} else {
 			value := tree.Get(key)
 			resQuery.Value = value
 		}
-
-	case "/index": // Get by Index
-		index := wire.GetInt64(reqQuery.Data)
-		key, value := tree.GetByIndex(int(index))
-		resQuery.Key = key
-		resQuery.Index = int64(index)
-		resQuery.Value = value
-
-	case "/size": // Get size
-		size := tree.Size()
-		sizeBytes := wire.BinaryBytes(size)
-		resQuery.Value = sizeBytes
 
 	default:
 		resQuery.Code = abci.CodeType_UnknownRequest

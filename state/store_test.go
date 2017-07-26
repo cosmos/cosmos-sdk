@@ -14,6 +14,20 @@ func GetDBs() []SimpleDB {
 	}
 }
 
+func b(k string) []byte {
+	if k == "" {
+		return nil
+	}
+	return []byte(k)
+}
+
+func m(k, v string) Model {
+	return Model{
+		Key:   b(k),
+		Value: b(v),
+	}
+}
+
 // TestKVStore makes sure that get/set/remove operations work,
 // as well as list
 func TestKVStore(t *testing.T) {
@@ -21,7 +35,7 @@ func TestKVStore(t *testing.T) {
 
 	type listQuery struct {
 		// this is the list query
-		start, end []byte
+		start, end string
 		limit      int
 		// expected result from List, first element also expected for First
 		expected []Model
@@ -37,69 +51,51 @@ func TestKVStore(t *testing.T) {
 	}{
 		// simple add
 		{
-			[]Model{
-				{[]byte{1}, []byte{2}},
-				{[]byte{3}, []byte{4}},
-			},
-			nil,
-			[]Model{{[]byte{1}, []byte{2}}},
-			[]listQuery{
+			toSet:    []Model{m("a", "b"), m("c", "d")},
+			toRemove: nil,
+			toGet:    []Model{m("a", "b")},
+			toList: []listQuery{
 				{
-					[]byte{1}, []byte{4}, 0,
-					// all
-					[]Model{
-						{[]byte{1}, []byte{2}},
-						{[]byte{3}, []byte{4}},
-					},
-					// last one
-					Model{[]byte{3}, []byte{4}},
+					"a", "d", 0,
+					[]Model{m("a", "b"), m("c", "d")},
+					m("c", "d"),
 				},
 				{
-					[]byte{1}, []byte{3}, 10,
-					// all
-					[]Model{
-						{[]byte{1}, []byte{2}},
-					},
-					// last one
-					Model{[]byte{1}, []byte{2}},
+					"a", "c", 10,
+					[]Model{m("a", "b")},
+					m("a", "b"),
 				},
 			},
 		},
 		// over-write data, remove
 		{
-			[]Model{
-				{[]byte{1}, []byte{2}},
-				{[]byte{2}, []byte{2}},
-				{[]byte{3}, []byte{2}},
-				{[]byte{2}, []byte{4}},
+			toSet: []Model{
+				m("a", "1"),
+				m("b", "2"),
+				m("c", "3"),
+				m("b", "4"),
 			},
-			[]Model{{[]byte{3}, []byte{2}}},
-			[]Model{
-				{[]byte{1}, []byte{2}},
-				{[]byte{2}, []byte{4}},
-				{[]byte{3}, nil},
+			toRemove: []Model{m("c", "3")},
+			toGet: []Model{
+				m("a", "1"),
+				m("b", "4"),
+				m("c", ""),
 			},
-			[]listQuery{
+			toList: []listQuery{
 				{
-					[]byte{0, 5}, []byte{10}, 1,
-					// all
-					[]Model{
-						{[]byte{1}, []byte{2}},
-					},
-					// last
-					Model{[]byte{2}, []byte{4}},
+					"0d", "h", 1,
+					[]Model{m("a", "1")},
+					m("b", "4"),
 				},
 				{
-					[]byte{1, 4}, []byte{1, 7}, 10,
+					"ad", "ak", 10,
 					[]Model{},
 					Model{},
 				},
 				{
-					[]byte{1, 5}, []byte{10}, 0,
-					[]Model{
-						{[]byte{2}, []byte{4}},
-					},
-					Model{[]byte{2}, []byte{4}},
+					"ad", "k", 0,
+					[]Model{m("b", "4")},
+					m("b", "4"),
 				},
 			},
 		},
@@ -121,15 +117,16 @@ func TestKVStore(t *testing.T) {
 				assert.Equal(len(g.Value) != 0, has, "%d/%d/%d", i, j, k)
 			}
 			for k, lq := range tc.toList {
-				list := db.List(lq.start, lq.end, lq.limit)
+				start, end := []byte(lq.start), []byte(lq.end)
+				list := db.List(start, end, lq.limit)
 				if assert.EqualValues(lq.expected, list, "%d/%d/%d", i, j, k) {
 					var first Model
 					if len(lq.expected) > 0 {
 						first = lq.expected[0]
 					}
-					f := db.First(lq.start, lq.end)
+					f := db.First(start, end)
 					assert.EqualValues(first, f, "%d/%d/%d", i, j, k)
-					l := db.Last(lq.start, lq.end)
+					l := db.Last(start, end)
 					assert.EqualValues(lq.last, l, "%d/%d/%d", i, j, k)
 				}
 			}

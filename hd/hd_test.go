@@ -89,6 +89,26 @@ func TestHDToAddr(t *testing.T) {
 	}
 }
 
+func TestReverseBytes(t *testing.T) {
+	tests := [...]struct {
+		v    []byte
+		want []byte
+	}{
+		{[]byte(""), []byte("")},
+		{nil, nil},
+		{[]byte("Tendermint"), []byte("tnimredneT")},
+		{[]byte("T"), []byte("T")},
+		{[]byte("Te"), []byte("eT")},
+	}
+
+	for i, tt := range tests {
+		got := ReverseBytes(tt.v)
+		if !bytes.Equal(got, tt.want) {
+			t.Errorf("#%d:\ngot= (%x)\nwant=(%x)", i, got, tt.want)
+		}
+	}
+}
+
 func ifExit(err error, n int) {
 	if err != nil {
 		fmt.Println(n, err)
@@ -186,4 +206,37 @@ func tylerSmith(seed []byte) ([]byte, []byte, []byte) {
 	priv := k.Key
 	pub := k.PublicKey().Key
 	return masterKey.Key, priv, pub
+}
+
+// Benchmarks
+
+var revBytesCases = [][]byte{
+	nil,
+	[]byte(""),
+
+	[]byte("12"),
+
+	// 16byte case
+	[]byte("abcdefghijklmnop"),
+
+	// 32byte case
+	[]byte("abcdefghijklmnopqrstuvwxyz123456"),
+
+	// 64byte case
+	[]byte("abcdefghijklmnopqrstuvwxyz123456abcdefghijklmnopqrstuvwxyz123456"),
+}
+
+func BenchmarkReverseBytes(b *testing.B) {
+	var sink []byte
+	for i := 0; i < b.N; i++ {
+		for _, tt := range revBytesCases {
+			sink = ReverseBytes(tt)
+		}
+	}
+	b.ReportAllocs()
+
+	// sink is necessary to ensure if the compiler tries
+	// to smart, that it won't optimize away the benchmarks.
+	if sink != nil {
+	}
 }

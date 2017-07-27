@@ -282,9 +282,20 @@ func CalcSha512(buf []byte) []byte {
 }
 
 func ReverseBytes(buf []byte) []byte {
-	res := []byte{}
-	for i := len(buf) - 1; i >= 0; i-- {
-		res = append(res, buf[i])
+	var res []byte
+	if len(buf) == 0 {
+		return res
+	}
+
+	// Walk till mid-way, swapping bytes from each end:
+	// b[i] and b[len-i-1]
+	blen := len(buf)
+	res = make([]byte, blen)
+	mid := blen / 2
+	for left := 0; left <= mid; left++ {
+		right := blen - left - 1
+		res[left] = buf[right]
+		res[right] = buf[left]
 	}
 	return res
 }

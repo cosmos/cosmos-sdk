@@ -1,9 +1,6 @@
 package state
 
 import (
-	"errors"
-	"math/rand"
-
 	"github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/tmlibs/merkle"
 )
@@ -11,31 +8,32 @@ import (
 // State represents the app states, separating the commited state (for queries)
 // from the working state (for CheckTx and AppendTx)
 type State struct {
-	committed  merkle.Tree
-	deliverTx  merkle.Tree
-	checkTx    merkle.Tree
+	committed  *Bonsai
+	deliverTx  *Bonsai
+	checkTx    *Bonsai
 	persistent bool
 }
 
 func NewState(tree merkle.Tree, persistent bool) State {
+	base := NewBonsai(tree)
 	return State{
-		committed:  tree,
-		deliverTx:  tree.Copy(),
-		checkTx:    tree.Copy(),
+		committed:  base,
+		deliverTx:  base.Checkpoint().(*Bonsai),
+		checkTx:    base.Checkpoint().(*Bonsai),
 		persistent: persistent,
 	}
 }
 
 func (s State) Committed() *Bonsai {
-	return NewBonsai(s.committed)
+	return s.committed
 }
 
 func (s State) Append() *Bonsai {
-	return NewBonsai(s.deliverTx)
+	return s.deliverTx
 }
 
 func (s State) Check() *Bonsai {
-	return NewBonsai(s.checkTx)
+	return s.checkTx
 }
 
 // Hash updates the tree
@@ -47,7 +45,7 @@ func (s *State) Hash() []byte {
 func (s *State) BatchSet(key, value []byte) {
 	if s.persistent {
 		// This is in the batch with the Save, but not in the tree
-		tree, ok := s.deliverTx.(*iavl.IAVLTree)
+		tree, ok := s.deliverTx.Tree.(*iavl.IAVLTree)
 		if ok {
 			tree.BatchSet(key, value)
 		}
@@ -56,106 +54,19 @@ func (s *State) BatchSet(key, value []byte) {
 
 // Commit save persistent nodes to the database and re-copies the trees
 func (s *State) Commit() []byte {
+	err := s.committed.Commit(s.deliverTx)
+	if err != nil {
+		panic(err) // ugh, TODO?
+	}
+
 	var hash []byte
 	if s.persistent {
-		hash = s.deliverTx.Save()
+		hash = s.committed.Tree.Save()
 	} else {
-		hash = s.deliverTx.Hash()
+		hash = s.committed.Tree.Hash()
 	}
 
-	s.committed = s.deliverTx
-	s.deliverTx = s.committed.Copy()
-	s.checkTx = s.committed.Copy()
+	s.deliverTx = s.committed.Checkpoint().(*Bonsai)
+	s.checkTx = s.committed.Checkpoint().(*Bonsai)
 	return hash
-}
-
-// store nonce as it's own type so no one can even try to fake it
-type nonce int64
-
-// Bonsai is a deformed tree forced to fit in a small pot
-type Bonsai struct {
-	id nonce
-	merkle.Tree
-}
-
-var _ SimpleDB = &Bonsai{}
-
-func NewBonsai(tree merkle.Tree) *Bonsai {
-	return &Bonsai{
-		id:   nonce(rand.Int63()),
-		Tree: tree,
-	}
-}
-
-// Get matches the signature of KVStore
-func (b *Bonsai) Get(key []byte) []byte {
-	_, value, _ := b.Tree.Get(key)
-	return value
-}
-
-// Set matches the signature of KVStore
-func (b *Bonsai) Set(key, value []byte) {
-	b.Tree.Set(key, value)
-}
-
-func (b *Bonsai) Remove(key []byte) (value []byte) {
-	value, _ = b.Tree.Remove(key)
-	return
-}
-
-func (b *Bonsai) List(start, end []byte, limit int) []Model {
-	res := []Model{}
-	stopAtCount := func(key []byte, value []byte) (stop bool) {
-		m := Model{key, value}
-		res = append(res, m)
-		// return false
-		return limit > 0 && len(res) >= limit
-	}
-	b.Tree.IterateRange(start, end, true, stopAtCount)
-	return res
-}
-
-func (b *Bonsai) First(start, end []byte) Model {
-	var m Model
-	stopAtFirst := func(key []byte, value []byte) (stop bool) {
-		m = Model{key, value}
-		return true
-	}
-	b.Tree.IterateRange(start, end, true, stopAtFirst)
-	return m
-}
-
-func (b *Bonsai) Last(start, end []byte) Model {
-	var m Model
-	stopAtFirst := func(key []byte, value []byte) (stop bool) {
-		m = Model{key, value}
-		return true
-	}
-	b.Tree.IterateRange(start, end, false, stopAtFirst)
-	return m
-}
-
-func (b *Bonsai) Checkpoint() SimpleDB {
-	return &Bonsai{
-		id:   b.id,
-		Tree: b.Tree.Copy(),
-	}
-}
-
-// Commit will take all changes from the checkpoint and write
-// them to the parent.
-// Returns an error if this is not a child of this one
-func (b *Bonsai) Commit(sub SimpleDB) error {
-	bb, ok := sub.(*Bonsai)
-	if !ok || (b.id != bb.id) {
-		return errors.New("Not a sub-transaction")
-	}
-	b.Tree = bb.Tree
-	return nil
-}
-
-// Discard will remove reference to this
-func (b *Bonsai) Discard() {
-	b.id = 0
-	b.Tree = nil
 }

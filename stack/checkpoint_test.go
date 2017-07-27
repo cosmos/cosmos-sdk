@@ -7,11 +7,27 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/state"
 )
+
+func makeState() state.SimpleDB {
+	// return state.NewMemKVStore()
+
+	return state.NewBonsai(iavl.NewIAVLTree(0, nil))
+
+	// tree with persistence....
+	// tmpDir, err := ioutil.TempDir("", "state-tests")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// db := dbm.NewDB("test-get-dbs", dbm.LevelDBBackendStr, tmpDir)
+	// persist := iavl.NewIAVLTree(500, db)
+	// return state.NewBonsai(persist)
+}
 
 func TestCheckpointer(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
@@ -69,7 +85,7 @@ func TestCheckpointer(t *testing.T) {
 	for i, tc := range cases {
 		ctx := NewContext("foo", 100, log.NewNopLogger())
 
-		store := state.NewMemKVStore()
+		store := makeState()
 		_, err := app.CheckTx(ctx, store, tc.tx)
 		if tc.valid {
 			require.Nil(err, "%+v", err)
@@ -81,7 +97,7 @@ func TestCheckpointer(t *testing.T) {
 			assert.EqualValues(m.Value, val, "%d: %#v", i, m)
 		}
 
-		store = state.NewMemKVStore()
+		store = makeState()
 		_, err = app.DeliverTx(ctx, store, tc.tx)
 		if tc.valid {
 			require.Nil(err, "%+v", err)

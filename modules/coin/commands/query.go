@@ -33,7 +33,7 @@ func accountQueryCmd(cmd *cobra.Command, args []string) error {
 	acc := coin.Account{}
 	proof, err := proofcmd.GetAndParseAppProof(key, &acc)
 	if lc.IsNoDataErr(err) {
-		return errors.Errorf("Account bytes are empty for address %X ", addr)
+		return errors.Errorf("Account bytes are empty for address %s ", addr)
 	} else if err != nil {
 		return err
 	}

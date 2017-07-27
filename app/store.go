@@ -90,8 +90,7 @@ func NewStore(dbName string, cacheSize int, logger log.Logger) (*Store, error) {
 		eyesStateBytes := db.Get(stateKey)
 		err = wire.ReadBinaryBytes(eyesStateBytes, &chainState)
 		if err != nil {
-			logger.Error("error reading MerkleEyesState", "err", err)
-			panic(err)
+			return nil, errors.Wrap(err, "Reading MerkleEyesState")
 		}
 		tree.Load(chainState.Hash)
 	}

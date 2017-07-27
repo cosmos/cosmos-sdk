@@ -58,16 +58,8 @@ func readSendTxFlags() (tx basecoin.Tx, err error) {
 	}
 
 	// craft the inputs and outputs
-	ins := []coin.TxInput{{
-		Address: fromAddr,
-		Coins:   amountCoins,
-	}}
-	outs := []coin.TxOutput{{
-		Address: toAddr,
-		Coins:   amountCoins,
-	}}
-
-	return coin.NewSendTx(ins, outs), nil
+	tx = coin.NewSendOneTx(fromAddr, toAddr, amountCoins)
+	return
 }
 
 func readFromAddr() (basecoin.Actor, error) {

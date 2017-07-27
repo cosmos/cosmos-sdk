@@ -102,8 +102,10 @@ func NewHandler(feeDenom string) basecoin.Handler {
 		stack.Recovery{},
 		auth.Signatures{},
 		base.Chain{},
+		stack.Checkpoint{OnCheck: true},
 		nonce.ReplayCheck{},
 		fee.NewSimpleFeeMiddleware(coin.Coin{feeDenom, 0}, fee.Bank),
+		stack.Checkpoint{OnDeliver: true},
 	).Use(dispatcher)
 }
 
@@ -123,13 +125,13 @@ func (Handler) Name() string {
 func (Handler) AssertDispatcher() {}
 
 // CheckTx checks if the tx is properly structured
-func (h Handler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, _ basecoin.Checker) (res basecoin.Result, err error) {
+func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, _ basecoin.Checker) (res basecoin.Result, err error) {
 	_, err = checkTx(ctx, tx)
 	return
 }
 
 // DeliverTx executes the tx if valid
-func (h Handler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, dispatch basecoin.Deliver) (res basecoin.Result, err error) {
+func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, dispatch basecoin.Deliver) (res basecoin.Result, err error) {
 	ctr, err := checkTx(ctx, tx)
 	if err != nil {
 		return res, err
@@ -201,7 +203,7 @@ func StateKey() []byte {
 }
 
 // LoadState - retrieve the counter state from the store
-func LoadState(store state.KVStore) (state State, err error) {
+func LoadState(store state.SimpleDB) (state State, err error) {
 	bytes := store.Get(StateKey())
 	if len(bytes) > 0 {
 		err = wire.ReadBinaryBytes(bytes, &state)
@@ -213,7 +215,7 @@ func LoadState(store state.KVStore) (state State, err error) {
 }
 
 // SaveState - save the counter state to the provided store
-func SaveState(store state.KVStore, state State) error {
+func SaveState(store state.SimpleDB, state State) error {
 	bytes := wire.BinaryBytes(state)
 	store.Set(StateKey(), bytes)
 	return nil

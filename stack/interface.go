@@ -20,40 +20,40 @@ type Middleware interface {
 }
 
 type CheckerMiddle interface {
-	CheckTx(ctx basecoin.Context, store state.KVStore,
+	CheckTx(ctx basecoin.Context, store state.SimpleDB,
 		tx basecoin.Tx, next basecoin.Checker) (basecoin.Result, error)
 }
 
-type CheckerMiddleFunc func(basecoin.Context, state.KVStore,
+type CheckerMiddleFunc func(basecoin.Context, state.SimpleDB,
 	basecoin.Tx, basecoin.Checker) (basecoin.Result, error)
 
-func (c CheckerMiddleFunc) CheckTx(ctx basecoin.Context, store state.KVStore,
+func (c CheckerMiddleFunc) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 	tx basecoin.Tx, next basecoin.Checker) (basecoin.Result, error) {
 	return c(ctx, store, tx, next)
 }
 
 type DeliverMiddle interface {
-	DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx,
+	DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx,
 		next basecoin.Deliver) (basecoin.Result, error)
 }
 
-type DeliverMiddleFunc func(basecoin.Context, state.KVStore,
+type DeliverMiddleFunc func(basecoin.Context, state.SimpleDB,
 	basecoin.Tx, basecoin.Deliver) (basecoin.Result, error)
 
-func (d DeliverMiddleFunc) DeliverTx(ctx basecoin.Context, store state.KVStore,
+func (d DeliverMiddleFunc) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 	tx basecoin.Tx, next basecoin.Deliver) (basecoin.Result, error) {
 	return d(ctx, store, tx, next)
 }
 
 type SetOptionMiddle interface {
-	SetOption(l log.Logger, store state.KVStore, module,
+	SetOption(l log.Logger, store state.SimpleDB, module,
 		key, value string, next basecoin.SetOptioner) (string, error)
 }
 
-type SetOptionMiddleFunc func(log.Logger, state.KVStore,
+type SetOptionMiddleFunc func(log.Logger, state.SimpleDB,
 	string, string, string, basecoin.SetOptioner) (string, error)
 
-func (c SetOptionMiddleFunc) SetOption(l log.Logger, store state.KVStore,
+func (c SetOptionMiddleFunc) SetOption(l log.Logger, store state.SimpleDB,
 	module, key, value string, next basecoin.SetOptioner) (string, error) {
 	return c(l, store, module, key, value, next)
 }
@@ -61,28 +61,28 @@ func (c SetOptionMiddleFunc) SetOption(l log.Logger, store state.KVStore,
 // holders
 type PassCheck struct{}
 
-func (_ PassCheck) CheckTx(ctx basecoin.Context, store state.KVStore,
+func (_ PassCheck) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 	tx basecoin.Tx, next basecoin.Checker) (basecoin.Result, error) {
 	return next.CheckTx(ctx, store, tx)
 }
 
 type PassDeliver struct{}
 
-func (_ PassDeliver) DeliverTx(ctx basecoin.Context, store state.KVStore,
+func (_ PassDeliver) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 	tx basecoin.Tx, next basecoin.Deliver) (basecoin.Result, error) {
 	return next.DeliverTx(ctx, store, tx)
 }
 
 type PassOption struct{}
 
-func (_ PassOption) SetOption(l log.Logger, store state.KVStore, module,
+func (_ PassOption) SetOption(l log.Logger, store state.SimpleDB, module,
 	key, value string, next basecoin.SetOptioner) (string, error) {
 	return next.SetOption(l, store, module, key, value)
 }
 
 type NopOption struct{}
 
-func (_ NopOption) SetOption(l log.Logger, store state.KVStore, module,
+func (_ NopOption) SetOption(l log.Logger, store state.SimpleDB, module,
 	key, value string, next basecoin.SetOptioner) (string, error) {
 	return "", nil
 }
@@ -112,17 +112,17 @@ func (w wrapped) Name() string {
 	return w.h.Name()
 }
 
-func (w wrapped) CheckTx(ctx basecoin.Context, store state.KVStore,
+func (w wrapped) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 	tx basecoin.Tx, _ basecoin.Checker) (basecoin.Result, error) {
 	return w.h.CheckTx(ctx, store, tx)
 }
 
-func (w wrapped) DeliverTx(ctx basecoin.Context, store state.KVStore,
+func (w wrapped) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 	tx basecoin.Tx, _ basecoin.Deliver) (basecoin.Result, error) {
 	return w.h.DeliverTx(ctx, store, tx)
 }
 
-func (w wrapped) SetOption(l log.Logger, store state.KVStore,
+func (w wrapped) SetOption(l log.Logger, store state.SimpleDB,
 	module, key, value string, _ basecoin.SetOptioner) (string, error) {
 	return w.h.SetOption(l, store, module, key, value)
 }

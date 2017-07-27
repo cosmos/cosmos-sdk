@@ -56,7 +56,7 @@ func (r Role) IsAuthorized(ctx basecoin.Context) bool {
 	return false
 }
 
-func loadRole(store state.KVStore, key []byte) (role Role, err error) {
+func loadRole(store state.SimpleDB, key []byte) (role Role, err error) {
 	data := store.Get(key)
 	if len(data) == 0 {
 		return role, ErrNoRole()
@@ -69,7 +69,7 @@ func loadRole(store state.KVStore, key []byte) (role Role, err error) {
 	return role, nil
 }
 
-func checkNoRole(store state.KVStore, key []byte) error {
+func checkNoRole(store state.SimpleDB, key []byte) error {
 	if _, err := loadRole(store, key); !IsNoRoleErr(err) {
 		return ErrRoleExists()
 	}
@@ -77,7 +77,7 @@ func checkNoRole(store state.KVStore, key []byte) error {
 }
 
 // we only have create here, no update, since we don't allow update yet
-func createRole(store state.KVStore, key []byte, role Role) error {
+func createRole(store state.SimpleDB, key []byte, role Role) error {
 	if err := checkNoRole(store, key); err != nil {
 		return err
 	}

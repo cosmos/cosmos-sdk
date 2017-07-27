@@ -1,12 +1,12 @@
 package state
 
 import (
-	"container/list"
-	"fmt"
+	"sort"
 
-	. "github.com/tendermint/tmlibs/common"
+	"github.com/tendermint/go-wire/data"
 )
 
+// KVStore is a simple interface to get/set data
 type KVStore interface {
 	Set(key, value []byte)
 	Get(key []byte) (value []byte)
@@ -14,125 +14,157 @@ type KVStore interface {
 
 //----------------------------------------
 
+// Model grabs together key and value to allow easier return values
+type Model struct {
+	Key   data.Bytes
+	Value data.Bytes
+}
+
+// SimpleDB allows us to do some basic range queries on a db
+type SimpleDB interface {
+	KVStore
+
+	Has(key []byte) (has bool)
+	Remove(key []byte) (value []byte) // returns old value if there was one
+
+	// Start is inclusive, End is exclusive...
+	// Thus List ([]byte{12, 13}, []byte{12, 14}) will return anything with
+	// the prefix []byte{12, 13}
+	List(start, end []byte, limit int) []Model
+	First(start, end []byte) Model
+	Last(start, end []byte) Model
+
+	// Checkpoint returns the same state, but where writes
+	// are buffered and don't affect the parent
+	Checkpoint() SimpleDB
+
+	// Commit will take all changes from the checkpoint and write
+	// them to the parent.
+	// Returns an error if this is not a child of this one
+	Commit(SimpleDB) error
+
+	// Discard will remove reference to this
+	Discard()
+}
+
+//----------------------------------------
+
+// MemKVStore is a simple implementation of SimpleDB.
+// It is only intended for quick testing, not to be used
+// in production or with large data stores.
 type MemKVStore struct {
 	m map[string][]byte
 }
 
+var _ SimpleDB = NewMemKVStore()
+
+// NewMemKVStore initializes a MemKVStore
 func NewMemKVStore() *MemKVStore {
 	return &MemKVStore{
 		m: make(map[string][]byte, 0),
 	}
 }
 
-func (mkv *MemKVStore) Set(key []byte, value []byte) {
-	mkv.m[string(key)] = value
+func (m *MemKVStore) Set(key []byte, value []byte) {
+	m.m[string(key)] = value
 }
 
-func (mkv *MemKVStore) Get(key []byte) (value []byte) {
-	return mkv.m[string(key)]
+func (m *MemKVStore) Get(key []byte) (value []byte) {
+	return m.m[string(key)]
 }
 
-//----------------------------------------
-
-// A Cache that enforces deterministic sync order.
-type KVCache struct {
-	store    KVStore
-	cache    map[string]kvCacheValue
-	keys     *list.List
-	logging  bool
-	logLines []string
+func (m *MemKVStore) Has(key []byte) (has bool) {
+	_, ok := m.m[string(key)]
+	return ok
 }
 
-type kvCacheValue struct {
-	v []byte        // The value of some key
-	e *list.Element // The KVCache.keys element
+func (m *MemKVStore) Remove(key []byte) (value []byte) {
+	val := m.m[string(key)]
+	delete(m.m, string(key))
+	return val
 }
 
-// NOTE: If store is nil, creates a new MemKVStore
-func NewKVCache(store KVStore) *KVCache {
-	if store == nil {
-		store = NewMemKVStore()
-	}
-	return (&KVCache{
-		store: store,
-	}).Reset()
-}
-
-func (kvc *KVCache) SetLogging() {
-	kvc.logging = true
-}
-
-func (kvc *KVCache) GetLogLines() []string {
-	return kvc.logLines
-}
-
-func (kvc *KVCache) ClearLogLines() {
-	kvc.logLines = nil
-}
-
-func (kvc *KVCache) Reset() *KVCache {
-	kvc.cache = make(map[string]kvCacheValue)
-	kvc.keys = list.New()
-	return kvc
-}
-
-func (kvc *KVCache) Set(key []byte, value []byte) {
-	if kvc.logging {
-		line := fmt.Sprintf("Set %v = %v", LegibleBytes(key), LegibleBytes(value))
-		kvc.logLines = append(kvc.logLines, line)
-	}
-	cacheValue, ok := kvc.cache[string(key)]
-	if ok {
-		kvc.keys.MoveToBack(cacheValue.e)
-	} else {
-		cacheValue.e = kvc.keys.PushBack(key)
-	}
-	cacheValue.v = value
-	kvc.cache[string(key)] = cacheValue
-}
-
-func (kvc *KVCache) Get(key []byte) (value []byte) {
-	cacheValue, ok := kvc.cache[string(key)]
-	if ok {
-		if kvc.logging {
-			line := fmt.Sprintf("Get (hit) %v = %v", LegibleBytes(key), LegibleBytes(cacheValue.v))
-			kvc.logLines = append(kvc.logLines, line)
+func (m *MemKVStore) List(start, end []byte, limit int) []Model {
+	keys := m.keysInRange(start, end)
+	if limit > 0 && len(keys) > 0 {
+		if limit > len(keys) {
+			limit = len(keys)
 		}
-		return cacheValue.v
-	} else {
-		value := kvc.store.Get(key)
-		kvc.cache[string(key)] = kvCacheValue{
-			v: value,
-			e: kvc.keys.PushBack(key),
-		}
-		if kvc.logging {
-			line := fmt.Sprintf("Get (miss) %v = %v", LegibleBytes(key), LegibleBytes(value))
-			kvc.logLines = append(kvc.logLines, line)
-		}
-		return value
+		keys = keys[:limit]
 	}
-}
 
-//Update the store with the values from the cache
-func (kvc *KVCache) Sync() {
-	for e := kvc.keys.Front(); e != nil; e = e.Next() {
-		key := e.Value.([]byte)
-		value := kvc.cache[string(key)]
-		kvc.store.Set(key, value.v)
-	}
-	kvc.Reset()
-}
-
-//----------------------------------------
-
-func LegibleBytes(data []byte) string {
-	s := ""
-	for _, b := range data {
-		if 0x21 <= b && b < 0x7F {
-			s += Green(string(b))
-		} else {
-			s += Blue(Fmt("%02X", b))
+	res := make([]Model, len(keys))
+	for i, k := range keys {
+		res[i] = Model{
+			Key:   []byte(k),
+			Value: m.m[k],
 		}
 	}
-	return s
+	return res
+}
+
+// First iterates through all keys to find the one that matches
+func (m *MemKVStore) First(start, end []byte) Model {
+	key := ""
+	for _, k := range m.keysInRange(start, end) {
+		if key == "" || k < key {
+			key = k
+		}
+	}
+	if key == "" {
+		return Model{}
+	}
+	return Model{
+		Key:   []byte(key),
+		Value: m.m[key],
+	}
+}
+
+func (m *MemKVStore) Last(start, end []byte) Model {
+	key := ""
+	for _, k := range m.keysInRange(start, end) {
+		if key == "" || k > key {
+			key = k
+		}
+	}
+	if key == "" {
+		return Model{}
+	}
+	return Model{
+		Key:   []byte(key),
+		Value: m.m[key],
+	}
+}
+
+func (m *MemKVStore) Discard() {
+	m.m = make(map[string][]byte, 0)
+}
+
+func (m *MemKVStore) Checkpoint() SimpleDB {
+	return NewMemKVCache(m)
+}
+
+func (m *MemKVStore) Commit(sub SimpleDB) error {
+	cache, ok := sub.(*MemKVCache)
+	if !ok {
+		return ErrNotASubTransaction()
+	}
+	// TODO: see if it points to us
+
+	// apply the cached data to us
+	cache.applyCache()
+	return nil
+}
+
+func (m *MemKVStore) keysInRange(start, end []byte) (res []string) {
+	s, e := string(start), string(end)
+	for k := range m.m {
+		afterStart := s == "" || k >= s
+		beforeEnd := e == "" || k < e
+		if afterStart && beforeEnd {
+			res = append(res, k)
+		}
+	}
+	sort.Strings(res)
+	return
 }

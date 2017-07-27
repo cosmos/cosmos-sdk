@@ -45,16 +45,16 @@ func (SimpleFeeMiddleware) Name() string {
 }
 
 // CheckTx - check the transaction
-func (h SimpleFeeMiddleware) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (h SimpleFeeMiddleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	return h.doTx(ctx, store, tx, next.CheckTx)
 }
 
 // DeliverTx - send the fee handler transaction
-func (h SimpleFeeMiddleware) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (h SimpleFeeMiddleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	return h.doTx(ctx, store, tx, next.DeliverTx)
 }
 
-func (h SimpleFeeMiddleware) doTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.CheckerFunc) (res basecoin.Result, err error) {
+func (h SimpleFeeMiddleware) doTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.CheckerFunc) (res basecoin.Result, err error) {
 	feeTx, ok := tx.Unwrap().(Fee)
 	if !ok {
 		// the fee wrapper is not required if there is no minimum

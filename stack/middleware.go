@@ -22,7 +22,7 @@ func (m *middleware) Name() string {
 }
 
 // CheckTx always returns an empty success tx
-func (m *middleware) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (basecoin.Result, error) {
+func (m *middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (basecoin.Result, error) {
 	// make sure we pass in proper context to child
 	next := secureCheck(m.next, ctx)
 	// set the permissions for this app
@@ -33,7 +33,7 @@ func (m *middleware) CheckTx(ctx basecoin.Context, store state.KVStore, tx basec
 }
 
 // DeliverTx always returns an empty success tx
-func (m *middleware) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (m *middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	// make sure we pass in proper context to child
 	next := secureDeliver(m.next, ctx)
 	// set the permissions for this app
@@ -43,7 +43,7 @@ func (m *middleware) DeliverTx(ctx basecoin.Context, store state.KVStore, tx bas
 	return m.middleware.DeliverTx(ctx, store, tx, next)
 }
 
-func (m *middleware) SetOption(l log.Logger, store state.KVStore, module, key, value string) (string, error) {
+func (m *middleware) SetOption(l log.Logger, store state.SimpleDB, module, key, value string) (string, error) {
 	// set the namespace for the app
 	store = stateSpace(store, m.Name())
 

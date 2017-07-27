@@ -62,7 +62,7 @@ func (n Tx) ValidateBasic() error {
 // and further increment the sequence number
 // NOTE It is okay to modify the sequence before running the wrapped TX because if the
 // wrapped Tx fails, the state changes are not applied
-func (n Tx) CheckIncrementSeq(ctx basecoin.Context, store state.KVStore) error {
+func (n Tx) CheckIncrementSeq(ctx basecoin.Context, store state.SimpleDB) error {
 
 	seqKey := n.getSeqKey()
 

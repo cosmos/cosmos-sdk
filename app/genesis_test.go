@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	eyescli "github.com/tendermint/merkleeyes/client"
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
@@ -19,27 +18,32 @@ const genesisFilepath = "./testdata/genesis.json"
 const genesisAcctFilepath = "./testdata/genesis2.json"
 
 func TestLoadGenesisDoNotFailIfAppOptionsAreMissing(t *testing.T) {
-	eyesCli := eyescli.NewLocalClient("", 0)
-	app := NewBasecoin(DefaultHandler("mycoin"), eyesCli, log.TestingLogger())
-	err := app.LoadGenesis("./testdata/genesis3.json")
+	logger := log.TestingLogger()
+	store, err := NewStore("", 0, logger)
+	require.Nil(t, err, "%+v", err)
+	app := NewBasecoin(DefaultHandler("mycoin"), store, logger)
+	err = app.LoadGenesis("./testdata/genesis3.json")
 	require.Nil(t, err, "%+v", err)
 }
 
 func TestLoadGenesis(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
-	eyesCli := eyescli.NewLocalClient("", 0)
-	app := NewBasecoin(DefaultHandler("mycoin"), eyesCli, log.TestingLogger())
-	err := app.LoadGenesis(genesisFilepath)
+	logger := log.TestingLogger()
+	store, err := NewStore("", 0, logger)
+	require.Nil(err, "%+v", err)
+
+	app := NewBasecoin(DefaultHandler("mycoin"), store, logger)
+	err = app.LoadGenesis(genesisFilepath)
 	require.Nil(err, "%+v", err)
 
 	// check the chain id
-	assert.Equal("foo_bar_chain", app.GetState().GetChainID())
+	assert.Equal("foo_bar_chain", app.GetChainID())
 
 	// and check the account info - previously calculated values
 	addr, _ := hex.DecodeString("eb98e0688217cfdeb70eddf4b33cdcc37fc53197")
 
-	coins, err := getAddr(addr, app.state)
+	coins, err := getAddr(addr, app.GetState())
 	require.Nil(err)
 	assert.True(coins.IsPositive())
 
@@ -57,13 +61,16 @@ func TestLoadGenesis(t *testing.T) {
 func TestLoadGenesisAccountAddress(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
-	eyesCli := eyescli.NewLocalClient("", 0)
-	app := NewBasecoin(DefaultHandler("mycoin"), eyesCli, log.TestingLogger())
-	err := app.LoadGenesis(genesisAcctFilepath)
+	logger := log.TestingLogger()
+	store, err := NewStore("", 0, logger)
+	require.Nil(err, "%+v", err)
+
+	app := NewBasecoin(DefaultHandler("mycoin"), store, logger)
+	err = app.LoadGenesis(genesisAcctFilepath)
 	require.Nil(err, "%+v", err)
 
 	// check the chain id
-	assert.Equal("addr_accounts_chain", app.GetState().GetChainID())
+	assert.Equal("addr_accounts_chain", app.GetChainID())
 
 	// make sure the accounts were set properly
 	cases := []struct {
@@ -86,7 +93,7 @@ func TestLoadGenesisAccountAddress(t *testing.T) {
 	for i, tc := range cases {
 		addr, err := hex.DecodeString(tc.addr)
 		require.Nil(err, tc.addr)
-		coins, err := getAddr(addr, app.state)
+		coins, err := getAddr(addr, app.GetState())
 		require.Nil(err, "%+v", err)
 		if !tc.exists {
 			assert.True(coins.IsZero(), "%d", i)

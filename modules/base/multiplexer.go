@@ -29,7 +29,7 @@ func (Multiplexer) Name() string {
 var _ stack.Middleware = Multiplexer{}
 
 // CheckTx splits the input tx and checks them all - fulfills Middlware interface
-func (Multiplexer) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (Multiplexer) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
 	if mtx, ok := tx.Unwrap().(*MultiTx); ok {
 		return runAll(ctx, store, mtx.Txs, next.CheckTx)
 	}
@@ -37,14 +37,14 @@ func (Multiplexer) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoi
 }
 
 // DeliverTx splits the input tx and checks them all - fulfills Middlware interface
-func (Multiplexer) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (Multiplexer) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
 	if mtx, ok := tx.Unwrap().(*MultiTx); ok {
 		return runAll(ctx, store, mtx.Txs, next.DeliverTx)
 	}
 	return next.DeliverTx(ctx, store, tx)
 }
 
-func runAll(ctx basecoin.Context, store state.KVStore, txs []basecoin.Tx, next basecoin.CheckerFunc) (res basecoin.Result, err error) {
+func runAll(ctx basecoin.Context, store state.SimpleDB, txs []basecoin.Tx, next basecoin.CheckerFunc) (res basecoin.Result, err error) {
 	// store all results, unless anything errors
 	rs := make([]basecoin.Result, len(txs))
 	for i, stx := range txs {

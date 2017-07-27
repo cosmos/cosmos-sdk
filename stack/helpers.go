@@ -20,9 +20,11 @@ const (
 const (
 	ByteRawTx   = 0xF0
 	ByteCheckTx = 0xF1
+	ByteFailTx  = 0xF2
 
 	TypeRawTx   = NameOK + "/raw" // this will just say a-ok to RawTx
 	TypeCheckTx = NameCheck + "/tx"
+	TypeFailTx  = NameFail + "/tx"
 
 	rawMaxSize = 2000 * 1000
 )
@@ -30,7 +32,8 @@ const (
 func init() {
 	basecoin.TxMapper.
 		RegisterImplementation(RawTx{}, TypeRawTx, ByteRawTx).
-		RegisterImplementation(CheckTx{}, TypeCheckTx, ByteCheckTx)
+		RegisterImplementation(CheckTx{}, TypeCheckTx, ByteCheckTx).
+		RegisterImplementation(FailTx{}, TypeFailTx, ByteFailTx)
 }
 
 // RawTx just contains bytes that can be hex-ified
@@ -72,6 +75,22 @@ func (CheckTx) ValidateBasic() error {
 	return nil
 }
 
+// FailTx just gets routed to filaure
+type FailTx struct{}
+
+var _ basecoin.TxInner = FailTx{}
+
+func NewFailTx() basecoin.Tx {
+	return FailTx{}.Wrap()
+}
+
+func (f FailTx) Wrap() basecoin.Tx {
+	return basecoin.Tx{f}
+}
+func (r FailTx) ValidateBasic() error {
+	return nil
+}
+
 // OKHandler just used to return okay to everything
 type OKHandler struct {
 	Log string
@@ -86,12 +105,12 @@ func (OKHandler) Name() string {
 }
 
 // CheckTx always returns an empty success tx
-func (ok OKHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (ok OKHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	return basecoin.Result{Log: ok.Log}, nil
 }
 
 // DeliverTx always returns an empty success tx
-func (ok OKHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (ok OKHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	return basecoin.Result{Log: ok.Log}, nil
 }
 
@@ -108,13 +127,13 @@ func (EchoHandler) Name() string {
 }
 
 // CheckTx always returns an empty success tx
-func (EchoHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (EchoHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	data, err := data.ToWire(tx)
 	return basecoin.Result{Data: data}, err
 }
 
 // DeliverTx always returns an empty success tx
-func (EchoHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (EchoHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	data, err := data.ToWire(tx)
 	return basecoin.Result{Data: data}, err
 }
@@ -133,12 +152,12 @@ func (FailHandler) Name() string {
 }
 
 // CheckTx always returns the given error
-func (f FailHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (f FailHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	return res, errors.Wrap(f.Err)
 }
 
 // DeliverTx always returns the given error
-func (f FailHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (f FailHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	return res, errors.Wrap(f.Err)
 }
 
@@ -157,7 +176,7 @@ func (PanicHandler) Name() string {
 }
 
 // CheckTx always panics
-func (p PanicHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (p PanicHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	if p.Err != nil {
 		panic(p.Err)
 	}
@@ -165,7 +184,7 @@ func (p PanicHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx base
 }
 
 // DeliverTx always panics
-func (p PanicHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (p PanicHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	if p.Err != nil {
 		panic(p.Err)
 	}
@@ -185,7 +204,7 @@ func (CheckHandler) Name() string {
 }
 
 // CheckTx verifies the permissions
-func (c CheckHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (c CheckHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	check, ok := tx.Unwrap().(CheckTx)
 	if !ok {
 		return res, errors.ErrUnknownTxType(tx)
@@ -200,7 +219,7 @@ func (c CheckHandler) CheckTx(ctx basecoin.Context, store state.KVStore, tx base
 }
 
 // DeliverTx verifies the permissions
-func (c CheckHandler) DeliverTx(ctx basecoin.Context, store state.KVStore, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (c CheckHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
 	// until something changes, just do the same as check
 	return c.CheckTx(ctx, store, tx)
 }

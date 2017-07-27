@@ -15,9 +15,9 @@ type Handler interface {
 	SetOptioner
 	Named
 	// TODO: flesh these out as well
-	// InitChain(store state.KVStore, vals []*abci.Validator)
-	// BeginBlock(store state.KVStore, hash []byte, header *abci.Header)
-	// EndBlock(store state.KVStore, height uint64) abci.ResponseEndBlock
+	// InitChain(store state.SimpleDB, vals []*abci.Validator)
+	// BeginBlock(store state.SimpleDB, hash []byte, header *abci.Header)
+	// EndBlock(store state.SimpleDB, height uint64) abci.ResponseEndBlock
 }
 
 type Named interface {
@@ -25,35 +25,35 @@ type Named interface {
 }
 
 type Checker interface {
-	CheckTx(ctx Context, store state.KVStore, tx Tx) (Result, error)
+	CheckTx(ctx Context, store state.SimpleDB, tx Tx) (Result, error)
 }
 
 // CheckerFunc (like http.HandlerFunc) is a shortcut for making wrapers
-type CheckerFunc func(Context, state.KVStore, Tx) (Result, error)
+type CheckerFunc func(Context, state.SimpleDB, Tx) (Result, error)
 
-func (c CheckerFunc) CheckTx(ctx Context, store state.KVStore, tx Tx) (Result, error) {
+func (c CheckerFunc) CheckTx(ctx Context, store state.SimpleDB, tx Tx) (Result, error) {
 	return c(ctx, store, tx)
 }
 
 type Deliver interface {
-	DeliverTx(ctx Context, store state.KVStore, tx Tx) (Result, error)
+	DeliverTx(ctx Context, store state.SimpleDB, tx Tx) (Result, error)
 }
 
 // DeliverFunc (like http.HandlerFunc) is a shortcut for making wrapers
-type DeliverFunc func(Context, state.KVStore, Tx) (Result, error)
+type DeliverFunc func(Context, state.SimpleDB, Tx) (Result, error)
 
-func (c DeliverFunc) DeliverTx(ctx Context, store state.KVStore, tx Tx) (Result, error) {
+func (c DeliverFunc) DeliverTx(ctx Context, store state.SimpleDB, tx Tx) (Result, error) {
 	return c(ctx, store, tx)
 }
 
 type SetOptioner interface {
-	SetOption(l log.Logger, store state.KVStore, module, key, value string) (string, error)
+	SetOption(l log.Logger, store state.SimpleDB, module, key, value string) (string, error)
 }
 
 // SetOptionFunc (like http.HandlerFunc) is a shortcut for making wrapers
-type SetOptionFunc func(log.Logger, state.KVStore, string, string, string) (string, error)
+type SetOptionFunc func(log.Logger, state.SimpleDB, string, string, string) (string, error)
 
-func (c SetOptionFunc) SetOption(l log.Logger, store state.KVStore, module, key, value string) (string, error) {
+func (c SetOptionFunc) SetOption(l log.Logger, store state.SimpleDB, module, key, value string) (string, error) {
 	return c(l, store, module, key, value)
 }
 
@@ -75,14 +75,14 @@ func (r Result) ToABCI() abci.Result {
 // holders
 type NopCheck struct{}
 
-func (_ NopCheck) CheckTx(Context, state.KVStore, Tx) (r Result, e error) { return }
+func (_ NopCheck) CheckTx(Context, state.SimpleDB, Tx) (r Result, e error) { return }
 
 type NopDeliver struct{}
 
-func (_ NopDeliver) DeliverTx(Context, state.KVStore, Tx) (r Result, e error) { return }
+func (_ NopDeliver) DeliverTx(Context, state.SimpleDB, Tx) (r Result, e error) { return }
 
 type NopOption struct{}
 
-func (_ NopOption) SetOption(log.Logger, state.KVStore, string, string, string) (string, error) {
+func (_ NopOption) SetOption(log.Logger, state.SimpleDB, string, string, string) (string, error) {
 	return "", nil
 }

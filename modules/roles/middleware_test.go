@@ -17,7 +17,7 @@ import (
 // shortcut for the lazy
 type ba []basecoin.Actor
 
-func createRole(app basecoin.Handler, store state.KVStore,
+func createRole(app basecoin.Handler, store state.SimpleDB,
 	name []byte, min uint32, sigs ...basecoin.Actor) (basecoin.Actor, error) {
 	tx := roles.NewCreateRoleTx(name, min, sigs)
 	ctx := stack.MockContext("foo", 1)

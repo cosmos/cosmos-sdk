@@ -1,5 +1,5 @@
-hash: 8c438edb7d269da439141e62f3e0c931fa9efaee54b13ce1e7330dc99179fddd
-updated: 2017-07-20T15:39:36.659717024+02:00
+hash: 45eed61138603d4d03518ea822068cf32b45d0a219bb7f3b836e52129f2a3a2b
+updated: 2017-07-26T19:44:39.753066441-04:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -133,16 +133,15 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: d63415027075bc5d74a98a718393b59b5c4279a5
+  version: 1c53d04dcc65c2fd15526152ed0651af10a09982
   subpackages:
   - certifiers
   - certifiers/client
   - certifiers/files
   - proofs
 - name: github.com/tendermint/merkleeyes
-  version: 102aaf5a8ffda1846413fb22805a94def2045b9f
+  version: 0310013053953eef80def3619aeb1e3a3254f452
   subpackages:
-  - app
   - client
   - iavl
 - name: github.com/tendermint/tendermint
@@ -172,7 +171,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: efb56aaea7517220bb3f42ff87b8004d554a17ff
+  version: 2f6f3e6aa70bb19b70a6e73210273fa127041070
   subpackages:
   - autofile
   - cli

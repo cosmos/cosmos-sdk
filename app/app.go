@@ -5,11 +5,10 @@ import (
 	"strings"
 
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/basecoin"
-	eyes "github.com/tendermint/merkleeyes/client"
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
+	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/base"
@@ -30,27 +29,24 @@ const (
 
 // Basecoin - The ABCI application
 type Basecoin struct {
-	eyesCli    *eyes.Client
-	state      *sm.State
-	cacheState *sm.State
-	handler    basecoin.Handler
-	height     uint64
-	logger     log.Logger
+	info *sm.ChainState
+
+	state *Store
+
+	handler basecoin.Handler
+	height  uint64
+	logger  log.Logger
 }
 
 var _ abci.Application = &Basecoin{}
 
 // NewBasecoin - create a new instance of the basecoin application
-func NewBasecoin(handler basecoin.Handler, eyesCli *eyes.Client, logger log.Logger) *Basecoin {
-	state := sm.NewState(eyesCli, logger.With("module", "state"))
-
+func NewBasecoin(handler basecoin.Handler, store *Store, logger log.Logger) *Basecoin {
 	return &Basecoin{
-		handler:    handler,
-		eyesCli:    eyesCli,
-		state:      state,
-		cacheState: nil,
-		height:     0,
-		logger:     logger,
+		handler: handler,
+		info:    sm.NewChainState(),
+		state:   store,
+		logger:  logger,
 	}
 }
 
@@ -68,23 +64,27 @@ func DefaultHandler(feeDenom string) basecoin.Handler {
 		stack.Recovery{},
 		auth.Signatures{},
 		base.Chain{},
+		stack.Checkpoint{OnCheck: true},
 		nonce.ReplayCheck{},
 		roles.NewMiddleware(),
 		fee.NewSimpleFeeMiddleware(coin.Coin{feeDenom, 0}, fee.Bank),
+		stack.Checkpoint{OnDeliver: true},
 	).Use(d)
 }
 
-// GetState - XXX For testing, not thread safe!
-func (app *Basecoin) GetState() *sm.State {
-	return app.state.CacheWrap()
+// GetChainID returns the currently stored chain
+func (app *Basecoin) GetChainID() string {
+	return app.info.GetChainID(app.state.Committed())
+}
+
+// GetState is back... please kill me
+func (app *Basecoin) GetState() sm.SimpleDB {
+	return app.state.Append()
 }
 
 // Info - ABCI
 func (app *Basecoin) Info() abci.ResponseInfo {
-	resp, err := app.eyesCli.InfoSync()
-	if err != nil {
-		cmn.PanicCrisis(err)
-	}
+	resp := app.state.Info()
 	app.height = resp.LastBlockHeight
 	return abci.ResponseInfo{
 		Data:             fmt.Sprintf("Basecoin v%v", version.Version),
@@ -97,16 +97,17 @@ func (app *Basecoin) Info() abci.ResponseInfo {
 func (app *Basecoin) SetOption(key string, value string) string {
 
 	module, key := splitKey(key)
+	state := app.state.Append()
 
 	if module == ModuleNameBase {
 		if key == ChainKey {
-			app.state.SetChainID(value)
+			app.info.SetChainID(state, value)
 			return "Success"
 		}
 		return fmt.Sprintf("Error: unknown base option: %s", key)
 	}
 
-	log, err := app.handler.SetOption(app.logger, app.state, module, key, value)
+	log, err := app.handler.SetOption(app.logger, state, module, key, value)
 	if err == nil {
 		return log
 	}
@@ -120,21 +121,16 @@ func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
 		return errors.Result(err)
 	}
 
-	// TODO: can we abstract this setup and commit logic??
-	cache := app.state.CacheWrap()
 	ctx := stack.NewContext(
-		app.state.GetChainID(),
+		app.GetChainID(),
 		app.height,
 		app.logger.With("call", "delivertx"),
 	)
-	res, err := app.handler.DeliverTx(ctx, cache, tx)
+	res, err := app.handler.DeliverTx(ctx, app.state.Append(), tx)
 
 	if err != nil {
-		// discard the cache...
 		return errors.Result(err)
 	}
-	// commit the cache and return result
-	cache.CacheSync()
 	return res.ToABCI()
 }
 
@@ -145,22 +141,16 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 		return errors.Result(err)
 	}
 
-	// we also need to discard error changes, so we don't increment checktx
-	// sequence on error, but not delivertx
-	cache := app.cacheState.CacheWrap()
 	ctx := stack.NewContext(
-		app.state.GetChainID(),
+		app.GetChainID(),
 		app.height,
 		app.logger.With("call", "checktx"),
 	)
-	// checktx generally shouldn't touch the state, but we don't care
-	// here on the framework level, since the cacheState is thrown away next block
-	res, err := app.handler.CheckTx(ctx, cache, tx)
+	res, err := app.handler.CheckTx(ctx, app.state.Check(), tx)
 
 	if err != nil {
 		return errors.Result(err)
 	}
-	cache.CacheSync()
 	return res.ToABCI()
 }
 
@@ -172,24 +162,13 @@ func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 		return
 	}
 
-	resQuery, err := app.eyesCli.QuerySync(reqQuery)
-	if err != nil {
-		resQuery.Log = "Failed to query MerkleEyes: " + err.Error()
-		resQuery.Code = abci.CodeType_InternalError
-		return
-	}
-	return
+	return app.state.Query(reqQuery)
 }
 
 // Commit - ABCI
 func (app *Basecoin) Commit() (res abci.Result) {
-
 	// Commit state
 	res = app.state.Commit()
-
-	// Wrap the committed state in cache for CheckTx
-	app.cacheState = app.state.CacheWrap()
-
 	if res.IsErr() {
 		cmn.PanicSanity("Error getting hash: " + res.Error())
 	}

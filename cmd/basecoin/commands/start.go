@@ -11,8 +11,6 @@ import (
 
 	"github.com/tendermint/abci/server"
 	"github.com/tendermint/basecoin"
-	eyesApp "github.com/tendermint/merkleeyes/app"
-	eyes "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
 
@@ -37,7 +35,6 @@ const EyesCacheSize = 10000
 //nolint
 const (
 	FlagAddress           = "address"
-	FlagEyes              = "eyes"
 	FlagWithoutTendermint = "without-tendermint"
 )
 
@@ -50,7 +47,6 @@ var (
 func init() {
 	flags := StartCmd.Flags()
 	flags.String(FlagAddress, "tcp://0.0.0.0:46658", "Listen address")
-	flags.String(FlagEyes, "local", "MerkleEyes address, or 'local' for embedded")
 	flags.Bool(FlagWithoutTendermint, false, "Only run basecoin abci app, assume external tendermint process")
 	// add all standard 'tendermint node' flags
 	tcmd.AddNodeFlags(StartCmd)
@@ -58,27 +54,22 @@ func init() {
 
 func startCmd(cmd *cobra.Command, args []string) error {
 	rootDir := viper.GetString(cli.HomeFlag)
-	meyes := viper.GetString(FlagEyes)
 
-	// Connect to MerkleEyes
-	var eyesCli *eyes.Client
-	if meyes == "local" {
-		eyesApp.SetLogger(logger.With("module", "merkleeyes"))
-		eyesCli = eyes.NewLocalClient(path.Join(rootDir, "data", "merkleeyes.db"), EyesCacheSize)
-	} else {
-		var err error
-		eyesCli, err = eyes.NewClient(meyes)
-		if err != nil {
-			return errors.Errorf("Error connecting to MerkleEyes: %v\n", err)
-		}
+	store, err := app.NewStore(
+		path.Join(rootDir, "data", "merkleeyes.db"),
+		EyesCacheSize,
+		logger.With("module", "store"),
+	)
+	if err != nil {
+		return err
 	}
 
 	// Create Basecoin app
-	basecoinApp := app.NewBasecoin(Handler, eyesCli, logger.With("module", "app"))
+	basecoinApp := app.NewBasecoin(Handler, store, logger.With("module", "app"))
 
 	// if chain_id has not been set yet, load the genesis.
 	// else, assume it's been loaded
-	if basecoinApp.GetState().GetChainID() == "" {
+	if basecoinApp.GetChainID() == "" {
 		// If genesis file exists, set key-value options
 		genesisFile := path.Join(rootDir, "genesis.json")
 		if _, err := os.Stat(genesisFile); err == nil {
@@ -91,7 +82,7 @@ func startCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	chainID := basecoinApp.GetState().GetChainID()
+	chainID := basecoinApp.GetChainID()
 	if viper.GetBool(FlagWithoutTendermint) {
 		logger.Info("Starting Basecoin without Tendermint", "chain_id", chainID)
 		// run just the abci app/server

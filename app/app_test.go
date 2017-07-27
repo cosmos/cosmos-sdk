@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/hex"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,7 +17,6 @@ import (
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
 	wire "github.com/tendermint/go-wire"
-	eyes "github.com/tendermint/merkleeyes/client"
 	"github.com/tendermint/tmlibs/log"
 )
 
@@ -82,14 +80,16 @@ func (at *appTest) reset() {
 	at.acctIn = coin.NewAccountWithKey(coin.Coins{{"mycoin", 7}})
 	at.acctOut = coin.NewAccountWithKey(coin.Coins{{"mycoin", 7}})
 
-	eyesCli := eyes.NewLocalClient("", 0)
-	// logger := log.TestingLogger().With("module", "app"),
-	logger := log.NewTMLogger(os.Stdout).With("module", "app")
-	logger = log.NewTracingLogger(logger)
+	// Note: switch logger if you want to get more info
+	logger := log.TestingLogger()
+	// logger := log.NewTracingLogger(log.NewTMLogger(os.Stdout))
+	store, err := NewStore("", 0, logger.With("module", "store"))
+	require.Nil(at.t, err, "%+v", err)
+
 	at.app = NewBasecoin(
 		DefaultHandler("mycoin"),
-		eyesCli,
-		logger,
+		store,
+		logger.With("module", "app"),
 	)
 
 	res := at.app.SetOption("base/chain_id", at.chainID)
@@ -102,13 +102,13 @@ func (at *appTest) reset() {
 	require.True(at.t, resabci.IsOK(), resabci)
 }
 
-func getBalance(key basecoin.Actor, store state.KVStore) (coin.Coins, error) {
+func getBalance(key basecoin.Actor, store state.SimpleDB) (coin.Coins, error) {
 	cspace := stack.PrefixedStore(coin.NameCoin, store)
 	acct, err := coin.GetAccount(cspace, key)
 	return acct.Coins, err
 }
 
-func getAddr(addr []byte, state state.KVStore) (coin.Coins, error) {
+func getAddr(addr []byte, state state.SimpleDB) (coin.Coins, error) {
 	actor := auth.SigPerm(addr)
 	return getBalance(actor, state)
 }
@@ -142,17 +142,20 @@ func TestSetOption(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	eyesCli := eyes.NewLocalClient("", 0)
+	logger := log.TestingLogger()
+	store, err := NewStore("", 0, logger.With("module", "store"))
+	require.Nil(err, "%+v", err)
+
 	app := NewBasecoin(
 		DefaultHandler("atom"),
-		eyesCli,
-		log.TestingLogger().With("module", "app"),
+		store,
+		logger.With("module", "app"),
 	)
 
 	//testing ChainID
 	chainID := "testChain"
 	res := app.SetOption("base/chain_id", chainID)
-	assert.EqualValues(app.GetState().GetChainID(), chainID)
+	assert.EqualValues(app.GetChainID(), chainID)
 	assert.EqualValues(res, "Success")
 
 	// make a nice account...
@@ -162,7 +165,7 @@ func TestSetOption(t *testing.T) {
 	require.EqualValues(res, "Success")
 
 	// make sure it is set correctly, with some balance
-	coins, err := getBalance(acct.Actor(), app.state)
+	coins, err := getBalance(acct.Actor(), app.GetState())
 	require.Nil(err)
 	assert.Equal(bal, coins)
 
@@ -189,7 +192,7 @@ func TestSetOption(t *testing.T) {
 	res = app.SetOption("coin/account", unsortAcc)
 	require.EqualValues(res, "Success")
 
-	coins, err = getAddr(unsortAddr, app.state)
+	coins, err = getAddr(unsortAddr, app.GetState())
 	require.Nil(err)
 	assert.True(coins.IsValid())
 	assert.Equal(unsortCoins, coins)
@@ -213,6 +216,8 @@ func TestTx(t *testing.T) {
 	//Bad Balance
 	at.acctIn.Coins = coin.Coins{{"mycoin", 2}}
 	at.initAccount(at.acctIn)
+	at.app.Commit()
+
 	res, _, _ := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1), true)
 	assert.True(res.IsErr(), "ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res)
 	res, diffIn, diffOut := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1), false)

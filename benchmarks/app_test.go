@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	wire "github.com/tendermint/go-wire"
-	eyesApp "github.com/tendermint/merkleeyes/app"
-	eyes "github.com/tendermint/merkleeyes/client"
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
@@ -56,18 +54,22 @@ func NewBenchApp(h basecoin.Handler, chainID string, n int,
 	// logger = log.NewTracingLogger(logger)
 
 	// TODO: disk writing
-	var eyesCli *eyes.Client
+	var store *app.Store
+	var err error
+
 	if persist {
 		tmpDir, _ := ioutil.TempDir("", "bc-app-benchmark")
-		eyesCli = eyes.NewLocalClient(tmpDir, 500)
+		store, err = app.NewStore(tmpDir, 500, logger)
 	} else {
-		eyesCli = eyes.NewLocalClient("", 0)
+		store, err = app.NewStore("", 0, logger)
 	}
-	eyesApp.SetLogger(logger.With("module", "merkle"))
+	if err != nil {
+		panic(err)
+	}
 
 	app := app.NewBasecoin(
 		h,
-		eyesCli,
+		store,
 		logger.With("module", "app"),
 	)
 	res := app.SetOption("base/chain_id", chainID)

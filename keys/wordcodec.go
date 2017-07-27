@@ -34,7 +34,8 @@ func NewCodec(words []string) (codec *WordCodec, err error) {
 	res := &WordCodec{
 		words: words,
 		// TODO: configure this outside???
-		check: NewIEEECRC32(),
+		// check: NewIEEECRC32(),
+		check: NewIBMCRC16(),
 	}
 
 	return res, nil

@@ -5,6 +5,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	cmn "github.com/tendermint/tmlibs/common"
+
 	"github.com/tendermint/go-crypto/keys/cryptostore"
 )
 
@@ -12,8 +15,8 @@ func TestNoopEncoder(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 	noop := cryptostore.Noop
 
-	key := cryptostore.GenEd25519.Generate()
-	key2 := cryptostore.GenSecp256k1.Generate()
+	key := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
+	key2 := cryptostore.GenSecp256k1.Generate(cmn.RandBytes(16))
 
 	b, err := noop.Encrypt(key, "encode")
 	require.Nil(err)
@@ -40,7 +43,7 @@ func TestSecretBox(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 	enc := cryptostore.SecretBox
 
-	key := cryptostore.GenEd25519.Generate()
+	key := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
 	pass := "some-special-secret"
 
 	b, err := enc.Encrypt(key, pass)

@@ -45,6 +45,7 @@ into various applications.
 
 ## Further reading
 
+* [Quark overview](overview.md)
 * [Glossary of the terms](glossary.md)
 * [Standard modules](stdlib.md)
 * Guide to building a module

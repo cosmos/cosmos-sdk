@@ -6,15 +6,15 @@ and match modular elements as desired. Along side, all modules are permissioned
 and sandboxed to reduce 
 
 For more explanation please see the [standard
-library](https://github.com/tendermint/basecoin/blob/infographic/docs/quark/stdlib.md)
+library](https://github.com/tendermint/basecoin/blob/unstable/docs/quark/stdlib.md)
 and
-[glossary](https://github.com/tendermint/basecoin/blob/infographic/docs/quark/glossary.md)
+[glossary](https://github.com/tendermint/basecoin/blob/unstable/docs/quark/glossary.md)
 documentation.
 
 For a more interconnected schematics see these
-[framework](https://github.com/tendermint/basecoin/blob/infographic/docs/graphics/overview-framework.png)
+[framework](https://github.com/tendermint/basecoin/blob/unstable/docs/graphics/overview-framework.png)
 and
-[security](https://github.com/tendermint/basecoin/blob/infographic/docs/graphics/overview-security.png)
+[security](https://github.com/tendermint/basecoin/blob/unstable/docs/graphics/overview-security.png)
 overviews.
 
 ## Framework Overview
@@ -27,14 +27,14 @@ off one level, like an onion.  As so, the transaction must be constructed to
 mirror the execution stack, and each middleware should allow embedding an
 arbitrary tx for the next layer in the stack.
 
-<img src="https://github.com/tendermint/basecoin/blob/infographic/docs/graphics/tx.png" width=250>
+<img src="https://github.com/tendermint/basecoin/blob/unstable/docs/graphics/tx.png" width=250>
 
 ### Execution Stack
 
 Middleware components allow for code reusability and integrability. A standard
 set of middleware are provided and can be mix-and-matched with custom
 middleware. Some of the [standard
-library](https://github.com/tendermint/basecoin/blob/infographic/docs/quark/stdlib.md)
+library](https://github.com/tendermint/basecoin/blob/unstable/docs/quark/stdlib.md)
 middlewares provided in this package include:
  - Logging
  - Recovery
@@ -55,7 +55,7 @@ a fee even if the end business logic fails, under this situation we would add
 the DeliverTx Checkpoint to after the fee middleware but before the business
 logic. This diagram displays a typical process flow through an execution stack.
 
-<img src="https://github.com/tendermint/basecoin/blob/infographic/docs/graphics/middleware.png" width=500>
+<img src="https://github.com/tendermint/basecoin/blob/unstable/docs/graphics/middleware.png" width=500>
 
 ### Dispatcher
 
@@ -68,7 +68,7 @@ Similarity to the execution stack, when executing a transaction the dispatcher
 isolates the state space available to the designated module (see [Data
 Store](overview.md#data-store)).
 
-<img src="https://github.com/tendermint/basecoin/blob/infographic/docs/graphics/dispatcher.png" width=600>
+<img src="https://github.com/tendermint/basecoin/blob/unstable/docs/graphics/dispatcher.png" width=600>
 
 ## Security Overview
 
@@ -83,7 +83,7 @@ designated permission for the transaction context to perform a specific action.
 Context is passed through the middleware and dispatcher, allowing one to add
 permissions on this app-space, and check current permissions.
 
-<img src="https://github.com/tendermint/basecoin/blob/infographic/docs/graphics/permission.png" width=500>
+<img src="https://github.com/tendermint/basecoin/blob/unstable/docs/graphics/permission.png" width=500>
 
 ### Data Store
 
@@ -100,6 +100,6 @@ prefixing invisible to each module while preventing each module from affecting
 each other module. Under this model no two registered modules are permitted to
 have the same namespace.
 
-<img src="https://github.com/tendermint/basecoin/blob/infographic/docs/graphics/datastore.png" width=500>
+<img src="https://github.com/tendermint/basecoin/blob/unstable/docs/graphics/datastore.png" width=500>
 
 

@@ -55,12 +55,16 @@ func NewBenchApp(h basecoin.Handler, chainID string, n int,
 
 	// TODO: disk writing
 	var store *app.Store
+	var err error
 
 	if persist {
 		tmpDir, _ := ioutil.TempDir("", "bc-app-benchmark")
-		store = app.NewStore(tmpDir, 500, logger)
+		store, err = app.NewStore(tmpDir, 500, logger)
 	} else {
-		store = app.NewStore("", 0, logger)
+		store, err = app.NewStore("", 0, logger)
+	}
+	if err != nil {
+		panic(err)
 	}
 
 	app := app.NewBasecoin(

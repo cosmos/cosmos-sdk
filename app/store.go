@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pkg/errors"
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-wire"
 	"github.com/tendermint/merkleeyes/iavl"
@@ -37,7 +38,7 @@ type ChainState struct {
 
 // NewStore initializes an in-memory IAVLTree, or attempts to load a persistant
 // tree from disk
-func NewStore(dbName string, cacheSize int, logger log.Logger) *Store {
+func NewStore(dbName string, cacheSize int, logger log.Logger) (*Store, error) {
 	// start at 1 so the height returned by query is for the
 	// next block, ie. the one that includes the AppHash for our current state
 	initialHeight := uint64(1)
@@ -48,17 +49,18 @@ func NewStore(dbName string, cacheSize int, logger log.Logger) *Store {
 			0,
 			nil,
 		)
-		return &Store{
+		store := &Store{
 			State:  state.NewState(tree, false),
 			height: initialHeight,
 			logger: logger,
 		}
+		return store, nil
 	}
 
 	// Expand the path fully
 	dbPath, err := filepath.Abs(dbName)
 	if err != nil {
-		panic(fmt.Sprintf("Invalid Database Name: %s", dbName))
+		return nil, errors.Wrap(err, "Invalid Database Name")
 	}
 
 	// Some external calls accidently add a ".db", which is now removed
@@ -94,21 +96,15 @@ func NewStore(dbName string, cacheSize int, logger log.Logger) *Store {
 		tree.Load(chainState.Hash)
 	}
 
-	return &Store{
+	res := &Store{
 		State:     state.NewState(tree, true),
 		height:    chainState.Height,
 		hash:      chainState.Hash,
 		persisted: true,
 		logger:    logger,
 	}
+	return res, nil
 }
-
-// CloseDB closes the database
-// func (s *Store) CloseDB() {
-// 	if s.db != nil {
-// 		s.db.Close()
-// 	}
-// }
 
 // Info implements abci.Application. It returns the height, hash and size (in the data).
 // The height is the block that holds the transactions, not the apphash itself.
@@ -136,9 +132,12 @@ func (s *Store) Commit() abci.Result {
 		Height: s.height,
 	}))
 
-	hash := s.State.Commit()
+	hash, err := s.State.Commit()
+	if err != nil {
+		return abci.NewError(abci.CodeType_InternalError, err.Error())
+	}
 	if !bytes.Equal(hash, s.hash) {
-		panic("AppHash is incorrect")
+		return abci.NewError(abci.CodeType_InternalError, "AppHash is incorrect")
 	}
 
 	if s.State.Committed().Size() == 0 {

@@ -53,10 +53,10 @@ func (s *State) BatchSet(key, value []byte) {
 }
 
 // Commit save persistent nodes to the database and re-copies the trees
-func (s *State) Commit() []byte {
+func (s *State) Commit() ([]byte, error) {
 	err := s.committed.Commit(s.deliverTx)
 	if err != nil {
-		panic(err) // ugh, TODO?
+		return nil, err
 	}
 
 	var hash []byte
@@ -68,5 +68,5 @@ func (s *State) Commit() []byte {
 
 	s.deliverTx = s.committed.Checkpoint().(*Bonsai)
 	s.checkTx = s.committed.Checkpoint().(*Bonsai)
-	return hash
+	return hash, nil
 }

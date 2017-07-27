@@ -19,9 +19,10 @@ const genesisAcctFilepath = "./testdata/genesis2.json"
 
 func TestLoadGenesisDoNotFailIfAppOptionsAreMissing(t *testing.T) {
 	logger := log.TestingLogger()
-	store := NewStore("", 0, logger)
+	store, err := NewStore("", 0, logger)
+	require.Nil(t, err, "%+v", err)
 	app := NewBasecoin(DefaultHandler("mycoin"), store, logger)
-	err := app.LoadGenesis("./testdata/genesis3.json")
+	err = app.LoadGenesis("./testdata/genesis3.json")
 	require.Nil(t, err, "%+v", err)
 }
 
@@ -29,9 +30,11 @@ func TestLoadGenesis(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	logger := log.TestingLogger()
-	store := NewStore("", 0, logger)
+	store, err := NewStore("", 0, logger)
+	require.Nil(err, "%+v", err)
+
 	app := NewBasecoin(DefaultHandler("mycoin"), store, logger)
-	err := app.LoadGenesis(genesisFilepath)
+	err = app.LoadGenesis(genesisFilepath)
 	require.Nil(err, "%+v", err)
 
 	// check the chain id
@@ -59,9 +62,11 @@ func TestLoadGenesisAccountAddress(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	logger := log.TestingLogger()
-	store := NewStore("", 0, logger)
+	store, err := NewStore("", 0, logger)
+	require.Nil(err, "%+v", err)
+
 	app := NewBasecoin(DefaultHandler("mycoin"), store, logger)
-	err := app.LoadGenesis(genesisAcctFilepath)
+	err = app.LoadGenesis(genesisAcctFilepath)
 	require.Nil(err, "%+v", err)
 
 	// check the chain id

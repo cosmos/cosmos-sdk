@@ -1,7 +1,6 @@
 package state
 
 import (
-	"errors"
 	"math/rand"
 
 	"github.com/tendermint/tmlibs/merkle"
@@ -47,7 +46,6 @@ func (b *Bonsai) List(start, end []byte, limit int) []Model {
 	stopAtCount := func(key []byte, value []byte) (stop bool) {
 		m := Model{key, value}
 		res = append(res, m)
-		// return false
 		return limit > 0 && len(res) >= limit
 	}
 	b.Tree.IterateRange(start, end, true, stopAtCount)
@@ -87,7 +85,7 @@ func (b *Bonsai) Checkpoint() SimpleDB {
 func (b *Bonsai) Commit(sub SimpleDB) error {
 	bb, ok := sub.(*Bonsai)
 	if !ok || (b.id != bb.id) {
-		return errors.New("Not a sub-transaction")
+		return ErrNotASubTransaction()
 	}
 	b.Tree = bb.Tree
 	return nil

@@ -1,14 +1,12 @@
 package state
 
-import "errors"
-
 // MemKVCache is designed to wrap MemKVStore as a cache
 type MemKVCache struct {
 	store SimpleDB
 	cache *MemKVStore
 }
 
-var _ SimpleDB = NewMemKVStore()
+var _ SimpleDB = (*MemKVCache)(nil)
 
 // NewMemKVCache wraps a cache around MemKVStore
 //
@@ -114,7 +112,7 @@ func (c *MemKVCache) Checkpoint() SimpleDB {
 func (c *MemKVCache) Commit(sub SimpleDB) error {
 	cache, ok := sub.(*MemKVCache)
 	if !ok {
-		return errors.New("sub is not a cache")
+		return ErrNotASubTransaction()
 	}
 	// TODO: see if it points to us
 

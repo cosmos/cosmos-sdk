@@ -20,13 +20,16 @@ import (
 
 func TestCounterPlugin(t *testing.T) {
 	assert := assert.New(t)
+	require := require.New(t)
 
 	// Basecoin initialization
 	chainID := "test_chain_id"
 	logger := log.TestingLogger()
 	// logger := log.NewTracingLogger(log.NewTMLogger(os.Stdout))
 
-	store := app.NewStore("", 0, logger.With("module", "store"))
+	store, err := app.NewStore("", 0, logger.With("module", "store"))
+	require.Nil(err, "%+v", err)
+
 	h := NewHandler("gold")
 	bcApp := app.NewBasecoin(
 		h,
@@ -39,7 +42,7 @@ func TestCounterPlugin(t *testing.T) {
 	bal := coin.Coins{{"", 1000}, {"gold", 1000}}
 	acct := coin.NewAccountWithKey(bal)
 	log := bcApp.SetOption("coin/account", acct.MakeOption())
-	require.Equal(t, "Success", log)
+	require.Equal("Success", log)
 
 	// Deliver a CounterTx
 	DeliverCounterTx := func(valid bool, counterFee coin.Coins, sequence uint32) abci.Result {

@@ -55,11 +55,14 @@ func init() {
 func startCmd(cmd *cobra.Command, args []string) error {
 	rootDir := viper.GetString(cli.HomeFlag)
 
-	store := app.NewStore(
+	store, err := app.NewStore(
 		path.Join(rootDir, "data", "merkleeyes.db"),
 		EyesCacheSize,
 		logger.With("module", "store"),
 	)
+	if err != nil {
+		return err
+	}
 
 	// Create Basecoin app
 	basecoinApp := app.NewBasecoin(Handler, store, logger.With("module", "app"))

@@ -83,7 +83,9 @@ func (at *appTest) reset() {
 	// Note: switch logger if you want to get more info
 	logger := log.TestingLogger()
 	// logger := log.NewTracingLogger(log.NewTMLogger(os.Stdout))
-	store := NewStore("", 0, logger.With("module", "store"))
+	store, err := NewStore("", 0, logger.With("module", "store"))
+	require.Nil(at.t, err, "%+v", err)
+
 	at.app = NewBasecoin(
 		DefaultHandler("mycoin"),
 		store,
@@ -141,7 +143,9 @@ func TestSetOption(t *testing.T) {
 	require := require.New(t)
 
 	logger := log.TestingLogger()
-	store := NewStore("", 0, logger.With("module", "store"))
+	store, err := NewStore("", 0, logger.With("module", "store"))
+	require.Nil(err, "%+v", err)
+
 	app := NewBasecoin(
 		DefaultHandler("atom"),
 		store,

@@ -1,5 +1,5 @@
-hash: 8c438edb7d269da439141e62f3e0c931fa9efaee54b13ce1e7330dc99179fddd
-updated: 2017-07-24T10:22:44.120576373-04:00
+hash: 2848c30b31fb205f846dd7dfca14ebed8a3249cbc5aaa759066b2bab3e4bbf42
+updated: 2017-07-27T16:46:31.962147949-04:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -57,6 +57,8 @@ imports:
   - json/parser
   - json/scanner
   - json/token
+- name: github.com/howeyc/crc16
+  version: 96a97a1abb579c7ff1a8ffa77f2e72d1c314b57f
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jmhodges/levigo
@@ -117,7 +119,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: d31cfbaeaa4d930798ec327b52917975f3203c11
+  version: bf355d1b58b27d4e98d8fb237eb14887b93a88f7
   subpackages:
   - cmd
   - keys
@@ -140,9 +142,8 @@ imports:
   - certifiers/files
   - proofs
 - name: github.com/tendermint/merkleeyes
-  version: 439776e0199f1812e132aa7b97463e8550906690
+  version: 0310013053953eef80def3619aeb1e3a3254f452
   subpackages:
-  - app
   - client
   - iavl
 - name: github.com/tendermint/tendermint

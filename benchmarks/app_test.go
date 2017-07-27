@@ -32,7 +32,7 @@ func DefaultHandler(feeDenom string) basecoin.Handler {
 	c := coin.NewHandler()
 	r := roles.NewHandler()
 	d := stack.NewDispatcher(
-		stack.WrapHandler(c),
+		c,
 		stack.WrapHandler(r),
 	)
 	return stack.New(

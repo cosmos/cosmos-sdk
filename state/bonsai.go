@@ -73,23 +73,49 @@ func (b *Bonsai) Last(start, end []byte) Model {
 }
 
 func (b *Bonsai) Checkpoint() SimpleDB {
-	return &Bonsai{
-		id:   b.id,
-		Tree: b.Tree.Copy(),
-	}
+	return NewMemKVCache(b)
 }
 
-// Commit will take all changes from the checkpoint and write
-// them to the parent.
-// Returns an error if this is not a child of this one
 func (b *Bonsai) Commit(sub SimpleDB) error {
-	bb, ok := sub.(*Bonsai)
+	cache, ok := sub.(*MemKVCache)
+	if !ok {
+		return ErrNotASubTransaction()
+	}
+	// see if it was wrapping this struct
+	bb, ok := cache.store.(*Bonsai)
 	if !ok || (b.id != bb.id) {
 		return ErrNotASubTransaction()
 	}
-	b.Tree = bb.Tree
+
+	// apply the cached data to the Bonsai
+	cache.applyCache()
 	return nil
 }
+
+//----------------------------------------
+// This is the checkpointing I want, but apparently iavl-tree is not
+// as immutable as I hoped... paniced in multiple go-routines :(
+//
+// FIXME: use this code when iavltree is improved
+
+// func (b *Bonsai) Checkpoint() SimpleDB {
+// 	return &Bonsai{
+// 		id:   b.id,
+// 		Tree: b.Tree.Copy(),
+// 	}
+// }
+
+// // Commit will take all changes from the checkpoint and write
+// // them to the parent.
+// // Returns an error if this is not a child of this one
+// func (b *Bonsai) Commit(sub SimpleDB) error {
+// 	bb, ok := sub.(*Bonsai)
+// 	if !ok || (b.id != bb.id) {
+// 		return ErrNotASubTransaction()
+// 	}
+// 	b.Tree = bb.Tree
+// 	return nil
+// }
 
 // Discard will remove reference to this
 func (b *Bonsai) Discard() {

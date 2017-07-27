@@ -1,7 +1,6 @@
 package state
 
 import (
-	"errors"
 	"sort"
 
 	"github.com/tendermint/go-wire/data"
@@ -148,7 +147,7 @@ func (m *MemKVStore) Checkpoint() SimpleDB {
 func (m *MemKVStore) Commit(sub SimpleDB) error {
 	cache, ok := sub.(*MemKVCache)
 	if !ok {
-		return errors.New("sub is not a cache")
+		return ErrNotASubTransaction()
 	}
 	// TODO: see if it points to us
 

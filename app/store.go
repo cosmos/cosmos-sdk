@@ -120,8 +120,13 @@ func (s *Store) Info() abci.ResponseInfo {
 
 // Commit implements abci.Application
 func (s *Store) Commit() abci.Result {
-	s.hash = s.State.Hash()
+	var err error
 	s.height++
+	s.hash, err = s.State.Hash()
+	if err != nil {
+		return abci.NewError(abci.CodeType_InternalError, err.Error())
+	}
+
 	s.logger.Debug("Commit synced",
 		"height", s.height,
 		"hash", fmt.Sprintf("%X", s.hash))

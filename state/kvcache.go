@@ -23,10 +23,12 @@ func NewMemKVCache(store SimpleDB) *MemKVCache {
 	}
 }
 
+// Set sets a key, fulfills KVStore interface
 func (c *MemKVCache) Set(key []byte, value []byte) {
 	c.cache.Set(key, value)
 }
 
+// Get gets a key, fulfills KVStore interface
 func (c *MemKVCache) Get(key []byte) (value []byte) {
 	value, ok := c.cache.m[string(key)]
 	if !ok {
@@ -36,6 +38,7 @@ func (c *MemKVCache) Get(key []byte) (value []byte) {
 	return value
 }
 
+// Has checks existence of a key, fulfills KVStore interface
 func (c *MemKVCache) Has(key []byte) bool {
 	value := c.Get(key)
 	return value != nil

@@ -3,7 +3,7 @@
 The quark middleware design optimizes flexibility and security. The framework
 is designed around a modular execution stack which allows applications to mix
 and match modular elements as desired. Along side, all modules are permissioned
-and sandboxed to reduce 
+and sandboxed to isolate modules for greater application security.
 
 For more explanation please see the [standard
 library](https://github.com/tendermint/basecoin/blob/unstable/docs/quark/stdlib.md)

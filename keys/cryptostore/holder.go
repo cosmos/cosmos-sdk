@@ -44,7 +44,7 @@ func (s Manager) Create(name, passphrase, algo string) (keys.Info, string, error
 		return keys.Info{}, "", err
 	}
 
-	// 128-bits the the all the randomness we can make use of
+	// 128-bits are the all the randomness we can make use of
 	secret := crypto.CRandBytes(16)
 	key := gen.Generate(secret)
 	err = s.es.Put(name, passphrase, key)
@@ -52,7 +52,8 @@ func (s Manager) Create(name, passphrase, algo string) (keys.Info, string, error
 		return keys.Info{}, "", err
 	}
 
-	// TODO: clean up type/kind handling with go-data
+	// we append the type byte to the serialized secret to help with recovery
+	// ie [secret] = [secret] + [type]
 	typ := key.Bytes()[0]
 	secret = append(secret, typ)
 
@@ -74,6 +75,8 @@ func (s Manager) Recover(name, passphrase, seedphrase string) (keys.Info, error)
 		return keys.Info{}, err
 	}
 
+	// secret is comprised of the actual secret with the type appended
+	// ie [secret] = [secret] + [type]
 	l := len(secret)
 	secret, typ := secret[:l-1], secret[l-1]
 

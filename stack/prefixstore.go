@@ -83,7 +83,7 @@ func (p prefixStore) Commit(sub state.SimpleDB) error {
 	}
 
 	// commit the wrapped data, don't worry about the prefix here
-	p.store.Commit(ps)
+	p.store.Commit(ps.store)
 	return nil
 }
 

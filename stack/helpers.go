@@ -20,9 +20,11 @@ const (
 const (
 	ByteRawTx   = 0xF0
 	ByteCheckTx = 0xF1
+	ByteFailTx  = 0xF2
 
 	TypeRawTx   = NameOK + "/raw" // this will just say a-ok to RawTx
 	TypeCheckTx = NameCheck + "/tx"
+	TypeFailTx  = NameFail + "/tx"
 
 	rawMaxSize = 2000 * 1000
 )
@@ -30,7 +32,8 @@ const (
 func init() {
 	basecoin.TxMapper.
 		RegisterImplementation(RawTx{}, TypeRawTx, ByteRawTx).
-		RegisterImplementation(CheckTx{}, TypeCheckTx, ByteCheckTx)
+		RegisterImplementation(CheckTx{}, TypeCheckTx, ByteCheckTx).
+		RegisterImplementation(FailTx{}, TypeFailTx, ByteFailTx)
 }
 
 // RawTx just contains bytes that can be hex-ified
@@ -69,6 +72,22 @@ func (c CheckTx) Wrap() basecoin.Tx {
 	return basecoin.Tx{c}
 }
 func (CheckTx) ValidateBasic() error {
+	return nil
+}
+
+// FailTx just gets routed to filaure
+type FailTx struct{}
+
+var _ basecoin.TxInner = FailTx{}
+
+func NewFailTx() basecoin.Tx {
+	return FailTx{}.Wrap()
+}
+
+func (f FailTx) Wrap() basecoin.Tx {
+	return basecoin.Tx{f}
+}
+func (r FailTx) ValidateBasic() error {
 	return nil
 }
 

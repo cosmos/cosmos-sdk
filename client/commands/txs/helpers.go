@@ -92,6 +92,11 @@ func SignTx(tx basecoin.Tx) error {
 		return err
 	}
 
+	// abort early if we don't want to sign
+	if viper.GetBool(FlagNoSign) {
+		return nil
+	}
+
 	name := viper.GetString(FlagName)
 	manager := keycmd.GetKeyManager()
 

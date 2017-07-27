@@ -13,6 +13,7 @@ import (
 // nolint
 const (
 	FlagName    = "name"
+	FlagNoSign  = "no-sign"
 	FlagIn      = "in"
 	FlagPrepare = "prepare"
 )
@@ -26,7 +27,7 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	RootCmd.PersistentFlags().String(FlagName, "", "name to sign the tx")
-	// TODO: prepare needs to override the SignAndPost somehow to SignAndSave
+	RootCmd.PersistentFlags().Bool(FlagNoSign, false, "don't add a signature")
 	RootCmd.PersistentFlags().String(FlagPrepare, "", "file to store prepared tx")
 	RootCmd.Flags().String(FlagIn, "", "file with tx in json format")
 }

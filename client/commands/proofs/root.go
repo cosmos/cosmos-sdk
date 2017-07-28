@@ -1,6 +1,9 @@
 package proofs
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
+	"github.com/tendermint/basecoin/client/commands"
+)
 
 // nolint
 const (
@@ -22,5 +25,6 @@ data to other peers as needed.
 
 func init() {
 	RootCmd.Flags().Int(FlagHeight, 0, "Height to query (skip to use latest block)")
-	RootCmd.Flags().Bool(FlagTrustNode, false, "DANGEROUS: blindly trust all results from the server")
+	RootCmd.Flags().Bool(commands.FlagTrustNode, false,
+		"DANGEROUS: blindly trust all results from the server")
 }

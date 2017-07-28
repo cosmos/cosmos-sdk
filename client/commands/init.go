@@ -29,9 +29,10 @@ var (
 
 //nolint
 const (
-	SeedFlag    = "seed"
-	HashFlag    = "valhash"
-	GenesisFlag = "genesis"
+	SeedFlag      = "seed"
+	HashFlag      = "valhash"
+	GenesisFlag   = "genesis"
+	FlagTrustNode = "trust-node"
 
 	ConfigFile = "config.toml"
 )
@@ -125,6 +126,11 @@ type Runable func(cmd *cobra.Command, args []string) error
 // and the root command sets up viper, which is needed to find the home dir.
 func RequireInit(run Runable) Runable {
 	return func(cmd *cobra.Command, args []string) error {
+		// otherwise, run the wrappped command
+		if viper.GetBool(FlagTrustNode) {
+			return run(cmd, args)
+		}
+
 		// first check if we were Init'ed and if not, return an error
 		root := viper.GetString(cli.HomeFlag)
 		init, err := WasInited(root)

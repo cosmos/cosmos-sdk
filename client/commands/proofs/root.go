@@ -7,8 +7,7 @@ import (
 
 // nolint
 const (
-	FlagHeight    = "height"
-	FlagTrustNode = "trust-node"
+	FlagHeight = "height"
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -24,7 +23,7 @@ data to other peers as needed.
 }
 
 func init() {
-	RootCmd.Flags().Int(FlagHeight, 0, "Height to query (skip to use latest block)")
-	RootCmd.Flags().Bool(commands.FlagTrustNode, false,
+	RootCmd.PersistentFlags().Int(FlagHeight, 0, "Height to query (skip to use latest block)")
+	RootCmd.PersistentFlags().Bool(commands.FlagTrustNode, false,
 		"DANGEROUS: blindly trust all results from the server")
 }

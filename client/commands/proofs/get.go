@@ -46,7 +46,7 @@ func GetProof(node client.Client, prover lc.Prover, key []byte, height int) (pro
 	}
 
 	// short-circuit with no proofs
-	if viper.GetBool(FlagTrustNode) {
+	if viper.GetBool(commands.FlagTrustNode) {
 		return proof, err
 	}
 

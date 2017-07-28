@@ -86,13 +86,13 @@ test02SendTxWithFee() {
     # make sure this works without trust also
     OLD_BC_HOME=$BC_HOME
     export BC_HOME=/foo
-    export BCTRUST_NODE=1
-    export BCNODE=localhost:46657
+    export BC_TRUST_NODE=1
+    export BC_NODE=localhost:46657
     checkSendFeeTx $HASH $TX_HEIGHT $SENDER "90" "10"
     checkAccount $SENDER "9007199254739900"
     checkAccount $RECV "1082"
-    unset BCTRUST_NODE
-    unset BCNODE
+    unset BC_TRUST_NODE
+    unset BC_NODE
     export BC_HOME=$OLD_BC_HOME
 }
 

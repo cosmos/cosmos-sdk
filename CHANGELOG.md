@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.2 (July 27, 2017)
+
+IMPROVEMENTS:
+
+* auto-test all tutorials to detect breaking changes
+* move deployment scripts from `/scripts` to `/publish` for clarity
+
+BUG FIXES:
+
+* `basecoin init` ensures the address in genesis.json is valid
+* fix bug that certain addresses couldn't receive ibc packets
+
 ## 0.6.1 (June 28, 2017)
 
 Make lots of small cli fixes that arose when people were using the tools for

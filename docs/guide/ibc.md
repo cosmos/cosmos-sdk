@@ -2,8 +2,8 @@
 
 One of the most exciting elements of the Cosmos Network is the InterBlockchain
 Communication (IBC) protocol, which enables interoperability across different
-blockchains. We implemented IBC as a basecoin plugin, and we'll show you
-how to use it to send tokens across blockchains!
+blockchains. We implemented IBC as a basecoin plugin, and we'll show you how to
+use it to send tokens across blockchains!
 
 Please note, this tutorial assumes you are familiar with [Basecoin
 plugins](/docs/guide/basecoin-plugins.md), but we'll explain how IBC works. You
@@ -175,15 +175,15 @@ The results of a query can thus be used as proof in an `IBCPacketPostTx`.
 
 ## Relay
 
-While we need all these packet types internally to keep track of all the
-proofs on both chains in a secure manner, for the normal work-flow,
-we can run a relay node that handles the cross-chain interaction.
+While we need all these packet types internally to keep track of all the proofs
+on both chains in a secure manner, for the normal work-flow, we can run a relay
+node that handles the cross-chain interaction.
 
-In this case, there are only two steps.  First `basecoin relay init`,
-which must be run once to register each chain with the other one,
-and make sure they are ready to send and recieve. And then
-`basecoin relay start`, which is a long-running process polling the queue
-on each side, and relaying all new message to the other block.
+In this case, there are only two steps.  First `basecoin relay init`, which
+must be run once to register each chain with the other one, and make sure they
+are ready to send and recieve. And then `basecoin relay start`, which is a
+long-running process polling the queue on each side, and relaying all new
+message to the other block.
 
 This requires that the relay has access to accounts with some funds on both
 chains to pay for all the ibc packets it will be forwarding.
@@ -195,14 +195,14 @@ tutorial.
 
 Make sure you have installed [basecoin and basecli](/docs/guide/install.md).
 
-Basecoin is a framework for creating new cryptocurrency applications.  It
-comes with an `IBC` plugin enabled by default.
+Basecoin is a framework for creating new cryptocurrency applications.  It comes
+with an `IBC` plugin enabled by default.
 
 You will also want to install the [jq](https://stedolan.github.io/jq/) for
 handling JSON at the command line.
 
-If you have any trouble with this, you can also look at the
-[test scripts](/tests/cli/ibc.sh) or just run `make test_cli` in basecoin repo.
+If you have any trouble with this, you can also look at the [test
+scripts](/tests/cli/ibc.sh) or just run `make test_cli` in basecoin repo.
 Otherwise, open up 5 (yes 5!) terminal tabs....
 
 ### Preliminaries
@@ -225,7 +225,9 @@ alias basecoin1="basecoin --home $BCHOME1_SERVER"
 alias basecoin2="basecoin --home $BCHOME2_SERVER"
 ```
 
-This will give us some new commands to use instead of raw `basecli` and `basecoin` to ensure we're using the right configuration for the chain we want to talk to.
+This will give us some new commands to use instead of raw `basecli` and
+`basecoin` to ensure we're using the right configuration for the chain we want
+to talk to.
 
 We also want to set some chain IDs:
 
@@ -234,7 +236,8 @@ export CHAINID1="test-chain-1"
 export CHAINID2="test-chain-2"
 ```
 
-And since we will run two different chains on one machine, we need to maintain different sets of ports:
+And since we will run two different chains on one machine, we need to maintain
+different sets of ports:
 
 ```
 export PORT_PREFIX1=1234
@@ -282,8 +285,9 @@ basecli1 query account $GOTNONE
 
 ### Setup Chain 2
 
-This is the same as above, except with `basecli2`, `basecoin2`, and `$CHAINID2`.
-We will also need to change the ports, since we're running another chain on the same local machine.
+This is the same as above, except with `basecli2`, `basecoin2`, and
+`$CHAINID2`.  We will also need to change the ports, since we're running
+another chain on the same local machine.
 
 Let's create new keys for test-chain-2:
 
@@ -315,13 +319,13 @@ basecli2 query account $BROKE
 
 ### Connect these chains
 
-OK! So we have two chains running on your local machine, with different
-keys on each.  Let's hook them up together by starting a relay process to
-forward messages from one chain to the other.
+OK! So we have two chains running on your local machine, with different keys on
+each.  Let's hook them up together by starting a relay process to forward
+messages from one chain to the other.
 
-The relay account needs some money in it to pay for the ibc messages, so
-for now, we have to transfer some cash from the rich accounts before we start
-the actual relay.
+The relay account needs some money in it to pay for the ibc messages, so for
+now, we have to transfer some cash from the rich accounts before we start the
+actual relay.
 
 ```
 # note that this key.json file is a hardcoded demo for all chains, this will

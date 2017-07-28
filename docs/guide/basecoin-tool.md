@@ -1,3 +1,57 @@
+<!--- shelldown script template, see github.com/rigelrozanski/shelldown
+#!/bin/bash
+
+testTutorial_BasecoinTool() {
+
+    rm -rf ~/.basecoin
+    rm -rf ~/.basecli
+    rm -rf example-data
+    KEYPASS=qwertyuiop
+
+    (echo $KEYPASS; echo $KEYPASS) | #shelldown[0][0] >/dev/null ; assertTrue "Expected true for line $LINENO" $? 
+    #shelldown[0][1] >/dev/null ; assertTrue "Expected true for line $LINENO" $?
+    #shelldown[1][0] ; assertTrue "Expected true for line $LINENO" $? 
+    #shelldown[1][1] ; assertTrue "Expected true for line $LINENO" $? 
+    
+    #shelldown[1][2] >>/dev/null 2>&1 &
+    sleep 5 ; PID_SERVER=$! ; disown ; assertTrue "Expected true for line $LINENO" $?
+    kill -9 $PID_SERVER >/dev/null 2>&1 ; sleep 1
+    
+    #shelldown[2][0] ; assertTrue "Expected true for line $LINENO" $? 
+    #shelldown[2][1] >>/dev/null 2>&1 &
+    sleep 5 ; PID_SERVER=$! ; disown ; assertTrue "Expected true for line $LINENO" $?
+    kill -9 $PID_SERVER >/dev/null 2>&1 ; sleep 1
+    
+    #shelldown[3][-1] >/dev/null ; assertTrue "Expected true for line $LINENO" $? 
+    
+    #shelldown[4][-1] >>/dev/null 2>&1 &
+    sleep 5 ; PID_SERVER=$! ; disown ; assertTrue "Expected true for line $LINENO" $?
+    #shelldown[5][-1] >>/dev/null 2>&1 &
+    sleep 5 ; PID_SERVER2=$! ; disown ; assertTrue "Expected true for line $LINENO" $?
+    kill -9 $PID_SERVER $PID_SERVER2 >/dev/null 2>&1 ; sleep 1
+    
+    #shelldown[4][-1] >>/dev/null 2>&1 &
+    sleep 5 ; PID_SERVER=$! ; disown ; assertTrue "Expected true for line $LINENO" $?
+    #shelldown[6][0] ; assertTrue "Expected true for line $LINENO" $? 
+    #shelldown[6][1] >>/dev/null 2>&1 &
+    sleep 5 ; PID_SERVER2=$! ; disown ; assertTrue "Expected true for line $LINENO" $?
+    kill -9 $PID_SERVER $PID_SERVER2 >/dev/null 2>&1 ; sleep 1
+    
+    #shelldown[7][-1] >/dev/null ; assertTrue "Expected true for line $LINENO" $? 
+    #shelldown[8][-1] >/dev/null ; assertTrue "Expected true for line $LINENO" $?
+    (echo $KEYPASS; echo $KEYPASS) | #shelldown[9][-1] >/dev/null ; assertTrue "Expected true for line $LINENO" $? 
+    #shelldown[10][-1] >/dev/null ; assertTrue "Expected true for line $LINENO" $? 
+    #shelldown[11][-1] >/dev/null ; assertTrue "Expected true for line $LINENO" $? 
+   
+    #cleanup 
+    rm -rf example-data
+}
+
+# load and run these tests with shunit2!
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #get this files directory
+. $DIR/shunit2
+-->
+
 # The Basecoin Tool
 
 In previous tutorials we learned the [basics of the Basecoin
@@ -9,7 +63,7 @@ details on using the Basecoin tool.
 
 Generate a key using the `basecli` tool:
 
-```
+```shelldown[0]
 basecli keys new mykey
 ME=$(basecli keys get mykey | awk '{print $2}')
 ```
@@ -19,7 +73,7 @@ ME=$(basecli keys get mykey | awk '{print $2}')
 By default, `basecoin` works out of `~/.basecoin`. To change this, set the
 `BCHOME` environment variable:
 
-```
+```shelldown[1]
 export BCHOME=~/.my_basecoin_data
 basecoin init $ME
 basecoin start
@@ -27,7 +81,7 @@ basecoin start
 
 or
 
-```
+```shelldown[2]
 BCHOME=~/.my_basecoin_data basecoin init $ME
 BCHOME=~/.my_basecoin_data basecoin start
 ```
@@ -38,7 +92,7 @@ So far we have run Basecoin and Tendermint in a single process.  However, since
 we use ABCI, we can actually run them in different processes.  First,
 initialize them:
 
-```
+```shelldown[3]
 basecoin init $ME
 ```
 
@@ -47,13 +101,13 @@ information for both Basecoin and Tendermint.
 
 Now, In one window, run
 
-```
+```shelldown[4]
 basecoin start --without-tendermint
 ```
 
 and in another,
 
-```
+```shelldown[5]
 TMROOT=~/.basecoin tendermint node
 ```
 
@@ -62,7 +116,7 @@ You should see Tendermint start making blocks!
 Alternatively, you could ignore the Tendermint details in
 `~/.basecoin/genesis.json` and use a separate directory by running:
 
-```
+```shelldown[6]
 tendermint init
 tendermint node
 ```
@@ -81,14 +135,14 @@ Now let's make our own custom Basecoin data.
 
 First, create a new directory:
 
-```
+```shelldown[7]
 mkdir example-data
 ```
 
 We can tell `basecoin` to use this directory by exporting the `BCHOME`
 environment variable:
 
-```
+```shelldown[8]
 export BCHOME=$(pwd)/example-data
 ```
 
@@ -97,13 +151,13 @@ variable to your shell startup scripts (eg. `~/.bashrc`).
 
 Now, let's create a new key:
 
-```
+```shelldown[9]
 basecli keys new foobar
 ```
 
 The key's info can be retrieved with
 
-```
+```shelldown[10]
 basecli keys get foobar -o=json
 ```
 
@@ -173,13 +227,13 @@ guide](https://tendermint.com/docs/guides/using-tendermint).
 
 You can reset all blockchain data by running:
 
-```
+```shelldown[11]
 basecoin unsafe_reset_all
 ```
 
 Similarly, you can reset client data by running:
  
-```
+```shelldown[12]
 basecli reset_all
 ```
 

@@ -12,6 +12,8 @@ import (
 
 // GetAccount - Get account from store and address
 func GetAccount(store state.SimpleDB, addr basecoin.Actor) (Account, error) {
+	// if the actor is another chain, we use one address for the chain....
+	addr = ChainAddr(addr)
 	acct, err := loadAccount(store, addr.Bytes())
 
 	// for empty accounts, don't return an error, but rather an empty account
@@ -23,12 +25,18 @@ func GetAccount(store state.SimpleDB, addr basecoin.Actor) (Account, error) {
 
 // CheckCoins makes sure there are funds, but doesn't change anything
 func CheckCoins(store state.SimpleDB, addr basecoin.Actor, coins Coins) (Coins, error) {
+	// if the actor is another chain, we use one address for the chain....
+	addr = ChainAddr(addr)
+
 	acct, err := updateCoins(store, addr, coins)
 	return acct.Coins, err
 }
 
 // ChangeCoins changes the money, returns error if it would be negative
 func ChangeCoins(store state.SimpleDB, addr basecoin.Actor, coins Coins) (Coins, error) {
+	// if the actor is another chain, we use one address for the chain....
+	addr = ChainAddr(addr)
+
 	acct, err := updateCoins(store, addr, coins)
 	if err != nil {
 		return acct.Coins, err
@@ -36,6 +44,19 @@ func ChangeCoins(store state.SimpleDB, addr basecoin.Actor, coins Coins) (Coins,
 
 	err = storeAccount(store, addr.Bytes(), acct)
 	return acct.Coins, err
+}
+
+// ChainAddr collapses all addresses from another chain into one, so we can
+// keep an over-all balance
+//
+// TODO: is there a better way to do this?
+func ChainAddr(addr basecoin.Actor) basecoin.Actor {
+	if addr.ChainID == "" {
+		return addr
+	}
+	addr.App = ""
+	addr.Address = nil
+	return addr
 }
 
 // updateCoins will load the account, make all checks, and return the updated account.
@@ -63,7 +84,11 @@ func updateCoins(store state.SimpleDB, addr basecoin.Actor, coins Coins) (acct A
 
 // Account - coin account structure
 type Account struct {
+	// Coins is how much is on the account
 	Coins Coins `json:"coins"`
+	// Credit is how much has been "fronted" to the account
+	// (this is usually 0 except for trusted chains)
+	Credit Coins `json:"credit"`
 }
 
 func loadAccount(store state.SimpleDB, key []byte) (acct Account, err error) {
@@ -84,5 +109,37 @@ func storeAccount(store state.SimpleDB, key []byte, acct Account) error {
 	// fmt.Printf("store: %X\n", key)
 	bin := wire.BinaryBytes(acct)
 	store.Set(key, bin)
+	return nil // real stores can return error...
+}
+
+// HandlerInfo - this is global info on the coin handler
+type HandlerInfo struct {
+	Issuer basecoin.Actor `json:"issuer"`
+}
+
+// TODO: where to store these special pieces??
+var handlerKey = []byte{12, 34}
+
+func loadHandlerInfo(store state.KVStore) (info HandlerInfo, err error) {
+	data := store.Get(handlerKey)
+	if len(data) == 0 {
+		return info, nil
+	}
+	err = wire.ReadBinaryBytes(data, &info)
+	if err != nil {
+		msg := "Error reading handler info"
+		return info, errors.ErrInternal(msg)
+	}
+	return info, nil
+}
+
+func storeIssuer(store state.KVStore, issuer basecoin.Actor) error {
+	info, err := loadHandlerInfo(store)
+	if err != nil {
+		return err
+	}
+	info.Issuer = issuer
+	d := wire.BinaryBytes(info)
+	store.Set(handlerKey, d)
 	return nil // real stores can return error...
 }

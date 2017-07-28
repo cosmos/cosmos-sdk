@@ -1,5 +1,5 @@
-hash: 45eed61138603d4d03518ea822068cf32b45d0a219bb7f3b836e52129f2a3a2b
-updated: 2017-07-26T19:44:39.753066441-04:00
+hash: 2848c30b31fb205f846dd7dfca14ebed8a3249cbc5aaa759066b2bab3e4bbf42
+updated: 2017-07-27T16:46:31.962147949-04:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -57,6 +57,8 @@ imports:
   - json/parser
   - json/scanner
   - json/token
+- name: github.com/howeyc/crc16
+  version: 96a97a1abb579c7ff1a8ffa77f2e72d1c314b57f
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jmhodges/levigo
@@ -117,7 +119,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: d31cfbaeaa4d930798ec327b52917975f3203c11
+  version: bf355d1b58b27d4e98d8fb237eb14887b93a88f7
   subpackages:
   - cmd
   - keys
@@ -133,7 +135,7 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: 1c53d04dcc65c2fd15526152ed0651af10a09982
+  version: fcf4e411583135a1900157b8b0274c41e20ea3a1
   subpackages:
   - certifiers
   - certifiers/client

@@ -19,6 +19,7 @@ import (
 	basecmd "github.com/tendermint/basecoin/modules/base/commands"
 	coincmd "github.com/tendermint/basecoin/modules/coin/commands"
 	feecmd "github.com/tendermint/basecoin/modules/fee/commands"
+	ibccmd "github.com/tendermint/basecoin/modules/ibc/commands"
 	noncecmd "github.com/tendermint/basecoin/modules/nonce/commands"
 	rolecmd "github.com/tendermint/basecoin/modules/roles/commands"
 )
@@ -46,6 +47,7 @@ func main() {
 		coincmd.AccountQueryCmd,
 		noncecmd.NonceQueryCmd,
 		rolecmd.RoleQueryCmd,
+		ibccmd.IBCQueryCmd,
 	)
 	proofs.TxPresenters.Register("base", txcmd.BaseTxPresenter{})
 
@@ -63,8 +65,13 @@ func main() {
 	txcmd.RootCmd.AddCommand(
 		// This is the default transaction, optional in your app
 		coincmd.SendTxCmd,
+		coincmd.CreditTxCmd,
 		// this enables creating roles
 		rolecmd.CreateRoleTxCmd,
+		// these are for handling ibc
+		ibccmd.RegisterChainTxCmd,
+		ibccmd.UpdateChainTxCmd,
+		ibccmd.PostPacketTxCmd,
 	)
 
 	// Set up the various commands to use

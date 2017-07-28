@@ -22,7 +22,7 @@ import:
   subpackages:
   - data
 - package: github.com/tendermint/light-client
-  version: 1c53d04dcc65c2fd15526152ed0651af10a09982
+  version: unstable
   subpackages:
   - proofs
   - certifiers

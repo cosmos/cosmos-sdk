@@ -7,7 +7,7 @@ import (
 
 // nolint
 const (
-	ByteFees = 0x21
+	ByteFees = 0x28
 	TypeFees = NameFee + "/tx"
 )
 

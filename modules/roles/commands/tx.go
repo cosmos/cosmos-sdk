@@ -11,7 +11,7 @@ import (
 	"github.com/tendermint/basecoin/modules/roles"
 )
 
-// CreateRoleTxCmd is CLI command to send tokens between basecoin accounts
+// CreateRoleTxCmd is CLI command to create a new role
 var CreateRoleTxCmd = &cobra.Command{
 	Use:   "create-role",
 	Short: "Create a new role",
@@ -32,7 +32,7 @@ func init() {
 	flags.Int(FlagMinSigs, 0, "Minimum number of signatures needed to assume this role")
 }
 
-// createRoleTxCmd is an example of how to make a tx
+// createRoleTxCmd creates a basic role tx and then wraps, signs, and posts it
 func createRoleTxCmd(cmd *cobra.Command, args []string) error {
 	tx, err := readCreateRoleTxFlags()
 	if err != nil {

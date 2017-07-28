@@ -10,12 +10,6 @@ import (
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/modules/auth"
-	"github.com/tendermint/basecoin/modules/base"
-	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/modules/fee"
-	"github.com/tendermint/basecoin/modules/nonce"
-	"github.com/tendermint/basecoin/modules/roles"
 	"github.com/tendermint/basecoin/stack"
 	sm "github.com/tendermint/basecoin/state"
 	"github.com/tendermint/basecoin/version"
@@ -48,28 +42,6 @@ func NewBasecoin(handler basecoin.Handler, store *Store, logger log.Logger) *Bas
 		state:   store,
 		logger:  logger,
 	}
-}
-
-// DefaultHandler - placeholder to just handle sendtx
-func DefaultHandler(feeDenom string) basecoin.Handler {
-	// use the default stack
-	c := coin.NewHandler()
-	r := roles.NewHandler()
-	d := stack.NewDispatcher(
-		stack.WrapHandler(c),
-		stack.WrapHandler(r),
-	)
-	return stack.New(
-		base.Logger{},
-		stack.Recovery{},
-		auth.Signatures{},
-		base.Chain{},
-		stack.Checkpoint{OnCheck: true},
-		nonce.ReplayCheck{},
-		roles.NewMiddleware(),
-		fee.NewSimpleFeeMiddleware(coin.Coin{feeDenom, 0}, fee.Bank),
-		stack.Checkpoint{OnDeliver: true},
-	).Use(d)
 }
 
 // GetChainID returns the currently stored chain

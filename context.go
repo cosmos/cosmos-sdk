@@ -43,6 +43,24 @@ func (a Actor) Empty() bool {
 	return a.ChainID == "" && a.App == "" && len(a.Address) == 0
 }
 
+// WithChain creates a copy of the actor with a different chainID
+func (a Actor) WithChain(chainID string) (b Actor) {
+	b = a
+	b.ChainID = chainID
+	return
+}
+
+type Actors []Actor
+
+func (a Actors) AllHaveChain(chainID string) bool {
+	for _, b := range a {
+		if b.ChainID != chainID {
+			return false
+		}
+	}
+	return true
+}
+
 // Context is an interface, so we can implement "secure" variants that
 // rely on private fields to control the actions
 type Context interface {

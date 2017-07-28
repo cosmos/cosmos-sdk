@@ -16,6 +16,7 @@ var (
 	errUnknownTxType    = fmt.Errorf("Tx type unknown")
 	errInvalidFormat    = fmt.Errorf("Invalid format")
 	errUnknownModule    = fmt.Errorf("Unknown module")
+	errUnknownKey       = fmt.Errorf("Unknown key")
 
 	internalErr    = abci.CodeType_InternalError
 	encodingErr    = abci.CodeType_EncodingError
@@ -39,7 +40,7 @@ func unwrap(i interface{}) interface{} {
 
 func ErrUnknownTxType(tx interface{}) TMError {
 	msg := fmt.Sprintf("%T", unwrap(tx))
-	return WithMessage(msg, errUnknownTxType, abci.CodeType_UnknownRequest)
+	return WithMessage(msg, errUnknownTxType, unknownRequest)
 }
 func IsUnknownTxTypeErr(err error) bool {
 	return IsSameError(errUnknownTxType, err)
@@ -47,17 +48,24 @@ func IsUnknownTxTypeErr(err error) bool {
 
 func ErrInvalidFormat(expected string, tx interface{}) TMError {
 	msg := fmt.Sprintf("%T not %s", unwrap(tx), expected)
-	return WithMessage(msg, errInvalidFormat, abci.CodeType_UnknownRequest)
+	return WithMessage(msg, errInvalidFormat, unknownRequest)
 }
 func IsInvalidFormatErr(err error) bool {
 	return IsSameError(errInvalidFormat, err)
 }
 
 func ErrUnknownModule(mod string) TMError {
-	return WithMessage(mod, errUnknownModule, abci.CodeType_UnknownRequest)
+	return WithMessage(mod, errUnknownModule, unknownRequest)
 }
 func IsUnknownModuleErr(err error) bool {
 	return IsSameError(errUnknownModule, err)
+}
+
+func ErrUnknownKey(mod string) TMError {
+	return WithMessage(mod, errUnknownKey, unknownRequest)
+}
+func IsUnknownKeyErr(err error) bool {
+	return IsSameError(errUnknownKey, err)
 }
 
 func ErrInternal(msg string) TMError {

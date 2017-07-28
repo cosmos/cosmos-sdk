@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
+	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/basecoin/state"
@@ -75,7 +76,7 @@ func TestHandlerValidation(t *testing.T) {
 
 	for i, tc := range cases {
 		ctx := stack.MockContext("base-chain", 100).WithPermissions(tc.perms...)
-		_, err := checkTx(ctx, tc.tx)
+		err := checkTx(ctx, tc.tx.Unwrap().(SendTx))
 		if tc.valid {
 			assert.Nil(err, "%d: %+v", i, err)
 		} else {
@@ -84,7 +85,7 @@ func TestHandlerValidation(t *testing.T) {
 	}
 }
 
-func TestDeliverTx(t *testing.T) {
+func TestDeliverSendTx(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -149,7 +150,7 @@ func TestDeliverTx(t *testing.T) {
 		}
 
 		ctx := stack.MockContext("base-chain", 100).WithPermissions(tc.perms...)
-		_, err := h.DeliverTx(ctx, store, tc.tx)
+		_, err := h.DeliverTx(ctx, store, tc.tx, nil)
 		if len(tc.final) > 0 { // valid
 			assert.Nil(err, "%d: %+v", i, err)
 			// make sure the final balances are correct
@@ -204,7 +205,7 @@ func TestSetOption(t *testing.T) {
 		for j, gen := range tc.init {
 			value, err := json.Marshal(gen)
 			require.Nil(err, "%d,%d: %+v", i, j, err)
-			_, err = h.SetOption(l, store, NameCoin, key, string(value))
+			_, err = h.SetOption(l, store, NameCoin, key, string(value), nil)
 			require.Nil(err)
 		}
 
@@ -215,5 +216,141 @@ func TestSetOption(t *testing.T) {
 			assert.Equal(f.coins, acct.Coins)
 		}
 	}
+}
 
+func TestSetIssuer(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	cases := []struct {
+		issuer basecoin.Actor
+	}{
+		{basecoin.Actor{App: "sig", Address: []byte("gwkfgk")}},
+		// and set back to empty (nil is valid, but assert.Equals doesn't match)
+		{basecoin.Actor{Address: []byte{}}},
+		{basecoin.Actor{ChainID: "other", App: "role", Address: []byte("vote")}},
+	}
+
+	h := NewHandler()
+	l := log.NewNopLogger()
+	for i, tc := range cases {
+		store := state.NewMemKVStore()
+		key := "issuer"
+
+		value, err := json.Marshal(tc.issuer)
+		require.Nil(err, "%d,%d: %+v", i, err)
+		_, err = h.SetOption(l, store, NameCoin, key, string(value), nil)
+		require.Nil(err, "%+v", err)
+
+		// check state is proper
+		info, err := loadHandlerInfo(store)
+		assert.Nil(err, "%d: %+v", i, err)
+		assert.Equal(tc.issuer, info.Issuer)
+	}
+}
+
+func TestDeliverCreditTx(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	// sample coins
+	someCoins := Coins{{"atom", 6570}}
+	minusCoins := Coins{{"atom", -1234}}
+	lessCoins := someCoins.Plus(minusCoins)
+	otherCoins := Coins{{"eth", 11}}
+	mixedCoins := someCoins.Plus(otherCoins)
+
+	// some sample addresses
+	owner := basecoin.Actor{App: "foo", Address: []byte("rocks")}
+	addr1 := basecoin.Actor{App: "coin", Address: []byte{1, 2}}
+	key := NewAccountWithKey(someCoins)
+	addr2 := key.Actor()
+	addr3 := basecoin.Actor{ChainID: "other", App: "sigs", Address: []byte{3, 9}}
+
+	h := NewHandler()
+	store := state.NewMemKVStore()
+	ctx := stack.MockContext("secret", 77)
+
+	// set the owner who can issue credit
+	js, err := json.Marshal(owner)
+	require.Nil(err, "%+v", err)
+	_, err = h.SetOption(log.NewNopLogger(), store, "coin", "issuer", string(js), nil)
+	require.Nil(err, "%+v", err)
+
+	// give addr2 some coins to start
+	_, err = h.SetOption(log.NewNopLogger(), store, "coin", "account", key.MakeOption(), nil)
+	require.Nil(err, "%+v", err)
+
+	cases := []struct {
+		tx       basecoin.Tx
+		perm     basecoin.Actor
+		check    errors.CheckErr
+		addr     basecoin.Actor
+		expected Account
+	}{
+		// require permission
+		{
+			tx:    NewCreditTx(addr1, someCoins),
+			check: errors.IsUnauthorizedErr,
+		},
+		// add credit
+		{
+			tx:       NewCreditTx(addr1, someCoins),
+			perm:     owner,
+			check:    errors.NoErr,
+			addr:     addr1,
+			expected: Account{Coins: someCoins, Credit: someCoins},
+		},
+		// remove some
+		{
+			tx:       NewCreditTx(addr1, minusCoins),
+			perm:     owner,
+			check:    errors.NoErr,
+			addr:     addr1,
+			expected: Account{Coins: lessCoins, Credit: lessCoins},
+		},
+		// can't remove more cash than there is
+		{
+			tx:    NewCreditTx(addr1, otherCoins.Negative()),
+			perm:  owner,
+			check: IsInsufficientFundsErr,
+		},
+		// cumulative with initial state
+		{
+			tx:       NewCreditTx(addr2, otherCoins),
+			perm:     owner,
+			check:    errors.NoErr,
+			addr:     addr2,
+			expected: Account{Coins: mixedCoins, Credit: otherCoins},
+		},
+		// Even if there is cash, credit can't go negative
+		{
+			tx:    NewCreditTx(addr2, minusCoins),
+			perm:  owner,
+			check: IsInsufficientCreditErr,
+		},
+		// make sure it works for other chains
+		{
+			tx:       NewCreditTx(addr3, mixedCoins),
+			perm:     owner,
+			check:    errors.NoErr,
+			addr:     ChainAddr(addr3),
+			expected: Account{Coins: mixedCoins, Credit: mixedCoins},
+		},
+	}
+
+	for i, tc := range cases {
+		myStore := store.Checkpoint()
+
+		myCtx := ctx.WithPermissions(tc.perm)
+		_, err = h.DeliverTx(myCtx, myStore, tc.tx, nil)
+		assert.True(tc.check(err), "%d: %+v", i, err)
+
+		if err == nil {
+			store.Commit(myStore)
+			acct, err := GetAccount(store, tc.addr)
+			require.Nil(err, "%+v", err)
+			assert.Equal(tc.expected, acct, "%d", i)
+		}
+	}
 }

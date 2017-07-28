@@ -120,7 +120,10 @@ func GetGenesisJSON(chainID, addr string) string {
           "amount": 9007199254740992
         }
       ]
-    }]
+    }],
+    "plugin_options": [
+      "coin/issuer", {"app": "sigs", "addr": "%s"}
+    ]
   }
-}`, chainID, addr)
+}`, chainID, addr, addr)
 }

@@ -2,8 +2,10 @@ package proofs
 
 import "github.com/spf13/cobra"
 
+// nolint
 const (
-	heightFlag = "height"
+	FlagHeight    = "height"
+	FlagTrustNode = "trust-node"
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -19,5 +21,6 @@ data to other peers as needed.
 }
 
 func init() {
-	RootCmd.Flags().Int(heightFlag, 0, "Height to query (skip to use latest block)")
+	RootCmd.Flags().Int(FlagHeight, 0, "Height to query (skip to use latest block)")
+	RootCmd.Flags().Bool(FlagTrustNode, false, "DANGEROUS: blindly trust all results from the server")
 }

@@ -26,6 +26,7 @@ import (
 func GetAndParseAppProof(key []byte, data interface{}) (lc.Proof, error) {
 	height := GetHeight()
 	node := commands.GetNode()
+
 	prover := proofs.NewAppProver(node)
 
 	proof, err := GetProof(node, prover, key, height)
@@ -43,7 +44,12 @@ func GetProof(node client.Client, prover lc.Prover, key []byte, height int) (pro
 	if err != nil {
 		return
 	}
-	ph := int(proof.BlockHeight())
+
+	// short-circuit with no proofs
+	if viper.GetBool(FlagTrustNode) {
+		return proof, err
+	}
+
 	// here is the certifier, root of all knowledge
 	cert, err := commands.GetCertifier()
 	if err != nil {
@@ -55,6 +61,7 @@ func GetProof(node client.Client, prover lc.Prover, key []byte, height int) (pro
 	// FIXME: cannot use cert.GetByHeight for now, as it also requires
 	// Validators and will fail on querying tendermint for non-current height.
 	// When this is supported, we should use it instead...
+	ph := int(proof.BlockHeight())
 	client.WaitForHeight(node, ph, nil)
 	commit, err := node.Commit(ph)
 	if err != nil {
@@ -96,7 +103,7 @@ func ParseHexKey(args []string, argname string) ([]byte, error) {
 }
 
 func GetHeight() int {
-	return viper.GetInt(heightFlag)
+	return viper.GetInt(FlagHeight)
 }
 
 type proof struct {

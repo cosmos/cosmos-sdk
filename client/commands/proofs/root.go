@@ -26,4 +26,5 @@ func init() {
 	RootCmd.PersistentFlags().Int(FlagHeight, 0, "Height to query (skip to use latest block)")
 	RootCmd.PersistentFlags().Bool(commands.FlagTrustNode, false,
 		"DANGEROUS: blindly trust all results from the server")
+	RootCmd.PersistentFlags().MarkHidden(commands.FlagTrustNode)
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	crypto "github.com/tendermint/go-crypto"
 )
 
 const (
@@ -56,4 +57,22 @@ func parseDigest(resp []byte) (key, sig []byte, err error) {
 
 	sig = resp[len(separator):]
 	return key, sig, nil
+}
+
+func parseKey(data []byte) (key crypto.PubKey, err error) {
+	ed := crypto.PubKeyEd25519{}
+	if len(data) < len(ed) {
+		return key, errors.Errorf("Key length too short: %d", len(data))
+	}
+	copy(ed[:], data)
+	return ed.Wrap(), nil
+}
+
+func parseSig(data []byte) (key crypto.Signature, err error) {
+	ed := crypto.SignatureEd25519{}
+	if len(data) < len(ed) {
+		return key, errors.Errorf("Sig length too short: %d", len(data))
+	}
+	copy(ed[:], data)
+	return ed.Wrap(), nil
 }

@@ -196,8 +196,8 @@ func doSend(w http.ResponseWriter, r *http.Request) {
 	if si.To == nil {
 		errsList = append(errsList, `"to" cannot be nil`)
 	}
-	if si.Fees == nil {
-		errsList = append(errsList, `"fees" cannot be nil`)
+	if len(si.Amount) == 0 {
+		errsList = append(errsList, `"amount" cannot be empty`)
 	}
 	if len(errsList) > 0 {
 		err := &ErrorResponse{
@@ -208,21 +208,13 @@ func doSend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	coins := []coin.Coin{*si.Fees}
-	in := []coin.TxInput{
-		coin.NewTxInput(*si.From, coins),
+	tx := coin.NewSendOneTx(*si.From, *si.To, si.Amount)
+	// fees are optional
+	if si.Fees != nil && !si.Fees.IsZero() {
+		tx = fee.NewFee(tx, *si.Fees, *si.From)
 	}
-	out := []coin.TxOutput{
-		coin.NewTxOutput(*si.To, coins),
-	}
-
-	tx := coin.NewSendTx(in, out)
-	tx = fee.NewFee(tx, *si.Fees, *si.From)
-
-	signers := []basecoin.Actor{
-		*si.From,
-		*si.To,
-	}
+	// only add the actual signer to the nonce
+	signers := []basecoin.Actor{*si.From}
 	tx = nonce.NewTx(si.Sequence, signers, tx)
 	tx = base.NewChainTx(commands.GetChainID(), 0, tx)
 
@@ -231,4 +223,5 @@ func doSend(w http.ResponseWriter, r *http.Request) {
 	} else {
 		tx = auth.NewSig(tx).Wrap()
 	}
+	writeSuccess(w, tx)
 }

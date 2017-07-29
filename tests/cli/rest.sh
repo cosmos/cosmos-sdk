@@ -3,7 +3,7 @@
 # These global variables are required for common.sh
 SERVER_EXE=basecoin
 CLIENT_EXE=basecli
-ACCOUNTS=(jaekwon ethan bucky rigel igor)
+ACCOUNTS=(jae ethan bucky rigel igor)
 RICH=${ACCOUNTS[0]}
 POOR=${ACCOUNTS[4]}
 

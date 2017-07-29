@@ -15,26 +15,26 @@ import (
 )
 
 type CreateKeyRequest struct {
-	Name       string `json:"name,omitempty" validate:"required,min=4,printascii"`
-	Passphrase string `json:"passphrase,omitempty" validate:"required,min=10"`
+	Name       string `json:"name,omitempty" validate:"required,min=3,printascii"`
+	Passphrase string `json:"password,omitempty" validate:"required,min=10"`
 
 	// Algo is the requested algorithm to create the key
 	Algo string `json:"algo,omitempty"`
 }
 
 type DeleteKeyRequest struct {
-	Name       string `json:"name,omitempty" validate:"required,min=4,printascii"`
-	Passphrase string `json:"passphrase,omitempty" validate:"required,min=10"`
+	Name       string `json:"name,omitempty" validate:"required,min=3,printascii"`
+	Passphrase string `json:"password,omitempty" validate:"required,min=10"`
 }
 
 type UpdateKeyRequest struct {
-	Name    string `json:"name,omitempty" validate:"required,min=4,printascii"`
-	OldPass string `json:"passphrase,omitempty" validate:"required,min=10"`
+	Name    string `json:"name,omitempty" validate:"required,min=3,printascii"`
+	OldPass string `json:"password,omitempty" validate:"required,min=10"`
 	NewPass string `json:"new_passphrase,omitempty" validate:"required,min=10"`
 }
 
 type SignRequest struct {
-	Name     string `json:"name,omitempty" validate:"required,min=4,printascii"`
+	Name     string `json:"name,omitempty" validate:"required,min=3,printascii"`
 	Password string `json:"password,omitempty" validate:"required,min=10"`
 
 	Tx basecoin.Tx `json:"tx" validate:"required"`

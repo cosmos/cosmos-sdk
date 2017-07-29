@@ -60,12 +60,13 @@ type CreateKeyResponse struct {
 // many fields so it would be nice to figure out all the invalid
 // inputs and report them back to the caller, in one shot.
 type SendInput struct {
-	Fees     *coin.Coin `json:"amount"`
+	Fees     *coin.Coin `json:"fees"`
 	Multi    bool       `json:"multi,omitempty"`
 	Sequence uint32     `json:"sequence"`
 
-	To   *basecoin.Actor `json:"to"`
-	From *basecoin.Actor `json:"from"`
+	To     *basecoin.Actor `json:"to"`
+	From   *basecoin.Actor `json:"from"`
+	Amount coin.Coins      `json:"amount"`
 }
 
 // Validators

@@ -69,6 +69,8 @@ test02SendTxWithFee() {
     # assert replay protection
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --sequence=2 --to=$RECV --name=$RICH 2>/dev/null)
     assertFalse "line=${LINENO}, replay: $TX" $?
+
+    # checking normally
     checkAccount $SENDER "9007199254739900"
     checkAccount $RECV "1082"
 
@@ -80,6 +82,18 @@ test02SendTxWithFee() {
     if assertTrue "line=${LINENO}, no nonce query" $?; then
         assertEquals "line=${LINENO}, proper nonce" "2" $(echo $NONCE | jq .data)
     fi
+
+    # make sure this works without trust also
+    OLD_BC_HOME=$BC_HOME
+    export BC_HOME=/foo
+    export BC_TRUST_NODE=1
+    export BC_NODE=localhost:46657
+    checkSendFeeTx $HASH $TX_HEIGHT $SENDER "90" "10"
+    checkAccount $SENDER "9007199254739900"
+    checkAccount $RECV "1082"
+    unset BC_TRUST_NODE
+    unset BC_NODE
+    export BC_HOME=$OLD_BC_HOME
 }
 
 

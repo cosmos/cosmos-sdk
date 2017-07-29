@@ -1,9 +1,13 @@
 package proofs
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
+	"github.com/tendermint/basecoin/client/commands"
+)
 
+// nolint
 const (
-	heightFlag = "height"
+	FlagHeight = "height"
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -19,5 +23,8 @@ data to other peers as needed.
 }
 
 func init() {
-	RootCmd.Flags().Int(heightFlag, 0, "Height to query (skip to use latest block)")
+	RootCmd.PersistentFlags().Int(FlagHeight, 0, "Height to query (skip to use latest block)")
+	RootCmd.PersistentFlags().Bool(commands.FlagTrustNode, false,
+		"DANGEROUS: blindly trust all results from the server")
+	RootCmd.PersistentFlags().MarkHidden(commands.FlagTrustNode)
 }

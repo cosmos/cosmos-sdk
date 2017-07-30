@@ -18,13 +18,13 @@ func TestEncoding(t *testing.T) {
 	require := require.New(t)
 
 	raw := stack.NewRawTx([]byte{0x34, 0xa7})
-	raw2 := stack.NewRawTx([]byte{0x73, 0x86, 0x22})
+	// raw2 := stack.NewRawTx([]byte{0x73, 0x86, 0x22})
 
 	cases := []struct {
 		Tx basecoin.Tx
 	}{
 		{raw},
-		{NewMultiTx(raw, raw2)},
+		// {NewMultiTx(raw, raw2)},
 		{NewChainTx("foobar", 0, raw)},
 	}
 

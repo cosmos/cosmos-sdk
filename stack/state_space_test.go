@@ -24,13 +24,13 @@ var _ Middleware = writerMid{}
 func (w writerMid) Name() string { return w.name }
 
 func (w writerMid) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Checker) (basecoin.Result, error) {
+	tx basecoin.Tx, next basecoin.Checker) (basecoin.CheckResult, error) {
 	store.Set(w.key, w.value)
 	return next.CheckTx(ctx, store, tx)
 }
 
 func (w writerMid) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Deliver) (basecoin.Result, error) {
+	tx basecoin.Tx, next basecoin.Deliver) (basecoin.DeliverResult, error) {
 	store.Set(w.key, w.value)
 	return next.DeliverTx(ctx, store, tx)
 }
@@ -52,15 +52,15 @@ var _ basecoin.Handler = writerHand{}
 func (w writerHand) Name() string { return w.name }
 
 func (w writerHand) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx) (basecoin.Result, error) {
+	tx basecoin.Tx) (basecoin.CheckResult, error) {
 	store.Set(w.key, w.value)
-	return basecoin.Result{}, nil
+	return basecoin.CheckResult{}, nil
 }
 
 func (w writerHand) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx) (basecoin.Result, error) {
+	tx basecoin.Tx) (basecoin.DeliverResult, error) {
 	store.Set(w.key, w.value)
-	return basecoin.Result{}, nil
+	return basecoin.DeliverResult{}, nil
 }
 
 func (w writerHand) SetOption(l log.Logger, store state.SimpleDB, module,

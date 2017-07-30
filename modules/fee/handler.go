@@ -47,6 +47,9 @@ func (SimpleFeeMiddleware) Name() string {
 // CheckTx - check the transaction
 func (h SimpleFeeMiddleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 	fee, err := h.verifyFee(ctx, tx)
+	if IsSkipFeesErr(err) {
+		return next.CheckTx(ctx, store, tx)
+	}
 	if err != nil {
 		return res, err
 	}
@@ -58,12 +61,16 @@ func (h SimpleFeeMiddleware) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 			return res, err
 		}
 	}
+
 	return next.CheckTx(ctx, store, fee.Tx)
 }
 
 // DeliverTx - send the fee handler transaction
 func (h SimpleFeeMiddleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 	fee, err := h.verifyFee(ctx, tx)
+	if IsSkipFeesErr(err) {
+		return next.DeliverTx(ctx, store, tx)
+	}
 	if err != nil {
 		return res, err
 	}
@@ -83,7 +90,7 @@ func (h SimpleFeeMiddleware) verifyFee(ctx basecoin.Context, tx basecoin.Tx) (Fe
 	if !ok {
 		// the fee wrapper is not required if there is no minimum
 		if h.MinFee.IsZero() {
-			return feeTx, nil
+			return feeTx, ErrSkipFees()
 		}
 		return feeTx, errors.ErrInvalidFormat(TypeFees, tx)
 	}

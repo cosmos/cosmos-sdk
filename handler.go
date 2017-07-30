@@ -87,10 +87,12 @@ type Dataer interface {
 // CheckResult captures any non-error abci result
 // to make sure people use error for error cases
 type CheckResult struct {
-	Data         data.Bytes
-	Log          string
+	Data data.Bytes
+	Log  string
+	// GasAllocated is the maximum units of work we allow this tx to perform
 	GasAllocated uint
-	GasPrice     uint
+	// GasPayment is the total fees for this tx (or other source of payment)
+	GasPayment uint
 }
 
 var _ Dataer = CheckResult{}

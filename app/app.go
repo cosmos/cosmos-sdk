@@ -23,11 +23,12 @@ const (
 
 // Basecoin - The ABCI application
 type Basecoin struct {
-	info *sm.ChainState
-
+	info  *sm.ChainState
 	state *Store
 
 	handler basecoin.Handler
+
+	pending []*abci.Validator
 	height  uint64
 	logger  log.Logger
 }
@@ -109,6 +110,9 @@ func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
 	if err != nil {
 		return errors.Result(err)
 	}
+	if len(res.Diff) > 0 {
+		app.pending = append(app.pending, res.Diff...)
+	}
 	return res.ToABCI()
 }
 
@@ -169,11 +173,11 @@ func (app *Basecoin) BeginBlock(hash []byte, header *abci.Header) {
 }
 
 // EndBlock - ABCI
+// Returns a list of all validator changes made in this block
 func (app *Basecoin) EndBlock(height uint64) (res abci.ResponseEndBlock) {
-	// for _, plugin := range app.plugins.GetList() {
-	// 	pluginRes := plugin.EndBlock(app.state, height)
-	// 	res.Diffs = append(res.Diffs, pluginRes.Diffs...)
-	// }
+	// TODO: cleanup in case a validator exists multiple times in the list
+	res.Diffs = app.pending
+	app.pending = nil
 	return
 }
 

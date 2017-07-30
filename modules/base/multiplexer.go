@@ -18,7 +18,7 @@ package base
 
 // // Multiplexer grabs a MultiTx and sends them sequentially down the line
 // type Multiplexer struct {
-// 	stack.PassOption
+// 	stack.PassInitState
 // }
 
 // // Name of the module - fulfills Middleware interface

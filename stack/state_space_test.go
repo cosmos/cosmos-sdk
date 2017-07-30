@@ -17,6 +17,7 @@ import (
 type writerMid struct {
 	name       string
 	key, value []byte
+	PassInitValidate
 }
 
 var _ Middleware = writerMid{}
@@ -41,10 +42,11 @@ func (w writerMid) InitState(l log.Logger, store state.SimpleDB, module,
 	return next.InitState(l, store, module, key, value)
 }
 
-// writerHand is a middleware that writes the given bytes on CheckTx and DeliverTx
+// writerHand is a handler that writes the given bytes on CheckTx and DeliverTx
 type writerHand struct {
 	name       string
 	key, value []byte
+	basecoin.NopInitValidate
 }
 
 var _ basecoin.Handler = writerHand{}
@@ -76,9 +78,9 @@ func TestStateSpace(t *testing.T) {
 		expected []data.Bytes
 	}{
 		{
-			writerHand{"foo", []byte{1, 2}, []byte("bar")},
+			writerHand{name: "foo", key: []byte{1, 2}, value: []byte("bar")},
 			[]Middleware{
-				writerMid{"bing", []byte{1, 2}, []byte("bang")},
+				writerMid{name: "bing", key: []byte{1, 2}, value: []byte("bang")},
 			},
 			[]data.Bytes{
 				{'f', 'o', 'o', 0, 1, 2},

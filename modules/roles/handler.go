@@ -11,7 +11,8 @@ const NameRole = "role"
 
 // Handler allows us to create new roles
 type Handler struct {
-	basecoin.NopOption
+	basecoin.NopInitState
+	basecoin.NopInitValidate
 }
 
 var _ basecoin.Handler = Handler{}

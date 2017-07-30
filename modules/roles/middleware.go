@@ -9,7 +9,8 @@ import (
 // Middleware allows us to add a requested role as a permission
 // if the tx requests it and has sufficient authority
 type Middleware struct {
-	stack.PassOption
+	stack.PassInitState
+	stack.PassInitValidate
 }
 
 var _ stack.Middleware = Middleware{}

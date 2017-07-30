@@ -10,22 +10,27 @@ import (
 
 // Handler is anything that processes a transaction
 type Handler interface {
+	// Checker verifies there are valid fees and estimates work
 	Checker
+	// Deliver performs the tx once it makes it in the block
 	Deliver
-	// This is for app options
+	// InitStater sets state from the genesis file
 	InitStater
+	// InitValidater sets the initial validator set
+	InitValidater
+	// Named ensures there is a name for the item
 	Named
-	// TODO: for staker
-	// InitChain(log log.Logger, store state.SimpleDB, vals []*abci.Validator)
 
 	// TODO????
 	// BeginBlock(store state.SimpleDB, hash []byte, header *abci.Header)
 }
 
+// Named ensures there is a name for the item
 type Named interface {
 	Name() string
 }
 
+// Checker verifies there are valid fees and estimates work
 type Checker interface {
 	CheckTx(ctx Context, store state.SimpleDB, tx Tx) (CheckResult, error)
 }
@@ -37,6 +42,7 @@ func (c CheckerFunc) CheckTx(ctx Context, store state.SimpleDB, tx Tx) (CheckRes
 	return c(ctx, store, tx)
 }
 
+// Deliver performs the tx once it makes it in the block
 type Deliver interface {
 	DeliverTx(ctx Context, store state.SimpleDB, tx Tx) (DeliverResult, error)
 }
@@ -48,6 +54,7 @@ func (c DeliverFunc) DeliverTx(ctx Context, store state.SimpleDB, tx Tx) (Delive
 	return c(ctx, store, tx)
 }
 
+// InitStater sets state from the genesis file
 type InitStater interface {
 	InitState(l log.Logger, store state.SimpleDB, module, key, value string) (string, error)
 }
@@ -57,6 +64,18 @@ type InitStateFunc func(log.Logger, state.SimpleDB, string, string, string) (str
 
 func (c InitStateFunc) InitState(l log.Logger, store state.SimpleDB, module, key, value string) (string, error) {
 	return c(l, store, module, key, value)
+}
+
+// InitValidater sets the initial validator set
+type InitValidater interface {
+	InitValidate(log log.Logger, store state.SimpleDB, vals []*abci.Validator)
+}
+
+// InitValidateFunc (like http.HandlerFunc) is a shortcut for making wrapers
+type InitValidateFunc func(log.Logger, state.SimpleDB, []*abci.Validator)
+
+func (c InitValidateFunc) InitValidate(l log.Logger, store state.SimpleDB, vals []*abci.Validator) {
+	c(l, store, vals)
 }
 
 //---------- results and some wrappers --------
@@ -119,8 +138,12 @@ type NopDeliver struct{}
 
 func (_ NopDeliver) DeliverTx(Context, state.SimpleDB, Tx) (r DeliverResult, e error) { return }
 
-type NopOption struct{}
+type NopInitState struct{}
 
-func (_ NopOption) InitState(log.Logger, state.SimpleDB, string, string, string) (string, error) {
+func (_ NopInitState) InitState(log.Logger, state.SimpleDB, string, string, string) (string, error) {
 	return "", nil
 }
+
+type NopInitValidate struct{}
+
+func (_ NopInitValidate) InitValidate(log log.Logger, store state.SimpleDB, vals []*abci.Validator) {}

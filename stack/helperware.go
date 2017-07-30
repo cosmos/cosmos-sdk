@@ -16,7 +16,8 @@ const (
 // Required Actor, otherwise passes along the call untouched
 type CheckMiddleware struct {
 	Required basecoin.Actor
-	PassOption
+	PassInitState
+	PassInitValidate
 }
 
 var _ Middleware = CheckMiddleware{}
@@ -42,7 +43,8 @@ func (p CheckMiddleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, t
 // GrantMiddleware tries to set the permission to this Actor, which may be prohibited
 type GrantMiddleware struct {
 	Auth basecoin.Actor
-	PassOption
+	PassInitState
+	PassInitValidate
 }
 
 var _ Middleware = GrantMiddleware{}

@@ -24,7 +24,8 @@ type SimpleFeeMiddleware struct {
 	// all fees go here, which could be a dump (Bank) or something reachable
 	// by other app logic
 	Collector basecoin.Actor
-	stack.PassOption
+	stack.PassInitState
+	stack.PassInitValidate
 }
 
 var _ stack.Middleware = SimpleFeeMiddleware{}

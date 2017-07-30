@@ -94,7 +94,8 @@ func (r FailTx) ValidateBasic() error {
 // OKHandler just used to return okay to everything
 type OKHandler struct {
 	Log string
-	basecoin.NopOption
+	basecoin.NopInitState
+	basecoin.NopInitValidate
 }
 
 var _ basecoin.Handler = OKHandler{}
@@ -116,7 +117,8 @@ func (ok OKHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx bas
 
 // EchoHandler returns success, echoing res.Data = tx bytes
 type EchoHandler struct {
-	basecoin.NopOption
+	basecoin.NopInitState
+	basecoin.NopInitValidate
 }
 
 var _ basecoin.Handler = EchoHandler{}
@@ -141,7 +143,8 @@ func (EchoHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx base
 // FailHandler always returns an error
 type FailHandler struct {
 	Err error
-	basecoin.NopOption
+	basecoin.NopInitState
+	basecoin.NopInitValidate
 }
 
 var _ basecoin.Handler = FailHandler{}
@@ -165,7 +168,8 @@ func (f FailHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx ba
 type PanicHandler struct {
 	Msg string
 	Err error
-	basecoin.NopOption
+	basecoin.NopInitState
+	basecoin.NopInitValidate
 }
 
 var _ basecoin.Handler = PanicHandler{}
@@ -193,7 +197,8 @@ func (p PanicHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx b
 
 // CheckHandler accepts CheckTx and verifies the permissions
 type CheckHandler struct {
-	basecoin.NopOption
+	basecoin.NopInitState
+	basecoin.NopInitValidate
 }
 
 var _ basecoin.Handler = CheckHandler{}

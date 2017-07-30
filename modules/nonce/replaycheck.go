@@ -13,7 +13,8 @@ const (
 
 // ReplayCheck uses the sequence to check for replay attacks
 type ReplayCheck struct {
-	stack.PassOption
+	stack.PassInitState
+	stack.PassInitValidate
 }
 
 // Name of the module - fulfills Middleware interface

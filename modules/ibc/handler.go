@@ -34,7 +34,9 @@ func AllowIBC(app string) basecoin.Actor {
 }
 
 // Handler updates the chain state or creates an ibc packet
-type Handler struct{}
+type Handler struct {
+	basecoin.NopInitValidate
+}
 
 var _ basecoin.Handler = Handler{}
 

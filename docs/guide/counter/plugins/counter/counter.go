@@ -114,7 +114,8 @@ func NewHandler(feeDenom string) basecoin.Handler {
 
 // Handler the counter transaction processing handler
 type Handler struct {
-	stack.NopOption
+	stack.PassInitState
+	stack.PassInitValidate
 }
 
 var _ stack.Dispatchable = Handler{}

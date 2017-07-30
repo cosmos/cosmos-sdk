@@ -17,7 +17,8 @@ const (
 // Signatures parses out go-crypto signatures and adds permissions to the
 // context for use inside the application
 type Signatures struct {
-	stack.PassOption
+	stack.PassInitState
+	stack.PassInitValidate
 }
 
 // Name of the module - fulfills Middleware interface

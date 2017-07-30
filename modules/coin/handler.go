@@ -16,7 +16,9 @@ import (
 const NameCoin = "coin"
 
 // Handler includes an accountant
-type Handler struct{}
+type Handler struct {
+	stack.PassInitValidate
+}
 
 var _ stack.Dispatchable = Handler{}
 

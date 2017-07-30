@@ -13,7 +13,8 @@ const (
 
 // Chain enforces that this tx was bound to the named chain
 type Chain struct {
-	stack.PassOption
+	stack.PassInitState
+	stack.PassInitValidate
 }
 
 // Name of the module - fulfills Middleware interface

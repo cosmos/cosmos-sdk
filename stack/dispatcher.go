@@ -2,8 +2,10 @@ package stack
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
@@ -119,6 +121,16 @@ func (d *Dispatcher) InitState(l log.Logger, store state.SimpleDB, module, key, 
 	return r.InitState(l, store, module, key, value, cb)
 }
 
+// InitValidate makes sure all modules are informed
+func (d *Dispatcher) InitValidate(log log.Logger, store state.SimpleDB, vals []*abci.Validator) {
+	for _, mod := range d.sortedModules() {
+		// no ctx, so secureCheck not needed
+		cb := d
+		space := stateSpace(store, mod.Name())
+		mod.InitValidate(log, space, vals, cb)
+	}
+}
+
 func (d *Dispatcher) lookupTx(tx basecoin.Tx) (Dispatchable, error) {
 	kind, err := tx.GetKind()
 	if err != nil {
@@ -139,4 +151,20 @@ func (d *Dispatcher) lookupModule(name string) (Dispatchable, error) {
 		return nil, errors.ErrUnknownModule(name)
 	}
 	return r, nil
+}
+
+func (d *Dispatcher) sortedModules() []Dispatchable {
+	// order all routes names
+	size := len(d.routes)
+	names := make([]string, 0, size)
+	for k := range d.routes {
+		names = append(names, k)
+	}
+	sort.Strings(names)
+
+	res := make([]Dispatchable, size)
+	for i, k := range names {
+		res[i] = d.routes[k]
+	}
+	return res
 }

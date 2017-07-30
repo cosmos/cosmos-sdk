@@ -32,12 +32,12 @@ func makeState() state.SimpleDB {
 func TestCheckpointer(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
-	good := writerHand{"foo", []byte{1, 2}, []byte("bar")}
+	good := writerHand{name: "foo", key: []byte{1, 2}, value: []byte("bar")}
 	bad := FailHandler{Err: errors.New("no go")}
 
 	app := New(
 		Checkpoint{OnCheck: true},
-		writerMid{"bing", []byte{1, 2}, []byte("bang")},
+		writerMid{name: "bing", key: []byte{1, 2}, value: []byte("bang")},
 		Checkpoint{OnDeliver: true},
 	).Use(
 		NewDispatcher(

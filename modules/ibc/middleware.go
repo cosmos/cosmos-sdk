@@ -9,7 +9,8 @@ import (
 // Middleware allows us to verify the IBC proof on a packet and
 // and if valid, attach this permission to the wrapped packet
 type Middleware struct {
-	stack.PassOption
+	stack.PassInitState
+	stack.PassInitValidate
 }
 
 var _ stack.Middleware = Middleware{}

@@ -14,7 +14,8 @@ const (
 type Checkpoint struct {
 	OnCheck   bool
 	OnDeliver bool
-	PassOption
+	PassInitState
+	PassInitValidate
 }
 
 // Name of the module - fulfills Middleware interface

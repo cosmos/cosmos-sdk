@@ -2,6 +2,7 @@
 package stack
 
 import (
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
@@ -15,7 +16,8 @@ import (
 type Middleware interface {
 	CheckerMiddle
 	DeliverMiddle
-	InitStateMiddle
+	InitStaterMiddle
+	InitValidaterMiddle
 	basecoin.Named
 }
 
@@ -45,17 +47,29 @@ func (d DeliverMiddleFunc) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 	return d(ctx, store, tx, next)
 }
 
-type InitStateMiddle interface {
+type InitStaterMiddle interface {
 	InitState(l log.Logger, store state.SimpleDB, module,
 		key, value string, next basecoin.InitStater) (string, error)
 }
 
-type InitStateMiddleFunc func(log.Logger, state.SimpleDB,
+type InitStaterMiddleFunc func(log.Logger, state.SimpleDB,
 	string, string, string, basecoin.InitStater) (string, error)
 
-func (c InitStateMiddleFunc) InitState(l log.Logger, store state.SimpleDB,
+func (c InitStaterMiddleFunc) InitState(l log.Logger, store state.SimpleDB,
 	module, key, value string, next basecoin.InitStater) (string, error) {
 	return c(l, store, module, key, value, next)
+}
+
+type InitValidaterMiddle interface {
+	InitValidate(l log.Logger, store state.SimpleDB, vals []*abci.Validator, next basecoin.InitValidater)
+}
+
+type InitValidaterMiddleFunc func(log.Logger, state.SimpleDB,
+	[]*abci.Validator, basecoin.InitValidater)
+
+func (c InitValidaterMiddleFunc) InitValidate(l log.Logger, store state.SimpleDB,
+	vals []*abci.Validator, next basecoin.InitValidater) {
+	c(l, store, vals, next)
 }
 
 // holders
@@ -73,18 +87,18 @@ func (_ PassDeliver) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 	return next.DeliverTx(ctx, store, tx)
 }
 
-type PassOption struct{}
+type PassInitState struct{}
 
-func (_ PassOption) InitState(l log.Logger, store state.SimpleDB, module,
+func (_ PassInitState) InitState(l log.Logger, store state.SimpleDB, module,
 	key, value string, next basecoin.InitStater) (string, error) {
 	return next.InitState(l, store, module, key, value)
 }
 
-type NopOption struct{}
+type PassInitValidate struct{}
 
-func (_ NopOption) InitState(l log.Logger, store state.SimpleDB, module,
-	key, value string, next basecoin.InitStater) (string, error) {
-	return "", nil
+func (_ PassInitValidate) InitValidate(l log.Logger, store state.SimpleDB,
+	vals []*abci.Validator, next basecoin.InitValidater) {
+	next.InitValidate(l, store, vals)
 }
 
 // Dispatchable is like middleware, except the meaning of "next" is different.
@@ -125,4 +139,9 @@ func (w wrapped) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 func (w wrapped) InitState(l log.Logger, store state.SimpleDB,
 	module, key, value string, _ basecoin.InitStater) (string, error) {
 	return w.h.InitState(l, store, module, key, value)
+}
+
+func (w wrapped) InitValidate(l log.Logger, store state.SimpleDB,
+	vals []*abci.Validator, next basecoin.InitValidater) {
+	w.h.InitValidate(l, store, vals)
 }

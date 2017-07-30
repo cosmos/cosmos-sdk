@@ -25,24 +25,24 @@ type Named interface {
 }
 
 type Checker interface {
-	CheckTx(ctx Context, store state.SimpleDB, tx Tx) (Result, error)
+	CheckTx(ctx Context, store state.SimpleDB, tx Tx) (CheckResult, error)
 }
 
 // CheckerFunc (like http.HandlerFunc) is a shortcut for making wrapers
-type CheckerFunc func(Context, state.SimpleDB, Tx) (Result, error)
+type CheckerFunc func(Context, state.SimpleDB, Tx) (CheckResult, error)
 
-func (c CheckerFunc) CheckTx(ctx Context, store state.SimpleDB, tx Tx) (Result, error) {
+func (c CheckerFunc) CheckTx(ctx Context, store state.SimpleDB, tx Tx) (CheckResult, error) {
 	return c(ctx, store, tx)
 }
 
 type Deliver interface {
-	DeliverTx(ctx Context, store state.SimpleDB, tx Tx) (Result, error)
+	DeliverTx(ctx Context, store state.SimpleDB, tx Tx) (DeliverResult, error)
 }
 
 // DeliverFunc (like http.HandlerFunc) is a shortcut for making wrapers
-type DeliverFunc func(Context, state.SimpleDB, Tx) (Result, error)
+type DeliverFunc func(Context, state.SimpleDB, Tx) (DeliverResult, error)
 
-func (c DeliverFunc) DeliverTx(ctx Context, store state.SimpleDB, tx Tx) (Result, error) {
+func (c DeliverFunc) DeliverTx(ctx Context, store state.SimpleDB, tx Tx) (DeliverResult, error) {
 	return c(ctx, store, tx)
 }
 
@@ -57,14 +57,32 @@ func (c SetOptionFunc) SetOption(l log.Logger, store state.SimpleDB, module, key
 	return c(l, store, module, key, value)
 }
 
-// Result captures any non-error abci result
+// CheckResult captures any non-error abci result
 // to make sure people use error for error cases
-type Result struct {
-	Data data.Bytes
-	Log  string
+type CheckResult struct {
+	Data         data.Bytes
+	Log          string
+	GasAllocated uint
+	GasPrice     uint
 }
 
-func (r Result) ToABCI() abci.Result {
+func (r CheckResult) ToABCI() abci.Result {
+	return abci.Result{
+		Data: r.Data,
+		Log:  r.Log,
+	}
+}
+
+// DeliverResult captures any non-error abci result
+// to make sure people use error for error cases
+type DeliverResult struct {
+	Data    data.Bytes
+	Log     string
+	Diff    []*abci.Validator
+	GasUsed uint
+}
+
+func (r DeliverResult) ToABCI() abci.Result {
 	return abci.Result{
 		Data: r.Data,
 		Log:  r.Log,
@@ -75,11 +93,11 @@ func (r Result) ToABCI() abci.Result {
 // holders
 type NopCheck struct{}
 
-func (_ NopCheck) CheckTx(Context, state.SimpleDB, Tx) (r Result, e error) { return }
+func (_ NopCheck) CheckTx(Context, state.SimpleDB, Tx) (r CheckResult, e error) { return }
 
 type NopDeliver struct{}
 
-func (_ NopDeliver) DeliverTx(Context, state.SimpleDB, Tx) (r Result, e error) { return }
+func (_ NopDeliver) DeliverTx(Context, state.SimpleDB, Tx) (r DeliverResult, e error) { return }
 
 type NopOption struct{}
 

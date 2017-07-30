@@ -104,7 +104,7 @@ func withIBC(ctx basecoin.Context) basecoin.Context {
 }
 
 func secureCheck(h basecoin.Checker, parent basecoin.Context) basecoin.Checker {
-	next := func(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+	next := func(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
 		if !parent.IsParent(ctx) {
 			return res, errors.New("Passing in non-child Context")
 		}
@@ -114,7 +114,7 @@ func secureCheck(h basecoin.Checker, parent basecoin.Context) basecoin.Checker {
 }
 
 func secureDeliver(h basecoin.Deliver, parent basecoin.Context) basecoin.Deliver {
-	next := func(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+	next := func(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
 		if !parent.IsParent(ctx) {
 			return res, errors.New("Passing in non-child Context")
 		}

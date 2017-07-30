@@ -25,7 +25,7 @@ func (Checkpoint) Name() string {
 var _ Middleware = Checkpoint{}
 
 // CheckTx reverts all data changes if there was an error
-func (c Checkpoint) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (c Checkpoint) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 	if !c.OnCheck {
 		return next.CheckTx(ctx, store, tx)
 	}
@@ -38,7 +38,7 @@ func (c Checkpoint) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basec
 }
 
 // DeliverTx reverts all data changes if there was an error
-func (c Checkpoint) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (c Checkpoint) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 	if !c.OnDeliver {
 		return next.DeliverTx(ctx, store, tx)
 	}

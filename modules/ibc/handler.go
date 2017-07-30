@@ -70,26 +70,27 @@ func (h Handler) SetOption(l log.Logger, store state.SimpleDB, module, key, valu
 
 // CheckTx verifies the packet is formated correctly, and has the proper sequence
 // for a registered chain
-func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
 	err = tx.ValidateBasic()
 	if err != nil {
 		return res, err
 	}
 
-	switch t := tx.Unwrap().(type) {
+	// TODO: better fee calculation (don't do complex crypto)
+	switch tx.Unwrap().(type) {
 	case RegisterChainTx:
-		return h.initSeed(ctx, store, t)
+		return res, nil
 	case UpdateChainTx:
-		return h.updateSeed(ctx, store, t)
+		return res, nil
 	case CreatePacketTx:
-		return h.createPacket(ctx, store, t)
+		return res, nil
 	}
 	return res, errors.ErrUnknownTxType(tx.Unwrap())
 }
 
 // DeliverTx verifies all signatures on the tx and updates the chain state
 // apropriately
-func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
 	err = tx.ValidateBasic()
 	if err != nil {
 		return res, err
@@ -111,7 +112,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx baseco
 //
 // only the registrar, if set, is allowed to do this
 func (h Handler) initSeed(ctx basecoin.Context, store state.SimpleDB,
-	t RegisterChainTx) (res basecoin.Result, err error) {
+	t RegisterChainTx) (res basecoin.DeliverResult, err error) {
 
 	info := LoadInfo(store)
 	if !info.Registrar.Empty() && !ctx.HasPermission(info.Registrar) {
@@ -135,7 +136,7 @@ func (h Handler) initSeed(ctx basecoin.Context, store state.SimpleDB,
 // updateSeed checks the seed against the existing chain data and rejects it if it
 // doesn't fit (or no chain data)
 func (h Handler) updateSeed(ctx basecoin.Context, store state.SimpleDB,
-	t UpdateChainTx) (res basecoin.Result, err error) {
+	t UpdateChainTx) (res basecoin.DeliverResult, err error) {
 
 	chainID := t.ChainID()
 	s := NewChainSet(store)
@@ -165,7 +166,7 @@ func (h Handler) updateSeed(ctx basecoin.Context, store state.SimpleDB,
 // createPacket makes sure all permissions are good and the destination
 // chain is registed.  If so, it appends it to the outgoing queue
 func (h Handler) createPacket(ctx basecoin.Context, store state.SimpleDB,
-	t CreatePacketTx) (res basecoin.Result, err error) {
+	t CreatePacketTx) (res basecoin.DeliverResult, err error) {
 
 	// make sure the chain is registed
 	dest := t.DestChain
@@ -203,6 +204,6 @@ func (h Handler) createPacket(ctx basecoin.Context, store state.SimpleDB,
 	packet.Sequence = q.Tail()
 	q.Push(packet.Bytes())
 
-	res = basecoin.Result{Log: fmt.Sprintf("Packet %s %d", dest, packet.Sequence)}
+	res = basecoin.DeliverResult{Log: fmt.Sprintf("Packet %s %d", dest, packet.Sequence)}
 	return
 }

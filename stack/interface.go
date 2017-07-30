@@ -21,27 +21,27 @@ type Middleware interface {
 
 type CheckerMiddle interface {
 	CheckTx(ctx basecoin.Context, store state.SimpleDB,
-		tx basecoin.Tx, next basecoin.Checker) (basecoin.Result, error)
+		tx basecoin.Tx, next basecoin.Checker) (basecoin.CheckResult, error)
 }
 
 type CheckerMiddleFunc func(basecoin.Context, state.SimpleDB,
-	basecoin.Tx, basecoin.Checker) (basecoin.Result, error)
+	basecoin.Tx, basecoin.Checker) (basecoin.CheckResult, error)
 
 func (c CheckerMiddleFunc) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Checker) (basecoin.Result, error) {
+	tx basecoin.Tx, next basecoin.Checker) (basecoin.CheckResult, error) {
 	return c(ctx, store, tx, next)
 }
 
 type DeliverMiddle interface {
 	DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx,
-		next basecoin.Deliver) (basecoin.Result, error)
+		next basecoin.Deliver) (basecoin.DeliverResult, error)
 }
 
 type DeliverMiddleFunc func(basecoin.Context, state.SimpleDB,
-	basecoin.Tx, basecoin.Deliver) (basecoin.Result, error)
+	basecoin.Tx, basecoin.Deliver) (basecoin.DeliverResult, error)
 
 func (d DeliverMiddleFunc) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Deliver) (basecoin.Result, error) {
+	tx basecoin.Tx, next basecoin.Deliver) (basecoin.DeliverResult, error) {
 	return d(ctx, store, tx, next)
 }
 
@@ -62,14 +62,14 @@ func (c SetOptionMiddleFunc) SetOption(l log.Logger, store state.SimpleDB,
 type PassCheck struct{}
 
 func (_ PassCheck) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Checker) (basecoin.Result, error) {
+	tx basecoin.Tx, next basecoin.Checker) (basecoin.CheckResult, error) {
 	return next.CheckTx(ctx, store, tx)
 }
 
 type PassDeliver struct{}
 
 func (_ PassDeliver) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Deliver) (basecoin.Result, error) {
+	tx basecoin.Tx, next basecoin.Deliver) (basecoin.DeliverResult, error) {
 	return next.DeliverTx(ctx, store, tx)
 }
 
@@ -113,12 +113,12 @@ func (w wrapped) Name() string {
 }
 
 func (w wrapped) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, _ basecoin.Checker) (basecoin.Result, error) {
+	tx basecoin.Tx, _ basecoin.Checker) (basecoin.CheckResult, error) {
 	return w.h.CheckTx(ctx, store, tx)
 }
 
 func (w wrapped) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, _ basecoin.Deliver) (basecoin.Result, error) {
+	tx basecoin.Tx, _ basecoin.Deliver) (basecoin.DeliverResult, error) {
 	return w.h.DeliverTx(ctx, store, tx)
 }
 

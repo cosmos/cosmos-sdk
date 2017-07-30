@@ -128,13 +128,13 @@ func (Handler) Name() string {
 func (Handler) AssertDispatcher() {}
 
 // CheckTx checks if the tx is properly structured
-func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, _ basecoin.Checker) (res basecoin.Result, err error) {
+func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, _ basecoin.Checker) (res basecoin.CheckResult, err error) {
 	_, err = checkTx(ctx, tx)
 	return
 }
 
 // DeliverTx executes the tx if valid
-func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, dispatch basecoin.Deliver) (res basecoin.Result, err error) {
+func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, dispatch basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 	ctr, err := checkTx(ctx, tx)
 	if err != nil {
 		return res, err

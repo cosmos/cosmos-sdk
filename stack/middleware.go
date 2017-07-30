@@ -31,7 +31,7 @@ func (m *middleware) wrapCtx(ctx basecoin.Context) basecoin.Context {
 }
 
 // CheckTx always returns an empty success tx
-func (m *middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (basecoin.Result, error) {
+func (m *middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (basecoin.CheckResult, error) {
 	// make sure we pass in proper context to child
 	next := secureCheck(m.next, ctx)
 	// set the permissions for this app
@@ -42,7 +42,7 @@ func (m *middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx base
 }
 
 // DeliverTx always returns an empty success tx
-func (m *middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (m *middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
 	// make sure we pass in proper context to child
 	next := secureDeliver(m.next, ctx)
 	// set the permissions for this app

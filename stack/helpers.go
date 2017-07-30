@@ -105,13 +105,13 @@ func (OKHandler) Name() string {
 }
 
 // CheckTx always returns an empty success tx
-func (ok OKHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
-	return basecoin.Result{Log: ok.Log}, nil
+func (ok OKHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
+	return basecoin.CheckResult{Log: ok.Log}, nil
 }
 
 // DeliverTx always returns an empty success tx
-func (ok OKHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
-	return basecoin.Result{Log: ok.Log}, nil
+func (ok OKHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
+	return basecoin.DeliverResult{Log: ok.Log}, nil
 }
 
 // EchoHandler returns success, echoing res.Data = tx bytes
@@ -127,15 +127,15 @@ func (EchoHandler) Name() string {
 }
 
 // CheckTx always returns an empty success tx
-func (EchoHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (EchoHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
 	data, err := data.ToWire(tx)
-	return basecoin.Result{Data: data}, err
+	return basecoin.CheckResult{Data: data}, err
 }
 
 // DeliverTx always returns an empty success tx
-func (EchoHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (EchoHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
 	data, err := data.ToWire(tx)
-	return basecoin.Result{Data: data}, err
+	return basecoin.DeliverResult{Data: data}, err
 }
 
 // FailHandler always returns an error
@@ -152,12 +152,12 @@ func (FailHandler) Name() string {
 }
 
 // CheckTx always returns the given error
-func (f FailHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (f FailHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
 	return res, errors.Wrap(f.Err)
 }
 
 // DeliverTx always returns the given error
-func (f FailHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (f FailHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
 	return res, errors.Wrap(f.Err)
 }
 
@@ -176,7 +176,7 @@ func (PanicHandler) Name() string {
 }
 
 // CheckTx always panics
-func (p PanicHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (p PanicHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
 	if p.Err != nil {
 		panic(p.Err)
 	}
@@ -184,7 +184,7 @@ func (p PanicHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx bas
 }
 
 // DeliverTx always panics
-func (p PanicHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (p PanicHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
 	if p.Err != nil {
 		panic(p.Err)
 	}
@@ -204,7 +204,7 @@ func (CheckHandler) Name() string {
 }
 
 // CheckTx verifies the permissions
-func (c CheckHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (c CheckHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
 	check, ok := tx.Unwrap().(CheckTx)
 	if !ok {
 		return res, errors.ErrUnknownTxType(tx)
@@ -219,7 +219,16 @@ func (c CheckHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx bas
 }
 
 // DeliverTx verifies the permissions
-func (c CheckHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
-	// until something changes, just do the same as check
-	return c.CheckTx(ctx, store, tx)
+func (c CheckHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
+	check, ok := tx.Unwrap().(CheckTx)
+	if !ok {
+		return res, errors.ErrUnknownTxType(tx)
+	}
+
+	for _, perm := range check.Required {
+		if !ctx.HasPermission(perm) {
+			return res, errors.ErrUnauthorized()
+		}
+	}
+	return res, nil
 }

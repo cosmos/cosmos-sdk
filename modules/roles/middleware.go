@@ -27,7 +27,7 @@ func (Middleware) Name() string {
 // CheckTx tries to assume the named role if requested.
 // If no role is requested, do nothing.
 // If insufficient authority to assume the role, return error.
-func (m Middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (m Middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 	// if this is not an AssumeRoleTx, then continue
 	assume, ok := tx.Unwrap().(AssumeRoleTx)
 	if !ok { // this also breaks the recursion below
@@ -46,7 +46,7 @@ func (m Middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basec
 // DeliverTx tries to assume the named role if requested.
 // If no role is requested, do nothing.
 // If insufficient authority to assume the role, return error.
-func (m Middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (m Middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 	// if this is not an AssumeRoleTx, then continue
 	assume, ok := tx.Unwrap().(AssumeRoleTx)
 	if !ok { // this also breaks the recursion below

@@ -25,7 +25,7 @@ var _ stack.Middleware = ReplayCheck{}
 
 // CheckTx verifies tx is not being replayed - fulfills Middlware interface
 func (r ReplayCheck) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+	tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 
 	stx, err := r.checkIncrementNonceTx(ctx, store, tx)
 	if err != nil {
@@ -39,7 +39,7 @@ func (r ReplayCheck) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 // NOTE It is okay to modify the sequence before running the wrapped TX because if the
 // wrapped Tx fails, the state changes are not applied
 func (r ReplayCheck) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+	tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 
 	stx, err := r.checkIncrementNonceTx(ctx, store, tx)
 	if err != nil {

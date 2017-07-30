@@ -100,7 +100,7 @@ func (a *AppChain) IncrementHeight(delta int) int {
 
 // DeliverTx runs the tx and commits the new tree, incrementing height
 // by one.
-func (a *AppChain) DeliverTx(tx basecoin.Tx, perms ...basecoin.Actor) (basecoin.Result, error) {
+func (a *AppChain) DeliverTx(tx basecoin.Tx, perms ...basecoin.Actor) (basecoin.DeliverResult, error) {
 	ctx := stack.MockContext(a.chainID, uint64(a.height)).WithPermissions(perms...)
 	store := a.store.Checkpoint()
 	res, err := a.app.DeliverTx(ctx, store, tx)

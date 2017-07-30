@@ -26,7 +26,7 @@ func (Recovery) Name() string {
 var _ Middleware = Recovery{}
 
 // CheckTx catches any panic and converts to error - fulfills Middlware interface
-func (Recovery) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (Recovery) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)
@@ -36,7 +36,7 @@ func (Recovery) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.
 }
 
 // DeliverTx catches any panic and converts to error - fulfills Middlware interface
-func (Recovery) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (Recovery) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)

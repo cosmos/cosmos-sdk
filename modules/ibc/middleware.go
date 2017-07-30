@@ -26,7 +26,7 @@ func (Middleware) Name() string {
 
 // CheckTx verifies the named chain and height is present, and verifies
 // the merkle proof in the packet
-func (m Middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (m Middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 	// if it is not a PostPacket, just let it go through
 	post, ok := tx.Unwrap().(PostPacketTx)
 	if !ok {
@@ -43,7 +43,7 @@ func (m Middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basec
 
 // DeliverTx verifies the named chain and height is present, and verifies
 // the merkle proof in the packet
-func (m Middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (m Middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 	// if it is not a PostPacket, just let it go through
 	post, ok := tx.Unwrap().(PostPacketTx)
 	if !ok {

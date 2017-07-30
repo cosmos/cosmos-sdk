@@ -64,7 +64,7 @@ func (d *Dispatcher) Name() string {
 // Tries to find a registered module (Dispatchable) based on the name of the tx.
 // The tx name (as registered with go-data) should be in the form `<module name>/XXXX`,
 // where `module name` must match the name of a dispatchable and XXX can be any string.
-func (d *Dispatcher) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (d *Dispatcher) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
 	r, err := d.lookupTx(tx)
 	if err != nil {
 		return res, err
@@ -85,7 +85,7 @@ func (d *Dispatcher) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx base
 // Tries to find a registered module (Dispatchable) based on the name of the tx.
 // The tx name (as registered with go-data) should be in the form `<module name>/XXXX`,
 // where `module name` must match the name of a dispatchable and XXX can be any string.
-func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
 	r, err := d.lookupTx(tx)
 	if err != nil {
 		return res, err

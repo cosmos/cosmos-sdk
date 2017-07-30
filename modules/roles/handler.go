@@ -27,7 +27,7 @@ func (Handler) Name() string {
 }
 
 // CheckTx verifies if the transaction is properly formated
-func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
 	var cr CreateRoleTx
 	cr, err = checkTx(ctx, tx)
 	if err != nil {
@@ -40,7 +40,7 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin
 // DeliverTx tries to create a new role.
 //
 // Returns an error if the role already exists
-func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
 	create, err := checkTx(ctx, tx)
 	if err != nil {
 		return res, err

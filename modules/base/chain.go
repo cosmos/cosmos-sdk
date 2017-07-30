@@ -24,7 +24,7 @@ func (Chain) Name() string {
 var _ stack.Middleware = Chain{}
 
 // CheckTx makes sure we are on the proper chain - fulfills Middlware interface
-func (c Chain) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (c Chain) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 	stx, err := c.checkChainTx(ctx.ChainID(), ctx.BlockHeight(), tx)
 	if err != nil {
 		return res, err
@@ -33,7 +33,7 @@ func (c Chain) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.T
 }
 
 // DeliverTx makes sure we are on the proper chain - fulfills Middlware interface
-func (c Chain) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (c Chain) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 	stx, err := c.checkChainTx(ctx.ChainID(), ctx.BlockHeight(), tx)
 	if err != nil {
 		return res, err

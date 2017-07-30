@@ -35,7 +35,7 @@ func (Handler) AssertDispatcher() {}
 
 // CheckTx checks if there is enough money in the account
 func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, _ basecoin.Checker) (res basecoin.Result, err error) {
+	tx basecoin.Tx, _ basecoin.Checker) (res basecoin.CheckResult, err error) {
 
 	err = tx.ValidateBasic()
 	if err != nil {
@@ -46,14 +46,14 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 	case SendTx:
 		return res, h.checkSendTx(ctx, store, t)
 	case CreditTx:
-		return h.creditTx(ctx, store, t)
+		return res, h.creditTx(ctx, store, t)
 	}
 	return res, errors.ErrUnknownTxType(tx.Unwrap())
 }
 
 // DeliverTx moves the money
 func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, cb basecoin.Deliver) (res basecoin.Result, err error) {
+	tx basecoin.Tx, cb basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 
 	err = tx.ValidateBasic()
 	if err != nil {
@@ -62,9 +62,9 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 
 	switch t := tx.Unwrap().(type) {
 	case SendTx:
-		return h.sendTx(ctx, store, t, cb)
+		return res, h.sendTx(ctx, store, t, cb)
 	case CreditTx:
-		return h.creditTx(ctx, store, t)
+		return res, h.creditTx(ctx, store, t)
 	}
 	return res, errors.ErrUnknownTxType(tx.Unwrap())
 }
@@ -85,11 +85,11 @@ func (h Handler) SetOption(l log.Logger, store state.SimpleDB,
 }
 
 func (h Handler) sendTx(ctx basecoin.Context, store state.SimpleDB,
-	send SendTx, cb basecoin.Deliver) (res basecoin.Result, err error) {
+	send SendTx, cb basecoin.Deliver) error {
 
-	err = checkTx(ctx, send)
+	err := checkTx(ctx, send)
 	if err != nil {
-		return res, err
+		return err
 	}
 
 	// deduct from all input accounts
@@ -97,7 +97,7 @@ func (h Handler) sendTx(ctx basecoin.Context, store state.SimpleDB,
 	for _, in := range send.Inputs {
 		_, err = ChangeCoins(store, in.Address, in.Coins.Negative())
 		if err != nil {
-			return res, err
+			return err
 		}
 		senders = append(senders, in.Address)
 	}
@@ -112,7 +112,7 @@ func (h Handler) sendTx(ctx basecoin.Context, store state.SimpleDB,
 
 		_, err = ChangeCoins(store, out.Address, out.Coins)
 		if err != nil {
-			return res, err
+			return err
 		}
 		// now send ibc packet if needed...
 		if out.Address.ChainID != "" {
@@ -133,46 +133,46 @@ func (h Handler) sendTx(ctx basecoin.Context, store state.SimpleDB,
 			ibcCtx := ctx.WithPermissions(ibc.AllowIBC(NameCoin))
 			_, err := cb.DeliverTx(ibcCtx, store, packet.Wrap())
 			if err != nil {
-				return res, err
+				return err
 			}
 		}
 	}
 
 	// a-ok!
-	return res, nil
+	return nil
 }
 
 func (h Handler) creditTx(ctx basecoin.Context, store state.SimpleDB,
-	credit CreditTx) (res basecoin.Result, err error) {
+	credit CreditTx) error {
 
 	// first check permissions!!
 	info, err := loadHandlerInfo(store)
 	if err != nil {
-		return res, err
+		return err
 	}
 	if info.Issuer.Empty() || !ctx.HasPermission(info.Issuer) {
-		return res, errors.ErrUnauthorized()
+		return errors.ErrUnauthorized()
 	}
 
 	// load up the account
 	addr := ChainAddr(credit.Debitor)
 	acct, err := GetAccount(store, addr)
 	if err != nil {
-		return res, err
+		return err
 	}
 
 	// make and check changes
 	acct.Coins = acct.Coins.Plus(credit.Credit)
 	if !acct.Coins.IsNonnegative() {
-		return res, ErrInsufficientFunds()
+		return ErrInsufficientFunds()
 	}
 	acct.Credit = acct.Credit.Plus(credit.Credit)
 	if !acct.Credit.IsNonnegative() {
-		return res, ErrInsufficientCredit()
+		return ErrInsufficientCredit()
 	}
 
 	err = storeAccount(store, addr.Bytes(), acct)
-	return res, err
+	return err
 }
 
 func checkTx(ctx basecoin.Context, send SendTx) error {

@@ -35,10 +35,10 @@ func (w writerMid) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 	return next.DeliverTx(ctx, store, tx)
 }
 
-func (w writerMid) SetOption(l log.Logger, store state.SimpleDB, module,
-	key, value string, next basecoin.SetOptioner) (string, error) {
+func (w writerMid) InitState(l log.Logger, store state.SimpleDB, module,
+	key, value string, next basecoin.InitStater) (string, error) {
 	store.Set([]byte(key), []byte(value))
-	return next.SetOption(l, store, module, key, value)
+	return next.InitState(l, store, module, key, value)
 }
 
 // writerHand is a middleware that writes the given bytes on CheckTx and DeliverTx
@@ -63,7 +63,7 @@ func (w writerHand) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 	return basecoin.DeliverResult{}, nil
 }
 
-func (w writerHand) SetOption(l log.Logger, store state.SimpleDB, module,
+func (w writerHand) InitState(l log.Logger, store state.SimpleDB, module,
 	key, value string) (string, error) {
 	store.Set([]byte(key), []byte(value))
 	return "Success", nil

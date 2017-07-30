@@ -101,11 +101,11 @@ func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx ba
 	return r.DeliverTx(ctx, store, tx, cb)
 }
 
-// SetOption - implements Handler interface
+// InitState - implements Handler interface
 //
 // Tries to find a registered module (Dispatchable) based on the
-// module name from SetOption of the tx.
-func (d *Dispatcher) SetOption(l log.Logger, store state.SimpleDB, module, key, value string) (string, error) {
+// module name from InitState of the tx.
+func (d *Dispatcher) InitState(l log.Logger, store state.SimpleDB, module, key, value string) (string, error) {
 	r, err := d.lookupModule(module)
 	if err != nil {
 		return "", err
@@ -116,7 +116,7 @@ func (d *Dispatcher) SetOption(l log.Logger, store state.SimpleDB, module, key, 
 	// but isolate data space
 	store = stateSpace(store, r.Name())
 
-	return r.SetOption(l, store, module, key, value, cb)
+	return r.InitState(l, store, module, key, value, cb)
 }
 
 func (d *Dispatcher) lookupTx(tx basecoin.Tx) (Dispatchable, error) {

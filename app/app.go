@@ -65,8 +65,9 @@ func (app *Basecoin) Info() abci.ResponseInfo {
 	}
 }
 
-// SetOption - ABCI
-func (app *Basecoin) SetOption(key string, value string) string {
+// InitState - used to setup state (was SetOption)
+// to be used by InitChain later
+func (app *Basecoin) InitState(key string, value string) string {
 
 	module, key := splitKey(key)
 	state := app.state.Append()
@@ -79,11 +80,16 @@ func (app *Basecoin) SetOption(key string, value string) string {
 		return fmt.Sprintf("Error: unknown base option: %s", key)
 	}
 
-	log, err := app.handler.SetOption(app.logger, state, module, key, value)
+	log, err := app.handler.InitState(app.logger, state, module, key, value)
 	if err == nil {
 		return log
 	}
 	return "Error: " + err.Error()
+}
+
+// SetOption - ABCI
+func (app *Basecoin) SetOption(key string, value string) string {
+	return "Not Implemented"
 }
 
 // DeliverTx - ABCI

@@ -15,7 +15,7 @@ import (
 type Middleware interface {
 	CheckerMiddle
 	DeliverMiddle
-	SetOptionMiddle
+	InitStateMiddle
 	basecoin.Named
 }
 
@@ -45,16 +45,16 @@ func (d DeliverMiddleFunc) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 	return d(ctx, store, tx, next)
 }
 
-type SetOptionMiddle interface {
-	SetOption(l log.Logger, store state.SimpleDB, module,
-		key, value string, next basecoin.SetOptioner) (string, error)
+type InitStateMiddle interface {
+	InitState(l log.Logger, store state.SimpleDB, module,
+		key, value string, next basecoin.InitStater) (string, error)
 }
 
-type SetOptionMiddleFunc func(log.Logger, state.SimpleDB,
-	string, string, string, basecoin.SetOptioner) (string, error)
+type InitStateMiddleFunc func(log.Logger, state.SimpleDB,
+	string, string, string, basecoin.InitStater) (string, error)
 
-func (c SetOptionMiddleFunc) SetOption(l log.Logger, store state.SimpleDB,
-	module, key, value string, next basecoin.SetOptioner) (string, error) {
+func (c InitStateMiddleFunc) InitState(l log.Logger, store state.SimpleDB,
+	module, key, value string, next basecoin.InitStater) (string, error) {
 	return c(l, store, module, key, value, next)
 }
 
@@ -75,15 +75,15 @@ func (_ PassDeliver) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 
 type PassOption struct{}
 
-func (_ PassOption) SetOption(l log.Logger, store state.SimpleDB, module,
-	key, value string, next basecoin.SetOptioner) (string, error) {
-	return next.SetOption(l, store, module, key, value)
+func (_ PassOption) InitState(l log.Logger, store state.SimpleDB, module,
+	key, value string, next basecoin.InitStater) (string, error) {
+	return next.InitState(l, store, module, key, value)
 }
 
 type NopOption struct{}
 
-func (_ NopOption) SetOption(l log.Logger, store state.SimpleDB, module,
-	key, value string, next basecoin.SetOptioner) (string, error) {
+func (_ NopOption) InitState(l log.Logger, store state.SimpleDB, module,
+	key, value string, next basecoin.InitStater) (string, error) {
 	return "", nil
 }
 
@@ -122,7 +122,7 @@ func (w wrapped) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 	return w.h.DeliverTx(ctx, store, tx)
 }
 
-func (w wrapped) SetOption(l log.Logger, store state.SimpleDB,
-	module, key, value string, _ basecoin.SetOptioner) (string, error) {
-	return w.h.SetOption(l, store, module, key, value)
+func (w wrapped) InitState(l log.Logger, store state.SimpleDB,
+	module, key, value string, _ basecoin.InitStater) (string, error) {
+	return w.h.InitState(l, store, module, key, value)
 }

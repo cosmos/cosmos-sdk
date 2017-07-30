@@ -130,7 +130,7 @@ func TestIBCRegisterPermissions(t *testing.T) {
 		// set option specifies the registrar
 		msg, err := json.Marshal(tc.registrar)
 		require.Nil(err, "%+v", err)
-		_, err = app.SetOption(log.NewNopLogger(), store,
+		_, err = app.InitState(log.NewNopLogger(), store,
 			NameIBC, OptionRegistrar, string(msg))
 		require.Nil(err, "%+v", err)
 

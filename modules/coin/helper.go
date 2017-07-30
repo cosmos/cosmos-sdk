@@ -41,7 +41,7 @@ func (a *AccountWithKey) NextSequence() uint32 {
 	return a.Sequence
 }
 
-// MakeOption returns a string to use with SetOption to initialize this account
+// MakeOption returns a string to use with InitState to initialize this account
 //
 // This is intended for use in test cases
 func (a *AccountWithKey) MakeOption() string {

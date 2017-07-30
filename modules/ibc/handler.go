@@ -39,7 +39,7 @@ type Handler struct{}
 var _ basecoin.Handler = Handler{}
 
 // NewHandler returns a Handler that allows all chains to connect via IBC.
-// Set a Registrar via SetOption to restrict it.
+// Set a Registrar via InitState to restrict it.
 func NewHandler() Handler {
 	return Handler{}
 }
@@ -49,8 +49,8 @@ func (Handler) Name() string {
 	return NameIBC
 }
 
-// SetOption sets the registrar for IBC
-func (h Handler) SetOption(l log.Logger, store state.SimpleDB, module, key, value string) (log string, err error) {
+// InitState sets the registrar for IBC
+func (h Handler) InitState(l log.Logger, store state.SimpleDB, module, key, value string) (log string, err error) {
 	if module != NameIBC {
 		return "", errors.ErrUnknownModule(module)
 	}

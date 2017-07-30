@@ -55,17 +55,17 @@ func (Logger) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.
 	return
 }
 
-// SetOption logs time and result - fulfills Middlware interface
-func (Logger) SetOption(l log.Logger, store state.SimpleDB, module, key, value string, next basecoin.SetOptioner) (string, error) {
+// InitState logs time and result - fulfills Middlware interface
+func (Logger) InitState(l log.Logger, store state.SimpleDB, module, key, value string, next basecoin.InitStater) (string, error) {
 	start := time.Now()
-	res, err := next.SetOption(l, store, module, key, value)
+	res, err := next.InitState(l, store, module, key, value)
 	delta := time.Now().Sub(start)
 	// TODO: log the value being set also?
 	l = l.With("duration", micros(delta)).With("mod", module).With("key", key)
 	if err == nil {
-		l.Info("SetOption", "log", res)
+		l.Info("InitState", "log", res)
 	} else {
-		l.Error("SetOption", "err", err)
+		l.Error("InitState", "err", err)
 	}
 	return res, err
 }

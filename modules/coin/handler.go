@@ -69,9 +69,9 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 	return res, errors.ErrUnknownTxType(tx.Unwrap())
 }
 
-// SetOption - sets the genesis account balance
-func (h Handler) SetOption(l log.Logger, store state.SimpleDB,
-	module, key, value string, cb basecoin.SetOptioner) (log string, err error) {
+// InitState - sets the genesis account balance
+func (h Handler) InitState(l log.Logger, store state.SimpleDB,
+	module, key, value string, cb basecoin.InitStater) (log string, err error) {
 	if module != NameCoin {
 		return "", errors.ErrUnknownModule(module)
 	}

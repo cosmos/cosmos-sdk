@@ -167,7 +167,7 @@ func TestDeliverSendTx(t *testing.T) {
 	}
 }
 
-func TestSetOption(t *testing.T) {
+func TestInitState(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -205,7 +205,7 @@ func TestSetOption(t *testing.T) {
 		for j, gen := range tc.init {
 			value, err := json.Marshal(gen)
 			require.Nil(err, "%d,%d: %+v", i, j, err)
-			_, err = h.SetOption(l, store, NameCoin, key, string(value), nil)
+			_, err = h.InitState(l, store, NameCoin, key, string(value), nil)
 			require.Nil(err)
 		}
 
@@ -239,7 +239,7 @@ func TestSetIssuer(t *testing.T) {
 
 		value, err := json.Marshal(tc.issuer)
 		require.Nil(err, "%d,%d: %+v", i, err)
-		_, err = h.SetOption(l, store, NameCoin, key, string(value), nil)
+		_, err = h.InitState(l, store, NameCoin, key, string(value), nil)
 		require.Nil(err, "%+v", err)
 
 		// check state is proper
@@ -274,11 +274,11 @@ func TestDeliverCreditTx(t *testing.T) {
 	// set the owner who can issue credit
 	js, err := json.Marshal(owner)
 	require.Nil(err, "%+v", err)
-	_, err = h.SetOption(log.NewNopLogger(), store, "coin", "issuer", string(js), nil)
+	_, err = h.InitState(log.NewNopLogger(), store, "coin", "issuer", string(js), nil)
 	require.Nil(err, "%+v", err)
 
 	// give addr2 some coins to start
-	_, err = h.SetOption(log.NewNopLogger(), store, "coin", "account", key.MakeOption(), nil)
+	_, err = h.InitState(log.NewNopLogger(), store, "coin", "account", key.MakeOption(), nil)
 	require.Nil(err, "%+v", err)
 
 	cases := []struct {

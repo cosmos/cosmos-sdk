@@ -36,12 +36,12 @@ func TestCounterPlugin(t *testing.T) {
 		store,
 		logger.With("module", "app"),
 	)
-	bcApp.SetOption("base/chain_id", chainID)
+	bcApp.InitState("base/chain_id", chainID)
 
 	// Account initialization
 	bal := coin.Coins{{"", 1000}, {"gold", 1000}}
 	acct := coin.NewAccountWithKey(bal)
-	log := bcApp.SetOption("coin/account", acct.MakeOption())
+	log := bcApp.InitState("coin/account", acct.MakeOption())
 	require.Equal("Success", log)
 
 	// Deliver a CounterTx

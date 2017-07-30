@@ -28,7 +28,7 @@ func BenchmarkSimpleTransfer(b *testing.B) {
 
 	// set the initial account
 	acct := NewAccountWithKey(Coins{{"mycoin", 1234567890}})
-	h.SetOption(logger, store, NameCoin, "account", acct.MakeOption(), nil)
+	h.InitState(logger, store, NameCoin, "account", acct.MakeOption(), nil)
 	sender := acct.Actor()
 	receiver := basecoin.Actor{App: "foo", Address: cmn.RandBytes(20)}
 

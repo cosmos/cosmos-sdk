@@ -52,11 +52,11 @@ func (m *middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx ba
 	return m.middleware.DeliverTx(ctx, store, tx, next)
 }
 
-func (m *middleware) SetOption(l log.Logger, store state.SimpleDB, module, key, value string) (string, error) {
+func (m *middleware) InitState(l log.Logger, store state.SimpleDB, module, key, value string) (string, error) {
 	// set the namespace for the app
 	store = stateSpace(store, m.space)
 
-	return m.middleware.SetOption(l, store, module, key, value, m.next)
+	return m.middleware.InitState(l, store, module, key, value, m.next)
 }
 
 // builder is used to associate info with the middleware, so we can build

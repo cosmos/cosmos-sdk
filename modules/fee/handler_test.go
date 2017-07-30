@@ -50,9 +50,9 @@ func TestFeeChecks(t *testing.T) {
 	// set up the store and init the accounts
 	store := state.NewMemKVStore()
 	l := log.NewNopLogger()
-	_, err := app1.SetOption(l, store, "coin", "account", key1.MakeOption())
+	_, err := app1.InitState(l, store, "coin", "account", key1.MakeOption())
 	require.Nil(err, "%+v", err)
-	_, err = app2.SetOption(l, store, "coin", "account", key2.MakeOption())
+	_, err = app2.InitState(l, store, "coin", "account", key2.MakeOption())
 	require.Nil(err, "%+v", err)
 
 	cases := []struct {

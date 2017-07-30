@@ -45,14 +45,14 @@ func (Recovery) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoi
 	return next.DeliverTx(ctx, store, tx)
 }
 
-// SetOption catches any panic and converts to error - fulfills Middlware interface
-func (Recovery) SetOption(l log.Logger, store state.SimpleDB, module, key, value string, next basecoin.SetOptioner) (log string, err error) {
+// InitState catches any panic and converts to error - fulfills Middlware interface
+func (Recovery) InitState(l log.Logger, store state.SimpleDB, module, key, value string, next basecoin.InitStater) (log string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)
 		}
 	}()
-	return next.SetOption(l, store, module, key, value)
+	return next.InitState(l, store, module, key, value)
 }
 
 // normalizePanic makes sure we can get a nice TMError (with stack) out of it

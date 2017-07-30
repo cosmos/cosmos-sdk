@@ -118,9 +118,9 @@ func (a *AppChain) Update(tx UpdateChainTx) error {
 	return err
 }
 
-// SetOption sets the option on our app
-func (a *AppChain) SetOption(mod, key, value string) (string, error) {
-	return a.app.SetOption(log.NewNopLogger(), a.store, mod, key, value)
+// InitState sets the option on our app
+func (a *AppChain) InitState(mod, key, value string) (string, error) {
+	return a.app.InitState(log.NewNopLogger(), a.store, mod, key, value)
 }
 
 // GetStore is used to get the app-specific sub-store

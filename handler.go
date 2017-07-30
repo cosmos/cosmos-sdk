@@ -12,12 +12,14 @@ import (
 type Handler interface {
 	Checker
 	Deliver
-	SetOptioner
+	// This is for app options
+	InitStater
 	Named
-	// TODO: flesh these out as well
-	// InitChain(store state.SimpleDB, vals []*abci.Validator)
+	// TODO: for staker
+	// InitChain(log log.Logger, store state.SimpleDB, vals []*abci.Validator)
+
+	// TODO????
 	// BeginBlock(store state.SimpleDB, hash []byte, header *abci.Header)
-	// EndBlock(store state.SimpleDB, height uint64) abci.ResponseEndBlock
 }
 
 type Named interface {
@@ -46,14 +48,14 @@ func (c DeliverFunc) DeliverTx(ctx Context, store state.SimpleDB, tx Tx) (Delive
 	return c(ctx, store, tx)
 }
 
-type SetOptioner interface {
-	SetOption(l log.Logger, store state.SimpleDB, module, key, value string) (string, error)
+type InitStater interface {
+	InitState(l log.Logger, store state.SimpleDB, module, key, value string) (string, error)
 }
 
-// SetOptionFunc (like http.HandlerFunc) is a shortcut for making wrapers
-type SetOptionFunc func(log.Logger, state.SimpleDB, string, string, string) (string, error)
+// InitStateFunc (like http.HandlerFunc) is a shortcut for making wrapers
+type InitStateFunc func(log.Logger, state.SimpleDB, string, string, string) (string, error)
 
-func (c SetOptionFunc) SetOption(l log.Logger, store state.SimpleDB, module, key, value string) (string, error) {
+func (c InitStateFunc) InitState(l log.Logger, store state.SimpleDB, module, key, value string) (string, error) {
 	return c(l, store, module, key, value)
 }
 
@@ -119,6 +121,6 @@ func (_ NopDeliver) DeliverTx(Context, state.SimpleDB, Tx) (r DeliverResult, e e
 
 type NopOption struct{}
 
-func (_ NopOption) SetOption(log.Logger, state.SimpleDB, string, string, string) (string, error) {
+func (_ NopOption) InitState(log.Logger, state.SimpleDB, string, string, string) (string, error) {
 	return "", nil
 }

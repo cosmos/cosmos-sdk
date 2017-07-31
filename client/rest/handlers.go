@@ -1,25 +1,15 @@
 package rest
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
 	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/client/commands/proofs"
-	"github.com/tendermint/basecoin/modules/auth"
-	"github.com/tendermint/basecoin/modules/base"
-	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/modules/fee"
-	"github.com/tendermint/basecoin/modules/nonce"
-	"github.com/tendermint/basecoin/stack"
 	keysutils "github.com/tendermint/go-crypto/cmd"
 	keys "github.com/tendermint/go-crypto/keys"
-	lightclient "github.com/tendermint/light-client"
+	"github.com/tendermint/tmlibs/common"
 )
 
 type Keys struct {
@@ -42,19 +32,19 @@ func (k *Keys) GenerateKey(w http.ResponseWriter, r *http.Request) {
 	ckReq := &CreateKeyRequest{
 		Algo: k.algo,
 	}
-	if err := parseRequestJSON(r, ckReq); err != nil {
-		writeError(w, err)
+	if err := common.ParseRequestAndValidateJSON(r, ckReq); err != nil {
+		common.WriteError(w, err)
 		return
 	}
 
 	key, seed, err := k.manager.Create(ckReq.Name, ckReq.Passphrase, ckReq.Algo)
 	if err != nil {
-		writeError(w, err)
+		common.WriteError(w, err)
 		return
 	}
 
 	res := &CreateKeyResponse{Key: key, Seed: seed}
-	writeSuccess(w, res)
+	common.WriteSuccess(w, res)
 }
 
 func (k *Keys) GetKey(w http.ResponseWriter, r *http.Request) {
@@ -62,19 +52,19 @@ func (k *Keys) GetKey(w http.ResponseWriter, r *http.Request) {
 	name := query["name"]
 	key, err := k.manager.Get(name)
 	if err != nil {
-		writeError(w, err)
+		common.WriteError(w, err)
 		return
 	}
-	writeSuccess(w, &key)
+	common.WriteSuccess(w, &key)
 }
 
 func (k *Keys) ListKeys(w http.ResponseWriter, r *http.Request) {
 	keys, err := k.manager.List()
 	if err != nil {
-		writeError(w, err)
+		common.WriteError(w, err)
 		return
 	}
-	writeSuccess(w, keys)
+	common.WriteSuccess(w, keys)
 }
 
 var (
@@ -83,52 +73,52 @@ var (
 
 func (k *Keys) UpdateKey(w http.ResponseWriter, r *http.Request) {
 	uReq := new(UpdateKeyRequest)
-	if err := parseRequestJSON(r, uReq); err != nil {
-		writeError(w, err)
+	if err := common.ParseRequestAndValidateJSON(r, uReq); err != nil {
+		common.WriteError(w, err)
 		return
 	}
 
 	query := mux.Vars(r)
 	name := query["name"]
 	if name != uReq.Name {
-		writeError(w, errNonMatchingPathAndJSONKeyNames)
+		common.WriteError(w, errNonMatchingPathAndJSONKeyNames)
 		return
 	}
 
 	if err := k.manager.Update(uReq.Name, uReq.OldPass, uReq.NewPass); err != nil {
-		writeError(w, err)
+		common.WriteError(w, err)
 		return
 	}
 
 	key, err := k.manager.Get(uReq.Name)
 	if err != nil {
-		writeError(w, err)
+		common.WriteError(w, err)
 		return
 	}
-	writeSuccess(w, &key)
+	common.WriteSuccess(w, &key)
 }
 
 func (k *Keys) DeleteKey(w http.ResponseWriter, r *http.Request) {
 	dReq := new(DeleteKeyRequest)
-	if err := parseRequestJSON(r, dReq); err != nil {
-		writeError(w, err)
+	if err := common.ParseRequestAndValidateJSON(r, dReq); err != nil {
+		common.WriteError(w, err)
 		return
 	}
 
 	query := mux.Vars(r)
 	name := query["name"]
 	if name != dReq.Name {
-		writeError(w, errNonMatchingPathAndJSONKeyNames)
+		common.WriteError(w, errNonMatchingPathAndJSONKeyNames)
 		return
 	}
 
 	if err := k.manager.Delete(dReq.Name, dReq.Passphrase); err != nil {
-		writeError(w, err)
+		common.WriteError(w, err)
 		return
 	}
 
-	resp := &ErrorResponse{Success: true}
-	writeSuccess(w, resp)
+	resp := &common.ErrorResponse{Success: true}
+	common.WriteSuccess(w, resp)
 }
 
 func (k *Keys) Register(r *mux.Router) {
@@ -145,140 +135,38 @@ type Context struct {
 
 func (ctx *Context) RegisterHandlers(r *mux.Router) error {
 	ctx.Keys.Register(r)
-	r.HandleFunc("/build/send", doSend).Methods("POST")
 	r.HandleFunc("/sign", doSign).Methods("POST")
 	r.HandleFunc("/tx", doPostTx).Methods("POST")
-	r.HandleFunc("/query/account/{signature}", doAccountQuery).Methods("GET")
 
 	return nil
 }
 
-func extractAddress(signature string) (address string, err *ErrorResponse) {
-	// Expecting the signature of the form:
-	//  sig:<ADDRESS>
-	splits := strings.Split(signature, ":")
-	if len(splits) < 2 {
-		return "", &ErrorResponse{
-			Error: `expecting the signature of the form "sig:<ADDRESS>"`,
-			Code:  406,
-		}
-	}
-	if splits[0] != "sigs" {
-		return "", &ErrorResponse{
-			Error: `expecting the signature of the form "sig:<ADDRESS>"`,
-			Code:  406,
-		}
-	}
-	return splits[1], nil
-}
-
-func doAccountQuery(w http.ResponseWriter, r *http.Request) {
-	query := mux.Vars(r)
-	signature := query["signature"]
-	address, errResp := extractAddress(signature)
-	if errResp != nil {
-		writeCode(w, errResp, errResp.Code)
-		return
-	}
-	actor, err := commands.ParseActor(address)
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	actor = coin.ChainAddr(actor)
-	key := stack.PrefixedKey(coin.NameCoin, actor.Bytes())
-	account := new(coin.Account)
-	proof, err := proofs.GetAndParseAppProof(key, account)
-	if lightclient.IsNoDataErr(err) {
-		err := fmt.Errorf("account bytes are empty for address: %q", address)
-		writeError(w, err)
-		return
-	} else if err != nil {
-		writeError(w, err)
-		return
-	}
-
-	if err := proofs.OutputProof(account, proof.BlockHeight()); err != nil {
-		writeError(w, err)
-		return
-	}
-	writeSuccess(w, account)
-}
-
 func doPostTx(w http.ResponseWriter, r *http.Request) {
 	tx := new(basecoin.Tx)
-	if err := parseRequestJSON(r, tx); err != nil {
-		writeError(w, err)
+	if err := common.ParseRequestAndValidateJSON(r, tx); err != nil {
+		common.WriteError(w, err)
 		return
 	}
 	commit, err := PostTx(*tx)
 	if err != nil {
-		writeError(w, err)
+		common.WriteError(w, err)
 		return
 	}
 
-	writeSuccess(w, commit)
+	common.WriteSuccess(w, commit)
 }
 
 func doSign(w http.ResponseWriter, r *http.Request) {
 	sr := new(SignRequest)
-	if err := parseRequestJSON(r, sr); err != nil {
-		writeError(w, err)
+	if err := common.ParseRequestAndValidateJSON(r, sr); err != nil {
+		common.WriteError(w, err)
 		return
 	}
 
 	tx := sr.Tx
 	if err := SignTx(sr.Name, sr.Password, tx); err != nil {
-		writeError(w, err)
+		common.WriteError(w, err)
 		return
 	}
-	writeSuccess(w, tx)
-}
-
-func doSend(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	si := new(SendInput)
-	if err := parseRequestJSON(r, si); err != nil {
-		writeError(w, err)
-		return
-	}
-
-	var errsList []string
-	if si.From == nil {
-		errsList = append(errsList, `"from" cannot be nil`)
-	}
-	if si.Sequence <= 0 {
-		errsList = append(errsList, `"sequence" must be > 0`)
-	}
-	if si.To == nil {
-		errsList = append(errsList, `"to" cannot be nil`)
-	}
-	if len(si.Amount) == 0 {
-		errsList = append(errsList, `"amount" cannot be empty`)
-	}
-	if len(errsList) > 0 {
-		err := &ErrorResponse{
-			Error: strings.Join(errsList, ", "),
-			Code:  406,
-		}
-		writeCode(w, err, 406)
-		return
-	}
-
-	tx := coin.NewSendOneTx(*si.From, *si.To, si.Amount)
-	// fees are optional
-	if si.Fees != nil && !si.Fees.IsZero() {
-		tx = fee.NewFee(tx, *si.Fees, *si.From)
-	}
-	// only add the actual signer to the nonce
-	signers := []basecoin.Actor{*si.From}
-	tx = nonce.NewTx(si.Sequence, signers, tx)
-	tx = base.NewChainTx(commands.GetChainID(), 0, tx)
-
-	if si.Multi {
-		tx = auth.NewMulti(tx).Wrap()
-	} else {
-		tx = auth.NewSig(tx).Wrap()
-	}
-	writeSuccess(w, tx)
+	common.WriteSuccess(w, tx)
 }

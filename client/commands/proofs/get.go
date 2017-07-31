@@ -2,6 +2,8 @@ package proofs
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -111,15 +113,22 @@ type proof struct {
 	Data   interface{} `json:"data"`
 }
 
-// OutputProof prints the proof to stdout
-// reuse this for printing proofs and we should enhance this for text/json,
-// better presentation of height
-func OutputProof(info interface{}, height uint64) error {
-	wrap := proof{height, info}
-	res, err := data.ToJSON(wrap)
+// FoutputProof writes the output of wrapping height and info
+// in the form {"data": <the_data>, "height": <the_height>}
+// to the provider io.Writer
+func FoutputProof(w io.Writer, v interface{}, height uint64) error {
+	wrap := &proof{height, v}
+	blob, err := data.ToJSON(wrap)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(res))
-	return nil
+	_, err = fmt.Fprintf(w, "%s\n", blob)
+	return err
+}
+
+// OutputProof prints the proof to stdout
+// reuse this for printing proofs and we should enhance this for text/json,
+// better presentation of height
+func OutputProof(data interface{}, height uint64) error {
+	return FoutputProof(os.Stdout, data, height)
 }

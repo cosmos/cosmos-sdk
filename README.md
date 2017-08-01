@@ -30,7 +30,7 @@ See the [install guide](/docs/guide/install.md) for more details.
 1. Learning to [use the plugin system](/docs/guide/basecoin-plugins.md)
 1. More features of the [Quark tool](/docs/guide/basecoin-tool.md)
 1. Learn how to use [Inter-Blockchain Communication (IBC)](/docs/guide/ibc.md)
-1. See [more examples](github.com/tendermint/basecoin-examples)
+1. See [more examples](https://github.com/tendermint/basecoin-examples)
 
 
 To deploy a testnet, see our [repository of deployment tools](https://github.com/tendermint/tools).

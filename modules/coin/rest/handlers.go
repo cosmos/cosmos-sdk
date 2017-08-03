@@ -10,6 +10,7 @@ import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/client/commands"
 	"github.com/tendermint/basecoin/client/commands/proofs"
+	"github.com/tendermint/basecoin/client/commands/txs"
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
@@ -35,7 +36,9 @@ type SendInput struct {
 }
 
 func RegisterHandlers(r *mux.Router) error {
-	r.HandleFunc("/build/send", doSend).Methods("POST")
+	r.HandleFunc("/build/send", sendRouter(noCommitToBlockchain)).Methods("POST")
+	r.HandleFunc("/send", sendRouter(postToBlockchain)).Methods("POST")
+
 	r.HandleFunc("/query/account/{signature}", doQueryAccount).Methods("GET")
 	return nil
 }
@@ -87,14 +90,7 @@ func PrepareSendTx(si *SendInput) basecoin.Tx {
 	return tx
 }
 
-func doSend(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	si := new(SendInput)
-	if err := common.ParseRequestAndValidateJSON(r, si); err != nil {
-		common.WriteError(w, err)
-		return
-	}
-
+func performSendTx(si *SendInput) (*basecoin.Tx, error) {
 	var errsList []string
 	if si.From == nil {
 		errsList = append(errsList, `"from" cannot be nil`)
@@ -114,10 +110,44 @@ func doSend(w http.ResponseWriter, r *http.Request) {
 			Err:  strings.Join(errsList, ", "),
 			Code: code,
 		}
-		common.WriteCode(w, err, code)
-		return
+		return nil, err
 	}
 
 	tx := PrepareSendTx(si)
-	common.WriteSuccess(w, tx)
+	return &tx, nil
+}
+
+const (
+	postToBlockchain     = true
+	noCommitToBlockchain = false
+)
+
+func sendRouter(behavior bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+		si := new(SendInput)
+		if err := common.ParseRequestAndValidateJSON(r, si); err != nil {
+			common.WriteError(w, err)
+			return
+		}
+
+		tx, err := performSendTx(si)
+		if err != nil {
+			common.WriteError(w, err)
+			return
+		}
+
+		if behavior != postToBlockchain {
+			common.WriteSuccess(w, tx)
+			return
+		}
+
+		commit, err := txs.CommitTx(*tx)
+		if err != nil {
+			common.WriteError(w, err)
+			return
+		}
+
+		common.WriteSuccess(w, commit)
+	}
 }

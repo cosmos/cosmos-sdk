@@ -40,13 +40,12 @@ restAccount() {
     ACCT=$(curl ${URL}/query/account/sigs:$1 2>/dev/null)
     if [ -n "$DEBUG" ]; then echo $ACCT; echo; fi
     assertEquals "line=${LINENO}, proper money" "$2" $(echo $ACCT | jq .coins[0].amount)
-    # assertEquals "line=${LINENO}, proper money" "$2" $(echo $ACCT | jq .data.coins[0].amount)
     return $?
 }
 
 restNoAccount() {
     ERROR=$(curl ${URL}/query/account/sigs:$1 2>/dev/null)
-    assertEquals "line=${LINENO}, should error" 406 $(echo $ERROR | jq .code)
+    assertEquals "line=${LINENO}, should error" 400 $(echo $ERROR | jq .code)
 }
 
 test00GetAccount() {
@@ -55,6 +54,36 @@ test00GetAccount() {
 
     restAccount $SENDER "9007199254740992"
     restNoAccount $RECV
+}
+
+# XXX Ex Usage: restCreateRole $PAYLOAD $EXPECTED
+# Desc: Tests that the first returned signer.addr matches the expected
+restCreateRole() {
+    assertNotNull "line=${LINENO}, data required" "$1"
+    ROLE=$(curl ${URL}/build/create_role --data "$1" 2>/dev/null)
+    if [ -n "$DEBUG" ]; then echo -e "$ROLE\n"; fi
+    assertEquals "line=${LINENO}, role required" "$2" $(echo $ROLE | jq .data.tx.data.signers[0].addr)
+    return $?
+}
+
+test03CreateRole() {
+    DATA="{\"role\": \"726f6c65\", \"seq\": 1, \"min_sigs\": 1, \"signers\": [{\"addr\": \"4FF759D47C81754D8F553DCCAC8651D0AF74C7F9\", \"app\": \"role\"}]}"
+    restCreateRole "$DATA" \""4FF759D47C81754D8F553DCCAC8651D0AF74C7F9"\"
+}
+
+test04CreateRoleInvalid() {
+    ERROR=$(curl ${URL}/build/create_role --data '{}' 2>/dev/null)
+    assertEquals "line=${LINENO}, should report validation failed" 0 $(echo $ERROR | grep "failed" > /dev/null && echo 0 || echo 1)
+
+    ERROR=$(curl ${URL}/build/create_role --data '{"role": "foo"}' 2>/dev/null)
+    assertEquals "line=${LINENO}, should report validation failed" 0 $(echo $ERROR | grep "failed" > /dev/null && echo 0 || echo 1)
+
+    ERROR=$(curl ${URL}/build/create_role --data '{"min_sigs": 2, "role": "abcdef"}' 2>/dev/null)
+    assertEquals "line=${LINENO}, should report validation failed" 0 $(echo $ERROR | grep "failed" > /dev/null && echo 0 || echo 1)
+
+    ## Non-hex roles should be rejected
+    ERROR=$(curl ${URL}/build/create_role --data "{\"role\": \"foobar\", \"seq\": 2, \"signers\": [{\"addr\": \"4FF759D47C81754D8F553DCCAC8651D0AF74C7F9\", \"app\": \"role\"}], \"min_sigs\": 1}" 2>/dev/null)
+    assertEquals "line=${LINENO}, should report validation failed" 0 $(echo $ERROR | grep "invalid hex" > /dev/null && echo 0 || echo 1)
 }
 
 test01SendTx() {

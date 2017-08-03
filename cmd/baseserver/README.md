@@ -24,11 +24,17 @@ Route | Method | Completed | Description
 /sign|POST|✔️|Sign a transaction
 /tx|POST|✖️|Post a transaction to the blockchain
 /seeds/status|GET|✖️|Returns the information on the last seed
+/build/create_role|POST|✔️|Creates a role. Please note that the role MUST be valid hex for example instead of sending "role", send its hex encoded equivalent "726f6c65"
+
+## Preamble:
+In the examples below, we assume that URL is set to `http://localhost:8889`
+which can be set for example
+URL=http://localhost:8889
 
 ## Sample usage
 - Generate a key
 ```shell
-$ curl -X POST http://localhost8998/keys --data '{"algo": "ed25519", "name": "SampleX", "passphrase": "Say no more"}'
+$ curl -X POST $URL/keys --data '{"algo": "ed25519", "name": "SampleX", "passphrase": "Say no more"}'
 ```
 
 ```json
@@ -47,7 +53,7 @@ $ curl -X POST http://localhost8998/keys --data '{"algo": "ed25519", "name": "Sa
 
 - Sign a key
 ```shell
-$ curl -X POST http://localhost:8998/sign --data '{
+$ curl -X POST $URL/sign --data '{
     "name": "matt",
     "password": "Say no more",
     "tx": {
@@ -111,6 +117,44 @@ $ curl -X POST http://localhost:8998/sign --data '{
         }
       }
     ]
+  }
+}
+```
+
+- Create a role
+```shell
+$ curl -X POST $URL/build/create_role --data \
+'{
+  "role": "deadbeef",
+  "signers": [{
+    "addr": "4FF759D47C81754D8F553DCCAC8651D0AF74C7F9",
+    "app": "role"
+  }],
+  "min_sigs": 1,
+  "seq": 1
+}'
+```
+
+```json
+{
+  "type": "chain/tx",
+  "data": {
+    "chain_id": "test_chain_id",
+    "expires_at": 0,
+    "tx": {
+      "type": "role/create",
+      "data": {
+        "role": "DEADBEEF",
+        "min_sigs": 1,
+        "signers": [
+          {
+            "chain": "",
+            "app": "role",
+            "addr": "4FF759D47C81754D8F553DCCAC8651D0AF74C7F9"
+          }
+        ]
+      }
+    }
   }
 }
 ```

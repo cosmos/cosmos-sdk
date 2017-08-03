@@ -22,9 +22,10 @@ Route | Method | Completed | Description
 /keys/{name}|DELETE|✔️|Deletes the named key
 /build/send|POST|✔️|Send a transaction
 /sign|POST|✔️|Sign a transaction
-/tx|POST|✖️|Post a transaction to the blockchain
+/tx|POST|✔️|Post a transaction to the blockchain
 /seeds/status|GET|✖️|Returns the information on the last seed
 /build/create_role|POST|✔️|Creates a role. Please note that the role MUST be valid hex for example instead of sending "role", send its hex encoded equivalent "726f6c65"
+/query/role/{role}|GET|✔️|Looks up a role by its address, from the blockchain
 
 ## Preamble:
 In the examples below, we assume that URL is set to `http://localhost:8889`

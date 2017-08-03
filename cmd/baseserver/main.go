@@ -54,6 +54,8 @@ func serve(cmd *cobra.Command, args []string) error {
 
 		// Roles createRole handler
 		rolerest.RegisterCreateRole,
+		// Roles query role handler
+		rolerest.RegisterQueryRole,
 
 		// Basecoin sign transactions handler
 		rest.RegisterSignTx,

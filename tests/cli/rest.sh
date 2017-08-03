@@ -86,6 +86,23 @@ test04CreateRoleInvalid() {
     assertEquals "line=${LINENO}, should report validation failed" 0 $(echo $ERROR | grep "invalid hex" > /dev/null && echo 0 || echo 1)
 }
 
+test05QueryRoleInvalid() {
+    ERROR=$(curl ${URL}/query/role/foo 2>/dev/null)
+    assertEquals "line=${LINENO}, should report invalid hex length" 0 $(echo $ERROR | grep "odd length" > /dev/null && echo 0 || echo 1)
+}
+
+queryRole() {
+    assertNotNull "line=${LINENO}, role required" "$1"
+    ROLE=$(curl ${URL}/query/role/$1 2>/dev/null)
+    if [ -n "$DEBUG" ]; then echo -e "$ROLE\n"; fi
+    assertEquals "line=${LINENO}, role required" "$2" $(echo $ROLE | jq .signers[0].addr)
+    return $?
+}
+
+test06QueryRoleValid() {
+  queryRole "726F6C65" "4FF759D47C81754D8F553DCCAC8651D0AF74C7F9"
+}
+
 test01SendTx() {
     SENDER=$(restAddr $RICH)
     RECV=$(restAddr $POOR)

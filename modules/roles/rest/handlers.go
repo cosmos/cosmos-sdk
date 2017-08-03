@@ -5,14 +5,17 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/client/commands"
+	"github.com/tendermint/basecoin/client/commands/query"
 	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/nonce"
 	"github.com/tendermint/basecoin/modules/roles"
+	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/tmlibs/common"
 )
 
@@ -49,6 +52,38 @@ func decodeRoleHex(roleInHex string) ([]byte, error) {
 // method access on route /build/create_role to create a role.
 func RegisterCreateRole(r *mux.Router) error {
 	r.HandleFunc("/build/create_role", doCreateRole).Methods("POST")
+	return nil
+}
+
+func doQueryRole(w http.ResponseWriter, r *http.Request) {
+	args := mux.Vars(r)
+	roleInHex := args["role"]
+	parsedRole, err := decodeRoleHex(roleInHex)
+	if err != nil {
+		common.WriteError(w, err)
+		return
+	}
+
+	recvRole := new(roles.Role)
+	key := stack.PrefixedKey(roles.NameRole, parsedRole)
+	prove := !viper.GetBool(commands.FlagTrustNode)
+	height, err := query.GetParsed(key, recvRole, prove)
+	if err != nil {
+		common.WriteError(w, err)
+		return
+	}
+
+	if err := query.OutputProof(recvRole, height); err != nil {
+		common.WriteError(w, err)
+		return
+	}
+	common.WriteSuccess(w, recvRole)
+}
+
+// RegisterQueryRole is a mux.Router handler that exposes GET
+// method access on route /query/role/{theRole} to query for a role.
+func RegisterQueryRole(r *mux.Router) error {
+	r.HandleFunc("/query/role/{role}", doQueryRole).Methods("GET")
 	return nil
 }
 

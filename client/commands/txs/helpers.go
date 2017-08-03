@@ -62,17 +62,7 @@ func GetSignerAct() (res basecoin.Actor) {
 // eg. if you already set the middleware layers in your code, or want to
 // output in another format.
 func DoTx(tx basecoin.Tx) (err error) {
-	tx, err = Middleware.Wrap(tx)
-	if err != nil {
-		return err
-	}
-
-	err = SignTx(tx)
-	if err != nil {
-		return err
-	}
-
-	bres, err := PrepareOrPostTx(tx)
+	bres, err := CommitTx(tx)
 	if err != nil {
 		return err
 	}
@@ -80,7 +70,19 @@ func DoTx(tx basecoin.Tx) (err error) {
 		return nil // successful prep, nothing left to do
 	}
 	return OutputTx(bres) // print response of the post
+}
 
+func CommitTx(tx basecoin.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
+	tx, err := Middleware.Wrap(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := SignTx(tx); err != nil {
+		return nil, err
+	}
+
+	return PrepareOrPostTx(tx)
 }
 
 // SignTx will validate the tx, and signs it if it is wrapping a Signable.

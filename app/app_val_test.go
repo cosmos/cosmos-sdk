@@ -6,59 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/basecoin/modules/base"
 	wire "github.com/tendermint/go-wire"
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
-
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/state"
 )
-
-//--------------------------------
-// Setup tx and handler for validation test cases
-
-const (
-	ValName       = "val"
-	TypeValChange = ValName + "/change"
-	ByteValChange = 0xfe
-)
-
-func init() {
-	basecoin.TxMapper.RegisterImplementation(ValChangeTx{}, TypeValChange, ByteValChange)
-}
-
-type ValSetHandler struct {
-	basecoin.NopCheck
-	basecoin.NopInitState
-	basecoin.NopInitValidate
-}
-
-var _ basecoin.Handler = ValSetHandler{}
-
-func (ValSetHandler) Name() string {
-	return ValName
-}
-
-func (ValSetHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
-	change, ok := tx.Unwrap().(ValChangeTx)
-	if !ok {
-		return res, errors.ErrUnknownTxType(tx)
-	}
-	res.Diff = change.Diff
-	return
-}
-
-type ValChangeTx struct {
-	Diff []*abci.Validator
-}
-
-func (v ValChangeTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{v}
-}
-
-func (v ValChangeTx) ValidateBasic() error { return nil }
 
 //-----------------------------------
 // Test cases start here
@@ -90,7 +42,7 @@ func TestEndBlock(t *testing.T) {
 
 	logger := log.NewNopLogger()
 	store := MockStore()
-	handler := ValSetHandler{}
+	handler := base.ValSetHandler{}
 	app := NewBasecoin(handler, store, logger)
 
 	val1 := makeVal()
@@ -125,7 +77,7 @@ func TestEndBlock(t *testing.T) {
 	for i, tc := range cases {
 		app.BeginBlock(nil, nil)
 		for _, c := range tc.changes {
-			tx := ValChangeTx{c}.Wrap()
+			tx := base.ValChangeTx{c}.Wrap()
 			txBytes := wire.BinaryBytes(tx)
 			res := app.DeliverTx(txBytes)
 			require.True(res.IsOK(), "%#v", res)

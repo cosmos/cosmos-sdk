@@ -32,7 +32,7 @@ var _ stack.Middleware = Multiplexer{}
 
 // CheckTx splits the input tx and checks them all - fulfills Middlware interface
 func (Multiplexer) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
-	if mtx, ok := tx.Unwrap().(*MultiTx); ok {
+	if mtx, ok := tx.Unwrap().(MultiTx); ok {
 		return runAllChecks(ctx, store, mtx.Txs, next)
 	}
 	return next.CheckTx(ctx, store, tx)
@@ -40,7 +40,7 @@ func (Multiplexer) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx baseco
 
 // DeliverTx splits the input tx and checks them all - fulfills Middlware interface
 func (Multiplexer) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
-	if mtx, ok := tx.Unwrap().(*MultiTx); ok {
+	if mtx, ok := tx.Unwrap().(MultiTx); ok {
 		return runAllDelivers(ctx, store, mtx.Txs, next)
 	}
 	return next.DeliverTx(ctx, store, tx)

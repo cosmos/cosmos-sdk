@@ -1,9 +1,3 @@
-# TODO for rewrite
-
-* Add tests for new CheckTx
-* Test Multiplexer
-
-
 Alexis:
 
 * merkle - proof (non-existence - maybe range)
@@ -12,8 +6,7 @@ light-client proofs:
 * make this sensible -> very tied to merkle proofs and API
 * support new proof types
 
-* abci add range suppprt
-
+* expose more proof types in basecoin.Query
 
 
 * merkle - api cleanup (also Bonsai)

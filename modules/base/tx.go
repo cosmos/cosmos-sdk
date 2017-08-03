@@ -16,13 +16,13 @@ const (
 
 //nolint
 const (
-	// TypeMultiTx = NameMultiplexer + "/tx"
+	TypeMultiTx = NameMultiplexer + "/tx"
 	TypeChainTx = NameChain + "/tx"
 )
 
 func init() {
 	basecoin.TxMapper.
-		// RegisterImplementation(MultiTx{}, TypeMultiTx, ByteMultiTx).
+		RegisterImplementation(MultiTx{}, TypeMultiTx, ByteMultiTx).
 		RegisterImplementation(ChainTx{}, TypeChainTx, ByteChainTx)
 }
 

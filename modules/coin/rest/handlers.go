@@ -34,12 +34,6 @@ type SendInput struct {
 	Amount coin.Coins      `json:"amount"`
 }
 
-func RegisterHandlers(r *mux.Router) error {
-	r.HandleFunc("/build/send", doSend).Methods("POST")
-	r.HandleFunc("/query/account/{signature}", doQueryAccount).Methods("GET")
-	return nil
-}
-
 // doQueryAccount is the HTTP handlerfunc to query an account
 // It expects a query string with
 func doQueryAccount(w http.ResponseWriter, r *http.Request) {
@@ -121,3 +115,38 @@ func doSend(w http.ResponseWriter, r *http.Request) {
 	tx := PrepareSendTx(si)
 	common.WriteSuccess(w, tx)
 }
+
+// mux.Router registrars
+
+// RegisterCoinSend is a mux.Router handler that exposes
+// POST method access on route /build/send to create a
+// transaction for sending money from one account to another.
+func RegisterCoinSend(r *mux.Router) error {
+	r.HandleFunc("/build/send", doSend).Methods("POST")
+	return nil
+}
+
+// RegisterQueryAccount is a mux.Router handler that exposes GET
+// method access on route /query/account/{signature} to query accounts
+func RegisterQueryAccount(r *mux.Router) error {
+	r.HandleFunc("/query/account/{signature}", doQueryAccount).Methods("GET")
+	return nil
+}
+
+// RegisterAll is a convenience function to
+// register all the  handlers in this package.
+func RegisterAll(r *mux.Router) error {
+	funcs := []func(*mux.Router) error{
+		RegisterCoinSend,
+		RegisterQueryAccount,
+	}
+
+	for _, fn := range funcs {
+		if err := fn(r); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// End of mux.Router registrars

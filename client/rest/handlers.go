@@ -21,6 +21,10 @@ func DefaultKeysManager() keys.Manager {
 	return keysutils.GetKeyManager()
 }
 
+func NewDefaultKeysManager(algo string) *Keys {
+	return New(DefaultKeysManager(), algo)
+}
+
 func New(manager keys.Manager, algo string) *Keys {
 	return &Keys{
 		algo:    algo,
@@ -121,26 +125,6 @@ func (k *Keys) DeleteKey(w http.ResponseWriter, r *http.Request) {
 	common.WriteSuccess(w, resp)
 }
 
-func (k *Keys) Register(r *mux.Router) {
-	r.HandleFunc("/keys", k.GenerateKey).Methods("POST")
-	r.HandleFunc("/keys", k.ListKeys).Methods("GET")
-	r.HandleFunc("/keys/{name}", k.GetKey).Methods("GET")
-	r.HandleFunc("/keys/{name}", k.UpdateKey).Methods("POST", "PUT")
-	r.HandleFunc("/keys/{name}", k.DeleteKey).Methods("DELETE")
-}
-
-type Context struct {
-	Keys *Keys
-}
-
-func (ctx *Context) RegisterHandlers(r *mux.Router) error {
-	ctx.Keys.Register(r)
-	r.HandleFunc("/sign", doSign).Methods("POST")
-	r.HandleFunc("/tx", doPostTx).Methods("POST")
-
-	return nil
-}
-
 func doPostTx(w http.ResponseWriter, r *http.Request) {
 	tx := new(basecoin.Tx)
 	if err := common.ParseRequestAndValidateJSON(r, tx); err != nil {
@@ -170,3 +154,38 @@ func doSign(w http.ResponseWriter, r *http.Request) {
 	}
 	common.WriteSuccess(w, tx)
 }
+
+// mux.Router registrars
+
+// RegisterPostTx is a mux.Router handler that exposes POST
+// method access to post a transaction to the blockchain.
+func RegisterPostTx(r *mux.Router) error {
+	r.HandleFunc("/tx", doPostTx).Methods("POST")
+	return nil
+}
+
+// RegisterAllCRUD is a convenience method to register all
+// CRUD for keys to allow access by methods and routes:
+// POST:      /keys
+// GET:	      /keys
+// GET:	      /keys/{name}
+// POST, PUT: /keys/{name}
+// DELETE:    /keys/{name}
+func (k *Keys) RegisterAllCRUD(r *mux.Router) error {
+	r.HandleFunc("/keys", k.GenerateKey).Methods("POST")
+	r.HandleFunc("/keys", k.ListKeys).Methods("GET")
+	r.HandleFunc("/keys/{name}", k.GetKey).Methods("GET")
+	r.HandleFunc("/keys/{name}", k.UpdateKey).Methods("POST", "PUT")
+	r.HandleFunc("/keys/{name}", k.DeleteKey).Methods("DELETE")
+
+	return nil
+}
+
+// RegisterSignTx is a mux.Router handler that
+// exposes POST method access to sign a transaction.
+func RegisterSignTx(r *mux.Router) error {
+	r.HandleFunc("/sign", doSign).Methods("POST")
+	return nil
+}
+
+// End of mux.Router registrars

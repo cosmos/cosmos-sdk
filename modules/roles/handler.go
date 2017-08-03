@@ -10,9 +10,9 @@ const (
 	//NameRole - name space of the roles module
 	NameRole = "role"
 	// CostCreate is the cost to create a new role
-	CostCreate = 40
+	CostCreate = uint(40)
 	// CostAssume is the cost to assume a role as part of a tx
-	CostAssume = 5
+	CostAssume = uint(5)
 )
 
 // Handler allows us to create new roles

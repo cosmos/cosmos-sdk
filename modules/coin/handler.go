@@ -16,9 +16,9 @@ const (
 	//NameCoin - name space of the coin module
 	NameCoin = "coin"
 	// CostSend is GasAllocation per input/output
-	CostSend = 10
+	CostSend = uint(10)
 	// CostCredit is GasAllocation of a credit allocation
-	CostCredit = 20
+	CostCredit = uint(20)
 )
 
 // Handler includes an accountant

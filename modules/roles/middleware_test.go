@@ -93,11 +93,14 @@ func TestAssumeRole(t *testing.T) {
 		}
 
 		// try CheckTx and DeliverTx and make sure they both assert permissions
-		_, err := app.CheckTx(myCtx, store, tx)
+		cres, err := app.CheckTx(myCtx, store, tx)
 		_, err2 := app.DeliverTx(myCtx, store, tx)
 		if tc.valid {
 			assert.Nil(err, "%d: %+v", i, err)
 			assert.Nil(err2, "%d: %+v", i, err2)
+			// make sure we charge for each role
+			assert.Equal(roles.CostAssume*uint(len(tc.roles)), cres.GasAllocated)
+			assert.Equal(uint(0), cres.GasPayment)
 		} else {
 			assert.NotNil(err, "%d", i)
 			assert.NotNil(err2, "%d", i)

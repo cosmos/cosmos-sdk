@@ -55,6 +55,8 @@ func TestFeeChecks(t *testing.T) {
 	_, err = app2.InitState(l, store, "coin", "account", key2.MakeOption())
 	require.Nil(err, "%+v", err)
 
+	// feeCost is what we expect if the fee is properly paid
+	feeCost := coin.CostSend * 2
 	cases := []struct {
 		valid bool
 		// this is the middleware stack to test
@@ -68,30 +70,32 @@ func TestFeeChecks(t *testing.T) {
 		// expected balance after the tx
 		left      coin.Coins
 		collected coin.Coins
+		// expected gas allocated
+		expectedCost uint
 	}{
 		// make sure it works with no fee (control group)
-		{true, app1, act1, false, act1, zero, mixed, nil},
-		{true, app1, act2, false, act2, zero, pure, nil},
+		{true, app1, act1, false, act1, zero, mixed, nil, 0},
+		{true, app1, act2, false, act2, zero, pure, nil, 0},
 
 		// no fee or too low is rejected
-		{false, app2, act1, false, act1, zero, mixed, nil},
-		{false, app2, act2, false, act2, zero, pure, nil},
-		{false, app2, act1, true, act1, zero, mixed, nil},
-		{false, app2, act2, true, act2, atom(1), pure, nil},
+		{false, app2, act1, false, act1, zero, mixed, nil, 0},
+		{false, app2, act2, false, act2, zero, pure, nil, 0},
+		{false, app2, act1, true, act1, zero, mixed, nil, 0},
+		{false, app2, act2, true, act2, atom(1), pure, nil, 0},
 
 		// proper fees are transfered in both cases
-		{true, app1, act1, true, act1, atom(1), wallet(1199, 55), atoms(1)},
-		{true, app2, act2, true, act2, atom(57), atoms(46600), atoms(58)},
+		{true, app1, act1, true, act1, atom(1), wallet(1199, 55), atoms(1), feeCost},
+		{true, app2, act2, true, act2, atom(57), atoms(46600), atoms(58), feeCost},
 
 		// // fee must be the proper type...
-		{false, app1, act1, true, act1, eth(5), wallet(1199, 55), atoms(58)},
+		{false, app1, act1, true, act1, eth(5), wallet(1199, 55), atoms(58), 0},
 
 		// signature must match
-		{false, app2, act1, true, act2, atom(5), atoms(46600), atoms(58)},
+		{false, app2, act1, true, act2, atom(5), atoms(46600), atoms(58), 0},
 
 		// send only works within limits
-		{true, app2, act1, true, act1, atom(1100), wallet(99, 55), atoms(1158)},
-		{false, app2, act1, true, act1, atom(500), wallet(99, 55), atoms(1158)},
+		{true, app2, act1, true, act1, atom(1100), wallet(99, 55), atoms(1158), feeCost},
+		{false, app2, act1, true, act1, atom(500), wallet(99, 55), atoms(1158), 0},
 	}
 
 	for i, tc := range cases {
@@ -105,9 +109,11 @@ func TestFeeChecks(t *testing.T) {
 		ctx := stack.MockContext("x", 1).WithPermissions(tc.signer)
 
 		// call checktx...
-		_, err := tc.app.CheckTx(ctx, store, tx)
+		cres, err := tc.app.CheckTx(ctx, store, tx)
 		if tc.valid {
 			assert.Nil(err, "%d: %+v", i, err)
+			assert.EqualValues(tc.fee.Amount, cres.GasPayment)
+			assert.EqualValues(tc.expectedCost, cres.GasAllocated)
 		} else {
 			assert.NotNil(err, "%d", i)
 		}

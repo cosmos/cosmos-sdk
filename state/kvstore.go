@@ -149,7 +149,12 @@ func (m *MemKVStore) Commit(sub SimpleDB) error {
 	if !ok {
 		return ErrNotASubTransaction()
 	}
-	// TODO: see if it points to us
+
+	// see if it points to us
+	ref, ok := cache.store.(*MemKVStore)
+	if !ok || ref != m {
+		return ErrNotASubTransaction()
+	}
 
 	// apply the cached data to us
 	cache.applyCache()

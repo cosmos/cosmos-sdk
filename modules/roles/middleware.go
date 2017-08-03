@@ -41,7 +41,10 @@ func (m Middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basec
 	}
 
 	// one could add multiple role statements, repeat as needed
-	return m.CheckTx(ctx, store, assume.Tx, next)
+	// charging for each level
+	res, err = m.CheckTx(ctx, store, assume.Tx, next)
+	res.GasAllocated += CostAssume
+	return
 }
 
 // DeliverTx tries to assume the named role if requested.

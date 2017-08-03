@@ -6,8 +6,14 @@ import (
 	"github.com/tendermint/basecoin/state"
 )
 
-//NameRole - name space of the roles module
-const NameRole = "role"
+const (
+	//NameRole - name space of the roles module
+	NameRole = "role"
+	// CostCreate is the cost to create a new role
+	CostCreate = 40
+	// CostAssume is the cost to assume a role as part of a tx
+	CostAssume = 5
+)
 
 // Handler allows us to create new roles
 type Handler struct {
@@ -34,6 +40,7 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin
 	if err != nil {
 		return
 	}
+	res = basecoin.NewCheck(CostCreate, "")
 	err = checkNoRole(store, cr.Role)
 	return
 }

@@ -9,6 +9,7 @@ import (
 //nolint
 const (
 	NameNonce = "nonce"
+	CostNonce = 10
 )
 
 // ReplayCheck uses the sequence to check for replay attacks
@@ -33,7 +34,9 @@ func (r ReplayCheck) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 		return res, err
 	}
 
-	return next.CheckTx(ctx, store, stx)
+	res, err = next.CheckTx(ctx, store, stx)
+	res.GasAllocated += CostNonce
+	return res, err
 }
 
 // DeliverTx verifies tx is not being replayed - fulfills Middlware interface

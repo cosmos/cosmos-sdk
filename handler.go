@@ -95,6 +95,15 @@ type CheckResult struct {
 	GasPayment uint
 }
 
+// NewCheck sets the gas used and the response data but no more info
+// these are the most common info needed to be set by the Handler
+func NewCheck(gasAllocated uint, log string) CheckResult {
+	return CheckResult{
+		GasAllocated: gasAllocated,
+		Log:          log,
+	}
+}
+
 var _ Dataer = CheckResult{}
 
 func (r CheckResult) ToABCI() abci.Result {

@@ -12,8 +12,14 @@ import (
 	"github.com/tendermint/basecoin/state"
 )
 
-//NameCoin - name space of the coin module
-const NameCoin = "coin"
+const (
+	//NameCoin - name space of the coin module
+	NameCoin = "coin"
+	// CostSend is GasAllocation per input/output
+	CostSend = 10
+	// CostCredit is GasAllocation of a credit allocation
+	CostCredit = 20
+)
 
 // Handler includes an accountant
 type Handler struct {
@@ -46,9 +52,12 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 
 	switch t := tx.Unwrap().(type) {
 	case SendTx:
-		return res, h.checkSendTx(ctx, store, t)
+		// price based on inputs and outputs
+		used := uint(len(t.Inputs) + len(t.Outputs))
+		return basecoin.NewCheck(used*CostSend, ""), h.checkSendTx(ctx, store, t)
 	case CreditTx:
-		return res, h.creditTx(ctx, store, t)
+		// default price of 20, constant work
+		return basecoin.NewCheck(CostCredit, ""), h.creditTx(ctx, store, t)
 	}
 	return res, errors.ErrUnknownTxType(tx.Unwrap())
 }

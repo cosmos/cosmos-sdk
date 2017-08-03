@@ -131,7 +131,8 @@ func (c *MemKVCache) Commit(sub SimpleDB) error {
 
 // applyCache will apply all the cache methods to the underlying store
 func (c *MemKVCache) applyCache() {
-	for k, v := range c.cache.m {
+	for _, k := range c.cache.keysInRange(nil, nil) {
+		v := c.cache.m[k]
 		if v == nil {
 			c.store.Remove([]byte(k))
 		} else {

@@ -112,7 +112,7 @@ func (s *Store) Info() abci.ResponseInfo {
 		"height", s.height,
 		"hash", fmt.Sprintf("%X", s.hash))
 	return abci.ResponseInfo{
-		Data:             cmn.Fmt("size:%v", s.State.Committed().Size()),
+		Data:             cmn.Fmt("size:%v", s.State.Size()),
 		LastBlockHeight:  s.height - 1,
 		LastBlockAppHash: s.hash,
 	}
@@ -144,7 +144,7 @@ func (s *Store) Commit() abci.Result {
 		return abci.NewError(abci.CodeType_InternalError, "AppHash is incorrect")
 	}
 
-	if s.State.Committed().Size() == 0 {
+	if s.State.Size() == 0 {
 		return abci.NewResultOK(nil, "Empty hash for empty tree")
 	}
 	return abci.NewResultOK(s.hash, "")

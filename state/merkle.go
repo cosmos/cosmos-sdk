@@ -24,6 +24,10 @@ func NewState(tree merkle.Tree, persistent bool) State {
 	}
 }
 
+func (s State) Size() int {
+	return s.committed.Tree.Size()
+}
+
 func (s State) Committed() *Bonsai {
 	return s.committed
 }

@@ -11,8 +11,8 @@ type nonce int64
 
 // Bonsai is a deformed tree forced to fit in a small pot
 type Bonsai struct {
-	id nonce
-	merkle.Tree
+	id   nonce
+	Tree merkle.Tree
 }
 
 var _ SimpleDB = &Bonsai{}
@@ -31,6 +31,11 @@ func (b *Bonsai) Get(key []byte) []byte {
 	return value
 }
 
+// Get matches the signature of KVStore
+func (b *Bonsai) Has(key []byte) bool {
+	return b.Tree.Has(key)
+}
+
 // Set matches the signature of KVStore
 func (b *Bonsai) Set(key, value []byte) {
 	b.Tree.Set(key, value)
@@ -39,6 +44,10 @@ func (b *Bonsai) Set(key, value []byte) {
 func (b *Bonsai) Remove(key []byte) (value []byte) {
 	value, _ = b.Tree.Remove(key)
 	return
+}
+
+func (b *Bonsai) Proof(key []byte) (value []byte, proof []byte, exists bool) {
+	return b.Tree.Proof(key)
 }
 
 func (b *Bonsai) List(start, end []byte, limit int) []Model {

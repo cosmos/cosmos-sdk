@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -110,9 +111,7 @@ func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
 	if err != nil {
 		return errors.Result(err)
 	}
-	if len(res.Diff) > 0 {
-		app.pending = append(app.pending, res.Diff...)
-	}
+	app.addValChange(res.Diff)
 	return res.ToABCI()
 }
 
@@ -179,6 +178,27 @@ func (app *Basecoin) EndBlock(height uint64) (res abci.ResponseEndBlock) {
 	res.Diffs = app.pending
 	app.pending = nil
 	return
+}
+
+func (app *Basecoin) addValChange(diffs []*abci.Validator) {
+	for _, d := range diffs {
+		idx := findVal(d, app.pending)
+		if idx >= 0 {
+			app.pending[idx] = d
+		} else {
+			app.pending = append(app.pending, d)
+		}
+	}
+}
+
+// return index of list with validator of same PubKey, or -1 if no match
+func findVal(val *abci.Validator, list []*abci.Validator) int {
+	for i, v := range list {
+		if bytes.Equal(val.PubKey, v.PubKey) {
+			return i
+		}
+	}
+	return -1
 }
 
 //TODO move split key to tmlibs?

@@ -36,6 +36,16 @@ type ChainState struct {
 	Height uint64
 }
 
+// MockStore returns an in-memory store only intended for testing
+func MockStore() *Store {
+	res, err := NewStore("", 0, log.NewNopLogger())
+	if err != nil {
+		// should never happen, abort test if it does
+		panic(err)
+	}
+	return res
+}
+
 // NewStore initializes an in-memory IAVLTree, or attempts to load a persistant
 // tree from disk
 func NewStore(dbName string, cacheSize int, logger log.Logger) (*Store, error) {

@@ -52,7 +52,7 @@ func txQueryCmd(cmd *cobra.Command, args []string) error {
 
 	// get the proof -> this will be used by all prover commands
 	node := commands.GetNode()
-	prove := viper.GetBool(commands.FlagTrustNode)
+	prove := !viper.GetBool(commands.FlagTrustNode)
 	res, err := node.Tx(bkey, prove)
 	if err != nil {
 		return err

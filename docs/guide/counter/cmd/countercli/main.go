@@ -58,7 +58,6 @@ func main() {
 	txcmd.Middleware.Register(txcmd.RootCmd.PersistentFlags())
 
 	// Prepare transactions
-	proofs.TxPresenters.Register("base", txcmd.BaseTxPresenter{})
 	txcmd.RootCmd.AddCommand(
 		// This is the default transaction, optional in your app
 		coincmd.SendTxCmd,

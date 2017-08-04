@@ -4,14 +4,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/light-client/proofs"
+	"github.com/tendermint/basecoin"
+	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/tendermint/types"
 
 	"github.com/tendermint/basecoin/client/commands"
 )
-
-//nolint TODO add description
-var TxPresenters = proofs.NewPresenters()
 
 // TxQueryCmd - CLI command to query a transaction with proof
 var TxQueryCmd = &cobra.Command{
@@ -25,21 +23,6 @@ data to other peers as needed.
 `,
 	RunE: commands.RequireInit(txQueryCmd),
 }
-
-// type ResultTx struct {
-//   Height   int           `json:"height"`
-//   Index    int           `json:"index"`
-//   TxResult abci.Result   `json:"tx_result"`
-//   Tx       types.Tx      `json:"tx"`
-//   Proof    types.TxProof `json:"proof,omitempty"`
-// }
-
-// type TxProof struct {
-//   Index, Total int
-//   RootHash     data.Bytes
-//   Data         Tx
-//   Proof        merkle.SimpleProof
-// }
 
 func txQueryCmd(cmd *cobra.Command, args []string) error {
 	// parse cli
@@ -58,6 +41,7 @@ func txQueryCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// no checks if we don't get a proof
 	if !prove {
 		return showTx(res.Height, res.Tx)
 	}
@@ -71,17 +55,17 @@ func txQueryCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// note that we return res.Proof.Data, not res.Tx,
+	// as res.Proof.Validate only verifies res.Proof.Data
 	return showTx(res.Height, res.Proof.Data)
 }
 
+// showTx parses anything that was previously registered as basecoin.Tx
 func showTx(h int, tx types.Tx) error {
-	// auto-determine which tx it was, over all registered tx types
-	info, err := TxPresenters.BruteForce(tx)
+	var info basecoin.Tx
+	err := wire.ReadBinaryBytes(tx, &info)
 	if err != nil {
 		return err
 	}
-
-	// we can reuse this output for other commands for text/json
-	// unless they do something special like store a file to disk
 	return OutputProof(info, uint64(h))
 }

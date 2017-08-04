@@ -49,7 +49,6 @@ func main() {
 		rolecmd.RoleQueryCmd,
 		ibccmd.IBCQueryCmd,
 	)
-	proofs.TxPresenters.Register("base", txcmd.BaseTxPresenter{})
 
 	// set up the middleware
 	txcmd.Middleware = txcmd.Wrappers{

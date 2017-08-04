@@ -48,10 +48,10 @@ func (SimpleFeeMiddleware) Name() string {
 // CheckTx - check the transaction
 func (h SimpleFeeMiddleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 	fee, err := h.verifyFee(ctx, tx)
-	if IsSkipFeesErr(err) {
-		return next.CheckTx(ctx, store, tx)
-	}
 	if err != nil {
+		if IsSkipFeesErr(err) {
+			return next.CheckTx(ctx, store, tx)
+		}
 		return res, err
 	}
 

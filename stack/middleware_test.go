@@ -80,7 +80,7 @@ func TestPermissionSandbox(t *testing.T) {
 	}
 }
 
-func checkPerm(t *testing.T, idx int, data []byte, check func(error) bool, res basecoin.Dataer, err error) {
+func checkPerm(t *testing.T, idx int, data []byte, check func(error) bool, res basecoin.Result, err error) {
 	assert := assert.New(t)
 
 	if len(data) > 0 {

@@ -35,7 +35,7 @@ type Checker interface {
 	CheckTx(ctx Context, store state.SimpleDB, tx Tx) (CheckResult, error)
 }
 
-// CheckerFunc (like http.HandlerFunc) is a shortcut for making wrapers
+// CheckerFunc (like http.HandlerFunc) is a shortcut for making wrappers
 type CheckerFunc func(Context, state.SimpleDB, Tx) (CheckResult, error)
 
 func (c CheckerFunc) CheckTx(ctx Context, store state.SimpleDB, tx Tx) (CheckResult, error) {
@@ -47,7 +47,7 @@ type Deliver interface {
 	DeliverTx(ctx Context, store state.SimpleDB, tx Tx) (DeliverResult, error)
 }
 
-// DeliverFunc (like http.HandlerFunc) is a shortcut for making wrapers
+// DeliverFunc (like http.HandlerFunc) is a shortcut for making wrappers
 type DeliverFunc func(Context, state.SimpleDB, Tx) (DeliverResult, error)
 
 func (c DeliverFunc) DeliverTx(ctx Context, store state.SimpleDB, tx Tx) (DeliverResult, error) {
@@ -59,7 +59,7 @@ type InitStater interface {
 	InitState(l log.Logger, store state.SimpleDB, module, key, value string) (string, error)
 }
 
-// InitStateFunc (like http.HandlerFunc) is a shortcut for making wrapers
+// InitStateFunc (like http.HandlerFunc) is a shortcut for making wrappers
 type InitStateFunc func(log.Logger, state.SimpleDB, string, string, string) (string, error)
 
 func (c InitStateFunc) InitState(l log.Logger, store state.SimpleDB, module, key, value string) (string, error) {
@@ -71,7 +71,7 @@ type InitValidater interface {
 	InitValidate(log log.Logger, store state.SimpleDB, vals []*abci.Validator)
 }
 
-// InitValidateFunc (like http.HandlerFunc) is a shortcut for making wrapers
+// InitValidateFunc (like http.HandlerFunc) is a shortcut for making wrappers
 type InitValidateFunc func(log.Logger, state.SimpleDB, []*abci.Validator)
 
 func (c InitValidateFunc) InitValidate(l log.Logger, store state.SimpleDB, vals []*abci.Validator) {
@@ -80,8 +80,17 @@ func (c InitValidateFunc) InitValidate(l log.Logger, store state.SimpleDB, vals 
 
 //---------- results and some wrappers --------
 
-type Dataer interface {
+// Result is a common interface of CheckResult and GetResult
+type Result interface {
 	GetData() data.Bytes
+	GetLog() string
+}
+
+func ToABCI(r Result) abci.Result {
+	return abci.Result{
+		Data: r.GetData(),
+		Log:  r.GetLog(),
+	}
 }
 
 // CheckResult captures any non-error abci result
@@ -104,17 +113,14 @@ func NewCheck(gasAllocated uint, log string) CheckResult {
 	}
 }
 
-var _ Dataer = CheckResult{}
-
-func (r CheckResult) ToABCI() abci.Result {
-	return abci.Result{
-		Data: r.Data,
-		Log:  r.Log,
-	}
-}
+var _ Result = CheckResult{}
 
 func (r CheckResult) GetData() data.Bytes {
 	return r.Data
+}
+
+func (r CheckResult) GetLog() string {
+	return r.Log
 }
 
 // DeliverResult captures any non-error abci result
@@ -126,17 +132,14 @@ type DeliverResult struct {
 	GasUsed uint
 }
 
-var _ Dataer = DeliverResult{}
-
-func (r DeliverResult) ToABCI() abci.Result {
-	return abci.Result{
-		Data: r.Data,
-		Log:  r.Log,
-	}
-}
+var _ Result = DeliverResult{}
 
 func (r DeliverResult) GetData() data.Bytes {
 	return r.Data
+}
+
+func (r DeliverResult) GetLog() string {
+	return r.Log
 }
 
 // placeholders

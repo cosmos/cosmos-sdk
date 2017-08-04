@@ -112,7 +112,7 @@ func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
 		return errors.Result(err)
 	}
 	app.addValChange(res.Diff)
-	return res.ToABCI()
+	return basecoin.ToABCI(res)
 }
 
 // CheckTx - ABCI
@@ -132,7 +132,7 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 	if err != nil {
 		return errors.Result(err)
 	}
-	return res.ToABCI()
+	return basecoin.ToABCI(res)
 }
 
 // Query - ABCI
@@ -182,7 +182,7 @@ func (app *Basecoin) EndBlock(height uint64) (res abci.ResponseEndBlock) {
 
 func (app *Basecoin) addValChange(diffs []*abci.Validator) {
 	for _, d := range diffs {
-		idx := findVal(d, app.pending)
+		idx := pubKeyIndex(d, app.pending)
 		if idx >= 0 {
 			app.pending[idx] = d
 		} else {
@@ -192,7 +192,7 @@ func (app *Basecoin) addValChange(diffs []*abci.Validator) {
 }
 
 // return index of list with validator of same PubKey, or -1 if no match
-func findVal(val *abci.Validator, list []*abci.Validator) int {
+func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {
 	for i, v := range list {
 		if bytes.Equal(val.PubKey, v.PubKey) {
 			return i

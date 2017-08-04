@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/basecoin/client/commands"
-	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
+	"github.com/tendermint/basecoin/client/commands/query"
 	"github.com/tendermint/basecoin/modules/ibc"
 	"github.com/tendermint/basecoin/stack"
 	wire "github.com/tendermint/go-wire"
@@ -86,18 +86,18 @@ func ibcQueryCmd(cmd *cobra.Command, args []string) error {
 	var res ibc.HandlerInfo
 	key := stack.PrefixedKey(ibc.NameIBC, ibc.HandlerKey())
 	prove := !viper.GetBool(commands.FlagTrustNode)
-	h, err := proofcmd.GetParsed(key, &res, prove)
+	h, err := query.GetParsed(key, &res, prove)
 	if err != nil {
 		return err
 	}
-	return proofcmd.OutputProof(res, h)
+	return query.OutputProof(res, h)
 }
 
 func chainsQueryCmd(cmd *cobra.Command, args []string) error {
 	list := [][]byte{}
 	key := stack.PrefixedKey(ibc.NameIBC, ibc.ChainsKey())
 	prove := !viper.GetBool(commands.FlagTrustNode)
-	h, err := proofcmd.GetParsed(key, &list, prove)
+	h, err := query.GetParsed(key, &list, prove)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func chainsQueryCmd(cmd *cobra.Command, args []string) error {
 		res[i] = string(list[i])
 	}
 
-	return proofcmd.OutputProof(res, h)
+	return query.OutputProof(res, h)
 }
 
 func chainQueryCmd(cmd *cobra.Command, args []string) error {
@@ -120,12 +120,12 @@ func chainQueryCmd(cmd *cobra.Command, args []string) error {
 	var res ibc.ChainInfo
 	key := stack.PrefixedKey(ibc.NameIBC, ibc.ChainKey(arg))
 	prove := !viper.GetBool(commands.FlagTrustNode)
-	h, err := proofcmd.GetParsed(key, &res, prove)
+	h, err := query.GetParsed(key, &res, prove)
 	if err != nil {
 		return err
 	}
 
-	return proofcmd.OutputProof(res, h)
+	return query.OutputProof(res, h)
 }
 
 func assertOne(from, to string) error {
@@ -157,12 +157,12 @@ func packetsQueryCmd(cmd *cobra.Command, args []string) error {
 
 	var res uint64
 	prove := !viper.GetBool(commands.FlagTrustNode)
-	h, err := proofcmd.GetParsed(key, &res, prove)
+	h, err := query.GetParsed(key, &res, prove)
 	if err != nil {
 		return err
 	}
 
-	return proofcmd.OutputProof(res, h)
+	return query.OutputProof(res, h)
 }
 
 func packetQueryCmd(cmd *cobra.Command, args []string) error {
@@ -189,15 +189,15 @@ func packetQueryCmd(cmd *cobra.Command, args []string) error {
 	// Input queue just display the results
 	var packet ibc.Packet
 	if from != "" {
-		h, err := proofcmd.GetParsed(key, &packet, prove)
+		h, err := query.GetParsed(key, &packet, prove)
 		if err != nil {
 			return err
 		}
-		return proofcmd.OutputProof(packet, h)
+		return query.OutputProof(packet, h)
 	}
 
 	// output queue, create a post packet
-	bs, height, proof, err := proofcmd.GetWithProof(key)
+	bs, height, proof, err := query.GetWithProof(key)
 	if err != nil {
 		return err
 	}

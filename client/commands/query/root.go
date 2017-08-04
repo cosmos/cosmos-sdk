@@ -1,4 +1,4 @@
-package proofs
+package query
 
 import (
 	"github.com/spf13/cobra"

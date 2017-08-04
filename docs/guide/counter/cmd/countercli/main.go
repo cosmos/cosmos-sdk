@@ -9,8 +9,8 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/client/commands/proofs"
 	"github.com/tendermint/basecoin/client/commands/proxy"
+	"github.com/tendermint/basecoin/client/commands/query"
 	"github.com/tendermint/basecoin/client/commands/seeds"
 	txcmd "github.com/tendermint/basecoin/client/commands/txs"
 	bcount "github.com/tendermint/basecoin/docs/guide/counter/cmd/countercli/commands"
@@ -37,10 +37,10 @@ func main() {
 	commands.AddBasicFlags(BaseCli)
 
 	// Prepare queries
-	proofs.RootCmd.AddCommand(
+	query.RootCmd.AddCommand(
 		// These are default parsers, optional in your app
-		proofs.TxQueryCmd,
-		proofs.KeyQueryCmd,
+		query.TxQueryCmd,
+		query.KeyQueryCmd,
 		coincmd.AccountQueryCmd,
 		noncecmd.NonceQueryCmd,
 
@@ -72,7 +72,7 @@ func main() {
 		commands.ResetCmd,
 		keycmd.RootCmd,
 		seeds.RootCmd,
-		proofs.RootCmd,
+		query.RootCmd,
 		txcmd.RootCmd,
 		proxy.RootCmd,
 	)

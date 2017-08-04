@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/basecoin/client/commands"
-	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
+	"github.com/tendermint/basecoin/client/commands/query"
 
 	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
 	"github.com/tendermint/basecoin/stack"
@@ -23,10 +23,10 @@ func counterQueryCmd(cmd *cobra.Command, args []string) error {
 
 	prove := !viper.GetBool(commands.FlagTrustNode)
 	key := stack.PrefixedKey(counter.NameCounter, counter.StateKey())
-	h, err := proofcmd.GetParsed(key, &cp, prove)
+	h, err := query.GetParsed(key, &cp, prove)
 	if err != nil {
 		return err
 	}
 
-	return proofcmd.OutputProof(cp, h)
+	return query.OutputProof(cp, h)
 }

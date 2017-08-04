@@ -59,7 +59,10 @@ func genEmptySeed(keys certifiers.ValKeys, chain string, h int,
 func makePostPacket(tree *iavl.IAVLTree, packet Packet, fromID string, fromHeight int) PostPacketTx {
 	key := []byte(fmt.Sprintf("some-long-prefix-%06d", packet.Sequence))
 	tree.Set(key, packet.Bytes())
-	_, proof := tree.ConstructProof(key)
+	_, proof, _, err := tree.GetWithProof(key)
+	if err != nil {
+		panic(err)
+	}
 	if proof == nil {
 		panic("wtf?")
 	}

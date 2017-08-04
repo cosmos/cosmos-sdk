@@ -11,6 +11,7 @@ import (
 	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
 	"github.com/tendermint/basecoin/modules/ibc"
 	"github.com/tendermint/basecoin/stack"
+	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
 )
 
@@ -186,8 +187,8 @@ func packetQueryCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// Input queue just display the results
+	var packet ibc.Packet
 	if from != "" {
-		var packet ibc.Packet
 		h, err := proofcmd.GetParsed(key, &packet, prove)
 		if err != nil {
 			return err
@@ -196,8 +197,11 @@ func packetQueryCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// output queue, create a post packet
-	var packet ibc.Packet
 	bs, height, proof, err := proofcmd.GetWithProof(key)
+	if err != nil {
+		return err
+	}
+	err = wire.ReadBinaryBytes(bs, &packet)
 	if err != nil {
 		return err
 	}

@@ -102,9 +102,9 @@ func (m Middleware) verifyPost(ctx basecoin.Context, store state.SimpleDB,
 	// verify the merkle hash....
 	root := seed.Header.AppHash
 	pBytes := packet.Bytes()
-	valid := tx.Proof.Verify(tx.Key, pBytes, root)
-	if !valid {
-		return ictx, itx, ErrInvalidProof()
+	err = tx.Proof.Verify(tx.Key, pBytes, root)
+	if err != nil {
+		return ictx, itx, ErrInvalidProofWithReason(err)
 	}
 
 	// add to input queue

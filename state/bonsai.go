@@ -3,7 +3,7 @@ package state
 import (
 	"math/rand"
 
-	"github.com/tendermint/tmlibs/merkle"
+	"github.com/tendermint/merkleeyes/iavl"
 )
 
 // store nonce as it's own type so no one can even try to fake it
@@ -12,13 +12,13 @@ type nonce int64
 // Bonsai is a deformed tree forced to fit in a small pot
 type Bonsai struct {
 	id   nonce
-	Tree merkle.Tree
+	Tree *iavl.IAVLTree
 }
 
 var _ SimpleDB = &Bonsai{}
 
 // NewBonsai wraps a merkle tree and tags it to track children
-func NewBonsai(tree merkle.Tree) *Bonsai {
+func NewBonsai(tree *iavl.IAVLTree) *Bonsai {
 	return &Bonsai{
 		id:   nonce(rand.Int63()),
 		Tree: tree,
@@ -46,8 +46,8 @@ func (b *Bonsai) Remove(key []byte) (value []byte) {
 	return
 }
 
-func (b *Bonsai) Proof(key []byte) (value []byte, proof []byte, exists bool) {
-	return b.Tree.Proof(key)
+func (b *Bonsai) GetWithProof(key []byte) ([]byte, *iavl.KeyExistsProof, *iavl.KeyNotExistsProof, error) {
+	return b.Tree.GetWithProof(key)
 }
 
 func (b *Bonsai) List(start, end []byte, limit int) []Model {

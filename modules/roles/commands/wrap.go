@@ -1,11 +1,17 @@
 package commands
 
 import (
+	"encoding/hex"
+
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
+	abci "github.com/tendermint/abci/types"
+	cmn "github.com/tendermint/tmlibs/common"
+
 	"github.com/tendermint/basecoin"
 	txcmd "github.com/tendermint/basecoin/client/commands/txs"
+	"github.com/tendermint/basecoin/errors"
 	"github.com/tendermint/basecoin/modules/roles"
 )
 
@@ -44,5 +50,10 @@ func (RoleWrapper) Register(fs *pflag.FlagSet) {
 
 // parse role turns the string->byte... todo: support hex?
 func parseRole(role string) ([]byte, error) {
-	return []byte(role), nil
+	res, err := hex.DecodeString(cmn.StripHex(role))
+	if err != nil {
+		err = errors.WithMessage("Address is invalid hex", err,
+			abci.CodeType_EncodingError)
+	}
+	return res, err
 }

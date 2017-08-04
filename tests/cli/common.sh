@@ -142,15 +142,15 @@ checkAccount() {
 # Desc: Ensures this named role exists, and has the number of members and required signatures as above
 checkRole() {
     # make sure sender goes down
-    ROLE=$(${CLIENT_EXE} query role $1)
+    QROLE=$(${CLIENT_EXE} query role $1)
     if ! assertTrue "line=${LINENO}, role must exist" $?; then
         return 1
     fi
 
-    if [ -n "$DEBUG" ]; then echo $ROLE; echo; fi
-    assertEquals "line=${LINENO}, proper sigs" "$2" $(echo $ROLE | jq .data.min_sigs)
-    assertEquals "line=${LINENO}, proper app" '"sigs"' $(echo $ROLE | jq '.data.signers[0].app' )
-    assertEquals "line=${LINENO}, proper signers" "$3" $(echo $ROLE | jq '.data.signers | length')
+    if [ -n "$DEBUG" ]; then echo $QROLE; echo; fi
+    assertEquals "line=${LINENO}, proper sigs" "$2" $(echo $QROLE | jq .data.min_sigs)
+    assertEquals "line=${LINENO}, proper app" '"sigs"' $(echo $QROLE | jq '.data.signers[0].app' )
+    assertEquals "line=${LINENO}, proper signers" "$3" $(echo $QROLE | jq '.data.signers | length')
     return $?
 }
 
@@ -188,12 +188,6 @@ checkSendTx() {
     return $?
 }
 
-# XXX Ex Usage: toHex "my-name"
-# converts the string into the hex representation of the bytes
-toHex() {
-    echo -n $1 | od -A n -t x1 | sed 's/ //g' | tr 'a-f' 'A-F'
-}
-
 # XXX Ex Usage: checkRoleTx $HASH $HEIGHT $NAME $NUM_SIGNERS
 # Desc: This looks up the tx by hash, and makes sure the height and type match
 #       and that the it refers to the proper role
@@ -211,8 +205,7 @@ checkRoleTx() {
     assertEquals "line=${LINENO}, type=nonce" '"nonce"' $(echo $NTX | jq .type)
     RTX=$(echo $NTX | jq .data.tx)
     assertEquals "line=${LINENO}, type=role/create" '"role/create"' $(echo $RTX | jq .type)
-    HEXNAME=$(toHex $3)
-    assertEquals "line=${LINENO}, proper name" "\"$HEXNAME\"" $(echo $RTX | jq .data.role)
+    assertEquals "line=${LINENO}, proper name" "\"$3\"" $(echo $RTX | jq .data.role)
     assertEquals "line=${LINENO}, proper num signers" "$4" $(echo $RTX | jq '.data.signers | length')
     return $?
 }

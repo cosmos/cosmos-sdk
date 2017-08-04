@@ -7,6 +7,7 @@ ACCOUNTS=(jae ethan bucky rigel igor)
 RICH=${ACCOUNTS[0]}
 POOR=${ACCOUNTS[4]}
 DUDE=${ACCOUNTS[2]}
+ROLE="10CAFE4E"
 
 oneTimeSetUp() {
     if ! quickSetup .basecoin_test_roles roles-chain; then
@@ -26,26 +27,26 @@ test01SetupRole() {
 
     SIGS=2
 
-    assertFalse "line=${LINENO}, missing min-sigs" "echo qwertyuiop | ${CLIENT_EXE} tx create-role --role=bank --members=${MEMBERS} --sequence=1 --name=$RICH"
-    assertFalse "line=${LINENO}, missing members" "echo qwertyuiop | ${CLIENT_EXE} tx create-role --role=bank --min-sigs=2 --sequence=1 --name=$RICH"
+    assertFalse "line=${LINENO}, missing min-sigs" "echo qwertyuiop | ${CLIENT_EXE} tx create-role --role=${ROLE} --members=${MEMBERS} --sequence=1 --name=$RICH"
+    assertFalse "line=${LINENO}, missing members" "echo qwertyuiop | ${CLIENT_EXE} tx create-role --role=${ROLE} --min-sigs=2 --sequence=1 --name=$RICH"
     assertFalse "line=${LINENO}, missing role" "echo qwertyuiop | ${CLIENT_EXE} tx create-role --min-sigs=2 --members=${MEMBERS} --sequence=1 --name=$RICH"
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx create-role --role=bank --min-sigs=$SIGS  --members=${MEMBERS} --sequence=1 --name=$RICH)
-    txSucceeded $? "$TX" "bank"
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx create-role --role=${ROLE} --min-sigs=$SIGS  --members=${MEMBERS} --sequence=1 --name=$RICH)
+    txSucceeded $? "$TX" "${ROLE}"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 
-    checkRole bank $SIGS 3
+    checkRole "${ROLE}" $SIGS 3
 
     # Make sure tx is indexed
-    checkRoleTx $HASH $TX_HEIGHT "bank" 3
+    checkRoleTx $HASH $TX_HEIGHT "${ROLE}" 3
 }
 
 test02SendTxToRole() {
     SENDER=$(getAddr $RICH)
-    RECV=role:$(toHex bank)
+    RECV=role:${ROLE}
 
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --fee=90mycoin --amount=10000mycoin --to=$RECV --sequence=2 --name=$RICH)
-    txSucceeded $? "$TX" "bank"
+    txSucceeded $? "$TX" "${ROLE}"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 
@@ -60,7 +61,7 @@ test03SendMultiFromRole() {
     ONE=$(getAddr $RICH)
     TWO=$(getAddr $POOR)
     THREE=$(getAddr $DUDE)
-    BANK=role:$(toHex bank)
+    BANK=role:${ROLE}
 
     # no money to start mr. poor...
     assertFalse "line=${LINENO}, has no money yet" "${CLIENT_EXE} query account $TWO 2>/dev/null"
@@ -68,12 +69,12 @@ test03SendMultiFromRole() {
     # let's try to send money from the role directly without multisig
     FAIL=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=1 --name=$POOR 2>/dev/null)
     assertFalse "need to assume role" $?
-    FAIL=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=2 --assume-role=bank --name=$POOR 2>/dev/null)
+    FAIL=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=2 --assume-role=${ROLE} --name=$POOR 2>/dev/null)
     assertFalse "need two signatures" $?
 
     # okay, begin a multisig transaction mr. poor...
     TX_FILE=$BASE_DIR/tx.json
-    echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=1 --assume-role=bank --name=$POOR --multi --prepare=$TX_FILE
+    echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=1 --assume-role=${ROLE} --name=$POOR --multi --prepare=$TX_FILE
     assertTrue "line=${LINENO}, successfully prepare tx" $?
     # and get some dude to sign it
     # FAIL=$(echo qwertyuiop | ${CLIENT_EXE} tx --in=$TX_FILE --name=$POOR 2>/dev/null)

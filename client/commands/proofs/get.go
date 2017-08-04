@@ -52,28 +52,8 @@ func GetProof(node client.Client, prover lc.Prover, key []byte, height int) (pro
 		return proof, err
 	}
 
-	// here is the certifier, root of all knowledge
-	cert, err := commands.GetCertifier()
-	if err != nil {
-		return
-	}
-
-	// get and validate a signed header for this proof
-
-	// FIXME: cannot use cert.GetByHeight for now, as it also requires
-	// Validators and will fail on querying tendermint for non-current height.
-	// When this is supported, we should use it instead...
 	ph := int(proof.BlockHeight())
-	client.WaitForHeight(node, ph, nil)
-	commit, err := node.Commit(ph)
-	if err != nil {
-		return
-	}
-	check := lc.Checkpoint{
-		Header: commit.Header,
-		Commit: commit.Commit,
-	}
-	err = cert.Certify(check)
+	check, err := GetCertifiedCheckpoint(ph)
 	if err != nil {
 		return
 	}
@@ -85,6 +65,40 @@ func GetProof(node client.Client, prover lc.Prover, key []byte, height int) (pro
 	}
 
 	return proof, err
+}
+
+// GetCertifiedCheckpoint gets the signed header for a given height
+// and certifies it.  Returns error if unable to get a proven header.
+func GetCertifiedCheckpoint(h int) (empty lc.Checkpoint, err error) {
+	// here is the certifier, root of all knowledge
+	node := commands.GetNode()
+	cert, err := commands.GetCertifier()
+	if err != nil {
+		return
+	}
+
+	// get and validate a signed header for this proof
+
+	// FIXME: cannot use cert.GetByHeight for now, as it also requires
+	// Validators and will fail on querying tendermint for non-current height.
+	// When this is supported, we should use it instead...
+	client.WaitForHeight(node, h, nil)
+	commit, err := node.Commit(h)
+	if err != nil {
+		return
+	}
+	check := lc.Checkpoint{
+		Header: commit.Header,
+		Commit: commit.Commit,
+	}
+	// double check we got the same height
+	if check.Height() != h {
+		return empty, lc.ErrHeightMismatch(h, check.Height())
+	}
+
+	// and now verify it matches our validators
+	err = cert.Certify(check)
+	return check, nil
 }
 
 // ParseHexKey parses the key flag as hex and converts to bytes or returns error

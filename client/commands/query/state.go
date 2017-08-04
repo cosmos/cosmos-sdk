@@ -1,10 +1,8 @@
-package proofs
+package query
 
 import (
 	"github.com/spf13/cobra"
-
-	"github.com/tendermint/go-wire/data"
-	"github.com/tendermint/light-client/proofs"
+	"github.com/spf13/viper"
 
 	"github.com/tendermint/basecoin/client/commands"
 )
@@ -24,24 +22,15 @@ If you want json output, use an app-specific command that knows key and value st
 // parse the object, but rather return the raw bytes
 func keyQueryCmd(cmd *cobra.Command, args []string) error {
 	// parse cli
-	height := GetHeight()
 	key, err := ParseHexKey(args, "key")
 	if err != nil {
 		return err
 	}
+	prove := !viper.GetBool(commands.FlagTrustNode)
 
-	// get the proof -> this will be used by all prover commands
-	node := commands.GetNode()
-	prover := proofs.NewAppProver(node)
-	proof, err := GetProof(node, prover, key, height)
+	val, h, err := Get(key, prove)
 	if err != nil {
 		return err
 	}
-
-	// state just returns raw hex....
-	info := data.Bytes(proof.Data())
-
-	// we can reuse this output for other commands for text/json
-	// unless they do something special like store a file to disk
-	return OutputProof(info, proof.BlockHeight())
+	return OutputProof(val, h)
 }

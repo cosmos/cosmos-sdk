@@ -5,12 +5,13 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	lc "github.com/tendermint/light-client"
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/client/commands"
-	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
+	"github.com/tendermint/basecoin/client/commands/query"
 	"github.com/tendermint/basecoin/modules/nonce"
 	"github.com/tendermint/basecoin/stack"
 )
@@ -33,23 +34,21 @@ func nonceQueryCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	seq, proof, err := doNonceQuery(signers)
+	seq, height, err := doNonceQuery(signers)
 	if err != nil {
 		return err
 	}
 
-	return proofcmd.OutputProof(seq, proof.BlockHeight())
+	return query.OutputProof(seq, height)
 }
 
-func doNonceQuery(signers []basecoin.Actor) (sequence uint32, proof lc.Proof, err error) {
-
+func doNonceQuery(signers []basecoin.Actor) (sequence uint32, height uint64, err error) {
 	key := stack.PrefixedKey(nonce.NameNonce, nonce.GetSeqKey(signers))
-
-	proof, err = proofcmd.GetAndParseAppProof(key, &sequence)
+	prove := !viper.GetBool(commands.FlagTrustNode)
+	height, err = query.GetParsed(key, &sequence, prove)
 	if lc.IsNoDataErr(err) {
 		// no data, return sequence 0
-		return 0, proof, nil
+		return 0, 0, nil
 	}
-
 	return
 }

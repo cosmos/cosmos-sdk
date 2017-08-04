@@ -6,10 +6,11 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
 
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/client/commands/proofs"
+	"github.com/tendermint/basecoin/client/commands/query"
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/coin"
@@ -37,8 +38,8 @@ type SendInput struct {
 // doQueryAccount is the HTTP handlerfunc to query an account
 // It expects a query string with
 func doQueryAccount(w http.ResponseWriter, r *http.Request) {
-	query := mux.Vars(r)
-	signature := query["signature"]
+	args := mux.Vars(r)
+	signature := args["signature"]
 	actor, err := commands.ParseActor(signature)
 	if err != nil {
 		common.WriteError(w, err)
@@ -47,7 +48,8 @@ func doQueryAccount(w http.ResponseWriter, r *http.Request) {
 	actor = coin.ChainAddr(actor)
 	key := stack.PrefixedKey(coin.NameCoin, actor.Bytes())
 	account := new(coin.Account)
-	proof, err := proofs.GetAndParseAppProof(key, account)
+	prove := !viper.GetBool(commands.FlagTrustNode)
+	height, err := query.GetParsed(key, account, prove)
 	if lightclient.IsNoDataErr(err) {
 		err := fmt.Errorf("account bytes are empty for address: %q", signature)
 		common.WriteError(w, err)
@@ -57,7 +59,7 @@ func doQueryAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := proofs.FoutputProof(w, account, proof.BlockHeight()); err != nil {
+	if err := query.FoutputProof(w, account, height); err != nil {
 		common.WriteError(w, err)
 	}
 }

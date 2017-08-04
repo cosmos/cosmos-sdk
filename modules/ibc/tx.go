@@ -3,7 +3,7 @@ package ibc
 import (
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/light-client/certifiers"
-	merkle "github.com/tendermint/merkleeyes/iavl"
+	"github.com/tendermint/merkleeyes/iavl"
 
 	"github.com/tendermint/basecoin"
 )
@@ -115,9 +115,9 @@ type PostPacketTx struct {
 	// The block height in which Packet was committed, to check Proof
 	FromChainHeight uint64 `json:"src_height"`
 	// this proof must match the header and the packet.Bytes()
-	Proof  *merkle.IAVLProof `json:"proof"`
-	Key    data.Bytes        `json:"key"`
-	Packet Packet            `json:"packet"`
+	Proof  *iavl.KeyExistsProof `json:"proof"`
+	Key    data.Bytes           `json:"key"`
+	Packet Packet               `json:"packet"`
 }
 
 // ValidateBasic makes sure this is consistent - used to satisfy TxInner

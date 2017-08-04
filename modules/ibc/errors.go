@@ -91,8 +91,11 @@ func IsPacketOutOfOrderErr(err error) bool {
 func ErrInvalidProof() error {
 	return errors.WithCode(errInvalidProof, IBCCodeInvalidProof)
 }
+func ErrInvalidProofWithReason(err error) error {
+	return errors.WithCode(err, IBCCodeInvalidProof)
+}
 func IsInvalidProofErr(err error) bool {
-	return errors.IsSameError(errInvalidProof, err)
+	return errors.HasErrorCode(err, IBCCodeInvalidProof)
 }
 
 func ErrInvalidCommit(err error) error {

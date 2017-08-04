@@ -1,5 +1,5 @@
 hash: 2848c30b31fb205f846dd7dfca14ebed8a3249cbc5aaa759066b2bab3e4bbf42
-updated: 2017-07-27T16:46:31.962147949-04:00
+updated: 2017-08-04T15:38:45.048261895+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -119,7 +119,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: bf355d1b58b27d4e98d8fb237eb14887b93a88f7
+  version: 03d2b2446e8587f159e52070b1f1e0def971a2c7
   subpackages:
   - cmd
   - keys
@@ -142,7 +142,7 @@ imports:
   - certifiers/files
   - proofs
 - name: github.com/tendermint/merkleeyes
-  version: 0310013053953eef80def3619aeb1e3a3254f452
+  version: 44c4c64c731db5be4261ff3971b01b7e19729419
   subpackages:
   - client
   - iavl

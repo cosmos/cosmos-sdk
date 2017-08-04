@@ -1,9 +1,6 @@
 package state
 
-import (
-	"github.com/tendermint/merkleeyes/iavl"
-	"github.com/tendermint/tmlibs/merkle"
-)
+import "github.com/tendermint/merkleeyes/iavl"
 
 // State represents the app states, separating the commited state (for queries)
 // from the working state (for CheckTx and AppendTx)
@@ -14,7 +11,7 @@ type State struct {
 	persistent bool
 }
 
-func NewState(tree merkle.Tree, persistent bool) State {
+func NewState(tree *iavl.IAVLTree, persistent bool) State {
 	base := NewBonsai(tree)
 	return State{
 		committed:  base,
@@ -59,10 +56,7 @@ func (s *State) Hash() ([]byte, error) {
 func (s *State) BatchSet(key, value []byte) {
 	if s.persistent {
 		// This is in the batch with the Save, but not in the tree
-		tree, ok := s.committed.Tree.(*iavl.IAVLTree)
-		if ok {
-			tree.BatchSet(key, value)
-		}
+		s.committed.Tree.BatchSet(key, value)
 	}
 }
 

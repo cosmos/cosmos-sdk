@@ -10,8 +10,8 @@ import (
 
 	"github.com/tendermint/basecoin/client/commands"
 	"github.com/tendermint/basecoin/client/commands/auto"
-	"github.com/tendermint/basecoin/client/commands/proofs"
 	"github.com/tendermint/basecoin/client/commands/proxy"
+	"github.com/tendermint/basecoin/client/commands/query"
 	rpccmd "github.com/tendermint/basecoin/client/commands/rpc"
 	"github.com/tendermint/basecoin/client/commands/seeds"
 	txcmd "github.com/tendermint/basecoin/client/commands/txs"
@@ -40,16 +40,15 @@ func main() {
 	commands.AddBasicFlags(BaseCli)
 
 	// Prepare queries
-	proofs.RootCmd.AddCommand(
+	query.RootCmd.AddCommand(
 		// These are default parsers, but optional in your app (you can remove key)
-		proofs.TxQueryCmd,
-		proofs.KeyQueryCmd,
+		query.TxQueryCmd,
+		query.KeyQueryCmd,
 		coincmd.AccountQueryCmd,
 		noncecmd.NonceQueryCmd,
 		rolecmd.RoleQueryCmd,
 		ibccmd.IBCQueryCmd,
 	)
-	proofs.TxPresenters.Register("base", txcmd.BaseTxPresenter{})
 
 	// set up the middleware
 	txcmd.Middleware = txcmd.Wrappers{
@@ -81,7 +80,7 @@ func main() {
 		keycmd.RootCmd,
 		seeds.RootCmd,
 		rpccmd.RootCmd,
-		proofs.RootCmd,
+		query.RootCmd,
 		txcmd.RootCmd,
 		proxy.RootCmd,
 		commands.VersionCmd,

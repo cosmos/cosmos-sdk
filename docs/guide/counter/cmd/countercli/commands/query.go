@@ -2,8 +2,10 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
-	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
+	"github.com/tendermint/basecoin/client/commands"
+	"github.com/tendermint/basecoin/client/commands/query"
 
 	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
 	"github.com/tendermint/basecoin/stack"
@@ -17,13 +19,14 @@ var CounterQueryCmd = &cobra.Command{
 }
 
 func counterQueryCmd(cmd *cobra.Command, args []string) error {
-	key := stack.PrefixedKey(counter.NameCounter, counter.StateKey())
-
 	var cp counter.State
-	proof, err := proofcmd.GetAndParseAppProof(key, &cp)
+
+	prove := !viper.GetBool(commands.FlagTrustNode)
+	key := stack.PrefixedKey(counter.NameCounter, counter.StateKey())
+	h, err := query.GetParsed(key, &cp, prove)
 	if err != nil {
 		return err
 	}
 
-	return proofcmd.OutputProof(cp, proof.BlockHeight())
+	return query.OutputProof(cp, h)
 }

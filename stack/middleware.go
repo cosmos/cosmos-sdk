@@ -1,6 +1,7 @@
 package stack
 
 import (
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
@@ -31,7 +32,7 @@ func (m *middleware) wrapCtx(ctx basecoin.Context) basecoin.Context {
 }
 
 // CheckTx always returns an empty success tx
-func (m *middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (basecoin.Result, error) {
+func (m *middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (basecoin.CheckResult, error) {
 	// make sure we pass in proper context to child
 	next := secureCheck(m.next, ctx)
 	// set the permissions for this app
@@ -42,7 +43,7 @@ func (m *middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx base
 }
 
 // DeliverTx always returns an empty success tx
-func (m *middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (m *middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
 	// make sure we pass in proper context to child
 	next := secureDeliver(m.next, ctx)
 	// set the permissions for this app
@@ -52,11 +53,17 @@ func (m *middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx ba
 	return m.middleware.DeliverTx(ctx, store, tx, next)
 }
 
-func (m *middleware) SetOption(l log.Logger, store state.SimpleDB, module, key, value string) (string, error) {
+func (m *middleware) InitState(l log.Logger, store state.SimpleDB, module, key, value string) (string, error) {
 	// set the namespace for the app
 	store = stateSpace(store, m.space)
 
-	return m.middleware.SetOption(l, store, module, key, value, m.next)
+	return m.middleware.InitState(l, store, module, key, value, m.next)
+}
+
+func (m *middleware) InitValidate(l log.Logger, store state.SimpleDB, vals []*abci.Validator) {
+	// set the namespace for the app
+	store = stateSpace(store, m.space)
+	m.middleware.InitValidate(l, store, vals, m.next)
 }
 
 // builder is used to associate info with the middleware, so we can build

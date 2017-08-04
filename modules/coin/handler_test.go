@@ -85,7 +85,7 @@ func TestHandlerValidation(t *testing.T) {
 	}
 }
 
-func TestDeliverSendTx(t *testing.T) {
+func TestCheckDeliverSendTx(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -110,6 +110,7 @@ func TestDeliverSendTx(t *testing.T) {
 		tx    basecoin.Tx
 		perms []basecoin.Actor
 		final []money // nil for error
+		cost  uint64  // gas allocated (if not error)
 	}{
 		{
 			[]money{{addr1, moreCoins}},
@@ -118,6 +119,7 @@ func TestDeliverSendTx(t *testing.T) {
 				[]TxOutput{NewTxOutput(addr2, someCoins)}),
 			[]basecoin.Actor{addr1},
 			[]money{{addr1, diffCoins}, {addr2, someCoins}},
+			20,
 		},
 		// simple multi-sig 2 accounts to 1
 		{
@@ -127,6 +129,7 @@ func TestDeliverSendTx(t *testing.T) {
 				[]TxOutput{NewTxOutput(addr3, mixedCoins)}),
 			[]basecoin.Actor{addr1, addr2},
 			[]money{{addr1, someCoins}, {addr2, diffCoins}, {addr3, mixedCoins}},
+			30,
 		},
 		// multi-sig with one account sending many times
 		{
@@ -136,6 +139,17 @@ func TestDeliverSendTx(t *testing.T) {
 				[]TxOutput{NewTxOutput(addr2, mixedCoins)}),
 			[]basecoin.Actor{addr1},
 			[]money{{addr1, diffCoins}, {addr2, mixedCoins}},
+			30,
+		},
+		// invalid send (not enough money )
+		{
+			[]money{{addr1, moreCoins}, {addr2, someCoins}},
+			NewSendTx(
+				[]TxInput{NewTxInput(addr2, moreCoins)},
+				[]TxOutput{NewTxOutput(addr1, moreCoins)}),
+			[]basecoin.Actor{addr1, addr2},
+			nil,
+			0,
 		},
 	}
 
@@ -150,9 +164,19 @@ func TestDeliverSendTx(t *testing.T) {
 		}
 
 		ctx := stack.MockContext("base-chain", 100).WithPermissions(tc.perms...)
-		_, err := h.DeliverTx(ctx, store, tc.tx, nil)
+
+		// throw-away state for checktx
+		cache := store.Checkpoint()
+		cres, err := h.CheckTx(ctx, cache, tc.tx, nil)
+		// real store for delivertx
+		_, err2 := h.DeliverTx(ctx, store, tc.tx, nil)
+
 		if len(tc.final) > 0 { // valid
 			assert.Nil(err, "%d: %+v", i, err)
+			assert.Nil(err2, "%d: %+v", i, err2)
+			// make sure proper gas is set
+			assert.Equal(uint64(0), cres.GasPayment, "%d", i)
+			assert.Equal(tc.cost, cres.GasAllocated, "%d", i)
 			// make sure the final balances are correct
 			for _, f := range tc.final {
 				acct, err := loadAccount(store, f.addr.Bytes())
@@ -160,14 +184,15 @@ func TestDeliverSendTx(t *testing.T) {
 				assert.Equal(f.coins, acct.Coins)
 			}
 		} else {
+			// both check and deliver should fail
 			assert.NotNil(err, "%d", i)
-			// TODO: make sure balances unchanged!
+			assert.NotNil(err2, "%d", i)
 		}
 
 	}
 }
 
-func TestSetOption(t *testing.T) {
+func TestInitState(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -205,7 +230,7 @@ func TestSetOption(t *testing.T) {
 		for j, gen := range tc.init {
 			value, err := json.Marshal(gen)
 			require.Nil(err, "%d,%d: %+v", i, j, err)
-			_, err = h.SetOption(l, store, NameCoin, key, string(value), nil)
+			_, err = h.InitState(l, store, NameCoin, key, string(value), nil)
 			require.Nil(err)
 		}
 
@@ -239,7 +264,7 @@ func TestSetIssuer(t *testing.T) {
 
 		value, err := json.Marshal(tc.issuer)
 		require.Nil(err, "%d,%d: %+v", i, err)
-		_, err = h.SetOption(l, store, NameCoin, key, string(value), nil)
+		_, err = h.InitState(l, store, NameCoin, key, string(value), nil)
 		require.Nil(err, "%+v", err)
 
 		// check state is proper
@@ -274,11 +299,11 @@ func TestDeliverCreditTx(t *testing.T) {
 	// set the owner who can issue credit
 	js, err := json.Marshal(owner)
 	require.Nil(err, "%+v", err)
-	_, err = h.SetOption(log.NewNopLogger(), store, "coin", "issuer", string(js), nil)
+	_, err = h.InitState(log.NewNopLogger(), store, "coin", "issuer", string(js), nil)
 	require.Nil(err, "%+v", err)
 
 	// give addr2 some coins to start
-	_, err = h.SetOption(log.NewNopLogger(), store, "coin", "account", key.MakeOption(), nil)
+	_, err = h.InitState(log.NewNopLogger(), store, "coin", "account", key.MakeOption(), nil)
 	require.Nil(err, "%+v", err)
 
 	cases := []struct {

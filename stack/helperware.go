@@ -16,7 +16,8 @@ const (
 // Required Actor, otherwise passes along the call untouched
 type CheckMiddleware struct {
 	Required basecoin.Actor
-	PassOption
+	PassInitState
+	PassInitValidate
 }
 
 var _ Middleware = CheckMiddleware{}
@@ -25,14 +26,14 @@ func (_ CheckMiddleware) Name() string {
 	return NameCheck
 }
 
-func (p CheckMiddleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (p CheckMiddleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 	if !ctx.HasPermission(p.Required) {
 		return res, errors.ErrUnauthorized()
 	}
 	return next.CheckTx(ctx, store, tx)
 }
 
-func (p CheckMiddleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (p CheckMiddleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 	if !ctx.HasPermission(p.Required) {
 		return res, errors.ErrUnauthorized()
 	}
@@ -42,7 +43,8 @@ func (p CheckMiddleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, t
 // GrantMiddleware tries to set the permission to this Actor, which may be prohibited
 type GrantMiddleware struct {
 	Auth basecoin.Actor
-	PassOption
+	PassInitState
+	PassInitValidate
 }
 
 var _ Middleware = GrantMiddleware{}
@@ -51,12 +53,12 @@ func (_ GrantMiddleware) Name() string {
 	return NameGrant
 }
 
-func (g GrantMiddleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (g GrantMiddleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 	ctx = ctx.WithPermissions(g.Auth)
 	return next.CheckTx(ctx, store, tx)
 }
 
-func (g GrantMiddleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (g GrantMiddleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 	ctx = ctx.WithPermissions(g.Auth)
 	return next.DeliverTx(ctx, store, tx)
 }

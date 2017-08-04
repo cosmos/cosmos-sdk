@@ -12,6 +12,7 @@ import (
 var (
 	errInsufficientFees = fmt.Errorf("Insufficient fees")
 	errWrongFeeDenom    = fmt.Errorf("Required fee denomination")
+	errSkipFees         = fmt.Errorf("Skip fees")
 
 	invalidInput = abci.CodeType_BaseInvalidInput
 )
@@ -28,4 +29,11 @@ func ErrWrongFeeDenom(denom string) errors.TMError {
 }
 func IsWrongFeeDenomErr(err error) bool {
 	return errors.IsSameError(errWrongFeeDenom, err)
+}
+
+func ErrSkipFees() errors.TMError {
+	return errors.WithCode(errSkipFees, invalidInput)
+}
+func IsSkipFeesErr(err error) bool {
+	return errors.IsSameError(errSkipFees, err)
 }

@@ -17,6 +17,7 @@ import (
 type writerMid struct {
 	name       string
 	key, value []byte
+	PassInitValidate
 }
 
 var _ Middleware = writerMid{}
@@ -24,27 +25,28 @@ var _ Middleware = writerMid{}
 func (w writerMid) Name() string { return w.name }
 
 func (w writerMid) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Checker) (basecoin.Result, error) {
+	tx basecoin.Tx, next basecoin.Checker) (basecoin.CheckResult, error) {
 	store.Set(w.key, w.value)
 	return next.CheckTx(ctx, store, tx)
 }
 
 func (w writerMid) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Deliver) (basecoin.Result, error) {
+	tx basecoin.Tx, next basecoin.Deliver) (basecoin.DeliverResult, error) {
 	store.Set(w.key, w.value)
 	return next.DeliverTx(ctx, store, tx)
 }
 
-func (w writerMid) SetOption(l log.Logger, store state.SimpleDB, module,
-	key, value string, next basecoin.SetOptioner) (string, error) {
+func (w writerMid) InitState(l log.Logger, store state.SimpleDB, module,
+	key, value string, next basecoin.InitStater) (string, error) {
 	store.Set([]byte(key), []byte(value))
-	return next.SetOption(l, store, module, key, value)
+	return next.InitState(l, store, module, key, value)
 }
 
-// writerHand is a middleware that writes the given bytes on CheckTx and DeliverTx
+// writerHand is a handler that writes the given bytes on CheckTx and DeliverTx
 type writerHand struct {
 	name       string
 	key, value []byte
+	basecoin.NopInitValidate
 }
 
 var _ basecoin.Handler = writerHand{}
@@ -52,18 +54,18 @@ var _ basecoin.Handler = writerHand{}
 func (w writerHand) Name() string { return w.name }
 
 func (w writerHand) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx) (basecoin.Result, error) {
+	tx basecoin.Tx) (basecoin.CheckResult, error) {
 	store.Set(w.key, w.value)
-	return basecoin.Result{}, nil
+	return basecoin.CheckResult{}, nil
 }
 
 func (w writerHand) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx) (basecoin.Result, error) {
+	tx basecoin.Tx) (basecoin.DeliverResult, error) {
 	store.Set(w.key, w.value)
-	return basecoin.Result{}, nil
+	return basecoin.DeliverResult{}, nil
 }
 
-func (w writerHand) SetOption(l log.Logger, store state.SimpleDB, module,
+func (w writerHand) InitState(l log.Logger, store state.SimpleDB, module,
 	key, value string) (string, error) {
 	store.Set([]byte(key), []byte(value))
 	return "Success", nil
@@ -76,9 +78,9 @@ func TestStateSpace(t *testing.T) {
 		expected []data.Bytes
 	}{
 		{
-			writerHand{"foo", []byte{1, 2}, []byte("bar")},
+			writerHand{name: "foo", key: []byte{1, 2}, value: []byte("bar")},
 			[]Middleware{
-				writerMid{"bing", []byte{1, 2}, []byte("bang")},
+				writerMid{name: "bing", key: []byte{1, 2}, value: []byte("bang")},
 			},
 			[]data.Bytes{
 				{'f', 'o', 'o', 0, 1, 2},

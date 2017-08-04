@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -23,11 +24,12 @@ const (
 
 // Basecoin - The ABCI application
 type Basecoin struct {
-	info *sm.ChainState
-
+	info  *sm.ChainState
 	state *Store
 
 	handler basecoin.Handler
+
+	pending []*abci.Validator
 	height  uint64
 	logger  log.Logger
 }
@@ -65,8 +67,9 @@ func (app *Basecoin) Info() abci.ResponseInfo {
 	}
 }
 
-// SetOption - ABCI
-func (app *Basecoin) SetOption(key string, value string) string {
+// InitState - used to setup state (was SetOption)
+// to be used by InitChain later
+func (app *Basecoin) InitState(key string, value string) string {
 
 	module, key := splitKey(key)
 	state := app.state.Append()
@@ -79,11 +82,16 @@ func (app *Basecoin) SetOption(key string, value string) string {
 		return fmt.Sprintf("Error: unknown base option: %s", key)
 	}
 
-	log, err := app.handler.SetOption(app.logger, state, module, key, value)
+	log, err := app.handler.InitState(app.logger, state, module, key, value)
 	if err == nil {
 		return log
 	}
 	return "Error: " + err.Error()
+}
+
+// SetOption - ABCI
+func (app *Basecoin) SetOption(key string, value string) string {
+	return "Not Implemented"
 }
 
 // DeliverTx - ABCI
@@ -103,7 +111,8 @@ func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
 	if err != nil {
 		return errors.Result(err)
 	}
-	return res.ToABCI()
+	app.addValChange(res.Diff)
+	return basecoin.ToABCI(res)
 }
 
 // CheckTx - ABCI
@@ -123,7 +132,7 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 	if err != nil {
 		return errors.Result(err)
 	}
-	return res.ToABCI()
+	return basecoin.ToABCI(res)
 }
 
 // Query - ABCI
@@ -163,12 +172,33 @@ func (app *Basecoin) BeginBlock(hash []byte, header *abci.Header) {
 }
 
 // EndBlock - ABCI
+// Returns a list of all validator changes made in this block
 func (app *Basecoin) EndBlock(height uint64) (res abci.ResponseEndBlock) {
-	// for _, plugin := range app.plugins.GetList() {
-	// 	pluginRes := plugin.EndBlock(app.state, height)
-	// 	res.Diffs = append(res.Diffs, pluginRes.Diffs...)
-	// }
+	// TODO: cleanup in case a validator exists multiple times in the list
+	res.Diffs = app.pending
+	app.pending = nil
 	return
+}
+
+func (app *Basecoin) addValChange(diffs []*abci.Validator) {
+	for _, d := range diffs {
+		idx := pubKeyIndex(d, app.pending)
+		if idx >= 0 {
+			app.pending[idx] = d
+		} else {
+			app.pending = append(app.pending, d)
+		}
+	}
+}
+
+// return index of list with validator of same PubKey, or -1 if no match
+func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {
+	for i, v := range list {
+		if bytes.Equal(val.PubKey, v.PubKey) {
+			return i
+		}
+	}
+	return -1
 }
 
 //TODO move split key to tmlibs?

@@ -3,6 +3,7 @@ package stack
 import (
 	"fmt"
 
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
@@ -26,7 +27,7 @@ func (Recovery) Name() string {
 var _ Middleware = Recovery{}
 
 // CheckTx catches any panic and converts to error - fulfills Middlware interface
-func (Recovery) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (Recovery) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)
@@ -36,7 +37,7 @@ func (Recovery) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.
 }
 
 // DeliverTx catches any panic and converts to error - fulfills Middlware interface
-func (Recovery) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (Recovery) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)
@@ -45,14 +46,29 @@ func (Recovery) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoi
 	return next.DeliverTx(ctx, store, tx)
 }
 
-// SetOption catches any panic and converts to error - fulfills Middlware interface
-func (Recovery) SetOption(l log.Logger, store state.SimpleDB, module, key, value string, next basecoin.SetOptioner) (log string, err error) {
+// InitState catches any panic and converts to error - fulfills Middlware interface
+func (Recovery) InitState(l log.Logger, store state.SimpleDB, module, key, value string, next basecoin.InitStater) (log string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)
 		}
 	}()
-	return next.SetOption(l, store, module, key, value)
+	return next.InitState(l, store, module, key, value)
+}
+
+// InitValidate catches any panic and logs it
+// TODO: return an error???
+func (Recovery) InitValidate(l log.Logger, store state.SimpleDB,
+	vals []*abci.Validator, next basecoin.InitValidater) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			// TODO: return an error???
+			err := normalizePanic(r)
+			l.With("err", err).Error(err.Error())
+		}
+	}()
+	next.InitValidate(l, store, vals)
 }
 
 // normalizePanic makes sure we can get a nice TMError (with stack) out of it

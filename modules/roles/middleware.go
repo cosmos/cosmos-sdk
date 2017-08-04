@@ -9,7 +9,8 @@ import (
 // Middleware allows us to add a requested role as a permission
 // if the tx requests it and has sufficient authority
 type Middleware struct {
-	stack.PassOption
+	stack.PassInitState
+	stack.PassInitValidate
 }
 
 var _ stack.Middleware = Middleware{}
@@ -27,7 +28,7 @@ func (Middleware) Name() string {
 // CheckTx tries to assume the named role if requested.
 // If no role is requested, do nothing.
 // If insufficient authority to assume the role, return error.
-func (m Middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (m Middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 	// if this is not an AssumeRoleTx, then continue
 	assume, ok := tx.Unwrap().(AssumeRoleTx)
 	if !ok { // this also breaks the recursion below
@@ -40,13 +41,16 @@ func (m Middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basec
 	}
 
 	// one could add multiple role statements, repeat as needed
-	return m.CheckTx(ctx, store, assume.Tx, next)
+	// charging for each level
+	res, err = m.CheckTx(ctx, store, assume.Tx, next)
+	res.GasAllocated += CostAssume
+	return
 }
 
 // DeliverTx tries to assume the named role if requested.
 // If no role is requested, do nothing.
 // If insufficient authority to assume the role, return error.
-func (m Middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (m Middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 	// if this is not an AssumeRoleTx, then continue
 	assume, ok := tx.Unwrap().(AssumeRoleTx)
 	if !ok { // this also breaks the recursion below

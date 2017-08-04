@@ -82,10 +82,10 @@ func TestChain(t *testing.T) {
 		i := strconv.Itoa(idx)
 
 		// make sure check returns error, not a panic crash
-		res, err := app.CheckTx(ctx, store, tc.tx)
+		cres, err := app.CheckTx(ctx, store, tc.tx)
 		if tc.valid {
 			assert.Nil(err, "%d: %+v", idx, err)
-			assert.Equal(msg, res.Log, i)
+			assert.Equal(msg, cres.Log, i)
 		} else {
 			if assert.NotNil(err, i) {
 				assert.Contains(err.Error(), tc.errorMsg, i)
@@ -93,10 +93,10 @@ func TestChain(t *testing.T) {
 		}
 
 		// make sure deliver returns error, not a panic crash
-		res, err = app.DeliverTx(ctx, store, tc.tx)
+		dres, err := app.DeliverTx(ctx, store, tc.tx)
 		if tc.valid {
 			assert.Nil(err, "%d: %+v", idx, err)
-			assert.Equal(msg, res.Log, i)
+			assert.Equal(msg, dres.Log, i)
 		} else {
 			if assert.NotNil(err, i) {
 				assert.Contains(err.Error(), tc.errorMsg, i)

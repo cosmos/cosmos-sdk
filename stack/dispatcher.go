@@ -2,8 +2,10 @@ package stack
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
@@ -64,7 +66,7 @@ func (d *Dispatcher) Name() string {
 // Tries to find a registered module (Dispatchable) based on the name of the tx.
 // The tx name (as registered with go-data) should be in the form `<module name>/XXXX`,
 // where `module name` must match the name of a dispatchable and XXX can be any string.
-func (d *Dispatcher) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (d *Dispatcher) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
 	r, err := d.lookupTx(tx)
 	if err != nil {
 		return res, err
@@ -85,7 +87,7 @@ func (d *Dispatcher) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx base
 // Tries to find a registered module (Dispatchable) based on the name of the tx.
 // The tx name (as registered with go-data) should be in the form `<module name>/XXXX`,
 // where `module name` must match the name of a dispatchable and XXX can be any string.
-func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
 	r, err := d.lookupTx(tx)
 	if err != nil {
 		return res, err
@@ -101,11 +103,11 @@ func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx ba
 	return r.DeliverTx(ctx, store, tx, cb)
 }
 
-// SetOption - implements Handler interface
+// InitState - implements Handler interface
 //
 // Tries to find a registered module (Dispatchable) based on the
-// module name from SetOption of the tx.
-func (d *Dispatcher) SetOption(l log.Logger, store state.SimpleDB, module, key, value string) (string, error) {
+// module name from InitState of the tx.
+func (d *Dispatcher) InitState(l log.Logger, store state.SimpleDB, module, key, value string) (string, error) {
 	r, err := d.lookupModule(module)
 	if err != nil {
 		return "", err
@@ -116,7 +118,17 @@ func (d *Dispatcher) SetOption(l log.Logger, store state.SimpleDB, module, key, 
 	// but isolate data space
 	store = stateSpace(store, r.Name())
 
-	return r.SetOption(l, store, module, key, value, cb)
+	return r.InitState(l, store, module, key, value, cb)
+}
+
+// InitValidate makes sure all modules are informed
+func (d *Dispatcher) InitValidate(log log.Logger, store state.SimpleDB, vals []*abci.Validator) {
+	for _, mod := range d.sortedModules() {
+		// no ctx, so secureCheck not needed
+		cb := d
+		space := stateSpace(store, mod.Name())
+		mod.InitValidate(log, space, vals, cb)
+	}
 }
 
 func (d *Dispatcher) lookupTx(tx basecoin.Tx) (Dispatchable, error) {
@@ -139,4 +151,20 @@ func (d *Dispatcher) lookupModule(name string) (Dispatchable, error) {
 		return nil, errors.ErrUnknownModule(name)
 	}
 	return r, nil
+}
+
+func (d *Dispatcher) sortedModules() []Dispatchable {
+	// order all routes names
+	size := len(d.routes)
+	names := make([]string, 0, size)
+	for k := range d.routes {
+		names = append(names, k)
+	}
+	sort.Strings(names)
+
+	res := make([]Dispatchable, size)
+	for i, k := range names {
+		res[i] = d.routes[k]
+	}
+	return res
 }

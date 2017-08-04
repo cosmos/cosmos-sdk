@@ -24,7 +24,8 @@ type SimpleFeeMiddleware struct {
 	// all fees go here, which could be a dump (Bank) or something reachable
 	// by other app logic
 	Collector basecoin.Actor
-	stack.PassOption
+	stack.PassInitState
+	stack.PassInitValidate
 }
 
 var _ stack.Middleware = SimpleFeeMiddleware{}
@@ -45,40 +46,72 @@ func (SimpleFeeMiddleware) Name() string {
 }
 
 // CheckTx - check the transaction
-func (h SimpleFeeMiddleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
-	return h.doTx(ctx, store, tx, next.CheckTx)
+func (h SimpleFeeMiddleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
+	fee, err := h.verifyFee(ctx, tx)
+	if err != nil {
+		if IsSkipFeesErr(err) {
+			return next.CheckTx(ctx, store, tx)
+		}
+		return res, err
+	}
+
+	var paid, used uint64
+	if !fee.Fee.IsZero() { // now, try to make a IPC call to coins...
+		send := coin.NewSendOneTx(fee.Payer, h.Collector, coin.Coins{fee.Fee})
+		sendRes, err := next.CheckTx(ctx, store, send)
+		if err != nil {
+			return res, err
+		}
+		paid = uint64(fee.Fee.Amount)
+		used = sendRes.GasAllocated
+	}
+
+	res, err = next.CheckTx(ctx, store, fee.Tx)
+	// add the given fee to the price for gas, plus one query
+	if err == nil {
+		res.GasPayment += paid
+		res.GasAllocated += used
+	}
+	return res, err
 }
 
 // DeliverTx - send the fee handler transaction
-func (h SimpleFeeMiddleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
-	return h.doTx(ctx, store, tx, next.DeliverTx)
+func (h SimpleFeeMiddleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
+	fee, err := h.verifyFee(ctx, tx)
+	if IsSkipFeesErr(err) {
+		return next.DeliverTx(ctx, store, tx)
+	}
+	if err != nil {
+		return res, err
+	}
+
+	if !fee.Fee.IsZero() { // now, try to make a IPC call to coins...
+		send := coin.NewSendOneTx(fee.Payer, h.Collector, coin.Coins{fee.Fee})
+		_, err = next.DeliverTx(ctx, store, send)
+		if err != nil {
+			return res, err
+		}
+	}
+	return next.DeliverTx(ctx, store, fee.Tx)
 }
 
-func (h SimpleFeeMiddleware) doTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.CheckerFunc) (res basecoin.Result, err error) {
+func (h SimpleFeeMiddleware) verifyFee(ctx basecoin.Context, tx basecoin.Tx) (Fee, error) {
 	feeTx, ok := tx.Unwrap().(Fee)
 	if !ok {
 		// the fee wrapper is not required if there is no minimum
 		if h.MinFee.IsZero() {
-			return next(ctx, store, tx)
+			return feeTx, ErrSkipFees()
 		}
-		return res, errors.ErrInvalidFormat(TypeFees, tx)
+		return feeTx, errors.ErrInvalidFormat(TypeFees, tx)
 	}
 
 	// see if it is the proper denom and big enough
 	fee := feeTx.Fee
 	if fee.Denom != h.MinFee.Denom {
-		return res, ErrWrongFeeDenom(h.MinFee.Denom)
+		return feeTx, ErrWrongFeeDenom(h.MinFee.Denom)
 	}
 	if !fee.IsGTE(h.MinFee) {
-		return res, ErrInsufficientFees()
+		return feeTx, ErrInsufficientFees()
 	}
-
-	// now, try to make a IPC call to coins...
-	send := coin.NewSendOneTx(feeTx.Payer, h.Collector, coin.Coins{fee})
-	_, err = next(ctx, store, send)
-	if err != nil {
-		return res, err
-	}
-
-	return next(ctx, store, feeTx.Tx)
+	return feeTx, nil
 }

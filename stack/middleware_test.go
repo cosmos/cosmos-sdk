@@ -72,11 +72,11 @@ func TestPermissionSandbox(t *testing.T) {
 			Apps(CheckMiddleware{Required: tc.require}).
 			Use(EchoHandler{})
 
-		res, err := app.CheckTx(ctx, store, raw)
-		checkPerm(t, i, tc.expectedRes, tc.expected, res, err)
+		cres, err := app.CheckTx(ctx, store, raw)
+		checkPerm(t, i, tc.expectedRes, tc.expected, cres, err)
 
-		res, err = app.DeliverTx(ctx, store, raw)
-		checkPerm(t, i, tc.expectedRes, tc.expected, res, err)
+		dres, err := app.DeliverTx(ctx, store, raw)
+		checkPerm(t, i, tc.expectedRes, tc.expected, dres, err)
 	}
 }
 
@@ -85,7 +85,7 @@ func checkPerm(t *testing.T, idx int, data []byte, check func(error) bool, res b
 
 	if len(data) > 0 {
 		assert.Nil(err, "%d: %+v", idx, err)
-		assert.EqualValues(data, res.Data)
+		assert.EqualValues(data, res.GetData())
 	} else {
 		assert.NotNil(err, "%d", idx)
 		// check error code!

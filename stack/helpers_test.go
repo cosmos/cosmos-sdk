@@ -25,9 +25,9 @@ func TestOK(t *testing.T) {
 	assert.Nil(err, "%+v", err)
 	assert.Equal(data, res.Log)
 
-	res, err = ok.DeliverTx(ctx, store, tx)
+	dres, err := ok.DeliverTx(ctx, store, tx)
 	assert.Nil(err, "%+v", err)
-	assert.Equal(data, res.Log)
+	assert.Equal(data, dres.Log)
 }
 
 func TestFail(t *testing.T) {

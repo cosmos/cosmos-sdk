@@ -9,11 +9,13 @@ import (
 //nolint
 const (
 	NameNonce = "nonce"
+	CostNonce = 10
 )
 
 // ReplayCheck uses the sequence to check for replay attacks
 type ReplayCheck struct {
-	stack.PassOption
+	stack.PassInitState
+	stack.PassInitValidate
 }
 
 // Name of the module - fulfills Middleware interface
@@ -25,21 +27,23 @@ var _ stack.Middleware = ReplayCheck{}
 
 // CheckTx verifies tx is not being replayed - fulfills Middlware interface
 func (r ReplayCheck) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+	tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 
 	stx, err := r.checkIncrementNonceTx(ctx, store, tx)
 	if err != nil {
 		return res, err
 	}
 
-	return next.CheckTx(ctx, store, stx)
+	res, err = next.CheckTx(ctx, store, stx)
+	res.GasAllocated += CostNonce
+	return res, err
 }
 
 // DeliverTx verifies tx is not being replayed - fulfills Middlware interface
 // NOTE It is okay to modify the sequence before running the wrapped TX because if the
 // wrapped Tx fails, the state changes are not applied
 func (r ReplayCheck) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+	tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 
 	stx, err := r.checkIncrementNonceTx(ctx, store, tx)
 	if err != nil {

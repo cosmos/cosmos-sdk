@@ -100,7 +100,7 @@ func (a *AppChain) IncrementHeight(delta int) int {
 
 // DeliverTx runs the tx and commits the new tree, incrementing height
 // by one.
-func (a *AppChain) DeliverTx(tx basecoin.Tx, perms ...basecoin.Actor) (basecoin.Result, error) {
+func (a *AppChain) DeliverTx(tx basecoin.Tx, perms ...basecoin.Actor) (basecoin.DeliverResult, error) {
 	ctx := stack.MockContext(a.chainID, uint64(a.height)).WithPermissions(perms...)
 	store := a.store.Checkpoint()
 	res, err := a.app.DeliverTx(ctx, store, tx)
@@ -118,9 +118,9 @@ func (a *AppChain) Update(tx UpdateChainTx) error {
 	return err
 }
 
-// SetOption sets the option on our app
-func (a *AppChain) SetOption(mod, key, value string) (string, error) {
-	return a.app.SetOption(log.NewNopLogger(), a.store, mod, key, value)
+// InitState sets the option on our app
+func (a *AppChain) InitState(mod, key, value string) (string, error) {
+	return a.app.InitState(log.NewNopLogger(), a.store, mod, key, value)
 }
 
 // GetStore is used to get the app-specific sub-store

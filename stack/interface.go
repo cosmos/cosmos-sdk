@@ -2,6 +2,7 @@
 package stack
 
 import (
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
@@ -15,76 +16,89 @@ import (
 type Middleware interface {
 	CheckerMiddle
 	DeliverMiddle
-	SetOptionMiddle
+	InitStaterMiddle
+	InitValidaterMiddle
 	basecoin.Named
 }
 
 type CheckerMiddle interface {
 	CheckTx(ctx basecoin.Context, store state.SimpleDB,
-		tx basecoin.Tx, next basecoin.Checker) (basecoin.Result, error)
+		tx basecoin.Tx, next basecoin.Checker) (basecoin.CheckResult, error)
 }
 
 type CheckerMiddleFunc func(basecoin.Context, state.SimpleDB,
-	basecoin.Tx, basecoin.Checker) (basecoin.Result, error)
+	basecoin.Tx, basecoin.Checker) (basecoin.CheckResult, error)
 
 func (c CheckerMiddleFunc) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Checker) (basecoin.Result, error) {
+	tx basecoin.Tx, next basecoin.Checker) (basecoin.CheckResult, error) {
 	return c(ctx, store, tx, next)
 }
 
 type DeliverMiddle interface {
 	DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx,
-		next basecoin.Deliver) (basecoin.Result, error)
+		next basecoin.Deliver) (basecoin.DeliverResult, error)
 }
 
 type DeliverMiddleFunc func(basecoin.Context, state.SimpleDB,
-	basecoin.Tx, basecoin.Deliver) (basecoin.Result, error)
+	basecoin.Tx, basecoin.Deliver) (basecoin.DeliverResult, error)
 
 func (d DeliverMiddleFunc) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Deliver) (basecoin.Result, error) {
+	tx basecoin.Tx, next basecoin.Deliver) (basecoin.DeliverResult, error) {
 	return d(ctx, store, tx, next)
 }
 
-type SetOptionMiddle interface {
-	SetOption(l log.Logger, store state.SimpleDB, module,
-		key, value string, next basecoin.SetOptioner) (string, error)
+type InitStaterMiddle interface {
+	InitState(l log.Logger, store state.SimpleDB, module,
+		key, value string, next basecoin.InitStater) (string, error)
 }
 
-type SetOptionMiddleFunc func(log.Logger, state.SimpleDB,
-	string, string, string, basecoin.SetOptioner) (string, error)
+type InitStaterMiddleFunc func(log.Logger, state.SimpleDB,
+	string, string, string, basecoin.InitStater) (string, error)
 
-func (c SetOptionMiddleFunc) SetOption(l log.Logger, store state.SimpleDB,
-	module, key, value string, next basecoin.SetOptioner) (string, error) {
+func (c InitStaterMiddleFunc) InitState(l log.Logger, store state.SimpleDB,
+	module, key, value string, next basecoin.InitStater) (string, error) {
 	return c(l, store, module, key, value, next)
+}
+
+type InitValidaterMiddle interface {
+	InitValidate(l log.Logger, store state.SimpleDB, vals []*abci.Validator, next basecoin.InitValidater)
+}
+
+type InitValidaterMiddleFunc func(log.Logger, state.SimpleDB,
+	[]*abci.Validator, basecoin.InitValidater)
+
+func (c InitValidaterMiddleFunc) InitValidate(l log.Logger, store state.SimpleDB,
+	vals []*abci.Validator, next basecoin.InitValidater) {
+	c(l, store, vals, next)
 }
 
 // holders
 type PassCheck struct{}
 
 func (_ PassCheck) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Checker) (basecoin.Result, error) {
+	tx basecoin.Tx, next basecoin.Checker) (basecoin.CheckResult, error) {
 	return next.CheckTx(ctx, store, tx)
 }
 
 type PassDeliver struct{}
 
 func (_ PassDeliver) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Deliver) (basecoin.Result, error) {
+	tx basecoin.Tx, next basecoin.Deliver) (basecoin.DeliverResult, error) {
 	return next.DeliverTx(ctx, store, tx)
 }
 
-type PassOption struct{}
+type PassInitState struct{}
 
-func (_ PassOption) SetOption(l log.Logger, store state.SimpleDB, module,
-	key, value string, next basecoin.SetOptioner) (string, error) {
-	return next.SetOption(l, store, module, key, value)
+func (_ PassInitState) InitState(l log.Logger, store state.SimpleDB, module,
+	key, value string, next basecoin.InitStater) (string, error) {
+	return next.InitState(l, store, module, key, value)
 }
 
-type NopOption struct{}
+type PassInitValidate struct{}
 
-func (_ NopOption) SetOption(l log.Logger, store state.SimpleDB, module,
-	key, value string, next basecoin.SetOptioner) (string, error) {
-	return "", nil
+func (_ PassInitValidate) InitValidate(l log.Logger, store state.SimpleDB,
+	vals []*abci.Validator, next basecoin.InitValidater) {
+	next.InitValidate(l, store, vals)
 }
 
 // Dispatchable is like middleware, except the meaning of "next" is different.
@@ -113,16 +127,21 @@ func (w wrapped) Name() string {
 }
 
 func (w wrapped) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, _ basecoin.Checker) (basecoin.Result, error) {
+	tx basecoin.Tx, _ basecoin.Checker) (basecoin.CheckResult, error) {
 	return w.h.CheckTx(ctx, store, tx)
 }
 
 func (w wrapped) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, _ basecoin.Deliver) (basecoin.Result, error) {
+	tx basecoin.Tx, _ basecoin.Deliver) (basecoin.DeliverResult, error) {
 	return w.h.DeliverTx(ctx, store, tx)
 }
 
-func (w wrapped) SetOption(l log.Logger, store state.SimpleDB,
-	module, key, value string, _ basecoin.SetOptioner) (string, error) {
-	return w.h.SetOption(l, store, module, key, value)
+func (w wrapped) InitState(l log.Logger, store state.SimpleDB,
+	module, key, value string, _ basecoin.InitStater) (string, error) {
+	return w.h.InitState(l, store, module, key, value)
+}
+
+func (w wrapped) InitValidate(l log.Logger, store state.SimpleDB,
+	vals []*abci.Validator, next basecoin.InitValidater) {
+	w.h.InitValidate(l, store, vals)
 }

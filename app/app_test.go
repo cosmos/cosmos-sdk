@@ -98,9 +98,9 @@ func (at *appTest) feeTx(coins coin.Coins, toll coin.Coin, sequence uint32) base
 	return at.signTx(tx)
 }
 
-// set the account on the app through SetOption
+// set the account on the app through InitState
 func (at *appTest) initAccount(acct *coin.AccountWithKey) {
-	res := at.app.SetOption("coin/account", acct.MakeOption())
+	res := at.app.InitState("coin/account", acct.MakeOption())
 	require.EqualValues(at.t, res, "Success")
 }
 
@@ -121,7 +121,7 @@ func (at *appTest) reset() {
 		logger.With("module", "app"),
 	)
 
-	res := at.app.SetOption("base/chain_id", at.chainID)
+	res := at.app.InitState("base/chain_id", at.chainID)
 	require.EqualValues(at.t, res, "Success")
 
 	at.initAccount(at.acctIn)
@@ -167,7 +167,7 @@ func (at *appTest) exec(t *testing.T, tx basecoin.Tx, checkTx bool) (res abci.Re
 
 //--------------------------------------------------------
 
-func TestSetOption(t *testing.T) {
+func TestInitState(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -183,14 +183,14 @@ func TestSetOption(t *testing.T) {
 
 	//testing ChainID
 	chainID := "testChain"
-	res := app.SetOption("base/chain_id", chainID)
+	res := app.InitState("base/chain_id", chainID)
 	assert.EqualValues(app.GetChainID(), chainID)
 	assert.EqualValues(res, "Success")
 
 	// make a nice account...
 	bal := coin.Coins{{"atom", 77}, {"eth", 12}}
 	acct := coin.NewAccountWithKey(bal)
-	res = app.SetOption("coin/account", acct.MakeOption())
+	res = app.InitState("coin/account", acct.MakeOption())
 	require.EqualValues(res, "Success")
 
 	// make sure it is set correctly, with some balance
@@ -218,7 +218,7 @@ func TestSetOption(t *testing.T) {
     }
   ]
 }`
-	res = app.SetOption("coin/account", unsortAcc)
+	res = app.InitState("coin/account", unsortAcc)
 	require.EqualValues(res, "Success")
 
 	coins, err = getAddr(unsortAddr, app.GetState())
@@ -226,13 +226,13 @@ func TestSetOption(t *testing.T) {
 	assert.True(coins.IsValid())
 	assert.Equal(unsortCoins, coins)
 
-	res = app.SetOption("base/dslfkgjdas", "")
+	res = app.InitState("base/dslfkgjdas", "")
 	assert.NotEqual(res, "Success")
 
-	res = app.SetOption("dslfkgjdas", "")
+	res = app.InitState("dslfkgjdas", "")
 	assert.NotEqual(res, "Success")
 
-	res = app.SetOption("dslfkgjdas/szfdjzs", "")
+	res = app.InitState("dslfkgjdas/szfdjzs", "")
 	assert.NotEqual(res, "Success")
 
 }

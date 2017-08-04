@@ -3,6 +3,7 @@ package base
 import (
 	"time"
 
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin"
@@ -26,7 +27,7 @@ func (Logger) Name() string {
 var _ stack.Middleware = Logger{}
 
 // CheckTx logs time and result - fulfills Middlware interface
-func (Logger) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (Logger) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 	start := time.Now()
 	res, err = next.CheckTx(ctx, store, tx)
 	delta := time.Now().Sub(start)
@@ -41,7 +42,7 @@ func (Logger) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx
 }
 
 // DeliverTx logs time and result - fulfills Middlware interface
-func (Logger) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (Logger) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 	start := time.Now()
 	res, err = next.DeliverTx(ctx, store, tx)
 	delta := time.Now().Sub(start)
@@ -55,19 +56,28 @@ func (Logger) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.
 	return
 }
 
-// SetOption logs time and result - fulfills Middlware interface
-func (Logger) SetOption(l log.Logger, store state.SimpleDB, module, key, value string, next basecoin.SetOptioner) (string, error) {
+// InitState logs time and result - fulfills Middlware interface
+func (Logger) InitState(l log.Logger, store state.SimpleDB, module, key, value string, next basecoin.InitStater) (string, error) {
 	start := time.Now()
-	res, err := next.SetOption(l, store, module, key, value)
+	res, err := next.InitState(l, store, module, key, value)
 	delta := time.Now().Sub(start)
 	// TODO: log the value being set also?
 	l = l.With("duration", micros(delta)).With("mod", module).With("key", key)
 	if err == nil {
-		l.Info("SetOption", "log", res)
+		l.Info("InitState", "log", res)
 	} else {
-		l.Error("SetOption", "err", err)
+		l.Error("InitState", "err", err)
 	}
 	return res, err
+}
+
+// InitValidate logs time and result - fulfills Middlware interface
+func (Logger) InitValidate(l log.Logger, store state.SimpleDB, vals []*abci.Validator, next basecoin.InitValidater) {
+	start := time.Now()
+	next.InitValidate(l, store, vals)
+	delta := time.Now().Sub(start)
+	l = l.With("duration", micros(delta))
+	l.Info("InitValidate")
 }
 
 // micros returns how many microseconds passed in a call

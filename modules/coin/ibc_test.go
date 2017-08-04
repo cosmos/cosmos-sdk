@@ -44,7 +44,7 @@ func TestIBCPostPacket(t *testing.T) {
 	// set up a rich guy on this chain
 	wealth := Coins{{"btc", 300}, {"eth", 2000}, {"ltc", 5000}}
 	rich := NewAccountWithKey(wealth)
-	_, err = ourChain.SetOption("coin", "account", rich.MakeOption())
+	_, err = ourChain.InitState("coin", "account", rich.MakeOption())
 	require.Nil(err, "%+v", err)
 
 	// sends money to another guy on a different chain, now other chain has credit

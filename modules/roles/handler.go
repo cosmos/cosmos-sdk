@@ -6,12 +6,19 @@ import (
 	"github.com/tendermint/basecoin/state"
 )
 
-//NameRole - name space of the roles module
-const NameRole = "role"
+const (
+	//NameRole - name space of the roles module
+	NameRole = "role"
+	// CostCreate is the cost to create a new role
+	CostCreate = uint64(40)
+	// CostAssume is the cost to assume a role as part of a tx
+	CostAssume = uint64(5)
+)
 
 // Handler allows us to create new roles
 type Handler struct {
-	basecoin.NopOption
+	basecoin.NopInitState
+	basecoin.NopInitValidate
 }
 
 var _ basecoin.Handler = Handler{}
@@ -27,12 +34,13 @@ func (Handler) Name() string {
 }
 
 // CheckTx verifies if the transaction is properly formated
-func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
 	var cr CreateRoleTx
 	cr, err = checkTx(ctx, tx)
 	if err != nil {
 		return
 	}
+	res = basecoin.NewCheck(CostCreate, "")
 	err = checkNoRole(store, cr.Role)
 	return
 }
@@ -40,7 +48,7 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin
 // DeliverTx tries to create a new role.
 //
 // Returns an error if the role already exists
-func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.Result, err error) {
+func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
 	create, err := checkTx(ctx, tx)
 	if err != nil {
 		return res, err

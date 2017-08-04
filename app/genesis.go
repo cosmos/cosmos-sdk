@@ -16,16 +16,16 @@ func (app *Basecoin) LoadGenesis(path string) error {
 	}
 
 	// set chain_id
-	app.SetOption("base/chain_id", genDoc.ChainID)
+	app.InitState("base/chain_id", genDoc.ChainID)
 
 	// set accounts
 	for _, acct := range genDoc.AppOptions.Accounts {
-		_ = app.SetOption("coin/account", string(acct))
+		_ = app.InitState("coin/account", string(acct))
 	}
 
 	// set plugin options
 	for _, kv := range genDoc.AppOptions.pluginOptions {
-		_ = app.SetOption(kv.Key, kv.Value)
+		_ = app.InitState(kv.Key, kv.Value)
 	}
 
 	return nil

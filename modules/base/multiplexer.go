@@ -3,6 +3,7 @@ package base
 import (
 	"strings"
 
+	abci "github.com/tendermint/abci/types"
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
 
@@ -18,7 +19,8 @@ const (
 
 // Multiplexer grabs a MultiTx and sends them sequentially down the line
 type Multiplexer struct {
-	stack.PassOption
+	stack.PassInitState
+	stack.PassInitValidate
 }
 
 // Name of the module - fulfills Middleware interface
@@ -29,45 +31,86 @@ func (Multiplexer) Name() string {
 var _ stack.Middleware = Multiplexer{}
 
 // CheckTx splits the input tx and checks them all - fulfills Middlware interface
-func (Multiplexer) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
-	if mtx, ok := tx.Unwrap().(*MultiTx); ok {
-		return runAll(ctx, store, mtx.Txs, next.CheckTx)
+func (Multiplexer) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
+	if mtx, ok := tx.Unwrap().(MultiTx); ok {
+		return runAllChecks(ctx, store, mtx.Txs, next)
 	}
 	return next.CheckTx(ctx, store, tx)
 }
 
 // DeliverTx splits the input tx and checks them all - fulfills Middlware interface
-func (Multiplexer) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
-	if mtx, ok := tx.Unwrap().(*MultiTx); ok {
-		return runAll(ctx, store, mtx.Txs, next.DeliverTx)
+func (Multiplexer) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
+	if mtx, ok := tx.Unwrap().(MultiTx); ok {
+		return runAllDelivers(ctx, store, mtx.Txs, next)
 	}
 	return next.DeliverTx(ctx, store, tx)
 }
 
-func runAll(ctx basecoin.Context, store state.SimpleDB, txs []basecoin.Tx, next basecoin.CheckerFunc) (res basecoin.Result, err error) {
+func runAllChecks(ctx basecoin.Context, store state.SimpleDB, txs []basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 	// store all results, unless anything errors
-	rs := make([]basecoin.Result, len(txs))
+	rs := make([]basecoin.CheckResult, len(txs))
 	for i, stx := range txs {
-		rs[i], err = next(ctx, store, stx)
+		rs[i], err = next.CheckTx(ctx, store, stx)
 		if err != nil {
 			return
 		}
 	}
 	// now combine the results into one...
-	return combine(rs), nil
+	return combineChecks(rs), nil
+}
+
+func runAllDelivers(ctx basecoin.Context, store state.SimpleDB, txs []basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
+	// store all results, unless anything errors
+	rs := make([]basecoin.DeliverResult, len(txs))
+	for i, stx := range txs {
+		rs[i], err = next.DeliverTx(ctx, store, stx)
+		if err != nil {
+			return
+		}
+	}
+	// now combine the results into one...
+	return combineDelivers(rs), nil
 }
 
 // combines all data bytes as a go-wire array.
 // joins all log messages with \n
-func combine(all []basecoin.Result) basecoin.Result {
+func combineChecks(all []basecoin.CheckResult) basecoin.CheckResult {
 	datas := make([]data.Bytes, len(all))
 	logs := make([]string, len(all))
+	var allocated, payments uint64
 	for i, r := range all {
 		datas[i] = r.Data
 		logs[i] = r.Log
+		allocated += r.GasAllocated
+		payments += r.GasPayment
 	}
-	return basecoin.Result{
-		Data: wire.BinaryBytes(datas),
-		Log:  strings.Join(logs, "\n"),
+	return basecoin.CheckResult{
+		Data:         wire.BinaryBytes(datas),
+		Log:          strings.Join(logs, "\n"),
+		GasAllocated: allocated,
+		GasPayment:   payments,
+	}
+}
+
+// combines all data bytes as a go-wire array.
+// joins all log messages with \n
+func combineDelivers(all []basecoin.DeliverResult) basecoin.DeliverResult {
+	datas := make([]data.Bytes, len(all))
+	logs := make([]string, len(all))
+	var used uint64
+	var diffs []*abci.Validator
+	for i, r := range all {
+		datas[i] = r.Data
+		logs[i] = r.Log
+		used += r.GasUsed
+		if len(r.Diff) > 0 {
+			diffs = append(diffs, r.Diff...)
+		}
+	}
+	return basecoin.DeliverResult{
+		Data:    wire.BinaryBytes(datas),
+		Log:     strings.Join(logs, "\n"),
+		GasUsed: used,
+		Diff:    diffs,
 	}
 }

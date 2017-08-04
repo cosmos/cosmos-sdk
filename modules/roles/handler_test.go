@@ -38,11 +38,13 @@ func TestCreateRole(t *testing.T) {
 	store := state.NewMemKVStore()
 	for i, tc := range cases {
 		tx := roles.NewCreateRoleTx([]byte(tc.role), tc.min, tc.sigs)
-		_, err := h.CheckTx(ctx, store, tx)
+		cres, err := h.CheckTx(ctx, store, tx)
 		_, err2 := h.DeliverTx(ctx, store, tx)
 		if tc.valid {
 			assert.Nil(err, "%d/%s: %+v", i, tc.role, err)
 			assert.Nil(err2, "%d/%s: %+v", i, tc.role, err2)
+			assert.Equal(roles.CostCreate, cres.GasAllocated)
+			assert.Equal(uint64(0), cres.GasPayment)
 		} else {
 			assert.NotNil(err, "%d/%s", i, tc.role)
 			assert.NotNil(err2, "%d/%s", i, tc.role)

@@ -17,7 +17,8 @@ const (
 // Signatures parses out go-crypto signatures and adds permissions to the
 // context for use inside the application
 type Signatures struct {
-	stack.PassOption
+	stack.PassInitState
+	stack.PassInitValidate
 }
 
 // Name of the module - fulfills Middleware interface
@@ -39,7 +40,7 @@ type Signable interface {
 }
 
 // CheckTx verifies the signatures are correct - fulfills Middlware interface
-func (Signatures) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.Result, err error) {
+func (Signatures) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
 	sigs, tnext, err := getSigners(tx)
 	if err != nil {
 		return res, err
@@ -49,7 +50,7 @@ func (Signatures) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoi
 }
 
 // DeliverTx verifies the signatures are correct - fulfills Middlware interface
-func (Signatures) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.Result, err error) {
+func (Signatures) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
 	sigs, tnext, err := getSigners(tx)
 	if err != nil {
 		return res, err

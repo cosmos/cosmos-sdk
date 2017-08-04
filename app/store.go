@@ -180,12 +180,18 @@ func (s *Store) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) 
 		key := reqQuery.Data // Data holds the key bytes
 		resQuery.Key = key
 		if reqQuery.Prove {
-			value, proof, exists := tree.Proof(key)
-			if !exists {
-				resQuery.Log = "Key not found"
+			value, proofExists, proofNotExists, err := tree.GetWithProof(key)
+			if err != nil {
+				resQuery.Log = err.Error()
+				break
 			}
-			resQuery.Value = value
-			resQuery.Proof = proof
+
+			if value != nil {
+				resQuery.Value = value
+				resQuery.Proof = wire.BinaryBytes(proofExists)
+			} else {
+				resQuery.Proof = wire.BinaryBytes(proofNotExists)
+			}
 		} else {
 			value := tree.Get(key)
 			resQuery.Value = value

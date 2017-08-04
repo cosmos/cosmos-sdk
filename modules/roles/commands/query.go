@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/tendermint/basecoin/client/commands"
 	proofcmd "github.com/tendermint/basecoin/client/commands/proofs"
@@ -28,10 +29,11 @@ func roleQueryCmd(cmd *cobra.Command, args []string) error {
 
 	var res roles.Role
 	key := stack.PrefixedKey(roles.NameRole, role)
-	proof, err := proofcmd.GetAndParseAppProof(key, &res)
+	prove := !viper.GetBool(commands.FlagTrustNode)
+	height, err := proofcmd.GetParsed(key, &res, prove)
 	if err != nil {
 		return err
 	}
 
-	return proofcmd.OutputProof(res, proof.BlockHeight())
+	return proofcmd.OutputProof(res, height)
 }

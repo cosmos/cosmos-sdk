@@ -12,8 +12,6 @@ import (
 	"github.com/tendermint/basecoin/modules/ibc"
 	"github.com/tendermint/basecoin/stack"
 	"github.com/tendermint/go-wire/data"
-	"github.com/tendermint/light-client/proofs"
-	"github.com/tendermint/merkleeyes/iavl"
 )
 
 // TODO: query seeds (register/update)
@@ -86,17 +84,19 @@ func init() {
 func ibcQueryCmd(cmd *cobra.Command, args []string) error {
 	var res ibc.HandlerInfo
 	key := stack.PrefixedKey(ibc.NameIBC, ibc.HandlerKey())
-	proof, err := proofcmd.GetAndParseAppProof(key, &res)
+	prove := !viper.GetBool(commands.FlagTrustNode)
+	h, err := proofcmd.GetParsed(key, &res, prove)
 	if err != nil {
 		return err
 	}
-	return proofcmd.OutputProof(res, proof.BlockHeight())
+	return proofcmd.OutputProof(res, h)
 }
 
 func chainsQueryCmd(cmd *cobra.Command, args []string) error {
 	list := [][]byte{}
 	key := stack.PrefixedKey(ibc.NameIBC, ibc.ChainsKey())
-	proof, err := proofcmd.GetAndParseAppProof(key, &list)
+	prove := !viper.GetBool(commands.FlagTrustNode)
+	h, err := proofcmd.GetParsed(key, &list, prove)
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func chainsQueryCmd(cmd *cobra.Command, args []string) error {
 		res[i] = string(list[i])
 	}
 
-	return proofcmd.OutputProof(res, proof.BlockHeight())
+	return proofcmd.OutputProof(res, h)
 }
 
 func chainQueryCmd(cmd *cobra.Command, args []string) error {
@@ -118,12 +118,13 @@ func chainQueryCmd(cmd *cobra.Command, args []string) error {
 
 	var res ibc.ChainInfo
 	key := stack.PrefixedKey(ibc.NameIBC, ibc.ChainKey(arg))
-	proof, err := proofcmd.GetAndParseAppProof(key, &res)
+	prove := !viper.GetBool(commands.FlagTrustNode)
+	h, err := proofcmd.GetParsed(key, &res, prove)
 	if err != nil {
 		return err
 	}
 
-	return proofcmd.OutputProof(res, proof.BlockHeight())
+	return proofcmd.OutputProof(res, h)
 }
 
 func assertOne(from, to string) error {
@@ -154,12 +155,13 @@ func packetsQueryCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	var res uint64
-	proof, err := proofcmd.GetAndParseAppProof(key, &res)
+	prove := !viper.GetBool(commands.FlagTrustNode)
+	h, err := proofcmd.GetParsed(key, &res, prove)
 	if err != nil {
 		return err
 	}
 
-	return proofcmd.OutputProof(res, proof.BlockHeight())
+	return proofcmd.OutputProof(res, h)
 }
 
 func packetQueryCmd(cmd *cobra.Command, args []string) error {
@@ -174,6 +176,7 @@ func packetQueryCmd(cmd *cobra.Command, args []string) error {
 	if seq < 0 {
 		return errors.Errorf("--%s must be a non-negative number", FlagSequence)
 	}
+	prove := !viper.GetBool(commands.FlagTrustNode)
 
 	var key []byte
 	if from != "" {
@@ -185,24 +188,16 @@ func packetQueryCmd(cmd *cobra.Command, args []string) error {
 	// Input queue just display the results
 	if from != "" {
 		var packet ibc.Packet
-		proof, err := proofcmd.GetAndParseAppProof(key, &packet)
+		h, err := proofcmd.GetParsed(key, &packet, prove)
 		if err != nil {
 			return err
 		}
-		return proofcmd.OutputProof(packet, proof.BlockHeight())
+		return proofcmd.OutputProof(packet, h)
 	}
 
 	// output queue, create a post packet
 	var packet ibc.Packet
-	proof, err := proofcmd.GetAndParseAppProof(key, &packet)
-	if err != nil {
-		return err
-	}
-
-	// TODO: oh so ugly.  fix before merge!
-	// wait, i want to change go-merkle too....
-	appProof := proof.(proofs.AppProof)
-	extractedProof, err := iavl.ReadProof(appProof.Proof)
+	bs, height, proof, err := proofcmd.GetWithProof(key)
 	if err != nil {
 		return err
 	}
@@ -210,10 +205,10 @@ func packetQueryCmd(cmd *cobra.Command, args []string) error {
 	// create the post packet here.
 	post := ibc.PostPacketTx{
 		FromChainID:     commands.GetChainID(),
-		FromChainHeight: proof.BlockHeight(),
+		FromChainHeight: height,
 		Key:             key,
 		Packet:          packet,
-		Proof:           extractedProof,
+		Proof:           proof,
 	}
 
 	// print json direct, as we don't need to wrap with the height

@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	lc "github.com/tendermint/light-client"
 
@@ -32,12 +33,13 @@ func accountQueryCmd(cmd *cobra.Command, args []string) error {
 	key := stack.PrefixedKey(coin.NameCoin, act.Bytes())
 
 	acc := coin.Account{}
-	proof, err := proofcmd.GetAndParseAppProof(key, &acc)
+	prove := !viper.GetBool(commands.FlagTrustNode)
+	height, err := proofcmd.GetParsed(key, &acc, prove)
 	if lc.IsNoDataErr(err) {
 		return errors.Errorf("Account bytes are empty for address %s ", addr)
 	} else if err != nil {
 		return err
 	}
 
-	return proofcmd.OutputProof(acc, proof.BlockHeight())
+	return proofcmd.OutputProof(acc, height)
 }

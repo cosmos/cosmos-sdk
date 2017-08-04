@@ -71,7 +71,7 @@ func TestFeeChecks(t *testing.T) {
 		left      coin.Coins
 		collected coin.Coins
 		// expected gas allocated
-		expectedCost uint
+		expectedCost uint64
 	}{
 		// make sure it works with no fee (control group)
 		{true, app1, act1, false, act1, zero, mixed, nil, 0},

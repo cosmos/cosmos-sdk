@@ -99,14 +99,14 @@ type CheckResult struct {
 	Data data.Bytes
 	Log  string
 	// GasAllocated is the maximum units of work we allow this tx to perform
-	GasAllocated uint
+	GasAllocated uint64
 	// GasPayment is the total fees for this tx (or other source of payment)
-	GasPayment uint
+	GasPayment uint64
 }
 
 // NewCheck sets the gas used and the response data but no more info
 // these are the most common info needed to be set by the Handler
-func NewCheck(gasAllocated uint, log string) CheckResult {
+func NewCheck(gasAllocated uint64, log string) CheckResult {
 	return CheckResult{
 		GasAllocated: gasAllocated,
 		Log:          log,
@@ -129,7 +129,7 @@ type DeliverResult struct {
 	Data    data.Bytes
 	Log     string
 	Diff    []*abci.Validator
-	GasUsed uint
+	GasUsed uint64
 }
 
 var _ Result = DeliverResult{}

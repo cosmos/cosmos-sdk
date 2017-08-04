@@ -44,7 +44,7 @@ func TestCreateRole(t *testing.T) {
 			assert.Nil(err, "%d/%s: %+v", i, tc.role, err)
 			assert.Nil(err2, "%d/%s: %+v", i, tc.role, err2)
 			assert.Equal(roles.CostCreate, cres.GasAllocated)
-			assert.Equal(uint(0), cres.GasPayment)
+			assert.Equal(uint64(0), cres.GasPayment)
 		} else {
 			assert.NotNil(err, "%d/%s", i, tc.role)
 			assert.NotNil(err2, "%d/%s", i, tc.role)

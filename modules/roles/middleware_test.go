@@ -99,8 +99,8 @@ func TestAssumeRole(t *testing.T) {
 			assert.Nil(err, "%d: %+v", i, err)
 			assert.Nil(err2, "%d: %+v", i, err2)
 			// make sure we charge for each role
-			assert.Equal(roles.CostAssume*uint(len(tc.roles)), cres.GasAllocated)
-			assert.Equal(uint(0), cres.GasPayment)
+			assert.Equal(roles.CostAssume*uint64(len(tc.roles)), cres.GasAllocated)
+			assert.Equal(uint64(0), cres.GasPayment)
 		} else {
 			assert.NotNil(err, "%d", i)
 			assert.NotNil(err2, "%d", i)

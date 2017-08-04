@@ -43,8 +43,8 @@ func TestMultiplexer(t *testing.T) {
 	cases := [...]struct {
 		tx           basecoin.Tx
 		valid        bool
-		gasAllocated uint
-		gasPayment   uint
+		gasAllocated uint64
+		gasPayment   uint64
 		log          string
 		data         data.Bytes
 	}{

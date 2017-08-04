@@ -103,11 +103,11 @@ func (PriceHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 
 // PriceShowTx lets us bounce back a given fee/gas on CheckTx
 type PriceShowTx struct {
-	GasAllocated uint
-	GasPayment   uint
+	GasAllocated uint64
+	GasPayment   uint64
 }
 
-func NewPriceShowTx(gasAllocated, gasPayment uint) basecoin.Tx {
+func NewPriceShowTx(gasAllocated, gasPayment uint64) basecoin.Tx {
 	return PriceShowTx{GasAllocated: gasAllocated, GasPayment: gasPayment}.Wrap()
 }
 

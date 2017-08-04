@@ -110,7 +110,7 @@ func TestCheckDeliverSendTx(t *testing.T) {
 		tx    basecoin.Tx
 		perms []basecoin.Actor
 		final []money // nil for error
-		cost  uint    // gas allocated (if not error)
+		cost  uint64  // gas allocated (if not error)
 	}{
 		{
 			[]money{{addr1, moreCoins}},
@@ -175,7 +175,7 @@ func TestCheckDeliverSendTx(t *testing.T) {
 			assert.Nil(err, "%d: %+v", i, err)
 			assert.Nil(err2, "%d: %+v", i, err2)
 			// make sure proper gas is set
-			assert.Equal(uint(0), cres.GasPayment, "%d", i)
+			assert.Equal(uint64(0), cres.GasPayment, "%d", i)
 			assert.Equal(tc.cost, cres.GasAllocated, "%d", i)
 			// make sure the final balances are correct
 			for _, f := range tc.final {

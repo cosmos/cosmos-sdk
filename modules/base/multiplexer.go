@@ -77,7 +77,7 @@ func runAllDelivers(ctx basecoin.Context, store state.SimpleDB, txs []basecoin.T
 func combineChecks(all []basecoin.CheckResult) basecoin.CheckResult {
 	datas := make([]data.Bytes, len(all))
 	logs := make([]string, len(all))
-	var allocated, payments uint
+	var allocated, payments uint64
 	for i, r := range all {
 		datas[i] = r.Data
 		logs[i] = r.Log
@@ -97,7 +97,7 @@ func combineChecks(all []basecoin.CheckResult) basecoin.CheckResult {
 func combineDelivers(all []basecoin.DeliverResult) basecoin.DeliverResult {
 	datas := make([]data.Bytes, len(all))
 	logs := make([]string, len(all))
-	var used uint
+	var used uint64
 	var diffs []*abci.Validator
 	for i, r := range all {
 		datas[i] = r.Data

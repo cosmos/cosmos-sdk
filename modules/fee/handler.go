@@ -55,14 +55,14 @@ func (h SimpleFeeMiddleware) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 		return res, err
 	}
 
-	var paid, used uint
+	var paid, used uint64
 	if !fee.Fee.IsZero() { // now, try to make a IPC call to coins...
 		send := coin.NewSendOneTx(fee.Payer, h.Collector, coin.Coins{fee.Fee})
 		sendRes, err := next.CheckTx(ctx, store, send)
 		if err != nil {
 			return res, err
 		}
-		paid = uint(fee.Fee.Amount)
+		paid = uint64(fee.Fee.Amount)
 		used = sendRes.GasAllocated
 	}
 

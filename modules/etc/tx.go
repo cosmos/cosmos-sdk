@@ -26,6 +26,10 @@ type SetTx struct {
 	Value data.Bytes `json:"value"`
 }
 
+func NewSetTx(key, value []byte) basecoin.Tx {
+	return SetTx{Key: key, Value: value}.Wrap()
+}
+
 // Wrap - fulfills TxInner interface
 func (t SetTx) Wrap() basecoin.Tx {
 	return basecoin.Tx{t}
@@ -42,6 +46,10 @@ func (t SetTx) ValidateBasic() error {
 // RemoveTx deletes the value at this key, returns old value
 type RemoveTx struct {
 	Key data.Bytes `json:"key"`
+}
+
+func NewRemoveTx(key []byte) basecoin.Tx {
+	return RemoveTx{Key: key}.Wrap()
 }
 
 // Wrap - fulfills TxInner interface

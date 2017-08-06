@@ -8,17 +8,16 @@ import (
 // nolint
 const (
 	TypeSet    = Name + "/set"
-	TypeGet    = Name + "/get"
 	TypeRemove = Name + "/remove"
 
 	ByteSet    = 0xF0
-	ByteGet    = 0xF1
 	ByteRemove = 0xF2
 )
 
 func init() {
 	basecoin.TxMapper.
-		RegisterImplementation(SetTx{}, TypeSet, ByteSet)
+		RegisterImplementation(SetTx{}, TypeSet, ByteSet).
+		RegisterImplementation(RemoveTx{}, TypeRemove, ByteRemove)
 }
 
 // SetTx sets a key-value pair
@@ -35,6 +34,24 @@ func (t SetTx) Wrap() basecoin.Tx {
 // ValidateBasic makes sure it is valid
 func (t SetTx) ValidateBasic() error {
 	if len(t.Key) == 0 || len(t.Value) == 0 {
+		return ErrMissingData()
+	}
+	return nil
+}
+
+// RemoveTx deletes the value at this key, returns old value
+type RemoveTx struct {
+	Key data.Bytes `json:"key"`
+}
+
+// Wrap - fulfills TxInner interface
+func (t RemoveTx) Wrap() basecoin.Tx {
+	return basecoin.Tx{t}
+}
+
+// ValidateBasic makes sure it is valid
+func (t RemoveTx) ValidateBasic() error {
+	if len(t.Key) == 0 {
 		return ErrMissingData()
 	}
 	return nil

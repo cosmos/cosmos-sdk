@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	"github.com/tendermint/tendermint/config"
 )
 
 // InitCmd - node initialization command
@@ -51,12 +52,18 @@ func initCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("`init` takes one argument, a basecoin account address. Generate one using `basecli keys new mykey`")
 	}
 	userAddr := args[0]
+	genesis := GetGenesisJSON(viper.GetString(FlagChainID), userAddr)
 
-	// initalize basecoin
+	return CreateGenesisValidatorFiles(cfg, genesis, cmd.Root().Name())
+}
+
+// CreateGenesisValidatorFiles creates a genesis file with these
+// contents and a private validator file
+func CreateGenesisValidatorFiles(cfg *config.Config, genesis, appName string) error {
 	genesisFile := cfg.GenesisFile()
 	privValFile := cfg.PrivValidatorFile()
 
-	mod1, err := setupFile(genesisFile, GetGenesisJSON(viper.GetString(FlagChainID), userAddr), 0644)
+	mod1, err := setupFile(genesisFile, genesis, 0644)
 	if err != nil {
 		return err
 	}
@@ -66,7 +73,7 @@ func initCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	if (mod1 + mod2) > 0 {
-		msg := fmt.Sprintf("Initialized %s", cmd.Root().Name())
+		msg := fmt.Sprintf("Initialized %s", appName)
 		logger.Info(msg, "genesis", genesisFile, "priv_validator", privValFile)
 	} else {
 		logger.Info("Already initialized", "priv_validator", privValFile)

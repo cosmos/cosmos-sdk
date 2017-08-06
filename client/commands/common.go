@@ -5,6 +5,7 @@ package commands
 
 import (
 	"encoding/hex"
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -138,4 +139,18 @@ func GetOneArg(args []string, argname string) (string, error) {
 		return "", errors.Errorf("Only accepts one argument [%s]", argname)
 	}
 	return args[0], nil
+}
+
+// ParseHexFlag takes a flag name and parses the viper contents as hex
+func ParseHexFlag(flag string) ([]byte, error) {
+	arg := viper.GetString(flag)
+	if arg == "" {
+		return nil, errors.Errorf("No such flag: %s", flag)
+	}
+	value, err := hex.DecodeString(cmn.StripHex(arg))
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("Cannot parse %s", flag))
+	}
+	return value, nil
+
 }

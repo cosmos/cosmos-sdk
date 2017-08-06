@@ -17,7 +17,7 @@ var SetTxCmd = &cobra.Command{
 
 // RemoveTxCmd is CLI command to remove data
 var RemoveTxCmd = &cobra.Command{
-	Use:   "Remove",
+	Use:   "remove",
 	Short: "Removes a key value pair",
 	RunE:  commands.RequireInit(removeTxCmd),
 }

@@ -10,8 +10,8 @@ const (
 	TypeSet    = Name + "/set"
 	TypeRemove = Name + "/remove"
 
-	ByteSet    = 0xF0
-	ByteRemove = 0xF2
+	ByteSet    = 0xF4
+	ByteRemove = 0xF5
 )
 
 func init() {

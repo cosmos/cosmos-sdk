@@ -11,6 +11,7 @@ import (
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
 	lc "github.com/tendermint/light-client"
+	"github.com/tendermint/light-client/certifiers"
 	"github.com/tendermint/light-client/proofs"
 	"github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/tendermint/rpc/client"
@@ -60,6 +61,16 @@ func Get(key []byte, prove bool) (data.Bytes, uint64, error) {
 // proof for the key-value pair if it exists, and all checks pass.
 func GetWithProof(key []byte) (data.Bytes, uint64, *iavl.KeyExistsProof, error) {
 	node := commands.GetNode()
+	cert, err := commands.GetCertifier()
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	return CustomGetWithProof(key, node, cert)
+}
+
+// TODO: fix this up alexis
+func CustomGetWithProof(key []byte, node client.Client,
+	cert *certifiers.InquiringCertifier) (data.Bytes, uint64, *iavl.KeyExistsProof, error) {
 
 	resp, err := node.ABCIQuery("/key", key, true)
 	if err != nil {
@@ -79,7 +90,7 @@ func GetWithProof(key []byte) (data.Bytes, uint64, *iavl.KeyExistsProof, error) 
 		return nil, 0, nil, lc.ErrHeightMismatch(ph, int(resp.Height))
 	}
 
-	check, err := GetCertifiedCheckpoint(ph)
+	check, err := GetCertifiedCheckpoint(ph, node, cert)
 	if err != nil {
 		return nil, 0, nil, err
 	}
@@ -101,14 +112,8 @@ func GetWithProof(key []byte) (data.Bytes, uint64, *iavl.KeyExistsProof, error) 
 
 // GetCertifiedCheckpoint gets the signed header for a given height
 // and certifies it.  Returns error if unable to get a proven header.
-func GetCertifiedCheckpoint(h int) (empty lc.Checkpoint, err error) {
-	// here is the certifier, root of all trust
-	node := commands.GetNode()
-	cert, err := commands.GetCertifier()
-	if err != nil {
-		return
-	}
-
+func GetCertifiedCheckpoint(h int, node client.Client,
+	cert *certifiers.InquiringCertifier) (empty lc.Checkpoint, err error) {
 	// get the checkpoint for this height
 
 	// FIXME: cannot use cert.GetByHeight for now, as it also requires

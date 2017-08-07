@@ -8,15 +8,19 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/modules/etc"
 	"github.com/tendermint/go-wire"
 	lc "github.com/tendermint/light-client"
+	"github.com/tendermint/light-client/certifiers"
+	certclient "github.com/tendermint/light-client/certifiers/client"
+	"github.com/tendermint/tmlibs/log"
+	ctest "github.com/tendermint/tmlibs/test"
+
 	nm "github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/rpc/client"
 	rpctest "github.com/tendermint/tendermint/rpc/test"
-	"github.com/tendermint/tmlibs/log"
-	ctest "github.com/tendermint/tmlibs/test"
+
+	"github.com/tendermint/basecoin/app"
+	"github.com/tendermint/basecoin/modules/etc"
 )
 
 var node *nm.Node
@@ -77,9 +81,16 @@ func TestAppProofs(t *testing.T) {
 	require.EqualValues(0, br.CheckTx.Code, "%#v", br.CheckTx)
 	require.EqualValues(0, br.DeliverTx.Code)
 
-	// unfortunately we cannot tell the server to give us any height
-	// other than the most recent, so 0 is the only choice :(
-	val, _, proof, err := GetWithProof(k)
+	// this sets up our trust on the node based on some past point.
+	// maybe this can be cleaned up and made easy to reuse
+	source := certclient.New(cl)
+	trusted := certifiers.NewMemStoreProvider()
+	// let's start with some trust before the query...
+	seed, err := source.GetByHeight(br.Height - 2)
+	require.Nil(err, "%+v", err)
+	cert := certifiers.NewInquiring("foo", seed, trusted, source)
+
+	val, _, proof, err := CustomGetWithProof(k, cl, cert)
 	require.Nil(err, "%+v", err)
 	require.NotNil(proof)
 	assert.EqualValues(v, val)

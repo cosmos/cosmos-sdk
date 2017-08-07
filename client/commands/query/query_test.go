@@ -17,7 +17,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/modules/etc"
+	"github.com/tendermint/basecoin/modules/eyes"
 )
 
 var node *nm.Node
@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err)
 	}
-	app := app.NewBasecoin(etc.NewHandler(), store, logger)
+	app := app.NewBasecoin(eyes.NewHandler(), store, logger)
 	node = rpctest.StartTendermint(app)
 
 	code := m.Run()
@@ -47,7 +47,7 @@ func TestAppProofs(t *testing.T) {
 	k := []byte("my-key")
 	v := []byte("my-value")
 
-	tx := etc.SetTx{Key: k, Value: v}.Wrap()
+	tx := eyes.SetTx{Key: k, Value: v}.Wrap()
 	btx := wire.BinaryBytes(tx)
 	br, err := cl.BroadcastTxCommit(btx)
 	require.Nil(err, "%+v", err)
@@ -69,7 +69,7 @@ func TestAppProofs(t *testing.T) {
 	require.Nil(err, "%+v", err)
 	require.NotNil(proof)
 
-	var data etc.Data
+	var data eyes.Data
 	err = wire.ReadBinaryBytes(bs, &data)
 	require.Nil(err, "%+v", err)
 	assert.EqualValues(v, data.Value)

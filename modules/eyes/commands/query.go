@@ -14,15 +14,15 @@ import (
 	"github.com/tendermint/basecoin/stack"
 )
 
-// EtcQueryCmd - command to query raw data
-var EtcQueryCmd = &cobra.Command{
-	Use:   "etc [key]",
-	Short: "Get data stored under key in etc",
-	RunE:  commands.RequireInit(etcQueryCmd),
+// EyesQueryCmd - command to query raw data
+var EyesQueryCmd = &cobra.Command{
+	Use:   "eyes [key]",
+	Short: "Get data stored under key in eyes",
+	RunE:  commands.RequireInit(eyesQueryCmd),
 }
 
-func etcQueryCmd(cmd *cobra.Command, args []string) error {
-	var res etc.Data
+func eyesQueryCmd(cmd *cobra.Command, args []string) error {
+	var res eyes.Data
 
 	arg, err := commands.GetOneArg(args, "key")
 	if err != nil {
@@ -33,7 +33,7 @@ func etcQueryCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	key = stack.PrefixedKey(etc.Name, key)
+	key = stack.PrefixedKey(eyes.Name, key)
 	prove := !viper.GetBool(commands.FlagTrustNode)
 	height, err := query.GetParsed(key, &res, prove)
 	if err != nil {

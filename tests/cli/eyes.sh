@@ -40,7 +40,7 @@ test00SetGetRemove() {
     KEY="CAFE6000"
     VALUE="F00D4200"
 
-    assertFalse "line=${LINENO} data present" "${CLIENT_EXE} query etc ${KEY}"
+    assertFalse "line=${LINENO} data present" "${CLIENT_EXE} query eyes ${KEY}"
 
     # set data
     TXRES=$(${CLIENT_EXE} tx set --key=${KEY} --value=${VALUE})
@@ -49,7 +49,7 @@ test00SetGetRemove() {
     TX_HEIGHT=$(echo $TXRES | jq .height)
 
     # make sure it is set
-    DATA=$(${CLIENT_EXE} query etc ${KEY})
+    DATA=$(${CLIENT_EXE} query eyes ${KEY})
     assertTrue "line=${LINENO} data not set" $?
     assertEquals "line=${LINENO}" "\"${VALUE}\"" $(echo $DATA | jq .data.value)
 
@@ -58,7 +58,7 @@ test00SetGetRemove() {
     assertTrue "line=${LINENO}, found tx" $?
     if [ -n "$DEBUG" ]; then echo $TX; echo; fi
 
-    assertEquals "line=${LINENO}, proper type" "\"etc/set\"" $(echo $TX | jq .data.type)
+    assertEquals "line=${LINENO}, proper type" "\"eyes/set\"" $(echo $TX | jq .data.type)
     assertEquals "line=${LINENO}, proper key" "\"${KEY}\"" $(echo $TX | jq .data.data.key)
     assertEquals "line=${LINENO}, proper value" "\"${VALUE}\"" $(echo $TX | jq .data.data.value)
 }

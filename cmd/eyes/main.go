@@ -20,7 +20,7 @@ func BuildApp() basecoin.Handler {
 	).
 		// We do this to demo real usage, also embeds it under it's own namespace
 		Dispatch(
-			stack.WrapHandler(etc.NewHandler()),
+			stack.WrapHandler(eyes.NewHandler()),
 		)
 }
 

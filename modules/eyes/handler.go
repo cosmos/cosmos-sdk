@@ -1,4 +1,4 @@
-package etc
+package eyes
 
 import (
 	"github.com/tendermint/basecoin"
@@ -9,7 +9,7 @@ import (
 
 const (
 	// Name of the module for registering it
-	Name = "etc"
+	Name = "eyes"
 
 	// CostSet is the gas needed for the set operation
 	CostSet uint64 = 10

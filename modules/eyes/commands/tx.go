@@ -47,7 +47,7 @@ func setTxCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	tx := etc.NewSetTx(key, value)
+	tx := eyes.NewSetTx(key, value)
 	return txs.DoTx(tx)
 }
 
@@ -58,6 +58,6 @@ func removeTxCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	tx := etc.NewRemoveTx(key)
+	tx := eyes.NewRemoveTx(key)
 	return txs.DoTx(tx)
 }

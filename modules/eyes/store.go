@@ -1,4 +1,4 @@
-package etc
+package eyes
 
 import "github.com/tendermint/go-wire/data"
 

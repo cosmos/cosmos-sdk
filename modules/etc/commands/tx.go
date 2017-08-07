@@ -22,9 +22,10 @@ var RemoveTxCmd = &cobra.Command{
 	RunE:  commands.RequireInit(removeTxCmd),
 }
 
-//nolint
 const (
-	FlagKey   = "key"
+	// FlagKey is the cli flag to set the key
+	FlagKey = "key"
+	// FlagValue is the cli flag to set the value
 	FlagValue = "value"
 )
 

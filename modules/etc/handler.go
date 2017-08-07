@@ -73,7 +73,8 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx baseco
 	return
 }
 
-// doSetTx write to the store, overwriting any previous value
+// doSetTx writes to the store, overwriting any previous value
+// note that an empty response in DeliverTx is OK with no log or data returned
 func (h Handler) doSetTx(ctx basecoin.Context, store state.SimpleDB, tx SetTx) (res basecoin.DeliverResult, err error) {
 	data := NewData(tx.Value, ctx.BlockHeight())
 	store.Set(tx.Key, wire.BinaryBytes(data))
@@ -81,6 +82,7 @@ func (h Handler) doSetTx(ctx basecoin.Context, store state.SimpleDB, tx SetTx) (
 }
 
 // doRemoveTx deletes the value from the store and returns the last value
+// here we let res.Data to return the value over abci
 func (h Handler) doRemoveTx(ctx basecoin.Context, store state.SimpleDB, tx RemoveTx) (res basecoin.DeliverResult, err error) {
 	// we set res.Data so it gets returned to the client over the abci interface
 	res.Data = store.Get(tx.Key)

@@ -27,13 +27,12 @@ import (
 // BaseCli - main basecoin client command
 var BaseCli = &cobra.Command{
 	Use:   "basecli",
-	Short: "Light client for tendermint",
-	Long: `Basecli is an version of tmcli including custom logic to
-present a nice (not raw hex) interface to the basecoin blockchain structure.
+	Short: "Light client for Tendermint",
+	Long: `Basecli is a certifying light client for the basecoin abci app.
 
-This is a useful tool, but also serves to demonstrate how one can configure
-tmcli to work for any custom abci app.
-`,
+It leverages the power of the tendermint consensus algorithm get full
+cryptographic proof of all queries while only syncing a fraction of the
+block headers.`,
 }
 
 func main() {

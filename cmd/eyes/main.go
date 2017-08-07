@@ -35,7 +35,6 @@ func main() {
 		// out own init command to not require argument
 		InitCmd,
 		commands.StartCmd,
-		//commands.RelayCmd,
 		commands.UnsafeResetAllCmd,
 		commands.VersionCmd,
 	)

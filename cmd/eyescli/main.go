@@ -21,7 +21,7 @@ import (
 // EyesCli - main basecoin client command
 var EyesCli = &cobra.Command{
 	Use:   "eyescli",
-	Short: "Light client for tendermint",
+	Short: "Light client for Tendermint",
 	Long:  `EyesCli is the light client for a merkle key-value store (eyes)`,
 }
 
@@ -33,7 +33,7 @@ func main() {
 		// These are default parsers, but optional in your app (you can remove key)
 		query.TxQueryCmd,
 		query.KeyQueryCmd,
-		// this is out custom parser
+		// this is our custom parser
 		etccmd.EtcQueryCmd,
 	)
 

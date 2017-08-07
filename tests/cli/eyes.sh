@@ -20,14 +20,14 @@ oneTimeSetUp() {
     export EYE_HOME=${SERVE_DIR}
     ${SERVER_EXE} init --chain-id=$CHAIN_ID  >>$SERVER_LOG
     startServer $SERVE_DIR $SERVER_LOG
-    if [ $? != 0 ]; then return 1; fi
+    [ $? = 0 ] || return 1
 
     # Set up client - make sure you use the proper prefix if you set
     #   a custom CLIENT_EXE
     export EYE_HOME=${BASE_DIR}/client
 
     initClient $CHAIN_ID
-    if [ $? != 0 ]; then return 1; fi
+    [ $? = 0 ] || return 1
 
     printf "...Testing may begin!\n\n\n"
 }

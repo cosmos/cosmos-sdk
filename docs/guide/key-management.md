@@ -17,8 +17,6 @@ update
 
 ## Create keys
 
-To get an app started quickly, or for dev/test scripting, the `basecli keys new alice --unsafe` command can be used. However, this tutorial is instead concerned with the advanced features of the tooling that don't compromise safety considerations.
-
 `basecli keys new` has two inputs (name, password) and two outputs (address, seed).
 
 First, we name our key:
@@ -112,7 +110,9 @@ Again, we can use the `--output json` flag:
 ]
 ```
 
-If we want information about a specific key:
+to get machine readable output.
+
+If we want information about one specific key, then:
 
 ```
 basecli keys get charlie --output json
@@ -120,7 +120,21 @@ basecli keys get charlie --output json
 
 will, for example, return the info for only the "charlie" key returned from the previous `basecoin keys list` command.
 
-Before moving on, let's set some configurations to make `--output json` the default. We can use either the `$BC_HOME` (?) env var or use a `config.toml` that is located in (?)
+The keys tooling can support different types of keys with a flag:
+
+```
+basecli keys new bit --type secp256k1
+```
+
+and you'll see the difference in the `"type": field from `basecli keys get`
+
+Before moving on, let's set an enviroment variable to make `--output json` the default.
+
+Either run or put in your `~/.bash_profile` the following line:
+
+```
+export BC_OUTPUT=json
+```
 
 ## Recover a key
 

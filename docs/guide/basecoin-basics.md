@@ -78,6 +78,7 @@ If you have trouble, see the [installation guide](install.md).
 
 Note the above command installs two binaries: `basecoin` and `basecli`.
 The former is the running node. The latter is a command-line light-client.
+This tutorial assumes you have a 'fresh' working environment. See [how to clean up, below](#clean-up).
 
 ## Generate some keys
 
@@ -85,12 +86,6 @@ Let's generate two keys, one to receive an initial allocation of coins,
 and one to send some coins to later:
 
 ```shelldown[1]
-# WARNING: this will wipe out any existing info in the ~/.basecli dir
-# including private keys, don't run if you have lots of local state already
-# while we're at it let's remove the working directory for the full node too
-basecli reset_all
-rm -rf ~/.basecoin
-
 basecli keys new cool
 basecli keys new friend
 ```
@@ -101,13 +96,9 @@ You'll need to enter passwords. You can view your key names and addresses with
 
 ## Initialize Basecoin
 
-
 To initialize a new Basecoin blockchain, run:
 
 ```shelldown[2]
-# WARNING: this will wipe out any existing info in the ~/.basecoin dir
-# don't run if you have lots of local state already
-rm -rf ~/.basecoin
 basecoin init <ADDRESS>
 ```
 
@@ -211,16 +202,16 @@ See `basecli tx send --help` for additional details.
 ## Proof
 
 Even if you don't see it in the UI, the result of every query comes with a
-proof.  This is a Merkle proof that the result of the query is actually
-contained in the state.  and the state's Merkle root is contained in a recent
-block header.  Behind the scenes, `countercli` will not only verify that this
+proof. This is a Merkle proof that the result of the query is actually
+contained in the state. And the state's Merkle root is contained in a recent
+block header. Behind the scenes, `countercli` will not only verify that this
 state matches the header, but also that the header is properly signed by the
-known validator set.  It will even update the validator set as needed, so long
+known validator set. It will even update the validator set as needed, so long
 as there have not been major changes and it is secure to do so. So, if you
 wonder why the query may take a second... there is a lot of work going on in
 the background to make sure even a lying full node can't trick your client.
 
-In a latter [guide on InterBlockchainCommunication](ibc.md), we'll use these
+In a latter [guide on InterBlockchain Communication](ibc.md), we'll use these
 proofs to post transactions to other chains.
 
 ## Accounts and Transactions
@@ -230,11 +221,11 @@ understand the underlying data structures.
 
 ### Accounts
 
-The Basecoin state consists entirely of a set of accounts.  Each account
+The Basecoin state consists entirely of a set of accounts. Each account
 contains a public key, a balance in many different coin denominations, and a
-strictly increasing sequence number for replay protection.  This type of
+strictly increasing sequence number for replay protection. This type of
 account was directly inspired by accounts in Ethereum, and is unlike Bitcoin's
-use of Unspent Transaction Outputs (UTXOs).  Note Basecoin is a multi-asset
+use of Unspent Transaction Outputs (UTXOs). Note Basecoin is a multi-asset
 cryptocurrency, so each account can have many different kinds of tokens.
 
 ```golang
@@ -259,16 +250,16 @@ Accounts are serialized and stored in a Merkle tree under the key
 `base/a/<address>`, where `<address>` is the address of the account.
 Typically, the address of the account is the 20-byte `RIPEMD160` hash of the
 public key, but other formats are acceptable as well, as defined in the
-[Tendermint crypto library](https://github.com/tendermint/go-crypto).  The
+[Tendermint crypto library](https://github.com/tendermint/go-crypto). The
 Merkle tree used in Basecoin is a balanced, binary search tree, which we call
 an [IAVL tree](https://github.com/tendermint/go-merkle).
 
 ### Transactions
 
 Basecoin defines a transaction type, the `SendTx`, which allows tokens
-to be sent to other accounts.  The `SendTx` takes a list of inputs and a list
+to be sent to other accounts. The `SendTx` takes a list of inputs and a list
 of outputs, and transfers all the tokens listed in the inputs from their
-corresponding accounts to the accounts listed in the output.  The `SendTx` is
+corresponding accounts to the accounts listed in the output. The `SendTx` is
 structured as follows:
 
 ```golang
@@ -293,15 +284,15 @@ type TxOutput struct {
 }
 ```
 
-Note the `SendTx` includes a field for `Gas` and `Fee`.  The `Gas` limits the
+Note the `SendTx` includes a field for `Gas` and `Fee`. The `Gas` limits the
 total amount of computation that can be done by the transaction, while the
-`Fee` refers to the total amount paid in fees.  This is slightly different from
+`Fee` refers to the total amount paid in fees. This is slightly different from
 Ethereum's concept of `Gas` and `GasPrice`, where `Fee = Gas x GasPrice`. In
 Basecoin, the `Gas` and `Fee` are independent, and the `GasPrice` is implicit.
 
 In Basecoin, the `Fee` is meant to be used by the validators to inform the
-ordering of transactions, like in Bitcoin.  And the `Gas` is meant to be used
-by the application plugin to control its execution.  There is currently no
+ordering of transactions, like in Bitcoin. And the `Gas` is meant to be used
+by the application plugin to control its execution. There is currently no
 means to pass `Fee` information to the Tendermint validators, but it will come
 soon...
 
@@ -314,18 +305,30 @@ the signature itself.
 
 Finally, note that the use of multiple inputs and multiple outputs allows us to
 send many different types of tokens between many different accounts at once in
-an atomic transaction.  Thus, the `SendTx` can serve as a basic unit of
+an atomic transaction. Thus, the `SendTx` can serve as a basic unit of
 decentralized exchange. When using multiple inputs and outputs, you must make
 sure that the sum of coins of the inputs equals the sum of coins of the outputs
 (no creating money), and that all accounts that provide inputs have signed the
 transaction.
+
+## Clean Up
+
+**WARNING:** Running these commands will wipe out any existing information in both the `~/.basecli` and `~/.basecoin` directories, including private keys.
+
+To remove all the files created and refresh your environment (e.g., if starting this tutorial again or trying something new), the following commands are run:
+
+```shelldown[end-of-tutorials]
+basecli reset_all
+rm -rf ~/.basecoin
+rm -rf ~/.basecoin
+```
 
 ## Conclusion
 
 In this guide, we introduced the `basecoin` and `basecli` tools, demonstrated
 how to start a new basecoin blockchain and how to send tokens between accounts,
 and discussed the underlying data types for accounts and transactions,
-specifically the `Account` and the `SendTx`.  In the [next
+specifically the `Account` and the `SendTx`. In the [next
 guide](basecoin-plugins.md), we introduce the Basecoin plugin system, which
 uses a new transaction type, the `AppTx`, to extend the functionality of the
 Basecoin system with arbitrary logic.

@@ -5,7 +5,7 @@ import (
 
 	"github.com/tendermint/basecoin/client/commands"
 	"github.com/tendermint/basecoin/client/commands/txs"
-	"github.com/tendermint/basecoin/modules/etc"
+	"github.com/tendermint/basecoin/modules/eyes"
 )
 
 // SetTxCmd is CLI command to set data

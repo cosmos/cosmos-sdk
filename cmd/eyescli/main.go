@@ -15,7 +15,7 @@ import (
 	rpccmd "github.com/tendermint/basecoin/client/commands/rpc"
 	"github.com/tendermint/basecoin/client/commands/seeds"
 	txcmd "github.com/tendermint/basecoin/client/commands/txs"
-	etccmd "github.com/tendermint/basecoin/modules/etc/commands"
+	etccmd "github.com/tendermint/basecoin/modules/eyes/commands"
 )
 
 // EyesCli - main basecoin client command

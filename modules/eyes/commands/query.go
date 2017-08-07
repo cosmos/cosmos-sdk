@@ -10,7 +10,7 @@ import (
 
 	"github.com/tendermint/basecoin/client/commands"
 	"github.com/tendermint/basecoin/client/commands/query"
-	"github.com/tendermint/basecoin/modules/etc"
+	"github.com/tendermint/basecoin/modules/eyes"
 	"github.com/tendermint/basecoin/stack"
 )
 

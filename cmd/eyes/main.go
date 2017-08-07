@@ -8,7 +8,7 @@ import (
 	"github.com/tendermint/basecoin"
 	"github.com/tendermint/basecoin/cmd/basecoin/commands"
 	"github.com/tendermint/basecoin/modules/base"
-	"github.com/tendermint/basecoin/modules/etc"
+	"github.com/tendermint/basecoin/modules/eyes"
 	"github.com/tendermint/basecoin/stack"
 )
 

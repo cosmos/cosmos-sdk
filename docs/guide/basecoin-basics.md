@@ -62,13 +62,13 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #get this files director
 
 # Basecoin Basics
 
-Here we explain how to get started with a simple Basecoin blockchain,
+Here we explain how to get started with a basic Basecoin blockchain,
 how to send transactions between accounts using the `basecoin` tool,
 and what is happening under the hood.
 
 ## Install
 
-Installing Basecoin is simple:
+With go, it's one command:
 
 ```shelldown[0]
 go get -u github.com/tendermint/basecoin/cmd/...
@@ -265,7 +265,7 @@ an [IAVL tree](https://github.com/tendermint/go-merkle).
 
 ### Transactions
 
-Basecoin defines a simple transaction type, the `SendTx`, which allows tokens
+Basecoin defines a transaction type, the `SendTx`, which allows tokens
 to be sent to other accounts.  The `SendTx` takes a list of inputs and a list
 of outputs, and transfers all the tokens listed in the inputs from their
 corresponding accounts to the accounts listed in the output.  The `SendTx` is

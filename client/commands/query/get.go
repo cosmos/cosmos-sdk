@@ -80,7 +80,6 @@ func getWithProof(key []byte, node client.Client, cert Certifier) (data.Bytes, u
 	if err != nil {
 		return nil, 0, nil, nil, err
 	}
-	ph := int(resp.Height)
 
 	// make sure the proof is the proper height
 	if !resp.Code.IsOK() {
@@ -89,11 +88,11 @@ func getWithProof(key []byte, node client.Client, cert Certifier) (data.Bytes, u
 	if len(resp.Key) == 0 || len(resp.Proof) == 0 {
 		return nil, 0, nil, nil, lc.ErrNoData()
 	}
-	if ph != 0 && ph != int(resp.Height) {
-		return nil, 0, nil, nil, lc.ErrHeightMismatch(ph, int(resp.Height))
+	if resp.Height == 0 {
+		return nil, 0, nil, nil, errors.New("Height returned is zero")
 	}
 
-	check, err := GetCertifiedCheckpoint(ph, node, cert)
+	check, err := GetCertifiedCheckpoint(int(resp.Height), node, cert)
 	if err != nil {
 		return nil, 0, nil, nil, err
 	}

@@ -11,16 +11,13 @@ import (
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
 	lc "github.com/tendermint/light-client"
+	"github.com/tendermint/light-client/certifiers"
 	"github.com/tendermint/light-client/proofs"
 	"github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/tendermint/basecoin/client/commands"
 )
-
-type Certifier interface {
-	Certify(check lc.Checkpoint) error
-}
 
 // GetParsed does most of the work of the query commands, but is quite
 // opinionated, so if you want more control about parsing, call Get
@@ -73,7 +70,7 @@ func GetWithProof(key []byte) (data.Bytes, uint64,
 	return getWithProof(key, node, cert)
 }
 
-func getWithProof(key []byte, node client.Client, cert Certifier) (data.Bytes, uint64,
+func getWithProof(key []byte, node client.Client, cert certifiers.Certifier) (data.Bytes, uint64,
 	*iavl.KeyExistsProof, *iavl.KeyNotExistsProof, error) {
 
 	resp, err := node.ABCIQuery("/key", key, true)
@@ -133,7 +130,7 @@ func getWithProof(key []byte, node client.Client, cert Certifier) (data.Bytes, u
 // GetCertifiedCheckpoint gets the signed header for a given height
 // and certifies it.  Returns error if unable to get a proven header.
 func GetCertifiedCheckpoint(h int, node client.Client,
-	cert Certifier) (empty lc.Checkpoint, err error) {
+	cert certifiers.Certifier) (empty lc.Checkpoint, err error) {
 	// get the checkpoint for this height
 
 	// FIXME: cannot use cert.GetByHeight for now, as it also requires

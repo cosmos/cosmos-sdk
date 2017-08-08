@@ -41,7 +41,6 @@ func TestAppProofs(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	cl := client.NewLocal(node)
-	// make sure one block is created
 	client.WaitForHeight(cl, 1, nil)
 
 	k := []byte("my-key")
@@ -54,22 +53,19 @@ func TestAppProofs(t *testing.T) {
 	require.EqualValues(0, br.CheckTx.Code, "%#v", br.CheckTx)
 	require.EqualValues(0, br.DeliverTx.Code)
 
-	// this sets up our trust on the node based on some past point.
-	// maybe this can be cleaned up and made easy to reuse
+	// This sets up our trust on the node based on some past point.
 	source := certclient.New(cl)
-	trusted := certifiers.NewMemStoreProvider()
-	// let's start with some trust before the query...
 	seed, err := source.GetByHeight(br.Height - 2)
 	require.Nil(err, "%+v", err)
-	cert := certifiers.NewInquiring("my-chain", seed, trusted, source)
+	cert := certifiers.NewStatic("my-chain", seed.Validators)
 
 	// Test existing key.
+	var data eyes.Data
 
 	bs, _, proofExists, _, err := getWithProof(k, cl, cert)
 	require.Nil(err, "%+v", err)
 	require.NotNil(proofExists)
 
-	var data eyes.Data
 	err = wire.ReadBinaryBytes(bs, &data)
 	require.Nil(err, "%+v", err)
 	assert.EqualValues(v, data.Value)
@@ -77,7 +73,6 @@ func TestAppProofs(t *testing.T) {
 	assert.Nil(err, "%+v", err)
 
 	// Test non-existing key.
-
 	missing := []byte("my-missing-key")
 	bs, _, proofExists, proofNotExists, err := getWithProof(missing, cl, cert)
 	require.Nil(err, "%+v", err)

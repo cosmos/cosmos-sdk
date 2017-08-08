@@ -65,9 +65,9 @@ func TestAppProofs(t *testing.T) {
 
 	// Test existing key.
 
-	bs, _, proof, err := CustomGetWithProof(k, cl, cert)
+	bs, _, proofExists, _, err := CustomGetWithProof(k, cl, cert)
 	require.Nil(err, "%+v", err)
-	require.NotNil(proof)
+	require.NotNil(proofExists)
 
 	var data eyes.Data
 	err = wire.ReadBinaryBytes(bs, &data)
@@ -76,10 +76,10 @@ func TestAppProofs(t *testing.T) {
 
 	// Test non-existing key.
 
-	// TODO: This currently fails.
 	missing := []byte("my-missing-key")
-	bs, _, proof, err = CustomGetWithProof(missing, cl, cert)
+	bs, _, proofExists, proofNotExists, err := CustomGetWithProof(missing, cl, cert)
 	require.Nil(err, "%+v", err)
 	require.Nil(bs)
-	require.NotNil(proof)
+	require.Nil(proofExists)
+	require.NotNil(proofNotExists)
 }

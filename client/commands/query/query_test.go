@@ -73,6 +73,8 @@ func TestAppProofs(t *testing.T) {
 	err = wire.ReadBinaryBytes(bs, &data)
 	require.Nil(err, "%+v", err)
 	assert.EqualValues(v, data.Value)
+	err = proofExists.Verify(k, bs, proofExists.RootHash)
+	assert.Nil(err, "%+v", err)
 
 	// Test non-existing key.
 
@@ -82,4 +84,8 @@ func TestAppProofs(t *testing.T) {
 	require.Nil(bs)
 	require.Nil(proofExists)
 	require.NotNil(proofNotExists)
+	err = proofNotExists.Verify(missing, proofNotExists.RootHash)
+	assert.Nil(err, "%+v", err)
+	err = proofNotExists.Verify(k, proofNotExists.RootHash)
+	assert.NotNil(err)
 }

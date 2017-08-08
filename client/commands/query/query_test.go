@@ -65,7 +65,7 @@ func TestAppProofs(t *testing.T) {
 
 	// Test existing key.
 
-	bs, _, proofExists, _, err := CustomGetWithProof(k, cl, cert)
+	bs, _, proofExists, _, err := getWithProof(k, cl, cert)
 	require.Nil(err, "%+v", err)
 	require.NotNil(proofExists)
 
@@ -77,7 +77,7 @@ func TestAppProofs(t *testing.T) {
 	// Test non-existing key.
 
 	missing := []byte("my-missing-key")
-	bs, _, proofExists, proofNotExists, err := CustomGetWithProof(missing, cl, cert)
+	bs, _, proofExists, proofNotExists, err := getWithProof(missing, cl, cert)
 	require.Nil(err, "%+v", err)
 	require.Nil(bs)
 	require.Nil(proofExists)

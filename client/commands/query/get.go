@@ -70,11 +70,10 @@ func GetWithProof(key []byte) (data.Bytes, uint64,
 	if err != nil {
 		return nil, 0, nil, nil, err
 	}
-	return CustomGetWithProof(key, node, cert)
+	return getWithProof(key, node, cert)
 }
 
-// TODO: fix this up alexis
-func CustomGetWithProof(key []byte, node client.Client, cert Certifier) (data.Bytes, uint64,
+func getWithProof(key []byte, node client.Client, cert Certifier) (data.Bytes, uint64,
 	*iavl.KeyExistsProof, *iavl.KeyNotExistsProof, error) {
 
 	resp, err := node.ABCIQuery("/key", key, true)

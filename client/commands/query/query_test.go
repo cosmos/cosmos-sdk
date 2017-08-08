@@ -3,7 +3,6 @@ package query
 import (
 	"os"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -42,7 +41,8 @@ func TestAppProofs(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	cl := client.NewLocal(node)
-	time.Sleep(200 * time.Millisecond)
+	// make sure one block is created
+	client.WaitForHeight(cl, 1, nil)
 
 	k := []byte("my-key")
 	v := []byte("my-value")

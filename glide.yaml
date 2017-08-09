@@ -29,7 +29,7 @@ import:
   - certifiers/client
   - certifiers/files
 - package: github.com/tendermint/merkleeyes
-  version: unstable
+  version: origin/unstable
   subpackages:
   - client
   - iavl

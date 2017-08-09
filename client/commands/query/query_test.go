@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/go-wire"
+	lc "github.com/tendermint/light-client"
 	"github.com/tendermint/light-client/certifiers"
 	certclient "github.com/tendermint/light-client/certifiers/client"
 	nm "github.com/tendermint/tendermint/node"
@@ -75,7 +76,7 @@ func TestAppProofs(t *testing.T) {
 	// Test non-existing key.
 	missing := []byte("my-missing-key")
 	bs, _, proofExists, proofNotExists, err := getWithProof(missing, cl, cert)
-	require.Nil(err, "%+v", err)
+	require.True(lc.IsNoDataErr(err))
 	require.Nil(bs)
 	require.Nil(proofExists)
 	require.NotNil(proofNotExists)

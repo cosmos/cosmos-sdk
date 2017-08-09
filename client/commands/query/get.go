@@ -124,7 +124,7 @@ func getWithProof(key []byte, node client.Client, cert certifiers.Certifier) (da
 		return nil, 0, nil, nil, err
 	}
 
-	return data.Bytes(resp.Value), resp.Height, nil, proof, nil
+	return nil, resp.Height, nil, proof, lc.ErrNoData()
 }
 
 // GetCertifiedCheckpoint gets the signed header for a given height

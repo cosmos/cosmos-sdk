@@ -89,7 +89,7 @@ func getWithProof(key []byte, node client.Client, cert certifiers.Certifier) (da
 		return nil, 0, nil, nil, errors.New("Height returned is zero")
 	}
 
-	check, err := GetCertifiedCheckpoint(int(resp.Height), node, cert)
+	check, err := getCertifiedCheckpoint(int(resp.Height), node, cert)
 	if err != nil {
 		return nil, 0, nil, nil, err
 	}
@@ -127,9 +127,9 @@ func getWithProof(key []byte, node client.Client, cert certifiers.Certifier) (da
 	return nil, resp.Height, nil, proof, lc.ErrNoData()
 }
 
-// GetCertifiedCheckpoint gets the signed header for a given height
+// getCertifiedCheckpoint gets the signed header for a given height
 // and certifies it.  Returns error if unable to get a proven header.
-func GetCertifiedCheckpoint(h int, node client.Client,
+func getCertifiedCheckpoint(h int, node client.Client,
 	cert certifiers.Certifier) (empty lc.Checkpoint, err error) {
 
 	// FIXME: cannot use cert.GetByHeight for now, as it also requires

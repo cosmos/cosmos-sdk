@@ -51,7 +51,7 @@ func txQueryCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	check, err := GetCertifiedCheckpoint(res.Height, node, cert)
+	check, err := getCertifiedCheckpoint(res.Height, node, cert)
 	if err != nil {
 		return err
 	}

@@ -102,7 +102,7 @@ func getWithProof(key []byte, node client.Client, cert certifiers.Certifier) (da
 			return nil, 0, nil, nil, err
 		}
 
-		// validate the proof against the certified header to ensure data integrity
+		// Validate the proof against the certified header to ensure data integrity.
 		err = proof.Verify(resp.Key, resp.Value, check.Header.AppHash)
 		if err != nil {
 			return nil, 0, nil, nil, err
@@ -118,7 +118,7 @@ func getWithProof(key []byte, node client.Client, cert certifiers.Certifier) (da
 		return nil, 0, nil, nil, err
 	}
 
-	// validate the proof against the certified header to ensure data integrity
+	// Validate the proof against the certified header to ensure data integrity.
 	err = proof.Verify(resp.Key, check.Header.AppHash)
 	if err != nil {
 		return nil, 0, nil, proof, errors.Wrap(err, "Couldn't verify proof")
@@ -131,7 +131,6 @@ func getWithProof(key []byte, node client.Client, cert certifiers.Certifier) (da
 // and certifies it.  Returns error if unable to get a proven header.
 func GetCertifiedCheckpoint(h int, node client.Client,
 	cert certifiers.Certifier) (empty lc.Checkpoint, err error) {
-	// get the checkpoint for this height
 
 	// FIXME: cannot use cert.GetByHeight for now, as it also requires
 	// Validators and will fail on querying tendermint for non-current height.

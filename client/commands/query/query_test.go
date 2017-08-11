@@ -64,9 +64,10 @@ func TestAppProofs(t *testing.T) {
 	// Test existing key.
 	var data eyes.Data
 
-	bs, _, proofExists, _, err := getWithProof(k, cl, cert)
+	bs, height, proofExists, _, err := getWithProof(k, cl, cert)
 	require.Nil(err, "%+v", err)
 	require.NotNil(proofExists)
+	require.True(uint64(br.Height) < height)
 
 	err = wire.ReadBinaryBytes(bs, &data)
 	require.Nil(err, "%+v", err)

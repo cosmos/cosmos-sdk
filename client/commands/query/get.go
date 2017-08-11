@@ -70,61 +70,69 @@ func GetWithProof(key []byte) (data.Bytes, uint64,
 	return getWithProof(key, node, cert)
 }
 
-func getWithProof(key []byte, node client.Client, cert certifiers.Certifier) (data.Bytes, uint64,
-	*iavl.KeyExistsProof, *iavl.KeyNotExistsProof, error) {
+func getWithProof(key []byte, node client.Client, cert certifiers.Certifier) (
+	val data.Bytes, height uint64, eproof *iavl.KeyExistsProof, neproof *iavl.KeyNotExistsProof, err error) {
 
 	resp, err := node.ABCIQuery("/key", key, true)
 	if err != nil {
-		return nil, 0, nil, nil, err
+		return
 	}
 
 	// make sure the proof is the proper height
 	if !resp.Code.IsOK() {
-		return nil, 0, nil, nil, errors.Errorf("Query error %d: %s", resp.Code, resp.Code.String())
+		err = errors.Errorf("Query error %d: %s", resp.Code, resp.Code.String())
+		return
 	}
 	if len(resp.Key) == 0 || len(resp.Proof) == 0 {
-		return nil, 0, nil, nil, lc.ErrNoData()
+		err = lc.ErrNoData()
+		return
 	}
 	if resp.Height == 0 {
-		return nil, 0, nil, nil, errors.New("Height returned is zero")
+		err = errors.New("Height returned is zero")
+		return
 	}
 
 	check, err := getCertifiedCheckpoint(int(resp.Height), node, cert)
 	if err != nil {
-		return nil, 0, nil, nil, err
+		return
 	}
 
 	if len(resp.Value) > 0 {
 		// The key was found, construct a proof of existence.
-		proof := new(iavl.KeyExistsProof)
-		err = wire.ReadBinaryBytes(resp.Proof, &proof)
+		eproof = new(iavl.KeyExistsProof)
+		err = wire.ReadBinaryBytes(resp.Proof, &eproof)
 		if err != nil {
-			return nil, 0, nil, nil, err
+			err = errors.Wrap(err, "Error reading proof")
+			return
 		}
 
 		// Validate the proof against the certified header to ensure data integrity.
-		err = proof.Verify(resp.Key, resp.Value, check.Header.AppHash)
+		err = eproof.Verify(resp.Key, resp.Value, check.Header.AppHash)
 		if err != nil {
-			return nil, 0, nil, nil, err
+			err = errors.Wrap(err, "Couldn't verify proof")
+			return
+		}
+		val = data.Bytes(resp.Value)
+	} else {
+		// The key wasn't found, construct a proof of non-existence.
+		neproof = new(iavl.KeyNotExistsProof)
+		err = wire.ReadBinaryBytes(resp.Proof, &neproof)
+		if err != nil {
+			err = errors.Wrap(err, "Error reading proof")
+			return
 		}
 
-		return data.Bytes(resp.Value), resp.Height, proof, nil, nil
+		// Validate the proof against the certified header to ensure data integrity.
+		err = neproof.Verify(resp.Key, check.Header.AppHash)
+		if err != nil {
+			err = errors.Wrap(err, "Couldn't verify proof")
+			return
+		}
+		err = lc.ErrNoData()
 	}
 
-	// The key wasn't found, construct a proof of non-existence.
-	proof := new(iavl.KeyNotExistsProof)
-	err = wire.ReadBinaryBytes(resp.Proof, &proof)
-	if err != nil {
-		return nil, 0, nil, nil, err
-	}
-
-	// Validate the proof against the certified header to ensure data integrity.
-	err = proof.Verify(resp.Key, check.Header.AppHash)
-	if err != nil {
-		return nil, 0, nil, proof, errors.Wrap(err, "Couldn't verify proof")
-	}
-
-	return nil, resp.Height, nil, proof, lc.ErrNoData()
+	height = resp.Height
+	return
 }
 
 // getCertifiedCheckpoint gets the signed header for a given height

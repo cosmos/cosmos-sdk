@@ -13,6 +13,7 @@ import (
 	"github.com/tendermint/basecoin/client/commands"
 	rest "github.com/tendermint/basecoin/client/rest"
 	coinrest "github.com/tendermint/basecoin/modules/coin/rest"
+	noncerest "github.com/tendermint/basecoin/modules/nonce/rest"
 	rolerest "github.com/tendermint/basecoin/modules/roles/rest"
 	"github.com/tendermint/tmlibs/cli"
 )
@@ -58,6 +59,9 @@ func serve(cmd *cobra.Command, args []string) error {
 		rest.RegisterSignTx,
 		// Basecoin post transaction handler
 		rest.RegisterPostTx,
+
+		// Nonce query handler
+		noncerest.RegisterQueryNonce,
 	}
 
 	for _, routeRegistrar := range routeRegistrars {

@@ -61,18 +61,22 @@ func TestAppProofs(t *testing.T) {
 	require.Nil(err, "%+v", err)
 	cert := certifiers.NewStatic("my-chain", seed.Validators)
 
+	latest, err := source.GetLatestCommit()
+	require.Nil(err, "%+v", err)
+	rootHash := latest.Header.AppHash
+
 	// Test existing key.
 	var data eyes.Data
 
 	bs, height, proofExists, _, err := getWithProof(k, cl, cert)
 	require.Nil(err, "%+v", err)
 	require.NotNil(proofExists)
-	require.True(uint64(br.Height) < height)
+	require.True(height >= uint64(latest.Header.Height))
 
 	err = wire.ReadBinaryBytes(bs, &data)
 	require.Nil(err, "%+v", err)
 	assert.EqualValues(v, data.Value)
-	err = proofExists.Verify(k, bs, proofExists.RootHash)
+	err = proofExists.Verify(k, bs, rootHash)
 	assert.Nil(err, "%+v", err)
 
 	// Test non-existing key.
@@ -82,9 +86,9 @@ func TestAppProofs(t *testing.T) {
 	require.Nil(bs)
 	require.Nil(proofExists)
 	require.NotNil(proofNotExists)
-	err = proofNotExists.Verify(missing, proofNotExists.RootHash)
+	err = proofNotExists.Verify(missing, rootHash)
 	assert.Nil(err, "%+v", err)
-	err = proofNotExists.Verify(k, proofNotExists.RootHash)
+	err = proofNotExists.Verify(k, rootHash)
 	assert.NotNil(err)
 }
 

@@ -2,13 +2,32 @@
 
 baseserver is the REST counterpart to basecli
 
-## Compiling and running it
+## Compiling
+
+### With Make
+```shell
+$ make install
+```
+
+### Cross compile binaries for linux, windows and darwin
+```shell
+$ make all
+```
+
+### Manually
 ```shell
 $ go get -u -v github.com/tendermint/basecoin/cmd/baseserver
+```
+
+Note: The recommended method of installing is `with make` rather
+than manually, since `with make` bakes into the respective binaries
+the version information, which helps in easy diagnosis.
+
+## Running it
+```shell
 $ baseserver init
 $ baseserver serve --port 8888
 ```
-
 to run the server at localhost:8888, otherwise if you don't specify --port,
 by default the server will be run on port 8998.
 

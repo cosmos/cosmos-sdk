@@ -29,6 +29,13 @@ var serveCmd = &cobra.Command{
 	RunE:  serve,
 }
 
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Version information about the light REST client for tendermint",
+	Long:  "Version information about the light REST client for tendermint",
+	RunE:  runVersion,
+}
+
 const (
 	envPortFlag = "port"
 	defaultAlgo = "ed25519"
@@ -69,12 +76,23 @@ func serve(cmd *cobra.Command, args []string) error {
 	return http.ListenAndServe(addr, router)
 }
 
+var (
+	version    = "0.0.1"
+	CommitHash = "<UNFILLED>"
+)
+
+func runVersion(cmd *cobra.Command, args []string) error {
+	fmt.Printf("%s:%s\n", version, CommitHash[:10])
+	return nil
+}
+
 func main() {
 	commands.AddBasicFlags(srvCli)
 
 	srvCli.AddCommand(
 		commands.InitCmd,
 		serveCmd,
+		versionCmd,
 	)
 
 	// TODO: Decide whether to use $HOME/.basecli for compatibility

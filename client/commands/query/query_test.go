@@ -51,33 +51,33 @@ func TestAppProofs(t *testing.T) {
 	tx := eyes.SetTx{Key: k, Value: v}.Wrap()
 	btx := wire.BinaryBytes(tx)
 	br, err := cl.BroadcastTxCommit(btx)
-	require.Nil(err, "%+v", err)
+	require.NoError(err, "%+v", err)
 	require.EqualValues(0, br.CheckTx.Code, "%#v", br.CheckTx)
 	require.EqualValues(0, br.DeliverTx.Code)
 
 	// This sets up our trust on the node based on some past point.
 	source := certclient.New(cl)
 	seed, err := source.GetByHeight(br.Height - 2)
-	require.Nil(err, "%+v", err)
+	require.NoError(err, "%+v", err)
 	cert := certifiers.NewStatic("my-chain", seed.Validators)
 
 	latest, err := source.GetLatestCommit()
-	require.Nil(err, "%+v", err)
+	require.NoError(err, "%+v", err)
 	rootHash := latest.Header.AppHash
 
 	// Test existing key.
 	var data eyes.Data
 
 	bs, height, proofExists, _, err := getWithProof(k, cl, cert)
-	require.Nil(err, "%+v", err)
+	require.NoError(err, "%+v", err)
 	require.NotNil(proofExists)
 	require.True(height >= uint64(latest.Header.Height))
 
 	err = wire.ReadBinaryBytes(bs, &data)
-	require.Nil(err, "%+v", err)
+	require.NoError(err, "%+v", err)
 	assert.EqualValues(v, data.Value)
 	err = proofExists.Verify(k, bs, rootHash)
-	assert.Nil(err, "%+v", err)
+	assert.NoError(err, "%+v", err)
 
 	// Test non-existing key.
 	missing := []byte("my-missing-key")
@@ -87,9 +87,9 @@ func TestAppProofs(t *testing.T) {
 	require.Nil(proofExists)
 	require.NotNil(proofNotExists)
 	err = proofNotExists.Verify(missing, rootHash)
-	assert.Nil(err, "%+v", err)
+	assert.NoError(err, "%+v", err)
 	err = proofNotExists.Verify(k, rootHash)
-	assert.NotNil(err)
+	assert.Error(err)
 }
 
 func TestTxProofs(t *testing.T) {
@@ -102,13 +102,13 @@ func TestTxProofs(t *testing.T) {
 
 	btx := types.Tx(wire.BinaryBytes(tx))
 	br, err := cl.BroadcastTxCommit(btx)
-	require.Nil(err, "%+v", err)
+	require.NoError(err, "%+v", err)
 	require.EqualValues(0, br.CheckTx.Code, "%#v", br.CheckTx)
 	require.EqualValues(0, br.DeliverTx.Code)
 
 	source := certclient.New(cl)
 	seed, err := source.GetByHeight(br.Height - 2)
-	require.Nil(err, "%+v", err)
+	require.NoError(err, "%+v", err)
 	cert := certifiers.NewStatic("my-chain", seed.Validators)
 
 	// First let's make sure a bogus transaction hash returns a valid non-existence proof.
@@ -119,13 +119,13 @@ func TestTxProofs(t *testing.T) {
 	assert.Nil(proofExists, "existence proof should be nil")
 	require.NotNil(proofNotExists, "non-existence proof shouldn't be nil")
 	err = proofNotExists.Verify(key, proofNotExists.RootHash)
-	require.Nil(err, "%+v", err)
+	require.NoError(err, "%+v", err)
 
 	// Now let's check with the real tx hash.
 	key = btx.Hash()
 	res, err := cl.Tx(key, true)
-	require.Nil(err, "%+v", err)
+	require.NoError(err, "%+v", err)
 	require.NotNil(res)
 	err = res.Proof.Validate(key)
-	assert.Nil(err, "%+v", err)
+	assert.NoError(err, "%+v", err)
 }

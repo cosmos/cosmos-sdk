@@ -74,11 +74,12 @@ func main() {
 
 	srvCli.AddCommand(
 		commands.InitCmd,
+		commands.VersionCmd,
 		serveCmd,
 	)
 
-	// TODO: Decide whether to use $HOME/.basecli for compatibility
-	// or just use $HOME/.baseserver?
+	// this should share the dir with basecli, so you can use the cli and
+	// the api interchangeably
 	cmd := cli.PrepareMainCmd(srvCli, "BC", os.ExpandEnv("$HOME/.basecli"))
 	if err := cmd.Execute(); err != nil {
 		log.Fatal(err)

@@ -6,6 +6,7 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/tendermint/basecoin"
+	client "github.com/tendermint/basecoin/client/commands"
 	"github.com/tendermint/basecoin/cmd/basecoin/commands"
 	"github.com/tendermint/basecoin/modules/base"
 	"github.com/tendermint/basecoin/modules/eyes"
@@ -36,7 +37,7 @@ func main() {
 		InitCmd,
 		commands.StartCmd,
 		commands.UnsafeResetAllCmd,
-		commands.VersionCmd,
+		client.VersionCmd,
 	)
 
 	cmd := cli.PrepareMainCmd(rt, "EYE", os.ExpandEnv("$HOME/.eyes"))

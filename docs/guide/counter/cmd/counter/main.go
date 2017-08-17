@@ -7,6 +7,7 @@ import (
 
 	"github.com/tendermint/tmlibs/cli"
 
+	client "github.com/tendermint/basecoin/client/commands"
 	"github.com/tendermint/basecoin/cmd/basecoin/commands"
 	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
 )
@@ -24,7 +25,7 @@ func main() {
 		commands.InitCmd,
 		commands.StartCmd,
 		commands.UnsafeResetAllCmd,
-		commands.VersionCmd,
+		client.VersionCmd,
 	)
 
 	cmd := cli.PrepareMainCmd(RootCmd, "CT", os.ExpandEnv("$HOME/.counter"))

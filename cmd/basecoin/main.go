@@ -6,6 +6,7 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/tendermint/basecoin"
+	client "github.com/tendermint/basecoin/client/commands"
 	"github.com/tendermint/basecoin/cmd/basecoin/commands"
 	"github.com/tendermint/basecoin/modules/auth"
 	"github.com/tendermint/basecoin/modules/base"
@@ -51,7 +52,7 @@ func main() {
 		commands.StartCmd,
 		//commands.RelayCmd,
 		commands.UnsafeResetAllCmd,
-		commands.VersionCmd,
+		client.VersionCmd,
 	)
 
 	cmd := cli.PrepareMainCmd(rt, "BC", os.ExpandEnv("$HOME/.basecoin"))

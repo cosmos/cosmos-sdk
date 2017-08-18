@@ -15,6 +15,10 @@ type Bonsai struct {
 	Tree *iavl.IAVLTree
 }
 
+func (b *Bonsai) String() string {
+	return "Bonsai{" + b.Tree.String() + "}"
+}
+
 var _ SimpleDB = &Bonsai{}
 
 // NewBonsai wraps a merkle tree and tags it to track children

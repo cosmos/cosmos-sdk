@@ -197,7 +197,7 @@ func packetQueryCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// output queue, create a post packet
-	bs, height, proof, err := query.GetWithProof(key)
+	bs, height, proof, _, err := query.GetWithProof(key)
 	if err != nil {
 		return err
 	}

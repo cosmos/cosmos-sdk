@@ -1,5 +1,5 @@
-hash: 2848c30b31fb205f846dd7dfca14ebed8a3249cbc5aaa759066b2bab3e4bbf42
-updated: 2017-08-04T15:38:45.048261895+02:00
+hash: 246a02006fc46d91294fba71971c51477241b0ace2989df04d728ae6d09f1013
+updated: 2017-08-09T17:20:03.756445376+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -135,14 +135,14 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/light-client
-  version: fcf4e411583135a1900157b8b0274c41e20ea3a1
+  version: b2afece9635d11e77dd404019b9cf3885d34f4e5
   subpackages:
   - certifiers
   - certifiers/client
   - certifiers/files
   - proofs
 - name: github.com/tendermint/merkleeyes
-  version: 44c4c64c731db5be4261ff3971b01b7e19729419
+  version: 25b700b87a45619cb6bd85330ab4a81b7b7fbb0d
   subpackages:
   - client
   - iavl
@@ -166,6 +166,7 @@ imports:
   - rpc/lib/client
   - rpc/lib/server
   - rpc/lib/types
+  - rpc/test
   - state
   - state/txindex
   - state/txindex/kv

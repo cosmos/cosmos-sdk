@@ -6,3 +6,4 @@ build
 shunit2
 docs/guide/*.sh
 keys/
+bin/

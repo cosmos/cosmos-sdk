@@ -1,15 +1,18 @@
 package commands
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"os"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/config"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 // InitCmd - node initialization command
@@ -52,8 +55,16 @@ func initCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("`init` takes one argument, a basecoin account address. Generate one using `basecli keys new mykey`")
 	}
 	userAddr := args[0]
-	genesis := GetGenesisJSON(viper.GetString(FlagChainID), userAddr)
+	// verify this account is correct
+	data, err := hex.DecodeString(cmn.StripHex(userAddr))
+	if err != nil {
+		return errors.Wrap(err, "Invalid address")
+	}
+	if len(data) != 20 {
+		return errors.New("Address must be 20-bytes in hex")
+	}
 
+	genesis := GetGenesisJSON(viper.GetString(FlagChainID), userAddr)
 	return CreateGenesisValidatorFiles(cfg, genesis, cmd.Root().Name())
 }
 

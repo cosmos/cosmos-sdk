@@ -117,7 +117,7 @@ and this time you'll see the coins in the role's account:
 basecli tx send --amount=6000mycoin --from=role:10CAFE4E --to=65D406E028319289A0706E294F3B764F44EBA3CF --sequence=1 --assume-role=10CAFE4E --name=poor --multi --prepare=tx.json
 ```
 
-you'll be prompted for `poor`'s password and there won't be any `stdout` to the terminal. Note that the address in the `--to` flag matches the address of `poor`'s account from the beginning of the tutorial. The main output is the `tx.json` file that has just been created. In the above command, the `--assume-role` flag is used to (not clear, since we have --from), while the `--multi` flag is used in combination with `--prepare`, to specify the file that is prepared for a multi-sig transaction.
+you'll be prompted for `poor`'s password and there won't be any `stdout` to the terminal. Note that the address in the `--to` flag matches the address of `poor`'s account from the beginning of the tutorial. The main output is the `tx.json` file that has just been created. In the above command, the `--assume-role` flag is used to evaluate account permissions on the transaction, while the `--multi` flag is used in combination with `--prepare`, to specify the file that is prepared for a multi-sig transaction.
 
 The `tx.json` file will look like this:
 
@@ -229,7 +229,15 @@ which will give output similar to:
 }
 ```
 
-and voila! That's the basics for creating roles and sending multi-sig transactions. For 3 of 3, you'd repeat the last step for rich as well (recall that poor initiated the multi-sig transaction). We can check the balance of the role:
+and voila! That's the basics for creating roles and sending multi-sig transactions. For 3 of 3, you'd add an intermediate transactions like:
+
+```
+basecli tx --in=tx.json --name=igor --prepare=tx2.json
+```
+
+before having rich sign and send the transaction. The `--prepare` flag writes files to disk rather than sending the transaction and can be used to chain together multiple transactions.
+
+We can check the balance of the role:
 
 ```
 basecli query account role:10CAFE4E

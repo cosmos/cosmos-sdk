@@ -41,7 +41,7 @@ ERROR: Account bytes are empty for address 65D406E028319289A0706E294F3B764F44EBA
 This first step defines the parameters of a new role, which will have control of any coins sent to it, and only release them if correct conditions are met. In this example, we are going to make a 2/3 multi-sig wallet. Let's look a the command and dissect it below:
 
 ```
-basecli tx create-role --role="10CAFE4E" --min-sigs=2 --members=5E4CB7A4E729BA0A8B18DE99E21409B6D706D0F1,65D406E028319289A0706E294F3B764F44EBA3CF,CB76F4092D1B13475272B36585EBD15D22A2848D --sequence=1 --name=rich
+basecli tx create-role --role=10CAFE4E --min-sigs=2 --members=5E4CB7A4E729BA0A8B18DE99E21409B6D706D0F1,65D406E028319289A0706E294F3B764F44EBA3CF,CB76F4092D1B13475272B36585EBD15D22A2848D --sequence=1 --name=rich
 ```
 
 In the first part we are sending a transaction that creates a role, rather than transfering coins. The `--role` flag is the name of the role (in hex only) and must be in double quotes. The `--min-sigs` and `--members` define your multi-sig parameters. Here, we require a minimum of 2 signatures out of 3 members but we could easily say 3 of 5 or 9 of 10, or whatever your application requires. The `--members` flag requires a comma-seperated list of addresses that will be signatories on the role. Then we set the `--sequence` number for the transaction, which will start at 1 and must be incremented by 1 for every transaction from an account. Finally, we use the name of the key/account that will be used to create the role, in this case the account `rich`. 
@@ -69,7 +69,7 @@ showing the block height at which the transaction was committed and its hash. A 
 Let's look at the balance of the role that we've created:
 
 ```
-basecli query account role:"10CAFE4E"
+basecli query account role:10CAFE4E
 ```
 
 and it should be empty:
@@ -81,7 +81,7 @@ ERROR: Account bytes are empty for address role:10CAFE4E
 Next, we want to send coins _to_ that role. Notice that because this is the second transaction being sent by rich, we need to increase `--sequence` to `2`: 
 
 ```
-basecli tx send --fee=90mycoin --amount=10000mycoin --to=role:"10CAFE4E" --sequence=2 --name=rich
+basecli tx send --fee=90mycoin --amount=10000mycoin --to=role:10CAFE4E --sequence=2 --name=rich
 ```
 
 We need to pay a transaction fee to the validators, in this case 90 `mycoin` to send 10000 `mycoin` Notice that for the `--to` flag, to specify that we are sending to a role instead of an account, the `role:` prefix is added before the role. Because it's `rich`'s second transaction, we've incremented the sequence. The output will be nearly identical to the output from `create-role` above.
@@ -91,7 +91,7 @@ Now the role has coins (think of it like a bank).
 Double check with:
 
 ```
-basecli query account role:"10CAFE4E"
+basecli query account role:10CAFE4E
 ```
 
 and this time you'll see the coins in the role's account:
@@ -114,7 +114,7 @@ and this time you'll see the coins in the role's account:
 `Poor` decides to initiate a multi-sig transaction to himself from the role's account. First, it must be prepared like so:
 
 ```
-basecli tx send --amount=6000mycoin --from=role:"10CAFE4E" --to=65D406E028319289A0706E294F3B764F44EBA3CF --sequence=1 --assume-role="10CAFE4E" --name=poor --multi --prepare=tx.json
+basecli tx send --amount=6000mycoin --from=role:10CAFE4E --to=65D406E028319289A0706E294F3B764F44EBA3CF --sequence=1 --assume-role=10CAFE4E --name=poor --multi --prepare=tx.json
 ```
 
 you'll be prompted for `poor`'s password and there won't be any `stdout` to the terminal. Note that the address in the `--to` flag matches the address of `poor`'s account from the beginning of the tutorial. The main output is the `tx.json` file that has just been created. In the above command, the `--assume-role` flag is used to (not clear, since we have --from), while the `--multi` flag is used in combination with `--prepare`, to specify the file that is prepared for a multi-sig transaction.
@@ -232,7 +232,7 @@ which will give output similar to:
 and voila! That's the basics for creating roles and sending multi-sig transactions. For 3 of 3, you'd repeat the last step for rich as well (recall that poor initiated the multi-sig transaction). We can check the balance of the role:
 
 ```
-basecli query account role:"10CAFE4E"
+basecli query account role:10CAFE4E
 ```
 
 and get the result:

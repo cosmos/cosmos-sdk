@@ -39,7 +39,7 @@ restAccount() {
     assertNotNull "line=${LINENO}, address required" "$1"
     ACCT=$(curl ${URL}/query/account/sigs:$1 2>/dev/null)
     if [ -n "$DEBUG" ]; then echo $ACCT; echo; fi
-    assertEquals "line=${LINENO}, proper money" "$2" $(echo $ACCT | jq .coins[0].amount)
+    assertEquals "line=${LINENO}, proper money" "$2" $(echo $ACCT | jq .data.coins[0].amount)
     return $?
 }
 

@@ -38,6 +38,7 @@ test_cli: tests/cli/shunit2
 	./tests/cli/roles.sh
 	./tests/cli/counter.sh
 	./tests/cli/restart.sh
+	./tests/cli/rest.sh
 	./tests/cli/ibc.sh
 
 test_tutorial: docs/guide/shunit2

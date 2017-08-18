@@ -70,6 +70,7 @@ func main() {
 	BaseCli.AddCommand(
 		commands.InitCmd,
 		commands.ResetCmd,
+		commands.VersionCmd,
 		keycmd.RootCmd,
 		seeds.RootCmd,
 		query.RootCmd,

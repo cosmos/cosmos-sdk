@@ -1,4 +1,4 @@
-package basecoin
+package sdk
 
 import (
 	"bytes"

@@ -7,9 +7,9 @@ import (
 	"github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // MockChain is used to simulate a chain for ibc tests.
@@ -79,13 +79,13 @@ func makePostPacket(tree *iavl.IAVLTree, packet Packet, fromID string, fromHeigh
 // AppChain is ready to handle tx
 type AppChain struct {
 	chainID string
-	app     basecoin.Handler
+	app     sdk.Handler
 	store   state.SimpleDB
 	height  int
 }
 
 // NewAppChain returns a chain that is ready to respond to tx
-func NewAppChain(app basecoin.Handler, chainID string) *AppChain {
+func NewAppChain(app sdk.Handler, chainID string) *AppChain {
 	return &AppChain{
 		chainID: chainID,
 		app:     app,
@@ -103,7 +103,7 @@ func (a *AppChain) IncrementHeight(delta int) int {
 
 // DeliverTx runs the tx and commits the new tree, incrementing height
 // by one.
-func (a *AppChain) DeliverTx(tx basecoin.Tx, perms ...basecoin.Actor) (basecoin.DeliverResult, error) {
+func (a *AppChain) DeliverTx(tx sdk.Tx, perms ...sdk.Actor) (sdk.DeliverResult, error) {
 	ctx := stack.MockContext(a.chainID, uint64(a.height)).WithPermissions(perms...)
 	store := a.store.Checkpoint()
 	res, err := a.app.DeliverTx(ctx, store, tx)

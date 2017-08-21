@@ -2,7 +2,7 @@
 // TypeWriter: wrapper
 // Directive: +gen on TxInner
 
-package basecoin
+package sdk
 
 import (
 	"github.com/tendermint/go-wire/data"

@@ -5,21 +5,21 @@ import (
 
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
+	sdk "github.com/cosmos/cosmos-sdk"
 )
 
 type naiveContext struct {
 	id     nonce
 	chain  string
 	height uint64
-	perms  []basecoin.Actor
+	perms  []sdk.Actor
 	log.Logger
 }
 
 // MockContext returns a simple, non-checking context for test cases.
 //
 // Always use NewContext() for production code to sandbox malicious code better
-func MockContext(chain string, height uint64) basecoin.Context {
+func MockContext(chain string, height uint64) sdk.Context {
 	return naiveContext{
 		id:     nonce(rand.Int63()),
 		chain:  chain,
@@ -28,7 +28,7 @@ func MockContext(chain string, height uint64) basecoin.Context {
 	}
 }
 
-var _ basecoin.Context = naiveContext{}
+var _ sdk.Context = naiveContext{}
 
 func (c naiveContext) ChainID() string {
 	return c.chain
@@ -39,7 +39,7 @@ func (c naiveContext) BlockHeight() uint64 {
 }
 
 // WithPermissions will panic if they try to set permission without the proper app
-func (c naiveContext) WithPermissions(perms ...basecoin.Actor) basecoin.Context {
+func (c naiveContext) WithPermissions(perms ...sdk.Actor) sdk.Context {
 	return naiveContext{
 		id:     c.id,
 		chain:  c.chain,
@@ -49,7 +49,7 @@ func (c naiveContext) WithPermissions(perms ...basecoin.Actor) basecoin.Context 
 	}
 }
 
-func (c naiveContext) HasPermission(perm basecoin.Actor) bool {
+func (c naiveContext) HasPermission(perm sdk.Actor) bool {
 	for _, p := range c.perms {
 		if p.Equals(perm) {
 			return true
@@ -58,7 +58,7 @@ func (c naiveContext) HasPermission(perm basecoin.Actor) bool {
 	return false
 }
 
-func (c naiveContext) GetPermissions(chain, app string) (res []basecoin.Actor) {
+func (c naiveContext) GetPermissions(chain, app string) (res []sdk.Actor) {
 	for _, p := range c.perms {
 		if chain == p.ChainID {
 			if app == "" || app == p.App {
@@ -70,7 +70,7 @@ func (c naiveContext) GetPermissions(chain, app string) (res []basecoin.Actor) {
 }
 
 // IsParent ensures that this is derived from the given secureClient
-func (c naiveContext) IsParent(other basecoin.Context) bool {
+func (c naiveContext) IsParent(other sdk.Context) bool {
 	nc, ok := other.(naiveContext)
 	if !ok {
 		return false
@@ -80,7 +80,7 @@ func (c naiveContext) IsParent(other basecoin.Context) bool {
 
 // Reset should clear out all permissions,
 // but carry on knowledge that this is a child
-func (c naiveContext) Reset() basecoin.Context {
+func (c naiveContext) Reset() sdk.Context {
 	return naiveContext{
 		id:     c.id,
 		chain:  c.chain,

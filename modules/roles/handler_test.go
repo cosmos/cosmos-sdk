@@ -5,32 +5,32 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/modules/roles"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/modules/roles"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 func TestCreateRole(t *testing.T) {
 	assert := assert.New(t)
 
-	a := basecoin.Actor{App: "foo", Address: []byte("bar")}
-	b := basecoin.Actor{ChainID: "eth", App: "foo", Address: []byte("bar")}
-	c := basecoin.Actor{App: "foo", Address: []byte("baz")}
-	d := basecoin.Actor{App: "si-ly", Address: []byte("bar")}
+	a := sdk.Actor{App: "foo", Address: []byte("bar")}
+	b := sdk.Actor{ChainID: "eth", App: "foo", Address: []byte("bar")}
+	c := sdk.Actor{App: "foo", Address: []byte("baz")}
+	d := sdk.Actor{App: "si-ly", Address: []byte("bar")}
 
 	cases := []struct {
 		valid bool
 		role  string
 		min   uint32
-		sigs  []basecoin.Actor
+		sigs  []sdk.Actor
 	}{
-		{true, "awesome", 1, []basecoin.Actor{a}},
-		{true, "cool", 2, []basecoin.Actor{b, c, d}},
-		{false, "oops", 3, []basecoin.Actor{a, d}}, // too many
-		{false, "ugh", 0, []basecoin.Actor{a, d}},  // too few
-		{false, "phew", 1, []basecoin.Actor{}},     // none
-		{false, "cool", 1, []basecoin.Actor{c, d}}, // duplicate of existing one
+		{true, "awesome", 1, []sdk.Actor{a}},
+		{true, "cool", 2, []sdk.Actor{b, c, d}},
+		{false, "oops", 3, []sdk.Actor{a, d}}, // too many
+		{false, "ugh", 0, []sdk.Actor{a, d}},  // too few
+		{false, "phew", 1, []sdk.Actor{}},     // none
+		{false, "cool", 1, []sdk.Actor{c, d}}, // duplicate of existing one
 	}
 
 	h := roles.NewHandler()

@@ -4,11 +4,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin"
+	sdk "github.com/cosmos/cosmos-sdk"
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/tendermint/types"
 
-	"github.com/tendermint/basecoin/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands"
 )
 
 // TxQueryCmd - CLI command to query a transaction with proof
@@ -65,9 +65,9 @@ func txQueryCmd(cmd *cobra.Command, args []string) error {
 	return showTx(res.Height, res.Proof.Data)
 }
 
-// showTx parses anything that was previously registered as basecoin.Tx
+// showTx parses anything that was previously registered as sdk.Tx
 func showTx(h int, tx types.Tx) error {
-	var info basecoin.Tx
+	var info sdk.Tx
 	err := wire.ReadBinaryBytes(tx, &info)
 	if err != nil {
 		return err

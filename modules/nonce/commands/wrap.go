@@ -6,10 +6,10 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/client/commands"
-	txcmd "github.com/tendermint/basecoin/client/commands/txs"
-	"github.com/tendermint/basecoin/modules/nonce"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
+	"github.com/cosmos/cosmos-sdk/modules/nonce"
 )
 
 // nolint
@@ -26,7 +26,7 @@ var _ txcmd.Wrapper = NonceWrapper{}
 // Wrap grabs the sequence number from the flag and wraps
 // the tx with this nonce.  Grabs the permission from the signer,
 // as we still only support single sig on the cli
-func (NonceWrapper) Wrap(tx basecoin.Tx) (res basecoin.Tx, err error) {
+func (NonceWrapper) Wrap(tx sdk.Tx) (res sdk.Tx, err error) {
 
 	signers, err := readNonceKey()
 	if err != nil {
@@ -48,16 +48,16 @@ func (NonceWrapper) Register(fs *pflag.FlagSet) {
 	fs.String(FlagNonceKey, "", "Set of comma-separated addresses for the nonce (for multisig)")
 }
 
-func readNonceKey() ([]basecoin.Actor, error) {
+func readNonceKey() ([]sdk.Actor, error) {
 	nonce := viper.GetString(FlagNonceKey)
 	if nonce == "" {
-		return []basecoin.Actor{txcmd.GetSignerAct()}, nil
+		return []sdk.Actor{txcmd.GetSignerAct()}, nil
 	}
 	return commands.ParseActors(nonce)
 }
 
 // read the sequence from the flag or query for it if flag is -1
-func readSequence(signers []basecoin.Actor) (seq uint32, err error) {
+func readSequence(signers []sdk.Actor) (seq uint32, err error) {
 	//add the nonce tx layer to the tx
 	seqFlag := viper.GetInt(FlagSequence)
 

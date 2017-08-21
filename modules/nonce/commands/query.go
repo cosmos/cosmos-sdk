@@ -9,11 +9,11 @@ import (
 
 	lc "github.com/tendermint/light-client"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/client/commands/query"
-	"github.com/tendermint/basecoin/modules/nonce"
-	"github.com/tendermint/basecoin/stack"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands/query"
+	"github.com/cosmos/cosmos-sdk/modules/nonce"
+	"github.com/cosmos/cosmos-sdk/stack"
 )
 
 // NonceQueryCmd - command to query an nonce account
@@ -42,7 +42,7 @@ func nonceQueryCmd(cmd *cobra.Command, args []string) error {
 	return query.OutputProof(seq, height)
 }
 
-func doNonceQuery(signers []basecoin.Actor) (sequence uint32, height uint64, err error) {
+func doNonceQuery(signers []sdk.Actor) (sequence uint32, height uint64, err error) {
 	key := stack.PrefixedKey(nonce.NameNonce, nonce.GetSeqKey(signers))
 	prove := !viper.GetBool(commands.FlagTrustNode)
 	height, err = query.GetParsed(key, &sequence, prove)

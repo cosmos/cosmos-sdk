@@ -9,7 +9,7 @@ import (
 	certclient "github.com/tendermint/light-client/certifiers/client"
 	"github.com/tendermint/tendermint/rpc/client"
 
-	"github.com/tendermint/basecoin/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands"
 )
 
 const (

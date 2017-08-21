@@ -8,17 +8,17 @@ import (
 
 	"github.com/tendermint/go-wire/data"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/modules/roles"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/modules/roles"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // shortcut for the lazy
-type ba []basecoin.Actor
+type ba []sdk.Actor
 
-func createRole(app basecoin.Handler, store state.SimpleDB,
-	name []byte, min uint32, sigs ...basecoin.Actor) (basecoin.Actor, error) {
+func createRole(app sdk.Handler, store state.SimpleDB,
+	name []byte, min uint32, sigs ...sdk.Actor) (sdk.Actor, error) {
 	tx := roles.NewCreateRoleTx(name, min, sigs)
 	ctx := stack.MockContext("foo", 1)
 	_, err := app.DeliverTx(ctx, store, tx)
@@ -42,10 +42,10 @@ func TestAssumeRole(t *testing.T) {
 	store := state.NewMemKVStore()
 
 	// potential actors
-	a := basecoin.Actor{App: "sig", Address: []byte("jae")}
-	b := basecoin.Actor{App: "sig", Address: []byte("bucky")}
-	c := basecoin.Actor{App: "sig", Address: []byte("ethan")}
-	d := basecoin.Actor{App: "tracko", Address: []byte("rigel")}
+	a := sdk.Actor{App: "sig", Address: []byte("jae")}
+	b := sdk.Actor{App: "sig", Address: []byte("bucky")}
+	c := sdk.Actor{App: "sig", Address: []byte("ethan")}
+	d := sdk.Actor{App: "tracko", Address: []byte("rigel")}
 
 	// devs is a 2-of-3 multisig
 	devs := data.Bytes{0, 1, 0, 1}
@@ -64,8 +64,8 @@ func TestAssumeRole(t *testing.T) {
 		// which roles we try to assume (can be multiple!)
 		// note: that wrapping is FILO, so tries to assume last role first
 		roles    []data.Bytes
-		signers  []basecoin.Actor // which people sign the  tx
-		required []basecoin.Actor // which permission we require to succeed
+		signers  []sdk.Actor // which people sign the  tx
+		required []sdk.Actor // which permission we require to succeed
 	}{
 		// basic checks to see logic works
 		{true, nil, nil, nil},

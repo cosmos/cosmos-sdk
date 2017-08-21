@@ -15,7 +15,7 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin/state"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // Store contains the merkle tree, and all info to handle abci requests

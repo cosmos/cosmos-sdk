@@ -7,10 +7,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/client/commands/query"
-	"github.com/tendermint/basecoin/modules/ibc"
-	"github.com/tendermint/basecoin/stack"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands/query"
+	"github.com/cosmos/cosmos-sdk/modules/ibc"
+	"github.com/cosmos/cosmos-sdk/stack"
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
 )

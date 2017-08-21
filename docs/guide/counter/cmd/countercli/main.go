@@ -8,17 +8,17 @@ import (
 	keycmd "github.com/tendermint/go-crypto/cmd"
 	"github.com/tendermint/tmlibs/cli"
 
-	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/client/commands/proxy"
-	"github.com/tendermint/basecoin/client/commands/query"
-	"github.com/tendermint/basecoin/client/commands/seeds"
-	txcmd "github.com/tendermint/basecoin/client/commands/txs"
-	bcount "github.com/tendermint/basecoin/docs/guide/counter/cmd/countercli/commands"
-	authcmd "github.com/tendermint/basecoin/modules/auth/commands"
-	basecmd "github.com/tendermint/basecoin/modules/base/commands"
-	coincmd "github.com/tendermint/basecoin/modules/coin/commands"
-	feecmd "github.com/tendermint/basecoin/modules/fee/commands"
-	noncecmd "github.com/tendermint/basecoin/modules/nonce/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands/proxy"
+	"github.com/cosmos/cosmos-sdk/client/commands/query"
+	"github.com/cosmos/cosmos-sdk/client/commands/seeds"
+	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
+	bcount "github.com/cosmos/cosmos-sdk/docs/guide/counter/cmd/countercli/commands"
+	authcmd "github.com/cosmos/cosmos-sdk/modules/auth/commands"
+	basecmd "github.com/cosmos/cosmos-sdk/modules/base/commands"
+	coincmd "github.com/cosmos/cosmos-sdk/modules/coin/commands"
+	feecmd "github.com/cosmos/cosmos-sdk/modules/fee/commands"
+	noncecmd "github.com/cosmos/cosmos-sdk/modules/nonce/commands"
 )
 
 // BaseCli represents the base command when called without any subcommands

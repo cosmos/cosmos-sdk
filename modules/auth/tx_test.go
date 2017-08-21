@@ -12,13 +12,13 @@ import (
 	"github.com/tendermint/go-crypto/keys/storage/memstorage"
 	wire "github.com/tendermint/go-wire"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/stack"
 )
 
 func checkSignBytes(t *testing.T, bytes []byte, expected string) {
 	// load it back... unwrap the tx
-	var preTx basecoin.Tx
+	var preTx sdk.Tx
 	err := wire.ReadBinaryBytes(bytes, &preTx)
 	require.Nil(t, err)
 

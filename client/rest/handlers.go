@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
-	"github.com/tendermint/basecoin"
+	sdk "github.com/cosmos/cosmos-sdk"
 	keysutils "github.com/tendermint/go-crypto/cmd"
 	keys "github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/tmlibs/common"
@@ -126,7 +126,7 @@ func (k *Keys) DeleteKey(w http.ResponseWriter, r *http.Request) {
 }
 
 func doPostTx(w http.ResponseWriter, r *http.Request) {
-	tx := new(basecoin.Tx)
+	tx := new(sdk.Tx)
 	if err := common.ParseRequestAndValidateJSON(r, tx); err != nil {
 		common.WriteError(w, err)
 		return

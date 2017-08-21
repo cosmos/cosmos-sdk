@@ -5,10 +5,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/client/commands"
-	txcmd "github.com/tendermint/basecoin/client/commands/txs"
-	"github.com/tendermint/basecoin/modules/roles"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
+	"github.com/cosmos/cosmos-sdk/modules/roles"
 )
 
 // CreateRoleTxCmd is CLI command to create a new role
@@ -41,7 +41,7 @@ func createRoleTxCmd(cmd *cobra.Command, args []string) error {
 	return txcmd.DoTx(tx)
 }
 
-func readCreateRoleTxFlags() (tx basecoin.Tx, err error) {
+func readCreateRoleTxFlags() (tx sdk.Tx, err error) {
 	role, err := parseRole(viper.GetString(FlagRole))
 	if err != nil {
 		return tx, err

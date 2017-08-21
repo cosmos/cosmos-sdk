@@ -1,15 +1,15 @@
 package ibc
 
 import (
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 	wire "github.com/tendermint/go-wire"
 )
 
 // HandlerInfo is the global state of the ibc.Handler
 type HandlerInfo struct {
-	Registrar basecoin.Actor `json:"registrar"`
+	Registrar sdk.Actor `json:"registrar"`
 }
 
 // Save the HandlerInfo to the store
@@ -88,12 +88,12 @@ func (c ChainSet) Update(chainID string, theirHeight int) error {
 type Packet struct {
 	DestChain   string          `json:"dest_chain"`
 	Sequence    uint64          `json:"sequence"`
-	Permissions basecoin.Actors `json:"permissions"`
-	Tx          basecoin.Tx     `json:"tx"`
+	Permissions sdk.Actors `json:"permissions"`
+	Tx          sdk.Tx     `json:"tx"`
 }
 
 // NewPacket creates a new outgoing packet
-func NewPacket(tx basecoin.Tx, dest string, seq uint64, perm ...basecoin.Actor) Packet {
+func NewPacket(tx sdk.Tx, dest string, seq uint64, perm ...sdk.Actor) Packet {
 	return Packet{
 		DestChain:   dest,
 		Sequence:    seq,

@@ -1,9 +1,9 @@
 package nonce
 
 import (
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 //nolint
@@ -26,8 +26,8 @@ func (ReplayCheck) Name() string {
 var _ stack.Middleware = ReplayCheck{}
 
 // CheckTx verifies tx is not being replayed - fulfills Middlware interface
-func (r ReplayCheck) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
+func (r ReplayCheck) CheckTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx, next sdk.Checker) (res sdk.CheckResult, err error) {
 
 	stx, err := r.checkIncrementNonceTx(ctx, store, tx)
 	if err != nil {
@@ -42,8 +42,8 @@ func (r ReplayCheck) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 // DeliverTx verifies tx is not being replayed - fulfills Middlware interface
 // NOTE It is okay to modify the sequence before running the wrapped TX because if the
 // wrapped Tx fails, the state changes are not applied
-func (r ReplayCheck) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
+func (r ReplayCheck) DeliverTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx, next sdk.Deliver) (res sdk.DeliverResult, err error) {
 
 	stx, err := r.checkIncrementNonceTx(ctx, store, tx)
 	if err != nil {
@@ -54,8 +54,8 @@ func (r ReplayCheck) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 }
 
 // checkNonceTx varifies the nonce sequence, an increment sequence number
-func (r ReplayCheck) checkIncrementNonceTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx) (basecoin.Tx, error) {
+func (r ReplayCheck) checkIncrementNonceTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx) (sdk.Tx, error) {
 
 	// make sure it is a the nonce Tx (Tx from this package)
 	nonceTx, ok := tx.Unwrap().(Tx)

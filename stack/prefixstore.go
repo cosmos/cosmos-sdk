@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/tendermint/basecoin/state"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 type prefixStore struct {

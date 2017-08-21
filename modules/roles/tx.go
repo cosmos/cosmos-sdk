@@ -3,8 +3,8 @@ package roles
 import (
 	"github.com/tendermint/go-wire/data"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
 )
 
 var (
@@ -24,7 +24,7 @@ const (
 )
 
 func init() {
-	basecoin.TxMapper.
+	sdk.TxMapper.
 		RegisterImplementation(AssumeRoleTx{}, TypeAssumeRoleTx, ByteAssumeRoleTx).
 		RegisterImplementation(CreateRoleTx{}, TypeCreateRoleTx, ByteCreateRoleTx)
 }
@@ -33,11 +33,11 @@ func init() {
 // the authority to use a given role.
 type AssumeRoleTx struct {
 	Role data.Bytes  `json:"role"`
-	Tx   basecoin.Tx `json:"tx"`
+	Tx   sdk.Tx `json:"tx"`
 }
 
 // NewAssumeRoleTx creates a new wrapper to add a role to a tx execution
-func NewAssumeRoleTx(role []byte, tx basecoin.Tx) basecoin.Tx {
+func NewAssumeRoleTx(role []byte, tx sdk.Tx) sdk.Tx {
 	return AssumeRoleTx{Role: role, Tx: tx}.Wrap()
 }
 
@@ -53,8 +53,8 @@ func (tx AssumeRoleTx) ValidateBasic() error {
 }
 
 // Wrap - used to satisfy TxInner
-func (tx AssumeRoleTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{tx}
+func (tx AssumeRoleTx) Wrap() sdk.Tx {
+	return sdk.Tx{tx}
 }
 
 // CreateRoleTx is used to construct a new role
@@ -64,11 +64,11 @@ func (tx AssumeRoleTx) Wrap() basecoin.Tx {
 type CreateRoleTx struct {
 	Role    data.Bytes       `json:"role"`
 	MinSigs uint32           `json:"min_sigs"`
-	Signers []basecoin.Actor `json:"signers"`
+	Signers []sdk.Actor `json:"signers"`
 }
 
 // NewCreateRoleTx creates a new role, which we can later use
-func NewCreateRoleTx(role []byte, minSigs uint32, signers []basecoin.Actor) basecoin.Tx {
+func NewCreateRoleTx(role []byte, minSigs uint32, signers []sdk.Actor) sdk.Tx {
 	return CreateRoleTx{Role: role, MinSigs: minSigs, Signers: signers}.Wrap()
 }
 
@@ -93,6 +93,6 @@ func (tx CreateRoleTx) ValidateBasic() error {
 }
 
 // Wrap - used to satisfy TxInner
-func (tx CreateRoleTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{tx}
+func (tx CreateRoleTx) Wrap() sdk.Tx {
+	return sdk.Tx{tx}
 }

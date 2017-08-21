@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 func TestNonce(t *testing.T) {
@@ -27,36 +27,36 @@ func TestNonce(t *testing.T) {
 	appName2 := "foot"
 
 	//root actors for the tests
-	act1 := basecoin.Actor{ChainID: chainID, App: appName1, Address: []byte{1, 2, 3, 4}}
-	act2 := basecoin.Actor{ChainID: chainID, App: appName1, Address: []byte{1, 1, 1, 1}}
-	act3 := basecoin.Actor{ChainID: chainID, App: appName1, Address: []byte{3, 3, 3, 3}}
-	act1DiffChain := basecoin.Actor{ChainID: chain2ID, App: appName1, Address: []byte{1, 2, 3, 4}}
-	act2DiffChain := basecoin.Actor{ChainID: chain2ID, App: appName1, Address: []byte{1, 1, 1, 1}}
-	act3DiffChain := basecoin.Actor{ChainID: chain2ID, App: appName1, Address: []byte{3, 3, 3, 3}}
-	act1DiffApp := basecoin.Actor{ChainID: chainID, App: appName2, Address: []byte{1, 2, 3, 4}}
-	act2DiffApp := basecoin.Actor{ChainID: chainID, App: appName2, Address: []byte{1, 1, 1, 1}}
-	act3DiffApp := basecoin.Actor{ChainID: chainID, App: appName2, Address: []byte{3, 3, 3, 3}}
+	act1 := sdk.Actor{ChainID: chainID, App: appName1, Address: []byte{1, 2, 3, 4}}
+	act2 := sdk.Actor{ChainID: chainID, App: appName1, Address: []byte{1, 1, 1, 1}}
+	act3 := sdk.Actor{ChainID: chainID, App: appName1, Address: []byte{3, 3, 3, 3}}
+	act1DiffChain := sdk.Actor{ChainID: chain2ID, App: appName1, Address: []byte{1, 2, 3, 4}}
+	act2DiffChain := sdk.Actor{ChainID: chain2ID, App: appName1, Address: []byte{1, 1, 1, 1}}
+	act3DiffChain := sdk.Actor{ChainID: chain2ID, App: appName1, Address: []byte{3, 3, 3, 3}}
+	act1DiffApp := sdk.Actor{ChainID: chainID, App: appName2, Address: []byte{1, 2, 3, 4}}
+	act2DiffApp := sdk.Actor{ChainID: chainID, App: appName2, Address: []byte{1, 1, 1, 1}}
+	act3DiffApp := sdk.Actor{ChainID: chainID, App: appName2, Address: []byte{3, 3, 3, 3}}
 
 	// let's construct some tests to make the table a bit less verbose
-	set0 := []basecoin.Actor{}
-	set1 := []basecoin.Actor{act1}
-	set2 := []basecoin.Actor{act2}
-	set12 := []basecoin.Actor{act1, act2}
-	set21 := []basecoin.Actor{act2, act1}
-	set123 := []basecoin.Actor{act1, act2, act3}
-	set321 := []basecoin.Actor{act3, act2, act1}
+	set0 := []sdk.Actor{}
+	set1 := []sdk.Actor{act1}
+	set2 := []sdk.Actor{act2}
+	set12 := []sdk.Actor{act1, act2}
+	set21 := []sdk.Actor{act2, act1}
+	set123 := []sdk.Actor{act1, act2, act3}
+	set321 := []sdk.Actor{act3, act2, act1}
 
 	//some more test cases for different chains and apps for each actor
-	set123Chain2 := []basecoin.Actor{act1DiffChain, act2DiffChain, act3DiffChain}
-	set123App2 := []basecoin.Actor{act1DiffApp, act2DiffApp, act3DiffApp}
-	set123MixedChains := []basecoin.Actor{act1, act2DiffChain, act3}
-	set123MixedApps := []basecoin.Actor{act1, act2DiffApp, act3}
+	set123Chain2 := []sdk.Actor{act1DiffChain, act2DiffChain, act3DiffChain}
+	set123App2 := []sdk.Actor{act1DiffApp, act2DiffApp, act3DiffApp}
+	set123MixedChains := []sdk.Actor{act1, act2DiffChain, act3}
+	set123MixedApps := []sdk.Actor{act1, act2DiffApp, act3}
 
 	testList := []struct {
 		valid   bool
 		seq     uint32
-		actors  []basecoin.Actor
-		signers []basecoin.Actor
+		actors  []sdk.Actor
+		signers []sdk.Actor
 	}{
 		// one signer
 		{false, 0, set1, set1},   // seq 0 is no good

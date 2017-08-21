@@ -1,9 +1,9 @@
 package roles
 
 import (
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 const (
@@ -17,11 +17,11 @@ const (
 
 // Handler allows us to create new roles
 type Handler struct {
-	basecoin.NopInitState
-	basecoin.NopInitValidate
+	sdk.NopInitState
+	sdk.NopInitValidate
 }
 
-var _ basecoin.Handler = Handler{}
+var _ sdk.Handler = Handler{}
 
 // NewHandler makes a role handler to create roles
 func NewHandler() Handler {
@@ -34,13 +34,13 @@ func (Handler) Name() string {
 }
 
 // CheckTx verifies if the transaction is properly formated
-func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
+func (h Handler) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.CheckResult, err error) {
 	var cr CreateRoleTx
 	cr, err = checkTx(ctx, tx)
 	if err != nil {
 		return
 	}
-	res = basecoin.NewCheck(CostCreate, "")
+	res = sdk.NewCheck(CostCreate, "")
 	err = checkNoRole(store, cr.Role)
 	return
 }
@@ -48,7 +48,7 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin
 // DeliverTx tries to create a new role.
 //
 // Returns an error if the role already exists
-func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
+func (h Handler) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.DeliverResult, err error) {
 	create, err := checkTx(ctx, tx)
 	if err != nil {
 		return res, err
@@ -60,7 +60,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx baseco
 	return res, err
 }
 
-func checkTx(ctx basecoin.Context, tx basecoin.Tx) (create CreateRoleTx, err error) {
+func checkTx(ctx sdk.Context, tx sdk.Tx) (create CreateRoleTx, err error) {
 	// check if the tx is proper type and valid
 	create, ok := tx.Unwrap().(CreateRoleTx)
 	if !ok {

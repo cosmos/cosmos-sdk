@@ -1,11 +1,11 @@
-package basecoin
+package sdk
 
 import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin/state"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // Handler is anything that processes a transaction

@@ -11,7 +11,7 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin/modules/coin"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
 )
 
 const genesisFilepath = "./testdata/genesis.json"

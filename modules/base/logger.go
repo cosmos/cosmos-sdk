@@ -6,9 +6,9 @@ import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // nolint
@@ -27,7 +27,7 @@ func (Logger) Name() string {
 var _ stack.Middleware = Logger{}
 
 // CheckTx logs time and result - fulfills Middlware interface
-func (Logger) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
+func (Logger) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Checker) (res sdk.CheckResult, err error) {
 	start := time.Now()
 	res, err = next.CheckTx(ctx, store, tx)
 	delta := time.Now().Sub(start)
@@ -42,7 +42,7 @@ func (Logger) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx
 }
 
 // DeliverTx logs time and result - fulfills Middlware interface
-func (Logger) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
+func (Logger) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Deliver) (res sdk.DeliverResult, err error) {
 	start := time.Now()
 	res, err = next.DeliverTx(ctx, store, tx)
 	delta := time.Now().Sub(start)
@@ -57,7 +57,7 @@ func (Logger) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.
 }
 
 // InitState logs time and result - fulfills Middlware interface
-func (Logger) InitState(l log.Logger, store state.SimpleDB, module, key, value string, next basecoin.InitStater) (string, error) {
+func (Logger) InitState(l log.Logger, store state.SimpleDB, module, key, value string, next sdk.InitStater) (string, error) {
 	start := time.Now()
 	res, err := next.InitState(l, store, module, key, value)
 	delta := time.Now().Sub(start)
@@ -72,7 +72,7 @@ func (Logger) InitState(l log.Logger, store state.SimpleDB, module, key, value s
 }
 
 // InitValidate logs time and result - fulfills Middlware interface
-func (Logger) InitValidate(l log.Logger, store state.SimpleDB, vals []*abci.Validator, next basecoin.InitValidater) {
+func (Logger) InitValidate(l log.Logger, store state.SimpleDB, vals []*abci.Validator, next sdk.InitValidater) {
 	start := time.Now()
 	next.InitValidate(l, store, vals)
 	delta := time.Now().Sub(start)

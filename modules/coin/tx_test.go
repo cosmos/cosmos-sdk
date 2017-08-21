@@ -8,20 +8,20 @@ import (
 
 	"github.com/tendermint/go-wire/data"
 
-	"github.com/tendermint/basecoin"
+	sdk "github.com/cosmos/cosmos-sdk"
 )
 
 // these are some constructs for the test cases
 var actors = []struct {
-	actor basecoin.Actor
+	actor sdk.Actor
 	valid bool
 }{
-	{basecoin.Actor{}, false},
-	{basecoin.Actor{App: "fooz"}, false},
-	{basecoin.Actor{Address: []byte{1, 2, 3, 4}}, false},
-	{basecoin.Actor{App: "fooz", Address: []byte{1, 2, 3, 4}}, true},
-	{basecoin.Actor{ChainID: "dings", App: "fooz", Address: []byte{1, 2, 3, 4}}, true},
-	{basecoin.Actor{ChainID: "dat", App: "fooz"}, false},
+	{sdk.Actor{}, false},
+	{sdk.Actor{App: "fooz"}, false},
+	{sdk.Actor{Address: []byte{1, 2, 3, 4}}, false},
+	{sdk.Actor{App: "fooz", Address: []byte{1, 2, 3, 4}}, true},
+	{sdk.Actor{ChainID: "dings", App: "fooz", Address: []byte{1, 2, 3, 4}}, true},
+	{sdk.Actor{ChainID: "dat", App: "fooz"}, false},
 }
 
 var (
@@ -78,10 +78,10 @@ func TestTxValidateOutput(t *testing.T) {
 func TestTxValidateTx(t *testing.T) {
 	assert := assert.New(t)
 
-	addr1 := basecoin.Actor{App: "coin", Address: []byte{1, 2}}
-	addr2 := basecoin.Actor{App: "coin", Address: []byte{3, 4}, ChainID: "over-there"}
-	addr3 := basecoin.Actor{App: "role", Address: []byte{7, 8}}
-	noAddr := basecoin.Actor{}
+	addr1 := sdk.Actor{App: "coin", Address: []byte{1, 2}}
+	addr2 := sdk.Actor{App: "coin", Address: []byte{3, 4}, ChainID: "over-there"}
+	addr3 := sdk.Actor{App: "role", Address: []byte{7, 8}}
+	noAddr := sdk.Actor{}
 
 	noCoins := Coins{}
 	someCoins := Coins{{"atom", 123}}
@@ -95,7 +95,7 @@ func TestTxValidateTx(t *testing.T) {
 	// totals don't match
 	cases := []struct {
 		valid bool
-		tx    basecoin.Tx
+		tx    sdk.Tx
 	}{
 		// 0-2. valid cases
 		{true, NewSendTx(
@@ -164,8 +164,8 @@ func TestTxSerializeTx(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	addr1 := basecoin.Actor{App: "coin", Address: []byte{1, 2}}
-	addr2 := basecoin.Actor{App: "coin", Address: []byte{3, 4}}
+	addr1 := sdk.Actor{App: "coin", Address: []byte{1, 2}}
+	addr2 := sdk.Actor{App: "coin", Address: []byte{3, 4}}
 	someCoins := Coins{{"atom", 123}}
 
 	send := NewSendTx(
@@ -175,14 +175,14 @@ func TestTxSerializeTx(t *testing.T) {
 
 	js, err := data.ToJSON(send)
 	require.Nil(err)
-	var tx basecoin.Tx
+	var tx sdk.Tx
 	err = data.FromJSON(js, &tx)
 	require.Nil(err)
 	assert.Equal(send, tx)
 
 	bin, err := data.ToWire(send)
 	require.Nil(err)
-	var tx2 basecoin.Tx
+	var tx2 sdk.Tx
 	err = data.FromWire(bin, &tx2)
 	require.Nil(err)
 	assert.Equal(send, tx2)

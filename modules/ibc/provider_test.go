@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/basecoin/state"
+	"github.com/cosmos/cosmos-sdk/state"
 	"github.com/tendermint/light-client/certifiers"
 )
 

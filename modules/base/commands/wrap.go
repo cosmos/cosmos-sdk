@@ -6,10 +6,10 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/client/commands"
-	txcmd "github.com/tendermint/basecoin/client/commands/txs"
-	"github.com/tendermint/basecoin/modules/base"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
+	"github.com/cosmos/cosmos-sdk/modules/base"
 )
 
 //nolint
@@ -23,7 +23,7 @@ type ChainWrapper struct{}
 var _ txcmd.Wrapper = ChainWrapper{}
 
 // Wrap will wrap the tx with a ChainTx from the standard flags
-func (ChainWrapper) Wrap(tx basecoin.Tx) (res basecoin.Tx, err error) {
+func (ChainWrapper) Wrap(tx sdk.Tx) (res sdk.Tx, err error) {
 	expires := viper.GetInt64(FlagExpires)
 	chain := commands.GetChainID()
 	if chain == "" {

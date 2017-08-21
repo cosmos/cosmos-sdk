@@ -1,9 +1,9 @@
 package eyes
 
 import (
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/state"
 	wire "github.com/tendermint/go-wire"
 )
 
@@ -19,11 +19,11 @@ const (
 
 // Handler allows us to set and remove data
 type Handler struct {
-	basecoin.NopInitState
-	basecoin.NopInitValidate
+	sdk.NopInitState
+	sdk.NopInitValidate
 }
 
-var _ basecoin.Handler = Handler{}
+var _ sdk.Handler = Handler{}
 
 // NewHandler makes a role handler to modify data
 func NewHandler() Handler {
@@ -36,7 +36,7 @@ func (Handler) Name() string {
 }
 
 // CheckTx verifies if the transaction is properly formated
-func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
+func (h Handler) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.CheckResult, err error) {
 	err = tx.ValidateBasic()
 	if err != nil {
 		return
@@ -44,9 +44,9 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin
 
 	switch tx.Unwrap().(type) {
 	case SetTx:
-		res = basecoin.NewCheck(CostSet, "")
+		res = sdk.NewCheck(CostSet, "")
 	case RemoveTx:
-		res = basecoin.NewCheck(CostRemove, "")
+		res = sdk.NewCheck(CostRemove, "")
 	default:
 		err = errors.ErrUnknownTxType(tx)
 	}
@@ -56,7 +56,7 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin
 // DeliverTx tries to create a new role.
 //
 // Returns an error if the role already exists
-func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
+func (h Handler) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.DeliverResult, err error) {
 	err = tx.ValidateBasic()
 	if err != nil {
 		return
@@ -75,7 +75,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx baseco
 
 // doSetTx writes to the store, overwriting any previous value
 // note that an empty response in DeliverTx is OK with no log or data returned
-func (h Handler) doSetTx(ctx basecoin.Context, store state.SimpleDB, tx SetTx) (res basecoin.DeliverResult, err error) {
+func (h Handler) doSetTx(ctx sdk.Context, store state.SimpleDB, tx SetTx) (res sdk.DeliverResult, err error) {
 	data := NewData(tx.Value, ctx.BlockHeight())
 	store.Set(tx.Key, wire.BinaryBytes(data))
 	return
@@ -83,7 +83,7 @@ func (h Handler) doSetTx(ctx basecoin.Context, store state.SimpleDB, tx SetTx) (
 
 // doRemoveTx deletes the value from the store and returns the last value
 // here we let res.Data to return the value over abci
-func (h Handler) doRemoveTx(ctx basecoin.Context, store state.SimpleDB, tx RemoveTx) (res basecoin.DeliverResult, err error) {
+func (h Handler) doRemoveTx(ctx sdk.Context, store state.SimpleDB, tx RemoveTx) (res sdk.DeliverResult, err error) {
 	// we set res.Data so it gets returned to the client over the abci interface
 	res.Data = store.Get(tx.Key)
 	if len(res.Data) != 0 {

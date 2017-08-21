@@ -1,9 +1,9 @@
 package ibc
 
 import (
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // Middleware allows us to verify the IBC proof on a packet and
@@ -27,7 +27,7 @@ func (Middleware) Name() string {
 
 // CheckTx verifies the named chain and height is present, and verifies
 // the merkle proof in the packet
-func (m Middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
+func (m Middleware) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Checker) (res sdk.CheckResult, err error) {
 	// if it is not a PostPacket, just let it go through
 	post, ok := tx.Unwrap().(PostPacketTx)
 	if !ok {
@@ -44,7 +44,7 @@ func (m Middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basec
 
 // DeliverTx verifies the named chain and height is present, and verifies
 // the merkle proof in the packet
-func (m Middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
+func (m Middleware) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Deliver) (res sdk.DeliverResult, err error) {
 	// if it is not a PostPacket, just let it go through
 	post, ok := tx.Unwrap().(PostPacketTx)
 	if !ok {
@@ -61,8 +61,8 @@ func (m Middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx bas
 
 // verifyPost accepts a message bound for this chain...
 // TODO: think about relay
-func (m Middleware) verifyPost(ctx basecoin.Context, store state.SimpleDB,
-	tx PostPacketTx) (ictx basecoin.Context, itx basecoin.Tx, err error) {
+func (m Middleware) verifyPost(ctx sdk.Context, store state.SimpleDB,
+	tx PostPacketTx) (ictx sdk.Context, itx sdk.Tx, err error) {
 
 	// make sure the chain is registered
 	from := tx.FromChainID

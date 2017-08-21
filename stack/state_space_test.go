@@ -9,8 +9,8 @@ import (
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // writerMid is a middleware that writes the given bytes on CheckTx and DeliverTx
@@ -24,20 +24,20 @@ var _ Middleware = writerMid{}
 
 func (w writerMid) Name() string { return w.name }
 
-func (w writerMid) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Checker) (basecoin.CheckResult, error) {
+func (w writerMid) CheckTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx, next sdk.Checker) (sdk.CheckResult, error) {
 	store.Set(w.key, w.value)
 	return next.CheckTx(ctx, store, tx)
 }
 
-func (w writerMid) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Deliver) (basecoin.DeliverResult, error) {
+func (w writerMid) DeliverTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx, next sdk.Deliver) (sdk.DeliverResult, error) {
 	store.Set(w.key, w.value)
 	return next.DeliverTx(ctx, store, tx)
 }
 
 func (w writerMid) InitState(l log.Logger, store state.SimpleDB, module,
-	key, value string, next basecoin.InitStater) (string, error) {
+	key, value string, next sdk.InitStater) (string, error) {
 	store.Set([]byte(key), []byte(value))
 	return next.InitState(l, store, module, key, value)
 }
@@ -46,23 +46,23 @@ func (w writerMid) InitState(l log.Logger, store state.SimpleDB, module,
 type writerHand struct {
 	name       string
 	key, value []byte
-	basecoin.NopInitValidate
+	sdk.NopInitValidate
 }
 
-var _ basecoin.Handler = writerHand{}
+var _ sdk.Handler = writerHand{}
 
 func (w writerHand) Name() string { return w.name }
 
-func (w writerHand) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx) (basecoin.CheckResult, error) {
+func (w writerHand) CheckTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx) (sdk.CheckResult, error) {
 	store.Set(w.key, w.value)
-	return basecoin.CheckResult{}, nil
+	return sdk.CheckResult{}, nil
 }
 
-func (w writerHand) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx) (basecoin.DeliverResult, error) {
+func (w writerHand) DeliverTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx) (sdk.DeliverResult, error) {
 	store.Set(w.key, w.value)
-	return basecoin.DeliverResult{}, nil
+	return sdk.DeliverResult{}, nil
 }
 
 func (w writerHand) InitState(l log.Logger, store state.SimpleDB, module,
@@ -73,7 +73,7 @@ func (w writerHand) InitState(l log.Logger, store state.SimpleDB, module,
 
 func TestStateSpace(t *testing.T) {
 	cases := []struct {
-		h        basecoin.Handler
+		h        sdk.Handler
 		m        []Middleware
 		expected []data.Bytes
 	}{
@@ -95,7 +95,7 @@ func TestStateSpace(t *testing.T) {
 		app := New(tc.m...).Use(d)
 
 		// register so RawTx is routed to this handler
-		basecoin.TxMapper.RegisterImplementation(RawTx{}, tc.h.Name(), byte(50+i))
+		sdk.TxMapper.RegisterImplementation(RawTx{}, tc.h.Name(), byte(50+i))
 
 		// run various tests on this setup
 		spaceCheck(t, i, app, tc.expected)
@@ -104,7 +104,7 @@ func TestStateSpace(t *testing.T) {
 	}
 }
 
-func spaceCheck(t *testing.T, i int, app basecoin.Handler, keys []data.Bytes) {
+func spaceCheck(t *testing.T, i int, app sdk.Handler, keys []data.Bytes) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -122,7 +122,7 @@ func spaceCheck(t *testing.T, i int, app basecoin.Handler, keys []data.Bytes) {
 	}
 }
 
-func spaceDeliver(t *testing.T, i int, app basecoin.Handler, keys []data.Bytes) {
+func spaceDeliver(t *testing.T, i int, app sdk.Handler, keys []data.Bytes) {
 	assert := assert.New(t)
 	require := require.New(t)
 

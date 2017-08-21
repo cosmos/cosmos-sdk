@@ -1,8 +1,8 @@
 package ibc
 
 import (
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 const (

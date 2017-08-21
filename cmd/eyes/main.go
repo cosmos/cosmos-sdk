@@ -5,16 +5,16 @@ import (
 
 	"github.com/tendermint/tmlibs/cli"
 
-	"github.com/tendermint/basecoin"
-	client "github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/cmd/basecoin/commands"
-	"github.com/tendermint/basecoin/modules/base"
-	"github.com/tendermint/basecoin/modules/eyes"
-	"github.com/tendermint/basecoin/stack"
+	sdk "github.com/cosmos/cosmos-sdk"
+	client "github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/cmd/basecoin/commands"
+	"github.com/cosmos/cosmos-sdk/modules/base"
+	"github.com/cosmos/cosmos-sdk/modules/eyes"
+	"github.com/cosmos/cosmos-sdk/stack"
 )
 
 // BuildApp constructs the stack we want to use for this app
-func BuildApp() basecoin.Handler {
+func BuildApp() sdk.Handler {
 	return stack.New(
 		base.Logger{},
 		stack.Recovery{},

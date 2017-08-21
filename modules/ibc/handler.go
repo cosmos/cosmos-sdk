@@ -6,10 +6,10 @@ import (
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 const (
@@ -29,16 +29,16 @@ var (
 
 // AllowIBC returns a specially crafted Actor that
 // enables sending IBC packets for this app type
-func AllowIBC(app string) basecoin.Actor {
-	return basecoin.Actor{App: app, Address: allowIBC}
+func AllowIBC(app string) sdk.Actor {
+	return sdk.Actor{App: app, Address: allowIBC}
 }
 
 // Handler updates the chain state or creates an ibc packet
 type Handler struct {
-	basecoin.NopInitValidate
+	sdk.NopInitValidate
 }
 
-var _ basecoin.Handler = Handler{}
+var _ sdk.Handler = Handler{}
 
 // NewHandler returns a Handler that allows all chains to connect via IBC.
 // Set a Registrar via InitState to restrict it.
@@ -57,7 +57,7 @@ func (h Handler) InitState(l log.Logger, store state.SimpleDB, module, key, valu
 		return "", errors.ErrUnknownModule(module)
 	}
 	if key == OptionRegistrar {
-		var act basecoin.Actor
+		var act sdk.Actor
 		err = data.FromJSON([]byte(value), &act)
 		if err != nil {
 			return "", err
@@ -72,7 +72,7 @@ func (h Handler) InitState(l log.Logger, store state.SimpleDB, module, key, valu
 
 // CheckTx verifies the packet is formated correctly, and has the proper sequence
 // for a registered chain
-func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
+func (h Handler) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.CheckResult, err error) {
 	err = tx.ValidateBasic()
 	if err != nil {
 		return res, err
@@ -92,7 +92,7 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin
 
 // DeliverTx verifies all signatures on the tx and updates the chain state
 // apropriately
-func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
+func (h Handler) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.DeliverResult, err error) {
 	err = tx.ValidateBasic()
 	if err != nil {
 		return res, err
@@ -113,8 +113,8 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx baseco
 // accepts it as the root of trust.
 //
 // only the registrar, if set, is allowed to do this
-func (h Handler) initSeed(ctx basecoin.Context, store state.SimpleDB,
-	t RegisterChainTx) (res basecoin.DeliverResult, err error) {
+func (h Handler) initSeed(ctx sdk.Context, store state.SimpleDB,
+	t RegisterChainTx) (res sdk.DeliverResult, err error) {
 
 	info := LoadInfo(store)
 	if !info.Registrar.Empty() && !ctx.HasPermission(info.Registrar) {
@@ -137,8 +137,8 @@ func (h Handler) initSeed(ctx basecoin.Context, store state.SimpleDB,
 
 // updateSeed checks the seed against the existing chain data and rejects it if it
 // doesn't fit (or no chain data)
-func (h Handler) updateSeed(ctx basecoin.Context, store state.SimpleDB,
-	t UpdateChainTx) (res basecoin.DeliverResult, err error) {
+func (h Handler) updateSeed(ctx sdk.Context, store state.SimpleDB,
+	t UpdateChainTx) (res sdk.DeliverResult, err error) {
 
 	chainID := t.ChainID()
 	s := NewChainSet(store)
@@ -167,8 +167,8 @@ func (h Handler) updateSeed(ctx basecoin.Context, store state.SimpleDB,
 
 // createPacket makes sure all permissions are good and the destination
 // chain is registed.  If so, it appends it to the outgoing queue
-func (h Handler) createPacket(ctx basecoin.Context, store state.SimpleDB,
-	t CreatePacketTx) (res basecoin.DeliverResult, err error) {
+func (h Handler) createPacket(ctx sdk.Context, store state.SimpleDB,
+	t CreatePacketTx) (res sdk.DeliverResult, err error) {
 
 	// make sure the chain is registed
 	dest := t.DestChain
@@ -189,7 +189,7 @@ func (h Handler) createPacket(ctx basecoin.Context, store state.SimpleDB,
 	packet := Packet{
 		DestChain:   dest,
 		Tx:          t.Tx,
-		Permissions: make([]basecoin.Actor, len(t.Permissions)),
+		Permissions: make([]sdk.Actor, len(t.Permissions)),
 	}
 
 	// make sure we have all the permissions we want to send
@@ -206,6 +206,6 @@ func (h Handler) createPacket(ctx basecoin.Context, store state.SimpleDB,
 	packet.Sequence = q.Tail()
 	q.Push(packet.Bytes())
 
-	res = basecoin.DeliverResult{Log: fmt.Sprintf("Packet %s %d", dest, packet.Sequence)}
+	res = sdk.DeliverResult{Log: fmt.Sprintf("Packet %s %d", dest, packet.Sequence)}
 	return
 }

@@ -1,8 +1,8 @@
 package fee
 
 import (
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/modules/coin"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
 )
 
 // nolint
@@ -12,7 +12,7 @@ const (
 )
 
 func init() {
-	basecoin.TxMapper.
+	sdk.TxMapper.
 		RegisterImplementation(Fee{}, TypeFees, ByteFees)
 }
 
@@ -22,12 +22,12 @@ func init() {
 type Fee struct {
 	// Gas coin.Coin `json:"gas"`  // ?????
 	Fee   coin.Coin      `json:"fee"`
-	Payer basecoin.Actor `json:"payer"` // the address who pays the fee
-	Tx    basecoin.Tx    `json:"tx"`
+	Payer sdk.Actor `json:"payer"` // the address who pays the fee
+	Tx    sdk.Tx    `json:"tx"`
 }
 
 // NewFee wraps a tx with a promised fee from this actor
-func NewFee(tx basecoin.Tx, fee coin.Coin, payer basecoin.Actor) basecoin.Tx {
+func NewFee(tx sdk.Tx, fee coin.Coin, payer sdk.Actor) sdk.Tx {
 	return Fee{Tx: tx, Fee: fee, Payer: payer}.Wrap()
 }
 
@@ -36,9 +36,9 @@ func (f Fee) ValidateBasic() error {
 	// TODO: more checks
 	return f.Tx.ValidateBasic()
 }
-func (f Fee) Wrap() basecoin.Tx {
-	return basecoin.Tx{f}
+func (f Fee) Wrap() sdk.Tx {
+	return sdk.Tx{f}
 }
-func (f Fee) Next() basecoin.Tx {
+func (f Fee) Next() sdk.Tx {
 	return f.Tx
 }

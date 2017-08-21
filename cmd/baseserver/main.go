@@ -10,11 +10,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin/client/commands"
-	rest "github.com/tendermint/basecoin/client/rest"
-	coinrest "github.com/tendermint/basecoin/modules/coin/rest"
-	noncerest "github.com/tendermint/basecoin/modules/nonce/rest"
-	rolerest "github.com/tendermint/basecoin/modules/roles/rest"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	rest "github.com/cosmos/cosmos-sdk/client/rest"
+	coinrest "github.com/cosmos/cosmos-sdk/modules/coin/rest"
+	noncerest "github.com/cosmos/cosmos-sdk/modules/nonce/rest"
+	rolerest "github.com/cosmos/cosmos-sdk/modules/roles/rest"
 	"github.com/tendermint/tmlibs/cli"
 )
 

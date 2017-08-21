@@ -4,10 +4,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin"
-	txcmd "github.com/tendermint/basecoin/client/commands/txs"
-	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
-	"github.com/tendermint/basecoin/modules/coin"
+	sdk "github.com/cosmos/cosmos-sdk"
+	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
+	"github.com/cosmos/cosmos-sdk/docs/guide/counter/plugins/counter"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
 )
 
 //CounterTxCmd is the CLI command to execute the counter
@@ -41,7 +41,7 @@ func counterTx(cmd *cobra.Command, args []string) error {
 	return txcmd.DoTx(tx)
 }
 
-func readCounterTxFlags() (tx basecoin.Tx, err error) {
+func readCounterTxFlags() (tx sdk.Tx, err error) {
 	feeCoins, err := coin.ParseCoins(viper.GetString(FlagCountFee))
 	if err != nil {
 		return tx, err

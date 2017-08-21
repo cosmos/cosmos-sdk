@@ -5,8 +5,8 @@ import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // Middleware is anything that wraps another handler to enhance functionality.
@@ -18,86 +18,86 @@ type Middleware interface {
 	DeliverMiddle
 	InitStaterMiddle
 	InitValidaterMiddle
-	basecoin.Named
+	sdk.Named
 }
 
 type CheckerMiddle interface {
-	CheckTx(ctx basecoin.Context, store state.SimpleDB,
-		tx basecoin.Tx, next basecoin.Checker) (basecoin.CheckResult, error)
+	CheckTx(ctx sdk.Context, store state.SimpleDB,
+		tx sdk.Tx, next sdk.Checker) (sdk.CheckResult, error)
 }
 
-type CheckerMiddleFunc func(basecoin.Context, state.SimpleDB,
-	basecoin.Tx, basecoin.Checker) (basecoin.CheckResult, error)
+type CheckerMiddleFunc func(sdk.Context, state.SimpleDB,
+	sdk.Tx, sdk.Checker) (sdk.CheckResult, error)
 
-func (c CheckerMiddleFunc) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Checker) (basecoin.CheckResult, error) {
+func (c CheckerMiddleFunc) CheckTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx, next sdk.Checker) (sdk.CheckResult, error) {
 	return c(ctx, store, tx, next)
 }
 
 type DeliverMiddle interface {
-	DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx,
-		next basecoin.Deliver) (basecoin.DeliverResult, error)
+	DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx,
+		next sdk.Deliver) (sdk.DeliverResult, error)
 }
 
-type DeliverMiddleFunc func(basecoin.Context, state.SimpleDB,
-	basecoin.Tx, basecoin.Deliver) (basecoin.DeliverResult, error)
+type DeliverMiddleFunc func(sdk.Context, state.SimpleDB,
+	sdk.Tx, sdk.Deliver) (sdk.DeliverResult, error)
 
-func (d DeliverMiddleFunc) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Deliver) (basecoin.DeliverResult, error) {
+func (d DeliverMiddleFunc) DeliverTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx, next sdk.Deliver) (sdk.DeliverResult, error) {
 	return d(ctx, store, tx, next)
 }
 
 type InitStaterMiddle interface {
 	InitState(l log.Logger, store state.SimpleDB, module,
-		key, value string, next basecoin.InitStater) (string, error)
+		key, value string, next sdk.InitStater) (string, error)
 }
 
 type InitStaterMiddleFunc func(log.Logger, state.SimpleDB,
-	string, string, string, basecoin.InitStater) (string, error)
+	string, string, string, sdk.InitStater) (string, error)
 
 func (c InitStaterMiddleFunc) InitState(l log.Logger, store state.SimpleDB,
-	module, key, value string, next basecoin.InitStater) (string, error) {
+	module, key, value string, next sdk.InitStater) (string, error) {
 	return c(l, store, module, key, value, next)
 }
 
 type InitValidaterMiddle interface {
-	InitValidate(l log.Logger, store state.SimpleDB, vals []*abci.Validator, next basecoin.InitValidater)
+	InitValidate(l log.Logger, store state.SimpleDB, vals []*abci.Validator, next sdk.InitValidater)
 }
 
 type InitValidaterMiddleFunc func(log.Logger, state.SimpleDB,
-	[]*abci.Validator, basecoin.InitValidater)
+	[]*abci.Validator, sdk.InitValidater)
 
 func (c InitValidaterMiddleFunc) InitValidate(l log.Logger, store state.SimpleDB,
-	vals []*abci.Validator, next basecoin.InitValidater) {
+	vals []*abci.Validator, next sdk.InitValidater) {
 	c(l, store, vals, next)
 }
 
 // holders
 type PassCheck struct{}
 
-func (_ PassCheck) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Checker) (basecoin.CheckResult, error) {
+func (_ PassCheck) CheckTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx, next sdk.Checker) (sdk.CheckResult, error) {
 	return next.CheckTx(ctx, store, tx)
 }
 
 type PassDeliver struct{}
 
-func (_ PassDeliver) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, next basecoin.Deliver) (basecoin.DeliverResult, error) {
+func (_ PassDeliver) DeliverTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx, next sdk.Deliver) (sdk.DeliverResult, error) {
 	return next.DeliverTx(ctx, store, tx)
 }
 
 type PassInitState struct{}
 
 func (_ PassInitState) InitState(l log.Logger, store state.SimpleDB, module,
-	key, value string, next basecoin.InitStater) (string, error) {
+	key, value string, next sdk.InitStater) (string, error) {
 	return next.InitState(l, store, module, key, value)
 }
 
 type PassInitValidate struct{}
 
 func (_ PassInitValidate) InitValidate(l log.Logger, store state.SimpleDB,
-	vals []*abci.Validator, next basecoin.InitValidater) {
+	vals []*abci.Validator, next sdk.InitValidater) {
 	next.InitValidate(l, store, vals)
 }
 
@@ -109,13 +109,13 @@ type Dispatchable interface {
 	AssertDispatcher()
 }
 
-// WrapHandler turns a basecoin.Handler into a Dispatchable interface
-func WrapHandler(h basecoin.Handler) Dispatchable {
+// WrapHandler turns a sdk.Handler into a Dispatchable interface
+func WrapHandler(h sdk.Handler) Dispatchable {
 	return wrapped{h}
 }
 
 type wrapped struct {
-	h basecoin.Handler
+	h sdk.Handler
 }
 
 var _ Dispatchable = wrapped{}
@@ -126,22 +126,22 @@ func (w wrapped) Name() string {
 	return w.h.Name()
 }
 
-func (w wrapped) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, _ basecoin.Checker) (basecoin.CheckResult, error) {
+func (w wrapped) CheckTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx, _ sdk.Checker) (sdk.CheckResult, error) {
 	return w.h.CheckTx(ctx, store, tx)
 }
 
-func (w wrapped) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, _ basecoin.Deliver) (basecoin.DeliverResult, error) {
+func (w wrapped) DeliverTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx, _ sdk.Deliver) (sdk.DeliverResult, error) {
 	return w.h.DeliverTx(ctx, store, tx)
 }
 
 func (w wrapped) InitState(l log.Logger, store state.SimpleDB,
-	module, key, value string, _ basecoin.InitStater) (string, error) {
+	module, key, value string, _ sdk.InitStater) (string, error) {
 	return w.h.InitState(l, store, module, key, value)
 }
 
 func (w wrapped) InitValidate(l log.Logger, store state.SimpleDB,
-	vals []*abci.Validator, next basecoin.InitValidater) {
+	vals []*abci.Validator, next sdk.InitValidater) {
 	w.h.InitValidate(l, store, vals)
 }

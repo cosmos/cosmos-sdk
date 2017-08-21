@@ -7,12 +7,12 @@ import (
 	"github.com/gorilla/mux"
 
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/modules/base"
-	"github.com/tendermint/basecoin/modules/nonce"
-	"github.com/tendermint/basecoin/modules/roles"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/modules/base"
+	"github.com/cosmos/cosmos-sdk/modules/nonce"
+	"github.com/cosmos/cosmos-sdk/modules/roles"
 	"github.com/tendermint/tmlibs/common"
 )
 
@@ -25,7 +25,7 @@ type RoleInput struct {
 
 	MinimumSigners uint32 `json:"min_sigs" validate:"required,min=1"`
 
-	Signers []basecoin.Actor `json:"signers" validate:"required,min=1"`
+	Signers []sdk.Actor `json:"signers" validate:"required,min=1"`
 
 	// Sequence is the user defined field whose purpose is to
 	// prevent replay attacks when creating a role, since it

@@ -10,12 +10,12 @@ import (
 	"github.com/tendermint/go-wire"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/modules/auth"
-	"github.com/tendermint/basecoin/modules/base"
-	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/modules/nonce"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/app"
+	"github.com/cosmos/cosmos-sdk/modules/auth"
+	"github.com/cosmos/cosmos-sdk/modules/base"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
+	"github.com/cosmos/cosmos-sdk/modules/nonce"
 )
 
 func TestCounterPlugin(t *testing.T) {
@@ -47,7 +47,7 @@ func TestCounterPlugin(t *testing.T) {
 	// Deliver a CounterTx
 	DeliverCounterTx := func(valid bool, counterFee coin.Coins, sequence uint32) abci.Result {
 		tx := NewTx(valid, counterFee)
-		tx = nonce.NewTx(sequence, []basecoin.Actor{acct.Actor()}, tx)
+		tx = nonce.NewTx(sequence, []sdk.Actor{acct.Actor()}, tx)
 		tx = base.NewChainTx(chainID, 0, tx)
 		stx := auth.NewSig(tx)
 		auth.Sign(stx, acct.Key)

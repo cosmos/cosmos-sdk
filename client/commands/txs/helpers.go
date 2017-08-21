@@ -22,9 +22,9 @@ import (
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/modules/auth"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/modules/auth"
 )
 
 // Validatable represents anything that can be Validated
@@ -43,7 +43,7 @@ func GetSigner() crypto.PubKey {
 
 // GetSignerAct returns the address of the signer of the tx
 // (as we still only support single sig)
-func GetSignerAct() (res basecoin.Actor) {
+func GetSignerAct() (res sdk.Actor) {
 	// this could be much cooler with multisig...
 	signer := GetSigner()
 	if !signer.Empty() {
@@ -61,7 +61,7 @@ func GetSignerAct() (res basecoin.Actor) {
 // If you want a non-standard flow, just call the various functions directly.
 // eg. if you already set the middleware layers in your code, or want to
 // output in another format.
-func DoTx(tx basecoin.Tx) (err error) {
+func DoTx(tx sdk.Tx) (err error) {
 	tx, err = Middleware.Wrap(tx)
 	if err != nil {
 		return err
@@ -85,7 +85,7 @@ func DoTx(tx basecoin.Tx) (err error) {
 
 // SignTx will validate the tx, and signs it if it is wrapping a Signable.
 // Modifies tx in place, and returns an error if it should sign but couldn't
-func SignTx(tx basecoin.Tx) error {
+func SignTx(tx sdk.Tx) error {
 	// validate tx client-side
 	err := tx.ValidateBasic()
 	if err != nil {
@@ -114,7 +114,7 @@ func SignTx(tx basecoin.Tx) error {
 // multisig, or to post it to the node. Returns error on any failure.
 // If no error and the result is nil, it means it already wrote to file,
 // no post, no need to do more.
-func PrepareOrPostTx(tx basecoin.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
+func PrepareOrPostTx(tx sdk.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
 	wrote, err := PrepareTx(tx)
 	// error in prep
 	if err != nil {
@@ -132,7 +132,7 @@ func PrepareOrPostTx(tx basecoin.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
 // to the specified location for later multi-sig.  Returns true if it
 // handled the tx (no futher work required), false if it did nothing
 // (and we should post the tx)
-func PrepareTx(tx basecoin.Tx) (bool, error) {
+func PrepareTx(tx sdk.Tx) (bool, error) {
 	prep := viper.GetString(FlagPrepare)
 	if prep == "" {
 		return false, nil
@@ -152,7 +152,7 @@ func PrepareTx(tx basecoin.Tx) (bool, error) {
 // PostTx does all work once we construct a proper struct
 // it validates the data, signs if needed, transforms to bytes,
 // and posts to the node.
-func PostTx(tx basecoin.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
+func PostTx(tx sdk.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
 	packet := wire.BinaryBytes(tx)
 	// post the bytes
 	node := commands.GetNode()

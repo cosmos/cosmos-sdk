@@ -8,12 +8,12 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
-func makeSignTx() basecoin.Tx {
+func makeSignTx() sdk.Tx {
 	key := crypto.GenPrivKeyEd25519().Wrap()
 	payload := cmn.RandBytes(32)
 	tx := NewSig(stack.NewRawTx(payload))
@@ -21,7 +21,7 @@ func makeSignTx() basecoin.Tx {
 	return tx.Wrap()
 }
 
-func makeMultiSignTx(cnt int) basecoin.Tx {
+func makeMultiSignTx(cnt int) sdk.Tx {
 	payload := cmn.RandBytes(32)
 	tx := NewMulti(stack.NewRawTx(payload))
 	for i := 0; i < cnt; i++ {
@@ -31,7 +31,7 @@ func makeMultiSignTx(cnt int) basecoin.Tx {
 	return tx.Wrap()
 }
 
-func makeHandler() basecoin.Handler {
+func makeHandler() sdk.Handler {
 	return stack.New(Signatures{}).Use(stack.OKHandler{})
 }
 

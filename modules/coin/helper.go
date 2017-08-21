@@ -4,8 +4,8 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire/data"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/modules/auth"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/modules/auth"
 )
 
 // AccountWithKey is a helper for tests, that includes and account
@@ -31,7 +31,7 @@ func (a *AccountWithKey) Address() []byte {
 }
 
 // Actor returns the basecoin actor associated with this account
-func (a *AccountWithKey) Actor() basecoin.Actor {
+func (a *AccountWithKey) Actor() sdk.Actor {
 	return auth.SigPerm(a.Key.PubKey().Address())
 }
 

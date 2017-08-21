@@ -7,10 +7,10 @@ import (
 
 	lc "github.com/tendermint/light-client"
 
-	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/client/commands/query"
-	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/stack"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands/query"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
+	"github.com/cosmos/cosmos-sdk/stack"
 )
 
 // AccountQueryCmd - command to query an account

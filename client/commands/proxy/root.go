@@ -14,7 +14,7 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands"
 )
 
 // RootCmd represents the base command when called without any subcommands

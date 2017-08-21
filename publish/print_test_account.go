@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/tendermint/basecoin/tests"
+	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/tendermint/go-wire"
 )
 

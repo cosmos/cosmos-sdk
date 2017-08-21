@@ -17,8 +17,8 @@ package commands
 // 	"github.com/tendermint/merkleeyes/iavl"
 // 	cmn "github.com/tendermint/tmlibs/common"
 
-// 	"github.com/tendermint/basecoin/plugins/ibc"
-// 	"github.com/tendermint/basecoin/types"
+// 	"github.com/cosmos/cosmos-sdk/plugins/ibc"
+// 	"github.com/cosmos/cosmos-sdk/types"
 // 	"github.com/tendermint/tendermint/rpc/client"
 // 	tmtypes "github.com/tendermint/tendermint/types"
 // )

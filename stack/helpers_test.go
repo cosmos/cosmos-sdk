@@ -8,8 +8,8 @@ import (
 
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 func TestOK(t *testing.T) {
@@ -18,7 +18,7 @@ func TestOK(t *testing.T) {
 	ctx := NewContext("test-chain", 20, log.NewNopLogger())
 	store := state.NewMemKVStore()
 	data := "this looks okay"
-	tx := basecoin.Tx{}
+	tx := sdk.Tx{}
 
 	ok := OKHandler{Log: data}
 	res, err := ok.CheckTx(ctx, store, tx)
@@ -36,7 +36,7 @@ func TestFail(t *testing.T) {
 	ctx := NewContext("test-chain", 20, log.NewNopLogger())
 	store := state.NewMemKVStore()
 	msg := "big problem"
-	tx := basecoin.Tx{}
+	tx := sdk.Tx{}
 
 	fail := FailHandler{Err: errors.New(msg)}
 	_, err := fail.CheckTx(ctx, store, tx)
@@ -56,7 +56,7 @@ func TestPanic(t *testing.T) {
 	ctx := NewContext("test-chain", 20, log.NewNopLogger())
 	store := state.NewMemKVStore()
 	msg := "system crash!"
-	tx := basecoin.Tx{}
+	tx := sdk.Tx{}
 
 	fail := PanicHandler{Msg: msg}
 	assert.Panics(func() { fail.CheckTx(ctx, store, tx) })
@@ -70,18 +70,18 @@ func TestCheck(t *testing.T) {
 	store := state.NewMemKVStore()
 	h := CheckHandler{}
 
-	a := basecoin.Actor{App: "foo", Address: []byte("baz")}
-	b := basecoin.Actor{App: "si-ly", Address: []byte("bar")}
+	a := sdk.Actor{App: "foo", Address: []byte("baz")}
+	b := sdk.Actor{App: "si-ly", Address: []byte("bar")}
 
 	cases := []struct {
 		valid             bool
-		signers, required []basecoin.Actor
+		signers, required []sdk.Actor
 	}{
 		{true, nil, nil},
-		{true, []basecoin.Actor{a}, []basecoin.Actor{a}},
-		{true, []basecoin.Actor{a, b}, []basecoin.Actor{a}},
-		{false, []basecoin.Actor{a}, []basecoin.Actor{a, b}},
-		{false, []basecoin.Actor{a}, []basecoin.Actor{b}},
+		{true, []sdk.Actor{a}, []sdk.Actor{a}},
+		{true, []sdk.Actor{a, b}, []sdk.Actor{a}},
+		{false, []sdk.Actor{a}, []sdk.Actor{a, b}},
+		{false, []sdk.Actor{a}, []sdk.Actor{b}},
 	}
 
 	for i, tc := range cases {

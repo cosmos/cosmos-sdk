@@ -6,9 +6,9 @@ import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // nolint
@@ -27,7 +27,7 @@ func (Recovery) Name() string {
 var _ Middleware = Recovery{}
 
 // CheckTx catches any panic and converts to error - fulfills Middlware interface
-func (Recovery) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
+func (Recovery) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Checker) (res sdk.CheckResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)
@@ -37,7 +37,7 @@ func (Recovery) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.
 }
 
 // DeliverTx catches any panic and converts to error - fulfills Middlware interface
-func (Recovery) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
+func (Recovery) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Deliver) (res sdk.DeliverResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)
@@ -47,7 +47,7 @@ func (Recovery) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoi
 }
 
 // InitState catches any panic and converts to error - fulfills Middlware interface
-func (Recovery) InitState(l log.Logger, store state.SimpleDB, module, key, value string, next basecoin.InitStater) (log string, err error) {
+func (Recovery) InitState(l log.Logger, store state.SimpleDB, module, key, value string, next sdk.InitStater) (log string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = normalizePanic(r)
@@ -59,7 +59,7 @@ func (Recovery) InitState(l log.Logger, store state.SimpleDB, module, key, value
 // InitValidate catches any panic and logs it
 // TODO: return an error???
 func (Recovery) InitValidate(l log.Logger, store state.SimpleDB,
-	vals []*abci.Validator, next basecoin.InitValidater) {
+	vals []*abci.Validator, next sdk.InitValidater) {
 
 	defer func() {
 		if r := recover(); r != nil {

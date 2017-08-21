@@ -8,9 +8,9 @@ import (
 
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 func TestChainValidate(t *testing.T) {
@@ -39,7 +39,7 @@ func TestChainValidate(t *testing.T) {
 		}
 	}
 
-	empty := NewChainTx("okay", 0, basecoin.Tx{})
+	empty := NewChainTx("okay", 0, sdk.Tx{})
 	err := empty.ValidateBasic()
 	assert.NotNil(err)
 }
@@ -52,7 +52,7 @@ func TestChain(t *testing.T) {
 
 	raw := stack.NewRawTx([]byte{1, 2, 3, 4})
 	cases := []struct {
-		tx       basecoin.Tx
+		tx       sdk.Tx
 		valid    bool
 		errorMsg string
 	}{

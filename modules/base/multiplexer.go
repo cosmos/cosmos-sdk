@@ -7,9 +7,9 @@ import (
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 //nolint
@@ -31,7 +31,7 @@ func (Multiplexer) Name() string {
 var _ stack.Middleware = Multiplexer{}
 
 // CheckTx splits the input tx and checks them all - fulfills Middlware interface
-func (Multiplexer) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
+func (Multiplexer) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Checker) (res sdk.CheckResult, err error) {
 	if mtx, ok := tx.Unwrap().(MultiTx); ok {
 		return runAllChecks(ctx, store, mtx.Txs, next)
 	}
@@ -39,16 +39,16 @@ func (Multiplexer) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx baseco
 }
 
 // DeliverTx splits the input tx and checks them all - fulfills Middlware interface
-func (Multiplexer) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
+func (Multiplexer) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Deliver) (res sdk.DeliverResult, err error) {
 	if mtx, ok := tx.Unwrap().(MultiTx); ok {
 		return runAllDelivers(ctx, store, mtx.Txs, next)
 	}
 	return next.DeliverTx(ctx, store, tx)
 }
 
-func runAllChecks(ctx basecoin.Context, store state.SimpleDB, txs []basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
+func runAllChecks(ctx sdk.Context, store state.SimpleDB, txs []sdk.Tx, next sdk.Checker) (res sdk.CheckResult, err error) {
 	// store all results, unless anything errors
-	rs := make([]basecoin.CheckResult, len(txs))
+	rs := make([]sdk.CheckResult, len(txs))
 	for i, stx := range txs {
 		rs[i], err = next.CheckTx(ctx, store, stx)
 		if err != nil {
@@ -59,9 +59,9 @@ func runAllChecks(ctx basecoin.Context, store state.SimpleDB, txs []basecoin.Tx,
 	return combineChecks(rs), nil
 }
 
-func runAllDelivers(ctx basecoin.Context, store state.SimpleDB, txs []basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
+func runAllDelivers(ctx sdk.Context, store state.SimpleDB, txs []sdk.Tx, next sdk.Deliver) (res sdk.DeliverResult, err error) {
 	// store all results, unless anything errors
-	rs := make([]basecoin.DeliverResult, len(txs))
+	rs := make([]sdk.DeliverResult, len(txs))
 	for i, stx := range txs {
 		rs[i], err = next.DeliverTx(ctx, store, stx)
 		if err != nil {
@@ -74,7 +74,7 @@ func runAllDelivers(ctx basecoin.Context, store state.SimpleDB, txs []basecoin.T
 
 // combines all data bytes as a go-wire array.
 // joins all log messages with \n
-func combineChecks(all []basecoin.CheckResult) basecoin.CheckResult {
+func combineChecks(all []sdk.CheckResult) sdk.CheckResult {
 	datas := make([]data.Bytes, len(all))
 	logs := make([]string, len(all))
 	var allocated, payments uint64
@@ -84,7 +84,7 @@ func combineChecks(all []basecoin.CheckResult) basecoin.CheckResult {
 		allocated += r.GasAllocated
 		payments += r.GasPayment
 	}
-	return basecoin.CheckResult{
+	return sdk.CheckResult{
 		Data:         wire.BinaryBytes(datas),
 		Log:          strings.Join(logs, "\n"),
 		GasAllocated: allocated,
@@ -94,7 +94,7 @@ func combineChecks(all []basecoin.CheckResult) basecoin.CheckResult {
 
 // combines all data bytes as a go-wire array.
 // joins all log messages with \n
-func combineDelivers(all []basecoin.DeliverResult) basecoin.DeliverResult {
+func combineDelivers(all []sdk.DeliverResult) sdk.DeliverResult {
 	datas := make([]data.Bytes, len(all))
 	logs := make([]string, len(all))
 	var used uint64
@@ -107,7 +107,7 @@ func combineDelivers(all []basecoin.DeliverResult) basecoin.DeliverResult {
 			diffs = append(diffs, r.Diff...)
 		}
 	}
-	return basecoin.DeliverResult{
+	return sdk.DeliverResult{
 		Data:    wire.BinaryBytes(datas),
 		Log:     strings.Join(logs, "\n"),
 		GasUsed: used,

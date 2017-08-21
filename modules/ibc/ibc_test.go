@@ -11,10 +11,10 @@ import (
 	"github.com/tendermint/light-client/certifiers"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // this tests registration without registrar permissions
@@ -73,14 +73,14 @@ func TestIBCRegisterPermissions(t *testing.T) {
 	keys := certifiers.GenValKeys(4)
 	appHash := []byte{0x17, 0x21, 0x5, 0x1e}
 
-	foobar := basecoin.Actor{App: "foo", Address: []byte("bar")}
-	baz := basecoin.Actor{App: "baz", Address: []byte("bar")}
-	foobaz := basecoin.Actor{App: "foo", Address: []byte("baz")}
+	foobar := sdk.Actor{App: "foo", Address: []byte("bar")}
+	baz := sdk.Actor{App: "baz", Address: []byte("bar")}
+	foobaz := sdk.Actor{App: "foo", Address: []byte("baz")}
 
 	cases := []struct {
 		seed      certifiers.Seed
-		registrar basecoin.Actor
-		signer    basecoin.Actor
+		registrar sdk.Actor
+		signer    sdk.Actor
 		checker   errors.CheckErr
 	}{
 		// no sig, no registrar
@@ -240,18 +240,18 @@ func TestIBCCreatePacket(t *testing.T) {
 	// this is the tx we send, and the needed permission to send it
 	raw := stack.NewRawTx([]byte{0xbe, 0xef})
 	ibcPerm := AllowIBC(stack.NameOK)
-	somePerm := basecoin.Actor{App: "some", Address: []byte("perm")}
+	somePerm := sdk.Actor{App: "some", Address: []byte("perm")}
 
 	cases := []struct {
 		dest     string
-		ibcPerms basecoin.Actors
-		ctxPerms basecoin.Actors
+		ibcPerms sdk.Actors
+		ctxPerms sdk.Actors
 		checker  errors.CheckErr
 	}{
 		// wrong chain -> error
 		{
 			dest:     "some-other-chain",
-			ctxPerms: basecoin.Actors{ibcPerm},
+			ctxPerms: sdk.Actors{ibcPerm},
 			checker:  IsNotRegisteredErr,
 		},
 
@@ -264,23 +264,23 @@ func TestIBCCreatePacket(t *testing.T) {
 		// correct -> nice sequence
 		{
 			dest:     chainID,
-			ctxPerms: basecoin.Actors{ibcPerm},
+			ctxPerms: sdk.Actors{ibcPerm},
 			checker:  errors.NoErr,
 		},
 
 		// requesting invalid permissions -> error
 		{
 			dest:     chainID,
-			ibcPerms: basecoin.Actors{somePerm},
-			ctxPerms: basecoin.Actors{ibcPerm},
+			ibcPerms: sdk.Actors{somePerm},
+			ctxPerms: sdk.Actors{ibcPerm},
 			checker:  IsCannotSetPermissionErr,
 		},
 
 		// requesting extra permissions when present
 		{
 			dest:     chainID,
-			ibcPerms: basecoin.Actors{somePerm},
-			ctxPerms: basecoin.Actors{ibcPerm, somePerm},
+			ibcPerms: sdk.Actors{somePerm},
+			ctxPerms: sdk.Actors{ibcPerm, somePerm},
 			checker:  errors.NoErr,
 		},
 	}
@@ -303,10 +303,10 @@ func TestIBCCreatePacket(t *testing.T) {
 	if assert.Equal(2, q.Size()) {
 		expected := []struct {
 			seq  uint64
-			perm basecoin.Actors
+			perm sdk.Actors
 		}{
 			{0, nil},
-			{1, basecoin.Actors{somePerm}},
+			{1, sdk.Actors{somePerm}},
 		}
 
 		for _, tc := range expected {
@@ -359,7 +359,7 @@ func TestIBCPostPacket(t *testing.T) {
 	packet0badHeight := packet0
 	packet0badHeight.FromChainHeight -= 2
 
-	theirActor := basecoin.Actor{ChainID: otherID, App: "foo", Address: []byte{1}}
+	theirActor := sdk.Actor{ChainID: otherID, App: "foo", Address: []byte{1}}
 	p1 := NewPacket(rawTx, ourID, 1, theirActor)
 	packet1, update1 := otherChain.MakePostPacket(p1, start+25)
 	require.Nil(ourChain.Update(update1))
@@ -367,15 +367,15 @@ func TestIBCPostPacket(t *testing.T) {
 	packet1badProof := packet1
 	packet1badProof.Key = []byte("random-data")
 
-	ourActor := basecoin.Actor{ChainID: ourID, App: "bar", Address: []byte{2}}
+	ourActor := sdk.Actor{ChainID: ourID, App: "bar", Address: []byte{2}}
 	p2 := NewPacket(rawTx, ourID, 2, ourActor)
 	packet2, update2 := otherChain.MakePostPacket(p2, start+50)
 	require.Nil(ourChain.Update(update2))
 
-	ibcPerm := basecoin.Actors{AllowIBC(stack.NameOK)}
+	ibcPerm := sdk.Actors{AllowIBC(stack.NameOK)}
 	cases := []struct {
 		packet      PostPacketTx
-		permissions basecoin.Actors
+		permissions sdk.Actors
 		checker     errors.CheckErr
 	}{
 		// bad chain -> error

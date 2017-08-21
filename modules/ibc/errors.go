@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/basecoin/errors"
+	"github.com/cosmos/cosmos-sdk/errors"
 )
 
 // nolint

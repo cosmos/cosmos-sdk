@@ -7,13 +7,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/client/commands/query"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/modules/nonce"
-	"github.com/tendermint/basecoin/stack"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands/query"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
+	"github.com/cosmos/cosmos-sdk/modules/nonce"
+	"github.com/cosmos/cosmos-sdk/stack"
 	wire "github.com/tendermint/go-wire"
 	lightclient "github.com/tendermint/light-client"
 	"github.com/tendermint/tmlibs/common"
@@ -29,7 +29,7 @@ func doQueryNonce(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	actor = coin.ChainAddr(actor)
-	key := nonce.GetSeqKey([]basecoin.Actor{actor})
+	key := nonce.GetSeqKey([]sdk.Actor{actor})
 	key = stack.PrefixedKey(nonce.NameNonce, key)
 
 	prove := !viper.GetBool(commands.FlagTrustNode)

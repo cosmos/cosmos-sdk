@@ -9,7 +9,7 @@ complex algorithms (although it would be great to add them).
 
 You can create them with NewSig() and NewMultiSig(), and they fulfill
 the keys.Signable interface. You can then .Wrap() them to create
-a basecoin.Tx.
+a sdk.Tx.
 */
 package auth
 
@@ -18,8 +18,8 @@ import (
 	"github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/go-wire/data"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
 )
 
 // nolint
@@ -50,7 +50,7 @@ func (s Signed) Empty() bool {
 /**** Registration ****/
 
 func init() {
-	basecoin.TxMapper.
+	sdk.TxMapper.
 		RegisterImplementation(&OneSig{}, TypeSingleTx, ByteSingleTx).
 		RegisterImplementation(&MultiSig{}, TypeMultiSig, ByteMultiSig)
 }
@@ -59,23 +59,23 @@ func init() {
 
 // OneSig lets us wrap arbitrary data with a go-crypto signature
 type OneSig struct {
-	Tx     basecoin.Tx `json:"tx"`
+	Tx     sdk.Tx `json:"tx"`
 	Signed `json:"signature"`
 }
 
 var _ keys.Signable = &OneSig{}
-var _ basecoin.TxLayer = &OneSig{}
+var _ sdk.TxLayer = &OneSig{}
 
 // NewSig wraps the tx with a Signable that accepts exactly one signature
-func NewSig(tx basecoin.Tx) *OneSig {
+func NewSig(tx sdk.Tx) *OneSig {
 	return &OneSig{Tx: tx}
 }
 
 //nolint
-func (s *OneSig) Wrap() basecoin.Tx {
-	return basecoin.Tx{s}
+func (s *OneSig) Wrap() sdk.Tx {
+	return sdk.Tx{s}
 }
-func (s *OneSig) Next() basecoin.Tx {
+func (s *OneSig) Next() sdk.Tx {
 	return s.Tx
 }
 func (s *OneSig) ValidateBasic() error {
@@ -130,23 +130,23 @@ func (s *OneSig) Signers() ([]crypto.PubKey, error) {
 
 // MultiSig lets us wrap arbitrary data with a go-crypto signature
 type MultiSig struct {
-	Tx   basecoin.Tx `json:"tx"`
+	Tx   sdk.Tx `json:"tx"`
 	Sigs []Signed    `json:"signatures"`
 }
 
 var _ keys.Signable = &MultiSig{}
-var _ basecoin.TxLayer = &MultiSig{}
+var _ sdk.TxLayer = &MultiSig{}
 
 // NewMulti wraps the tx with a Signable that accepts arbitrary numbers of signatures
-func NewMulti(tx basecoin.Tx) *MultiSig {
+func NewMulti(tx sdk.Tx) *MultiSig {
 	return &MultiSig{Tx: tx}
 }
 
 // nolint
-func (s *MultiSig) Wrap() basecoin.Tx {
-	return basecoin.Tx{s}
+func (s *MultiSig) Wrap() sdk.Tx {
+	return sdk.Tx{s}
 }
-func (s *MultiSig) Next() basecoin.Tx {
+func (s *MultiSig) Next() sdk.Tx {
 	return s.Tx
 }
 func (s *MultiSig) ValidateBasic() error {

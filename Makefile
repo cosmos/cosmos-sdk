@@ -3,7 +3,7 @@ GOTOOLS =	github.com/mitchellh/gox \
 			github.com/rigelrozanski/shelldown/cmd/shelldown
 TUTORIALS=$(shell find docs/guide -name "*md" -type f)
 
-LINKER_FLAGS:="-X github.com/tendermint/basecoin/client/commands.CommitHash=`git rev-parse --short HEAD`"
+LINKER_FLAGS:="-X github.com/cosmos/cosmos-sdk/client/commands.CommitHash=`git rev-parse --short HEAD`"
 
 all: get_vendor_deps install test
 

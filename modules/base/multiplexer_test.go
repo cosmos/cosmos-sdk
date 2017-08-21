@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
@@ -41,7 +41,7 @@ func TestMultiplexer(t *testing.T) {
 	}
 
 	cases := [...]struct {
-		tx           basecoin.Tx
+		tx           sdk.Tx
 		valid        bool
 		gasAllocated uint64
 		gasPayment   uint64

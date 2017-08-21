@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/abci/server"
-	"github.com/tendermint/basecoin"
+	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
 
@@ -19,7 +19,7 @@ import (
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/types"
 
-	"github.com/tendermint/basecoin/app"
+	"github.com/cosmos/cosmos-sdk/app"
 )
 
 // StartCmd - command to start running the basecoin node!
@@ -41,7 +41,7 @@ const (
 var (
 	// Handler - use a global to store the handler, so we can set it in main.
 	// TODO: figure out a cleaner way to register plugins
-	Handler basecoin.Handler
+	Handler sdk.Handler
 )
 
 func init() {

@@ -7,7 +7,7 @@ func main() {}
 // 	"time"
 
 // 	"github.com/gorilla/websocket"
-// 	"github.com/tendermint/basecoin/types"
+// 	"github.com/cosmos/cosmos-sdk/types"
 // 	wire "github.com/tendermint/go-wire"
 // 	_ "github.com/tendermint/tendermint/rpc/core/types" // Register RPCResponse > Result types
 // 	"github.com/tendermint/tendermint/rpc/lib/client"

@@ -5,21 +5,21 @@ import (
 
 	"github.com/tendermint/tmlibs/cli"
 
-	"github.com/tendermint/basecoin"
-	client "github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/cmd/basecoin/commands"
-	"github.com/tendermint/basecoin/modules/auth"
-	"github.com/tendermint/basecoin/modules/base"
-	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/modules/fee"
-	"github.com/tendermint/basecoin/modules/ibc"
-	"github.com/tendermint/basecoin/modules/nonce"
-	"github.com/tendermint/basecoin/modules/roles"
-	"github.com/tendermint/basecoin/stack"
+	sdk "github.com/cosmos/cosmos-sdk"
+	client "github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/cmd/basecoin/commands"
+	"github.com/cosmos/cosmos-sdk/modules/auth"
+	"github.com/cosmos/cosmos-sdk/modules/base"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
+	"github.com/cosmos/cosmos-sdk/modules/fee"
+	"github.com/cosmos/cosmos-sdk/modules/ibc"
+	"github.com/cosmos/cosmos-sdk/modules/nonce"
+	"github.com/cosmos/cosmos-sdk/modules/roles"
+	"github.com/cosmos/cosmos-sdk/stack"
 )
 
 // BuildApp constructs the stack we want to use for this app
-func BuildApp(feeDenom string) basecoin.Handler {
+func BuildApp(feeDenom string) sdk.Handler {
 	return stack.New(
 		base.Logger{},
 		stack.Recovery{},

@@ -1,8 +1,8 @@
 package stack
 
 import (
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 //nolint
@@ -26,7 +26,7 @@ func (Checkpoint) Name() string {
 var _ Middleware = Checkpoint{}
 
 // CheckTx reverts all data changes if there was an error
-func (c Checkpoint) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
+func (c Checkpoint) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Checker) (res sdk.CheckResult, err error) {
 	if !c.OnCheck {
 		return next.CheckTx(ctx, store, tx)
 	}
@@ -39,7 +39,7 @@ func (c Checkpoint) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basec
 }
 
 // DeliverTx reverts all data changes if there was an error
-func (c Checkpoint) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
+func (c Checkpoint) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Deliver) (res sdk.DeliverResult, err error) {
 	if !c.OnDeliver {
 		return next.DeliverTx(ctx, store, tx)
 	}

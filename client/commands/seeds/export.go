@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands"
 	"github.com/tendermint/light-client/certifiers"
 )
 

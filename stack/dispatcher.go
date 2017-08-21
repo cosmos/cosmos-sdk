@@ -8,9 +8,9 @@ import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // nolint
@@ -40,7 +40,7 @@ func NewDispatcher(routes ...Dispatchable) *Dispatcher {
 	return d
 }
 
-var _ basecoin.Handler = new(Dispatcher)
+var _ sdk.Handler = new(Dispatcher)
 
 // AddRoutes registers all these dispatchable choices under their subdomains
 //
@@ -66,7 +66,7 @@ func (d *Dispatcher) Name() string {
 // Tries to find a registered module (Dispatchable) based on the name of the tx.
 // The tx name (as registered with go-data) should be in the form `<module name>/XXXX`,
 // where `module name` must match the name of a dispatchable and XXX can be any string.
-func (d *Dispatcher) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
+func (d *Dispatcher) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.CheckResult, err error) {
 	r, err := d.lookupTx(tx)
 	if err != nil {
 		return res, err
@@ -87,7 +87,7 @@ func (d *Dispatcher) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx base
 // Tries to find a registered module (Dispatchable) based on the name of the tx.
 // The tx name (as registered with go-data) should be in the form `<module name>/XXXX`,
 // where `module name` must match the name of a dispatchable and XXX can be any string.
-func (d *Dispatcher) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
+func (d *Dispatcher) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.DeliverResult, err error) {
 	r, err := d.lookupTx(tx)
 	if err != nil {
 		return res, err
@@ -131,7 +131,7 @@ func (d *Dispatcher) InitValidate(log log.Logger, store state.SimpleDB, vals []*
 	}
 }
 
-func (d *Dispatcher) lookupTx(tx basecoin.Tx) (Dispatchable, error) {
+func (d *Dispatcher) lookupTx(tx sdk.Tx) (Dispatchable, error) {
 	kind, err := tx.GetKind()
 	if err != nil {
 		return nil, err

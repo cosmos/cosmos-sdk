@@ -4,8 +4,8 @@ import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // middleware lets us wrap a whole stack up into one Handler
@@ -15,16 +15,16 @@ type middleware struct {
 	middleware Middleware
 	space      string
 	allowIBC   bool
-	next       basecoin.Handler
+	next       sdk.Handler
 }
 
-var _ basecoin.Handler = &middleware{}
+var _ sdk.Handler = &middleware{}
 
 func (m *middleware) Name() string {
 	return m.middleware.Name()
 }
 
-func (m *middleware) wrapCtx(ctx basecoin.Context) basecoin.Context {
+func (m *middleware) wrapCtx(ctx sdk.Context) sdk.Context {
 	if m.allowIBC {
 		return withIBC(ctx)
 	}
@@ -32,7 +32,7 @@ func (m *middleware) wrapCtx(ctx basecoin.Context) basecoin.Context {
 }
 
 // CheckTx always returns an empty success tx
-func (m *middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (basecoin.CheckResult, error) {
+func (m *middleware) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (sdk.CheckResult, error) {
 	// make sure we pass in proper context to child
 	next := secureCheck(m.next, ctx)
 	// set the permissions for this app
@@ -43,7 +43,7 @@ func (m *middleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx base
 }
 
 // DeliverTx always returns an empty success tx
-func (m *middleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
+func (m *middleware) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.DeliverResult, err error) {
 	// make sure we pass in proper context to child
 	next := secureDeliver(m.next, ctx)
 	// set the permissions for this app
@@ -83,7 +83,7 @@ func prep(m Middleware, ibc bool) builder {
 }
 
 // wrap sets up the middleware with the proper options
-func (b builder) wrap(next basecoin.Handler) basecoin.Handler {
+func (b builder) wrap(next sdk.Handler) sdk.Handler {
 	return &middleware{
 		middleware: b.middleware,
 		space:      b.stateSpace,
@@ -95,11 +95,11 @@ func (b builder) wrap(next basecoin.Handler) basecoin.Handler {
 // Stack is the entire application stack
 type Stack struct {
 	middles          []builder
-	handler          basecoin.Handler
-	basecoin.Handler // the compiled version, which we expose
+	handler          sdk.Handler
+	sdk.Handler // the compiled version, which we expose
 }
 
-var _ basecoin.Handler = &Stack{}
+var _ sdk.Handler = &Stack{}
 
 // New prepares a middleware stack, you must `.Use()` a Handler
 // before you can execute it.
@@ -127,7 +127,7 @@ func (s *Stack) IBC(m Middleware) *Stack {
 }
 
 // Use sets the final handler for the stack and prepares it for use
-func (s *Stack) Use(handler basecoin.Handler) *Stack {
+func (s *Stack) Use(handler sdk.Handler) *Stack {
 	if handler == nil {
 		panic("Cannot have a Stack without an end handler")
 	}
@@ -143,7 +143,7 @@ func (s *Stack) Dispatch(routes ...Dispatchable) *Stack {
 	return s.Use(d)
 }
 
-func build(mid []builder, end basecoin.Handler) basecoin.Handler {
+func build(mid []builder, end sdk.Handler) sdk.Handler {
 	if len(mid) == 0 {
 		return end
 	}

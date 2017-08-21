@@ -9,8 +9,8 @@ import (
 
 	"github.com/tendermint/go-wire/data"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/stack"
 )
 
 func TestEncoding(t *testing.T) {
@@ -21,7 +21,7 @@ func TestEncoding(t *testing.T) {
 	// raw2 := stack.NewRawTx([]byte{0x73, 0x86, 0x22})
 
 	cases := []struct {
-		Tx basecoin.Tx
+		Tx sdk.Tx
 	}{
 		{raw},
 		// {NewMultiTx(raw, raw2)},
@@ -35,7 +35,7 @@ func TestEncoding(t *testing.T) {
 		// test json in and out
 		js, err := data.ToJSON(tx)
 		require.Nil(err, i)
-		var jtx basecoin.Tx
+		var jtx sdk.Tx
 		err = data.FromJSON(js, &jtx)
 		require.Nil(err, i)
 		assert.Equal(tx, jtx, i)
@@ -43,7 +43,7 @@ func TestEncoding(t *testing.T) {
 		// test wire in and out
 		bin, err := data.ToWire(tx)
 		require.Nil(err, i)
-		var wtx basecoin.Tx
+		var wtx sdk.Tx
 		err = data.FromWire(bin, &wtx)
 		require.Nil(err, i)
 		assert.Equal(tx, wtx, i)

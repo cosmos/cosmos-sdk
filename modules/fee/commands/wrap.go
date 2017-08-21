@@ -4,11 +4,11 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/client/commands"
-	txcmd "github.com/tendermint/basecoin/client/commands/txs"
-	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/modules/fee"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
+	"github.com/cosmos/cosmos-sdk/modules/fee"
 )
 
 //nolint
@@ -24,7 +24,7 @@ var _ txcmd.Wrapper = FeeWrapper{}
 
 // Wrap checks for FlagFee and if present wraps the tx with a
 // FeeTx of the given amount, paid by the signer
-func (FeeWrapper) Wrap(tx basecoin.Tx) (res basecoin.Tx, err error) {
+func (FeeWrapper) Wrap(tx sdk.Tx) (res sdk.Tx, err error) {
 	//parse the fee and amounts into coin types
 	toll, err := coin.ParseCoin(viper.GetString(FlagFee))
 	if err != nil {
@@ -50,7 +50,7 @@ func (FeeWrapper) Register(fs *pflag.FlagSet) {
 	fs.String(FlagPayer, "", "Account to pay fee if not current signer (for multisig)")
 }
 
-func readPayer() (basecoin.Actor, error) {
+func readPayer() (sdk.Actor, error) {
 	payer := viper.GetString(FlagPayer)
 	if payer == "" {
 		return txcmd.GetSignerAct(), nil

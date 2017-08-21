@@ -10,8 +10,8 @@ package nonce
 import (
 	"sort"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // nolint
@@ -21,20 +21,20 @@ const (
 )
 
 func init() {
-	basecoin.TxMapper.RegisterImplementation(Tx{}, TypeNonce, ByteNonce)
+	sdk.TxMapper.RegisterImplementation(Tx{}, TypeNonce, ByteNonce)
 }
 
 // Tx - Nonce transaction structure, contains list of signers and current sequence number
 type Tx struct {
 	Sequence uint32           `json:"sequence"`
-	Signers  []basecoin.Actor `json:"signers"`
-	Tx       basecoin.Tx      `json:"tx"`
+	Signers  []sdk.Actor `json:"signers"`
+	Tx       sdk.Tx      `json:"tx"`
 }
 
-var _ basecoin.TxInner = &Tx{}
+var _ sdk.TxInner = &Tx{}
 
 // NewTx wraps the tx with a signable nonce
-func NewTx(sequence uint32, signers []basecoin.Actor, tx basecoin.Tx) basecoin.Tx {
+func NewTx(sequence uint32, signers []sdk.Actor, tx sdk.Tx) sdk.Tx {
 	return (Tx{
 		Sequence: sequence,
 		Signers:  signers,
@@ -43,8 +43,8 @@ func NewTx(sequence uint32, signers []basecoin.Actor, tx basecoin.Tx) basecoin.T
 }
 
 //nolint
-func (n Tx) Wrap() basecoin.Tx {
-	return basecoin.Tx{n}
+func (n Tx) Wrap() sdk.Tx {
+	return sdk.Tx{n}
 }
 func (n Tx) ValidateBasic() error {
 	switch {
@@ -62,7 +62,7 @@ func (n Tx) ValidateBasic() error {
 // and further increment the sequence number
 // NOTE It is okay to modify the sequence before running the wrapped TX because if the
 // wrapped Tx fails, the state changes are not applied
-func (n Tx) CheckIncrementSeq(ctx basecoin.Context, store state.SimpleDB) error {
+func (n Tx) CheckIncrementSeq(ctx sdk.Context, store state.SimpleDB) error {
 
 	seqKey := n.getSeqKey()
 
@@ -96,12 +96,12 @@ func (n Tx) getSeqKey() (seqKey []byte) {
 }
 
 // GetSeqKey - Generate the sequence key as the concatenated list of signers, sorted by address.
-func GetSeqKey(signers []basecoin.Actor) (seqKey []byte) {
+func GetSeqKey(signers []sdk.Actor) (seqKey []byte) {
 
 	// First copy the list of signers to sort as sort is done in place
-	signers2sort := make([]basecoin.Actor, len(signers))
+	signers2sort := make([]sdk.Actor, len(signers))
 	copy(signers2sort, signers)
-	sort.Sort(basecoin.ByAll(signers))
+	sort.Sort(sdk.ByAll(signers))
 
 	for _, signer := range signers {
 		seqKey = append(seqKey, signer.Bytes()...)

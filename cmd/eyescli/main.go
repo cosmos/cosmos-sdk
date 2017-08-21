@@ -8,14 +8,14 @@ import (
 	keycmd "github.com/tendermint/go-crypto/cmd"
 	"github.com/tendermint/tmlibs/cli"
 
-	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/client/commands/auto"
-	"github.com/tendermint/basecoin/client/commands/proxy"
-	"github.com/tendermint/basecoin/client/commands/query"
-	rpccmd "github.com/tendermint/basecoin/client/commands/rpc"
-	"github.com/tendermint/basecoin/client/commands/seeds"
-	txcmd "github.com/tendermint/basecoin/client/commands/txs"
-	eyescmd "github.com/tendermint/basecoin/modules/eyes/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands/auto"
+	"github.com/cosmos/cosmos-sdk/client/commands/proxy"
+	"github.com/cosmos/cosmos-sdk/client/commands/query"
+	rpccmd "github.com/cosmos/cosmos-sdk/client/commands/rpc"
+	"github.com/cosmos/cosmos-sdk/client/commands/seeds"
+	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
+	eyescmd "github.com/cosmos/cosmos-sdk/modules/eyes/commands"
 )
 
 // EyesCli - main basecoin client command

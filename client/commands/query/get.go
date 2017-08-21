@@ -16,7 +16,7 @@ import (
 	"github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/tendermint/rpc/client"
 
-	"github.com/tendermint/basecoin/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands"
 )
 
 // GetParsed does most of the work of the query commands, but is quite

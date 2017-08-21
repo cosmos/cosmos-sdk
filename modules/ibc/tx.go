@@ -5,7 +5,7 @@ import (
 	"github.com/tendermint/light-client/certifiers"
 	"github.com/tendermint/merkleeyes/iavl"
 
-	"github.com/tendermint/basecoin"
+	sdk "github.com/cosmos/cosmos-sdk"
 )
 
 // nolint
@@ -23,7 +23,7 @@ const (
 )
 
 func init() {
-	basecoin.TxMapper.
+	sdk.TxMapper.
 		RegisterImplementation(RegisterChainTx{}, TypeRegisterChain, ByteRegisterChain).
 		RegisterImplementation(UpdateChainTx{}, TypeUpdateChain, ByteUpdateChain).
 		RegisterImplementation(CreatePacketTx{}, TypeCreatePacket, ByteCreatePacket).
@@ -50,8 +50,8 @@ func (r RegisterChainTx) ValidateBasic() error {
 }
 
 // Wrap - used to satisfy TxInner
-func (r RegisterChainTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{r}
+func (r RegisterChainTx) Wrap() sdk.Tx {
+	return sdk.Tx{r}
 }
 
 // UpdateChainTx updates the state of this chain
@@ -74,8 +74,8 @@ func (u UpdateChainTx) ValidateBasic() error {
 }
 
 // Wrap - used to satisfy TxInner
-func (u UpdateChainTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{u}
+func (u UpdateChainTx) Wrap() sdk.Tx {
+	return sdk.Tx{u}
 }
 
 // CreatePacketTx is meant to be called by IPC, another module...
@@ -87,8 +87,8 @@ func (u UpdateChainTx) Wrap() basecoin.Tx {
 // that can send this packet (so only coins can request SendTx packet)
 type CreatePacketTx struct {
 	DestChain   string          `json:"dest_chain"`
-	Permissions basecoin.Actors `json:"permissions"`
-	Tx          basecoin.Tx     `json:"tx"`
+	Permissions sdk.Actors `json:"permissions"`
+	Tx          sdk.Tx     `json:"tx"`
 }
 
 // ValidateBasic makes sure this is consistent - used to satisfy TxInner
@@ -100,8 +100,8 @@ func (p CreatePacketTx) ValidateBasic() error {
 }
 
 // Wrap - used to satisfy TxInner
-func (p CreatePacketTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{p}
+func (p CreatePacketTx) Wrap() sdk.Tx {
+	return sdk.Tx{p}
 }
 
 // PostPacketTx takes a wrapped packet from another chain and
@@ -127,6 +127,6 @@ func (p PostPacketTx) ValidateBasic() error {
 }
 
 // Wrap - used to satisfy TxInner
-func (p PostPacketTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{p}
+func (p PostPacketTx) Wrap() sdk.Tx {
+	return sdk.Tx{p}
 }

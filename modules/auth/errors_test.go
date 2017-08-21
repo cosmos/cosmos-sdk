@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/tendermint/basecoin/errors"
+	"github.com/cosmos/cosmos-sdk/errors"
 )
 
 func TestChecks(t *testing.T) {

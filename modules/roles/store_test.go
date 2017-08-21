@@ -6,42 +6,42 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/modules/roles"
-	"github.com/tendermint/basecoin/stack"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/modules/roles"
+	"github.com/cosmos/cosmos-sdk/stack"
 )
 
 func TestRole(t *testing.T) {
 	assert := assert.New(t)
 
 	// prepare some actors...
-	a := basecoin.Actor{App: "foo", Address: []byte("bar")}
-	b := basecoin.Actor{ChainID: "eth", App: "foo", Address: []byte("bar")}
-	c := basecoin.Actor{App: "foo", Address: []byte("baz")}
-	d := basecoin.Actor{App: "si-ly", Address: []byte("bar")}
-	e := basecoin.Actor{App: "si-ly", Address: []byte("big")}
-	f := basecoin.Actor{App: "sig", Address: []byte{1}}
-	g := basecoin.Actor{App: "sig", Address: []byte{2, 3, 4}}
+	a := sdk.Actor{App: "foo", Address: []byte("bar")}
+	b := sdk.Actor{ChainID: "eth", App: "foo", Address: []byte("bar")}
+	c := sdk.Actor{App: "foo", Address: []byte("baz")}
+	d := sdk.Actor{App: "si-ly", Address: []byte("bar")}
+	e := sdk.Actor{App: "si-ly", Address: []byte("big")}
+	f := sdk.Actor{App: "sig", Address: []byte{1}}
+	g := sdk.Actor{App: "sig", Address: []byte{2, 3, 4}}
 
 	cases := []struct {
 		sigs    uint32
-		allowed []basecoin.Actor
-		signers []basecoin.Actor
+		allowed []sdk.Actor
+		signers []sdk.Actor
 		valid   bool
 	}{
 		// make sure simple compare is correct
-		{1, []basecoin.Actor{a}, []basecoin.Actor{a}, true},
-		{1, []basecoin.Actor{a}, []basecoin.Actor{b}, false},
-		{1, []basecoin.Actor{a}, []basecoin.Actor{c}, false},
-		{1, []basecoin.Actor{a}, []basecoin.Actor{d}, false},
+		{1, []sdk.Actor{a}, []sdk.Actor{a}, true},
+		{1, []sdk.Actor{a}, []sdk.Actor{b}, false},
+		{1, []sdk.Actor{a}, []sdk.Actor{c}, false},
+		{1, []sdk.Actor{a}, []sdk.Actor{d}, false},
 		// make sure multi-sig counts to 1
-		{1, []basecoin.Actor{a, b, c}, []basecoin.Actor{d, e, a, f}, true},
-		{1, []basecoin.Actor{a, b, c}, []basecoin.Actor{a, b, c, d}, true},
-		{1, []basecoin.Actor{a, b, c}, []basecoin.Actor{d, e, f}, false},
+		{1, []sdk.Actor{a, b, c}, []sdk.Actor{d, e, a, f}, true},
+		{1, []sdk.Actor{a, b, c}, []sdk.Actor{a, b, c, d}, true},
+		{1, []sdk.Actor{a, b, c}, []sdk.Actor{d, e, f}, false},
 		// make sure multi-sig counts higher
-		{2, []basecoin.Actor{b, e, g}, []basecoin.Actor{g, c, a, d, b}, true},
-		{2, []basecoin.Actor{b, e, g}, []basecoin.Actor{c, a, d, b}, false},
-		{3, []basecoin.Actor{a, b, c}, []basecoin.Actor{g}, false},
+		{2, []sdk.Actor{b, e, g}, []sdk.Actor{g, c, a, d, b}, true},
+		{2, []sdk.Actor{b, e, g}, []sdk.Actor{c, a, d, b}, false},
+		{3, []sdk.Actor{a, b, c}, []sdk.Actor{g}, false},
 	}
 
 	for idx, tc := range cases {

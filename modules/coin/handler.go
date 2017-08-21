@@ -4,12 +4,12 @@ import (
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/modules/auth"
-	"github.com/tendermint/basecoin/modules/ibc"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/modules/auth"
+	"github.com/cosmos/cosmos-sdk/modules/ibc"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 const (
@@ -42,8 +42,8 @@ func (Handler) Name() string {
 func (Handler) AssertDispatcher() {}
 
 // CheckTx checks if there is enough money in the account
-func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, _ basecoin.Checker) (res basecoin.CheckResult, err error) {
+func (h Handler) CheckTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx, _ sdk.Checker) (res sdk.CheckResult, err error) {
 
 	err = tx.ValidateBasic()
 	if err != nil {
@@ -54,17 +54,17 @@ func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 	case SendTx:
 		// price based on inputs and outputs
 		used := uint64(len(t.Inputs) + len(t.Outputs))
-		return basecoin.NewCheck(used*CostSend, ""), h.checkSendTx(ctx, store, t)
+		return sdk.NewCheck(used*CostSend, ""), h.checkSendTx(ctx, store, t)
 	case CreditTx:
 		// default price of 20, constant work
-		return basecoin.NewCheck(CostCredit, ""), h.creditTx(ctx, store, t)
+		return sdk.NewCheck(CostCredit, ""), h.creditTx(ctx, store, t)
 	}
 	return res, errors.ErrUnknownTxType(tx.Unwrap())
 }
 
 // DeliverTx moves the money
-func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx, cb basecoin.Deliver) (res basecoin.DeliverResult, err error) {
+func (h Handler) DeliverTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx, cb sdk.Deliver) (res sdk.DeliverResult, err error) {
 
 	err = tx.ValidateBasic()
 	if err != nil {
@@ -82,7 +82,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
 
 // InitState - sets the genesis account balance
 func (h Handler) InitState(l log.Logger, store state.SimpleDB,
-	module, key, value string, cb basecoin.InitStater) (log string, err error) {
+	module, key, value string, cb sdk.InitStater) (log string, err error) {
 	if module != NameCoin {
 		return "", errors.ErrUnknownModule(module)
 	}
@@ -95,8 +95,8 @@ func (h Handler) InitState(l log.Logger, store state.SimpleDB,
 	return "", errors.ErrUnknownKey(key)
 }
 
-func (h Handler) sendTx(ctx basecoin.Context, store state.SimpleDB,
-	send SendTx, cb basecoin.Deliver) error {
+func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
+	send SendTx, cb sdk.Deliver) error {
 
 	err := checkTx(ctx, send)
 	if err != nil {
@@ -104,7 +104,7 @@ func (h Handler) sendTx(ctx basecoin.Context, store state.SimpleDB,
 	}
 
 	// deduct from all input accounts
-	senders := basecoin.Actors{}
+	senders := sdk.Actors{}
 	for _, in := range send.Inputs {
 		_, err = ChangeCoins(store, in.Address, in.Coins.Negative())
 		if err != nil {
@@ -153,7 +153,7 @@ func (h Handler) sendTx(ctx basecoin.Context, store state.SimpleDB,
 	return nil
 }
 
-func (h Handler) creditTx(ctx basecoin.Context, store state.SimpleDB,
+func (h Handler) creditTx(ctx sdk.Context, store state.SimpleDB,
 	credit CreditTx) error {
 
 	// first check permissions!!
@@ -186,7 +186,7 @@ func (h Handler) creditTx(ctx basecoin.Context, store state.SimpleDB,
 	return err
 }
 
-func checkTx(ctx basecoin.Context, send SendTx) error {
+func checkTx(ctx sdk.Context, send SendTx) error {
 	// check if all inputs have permission
 	for _, in := range send.Inputs {
 		if !ctx.HasPermission(in.Address) {
@@ -196,7 +196,7 @@ func checkTx(ctx basecoin.Context, send SendTx) error {
 	return nil
 }
 
-func (Handler) checkSendTx(ctx basecoin.Context, store state.SimpleDB, send SendTx) error {
+func (Handler) checkSendTx(ctx sdk.Context, store state.SimpleDB, send SendTx) error {
 	err := checkTx(ctx, send)
 	if err != nil {
 		return err
@@ -234,7 +234,7 @@ func setAccount(store state.SimpleDB, value string) (log string, err error) {
 // setIssuer sets a permission for some super-powerful account to
 // mint money
 func setIssuer(store state.SimpleDB, value string) (log string, err error) {
-	var issuer basecoin.Actor
+	var issuer sdk.Actor
 	err = data.FromJSON([]byte(value), &issuer)
 	if err != nil {
 		return "", err

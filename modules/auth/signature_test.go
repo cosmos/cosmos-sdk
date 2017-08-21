@@ -9,9 +9,9 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 func TestSignatureChecks(t *testing.T) {
@@ -32,7 +32,7 @@ func TestSignatureChecks(t *testing.T) {
 	cases := []struct {
 		useMultiSig bool
 		keys        []crypto.PrivKey
-		check       basecoin.Actor
+		check       sdk.Actor
 		valid       bool
 	}{
 		// test with single sigs
@@ -61,7 +61,7 @@ func TestSignatureChecks(t *testing.T) {
 			stack.CheckMiddleware{Required: tc.check},
 		).Use(stack.OKHandler{})
 
-		var tx basecoin.Tx
+		var tx sdk.Tx
 		// this does the signing as needed
 		if tc.useMultiSig {
 			mtx := NewMulti(raw)

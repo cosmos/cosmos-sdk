@@ -1,7 +1,7 @@
 package eyes
 
 import (
-	"github.com/tendermint/basecoin"
+	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/tendermint/go-wire/data"
 )
 
@@ -15,7 +15,7 @@ const (
 )
 
 func init() {
-	basecoin.TxMapper.
+	sdk.TxMapper.
 		RegisterImplementation(SetTx{}, TypeSet, ByteSet).
 		RegisterImplementation(RemoveTx{}, TypeRemove, ByteRemove)
 }
@@ -26,13 +26,13 @@ type SetTx struct {
 	Value data.Bytes `json:"value"`
 }
 
-func NewSetTx(key, value []byte) basecoin.Tx {
+func NewSetTx(key, value []byte) sdk.Tx {
 	return SetTx{Key: key, Value: value}.Wrap()
 }
 
 // Wrap - fulfills TxInner interface
-func (t SetTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{t}
+func (t SetTx) Wrap() sdk.Tx {
+	return sdk.Tx{t}
 }
 
 // ValidateBasic makes sure it is valid
@@ -48,13 +48,13 @@ type RemoveTx struct {
 	Key data.Bytes `json:"key"`
 }
 
-func NewRemoveTx(key []byte) basecoin.Tx {
+func NewRemoveTx(key []byte) sdk.Tx {
 	return RemoveTx{Key: key}.Wrap()
 }
 
 // Wrap - fulfills TxInner interface
-func (t RemoveTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{t}
+func (t RemoveTx) Wrap() sdk.Tx {
+	return sdk.Tx{t}
 }
 
 // ValidateBasic makes sure it is valid

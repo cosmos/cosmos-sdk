@@ -9,11 +9,11 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/stack"
-	sm "github.com/tendermint/basecoin/state"
-	"github.com/tendermint/basecoin/version"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/stack"
+	sm "github.com/cosmos/cosmos-sdk/state"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 //nolint
@@ -27,7 +27,7 @@ type Basecoin struct {
 	info  *sm.ChainState
 	state *Store
 
-	handler basecoin.Handler
+	handler sdk.Handler
 
 	pending []*abci.Validator
 	height  uint64
@@ -37,7 +37,7 @@ type Basecoin struct {
 var _ abci.Application = &Basecoin{}
 
 // NewBasecoin - create a new instance of the basecoin application
-func NewBasecoin(handler basecoin.Handler, store *Store, logger log.Logger) *Basecoin {
+func NewBasecoin(handler sdk.Handler, store *Store, logger log.Logger) *Basecoin {
 	return &Basecoin{
 		handler: handler,
 		info:    sm.NewChainState(),
@@ -96,7 +96,7 @@ func (app *Basecoin) SetOption(key string, value string) string {
 
 // DeliverTx - ABCI
 func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
-	tx, err := basecoin.LoadTx(txBytes)
+	tx, err := sdk.LoadTx(txBytes)
 	if err != nil {
 		return errors.Result(err)
 	}
@@ -112,12 +112,12 @@ func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
 		return errors.Result(err)
 	}
 	app.addValChange(res.Diff)
-	return basecoin.ToABCI(res)
+	return sdk.ToABCI(res)
 }
 
 // CheckTx - ABCI
 func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
-	tx, err := basecoin.LoadTx(txBytes)
+	tx, err := sdk.LoadTx(txBytes)
 	if err != nil {
 		return errors.Result(err)
 	}
@@ -132,7 +132,7 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 	if err != nil {
 		return errors.Result(err)
 	}
-	return basecoin.ToABCI(res)
+	return sdk.ToABCI(res)
 }
 
 // Query - ABCI

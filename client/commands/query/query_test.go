@@ -17,8 +17,8 @@ import (
 	"github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/modules/eyes"
+	"github.com/cosmos/cosmos-sdk/app"
+	"github.com/cosmos/cosmos-sdk/modules/eyes"
 )
 
 var node *nm.Node

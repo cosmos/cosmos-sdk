@@ -8,10 +8,10 @@ import (
 
 	cmn "github.com/tendermint/tmlibs/common"
 
-	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/client/commands/query"
-	"github.com/tendermint/basecoin/modules/eyes"
-	"github.com/tendermint/basecoin/stack"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands/query"
+	"github.com/cosmos/cosmos-sdk/modules/eyes"
+	"github.com/cosmos/cosmos-sdk/stack"
 )
 
 // EyesQueryCmd - command to query raw data

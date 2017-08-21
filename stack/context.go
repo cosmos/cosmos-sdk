@@ -5,8 +5,8 @@ import (
 
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // store nonce as it's own type so no one can even try to fake it
@@ -20,7 +20,7 @@ type secureContext struct {
 }
 
 // NewContext - create a new secureContext
-func NewContext(chain string, height uint64, logger log.Logger) basecoin.Context {
+func NewContext(chain string, height uint64, logger log.Logger) sdk.Context {
 	mock := MockContext(chain, height).(naiveContext)
 	mock.Logger = logger
 	return secureContext{
@@ -28,10 +28,10 @@ func NewContext(chain string, height uint64, logger log.Logger) basecoin.Context
 	}
 }
 
-var _ basecoin.Context = secureContext{}
+var _ sdk.Context = secureContext{}
 
 // WithPermissions will panic if they try to set permission without the proper app
-func (c secureContext) WithPermissions(perms ...basecoin.Actor) basecoin.Context {
+func (c secureContext) WithPermissions(perms ...sdk.Actor) sdk.Context {
 	// the guard makes sure you only set permissions for the app you are inside
 	for _, p := range perms {
 		if !c.validPermisison(p) {
@@ -48,7 +48,7 @@ func (c secureContext) WithPermissions(perms ...basecoin.Actor) basecoin.Context
 	}
 }
 
-func (c secureContext) validPermisison(p basecoin.Actor) bool {
+func (c secureContext) validPermisison(p sdk.Actor) bool {
 	// if app is set, then it must match
 	if c.app != "" && c.app != p.App {
 		return false
@@ -59,7 +59,7 @@ func (c secureContext) validPermisison(p basecoin.Actor) bool {
 
 // Reset should clear out all permissions,
 // but carry on knowledge that this is a child
-func (c secureContext) Reset() basecoin.Context {
+func (c secureContext) Reset() sdk.Context {
 	return secureContext{
 		app:          c.app,
 		ibc:          c.ibc,
@@ -68,7 +68,7 @@ func (c secureContext) Reset() basecoin.Context {
 }
 
 // IsParent ensures that this is derived from the given secureClient
-func (c secureContext) IsParent(other basecoin.Context) bool {
+func (c secureContext) IsParent(other sdk.Context) bool {
 	so, ok := other.(secureContext)
 	if !ok {
 		return false
@@ -78,7 +78,7 @@ func (c secureContext) IsParent(other basecoin.Context) bool {
 
 // withApp is a private method that we can use to properly set the
 // app controls in the middleware
-func withApp(ctx basecoin.Context, app string) basecoin.Context {
+func withApp(ctx sdk.Context, app string) sdk.Context {
 	sc, ok := ctx.(secureContext)
 	if !ok {
 		return ctx
@@ -91,7 +91,7 @@ func withApp(ctx basecoin.Context, app string) basecoin.Context {
 }
 
 // withIBC is a private method so we can securely allow IBC permissioning
-func withIBC(ctx basecoin.Context) basecoin.Context {
+func withIBC(ctx sdk.Context) sdk.Context {
 	sc, ok := ctx.(secureContext)
 	if !ok {
 		return ctx
@@ -103,22 +103,22 @@ func withIBC(ctx basecoin.Context) basecoin.Context {
 	}
 }
 
-func secureCheck(h basecoin.Checker, parent basecoin.Context) basecoin.Checker {
-	next := func(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
+func secureCheck(h sdk.Checker, parent sdk.Context) sdk.Checker {
+	next := func(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.CheckResult, err error) {
 		if !parent.IsParent(ctx) {
 			return res, errors.New("Passing in non-child Context")
 		}
 		return h.CheckTx(ctx, store, tx)
 	}
-	return basecoin.CheckerFunc(next)
+	return sdk.CheckerFunc(next)
 }
 
-func secureDeliver(h basecoin.Deliver, parent basecoin.Context) basecoin.Deliver {
-	next := func(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
+func secureDeliver(h sdk.Deliver, parent sdk.Context) sdk.Deliver {
+	next := func(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.DeliverResult, err error) {
 		if !parent.IsParent(ctx) {
 			return res, errors.New("Passing in non-child Context")
 		}
 		return h.DeliverTx(ctx, store, tx)
 	}
-	return basecoin.DeliverFunc(next)
+	return sdk.DeliverFunc(next)
 }

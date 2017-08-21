@@ -5,14 +5,14 @@ import (
 
 	wire "github.com/tendermint/go-wire"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // NewPerm creates a role permission with the given label
-func NewPerm(role []byte) basecoin.Actor {
-	return basecoin.Actor{
+func NewPerm(role []byte) sdk.Actor {
+	return sdk.Actor{
 		App:     NameRole,
 		Address: role,
 	}
@@ -21,11 +21,11 @@ func NewPerm(role []byte) basecoin.Actor {
 // Role - structure to hold permissioning
 type Role struct {
 	MinSigs uint32           `json:"min_sigs"`
-	Signers []basecoin.Actor `json:"signers"`
+	Signers []sdk.Actor `json:"signers"`
 }
 
 // NewRole creates a Role structure to store the permissioning
-func NewRole(min uint32, signers []basecoin.Actor) Role {
+func NewRole(min uint32, signers []sdk.Actor) Role {
 	return Role{
 		MinSigs: min,
 		Signers: signers,
@@ -33,7 +33,7 @@ func NewRole(min uint32, signers []basecoin.Actor) Role {
 }
 
 // IsSigner checks if the given Actor is allowed to sign this role
-func (r Role) IsSigner(a basecoin.Actor) bool {
+func (r Role) IsSigner(a sdk.Actor) bool {
 	for _, s := range r.Signers {
 		if a.Equals(s) {
 			return true
@@ -43,7 +43,7 @@ func (r Role) IsSigner(a basecoin.Actor) bool {
 }
 
 // IsAuthorized checks if the context has permission to assume the role
-func (r Role) IsAuthorized(ctx basecoin.Context) bool {
+func (r Role) IsAuthorized(ctx sdk.Context) bool {
 	needed := r.MinSigs
 	for _, s := range r.Signers {
 		if ctx.HasPermission(s) {

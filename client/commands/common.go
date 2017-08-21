@@ -20,8 +20,8 @@ import (
 
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/modules/auth"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/modules/auth"
 )
 
 var (
@@ -86,9 +86,9 @@ func GetCertifier() (*certifiers.InquiringCertifier, error) {
 
 // ParseActor parses an address of form:
 // [<chain>:][<app>:]<hex address>
-// into a basecoin.Actor.
+// into a sdk.Actor.
 // If app is not specified or "", then assume auth.NameSigs
-func ParseActor(input string) (res basecoin.Actor, err error) {
+func ParseActor(input string) (res sdk.Actor, err error) {
 	chain, app := "", auth.NameSigs
 	input = strings.TrimSpace(input)
 	spl := strings.SplitN(input, ":", 3)
@@ -108,7 +108,7 @@ func ParseActor(input string) (res basecoin.Actor, err error) {
 	if err != nil {
 		return res, errors.Errorf("Address is invalid hex: %v\n", err)
 	}
-	res = basecoin.Actor{
+	res = sdk.Actor{
 		ChainID: chain,
 		App:     app,
 		Address: addr,
@@ -118,8 +118,8 @@ func ParseActor(input string) (res basecoin.Actor, err error) {
 
 // ParseActors takes a comma-separated list of actors and parses them into
 // a slice
-func ParseActors(key string) (signers []basecoin.Actor, err error) {
-	var act basecoin.Actor
+func ParseActors(key string) (signers []sdk.Actor, err error) {
+	var act sdk.Actor
 	for _, k := range strings.Split(key, ",") {
 		act, err = ParseActor(k)
 		if err != nil {

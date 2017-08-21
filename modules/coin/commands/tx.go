@@ -4,10 +4,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/client/commands"
-	txcmd "github.com/tendermint/basecoin/client/commands/txs"
-	"github.com/tendermint/basecoin/modules/coin"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
 )
 
 // SendTxCmd is CLI command to send tokens between basecoin accounts
@@ -50,7 +50,7 @@ func sendTxCmd(cmd *cobra.Command, args []string) error {
 	return txcmd.DoTx(tx)
 }
 
-func readSendTxFlags() (tx basecoin.Tx, err error) {
+func readSendTxFlags() (tx sdk.Tx, err error) {
 	// parse to address
 	toAddr, err := commands.ParseActor(viper.GetString(FlagTo))
 	if err != nil {
@@ -80,7 +80,7 @@ func creditTxCmd(cmd *cobra.Command, args []string) error {
 	return txcmd.DoTx(tx)
 }
 
-func readCreditTxFlags() (tx basecoin.Tx, err error) {
+func readCreditTxFlags() (tx sdk.Tx, err error) {
 	// parse to address
 	toAddr, err := commands.ParseActor(viper.GetString(FlagTo))
 	if err != nil {
@@ -96,7 +96,7 @@ func readCreditTxFlags() (tx basecoin.Tx, err error) {
 	return
 }
 
-func readFromAddr() (basecoin.Actor, error) {
+func readFromAddr() (sdk.Actor, error) {
 	from := viper.GetString(FlagFrom)
 	if from == "" {
 		return txcmd.GetSignerAct(), nil

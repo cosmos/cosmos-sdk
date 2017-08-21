@@ -1,11 +1,11 @@
-package basecoin
+package sdk
 
 import (
 	"strings"
 
 	"github.com/tendermint/go-wire/data"
 
-	"github.com/tendermint/basecoin/errors"
+	"github.com/cosmos/cosmos-sdk/errors"
 )
 
 const maxTxSize = 10240

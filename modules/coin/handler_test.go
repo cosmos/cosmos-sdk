@@ -10,11 +10,11 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/modules/auth"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/modules/auth"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // this makes sure that txs are rejected with invalid data or permissions
@@ -22,56 +22,56 @@ func TestHandlerValidation(t *testing.T) {
 	assert := assert.New(t)
 
 	// these are all valid, except for minusCoins
-	addr1 := basecoin.Actor{App: "coin", Address: []byte{1, 2}}
-	addr2 := basecoin.Actor{App: "role", Address: []byte{7, 8}}
+	addr1 := sdk.Actor{App: "coin", Address: []byte{1, 2}}
+	addr2 := sdk.Actor{App: "role", Address: []byte{7, 8}}
 	someCoins := Coins{{"atom", 123}}
 	doubleCoins := Coins{{"atom", 246}}
 	minusCoins := Coins{{"eth", -34}}
 
 	cases := []struct {
 		valid bool
-		tx    basecoin.Tx
-		perms []basecoin.Actor
+		tx    sdk.Tx
+		perms []sdk.Actor
 	}{
 		// auth works with different apps
 		{true,
 			NewSendTx(
 				[]TxInput{NewTxInput(addr1, someCoins)},
 				[]TxOutput{NewTxOutput(addr2, someCoins)}),
-			[]basecoin.Actor{addr1}},
+			[]sdk.Actor{addr1}},
 		{true,
 			NewSendTx(
 				[]TxInput{NewTxInput(addr2, someCoins)},
 				[]TxOutput{NewTxOutput(addr1, someCoins)}),
-			[]basecoin.Actor{addr1, addr2}},
+			[]sdk.Actor{addr1, addr2}},
 		// check multi-input with both sigs
 		{true,
 			NewSendTx(
 				[]TxInput{NewTxInput(addr1, someCoins), NewTxInput(addr2, someCoins)},
 				[]TxOutput{NewTxOutput(addr1, doubleCoins)}),
-			[]basecoin.Actor{addr1, addr2}},
+			[]sdk.Actor{addr1, addr2}},
 		// wrong permissions fail
 		{false,
 			NewSendTx(
 				[]TxInput{NewTxInput(addr1, someCoins)},
 				[]TxOutput{NewTxOutput(addr2, someCoins)}),
-			[]basecoin.Actor{}},
+			[]sdk.Actor{}},
 		{false,
 			NewSendTx(
 				[]TxInput{NewTxInput(addr1, someCoins)},
 				[]TxOutput{NewTxOutput(addr2, someCoins)}),
-			[]basecoin.Actor{addr2}},
+			[]sdk.Actor{addr2}},
 		{false,
 			NewSendTx(
 				[]TxInput{NewTxInput(addr1, someCoins), NewTxInput(addr2, someCoins)},
 				[]TxOutput{NewTxOutput(addr1, doubleCoins)}),
-			[]basecoin.Actor{addr1}},
+			[]sdk.Actor{addr1}},
 		// invalid input fails
 		{false,
 			NewSendTx(
 				[]TxInput{NewTxInput(addr1, minusCoins)},
 				[]TxOutput{NewTxOutput(addr2, minusCoins)}),
-			[]basecoin.Actor{addr2}},
+			[]sdk.Actor{addr2}},
 	}
 
 	for i, tc := range cases {
@@ -90,9 +90,9 @@ func TestCheckDeliverSendTx(t *testing.T) {
 	require := require.New(t)
 
 	// some sample settings
-	addr1 := basecoin.Actor{App: "coin", Address: []byte{1, 2}}
-	addr2 := basecoin.Actor{App: "role", Address: []byte{7, 8}}
-	addr3 := basecoin.Actor{App: "coin", Address: []byte{6, 5, 4, 3}}
+	addr1 := sdk.Actor{App: "coin", Address: []byte{1, 2}}
+	addr2 := sdk.Actor{App: "role", Address: []byte{7, 8}}
+	addr3 := sdk.Actor{App: "coin", Address: []byte{6, 5, 4, 3}}
 
 	someCoins := Coins{{"atom", 123}}
 	moreCoins := Coins{{"atom", 6487}}
@@ -101,14 +101,14 @@ func TestCheckDeliverSendTx(t *testing.T) {
 	mixedCoins := someCoins.Plus(otherCoins)
 
 	type money struct {
-		addr  basecoin.Actor
+		addr  sdk.Actor
 		coins Coins
 	}
 
 	cases := []struct {
 		init  []money
-		tx    basecoin.Tx
-		perms []basecoin.Actor
+		tx    sdk.Tx
+		perms []sdk.Actor
 		final []money // nil for error
 		cost  uint64  // gas allocated (if not error)
 	}{
@@ -117,7 +117,7 @@ func TestCheckDeliverSendTx(t *testing.T) {
 			NewSendTx(
 				[]TxInput{NewTxInput(addr1, someCoins)},
 				[]TxOutput{NewTxOutput(addr2, someCoins)}),
-			[]basecoin.Actor{addr1},
+			[]sdk.Actor{addr1},
 			[]money{{addr1, diffCoins}, {addr2, someCoins}},
 			20,
 		},
@@ -127,7 +127,7 @@ func TestCheckDeliverSendTx(t *testing.T) {
 			NewSendTx(
 				[]TxInput{NewTxInput(addr1, otherCoins), NewTxInput(addr2, someCoins)},
 				[]TxOutput{NewTxOutput(addr3, mixedCoins)}),
-			[]basecoin.Actor{addr1, addr2},
+			[]sdk.Actor{addr1, addr2},
 			[]money{{addr1, someCoins}, {addr2, diffCoins}, {addr3, mixedCoins}},
 			30,
 		},
@@ -137,7 +137,7 @@ func TestCheckDeliverSendTx(t *testing.T) {
 			NewSendTx(
 				[]TxInput{NewTxInput(addr1, otherCoins), NewTxInput(addr1, someCoins)},
 				[]TxOutput{NewTxOutput(addr2, mixedCoins)}),
-			[]basecoin.Actor{addr1},
+			[]sdk.Actor{addr1},
 			[]money{{addr1, diffCoins}, {addr2, mixedCoins}},
 			30,
 		},
@@ -147,7 +147,7 @@ func TestCheckDeliverSendTx(t *testing.T) {
 			NewSendTx(
 				[]TxInput{NewTxInput(addr2, moreCoins)},
 				[]TxOutput{NewTxOutput(addr1, moreCoins)}),
-			[]basecoin.Actor{addr1, addr2},
+			[]sdk.Actor{addr1, addr2},
 			nil,
 			0,
 		},
@@ -206,7 +206,7 @@ func TestInitState(t *testing.T) {
 	mixedCoins := someCoins.Plus(otherCoins)
 
 	type money struct {
-		addr  basecoin.Actor
+		addr  sdk.Actor
 		coins Coins
 	}
 
@@ -248,12 +248,12 @@ func TestSetIssuer(t *testing.T) {
 	require := require.New(t)
 
 	cases := []struct {
-		issuer basecoin.Actor
+		issuer sdk.Actor
 	}{
-		{basecoin.Actor{App: "sig", Address: []byte("gwkfgk")}},
+		{sdk.Actor{App: "sig", Address: []byte("gwkfgk")}},
 		// and set back to empty (nil is valid, but assert.Equals doesn't match)
-		{basecoin.Actor{Address: []byte{}}},
-		{basecoin.Actor{ChainID: "other", App: "role", Address: []byte("vote")}},
+		{sdk.Actor{Address: []byte{}}},
+		{sdk.Actor{ChainID: "other", App: "role", Address: []byte("vote")}},
 	}
 
 	h := NewHandler()
@@ -286,11 +286,11 @@ func TestDeliverCreditTx(t *testing.T) {
 	mixedCoins := someCoins.Plus(otherCoins)
 
 	// some sample addresses
-	owner := basecoin.Actor{App: "foo", Address: []byte("rocks")}
-	addr1 := basecoin.Actor{App: "coin", Address: []byte{1, 2}}
+	owner := sdk.Actor{App: "foo", Address: []byte("rocks")}
+	addr1 := sdk.Actor{App: "coin", Address: []byte{1, 2}}
 	key := NewAccountWithKey(someCoins)
 	addr2 := key.Actor()
-	addr3 := basecoin.Actor{ChainID: "other", App: "sigs", Address: []byte{3, 9}}
+	addr3 := sdk.Actor{ChainID: "other", App: "sigs", Address: []byte{3, 9}}
 
 	h := NewHandler()
 	store := state.NewMemKVStore()
@@ -307,10 +307,10 @@ func TestDeliverCreditTx(t *testing.T) {
 	require.Nil(err, "%+v", err)
 
 	cases := []struct {
-		tx       basecoin.Tx
-		perm     basecoin.Actor
+		tx       sdk.Tx
+		perm     sdk.Actor
 		check    errors.CheckErr
-		addr     basecoin.Actor
+		addr     sdk.Actor
 		expected Account
 	}{
 		// require permission

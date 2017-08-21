@@ -4,11 +4,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/client/commands/query"
+	"github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands/query"
 
-	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
-	"github.com/tendermint/basecoin/stack"
+	"github.com/cosmos/cosmos-sdk/docs/guide/counter/plugins/counter"
+	"github.com/cosmos/cosmos-sdk/stack"
 )
 
 //CounterQueryCmd - CLI command to query the counter state

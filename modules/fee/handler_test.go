@@ -8,11 +8,11 @@ import (
 
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/modules/fee"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
+	"github.com/cosmos/cosmos-sdk/modules/fee"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 func TestFeeChecks(t *testing.T) {
@@ -30,7 +30,7 @@ func TestFeeChecks(t *testing.T) {
 	pure := atoms(46657)
 
 	// these are some accounts
-	collector := basecoin.Actor{App: fee.NameFee, Address: []byte("mine")}
+	collector := sdk.Actor{App: fee.NameFee, Address: []byte("mine")}
 	key1 := coin.NewAccountWithKey(mixed)
 	key2 := coin.NewAccountWithKey(pure)
 	act1, act2 := key1.Actor(), key2.Actor()
@@ -60,12 +60,12 @@ func TestFeeChecks(t *testing.T) {
 	cases := []struct {
 		valid bool
 		// this is the middleware stack to test
-		app basecoin.Handler
+		app sdk.Handler
 		// they sign the tx
-		signer basecoin.Actor
+		signer sdk.Actor
 		// wrap with the given fee if hasFee is true
 		hasFee bool
-		payer  basecoin.Actor
+		payer  sdk.Actor
 		fee    coin.Coin
 		// expected balance after the tx
 		left      coin.Coins

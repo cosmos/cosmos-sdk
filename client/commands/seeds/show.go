@@ -10,7 +10,7 @@ import (
 
 	"github.com/tendermint/light-client/certifiers"
 
-	"github.com/tendermint/basecoin/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands"
 )
 
 const (

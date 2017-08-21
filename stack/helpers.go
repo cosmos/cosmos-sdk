@@ -3,9 +3,9 @@ package stack
 import (
 	"github.com/tendermint/go-wire/data"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 //nolint
@@ -30,7 +30,7 @@ const (
 )
 
 func init() {
-	basecoin.TxMapper.
+	sdk.TxMapper.
 		RegisterImplementation(RawTx{}, TypeRawTx, ByteRawTx).
 		RegisterImplementation(CheckTx{}, TypeCheckTx, ByteCheckTx).
 		RegisterImplementation(FailTx{}, TypeFailTx, ByteFailTx)
@@ -41,14 +41,14 @@ type RawTx struct {
 	data.Bytes
 }
 
-var _ basecoin.TxInner = RawTx{}
+var _ sdk.TxInner = RawTx{}
 
 // nolint
-func NewRawTx(d []byte) basecoin.Tx {
+func NewRawTx(d []byte) sdk.Tx {
 	return RawTx{data.Bytes(d)}.Wrap()
 }
-func (r RawTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{r}
+func (r RawTx) Wrap() sdk.Tx {
+	return sdk.Tx{r}
 }
 func (r RawTx) ValidateBasic() error {
 	if len(r.Bytes) > rawMaxSize {
@@ -59,17 +59,17 @@ func (r RawTx) ValidateBasic() error {
 
 // CheckTx contains a list of permissions to be tested
 type CheckTx struct {
-	Required []basecoin.Actor
+	Required []sdk.Actor
 }
 
-var _ basecoin.TxInner = CheckTx{}
+var _ sdk.TxInner = CheckTx{}
 
 // nolint
-func NewCheckTx(req []basecoin.Actor) basecoin.Tx {
+func NewCheckTx(req []sdk.Actor) sdk.Tx {
 	return CheckTx{req}.Wrap()
 }
-func (c CheckTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{c}
+func (c CheckTx) Wrap() sdk.Tx {
+	return sdk.Tx{c}
 }
 func (CheckTx) ValidateBasic() error {
 	return nil
@@ -78,14 +78,14 @@ func (CheckTx) ValidateBasic() error {
 // FailTx just gets routed to filaure
 type FailTx struct{}
 
-var _ basecoin.TxInner = FailTx{}
+var _ sdk.TxInner = FailTx{}
 
-func NewFailTx() basecoin.Tx {
+func NewFailTx() sdk.Tx {
 	return FailTx{}.Wrap()
 }
 
-func (f FailTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{f}
+func (f FailTx) Wrap() sdk.Tx {
+	return sdk.Tx{f}
 }
 func (r FailTx) ValidateBasic() error {
 	return nil
@@ -94,11 +94,11 @@ func (r FailTx) ValidateBasic() error {
 // OKHandler just used to return okay to everything
 type OKHandler struct {
 	Log string
-	basecoin.NopInitState
-	basecoin.NopInitValidate
+	sdk.NopInitState
+	sdk.NopInitValidate
 }
 
-var _ basecoin.Handler = OKHandler{}
+var _ sdk.Handler = OKHandler{}
 
 // Name - return handler's name
 func (OKHandler) Name() string {
@@ -106,22 +106,22 @@ func (OKHandler) Name() string {
 }
 
 // CheckTx always returns an empty success tx
-func (ok OKHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
-	return basecoin.CheckResult{Log: ok.Log}, nil
+func (ok OKHandler) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.CheckResult, err error) {
+	return sdk.CheckResult{Log: ok.Log}, nil
 }
 
 // DeliverTx always returns an empty success tx
-func (ok OKHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
-	return basecoin.DeliverResult{Log: ok.Log}, nil
+func (ok OKHandler) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.DeliverResult, err error) {
+	return sdk.DeliverResult{Log: ok.Log}, nil
 }
 
 // EchoHandler returns success, echoing res.Data = tx bytes
 type EchoHandler struct {
-	basecoin.NopInitState
-	basecoin.NopInitValidate
+	sdk.NopInitState
+	sdk.NopInitValidate
 }
 
-var _ basecoin.Handler = EchoHandler{}
+var _ sdk.Handler = EchoHandler{}
 
 // Name - return handler's name
 func (EchoHandler) Name() string {
@@ -129,25 +129,25 @@ func (EchoHandler) Name() string {
 }
 
 // CheckTx always returns an empty success tx
-func (EchoHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
+func (EchoHandler) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.CheckResult, err error) {
 	data, err := data.ToWire(tx)
-	return basecoin.CheckResult{Data: data}, err
+	return sdk.CheckResult{Data: data}, err
 }
 
 // DeliverTx always returns an empty success tx
-func (EchoHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
+func (EchoHandler) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.DeliverResult, err error) {
 	data, err := data.ToWire(tx)
-	return basecoin.DeliverResult{Data: data}, err
+	return sdk.DeliverResult{Data: data}, err
 }
 
 // FailHandler always returns an error
 type FailHandler struct {
 	Err error
-	basecoin.NopInitState
-	basecoin.NopInitValidate
+	sdk.NopInitState
+	sdk.NopInitValidate
 }
 
-var _ basecoin.Handler = FailHandler{}
+var _ sdk.Handler = FailHandler{}
 
 // Name - return handler's name
 func (FailHandler) Name() string {
@@ -155,12 +155,12 @@ func (FailHandler) Name() string {
 }
 
 // CheckTx always returns the given error
-func (f FailHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
+func (f FailHandler) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.CheckResult, err error) {
 	return res, errors.Wrap(f.Err)
 }
 
 // DeliverTx always returns the given error
-func (f FailHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
+func (f FailHandler) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.DeliverResult, err error) {
 	return res, errors.Wrap(f.Err)
 }
 
@@ -168,11 +168,11 @@ func (f FailHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx ba
 type PanicHandler struct {
 	Msg string
 	Err error
-	basecoin.NopInitState
-	basecoin.NopInitValidate
+	sdk.NopInitState
+	sdk.NopInitValidate
 }
 
-var _ basecoin.Handler = PanicHandler{}
+var _ sdk.Handler = PanicHandler{}
 
 // Name - return handler's name
 func (PanicHandler) Name() string {
@@ -180,7 +180,7 @@ func (PanicHandler) Name() string {
 }
 
 // CheckTx always panics
-func (p PanicHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
+func (p PanicHandler) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.CheckResult, err error) {
 	if p.Err != nil {
 		panic(p.Err)
 	}
@@ -188,7 +188,7 @@ func (p PanicHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx bas
 }
 
 // DeliverTx always panics
-func (p PanicHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
+func (p PanicHandler) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.DeliverResult, err error) {
 	if p.Err != nil {
 		panic(p.Err)
 	}
@@ -197,11 +197,11 @@ func (p PanicHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx b
 
 // CheckHandler accepts CheckTx and verifies the permissions
 type CheckHandler struct {
-	basecoin.NopInitState
-	basecoin.NopInitValidate
+	sdk.NopInitState
+	sdk.NopInitValidate
 }
 
-var _ basecoin.Handler = CheckHandler{}
+var _ sdk.Handler = CheckHandler{}
 
 // Name - return handler's name
 func (CheckHandler) Name() string {
@@ -209,7 +209,7 @@ func (CheckHandler) Name() string {
 }
 
 // CheckTx verifies the permissions
-func (c CheckHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.CheckResult, err error) {
+func (c CheckHandler) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.CheckResult, err error) {
 	check, ok := tx.Unwrap().(CheckTx)
 	if !ok {
 		return res, errors.ErrUnknownTxType(tx)
@@ -224,7 +224,7 @@ func (c CheckHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx bas
 }
 
 // DeliverTx verifies the permissions
-func (c CheckHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
+func (c CheckHandler) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (res sdk.DeliverResult, err error) {
 	check, ok := tx.Unwrap().(CheckTx)
 	if !ok {
 		return res, errors.ErrUnknownTxType(tx)

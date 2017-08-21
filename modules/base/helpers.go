@@ -3,9 +3,9 @@ package base
 import (
 	abci "github.com/tendermint/abci/types"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 //nolint
@@ -21,7 +21,7 @@ const (
 )
 
 func init() {
-	basecoin.TxMapper.
+	sdk.TxMapper.
 		RegisterImplementation(ValChangeTx{}, TypeValChange, ByteValChange).
 		RegisterImplementation(PriceShowTx{}, TypePriceShow, BytePriceShow)
 }
@@ -30,19 +30,19 @@ func init() {
 // Setup tx and handler for validation test cases
 
 type ValSetHandler struct {
-	basecoin.NopCheck
-	basecoin.NopInitState
-	basecoin.NopInitValidate
+	sdk.NopCheck
+	sdk.NopInitState
+	sdk.NopInitValidate
 }
 
-var _ basecoin.Handler = ValSetHandler{}
+var _ sdk.Handler = ValSetHandler{}
 
 func (ValSetHandler) Name() string {
 	return NameVal
 }
 
-func (ValSetHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
+func (ValSetHandler) DeliverTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx) (res sdk.DeliverResult, err error) {
 	change, ok := tx.Unwrap().(ValChangeTx)
 	if !ok {
 		return res, errors.ErrUnknownTxType(tx)
@@ -55,8 +55,8 @@ type ValChangeTx struct {
 	Diff []*abci.Validator
 }
 
-func (v ValChangeTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{v}
+func (v ValChangeTx) Wrap() sdk.Tx {
+	return sdk.Tx{v}
 }
 
 func (v ValChangeTx) ValidateBasic() error { return nil }
@@ -69,18 +69,18 @@ var PriceData = []byte{0xCA, 0xFE}
 
 // PriceHandler returns checktx results based on the input
 type PriceHandler struct {
-	basecoin.NopInitState
-	basecoin.NopInitValidate
+	sdk.NopInitState
+	sdk.NopInitValidate
 }
 
-var _ basecoin.Handler = PriceHandler{}
+var _ sdk.Handler = PriceHandler{}
 
 func (PriceHandler) Name() string {
 	return NamePrice
 }
 
-func (PriceHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx) (res basecoin.CheckResult, err error) {
+func (PriceHandler) CheckTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx) (res sdk.CheckResult, err error) {
 	price, ok := tx.Unwrap().(PriceShowTx)
 	if !ok {
 		return res, errors.ErrUnknownTxType(tx)
@@ -91,8 +91,8 @@ func (PriceHandler) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 	return
 }
 
-func (PriceHandler) DeliverTx(ctx basecoin.Context, store state.SimpleDB,
-	tx basecoin.Tx) (res basecoin.DeliverResult, err error) {
+func (PriceHandler) DeliverTx(ctx sdk.Context, store state.SimpleDB,
+	tx sdk.Tx) (res sdk.DeliverResult, err error) {
 	_, ok := tx.Unwrap().(PriceShowTx)
 	if !ok {
 		return res, errors.ErrUnknownTxType(tx)
@@ -107,12 +107,12 @@ type PriceShowTx struct {
 	GasPayment   uint64
 }
 
-func NewPriceShowTx(gasAllocated, gasPayment uint64) basecoin.Tx {
+func NewPriceShowTx(gasAllocated, gasPayment uint64) sdk.Tx {
 	return PriceShowTx{GasAllocated: gasAllocated, GasPayment: gasPayment}.Wrap()
 }
 
-func (p PriceShowTx) Wrap() basecoin.Tx {
-	return basecoin.Tx{p}
+func (p PriceShowTx) Wrap() sdk.Tx {
+	return sdk.Tx{p}
 }
 
 func (v PriceShowTx) ValidateBasic() error { return nil }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/tendermint/basecoin/version"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // CommitHash should be filled by linker flags

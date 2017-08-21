@@ -7,9 +7,9 @@ import (
 
 	"github.com/tendermint/tmlibs/cli"
 
-	client "github.com/tendermint/basecoin/client/commands"
-	"github.com/tendermint/basecoin/cmd/basecoin/commands"
-	"github.com/tendermint/basecoin/docs/guide/counter/plugins/counter"
+	client "github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/cmd/basecoin/commands"
+	"github.com/cosmos/cosmos-sdk/docs/guide/counter/plugins/counter"
 )
 
 func main() {

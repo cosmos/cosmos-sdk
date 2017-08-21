@@ -1,9 +1,9 @@
 package base
 
 import (
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 //nolint
@@ -25,7 +25,7 @@ func (Chain) Name() string {
 var _ stack.Middleware = Chain{}
 
 // CheckTx makes sure we are on the proper chain - fulfills Middlware interface
-func (c Chain) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
+func (c Chain) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Checker) (res sdk.CheckResult, err error) {
 	stx, err := c.checkChainTx(ctx.ChainID(), ctx.BlockHeight(), tx)
 	if err != nil {
 		return res, err
@@ -34,7 +34,7 @@ func (c Chain) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.T
 }
 
 // DeliverTx makes sure we are on the proper chain - fulfills Middlware interface
-func (c Chain) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
+func (c Chain) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Deliver) (res sdk.DeliverResult, err error) {
 	stx, err := c.checkChainTx(ctx.ChainID(), ctx.BlockHeight(), tx)
 	if err != nil {
 		return res, err
@@ -44,7 +44,7 @@ func (c Chain) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin
 
 // checkChainTx makes sure the tx is a Chain Tx, it is on the proper chain,
 // and it has not expired.
-func (c Chain) checkChainTx(chainID string, height uint64, tx basecoin.Tx) (basecoin.Tx, error) {
+func (c Chain) checkChainTx(chainID string, height uint64, tx sdk.Tx) (sdk.Tx, error) {
 	// make sure it is a chaintx
 	ctx, ok := tx.Unwrap().(ChainTx)
 	if !ok {

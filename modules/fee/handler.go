@@ -1,11 +1,11 @@
 package fee
 
 import (
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // NameFee - namespace for the fee module
@@ -13,7 +13,7 @@ const NameFee = "fee"
 
 // Bank is a default location for the fees, but pass anything into
 // the middleware constructor
-var Bank = basecoin.Actor{App: NameFee, Address: []byte("bank")}
+var Bank = sdk.Actor{App: NameFee, Address: []byte("bank")}
 
 // SimpleFeeMiddleware - middleware for fee checking, constant amount
 // It used modules.coin to move the money
@@ -23,7 +23,7 @@ type SimpleFeeMiddleware struct {
 	MinFee coin.Coin
 	// all fees go here, which could be a dump (Bank) or something reachable
 	// by other app logic
-	Collector basecoin.Actor
+	Collector sdk.Actor
 	stack.PassInitState
 	stack.PassInitValidate
 }
@@ -33,7 +33,7 @@ var _ stack.Middleware = SimpleFeeMiddleware{}
 // NewSimpleFeeMiddleware returns a fee handler with a fixed minimum fee.
 //
 // If minFee is 0, then the FeeTx is optional
-func NewSimpleFeeMiddleware(minFee coin.Coin, collector basecoin.Actor) SimpleFeeMiddleware {
+func NewSimpleFeeMiddleware(minFee coin.Coin, collector sdk.Actor) SimpleFeeMiddleware {
 	return SimpleFeeMiddleware{
 		MinFee:    minFee,
 		Collector: collector,
@@ -46,7 +46,7 @@ func (SimpleFeeMiddleware) Name() string {
 }
 
 // CheckTx - check the transaction
-func (h SimpleFeeMiddleware) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Checker) (res basecoin.CheckResult, err error) {
+func (h SimpleFeeMiddleware) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Checker) (res sdk.CheckResult, err error) {
 	fee, err := h.verifyFee(ctx, tx)
 	if err != nil {
 		if IsSkipFeesErr(err) {
@@ -76,7 +76,7 @@ func (h SimpleFeeMiddleware) CheckTx(ctx basecoin.Context, store state.SimpleDB,
 }
 
 // DeliverTx - send the fee handler transaction
-func (h SimpleFeeMiddleware) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, next basecoin.Deliver) (res basecoin.DeliverResult, err error) {
+func (h SimpleFeeMiddleware) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Deliver) (res sdk.DeliverResult, err error) {
 	fee, err := h.verifyFee(ctx, tx)
 	if IsSkipFeesErr(err) {
 		return next.DeliverTx(ctx, store, tx)
@@ -95,7 +95,7 @@ func (h SimpleFeeMiddleware) DeliverTx(ctx basecoin.Context, store state.SimpleD
 	return next.DeliverTx(ctx, store, fee.Tx)
 }
 
-func (h SimpleFeeMiddleware) verifyFee(ctx basecoin.Context, tx basecoin.Tx) (Fee, error) {
+func (h SimpleFeeMiddleware) verifyFee(ctx sdk.Context, tx sdk.Tx) (Fee, error) {
 	feeTx, ok := tx.Unwrap().(Fee)
 	if !ok {
 		// the fee wrapper is not required if there is no minimum

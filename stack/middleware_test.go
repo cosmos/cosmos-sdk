@@ -9,9 +9,9 @@ import (
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 const (
@@ -29,16 +29,16 @@ func TestPermissionSandbox(t *testing.T) {
 	require.Nil(err)
 
 	// test cases to make sure permissioning is solid
-	grantee := basecoin.Actor{App: NameGrant, Address: []byte{1}}
-	grantee2 := basecoin.Actor{App: NameGrant, Address: []byte{2}}
+	grantee := sdk.Actor{App: NameGrant, Address: []byte{1}}
+	grantee2 := sdk.Actor{App: NameGrant, Address: []byte{2}}
 	// ibc and grantee are the same, just different chains
-	ibc := basecoin.Actor{ChainID: "other", App: NameGrant, Address: []byte{1}}
-	ibc2 := basecoin.Actor{ChainID: "other", App: nameSigner, Address: []byte{21}}
-	signer := basecoin.Actor{App: nameSigner, Address: []byte{21}}
+	ibc := sdk.Actor{ChainID: "other", App: NameGrant, Address: []byte{1}}
+	ibc2 := sdk.Actor{ChainID: "other", App: nameSigner, Address: []byte{21}}
+	signer := sdk.Actor{App: nameSigner, Address: []byte{21}}
 	cases := []struct {
 		asIBC       bool
-		grant       basecoin.Actor
-		require     basecoin.Actor
+		grant       sdk.Actor
+		require     sdk.Actor
 		expectedRes data.Bytes
 		expected    func(error) bool
 	}{
@@ -80,7 +80,7 @@ func TestPermissionSandbox(t *testing.T) {
 	}
 }
 
-func checkPerm(t *testing.T, idx int, data []byte, check func(error) bool, res basecoin.Result, err error) {
+func checkPerm(t *testing.T, idx int, data []byte, check func(error) bool, res sdk.Result, err error) {
 	assert := assert.New(t)
 
 	if len(data) > 0 {

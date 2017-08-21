@@ -8,22 +8,22 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/modules/auth"
-	"github.com/tendermint/basecoin/modules/base"
-	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/modules/fee"
-	"github.com/tendermint/basecoin/modules/ibc"
-	"github.com/tendermint/basecoin/modules/nonce"
-	"github.com/tendermint/basecoin/modules/roles"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/modules/auth"
+	"github.com/cosmos/cosmos-sdk/modules/base"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
+	"github.com/cosmos/cosmos-sdk/modules/fee"
+	"github.com/cosmos/cosmos-sdk/modules/ibc"
+	"github.com/cosmos/cosmos-sdk/modules/nonce"
+	"github.com/cosmos/cosmos-sdk/modules/roles"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/tmlibs/log"
 )
 
 // DefaultHandler for the tests (coin, roles, ibc)
-func DefaultHandler(feeDenom string) basecoin.Handler {
+func DefaultHandler(feeDenom string) sdk.Handler {
 	// use the default stack
 	r := roles.NewHandler()
 	i := ibc.NewHandler()
@@ -70,30 +70,30 @@ func newAppTest(t *testing.T) *appTest {
 }
 
 // baseTx is the
-func (at *appTest) baseTx(coins coin.Coins) basecoin.Tx {
+func (at *appTest) baseTx(coins coin.Coins) sdk.Tx {
 	in := []coin.TxInput{{Address: at.acctIn.Actor(), Coins: coins}}
 	out := []coin.TxOutput{{Address: at.acctOut.Actor(), Coins: coins}}
 	tx := coin.NewSendTx(in, out)
 	return tx
 }
 
-func (at *appTest) signTx(tx basecoin.Tx) basecoin.Tx {
+func (at *appTest) signTx(tx sdk.Tx) sdk.Tx {
 	stx := auth.NewMulti(tx)
 	auth.Sign(stx, at.acctIn.Key)
 	return stx.Wrap()
 }
 
-func (at *appTest) getTx(coins coin.Coins, sequence uint32) basecoin.Tx {
+func (at *appTest) getTx(coins coin.Coins, sequence uint32) sdk.Tx {
 	tx := at.baseTx(coins)
-	tx = nonce.NewTx(sequence, []basecoin.Actor{at.acctIn.Actor()}, tx)
+	tx = nonce.NewTx(sequence, []sdk.Actor{at.acctIn.Actor()}, tx)
 	tx = base.NewChainTx(at.chainID, 0, tx)
 	return at.signTx(tx)
 }
 
-func (at *appTest) feeTx(coins coin.Coins, toll coin.Coin, sequence uint32) basecoin.Tx {
+func (at *appTest) feeTx(coins coin.Coins, toll coin.Coin, sequence uint32) sdk.Tx {
 	tx := at.baseTx(coins)
 	tx = fee.NewFee(tx, toll, at.acctIn.Actor())
-	tx = nonce.NewTx(sequence, []basecoin.Actor{at.acctIn.Actor()}, tx)
+	tx = nonce.NewTx(sequence, []sdk.Actor{at.acctIn.Actor()}, tx)
 	tx = base.NewChainTx(at.chainID, 0, tx)
 	return at.signTx(tx)
 }
@@ -131,7 +131,7 @@ func (at *appTest) reset() {
 	require.True(at.t, resabci.IsOK(), resabci)
 }
 
-func getBalance(key basecoin.Actor, store state.SimpleDB) (coin.Coins, error) {
+func getBalance(key sdk.Actor, store state.SimpleDB) (coin.Coins, error) {
 	cspace := stack.PrefixedStore(coin.NameCoin, store)
 	acct, err := coin.GetAccount(cspace, key)
 	return acct.Coins, err
@@ -143,7 +143,7 @@ func getAddr(addr []byte, state state.SimpleDB) (coin.Coins, error) {
 }
 
 // returns the final balance and expected balance for input and output accounts
-func (at *appTest) exec(t *testing.T, tx basecoin.Tx, checkTx bool) (res abci.Result, diffIn, diffOut coin.Coins) {
+func (at *appTest) exec(t *testing.T, tx sdk.Tx, checkTx bool) (res abci.Result, diffIn, diffOut coin.Coins) {
 	require := require.New(t)
 
 	initBalIn, err := getBalance(at.acctIn.Actor(), at.app.GetState())

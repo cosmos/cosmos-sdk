@@ -6,17 +6,17 @@ import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-wire"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/errors"
-	"github.com/tendermint/basecoin/modules/auth"
-	"github.com/tendermint/basecoin/modules/base"
-	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/modules/fee"
-	"github.com/tendermint/basecoin/modules/ibc"
-	"github.com/tendermint/basecoin/modules/nonce"
-	"github.com/tendermint/basecoin/modules/roles"
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/errors"
+	"github.com/cosmos/cosmos-sdk/modules/auth"
+	"github.com/cosmos/cosmos-sdk/modules/base"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
+	"github.com/cosmos/cosmos-sdk/modules/fee"
+	"github.com/cosmos/cosmos-sdk/modules/ibc"
+	"github.com/cosmos/cosmos-sdk/modules/nonce"
+	"github.com/cosmos/cosmos-sdk/modules/roles"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // Tx
@@ -32,7 +32,7 @@ const (
 )
 
 func init() {
-	basecoin.TxMapper.RegisterImplementation(Tx{}, TypeTx, ByteTx)
+	sdk.TxMapper.RegisterImplementation(Tx{}, TypeTx, ByteTx)
 }
 
 // Tx - struct for all counter transactions
@@ -42,7 +42,7 @@ type Tx struct {
 }
 
 // NewTx - return a new counter transaction struct wrapped as a basecoin transaction
-func NewTx(valid bool, fee coin.Coins) basecoin.Tx {
+func NewTx(valid bool, fee coin.Coins) sdk.Tx {
 	return Tx{
 		Valid: valid,
 		Fee:   fee,
@@ -50,8 +50,8 @@ func NewTx(valid bool, fee coin.Coins) basecoin.Tx {
 }
 
 // Wrap - Wrap a Tx as a Basecoin Tx, used to satisfy the XXX interface
-func (c Tx) Wrap() basecoin.Tx {
-	return basecoin.Tx{TxInner: c}
+func (c Tx) Wrap() sdk.Tx {
+	return sdk.Tx{TxInner: c}
 }
 
 // ValidateBasic just makes sure the Fee is a valid, non-negative value
@@ -91,7 +91,7 @@ func ErrDecoding() error {
 //--------------------------------------------------------------------------------
 
 // NewHandler returns a new counter transaction processing handler
-func NewHandler(feeDenom string) basecoin.Handler {
+func NewHandler(feeDenom string) sdk.Handler {
 	return stack.New(
 		base.Logger{},
 		stack.Recovery{},
@@ -129,13 +129,13 @@ func (Handler) Name() string {
 func (Handler) AssertDispatcher() {}
 
 // CheckTx checks if the tx is properly structured
-func (h Handler) CheckTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, _ basecoin.Checker) (res basecoin.CheckResult, err error) {
+func (h Handler) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, _ sdk.Checker) (res sdk.CheckResult, err error) {
 	_, err = checkTx(ctx, tx)
 	return
 }
 
 // DeliverTx executes the tx if valid
-func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx basecoin.Tx, dispatch basecoin.Deliver) (res basecoin.DeliverResult, err error) {
+func (h Handler) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, dispatch sdk.Deliver) (res sdk.DeliverResult, err error) {
 	ctr, err := checkTx(ctx, tx)
 	if err != nil {
 		return res, err
@@ -175,7 +175,7 @@ func (h Handler) DeliverTx(ctx basecoin.Context, store state.SimpleDB, tx baseco
 	return res, err
 }
 
-func checkTx(ctx basecoin.Context, tx basecoin.Tx) (ctr Tx, err error) {
+func checkTx(ctx sdk.Context, tx sdk.Tx) (ctr Tx, err error) {
 	ctr, ok := tx.Unwrap().(Tx)
 	if !ok {
 		return ctr, errors.ErrInvalidFormat(TypeTx, tx)
@@ -191,8 +191,8 @@ func checkTx(ctx basecoin.Context, tx basecoin.Tx) (ctr Tx, err error) {
 //--------------------------------------------------------------------------------
 
 // StoreActor - return the basecoin actor for the account
-func StoreActor() basecoin.Actor {
-	return basecoin.Actor{App: NameCounter, Address: []byte{0x04, 0x20}} //XXX what do these bytes represent? - should use typebyte variables
+func StoreActor() sdk.Actor {
+	return sdk.Actor{App: NameCounter, Address: []byte{0x04, 0x20}} //XXX what do these bytes represent? - should use typebyte variables
 }
 
 // State - state of the counter applicaton

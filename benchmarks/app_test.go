@@ -9,15 +9,15 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/app"
-	"github.com/tendermint/basecoin/modules/auth"
-	"github.com/tendermint/basecoin/modules/base"
-	"github.com/tendermint/basecoin/modules/coin"
-	"github.com/tendermint/basecoin/modules/fee"
-	"github.com/tendermint/basecoin/modules/nonce"
-	"github.com/tendermint/basecoin/modules/roles"
-	"github.com/tendermint/basecoin/stack"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/app"
+	"github.com/cosmos/cosmos-sdk/modules/auth"
+	"github.com/cosmos/cosmos-sdk/modules/base"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
+	"github.com/cosmos/cosmos-sdk/modules/fee"
+	"github.com/cosmos/cosmos-sdk/modules/nonce"
+	"github.com/cosmos/cosmos-sdk/modules/roles"
+	"github.com/cosmos/cosmos-sdk/stack"
 )
 
 type BenchApp struct {
@@ -27,7 +27,7 @@ type BenchApp struct {
 }
 
 // DefaultHandler - placeholder to just handle sendtx
-func DefaultHandler(feeDenom string) basecoin.Handler {
+func DefaultHandler(feeDenom string) sdk.Handler {
 	// use the default stack
 	c := coin.NewHandler()
 	r := roles.NewHandler()
@@ -46,7 +46,7 @@ func DefaultHandler(feeDenom string) basecoin.Handler {
 	).Use(d)
 }
 
-func NewBenchApp(h basecoin.Handler, chainID string, n int,
+func NewBenchApp(h sdk.Handler, chainID string, n int,
 	persist bool) BenchApp {
 
 	logger := log.NewNopLogger()
@@ -107,7 +107,7 @@ func (b BenchApp) makeTx(useFee bool) []byte {
 		tx = fee.NewFee(tx, toll, sender.Actor())
 	}
 	sequence := sender.NextSequence()
-	tx = nonce.NewTx(sequence, []basecoin.Actor{sender.Actor()}, tx)
+	tx = nonce.NewTx(sequence, []sdk.Actor{sender.Actor()}, tx)
 	tx = base.NewChainTx(b.ChainID, 0, tx)
 	stx := auth.NewMulti(tx)
 	auth.Sign(stx, sender.Key)

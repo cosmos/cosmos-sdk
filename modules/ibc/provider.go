@@ -4,8 +4,8 @@ import (
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/light-client/certifiers"
 
-	"github.com/tendermint/basecoin/stack"
-	"github.com/tendermint/basecoin/state"
+	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/state"
 )
 
 const (

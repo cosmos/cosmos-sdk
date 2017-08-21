@@ -1,8 +1,8 @@
 package rest
 
 import (
-	"github.com/tendermint/basecoin"
-	"github.com/tendermint/basecoin/modules/coin"
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/modules/coin"
 	"github.com/tendermint/go-crypto/keys"
 )
 
@@ -29,7 +29,7 @@ type SignRequest struct {
 	Name     string `json:"name,omitempty" validate:"required,min=3,printascii"`
 	Password string `json:"password,omitempty" validate:"required,min=10"`
 
-	Tx basecoin.Tx `json:"tx" validate:"required"`
+	Tx sdk.Tx `json:"tx" validate:"required"`
 }
 
 type CreateKeyResponse struct {
@@ -46,7 +46,7 @@ type SendInput struct {
 	Multi    bool       `json:"multi,omitempty"`
 	Sequence uint32     `json:"sequence"`
 
-	To     *basecoin.Actor `json:"to"`
-	From   *basecoin.Actor `json:"from"`
+	To     *sdk.Actor `json:"to"`
+	From   *sdk.Actor `json:"from"`
 	Amount coin.Coins      `json:"amount"`
 }

@@ -1,4 +1,4 @@
-package: github.com/tendermint/basecoin
+package: github.com/cosmos/cosmos-sdk
 import:
 - package: github.com/gorilla/websocket
 - package: github.com/pkg/errors

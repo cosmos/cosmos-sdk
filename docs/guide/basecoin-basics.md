@@ -320,7 +320,6 @@ To remove all the files created and refresh your environment (e.g., if starting 
 ```shelldown[end-of-tutorials]
 basecli reset_all
 rm -rf ~/.basecoin
-rm -rf ~/.basecoin
 ```
 
 ## Conclusion

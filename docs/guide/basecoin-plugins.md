@@ -79,7 +79,7 @@ both use the same library of commands, including one for signing and
 broadcasting `SendTx`.
 
 Counter transactions take two custom inputs, a boolean argument named `valid`,
-and a coin amount named `countfee`.  The transaction is only accepted if both
+and a coin amount named `countfee`. The transaction is only accepted if both
 `valid` is set to true and the transaction input coins is greater than
 `countfee` that the user provides.
 
@@ -126,11 +126,11 @@ them.  Of course, we can also expose queries on our plugin:
 countercli query counter
 ```
 
-Tada! We can now see that our custom counter plugin tx went through.  You
-should see a Counter value of 1 representing the number of valid transactions.
-If we send another transaction, and then query again, we will see the value
-increment.  Note that we need the sequence number here to send the coins
-(it didn't increment when we just pinged the counter)
+Tada! We can now see that our custom counter plugin transactions went through.
+You should see a Counter value of 1 representing the number of valid
+transactions. If we send another transaction, and then query again, we will
+see the value increment. Note that we need the sequence number here to send the
+coins (it didn't increment when we just pinged the counter)
 
 ```shelldown[4]
 countercli tx counter --name cool --countfee=2mycoin --sequence=2 --valid

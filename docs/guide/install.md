@@ -4,14 +4,14 @@ If you aren't used to compile go programs and just want the released
 version of the code, please head to our [downloads](https://tendermint.com/download)
 page to get a pre-compiled binary for your platform.
 
-On a good day, basecoin can be installed like a normal Go program:
+Usually, Cosmos SDK can be installed like a normal Go program:
 
 ```
-go get -u github.com/tendermint/basecoin/cmd/...
+go get -u github.com/cosmos/cosmos-sdk/cmd/...
 ```
 
-In some cases, if that fails, or if another branch is required,
-we use `glide` for dependency management.
+If the dependencies have been updated with breaking changes,
+or if another branch is required, `glide` is used for dependency management.
 Thus, assuming you've already run `go get` or otherwise cloned the repo,
 the correct way to install is:
 
@@ -30,4 +30,3 @@ If you need another branch, make sure to run `git checkout <branch>`
 before `make all`. And if you switch branches a lot, especially
 touching other tendermint repos, you may need to `make fresh` sometimes
 so glide doesn't get confused with all the branches and versions lying around.
-

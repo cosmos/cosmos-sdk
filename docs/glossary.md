@@ -20,10 +20,10 @@ binary and json encodings and decodings for `struct` or  interface` objects.
 Here, encoding and decoding operations are designed to operate with interfaces
 nested any amount times (like an onion!). There is one public `TxMapper`
 in the basecoin root package, and all modules can register their own transaction
-types there. This allows us to deserialize the entire tx in one location (even
-with types defined in other repos), to easily embed an arbitrary tx inside another
-without specifying the type, and provide an automatic json representation to
-provide to users (or apps) to inspect the chain.
+types there. This allows us to deserialize the entire transaction in one location
+(even with types defined in other repos), to easily embed an arbitrary tx inside
+another without specifying the type, and provide an automatic json representation
+to provide to users (or apps) to inspect the chain.
 
 Note how we can wrap any other transaction, add a fee level, and not worry
 about the encoding in our module any more?
@@ -172,9 +172,9 @@ implements the `Handler` interface. We then register a list of modules with
 the dispatcher. Every module has a unique `Name()`, which is used for
 isolating its state space. We use this same name for routing transactions.
 Each transaction implementation must be registed with go-wire via `TxMapper`,
-so we just look at the registered name of this tx, which should be of the form
-`<module name>/xxx`. The dispatcher grabs the appropriate module name from
- the tx name and routes it if the module is present.
+so we just look at the registered name of this transaction, which should be
+of the form `<module name>/xxx`. The dispatcher grabs the appropriate module
+name from the tx name and routes it if the module is present.
 
 This all seems like a bit of magic, but really we're just making use of go-wire
 magic that we are already using, rather than add another layer. For all the

@@ -26,8 +26,7 @@ application customization. For example, does your app require fees, how do you
 want to log messages, do you enable IBC, do you even have a cryptocurrency? In
 this way, the Cosmos SDK is the **Rails of cryptocurrencies**.
 
-Within this repository, the `basecoin` app serves as a reference implementation for how we build ABCI applications in Go, and is the framework in which we implement the [Cosmos Hub](https://cosmos.network). **It's easy to use, and doesn't require any forking** - just implement your plugin, import the libraries, and away
-you go with a full-stack blockchain and command line tool for transacting.
+Within this repository, the `basecoin` app serves as a reference implementation for how we build ABCI applications in Go, and is the framework in which we implement the [Cosmos Hub](https://cosmos.network). **It's easy to use, and doesn't require any forking** - just implement your plugin, import the libraries, and away you go with a full-stack blockchain and command line tool for transacting.
 
 ## Prerequisites
 

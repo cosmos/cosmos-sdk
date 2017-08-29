@@ -108,10 +108,10 @@ block), and this generally requires approval of an authorized registrar (which
 may be a multi-sig role). Updating a registered chain can be done by anyone,
 as the new header can be completely verified by the existing knowledge of the
 chain. Also, modules can initiate an outgoing IBC message to another chain
-by calling `CreatePacketTx` over IPC (inter-plugin communication) with a tx
-that belongs to their module. (This must be explicitly authorized by the
-same module, so only the eg. coin module can authorize a `SendTx` to another
-chain).
+by calling `CreatePacketTx` over IPC (inter-plugin communication) with a
+transaction that belongs to their module. (This must be explicitly authorized
+by the same module, so only the eg. coin module can authorize a `SendTx` to
+another chain).
 
 `PostPacketTx` can post a transaction that was created on another chain along
 with the merkle proof, which must match an already registered header. If this

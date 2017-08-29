@@ -19,13 +19,14 @@ overviews.
 
 ## Framework Overview
 
-### Transactions
+### Transactions (tx)
 
 Each transaction passes through the middleware stack which can be defined
-uniquely by each application. From the multiple layers of tx, each middleware
-may strip off one level, like an onion. As such, the transaction must be
-constructed to mirror the execution stack, and each middleware module should
-allow embedding an arbitrary tx for the next layer in the stack.
+uniquely by each application. From the multiple layers of transaction, each
+middleware may strip off one level, like an onion. As such, the transaction
+must be constructed to mirror the execution stack, and each middleware module
+should allow an arbitrary transaction to be embedded for the next layer in
+the stack.
 
 <img src="graphics/tx.png" width=250>
 

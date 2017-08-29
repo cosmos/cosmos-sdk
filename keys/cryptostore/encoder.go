@@ -28,18 +28,24 @@ func secret(passphrase string) []byte {
 type secretbox struct{}
 
 func (e secretbox) Encrypt(key crypto.PrivKey, pass string) ([]byte, error) {
+	if pass == "" {
+		return key.Bytes(), nil
+	}
 	s := secret(pass)
 	cipher := crypto.EncryptSymmetric(key.Bytes(), s)
 	return cipher, nil
 }
 
-func (e secretbox) Decrypt(data []byte, pass string) (crypto.PrivKey, error) {
-	s := secret(pass)
-	private, err := crypto.DecryptSymmetric(data, s)
-	if err != nil {
-		return crypto.PrivKey{}, errors.Wrap(err, "Invalid Passphrase")
+func (e secretbox) Decrypt(data []byte, pass string) (key crypto.PrivKey, err error) {
+	private := data
+	if pass != "" {
+		s := secret(pass)
+		private, err = crypto.DecryptSymmetric(data, s)
+		if err != nil {
+			return crypto.PrivKey{}, errors.Wrap(err, "Invalid Passphrase")
+		}
 	}
-	key, err := crypto.PrivKeyFromBytes(private)
+	key, err = crypto.PrivKeyFromBytes(private)
 	return key, errors.Wrap(err, "Invalid Passphrase")
 }
 

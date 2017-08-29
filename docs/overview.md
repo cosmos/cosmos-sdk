@@ -12,9 +12,9 @@ and
 documentation.
 
 For a more interconnected schematics see these
-[framework](../graphics/overview-framework.png)
+[framework](graphics/overview-framework.png)
 and
-[security](../graphics/overview-security.png)
+[security](graphics/overview-security.png)
 overviews.
 
 ## Framework Overview
@@ -27,7 +27,7 @@ may strip off one level, like an onion. As such, the transaction must be
 constructed to mirror the execution stack, and each middleware module should
 allow embedding an arbitrary tx for the next layer in the stack.
 
-<img src="..//graphics/tx.png" width=250>
+<img src="graphics/tx.png" width=250>
 
 ### Execution Stack
 
@@ -54,7 +54,7 @@ a fee even if the end business logic fails; under this situation we would add
 the `DeliverTx` checkpoint after the fee middleware but before the business
 logic. This diagram displays a typical process flow through an execution stack.
 
-<img src="../graphics/middleware.png" width=500>
+<img src="graphics/middleware.png" width=500>
 
 ### Dispatcher
 
@@ -67,7 +67,7 @@ Similarly to the execution stack, when executing a transaction the dispatcher
 isolates the state space available to the designated module (see [Data
 Store](overview.md#data-store)).
 
-<img src="../graphics/dispatcher.png" width=600>
+<img src="graphics/dispatcher.png" width=600>
 
 ## Security Overview
 
@@ -82,7 +82,7 @@ designated permission for the transaction context to perform a specific action.
 Context is passed through the middleware and dispatcher, allowing one to add
 permissions on this app-space, and check current permissions.
 
-<img src="../graphics/permission.png" width=500>
+<img src="graphics/permission.png" width=500>
 
 ### Data Store
 
@@ -99,4 +99,4 @@ prefixing invisible to each module while preventing each module from affecting
 each other module. Under this model no two registered modules are permitted to
 have the same namespace.
 
-<img src="../graphics/datastore.png" width=500>
+<img src="graphics/datastore.png" width=500>

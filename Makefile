@@ -3,7 +3,7 @@ GOTOOLS =	github.com/mitchellh/gox \
 			github.com/rigelrozanski/shelldown/cmd/shelldown
 TUTORIALS=$(shell find docs/guide -name "*md" -type f)
 
-EXAMPLES := counter eyes
+EXAMPLES := counter eyes basecoin
 INSTALL_EXAMPLES := $(addprefix install_,${EXAMPLES})
 TEST_EXAMPLES := $(addprefix testex_,${EXAMPLES})
 
@@ -39,14 +39,6 @@ test_unit:
 test_cli: $(TEST_EXAMPLES)
 	# sudo apt-get install jq
 	# wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2"
-	./tests/cli/keys.sh
-	./tests/cli/rpc.sh
-	./tests/cli/init.sh
-	./tests/cli/basictx.sh
-	./tests/cli/roles.sh
-	./tests/cli/restart.sh
-	./tests/cli/rest.sh
-	./tests/cli/ibc.sh
 
 test_tutorial:
 	@shelldown ${TUTORIALS}

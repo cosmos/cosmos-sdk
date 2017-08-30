@@ -8,7 +8,7 @@ import (
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 
-	"github.com/cosmos/cosmos-sdk/cmd/basecoin/commands"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/cmd/basecoin/commands"
 )
 
 // InitCmd - node initialization command

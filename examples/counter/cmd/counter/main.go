@@ -8,7 +8,7 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	client "github.com/cosmos/cosmos-sdk/client/commands"
-	"github.com/cosmos/cosmos-sdk/cmd/basecoin/commands"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/cmd/basecoin/commands"
 	"github.com/cosmos/cosmos-sdk/examples/counter/plugins/counter"
 )
 

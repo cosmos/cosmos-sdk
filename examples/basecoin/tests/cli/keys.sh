@@ -26,4 +26,8 @@ testMakeKeys() {
 
 # load and run these tests with shunit2!
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #get this files directory
-. $DIR/shunit2
+
+# TODO: how to handle this if we are not in the same directory
+CLI_DIR=${DIR}/../../../../tests/cli
+
+. $CLI_DIR/shunit2

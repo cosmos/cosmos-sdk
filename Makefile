@@ -33,8 +33,9 @@ test_unit:
 	@go test `glide novendor`
 	#go run tests/tendermint/*.go
 
-test_cli: tests/cli/shunit2
+test_cli:
 	# sudo apt-get install jq
+	# wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2"
 	./tests/cli/keys.sh
 	./tests/cli/rpc.sh
 	./tests/cli/init.sh
@@ -48,19 +49,11 @@ test_cli: tests/cli/shunit2
 		cd $$EX && make test_cli; \
 	done
 
-test_tutorial: docs/guide/shunit2
+test_tutorial:
 	@shelldown ${TUTORIALS}
 	@for script in docs/guide/*.sh ; do \
 		bash $$script ; \
 	done
-
-tests/cli/shunit2:
-	@wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2" \
-    	-q -O tests/cli/shunit2
-
-docs/guide/shunit2:
-	@wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2" \
-    	-q -O docs/guide/shunit2
 
 get_vendor_deps: tools
 	@glide install

@@ -3,6 +3,5 @@ vendor
 .vagrant
 merkleeyes.db
 build
-shunit2
 docs/guide/*.sh
 keys/

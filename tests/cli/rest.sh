@@ -17,6 +17,7 @@ oneTimeSetUp() {
     baseserver serve --port $BPORT >/dev/null &
     PID_PROXY=$!
     disown
+    sleep 0.1 # for startup
 }
 
 oneTimeTearDown() {
@@ -29,7 +30,8 @@ oneTimeTearDown() {
 restAddr() {
     assertNotNull "line=${LINENO}, keyname required" "$1"
     ADDR=$(curl ${URL}/keys/${1} 2>/dev/null | jq .address | tr -d \")
-    assertNotEquals "line=${LINENO}, no key" "null" $ADDR
+    assertNotEquals "line=${LINENO}, null key" "null" "$ADDR"
+    assertNotEquals "line=${LINENO}, no key" "" "$ADDR"
     echo $ADDR
 }
 
@@ -49,12 +51,38 @@ restNoAccount() {
 }
 
 test00GetAccount() {
+    RECV=$(restAddr $POOR)
+    SENDER=$(restAddr $RICH)
+
+    restNoAccount $RECV
+    restAccount $SENDER "9007199254740992"
+}
+
+test01SendTx() {
     SENDER=$(restAddr $RICH)
     RECV=$(restAddr $POOR)
 
-    restAccount $SENDER "9007199254740992"
-    restNoAccount $RECV
+    CMD="{\"from\": {\"app\": \"sigs\", \"addr\": \"$SENDER\"}, \"to\": {\"app\": \"sigs\", \"addr\": \"$RECV\"}, \"amount\": [{\"denom\": \"mycoin\", \"amount\": 992}], \"sequence\": 1}"
+
+    UNSIGNED=$(curl -XPOST ${URL}/build/send -d "$CMD" 2>/dev/null)
+    if [ -n "$DEBUG" ]; then echo $UNSIGNED; echo; fi
+
+    TOSIGN="{\"name\": \"$RICH\", \"password\": \"qwertyuiop\", \"tx\": $UNSIGNED}"
+    SIGNED=$(curl -XPOST ${URL}/sign -d "$TOSIGN" 2>/dev/null)
+    TX=$(curl -XPOST ${URL}/tx -d "$SIGNED" 2>/dev/null)
+    if [ -n "$DEBUG" ]; then echo $TX; echo; fi
+
+    txSucceeded $? "$TX" "$RECV"
+    HASH=$(echo $TX | jq .hash | tr -d \")
+    TX_HEIGHT=$(echo $TX | jq .height)
+
+    restAccount $SENDER "9007199254740000"
+    restAccount $RECV "992"
+
+    # Make sure tx is indexed
+    checkSendTx $HASH $TX_HEIGHT $SENDER "992"
 }
+
 
 # XXX Ex Usage: restCreateRole $PAYLOAD $EXPECTED
 # Desc: Tests that the first returned signer.addr matches the expected
@@ -86,30 +114,6 @@ test04CreateRoleInvalid() {
     assertEquals "line=${LINENO}, should report validation failed" 0 $(echo $ERROR | grep "invalid hex" > /dev/null && echo 0 || echo 1)
 }
 
-test01SendTx() {
-    SENDER=$(restAddr $RICH)
-    RECV=$(restAddr $POOR)
-
-    CMD="{\"from\": {\"app\": \"sigs\", \"addr\": \"$SENDER\"}, \"to\": {\"app\": \"sigs\", \"addr\": \"$RECV\"}, \"amount\": [{\"denom\": \"mycoin\", \"amount\": 992}], \"sequence\": 1}"
-
-    UNSIGNED=$(curl -XPOST ${URL}/build/send -d "$CMD" 2>/dev/null)
-    if [ -n "$DEBUG" ]; then echo $UNSIGNED; echo; fi
-
-    TOSIGN="{\"name\": \"$RICH\", \"password\": \"qwertyuiop\", \"tx\": $UNSIGNED}"
-    SIGNED=$(curl -XPOST ${URL}/sign -d "$TOSIGN" 2>/dev/null)
-    TX=$(curl -XPOST ${URL}/tx -d "$SIGNED" 2>/dev/null)
-    if [ -n "$DEBUG" ]; then echo $TX; echo; fi
-
-    txSucceeded $? "$TX" "$RECV"
-    HASH=$(echo $TX | jq .hash | tr -d \")
-    TX_HEIGHT=$(echo $TX | jq .height)
-
-    restAccount $SENDER "9007199254740000"
-    restAccount $RECV "992"
-
-    # Make sure tx is indexed
-    checkSendTx $HASH $TX_HEIGHT $SENDER "992"
-}
 
 # test02SendTxWithFee() {
 #     SENDER=$(getAddr $RICH)

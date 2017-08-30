@@ -66,6 +66,8 @@ test00SetGetRemove() {
 
 # Load common then run these tests with shunit2!
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #get this files directory
-. $DIR/common.sh
-. $DIR/shunit2
+CLI_DIR=${DIR}/../../../../tests/cli
+
+. $CLI_DIR/common.sh
+. $CLI_DIR/shunit2
 

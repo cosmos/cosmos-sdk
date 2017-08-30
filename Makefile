@@ -4,6 +4,7 @@ GOTOOLS =	github.com/mitchellh/gox \
 TUTORIALS=$(shell find docs/guide -name "*md" -type f)
 
 EXAMPLES := counter
+EXAMPLE_DIRS := $(addprefix ./examples/,${EXAMPLES})
 
 LINKER_FLAGS:="-X github.com/cosmos/cosmos-sdk/client/commands.CommitHash=`git rev-parse --short HEAD`"
 
@@ -14,8 +15,8 @@ build:
 
 install:
 	@go install -ldflags $(LINKER_FLAGS) ./cmd/...
-	@for EX in $(EXAMPLES); do \
-		go install -ldflags $(LINKER_FLAGS) ./examples/$$EX/cmd/...; \
+	@for EX in $(EXAMPLE_DIRS); do \
+		cd $$EX && make install; \
 	done
 
 dist:
@@ -40,10 +41,12 @@ test_cli: tests/cli/shunit2
 	./tests/cli/basictx.sh
 	./tests/cli/eyes.sh
 	./tests/cli/roles.sh
-	./tests/cli/counter.sh
 	./tests/cli/restart.sh
 	./tests/cli/rest.sh
 	./tests/cli/ibc.sh
+	@for EX in $(EXAMPLE_DIRS); do \
+		cd $$EX && make test_cli; \
+	done
 
 test_tutorial: docs/guide/shunit2
 	@shelldown ${TUTORIALS}

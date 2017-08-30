@@ -9,7 +9,7 @@ import (
 
 	client "github.com/cosmos/cosmos-sdk/client/commands"
 	"github.com/cosmos/cosmos-sdk/cmd/basecoin/commands"
-	"github.com/cosmos/cosmos-sdk/docs/guide/counter/plugins/counter"
+	"github.com/cosmos/cosmos-sdk/examples/counter/plugins/counter"
 )
 
 func main() {

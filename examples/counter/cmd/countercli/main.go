@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/commands/seeds"
 
 	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
-	bcount "github.com/cosmos/cosmos-sdk/docs/guide/counter/cmd/countercli/commands"
+	bcount "github.com/cosmos/cosmos-sdk/examples/counter/cmd/countercli/commands"
 	authcmd "github.com/cosmos/cosmos-sdk/modules/auth/commands"
 	basecmd "github.com/cosmos/cosmos-sdk/modules/base/commands"
 	coincmd "github.com/cosmos/cosmos-sdk/modules/coin/commands"

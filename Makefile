@@ -3,6 +3,8 @@ GOTOOLS =	github.com/mitchellh/gox \
 			github.com/rigelrozanski/shelldown/cmd/shelldown
 TUTORIALS=$(shell find docs/guide -name "*md" -type f)
 
+EXAMPLES := counter
+
 LINKER_FLAGS:="-X github.com/cosmos/cosmos-sdk/client/commands.CommitHash=`git rev-parse --short HEAD`"
 
 all: get_vendor_deps install test
@@ -12,7 +14,9 @@ build:
 
 install:
 	@go install -ldflags $(LINKER_FLAGS) ./cmd/...
-	@go install -ldflags $(LINKER_FLAGS) ./docs/guide/counter/cmd/...
+	@for EX in $(EXAMPLES); do \
+		go install -ldflags $(LINKER_FLAGS) ./examples/$$EX/cmd/...; \
+	done
 
 dist:
 	@bash publish/dist.sh

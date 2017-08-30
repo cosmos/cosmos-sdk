@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
-	"github.com/cosmos/cosmos-sdk/docs/guide/counter/plugins/counter"
+	"github.com/cosmos/cosmos-sdk/examples/counter/plugins/counter"
 	"github.com/cosmos/cosmos-sdk/modules/coin"
 )
 

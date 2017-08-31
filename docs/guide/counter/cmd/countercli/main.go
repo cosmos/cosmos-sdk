@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/commands/proxy"
 	"github.com/cosmos/cosmos-sdk/client/commands/query"
 	"github.com/cosmos/cosmos-sdk/client/commands/seeds"
+
 	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
 	bcount "github.com/cosmos/cosmos-sdk/docs/guide/counter/cmd/countercli/commands"
 	authcmd "github.com/cosmos/cosmos-sdk/modules/auth/commands"
@@ -21,15 +22,16 @@ import (
 	noncecmd "github.com/cosmos/cosmos-sdk/modules/nonce/commands"
 )
 
-// BaseCli represents the base command when called without any subcommands
-var BaseCli = &cobra.Command{
+// CounterCli represents the base command when called without any subcommands
+var CounterCli = &cobra.Command{
 	Use:   "countercli",
-	Short: "Light client for tendermint",
-	Long: `Basecli is an version of tmcli including custom logic to
-present a nice (not raw hex) interface to the basecoin blockchain structure.
+	Short: "Example app built using the Cosmos SDK",
+	Long: `Countercli is a demo app that includes custom logic to
+present a formatted interface to a custom blockchain structure.
 
-This is a useful tool, but also serves to demonstrate how one can configure
-tmcli to work for any custom abci app.
+This is a useful tool and also serves to demonstrate how to configure
+the Cosmos SDK to work for any custom ABCI app, see:
+
 `,
 }
 

@@ -14,7 +14,7 @@ By default we will serve on `http://localhost:2024`.  CORS will be disabled by d
 The MVP will allow us to move around money.  This involves the
 following functions:
 
-## Construct an unsigned tx
+## Construct an unsigned transaction
 
 `POST /build/send`
 

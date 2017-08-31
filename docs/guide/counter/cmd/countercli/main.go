@@ -36,7 +36,7 @@ the Cosmos SDK to work for any custom ABCI app, see:
 }
 
 func main() {
-	commands.AddBasicFlags(BaseCli)
+	commands.AddBasicFlags(CounterCli)
 
 	// Prepare queries
 	query.RootCmd.AddCommand(
@@ -69,7 +69,7 @@ func main() {
 	)
 
 	// Set up the various commands to use
-	BaseCli.AddCommand(
+	CounterCli.AddCommand(
 		commands.InitCmd,
 		commands.ResetCmd,
 		commands.VersionCmd,
@@ -80,6 +80,6 @@ func main() {
 		proxy.RootCmd,
 	)
 
-	cmd := cli.PrepareMainCmd(BaseCli, "CTL", os.ExpandEnv("$HOME/.countercli"))
+	cmd := cli.PrepareMainCmd(CounterCli, "CTL", os.ExpandEnv("$HOME/.countercli"))
 	cmd.Execute()
 }

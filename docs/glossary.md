@@ -21,9 +21,9 @@ Here, encoding and decoding operations are designed to operate with interfaces
 nested any amount times (like an onion!). There is one public `TxMapper`
 in the basecoin root package, and all modules can register their own transaction
 types there. This allows us to deserialize the entire transaction in one location
-(even with types defined in other repos), to easily embed an arbitrary tx inside
-another without specifying the type, and provide an automatic json representation
-to provide to users (or apps) to inspect the chain.
+(even with types defined in other repos), to easily embed an arbitrary transaction
+inside another without specifying the type, and provide an automatic json
+representation allowing for users (or apps) to inspect the chain.
 
 Note how we can wrap any other transaction, add a fee level, and not worry
 about the encoding in our module any more?
@@ -163,7 +163,7 @@ then each transaction is handled by the appropriate module.
 ## Dispatcher
 
 We usually will want to have multiple modules working together, and need to
-make sure the correct transactions get to the correct module. So we have the
+make sure the correct transactions get to the correct module. So we have
 `coin` sending money, `roles` to create multi-sig accounts, and `ibc` for
 following other chains all working together without interference.
 

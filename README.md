@@ -13,7 +13,7 @@ Branch    | Tests | Coverage | Report Card
 develop   | [![CircleCI](https://circleci.com/gh/cosmos/cosmos-sdk/tree/develop.svg?style=shield)](https://circleci.com/gh/cosmos/cosmos-sdk/tree/develop) | [![codecov](https://codecov.io/gh/cosmos/cosmos-sdk/branch/develop/graph/badge.svg)](https://codecov.io/gh/cosmos/cosmos-sdk) | [![Go Report Card](https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk/tree/develop)](https://goreportcard.com/report/github.com/cosmos/cosmos-sdk/tree/develop)
 master    | [![CircleCI](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master.svg?style=shield)](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master) | [![codecov](https://codecov.io/gh/cosmos/cosmos-sdk/branch/master/graph/badge.svg)](https://codecov.io/gh/cosmos/cosmos-sdk) | [![Go Report Card](https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk/tree/master)](https://goreportcard.com/report/github.com/cosmos/cosmos-sdk/tree/master)
 
-The Cosmos SDK is the middleware platform which the [Cosmos](https://cosmos.network) HUB is constructed from. The HUB is a blockchain (or, internet of blockchains) in which the atom supply resides. The atos supply is defined at genesis and can change based on the rules of the HUB.
+The Cosmos SDK is the middleware platform which the [Cosmos Hub](https://cosmos.network) is constructed from. The Hub is a blockchain (or, internet of blockchains) in which the Atom supply resides. The Atoms supply is defined at genesis and can change based on the rules of the Hub.
 
 Under the hood, the Cosmos SDK is an [ABCI application](https://github.com/tendermint/abci) designed to be used with the [Tendermint consensus engine](https://tendermint.com/) to form a Proof-of-Stake cryptocurrency. It also provides a general purpose framework
 for extending the feature-set of the cryptocurrency by implementing plugins.
@@ -49,3 +49,29 @@ See the [install guide](/docs/guide/install.md) for more details.
 * See [more examples](https://github.com/cosmos/cosmos-academy)
 
 To deploy a testnet, see our [repository of deployment tools](https://github.com/tendermint/tools).
+
+# Inspiration
+
+The basic concept for this SDK comes from years of web development. A number of
+patterns have arisen in that realm of software which enable people to build remote
+servers with APIs remarkably quickly and with high stability. The
+[ABCI](https://github.com/tendermint/abci) application interface is similar to
+a web API (`DeliverTx` is like POST and `Query` is like GET while `SetOption` is like
+the admin playing with the config file). Here are some patterns that might be
+useful:
+
+* MVC - separate data model (storage) from business logic (controllers)
+* Routers - easily direct each request to the appropriate controller
+* Middleware - a series of wrappers that provide global functionality (like
+  authentication) to all controllers
+* Modules (gems, package, etc) - developers can write a self-contained package
+  with a given set of functionality, which can be imported and reused in other
+  apps
+
+Also at play is the concept of different tables/schemas in databases, thus you can
+keep the different modules safely separated and avoid any accidental (or malicious)
+overwriting of data.
+
+Not all of these can be compare one-to-one in the blockchain world, but they do
+provide inspiration for building orthogonal pieces that can easily be combined
+into various applications.

@@ -34,7 +34,7 @@ the stack.
 
 Middleware components allow for code reusability and integrability. A standard
 set of middleware are provided and can be mix-and-matched with custom
-middleware. Some of the [standardlibrary](stdlib.md)
+middleware. Some of the [standard library](stdlib.md)
 middlewares provided in this package include:
  - Logging
  - Recovery
@@ -47,7 +47,7 @@ middlewares provided in this package include:
  
 As a part of stack execution the state space provided to each middleware is
 isolated (see [Data Store](overview.md#data-store)). When executing the stack,
-state-recovery check-points can be assigned for stack execution of `CheckTx` 
+state-recovery checkpoints can be assigned for stack execution of `CheckTx` 
 or `DeliverTx`. This means, that all state changes will be reverted to the 
 checkpoint state on failure when either being run as a part of `CheckTx`
 or `DeliverTx`. Example usage of the checkpoints is when we may want to deduct
@@ -75,7 +75,7 @@ Store](overview.md#data-store)).
 ### Permission
 
 Each application is run in a sandbox to isolate security risks. When
-interfacing between applications, if a one of those applications is compromised
+interfacing between applications, if one of those applications is compromised
 the entire network should still be secure. This is achieved through actor
 permissioning whereby each chain, account, or application can provided a
 designated permission for the transaction context to perform a specific action.

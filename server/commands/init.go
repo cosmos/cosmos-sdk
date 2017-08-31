@@ -82,7 +82,7 @@ func initCmd(cmd *cobra.Command, args []string) error {
 			options = append(options, option)
 		}
 	}
-	optionsStr += strings.Join(options[:], ",\n      ")
+	optionsStr += strings.Join(options[:], sep)
 
 	genesis := GetGenesisJSON(viper.GetString(FlagChainID), userAddr, optionsStr)
 	return CreateGenesisValidatorFiles(cfg, genesis, cmd.Root().Name())

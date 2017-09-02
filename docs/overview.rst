@@ -1,24 +1,17 @@
-Quark Overview
+SDK Overview
 ==============
 
-The quark middleware design optimizes flexibility and security. The
+The SDK middleware design optimizes flexibility and security. The
 framework is designed around a modular execution stack which allows
 applications to mix and match modular elements as desired. Along side,
 all modules are permissioned and sandboxed to isolate modules for
 greater application security.
 
-For more explanation please see the `standard library <stdlib.md>`__ and
-`glossary <glossary.md>`__ documentation.
-
-For a more interconnected schematics see these
-`framework <graphics/overview-framework.png>`__ and
-`security <graphics/overview-security.png>`__ overviews.
-
 Framework Overview
 ------------------
 
-Transactions (tx)
-~~~~~~~~~~~~~~~~~
+Transactions
+~~~~~~~~~~~~
 
 Each transaction passes through the middleware stack which can be
 defined uniquely by each application. From the multiple layers of
@@ -32,13 +25,13 @@ Execution Stack
 
 Middleware components allow for code reusability and integrability. A
 standard set of middleware are provided and can be mix-and-matched with
-custom middleware. Some of the `standard library <stdlib.md>`__
+custom middleware. Some of the `standard library <./stdlib.html>`__
 middlewares provided in this package include: - Logging - Recovery -
 Signatures - Chain - Nonce - Fees - Roles -
 Inter-Blockchain-Communication (IBC)
 
 As a part of stack execution the state space provided to each middleware
-is isolated (see `Data Store <overview.md#data-store>`__). When
+is isolated ``Data Store`` below. When
 executing the stack, state-recovery checkpoints can be assigned for
 stack execution of ``CheckTx`` or ``DeliverTx``. This means, that all
 state changes will be reverted to the checkpoint state on failure when
@@ -59,7 +52,7 @@ types must first be registered with the dispatcher. Once registered the
 middleware stack or any other handler can call the dispatcher to execute
 a transaction. Similarly to the execution stack, when executing a
 transaction the dispatcher isolates the state space available to the
-designated module (see `Data Store <overview.md#data-store>`__).
+designated module (see ``Data Store`` below).
 
 Security Overview
 -----------------
@@ -93,5 +86,3 @@ accessible to it under the assigned key ``bar``. This effectively makes
 app prefixing invisible to each module while preventing each module from
 affecting each other module. Under this model no two registered modules
 are permitted to have the same namespace.
-
-

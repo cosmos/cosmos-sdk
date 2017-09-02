@@ -74,24 +74,28 @@ Install
 
 With go, it's one command:
 
-.. code:: shelldown[0]
+..  code:: shelldown[0]
+
+::
 
     go get -u github.com/tendermint/basecoin/cmd/...
 
-If you have trouble, see the `installation guide <install.md>`__.
+If you have trouble, see the `installation guide <./install.html>`__.
 
 Note the above command installs two binaries: ``basecoin`` and
 ``basecli``. The former is the running node. The latter is a
 command-line light-client. This tutorial assumes you have a 'fresh'
-working environment. See `how to clean up, below <#clean-up>`__.
+working environment. See how to clean up below.
 
 Generate some keys
-------------------
+~~~~~~~~~~~~~~~~~~
 
 Let's generate two keys, one to receive an initial allocation of coins,
 and one to send some coins to later:
 
-.. code:: shelldown[1]
+..  code:: shelldown[1]
+
+::
 
     basecli keys new cool
     basecli keys new friend
@@ -105,14 +109,18 @@ Initialize Basecoin
 
 To initialize a new Basecoin blockchain, run:
 
-.. code:: shelldown[2]
+..  code:: shelldown[2]
+
+::
 
     basecoin init <ADDRESS>
 
 If you prefer not to copy-paste, you can provide the address
 programatically:
 
-.. code:: shelldown[3]
+..  code:: shelldown[3]
+
+::
 
     basecoin init $(basecli keys get cool | awk '{print $2}')
 
@@ -124,12 +132,14 @@ Basecoin tool </docs/guide/basecoin-tool.md>`__.
 If you like, you can manually add some more accounts to the blockchain
 by generating keys and editing the ``~/.basecoin/genesis.json``.
 
-Start
------
+Start Basecoin
+~~~~~~~~~~~~~~
 
 Now we can start Basecoin:
 
-.. code:: shelldown[4]
+..  code:: shelldown[4]
+
+::
 
     basecoin start
 
@@ -143,7 +153,9 @@ light-client utility. Basecli is used for sending transactions and
 querying the state. Leave Basecoin running and open a new terminal
 window. Here run:
 
-.. code:: shelldown[5]
+..  code:: shelldown[5]
+
+::
 
     basecli init --node=tcp://localhost:46657 --genesis=$HOME/.basecoin/genesis.json
 
@@ -153,17 +165,19 @@ some trusted source, so all queries done with ``basecli`` can be
 cryptographically proven to be correct according to a known validator
 set.
 
-Note: that --genesis only works if there have been no validator set
+Note: that ``--genesis`` only works if there have been no validator set
 changes since genesis. If there are validator set changes, you need to
 find the current set through some other method.
 
 Send transactions
------------------
+~~~~~~~~~~~~~~~~~
 
 Now we are ready to send some transactions. First Let's check the
 balance of the two accounts we setup earlier:
 
-.. code:: shelldown[6]
+..  code:: shelldown[6]
+
+::
 
     ME=$(basecli keys get cool | awk '{print $2}')
     YOU=$(basecli keys get friend | awk '{print $2}')
@@ -173,20 +187,26 @@ balance of the two accounts we setup earlier:
 The first account is flush with cash, while the second account doesn't
 exist. Let's send funds from the first account to the second:
 
-.. code:: shelldown[7]
+..  code:: shelldown[7]
+
+::
 
     basecli tx send --name=cool --amount=1000mycoin --to=$YOU --sequence=1
 
 Now if we check the second account, it should have ``1000`` 'mycoin'
 coins!
 
-.. code:: shelldown[8]
+..  code:: shelldown[8]
+
+::
 
     basecli query account $YOU
 
 We can send some of these coins back like so:
 
-.. code:: shelldown[9]
+..  code:: shelldown[9]
+
+::
 
     basecli tx send --name=friend --amount=500mycoin --to=$ME --sequence=1
 
@@ -195,20 +215,26 @@ send from.
 
 If we try to send too much, we'll get an error:
 
-.. code:: shelldown[10]
+..  code:: shelldown[10]
+
+::
 
     basecli tx send --name=friend --amount=500000mycoin --to=$ME --sequence=2
 
 Let's send another transaction:
 
-.. code:: shelldown[11]
+..  code:: shelldown[11]
 
-    basecli tx send --name=cool --amount=2345mycoin --to=$YOU --sequence=2
+::
+
+   basecli tx send --name=cool --amount=2345mycoin --to=$YOU --sequence=2
 
 Note the ``hash`` value in the response - this is the hash of the
 transaction. We can query for the transaction by this hash:
 
-.. code:: shelldown[12]
+..  code:: shelldown[12]
+
+::
 
     basecli query tx <HASH>
 
@@ -228,9 +254,6 @@ and it is secure to do so. So, if you wonder why the query may take a
 second... there is a lot of work going on in the background to make sure
 even a lying full node can't trick your client.
 
-In a latter `guide on InterBlockchain Communication <ibc.md>`__, we'll
-use these proofs to post transactions to other chains.
-
 Accounts and Transactions
 -------------------------
 
@@ -248,7 +271,9 @@ unlike Bitcoin's use of Unspent Transaction Outputs (UTXOs). Note
 Basecoin is a multi-asset cryptocurrency, so each account can have many
 different kinds of tokens.
 
-.. code:: golang
+..  code:: golang
+
+::
 
     type Account struct {
         PubKey   crypto.PubKey `json:"pub_key"` // May be nil, if not known.
@@ -285,7 +310,9 @@ a list of outputs, and transfers all the tokens listed in the inputs
 from their corresponding accounts to the accounts listed in the output.
 The ``SendTx`` is structured as follows:
 
-.. code:: golang
+..  code:: golang
+
+::
 
     type SendTx struct {
       Gas     int64      `json:"gas"`
@@ -347,19 +374,15 @@ To remove all the files created and refresh your environment (e.g., if
 starting this tutorial again or trying something new), the following
 commands are run:
 
-.. code:: shelldown[end-of-tutorials]
+..  code:: shelldown[end-of-tutorials]
+
+::
 
     basecli reset_all
     rm -rf ~/.basecoin
-
-Conclusion
-----------
 
 In this guide, we introduced the ``basecoin`` and ``basecli`` tools,
 demonstrated how to start a new basecoin blockchain and how to send
 tokens between accounts, and discussed the underlying data types for
 accounts and transactions, specifically the ``Account`` and the
-``SendTx``. In the `next guide <basecoin-plugins.md>`__, we introduce
-the Basecoin plugin system, which uses a new transaction type, the
-``AppTx``, to extend the functionality of the Basecoin system with
-arbitrary logic.
+``SendTx``.

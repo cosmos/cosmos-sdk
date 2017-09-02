@@ -54,31 +54,33 @@
    . $DIR/shunit2
    -->
 
-The Basecoin Tool
+Basecoin The Tool
 =================
 
-In previous tutorials we learned the `basics of the Basecoin
-CLI </docs/guide/basecoin-basics.md>`__ and `how to implement a
-plugin </docs/guide/basecoin-plugins.md>`__. In this tutorial, we
+We previously learned about basecoin basics. In this tutorial, we
 provide more details on using the Basecoin tool.
 
 Generate a Key
-==============
+--------------
 
 Generate a key using the ``basecli`` tool:
 
-.. code:: shelldown[0]
+.. comment code:: shelldown[0]
+
+::
 
     basecli keys new mykey
     ME=$(basecli keys get mykey | awk '{print $2}')
 
 Data Directory
-==============
+--------------
 
 By default, ``basecoin`` works out of ``~/.basecoin``. To change this,
 set the ``BCHOME`` environment variable:
 
-.. code:: shelldown[1]
+.. comment code:: shelldown[1]
+
+::
 
     export BCHOME=~/.my_basecoin_data
     basecoin init $ME
@@ -86,19 +88,23 @@ set the ``BCHOME`` environment variable:
 
 or
 
-.. code:: shelldown[2]
+.. comment code:: shelldown[2]
+
+::
 
     BCHOME=~/.my_basecoin_data basecoin init $ME
     BCHOME=~/.my_basecoin_data basecoin start
 
 ABCI Server
-===========
+-----------
 
 So far we have run Basecoin and Tendermint in a single process. However,
 since we use ABCI, we can actually run them in different processes.
 First, initialize them:
 
-.. code:: shelldown[3]
+.. comment code:: shelldown[3]
+
+::
 
     basecoin init $ME
 
@@ -107,13 +113,17 @@ the information for both Basecoin and Tendermint.
 
 Now, In one window, run
 
-.. code:: shelldown[4]
+.. comment code:: shelldown[4]
+
+::
 
     basecoin start --without-tendermint
 
 and in another,
 
-.. code:: shelldown[5]
+.. comment code:: shelldown[5]
+
+::
 
     TMROOT=~/.basecoin tendermint node
 
@@ -122,36 +132,40 @@ You should see Tendermint start making blocks!
 Alternatively, you could ignore the Tendermint details in
 ``~/.basecoin/genesis.json`` and use a separate directory by running:
 
-.. code:: shelldown[6]
+.. comment code:: shelldown[6]
+
+::
 
     tendermint init
     tendermint node
 
-For more details on using ``tendermint``, see `the
-guide <https://tendermint.com/docs/guides/using-tendermint>`__.
+See the `tendermint documentation <https://tendermint.readthedocs.io>`__ for more information.
 
 Keys and Genesis
-================
+----------------
 
 In previous tutorials we used ``basecoin init`` to initialize
 ``~/.basecoin`` with the default configuration. This command creates
 files both for Tendermint and for Basecoin, and a single
-``genesis.json`` file for both of them. For more information on these
-files, see the `guide to using
-Tendermint <https://tendermint.com/docs/guides/using-tendermint>`__.
+``genesis.json`` file for both of them. You can read more about these
+files in the Tendermint documentation.
 
 Now let's make our own custom Basecoin data.
 
 First, create a new directory:
 
-.. code:: shelldown[7]
+.. comment code:: shelldown[7]
+
+::
 
     mkdir example-data
 
 We can tell ``basecoin`` to use this directory by exporting the
 ``BCHOME`` environment variable:
 
-.. code:: shelldown[8]
+.. comment code:: shelldown[8]
+
+::
 
     export BCHOME=$(pwd)/example-data
 
@@ -160,13 +174,17 @@ this variable to your shell startup scripts (eg. ``~/.bashrc``).
 
 Now, let's create a new key:
 
-.. code:: shelldown[9]
+.. comment code:: shelldown[9]
+
+::
 
     basecli keys new foobar
 
 The key's info can be retrieved with
 
-.. code:: shelldown[10]
+.. comment code:: shelldown[10]
+
+::
 
     basecli keys get foobar -o=json
 
@@ -228,27 +246,31 @@ need this flag because we were using the default chain ID
 ("test\_chain\_id"). Now that we're using a custom chain, we need to
 specify the chain explicitly on the command line.
 
-Note we have also left out the details of the Tendermint genesis. These
-are documented in the `Tendermint
-guide <https://tendermint.com/docs/guides/using-tendermint>`__.
+Note we have also left out the details of the Tendermint genesis. See the
+`Tendermint documentation <https://tendermint.readthedocs.io>`__ for more
+information.
 
 Reset
-=====
+-----
 
 You can reset all blockchain data by running:
 
-.. code:: shelldown[11]
+.. (comment) code:: shelldown[11]
+
+::
 
     basecoin unsafe_reset_all
 
 Similarly, you can reset client data by running:
 
-.. code:: shelldown[12]
+.. (comment) code:: shelldown[12]
+
+::
 
     basecli reset_all
 
 Genesis
-=======
+-------
 
 Any required plugin initialization should be constructed using
 ``SetOption`` on genesis. When starting a new chain for the first time,

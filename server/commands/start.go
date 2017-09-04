@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/abci/server"
 	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/tendermint/abci/server"
 	"github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
 
@@ -22,10 +22,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/app"
 )
 
-// StartCmd - command to start running the basecoin node!
+// StartCmd - command to start running the abci app (and tendermint)!
 var StartCmd = &cobra.Command{
 	Use:   "start",
-	Short: "Start basecoin",
+	Short: "Start this full node",
 	RunE:  startCmd,
 }
 
@@ -47,7 +47,7 @@ var (
 func init() {
 	flags := StartCmd.Flags()
 	flags.String(FlagAddress, "tcp://0.0.0.0:46658", "Listen address")
-	flags.Bool(FlagWithoutTendermint, false, "Only run basecoin abci app, assume external tendermint process")
+	flags.Bool(FlagWithoutTendermint, false, "Only run abci app, assume external tendermint process")
 	// add all standard 'tendermint node' flags
 	tcmd.AddNodeFlags(StartCmd)
 }

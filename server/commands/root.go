@@ -21,23 +21,21 @@ var (
 	logger = log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "main")
 )
 
-// RootCmd - main node command
-var RootCmd = &cobra.Command{
-	Use:   "basecoin",
-	Short: "A cryptocurrency framework in Golang based on Tendermint-Core",
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {
-		level := viper.GetString(FlagLogLevel)
-		logger, err = tmflags.ParseLogLevel(level, logger, defaultLogLevel)
-		if err != nil {
-			return err
-		}
-		if viper.GetBool(cli.TraceFlag) {
-			logger = log.NewTracingLogger(logger)
-		}
-		return nil
-	},
+// preRunSetup should be set as PersistentPreRunE on the root command to
+// properly handle the logging and the tracer
+func preRunSetup(cmd *cobra.Command, args []string) (err error) {
+	level := viper.GetString(FlagLogLevel)
+	logger, err = tmflags.ParseLogLevel(level, logger, defaultLogLevel)
+	if err != nil {
+		return err
+	}
+	if viper.GetBool(cli.TraceFlag) {
+		logger = log.NewTracingLogger(logger)
+	}
+	return nil
 }
 
-func init() {
-	RootCmd.PersistentFlags().String(FlagLogLevel, defaultLogLevel, "Log level")
+func SetUpRoot(cmd *cobra.Command) {
+	cmd.PersistentPreRunE = preRunSetup
+	cmd.PersistentFlags().String(FlagLogLevel, defaultLogLevel, "Log level")
 }

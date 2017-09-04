@@ -18,7 +18,7 @@ import (
 // InitCmd - node initialization command
 var InitCmd = &cobra.Command{
 	Use:   "init [address]",
-	Short: "Initialize a basecoin blockchain",
+	Short: "Initialize genesis files for a blockchain",
 	RunE:  initCmd,
 }
 

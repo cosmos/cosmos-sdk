@@ -3,11 +3,11 @@ package main
 import (
 	"os"
 
+	"github.com/spf13/cobra"
 	"github.com/tendermint/tmlibs/cli"
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	client "github.com/cosmos/cosmos-sdk/client/commands"
-	"github.com/cosmos/cosmos-sdk/server/commands"
 	"github.com/cosmos/cosmos-sdk/modules/auth"
 	"github.com/cosmos/cosmos-sdk/modules/base"
 	"github.com/cosmos/cosmos-sdk/modules/coin"
@@ -15,8 +15,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/modules/ibc"
 	"github.com/cosmos/cosmos-sdk/modules/nonce"
 	"github.com/cosmos/cosmos-sdk/modules/roles"
+	"github.com/cosmos/cosmos-sdk/server/commands"
 	"github.com/cosmos/cosmos-sdk/stack"
 )
+
+// RootCmd is the entry point for this binary
+var RootCmd = &cobra.Command{
+	Use:   "basecoin",
+	Short: "A cryptocurrency framework in Golang based on Tendermint-Core",
+}
 
 // BuildApp constructs the stack we want to use for this app
 func BuildApp(feeDenom string) sdk.Handler {
@@ -42,19 +49,18 @@ func BuildApp(feeDenom string) sdk.Handler {
 }
 
 func main() {
-	rt := commands.RootCmd
-
 	// require all fees in mycoin - change this in your app!
 	commands.Handler = BuildApp("mycoin")
 
-	rt.AddCommand(
+	RootCmd.AddCommand(
 		commands.InitCmd,
 		commands.StartCmd,
 		//commands.RelayCmd,
 		commands.UnsafeResetAllCmd,
 		client.VersionCmd,
 	)
+	commands.SetUpRoot(RootCmd)
 
-	cmd := cli.PrepareMainCmd(rt, "BC", os.ExpandEnv("$HOME/.basecoin"))
+	cmd := cli.PrepareMainCmd(RootCmd, "BC", os.ExpandEnv("$HOME/.basecoin"))
 	cmd.Execute()
 }

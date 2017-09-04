@@ -8,15 +8,17 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	client "github.com/cosmos/cosmos-sdk/client/commands"
-	"github.com/cosmos/cosmos-sdk/server/commands"
 	"github.com/cosmos/cosmos-sdk/examples/counter/plugins/counter"
+	"github.com/cosmos/cosmos-sdk/server/commands"
 )
 
+// RootCmd is the entry point for this binary
+var RootCmd = &cobra.Command{
+	Use:   "counter",
+	Short: "demo application for cosmos sdk",
+}
+
 func main() {
-	var RootCmd = &cobra.Command{
-		Use:   "counter",
-		Short: "demo plugin for basecoin",
-	}
 
 	// TODO: register the counter here
 	commands.Handler = counter.NewHandler("mycoin")
@@ -27,6 +29,7 @@ func main() {
 		commands.UnsafeResetAllCmd,
 		client.VersionCmd,
 	)
+	commands.SetUpRoot(RootCmd)
 
 	cmd := cli.PrepareMainCmd(RootCmd, "CT", os.ExpandEnv("$HOME/.counter"))
 	cmd.Execute()

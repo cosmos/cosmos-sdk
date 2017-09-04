@@ -151,9 +151,7 @@ test04CreateRoleInvalid() {
 
 # Load common then run these tests with shunit2!
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #get this files directory
-
-# TODO: how to handle this if we are not in the same directory
-CLI_DIR=${DIR}/../../../../tests/cli
+CLI_DIR=$GOPATH/src/github.com/cosmos/cosmos-sdk/tests/cli
 
 . $CLI_DIR/common.sh
 . $CLI_DIR/shunit2

@@ -21,6 +21,7 @@ Welcome to the Cosmos SDK!
    key-management.rst
    roles-and-multi-sig.rst
    basecoin-plugins.rst
+   basecoin-kubernetes.rst
    ibc.rst
    glossary.rst
    stdlib.rst

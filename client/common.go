@@ -47,8 +47,8 @@ func GetCertifier(chainID string, trust certifiers.Provider,
 	return cert, nil
 }
 
-// GetSecureNode uses a given certifier to wrap an connection to an untrusted
+// SecureClient uses a given certifier to wrap an connection to an untrusted
 // host and return a cryptographically secure rpc client.
-func GetSecureNode(c rpcclient.Client, cert *certifiers.InquiringCertifier) rpcclient.Client {
+func SecureClient(c rpcclient.Client, cert *certifiers.InquiringCertifier) rpcclient.Client {
 	return certclient.Wrap(c, cert)
 }

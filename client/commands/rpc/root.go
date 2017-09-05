@@ -46,7 +46,7 @@ func getSecureNode() (rpcclient.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return client.GetSecureNode(c, cert), nil
+	return client.SecureClient(c, cert), nil
 }
 
 // printResult just writes the struct to the console, returns an error if it can't

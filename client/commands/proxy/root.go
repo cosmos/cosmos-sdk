@@ -1,19 +1,15 @@
 package proxy
 
 import (
-	"net/http"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	certclient "github.com/tendermint/light-client/certifiers/client"
-	"github.com/tendermint/tendermint/rpc/client"
-	"github.com/tendermint/tendermint/rpc/core"
-	rpc "github.com/tendermint/tendermint/rpc/lib/server"
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 )
 
@@ -32,8 +28,7 @@ just with added trust and running locally.`,
 }
 
 const (
-	bindFlag   = "serve"
-	wsEndpoint = "/websocket"
+	bindFlag = "serve"
 )
 
 func init() {
@@ -50,24 +45,15 @@ func init() {
 
 func runProxy(cmd *cobra.Command, args []string) error {
 	// First, connect a client
-	c := commands.GetNode()
+	node := commands.GetNode()
+	bind := viper.GetString(bindFlag)
 	cert, err := commands.GetCertifier()
 	if err != nil {
 		return err
 	}
-	sc := certclient.Wrap(c, cert)
-	sc.Start()
-	r := routes(sc)
+	sc := client.SecureClient(node, cert)
 
-	// build the handler...
-	mux := http.NewServeMux()
-	rpc.RegisterRPCFuncs(mux, r, logger)
-	wm := rpc.NewWebsocketManager(r, c)
-	wm.SetLogger(logger)
-	core.SetLogger(logger)
-	mux.HandleFunc(wsEndpoint, wm.WebsocketHandler)
-
-	_, err = rpc.StartHTTPServer(viper.GetString(bindFlag), mux, logger)
+	err = client.StartProxy(sc, bind, logger)
 	if err != nil {
 		return err
 	}
@@ -77,34 +63,4 @@ func runProxy(cmd *cobra.Command, args []string) error {
 	})
 
 	return nil
-}
-
-// First step, proxy with no checks....
-func routes(c client.Client) map[string]*rpc.RPCFunc {
-
-	return map[string]*rpc.RPCFunc{
-		// Subscribe/unsubscribe are reserved for websocket events.
-		// We can just use the core tendermint impl, which uses the
-		// EventSwitch we registered in NewWebsocketManager above
-		"subscribe":   rpc.NewWSRPCFunc(core.Subscribe, "event"),
-		"unsubscribe": rpc.NewWSRPCFunc(core.Unsubscribe, "event"),
-
-		// info API
-		"status":     rpc.NewRPCFunc(c.Status, ""),
-		"blockchain": rpc.NewRPCFunc(c.BlockchainInfo, "minHeight,maxHeight"),
-		"genesis":    rpc.NewRPCFunc(c.Genesis, ""),
-		"block":      rpc.NewRPCFunc(c.Block, "height"),
-		"commit":     rpc.NewRPCFunc(c.Commit, "height"),
-		"tx":         rpc.NewRPCFunc(c.Tx, "hash,prove"),
-		"validators": rpc.NewRPCFunc(c.Validators, ""),
-
-		// broadcast API
-		"broadcast_tx_commit": rpc.NewRPCFunc(c.BroadcastTxCommit, "tx"),
-		"broadcast_tx_sync":   rpc.NewRPCFunc(c.BroadcastTxSync, "tx"),
-		"broadcast_tx_async":  rpc.NewRPCFunc(c.BroadcastTxAsync, "tx"),
-
-		// abci API
-		"abci_query": rpc.NewRPCFunc(c.ABCIQuery, "path,data,prove"),
-		"abci_info":  rpc.NewRPCFunc(c.ABCIInfo, ""),
-	}
 }

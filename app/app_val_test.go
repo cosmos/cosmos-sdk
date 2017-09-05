@@ -5,11 +5,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	abci "github.com/tendermint/abci/types"
-	"github.com/cosmos/cosmos-sdk/modules/base"
 	wire "github.com/tendermint/go-wire"
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
+
+	"github.com/cosmos/cosmos-sdk/modules/base"
 )
 
 //-----------------------------------
@@ -30,9 +32,6 @@ func makeVal() *abci.Validator {
 func withNewPower(val *abci.Validator) *abci.Validator {
 	res := *val
 	res.Power = randPower()
-	if res.Power == val.Power {
-		panic("no no")
-	}
 	return &res
 }
 

@@ -78,7 +78,13 @@ func initCmd(cmd *cobra.Command, args []string) error {
 			if len(s) != 3 {
 				return errors.New("Genesis option must be in the format <app>/<option>/<value>")
 			}
-			option := `"` + s[0] + `/` + s[1] + `", "` + s[2] + `"`
+
+			//Add quotes if the value (s[2]) is not json
+			if !strings.Contains(s[2], "\"") {
+				s[2] = `"` + s[2] + `"`
+			}
+
+			option := `"` + s[0] + `/` + s[1] + `", ` + s[2]
 			options = append(options, option)
 		}
 	}

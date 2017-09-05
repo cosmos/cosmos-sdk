@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/go-wire/data"
-	certclient "github.com/tendermint/light-client/certifiers/client"
-	"github.com/tendermint/tendermint/rpc/client"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 )
 
@@ -39,15 +39,14 @@ func init() {
 	)
 }
 
-func getSecureNode() (client.Client, error) {
+func getSecureNode() (rpcclient.Client, error) {
 	// First, connect a client
 	c := commands.GetNode()
 	cert, err := commands.GetCertifier()
 	if err != nil {
 		return nil, err
 	}
-	sc := certclient.Wrap(c, cert)
-	return sc, nil
+	return client.GetSecureNode(c, cert), nil
 }
 
 // printResult just writes the struct to the console, returns an error if it can't

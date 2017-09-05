@@ -47,6 +47,7 @@ func exportSeed(cmd *cobra.Command, args []string) error {
 	return writeSeed(seed, path)
 }
 
+// TODO use certifiers function
 func writeSeed(seed certifiers.Seed, path string) (err error) {
 	f, err := os.Create(path)
 	if err != nil {

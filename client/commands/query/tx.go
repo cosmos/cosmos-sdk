@@ -8,6 +8,7 @@ import (
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 )
 
@@ -51,7 +52,7 @@ func txQueryCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	check, err := getCertifiedCheckpoint(res.Height, node, cert)
+	check, err := client.GetCertifiedCheckpoint(res.Height, node, cert)
 	if err != nil {
 		return err
 	}

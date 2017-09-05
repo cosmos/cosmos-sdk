@@ -1,4 +1,4 @@
-package query
+package client
 
 import (
 	"os"
@@ -69,7 +69,7 @@ func TestAppProofs(t *testing.T) {
 	// Test existing key.
 	var data eyes.Data
 
-	bs, height, proofExists, _, err := getWithProof(k, cl, cert)
+	bs, height, proofExists, _, err := GetWithProof(k, cl, cert)
 	require.NoError(err, "%+v", err)
 	require.NotNil(proofExists)
 	require.True(height >= uint64(latest.Header.Height))
@@ -87,7 +87,7 @@ func TestAppProofs(t *testing.T) {
 
 	// Test non-existing key.
 	missing := []byte("my-missing-key")
-	bs, _, proofExists, proofNotExists, err := getWithProof(missing, cl, cert)
+	bs, _, proofExists, proofNotExists, err := GetWithProof(missing, cl, cert)
 	require.True(lc.IsNoDataErr(err))
 	require.Nil(bs)
 	require.Nil(proofExists)
@@ -119,7 +119,7 @@ func TestTxProofs(t *testing.T) {
 
 	// First let's make sure a bogus transaction hash returns a valid non-existence proof.
 	key := types.Tx([]byte("bogus")).Hash()
-	bs, _, proofExists, proofNotExists, err := getWithProof(key, cl, cert)
+	bs, _, proofExists, proofNotExists, err := GetWithProof(key, cl, cert)
 	assert.Nil(bs, "value should be nil")
 	require.True(lc.IsNoDataErr(err), "error should signal 'no data'")
 	assert.Nil(proofExists, "existence proof should be nil")

@@ -23,7 +23,6 @@ type SignatureInner interface {
 	AssertIsSignatureInner()
 	Bytes() []byte
 	IsZero() bool
-	String() string
 	Equals(Signature) bool
 	Wrap() Signature
 }

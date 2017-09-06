@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/tendermint/merkleeyes/iavl"
+	"github.com/tendermint/iavl"
 	dbm "github.com/tendermint/tmlibs/db"
 )
 

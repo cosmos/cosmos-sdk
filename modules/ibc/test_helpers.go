@@ -3,8 +3,8 @@ package ibc
 import (
 	"fmt"
 
+	"github.com/tendermint/iavl"
 	"github.com/tendermint/light-client/certifiers"
-	"github.com/tendermint/merkleeyes/iavl"
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"
@@ -59,7 +59,7 @@ func genEmptySeed(keys certifiers.ValKeys, chain string, h int,
 func makePostPacket(tree *iavl.IAVLTree, packet Packet, fromID string, fromHeight int) PostPacketTx {
 	key := []byte(fmt.Sprintf("some-long-prefix-%06d", packet.Sequence))
 	tree.Set(key, packet.Bytes())
-	_, proof, _, err := tree.GetWithProof(key)
+	_, proof, err := tree.GetWithProof(key)
 	if err != nil {
 		panic(err)
 	}

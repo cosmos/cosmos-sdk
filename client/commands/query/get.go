@@ -10,8 +10,8 @@ import (
 
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
+	"github.com/tendermint/iavl"
 	"github.com/tendermint/light-client/proofs"
-	"github.com/tendermint/merkleeyes/iavl"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/commands"
@@ -50,20 +50,18 @@ func Get(key []byte, prove bool) (data.Bytes, uint64, error) {
 		resp, err := node.ABCIQuery("/key", key, false)
 		return data.Bytes(resp.Value), resp.Height, err
 	}
-	val, h, _, _, err := GetWithProof(key)
+	val, h, _, err := GetWithProof(key)
 	return val, h, err
 }
 
 // GetWithProof returns the values stored under a given key at the named
 // height as in Get.  Additionally, it will return a validated merkle
 // proof for the key-value pair if it exists, and all checks pass.
-func GetWithProof(key []byte) (data.Bytes, uint64,
-	*iavl.KeyExistsProof, *iavl.KeyNotExistsProof, error) {
-
+func GetWithProof(key []byte) (data.Bytes, uint64, iavl.KeyProof, error) {
 	node := commands.GetNode()
 	cert, err := commands.GetCertifier()
 	if err != nil {
-		return nil, 0, nil, nil, err
+		return nil, 0, nil, err
 	}
 	return client.GetWithProof(key, node, cert)
 }

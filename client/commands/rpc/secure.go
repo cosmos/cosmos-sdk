@@ -27,7 +27,7 @@ func runBlock(cmd *cobra.Command, args []string) error {
 	}
 
 	h := viper.GetInt(FlagHeight)
-	block, err := c.Block(h)
+	block, err := c.Block(&h)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func runCommit(cmd *cobra.Command, args []string) error {
 	}
 
 	h := viper.GetInt(FlagHeight)
-	commit, err := c.Commit(h)
+	commit, err := c.Commit(&h)
 	if err != nil {
 		return err
 	}

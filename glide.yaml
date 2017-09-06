@@ -28,11 +28,8 @@ import:
   - certifiers
   - certifiers/client
   - certifiers/files
-- package: github.com/tendermint/merkleeyes
+- package: github.com/tendermint/iavl
   version: develop
-  subpackages:
-  - client
-  - iavl
 - package: github.com/tendermint/tendermint
   version: develop
   subpackages:

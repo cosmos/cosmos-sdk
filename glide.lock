@@ -1,5 +1,5 @@
-hash: 8c26e55d658fbe1b9c7951833528b63613549a61149ca7e78e6de2d96f81f372
-updated: 2017-09-06T13:54:19.419666453+02:00
+hash: ba9b44c722e57f103b8b6b861aabaeb37ad59c706160b6281817945f95dfbc1e
+updated: 2017-09-06T17:08:51.118191348+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -136,6 +136,8 @@ imports:
   subpackages:
   - data
   - data/base58
+- name: github.com/tendermint/iavl
+  version: a3ec7707c4eacabd33b7c510df364bfce1eb33e6
 - name: github.com/tendermint/light-client
   version: ac2e4bf47b31aaf5d3d336691ac786ec751bfc32
   subpackages:
@@ -146,7 +148,6 @@ imports:
 - name: github.com/tendermint/merkleeyes
   version: 2f6e5d31e7a35045d8d0a5895cb1fec33dd4d32b
   subpackages:
-  - client
   - iavl
 - name: github.com/tendermint/tendermint
   version: aa78fc14b5824725f8a14dd2c2ad727a9ab89cc3

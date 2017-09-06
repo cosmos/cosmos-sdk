@@ -3,11 +3,10 @@ package client
 import (
 	"github.com/pkg/errors"
 
-	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
+	"github.com/tendermint/iavl"
 	lc "github.com/tendermint/light-client"
 	"github.com/tendermint/light-client/certifiers"
-	"github.com/tendermint/merkleeyes/iavl"
 
 	"github.com/tendermint/tendermint/rpc/client"
 )
@@ -16,11 +15,10 @@ import (
 // a valid proof, as defined by the certifier.
 //
 // If there is any error in checking, returns an error.
-// If val is non-empty, eproof will be non-nil
-// If val is empty, neproof will be non-nil
+// If val is non-empty, proof should be KeyExistsProof
+// If val is empty, proof should be KeyMissingProof
 func GetWithProof(key []byte, node client.Client, cert certifiers.Certifier) (
-	val data.Bytes, height uint64, eproof *iavl.KeyExistsProof,
-	neproof *iavl.KeyNotExistsProof, err error) {
+	val data.Bytes, height uint64, proof iavl.KeyProof, err error) {
 
 	resp, err := node.ABCIQuery("/key", key, true)
 	if err != nil {
@@ -48,8 +46,8 @@ func GetWithProof(key []byte, node client.Client, cert certifiers.Certifier) (
 
 	if len(resp.Value) > 0 {
 		// The key was found, construct a proof of existence.
-		eproof = new(iavl.KeyExistsProof)
-		err = wire.ReadBinaryBytes(resp.Proof, &eproof)
+		var eproof *iavl.KeyExistsProof
+		eproof, err = iavl.ReadKeyExistsProof(resp.Proof)
 		if err != nil {
 			err = errors.Wrap(err, "Error reading proof")
 			return
@@ -62,22 +60,24 @@ func GetWithProof(key []byte, node client.Client, cert certifiers.Certifier) (
 			return
 		}
 		val = data.Bytes(resp.Value)
+		proof = eproof
 	} else {
 		// The key wasn't found, construct a proof of non-existence.
-		neproof = new(iavl.KeyNotExistsProof)
-		err = wire.ReadBinaryBytes(resp.Proof, &neproof)
+		var aproof *iavl.KeyAbsentProof
+		aproof, err = iavl.ReadKeyAbsentProof(resp.Proof)
 		if err != nil {
 			err = errors.Wrap(err, "Error reading proof")
 			return
 		}
 
 		// Validate the proof against the certified header to ensure data integrity.
-		err = neproof.Verify(resp.Key, check.Header.AppHash)
+		err = proof.Verify(resp.Key, nil, check.Header.AppHash)
 		if err != nil {
 			err = errors.Wrap(err, "Couldn't verify proof")
 			return
 		}
 		err = lc.ErrNoData()
+		proof = aproof
 	}
 
 	height = resp.Height
@@ -93,7 +93,7 @@ func GetCertifiedCheckpoint(h int, node client.Client,
 	// Validators and will fail on querying tendermint for non-current height.
 	// When this is supported, we should use it instead...
 	client.WaitForHeight(node, h, nil)
-	commit, err := node.Commit(h)
+	commit, err := node.Commit(&h)
 	if err != nil {
 		return
 	}

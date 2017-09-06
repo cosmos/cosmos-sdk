@@ -2,8 +2,8 @@ package ibc
 
 import (
 	"github.com/tendermint/go-wire/data"
+	"github.com/tendermint/iavl"
 	"github.com/tendermint/light-client/certifiers"
-	"github.com/tendermint/merkleeyes/iavl"
 
 	sdk "github.com/cosmos/cosmos-sdk"
 )
@@ -86,7 +86,7 @@ func (u UpdateChainTx) Wrap() sdk.Tx {
 // If must have the special `AllowIBC` permission from the app
 // that can send this packet (so only coins can request SendTx packet)
 type CreatePacketTx struct {
-	DestChain   string          `json:"dest_chain"`
+	DestChain   string     `json:"dest_chain"`
 	Permissions sdk.Actors `json:"permissions"`
 	Tx          sdk.Tx     `json:"tx"`
 }
@@ -115,9 +115,9 @@ type PostPacketTx struct {
 	// The block height in which Packet was committed, to check Proof
 	FromChainHeight uint64 `json:"src_height"`
 	// this proof must match the header and the packet.Bytes()
-	Proof  *iavl.KeyExistsProof `json:"proof"`
-	Key    data.Bytes           `json:"key"`
-	Packet Packet               `json:"packet"`
+	Proof  iavl.KeyProof `json:"proof"`
+	Key    data.Bytes    `json:"key"`
+	Packet Packet        `json:"packet"`
 }
 
 // ValidateBasic makes sure this is consistent - used to satisfy TxInner

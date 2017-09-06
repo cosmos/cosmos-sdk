@@ -69,32 +69,31 @@ func TestAppProofs(t *testing.T) {
 	// Test existing key.
 	var data eyes.Data
 
-	bs, height, proofExists, _, err := GetWithProof(k, cl, cert)
+	bs, height, proof, err := GetWithProof(k, cl, cert)
 	require.NoError(err, "%+v", err)
-	require.NotNil(proofExists)
+	require.NotNil(proof)
 	require.True(height >= uint64(latest.Header.Height))
 
 	// Alexis there is a bug here, somehow the above code gives us rootHash = nil
-	// and proofExists.Verify doesn't care, while proofNotExists.Verify fails.
+	// and proof.Verify doesn't care, while proofNotExists.Verify fails.
 	// I am hacking this in to make it pass, but please investigate further.
-	rootHash = proofExists.RootHash
+	rootHash = proof.Root()
 
 	err = wire.ReadBinaryBytes(bs, &data)
 	require.NoError(err, "%+v", err)
 	assert.EqualValues(v, data.Value)
-	err = proofExists.Verify(k, bs, rootHash)
+	err = proof.Verify(k, bs, rootHash)
 	assert.NoError(err, "%+v", err)
 
 	// Test non-existing key.
 	missing := []byte("my-missing-key")
-	bs, _, proofExists, proofNotExists, err := GetWithProof(missing, cl, cert)
+	bs, _, proof, err = GetWithProof(missing, cl, cert)
 	require.True(lc.IsNoDataErr(err))
 	require.Nil(bs)
-	require.Nil(proofExists)
-	require.NotNil(proofNotExists)
-	err = proofNotExists.Verify(missing, rootHash)
+	require.NotNil(proof)
+	err = proof.Verify(missing, nil, rootHash)
 	assert.NoError(err, "%+v", err)
-	err = proofNotExists.Verify(k, rootHash)
+	err = proof.Verify(k, nil, rootHash)
 	assert.Error(err)
 }
 
@@ -119,12 +118,11 @@ func TestTxProofs(t *testing.T) {
 
 	// First let's make sure a bogus transaction hash returns a valid non-existence proof.
 	key := types.Tx([]byte("bogus")).Hash()
-	bs, _, proofExists, proofNotExists, err := GetWithProof(key, cl, cert)
+	bs, _, proof, err := GetWithProof(key, cl, cert)
 	assert.Nil(bs, "value should be nil")
 	require.True(lc.IsNoDataErr(err), "error should signal 'no data'")
-	assert.Nil(proofExists, "existence proof should be nil")
-	require.NotNil(proofNotExists, "non-existence proof shouldn't be nil")
-	err = proofNotExists.Verify(key, proofNotExists.RootHash)
+	require.NotNil(proof, "proof shouldn't be nil")
+	err = proof.Verify(key, nil, proof.Root())
 	require.NoError(err, "%+v", err)
 
 	// Now let's check with the real tx hash.

@@ -71,7 +71,7 @@ func GetWithProof(key []byte, node client.Client, cert certifiers.Certifier) (
 		}
 
 		// Validate the proof against the certified header to ensure data integrity.
-		err = proof.Verify(resp.Key, nil, check.Header.AppHash)
+		err = aproof.Verify(resp.Key, nil, check.Header.AppHash)
 		if err != nil {
 			err = errors.Wrap(err, "Couldn't verify proof")
 			return

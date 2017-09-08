@@ -42,7 +42,7 @@ func importSeed(cmd *cobra.Command, args []string) error {
 
 	// parse the input file
 	path := args[0]
-	seed, err := certifiers.LoadSeed(path)
+	seed, err := certifiers.LoadSeedJSON(path)
 	if err != nil {
 		return err
 	}

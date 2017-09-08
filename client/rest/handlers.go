@@ -6,10 +6,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
-	sdk "github.com/cosmos/cosmos-sdk"
-	keysutils "github.com/tendermint/go-crypto/cmd"
 	keys "github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/tmlibs/common"
+
+	sdk "github.com/cosmos/cosmos-sdk"
+	keycmd "github.com/cosmos/cosmos-sdk/client/commands/keys"
 )
 
 type Keys struct {
@@ -18,7 +19,7 @@ type Keys struct {
 }
 
 func DefaultKeysManager() keys.Manager {
-	return keysutils.GetKeyManager()
+	return keycmd.GetKeyManager()
 }
 
 func NewDefaultKeysManager(algo string) *Keys {

@@ -1,6 +1,6 @@
 package state
 
-import "github.com/tendermint/merkleeyes/iavl"
+import "github.com/tendermint/iavl"
 
 // State represents the app states, separating the commited state (for queries)
 // from the working state (for CheckTx and AppendTx)

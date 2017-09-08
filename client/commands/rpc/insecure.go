@@ -59,7 +59,7 @@ var validatorsCmd = &cobra.Command{
 
 func runValidators(cmd *cobra.Command, args []string) error {
 	c := commands.GetNode()
-	validators, err := c.Validators()
+	validators, err := c.Validators(nil)
 	if err != nil {
 		return err
 	}

@@ -4,4 +4,3 @@ vendor
 merkleeyes.db
 build
 docs/guide/*.sh
-keys/

@@ -13,14 +13,13 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/light-client/certifiers"
-	"github.com/tendermint/light-client/certifiers/client"
-	"github.com/tendermint/light-client/certifiers/files"
 	"github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/modules/auth"
 )
 
@@ -47,41 +46,40 @@ func GetChainID() string {
 
 // GetNode prepares a simple rpc.Client from the flags
 func GetNode() rpcclient.Client {
-	return rpcclient.NewHTTP(viper.GetString(NodeFlag), "/websocket")
+	return client.GetNode(viper.GetString(NodeFlag))
+}
+
+// GetSourceProvider returns a provider pointing to an rpc handler
+func GetSourceProvider() certifiers.Provider {
+	if sourceProv == nil {
+		node := viper.GetString(NodeFlag)
+		sourceProv = client.GetRPCProvider(node)
+	}
+	return sourceProv
+}
+
+// GetTrustedProvider returns a reference to a local store with cache
+func GetTrustedProvider() certifiers.Provider {
+	if trustedProv == nil {
+		rootDir := viper.GetString(cli.HomeFlag)
+		trustedProv = client.GetLocalProvider(rootDir)
+	}
+	return trustedProv
 }
 
 // GetProviders creates a trusted (local) seed provider and a remote
 // provider based on configuration.
 func GetProviders() (trusted certifiers.Provider, source certifiers.Provider) {
-	if trustedProv == nil || sourceProv == nil {
-		// initialize provider with files stored in homedir
-		rootDir := viper.GetString(cli.HomeFlag)
-		trustedProv = certifiers.NewCacheProvider(
-			certifiers.NewMemStoreProvider(),
-			files.NewProvider(rootDir),
-		)
-		node := viper.GetString(NodeFlag)
-		sourceProv = client.NewHTTP(node)
-	}
-	return trustedProv, sourceProv
+	return GetTrustedProvider(), GetSourceProvider()
 }
 
 // GetCertifier constructs a dynamic certifier from the config info
 func GetCertifier() (*certifiers.InquiringCertifier, error) {
 	// load up the latest store....
-	trust, source := GetProviders()
-
-	// this gets the most recent verified seed
-	seed, err := certifiers.LatestSeed(trust)
-	if certifiers.IsSeedNotFoundErr(err) {
-		return nil, errors.New("Please run init first to establish a root of trust")
-	}
-	if err != nil {
-		return nil, err
-	}
-	cert := certifiers.NewInquiring(
-		viper.GetString(ChainFlag), seed, trust, source)
-	return cert, nil
+	trust := GetTrustedProvider()
+	source := GetSourceProvider()
+	chainID := GetChainID()
+	return client.GetCertifier(chainID, trust, source)
 }
 
 // ParseActor parses an address of form:

@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/stack"
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
+	"github.com/tendermint/iavl"
 )
 
 // TODO: query seeds (register/update)
@@ -197,22 +198,26 @@ func packetQueryCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// output queue, create a post packet
-	bs, height, proof, _, err := query.GetWithProof(key)
+	bs, height, proof, err := query.GetWithProof(key)
 	if err != nil {
 		return err
 	}
+	if len(bs) == 0 {
+		// TODO: what info here?
+		return errors.New("no such packet")
+	}
+
 	err = wire.ReadBinaryBytes(bs, &packet)
 	if err != nil {
 		return err
 	}
-
 	// create the post packet here.
 	post := ibc.PostPacketTx{
 		FromChainID:     commands.GetChainID(),
 		FromChainHeight: height,
 		Key:             key,
 		Packet:          packet,
-		Proof:           proof,
+		Proof:           proof.(*iavl.KeyExistsProof),
 	}
 
 	// print json direct, as we don't need to wrap with the height

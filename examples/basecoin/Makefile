@@ -12,6 +12,7 @@ test_cli:
 	./tests/cli/keys.sh
 	./tests/cli/rpc.sh
 	./tests/cli/init.sh
+	./tests/cli/init-server.sh
 	./tests/cli/basictx.sh
 	./tests/cli/roles.sh
 	./tests/cli/restart.sh

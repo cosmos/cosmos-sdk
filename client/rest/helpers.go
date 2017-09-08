@@ -1,7 +1,6 @@
 package rest
 
 import (
-	keycmd "github.com/tendermint/go-crypto/cmd"
 	"github.com/tendermint/go-crypto/keys"
 	wire "github.com/tendermint/go-wire"
 
@@ -9,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/client/commands"
+	keycmd "github.com/cosmos/cosmos-sdk/client/commands/keys"
 )
 
 // PostTx is same as a tx

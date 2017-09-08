@@ -3,7 +3,7 @@ package state
 import (
 	"math/rand"
 
-	"github.com/tendermint/merkleeyes/iavl"
+	"github.com/tendermint/iavl"
 )
 
 // store nonce as it's own type so no one can even try to fake it
@@ -50,7 +50,7 @@ func (b *Bonsai) Remove(key []byte) (value []byte) {
 	return
 }
 
-func (b *Bonsai) GetWithProof(key []byte) ([]byte, *iavl.KeyExistsProof, *iavl.KeyNotExistsProof, error) {
+func (b *Bonsai) GetWithProof(key []byte) ([]byte, iavl.KeyProof, error) {
 	return b.Tree.GetWithProof(key)
 }
 

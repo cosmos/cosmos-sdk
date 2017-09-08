@@ -47,7 +47,7 @@ func loadSeed(p certifiers.Provider, h int, hash, file string) (seed certifiers.
 			seed, err = p.GetByHash(vhash)
 		}
 	} else if file != "" {
-		seed, err = certifiers.LoadSeed(file)
+		seed, err = certifiers.LoadSeedJSON(file)
 	} else {
 		// default is latest seed
 		seed, err = certifiers.LatestSeed(p)

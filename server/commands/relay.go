@@ -14,7 +14,7 @@ package commands
 // 	// 	"github.com/tendermint/tmlibs/log"
 
 // 	"github.com/tendermint/go-wire"
-// 	"github.com/tendermint/merkleeyes/iavl"
+// 	"github.com/tendermint/iavl"
 // 	cmn "github.com/tendermint/tmlibs/common"
 
 // 	"github.com/cosmos/cosmos-sdk/plugins/ibc"

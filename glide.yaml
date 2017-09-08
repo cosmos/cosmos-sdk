@@ -15,26 +15,22 @@ import:
 - package: github.com/tendermint/go-crypto
   version: develop
   subpackages:
-  - cmd
   - keys
 - package: github.com/tendermint/go-wire
   version: develop
   subpackages:
   - data
 - package: github.com/tendermint/light-client
-  version: unstable
+  version: develop
   subpackages:
   - proofs
   - certifiers
   - certifiers/client
   - certifiers/files
-- package: github.com/tendermint/merkleeyes
-  version: origin/unstable
-  subpackages:
-  - client
-  - iavl
+- package: github.com/tendermint/iavl
+  version: develop
 - package: github.com/tendermint/tendermint
-  version: no-internet
+  version: develop
   subpackages:
   - config
   - node

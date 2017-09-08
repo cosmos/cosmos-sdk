@@ -5,12 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	keycmd "github.com/tendermint/go-crypto/cmd"
 	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	"github.com/cosmos/cosmos-sdk/client/commands/auto"
-	"github.com/cosmos/cosmos-sdk/client/commands/proxy"
 	"github.com/cosmos/cosmos-sdk/client/commands/query"
 	rpccmd "github.com/cosmos/cosmos-sdk/client/commands/rpc"
 	"github.com/cosmos/cosmos-sdk/client/commands/seeds"
@@ -52,12 +50,10 @@ func main() {
 		// we use out own init command to not require address arg
 		commands.InitCmd,
 		commands.ResetCmd,
-		keycmd.RootCmd,
 		seeds.RootCmd,
 		rpccmd.RootCmd,
 		query.RootCmd,
 		txcmd.RootCmd,
-		proxy.RootCmd,
 		commands.VersionCmd,
 		auto.AutoCompleteCmd,
 	)

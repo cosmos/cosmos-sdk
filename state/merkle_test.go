@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/merkleeyes/iavl"
+	"github.com/tendermint/iavl"
 )
 
 type keyVal struct {

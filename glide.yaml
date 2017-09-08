@@ -15,7 +15,6 @@ import:
 - package: github.com/tendermint/go-crypto
   version: develop
   subpackages:
-  - cmd
   - keys
 - package: github.com/tendermint/go-wire
   version: develop

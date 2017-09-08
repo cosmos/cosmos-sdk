@@ -1,5 +1,5 @@
 hash: ba9b44c722e57f103b8b6b861aabaeb37ad59c706160b6281817945f95dfbc1e
-updated: 2017-09-06T17:08:51.118191348+02:00
+updated: 2017-09-08T20:43:55.154928875+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -40,8 +40,6 @@ imports:
   version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
-- name: github.com/gorilla/handlers
-  version: a4043c62cc2329bacda331d33fc908ab11ef0ec3
 - name: github.com/gorilla/mux
   version: bcd8bc72b08df0f70df986b97f95590779502d31
 - name: github.com/gorilla/websocket
@@ -58,7 +56,7 @@ imports:
   - json/scanner
   - json/token
 - name: github.com/howeyc/crc16
-  version: 96a97a1abb579c7ff1a8ffa77f2e72d1c314b57f
+  version: 58da63c846043d0bea709c8d47039df06577d6d9
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jmhodges/levigo
@@ -126,8 +124,6 @@ imports:
   - cmd
   - keys
   - keys/cryptostore
-  - keys/server
-  - keys/server/types
   - keys/storage/filestorage
   - keys/storage/memstorage
   - keys/wordlist

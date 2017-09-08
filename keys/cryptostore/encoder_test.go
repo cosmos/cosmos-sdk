@@ -60,3 +60,42 @@ func TestSecretBox(t *testing.T) {
 	require.Nil(err)
 	assert.Equal(key, pk)
 }
+
+func TestSecretBoxNoPass(t *testing.T) {
+	assert, require := assert.New(t), require.New(t)
+	enc := cryptostore.SecretBox
+
+	key := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
+
+	cases := []struct {
+		encode string
+		decode string
+		valid  bool
+	}{
+		{"foo", "foo", true},
+		{"foo", "food", false},
+		{"", "", true},
+		{"", "a", false},
+		{"a", "", false},
+	}
+
+	for i, tc := range cases {
+		b, err := enc.Encrypt(key, tc.encode)
+		require.Nil(err, "%d: %+v", i, err)
+		assert.NotEmpty(b, "%d", i)
+
+		pk, err := enc.Decrypt(b, tc.decode)
+		if tc.valid {
+			require.Nil(err, "%d: %+v", i, err)
+			assert.Equal(key, pk, "%d", i)
+		} else {
+			require.NotNil(err, "%d", i)
+		}
+	}
+
+	// now let's make sure raw bytes also work...
+	b := key.Bytes()
+	pk, err := enc.Decrypt(b, "")
+	require.Nil(err, "%+v", err)
+	assert.Equal(key, pk)
+}

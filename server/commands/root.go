@@ -35,6 +35,7 @@ func preRunSetup(cmd *cobra.Command, args []string) (err error) {
 	return nil
 }
 
+// SetUpRoot - initialize the root command
 func SetUpRoot(cmd *cobra.Command) {
 	cmd.PersistentPreRunE = preRunSetup
 	cmd.PersistentFlags().String(FlagLogLevel, defaultLogLevel, "Log level")

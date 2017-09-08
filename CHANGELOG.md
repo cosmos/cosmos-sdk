@@ -1,5 +1,11 @@
 # Changelog
 
+## CHANGES IN DEVELOP
+
+IMPROVEMENTS:
+
+* initialize options for genesis with `--option` flag on `basecoin init` 
+
 ## 0.6.2 (July 27, 2017)
 
 IMPROVEMENTS:

@@ -3,7 +3,7 @@ GOTOOLS =	github.com/mitchellh/gox \
 			github.com/rigelrozanski/shelldown/cmd/shelldown
 TUTORIALS=$(shell find docs/guide -name "*md" -type f)
 
-EXAMPLES := counter eyes basecoin
+EXAMPLES := counter eyes basecoin 
 INSTALL_EXAMPLES := $(addprefix install_,${EXAMPLES})
 TEST_EXAMPLES := $(addprefix testex_,${EXAMPLES})
 
@@ -37,6 +37,7 @@ test_unit:
 	@go test `glide novendor`
 
 test_cli: $(TEST_EXAMPLES)
+	./tests/cli/init-server.sh
 	# sudo apt-get install jq
 	# wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2"
 

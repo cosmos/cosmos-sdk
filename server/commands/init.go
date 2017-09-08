@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -25,10 +26,12 @@ var InitCmd = &cobra.Command{
 //nolint - flags
 var (
 	FlagChainID = "chain-id" //TODO group with other flags or remove? is this already a flag here?
+	FlagOption  = "option"
 )
 
 func init() {
 	InitCmd.Flags().String(FlagChainID, "test_chain_id", "Chain ID")
+	InitCmd.Flags().StringSliceP(FlagOption, "p", []string{}, "Genesis option in the format <app>/<option>/<value>")
 }
 
 // returns 1 iff it set a file, otherwise 0 (so we can add them)
@@ -64,7 +67,31 @@ func initCmd(cmd *cobra.Command, args []string) error {
 		return errors.New("Address must be 20-bytes in hex")
 	}
 
-	genesis := GetGenesisJSON(viper.GetString(FlagChainID), userAddr)
+	var optionsStr string
+	optionsRaw := viper.GetStringSlice(FlagOption)
+	if len(optionsRaw) > 0 {
+
+		var options []string
+		sep := ",\n      "
+
+		for i := 0; i < len(optionsRaw); i++ {
+			s := strings.SplitN(optionsRaw[i], "/", 3)
+			if len(s) != 3 {
+				return errors.New("Genesis option must be in the format <app>/<option>/<value>")
+			}
+
+			//Add quotes if the value (s[2]) is not json
+			if !strings.Contains(s[2], "\"") {
+				s[2] = `"` + s[2] + `"`
+			}
+
+			option := `"` + s[0] + `/` + s[1] + `", ` + s[2]
+			options = append(options, option)
+		}
+		optionsStr = sep + strings.Join(options[:], sep)
+	}
+
+	genesis := GetGenesisJSON(viper.GetString(FlagChainID), userAddr, optionsStr)
 	return CreateGenesisValidatorFiles(cfg, genesis, cmd.Root().Name())
 }
 
@@ -114,7 +141,7 @@ var PrivValJSON = `{
 // GetGenesisJSON returns a new tendermint genesis with Basecoin app_options
 // that grant a large amount of "mycoin" to a single address
 // TODO: A better UX for generating genesis files
-func GetGenesisJSON(chainID, addr string) string {
+func GetGenesisJSON(chainID, addr string, options string) string {
 	return fmt.Sprintf(`{
   "app_hash": "",
   "chain_id": "%s",
@@ -140,8 +167,8 @@ func GetGenesisJSON(chainID, addr string) string {
       ]
     }],
     "plugin_options": [
-      "coin/issuer", {"app": "sigs", "addr": "%s"}
+      "coin/issuer", {"app": "sigs", "addr": "%s"}%s
     ]
   }
-}`, chainID, addr, addr)
+}`, chainID, addr, addr, options)
 }

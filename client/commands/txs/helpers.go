@@ -10,12 +10,11 @@ import (
 	"strings"
 
 	"github.com/bgentry/speakeasy"
-	"github.com/mattn/go-isatty"
+	isatty "github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
 	crypto "github.com/tendermint/go-crypto"
-	keycmd "github.com/tendermint/go-crypto/cmd"
 	"github.com/tendermint/go-crypto/keys"
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
@@ -24,6 +23,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/client/commands"
+	keycmd "github.com/cosmos/cosmos-sdk/client/commands/keys"
 	"github.com/cosmos/cosmos-sdk/modules/auth"
 )
 

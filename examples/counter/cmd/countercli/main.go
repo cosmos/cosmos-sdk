@@ -5,10 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	keycmd "github.com/tendermint/go-crypto/cmd"
 	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands/keys"
 	"github.com/cosmos/cosmos-sdk/client/commands/proxy"
 	"github.com/cosmos/cosmos-sdk/client/commands/query"
 	"github.com/cosmos/cosmos-sdk/client/commands/seeds"
@@ -73,7 +73,7 @@ func main() {
 		commands.InitCmd,
 		commands.ResetCmd,
 		commands.VersionCmd,
-		keycmd.RootCmd,
+		keys.RootCmd,
 		seeds.RootCmd,
 		query.RootCmd,
 		txcmd.RootCmd,

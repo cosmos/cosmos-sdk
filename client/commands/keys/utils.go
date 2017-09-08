@@ -1,4 +1,4 @@
-package cmd
+package keys
 
 import (
 	"bufio"

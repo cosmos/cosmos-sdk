@@ -70,7 +70,7 @@ func makePostPacket(tree *iavl.IAVLTree, packet Packet, fromID string, fromHeigh
 	return PostPacketTx{
 		FromChainID:     fromID,
 		FromChainHeight: uint64(fromHeight),
-		Proof:           proof,
+		Proof:           proof.(*iavl.KeyExistsProof),
 		Key:             key,
 		Packet:          packet,
 	}

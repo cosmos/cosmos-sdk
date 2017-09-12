@@ -48,7 +48,10 @@ type PrivKeyLedger struct {
 	pubKey crypto.PubKey
 }
 
-var _ crypto.PrivKeyInner = &PrivKeyLedger{}
+func NewPrivKeyLedger() crypto.PrivKey {
+	var pk PrivKeyLedger
+	return pk.Wrap()
+}
 
 // AssertIsPrivKeyInner fulfils PrivKey Interface
 func (pk *PrivKeyLedger) AssertIsPrivKeyInner() {}

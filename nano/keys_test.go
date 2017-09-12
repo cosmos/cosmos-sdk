@@ -77,5 +77,13 @@ func TestRealLedger(t *testing.T) {
 	if os.Getenv("WITH_LEDGER") == "" {
 		t.Skip("Set WITH_LEDGER to run code on real ledger")
 	}
-	// let's try for real....
+
+	priv := NewPrivKeyLedger()
+	msg := []byte("kuhehfeohg")
+
+	sig := priv.Sign(msg)
+	pub := priv.PubKey()
+
+	valid := pub.VerifyBytes(msg, sig)
+	assert.True(t, valid)
 }

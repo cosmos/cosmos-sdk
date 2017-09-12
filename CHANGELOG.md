@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.0 (N/A)
+
+BREAKING CHANGES:
+
+- Remove `cmd` and `keys/tx` packages altogether: move it to the cosmos-sdk
+- `cryptostore.Generator` takes a secret 
+- Remove `String()` from `Signature` interface
+
+FEATURES:
+
+- `keys`: add CRC16 error correcting code
+
+IMPROVEMENTS:
+
+- Allow no passwords on keys for development convenience
+
+
+
 ## 0.2.1 (June 21, 2017)
 
 - Improve keys command

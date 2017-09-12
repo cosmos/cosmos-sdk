@@ -2,9 +2,11 @@ package nano
 
 import (
 	"bytes"
+	"crypto/sha512"
 	"fmt"
 
 	"github.com/pkg/errors"
+
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -14,7 +16,7 @@ const (
 	Update    = 0x01
 	Digest    = 0x02
 	MaxChunk  = 253
-	KeyLength = 65
+	KeyLength = 32
 	SigLength = 64
 )
 
@@ -75,4 +77,9 @@ func parseSig(data []byte) (key crypto.Signature, err error) {
 	}
 	copy(ed[:], data)
 	return ed.Wrap(), nil
+}
+
+func hashMsg(data []byte) []byte {
+	res := sha512.Sum512(data)
+	return res[:]
 }

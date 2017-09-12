@@ -4,39 +4,91 @@ import (
 	"bytes"
 	"encoding/hex"
 
+	ledger "github.com/ethanfrey/ledger"
+
 	crypto "github.com/tendermint/go-crypto"
 )
 
-// // Implements PrivKey, calling the ledger nano
-// type PrivKeyLedger struct{}
+var device *ledger.Ledger
 
-// var _ PrivKeyInner = PrivKeyLedger{}
+// getLedger gets a copy of the device, and caches it
+func getLedger() (*ledger.Ledger, error) {
+	var err error
+	if device == nil {
+		device, err = ledger.FindLedger()
+	}
+	return device, err
+}
 
-// func (privKey PrivKeyLedger) AssertIsPrivKeyInner() {}
+func signLedger(device *ledger.Ledger, msg []byte) (pk crypto.PubKey, sig crypto.Signature, err error) {
+	var resp []byte
 
-// func (privKey PrivKeyLedger) Bytes() []byte {
-// 	return wire.BinaryBytes(PrivKey{privKey})
-// }
+	packets := generateSignRequests(msg)
+	for _, pack := range packets {
+		resp, err = device.Exchange(pack, 100)
+		if err != nil {
+			return pk, sig, err
+		}
+	}
 
-// func (privKey PrivKeyLedger) Sign(msg []byte) Signature {
-// 	privKeyBytes := [64]byte(privKey)
-// 	signatureBytes := ed25519.Sign(&privKeyBytes, msg)
-// 	return SignatureEd25519(*signatureBytes).Wrap()
-// }
+	// the last call is the result we want and needs to be parsed
+	key, bsig, err := parseDigest(resp)
+	if err != nil {
+		return pk, sig, err
+	}
 
-// func (privKey PrivKeyLedger) PubKey() PubKey {
-// 	privKeyBytes := [64]byte(privKey)
-// 	pubBytes := *ed25519.MakePublicKey(&privKeyBytes)
-// 	return PubKeyEd25519(pubBytes).Wrap()
-// }
+	var b [32]byte
+	copy(b[:], key)
+	return PubKeyLedgerFromBytes(b), crypto.SignatureEd25519FromBytes(bsig), nil
+}
 
-// func (privKey PrivKeyLedger) Equals(other PrivKey) bool {
-// 	if otherEd, ok := other.Unwrap().(PrivKeyLedger); ok {
-// 		return bytes.Equal(privKey[:], otherEd[:])
-// 	} else {
-// 		return false
-// 	}
-// }
+// PrivKeyLedger implements PrivKey, calling the ledger nano
+// we cache the PubKey from the first call to use it later
+type PrivKeyLedger struct {
+	pubKey crypto.PubKey
+}
+
+var _ crypto.PrivKeyInner = &PrivKeyLedger{}
+
+// AssertIsPrivKeyInner fulfils PrivKey Interface
+func (pk *PrivKeyLedger) AssertIsPrivKeyInner() {}
+
+// Bytes fulfils pk Interface - not supported
+func (pk *PrivKeyLedger) Bytes() []byte {
+	return nil
+}
+
+// Sign calls the ledger and stores the pk for future use
+func (pk *PrivKeyLedger) Sign(msg []byte) crypto.Signature {
+	// oh, I wish there was better error handling
+	dev, err := getLedger()
+	if err != nil {
+		panic(err)
+	}
+
+	pub, sig, err := signLedger(dev, msg)
+	if err != nil {
+		panic(err)
+	}
+
+	pk.pubKey = pub
+	return sig
+}
+
+// PubKey returns the stored PubKey
+// TODO: query the ledger if not there, once it is not volatile
+func (pk *PrivKeyLedger) PubKey() crypto.PubKey {
+	return pk.pubKey
+}
+
+// Equals fulfils PrivKey Interface
+// TODO: needs to be fixed
+func (pk *PrivKeyLedger) Equals(other crypto.PrivKey) bool {
+	if _, ok := other.Unwrap().(*PrivKeyLedger); ok {
+		return true
+	}
+	return false
+}
 
 // MockPrivKeyLedger behaves as the ledger, but stores a pre-packaged call-response
 // for use in test cases
@@ -88,7 +140,7 @@ func (pk MockPrivKeyLedger) Sign(msg []byte) crypto.Signature {
 
 // PubKey returns a real PubKeyLedger, that will verify this signature
 func (pk MockPrivKeyLedger) PubKey() crypto.PubKey {
-	return PubKeyLedger{crypto.PubKeyEd25519(pk.Pub)}.Wrap()
+	return PubKeyLedgerFromBytes(pk.Pub)
 }
 
 // Equals compares that two Mocks have the same data
@@ -109,6 +161,11 @@ type PubKeyLedger struct {
 	crypto.PubKeyEd25519
 }
 
+// PubKeyLedgerFromBytes creates a PubKey from the raw bytes
+func PubKeyLedgerFromBytes(key [32]byte) crypto.PubKey {
+	return PubKeyLedger{crypto.PubKeyEd25519(key)}.Wrap()
+}
+
 // VerifyBytes uses the normal Ed25519 algorithm but a sha512 hash beforehand
 func (pk PubKeyLedger) VerifyBytes(msg []byte, sig crypto.Signature) bool {
 	hmsg := hashMsg(msg)
@@ -127,17 +184,17 @@ func (pk PubKeyLedger) Equals(other crypto.PubKey) bool {
 
 func init() {
 	crypto.PrivKeyMapper.
-		// RegisterImplementation(PrivKeyLedger{}, "ledger", 0x10).
+		RegisterImplementation(&PrivKeyLedger{}, "ledger", 0x10).
 		RegisterImplementation(MockPrivKeyLedger{}, "mock-ledger", 0x11)
 
 	crypto.PubKeyMapper.
 		RegisterImplementation(PubKeyLedger{}, "ledger", 0x10)
 }
 
-// // Wrap fulfils interface for PrivKey struct
-// func (hi PrivKeyLedger) Wrap() crypto.PrivKey {
-// 	return PrivKey{hi}
-// }
+// Wrap fulfils interface for PrivKey struct
+func (pk *PrivKeyLedger) Wrap() crypto.PrivKey {
+	return crypto.PrivKey{pk}
+}
 
 // Wrap fulfils interface for PrivKey struct
 func (pk MockPrivKeyLedger) Wrap() crypto.PrivKey {

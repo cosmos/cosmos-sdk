@@ -2,6 +2,7 @@ package nano
 
 import (
 	"encoding/hex"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -70,4 +71,11 @@ func TestLedgerKeys(t *testing.T) {
 		valid := pub.VerifyBytes(bmsg, sig)
 		assert.Equal(tc.valid, valid, "%d", i)
 	}
+}
+
+func TestRealLedger(t *testing.T) {
+	if os.Getenv("WITH_LEDGER") == "" {
+		t.Skip("Set WITH_LEDGER to run code on real ledger")
+	}
+	// let's try for real....
 }

@@ -61,7 +61,7 @@ func parseDigest(resp []byte) (key, sig []byte, err error) {
 	return key, sig, nil
 }
 
-func parseKey(data []byte) (key crypto.PubKey, err error) {
+func parseEdKey(data []byte) (key crypto.PubKey, err error) {
 	ed := crypto.PubKeyEd25519{}
 	if len(data) < len(ed) {
 		return key, errors.Errorf("Key length too short: %d", len(data))

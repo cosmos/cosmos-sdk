@@ -86,7 +86,7 @@ func TestCryptoConvert(t *testing.T) {
 		msg, key, sig, err := toBytes(tc)
 		require.Nil(err, "%d: %+v", i, err)
 
-		pk, err := parseKey(key)
+		pk, err := parseEdKey(key)
 		require.Nil(err, "%d: %+v", i, err)
 		psig, err := parseSig(sig)
 		require.Nil(err, "%d: %+v", i, err)

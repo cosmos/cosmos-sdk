@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/hex"
 
+	"github.com/pkg/errors"
+
 	ledger "github.com/ethanfrey/ledger"
 
 	crypto "github.com/tendermint/go-crypto"
@@ -48,9 +50,13 @@ type PrivKeyLedger struct {
 	pubKey crypto.PubKey
 }
 
-func NewPrivKeyLedger() crypto.PrivKey {
+func NewPrivKeyLedger() (crypto.PrivKey, error) {
 	var pk PrivKeyLedger
-	return pk.Wrap()
+	// getPubKey will cache the pubkey for later use,
+	// this allows us to return an error early if the ledger
+	// is not plugged in
+	_, err := pk.getPubKey()
+	return pk.Wrap(), err
 }
 
 // AssertIsPrivKeyInner fulfils PrivKey Interface
@@ -74,14 +80,39 @@ func (pk *PrivKeyLedger) Sign(msg []byte) crypto.Signature {
 		panic(err)
 	}
 
-	pk.pubKey = pub
+	// if we have no pubkey yet, store it for future queries
+	if pk.pubKey.Empty() {
+		pk.pubKey = pub
+	}
 	return sig
 }
 
 // PubKey returns the stored PubKey
 // TODO: query the ledger if not there, once it is not volatile
 func (pk *PrivKeyLedger) PubKey() crypto.PubKey {
-	return pk.pubKey
+	key, err := pk.getPubKey()
+	if err != nil {
+		panic(err)
+	}
+	return key
+}
+
+// getPubKey reads the pubkey from cache or from the ledger itself
+// since this involves IO, it may return an error, which is not exposed
+// in the PubKey interface, so this function allows better error handling
+func (pk *PrivKeyLedger) getPubKey() (key crypto.PubKey, err error) {
+	// if we have no pubkey, set it
+	if pk.pubKey.Empty() {
+		dev, err := getLedger()
+		if err != nil {
+			return key, errors.WithMessage(err, "Can't connect to ledger")
+		}
+		pk.pubKey, _, err = signLedger(dev, []byte{0})
+		if err != nil {
+			return key, errors.WithMessage(err, "Can't sign with app")
+		}
+	}
+	return pk.pubKey, nil
 }
 
 // Equals fulfils PrivKey Interface

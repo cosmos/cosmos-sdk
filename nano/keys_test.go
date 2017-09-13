@@ -74,16 +74,18 @@ func TestLedgerKeys(t *testing.T) {
 }
 
 func TestRealLedger(t *testing.T) {
+	assert, require := assert.New(t), require.New(t)
+
 	if os.Getenv("WITH_LEDGER") == "" {
 		t.Skip("Set WITH_LEDGER to run code on real ledger")
 	}
-
-	priv := NewPrivKeyLedger()
 	msg := []byte("kuhehfeohg")
 
-	sig := priv.Sign(msg)
+	priv, err := NewPrivKeyLedger()
+	require.Nil(err, "%+v", err)
 	pub := priv.PubKey()
+	sig := priv.Sign(msg)
 
 	valid := pub.VerifyBytes(msg, sig)
-	assert.True(t, valid)
+	assert.True(valid)
 }

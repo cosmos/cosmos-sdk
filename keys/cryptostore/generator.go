@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 
 	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/go-crypto/nano"
 )
 
 var (
@@ -11,6 +12,8 @@ var (
 	GenEd25519 Generator = GenFunc(genEd25519)
 	// GenSecp256k1 produces Secp256k1 private keys
 	GenSecp256k1 Generator = GenFunc(genSecp256)
+	// GenLedger used Ed25519 keys stored on nano ledger s with cosmos app
+	GenLedger Generator = GenFunc(genLedger)
 )
 
 // Generator determines the type of private key the keystore creates
@@ -33,12 +36,25 @@ func genSecp256(secret []byte) crypto.PrivKey {
 	return crypto.GenPrivKeySecp256k1FromSecret(secret).Wrap()
 }
 
+// secret is completely ignored for the ledger...
+// just for interface compatibility
+func genLedger(secret []byte) crypto.PrivKey {
+	key, err := nano.NewPrivKeyLedger()
+	if err != nil {
+		// TODO: cleaner error handling
+		panic(err)
+	}
+	return key
+}
+
 func getGenerator(algo string) (Generator, error) {
 	switch algo {
 	case crypto.NameEd25519:
 		return GenEd25519, nil
 	case crypto.NameSecp256k1:
 		return GenSecp256k1, nil
+	case nano.NameLedger:
+		return GenLedger, nil
 	default:
 		return nil, errors.Errorf("Cannot generate keys for algorithm: %s", algo)
 	}
@@ -50,6 +66,8 @@ func getGeneratorByType(typ byte) (Generator, error) {
 		return GenEd25519, nil
 	case crypto.TypeSecp256k1:
 		return GenSecp256k1, nil
+	case nano.TypeLedger:
+		return GenLedger, nil
 	default:
 		return nil, errors.Errorf("Cannot generate keys for algorithm: %X", typ)
 	}

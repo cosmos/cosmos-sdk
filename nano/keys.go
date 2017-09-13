@@ -12,6 +12,11 @@ import (
 	wire "github.com/tendermint/go-wire"
 )
 
+const (
+	NameLedger = "ledger"
+	TypeLedger = 0x10
+)
+
 var device *ledger.Ledger
 
 // getLedger gets a copy of the device, and caches it
@@ -48,7 +53,10 @@ func signLedger(device *ledger.Ledger, msg []byte) (pk crypto.PubKey, sig crypto
 // PrivKeyLedger implements PrivKey, calling the ledger nano
 // we cache the PubKey from the first call to use it later
 type PrivKeyLedger struct {
-	pubKey crypto.PubKey
+	// PubKey should be private, but we want to encode it via go-wire
+	// so we can view the address later, even without having the ledger
+	// attached
+	CachedPubKey crypto.PubKey
 }
 
 func NewPrivKeyLedger() (crypto.PrivKey, error) {
@@ -82,8 +90,8 @@ func (pk *PrivKeyLedger) Sign(msg []byte) crypto.Signature {
 	}
 
 	// if we have no pubkey yet, store it for future queries
-	if pk.pubKey.Empty() {
-		pk.pubKey = pub
+	if pk.CachedPubKey.Empty() {
+		pk.CachedPubKey = pub
 	}
 	return sig
 }
@@ -103,17 +111,17 @@ func (pk *PrivKeyLedger) PubKey() crypto.PubKey {
 // in the PubKey interface, so this function allows better error handling
 func (pk *PrivKeyLedger) getPubKey() (key crypto.PubKey, err error) {
 	// if we have no pubkey, set it
-	if pk.pubKey.Empty() {
+	if pk.CachedPubKey.Empty() {
 		dev, err := getLedger()
 		if err != nil {
 			return key, errors.WithMessage(err, "Can't connect to ledger")
 		}
-		pk.pubKey, _, err = signLedger(dev, []byte{0})
+		pk.CachedPubKey, _, err = signLedger(dev, []byte{0})
 		if err != nil {
 			return key, errors.WithMessage(err, "Can't sign with app")
 		}
 	}
-	return pk.pubKey, nil
+	return pk.CachedPubKey, nil
 }
 
 // Equals fulfils PrivKey Interface
@@ -219,11 +227,11 @@ func (pk PubKeyLedger) Equals(other crypto.PubKey) bool {
 
 func init() {
 	crypto.PrivKeyMapper.
-		RegisterImplementation(&PrivKeyLedger{}, "ledger", 0x10).
+		RegisterImplementation(&PrivKeyLedger{}, NameLedger, TypeLedger).
 		RegisterImplementation(MockPrivKeyLedger{}, "mock-ledger", 0x11)
 
 	crypto.PubKeyMapper.
-		RegisterImplementation(PubKeyLedger{}, "ledger", 0x10)
+		RegisterImplementation(PubKeyLedger{}, NameLedger, TypeLedger)
 }
 
 // Wrap fulfils interface for PrivKey struct

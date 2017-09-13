@@ -42,7 +42,7 @@ passed as a command line argument for security.`,
 }
 
 func init() {
-	newCmd.Flags().StringP(flagType, "t", "ed25519", "Type of key (ed25519|secp256k1)")
+	newCmd.Flags().StringP(flagType, "t", "ed25519", "Type of key (ed25519|secp256k1|ledger")
 	newCmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 }
 

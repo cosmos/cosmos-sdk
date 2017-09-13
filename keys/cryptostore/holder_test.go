@@ -1,6 +1,8 @@
 package cryptostore_test
 
 import (
+	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -260,45 +262,59 @@ func TestSeedPhrase(t *testing.T) {
 	assert.Equal(info.PubKey, newInfo.PubKey)
 }
 
-// func ExampleStore() {
-// 	// Select the encryption and storage for your cryptostore
-// 	cstore := cryptostore.New(
-// 		cryptostore.GenEd25519,
-// 		cryptostore.SecretBox,
-// 		// Note: use filestorage.New(dir) for real data
-// 		memstorage.New(),
-// 	)
+func ExampleStore() {
+	// Select the encryption and storage for your cryptostore
+	cstore := cryptostore.New(
+		cryptostore.SecretBox,
+		// Note: use filestorage.New(dir) for real data
+		memstorage.New(),
+		keys.MustLoadCodec("english"),
+	)
+	ed := crypto.NameEd25519
+	sec := crypto.NameSecp256k1
 
-// 	// Add keys and see they return in alphabetical order
-// 	cstore.Create("Bob", "friend")
-// 	cstore.Create("Alice", "secret")
-// 	cstore.Create("Carl", "mitm")
-// 	info, _ := cstore.List()
-// 	for _, i := range info {
-// 		fmt.Println(i.Name)
-// 	}
+	// Add keys and see they return in alphabetical order
+	bob, _, err := cstore.Create("Bob", "friend", ed)
+	if err != nil {
+		// this should never happen
+		fmt.Println(err)
+	} else {
+		// return info here just like in List
+		fmt.Println(bob.Name)
+	}
+	cstore.Create("Alice", "secret", sec)
+	cstore.Create("Carl", "mitm", ed)
+	info, _ := cstore.List()
+	for _, i := range info {
+		fmt.Println(i.Name)
+	}
 
-// 	// We need to use passphrase to generate a signature
-// 	tx := mock.NewSig([]byte("deadbeef"))
-// 	err := cstore.Sign("Bob", "friend", tx)
-// 	if err != nil {
-// 		fmt.Println("don't accept real passphrase")
-// 	}
+	// We need to use passphrase to generate a signature
+	tx := keys.NewMockSignable([]byte("deadbeef"))
+	err = cstore.Sign("Bob", "friend", tx)
+	if err != nil {
+		fmt.Println("don't accept real passphrase")
+	}
 
-// 	// and we can validate the signature with publically available info
-// 	binfo, _ := cstore.Get("Bob")
-// 	sigs, err := tx.Signers()
-// 	if err != nil {
-// 		fmt.Println("badly signed")
-// 	} else if bytes.Equal(sigs[0].Bytes(), binfo.PubKey.Bytes()) {
-// 		fmt.Println("signed by Bob")
-// 	} else {
-// 		fmt.Println("signed by someone else")
-// 	}
+	// and we can validate the signature with publically available info
+	binfo, _ := cstore.Get("Bob")
+	if !binfo.PubKey.Equals(bob.PubKey) {
+		fmt.Println("Get and Create return different keys")
+	}
 
-// 	// Output:
-// 	// Alice
-// 	// Bob
-// 	// Carl
-// 	// signed by Bob
-// }
+	sigs, err := tx.Signers()
+	if err != nil {
+		fmt.Println("badly signed")
+	} else if bytes.Equal(sigs[0].Bytes(), binfo.PubKey.Bytes()) {
+		fmt.Println("signed by Bob")
+	} else {
+		fmt.Println("signed by someone else")
+	}
+
+	// Output:
+	// Bob
+	// Alice
+	// Bob
+	// Carl
+	// signed by Bob
+}

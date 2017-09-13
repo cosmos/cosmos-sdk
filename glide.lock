@@ -1,5 +1,5 @@
-hash: ba9b44c722e57f103b8b6b861aabaeb37ad59c706160b6281817945f95dfbc1e
-updated: 2017-09-08T20:43:55.154928875+02:00
+hash: 647d25291b8e9a85cb4a49abc972a41537e8a286514bf41180845785e3b180a4
+updated: 2017-09-13T14:11:46.879460282+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -107,7 +107,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: f1094f760b80ed35d709ed446646b716ded7a6f2
+  version: a0724296592f63c0b7fdbc4eec1a7e53b6f4eb55
   subpackages:
   - client
   - example/dummy
@@ -119,9 +119,8 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 1bc8de4caa844f8b64c120e65b047898f22b7f3e
+  version: 50e7c078170975532ca52004cb03a473afdebbff
   subpackages:
-  - cmd
   - keys
   - keys/cryptostore
   - keys/storage/filestorage
@@ -146,7 +145,7 @@ imports:
   subpackages:
   - iavl
 - name: github.com/tendermint/tendermint
-  version: aa78fc14b5824725f8a14dd2c2ad727a9ab89cc3
+  version: cc50dc076a21df40477b1ce77348010f3f3defc4
   subpackages:
   - blockchain
   - cmd/tendermint/commands

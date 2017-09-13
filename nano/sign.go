@@ -3,7 +3,6 @@ package nano
 import (
 	"bytes"
 	"crypto/sha512"
-	"fmt"
 
 	"github.com/pkg/errors"
 
@@ -55,7 +54,6 @@ func parseDigest(resp []byte) (key, sig []byte, err error) {
 	if !bytes.Equal(separator, resp[:len(separator)]) {
 		return nil, nil, errors.New("Cannot find 0xCAFE")
 	}
-	fmt.Println("successs")
 
 	sig = resp[len(separator):]
 	return key, sig, nil

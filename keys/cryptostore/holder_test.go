@@ -185,6 +185,7 @@ func TestSignWithLedger(t *testing.T) {
 	assert.Equal(info.Name, n)
 	key := info.PubKey
 	require.False(key.Empty())
+	require.True(key.Equals(c.PubKey))
 
 	// let's try to sign some messages
 	d1 := []byte("welcome to cosmos")

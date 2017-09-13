@@ -92,6 +92,8 @@ func (pk *PrivKeyLedger) Sign(msg []byte) crypto.Signature {
 	// if we have no pubkey yet, store it for future queries
 	if pk.CachedPubKey.Empty() {
 		pk.CachedPubKey = pub
+	} else if !pk.CachedPubKey.Equals(pub) {
+		panic("signed with a different key than stored")
 	}
 	return sig
 }

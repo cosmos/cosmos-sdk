@@ -9,6 +9,7 @@ import (
 	ledger "github.com/ethanfrey/ledger"
 
 	crypto "github.com/tendermint/go-crypto"
+	wire "github.com/tendermint/go-wire"
 )
 
 var device *ledger.Ledger
@@ -62,9 +63,9 @@ func NewPrivKeyLedger() (crypto.PrivKey, error) {
 // AssertIsPrivKeyInner fulfils PrivKey Interface
 func (pk *PrivKeyLedger) AssertIsPrivKeyInner() {}
 
-// Bytes fulfils pk Interface - not supported
+// Bytes fulfils pk Interface - no data, just type info
 func (pk *PrivKeyLedger) Bytes() []byte {
-	return nil
+	return wire.BinaryBytes(pk.Wrap())
 }
 
 // Sign calls the ledger and stores the pk for future use

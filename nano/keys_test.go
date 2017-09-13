@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	crypto "github.com/tendermint/go-crypto"
 )
 
 func TestLedgerKeys(t *testing.T) {
@@ -88,4 +89,19 @@ func TestRealLedger(t *testing.T) {
 
 	valid := pub.VerifyBytes(msg, sig)
 	assert.True(valid)
+
+	// now, let's serialize the key and make sure it still works
+	bs := priv.Bytes()
+	priv2, err := crypto.PrivKeyFromBytes(bs)
+	require.Nil(err, "%+v", err)
+
+	// make sure we get the same pubkey when we load from disk
+	pub2 := priv2.PubKey()
+	require.Equal(pub, pub2)
+
+	// signing with the loaded key should match the original pubkey
+	sig = priv2.Sign(msg)
+	valid = pub.VerifyBytes(msg, sig)
+	assert.True(valid)
+
 }

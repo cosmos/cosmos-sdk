@@ -5,6 +5,8 @@ for key management, transaction signing, and query validation.
 Please read the README and godoc to see how to
 configure the server for your application.
 */
+
+// nolint: goimports
 package server
 
 import (
@@ -12,8 +14,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	data "github.com/tendermint/go-wire/data"
 	"github.com/tendermint/go-crypto/keys/server/types"
+	data "github.com/tendermint/go-wire/data"
 
 	"github.com/pkg/errors"
 )

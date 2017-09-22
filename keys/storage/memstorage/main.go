@@ -23,6 +23,7 @@ func New() MemStore {
 }
 
 // assertStorage just makes sure we implement the Storage interface
+// nolint [ megacheck, deadcode ]
 func (s MemStore) assertStorage() keys.Storage {
 	return s
 }

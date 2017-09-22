@@ -1,10 +1,8 @@
+// nolint: goimports
 package hd
 
 import (
 	"bytes"
-	"crypto/hmac"
-	"crypto/sha512"
-	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -14,11 +12,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tyler-smith/go-bip39"
-
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil/hdkeychain"
-	"github.com/mndrix/btcutil"
-	"github.com/tyler-smith/go-bip32"
 
 	"github.com/tendermint/go-crypto"
 )
@@ -33,7 +26,7 @@ type addrData struct {
 }
 
 // NOTE: atom fundraiser address
-var hdPath string = "m/44'/118'/0'/0/0"
+// var hdPath string = "m/44'/118'/0'/0/0"
 var hdToAddrTable []addrData
 
 func init() {
@@ -109,13 +102,6 @@ func TestReverseBytes(t *testing.T) {
 	}
 }
 
-func ifExit(err error, n int) {
-	if err != nil {
-		fmt.Println(n, err)
-		os.Exit(1)
-	}
-}
-
 func gocrypto(seed []byte) ([]byte, []byte, []byte) {
 
 	_, priv, ch, _ := ComputeMastersFromSeed(string(seed))
@@ -129,83 +115,6 @@ func gocrypto(seed []byte) ([]byte, []byte, []byte) {
 	pubBytes := PubKeyBytesFromPrivKeyBytes(privBytes, true)
 
 	return HexDecode(priv), privBytes, pubBytes
-}
-
-func btcsuite(seed []byte) ([]byte, []byte, []byte) {
-	fmt.Println("HD")
-	masterKey, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
-	if err != nil {
-		hmac := hmac.New(sha512.New, []byte("Bitcoin seed"))
-		hmac.Write([]byte(seed))
-		intermediary := hmac.Sum(nil)
-
-		curve := btcutil.Secp256k1()
-		curveParams := curve.Params()
-
-		// Split it into our key and chain code
-		keyBytes := intermediary[:32]
-		fmt.Printf("\t%X\n", keyBytes)
-		fmt.Printf("\t%X\n", curveParams.N.Bytes())
-		keyInt, _ := binary.ReadVarint(bytes.NewBuffer(keyBytes))
-		fmt.Printf("\t%d\n", keyInt)
-	}
-	fh := hdkeychain.HardenedKeyStart
-	k, err := masterKey.Child(uint32(fh + 44))
-	ifExit(err, 44)
-	k, err = k.Child(uint32(fh + 118))
-	ifExit(err, 118)
-	k, err = k.Child(uint32(fh + 0))
-	ifExit(err, 1)
-	k, err = k.Child(uint32(0))
-	ifExit(err, 2)
-	k, err = k.Child(uint32(0))
-	ifExit(err, 3)
-	ecpriv, err := k.ECPrivKey()
-	ifExit(err, 10)
-	ecpub, err := k.ECPubKey()
-	ifExit(err, 11)
-
-	priv := ecpriv.Serialize()
-	pub := ecpub.SerializeCompressed()
-	mkey, _ := masterKey.ECPrivKey()
-	return mkey.Serialize(), priv, pub
-}
-
-// return priv and pub
-func tylerSmith(seed []byte) ([]byte, []byte, []byte) {
-	masterKey, err := bip32.NewMasterKey(seed)
-	if err != nil {
-		hmac := hmac.New(sha512.New, []byte("Bitcoin seed"))
-		hmac.Write([]byte(seed))
-		intermediary := hmac.Sum(nil)
-
-		curve := btcutil.Secp256k1()
-		curveParams := curve.Params()
-
-		// Split it into our key and chain code
-		keyBytes := intermediary[:32]
-		fmt.Printf("\t%X\n", keyBytes)
-		fmt.Printf("\t%X\n", curveParams.N.Bytes())
-		keyInt, _ := binary.ReadVarint(bytes.NewBuffer(keyBytes))
-		fmt.Printf("\t%d\n", keyInt)
-
-	}
-	ifExit(err, 0)
-	fh := bip32.FirstHardenedChild
-	k, err := masterKey.NewChildKey(fh + 44)
-	ifExit(err, 44)
-	k, err = k.NewChildKey(fh + 118)
-	ifExit(err, 118)
-	k, err = k.NewChildKey(fh + 0)
-	ifExit(err, 1)
-	k, err = k.NewChildKey(0)
-	ifExit(err, 2)
-	k, err = k.NewChildKey(0)
-	ifExit(err, 3)
-
-	priv := k.Key
-	pub := k.PublicKey().Key
-	return masterKey.Key, priv, pub
 }
 
 // Benchmarks
@@ -237,6 +146,6 @@ func BenchmarkReverseBytes(b *testing.B) {
 
 	// sink is necessary to ensure if the compiler tries
 	// to smart, that it won't optimize away the benchmarks.
-	if sink != nil {
+	if sink != nil { // nolint: megacheck
 	}
 }

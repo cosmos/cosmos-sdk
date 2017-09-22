@@ -2,7 +2,9 @@
 
 GOTOOLS = \
 	github.com/Masterminds/glide \
-	github.com/jteeuwen/go-bindata/go-bindata
+	github.com/jteeuwen/go-bindata/go-bindata \
+	github.com/alecthomas/gometalinter
+
 REPO:=github.com/tendermint/go-crypto
 
 all: get_vendor_deps test
@@ -31,3 +33,37 @@ codegen:
 	@echo "--> regenerating all interface wrappers"
 	@gen
 	@echo "Done!"
+
+metalinter: ensure_tools
+	@gometalinter --install
+	gometalinter --vendor --deadline=600s --enable-all --disable=lll ./...
+
+metalinter_test: ensure_tools
+	@gometalinter --install
+	gometalinter --vendor --deadline=600s --disable-all  \
+		--enable=aligncheck \
+		--enable=deadcode \
+		--enable=gas \
+		--enable=goconst \
+		--enable=gocyclo \
+		--enable=goimports \
+		--enable=gosimple \
+		--enable=gotype \
+	 	--enable=ineffassign \
+	   	--enable=interfacer \
+		--enable=megacheck \
+	 	--enable=misspell \
+		--enable=safesql \
+		--enable=staticcheck \
+		--enable=structcheck \
+	   	--enable=unconvert \
+		--enable=unused \
+		--enable=vetshadow \
+		--enable=vet \
+		--enable=unparam \
+		--enable=varcheck \
+		./...
+
+		#--enable=dupl \
+		#--enable=errcheck \
+		#--enable=golint \ <== comments on anything exported

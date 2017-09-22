@@ -22,8 +22,8 @@ const (
 	PrivExt   = "tlc"
 	PubExt    = "pub"
 	keyPerm   = os.FileMode(0600)
-	pubPerm   = os.FileMode(0644)
-	dirPerm   = os.FileMode(0700)
+	// pubPerm   = os.FileMode(0644)
+	dirPerm = os.FileMode(0700)
 )
 
 type FileStore struct {
@@ -43,6 +43,7 @@ func New(dir string) FileStore {
 }
 
 // assertStorage just makes sure we implement the proper Storage interface
+// nolint [ megacheck, deadcode ]
 func (s FileStore) assertStorage() keys.Storage {
 	return s
 }

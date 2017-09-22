@@ -6,6 +6,7 @@
 // keys/wordlist/spanish.txt
 // DO NOT EDIT!
 
+// nolint: goimports
 package wordlist
 
 import (
@@ -204,9 +205,9 @@ func AssetNames() []string {
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
 	"keys/wordlist/chinese_simplified.txt": keysWordlistChinese_simplifiedTxt,
-	"keys/wordlist/english.txt": keysWordlistEnglishTxt,
-	"keys/wordlist/japanese.txt": keysWordlistJapaneseTxt,
-	"keys/wordlist/spanish.txt": keysWordlistSpanishTxt,
+	"keys/wordlist/english.txt":            keysWordlistEnglishTxt,
+	"keys/wordlist/japanese.txt":           keysWordlistJapaneseTxt,
+	"keys/wordlist/spanish.txt":            keysWordlistSpanishTxt,
 }
 
 // AssetDir returns the file names below a certain
@@ -248,13 +249,14 @@ type bintree struct {
 	Func     func() (*asset, error)
 	Children map[string]*bintree
 }
+
 var _bintree = &bintree{nil, map[string]*bintree{
 	"keys": &bintree{nil, map[string]*bintree{
 		"wordlist": &bintree{nil, map[string]*bintree{
 			"chinese_simplified.txt": &bintree{keysWordlistChinese_simplifiedTxt, map[string]*bintree{}},
-			"english.txt": &bintree{keysWordlistEnglishTxt, map[string]*bintree{}},
-			"japanese.txt": &bintree{keysWordlistJapaneseTxt, map[string]*bintree{}},
-			"spanish.txt": &bintree{keysWordlistSpanishTxt, map[string]*bintree{}},
+			"english.txt":            &bintree{keysWordlistEnglishTxt, map[string]*bintree{}},
+			"japanese.txt":           &bintree{keysWordlistJapaneseTxt, map[string]*bintree{}},
+			"spanish.txt":            &bintree{keysWordlistSpanishTxt, map[string]*bintree{}},
 		}},
 	}},
 }}
@@ -305,4 +307,3 @@ func _filePath(dir, name string) string {
 	cannonicalName := strings.Replace(name, "\\", "/", -1)
 	return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
 }
-

@@ -25,11 +25,13 @@ func New(coder Encoder, store keys.Storage, codec keys.Codec) Manager {
 }
 
 // exists just to make sure we fulfill the Signer interface
+// nolint [ megacheck, deadcode ]
 func (s Manager) assertSigner() keys.Signer {
 	return s
 }
 
 // exists just to make sure we fulfill the Manager interface
+// nolint [ megacheck, deadcode ]
 func (s Manager) assertKeyManager() keys.Manager {
 	return s
 }

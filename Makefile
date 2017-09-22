@@ -7,7 +7,7 @@ GOTOOLS = \
 
 REPO:=github.com/tendermint/go-crypto
 
-all: get_vendor_deps test
+all: get_vendor_deps metalinter_test test
 
 test:
 	go test `glide novendor`

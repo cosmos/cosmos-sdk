@@ -1,32 +1,14 @@
-.PHONEY: all docs test install get_vendor_deps ensure_tools codegen wordlist
+.PHONEY: all test install get_vendor_deps ensure_tools codegen wordlist
 
 GOTOOLS = \
 	github.com/Masterminds/glide \
 	github.com/jteeuwen/go-bindata/go-bindata
 REPO:=github.com/tendermint/go-crypto
 
-docs:
-	@go get github.com/davecheney/godoc2md
-	godoc2md $(REPO) > README.md
+all: get_vendor_deps test
 
-all: get_vendor_deps install test
-
-install:
-	go install ./cmd/keys
-
-test: test_unit test_cli
-
-test_unit:
+test:
 	go test `glide novendor`
-	#go run tests/tendermint/*.go
-
-test_cli: tests/shunit2
-	# sudo apt-get install jq
-	@./tests/keys.sh
-
-tests/shunit2:
-	wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2" \
-		-q -O tests/shunit2
 
 get_vendor_deps: ensure_tools
 	@rm -rf vendor/

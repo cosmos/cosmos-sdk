@@ -5,6 +5,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	cmn "github.com/tendermint/tmlibs/common"
+
 	"github.com/tendermint/go-crypto/keys/cryptostore"
 )
 
@@ -12,8 +15,8 @@ func TestNoopEncoder(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 	noop := cryptostore.Noop
 
-	key := cryptostore.GenEd25519.Generate()
-	key2 := cryptostore.GenSecp256k1.Generate()
+	key := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
+	key2 := cryptostore.GenSecp256k1.Generate(cmn.RandBytes(16))
 
 	b, err := noop.Encrypt(key, "encode")
 	require.Nil(err)
@@ -40,7 +43,7 @@ func TestSecretBox(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 	enc := cryptostore.SecretBox
 
-	key := cryptostore.GenEd25519.Generate()
+	key := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
 	pass := "some-special-secret"
 
 	b, err := enc.Encrypt(key, pass)
@@ -55,5 +58,44 @@ func TestSecretBox(t *testing.T) {
 	// but decoding with the same passphrase gets us our key
 	pk, err = enc.Decrypt(b, pass)
 	require.Nil(err)
+	assert.Equal(key, pk)
+}
+
+func TestSecretBoxNoPass(t *testing.T) {
+	assert, require := assert.New(t), require.New(t)
+	enc := cryptostore.SecretBox
+
+	key := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
+
+	cases := []struct {
+		encode string
+		decode string
+		valid  bool
+	}{
+		{"foo", "foo", true},
+		{"foo", "food", false},
+		{"", "", true},
+		{"", "a", false},
+		{"a", "", false},
+	}
+
+	for i, tc := range cases {
+		b, err := enc.Encrypt(key, tc.encode)
+		require.Nil(err, "%d: %+v", i, err)
+		assert.NotEmpty(b, "%d", i)
+
+		pk, err := enc.Decrypt(b, tc.decode)
+		if tc.valid {
+			require.Nil(err, "%d: %+v", i, err)
+			assert.Equal(key, pk, "%d", i)
+		} else {
+			require.NotNil(err, "%d", i)
+		}
+	}
+
+	// now let's make sure raw bytes also work...
+	b := key.Bytes()
+	pk, err := enc.Decrypt(b, "")
+	require.Nil(err, "%+v", err)
 	assert.Equal(key, pk)
 }

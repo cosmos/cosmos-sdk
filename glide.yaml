@@ -29,6 +29,7 @@ import:
 - package: github.com/spf13/cobra
 - package: github.com/spf13/viper
 - package: gopkg.in/go-playground/validator.v9
+- package: github.com/howeyc/crc16
 testImport:
 - package: github.com/mndrix/btcutil
 - package: github.com/stretchr/testify

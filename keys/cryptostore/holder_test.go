@@ -5,6 +5,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	cmn "github.com/tendermint/tmlibs/common"
+
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/go-crypto/keys/cryptostore"
@@ -148,6 +151,32 @@ func assertPassword(assert *assert.Assertions, cstore cryptostore.Manager, name,
 	assert.Nil(err, "%+v", err)
 }
 
+// TestImportUnencrypted tests accepting raw priv keys bytes as input
+func TestImportUnencrypted(t *testing.T) {
+	require := require.New(t)
+
+	// make the storage with reasonable defaults
+	cstore := cryptostore.New(
+		cryptostore.SecretBox,
+		memstorage.New(),
+		keys.MustLoadCodec("english"),
+	)
+
+	key := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
+	addr := key.PubKey().Address()
+	name := "john"
+	pass := "top-secret"
+
+	// import raw bytes
+	err := cstore.Import(name, pass, "", key.Bytes())
+	require.Nil(err, "%+v", err)
+
+	// make sure the address matches
+	info, err := cstore.Get(name)
+	require.Nil(err, "%+v", err)
+	require.EqualValues(addr, info.Address)
+}
+
 // TestAdvancedKeyManagement verifies update, import, export functionality
 func TestAdvancedKeyManagement(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
@@ -190,16 +219,6 @@ func TestAdvancedKeyManagement(t *testing.T) {
 	// import fails on bad transfer pass
 	err = cstore.Import(n2, p3, p2, exported)
 	assert.NotNil(err)
-	// import cannot overwrite existing keys
-	err = cstore.Import(n1, p3, pt, exported)
-	assert.NotNil(err)
-	// we can now import under another name
-	err = cstore.Import(n2, p3, pt, exported)
-	require.Nil(err, "%+v", err)
-
-	// make sure both passwords are now properly set (not to the transfer pass)
-	assertPassword(assert, cstore, n1, p2, pt)
-	assertPassword(assert, cstore, n2, p3, pt)
 }
 
 // TestSeedPhrase verifies restoring from a seed phrase

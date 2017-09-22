@@ -35,6 +35,7 @@ func NewCodec(words []string) (codec *WordCodec, err error) {
 		words: words,
 		// TODO: configure this outside???
 		check: NewIEEECRC32(),
+		// check: NewIBMCRC16(),
 	}
 
 	return res, nil

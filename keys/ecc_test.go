@@ -8,18 +8,22 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
+var codecs = []ECC{
+	NewIBMCRC16(),
+	NewSCSICRC16(),
+	NewCCITTCRC16(),
+	NewIEEECRC32(),
+	NewCastagnoliCRC32(),
+	NewKoopmanCRC32(),
+	NewISOCRC64(),
+	NewECMACRC64(),
+}
+
 // TestECCPasses makes sure that the AddECC/CheckECC methods are symetric
 func TestECCPasses(t *testing.T) {
 	assert := assert.New(t)
 
-	checks := []ECC{
-		NoECC{},
-		NewIEEECRC32(),
-		NewCastagnoliCRC32(),
-		NewKoopmanCRC32(),
-		NewISOCRC64(),
-		NewECMACRC64(),
-	}
+	checks := append(codecs, NoECC{})
 
 	for _, check := range checks {
 		for i := 0; i < 2000; i++ {
@@ -39,14 +43,7 @@ func TestECCPasses(t *testing.T) {
 func TestECCFails(t *testing.T) {
 	assert := assert.New(t)
 
-	checks := []ECC{
-		NewIEEECRC32(),
-		NewCastagnoliCRC32(),
-		NewKoopmanCRC32(),
-		NewISOCRC64(),
-		NewECMACRC64(),
-	}
-
+	checks := codecs
 	attempts := 2000
 
 	for _, check := range checks {

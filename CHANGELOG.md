@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 (N/A)
+## 0.3.0 (September 22, 2017)
 
 BREAKING CHANGES:
 
@@ -15,7 +15,6 @@ FEATURES:
 IMPROVEMENTS:
 
 - Allow no passwords on keys for development convenience
-
 
 
 ## 0.2.1 (June 21, 2017)

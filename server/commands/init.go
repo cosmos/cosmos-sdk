@@ -148,7 +148,7 @@ func GetGenesisJSON(chainID, addr string, options string) string {
   "genesis_time": "0001-01-01T00:00:00.000Z",
   "validators": [
     {
-      "amount": 10,
+      "power": 10,
       "name": "",
       "pub_key": {
         "type": "ed25519",

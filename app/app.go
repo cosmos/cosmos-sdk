@@ -57,7 +57,7 @@ func (app *Basecoin) GetState() sm.SimpleDB {
 }
 
 // Info - ABCI
-func (app *Basecoin) Info() abci.ResponseInfo {
+func (app *Basecoin) Info(req abci.RequestInfo) abci.ResponseInfo {
 	resp := app.state.Info()
 	app.height = resp.LastBlockHeight
 	return abci.ResponseInfo{
@@ -157,14 +157,14 @@ func (app *Basecoin) Commit() (res abci.Result) {
 }
 
 // InitChain - ABCI
-func (app *Basecoin) InitChain(validators []*abci.Validator) {
+func (app *Basecoin) InitChain(req abci.RequestInitChain) {
 	// for _, plugin := range app.plugins.GetList() {
 	// 	plugin.InitChain(app.state, validators)
 	// }
 }
 
 // BeginBlock - ABCI
-func (app *Basecoin) BeginBlock(hash []byte, header *abci.Header) {
+func (app *Basecoin) BeginBlock(req abci.RequestBeginBlock) {
 	app.height++
 	// for _, plugin := range app.plugins.GetList() {
 	// 	plugin.BeginBlock(app.state, hash, header)

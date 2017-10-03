@@ -73,7 +73,7 @@ func TestEndBlock(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		app.BeginBlock(nil, nil)
+		app.BeginBlock(abci.RequestBeginBlock{})
 		for _, c := range tc.changes {
 			tx := base.ValChangeTx{c}.Wrap()
 			txBytes := wire.BinaryBytes(tx)

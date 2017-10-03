@@ -118,8 +118,15 @@ func startTendermint(dir string, basecoinApp *app.Basecoin) error {
 	}
 
 	// Create & start tendermint node
-	privValidator := types.LoadOrGenPrivValidator(cfg.PrivValidatorFile(), logger)
-	n := node.NewNode(cfg, privValidator, proxy.NewLocalClientCreator(basecoinApp), logger.With("module", "node"))
+	n, err := node.NewNode(cfg,
+		types.LoadOrGenPrivValidatorFS(cfg.PrivValidatorFile()),
+		proxy.NewLocalClientCreator(basecoinApp),
+		node.DefaultGenesisDocProviderFunc(cfg),
+		node.DefaultDBProvider,
+		logger.With("module", "node"))
+	if err != nil {
+		return err
+	}
 
 	_, err = n.Start()
 	if err != nil {

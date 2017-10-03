@@ -28,11 +28,15 @@ type Basecoin struct {
 	state *Store
 
 	handler sdk.Handler
+	tick    Ticker
 
 	pending []*abci.Validator
 	height  uint64
 	logger  log.Logger
 }
+
+// Ticker - tick function
+type Ticker func(sm.SimpleDB) ([]*abci.Validator, error)
 
 var _ abci.Application = &Basecoin{}
 
@@ -43,6 +47,17 @@ func NewBasecoin(handler sdk.Handler, store *Store, logger log.Logger) *Basecoin
 		info:    sm.NewChainState(),
 		state:   store,
 		logger:  logger,
+	}
+}
+
+// NewBasecoinTick - create a new instance of the basecoin application with tick functionality
+func NewBasecoinTick(handler sdk.Handler, store *Store, logger log.Logger, tick Ticker) *Basecoin {
+	return &Basecoin{
+		handler: handler,
+		info:    sm.NewChainState(),
+		state:   store,
+		logger:  logger,
+		tick:    tick,
 	}
 }
 
@@ -170,6 +185,14 @@ func (app *Basecoin) BeginBlock(req abci.RequestBeginBlock) {
 	// for _, plugin := range app.plugins.GetList() {
 	// 	plugin.BeginBlock(app.state, hash, header)
 	// }
+
+	if app.tick != nil {
+		diff, err := app.tick(app.state.Append())
+		if err != nil {
+			panic(err)
+		}
+		app.addValChange(diff)
+	}
 }
 
 // EndBlock - ABCI

@@ -163,28 +163,10 @@ func (app *Basecoin) InitChain(req abci.RequestInitChain) {
 	// }
 }
 
-// Ticker - has the ticker function
-type Ticker interface {
-	Tick(ctx sdk.Context, store sm.SimpleDB) ([]*abci.Validator, error)
-}
-
 // BeginBlock - ABCI
 func (app *Basecoin) BeginBlock(req abci.RequestBeginBlock) {
 	app.height++
 
-	ticker, ok := app.handler.(Ticker)
-	if ok {
-		ctx := stack.NewContext(
-			app.GetChainID(),
-			app.height,
-			app.logger.With("call", "delivertx"),
-		)
-		diff, err := ticker.Tick(ctx, app.state.Append())
-		if err != nil {
-			panic(err)
-		}
-		app.addValChange(diff)
-	}
 	// for _, plugin := range app.plugins.GetList() {
 	// 	plugin.BeginBlock(app.state, hash, header)
 	// }

@@ -6,7 +6,6 @@ Please read the README and godoc to see how to
 configure the server for your application.
 */
 
-// nolint: goimports
 package server
 
 import (

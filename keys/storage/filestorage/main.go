@@ -42,8 +42,9 @@ func New(dir string) FileStore {
 	return FileStore{dir}
 }
 
+var _ keys.Storage = FileStore{}
+
 // assertStorage just makes sure we implement the proper Storage interface
-// nolint [ megacheck, deadcode ]
 func (s FileStore) assertStorage() keys.Storage {
 	return s
 }

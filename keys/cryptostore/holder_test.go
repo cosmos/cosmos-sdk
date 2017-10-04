@@ -144,7 +144,6 @@ func TestKeyManagement(t *testing.T) {
 // 	}
 // }
 
-// nolint: unparam
 func assertPassword(assert *assert.Assertions, cstore cryptostore.Manager, name, pass, badpass string) {
 	err := cstore.Update(name, badpass, pass)
 	assert.NotNil(err)

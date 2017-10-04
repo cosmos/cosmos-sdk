@@ -46,9 +46,7 @@ metalinter_test: ensure_tools
 		--enable=gas \
 		--enable=goconst \
 		--enable=gocyclo \
-		--enable=goimports \
 		--enable=gosimple \
-		--enable=gotype \
 	 	--enable=ineffassign \
 	   	--enable=interfacer \
 		--enable=megacheck \
@@ -66,4 +64,6 @@ metalinter_test: ensure_tools
 
 		#--enable=dupl \
 		#--enable=errcheck \
+		#--enable=goimports \
 		#--enable=golint \ <== comments on anything exported
+		#--enable=gotype \

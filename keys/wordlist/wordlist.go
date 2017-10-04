@@ -6,7 +6,6 @@
 // keys/wordlist/spanish.txt
 // DO NOT EDIT!
 
-// nolint: goimports
 package wordlist
 
 import (

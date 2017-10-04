@@ -52,7 +52,6 @@ func (k Keys) GetKey(w http.ResponseWriter, r *http.Request) {
 	writeSuccess(w, &key)
 }
 
-// nolint: unparam
 func (k Keys) ListKeys(w http.ResponseWriter, r *http.Request) {
 
 	keys, err := k.manager.List()

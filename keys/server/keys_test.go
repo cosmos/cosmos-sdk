@@ -120,7 +120,6 @@ func listKeys(h http.Handler) (keys.Infos, int, error) {
 	return data, rr.Code, err
 }
 
-// nolint: unparam
 func getKey(h http.Handler, name string) (*keys.Info, int, error) {
 	rr := httptest.NewRecorder()
 	req, err := http.NewRequest("GET", "/keys/"+name, nil)
@@ -138,7 +137,6 @@ func getKey(h http.Handler, name string) (*keys.Info, int, error) {
 	return &data, rr.Code, err
 }
 
-// nolint: unparam
 func createKey(h http.Handler, name, passphrase, algo string) (*types.CreateKeyResponse, int, error) {
 	rr := httptest.NewRecorder()
 	post := types.CreateKeyRequest{
@@ -167,7 +165,6 @@ func createKey(h http.Handler, name, passphrase, algo string) (*types.CreateKeyR
 	return data, rr.Code, err
 }
 
-// nolint: unparam
 func deleteKey(h http.Handler, name, passphrase string) (*types.ErrorResponse, int, error) {
 	rr := httptest.NewRecorder()
 	post := types.DeleteKeyRequest{

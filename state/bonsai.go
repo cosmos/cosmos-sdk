@@ -12,7 +12,7 @@ type nonce int64
 // Bonsai is a deformed tree forced to fit in a small pot
 type Bonsai struct {
 	id   nonce
-	Tree *iavl.IAVLTree
+	Tree *iavl.VersionedTree
 }
 
 func (b *Bonsai) String() string {
@@ -22,7 +22,7 @@ func (b *Bonsai) String() string {
 var _ SimpleDB = &Bonsai{}
 
 // NewBonsai wraps a merkle tree and tags it to track children
-func NewBonsai(tree *iavl.IAVLTree) *Bonsai {
+func NewBonsai(tree *iavl.VersionedTree) *Bonsai {
 	return &Bonsai{
 		id:   nonce(rand.Int63()),
 		Tree: tree,

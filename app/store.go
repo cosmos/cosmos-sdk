@@ -46,8 +46,8 @@ func MockStore() *Store {
 	return res
 }
 
-// NewStore initializes an in-memory IAVLTree, or attempts to load a persistant
-// tree from disk
+// NewStore initializes an in-memory iavl.VersionedTree, or attempts to load a
+// persistant tree from disk
 func NewStore(dbName string, cacheSize int, logger log.Logger) (*Store, error) {
 	// start at 1 so the height returned by query is for the
 	// next block, ie. the one that includes the AppHash for our current state
@@ -55,9 +55,9 @@ func NewStore(dbName string, cacheSize int, logger log.Logger) (*Store, error) {
 
 	// Non-persistent case
 	if dbName == "" {
-		tree := iavl.NewIAVLTree(
+		tree := iavl.NewVersionedTree(
 			0,
-			nil,
+			dbm.NewMemDB(),
 		)
 		store := &Store{
 			State:  state.NewState(tree, false),
@@ -85,24 +85,26 @@ func NewStore(dbName string, cacheSize int, logger log.Logger) (*Store, error) {
 
 	// Open database called "dir/name.db", if it doesn't exist it will be created
 	db := dbm.NewDB(name, dbm.LevelDBBackendStr, dir)
-	tree := iavl.NewIAVLTree(cacheSize, db)
+	tree := iavl.NewVersionedTree(cacheSize, db)
 
 	var chainState ChainState
 	if empty {
 		logger.Info("no existing db, creating new db")
 		chainState = ChainState{
-			Hash:   tree.Save(),
+			Hash:   nil,
 			Height: initialHeight,
 		}
 		db.Set(stateKey, wire.BinaryBytes(chainState))
 	} else {
 		logger.Info("loading existing db")
 		eyesStateBytes := db.Get(stateKey)
-		err = wire.ReadBinaryBytes(eyesStateBytes, &chainState)
-		if err != nil {
+
+		if err = wire.ReadBinaryBytes(eyesStateBytes, &chainState); err != nil {
 			return nil, errors.Wrap(err, "Reading MerkleEyesState")
 		}
-		tree.Load(chainState.Hash)
+		if err = tree.Load(); err != nil {
+			return nil, errors.Wrap(err, "Loading tree")
+		}
 	}
 
 	res := &Store{

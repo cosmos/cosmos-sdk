@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/iavl"
+	db "github.com/tendermint/tmlibs/db"
 )
 
 type keyVal struct {
@@ -64,7 +65,7 @@ func TestStateCommitHash(t *testing.T) {
 			result := make([][]byte, len(tc.rounds))
 
 			// make the store...
-			tree := iavl.NewIAVLTree(0, nil)
+			tree := iavl.NewVersionedTree(0, db.NewMemDB())
 			store := NewState(tree, false)
 
 			for n, r := range tc.rounds {

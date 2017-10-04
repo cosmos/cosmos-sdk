@@ -11,7 +11,7 @@ type State struct {
 	persistent bool
 }
 
-func NewState(tree *iavl.IAVLTree, persistent bool) State {
+func NewState(tree *iavl.VersionedTree, persistent bool) State {
 	base := NewBonsai(tree)
 	return State{
 		committed:  base,
@@ -70,7 +70,11 @@ func (s *State) Commit() ([]byte, error) {
 
 	var hash []byte
 	if s.persistent {
-		hash = s.committed.Tree.Save()
+		nextVersion := s.committed.Tree.LatestVersion() + 1
+		hash, err = s.committed.Tree.SaveVersion(nextVersion)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		hash = s.committed.Tree.Hash()
 	}

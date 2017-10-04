@@ -17,11 +17,11 @@ func GetDBs() []SimpleDB {
 		panic(err)
 	}
 	db := dbm.NewDB("test-get-dbs", dbm.LevelDBBackendStr, tmpDir)
-	persist := iavl.NewIAVLTree(500, db)
+	persist := iavl.NewVersionedTree(500, db)
 
 	return []SimpleDB{
 		NewMemKVStore(),
-		NewBonsai(iavl.NewIAVLTree(0, nil)),
+		NewBonsai(iavl.NewVersionedTree(0, dbm.NewMemDB())),
 		NewBonsai(persist),
 	}
 }

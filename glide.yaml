@@ -8,7 +8,6 @@ import:
 - package: github.com/spf13/viper
 - package: github.com/tendermint/abci
   version: develop
-  version:
   subpackages:
   - server
   - types

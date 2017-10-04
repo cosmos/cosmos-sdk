@@ -58,7 +58,6 @@ metalinter_test: ensure_tools
 		--enable=unused \
 		--enable=vetshadow \
 		--enable=vet \
-		--enable=unparam \
 		--enable=varcheck \
 		./...
 
@@ -67,3 +66,4 @@ metalinter_test: ensure_tools
 		#--enable=goimports \
 		#--enable=golint \ <== comments on anything exported
 		#--enable=gotype \
+		#--enable=unparam \

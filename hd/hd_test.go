@@ -2,9 +2,9 @@ package hd
 
 import (
 	"bytes"
-	"crypto/hmac"
-	"crypto/sha512"
-	"encoding/binary"
+	//"crypto/hmac"
+	//"crypto/sha512"
+	//"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -15,10 +15,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tyler-smith/go-bip39"
 
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil/hdkeychain"
-	"github.com/mndrix/btcutil"
-	"github.com/tyler-smith/go-bip32"
+	//"github.com/btcsuite/btcd/chaincfg"
+	//"github.com/btcsuite/btcutil/hdkeychain"
+	//"github.com/mndrix/btcutil"
+	//"github.com/tyler-smith/go-bip32"
 
 	"github.com/tendermint/go-crypto"
 )
@@ -109,12 +109,14 @@ func TestReverseBytes(t *testing.T) {
 	}
 }
 
+/*
 func ifExit(err error, n int) {
 	if err != nil {
 		fmt.Println(n, err)
 		os.Exit(1)
 	}
 }
+*/
 
 func gocrypto(seed []byte) ([]byte, []byte, []byte) {
 
@@ -131,6 +133,7 @@ func gocrypto(seed []byte) ([]byte, []byte, []byte) {
 	return HexDecode(priv), privBytes, pubBytes
 }
 
+/*
 func btcsuite(seed []byte) ([]byte, []byte, []byte) {
 	fmt.Println("HD")
 	masterKey, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
@@ -207,9 +210,9 @@ func tylerSmith(seed []byte) ([]byte, []byte, []byte) {
 	pub := k.PublicKey().Key
 	return masterKey.Key, priv, pub
 }
+*/
 
 // Benchmarks
-
 var revBytesCases = [][]byte{
 	nil,
 	[]byte(""),

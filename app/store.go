@@ -60,7 +60,7 @@ func NewStore(dbName string, cacheSize int, logger log.Logger) (*Store, error) {
 			dbm.NewMemDB(),
 		)
 		store := &Store{
-			State:  state.NewState(tree, false),
+			State:  state.NewState(tree, true),
 			height: initialHeight,
 			logger: logger,
 		}
@@ -148,7 +148,7 @@ func (s *Store) Commit() abci.Result {
 		Height: s.height,
 	}))
 
-	hash, err := s.State.Commit()
+	hash, err := s.State.Commit(s.height)
 	if err != nil {
 		return abci.NewError(abci.CodeType_InternalError, err.Error())
 	}
@@ -164,25 +164,25 @@ func (s *Store) Commit() abci.Result {
 
 // Query implements abci.Application
 func (s *Store) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) {
-
-	if reqQuery.Height != 0 {
-		// TODO: support older commits
-		resQuery.Code = abci.CodeType_InternalError
-		resQuery.Log = "merkleeyes only supports queries on latest commit"
-		return
-	}
-
 	// set the query response height to current
-	resQuery.Height = s.height
-
 	tree := s.State.Committed()
+
+	height := reqQuery.Height
+	if height == 0 {
+		if tree.Tree.VersionExists(s.height - 1) {
+			height = s.height - 1
+		} else {
+			height = s.height
+		}
+	}
+	resQuery.Height = height
 
 	switch reqQuery.Path {
 	case "/store", "/key": // Get by key
 		key := reqQuery.Data // Data holds the key bytes
 		resQuery.Key = key
 		if reqQuery.Prove {
-			value, proof, err := tree.GetWithProof(key)
+			value, proof, err := tree.GetVersionedWithProof(key, height)
 			if err != nil {
 				resQuery.Log = err.Error()
 				break

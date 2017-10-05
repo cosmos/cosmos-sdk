@@ -61,7 +61,7 @@ func (s *State) BatchSet(key, value []byte) {
 }
 
 // Commit save persistent nodes to the database and re-copies the trees
-func (s *State) Commit() ([]byte, error) {
+func (s *State) Commit(version uint64) ([]byte, error) {
 	// commit (if we didn't do hash earlier)
 	err := s.committed.Commit(s.deliverTx)
 	if err != nil {
@@ -70,10 +70,11 @@ func (s *State) Commit() ([]byte, error) {
 
 	var hash []byte
 	if s.persistent {
-		nextVersion := s.committed.Tree.LatestVersion() + 1
-		hash, err = s.committed.Tree.SaveVersion(nextVersion)
-		if err != nil {
-			return nil, err
+		if s.committed.Tree.Size() > 0 || s.committed.Tree.LatestVersion() > 0 {
+			hash, err = s.committed.Tree.SaveVersion(version)
+			if err != nil {
+				return nil, err
+			}
 		}
 	} else {
 		hash = s.committed.Tree.Hash()

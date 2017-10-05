@@ -32,11 +32,13 @@ var StartCmd = &cobra.Command{
 
 // TickStartCmd - command to create a start command with tick
 func TickStartCmd(tick app.Ticker) *cobra.Command {
-	return &cobra.Command{
+	startCmd := &cobra.Command{
 		Use:   "start",
 		Short: "Start this full node",
 		RunE:  tickStartCmd(tick),
 	}
+	addStartFlag(startCmd)
+	return startCmd
 }
 
 // nolint TODO: move to config file
@@ -55,11 +57,15 @@ var (
 )
 
 func init() {
-	flags := StartCmd.Flags()
+	addStartFlag(StartCmd)
+}
+
+func addStartFlag(startCmd *cobra.Command) {
+	flags := startCmd.Flags()
 	flags.String(FlagAddress, "tcp://0.0.0.0:46658", "Listen address")
 	flags.Bool(FlagWithoutTendermint, false, "Only run abci app, assume external tendermint process")
 	// add all standard 'tendermint node' flags
-	tcmd.AddNodeFlags(StartCmd)
+	tcmd.AddNodeFlags(startCmd)
 }
 
 //returns the start command which uses the tick

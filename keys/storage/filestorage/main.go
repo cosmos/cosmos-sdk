@@ -42,12 +42,8 @@ func New(dir string) FileStore {
 	return FileStore{dir}
 }
 
+// assert FileStore satisfies keys.Storage
 var _ keys.Storage = FileStore{}
-
-// assertStorage just makes sure we implement the proper Storage interface
-func (s FileStore) assertStorage() keys.Storage {
-	return s
-}
 
 // Put creates two files, one with the public info as json, the other
 // with the (encoded) private key as gpg ascii-armor style

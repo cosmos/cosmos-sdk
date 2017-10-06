@@ -30,15 +30,10 @@ var StartCmd = &cobra.Command{
 	RunE:  startCmd,
 }
 
-// TickStartCmd - command to create a start command with tick
-func TickStartCmd(tick app.Ticker) *cobra.Command {
-	startCmd := &cobra.Command{
-		Use:   "start",
-		Short: "Start this full node",
-		RunE:  tickStartCmd(tick),
-	}
-	addStartFlag(startCmd)
-	return startCmd
+// InitTickStartCmd - initialize a command as the start command with tick
+func InitTickStartCmd(tick app.Ticker, cmd *cobra.Command) {
+	cmd.RunE = tickStartCmd(tick)
+	addStartFlag(cmd)
 }
 
 // nolint TODO: move to config file

@@ -127,11 +127,6 @@ func (coins Coins) IsValid() bool {
 	}
 }
 
-// IsValidNonnegative tests is coins IsValid and IsNonnegative
-func (coins Coins) IsValidNonnegative() bool {
-	return coins.IsValid() && coins.IsNonnegative()
-}
-
 // Plus combines to sets of coins
 //
 // TODO: handle empty coins!

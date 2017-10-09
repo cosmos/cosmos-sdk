@@ -45,7 +45,7 @@ test02SendTxToRole() {
     SENDER=$(getAddr $RICH)
     RECV=role:${ROLE}
 
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --fee=90mycoin --amount=10000mycoin --to=$RECV --sequence=2 --name=$RICH)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --fee=90strings --amount=10000strings --to=$RECV --sequence=2 --name=$RICH)
     txSucceeded $? "$TX" "${ROLE}"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
@@ -67,14 +67,14 @@ test03SendMultiFromRole() {
     assertFalse "line=${LINENO}, has no money yet" "${CLIENT_EXE} query account $TWO 2>/dev/null"
 
     # let's try to send money from the role directly without multisig
-    FAIL=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=1 --name=$POOR 2>/dev/null)
+    FAIL=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000strings --from=$BANK --to=$TWO --sequence=1 --name=$POOR 2>/dev/null)
     assertFalse "need to assume role" $?
-    FAIL=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=2 --assume-role=${ROLE} --name=$POOR 2>/dev/null)
+    FAIL=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000strings --from=$BANK --to=$TWO --sequence=2 --assume-role=${ROLE} --name=$POOR 2>/dev/null)
     assertFalse "need two signatures" $?
 
     # okay, begin a multisig transaction mr. poor...
     TX_FILE=$BASE_DIR/tx.json
-    echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000mycoin --from=$BANK --to=$TWO --sequence=1 --assume-role=${ROLE} --name=$POOR --multi --prepare=$TX_FILE
+    echo qwertyuiop | ${CLIENT_EXE} tx send --amount=6000strings --from=$BANK --to=$TWO --sequence=1 --assume-role=${ROLE} --name=$POOR --multi --prepare=$TX_FILE
     assertTrue "line=${LINENO}, successfully prepare tx" $?
     # and get some dude to sign it
     # FAIL=$(echo qwertyuiop | ${CLIENT_EXE} tx --in=$TX_FILE --name=$POOR 2>/dev/null)

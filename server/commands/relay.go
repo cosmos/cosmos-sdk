@@ -253,7 +253,7 @@ package commands
 // 		ibc.IBCTx `json:"unwrap"`
 // 	}{ibcTx}))
 
-// 	smallCoins := coin.Coin{"mycoin", 1}
+// 	smallCoins := coin.Coin{"strings", 1}
 
 // 	input := types.NewTxInput(r.privKey.PubKey, coin.Coins{smallCoins}, sequence)
 // 	tx := &types.AppTx{

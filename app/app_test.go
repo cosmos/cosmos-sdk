@@ -104,10 +104,10 @@ func (at *appTest) initAccount(acct *coin.AccountWithKey) {
 	require.EqualValues(at.t, res, "Success")
 }
 
-// reset the in and out accs to be one account each with 7mycoin
+// reset the in and out accs to be one account each with 7strings
 func (at *appTest) reset() {
-	at.acctIn = coin.NewAccountWithKey(coin.Coins{{"mycoin", 7}})
-	at.acctOut = coin.NewAccountWithKey(coin.Coins{{"mycoin", 7}})
+	at.acctIn = coin.NewAccountWithKey(coin.Coins{{"strings", 7}})
+	at.acctOut = coin.NewAccountWithKey(coin.Coins{{"strings", 7}})
 
 	// Note: switch logger if you want to get more info
 	logger := log.TestingLogger()
@@ -116,7 +116,7 @@ func (at *appTest) reset() {
 	require.Nil(at.t, err, "%+v", err)
 
 	at.app = NewBasecoin(
-		DefaultHandler("mycoin"),
+		DefaultHandler("strings"),
 		store,
 		logger.With("module", "app"),
 	)
@@ -243,25 +243,25 @@ func TestTx(t *testing.T) {
 	at := newAppTest(t)
 
 	//Bad Balance
-	at.acctIn.Coins = coin.Coins{{"mycoin", 2}}
+	at.acctIn.Coins = coin.Coins{{"strings", 2}}
 	at.initAccount(at.acctIn)
 	at.app.Commit()
 
-	res, _, _ := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1), true)
+	res, _, _ := at.exec(t, at.getTx(coin.Coins{{"strings", 5}}, 1), true)
 	assert.True(res.IsErr(), "ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res)
-	res, diffIn, diffOut := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1), false)
+	res, diffIn, diffOut := at.exec(t, at.getTx(coin.Coins{{"strings", 5}}, 1), false)
 	assert.True(res.IsErr(), "ExecTx/Bad DeliverTx: Expected error return from ExecTx, returned: %v", res)
 	assert.True(diffIn.IsZero())
 	assert.True(diffOut.IsZero())
 
 	//Regular CheckTx
 	at.reset()
-	res, _, _ = at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1), true)
+	res, _, _ = at.exec(t, at.getTx(coin.Coins{{"strings", 5}}, 1), true)
 	assert.True(res.IsOK(), "ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", res)
 
 	//Regular DeliverTx
 	at.reset()
-	amt := coin.Coins{{"mycoin", 3}}
+	amt := coin.Coins{{"strings", 3}}
 	res, diffIn, diffOut = at.exec(t, at.getTx(amt, 1), false)
 	assert.True(res.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res)
 	assert.Equal(amt.Negative(), diffIn)
@@ -269,8 +269,8 @@ func TestTx(t *testing.T) {
 
 	//DeliverTx with fee.... 4 get to recipient, 1 extra taxed
 	at.reset()
-	amt = coin.Coins{{"mycoin", 4}}
-	toll := coin.Coin{"mycoin", 1}
+	amt = coin.Coins{{"strings", 4}}
+	toll := coin.Coin{"strings", 1}
 	res, diffIn, diffOut = at.exec(t, at.feeTx(amt, toll, 1), false)
 	assert.True(res.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res)
 	payment := amt.Plus(coin.Coins{toll}).Negative()
@@ -283,7 +283,7 @@ func TestQuery(t *testing.T) {
 	assert := assert.New(t)
 	at := newAppTest(t)
 
-	res, _, _ := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1), false)
+	res, _, _ := at.exec(t, at.getTx(coin.Coins{{"strings", 5}}, 1), false)
 	assert.True(res.IsOK(), "Commit, DeliverTx: Expected OK return from DeliverTx, Error: %v", res)
 
 	resQueryPreCommit := at.app.Query(abci.RequestQuery{

@@ -27,7 +27,7 @@ func BenchmarkSimpleTransfer(b *testing.B) {
 	logger := log.NewNopLogger()
 
 	// set the initial account
-	acct := NewAccountWithKey(Coins{{"mycoin", 1234567890}})
+	acct := NewAccountWithKey(Coins{{"strings", 1234567890}})
 	h.InitState(logger, store, NameCoin, "account", acct.MakeOption(), nil)
 	sender := acct.Actor()
 	receiver := sdk.Actor{App: "foo", Address: cmn.RandBytes(20)}
@@ -35,7 +35,7 @@ func BenchmarkSimpleTransfer(b *testing.B) {
 	// now, loop...
 	for i := 1; i <= b.N; i++ {
 		ctx := stack.MockContext("foo", 100).WithPermissions(sender)
-		tx := makeSimpleTx(sender, receiver, Coins{{"mycoin", 2}})
+		tx := makeSimpleTx(sender, receiver, Coins{{"strings", 2}})
 		_, err := h.DeliverTx(ctx, store, tx, nil)
 		// never should error
 		if err != nil {

@@ -113,7 +113,7 @@ initialize the light-client and send a transaction:
     countercli init --node=tcp://localhost:46657 --genesis=$HOME/.counter/genesis.json
 
     YOU=$(countercli keys get friend | awk '{print $2}')
-    countercli tx send --name=cool --amount=1000mycoin --to=$YOU --sequence=1
+    countercli tx send --name=cool --amount=1000strings --to=$YOU --sequence=1
 
 But the Counter has an additional command, ``countercli tx counter``,
 which crafts an ``AppTx`` specifically for this plugin:
@@ -142,7 +142,7 @@ the counter)
 
 .. code:: shelldown[4]
 
-    countercli tx counter --name cool --countfee=2mycoin --sequence=2 --valid
+    countercli tx counter --name cool --countfee=2strings --sequence=2 --valid
     countercli query counter
 
 The Counter value should be 2, because we sent a second valid

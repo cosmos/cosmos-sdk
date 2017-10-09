@@ -62,7 +62,7 @@ test01SendTx() {
     SENDER=$(restAddr $RICH)
     RECV=$(restAddr $POOR)
 
-    CMD="{\"from\": {\"app\": \"sigs\", \"addr\": \"$SENDER\"}, \"to\": {\"app\": \"sigs\", \"addr\": \"$RECV\"}, \"amount\": [{\"denom\": \"mycoin\", \"amount\": 992}], \"sequence\": 1}"
+    CMD="{\"from\": {\"app\": \"sigs\", \"addr\": \"$SENDER\"}, \"to\": {\"app\": \"sigs\", \"addr\": \"$RECV\"}, \"amount\": [{\"denom\": \"strings\", \"amount\": 992}], \"sequence\": 1}"
 
     UNSIGNED=$(curl -XPOST ${URL}/build/send -d "$CMD" 2>/dev/null)
     if [ -n "$DEBUG" ]; then echo $UNSIGNED; echo; fi
@@ -120,7 +120,7 @@ test04CreateRoleInvalid() {
 #     RECV=$(getAddr $POOR)
 
 #     # Test to see if the auto-sequencing works, the sequence here should be calculated to be 2
-#     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --to=$RECV --name=$RICH)
+#     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90strings --fee=10strings --to=$RECV --name=$RICH)
 #     txSucceeded $? "$TX" "$RECV"
 #     HASH=$(echo $TX | jq .hash | tr -d \")
 #     TX_HEIGHT=$(echo $TX | jq .height)
@@ -133,7 +133,7 @@ test04CreateRoleInvalid() {
 #     checkSendFeeTx $HASH $TX_HEIGHT $SENDER "90" "10"
 
 #     # assert replay protection
-#     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --sequence=2 --to=$RECV --name=$RICH 2>/dev/null)
+#     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90strings --fee=10strings --sequence=2 --to=$RECV --name=$RICH 2>/dev/null)
 #     assertFalse "line=${LINENO}, replay: $TX" $?
 #     checkAccount $SENDER "9007199254739900"
 #     checkAccount $RECV "1082"

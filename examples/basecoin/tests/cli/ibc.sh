@@ -174,7 +174,7 @@ test04SendIBCPacket() {
     SENDER=$(getAddr $RICH)
     RECV=$(BC_HOME=${CLIENT_2} getAddr $POOR)
 
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=20002mycoin \
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=20002strings \
         --to=${CHAIN_ID_2}::${RECV} --name=$RICH)
     txSucceeded $? "$TX" "${CHAIN_ID_2}::${RECV}"
     # quit early if there is no point in more tests
@@ -209,7 +209,7 @@ test05ReceiveIBCPacket() {
     export BC_HOME=${CLIENT_2}
 
     # make some credit, so we can accept the packet
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx credit --amount=60006mycoin --to=$CHAIN_ID_1:: --name=$RICH)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx credit --amount=60006strings --to=$CHAIN_ID_1:: --name=$RICH)
     txSucceeded $? "$TX" "${CHAIN_ID_1}::"
     checkAccount $CHAIN_ID_1:: "60006"
 
@@ -269,7 +269,7 @@ assertNewHeight() {
 #     RECV=$(BC_HOME=${CLIENT_2} getAddr $POOR)
 
 #     export BC_HOME=${CLIENT_1}
-#     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=20002mycoin \
+#     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=20002strings \
 #         --sequence=1 --to=${CHAIN_ID_2}/${RECV} --name=$RICH)
 #     txSucceeded $? "$TX" "${CHAIN_ID_2}/${RECV}"
 #     # an example to quit early if there is no point in more tests
@@ -318,7 +318,7 @@ assertNewHeight() {
 #     # Get paid on chain1
 #     export BC_HOME=${CLIENT_1}
 #     SENDER=$(getAddr $RICH)
-#     RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000mycoin \
+#     RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000strings \
 #         --sequence=$1 --to=$RELAY_ADDR --name=$RICH)
 #     txSucceeded $? "$RES" "$RELAY_ADDR"
 #     if [ $? != 0 ]; then echo "can't pay chain1!"; return 1; fi
@@ -326,7 +326,7 @@ assertNewHeight() {
 #     # Get paid on chain2
 #     export BC_HOME=${CLIENT_2}
 #     SENDER=$(getAddr $RICH)
-#     RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000mycoin \
+#     RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000strings \
 #         --sequence=$2 --to=$RELAY_ADDR --name=$RICH)
 #     txSucceeded $? "$RES" "$RELAY_ADDR"
 #     if [ $? != 0 ]; then echo "can't pay chain2!"; return 1; fi

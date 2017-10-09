@@ -21,7 +21,7 @@ test00PreRestart() {
     SENDER=$(getAddr $RICH)
     RECV=$(getAddr $POOR)
 
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=992strings --sequence=1 --to=$RECV --name=$RICH)
     txSucceeded $? "$TX" "$RECV"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
@@ -38,7 +38,7 @@ test01OnRestart() {
     SENDER=$(getAddr $RICH)
     RECV=$(getAddr $POOR)
 
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=10000mycoin --sequence=2 --to=$RECV --name=$RICH)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=10000strings --sequence=2 --to=$RECV --name=$RICH)
     txSucceeded $? "$TX" "$RECV"
     if [ $? != 0 ]; then echo "can't make tx!"; return 1; fi
 
@@ -52,7 +52,7 @@ test01OnRestart() {
     echo "done waiting!"
 
     # last minute tx just at the block cut-off...
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=20000mycoin --sequence=3 --to=$RECV --name=$RICH)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=20000strings --sequence=3 --to=$RECV --name=$RICH)
     txSucceeded $? "$TX" "$RECV"
     if [ $? != 0 ]; then echo "can't make second tx!"; return 1; fi
 

@@ -21,7 +21,7 @@ var RootCmd = &cobra.Command{
 func main() {
 
 	// TODO: register the counter here
-	commands.Handler = counter.NewHandler("mycoin")
+	commands.Handler = counter.NewHandler("strings")
 
 	RootCmd.AddCommand(
 		commands.InitCmd,

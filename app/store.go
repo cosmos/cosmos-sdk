@@ -99,7 +99,7 @@ func (s *Store) Info() abci.ResponseInfo {
 		"hash", fmt.Sprintf("%X", s.Hash()))
 	return abci.ResponseInfo{
 		Data:             cmn.Fmt("size:%v", s.State.Size()),
-		LastBlockHeight:  s.height - 1,
+		LastBlockHeight:  s.height,
 		LastBlockAppHash: s.Hash(),
 	}
 }

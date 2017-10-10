@@ -37,6 +37,14 @@ func (s State) Check() SimpleDB {
 	return s.checkTx
 }
 
+func (s State) LatestHeight() uint64 {
+	return s.committed.Tree.LatestVersion()
+}
+
+func (s State) LatestHash() []byte {
+	return s.committed.Tree.Hash()
+}
+
 // BatchSet is used for some weird magic in storing the new height
 func (s *State) BatchSet(key, value []byte) {
 	if s.persistent {

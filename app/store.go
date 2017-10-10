@@ -130,11 +130,16 @@ func (s *Store) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) 
 
 	height := reqQuery.Height
 	if height == 0 {
-		if tree.Tree.VersionExists(s.height - 1) {
-			height = s.height - 1
-		} else {
-			height = s.height
-		}
+		// TODO: once the rpc actually passes in non-zero
+		// heights we can use to query right after a tx
+		// we must retrun most recent, even if apphash
+		// is not yet in the blockchain
+
+		// if tree.Tree.VersionExists(s.height - 1) {
+		// 	height = s.height - 1
+		// } else {
+		height = s.height
+		// }
 	}
 	resQuery.Height = height
 

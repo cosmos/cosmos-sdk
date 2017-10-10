@@ -60,7 +60,7 @@ func NewStore(dbName string, cacheSize int, logger log.Logger) (*Store, error) {
 			dbm.NewMemDB(),
 		)
 		store := &Store{
-			State:  state.NewState(tree, true),
+			State:  state.NewState(tree),
 			height: initialHeight,
 			logger: logger,
 		}
@@ -108,7 +108,7 @@ func NewStore(dbName string, cacheSize int, logger log.Logger) (*Store, error) {
 	}
 
 	res := &Store{
-		State:     state.NewState(tree, true),
+		State:     state.NewState(tree),
 		height:    chainState.Height,
 		hash:      chainState.Hash,
 		persisted: true,

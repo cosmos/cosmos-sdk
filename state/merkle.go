@@ -11,13 +11,13 @@ type State struct {
 	persistent bool
 }
 
-func NewState(tree *iavl.VersionedTree, persistent bool) State {
+func NewState(tree *iavl.VersionedTree) State {
 	base := NewBonsai(tree)
 	return State{
 		committed:  base,
 		deliverTx:  base.Checkpoint(),
 		checkTx:    base.Checkpoint(),
-		persistent: persistent,
+		persistent: true,
 	}
 }
 

@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/modules/auth"
 	"github.com/cosmos/cosmos-sdk/modules/base"
@@ -18,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/modules/roles"
 	"github.com/cosmos/cosmos-sdk/stack"
 	"github.com/cosmos/cosmos-sdk/state"
+	abci "github.com/tendermint/abci/types"
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/tmlibs/log"
 )
@@ -294,9 +294,10 @@ func TestQuery(t *testing.T) {
 	res = at.app.Commit()
 	assert.True(res.IsOK(), res)
 
+	key := stack.PrefixedKey(coin.NameCoin, at.acctIn.Address())
 	resQueryPostCommit := at.app.Query(abci.RequestQuery{
-		Path: "/account",
-		Data: at.acctIn.Address(),
+		Path: "/key",
+		Data: key,
 	})
 	assert.NotEqual(resQueryPreCommit, resQueryPostCommit, "Query should change before/after commit")
 }

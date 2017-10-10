@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/iavl"
+	db "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"
@@ -17,7 +18,7 @@ import (
 func makeState() state.SimpleDB {
 	// return state.NewMemKVStore()
 
-	return state.NewBonsai(iavl.NewIAVLTree(0, nil))
+	return state.NewBonsai(iavl.NewVersionedTree(0, db.NewMemDB()))
 
 	// tree with persistence....
 	// tmpDir, err := ioutil.TempDir("", "state-tests")

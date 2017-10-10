@@ -1,5 +1,5 @@
-hash: 647d25291b8e9a85cb4a49abc972a41537e8a286514bf41180845785e3b180a4
-updated: 2017-10-02T23:59:53.784455453-04:00
+hash: fbfdd03c0367bb0785ceb81ed34059df219e55d5a9c71c12597e505fbce14165
+updated: 2017-10-10T17:14:33.612302321+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -108,7 +108,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 191c4b6d176169ffc7f9972d490fa362a3b7d940
+  version: 15cd7fb1e3b75c436b6dee89a44db35f3d265bd0
   subpackages:
   - client
   - example/dummy
@@ -128,12 +128,12 @@ imports:
   - keys/storage/memstorage
   - keys/wordlist
 - name: github.com/tendermint/go-wire
-  version: 5f88da3dbc1a72844e6dfaf274ce87f851d488eb
+  version: ddbcd39cf68f7026d12f81c66a3cb45fc38ac48b
   subpackages:
   - data
   - data/base58
 - name: github.com/tendermint/iavl
-  version: 2d3ca4f466c32953641d4c49cad3d93eb7876a5e
+  version: 372f484952449aae18cce33b82c13329a9009acf
 - name: github.com/tendermint/light-client
   version: ac2e4bf47b31aaf5d3d336691ac786ec751bfc32
   subpackages:
@@ -146,7 +146,7 @@ imports:
   subpackages:
   - iavl
 - name: github.com/tendermint/tendermint
-  version: 97e980225530133c7b7e2b45e5e65c1f78ace89b
+  version: 49653d3e31e34a5da83e16e9ffdcd95a68acd9be
   subpackages:
   - blockchain
   - cmd/tendermint/commands
@@ -173,7 +173,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: 096dcb90e60aa00b748b3fe49a4b95e48ebf1e13
+  version: 7dd6b3d3f8a7a998a79bdd0d8222252b309570f3
   subpackages:
   - autofile
   - cli

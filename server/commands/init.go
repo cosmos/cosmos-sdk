@@ -2,6 +2,7 @@ package commands
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -13,6 +14,7 @@ import (
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/types"
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
@@ -91,21 +93,30 @@ func initCmd(cmd *cobra.Command, args []string) error {
 		optionsStr = sep + strings.Join(options[:], sep)
 	}
 
-	genesis := GetGenesisJSON(viper.GetString(FlagChainID), userAddr, optionsStr)
-	return CreateGenesisValidatorFiles(cfg, genesis, cmd.Root().Name())
+	privVal := types.GenPrivValidatorFS("")
+	privValHex := strings.ToUpper(hex.EncodeToString(privVal.PubKey.Bytes()[1:]))
+	genesis := GetGenesisJSON(privValHex, viper.GetString(FlagChainID),
+		userAddr, optionsStr)
+
+	pvBytes, err := json.Marshal(privVal)
+	if err != nil {
+		return err
+	}
+
+	return CreateGenesisValidatorFiles(cfg, genesis, string(pvBytes), cmd.Root().Name())
 }
 
 // CreateGenesisValidatorFiles creates a genesis file with these
 // contents and a private validator file
-func CreateGenesisValidatorFiles(cfg *config.Config, genesis, appName string) error {
-	genesisFile := cfg.GenesisFile()
+func CreateGenesisValidatorFiles(cfg *config.Config, genesis, privVal, appName string) error {
 	privValFile := cfg.PrivValidatorFile()
+	genesisFile := cfg.GenesisFile()
 
 	mod1, err := setupFile(genesisFile, genesis, 0644)
 	if err != nil {
 		return err
 	}
-	mod2, err := setupFile(privValFile, PrivValJSON, 0400)
+	mod2, err := setupFile(privValFile, privVal, 0400)
 	if err != nil {
 		return err
 	}
@@ -120,28 +131,10 @@ func CreateGenesisValidatorFiles(cfg *config.Config, genesis, appName string) er
 	return nil
 }
 
-// PrivValJSON - validator private key file contents in json
-var PrivValJSON = `{
-  "address": "7A956FADD20D3A5B2375042B2959F8AB172A058F",
-  "last_height": 0,
-  "last_round": 0,
-  "last_signature": null,
-  "last_signbytes": "",
-  "last_step": 0,
-  "priv_key": {
-    "type": "ed25519",
-    "data": "D07ABE82A8B15559A983B2DB5D4842B2B6E4D6AF58B080005662F424F17D68C17B90EA87E7DC0C7145C8C48C08992BE271C7234134343E8A8E8008E617DE7B30"
-  },
-  "pub_key": {
-    "type": "ed25519",
-    "data": "7B90EA87E7DC0C7145C8C48C08992BE271C7234134343E8A8E8008E617DE7B30"
-  }
-}`
-
 // GetGenesisJSON returns a new tendermint genesis with Basecoin app_options
 // that grant a large amount of "strings" to a single address
 // TODO: A better UX for generating genesis files
-func GetGenesisJSON(chainID, addr string, options string) string {
+func GetGenesisJSON(pubkey, chainID, addr string, options string) string {
 	return fmt.Sprintf(`{
   "app_hash": "",
   "chain_id": "%s",
@@ -152,7 +145,7 @@ func GetGenesisJSON(chainID, addr string, options string) string {
       "name": "",
       "pub_key": {
         "type": "ed25519",
-        "data": "7B90EA87E7DC0C7145C8C48C08992BE271C7234134343E8A8E8008E617DE7B30"
+        "data": "%s"
       }
     }
   ],
@@ -170,5 +163,5 @@ func GetGenesisJSON(chainID, addr string, options string) string {
       "coin/issuer", {"app": "sigs", "addr": "%s"}%s
     ]
   }
-}`, chainID, addr, addr, options)
+}`, chainID, pubkey, addr, addr, options)
 }

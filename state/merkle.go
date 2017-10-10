@@ -37,21 +37,6 @@ func (s State) Check() SimpleDB {
 	return s.checkTx
 }
 
-// Hash applies deliverTx to committed and calculates hash
-//
-// Note the usage:
-// Hash -> gets the calculated hash but doesn't save
-// BatchSet -> adds some out-of-bounds data
-// Commit -> Save everything to disk and the same hash
-func (s *State) Hash() ([]byte, error) {
-	err := s.committed.Commit(s.deliverTx)
-	if err != nil {
-		return nil, err
-	}
-	s.deliverTx = s.committed.Checkpoint()
-	return s.committed.Tree.Hash(), nil
-}
-
 // BatchSet is used for some weird magic in storing the new height
 func (s *State) BatchSet(key, value []byte) {
 	if s.persistent {

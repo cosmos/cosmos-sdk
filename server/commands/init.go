@@ -29,11 +29,13 @@ var InitCmd = &cobra.Command{
 var (
 	FlagChainID = "chain-id" //TODO group with other flags or remove? is this already a flag here?
 	FlagOption  = "option"
+	FlagStatic  = "static"
 )
 
 func init() {
 	InitCmd.Flags().String(FlagChainID, "test_chain_id", "Chain ID")
 	InitCmd.Flags().StringSliceP(FlagOption, "p", []string{}, "Genesis option in the format <app>/<option>/<value>")
+	InitCmd.Flags().Bool(FlagStatic, false, "use a static private validator")
 }
 
 // returns 1 iff it set a file, otherwise 0 (so we can add them)
@@ -93,18 +95,46 @@ func initCmd(cmd *cobra.Command, args []string) error {
 		optionsStr = sep + strings.Join(options[:], sep)
 	}
 
-	privVal := types.GenPrivValidatorFS("")
-	privValHex := strings.ToUpper(hex.EncodeToString(privVal.PubKey.Bytes()[1:]))
-	genesis := GetGenesisJSON(privValHex, viper.GetString(FlagChainID),
-		userAddr, optionsStr)
+	var privValJSON, pubkey string
+	if viper.GetBool(FlagStatic) {
+		privValJSON = StaticPrivValJSON
+		pubkey = StaticPK
+	} else {
 
-	pvBytes, err := json.Marshal(privVal)
-	if err != nil {
-		return err
+		privVal := types.GenPrivValidatorFS("")
+		pubkey = strings.ToUpper(hex.EncodeToString(privVal.PubKey.Bytes()[1:]))
+		pvBytes, err := json.Marshal(privVal)
+		if err != nil {
+			return err
+		}
+		privValJSON = string(pvBytes)
 	}
 
-	return CreateGenesisValidatorFiles(cfg, genesis, string(pvBytes), cmd.Root().Name())
+	genesis := GetGenesisJSON(pubkey, viper.GetString(FlagChainID),
+		userAddr, optionsStr)
+	return CreateGenesisValidatorFiles(cfg, genesis, privValJSON, cmd.Root().Name())
 }
+
+// StaticPK - static public key for test cases
+var StaticPK = "7B90EA87E7DC0C7145C8C48C08992BE271C7234134343E8A8E8008E617DE7B30"
+
+// StaticPrivValJSON - static validator private key file contents in json
+var StaticPrivValJSON = `{
+  "address": "7A956FADD20D3A5B2375042B2959F8AB172A058F",
+  "last_height": 0,
+  "last_round": 0,
+  "last_signature": null,
+  "last_signbytes": "",
+  "last_step": 0,
+  "priv_key": {
+    "type": "ed25519",
+    "data": "D07ABE82A8B15559A983B2DB5D4842B2B6E4D6AF58B080005662F424F17D68C17B90EA87E7DC0C7145C8C48C08992BE271C7234134343E8A8E8008E617DE7B30"
+  },
+  "pub_key": {
+    "type": "ed25519",
+    "data": "7B90EA87E7DC0C7145C8C48C08992BE271C7234134343E8A8E8008E617DE7B30"
+  }
+}`
 
 // CreateGenesisValidatorFiles creates a genesis file with these
 // contents and a private validator file

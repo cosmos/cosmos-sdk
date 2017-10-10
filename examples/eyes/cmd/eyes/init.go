@@ -35,26 +35,8 @@ func initCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	genesis := getGenesisJSON(viper.GetString(commands.FlagChainID))
-	return commands.CreateGenesisValidatorFiles(cfg, genesis, PrivValJSON, cmd.Root().Name())
+	return commands.CreateGenesisValidatorFiles(cfg, genesis, commands.StaticPrivValJSON, cmd.Root().Name())
 }
-
-// PrivValJSON - validator private key file contents in json
-var PrivValJSON = `{
-  "address": "7A956FADD20D3A5B2375042B2959F8AB172A058F",
-  "last_height": 0,
-  "last_round": 0,
-  "last_signature": null,
-  "last_signbytes": "",
-  "last_step": 0,
-  "priv_key": {
-    "type": "ed25519",
-    "data": "D07ABE82A8B15559A983B2DB5D4842B2B6E4D6AF58B080005662F424F17D68C17B90EA87E7DC0C7145C8C48C08992BE271C7234134343E8A8E8008E617DE7B30"
-  },
-  "pub_key": {
-    "type": "ed25519",
-    "data": "7B90EA87E7DC0C7145C8C48C08992BE271C7234134343E8A8E8008E617DE7B30"
-  }
-}`
 
 // TODO: better, auto-generate validator...
 func getGenesisJSON(chainID string) string {

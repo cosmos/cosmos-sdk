@@ -65,7 +65,7 @@ initServer() {
     SERVER_LOG=$1/${SERVER_EXE}.log
 
     GENKEY=$(${CLIENT_EXE} keys get ${RICH} | awk '{print $2}')
-    ${SERVER_EXE} init --chain-id $CHAIN $GENKEY --home=$SERVE_DIR >>$SERVER_LOG
+    ${SERVER_EXE} init --static --chain-id $CHAIN $GENKEY --home=$SERVE_DIR >>$SERVER_LOG
 
     # optionally set the port
     if [ -n "$3" ]; then

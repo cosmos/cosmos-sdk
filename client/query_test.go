@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -103,13 +104,14 @@ func TestTxProofs(t *testing.T) {
 	cl := client.NewLocal(node)
 	client.WaitForHeight(cl, 1, nil)
 
-	tx := eyes.SetTx{Key: []byte("key-a"), Value: []byte("value-a")}.Wrap()
+	tx := eyes.NewSetTx([]byte("key-a"), []byte("value-a"))
 
 	btx := types.Tx(wire.BinaryBytes(tx))
 	br, err := cl.BroadcastTxCommit(btx)
 	require.NoError(err, "%+v", err)
 	require.EqualValues(0, br.CheckTx.Code, "%#v", br.CheckTx)
 	require.EqualValues(0, br.DeliverTx.Code)
+	fmt.Printf("tx height: %d\n", br.Height)
 
 	source := certclient.New(cl)
 	seed, err := source.GetByHeight(br.Height - 2)
@@ -118,18 +120,20 @@ func TestTxProofs(t *testing.T) {
 
 	// First let's make sure a bogus transaction hash returns a valid non-existence proof.
 	key := types.Tx([]byte("bogus")).Hash()
-	bs, _, proof, err := GetWithProof(key, cl, cert)
-	assert.Nil(bs, "value should be nil")
-	require.True(lc.IsNoDataErr(err), "error should signal 'no data'")
-	require.NotNil(proof, "proof shouldn't be nil")
-	err = proof.Verify(key, nil, proof.Root())
-	require.NoError(err, "%+v", err)
+	res, err := cl.Tx(key, true)
+	require.NotNil(err)
+	require.Contains(err.Error(), "not found")
 
 	// Now let's check with the real tx hash.
 	key = btx.Hash()
-	res, err := cl.Tx(key, true)
+	res, err = cl.Tx(key, true)
 	require.NoError(err, "%+v", err)
 	require.NotNil(res)
 	err = res.Proof.Validate(key)
 	assert.NoError(err, "%+v", err)
+
+	check, err := GetCertifiedCheckpoint(int(br.Height), cl, cert)
+	require.Nil(err, "%+v", err)
+	require.Equal(res.Proof.RootHash, check.Header.DataHash)
+
 }

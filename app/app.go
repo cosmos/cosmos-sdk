@@ -165,6 +165,7 @@ func (app *Basecoin) InitChain(req abci.RequestInitChain) {
 
 // BeginBlock - ABCI
 func (app *Basecoin) BeginBlock(req abci.RequestBeginBlock) {
+	fmt.Println("BeginBlock")
 	app.height++
 	// for _, plugin := range app.plugins.GetList() {
 	// 	plugin.BeginBlock(app.state, hash, header)

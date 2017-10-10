@@ -123,6 +123,7 @@ func (s *Store) Commit() abci.Result {
 	if s.State.Size() == 0 {
 		return abci.NewResultOK(nil, "Empty hash for empty tree")
 	}
+	fmt.Printf("ABCI Commit: %d / %X\n", height, hash)
 	return abci.NewResultOK(hash, "")
 }
 

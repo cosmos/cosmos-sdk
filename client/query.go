@@ -1,6 +1,8 @@
 package client
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 
 	"github.com/tendermint/go-wire/data"
@@ -39,7 +41,9 @@ func GetWithProof(key []byte, node client.Client, cert certifiers.Certifier) (
 		return
 	}
 
-	check, err := GetCertifiedCheckpoint(int(resp.Height), node, cert)
+	var check lc.Checkpoint
+	// check, err = GetCertifiedCheckpoint(int(resp.Height), node, cert)
+	check, err = GetCertifiedCheckpoint(int(resp.Height+9), node, cert)
 	if err != nil {
 		return
 	}
@@ -69,6 +73,10 @@ func GetWithProof(key []byte, node client.Client, cert certifiers.Certifier) (
 			err = errors.Wrap(err, "Error reading proof")
 			return
 		}
+
+		fmt.Printf("apphash: %x\n", check.Header.AppHash)
+		fmt.Printf("proof hash: %x\n", aproof.Root())
+		fmt.Printf("response height: %d\n", resp.Height)
 
 		// Validate the proof against the certified header to ensure data integrity.
 		err = aproof.Verify(resp.Key, nil, check.Header.AppHash)

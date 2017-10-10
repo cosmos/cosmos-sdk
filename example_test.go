@@ -15,23 +15,21 @@
 package crypto_test
 
 import (
-//"fmt"
+	"fmt"
 
-//"github.com/tendermint/go-crypto"
+	"github.com/tendermint/go-crypto"
 )
 
-/*
-func example_Sha256() {
+func ExampleSha256() {
 	sum := crypto.Sha256([]byte("This is Tendermint"))
 	fmt.Printf("%x\n", sum)
 	// Output:
 	// f91afb642f3d1c87c17eb01aae5cb65c242dfdbe7cf1066cc260f4ce5d33b94e
 }
 
-func example_Ripemd160() {
+func ExampleRipemd160() {
 	sum := crypto.Ripemd160([]byte("This is Tendermint"))
 	fmt.Printf("%x\n", sum)
 	// Output:
 	// 051e22663e8f0fd2f2302f1210f954adff009005
 }
-*/

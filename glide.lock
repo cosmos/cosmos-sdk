@@ -1,5 +1,5 @@
 hash: fbfdd03c0367bb0785ceb81ed34059df219e55d5a9c71c12597e505fbce14165
-updated: 2017-10-05T12:45:12.67543189+02:00
+updated: 2017-10-10T17:14:33.612302321+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -133,7 +133,7 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/iavl
-  version: ff8784b7ba609d80ef78ebcc5ca4bd2d01b04259
+  version: 372f484952449aae18cce33b82c13329a9009acf
 - name: github.com/tendermint/light-client
   version: ac2e4bf47b31aaf5d3d336691ac786ec751bfc32
   subpackages:

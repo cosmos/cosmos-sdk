@@ -23,7 +23,7 @@ Input:
 {
     "to": {"app": "role", "addr": "62616E6B32" },
     "from": {"app": "sigs", "addr": "BDADF167E6CF2CDF2D621E590FF1FED2787A40E0" },
-    "amount": { "denom": "strings", "amount": 900000 },
+    "amount": { "denom": "mycoin", "amount": 900000 },
     "sequence": 1,
     "multi": true,
 }
@@ -31,7 +31,7 @@ Input:
 
 Output (a json encoding of basecoin.Tx):
 
-`basecli tx send --to=role:62616E6B32 --from=sigs:91C959ADE03D8973E8F2FBA9FD2EED327DCE2B0A --amount=900000strings  --sequence=1 --multi --prepare=- --no-sign`
+`basecli tx send --to=role:62616E6B32 --from=sigs:91C959ADE03D8973E8F2FBA9FD2EED327DCE2B0A --amount=900000mycoin  --sequence=1 --multi --prepare=- --no-sign`
 
 
 ```
@@ -66,7 +66,7 @@ Output (a json encoding of basecoin.Tx):
                     },
                     "coins": [
                       {
-                        "denom": "strings",
+                        "denom": "mycoin",
                         "amount": 900000
                       }
                     ]
@@ -81,7 +81,7 @@ Output (a json encoding of basecoin.Tx):
                     },
                     "coins": [
                       {
-                        "denom": "strings",
+                        "denom": "mycoin",
                         "amount": 900000
                       }
                     ]
@@ -123,7 +123,7 @@ Input:
 
 Output:
 
-`basecli tx send --to=role:62616E6B32 --from=sigs:91C959ADE03D8973E8F2FBA9FD2EED327DCE2B0A --amount=900000strings  --sequence=1 --multi --no-sign --prepare=unsigned.json`
+`basecli tx send --to=role:62616E6B32 --from=sigs:91C959ADE03D8973E8F2FBA9FD2EED327DCE2B0A --amount=900000mycoin  --sequence=1 --multi --no-sign --prepare=unsigned.json`
 
 `echo 1234567890 | basecli tx --in=unsigned.json --prepare=- --name=matt`
 
@@ -162,7 +162,7 @@ Signed tx as json, directly copy output of `/sign`
 Output:
 
 
-`echo 1234567890 | basecli tx send --to=role:62616E6B32 --from=sigs:91C959ADE03D8973E8F2FBA9FD2EED327DCE2B0A --amount=900000strings  --sequence=1 --multi --name=matt --prepare=signed.json`
+`echo 1234567890 | basecli tx send --to=role:62616E6B32 --from=sigs:91C959ADE03D8973E8F2FBA9FD2EED327DCE2B0A --amount=900000mycoin  --sequence=1 --multi --name=matt --prepare=signed.json`
 
 `basecli tx --in=signed.json --no-sign`
 
@@ -193,7 +193,7 @@ Output:
   "data": {
     "coins": [
       {
-        "denom": "strings",
+        "denom": "mycoin",
         "amount": 12345
       }
     ]

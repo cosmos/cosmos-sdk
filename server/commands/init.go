@@ -162,7 +162,7 @@ func CreateGenesisValidatorFiles(cfg *config.Config, genesis, privVal, appName s
 }
 
 // GetGenesisJSON returns a new tendermint genesis with Basecoin app_options
-// that grant a large amount of "strings" to a single address
+// that grant a large amount of "mycoin" to a single address
 // TODO: A better UX for generating genesis files
 func GetGenesisJSON(pubkey, chainID, addr string, options string) string {
 	return fmt.Sprintf(`{
@@ -184,7 +184,7 @@ func GetGenesisJSON(pubkey, chainID, addr string, options string) string {
       "address": "%s",
       "coins": [
         {
-          "denom": "strings",
+          "denom": "mycoin",
           "amount": 9007199254740992
         }
       ]

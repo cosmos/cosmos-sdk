@@ -34,9 +34,9 @@ test01SendTx() {
     RECV=$(getAddr $POOR)
 
     # sequence should work well for first time also
-    assertFalse "Line=${LINENO}, missing dest" "${CLIENT_EXE} tx send --amount=992strings 2>/dev/null"
-    assertFalse "Line=${LINENO}, bad password" "echo foo | ${CLIENT_EXE} tx send --amount=992strings --to=$RECV --name=$RICH 2>/dev/null"
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=992strings --to=$RECV --name=$RICH)
+    assertFalse "Line=${LINENO}, missing dest" "${CLIENT_EXE} tx send --amount=992mycoin 2>/dev/null"
+    assertFalse "Line=${LINENO}, bad password" "echo foo | ${CLIENT_EXE} tx send --amount=992mycoin --to=$RECV --name=$RICH 2>/dev/null"
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=992mycoin --to=$RECV --name=$RICH)
     txSucceeded $? "$TX" "$RECV"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
@@ -66,9 +66,9 @@ checkCounter() {
 
 test03AddCount() {
     SENDER=$(getAddr $RICH)
-    assertFalse "Line=${LINENO}, bad password" "echo hi | ${CLIENT_EXE} tx counter --countfee=100strings --sequence=2 --name=${RICH} 2>/dev/null"
+    assertFalse "Line=${LINENO}, bad password" "echo hi | ${CLIENT_EXE} tx counter --countfee=100mycoin --sequence=2 --name=${RICH} 2>/dev/null"
 
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --countfee=10strings --sequence=2 --name=${RICH} --valid)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --countfee=10mycoin --sequence=2 --name=${RICH} --valid)
     txSucceeded $? "$TX" "counter"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
@@ -94,7 +94,7 @@ test03AddCount() {
     fi
 
     # test again with fees...
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --countfee=7strings --fee=4strings --sequence=3 --name=${RICH} --valid)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --countfee=7mycoin --fee=4mycoin --sequence=3 --name=${RICH} --valid)
     txSucceeded $? "$TX" "counter"
 
     # make sure the counter was updated, added 7
@@ -104,7 +104,7 @@ test03AddCount() {
     checkAccount $SENDER "9007199254739979"
 
     # make sure we cannot replay the counter, no state change
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --countfee=10strings --sequence=2 --name=${RICH} --valid 2>/dev/null)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --countfee=10mycoin --sequence=2 --name=${RICH} --valid 2>/dev/null)
     assertFalse "line=${LINENO}, replay: $TX" $?
     checkCounter "2" "17"
     checkAccount $SENDER "9007199254739979"

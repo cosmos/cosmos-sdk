@@ -59,7 +59,7 @@ $ curl -X POST $URL/sign --data '{
     "tx": {
         "type": "sigs/multi",
         "data": {
-            "tx": {"type":"coin/send","data":{"inputs":[{"address":{"chain":"","app":"role","addr":"62616E6B32"},"coins":[{"denom":"strings","amount":900000}]}],"outputs":[{"address":{"chain":"","app":"sigs","addr":"BDADF167E6CF2CDF2D621E590FF1FED2787A40E0"},"coins":[{"denom":"strings","amount":900000}]}]}},
+            "tx": {"type":"coin/send","data":{"inputs":[{"address":{"chain":"","app":"role","addr":"62616E6B32"},"coins":[{"denom":"mycoin","amount":900000}]}],"outputs":[{"address":{"chain":"","app":"sigs","addr":"BDADF167E6CF2CDF2D621E590FF1FED2787A40E0"},"coins":[{"denom":"mycoin","amount":900000}]}]}},
             "signatures": null
         }
     }
@@ -82,7 +82,7 @@ $ curl -X POST $URL/sign --data '{
             },
             "coins": [
               {
-                "denom": "strings",
+                "denom": "mycoin",
                 "amount": 900000
               }
             ]
@@ -97,7 +97,7 @@ $ curl -X POST $URL/sign --data '{
             },
             "coins": [
               {
-                "denom": "strings",
+                "denom": "mycoin",
                 "amount": 900000
               }
             ]

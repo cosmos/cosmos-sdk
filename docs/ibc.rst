@@ -360,10 +360,10 @@ start the actual relay.
     RELAY_KEY=$BCHOME1_SERVER/key.json
     RELAY_ADDR=$(cat $RELAY_KEY | jq .address | tr -d \")
 
-    basecli1 tx send --amount=100000strings --sequence=1 --to=$RELAY_ADDR--name=money
+    basecli1 tx send --amount=100000mycoin --sequence=1 --to=$RELAY_ADDR--name=money
     basecli1 query account $RELAY_ADDR
 
-    basecli2 tx send --amount=100000strings --sequence=1 --to=$RELAY_ADDR --name=moremoney
+    basecli2 tx send --amount=100000mycoin --sequence=1 --to=$RELAY_ADDR --name=moremoney
     basecli2 query account $RELAY_ADDR
 
 Now we can start the relay process.
@@ -398,7 +398,7 @@ labor...
 ::
 
     # Let's send some funds from test-chain-1
-    basecli1 tx send --amount=12345strings --sequence=2 --to=test-chain-2/$BROKE --name=money
+    basecli1 tx send --amount=12345mycoin --sequence=2 --to=test-chain-2/$BROKE --name=money
 
 ::
 

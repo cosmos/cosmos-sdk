@@ -49,8 +49,8 @@ func BuildApp(feeDenom string) sdk.Handler {
 }
 
 func main() {
-	// require all fees in strings - change this in your app!
-	commands.Handler = BuildApp("strings")
+	// require all fees in mycoin - change this in your app!
+	commands.Handler = BuildApp("mycoin")
 
 	RootCmd.AddCommand(
 		commands.InitCmd,

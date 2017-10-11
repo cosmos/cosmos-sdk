@@ -45,7 +45,7 @@ $ basecoin start
 ## Send the money
 
 ```
-% basecli tx send --name demo --amount 1000strings --sequence 1 --to $YOU
+% basecli tx send --name demo --amount 1000mycoin --sequence 1 --to $YOU
 -> copy hash to HASH
 % basecli query tx $HASH
 % basecli query account $YOU

@@ -32,7 +32,7 @@ has plenty of coins:
       "data": {
         "coins": [
           {
-            "denom": "strings",
+            "denom": "mycoin",
             "amount": 9007199254740992
           }
         ],
@@ -118,10 +118,10 @@ the second transaction being sent by rich, we need to increase
 
 ::
 
-    basecli tx send --fee=90strings --amount=10000strings --to=role:10CAFE4E --sequence=2 --name=rich
+    basecli tx send --fee=90mycoin --amount=10000mycoin --to=role:10CAFE4E --sequence=2 --name=rich
 
 We need to pay a transaction fee to the validators, in this case 90
-``strings`` to send 10000 ``strings`` Notice that for the ``--to`` flag,
+``mycoin`` to send 10000 ``mycoin`` Notice that for the ``--to`` flag,
 to specify that we are sending to a role instead of an account, the
 ``role:`` prefix is added before the role. Because it's ``rich``'s
 second transaction, we've incremented the sequence. The output will be
@@ -144,7 +144,7 @@ and this time you'll see the coins in the role's account:
       "data": {
         "coins": [
           {
-            "denom": "strings",
+            "denom": "mycoin",
             "amount": 10000
           }
         ],
@@ -157,7 +157,7 @@ role's account. First, it must be prepared like so:
 
 ::
 
-    basecli tx send --amount=6000strings --from=role:10CAFE4E --to=65D406E028319289A0706E294F3B764F44EBA3CF --sequence=1 --assume-role=10CAFE4E --name=poor --multi --prepare=tx.json
+    basecli tx send --amount=6000mycoin --from=role:10CAFE4E --to=65D406E028319289A0706E294F3B764F44EBA3CF --sequence=1 --assume-role=10CAFE4E --name=poor --multi --prepare=tx.json
 
 you'll be prompted for ``poor``'s password and there won't be any
 ``stdout`` to the terminal. Note that the address in the ``--to`` flag
@@ -207,7 +207,7 @@ The ``tx.json`` file will look like this:
                             },
                             "coins": [
                               {
-                                "denom": "strings",
+                                "denom": "mycoin",
                                 "amount": 6000
                               }
                             ]
@@ -222,7 +222,7 @@ The ``tx.json`` file will look like this:
                             },
                             "coins": [
                               {
-                                "denom": "strings",
+                                "denom": "mycoin",
                                 "amount": 6000
                               }
                             ]
@@ -305,7 +305,7 @@ and get the result:
       "data": {
         "coins": [
           {
-            "denom": "strings",
+            "denom": "mycoin",
             "amount": 4000
           }
         ],
@@ -313,7 +313,7 @@ and get the result:
       }
     }
 
-and see that ``poor`` now has 6000 ``strings``:
+and see that ``poor`` now has 6000 ``mycoin``:
 
 ::
 

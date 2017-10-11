@@ -78,7 +78,7 @@ func NewBenchApp(h sdk.Handler, chainID string, n int,
 	}
 
 	// make keys
-	money := coin.Coins{{"strings", 1234567890}}
+	money := coin.Coins{{"mycoin", 1234567890}}
 	accts := make([]*coin.AccountWithKey, n)
 	for i := 0; i < n; i++ {
 		accts[i] = coin.NewAccountWithKey(money)
@@ -100,10 +100,10 @@ func (b BenchApp) makeTx(useFee bool) []byte {
 	n := len(b.Accounts)
 	sender := b.Accounts[cmn.RandInt()%n]
 	recipient := b.Accounts[cmn.RandInt()%n]
-	amount := coin.Coins{{"strings", 123}}
+	amount := coin.Coins{{"mycoin", 123}}
 	tx := coin.NewSendOneTx(sender.Actor(), recipient.Actor(), amount)
 	if useFee {
-		toll := coin.Coin{"strings", 2}
+		toll := coin.Coin{"mycoin", 2}
 		tx = fee.NewFee(tx, toll, sender.Actor())
 	}
 	sequence := sender.NextSequence()
@@ -116,7 +116,7 @@ func (b BenchApp) makeTx(useFee bool) []byte {
 }
 
 func BenchmarkMakeTx(b *testing.B) {
-	h := DefaultHandler("strings")
+	h := DefaultHandler("mycoin")
 	app := NewBenchApp(h, "bench-chain", 10, false)
 	b.ResetTimer()
 	for i := 1; i <= b.N; i++ {
@@ -192,7 +192,7 @@ func BenchmarkSimpleTransfer(b *testing.B) {
 			prefix += "-memdb"
 		}
 
-		h := DefaultHandler("strings")
+		h := DefaultHandler("mycoin")
 		app := NewBenchApp(h, "bench-chain", bb.accounts, bb.toDisk)
 		b.Run(prefix, func(sub *testing.B) {
 			benchmarkTransfers(sub, app, bb.blockSize, bb.useFee)

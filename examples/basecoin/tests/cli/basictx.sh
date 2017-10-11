@@ -33,9 +33,9 @@ test01SendTx() {
     SENDER=$(getAddr $RICH)
     RECV=$(getAddr $POOR)
 
-    assertFalse "line=${LINENO}, missing dest" "${CLIENT_EXE} tx send --amount=992strings --sequence=1"
-    assertFalse "line=${LINENO}, bad password" "echo foo | ${CLIENT_EXE} tx send --amount=992strings --sequence=1 --to=$RECV --name=$RICH"
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=992strings --sequence=1 --to=$RECV --name=$RICH)
+    assertFalse "line=${LINENO}, missing dest" "${CLIENT_EXE} tx send --amount=992mycoin --sequence=1"
+    assertFalse "line=${LINENO}, bad password" "echo foo | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH"
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=992mycoin --sequence=1 --to=$RECV --name=$RICH)
     txSucceeded $? "$TX" "$RECV"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
@@ -54,7 +54,7 @@ test02SendTxWithFee() {
     RECV=$(getAddr $POOR)
 
     # Test to see if the auto-sequencing works, the sequence here should be calculated to be 2
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90strings --fee=10strings --to=$RECV --name=$RICH)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --to=$RECV --name=$RICH)
     txSucceeded $? "$TX" "$RECV"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
@@ -67,7 +67,7 @@ test02SendTxWithFee() {
     checkSendFeeTx $HASH $TX_HEIGHT $SENDER "90" "10"
 
     # assert replay protection
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90strings --fee=10strings --sequence=2 --to=$RECV --name=$RICH 2>/dev/null)
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --sequence=2 --to=$RECV --name=$RICH 2>/dev/null)
     assertFalse "line=${LINENO}, replay: $TX" $?
 
     # checking normally
@@ -102,8 +102,8 @@ test03CreditTx() {
     RECV=$(getAddr $POOR)
 
     # make sure we are controlled by permissions (only rich can issue credit)
-    assertFalse "line=${LINENO}, bad password" "echo qwertyuiop | ${CLIENT_EXE} tx credit --amount=1000strings --sequence=1 --to=$RECV --name=$POOR"
-    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx credit --amount=1000strings --sequence=3 --to=$RECV --name=$RICH)
+    assertFalse "line=${LINENO}, bad password" "echo qwertyuiop | ${CLIENT_EXE} tx credit --amount=1000mycoin --sequence=1 --to=$RECV --name=$POOR"
+    TX=$(echo qwertyuiop | ${CLIENT_EXE} tx credit --amount=1000mycoin --sequence=3 --to=$RECV --name=$RICH)
     txSucceeded $? "$TX" "$RECV"
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)

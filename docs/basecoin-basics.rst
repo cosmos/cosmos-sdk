@@ -28,7 +28,7 @@
        #shelldown[6][0]
        #shelldown[6][1]
        RES=$(#shelldown[6][2] | jq '.data.coins[0].denom' | tr -d '"')
-       assertTrue "Line $LINENO: Expected to have stringss, got $RES" '[[ $RES == strings ]]'
+       assertTrue "Line $LINENO: Expected to have mycoins, got $RES" '[[ $RES == mycoin ]]'
        RES="$(#shelldown[6][3] 2>&1)"
        assertTrue "Line $LINENO: Expected to contain ERROR, got $RES" '[[ $RES == *ERROR* ]]'
 
@@ -36,7 +36,7 @@
        assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
 
        RES=$(#shelldown[8][-1] | jq '.data.coins[0].amount')
-       assertTrue "Line $LINENO: Expected to contain 1000 strings, got $RES" '[[ $RES == 1000 ]]'
+       assertTrue "Line $LINENO: Expected to contain 1000 mycoin, got $RES" '[[ $RES == 1000 ]]'
 
        RES=$((echo $KEYPASS) | #shelldown[9][-1] | jq '.deliver_tx.code')
        assertTrue "Line $LINENO: Expected 0 code deliver_tx, got $RES" '[[ $RES == 0 ]]'
@@ -191,9 +191,9 @@ exist. Let's send funds from the first account to the second:
 
 ::
 
-    basecli tx send --name=cool --amount=1000strings --to=$YOU --sequence=1
+    basecli tx send --name=cool --amount=1000mycoin --to=$YOU --sequence=1
 
-Now if we check the second account, it should have ``1000`` 'strings'
+Now if we check the second account, it should have ``1000`` 'mycoin'
 coins!
 
 ..  code:: shelldown[8]
@@ -208,7 +208,7 @@ We can send some of these coins back like so:
 
 ::
 
-    basecli tx send --name=friend --amount=500strings --to=$ME --sequence=1
+    basecli tx send --name=friend --amount=500mycoin --to=$ME --sequence=1
 
 Note how we use the ``--name`` flag to select a different account to
 send from.
@@ -219,7 +219,7 @@ If we try to send too much, we'll get an error:
 
 ::
 
-    basecli tx send --name=friend --amount=500000strings --to=$ME --sequence=2
+    basecli tx send --name=friend --amount=500000mycoin --to=$ME --sequence=2
 
 Let's send another transaction:
 
@@ -227,7 +227,7 @@ Let's send another transaction:
 
 ::
 
-   basecli tx send --name=cool --amount=2345strings --to=$YOU --sequence=2
+   basecli tx send --name=cool --amount=2345mycoin --to=$YOU --sequence=2
 
 Note the ``hash`` value in the response - this is the hash of the
 transaction. We can query for the transaction by this hash:

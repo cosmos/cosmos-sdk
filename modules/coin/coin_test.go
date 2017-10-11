@@ -69,7 +69,7 @@ func TestParse(t *testing.T) {
 		{"98 bar , 1 foo  ", true, Coins{{"bar", 98}, {"foo", 1}}},
 		{"  55\t \t bling\n", true, Coins{{"bling", 55}}},
 		{"2foo, 97 bar", true, Coins{{"bar", 97}, {"foo", 2}}},
-		{"5 strings,", false, nil},             // no empty coins in a list
+		{"5 mycoin,", false, nil},             // no empty coins in a list
 		{"2 3foo, 97 bar", false, nil},        // 3foo is invalid coin name
 		{"11me coin, 12you coin", false, nil}, // no spaces in coin names
 		{"1.2btc", false, nil},                // amount must be integer

@@ -46,7 +46,7 @@ func (FeeWrapper) Wrap(tx sdk.Tx) (res sdk.Tx, err error) {
 
 // Register adds the sequence flags to the cli
 func (FeeWrapper) Register(fs *pflag.FlagSet) {
-	fs.String(FlagFee, "0strings", "Coins for the transaction fee of the format <amt><coin>")
+	fs.String(FlagFee, "0mycoin", "Coins for the transaction fee of the format <amt><coin>")
 	fs.String(FlagPayer, "", "Account to pay fee if not current signer (for multisig)")
 }
 

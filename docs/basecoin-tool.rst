@@ -277,6 +277,6 @@ Any required plugin initialization should be constructed using
 ``SetOption`` will be called for each item the genesis file. Within
 genesis.json file entries are made in the format:
 ``"<plugin>/<key>", "<value>"``, where ``<plugin>`` is the plugin name,
-and ``<key>`` and ``<value>`` are the strings passed into the plugin
+and ``<key>`` and ``<value>`` are the mycoin passed into the plugin
 SetOption function. This function is intended to be used to set plugin
 specific information such as the plugin state.

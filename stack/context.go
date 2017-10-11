@@ -34,7 +34,7 @@ var _ sdk.Context = secureContext{}
 func (c secureContext) WithPermissions(perms ...sdk.Actor) sdk.Context {
 	// the guard makes sure you only set permissions for the app you are inside
 	for _, p := range perms {
-		if !c.validPermisison(p) {
+		if !c.validPermission(p) {
 			err := errors.Errorf("Cannot set permission for %s/%s on (app=%s, ibc=%b)",
 				p.ChainID, p.App, c.app, c.ibc)
 			panic(err)
@@ -48,7 +48,7 @@ func (c secureContext) WithPermissions(perms ...sdk.Actor) sdk.Context {
 	}
 }
 
-func (c secureContext) validPermisison(p sdk.Actor) bool {
+func (c secureContext) validPermission(p sdk.Actor) bool {
 	// if app is set, then it must match
 	if c.app != "" && c.app != p.App {
 		return false

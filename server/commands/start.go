@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/tendermint/abci/server"
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
 
@@ -19,6 +19,7 @@ import (
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/types"
 
+	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/app"
 )
 
@@ -27,6 +28,18 @@ var StartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start this full node",
 	RunE:  startCmd,
+}
+
+// GetTickStartCmd - initialize a command as the start command with tick
+func GetTickStartCmd(tick app.Ticker) *cobra.Command {
+	startCmd := &cobra.Command{
+		Use:   "start",
+		Short: "Start this full node",
+		RunE:  startCmd,
+	}
+	startCmd.RunE = tickStartCmd(tick)
+	addStartFlag(startCmd)
+	return startCmd
 }
 
 // nolint TODO: move to config file
@@ -45,11 +58,35 @@ var (
 )
 
 func init() {
-	flags := StartCmd.Flags()
+	addStartFlag(StartCmd)
+}
+
+func addStartFlag(startCmd *cobra.Command) {
+	flags := startCmd.Flags()
 	flags.String(FlagAddress, "tcp://0.0.0.0:46658", "Listen address")
 	flags.Bool(FlagWithoutTendermint, false, "Only run abci app, assume external tendermint process")
 	// add all standard 'tendermint node' flags
-	tcmd.AddNodeFlags(StartCmd)
+	tcmd.AddNodeFlags(startCmd)
+}
+
+//returns the start command which uses the tick
+func tickStartCmd(tick app.Ticker) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		rootDir := viper.GetString(cli.HomeFlag)
+
+		store, err := app.NewStore(
+			path.Join(rootDir, "data", "merkleeyes.db"),
+			EyesCacheSize,
+			logger.With("module", "store"),
+		)
+		if err != nil {
+			return err
+		}
+
+		// Create Basecoin app
+		basecoinApp := app.NewBasecoinTick(Handler, store, logger.With("module", "app"), tick)
+		return start(rootDir, store, basecoinApp)
+	}
 }
 
 func startCmd(cmd *cobra.Command, args []string) error {
@@ -63,9 +100,12 @@ func startCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
 	// Create Basecoin app
 	basecoinApp := app.NewBasecoin(Handler, store, logger.With("module", "app"))
+	return start(rootDir, store, basecoinApp)
+}
+
+func start(rootDir string, store *app.Store, basecoinApp *app.Basecoin) error {
 
 	// if chain_id has not been set yet, load the genesis.
 	// else, assume it's been loaded
@@ -93,7 +133,7 @@ func startCmd(cmd *cobra.Command, args []string) error {
 	return startTendermint(rootDir, basecoinApp)
 }
 
-func startBasecoinABCI(basecoinApp *app.Basecoin) error {
+func startBasecoinABCI(basecoinApp abci.Application) error {
 	// Start the ABCI listener
 	addr := viper.GetString(FlagAddress)
 	svr, err := server.NewServer(addr, "socket", basecoinApp)
@@ -111,7 +151,7 @@ func startBasecoinABCI(basecoinApp *app.Basecoin) error {
 	return nil
 }
 
-func startTendermint(dir string, basecoinApp *app.Basecoin) error {
+func startTendermint(dir string, basecoinApp abci.Application) error {
 	cfg, err := tcmd.ParseConfig()
 	if err != nil {
 		return err

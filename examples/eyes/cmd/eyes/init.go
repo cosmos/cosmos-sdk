@@ -35,7 +35,7 @@ func initCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	genesis := getGenesisJSON(viper.GetString(commands.FlagChainID))
-	return commands.CreateGenesisValidatorFiles(cfg, genesis, cmd.Root().Name())
+	return commands.CreateGenesisValidatorFiles(cfg, genesis, commands.StaticPrivValJSON, cmd.Root().Name())
 }
 
 // TODO: better, auto-generate validator...

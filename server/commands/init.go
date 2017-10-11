@@ -18,24 +18,29 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
-// InitCmd - node initialization command
-var InitCmd = &cobra.Command{
-	Use:   "init [address]",
-	Short: "Initialize genesis files for a blockchain",
-	RunE:  initCmd,
-}
-
-//nolint - flags
 var (
+	// InitCmd - node initialization command
+	InitCmd = GetInitCmd("mycoin")
+
+	//nolint - flags
 	FlagChainID = "chain-id" //TODO group with other flags or remove? is this already a flag here?
+	FlagDenom   = "denom"    //TODO group with other flags or remove? is this already a flag here?
 	FlagOption  = "option"
 	FlagStatic  = "static"
 )
 
-func init() {
-	InitCmd.Flags().String(FlagChainID, "test_chain_id", "Chain ID")
-	InitCmd.Flags().StringSliceP(FlagOption, "p", []string{}, "Genesis option in the format <app>/<option>/<value>")
-	InitCmd.Flags().Bool(FlagStatic, false, "use a static private validator")
+// GetInitCmd - get the node initialization command, with a custom genesis account denom
+func GetInitCmd(defaultDenom string) *cobra.Command {
+	initCmd := &cobra.Command{
+		Use:   "init [address]",
+		Short: "Initialize genesis files for a blockchain",
+		RunE:  initCmd,
+	}
+	initCmd.Flags().String(FlagChainID, "test_chain_id", "Chain ID")
+	initCmd.Flags().String(FlagDenom, defaultDenom, "Coin denomination for genesis account")
+	initCmd.Flags().StringSliceP(FlagOption, "p", []string{}, "Genesis option in the format <app>/<option>/<value>")
+	initCmd.Flags().Bool(FlagStatic, false, "use a static private validator")
+	return initCmd
 }
 
 // returns 1 iff it set a file, otherwise 0 (so we can add them)
@@ -110,7 +115,7 @@ func initCmd(cmd *cobra.Command, args []string) error {
 		privValJSON = string(pvBytes)
 	}
 
-	genesis := GetGenesisJSON(pubkey, viper.GetString(FlagChainID),
+	genesis := GetGenesisJSON(pubkey, viper.GetString(FlagChainID), viper.GetString(FlagDenom),
 		userAddr, optionsStr)
 	return CreateGenesisValidatorFiles(cfg, genesis, privValJSON, cmd.Root().Name())
 }
@@ -164,7 +169,7 @@ func CreateGenesisValidatorFiles(cfg *config.Config, genesis, privVal, appName s
 // GetGenesisJSON returns a new tendermint genesis with Basecoin app_options
 // that grant a large amount of "mycoin" to a single address
 // TODO: A better UX for generating genesis files
-func GetGenesisJSON(pubkey, chainID, addr string, options string) string {
+func GetGenesisJSON(pubkey, chainID, denom, addr string, options string) string {
 	return fmt.Sprintf(`{
   "app_hash": "",
   "chain_id": "%s",
@@ -184,7 +189,7 @@ func GetGenesisJSON(pubkey, chainID, addr string, options string) string {
       "address": "%s",
       "coins": [
         {
-          "denom": "mycoin",
+          "denom": "%s",
           "amount": 9007199254740992
         }
       ]
@@ -193,5 +198,5 @@ func GetGenesisJSON(pubkey, chainID, addr string, options string) string {
       "coin/issuer", {"app": "sigs", "addr": "%s"}%s
     ]
   }
-}`, chainID, pubkey, addr, addr, options)
+}`, chainID, pubkey, addr, denom, addr, options)
 }

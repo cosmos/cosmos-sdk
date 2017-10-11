@@ -30,8 +30,8 @@ var StartCmd = &cobra.Command{
 	RunE:  startCmd,
 }
 
-// InitTickStartCmd - initialize a command as the start command with tick
-func InitTickStartCmd(tick app.Ticker) *cobra.Command {
+// GetTickStartCmd - initialize a command as the start command with tick
+func GetTickStartCmd(tick app.Ticker) *cobra.Command {
 	startCmd := &cobra.Command{
 		Use:   "start",
 		Short: "Start this full node",

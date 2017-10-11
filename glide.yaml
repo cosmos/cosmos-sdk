@@ -29,7 +29,7 @@ import:
 - package: github.com/tendermint/iavl
   version: develop
 - package: github.com/tendermint/tendermint
-  version: develop
+  version: 0.11.1
   subpackages:
   - config
   - node

@@ -15,7 +15,16 @@ Branch    | Tests | Coverage
 develop   | [![CircleCI](https://circleci.com/gh/cosmos/cosmos-sdk/tree/develop.svg?style=shield)](https://circleci.com/gh/cosmos/cosmos-sdk/tree/develop) | [![codecov](https://codecov.io/gh/cosmos/cosmos-sdk/branch/develop/graph/badge.svg)](https://codecov.io/gh/cosmos/cosmos-sdk)
 master    | [![CircleCI](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master.svg?style=shield)](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master) | [![codecov](https://codecov.io/gh/cosmos/cosmos-sdk/branch/master/graph/badge.svg)](https://codecov.io/gh/cosmos/cosmos-sdk)
 
-The Cosmos SDK is the middleware platform which the [Cosmos Hub](https://cosmos.network) is constructed from. The Hub is a blockchain (or, internet of blockchains) in which the Atom supply resides. The Atoms supply is defined at genesis and can change based on the rules of the Hub.
+
+!!!!!!!!!!!!!!!!!!!!!
+
+*THIS REPOSITORY IS UNDERGOING RAPID DEVELOPMENT AND NONE OF ITS INTERFACES ARE CONSIDERED STABLE.*
+
+*USE AT YOUR OWN RISK.*
+
+!!!!!!!!!!!!!!!!!!!!!
+
+The Cosmos SDK is the middleware platform that the [Cosmos Hub](https://cosmos.network) is constructed from. The Hub is a blockchain (or, internet of blockchains) in which the Atom supply resides. The Atoms supply is defined at genesis and can change based on the rules of the Hub.
 
 Under the hood, the Cosmos SDK is an [ABCI application](https://github.com/tendermint/abci) designed to be used with the [Tendermint consensus engine](https://tendermint.com/) to form a Proof-of-Stake cryptocurrency. It also provides a general purpose framework
 for extending the feature-set of the cryptocurrency by implementing plugins.

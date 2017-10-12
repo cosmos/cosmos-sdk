@@ -20,7 +20,7 @@ import (
 
 var (
 	// InitCmd - node initialization command
-	InitCmd = GetInitCmd("mycoin")
+	InitCmd = GetInitCmd("mycoin", []string{})
 
 	//nolint - flags
 	FlagChainID = "chain-id" //TODO group with other flags or remove? is this already a flag here?
@@ -30,7 +30,7 @@ var (
 )
 
 // GetInitCmd - get the node initialization command, with a custom genesis account denom
-func GetInitCmd(defaultDenom string) *cobra.Command {
+func GetInitCmd(defaultDenom string, options []string) *cobra.Command {
 	initCmd := &cobra.Command{
 		Use:   "init [address]",
 		Short: "Initialize genesis files for a blockchain",
@@ -38,7 +38,7 @@ func GetInitCmd(defaultDenom string) *cobra.Command {
 	}
 	initCmd.Flags().String(FlagChainID, "test_chain_id", "Chain ID")
 	initCmd.Flags().String(FlagDenom, defaultDenom, "Coin denomination for genesis account")
-	initCmd.Flags().StringSliceP(FlagOption, "p", []string{}, "Genesis option in the format <app>/<option>/<value>")
+	initCmd.Flags().StringSliceP(FlagOption, "p", options, "Genesis option in the format <app>/<option>/<value>")
 	initCmd.Flags().Bool(FlagStatic, false, "use a static private validator")
 	return initCmd
 }

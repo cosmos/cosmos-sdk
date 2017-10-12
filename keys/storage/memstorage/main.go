@@ -7,11 +7,13 @@ package memstorage
 
 import (
 	"github.com/pkg/errors"
+
 	keys "github.com/tendermint/go-crypto/keys"
 )
 
 type data struct {
 	info keys.Info
+	salt []byte
 	key  []byte
 }
 
@@ -29,22 +31,22 @@ func (s MemStore) assertStorage() keys.Storage {
 
 // Put adds the given key, returns an error if it another key
 // is already stored under this name
-func (s MemStore) Put(name string, key []byte, info keys.Info) error {
+func (s MemStore) Put(name string, salt, key []byte, info keys.Info) error {
 	if _, ok := s[name]; ok {
 		return errors.Errorf("Key named '%s' already exists", name)
 	}
-	s[name] = data{info, key}
+	s[name] = data{info, salt, key}
 	return nil
 }
 
 // Get returns the key stored under the name, or returns an error if not present
-func (s MemStore) Get(name string) ([]byte, keys.Info, error) {
-	var err error
+func (s MemStore) Get(name string) (salt, key []byte, info keys.Info, err error) {
 	d, ok := s[name]
 	if !ok {
 		err = errors.Errorf("Key named '%s' doesn't exist", name)
 	}
-	return d.key, d.info.Format(), err
+
+	return d.salt, d.key, d.info.Format(), err
 }
 
 // List returns the public info of all keys in the MemStore in unsorted order

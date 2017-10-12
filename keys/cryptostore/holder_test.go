@@ -168,7 +168,7 @@ func TestImportUnencrypted(t *testing.T) {
 	pass := "top-secret"
 
 	// import raw bytes
-	err := cstore.Import(name, pass, "", key.Bytes())
+	err := cstore.Import(name, pass, "", nil, key.Bytes())
 	require.Nil(err, "%+v", err)
 
 	// make sure the address matches
@@ -209,15 +209,15 @@ func TestAdvancedKeyManagement(t *testing.T) {
 	assertPassword(assert, cstore, n1, p2, p1)
 
 	// exporting requires the proper name and passphrase
-	_, err = cstore.Export(n2, p2, pt)
+	_, _, err = cstore.Export(n2, p2, pt)
 	assert.NotNil(err)
-	_, err = cstore.Export(n1, p1, pt)
+	_, _, err = cstore.Export(n1, p1, pt)
 	assert.NotNil(err)
-	exported, err := cstore.Export(n1, p2, pt)
+	salt, exported, err := cstore.Export(n1, p2, pt)
 	require.Nil(err, "%+v", err)
 
 	// import fails on bad transfer pass
-	err = cstore.Import(n2, p3, p2, exported)
+	err = cstore.Import(n2, p3, p2, salt, exported)
 	assert.NotNil(err)
 }
 

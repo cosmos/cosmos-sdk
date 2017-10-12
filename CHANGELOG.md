@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1 (October 11, 2017)
+
+IMPROVEMENTS:
+
+* server/commands: GetInitCmd takes list of options
+
 ## 0.7.0 (October 11, 2017)
 
 BREAKING CHANGES:

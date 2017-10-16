@@ -20,8 +20,7 @@ import (
 
 //nolint
 const (
-	ModuleNameBase = "base"
-	ChainKey       = "chain_id"
+	ChainKey = "chain_id"
 )
 
 // BaseApp contains a data store and all info needed
@@ -205,16 +204,6 @@ func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {
 		}
 	}
 	return -1
-}
-
-// Splits the string at the first '/'.
-// if there are none, assign default module ("base").
-func splitKey(key string) (string, string) {
-	if strings.Contains(key, "/") {
-		keyParts := strings.SplitN(key, "/", 2)
-		return keyParts[0], keyParts[1]
-	}
-	return ModuleNameBase, key
 }
 
 func loadState(dbName string, cacheSize int) (*sm.State, error) {

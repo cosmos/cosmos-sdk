@@ -2,33 +2,55 @@ package app
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/pkg/errors"
 
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
-// LoadGenesis - Load the genesis file into memory
-func (app *Basecoin) LoadGenesis(path string) error {
+//nolint
+const (
+	ModuleNameBase = "base"
+)
+
+// InitState just holds module/key/value triples from
+// parsing the genesis file
+type InitState struct {
+	Module string
+	Key    string
+	Value  string
+}
+
+// GetInitialState parses the genesis file in a format
+// that can easily be handed into InitState modules
+func GetInitialState(path string) ([]InitState, error) {
 	genDoc, err := loadGenesis(path)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// set chain_id
-	app.InitState("base/chain_id", genDoc.ChainID)
+	opts := genDoc.AppOptions
+	cnt := 1 + len(opts.Accounts) + len(opts.pluginOptions)
+	res := make([]InitState, cnt)
+
+	res[0] = InitState{ModuleNameBase, ChainKey, genDoc.ChainID}
+	i := 1
 
 	// set accounts
-	for _, acct := range genDoc.AppOptions.Accounts {
-		_ = app.InitState("coin/account", string(acct))
+	for _, acct := range opts.Accounts {
+		res[i] = InitState{"coin", "account", string(acct)}
+		i++
 	}
 
 	// set plugin options
-	for _, kv := range genDoc.AppOptions.pluginOptions {
-		_ = app.InitState(kv.Key, kv.Value)
+	for _, kv := range opts.pluginOptions {
+		module, key := splitKey(kv.Key)
+		res[i] = InitState{module, key, kv.Value}
+		i++
 	}
 
-	return nil
+	return res, nil
 }
 
 type keyValue struct {
@@ -96,4 +118,14 @@ func parseGenesisList(kvzIn []json.RawMessage) (kvz []keyValue, err error) {
 		kvz = append(kvz, kv)
 	}
 	return kvz, nil
+}
+
+// Splits the string at the first '/'.
+// if there are none, assign default module ("base").
+func splitKey(key string) (string, string) {
+	if strings.Contains(key, "/") {
+		keyParts := strings.SplitN(key, "/", 2)
+		return keyParts[0], keyParts[1]
+	}
+	return ModuleNameBase, key
 }

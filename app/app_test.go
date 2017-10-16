@@ -100,8 +100,8 @@ func (at *appTest) feeTx(coins coin.Coins, toll coin.Coin, sequence uint32) sdk.
 
 // set the account on the app through InitState
 func (at *appTest) initAccount(acct *coin.AccountWithKey) {
-	res := at.app.InitState("coin/account", acct.MakeOption())
-	require.EqualValues(at.t, res, "Success")
+	_, err := at.app.InitState("coin", "account", acct.MakeOption())
+	require.Nil(at.t, err, "%+v", err)
 }
 
 // reset the in and out accs to be one account each with 7mycoin
@@ -122,8 +122,8 @@ func (at *appTest) reset() {
 	)
 	require.Nil(at.t, err, "%+v", err)
 
-	res := at.app.InitState("base/chain_id", at.chainID)
-	require.EqualValues(at.t, res, "Success")
+	_, err = at.app.InitState("base", "chain_id", at.chainID)
+	require.Nil(at.t, err, "%+v", err)
 
 	at.initAccount(at.acctIn)
 	at.initAccount(at.acctOut)
@@ -183,15 +183,15 @@ func TestInitState(t *testing.T) {
 
 	//testing ChainID
 	chainID := "testChain"
-	res := app.InitState("base/chain_id", chainID)
+	_, err = app.InitState("base", "chain_id", chainID)
+	require.Nil(err, "%+v", err)
 	assert.EqualValues(app.GetChainID(), chainID)
-	assert.EqualValues(res, "Success")
 
 	// make a nice account...
 	bal := coin.Coins{{"atom", 77}, {"eth", 12}}
 	acct := coin.NewAccountWithKey(bal)
-	res = app.InitState("coin/account", acct.MakeOption())
-	require.EqualValues(res, "Success")
+	_, err = app.InitState("coin", "account", acct.MakeOption())
+	require.Nil(err, "%+v", err)
 
 	// make sure it is set correctly, with some balance
 	coins, err := getBalance(acct.Actor(), app.Append())
@@ -218,23 +218,22 @@ func TestInitState(t *testing.T) {
     }
   ]
 }`
-	res = app.InitState("coin/account", unsortAcc)
-	require.EqualValues(res, "Success")
+	_, err = app.InitState("coin", "account", unsortAcc)
+	require.Nil(err, "%+v", err)
 
 	coins, err = getAddr(unsortAddr, app.Append())
 	require.Nil(err)
 	assert.True(coins.IsValid())
 	assert.Equal(unsortCoins, coins)
 
-	res = app.InitState("base/dslfkgjdas", "")
-	assert.NotEqual(res, "Success")
+	_, err = app.InitState("base", "dslfkgjdas", "")
+	require.NotNil(err)
 
-	res = app.InitState("dslfkgjdas", "")
-	assert.NotEqual(res, "Success")
+	_, err = app.InitState("", "dslfkgjdas", "")
+	require.NotNil(err)
 
-	res = app.InitState("dslfkgjdas/szfdjzs", "")
-	assert.NotEqual(res, "Success")
-
+	_, err = app.InitState("dslfkgjdas", "szfdjzs", "")
+	require.NotNil(err)
 }
 
 // Test CheckTx and DeliverTx with insufficient and sufficient balance

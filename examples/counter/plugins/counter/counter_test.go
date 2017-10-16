@@ -35,13 +35,14 @@ func TestCounterPlugin(t *testing.T) {
 		logger.With("module", "app"),
 	)
 	require.Nil(err, "%+v", err)
-	bcApp.InitState("base/chain_id", chainID)
+	_, err = bcApp.InitState("base", "chain_id", chainID)
+	require.Nil(err, "%+v", err)
 
 	// Account initialization
 	bal := coin.Coins{{"", 1000}, {"gold", 1000}}
 	acct := coin.NewAccountWithKey(bal)
-	log := bcApp.InitState("coin/account", acct.MakeOption())
-	require.Equal("Success", log)
+	_, err = bcApp.InitState("coin", "account", acct.MakeOption())
+	require.Nil(err, "%+v", err)
 
 	// Deliver a CounterTx
 	DeliverCounterTx := func(valid bool, counterFee coin.Coins, sequence uint32) abci.Result {

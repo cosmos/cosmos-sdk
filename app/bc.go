@@ -47,23 +47,18 @@ func NewBasecoinTick(handler sdk.Handler, tick Ticker, dbName string, cacheSize 
 
 // InitState - used to setup state (was SetOption)
 // to be used by InitChain later
-func (app *Basecoin) InitState(key string, value string) string {
-	module, key := splitKey(key)
+func (app *Basecoin) InitState(module, key, value string) (string, error) {
 	state := app.Append()
 
 	if module == ModuleNameBase {
 		if key == ChainKey {
 			app.info.SetChainID(state, value)
-			return "Success"
+			return "Success", nil
 		}
-		return fmt.Sprintf("Error: unknown base option: %s", key)
+		return "", fmt.Errorf("unknown base option: %s", key)
 	}
 
-	log, err := app.handler.InitState(app.Logger(), state, module, key, value)
-	if err == nil {
-		return log
-	}
-	return "Error: " + err.Error()
+	return app.handler.InitState(app.Logger(), state, module, key, value)
 }
 
 // DeliverTx - ABCI
@@ -120,4 +115,26 @@ func (app *Basecoin) BeginBlock(req abci.RequestBeginBlock) {
 		}
 		app.AddValChange(diff)
 	}
+}
+
+// LoadGenesis parses the genesis file and sets the initial
+// state based on that
+func (app *Basecoin) LoadGenesis(filePath string) error {
+	init, err := GetInitialState(filePath)
+	if err != nil {
+		return err
+	}
+
+	// execute all the genesis init options
+	// abort on any error
+	fmt.Printf("%#v\n", init)
+	for _, mkv := range init {
+		log, _ := app.InitState(mkv.Module, mkv.Key, mkv.Value)
+		// TODO: error out on bad options??
+		// if err != nil {
+		// 	return err
+		// }
+		app.Logger().Info(log)
+	}
+	return nil
 }

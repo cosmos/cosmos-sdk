@@ -28,13 +28,9 @@ func TestCounterPlugin(t *testing.T) {
 	// logger := log.NewTracingLogger(log.NewTMLogger(os.Stdout))
 
 	h := NewHandler("gold")
-	bcApp, err := app.NewBasecoin(
-		h,
-		"",
-		0,
-		logger.With("module", "app"),
-	)
+	store, err := app.MockStoreApp("counter", logger)
 	require.Nil(err, "%+v", err)
+	bcApp := app.NewBaseApp(store, h, nil)
 	_, err = bcApp.InitState("base", "chain_id", chainID)
 	require.Nil(err, "%+v", err)
 

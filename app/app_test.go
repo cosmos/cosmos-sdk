@@ -55,7 +55,7 @@ func DefaultHandler(feeDenom string) sdk.Handler {
 type appTest struct {
 	t       *testing.T
 	chainID string
-	app     *Basecoin
+	app     *BaseApp
 	acctIn  *coin.AccountWithKey
 	acctOut *coin.AccountWithKey
 }
@@ -113,14 +113,9 @@ func (at *appTest) reset() {
 	logger := log.TestingLogger()
 	// logger := log.NewTracingLogger(log.NewTMLogger(os.Stdout))
 
-	var err error
-	at.app, err = NewBasecoin(
-		DefaultHandler("mycoin"),
-		"",
-		0,
-		logger.With("module", "app"),
-	)
+	store, err := NewStoreApp("app-test", "", 0, logger)
 	require.Nil(at.t, err, "%+v", err)
+	at.app = NewBaseApp(store, DefaultHandler("mycoin"), nil)
 
 	_, err = at.app.InitState("base", "chain_id", at.chainID)
 	require.Nil(at.t, err, "%+v", err)
@@ -173,13 +168,9 @@ func TestInitState(t *testing.T) {
 	require := require.New(t)
 
 	logger := log.TestingLogger()
-	app, err := NewBasecoin(
-		DefaultHandler("atom"),
-		"",
-		0,
-		logger.With("module", "app"),
-	)
+	store, err := NewStoreApp("app-test", "", 0, logger)
 	require.Nil(err, "%+v", err)
+	app := NewBaseApp(store, DefaultHandler("atom"), nil)
 
 	//testing ChainID
 	chainID := "testChain"

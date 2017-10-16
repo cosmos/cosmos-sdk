@@ -22,12 +22,12 @@ const (
 	ChainKey = "chain_id"
 )
 
-// BaseApp contains a data store and all info needed
+// StoreApp contains a data store and all info needed
 // to perform queries and handshakes.
 //
 // It should be embeded in another struct for CheckTx,
 // DeliverTx and initializing state from the genesis.
-type BaseApp struct {
+type StoreApp struct {
 	// Name is what is returned from info
 	Name string
 
@@ -44,63 +44,78 @@ type BaseApp struct {
 	logger log.Logger
 }
 
-// NewBaseApp creates a data store to handle queries
-func NewBaseApp(appName, dbName string, cacheSize int, logger log.Logger) (*BaseApp, error) {
+// NewStoreApp creates a data store to handle queries
+func NewStoreApp(appName, dbName string, cacheSize int, logger log.Logger) (*StoreApp, error) {
 	state, err := loadState(dbName, cacheSize)
 	if err != nil {
 		return nil, err
 	}
-	app := &BaseApp{
+	app := &StoreApp{
 		Name:   appName,
 		State:  state,
 		height: state.LatestHeight(),
 		info:   sm.NewChainState(),
-		logger: logger,
+		logger: logger.With("module", "app"),
 	}
 	return app, nil
 }
 
+// MockStoreApp returns a Store app with no persistence
+func MockStoreApp(appName string, logger log.Logger) (*StoreApp, error) {
+	return NewStoreApp(appName, "", 0, logger)
+}
+
 // GetChainID returns the currently stored chain
-func (app *BaseApp) GetChainID() string {
+func (app *StoreApp) GetChainID() string {
 	return app.info.GetChainID(app.Committed())
 }
 
 // Logger returns the application base logger
-func (app *BaseApp) Logger() log.Logger {
+func (app *StoreApp) Logger() log.Logger {
 	return app.logger
 }
 
 // Hash gets the last hash stored in the database
-func (app *BaseApp) Hash() []byte {
+func (app *StoreApp) Hash() []byte {
 	return app.State.LatestHash()
+}
+
+// CommittedHeight gets the last block height committed
+// to the db
+func (app *StoreApp) CommittedHeight() uint64 {
+	return app.height
+}
+
+// WorkingHeight gets the current block we are writing
+func (app *StoreApp) WorkingHeight() uint64 {
+	return app.height + 1
 }
 
 // Info implements abci.Application. It returns the height and hash,
 // as well as the abci name and version.
 //
 // The height is the block that holds the transactions, not the apphash itself.
-func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
+func (app *StoreApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 	hash := app.Hash()
 
 	app.logger.Info("Info synced",
-		"height", app.height,
+		"height", app.CommittedHeight(),
 		"hash", fmt.Sprintf("%X", hash))
 
 	return abci.ResponseInfo{
-		// TODO
 		Data:             app.Name,
-		LastBlockHeight:  app.height,
+		LastBlockHeight:  app.CommittedHeight(),
 		LastBlockAppHash: hash,
 	}
 }
 
 // SetOption - ABCI
-func (app *BaseApp) SetOption(key string, value string) string {
+func (app *StoreApp) SetOption(key string, value string) string {
 	return "Not Implemented"
 }
 
 // Query - ABCI
-func (app *BaseApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) {
+func (app *StoreApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) {
 	if len(reqQuery.Data) == 0 {
 		resQuery.Log = "Query cannot be zero length"
 		resQuery.Code = abci.CodeType_EncodingError
@@ -120,7 +135,7 @@ func (app *BaseApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQue
 		// if tree.Tree.VersionExists(app.height - 1) {
 		//  height = app.height - 1
 		// } else {
-		height = app.height
+		height = app.CommittedHeight()
 		// }
 	}
 	resQuery.Height = height
@@ -150,7 +165,7 @@ func (app *BaseApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQue
 }
 
 // Commit implements abci.Application
-func (app *BaseApp) Commit() (res abci.Result) {
+func (app *StoreApp) Commit() (res abci.Result) {
 	app.height++
 
 	hash, err := app.State.Commit(app.height)
@@ -170,16 +185,14 @@ func (app *BaseApp) Commit() (res abci.Result) {
 }
 
 // InitChain - ABCI
-func (app *BaseApp) InitChain(req abci.RequestInitChain) {
-}
+func (app *StoreApp) InitChain(req abci.RequestInitChain) {}
 
 // BeginBlock - ABCI
-func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) {
-}
+func (app *StoreApp) BeginBlock(req abci.RequestBeginBlock) {}
 
 // EndBlock - ABCI
 // Returns a list of all validator changes made in this block
-func (app *BaseApp) EndBlock(height uint64) (res abci.ResponseEndBlock) {
+func (app *StoreApp) EndBlock(height uint64) (res abci.ResponseEndBlock) {
 	// TODO: cleanup in case a validator exists multiple times in the list
 	res.Diffs = app.pending
 	app.pending = nil
@@ -189,7 +202,7 @@ func (app *BaseApp) EndBlock(height uint64) (res abci.ResponseEndBlock) {
 // AddValChange is meant to be called by apps on DeliverTx
 // results, this is added to the cache for the endblock
 // changeset
-func (app *BaseApp) AddValChange(diffs []*abci.Validator) {
+func (app *StoreApp) AddValChange(diffs []*abci.Validator) {
 	for _, d := range diffs {
 		idx := pubKeyIndex(d, app.pending)
 		if idx >= 0 {

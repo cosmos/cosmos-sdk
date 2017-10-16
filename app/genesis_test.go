@@ -19,11 +19,9 @@ const genesisAcctFilepath = "./testdata/genesis2.json"
 
 func TestLoadGenesisDoNotFailIfAppOptionsAreMissing(t *testing.T) {
 	logger := log.TestingLogger()
-	app, err := NewBasecoin(DefaultHandler("mycoin"),
-		"",
-		0,
-		logger)
+	store, err := MockStoreApp("genesis", logger)
 	require.Nil(t, err, "%+v", err)
+	app := NewBaseApp(store, DefaultHandler("mycoin"), nil)
 
 	err = LoadGenesis(app, "./testdata/genesis3.json")
 	require.Nil(t, err, "%+v", err)
@@ -33,11 +31,9 @@ func TestLoadGenesis(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	logger := log.TestingLogger()
-	app, err := NewBasecoin(DefaultHandler("mycoin"),
-		"",
-		0,
-		logger)
+	store, err := MockStoreApp("genesis", logger)
 	require.Nil(err, "%+v", err)
+	app := NewBaseApp(store, DefaultHandler("mycoin"), nil)
 
 	err = LoadGenesis(app, genesisFilepath)
 	require.Nil(err, "%+v", err)
@@ -67,11 +63,9 @@ func TestLoadGenesisAccountAddress(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	logger := log.TestingLogger()
-	app, err := NewBasecoin(DefaultHandler("mycoin"),
-		"",
-		0,
-		logger)
+	store, err := MockStoreApp("genesis", logger)
 	require.Nil(err, "%+v", err)
+	app := NewBaseApp(store, DefaultHandler("mycoin"), nil)
 
 	err = LoadGenesis(app, genesisAcctFilepath)
 	require.Nil(err, "%+v", err)

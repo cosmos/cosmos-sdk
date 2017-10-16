@@ -21,6 +21,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/app"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // StartCmd - command to start running the abci app (and tendermint)!
@@ -31,7 +32,7 @@ var StartCmd = &cobra.Command{
 }
 
 // GetTickStartCmd - initialize a command as the start command with tick
-func GetTickStartCmd(tick app.Ticker) *cobra.Command {
+func GetTickStartCmd(tick sdk.Ticker) *cobra.Command {
 	startCmd := &cobra.Command{
 		Use:   "start",
 		Short: "Start this full node",
@@ -70,20 +71,23 @@ func addStartFlag(startCmd *cobra.Command) {
 }
 
 //returns the start command which uses the tick
-func tickStartCmd(tick app.Ticker) func(cmd *cobra.Command, args []string) error {
+func tickStartCmd(clock sdk.Ticker) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		rootDir := viper.GetString(cli.HomeFlag)
 
-		// Create Basecoin app
-		basecoinApp, err := app.NewBasecoinTick(
-			Handler,
-			tick,
+		cmdName := cmd.Root().Name()
+		appName := fmt.Sprintf("%s v%v", cmdName, version.Version)
+		storeApp, err := app.NewStoreApp(
+			appName,
 			path.Join(rootDir, "data", "merkleeyes.db"),
 			EyesCacheSize,
 			logger.With("module", "app"))
 		if err != nil {
 			return err
 		}
+
+		// Create Basecoin app
+		basecoinApp := app.NewBaseApp(storeApp, Handler, clock)
 		return start(rootDir, basecoinApp)
 	}
 }
@@ -91,19 +95,23 @@ func tickStartCmd(tick app.Ticker) func(cmd *cobra.Command, args []string) error
 func startCmd(cmd *cobra.Command, args []string) error {
 	rootDir := viper.GetString(cli.HomeFlag)
 
-	// Create Basecoin app
-	basecoinApp, err := app.NewBasecoin(
-		Handler,
+	cmdName := cmd.Root().Name()
+	appName := fmt.Sprintf("%s v%v", cmdName, version.Version)
+	storeApp, err := app.NewStoreApp(
+		appName,
 		path.Join(rootDir, "data", "merkleeyes.db"),
 		EyesCacheSize,
 		logger.With("module", "app"))
 	if err != nil {
 		return err
 	}
+
+	// Create Basecoin app
+	basecoinApp := app.NewBaseApp(storeApp, Handler, nil)
 	return start(rootDir, basecoinApp)
 }
 
-func start(rootDir string, basecoinApp *app.Basecoin) error {
+func start(rootDir string, basecoinApp *app.BaseApp) error {
 
 	// if chain_id has not been set yet, load the genesis.
 	// else, assume it's been loaded

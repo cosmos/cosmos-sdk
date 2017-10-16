@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/app"
+	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/modules/auth"
 	"github.com/cosmos/cosmos-sdk/modules/base"
 	"github.com/cosmos/cosmos-sdk/modules/coin"
@@ -21,7 +21,7 @@ import (
 )
 
 type BenchApp struct {
-	App      *app.Basecoin
+	App      *sdkapp.BaseApp
 	Accounts []*coin.AccountWithKey
 	ChainID  string
 }
@@ -59,15 +59,11 @@ func NewBenchApp(h sdk.Handler, chainID string, n int,
 		cache = 500
 	}
 
-	app, err := app.NewBasecoin(
-		h,
-		dbDir,
-		cache,
-		logger.With("module", "app"),
-	)
+	store, err := sdkapp.NewStoreApp("bench", dbDir, cache, logger)
 	if err != nil {
 		panic(err)
 	}
+	app := sdkapp.NewBaseApp(store, h, nil)
 
 	_, err = app.InitState("base", "chain_id", chainID)
 	if err != nil {

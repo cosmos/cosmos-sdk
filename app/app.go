@@ -15,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/errors"
 	sm "github.com/cosmos/cosmos-sdk/state"
-	"github.com/cosmos/cosmos-sdk/version"
 )
 
 //nolint
@@ -29,6 +28,10 @@ const (
 // It should be embeded in another struct for CheckTx,
 // DeliverTx and initializing state from the genesis.
 type BaseApp struct {
+	// Name is what is returned from info
+	Name string
+
+	// this is the database state
 	info *sm.ChainState
 	*sm.State
 
@@ -42,12 +45,13 @@ type BaseApp struct {
 }
 
 // NewBaseApp creates a data store to handle queries
-func NewBaseApp(dbName string, cacheSize int, logger log.Logger) (*BaseApp, error) {
+func NewBaseApp(appName, dbName string, cacheSize int, logger log.Logger) (*BaseApp, error) {
 	state, err := loadState(dbName, cacheSize)
 	if err != nil {
 		return nil, err
 	}
 	app := &BaseApp{
+		Name:   appName,
 		State:  state,
 		height: state.LatestHeight(),
 		info:   sm.NewChainState(),
@@ -84,7 +88,7 @@ func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 
 	return abci.ResponseInfo{
 		// TODO
-		Data:             fmt.Sprintf("Basecoin v%v", version.Version),
+		Data:             app.Name,
 		LastBlockHeight:  app.height,
 		LastBlockAppHash: hash,
 	}

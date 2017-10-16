@@ -24,15 +24,9 @@ const (
 
 // Basecoin - The ABCI application
 type Basecoin struct {
-	info  *sm.ChainState
-	state *Store
-
+	*BaseApp
 	handler sdk.Handler
 	tick    Ticker
-
-	pending []*abci.Validator
-	height  uint64
-	logger  log.Logger
 }
 
 // Ticker - tick function
@@ -43,45 +37,17 @@ var _ abci.Application = &Basecoin{}
 // NewBasecoin - create a new instance of the basecoin application
 func NewBasecoin(handler sdk.Handler, store *Store, logger log.Logger) *Basecoin {
 	return &Basecoin{
+		BaseApp: NewBaseApp(store, logger),
 		handler: handler,
-		info:    sm.NewChainState(),
-		state:   store,
-		logger:  logger,
 	}
 }
 
 // NewBasecoinTick - create a new instance of the basecoin application with tick functionality
 func NewBasecoinTick(handler sdk.Handler, store *Store, logger log.Logger, tick Ticker) *Basecoin {
 	return &Basecoin{
+		BaseApp: NewBaseApp(store, logger),
 		handler: handler,
-		info:    sm.NewChainState(),
-		state:   store,
-		logger:  logger,
 		tick:    tick,
-	}
-}
-
-// GetChainID returns the currently stored chain
-func (app *Basecoin) GetChainID() string {
-	return app.info.GetChainID(app.state.Committed())
-}
-
-// GetState is back... please kill me
-func (app *Basecoin) GetState() sm.SimpleDB {
-	return app.state.Append()
-}
-
-// Info - ABCI
-func (app *Basecoin) Info(req abci.RequestInfo) abci.ResponseInfo {
-	resp := app.state.Info()
-	app.logger.Debug("Info",
-		"height", resp.LastBlockHeight,
-		"hash", fmt.Sprintf("%X", resp.LastBlockAppHash))
-	app.height = resp.LastBlockHeight
-	return abci.ResponseInfo{
-		Data:             fmt.Sprintf("Basecoin v%v", version.Version),
-		LastBlockHeight:  resp.LastBlockHeight,
-		LastBlockAppHash: resp.LastBlockAppHash,
 	}
 }
 
@@ -99,16 +65,11 @@ func (app *Basecoin) InitState(key string, value string) string {
 		return fmt.Sprintf("Error: unknown base option: %s", key)
 	}
 
-	log, err := app.handler.InitState(app.logger, state, module, key, value)
+	log, err := app.handler.InitState(app.Logger(), state, module, key, value)
 	if err == nil {
 		return log
 	}
 	return "Error: " + err.Error()
-}
-
-// SetOption - ABCI
-func (app *Basecoin) SetOption(key string, value string) string {
-	return "Not Implemented"
 }
 
 // DeliverTx - ABCI
@@ -121,14 +82,14 @@ func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
 	ctx := stack.NewContext(
 		app.GetChainID(),
 		app.height,
-		app.logger.With("call", "delivertx"),
+		app.Logger().With("call", "delivertx"),
 	)
 	res, err := app.handler.DeliverTx(ctx, app.state.Append(), tx)
 
 	if err != nil {
 		return errors.Result(err)
 	}
-	app.addValChange(res.Diff)
+	app.AddValChange(res.Diff)
 	return sdk.ToABCI(res)
 }
 
@@ -142,7 +103,7 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 	ctx := stack.NewContext(
 		app.GetChainID(),
 		app.height,
-		app.logger.With("call", "checktx"),
+		app.Logger().With("call", "checktx"),
 	)
 	res, err := app.handler.CheckTx(ctx, app.state.Check(), tx)
 
@@ -152,8 +113,82 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 	return sdk.ToABCI(res)
 }
 
+// BeginBlock - ABCI
+func (app *Basecoin) BeginBlock(req abci.RequestBeginBlock) {
+	// call the embeded Begin
+	app.BaseApp.BeginBlock(req)
+
+	// now execute tick
+	if app.tick != nil {
+		diff, err := app.tick(app.state.Append())
+		if err != nil {
+			panic(err)
+		}
+		app.AddValChange(diff)
+	}
+}
+
+/////////////////////////// Move to SDK ///////
+
+// BaseApp contains a data store and all info needed
+// to perform queries and handshakes.
+//
+// It should be embeded in another struct for CheckTx,
+// DeliverTx and initializing state from the genesis.
+type BaseApp struct {
+	info  *sm.ChainState
+	state *Store
+
+	pending []*abci.Validator
+	height  uint64
+	logger  log.Logger
+}
+
+// NewBaseApp creates a data store to handle queries
+func NewBaseApp(store *Store, logger log.Logger) *BaseApp {
+	return &BaseApp{
+		info:   sm.NewChainState(),
+		state:  store,
+		logger: logger,
+	}
+}
+
+// GetChainID returns the currently stored chain
+func (app *BaseApp) GetChainID() string {
+	return app.info.GetChainID(app.state.Committed())
+}
+
+// GetState returns the delivertx state, should be removed
+func (app *BaseApp) GetState() sm.SimpleDB {
+	return app.state.Append()
+}
+
+// Logger returns the application base logger
+func (app *BaseApp) Logger() log.Logger {
+	return app.logger
+}
+
+// Info - ABCI
+func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
+	resp := app.state.Info()
+	app.logger.Debug("Info",
+		"height", resp.LastBlockHeight,
+		"hash", fmt.Sprintf("%X", resp.LastBlockAppHash))
+	app.height = resp.LastBlockHeight
+	return abci.ResponseInfo{
+		Data:             fmt.Sprintf("Basecoin v%v", version.Version),
+		LastBlockHeight:  resp.LastBlockHeight,
+		LastBlockAppHash: resp.LastBlockAppHash,
+	}
+}
+
+// SetOption - ABCI
+func (app *BaseApp) SetOption(key string, value string) string {
+	return "Not Implemented"
+}
+
 // Query - ABCI
-func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) {
+func (app *BaseApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) {
 	if len(reqQuery.Data) == 0 {
 		resQuery.Log = "Query cannot be zero length"
 		resQuery.Code = abci.CodeType_EncodingError
@@ -164,7 +199,7 @@ func (app *Basecoin) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 }
 
 // Commit - ABCI
-func (app *Basecoin) Commit() (res abci.Result) {
+func (app *BaseApp) Commit() (res abci.Result) {
 	// Commit state
 	res = app.state.Commit()
 	if res.IsErr() {
@@ -174,39 +209,27 @@ func (app *Basecoin) Commit() (res abci.Result) {
 }
 
 // InitChain - ABCI
-func (app *Basecoin) InitChain(req abci.RequestInitChain) {
+func (app *BaseApp) InitChain(req abci.RequestInitChain) {
 	// for _, plugin := range app.plugins.GetList() {
 	// 	plugin.InitChain(app.state, validators)
 	// }
 }
 
 // BeginBlock - ABCI
-func (app *Basecoin) BeginBlock(req abci.RequestBeginBlock) {
+func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) {
 	app.height++
-
-	// for _, plugin := range app.plugins.GetList() {
-	// 	plugin.BeginBlock(app.state, hash, header)
-	// }
-
-	if app.tick != nil {
-		diff, err := app.tick(app.state.Append())
-		if err != nil {
-			panic(err)
-		}
-		app.addValChange(diff)
-	}
 }
 
 // EndBlock - ABCI
 // Returns a list of all validator changes made in this block
-func (app *Basecoin) EndBlock(height uint64) (res abci.ResponseEndBlock) {
+func (app *BaseApp) EndBlock(height uint64) (res abci.ResponseEndBlock) {
 	// TODO: cleanup in case a validator exists multiple times in the list
 	res.Diffs = app.pending
 	app.pending = nil
 	return
 }
 
-func (app *Basecoin) addValChange(diffs []*abci.Validator) {
+func (app *BaseApp) AddValChange(diffs []*abci.Validator) {
 	for _, d := range diffs {
 		idx := pubKeyIndex(d, app.pending)
 		if idx >= 0 {

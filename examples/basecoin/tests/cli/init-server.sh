@@ -12,7 +12,7 @@ test01initOption() {
     GENESIS_FILE=${SERVE_DIR}/genesis.json
     HEX="deadbeef1234deadbeef1234deadbeef1234aaaa"
 
-    ${SERVER_EXE} init ${HEX} --home="$SERVE_DIR" -p=app1/key1/val1 -p='"app2/key2/{""name"": ""joe"", ""age"": ""100""}"' >/dev/null
+    ${SERVER_EXE} init ${HEX} --home="$SERVE_DIR" -p=eyes/key1/val1 -p='"eyes/key2/{""name"": ""joe"", ""age"": ""100""}"' >/dev/null
     if ! assertTrue "line=${LINENO}" $?; then return 1; fi
 
     OPTION1KEY=$(cat ${GENESIS_FILE} | jq '.app_options.plugin_options[2]')
@@ -21,9 +21,9 @@ test01initOption() {
     OPTION2VAL=$(cat ${GENESIS_FILE} | jq '.app_options.plugin_options[5]')
     OPTION2VALEXPECTED=$(echo '{"name": "joe", "age": "100"}' | jq '.')
 
-    assertEquals "line=${LINENO}" '"app1/key1"' $OPTION1KEY
+    assertEquals "line=${LINENO}" '"eyes/key1"' $OPTION1KEY
     assertEquals "line=${LINENO}" '"val1"' $OPTION1VAL
-    assertEquals "line=${LINENO}" '"app2/key2"' $OPTION2KEY
+    assertEquals "line=${LINENO}" '"eyes/key2"' $OPTION2KEY
     assertEquals "line=${LINENO}" "$OPTION2VALEXPECTED" "$OPTION2VAL"
 }
 

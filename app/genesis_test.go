@@ -25,7 +25,7 @@ func TestLoadGenesisDoNotFailIfAppOptionsAreMissing(t *testing.T) {
 		logger)
 	require.Nil(t, err, "%+v", err)
 
-	err = app.LoadGenesis("./testdata/genesis3.json")
+	err = LoadGenesis(app, "./testdata/genesis3.json")
 	require.Nil(t, err, "%+v", err)
 }
 
@@ -39,7 +39,7 @@ func TestLoadGenesis(t *testing.T) {
 		logger)
 	require.Nil(err, "%+v", err)
 
-	err = app.LoadGenesis(genesisFilepath)
+	err = LoadGenesis(app, genesisFilepath)
 	require.Nil(err, "%+v", err)
 
 	// check the chain id
@@ -73,7 +73,7 @@ func TestLoadGenesisAccountAddress(t *testing.T) {
 		logger)
 	require.Nil(err, "%+v", err)
 
-	err = app.LoadGenesis(genesisAcctFilepath)
+	err = LoadGenesis(app, genesisAcctFilepath)
 	require.Nil(err, "%+v", err)
 
 	// check the chain id

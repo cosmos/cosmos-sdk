@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/abci/version"
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/errors"
 	"github.com/cosmos/cosmos-sdk/stack"
 	sm "github.com/cosmos/cosmos-sdk/state"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // Basecoin - The ABCI application
@@ -61,7 +61,13 @@ func (app *Basecoin) InitState(module, key, value string) (string, error) {
 		return "", fmt.Errorf("unknown base option: %s", key)
 	}
 
-	return app.handler.InitState(app.Logger(), state, module, key, value)
+	log, err := app.handler.InitState(app.Logger(), state, module, key, value)
+	if err != nil {
+		app.Logger().Error("Genesis App Options", "err", err)
+	} else {
+		app.Logger().Info(log)
+	}
+	return log, err
 }
 
 // DeliverTx - ABCI
@@ -118,26 +124,4 @@ func (app *Basecoin) BeginBlock(req abci.RequestBeginBlock) {
 		}
 		app.AddValChange(diff)
 	}
-}
-
-// LoadGenesis parses the genesis file and sets the initial
-// state based on that
-func (app *Basecoin) LoadGenesis(filePath string) error {
-	init, err := GetInitialState(filePath)
-	if err != nil {
-		return err
-	}
-
-	// execute all the genesis init options
-	// abort on any error
-	fmt.Printf("%#v\n", init)
-	for _, mkv := range init {
-		log, _ := app.InitState(mkv.Module, mkv.Key, mkv.Value)
-		// TODO: error out on bad options??
-		// if err != nil {
-		// 	return err
-		// }
-		app.Logger().Info(log)
-	}
-	return nil
 }

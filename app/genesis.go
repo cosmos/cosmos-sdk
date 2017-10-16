@@ -14,17 +14,43 @@ const (
 	ModuleNameBase = "base"
 )
 
-// InitState just holds module/key/value triples from
+// Option just holds module/key/value triples from
 // parsing the genesis file
-type InitState struct {
+type Option struct {
 	Module string
 	Key    string
 	Value  string
 }
 
-// GetInitialState parses the genesis file in a format
-// that can easily be handed into InitState modules
-func GetInitialState(path string) ([]InitState, error) {
+// InitStater is anything that can handle app options
+// from genesis file.
+type InitStater interface {
+	InitState(module, key, value string) (string, error)
+}
+
+// LoadGenesis parses the genesis file and sets the initial
+// state based on that
+func LoadGenesis(app InitStater, filePath string) error {
+	opts, err := GetGenesisOptions(filePath)
+	if err != nil {
+		return err
+	}
+
+	// execute all the genesis init options
+	// abort on any error
+	for _, opt := range opts {
+		_, _ = app.InitState(opt.Module, opt.Key, opt.Value)
+		// TODO: error out on bad options??
+		// if err != nil {
+		//  return err
+		// }
+	}
+	return nil
+}
+
+// GetGenesisOptions parses the genesis file in a format
+// that can easily be handed into InitStaters
+func GetGenesisOptions(path string) ([]Option, error) {
 	genDoc, err := loadGenesis(path)
 	if err != nil {
 		return nil, err
@@ -32,21 +58,21 @@ func GetInitialState(path string) ([]InitState, error) {
 
 	opts := genDoc.AppOptions
 	cnt := 1 + len(opts.Accounts) + len(opts.pluginOptions)
-	res := make([]InitState, cnt)
+	res := make([]Option, cnt)
 
-	res[0] = InitState{ModuleNameBase, ChainKey, genDoc.ChainID}
+	res[0] = Option{ModuleNameBase, ChainKey, genDoc.ChainID}
 	i := 1
 
 	// set accounts
 	for _, acct := range opts.Accounts {
-		res[i] = InitState{"coin", "account", string(acct)}
+		res[i] = Option{"coin", "account", string(acct)}
 		i++
 	}
 
 	// set plugin options
 	for _, kv := range opts.pluginOptions {
 		module, key := splitKey(kv.Key)
-		res[i] = InitState{module, key, kv.Value}
+		res[i] = Option{module, key, kv.Value}
 		i++
 	}
 

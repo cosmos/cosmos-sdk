@@ -53,25 +53,22 @@ func NewBenchApp(h sdk.Handler, chainID string, n int,
 	// logger := log.NewFilter(log.NewTMLogger(os.Stdout), log.AllowError())
 	// logger = log.NewTracingLogger(logger)
 
-	// TODO: disk writing
-	var store *app.Store
-	var err error
-
+	dbDir, cache := "", 0
 	if persist {
-		tmpDir, _ := ioutil.TempDir("", "bc-app-benchmark")
-		store, err = app.NewStore(tmpDir, 500, logger)
-	} else {
-		store, err = app.NewStore("", 0, logger)
+		dbDir, _ = ioutil.TempDir("", "bc-app-benchmark")
+		cache = 500
 	}
+
+	app, err := app.NewBasecoin(
+		h,
+		dbDir,
+		cache,
+		logger.With("module", "app"),
+	)
 	if err != nil {
 		panic(err)
 	}
 
-	app := app.NewBasecoin(
-		h,
-		store,
-		logger.With("module", "app"),
-	)
 	res := app.InitState("base/chain_id", chainID)
 	if res != "Success" {
 		panic("cannot set chain")

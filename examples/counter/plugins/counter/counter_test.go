@@ -27,15 +27,14 @@ func TestCounterPlugin(t *testing.T) {
 	logger := log.TestingLogger()
 	// logger := log.NewTracingLogger(log.NewTMLogger(os.Stdout))
 
-	store, err := app.NewStore("", 0, logger.With("module", "store"))
-	require.Nil(err, "%+v", err)
-
 	h := NewHandler("gold")
-	bcApp := app.NewBasecoin(
+	bcApp, err := app.NewBasecoin(
 		h,
-		store,
+		"",
+		0,
 		logger.With("module", "app"),
 	)
+	require.Nil(err, "%+v", err)
 	bcApp.InitState("base/chain_id", chainID)
 
 	// Account initialization

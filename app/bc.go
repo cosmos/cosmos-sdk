@@ -75,7 +75,7 @@ func (app *Basecoin) DeliverTx(txBytes []byte) abci.Result {
 
 	ctx := stack.NewContext(
 		app.GetChainID(),
-		app.height,
+		app.height+1,
 		app.Logger().With("call", "delivertx"),
 	)
 	res, err := app.handler.DeliverTx(ctx, app.Append(), tx)
@@ -96,7 +96,7 @@ func (app *Basecoin) CheckTx(txBytes []byte) abci.Result {
 
 	ctx := stack.NewContext(
 		app.GetChainID(),
-		app.height,
+		app.height+1,
 		app.Logger().With("call", "checktx"),
 	)
 	res, err := app.handler.CheckTx(ctx, app.Check(), tx)

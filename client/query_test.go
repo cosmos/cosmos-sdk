@@ -26,11 +26,11 @@ var node *nm.Node
 
 func TestMain(m *testing.M) {
 	logger := log.TestingLogger()
-	store, err := app.NewStore("", 0, logger)
+	app, err := app.NewBasecoin(eyes.NewHandler(), "", 0, logger)
 	if err != nil {
 		panic(err)
 	}
-	app := app.NewBasecoin(eyes.NewHandler(), store, logger)
+
 	node = rpctest.StartTendermint(app)
 
 	code := m.Run()

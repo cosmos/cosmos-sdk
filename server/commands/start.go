@@ -74,38 +74,36 @@ func tickStartCmd(tick app.Ticker) func(cmd *cobra.Command, args []string) error
 	return func(cmd *cobra.Command, args []string) error {
 		rootDir := viper.GetString(cli.HomeFlag)
 
-		store, err := app.NewStore(
+		// Create Basecoin app
+		basecoinApp, err := app.NewBasecoinTick(
+			Handler,
+			tick,
 			path.Join(rootDir, "data", "merkleeyes.db"),
 			EyesCacheSize,
-			logger.With("module", "store"),
-		)
+			logger.With("module", "app"))
 		if err != nil {
 			return err
 		}
-
-		// Create Basecoin app
-		basecoinApp := app.NewBasecoinTick(Handler, store, logger.With("module", "app"), tick)
-		return start(rootDir, store, basecoinApp)
+		return start(rootDir, basecoinApp)
 	}
 }
 
 func startCmd(cmd *cobra.Command, args []string) error {
 	rootDir := viper.GetString(cli.HomeFlag)
 
-	store, err := app.NewStore(
+	// Create Basecoin app
+	basecoinApp, err := app.NewBasecoin(
+		Handler,
 		path.Join(rootDir, "data", "merkleeyes.db"),
 		EyesCacheSize,
-		logger.With("module", "store"),
-	)
+		logger.With("module", "app"))
 	if err != nil {
 		return err
 	}
-	// Create Basecoin app
-	basecoinApp := app.NewBasecoin(Handler, store, logger.With("module", "app"))
-	return start(rootDir, store, basecoinApp)
+	return start(rootDir, basecoinApp)
 }
 
-func start(rootDir string, store *app.Store, basecoinApp *app.Basecoin) error {
+func start(rootDir string, basecoinApp *app.Basecoin) error {
 
 	// if chain_id has not been set yet, load the genesis.
 	// else, assume it's been loaded

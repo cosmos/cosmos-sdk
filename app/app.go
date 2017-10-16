@@ -33,9 +33,13 @@ type BaseApp struct {
 	info *sm.ChainState
 	*sm.State
 
+	// cached validator changes from DeliverTx
 	pending []*abci.Validator
-	height  uint64
-	logger  log.Logger
+
+	// height is last committed block, DeliverTx is the next one
+	height uint64
+
+	logger log.Logger
 }
 
 // NewBaseApp creates a data store to handle queries
@@ -45,8 +49,9 @@ func NewBaseApp(dbName string, cacheSize int, logger log.Logger) (*BaseApp, erro
 		return nil, err
 	}
 	app := &BaseApp{
-		info:   sm.NewChainState(),
 		State:  state,
+		height: state.LatestHeight(),
+		info:   sm.NewChainState(),
 		logger: logger,
 	}
 	return app, nil
@@ -163,14 +168,10 @@ func (app *BaseApp) Commit() (res abci.Result) {
 
 // InitChain - ABCI
 func (app *BaseApp) InitChain(req abci.RequestInitChain) {
-	// for _, plugin := range app.plugins.GetList() {
-	// 	plugin.InitChain(app.state, validators)
-	// }
 }
 
 // BeginBlock - ABCI
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) {
-	app.height++
 }
 
 // EndBlock - ABCI
@@ -182,6 +183,9 @@ func (app *BaseApp) EndBlock(height uint64) (res abci.ResponseEndBlock) {
 	return
 }
 
+// AddValChange is meant to be called by apps on DeliverTx
+// results, this is added to the cache for the endblock
+// changeset
 func (app *BaseApp) AddValChange(diffs []*abci.Validator) {
 	for _, d := range diffs {
 		idx := pubKeyIndex(d, app.pending)
@@ -202,8 +206,6 @@ func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {
 	}
 	return -1
 }
-
-//TODO move split key to tmlibs?
 
 // Splits the string at the first '/'.
 // if there are none, assign default module ("base").

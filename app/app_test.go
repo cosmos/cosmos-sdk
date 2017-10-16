@@ -112,14 +112,15 @@ func (at *appTest) reset() {
 	// Note: switch logger if you want to get more info
 	logger := log.TestingLogger()
 	// logger := log.NewTracingLogger(log.NewTMLogger(os.Stdout))
-	store, err := NewStore("", 0, logger.With("module", "store"))
-	require.Nil(at.t, err, "%+v", err)
 
-	at.app = NewBasecoin(
+	var err error
+	at.app, err = NewBasecoin(
 		DefaultHandler("mycoin"),
-		store,
+		"",
+		0,
 		logger.With("module", "app"),
 	)
+	require.Nil(at.t, err, "%+v", err)
 
 	res := at.app.InitState("base/chain_id", at.chainID)
 	require.EqualValues(at.t, res, "Success")
@@ -146,9 +147,9 @@ func getAddr(addr []byte, state state.SimpleDB) (coin.Coins, error) {
 func (at *appTest) exec(t *testing.T, tx sdk.Tx, checkTx bool) (res abci.Result, diffIn, diffOut coin.Coins) {
 	require := require.New(t)
 
-	initBalIn, err := getBalance(at.acctIn.Actor(), at.app.GetState())
+	initBalIn, err := getBalance(at.acctIn.Actor(), at.app.Append())
 	require.Nil(err, "%+v", err)
-	initBalOut, err := getBalance(at.acctOut.Actor(), at.app.GetState())
+	initBalOut, err := getBalance(at.acctOut.Actor(), at.app.Append())
 	require.Nil(err, "%+v", err)
 
 	txBytes := wire.BinaryBytes(tx)
@@ -158,9 +159,9 @@ func (at *appTest) exec(t *testing.T, tx sdk.Tx, checkTx bool) (res abci.Result,
 		res = at.app.DeliverTx(txBytes)
 	}
 
-	endBalIn, err := getBalance(at.acctIn.Actor(), at.app.GetState())
+	endBalIn, err := getBalance(at.acctIn.Actor(), at.app.Append())
 	require.Nil(err, "%+v", err)
-	endBalOut, err := getBalance(at.acctOut.Actor(), at.app.GetState())
+	endBalOut, err := getBalance(at.acctOut.Actor(), at.app.Append())
 	require.Nil(err, "%+v", err)
 	return res, endBalIn.Minus(initBalIn), endBalOut.Minus(initBalOut)
 }
@@ -172,14 +173,13 @@ func TestInitState(t *testing.T) {
 	require := require.New(t)
 
 	logger := log.TestingLogger()
-	store, err := NewStore("", 0, logger.With("module", "store"))
-	require.Nil(err, "%+v", err)
-
-	app := NewBasecoin(
+	app, err := NewBasecoin(
 		DefaultHandler("atom"),
-		store,
+		"",
+		0,
 		logger.With("module", "app"),
 	)
+	require.Nil(err, "%+v", err)
 
 	//testing ChainID
 	chainID := "testChain"
@@ -194,7 +194,7 @@ func TestInitState(t *testing.T) {
 	require.EqualValues(res, "Success")
 
 	// make sure it is set correctly, with some balance
-	coins, err := getBalance(acct.Actor(), app.GetState())
+	coins, err := getBalance(acct.Actor(), app.Append())
 	require.Nil(err)
 	assert.Equal(bal, coins)
 
@@ -221,7 +221,7 @@ func TestInitState(t *testing.T) {
 	res = app.InitState("coin/account", unsortAcc)
 	require.EqualValues(res, "Success")
 
-	coins, err = getAddr(unsortAddr, app.GetState())
+	coins, err = getAddr(unsortAddr, app.Append())
 	require.Nil(err)
 	assert.True(coins.IsValid())
 	assert.Equal(unsortCoins, coins)

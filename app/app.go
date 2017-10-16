@@ -3,12 +3,17 @@ package app
 import (
 	"bytes"
 	"fmt"
+	"path"
+	"path/filepath"
 	"strings"
 
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/iavl"
 	cmn "github.com/tendermint/tmlibs/common"
+	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
+	"github.com/cosmos/cosmos-sdk/errors"
 	sm "github.com/cosmos/cosmos-sdk/state"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -19,16 +24,14 @@ const (
 	ChainKey       = "chain_id"
 )
 
-/////////////////////////// Move to SDK ///////
-
 // BaseApp contains a data store and all info needed
 // to perform queries and handshakes.
 //
 // It should be embeded in another struct for CheckTx,
 // DeliverTx and initializing state from the genesis.
 type BaseApp struct {
-	info  *sm.ChainState
-	state *Store
+	info *sm.ChainState
+	*sm.State
 
 	pending []*abci.Validator
 	height  uint64
@@ -36,22 +39,22 @@ type BaseApp struct {
 }
 
 // NewBaseApp creates a data store to handle queries
-func NewBaseApp(store *Store, logger log.Logger) *BaseApp {
-	return &BaseApp{
+func NewBaseApp(dbName string, cacheSize int, logger log.Logger) (*BaseApp, error) {
+	state, err := loadState(dbName, cacheSize)
+	if err != nil {
+		return nil, err
+	}
+	app := &BaseApp{
 		info:   sm.NewChainState(),
-		state:  store,
+		State:  state,
 		logger: logger,
 	}
+	return app, nil
 }
 
 // GetChainID returns the currently stored chain
 func (app *BaseApp) GetChainID() string {
-	return app.info.GetChainID(app.state.Committed())
-}
-
-// GetState returns the delivertx state, should be removed
-func (app *BaseApp) GetState() sm.SimpleDB {
-	return app.state.Append()
+	return app.info.GetChainID(app.Committed())
 }
 
 // Logger returns the application base logger
@@ -59,17 +62,27 @@ func (app *BaseApp) Logger() log.Logger {
 	return app.logger
 }
 
-// Info - ABCI
+// Hash gets the last hash stored in the database
+func (app *BaseApp) Hash() []byte {
+	return app.State.LatestHash()
+}
+
+// Info implements abci.Application. It returns the height and hash,
+// as well as the abci name and version.
+//
+// The height is the block that holds the transactions, not the apphash itself.
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
-	resp := app.state.Info()
-	app.logger.Debug("Info",
-		"height", resp.LastBlockHeight,
-		"hash", fmt.Sprintf("%X", resp.LastBlockAppHash))
-	app.height = resp.LastBlockHeight
+	hash := app.Hash()
+
+	app.logger.Info("Info synced",
+		"height", app.height,
+		"hash", fmt.Sprintf("%X", hash))
+
 	return abci.ResponseInfo{
+		// TODO
 		Data:             fmt.Sprintf("Basecoin v%v", version.Version),
-		LastBlockHeight:  resp.LastBlockHeight,
-		LastBlockAppHash: resp.LastBlockAppHash,
+		LastBlockHeight:  app.height,
+		LastBlockAppHash: hash,
 	}
 }
 
@@ -86,17 +99,66 @@ func (app *BaseApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQue
 		return
 	}
 
-	return app.state.Query(reqQuery)
+	// set the query response height to current
+	tree := app.State.Committed()
+
+	height := reqQuery.Height
+	if height == 0 {
+		// TODO: once the rpc actually passes in non-zero
+		// heights we can use to query right after a tx
+		// we must retrun most recent, even if apphash
+		// is not yet in the blockchain
+
+		// if tree.Tree.VersionExists(app.height - 1) {
+		//  height = app.height - 1
+		// } else {
+		height = app.height
+		// }
+	}
+	resQuery.Height = height
+
+	switch reqQuery.Path {
+	case "/store", "/key": // Get by key
+		key := reqQuery.Data // Data holds the key bytes
+		resQuery.Key = key
+		if reqQuery.Prove {
+			value, proof, err := tree.GetVersionedWithProof(key, height)
+			if err != nil {
+				resQuery.Log = err.Error()
+				break
+			}
+			resQuery.Value = value
+			resQuery.Proof = proof.Bytes()
+		} else {
+			value := tree.Get(key)
+			resQuery.Value = value
+		}
+
+	default:
+		resQuery.Code = abci.CodeType_UnknownRequest
+		resQuery.Log = cmn.Fmt("Unexpected Query path: %v", reqQuery.Path)
+	}
+	return
 }
 
-// Commit - ABCI
+// Commit implements abci.Application
 func (app *BaseApp) Commit() (res abci.Result) {
-	// Commit state
-	res = app.state.Commit()
-	if res.IsErr() {
-		cmn.PanicSanity("Error getting hash: " + res.Error())
+	app.height++
+
+	hash, err := app.State.Commit(app.height)
+	if err != nil {
+		// die if we can't commit, not to recover
+		panic(err)
 	}
-	return res
+	app.logger.Debug("Commit synced",
+		"height", app.height,
+		"hash", fmt.Sprintf("%X", hash),
+	)
+
+	if app.State.Size() == 0 {
+		return abci.NewResultOK(nil, "Empty hash for empty tree")
+	}
+	return abci.NewResultOK(hash, "")
 }
 
 // InitChain - ABCI
@@ -151,4 +213,40 @@ func splitKey(key string) (string, string) {
 		return keyParts[0], keyParts[1]
 	}
 	return ModuleNameBase, key
+}
+
+func loadState(dbName string, cacheSize int) (*sm.State, error) {
+	// memory backed case, just for testing
+	if dbName == "" {
+		tree := iavl.NewVersionedTree(0, dbm.NewMemDB())
+		return sm.NewState(tree), nil
+	}
+
+	// Expand the path fully
+	dbPath, err := filepath.Abs(dbName)
+	if err != nil {
+		return nil, errors.ErrInternal("Invalid Database Name")
+	}
+
+	// Some external calls accidently add a ".db", which is now removed
+	dbPath = strings.TrimSuffix(dbPath, path.Ext(dbPath))
+
+	// Split the database name into it's components (dir, name)
+	dir := path.Dir(dbPath)
+	name := path.Base(dbPath)
+
+	// Make sure the path exists
+	empty, _ := cmn.IsDirEmpty(dbPath + ".db")
+
+	// Open database called "dir/name.db", if it doesn't exist it will be created
+	db := dbm.NewDB(name, dbm.LevelDBBackendStr, dir)
+	tree := iavl.NewVersionedTree(cacheSize, db)
+
+	if !empty {
+		if err = tree.Load(); err != nil {
+			return nil, errors.ErrInternal("Loading tree: " + err.Error())
+		}
+	}
+
+	return sm.NewState(tree), nil
 }

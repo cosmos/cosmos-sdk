@@ -19,9 +19,12 @@ const genesisAcctFilepath = "./testdata/genesis2.json"
 
 func TestLoadGenesisDoNotFailIfAppOptionsAreMissing(t *testing.T) {
 	logger := log.TestingLogger()
-	store, err := NewStore("", 0, logger)
+	app, err := NewBasecoin(DefaultHandler("mycoin"),
+		"",
+		0,
+		logger)
 	require.Nil(t, err, "%+v", err)
-	app := NewBasecoin(DefaultHandler("mycoin"), store, logger)
+
 	err = app.LoadGenesis("./testdata/genesis3.json")
 	require.Nil(t, err, "%+v", err)
 }
@@ -30,10 +33,12 @@ func TestLoadGenesis(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	logger := log.TestingLogger()
-	store, err := NewStore("", 0, logger)
+	app, err := NewBasecoin(DefaultHandler("mycoin"),
+		"",
+		0,
+		logger)
 	require.Nil(err, "%+v", err)
 
-	app := NewBasecoin(DefaultHandler("mycoin"), store, logger)
 	err = app.LoadGenesis(genesisFilepath)
 	require.Nil(err, "%+v", err)
 
@@ -43,7 +48,7 @@ func TestLoadGenesis(t *testing.T) {
 	// and check the account info - previously calculated values
 	addr, _ := hex.DecodeString("eb98e0688217cfdeb70eddf4b33cdcc37fc53197")
 
-	coins, err := getAddr(addr, app.GetState())
+	coins, err := getAddr(addr, app.Append())
 	require.Nil(err)
 	assert.True(coins.IsPositive())
 
@@ -62,10 +67,12 @@ func TestLoadGenesisAccountAddress(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	logger := log.TestingLogger()
-	store, err := NewStore("", 0, logger)
+	app, err := NewBasecoin(DefaultHandler("mycoin"),
+		"",
+		0,
+		logger)
 	require.Nil(err, "%+v", err)
 
-	app := NewBasecoin(DefaultHandler("mycoin"), store, logger)
 	err = app.LoadGenesis(genesisAcctFilepath)
 	require.Nil(err, "%+v", err)
 
@@ -93,7 +100,7 @@ func TestLoadGenesisAccountAddress(t *testing.T) {
 	for i, tc := range cases {
 		addr, err := hex.DecodeString(tc.addr)
 		require.Nil(err, tc.addr)
-		coins, err := getAddr(addr, app.GetState())
+		coins, err := getAddr(addr, app.Append())
 		require.Nil(err, "%+v", err)
 		if !tc.exists {
 			assert.True(coins.IsZero(), "%d", i)

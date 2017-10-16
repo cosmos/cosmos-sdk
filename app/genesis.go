@@ -39,11 +39,10 @@ func LoadGenesis(app InitStater, filePath string) error {
 	// execute all the genesis init options
 	// abort on any error
 	for _, opt := range opts {
-		_, _ = app.InitState(opt.Module, opt.Key, opt.Value)
-		// TODO: error out on bad options??
-		// if err != nil {
-		//  return err
-		// }
+		_, err = app.InitState(opt.Module, opt.Key, opt.Value)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

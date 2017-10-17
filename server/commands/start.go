@@ -120,7 +120,7 @@ func start(rootDir string, basecoinApp *app.BaseApp) error {
 		// If genesis file exists, set key-value options
 		genesisFile := path.Join(rootDir, "genesis.json")
 		if _, err := os.Stat(genesisFile); err == nil {
-			err = genesis.LoadGenesis(basecoinApp, genesisFile)
+			err = genesis.Load(basecoinApp, genesisFile)
 			if err != nil {
 				return errors.Errorf("Error in LoadGenesis: %v\n", err)
 			}

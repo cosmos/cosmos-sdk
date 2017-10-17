@@ -24,10 +24,10 @@ type InitStater interface {
 	InitState(module, key, value string) (string, error)
 }
 
-// LoadGenesis parses the genesis file and sets the initial
+// Load parses the genesis file and sets the initial
 // state based on that
-func LoadGenesis(app InitStater, filePath string) error {
-	opts, err := GetGenesisOptions(filePath)
+func Load(app InitStater, filePath string) error {
+	opts, err := GetOptions(filePath)
 	if err != nil {
 		return err
 	}
@@ -43,10 +43,10 @@ func LoadGenesis(app InitStater, filePath string) error {
 	return nil
 }
 
-// GetGenesisOptions parses the genesis file in a format
+// GetOptions parses the genesis file in a format
 // that can easily be handed into InitStaters
-func GetGenesisOptions(path string) ([]Option, error) {
-	genDoc, err := loadGenesis(path)
+func GetOptions(path string) ([]Option, error) {
+	genDoc, err := load(path)
 	if err != nil {
 		return nil, err
 	}
@@ -79,38 +79,38 @@ type keyValue struct {
 	Value string `json:"value"`
 }
 
-// FullGenesisDoc - includes tendermint (in the json, we ignore here)
-type FullGenesisDoc struct {
-	ChainID    string      `json:"chain_id"`
-	AppOptions *GenesisDoc `json:"app_options"`
+// FullDoc - includes tendermint (in the json, we ignore here)
+type FullDoc struct {
+	ChainID    string `json:"chain_id"`
+	AppOptions *Doc   `json:"app_options"`
 }
 
-// GenesisDoc - All genesis values
-type GenesisDoc struct {
+// Doc - All genesis values
+type Doc struct {
 	Accounts      []json.RawMessage `json:"accounts"`
 	PluginOptions []json.RawMessage `json:"plugin_options"`
 
 	pluginOptions []keyValue // unmarshaled rawmessages
 }
 
-func loadGenesis(filePath string) (*FullGenesisDoc, error) {
+func load(filePath string) (*FullDoc, error) {
 	bytes, err := cmn.ReadFile(filePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "loading genesis file")
 	}
 
 	// the basecoin genesis go-wire/data :)
-	genDoc := new(FullGenesisDoc)
+	genDoc := new(FullDoc)
 	err = json.Unmarshal(bytes, genDoc)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshaling genesis file")
 	}
 
 	if genDoc.AppOptions == nil {
-		genDoc.AppOptions = new(GenesisDoc)
+		genDoc.AppOptions = new(Doc)
 	}
 
-	pluginOpts, err := parseGenesisList(genDoc.AppOptions.PluginOptions)
+	pluginOpts, err := parseList(genDoc.AppOptions.PluginOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func loadGenesis(filePath string) (*FullGenesisDoc, error) {
 	return genDoc, nil
 }
 
-func parseGenesisList(kvzIn []json.RawMessage) (kvz []keyValue, err error) {
+func parseList(kvzIn []json.RawMessage) (kvz []keyValue, err error) {
 	if len(kvzIn)%2 != 0 {
 		return nil, errors.New("genesis cannot have an odd number of items.  Format = [key1, value1, key2, value2, ...]")
 	}

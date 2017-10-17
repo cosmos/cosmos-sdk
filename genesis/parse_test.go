@@ -13,18 +13,18 @@ import (
 
 const genesisFilepath = "./testdata/genesis.json"
 
-func TestParseGenesisList(t *testing.T) {
+func TestParseList(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	bytes, err := cmn.ReadFile(genesisFilepath)
 	require.Nil(err, "loading genesis file %+v", err)
 
 	// the basecoin genesis go-wire/data :)
-	genDoc := new(FullGenesisDoc)
+	genDoc := new(FullDoc)
 	err = json.Unmarshal(bytes, genDoc)
 	require.Nil(err, "unmarshaling genesis file %+v", err)
 
-	pluginOpts, err := parseGenesisList(genDoc.AppOptions.PluginOptions)
+	pluginOpts, err := parseList(genDoc.AppOptions.PluginOptions)
 	require.Nil(err, "%+v", err)
 	genDoc.AppOptions.pluginOptions = pluginOpts
 
@@ -34,10 +34,10 @@ func TestParseGenesisList(t *testing.T) {
 	assert.Equal(genDoc.AppOptions.pluginOptions[1].Value, "value2")
 }
 
-func TestGetGenesisOptions(t *testing.T) {
+func TestGetOptions(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
-	opts, err := GetGenesisOptions(genesisFilepath)
+	opts, err := GetOptions(genesisFilepath)
 	require.Nil(err, "loading genesis file %+v", err)
 
 	require.Equal(4, len(opts))

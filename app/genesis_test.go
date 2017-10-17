@@ -26,7 +26,7 @@ func TestLoadGenesisDoNotFailIfAppOptionsAreMissing(t *testing.T) {
 	require.Nil(t, err, "%+v", err)
 	app := NewBaseApp(store, DefaultHandler("mycoin"), nil)
 
-	err = genesis.LoadGenesis(app, "./testdata/genesis3.json")
+	err = genesis.Load(app, "./testdata/genesis3.json")
 	require.Nil(t, err, "%+v", err)
 }
 
@@ -38,7 +38,7 @@ func TestLoadGenesisFailsWithUnknownOptions(t *testing.T) {
 	require.Nil(err, "%+v", err)
 
 	app := NewBaseApp(store, DefaultHandler("mycoin"), nil)
-	err = genesis.LoadGenesis(app, genesisFilepath)
+	err = genesis.Load(app, genesisFilepath)
 	require.NotNil(err, "%+v", err)
 }
 
@@ -51,7 +51,7 @@ func TestLoadGenesisAccountAddress(t *testing.T) {
 	require.Nil(err, "%+v", err)
 	app := NewBaseApp(store, DefaultHandler("mycoin"), nil)
 
-	err = genesis.LoadGenesis(app, genesisAcctFilepath)
+	err = genesis.Load(app, genesisAcctFilepath)
 	require.Nil(err, "%+v", err)
 
 	// check the chain id
@@ -96,6 +96,6 @@ func TestLoadGenesisAccountInconsistentAddress(t *testing.T) {
 	store, err := MockStoreApp("genesis", logger)
 	require.Nil(err, "%+v", err)
 	app := NewBaseApp(store, DefaultHandler("mycoin"), nil)
-	err = genesis.LoadGenesis(app, genesisBadAcctFilepath)
+	err = genesis.Load(app, genesisBadAcctFilepath)
 	require.NotNil(err)
 }

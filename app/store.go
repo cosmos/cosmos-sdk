@@ -32,8 +32,8 @@ type StoreApp struct {
 	Name string
 
 	// this is the database state
-	info *sm.ChainState
-	*sm.State
+	info  *sm.ChainState
+	state *sm.State
 
 	// cached validator changes from DeliverTx
 	pending []*abci.Validator
@@ -52,7 +52,7 @@ func NewStoreApp(appName, dbName string, cacheSize int, logger log.Logger) (*Sto
 	}
 	app := &StoreApp{
 		Name:   appName,
-		State:  state,
+		state:  state,
 		height: state.LatestHeight(),
 		info:   sm.NewChainState(),
 		logger: logger.With("module", "app"),
@@ -67,7 +67,7 @@ func MockStoreApp(appName string, logger log.Logger) (*StoreApp, error) {
 
 // GetChainID returns the currently stored chain
 func (app *StoreApp) GetChainID() string {
-	return app.info.GetChainID(app.Committed())
+	return app.info.GetChainID(app.state.Committed())
 }
 
 // Logger returns the application base logger
@@ -77,7 +77,23 @@ func (app *StoreApp) Logger() log.Logger {
 
 // Hash gets the last hash stored in the database
 func (app *StoreApp) Hash() []byte {
-	return app.State.LatestHash()
+	return app.state.LatestHash()
+}
+
+// Committed returns the committed state,
+// also exposing historical queries
+// func (app *StoreApp) Committed() *Bonsai {
+// 	return app.state.committed
+// }
+
+// Append returns the working state for DeliverTx
+func (app *StoreApp) Append() sm.SimpleDB {
+	return app.state.Append()
+}
+
+// Check returns the working state for CheckTx
+func (app *StoreApp) Check() sm.SimpleDB {
+	return app.state.Check()
 }
 
 // CommittedHeight gets the last block height committed
@@ -123,7 +139,7 @@ func (app *StoreApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 	}
 
 	// set the query response height to current
-	tree := app.State.Committed()
+	tree := app.state.Committed()
 
 	height := reqQuery.Height
 	if height == 0 {
@@ -168,7 +184,7 @@ func (app *StoreApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 func (app *StoreApp) Commit() (res abci.Result) {
 	app.height++
 
-	hash, err := app.State.Commit(app.height)
+	hash, err := app.state.Commit(app.height)
 	if err != nil {
 		// die if we can't commit, not to recover
 		panic(err)
@@ -178,7 +194,7 @@ func (app *StoreApp) Commit() (res abci.Result) {
 		"hash", fmt.Sprintf("%X", hash),
 	)
 
-	if app.State.Size() == 0 {
+	if app.state.Size() == 0 {
 		return abci.NewResultOK(nil, "Empty hash for empty tree")
 	}
 	return abci.NewResultOK(hash, "")

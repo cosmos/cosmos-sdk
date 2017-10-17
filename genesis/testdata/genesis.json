@@ -1,0 +1,22 @@
+{
+  "chain_id": "foo_bar_chain",
+  "app_options": {
+    "accounts": [{
+      "pub_key": {
+        "type": "ed25519",
+        "data": "6880db93598e283a67c4d88fc67a8858aa2de70f713fe94a5109e29c137100c2"
+      },
+      "coins": [
+        {
+          "denom": "blank",
+          "amount": 12345
+        },
+        {
+          "denom": "ETH",
+          "amount": 654321
+        }
+      ]
+    }],
+    "plugin_options": ["plugin1/key1", "value1", "plugin1/key2", "value2"]
+  }
+}

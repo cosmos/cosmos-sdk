@@ -95,8 +95,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) {
 func (app *BaseApp) InitState(module, key, value string) (string, error) {
 	state := app.Append()
 
-	if module == ModuleNameBase {
-		if key == ChainKey {
+	if module == sdk.ModuleNameBase {
+		if key == sdk.ChainKey {
 			app.info.SetChainID(state, value)
 			return "Success", nil
 		}

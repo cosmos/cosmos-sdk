@@ -8,6 +8,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/state"
 )
 
+const (
+	// ModuleNameBase is the module name for internal functionality
+	ModuleNameBase = "base"
+	// ChainKey is the option key for setting the chain id
+	ChainKey = "chain_id"
+)
+
 // Handler is anything that processes a transaction
 type Handler interface {
 	// Checker verifies there are valid fees and estimates work

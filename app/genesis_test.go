@@ -2,15 +2,14 @@ package app
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
+	"github.com/cosmos/cosmos-sdk/genesis"
 	"github.com/cosmos/cosmos-sdk/modules/coin"
 )
 
@@ -27,7 +26,7 @@ func TestLoadGenesisDoNotFailIfAppOptionsAreMissing(t *testing.T) {
 	require.Nil(t, err, "%+v", err)
 	app := NewBaseApp(store, DefaultHandler("mycoin"), nil)
 
-	err = LoadGenesis(app, "./testdata/genesis3.json")
+	err = genesis.LoadGenesis(app, "./testdata/genesis3.json")
 	require.Nil(t, err, "%+v", err)
 }
 
@@ -39,7 +38,7 @@ func TestLoadGenesisFailsWithUnknownOptions(t *testing.T) {
 	require.Nil(err, "%+v", err)
 
 	app := NewBaseApp(store, DefaultHandler("mycoin"), nil)
-	err = LoadGenesis(app, genesisFilepath)
+	err = genesis.LoadGenesis(app, genesisFilepath)
 	require.NotNil(err, "%+v", err)
 }
 
@@ -52,7 +51,7 @@ func TestLoadGenesisAccountAddress(t *testing.T) {
 	require.Nil(err, "%+v", err)
 	app := NewBaseApp(store, DefaultHandler("mycoin"), nil)
 
-	err = LoadGenesis(app, genesisAcctFilepath)
+	err = genesis.LoadGenesis(app, genesisAcctFilepath)
 	require.Nil(err, "%+v", err)
 
 	// check the chain id
@@ -97,54 +96,6 @@ func TestLoadGenesisAccountInconsistentAddress(t *testing.T) {
 	store, err := MockStoreApp("genesis", logger)
 	require.Nil(err, "%+v", err)
 	app := NewBaseApp(store, DefaultHandler("mycoin"), nil)
-	err = LoadGenesis(app, genesisBadAcctFilepath)
+	err = genesis.LoadGenesis(app, genesisBadAcctFilepath)
 	require.NotNil(err)
-}
-
-func TestParseGenesisList(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
-
-	bytes, err := cmn.ReadFile(genesisFilepath)
-	require.Nil(err, "loading genesis file %+v", err)
-
-	// the basecoin genesis go-wire/data :)
-	genDoc := new(FullGenesisDoc)
-	err = json.Unmarshal(bytes, genDoc)
-	require.Nil(err, "unmarshaling genesis file %+v", err)
-
-	pluginOpts, err := parseGenesisList(genDoc.AppOptions.PluginOptions)
-	require.Nil(err, "%+v", err)
-	genDoc.AppOptions.pluginOptions = pluginOpts
-
-	assert.Equal(genDoc.AppOptions.pluginOptions[0].Key, "plugin1/key1")
-	assert.Equal(genDoc.AppOptions.pluginOptions[1].Key, "plugin1/key2")
-	assert.Equal(genDoc.AppOptions.pluginOptions[0].Value, "value1")
-	assert.Equal(genDoc.AppOptions.pluginOptions[1].Value, "value2")
-}
-
-func TestGetGenesisOptions(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
-
-	opts, err := GetGenesisOptions(genesisFilepath)
-	require.Nil(err, "loading genesis file %+v", err)
-
-	require.Equal(4, len(opts))
-	chain := opts[0]
-	assert.Equal(ModuleNameBase, chain.Module)
-	assert.Equal(ChainKey, chain.Key)
-	assert.Equal("foo_bar_chain", chain.Value)
-
-	acct := opts[1]
-	assert.Equal("coin", acct.Module)
-	assert.Equal("account", acct.Key)
-
-	p1 := opts[2]
-	assert.Equal("plugin1", p1.Module)
-	assert.Equal("key1", p1.Key)
-	assert.Equal("value1", p1.Value)
-
-	p2 := opts[3]
-	assert.Equal("plugin1", p2.Module)
-	assert.Equal("key2", p2.Key)
-	assert.Equal("value2", p2.Value)
 }

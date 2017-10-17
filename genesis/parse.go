@@ -1,17 +1,13 @@
-package app
+package genesis
 
 import (
 	"encoding/json"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/pkg/errors"
 
 	cmn "github.com/tendermint/tmlibs/common"
-)
-
-//nolint
-const (
-	ModuleNameBase = "base"
 )
 
 // Option just holds module/key/value triples from
@@ -59,7 +55,7 @@ func GetGenesisOptions(path string) ([]Option, error) {
 	cnt := 1 + len(opts.Accounts) + len(opts.pluginOptions)
 	res := make([]Option, cnt)
 
-	res[0] = Option{ModuleNameBase, ChainKey, genDoc.ChainID}
+	res[0] = Option{sdk.ModuleNameBase, sdk.ChainKey, genDoc.ChainID}
 	i := 1
 
 	// set accounts
@@ -152,5 +148,5 @@ func splitKey(key string) (string, string) {
 		keyParts := strings.SplitN(key, "/", 2)
 		return keyParts[0], keyParts[1]
 	}
-	return ModuleNameBase, key
+	return sdk.ModuleNameBase, key
 }

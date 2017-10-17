@@ -291,19 +291,3 @@ func TestQuery(t *testing.T) {
 	})
 	assert.NotEqual(resQueryPreCommit, resQueryPostCommit, "Query should change before/after commit")
 }
-
-func TestSplitKey(t *testing.T) {
-	assert := assert.New(t)
-	prefix, suffix := splitKey("foo/bar")
-	assert.EqualValues("foo", prefix)
-	assert.EqualValues("bar", suffix)
-
-	prefix, suffix = splitKey("foobar")
-	assert.EqualValues("base", prefix)
-	assert.EqualValues("foobar", suffix)
-
-	prefix, suffix = splitKey("some/complex/issue")
-	assert.EqualValues("some", prefix)
-	assert.EqualValues("complex/issue", suffix)
-
-}

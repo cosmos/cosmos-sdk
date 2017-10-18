@@ -31,13 +31,13 @@ func TestCounterPlugin(t *testing.T) {
 	store, err := app.MockStoreApp("counter", logger)
 	require.Nil(err, "%+v", err)
 	bcApp := app.NewBaseApp(store, h, nil)
-	_, err = bcApp.InitState("base", "chain_id", chainID)
+	err = bcApp.InitState("base", "chain_id", chainID)
 	require.Nil(err, "%+v", err)
 
 	// Account initialization
 	bal := coin.Coins{{"", 1000}, {"gold", 1000}}
 	acct := coin.NewAccountWithKey(bal)
-	_, err = bcApp.InitState("coin", "account", acct.MakeOption())
+	err = bcApp.InitState("coin", "account", acct.MakeOption())
 	require.Nil(err, "%+v", err)
 
 	// Deliver a CounterTx

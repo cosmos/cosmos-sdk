@@ -100,7 +100,7 @@ func (at *appTest) feeTx(coins coin.Coins, toll coin.Coin, sequence uint32) sdk.
 
 // set the account on the app through InitState
 func (at *appTest) initAccount(acct *coin.AccountWithKey) {
-	_, err := at.app.InitState("coin", "account", acct.MakeOption())
+	err := at.app.InitState("coin", "account", acct.MakeOption())
 	require.Nil(at.t, err, "%+v", err)
 }
 
@@ -117,7 +117,7 @@ func (at *appTest) reset() {
 	require.Nil(at.t, err, "%+v", err)
 	at.app = NewBaseApp(store, DefaultHandler("mycoin"), nil)
 
-	_, err = at.app.InitState("base", "chain_id", at.chainID)
+	err = at.app.InitState("base", "chain_id", at.chainID)
 	require.Nil(at.t, err, "%+v", err)
 
 	at.initAccount(at.acctIn)
@@ -174,14 +174,14 @@ func TestInitState(t *testing.T) {
 
 	//testing ChainID
 	chainID := "testChain"
-	_, err = app.InitState("base", "chain_id", chainID)
+	err = app.InitState("base", "chain_id", chainID)
 	require.Nil(err, "%+v", err)
 	assert.EqualValues(app.GetChainID(), chainID)
 
 	// make a nice account...
 	bal := coin.Coins{{"atom", 77}, {"eth", 12}}
 	acct := coin.NewAccountWithKey(bal)
-	_, err = app.InitState("coin", "account", acct.MakeOption())
+	err = app.InitState("coin", "account", acct.MakeOption())
 	require.Nil(err, "%+v", err)
 
 	// make sure it is set correctly, with some balance
@@ -209,7 +209,7 @@ func TestInitState(t *testing.T) {
     }
   ]
 }`
-	_, err = app.InitState("coin", "account", unsortAcc)
+	err = app.InitState("coin", "account", unsortAcc)
 	require.Nil(err, "%+v", err)
 
 	coins, err = getAddr(unsortAddr, app.Append())
@@ -217,13 +217,13 @@ func TestInitState(t *testing.T) {
 	assert.True(coins.IsValid())
 	assert.Equal(unsortCoins, coins)
 
-	_, err = app.InitState("base", "dslfkgjdas", "")
+	err = app.InitState("base", "dslfkgjdas", "")
 	require.NotNil(err)
 
-	_, err = app.InitState("", "dslfkgjdas", "")
+	err = app.InitState("", "dslfkgjdas", "")
 	require.NotNil(err)
 
-	_, err = app.InitState("dslfkgjdas", "szfdjzs", "")
+	err = app.InitState("dslfkgjdas", "szfdjzs", "")
 	require.NotNil(err)
 }
 

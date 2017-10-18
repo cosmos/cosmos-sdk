@@ -19,9 +19,10 @@ type Option struct {
 }
 
 // InitStater is anything that can handle app options
-// from genesis file.
+// from genesis file. Setting the merkle store, config options,
+// or anything else
 type InitStater interface {
-	InitState(module, key, value string) (string, error)
+	InitState(module, key, value string) error
 }
 
 // Load parses the genesis file and sets the initial
@@ -35,7 +36,7 @@ func Load(app InitStater, filePath string) error {
 	// execute all the genesis init options
 	// abort on any error
 	for _, opt := range opts {
-		_, err = app.InitState(opt.Module, opt.Key, opt.Value)
+		err = app.InitState(opt.Module, opt.Key, opt.Value)
 		if err != nil {
 			return err
 		}

@@ -65,7 +65,7 @@ func NewBenchApp(h sdk.Handler, chainID string, n int,
 	}
 	app := sdkapp.NewBaseApp(store, h, nil)
 
-	_, err = app.InitState("base", "chain_id", chainID)
+	err = app.InitState("base", "chain_id", chainID)
 	if err != nil {
 		panic("cannot set chain")
 	}
@@ -75,7 +75,7 @@ func NewBenchApp(h sdk.Handler, chainID string, n int,
 	accts := make([]*coin.AccountWithKey, n)
 	for i := 0; i < n; i++ {
 		accts[i] = coin.NewAccountWithKey(money)
-		_, err = app.InitState("coin", "account", accts[i].MakeOption())
+		err = app.InitState("coin", "account", accts[i].MakeOption())
 		if err != nil {
 			panic("can't set account")
 		}

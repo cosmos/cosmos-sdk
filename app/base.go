@@ -92,22 +92,24 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) {
 // to be used by InitChain later
 //
 // TODO: rethink this a bit more....
-func (app *BaseApp) InitState(module, key, value string) (string, error) {
+func (app *BaseApp) InitState(module, key, value string) error {
 	state := app.Append()
+	logger := app.Logger().With("module", module, "key", key)
 
 	if module == sdk.ModuleNameBase {
 		if key == sdk.ChainKey {
 			app.info.SetChainID(state, value)
-			return "Success", nil
+			return nil
 		}
-		return "", fmt.Errorf("unknown base option: %s", key)
+		logger.Error("Invalid genesis option")
+		return fmt.Errorf("Unknown base option: %s", key)
 	}
 
-	log, err := app.handler.InitState(app.Logger(), state, module, key, value)
+	log, err := app.handler.InitState(logger, state, module, key, value)
 	if err != nil {
-		app.Logger().Error("Genesis App Options", "err", err)
+		logger.Error("Invalid genesis option", "err", err)
 	} else {
-		app.Logger().Info(log)
+		logger.Info(log)
 	}
-	return log, err
+	return err
 }

@@ -142,11 +142,14 @@ checkAccount() {
     return $?
 }
 
-# XXX Ex Usage: checkRole $ROLE $SIGS $NUM_SIGNERS
+# XXX Ex Usage: checkRole $ROLE $SIGS $NUM_SIGNERS [$HEIGHT]
 # Desc: Ensures this named role exists, and has the number of members and required signatures as above
 checkRole() {
+    # default height of 0, but accept an argument
+    HEIGHT=${4:-0}
+
     # make sure sender goes down
-    QROLE=$(${CLIENT_EXE} query role $1)
+    QROLE=$(${CLIENT_EXE} query role $1 --height=$HEIGHT)
     if ! assertTrue "line=${LINENO}, role must exist" $?; then
         return 1
     fi

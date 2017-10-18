@@ -184,7 +184,7 @@ test04SendIBCPacket() {
     TX_HEIGHT=$(echo $TX | jq .height)
 
     # Make sure balance went down and tx is indexed
-    checkAccount $SENDER "9007199254720990"
+    checkAccount $SENDER "9007199254720990"  "$TX_HEIGHT"
     checkSendTx $HASH $TX_HEIGHT $SENDER "20002"
 
     # look, we wrote a packet
@@ -211,7 +211,7 @@ test05ReceiveIBCPacket() {
     # make some credit, so we can accept the packet
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx credit --amount=60006mycoin --to=$CHAIN_ID_1:: --name=$RICH)
     txSucceeded $? "$TX" "${CHAIN_ID_1}::"
-    checkAccount $CHAIN_ID_1:: "60006"
+    checkAccount $CHAIN_ID_1:: "60006"  "$TX_HEIGHT"
 
     # now, we try to post it.... (this is PACKET from last test)
 
@@ -279,7 +279,7 @@ assertNewHeight() {
 #     TX_HEIGHT=$(echo $TX | jq .height)
 
 #     # Make sure balance went down and tx is indexed
-#     checkAccount $SENDER "1" "9007199254720990"
+#     checkAccount $SENDER "1" "9007199254720990"  "$TX_HEIGHT"
 #     checkSendTx $HASH $TX_HEIGHT $SENDER "20002"
 
 #     # Make sure nothing arrived - yet

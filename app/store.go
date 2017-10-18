@@ -146,11 +146,12 @@ func (app *StoreApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 		// we must retrun most recent, even if apphash
 		// is not yet in the blockchain
 
-		// if tree.Tree.VersionExists(app.height - 1) {
-		//  height = app.height - 1
-		// } else {
-		height = app.CommittedHeight()
-		// }
+		withProof := app.CommittedHeight() - 1
+		if tree.Tree.VersionExists(withProof) {
+			height = withProof
+		} else {
+			height = app.CommittedHeight()
+		}
 	}
 	resQuery.Height = height
 

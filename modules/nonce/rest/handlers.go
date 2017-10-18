@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
@@ -28,6 +29,17 @@ func doQueryNonce(w http.ResponseWriter, r *http.Request) {
 		common.WriteError(w, err)
 		return
 	}
+
+	var h int
+	qHeight := args["height"]
+	if qHeight != "" {
+		h, err = strconv.Atoi(qHeight)
+		if err != nil {
+			common.WriteError(w, err)
+			return
+		}
+	}
+
 	actor = coin.ChainAddr(actor)
 	key := nonce.GetSeqKey([]sdk.Actor{actor})
 	key = stack.PrefixedKey(nonce.NameNonce, key)
@@ -35,7 +47,7 @@ func doQueryNonce(w http.ResponseWriter, r *http.Request) {
 	prove := !viper.GetBool(commands.FlagTrustNode)
 
 	// query sequence number
-	data, height, err := query.Get(key, prove)
+	data, height, err := query.Get(key, h, prove)
 	if lightclient.IsNoDataErr(err) {
 		err = fmt.Errorf("nonce empty for address: %q", signature)
 		common.WriteError(w, err)

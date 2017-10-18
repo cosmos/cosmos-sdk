@@ -15,9 +15,9 @@ oneTimeSetUp() {
         exit 1;
     fi
     baseserver serve --port $BPORT >/dev/null &
+    sleep 0.1 # for startup
     PID_PROXY=$!
     disown
-    sleep 0.1 # for startup
 }
 
 oneTimeTearDown() {
@@ -35,12 +35,16 @@ restAddr() {
     echo $ADDR
 }
 
-# XXX Ex Usage: restAccount $ADDR $AMOUNT
+# XXX Ex Usage: restAccount $ADDR $AMOUNT [$HEIGHT]
 # Desc: Assumes just one coin, checks the balance of first coin in any case
 restAccount() {
     assertNotNull "line=${LINENO}, address required" "$1"
-    ACCT=$(curl ${URL}/query/account/sigs:$1 2>/dev/null)
-    if [ -n "$DEBUG" ]; then echo $ACCT; echo; fi
+    QUERY=${URL}/query/account/sigs:$1
+    if [ -n "$3" ]; then
+        QUERY="${QUERY}?height=${3}"
+    fi
+    ACCT=$(curl ${QUERY} 2>/dev/null)
+    if [ -n "$DEBUG" ]; then echo $QUERY; echo $ACCT; echo; fi
     assertEquals "line=${LINENO}, proper money" "$2" $(echo $ACCT | jq .data.coins[0].amount)
     return $?
 }
@@ -76,8 +80,8 @@ test01SendTx() {
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 
-    restAccount $SENDER "9007199254740000"
-    restAccount $RECV "992"
+    restAccount $SENDER "9007199254740000" "$TX_HEIGHT"
+    restAccount $RECV "992" "$TX_HEIGHT"
 
     # Make sure tx is indexed
     checkSendTx $HASH $TX_HEIGHT $SENDER "992"

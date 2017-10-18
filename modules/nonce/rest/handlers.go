@@ -31,7 +31,7 @@ func doQueryNonce(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var h int
-	qHeight := args["height"]
+	qHeight := r.URL.Query().Get("height")
 	if qHeight != "" {
 		h, err = strconv.Atoi(qHeight)
 		if err != nil {

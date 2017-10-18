@@ -35,7 +35,7 @@ test01SetupRole() {
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 
-    checkRole "${ROLE}" $SIGS 3
+    checkRole "${ROLE}" $SIGS 3 "$TX_HEIGHT"
 
     # Make sure tx is indexed
     checkRoleTx $HASH $TX_HEIGHT "${ROLE}" 3
@@ -51,8 +51,8 @@ test02SendTxToRole() {
     TX_HEIGHT=$(echo $TX | jq .height)
 
     # reduce by 10090
-    checkAccount $SENDER "9007199254730902"
-    checkAccount $RECV "10000"
+    checkAccount $SENDER "9007199254730902" "$TX_HEIGHT"
+    checkAccount $RECV "10000" "$TX_HEIGHT"
 
     checkSendFeeTx $HASH $TX_HEIGHT $SENDER "10000" "90"
 }
@@ -82,9 +82,10 @@ test03SendMultiFromRole() {
     # and get some dude to sign it for the full access
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx --in=$TX_FILE --name=$DUDE)
     txSucceeded $? "$TX" "multi-bank"
+    TX_HEIGHT=$(echo $TX | jq .height)
 
-    checkAccount $TWO "6000"
-    checkAccount $BANK "4000"
+    checkAccount $TWO "6000" "$TX_HEIGHT"
+    checkAccount $BANK "4000" "$TX_HEIGHT"
 }
 
 

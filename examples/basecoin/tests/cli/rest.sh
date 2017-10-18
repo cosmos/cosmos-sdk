@@ -126,8 +126,8 @@ test04CreateRoleInvalid() {
 #     TX_HEIGHT=$(echo $TX | jq .height)
 
 #     # deduct 100 from sender, add 90 to receiver... fees "vanish"
-#     checkAccount $SENDER "9007199254739900"
-#     checkAccount $RECV "1082"
+#     checkAccount $SENDER "9007199254739900"  "$TX_HEIGHT"
+#     checkAccount $RECV "1082"  "$TX_HEIGHT"
 
 #     # Make sure tx is indexed
 #     checkSendFeeTx $HASH $TX_HEIGHT $SENDER "90" "10"
@@ -135,8 +135,8 @@ test04CreateRoleInvalid() {
 #     # assert replay protection
 #     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --sequence=2 --to=$RECV --name=$RICH 2>/dev/null)
 #     assertFalse "line=${LINENO}, replay: $TX" $?
-#     checkAccount $SENDER "9007199254739900"
-#     checkAccount $RECV "1082"
+#     checkAccount $SENDER "9007199254739900"  "$TX_HEIGHT"
+#     checkAccount $RECV "1082"  "$TX_HEIGHT"
 
 #     # make sure we can query the proper nonce
 #     NONCE=$(${CLIENT_EXE} query nonce $SENDER)

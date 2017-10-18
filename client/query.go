@@ -20,7 +20,7 @@ import (
 func GetWithProof(key []byte, node client.Client, cert certifiers.Certifier) (
 	val data.Bytes, height uint64, proof iavl.KeyProof, err error) {
 
-	resp, err := node.ABCIQuery("/key", key, true)
+	resp, err := node.ABCIQuery("/key", key)
 	if err != nil {
 		return
 	}

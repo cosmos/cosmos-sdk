@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/iavl"
 	"github.com/tendermint/light-client/proofs"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/commands"
@@ -47,7 +48,8 @@ func GetParsed(key []byte, data interface{}, prove bool) (uint64, error) {
 func Get(key []byte, prove bool) (data.Bytes, uint64, error) {
 	if !prove {
 		node := commands.GetNode()
-		resp, err := node.ABCIQuery("/key", key, false)
+		resp, err := node.ABCIQueryWithOptions("/key", key,
+			rpcclient.ABCIQueryOptions{Trusted: true})
 		return data.Bytes(resp.Value), resp.Height, err
 	}
 	val, h, _, err := GetWithProof(key)

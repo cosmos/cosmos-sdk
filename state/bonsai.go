@@ -31,7 +31,7 @@ func NewBonsai(tree *iavl.VersionedTree) *Bonsai {
 
 // Get matches the signature of KVStore
 func (b *Bonsai) Get(key []byte) []byte {
-	_, value, _ := b.Tree.Get(key)
+	_, value := b.Tree.Get(key)
 	return value
 }
 

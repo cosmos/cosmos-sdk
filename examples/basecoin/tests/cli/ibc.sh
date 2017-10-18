@@ -188,16 +188,17 @@ test04SendIBCPacket() {
     checkSendTx $HASH $TX_HEIGHT $SENDER "20002"
 
     # look, we wrote a packet
-    PACKETS=$(${CLIENT_EXE} query ibc packets --to=$CHAIN_ID_2)
+    PACKETS=$(${CLIENT_EXE} query ibc packets --to=$CHAIN_ID_2 --height=$TX_HEIGHT)
     assertTrue "line=${LINENO}, packets query" $?
     assertEquals "line=${LINENO}, packet count" 1 $(echo $PACKETS | jq .data)
 
     # and look at the packet itself
-    PACKET=$(${CLIENT_EXE} query ibc packet --to=$CHAIN_ID_2 --sequence=0)
+    PACKET=$(${CLIENT_EXE} query ibc packet --to=$CHAIN_ID_2 --sequence=0 --height=$TX_HEIGHT)
     assertTrue "line=${LINENO}, packet query" $?
     assertEquals "line=${LINENO}, proper src" "\"$CHAIN_ID_1\"" $(echo $PACKET | jq .src_chain)
     assertEquals "line=${LINENO}, proper dest" "\"$CHAIN_ID_2\"" $(echo $PACKET | jq .packet.dest_chain)
     assertEquals "line=${LINENO}, proper sequence" "0" $(echo $PACKET | jq .packet.sequence)
+    echo $PACKET
 
     # nothing arrived
     ARRIVED=$(${CLIENT_EXE} query ibc packets --from=$CHAIN_ID_1 --home=$CLIENT_2 2>/dev/null)
@@ -211,12 +212,15 @@ test05ReceiveIBCPacket() {
     # make some credit, so we can accept the packet
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx credit --amount=60006mycoin --to=$CHAIN_ID_1:: --name=$RICH)
     txSucceeded $? "$TX" "${CHAIN_ID_1}::"
-    checkAccount $CHAIN_ID_1:: "60006"  "$TX_HEIGHT"
+    TX_HEIGHT=$(echo $TX | jq .height)
+    checkAccount $CHAIN_ID_1:: "60006" "$TX_HEIGHT"
 
     # now, we try to post it.... (this is PACKET from last test)
 
     # get the seed and post it
     SRC_HEIGHT=$(echo $PACKET | jq .src_height)
+    SRC_HEIGHT=$(expr $SRC_HEIGHT + 1)
+    echo "src_height:" $SRC_HEIGHT
     # FIXME: this should auto-update on proofs...
     ${CLIENT_EXE} seeds update --height=$SRC_HEIGHT --home=${CLIENT_1}  > /dev/null
     assertTrue "line=${LINENO}, update seed failed" $?
@@ -224,14 +228,16 @@ test05ReceiveIBCPacket() {
     PACKET_SEED="$BASE_DIR_1/packet_seed.json"
     ${CLIENT_EXE} seeds export $PACKET_SEED --home=${CLIENT_1} #--height=$SRC_HEIGHT
     assertTrue "line=${LINENO}, export seed failed" $?
-    # echo "**** SEED ****"
-    # cat $PACKET_SEED | jq .
+    echo "**** SEED ****"
+    cat $PACKET_SEED | jq .checkpoint.header
+    # cat $PACKET_SEED | jq .checkpoint.header.app_hash
 
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-update \
-        --seed=${PACKET_SEED} --name=$POOR)
+        --seed=${PACKET_SEED} --name=$POOR --sequence=3)
     txSucceeded $? "$TX" "prepare packet chain1 on chain 2"
     # an example to quit early if there is no point in more tests
     if [ $? != 0 ]; then echo "aborting!"; return 1; fi
+    TX_HEIGHT=$(echo $TX | jq .height)
 
     # write the packet to the file
     POST_PACKET="$BASE_DIR_1/post_packet.json"
@@ -241,13 +247,14 @@ test05ReceiveIBCPacket() {
 
     # post it as a tx (cross-fingers)
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-post \
-        --packet=${POST_PACKET} --name=$POOR)
+        --packet=${POST_PACKET} --name=$POOR --sequence=4)
     txSucceeded $? "$TX" "post packet from chain1 on chain 2"
+    TX_HEIGHT=$(echo $TX | jq .height)
 
     # TODO: more queries on stuff...
 
     # look, we wrote a packet
-    PACKETS=$(${CLIENT_EXE} query ibc packets --from=$CHAIN_ID_1)
+    PACKETS=$(${CLIENT_EXE} query ibc packets  --height=$TX_HEIGHT --from=$CHAIN_ID_1)
     assertTrue "line=${LINENO}, packets query" $?
     assertEquals "line=${LINENO}, packet count" 1 $(echo $PACKETS | jq .data)
 }

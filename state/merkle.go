@@ -5,17 +5,19 @@ import "github.com/tendermint/iavl"
 // State represents the app states, separating the commited state (for queries)
 // from the working state (for CheckTx and AppendTx)
 type State struct {
-	committed *Bonsai
-	deliverTx SimpleDB
-	checkTx   SimpleDB
+	committed   *Bonsai
+	deliverTx   SimpleDB
+	checkTx     SimpleDB
+	historySize uint64
 }
 
-func NewState(tree *iavl.VersionedTree) *State {
+func NewState(tree *iavl.VersionedTree, historySize uint64) *State {
 	base := NewBonsai(tree)
 	return &State{
-		committed: base,
-		deliverTx: base.Checkpoint(),
-		checkTx:   base.Checkpoint(),
+		committed:   base,
+		deliverTx:   base.Checkpoint(),
+		checkTx:     base.Checkpoint(),
+		historySize: historySize,
 	}
 }
 
@@ -51,12 +53,18 @@ func (s *State) Commit(version uint64) ([]byte, error) {
 		return nil, err
 	}
 
+	// store a new version
 	var hash []byte
 	if s.committed.Tree.Size() > 0 || s.committed.Tree.LatestVersion() > 0 {
 		hash, err = s.committed.Tree.SaveVersion(version)
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// release an old version
+	if version > s.historySize {
+		s.committed.Tree.DeleteVersion(version - s.historySize)
 	}
 
 	s.deliverTx = s.committed.Checkpoint()

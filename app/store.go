@@ -17,6 +17,9 @@ import (
 	sm "github.com/cosmos/cosmos-sdk/state"
 )
 
+// DefaultHistorySize is how many blocks of history to store for ABCI queries
+const DefaultHistorySize = 10
+
 // StoreApp contains a data store and all info needed
 // to perform queries and handshakes.
 //
@@ -41,7 +44,7 @@ type StoreApp struct {
 
 // NewStoreApp creates a data store to handle queries
 func NewStoreApp(appName, dbName string, cacheSize int, logger log.Logger) (*StoreApp, error) {
-	state, err := loadState(dbName, cacheSize)
+	state, err := loadState(dbName, cacheSize, DefaultHistorySize)
 	if err != nil {
 		return nil, err
 	}
@@ -234,11 +237,11 @@ func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {
 	return -1
 }
 
-func loadState(dbName string, cacheSize int) (*sm.State, error) {
+func loadState(dbName string, cacheSize int, historySize uint64) (*sm.State, error) {
 	// memory backed case, just for testing
 	if dbName == "" {
 		tree := iavl.NewVersionedTree(0, dbm.NewMemDB())
-		return sm.NewState(tree), nil
+		return sm.NewState(tree, historySize), nil
 	}
 
 	// Expand the path fully
@@ -267,5 +270,5 @@ func loadState(dbName string, cacheSize int) (*sm.State, error) {
 		}
 	}
 
-	return sm.NewState(tree), nil
+	return sm.NewState(tree, historySize), nil
 }

@@ -208,24 +208,31 @@ test04SendIBCPacket() {
 
 test05ReceiveIBCPacket() {
     export BC_HOME=${CLIENT_2}
+    RECV=$(getAddr $POOR)
 
     # make some credit, so we can accept the packet
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx credit --amount=60006mycoin --to=$CHAIN_ID_1:: --name=$RICH)
     txSucceeded $? "$TX" "${CHAIN_ID_1}::"
     TX_HEIGHT=$(echo $TX | jq .height)
+
+    # make sure there is enough credit
     checkAccount $CHAIN_ID_1:: "60006" "$TX_HEIGHT"
+    # and the poor guy doesn't have a penny to his name
+    ACCT2=$(${CLIENT_EXE} query account $RECV 2>/dev/null)
+    assertFalse "line=${LINENO}, has no genesis account" $?
+
 
     # now, we try to post it.... (this is PACKET from last test)
 
-    # get the seed and post it
+    # get the seed with the proof and post it
     SRC_HEIGHT=$(echo $PACKET | jq .src_height)
-    SRC_HEIGHT=$(expr $SRC_HEIGHT + 1)
+    PROOF_HEIGHT=$(expr $SRC_HEIGHT + 1)
     # FIXME: this should auto-update on proofs...
-    ${CLIENT_EXE} seeds update --height=$SRC_HEIGHT --home=${CLIENT_1}  > /dev/null
+    ${CLIENT_EXE} seeds update --height=$PROOF_HEIGHT --home=${CLIENT_1}  > /dev/null
     assertTrue "line=${LINENO}, update seed failed" $?
 
     PACKET_SEED="$BASE_DIR_1/packet_seed.json"
-    ${CLIENT_EXE} seeds export $PACKET_SEED --home=${CLIENT_1} #--height=$SRC_HEIGHT
+    ${CLIENT_EXE} seeds export $PACKET_SEED --home=${CLIENT_1} --height=$PROOF_HEIGHT
     assertTrue "line=${LINENO}, export seed failed" $?
     if [ -n "$DEBUG" ]; then
         echo "**** SEED ****"
@@ -250,14 +257,15 @@ test05ReceiveIBCPacket() {
     txSucceeded $? "$TX" "post packet from chain1 on chain 2"
     TX_HEIGHT=$(echo $TX | jq .height)
 
-    # TODO: more queries on stuff...
+    # ensure $POOR balance was incremented, and credit for CHAIN_1 decremented
+    checkAccount $CHAIN_ID_1:: "40004" "$TX_HEIGHT"
+    checkAccount $RECV "20002" "$TX_HEIGHT"
 
     # look, we wrote a packet
     PACKETS=$(${CLIENT_EXE} query ibc packets  --height=$TX_HEIGHT --from=$CHAIN_ID_1)
     assertTrue "line=${LINENO}, packets query" $?
     assertEquals "line=${LINENO}, packet count" 1 $(echo $PACKETS | jq .data)
 }
-
 
 # XXX Ex Usage: assertNewHeight $MSG $SEED_1 $SEED_2
 # Desc: Asserts that seed2 has a higher block height than seed 1
@@ -267,95 +275,6 @@ assertNewHeight() {
     assertTrue "$MSG" "test $H2 -gt $H1"
     return $?
 }
-
-# test01SendIBCTx() {
-#     # Trigger a cross-chain sendTx... from RICH on chain1 to POOR on chain2
-#     #   we make sure the money was reduced, but nothing arrived
-#     SENDER=$(BC_HOME=${CLIENT_1} getAddr $RICH)
-#     RECV=$(BC_HOME=${CLIENT_2} getAddr $POOR)
-
-#     export BC_HOME=${CLIENT_1}
-#     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=20002mycoin \
-#         --sequence=1 --to=${CHAIN_ID_2}/${RECV} --name=$RICH)
-#     txSucceeded $? "$TX" "${CHAIN_ID_2}/${RECV}"
-#     # an example to quit early if there is no point in more tests
-#     if [ $? != 0 ]; then echo "aborting!"; return 1; fi
-
-#     HASH=$(echo $TX | jq .hash | tr -d \")
-#     TX_HEIGHT=$(echo $TX | jq .height)
-
-#     # Make sure balance went down and tx is indexed
-#     checkAccount $SENDER "1" "9007199254720990"  "$TX_HEIGHT"
-#     checkSendTx $HASH $TX_HEIGHT $SENDER "20002"
-
-#     # Make sure nothing arrived - yet
-#     waitForBlock ${PORT_1}
-#     assertFalse "line=${LINENO}, no relay running" "BC_HOME=${CLIENT_2} ${CLIENT_EXE} query account $RECV"
-
-#     # Start the relay and wait a few blocks...
-#     # (already sent a tx on chain1, so use higher sequence)
-#     startRelay 2 1
-#     if [ $? != 0 ]; then echo "can't start relay"; cat ${BASE_DIR_1}/../relay.log; return 1; fi
-
-#     # Give it a little time, then make sure the money arrived
-#     echo "waiting for relay..."
-#     sleep 1
-#     waitForBlock ${PORT_1}
-#     waitForBlock ${PORT_2}
-
-#     # Check the new account
-#     echo "checking ibc recipient..."
-#     BC_HOME=${CLIENT_2} checkAccount $RECV "0" "20002"
-
-#     # Stop relay
-#     printf "stoping relay\n"
-#     kill -9 $PID_RELAY
-# }
-
-# # StartRelay $seq1 $seq2
-# # startRelay hooks up a relay between chain1 and chain2
-# # it needs the proper sequence number for $RICH on chain1 and chain2 as args
-# startRelay() {
-#     # Send some cash to the default key, so it can send messages
-#     RELAY_KEY=${BASE_DIR_1}/server/key.json
-#     RELAY_ADDR=$(cat $RELAY_KEY | jq .address | tr -d \")
-#     echo starting relay $PID_RELAY ...
-
-#     # Get paid on chain1
-#     export BC_HOME=${CLIENT_1}
-#     SENDER=$(getAddr $RICH)
-#     RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000mycoin \
-#         --sequence=$1 --to=$RELAY_ADDR --name=$RICH)
-#     txSucceeded $? "$RES" "$RELAY_ADDR"
-#     if [ $? != 0 ]; then echo "can't pay chain1!"; return 1; fi
-
-#     # Get paid on chain2
-#     export BC_HOME=${CLIENT_2}
-#     SENDER=$(getAddr $RICH)
-#     RES=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=100000mycoin \
-#         --sequence=$2 --to=$RELAY_ADDR --name=$RICH)
-#     txSucceeded $? "$RES" "$RELAY_ADDR"
-#     if [ $? != 0 ]; then echo "can't pay chain2!"; return 1; fi
-
-#     # Initialize the relay (register both chains)
-#     ${SERVER_EXE} relay init --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
-#         --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
-#         --genesis1=${BASE_DIR_1}/server/genesis.json --genesis2=${BASE_DIR_2}/server/genesis.json \
-#         --from=$RELAY_KEY > ${BASE_DIR_1}/../relay.log
-#     if [ $? != 0 ]; then echo "can't initialize relays"; cat ${BASE_DIR_1}/../relay.log; return 1; fi
-
-#     # Now start the relay (constantly send packets)
-#     ${SERVER_EXE} relay start --chain1-id=$CHAIN_ID_1 --chain2-id=$CHAIN_ID_2 \
-#         --chain1-addr=tcp://localhost:${PORT_1} --chain2-addr=tcp://localhost:${PORT_2} \
-#         --from=$RELAY_KEY >> ${BASE_DIR_1}/../relay.log &
-#     sleep 2
-#     PID_RELAY=$!
-#     disown
-
-#     # Return an error if it dies in the first two seconds to make sure it is running
-#     ps $PID_RELAY >/dev/null
-#     return $?
-# }
 
 # Load common then run these tests with shunit2!
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #get this files directory

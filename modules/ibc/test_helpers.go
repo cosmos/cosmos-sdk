@@ -42,7 +42,7 @@ func (m MockChain) MakePostPacket(packet Packet, h int) (
 	PostPacketTx, UpdateChainTx) {
 
 	post := makePostPacket(m.tree, packet, m.chainID, h)
-	seed := genEmptySeed(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
+	seed := genEmptySeed(m.keys, m.chainID, h+1, m.tree.Hash(), len(m.keys))
 	update := UpdateChainTx{seed}
 
 	return post, update

@@ -94,7 +94,10 @@ func (m Middleware) verifyPost(ctx sdk.Context, store state.SimpleDB,
 	// look up the referenced header
 	space := stack.PrefixedStore(from, store)
 	provider := newDBProvider(space)
-	seed, err := provider.GetExactHeight(int(tx.FromChainHeight))
+
+	// if the query was on height H, the proof is in header H+1
+	proofHeight := int(tx.FromChainHeight + 1)
+	seed, err := provider.GetExactHeight(proofHeight)
 	if err != nil {
 		return ictx, itx, err
 	}

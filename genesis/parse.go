@@ -54,22 +54,18 @@ func GetOptions(path string) ([]Option, error) {
 
 	opts := genDoc.AppOptions
 	cnt := 1 + len(opts.Accounts) + len(opts.pluginOptions)
-	res := make([]Option, cnt)
-
-	res[0] = Option{sdk.ModuleNameBase, sdk.ChainKey, genDoc.ChainID}
-	i := 1
+	res := make([]Option, 0, cnt)
+	res = append(res, Option{sdk.ModuleNameBase, sdk.ChainKey, genDoc.ChainID})
 
 	// set accounts
 	for _, acct := range opts.Accounts {
-		res[i] = Option{"coin", "account", string(acct)}
-		i++
+		res = append(res, Option{"coin", "account", string(acct)})
 	}
 
 	// set plugin options
 	for _, kv := range opts.pluginOptions {
 		module, key := splitKey(kv.Key)
-		res[i] = Option{module, key, kv.Value}
-		i++
+		res = append(res, Option{module, key, kv.Value})
 	}
 
 	return res, nil

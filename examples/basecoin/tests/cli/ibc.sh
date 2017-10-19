@@ -198,7 +198,7 @@ test04SendIBCPacket() {
     assertEquals "line=${LINENO}, proper src" "\"$CHAIN_ID_1\"" $(echo $PACKET | jq .src_chain)
     assertEquals "line=${LINENO}, proper dest" "\"$CHAIN_ID_2\"" $(echo $PACKET | jq .packet.dest_chain)
     assertEquals "line=${LINENO}, proper sequence" "0" $(echo $PACKET | jq .packet.sequence)
-    echo $PACKET
+    if [ -n "$DEBUG" ]; then echo $PACKET; echo; fi
 
     # nothing arrived
     ARRIVED=$(${CLIENT_EXE} query ibc packets --from=$CHAIN_ID_1 --home=$CLIENT_2 2>/dev/null)
@@ -220,7 +220,6 @@ test05ReceiveIBCPacket() {
     # get the seed and post it
     SRC_HEIGHT=$(echo $PACKET | jq .src_height)
     SRC_HEIGHT=$(expr $SRC_HEIGHT + 1)
-    echo "src_height:" $SRC_HEIGHT
     # FIXME: this should auto-update on proofs...
     ${CLIENT_EXE} seeds update --height=$SRC_HEIGHT --home=${CLIENT_1}  > /dev/null
     assertTrue "line=${LINENO}, update seed failed" $?
@@ -228,9 +227,11 @@ test05ReceiveIBCPacket() {
     PACKET_SEED="$BASE_DIR_1/packet_seed.json"
     ${CLIENT_EXE} seeds export $PACKET_SEED --home=${CLIENT_1} #--height=$SRC_HEIGHT
     assertTrue "line=${LINENO}, export seed failed" $?
-    echo "**** SEED ****"
-    cat $PACKET_SEED | jq .checkpoint.header
-    # cat $PACKET_SEED | jq .checkpoint.header.app_hash
+    if [ -n "$DEBUG" ]; then
+        echo "**** SEED ****"
+        cat $PACKET_SEED | jq .checkpoint.header
+        echo
+    fi
 
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-update \
         --seed=${PACKET_SEED} --name=$POOR --sequence=3)
@@ -242,8 +243,6 @@ test05ReceiveIBCPacket() {
     # write the packet to the file
     POST_PACKET="$BASE_DIR_1/post_packet.json"
     echo $PACKET > $POST_PACKET
-    # echo "**** POST ****"
-    # cat $POST_PACKET | jq .
 
     # post it as a tx (cross-fingers)
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-post \

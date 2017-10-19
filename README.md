@@ -24,6 +24,8 @@ master    | [![CircleCI](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master.s
 
 !!!!!!!!!!!!!!!!!!!!!
 
+**Note: Requires Go 1.8+**
+
 The Cosmos SDK is the middleware platform that the [Cosmos Hub](https://cosmos.network) is constructed from. The Hub is a blockchain (or, internet of blockchains) in which the Atom supply resides. The Atoms supply is defined at genesis and can change based on the rules of the Hub.
 
 Under the hood, the Cosmos SDK is an [ABCI application](https://github.com/tendermint/abci) designed to be used with the [Tendermint consensus engine](https://tendermint.com/) to form a Proof-of-Stake cryptocurrency. It also provides a general purpose framework

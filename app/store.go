@@ -258,17 +258,11 @@ func loadState(dbName string, cacheSize int, historySize uint64) (*sm.State, err
 	dir := path.Dir(dbPath)
 	name := path.Base(dbPath)
 
-	// Make sure the path exists
-	empty, _ := cmn.IsDirEmpty(dbPath + ".db")
-
 	// Open database called "dir/name.db", if it doesn't exist it will be created
 	db := dbm.NewDB(name, dbm.LevelDBBackendStr, dir)
 	tree := iavl.NewVersionedTree(cacheSize, db)
-
-	if !empty {
-		if err = tree.Load(); err != nil {
-			return nil, errors.ErrInternal("Loading tree: " + err.Error())
-		}
+	if err = tree.Load(); err != nil {
+		return nil, errors.ErrInternal("Loading tree: " + err.Error())
 	}
 
 	return sm.NewState(tree, historySize), nil

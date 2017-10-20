@@ -14,6 +14,8 @@ import (
 	"github.com/tendermint/light-client/proofs"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 )

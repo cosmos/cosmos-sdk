@@ -13,8 +13,8 @@ import (
 
 var updateCmd = &cobra.Command{
 	Use:          "update",
-	Short:        "Update seed to current height if possible",
-	RunE:         commands.RequireInit(updateSeed),
+	Short:        "Update commit to current height if possible",
+	RunE:         commands.RequireInit(updateCommit),
 	SilenceUsage: true,
 }
 
@@ -23,27 +23,27 @@ func init() {
 	RootCmd.AddCommand(updateCmd)
 }
 
-func updateSeed(cmd *cobra.Command, args []string) error {
+func updateCommit(cmd *cobra.Command, args []string) error {
 	cert, err := commands.GetCertifier()
 	if err != nil {
 		return err
 	}
 
 	h := viper.GetInt(heightFlag)
-	var seed certifiers.Seed
+	var fc certifiers.FullCommit
 	if h <= 0 {
 		// get the lastest from our source
-		seed, err = certifiers.LatestSeed(cert.SeedSource)
+		fc, err = cert.Source.LatestCommit()
 	} else {
-		seed, err = cert.SeedSource.GetByHeight(h)
+		fc, err = cert.Source.GetByHeight(h)
 	}
 	if err != nil {
 		return err
 	}
 
 	// let the certifier do it's magic to update....
-	fmt.Printf("Trying to update to height: %d...\n", seed.Height())
-	err = cert.Update(seed.Checkpoint, seed.Validators)
+	fmt.Printf("Trying to update to height: %d...\n", fc.Height())
+	err = cert.Update(fc)
 	if err != nil {
 		return err
 	}

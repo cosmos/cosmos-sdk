@@ -74,7 +74,7 @@ func GetProviders() (trusted certifiers.Provider, source certifiers.Provider) {
 }
 
 // GetCertifier constructs a dynamic certifier from the config info
-func GetCertifier() (*certifiers.InquiringCertifier, error) {
+func GetCertifier() (*certifiers.Inquiring, error) {
 	// load up the latest store....
 	trust := GetTrustedProvider()
 	source := GetSourceProvider()

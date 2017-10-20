@@ -280,14 +280,14 @@ func initSeed() (err error) {
 	trust, source := GetProviders()
 
 	// load a seed file, or get data from the provider
-	var seed certifiers.Seed
+	var seed certifiers.FullCommit
 	seedFile := viper.GetString(SeedFlag)
 	if seedFile == "" {
 		fmt.Println("Loading validator set from tendermint rpc...")
-		seed, err = certifiers.LatestSeed(source)
+		seed, err = source.LatestCommit()
 	} else {
 		fmt.Printf("Loading validators from file %s\n", seedFile)
-		seed, err = certifiers.LoadSeed(seedFile)
+		seed, err = files.LoadFullCommit(seedFile)
 	}
 	// can't load the seed? abort!
 	if err != nil {
@@ -305,8 +305,8 @@ func initSeed() (err error) {
 	if hash != "" {
 		var hashb []byte
 		hashb, err = hex.DecodeString(hash)
-		if err == nil && !bytes.Equal(hashb, seed.Hash()) {
-			err = errors.Errorf("Seed hash doesn't match expectation: %X", seed.Hash())
+		if err == nil && !bytes.Equal(hashb, seed.ValidatorsHash()) {
+			err = errors.Errorf("Seed hash doesn't match expectation: %X", seed.ValidatorsHash())
 		}
 	} else {
 		err = validateHash(seed)
@@ -317,14 +317,14 @@ func initSeed() (err error) {
 	}
 
 	// if accepted, store seed as current state
-	trust.StoreSeed(seed)
+	trust.StoreCommit(seed)
 	return nil
 }
 
-func validateHash(seed certifiers.Seed) error {
+func validateHash(seed certifiers.FullCommit) error {
 	// ask the user to verify the validator hash
 	fmt.Println("\nImportant: if this is incorrect, all interaction with the chain will be insecure!")
-	fmt.Printf("  Given validator hash valid: %X\n", seed.Hash())
+	fmt.Printf("  Given validator hash valid: %X\n", seed.ValidatorsHash())
 	fmt.Println("Is this valid (y/n)?")
 	valid := askForConfirmation()
 	if !valid {

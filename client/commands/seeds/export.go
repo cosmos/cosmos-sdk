@@ -5,6 +5,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/tendermint/light-client/certifiers/files"
+
 	"github.com/cosmos/cosmos-sdk/client/commands"
 )
 
@@ -34,11 +36,11 @@ func exportSeed(cmd *cobra.Command, args []string) error {
 	trust, _ := commands.GetProviders()
 	h := viper.GetInt(heightFlag)
 	hash := viper.GetString(hashFlag)
-	seed, err := loadSeed(trust, h, hash, "")
+	fc, err := loadCommit(trust, h, hash, "")
 	if err != nil {
 		return err
 	}
 
 	// now get the output file and write it
-	return seed.WriteJSON(path)
+	return files.SaveFullCommitJSON(fc, path)
 }

@@ -218,13 +218,13 @@ func TestInitState(t *testing.T) {
 	assert.Equal(unsortCoins, coins)
 
 	err = app.InitState("base", "dslfkgjdas", "")
-	require.NotNil(err)
+	require.Error(err)
 
 	err = app.InitState("", "dslfkgjdas", "")
-	require.NotNil(err)
+	require.Error(err)
 
 	err = app.InitState("dslfkgjdas", "szfdjzs", "")
-	require.NotNil(err)
+	require.Error(err)
 }
 
 // Test CheckTx and DeliverTx with insufficient and sufficient balance

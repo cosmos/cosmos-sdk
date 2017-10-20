@@ -1,5 +1,5 @@
 hash: fa04e2d0e8764d44c0f8e3400d7d12118b0f05aac6c12e5ff0d3dd1940c03100
-updated: 2017-10-19T16:01:35.775869665+02:00
+updated: 2017-10-20T19:33:25.496934736+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -133,9 +133,9 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/iavl
-  version: 4f9a4a2433e3b3022ae2ceec50a1f57689d54145
+  version: 721710e7aa59f61dbfbf558943a207ba3fe6b926
 - name: github.com/tendermint/light-client
-  version: 79125bb4dfe173fe8a7208327ac4ec4c73d1a8a7
+  version: f817693e93241ee10d8ad49935f7c05b4776d829
   subpackages:
   - certifiers
   - certifiers/client
@@ -237,7 +237,7 @@ imports:
   - tap
   - transport
 - name: gopkg.in/go-playground/validator.v9
-  version: d529ee1b0f30352444f507cc6cdac96bfd12decc
+  version: 6d8c18553ea1ac493d049edd6f102f52e618f085
 - name: gopkg.in/yaml.v2
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports:

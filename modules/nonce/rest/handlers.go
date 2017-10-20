@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 
 	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	"github.com/cosmos/cosmos-sdk/client/commands/query"
 	"github.com/cosmos/cosmos-sdk/errors"
@@ -16,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/modules/nonce"
 	"github.com/cosmos/cosmos-sdk/stack"
 	wire "github.com/tendermint/go-wire"
-	lightclient "github.com/tendermint/light-client"
 	"github.com/tendermint/tmlibs/common"
 )
 
@@ -48,7 +48,7 @@ func doQueryNonce(w http.ResponseWriter, r *http.Request) {
 
 	// query sequence number
 	data, height, err := query.Get(key, h, prove)
-	if lightclient.IsNoDataErr(err) {
+	if client.IsNoDataErr(err) {
 		err = fmt.Errorf("nonce empty for address: %q", signature)
 		common.WriteError(w, err)
 		return

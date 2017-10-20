@@ -38,7 +38,7 @@ func GetWithProof(key []byte, reqHeight int, node client.Client,
 		return
 	}
 	if len(resp.Key) == 0 || len(resp.Proof) == 0 {
-		err = lc.ErrNoData()
+		err = ErrNoData()
 		return
 	}
 	if resp.Height == 0 {
@@ -84,7 +84,7 @@ func GetWithProof(key []byte, reqHeight int, node client.Client,
 			err = errors.Wrap(err, "Couldn't verify proof")
 			return
 		}
-		err = lc.ErrNoData()
+		err = ErrNoData()
 		proof = aproof
 	}
 

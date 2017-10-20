@@ -9,14 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/go-wire"
-	lc "github.com/tendermint/light-client"
 	"github.com/tendermint/light-client/certifiers"
 	certclient "github.com/tendermint/light-client/certifiers/client"
+	"github.com/tendermint/tmlibs/log"
+
 	nm "github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/rpc/client"
 	rpctest "github.com/tendermint/tendermint/rpc/test"
 	"github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tmlibs/log"
 
 	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/modules/eyes"
@@ -98,7 +98,7 @@ func TestAppProofs(t *testing.T) {
 	// Test non-existing key.
 	missing := []byte("my-missing-key")
 	bs, _, proof, err = GetWithProof(missing, 0, cl, cert)
-	require.True(lc.IsNoDataErr(err))
+	require.True(IsNoDataErr(err))
 	require.Nil(bs)
 	require.NotNil(proof)
 	err = proof.Verify(missing, nil, rootHash)

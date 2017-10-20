@@ -12,7 +12,6 @@ import (
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/iavl"
 	"github.com/tendermint/light-client/proofs"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 

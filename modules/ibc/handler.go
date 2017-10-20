@@ -124,14 +124,14 @@ func (h Handler) initSeed(ctx sdk.Context, store state.SimpleDB,
 	// verify that the header looks reasonable
 	chainID := t.ChainID()
 	s := NewChainSet(store)
-	err = s.Register(chainID, ctx.BlockHeight(), t.Seed.Height())
+	err = s.Register(chainID, ctx.BlockHeight(), t.Commit.Height())
 	if err != nil {
 		return res, err
 	}
 
 	space := stack.PrefixedStore(chainID, store)
 	provider := newDBProvider(space)
-	err = provider.StoreSeed(t.Seed)
+	err = provider.StoreCommit(t.Commit)
 	return res, err
 }
 
@@ -147,21 +147,21 @@ func (h Handler) updateSeed(ctx sdk.Context, store state.SimpleDB,
 	}
 
 	// load the certifier for this chain
-	seed := t.Seed
+	fc := t.Commit
 	space := stack.PrefixedStore(chainID, store)
-	cert, err := newCertifier(space, chainID, seed.Height())
+	cert, err := newCertifier(space, chainID, fc.Height())
 	if err != nil {
 		return res, err
 	}
 
-	// this will import the seed if it is valid in the current context
-	err = cert.Update(seed.Checkpoint, seed.Validators)
+	// this will import the commit if it is valid in the current context
+	err = cert.Update(fc)
 	if err != nil {
 		return res, ErrInvalidCommit(err)
 	}
 
 	// update the tracked height in chain info
-	err = s.Update(chainID, t.Seed.Height())
+	err = s.Update(chainID, fc.Height())
 	return res, err
 }
 

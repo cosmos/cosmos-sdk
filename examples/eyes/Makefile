@@ -1,4 +1,5 @@
-LINKER_FLAGS:="-X github.com/cosmos/cosmos-sdk/client/commands.CommitHash=`git rev-parse --short HEAD`"
+COMMIT_HASH := $(shell git rev-parse --short HEAD)
+LINKER_FLAGS:="-X github.com/cosmos/cosmos-sdk/client/commands.CommitHash=${COMMIT_HASH}"
 
 install:
 	@go install -ldflags $(LINKER_FLAGS) ./cmd/...

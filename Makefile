@@ -6,8 +6,8 @@ TUTORIALS=$(shell find docs/guide -name "*md" -type f)
 EXAMPLES := counter eyes basecoin
 INSTALL_EXAMPLES := $(addprefix install_,${EXAMPLES})
 TEST_EXAMPLES := $(addprefix testex_,${EXAMPLES})
-
-LINKER_FLAGS:="-X github.com/cosmos/cosmos-sdk/client/commands.CommitHash=`git rev-parse --short HEAD`"
+COMMIT_HASH := $(shell git rev-parse --short HEAD)
+LINKER_FLAGS:="-X github.com/cosmos/cosmos-sdk/client/commands.CommitHash=${COMMIT_HASH}"
 
 all: get_vendor_deps install test
 

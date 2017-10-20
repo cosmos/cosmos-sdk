@@ -80,13 +80,13 @@ func postPacketTxCmd(cmd *cobra.Command, args []string) error {
 	return txcmd.DoTx(post.Wrap())
 }
 
-func readSeed() (seed certifiers.Seed, err error) {
+func readSeed() (fc certifiers.FullCommit, err error) {
 	name := viper.GetString(FlagSeed)
 	if name == "" {
-		return seed, errors.New("You must specify a seed file")
+		return fc, errors.New("You must specify a commit file")
 	}
 
-	err = readFile(name, &seed)
+	err = readFile(name, &fc)
 	return
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	"github.com/cosmos/cosmos-sdk/client/commands/query"
 	"github.com/cosmos/cosmos-sdk/modules/auth"
@@ -18,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/modules/fee"
 	"github.com/cosmos/cosmos-sdk/modules/nonce"
 	"github.com/cosmos/cosmos-sdk/stack"
-	lightclient "github.com/tendermint/light-client"
 	"github.com/tendermint/tmlibs/common"
 )
 
@@ -62,7 +62,7 @@ func doQueryAccount(w http.ResponseWriter, r *http.Request) {
 	account := new(coin.Account)
 	prove := !viper.GetBool(commands.FlagTrustNode)
 	height, err := query.GetParsed(key, account, h, prove)
-	if lightclient.IsNoDataErr(err) {
+	if client.IsNoDataErr(err) {
 		err := fmt.Errorf("account bytes are empty for address: %q", signature)
 		common.WriteError(w, err)
 		return

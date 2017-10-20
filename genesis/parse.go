@@ -10,6 +10,10 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
+// KeyDelimiter is used to separate module and key in
+// the options
+const KeyDelimiter = "/"
+
 // Option just holds module/key/value triples from
 // parsing the genesis file
 type Option struct {
@@ -141,8 +145,8 @@ func parseList(kvzIn []json.RawMessage) (kvz []keyValue, err error) {
 // Splits the string at the first '/'.
 // if there are none, assign default module ("base").
 func splitKey(key string) (string, string) {
-	if strings.Contains(key, "/") {
-		keyParts := strings.SplitN(key, "/", 2)
+	if strings.Contains(key, KeyDelimiter) {
+		keyParts := strings.SplitN(key, KeyDelimiter, 2)
 		return keyParts[0], keyParts[1]
 	}
 	return sdk.ModuleNameBase, key

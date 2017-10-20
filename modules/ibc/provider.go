@@ -17,11 +17,11 @@ const (
 // newCertifier loads up the current state of this chain to make a proper certifier
 // it will load the most recent height before block h if h is positive
 // if h < 0, it will load the latest height
-func newCertifier(store state.SimpleDB, chainID string, h int) (*certifiers.InquiringCertifier, error) {
+func newCertifier(store state.SimpleDB, chainID string, h int) (*certifiers.Inquiring, error) {
 	// each chain has their own prefixed subspace
 	p := newDBProvider(store)
 
-	var seed certifiers.Seed
+	var seed certifiers.FullCommit
 	var err error
 	if h > 0 {
 		// this gets the most recent verified seed below the specified height
@@ -55,7 +55,7 @@ func newDBProvider(store state.SimpleDB) *dbProvider {
 
 var _ certifiers.Provider = &dbProvider{}
 
-func (d *dbProvider) StoreSeed(seed certifiers.Seed) error {
+func (d *dbProvider) StoreSeed(seed certifiers.FullCommit) error {
 	// TODO: don't duplicate data....
 	b := wire.BinaryBytes(seed)
 	d.byHash.Set(seed.Hash(), b)
@@ -63,7 +63,7 @@ func (d *dbProvider) StoreSeed(seed certifiers.Seed) error {
 	return nil
 }
 
-func (d *dbProvider) GetByHeight(h int) (seed certifiers.Seed, err error) {
+func (d *dbProvider) GetByHeight(h int) (seed certifiers.FullCommit, err error) {
 	b, _ := d.byHeight.LTE(uint64(h))
 	if b == nil {
 		return seed, certifiers.ErrSeedNotFound()
@@ -72,7 +72,7 @@ func (d *dbProvider) GetByHeight(h int) (seed certifiers.Seed, err error) {
 	return
 }
 
-func (d *dbProvider) GetByHash(hash []byte) (seed certifiers.Seed, err error) {
+func (d *dbProvider) GetByHash(hash []byte) (seed certifiers.FullCommit, err error) {
 	b := d.byHash.Get(hash)
 	if b == nil {
 		return seed, certifiers.ErrSeedNotFound()
@@ -83,7 +83,7 @@ func (d *dbProvider) GetByHash(hash []byte) (seed certifiers.Seed, err error) {
 
 // GetExactHeight is like GetByHeight, but returns an error instead of
 // closest match if there is no exact match
-func (d *dbProvider) GetExactHeight(h int) (seed certifiers.Seed, err error) {
+func (d *dbProvider) GetExactHeight(h int) (seed certifiers.FullCommit, err error) {
 	seed, err = d.GetByHeight(h)
 	if err != nil {
 		return

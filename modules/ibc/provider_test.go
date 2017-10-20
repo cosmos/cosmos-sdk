@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/light-client/certifiers"
 )
 
-func assertSeedEqual(t *testing.T, s, s2 certifiers.Seed) {
+func assertSeedEqual(t *testing.T, s, s2 certifiers.FullCommit) {
 	assert := assert.New(t)
 	assert.Equal(s.Height(), s2.Height())
 	assert.Equal(s.Hash(), s2.Hash())
@@ -75,16 +75,16 @@ func TestDBProvider(t *testing.T) {
 	checkProvider(t, p, "test-db", "bling")
 }
 
-func makeSeeds(keys certifiers.ValKeys, count int, chainID, app string) []certifiers.Seed {
+func makeSeeds(keys certifiers.ValKeys, count int, chainID, app string) []certifiers.FullCommit {
 	appHash := []byte(app)
-	seeds := make([]certifiers.Seed, count)
+	seeds := make([]certifiers.FullCommit, count)
 	for i := 0; i < count; i++ {
 		// two seeds for each validator, to check how we handle dups
 		// (10, 0), (10, 1), (10, 1), (10, 2), (10, 2), ...
 		vals := keys.ToValidators(10, int64(count/2))
 		h := 20 + 10*i
 		check := keys.GenCheckpoint(chainID, h, nil, vals, appHash, 0, len(keys))
-		seeds[i] = certifiers.Seed{check, vals}
+		seeds[i] = certifiers.FullCommit{check, vals}
 	}
 	return seeds
 }

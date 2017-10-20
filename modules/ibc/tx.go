@@ -32,7 +32,7 @@ func init() {
 
 // RegisterChainTx allows you to register a new chain on this blockchain
 type RegisterChainTx struct {
-	Seed certifiers.Seed `json:"seed"`
+	Seed certifiers.FullCommit `json:"seed"`
 }
 
 // ChainID helps get the chain this tx refers to
@@ -56,7 +56,7 @@ func (r RegisterChainTx) Wrap() sdk.Tx {
 
 // UpdateChainTx updates the state of this chain
 type UpdateChainTx struct {
-	Seed certifiers.Seed `json:"seed"`
+	Seed certifiers.FullCommit `json:"seed"`
 }
 
 // ChainID helps get the chain this tx refers to

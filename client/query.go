@@ -5,8 +5,8 @@ import (
 
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/iavl"
-	lc "github.com/tendermint/light-client"
 	"github.com/tendermint/light-client/certifiers"
+	certerr "github.com/tendermint/light-client/certifiers/errors"
 
 	"github.com/tendermint/tendermint/rpc/client"
 )
@@ -47,7 +47,7 @@ func GetWithProof(key []byte, reqHeight int, node client.Client,
 	}
 
 	// AppHash for height H is in header H+1
-	var check lc.Checkpoint
+	var check *certifiers.Commit
 	check, err = GetCertifiedCheckpoint(int(resp.Height+1), node, cert)
 	if err != nil {
 		return
@@ -95,25 +95,22 @@ func GetWithProof(key []byte, reqHeight int, node client.Client,
 // GetCertifiedCheckpoint gets the signed header for a given height
 // and certifies it.  Returns error if unable to get a proven header.
 func GetCertifiedCheckpoint(h int, node client.Client,
-	cert certifiers.Certifier) (empty lc.Checkpoint, err error) {
+	cert certifiers.Certifier) (empty *certifiers.Commit, err error) {
 
 	// FIXME: cannot use cert.GetByHeight for now, as it also requires
 	// Validators and will fail on querying tendermint for non-current height.
 	// When this is supported, we should use it instead...
 	client.WaitForHeight(node, h, nil)
-	commit, err := node.Commit(&h)
+	cresp, err := node.Commit(&h)
 	if err != nil {
 		return
 	}
-	check := lc.Checkpoint{
-		Header: commit.Header,
-		Commit: commit.Commit,
-	}
+	commit := certifiers.CommitFromResult(cresp)
 
 	// validate downloaded checkpoint with our request and trust store.
-	if check.Height() != h {
-		return empty, lc.ErrHeightMismatch(h, check.Height())
+	if commit.Height() != h {
+		return empty, certerr.ErrHeightMismatch(h, commit.Height())
 	}
-	err = cert.Certify(check)
-	return check, nil
+	err = cert.Certify(commit)
+	return commit, nil
 }

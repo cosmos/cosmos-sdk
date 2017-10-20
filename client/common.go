@@ -5,7 +5,10 @@ import (
 
 	"github.com/tendermint/light-client/certifiers"
 	certclient "github.com/tendermint/light-client/certifiers/client"
+	certerr "github.com/tendermint/light-client/certifiers/errors"
 	"github.com/tendermint/light-client/certifiers/files"
+
+	"github.com/tendermint/light-client/proofs"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )
@@ -18,7 +21,7 @@ func GetNode(url string) rpcclient.Client {
 // GetRPCProvider retuns a certifier compatible data source using
 // tendermint RPC
 func GetRPCProvider(url string) certifiers.Provider {
-	return certclient.NewHTTP(url)
+	return certclient.NewHTTPProvider(url)
 }
 
 // GetLocalProvider returns a reference to a file store of headers
@@ -33,11 +36,11 @@ func GetLocalProvider(dir string) certifiers.Provider {
 // GetCertifier initializes an inquiring certifier given a fixed chainID
 // and a local source of trusted data with at least one seed
 func GetCertifier(chainID string, trust certifiers.Provider,
-	source certifiers.Provider) (*certifiers.InquiringCertifier, error) {
+	source certifiers.Provider) (*certifiers.Inquiring, error) {
 
 	// this gets the most recent verified seed
-	seed, err := certifiers.LatestSeed(trust)
-	if certifiers.IsSeedNotFoundErr(err) {
+	seed, err := trust.LatestCommit()
+	if certerr.IsCommitNotFoundErr(err) {
 		return nil, errors.New("Please run init first to establish a root of trust")
 	}
 	if err != nil {
@@ -49,6 +52,6 @@ func GetCertifier(chainID string, trust certifiers.Provider,
 
 // SecureClient uses a given certifier to wrap an connection to an untrusted
 // host and return a cryptographically secure rpc client.
-func SecureClient(c rpcclient.Client, cert *certifiers.InquiringCertifier) rpcclient.Client {
-	return certclient.Wrap(c, cert)
+func SecureClient(c rpcclient.Client, cert *certifiers.Inquiring) rpcclient.Client {
+	return proofs.Wrap(c, cert)
 }

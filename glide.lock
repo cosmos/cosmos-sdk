@@ -1,5 +1,5 @@
-hash: fbfdd03c0367bb0785ceb81ed34059df219e55d5a9c71c12597e505fbce14165
-updated: 2017-10-23T14:49:22.891642342+02:00
+hash: 01d77eb5791b8963db5ecffcf2c59d3dff7fdab5f627f0260b0c4c298fa3f7e8
+updated: 2017-10-23T15:01:08.294460953+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -135,14 +135,15 @@ imports:
 - name: github.com/tendermint/iavl
   version: 721710e7aa59f61dbfbf558943a207ba3fe6b926
 - name: github.com/tendermint/light-client
-  version: 569e1583da8a52e499764533f3a05d05be6d56d6
+  version: e12516078a89df78ce223ea21a1b82455fd0bc15
   subpackages:
   - certifiers
   - certifiers/client
+  - certifiers/errors
   - certifiers/files
   - proofs
 - name: github.com/tendermint/tendermint
-  version: fa56e8c0ce463f77c87ab17a3d7cf5431d9f2c0b
+  version: 60b7f2c61b921ef5b760f07f6034e5167396d601
   subpackages:
   - blockchain
   - cmd/tendermint/commands

@@ -12,21 +12,21 @@ type encryptedStorage struct {
 }
 
 func (es encryptedStorage) Put(name, pass string, key crypto.PrivKey) error {
-	secret, err := es.coder.Encrypt(key, pass)
+	saltBytes, encBytes, err := es.coder.Encrypt(key, pass)
 	if err != nil {
 		return err
 	}
 
 	ki := info(name, key)
-	return es.store.Put(name, secret, ki)
+	return es.store.Put(name, saltBytes, encBytes, ki)
 }
 
 func (es encryptedStorage) Get(name, pass string) (crypto.PrivKey, keys.Info, error) {
-	secret, info, err := es.store.Get(name)
+	saltBytes, encBytes, info, err := es.store.Get(name)
 	if err != nil {
 		return crypto.PrivKey{}, info, err
 	}
-	key, err := es.coder.Decrypt(secret, pass)
+	key, err := es.coder.Decrypt(saltBytes, encBytes, pass)
 	return key, info, err
 }
 

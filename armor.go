@@ -22,7 +22,7 @@ func EncodeArmor(blockType string, headers map[string]string, data []byte) strin
 	if err != nil {
 		PanicSanity("Error encoding ascii armor: " + err.Error())
 	}
-	return string(buf.Bytes())
+	return buf.String()
 }
 
 func DecodeArmor(armorStr string) (blockType string, headers map[string]string, data []byte, err error) {

@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"hash"
-	"log"
 	"math/big"
 	"strconv"
 	"strings"
@@ -86,8 +85,7 @@ func ComputeTxId(rawTxHex string) string {
 	return HexEncode(ReverseBytes(CalcHash256(HexDecode(rawTxHex))))
 }
 
-// Private methods...
-
+/*
 func printKeyInfo(privKeyBytes []byte, pubKeyBytes []byte, chain []byte) {
 	if pubKeyBytes == nil {
 		pubKeyBytes = PubKeyBytesFromPrivKeyBytes(privKeyBytes, true)
@@ -99,6 +97,7 @@ func printKeyInfo(privKeyBytes []byte, pubKeyBytes []byte, chain []byte) {
 		addr,
 		HexEncode(chain))
 }
+*/
 
 func DerivePrivateKeyForPath(privKeyBytes []byte, chain []byte, path string) []byte {
 	data := privKeyBytes
@@ -144,7 +143,7 @@ func DerivePublicKeyForPath(pubKeyBytes []byte, chain []byte, path string) []byt
 }
 
 func DerivePrivateKey(privKeyBytes []byte, chain []byte, i uint32, prime bool) ([]byte, []byte) {
-	data := []byte{}
+	var data []byte
 	if prime {
 		i = i | 0x80000000
 		data = append([]byte{byte(0)}, privKeyBytes...)
@@ -177,11 +176,11 @@ func addPoints(a []byte, b []byte) []byte {
 		panic(err)
 	}
 	sumX, sumY := btcec.S256().Add(ap.X, ap.Y, bp.X, bp.Y)
-	sum := (*btcec.PublicKey)(&btcec.PublicKey{
+	sum := &btcec.PublicKey{
 		Curve: btcec.S256(),
 		X:     sumX,
 		Y:     sumY,
-	})
+	}
 	return sum.SerializeCompressed()
 }
 
@@ -248,11 +247,11 @@ func WIFFromPrivKeyBytes(privKeyBytes []byte, compress bool) string {
 
 func PubKeyBytesFromPrivKeyBytes(privKeyBytes []byte, compress bool) (pubKeyBytes []byte) {
 	x, y := btcec.S256().ScalarBaseMult(privKeyBytes)
-	pub := (*btcec.PublicKey)(&btcec.PublicKey{
+	pub := &btcec.PublicKey{
 		Curve: btcec.S256(),
 		X:     x,
 		Y:     y,
-	})
+	}
 
 	if compress {
 		return pub.SerializeCompressed()

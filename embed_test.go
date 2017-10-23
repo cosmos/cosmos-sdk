@@ -73,8 +73,8 @@ func TestEncodeDemo(t *testing.T) {
 		// Try to encode as binary
 		b, err := data.ToWire(tc.in)
 		if assert.Nil(err, "%d: %#v", i, tc.in) {
-			err := data.FromWire(b, tc.out)
-			if assert.Nil(err) {
+			err2 := data.FromWire(b, tc.out)
+			if assert.Nil(err2) {
 				assert.Equal(tc.expected, tc.out.String())
 			}
 		}
@@ -82,8 +82,8 @@ func TestEncodeDemo(t *testing.T) {
 		// Try to encode it as json
 		j, err := data.ToJSON(tc.in)
 		if assert.Nil(err, "%d: %#v", i, tc.in) {
-			err := data.FromJSON(j, tc.out)
-			if assert.Nil(err) {
+			err2 := data.FromJSON(j, tc.out)
+			if assert.Nil(err2) {
 				assert.Equal(tc.expected, tc.out.String())
 			}
 		}

@@ -119,8 +119,8 @@ func TestCheckInvalidLists(t *testing.T) {
 			w, err := codec.BytesToWords(data)
 			if tc.valid {
 				assert.Nil(err, "%d: %+v", i, err)
-				b, err := codec.WordsToBytes(w)
-				assert.Nil(err, "%d: %+v", i, err)
+				b, err1 := codec.WordsToBytes(w)
+				assert.Nil(err1, "%d: %+v", i, err1)
 				assert.Equal(data, b)
 			} else {
 				assert.NotNil(err, "%d", i)

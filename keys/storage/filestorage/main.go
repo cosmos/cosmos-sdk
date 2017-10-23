@@ -22,13 +22,14 @@ import (
 const (
 	// BlockType is the type of block.
 	BlockType = "Tendermint Light Client"
+
 	// PrivExt is the extension for private keys.
 	PrivExt = "tlc"
 	// PubExt is the extensions for public keys.
 	PubExt = "pub"
 
 	keyPerm = os.FileMode(0600)
-	pubPerm = os.FileMode(0644)
+	// pubPerm = os.FileMode(0644)
 	dirPerm = os.FileMode(0700)
 )
 
@@ -51,10 +52,8 @@ func New(dir string) FileStore {
 	return FileStore{dir}
 }
 
-// assertStorage just makes sure we implement the proper Storage interface
-func (s FileStore) assertStorage() keys.Storage {
-	return s
-}
+// assert FileStore satisfies keys.Storage
+var _ keys.Storage = FileStore{}
 
 // Put creates two files, one with the public info as json, the other
 // with the (encoded) private key as gpg ascii-armor style
@@ -90,11 +89,10 @@ func (s FileStore) Get(name string) (salt []byte, key []byte, info keys.Info, er
 // Info for all keys located in this directory.
 func (s FileStore) List() (keys.Infos, error) {
 	dir, err := os.Open(s.keyDir)
-	defer dir.Close()
-
 	if err != nil {
 		return nil, errors.Wrap(err, "List Keys")
 	}
+	defer dir.Close()
 
 	names, err := dir.Readdirnames(0)
 	if err != nil {
@@ -142,11 +140,10 @@ func (s FileStore) nameToPaths(name string) (pub, priv string) {
 
 func readInfo(path string) (info keys.Info, err error) {
 	f, err := os.Open(path)
-	defer f.Close()
-
 	if err != nil {
 		return info, errors.Wrap(err, "Reading data")
 	}
+	defer f.Close()
 
 	d, err := ioutil.ReadAll(f)
 	if err != nil {
@@ -171,11 +168,10 @@ func readInfo(path string) (info keys.Info, err error) {
 
 func read(path string) (salt, key []byte, name string, err error) {
 	f, err := os.Open(path)
-	defer f.Close()
-
 	if err != nil {
 		return nil, nil, "", errors.Wrap(err, "Reading data")
 	}
+	defer f.Close()
 
 	d, err := ioutil.ReadAll(f)
 	if err != nil {
@@ -209,11 +205,10 @@ func read(path string) (salt, key []byte, name string, err error) {
 
 func writeInfo(path string, info keys.Info) error {
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, keyPerm)
-	defer f.Close()
-
 	if err != nil {
 		return errors.Wrap(err, "Writing data")
 	}
+	defer f.Close()
 
 	headers := map[string]string{"name": info.Name}
 	text := crypto.EncodeArmor(BlockType, headers, info.PubKey.Bytes())
@@ -224,11 +219,10 @@ func writeInfo(path string, info keys.Info) error {
 
 func write(path, name string, salt, key []byte) error {
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, keyPerm)
-	defer f.Close()
-
 	if err != nil {
 		return errors.Wrap(err, "Writing data")
 	}
+	defer f.Close()
 
 	headers := map[string]string{
 		"name": name,

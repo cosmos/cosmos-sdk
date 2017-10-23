@@ -24,15 +24,9 @@ func New(coder Encoder, store keys.Storage, codec keys.Codec) Manager {
 	}
 }
 
-// exists just to make sure we fulfill the Signer interface
-func (s Manager) assertSigner() keys.Signer {
-	return s
-}
-
-// exists just to make sure we fulfill the Manager interface
-func (s Manager) assertKeyManager() keys.Manager {
-	return s
-}
+// assert Manager satisfies keys.Signer and keys.Manager interfaces
+var _ keys.Signer = Manager{}
+var _ keys.Manager = Manager{}
 
 // Create adds a new key to the storage engine, returning error if
 // another key already stored under this name

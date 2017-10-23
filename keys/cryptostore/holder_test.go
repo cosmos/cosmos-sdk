@@ -50,22 +50,22 @@ func TestKeyManagement(t *testing.T) {
 	assert.NotNil(err)
 
 	// list shows them in order
-	keys, err := cstore.List()
+	keyS, err := cstore.List()
 	require.Nil(err)
-	require.Equal(2, len(keys))
+	require.Equal(2, len(keyS))
 	// note these are in alphabetical order
-	assert.Equal(n2, keys[0].Name)
-	assert.Equal(n1, keys[1].Name)
-	assert.Equal(i2.PubKey, keys[0].PubKey)
+	assert.Equal(n2, keyS[0].Name)
+	assert.Equal(n1, keyS[1].Name)
+	assert.Equal(i2.PubKey, keyS[0].PubKey)
 
 	// deleting a key removes it
 	err = cstore.Delete("bad name", "foo")
 	require.NotNil(err)
 	err = cstore.Delete(n1, p1)
 	require.Nil(err)
-	keys, err = cstore.List()
+	keyS, err = cstore.List()
 	require.Nil(err)
-	assert.Equal(1, len(keys))
+	assert.Equal(1, len(keyS))
 	_, err = cstore.Get(n1)
 	assert.NotNil(err)
 

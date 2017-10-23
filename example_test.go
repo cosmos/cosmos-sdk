@@ -20,14 +20,14 @@ import (
 	"github.com/tendermint/go-crypto"
 )
 
-func Example_Sha256() {
+func ExampleSha256() {
 	sum := crypto.Sha256([]byte("This is Tendermint"))
 	fmt.Printf("%x\n", sum)
 	// Output:
 	// f91afb642f3d1c87c17eb01aae5cb65c242dfdbe7cf1066cc260f4ce5d33b94e
 }
 
-func Example_Ripemd160() {
+func ExampleRipemd160() {
 	sum := crypto.Ripemd160([]byte("This is Tendermint"))
 	fmt.Printf("%x\n", sum)
 	// Output:

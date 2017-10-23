@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/errors"
-	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // Recovery catches any panics and returns them as errors instead
@@ -14,7 +13,7 @@ type Recovery struct{}
 var _ sdk.Decorator = Recovery{}
 
 // CheckTx catches any panic and converts to error - fulfills Middlware interface
-func (Recovery) CheckTx(ctx sdk.Context, store state.SimpleDB,
+func (Recovery) CheckTx(ctx sdk.Context, store sdk.SimpleDB,
 	tx interface{}, next sdk.Checker) (res sdk.CheckResult, err error) {
 
 	defer func() {
@@ -26,7 +25,7 @@ func (Recovery) CheckTx(ctx sdk.Context, store state.SimpleDB,
 }
 
 // DeliverTx catches any panic and converts to error - fulfills Middlware interface
-func (Recovery) DeliverTx(ctx sdk.Context, store state.SimpleDB,
+func (Recovery) DeliverTx(ctx sdk.Context, store sdk.SimpleDB,
 	tx interface{}, next sdk.Deliverer) (res sdk.DeliverResult, err error) {
 
 	defer func() {

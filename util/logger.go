@@ -6,7 +6,6 @@ import (
 	abci "github.com/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/state"
 )
 
 // Logger writes out log messages on every request
@@ -15,7 +14,7 @@ type Logger struct{}
 var _ sdk.Decorator = Logger{}
 
 // CheckTx logs time and result - fulfills Middlware interface
-func (Logger) CheckTx(ctx sdk.Context, store state.SimpleDB, tx interface{}, next sdk.Checker) (res sdk.CheckResult, err error) {
+func (Logger) CheckTx(ctx sdk.Context, store sdk.SimpleDB, tx interface{}, next sdk.Checker) (res sdk.CheckResult, err error) {
 	start := time.Now()
 	res, err = next.CheckTx(ctx, store, tx)
 	delta := time.Now().Sub(start)
@@ -30,7 +29,7 @@ func (Logger) CheckTx(ctx sdk.Context, store state.SimpleDB, tx interface{}, nex
 }
 
 // DeliverTx logs time and result - fulfills Middlware interface
-func (Logger) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx interface{}, next sdk.Deliverer) (res sdk.DeliverResult, err error) {
+func (Logger) DeliverTx(ctx sdk.Context, store sdk.SimpleDB, tx interface{}, next sdk.Deliverer) (res sdk.DeliverResult, err error) {
 	start := time.Now()
 	res, err = next.DeliverTx(ctx, store, tx)
 	delta := time.Now().Sub(start)
@@ -48,7 +47,7 @@ func (Logger) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx interface{}, n
 // Pass in a name to be logged with this to separate out various
 // tickers
 func LogTicker(clock sdk.Ticker, name string) sdk.Ticker {
-	res := func(ctx sdk.Context, s state.SimpleDB) ([]*abci.Validator, error) {
+	res := func(ctx sdk.Context, s sdk.SimpleDB) ([]*abci.Validator, error) {
 		start := time.Now()
 		vals, err := clock.Tick(ctx, s)
 		delta := time.Now().Sub(start)

@@ -32,8 +32,8 @@ func NewMockChain(chainID string, numKeys int) MockChain {
 
 // GetRegistrationTx returns a valid tx to register this chain
 func (m MockChain) GetRegistrationTx(h int) RegisterChainTx {
-	seed := genEmptyCommit(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
-	return RegisterChainTx{seed}
+	fc := genEmptyCommit(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
+	return RegisterChainTx{fc}
 }
 
 // MakePostPacket commits the packet locally and returns the proof,
@@ -42,8 +42,8 @@ func (m MockChain) MakePostPacket(packet Packet, h int) (
 	PostPacketTx, UpdateChainTx) {
 
 	post := makePostPacket(m.tree, packet, m.chainID, h)
-	seed := genEmptyCommit(m.keys, m.chainID, h+1, m.tree.Hash(), len(m.keys))
-	update := UpdateChainTx{seed}
+	fc := genEmptyCommit(m.keys, m.chainID, h+1, m.tree.Hash(), len(m.keys))
+	update := UpdateChainTx{fc}
 
 	return post, update
 }

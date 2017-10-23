@@ -100,20 +100,20 @@ func (h Handler) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (re
 
 	switch t := tx.Unwrap().(type) {
 	case RegisterChainTx:
-		return h.initSeed(ctx, store, t)
+		return h.registerChain(ctx, store, t)
 	case UpdateChainTx:
-		return h.updateSeed(ctx, store, t)
+		return h.updateChain(ctx, store, t)
 	case CreatePacketTx:
 		return h.createPacket(ctx, store, t)
 	}
 	return res, errors.ErrUnknownTxType(tx.Unwrap())
 }
 
-// initSeed imports the first seed for this chain and
+// registerChain imports the first seed for this chain and
 // accepts it as the root of trust.
 //
 // only the registrar, if set, is allowed to do this
-func (h Handler) initSeed(ctx sdk.Context, store state.SimpleDB,
+func (h Handler) registerChain(ctx sdk.Context, store state.SimpleDB,
 	t RegisterChainTx) (res sdk.DeliverResult, err error) {
 
 	info := LoadInfo(store)
@@ -135,9 +135,9 @@ func (h Handler) initSeed(ctx sdk.Context, store state.SimpleDB,
 	return res, err
 }
 
-// updateSeed checks the seed against the existing chain data and rejects it if it
+// updateChain checks the seed against the existing chain data and rejects it if it
 // doesn't fit (or no chain data)
-func (h Handler) updateSeed(ctx sdk.Context, store state.SimpleDB,
+func (h Handler) updateChain(ctx sdk.Context, store state.SimpleDB,
 	t UpdateChainTx) (res sdk.DeliverResult, err error) {
 
 	chainID := t.ChainID()

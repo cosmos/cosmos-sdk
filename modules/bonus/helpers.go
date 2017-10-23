@@ -1,4 +1,4 @@
-package base
+package bonus
 
 import (
 	abci "github.com/tendermint/abci/types"

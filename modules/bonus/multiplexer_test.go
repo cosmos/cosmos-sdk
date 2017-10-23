@@ -1,12 +1,12 @@
-package base
+package bonus
 
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/stack"
 	"github.com/cosmos/cosmos-sdk/state"
+	"github.com/stretchr/testify/assert"
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"

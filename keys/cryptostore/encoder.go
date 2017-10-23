@@ -55,7 +55,7 @@ func (e secretbox) Decrypt(saltBytes []byte, encBytes []byte, passphrase string)
 	}
 	privKey, err = crypto.PrivKeyFromBytes(privKeyBytes)
 	if err != nil {
-		return crypto.PrivKey{}, errors.Wrap(err, "Couldn't get privKey from bytes")
+		return crypto.PrivKey{}, errors.Wrap(err, "Private Key")
 	}
 	return privKey, nil
 }

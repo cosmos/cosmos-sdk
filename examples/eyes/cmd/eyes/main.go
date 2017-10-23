@@ -8,10 +8,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	client "github.com/cosmos/cosmos-sdk/client/commands"
-	"github.com/cosmos/cosmos-sdk/modules/base"
 	"github.com/cosmos/cosmos-sdk/modules/eyes"
 	"github.com/cosmos/cosmos-sdk/server/commands"
-	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/util"
 )
 
 // RootCmd is the entry point for this binary
@@ -23,14 +22,11 @@ var RootCmd = &cobra.Command{
 
 // BuildApp constructs the stack we want to use for this app
 func BuildApp() sdk.Handler {
-	return stack.New(
-		base.Logger{},
-		stack.Recovery{},
-	).
-		// We do this to demo real usage, also embeds it under it's own namespace
-		Dispatch(
-			stack.WrapHandler(eyes.NewHandler()),
-		)
+	return sdk.ChainDecorators(
+		util.Logger{},
+		util.Recovery{},
+	).WithHandler(
+		eyes.NewHandler())
 }
 
 func main() {

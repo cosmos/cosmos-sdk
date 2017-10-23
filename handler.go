@@ -3,8 +3,6 @@ package sdk
 import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/log"
-
-	"github.com/cosmos/cosmos-sdk/state"
 )
 
 const (
@@ -25,25 +23,25 @@ type Handler interface {
 
 // Checker verifies there are valid fees and estimates work
 type Checker interface {
-	CheckTx(ctx Context, store state.SimpleDB, tx interface{}) (CheckResult, error)
+	CheckTx(ctx Context, store SimpleDB, tx interface{}) (CheckResult, error)
 }
 
 // CheckerFunc (like http.HandlerFunc) is a shortcut for making wrappers
-type CheckerFunc func(Context, state.SimpleDB, interface{}) (CheckResult, error)
+type CheckerFunc func(Context, SimpleDB, interface{}) (CheckResult, error)
 
-func (c CheckerFunc) CheckTx(ctx Context, store state.SimpleDB, tx interface{}) (CheckResult, error) {
+func (c CheckerFunc) CheckTx(ctx Context, store SimpleDB, tx interface{}) (CheckResult, error) {
 	return c(ctx, store, tx)
 }
 
 // Deliverer performs the tx once it makes it in the block
 type Deliverer interface {
-	DeliverTx(ctx Context, store state.SimpleDB, tx interface{}) (DeliverResult, error)
+	DeliverTx(ctx Context, store SimpleDB, tx interface{}) (DeliverResult, error)
 }
 
 // DelivererFunc (like http.HandlerFunc) is a shortcut for making wrappers
-type DelivererFunc func(Context, state.SimpleDB, interface{}) (DeliverResult, error)
+type DelivererFunc func(Context, SimpleDB, interface{}) (DeliverResult, error)
 
-func (c DelivererFunc) DeliverTx(ctx Context, store state.SimpleDB, tx interface{}) (DeliverResult, error) {
+func (c DelivererFunc) DeliverTx(ctx Context, store SimpleDB, tx interface{}) (DeliverResult, error) {
 	return c(ctx, store, tx)
 }
 
@@ -53,20 +51,20 @@ func (c DelivererFunc) DeliverTx(ctx Context, store state.SimpleDB, tx interface
 // Ticker can be executed every block.
 // Called from BeginBlock
 type Ticker interface {
-	Tick(Context, state.SimpleDB) ([]*abci.Validator, error)
+	Tick(Context, SimpleDB) ([]*abci.Validator, error)
 }
 
 // TickerFunc allows a function to implement the interface
-type TickerFunc func(Context, state.SimpleDB) ([]*abci.Validator, error)
+type TickerFunc func(Context, SimpleDB) ([]*abci.Validator, error)
 
-func (t TickerFunc) Tick(ctx Context, store state.SimpleDB) ([]*abci.Validator, error) {
+func (t TickerFunc) Tick(ctx Context, store SimpleDB) ([]*abci.Validator, error) {
 	return t(ctx, store)
 }
 
 // InitValidator sets the initial validator set.
 // Called from InitChain
 type InitValidator interface {
-	InitValidators(logger log.Logger, store state.SimpleDB,
+	InitValidators(logger log.Logger, store SimpleDB,
 		vals []*abci.Validator)
 }
 
@@ -74,7 +72,7 @@ type InitValidator interface {
 //
 // TODO: Think if this belongs here, in genesis, or somewhere else
 type InitStater interface {
-	InitState(logger log.Logger, store state.SimpleDB,
+	InitState(logger log.Logger, store SimpleDB,
 		module, key, value string) (string, error)
 }
 

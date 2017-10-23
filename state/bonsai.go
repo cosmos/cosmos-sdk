@@ -3,6 +3,7 @@ package state
 import (
 	"math/rand"
 
+	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/tendermint/iavl"
 )
 
@@ -19,7 +20,7 @@ func (b *Bonsai) String() string {
 	return "Bonsai{" + b.Tree.String() + "}"
 }
 
-var _ SimpleDB = &Bonsai{}
+var _ sdk.SimpleDB = &Bonsai{}
 
 // NewBonsai wraps a merkle tree and tags it to track children
 func NewBonsai(tree *iavl.VersionedTree) *Bonsai {
@@ -58,10 +59,10 @@ func (b *Bonsai) GetVersionedWithProof(key []byte, version uint64) ([]byte, iavl
 	return b.Tree.GetVersionedWithProof(key, version)
 }
 
-func (b *Bonsai) List(start, end []byte, limit int) []Model {
-	res := []Model{}
+func (b *Bonsai) List(start, end []byte, limit int) []sdk.Model {
+	res := []sdk.Model{}
 	stopAtCount := func(key []byte, value []byte) (stop bool) {
-		m := Model{key, value}
+		m := sdk.Model{key, value}
 		res = append(res, m)
 		return limit > 0 && len(res) >= limit
 	}
@@ -69,31 +70,31 @@ func (b *Bonsai) List(start, end []byte, limit int) []Model {
 	return res
 }
 
-func (b *Bonsai) First(start, end []byte) Model {
-	var m Model
+func (b *Bonsai) First(start, end []byte) sdk.Model {
+	var m sdk.Model
 	stopAtFirst := func(key []byte, value []byte) (stop bool) {
-		m = Model{key, value}
+		m = sdk.Model{key, value}
 		return true
 	}
 	b.Tree.IterateRange(start, end, true, stopAtFirst)
 	return m
 }
 
-func (b *Bonsai) Last(start, end []byte) Model {
-	var m Model
+func (b *Bonsai) Last(start, end []byte) sdk.Model {
+	var m sdk.Model
 	stopAtFirst := func(key []byte, value []byte) (stop bool) {
-		m = Model{key, value}
+		m = sdk.Model{key, value}
 		return true
 	}
 	b.Tree.IterateRange(start, end, false, stopAtFirst)
 	return m
 }
 
-func (b *Bonsai) Checkpoint() SimpleDB {
+func (b *Bonsai) Checkpoint() sdk.SimpleDB {
 	return NewMemKVCache(b)
 }
 
-func (b *Bonsai) Commit(sub SimpleDB) error {
+func (b *Bonsai) Commit(sub sdk.SimpleDB) error {
 	cache, ok := sub.(*MemKVCache)
 	if !ok {
 		return ErrNotASubTransaction()
@@ -115,7 +116,7 @@ func (b *Bonsai) Commit(sub SimpleDB) error {
 //
 // FIXME: use this code when iavltree is improved
 
-// func (b *Bonsai) Checkpoint() SimpleDB {
+// func (b *Bonsai) Checkpoint() sdk.SimpleDB {
 // 	return &Bonsai{
 // 		id:   b.id,
 // 		Tree: b.Tree.Copy(),
@@ -125,7 +126,7 @@ func (b *Bonsai) Commit(sub SimpleDB) error {
 // // Commit will take all changes from the checkpoint and write
 // // them to the parent.
 // // Returns an error if this is not a child of this one
-// func (b *Bonsai) Commit(sub SimpleDB) error {
+// func (b *Bonsai) Commit(sub sdk.SimpleDB) error {
 // 	bb, ok := sub.(*Bonsai)
 // 	if !ok || (b.id != bb.id) {
 // 		return ErrNotASubTransaction()

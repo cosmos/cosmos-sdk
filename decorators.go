@@ -1,9 +1,5 @@
 package sdk
 
-import (
-	"github.com/cosmos/cosmos-sdk/state"
-)
-
 // Decorator is anything that wraps another handler
 // to enhance functionality.
 //
@@ -15,12 +11,12 @@ type Decorator interface {
 }
 
 type DecorateChecker interface {
-	CheckTx(ctx Context, store state.SimpleDB,
+	CheckTx(ctx Context, store SimpleDB,
 		tx interface{}, next Checker) (CheckResult, error)
 }
 
 type DecorateDeliverer interface {
-	DeliverTx(ctx Context, store state.SimpleDB, tx interface{},
+	DeliverTx(ctx Context, store SimpleDB, tx interface{},
 		next Deliverer) (DeliverResult, error)
 }
 
@@ -74,14 +70,14 @@ type decorator struct {
 var _ Handler = &decorator{}
 
 // CheckTx fulfils Handler interface
-func (m *decorator) CheckTx(ctx Context, store state.SimpleDB,
+func (m *decorator) CheckTx(ctx Context, store SimpleDB,
 	tx interface{}) (CheckResult, error) {
 
 	return m.decorator.CheckTx(ctx, store, tx, m.next)
 }
 
 // DeliverTx fulfils Handler interface
-func (m *decorator) DeliverTx(ctx Context, store state.SimpleDB,
+func (m *decorator) DeliverTx(ctx Context, store SimpleDB,
 	tx interface{}) (res DeliverResult, err error) {
 
 	return m.decorator.DeliverTx(ctx, store, tx, m.next)

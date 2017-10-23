@@ -1,13 +1,16 @@
 package state
 
-import "github.com/tendermint/iavl"
+import (
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/tendermint/iavl"
+)
 
 // State represents the app states, separating the commited state (for queries)
 // from the working state (for CheckTx and AppendTx)
 type State struct {
 	committed   *Bonsai
-	deliverTx   SimpleDB
-	checkTx     SimpleDB
+	deliverTx   sdk.SimpleDB
+	checkTx     sdk.SimpleDB
 	historySize uint64
 }
 
@@ -42,13 +45,13 @@ func (s State) Committed() *Bonsai {
 
 // Append gives us read-write access to the current working
 // state (to be committed at EndBlock)
-func (s State) Append() SimpleDB {
+func (s State) Append() sdk.SimpleDB {
 	return s.deliverTx
 }
 
 // Append gives us read-write access to the current scratch
 // state (to be reset at EndBlock)
-func (s State) Check() SimpleDB {
+func (s State) Check() sdk.SimpleDB {
 	return s.checkTx
 }
 

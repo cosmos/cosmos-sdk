@@ -4,13 +4,14 @@ import (
 	"io/ioutil"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/tendermint/iavl"
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
-func GetDBs() []SimpleDB {
+func GetDBs() []sdk.SimpleDB {
 	// tree with persistence....
 	tmpDir, err := ioutil.TempDir("", "state-tests")
 	if err != nil {
@@ -19,7 +20,7 @@ func GetDBs() []SimpleDB {
 	db := dbm.NewDB("test-get-dbs", dbm.LevelDBBackendStr, tmpDir)
 	persist := iavl.NewVersionedTree(500, db)
 
-	return []SimpleDB{
+	return []sdk.SimpleDB{
 		NewMemKVStore(),
 		NewBonsai(iavl.NewVersionedTree(0, dbm.NewMemDB())),
 		NewBonsai(persist),
@@ -33,8 +34,8 @@ func b(k string) []byte {
 	return []byte(k)
 }
 
-func m(k, v string) Model {
-	return Model{
+func m(k, v string) sdk.Model {
+	return sdk.Model{
 		Key:   b(k),
 		Value: b(v),
 	}
@@ -45,9 +46,9 @@ type listQuery struct {
 	start, end string
 	limit      int
 	// expected result from List, first element also expected for First
-	expected []Model
+	expected []sdk.Model
 	// expected result from Last
-	last Model
+	last sdk.Model
 }
 
 // TestKVStore makes sure that get/set/remove operations work,
@@ -56,39 +57,39 @@ func TestKVStore(t *testing.T) {
 	assert := assert.New(t)
 
 	cases := []struct {
-		toSet    []Model
-		toRemove []Model
-		toGet    []Model
+		toSet    []sdk.Model
+		toRemove []sdk.Model
+		toGet    []sdk.Model
 		toList   []listQuery
 	}{
 		// simple add
 		{
-			toSet:    []Model{m("a", "b"), m("c", "d")},
+			toSet:    []sdk.Model{m("a", "b"), m("c", "d")},
 			toRemove: nil,
-			toGet:    []Model{m("a", "b")},
+			toGet:    []sdk.Model{m("a", "b")},
 			toList: []listQuery{
 				{
 					"a", "d", 0,
-					[]Model{m("a", "b"), m("c", "d")},
+					[]sdk.Model{m("a", "b"), m("c", "d")},
 					m("c", "d"),
 				},
 				{
 					"a", "c", 10,
-					[]Model{m("a", "b")},
+					[]sdk.Model{m("a", "b")},
 					m("a", "b"),
 				},
 			},
 		},
 		// over-write data, remove
 		{
-			toSet: []Model{
+			toSet: []sdk.Model{
 				m("a", "1"),
 				m("b", "2"),
 				m("c", "3"),
 				m("b", "4"),
 			},
-			toRemove: []Model{m("c", "3")},
-			toGet: []Model{
+			toRemove: []sdk.Model{m("c", "3")},
+			toGet: []sdk.Model{
 				m("a", "1"),
 				m("b", "4"),
 				m("c", ""),
@@ -96,17 +97,17 @@ func TestKVStore(t *testing.T) {
 			toList: []listQuery{
 				{
 					"0d", "h", 1,
-					[]Model{m("a", "1")},
+					[]sdk.Model{m("a", "1")},
 					m("b", "4"),
 				},
 				{
 					"ad", "ak", 10,
-					[]Model{},
-					Model{},
+					[]sdk.Model{},
+					sdk.Model{},
 				},
 				{
 					"ad", "k", 0,
-					[]Model{m("b", "4")},
+					[]sdk.Model{m("b", "4")},
 					m("b", "4"),
 				},
 			},
@@ -132,7 +133,7 @@ func TestKVStore(t *testing.T) {
 				start, end := []byte(lq.start), []byte(lq.end)
 				list := db.List(start, end, lq.limit)
 				if assert.EqualValues(lq.expected, list, "%d/%d/%d", i, j, k) {
-					var first Model
+					var first sdk.Model
 					if len(lq.expected) > 0 {
 						first = lq.expected[0]
 					}

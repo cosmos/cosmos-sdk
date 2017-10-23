@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"sort"
 
+	sdk "github.com/cosmos/cosmos-sdk"
 	wire "github.com/tendermint/go-wire"
 )
 
@@ -18,14 +19,14 @@ func SetKey() []byte {
 // If we had full access to the IAVL tree, this would be completely
 // trivial and redundant
 type Set struct {
-	store KVStore
+	store sdk.KVStore
 	keys  KeyList
 }
 
-var _ KVStore = &Set{}
+var _ sdk.KVStore = &Set{}
 
 // NewSet loads or initializes a span of keys
-func NewSet(store KVStore) *Set {
+func NewSet(store sdk.KVStore) *Set {
 	s := &Set{store: store}
 	s.loadKeys()
 	return s

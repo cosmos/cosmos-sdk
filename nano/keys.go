@@ -59,6 +59,8 @@ type PrivKeyLedger struct {
 	CachedPubKey crypto.PubKey
 }
 
+// NewPrivKeyLedger will generate a new key and store the
+// public key for later use.
 func NewPrivKeyLedger() (crypto.PrivKey, error) {
 	var pk PrivKeyLedger
 	// getPubKey will cache the pubkey for later use,
@@ -66,6 +68,22 @@ func NewPrivKeyLedger() (crypto.PrivKey, error) {
 	// is not plugged in
 	_, err := pk.getPubKey()
 	return pk.Wrap(), err
+}
+
+// ValidateKey allows us to verify the sanity of a key
+// after loading it from disk
+func (pk *PrivKeyLedger) ValidateKey() error {
+	// getPubKey will return an error if the ledger is not
+	// properly set up...
+	pub, err := pk.getPubKey()
+	if err != nil {
+		return err
+	}
+	// verify this matches cached address
+	if !pub.Equals(pk.CachedPubKey) {
+		return errors.New("ledger doesn't match cached key")
+	}
+	return nil
 }
 
 // AssertIsPrivKeyInner fulfils PrivKey Interface

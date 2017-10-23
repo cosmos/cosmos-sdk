@@ -1,4 +1,4 @@
-package seeds
+package commits
 
 import (
 	"fmt"
@@ -18,9 +18,9 @@ const (
 
 var importCmd = &cobra.Command{
 	Use:          "import <file>",
-	Short:        "Imports a new seed from the given file",
-	Long:         `Validate this file and update to the given seed if secure.`,
-	RunE:         commands.RequireInit(importSeed),
+	Short:        "Imports a new commit from the given file",
+	Long:         `Validate this file and update to the given commit if secure.`,
+	RunE:         commands.RequireInit(importCommit),
 	SilenceUsage: true,
 }
 
@@ -29,7 +29,7 @@ func init() {
 	RootCmd.AddCommand(importCmd)
 }
 
-func importSeed(cmd *cobra.Command, args []string) error {
+func importCommit(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 || len(args[0]) == 0 {
 		return errors.New("You must provide an input file")
 	}

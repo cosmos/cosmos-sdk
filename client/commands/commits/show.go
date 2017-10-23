@@ -1,4 +1,4 @@
-package seeds
+package commits
 
 import (
 	"encoding/hex"
@@ -31,9 +31,9 @@ If desired, you can select by height, validator hash, or a file.
 }
 
 func init() {
-	showCmd.Flags().Int(heightFlag, 0, "Show the seed with closest height to this")
-	showCmd.Flags().String(hashFlag, "", "Show the seed matching the validator hash")
-	showCmd.Flags().String(fileFlag, "", "Show the seed stored in the given file")
+	showCmd.Flags().Int(heightFlag, 0, "Show the commit with closest height to this")
+	showCmd.Flags().String(hashFlag, "", "Show the commit matching the validator hash")
+	showCmd.Flags().String(fileFlag, "", "Show the commit stored in the given file")
 	RootCmd.AddCommand(showCmd)
 }
 

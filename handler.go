@@ -90,3 +90,16 @@ func MustGetTx(msg interface{}) interface{} {
 	m := msg.(Msg)
 	return m.GetTx()
 }
+
+// WrapTx embeds the tx into a Msg interface, with no decorator info
+func WrapTx(tx interface{}) Msg {
+	return msg{tx}
+}
+
+type msg struct {
+	tx interface{}
+}
+
+func (m msg) GetTx() interface{} {
+	return m.tx
+}

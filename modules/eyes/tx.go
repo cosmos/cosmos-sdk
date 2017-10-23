@@ -1,24 +1,21 @@
 package eyes
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/tendermint/go-wire/data"
 )
 
-// nolint
-const (
-	TypeSet    = Name + "/set"
-	TypeRemove = Name + "/remove"
-
-	ByteSet    = 0xF4
-	ByteRemove = 0xF5
-)
-
-func init() {
-	sdk.TxMapper.
-		RegisterImplementation(SetTx{}, TypeSet, ByteSet).
-		RegisterImplementation(RemoveTx{}, TypeRemove, ByteRemove)
+// DO NOT USE THIS INTERFACE.
+// You probably want to use EyesTx
+// +gen wrapper:"EyesTx,Impl[SetTx,RemoveTx],set,remove"
+type EyesTxInner interface {
+	ValidateBasic() error
 }
+
+// func init() {
+// 	sdk.TxMapper.
+// 		RegisterImplementation(SetTx{}, TypeSet, ByteSet).
+// 		RegisterImplementation(RemoveTx{}, TypeRemove, ByteRemove)
+// }
 
 // SetTx sets a key-value pair
 type SetTx struct {
@@ -26,13 +23,8 @@ type SetTx struct {
 	Value data.Bytes `json:"value"`
 }
 
-func NewSetTx(key, value []byte) sdk.Tx {
+func NewSetTx(key, value []byte) EyesTx {
 	return SetTx{Key: key, Value: value}.Wrap()
-}
-
-// Wrap - fulfills TxInner interface
-func (t SetTx) Wrap() sdk.Tx {
-	return sdk.Tx{t}
 }
 
 // ValidateBasic makes sure it is valid
@@ -48,13 +40,8 @@ type RemoveTx struct {
 	Key data.Bytes `json:"key"`
 }
 
-func NewRemoveTx(key []byte) sdk.Tx {
+func NewRemoveTx(key []byte) EyesTx {
 	return RemoveTx{Key: key}.Wrap()
-}
-
-// Wrap - fulfills TxInner interface
-func (t RemoveTx) Wrap() sdk.Tx {
-	return sdk.Tx{t}
 }
 
 // ValidateBasic makes sure it is valid

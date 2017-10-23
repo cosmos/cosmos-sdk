@@ -125,8 +125,8 @@ test02UpdateChains() {
     assertTrue "line=${LINENO}, export seed failed" $?
     assertNewHeight "line=${LINENO}" $ROOT_2 $UPDATE_2
     # this is used later to check query data
-    REGISTER_2_HEIGHT=$(cat $ROOT_2 | jq .checkpoint.header.height)
-    UPDATE_2_HEIGHT=$(cat $UPDATE_2 | jq .checkpoint.header.height)
+    REGISTER_2_HEIGHT=$(cat $ROOT_2 | jq .commit.header.height)
+    UPDATE_2_HEIGHT=$(cat $UPDATE_2 | jq .commit.header.height)
 
     # update chain2 on chain1
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-update \
@@ -236,7 +236,7 @@ test05ReceiveIBCPacket() {
     assertTrue "line=${LINENO}, export seed failed" $?
     if [ -n "$DEBUG" ]; then
         echo "**** SEED ****"
-        cat $PACKET_SEED | jq .checkpoint.header
+        cat $PACKET_SEED | jq .commit.header
         echo
     fi
 
@@ -270,9 +270,9 @@ test05ReceiveIBCPacket() {
 # XXX Ex Usage: assertNewHeight $MSG $SEED_1 $SEED_2
 # Desc: Asserts that seed2 has a higher block height than seed 1
 assertNewHeight() {
-    H1=$(cat $2 | jq .checkpoint.header.height)
-    H2=$(cat $3 | jq .checkpoint.header.height)
-    assertTrue "$MSG" "test $H2 -gt $H1"
+    H1=$(cat $2 | jq .commit.header.height)
+    H2=$(cat $3 | jq .commit.header.height)
+    assertTrue "$1" "test $H2 -gt $H1"
     return $?
 }
 

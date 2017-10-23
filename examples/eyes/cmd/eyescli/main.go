@@ -9,9 +9,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	"github.com/cosmos/cosmos-sdk/client/commands/auto"
+	"github.com/cosmos/cosmos-sdk/client/commands/commits"
 	"github.com/cosmos/cosmos-sdk/client/commands/query"
 	rpccmd "github.com/cosmos/cosmos-sdk/client/commands/rpc"
-	"github.com/cosmos/cosmos-sdk/client/commands/seeds"
 	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
 	eyescmd "github.com/cosmos/cosmos-sdk/modules/eyes/commands"
 )
@@ -50,7 +50,7 @@ func main() {
 		// we use out own init command to not require address arg
 		commands.InitCmd,
 		commands.ResetCmd,
-		seeds.RootCmd,
+		commits.RootCmd,
 		rpccmd.RootCmd,
 		query.RootCmd,
 		txcmd.RootCmd,

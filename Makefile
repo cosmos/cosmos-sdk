@@ -34,7 +34,7 @@ benchmark:
 test: test_unit test_cli
 
 test_unit:
-	@go test `glide novendor`
+	@go test `glide novendor | grep -v _attic | grep -v examples`
 
 test_cli: $(TEST_EXAMPLES)
 	# sudo apt-get install jq

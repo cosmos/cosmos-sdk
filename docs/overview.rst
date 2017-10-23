@@ -31,7 +31,7 @@ Signatures - Chain - Nonce - Fees - Roles -
 Inter-Blockchain-Communication (IBC)
 
 As a part of stack execution the state space provided to each middleware
-is isolated ``Data Store`` below. When
+is isolated in the ``Data Store`` below. When
 executing the stack, state-recovery checkpoints can be assigned for
 stack execution of ``CheckTx`` or ``DeliverTx``. This means, that all
 state changes will be reverted to the checkpoint state on failure when
@@ -41,6 +41,8 @@ end business logic fails; under this situation we would add the
 ``DeliverTx`` checkpoint after the fee middleware but before the
 business logic. This diagram displays a typical process flow through an
 execution stack.
+
+
 
 Dispatcher
 ~~~~~~~~~~

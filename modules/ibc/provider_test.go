@@ -8,12 +8,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/state"
 	"github.com/tendermint/light-client/certifiers"
+	certerr "github.com/tendermint/light-client/certifiers/errors"
 )
 
 func assertSeedEqual(t *testing.T, s, s2 certifiers.FullCommit) {
 	assert := assert.New(t)
 	assert.Equal(s.Height(), s2.Height())
-	assert.Equal(s.Hash(), s2.Hash())
+	assert.Equal(s.ValidatorsHash(), s2.ValidatorsHash())
 	// TODO: more
 }
 
@@ -31,11 +32,11 @@ func TestProviderStore(t *testing.T) {
 	// check it...
 	_, err := p.GetByHeight(20)
 	require.NotNil(err)
-	assert.True(certifiers.IsSeedNotFoundErr(err))
+	assert.True(certerr.IsCommitNotFoundErr(err))
 
 	// add a seed
 	for _, s := range seeds {
-		err = p.StoreSeed(s)
+		err = p.StoreCommit(s)
 		require.Nil(err)
 	}
 
@@ -54,16 +55,16 @@ func TestProviderStore(t *testing.T) {
 
 	// below is nothing
 	_, err = p.GetByHeight(s.Height() - 2)
-	assert.True(certifiers.IsSeedNotFoundErr(err))
+	assert.True(certerr.IsCommitNotFoundErr(err))
 
 	// make sure we get highest
-	val, err = certifiers.LatestSeed(p)
+	val, err = p.LatestCommit()
 	if assert.Nil(err) {
 		assertSeedEqual(t, seeds[3], val)
 	}
 
 	// make sure by hash also (note all have same hash, so overwritten)
-	val, err = p.GetByHash(seeds[1].Hash())
+	val, err = p.GetByHash(seeds[1].ValidatorsHash())
 	if assert.Nil(err) {
 		assertSeedEqual(t, seeds[3], val)
 	}
@@ -83,8 +84,7 @@ func makeSeeds(keys certifiers.ValKeys, count int, chainID, app string) []certif
 		// (10, 0), (10, 1), (10, 1), (10, 2), (10, 2), ...
 		vals := keys.ToValidators(10, int64(count/2))
 		h := 20 + 10*i
-		check := keys.GenCheckpoint(chainID, h, nil, vals, appHash, 0, len(keys))
-		seeds[i] = certifiers.FullCommit{check, vals}
+		seeds[i] = keys.GenFullCommit(chainID, h, nil, vals, appHash, 0, len(keys))
 	}
 	return seeds
 }
@@ -100,18 +100,18 @@ func checkProvider(t *testing.T, p certifiers.Provider, chainID, app string) {
 	// check provider is empty
 	seed, err := p.GetByHeight(20)
 	require.NotNil(err)
-	assert.True(certifiers.IsSeedNotFoundErr(err))
+	assert.True(certerr.IsCommitNotFoundErr(err))
 
-	seed, err = p.GetByHash(seeds[3].Hash())
+	seed, err = p.GetByHash(seeds[3].ValidatorsHash())
 	require.NotNil(err)
-	assert.True(certifiers.IsSeedNotFoundErr(err))
+	assert.True(certerr.IsCommitNotFoundErr(err))
 
 	// now add them all to the provider
 	for _, s := range seeds {
-		err = p.StoreSeed(s)
+		err = p.StoreCommit(s)
 		require.Nil(err)
 		// and make sure we can get it back
-		s2, err := p.GetByHash(s.Hash())
+		s2, err := p.GetByHash(s.ValidatorsHash())
 		assert.Nil(err)
 		assertSeedEqual(t, s, s2)
 		// by height as well

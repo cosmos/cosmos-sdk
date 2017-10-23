@@ -173,7 +173,7 @@ func TestSignWithLedger(t *testing.T) {
 	p := "hard2hack"
 
 	// create a nano user
-	c, _, err := cstore.Create(n, p, nano.NameLedger)
+	c, _, err := cstore.Create(n, p, nano.NameLedgerEd25519)
 	require.Nil(err, "%+v", err)
 	assert.Equal(c.Name, n)
 	_, ok := c.PubKey.Unwrap().(nano.PubKeyLedger)

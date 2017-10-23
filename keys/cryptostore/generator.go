@@ -68,7 +68,7 @@ func getGenerator(algo string) Generator {
 		return GenEd25519
 	case crypto.NameSecp256k1:
 		return GenSecp256k1
-	case nano.NameLedger:
+	case nano.NameLedgerEd25519:
 		return GenLedger
 	default:
 		return genInvalidAlgo{algo}
@@ -81,7 +81,7 @@ func getGeneratorByType(typ byte) Generator {
 		return GenEd25519
 	case crypto.TypeSecp256k1:
 		return GenSecp256k1
-	case nano.TypeLedger:
+	case nano.TypeLedgerEd25519:
 		return GenLedger
 	default:
 		return genInvalidByte{typ}

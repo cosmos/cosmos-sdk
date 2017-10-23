@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	NameLedger = "ledger"
-	TypeLedger = 0x10
+	NameLedgerEd25519 = "ledger"
+	TypeLedgerEd25519 = 0x10
 )
 
 var device *ledger.Ledger
@@ -229,11 +229,11 @@ func (pk PubKeyLedger) Equals(other crypto.PubKey) bool {
 
 func init() {
 	crypto.PrivKeyMapper.
-		RegisterImplementation(&PrivKeyLedger{}, NameLedger, TypeLedger).
+		RegisterImplementation(&PrivKeyLedger{}, NameLedgerEd25519, TypeLedgerEd25519).
 		RegisterImplementation(MockPrivKeyLedger{}, "mock-ledger", 0x11)
 
 	crypto.PubKeyMapper.
-		RegisterImplementation(PubKeyLedger{}, NameLedger, TypeLedger)
+		RegisterImplementation(PubKeyLedger{}, NameLedgerEd25519, TypeLedgerEd25519)
 }
 
 // Wrap fulfils interface for PrivKey struct

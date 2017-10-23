@@ -59,13 +59,13 @@ func TestAppProofs(t *testing.T) {
 	brh := br.Height
 
 	// This sets up our trust on the node based on some past point.
-	source := certclient.New(cl)
+	source := certclient.NewProvider(cl)
 	seed, err := source.GetByHeight(br.Height - 2)
 	require.NoError(err, "%+v", err)
 	cert := certifiers.NewStatic("my-chain", seed.Validators)
 
 	client.WaitForHeight(cl, 3, nil)
-	latest, err := source.GetLatestCommit()
+	latest, err := source.LatestCommit()
 	require.NoError(err, "%+v", err)
 	rootHash := latest.Header.AppHash
 
@@ -75,7 +75,7 @@ func TestAppProofs(t *testing.T) {
 	// verify a query before the tx block has no data (and valid non-exist proof)
 	bs, height, proof, err := GetWithProof(k, brh-1, cl, cert)
 	require.NotNil(err)
-	require.True(lc.IsNoDataErr(err))
+	require.True(IsNoDataErr(err))
 	require.Nil(bs)
 
 	// but given that block it is good
@@ -122,7 +122,7 @@ func TestTxProofs(t *testing.T) {
 	require.EqualValues(0, br.DeliverTx.Code)
 	fmt.Printf("tx height: %d\n", br.Height)
 
-	source := certclient.New(cl)
+	source := certclient.NewProvider(cl)
 	seed, err := source.GetByHeight(br.Height - 2)
 	require.NoError(err, "%+v", err)
 	cert := certifiers.NewStatic("my-chain", seed.Validators)

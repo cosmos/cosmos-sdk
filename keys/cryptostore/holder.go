@@ -33,14 +33,15 @@ var _ keys.Manager = Manager{}
 //
 // algo must be a supported go-crypto algorithm: ed25519, secp256k1
 func (s Manager) Create(name, passphrase, algo string) (keys.Info, string, error) {
-	gen, err := getGenerator(algo)
+	// 128-bits are the all the randomness we can make use of
+	secret := crypto.CRandBytes(16)
+	gen := getGenerator(algo)
+
+	key, err := gen.Generate(secret)
 	if err != nil {
 		return keys.Info{}, "", err
 	}
 
-	// 128-bits are the all the randomness we can make use of
-	secret := crypto.CRandBytes(16)
-	key := gen.Generate(secret)
 	err = s.es.Put(name, passphrase, key)
 	if err != nil {
 		return keys.Info{}, "", err
@@ -74,11 +75,11 @@ func (s Manager) Recover(name, passphrase, seedphrase string) (keys.Info, error)
 	l := len(secret)
 	secret, typ := secret[:l-1], secret[l-1]
 
-	gen, err := getGeneratorByType(typ)
+	gen := getGeneratorByType(typ)
+	key, err := gen.Generate(secret)
 	if err != nil {
 		return keys.Info{}, err
 	}
-	key := gen.Generate(secret)
 
 	// d00d, it worked!  create the bugger....
 	err = s.es.Put(name, passphrase, key)

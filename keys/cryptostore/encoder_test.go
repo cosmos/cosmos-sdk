@@ -15,8 +15,10 @@ func TestNoopEncoder(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 	noop := cryptostore.Noop
 
-	key := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
-	key2 := cryptostore.GenSecp256k1.Generate(cmn.RandBytes(16))
+	key, err := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
+	require.NoError(err)
+	key2, err := cryptostore.GenSecp256k1.Generate(cmn.RandBytes(16))
+	require.NoError(err)
 
 	_, b, err := noop.Encrypt(key, "encode")
 	require.Nil(err)
@@ -43,7 +45,8 @@ func TestSecretBox(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 	enc := cryptostore.SecretBox
 
-	key := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
+	key, err := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
+	require.NoError(err)
 	pass := "some-special-secret"
 
 	s, b, err := enc.Encrypt(key, pass)
@@ -65,7 +68,8 @@ func TestSecretBoxNoPass(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 	enc := cryptostore.SecretBox
 
-	key := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
+	key, err := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
+	require.NoError(err)
 
 	cases := []struct {
 		encode string

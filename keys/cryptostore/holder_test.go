@@ -224,13 +224,15 @@ func TestImportUnencrypted(t *testing.T) {
 		keys.MustLoadCodec("english"),
 	)
 
-	key := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
+	key, err := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
+	require.NoError(err)
+
 	addr := key.PubKey().Address()
 	name := "john"
 	pass := "top-secret"
 
 	// import raw bytes
-	err := cstore.Import(name, pass, "", nil, key.Bytes())
+	err = cstore.Import(name, pass, "", nil, key.Bytes())
 	require.Nil(err, "%+v", err)
 
 	// make sure the address matches

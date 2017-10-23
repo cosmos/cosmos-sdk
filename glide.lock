@@ -1,5 +1,5 @@
-hash: fa04e2d0e8764d44c0f8e3400d7d12118b0f05aac6c12e5ff0d3dd1940c03100
-updated: 2017-10-20T19:33:25.496934736+02:00
+hash: fbfdd03c0367bb0785ceb81ed34059df219e55d5a9c71c12597e505fbce14165
+updated: 2017-10-23T14:49:22.891642342+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -107,7 +107,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 5162ed1b2b4e7c0cea98be442210b43a0b6b94b9
+  version: bb9bb4aa465a31fd6a272765be381888e6898c74
   subpackages:
   - client
   - example/dummy
@@ -128,14 +128,14 @@ imports:
   - keys/storage/memstorage
   - keys/wordlist
 - name: github.com/tendermint/go-wire
-  version: 26ee079df7fca1958da8995c727b59759b197534
+  version: 55ae61f1fc83cfaa57ab7d54250d7a1a2be0b83c
   subpackages:
   - data
   - data/base58
 - name: github.com/tendermint/iavl
   version: 721710e7aa59f61dbfbf558943a207ba3fe6b926
 - name: github.com/tendermint/light-client
-  version: f817693e93241ee10d8ad49935f7c05b4776d829
+  version: 569e1583da8a52e499764533f3a05d05be6d56d6
   subpackages:
   - certifiers
   - certifiers/client

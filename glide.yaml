@@ -7,7 +7,7 @@ import:
 - package: github.com/spf13/pflag
 - package: github.com/spf13/viper
 - package: github.com/tendermint/abci
-  version: feature/merkleeyes-to-iavl
+  version: develop
   subpackages:
   - server
   - types
@@ -20,7 +20,7 @@ import:
   subpackages:
   - data
 - package: github.com/tendermint/light-client
-  version: feature/merkleeyes-to-iavl
+  version: develop
   subpackages:
   - proofs
   - certifiers

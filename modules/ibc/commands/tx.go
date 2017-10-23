@@ -39,36 +39,36 @@ var PostPacketTxCmd = &cobra.Command{
 
 //nolint
 const (
-	FlagSeed   = "seed"
+	FlagCommit = "commit"
 	FlagPacket = "packet"
 )
 
 func init() {
 	fs1 := RegisterChainTxCmd.Flags()
-	fs1.String(FlagSeed, "", "Filename with a seed file")
+	fs1.String(FlagCommit, "", "Filename with a commit file")
 
 	fs2 := UpdateChainTxCmd.Flags()
-	fs2.String(FlagSeed, "", "Filename with a seed file")
+	fs2.String(FlagCommit, "", "Filename with a commit file")
 
 	fs3 := PostPacketTxCmd.Flags()
 	fs3.String(FlagPacket, "", "Filename with a packet to post")
 }
 
 func registerChainTxCmd(cmd *cobra.Command, args []string) error {
-	seed, err := readSeed()
+	fc, err := readCommit()
 	if err != nil {
 		return err
 	}
-	tx := ibc.RegisterChainTx{seed}.Wrap()
+	tx := ibc.RegisterChainTx{fc}.Wrap()
 	return txcmd.DoTx(tx)
 }
 
 func updateChainTxCmd(cmd *cobra.Command, args []string) error {
-	seed, err := readSeed()
+	fc, err := readCommit()
 	if err != nil {
 		return err
 	}
-	tx := ibc.UpdateChainTx{seed}.Wrap()
+	tx := ibc.UpdateChainTx{fc}.Wrap()
 	return txcmd.DoTx(tx)
 }
 
@@ -80,8 +80,8 @@ func postPacketTxCmd(cmd *cobra.Command, args []string) error {
 	return txcmd.DoTx(post.Wrap())
 }
 
-func readSeed() (fc certifiers.FullCommit, err error) {
-	name := viper.GetString(FlagSeed)
+func readCommit() (fc certifiers.FullCommit, err error) {
+	name := viper.GetString(FlagCommit)
 	if name == "" {
 		return fc, errors.New("You must specify a commit file")
 	}

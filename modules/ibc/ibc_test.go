@@ -27,12 +27,12 @@ func TestIBCRegister(t *testing.T) {
 	appHash := []byte{0, 4, 7, 23}
 	appHash2 := []byte{12, 34, 56, 78}
 
-	// badSeed doesn't validate
-	badSeed := genEmptyCommit(keys2, "chain-2", 123, appHash, len(keys2))
-	badSeed.Header.AppHash = appHash2
+	// badCommit doesn't validate
+	badCommit := genEmptyCommit(keys2, "chain-2", 123, appHash, len(keys2))
+	badCommit.Header.AppHash = appHash2
 
 	cases := []struct {
-		seed    certifiers.FullCommit
+		fc      certifiers.FullCommit
 		checker errors.CheckErr
 	}{
 		{
@@ -44,7 +44,7 @@ func TestIBCRegister(t *testing.T) {
 			IsAlreadyRegisteredErr,
 		},
 		{
-			badSeed,
+			badCommit,
 			IsInvalidCommitErr,
 		},
 		{
@@ -58,7 +58,7 @@ func TestIBCRegister(t *testing.T) {
 	app := stack.New().Dispatch(stack.WrapHandler(NewHandler()))
 
 	for i, tc := range cases {
-		tx := RegisterChainTx{tc.seed}.Wrap()
+		tx := RegisterChainTx{tc.fc}.Wrap()
 		_, err := app.DeliverTx(ctx, store, tx)
 		assert.True(tc.checker(err), "%d: %+v", i, err)
 	}
@@ -165,7 +165,7 @@ func TestIBCUpdate(t *testing.T) {
 	require.Nil(err, "%+v", err)
 
 	cases := []struct {
-		seed    certifiers.FullCommit
+		fc      certifiers.FullCommit
 		checker errors.CheckErr
 	}{
 		// same validator, higher up
@@ -211,7 +211,7 @@ func TestIBCUpdate(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		tx := UpdateChainTx{tc.seed}.Wrap()
+		tx := UpdateChainTx{tc.fc}.Wrap()
 		_, err := app.DeliverTx(ctx, store, tx)
 		assert.True(tc.checker(err), "%d: %+v", i, err)
 	}

@@ -141,8 +141,8 @@ func TestTxProofs(t *testing.T) {
 	err = res.Proof.Validate(key)
 	assert.NoError(err, "%+v", err)
 
-	check, err := GetCertifiedCheckpoint(int(br.Height), cl, cert)
+	commit, err := GetCertifiedCommit(int(br.Height), cl, cert)
 	require.Nil(err, "%+v", err)
-	require.Equal(res.Proof.RootHash, check.Header.DataHash)
+	require.Equal(res.Proof.RootHash, commit.Header.DataHash)
 
 }

@@ -38,15 +38,15 @@ func GetLocalProvider(dir string) certifiers.Provider {
 func GetCertifier(chainID string, trust certifiers.Provider,
 	source certifiers.Provider) (*certifiers.Inquiring, error) {
 
-	// this gets the most recent verified seed
-	seed, err := trust.LatestCommit()
+	// this gets the most recent verified commit
+	fc, err := trust.LatestCommit()
 	if certerr.IsCommitNotFoundErr(err) {
 		return nil, errors.New("Please run init first to establish a root of trust")
 	}
 	if err != nil {
 		return nil, err
 	}
-	cert := certifiers.NewInquiring(chainID, seed, trust, source)
+	cert := certifiers.NewInquiring(chainID, fc, trust, source)
 	return cert, nil
 }
 

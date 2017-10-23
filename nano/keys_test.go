@@ -104,4 +104,10 @@ func TestRealLedger(t *testing.T) {
 	valid = pub.VerifyBytes(msg, sig)
 	assert.True(valid)
 
+	// make sure pubkeys serialize properly as well
+	bs = pub.Bytes()
+	bpub, err := crypto.PubKeyFromBytes(bs)
+	require.NoError(err)
+	assert.Equal(pub, bpub)
+
 }

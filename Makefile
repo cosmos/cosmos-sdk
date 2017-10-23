@@ -41,7 +41,6 @@ metalinter: ensure_tools
 metalinter_test: ensure_tools
 	@gometalinter --install
 	gometalinter --vendor --deadline=600s --disable-all  \
-		--enable=aligncheck \
 		--enable=deadcode \
 		--enable=gas \
 		--enable=goconst \
@@ -49,6 +48,7 @@ metalinter_test: ensure_tools
 		--enable=gosimple \
 	 	--enable=ineffassign \
 	   	--enable=interfacer \
+		--enable=maligned \
 		--enable=megacheck \
 	 	--enable=misspell \
 		--enable=safesql \

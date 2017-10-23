@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -109,5 +110,33 @@ func TestRealLedger(t *testing.T) {
 	bpub, err := crypto.PubKeyFromBytes(bs)
 	require.NoError(err)
 	assert.Equal(pub, bpub)
+}
 
+// TestRealLedgerErrorHandling calls. These tests assume
+// the ledger is not plugged in....
+func TestRealLedgerErrorHandling(t *testing.T) {
+	require := require.New(t)
+
+	if os.Getenv("WITH_LEDGER") != "" {
+		t.Skip("Skipping on WITH_LEDGER as it tests unplugged cases")
+	}
+
+	// first, try to generate a key, must return an error
+	// (no panic)
+	_, err := NewPrivKeyLedger()
+	require.Error(err)
+
+	led := PrivKeyLedger{} // empty
+	// or with some pub key
+	ed := crypto.GenPrivKeyEd25519()
+	led2 := PrivKeyLedger{CachedPubKey: ed.PubKey()}
+
+	// loading these should return errors
+	bs := led.Bytes()
+	_, err = crypto.PrivKeyFromBytes(bs)
+	require.Error(err)
+
+	bs = led2.Bytes()
+	_, err = crypto.PrivKeyFromBytes(bs)
+	require.Error(err)
 }

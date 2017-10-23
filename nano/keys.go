@@ -76,7 +76,7 @@ func NewPrivKeyLedger() (crypto.PrivKey, error) {
 func (pk *PrivKeyLedger) ValidateKey() error {
 	// getPubKey will return an error if the ledger is not
 	// properly set up...
-	pub, err := pk.getPubKey()
+	pub, err := pk.forceGetPubKey()
 	if err != nil {
 		return err
 	}

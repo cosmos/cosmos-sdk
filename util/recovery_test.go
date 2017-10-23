@@ -7,8 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/tendermint/tmlibs/log"
-
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/state"
 )
@@ -17,9 +15,9 @@ func TestRecovery(t *testing.T) {
 	assert := assert.New(t)
 
 	// generic args here...
-	ctx := NewContext("test-chain", 20, log.NewNopLogger())
+	ctx := MockContext("test-chain", 20)
 	store := state.NewMemKVStore()
-	tx := sdk.Tx{}
+	tx := 0 // we ignore it, so it can be anything
 
 	cases := []struct {
 		msg      string // what to send to panic
@@ -35,7 +33,7 @@ func TestRecovery(t *testing.T) {
 		i := strconv.Itoa(idx)
 		fail := PanicHandler{Msg: tc.msg, Err: tc.err}
 		rec := Recovery{}
-		app := New(rec).Use(fail)
+		app := sdk.ChainDecorators(rec).WithHandler(fail)
 
 		// make sure check returns error, not a panic crash
 		_, err := app.CheckTx(ctx, store, tx)

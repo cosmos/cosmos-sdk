@@ -6,42 +6,28 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/tendermint/tmlibs/log"
-
 	sdk "github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/stack"
 	"github.com/cosmos/cosmos-sdk/state"
 )
 
-func TestChainValidate(t *testing.T) {
-	assert := assert.New(t)
-	raw := stack.NewRawTx([]byte{1, 2, 3, 4})
-
-	cases := []struct {
-		name    string
-		expires uint64
-		valid   bool
-	}{
-		{"hello", 0, true},
-		{"one-2-three", 123, true},
-		{"super!@#$%@", 0, false},
-		{"WISH_2_be", 14, true},
-		{"öhhh", 54, false},
+func NewChainTx(name string, height uint64, data []byte) ChainedTx {
+	return chainTx{
+		ChainData: ChainData{name, height},
+		Data:      data,
 	}
+}
 
-	for _, tc := range cases {
-		tx := NewChainTx(tc.name, tc.expires, raw)
-		err := tx.ValidateBasic()
-		if tc.valid {
-			assert.Nil(err, "%s: %+v", tc.name, err)
-		} else {
-			assert.NotNil(err, tc.name)
-		}
-	}
+type chainTx struct {
+	ChainData
+	Data []byte
+}
 
-	empty := NewChainTx("okay", 0, sdk.Tx{})
-	err := empty.ValidateBasic()
-	assert.NotNil(err)
+func (c chainTx) GetChain() ChainData {
+	return c.ChainData
+}
+
+func (c chainTx) GetTx() interface{} {
+	return RawTx{c.Data}
 }
 
 func TestChain(t *testing.T) {
@@ -50,9 +36,9 @@ func TestChain(t *testing.T) {
 	chainID := "my-chain"
 	height := uint64(100)
 
-	raw := stack.NewRawTx([]byte{1, 2, 3, 4})
+	raw := []byte{1, 2, 3, 4}
 	cases := []struct {
-		tx       sdk.Tx
+		tx       interface{}
 		valid    bool
 		errorMsg string
 	}{
@@ -71,12 +57,12 @@ func TestChain(t *testing.T) {
 	}
 
 	// generic args here...
-	ctx := stack.NewContext(chainID, height, log.NewNopLogger())
+	ctx := MockContext(chainID, height)
 	store := state.NewMemKVStore()
 
 	// build the stack
-	ok := stack.OKHandler{Log: msg}
-	app := stack.New(Chain{}).Use(ok)
+	ok := OKHandler{Log: msg}
+	app := sdk.ChainDecorators(Chain{}).WithHandler(ok)
 
 	for idx, tc := range cases {
 		i := strconv.Itoa(idx)

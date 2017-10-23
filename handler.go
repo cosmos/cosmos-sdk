@@ -77,3 +77,18 @@ type InitStater interface {
 	InitState(logger log.Logger, store state.SimpleDB,
 		module, key, value string) (string, error)
 }
+
+//////////////////////////////////////////////////
+// Helper methods
+
+// Msg allows us to get the actual tx from a structure with lots of
+// decorator information. This is usually what should be passed to Handlers.
+type Msg interface {
+	GetTx() interface{}
+}
+
+// MustGetTx forces the msg to the interface and extracts the tx
+func MustGetTx(msg interface{}) interface{} {
+	m := msg.(Msg)
+	return m.GetTx()
+}

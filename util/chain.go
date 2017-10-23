@@ -33,7 +33,9 @@ var _ sdk.Decorator = Chain{}
 
 // CheckTx makes sure we are on the proper chain
 // - fulfills Decorator interface
-func (c Chain) CheckTx(ctx sdk.Context, store state.SimpleDB, tx interface{}, next sdk.Checker) (res sdk.CheckResult, err error) {
+func (c Chain) CheckTx(ctx sdk.Context, store state.SimpleDB,
+	tx interface{}, next sdk.Checker) (res sdk.CheckResult, err error) {
+
 	err = c.checkChainTx(ctx.ChainID(), ctx.BlockHeight(), tx)
 	if err != nil {
 		return res, err
@@ -43,7 +45,9 @@ func (c Chain) CheckTx(ctx sdk.Context, store state.SimpleDB, tx interface{}, ne
 
 // DeliverTx makes sure we are on the proper chain
 // - fulfills Decorator interface
-func (c Chain) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx interface{}, next sdk.Deliverer) (res sdk.DeliverResult, err error) {
+func (c Chain) DeliverTx(ctx sdk.Context, store state.SimpleDB,
+	tx interface{}, next sdk.Deliverer) (res sdk.DeliverResult, err error) {
+
 	err = c.checkChainTx(ctx.ChainID(), ctx.BlockHeight(), tx)
 	if err != nil {
 		return res, err

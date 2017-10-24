@@ -39,7 +39,7 @@ func (o oneSig) GetTx() interface{} {
 	return o.Data
 }
 
-func OneSig(data []byte) keys.Signable {
+func newSingle(data []byte) oneSig {
 	return oneSig{
 		Data:     util.NewRawTx(data),
 		NamedSig: NewSig(),
@@ -76,7 +76,7 @@ func (m multiSig) GetTx() interface{} {
 	return m.Data
 }
 
-func MultiSig(data []byte) keys.Signable {
+func newMulti(data []byte) multiSig {
 	return multiSig{
 		Data:      util.NewRawTx(data),
 		NamedSigs: NewMultiSig(),

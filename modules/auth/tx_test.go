@@ -52,7 +52,7 @@ func TestOneSig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tx := OneSig([]byte(tc.data))
+		tx := newSingle([]byte(tc.data))
 		// unsigned version
 		_, err = tx.Signers()
 		assert.NotNil(err)
@@ -117,7 +117,7 @@ func TestMultiSig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tx := MultiSig([]byte(tc.data))
+		tx := newMulti([]byte(tc.data))
 		// unsigned version
 		_, err = tx.Signers()
 		assert.NotNil(err)

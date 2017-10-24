@@ -25,7 +25,6 @@ import (
 // Credential can be combined with message data
 // to create a keys.Signable
 type Credential interface {
-	Empty() bool
 	Sign(pubkey crypto.PubKey, sig crypto.Signature) error
 	Signers(signBytes []byte) ([]crypto.PubKey, error)
 }

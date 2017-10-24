@@ -29,16 +29,14 @@ func NewBaseApp(store *StoreApp, handler sdk.Handler, clock sdk.Ticker) *BaseApp
 
 // DeliverTx - ABCI - dispatches to the handler
 func (app *BaseApp) DeliverTx(txBytes []byte) abci.Result {
-	tx, err := sdk.LoadTx(txBytes)
-	if err != nil {
-		return errors.Result(err)
-	}
 
+	// TODO: use real context on refactor
 	ctx := util.MockContext(
 		app.GetChainID(),
 		app.WorkingHeight(),
 	)
-	res, err := app.handler.DeliverTx(ctx, app.Append(), tx)
+	// Note: first decorator must parse bytes
+	res, err := app.handler.DeliverTx(ctx, app.Append(), txBytes)
 
 	if err != nil {
 		return errors.Result(err)
@@ -49,16 +47,13 @@ func (app *BaseApp) DeliverTx(txBytes []byte) abci.Result {
 
 // CheckTx - ABCI - dispatches to the handler
 func (app *BaseApp) CheckTx(txBytes []byte) abci.Result {
-	tx, err := sdk.LoadTx(txBytes)
-	if err != nil {
-		return errors.Result(err)
-	}
-
+	// TODO: use real context on refactor
 	ctx := util.MockContext(
 		app.GetChainID(),
 		app.WorkingHeight(),
 	)
-	res, err := app.handler.CheckTx(ctx, app.Check(), tx)
+	// Note: first decorator must parse bytes
+	res, err := app.handler.CheckTx(ctx, app.Check(), txBytes)
 
 	if err != nil {
 		return errors.Result(err)

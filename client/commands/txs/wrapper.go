@@ -2,8 +2,6 @@ package txs
 
 import (
 	"github.com/spf13/pflag"
-
-	sdk "github.com/cosmos/cosmos-sdk"
 )
 
 var (
@@ -14,7 +12,7 @@ var (
 // Wrapper defines the information needed for each middleware package that
 // wraps the data.  They should read all configuration out of bounds via viper.
 type Wrapper interface {
-	Wrap(sdk.Tx) (sdk.Tx, error)
+	Wrap(interface{}) (interface{}, error)
 	Register(*pflag.FlagSet)
 }
 
@@ -26,7 +24,7 @@ var _ Wrapper = Wrappers{}
 
 // Wrap applies the wrappers to the passed in tx in order,
 // aborting on the first error
-func (ws Wrappers) Wrap(tx sdk.Tx) (sdk.Tx, error) {
+func (ws Wrappers) Wrap(tx interface{}) (interface{}, error) {
 	var err error
 	for _, w := range ws {
 		tx, err = w.Wrap(tx)

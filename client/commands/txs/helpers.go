@@ -61,7 +61,7 @@ func GetSignerAct() (res sdk.Actor) {
 // If you want a non-standard flow, just call the various functions directly.
 // eg. if you already set the middleware layers in your code, or want to
 // output in another format.
-func DoTx(tx sdk.Tx) (err error) {
+func DoTx(tx interface{}) (err error) {
 	tx, err = Middleware.Wrap(tx)
 	if err != nil {
 		return err
@@ -85,12 +85,12 @@ func DoTx(tx sdk.Tx) (err error) {
 
 // SignTx will validate the tx, and signs it if it is wrapping a Signable.
 // Modifies tx in place, and returns an error if it should sign but couldn't
-func SignTx(tx sdk.Tx) error {
-	// validate tx client-side
-	err := tx.ValidateBasic()
-	if err != nil {
-		return err
-	}
+func SignTx(tx interface{}) (err error) {
+	// TODO: validate tx client-side
+	// err := tx.ValidateBasic()
+	// if err != nil {
+	// 	return err
+	// }
 
 	// abort early if we don't want to sign
 	if viper.GetBool(FlagNoSign) {
@@ -100,7 +100,7 @@ func SignTx(tx sdk.Tx) error {
 	name := viper.GetString(FlagName)
 	manager := keycmd.GetKeyManager()
 
-	if sign, ok := tx.Unwrap().(keys.Signable); ok {
+	if sign, ok := tx.(keys.Signable); ok {
 		// TODO: allow us not to sign? if so then what use?
 		if name == "" {
 			return errors.New("--name is required to sign tx")
@@ -114,7 +114,7 @@ func SignTx(tx sdk.Tx) error {
 // multisig, or to post it to the node. Returns error on any failure.
 // If no error and the result is nil, it means it already wrote to file,
 // no post, no need to do more.
-func PrepareOrPostTx(tx sdk.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
+func PrepareOrPostTx(tx interface{}) (*ctypes.ResultBroadcastTxCommit, error) {
 	wrote, err := PrepareTx(tx)
 	// error in prep
 	if err != nil {
@@ -132,7 +132,7 @@ func PrepareOrPostTx(tx sdk.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
 // to the specified location for later multi-sig.  Returns true if it
 // handled the tx (no futher work required), false if it did nothing
 // (and we should post the tx)
-func PrepareTx(tx sdk.Tx) (bool, error) {
+func PrepareTx(tx interface{}) (bool, error) {
 	prep := viper.GetString(FlagPrepare)
 	if prep == "" {
 		return false, nil
@@ -152,7 +152,7 @@ func PrepareTx(tx sdk.Tx) (bool, error) {
 // PostTx does all work once we construct a proper struct
 // it validates the data, signs if needed, transforms to bytes,
 // and posts to the node.
-func PostTx(tx sdk.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
+func PostTx(tx interface{}) (*ctypes.ResultBroadcastTxCommit, error) {
 	packet := wire.BinaryBytes(tx)
 	// post the bytes
 	node := commands.GetNode()

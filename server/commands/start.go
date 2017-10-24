@@ -57,6 +57,8 @@ var (
 	// Handler - use a global to store the handler, so we can set it in main.
 	// TODO: figure out a cleaner way to register plugins
 	Handler sdk.Handler
+	// InitState registers handlers for genesis file options
+	InitState sdk.InitStater
 )
 
 func init() {
@@ -88,8 +90,9 @@ func tickStartCmd(clock sdk.Ticker) func(cmd *cobra.Command, args []string) erro
 		}
 
 		// Create Basecoin app
-		basecoinApp := app.NewBaseApp(storeApp, Handler, clock)
-		return start(rootDir, basecoinApp)
+		baseApp := app.NewBaseApp(storeApp, Handler, clock)
+		app := app.NewInitApp(baseApp, InitState, nil) // TODO: support validators
+		return start(rootDir, app)
 	}
 }
 
@@ -108,19 +111,20 @@ func startCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create Basecoin app
-	basecoinApp := app.NewBaseApp(storeApp, Handler, nil)
-	return start(rootDir, basecoinApp)
+	baseApp := app.NewBaseApp(storeApp, Handler, nil)
+	app := app.NewInitApp(baseApp, InitState, nil) // TODO: support validators
+	return start(rootDir, app)
 }
 
-func start(rootDir string, basecoinApp *app.BaseApp) error {
+func start(rootDir string, app *app.InitApp) error {
 
 	// if chain_id has not been set yet, load the genesis.
 	// else, assume it's been loaded
-	if basecoinApp.GetChainID() == "" {
+	if app.GetChainID() == "" {
 		// If genesis file exists, set key-value options
 		genesisFile := path.Join(rootDir, "genesis.json")
 		if _, err := os.Stat(genesisFile); err == nil {
-			err = genesis.Load(basecoinApp, genesisFile)
+			err = genesis.Load(app, genesisFile)
 			if err != nil {
 				return errors.Errorf("Error in LoadGenesis: %v\n", err)
 			}
@@ -129,21 +133,21 @@ func start(rootDir string, basecoinApp *app.BaseApp) error {
 		}
 	}
 
-	chainID := basecoinApp.GetChainID()
+	chainID := app.GetChainID()
 	if viper.GetBool(FlagWithoutTendermint) {
 		logger.Info("Starting Basecoin without Tendermint", "chain_id", chainID)
 		// run just the abci app/server
-		return startBasecoinABCI(basecoinApp)
+		return startBasecoinABCI(app)
 	}
 	logger.Info("Starting Basecoin with Tendermint", "chain_id", chainID)
 	// start the app with tendermint in-process
-	return startTendermint(rootDir, basecoinApp)
+	return startTendermint(rootDir, app)
 }
 
-func startBasecoinABCI(basecoinApp abci.Application) error {
+func startBasecoinABCI(app abci.Application) error {
 	// Start the ABCI listener
 	addr := viper.GetString(FlagAddress)
-	svr, err := server.NewServer(addr, "socket", basecoinApp)
+	svr, err := server.NewServer(addr, "socket", app)
 	if err != nil {
 		return errors.Errorf("Error creating listener: %v\n", err)
 	}
@@ -158,7 +162,7 @@ func startBasecoinABCI(basecoinApp abci.Application) error {
 	return nil
 }
 
-func startTendermint(dir string, basecoinApp abci.Application) error {
+func startTendermint(dir string, app abci.Application) error {
 	cfg, err := tcmd.ParseConfig()
 	if err != nil {
 		return err
@@ -167,7 +171,7 @@ func startTendermint(dir string, basecoinApp abci.Application) error {
 	// Create & start tendermint node
 	n, err := node.NewNode(cfg,
 		types.LoadOrGenPrivValidatorFS(cfg.PrivValidatorFile()),
-		proxy.NewLocalClientCreator(basecoinApp),
+		proxy.NewLocalClientCreator(app),
 		node.DefaultGenesisDocProviderFunc(cfg),
 		node.DefaultDBProvider,
 		logger.With("module", "node"))

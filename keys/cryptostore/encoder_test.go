@@ -68,8 +68,8 @@ func TestSecretBoxNoPass(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 	enc := cryptostore.SecretBox
 
-	key, err := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
-	require.NoError(err)
+	key, rerr := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
+	require.NoError(rerr)
 
 	cases := []struct {
 		encode string
@@ -99,7 +99,7 @@ func TestSecretBoxNoPass(t *testing.T) {
 
 	// now let's make sure raw bytes also work...
 	b := key.Bytes()
-	pk, err := enc.Decrypt(nil, b, "")
-	require.Nil(err, "%+v", err)
+	pk, rerr := enc.Decrypt(nil, b, "")
+	require.NoError(rerr)
 	assert.Equal(key, pk)
 }

@@ -280,15 +280,15 @@ func init() {
 
 // Wrap fulfils interface for PrivKey struct
 func (pk *PrivKeyLedgerEd25519) Wrap() crypto.PrivKey {
-	return crypto.PrivKey{pk}
+	return crypto.PrivKey{PrivKeyInner: pk}
 }
 
 // Wrap fulfils interface for PrivKey struct
 func (pk MockPrivKeyLedgerEd25519) Wrap() crypto.PrivKey {
-	return crypto.PrivKey{pk}
+	return crypto.PrivKey{PrivKeyInner: pk}
 }
 
 // Wrap fulfils interface for PubKey struct
 func (pk PubKeyLedgerEd25519) Wrap() crypto.PubKey {
-	return crypto.PubKey{pk}
+	return crypto.PubKey{PubKeyInner: pk}
 }

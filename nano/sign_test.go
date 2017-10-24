@@ -4,9 +4,29 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	crypto "github.com/tendermint/go-crypto"
 )
+
+func parseEdKey(data []byte) (key crypto.PubKey, err error) {
+	ed := crypto.PubKeyEd25519{}
+	if len(data) < len(ed) {
+		return key, errors.Errorf("Key length too short: %d", len(data))
+	}
+	copy(ed[:], data)
+	return ed.Wrap(), nil
+}
+
+func parseSig(data []byte) (key crypto.Signature, err error) {
+	ed := crypto.SignatureEd25519{}
+	if len(data) < len(ed) {
+		return key, errors.Errorf("Sig length too short: %d", len(data))
+	}
+	copy(ed[:], data)
+	return ed.Wrap(), nil
+}
 
 func TestParseDigest(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)

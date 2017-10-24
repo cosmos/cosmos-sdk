@@ -320,7 +320,7 @@ func TestSeedPhrase(t *testing.T) {
 	assert.Equal(info.PubKey, newInfo.PubKey)
 }
 
-func ExampleStore() {
+func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
 	cstore := cryptostore.New(
 		cryptostore.SecretBox,

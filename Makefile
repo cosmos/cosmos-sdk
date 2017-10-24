@@ -10,7 +10,7 @@ REPO:=github.com/tendermint/go-crypto
 all: get_vendor_deps metalinter_test test
 
 test:
-	go test `glide novendor`
+	go test -p 1 `glide novendor`
 
 get_vendor_deps: ensure_tools
 	@rm -rf vendor/

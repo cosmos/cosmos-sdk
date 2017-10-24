@@ -14,7 +14,10 @@ import (
 func TestSortKeys(t *testing.T) {
 	assert := assert.New(t)
 
-	gen := func() crypto.PrivKey { return GenEd25519.Generate(cmn.RandBytes(16)) }
+	gen := func() crypto.PrivKey {
+		key, _ := GenEd25519.Generate(cmn.RandBytes(16))
+		return key
+	}
 	assert.NotEqual(gen(), gen())
 
 	// alphabetical order is n3, n1, n2

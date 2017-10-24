@@ -43,7 +43,8 @@ func (e secretbox) Decrypt(saltBytes []byte, encBytes []byte, passphrase string)
 	privKeyBytes := encBytes
 	// NOTE: Some keys weren't encrypted with a passphrase and hence we have the conditional
 	if passphrase != "" {
-		key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 14) // TODO parameterize.  14 is good today (2016)
+		var key []byte
+		key, err = bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 14) // TODO parameterize.  14 is good today (2016)
 		if err != nil {
 			return crypto.PrivKey{}, errors.Wrap(err, "Invalid Passphrase")
 		}
@@ -55,7 +56,7 @@ func (e secretbox) Decrypt(saltBytes []byte, encBytes []byte, passphrase string)
 	}
 	privKey, err = crypto.PrivKeyFromBytes(privKeyBytes)
 	if err != nil {
-		return crypto.PrivKey{}, errors.Wrap(err, "Couldn't get privKey from bytes")
+		return crypto.PrivKey{}, errors.Wrap(err, "Private Key")
 	}
 	return privKey, nil
 }

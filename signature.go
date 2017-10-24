@@ -63,6 +63,12 @@ func (sig *SignatureEd25519) UnmarshalJSON(enc []byte) error {
 	return err
 }
 
+func SignatureEd25519FromBytes(data []byte) Signature {
+	var sig SignatureEd25519
+	copy(sig[:], data)
+	return sig.Wrap()
+}
+
 //-------------------------------------
 
 var _ SignatureInner = SignatureSecp256k1{}

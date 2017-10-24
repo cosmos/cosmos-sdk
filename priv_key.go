@@ -13,13 +13,27 @@ import (
 
 func PrivKeyFromBytes(privKeyBytes []byte) (privKey PrivKey, err error) {
 	err = wire.ReadBinaryBytes(privKeyBytes, &privKey)
+	if err == nil {
+		// add support for a ValidateKey method on PrivKeys
+		// to make sure they load correctly
+		val, ok := privKey.Unwrap().(validatable)
+		if ok {
+			err = val.ValidateKey()
+		}
+	}
 	return
+}
+
+// validatable is an optional interface for keys that want to
+// check integrity
+type validatable interface {
+	ValidateKey() error
 }
 
 //----------------------------------------
 
 // DO NOT USE THIS INTERFACE.
-// You probably want to use PubKey
+// You probably want to use PrivKey
 // +gen wrapper:"PrivKey,Impl[PrivKeyEd25519,PrivKeySecp256k1],ed25519,secp256k1"
 type PrivKeyInner interface {
 	AssertIsPrivKeyInner()

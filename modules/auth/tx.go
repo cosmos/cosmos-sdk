@@ -15,6 +15,7 @@ package auth
 
 import (
 	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/go-crypto/keys"
 
 	"github.com/cosmos/cosmos-sdk/errors"
 )
@@ -163,8 +164,9 @@ func (s *NamedSigs) Signers(signBytes []byte) (res []crypto.PubKey, err error) {
 
 // Sign - sign the given data with private key and store
 // the result in the credentil
-func Sign(msg []byte, key crypto.PrivKey, cred Credential) error {
+func Sign(signable keys.Signable, key crypto.PrivKey) error {
+	msg := signable.SignBytes()
 	pubkey := key.PubKey()
 	sig := key.Sign(msg)
-	return cred.Sign(pubkey, sig)
+	return signable.Sign(pubkey, sig)
 }

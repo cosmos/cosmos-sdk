@@ -67,14 +67,14 @@ func TestSignatureChecks(t *testing.T) {
 		if tc.useMultiSig {
 			mtx := newMulti(raw)
 			for _, k := range tc.keys {
-				err := Sign(mtx.SignBytes(), k, mtx.NamedSigs)
+				err := Sign(mtx, k)
 				assert.Nil(err, "%d: %+v", i, err)
 			}
 			tx = mtx
 		} else {
 			otx := newSingle(raw)
 			for _, k := range tc.keys {
-				err := Sign(otx.SignBytes(), k, otx.NamedSig)
+				err := Sign(otx, k)
 				assert.Nil(err, "%d: %+v", i, err)
 			}
 			tx = otx

@@ -1,13 +1,11 @@
 package app
 
 import (
-	"fmt"
-
 	abci "github.com/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/errors"
-	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/util"
 )
 
 // BaseApp - The ABCI application
@@ -36,10 +34,9 @@ func (app *BaseApp) DeliverTx(txBytes []byte) abci.Result {
 		return errors.Result(err)
 	}
 
-	ctx := stack.NewContext(
+	ctx := util.MockContext(
 		app.GetChainID(),
 		app.WorkingHeight(),
-		app.Logger().With("call", "delivertx"),
 	)
 	res, err := app.handler.DeliverTx(ctx, app.Append(), tx)
 
@@ -57,10 +54,9 @@ func (app *BaseApp) CheckTx(txBytes []byte) abci.Result {
 		return errors.Result(err)
 	}
 
-	ctx := stack.NewContext(
+	ctx := util.MockContext(
 		app.GetChainID(),
 		app.WorkingHeight(),
-		app.Logger().With("call", "checktx"),
 	)
 	res, err := app.handler.CheckTx(ctx, app.Check(), tx)
 
@@ -74,10 +70,9 @@ func (app *BaseApp) CheckTx(txBytes []byte) abci.Result {
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) {
 	// execute tick if present
 	if app.clock != nil {
-		ctx := stack.NewContext(
+		ctx := util.MockContext(
 			app.GetChainID(),
 			app.WorkingHeight(),
-			app.Logger().With("call", "tick"),
 		)
 
 		diff, err := app.clock.Tick(ctx, app.Append())
@@ -86,30 +81,4 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) {
 		}
 		app.AddValChange(diff)
 	}
-}
-
-// InitState - used to setup state (was SetOption)
-// to be used by InitChain later
-//
-// TODO: rethink this a bit more....
-func (app *BaseApp) InitState(module, key, value string) error {
-	state := app.Append()
-	logger := app.Logger().With("module", module, "key", key)
-
-	if module == sdk.ModuleNameBase {
-		if key == sdk.ChainKey {
-			app.info.SetChainID(state, value)
-			return nil
-		}
-		logger.Error("Invalid genesis option")
-		return fmt.Errorf("Unknown base option: %s", key)
-	}
-
-	log, err := app.handler.InitState(logger, state, module, key, value)
-	if err != nil {
-		logger.Error("Invalid genesis option", "err", err)
-	} else {
-		logger.Info(log)
-	}
-	return err
 }

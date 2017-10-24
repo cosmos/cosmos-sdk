@@ -39,11 +39,12 @@ func (e secretbox) Encrypt(privKey crypto.PrivKey, passphrase string) (saltBytes
 	return saltBytes, crypto.EncryptSymmetric(privKeyBytes, key), nil
 }
 
-func (e secretbox) Decrypt(saltBytes []byte, encBytes []byte, passphrase string) (crypto.PrivKey, error) {
+func (e secretbox) Decrypt(saltBytes []byte, encBytes []byte, passphrase string) (privKey crypto.PrivKey, err error) {
 	privKeyBytes := encBytes
 	// NOTE: Some keys weren't encrypted with a passphrase and hence we have the conditional
 	if passphrase != "" {
-		key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 14) // TODO parameterize.  14 is good today (2016)
+		var key []byte
+		key, err = bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 14) // TODO parameterize.  14 is good today (2016)
 		if err != nil {
 			return crypto.PrivKey{}, errors.Wrap(err, "Invalid Passphrase")
 		}
@@ -53,7 +54,7 @@ func (e secretbox) Decrypt(saltBytes []byte, encBytes []byte, passphrase string)
 			return crypto.PrivKey{}, errors.Wrap(err, "Invalid Passphrase")
 		}
 	}
-	privKey, err := crypto.PrivKeyFromBytes(privKeyBytes)
+	privKey, err = crypto.PrivKeyFromBytes(privKeyBytes)
 	if err != nil {
 		return crypto.PrivKey{}, errors.Wrap(err, "Private Key")
 	}

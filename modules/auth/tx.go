@@ -1,5 +1,5 @@
 /*
-Package auth contains generic Signable implementations that can be used
+Package auth contains generic Credential implementations that can be used
 by your application or tests to handle authentication needs.
 
 It currently supports transaction data as opaque bytes and either single
@@ -7,205 +7,150 @@ or multiple private key signatures using straightforward algorithms.
 It currently does not support N-of-M key share signing of other more
 complex algorithms (although it would be great to add them).
 
-You can create them with NewSig() and NewMultiSig(), and they fulfill
-the keys.Signable interface. You can then .Wrap() them to create
-a sdk.Tx.
+This can be embedded in another structure along with the data to be
+signed and easily allow you to build a custom keys.Signable implementation.
+Please see example usage of Credential.
 */
 package auth
 
 import (
 	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-crypto/keys"
-	"github.com/tendermint/go-wire/data"
 
-	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/errors"
 )
 
-// nolint
-const (
-	// for signatures
-	ByteSingleTx = 0x16
-	ByteMultiSig = 0x17
-)
+//////////////////////////////////////////
+// Interface
 
-// nolint
-const (
-	// for signatures
-	TypeSingleTx = NameSigs + "/one"
-	TypeMultiSig = NameSigs + "/multi"
-)
+// Credential can be combined with message data
+// to create a keys.Signable
+type Credential interface {
+	Empty() bool
+	Sign(pubkey crypto.PubKey, sig crypto.Signature) error
+	Signers(signBytes []byte) ([]crypto.PubKey, error)
+}
 
-// Signed holds one signature of the data
-type Signed struct {
+/////////////////////////////////////////
+// NamedSig - one signature
+
+// NamedSig holds one signature of the data
+type NamedSig struct {
 	Sig    crypto.Signature
 	Pubkey crypto.PubKey
 }
 
+var _ Credential = &NamedSig{}
+
 // Empty returns true if there is not enough signature info
-func (s Signed) Empty() bool {
+func (s *NamedSig) Empty() bool {
 	return s.Sig.Empty() || s.Pubkey.Empty()
 }
 
-/**** Registration ****/
-
-func init() {
-	sdk.TxMapper.
-		RegisterImplementation(&OneSig{}, TypeSingleTx, ByteSingleTx).
-		RegisterImplementation(&MultiSig{}, TypeMultiSig, ByteMultiSig)
-}
-
-/**** One Sig ****/
-
-// OneSig lets us wrap arbitrary data with a go-crypto signature
-type OneSig struct {
-	Tx     sdk.Tx `json:"tx"`
-	Signed `json:"signature"`
-}
-
-var _ keys.Signable = &OneSig{}
-var _ sdk.TxLayer = &OneSig{}
-
-// NewSig wraps the tx with a Signable that accepts exactly one signature
-func NewSig(tx sdk.Tx) *OneSig {
-	return &OneSig{Tx: tx}
-}
-
-//nolint
-func (s *OneSig) Wrap() sdk.Tx {
-	return sdk.Tx{s}
-}
-func (s *OneSig) Next() sdk.Tx {
-	return s.Tx
-}
-func (s *OneSig) ValidateBasic() error {
-	return s.Tx.ValidateBasic()
-}
-
-// TxBytes returns the full data with signatures
-func (s *OneSig) TxBytes() ([]byte, error) {
-	return data.ToWire(s.Wrap())
-}
-
-// SignBytes returns the original data passed into `NewSig`
-func (s *OneSig) SignBytes() []byte {
-	res, err := data.ToWire(s.Tx)
-	if err != nil {
-		panic(err)
-	}
-	return res
-}
-
 // Sign will add a signature and pubkey.
-//
-// Depending on the Signable, one may be able to call this multiple times for multisig
-// Returns error if called with invalid data or too many times
-func (s *OneSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
-	signed := Signed{sig, pubkey}
-	if signed.Empty() {
-		return errors.ErrMissingSignature()
-	}
+func (s *NamedSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
 	if !s.Empty() {
 		return ErrTooManySignatures()
 	}
-	// set the value once we are happy
-	s.Signed = signed
+	s.Sig = sig
+	s.Pubkey = pubkey
+	if s.Empty() {
+		return errors.ErrMissingSignature()
+	}
 	return nil
 }
 
-// Signers will return the public key(s) that signed if the signature
+// signer will return a pubkey and a possible error.
+// building block to combine
+func (s *NamedSig) signer(signBytes []byte) (crypto.PubKey, error) {
+	key := s.Pubkey
+	if s.Empty() {
+		return key, errors.ErrMissingSignature()
+	}
+	if !s.Pubkey.VerifyBytes(signBytes, s.Sig) {
+		return key, ErrInvalidSignature()
+	}
+	return key, nil
+}
+
+// Signers will return the public key that signed if the signature
 // is valid, or an error if there is any issue with the signature,
 // including if there are no signatures
-func (s *OneSig) Signers() ([]crypto.PubKey, error) {
-	if s.Empty() {
-		return nil, errors.ErrMissingSignature()
-	}
-	if !s.Pubkey.VerifyBytes(s.SignBytes(), s.Sig) {
-		return nil, ErrInvalidSignature()
-	}
-	return []crypto.PubKey{s.Pubkey}, nil
-}
-
-/**** MultiSig ****/
-
-// MultiSig lets us wrap arbitrary data with a go-crypto signature
-type MultiSig struct {
-	Tx   sdk.Tx `json:"tx"`
-	Sigs []Signed    `json:"signatures"`
-}
-
-var _ keys.Signable = &MultiSig{}
-var _ sdk.TxLayer = &MultiSig{}
-
-// NewMulti wraps the tx with a Signable that accepts arbitrary numbers of signatures
-func NewMulti(tx sdk.Tx) *MultiSig {
-	return &MultiSig{Tx: tx}
-}
-
-// nolint
-func (s *MultiSig) Wrap() sdk.Tx {
-	return sdk.Tx{s}
-}
-func (s *MultiSig) Next() sdk.Tx {
-	return s.Tx
-}
-func (s *MultiSig) ValidateBasic() error {
-	return s.Tx.ValidateBasic()
-}
-
-// TxBytes returns the full data with signatures
-func (s *MultiSig) TxBytes() ([]byte, error) {
-	return data.ToWire(s.Wrap())
-}
-
-// SignBytes returns the original data passed into `NewSig`
-func (s *MultiSig) SignBytes() []byte {
-	res, err := data.ToWire(s.Tx)
+func (s *NamedSig) Signers(signBytes []byte) ([]crypto.PubKey, error) {
+	key, err := s.signer(signBytes)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return res
+	return []crypto.PubKey{key}, nil
+}
+
+// // TxBytes returns the full data with signatures
+// func (s *OneSig) TxBytes() ([]byte, error) {
+// 	return data.ToWire(s.Wrap())
+// }
+
+// // SignBytes returns the original data passed into `NewSig`
+// func (s *OneSig) SignBytes() []byte {
+// 	res, err := data.ToWire(s.Tx)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return res
+// }
+
+/////////////////////////////////////////
+// NamedSigs - multiple signatures
+
+// NamedSigs is a list of signatures
+// and fulfils the same interface as NamedSig
+type NamedSigs []NamedSig
+
+var _ Credential = &NamedSigs{}
+
+// Empty returns true iff no signatures were ever added
+func (s *NamedSigs) Empty() bool {
+	return len(*s) == 0
 }
 
 // Sign will add a signature and pubkey.
 //
 // Depending on the Signable, one may be able to call this multiple times for multisig
 // Returns error if called with invalid data or too many times
-func (s *MultiSig) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
-	signed := Signed{sig, pubkey}
-	if signed.Empty() {
-		return errors.ErrMissingSignature()
+func (s *NamedSigs) Sign(pubkey crypto.PubKey, sig crypto.Signature) error {
+	// optimize for success case - append and store signature
+	l := len(*s)
+	*s = append(*s, NamedSig{})
+	err := (*s)[l].Sign(pubkey, sig)
+
+	// if there is an error, remove from the list
+	if err != nil {
+		*s = (*s)[:l]
 	}
-	// set the value once we are happy
-	s.Sigs = append(s.Sigs, signed)
-	return nil
+	return err
 }
 
 // Signers will return the public key(s) that signed if the signature
 // is valid, or an error if there is any issue with the signature,
 // including if there are no signatures
-func (s *MultiSig) Signers() ([]crypto.PubKey, error) {
-	if len(s.Sigs) == 0 {
+func (s *NamedSigs) Signers(signBytes []byte) (res []crypto.PubKey, err error) {
+	if s.Empty() {
 		return nil, errors.ErrMissingSignature()
 	}
-	// verify all the signatures before returning them
-	keys := make([]crypto.PubKey, len(s.Sigs))
-	data := s.SignBytes()
-	for i := range s.Sigs {
-		ms := s.Sigs[i]
-		if !ms.Pubkey.VerifyBytes(data, ms.Sig) {
-			return nil, ErrInvalidSignature()
-		}
-		keys[i] = ms.Pubkey
-	}
 
-	return keys, nil
+	l := len(*s)
+	res = make([]crypto.PubKey, l)
+	for i := 0; i < l; i++ {
+		res[i], err = (*s)[i].signer(signBytes)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
-// Sign - sign the transaction with private key
-func Sign(tx keys.Signable, key crypto.PrivKey) error {
-	msg := tx.SignBytes()
+// Sign - sign the given data with private key and store
+// the result in the credentil
+func Sign(msg []byte, key crypto.PrivKey, cred Credential) error {
 	pubkey := key.PubKey()
 	sig := key.Sign(msg)
-	return tx.Sign(pubkey, sig)
+	return cred.Sign(pubkey, sig)
 }

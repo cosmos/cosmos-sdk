@@ -176,7 +176,7 @@ func TestSignWithLedger(t *testing.T) {
 	c, _, err := cstore.Create(n, p, nano.NameLedgerEd25519)
 	require.Nil(err, "%+v", err)
 	assert.Equal(c.Name, n)
-	_, ok := c.PubKey.Unwrap().(nano.PubKeyLedger)
+	_, ok := c.PubKey.Unwrap().(nano.PubKeyLedgerEd25519)
 	require.True(ok)
 
 	// make sure we can get it back

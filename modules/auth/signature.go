@@ -5,8 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/errors"
-	"github.com/cosmos/cosmos-sdk/stack"
-	"github.com/cosmos/cosmos-sdk/state"
 )
 
 //nolint
@@ -17,16 +15,9 @@ const (
 // Signatures parses out go-crypto signatures and adds permissions to the
 // context for use inside the application
 type Signatures struct {
-	stack.PassInitState
-	stack.PassInitValidate
 }
 
-// Name of the module - fulfills Middleware interface
-func (Signatures) Name() string {
-	return NameSigs
-}
-
-var _ stack.Middleware = Signatures{}
+var _ sdk.Decorator = Signatures{}
 
 // SigPerm takes the binary address from PubKey.Address and makes it an Actor
 func SigPerm(addr []byte) sdk.Actor {
@@ -35,28 +26,31 @@ func SigPerm(addr []byte) sdk.Actor {
 
 // Signable allows us to use txs.OneSig and txs.MultiSig (and others??)
 type Signable interface {
-	sdk.TxLayer
 	Signers() ([]crypto.PubKey, error)
 }
 
 // CheckTx verifies the signatures are correct - fulfills Middlware interface
-func (Signatures) CheckTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Checker) (res sdk.CheckResult, err error) {
-	sigs, tnext, err := getSigners(tx)
+func (Signatures) CheckTx(ctx sdk.Context, store sdk.SimpleDB,
+	tx interface{}, next sdk.Checker) (res sdk.CheckResult, err error) {
+
+	sigs, err := getSigners(tx)
 	if err != nil {
 		return res, err
 	}
 	ctx2 := addSigners(ctx, sigs)
-	return next.CheckTx(ctx2, store, tnext)
+	return next.CheckTx(ctx2, store, tx)
 }
 
 // DeliverTx verifies the signatures are correct - fulfills Middlware interface
-func (Signatures) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next sdk.Deliver) (res sdk.DeliverResult, err error) {
-	sigs, tnext, err := getSigners(tx)
+func (Signatures) DeliverTx(ctx sdk.Context, store sdk.SimpleDB,
+	tx interface{}, next sdk.Deliverer) (res sdk.DeliverResult, err error) {
+
+	sigs, err := getSigners(tx)
 	if err != nil {
 		return res, err
 	}
 	ctx2 := addSigners(ctx, sigs)
-	return next.DeliverTx(ctx2, store, tnext)
+	return next.DeliverTx(ctx2, store, tx)
 }
 
 func addSigners(ctx sdk.Context, sigs []crypto.PubKey) sdk.Context {
@@ -68,11 +62,11 @@ func addSigners(ctx sdk.Context, sigs []crypto.PubKey) sdk.Context {
 	return ctx.WithPermissions(perms...)
 }
 
-func getSigners(tx sdk.Tx) ([]crypto.PubKey, sdk.Tx, error) {
-	stx, ok := tx.Unwrap().(Signable)
+func getSigners(tx interface{}) ([]crypto.PubKey, error) {
+	stx, ok := tx.(Signable)
 	if !ok {
-		return nil, sdk.Tx{}, errors.ErrUnauthorized()
+		return nil, errors.ErrUnauthorized()
 	}
 	sig, err := stx.Signers()
-	return sig, stx.Next(), err
+	return sig, err
 }

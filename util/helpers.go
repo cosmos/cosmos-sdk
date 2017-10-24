@@ -32,6 +32,11 @@ type RawTx struct {
 	Data data.Bytes
 }
 
+// NewRawTx creates a RawTx object
+func NewRawTx(data []byte) RawTx {
+	return RawTx{Data: data}
+}
+
 // ValidateBasic can ensure a limited size of tx
 func (r RawTx) ValidateBasic() error {
 	if len(r.Data) > rawMaxSize {

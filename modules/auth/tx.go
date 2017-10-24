@@ -8,7 +8,7 @@ It currently does not support N-of-M key share signing of other more
 complex algorithms (although it would be great to add them).
 
 This can be embedded in another structure along with the data to be
-signed and easily allow you to build a custom keys.Signable implementation.
+signed and easily allow you to build a custom Signable implementation.
 Please see example usage of Credential.
 */
 package auth
@@ -30,6 +30,11 @@ type Credential interface {
 	Signers(signBytes []byte) ([]crypto.PubKey, error)
 }
 
+// Signable is data along with credentials, which can be verified
+type Signable interface {
+	Signers() ([]crypto.PubKey, error)
+}
+
 /////////////////////////////////////////
 // NamedSig - one signature
 
@@ -40,6 +45,10 @@ type NamedSig struct {
 }
 
 var _ Credential = &NamedSig{}
+
+func NewSig() *NamedSig {
+	return new(NamedSig)
+}
 
 // Empty returns true if there is not enough signature info
 func (s *NamedSig) Empty() bool {
@@ -105,6 +114,12 @@ func (s *NamedSig) Signers(signBytes []byte) ([]crypto.PubKey, error) {
 type NamedSigs []NamedSig
 
 var _ Credential = &NamedSigs{}
+
+func NewMultiSig() *NamedSigs {
+	// pre-allocate space of two, as we expect multiple signatures
+	s := make(NamedSigs, 0, 2)
+	return &s
+}
 
 // Empty returns true iff no signatures were ever added
 func (s *NamedSigs) Empty() bool {

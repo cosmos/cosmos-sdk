@@ -12,20 +12,16 @@ import (
 	"github.com/tendermint/go-crypto/keys/storage/memstorage"
 	wire "github.com/tendermint/go-wire"
 
-	sdk "github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/stack"
+	"github.com/cosmos/cosmos-sdk/util"
 )
 
 func checkSignBytes(t *testing.T, bytes []byte, expected string) {
 	// load it back... unwrap the tx
-	var preTx sdk.Tx
-	err := wire.ReadBinaryBytes(bytes, &preTx)
+	var raw util.RawTx
+	err := wire.ReadBinaryBytes(bytes, &raw)
 	require.Nil(t, err)
-
-	// now make sure this tx is data.Bytes with the info we want
-	raw, ok := preTx.Unwrap().(stack.RawTx)
-	require.True(t, ok)
-	assert.Equal(t, expected, string(raw.Bytes))
+	// now make sure this is data.Bytes with the info we expect
+	assert.Equal(t, expected, string(raw.Data))
 }
 
 func TestOneSig(t *testing.T) {
@@ -56,8 +52,7 @@ func TestOneSig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		inner := stack.NewRawTx([]byte(tc.data)).Wrap()
-		tx := NewSig(inner)
+		tx := OneSig([]byte(tc.data))
 		// unsigned version
 		_, err = tx.Signers()
 		assert.NotNil(err)
@@ -122,8 +117,7 @@ func TestMultiSig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		inner := stack.NewRawTx([]byte(tc.data)).Wrap()
-		tx := NewMulti(inner)
+		tx := MultiSig([]byte(tc.data))
 		// unsigned version
 		_, err = tx.Signers()
 		assert.NotNil(err)

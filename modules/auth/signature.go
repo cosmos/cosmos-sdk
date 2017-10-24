@@ -14,19 +14,13 @@ const (
 
 // Signatures parses out go-crypto signatures and adds permissions to the
 // context for use inside the application
-type Signatures struct {
-}
+type Signatures struct{}
 
 var _ sdk.Decorator = Signatures{}
 
 // SigPerm takes the binary address from PubKey.Address and makes it an Actor
 func SigPerm(addr []byte) sdk.Actor {
 	return sdk.NewActor(NameSigs, addr)
-}
-
-// Signable allows us to use txs.OneSig and txs.MultiSig (and others??)
-type Signable interface {
-	Signers() ([]crypto.PubKey, error)
 }
 
 // CheckTx verifies the signatures are correct - fulfills Middlware interface

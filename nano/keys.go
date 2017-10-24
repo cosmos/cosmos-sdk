@@ -16,6 +16,10 @@ import (
 const (
 	NameLedgerEd25519 = "ledger-ed25519"
 	TypeLedgerEd25519 = 0x10
+
+	// Timeout is the number of seconds to wait for a response from the ledger
+	// if eg. waiting for user confirmation on button push
+	Timeout = 20
 )
 
 var device *ledger.Ledger
@@ -34,7 +38,7 @@ func signLedger(device *ledger.Ledger, msg []byte) (pk crypto.PubKey, sig crypto
 
 	packets := generateSignRequests(msg)
 	for _, pack := range packets {
-		resp, err = device.Exchange(pack, 100)
+		resp, err = device.Exchange(pack, Timeout)
 		if err != nil {
 			return pk, sig, err
 		}
@@ -90,12 +94,19 @@ func (pk *PrivKeyLedgerEd25519) ValidateKey() error {
 // AssertIsPrivKeyInner fulfils PrivKey Interface
 func (pk *PrivKeyLedgerEd25519) AssertIsPrivKeyInner() {}
 
-// Bytes fulfils pk Interface - no data, just type info
+// Bytes fulfils pk Interface - stores the cached pubkey so we can verify
+// the same key when we reconnect to a ledger
 func (pk *PrivKeyLedgerEd25519) Bytes() []byte {
 	return wire.BinaryBytes(pk.Wrap())
 }
 
 // Sign calls the ledger and stores the pk for future use
+//
+// XXX/TODO: panics if there is an error communicating with the ledger.
+//
+// Communication is checked on NewPrivKeyLedger and PrivKeyFromBytes,
+// returning an error, so this should only trigger if the privkey is held
+// in memory for a while before use.
 func (pk *PrivKeyLedgerEd25519) Sign(msg []byte) crypto.Signature {
 	// oh, I wish there was better error handling
 	dev, err := getLedger()
@@ -152,11 +163,11 @@ func (pk *PrivKeyLedgerEd25519) forceGetPubKey() (key crypto.PubKey, err error) 
 	return key, err
 }
 
-// Equals fulfils PrivKey Interface
-// TODO: needs to be fixed
+// Equals fulfils PrivKey Interface - makes sure both keys refer to the
+// same
 func (pk *PrivKeyLedgerEd25519) Equals(other crypto.PrivKey) bool {
-	if _, ok := other.Unwrap().(*PrivKeyLedgerEd25519); ok {
-		return true
+	if ledger, ok := other.Unwrap().(*PrivKeyLedgerEd25519); ok {
+		return pk.CachedPubKey.Equals(ledger.CachedPubKey)
 	}
 	return false
 }
@@ -251,7 +262,7 @@ func (pk PubKeyLedgerEd25519) VerifyBytes(msg []byte, sig crypto.Signature) bool
 // Equals implements PubKey interface
 func (pk PubKeyLedgerEd25519) Equals(other crypto.PubKey) bool {
 	if ledger, ok := other.Unwrap().(PubKeyLedgerEd25519); ok {
-		return bytes.Equal(pk.PubKeyEd25519[:], ledger.PubKeyEd25519[:])
+		return pk.PubKeyEd25519.Equals(ledger.PubKeyEd25519.Wrap())
 	}
 	return false
 }

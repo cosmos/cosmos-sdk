@@ -252,7 +252,7 @@ func TestSetIssuer(t *testing.T) {
 	}{
 		{sdk.Actor{App: "sig", Address: []byte("gwkfgk")}},
 		// and set back to empty (nil is valid, but assert.Equals doesn't match)
-		{sdk.Actor{Address: []byte{}}},
+		{sdk.Actor{}},
 		{sdk.Actor{ChainID: "other", App: "role", Address: []byte("vote")}},
 	}
 

@@ -1,4 +1,4 @@
-package seeds
+package commits
 
 import (
 	"encoding/hex"
@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/light-client/certifiers"
+	"github.com/tendermint/light-client/certifiers/files"
 
 	"github.com/cosmos/cosmos-sdk/client/commands"
 )
@@ -21,53 +22,53 @@ const (
 
 var showCmd = &cobra.Command{
 	Use:   "show",
-	Short: "Show the details of one selected seed",
+	Short: "Show the details of one selected commit",
 	Long: `Shows the most recent downloaded key by default.
 If desired, you can select by height, validator hash, or a file.
 `,
-	RunE:         commands.RequireInit(showSeed),
+	RunE:         commands.RequireInit(showCommit),
 	SilenceUsage: true,
 }
 
 func init() {
-	showCmd.Flags().Int(heightFlag, 0, "Show the seed with closest height to this")
-	showCmd.Flags().String(hashFlag, "", "Show the seed matching the validator hash")
-	showCmd.Flags().String(fileFlag, "", "Show the seed stored in the given file")
+	showCmd.Flags().Int(heightFlag, 0, "Show the commit with closest height to this")
+	showCmd.Flags().String(hashFlag, "", "Show the commit matching the validator hash")
+	showCmd.Flags().String(fileFlag, "", "Show the commit stored in the given file")
 	RootCmd.AddCommand(showCmd)
 }
 
-func loadSeed(p certifiers.Provider, h int, hash, file string) (seed certifiers.Seed, err error) {
-	// load the seed from the proper place
+func loadCommit(p certifiers.Provider, h int, hash, file string) (fc certifiers.FullCommit, err error) {
+	// load the commit from the proper place
 	if h != 0 {
-		seed, err = p.GetByHeight(h)
+		fc, err = p.GetByHeight(h)
 	} else if hash != "" {
 		var vhash []byte
 		vhash, err = hex.DecodeString(hash)
 		if err == nil {
-			seed, err = p.GetByHash(vhash)
+			fc, err = p.GetByHash(vhash)
 		}
 	} else if file != "" {
-		seed, err = certifiers.LoadSeedJSON(file)
+		fc, err = files.LoadFullCommitJSON(file)
 	} else {
-		// default is latest seed
-		seed, err = certifiers.LatestSeed(p)
+		// default is latest commit
+		fc, err = p.LatestCommit()
 	}
 	return
 }
 
-func showSeed(cmd *cobra.Command, args []string) error {
+func showCommit(cmd *cobra.Command, args []string) error {
 	trust, _ := commands.GetProviders()
 
 	h := viper.GetInt(heightFlag)
 	hash := viper.GetString(hashFlag)
 	file := viper.GetString(fileFlag)
-	seed, err := loadSeed(trust, h, hash, file)
+	fc, err := loadCommit(trust, h, hash, file)
 	if err != nil {
 		return err
 	}
 
 	// now render it!
-	data, err := json.MarshalIndent(seed, "", "  ")
+	data, err := json.MarshalIndent(fc, "", "  ")
 	fmt.Println(string(data))
 	return err
 }

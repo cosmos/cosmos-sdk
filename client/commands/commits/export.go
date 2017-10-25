@@ -1,30 +1,32 @@
-package seeds
+package commits
 
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/tendermint/light-client/certifiers/files"
+
 	"github.com/cosmos/cosmos-sdk/client/commands"
 )
 
 var exportCmd = &cobra.Command{
 	Use:   "export <file>",
-	Short: "Export selected seeds to given file",
-	Long: `Exports the most recent seed to a binary file.
+	Short: "Export selected commits to given file",
+	Long: `Exports the most recent commit to a binary file.
 If desired, you can select by an older height or validator hash.
 `,
-	RunE:         commands.RequireInit(exportSeed),
+	RunE:         commands.RequireInit(exportCommit),
 	SilenceUsage: true,
 }
 
 func init() {
-	exportCmd.Flags().Int(heightFlag, 0, "Show the seed with closest height to this")
-	exportCmd.Flags().String(hashFlag, "", "Show the seed matching the validator hash")
+	exportCmd.Flags().Int(heightFlag, 0, "Show the commit with closest height to this")
+	exportCmd.Flags().String(hashFlag, "", "Show the commit matching the validator hash")
 	RootCmd.AddCommand(exportCmd)
 }
 
-func exportSeed(cmd *cobra.Command, args []string) error {
+func exportCommit(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 || len(args[0]) == 0 {
 		return errors.New("You must provide a filepath to output")
 	}
@@ -34,11 +36,11 @@ func exportSeed(cmd *cobra.Command, args []string) error {
 	trust, _ := commands.GetProviders()
 	h := viper.GetInt(heightFlag)
 	hash := viper.GetString(hashFlag)
-	seed, err := loadSeed(trust, h, hash, "")
+	fc, err := loadCommit(trust, h, hash, "")
 	if err != nil {
 		return err
 	}
 
 	// now get the output file and write it
-	return seed.WriteJSON(path)
+	return files.SaveFullCommitJSON(fc, path)
 }

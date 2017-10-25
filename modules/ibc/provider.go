@@ -3,6 +3,7 @@ package ibc
 import (
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/light-client/certifiers"
+	certerr "github.com/tendermint/light-client/certifiers/errors"
 
 	"github.com/cosmos/cosmos-sdk/stack"
 	"github.com/cosmos/cosmos-sdk/state"
@@ -17,26 +18,26 @@ const (
 // newCertifier loads up the current state of this chain to make a proper certifier
 // it will load the most recent height before block h if h is positive
 // if h < 0, it will load the latest height
-func newCertifier(store state.SimpleDB, chainID string, h int) (*certifiers.InquiringCertifier, error) {
+func newCertifier(store state.SimpleDB, chainID string, h int) (*certifiers.Inquiring, error) {
 	// each chain has their own prefixed subspace
 	p := newDBProvider(store)
 
-	var seed certifiers.Seed
+	var fc certifiers.FullCommit
 	var err error
 	if h > 0 {
-		// this gets the most recent verified seed below the specified height
-		seed, err = p.GetByHeight(h)
+		// this gets the most recent verified commit below the specified height
+		fc, err = p.GetByHeight(h)
 	} else {
-		// 0 or negative means start at latest seed
-		seed, err = certifiers.LatestSeed(p)
+		// 0 or negative means start at latest commit
+		fc, err = p.LatestCommit()
 	}
 	if err != nil {
 		return nil, ErrHeaderNotFound(h)
 	}
 
 	// we have no source for untrusted keys, but use the db to load trusted history
-	cert := certifiers.NewInquiring(chainID, seed, p,
-		certifiers.MissingProvider{})
+	cert := certifiers.NewInquiring(chainID, fc, p,
+		certifiers.NewMissingProvider())
 	return cert, nil
 }
 
@@ -55,40 +56,49 @@ func newDBProvider(store state.SimpleDB) *dbProvider {
 
 var _ certifiers.Provider = &dbProvider{}
 
-func (d *dbProvider) StoreSeed(seed certifiers.Seed) error {
+func (d *dbProvider) StoreCommit(fc certifiers.FullCommit) error {
 	// TODO: don't duplicate data....
-	b := wire.BinaryBytes(seed)
-	d.byHash.Set(seed.Hash(), b)
-	d.byHeight.Set(uint64(seed.Height()), b)
+	b := wire.BinaryBytes(fc)
+	d.byHash.Set(fc.ValidatorsHash(), b)
+	d.byHeight.Set(uint64(fc.Height()), b)
 	return nil
 }
 
-func (d *dbProvider) GetByHeight(h int) (seed certifiers.Seed, err error) {
-	b, _ := d.byHeight.LTE(uint64(h))
+func (d *dbProvider) LatestCommit() (fc certifiers.FullCommit, err error) {
+	b, _ := d.byHeight.Top()
 	if b == nil {
-		return seed, certifiers.ErrSeedNotFound()
+		return fc, certerr.ErrCommitNotFound()
 	}
-	err = wire.ReadBinaryBytes(b, &seed)
+	err = wire.ReadBinaryBytes(b, &fc)
 	return
 }
 
-func (d *dbProvider) GetByHash(hash []byte) (seed certifiers.Seed, err error) {
+func (d *dbProvider) GetByHeight(h int) (fc certifiers.FullCommit, err error) {
+	b, _ := d.byHeight.LTE(uint64(h))
+	if b == nil {
+		return fc, certerr.ErrCommitNotFound()
+	}
+	err = wire.ReadBinaryBytes(b, &fc)
+	return
+}
+
+func (d *dbProvider) GetByHash(hash []byte) (fc certifiers.FullCommit, err error) {
 	b := d.byHash.Get(hash)
 	if b == nil {
-		return seed, certifiers.ErrSeedNotFound()
+		return fc, certerr.ErrCommitNotFound()
 	}
-	err = wire.ReadBinaryBytes(b, &seed)
+	err = wire.ReadBinaryBytes(b, &fc)
 	return
 }
 
 // GetExactHeight is like GetByHeight, but returns an error instead of
 // closest match if there is no exact match
-func (d *dbProvider) GetExactHeight(h int) (seed certifiers.Seed, err error) {
-	seed, err = d.GetByHeight(h)
+func (d *dbProvider) GetExactHeight(h int) (fc certifiers.FullCommit, err error) {
+	fc, err = d.GetByHeight(h)
 	if err != nil {
 		return
 	}
-	if seed.Height() != h {
+	if fc.Height() != h {
 		err = ErrHeaderNotFound(h)
 	}
 	return

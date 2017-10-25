@@ -84,18 +84,18 @@ test00GetAccount() {
 }
 
 test01RegisterChains() {
-    # let's get the root seeds to cross-register them
-    ROOT_1="$BASE_DIR_1/root_seed.json"
-    ${CLIENT_EXE} seeds export $ROOT_1 --home=${CLIENT_1}
-    assertTrue "line=${LINENO}, export seed failed" $?
+    # let's get the root commits to cross-register them
+    ROOT_1="$BASE_DIR_1/root_commit.json"
+    ${CLIENT_EXE} commits export $ROOT_1 --home=${CLIENT_1}
+    assertTrue "line=${LINENO}, export commit failed" $?
 
-    ROOT_2="$BASE_DIR_2/root_seed.json"
-    ${CLIENT_EXE} seeds export $ROOT_2 --home=${CLIENT_2}
-    assertTrue "line=${LINENO}, export seed failed" $?
+    ROOT_2="$BASE_DIR_2/root_commit.json"
+    ${CLIENT_EXE} commits export $ROOT_2 --home=${CLIENT_2}
+    assertTrue "line=${LINENO}, export commit failed" $?
 
     # register chain2 on chain1
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-register \
-        --sequence=1 --seed=${ROOT_2} --name=$POOR --home=${CLIENT_1})
+        --sequence=1 --commit=${ROOT_2} --name=$POOR --home=${CLIENT_1})
     txSucceeded $? "$TX" "register chain2 on chain 1"
     # an example to quit early if there is no point in more tests
     if [ $? != 0 ]; then echo "aborting!"; return 1; fi
@@ -104,40 +104,40 @@ test01RegisterChains() {
 
     # register chain1 on chain2 (no money needed... yet)
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-register \
-        --sequence=1 --seed=${ROOT_1} --name=$POOR --home=${CLIENT_2})
+        --sequence=1 --commit=${ROOT_1} --name=$POOR --home=${CLIENT_2})
     txSucceeded $? "$TX" "register chain1 on chain 2"
     # an example to quit early if there is no point in more tests
     if [ $? != 0 ]; then echo "aborting!"; return 1; fi
 }
 
 test02UpdateChains() {
-    # let's get the root seeds to cross-register them
+    # let's get the root commits to cross-register them
     UPDATE_1="$BASE_DIR_1/seed_1.json"
-    ${CLIENT_EXE} seeds update --home=${CLIENT_1}  > /dev/null
-    ${CLIENT_EXE} seeds export $UPDATE_1 --home=${CLIENT_1}
-    assertTrue "line=${LINENO}, export seed failed" $?
+    ${CLIENT_EXE} commits update --home=${CLIENT_1}  > /dev/null
+    ${CLIENT_EXE} commits export $UPDATE_1 --home=${CLIENT_1}
+    assertTrue "line=${LINENO}, export commit failed" $?
     # make sure it is newer than the other....
     assertNewHeight "line=${LINENO}" $ROOT_1 $UPDATE_1
 
     UPDATE_2="$BASE_DIR_2/seed_2.json"
-    ${CLIENT_EXE} seeds update --home=${CLIENT_2} > /dev/null
-    ${CLIENT_EXE} seeds export $UPDATE_2 --home=${CLIENT_2}
-    assertTrue "line=${LINENO}, export seed failed" $?
+    ${CLIENT_EXE} commits update --home=${CLIENT_2} > /dev/null
+    ${CLIENT_EXE} commits export $UPDATE_2 --home=${CLIENT_2}
+    assertTrue "line=${LINENO}, export commit failed" $?
     assertNewHeight "line=${LINENO}" $ROOT_2 $UPDATE_2
     # this is used later to check query data
-    REGISTER_2_HEIGHT=$(cat $ROOT_2 | jq .checkpoint.header.height)
-    UPDATE_2_HEIGHT=$(cat $UPDATE_2 | jq .checkpoint.header.height)
+    REGISTER_2_HEIGHT=$(cat $ROOT_2 | jq .commit.header.height)
+    UPDATE_2_HEIGHT=$(cat $UPDATE_2 | jq .commit.header.height)
 
     # update chain2 on chain1
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-update \
-        --sequence=2 --seed=${UPDATE_2} --name=$POOR --home=${CLIENT_1})
+        --sequence=2 --commit=${UPDATE_2} --name=$POOR --home=${CLIENT_1})
     txSucceeded $? "$TX" "update chain2 on chain 1"
     # an example to quit early if there is no point in more tests
     if [ $? != 0 ]; then echo "aborting!"; return 1; fi
 
     # update chain1 on chain2 (no money needed... yet)
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-update \
-        --sequence=2 --seed=${UPDATE_1} --name=$POOR --home=${CLIENT_2})
+        --sequence=2 --commit=${UPDATE_1} --name=$POOR --home=${CLIENT_2})
     txSucceeded $? "$TX" "update chain1 on chain 2"
     # an example to quit early if there is no point in more tests
     if [ $? != 0 ]; then echo "aborting!"; return 1; fi
@@ -224,24 +224,24 @@ test05ReceiveIBCPacket() {
 
     # now, we try to post it.... (this is PACKET from last test)
 
-    # get the seed with the proof and post it
+    # get the commit with the proof and post it
     SRC_HEIGHT=$(echo $PACKET | jq .src_height)
     PROOF_HEIGHT=$(expr $SRC_HEIGHT + 1)
     # FIXME: this should auto-update on proofs...
-    ${CLIENT_EXE} seeds update --height=$PROOF_HEIGHT --home=${CLIENT_1}  > /dev/null
-    assertTrue "line=${LINENO}, update seed failed" $?
+    ${CLIENT_EXE} commits update --height=$PROOF_HEIGHT --home=${CLIENT_1}  > /dev/null
+    assertTrue "line=${LINENO}, update commit failed" $?
 
-    PACKET_SEED="$BASE_DIR_1/packet_seed.json"
-    ${CLIENT_EXE} seeds export $PACKET_SEED --home=${CLIENT_1} --height=$PROOF_HEIGHT
-    assertTrue "line=${LINENO}, export seed failed" $?
+    PACKET_COMMIT="$BASE_DIR_1/packet_commit.json"
+    ${CLIENT_EXE} commits export $PACKET_COMMIT --home=${CLIENT_1} --height=$PROOF_HEIGHT
+    assertTrue "line=${LINENO}, export commit failed" $?
     if [ -n "$DEBUG" ]; then
         echo "**** SEED ****"
-        cat $PACKET_SEED | jq .checkpoint.header
+        cat $PACKET_COMMIT | jq .commit.header
         echo
     fi
 
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx ibc-update \
-        --seed=${PACKET_SEED} --name=$POOR --sequence=3)
+        --commit=${PACKET_COMMIT} --name=$POOR --sequence=3)
     txSucceeded $? "$TX" "prepare packet chain1 on chain 2"
     # an example to quit early if there is no point in more tests
     if [ $? != 0 ]; then echo "aborting!"; return 1; fi
@@ -268,11 +268,11 @@ test05ReceiveIBCPacket() {
 }
 
 # XXX Ex Usage: assertNewHeight $MSG $SEED_1 $SEED_2
-# Desc: Asserts that seed2 has a higher block height than seed 1
+# Desc: Asserts that seed2 has a higher block height than commit 1
 assertNewHeight() {
-    H1=$(cat $2 | jq .checkpoint.header.height)
-    H2=$(cat $3 | jq .checkpoint.header.height)
-    assertTrue "$MSG" "test $H2 -gt $H1"
+    H1=$(cat $2 | jq .commit.header.height)
+    H2=$(cat $3 | jq .commit.header.height)
+    assertTrue "$1" "test $H2 -gt $H1"
     return $?
 }
 

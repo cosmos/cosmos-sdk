@@ -1,4 +1,4 @@
-package seeds
+package commits
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/light-client/certifiers"
+	"github.com/tendermint/light-client/certifiers/files"
 
 	"github.com/cosmos/cosmos-sdk/client/commands"
 )
@@ -18,9 +18,9 @@ const (
 
 var importCmd = &cobra.Command{
 	Use:          "import <file>",
-	Short:        "Imports a new seed from the given file",
-	Long:         `Validate this file and update to the given seed if secure.`,
-	RunE:         commands.RequireInit(importSeed),
+	Short:        "Imports a new commit from the given file",
+	Long:         `Validate this file and update to the given commit if secure.`,
+	RunE:         commands.RequireInit(importCommit),
 	SilenceUsage: true,
 }
 
@@ -29,7 +29,7 @@ func init() {
 	RootCmd.AddCommand(importCmd)
 }
 
-func importSeed(cmd *cobra.Command, args []string) error {
+func importCommit(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 || len(args[0]) == 0 {
 		return errors.New("You must provide an input file")
 	}
@@ -42,18 +42,18 @@ func importSeed(cmd *cobra.Command, args []string) error {
 
 	// parse the input file
 	path := args[0]
-	seed, err := certifiers.LoadSeedJSON(path)
+	fc, err := files.LoadFullCommitJSON(path)
 	if err != nil {
 		return err
 	}
 
 	// just do simple checks in --dry-run
 	if viper.GetBool(dryFlag) {
-		fmt.Printf("Testing seed %d/%X\n", seed.Height(), seed.Hash())
-		err = seed.ValidateBasic(cert.ChainID())
+		fmt.Printf("Testing commit %d/%X\n", fc.Height(), fc.ValidatorsHash())
+		err = fc.ValidateBasic(cert.ChainID())
 	} else {
-		fmt.Printf("Importing seed %d/%X\n", seed.Height(), seed.Hash())
-		err = cert.Update(seed.Checkpoint, seed.Validators)
+		fmt.Printf("Importing commit %d/%X\n", fc.Height(), fc.ValidatorsHash())
+		err = cert.Update(fc)
 	}
 	return err
 }

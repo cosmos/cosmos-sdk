@@ -32,8 +32,8 @@ func NewMockChain(chainID string, numKeys int) MockChain {
 
 // GetRegistrationTx returns a valid tx to register this chain
 func (m MockChain) GetRegistrationTx(h int) RegisterChainTx {
-	seed := genEmptySeed(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
-	return RegisterChainTx{seed}
+	fc := genEmptyCommit(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
+	return RegisterChainTx{fc}
 }
 
 // MakePostPacket commits the packet locally and returns the proof,
@@ -42,18 +42,17 @@ func (m MockChain) MakePostPacket(packet Packet, h int) (
 	PostPacketTx, UpdateChainTx) {
 
 	post := makePostPacket(m.tree, packet, m.chainID, h)
-	seed := genEmptySeed(m.keys, m.chainID, h+1, m.tree.Hash(), len(m.keys))
-	update := UpdateChainTx{seed}
+	fc := genEmptyCommit(m.keys, m.chainID, h+1, m.tree.Hash(), len(m.keys))
+	update := UpdateChainTx{fc}
 
 	return post, update
 }
 
-func genEmptySeed(keys certifiers.ValKeys, chain string, h int,
-	appHash []byte, count int) certifiers.Seed {
+func genEmptyCommit(keys certifiers.ValKeys, chain string, h int,
+	appHash []byte, count int) certifiers.FullCommit {
 
 	vals := keys.ToValidators(10, 0)
-	cp := keys.GenCheckpoint(chain, h, nil, vals, appHash, 0, count)
-	return certifiers.Seed{cp, vals}
+	return keys.GenFullCommit(chain, h, nil, vals, appHash, 0, count)
 }
 
 func makePostPacket(tree *iavl.Tree, packet Packet, fromID string, fromHeight int) PostPacketTx {

@@ -8,9 +8,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	client "github.com/cosmos/cosmos-sdk/client/commands"
-	"github.com/cosmos/cosmos-sdk/modules/eyes"
+	eyesmod "github.com/cosmos/cosmos-sdk/modules/eyes"
 	"github.com/cosmos/cosmos-sdk/server/commands"
 	"github.com/cosmos/cosmos-sdk/util"
+
+	"github.com/cosmos/cosmos-sdk/examples/eyes"
 )
 
 // RootCmd is the entry point for this binary
@@ -25,8 +27,11 @@ func BuildApp() sdk.Handler {
 	return sdk.ChainDecorators(
 		util.Logger{},
 		util.Recovery{},
+		eyes.Parser{},
+		util.Chain{},
 	).WithHandler(
-		eyes.NewHandler())
+		eyesmod.NewHandler(),
+	)
 }
 
 func main() {

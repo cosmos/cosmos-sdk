@@ -21,6 +21,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/app"
+	"github.com/cosmos/cosmos-sdk/genesis"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // StartCmd - command to start running the abci app (and tendermint)!
@@ -31,7 +33,7 @@ var StartCmd = &cobra.Command{
 }
 
 // GetTickStartCmd - initialize a command as the start command with tick
-func GetTickStartCmd(tick app.Ticker) *cobra.Command {
+func GetTickStartCmd(tick sdk.Ticker) *cobra.Command {
 	startCmd := &cobra.Command{
 		Use:   "start",
 		Short: "Start this full node",
@@ -70,42 +72,47 @@ func addStartFlag(startCmd *cobra.Command) {
 }
 
 //returns the start command which uses the tick
-func tickStartCmd(tick app.Ticker) func(cmd *cobra.Command, args []string) error {
+func tickStartCmd(clock sdk.Ticker) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		rootDir := viper.GetString(cli.HomeFlag)
 
-		store, err := app.NewStore(
+		cmdName := cmd.Root().Name()
+		appName := fmt.Sprintf("%s v%v", cmdName, version.Version)
+		storeApp, err := app.NewStoreApp(
+			appName,
 			path.Join(rootDir, "data", "merkleeyes.db"),
 			EyesCacheSize,
-			logger.With("module", "store"),
-		)
+			logger.With("module", "app"))
 		if err != nil {
 			return err
 		}
 
 		// Create Basecoin app
-		basecoinApp := app.NewBasecoinTick(Handler, store, logger.With("module", "app"), tick)
-		return start(rootDir, store, basecoinApp)
+		basecoinApp := app.NewBaseApp(storeApp, Handler, clock)
+		return start(rootDir, basecoinApp)
 	}
 }
 
 func startCmd(cmd *cobra.Command, args []string) error {
 	rootDir := viper.GetString(cli.HomeFlag)
 
-	store, err := app.NewStore(
+	cmdName := cmd.Root().Name()
+	appName := fmt.Sprintf("%s v%v", cmdName, version.Version)
+	storeApp, err := app.NewStoreApp(
+		appName,
 		path.Join(rootDir, "data", "merkleeyes.db"),
 		EyesCacheSize,
-		logger.With("module", "store"),
-	)
+		logger.With("module", "app"))
 	if err != nil {
 		return err
 	}
+
 	// Create Basecoin app
-	basecoinApp := app.NewBasecoin(Handler, store, logger.With("module", "app"))
-	return start(rootDir, store, basecoinApp)
+	basecoinApp := app.NewBaseApp(storeApp, Handler, nil)
+	return start(rootDir, basecoinApp)
 }
 
-func start(rootDir string, store *app.Store, basecoinApp *app.Basecoin) error {
+func start(rootDir string, basecoinApp *app.BaseApp) error {
 
 	// if chain_id has not been set yet, load the genesis.
 	// else, assume it's been loaded
@@ -113,7 +120,7 @@ func start(rootDir string, store *app.Store, basecoinApp *app.Basecoin) error {
 		// If genesis file exists, set key-value options
 		genesisFile := path.Join(rootDir, "genesis.json")
 		if _, err := os.Stat(genesisFile); err == nil {
-			err := basecoinApp.LoadGenesis(genesisFile)
+			err = genesis.Load(basecoinApp, genesisFile)
 			if err != nil {
 				return errors.Errorf("Error in LoadGenesis: %v\n", err)
 			}

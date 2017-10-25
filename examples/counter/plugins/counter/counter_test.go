@@ -27,22 +27,18 @@ func TestCounterPlugin(t *testing.T) {
 	logger := log.TestingLogger()
 	// logger := log.NewTracingLogger(log.NewTMLogger(os.Stdout))
 
-	store, err := app.NewStore("", 0, logger.With("module", "store"))
-	require.Nil(err, "%+v", err)
-
 	h := NewHandler("gold")
-	bcApp := app.NewBasecoin(
-		h,
-		store,
-		logger.With("module", "app"),
-	)
-	bcApp.InitState("base/chain_id", chainID)
+	store, err := app.MockStoreApp("counter", logger)
+	require.Nil(err, "%+v", err)
+	bcApp := app.NewBaseApp(store, h, nil)
+	err = bcApp.InitState("base", "chain_id", chainID)
+	require.Nil(err, "%+v", err)
 
 	// Account initialization
 	bal := coin.Coins{{"", 1000}, {"gold", 1000}}
 	acct := coin.NewAccountWithKey(bal)
-	log := bcApp.InitState("coin/account", acct.MakeOption())
-	require.Equal("Success", log)
+	err = bcApp.InitState("coin", "account", acct.MakeOption())
+	require.Nil(err, "%+v", err)
 
 	// Deliver a CounterTx
 	DeliverCounterTx := func(valid bool, counterFee coin.Coins, sequence uint32) abci.Result {

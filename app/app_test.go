@@ -55,7 +55,7 @@ func DefaultHandler(feeDenom string) sdk.Handler {
 type appTest struct {
 	t       *testing.T
 	chainID string
-	app     *Basecoin
+	app     *BaseApp
 	acctIn  *coin.AccountWithKey
 	acctOut *coin.AccountWithKey
 }
@@ -100,8 +100,8 @@ func (at *appTest) feeTx(coins coin.Coins, toll coin.Coin, sequence uint32) sdk.
 
 // set the account on the app through InitState
 func (at *appTest) initAccount(acct *coin.AccountWithKey) {
-	res := at.app.InitState("coin/account", acct.MakeOption())
-	require.EqualValues(at.t, res, "Success")
+	err := at.app.InitState("coin", "account", acct.MakeOption())
+	require.Nil(at.t, err, "%+v", err)
 }
 
 // reset the in and out accs to be one account each with 7mycoin
@@ -112,17 +112,13 @@ func (at *appTest) reset() {
 	// Note: switch logger if you want to get more info
 	logger := log.TestingLogger()
 	// logger := log.NewTracingLogger(log.NewTMLogger(os.Stdout))
-	store, err := NewStore("", 0, logger.With("module", "store"))
+
+	store, err := NewStoreApp("app-test", "", 0, logger)
 	require.Nil(at.t, err, "%+v", err)
+	at.app = NewBaseApp(store, DefaultHandler("mycoin"), nil)
 
-	at.app = NewBasecoin(
-		DefaultHandler("mycoin"),
-		store,
-		logger.With("module", "app"),
-	)
-
-	res := at.app.InitState("base/chain_id", at.chainID)
-	require.EqualValues(at.t, res, "Success")
+	err = at.app.InitState("base", "chain_id", at.chainID)
+	require.Nil(at.t, err, "%+v", err)
 
 	at.initAccount(at.acctIn)
 	at.initAccount(at.acctOut)
@@ -146,9 +142,9 @@ func getAddr(addr []byte, state state.SimpleDB) (coin.Coins, error) {
 func (at *appTest) exec(t *testing.T, tx sdk.Tx, checkTx bool) (res abci.Result, diffIn, diffOut coin.Coins) {
 	require := require.New(t)
 
-	initBalIn, err := getBalance(at.acctIn.Actor(), at.app.GetState())
+	initBalIn, err := getBalance(at.acctIn.Actor(), at.app.Append())
 	require.Nil(err, "%+v", err)
-	initBalOut, err := getBalance(at.acctOut.Actor(), at.app.GetState())
+	initBalOut, err := getBalance(at.acctOut.Actor(), at.app.Append())
 	require.Nil(err, "%+v", err)
 
 	txBytes := wire.BinaryBytes(tx)
@@ -158,9 +154,9 @@ func (at *appTest) exec(t *testing.T, tx sdk.Tx, checkTx bool) (res abci.Result,
 		res = at.app.DeliverTx(txBytes)
 	}
 
-	endBalIn, err := getBalance(at.acctIn.Actor(), at.app.GetState())
+	endBalIn, err := getBalance(at.acctIn.Actor(), at.app.Append())
 	require.Nil(err, "%+v", err)
-	endBalOut, err := getBalance(at.acctOut.Actor(), at.app.GetState())
+	endBalOut, err := getBalance(at.acctOut.Actor(), at.app.Append())
 	require.Nil(err, "%+v", err)
 	return res, endBalIn.Minus(initBalIn), endBalOut.Minus(initBalOut)
 }
@@ -172,29 +168,24 @@ func TestInitState(t *testing.T) {
 	require := require.New(t)
 
 	logger := log.TestingLogger()
-	store, err := NewStore("", 0, logger.With("module", "store"))
+	store, err := NewStoreApp("app-test", "", 0, logger)
 	require.Nil(err, "%+v", err)
-
-	app := NewBasecoin(
-		DefaultHandler("atom"),
-		store,
-		logger.With("module", "app"),
-	)
+	app := NewBaseApp(store, DefaultHandler("atom"), nil)
 
 	//testing ChainID
 	chainID := "testChain"
-	res := app.InitState("base/chain_id", chainID)
+	err = app.InitState("base", "chain_id", chainID)
+	require.Nil(err, "%+v", err)
 	assert.EqualValues(app.GetChainID(), chainID)
-	assert.EqualValues(res, "Success")
 
 	// make a nice account...
 	bal := coin.Coins{{"atom", 77}, {"eth", 12}}
 	acct := coin.NewAccountWithKey(bal)
-	res = app.InitState("coin/account", acct.MakeOption())
-	require.EqualValues(res, "Success")
+	err = app.InitState("coin", "account", acct.MakeOption())
+	require.Nil(err, "%+v", err)
 
 	// make sure it is set correctly, with some balance
-	coins, err := getBalance(acct.Actor(), app.GetState())
+	coins, err := getBalance(acct.Actor(), app.Append())
 	require.Nil(err)
 	assert.Equal(bal, coins)
 
@@ -218,23 +209,22 @@ func TestInitState(t *testing.T) {
     }
   ]
 }`
-	res = app.InitState("coin/account", unsortAcc)
-	require.EqualValues(res, "Success")
+	err = app.InitState("coin", "account", unsortAcc)
+	require.Nil(err, "%+v", err)
 
-	coins, err = getAddr(unsortAddr, app.GetState())
+	coins, err = getAddr(unsortAddr, app.Append())
 	require.Nil(err)
 	assert.True(coins.IsValid())
 	assert.Equal(unsortCoins, coins)
 
-	res = app.InitState("base/dslfkgjdas", "")
-	assert.NotEqual(res, "Success")
+	err = app.InitState("base", "dslfkgjdas", "")
+	require.NotNil(err)
 
-	res = app.InitState("dslfkgjdas", "")
-	assert.NotEqual(res, "Success")
+	err = app.InitState("", "dslfkgjdas", "")
+	require.NotNil(err)
 
-	res = app.InitState("dslfkgjdas/szfdjzs", "")
-	assert.NotEqual(res, "Success")
-
+	err = app.InitState("dslfkgjdas", "szfdjzs", "")
+	require.NotNil(err)
 }
 
 // Test CheckTx and DeliverTx with insufficient and sufficient balance
@@ -300,20 +290,4 @@ func TestQuery(t *testing.T) {
 		Data: key,
 	})
 	assert.NotEqual(resQueryPreCommit, resQueryPostCommit, "Query should change before/after commit")
-}
-
-func TestSplitKey(t *testing.T) {
-	assert := assert.New(t)
-	prefix, suffix := splitKey("foo/bar")
-	assert.EqualValues("foo", prefix)
-	assert.EqualValues("bar", suffix)
-
-	prefix, suffix = splitKey("foobar")
-	assert.EqualValues("base", prefix)
-	assert.EqualValues("foobar", suffix)
-
-	prefix, suffix = splitKey("some/complex/issue")
-	assert.EqualValues("some", prefix)
-	assert.EqualValues("complex/issue", suffix)
-
 }

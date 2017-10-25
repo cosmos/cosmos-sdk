@@ -8,6 +8,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/state"
 )
 
+const (
+	// ModuleNameBase is the module name for internal functionality
+	ModuleNameBase = "base"
+	// ChainKey is the option key for setting the chain id
+	ChainKey = "chain_id"
+)
+
 // Handler is anything that processes a transaction
 type Handler interface {
 	// Checker verifies there are valid fees and estimates work
@@ -23,6 +30,18 @@ type Handler interface {
 
 	// TODO????
 	// BeginBlock(store state.SimpleDB, hash []byte, header *abci.Header)
+}
+
+// Ticker can be executed every block
+type Ticker interface {
+	Tick(Context, state.SimpleDB) ([]*abci.Validator, error)
+}
+
+// TickerFunc allows a function to implement the interface
+type TickerFunc func(Context, state.SimpleDB) ([]*abci.Validator, error)
+
+func (t TickerFunc) Tick(ctx Context, store state.SimpleDB) ([]*abci.Validator, error) {
+	return t(ctx, store)
 }
 
 // Named ensures there is a name for the item

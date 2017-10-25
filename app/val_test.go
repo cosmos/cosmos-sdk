@@ -39,9 +39,10 @@ func TestEndBlock(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	logger := log.NewNopLogger()
-	store := MockStore()
 	handler := base.ValSetHandler{}
-	app := NewBasecoin(handler, store, logger)
+	store, err := MockStoreApp("vals", logger)
+	require.Nil(err, "%+v", err)
+	app := NewBaseApp(store, handler, nil)
 
 	val1 := makeVal()
 	val2 := makeVal()

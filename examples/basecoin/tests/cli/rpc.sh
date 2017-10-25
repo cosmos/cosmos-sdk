@@ -66,7 +66,7 @@ test01GetInsecure() {
     INFO=$(${CLIENT_EXE} rpc info)
     assertTrue "line=${LINENO}, get info" "$?"
     DATA=$(echo $INFO | jq .response.data)
-    assertEquals "line=${LINENO}, basecoin info" '"Basecoin v0.7.1"' "$DATA"
+    assertEquals "line=${LINENO}, basecoin info" '"basecoin v0.7.1"' "$DATA"
 }
 
 test02GetSecure() {

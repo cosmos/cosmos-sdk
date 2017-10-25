@@ -20,7 +20,7 @@ import:
   subpackages:
   - data
 - package: github.com/tendermint/light-client
-  version: feature/make-certifiers-stand-alone
+  version: develop
   subpackages:
   - proofs
   - certifiers

@@ -23,7 +23,7 @@ func counterQueryCmd(cmd *cobra.Command, args []string) error {
 
 	prove := !viper.GetBool(commands.FlagTrustNode)
 	key := stack.PrefixedKey(counter.NameCounter, counter.StateKey())
-	h, err := query.GetParsed(key, &cp, prove)
+	h, err := query.GetParsed(key, &cp, query.GetHeight(), prove)
 	if err != nil {
 		return err
 	}

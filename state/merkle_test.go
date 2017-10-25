@@ -66,7 +66,7 @@ func TestStateCommitHash(t *testing.T) {
 
 			// make the store...
 			tree := iavl.NewVersionedTree(0, db.NewMemDB())
-			store := NewState(tree)
+			store := NewState(tree, 2)
 
 			for n, r := range tc.rounds {
 				// start the cache

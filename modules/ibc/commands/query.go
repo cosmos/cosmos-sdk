@@ -87,7 +87,7 @@ func ibcQueryCmd(cmd *cobra.Command, args []string) error {
 	var res ibc.HandlerInfo
 	key := stack.PrefixedKey(ibc.NameIBC, ibc.HandlerKey())
 	prove := !viper.GetBool(commands.FlagTrustNode)
-	h, err := query.GetParsed(key, &res, prove)
+	h, err := query.GetParsed(key, &res, query.GetHeight(), prove)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func chainsQueryCmd(cmd *cobra.Command, args []string) error {
 	list := [][]byte{}
 	key := stack.PrefixedKey(ibc.NameIBC, ibc.ChainsKey())
 	prove := !viper.GetBool(commands.FlagTrustNode)
-	h, err := query.GetParsed(key, &list, prove)
+	h, err := query.GetParsed(key, &list, query.GetHeight(), prove)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func chainQueryCmd(cmd *cobra.Command, args []string) error {
 	var res ibc.ChainInfo
 	key := stack.PrefixedKey(ibc.NameIBC, ibc.ChainKey(arg))
 	prove := !viper.GetBool(commands.FlagTrustNode)
-	h, err := query.GetParsed(key, &res, prove)
+	h, err := query.GetParsed(key, &res, query.GetHeight(), prove)
 	if err != nil {
 		return err
 	}
@@ -158,7 +158,7 @@ func packetsQueryCmd(cmd *cobra.Command, args []string) error {
 
 	var res uint64
 	prove := !viper.GetBool(commands.FlagTrustNode)
-	h, err := query.GetParsed(key, &res, prove)
+	h, err := query.GetParsed(key, &res, query.GetHeight(), prove)
 	if err != nil {
 		return err
 	}
@@ -190,7 +190,7 @@ func packetQueryCmd(cmd *cobra.Command, args []string) error {
 	// Input queue just display the results
 	var packet ibc.Packet
 	if from != "" {
-		h, err := query.GetParsed(key, &packet, prove)
+		h, err := query.GetParsed(key, &packet, query.GetHeight(), prove)
 		if err != nil {
 			return err
 		}
@@ -198,7 +198,7 @@ func packetQueryCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// output queue, create a post packet
-	bs, height, proof, err := query.GetWithProof(key)
+	bs, height, proof, err := query.GetWithProof(key, query.GetHeight())
 	if err != nil {
 		return err
 	}

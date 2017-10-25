@@ -45,7 +45,7 @@ func nonceQueryCmd(cmd *cobra.Command, args []string) error {
 func doNonceQuery(signers []sdk.Actor) (sequence uint32, height uint64, err error) {
 	key := stack.PrefixedKey(nonce.NameNonce, nonce.GetSeqKey(signers))
 	prove := !viper.GetBool(commands.FlagTrustNode)
-	height, err = query.GetParsed(key, &sequence, prove)
+	height, err = query.GetParsed(key, &sequence, query.GetHeight(), prove)
 	if lc.IsNoDataErr(err) {
 		// no data, return sequence 0
 		return 0, 0, nil

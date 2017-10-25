@@ -18,7 +18,7 @@ import (
 type MockChain struct {
 	keys    certifiers.ValKeys
 	chainID string
-	tree    *iavl.IAVLTree
+	tree    *iavl.Tree
 }
 
 // NewMockChain initializes a teststore and test validators
@@ -26,7 +26,7 @@ func NewMockChain(chainID string, numKeys int) MockChain {
 	return MockChain{
 		keys:    certifiers.GenValKeys(numKeys),
 		chainID: chainID,
-		tree:    iavl.NewIAVLTree(0, nil),
+		tree:    iavl.NewTree(0, nil),
 	}
 }
 
@@ -42,7 +42,7 @@ func (m MockChain) MakePostPacket(packet Packet, h int) (
 	PostPacketTx, UpdateChainTx) {
 
 	post := makePostPacket(m.tree, packet, m.chainID, h)
-	seed := genEmptySeed(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
+	seed := genEmptySeed(m.keys, m.chainID, h+1, m.tree.Hash(), len(m.keys))
 	update := UpdateChainTx{seed}
 
 	return post, update
@@ -56,7 +56,7 @@ func genEmptySeed(keys certifiers.ValKeys, chain string, h int,
 	return certifiers.Seed{cp, vals}
 }
 
-func makePostPacket(tree *iavl.IAVLTree, packet Packet, fromID string, fromHeight int) PostPacketTx {
+func makePostPacket(tree *iavl.Tree, packet Packet, fromID string, fromHeight int) PostPacketTx {
 	key := []byte(fmt.Sprintf("some-long-prefix-%06d", packet.Sequence))
 	tree.Set(key, packet.Bytes())
 	_, proof, err := tree.GetWithProof(key)

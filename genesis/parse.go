@@ -10,6 +10,10 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
+// KeyDelimiter is used to separate module and key in
+// the options
+const KeyDelimiter = "/"
+
 // Option just holds module/key/value triples from
 // parsing the genesis file
 type Option struct {
@@ -54,22 +58,18 @@ func GetOptions(path string) ([]Option, error) {
 
 	opts := genDoc.AppOptions
 	cnt := 1 + len(opts.Accounts) + len(opts.pluginOptions)
-	res := make([]Option, cnt)
-
-	res[0] = Option{sdk.ModuleNameBase, sdk.ChainKey, genDoc.ChainID}
-	i := 1
+	res := make([]Option, 0, cnt)
+	res = append(res, Option{sdk.ModuleNameBase, sdk.ChainKey, genDoc.ChainID})
 
 	// set accounts
 	for _, acct := range opts.Accounts {
-		res[i] = Option{"coin", "account", string(acct)}
-		i++
+		res = append(res, Option{"coin", "account", string(acct)})
 	}
 
 	// set plugin options
 	for _, kv := range opts.pluginOptions {
 		module, key := splitKey(kv.Key)
-		res[i] = Option{module, key, kv.Value}
-		i++
+		res = append(res, Option{module, key, kv.Value})
 	}
 
 	return res, nil
@@ -145,8 +145,8 @@ func parseList(kvzIn []json.RawMessage) (kvz []keyValue, err error) {
 // Splits the string at the first '/'.
 // if there are none, assign default module ("base").
 func splitKey(key string) (string, string) {
-	if strings.Contains(key, "/") {
-		keyParts := strings.SplitN(key, "/", 2)
+	if strings.Contains(key, KeyDelimiter) {
+		keyParts := strings.SplitN(key, KeyDelimiter, 2)
 		return keyParts[0], keyParts[1]
 	}
 	return sdk.ModuleNameBase, key

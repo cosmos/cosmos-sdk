@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -32,7 +33,7 @@ type SendInput struct {
 
 	To     *sdk.Actor `json:"to"`
 	From   *sdk.Actor `json:"from"`
-	Amount coin.Coins      `json:"amount"`
+	Amount coin.Coins `json:"amount"`
 }
 
 // doQueryAccount is the HTTP handlerfunc to query an account
@@ -45,11 +46,22 @@ func doQueryAccount(w http.ResponseWriter, r *http.Request) {
 		common.WriteError(w, err)
 		return
 	}
+
+	var h int
+	qHeight := r.URL.Query().Get("height")
+	if qHeight != "" {
+		h, err = strconv.Atoi(qHeight)
+		if err != nil {
+			common.WriteError(w, err)
+			return
+		}
+	}
+
 	actor = coin.ChainAddr(actor)
 	key := stack.PrefixedKey(coin.NameCoin, actor.Bytes())
 	account := new(coin.Account)
 	prove := !viper.GetBool(commands.FlagTrustNode)
-	height, err := query.GetParsed(key, account, prove)
+	height, err := query.GetParsed(key, account, h, prove)
 	if lightclient.IsNoDataErr(err) {
 		err := fmt.Errorf("account bytes are empty for address: %q", signature)
 		common.WriteError(w, err)
@@ -152,4 +164,3 @@ func RegisterAll(r *mux.Router) error {
 }
 
 // End of mux.Router registrars
-

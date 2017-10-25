@@ -15,9 +15,9 @@ oneTimeSetUp() {
         exit 1;
     fi
     baseserver serve --port $BPORT >/dev/null &
+    sleep 0.1 # for startup
     PID_PROXY=$!
     disown
-    sleep 0.1 # for startup
 }
 
 oneTimeTearDown() {
@@ -35,12 +35,16 @@ restAddr() {
     echo $ADDR
 }
 
-# XXX Ex Usage: restAccount $ADDR $AMOUNT
+# XXX Ex Usage: restAccount $ADDR $AMOUNT [$HEIGHT]
 # Desc: Assumes just one coin, checks the balance of first coin in any case
 restAccount() {
     assertNotNull "line=${LINENO}, address required" "$1"
-    ACCT=$(curl ${URL}/query/account/sigs:$1 2>/dev/null)
-    if [ -n "$DEBUG" ]; then echo $ACCT; echo; fi
+    QUERY=${URL}/query/account/sigs:$1
+    if [ -n "$3" ]; then
+        QUERY="${QUERY}?height=${3}"
+    fi
+    ACCT=$(curl ${QUERY} 2>/dev/null)
+    if [ -n "$DEBUG" ]; then echo $QUERY; echo $ACCT; echo; fi
     assertEquals "line=${LINENO}, proper money" "$2" $(echo $ACCT | jq .data.coins[0].amount)
     return $?
 }
@@ -76,8 +80,8 @@ test01SendTx() {
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 
-    restAccount $SENDER "9007199254740000"
-    restAccount $RECV "992"
+    restAccount $SENDER "9007199254740000" "$TX_HEIGHT"
+    restAccount $RECV "992" "$TX_HEIGHT"
 
     # Make sure tx is indexed
     checkSendTx $HASH $TX_HEIGHT $SENDER "992"
@@ -126,8 +130,8 @@ test04CreateRoleInvalid() {
 #     TX_HEIGHT=$(echo $TX | jq .height)
 
 #     # deduct 100 from sender, add 90 to receiver... fees "vanish"
-#     checkAccount $SENDER "9007199254739900"
-#     checkAccount $RECV "1082"
+#     checkAccount $SENDER "9007199254739900"  "$TX_HEIGHT"
+#     checkAccount $RECV "1082"  "$TX_HEIGHT"
 
 #     # Make sure tx is indexed
 #     checkSendFeeTx $HASH $TX_HEIGHT $SENDER "90" "10"
@@ -135,8 +139,8 @@ test04CreateRoleInvalid() {
 #     # assert replay protection
 #     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx send --amount=90mycoin --fee=10mycoin --sequence=2 --to=$RECV --name=$RICH 2>/dev/null)
 #     assertFalse "line=${LINENO}, replay: $TX" $?
-#     checkAccount $SENDER "9007199254739900"
-#     checkAccount $RECV "1082"
+#     checkAccount $SENDER "9007199254739900"  "$TX_HEIGHT"
+#     checkAccount $RECV "1082"  "$TX_HEIGHT"
 
 #     # make sure we can query the proper nonce
 #     NONCE=$(${CLIENT_EXE} query nonce $SENDER)

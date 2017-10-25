@@ -124,11 +124,15 @@ getAddr() {
     echo $RAW | cut -d' ' -f2
 }
 
-# XXX Ex Usage: checkAccount $ADDR $AMOUNT
+# XXX Ex Usage: checkAccount $ADDR $AMOUNT [$HEIGHT]
 # Desc: Assumes just one coin, checks the balance of first coin in any case
+# pass optional height to query which block to query
 checkAccount() {
+    # default height of 0, but accept an argument
+    HEIGHT=${3:-0}
+
     # make sure sender goes down
-    ACCT=$(${CLIENT_EXE} query account $1)
+    ACCT=$(${CLIENT_EXE} query account $1 --height=$HEIGHT)
     if ! assertTrue "line=${LINENO}, account must exist" $?; then
         return 1
     fi
@@ -138,11 +142,14 @@ checkAccount() {
     return $?
 }
 
-# XXX Ex Usage: checkRole $ROLE $SIGS $NUM_SIGNERS
+# XXX Ex Usage: checkRole $ROLE $SIGS $NUM_SIGNERS [$HEIGHT]
 # Desc: Ensures this named role exists, and has the number of members and required signatures as above
 checkRole() {
+    # default height of 0, but accept an argument
+    HEIGHT=${4:-0}
+
     # make sure sender goes down
-    QROLE=$(${CLIENT_EXE} query role $1)
+    QROLE=$(${CLIENT_EXE} query role $1 --height=$HEIGHT)
     if ! assertTrue "line=${LINENO}, role must exist" $?; then
         return 1
     fi

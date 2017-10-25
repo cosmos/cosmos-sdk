@@ -56,6 +56,7 @@ func TestAppProofs(t *testing.T) {
 	require.NoError(err, "%+v", err)
 	require.EqualValues(0, br.CheckTx.Code, "%#v", br.CheckTx)
 	require.EqualValues(0, br.DeliverTx.Code)
+	brh := br.Height
 
 	// This sets up our trust on the node based on some past point.
 	source := certclient.New(cl)
@@ -71,7 +72,14 @@ func TestAppProofs(t *testing.T) {
 	// Test existing key.
 	var data eyes.Data
 
-	bs, height, proof, err := GetWithProof(k, cl, cert)
+	// verify a query before the tx block has no data (and valid non-exist proof)
+	bs, height, proof, err := GetWithProof(k, brh-1, cl, cert)
+	require.NotNil(err)
+	require.True(lc.IsNoDataErr(err))
+	require.Nil(bs)
+
+	// but given that block it is good
+	bs, height, proof, err = GetWithProof(k, brh, cl, cert)
 	require.NoError(err, "%+v", err)
 	require.NotNil(proof)
 	require.True(height >= uint64(latest.Header.Height))
@@ -89,7 +97,7 @@ func TestAppProofs(t *testing.T) {
 
 	// Test non-existing key.
 	missing := []byte("my-missing-key")
-	bs, _, proof, err = GetWithProof(missing, cl, cert)
+	bs, _, proof, err = GetWithProof(missing, 0, cl, cert)
 	require.True(lc.IsNoDataErr(err))
 	require.Nil(bs)
 	require.NotNil(proof)

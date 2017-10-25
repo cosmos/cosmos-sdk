@@ -17,6 +17,9 @@ import (
 	sm "github.com/cosmos/cosmos-sdk/state"
 )
 
+// DefaultHistorySize is how many blocks of history to store for ABCI queries
+const DefaultHistorySize = 10
+
 // StoreApp contains a data store and all info needed
 // to perform queries and handshakes.
 //
@@ -41,7 +44,7 @@ type StoreApp struct {
 
 // NewStoreApp creates a data store to handle queries
 func NewStoreApp(appName, dbName string, cacheSize int, logger log.Logger) (*StoreApp, error) {
-	state, err := loadState(dbName, cacheSize)
+	state, err := loadState(dbName, cacheSize, DefaultHistorySize)
 	if err != nil {
 		return nil, err
 	}
@@ -143,11 +146,12 @@ func (app *StoreApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 		// we must retrun most recent, even if apphash
 		// is not yet in the blockchain
 
-		// if tree.Tree.VersionExists(app.height - 1) {
-		//  height = app.height - 1
-		// } else {
-		height = app.CommittedHeight()
-		// }
+		withProof := app.CommittedHeight() - 1
+		if tree.Tree.VersionExists(withProof) {
+			height = withProof
+		} else {
+			height = app.CommittedHeight()
+		}
 	}
 	resQuery.Height = height
 
@@ -234,11 +238,11 @@ func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {
 	return -1
 }
 
-func loadState(dbName string, cacheSize int) (*sm.State, error) {
+func loadState(dbName string, cacheSize int, historySize uint64) (*sm.State, error) {
 	// memory backed case, just for testing
 	if dbName == "" {
 		tree := iavl.NewVersionedTree(0, dbm.NewMemDB())
-		return sm.NewState(tree), nil
+		return sm.NewState(tree, historySize), nil
 	}
 
 	// Expand the path fully
@@ -254,18 +258,12 @@ func loadState(dbName string, cacheSize int) (*sm.State, error) {
 	dir := path.Dir(dbPath)
 	name := path.Base(dbPath)
 
-	// Make sure the path exists
-	empty, _ := cmn.IsDirEmpty(dbPath + ".db")
-
 	// Open database called "dir/name.db", if it doesn't exist it will be created
 	db := dbm.NewDB(name, dbm.LevelDBBackendStr, dir)
 	tree := iavl.NewVersionedTree(cacheSize, db)
-
-	if !empty {
-		if err = tree.Load(); err != nil {
-			return nil, errors.ErrInternal("Loading tree: " + err.Error())
-		}
+	if err = tree.Load(); err != nil {
+		return nil, errors.ErrInternal("Loading tree: " + err.Error())
 	}
 
-	return sm.NewState(tree), nil
+	return sm.NewState(tree, historySize), nil
 }

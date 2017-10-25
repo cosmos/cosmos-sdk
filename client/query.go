@@ -17,10 +17,17 @@ import (
 // If there is any error in checking, returns an error.
 // If val is non-empty, proof should be KeyExistsProof
 // If val is empty, proof should be KeyMissingProof
-func GetWithProof(key []byte, node client.Client, cert certifiers.Certifier) (
+func GetWithProof(key []byte, reqHeight int, node client.Client,
+	cert certifiers.Certifier) (
 	val data.Bytes, height uint64, proof iavl.KeyProof, err error) {
 
-	resp, err := node.ABCIQuery("/key", key, true)
+	if reqHeight < 0 {
+		err = errors.Errorf("Height cannot be negative")
+		return
+	}
+
+	resp, err := node.ABCIQueryWithOptions("/key", key,
+		client.ABCIQueryOptions{Height: uint64(reqHeight)})
 	if err != nil {
 		return
 	}

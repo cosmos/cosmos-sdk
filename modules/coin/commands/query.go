@@ -34,7 +34,7 @@ func accountQueryCmd(cmd *cobra.Command, args []string) error {
 
 	acc := coin.Account{}
 	prove := !viper.GetBool(commands.FlagTrustNode)
-	height, err := query.GetParsed(key, &acc, prove)
+	height, err := query.GetParsed(key, &acc, query.GetHeight(), prove)
 	if lc.IsNoDataErr(err) {
 		return errors.Errorf("Account bytes are empty for address %s ", addr)
 	} else if err != nil {

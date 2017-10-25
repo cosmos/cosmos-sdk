@@ -28,7 +28,7 @@ func keyQueryCmd(cmd *cobra.Command, args []string) error {
 	}
 	prove := !viper.GetBool(commands.FlagTrustNode)
 
-	val, h, err := Get(key, prove)
+	val, h, err := Get(key, GetHeight(), prove)
 	if err != nil {
 		return err
 	}

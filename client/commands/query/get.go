@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/iavl"
 	"github.com/tendermint/light-client/proofs"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/commands"
@@ -24,8 +25,8 @@ import (
 // It will try to get the proof for the given key.  If it is successful,
 // it will return the height and also unserialize proof.Data into the data
 // argument (so pass in a pointer to the appropriate struct)
-func GetParsed(key []byte, data interface{}, prove bool) (uint64, error) {
-	bs, h, err := Get(key, prove)
+func GetParsed(key []byte, data interface{}, height int, prove bool) (uint64, error) {
+	bs, h, err := Get(key, height, prove)
 	if err != nil {
 		return 0, err
 	}
@@ -44,26 +45,31 @@ func GetParsed(key []byte, data interface{}, prove bool) (uint64, error) {
 // we just repeat whatever any (potentially malicious) node gives us.
 // Only use that if you are running the full node yourself,
 // and it is localhost or you have a secure connection (not HTTP)
-func Get(key []byte, prove bool) (data.Bytes, uint64, error) {
+func Get(key []byte, height int, prove bool) (data.Bytes, uint64, error) {
+	if height < 0 {
+		return nil, 0, fmt.Errorf("Height cannot be negative")
+	}
+
 	if !prove {
 		node := commands.GetNode()
-		resp, err := node.ABCIQuery("/key", key, false)
+		resp, err := node.ABCIQueryWithOptions("/key", key,
+			rpcclient.ABCIQueryOptions{Trusted: true, Height: uint64(height)})
 		return data.Bytes(resp.Value), resp.Height, err
 	}
-	val, h, _, err := GetWithProof(key)
+	val, h, _, err := GetWithProof(key, height)
 	return val, h, err
 }
 
 // GetWithProof returns the values stored under a given key at the named
 // height as in Get.  Additionally, it will return a validated merkle
 // proof for the key-value pair if it exists, and all checks pass.
-func GetWithProof(key []byte) (data.Bytes, uint64, iavl.KeyProof, error) {
+func GetWithProof(key []byte, height int) (data.Bytes, uint64, iavl.KeyProof, error) {
 	node := commands.GetNode()
 	cert, err := commands.GetCertifier()
 	if err != nil {
 		return nil, 0, nil, err
 	}
-	return client.GetWithProof(key, node, cert)
+	return client.GetWithProof(key, height, node, cert)
 }
 
 // ParseHexKey parses the key flag as hex and converts to bytes or returns error

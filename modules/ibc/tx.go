@@ -113,6 +113,7 @@ type PostPacketTx struct {
 	// The immediate source of the packet, not always Packet.SrcChainID
 	FromChainID string `json:"src_chain"`
 	// The block height in which Packet was committed, to check Proof
+	// AppHash for the proof in header for FromChainHeight+1
 	FromChainHeight uint64 `json:"src_height"`
 	// this proof must match the header and the packet.Bytes()
 	Proof  *iavl.KeyExistsProof `json:"proof"`

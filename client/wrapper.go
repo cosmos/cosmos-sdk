@@ -15,6 +15,8 @@ import (
 
 var _ rpcclient.Client = Wrapper{}
 
+// Wrapper wraps a rpcclient with a Certifier and double-checks any input that is
+// provable before passing it along. Allows you to make any rpcclient fully secure.
 type Wrapper struct {
 	rpcclient.Client
 	cert *certifiers.Inquiring
@@ -22,6 +24,8 @@ type Wrapper struct {
 
 // SecureClient uses a given certifier to wrap an connection to an untrusted
 // host and return a cryptographically secure rpc client.
+//
+// If it is wrapping an HTTP rpcclient, it will also wrap the websocket interface
 func SecureClient(c rpcclient.Client, cert *certifiers.Inquiring) Wrapper {
 	wrap := Wrapper{c, cert}
 	// if we wrap http client, then we can swap out the event switch to filter
@@ -32,15 +36,18 @@ func SecureClient(c rpcclient.Client, cert *certifiers.Inquiring) Wrapper {
 	return wrap
 }
 
+// ABCIQueryWithOptions exposes all options for the ABCI query and verifies the returned proof
 func (w Wrapper) ABCIQueryWithOptions(path string, data data.Bytes, opts rpcclient.ABCIQueryOptions) (*ctypes.ResultABCIQuery, error) {
 	res, _, err := GetWithProofOptions(path, data, opts, w.Client, w.cert)
 	return res, err
 }
 
+// ABCIQuery uses default options for the ABCI query and verifies the returned proof
 func (w Wrapper) ABCIQuery(path string, data data.Bytes) (*ctypes.ResultABCIQuery, error) {
 	return w.ABCIQueryWithOptions(path, data, rpcclient.DefaultABCIQueryOptions)
 }
 
+// Tx queries for a given tx and verifies the proof if it was requested
 func (w Wrapper) Tx(hash []byte, prove bool) (*ctypes.ResultTx, error) {
 	res, err := w.Client.Tx(hash, prove)
 	if !prove || err != nil {
@@ -54,6 +61,10 @@ func (w Wrapper) Tx(hash []byte, prove bool) (*ctypes.ResultTx, error) {
 	return res, err
 }
 
+// BlockchainInfo requests a list of headers and verifies them all...
+// Rather expensive.
+//
+// TODO: optimize this if used for anything needing performance
 func (w Wrapper) BlockchainInfo(minHeight, maxHeight int) (*ctypes.ResultBlockchainInfo, error) {
 	r, err := w.Client.BlockchainInfo(minHeight, maxHeight)
 	if err != nil {
@@ -68,7 +79,6 @@ func (w Wrapper) BlockchainInfo(minHeight, maxHeight int) (*ctypes.ResultBlockch
 			return nil, err
 		}
 		check := certclient.CommitFromResult(c)
-		// TODO: 3
 		err = ValidateBlockMeta(meta, check)
 		if err != nil {
 			return nil, err
@@ -78,6 +88,7 @@ func (w Wrapper) BlockchainInfo(minHeight, maxHeight int) (*ctypes.ResultBlockch
 	return r, nil
 }
 
+// Block returns an entire block and verifies all signatures
 func (w Wrapper) Block(height *int) (*ctypes.ResultBlock, error) {
 	r, err := w.Client.Block(height)
 	if err != nil {
@@ -116,11 +127,17 @@ func (w Wrapper) Commit(height *int) (*ctypes.ResultCommit, error) {
 	return r, err
 }
 
+// WrappedSwitch creates a websocket connection that auto-verifies any info
+// coming through before passing it along.
+//
+// Since the verification takes 1-2 rpc calls, this is obviously only for
+// relatively low-throughput situations that can tolerate a bit extra latency
 type WrappedSwitch struct {
 	types.EventSwitch
 	client rpcclient.Client
 }
 
+// FireEvent verifies any block or header returned from the eventswitch
 func (s WrappedSwitch) FireEvent(event string, data events.EventData) {
 	tm, ok := data.(types.TMEventData)
 	if !ok {
@@ -142,6 +159,7 @@ func (s WrappedSwitch) FireEvent(event string, data events.EventData) {
 			fmt.Printf("Invalid block: %#v\n", err)
 			return
 		}
+		// TODO: can we verify tx as well? anything else
 	}
 
 	// looks good, we fire it

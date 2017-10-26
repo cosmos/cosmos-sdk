@@ -3,7 +3,9 @@ GOTOOLS =	github.com/mitchellh/gox \
 			github.com/rigelrozanski/shelldown/cmd/shelldown
 TUTORIALS=$(shell find docs/guide -name "*md" -type f)
 
-EXAMPLES := counter eyes basecoin
+# EXAMPLES := counter eyes basecoin
+EXAMPLES := eyes
+
 INSTALL_EXAMPLES := $(addprefix install_,${EXAMPLES})
 TEST_EXAMPLES := $(addprefix testex_,${EXAMPLES})
 
@@ -34,7 +36,7 @@ benchmark:
 test: test_unit test_cli
 
 test_unit:
-	@go test `glide novendor`
+	@go test `glide novendor | grep -v _attic | grep -v examples`
 
 test_cli: $(TEST_EXAMPLES)
 	# sudo apt-get install jq

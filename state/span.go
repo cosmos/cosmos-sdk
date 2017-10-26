@@ -1,6 +1,9 @@
 package state
 
-import wire "github.com/tendermint/go-wire"
+import (
+	sdk "github.com/cosmos/cosmos-sdk"
+	wire "github.com/tendermint/go-wire"
+)
 
 var (
 	keys = []byte("keys")
@@ -16,13 +19,13 @@ var (
 //
 // TODO: doesn't handle deleting....
 type Span struct {
-	store KVStore
+	store sdk.KVStore
 	// keys is sorted ascending and cannot contain duplicates
 	keys []uint64
 }
 
 // NewSpan loads or initializes a span of keys
-func NewSpan(store KVStore) *Span {
+func NewSpan(store sdk.KVStore) *Span {
 	s := &Span{store: store}
 	s.loadKeys()
 	return s

@@ -1,5 +1,5 @@
 //nolint
-package base
+package util
 
 import (
 	"fmt"

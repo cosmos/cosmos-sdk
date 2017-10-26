@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	sdk "github.com/cosmos/cosmos-sdk"
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/tendermint/types"
 
@@ -66,9 +65,9 @@ func txQueryCmd(cmd *cobra.Command, args []string) error {
 	return showTx(res.Height, res.Proof.Data)
 }
 
-// showTx parses anything that was previously registered as sdk.Tx
+// showTx parses anything that was previously registered as interface{}
 func showTx(h int, tx types.Tx) error {
-	var info sdk.Tx
+	var info interface{}
 	err := wire.ReadBinaryBytes(tx, &info)
 	if err != nil {
 		return err

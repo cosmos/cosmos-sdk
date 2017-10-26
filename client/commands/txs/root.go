@@ -6,8 +6,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	sdk "github.com/cosmos/cosmos-sdk"
 )
 
 // nolint
@@ -39,7 +37,7 @@ func doRawTx(cmd *cobra.Command, args []string) error {
 	}
 
 	// parse the input
-	var tx sdk.Tx
+	var tx interface{}
 	err = json.Unmarshal(raw, &tx)
 	if err != nil {
 		return errors.WithStack(err)

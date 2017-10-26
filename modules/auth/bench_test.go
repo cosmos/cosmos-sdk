@@ -6,33 +6,36 @@ import (
 
 	crypto "github.com/tendermint/go-crypto"
 	cmn "github.com/tendermint/tmlibs/common"
-	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/stack"
 	"github.com/cosmos/cosmos-sdk/state"
+	"github.com/cosmos/cosmos-sdk/util"
 )
 
-func makeSignTx() sdk.Tx {
+func makeSignTx() interface{} {
 	key := crypto.GenPrivKeyEd25519().Wrap()
 	payload := cmn.RandBytes(32)
-	tx := NewSig(stack.NewRawTx(payload))
+	tx := newSingle(payload)
 	Sign(tx, key)
-	return tx.Wrap()
+	return tx
 }
 
-func makeMultiSignTx(cnt int) sdk.Tx {
+func makeMultiSignTx(cnt int) interface{} {
 	payload := cmn.RandBytes(32)
-	tx := NewMulti(stack.NewRawTx(payload))
+	tx := newMulti(payload)
 	for i := 0; i < cnt; i++ {
 		key := crypto.GenPrivKeyEd25519().Wrap()
 		Sign(tx, key)
 	}
-	return tx.Wrap()
+	return tx
 }
 
 func makeHandler() sdk.Handler {
-	return stack.New(Signatures{}).Use(stack.OKHandler{})
+	return sdk.ChainDecorators(
+		Signatures{},
+	).WithHandler(
+		util.OKHandler{},
+	)
 }
 
 func BenchmarkCheckOneSig(b *testing.B) {
@@ -40,7 +43,7 @@ func BenchmarkCheckOneSig(b *testing.B) {
 	h := makeHandler()
 	store := state.NewMemKVStore()
 	for i := 1; i <= b.N; i++ {
-		ctx := stack.NewContext("foo", 100, log.NewNopLogger())
+		ctx := util.MockContext("foo", 100)
 		_, err := h.DeliverTx(ctx, store, tx)
 		// never should error
 		if err != nil {
@@ -64,7 +67,7 @@ func benchmarkCheckMultiSig(b *testing.B, cnt int) {
 	h := makeHandler()
 	store := state.NewMemKVStore()
 	for i := 1; i <= b.N; i++ {
-		ctx := stack.NewContext("foo", 100, log.NewNopLogger())
+		ctx := util.MockContext("foo", 100)
 		_, err := h.DeliverTx(ctx, store, tx)
 		// never should error
 		if err != nil {

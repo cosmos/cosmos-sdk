@@ -1,6 +1,10 @@
 package state
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+
+	sdk "github.com/cosmos/cosmos-sdk"
+)
 
 var (
 	headKey = []byte("h")
@@ -25,7 +29,7 @@ func QueueItemKey(i uint64) []byte {
 
 // Queue allows us to fill up a range of the db, and grab from either end
 type Queue struct {
-	store KVStore
+	store sdk.KVStore
 	head  uint64 // if Size() > 0, the first element is here
 	tail  uint64 // this is the first empty slot to Push() to
 }
@@ -33,7 +37,7 @@ type Queue struct {
 // NewQueue will load or initialize a queue in this state-space
 //
 // Generally, you will want to stack.PrefixStore() the space first
-func NewQueue(store KVStore) *Queue {
+func NewQueue(store sdk.KVStore) *Queue {
 	q := &Queue{store: store}
 	q.head = q.getCount(headKey)
 	q.tail = q.getCount(tailKey)

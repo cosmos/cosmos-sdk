@@ -7,20 +7,19 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/stack"
 	"github.com/cosmos/cosmos-sdk/state"
+	"github.com/cosmos/cosmos-sdk/util"
 )
 
 func TestSignatureChecks(t *testing.T) {
 	assert := assert.New(t)
 
 	// generic args
-	ctx := stack.NewContext("test-chain", 100, log.NewNopLogger())
+	ctx := util.MockContext("test-chain", 100)
 	store := state.NewMemKVStore()
-	raw := stack.NewRawTx([]byte{1, 2, 3, 4})
+	raw := []byte{1, 2, 3, 4}
 
 	// let's make some keys....
 	priv1 := crypto.GenPrivKeyEd25519().Wrap()
@@ -56,27 +55,29 @@ func TestSignatureChecks(t *testing.T) {
 		idx := strconv.Itoa(i)
 
 		// make the stack check for the given permission
-		app := stack.New(
+		app := sdk.ChainDecorators(
 			Signatures{},
-			stack.CheckMiddleware{Required: tc.check},
-		).Use(stack.OKHandler{})
+			util.CheckDecorator{Required: tc.check},
+		).WithHandler(
+			util.OKHandler{},
+		)
 
-		var tx sdk.Tx
+		var tx interface{}
 		// this does the signing as needed
 		if tc.useMultiSig {
-			mtx := NewMulti(raw)
+			mtx := newMulti(raw)
 			for _, k := range tc.keys {
 				err := Sign(mtx, k)
 				assert.Nil(err, "%d: %+v", i, err)
 			}
-			tx = mtx.Wrap()
+			tx = mtx
 		} else {
-			otx := NewSig(raw)
+			otx := newSingle(raw)
 			for _, k := range tc.keys {
 				err := Sign(otx, k)
 				assert.Nil(err, "%d: %+v", i, err)
 			}
-			tx = otx.Wrap()
+			tx = otx
 		}
 
 		_, err := app.CheckTx(ctx, store, tx)

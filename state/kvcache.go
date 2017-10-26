@@ -1,18 +1,20 @@
 package state
 
+import sdk "github.com/cosmos/cosmos-sdk"
+
 // MemKVCache is designed to wrap MemKVStore as a cache
 type MemKVCache struct {
-	store SimpleDB
+	store sdk.SimpleDB
 	cache *MemKVStore
 }
 
-var _ SimpleDB = (*MemKVCache)(nil)
+var _ sdk.SimpleDB = (*MemKVCache)(nil)
 
 // NewMemKVCache wraps a cache around MemKVStore
 //
 // You probably don't want to use directly, but rather
 // via MemKVCache.Checkpoint()
-func NewMemKVCache(store SimpleDB) *MemKVCache {
+func NewMemKVCache(store sdk.SimpleDB) *MemKVCache {
 	if store == nil {
 		panic("wtf")
 	}
@@ -53,7 +55,7 @@ func (c *MemKVCache) Remove(key []byte) (value []byte) {
 }
 
 // List is also inefficiently implemented...
-func (c *MemKVCache) List(start, end []byte, limit int) []Model {
+func (c *MemKVCache) List(start, end []byte, limit int) []sdk.Model {
 	orig := c.store.List(start, end, 0)
 	cached := c.cache.List(start, end, 0)
 	keys := c.combineLists(orig, cached)
@@ -69,7 +71,7 @@ func (c *MemKVCache) List(start, end []byte, limit int) []Model {
 	return keys
 }
 
-func (c *MemKVCache) combineLists(orig, cache []Model) []Model {
+func (c *MemKVCache) combineLists(orig, cache []sdk.Model) []sdk.Model {
 	store := NewMemKVStore()
 	for _, m := range orig {
 		store.Set(m.Key, m.Value)
@@ -86,33 +88,33 @@ func (c *MemKVCache) combineLists(orig, cache []Model) []Model {
 }
 
 // First is done with List, but could be much more efficient
-func (c *MemKVCache) First(start, end []byte) Model {
+func (c *MemKVCache) First(start, end []byte) sdk.Model {
 	data := c.List(start, end, 0)
 	if len(data) == 0 {
-		return Model{}
+		return sdk.Model{}
 	}
 	return data[0]
 }
 
 // Last is done with List, but could be much more efficient
-func (c *MemKVCache) Last(start, end []byte) Model {
+func (c *MemKVCache) Last(start, end []byte) sdk.Model {
 	data := c.List(start, end, 0)
 	if len(data) == 0 {
-		return Model{}
+		return sdk.Model{}
 	}
 	return data[len(data)-1]
 }
 
 // Checkpoint returns the same state, but where writes
 // are buffered and don't affect the parent
-func (c *MemKVCache) Checkpoint() SimpleDB {
+func (c *MemKVCache) Checkpoint() sdk.SimpleDB {
 	return NewMemKVCache(c)
 }
 
 // Commit will take all changes from the checkpoint and write
 // them to the parent.
 // Returns an error if this is not a child of this one
-func (c *MemKVCache) Commit(sub SimpleDB) error {
+func (c *MemKVCache) Commit(sub sdk.SimpleDB) error {
 	cache, ok := sub.(*MemKVCache)
 	if !ok {
 		return ErrNotASubTransaction()

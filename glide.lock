@@ -1,26 +1,20 @@
-hash: a2243bfd21937edf660778300855e7cb72185164641cb278dbf0c220e8a0f60a
-updated: 2017-10-23T17:21:02.40831023+02:00
+hash: 6e06a42eafe0aeff112cee86aef6b2cab0e2f62c2e6bfccfb629aa22f6b62773
+updated: 2017-10-26T11:57:48.785457739+02:00
 imports:
-- name: github.com/bgentry/speakeasy
-  version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
 - name: github.com/btcsuite/btcd
   version: b8df516b4b267acf2de46be593a9d948d1d2c420
   subpackages:
   - btcec
-  - chaincfg
-  - chaincfg/chainhash
-  - wire
 - name: github.com/btcsuite/btcutil
   version: 66871daeb12123ece012a9628d2798d01195c4b3
   subpackages:
   - base58
-  - hdkeychain
 - name: github.com/btcsuite/fastsha256
   version: 637e656429416087660c84436a2a035d69d54e2e
+- name: github.com/ethanfrey/hid
+  version: f379bda1dbc8e79333b04563f71a12e86206efe5
 - name: github.com/ethanfrey/ledger
-  version: 5e432577be582bd18a3b4a9cd75dae7a317ade36
-- name: github.com/flynn/hid
-  version: ed06a31c6245d4552e8dbba7e32e5b010b875d65
+  version: 3689ce9be93e1a5bef836b1cc2abb18381c79176
 - name: github.com/go-kit/kit
   version: d67bb4c202e3b91377d1079b110a6c9ce23ab2f8
   subpackages:
@@ -37,34 +31,24 @@ imports:
   version: 71201497bace774495daed26a3874fd339e0b538
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
-- name: github.com/gorilla/context
-  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
-- name: github.com/gorilla/handlers
-  version: a4043c62cc2329bacda331d33fc908ab11ef0ec3
-- name: github.com/gorilla/mux
-  version: bcd8bc72b08df0f70df986b97f95590779502d31
 - name: github.com/howeyc/crc16
   version: 58da63c846043d0bea709c8d47039df06577d6d9
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
-- name: github.com/spf13/cobra
-  version: 4cdb38c072b86bf795d2c81de50784d9fdd6eb77
-- name: github.com/spf13/viper
-  version: 0967fc9aceab2ce9da34061253ac10fb99bba5b2
 - name: github.com/tendermint/ed25519
   version: 1f52c6f8b8a5c7908aff4497c186af344b428925
   subpackages:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-wire
-  version: 55ae61f1fc83cfaa57ab7d54250d7a1a2be0b83c
+  version: 3180c867ca52bcd9ba6c905ce63613f8d8e9837c
   subpackages:
   - data
   - data/base58
 - name: github.com/tendermint/tmlibs
-  version: 8e5266a9ef2527e68a1571f932db8228a331b556
+  version: b30e3ba26d4077edeed83c50a4e0c38b0ec9ddb3
   subpackages:
   - common
   - log
@@ -83,8 +67,6 @@ imports:
 - name: gopkg.in/go-playground/validator.v9
   version: 6d8c18553ea1ac493d049edd6f102f52e618f085
 testImports:
-- name: github.com/cmars/basen
-  version: fe3947df716ebfda9847eb1b9a48f9592e06478c
 - name: github.com/davecgh/go-spew
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:

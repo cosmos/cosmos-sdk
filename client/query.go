@@ -5,11 +5,12 @@ import (
 
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/iavl"
+
 	"github.com/tendermint/tendermint/certifiers"
 	"github.com/tendermint/tendermint/certifiers/client"
 	certerr "github.com/tendermint/tendermint/certifiers/errors"
-
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 // GetWithProof will query the key on the given node, and verify it has
@@ -27,70 +28,70 @@ func GetWithProof(key []byte, reqHeight int, node rpcclient.Client,
 		return
 	}
 
-	resp, err := node.ABCIQueryWithOptions("/key", key,
-		rpcclient.ABCIQueryOptions{Height: uint64(reqHeight)})
+	resp, proof, err := GetWithProofOptions("/key", key,
+		rpcclient.ABCIQueryOptions{Height: uint64(reqHeight)},
+		node, cert)
+	if resp != nil {
+		val, height = resp.Value, resp.Height
+	}
+	return val, height, proof, err
+}
+
+// GetWithProofOptions is useful if you want full access to the ABCIQueryOptions
+func GetWithProofOptions(path string, key []byte, opts rpcclient.ABCIQueryOptions,
+	node rpcclient.Client, cert certifiers.Certifier) (
+	*ctypes.ResultABCIQuery, iavl.KeyProof, error) {
+
+	resp, err := node.ABCIQueryWithOptions(path, key, opts)
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 
 	// make sure the proof is the proper height
 	if !resp.Code.IsOK() {
 		err = errors.Errorf("Query error %d: %s", resp.Code, resp.Code.String())
-		return
+		return nil, nil, err
 	}
 	if len(resp.Key) == 0 || len(resp.Proof) == 0 {
-		err = ErrNoData()
-		return
+		return nil, nil, ErrNoData()
 	}
 	if resp.Height == 0 {
-		err = errors.New("Height returned is zero")
-		return
+		return nil, nil, errors.New("Height returned is zero")
 	}
 
 	// AppHash for height H is in header H+1
-	var commit certifiers.Commit
-	commit, err = GetCertifiedCommit(int(resp.Height+1), node, cert)
+	commit, err := GetCertifiedCommit(int(resp.Height+1), node, cert)
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 
 	if len(resp.Value) > 0 {
 		// The key was found, construct a proof of existence.
-		var eproof *iavl.KeyExistsProof
-		eproof, err = iavl.ReadKeyExistsProof(resp.Proof)
+		eproof, err := iavl.ReadKeyExistsProof(resp.Proof)
 		if err != nil {
-			err = errors.Wrap(err, "Error reading proof")
-			return
+			return nil, nil, errors.Wrap(err, "Error reading proof")
 		}
 
 		// Validate the proof against the certified header to ensure data integrity.
 		err = eproof.Verify(resp.Key, resp.Value, commit.Header.AppHash)
 		if err != nil {
-			err = errors.Wrap(err, "Couldn't verify proof")
-			return
+			return nil, nil, errors.Wrap(err, "Couldn't verify proof")
 		}
-		val = data.Bytes(resp.Value)
-		proof = eproof
-	} else {
-		// The key wasn't found, construct a proof of non-existence.
-		var aproof *iavl.KeyAbsentProof
-		aproof, err = iavl.ReadKeyAbsentProof(resp.Proof)
-		if err != nil {
-			err = errors.Wrap(err, "Error reading proof")
-			return
-		}
-		// Validate the proof against the certified header to ensure data integrity.
-		err = aproof.Verify(resp.Key, nil, commit.Header.AppHash)
-		if err != nil {
-			err = errors.Wrap(err, "Couldn't verify proof")
-			return
-		}
-		err = ErrNoData()
-		proof = aproof
+		return resp, eproof, nil
 	}
 
-	height = resp.Height
-	return
+	// The key wasn't found, construct a proof of non-existence.
+	var aproof *iavl.KeyAbsentProof
+	aproof, err = iavl.ReadKeyAbsentProof(resp.Proof)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "Error reading proof")
+	}
+	// Validate the proof against the certified header to ensure data integrity.
+	err = aproof.Verify(resp.Key, nil, commit.Header.AppHash)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "Couldn't verify proof")
+	}
+	return resp, aproof, ErrNoData()
 }
 
 // GetCertifiedCommit gets the signed header for a given height

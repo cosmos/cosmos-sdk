@@ -7,10 +7,12 @@ import (
 	"github.com/tendermint/tmlibs/events"
 
 	"github.com/tendermint/tendermint/certifiers"
-	"github.com/tendermint/tendermint/certifiers/client"
+	certclient "github.com/tendermint/tendermint/certifiers/client"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 var _ rpcclient.Client = Wrapper{}
@@ -20,7 +22,9 @@ type Wrapper struct {
 	cert *certifiers.Inquiring
 }
 
-func Wrap(c rpcclient.Client, cert *certifiers.Inquiring) Wrapper {
+// SecureClient uses a given certifier to wrap an connection to an untrusted
+// host and return a cryptographically secure rpc client.
+func SecureClient(c rpcclient.Client, cert *certifiers.Inquiring) Wrapper {
 	wrap := Wrapper{c, cert}
 	// if we wrap http client, then we can swap out the event switch to filter
 	if hc, ok := c.(*rpcclient.HTTP); ok {
@@ -31,42 +35,12 @@ func Wrap(c rpcclient.Client, cert *certifiers.Inquiring) Wrapper {
 }
 
 func (w Wrapper) ABCIQueryWithOptions(path string, data data.Bytes, opts rpcclient.ABCIQueryOptions) (*ctypes.ResultABCIQuery, error) {
-	r, err := w.Client.ABCIQuery(path, data)
-	if opts.Trusted || err != nil {
-		return r, err
-	}
-
-	return w.proveQuery(r)
+	res, _, err := client.GetWithProofOptions(path, data, opts, w.Client, w.cert)
+	return res, err
 }
 
 func (w Wrapper) ABCIQuery(path string, data data.Bytes) (*ctypes.ResultABCIQuery, error) {
-	// default always with proof
-	r, err := w.Client.ABCIQuery(path, data)
-	if err != nil {
-		return nil, err
-	}
-
-	return w.proveQuery(r)
-}
-
-func (w Wrapper) proveQuery(r *ctypes.ResultABCIQuery) (*ctypes.ResultABCIQuery, error) {
-	// get a verified commit to validate from
-	h := int(r.Height)
-	c, err := w.Commit(&h)
-	if err != nil {
-		return nil, err
-	}
-	// make sure the checkpoint and proof match up
-	check := client.CommitFromResult(c)
-	// verify query
-	proof := AppProof{
-		Height: r.Height,
-		Key:    r.Key,
-		Value:  r.Value,
-		Proof:  r.Proof,
-	}
-	err = proof.Validate(check)
-	return r, err
+	return w.ABCIQueryWithOptions(path, data, rpcclient.DefaultABCIQueryOptions)
 }
 
 func (w Wrapper) Tx(hash []byte, prove bool) (*ctypes.ResultTx, error) {
@@ -80,7 +54,9 @@ func (w Wrapper) Tx(hash []byte, prove bool) (*ctypes.ResultTx, error) {
 		return nil, err
 	}
 	// make sure the checkpoint and proof match up
-	check := client.CommitFromResult(c)
+	check := certclient.CommitFromResult(c)
+
+	// TODO: 2
 	// verify tx
 	proof := TxProof{
 		Height: uint64(r.Height),
@@ -103,7 +79,8 @@ func (w Wrapper) BlockchainInfo(minHeight, maxHeight int) (*ctypes.ResultBlockch
 		if err != nil {
 			return nil, err
 		}
-		check := client.CommitFromResult(c)
+		check := certclient.CommitFromResult(c)
+		// TODO: 3
 		err = ValidateBlockMeta(meta, check)
 		if err != nil {
 			return nil, err
@@ -123,7 +100,7 @@ func (w Wrapper) Block(height *int) (*ctypes.ResultBlock, error) {
 	if err != nil {
 		return nil, err
 	}
-	check := client.CommitFromResult(c)
+	check := certclient.CommitFromResult(c)
 
 	// now verify
 	err = ValidateBlockMeta(r.BlockMeta, check)
@@ -145,7 +122,7 @@ func (w Wrapper) Commit(height *int) (*ctypes.ResultCommit, error) {
 	r, err := w.Client.Commit(height)
 	// if we got it, then certify it
 	if err == nil {
-		check := client.CommitFromResult(r)
+		check := certclient.CommitFromResult(r)
 		err = w.cert.Certify(check)
 	}
 	return r, err
@@ -189,7 +166,7 @@ func verifyHeader(c rpcclient.Client, head *types.Header) error {
 	if err != nil {
 		return err
 	}
-	check := client.CommitFromResult(commit)
+	check := certclient.CommitFromResult(commit)
 	return ValidateHeader(head, check)
 }
 
@@ -199,6 +176,6 @@ func verifyBlock(c rpcclient.Client, block *types.Block) error {
 	if err != nil {
 		return err
 	}
-	check := client.CommitFromResult(commit)
+	check := certclient.CommitFromResult(commit)
 	return ValidateBlock(block, check)
 }

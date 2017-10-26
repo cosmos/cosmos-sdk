@@ -8,7 +8,7 @@ import (
 	certerr "github.com/tendermint/tendermint/certifiers/errors"
 	"github.com/tendermint/tendermint/certifiers/files"
 
-	"github.com/tendermint/light-client/proofs"
+	"github.com/cosmos/cosmos-sdk/client/proofs"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )

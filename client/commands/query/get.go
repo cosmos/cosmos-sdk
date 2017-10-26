@@ -11,7 +11,7 @@ import (
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/iavl"
-	"github.com/tendermint/light-client/proofs"
+	"github.com/cosmos/cosmos-sdk/client/proofs"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 

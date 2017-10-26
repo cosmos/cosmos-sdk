@@ -1,5 +1,5 @@
-hash: fbfdd03c0367bb0785ceb81ed34059df219e55d5a9c71c12597e505fbce14165
-updated: 2017-10-26T15:57:25.483144016+02:00
+hash: 809845bf4c18a4abc85cf5d7b5ee7a17e0f437cd377b22e158787c718272261a
+updated: 2017-10-26T16:18:37.833408343+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -140,18 +140,14 @@ imports:
   - data/base58
 - name: github.com/tendermint/iavl
   version: 595f3dcd5b6cd4a292e90757ae6d367fd7a6e653
-- name: github.com/tendermint/light-client
-  version: 76313d625e662ed7b284d066d68ff71edd7a9fac
-  subpackages:
-  - certifiers
-  - certifiers/client
-  - certifiers/errors
-  - certifiers/files
-  - proofs
 - name: github.com/tendermint/tendermint
   version: bb6c15b00a07e2aafc7fe245b3acfb33b9c25abe
   subpackages:
   - blockchain
+  - certifiers
+  - certifiers/client
+  - certifiers/errors
+  - certifiers/files
   - cmd/tendermint/commands
   - config
   - consensus
@@ -190,6 +186,7 @@ imports:
   - log
   - logger
   - merkle
+  - test
 - name: golang.org/x/crypto
   version: edd5e9b0879d13ee6970a50153d85b8fec9f7686
   subpackages:
@@ -231,7 +228,6 @@ imports:
   version: f7bf885db0b7479a537ec317c6e48ce53145f3db
   subpackages:
   - balancer
-  - balancer/roundrobin
   - codes
   - connectivity
   - credentials
@@ -243,8 +239,6 @@ imports:
   - naming
   - peer
   - resolver
-  - resolver/dns
-  - resolver/passthrough
   - stats
   - status
   - tap

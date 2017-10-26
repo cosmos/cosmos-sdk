@@ -19,18 +19,14 @@ import:
   version: develop
   subpackages:
   - data
-- package: github.com/tendermint/light-client
-  version: develop
-  subpackages:
-  - proofs
-  - certifiers
-  - certifiers/client
-  - certifiers/files
 - package: github.com/tendermint/iavl
   version: develop
 - package: github.com/tendermint/tendermint
   version: develop
   subpackages:
+  - certifiers
+  - certifiers/client
+  - certifiers/files
   - config
   - node
   - proxy

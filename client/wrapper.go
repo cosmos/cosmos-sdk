@@ -1,4 +1,4 @@
-package proofs
+package client
 
 import (
 	"fmt"
@@ -11,8 +11,6 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
 )
 
 var _ rpcclient.Client = Wrapper{}
@@ -35,7 +33,7 @@ func SecureClient(c rpcclient.Client, cert *certifiers.Inquiring) Wrapper {
 }
 
 func (w Wrapper) ABCIQueryWithOptions(path string, data data.Bytes, opts rpcclient.ABCIQueryOptions) (*ctypes.ResultABCIQuery, error) {
-	res, _, err := client.GetWithProofOptions(path, data, opts, w.Client, w.cert)
+	res, _, err := GetWithProofOptions(path, data, opts, w.Client, w.cert)
 	return res, err
 }
 
@@ -48,7 +46,7 @@ func (w Wrapper) Tx(hash []byte, prove bool) (*ctypes.ResultTx, error) {
 	if !prove || err != nil {
 		return res, err
 	}
-	check, err := client.GetCertifiedCommit(res.Height, w.Client, w.cert)
+	check, err := GetCertifiedCommit(res.Height, w.Client, w.cert)
 	if err != nil {
 		return res, err
 	}

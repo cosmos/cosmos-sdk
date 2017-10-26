@@ -1,13 +1,13 @@
-package proofs
+package client
 
 import (
 	"bytes"
-	"errors"
 
-	"github.com/tendermint/tendermint/types"
+	"github.com/pkg/errors"
 
 	"github.com/tendermint/tendermint/certifiers"
 	certerr "github.com/tendermint/tendermint/certifiers/errors"
+	"github.com/tendermint/tendermint/types"
 )
 
 func ValidateBlockMeta(meta *types.BlockMeta, check certifiers.Commit) error {

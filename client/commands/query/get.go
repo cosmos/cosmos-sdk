@@ -1,6 +1,7 @@
 package query
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -11,7 +12,7 @@ import (
 	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/iavl"
-	"github.com/cosmos/cosmos-sdk/client/proofs"
+	cmn "github.com/tendermint/tmlibs/common"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
@@ -87,7 +88,8 @@ func ParseHexKey(args []string, argname string) ([]byte, error) {
 		return nil, errors.Errorf("[%s] argument must be non-empty ", argname)
 	}
 	// with tx, we always just parse key as hex and use to lookup
-	return proofs.ParseHexKey(rawkey)
+	key, err := hex.DecodeString(cmn.StripHex(rawkey))
+	return key, errors.WithStack(err)
 }
 
 // GetHeight reads the viper config for the query height

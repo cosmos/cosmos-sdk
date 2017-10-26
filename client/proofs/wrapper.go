@@ -44,26 +44,16 @@ func (w Wrapper) ABCIQuery(path string, data data.Bytes) (*ctypes.ResultABCIQuer
 }
 
 func (w Wrapper) Tx(hash []byte, prove bool) (*ctypes.ResultTx, error) {
-	r, err := w.Client.Tx(hash, prove)
+	res, err := w.Client.Tx(hash, prove)
 	if !prove || err != nil {
-		return r, err
+		return res, err
 	}
-	// get a verified commit to validate from
-	c, err := w.Commit(&r.Height)
+	check, err := client.GetCertifiedCommit(res.Height, w.Client, w.cert)
 	if err != nil {
-		return nil, err
+		return res, err
 	}
-	// make sure the checkpoint and proof match up
-	check := certclient.CommitFromResult(c)
-
-	// TODO: 2
-	// verify tx
-	proof := TxProof{
-		Height: uint64(r.Height),
-		Proof:  r.Proof,
-	}
-	err = proof.Validate(check)
-	return r, err
+	err = res.Proof.Validate(check.Header.DataHash)
+	return res, err
 }
 
 func (w Wrapper) BlockchainInfo(minHeight, maxHeight int) (*ctypes.ResultBlockchainInfo, error) {

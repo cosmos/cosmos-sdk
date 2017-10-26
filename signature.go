@@ -1,7 +1,7 @@
 package crypto
 
 import (
-	"bytes"
+	"crypto/subtle"
 	"fmt"
 
 	"github.com/tendermint/go-wire"
@@ -46,7 +46,11 @@ func (sig SignatureEd25519) String() string { return fmt.Sprintf("/%X.../", Fing
 
 func (sig SignatureEd25519) Equals(other Signature) bool {
 	if otherEd, ok := other.Unwrap().(SignatureEd25519); ok {
-		return bytes.Equal(sig[:], otherEd[:])
+		// It is essential that we constant time compare
+		// private keys and signatures instead of bytes.Equal,
+		// to avoid susceptibility to timing/side channel attacks.
+		// See Issue https://github.com/tendermint/go-crypto/issues/43
+		return subtle.ConstantTimeCompare(sig[:], otherEd[:]) == 0
 	} else {
 		return false
 	}
@@ -82,7 +86,11 @@ func (sig SignatureSecp256k1) String() string { return fmt.Sprintf("/%X.../", Fi
 
 func (sig SignatureSecp256k1) Equals(other Signature) bool {
 	if otherEd, ok := other.Unwrap().(SignatureSecp256k1); ok {
-		return bytes.Equal(sig[:], otherEd[:])
+		// It is essential that we constant time compare
+		// private keys and signatures instead of bytes.Equal,
+		// to avoid susceptibility to timing/side channel attacks.
+		// See Issue https://github.com/tendermint/go-crypto/issues/43
+		return subtle.ConstantTimeCompare(sig[:], otherEd[:]) == 0
 	} else {
 		return false
 	}

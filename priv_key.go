@@ -1,7 +1,7 @@
 package crypto
 
 import (
-	"bytes"
+	"crypto/subtle"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/tendermint/ed25519"
@@ -57,7 +57,11 @@ func (privKey PrivKeyEd25519) PubKey() PubKey {
 
 func (privKey PrivKeyEd25519) Equals(other PrivKey) bool {
 	if otherEd, ok := other.Unwrap().(PrivKeyEd25519); ok {
-		return bytes.Equal(privKey[:], otherEd[:])
+		// It is essential that we constant time compare
+		// private keys and signatures instead of bytes.Equal,
+		// to avoid susceptibility to timing/side channel attacks.
+		// See Issue https://github.com/tendermint/go-crypto/issues/43
+		return subtle.ConstantTimeCompare(privKey[:], otherEd[:]) == 0
 	} else {
 		return false
 	}
@@ -144,7 +148,11 @@ func (privKey PrivKeySecp256k1) PubKey() PubKey {
 
 func (privKey PrivKeySecp256k1) Equals(other PrivKey) bool {
 	if otherSecp, ok := other.Unwrap().(PrivKeySecp256k1); ok {
-		return bytes.Equal(privKey[:], otherSecp[:])
+		// It is essential that we constant time compare
+		// private keys and signatures instead of bytes.Equal,
+		// to avoid susceptibility to timing/side channel attacks.
+		// See Issue https://github.com/tendermint/go-crypto/issues/43
+		return subtle.ConstantTimeCompare(privKey[:], otherSecp[:]) == 0
 	} else {
 		return false
 	}

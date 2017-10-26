@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	wire "github.com/tendermint/go-wire"
-	"github.com/tendermint/light-client/certifiers"
+	"github.com/tendermint/tendermint/certifiers"
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"

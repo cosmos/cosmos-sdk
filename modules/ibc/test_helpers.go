@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/tendermint/iavl"
-	"github.com/tendermint/light-client/certifiers"
+	"github.com/tendermint/tendermint/certifiers"
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"

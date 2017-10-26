@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
 	"github.com/cosmos/cosmos-sdk/modules/ibc"
-	"github.com/tendermint/light-client/certifiers"
+	"github.com/tendermint/tendermint/certifiers"
 )
 
 // RegisterChainTxCmd is CLI command to register a new chain for ibc

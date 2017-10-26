@@ -5,8 +5,8 @@ import (
 
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/iavl"
-	"github.com/tendermint/light-client/certifiers"
-	certerr "github.com/tendermint/light-client/certifiers/errors"
+	"github.com/tendermint/tendermint/certifiers"
+	certerr "github.com/tendermint/tendermint/certifiers/errors"
 
 	"github.com/tendermint/tendermint/rpc/client"
 )

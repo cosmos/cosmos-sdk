@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/state"
-	"github.com/tendermint/light-client/certifiers"
-	certerr "github.com/tendermint/light-client/certifiers/errors"
+	"github.com/tendermint/tendermint/certifiers"
+	certerr "github.com/tendermint/tendermint/certifiers/errors"
 )
 
 func assertCommitsEqual(t *testing.T, fc, fc2 certifiers.FullCommit) {

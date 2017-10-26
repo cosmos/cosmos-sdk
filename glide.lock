@@ -1,5 +1,5 @@
 hash: fbfdd03c0367bb0785ceb81ed34059df219e55d5a9c71c12597e505fbce14165
-updated: 2017-10-25T19:24:51.90002008+02:00
+updated: 2017-10-26T15:57:25.483144016+02:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -11,10 +11,10 @@ imports:
   version: a368813c5e648fee92e5f6c30e3944ff9d5e8895
 - name: github.com/ebuchman/fail-test
   version: 95f809107225be108efcf10a3509e4ea6ceef3c4
+- name: github.com/ethanfrey/hid
+  version: f379bda1dbc8e79333b04563f71a12e86206efe5
 - name: github.com/ethanfrey/ledger
-  version: 5e432577be582bd18a3b4a9cd75dae7a317ade36
-- name: github.com/flynn/hid
-  version: ed06a31c6245d4552e8dbba7e32e5b010b875d65
+  version: 3689ce9be93e1a5bef836b1cc2abb18381c79176
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/go-kit/kit
@@ -48,7 +48,7 @@ imports:
 - name: github.com/gorilla/mux
   version: 24fca303ac6da784b9e8269f724ddeb0b2eea5e7
 - name: github.com/gorilla/websocket
-  version: 71fa72d4842364bc5f74185f4161e0099ea3624a
+  version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
 - name: github.com/hashicorp/hcl
   version: 23c074d0eceb2b8a5bfdbb271ab780cde70f05a8
   subpackages:
@@ -95,7 +95,7 @@ imports:
 - name: github.com/spf13/pflag
   version: 97afa5e7ca8a08a383cb259e06636b5e2cc7897f
 - name: github.com/spf13/viper
-  version: 8ef37cbca71638bf32f3d5e194117d4cb46da163
+  version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: github.com/syndtr/goleveldb
   version: b89cc31ef7977104127d34c1bd31ebd1a9db2199
   subpackages:
@@ -112,7 +112,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: bb9bb4aa465a31fd6a272765be381888e6898c74
+  version: a0e38dc58374f485481ea07b23659d85f670a694
   subpackages:
   - client
   - example/dummy
@@ -124,7 +124,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 0a5b1d979a1bc86200c9ff829fbbcd575799a1b6
+  version: db5603e37435933c13665a708055fadd18222f5f
   subpackages:
   - bcrypt
   - keys
@@ -134,7 +134,7 @@ imports:
   - keys/wordlist
   - nano
 - name: github.com/tendermint/go-wire
-  version: 99d2169a1e39c65983eacaa1da867d6f3218e1c9
+  version: 3180c867ca52bcd9ba6c905ce63613f8d8e9837c
   subpackages:
   - data
   - data/base58
@@ -149,7 +149,7 @@ imports:
   - certifiers/files
   - proofs
 - name: github.com/tendermint/tendermint
-  version: b2d5546cf8f71e0e168072e118d9836862384e6c
+  version: bb6c15b00a07e2aafc7fe245b3acfb33b9c25abe
   subpackages:
   - blockchain
   - cmd/tendermint/commands
@@ -177,7 +177,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: 0a652499ead7cd20a57a6a592f0491a2b493bb85
+  version: b30e3ba26d4077edeed83c50a4e0c38b0ec9ddb3
   subpackages:
   - autofile
   - cli
@@ -228,7 +228,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: a5986a5c88227370a9c0a82e5277167229c034cd
+  version: f7bf885db0b7479a537ec317c6e48ce53145f3db
   subpackages:
   - balancer
   - balancer/roundrobin

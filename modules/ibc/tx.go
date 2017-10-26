@@ -3,7 +3,7 @@ package ibc
 import (
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/iavl"
-	"github.com/tendermint/light-client/certifiers"
+	"github.com/tendermint/tendermint/certifiers"
 
 	sdk "github.com/cosmos/cosmos-sdk"
 )

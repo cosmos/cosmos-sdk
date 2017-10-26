@@ -3,10 +3,10 @@ package client
 import (
 	"errors"
 
-	"github.com/tendermint/light-client/certifiers"
-	certclient "github.com/tendermint/light-client/certifiers/client"
-	certerr "github.com/tendermint/light-client/certifiers/errors"
-	"github.com/tendermint/light-client/certifiers/files"
+	"github.com/tendermint/tendermint/certifiers"
+	certclient "github.com/tendermint/tendermint/certifiers/client"
+	certerr "github.com/tendermint/tendermint/certifiers/errors"
+	"github.com/tendermint/tendermint/certifiers/files"
 
 	"github.com/tendermint/light-client/proofs"
 

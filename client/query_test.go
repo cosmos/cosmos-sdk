@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/go-wire"
-	"github.com/tendermint/light-client/certifiers"
-	certclient "github.com/tendermint/light-client/certifiers/client"
+	"github.com/tendermint/tendermint/certifiers"
+	certclient "github.com/tendermint/tendermint/certifiers/client"
 	"github.com/tendermint/tmlibs/log"
 
 	nm "github.com/tendermint/tendermint/node"

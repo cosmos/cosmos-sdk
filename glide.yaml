@@ -22,14 +22,9 @@ import:
   - nacl/secretbox
   - openpgp/armor
   - ripemd160
-- package: github.com/bgentry/speakeasy
-- package: github.com/gorilla/handlers
-- package: github.com/gorilla/mux
 - package: github.com/pkg/errors
-- package: github.com/spf13/cobra
-- package: github.com/spf13/viper
-- package: gopkg.in/go-playground/validator.v9
 - package: github.com/howeyc/crc16
+- package: github.com/ethanfrey/ledger
 testImport:
 - package: github.com/mndrix/btcutil
 - package: github.com/stretchr/testify

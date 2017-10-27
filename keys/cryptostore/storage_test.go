@@ -5,16 +5,19 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	crypto "github.com/tendermint/go-crypto"
 	cmn "github.com/tendermint/tmlibs/common"
 
+	crypto "github.com/tendermint/go-crypto"
 	keys "github.com/tendermint/go-crypto/keys"
 )
 
 func TestSortKeys(t *testing.T) {
 	assert := assert.New(t)
 
-	gen := func() crypto.PrivKey { return GenEd25519.Generate(cmn.RandBytes(16)) }
+	gen := func() crypto.PrivKey {
+		key, _ := GenEd25519.Generate(cmn.RandBytes(16))
+		return key
+	}
 	assert.NotEqual(gen(), gen())
 
 	// alphabetical order is n3, n1, n2

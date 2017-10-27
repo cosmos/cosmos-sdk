@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.0 (October 27, 2017)
+
+BREAKING CHANGES:
+
+- `keys`: use bcrypt plus salt
+
+FEATURES:
+
+- add support for signing via Ledger Nano
+
+IMPROVEMENTS:
+
+- linting and comments
+
 ## 0.3.0 (September 22, 2017)
 
 BREAKING CHANGES:

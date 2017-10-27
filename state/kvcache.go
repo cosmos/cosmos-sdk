@@ -2,8 +2,9 @@ package state
 
 // MemKVCache is designed to wrap MemKVStore as a cache
 type MemKVCache struct {
-	store SimpleDB
-	cache *MemKVStore
+	store      SimpleDB
+	readCache  *MemKVStore
+	writeCache *MemKVStore
 }
 
 var _ SimpleDB = (*MemKVCache)(nil)
@@ -18,23 +19,34 @@ func NewMemKVCache(store SimpleDB) *MemKVCache {
 	}
 
 	return &MemKVCache{
-		store: store,
-		cache: NewMemKVStore(),
+		store:      store,
+		readCache:  NewMemKVStore(),
+		writeCache: NewMemKVStore(),
 	}
 }
 
 // Set sets a key, fulfills KVStore interface
 func (c *MemKVCache) Set(key []byte, value []byte) {
-	c.cache.Set(key, value)
+	// if we write it, remove from read cache
+	c.readCache.Remove(key)
+	c.writeCache.Set(key, value)
 }
 
 // Get gets a key, fulfills KVStore interface
 func (c *MemKVCache) Get(key []byte) (value []byte) {
-	value, ok := c.cache.m[string(key)]
-	if !ok {
-		value = c.store.Get(key)
-		c.cache.Set(key, value)
+	// see if we have a cached write
+	value, ok := c.writeCache.m[string(key)]
+	if ok {
+		return value
 	}
+	// then a cached read
+	value, ok = c.readCache.m[string(key)]
+	if ok {
+		return value
+	}
+	// then read directly and cache it
+	value = c.store.Get(key)
+	c.readCache.Set(key, value)
 	return value
 }
 
@@ -44,19 +56,19 @@ func (c *MemKVCache) Has(key []byte) bool {
 	return value != nil
 }
 
-// Remove uses nil value as a flag to delete... not ideal but good enough
-// for testing
+// Remove uses nil value as a flag to delete...
+// not ideal but good enough for testing
 func (c *MemKVCache) Remove(key []byte) (value []byte) {
 	value = c.Get(key)
-	c.cache.Set(key, nil)
+	c.Set(key, nil)
 	return value
 }
 
 // List is also inefficiently implemented...
 func (c *MemKVCache) List(start, end []byte, limit int) []Model {
 	orig := c.store.List(start, end, 0)
-	cached := c.cache.List(start, end, 0)
-	keys := c.combineLists(orig, cached)
+	writen := c.writeCache.List(start, end, 0)
+	keys := c.combineLists(orig, writen)
 
 	// apply limit (too late)
 	if limit > 0 && len(keys) > 0 {
@@ -69,19 +81,17 @@ func (c *MemKVCache) List(start, end []byte, limit int) []Model {
 	return keys
 }
 
-func (c *MemKVCache) combineLists(orig, cache []Model) []Model {
+func (c *MemKVCache) combineLists(lists ...[]Model) []Model {
 	store := NewMemKVStore()
-	for _, m := range orig {
-		store.Set(m.Key, m.Value)
-	}
-	for _, m := range cache {
-		if m.Value == nil {
-			store.Remove([]byte(m.Key))
-		} else {
-			store.Set([]byte(m.Key), m.Value)
+	for _, cache := range lists {
+		for _, m := range cache {
+			if m.Value == nil {
+				store.Remove([]byte(m.Key))
+			} else {
+				store.Set([]byte(m.Key), m.Value)
+			}
 		}
 	}
-
 	return store.List(nil, nil, 0)
 }
 
@@ -131,8 +141,8 @@ func (c *MemKVCache) Commit(sub SimpleDB) error {
 
 // applyCache will apply all the cache methods to the underlying store
 func (c *MemKVCache) applyCache() {
-	for _, k := range c.cache.keysInRange(nil, nil) {
-		v := c.cache.m[k]
+	for _, k := range c.writeCache.keysInRange(nil, nil) {
+		v := c.writeCache.m[k]
 		if v == nil {
 			c.store.Remove([]byte(k))
 		} else {
@@ -143,5 +153,6 @@ func (c *MemKVCache) applyCache() {
 
 // Discard will remove reference to this
 func (c *MemKVCache) Discard() {
-	c.cache = NewMemKVStore()
+	c.readCache = NewMemKVStore()
+	c.writeCache = NewMemKVStore()
 }

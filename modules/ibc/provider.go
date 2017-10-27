@@ -2,8 +2,8 @@ package ibc
 
 import (
 	wire "github.com/tendermint/go-wire"
-	"github.com/tendermint/light-client/certifiers"
-	certerr "github.com/tendermint/light-client/certifiers/errors"
+	"github.com/tendermint/tendermint/certifiers"
+	certerr "github.com/tendermint/tendermint/certifiers/errors"
 
 	"github.com/cosmos/cosmos-sdk/stack"
 	"github.com/cosmos/cosmos-sdk/state"

@@ -3,12 +3,10 @@ package client
 import (
 	"errors"
 
-	"github.com/tendermint/light-client/certifiers"
-	certclient "github.com/tendermint/light-client/certifiers/client"
-	certerr "github.com/tendermint/light-client/certifiers/errors"
-	"github.com/tendermint/light-client/certifiers/files"
-
-	"github.com/tendermint/light-client/proofs"
+	"github.com/tendermint/tendermint/certifiers"
+	certclient "github.com/tendermint/tendermint/certifiers/client"
+	certerr "github.com/tendermint/tendermint/certifiers/errors"
+	"github.com/tendermint/tendermint/certifiers/files"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )
@@ -48,10 +46,4 @@ func GetCertifier(chainID string, trust certifiers.Provider,
 	}
 	cert := certifiers.NewInquiring(chainID, fc, trust, source)
 	return cert, nil
-}
-
-// SecureClient uses a given certifier to wrap an connection to an untrusted
-// host and return a cryptographically secure rpc client.
-func SecureClient(c rpcclient.Client, cert *certifiers.Inquiring) rpcclient.Client {
-	return proofs.Wrap(c, cert)
 }

@@ -10,6 +10,10 @@ FEATURES:
 
 - add support for signing via Ledger Nano
 
+IMPROVEMENTS:
+
+- linting and comments
+
 ## 0.3.0 (September 22, 2017)
 
 BREAKING CHANGES:

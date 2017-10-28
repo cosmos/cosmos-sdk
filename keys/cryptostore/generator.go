@@ -2,7 +2,6 @@ package cryptostore
 
 import (
 	"github.com/pkg/errors"
-
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-crypto/nano"
 )

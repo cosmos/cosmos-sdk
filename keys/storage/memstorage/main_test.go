@@ -14,7 +14,6 @@ func TestBasicCRUD(t *testing.T) {
 
 	name := "foo"
 	key := []byte("secret-key-here")
-	salt := []byte("salt-here")
 	pubkey := crypto.GenPrivKeyEd25519().PubKey()
 	info := keys.Info{
 		Name:   name,
@@ -22,7 +21,7 @@ func TestBasicCRUD(t *testing.T) {
 	}
 
 	// No data: Get and Delete return nothing
-	_, _, _, err := store.Get(name)
+	_, _, err := store.Get(name)
 	assert.NotNil(err)
 	err = store.Delete(name)
 	assert.NotNil(err)
@@ -32,14 +31,14 @@ func TestBasicCRUD(t *testing.T) {
 	assert.Empty(l)
 
 	// Putting the key in the  store must work
-	err = store.Put(name, salt, key, info)
+	err = store.Put(name, key, info)
 	assert.Nil(err)
 	// But a second time is a failure
-	err = store.Put(name, salt, key, info)
+	err = store.Put(name, key, info)
 	assert.NotNil(err)
 
 	// Now, we can get and list properly
-	_, k, i, err := store.Get(name)
+	k, i, err := store.Get(name)
 	assert.Nil(err)
 	assert.Equal(key, k)
 	assert.Equal(info.Name, i.Name)
@@ -51,7 +50,7 @@ func TestBasicCRUD(t *testing.T) {
 	assert.Equal(i, l[0])
 
 	// querying a non-existent key fails
-	_, _, _, err = store.Get("badname")
+	_, _, err = store.Get("badname")
 	assert.NotNil(err)
 
 	// We can only delete once
@@ -61,7 +60,7 @@ func TestBasicCRUD(t *testing.T) {
 	assert.NotNil(err)
 
 	// and then Get and List don't work
-	_, _, _, err = store.Get(name)
+	_, _, err = store.Get(name)
 	assert.NotNil(err)
 	// List returns empty list
 	l, err = store.List()

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.1 (October 27, 2017)
+
+This release removes support for bcrypt as it was merged too soon without an upgrade plan
+for existing keys.
+
+REVERTS THE FOLLOWING COMMITS:
+
+- Parameterize and lower bcrypt cost - dfc4cdd2d71513e4a9922d679c74f36357c4c862
+- Upgrade keys to use bcrypt with salts (#38)  - 8e7f0e7701f92206679ad093d013b9b162427631
+
 ## 0.4.0 (October 27, 2017)
 
 BREAKING CHANGES:

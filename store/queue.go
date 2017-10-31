@@ -1,4 +1,4 @@
-package state
+package store
 
 import (
 	"encoding/binary"

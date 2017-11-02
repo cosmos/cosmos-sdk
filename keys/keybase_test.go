@@ -1,4 +1,4 @@
-package cryptostore_test
+package keys_test
 
 import (
 	"bytes"
@@ -10,11 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	cmn "github.com/tendermint/tmlibs/common"
+	dbm "github.com/tendermint/tmlibs/db"
 
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-crypto/keys"
-	"github.com/tendermint/go-crypto/keys/cryptostore"
-	"github.com/tendermint/go-crypto/keys/storage/memstorage"
 	"github.com/tendermint/go-crypto/nano"
 )
 
@@ -23,9 +22,8 @@ func TestKeyManagement(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	// make the storage with reasonable defaults
-	cstore := cryptostore.New(
-		cryptostore.SecretBox,
-		memstorage.New(),
+	cstore := keys.New(
+		dbm.NewMemDB(),
 		keys.MustLoadCodec("english"),
 	)
 
@@ -92,9 +90,8 @@ func TestSignVerify(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	// make the storage with reasonable defaults
-	cstore := cryptostore.New(
-		cryptostore.SecretBox,
-		memstorage.New(),
+	cstore := keys.New(
+		dbm.NewMemDB(),
 		keys.MustLoadCodec("english"),
 	)
 	algo := crypto.NameSecp256k1
@@ -164,9 +161,8 @@ func TestSignWithLedger(t *testing.T) {
 	}
 
 	// make the storage with reasonable defaults
-	cstore := cryptostore.New(
-		cryptostore.SecretBox,
-		memstorage.New(),
+	cstore := keys.New(
+		dbm.NewMemDB(),
 		keys.MustLoadCodec("english"),
 	)
 	n := "nano-s"
@@ -206,7 +202,7 @@ func TestSignWithLedger(t *testing.T) {
 	assert.False(key.VerifyBytes(d1, s2.Signature))
 }
 
-func assertPassword(assert *assert.Assertions, cstore cryptostore.Manager, name, pass, badpass string) {
+func assertPassword(assert *assert.Assertions, cstore keys.KeyBase, name, pass, badpass string) {
 	err := cstore.Update(name, badpass, pass)
 	assert.NotNil(err)
 	err = cstore.Update(name, pass, pass)
@@ -218,13 +214,12 @@ func TestImportUnencrypted(t *testing.T) {
 	require := require.New(t)
 
 	// make the storage with reasonable defaults
-	cstore := cryptostore.New(
-		cryptostore.SecretBox,
-		memstorage.New(),
+	cstore := keys.New(
+		dbm.NewMemDB(),
 		keys.MustLoadCodec("english"),
 	)
 
-	key, err := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
+	key, err := keys.GenEd25519.Generate(cmn.RandBytes(16))
 	require.NoError(err)
 
 	addr := key.PubKey().Address()
@@ -246,9 +241,8 @@ func TestAdvancedKeyManagement(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	// make the storage with reasonable defaults
-	cstore := cryptostore.New(
-		cryptostore.SecretBox,
-		memstorage.New(),
+	cstore := keys.New(
+		dbm.NewMemDB(),
 		keys.MustLoadCodec("english"),
 	)
 
@@ -290,9 +284,8 @@ func TestSeedPhrase(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	// make the storage with reasonable defaults
-	cstore := cryptostore.New(
-		cryptostore.SecretBox,
-		memstorage.New(),
+	cstore := keys.New(
+		dbm.NewMemDB(),
 		keys.MustLoadCodec("english"),
 	)
 
@@ -322,10 +315,8 @@ func TestSeedPhrase(t *testing.T) {
 
 func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
-	cstore := cryptostore.New(
-		cryptostore.SecretBox,
-		// Note: use filestorage.New(dir) for real data
-		memstorage.New(),
+	cstore := keys.New(
+		dbm.NewMemDB(),
 		keys.MustLoadCodec("english"),
 	)
 	ed := crypto.NameEd25519

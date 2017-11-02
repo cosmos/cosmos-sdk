@@ -1,4 +1,4 @@
-package cryptostore
+package keys
 
 import (
 	"strings"

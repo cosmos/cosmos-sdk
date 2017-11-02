@@ -6,6 +6,13 @@ import:
 - package: github.com/btcsuite/btcutil
   subpackages:
   - base58
+- package: github.com/syndtr/goleveldb
+  subpackages:
+  - leveldb
+  - leveldb/errors
+  - leveldb/iterator
+  - leveldb/opt
+  - leveldb/util
 - package: github.com/tendermint/ed25519
   subpackages:
   - extra25519

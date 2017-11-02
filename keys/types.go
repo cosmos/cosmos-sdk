@@ -12,6 +12,11 @@ type Info struct {
 	PubKey crypto.PubKey `json:"pubkey"`
 }
 
+// Address is a helper function to calculate the address from the pubkey
+func (i Info) Address() []byte {
+	return i.PubKey.Address()
+}
+
 func (i Info) bytes() []byte {
 	return wire.BinaryBytes(i)
 }

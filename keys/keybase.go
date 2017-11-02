@@ -3,8 +3,11 @@ package keys
 import (
 	"strings"
 
+	"github.com/pkg/errors"
 	crypto "github.com/tendermint/go-crypto"
 	dbm "github.com/tendermint/tmlibs/db"
+
+	"github.com/tendermint/go-crypto/nano"
 )
 
 // XXX Lets use go-crypto/bcrypt and ascii encoding directly in here without
@@ -37,9 +40,7 @@ var _ Keybase = dbKeybase{}
 func (kb dbKeybase) Create(name, passphrase, algo string) (Info, string, error) {
 	// 128-bits are the all the randomness we can make use of
 	secret := crypto.CRandBytes(16)
-	gen := getGenerator(algo)
-
-	key, err := gen.Generate(secret)
+	key, err := generate(algo, secret)
 	if err != nil {
 		return Info{}, "", err
 	}
@@ -77,8 +78,7 @@ func (s dbKeybase) Recover(name, passphrase, seedphrase string) (Info, error) {
 	l := len(secret)
 	secret, typ := secret[:l-1], secret[l-1]
 
-	gen := getGeneratorByType(typ)
-	key, err := gen.Generate(secret)
+	key, err := generateByType(typ, secret)
 	if err != nil {
 		return Info{}, err
 	}
@@ -89,9 +89,9 @@ func (s dbKeybase) Recover(name, passphrase, seedphrase string) (Info, error) {
 }
 
 // List loads the keys from the storage and enforces alphabetical order
-func (s dbKeybase) List() (Infos, error) {
-	res, err := kb.es.List()
-	res.Sort()
+func (s dbKeybase) List() ([]Info, error) {
+	res, err := s.es.List()
+	sort.SortSlice(res)
 	return res, err
 }
 
@@ -105,7 +105,7 @@ func (s dbKeybase) Get(name string) (Info, error) {
 // this public key
 //
 // If no key for this name, or the passphrase doesn't match, returns an error
-func (s dbKeybase) Sign(name, passphrase string, msg []byte) error {
+func (s dbKeybase) Sign(name, passphrase string, msg []byte) (crypto.Signature, crypto.PubKey, error) {
 	key, _, err := kb.es.Get(name, passphrase)
 	if err != nil {
 		return err
@@ -168,4 +168,32 @@ func (s dbKeybase) Update(name, oldpass, newpass string) error {
 	kb.Delete(name, oldpass)
 
 	return kb.es.Put(name, newpass, key)
+}
+
+func generate(algo string, secret []byte) (crypto.PrivKey, error) {
+	switch algo {
+	case crypto.NameEd25519:
+		return crypto.GenPrivKeyEd25519FromSecret(secret).Wrap(), nil
+	case crypto.NameSecp256k1:
+		return crypto.GenPrivKeySecp256k1FromSecret(secret).Wrap(), nil
+	case nano.NameLedgerEd25519:
+		return nano.NewPrivKeyLedgerEd25519Ed25519()
+	default:
+		err := errors.Errorf("Cannot generate keys for algorithm: %s", algo)
+		return crypto.PrivKey{}, err
+	}
+}
+
+func generateByType(typ byte, secret []byte) (crypto.PrivKey, error) {
+	switch typ {
+	case crypto.TypeEd25519:
+		return generate(crypto.NameEd25519, secret)
+	case crypto.TypeSecp256k1:
+		return generate(crypto.NameSecp256k1, secret)
+	case nano.TypeLedgerEd25519:
+		return generate(nano.NameLedgerEd25519, secret)
+	default:
+		err := errors.Errorf("Cannot generate keys for algorithm: %X", typ)
+		return crypto.PrivKey{}, err
+	}
 }

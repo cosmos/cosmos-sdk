@@ -10,6 +10,13 @@ type Info struct {
 	PubKey crypto.PubKey `json:"pubkey"`
 }
 
+func info(name string, privKey crypto.PrivKey) Info {
+	return Info{
+		Name:   name,
+		PubKey: privKey.PubKey(),
+	}
+}
+
 // Keybase allows simple CRUD on a keystore, as an aid to signing
 type Keybase interface {
 	// Sign some bytes

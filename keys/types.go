@@ -1,6 +1,8 @@
 package keys
 
 import (
+	wire "github.com/tendermint/go-wire"
+
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -8,6 +10,15 @@ import (
 type Info struct {
 	Name   string        `json:"name"`
 	PubKey crypto.PubKey `json:"pubkey"`
+}
+
+func (i Info) bytes() []byte {
+	return wire.BinaryBytes(i)
+}
+
+func readInfo(bs []byte) (info Info, err error) {
+	err = wire.ReadBinaryBytes(bs, &info)
+	return
 }
 
 func info(name string, privKey crypto.PrivKey) Info {

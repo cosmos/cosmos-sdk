@@ -4,12 +4,15 @@
    contain the root `toctree` directive.
 
 Welcome to the Cosmos SDK!
-======================================
+==========================
 
 .. image:: graphics/cosmos-sdk-image.png
    :height: 250px
    :width: 500px
    :align: center
+
+SDK and Basecoin
+----------------
 
 .. toctree::
    :maxdepth: 2
@@ -25,3 +28,12 @@ Welcome to the Cosmos SDK!
    ibc.rst
    glossary.rst
    stdlib.rst
+
+Staking Module
+--------------
+
+.. toctree::
+   :maxdepth: 2
+   
+   atlas-testnet.rst
+   local-testnet.rst

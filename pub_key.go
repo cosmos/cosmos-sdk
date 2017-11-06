@@ -14,8 +14,10 @@ import (
 )
 
 func PubKeyFromBytes(pubKeyBytes []byte) (pubKey PubKey, err error) {
-	err = wire.ReadBinaryBytes(pubKeyBytes, &pubKey)
-	return
+	if err := wire.ReadBinaryBytes(pubKeyBytes, &pubKey); err != nil {
+		return PubKey{}, err
+	}
+	return pubKey, nil
 }
 
 //----------------------------------------

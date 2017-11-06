@@ -6,6 +6,7 @@ import (
 
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type keyData struct {
@@ -38,4 +39,10 @@ func TestPubKeySecp256k1Address(t *testing.T) {
 		assert.Equal(t, pub, pubB, "Expected pub keys to match")
 		assert.Equal(t, addr, addrB, "Expected addresses to match")
 	}
+}
+
+func TestPubKeyInvalidDataProperReturnsEmpty(t *testing.T) {
+	pk, err := PubKeyFromBytes([]byte("foo"))
+	require.NotNil(t, err, "expecting a non-nil error")
+	require.True(t, pk.Empty(), "expecting an empty public key on error")
 }

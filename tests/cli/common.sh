@@ -15,6 +15,12 @@ quickSetup() {
     BASE_DIR=$HOME/$1
     CHAIN_ID=$2
 
+	# TODO Make this more robust
+    if [ "$BASE_DIR" == "$HOME/" ]; then
+	    echo "quickSetup() must be called with argument, or it will wipe your home directory"
+	    exit 1
+    fi
+
     rm -rf $BASE_DIR 2>/dev/null
     mkdir -p $BASE_DIR
 

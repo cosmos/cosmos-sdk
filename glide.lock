@@ -1,5 +1,5 @@
-hash: 86d02329c537ccb46ccb062918f0cb9e839f2cf894dfd57223c3ea4de14266db
-updated: 2017-11-02T14:09:11.208038182-05:00
+hash: 765599cf3dcac232d3d2ece65c3b016d0abe55d0536adfe93d11e0dd29287de4
+updated: 2017-11-13T14:37:54.127163059+01:00
 imports:
 - name: github.com/btcsuite/btcd
   version: c7588cbf7690cd9f047a28efa2dcd8f2435a4e5e
@@ -10,7 +10,7 @@ imports:
   subpackages:
   - base58
 - name: github.com/ethanfrey/hid
-  version: 660bb717bd4e7cbcdf0f7cd5cadf1cb2e4be452a
+  version: ea8f4c923d3bc8c9c312b7d38724a294f184258a
 - name: github.com/ethanfrey/ledger
   version: 23a7bb9d74bc83a862fcb4bddde24215b2295ad9
 - name: github.com/go-kit/kit
@@ -60,18 +60,18 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-wire
-  version: 2baffcb6b690057568bc90ef1d457efb150b979a
+  version: 1c96861c03231361546944d883d99593b2e6b408
   subpackages:
   - data
   - data/base58
 - name: github.com/tendermint/tmlibs
-  version: d9525c0fb671204450b160807480e1263053fb20
+  version: 56e51bc1133bd54a331e0314d5f80fb547460362
   subpackages:
   - common
   - db
   - log
 - name: golang.org/x/crypto
-  version: bd6f299fb381e4c3393d1c4b1f0b94f5e77650c8
+  version: edd5e9b0879d13ee6970a50153d85b8fec9f7686
   subpackages:
   - bcrypt
   - blowfish

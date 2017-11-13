@@ -222,11 +222,11 @@ func generate(algo string, secret []byte) (crypto.PrivKey, error) {
 func generateByType(typ byte, secret []byte) (crypto.PrivKey, error) {
 	switch typ {
 	case crypto.TypeEd25519:
-		return generate(crypto.NameEd25519, secret)
+		return crypto.GenPrivKeyEd25519FromSecret(secret).Wrap(), nil
 	case crypto.TypeSecp256k1:
-		return generate(crypto.NameSecp256k1, secret)
+		return crypto.GenPrivKeySecp256k1FromSecret(secret).Wrap(), nil
 	case nano.TypeLedgerEd25519:
-		return generate(nano.NameLedgerEd25519, secret)
+		return nano.NewPrivKeyLedgerEd25519Ed25519()
 	default:
 		err := errors.Errorf("Cannot generate keys for algorithm: %X", typ)
 		return crypto.PrivKey{}, err

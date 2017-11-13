@@ -56,10 +56,11 @@ metalinter_test: ensure_tools
 		--enable=structcheck \
 	   	--enable=unconvert \
 		--enable=unused \
-		--enable=vetshadow \
 		--enable=vet \
 		--enable=varcheck \
 		./...
+
+		# --enable=vetshadow \  <= doesn't like assert := assert.New(t)
 
 		#--enable=dupl \
 		#--enable=errcheck \

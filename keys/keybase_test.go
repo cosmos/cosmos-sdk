@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	asrt "github.com/stretchr/testify/assert"
+	rqr "github.com/stretchr/testify/require"
 
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -18,7 +18,7 @@ import (
 
 // TestKeyManagement makes sure we can manipulate these keys well
 func TestKeyManagement(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 
 	// make the storage with reasonable defaults
 	cstore := keys.New(
@@ -86,7 +86,7 @@ func TestKeyManagement(t *testing.T) {
 // TestSignVerify does some detailed checks on how we sign and validate
 // signatures
 func TestSignVerify(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 
 	// make the storage with reasonable defaults
 	cstore := keys.New(
@@ -157,7 +157,7 @@ func TestSignVerify(t *testing.T) {
 // This test will only succeed with a ledger attached to the computer
 // and the cosmos app open
 func TestSignWithLedger(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 	if os.Getenv("WITH_LEDGER") == "" {
 		t.Skip("Set WITH_LEDGER to run code on real ledger")
 	}
@@ -205,7 +205,7 @@ func TestSignWithLedger(t *testing.T) {
 	assert.False(key.VerifyBytes(d1, s2))
 }
 
-func assertPassword(assert *assert.Assertions, cstore keys.Keybase, name, pass, badpass string) {
+func assertPassword(assert *asrt.Assertions, cstore keys.Keybase, name, pass, badpass string) {
 	err := cstore.Update(name, badpass, pass)
 	assert.NotNil(err)
 	err = cstore.Update(name, pass, pass)
@@ -214,7 +214,7 @@ func assertPassword(assert *assert.Assertions, cstore keys.Keybase, name, pass, 
 
 // TestImportUnencrypted tests accepting raw priv keys bytes as input
 func TestImportUnencrypted(t *testing.T) {
-	require := require.New(t)
+	require := rqr.New(t)
 
 	// make the storage with reasonable defaults
 	cstore := keys.New(
@@ -240,7 +240,7 @@ func TestImportUnencrypted(t *testing.T) {
 
 // TestAdvancedKeyManagement verifies update, import, export functionality
 func TestAdvancedKeyManagement(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 
 	// make the storage with reasonable defaults
 	cstore := keys.New(
@@ -283,7 +283,7 @@ func TestAdvancedKeyManagement(t *testing.T) {
 
 // TestSeedPhrase verifies restoring from a seed phrase
 func TestSeedPhrase(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 
 	// make the storage with reasonable defaults
 	cstore := keys.New(

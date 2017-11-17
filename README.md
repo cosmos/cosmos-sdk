@@ -28,7 +28,7 @@ master    | [![CircleCI](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master.s
 
 The Cosmos SDK is the middleware platform that the [Cosmos Hub](https://cosmos.network) is constructed from. The Hub is a blockchain (or, internet of blockchains) in which the Atom supply resides. The Atoms supply is defined at genesis and can change based on the rules of the Hub.
 
-Under the hood, the Cosmos SDK is an [ABCI application](https://github.com/tendermint/abci) designed to be used with the [Tendermint consensus engine](https://tendermint.com/) to form a Proof-of-Stake cryptocurrency. It also provides a general purpose framework
+Under the hood, the Cosmos SDK is an [ABCI application](https://github.com/tendermint/abci) designed to be used with the [Tendermint consensus engine](https://github.com/tendermint/tendermint) to form a Proof-of-Stake cryptocurrency. It also provides a general purpose framework
 for extending the feature-set of the cryptocurrency by implementing plugins.
 
 This SDK affords you all the tools you need to rapidly develop
@@ -45,23 +45,13 @@ Within this repository, the `basecoin` app serves as a reference implementation 
 
 * [golang](https://golang.org/doc/install)
 
-## Installation
+## Installation and Documentation
 
 ```
 go get -u github.com/cosmos/cosmos-sdk/cmd/basecoin
 ```
 
-See the [install guide](/docs/guide/install.md) for more details.
-
-## Guides
-
-* Getting started with the [Basecoin basics](/docs/guide/basecoin-basics.md)
-* Learn to [use the plugin system](/docs/guide/basecoin-plugins.md)
-* More features of the [Basecoin tool](/docs/guide/basecoin-tool.md)
-* Learn how to use [Inter-Blockchain Communication (IBC)](/docs/guide/ibc.md)
-* See [more examples](https://github.com/cosmos/cosmos-academy)
-
-To deploy a testnet, see our [repository of deployment tools](https://github.com/tendermint/tools).
+See the [Cosmos SDK Documentation](http://cosmos-sdk.readthedocs.io/en/latest/) for complete installation details and usage documentation. To deploy a testnet, see our [repository of deployment tools](https://github.com/tendermint/tools).
 
 # Inspiration
 

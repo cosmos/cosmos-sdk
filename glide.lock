@@ -1,5 +1,5 @@
 hash: 809845bf4c18a4abc85cf5d7b5ee7a17e0f437cd377b22e158787c718272261a
-updated: 2017-10-26T16:18:37.833408343+02:00
+updated: 2017-11-22T12:10:57.995842504+01:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -12,9 +12,9 @@ imports:
 - name: github.com/ebuchman/fail-test
   version: 95f809107225be108efcf10a3509e4ea6ceef3c4
 - name: github.com/ethanfrey/hid
-  version: f379bda1dbc8e79333b04563f71a12e86206efe5
+  version: dce75af84cf849c60f39bf1b8192fb5cd597b5d9
 - name: github.com/ethanfrey/ledger
-  version: 3689ce9be93e1a5bef836b1cc2abb18381c79176
+  version: f7f2f056357db77db845a79aa1abdadc3ae66369
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/go-kit/kit
@@ -89,7 +89,7 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 7b2c5ac9fc04fc5efafb60700713d4fa609b777b
+  version: 19e54c4a2b8a78c9d54b2bed61b1a6c5e1bfcf6f
 - name: github.com/spf13/jwalterweatherman
   version: 12bd96e66386c1960ab0f74ced1362f66f552f7b
 - name: github.com/spf13/pflag
@@ -112,21 +112,20 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: a0e38dc58374f485481ea07b23659d85f670a694
+  version: bee7c5c7aa09443c4d9aa74217a891f8229d9ea3
   subpackages:
   - client
   - example/dummy
   - server
   - types
 - name: github.com/tendermint/ed25519
-  version: 1f52c6f8b8a5c7908aff4497c186af344b428925
+  version: d8387025d2b9d158cf4efb07e7ebf814bcce2057
   subpackages:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: db5603e37435933c13665a708055fadd18222f5f
+  version: b4f04f196cd719660e43b91202cd60d9a95b1837
   subpackages:
-  - bcrypt
   - keys
   - keys/cryptostore
   - keys/storage/filestorage
@@ -134,14 +133,14 @@ imports:
   - keys/wordlist
   - nano
 - name: github.com/tendermint/go-wire
-  version: 3180c867ca52bcd9ba6c905ce63613f8d8e9837c
+  version: 7d50b38b3815efe313728de77e2995c8813ce13f
   subpackages:
   - data
   - data/base58
 - name: github.com/tendermint/iavl
   version: 595f3dcd5b6cd4a292e90757ae6d367fd7a6e653
 - name: github.com/tendermint/tendermint
-  version: bb6c15b00a07e2aafc7fe245b3acfb33b9c25abe
+  version: e997db7a23d3e51b2b265f892226e980ae4c8300
   subpackages:
   - blockchain
   - certifiers
@@ -155,6 +154,7 @@ imports:
   - mempool
   - node
   - p2p
+  - p2p/trust
   - p2p/upnp
   - proxy
   - rpc/client
@@ -173,7 +173,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: b30e3ba26d4077edeed83c50a4e0c38b0ec9ddb3
+  version: 135a1a7cd78215105a55308c167b3331c225e00b
   subpackages:
   - autofile
   - cli
@@ -186,11 +186,11 @@ imports:
   - log
   - logger
   - merkle
-  - test
+  - pubsub
+  - pubsub/query
 - name: golang.org/x/crypto
   version: edd5e9b0879d13ee6970a50153d85b8fec9f7686
   subpackages:
-  - blowfish
   - curve25519
   - nacl/box
   - nacl/secretbox
@@ -249,7 +249,7 @@ imports:
   version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
 testImports:
 - name: github.com/davecgh/go-spew
-  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
 - name: github.com/pmezard/go-difflib
@@ -257,7 +257,7 @@ testImports:
   subpackages:
   - difflib
 - name: github.com/stretchr/testify
-  version: 2aa2c176b9dab406a6970f6a55f513e8a8c8b18f
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
   - assert
   - require

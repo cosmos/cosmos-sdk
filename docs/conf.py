@@ -20,8 +20,6 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-import urllib
-
 import sphinx_rtd_theme
 
 # -- General configuration ------------------------------------------------
@@ -170,10 +168,3 @@ texinfo_documents = [
      author, 'Cosmos-SDK', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-repo = "https://raw/githubusercontent.com/cosmos/gaia/"
-branch = "docs" # will become master
-directory = "docs"
-
-urllib.urlretrieve(repo+branch+directory+'atlas-testnet.rst', filename='atlas-testnet.rst')
-urllib.urlretrieve(repo+branch+directory+'local-testnet.rst', filename='local-testnet.rst')

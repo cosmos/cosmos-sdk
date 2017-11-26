@@ -1,6 +1,6 @@
 package types
 
-import "github.com/tendermint/tmlibs/crypto"
+import crypto "github.com/tendermint/go-crypto"
 
 // The parsed tx bytes is called a Msg.
 type Msg interface {

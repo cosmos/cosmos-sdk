@@ -8,8 +8,8 @@ First, generate a new key with a name, and save the address:
 
 ::
 
-    gaia cli keys new alice
-    gaia cli keys list
+    gaia client keys new alice
+    gaia client keys list
 
 This will output:
 
@@ -80,14 +80,14 @@ account:
 
 ::
 
-    gaia cli init --chain-id=test --node=tcp://localhost:46657
-    gaia cli query account E9E103F788AADD9C0842231E496B2139C118FA60
+    gaia client init --chain-id=test --node=tcp://localhost:46657
+    gaia client query account E9E103F788AADD9C0842231E496B2139C118FA60
 
 Nice. We can also lookup the validator set:
 
 ::
 
-    gaia cli query validators
+    gaia client query validators
 
 Notice it's empty! This is because the initial validators are special -
 the app doesn't know about them, so they can't be removed. To see what
@@ -114,15 +114,15 @@ Now we can bond some coins to that pubkey:
 
 ::
 
-    gaia cli tx bond --amount=10fermion --name=alice --pubkey=<validator pubkey>
+    gaia client tx bond --amount=10fermion --name=alice --pubkey=<validator pubkey>
 
 We should see our account balance decrement, and the pubkey get added to
 the app's list of bonds:
 
 ::
 
-    gaia cli query account E9E103F788AADD9C0842231E496B2139C118FA60
-    gaia cli query validators
+    gaia client query account E9E103F788AADD9C0842231E496B2139C118FA60
+    gaia client query validators
 
 To confirm for certain the new validator is active, check tendermint:
 
@@ -139,9 +139,9 @@ your VotingPower reduce and your account balance increase.
 
 ::
 
-    gaia cli tx unbond --amount=10fermion --name=alice
-    gaia cli query validators
-    gaia cli query account E9E103F788AADD9C0842231E496B2139C118FA60
+    gaia client tx unbond --amount=10fermion --name=alice
+    gaia client query validators
+    gaia client query account E9E103F788AADD9C0842231E496B2139C118FA60
 
 Once you unbond enough, you will no longer be needed to make new blocks.
 

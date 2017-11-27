@@ -25,18 +25,18 @@ func Decorate(dec Decorator, next Handler) Handler {
 /*
 	Helper to construct a decorated Handler from a stack of Decorators
 	(first-decorator-first-call as in Python @decorators) , w/ Handler provided
-	last for syntactic sugar of Stack().WithHandler()
+	last for syntactic sugar of ChainDecorators().WithHandler()
 
 	Usage:
 
-	handler := sdk.Stack(
+	handler := sdk.ChainDecorators(
 		decorator1,
 		decorator2,
 		...,
 	).WithHandler(myHandler)
 
 */
-func Stack(decorators ...Decorator) stack {
+func ChainDecorators(decorators ...Decorator) stack {
 	return stack{
 		decs: decorators,
 	}
@@ -49,7 +49,7 @@ type stack struct {
 
 // WithHandler sets the final handler for the stack and
 // returns the decoratored Handler.
-func (s *Stack) WithHandler(handler Handler) Handler {
+func (s stack) WithHandler(handler Handler) Handler {
 	if handler == nil {
 		panic("WithHandler() requires a non-nil Handler")
 	}

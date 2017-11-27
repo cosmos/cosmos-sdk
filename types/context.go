@@ -57,6 +57,14 @@ func (c SDKContext) BlockHeader() tm.Header {
 	return c.Value(contextKeyBlockHeader).(tm.Header)
 }
 
+func (c SDKContext) BlockHeight() int64 {
+	return c.Value(contextKeyBlockHeight).(int64)
+}
+
+func (c SDKContext) ChainID() string {
+	return c.Value(contextKeyChainID).(string)
+}
+
 // Unexposed to prevent overriding.
 func (c SDKContext) setBlockHeader(header tm.Header) SDKContext {
 	return c.WithValueSDK(contextKeyBlockHeader, header)

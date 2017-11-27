@@ -34,6 +34,7 @@ Staking Module
 
 .. toctree::
    :maxdepth: 2
-   
-   atlas-testnet.rst
+
+   staking-module.rst
    local-testnet.rst
+   atlas-testnet.rst

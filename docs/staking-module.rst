@@ -26,11 +26,11 @@ The ``gaia`` tool has three primary commands:
 
 and a handful of flags that are highlighted only as necessary.
 
-The ``gaia node`` command is a proxt for running a tendermint node. You be using
+The ``gaia node`` command is a proxt for running a tendermint node. You'll be using
 this command to either initialize a new node, or - using existing files - joining
 the testnet. 
 
-The ``gaia rest-server`` command is used by (insert).
+The ``gaia rest-server`` command is used by the `cosmos UI <https://github.com/cosmos/cosmos-ui>`__.
 
 Lastly, the ``gaia client`` command is the workhorse of the staking module. It allows
 for sending various transactions and other types of interaction with a running chain.

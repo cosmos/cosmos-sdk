@@ -45,7 +45,7 @@ new directory, and copying in the genesis:
 
 ::
 
-    gaia node init E9E103F788AADD9C0842231E496B2139C118FA60 --home=$HOME/.gaia2 --chain-id=test
+    gaia node init E9E103F788AADD9C0842231E496B2139C118FA60 --home=$HOME/.gaia2 --chain-id=gaia-test
     cp $HOME/.gaia1/genesis.json $HOME/.gaia2/genesis.json
 
 We need to also modify ``$HOME/.gaia2/config.toml`` to set new seeds
@@ -80,7 +80,7 @@ account:
 
 ::
 
-    gaia client init --chain-id=test --node=tcp://localhost:46657
+    gaia client init --chain-id=gaia-test --node=tcp://localhost:46657
     gaia client query account E9E103F788AADD9C0842231E496B2139C118FA60
 
 Nice. We can also lookup the validator set:

@@ -16,7 +16,11 @@ const (
 )
 
 type MultiStore interface {
-	CacheWrappable
+
+	// Cache wrap MultiStore.
+	// NOTE: Caller should probably not call .Write() on each, but
+	// call CacheMultiStore.Write().
+	CacheMultiStore() CacheMultiStore
 
 	// Convenience
 	GetStore(name string) interface{}
@@ -24,19 +28,24 @@ type MultiStore interface {
 	GetIterKVStore(name string) IterKVStore
 }
 
+type CacheMultiStore interface {
+	MultiStore
+	Write() // Writes operations to underlying KVStore
+}
+
 //----------------------------------------
 
-// RootStore is composed of many Committers.
+// rootMultiStore is composed of many Committers.
 // Implements MultiStore.
-type RootStore struct {
+type rootMultiStore struct {
 	db           dbm.DB
-	version      uint64
+	version      int64
 	storeLoaders map[string]CommitterLoader
 	substores    map[string]Committer
 }
 
-func NewRootStore(db dbm.DB) *RootStore {
-	return &RootStore{
+func NewMultiStore(db dbm.DB) *rootMultiStore {
+	return &rootMultiStore{
 		db:           db,
 		version:      0,
 		storeLoaders: make(map[string]CommitterLoader),
@@ -44,28 +53,28 @@ func NewRootStore(db dbm.DB) *RootStore {
 	}
 }
 
-func (rs *RootStore) SetCommitterLoader(name string, loader CommitterLoader) {
+func (rs *rootMultiStore) SetCommitterLoader(name string, loader CommitterLoader) {
 	if _, ok := rs.storeLoaders[name]; ok {
-		panic(fmt.Sprintf("RootStore duplicate substore name " + name))
+		panic(fmt.Sprintf("rootMultiStore duplicate substore name " + name))
 	}
 	rs.storeLoaders[name] = loader
 }
 
 //----------------------------------------
-// RootStore state
+// rootMultiStore state
 
 type msState struct {
 	Substores []substore
 }
 
-func (rs *msState) Sort() {
-	rs.Substores.Sort()
+func (ms *msState) Sort() {
+	ms.Substores.Sort()
 }
 
-func (rs *msState) Hash() []byte {
-	m := make(map[string]interface{}, len(rs.Substores))
-	for _, substore := range rs.Substores {
-		m[substore.name] = substore.ssState
+func (ms *msState) Hash() []byte {
+	m := make(map[string]interface{}, len(ms.Substores))
+	for _, substore := range ms.Substores {
+		m[substore.name] = substore.subState
 	}
 	return merkle.SimpleHashFromMap(m)
 }
@@ -75,16 +84,16 @@ func (rs *msState) Hash() []byte {
 
 type substore struct {
 	name string
-	ssState
+	subState
 }
 
 // This gets serialized by go-wire
-type ssState struct {
+type subState struct {
 	CommitID CommitID
 	// ... maybe add more state
 }
 
-func (ss ssState) Hash() []byte {
+func (ss subState) Hash() []byte {
 	ssBytes, _ := wire.Marshal(ss) // Does not error
 	hasher := ripemd160.New()
 	hasher.Write(ssBytes)
@@ -93,14 +102,14 @@ func (ss ssState) Hash() []byte {
 
 //----------------------------------------
 
-// Call once after all calls to SetStoreLoader are complete.
-func (rs *RootStore) LoadLatestVersion() error {
+// Call once after all calls to SetCommitterLoader are complete.
+func (rs *rootMultiStore) LoadLatestVersion() error {
 	ver := rs.getLatestVersion()
 	rs.LoadVersion(ver)
 }
 
-func (rs *RootStore) getLatestVersion() uint64 {
-	var latest uint64
+func (rs *rootMultiStore) getLatestVersion() int64 {
+	var latest int64
 	latestBytes := rs.db.Get(msLatestKey)
 	if latestBytes == nil {
 		return 0
@@ -112,15 +121,19 @@ func (rs *RootStore) getLatestVersion() uint64 {
 	return latest
 }
 
-func (rs *RootStore) LoadVersion(ver uint64) error {
-	rs.version = ver
+// NOTE: Returns 0 unless LoadVersion() or LoadLatestVersion() is called.
+func (rs *rootMultiStore) GetVersion() int64 {
+	return rs.version
+}
+
+func (rs *rootMultiStore) LoadVersion(ver int64) error {
 
 	// Special logic for version 0
 	if ver == 0 {
 		for name, storeLoader := range rs.storeLoaders {
 			store, err := storeLoader(CommitID{Version: 0})
 			if err != nil {
-				return fmt.Errorf("Failed to load RootStore: %v", err)
+				return fmt.Errorf("Failed to load rootMultiStore: %v", err)
 			}
 			rs.substores[name] = store
 		}
@@ -131,40 +144,44 @@ func (rs *RootStore) LoadVersion(ver uint64) error {
 	msStateKey := fmt.Sprintf(msStateKeyFmt, ver)
 	stateBytes := rs.db.Get(msStateKey, ver)
 	if bz == nil {
-		return fmt.Errorf("Failed to load RootStore: no data")
+		return fmt.Errorf("Failed to load rootMultiStore: no data")
 	}
 	var state msState
 	err := wire.Unmarshal(stateBytes, &state)
 	if err != nil {
-		return fmt.Errorf("Failed to load RootStore: %v", err)
+		return fmt.Errorf("Failed to load rootMultiStore: %v", err)
 	}
 
 	// Load each Substore
+	var newSubstores = make(map[string]Committer)
 	for _, store := range state.Substores {
 		name, commitID := store.Name, store.CommitID
 		storeLoader := rs.storeLoaders[name]
 		if storeLoader == nil {
-			return fmt.Errorf("Failed to loadRootStore: StoreLoader missing for %v", name)
+			return fmt.Errorf("Failed to loadrootMultiStore: CommitterLoader missing for %v", name)
 		}
 		store, err := storeLoader(commitID)
 		if err != nil {
-			return fmt.Errorf("Failed to load RootStore: %v", err)
+			return fmt.Errorf("Failed to load rootMultiStore: %v", err)
 		}
-		rs.substores[name] = store
+		newSubstores[name] = store
 	}
 
-	// If any StoreLoaders were not used, return error.
+	// If any CommitterLoaders were not used, return error.
 	for name := range rs.storeLoaders {
 		if _, ok := rs.substores[name]; !ok {
-			return fmt.Errorf("Unused StoreLoader: %v", name)
+			return fmt.Errorf("Unused CommitterLoader: %v", name)
 		}
 	}
 
+	// Success.
+	rs.version = ver
+	rs.substores = newSubstores
 	return nil
 }
 
 // Implements Committer
-func (rs *RootStore) Commit() CommitID {
+func (rs *rootMultiStore) Commit() CommitID {
 
 	// Needs to be transactional
 	batch := rs.db.NewBatch()
@@ -174,7 +191,7 @@ func (rs *RootStore) Commit() CommitID {
 	for name, store := range rs.substores {
 		commitID := store.Commit()
 		state.Substores = append(state.Substores,
-			ssState{
+			subState{
 				Name:     name,
 				CommitID: commitID,
 			},
@@ -196,37 +213,37 @@ func (rs *RootStore) Commit() CommitID {
 	batch.version += 1
 }
 
-// Implements MultiStore/CacheWrappable
-func (rs *RootStore) CacheWrap() (o interface{}) {
+// Implements MultiStore
+func (rs *rootMultiStore) CacheMultiStore() CacheMultiStore {
 	return newCacheMultiStore(rs)
 }
 
-// Implements MultiStore/CacheWrappable
-func (rs *RootStore) GetCommitter(name string) Committer {
+// Implements MultiStore
+func (rs *rootMultiStore) GetCommitter(name string) Committer {
 	return rs.store[name]
 }
 
-// Implements MultiStore/CacheWrappable
-func (rs *RootStore) GetKVStore(name string) KVStore {
+// Implements MultiStore
+func (rs *rootMultiStore) GetKVStore(name string) KVStore {
 	return rs.store[name].(KVStore)
 }
 
-// Implements MultiStore/CacheWrappable
-func (rs *RootStore) GetIterKVStore(name string) IterKVStore {
+// Implements MultiStore
+func (rs *rootMultiStore) GetIterKVStore(name string) IterKVStore {
 	return rs.store[name].(IterKVStore)
 }
 
 //----------------------------------------
-// ssStates
+// subStates
 
-type ssStates []ssState
+type subStates []subState
 
-func (ssz ssStates) Len() int           { return len(ssz) }
-func (ssz ssStates) Less(i, j int) bool { return ssz[i].Key < ssz[j].Key }
-func (ssz ssStates) Swap(i, j int)      { ssz[i], ssz[j] = ssz[j], ssz[i] }
-func (ssz ssStates) Sort()              { sort.Sort(ssz) }
+func (ssz subStates) Len() int           { return len(ssz) }
+func (ssz subStates) Less(i, j int) bool { return ssz[i].Key < ssz[j].Key }
+func (ssz subStates) Swap(i, j int)      { ssz[i], ssz[j] = ssz[j], ssz[i] }
+func (ssz subStates) Sort()              { sort.Sort(ssz) }
 
-func (ssz ssStates) Hash() []byte {
+func (ssz subStates) Hash() []byte {
 	hz := make([]merkle.Hashable, len(ssz))
 	for i, ss := range ssz {
 		hz[i] = ss
@@ -245,11 +262,11 @@ type cwWriter interface {
 // Implements MultiStore.
 type cacheMultiStore struct {
 	db        dbm.DB
-	version   uint64
+	version   int64
 	substores map[string]cwWriter
 }
 
-func newCacheMultiStore(rs *RootStore) MultiStore {
+func newCacheMultiStore(rs *rootMultiStore) cacheMultiStore {
 	cms := cacheMultiStore{
 		db:        db.CacheWrap(),
 		version:   rs.version,
@@ -261,9 +278,30 @@ func newCacheMultiStore(rs *RootStore) MultiStore {
 	return cms
 }
 
+// Implements CacheMultiStore
 func (cms cacheMultiStore) Write() {
 	cms.db.Write()
 	for substore := range rs.substores {
 		substore.(cwWriter).Write()
 	}
+}
+
+// Implements CacheMultiStore
+func (rs cacheMultiStore) CacheMultiStore() CacheMultiStore {
+	return newCacheMultiStore(rs)
+}
+
+// Implements CacheMultiStore
+func (rs cacheMultiStore) GetCommitter(name string) Committer {
+	return rs.store[name]
+}
+
+// Implements CacheMultiStore
+func (rs cacheMultiStore) GetKVStore(name string) KVStore {
+	return rs.store[name].(KVStore)
+}
+
+// Implements CacheMultiStore
+func (rs cacheMultiStore) GetIterKVStore(name string) IterKVStore {
+	return rs.store[name].(IterKVStore)
 }

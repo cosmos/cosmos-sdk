@@ -12,7 +12,7 @@ import:
   - server
   - types
 - package: github.com/tendermint/go-crypto
-  version: develop
+  version: sdk2
   subpackages:
   - keys
 - package: github.com/tendermint/go-wire
@@ -27,7 +27,7 @@ import:
   - certifiers/client
   - certifiers/files
 - package: github.com/tendermint/iavl
-  version: develop
+  version: sdk2
 - package: github.com/tendermint/tendermint
   version: develop
   subpackages:
@@ -40,7 +40,7 @@ import:
   - rpc/lib/types
   - types
 - package: github.com/tendermint/tmlibs
-  version: develop
+  version: sdk2
   subpackages:
   - cli
   - cli/flags

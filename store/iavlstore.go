@@ -12,7 +12,7 @@ import (
 )
 
 // NewIAVLLoader returns a CommitterLoader that returns
-// an IAVLStore
+// an IAVLCommitter
 func NewIAVLLoader(dbName string, cacheSize int, history uint64) CommitterLoader {
 	l := iavlLoader{
 		dbName:    dbName,
@@ -22,8 +22,8 @@ func NewIAVLLoader(dbName string, cacheSize int, history uint64) CommitterLoader
 	return CommitterLoader(l.Load)
 }
 
-// IAVLStore Implements IterKVStore and Committer
-type IAVLStore struct {
+// IAVLCommitter Implements IterKVStore and Committer
+type IAVLCommitter struct {
 	// we must store the last height here, as it is needed
 	// for saving the versioned tree
 	lastHeight uint64
@@ -32,11 +32,34 @@ type IAVLStore struct {
 	// uses a naive "hold last X versions" algorithm
 	history uint64
 
+	// this is all historical data and connection to
+	// the db
 	tree *iavl.VersionedTree
+
+	// this is the current working state to be saved
+	// on the next commit
+	IAVLStore
 }
 
-// Commit writes another version to the
-func (i *IAVLStore) Commit() CommitID {
+// NewIAVLCommitter properly initializes a committer
+// that is ready to use as a IterKVStore
+func NewIAVLCommitter(tree *iavl.VersionedTree,
+	lastHeight uint64, history uint64) *IAVLCommitter {
+	i := &IAVLCommitter{
+		tree:       tree,
+		lastHeight: lastHeight,
+		history:    history,
+	}
+	i.updateStore()
+	return i
+}
+
+// Commit syncs the working state and
+// saves another version to the db
+func (i *IAVLCommitter) Commit() CommitID {
+	// TODO: sync working state??
+	// I think this is done already just by writing to tree.Tree()
+
 	// save a new version
 	i.lastHeight++
 	hash, err := i.tree.SaveVersion(i.lastHeight)
@@ -46,7 +69,10 @@ func (i *IAVLStore) Commit() CommitID {
 		panic(err)
 	}
 
-	// release an old version
+	// now point working state to the new status
+	i.updateStore()
+
+	// release an old version of history
 	if i.history <= i.lastHeight {
 		release := i.lastHeight - i.history
 		i.tree.DeleteVersion(release)
@@ -58,9 +84,51 @@ func (i *IAVLStore) Commit() CommitID {
 	}
 }
 
-// var _ IterKVStore = (*IAVLStore)(nil)
-var _ KVStore = (*IAVLStore)(nil)
-var _ Committer = (*IAVLStore)(nil)
+// store returns a wrapper around the current writable state
+func (i *IAVLCommitter) updateStore() {
+	i.IAVLStore = IAVLStore{i.tree.Tree()}
+}
+
+var _ CacheWrappable = (*IAVLCommitter)(nil)
+var _ Committer = (*IAVLCommitter)(nil)
+
+// IAVLStore is the writable state (not history) and
+// implements the IterKVStore interface.
+type IAVLStore struct {
+	tree *iavl.Tree
+}
+
+// CacheWrap returns a wrapper around the current writable state
+func (i IAVLStore) CacheWrap() interface{} {
+	// TODO: something here for sure
+	return i
+}
+
+// Set implements KVStore
+func (i IAVLStore) Set(key, value []byte) (prev []byte) {
+	_, prev = i.tree.Get(key)
+	i.tree.Set(key, value)
+	return prev
+}
+
+// Get implements KVStore
+func (i IAVLStore) Get(key []byte) (value []byte, exists bool) {
+	_, v := i.tree.Get(key)
+	return v, (v != nil)
+}
+
+// Has implements KVStore
+func (i IAVLStore) Has(key []byte) (exists bool) {
+	return i.tree.Has(key)
+}
+
+// Remove implements KVStore
+func (i IAVLStore) Remove(key []byte) (prev []byte, removed bool) {
+	return i.tree.Remove(key)
+}
+
+// var _ IterKVStore = IAVLStore{}
+var _ KVStore = IAVLStore{}
 
 // iavlLoader contains info on what store we want to load from
 type iavlLoader struct {
@@ -74,10 +142,7 @@ func (l iavlLoader) Load(id CommitID) (Committer, error) {
 	// memory backed case, just for testing
 	if l.dbName == "" {
 		tree := iavl.NewVersionedTree(0, dbm.NewMemDB())
-		store := &IAVLStore{
-			tree:    tree,
-			history: l.history,
-		}
+		store := NewIAVLCommitter(tree, 0, l.history)
 		return store, nil
 	}
 
@@ -102,11 +167,7 @@ func (l iavlLoader) Load(id CommitID) (Committer, error) {
 	}
 
 	// TODO: load the version stored in id
-	store := &IAVLStore{
-		tree:       tree,
-		lastHeight: tree.LatestVersion(),
-		history:    l.history,
-	}
-
+	store := NewIAVLCommitter(tree, tree.LatestVersion(),
+		l.history)
 	return store, nil
 }

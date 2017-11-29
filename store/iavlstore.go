@@ -100,7 +100,7 @@ type IAVLStore struct {
 
 // CacheWrap returns a wrapper around the current writable state
 func (i IAVLStore) CacheWrap() interface{} {
-	// TODO: something here for sure
+	// TODO: add CacheWrap to IAVLTree using new db stuff
 	return i
 }
 
@@ -127,8 +127,88 @@ func (i IAVLStore) Remove(key []byte) (prev []byte, removed bool) {
 	return i.tree.Remove(key)
 }
 
-// var _ IterKVStore = IAVLStore{}
-var _ KVStore = IAVLStore{}
+// Iterator implements IterKVStore
+func (i IAVLStore) Iterator(start, end []byte) Iterator {
+	// TODO: this needs changes to IAVL tree
+	return nil
+}
+
+// ReverseIterator implements IterKVStore
+func (i IAVLStore) ReverseIterator(start, end []byte) Iterator {
+	// TODO
+	return nil
+}
+
+// First implements IterKVStore
+func (i IAVLStore) First(start, end []byte) (kv KVPair, ok bool) {
+	// TODO
+	return KVPair{}, false
+}
+
+// Last implements IterKVStore
+func (i IAVLStore) Last(start, end []byte) (kv KVPair, ok bool) {
+	// TODO
+	return KVPair{}, false
+}
+
+var _ IterKVStore = IAVLStore{}
+
+type iavlIterator struct {
+	// TODO
+}
+
+var _ Iterator = (*iavlIterator)(nil)
+
+// Domain implements Iterator
+//
+// The start & end (exclusive) limits to iterate over.
+// If end < start, then the Iterator goes in reverse order.
+func (i *iavlIterator) Domain() (start, end []byte) {
+	// TODO
+	return nil, nil
+}
+
+// Valid implements Iterator
+//
+// Returns if the current position is valid.
+func (i *iavlIterator) Valid() bool {
+	// TODO
+	return false
+}
+
+// Next implements Iterator
+//
+// Next moves the iterator to the next key/value pair.
+func (i *iavlIterator) Next() {
+	// TODO
+}
+
+// Key implements Iterator
+//
+// Key returns the key of the current key/value pair, or nil if done.
+// The caller should not modify the contents of the returned slice, and
+// its contents may change after calling Next().
+func (i *iavlIterator) Key() []byte {
+	// TODO
+	return nil
+}
+
+// Value implements Iterator
+//
+// Value returns the key of the current key/value pair, or nil if done.
+// The caller should not modify the contents of the returned slice, and
+// its contents may change after calling Next().
+func (i *iavlIterator) Value() []byte {
+	// TODO
+	return nil
+}
+
+// Release implements Iterator
+//
+// Releases any resources and iteration-locks
+func (i *iavlIterator) Release() {
+	// TODO
+}
 
 // iavlLoader contains info on what store we want to load from
 type iavlLoader struct {

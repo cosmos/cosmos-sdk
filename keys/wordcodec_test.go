@@ -3,14 +3,14 @@ package keys
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	asrt "github.com/stretchr/testify/assert"
+	rqr "github.com/stretchr/testify/require"
 
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
 func TestLengthCalc(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	cases := []struct {
 		bytes, words int
@@ -50,7 +50,7 @@ func TestLengthCalc(t *testing.T) {
 }
 
 func TestEncodeDecode(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 
 	codec, err := LoadCodec("english")
 	require.Nil(err, "%+v", err)
@@ -82,7 +82,7 @@ func TestEncodeDecode(t *testing.T) {
 }
 
 func TestCheckInvalidLists(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	trivial := []string{"abc", "def"}
 	short := make([]string, 1234)
@@ -144,7 +144,7 @@ func getDiffWord(c *WordCodec, not string) string {
 }
 
 func TestCheckTypoDetection(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 
 	banks := []string{"english", "spanish", "japanese", "chinese_simplified"}
 

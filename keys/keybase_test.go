@@ -1,31 +1,28 @@
-package cryptostore_test
+package keys_test
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	asrt "github.com/stretchr/testify/assert"
+	rqr "github.com/stretchr/testify/require"
 
 	cmn "github.com/tendermint/tmlibs/common"
+	dbm "github.com/tendermint/tmlibs/db"
 
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-crypto/keys"
-	"github.com/tendermint/go-crypto/keys/cryptostore"
-	"github.com/tendermint/go-crypto/keys/storage/memstorage"
 	"github.com/tendermint/go-crypto/nano"
 )
 
 // TestKeyManagement makes sure we can manipulate these keys well
 func TestKeyManagement(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 
 	// make the storage with reasonable defaults
-	cstore := cryptostore.New(
-		cryptostore.SecretBox,
-		memstorage.New(),
+	cstore := keys.New(
+		dbm.NewMemDB(),
 		keys.MustLoadCodec("english"),
 	)
 
@@ -89,12 +86,11 @@ func TestKeyManagement(t *testing.T) {
 // TestSignVerify does some detailed checks on how we sign and validate
 // signatures
 func TestSignVerify(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 
 	// make the storage with reasonable defaults
-	cstore := cryptostore.New(
-		cryptostore.SecretBox,
-		memstorage.New(),
+	cstore := keys.New(
+		dbm.NewMemDB(),
 		keys.MustLoadCodec("english"),
 	)
 	algo := crypto.NameSecp256k1
@@ -114,18 +110,21 @@ func TestSignVerify(t *testing.T) {
 	d2 := []byte("some other important info!")
 
 	// try signing both data with both keys...
-	s11 := keys.NewMockSignable(d1)
-	err = cstore.Sign(n1, p1, s11)
+	s11, pub1, err := cstore.Sign(n1, p1, d1)
 	require.Nil(err)
-	s12 := keys.NewMockSignable(d2)
-	err = cstore.Sign(n1, p1, s12)
+	require.Equal(i1.PubKey, pub1)
+
+	s12, pub1, err := cstore.Sign(n1, p1, d2)
 	require.Nil(err)
-	s21 := keys.NewMockSignable(d1)
-	err = cstore.Sign(n2, p2, s21)
+	require.Equal(i1.PubKey, pub1)
+
+	s21, pub2, err := cstore.Sign(n2, p2, d1)
 	require.Nil(err)
-	s22 := keys.NewMockSignable(d2)
-	err = cstore.Sign(n2, p2, s22)
+	require.Equal(i2.PubKey, pub2)
+
+	s22, pub2, err := cstore.Sign(n2, p2, d2)
 	require.Nil(err)
+	require.Equal(i2.PubKey, pub2)
 
 	// let's try to validate and make sure it only works when everything is proper
 	cases := []struct {
@@ -135,15 +134,15 @@ func TestSignVerify(t *testing.T) {
 		valid bool
 	}{
 		// proper matches
-		{i1.PubKey, d1, s11.Signature, true},
+		{i1.PubKey, d1, s11, true},
 		// change data, pubkey, or signature leads to fail
-		{i1.PubKey, d2, s11.Signature, false},
-		{i2.PubKey, d1, s11.Signature, false},
-		{i1.PubKey, d1, s21.Signature, false},
+		{i1.PubKey, d2, s11, false},
+		{i2.PubKey, d1, s11, false},
+		{i1.PubKey, d1, s21, false},
 		// make sure other successes
-		{i1.PubKey, d2, s12.Signature, true},
-		{i2.PubKey, d1, s21.Signature, true},
-		{i2.PubKey, d2, s22.Signature, true},
+		{i1.PubKey, d2, s12, true},
+		{i2.PubKey, d1, s21, true},
+		{i2.PubKey, d2, s22, true},
 	}
 
 	for i, tc := range cases {
@@ -158,15 +157,14 @@ func TestSignVerify(t *testing.T) {
 // This test will only succeed with a ledger attached to the computer
 // and the cosmos app open
 func TestSignWithLedger(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 	if os.Getenv("WITH_LEDGER") == "" {
 		t.Skip("Set WITH_LEDGER to run code on real ledger")
 	}
 
 	// make the storage with reasonable defaults
-	cstore := cryptostore.New(
-		cryptostore.SecretBox,
-		memstorage.New(),
+	cstore := keys.New(
+		dbm.NewMemDB(),
 		keys.MustLoadCodec("english"),
 	)
 	n := "nano-s"
@@ -192,21 +190,22 @@ func TestSignWithLedger(t *testing.T) {
 	d2 := []byte("please turn on the app")
 
 	// try signing both data with the ledger...
-	s1 := keys.NewMockSignable(d1)
-	err = cstore.Sign(n, p, s1)
+	s1, pub, err := cstore.Sign(n, p, d1)
 	require.Nil(err)
-	s2 := keys.NewMockSignable(d2)
-	err = cstore.Sign(n, p, s2)
+	require.Equal(info.PubKey, pub)
+
+	s2, pub, err := cstore.Sign(n, p, d2)
 	require.Nil(err)
+	require.Equal(info.PubKey, pub)
 
 	// now, let's check those signatures work
-	assert.True(key.VerifyBytes(d1, s1.Signature))
-	assert.True(key.VerifyBytes(d2, s2.Signature))
+	assert.True(key.VerifyBytes(d1, s1))
+	assert.True(key.VerifyBytes(d2, s2))
 	// and mismatched signatures don't
-	assert.False(key.VerifyBytes(d1, s2.Signature))
+	assert.False(key.VerifyBytes(d1, s2))
 }
 
-func assertPassword(assert *assert.Assertions, cstore cryptostore.Manager, name, pass, badpass string) {
+func assertPassword(assert *asrt.Assertions, cstore keys.Keybase, name, pass, badpass string) {
 	err := cstore.Update(name, badpass, pass)
 	assert.NotNil(err)
 	err = cstore.Update(name, pass, pass)
@@ -215,40 +214,37 @@ func assertPassword(assert *assert.Assertions, cstore cryptostore.Manager, name,
 
 // TestImportUnencrypted tests accepting raw priv keys bytes as input
 func TestImportUnencrypted(t *testing.T) {
-	require := require.New(t)
+	require := rqr.New(t)
 
 	// make the storage with reasonable defaults
-	cstore := cryptostore.New(
-		cryptostore.SecretBox,
-		memstorage.New(),
+	cstore := keys.New(
+		dbm.NewMemDB(),
 		keys.MustLoadCodec("english"),
 	)
 
-	key, err := cryptostore.GenEd25519.Generate(cmn.RandBytes(16))
-	require.NoError(err)
+	key := crypto.GenPrivKeyEd25519FromSecret(cmn.RandBytes(16)).Wrap()
 
 	addr := key.PubKey().Address()
 	name := "john"
 	pass := "top-secret"
 
 	// import raw bytes
-	err = cstore.Import(name, pass, "", key.Bytes())
+	err := cstore.Import(name, pass, "", key.Bytes())
 	require.Nil(err, "%+v", err)
 
 	// make sure the address matches
 	info, err := cstore.Get(name)
 	require.Nil(err, "%+v", err)
-	require.EqualValues(addr, info.Address)
+	require.EqualValues(addr, info.Address())
 }
 
 // TestAdvancedKeyManagement verifies update, import, export functionality
 func TestAdvancedKeyManagement(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 
 	// make the storage with reasonable defaults
-	cstore := cryptostore.New(
-		cryptostore.SecretBox,
-		memstorage.New(),
+	cstore := keys.New(
+		dbm.NewMemDB(),
 		keys.MustLoadCodec("english"),
 	)
 
@@ -287,12 +283,11 @@ func TestAdvancedKeyManagement(t *testing.T) {
 
 // TestSeedPhrase verifies restoring from a seed phrase
 func TestSeedPhrase(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 
 	// make the storage with reasonable defaults
-	cstore := cryptostore.New(
-		cryptostore.SecretBox,
-		memstorage.New(),
+	cstore := keys.New(
+		dbm.NewMemDB(),
 		keys.MustLoadCodec("english"),
 	)
 
@@ -316,16 +311,14 @@ func TestSeedPhrase(t *testing.T) {
 	newInfo, err := cstore.Recover(n2, p2, seed)
 	require.Nil(err, "%+v", err)
 	assert.Equal(n2, newInfo.Name)
-	assert.Equal(info.Address, newInfo.Address)
+	assert.Equal(info.Address(), newInfo.Address())
 	assert.Equal(info.PubKey, newInfo.PubKey)
 }
 
 func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
-	cstore := cryptostore.New(
-		cryptostore.SecretBox,
-		// Note: use filestorage.New(dir) for real data
-		memstorage.New(),
+	cstore := keys.New(
+		dbm.NewMemDB(),
 		keys.MustLoadCodec("english"),
 	)
 	ed := crypto.NameEd25519
@@ -348,8 +341,8 @@ func ExampleNew() {
 	}
 
 	// We need to use passphrase to generate a signature
-	tx := keys.NewMockSignable([]byte("deadbeef"))
-	err = cstore.Sign("Bob", "friend", tx)
+	tx := []byte("deadbeef")
+	sig, pub, err := cstore.Sign("Bob", "friend", tx)
 	if err != nil {
 		fmt.Println("don't accept real passphrase")
 	}
@@ -360,13 +353,11 @@ func ExampleNew() {
 		fmt.Println("Get and Create return different keys")
 	}
 
-	sigs, err := tx.Signers()
-	if err != nil {
-		fmt.Println("badly signed")
-	} else if bytes.Equal(sigs[0].Bytes(), binfo.PubKey.Bytes()) {
+	if pub.Equals(binfo.PubKey) {
 		fmt.Println("signed by Bob")
-	} else {
-		fmt.Println("signed by someone else")
+	}
+	if !pub.VerifyBytes(tx, sig) {
+		fmt.Println("invalid signature")
 	}
 
 	// Output:

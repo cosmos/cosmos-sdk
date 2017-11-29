@@ -109,8 +109,6 @@ func TestSignatureEncodings(t *testing.T) {
 }
 
 func TestWrapping(t *testing.T) {
-	assert := assert.New(t)
-
 	// construct some basic constructs
 	msg := CRandBytes(128)
 	priv := GenPrivKeyEd25519()
@@ -126,7 +124,7 @@ func TestWrapping(t *testing.T) {
 	}
 	for _, p := range pubs {
 		_, ok := p.PubKeyInner.(PubKey)
-		assert.False(ok)
+		assert.False(t, ok)
 	}
 
 	sigs := []Signature{
@@ -137,7 +135,7 @@ func TestWrapping(t *testing.T) {
 	}
 	for _, s := range sigs {
 		_, ok := s.SignatureInner.(Signature)
-		assert.False(ok)
+		assert.False(t, ok)
 	}
 
 }

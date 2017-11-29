@@ -5,14 +5,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	asrt "github.com/stretchr/testify/assert"
+	rqr "github.com/stretchr/testify/require"
 
 	crypto "github.com/tendermint/go-crypto"
 )
 
 func TestLedgerKeys(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 
 	cases := []struct {
 		msg, pubkey, sig string
@@ -76,7 +76,7 @@ func TestLedgerKeys(t *testing.T) {
 }
 
 func TestRealLedger(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 
 	if os.Getenv("WITH_LEDGER") == "" {
 		t.Skip("Set WITH_LEDGER to run code on real ledger")
@@ -115,7 +115,7 @@ func TestRealLedger(t *testing.T) {
 // TestRealLedgerErrorHandling calls. These tests assume
 // the ledger is not plugged in....
 func TestRealLedgerErrorHandling(t *testing.T) {
-	require := require.New(t)
+	require := rqr.New(t)
 
 	if os.Getenv("WITH_LEDGER") != "" {
 		t.Skip("Skipping on WITH_LEDGER as it tests unplugged cases")

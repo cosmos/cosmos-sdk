@@ -145,8 +145,6 @@ func (s SigMessage) Bytes() []byte {
 }
 
 func TestEmbededWireEncodings(t *testing.T) {
-	assert := assert.New(t)
-
 	cases := []struct {
 		privKey PrivKey
 		keyType byte
@@ -171,7 +169,7 @@ func TestEmbededWireEncodings(t *testing.T) {
 	for i, tc := range cases {
 		pubKey := tc.privKey.PubKey()
 		sig := tc.privKey.Sign(payload)
-		assert.True(pubKey.VerifyBytes(payload, sig), "%d", i)
+		assert.True(t, pubKey.VerifyBytes(payload, sig), "%d", i)
 
 		msg := SigMessage{
 			Key: pubKey,

@@ -1,5 +1,5 @@
-hash: 6e06a42eafe0aeff112cee86aef6b2cab0e2f62c2e6bfccfb629aa22f6b62773
-updated: 2017-10-27T18:45:18.350198941+02:00
+hash: 765599cf3dcac232d3d2ece65c3b016d0abe55d0536adfe93d11e0dd29287de4
+updated: 2017-11-13T14:37:54.127163059+01:00
 imports:
 - name: github.com/btcsuite/btcd
   version: c7588cbf7690cd9f047a28efa2dcd8f2435a4e5e
@@ -10,7 +10,7 @@ imports:
   subpackages:
   - base58
 - name: github.com/ethanfrey/hid
-  version: 660bb717bd4e7cbcdf0f7cd5cadf1cb2e4be452a
+  version: ea8f4c923d3bc8c9c312b7d38724a294f184258a
 - name: github.com/ethanfrey/ledger
   version: 23a7bb9d74bc83a862fcb4bddde24215b2295ad9
 - name: github.com/go-kit/kit
@@ -29,26 +29,46 @@ imports:
   version: 71201497bace774495daed26a3874fd339e0b538
 - name: github.com/go-stack/stack
   version: 817915b46b97fd7bb80e8ab6b69f01a53ac3eebf
+- name: github.com/golang/snappy
+  version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/howeyc/crc16
   version: 96a97a1abb579c7ff1a8ffa77f2e72d1c314b57f
+- name: github.com/jmhodges/levigo
+  version: c42d9e0ca023e2198120196f842701bb4c55d7b9
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
+- name: github.com/syndtr/goleveldb
+  version: b89cc31ef7977104127d34c1bd31ebd1a9db2199
+  subpackages:
+  - leveldb
+  - leveldb/cache
+  - leveldb/comparer
+  - leveldb/errors
+  - leveldb/filter
+  - leveldb/iterator
+  - leveldb/journal
+  - leveldb/memdb
+  - leveldb/opt
+  - leveldb/storage
+  - leveldb/table
+  - leveldb/util
 - name: github.com/tendermint/ed25519
   version: d8387025d2b9d158cf4efb07e7ebf814bcce2057
   subpackages:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-wire
-  version: 8ee84b5b2581530168daf66fc89c548d27403c57
+  version: 1c96861c03231361546944d883d99593b2e6b408
   subpackages:
   - data
   - data/base58
 - name: github.com/tendermint/tmlibs
-  version: 092eb701c7276907cdbed258750e22ce895b6735
+  version: 56e51bc1133bd54a331e0314d5f80fb547460362
   subpackages:
   - common
+  - db
   - log
 - name: golang.org/x/crypto
   version: edd5e9b0879d13ee6970a50153d85b8fec9f7686

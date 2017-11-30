@@ -1,5 +1,5 @@
 hash: b458f1ec5c9386c5c7439fa5ee7a3fe1a812813aef7681ccc18c511fa25073a2
-updated: 2017-11-30T16:15:15.656201018+01:00
+updated: 2017-11-30T17:49:32.657374318Z
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -112,7 +112,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: b89fd815a5e63bd424093aa0ef84d2e146d30c58
+  version: 22b491bb1952125dd2fb0730d6ca8e59e310547c
   subpackages:
   - client
   - example/dummy
@@ -141,7 +141,7 @@ imports:
 - name: github.com/tendermint/iavl
   version: 595f3dcd5b6cd4a292e90757ae6d367fd7a6e653
 - name: github.com/tendermint/tendermint
-  version: cb9743e5671776d683cdb9a51de7d12854a2acae
+  version: 03222d834b8dccde63ed10840a294164caa17f04
   subpackages:
   - blockchain
   - certifiers

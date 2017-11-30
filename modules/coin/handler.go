@@ -153,36 +153,20 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 	// now we build the tags
 	tags := make([]*abci.KVPair, 0)
 
-	tags = append(tags, tagInt("height", int64(ctx.BlockHeight())))
+	tags = append(tags, abci.KVPairInt("height", int64(ctx.BlockHeight())))
 
 	for _, in := range send.Inputs {
 		addr := in.Address.Address.String()
-		tags = append(tags, tagStr("coin.sender", addr))
+		tags = append(tags, abci.KVPairString("coin.sender", addr))
 	}
 
 	for _, out := range send.Outputs {
 		addr := out.Address.Address.String()
-		tags = append(tags, tagStr("coin.receiver", addr))
+		tags = append(tags, abci.KVPairString("coin.receiver", addr))
 	}
 
 	// a-ok!
 	return sdk.DeliverResult{Tags: tags}, nil
-}
-
-func tagInt(key string, val int64) *abci.KVPair {
-	return &abci.KVPair{
-		Key:       key,
-		ValueInt:  val,
-		ValueType: abci.KVPair_INT,
-	}
-}
-
-func tagStr(key, val string) *abci.KVPair {
-	return &abci.KVPair{
-		Key:         key,
-		ValueString: val,
-		ValueType:   abci.KVPair_STRING,
-	}
 }
 
 func (h Handler) creditTx(ctx sdk.Context, store state.SimpleDB,

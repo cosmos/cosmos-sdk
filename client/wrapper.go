@@ -3,8 +3,8 @@ package client
 import (
 	"github.com/tendermint/go-wire/data"
 
-	"github.com/tendermint/tendermint/certifiers"
-	certclient "github.com/tendermint/tendermint/certifiers/client"
+	"github.com/tendermint/tendermint/lite"
+	certclient "github.com/tendermint/tendermint/lite/client"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
@@ -16,14 +16,14 @@ var _ rpcclient.Client = Wrapper{}
 // provable before passing it along. Allows you to make any rpcclient fully secure.
 type Wrapper struct {
 	rpcclient.Client
-	cert *certifiers.Inquiring
+	cert *lite.Inquiring
 }
 
 // SecureClient uses a given certifier to wrap an connection to an untrusted
 // host and return a cryptographically secure rpc client.
 //
 // If it is wrapping an HTTP rpcclient, it will also wrap the websocket interface
-func SecureClient(c rpcclient.Client, cert *certifiers.Inquiring) Wrapper {
+func SecureClient(c rpcclient.Client, cert *lite.Inquiring) Wrapper {
 	wrap := Wrapper{c, cert}
 	// TODO: no longer possible as no more such interface exposed....
 	// if we wrap http client, then we can swap out the event switch to filter
@@ -51,7 +51,8 @@ func (w Wrapper) Tx(hash []byte, prove bool) (*ctypes.ResultTx, error) {
 	if !prove || err != nil {
 		return res, err
 	}
-	check, err := GetCertifiedCommit(res.Height, w.Client, w.cert)
+	h := uint64(res.Height)
+	check, err := GetCertifiedCommit(h, w.Client, w.cert)
 	if err != nil {
 		return res, err
 	}
@@ -111,7 +112,7 @@ func (w Wrapper) Block(height *int) (*ctypes.ResultBlock, error) {
 	return r, nil
 }
 
-// Commit downloads the Commit and certifies it with the certifiers.
+// Commit downloads the Commit and certifies it with the lite.
 //
 // This is the foundation for all other verification in this module
 func (w Wrapper) Commit(height *int) (*ctypes.ResultCommit, error) {

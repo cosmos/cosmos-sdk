@@ -124,8 +124,8 @@ func (app *StoreApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 }
 
 // SetOption - ABCI
-func (app *StoreApp) SetOption(key string, value string) string {
-	return "Not Implemented"
+func (app *StoreApp) SetOption(res abci.RequestSetOption) abci.ResponseSetOption {
+	return abci.ResponseSetOption{Log: "Not Implemented"}
 }
 
 // Query - ABCI
@@ -180,7 +180,7 @@ func (app *StoreApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 }
 
 // Commit implements abci.Application
-func (app *StoreApp) Commit() (res abci.Result) {
+func (app *StoreApp) Commit() (res abci.ResponseCommit) {
 	app.height++
 
 	hash, err := app.state.Commit(app.height)
@@ -194,20 +194,22 @@ func (app *StoreApp) Commit() (res abci.Result) {
 	)
 
 	if app.state.Size() == 0 {
-		return abci.NewResultOK(nil, "Empty hash for empty tree")
+		return abci.ResponseCommit{Log: "Empty hash for empty tree"}
 	}
-	return abci.NewResultOK(hash, "")
+	return abci.ResponseCommit{Data: hash}
 }
 
 // InitChain - ABCI
-func (app *StoreApp) InitChain(req abci.RequestInitChain) {}
+func (app *StoreApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
+	return
+}
 
 // BeginBlock - ABCI
 func (app *StoreApp) BeginBlock(req abci.RequestBeginBlock) {}
 
 // EndBlock - ABCI
 // Returns a list of all validator changes made in this block
-func (app *StoreApp) EndBlock(height uint64) (res abci.ResponseEndBlock) {
+func (app *StoreApp) EndBlock(_ abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	// TODO: cleanup in case a validator exists multiple times in the list
 	res.Diffs = app.pending
 	app.pending = nil

@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/go-wire"
-	"github.com/tendermint/tendermint/certifiers"
-	certclient "github.com/tendermint/tendermint/certifiers/client"
+	"github.com/tendermint/tendermint/lite"
+	certclient "github.com/tendermint/tendermint/lite/client"
 	"github.com/tendermint/tmlibs/log"
 
 	nm "github.com/tendermint/tendermint/node"
@@ -62,7 +62,7 @@ func TestAppProofs(t *testing.T) {
 	source := certclient.NewProvider(cl)
 	seed, err := source.GetByHeight(br.Height - 2)
 	require.NoError(err, "%+v", err)
-	cert := certifiers.NewStatic("my-chain", seed.Validators)
+	cert := lite.NewStatic("my-chain", seed.Validators)
 
 	client.WaitForHeight(cl, 3, nil)
 	latest, err := source.LatestCommit()
@@ -125,7 +125,7 @@ func TestTxProofs(t *testing.T) {
 	source := certclient.NewProvider(cl)
 	seed, err := source.GetByHeight(br.Height - 2)
 	require.NoError(err, "%+v", err)
-	cert := certifiers.NewStatic("my-chain", seed.Validators)
+	cert := lite.NewStatic("my-chain", seed.Validators)
 
 	// First let's make sure a bogus transaction hash returns a valid non-existence proof.
 	key := types.Tx([]byte("bogus")).Hash()

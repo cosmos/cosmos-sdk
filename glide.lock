@@ -1,5 +1,5 @@
-hash: 809845bf4c18a4abc85cf5d7b5ee7a17e0f437cd377b22e158787c718272261a
-updated: 2017-11-22T12:10:57.995842504+01:00
+hash: b458f1ec5c9386c5c7439fa5ee7a3fe1a812813aef7681ccc18c511fa25073a2
+updated: 2017-11-30T16:15:15.656201018+01:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -11,14 +11,14 @@ imports:
   version: a368813c5e648fee92e5f6c30e3944ff9d5e8895
 - name: github.com/ebuchman/fail-test
   version: 95f809107225be108efcf10a3509e4ea6ceef3c4
-- name: github.com/ethanfrey/hid
-  version: dce75af84cf849c60f39bf1b8192fb5cd597b5d9
 - name: github.com/ethanfrey/ledger
-  version: f7f2f056357db77db845a79aa1abdadc3ae66369
+  version: 5e432577be582bd18a3b4a9cd75dae7a317ade36
+- name: github.com/flynn/hid
+  version: ed06a31c6245d4552e8dbba7e32e5b010b875d65
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/go-kit/kit
-  version: e2b298466b32c7cd5579a9b9b07e968fc9d9452c
+  version: d67bb4c202e3b91377d1079b110a6c9ce23ab2f8
   subpackages:
   - log
   - log/level
@@ -26,13 +26,13 @@ imports:
 - name: github.com/go-logfmt/logfmt
   version: 390ab7935ee28ec6b286364bba9b4dd6410cb3d5
 - name: github.com/go-playground/locales
-  version: e4cbcb5d0652150d40ad0646651076b6bd2be4f6
+  version: 1e5f1161c6416a5ff48840eb8724a394e48cc534
   subpackages:
   - currency
 - name: github.com/go-playground/universal-translator
   version: 71201497bace774495daed26a3874fd339e0b538
 - name: github.com/go-stack/stack
-  version: 817915b46b97fd7bb80e8ab6b69f01a53ac3eebf
+  version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/golang/protobuf
   version: 1643683e1b54a9e88ad26d98f81400c8c9d9f4f9
   subpackages:
@@ -89,7 +89,7 @@ imports:
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 19e54c4a2b8a78c9d54b2bed61b1a6c5e1bfcf6f
+  version: 7b2c5ac9fc04fc5efafb60700713d4fa609b777b
 - name: github.com/spf13/jwalterweatherman
   version: 12bd96e66386c1960ab0f74ced1362f66f552f7b
 - name: github.com/spf13/pflag
@@ -97,7 +97,7 @@ imports:
 - name: github.com/spf13/viper
   version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: github.com/syndtr/goleveldb
-  version: b89cc31ef7977104127d34c1bd31ebd1a9db2199
+  version: 8c81ea47d4c41a385645e133e15510fc6a2a74b4
   subpackages:
   - leveldb
   - leveldb/cache
@@ -112,14 +112,14 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: bee7c5c7aa09443c4d9aa74217a891f8229d9ea3
+  version: b89fd815a5e63bd424093aa0ef84d2e146d30c58
   subpackages:
   - client
   - example/dummy
   - server
   - types
 - name: github.com/tendermint/ed25519
-  version: d8387025d2b9d158cf4efb07e7ebf814bcce2057
+  version: 1f52c6f8b8a5c7908aff4497c186af344b428925
   subpackages:
   - edwards25519
   - extra25519
@@ -137,20 +137,24 @@ imports:
   subpackages:
   - data
   - data/base58
+  - nowriter/tmencoding
 - name: github.com/tendermint/iavl
   version: 595f3dcd5b6cd4a292e90757ae6d367fd7a6e653
 - name: github.com/tendermint/tendermint
-  version: e997db7a23d3e51b2b265f892226e980ae4c8300
+  version: cb9743e5671776d683cdb9a51de7d12854a2acae
   subpackages:
   - blockchain
   - certifiers
   - certifiers/client
-  - certifiers/errors
   - certifiers/files
   - cmd/tendermint/commands
   - config
   - consensus
   - consensus/types
+  - lite
+  - lite/client
+  - lite/errors
+  - lite/files
   - mempool
   - node
   - p2p
@@ -173,7 +177,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: 135a1a7cd78215105a55308c167b3331c225e00b
+  version: 21fb7819891997c96838308b4eba5a50b07ff03f
   subpackages:
   - autofile
   - cli
@@ -189,7 +193,7 @@ imports:
   - pubsub
   - pubsub/query
 - name: golang.org/x/crypto
-  version: edd5e9b0879d13ee6970a50153d85b8fec9f7686
+  version: c7af5bf2638a1164f2eb5467c39c6cffbd13a02e
   subpackages:
   - curve25519
   - nacl/box
@@ -244,7 +248,7 @@ imports:
   - tap
   - transport
 - name: gopkg.in/go-playground/validator.v9
-  version: 1304298bf10d085adec514b076772a79c9cadb6b
+  version: 6d8c18553ea1ac493d049edd6f102f52e618f085
 - name: gopkg.in/yaml.v2
   version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
 testImports:

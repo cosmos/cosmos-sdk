@@ -2,8 +2,8 @@ package ibc
 
 import (
 	wire "github.com/tendermint/go-wire"
-	"github.com/tendermint/tendermint/certifiers"
-	certerr "github.com/tendermint/tendermint/certifiers/errors"
+	"github.com/tendermint/tendermint/lite"
+	certerr "github.com/tendermint/tendermint/lite/errors"
 
 	"github.com/cosmos/cosmos-sdk/stack"
 	"github.com/cosmos/cosmos-sdk/state"
@@ -18,11 +18,11 @@ const (
 // newCertifier loads up the current state of this chain to make a proper certifier
 // it will load the most recent height before block h if h is positive
 // if h < 0, it will load the latest height
-func newCertifier(store state.SimpleDB, chainID string, h int) (*certifiers.Inquiring, error) {
+func newCertifier(store state.SimpleDB, chainID string, h int) (*lite.Inquiring, error) {
 	// each chain has their own prefixed subspace
 	p := newDBProvider(store)
 
-	var fc certifiers.FullCommit
+	var fc lite.FullCommit
 	var err error
 	if h > 0 {
 		// this gets the most recent verified commit below the specified height
@@ -36,8 +36,8 @@ func newCertifier(store state.SimpleDB, chainID string, h int) (*certifiers.Inqu
 	}
 
 	// we have no source for untrusted keys, but use the db to load trusted history
-	cert := certifiers.NewInquiring(chainID, fc, p,
-		certifiers.NewMissingProvider())
+	cert := lite.NewInquiring(chainID, fc, p,
+		NewMissingProvider())
 	return cert, nil
 }
 
@@ -54,9 +54,9 @@ func newDBProvider(store state.SimpleDB) *dbProvider {
 	}
 }
 
-var _ certifiers.Provider = &dbProvider{}
+var _ lite.Provider = &dbProvider{}
 
-func (d *dbProvider) StoreCommit(fc certifiers.FullCommit) error {
+func (d *dbProvider) StoreCommit(fc lite.FullCommit) error {
 	// TODO: don't duplicate data....
 	b := wire.BinaryBytes(fc)
 	d.byHash.Set(fc.ValidatorsHash(), b)
@@ -64,7 +64,7 @@ func (d *dbProvider) StoreCommit(fc certifiers.FullCommit) error {
 	return nil
 }
 
-func (d *dbProvider) LatestCommit() (fc certifiers.FullCommit, err error) {
+func (d *dbProvider) LatestCommit() (fc lite.FullCommit, err error) {
 	b, _ := d.byHeight.Top()
 	if b == nil {
 		return fc, certerr.ErrCommitNotFound()
@@ -73,7 +73,7 @@ func (d *dbProvider) LatestCommit() (fc certifiers.FullCommit, err error) {
 	return
 }
 
-func (d *dbProvider) GetByHeight(h int) (fc certifiers.FullCommit, err error) {
+func (d *dbProvider) GetByHeight(h int) (fc lite.FullCommit, err error) {
 	b, _ := d.byHeight.LTE(uint64(h))
 	if b == nil {
 		return fc, certerr.ErrCommitNotFound()
@@ -82,7 +82,7 @@ func (d *dbProvider) GetByHeight(h int) (fc certifiers.FullCommit, err error) {
 	return
 }
 
-func (d *dbProvider) GetByHash(hash []byte) (fc certifiers.FullCommit, err error) {
+func (d *dbProvider) GetByHash(hash []byte) (fc lite.FullCommit, err error) {
 	b := d.byHash.Get(hash)
 	if b == nil {
 		return fc, certerr.ErrCommitNotFound()
@@ -93,7 +93,7 @@ func (d *dbProvider) GetByHash(hash []byte) (fc certifiers.FullCommit, err error
 
 // GetExactHeight is like GetByHeight, but returns an error instead of
 // closest match if there is no exact match
-func (d *dbProvider) GetExactHeight(h int) (fc certifiers.FullCommit, err error) {
+func (d *dbProvider) GetExactHeight(h int) (fc lite.FullCommit, err error) {
 	fc, err = d.GetByHeight(h)
 	if err != nil {
 		return

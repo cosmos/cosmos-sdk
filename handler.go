@@ -99,19 +99,6 @@ func (c InitValidateFunc) InitValidate(l log.Logger, store state.SimpleDB, vals 
 
 //---------- results and some wrappers --------
 
-// Result is a common interface of CheckResult and GetResult
-type Result interface {
-	GetData() data.Bytes
-	GetLog() string
-}
-
-func ToABCI(r Result) abci.Result {
-	return abci.Result{
-		Data: r.GetData(),
-		Log:  r.GetLog(),
-	}
-}
-
 // CheckResult captures any non-error abci result
 // to make sure people use error for error cases
 type CheckResult struct {
@@ -132,14 +119,13 @@ func NewCheck(gasAllocated uint64, log string) CheckResult {
 	}
 }
 
-var _ Result = CheckResult{}
-
-func (r CheckResult) GetData() data.Bytes {
-	return r.Data
-}
-
-func (r CheckResult) GetLog() string {
-	return r.Log
+func (c CheckResult) ToABCI() abci.ResponseCheckTx {
+	return abci.ResponseCheckTx{
+		Data: c.Data,
+		Log:  c.Log,
+		Gas:  c.GasAllocated,
+		Fee:  c.GasPayment,
+	}
 }
 
 // DeliverResult captures any non-error abci result
@@ -148,17 +134,16 @@ type DeliverResult struct {
 	Data    data.Bytes
 	Log     string
 	Diff    []*abci.Validator
-	GasUsed uint64
+	Tags    []*abci.KVPair
+	GasUsed uint64 // unused
 }
 
-var _ Result = DeliverResult{}
-
-func (r DeliverResult) GetData() data.Bytes {
-	return r.Data
-}
-
-func (r DeliverResult) GetLog() string {
-	return r.Log
+func (d DeliverResult) ToABCI() abci.ResponseDeliverTx {
+	return abci.ResponseDeliverTx{
+		Data: d.Data,
+		Log:  d.Log,
+		Tags: d.Tags,
+	}
 }
 
 // placeholders

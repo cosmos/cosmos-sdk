@@ -67,11 +67,11 @@ func txQueryCmd(cmd *cobra.Command, args []string) error {
 }
 
 // showTx parses anything that was previously registered as sdk.Tx
-func showTx(h int, tx types.Tx) error {
+func showTx(h uint64, tx types.Tx) error {
 	var info sdk.Tx
 	err := wire.ReadBinaryBytes(tx, &info)
 	if err != nil {
 		return err
 	}
-	return OutputProof(info, uint64(h))
+	return OutputProof(info, h)
 }

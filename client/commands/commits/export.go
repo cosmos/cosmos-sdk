@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/tendermint/certifiers/files"
+	"github.com/tendermint/tendermint/lite/files"
 
 	"github.com/cosmos/cosmos-sdk/client/commands"
 )

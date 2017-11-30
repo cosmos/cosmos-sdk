@@ -63,11 +63,23 @@ func (t tmerror) Format(s fmt.State, verb rune) {
 	fmt.Fprintf(s, "(%d) %s\n", t.code, t.msg)
 }
 
-// Result converts any error into a abci.Result, preserving as much info
-// as possible if it was already a TMError
-func Result(err error) abci.Result {
+// DeliverResult converts any error into a abci.ResponseDeliverTx,
+// preserving as much info as possible if it was already
+// a TMError
+func DeliverResult(err error) abci.ResponseDeliverTx {
 	tm := Wrap(err)
-	return abci.Result{
+	return abci.ResponseDeliverTx{
+		Code: tm.ErrorCode(),
+		Log:  tm.Message(),
+	}
+}
+
+// CheckResult converts any error into a abci.ResponseCheckTx,
+// preserving as much info as possible if it was already
+// a TMError
+func CheckResult(err error) abci.ResponseCheckTx {
+	tm := Wrap(err)
+	return abci.ResponseCheckTx{
 		Code: tm.ErrorCode(),
 		Log:  tm.Message(),
 	}

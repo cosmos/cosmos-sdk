@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	wire "github.com/tendermint/go-wire"
-	"github.com/tendermint/tendermint/certifiers"
+	"github.com/tendermint/tendermint/lite"
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"
@@ -22,8 +22,8 @@ func TestIBCRegister(t *testing.T) {
 	assert := assert.New(t)
 
 	// the validators we use to make seeds
-	keys := certifiers.GenValKeys(5)
-	keys2 := certifiers.GenValKeys(7)
+	keys := lite.GenValKeys(5)
+	keys2 := lite.GenValKeys(7)
 	appHash := []byte{0, 4, 7, 23}
 	appHash2 := []byte{12, 34, 56, 78}
 
@@ -32,7 +32,7 @@ func TestIBCRegister(t *testing.T) {
 	badCommit.Header.AppHash = appHash2
 
 	cases := []struct {
-		fc      certifiers.FullCommit
+		fc      lite.FullCommit
 		checker errors.CheckErr
 	}{
 		{
@@ -70,7 +70,7 @@ func TestIBCRegisterPermissions(t *testing.T) {
 	require := require.New(t)
 
 	// the validators we use to make seeds
-	keys := certifiers.GenValKeys(4)
+	keys := lite.GenValKeys(4)
 	appHash := []byte{0x17, 0x21, 0x5, 0x1e}
 
 	foobar := sdk.Actor{App: "foo", Address: []byte("bar")}
@@ -78,7 +78,7 @@ func TestIBCRegisterPermissions(t *testing.T) {
 	foobaz := sdk.Actor{App: "foo", Address: []byte("baz")}
 
 	cases := []struct {
-		seed      certifiers.FullCommit
+		seed      lite.FullCommit
 		registrar sdk.Actor
 		signer    sdk.Actor
 		checker   errors.CheckErr
@@ -148,7 +148,7 @@ func TestIBCUpdate(t *testing.T) {
 	require := require.New(t)
 
 	// this is the root seed, that others are evaluated against
-	keys := certifiers.GenValKeys(7)
+	keys := lite.GenValKeys(7)
 	appHash := []byte{0, 4, 7, 23}
 	start := 100 // initial height
 	root := genEmptyCommit(keys, "chain-1", 100, appHash, len(keys))
@@ -165,7 +165,7 @@ func TestIBCUpdate(t *testing.T) {
 	require.Nil(err, "%+v", err)
 
 	cases := []struct {
-		fc      certifiers.FullCommit
+		fc      lite.FullCommit
 		checker errors.CheckErr
 	}{
 		// same validator, higher up
@@ -223,7 +223,7 @@ func TestIBCCreatePacket(t *testing.T) {
 	require := require.New(t)
 
 	// this is the root seed, that others are evaluated against
-	keys := certifiers.GenValKeys(7)
+	keys := lite.GenValKeys(7)
 	appHash := []byte{1, 2, 3, 4}
 	start := 100 // initial height
 	chainID := "cosmos-hub"

@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/tendermint/certifiers"
+	"github.com/tendermint/tendermint/lite"
 	"github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
 
@@ -24,8 +24,8 @@ import (
 )
 
 var (
-	trustedProv certifiers.Provider
-	sourceProv  certifiers.Provider
+	trustedProv lite.Provider
+	sourceProv  lite.Provider
 )
 
 const (
@@ -50,7 +50,7 @@ func GetNode() rpcclient.Client {
 }
 
 // GetSourceProvider returns a provider pointing to an rpc handler
-func GetSourceProvider() certifiers.Provider {
+func GetSourceProvider() lite.Provider {
 	if sourceProv == nil {
 		node := viper.GetString(NodeFlag)
 		sourceProv = client.GetRPCProvider(node)
@@ -59,7 +59,7 @@ func GetSourceProvider() certifiers.Provider {
 }
 
 // GetTrustedProvider returns a reference to a local store with cache
-func GetTrustedProvider() certifiers.Provider {
+func GetTrustedProvider() lite.Provider {
 	if trustedProv == nil {
 		rootDir := viper.GetString(cli.HomeFlag)
 		trustedProv = client.GetLocalProvider(rootDir)
@@ -69,12 +69,12 @@ func GetTrustedProvider() certifiers.Provider {
 
 // GetProviders creates a trusted (local) seed provider and a remote
 // provider based on configuration.
-func GetProviders() (trusted certifiers.Provider, source certifiers.Provider) {
+func GetProviders() (trusted lite.Provider, source lite.Provider) {
 	return GetTrustedProvider(), GetSourceProvider()
 }
 
 // GetCertifier constructs a dynamic certifier from the config info
-func GetCertifier() (*certifiers.Inquiring, error) {
+func GetCertifier() (*lite.Inquiring, error) {
 	// load up the latest store....
 	trust := GetTrustedProvider()
 	source := GetSourceProvider()

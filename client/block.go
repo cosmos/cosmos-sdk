@@ -5,17 +5,17 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/tendermint/tendermint/certifiers"
-	certerr "github.com/tendermint/tendermint/certifiers/errors"
+	"github.com/tendermint/tendermint/lite"
+	certerr "github.com/tendermint/tendermint/lite/errors"
 	"github.com/tendermint/tendermint/types"
 )
 
-func ValidateBlockMeta(meta *types.BlockMeta, check certifiers.Commit) error {
+func ValidateBlockMeta(meta *types.BlockMeta, check lite.Commit) error {
 	// TODO: check the BlockID??
 	return ValidateHeader(meta.Header, check)
 }
 
-func ValidateBlock(meta *types.Block, check certifiers.Commit) error {
+func ValidateBlock(meta *types.Block, check lite.Commit) error {
 	err := ValidateHeader(meta.Header, check)
 	if err != nil {
 		return err
@@ -26,7 +26,7 @@ func ValidateBlock(meta *types.Block, check certifiers.Commit) error {
 	return nil
 }
 
-func ValidateHeader(head *types.Header, check certifiers.Commit) error {
+func ValidateHeader(head *types.Header, check lite.Commit) error {
 	// make sure they are for the same height (obvious fail)
 	if head.Height != check.Height() {
 		return certerr.ErrHeightMismatch(head.Height, check.Height())

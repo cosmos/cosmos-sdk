@@ -1,6 +1,9 @@
 package coin
 
 import (
+	"strings"
+
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
 
@@ -73,7 +76,7 @@ func (h Handler) DeliverTx(ctx sdk.Context, store state.SimpleDB,
 
 	switch t := tx.Unwrap().(type) {
 	case SendTx:
-		return res, h.sendTx(ctx, store, t, cb)
+		return h.sendTx(ctx, store, t, cb)
 	case CreditTx:
 		return res, h.creditTx(ctx, store, t)
 	}
@@ -96,11 +99,11 @@ func (h Handler) InitState(l log.Logger, store state.SimpleDB,
 }
 
 func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
-	send SendTx, cb sdk.Deliver) error {
+	send SendTx, cb sdk.Deliver) (res sdk.DeliverResult, err error) {
 
-	err := checkTx(ctx, send)
+	err = checkTx(ctx, send)
 	if err != nil {
-		return err
+		return res, err
 	}
 
 	// deduct from all input accounts
@@ -108,7 +111,7 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 	for _, in := range send.Inputs {
 		_, err = ChangeCoins(store, in.Address, in.Coins.Negative())
 		if err != nil {
-			return err
+			return res, err
 		}
 		senders = append(senders, in.Address)
 	}
@@ -123,7 +126,7 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 
 		_, err = ChangeCoins(store, out.Address, out.Coins)
 		if err != nil {
-			return err
+			return res, err
 		}
 		// now send ibc packet if needed...
 		if out.Address.ChainID != "" {
@@ -144,13 +147,47 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 			ibcCtx := ctx.WithPermissions(ibc.AllowIBC(NameCoin))
 			_, err := cb.DeliverTx(ibcCtx, store, packet.Wrap())
 			if err != nil {
-				return err
+				return res, err
 			}
 		}
 	}
 
+	// now we build the tags
+	tags := make([]*abci.KVPair, 3)
+	tags[0] = tagInt("height", int64(ctx.BlockHeight()))
+
+	var names []string
+	for _, in := range send.Inputs {
+		addr := in.Address.Address.String()
+		names = append(names, addr)
+	}
+	tags[1] = tagStr("coin.sender", strings.Join(names, ","))
+
+	names = []string{}
+	for _, out := range send.Outputs {
+		addr := out.Address.Address.String()
+		names = append(names, addr)
+	}
+	tags[2] = tagStr("coin.receiver", strings.Join(names, ","))
+
 	// a-ok!
-	return nil
+	return sdk.DeliverResult{Tags: tags}, nil
+}
+
+func tagInt(key string, val int64) *abci.KVPair {
+	return &abci.KVPair{
+		Key:       key,
+		ValueInt:  val,
+		ValueType: abci.KVPair_INT,
+	}
+}
+
+func tagStr(key, val string) *abci.KVPair {
+	return &abci.KVPair{
+		Key:         key,
+		ValueString: val,
+		ValueType:   abci.KVPair_STRING,
+	}
 }
 
 func (h Handler) creditTx(ctx sdk.Context, store state.SimpleDB,

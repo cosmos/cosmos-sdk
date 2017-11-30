@@ -1,8 +1,6 @@
 package coin
 
 import (
-	"strings"
-
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
@@ -153,22 +151,19 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 	}
 
 	// now we build the tags
-	tags := make([]*abci.KVPair, 3)
-	tags[0] = tagInt("height", int64(ctx.BlockHeight()))
+	tags := make([]*abci.KVPair, 0)
 
-	var names []string
+	tags = append(tags, tagInt("height", int64(ctx.BlockHeight())))
+
 	for _, in := range send.Inputs {
 		addr := in.Address.Address.String()
-		names = append(names, addr)
+		tags = append(tags, tagStr("coin.sender", addr))
 	}
-	tags[1] = tagStr("coin.sender", strings.Join(names, ","))
 
-	names = []string{}
 	for _, out := range send.Outputs {
 		addr := out.Address.Address.String()
-		names = append(names, addr)
+		tags = append(tags, tagStr("coin.receiver", addr))
 	}
-	tags[2] = tagStr("coin.receiver", strings.Join(names, ","))
 
 	// a-ok!
 	return sdk.DeliverResult{Tags: tags}, nil

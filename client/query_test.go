@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -56,11 +55,11 @@ func TestAppProofs(t *testing.T) {
 	require.NoError(err, "%+v", err)
 	require.EqualValues(0, br.CheckTx.Code, "%#v", br.CheckTx)
 	require.EqualValues(0, br.DeliverTx.Code)
-	brh := br.Height
+	brh := int(br.Height)
 
 	// This sets up our trust on the node based on some past point.
 	source := certclient.NewProvider(cl)
-	seed, err := source.GetByHeight(br.Height - 2)
+	seed, err := source.GetByHeight(brh - 2)
 	require.NoError(err, "%+v", err)
 	cert := lite.NewStatic("my-chain", seed.Validators)
 
@@ -120,10 +119,10 @@ func TestTxProofs(t *testing.T) {
 	require.NoError(err, "%+v", err)
 	require.EqualValues(0, br.CheckTx.Code, "%#v", br.CheckTx)
 	require.EqualValues(0, br.DeliverTx.Code)
-	fmt.Printf("tx height: %d\n", br.Height)
+	brh := int(br.Height)
 
 	source := certclient.NewProvider(cl)
-	seed, err := source.GetByHeight(br.Height - 2)
+	seed, err := source.GetByHeight(brh - 2)
 	require.NoError(err, "%+v", err)
 	cert := lite.NewStatic("my-chain", seed.Validators)
 
@@ -141,7 +140,7 @@ func TestTxProofs(t *testing.T) {
 	err = res.Proof.Validate(key)
 	assert.NoError(err, "%+v", err)
 
-	commit, err := GetCertifiedCommit(int(br.Height), cl, cert)
+	commit, err := GetCertifiedCommit(br.Height, cl, cert)
 	require.Nil(err, "%+v", err)
 	require.Equal(res.Proof.RootHash, commit.Header.DataHash)
 

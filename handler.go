@@ -99,6 +99,10 @@ func (c InitValidateFunc) InitValidate(l log.Logger, store state.SimpleDB, vals 
 
 //---------- results and some wrappers --------
 
+type Result interface {
+	GetData() data.Bytes
+}
+
 // CheckResult captures any non-error abci result
 // to make sure people use error for error cases
 type CheckResult struct {
@@ -128,6 +132,10 @@ func (c CheckResult) ToABCI() abci.ResponseCheckTx {
 	}
 }
 
+func (c CheckResult) GetData() data.Bytes {
+	return c.Data
+}
+
 // DeliverResult captures any non-error abci result
 // to make sure people use error for error cases
 type DeliverResult struct {
@@ -144,6 +152,10 @@ func (d DeliverResult) ToABCI() abci.ResponseDeliverTx {
 		Log:  d.Log,
 		Tags: d.Tags,
 	}
+}
+
+func (d DeliverResult) GetData() data.Bytes {
+	return d.Data
 }
 
 // placeholders

@@ -31,9 +31,14 @@ func TestCreateResult(t *testing.T) {
 	for idx, tc := range cases {
 		i := strconv.Itoa(idx)
 
-		res := Result(tc.err)
-		assert.True(res.IsErr(), i)
-		assert.Equal(tc.msg, res.Log, i)
-		assert.Equal(tc.code, res.Code, i)
+		dres := DeliverResult(tc.err)
+		assert.True(dres.IsErr(), i)
+		assert.Equal(tc.msg, dres.Log, i)
+		assert.Equal(tc.code, dres.Code, i)
+
+		cres := CheckResult(tc.err)
+		assert.True(cres.IsErr(), i)
+		assert.Equal(tc.msg, cres.Log, i)
+		assert.Equal(tc.code, cres.Code, i)
 	}
 }

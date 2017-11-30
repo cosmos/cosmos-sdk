@@ -47,6 +47,10 @@ test01SendTx() {
 
     # Make sure tx is indexed
     checkSendTx $HASH $TX_HEIGHT $SENDER "992"
+
+    echo "search for tx (demo):"
+    curl "http://localhost:46657/tx_search?query=\"coin.sender='${SENDER}'\"&prove=true"
+    echo
 }
 
 test02SendTxWithFee() {

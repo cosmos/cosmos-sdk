@@ -79,6 +79,14 @@ initServer() {
         sed -ie "s/4665/$3/" $SERVE_DIR/config.toml
     fi
 
+    # add indexing
+    cat > $SERVE_DIR/config.toml << EOF
+
+[tx_index]
+indexer = "kv"
+index_tags = "height,coin.sender,coin.receiver"
+EOF
+
     echo "Starting ${SERVER_EXE} server..."
     startServer $SERVE_DIR $SERVER_LOG
     return $?

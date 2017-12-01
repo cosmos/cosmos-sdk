@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	"github.com/cosmos/cosmos-sdk/client/commands/query"
+	"github.com/cosmos/cosmos-sdk/client/commands/search"
 	"github.com/cosmos/cosmos-sdk/modules/auth"
 	"github.com/cosmos/cosmos-sdk/modules/base"
 	"github.com/cosmos/cosmos-sdk/modules/coin"
@@ -72,6 +73,51 @@ func doQueryAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := query.FoutputProof(w, account, height); err != nil {
+		common.WriteError(w, err)
+	}
+}
+
+// doQueryAccount is the HTTP handlerfunc to search for
+// all SendTx transactions with this account as sender
+// or receiver
+func doSearchSent(w http.ResponseWriter, r *http.Request) {
+	args := mux.Vars(r)
+	account := args["account"]
+	actor, err := commands.ParseActor(account)
+	if err != nil {
+		common.WriteError(w, err)
+		return
+	}
+
+	// TODO: handle minHeight...
+	// var h int
+	// qHeight := r.URL.Query().Get("height")
+	// if qHeight != "" {
+	// 	h, err = strconv.Atoi(qHeight)
+	// 	if err != nil {
+	// 		common.WriteError(w, err)
+	// 		return
+	// 	}
+	// }
+
+	findSender := fmt.Sprintf("coin.sender='%s'", actor)
+	findReceiver := fmt.Sprintf("coin.receiver='%s'", actor)
+	prove := !viper.GetBool(commands.FlagTrustNode)
+	all, err := search.FindAnyTx(prove, findSender, findReceiver)
+	if err != nil {
+		common.WriteError(w, err)
+		return
+	}
+
+	// format....
+	output, err := search.FormatSearch(all, coin.ExtractCoinTx)
+	if err != nil {
+		common.WriteError(w, err)
+		return
+	}
+
+	// display
+	if err := search.Foutput(w, output); err != nil {
 		common.WriteError(w, err)
 	}
 }
@@ -147,12 +193,20 @@ func RegisterQueryAccount(r *mux.Router) error {
 	return nil
 }
 
+// RegisterSearchSent is a mux.Router handler that exposes GET
+// method access on route /tx/coin/{account} to historical sendtx transactions
+func RegisterSearchSent(r *mux.Router) error {
+	r.HandleFunc("/tx/coin/{account}", doSearchSent).Methods("GET")
+	return nil
+}
+
 // RegisterAll is a convenience function to
 // register all the  handlers in this package.
 func RegisterAll(r *mux.Router) error {
 	funcs := []func(*mux.Router) error{
 		RegisterCoinSend,
 		RegisterQueryAccount,
+		RegisterSearchSent,
 	}
 
 	for _, fn := range funcs {

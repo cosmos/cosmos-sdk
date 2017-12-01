@@ -87,6 +87,13 @@ test01SendTx() {
     checkSendTx $HASH $TX_HEIGHT $SENDER "992"
 }
 
+test02FindTx() {
+    SENDER=$(restAddr $RICH)
+    QUERY=${URL}/tx/coin/$SENDER
+    echo "search"
+    curl ${QUERY} 2>/dev/null
+}
+
 
 # XXX Ex Usage: restCreateRole $PAYLOAD $EXPECTED
 # Desc: Tests that the first returned signer.addr matches the expected

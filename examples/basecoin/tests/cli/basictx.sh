@@ -48,9 +48,10 @@ test01SendTx() {
     # Make sure tx is indexed
     checkSendTx $HASH $TX_HEIGHT $SENDER "992"
 
-    CMD="${CLIENT_EXE} search sent ${SENDER}"
-    echo $CMD
-    $CMD
+    # For demoing output
+    # CMD="${CLIENT_EXE} search sent ${SENDER}"
+    # echo $CMD
+    # $CMD
 
     SENT_TX=$(${CLIENT_EXE} search sent ${SENDER})
     assertEquals "line=${LINENO}" 1 $(echo ${SENT_TX} | jq '. | length')

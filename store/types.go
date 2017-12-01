@@ -5,8 +5,12 @@ import (
 )
 
 type CommitID struct {
-	Version uint64
+	Version int64
 	Hash    []byte
+}
+
+type (cid CommitID) IsZero() bool {
+	return cid.Version == 0  && len(cid.Hash) == 0
 }
 
 type Committer interface {

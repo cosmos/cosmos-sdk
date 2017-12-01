@@ -175,7 +175,7 @@ func startTendermint(dir string, basecoinApp abci.Application) error {
 		return err
 	}
 
-	_, err = n.Start()
+	err = n.Start()
 	if err != nil {
 		return err
 	}

@@ -15,8 +15,8 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/tendermint/certifiers"
-	"github.com/tendermint/tendermint/certifiers/files"
+	"github.com/tendermint/tendermint/lite"
+	"github.com/tendermint/tendermint/lite/files"
 	"github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
 
@@ -280,7 +280,7 @@ func initTrust() (err error) {
 	trust, source := GetProviders()
 
 	// load a commit file, or get data from the provider
-	var fc certifiers.FullCommit
+	var fc lite.FullCommit
 	commitFile := viper.GetString(CommitFlag)
 	if commitFile == "" {
 		fmt.Println("Loading validator set from tendermint rpc...")
@@ -321,7 +321,7 @@ func initTrust() (err error) {
 	return nil
 }
 
-func validateHash(fc certifiers.FullCommit) error {
+func validateHash(fc lite.FullCommit) error {
 	// ask the user to verify the validator hash
 	fmt.Println("\nImportant: if this is incorrect, all interaction with the chain will be insecure!")
 	fmt.Printf("  Given validator hash valid: %X\n", fc.ValidatorsHash())

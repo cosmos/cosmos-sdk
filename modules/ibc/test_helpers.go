@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/tendermint/iavl"
-	"github.com/tendermint/tendermint/certifiers"
+	"github.com/tendermint/tendermint/lite"
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"
@@ -16,7 +16,7 @@ import (
 // It is able to produce ibc packets and all verification for
 // them, but cannot respond to any responses.
 type MockChain struct {
-	keys    certifiers.ValKeys
+	keys    lite.ValKeys
 	chainID string
 	tree    *iavl.Tree
 }
@@ -24,7 +24,7 @@ type MockChain struct {
 // NewMockChain initializes a teststore and test validators
 func NewMockChain(chainID string, numKeys int) MockChain {
 	return MockChain{
-		keys:    certifiers.GenValKeys(numKeys),
+		keys:    lite.GenValKeys(numKeys),
 		chainID: chainID,
 		tree:    iavl.NewTree(0, nil),
 	}
@@ -48,8 +48,8 @@ func (m MockChain) MakePostPacket(packet Packet, h int) (
 	return post, update
 }
 
-func genEmptyCommit(keys certifiers.ValKeys, chain string, h int,
-	appHash []byte, count int) certifiers.FullCommit {
+func genEmptyCommit(keys lite.ValKeys, chain string, h int,
+	appHash []byte, count int) lite.FullCommit {
 
 	vals := keys.ToValidators(10, 0)
 	return keys.GenFullCommit(chain, h, nil, vals, appHash, 0, count)

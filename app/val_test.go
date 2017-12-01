@@ -79,9 +79,9 @@ func TestEndBlock(t *testing.T) {
 			tx := base.ValChangeTx{c}.Wrap()
 			txBytes := wire.BinaryBytes(tx)
 			res := app.DeliverTx(txBytes)
-			require.True(res.IsOK(), "%#v", res)
+			require.True(res.Code.IsOK(), "%#v", res)
 		}
-		diff := app.EndBlock(app.height)
+		diff := app.EndBlock(abci.RequestEndBlock{app.height})
 		// TODO: don't care about order here...
 		assert.Equal(tc.expected, diff.Diffs, "%d", i)
 	}

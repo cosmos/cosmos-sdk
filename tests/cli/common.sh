@@ -79,6 +79,14 @@ initServer() {
         sed -ie "s/4665/$3/" $SERVE_DIR/config.toml
     fi
 
+    # add indexing
+    cat >> $SERVE_DIR/config.toml << EOF
+
+[tx_index]
+indexer = "kv"
+index_tags = "height,coin.sender,coin.receiver"
+EOF
+
     echo "Starting ${SERVER_EXE} server..."
     startServer $SERVE_DIR $SERVER_LOG
     return $?
@@ -173,8 +181,8 @@ checkRole() {
 txSucceeded() {
     if (assertTrue "line=${LINENO}, sent tx ($3): $2" $1); then
         TX=$2
-        assertEquals "line=${LINENO}, good check ($3): $TX" "0" $(echo $TX | jq .check_tx.code)
-        assertEquals "line=${LINENO}, good deliver ($3): $TX" "0" $(echo $TX | jq .deliver_tx.code)
+        assertEquals "line=${LINENO}, good check ($3): $TX" null $(echo $TX | jq .check_tx.code)
+        assertEquals "line=${LINENO}, good deliver ($3): $TX" null $(echo $TX | jq .deliver_tx.code)
     else
         return 1
     fi

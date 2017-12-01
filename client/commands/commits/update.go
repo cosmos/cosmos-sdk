@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/tendermint/certifiers"
+	"github.com/tendermint/tendermint/lite"
 
 	"github.com/cosmos/cosmos-sdk/client/commands"
 )
@@ -30,7 +30,7 @@ func updateCommit(cmd *cobra.Command, args []string) error {
 	}
 
 	h := viper.GetInt(heightFlag)
-	var fc certifiers.FullCommit
+	var fc lite.FullCommit
 	if h <= 0 {
 		// get the lastest from our source
 		fc, err = cert.Source.LatestCommit()

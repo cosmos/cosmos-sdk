@@ -48,9 +48,7 @@ func serve(cmd *cobra.Command, args []string) error {
 		rest.NewDefaultKeysManager(defaultAlgo).RegisterAllCRUD,
 
 		// Coin send handler
-		coinrest.RegisterCoinSend,
-		// Coin query account handler
-		coinrest.RegisterQueryAccount,
+		coinrest.RegisterAll,
 
 		// Roles createRole handler
 		rolerest.RegisterCreateRole,

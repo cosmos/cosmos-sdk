@@ -26,7 +26,7 @@ func init() {
 
 // Tx - Nonce transaction structure, contains list of signers and current sequence number
 type Tx struct {
-	Sequence uint32           `json:"sequence"`
+	Sequence uint32      `json:"sequence"`
 	Signers  []sdk.Actor `json:"signers"`
 	Tx       sdk.Tx      `json:"tx"`
 }
@@ -56,6 +56,9 @@ func (n Tx) ValidateBasic() error {
 		return ErrNoSigners()
 	}
 	return n.Tx.ValidateBasic()
+}
+func (n Tx) Next() sdk.Tx {
+	return n.Tx
 }
 
 // CheckIncrementSeq - Check that the sequence number is one more than the state sequence number

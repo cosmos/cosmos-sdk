@@ -48,15 +48,23 @@ test01SendTx() {
     # Make sure tx is indexed
     checkSendTx $HASH $TX_HEIGHT $SENDER "992"
 
-    # echo "search for tx (demo):"
-    # curl "http://localhost:46657/tx_search?query=\"coin.sender='${SENDER}'\"&prove=true"
-    # echo
+    CMD="${CLIENT_EXE} search sent ${SENDER}"
+    echo $CMD
+    $CMD
 
-    echo "cli search"
-    ${CLIENT_EXE} search sent ${SENDER}
-    ${CLIENT_EXE} search sent ${RECV}
-    ${CLIENT_EXE} search sent 1234567890123456789012345678901234567890
-    echo
+    SENT_TX=$(${CLIENT_EXE} search sent ${SENDER})
+    assertEquals "line=${LINENO}" 1 $(echo ${SENT_TX} | jq '. | length')
+    assertEquals "line=${LINENO}" $TX_HEIGHT $(echo ${SENT_TX} | jq '.[0].height')
+
+    IN=$(echo ${SENT_TX} | jq '.[0].tx.inputs')
+    assertEquals "line=${LINENO}" 1 $(echo ${IN} | jq '. | length')
+    assertEquals "line=${LINENO}" 992 $(echo ${IN} | jq '.[0].coins[0].amount')
+    assertEquals "line=${LINENO}" "\"$SENDER\"" $(echo ${IN} | jq '.[0].sender')
+
+    OUT=$(echo ${SENT_TX} | jq '.[0].tx.outputs')
+    assertEquals "line=${LINENO}" 1 $(echo ${OUT} | jq '. | length')
+    assertEquals "line=${LINENO}" 992 $(echo ${OUT} | jq '.[0].coins[0].amount')
+    assertEquals "line=${LINENO}" "\"$RECV\"" $(echo ${OUT} | jq '.[0].receiver')
 }
 
 test02SendTxWithFee() {

@@ -151,7 +151,7 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 	}
 
 	// now we build the tags
-	tags := make([]*abci.KVPair, 0)
+	tags := make([]*abci.KVPair, 0, 1+len(send.Inputs)+len(send.Outputs))
 
 	tags = append(tags, abci.KVPairInt("height", int64(ctx.BlockHeight())))
 

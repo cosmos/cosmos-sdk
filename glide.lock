@@ -1,5 +1,5 @@
-hash: b458f1ec5c9386c5c7439fa5ee7a3fe1a812813aef7681ccc18c511fa25073a2
-updated: 2017-11-30T17:49:32.657374318Z
+hash: 791d28ec82d1ea662cc3f192aa7bf1f6dffdc1f2e43e57ce731857d6ea147ee4
+updated: 2017-12-01T10:08:25.699042855+01:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -11,10 +11,10 @@ imports:
   version: a368813c5e648fee92e5f6c30e3944ff9d5e8895
 - name: github.com/ebuchman/fail-test
   version: 95f809107225be108efcf10a3509e4ea6ceef3c4
+- name: github.com/ethanfrey/hid
+  version: dce75af84cf849c60f39bf1b8192fb5cd597b5d9
 - name: github.com/ethanfrey/ledger
-  version: 5e432577be582bd18a3b4a9cd75dae7a317ade36
-- name: github.com/flynn/hid
-  version: ed06a31c6245d4552e8dbba7e32e5b010b875d65
+  version: f7f2f056357db77db845a79aa1abdadc3ae66369
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/go-kit/kit
@@ -119,7 +119,7 @@ imports:
   - server
   - types
 - name: github.com/tendermint/ed25519
-  version: 1f52c6f8b8a5c7908aff4497c186af344b428925
+  version: d8387025d2b9d158cf4efb07e7ebf814bcce2057
   subpackages:
   - edwards25519
   - extra25519
@@ -133,7 +133,7 @@ imports:
   - keys/wordlist
   - nano
 - name: github.com/tendermint/go-wire
-  version: 7d50b38b3815efe313728de77e2995c8813ce13f
+  version: 217a3c439f6497890d232ff5ed24084b43d9bfb3
   subpackages:
   - data
   - data/base58
@@ -141,7 +141,7 @@ imports:
 - name: github.com/tendermint/iavl
   version: 595f3dcd5b6cd4a292e90757ae6d367fd7a6e653
 - name: github.com/tendermint/tendermint
-  version: 03222d834b8dccde63ed10840a294164caa17f04
+  version: b2489b4318c843a64e2809517f93d906c5f9dc15
   subpackages:
   - blockchain
   - certifiers

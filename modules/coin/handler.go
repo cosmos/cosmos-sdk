@@ -156,12 +156,12 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 	tags = append(tags, abci.KVPairInt("height", int64(ctx.BlockHeight())))
 
 	for _, in := range send.Inputs {
-		addr := in.Address.Address.String()
+		addr := in.Address.String()
 		tags = append(tags, abci.KVPairString("coin.sender", addr))
 	}
 
 	for _, out := range send.Outputs {
-		addr := out.Address.Address.String()
+		addr := out.Address.String()
 		tags = append(tags, abci.KVPairString("coin.receiver", addr))
 	}
 

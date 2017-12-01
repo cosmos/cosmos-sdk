@@ -5,7 +5,7 @@ import "fmt"
 const (
 	// ABCI Response Codes
 	CodeInternalError     = 1
-	CodeEncodingError     = 2
+	CodeTxParseError      = 2
 	CodeBadNonce          = 3
 	CodeUnauthorized      = 4
 	CodeInsufficientFunds = 5
@@ -17,8 +17,8 @@ func codeToDefaultLog(code uint32) string {
 	switch code {
 	case CodeInternalError:
 		return "Internal error"
-	case CodeEncodingError:
-		return "Encoding error"
+	case CodeTxParseError:
+		return "Tx parse error"
 	case CodeBadNonce:
 		return "Bad nonce"
 	case CodeUnauthorized:
@@ -40,8 +40,8 @@ func InternalError(log string) sdkError {
 	return newSDKError(CodeInternalError, log)
 }
 
-func EncodingError(log string) sdkError {
-	return newSDKError(CodeEncodingError, log)
+func TxParseError(log string) sdkError {
+	return newSDKError(CodeTxParseError, log)
 }
 
 func BadNonce(log string) sdkError {

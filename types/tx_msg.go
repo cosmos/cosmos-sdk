@@ -34,3 +34,5 @@ type Tx interface {
 	// .Empty().
 	Signatures() []Signature
 }
+
+type TxParser func(txBytes []byte) (Tx, error)

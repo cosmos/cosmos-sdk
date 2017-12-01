@@ -1,7 +1,7 @@
 package: github.com/cosmos/cosmos-sdk
 import:
 - package: github.com/ethanfrey/hid
-  version: dce75af84cf849c60f39bf1b8192fb5cd597b5d9
+  version: f76da0b80567e8b6f676e1757b549a93494fe4b5
 - package: github.com/ethanfrey/ledger
   version: f7f2f056357db77db845a79aa1abdadc3ae66369
 - package: github.com/gorilla/websocket

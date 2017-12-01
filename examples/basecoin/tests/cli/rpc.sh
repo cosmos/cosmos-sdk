@@ -70,6 +70,11 @@ test01GetInsecure() {
 }
 
 test02GetSecure() {
+    # checking old headers only works if there is enough info
+    # before it. Wait until we are at least at height 3, so this
+    # works properly (querying previous commits)
+    ${CLIENT_EXE} rpc wait --height=3 > /dev/null
+
     HEIGHT=$(${CLIENT_EXE} rpc status | jq .latest_block_height)
     assertTrue "line=${LINENO}, get status" "$?"
 

@@ -89,9 +89,27 @@ test01SendTx() {
 
 test02FindTx() {
     SENDER=$(restAddr $RICH)
+    RECV=$(restAddr $POOR)
+
     QUERY=${URL}/tx/coin/$SENDER
-    echo "search"
-    curl ${QUERY} 2>/dev/null
+
+    # For demoing rest
+    # echo "search"
+    # curl ${QUERY} 2>/dev/null
+
+    SENT_TX=$(curl ${QUERY} 2>/dev/null)
+    assertEquals "line=${LINENO}" 1 $(echo ${SENT_TX} | jq '. | length')
+    assertEquals "line=${LINENO}" $TX_HEIGHT $(echo ${SENT_TX} | jq '.[0].height')
+
+    IN=$(echo ${SENT_TX} | jq '.[0].tx.inputs')
+    assertEquals "line=${LINENO}" 1 $(echo ${IN} | jq '. | length')
+    assertEquals "line=${LINENO}" 992 $(echo ${IN} | jq '.[0].coins[0].amount')
+    assertEquals "line=${LINENO}" "\"$SENDER\"" $(echo ${IN} | jq '.[0].sender')
+
+    OUT=$(echo ${SENT_TX} | jq '.[0].tx.outputs')
+    assertEquals "line=${LINENO}" 1 $(echo ${OUT} | jq '. | length')
+    assertEquals "line=${LINENO}" 992 $(echo ${OUT} | jq '.[0].coins[0].amount')
+    assertEquals "line=${LINENO}" "\"$RECV\"" $(echo ${OUT} | jq '.[0].receiver')
 }
 
 

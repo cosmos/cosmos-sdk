@@ -80,7 +80,7 @@ initServer() {
     fi
 
     # add indexing
-    cat > $SERVE_DIR/config.toml << EOF
+    cat >> $SERVE_DIR/config.toml << EOF
 
 [tx_index]
 indexer = "kv"

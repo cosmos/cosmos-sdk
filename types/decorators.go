@@ -1,4 +1,4 @@
-package sdk
+package types
 
 // A Decorator executes before/during/after a handler to enhance functionality.
 type Decorator interface {

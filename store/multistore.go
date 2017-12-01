@@ -2,7 +2,6 @@ package store
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"

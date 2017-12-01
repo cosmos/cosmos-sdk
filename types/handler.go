@@ -1,4 +1,4 @@
-package sdk
+package types
 
 import (
 	abci "github.com/tendermint/abci/types"

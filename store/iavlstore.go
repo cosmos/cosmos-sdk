@@ -9,7 +9,12 @@ type IAVLStore struct {
 	//
 }
 
-// XXX GUT THIS AND TURN IT INTO AN IAVLSTORE LOADER
+// XXX
+func NewIAVLStore() {
+}
+
+/*
+// XXX GUT THIS AND TURN IT INTO AN IAVLSTORE LOADER, LoadIAVLStore()
 func loadState(dbName string, cacheSize int) (*sm.State, error) {
 	// memory backed case, just for testing
 	if dbName == "" {
@@ -39,3 +44,4 @@ func loadState(dbName string, cacheSize int) (*sm.State, error) {
 
 	return sm.NewState(tree), nil
 }
+*/

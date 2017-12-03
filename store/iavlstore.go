@@ -99,7 +99,7 @@ type IAVLStore struct {
 }
 
 // CacheWrap returns a wrapper around the current writable state
-func (i IAVLStore) CacheWrap() interface{} {
+func (i IAVLStore) CacheWrap() CacheWriter {
 	// TODO: add CacheWrap to IAVLTree using new db stuff
 	return i
 }

@@ -132,7 +132,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 }
 
 // Commits each substore and gets commitState.
-func (rs *RootMultiStore) doCommit() commitState {
+func (rs *rootMultiStore) doCommit() commitState {
 	version := rs.curVersion
 	lastHash := rs.LastHash
 	substores := make([]substore, len(rs.substores))

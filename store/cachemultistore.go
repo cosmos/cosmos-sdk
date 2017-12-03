@@ -20,10 +20,10 @@ type cacheMultiStore struct {
 
 func newCacheMultiStore(rs *rootMultiStore) cacheMultiStore {
 	cms := cacheMultiStore{
-		db:           db.CacheWrap(),
-		version:      rs.version,
+		db:           dbm.CacheWrap(),
+		version:      rs.curVersion,
 		lastCommitID: rs.lastCommitID,
-		substores:    make(map[string]cwwWriter), len(rs.substores),
+		substores:    make(map[string]cwWriter, len(rs.substores)),
 	}
 	for name, substore := range rs.substores {
 		cms.substores[name] = substore.CacheWrap().(cwWriter)
@@ -44,8 +44,8 @@ func (cms cacheMultiStore) CurrentVersion() int64 {
 // Implements CacheMultiStore
 func (cms cacheMultiStore) Write() {
 	cms.db.Write()
-	for substore := range rs.substores {
-		substore.(cwWriter).Write()
+	for substore := range cms.substores {
+		substore.Write()
 	}
 }
 

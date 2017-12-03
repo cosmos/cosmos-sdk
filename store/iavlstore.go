@@ -13,14 +13,17 @@ import (
 
 // NewIAVLLoader returns a CommitterLoader that returns
 // an IAVLCommitter
-func NewIAVLLoader(dbName string, cacheSize int, history uint64) CommitterLoader {
+func NewIAVLLoader(dbName string, cacheSize int, nHistoricalVersions uint64) CommitterLoader {
 	l := iavlLoader{
-		dbName:    dbName,
-		cacheSize: cacheSize,
-		history:   history,
+		dbName:              dbName,
+		cacheSize:           cacheSize,
+		nHistoricalVersions: nHistoricalVersions,
 	}
 	return CommitterLoader(l.Load)
 }
+
+var _ CacheWrappable = (*IAVLCommitter)(nil)
+var _ Committer = (*IAVLCommitter)(nil)
 
 // IAVLCommitter Implements IterKVStore and Committer
 type IAVLCommitter struct {
@@ -28,9 +31,9 @@ type IAVLCommitter struct {
 	// for saving the versioned tree
 	lastHeight uint64
 
-	// history is how many old versions we hold onto,
+	// nHistoricalVersions is how many old versions we hold onto,
 	// uses a naive "hold last X versions" algorithm
-	history uint64
+	nHistoricalVersions uint64
 
 	// this is all historical data and connection to
 	// the db
@@ -44,11 +47,11 @@ type IAVLCommitter struct {
 // NewIAVLCommitter properly initializes a committer
 // that is ready to use as a IterKVStore
 func NewIAVLCommitter(tree *iavl.VersionedTree,
-	lastHeight uint64, history uint64) *IAVLCommitter {
+	lastHeight uint64, nHistoricalVersions uint64) *IAVLCommitter {
 	i := &IAVLCommitter{
-		tree:       tree,
-		lastHeight: lastHeight,
-		history:    history,
+		tree:                tree,
+		lastHeight:          lastHeight,
+		nHistoricalVersions: nHistoricalVersions,
 	}
 	i.updateStore()
 	return i
@@ -73,8 +76,8 @@ func (i *IAVLCommitter) Commit() CommitID {
 	i.updateStore()
 
 	// release an old version of history
-	if i.history <= i.lastHeight {
-		release := i.lastHeight - i.history
+	if i.nHistoricalVersions <= i.lastHeight {
+		release := i.lastHeight - i.nHistoricalVersions
 		i.tree.DeleteVersion(release)
 	}
 
@@ -88,9 +91,6 @@ func (i *IAVLCommitter) Commit() CommitID {
 func (i *IAVLCommitter) updateStore() {
 	i.IAVLStore = IAVLStore{i.tree.Tree()}
 }
-
-var _ CacheWrappable = (*IAVLCommitter)(nil)
-var _ Committer = (*IAVLCommitter)(nil)
 
 // IAVLStore is the writable state (not history) and
 // implements the IterKVStore interface.
@@ -212,9 +212,9 @@ func (i *iavlIterator) Release() {
 
 // iavlLoader contains info on what store we want to load from
 type iavlLoader struct {
-	dbName    string
-	cacheSize int
-	history   uint64
+	dbName             string
+	cacheSize          int
+	nHistoricalVersion uint64
 }
 
 // Load implements CommitLoader type
@@ -222,7 +222,7 @@ func (l iavlLoader) Load(id CommitID) (Committer, error) {
 	// memory backed case, just for testing
 	if l.dbName == "" {
 		tree := iavl.NewVersionedTree(0, dbm.NewMemDB())
-		store := NewIAVLCommitter(tree, 0, l.history)
+		store := NewIAVLCommitter(tree, 0, l.nHistoricalVersions)
 		return store, nil
 	}
 
@@ -248,6 +248,6 @@ func (l iavlLoader) Load(id CommitID) (Committer, error) {
 
 	// TODO: load the version stored in id
 	store := NewIAVLCommitter(tree, tree.LatestVersion(),
-		l.history)
+		l.nHistoricalVersions)
 	return store, nil
 }

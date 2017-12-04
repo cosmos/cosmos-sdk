@@ -2,44 +2,37 @@ package types
 
 import (
 	"context"
-	tm "github.com/tendermint/tendermint/types"
+	abci "github.com/tendermint/abci/types"
 )
 
-/*
-
-NOTE: Golang's Context is embedded and relied on
-for compatibility w/ tools like monkit.
-(https://github.com/spacemonkeygo/monkit)
-
-Usage:
-
-defer mon.Task()(&ctx.Context)(&err)
-
-*/
-type SDKContext struct {
+type Context struct {
 	context.Context
-	// NOTE: adding fields here will break monkit compatibility
-	// use context.Context instead if possible.
+	// Don't add any other fields here,
+	// it's probably not what you want to do.
 }
 
-func NewSDKContext(header tm.Header) SDKContext {
-	c := SDKContext{
+func NewContext(header tm.Header, isCheckTx bool, txBytes []byte) Context {
+	c := Context{
 		Context: context.Background(),
 	}
 	c = c.setBlockHeader(header)
 	c = c.setBlockHeight(int64(header.Height))
 	c = c.setChainID(header.ChainID)
+	c = c.setIsCheckTx(isCheckTx)
+	c = c.setTxBytes(txBytes)
 	return c
 }
 
-func (c SDKContext) WithValueSDK(key interface{}, value interface{}) SDKContext {
-	return SDKContext{
+// The original context.Context API.
+func (c Context) WithValue(key interface{}, value interface{}) context.Context {
+	return context.WithValue(c.Context, key, value)
+}
+
+// Like WithValue() but retains this API.
+func (c Context) WithValueSDK(key interface{}, value interface{}) Context {
+	return Context{
 		Context: context.WithValue(c.Context, key, value),
 	}
-}
-
-func (c SDKContext) WithValue(key interface{}, value interface{}) Context {
-	return c
 }
 
 //----------------------------------------
@@ -51,31 +44,51 @@ const (
 	contextKeyBlockHeader contextKey = iota
 	contextKeyBlockHeight
 	contextKeyChainID
+	contextKeyIsCheckTx
+	contextKeyTxBytes
 )
 
-func (c SDKContext) BlockHeader() tm.Header {
+func (c Context) BlockHeader() tm.Header {
 	return c.Value(contextKeyBlockHeader).(tm.Header)
 }
 
-func (c SDKContext) BlockHeight() int64 {
+func (c Context) BlockHeight() int64 {
 	return c.Value(contextKeyBlockHeight).(int64)
 }
 
-func (c SDKContext) ChainID() string {
+func (c Context) ChainID() string {
 	return c.Value(contextKeyChainID).(string)
 }
 
+func (c Context) IsCheckTx() bool {
+	return c.Value(contextKeyIsCheckTx).(bool)
+}
+
+func (c Context) TxBytes() []byte {
+	return c.Value(contextKeyTxBytes).([]byte)
+}
+
 // Unexposed to prevent overriding.
-func (c SDKContext) setBlockHeader(header tm.Header) SDKContext {
+func (c Context) setBlockHeader(header tm.Header) Context {
 	return c.WithValueSDK(contextKeyBlockHeader, header)
 }
 
 // Unexposed to prevent overriding.
-func (c SDKContext) setBlockHeight(height int64) SDKContext {
+func (c Context) setBlockHeight(height int64) Context {
 	return c.WithValueSDK(contextKeyBlockHeight, header)
 }
 
 // Unexposed to prevent overriding.
-func (c SDKContext) setChainID(chainID string) SDKContext {
+func (c Context) setChainID(chainID string) Context {
 	return c.WithValueSDK(contextKeyChainID, header)
+}
+
+// Unexposed to prevent overriding.
+func (c Context) setIsCheckTx(isCheckTx bool) Context {
+	return c.WithValueSDK(contextKeyIsCheckTx, isCheckTx)
+}
+
+// Unexposed to prevent overriding.
+func (c Context) setTxBytes(txBytes []byte) Context {
+	return c.WithValueSDK(contextKeyTxBytes, txBytes)
 }

@@ -11,7 +11,7 @@ type cacheMultiStore struct {
 	db           dbm.CacheDB
 	curVersion   int64
 	lastCommitID CommitID
-	substores    map[string]CacheWriter
+	substores    map[string]CacheWrap
 }
 
 func newCacheMultiStoreFromRMS(rms *rootMultiStore) cacheMultiStore {
@@ -19,25 +19,25 @@ func newCacheMultiStoreFromRMS(rms *rootMultiStore) cacheMultiStore {
 		db:           rms.db.CacheDB(),
 		curVersion:   rms.curVersion,
 		lastCommitID: rms.lastCommitID,
-		substores:    make(map[string]CacheWriter, len(rms.substores)),
+		substores:    make(map[string]CacheWrap, len(rms.substores)),
 	}
 	for name, substore := range rms.substores {
-		cms.substores[name] = substore.CacheWrap().(CacheWriter)
+		cms.substores[name] = substore.CacheWrap()
 	}
 	return cms
 }
 
 func newCacheMultiStoreFromCMS(cms cacheMultiStore) cacheMultiStore {
-	cms := cacheMultiStore{
+	cms2 := cacheMultiStore{
 		db:           cms.db.CacheDB(),
 		curVersion:   cms.curVersion,
 		lastCommitID: cms.lastCommitID,
-		substores:    make(map[string]CacheWriter, len(cms.substores)),
+		substores:    make(map[string]CacheWrap, len(cms.substores)),
 	}
-	for name, substore := range rs.substores {
-		cms.substores[name] = substore.CacheWrap().(CacheWriter)
+	for name, substore := range cms.substores {
+		cms2.substores[name] = substore.CacheWrap()
 	}
-	return cms
+	return cms2
 }
 
 // Implements CacheMultiStore
@@ -59,21 +59,26 @@ func (cms cacheMultiStore) Write() {
 }
 
 // Implements CacheMultiStore
+func (cms cacheMultiStore) CacheWrap() CacheWrap {
+	return cms.CacheMultiStore()
+}
+
+// Implements CacheMultiStore
 func (cms cacheMultiStore) CacheMultiStore() CacheMultiStore {
 	return newCacheMultiStoreFromCMS(cms)
 }
 
 // Implements CacheMultiStore
-func (cms cacheMultiStore) GetCommitter(name string) Committer {
-	return cms.store[name]
+func (cms cacheMultiStore) GetStore(name string) interface{} {
+	return cms.substores[name]
 }
 
 // Implements CacheMultiStore
 func (cms cacheMultiStore) GetKVStore(name string) KVStore {
-	return cms.store[name].(KVStore)
+	return cms.substores[name].(KVStore)
 }
 
 // Implements CacheMultiStore
 func (cms cacheMultiStore) GetIterKVStore(name string) IterKVStore {
-	return cms.store[name].(IterKVStore)
+	return cms.substores[name].(IterKVStore)
 }

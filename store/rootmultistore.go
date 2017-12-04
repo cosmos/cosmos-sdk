@@ -163,7 +163,7 @@ func (rs *rootMultiStore) Commit() CommitID {
 }
 
 // Implements CommitStore
-func (rs *rootMultiStore) CacheWrap() CacheWriter {
+func (rs *rootMultiStore) CacheWrap() CacheWrap {
 	return rs.CacheMultiStore()
 }
 

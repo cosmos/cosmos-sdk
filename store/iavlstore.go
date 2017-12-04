@@ -1,3 +1,5 @@
+// XXX Need to s/Committer/CommitStore/g
+
 package store
 
 import (

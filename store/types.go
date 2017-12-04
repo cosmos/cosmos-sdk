@@ -32,12 +32,15 @@ type CacheWrapper interface {
 
 		NOTE: https://dave.cheney.net/2017/07/22/should-go-2-0-support-generics.
 	*/
-	CacheWrap() CacheWriter
+	CacheWrap() CacheWrap
 }
 
-// CacheWriter.Write syncs with the underlying store.
-type CacheWriter interface {
+type CacheWrap interface {
+	// Write syncs with the underlying store.
 	Write()
+
+	// CacheWrap recursively wraps again.
+	CacheWrap() CacheWrap
 }
 
 type CommitStore interface {
@@ -60,7 +63,7 @@ type KVStore interface {
 	CacheKVStore() CacheKVStore
 
 	// CacheWrap() returns a CacheKVStore.
-	CacheWrap() CacheWriter
+	CacheWrap() CacheWrap
 }
 
 type CacheKVStore interface {
@@ -85,7 +88,7 @@ type IterKVStore interface {
 	CacheIterKVStore() CacheIterKVStore
 
 	// CacheWrap() returns a CacheIterKVStore.
-	CacheWrap() CacheWriter
+	CacheWrap() CacheWrap
 }
 
 type CacheIterKVStore interface {
@@ -156,7 +159,7 @@ type MultiStore interface {
 	CacheMultiStore() CacheMultiStore
 
 	// CacheWrap returns a CacheMultiStore.
-	CacheWrap() CacheWriter
+	CacheWrap() CacheWrap
 
 	// Convenience
 	GetStore(name string) interface{}

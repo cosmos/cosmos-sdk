@@ -31,8 +31,8 @@ type Result struct {
 	FeeAmount int64
 	FeeDenom  string
 
-	// Diff results in changes to the validator set.
-	Diff []*abci.Validator
+	// Changes to the validator set.
+	ValSetDiff []abci.Validator
 
 	// Tags are used for transaction indexing and pubsub.
 	Tags []KVPair

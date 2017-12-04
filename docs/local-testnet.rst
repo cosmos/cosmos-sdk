@@ -1,13 +1,15 @@
 Local Testnet Example
 =====================
 
-This tutorial demonstrates the basics of setting up a gaia
-testnet locally
+This tutorial demonstrates the basics of: setting up a gaia
+testnet locally, sending transactions, declaring candidacy,
+bonding, and unbonding. Various other commands of the ``gaia``
+tooling are also introduced.
 
 Generate Keys
 -------------
 
-First, generate a new key with a name:
+First, let's generate a key named ``alice``.:
 
 ::
 
@@ -19,7 +21,7 @@ This will output:
 
     Enter a passphrase:
     Repeat the passphrase:
-    alice	    E9E103F788AADD9C0842231E496B2139C118FA60
+    alice	    5D93A6059B6592833CBC8FA3DA90EE0382198985
     **Important** write this seed phrase in a safe place.
     It is the only way to recover your account if you ever forget your password.
 
@@ -30,11 +32,12 @@ We recommend doing something like ``MYADDR=<your address>``. Writing
 down the recovery phrase is crucial for production keys, however,
 for this tutorial you can skip this step.
 
-Because ``alice`` will be delclaring candidacy to be a validator, we need another key, ``bob`` who will delegate his tokens to ``alice``.
+Because ``alice`` will be the initial validator, we need another key, ``bob`` who will first receives tokens from ``alice``, then declare candidacy as a validator. We also need an account for ``charlie`` who will bond and unbond to ``bob``.
 
 ::
 
     gaia client keys new bob
+    gaia client keys new charlie
 
 Now we can see the keys we've created:
 
@@ -42,15 +45,17 @@ Now we can see the keys we've created:
 
     gaia client keys list
 
-which show's something like:
+which shows something like:
 
 ::
 
     All keys:
-    alice               E9E103F788AADD9C0842231E496B2139C118FA60
-    bob                 7E00832E8CC9D15E3AE6EEBAE09C3CB83AA04361
+    alice           5D93A6059B6592833CBC8FA3DA90EE0382198985
+    bob             5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
+    charlie         48F74F48281C89E5E4BE9092F735EA519768E8EF
 
-Try add the ``--output json`` flag to the above command to get more information.
+Try adding the ``--output json`` flag to the above command to get more information.
+The information for these keys is stored in ``~/.cosmos-gaia-cli``.
 We've got our keys made, so let's move on to the next step.
 
 Initialize the chain
@@ -60,7 +65,7 @@ Now initialize a gaia chain, using ``alice``'s address:
 
 ::
 
-    gaia node init E9E103F788AADD9C0842231E496B2139C118FA60 --home=$HOME/.gaia1 --chain-id=gaia-test
+    gaia node init 5D93A6059B6592833CBC8FA3DA90EE0382198985 --home=$HOME/.gaia1 --chain-id=gaia-test
 
 This will create all the files necessary to run a single node chain in
 ``$HOME/.gaia1``: a ``priv_validator.json`` file with the validators
@@ -68,11 +73,11 @@ private key, and a ``genesis.json`` file with the list of validators and
 accounts.
 
 We'll add a second node on our local machine by initiating a node in a
-new directory, and copying in the genesis:
+new directory, with the same address, and copying in the genesis:
 
 ::
 
-    gaia node init E9E103F788AADD9C0842231E496B2139C118FA60 --home=$HOME/.gaia2 --chain-id=gaia-test
+    gaia node init 5D93A6059B6592833CBC8FA3DA90EE0382198985 --home=$HOME/.gaia2 --chain-id=gaia-test
     cp $HOME/.gaia1/genesis.json $HOME/.gaia2/genesis.json
 
 We also need to modify ``$HOME/.gaia2/config.toml`` to set new seeds
@@ -95,7 +100,7 @@ and ports. It should look like:
 
 Great, now that we've initialized the chains, we can start both nodes:
 
-NOTE: each command below must be started in seperate terminal windows. Alternatively, to run this testnet across multiple machines, you'd replace the ``seeds = "0.0.0.0"`` in ``~/.gaia2.config.toml``, and could skip the modifications we made to the config file above because port conflicts would be avoided.
+NOTE: each command below must be started in seperate terminal windows. Alternatively, to run this testnet across multiple machines, you'd replace the ``seeds = "0.0.0.0"`` in ``~/.gaia2.config.toml`` with the IP of the first node, and could skip the modifications we made to the config file above because port conflicts would be avoided.
 
 ::
 
@@ -108,7 +113,7 @@ account:
 ::
 
     gaia client init --chain-id=gaia-test --node=tcp://localhost:46657
-    gaia client query account E9E103F788AADD9C0842231E496B2139C118FA60
+    gaia client query account 5D93A6059B6592833CBC8FA3DA90EE0382198985 
 
 To see what tendermint considers the validator set is, use:
 
@@ -117,6 +122,51 @@ To see what tendermint considers the validator set is, use:
     curl localhost:46657/validators
 
 and compare the information in this file: ``~/.gaia1/priv_validator.json``. The ``address`` and ``pub_key`` fields should match.
+
+Send Tokens
+-----------
+
+We'll have ``alice`` who is currently quite rich, send some ``fermions`` to ``bob``:
+
+::
+
+    gaia client tx send --amount=992fermion --sequence=1 --name=alice --to=5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
+
+where the ``--sequence`` flag is to be incremented for each transaction, the ``--name`` flag names the sender, and the ``--to`` flag takes ``bob``'s address. You'll see something like:
+
+::
+
+    Please enter passphrase for alice: 
+    {
+      "check_tx": {
+        "gas": 30
+      },
+      "deliver_tx": {
+        "tags": [
+          {
+            "key": "height",
+            "value_type": 1,
+            "value_int": 2963
+          },
+          {
+            "key": "coin.sender",
+            "value_string": "5D93A6059B6592833CBC8FA3DA90EE0382198985"
+          },
+          {
+            "key": "coin.receiver",
+            "value_string": "5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6"
+          }
+        ]
+      },
+      "hash": "423BD7EA3C4B36AF8AFCCA381C0771F8A698BA77",
+      "height": 2963
+    }
+
+Check out ``bob``'s account, which should now have 992 fermions:
+
+::
+
+    gaia client query account 5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
 
 Add Second Validator
 --------------------
@@ -137,17 +187,32 @@ the first part will look like:
 
 and you want the ``pub_key`` ``data`` that starts with ``96864CE``.
 
-Now we can declare candidacy to that pubkey:
+Now ``bob`` can declare candidacy to that pubkey:
 
 ::
 
-    gaia client tx declare-candidacy --amount=10fermion --name=alice --pubkey=<pub_key data>
+    gaia client tx declare-candidacy --amount=10fermion --name=bob --pubkey=<pub_key data> --moniker=bobby
 
-We should see our account balance decrement:
+with an output like:
 
 ::
 
-    gaia client query account E9E103F788AADD9C0842231E496B2139C118FA60
+    Please enter passphrase for bob: 
+    {
+      "check_tx": {
+        "gas": 30
+      },
+      "deliver_tx": {},
+      "hash": "2A2A61FFBA1D7A59138E0068C82CC830E5103799",
+      "height": 4075
+    }
+
+
+We should see ``bob``'s account balance decrease by 10 fermions:
+
+::
+
+    gaia client query account 5D93A6059B6592833CBC8FA3DA90EE0382198985 
 
 To confirm for certain the new validator is active, ask the tendermint node:
 
@@ -159,11 +224,16 @@ If you now kill either node, blocks will stop streaming in, because
 there aren't enough validators online. Turn it back on and they will
 start streaming again.
 
-Now that ``alice`` has declared her candidacy, which essentially bonded 10 fermions and made her a validator, we're going to get ``bob`` to delegate some coins to ``alice``.
+Now that ``bob`` has declared candidacy, which essentially bonded 10 fermions and made him a validator, we're going to get ``charlie`` to delegate some coins to ``bob``.
 
 Delegate
 --------
 
+First let's have ``alice`` send some coins to ``charlie``:
+
+::
+
+   gaia client tx send --amount=999fermion --sequence=2 --name=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
 
 
 Unbond
@@ -175,7 +245,7 @@ your VotingPower reduce and your account balance increase.
 ::
 
     gaia client tx unbond --amount=10fermion --name=alice
-    gaia client query account E9E103F788AADD9C0842231E496B2139C118FA60
+    gaia client query account 5D93A6059B6592833CBC8FA3DA90EE0382198985 
 
 Once you unbond enough, you will no longer be needed to make new blocks.
 

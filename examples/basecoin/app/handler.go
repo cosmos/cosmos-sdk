@@ -1,13 +1,10 @@
-XXX Rename AppHandler to DefaultAppHandler.
-XXX Register with a sdk.BaseApp instance to create Basecoin.
-XXX Create TxParser in anotehr file.
+// XXX Rename AppHandler to DefaultAppHandler.
+// XXX Register with a sdk.BaseApp instance to create Basecoin.
+// XXX Create TxParser in anotehr file.
 
 package app
 
 import (
-	wire "github.com/tendermint/go-wire"
-	"github.com/tendermint/go-wire/data"
-
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/store"
 )

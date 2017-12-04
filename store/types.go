@@ -21,6 +21,29 @@ type Committer interface {
 
 type CommitterLoader func(id CommitID) (Committer, error)
 
+// CacheWriter is returned from CacheWrap and knows how to
+// write its cached changes to its parent
+type CacheWriter interface {
+	// Write must write to the
+	Write() error
+}
+
+// CacheWrappable is anything that can be wrapped with a cache.
+type CacheWrappable interface {
+
+	// CacheWrap() wraps a thing with a cache.  After calling
+	// .Write() on the CacheWrap, all previous CacheWraps on the
+	// object expire.
+	//
+	// CacheWrap() should not return a Committer, since Commit() on
+	// CacheWraps make no sense.  It can return KVStore, IterKVStore,
+	// etc.
+	//
+	// NOTE: https://dave.cheney.net/2017/07/22/should-go-2-0-support-generics.
+	// The returned object may or may not implement CacheWrap() as well.
+	CacheWrap() CacheWriter
+}
+
 // KVStore is a simple interface to get/set data
 type KVStore interface {
 	Set(key, value []byte) (prev []byte)

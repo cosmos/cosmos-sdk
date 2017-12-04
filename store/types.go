@@ -14,35 +14,38 @@ func (cid CommitID) IsZero() bool {
 }
 
 type Committer interface {
-
 	// Commit persists the state to disk.
 	Commit() CommitID
 }
 
-type CommitterLoader func(id CommitID) (Committer, error)
+type CacheWrapper interface {
+	/*
+		CacheWrap() makes the most appropriate cache-wrap.  For example,
+		IAVLStore.CacheWrap() returns a CacheIterKVStore.  After call to
+		.Write() on the cache-wrap, all previous cache-wraps on the object
+		expire.
 
-// CacheWriter is returned from CacheWrap and knows how to
-// write its cached changes to its parent
-type CacheWriter interface {
-	// Write must write to the
-	Write() error
-}
+		CacheWrap() should not return a Committer, since Commit() on
+		cache-wraps make no sense.  It can return KVStore, IterKVStore, etc.
 
-// CacheWrappable is anything that can be wrapped with a cache.
-type CacheWrappable interface {
+		The returned object may or may not implement CacheWrap() as well.
 
-	// CacheWrap() wraps a thing with a cache.  After calling
-	// .Write() on the CacheWrap, all previous CacheWraps on the
-	// object expire.
-	//
-	// CacheWrap() should not return a Committer, since Commit() on
-	// CacheWraps make no sense.  It can return KVStore, IterKVStore,
-	// etc.
-	//
-	// NOTE: https://dave.cheney.net/2017/07/22/should-go-2-0-support-generics.
-	// The returned object may or may not implement CacheWrap() as well.
+		NOTE: https://dave.cheney.net/2017/07/22/should-go-2-0-support-generics.
+	*/
 	CacheWrap() CacheWriter
 }
+
+// CacheWriter.Write syncs with the underlying store.
+type CacheWriter interface {
+	Write()
+}
+
+type CommitStore interface {
+	Committer
+	CacheWrapper
+}
+
+type CommitStoreLoader func(id CommitID) (CommitStore, error)
 
 // KVStore is a simple interface to get/set data
 type KVStore interface {
@@ -53,8 +56,11 @@ type KVStore interface {
 
 	// CacheKVStore() wraps a thing with a cache.  After
 	// calling .Write() on the CacheKVStore, all previous
-	// CacheWraps on the object expire.
+	// cache-wraps on the object expire.
 	CacheKVStore() CacheKVStore
+
+	// CacheWrap() returns a CacheKVStore.
+	CacheWrap() CacheWriter
 }
 
 type CacheKVStore interface {
@@ -75,8 +81,11 @@ type IterKVStore interface {
 
 	// CacheIterKVStore() wraps a thing with a cache.
 	// After calling .Write() on the CacheIterKVStore, all
-	// previous CacheWraps on the object expire.
+	// previous cache-wraps on the object expire.
 	CacheIterKVStore() CacheIterKVStore
+
+	// CacheWrap() returns a CacheIterKVStore.
+	CacheWrap() CacheWriter
 }
 
 type CacheIterKVStore interface {
@@ -129,4 +138,33 @@ type Iterator interface {
 
 	// Releases any resources and iteration-locks
 	Release()
+}
+
+type MultiStore interface {
+
+	// Last commit, or the zero CommitID.
+	// If not zero, CommitID.Version is CurrentVersion()-1.
+	LastCommitID() CommitID
+
+	// Current version being worked on now, not yet committed.
+	// Should be greater than 0.
+	CurrentVersion() int64
+
+	// Cache wrap MultiStore.
+	// NOTE: Caller should probably not call .Write() on each, but
+	// call CacheMultiStore.Write().
+	CacheMultiStore() CacheMultiStore
+
+	// CacheWrap returns a CacheMultiStore.
+	CacheWrap() CacheWriter
+
+	// Convenience
+	GetStore(name string) interface{}
+	GetKVStore(name string) KVStore
+	GetIterKVStore(name string) IterKVStore
+}
+
+type CacheMultiStore interface {
+	MultiStore
+	Write() // Writes operations to underlying KVStore
 }

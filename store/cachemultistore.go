@@ -5,28 +5,24 @@ import dbm "github.com/tendermint/tmlibs/db"
 //----------------------------------------
 // cacheMultiStore
 
-type cwWriter interface {
-	Write()
-}
-
-// cacheMultiStore holds many CacheWrap'd stores.
+// cacheMultiStore holds many cache-wrapped stores.
 // Implements MultiStore.
 type cacheMultiStore struct {
 	db           dbm.DB
 	version      int64
 	lastCommitID CommitID
-	substores    map[string]cwWriter
+	substores    map[string]CacheWriter
 }
 
 func newCacheMultiStore(rs *rootMultiStore) cacheMultiStore {
 	cms := cacheMultiStore{
-		db:           dbm.CacheWrap(),
+		db:           dbm.CacheDB(),
 		version:      rs.curVersion,
 		lastCommitID: rs.lastCommitID,
-		substores:    make(map[string]cwWriter, len(rs.substores)),
+		substores:    make(map[string]CacheWriter, len(rs.substores)),
 	}
 	for name, substore := range rs.substores {
-		cms.substores[name] = substore.CacheWrap().(cwWriter)
+		cms.substores[name] = substore.CacheWrap().(CacheWriter)
 	}
 	return cms
 }

@@ -14,35 +14,7 @@ const (
 	commitStateKeyFmt = "s/%d" // s/<version>
 )
 
-type MultiStore interface {
-
-	// Last commit, or the zero CommitID.
-	// If not zero, CommitID.Version is CurrentVersion()-1.
-	LastCommitID() CommitID
-
-	// Current version being worked on now, not yet committed.
-	// Should be greater than 0.
-	CurrentVersion() int64
-
-	// Cache wrap MultiStore.
-	// NOTE: Caller should probably not call .Write() on each, but
-	// call CacheMultiStore.Write().
-	CacheMultiStore() CacheMultiStore
-
-	// Convenience
-	GetStore(name string) interface{}
-	GetKVStore(name string) KVStore
-	GetIterKVStore(name string) IterKVStore
-}
-
-type CacheMultiStore interface {
-	MultiStore
-	Write() // Writes operations to underlying KVStore
-}
-
-//----------------------------------------
-
-// rootMultiStore is composed of many Committers.
+// rootMultiStore is composed of many CommitStores.
 // Name contrasts with cacheMultiStore which is for cache-wrapping
 // other MultiStores.
 // Implements MultiStore.
@@ -50,8 +22,8 @@ type rootMultiStore struct {
 	db           dbm.DB
 	curVersion   int64
 	lastHash     []byte
-	storeLoaders map[string]CommitterLoader
-	substores    map[string]Committer
+	storeLoaders map[string]CommitStoreLoader
+	substores    map[string]CommitStore
 }
 
 func NewMultiStore(db dbm.DB) *rootMultiStore {
@@ -59,19 +31,19 @@ func NewMultiStore(db dbm.DB) *rootMultiStore {
 		db:           db,
 		curVersion:   0,
 		lastHash:     nil,
-		storeLoaders: make(map[string]CommitterLoader),
-		substores:    make(map[string]Committer),
+		storeLoaders: make(map[string]CommitStoreLoader),
+		substores:    make(map[string]CommitStore),
 	}
 }
 
-func (rs *rootMultiStore) SetCommitterLoader(name string, loader CommitterLoader) {
+func (rs *rootMultiStore) SetCommitStoreLoader(name string, loader CommitStoreLoader) {
 	if _, ok := rs.storeLoaders[name]; ok {
 		panic(fmt.Sprintf("rootMultiStore duplicate substore name " + name))
 	}
 	rs.storeLoaders[name] = loader
 }
 
-// Call once after all calls to SetCommitterLoader are complete.
+// Call once after all calls to SetCommitStoreLoader are complete.
 func (rs *rootMultiStore) LoadLatestVersion() error {
 	ver := getLatestVersion(rs.db)
 	rs.LoadVersion(ver)
@@ -103,12 +75,12 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	var state commitState = loadCommitState(rs.db, ver)
 
 	// Load each Substore
-	var newSubstores = make(map[string]Committer)
+	var newSubstores = make(map[string]CommitStore)
 	for _, store := range state.Substores {
 		name, commitID := store.Name, store.CommitID
 		storeLoader := rs.storeLoaders[name]
 		if storeLoader == nil {
-			return fmt.Errorf("Failed to loadrootMultiStore: CommitterLoader missing for %v", name)
+			return fmt.Errorf("Failed to loadrootMultiStore: CommitStoreLoader missing for %v", name)
 		}
 		store, err := storeLoader(commitID)
 		if err != nil {
@@ -117,10 +89,10 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 		newSubstores[name] = store
 	}
 
-	// If any CommitterLoaders were not used, return error.
+	// If any CommitStoreLoaders were not used, return error.
 	for name := range rs.storeLoaders {
 		if _, ok := rs.substores[name]; !ok {
-			return fmt.Errorf("Unused CommitterLoader: %v", name)
+			return fmt.Errorf("Unused CommitStoreLoader: %v", name)
 		}
 	}
 
@@ -162,7 +134,7 @@ func (rs *rootMultiStore) doCommit() commitState {
 
 //----------------------------------------
 
-// Implements Committer
+// Implements CommitStore
 func (rs *rootMultiStore) Commit() CommitID {
 
 	version := rs.version
@@ -190,7 +162,11 @@ func (rs *rootMultiStore) Commit() CommitID {
 		Version: version,
 		Hash:    state.Hash(),
 	}
+}
 
+// Implements CommitStore
+func (rs *rootMultiStore) CacheWrap() CacheWriter {
+	return rs.CacheMultiStore()
 }
 
 // Get the last committed CommitID
@@ -213,7 +189,7 @@ func (rs *rootMultiStore) CacheMultiStore() CacheMultiStore {
 }
 
 // Implements MultiStore
-func (rs *rootMultiStore) GetCommitter(name string) Committer {
+func (rs *rootMultiStore) GetCommitStore(name string) CommitStore {
 	return rs.store[name]
 }
 

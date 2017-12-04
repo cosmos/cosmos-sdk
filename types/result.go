@@ -4,26 +4,36 @@ import (
 	abci "github.com/tendermint/abci/types"
 )
 
-// CheckResult captures any non-error ABCI  result
-// to make sure people use error for error cases.
-type CheckResult struct {
-	abci.Result
-
-	// GasAllocated is the maximum units of work we allow this tx to perform
-	GasAllocated uint64
-
-	// GasPayment is the total fees for this tx (or other source of payment)
-	GasPayment uint64
+type KVPair struct {
+	Key   []byte
+	Value []byte
 }
 
-// DeliverResult captures any non-error abci result
-// to make sure people use error for error cases
-type DeliverResult struct {
-	abci.Result
+// Result is the union of ResponseDeliverTx and ResponseCheckTx.
+type Result struct {
 
-	// TODO comment
+	// Code is the response code, is stored back on the chain.
+	Code uint32
+
+	// Data is any data returned from the app.
+	Data []byte
+
+	// Log is just debug information. NOTE: nondeterministic.
+	Log string
+
+	// GasAllocated is the maximum units of work we allow this tx to perform.
+	GasAllocated int64
+
+	// GasUsed is the amount of gas actually consumed. NOTE: not used.
+	GasUsed int64
+
+	// Tx fee amount and denom.
+	FeeAmount int64
+	FeeDenom  string
+
+	// Diff results in changes to the validator set.
 	Diff []*abci.Validator
 
-	// TODO comment
-	GasUsed uint64
+	// Tags are used for transaction indexing and pubsub.
+	Tags []KVPair
 }

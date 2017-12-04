@@ -33,9 +33,6 @@ type BaseApp struct {
 	// Cached validator changes from DeliverTx
 	pending []*abci.Validator
 
-	// Parser for the tx.
-	txParser sdk.TxParser
-
 	// Handler for CheckTx and DeliverTx.
 	handler sdk.Handler
 }
@@ -89,11 +86,7 @@ func NewBaseApp(name string, ms MultiStore) (*BaseApp, error) {
 	}
 }
 
-func (app *BaseApp) SetTxParser(parser TxParser) {
-	app.txParser = parser
-}
-
-func (app *BaseApp) SetHandler(handler sdk.Handler) {
+func (app *BaseApp) WithHandler(handler sdk.Handler) *BaseApp {
 	app.handler = handler
 }
 
@@ -102,60 +95,30 @@ func (app *BaseApp) SetHandler(handler sdk.Handler) {
 // DeliverTx - ABCI - dispatches to the handler
 func (app *BaseApp) DeliverTx(txBytes []byte) abci.ResponseDeliverTx {
 
-	// TODO: use real context on refactor
-	ctx := util.MockContext(
-		app.GetChainID(),
-		app.WorkingHeight(),
-	)
-
-	// Parse the transaction
-	tx, err := app.parseTxFn(ctx, txBytes)
-	if err != nil {
-		err := sdk.TxParseError("").WithCause(err)
-		return sdk.ResponseDeliverTxFromErr(err)
-	}
-
-	// Make handler deal with it
-	data, err := app.handler.DeliverTx(ctx, app.ms, tx)
-	if err != nil {
-		return sdk.ResponseDeliverTxFromErr(err)
-	}
-
-	app.AddValChange(res.Diff)
-
+	ctx := sdk.NewContext(app.header, false, txBytes)
+	// NOTE: Tx is nil until a decorator parses it.
+	result := app.handler(ctx, nil)
 	return abci.ResponseDeliverTx{
-		Code: abci.CodeType_OK,
-		Data: data,
-		Log:  "", // TODO add log from ctx.logger
+		Code: result.Code,
+		Data: result.Data,
+		Log:  result.Log,
+		Tags: result.Tags,
 	}
 }
 
 // CheckTx - ABCI - dispatches to the handler
 func (app *BaseApp) CheckTx(txBytes []byte) abci.ResponseCheckTx {
 
-	// TODO: use real context on refactor
-	ctx := util.MockContext(
-		app.GetChainID(),
-		app.WorkingHeight(),
-	)
-
-	// Parse the transaction
-	tx, err := app.parseTxFn(ctx, txBytes)
-	if err != nil {
-		err := sdk.TxParseError("").WithCause(err)
-		return sdk.ResponseCheckTxFromErr(err)
-	}
-
-	// Make handler deal with it
-	data, err := app.handler.CheckTx(ctx, app.ms, tx)
-	if err != nil {
-		return sdk.ResponseCheckTx(err)
-	}
-
+	ctx := sdk.NewContext(app.header, true, txBytes)
+	// NOTE: Tx is nil until a decorator parses it.
+	result := app.handler(ctx, nil)
 	return abci.ResponseCheckTx{
-		Code: abci.CodeType_OK,
-		Data: data,
-		Log:  "", // TODO add log from ctx.logger
+		Code:      result.Code,
+		Data:      result.Data,
+		Log:       result.Log,
+		Gas:       result.Gas,
+		FeeDenom:  result.FeeDenom,
+		FeeAmount: result.FeeAmount,
 	}
 }
 

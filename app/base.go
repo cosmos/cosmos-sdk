@@ -12,7 +12,6 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/util"
 )
 
 const mainKeyHeader = "header"

@@ -174,7 +174,7 @@ func (rs *rootMultiStore) LastCommitID() CommitID {
 
 // Implements MultiStore
 func (rs *rootMultiStore) CacheMultiStore() CacheMultiStore {
-	return newCacheMultiStore(rs)
+	return newCacheMultiStoreFromRMS(rs)
 }
 
 // Implements MultiStore

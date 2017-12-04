@@ -128,9 +128,6 @@ imports:
   subpackages:
   - bcrypt
   - keys
-  - keys/cryptostore
-  - keys/storage/filestorage
-  - keys/storage/memstorage
   - keys/wordlist
   - nano
 - name: github.com/tendermint/go-wire
@@ -139,7 +136,7 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/iavl
-  version: 595f3dcd5b6cd4a292e90757ae6d367fd7a6e653
+  version: 7198bc18ac0cf4ac0f57802d8022695640b79ec7
 - name: github.com/tendermint/light-client
   version: 76313d625e662ed7b284d066d68ff71edd7a9fac
   subpackages:
@@ -177,7 +174,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: 0a652499ead7cd20a57a6a592f0491a2b493bb85
+  version: 17dc8a74497d3fee933592ef860275e6b0dd71d6
   subpackages:
   - autofile
   - cli

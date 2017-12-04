@@ -8,18 +8,31 @@ import dbm "github.com/tendermint/tmlibs/db"
 // cacheMultiStore holds many cache-wrapped stores.
 // Implements MultiStore.
 type cacheMultiStore struct {
-	db           dbm.DB
-	version      int64
+	db           dbm.CacheDB
+	curVersion   int64
 	lastCommitID CommitID
 	substores    map[string]CacheWriter
 }
 
-func newCacheMultiStore(rs *rootMultiStore) cacheMultiStore {
+func newCacheMultiStoreFromRMS(rms *rootMultiStore) cacheMultiStore {
 	cms := cacheMultiStore{
-		db:           rs.db.CacheDB(),
-		version:      rs.curVersion,
-		lastCommitID: rs.lastCommitID,
-		substores:    make(map[string]CacheWriter, len(rs.substores)),
+		db:           rms.db.CacheDB(),
+		curVersion:   rms.curVersion,
+		lastCommitID: rms.lastCommitID,
+		substores:    make(map[string]CacheWriter, len(rms.substores)),
+	}
+	for name, substore := range rms.substores {
+		cms.substores[name] = substore.CacheWrap().(CacheWriter)
+	}
+	return cms
+}
+
+func newCacheMultiStoreFromCMS(cms cacheMultiStore) cacheMultiStore {
+	cms := cacheMultiStore{
+		db:           cms.db.CacheDB(),
+		curVersion:   cms.curVersion,
+		lastCommitID: cms.lastCommitID,
+		substores:    make(map[string]CacheWriter, len(cms.substores)),
 	}
 	for name, substore := range rs.substores {
 		cms.substores[name] = substore.CacheWrap().(CacheWriter)
@@ -34,33 +47,33 @@ func (cms cacheMultiStore) LastCommitID() CommitID {
 
 // Implements CacheMultiStore
 func (cms cacheMultiStore) CurrentVersion() int64 {
-	return cms.version
+	return cms.curVersion
 }
 
 // Implements CacheMultiStore
 func (cms cacheMultiStore) Write() {
 	cms.db.Write()
-	for substore := range cms.substores {
+	for _, substore := range cms.substores {
 		substore.Write()
 	}
 }
 
 // Implements CacheMultiStore
-func (rs cacheMultiStore) CacheMultiStore() CacheMultiStore {
-	return newCacheMultiStore(rs)
+func (cms cacheMultiStore) CacheMultiStore() CacheMultiStore {
+	return newCacheMultiStoreFromCMS(cms)
 }
 
 // Implements CacheMultiStore
-func (rs cacheMultiStore) GetCommitter(name string) Committer {
-	return rs.store[name]
+func (cms cacheMultiStore) GetCommitter(name string) Committer {
+	return cms.store[name]
 }
 
 // Implements CacheMultiStore
-func (rs cacheMultiStore) GetKVStore(name string) KVStore {
-	return rs.store[name].(KVStore)
+func (cms cacheMultiStore) GetKVStore(name string) KVStore {
+	return cms.store[name].(KVStore)
 }
 
 // Implements CacheMultiStore
-func (rs cacheMultiStore) GetIterKVStore(name string) IterKVStore {
-	return rs.store[name].(IterKVStore)
+func (cms cacheMultiStore) GetIterKVStore(name string) IterKVStore {
+	return cms.store[name].(IterKVStore)
 }

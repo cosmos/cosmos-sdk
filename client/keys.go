@@ -1,5 +1,7 @@
 package client
 
+/*
+
 import (
 	"path/filepath"
 
@@ -25,3 +27,4 @@ func GetKeyManager(rootDir string) keys.Manager {
 	)
 	return manager
 }
+*/

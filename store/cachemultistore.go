@@ -16,7 +16,7 @@ type cacheMultiStore struct {
 
 func newCacheMultiStore(rs *rootMultiStore) cacheMultiStore {
 	cms := cacheMultiStore{
-		db:           dbm.CacheDB(),
+		db:           rs.db.CacheDB(),
 		version:      rs.curVersion,
 		lastCommitID: rs.lastCommitID,
 		substores:    make(map[string]CacheWriter, len(rs.substores)),

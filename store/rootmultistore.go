@@ -21,7 +21,7 @@ const (
 type rootMultiStore struct {
 	db           dbm.DB
 	curVersion   int64
-	lastHash     []byte
+	lastCommitID CommitID
 	storeLoaders map[string]CommitStoreLoader
 	substores    map[string]CommitStore
 }
@@ -30,7 +30,6 @@ func NewMultiStore(db dbm.DB) *rootMultiStore {
 	return &rootMultiStore{
 		db:           db,
 		curVersion:   0,
-		lastHash:     nil,
 		storeLoaders: make(map[string]CommitStoreLoader),
 		substores:    make(map[string]CommitStore),
 	}
@@ -64,7 +63,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 				return fmt.Errorf("Failed to load rootMultiStore: %v", err)
 			}
 			rs.curVersion = 1
-			rs.lastHash = nil
+			rs.lastCommitID = CommitID{}
 			rs.substores[name] = store
 		}
 		return nil
@@ -98,7 +97,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 
 	// Success.
 	rs.curVersion = ver + 1
-	rs.lastHash = state.LastHash
+	rs.lastCommitID = state.CommitID()
 	rs.substores = newSubstores
 	return nil
 }
@@ -106,7 +105,6 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 // Commits each substore and gets commitState.
 func (rs *rootMultiStore) doCommit() commitState {
 	version := rs.curVersion
-	lastHash := rs.LastHash
 	substores := make([]substore, len(rs.substores))
 
 	for name, store := range rs.substores {
@@ -127,7 +125,6 @@ func (rs *rootMultiStore) doCommit() commitState {
 
 	return commitState{
 		Version:   version,
-		LastHash:  lastHash,
 		Substores: substores,
 	}
 }
@@ -157,11 +154,12 @@ func (rs *rootMultiStore) Commit() CommitID {
 
 	batch.Write()
 	rs.version += 1
-
-	return CommitID{
+	commitID := CommitID{
 		Version: version,
 		Hash:    state.Hash(),
 	}
+	rs.lastCommitID = commitID
+	return commitID
 }
 
 // Implements CommitStore
@@ -171,16 +169,7 @@ func (rs *rootMultiStore) CacheWrap() CacheWriter {
 
 // Get the last committed CommitID
 func (rs *rootMultiStore) LastCommitID() CommitID {
-
-	// If we haven't committed yet, return a zero CommitID
-	if rs.curVersion == 0 {
-		return CommitID{}
-	}
-
-	return CommitID{
-		Version: rs.curVersion - 1,
-		Hash:    rs.LastHash,
-	}
+	return rs.lastCommitID
 }
 
 // Implements MultiStore
@@ -211,9 +200,6 @@ type commitState struct {
 
 	// Version
 	Version int64
-
-	// Last hash (memoization)
-	LastHash []byte
 
 	// Substore info for
 	Substores []substore

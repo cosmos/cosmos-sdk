@@ -70,8 +70,13 @@ func (app *BaseApp) CheckTx(txBytes []byte) abci.ResponseCheckTx {
 	return res.ToABCI()
 }
 
-// BeginBlock - ABCI - triggers Tick actions
-func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+// BeginBlock - ABCI
+func (app *BaseApp) BeginBlock(_ abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+	return
+}
+
+// EndBlock - ABCI - triggers Tick actions
+func (app *BaseApp) EndBlock(_ abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	// execute tick if present
 	if app.clock != nil {
 		ctx := stack.NewContext(

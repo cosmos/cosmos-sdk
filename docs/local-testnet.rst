@@ -9,7 +9,7 @@ tooling are also introduced.
 Generate Keys
 -------------
 
-First, let's generate a key named ``alice``.:
+First, let's generate a key named ``alice``:
 
 ::
 
@@ -233,7 +233,62 @@ First let's have ``alice`` send some coins to ``charlie``:
 
 ::
 
-   gaia client tx send --amount=999fermion --sequence=2 --name=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
+    gaia client tx send --amount=999fermion --sequence=2 --name=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
+
+Then ``charlie`` will delegate some fermions to ``bob``:
+
+::
+
+    gaia client tx delegate --amount=10fermion --name=charlie --pubkey=<pub_key data>
+
+You'll see output like:
+
+::
+
+    Please enter passphrase for charlie: 
+    {
+      "check_tx": {
+        "gas": 30
+      },
+      "deliver_tx": {},
+      "hash": "C3443BA30FCCC1F6E3A3D6AAAEE885244F8554F0",
+      "height": 51585
+    }
+
+And that's it. You can query ``charlie``'s account to see the decrease in fermions.
+
+To get more information about the candidate, try:
+
+::
+
+    gaia client query candidate --pubkey=<pub_key data>
+
+and you'll see output similar to:
+
+::
+
+    {
+      "height": 51899,
+      "data": {
+        "pub_key": {
+          "type": "ed25519",
+          "data": "52D6FCD8C92A97F7CCB01205ADF310A18411EA8FDCC10E65BF2FCDB05AD1689B"
+        },
+        "owner": {
+          "chain": "",
+          "app": "sigs",
+          "addr": "5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6"
+        },
+        "shares": 20,
+        "voting_power": 20,
+        "description": {
+          "moniker": "bobby",
+          "identity": "",
+          "website": "",
+          "details": ""
+        }
+      }
+    }
 
 
 Unbond
@@ -244,9 +299,7 @@ your VotingPower reduce and your account balance increase.
 
 ::
 
-    gaia client tx unbond --amount=10fermion --name=alice
-    gaia client query account 5D93A6059B6592833CBC8FA3DA90EE0382198985 
-
-Once you unbond enough, you will no longer be needed to make new blocks.
+    gaia client tx unbond --amount=5fermion --name=charlie --pubkey=<pub_key data>
+    gaia client query account 48F74F48281C89E5E4BE9092F735EA519768E8EF
 
 That concludes an overview of the ``gaia`` tooling for local testing.

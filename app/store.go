@@ -42,6 +42,9 @@ type StoreApp struct {
 	logger log.Logger
 }
 
+// TODO should satisfy?
+//var _ abci.Application = &StoreApp{}
+
 // NewStoreApp creates a data store to handle queries
 func NewStoreApp(appName, dbName string, cacheSize int, logger log.Logger) (*StoreApp, error) {
 	state, err := loadState(dbName, cacheSize, DefaultHistorySize)
@@ -205,7 +208,7 @@ func (app *StoreApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInit
 }
 
 // BeginBlock - ABCI
-func (app *StoreApp) BeginBlock(req abci.RequestBeginBlock) {}
+func (app *StoreApp) BeginBlock(_ abci.RequestBeginBlock) (res abci.ResponseBeginBlock) { return }
 
 // EndBlock - ABCI
 // Returns a list of all validator changes made in this block

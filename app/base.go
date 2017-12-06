@@ -71,12 +71,10 @@ func (app *BaseApp) CheckTx(txBytes []byte) abci.ResponseCheckTx {
 }
 
 // BeginBlock - ABCI
-func (app *BaseApp) BeginBlock(_ abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	return
-}
+func (app *BaseApp) BeginBlock(_ abci.RequestBeginBlock) (res abci.ResponseBeginBlock) { return }
 
 // EndBlock - ABCI - triggers Tick actions
-func (app *BaseApp) EndBlock(_ abci.RequestEndBlock) (res abci.ResponseEndBlock) {
+func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	// execute tick if present
 	if app.clock != nil {
 		ctx := stack.NewContext(
@@ -91,7 +89,7 @@ func (app *BaseApp) EndBlock(_ abci.RequestEndBlock) (res abci.ResponseEndBlock)
 		}
 		app.AddValChange(diff)
 	}
-	return res
+	return app.StoreApp.EndBlock(req)
 }
 
 // InitState - used to setup state (was SetOption)

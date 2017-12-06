@@ -126,6 +126,25 @@ func (k *Keys) DeleteKey(w http.ResponseWriter, r *http.Request) {
 	common.WriteSuccess(w, resp)
 }
 
+func (k *Keys) RecoverKey(w http.ResponseWriter, r *http.Request) {
+	rkReq := &RecoverKeyRequest{
+		Algo: k.algo,
+	}
+	if err := common.ParseRequestAndValidateJSON(r, rkReq); err != nil {
+		common.WriteError(w, err)
+		return
+	}
+
+	key, err := k.manager.Recover(rkReq.Name, rkReq.Passphrase, rkReq.Seed)
+	if err != nil {
+		common.WriteError(w, err)
+		return
+	}
+
+	res := &CreateKeyResponse{Key: key, Seed: rkReq.Seed}
+	common.WriteSuccess(w, res)
+}
+
 func doPostTx(w http.ResponseWriter, r *http.Request) {
 	tx := new(sdk.Tx)
 	if err := common.ParseRequestAndValidateJSON(r, tx); err != nil {
@@ -168,12 +187,14 @@ func RegisterPostTx(r *mux.Router) error {
 // RegisterAllCRUD is a convenience method to register all
 // CRUD for keys to allow access by methods and routes:
 // POST:      /keys
+// POST:      /keys/recover
 // GET:	      /keys
 // GET:	      /keys/{name}
 // POST, PUT: /keys/{name}
 // DELETE:    /keys/{name}
 func (k *Keys) RegisterAllCRUD(r *mux.Router) error {
 	r.HandleFunc("/keys", k.GenerateKey).Methods("POST")
+	r.HandleFunc("/keys/recover", k.RecoverKey).Methods("POST")
 	r.HandleFunc("/keys", k.ListKeys).Methods("GET")
 	r.HandleFunc("/keys/{name}", k.GetKey).Methods("GET")
 	r.HandleFunc("/keys/{name}", k.UpdateKey).Methods("POST", "PUT")

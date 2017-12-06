@@ -9,6 +9,7 @@ import (
 type CreateKeyRequest struct {
 	Name       string `json:"name,omitempty" validate:"required,min=3,printascii"`
 	Passphrase string `json:"password,omitempty" validate:"required,min=10"`
+	Seed	   string `json:"seed_phrase,omitempty" validate:"min=23"`
 
 	// Algo is the requested algorithm to create the key
 	Algo string `json:"algo,omitempty"`

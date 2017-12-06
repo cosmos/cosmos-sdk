@@ -94,8 +94,8 @@ func (b builder) wrap(next sdk.Handler) sdk.Handler {
 
 // Stack is the entire application stack
 type Stack struct {
-	middles          []builder
-	handler          sdk.Handler
+	middles     []builder
+	handler     sdk.Handler
 	sdk.Handler // the compiled version, which we expose
 }
 

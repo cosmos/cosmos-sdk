@@ -1,13 +1,10 @@
 package client
 
 import (
-	"fmt"
-
 	"github.com/tendermint/go-wire/data"
-	"github.com/tendermint/tmlibs/events"
 
-	"github.com/tendermint/tendermint/certifiers"
-	certclient "github.com/tendermint/tendermint/certifiers/client"
+	"github.com/tendermint/tendermint/lite"
+	certclient "github.com/tendermint/tendermint/lite/client"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
@@ -19,20 +16,21 @@ var _ rpcclient.Client = Wrapper{}
 // provable before passing it along. Allows you to make any rpcclient fully secure.
 type Wrapper struct {
 	rpcclient.Client
-	cert *certifiers.Inquiring
+	cert *lite.Inquiring
 }
 
 // SecureClient uses a given certifier to wrap an connection to an untrusted
 // host and return a cryptographically secure rpc client.
 //
 // If it is wrapping an HTTP rpcclient, it will also wrap the websocket interface
-func SecureClient(c rpcclient.Client, cert *certifiers.Inquiring) Wrapper {
+func SecureClient(c rpcclient.Client, cert *lite.Inquiring) Wrapper {
 	wrap := Wrapper{c, cert}
+	// TODO: no longer possible as no more such interface exposed....
 	// if we wrap http client, then we can swap out the event switch to filter
-	if hc, ok := c.(*rpcclient.HTTP); ok {
-		evt := hc.WSEvents.EventSwitch
-		hc.WSEvents.EventSwitch = WrappedSwitch{evt, wrap}
-	}
+	// if hc, ok := c.(*rpcclient.HTTP); ok {
+	// 	evt := hc.WSEvents.EventSwitch
+	// 	hc.WSEvents.EventSwitch = WrappedSwitch{evt, wrap}
+	// }
 	return wrap
 }
 
@@ -53,7 +51,8 @@ func (w Wrapper) Tx(hash []byte, prove bool) (*ctypes.ResultTx, error) {
 	if !prove || err != nil {
 		return res, err
 	}
-	check, err := GetCertifiedCommit(res.Height, w.Client, w.cert)
+	h := uint64(res.Height)
+	check, err := GetCertifiedCommit(h, w.Client, w.cert)
 	if err != nil {
 		return res, err
 	}
@@ -113,7 +112,7 @@ func (w Wrapper) Block(height *int) (*ctypes.ResultBlock, error) {
 	return r, nil
 }
 
-// Commit downloads the Commit and certifies it with the certifiers.
+// Commit downloads the Commit and certifies it with the lite.
 //
 // This is the foundation for all other verification in this module
 func (w Wrapper) Commit(height *int) (*ctypes.ResultCommit, error) {
@@ -127,44 +126,44 @@ func (w Wrapper) Commit(height *int) (*ctypes.ResultCommit, error) {
 	return r, err
 }
 
-// WrappedSwitch creates a websocket connection that auto-verifies any info
-// coming through before passing it along.
-//
-// Since the verification takes 1-2 rpc calls, this is obviously only for
-// relatively low-throughput situations that can tolerate a bit extra latency
-type WrappedSwitch struct {
-	types.EventSwitch
-	client rpcclient.Client
-}
+// // WrappedSwitch creates a websocket connection that auto-verifies any info
+// // coming through before passing it along.
+// //
+// // Since the verification takes 1-2 rpc calls, this is obviously only for
+// // relatively low-throughput situations that can tolerate a bit extra latency
+// type WrappedSwitch struct {
+// 	types.EventSwitch
+// 	client rpcclient.Client
+// }
 
-// FireEvent verifies any block or header returned from the eventswitch
-func (s WrappedSwitch) FireEvent(event string, data events.EventData) {
-	tm, ok := data.(types.TMEventData)
-	if !ok {
-		fmt.Printf("bad type %#v\n", data)
-		return
-	}
+// // FireEvent verifies any block or header returned from the eventswitch
+// func (s WrappedSwitch) FireEvent(event string, data events.EventData) {
+// 	tm, ok := data.(types.TMEventData)
+// 	if !ok {
+// 		fmt.Printf("bad type %#v\n", data)
+// 		return
+// 	}
 
-	// check to validate it if possible, and drop if not valid
-	switch t := tm.Unwrap().(type) {
-	case types.EventDataNewBlockHeader:
-		err := verifyHeader(s.client, t.Header)
-		if err != nil {
-			fmt.Printf("Invalid header: %#v\n", err)
-			return
-		}
-	case types.EventDataNewBlock:
-		err := verifyBlock(s.client, t.Block)
-		if err != nil {
-			fmt.Printf("Invalid block: %#v\n", err)
-			return
-		}
-		// TODO: can we verify tx as well? anything else
-	}
+// 	// check to validate it if possible, and drop if not valid
+// 	switch t := tm.Unwrap().(type) {
+// 	case types.EventDataNewBlockHeader:
+// 		err := verifyHeader(s.client, t.Header)
+// 		if err != nil {
+// 			fmt.Printf("Invalid header: %#v\n", err)
+// 			return
+// 		}
+// 	case types.EventDataNewBlock:
+// 		err := verifyBlock(s.client, t.Block)
+// 		if err != nil {
+// 			fmt.Printf("Invalid block: %#v\n", err)
+// 			return
+// 		}
+// 		// TODO: can we verify tx as well? anything else
+// 	}
 
-	// looks good, we fire it
-	s.EventSwitch.FireEvent(event, data)
-}
+// 	// looks good, we fire it
+// 	s.EventSwitch.FireEvent(event, data)
+// }
 
 func verifyHeader(c rpcclient.Client, head *types.Header) error {
 	// get a checkpoint to verify from

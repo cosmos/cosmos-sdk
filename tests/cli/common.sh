@@ -15,10 +15,10 @@ quickSetup() {
     BASE_DIR=$HOME/$1
     CHAIN_ID=$2
 
-	# TODO Make this more robust
+    # TODO Make this more robust
     if [ "$BASE_DIR" == "$HOME/" ]; then
-	    echo "quickSetup() must be called with argument, or it will wipe your home directory"
-	    exit 1
+        echo "quickSetup() must be called with argument, or it will wipe your home directory"
+        exit 1
     fi
 
     rm -rf $BASE_DIR 2>/dev/null
@@ -68,7 +68,7 @@ initServer() {
     SERVE_DIR=$1/server
     assertNotNull "line=${LINENO}, no chain" $2
     CHAIN=$2
-    SERVER_LOG=$1/${SERVER_EXE}.log
+    SERVER_LOG=$1/node.log
 
     GENKEY=$(${CLIENT_EXE} keys get ${RICH} | awk '{print $2}')
     ${SERVER_EXE} init --static --chain-id $CHAIN $GENKEY --home=$SERVE_DIR >>$SERVER_LOG
@@ -78,6 +78,14 @@ initServer() {
         echo "setting port $3"
         sed -ie "s/4665/$3/" $SERVE_DIR/config.toml
     fi
+
+    # add indexing
+    cat >> $SERVE_DIR/config.toml << EOF
+
+[tx_index]
+indexer = "kv"
+index_tags = "height,coin.sender,coin.receiver"
+EOF
 
     echo "Starting ${SERVER_EXE} server..."
     startServer $SERVE_DIR $SERVER_LOG
@@ -173,8 +181,8 @@ checkRole() {
 txSucceeded() {
     if (assertTrue "line=${LINENO}, sent tx ($3): $2" $1); then
         TX=$2
-        assertEquals "line=${LINENO}, good check ($3): $TX" "0" $(echo $TX | jq .check_tx.code)
-        assertEquals "line=${LINENO}, good deliver ($3): $TX" "0" $(echo $TX | jq .deliver_tx.code)
+        assertEquals "line=${LINENO}, good check ($3): $TX" null $(echo $TX | jq .check_tx.code)
+        assertEquals "line=${LINENO}, good deliver ($3): $TX" null $(echo $TX | jq .deliver_tx.code)
     else
         return 1
     fi

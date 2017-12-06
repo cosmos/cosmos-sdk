@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/tendermint/certifiers"
-	"github.com/tendermint/tendermint/certifiers/files"
+	"github.com/tendermint/tendermint/lite"
+	"github.com/tendermint/tendermint/lite/files"
 
 	"github.com/cosmos/cosmos-sdk/client/commands"
 )
@@ -37,7 +37,7 @@ func init() {
 	RootCmd.AddCommand(showCmd)
 }
 
-func loadCommit(p certifiers.Provider, h int, hash, file string) (fc certifiers.FullCommit, err error) {
+func loadCommit(p lite.Provider, h int, hash, file string) (fc lite.FullCommit, err error) {
 	// load the commit from the proper place
 	if h != 0 {
 		fc, err = p.GetByHeight(h)

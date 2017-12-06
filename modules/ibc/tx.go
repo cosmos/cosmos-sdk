@@ -3,7 +3,7 @@ package ibc
 import (
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/iavl"
-	"github.com/tendermint/tendermint/certifiers"
+	"github.com/tendermint/tendermint/lite"
 
 	sdk "github.com/cosmos/cosmos-sdk"
 )
@@ -32,7 +32,7 @@ func init() {
 
 // RegisterChainTx allows you to register a new chain on this blockchain
 type RegisterChainTx struct {
-	Commit certifiers.FullCommit `json:"seed"`
+	Commit lite.FullCommit `json:"seed"`
 }
 
 // ChainID helps get the chain this tx refers to
@@ -56,7 +56,7 @@ func (r RegisterChainTx) Wrap() sdk.Tx {
 
 // UpdateChainTx updates the state of this chain
 type UpdateChainTx struct {
-	Commit certifiers.FullCommit `json:"seed"`
+	Commit lite.FullCommit `json:"seed"`
 }
 
 // ChainID helps get the chain this tx refers to

@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/state"
-	"github.com/tendermint/tendermint/certifiers"
-	certerr "github.com/tendermint/tendermint/certifiers/errors"
+	"github.com/tendermint/tendermint/lite"
+	certerr "github.com/tendermint/tendermint/lite/errors"
 )
 
-func assertCommitsEqual(t *testing.T, fc, fc2 certifiers.FullCommit) {
+func assertCommitsEqual(t *testing.T, fc, fc2 lite.FullCommit) {
 	assert := assert.New(t)
 	assert.Equal(fc.Height(), fc2.Height())
 	assert.Equal(fc.ValidatorsHash(), fc2.ValidatorsHash())
@@ -22,7 +22,7 @@ func TestProviderStore(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	// make a few commits
-	keys := certifiers.GenValKeys(2)
+	keys := lite.GenValKeys(2)
 	commits := makeCommits(keys, 4, "some-chain", "demo-store")
 
 	// make a provider
@@ -76,9 +76,9 @@ func TestDBProvider(t *testing.T) {
 	checkProvider(t, p, "test-db", "bling")
 }
 
-func makeCommits(keys certifiers.ValKeys, count int, chainID, app string) []certifiers.FullCommit {
+func makeCommits(keys lite.ValKeys, count int, chainID, app string) []lite.FullCommit {
 	appHash := []byte(app)
-	commits := make([]certifiers.FullCommit, count)
+	commits := make([]lite.FullCommit, count)
 	for i := 0; i < count; i++ {
 		// two commits for each validator, to check how we handle dups
 		// (10, 0), (10, 1), (10, 1), (10, 2), (10, 2), ...
@@ -89,9 +89,9 @@ func makeCommits(keys certifiers.ValKeys, count int, chainID, app string) []cert
 	return commits
 }
 
-func checkProvider(t *testing.T, p certifiers.Provider, chainID, app string) {
+func checkProvider(t *testing.T, p lite.Provider, chainID, app string) {
 	assert, require := assert.New(t), require.New(t)
-	keys := certifiers.GenValKeys(5)
+	keys := lite.GenValKeys(5)
 	count := 10
 
 	// make a bunch of commits...

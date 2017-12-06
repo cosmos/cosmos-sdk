@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
 	"github.com/cosmos/cosmos-sdk/modules/ibc"
-	"github.com/tendermint/tendermint/certifiers"
+	"github.com/tendermint/tendermint/lite"
 )
 
 // RegisterChainTxCmd is CLI command to register a new chain for ibc
@@ -80,7 +80,7 @@ func postPacketTxCmd(cmd *cobra.Command, args []string) error {
 	return txcmd.DoTx(post.Wrap())
 }
 
-func readCommit() (fc certifiers.FullCommit, err error) {
+func readCommit() (fc lite.FullCommit, err error) {
 	name := viper.GetString(FlagCommit)
 	if name == "" {
 		return fc, errors.New("You must specify a commit file")

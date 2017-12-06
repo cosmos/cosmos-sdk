@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/modules/base"
 	"github.com/cosmos/cosmos-sdk/modules/coin"
 	"github.com/cosmos/cosmos-sdk/modules/fee"
-	"github.com/cosmos/cosmos-sdk/modules/ibc"
 	"github.com/cosmos/cosmos-sdk/modules/nonce"
 	"github.com/cosmos/cosmos-sdk/modules/roles"
 	"github.com/cosmos/cosmos-sdk/stack"
@@ -26,7 +25,6 @@ import (
 func DefaultHandler(feeDenom string) sdk.Handler {
 	// use the default stack
 	r := roles.NewHandler()
-	i := ibc.NewHandler()
 
 	return stack.New(
 		base.Logger{},
@@ -35,17 +33,13 @@ func DefaultHandler(feeDenom string) sdk.Handler {
 		base.Chain{},
 		stack.Checkpoint{OnCheck: true},
 		nonce.ReplayCheck{},
+		roles.NewMiddleware(),
+		fee.NewSimpleFeeMiddleware(coin.Coin{feeDenom, 0}, fee.Bank),
+		stack.Checkpoint{OnDeliver: true},
 	).
-		IBC(ibc.NewMiddleware()).
-		Apps(
-			roles.NewMiddleware(),
-			fee.NewSimpleFeeMiddleware(coin.Coin{feeDenom, 0}, fee.Bank),
-			stack.Checkpoint{OnDeliver: true},
-		).
 		Dispatch(
 			coin.NewHandler(),
 			stack.WrapHandler(r),
-			stack.WrapHandler(i),
 		)
 }
 
@@ -124,7 +118,7 @@ func (at *appTest) reset() {
 	at.initAccount(at.acctOut)
 
 	resabci := at.app.Commit()
-	require.True(at.t, resabci.IsOK(), resabci)
+	require.True(at.t, resabci.Code.IsOK(), resabci)
 }
 
 func getBalance(key sdk.Actor, store state.SimpleDB) (coin.Coins, error) {
@@ -139,7 +133,7 @@ func getAddr(addr []byte, state state.SimpleDB) (coin.Coins, error) {
 }
 
 // returns the final balance and expected balance for input and output accounts
-func (at *appTest) exec(t *testing.T, tx sdk.Tx, checkTx bool) (res abci.Result, diffIn, diffOut coin.Coins) {
+func (at *appTest) execDeliver(t *testing.T, tx sdk.Tx) (res abci.ResponseDeliverTx, diffIn, diffOut coin.Coins) {
 	require := require.New(t)
 
 	initBalIn, err := getBalance(at.acctIn.Actor(), at.app.Append())
@@ -148,11 +142,40 @@ func (at *appTest) exec(t *testing.T, tx sdk.Tx, checkTx bool) (res abci.Result,
 	require.Nil(err, "%+v", err)
 
 	txBytes := wire.BinaryBytes(tx)
-	if checkTx {
-		res = at.app.CheckTx(txBytes)
-	} else {
-		res = at.app.DeliverTx(txBytes)
+	res = at.app.DeliverTx(txBytes)
+
+	// check the tags
+	if res.Code.IsOK() {
+		tags := res.Tags
+		require.NotEmpty(tags)
+		require.Equal("height", tags[0].Key)
+		require.True(tags[0].ValueInt > 0)
+		require.Equal("coin.sender", tags[1].Key)
+		sender := at.acctIn.Actor().Address.String()
+		require.Equal(sender, tags[1].ValueString)
+		require.Equal("coin.receiver", tags[2].Key)
+		rcpt := at.acctOut.Actor().Address.String()
+		require.Equal(rcpt, tags[2].ValueString)
 	}
+
+	endBalIn, err := getBalance(at.acctIn.Actor(), at.app.Append())
+	require.Nil(err, "%+v", err)
+	endBalOut, err := getBalance(at.acctOut.Actor(), at.app.Append())
+	require.Nil(err, "%+v", err)
+	return res, endBalIn.Minus(initBalIn), endBalOut.Minus(initBalOut)
+}
+
+// returns the final balance and expected balance for input and output accounts
+func (at *appTest) execCheck(t *testing.T, tx sdk.Tx) (res abci.ResponseCheckTx, diffIn, diffOut coin.Coins) {
+	require := require.New(t)
+
+	initBalIn, err := getBalance(at.acctIn.Actor(), at.app.Append())
+	require.Nil(err, "%+v", err)
+	initBalOut, err := getBalance(at.acctOut.Actor(), at.app.Append())
+	require.Nil(err, "%+v", err)
+
+	txBytes := wire.BinaryBytes(tx)
+	res = at.app.CheckTx(txBytes)
 
 	endBalIn, err := getBalance(at.acctIn.Actor(), at.app.Append())
 	require.Nil(err, "%+v", err)
@@ -237,23 +260,23 @@ func TestTx(t *testing.T) {
 	at.initAccount(at.acctIn)
 	at.app.Commit()
 
-	res, _, _ := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1), true)
-	assert.True(res.IsErr(), "ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", res)
-	res, diffIn, diffOut := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1), false)
-	assert.True(res.IsErr(), "ExecTx/Bad DeliverTx: Expected error return from ExecTx, returned: %v", res)
+	cres, _, _ := at.execCheck(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1))
+	assert.True(cres.IsErr(), "ExecTx/Bad CheckTx: Expected error return from ExecTx, returned: %v", cres)
+	dres, diffIn, diffOut := at.execDeliver(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1))
+	assert.True(dres.IsErr(), "ExecTx/Bad DeliverTx: Expected error return from ExecTx, returned: %v", dres)
 	assert.True(diffIn.IsZero())
 	assert.True(diffOut.IsZero())
 
 	//Regular CheckTx
 	at.reset()
-	res, _, _ = at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1), true)
-	assert.True(res.IsOK(), "ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", res)
+	cres, _, _ = at.execCheck(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1))
+	assert.True(cres.Code.IsOK(), "ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", cres)
 
 	//Regular DeliverTx
 	at.reset()
 	amt := coin.Coins{{"mycoin", 3}}
-	res, diffIn, diffOut = at.exec(t, at.getTx(amt, 1), false)
-	assert.True(res.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res)
+	dres, diffIn, diffOut = at.execDeliver(t, at.getTx(amt, 1))
+	assert.True(dres.Code.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", dres)
 	assert.Equal(amt.Negative(), diffIn)
 	assert.Equal(amt, diffOut)
 
@@ -261,8 +284,8 @@ func TestTx(t *testing.T) {
 	at.reset()
 	amt = coin.Coins{{"mycoin", 4}}
 	toll := coin.Coin{"mycoin", 1}
-	res, diffIn, diffOut = at.exec(t, at.feeTx(amt, toll, 1), false)
-	assert.True(res.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", res)
+	dres, diffIn, diffOut = at.execDeliver(t, at.feeTx(amt, toll, 1))
+	assert.True(dres.Code.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", dres)
 	payment := amt.Plus(coin.Coins{toll}).Negative()
 	assert.Equal(payment, diffIn)
 	assert.Equal(amt, diffOut)
@@ -273,16 +296,16 @@ func TestQuery(t *testing.T) {
 	assert := assert.New(t)
 	at := newAppTest(t)
 
-	res, _, _ := at.exec(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1), false)
-	assert.True(res.IsOK(), "Commit, DeliverTx: Expected OK return from DeliverTx, Error: %v", res)
+	dres, _, _ := at.execDeliver(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1))
+	assert.True(dres.Code.IsOK(), "Commit, DeliverTx: Expected OK return from DeliverTx, Error: %v", dres)
 
 	resQueryPreCommit := at.app.Query(abci.RequestQuery{
 		Path: "/account",
 		Data: at.acctIn.Address(),
 	})
 
-	res = at.app.Commit()
-	assert.True(res.IsOK(), res)
+	cres := at.app.Commit()
+	assert.True(cres.Code.IsOK(), cres)
 
 	key := stack.PrefixedKey(coin.NameCoin, at.acctIn.Address())
 	resQueryPostCommit := at.app.Query(abci.RequestQuery{

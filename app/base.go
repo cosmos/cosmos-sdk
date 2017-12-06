@@ -30,10 +30,10 @@ func NewBaseApp(store *StoreApp, handler sdk.Handler, clock sdk.Ticker) *BaseApp
 }
 
 // DeliverTx - ABCI - dispatches to the handler
-func (app *BaseApp) DeliverTx(txBytes []byte) abci.Result {
+func (app *BaseApp) DeliverTx(txBytes []byte) abci.ResponseDeliverTx {
 	tx, err := sdk.LoadTx(txBytes)
 	if err != nil {
-		return errors.Result(err)
+		return errors.DeliverResult(err)
 	}
 
 	ctx := stack.NewContext(
@@ -44,17 +44,17 @@ func (app *BaseApp) DeliverTx(txBytes []byte) abci.Result {
 	res, err := app.handler.DeliverTx(ctx, app.Append(), tx)
 
 	if err != nil {
-		return errors.Result(err)
+		return errors.DeliverResult(err)
 	}
 	app.AddValChange(res.Diff)
-	return sdk.ToABCI(res)
+	return res.ToABCI()
 }
 
 // CheckTx - ABCI - dispatches to the handler
-func (app *BaseApp) CheckTx(txBytes []byte) abci.Result {
+func (app *BaseApp) CheckTx(txBytes []byte) abci.ResponseCheckTx {
 	tx, err := sdk.LoadTx(txBytes)
 	if err != nil {
-		return errors.Result(err)
+		return errors.CheckResult(err)
 	}
 
 	ctx := stack.NewContext(
@@ -65,13 +65,16 @@ func (app *BaseApp) CheckTx(txBytes []byte) abci.Result {
 	res, err := app.handler.CheckTx(ctx, app.Check(), tx)
 
 	if err != nil {
-		return errors.Result(err)
+		return errors.CheckResult(err)
 	}
-	return sdk.ToABCI(res)
+	return res.ToABCI()
 }
 
-// BeginBlock - ABCI - triggers Tick actions
-func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) {
+// BeginBlock - ABCI
+func (app *BaseApp) BeginBlock(_ abci.RequestBeginBlock) (res abci.ResponseBeginBlock) { return }
+
+// EndBlock - ABCI - triggers Tick actions
+func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	// execute tick if present
 	if app.clock != nil {
 		ctx := stack.NewContext(
@@ -86,6 +89,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) {
 		}
 		app.AddValChange(diff)
 	}
+	return app.StoreApp.EndBlock(req)
 }
 
 // InitState - used to setup state (was SetOption)

@@ -12,7 +12,7 @@ imports:
 - name: github.com/ebuchman/fail-test
   version: 95f809107225be108efcf10a3509e4ea6ceef3c4
 - name: github.com/ethanfrey/hid
-  version: f76da0b80567e8b6f676e1757b549a93494fe4b5
+  version: dce75af84cf849c60f39bf1b8192fb5cd597b5d9
 - name: github.com/ethanfrey/ledger
   version: f7f2f056357db77db845a79aa1abdadc3ae66369
 - name: github.com/fsnotify/fsnotify

@@ -15,10 +15,10 @@ quickSetup() {
     BASE_DIR=$HOME/$1
     CHAIN_ID=$2
 
-	# TODO Make this more robust
+    # TODO Make this more robust
     if [ "$BASE_DIR" == "$HOME/" ]; then
-	    echo "quickSetup() must be called with argument, or it will wipe your home directory"
-	    exit 1
+        echo "quickSetup() must be called with argument, or it will wipe your home directory"
+        exit 1
     fi
 
     rm -rf $BASE_DIR 2>/dev/null
@@ -68,7 +68,7 @@ initServer() {
     SERVE_DIR=$1/server
     assertNotNull "line=${LINENO}, no chain" $2
     CHAIN=$2
-    SERVER_LOG=$1/${SERVER_EXE}.log
+    SERVER_LOG=$1/node.log
 
     GENKEY=$(${CLIENT_EXE} keys get ${RICH} | awk '{print $2}')
     ${SERVER_EXE} init --static --chain-id $CHAIN $GENKEY --home=$SERVE_DIR >>$SERVER_LOG

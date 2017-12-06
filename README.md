@@ -53,6 +53,10 @@ go get -u github.com/cosmos/cosmos-sdk/cmd/basecoin
 
 See the [install guide](/docs/guide/install.md) for more details.
 
+## API
+* [Baseserver](/examples/basecoin/cmd/baseserver/README.md)
+* [Basecli](/examples/basecoin/cmd/basecli/README.md)
+
 ## Guides
 
 * Getting started with the [Basecoin basics](/docs/guide/basecoin-basics.md)

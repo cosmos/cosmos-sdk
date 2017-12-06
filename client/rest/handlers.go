@@ -127,21 +127,21 @@ func (k *Keys) DeleteKey(w http.ResponseWriter, r *http.Request) {
 }
 
 func (k *Keys) RecoverKey(w http.ResponseWriter, r *http.Request) {
-	ckReq := &RecoverKeyRequest{
+	rkReq := &RecoverKeyRequest{
 		Algo: k.algo,
 	}
-	if err := common.ParseRequestAndValidateJSON(r, ckReq); err != nil {
+	if err := common.ParseRequestAndValidateJSON(r, rkReq); err != nil {
 		common.WriteError(w, err)
 		return
 	}
 
-	key, err := k.manager.Recover(ckReq.Name, ckReq.Passphrase, ckReq.Seed)
+	key, err := k.manager.Recover(rkReq.Name, rkReq.Passphrase, rkReq.Seed)
 	if err != nil {
 		common.WriteError(w, err)
 		return
 	}
 
-	res := &CreateKeyResponse{Key: key, Seed: ckReq.Seed}
+	res := &CreateKeyResponse{Key: key, Seed: rkReq.Seed}
 	common.WriteSuccess(w, res)
 }
 
@@ -187,7 +187,7 @@ func RegisterPostTx(r *mux.Router) error {
 // RegisterAllCRUD is a convenience method to register all
 // CRUD for keys to allow access by methods and routes:
 // POST:      /keys
-// POST:	  /keys/recover
+// POST:      /keys/recover
 // GET:	      /keys
 // GET:	      /keys/{name}
 // POST, PUT: /keys/{name}

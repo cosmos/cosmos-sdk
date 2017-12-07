@@ -8,10 +8,10 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/commands"
+	"github.com/cosmos/cosmos-sdk/client/commands/commits"
 	"github.com/cosmos/cosmos-sdk/client/commands/keys"
 	"github.com/cosmos/cosmos-sdk/client/commands/proxy"
 	"github.com/cosmos/cosmos-sdk/client/commands/query"
-	"github.com/cosmos/cosmos-sdk/client/commands/seeds"
 
 	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
 	bcount "github.com/cosmos/cosmos-sdk/examples/counter/cmd/countercli/commands"
@@ -74,7 +74,7 @@ func main() {
 		commands.ResetCmd,
 		commands.VersionCmd,
 		keys.RootCmd,
-		seeds.RootCmd,
+		commits.RootCmd,
 		query.RootCmd,
 		txcmd.RootCmd,
 		proxy.RootCmd,

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/tendermint/iavl"
-	"github.com/tendermint/light-client/certifiers"
+	"github.com/tendermint/tendermint/lite"
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"
@@ -16,24 +16,24 @@ import (
 // It is able to produce ibc packets and all verification for
 // them, but cannot respond to any responses.
 type MockChain struct {
-	keys    certifiers.ValKeys
+	keys    lite.ValKeys
 	chainID string
-	tree    *iavl.IAVLTree
+	tree    *iavl.Tree
 }
 
 // NewMockChain initializes a teststore and test validators
 func NewMockChain(chainID string, numKeys int) MockChain {
 	return MockChain{
-		keys:    certifiers.GenValKeys(numKeys),
+		keys:    lite.GenValKeys(numKeys),
 		chainID: chainID,
-		tree:    iavl.NewIAVLTree(0, nil),
+		tree:    iavl.NewTree(0, nil),
 	}
 }
 
 // GetRegistrationTx returns a valid tx to register this chain
 func (m MockChain) GetRegistrationTx(h int) RegisterChainTx {
-	seed := genEmptySeed(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
-	return RegisterChainTx{seed}
+	fc := genEmptyCommit(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
+	return RegisterChainTx{fc}
 }
 
 // MakePostPacket commits the packet locally and returns the proof,
@@ -42,21 +42,20 @@ func (m MockChain) MakePostPacket(packet Packet, h int) (
 	PostPacketTx, UpdateChainTx) {
 
 	post := makePostPacket(m.tree, packet, m.chainID, h)
-	seed := genEmptySeed(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
-	update := UpdateChainTx{seed}
+	fc := genEmptyCommit(m.keys, m.chainID, h+1, m.tree.Hash(), len(m.keys))
+	update := UpdateChainTx{fc}
 
 	return post, update
 }
 
-func genEmptySeed(keys certifiers.ValKeys, chain string, h int,
-	appHash []byte, count int) certifiers.Seed {
+func genEmptyCommit(keys lite.ValKeys, chain string, h int,
+	appHash []byte, count int) lite.FullCommit {
 
 	vals := keys.ToValidators(10, 0)
-	cp := keys.GenCheckpoint(chain, h, nil, vals, appHash, 0, count)
-	return certifiers.Seed{cp, vals}
+	return keys.GenFullCommit(chain, h, nil, vals, appHash, 0, count)
 }
 
-func makePostPacket(tree *iavl.IAVLTree, packet Packet, fromID string, fromHeight int) PostPacketTx {
+func makePostPacket(tree *iavl.Tree, packet Packet, fromID string, fromHeight int) PostPacketTx {
 	key := []byte(fmt.Sprintf("some-long-prefix-%06d", packet.Sequence))
 	tree.Set(key, packet.Bytes())
 	_, proof, err := tree.GetWithProof(key)

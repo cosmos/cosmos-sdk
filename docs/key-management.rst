@@ -179,7 +179,7 @@ which prompts for a new password then the seed:
     alice-again CBF5D9CE6DDCC32806162979495D07B851C53451
 
 and voila! You've recovered your key. Note that the seed can be typed
-our, pasted in, or piped into the command alongside the password.
+out, pasted in, or piped into the command alongside the password.
 
 To change the password of a key, we can:
 

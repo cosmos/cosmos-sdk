@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	rest "github.com/cosmos/cosmos-sdk/client/rest"
 	coinrest "github.com/cosmos/cosmos-sdk/modules/coin/rest"
@@ -43,22 +44,25 @@ func init() {
 func serve(cmd *cobra.Command, args []string) error {
 	router := mux.NewRouter()
 
+	rootDir := viper.GetString(cli.HomeFlag)
+	keyMan := client.GetKeyManager(rootDir)
+	serviceKeys := rest.NewServiceKeys(keyMan)
+	serviceTxs := rest.NewServiceTxs(commands.GetNode())
+
 	routeRegistrars := []func(*mux.Router) error{
 		// rest.Keys handlers
-		rest.NewDefaultKeysManager(defaultAlgo).RegisterAllCRUD,
+		serviceKeys.RegisterCRUD,
 
 		// Coin send handler
-		coinrest.RegisterCoinSend,
-		// Coin query account handler
-		coinrest.RegisterQueryAccount,
+		coinrest.RegisterAll,
 
 		// Roles createRole handler
 		rolerest.RegisterCreateRole,
 
 		// Basecoin sign transactions handler
-		rest.RegisterSignTx,
+		serviceKeys.RegisterSignTx,
 		// Basecoin post transaction handler
-		rest.RegisterPostTx,
+		serviceTxs.RegisterPostTx,
 
 		// Nonce query handler
 		noncerest.RegisterQueryNonce,

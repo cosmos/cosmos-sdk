@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -9,16 +8,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/go-wire"
-	lc "github.com/tendermint/light-client"
-	"github.com/tendermint/light-client/certifiers"
-	certclient "github.com/tendermint/light-client/certifiers/client"
+	"github.com/tendermint/tendermint/lite"
+	certclient "github.com/tendermint/tendermint/lite/client"
+	"github.com/tendermint/tmlibs/log"
+
 	nm "github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/rpc/client"
 	rpctest "github.com/tendermint/tendermint/rpc/test"
 	"github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tmlibs/log"
 
-	"github.com/cosmos/cosmos-sdk/app"
+	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/modules/eyes"
 )
 
@@ -26,11 +25,12 @@ var node *nm.Node
 
 func TestMain(m *testing.M) {
 	logger := log.TestingLogger()
-	store, err := app.NewStore("", 0, logger)
+	store, err := sdkapp.MockStoreApp("query", logger)
 	if err != nil {
 		panic(err)
 	}
-	app := app.NewBasecoin(eyes.NewHandler(), store, logger)
+	app := sdkapp.NewBaseApp(store, eyes.NewHandler(), nil)
+
 	node = rpctest.StartTendermint(app)
 
 	code := m.Run()
@@ -55,22 +55,30 @@ func TestAppProofs(t *testing.T) {
 	require.NoError(err, "%+v", err)
 	require.EqualValues(0, br.CheckTx.Code, "%#v", br.CheckTx)
 	require.EqualValues(0, br.DeliverTx.Code)
+	brh := int(br.Height)
 
 	// This sets up our trust on the node based on some past point.
-	source := certclient.New(cl)
-	seed, err := source.GetByHeight(br.Height - 2)
+	source := certclient.NewProvider(cl)
+	seed, err := source.GetByHeight(brh - 2)
 	require.NoError(err, "%+v", err)
-	cert := certifiers.NewStatic("my-chain", seed.Validators)
+	cert := lite.NewStatic("my-chain", seed.Validators)
 
 	client.WaitForHeight(cl, 3, nil)
-	latest, err := source.GetLatestCommit()
+	latest, err := source.LatestCommit()
 	require.NoError(err, "%+v", err)
 	rootHash := latest.Header.AppHash
 
 	// Test existing key.
 	var data eyes.Data
 
-	bs, height, proof, err := GetWithProof(k, cl, cert)
+	// verify a query before the tx block has no data (and valid non-exist proof)
+	bs, height, proof, err := GetWithProof(k, brh-1, cl, cert)
+	require.NotNil(err)
+	require.True(IsNoDataErr(err))
+	require.Nil(bs)
+
+	// but given that block it is good
+	bs, height, proof, err = GetWithProof(k, brh, cl, cert)
 	require.NoError(err, "%+v", err)
 	require.NotNil(proof)
 	require.True(height >= uint64(latest.Header.Height))
@@ -88,8 +96,8 @@ func TestAppProofs(t *testing.T) {
 
 	// Test non-existing key.
 	missing := []byte("my-missing-key")
-	bs, _, proof, err = GetWithProof(missing, cl, cert)
-	require.True(lc.IsNoDataErr(err))
+	bs, _, proof, err = GetWithProof(missing, 0, cl, cert)
+	require.True(IsNoDataErr(err))
 	require.Nil(bs)
 	require.NotNil(proof)
 	err = proof.Verify(missing, nil, rootHash)
@@ -111,12 +119,12 @@ func TestTxProofs(t *testing.T) {
 	require.NoError(err, "%+v", err)
 	require.EqualValues(0, br.CheckTx.Code, "%#v", br.CheckTx)
 	require.EqualValues(0, br.DeliverTx.Code)
-	fmt.Printf("tx height: %d\n", br.Height)
+	brh := int(br.Height)
 
-	source := certclient.New(cl)
-	seed, err := source.GetByHeight(br.Height - 2)
+	source := certclient.NewProvider(cl)
+	seed, err := source.GetByHeight(brh - 2)
 	require.NoError(err, "%+v", err)
-	cert := certifiers.NewStatic("my-chain", seed.Validators)
+	cert := lite.NewStatic("my-chain", seed.Validators)
 
 	// First let's make sure a bogus transaction hash returns a valid non-existence proof.
 	key := types.Tx([]byte("bogus")).Hash()
@@ -132,8 +140,8 @@ func TestTxProofs(t *testing.T) {
 	err = res.Proof.Validate(key)
 	assert.NoError(err, "%+v", err)
 
-	check, err := GetCertifiedCheckpoint(int(br.Height), cl, cert)
+	commit, err := GetCertifiedCommit(br.Height, cl, cert)
 	require.Nil(err, "%+v", err)
-	require.Equal(res.Proof.RootHash, check.Header.DataHash)
+	require.Equal(res.Proof.RootHash, commit.Header.DataHash)
 
 }

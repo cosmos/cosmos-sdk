@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -15,6 +16,6 @@ var VersionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Show version info",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("v%s %s\n", version.Version, CommitHash)
+		fmt.Printf("%s-%s\n", version.Version, CommitHash)
 	},
 }

@@ -8,6 +8,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/state"
 )
 
+const (
+	// ModuleNameBase is the module name for internal functionality
+	ModuleNameBase = "base"
+	// ChainKey is the option key for setting the chain id
+	ChainKey = "chain_id"
+)
+
 // Handler is anything that processes a transaction
 type Handler interface {
 	// Checker verifies there are valid fees and estimates work
@@ -23,6 +30,18 @@ type Handler interface {
 
 	// TODO????
 	// BeginBlock(store state.SimpleDB, hash []byte, header *abci.Header)
+}
+
+// Ticker can be executed every block
+type Ticker interface {
+	Tick(Context, state.SimpleDB) ([]*abci.Validator, error)
+}
+
+// TickerFunc allows a function to implement the interface
+type TickerFunc func(Context, state.SimpleDB) ([]*abci.Validator, error)
+
+func (t TickerFunc) Tick(ctx Context, store state.SimpleDB) ([]*abci.Validator, error) {
+	return t(ctx, store)
 }
 
 // Named ensures there is a name for the item
@@ -80,17 +99,8 @@ func (c InitValidateFunc) InitValidate(l log.Logger, store state.SimpleDB, vals 
 
 //---------- results and some wrappers --------
 
-// Result is a common interface of CheckResult and GetResult
 type Result interface {
 	GetData() data.Bytes
-	GetLog() string
-}
-
-func ToABCI(r Result) abci.Result {
-	return abci.Result{
-		Data: r.GetData(),
-		Log:  r.GetLog(),
-	}
 }
 
 // CheckResult captures any non-error abci result
@@ -113,14 +123,17 @@ func NewCheck(gasAllocated uint64, log string) CheckResult {
 	}
 }
 
-var _ Result = CheckResult{}
-
-func (r CheckResult) GetData() data.Bytes {
-	return r.Data
+func (c CheckResult) ToABCI() abci.ResponseCheckTx {
+	return abci.ResponseCheckTx{
+		Data: c.Data,
+		Log:  c.Log,
+		Gas:  c.GasAllocated,
+		Fee:  c.GasPayment,
+	}
 }
 
-func (r CheckResult) GetLog() string {
-	return r.Log
+func (c CheckResult) GetData() data.Bytes {
+	return c.Data
 }
 
 // DeliverResult captures any non-error abci result
@@ -129,17 +142,20 @@ type DeliverResult struct {
 	Data    data.Bytes
 	Log     string
 	Diff    []*abci.Validator
-	GasUsed uint64
+	Tags    []*abci.KVPair
+	GasUsed uint64 // unused
 }
 
-var _ Result = DeliverResult{}
-
-func (r DeliverResult) GetData() data.Bytes {
-	return r.Data
+func (d DeliverResult) ToABCI() abci.ResponseDeliverTx {
+	return abci.ResponseDeliverTx{
+		Data: d.Data,
+		Log:  d.Log,
+		Tags: d.Tags,
+	}
 }
 
-func (r DeliverResult) GetLog() string {
-	return r.Log
+func (d DeliverResult) GetData() data.Bytes {
+	return d.Data
 }
 
 // placeholders

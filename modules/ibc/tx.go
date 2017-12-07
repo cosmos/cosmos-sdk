@@ -3,7 +3,7 @@ package ibc
 import (
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/iavl"
-	"github.com/tendermint/light-client/certifiers"
+	"github.com/tendermint/tendermint/lite"
 
 	sdk "github.com/cosmos/cosmos-sdk"
 )
@@ -32,17 +32,17 @@ func init() {
 
 // RegisterChainTx allows you to register a new chain on this blockchain
 type RegisterChainTx struct {
-	Seed certifiers.Seed `json:"seed"`
+	Commit lite.FullCommit `json:"seed"`
 }
 
 // ChainID helps get the chain this tx refers to
 func (r RegisterChainTx) ChainID() string {
-	return r.Seed.Header.ChainID
+	return r.Commit.Header.ChainID
 }
 
 // ValidateBasic makes sure this is consistent, without checking the sigs
 func (r RegisterChainTx) ValidateBasic() error {
-	err := r.Seed.ValidateBasic(r.ChainID())
+	err := r.Commit.ValidateBasic(r.ChainID())
 	if err != nil {
 		err = ErrInvalidCommit(err)
 	}
@@ -56,17 +56,17 @@ func (r RegisterChainTx) Wrap() sdk.Tx {
 
 // UpdateChainTx updates the state of this chain
 type UpdateChainTx struct {
-	Seed certifiers.Seed `json:"seed"`
+	Commit lite.FullCommit `json:"seed"`
 }
 
 // ChainID helps get the chain this tx refers to
 func (u UpdateChainTx) ChainID() string {
-	return u.Seed.Header.ChainID
+	return u.Commit.Header.ChainID
 }
 
 // ValidateBasic makes sure this is consistent, without checking the sigs
 func (u UpdateChainTx) ValidateBasic() error {
-	err := u.Seed.ValidateBasic(u.ChainID())
+	err := u.Commit.ValidateBasic(u.ChainID())
 	if err != nil {
 		err = ErrInvalidCommit(err)
 	}
@@ -113,6 +113,7 @@ type PostPacketTx struct {
 	// The immediate source of the packet, not always Packet.SrcChainID
 	FromChainID string `json:"src_chain"`
 	// The block height in which Packet was committed, to check Proof
+	// AppHash for the proof in header for FromChainHeight+1
 	FromChainHeight uint64 `json:"src_height"`
 	// this proof must match the header and the packet.Bytes()
 	Proof  *iavl.KeyExistsProof `json:"proof"`

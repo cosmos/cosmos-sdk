@@ -1,10 +1,12 @@
 package eyes
 
 import (
+	wire "github.com/tendermint/go-wire"
+	"github.com/tendermint/tmlibs/log"
+
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/errors"
 	"github.com/cosmos/cosmos-sdk/state"
-	wire "github.com/tendermint/go-wire"
 )
 
 const (
@@ -19,7 +21,6 @@ const (
 
 // Handler allows us to set and remove data
 type Handler struct {
-	sdk.NopInitState
 	sdk.NopInitValidate
 }
 
@@ -33,6 +34,16 @@ func NewHandler() Handler {
 // Name - return name space
 func (Handler) Name() string {
 	return Name
+}
+
+// InitState - sets the genesis state
+func (h Handler) InitState(l log.Logger, store state.SimpleDB,
+	module, key, value string) (log string, err error) {
+	if module != Name {
+		return "", errors.ErrUnknownModule(module)
+	}
+	store.Set([]byte(key), []byte(value))
+	return key, nil
 }
 
 // CheckTx verifies if the transaction is properly formated

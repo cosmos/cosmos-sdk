@@ -66,10 +66,15 @@ test01GetInsecure() {
     INFO=$(${CLIENT_EXE} rpc info)
     assertTrue "line=${LINENO}, get info" "$?"
     DATA=$(echo $INFO | jq .response.data)
-    assertEquals "line=${LINENO}, basecoin info" '"Basecoin v0.7.1"' "$DATA"
+    assertEquals "line=${LINENO}, basecoin info" '"basecoin v0.7.1"' "$DATA"
 }
 
 test02GetSecure() {
+    # checking old headers only works if there is enough info
+    # before it. Wait until we are at least at height 3, so this
+    # works properly (querying previous commits)
+    ${CLIENT_EXE} rpc wait --height=3 > /dev/null
+
     HEIGHT=$(${CLIENT_EXE} rpc status | jq .latest_block_height)
     assertTrue "line=${LINENO}, get status" "$?"
 

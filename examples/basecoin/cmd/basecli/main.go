@@ -9,11 +9,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	"github.com/cosmos/cosmos-sdk/client/commands/auto"
+	"github.com/cosmos/cosmos-sdk/client/commands/commits"
 	"github.com/cosmos/cosmos-sdk/client/commands/keys"
 	"github.com/cosmos/cosmos-sdk/client/commands/proxy"
 	"github.com/cosmos/cosmos-sdk/client/commands/query"
 	rpccmd "github.com/cosmos/cosmos-sdk/client/commands/rpc"
-	"github.com/cosmos/cosmos-sdk/client/commands/seeds"
+	"github.com/cosmos/cosmos-sdk/client/commands/search"
 	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
 	authcmd "github.com/cosmos/cosmos-sdk/modules/auth/commands"
 	basecmd "github.com/cosmos/cosmos-sdk/modules/base/commands"
@@ -49,6 +50,11 @@ func main() {
 		ibccmd.IBCQueryCmd,
 	)
 
+	// these are queries to search for a tx
+	search.RootCmd.AddCommand(
+		coincmd.SentSearchCmd,
+	)
+
 	// set up the middleware
 	txcmd.Middleware = txcmd.Wrappers{
 		feecmd.FeeWrapper{},
@@ -77,9 +83,10 @@ func main() {
 		commands.InitCmd,
 		commands.ResetCmd,
 		keys.RootCmd,
-		seeds.RootCmd,
+		commits.RootCmd,
 		rpccmd.RootCmd,
 		query.RootCmd,
+		search.RootCmd,
 		txcmd.RootCmd,
 		proxy.RootCmd,
 		commands.VersionCmd,

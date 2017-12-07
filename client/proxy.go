@@ -24,7 +24,12 @@ func StartProxy(c rpcclient.Client, bind string, logger log.Logger) error {
 	// build the handler...
 	mux := http.NewServeMux()
 	rpc.RegisterRPCFuncs(mux, r, logger)
-	wm := rpc.NewWebsocketManager(r, c)
+
+	onDisconnect := rpc.OnDisconnect(func(remoteAddr string) {
+		// FIXME: TODO
+		// n.eventBus.UnsubscribeAll(context.Background(), remoteAddr)
+	})
+	wm := rpc.NewWebsocketManager(r, onDisconnect)
 	wm.SetLogger(logger)
 	core.SetLogger(logger)
 	mux.HandleFunc(wsEndpoint, wm.WebsocketHandler)

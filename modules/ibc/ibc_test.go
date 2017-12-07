@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	wire "github.com/tendermint/go-wire"
-	"github.com/tendermint/light-client/certifiers"
+	"github.com/tendermint/tendermint/lite"
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"
@@ -22,33 +22,33 @@ func TestIBCRegister(t *testing.T) {
 	assert := assert.New(t)
 
 	// the validators we use to make seeds
-	keys := certifiers.GenValKeys(5)
-	keys2 := certifiers.GenValKeys(7)
+	keys := lite.GenValKeys(5)
+	keys2 := lite.GenValKeys(7)
 	appHash := []byte{0, 4, 7, 23}
 	appHash2 := []byte{12, 34, 56, 78}
 
-	// badSeed doesn't validate
-	badSeed := genEmptySeed(keys2, "chain-2", 123, appHash, len(keys2))
-	badSeed.Header.AppHash = appHash2
+	// badCommit doesn't validate
+	badCommit := genEmptyCommit(keys2, "chain-2", 123, appHash, len(keys2))
+	badCommit.Header.AppHash = appHash2
 
 	cases := []struct {
-		seed    certifiers.Seed
+		fc      lite.FullCommit
 		checker errors.CheckErr
 	}{
 		{
-			genEmptySeed(keys, "chain-1", 100, appHash, len(keys)),
+			genEmptyCommit(keys, "chain-1", 100, appHash, len(keys)),
 			errors.NoErr,
 		},
 		{
-			genEmptySeed(keys, "chain-1", 200, appHash, len(keys)),
+			genEmptyCommit(keys, "chain-1", 200, appHash, len(keys)),
 			IsAlreadyRegisteredErr,
 		},
 		{
-			badSeed,
+			badCommit,
 			IsInvalidCommitErr,
 		},
 		{
-			genEmptySeed(keys2, "chain-2", 123, appHash2, 5),
+			genEmptyCommit(keys2, "chain-2", 123, appHash2, 5),
 			errors.NoErr,
 		},
 	}
@@ -58,7 +58,7 @@ func TestIBCRegister(t *testing.T) {
 	app := stack.New().Dispatch(stack.WrapHandler(NewHandler()))
 
 	for i, tc := range cases {
-		tx := RegisterChainTx{tc.seed}.Wrap()
+		tx := RegisterChainTx{tc.fc}.Wrap()
 		_, err := app.DeliverTx(ctx, store, tx)
 		assert.True(tc.checker(err), "%d: %+v", i, err)
 	}
@@ -70,7 +70,7 @@ func TestIBCRegisterPermissions(t *testing.T) {
 	require := require.New(t)
 
 	// the validators we use to make seeds
-	keys := certifiers.GenValKeys(4)
+	keys := lite.GenValKeys(4)
 	appHash := []byte{0x17, 0x21, 0x5, 0x1e}
 
 	foobar := sdk.Actor{App: "foo", Address: []byte("bar")}
@@ -78,45 +78,45 @@ func TestIBCRegisterPermissions(t *testing.T) {
 	foobaz := sdk.Actor{App: "foo", Address: []byte("baz")}
 
 	cases := []struct {
-		seed      certifiers.Seed
+		seed      lite.FullCommit
 		registrar sdk.Actor
 		signer    sdk.Actor
 		checker   errors.CheckErr
 	}{
 		// no sig, no registrar
 		{
-			seed:    genEmptySeed(keys, "chain-1", 100, appHash, len(keys)),
+			seed:    genEmptyCommit(keys, "chain-1", 100, appHash, len(keys)),
 			checker: errors.NoErr,
 		},
 		// sig, no registrar
 		{
-			seed:    genEmptySeed(keys, "chain-2", 100, appHash, len(keys)),
+			seed:    genEmptyCommit(keys, "chain-2", 100, appHash, len(keys)),
 			signer:  foobaz,
 			checker: errors.NoErr,
 		},
 		// registrar, no sig
 		{
-			seed:      genEmptySeed(keys, "chain-3", 100, appHash, len(keys)),
+			seed:      genEmptyCommit(keys, "chain-3", 100, appHash, len(keys)),
 			registrar: foobar,
 			checker:   errors.IsUnauthorizedErr,
 		},
 		// registrar, wrong sig
 		{
-			seed:      genEmptySeed(keys, "chain-4", 100, appHash, len(keys)),
+			seed:      genEmptyCommit(keys, "chain-4", 100, appHash, len(keys)),
 			signer:    foobaz,
 			registrar: foobar,
 			checker:   errors.IsUnauthorizedErr,
 		},
 		// registrar, wrong sig
 		{
-			seed:      genEmptySeed(keys, "chain-5", 100, appHash, len(keys)),
+			seed:      genEmptyCommit(keys, "chain-5", 100, appHash, len(keys)),
 			signer:    baz,
 			registrar: foobar,
 			checker:   errors.IsUnauthorizedErr,
 		},
 		// registrar, proper sig
 		{
-			seed:      genEmptySeed(keys, "chain-6", 100, appHash, len(keys)),
+			seed:      genEmptyCommit(keys, "chain-6", 100, appHash, len(keys)),
 			signer:    foobar,
 			registrar: foobar,
 			checker:   errors.NoErr,
@@ -148,10 +148,10 @@ func TestIBCUpdate(t *testing.T) {
 	require := require.New(t)
 
 	// this is the root seed, that others are evaluated against
-	keys := certifiers.GenValKeys(7)
+	keys := lite.GenValKeys(7)
 	appHash := []byte{0, 4, 7, 23}
 	start := 100 // initial height
-	root := genEmptySeed(keys, "chain-1", 100, appHash, len(keys))
+	root := genEmptyCommit(keys, "chain-1", 100, appHash, len(keys))
 
 	keys2 := keys.Extend(2)
 	keys3 := keys2.Extend(2)
@@ -165,53 +165,53 @@ func TestIBCUpdate(t *testing.T) {
 	require.Nil(err, "%+v", err)
 
 	cases := []struct {
-		seed    certifiers.Seed
+		fc      lite.FullCommit
 		checker errors.CheckErr
 	}{
 		// same validator, higher up
 		{
-			genEmptySeed(keys, "chain-1", start+50, []byte{22}, len(keys)),
+			genEmptyCommit(keys, "chain-1", start+50, []byte{22}, len(keys)),
 			errors.NoErr,
 		},
 		// same validator, between existing (not most recent)
 		{
-			genEmptySeed(keys, "chain-1", start+5, []byte{15, 43}, len(keys)),
+			genEmptyCommit(keys, "chain-1", start+5, []byte{15, 43}, len(keys)),
 			errors.NoErr,
 		},
 		// same validators, before root of trust
 		{
-			genEmptySeed(keys, "chain-1", start-8, []byte{11, 77}, len(keys)),
+			genEmptyCommit(keys, "chain-1", start-8, []byte{11, 77}, len(keys)),
 			IsHeaderNotFoundErr,
 		},
 		// insufficient signatures
 		{
-			genEmptySeed(keys, "chain-1", start+60, []byte{24}, len(keys)/2),
+			genEmptyCommit(keys, "chain-1", start+60, []byte{24}, len(keys)/2),
 			IsInvalidCommitErr,
 		},
 		// unregistered chain
 		{
-			genEmptySeed(keys, "chain-2", start+60, []byte{24}, len(keys)/2),
+			genEmptyCommit(keys, "chain-2", start+60, []byte{24}, len(keys)/2),
 			IsNotRegisteredErr,
 		},
 		// too much change (keys -> keys3)
 		{
-			genEmptySeed(keys3, "chain-1", start+100, []byte{22}, len(keys3)),
+			genEmptyCommit(keys3, "chain-1", start+100, []byte{22}, len(keys3)),
 			IsInvalidCommitErr,
 		},
 		// legit update to validator set (keys -> keys2)
 		{
-			genEmptySeed(keys2, "chain-1", start+90, []byte{33}, len(keys2)),
+			genEmptyCommit(keys2, "chain-1", start+90, []byte{33}, len(keys2)),
 			errors.NoErr,
 		},
 		// now impossible jump works (keys -> keys2 -> keys3)
 		{
-			genEmptySeed(keys3, "chain-1", start+100, []byte{44}, len(keys3)),
+			genEmptyCommit(keys3, "chain-1", start+100, []byte{44}, len(keys3)),
 			errors.NoErr,
 		},
 	}
 
 	for i, tc := range cases {
-		tx := UpdateChainTx{tc.seed}.Wrap()
+		tx := UpdateChainTx{tc.fc}.Wrap()
 		_, err := app.DeliverTx(ctx, store, tx)
 		assert.True(tc.checker(err), "%d: %+v", i, err)
 	}
@@ -223,11 +223,11 @@ func TestIBCCreatePacket(t *testing.T) {
 	require := require.New(t)
 
 	// this is the root seed, that others are evaluated against
-	keys := certifiers.GenValKeys(7)
+	keys := lite.GenValKeys(7)
 	appHash := []byte{1, 2, 3, 4}
 	start := 100 // initial height
 	chainID := "cosmos-hub"
-	root := genEmptySeed(keys, chainID, start, appHash, len(keys))
+	root := genEmptyCommit(keys, chainID, start, appHash, len(keys))
 
 	// create the app and register the root of trust (for chain-1)
 	ctx := stack.MockContext("hub", 50)

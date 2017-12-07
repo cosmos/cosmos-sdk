@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/modules/auth"
 	"github.com/cosmos/cosmos-sdk/modules/base"
 	"github.com/cosmos/cosmos-sdk/modules/coin"
+	"github.com/cosmos/cosmos-sdk/modules/eyes"
 	"github.com/cosmos/cosmos-sdk/modules/fee"
 	"github.com/cosmos/cosmos-sdk/modules/ibc"
 	"github.com/cosmos/cosmos-sdk/modules/nonce"
@@ -45,6 +46,8 @@ func BuildApp(feeDenom string) sdk.Handler {
 			coin.NewHandler(),
 			stack.WrapHandler(roles.NewHandler()),
 			stack.WrapHandler(ibc.NewHandler()),
+			// and just for run, add eyes as well
+			stack.WrapHandler(eyes.NewHandler()),
 		)
 }
 

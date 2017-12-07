@@ -59,7 +59,7 @@ type ChainTx struct {
 	// name of chain, must be [A-Za-z0-9_-]+
 	ChainID string `json:"chain_id"`
 	// block height at which it is no longer valid, 0 means no expiration
-	ExpiresAt uint64      `json:"expires_at"`
+	ExpiresAt uint64 `json:"expires_at"`
 	Tx        sdk.Tx `json:"tx"`
 }
 
@@ -96,4 +96,7 @@ func (c ChainTx) ValidateBasic() error {
 	}
 	// TODO: more checks? chainID?
 	return c.Tx.ValidateBasic()
+}
+func (c ChainTx) Next() sdk.Tx {
+	return c.Tx
 }

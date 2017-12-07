@@ -237,7 +237,7 @@ info about self...
 }
 ```
 
-`/seeds`
+`/commits`
 
 ```
 {
@@ -246,4 +246,4 @@ info about self...
 }
 ```
 
-info on last seed
+info on last commit

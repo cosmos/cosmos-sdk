@@ -66,7 +66,7 @@ func TestStateCommitHash(t *testing.T) {
 
 			// make the store...
 			tree := iavl.NewVersionedTree(0, db.NewMemDB())
-			store := NewState(tree)
+			store := NewState(tree, 2)
 
 			for n, r := range tc.rounds {
 				// start the cache
@@ -98,4 +98,49 @@ func TestStateCommitHash(t *testing.T) {
 		}
 	}
 
+}
+
+// Ensure getting data doesn't cause it to write
+func TestGetDoesntWrite(t *testing.T) {
+	assert, require := assert.New(t), require.New(t)
+
+	// make the store...
+	tree := iavl.NewVersionedTree(0, db.NewMemDB())
+	store := NewState(tree, 5)
+
+	k, v := []byte("foo"), []byte("bar")
+	k2, v2 := []byte("abc"), []byte("def")
+	nok := []byte("baz")
+
+	// one set should change something
+	store.Append().Set(k, v)
+	hash, err := store.Commit(1)
+	require.NoError(err)
+	require.NotNil(hash)
+	// calling hash returns last committed state
+	hash1 := store.LatestHash()
+	require.Equal(hash, hash1)
+
+	// a second set will update the state
+	store.Append().Set(k2, v2)
+	hash, err = store.Commit(2)
+	require.NoError(err)
+	assert.NotEqual(hash1, hash)
+	// calling hash returns last committed state
+	hash2 := store.LatestHash()
+	require.Equal(hash, hash2)
+
+	// a missed get will not do anything....
+	val := store.Append().Get(nok)
+	assert.Nil(val)
+	hash, err = store.Commit(3)
+	require.NoError(err)
+	assert.Equal(hash2, hash)
+
+	// a proper get will not do anything....
+	val = store.Append().Get(k2)
+	assert.Equal(v2, val)
+	hash, err = store.Commit(4)
+	require.NoError(err)
+	assert.Equal(hash2, hash)
 }

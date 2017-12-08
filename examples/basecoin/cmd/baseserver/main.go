@@ -47,7 +47,9 @@ func serve(cmd *cobra.Command, args []string) error {
 	rootDir := viper.GetString(cli.HomeFlag)
 	keyMan := client.GetKeyManager(rootDir)
 	serviceKeys := rest.NewServiceKeys(keyMan)
-	serviceTxs := rest.NewServiceTxs(commands.GetNode())
+
+	rpcClient := commands.GetNode()
+	serviceTxs := rest.NewServiceTxs(rpcClient)
 
 	routeRegistrars := []func(*mux.Router) error{
 		// rest.Keys handlers
@@ -76,6 +78,16 @@ func serve(cmd *cobra.Command, args []string) error {
 
 	port := viper.GetInt(envPortFlag)
 	addr := fmt.Sprintf(":%d", port)
+
+	onDisconnect := rpc.OnDisconnect(func(remoteAddr string) {
+		// FIXME: TODO
+		// n.eventBus.UnsubscribeAll(context.Background(), remoteAddr)
+	})
+	routes := client.RPCRoutes(rpcClient)
+	wm := rpcserver.NewWebsocketManager(routes, onDisconnect)
+	wsLogger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "ws")
+	wm.SetLogger(wsLogger)
+	router.HandleFunc("/websocket", wm.WebsocketHandler)
 
 	log.Printf("Serving on %q", addr)
 	return http.ListenAndServe(addr, router)

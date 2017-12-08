@@ -28,11 +28,12 @@ func GetWithProof(key []byte, reqHeight int, node rpcclient.Client,
 		return
 	}
 
-	resp, proof, err := GetWithProofOptions("/key", key,
-		rpcclient.ABCIQueryOptions{Height: uint64(reqHeight)},
+	_resp, proof, err := GetWithProofOptions("/key", key,
+		rpcclient.ABCIQueryOptions{Height: int64(reqHeight)},
 		node, cert)
-	if resp != nil {
-		val, height = resp.Value, resp.Height
+	if _resp != nil {
+		resp := _resp.Response
+		val, height = resp.Value, uint64(resp.Height)
 	}
 	return val, height, proof, err
 }
@@ -42,14 +43,15 @@ func GetWithProofOptions(path string, key []byte, opts rpcclient.ABCIQueryOption
 	node rpcclient.Client, cert lite.Certifier) (
 	*ctypes.ResultABCIQuery, iavl.KeyProof, error) {
 
-	resp, err := node.ABCIQueryWithOptions(path, key, opts)
+	_resp, err := node.ABCIQueryWithOptions(path, key, opts)
 	if err != nil {
 		return nil, nil, err
 	}
+	resp := _resp.Response
 
 	// make sure the proof is the proper height
-	if !resp.Code.IsOK() {
-		err = errors.Errorf("Query error %d: %s", resp.Code, resp.Code.String())
+	if resp.IsErr() {
+		err = errors.Errorf("Query error %d: %d", resp.Code)
 		return nil, nil, err
 	}
 	if len(resp.Key) == 0 || len(resp.Proof) == 0 {

@@ -4,8 +4,6 @@ package errors
 import (
 	"fmt"
 	"reflect"
-
-	abci "github.com/tendermint/abci/types"
 )
 
 var (
@@ -17,12 +15,6 @@ var (
 	errInvalidFormat    = fmt.Errorf("Invalid format")
 	errUnknownModule    = fmt.Errorf("Unknown module")
 	errUnknownKey       = fmt.Errorf("Unknown key")
-
-	internalErr    = abci.CodeType_InternalError
-	encodingErr    = abci.CodeType_EncodingError
-	unauthorized   = abci.CodeType_Unauthorized
-	unknownRequest = abci.CodeType_UnknownRequest
-	unknownAddress = abci.CodeType_BaseUnknownAddress
 )
 
 // some crazy reflection to unwrap any generated struct.

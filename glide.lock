@@ -131,12 +131,12 @@ imports:
   - keys/wordlist
   - nano
 - name: github.com/tendermint/go-wire
-  version: 99d2169a1e39c65983eacaa1da867d6f3218e1c9
+  version: 078a95fc9117752ced2590cb4632efdf48e41c84
   subpackages:
   - data
   - data/base58
 - name: github.com/tendermint/iavl
-  version: 7198bc18ac0cf4ac0f57802d8022695640b79ec7
+  version: 03e6c011329bce607eed69d60737c899519f1f70
 - name: github.com/tendermint/light-client
   version: 76313d625e662ed7b284d066d68ff71edd7a9fac
   subpackages:

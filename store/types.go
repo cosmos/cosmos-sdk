@@ -88,7 +88,7 @@ type IterKVStore interface {
 	CacheIterKVStore() CacheIterKVStore
 
 	// CacheWrap() returns a CacheIterKVStore.
-	CacheWrap() CacheWrap
+	// CacheWrap() defined in KVStore
 }
 
 type CacheIterKVStore interface {

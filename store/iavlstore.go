@@ -1,5 +1,3 @@
-// XXX Need to s/Committer/CommitStore/g
-
 package store
 
 import (
@@ -13,152 +11,119 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
-// NewIAVLLoader returns a CommitterLoader that returns
-// an IAVLCommitter
-func NewIAVLLoader(dbName string, cacheSize int, nHistoricalVersions uint64) CommitterLoader {
-	l := iavlLoader{
-		dbName:              dbName,
-		cacheSize:           cacheSize,
-		nHistoricalVersions: nHistoricalVersions,
+// NewIAVLStoreLoader returns a CommitStoreLoader that returns an iavlStore
+func NewIAVLStoreLoader(dbName string, cacheSize int, numHistory int64) CommitStoreLoader {
+	l := iavlStoreLoader{
+		dbName:     dbName,
+		cacheSize:  cacheSize,
+		numHistory: numHistory,
 	}
-	return CommitterLoader(l.Load)
+	return l.Load
 }
 
-var _ CacheIterKVStore = (*IAVLCommitter)(nil)
-var _ Committer = (*IAVLCommitter)(nil)
+var _ IterKVStore = (*iavlStore)(nil)
+var _ CommitStore = (*iavlStore)(nil)
 
-// IAVLCommitter Implements IterKVStore and Committer
-type IAVLCommitter struct {
-	// we must store the last height here, as it is needed
-	// for saving the versioned tree
-	lastHeight uint64
+// iavlStore Implements IterKVStore and CommitStore.
+type iavlStore struct {
 
-	// nHistoricalVersions is how many old versions we hold onto,
-	// uses a naive "hold last X versions" algorithm
-	nHistoricalVersions uint64
-
-	// this is all historical data and connection to
-	// the db
+	// The underlying tree.
 	tree *iavl.VersionedTree
 
-	// this is the current working state to be saved
-	// on the next commit
-	IAVLStore
+	// How many old versions we hold onto.
+	numHistory int64
 }
 
-// NewIAVLCommitter properly initializes a committer
-// that is ready to use as a IterKVStore
-func NewIAVLCommitter(tree *iavl.VersionedTree,
-	lastHeight uint64, nHistoricalVersions uint64) *IAVLCommitter {
-	ic := &IAVLCommitter{
-		tree:                tree,
-		lastHeight:          lastHeight,
-		nHistoricalVersions: nHistoricalVersions,
+// CONTRACT: tree should be fully loaded.
+func newIAVLStore(tree *iavl.VersionedTree, numHistory int64) *iavlStore {
+	st := &iavlStore{
+		tree:       tree,
+		numHistory: numHistory,
 	}
-	ic.updateStore()
-	return ic
+	return st
 }
 
-// Commit syncs the working state and
-// saves another version to the db
-func (i *IAVLCommitter) Commit() CommitID {
-	// TODO: sync working state??
-	// I think this is done already just by writing to tree.Tree()
+// Commit persists the store.
+func (st *iavlStore) Commit() CommitID {
 
-	// save a new version
-	ic.lastHeight++
-	hash, err := ic.tree.SaveVersion(ic.lastHeight)
+	// Save a new version.
+	hash, version, err := st.tree.SaveVersion()
 	if err != nil {
-		// TODO: do we want to extend Commit to
-		// allow returning errors?
+		// TODO: Do we want to extend Commit to allow returning errors?
 		panic(err)
 	}
 
-	// now point working state to the new status
-	ic.updateStore()
-
-	// release an old version of history
-	if ic.nHistoricalVersions <= ic.lastHeight {
-		release := ic.lastHeight - ic.nHistoricalVersions
-		ic.tree.DeleteVersion(release)
+	// Release an old version of history
+	if st.numHistory < st.tree.Version() {
+		toRelease := version - st.numHistory
+		st.tree.DeleteVersion(toRelease)
 	}
 
 	return CommitID{
-		Version: ic.lastHeight,
+		Version: version,
 		Hash:    hash,
 	}
 }
 
-// store returns a wrapper around the current writable state
-func (ic *IAVLCommitter) updateStore() {
-	ic.IAVLStore = IAVLStore{ic.tree.Tree()}
-}
-
-// IAVLStore is the writable state (not history) and
-// implements the IterKVStore interface.
-type IAVLStore struct {
-	tree *iavl.Tree
-}
-
 // CacheWrap implements IterKVStore.
-func (is IAVLStore) CacheWrap() CacheWriter {
-	return is.CacheIterKVStore()
+func (st *iavlStore) CacheWrap() CacheWriter {
+	return st.CacheIterKVStore()
 }
 
 // CacheIterKVStore implements IterKVStore.
-func (is IAVLStore) CacheIterKVStore() CacheIterKVStore {
-	// TODO: Add CacheWrap to IAVLTree.
-	return i
+func (st *iavlStore) CacheIterKVStore() CacheIterKVStore {
+	// XXX Create generic IterKVStore wrapper.
+	return nil
 }
 
 // Set implements IterKVStore.
-func (is IAVLStore) Set(key, value []byte) (prev []byte) {
-	_, prev = is.tree.Get(key)
-	is.tree.Set(key, value)
+func (st *iavlStore) Set(key, value []byte) (prev []byte) {
+	_, prev = st.tree.Get(key)
+	st.tree.Set(key, value)
 	return prev
 }
 
 // Get implements IterKVStore.
-func (is IAVLStore) Get(key []byte) (value []byte, exists bool) {
-	_, v := is.tree.Get(key)
+func (st *iavlStore) Get(key []byte) (value []byte, exists bool) {
+	_, v := st.tree.Get(key)
 	return v, (v != nil)
 }
 
 // Has implements IterKVStore.
-func (is IAVLStore) Has(key []byte) (exists bool) {
-	return is.tree.Has(key)
+func (st *iavlStore) Has(key []byte) (exists bool) {
+	return st.tree.Has(key)
 }
 
 // Remove implements IterKVStore.
-func (is IAVLStore) Remove(key []byte) (prev []byte, removed bool) {
-	return is.tree.Remove(key)
+func (st *iavlStore) Remove(key []byte) (prev []byte, removed bool) {
+	return st.tree.Remove(key)
 }
 
 // Iterator implements IterKVStore.
-func (is IAVLStore) Iterator(start, end []byte) Iterator {
-	// TODO: this needs changes to IAVL tree
+func (st *iavlStore) Iterator(start, end []byte) Iterator {
+	// XXX Create iavlIterator (without modifying tendermint/iavl)
 	return nil
 }
 
 // ReverseIterator implements IterKVStore.
-func (is IAVLStore) ReverseIterator(start, end []byte) Iterator {
-	// TODO
+func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
+	// XXX Create iavlIterator (without modifying tendermint/iavl)
 	return nil
 }
 
 // First implements IterKVStore.
 func (is IAVLStore) First(start, end []byte) (kv KVPair, ok bool) {
-	// TODO
+	// XXX
 	return KVPair{}, false
 }
 
 // Last implements IterKVStore.
 func (is IAVLStore) Last(start, end []byte) (kv KVPair, ok bool) {
-	// TODO
+	// XXX
 	return KVPair{}, false
 }
 
-var _ IterKVStore = IAVLStore{}
+//----------------------------------------
 
 type iavlIterator struct {
 	// TODO
@@ -167,94 +132,55 @@ type iavlIterator struct {
 var _ Iterator = (*iavlIterator)(nil)
 
 // Domain implements Iterator
-//
-// The start & end (exclusive) limits to iterate over.
-// If end < start, then the Iterator goes in reverse order.
 func (ii *iavlIterator) Domain() (start, end []byte) {
 	// TODO
 	return nil, nil
 }
 
 // Valid implements Iterator
-//
-// Returns if the current position is valid.
 func (ii *iavlIterator) Valid() bool {
 	// TODO
 	return false
 }
 
 // Next implements Iterator
-//
-// Next moves the iterator to the next key/value pair.
 func (ii *iavlIterator) Next() {
 	// TODO
 }
 
 // Key implements Iterator
-//
-// Key returns the key of the current key/value pair, or nil if done.
-// The caller should not modify the contents of the returned slice, and
-// its contents may change after calling Next().
 func (ii *iavlIterator) Key() []byte {
 	// TODO
 	return nil
 }
 
 // Value implements Iterator
-//
-// Value returns the key of the current key/value pair, or nil if done.
-// The caller should not modify the contents of the returned slice, and
-// its contents may change after calling Next().
 func (ii *iavlIterator) Value() []byte {
 	// TODO
 	return nil
 }
 
 // Release implements Iterator
-//
-// Releases any resources and iteration-locks
 func (ii *iavlIterator) Release() {
 	// TODO
 }
 
-// iavlLoader contains info on what store we want to load from
-type iavlLoader struct {
-	dbName             string
-	cacheSize          int
-	nHistoricalVersion uint64
+//----------------------------------------
+
+// iavlStoreLoader contains info on what store we want to load from
+type iavlStoreLoader struct {
+	db         dbm.DB
+	cacheSize  int
+	numHistory int64
 }
 
-// Load implements CommitLoader type
-func (il iavlLoader) Load(id CommitID) (Committer, error) {
-	// memory backed case, just for testing
-	if il.dbName == "" {
-		tree := iavl.NewVersionedTree(0, dbm.NewMemDB())
-		store := NewIAVLCommitter(tree, 0, il.nHistoricalVersions)
-		return store, nil
-	}
-
-	// Expand the path fully
-	dbPath, err := filepath.Abs(il.dbName)
+// Load implements CommitLoader.
+func (isl iavlLoader) Load(id CommitID) (CommitStore, error) {
+	tree := iavl.NewVersionedTree(isl.db, isl.cacheSize)
+	err := tree.Load()
 	if err != nil {
-		return nil, errors.New("Invalid Database Name")
+		return nil, err
 	}
-
-	// Some external calls accidently add a ".db", which is now removed
-	dbPath = strings.TrimSuffix(dbPath, path.Ext(dbPath))
-
-	// Split the database name into it's components (dir, name)
-	dir := filepath.Dir(dbPath)
-	name := filepath.Base(dbPath)
-
-	// Open database called "dir/name.db", if it doesn't exist it will be created
-	db := dbm.NewDB(name, dbm.LevelDBBackendStr, dir)
-	tree := iavl.NewVersionedTree(il.cacheSize, db)
-	if err = tree.Load(); err != nil {
-		return nil, errors.New("Loading tree: " + err.Error())
-	}
-
-	// TODO: load the version stored in id
-	store := NewIAVLCommitter(tree, tree.LatestVersion(),
-		il.nHistoricalVersions)
+	store := newIAVLStore(tree, isl.numHistory)
 	return store, nil
 }

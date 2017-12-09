@@ -45,7 +45,7 @@ func (rs *rootMultiStore) SetCommitStoreLoader(name string, loader CommitStoreLo
 // Call once after all calls to SetCommitStoreLoader are complete.
 func (rs *rootMultiStore) LoadLatestVersion() error {
 	ver := getLatestVersion(rs.db)
-	rs.LoadVersion(ver)
+	return rs.LoadVersion(ver)
 }
 
 // NOTE: Returns 0 unless LoadVersion() or LoadLatestVersion() is called.
@@ -71,7 +71,10 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	// Otherwise, version is 1 or greater
 
 	// Load commitState
-	var state commitState = loadCommitState(rs.db, ver)
+	state, err := loadCommitState(rs.db, ver)
+	if err != nil {
+		return err
+	}
 
 	// Load each Substore
 	var newSubstores = make(map[string]CommitStore)
@@ -112,12 +115,10 @@ func (rs *rootMultiStore) doCommit() commitState {
 		commitID := store.Commit()
 
 		// Record CommitID
-		substores = append(substores,
-			substore{
-				Name:     name,
-				CommitID: commitID,
-			},
-		)
+		substore := substore{}
+		substore.Name = name
+		substore.CommitID = commitID
+		substores = append(substores, substore)
 	}
 
 	// Incr curVersion
@@ -134,7 +135,7 @@ func (rs *rootMultiStore) doCommit() commitState {
 // Implements CommitStore
 func (rs *rootMultiStore) Commit() CommitID {
 
-	version := rs.version
+	version := rs.curVersion
 
 	// Needs to be transactional
 	batch := rs.db.NewBatch()
@@ -145,15 +146,15 @@ func (rs *rootMultiStore) Commit() CommitID {
 	if err != nil {
 		panic(err)
 	}
-	commitStateKey := fmt.Sprintf(commitStateKeyFmt, rs.version)
-	batch.Set(commitStateKey, stateBytes)
+	commitStateKey := fmt.Sprintf(commitStateKeyFmt, rs.curVersion)
+	batch.Set([]byte(commitStateKey), stateBytes)
 
 	// Save the latest version
-	latestBytes, _ := wire.Marshal(rs.version) // Does not error
-	batch.Set(latestVersionKey, latestBytes)
+	latestBytes, _ := wire.Marshal(rs.curVersion) // Does not error
+	batch.Set([]byte(latestVersionKey), latestBytes)
 
 	batch.Write()
-	rs.version += 1
+	rs.curVersion += 1
 	commitID := CommitID{
 		Version: version,
 		Hash:    state.Hash(),
@@ -179,17 +180,17 @@ func (rs *rootMultiStore) CacheMultiStore() CacheMultiStore {
 
 // Implements MultiStore
 func (rs *rootMultiStore) GetCommitStore(name string) CommitStore {
-	return rs.store[name]
+	return rs.substores[name]
 }
 
 // Implements MultiStore
 func (rs *rootMultiStore) GetKVStore(name string) KVStore {
-	return rs.store[name].(KVStore)
+	return rs.substores[name].(KVStore)
 }
 
 // Implements MultiStore
 func (rs *rootMultiStore) GetIterKVStore(name string) IterKVStore {
-	return rs.store[name].(IterKVStore)
+	return rs.substores[name].(IterKVStore)
 }
 
 //----------------------------------------
@@ -210,8 +211,8 @@ func loadCommitState(db dbm.DB, ver int64) (commitState, error) {
 
 	// Load from DB.
 	commitStateKey := fmt.Sprintf(commitStateKeyFmt, ver)
-	stateBytes := db.Get(commitStateKey, ver)
-	if bz == nil {
+	stateBytes := db.Get([]byte(commitStateKey))
+	if stateBytes == nil {
 		return commitState{}, fmt.Errorf("Failed to load rootMultiStore: no data")
 	}
 
@@ -264,7 +265,7 @@ func (sc substoreCore) Hash() []byte {
 
 func getLatestVersion(db dbm.DB) int64 {
 	var latest int64
-	latestBytes := db.Get(latestVersionKey)
+	latestBytes := db.Get([]byte(latestVersionKey))
 	if latestBytes == nil {
 		return 0
 	}

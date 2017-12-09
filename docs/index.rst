@@ -11,23 +11,27 @@ Welcome to the Cosmos SDK!
    :width: 500px
    :align: center
 
-SDK and Basecoin
-----------------
+SDK
+---
 
 .. toctree::
    :maxdepth: 2
    
-   overview.rst
-   install.rst
-   basecoin-basics.rst
-   basecoin-tool.rst
-   key-management.rst
-   roles-and-multi-sig.rst
-   basecoin-plugins.rst
-   basecoin-kubernetes.rst
-   ibc.rst
-   glossary.rst
-   stdlib.rst
+   sdk/overview.rst
+   sdk/install.rst
+   sdk/key-management.rst
+   sdk/roles-and-multi-sig.rst
+
+Basecoin
+--------
+
+.. toctree::
+   :maxdepth: 2
+
+   basecoin/basics.rst
+   basecoin/tool.rst
+   basecoin/plugins.rst
+   basecoin/kubernetes.rst
 
 Staking Module
 --------------
@@ -35,6 +39,16 @@ Staking Module
 .. toctree::
    :maxdepth: 2
 
-   staking-module.rst
-   local-testnet.rst
-   atlas-testnet.rst
+   staking/intro.rst
+   staking/local-testnet.rst
+   staking/atlas-testnet.rst
+
+Extras
+------
+
+.. toctree::
+   :maxdepth: 2
+
+   ibc.rst
+   glossary.rst
+   stdlib.rst

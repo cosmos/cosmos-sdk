@@ -77,7 +77,7 @@ func TestStateCommitHash(t *testing.T) {
 					deliver.Set(k, v)
 				}
 				// commit and add hash to result
-				hash, err := store.Commit(uint64(n + 1))
+				hash, err := store.Commit(int64(n + 1))
 				require.Nil(err, "tc:%d / rnd:%d - %+v", i, n, err)
 				result[n] = hash
 			}

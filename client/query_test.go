@@ -81,7 +81,7 @@ func TestAppProofs(t *testing.T) {
 	bs, height, proof, err = GetWithProof(k, brh, cl, cert)
 	require.NoError(err, "%+v", err)
 	require.NotNil(proof)
-	require.True(height >= uint64(latest.Header.Height))
+	require.True(height >= int64(latest.Header.Height))
 
 	// Alexis there is a bug here, somehow the above code gives us rootHash = nil
 	// and proof.Verify doesn't care, while proofNotExists.Verify fails.

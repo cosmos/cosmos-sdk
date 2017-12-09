@@ -302,7 +302,7 @@ func TestIBCCreatePacket(t *testing.T) {
 	q := OutputQueue(p, chainID)
 	if assert.Equal(2, q.Size()) {
 		expected := []struct {
-			seq  uint64
+			seq  int64
 			perm sdk.Actors
 		}{
 			{0, nil},

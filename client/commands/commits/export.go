@@ -34,7 +34,7 @@ func exportCommit(cmd *cobra.Command, args []string) error {
 
 	// load the seed as specified
 	trust, _ := commands.GetProviders()
-	h := viper.GetInt(heightFlag)
+	h := int64(viper.GetInt(heightFlag))
 	hash := viper.GetString(hashFlag)
 	fc, err := loadCommit(trust, h, hash, "")
 	if err != nil {

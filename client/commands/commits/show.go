@@ -37,7 +37,7 @@ func init() {
 	RootCmd.AddCommand(showCmd)
 }
 
-func loadCommit(p lite.Provider, h int, hash, file string) (fc lite.FullCommit, err error) {
+func loadCommit(p lite.Provider, h int64, hash, file string) (fc lite.FullCommit, err error) {
 	// load the commit from the proper place
 	if h != 0 {
 		fc, err = p.GetByHeight(h)
@@ -59,7 +59,7 @@ func loadCommit(p lite.Provider, h int, hash, file string) (fc lite.FullCommit, 
 func showCommit(cmd *cobra.Command, args []string) error {
 	trust, _ := commands.GetProviders()
 
-	h := viper.GetInt(heightFlag)
+	h := int64(viper.GetInt(heightFlag))
 	hash := viper.GetString(hashFlag)
 	file := viper.GetString(fileFlag)
 	fc, err := loadCommit(trust, h, hash, file)

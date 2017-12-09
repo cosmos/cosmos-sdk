@@ -29,7 +29,7 @@ func (ChainWrapper) Wrap(tx sdk.Tx) (res sdk.Tx, err error) {
 	if chain == "" {
 		return res, errors.New("No chain-id provided")
 	}
-	res = base.NewChainTx(chain, uint64(expires), tx)
+	res = base.NewChainTx(chain, int64(expires), tx)
 	return
 }
 

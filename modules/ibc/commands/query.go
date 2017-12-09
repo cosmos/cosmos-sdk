@@ -47,7 +47,7 @@ var PacketsQueryCmd = &cobra.Command{
 	Use:   "packets",
 	Short: "Get latest packet in a queue",
 	RunE:  commands.RequireInit(packetsQueryCmd),
-	// uint64
+	// int64
 }
 
 // PacketQueryCmd - get the names packet (by queue and sequence)
@@ -156,7 +156,7 @@ func packetsQueryCmd(cmd *cobra.Command, args []string) error {
 		key = stack.PrefixedKey(ibc.NameIBC, ibc.QueueOutKey(to))
 	}
 
-	var res uint64
+	var res int64
 	prove := !viper.GetBool(commands.FlagTrustNode)
 	h, err := query.GetParsed(key, &res, query.GetHeight(), prove)
 	if err != nil {
@@ -182,9 +182,9 @@ func packetQueryCmd(cmd *cobra.Command, args []string) error {
 
 	var key []byte
 	if from != "" {
-		key = stack.PrefixedKey(ibc.NameIBC, ibc.QueueInPacketKey(from, uint64(seq)))
+		key = stack.PrefixedKey(ibc.NameIBC, ibc.QueueInPacketKey(from, int64(seq)))
 	} else {
-		key = stack.PrefixedKey(ibc.NameIBC, ibc.QueueOutPacketKey(to, uint64(seq)))
+		key = stack.PrefixedKey(ibc.NameIBC, ibc.QueueOutPacketKey(to, int64(seq)))
 	}
 
 	// Input queue just display the results

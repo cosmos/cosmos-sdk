@@ -18,7 +18,7 @@ const (
 // newCertifier loads up the current state of this chain to make a proper certifier
 // it will load the most recent height before block h if h is positive
 // if h < 0, it will load the latest height
-func newCertifier(store state.SimpleDB, chainID string, h int) (*lite.Inquiring, error) {
+func newCertifier(store state.SimpleDB, chainID string, h int64) (*lite.Inquiring, error) {
 	// each chain has their own prefixed subspace
 	p := newDBProvider(store)
 
@@ -60,7 +60,7 @@ func (d *dbProvider) StoreCommit(fc lite.FullCommit) error {
 	// TODO: don't duplicate data....
 	b := wire.BinaryBytes(fc)
 	d.byHash.Set(fc.ValidatorsHash(), b)
-	d.byHeight.Set(uint64(fc.Height()), b)
+	d.byHeight.Set(int64(fc.Height()), b)
 	return nil
 }
 
@@ -73,8 +73,8 @@ func (d *dbProvider) LatestCommit() (fc lite.FullCommit, err error) {
 	return
 }
 
-func (d *dbProvider) GetByHeight(h int) (fc lite.FullCommit, err error) {
-	b, _ := d.byHeight.LTE(uint64(h))
+func (d *dbProvider) GetByHeight(h int64) (fc lite.FullCommit, err error) {
+	b, _ := d.byHeight.LTE(int64(h))
 	if b == nil {
 		return fc, certerr.ErrCommitNotFound()
 	}
@@ -93,7 +93,7 @@ func (d *dbProvider) GetByHash(hash []byte) (fc lite.FullCommit, err error) {
 
 // GetExactHeight is like GetByHeight, but returns an error instead of
 // closest match if there is no exact match
-func (d *dbProvider) GetExactHeight(h int) (fc lite.FullCommit, err error) {
+func (d *dbProvider) GetExactHeight(h int64) (fc lite.FullCommit, err error) {
 	fc, err = d.GetByHeight(h)
 	if err != nil {
 		return

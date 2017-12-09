@@ -27,7 +27,7 @@ import (
 // It will try to get the proof for the given key.  If it is successful,
 // it will return the height and also unserialize proof.Data into the data
 // argument (so pass in a pointer to the appropriate struct)
-func GetParsed(key []byte, data interface{}, height int, prove bool) (uint64, error) {
+func GetParsed(key []byte, data interface{}, height int64, prove bool) (int64, error) {
 	bs, h, err := Get(key, height, prove)
 	if err != nil {
 		return 0, err
@@ -47,7 +47,7 @@ func GetParsed(key []byte, data interface{}, height int, prove bool) (uint64, er
 // we just repeat whatever any (potentially malicious) node gives us.
 // Only use that if you are running the full node yourself,
 // and it is localhost or you have a secure connection (not HTTP)
-func Get(key []byte, height int, prove bool) (data.Bytes, uint64, error) {
+func Get(key []byte, height int64, prove bool) (data.Bytes, int64, error) {
 	if height < 0 {
 		return nil, 0, fmt.Errorf("Height cannot be negative")
 	}
@@ -55,8 +55,11 @@ func Get(key []byte, height int, prove bool) (data.Bytes, uint64, error) {
 	if !prove {
 		node := commands.GetNode()
 		resp, err := node.ABCIQueryWithOptions("/key", key,
-			rpcclient.ABCIQueryOptions{Trusted: true, Height: uint64(height)})
-		return data.Bytes(resp.Value), resp.Height, err
+			rpcclient.ABCIQueryOptions{Trusted: true, Height: int64(height)})
+		if resp == nil {
+			return nil, height, err
+		}
+		return data.Bytes(resp.Response.Value), resp.Response.Height, err
 	}
 	val, h, _, err := GetWithProof(key, height)
 	return val, h, err
@@ -65,7 +68,7 @@ func Get(key []byte, height int, prove bool) (data.Bytes, uint64, error) {
 // GetWithProof returns the values stored under a given key at the named
 // height as in Get.  Additionally, it will return a validated merkle
 // proof for the key-value pair if it exists, and all checks pass.
-func GetWithProof(key []byte, height int) (data.Bytes, uint64, iavl.KeyProof, error) {
+func GetWithProof(key []byte, height int64) (data.Bytes, int64, iavl.KeyProof, error) {
 	node := commands.GetNode()
 	cert, err := commands.GetCertifier()
 	if err != nil {
@@ -93,19 +96,19 @@ func ParseHexKey(args []string, argname string) ([]byte, error) {
 }
 
 // GetHeight reads the viper config for the query height
-func GetHeight() int {
-	return viper.GetInt(FlagHeight)
+func GetHeight() int64 {
+	return int64(viper.GetInt(FlagHeight))
 }
 
 type proof struct {
-	Height uint64      `json:"height"`
+	Height int64       `json:"height"`
 	Data   interface{} `json:"data"`
 }
 
 // FoutputProof writes the output of wrapping height and info
 // in the form {"data": <the_data>, "height": <the_height>}
 // to the provider io.Writer
-func FoutputProof(w io.Writer, v interface{}, height uint64) error {
+func FoutputProof(w io.Writer, v interface{}, height int64) error {
 	wrap := &proof{height, v}
 	blob, err := data.ToJSON(wrap)
 	if err != nil {
@@ -118,6 +121,6 @@ func FoutputProof(w io.Writer, v interface{}, height uint64) error {
 // OutputProof prints the proof to stdout
 // reuse this for printing proofs and we should enhance this for text/json,
 // better presentation of height
-func OutputProof(data interface{}, height uint64) error {
+func OutputProof(data interface{}, height int64) error {
 	return FoutputProof(os.Stdout, data, height)
 }

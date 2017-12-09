@@ -17,8 +17,8 @@ import (
 //-----------------------------------
 // Test cases start here
 
-func randPower() uint64 {
-	return uint64(cmn.RandInt()%50 + 60)
+func randPower() int64 {
+	return int64(cmn.RandInt()%50 + 60)
 }
 
 func makeVal() *abci.Validator {

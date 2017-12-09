@@ -19,7 +19,7 @@ func TestNonce(t *testing.T) {
 	chainID := "my-chain"
 	chain2ID := "woohoo"
 
-	height := uint64(100)
+	height := int64(100)
 	ctx := stack.MockContext(chainID, height)
 	store := state.NewMemKVStore()
 

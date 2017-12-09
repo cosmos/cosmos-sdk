@@ -29,7 +29,7 @@ func updateCommit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	h := viper.GetInt(heightFlag)
+	h := int64(viper.GetInt(heightFlag))
 	var fc lite.FullCommit
 	if h <= 0 {
 		// get the lastest from our source

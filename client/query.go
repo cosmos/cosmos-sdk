@@ -19,9 +19,9 @@ import (
 // If there is any error in checking, returns an error.
 // If val is non-empty, proof should be KeyExistsProof
 // If val is empty, proof should be KeyMissingProof
-func GetWithProof(key []byte, reqHeight int, node rpcclient.Client,
+func GetWithProof(key []byte, reqHeight int64, node rpcclient.Client,
 	cert lite.Certifier) (
-	val data.Bytes, height uint64, proof iavl.KeyProof, err error) {
+	val data.Bytes, height int64, proof iavl.KeyProof, err error) {
 
 	if reqHeight < 0 {
 		err = errors.Errorf("Height cannot be negative")
@@ -33,7 +33,7 @@ func GetWithProof(key []byte, reqHeight int, node rpcclient.Client,
 		node, cert)
 	if _resp != nil {
 		resp := _resp.Response
-		val, height = resp.Value, uint64(resp.Height)
+		val, height = resp.Value, resp.Height
 	}
 	return val, height, proof, err
 }
@@ -79,7 +79,7 @@ func GetWithProofOptions(path string, key []byte, opts rpcclient.ABCIQueryOption
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "Couldn't verify proof")
 		}
-		return resp, eproof, nil
+		return &ctypes.ResultABCIQuery{resp}, eproof, nil
 	}
 
 	// The key wasn't found, construct a proof of non-existence.
@@ -93,30 +93,27 @@ func GetWithProofOptions(path string, key []byte, opts rpcclient.ABCIQueryOption
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Couldn't verify proof")
 	}
-	return resp, aproof, ErrNoData()
+	return &ctypes.ResultABCIQuery{resp}, aproof, ErrNoData()
 }
 
 // GetCertifiedCommit gets the signed header for a given height
 // and certifies it.  Returns error if unable to get a proven header.
-func GetCertifiedCommit(h uint64, node rpcclient.Client,
+func GetCertifiedCommit(h int64, node rpcclient.Client,
 	cert lite.Certifier) (empty lite.Commit, err error) {
-
-	// TODO: please standardize all int types
-	ih := int(h)
 
 	// FIXME: cannot use cert.GetByHeight for now, as it also requires
 	// Validators and will fail on querying tendermint for non-current height.
 	// When this is supported, we should use it instead...
-	rpcclient.WaitForHeight(node, ih, nil)
-	cresp, err := node.Commit(&ih)
+	rpcclient.WaitForHeight(node, h, nil)
+	cresp, err := node.Commit(&h)
 	if err != nil {
 		return
 	}
 	commit := client.CommitFromResult(cresp)
 
 	// validate downloaded checkpoint with our request and trust store.
-	if commit.Height() != ih {
-		return empty, certerr.ErrHeightMismatch(ih, commit.Height())
+	if commit.Height() != h {
+		return empty, certerr.ErrHeightMismatch(h, commit.Height())
 	}
 	err = cert.Certify(commit)
 	return commit, nil

@@ -96,7 +96,7 @@ func (m Middleware) verifyPost(ctx sdk.Context, store state.SimpleDB,
 	provider := newDBProvider(space)
 
 	// if the query was on height H, the proof is in header H+1
-	proofHeight := int(tx.FromChainHeight + 1)
+	proofHeight := tx.FromChainHeight + 1
 	seed, err := provider.GetExactHeight(proofHeight)
 	if err != nil {
 		return ictx, itx, err

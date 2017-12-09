@@ -11,7 +11,7 @@ import (
 var (
 	errMissingData = fmt.Errorf("All tx fields must be filled")
 
-	malformed = abci.CodeType_EncodingError
+	malformed = errors.CodeTypeEncodingError
 )
 
 //nolint

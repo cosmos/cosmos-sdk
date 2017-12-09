@@ -37,7 +37,7 @@ type StoreApp struct {
 	pending []*abci.Validator
 
 	// height is last committed block, DeliverTx is the next one
-	height uint64
+	height int64
 
 	logger log.Logger
 }
@@ -99,12 +99,12 @@ func (app *StoreApp) Check() sm.SimpleDB {
 
 // CommittedHeight gets the last block height committed
 // to the db
-func (app *StoreApp) CommittedHeight() uint64 {
+func (app *StoreApp) CommittedHeight() int64 {
 	return app.height
 }
 
 // WorkingHeight gets the current block we are writing
-func (app *StoreApp) WorkingHeight() uint64 {
+func (app *StoreApp) WorkingHeight() int64 {
 	return app.height + 1
 }
 
@@ -243,7 +243,7 @@ func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {
 	return -1
 }
 
-func loadState(dbName string, cacheSize int, historySize uint64) (*sm.State, error) {
+func loadState(dbName string, cacheSize int, historySize int64) (*sm.State, error) {
 	// memory backed case, just for testing
 	if dbName == "" {
 		tree := iavl.NewVersionedTree(0, dbm.NewMemDB())

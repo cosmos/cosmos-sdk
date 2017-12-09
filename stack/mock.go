@@ -11,7 +11,7 @@ import (
 type naiveContext struct {
 	id     nonce
 	chain  string
-	height uint64
+	height int64
 	perms  []sdk.Actor
 	log.Logger
 }
@@ -19,7 +19,7 @@ type naiveContext struct {
 // MockContext returns a simple, non-checking context for test cases.
 //
 // Always use NewContext() for production code to sandbox malicious code better
-func MockContext(chain string, height uint64) sdk.Context {
+func MockContext(chain string, height int64) sdk.Context {
 	return naiveContext{
 		id:     nonce(rand.Int63()),
 		chain:  chain,
@@ -34,7 +34,7 @@ func (c naiveContext) ChainID() string {
 	return c.chain
 }
 
-func (c naiveContext) BlockHeight() uint64 {
+func (c naiveContext) BlockHeight() int64 {
 	return c.height
 }
 

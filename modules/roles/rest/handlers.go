@@ -37,7 +37,7 @@ type RoleInput struct {
 func decodeRoleHex(roleInHex string) ([]byte, error) {
 	parsedRole, err := hex.DecodeString(common.StripHex(roleInHex))
 	if err != nil {
-		err = errors.WithMessage("invalid hex", err, abci.CodeType_EncodingError)
+		err = errors.WithMessage("invalid hex", err, errors.CodeTypeEncodingError)
 		return nil, err
 	}
 	return parsedRole, nil

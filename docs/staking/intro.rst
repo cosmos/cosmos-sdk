@@ -1,9 +1,24 @@
 Using Gaia
 ==========
 
-The purpose of the ``gaia`` staking module is to provide users with the ability to 1) declare candidacy as a validator, 2) bond/unbond to a candidate.
+This project is a demonstration of the Cosmos Hub with staking functionality; it is
+designed to get validator acquianted with staking concepts and procedure.
 
-For the time being, the ``gaia`` tooling is installed seperately from the Cosmos-SDK:
+Potential validators will be declaring their candidacy, after which users can
+delegate and, if they so wish, unbond. This can be practiced using a local or
+public testnet.
+
+Setup Testnet
+-------------
+
+The first thing you'll want to do is either `create a local testnet <./local-testnet.html>`__ or
+join a `public testnet <./public-testnet.html>`__. Either step is required before proceeding
+(although you should browse below and make some keys first).
+
+Install
+-------
+
+The ``gaia`` tooling is an extension of the Cosmos-SDK; to install:
 
 ::
 
@@ -12,7 +27,7 @@ For the time being, the ``gaia`` tooling is installed seperately from the Cosmos
     make get_vendor_deps
     make install
 
-The ``gaia`` tool has three primary commands:
+It has three primary commands:
 
 ::
 
@@ -36,13 +51,6 @@ Lastly, the ``gaia client`` command is the workhorse of the staking module. It a
 for sending various transactions and other types of interaction with a running chain.
 The rest of this tutorial will cover several commands from ``gaia client`` and assume
 that you've setup or joined a testnet.
-
-Setup Testnet
--------------
-
-The first thing you'll want to do is either `create a local testnet <./local-testnet.html>`__ or
-join the `atlas testnet <./atlas-testnet.html>`__. Either step is required before proceeding
-(although you should browse below and make some keys first).
 
 Generating Keys
 ---------------
@@ -103,7 +111,7 @@ We'll have ``alice`` who is currently quite rich, send some ``fermions`` to ``bo
 
 ::
 
-    gaia client tx send --amount=992fermion --sequence=1 --name=alice --to=5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
+    gaia client tx send --amount=1000fermion --sequence=1 --name=alice --to=5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
 
 where the ``--sequence`` flag is to be incremented for each transaction, the ``--name`` flag names the sender, and the ``--to`` flag takes ``bob``'s address. You'll see something like:
 
@@ -206,7 +214,7 @@ First let's have ``alice`` send some coins to ``charlie``:
 
 ::
 
-    gaia client tx send --amount=999fermion --sequence=2 --name=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
+    gaia client tx send --amount=1000fermion --sequence=2 --name=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
 
 Then ``charlie`` will delegate some fermions to ``bob``:
 
@@ -263,16 +271,42 @@ and you'll see output similar to:
       }
     }
 
+It's also possible the query the delegator's bond like so:
+
+::
+
+    gaia client query delegator-bond --delegator-address 48F74F48281C89E5E4BE9092F735EA519768E8EF --pubkey 52D6FCD8C92A97F7CCB01205ADF310A18411EA8FDCC10E65BF2FCDB05AD1689B
+
+with an output similar to:
+
+::
+
+    {
+      "height": 325782,
+      "data": {
+        "PubKey": {
+          "type": "ed25519",
+          "data": "52D6FCD8C92A97F7CCB01205ADF310A18411EA8FDCC10E65BF2FCDB05AD1689B"
+        },
+        "Shares": 20
+      }
+    }
+ 
+
+where the ``--delegator-address`` is ``charlie``'s address and the ``-pubkey`` is the same as we've been using.
+
 
 Unbonding
 ---------
 
-Finally, to relinquish all your power, unbond some coins. You should see
+Finally, to relinquish your voting power, unbond some coins. You should see
 your VotingPower reduce and your account balance increase.
 
 ::
 
     gaia client tx unbond --amount=5fermion --name=charlie --pubkey=<pub_key data>
     gaia client query account 48F74F48281C89E5E4BE9092F735EA519768E8EF
+
+See the bond decrease with ``gaia client query delegator-bond`` like above.
 
 That concludes an overview of the ``gaia`` tooling for local testing.

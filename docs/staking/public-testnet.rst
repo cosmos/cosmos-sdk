@@ -1,24 +1,18 @@
-Atlas Testnet
-=============
+Public Testnets
+===============
 
-Atlas is a community testnet which can be used to test setting up a
-cosmos validator node. In addition to this tutorial you can also
-follow `this video <https://www.youtube.com/watch?v=B-shjoqvnnY>`__.
+Here we'll cover the basics of joining a public testnet. These testnets
+come and go with various names are we release new versions of tendermint
+core. This tutorial covers joining the  ``gaia-1`` testnet. To join
+other testnets, choose different initialization files, described below.
 
 Get Tokens
 ----------
 
-To work on the Atlas you'll need some tokens to get started. To do
-this first generate a new key:
-
-::
-
-    gaia client keys new bob
-    gaia client keys list
-
-This will output a bunch of information. Read it carefully, then enter
-your key into `this utility <http://www.cosmosvalidators.com/>`__ with
-your key address and it will send you some ``fermion`` testnet tokens.
+If you haven't already `created a key <../sdk/key-management.html>`__,
+do so now. Copy your key's address and enter it into
+`this utility <http://www.cosmosvalidators.com/>`__ which will send you
+some ``fermion`` testnet tokens.
 
 Get Files
 ---------
@@ -32,12 +26,15 @@ testnet repo:
     git clone https://github.com/tendermint/testnets ~/testnets
     cd ~/testnets/gaia-1/gaia
 
+NOTE: to join a different testnet, change the ``gaia-1/gaia`` filepath
+to another directory with testnet inititalization files *and* an
+active testnet.
 
 Start Node
 ----------
 
-Now we can start a new node in the background; note that it may
-take awhile to sync with the existing testnet.
+Now we can start a new node:it may take awhile to sync with the
+existing testnet.
 
 ::
 
@@ -52,7 +49,7 @@ Finally, let's initialize the gaia client to interact with the testnet:
 
 ::
 
-    gaia client init --chain-id=atlas --node=tcp://localhost:46657
+    gaia client init --chain-id=gaia-1 --node=tcp://localhost:46657
 
 and check our balance:
 

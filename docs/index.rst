@@ -41,7 +41,7 @@ Staking Module
 
    staking/intro.rst
    staking/local-testnet.rst
-   staking/atlas-testnet.rst
+   staking/public-testnet.rst
 
 Extras
 ------

@@ -53,7 +53,7 @@ func TestCounterPlugin(t *testing.T) {
 
 	// Test a basic send, no fee
 	res := DeliverCounterTx(true, nil, 1)
-	assert.True(res.Code.IsOK(), res.String())
+	assert.True(res.IsOK(), res.String())
 
 	// Test an invalid send, no fee
 	res = DeliverCounterTx(false, nil, 2)
@@ -65,7 +65,7 @@ func TestCounterPlugin(t *testing.T) {
 
 	// Test an valid send, with supported fee
 	res = DeliverCounterTx(true, coin.Coins{{"gold", 100}}, 3)
-	assert.True(res.Code.IsOK(), res.String())
+	assert.True(res.IsOK(), res.String())
 
 	// Test unsupported fee
 	res = DeliverCounterTx(true, coin.Coins{{"silver", 100}}, 4)

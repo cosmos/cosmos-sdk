@@ -55,7 +55,7 @@ func TestAppProofs(t *testing.T) {
 	require.NoError(err, "%+v", err)
 	require.EqualValues(0, br.CheckTx.Code, "%#v", br.CheckTx)
 	require.EqualValues(0, br.DeliverTx.Code)
-	brh := int(br.Height)
+	brh := br.Height
 
 	// This sets up our trust on the node based on some past point.
 	source := certclient.NewProvider(cl)
@@ -119,7 +119,7 @@ func TestTxProofs(t *testing.T) {
 	require.NoError(err, "%+v", err)
 	require.EqualValues(0, br.CheckTx.Code, "%#v", br.CheckTx)
 	require.EqualValues(0, br.DeliverTx.Code)
-	brh := int(br.Height)
+	brh := br.Height
 
 	source := certclient.NewProvider(cl)
 	seed, err := source.GetByHeight(brh - 2)

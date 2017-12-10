@@ -53,8 +53,8 @@ func (s State) Check() SimpleDB {
 }
 
 // LatestHeight is the last block height we have committed
-func (s State) LatestHeight() uint64 {
-	return s.committed.Tree.LatestVersion()
+func (s State) LatestHeight() int64 {
+	return int64(s.committed.Tree.LatestVersion())
 }
 
 // LatestHash is the root hash of the last state we have

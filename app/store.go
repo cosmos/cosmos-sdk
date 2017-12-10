@@ -135,7 +135,7 @@ func (app *StoreApp) SetOption(res abci.RequestSetOption) abci.ResponseSetOption
 func (app *StoreApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) {
 	if len(reqQuery.Data) == 0 {
 		resQuery.Log = "Query cannot be zero length"
-		resQuery.Code = abci.CodeType_EncodingError
+		resQuery.Code = errors.CodeTypeEncodingErr
 		return
 	}
 
@@ -150,7 +150,7 @@ func (app *StoreApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 		// is not yet in the blockchain
 
 		withProof := app.CommittedHeight() - 1
-		if tree.Tree.VersionExists(withProof) {
+		if tree.Tree.VersionExists(uint64(withProof)) {
 			height = withProof
 		} else {
 			height = app.CommittedHeight()
@@ -176,7 +176,7 @@ func (app *StoreApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 		}
 
 	default:
-		resQuery.Code = abci.CodeType_UnknownRequest
+		resQuery.Code = errors.CodeTypeUnknownRequest
 		resQuery.Log = cmn.Fmt("Unexpected Query path: %v", reqQuery.Path)
 	}
 	return

@@ -3,15 +3,13 @@ package eyes
 import (
 	"fmt"
 
-	abci "github.com/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/errors"
 )
 
 var (
 	errMissingData = fmt.Errorf("All tx fields must be filled")
 
-	malformed = errors.CodeTypeEncodingError
+	malformed = errors.CodeTypeEncodingErr
 )
 
 //nolint

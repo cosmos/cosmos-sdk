@@ -95,7 +95,7 @@ func Wrap(err error) TMError {
 		return tm
 	}
 
-	return WithCode(err, defaultErrCode)
+	return WithCode(err, CodeTypeInternalErr)
 }
 
 // WithCode adds a stacktrace if necessary and sets the code and msg,
@@ -145,5 +145,5 @@ func HasErrorCode(err error, code uint32) bool {
 	if tm, ok := err.(TMError); ok {
 		return tm.ErrorCode() == code
 	}
-	return code == defaultErrCode
+	return code == CodeTypeInternalErr
 }

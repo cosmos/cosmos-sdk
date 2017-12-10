@@ -150,7 +150,7 @@ func TestIBCUpdate(t *testing.T) {
 	// this is the root seed, that others are evaluated against
 	keys := lite.GenValKeys(7)
 	appHash := []byte{0, 4, 7, 23}
-	start := 100 // initial height
+	start := int64(100) // initial height
 	root := genEmptyCommit(keys, "chain-1", 100, appHash, len(keys))
 
 	keys2 := keys.Extend(2)
@@ -225,7 +225,7 @@ func TestIBCCreatePacket(t *testing.T) {
 	// this is the root seed, that others are evaluated against
 	keys := lite.GenValKeys(7)
 	appHash := []byte{1, 2, 3, 4}
-	start := 100 // initial height
+	start := int64(100) // initial height
 	chainID := "cosmos-hub"
 	root := genEmptyCommit(keys, chainID, start, appHash, len(keys))
 
@@ -327,7 +327,7 @@ func TestIBCPostPacket(t *testing.T) {
 
 	otherID := "chain-1"
 	ourID := "hub"
-	start := 200
+	start := int64(200)
 	msg := "it's okay"
 
 	// create the app and our chain

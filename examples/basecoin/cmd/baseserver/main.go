@@ -10,13 +10,16 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
+	"github.com/tendermint/tmlibs/cli"
+	tmlog "github.com/tendermint/tmlibs/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	rest "github.com/cosmos/cosmos-sdk/client/rest"
 	coinrest "github.com/cosmos/cosmos-sdk/modules/coin/rest"
 	noncerest "github.com/cosmos/cosmos-sdk/modules/nonce/rest"
 	rolerest "github.com/cosmos/cosmos-sdk/modules/roles/rest"
-	"github.com/tendermint/tmlibs/cli"
 )
 
 var srvCli = &cobra.Command{
@@ -79,13 +82,13 @@ func serve(cmd *cobra.Command, args []string) error {
 	port := viper.GetInt(envPortFlag)
 	addr := fmt.Sprintf(":%d", port)
 
-	onDisconnect := rpc.OnDisconnect(func(remoteAddr string) {
+	onDisconnect := rpcserver.OnDisconnect(func(remoteAddr string) {
 		// FIXME: TODO
 		// n.eventBus.UnsubscribeAll(context.Background(), remoteAddr)
 	})
 	routes := client.RPCRoutes(rpcClient)
 	wm := rpcserver.NewWebsocketManager(routes, onDisconnect)
-	wsLogger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "ws")
+	wsLogger := tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout)).With("module", "ws")
 	wm.SetLogger(wsLogger)
 	router.HandleFunc("/websocket", wm.WebsocketHandler)
 

@@ -6,7 +6,6 @@ import (
 
 	"github.com/gorilla/mux"
 
-	abci "github.com/tendermint/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	"github.com/cosmos/cosmos-sdk/errors"
@@ -37,7 +36,7 @@ type RoleInput struct {
 func decodeRoleHex(roleInHex string) ([]byte, error) {
 	parsedRole, err := hex.DecodeString(common.StripHex(roleInHex))
 	if err != nil {
-		err = errors.WithMessage("invalid hex", err, errors.CodeTypeEncodingError)
+		err = errors.WithMessage("invalid hex", err, errors.CodeTypeEncodingErr)
 		return nil, err
 	}
 	return parsedRole, nil

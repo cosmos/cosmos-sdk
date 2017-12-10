@@ -8,6 +8,13 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
+// iavlStoreLoader contains info on what store we want to load from
+type iavlStoreLoader struct {
+	db         dbm.DB
+	cacheSize  int
+	numHistory int64
+}
+
 // NewIAVLStoreLoader returns a CommitStoreLoader that returns an iavlStore
 func NewIAVLStoreLoader(db dbm.DB, cacheSize int, numHistory int64) CommitStoreLoader {
 	l := iavlStoreLoader{
@@ -17,6 +24,19 @@ func NewIAVLStoreLoader(db dbm.DB, cacheSize int, numHistory int64) CommitStoreL
 	}
 	return l.Load
 }
+
+// Load implements CommitLoader.
+func (isl iavlStoreLoader) Load(id CommitID) (CommitStore, error) {
+	tree := iavl.NewVersionedTree(isl.db, isl.cacheSize)
+	err := tree.Load()
+	if err != nil {
+		return nil, err
+	}
+	store := newIAVLStore(tree, isl.numHistory)
+	return store, nil
+}
+
+//----------------------------------------
 
 var _ IterKVStore = (*iavlStore)(nil)
 var _ CommitStore = (*iavlStore)(nil)
@@ -268,8 +288,6 @@ func (ii *iavlIterator) Release() {
 //----------------------------------------
 
 func (ii *iavlIterator) setNext(key, value []byte) {
-	ii.mtx.Lock()
-	defer ii.mtx.Unlock()
 	ii.assertIsValid()
 
 	ii.key = key
@@ -277,8 +295,6 @@ func (ii *iavlIterator) setNext(key, value []byte) {
 }
 
 func (ii *iavlIterator) setInvalid() {
-	ii.mtx.Lock()
-	defer ii.mtx.Unlock()
 	ii.assertIsValid()
 
 	ii.invalid = true
@@ -301,26 +317,6 @@ func (ii *iavlIterator) assertIsValid() {
 	if ii.invalid {
 		panic("invalid iterator")
 	}
-}
-
-//----------------------------------------
-
-// iavlStoreLoader contains info on what store we want to load from
-type iavlStoreLoader struct {
-	db         dbm.DB
-	cacheSize  int
-	numHistory int64
-}
-
-// Load implements CommitLoader.
-func (isl iavlStoreLoader) Load(id CommitID) (CommitStore, error) {
-	tree := iavl.NewVersionedTree(isl.db, isl.cacheSize)
-	err := tree.Load()
-	if err != nil {
-		return nil, err
-	}
-	store := newIAVLStore(tree, isl.numHistory)
-	return store, nil
 }
 
 //----------------------------------------

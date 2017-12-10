@@ -249,10 +249,7 @@ func (ii *iavlIterator) Release() {
 func (ii *iavlIterator) setNext(key, value []byte) {
 	ii.mtx.Lock()
 	defer ii.mtx.Unlock()
-
-	if ii.invalid {
-		panic("setNext on an invalid iterator")
-	}
+	ii.asertIsValid()
 
 	ii.key = key
 	ii.value = value
@@ -261,10 +258,7 @@ func (ii *iavlIterator) setNext(key, value []byte) {
 func (ii *iavlIterator) setInvalid() {
 	ii.mtx.Lock()
 	defer ii.mtx.Unlock()
-
-	if ii.invalid {
-		panic("setInvalid on an invalid iterator")
-	}
+	ii.asertIsValid()
 
 	ii.invalid = true
 }
@@ -284,7 +278,7 @@ func (ii *iavlIterator) receiveNext() {
 
 func (ii *iavlIterator) assertIsValid() {
 	if ii.invalid {
-		panic("Next called on invalid iterator")
+		panic("invalid iterator")
 	}
 }
 

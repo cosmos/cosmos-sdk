@@ -136,7 +136,7 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/iavl
-  version: 03e6c011329bce607eed69d60737c899519f1f70
+  version: ab22235a11524125a1df019e7b223d9797a88810
 - name: github.com/tendermint/light-client
   version: 76313d625e662ed7b284d066d68ff71edd7a9fac
   subpackages:

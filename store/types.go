@@ -79,7 +79,11 @@ type IterKVStore interface {
 	Iterator(start, end []byte) Iterator
 	ReverseIterator(start, end []byte) Iterator
 
+	// Gets the first item.
 	First(start, end []byte) (kv KVPair, ok bool)
+
+	// Gets the last item (towards "end").
+	// End is exclusive.
 	Last(start, end []byte) (kv KVPair, ok bool)
 
 	// CacheIterKVStore() wraps a thing with a cache.

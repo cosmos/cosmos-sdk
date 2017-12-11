@@ -169,7 +169,7 @@ func (iter *cacheMergeIterator) compare(a, b []byte) int {
 // If `until` is nil, there is no limit.
 // CONTRACT: cache is valid.
 func (iter *cacheMergeIterator) skipCacheDeletes(until []byte) {
-	for (until == nil || bytes.Compare(iter.cache.Key(), until) < 0) &&
+	for (until == nil || iter.compare(iter.cache.Key(), until) < 0) &&
 		iter.cache.Value() == nil {
 
 		iter.cache.Next()

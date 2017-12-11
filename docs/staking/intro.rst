@@ -116,7 +116,7 @@ First, we need the pub_key data:
 
 ::
 
-    cat $HOME/.gaia2/priv_validator.json 
+    cat $HOME/.gaia2/config/priv_validator.json 
 
 the first part will look like:
 

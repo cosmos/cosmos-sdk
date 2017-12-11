@@ -108,7 +108,7 @@ First, initialize them:
 
     basecoin init $ME
 
-This will create a single ``genesis.json`` file in ``~/.basecoin`` with
+This will create a single ``genesis.json`` file in ``~/.basecoin/config`` with
 the information for both Basecoin and Tendermint.
 
 Now, In one window, run
@@ -130,7 +130,7 @@ and in another,
 You should see Tendermint start making blocks!
 
 Alternatively, you could ignore the Tendermint details in
-``~/.basecoin/genesis.json`` and use a separate directory by running:
+``~/.basecoin/config/genesis.json`` and use a separate directory by running:
 
 .. comment code:: shelldown[6]
 

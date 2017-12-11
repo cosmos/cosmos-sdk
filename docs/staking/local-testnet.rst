@@ -22,7 +22,7 @@ Now initialize a gaia chain, using ``alice``'s address:
     gaia node init 5D93A6059B6592833CBC8FA3DA90EE0382198985 --home=$HOME/.gaia1 --chain-id=gaia-test
 
 This will create all the files necessary to run a single node chain in
-``$HOME/.gaia1``: a ``priv_validator.json`` file with the validators
+``$HOME/.gaia1/config``: a ``priv_validator.json`` file with the validators
 private key, and a ``genesis.json`` file with the list of validators and
 accounts.
 
@@ -32,9 +32,9 @@ new directory, with the same address, and copying in the genesis:
 ::
 
     gaia node init 5D93A6059B6592833CBC8FA3DA90EE0382198985 --home=$HOME/.gaia2 --chain-id=gaia-test
-    cp $HOME/.gaia1/genesis.json $HOME/.gaia2/genesis.json
+    cp $HOME/.gaia1/config/genesis.json $HOME/.gaia2/config/genesis.json
 
-We also need to modify ``$HOME/.gaia2/config.toml`` to set new seeds
+We also need to modify ``$HOME/.gaia2/config/config.toml`` to set new seeds
 and ports. It should look like:
 
 ::
@@ -57,7 +57,7 @@ Start Nodes
 
 Now that we've initialized the chains, we can start both nodes:
 
-NOTE: each command below must be started in seperate terminal windows. Alternatively, to run this testnet across multiple machines, you'd replace the ``seeds = "0.0.0.0"`` in ``~/.gaia2.config.toml`` with the IP of the first node, and could skip the modifications we made to the config file above because port conflicts would be avoided.
+NOTE: each command below must be started in seperate terminal windows. Alternatively, to run this testnet across multiple machines, you'd replace the ``seeds = "0.0.0.0"`` in ``~/.gaia2/config/config.toml`` with the IP of the first node, and could skip the modifications we made to the config file above because port conflicts would be avoided.
 
 ::
 
@@ -78,6 +78,6 @@ To see what tendermint considers the validator set is, use:
 
     curl localhost:46657/validators
 
-and compare the information in this file: ``~/.gaia1/priv_validator.json``. The ``address`` and ``pub_key`` fields should match.
+and compare the information in this file: ``~/.gaia1/config/priv_validator.json``. The ``address`` and ``pub_key`` fields should match.
 
 To add a second validator on your testnet, you'll need to bond some tokens be declaring candidacy.

@@ -2,7 +2,9 @@ Key Management
 ==============
 
 Here we explain a bit how to work with your keys, using the
-``basecli keys`` subcommand.
+``basecli keys`` subcommand. Note that because ``basecli`` is
+an implementation of the Cosmmos SDK, other implementations, such
+as ``gaia`` will have a compatible set of tooling.
 
 **Note:** This keys tooling is not considered production ready and is
 for dev only.

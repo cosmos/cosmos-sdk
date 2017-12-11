@@ -82,12 +82,8 @@ func serve(cmd *cobra.Command, args []string) error {
 	port := viper.GetInt(envPortFlag)
 	addr := fmt.Sprintf(":%d", port)
 
-	onDisconnect := rpcserver.OnDisconnect(func(remoteAddr string) {
-		// FIXME: TODO
-		// n.eventBus.UnsubscribeAll(context.Background(), remoteAddr)
-	})
 	routes := client.RPCRoutes(rpcClient)
-	wm := rpcserver.NewWebsocketManager(routes, onDisconnect)
+	wm := rpcserver.NewWebsocketManager(routes, rpcserver.EventSubscriber(rpcClient))
 	wsLogger := tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout)).With("module", "ws")
 	wm.SetLogger(wsLogger)
 	router.HandleFunc("/websocket", wm.WebsocketHandler)

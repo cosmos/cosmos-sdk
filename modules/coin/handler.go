@@ -17,9 +17,9 @@ const (
 	//NameCoin - name space of the coin module
 	NameCoin = "coin"
 	// CostSend is GasAllocation per input/output
-	CostSend = uint64(10)
+	CostSend = int64(10)
 	// CostCredit is GasAllocation of a credit allocation
-	CostCredit = uint64(20)
+	CostCredit = int64(20)
 )
 
 // Handler includes an accountant
@@ -54,7 +54,7 @@ func (h Handler) CheckTx(ctx sdk.Context, store state.SimpleDB,
 	switch t := tx.Unwrap().(type) {
 	case SendTx:
 		// price based on inputs and outputs
-		used := uint64(len(t.Inputs) + len(t.Outputs))
+		used := int64(len(t.Inputs) + len(t.Outputs))
 		return sdk.NewCheck(used*CostSend, ""), h.checkSendTx(ctx, store, t)
 	case CreditTx:
 		// default price of 20, constant work

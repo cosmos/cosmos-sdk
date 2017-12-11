@@ -25,10 +25,10 @@ func init() {
 
 func runWait(cmd *cobra.Command, args []string) error {
 	c := commands.GetNode()
-	h := viper.GetInt(FlagHeight)
+	h := int64(viper.GetInt(FlagHeight))
 	if h == -1 {
 		// read from delta
-		d := viper.GetInt(FlagDelta)
+		d := int64(viper.GetInt(FlagDelta))
 		if d == -1 {
 			return errors.New("Must set --height or --delta")
 		}

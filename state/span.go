@@ -18,7 +18,7 @@ var (
 type Span struct {
 	store KVStore
 	// keys is sorted ascending and cannot contain duplicates
-	keys []uint64
+	keys []int64
 }
 
 // NewSpan loads or initializes a span of keys
@@ -29,7 +29,7 @@ func NewSpan(store KVStore) *Span {
 }
 
 // Set puts a value at a given height
-func (s *Span) Set(h uint64, value []byte) {
+func (s *Span) Set(h int64, value []byte) {
 	key := makeKey(h)
 	s.store.Set(key, value)
 	s.addKey(h)
@@ -37,13 +37,13 @@ func (s *Span) Set(h uint64, value []byte) {
 }
 
 // Get returns the element at h if it exists
-func (s *Span) Get(h uint64) []byte {
+func (s *Span) Get(h int64) []byte {
 	key := makeKey(h)
 	return s.store.Get(key)
 }
 
 // Bottom returns the lowest element in the Span, along with its index
-func (s *Span) Bottom() ([]byte, uint64) {
+func (s *Span) Bottom() ([]byte, int64) {
 	if len(s.keys) == 0 {
 		return nil, 0
 	}
@@ -52,7 +52,7 @@ func (s *Span) Bottom() ([]byte, uint64) {
 }
 
 // Top returns the highest element in the Span, along with its index
-func (s *Span) Top() ([]byte, uint64) {
+func (s *Span) Top() ([]byte, int64) {
 	l := len(s.keys)
 	if l == 0 {
 		return nil, 0
@@ -62,7 +62,7 @@ func (s *Span) Top() ([]byte, uint64) {
 }
 
 // GTE returns the lowest element in the Span that is >= h, along with its index
-func (s *Span) GTE(h uint64) ([]byte, uint64) {
+func (s *Span) GTE(h int64) ([]byte, int64) {
 	for _, k := range s.keys {
 		if k >= h {
 			return s.Get(k), k
@@ -73,8 +73,8 @@ func (s *Span) GTE(h uint64) ([]byte, uint64) {
 
 // LTE returns the highest element in the Span that is <= h,
 // along with its index
-func (s *Span) LTE(h uint64) ([]byte, uint64) {
-	var k uint64
+func (s *Span) LTE(h int64) ([]byte, int64) {
+	var k int64
 	// start from the highest and go down for the first match
 	for i := len(s.keys) - 1; i >= 0; i-- {
 		k = s.keys[i]
@@ -86,7 +86,7 @@ func (s *Span) LTE(h uint64) ([]byte, uint64) {
 }
 
 // addKey inserts this key, maintaining sorted order, no duplicates
-func (s *Span) addKey(h uint64) {
+func (s *Span) addKey(h int64) {
 	for i, k := range s.keys {
 		// don't add duplicates
 		if h == k {

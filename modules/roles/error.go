@@ -4,8 +4,6 @@ package roles
 import (
 	"fmt"
 
-	abci "github.com/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/errors"
 )
 
@@ -18,7 +16,7 @@ var (
 	errTooManyMembers   = fmt.Errorf("Too many members specified")
 	errNotEnoughMembers = fmt.Errorf("Not enough members specified")
 
-	unauthorized = abci.CodeType_Unauthorized
+	unauthorized = errors.CodeTypeUnauthorized
 )
 
 // TODO: codegen?

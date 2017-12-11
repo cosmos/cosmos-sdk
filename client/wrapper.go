@@ -51,7 +51,7 @@ func (w Wrapper) Tx(hash []byte, prove bool) (*ctypes.ResultTx, error) {
 	if !prove || err != nil {
 		return res, err
 	}
-	h := uint64(res.Height)
+	h := int64(res.Height)
 	check, err := GetCertifiedCommit(h, w.Client, w.cert)
 	if err != nil {
 		return res, err
@@ -64,7 +64,7 @@ func (w Wrapper) Tx(hash []byte, prove bool) (*ctypes.ResultTx, error) {
 // Rather expensive.
 //
 // TODO: optimize this if used for anything needing performance
-func (w Wrapper) BlockchainInfo(minHeight, maxHeight int) (*ctypes.ResultBlockchainInfo, error) {
+func (w Wrapper) BlockchainInfo(minHeight, maxHeight int64) (*ctypes.ResultBlockchainInfo, error) {
 	r, err := w.Client.BlockchainInfo(minHeight, maxHeight)
 	if err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func (w Wrapper) BlockchainInfo(minHeight, maxHeight int) (*ctypes.ResultBlockch
 }
 
 // Block returns an entire block and verifies all signatures
-func (w Wrapper) Block(height *int) (*ctypes.ResultBlock, error) {
+func (w Wrapper) Block(height *int64) (*ctypes.ResultBlock, error) {
 	r, err := w.Client.Block(height)
 	if err != nil {
 		return nil, err
@@ -115,7 +115,7 @@ func (w Wrapper) Block(height *int) (*ctypes.ResultBlock, error) {
 // Commit downloads the Commit and certifies it with the lite.
 //
 // This is the foundation for all other verification in this module
-func (w Wrapper) Commit(height *int) (*ctypes.ResultCommit, error) {
+func (w Wrapper) Commit(height *int64) (*ctypes.ResultCommit, error) {
 	rpcclient.WaitForHeight(w.Client, *height, nil)
 	r, err := w.Client.Commit(height)
 	// if we got it, then certify it

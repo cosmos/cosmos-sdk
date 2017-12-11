@@ -14,7 +14,7 @@ const (
 	Name = "eyes"
 
 	// CostSet is the gas needed for the set operation
-	CostSet uint64 = 10
+	CostSet int64 = 10
 	// CostRemove is the gas needed for the remove operation
 	CostRemove = 10
 )

@@ -118,7 +118,7 @@ func (at *appTest) reset() {
 	at.initAccount(at.acctOut)
 
 	resabci := at.app.Commit()
-	require.True(at.t, resabci.Code.IsOK(), resabci)
+	require.True(at.t, resabci.IsOK(), resabci)
 }
 
 func getBalance(key sdk.Actor, store state.SimpleDB) (coin.Coins, error) {
@@ -145,7 +145,7 @@ func (at *appTest) execDeliver(t *testing.T, tx sdk.Tx) (res abci.ResponseDelive
 	res = at.app.DeliverTx(txBytes)
 
 	// check the tags
-	if res.Code.IsOK() {
+	if res.IsOK() {
 		tags := res.Tags
 		require.NotEmpty(tags)
 		require.Equal("height", tags[0].Key)
@@ -270,13 +270,13 @@ func TestTx(t *testing.T) {
 	//Regular CheckTx
 	at.reset()
 	cres, _, _ = at.execCheck(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1))
-	assert.True(cres.Code.IsOK(), "ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", cres)
+	assert.True(cres.IsOK(), "ExecTx/Good CheckTx: Expected OK return from ExecTx, Error: %v", cres)
 
 	//Regular DeliverTx
 	at.reset()
 	amt := coin.Coins{{"mycoin", 3}}
 	dres, diffIn, diffOut = at.execDeliver(t, at.getTx(amt, 1))
-	assert.True(dres.Code.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", dres)
+	assert.True(dres.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", dres)
 	assert.Equal(amt.Negative(), diffIn)
 	assert.Equal(amt, diffOut)
 
@@ -285,7 +285,7 @@ func TestTx(t *testing.T) {
 	amt = coin.Coins{{"mycoin", 4}}
 	toll := coin.Coin{"mycoin", 1}
 	dres, diffIn, diffOut = at.execDeliver(t, at.feeTx(amt, toll, 1))
-	assert.True(dres.Code.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", dres)
+	assert.True(dres.IsOK(), "ExecTx/Good DeliverTx: Expected OK return from ExecTx, Error: %v", dres)
 	payment := amt.Plus(coin.Coins{toll}).Negative()
 	assert.Equal(payment, diffIn)
 	assert.Equal(amt, diffOut)
@@ -297,7 +297,7 @@ func TestQuery(t *testing.T) {
 	at := newAppTest(t)
 
 	dres, _, _ := at.execDeliver(t, at.getTx(coin.Coins{{"mycoin", 5}}, 1))
-	assert.True(dres.Code.IsOK(), "Commit, DeliverTx: Expected OK return from DeliverTx, Error: %v", dres)
+	assert.True(dres.IsOK(), "Commit, DeliverTx: Expected OK return from DeliverTx, Error: %v", dres)
 
 	resQueryPreCommit := at.app.Query(abci.RequestQuery{
 		Path: "/account",
@@ -305,7 +305,7 @@ func TestQuery(t *testing.T) {
 	})
 
 	cres := at.app.Commit()
-	assert.True(cres.Code.IsOK(), cres)
+	assert.True(cres.IsOK(), cres)
 
 	key := stack.PrefixedKey(coin.NameCoin, at.acctIn.Address())
 	resQueryPostCommit := at.app.Query(abci.RequestQuery{

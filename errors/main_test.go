@@ -7,8 +7,6 @@ import (
 
 	pkerr "github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-
-	abci "github.com/tendermint/abci/types"
 )
 
 func TestCreateResult(t *testing.T) {
@@ -17,15 +15,15 @@ func TestCreateResult(t *testing.T) {
 	cases := []struct {
 		err  error
 		msg  string
-		code abci.CodeType
+		code uint32
 	}{
-		{stderr.New("base"), "base", defaultErrCode},
-		{pkerr.New("dave"), "dave", defaultErrCode},
-		{New("nonce", abci.CodeType_BadNonce), "nonce", abci.CodeType_BadNonce},
-		{Wrap(stderr.New("wrap")), "wrap", defaultErrCode},
-		{WithCode(stderr.New("coded"), abci.CodeType_BaseInvalidInput), "coded", abci.CodeType_BaseInvalidInput},
-		{ErrDecoding(), errDecoding.Error(), abci.CodeType_EncodingError},
-		{ErrUnauthorized(), errUnauthorized.Error(), abci.CodeType_Unauthorized},
+		{stderr.New("base"), "base", CodeTypeInternalErr},
+		{pkerr.New("dave"), "dave", CodeTypeInternalErr},
+		{New("nonce", CodeTypeBadNonce), "nonce", CodeTypeBadNonce},
+		{Wrap(stderr.New("wrap")), "wrap", CodeTypeInternalErr},
+		{WithCode(stderr.New("coded"), CodeTypeBaseInvalidInput), "coded", CodeTypeBaseInvalidInput},
+		{ErrDecoding(), errDecoding.Error(), CodeTypeEncodingErr},
+		{ErrUnauthorized(), errUnauthorized.Error(), CodeTypeUnauthorized},
 	}
 
 	for idx, tc := range cases {

@@ -3,7 +3,6 @@ package ibc
 import (
 	"fmt"
 
-	abci "github.com/tendermint/abci/types"
 	"github.com/cosmos/cosmos-sdk/errors"
 )
 
@@ -20,14 +19,14 @@ var (
 	errInvalidProof        = fmt.Errorf("Invalid merkle proof")
 	msgInvalidCommit       = "Invalid header and commit"
 
-	IBCCodeChainNotRegistered    = abci.CodeType(1001)
-	IBCCodeChainAlreadyExists    = abci.CodeType(1002)
-	IBCCodeUnknownChain          = abci.CodeType(1003)
-	IBCCodeInvalidPacketSequence = abci.CodeType(1004)
-	IBCCodeUnknownHeight         = abci.CodeType(1005)
-	IBCCodeInvalidCommit         = abci.CodeType(1006)
-	IBCCodeInvalidProof          = abci.CodeType(1007)
-	IBCCodeInvalidCall           = abci.CodeType(1008)
+	IBCCodeChainNotRegistered    = uint32(1001)
+	IBCCodeChainAlreadyExists    = uint32(1002)
+	IBCCodeUnknownChain          = uint32(1003)
+	IBCCodeInvalidPacketSequence = uint32(1004)
+	IBCCodeUnknownHeight         = uint32(1005)
+	IBCCodeInvalidCommit         = uint32(1006)
+	IBCCodeInvalidProof          = uint32(1007)
+	IBCCodeInvalidCall           = uint32(1008)
 )
 
 func ErrNotRegistered(chainID string) error {
@@ -65,7 +64,7 @@ func IsCannotSetPermissionErr(err error) bool {
 	return errors.IsSameError(errCannotSetPermission, err)
 }
 
-func ErrHeaderNotFound(h int) error {
+func ErrHeaderNotFound(h int64) error {
 	msg := fmt.Sprintf("height %d", h)
 	return errors.WithMessage(msg, errHeaderNotFound, IBCCodeUnknownHeight)
 }
@@ -80,7 +79,7 @@ func IsPacketAlreadyExistsErr(err error) bool {
 	return errors.IsSameError(errPacketAlreadyExists, err)
 }
 
-func ErrPacketOutOfOrder(seq uint64) error {
+func ErrPacketOutOfOrder(seq int64) error {
 	msg := fmt.Sprintf("expected %d", seq)
 	return errors.WithMessage(msg, errPacketOutOfOrder, IBCCodeInvalidPacketSequence)
 }

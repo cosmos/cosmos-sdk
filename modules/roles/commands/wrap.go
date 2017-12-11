@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	abci "github.com/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 
 	sdk "github.com/cosmos/cosmos-sdk"
@@ -53,7 +52,7 @@ func parseRole(role string) ([]byte, error) {
 	res, err := hex.DecodeString(cmn.StripHex(role))
 	if err != nil {
 		err = errors.WithMessage("Address is invalid hex", err,
-			abci.CodeType_EncodingError)
+			errors.CodeTypeEncodingErr)
 	}
 	return res, err
 }

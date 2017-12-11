@@ -8,12 +8,12 @@ type State struct {
 	committed   *Bonsai
 	deliverTx   SimpleDB
 	checkTx     SimpleDB
-	historySize uint64
+	historySize int64
 }
 
 // NewState wraps a versioned tree and maintains all needed
 // states for the abci app
-func NewState(tree *iavl.VersionedTree, historySize uint64) *State {
+func NewState(tree *iavl.VersionedTree, historySize int64) *State {
 	base := NewBonsai(tree)
 	return &State{
 		committed:   base,
@@ -53,8 +53,8 @@ func (s State) Check() SimpleDB {
 }
 
 // LatestHeight is the last block height we have committed
-func (s State) LatestHeight() uint64 {
-	return s.committed.Tree.LatestVersion()
+func (s State) LatestHeight() int64 {
+	return int64(s.committed.Tree.LatestVersion())
 }
 
 // LatestHash is the root hash of the last state we have
@@ -64,7 +64,7 @@ func (s State) LatestHash() []byte {
 }
 
 // Commit saves persistent nodes to the database and re-copies the trees
-func (s *State) Commit(version uint64) ([]byte, error) {
+func (s *State) Commit(version int64) ([]byte, error) {
 	// commit (if we didn't do hash earlier)
 	err := s.committed.Commit(s.deliverTx)
 	if err != nil {
@@ -74,7 +74,7 @@ func (s *State) Commit(version uint64) ([]byte, error) {
 	// store a new version
 	var hash []byte
 	if !s.IsEmpty() {
-		hash, err = s.committed.Tree.SaveVersion(version)
+		hash, err = s.committed.Tree.SaveVersion(uint64(version))
 		if err != nil {
 			return nil, err
 		}
@@ -82,7 +82,7 @@ func (s *State) Commit(version uint64) ([]byte, error) {
 
 	// release an old version
 	if version > s.historySize {
-		s.committed.Tree.DeleteVersion(version - s.historySize)
+		s.committed.Tree.DeleteVersion(uint64(version - s.historySize))
 	}
 
 	s.deliverTx = s.committed.Checkpoint()

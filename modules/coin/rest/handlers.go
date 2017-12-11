@@ -48,14 +48,15 @@ func doQueryAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var h int
+	var h int64
 	qHeight := r.URL.Query().Get("height")
 	if qHeight != "" {
-		h, err = strconv.Atoi(qHeight)
+		_h, err := strconv.Atoi(qHeight)
 		if err != nil {
 			common.WriteError(w, err)
 			return
 		}
+		h = int64(_h)
 	}
 
 	actor = coin.ChainAddr(actor)

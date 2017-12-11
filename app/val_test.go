@@ -17,8 +17,8 @@ import (
 //-----------------------------------
 // Test cases start here
 
-func randPower() uint64 {
-	return uint64(cmn.RandInt()%50 + 60)
+func randPower() int64 {
+	return int64(cmn.RandInt()%50 + 60)
 }
 
 func makeVal() *abci.Validator {
@@ -79,7 +79,7 @@ func TestEndBlock(t *testing.T) {
 			tx := base.ValChangeTx{c}.Wrap()
 			txBytes := wire.BinaryBytes(tx)
 			res := app.DeliverTx(txBytes)
-			require.True(res.Code.IsOK(), "%#v", res)
+			require.True(res.IsOK(), "%#v", res)
 		}
 		diff := app.EndBlock(abci.RequestEndBlock{app.height})
 		// TODO: don't care about order here...

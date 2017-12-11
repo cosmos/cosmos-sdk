@@ -19,7 +19,7 @@ func TestChainValidate(t *testing.T) {
 
 	cases := []struct {
 		name    string
-		expires uint64
+		expires int64
 		valid   bool
 	}{
 		{"hello", 0, true},
@@ -48,7 +48,7 @@ func TestChain(t *testing.T) {
 	assert := assert.New(t)
 	msg := "got it"
 	chainID := "my-chain"
-	height := uint64(100)
+	height := int64(100)
 
 	raw := stack.NewRawTx([]byte{1, 2, 3, 4})
 	cases := []struct {

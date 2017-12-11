@@ -15,7 +15,7 @@ func NewMissingProvider() lite.Provider {
 }
 
 func (missingProvider) StoreCommit(lite.FullCommit) error { return nil }
-func (missingProvider) GetByHeight(int) (lite.FullCommit, error) {
+func (missingProvider) GetByHeight(int64) (lite.FullCommit, error) {
 	return lite.FullCommit{}, liteErr.ErrCommitNotFound()
 }
 func (missingProvider) GetByHash([]byte) (lite.FullCommit, error) {

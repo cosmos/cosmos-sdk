@@ -1,5 +1,5 @@
-hash: 791d28ec82d1ea662cc3f192aa7bf1f6dffdc1f2e43e57ce731857d6ea147ee4
-updated: 2017-12-01T10:08:25.699042855+01:00
+hash: da24779c9db3af6dc6427b7d1ae84a725bf454f7785c09d3dfc1a160442aca9f
+updated: 2017-12-08T18:41:01.918184161-05:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -33,6 +33,15 @@ imports:
   version: 71201497bace774495daed26a3874fd339e0b538
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
+- name: github.com/gogo/protobuf
+  version: 342cbe0a04158f6dcb03ca0079991a51a4248c02
+  subpackages:
+  - gogoproto
+  - jsonpb
+  - proto
+  - protoc-gen-gogo/descriptor
+  - sortkeys
+  - types
 - name: github.com/golang/protobuf
   version: 1643683e1b54a9e88ad26d98f81400c8c9d9f4f9
   subpackages:
@@ -112,9 +121,10 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 22b491bb1952125dd2fb0730d6ca8e59e310547c
+  version: fca2b508c185b855af1446ec4afc19bdfc7b315d
   subpackages:
   - client
+  - example/code
   - example/dummy
   - server
   - types
@@ -133,15 +143,15 @@ imports:
   - keys/wordlist
   - nano
 - name: github.com/tendermint/go-wire
-  version: 217a3c439f6497890d232ff5ed24084b43d9bfb3
+  version: 51453fda64ba68061b42e17b17e68469993e0a02
   subpackages:
   - data
   - data/base58
-  - nowriter/tmencoding
+  - nowriter/tmlegacy
 - name: github.com/tendermint/iavl
   version: 595f3dcd5b6cd4a292e90757ae6d367fd7a6e653
 - name: github.com/tendermint/tendermint
-  version: b2489b4318c843a64e2809517f93d906c5f9dc15
+  version: 7e3a5b7ce8e8a92b81eb99e3a6c1451e6d271d36
   subpackages:
   - blockchain
   - certifiers
@@ -177,7 +187,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: 21fb7819891997c96838308b4eba5a50b07ff03f
+  version: b49bce2bc3fb8fa25f676b9b49cce5e10f89b0c6
   subpackages:
   - autofile
   - cli
@@ -229,7 +239,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: f7bf885db0b7479a537ec317c6e48ce53145f3db
+  version: 401e0e00e4bb830a10496d64cd95e068c5bf50de
   subpackages:
   - balancer
   - codes

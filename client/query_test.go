@@ -55,7 +55,7 @@ func TestAppProofs(t *testing.T) {
 	require.NoError(err, "%+v", err)
 	require.EqualValues(0, br.CheckTx.Code, "%#v", br.CheckTx)
 	require.EqualValues(0, br.DeliverTx.Code)
-	brh := int(br.Height)
+	brh := br.Height
 
 	// This sets up our trust on the node based on some past point.
 	source := certclient.NewProvider(cl)
@@ -81,7 +81,7 @@ func TestAppProofs(t *testing.T) {
 	bs, height, proof, err = GetWithProof(k, brh, cl, cert)
 	require.NoError(err, "%+v", err)
 	require.NotNil(proof)
-	require.True(height >= uint64(latest.Header.Height))
+	require.True(height >= int64(latest.Header.Height))
 
 	// Alexis there is a bug here, somehow the above code gives us rootHash = nil
 	// and proof.Verify doesn't care, while proofNotExists.Verify fails.
@@ -119,7 +119,7 @@ func TestTxProofs(t *testing.T) {
 	require.NoError(err, "%+v", err)
 	require.EqualValues(0, br.CheckTx.Code, "%#v", br.CheckTx)
 	require.EqualValues(0, br.DeliverTx.Code)
-	brh := int(br.Height)
+	brh := br.Height
 
 	source := certclient.NewProvider(cl)
 	seed, err := source.GetByHeight(brh - 2)

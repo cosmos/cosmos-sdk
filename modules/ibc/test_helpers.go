@@ -31,14 +31,14 @@ func NewMockChain(chainID string, numKeys int) MockChain {
 }
 
 // GetRegistrationTx returns a valid tx to register this chain
-func (m MockChain) GetRegistrationTx(h int) RegisterChainTx {
+func (m MockChain) GetRegistrationTx(h int64) RegisterChainTx {
 	fc := genEmptyCommit(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
 	return RegisterChainTx{fc}
 }
 
 // MakePostPacket commits the packet locally and returns the proof,
 // in the form of two packets to update the header and prove this packet.
-func (m MockChain) MakePostPacket(packet Packet, h int) (
+func (m MockChain) MakePostPacket(packet Packet, h int64) (
 	PostPacketTx, UpdateChainTx) {
 
 	post := makePostPacket(m.tree, packet, m.chainID, h)
@@ -48,14 +48,14 @@ func (m MockChain) MakePostPacket(packet Packet, h int) (
 	return post, update
 }
 
-func genEmptyCommit(keys lite.ValKeys, chain string, h int,
+func genEmptyCommit(keys lite.ValKeys, chain string, h int64,
 	appHash []byte, count int) lite.FullCommit {
 
 	vals := keys.ToValidators(10, 0)
 	return keys.GenFullCommit(chain, h, nil, vals, appHash, 0, count)
 }
 
-func makePostPacket(tree *iavl.Tree, packet Packet, fromID string, fromHeight int) PostPacketTx {
+func makePostPacket(tree *iavl.Tree, packet Packet, fromID string, fromHeight int64) PostPacketTx {
 	key := []byte(fmt.Sprintf("some-long-prefix-%06d", packet.Sequence))
 	tree.Set(key, packet.Bytes())
 	_, proof, err := tree.GetWithProof(key)
@@ -68,7 +68,7 @@ func makePostPacket(tree *iavl.Tree, packet Packet, fromID string, fromHeight in
 
 	return PostPacketTx{
 		FromChainID:     fromID,
-		FromChainHeight: uint64(fromHeight),
+		FromChainHeight: int64(fromHeight),
 		Proof:           proof.(*iavl.KeyExistsProof),
 		Key:             key,
 		Packet:          packet,
@@ -80,7 +80,7 @@ type AppChain struct {
 	chainID string
 	app     sdk.Handler
 	store   state.SimpleDB
-	height  int
+	height  int64
 }
 
 // NewAppChain returns a chain that is ready to respond to tx
@@ -95,7 +95,7 @@ func NewAppChain(app sdk.Handler, chainID string) *AppChain {
 
 // IncrementHeight allows us to jump heights, more than the auto-step
 // of 1.  It returns the new height we are at.
-func (a *AppChain) IncrementHeight(delta int) int {
+func (a *AppChain) IncrementHeight(delta int64) int64 {
 	a.height += delta
 	return a.height
 }
@@ -103,7 +103,7 @@ func (a *AppChain) IncrementHeight(delta int) int {
 // DeliverTx runs the tx and commits the new tree, incrementing height
 // by one.
 func (a *AppChain) DeliverTx(tx sdk.Tx, perms ...sdk.Actor) (sdk.DeliverResult, error) {
-	ctx := stack.MockContext(a.chainID, uint64(a.height)).WithPermissions(perms...)
+	ctx := stack.MockContext(a.chainID, int64(a.height)).WithPermissions(perms...)
 	store := a.store.Checkpoint()
 	res, err := a.app.DeliverTx(ctx, store, tx)
 	if err == nil {

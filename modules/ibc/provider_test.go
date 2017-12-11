@@ -83,7 +83,7 @@ func makeCommits(keys lite.ValKeys, count int, chainID, app string) []lite.FullC
 		// two commits for each validator, to check how we handle dups
 		// (10, 0), (10, 1), (10, 1), (10, 2), (10, 2), ...
 		vals := keys.ToValidators(10, int64(count/2))
-		h := 20 + 10*i
+		h := int64(20 + 10*i)
 		commits[i] = keys.GenFullCommit(chainID, h, nil, vals, appHash, 0, len(keys))
 	}
 	return commits
@@ -130,7 +130,7 @@ func checkProvider(t *testing.T, p lite.Provider, chainID, app string) {
 	fc, err = p.GetByHeight(47)
 	if assert.Nil(err) {
 		// we only step by 10, so 40 must be the one below this
-		assert.Equal(40, fc.Height())
+		assert.Equal(int64(40), fc.Height())
 	}
 
 }

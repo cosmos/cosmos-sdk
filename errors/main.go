@@ -8,8 +8,6 @@ import (
 	abci "github.com/tendermint/abci/types"
 )
 
-const defaultErrCode = abci.CodeType_InternalError
-
 type stackTracer interface {
 	error
 	StackTrace() errors.StackTrace
@@ -22,13 +20,13 @@ type causer interface {
 // TMError is the tendermint abci return type with stack trace
 type TMError interface {
 	stackTracer
-	ErrorCode() abci.CodeType
+	ErrorCode() uint32
 	Message() string
 }
 
 type tmerror struct {
 	stackTracer
-	code abci.CodeType
+	code uint32
 	msg  string
 }
 
@@ -37,7 +35,7 @@ var (
 	_ error  = tmerror{}
 )
 
-func (t tmerror) ErrorCode() abci.CodeType {
+func (t tmerror) ErrorCode() uint32 {
 	return t.code
 }
 
@@ -97,12 +95,12 @@ func Wrap(err error) TMError {
 		return tm
 	}
 
-	return WithCode(err, defaultErrCode)
+	return WithCode(err, CodeTypeInternalErr)
 }
 
 // WithCode adds a stacktrace if necessary and sets the code and msg,
 // overriding the state if err was already TMError
-func WithCode(err error, code abci.CodeType) TMError {
+func WithCode(err error, code uint32) TMError {
 	// add a stack only if not present
 	st, ok := err.(stackTracer)
 	if !ok {
@@ -118,14 +116,14 @@ func WithCode(err error, code abci.CodeType) TMError {
 
 // WithMessage prepends some text to the error, then calls WithCode
 // It wraps the original error, so IsSameError will still match on err
-func WithMessage(prefix string, err error, code abci.CodeType) TMError {
+func WithMessage(prefix string, err error, code uint32) TMError {
 	e2 := errors.WithMessage(err, prefix)
 	return WithCode(e2, code)
 }
 
 // New adds a stacktrace if necessary and sets the code and msg,
 // overriding the state if err was already TMError
-func New(msg string, code abci.CodeType) TMError {
+func New(msg string, code uint32) TMError {
 	// create a new error with stack trace and attach a code
 	st := errors.New(msg).(stackTracer)
 	return tmerror{
@@ -143,9 +141,9 @@ func IsSameError(pattern error, err error) bool {
 }
 
 // HasErrorCode checks if this error would return the named error code
-func HasErrorCode(err error, code abci.CodeType) bool {
+func HasErrorCode(err error, code uint32) bool {
 	if tm, ok := err.(TMError); ok {
 		return tm.ErrorCode() == code
 	}
-	return code == defaultErrCode
+	return code == CodeTypeInternalErr
 }

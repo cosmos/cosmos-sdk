@@ -1,5 +1,5 @@
 hash: da24779c9db3af6dc6427b7d1ae84a725bf454f7785c09d3dfc1a160442aca9f
-updated: 2017-12-08T18:41:01.918184161-05:00
+updated: 2017-12-11T15:11:10.66123844-05:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -143,7 +143,7 @@ imports:
   - keys/wordlist
   - nano
 - name: github.com/tendermint/go-wire
-  version: 51453fda64ba68061b42e17b17e68469993e0a02
+  version: 27be46e25124ddf775e23317a83647ce62a93f6b
   subpackages:
   - data
   - data/base58
@@ -151,7 +151,7 @@ imports:
 - name: github.com/tendermint/iavl
   version: 595f3dcd5b6cd4a292e90757ae6d367fd7a6e653
 - name: github.com/tendermint/tendermint
-  version: 7e3a5b7ce8e8a92b81eb99e3a6c1451e6d271d36
+  version: 5c58db3bb49e35d0cc2a32de904cb754e5fd1c7b
   subpackages:
   - blockchain
   - certifiers
@@ -187,7 +187,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: b49bce2bc3fb8fa25f676b9b49cce5e10f89b0c6
+  version: d836ee056db0e454ab33b0f17c03308bcce92c48
   subpackages:
   - autofile
   - cli

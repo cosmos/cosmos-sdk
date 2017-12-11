@@ -8,13 +8,6 @@ Potential validators will be declaring their candidacy, after which users can
 delegate and, if they so wish, unbond. This can be practiced using a local or
 public testnet.
 
-Setup Testnet
--------------
-
-The first thing you'll want to do is either `create a local testnet <./local-testnet.html>`__ or
-join a `public testnet <./public-testnet.html>`__. Either step is required before proceeding
-(although you should browse below and make some keys first).
-
 Install
 -------
 
@@ -49,60 +42,25 @@ The ``gaia rest-server`` command is used by the `cosmos UI <https://github.com/c
 
 Lastly, the ``gaia client`` command is the workhorse of the staking module. It allows
 for sending various transactions and other types of interaction with a running chain.
-The rest of this tutorial will cover several commands from ``gaia client`` and assume
 that you've setup or joined a testnet.
 
 Generating Keys
 ---------------
 
-First, let's generate a key named ``alice``:
+Review the `key management tutorial <../sdk/key-management.html>`__ and create one key
+if you'll be joining the public testnet, and three keys if you'll be trying out a local
+testnet.
 
-::
+Setup Testnet
+-------------
 
-    gaia client keys new alice
+The first thing you'll want to do is either `create a local testnet <./local-testnet.html>`__ or
+join a `public testnet <./public-testnet.html>`__. Either step is required before proceeding.
 
-This will output:
-
-::
-
-    Enter a passphrase:
-    Repeat the passphrase:
-    alice	    5D93A6059B6592833CBC8FA3DA90EE0382198985
-    **Important** write this seed phrase in a safe place.
-    It is the only way to recover your account if you ever forget your password.
-
-    inject position weather divorce shine immense middle affair piece oval silver type until spike educate abandon
-
-which has your address and will be re-used throughout this tutorial.
-We recommend doing something like ``MYADDR=<your address>``. Writing 
-down the recovery phrase is crucial for production keys, however,
-for this tutorial you can skip this step.
-
-Because ``alice`` will be the initial validator, we need another key, ``bob`` who will first receives tokens from ``alice``, then declare candidacy as a validator. We also need an account for ``charlie`` who will bond and unbond to ``bob``.
-
-::
-
-    gaia client keys new bob
-    gaia client keys new charlie
-
-Now we can see the keys we've created:
-
-::
-
-    gaia client keys list
-
-which shows something like:
-
-::
-
-    All keys:
-    alice           5D93A6059B6592833CBC8FA3DA90EE0382198985
-    bob             5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
-    charlie         48F74F48281C89E5E4BE9092F735EA519768E8EF
-
-Try adding the ``--output json`` flag to the above command to get more information.
-The information for these keys is stored in ``~/.cosmos-gaia-cli``.
-We've got our keys made, so let's move on to the next step.
+The rest of this tutorial will assume a local testnet with three participants: ``alice`` will be
+the initial validator, ``bob`` will first receives tokens from ``alice`` then declare candidacy
+as a validator, and ``charlie`` will bond then unbond to ``bob``. If you're joining the public
+testnet, the token amounts will need to be adjusted.
 
 Sending Tokens
 --------------

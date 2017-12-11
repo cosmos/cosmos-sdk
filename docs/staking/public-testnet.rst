@@ -43,7 +43,7 @@ existing testnet.
 Once blocks slow down to about one per second, you're all caught up.
 
 The ``gaia node start`` command will automaticaly generate a validator
-private key found in ``~/testnets/gaia-1/gaia/priv_validator.json``.
+private key found in ``~/testnets/gaia-1/gaia/config/priv_validator.json``.
 
 Finally, let's initialize the gaia client to interact with the testnet:
 

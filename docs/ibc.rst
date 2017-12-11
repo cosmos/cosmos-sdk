@@ -291,7 +291,7 @@ Now start basecoin:
 
 ::
 
-    sed -ie "s/4665/$PORT_PREFIX1/" $BCHOME1_SERVER/config.toml
+    sed -ie "s/4665/$PORT_PREFIX1/" $BCHOME1_SERVER/config/config.toml
 
     basecoin1 start &> basecoin1.log &
 
@@ -303,7 +303,7 @@ first account should have money, the second none:
 
 ::
 
-    basecli1 init --node=tcp://localhost:${RPC_PORT1} --genesis=${BCHOME1_SERVER}/genesis.json
+    basecli1 init --node=tcp://localhost:${RPC_PORT1} --genesis=${BCHOME1_SERVER}/config/genesis.json
     basecli1 query account $MONEY
     basecli1 query account $GOTNONE
 
@@ -329,7 +329,7 @@ And prepare the genesis block, and start the server:
 
     basecoin2 init --chain-id $CHAINID2 $(basecli2 keys get moremoney | awk '{print $2}')
 
-    sed -ie "s/4665/$PORT_PREFIX2/" $BCHOME2_SERVER/config.toml
+    sed -ie "s/4665/$PORT_PREFIX2/" $BCHOME2_SERVER/config/config.toml
 
     basecoin2 start &> basecoin2.log &
 
@@ -338,7 +338,7 @@ account should have money, the second none:
 
 ::
 
-    basecli2 init --node=tcp://localhost:${RPC_PORT2} --genesis=${BCHOME2_SERVER}/genesis.json
+    basecli2 init --node=tcp://localhost:${RPC_PORT2} --genesis=${BCHOME2_SERVER}/config/genesis.json
     basecli2 query account $MOREMONEY
     basecli2 query account $BROKE
 
@@ -372,7 +372,7 @@ Now we can start the relay process.
 
     basecoin relay init --chain1-id=$CHAINID1 --chain2-id=$CHAINID2 \
       --chain1-addr=tcp://localhost:${RPC_PORT1} --chain2-addr=tcp://localhost:${RPC_PORT2} \
-      --genesis1=${BCHOME1_SERVER}/genesis.json --genesis2=${BCHOME2_SERVER}/genesis.json \
+      --genesis1=${BCHOME1_SERVER}/config/genesis.json --genesis2=${BCHOME2_SERVER}/config/genesis.json \
       --from=$RELAY_KEY
 
     basecoin relay start --chain1-id=$CHAINID1 --chain2-id=$CHAINID2 \

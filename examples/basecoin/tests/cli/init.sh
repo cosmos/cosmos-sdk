@@ -15,7 +15,7 @@ oneTimeSetUp() {
     ${SERVER_EXE} init ${HEX} --home="$SERVER" >> "$SERVER_LOG"
     if ! assertTrue "line=${LINENO}" $?; then return 1; fi
 
-    GENESIS_FILE=${SERVER}/genesis.json
+    GENESIS_FILE=${SERVER}/config/genesis.json
     CHAIN_ID=$(cat ${GENESIS_FILE} | jq .chain_id | tr -d \")
 
     printf "starting ${SERVER_EXE}...\n"

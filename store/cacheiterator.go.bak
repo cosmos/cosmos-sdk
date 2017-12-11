@@ -1,0 +1,234 @@
+package store
+
+// A ChanIteratorFunc returns a chan to pull items from.
+// `iterCh` has 0 capacity and closes when there are no more items.
+// Close releaseCh to release the goroutine and other resources.
+type ChanIteratorFunc func(start, end []byte, ascending bool) (iterCh <-chan KVPair, releaseCh chan struct{})
+
+// Merges two iterators together.
+type mergeIterator struct {
+	// Source iterator (e.g. from parent tree)
+	source ChanIterator
+
+	// Domain
+	start, end []byte
+
+	// Iteration order
+	ascending bool
+
+	// Channel to push iteration values.
+	iterCh chan KVPair
+
+	// Close this to release goroutine.
+	quitCh chan struct{}
+
+	// Close this to signal that state is initialized.
+	initCh chan struct{}
+
+	//----------------------------------------
+	// What follows are mutable state.
+	mtx sync.Mutex
+
+	invalid bool   // True once, true forever
+	key     []byte // The current key
+	value   []byte // The current value
+}
+
+var _ Iterator = (*mergeIterator)(nil)
+
+// newMergeIterator will create a new mergeIterator.
+// CONTRACT: Caller must release the mergeIterator, as each one creates a new
+// goroutine.
+func newMergeIterator(source ChanIteratorFunc, start, end []byte, ascending bool) *mergeIterator {
+	iter := &mergeIterator{
+		tree:      tree,
+		start:     cp(start),
+		end:       cp(end),
+		ascending: ascending,
+		iterCh:    make(chan KVPair, 0), // Set capacity > 0?
+		quitCh:    make(chan struct{}),
+		initCh:    make(chan struct{}),
+	}
+	go itr.iterateRoutine()
+	go itr.initRoutine()
+	return itr
+}
+
+// Run this to funnel items from the tree to iterCh.
+func (iter *mergeIterator) iterateRoutine() {
+	defer close(iter.iterCh)
+	for {
+		select {
+		case kv, ok := <-iter.source:
+			if !ok { // source is exhausted.
+				return
+			} else { // received new kv pair.
+				select {
+				case iter.iterCh <- KVPair{key, value}:
+					continue // (yay).
+				case <-iter.quitCh:
+					return
+				}
+			}
+		case <-iter.quitCh:
+			return
+		}
+	}
+}
+
+// Run this to fetch the first item.
+func (iter *mergeIterator) initRoutine() {
+	iter.receiveNext()
+	close(iter.initCh)
+}
+
+// Domain implements Iterator
+func (iter *mergeIterator) Domain() (start, end []byte) {
+	return iter.start, iter.end
+}
+
+// Valid implements Iterator
+func (iter *mergeIterator) Valid() bool {
+	iter.waitInit()
+	iter.mtx.Lock()
+	defer iter.mtx.Unlock()
+
+	return !iter.invalid
+}
+
+// Next implements Iterator
+func (iter *mergeIterator) Next() {
+	iter.waitInit()
+	iter.mtx.Lock()
+	defer iter.mtx.Unlock()
+	iter.assertIsValid()
+
+	iter.receiveNext()
+}
+
+// Key implements Iterator
+func (iter *mergeIterator) Key() []byte {
+	iter.waitInit()
+	iter.mtx.Lock()
+	defer iter.mtx.Unlock()
+	iter.assertIsValid()
+
+	return iter.key
+}
+
+// Value implements Iterator
+func (iter *mergeIterator) Value() []byte {
+	iter.waitInit()
+	iter.mtx.Lock()
+	defer iter.mtx.Unlock()
+	iter.assertIsValid()
+
+	return iter.value
+}
+
+// Release implements Iterator
+func (iter *mergeIterator) Release() {
+	close(iter.quitCh)
+}
+
+//----------------------------------------
+
+func (iter *mergeIterator) setNext(key, value []byte) {
+	iter.mtx.Lock()
+	defer iter.mtx.Unlock()
+	iter.assertIsValid()
+
+	iter.key = key
+	iter.value = value
+}
+
+func (iter *mergeIterator) setInvalid() {
+	iter.mtx.Lock()
+	defer iter.mtx.Unlock()
+	iter.assertIsValid()
+
+	iter.invalid = true
+}
+
+func (iter *mergeIterator) waitInit() {
+	<-iter.initCh
+}
+
+func (iter *mergeIterator) receiveNext() {
+	kvPair, ok := <-iter.iterCh
+	if ok {
+		iter.setNext(kvPair.Key, kvPair.Value)
+	} else {
+		iter.setInvalid()
+	}
+}
+
+func (iter *mergeIterator) assertIsValid() {
+	if iter.invalid {
+		panic("invalid iterator")
+	}
+}
+
+//----------------------------------------
+// ChanIterators
+
+// Adapter for iavl.Tree.
+func IAVLChanIterator(tree *iavl.Tree) ChanIteratorFunc {
+	return func(start, end []byte, ascending bool) (iterCh <-chan KVPair, releaseCh chan struct{}) {
+
+		start, end = cp(start), cp(end)
+		iterCh = make(chan KVPair, 0)
+		releaseCh = make(chan struct{})
+
+		go func() {
+			defer close(iterCh)
+
+			// Iterate over source Tree.
+			tree.IterateRange(
+				start, end, ascending,
+
+				// For each item in order...
+				(func(key, value []byte) (stop bool) {
+					select {
+					case <-releaseCh:
+						return true
+					case iterCh <- KVPair{key, value}:
+						return false
+					}
+				}),
+			)
+		}()
+
+		return iterCh, releaseCh
+	}
+}
+
+// Adapter for Iterator
+func IteratorChanIterator(iter Iterator) ChanIteratorFunc {
+	return func(start, end []byte, ascending bool) (iterCh <-chan KVPair, releaseCh chan struct{}) {
+
+		start, end = cp(start), cp(end)
+		iterCh = make(chan KVPair, 0)
+		releaseCh = make(chan struct{})
+
+		go func() {
+			defer close(iterCh)
+
+			// Iterate over source Iterator.
+		FOR_LOOP:
+			for ; iter.Valid(); iter.Next() {
+
+				// For each item in order...
+				k, v := iter.Key(), iter.Value()
+				select {
+				case <-releaseCh:
+					return
+				case iterCh <- KVPair{key, value}:
+					break FOR_LOOP
+				}
+			}
+		}()
+
+		return iterCh, releaseCh
+	}
+}

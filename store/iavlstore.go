@@ -1,7 +1,6 @@
 package store
 
 import (
-	"bytes"
 	"sync"
 
 	"github.com/tendermint/iavl"
@@ -79,16 +78,14 @@ func (st *iavlStore) CacheIterKVStore() CacheIterKVStore {
 }
 
 // Set implements IterKVStore.
-func (st *iavlStore) Set(key, value []byte) (prev []byte) {
-	_, prev = st.tree.Get(key)
+func (st *iavlStore) Set(key, value []byte) {
 	st.tree.Set(key, value)
-	return prev
 }
 
 // Get implements IterKVStore.
-func (st *iavlStore) Get(key []byte) (value []byte, exists bool) {
+func (st *iavlStore) Get(key []byte) (value []byte) {
 	_, v := st.tree.Get(key)
-	return v, (v != nil)
+	return v
 }
 
 // Has implements IterKVStore.
@@ -97,8 +94,8 @@ func (st *iavlStore) Has(key []byte) (exists bool) {
 }
 
 // Remove implements IterKVStore.
-func (st *iavlStore) Remove(key []byte) (prev []byte, removed bool) {
-	return st.tree.Remove(key)
+func (st *iavlStore) Remove(key []byte) {
+	st.tree.Remove(key)
 }
 
 // Iterator implements IterKVStore.
@@ -113,39 +110,17 @@ func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 
 // First implements IterKVStore.
 func (st *iavlStore) First(start, end []byte) (kv KVPair, ok bool) {
-	iter := st.Iterator(start, end)
-	if !iter.Valid() {
-		return kv, false
-	}
-	defer iter.Release()
-	return KVPair{iter.Key(), iter.Value()}, true
+	return iteratorFirst(st, start, end)
 }
 
 // Last implements IterKVStore.
 func (st *iavlStore) Last(start, end []byte) (kv KVPair, ok bool) {
-	iter := st.ReverseIterator(end, start)
-	if !iter.Valid() {
-		if v, ok := st.Get(start); ok {
-			return KVPair{cp(start), cp(v)}, true
-		} else {
-			return kv, false
-		}
-	}
-	defer iter.Release()
-
-	if bytes.Equal(iter.Key(), end) {
-		// Skip this one, end is exclusive.
-		iter.Next()
-		if !iter.Valid() {
-			return kv, false
-		}
-	}
-
-	return KVPair{iter.Key(), iter.Value()}, true
+	return iteratorLast(st, start, end)
 }
 
 //----------------------------------------
 
+// Implements Iterator
 type iavlIterator struct {
 	// Underlying store
 	tree *iavl.Tree
@@ -179,9 +154,9 @@ var _ Iterator = (*iavlIterator)(nil)
 // newIAVLIterator will create a new iavlIterator.
 // CONTRACT: Caller must release the iavlIterator, as each one creates a new
 // goroutine.
-func newIAVLIterator(t *iavl.Tree, start, end []byte, ascending bool) *iavlIterator {
-	itr := &iavlIterator{
-		tree:      t,
+func newIAVLIterator(tree *iavl.Tree, start, end []byte, ascending bool) *iavlIterator {
+	iter := &iavlIterator{
+		tree:      tree,
 		start:     cp(start),
 		end:       cp(end),
 		ascending: ascending,
@@ -189,116 +164,116 @@ func newIAVLIterator(t *iavl.Tree, start, end []byte, ascending bool) *iavlItera
 		quitCh:    make(chan struct{}),
 		initCh:    make(chan struct{}),
 	}
-	go itr.iterateRoutine()
-	go itr.initRoutine()
-	return itr
+	go iter.iterateRoutine()
+	go iter.initRoutine()
+	return iter
 }
 
 // Run this to funnel items from the tree to iterCh.
-func (ii *iavlIterator) iterateRoutine() {
-	ii.tree.IterateRange(
-		ii.start, ii.end, ii.ascending,
+func (iter *iavlIterator) iterateRoutine() {
+	iter.tree.IterateRange(
+		iter.start, iter.end, iter.ascending,
 		func(key, value []byte) bool {
 			select {
-			case <-ii.quitCh:
+			case <-iter.quitCh:
 				return true // done with iteration.
-			case ii.iterCh <- KVPair{key, value}:
+			case iter.iterCh <- KVPair{key, value}:
 				return false // yay.
 			}
 		},
 	)
-	close(ii.iterCh) // done.
+	close(iter.iterCh) // done.
 }
 
 // Run this to fetch the first item.
-func (ii *iavlIterator) initRoutine() {
-	ii.receiveNext()
-	close(ii.initCh)
+func (iter *iavlIterator) initRoutine() {
+	iter.receiveNext()
+	close(iter.initCh)
 }
 
 // Domain implements Iterator
-func (ii *iavlIterator) Domain() (start, end []byte) {
-	return ii.start, ii.end
+func (iter *iavlIterator) Domain() (start, end []byte) {
+	return iter.start, iter.end
 }
 
 // Valid implements Iterator
-func (ii *iavlIterator) Valid() bool {
-	ii.waitInit()
-	ii.mtx.Lock()
-	defer ii.mtx.Unlock()
+func (iter *iavlIterator) Valid() bool {
+	iter.waitInit()
+	iter.mtx.Lock()
+	defer iter.mtx.Unlock()
 
-	return !ii.invalid
+	return !iter.invalid
 }
 
 // Next implements Iterator
-func (ii *iavlIterator) Next() {
-	ii.waitInit()
-	ii.mtx.Lock()
-	defer ii.mtx.Unlock()
-	ii.assertIsValid()
+func (iter *iavlIterator) Next() {
+	iter.waitInit()
+	iter.mtx.Lock()
+	defer iter.mtx.Unlock()
+	iter.assertIsValid()
 
-	ii.receiveNext()
+	iter.receiveNext()
 }
 
 // Key implements Iterator
-func (ii *iavlIterator) Key() []byte {
-	ii.waitInit()
-	ii.mtx.Lock()
-	defer ii.mtx.Unlock()
-	ii.assertIsValid()
+func (iter *iavlIterator) Key() []byte {
+	iter.waitInit()
+	iter.mtx.Lock()
+	defer iter.mtx.Unlock()
+	iter.assertIsValid()
 
-	return ii.key
+	return iter.key
 }
 
 // Value implements Iterator
-func (ii *iavlIterator) Value() []byte {
-	ii.waitInit()
-	ii.mtx.Lock()
-	defer ii.mtx.Unlock()
-	ii.assertIsValid()
+func (iter *iavlIterator) Value() []byte {
+	iter.waitInit()
+	iter.mtx.Lock()
+	defer iter.mtx.Unlock()
+	iter.assertIsValid()
 
-	return ii.value
+	return iter.value
 }
 
 // Release implements Iterator
-func (ii *iavlIterator) Release() {
-	close(ii.quitCh)
+func (iter *iavlIterator) Release() {
+	close(iter.quitCh)
 }
 
 //----------------------------------------
 
-func (ii *iavlIterator) setNext(key, value []byte) {
-	ii.mtx.Lock()
-	defer ii.mtx.Unlock()
-	ii.assertIsValid()
+func (iter *iavlIterator) setNext(key, value []byte) {
+	iter.mtx.Lock()
+	defer iter.mtx.Unlock()
+	iter.assertIsValid()
 
-	ii.key = key
-	ii.value = value
+	iter.key = key
+	iter.value = value
 }
 
-func (ii *iavlIterator) setInvalid() {
-	ii.mtx.Lock()
-	defer ii.mtx.Unlock()
-	ii.assertIsValid()
+func (iter *iavlIterator) setInvalid() {
+	iter.mtx.Lock()
+	defer iter.mtx.Unlock()
+	iter.assertIsValid()
 
-	ii.invalid = true
+	iter.invalid = true
 }
 
-func (ii *iavlIterator) waitInit() {
-	<-ii.initCh
+func (iter *iavlIterator) waitInit() {
+	<-iter.initCh
 }
 
-func (ii *iavlIterator) receiveNext() {
-	kvPair, ok := <-ii.iterCh
+func (iter *iavlIterator) receiveNext() {
+	kvPair, ok := <-iter.iterCh
 	if ok {
-		ii.setNext(kvPair.Key, kvPair.Value)
+		iter.setNext(kvPair.Key, kvPair.Value)
 	} else {
-		ii.setInvalid()
+		iter.setInvalid()
 	}
 }
 
-func (ii *iavlIterator) assertIsValid() {
-	if ii.invalid {
+func (iter *iavlIterator) assertIsValid() {
+	if iter.invalid {
 		panic("invalid iterator")
 	}
 }

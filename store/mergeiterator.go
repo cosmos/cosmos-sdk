@@ -164,7 +164,7 @@ func (iter *cacheMergeIterator) compare(a, b []byte) int {
 }
 
 // Skip all delete-items from the cache w/ `key < until`.  After this function,
-// current item is non-delete-item, xor `until <= key`.
+// current item is a non-delete-item, or `until <= key`.
 // If the current item is not a delete item, does noting.
 // If `until` is nil, there is no limit.
 // CONTRACT: cache is valid.

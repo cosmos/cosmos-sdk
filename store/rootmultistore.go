@@ -214,7 +214,7 @@ func (cs commitState) CommitID() CommitID {
 // substore state
 
 // substore contains the name and core reference for an underlying store.
-// it is the leaf of the rootMultiStores top level simple merkle tree
+// It is the leaf of the rootMultiStores top level simple merkle tree
 type substore struct {
 	Name string
 	substoreCore
@@ -274,7 +274,6 @@ func loadCommitState(db dbm.DB, ver int64) (commitState, error) {
 }
 
 // write the commitState to the batch.
-// NOTE: should version == state.Version ?
 func saveCommitState(batch db.Batch, version int64, state commitState) {
 	stateBytes, err := wire.Marshal(state)
 	if err != nil {

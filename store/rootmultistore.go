@@ -3,6 +3,7 @@ package store
 import (
 	"fmt"
 
+	db "github.com/tendermint/go-db"
 	"github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/merkle"
@@ -44,7 +45,7 @@ func (rs *rootMultiStore) SetCommitStoreLoader(name string, loader CommitStoreLo
 
 // Call once after all calls to SetCommitStoreLoader are complete.
 func (rs *rootMultiStore) LoadLatestVersion() error {
-	ver := getLatestVersion(rs.db)
+	ver := loadLatestVersion(rs.db)
 	return rs.LoadVersion(ver)
 }
 
@@ -105,12 +106,11 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	return nil
 }
 
-// Commits each substore and gets commitState.
-func (rs *rootMultiStore) doCommit() commitState {
-	version := rs.curVersion
-	substores := make([]substore, len(rs.substores))
+// Commits each substore and returns a new commitState.
+func doCommit(version int64, substoresMap map[string]CommitStore) commitState {
+	substores := make([]substore, 0, len(substoresMap))
 
-	for name, store := range rs.substores {
+	for name, store := range substoresMap {
 		// Commit
 		commitID := store.Commit()
 
@@ -121,39 +121,25 @@ func (rs *rootMultiStore) doCommit() commitState {
 		substores = append(substores, substore)
 	}
 
-	// Incr curVersion
-	rs.curVersion += 1
-
 	return commitState{
 		Version:   version,
 		Substores: substores,
 	}
 }
 
-//----------------------------------------
-
 // Implements CommitStore
 func (rs *rootMultiStore) Commit() CommitID {
 
 	version := rs.curVersion
 
+	state := doCommit(rs.curVersion, rs.substores)
+
 	// Needs to be transactional
 	batch := rs.db.NewBatch()
-
-	// Commit each substore and get commitState
-	state := rs.doCommit()
-	stateBytes, err := wire.Marshal(state)
-	if err != nil {
-		panic(err)
-	}
-	commitStateKey := fmt.Sprintf(commitStateKeyFmt, rs.curVersion)
-	batch.Set([]byte(commitStateKey), stateBytes)
-
-	// Save the latest version
-	latestBytes, _ := wire.Marshal(rs.curVersion) // Does not error
-	batch.Set([]byte(latestVersionKey), latestBytes)
-
+	saveCommitState(batch, rs.curVersion, state)
+	saveLatestVersion(batch, rs.curVersion)
 	batch.Write()
+
 	rs.curVersion += 1
 	commitID := CommitID{
 		Version: version,
@@ -206,25 +192,7 @@ type commitState struct {
 	Substores []substore
 }
 
-// loads commitState from disk.
-func loadCommitState(db dbm.DB, ver int64) (commitState, error) {
-
-	// Load from DB.
-	commitStateKey := fmt.Sprintf(commitStateKeyFmt, ver)
-	stateBytes := db.Get([]byte(commitStateKey))
-	if stateBytes == nil {
-		return commitState{}, fmt.Errorf("Failed to load rootMultiStore: no data")
-	}
-
-	// Parse bytes.
-	var state commitState
-	err := wire.Unmarshal(stateBytes, &state)
-	if err != nil {
-		return commitState{}, fmt.Errorf("Failed to load rootMultiStore: %v", err)
-	}
-	return state, nil
-}
-
+// Hash returns the simple merkle root hash of the substores sorted by name.
 func (cs commitState) Hash() []byte {
 	// TODO cache to cs.hash []byte
 	m := make(map[string]interface{}, len(cs.Substores))
@@ -254,6 +222,7 @@ type substoreCore struct {
 	// ... maybe add more state
 }
 
+// Hash returns the RIPEMD160 of the wire-encoded substore.
 func (sc substoreCore) Hash() []byte {
 	scBytes, _ := wire.Marshal(sc) // Does not error
 	hasher := ripemd160.New()
@@ -263,7 +232,7 @@ func (sc substoreCore) Hash() []byte {
 
 //----------------------------------------
 
-func getLatestVersion(db dbm.DB) int64 {
+func loadLatestVersion(db dbm.DB) int64 {
 	var latest int64
 	latestBytes := db.Get([]byte(latestVersionKey))
 	if latestBytes == nil {
@@ -274,4 +243,40 @@ func getLatestVersion(db dbm.DB) int64 {
 		panic(err)
 	}
 	return latest
+}
+
+func saveLatestVersion(batch db.Batch, version int64) {
+	// Save the latest version
+	latestBytes, _ := wire.Marshal(version) // Does not error
+	batch.Set([]byte(latestVersionKey), latestBytes)
+}
+
+// loads commitState from disk.
+func loadCommitState(db dbm.DB, ver int64) (commitState, error) {
+
+	// Load from DB.
+	commitStateKey := fmt.Sprintf(commitStateKeyFmt, ver)
+	stateBytes := db.Get([]byte(commitStateKey))
+	if stateBytes == nil {
+		return commitState{}, fmt.Errorf("Failed to load rootMultiStore: no data")
+	}
+
+	// Parse bytes.
+	var state commitState
+	err := wire.Unmarshal(stateBytes, &state)
+	if err != nil {
+		return commitState{}, fmt.Errorf("Failed to load rootMultiStore: %v", err)
+	}
+	return state, nil
+}
+
+// write the commitState to the batch.
+// NOTE: should version == state.Version ?
+func saveCommitState(batch db.Batch, version int64, state commitState) {
+	stateBytes, err := wire.Marshal(state)
+	if err != nil {
+		panic(err)
+	}
+	commitStateKey := fmt.Sprintf(commitStateKeyFmt, version)
+	batch.Set([]byte(commitStateKey), stateBytes)
 }

@@ -52,10 +52,18 @@ type CommitStoreLoader func(id CommitID) (CommitStore, error)
 
 // KVStore is a simple interface to get/set data
 type KVStore interface {
-	Set(key, value []byte) (prev []byte)
-	Get(key []byte) (value []byte, exists bool)
-	Has(key []byte) (exists bool)
-	Remove(key []byte) (prev []byte, removed bool)
+
+	// Get returns nil iff key doesn't exist. Panics on nil key.
+	Get(key []byte) []byte
+
+	// Set sets the key. Panics on nil key.
+	Set(key, value []byte)
+
+	// Has checks if a key exists. Panics on nil key.
+	Has(key []byte) bool
+
+	// Remove deletes the key. Panics on nil key.
+	Remove(key []byte)
 
 	// CacheKVStore() wraps a thing with a cache.  After
 	// calling .Write() on the CacheKVStore, all previous

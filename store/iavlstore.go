@@ -7,6 +7,13 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
+// iavlStoreLoader contains info on what store we want to load from
+type iavlStoreLoader struct {
+	db         dbm.DB
+	cacheSize  int
+	numHistory int64
+}
+
 // NewIAVLStoreLoader returns a CommitStoreLoader that returns an iavlStore
 func NewIAVLStoreLoader(db dbm.DB, cacheSize int, numHistory int64) CommitStoreLoader {
 	l := iavlStoreLoader{
@@ -16,6 +23,19 @@ func NewIAVLStoreLoader(db dbm.DB, cacheSize int, numHistory int64) CommitStoreL
 	}
 	return l.Load
 }
+
+// Load implements CommitLoader.
+func (isl iavlStoreLoader) Load(id CommitID) (CommitStore, error) {
+	tree := iavl.NewVersionedTree(isl.db, isl.cacheSize)
+	err := tree.Load()
+	if err != nil {
+		return nil, err
+	}
+	store := newIAVLStore(tree, isl.numHistory)
+	return store, nil
+}
+
+//----------------------------------------
 
 var _ IterKVStore = (*iavlStore)(nil)
 var _ CommitStore = (*iavlStore)(nil)
@@ -243,8 +263,6 @@ func (iter *iavlIterator) Release() {
 //----------------------------------------
 
 func (iter *iavlIterator) setNext(key, value []byte) {
-	iter.mtx.Lock()
-	defer iter.mtx.Unlock()
 	iter.assertIsValid()
 
 	iter.key = key
@@ -252,8 +270,6 @@ func (iter *iavlIterator) setNext(key, value []byte) {
 }
 
 func (iter *iavlIterator) setInvalid() {
-	iter.mtx.Lock()
-	defer iter.mtx.Unlock()
 	iter.assertIsValid()
 
 	iter.invalid = true
@@ -276,26 +292,6 @@ func (iter *iavlIterator) assertIsValid() {
 	if iter.invalid {
 		panic("invalid iterator")
 	}
-}
-
-//----------------------------------------
-
-// iavlStoreLoader contains info on what store we want to load from
-type iavlStoreLoader struct {
-	db         dbm.DB
-	cacheSize  int
-	numHistory int64
-}
-
-// Load implements CommitLoader.
-func (isl iavlStoreLoader) Load(id CommitID) (CommitStore, error) {
-	tree := iavl.NewVersionedTree(isl.db, isl.cacheSize)
-	err := tree.Load()
-	if err != nil {
-		return nil, err
-	}
-	store := newIAVLStore(tree, isl.numHistory)
-	return store, nil
 }
 
 //----------------------------------------

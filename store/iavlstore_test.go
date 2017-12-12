@@ -64,21 +64,16 @@ func TestIAVLStoreGetSetHasRemove(t *testing.T) {
 	exists := iavlStore.Has([]byte(key))
 	assert.True(t, exists)
 
-	value, exists := iavlStore.Get([]byte(key))
-	assert.True(t, exists)
+	value := iavlStore.Get([]byte(key))
 	assert.EqualValues(t, value, treeData[key])
 
 	value2 := "notgoodbye"
-	prev := iavlStore.Set([]byte(key), []byte(value2))
-	assert.EqualValues(t, value, prev)
+	iavlStore.Set([]byte(key), []byte(value2))
 
-	value, exists = iavlStore.Get([]byte(key))
-	assert.True(t, exists)
+	value = iavlStore.Get([]byte(key))
 	assert.EqualValues(t, value, value2)
 
-	prev, removed := iavlStore.Remove([]byte(key))
-	assert.True(t, removed)
-	assert.EqualValues(t, value2, prev)
+	iavlStore.Remove([]byte(key))
 
 	exists = iavlStore.Has([]byte(key))
 	assert.False(t, exists)

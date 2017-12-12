@@ -4,6 +4,7 @@ import (
 	"github.com/tendermint/go-wire/data"
 )
 
+// CommitID contains the tree version number and its merkle root
 type CommitID struct {
 	Version int64
 	Hash    []byte
@@ -74,6 +75,7 @@ type KVStore interface {
 	CacheWrap() CacheWrap
 }
 
+// CacheKVStore is a CacheWrap backed by a KVStore
 type CacheKVStore interface {
 	KVStore
 	Write() // Writes operations to underlying KVStore
@@ -103,6 +105,7 @@ type IterKVStore interface {
 	// CacheWrap() defined in KVStore
 }
 
+// CacheIterKVStore is a CacheWrap backed by an IterKVStore
 type CacheIterKVStore interface {
 	IterKVStore
 	Write() // Writes operations to underlying KVStore

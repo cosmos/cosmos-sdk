@@ -58,13 +58,14 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 
 	// Special logic for version 0
 	if ver == 0 {
+		rs.curVersion = 1
+		rs.lastCommitID = CommitID{}
+
 		for name, storeLoader := range rs.storeLoaders {
 			store, err := storeLoader(CommitID{})
 			if err != nil {
 				return fmt.Errorf("Failed to load rootMultiStore: %v", err)
 			}
-			rs.curVersion = 1
-			rs.lastCommitID = CommitID{}
 			rs.substores[name] = store
 		}
 		return nil
@@ -87,14 +88,14 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 		}
 		store, err := storeLoader(commitID)
 		if err != nil {
-			return fmt.Errorf("Failed to load rootMultiStore: %v", err)
+			return fmt.Errorf("Failed to load rootMultiStore substore %v for commitID %v: %v", name, commitID, err)
 		}
 		newSubstores[name] = store
 	}
 
 	// If any CommitStoreLoaders were not used, return error.
 	for name := range rs.storeLoaders {
-		if _, ok := rs.substores[name]; !ok {
+		if _, ok := newSubstores[name]; !ok {
 			return fmt.Errorf("Unused CommitStoreLoader: %v", name)
 		}
 	}
@@ -212,6 +213,8 @@ func (cs commitState) CommitID() CommitID {
 //----------------------------------------
 // substore state
 
+// substore contains the name and core reference for an underlying store.
+// it is the leaf of the rootMultiStores top level simple merkle tree
 type substore struct {
 	Name string
 	substoreCore

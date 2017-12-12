@@ -53,10 +53,10 @@ See the [install guide](/docs/guide/install.md) for more details.
 
 ## Guides
 
-* Getting started with the [Basecoin basics](/docs/guide/basecoin-basics.md)
-* Learn to [use the plugin system](/docs/guide/basecoin-plugins.md)
-* More features of the [Basecoin tool](/docs/guide/basecoin-tool.md)
-* Learn how to use [Inter-Blockchain Communication (IBC)](/docs/guide/ibc.md)
+* Getting started with the [Basecoin basics](/docs/basecoin-basics.rst)
+* Learn to [use the plugin system](/docs/basecoin-plugins.rst)
+* More features of the [Basecoin tool](/docs/basecoin-tool.rst)
+* Learn how to use [Inter-Blockchain Communication (IBC)](/docs/ibc.rst)
 * See [more examples](https://github.com/cosmos/cosmos-academy)
 
 To deploy a testnet, see our [repository of deployment tools](https://github.com/tendermint/tools).

@@ -113,8 +113,8 @@ func (st *iavlStore) Has(key []byte) (exists bool) {
 	return st.tree.Has(key)
 }
 
-// Remove implements IterKVStore.
-func (st *iavlStore) Remove(key []byte) {
+// Delete implements IterKVStore.
+func (st *iavlStore) Delete(key []byte) {
 	st.tree.Remove(key)
 }
 
@@ -126,16 +126,6 @@ func (st *iavlStore) Iterator(start, end []byte) Iterator {
 // ReverseIterator implements IterKVStore.
 func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, false)
-}
-
-// First implements IterKVStore.
-func (st *iavlStore) First(start, end []byte) (kv KVPair, ok bool) {
-	return iteratorFirst(st, start, end)
-}
-
-// Last implements IterKVStore.
-func (st *iavlStore) Last(start, end []byte) (kv KVPair, ok bool) {
-	return iteratorLast(st, start, end)
 }
 
 //----------------------------------------

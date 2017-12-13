@@ -214,6 +214,55 @@ func TestCacheKVMergeIteratorDeleteLast(t *testing.T) {
 	}
 }
 
+func TestCacheKVMergeIterator(t *testing.T) {
+	mem := dbm.NewMemDB()
+	st := NewCacheKVStore(mem)
+
+	// set some items and write them
+	nItems := 5
+	for i := 0; i < nItems; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+	}
+	st.Write()
+
+	// set some items and leave dirty
+	for i := nItems; i < nItems*2; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+	}
+
+	// iterate over all of them
+	assertIterateDomain(t, st, nItems*2)
+
+	// set the last dirty item to delete
+	last := nItems*2 - 1
+	st.Delete(keyFmt(last))
+
+	// iterate over all of them, ensure we dont see the last one
+	assertIterateDomain(t, st, nItems*2-1)
+
+	// write and check again
+	st.Write()
+	assertIterateDomain(t, st, nItems*2-1)
+
+	// delete the next last one
+	last = nItems*2 - 2
+	st.Delete(keyFmt(last))
+	assertIterateDomain(t, st, nItems*2-2)
+}
+
+// iterate over whole domain
+func assertIterateDomain(t *testing.T, st KVStore, expectedN int) {
+	itr := st.Iterator(dbm.BeginningKey(), dbm.EndingKey())
+	var i = 0
+	for ; itr.Valid(); itr.Next() {
+		k, v := itr.Key(), itr.Value()
+		assert.Equal(t, keyFmt(i), k)
+		assert.Equal(t, valFmt(i), v)
+		i += 1
+	}
+	assert.Equal(t, expectedN, i)
+}
+
 func TestCacheKVMergeIteratorDeletes(t *testing.T) {
 	st := newCacheKVStore()
 	truth := dbm.NewMemDB()

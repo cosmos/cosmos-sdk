@@ -1,5 +1,9 @@
 package store
 
+import (
+	dbm "github.com/tendermint/tmlibs/db"
+)
+
 // Iterates over iterKVCache items.
 // if key is nil, means it was deleted.
 // Implements Iterator.
@@ -9,10 +13,17 @@ type memIterator struct {
 }
 
 func newMemIterator(start, end []byte, items []KVPair) *memIterator {
+	itemsInDomain := make([]KVPair, 0)
+	for _, item := range items {
+		ascending := keyCompare(start, end) < 0
+		if dbm.IsKeyInDomain(item.Key, start, end, !ascending) {
+			itemsInDomain = append(itemsInDomain, item)
+		}
+	}
 	return &memIterator{
 		start: start,
 		end:   end,
-		items: items,
+		items: itemsInDomain,
 	}
 }
 
@@ -45,7 +56,7 @@ func (mi *memIterator) Value() []byte {
 	return mi.items[0].Value
 }
 
-func (mi *memIterator) Release() {
+func (mi *memIterator) Close() {
 	mi.start = nil
 	mi.end = nil
 	mi.items = nil

@@ -37,10 +37,10 @@ func (isl iavlStoreLoader) Load(id CommitID) (CommitStore, error) {
 
 //----------------------------------------
 
-var _ IterKVStore = (*iavlStore)(nil)
+var _ KVStore = (*iavlStore)(nil)
 var _ CommitStore = (*iavlStore)(nil)
 
-// iavlStore Implements IterKVStore and CommitStore.
+// iavlStore Implements KVStore and CommitStore.
 type iavlStore struct {
 
 	// The underlying tree.
@@ -81,44 +81,33 @@ func (st *iavlStore) Commit() CommitID {
 	}
 }
 
-// CacheWrap implements IterKVStore.
+// CacheWrap implements KVStore.
 func (st *iavlStore) CacheWrap() CacheWrap {
-	return st.CacheIterKVStore()
+	return NewCacheKVStore(st)
 }
 
-// CacheKVStore implements IterKVStore.
-func (st *iavlStore) CacheKVStore() CacheKVStore {
-	return st.CacheIterKVStore()
-}
-
-// CacheIterKVStore implements IterKVStore.
-func (st *iavlStore) CacheIterKVStore() CacheIterKVStore {
-	// XXX Create generic IterKVStore wrapper.
-	return nil
-}
-
-// Set implements IterKVStore.
+// Set implements KVStore.
 func (st *iavlStore) Set(key, value []byte) {
 	st.tree.Set(key, value)
 }
 
-// Get implements IterKVStore.
+// Get implements KVStore.
 func (st *iavlStore) Get(key []byte) (value []byte) {
 	_, v := st.tree.Get(key)
 	return v
 }
 
-// Has implements IterKVStore.
+// Has implements KVStore.
 func (st *iavlStore) Has(key []byte) (exists bool) {
 	return st.tree.Has(key)
 }
 
-// Remove implements IterKVStore.
-func (st *iavlStore) Remove(key []byte) {
+// Delete implements KVStore.
+func (st *iavlStore) Delete(key []byte) {
 	st.tree.Remove(key)
 }
 
-// Iterator implements IterKVStore.
+// Iterator implements KVStore.
 func (st *iavlStore) Iterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, true)
 }
@@ -126,16 +115,6 @@ func (st *iavlStore) Iterator(start, end []byte) Iterator {
 // ReverseIterator implements IterKVStore.
 func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, false)
-}
-
-// First implements IterKVStore.
-func (st *iavlStore) First(start, end []byte) (kv KVPair, ok bool) {
-	return iteratorFirst(st, start, end)
-}
-
-// Last implements IterKVStore.
-func (st *iavlStore) Last(start, end []byte) (kv KVPair, ok bool) {
-	return iteratorLast(st, start, end)
 }
 
 //----------------------------------------

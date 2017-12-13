@@ -2,158 +2,11 @@ package store
 
 import (
 	"github.com/tendermint/go-wire/data"
+	"github.com/tendermint/tmlibs/db"
 )
 
-type CommitID struct {
-	Version int64
-	Hash    []byte
-}
-
-func (cid CommitID) IsZero() bool {
-	return cid.Version == 0 && len(cid.Hash) == 0
-}
-
-type Committer interface {
-	// Commit persists the state to disk.
-	Commit() CommitID
-}
-
-type CacheWrapper interface {
-	/*
-		CacheWrap() makes the most appropriate cache-wrap.  For example,
-		IAVLStore.CacheWrap() returns a CacheIterKVStore.  After call to
-		.Write() on the cache-wrap, all previous cache-wraps on the object
-		expire.
-
-		CacheWrap() should not return a Committer, since Commit() on
-		cache-wraps make no sense.  It can return KVStore, IterKVStore, etc.
-
-		The returned object may or may not implement CacheWrap() as well.
-
-		NOTE: https://dave.cheney.net/2017/07/22/should-go-2-0-support-generics.
-	*/
-	CacheWrap() CacheWrap
-}
-
-type CacheWrap interface {
-	// Write syncs with the underlying store.
-	Write()
-
-	// CacheWrap recursively wraps again.
-	CacheWrap() CacheWrap
-}
-
-type CommitStore interface {
-	Committer
-	CacheWrapper
-}
-
-type CommitStoreLoader func(id CommitID) (CommitStore, error)
-
-// KVStore is a simple interface to get/set data
-type KVStore interface {
-
-	// Get returns nil iff key doesn't exist. Panics on nil key.
-	Get(key []byte) []byte
-
-	// Set sets the key. Panics on nil key.
-	Set(key, value []byte)
-
-	// Has checks if a key exists. Panics on nil key.
-	Has(key []byte) bool
-
-	// Remove deletes the key. Panics on nil key.
-	Remove(key []byte)
-
-	// CacheKVStore() wraps a thing with a cache.  After
-	// calling .Write() on the CacheKVStore, all previous
-	// cache-wraps on the object expire.
-	CacheKVStore() CacheKVStore
-
-	// CacheWrap() returns a CacheKVStore.
-	CacheWrap() CacheWrap
-}
-
-type CacheKVStore interface {
-	KVStore
-	Write() // Writes operations to underlying KVStore
-}
-
-// IterKVStore can be iterated on
-// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-type IterKVStore interface {
-	KVStore
-
-	Iterator(start, end []byte) Iterator
-	ReverseIterator(start, end []byte) Iterator
-
-	// Gets the first item.
-	First(start, end []byte) (kv KVPair, ok bool)
-
-	// Gets the last item (towards "end").
-	// End is exclusive.
-	Last(start, end []byte) (kv KVPair, ok bool)
-
-	// CacheIterKVStore() wraps a thing with a cache.
-	// After calling .Write() on the CacheIterKVStore, all
-	// previous cache-wraps on the object expire.
-	CacheIterKVStore() CacheIterKVStore
-
-	// CacheWrap() returns a CacheIterKVStore.
-	// CacheWrap() defined in KVStore
-}
-
-type CacheIterKVStore interface {
-	IterKVStore
-	Write() // Writes operations to underlying KVStore
-}
-
-type KVPair struct {
-	Key   data.Bytes
-	Value data.Bytes
-}
-
-/*
-	Usage:
-
-	for itr := kvm.Iterator(start, end); itr.Valid(); itr.Next() {
-		k, v := itr.Key(); itr.Value()
-		....
-	}
-*/
-type Iterator interface {
-
-	// The start & end (exclusive) limits to iterate over.
-	// If end < start, then the Iterator goes in reverse order.
-	// A domain of ([]byte{12, 13}, []byte{12, 14}) will iterate
-	// over anything with the prefix []byte{12, 13}
-	Domain() (start []byte, end []byte)
-
-	// Returns if the current position is valid.
-	Valid() bool
-
-	// Next moves the iterator to the next key/value pair.
-	//
-	// If Valid returns false, this method will panic.
-	Next()
-
-	// Key returns the key of the current key/value pair, or nil if done.
-	// The caller should not modify the contents of the returned slice, and
-	// its contents may change after calling Next().
-	//
-	// If Valid returns false, this method will panic.
-	Key() []byte
-
-	// Value returns the key of the current key/value pair, or nil if done.
-	// The caller should not modify the contents of the returned slice, and
-	// its contents may change after calling Next().
-	//
-	// If Valid returns false, this method will panic.
-	Value() []byte
-
-	// Releases any resources and iteration-locks
-	Release()
-}
+//----------------------------------------
+// MultiStore
 
 type MultiStore interface {
 
@@ -170,16 +23,108 @@ type MultiStore interface {
 	// call CacheMultiStore.Write().
 	CacheMultiStore() CacheMultiStore
 
-	// CacheWrap returns a CacheMultiStore.
-	CacheWrap() CacheWrap
-
 	// Convenience
 	GetStore(name string) interface{}
 	GetKVStore(name string) KVStore
-	GetIterKVStore(name string) IterKVStore
 }
 
 type CacheMultiStore interface {
 	MultiStore
 	Write() // Writes operations to underlying KVStore
+}
+
+type CommitStore interface {
+	Committer
+	CacheWrapper
+}
+
+type CommitStoreLoader func(id CommitID) (CommitStore, error)
+
+type Committer interface {
+	// Commit persists the state to disk.
+	Commit() CommitID
+}
+
+//----------------------------------------
+// KVStore
+
+// KVStore is a simple interface to get/set data
+type KVStore interface {
+
+	// Get returns nil iff key doesn't exist. Panics on nil key.
+	Get(key []byte) []byte
+
+	// Has checks if a key exists. Panics on nil key.
+	Has(key []byte) bool
+
+	// Set sets the key. Panics on nil key.
+	Set(key, value []byte)
+
+	// Delete deletes the key. Panics on nil key.
+	Delete(key []byte)
+
+	// Iterator over a domain of keys in ascending order. End is exclusive.
+	// Start must be less than end, or the Iterator is invalid.
+	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+	Iterator(start, end []byte) Iterator
+
+	// Iterator over a domain of keys in descending order. End is exclusive.
+	// Start must be greater than end, or the Iterator is invalid.
+	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+	ReverseIterator(start, end []byte) Iterator
+}
+
+// db.DB implements KVStore so we can CacheKVStore it.
+var _ KVStore = db.DB(nil)
+
+// Alias iterator to db's Iterator for convenience.
+type Iterator = db.Iterator
+
+// CacheKVStore cache-wraps a KVStore.  After calling .Write() on the
+// CacheKVStore, all previously created CacheKVStores on the object expire.
+type CacheKVStore interface {
+	KVStore
+	Write() // Writes operations to underlying KVStore
+}
+
+//----------------------------------------
+// CacheWrap
+
+/*
+	CacheWrap() makes the most appropriate cache-wrap.  For example,
+	IAVLStore.CacheWrap() returns a CacheKVStore.
+
+	CacheWrap() should not return a Committer, since Commit() on
+	cache-wraps make no sense.  It can return KVStore, HeapStore,
+	SpaceStore, etc.
+*/
+type CacheWrapper interface {
+	CacheWrap() CacheWrap
+}
+
+type CacheWrap interface {
+
+	// Write syncs with the underlying store.
+	Write()
+
+	// CacheWrap recursively wraps again.
+	CacheWrap() CacheWrap
+}
+
+//----------------------------------------
+// etc
+
+type KVPair struct {
+	Key   data.Bytes
+	Value data.Bytes
+}
+
+// CommitID contains the tree version number and its merkle root.
+type CommitID struct {
+	Version int64
+	Hash    []byte
+}
+
+func (cid CommitID) IsZero() bool {
+	return cid.Version == 0 && len(cid.Hash) == 0
 }

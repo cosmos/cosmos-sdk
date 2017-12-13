@@ -1,14 +1,12 @@
 package store
 
-import dbm "github.com/tendermint/tmlibs/db"
-
 //----------------------------------------
 // cacheMultiStore
 
 // cacheMultiStore holds many cache-wrapped stores.
 // Implements MultiStore.
 type cacheMultiStore struct {
-	db           dbm.CacheDB
+	db           CacheKVStore
 	curVersion   int64
 	lastCommitID CommitID
 	substores    map[string]CacheWrap
@@ -16,7 +14,7 @@ type cacheMultiStore struct {
 
 func newCacheMultiStoreFromRMS(rms *rootMultiStore) cacheMultiStore {
 	cms := cacheMultiStore{
-		db:           rms.db.CacheDB(),
+		db:           NewCacheKVStore(rms.db),
 		curVersion:   rms.curVersion,
 		lastCommitID: rms.lastCommitID,
 		substores:    make(map[string]CacheWrap, len(rms.substores)),
@@ -29,7 +27,7 @@ func newCacheMultiStoreFromRMS(rms *rootMultiStore) cacheMultiStore {
 
 func newCacheMultiStoreFromCMS(cms cacheMultiStore) cacheMultiStore {
 	cms2 := cacheMultiStore{
-		db:           cms.db.CacheDB(),
+		db:           NewCacheKVStore(cms.db),
 		curVersion:   cms.curVersion,
 		lastCommitID: cms.lastCommitID,
 		substores:    make(map[string]CacheWrap, len(cms.substores)),
@@ -60,7 +58,7 @@ func (cms cacheMultiStore) Write() {
 
 // Implements CacheMultiStore
 func (cms cacheMultiStore) CacheWrap() CacheWrap {
-	return cms.CacheMultiStore()
+	return cms.CacheMultiStore().(CacheWrap)
 }
 
 // Implements CacheMultiStore
@@ -76,9 +74,4 @@ func (cms cacheMultiStore) GetStore(name string) interface{} {
 // Implements CacheMultiStore
 func (cms cacheMultiStore) GetKVStore(name string) KVStore {
 	return cms.substores[name].(KVStore)
-}
-
-// Implements CacheMultiStore
-func (cms cacheMultiStore) GetIterKVStore(name string) IterKVStore {
-	return cms.substores[name].(IterKVStore)
 }

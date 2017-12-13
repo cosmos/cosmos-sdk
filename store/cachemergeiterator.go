@@ -154,6 +154,16 @@ func (iter *cacheMergeIterator) Release() {
 	iter.cache.Release()
 }
 
+// GetError implements Iterator
+func (iter *cacheMergeIterator) GetError() (err error) {
+	err = iter.parent.GetError()
+	if err != nil {
+		return err
+	}
+	err = iter.cache.GetError()
+	return err
+}
+
 // Like bytes.Compare but opposite if not ascending.
 func (iter *cacheMergeIterator) compare(a, b []byte) int {
 	if iter.ascending {

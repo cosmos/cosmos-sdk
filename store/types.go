@@ -30,7 +30,7 @@ type MultiStore interface {
 
 type CacheMultiStore interface {
 	MultiStore
-	Write() error // Writes operations to underlying KVStore
+	Write() // Writes operations to underlying KVStore
 }
 
 type CommitStore interface {
@@ -80,11 +80,11 @@ var _ KVStore = db.DB(nil)
 // Alias iterator to db's Iterator for convenience.
 type Iterator = db.Iterator
 
-// CacheKVStore wraps a thing with a cache.  After calling .Write() on the
+// CacheKVStore cache-wraps a KVStore.  After calling .Write() on the
 // CacheKVStore, all previously created CacheKVStores on the object expire.
 type CacheKVStore interface {
 	KVStore
-	Write() error // Writes operations to underlying KVStore
+	Write() // Writes operations to underlying KVStore
 }
 
 //----------------------------------------
@@ -92,15 +92,11 @@ type CacheKVStore interface {
 
 /*
 	CacheWrap() makes the most appropriate cache-wrap.  For example,
-	IAVLStore.CacheWrap() returns a CacheKVStore.  After call to
-	.Write() on the cache-wrap, all previous cache-wraps on the object
-	expire.
+	IAVLStore.CacheWrap() returns a CacheKVStore.
 
 	CacheWrap() should not return a Committer, since Commit() on
 	cache-wraps make no sense.  It can return KVStore, HeapStore,
 	SpaceStore, etc.
-
-	The returned object may or may not implement CacheWrap() as well.
 */
 type CacheWrapper interface {
 	CacheWrap() CacheWrap
@@ -109,7 +105,7 @@ type CacheWrapper interface {
 type CacheWrap interface {
 
 	// Write syncs with the underlying store.
-	Write() error
+	Write()
 
 	// CacheWrap recursively wraps again.
 	CacheWrap() CacheWrap
@@ -123,6 +119,7 @@ type KVPair struct {
 	Value data.Bytes
 }
 
+// CommitID contains the tree version number and its merkle root.
 type CommitID struct {
 	Version int64
 	Hash    []byte

@@ -37,10 +37,10 @@ func (isl iavlStoreLoader) Load(id CommitID) (CommitStore, error) {
 
 //----------------------------------------
 
-var _ IterKVStore = (*iavlStore)(nil)
+var _ KVStore = (*iavlStore)(nil)
 var _ CommitStore = (*iavlStore)(nil)
 
-// iavlStore Implements IterKVStore and CommitStore.
+// iavlStore Implements KVStore and CommitStore.
 type iavlStore struct {
 
 	// The underlying tree.
@@ -81,44 +81,33 @@ func (st *iavlStore) Commit() CommitID {
 	}
 }
 
-// CacheWrap implements IterKVStore.
+// CacheWrap implements KVStore.
 func (st *iavlStore) CacheWrap() CacheWrap {
-	return st.CacheIterKVStore()
+	return NewCacheKVStore(st)
 }
 
-// CacheKVStore implements IterKVStore.
-func (st *iavlStore) CacheKVStore() CacheKVStore {
-	return st.CacheIterKVStore()
-}
-
-// CacheIterKVStore implements IterKVStore.
-func (st *iavlStore) CacheIterKVStore() CacheIterKVStore {
-	// XXX Create generic IterKVStore wrapper.
-	return nil
-}
-
-// Set implements IterKVStore.
+// Set implements KVStore.
 func (st *iavlStore) Set(key, value []byte) {
 	st.tree.Set(key, value)
 }
 
-// Get implements IterKVStore.
+// Get implements KVStore.
 func (st *iavlStore) Get(key []byte) (value []byte) {
 	_, v := st.tree.Get(key)
 	return v
 }
 
-// Has implements IterKVStore.
+// Has implements KVStore.
 func (st *iavlStore) Has(key []byte) (exists bool) {
 	return st.tree.Has(key)
 }
 
-// Delete implements IterKVStore.
+// Delete implements KVStore.
 func (st *iavlStore) Delete(key []byte) {
 	st.tree.Remove(key)
 }
 
-// Iterator implements IterKVStore.
+// Iterator implements KVStore.
 func (st *iavlStore) Iterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, true)
 }
@@ -248,6 +237,11 @@ func (iter *iavlIterator) Value() []byte {
 // Release implements Iterator
 func (iter *iavlIterator) Release() {
 	close(iter.quitCh)
+}
+
+// GetError implements Iterator
+func (iter *iavlIterator) GetError() error {
+	return nil
 }
 
 //----------------------------------------

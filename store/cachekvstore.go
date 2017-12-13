@@ -2,7 +2,6 @@ package store
 
 import (
 	"bytes"
-	"errors"
 	"sort"
 	"sync"
 )
@@ -17,25 +16,18 @@ type cValue struct {
 
 // cacheKVStore wraps an in-memory cache around an underlying KVStore.
 type cacheKVStore struct {
-	mtx         sync.Mutex
-	cache       map[string]cValue
-	parent      KVStore
-	lockVersion interface{}
+	mtx    sync.Mutex
+	cache  map[string]cValue
+	parent KVStore
 }
 
 var _ CacheKVStore = (*cacheKVStore)(nil)
 
-// If parent implements VRWMutex, multiple CacheKVStores are safe to use
-// concurrently.
 func NewCacheKVStore(parent KVStore) *cacheKVStore {
 
 	ci := &cacheKVStore{
 		cache:  make(map[string]cValue),
 		parent: parent,
-	}
-
-	if parent, ok := parent.(VRWMutex); ok {
-		ci.lockVersion = parent.GetLockVersion()
 	}
 
 	return ci
@@ -79,18 +71,9 @@ func (ci *cacheKVStore) Delete(key []byte) {
 }
 
 // Write writes pending updates to the parent database and clears the cache.
-func (ci *cacheKVStore) Write() error {
+func (ci *cacheKVStore) Write() {
 	ci.mtx.Lock()
 	defer ci.mtx.Unlock()
-
-	// Optional check for goroutine safety.
-	if parent, ok := ci.parent.(VRWMutex); ok {
-		if !parent.TryLock(ci.lockVersion) {
-			return errors.New("This CacheKVStore has expired.")
-		}
-		// All good!
-		defer parent.Unlock()
-	}
 
 	// We need a copy of all of the keys.
 	// Not the best, but probably not a bottleneck depending.
@@ -103,7 +86,7 @@ func (ci *cacheKVStore) Write() error {
 	sort.Strings(keys)
 
 	// TODO in tmlibs/db we use Batch to write atomically.
-	// Consider locking the underlying KVStore during write.
+	// Consider allowing usage of Batch.
 	for _, key := range keys {
 		cacheValue := ci.cache[key]
 		if cacheValue.deleted {
@@ -117,18 +100,12 @@ func (ci *cacheKVStore) Write() error {
 
 	// Clear the cache
 	ci.cache = make(map[string]cValue)
-
-	return nil
 }
 
 //----------------------------------------
 // To cache-wrap this cacheKVStore further.
 
 func (ci *cacheKVStore) CacheWrap() CacheWrap {
-	return ci.CacheKVStore()
-}
-
-func (ci *cacheKVStore) CacheKVStore() CacheKVStore {
 	return NewCacheKVStore(ci)
 }
 

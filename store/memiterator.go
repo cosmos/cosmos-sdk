@@ -50,7 +50,3 @@ func (mi *memIterator) Release() {
 	mi.end = nil
 	mi.items = nil
 }
-
-func (mi *memIterator) GetError() error {
-	return nil
-}

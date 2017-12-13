@@ -239,11 +239,6 @@ func (iter *iavlIterator) Release() {
 	close(iter.quitCh)
 }
 
-// GetError implements Iterator
-func (iter *iavlIterator) GetError() error {
-	return nil
-}
-
 //----------------------------------------
 
 func (iter *iavlIterator) setNext(key, value []byte) {

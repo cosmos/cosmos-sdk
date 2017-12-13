@@ -4,7 +4,7 @@ baseserver is the REST counterpart to basecli
 
 ## Compiling and running it
 ```shell
-$ go get -u -v github.com/tendermint/basecoin/cmd/baseserver
+$ go get -u -v github.com/cosmos/cosmos-sdk/examples/basecoin/cmd/baseserver
 $ baseserver init
 $ baseserver serve --port 8888
 ```

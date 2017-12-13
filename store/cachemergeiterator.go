@@ -1,6 +1,8 @@
 package store
 
-import "bytes"
+import (
+	"bytes"
+)
 
 // cacheMergeIterator merges a parent Iterator and a cache Iterator.
 // The cache iterator may return nil keys to signal that an item
@@ -169,6 +171,9 @@ func (iter *cacheMergeIterator) compare(a, b []byte) int {
 // If `until` is nil, there is no limit.
 // CONTRACT: cache is valid.
 func (iter *cacheMergeIterator) skipCacheDeletes(until []byte) {
+	if !iter.cache.Valid() {
+		return
+	}
 	for (until == nil || iter.compare(iter.cache.Key(), until) < 0) &&
 		iter.cache.Value() == nil {
 
@@ -189,8 +194,21 @@ func (iter *cacheMergeIterator) skipUntilExistsOrInvalid() {
 			return
 		}
 
+		// If cache not valid but parent is, return
+		if iter.parent.Valid() &&
+			!iter.cache.Valid() {
+			return
+		}
+
 		// Parent and Cache items exist.
-		keyP, keyC := iter.parent.Key(), iter.cache.Key()
+		var keyP, keyC []byte
+		if iter.parent.Valid() {
+			keyP = iter.parent.Key()
+		}
+		if iter.cache.Valid() {
+			keyC = iter.cache.Key()
+		}
+
 		cmp := iter.compare(keyP, keyC)
 		switch cmp {
 

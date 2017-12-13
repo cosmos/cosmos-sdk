@@ -168,6 +168,3 @@ texinfo_documents = [
      author, 'Cosmos-SDK', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-

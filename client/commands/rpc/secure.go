@@ -26,7 +26,7 @@ func runBlock(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	h := viper.GetInt(FlagHeight)
+	h := int64(viper.GetInt(FlagHeight))
 	block, err := c.Block(&h)
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func runCommit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	h := viper.GetInt(FlagHeight)
+	h := int64(viper.GetInt(FlagHeight))
 	commit, err := c.Commit(&h)
 	if err != nil {
 		return err
@@ -66,8 +66,8 @@ func runHeaders(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	min := viper.GetInt(FlagMin)
-	max := viper.GetInt(FlagMax)
+	min := int64(viper.GetInt(FlagMin))
+	max := int64(viper.GetInt(FlagMax))
 	headers, err := c.BlockchainInfo(min, max)
 	if err != nil {
 		return err

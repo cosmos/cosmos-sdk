@@ -35,7 +35,7 @@ func eyesQueryCmd(cmd *cobra.Command, args []string) error {
 
 	key = stack.PrefixedKey(eyes.Name, key)
 	prove := !viper.GetBool(commands.FlagTrustNode)
-	height, err := query.GetParsed(key, &res, prove)
+	height, err := query.GetParsed(key, &res, query.GetHeight(), prove)
 	if err != nil {
 		return err
 	}

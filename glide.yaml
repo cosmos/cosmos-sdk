@@ -1,11 +1,16 @@
 package: github.com/cosmos/cosmos-sdk
 import:
+- package: github.com/ethanfrey/hid
+  version: dce75af84cf849c60f39bf1b8192fb5cd597b5d9
+- package: github.com/ethanfrey/ledger
+  version: f7f2f056357db77db845a79aa1abdadc3ae66369
 - package: github.com/gorilla/websocket
 - package: github.com/pkg/errors
   version: ^0.8.0
 - package: github.com/spf13/cobra
 - package: github.com/spf13/pflag
 - package: github.com/spf13/viper
+# update this when tendermint/tendermint updates
 - package: github.com/tendermint/abci
   version: develop
   subpackages:
@@ -19,18 +24,14 @@ import:
   version: develop
   subpackages:
   - data
-- package: github.com/tendermint/light-client
-  version: develop
-  subpackages:
-  - proofs
-  - certifiers
-  - certifiers/client
-  - certifiers/files
 - package: github.com/tendermint/iavl
   version: develop
 - package: github.com/tendermint/tendermint
-  version: 0.11.1
+  version: develop
   subpackages:
+  - certifiers
+  - certifiers/client
+  - certifiers/files
   - config
   - node
   - proxy

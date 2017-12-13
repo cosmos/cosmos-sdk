@@ -10,7 +10,7 @@ Usually, Cosmos SDK can be installed like a normal Go program:
 
 ::
 
-    go get -u github.com/cosmos/cosmos-sdk/cmd/...
+    go get -u github.com/cosmos/cosmos-sdk
 
 If the dependencies have been updated with breaking changes, or if
 another branch is required, ``glide`` is used for dependency management.
@@ -19,7 +19,7 @@ repo, the correct way to install is:
 
 ::
 
-    cd $GOPATH/src/github.com/tendermint/basecoin
+    cd $GOPATH/src/github.com/cosmos/cosmos-sdk
     git pull origin master
     make all
 

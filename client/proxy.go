@@ -24,7 +24,8 @@ func StartProxy(c rpcclient.Client, bind string, logger log.Logger) error {
 	// build the handler...
 	mux := http.NewServeMux()
 	rpc.RegisterRPCFuncs(mux, r, logger)
-	wm := rpc.NewWebsocketManager(r, c)
+
+	wm := rpc.NewWebsocketManager(r, rpc.EventSubscriber(c))
 	wm.SetLogger(logger)
 	core.SetLogger(logger)
 	mux.HandleFunc(wsEndpoint, wm.WebsocketHandler)
@@ -44,8 +45,8 @@ func RPCRoutes(c rpcclient.Client) map[string]*rpc.RPCFunc {
 		// Subscribe/unsubscribe are reserved for websocket events.
 		// We can just use the core tendermint impl, which uses the
 		// EventSwitch we registered in NewWebsocketManager above
-		"subscribe":   rpc.NewWSRPCFunc(core.Subscribe, "event"),
-		"unsubscribe": rpc.NewWSRPCFunc(core.Unsubscribe, "event"),
+		"subscribe":   rpc.NewWSRPCFunc(core.Subscribe, "query"),
+		"unsubscribe": rpc.NewWSRPCFunc(core.Unsubscribe, "query"),
 
 		// info API
 		"status":     rpc.NewRPCFunc(c.Status, ""),

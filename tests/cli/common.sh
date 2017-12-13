@@ -15,10 +15,10 @@ quickSetup() {
     BASE_DIR=$HOME/$1
     CHAIN_ID=$2
 
-	# TODO Make this more robust
+    # TODO Make this more robust
     if [ "$BASE_DIR" == "$HOME/" ]; then
-	    echo "quickSetup() must be called with argument, or it will wipe your home directory"
-	    exit 1
+        echo "quickSetup() must be called with argument, or it will wipe your home directory"
+        exit 1
     fi
 
     rm -rf $BASE_DIR 2>/dev/null
@@ -68,7 +68,7 @@ initServer() {
     SERVE_DIR=$1/server
     assertNotNull "line=${LINENO}, no chain" $2
     CHAIN=$2
-    SERVER_LOG=$1/${SERVER_EXE}.log
+    SERVER_LOG=$1/node.log
 
     GENKEY=$(${CLIENT_EXE} keys get ${RICH} | awk '{print $2}')
     ${SERVER_EXE} init --static --chain-id $CHAIN $GENKEY --home=$SERVE_DIR >>$SERVER_LOG
@@ -79,9 +79,17 @@ initServer() {
         sed -ie "s/4665/$3/" $SERVE_DIR/config.toml
     fi
 
-    echo "Starting ${SERVER_EXE} server..."
-    startServer $SERVE_DIR $SERVER_LOG
-    return $?
+    # add indexing
+    cat >> $SERVE_DIR/config.toml << EOF
+
+[tx_index]
+indexer = "kv"
+index_tags = "height,coin.sender,coin.receiver"
+EOF
+
+echo "Starting ${SERVER_EXE} server..."
+startServer $SERVE_DIR $SERVER_LOG
+return $?
 }
 
 # XXX Ex Usage: startServer $SERVE_DIR $SERVER_LOG
@@ -130,11 +138,15 @@ getAddr() {
     echo $RAW | cut -d' ' -f2
 }
 
-# XXX Ex Usage: checkAccount $ADDR $AMOUNT
+# XXX Ex Usage: checkAccount $ADDR $AMOUNT [$HEIGHT]
 # Desc: Assumes just one coin, checks the balance of first coin in any case
+# pass optional height to query which block to query
 checkAccount() {
+    # default height of 0, but accept an argument
+    HEIGHT=${3:-0}
+
     # make sure sender goes down
-    ACCT=$(${CLIENT_EXE} query account $1)
+    ACCT=$(${CLIENT_EXE} query account $1 --height=$HEIGHT)
     if ! assertTrue "line=${LINENO}, account must exist" $?; then
         return 1
     fi
@@ -144,11 +156,14 @@ checkAccount() {
     return $?
 }
 
-# XXX Ex Usage: checkRole $ROLE $SIGS $NUM_SIGNERS
+# XXX Ex Usage: checkRole $ROLE $SIGS $NUM_SIGNERS [$HEIGHT]
 # Desc: Ensures this named role exists, and has the number of members and required signatures as above
 checkRole() {
+    # default height of 0, but accept an argument
+    HEIGHT=${4:-0}
+
     # make sure sender goes down
-    QROLE=$(${CLIENT_EXE} query role $1)
+    QROLE=$(${CLIENT_EXE} query role $1 --height=$HEIGHT)
     if ! assertTrue "line=${LINENO}, role must exist" $?; then
         return 1
     fi
@@ -166,8 +181,8 @@ checkRole() {
 txSucceeded() {
     if (assertTrue "line=${LINENO}, sent tx ($3): $2" $1); then
         TX=$2
-        assertEquals "line=${LINENO}, good check ($3): $TX" "0" $(echo $TX | jq .check_tx.code)
-        assertEquals "line=${LINENO}, good deliver ($3): $TX" "0" $(echo $TX | jq .deliver_tx.code)
+        assertEquals "line=${LINENO}, good check ($3): $TX" 0 $(echo $TX | jq .check_tx.code)
+        assertEquals "line=${LINENO}, good deliver ($3): $TX" 0 $(echo $TX | jq .deliver_tx.code)
     else
         return 1
     fi

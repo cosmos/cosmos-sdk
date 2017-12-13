@@ -4,8 +4,6 @@ package fee
 import (
 	"fmt"
 
-	abci "github.com/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/errors"
 )
 
@@ -14,7 +12,7 @@ var (
 	errWrongFeeDenom    = fmt.Errorf("Required fee denomination")
 	errSkipFees         = fmt.Errorf("Skip fees")
 
-	invalidInput = abci.CodeType_BaseInvalidInput
+	invalidInput = errors.CodeTypeBaseInvalidInput
 )
 
 func ErrInsufficientFees() errors.TMError {

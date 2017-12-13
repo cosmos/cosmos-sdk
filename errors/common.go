@@ -4,8 +4,6 @@ package errors
 import (
 	"fmt"
 	"reflect"
-
-	abci "github.com/tendermint/abci/types"
 )
 
 var (
@@ -17,12 +15,6 @@ var (
 	errInvalidFormat    = fmt.Errorf("Invalid format")
 	errUnknownModule    = fmt.Errorf("Unknown module")
 	errUnknownKey       = fmt.Errorf("Unknown key")
-
-	internalErr    = abci.CodeType_InternalError
-	encodingErr    = abci.CodeType_EncodingError
-	unauthorized   = abci.CodeType_Unauthorized
-	unknownRequest = abci.CodeType_UnknownRequest
-	unknownAddress = abci.CodeType_BaseUnknownAddress
 )
 
 // some crazy reflection to unwrap any generated struct.
@@ -40,7 +32,7 @@ func unwrap(i interface{}) interface{} {
 
 func ErrUnknownTxType(tx interface{}) TMError {
 	msg := fmt.Sprintf("%T", unwrap(tx))
-	return WithMessage(msg, errUnknownTxType, unknownRequest)
+	return WithMessage(msg, errUnknownTxType, CodeTypeUnknownRequest)
 }
 func IsUnknownTxTypeErr(err error) bool {
 	return IsSameError(errUnknownTxType, err)
@@ -48,61 +40,61 @@ func IsUnknownTxTypeErr(err error) bool {
 
 func ErrInvalidFormat(expected string, tx interface{}) TMError {
 	msg := fmt.Sprintf("%T not %s", unwrap(tx), expected)
-	return WithMessage(msg, errInvalidFormat, unknownRequest)
+	return WithMessage(msg, errInvalidFormat, CodeTypeUnknownRequest)
 }
 func IsInvalidFormatErr(err error) bool {
 	return IsSameError(errInvalidFormat, err)
 }
 
 func ErrUnknownModule(mod string) TMError {
-	return WithMessage(mod, errUnknownModule, unknownRequest)
+	return WithMessage(mod, errUnknownModule, CodeTypeUnknownRequest)
 }
 func IsUnknownModuleErr(err error) bool {
 	return IsSameError(errUnknownModule, err)
 }
 
 func ErrUnknownKey(mod string) TMError {
-	return WithMessage(mod, errUnknownKey, unknownRequest)
+	return WithMessage(mod, errUnknownKey, CodeTypeUnknownRequest)
 }
 func IsUnknownKeyErr(err error) bool {
 	return IsSameError(errUnknownKey, err)
 }
 
 func ErrInternal(msg string) TMError {
-	return New(msg, internalErr)
+	return New(msg, CodeTypeInternalErr)
 }
 
 // IsInternalErr matches any error that is not classified
 func IsInternalErr(err error) bool {
-	return HasErrorCode(err, internalErr)
+	return HasErrorCode(err, CodeTypeInternalErr)
 }
 
 func ErrDecoding() TMError {
-	return WithCode(errDecoding, encodingErr)
+	return WithCode(errDecoding, CodeTypeEncodingErr)
 }
 func IsDecodingErr(err error) bool {
 	return IsSameError(errDecoding, err)
 }
 
 func ErrUnauthorized() TMError {
-	return WithCode(errUnauthorized, unauthorized)
+	return WithCode(errUnauthorized, CodeTypeUnauthorized)
 }
 
 // IsUnauthorizedErr is generic helper for any unauthorized errors,
 // also specific sub-types
 func IsUnauthorizedErr(err error) bool {
-	return HasErrorCode(err, unauthorized)
+	return HasErrorCode(err, CodeTypeUnauthorized)
 }
 
 func ErrMissingSignature() TMError {
-	return WithCode(errMissingSignature, unauthorized)
+	return WithCode(errMissingSignature, CodeTypeUnauthorized)
 }
 func IsMissingSignatureErr(err error) bool {
 	return IsSameError(errMissingSignature, err)
 }
 
 func ErrTooLarge() TMError {
-	return WithCode(errTooLarge, encodingErr)
+	return WithCode(errTooLarge, CodeTypeEncodingErr)
 }
 func IsTooLargeErr(err error) bool {
 	return IsSameError(errTooLarge, err)

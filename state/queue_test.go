@@ -44,7 +44,7 @@ func TestQueue(t *testing.T) {
 		q := NewQueue(store)
 		for j, in := range tc.pushes {
 			cnt := q.Push(in)
-			assert.Equal(uint64(j), cnt, "%d", i)
+			assert.Equal(int64(j), cnt, "%d", i)
 		}
 		assert.EqualValues(len(tc.pushes), q.Size())
 

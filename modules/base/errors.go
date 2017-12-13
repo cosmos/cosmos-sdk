@@ -4,8 +4,6 @@ package base
 import (
 	"fmt"
 
-	abci "github.com/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/errors"
 )
 
@@ -14,7 +12,7 @@ var (
 	errWrongChain = fmt.Errorf("Wrong chain for tx")   //move base
 	errExpired    = fmt.Errorf("Tx expired")           //move base
 
-	unauthorized = abci.CodeType_Unauthorized
+	unauthorized = errors.CodeTypeUnauthorized
 )
 
 func ErrNoChain() errors.TMError {

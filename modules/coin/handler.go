@@ -1,6 +1,7 @@
 package coin
 
 import (
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/log"
 
@@ -16,9 +17,9 @@ const (
 	//NameCoin - name space of the coin module
 	NameCoin = "coin"
 	// CostSend is GasAllocation per input/output
-	CostSend = uint64(10)
+	CostSend = int64(10)
 	// CostCredit is GasAllocation of a credit allocation
-	CostCredit = uint64(20)
+	CostCredit = int64(20)
 )
 
 // Handler includes an accountant
@@ -53,7 +54,7 @@ func (h Handler) CheckTx(ctx sdk.Context, store state.SimpleDB,
 	switch t := tx.Unwrap().(type) {
 	case SendTx:
 		// price based on inputs and outputs
-		used := uint64(len(t.Inputs) + len(t.Outputs))
+		used := int64(len(t.Inputs) + len(t.Outputs))
 		return sdk.NewCheck(used*CostSend, ""), h.checkSendTx(ctx, store, t)
 	case CreditTx:
 		// default price of 20, constant work
@@ -73,7 +74,7 @@ func (h Handler) DeliverTx(ctx sdk.Context, store state.SimpleDB,
 
 	switch t := tx.Unwrap().(type) {
 	case SendTx:
-		return res, h.sendTx(ctx, store, t, cb)
+		return h.sendTx(ctx, store, t, cb)
 	case CreditTx:
 		return res, h.creditTx(ctx, store, t)
 	}
@@ -96,11 +97,11 @@ func (h Handler) InitState(l log.Logger, store state.SimpleDB,
 }
 
 func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
-	send SendTx, cb sdk.Deliver) error {
+	send SendTx, cb sdk.Deliver) (res sdk.DeliverResult, err error) {
 
-	err := checkTx(ctx, send)
+	err = checkTx(ctx, send)
 	if err != nil {
-		return err
+		return res, err
 	}
 
 	// deduct from all input accounts
@@ -108,7 +109,7 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 	for _, in := range send.Inputs {
 		_, err = ChangeCoins(store, in.Address, in.Coins.Negative())
 		if err != nil {
-			return err
+			return res, err
 		}
 		senders = append(senders, in.Address)
 	}
@@ -123,7 +124,7 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 
 		_, err = ChangeCoins(store, out.Address, out.Coins)
 		if err != nil {
-			return err
+			return res, err
 		}
 		// now send ibc packet if needed...
 		if out.Address.ChainID != "" {
@@ -144,13 +145,28 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 			ibcCtx := ctx.WithPermissions(ibc.AllowIBC(NameCoin))
 			_, err := cb.DeliverTx(ibcCtx, store, packet.Wrap())
 			if err != nil {
-				return err
+				return res, err
 			}
 		}
 	}
 
+	// now we build the tags
+	tags := make([]*abci.KVPair, 0, 1+len(send.Inputs)+len(send.Outputs))
+
+	tags = append(tags, abci.KVPairInt("height", int64(ctx.BlockHeight())))
+
+	for _, in := range send.Inputs {
+		addr := in.Address.String()
+		tags = append(tags, abci.KVPairString("coin.sender", addr))
+	}
+
+	for _, out := range send.Outputs {
+		addr := out.Address.String()
+		tags = append(tags, abci.KVPairString("coin.receiver", addr))
+	}
+
 	// a-ok!
-	return nil
+	return sdk.DeliverResult{Tags: tags}, nil
 }
 
 func (h Handler) creditTx(ctx sdk.Context, store state.SimpleDB,

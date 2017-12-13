@@ -26,8 +26,8 @@ test00PreRestart() {
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 
-    checkAccount $SENDER "9007199254740000"
-    checkAccount $RECV "992"
+    checkAccount $SENDER "9007199254740000"  "$TX_HEIGHT"
+    checkAccount $RECV "992"  "$TX_HEIGHT"
 
     # make sure tx is indexed
     checkSendTx $HASH $TX_HEIGHT $SENDER "992"

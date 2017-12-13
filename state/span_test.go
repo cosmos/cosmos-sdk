@@ -8,7 +8,7 @@ import (
 )
 
 type kv struct {
-	k uint64
+	k int64
 	v []byte
 }
 
@@ -28,7 +28,7 @@ func TestBasicSpan(t *testing.T) {
 
 	lots := make([]kv, 1000)
 	for i := range lots {
-		lots[i] = kv{uint64(3 * i), []byte{byte(i / 100), byte(i % 100)}}
+		lots[i] = kv{int64(3 * i), []byte{byte(i / 100), byte(i % 100)}}
 	}
 
 	cases := []bscase{

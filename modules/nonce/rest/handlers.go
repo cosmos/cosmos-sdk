@@ -3,11 +3,13 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
 
 	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	"github.com/cosmos/cosmos-sdk/client/commands/query"
 	"github.com/cosmos/cosmos-sdk/errors"
@@ -15,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/modules/nonce"
 	"github.com/cosmos/cosmos-sdk/stack"
 	wire "github.com/tendermint/go-wire"
-	lightclient "github.com/tendermint/light-client"
 	"github.com/tendermint/tmlibs/common"
 )
 
@@ -28,6 +29,18 @@ func doQueryNonce(w http.ResponseWriter, r *http.Request) {
 		common.WriteError(w, err)
 		return
 	}
+
+	var h int64
+	qHeight := r.URL.Query().Get("height")
+	if qHeight != "" {
+		_h, err := strconv.Atoi(qHeight)
+		if err != nil {
+			common.WriteError(w, err)
+			return
+		}
+		h = int64(_h)
+	}
+
 	actor = coin.ChainAddr(actor)
 	key := nonce.GetSeqKey([]sdk.Actor{actor})
 	key = stack.PrefixedKey(nonce.NameNonce, key)
@@ -35,8 +48,8 @@ func doQueryNonce(w http.ResponseWriter, r *http.Request) {
 	prove := !viper.GetBool(commands.FlagTrustNode)
 
 	// query sequence number
-	data, height, err := query.Get(key, prove)
-	if lightclient.IsNoDataErr(err) {
+	data, height, err := query.Get(key, h, prove)
+	if client.IsNoDataErr(err) {
 		err = fmt.Errorf("nonce empty for address: %q", signature)
 		common.WriteError(w, err)
 		return

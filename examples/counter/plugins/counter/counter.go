@@ -3,7 +3,6 @@ package counter
 import (
 	"fmt"
 
-	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-wire"
 
 	sdk "github.com/cosmos/cosmos-sdk"
@@ -74,7 +73,7 @@ var (
 
 // ErrInvalidCounter - custom error class
 func ErrInvalidCounter() error {
-	return errors.WithCode(errInvalidCounter, abci.CodeType_BaseInvalidInput)
+	return errors.WithCode(errInvalidCounter, errors.CodeTypeBaseInvalidInput)
 }
 
 // IsInvalidCounterErr - custom error class check

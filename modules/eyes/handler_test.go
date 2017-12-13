@@ -15,7 +15,7 @@ func TestHandler(t *testing.T) {
 
 	key := []byte("one")
 	val := []byte("foo")
-	var height uint64 = 123
+	var height int64 = 123
 
 	h := NewHandler()
 	ctx := stack.MockContext("role-chain", height)

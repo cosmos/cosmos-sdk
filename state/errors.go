@@ -4,7 +4,6 @@ package state
 import (
 	"fmt"
 
-	abci "github.com/tendermint/abci/types"
 	"github.com/cosmos/cosmos-sdk/errors"
 )
 
@@ -13,7 +12,7 @@ var (
 )
 
 func ErrNotASubTransaction() errors.TMError {
-	return errors.WithCode(errNotASubTransaction, abci.CodeType_InternalError)
+	return errors.WithCode(errNotASubTransaction, errors.CodeTypeInternalErr)
 }
 func IsNotASubTransactionErr(err error) bool {
 	return errors.IsSameError(errNotASubTransaction, err)

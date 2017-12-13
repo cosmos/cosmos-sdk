@@ -4,8 +4,6 @@ package auth
 import (
 	"fmt"
 
-	abci "github.com/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/errors"
 )
 
@@ -13,7 +11,7 @@ var (
 	errInvalidSignature  = fmt.Errorf("Invalid Signature")   //move auth
 	errTooManySignatures = fmt.Errorf("Too many signatures") //move auth
 
-	unauthorized = abci.CodeType_Unauthorized
+	unauthorized = errors.CodeTypeUnauthorized
 )
 
 func ErrTooManySignatures() errors.TMError {

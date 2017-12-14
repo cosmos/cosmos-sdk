@@ -153,6 +153,10 @@ func (cid CommitID) IsZero() bool {
 	return cid.Version == 0 && len(cid.Hash) == 0
 }
 
+func (cid CommitID) String() string {
+	return fmt.Spritnf("CommitID{%v:%X}", cid.Hash, cid.Version)
+}
+
 // bytes.Compare but bounded on both sides by nil.
 // both (k1, nil) and (nil, k2) return -1
 func keyCompare(k1, k2 []byte) int {

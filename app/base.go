@@ -224,22 +224,11 @@ func (app *BaseApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQue
 
 // Commit implements abci.Application
 func (app *BaseApp) Commit() (res abci.Result) {
-	/*
-		hash, err := app.state.Commit(app.height)
-		if err != nil {
-			// die if we can't commit, not to recover
-			panic(err)
-		}
-		app.logger.Debug("Commit synced",
-			"height", app.height,
-			"hash", fmt.Sprintf("%X", hash),
-		)
-
-		if app.state.Size() == 0 {
-			return abci.NewResultOK(nil, "Empty hash for empty tree")
-		}
-		return abci.NewResultOK(hash, "")
-	*/
+	commitID := app.store.Commit()
+	app.logger.Debug("Commit synced",
+		"commit", commitID,
+	)
+	return abci.NewResultOK(hash, "")
 }
 
 // InitChain - ABCI
@@ -253,7 +242,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) {
 // EndBlock - ABCI
 // Returns a list of all validator changes made in this block
 func (app *BaseApp) EndBlock(height uint64) (res abci.ResponseEndBlock) {
-	// TODO: Compress duplicates
+	// XXX Update to res.Updates.
 	res.Diffs = app.valSetDiff
 	app.valSetDiff = nil
 	return

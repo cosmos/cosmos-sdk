@@ -24,10 +24,10 @@ type BaseApp struct {
 	name string
 
 	// DeliverTx (main) state
-	ms MultiStore
+	store MultiStore
 
 	// CheckTx state
-	msCheck CacheMultiStore
+	storeCheck CacheMultiStore
 
 	// Current block header
 	header *abci.Header
@@ -42,25 +42,25 @@ type BaseApp struct {
 var _ abci.Application = &BaseApp{}
 
 // CONTRACT: There exists a "main" KVStore.
-func NewBaseApp(name string, ms MultiStore) (*BaseApp, error) {
+func NewBaseApp(name string, store CommitMultiStore) (*BaseApp, error) {
 
-	if ms.GetKVStore("main") == nil {
+	if store.GetKVStore("main") == nil {
 		return nil, errors.New("BaseApp expects MultiStore with 'main' KVStore")
 	}
 
 	logger := makeDefaultLogger()
-	lastCommitID := ms.LastCommitID()
-	curVersion := ms.CurrentVersion()
-	main := ms.GetKVStore("main")
+	lastCommitID := store.LastCommitID()
+	curVersion := store.CurrentVersion()
+	main := store.GetKVStore("main")
 	header := (*abci.Header)(nil)
-	msCheck := ms.CacheMultiStore()
+	storeCheck := store.CacheMultiStore()
 
 	// SANITY
 	if curVersion != lastCommitID.Version+1 {
 		panic("CurrentVersion != LastCommitID.Version+1")
 	}
 
-	// If we've committed before, we expect ms.GetKVStore("main").Get("header")
+	// If we've committed before, we expect store.GetKVStore("main").Get("header")
 	if !lastCommitID.IsZero() {
 		headerBytes, ok := main.Get(mainKeyHeader)
 		if !ok {
@@ -81,8 +81,8 @@ func NewBaseApp(name string, ms MultiStore) (*BaseApp, error) {
 	return &BaseApp{
 		logger:     logger,
 		name:       name,
-		ms:         ms,
-		msCheck:    msCheck,
+		store:      store,
+		storeCheck: storeCheck,
 		header:     header,
 		hander:     nil, // set w/ .WithHandler()
 		valSetDiff: nil,
@@ -98,15 +98,26 @@ func (app *BaseApp) WithHandler(handler sdk.Handler) *BaseApp {
 // DeliverTx - ABCI - dispatches to the handler
 func (app *BaseApp) DeliverTx(txBytes []byte) abci.ResponseDeliverTx {
 
-	ctx := sdk.NewContext(app.header, false, txBytes)
-	// NOTE: Tx is nil until a decorator parses it.
-	result := app.handler(ctx, nil)
+	// Initialize arguments to Handler.
+	var isCheckTx = false
+	var ctx = sdk.NewContext(app.header, isCheckTx, txBytes)
+	var store = app.store
+	var tx Tx = nil // nil until a decorator parses one.
+
+	// Run the handler.
+	var result = app.handler(ctx, app.store, tx)
+
+	// After-handler hooks.
+	// TODO move to app.afterHandler(...).
 	if result.Code == abci.CodeType_OK {
+		// XXX No longer "diff", we need to replace old entries.
 		app.ValSetDiff = append(app.ValSetDiff, result.ValSetDiff)
 	} else {
 		// Even though the Code is not OK, there will be some side effects,
 		// like those caused by fee deductions or sequence incrementations.
 	}
+
+	// Tell the blockchain engine (i.e. Tendermint).
 	return abci.ResponseDeliverTx{
 		Code: result.Code,
 		Data: result.Data,
@@ -118,10 +129,17 @@ func (app *BaseApp) DeliverTx(txBytes []byte) abci.ResponseDeliverTx {
 // CheckTx - ABCI - dispatches to the handler
 func (app *BaseApp) CheckTx(txBytes []byte) abci.ResponseCheckTx {
 
-	ctx := sdk.NewContext(app.header, true, txBytes)
-	// NOTE: Tx is nil until a decorator parses it.
-	result := app.handler(ctx, nil)
-	return abci.ResponseCheckTx{
+	// Initialize arguments to Handler.
+	var isCheckTx = true
+	var ctx = sdk.NewContext(app.header, isCheckTx, txBytes)
+	var store = app.store
+	var tx Tx = nil // nil until a decorator parses one.
+
+	// Run the handler.
+	var result = app.handler(ctx, app.store, tx)
+
+	// Tell the blockchain engine (i.e. Tendermint).
+	return abci.ResponseDeliverTx{
 		Code:      result.Code,
 		Data:      result.Data,
 		Log:       result.Log,
@@ -134,7 +152,7 @@ func (app *BaseApp) CheckTx(txBytes []byte) abci.ResponseCheckTx {
 // Info - ABCI
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 
-	lastCommitID := app.ms.LastCommitID()
+	lastCommitID := app.store.LastCommitID()
 
 	return abci.ResponseInfo{
 		Data:             app.Name,
@@ -150,55 +168,57 @@ func (app *BaseApp) SetOption(key string, value string) string {
 
 // Query - ABCI
 func (app *BaseApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) {
-	/* TODO
+	/*
+		XXX Make this work with MultiStore.
+		XXX It will require some interfaces updates in store/types.go.
 
-	if len(reqQuery.Data) == 0 {
-		resQuery.Log = "Query cannot be zero length"
-		resQuery.Code = abci.CodeType_EncodingError
-		return
-	}
-
-	// set the query response height to current
-	tree := app.state.Committed()
-
-	height := reqQuery.Height
-	if height == 0 {
-		// TODO: once the rpc actually passes in non-zero
-		// heights we can use to query right after a tx
-		// we must retrun most recent, even if apphash
-		// is not yet in the blockchain
-
-		withProof := app.CommittedHeight() - 1
-		if tree.Tree.VersionExists(withProof) {
-			height = withProof
-		} else {
-			height = app.CommittedHeight()
+		if len(reqQuery.Data) == 0 {
+			resQuery.Log = "Query cannot be zero length"
+			resQuery.Code = abci.CodeType_EncodingError
+			return
 		}
-	}
-	resQuery.Height = height
 
-	switch reqQuery.Path {
-	case "/store", "/key": // Get by key
-		key := reqQuery.Data // Data holds the key bytes
-		resQuery.Key = key
-		if reqQuery.Prove {
-			value, proof, err := tree.GetVersionedWithProof(key, height)
-			if err != nil {
-				resQuery.Log = err.Error()
-				break
+		// set the query response height to current
+		tree := app.state.Committed()
+
+		height := reqQuery.Height
+		if height == 0 {
+			// TODO: once the rpc actually passes in non-zero
+			// heights we can use to query right after a tx
+			// we must retrun most recent, even if apphash
+			// is not yet in the blockchain
+
+			withProof := app.CommittedHeight() - 1
+			if tree.Tree.VersionExists(withProof) {
+				height = withProof
+			} else {
+				height = app.CommittedHeight()
 			}
-			resQuery.Value = value
-			resQuery.Proof = proof.Bytes()
-		} else {
-			value := tree.Get(key)
-			resQuery.Value = value
 		}
+		resQuery.Height = height
 
-	default:
-		resQuery.Code = abci.CodeType_UnknownRequest
-		resQuery.Log = cmn.Fmt("Unexpected Query path: %v", reqQuery.Path)
-	}
-	return
+		switch reqQuery.Path {
+		case "/store", "/key": // Get by key
+			key := reqQuery.Data // Data holds the key bytes
+			resQuery.Key = key
+			if reqQuery.Prove {
+				value, proof, err := tree.GetVersionedWithProof(key, height)
+				if err != nil {
+					resQuery.Log = err.Error()
+					break
+				}
+				resQuery.Value = value
+				resQuery.Proof = proof.Bytes()
+			} else {
+				value := tree.Get(key)
+				resQuery.Value = value
+			}
+
+		default:
+			resQuery.Code = abci.CodeType_UnknownRequest
+			resQuery.Log = cmn.Fmt("Unexpected Query path: %v", reqQuery.Path)
+		}
+		return
 	*/
 }
 

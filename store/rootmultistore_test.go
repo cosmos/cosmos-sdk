@@ -71,7 +71,7 @@ func newMultiStoreWithLoaders(db dbm.DB) *rootMultiStore {
 		"store3": newMockCommitStore,
 	}
 	for name, loader := range storeLoaders {
-		store.SetCommitStoreLoader(name, loader)
+		store.SetSubstoreLoader(name, loader)
 	}
 	return store
 }

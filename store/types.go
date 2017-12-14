@@ -30,22 +30,44 @@ type MultiStore interface {
 	GetKVStore(name string) KVStore
 }
 
+// From MultiStore.CacheMultiStore()....
 type CacheMultiStore interface {
 	MultiStore
 	Write() // Writes operations to underlying KVStore
 }
 
+// Substores of MultiStore must implement CommitStore.
 type CommitStore interface {
 	Committer
 	CacheWrapper
 }
 
-type CommitStoreLoader func(id CommitID) (CommitStore, error)
-
+// A non-cache store that can commit (persist) and get a Merkle root.
 type Committer interface {
-	// Commit persists the state to disk.
 	Commit() CommitID
 }
+
+// A non-cache MultiStore.
+type CommitMultiStore interface {
+	CommitStore
+	MultiStore
+
+	// Add a substore loader.
+	SetSubstoreLoader(name string, loader CommitStoreLoader)
+
+	// Load the latest persisted version.
+	LoadLatestVersion() error
+
+	// Load a specific persisted version.  When you load an old version, or
+	// when the last commit attempt didn't complete, the next commit after
+	// loading must be idempotent (return the same commit id).  Otherwise the
+	// behavior is undefined.
+	LoadVersion(ver int64) error
+}
+
+// These must be added to the MultiStore before calling LoadVersion() or
+// LoadLatest().
+type CommitStoreLoader func(id CommitID) (CommitStore, error)
 
 //----------------------------------------
 // KVStore

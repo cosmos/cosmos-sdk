@@ -35,14 +35,14 @@ func NewMultiStore(db dbm.DB) *rootMultiStore {
 	}
 }
 
-func (rs *rootMultiStore) SetCommitStoreLoader(name string, loader CommitStoreLoader) {
+func (rs *rootMultiStore) SetSubstoreLoader(name string, loader CommitStoreLoader) {
 	if _, ok := rs.storeLoaders[name]; ok {
 		panic(fmt.Sprintf("rootMultiStore duplicate substore name " + name))
 	}
 	rs.storeLoaders[name] = loader
 }
 
-// Call once after all calls to SetCommitStoreLoader are complete.
+// Call once after all calls to SetSubstoreLoader are complete.
 func (rs *rootMultiStore) LoadLatestVersion() error {
 	ver := getLatestVersion(rs.db)
 	return rs.LoadVersion(ver)

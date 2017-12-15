@@ -13,7 +13,7 @@ type memIterator struct {
 func newMemIterator(start, end []byte, items []KVPair) *memIterator {
 	itemsInDomain := make([]KVPair, 0)
 	for _, item := range items {
-		if dbm.IsKeyInDomain(string(item.Key), start, end) {
+		if dbm.IsKeyInDomain(item.Key, start, end) {
 			itemsInDomain = append(itemsInDomain, item)
 		}
 	}
@@ -53,7 +53,7 @@ func (mi *memIterator) Value() []byte {
 	return mi.items[0].Value
 }
 
-func (mi *memIterator) Release() {
+func (mi *memIterator) Close() {
 	mi.start = nil
 	mi.end = nil
 	mi.items = nil

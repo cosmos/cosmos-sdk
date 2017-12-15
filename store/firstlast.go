@@ -8,7 +8,7 @@ func First(st KVStore, start, end []byte) (kv KVPair, ok bool) {
 	if !iter.Valid() {
 		return kv, false
 	}
-	defer iter.Release()
+	defer iter.Close()
 
 	return KVPair{iter.Key(), iter.Value()}, true
 }
@@ -23,7 +23,7 @@ func Last(st KVStore, start, end []byte) (kv KVPair, ok bool) {
 			return kv, false
 		}
 	}
-	defer iter.Release()
+	defer iter.Close()
 
 	if bytes.Equal(iter.Key(), end) {
 		// Skip this one, end is exclusive.

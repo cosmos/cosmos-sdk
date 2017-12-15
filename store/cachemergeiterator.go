@@ -150,10 +150,10 @@ func (iter *cacheMergeIterator) Value() []byte {
 	}
 }
 
-// Release implements Iterator
-func (iter *cacheMergeIterator) Release() {
-	iter.parent.Release()
-	iter.cache.Release()
+// Close implements Iterator
+func (iter *cacheMergeIterator) Close() {
+	iter.parent.Close()
+	iter.cache.Close()
 }
 
 // Like bytes.Compare but opposite if not ascending.

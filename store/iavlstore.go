@@ -234,8 +234,8 @@ func (iter *iavlIterator) Value() []byte {
 	return iter.value
 }
 
-// Release implements Iterator
-func (iter *iavlIterator) Release() {
+// Close implements Iterator
+func (iter *iavlIterator) Close() {
 	close(iter.quitCh)
 }
 

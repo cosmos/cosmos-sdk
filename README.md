@@ -48,8 +48,8 @@ Within this repository, the `basecoin` app serves as a reference implementation 
 ## Installation and Documentation
 
 ```
-go get -u github.com/cosmos/cosmos-sdk/cmd/basecoin
-```
+ go get -u github.com/cosmos/cosmos-sdk/examples/basecoin/cmd/basecoin
+ ```
 
 See the [Cosmos SDK Documentation](http://cosmos-sdk.readthedocs.io/en/latest/) for complete installation details and usage documentation. To deploy a testnet, see our [repository of deployment tools](https://github.com/tendermint/tools).
 

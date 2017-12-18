@@ -18,7 +18,7 @@ master    | [![CircleCI](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master.s
 
 !!!!!!!!!!!!!!!!!!!!!
 
-*THIS REPOSITORY IS UNDERGOING RAPID DEVELOPMENT AND NONE OF ITS INTERFACES ARE CONSIDERED STABLE.*
+*THIS REPOSITORY IS UNDERGOING RAPID DEVELOPMENT AND NONE OF ITS INTERFACES IS CONSIDERED STABLE.*
 
 *USE AT YOUR OWN RISK.*
 
@@ -52,6 +52,7 @@ go get -u github.com/cosmos/cosmos-sdk/cmd/basecoin
 ```
 
 See the [Cosmos SDK Documentation](http://cosmos-sdk.readthedocs.io/en/latest/) for complete installation details and usage documentation. To deploy a testnet, see our [repository of deployment tools](https://github.com/tendermint/tools).
+
 
 # Inspiration
 

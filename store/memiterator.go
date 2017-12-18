@@ -1,6 +1,7 @@
 package store
 
 import (
+	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
@@ -9,10 +10,10 @@ import (
 // Implements Iterator.
 type memIterator struct {
 	start, end []byte
-	items      []KVPair
+	items      []cmn.KVPair
 }
 
-func newMemIterator(start, end []byte, items []KVPair) *memIterator {
+func newMemIterator(start, end []byte, items []cmn.KVPair) *memIterator {
 	itemsInDomain := make([]KVPair, 0)
 	for _, item := range items {
 		ascending := keyCompare(start, end) < 0

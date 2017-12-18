@@ -1,24 +1,27 @@
 package store
 
-import "bytes"
+import (
+	"bytes"
+	cmn "github.com/tendermint/tmlibs/common"
+)
 
 // Gets the first item.
-func First(st KVStore, start, end []byte) (kv KVPair, ok bool) {
+func First(st KVStore, start, end []byte) (kv cmn.KVPair, ok bool) {
 	iter := st.Iterator(start, end)
 	if !iter.Valid() {
 		return kv, false
 	}
 	defer iter.Close()
 
-	return KVPair{iter.Key(), iter.Value()}, true
+	return cmn.KVPair{iter.Key(), iter.Value()}, true
 }
 
 // Gets the last item.  `end` is exclusive.
-func Last(st KVStore, start, end []byte) (kv KVPair, ok bool) {
+func Last(st KVStore, start, end []byte) (kv cmn.KVPair, ok bool) {
 	iter := st.ReverseIterator(end, start)
 	if !iter.Valid() {
 		if v := st.Get(start); v != nil {
-			return KVPair{cp(start), cp(v)}, true
+			return cmn.KVPair{cp(start), cp(v)}, true
 		} else {
 			return kv, false
 		}
@@ -33,5 +36,5 @@ func Last(st KVStore, start, end []byte) (kv KVPair, ok bool) {
 		}
 	}
 
-	return KVPair{iter.Key(), iter.Value()}, true
+	return cmn.KVPair{iter.Key(), iter.Value()}, true
 }

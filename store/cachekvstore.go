@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"sort"
 	"sync"
+
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 // If value is nil but deleted is false, it means the parent doesn't have the
@@ -85,8 +87,8 @@ func (ci *cacheKVStore) Write() {
 	}
 	sort.Strings(keys)
 
-	// TODO in tmlibs/db we use Batch to write atomically.
-	// Consider allowing usage of Batch.
+	// TODO: Consider allowing usage of Batch, which would allow the write to
+	// at least happen atomically.
 	for _, key := range keys {
 		cacheValue := ci.cache[key]
 		if cacheValue.deleted {
@@ -133,14 +135,14 @@ func (ci *cacheKVStore) iterator(start, end []byte, ascending bool) Iterator {
 }
 
 // Constructs a slice of dirty items, to use w/ memIterator.
-func (ci *cacheKVStore) dirtyItems(ascending bool) []KVPair {
-	items := make([]KVPair, 0, len(ci.cache))
+func (ci *cacheKVStore) dirtyItems(ascending bool) []cmn.KVPair {
+	items := make([]cmn.KVPair, 0, len(ci.cache))
 	for key, cacheValue := range ci.cache {
 		if !cacheValue.dirty {
 			continue
 		}
 		items = append(items,
-			KVPair{[]byte(key), cacheValue.value})
+			cmn.KVPair{[]byte(key), cacheValue.value})
 	}
 	sort.Slice(items, func(i, j int) bool {
 		if ascending {

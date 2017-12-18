@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/tendermint/iavl"
+	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
@@ -131,7 +132,7 @@ type iavlIterator struct {
 	ascending bool
 
 	// Channel to push iteration values.
-	iterCh chan KVPair
+	iterCh chan cmn.KVPair
 
 	// Close this to release goroutine.
 	quitCh chan struct{}
@@ -159,7 +160,7 @@ func newIAVLIterator(tree *iavl.Tree, start, end []byte, ascending bool) *iavlIt
 		start:     cp(start),
 		end:       cp(end),
 		ascending: ascending,
-		iterCh:    make(chan KVPair, 0), // Set capacity > 0?
+		iterCh:    make(chan cmn.KVPair, 0), // Set capacity > 0?
 		quitCh:    make(chan struct{}),
 		initCh:    make(chan struct{}),
 	}
@@ -176,7 +177,7 @@ func (iter *iavlIterator) iterateRoutine() {
 			select {
 			case <-iter.quitCh:
 				return true // done with iteration.
-			case iter.iterCh <- KVPair{key, value}:
+			case iter.iterCh <- cmn.KVPair{key, value}:
 				return false // yay.
 			}
 		},

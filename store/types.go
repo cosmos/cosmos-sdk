@@ -2,8 +2,8 @@ package store
 
 import (
 	"bytes"
+	"fmt"
 
-	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/db"
 )
 
@@ -138,11 +138,6 @@ type CacheWrap interface {
 //----------------------------------------
 // etc
 
-type KVPair struct {
-	Key   data.Bytes
-	Value data.Bytes
-}
-
 // CommitID contains the tree version number and its merkle root.
 type CommitID struct {
 	Version int64
@@ -154,7 +149,7 @@ func (cid CommitID) IsZero() bool {
 }
 
 func (cid CommitID) String() string {
-	return fmt.Spritnf("CommitID{%v:%X}", cid.Hash, cid.Version)
+	return fmt.Sprintf("CommitID{%v:%X}", cid.Hash, cid.Version)
 }
 
 // bytes.Compare but bounded on both sides by nil.

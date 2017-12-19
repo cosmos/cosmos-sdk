@@ -11,7 +11,7 @@ type Signature interface {
 // There must be better strategies, but this is simplest.
 type StdSignature struct {
 	crypto.Signature
-	Sequence int
+	SequenceNumber int
 }
 
 func (ss StdSignature) CryptoSig() crypto.Signature {
@@ -19,5 +19,5 @@ func (ss StdSignature) CryptoSig() crypto.Signature {
 }
 
 func (ss StdSignature) Sequence() int {
-	return ss.Sequence
+	return ss.SequenceNumber
 }

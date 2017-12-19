@@ -1,6 +1,10 @@
 package errors
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/pkg/errors"
+)
 
 const (
 	// ABCI Response Codes
@@ -65,6 +69,8 @@ func UnknownRequest(log string) sdkError {
 type ABCIError interface {
 	ABCICode() uint32
 	ABCILog() string
+
+	Error() string
 }
 
 /*
@@ -131,4 +137,23 @@ func (err sdkError) WithCause(cause error) sdkError {
 	copy := err
 	copy.cause = cause
 	return copy
+}
+
+// HasErrorCode checks if this error would return the named error code
+func HasErrorCode(err error, code uint32) bool {
+	if abciErr, ok := err.(ABCIError); ok {
+		return abciErr.ABCICode() == code
+	}
+	return code == CodeInternalError
+}
+
+func IsSameError(pattern error, err error) bool {
+	return err != nil && (errors.Cause(err) == errors.Cause(pattern))
+}
+
+func WithCode(err error, code uint32) sdkError {
+	return sdkError{
+		code:  code,
+		cause: err,
+	}
 }

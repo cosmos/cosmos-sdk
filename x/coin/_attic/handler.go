@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/errors"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	// "github.com/cosmos/cosmos-sdk/x/ibc"
 	// "github.com/cosmos/cosmos-sdk/stack"
@@ -42,8 +43,8 @@ func (Handler) Name() string {
 func (Handler) AssertDispatcher() {}
 
 // CheckTx checks if there is enough money in the account
-func (h Handler) CheckTx(ctx sdk.Context, store store.MultiStore,
-	tx sdk.Tx, _ sdk.Checker) (res sdk.CheckResult, err error) {
+func (h Handler) CheckTx(ctx types.Context, store store.MultiStore,
+	tx types.Tx, _ sdk.Checker) (res sdk.CheckResult, err error) {
 
 	err = tx.ValidateBasic()
 	if err != nil {
@@ -63,8 +64,8 @@ func (h Handler) CheckTx(ctx sdk.Context, store store.MultiStore,
 }
 
 // DeliverTx moves the money
-func (h Handler) DeliverTx(ctx sdk.Context, store store.MultiStore,
-	tx sdk.Tx, cb sdk.Deliver) (res sdk.DeliverResult, err error) {
+func (h Handler) DeliverTx(ctx types.Context, store store.MultiStore,
+	tx types.Tx, cb sdk.Deliver) (res sdk.DeliverResult, err error) {
 
 	err = tx.ValidateBasic()
 	if err != nil {
@@ -95,7 +96,7 @@ func (h Handler) InitState(l log.Logger, store store.MultiStore,
 	return "", errors.ErrUnknownKey(key)
 }
 
-func (h Handler) sendTx(ctx sdk.Context, store store.MultiStore,
+func (h Handler) sendTx(ctx types.Context, store store.MultiStore,
 	send SendTx, cb sdk.Deliver) error {
 
 	err := checkTx(ctx, send)
@@ -156,7 +157,7 @@ func (h Handler) sendTx(ctx sdk.Context, store store.MultiStore,
 	return nil
 }
 
-func (h Handler) creditTx(ctx sdk.Context, store store.MultiStore,
+func (h Handler) creditTx(ctx types.Context, store store.MultiStore,
 	credit CreditTx) error {
 
 	// first check permissions!!
@@ -189,7 +190,7 @@ func (h Handler) creditTx(ctx sdk.Context, store store.MultiStore,
 	return err
 }
 
-func checkTx(ctx sdk.Context, send SendTx) error {
+func checkTx(ctx types.Context, send SendTx) error {
 	// check if all inputs have permission
 	for _, in := range send.Inputs {
 		if !ctx.HasPermission(in.Address) {
@@ -199,7 +200,7 @@ func checkTx(ctx sdk.Context, send SendTx) error {
 	return nil
 }
 
-func (Handler) checkSendTx(ctx sdk.Context, store store.MultiStore, send SendTx) error {
+func (Handler) checkSendTx(ctx types.Context, store store.MultiStore, send SendTx) error {
 	err := checkTx(ctx, send)
 	if err != nil {
 		return err

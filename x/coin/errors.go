@@ -4,8 +4,6 @@ package coin
 import (
 	"fmt"
 
-	abci "github.com/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/errors"
 )
 
@@ -18,10 +16,11 @@ var (
 	errInvalidAddress     = fmt.Errorf("Invalid address")
 	errInvalidCoins       = fmt.Errorf("Invalid coins")
 
-	invalidInput   = abci.CodeType_BaseInvalidInput
-	invalidOutput  = abci.CodeType_BaseInvalidOutput
-	unknownAddress = abci.CodeType_BaseUnknownAddress
-	unknownRequest = abci.CodeType_UnknownRequest
+	// TODO
+	invalidInput   uint32 = 10
+	invalidOutput  uint32 = 11
+	unknownAddress uint32 = 12
+	unknownRequest uint32 = errors.CodeUnknownRequest
 )
 
 // here are some generic handlers to grab classes of errors based on code
@@ -38,7 +37,7 @@ func IsCoinErr(err error) bool {
 	return err != nil && (IsInputErr(err) || IsOutputErr(err) || IsAddressErr(err))
 }
 
-func ErrNoAccount() errors.TMError {
+func ErrNoAccount() errors.ABCIError {
 	return errors.WithCode(errNoAccount, unknownAddress)
 }
 
@@ -46,42 +45,42 @@ func IsNoAccountErr(err error) bool {
 	return errors.IsSameError(errNoAccount, err)
 }
 
-func ErrInvalidAddress() errors.TMError {
+func ErrInvalidAddress() errors.ABCIError {
 	return errors.WithCode(errInvalidAddress, invalidInput)
 }
 func IsInvalidAddressErr(err error) bool {
 	return errors.IsSameError(errInvalidAddress, err)
 }
 
-func ErrInvalidCoins() errors.TMError {
+func ErrInvalidCoins() errors.ABCIError {
 	return errors.WithCode(errInvalidCoins, invalidInput)
 }
 func IsInvalidCoinsErr(err error) bool {
 	return errors.IsSameError(errInvalidCoins, err)
 }
 
-func ErrInsufficientFunds() errors.TMError {
+func ErrInsufficientFunds() errors.ABCIError {
 	return errors.WithCode(errInsufficientFunds, invalidInput)
 }
 func IsInsufficientFundsErr(err error) bool {
 	return errors.IsSameError(errInsufficientFunds, err)
 }
 
-func ErrInsufficientCredit() errors.TMError {
+func ErrInsufficientCredit() errors.ABCIError {
 	return errors.WithCode(errInsufficientCredit, invalidInput)
 }
 func IsInsufficientCreditErr(err error) bool {
 	return errors.IsSameError(errInsufficientCredit, err)
 }
 
-func ErrNoInputs() errors.TMError {
+func ErrNoInputs() errors.ABCIError {
 	return errors.WithCode(errNoInputs, invalidInput)
 }
 func IsNoInputsErr(err error) bool {
 	return errors.IsSameError(errNoInputs, err)
 }
 
-func ErrNoOutputs() errors.TMError {
+func ErrNoOutputs() errors.ABCIError {
 	return errors.WithCode(errNoOutputs, invalidOutput)
 }
 func IsNoOutputsErr(err error) bool {

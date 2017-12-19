@@ -2,18 +2,18 @@ package coin
 
 import (
 	"fmt"
-
-	sdk "github.com/cosmos/cosmos-sdk"
 )
 
-func init() {
+/*func init() {
 	sdk.TxMapper.
 		RegisterImplementation(SendTx{}, TypeSend, ByteSend).
 		RegisterImplementation(CreditTx{}, TypeCredit, ByteCredit)
-}
+}*/
 
 // we reserve the 0x20-0x3f range for standard modules
 const (
+	NameCoin = "coin"
+
 	ByteSend   = 0x20
 	TypeSend   = NameCoin + "/send"
 	ByteCredit = 0x21
@@ -24,8 +24,8 @@ const (
 
 // TxInput - expected coin movement outputs, used with SendTx
 type TxInput struct {
-	Address sdk.Actor `json:"address"`
-	Coins   Coins          `json:"coins"`
+	Address Actor `json:"address"`
+	Coins   Coins `json:"coins"`
 }
 
 // ValidateBasic - validate transaction input
@@ -51,7 +51,7 @@ func (txIn TxInput) String() string {
 }
 
 // NewTxInput - create a transaction input, used with SendTx
-func NewTxInput(addr sdk.Actor, coins Coins) TxInput {
+func NewTxInput(addr Actor, coins Coins) TxInput {
 	input := TxInput{
 		Address: addr,
 		Coins:   coins,
@@ -63,8 +63,8 @@ func NewTxInput(addr sdk.Actor, coins Coins) TxInput {
 
 // TxOutput - expected coin movement output, used with SendTx
 type TxOutput struct {
-	Address sdk.Actor `json:"address"`
-	Coins   Coins          `json:"coins"`
+	Address Actor `json:"address"`
+	Coins   Coins `json:"coins"`
 }
 
 // ValidateBasic - validate transaction output
@@ -90,7 +90,7 @@ func (txOut TxOutput) String() string {
 }
 
 // NewTxOutput - create a transaction output, used with SendTx
-func NewTxOutput(addr sdk.Actor, coins Coins) TxOutput {
+func NewTxOutput(addr Actor, coins Coins) TxOutput {
 	output := TxOutput{
 		Address: addr,
 		Coins:   coins,
@@ -107,19 +107,19 @@ type SendTx struct {
 	Outputs []TxOutput `json:"outputs"`
 }
 
-var _ sdk.Tx = NewSendTx(nil, nil)
+// var _ types.Tx = NewSendTx(nil, nil)
 
 // NewSendTx - construct arbitrary multi-in, multi-out sendtx
-func NewSendTx(in []TxInput, out []TxOutput) sdk.Tx {
-	return SendTx{Inputs: in, Outputs: out}.Wrap()
+func NewSendTx(in []TxInput, out []TxOutput) SendTx { // types.Tx {
+	return SendTx{Inputs: in, Outputs: out}
 }
 
 // NewSendOneTx is a helper for the standard (?) case where there is exactly
 // one sender and one recipient
-func NewSendOneTx(sender, recipient sdk.Actor, amount Coins) sdk.Tx {
+func NewSendOneTx(sender, recipient Actor, amount Coins) SendTx {
 	in := []TxInput{{Address: sender, Coins: amount}}
 	out := []TxOutput{{Address: recipient, Coins: amount}}
-	return SendTx{Inputs: in, Outputs: out}.Wrap()
+	return SendTx{Inputs: in, Outputs: out}
 }
 
 // ValidateBasic - validate the send transaction
@@ -157,17 +157,12 @@ func (tx SendTx) String() string {
 	return fmt.Sprintf("SendTx{%v->%v}", tx.Inputs, tx.Outputs)
 }
 
-// Wrap - used to satisfy TxInner
-func (tx SendTx) Wrap() sdk.Tx {
-	return sdk.Tx{tx}
-}
-
 //-----------------------------------------------------------------------------
 
 // CreditTx - this allows a special issuer to give an account credit
 // Satisfies: TxInner
 type CreditTx struct {
-	Debitor sdk.Actor `json:"debitor"`
+	Debitor Actor `json:"debitor"`
 	// Credit is the amount to change the credit...
 	// This may be negative to remove some over-issued credit,
 	// but can never bring the credit or the balance to negative
@@ -175,13 +170,8 @@ type CreditTx struct {
 }
 
 // NewCreditTx - modify the credit granted to a given account
-func NewCreditTx(debitor sdk.Actor, credit Coins) sdk.Tx {
-	return CreditTx{Debitor: debitor, Credit: credit}.Wrap()
-}
-
-// Wrap - used to satisfy TxInner
-func (tx CreditTx) Wrap() sdk.Tx {
-	return sdk.Tx{tx}
+func NewCreditTx(debitor Actor, credit Coins) CreditTx {
+	return CreditTx{Debitor: debitor, Credit: credit}
 }
 
 // ValidateBasic - used to satisfy TxInner

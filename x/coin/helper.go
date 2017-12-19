@@ -5,7 +5,7 @@ import (
 	"github.com/tendermint/go-wire/data"
 
 	sdk "github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/modules/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // AccountWithKey is a helper for tests, that includes and account

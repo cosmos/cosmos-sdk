@@ -1,7 +1,7 @@
 package auth
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 /*
@@ -13,7 +13,7 @@ import (
 	var acc accounts.Account
 
 	accounts.SetAccount(ctx, acc)
-	acc2, ok := accounts.GetAccount(ctx)
+	acc2 := accounts.GetAccount(ctx)
 
 */
 
@@ -24,10 +24,10 @@ const (
 	contextKeyAccount contextKey = iota
 )
 
-func SetAccount(ctx sdk.Context, account Account) sdk.Context {
-	return ctx.WithValue(contextKeyAccount, account)
+func SetAccount(ctx types.Context, account Account) types.Context {
+	return ctx.WithValueSDK(contextKeyAccount, account)
 }
 
-func GetAccount(ctx sdk.Context) (Account, bool) {
+func GetAccount(ctx types.Context) Account {
 	return ctx.Value(contextKeyAccount).(Account)
 }

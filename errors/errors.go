@@ -4,12 +4,12 @@ import "fmt"
 
 const (
 	// ABCI Response Codes
-	CodeInternalError     = 1
-	CodeTxParseError      = 2
-	CodeBadNonce          = 3
-	CodeUnauthorized      = 4
-	CodeInsufficientFunds = 5
-	CodeUnknownRequest    = 6
+	CodeInternalError     uint32 = 1
+	CodeTxParseError             = 2
+	CodeBadNonce                 = 3
+	CodeUnauthorized             = 4
+	CodeInsufficientFunds        = 5
+	CodeUnknownRequest           = 6
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.

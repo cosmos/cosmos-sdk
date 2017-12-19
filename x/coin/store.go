@@ -7,11 +7,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/errors"
-	"github.com/cosmos/cosmos-sdk/state"
+	"github.com/cosmos/cosmos-sdk/store"
 )
 
 // GetAccount - Get account from store and address
-func GetAccount(store state.SimpleDB, addr sdk.Actor) (Account, error) {
+func GetAccount(store store.MultiStore, addr sdk.Actor) (Account, error) {
 	// if the actor is another chain, we use one address for the chain....
 	addr = ChainAddr(addr)
 	acct, err := loadAccount(store, addr.Bytes())
@@ -24,7 +24,7 @@ func GetAccount(store state.SimpleDB, addr sdk.Actor) (Account, error) {
 }
 
 // CheckCoins makes sure there are funds, but doesn't change anything
-func CheckCoins(store state.SimpleDB, addr sdk.Actor, coins Coins) (Coins, error) {
+func CheckCoins(store store.MultiStore, addr sdk.Actor, coins Coins) (Coins, error) {
 	// if the actor is another chain, we use one address for the chain....
 	addr = ChainAddr(addr)
 
@@ -33,7 +33,7 @@ func CheckCoins(store state.SimpleDB, addr sdk.Actor, coins Coins) (Coins, error
 }
 
 // ChangeCoins changes the money, returns error if it would be negative
-func ChangeCoins(store state.SimpleDB, addr sdk.Actor, coins Coins) (Coins, error) {
+func ChangeCoins(store store.MultiStore, addr sdk.Actor, coins Coins) (Coins, error) {
 	// if the actor is another chain, we use one address for the chain....
 	addr = ChainAddr(addr)
 
@@ -62,7 +62,7 @@ func ChainAddr(addr sdk.Actor) sdk.Actor {
 // updateCoins will load the account, make all checks, and return the updated account.
 //
 // it doesn't save anything, that is up to you to decide (Check/Change Coins)
-func updateCoins(store state.SimpleDB, addr sdk.Actor, coins Coins) (acct Account, err error) {
+func updateCoins(store store.MultiStore, addr sdk.Actor, coins Coins) (acct Account, err error) {
 	acct, err = loadAccount(store, addr.Bytes())
 	// we can increase an empty account...
 	if IsNoAccountErr(err) && coins.IsPositive() {
@@ -91,7 +91,7 @@ type Account struct {
 	Credit Coins `json:"credit"`
 }
 
-func loadAccount(store state.SimpleDB, key []byte) (acct Account, err error) {
+func loadAccount(store store.MultiStore, key []byte) (acct Account, err error) {
 	// fmt.Printf("load:  %X\n", key)
 	data := store.Get(key)
 	if len(data) == 0 {
@@ -105,7 +105,7 @@ func loadAccount(store state.SimpleDB, key []byte) (acct Account, err error) {
 	return acct, nil
 }
 
-func storeAccount(store state.SimpleDB, key []byte, acct Account) error {
+func storeAccount(store store.MultiStore, key []byte, acct Account) error {
 	// fmt.Printf("store: %X\n", key)
 	bin := wire.BinaryBytes(acct)
 	store.Set(key, bin)
@@ -120,7 +120,7 @@ type HandlerInfo struct {
 // TODO: where to store these special pieces??
 var handlerKey = []byte{12, 34}
 
-func loadHandlerInfo(store state.KVStore) (info HandlerInfo, err error) {
+func loadHandlerInfo(store store.KVStore) (info HandlerInfo, err error) {
 	data := store.Get(handlerKey)
 	if len(data) == 0 {
 		return info, nil
@@ -133,7 +133,7 @@ func loadHandlerInfo(store state.KVStore) (info HandlerInfo, err error) {
 	return info, nil
 }
 
-func storeIssuer(store state.KVStore, issuer sdk.Actor) error {
+func storeIssuer(store store.KVStore, issuer sdk.Actor) error {
 	info, err := loadHandlerInfo(store)
 	if err != nil {
 		return err

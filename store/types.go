@@ -1,6 +1,8 @@
 package store
 
 import (
+	"bytes"
+
 	"github.com/tendermint/go-wire/data"
 	"github.com/tendermint/tmlibs/db"
 )
@@ -127,4 +129,12 @@ type CommitID struct {
 
 func (cid CommitID) IsZero() bool {
 	return cid.Version == 0 && len(cid.Hash) == 0
+}
+
+// bytes.Compare but returns 0 if either key is nil
+func keyCompare(k1, k2 []byte) int {
+	if k1 == nil || k2 == nil {
+		return 0
+	}
+	return bytes.Compare(k1, k2)
 }

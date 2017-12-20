@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -95,7 +96,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 	}
 
 	// iterate over all of them
-	itr := st.Iterator(dbm.BeginningKey(), dbm.EndingKey())
+	itr := st.Iterator(nil, nil)
 	var i = 0
 	for ; itr.Valid(); itr.Next() {
 		k, v := itr.Key(), itr.Value()
@@ -106,9 +107,10 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 	assert.Equal(t, nItems, i)
 
 	// iterate over none
-	itr = st.Iterator(bz("money"), dbm.EndingKey())
+	itr = st.Iterator(bz("money"), nil)
 	i = 0
 	for ; itr.Valid(); itr.Next() {
+		fmt.Println(string(itr.Key()))
 		i += 1
 	}
 	assert.Equal(t, 0, i)
@@ -221,7 +223,7 @@ func TestCacheKVMergeIterator(t *testing.T) {
 
 // iterate over whole domain
 func assertIterateDomain(t *testing.T, st KVStore, expectedN int) {
-	itr := st.Iterator(dbm.BeginningKey(), dbm.EndingKey())
+	itr := st.Iterator(nil, nil)
 	var i = 0
 	for ; itr.Valid(); itr.Next() {
 		k, v := itr.Key(), itr.Value()

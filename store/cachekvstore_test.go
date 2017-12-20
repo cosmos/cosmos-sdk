@@ -112,7 +112,6 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 		i += 1
 	}
 	assert.Equal(t, 0, i)
-	return
 
 	// iterate over lower
 	itr = st.Iterator(keyFmt(0), keyFmt(3))
@@ -123,7 +122,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 		assert.Equal(t, valFmt(i), v)
 		i += 1
 	}
-	assert.Equal(t, 2, i)
+	assert.Equal(t, 3, i)
 
 	// iterate over upper
 	itr = st.Iterator(keyFmt(2), keyFmt(4))
@@ -137,6 +136,55 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 	assert.Equal(t, 4, i)
 }
 
+func TestCacheKVMergeIteratorBasics(t *testing.T) {
+	mem := dbm.NewMemDB()
+	st := NewCacheKVStore(mem)
+
+	// set an item in the cache, iterator should be empty
+	k, v := keyFmt(0), valFmt(0)
+	st.Set(k, v)
+	st.Delete(k)
+	assertIterateDomain(t, st, 0)
+
+	// now set it and assert its there
+	st.Set(k, v)
+	assertIterateDomain(t, st, 1)
+
+	// write it and assert its there
+	st.Write()
+	assertIterateDomain(t, st, 1)
+
+	// remove it in cache and assert its not
+	st.Delete(k)
+	assertIterateDomain(t, st, 0)
+
+	// write the delete and assert its not there
+	st.Write()
+	assertIterateDomain(t, st, 0)
+
+	// add two keys and assert theyre there
+	k1, v1 := keyFmt(1), valFmt(1)
+	st.Set(k, v)
+	st.Set(k1, v1)
+	assertIterateDomain(t, st, 2)
+
+	// write it and assert theyre there
+	st.Write()
+	assertIterateDomain(t, st, 2)
+
+	// remove one in cache and assert its not
+	st.Delete(k1)
+	assertIterateDomain(t, st, 1)
+
+	// write the delete and assert its not there
+	st.Write()
+	assertIterateDomain(t, st, 1)
+
+	// delete the other key in cache and asserts its empty
+	st.Delete(k)
+	assertIterateDomain(t, st, 0)
+}
+
 func TestCacheKVMergeIterator(t *testing.T) {
 	mem := dbm.NewMemDB()
 	st := NewCacheKVStore(mem)
@@ -148,7 +196,7 @@ func TestCacheKVMergeIterator(t *testing.T) {
 	}
 	st.Write()
 
-	// set some items and leave dirty
+	// set some more items and leave dirty
 	for i := nItems; i < nItems*2; i++ {
 		st.Set(keyFmt(i), valFmt(i))
 	}
@@ -156,19 +204,17 @@ func TestCacheKVMergeIterator(t *testing.T) {
 	// iterate over all of them
 	assertIterateDomain(t, st, nItems*2)
 
-	// set the last dirty item to delete
+	// delete the last dirty item, ensure we dont see it
 	last := nItems*2 - 1
 	st.Delete(keyFmt(last))
-
-	// iterate over all of them, ensure we dont see the last one
 	assertIterateDomain(t, st, nItems*2-1)
 
 	// write and check again
 	st.Write()
 	assertIterateDomain(t, st, nItems*2-1)
 
-	// delete the next last one
-	last = nItems*2 - 2
+	// delete the next last one, ensure we dont see it
+	last = last - 1
 	st.Delete(keyFmt(last))
 	assertIterateDomain(t, st, nItems*2-2)
 }

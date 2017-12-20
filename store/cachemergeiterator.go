@@ -49,12 +49,28 @@ func (iter *cacheMergeIterator) Domain() (start, end []byte) {
 // Valid implements Iterator.
 func (iter *cacheMergeIterator) Valid() bool {
 
-	// If parent is valid, this is valid.
-	if iter.parent.Valid() {
+	// If not in cache, return parent
+	if !iter.cache.Valid() {
+		return iter.parent.Valid()
+	}
+
+	// Cache is valid
+
+	// If not in parent, skip deletes and return cache
+	if !iter.parent.Valid() {
+		iter.skipCacheDeletes(nil)
+		return iter.cache.Valid()
+	}
+
+	// Both cache and parent are valid
+
+	// If cache is ahead, return true - we're on the parent.
+	cmp := iter.compare(iter.parent.Key(), iter.cache.Key())
+	if cmp == -1 {
 		return true
 	}
 
-	// Otherwise depends on child.
+	// Otherwise, skip deletes and return cache
 	iter.skipCacheDeletes(nil)
 	return iter.cache.Valid()
 }
@@ -174,9 +190,15 @@ func (iter *cacheMergeIterator) skipCacheDeletes(until []byte) {
 	if !iter.cache.Valid() {
 		return
 	}
+
 	for (until == nil || iter.compare(iter.cache.Key(), until) < 0) &&
 		iter.cache.Value() == nil {
 
+		// if the parent is the same as the cache, we need to advance it too
+		if iter.parent.Valid() &&
+			bytes.Compare(iter.parent.Key(), iter.cache.Key()) == 0 {
+			iter.parent.Next()
+		}
 		iter.cache.Next()
 		if !iter.cache.Valid() {
 			return
@@ -189,25 +211,23 @@ func (iter *cacheMergeIterator) skipCacheDeletes(until []byte) {
 func (iter *cacheMergeIterator) skipUntilExistsOrInvalid() {
 	for {
 
-		// Invalid.
-		if !iter.Valid() {
-			return
-		}
-
-		// If cache not valid but parent is, return
+		// Exists in parent but not in cache.
 		if iter.parent.Valid() &&
 			!iter.cache.Valid() {
 			return
 		}
 
-		// Parent and Cache items exist.
-		var keyP, keyC []byte
+		// Invalid.
+		if !iter.Valid() {
+			return
+		}
+
+		// Parent may still be invalid
+		var keyP []byte
 		if iter.parent.Valid() {
 			keyP = iter.parent.Key()
 		}
-		if iter.cache.Valid() {
-			keyC = iter.cache.Key()
-		}
+		keyC := iter.cache.Key()
 
 		cmp := iter.compare(keyP, keyC)
 		switch cmp {

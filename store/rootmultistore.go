@@ -20,7 +20,7 @@ const (
 // Implements MultiStore.
 type rootMultiStore struct {
 	db           dbm.DB
-	curVersion   int64
+	nextVersion  int64
 	lastCommitID CommitID
 	storeLoaders map[string]CommitStoreLoader
 	substores    map[string]CommitStore
@@ -29,7 +29,7 @@ type rootMultiStore struct {
 func NewMultiStore(db dbm.DB) *rootMultiStore {
 	return &rootMultiStore{
 		db:           db,
-		curVersion:   0,
+		nextVersion:  0,
 		storeLoaders: make(map[string]CommitStoreLoader),
 		substores:    make(map[string]CommitStore),
 	}
@@ -49,8 +49,8 @@ func (rs *rootMultiStore) LoadLatestVersion() error {
 }
 
 // NOTE: Returns 0 unless LoadVersion() or LoadLatestVersion() is called.
-func (rs *rootMultiStore) GetCurrentVersion() int64 {
-	return rs.curVersion
+func (rs *rootMultiStore) NextVersion() int64 {
+	return rs.nextVersion
 }
 
 func (rs *rootMultiStore) LoadVersion(ver int64) error {
@@ -65,7 +65,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 			rs.substores[name] = store
 		}
 
-		rs.curVersion = 1
+		rs.nextVersion = 1
 		rs.lastCommitID = CommitID{}
 		return nil
 	}
@@ -100,7 +100,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	}
 
 	// Success.
-	rs.curVersion = ver + 1
+	rs.nextVersion = ver + 1
 	rs.lastCommitID = state.CommitID()
 	rs.substores = newSubstores
 	return nil
@@ -110,7 +110,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 func (rs *rootMultiStore) Commit() CommitID {
 
 	// Commit substores
-	version := rs.curVersion
+	version := rs.nextVersion
 	state := commitSubstores(version, rs.substores)
 
 	// Need to update self state atomically.
@@ -120,7 +120,7 @@ func (rs *rootMultiStore) Commit() CommitID {
 	batch.Write()
 
 	// Prepare for next version.
-	rs.curVersion = version + 1
+	rs.nextVersion = version + 1
 	commitID := CommitID{
 		Version: version,
 		Hash:    state.Hash(),

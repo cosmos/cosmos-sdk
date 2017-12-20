@@ -77,7 +77,7 @@ func newMultiStoreWithLoaders(db dbm.DB) *rootMultiStore {
 }
 
 func checkStore(t *testing.T, store *rootMultiStore, expect, got CommitID) {
-	assert.EqualValues(t, expect.Version+1, store.GetCurrentVersion())
+	assert.EqualValues(t, expect.Version+1, store.NextVersion())
 	assert.Equal(t, expect, got)
 	assert.Equal(t, expect, store.LastCommitID())
 

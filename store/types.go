@@ -13,12 +13,12 @@ import (
 type MultiStore interface {
 
 	// Last commit, or the zero CommitID.
-	// If not zero, CommitID.Version is CurrentVersion()-1.
+	// If not zero, CommitID.Version is NextVersion()-1.
 	LastCommitID() CommitID
 
 	// Current version being worked on now, not yet committed.
 	// Should be greater than 0.
-	CurrentVersion() int64
+	NextVersion() int64
 
 	// Cache wrap MultiStore.
 	// NOTE: Caller should probably not call .Write() on each, but

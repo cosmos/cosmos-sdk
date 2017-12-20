@@ -7,7 +7,7 @@ package store
 // Implements MultiStore.
 type cacheMultiStore struct {
 	db           CacheKVStore
-	curVersion   int64
+	nextVersion  int64
 	lastCommitID CommitID
 	substores    map[string]CacheWrap
 }
@@ -15,7 +15,7 @@ type cacheMultiStore struct {
 func newCacheMultiStoreFromRMS(rms *rootMultiStore) cacheMultiStore {
 	cms := cacheMultiStore{
 		db:           NewCacheKVStore(rms.db),
-		curVersion:   rms.curVersion,
+		nextVersion:  rms.nextVersion,
 		lastCommitID: rms.lastCommitID,
 		substores:    make(map[string]CacheWrap, len(rms.substores)),
 	}
@@ -28,7 +28,7 @@ func newCacheMultiStoreFromRMS(rms *rootMultiStore) cacheMultiStore {
 func newCacheMultiStoreFromCMS(cms cacheMultiStore) cacheMultiStore {
 	cms2 := cacheMultiStore{
 		db:           NewCacheKVStore(cms.db),
-		curVersion:   cms.curVersion,
+		nextVersion:  cms.nextVersion,
 		lastCommitID: cms.lastCommitID,
 		substores:    make(map[string]CacheWrap, len(cms.substores)),
 	}
@@ -44,8 +44,8 @@ func (cms cacheMultiStore) LastCommitID() CommitID {
 }
 
 // Implements CacheMultiStore
-func (cms cacheMultiStore) CurrentVersion() int64 {
-	return cms.curVersion
+func (cms cacheMultiStore) NextVersion() int64 {
+	return cms.nextVersion
 }
 
 // Implements CacheMultiStore

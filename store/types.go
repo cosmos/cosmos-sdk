@@ -131,10 +131,13 @@ func (cid CommitID) IsZero() bool {
 	return cid.Version == 0 && len(cid.Hash) == 0
 }
 
-// bytes.Compare but returns 0 if either key is nil
+// bytes.Compare but bounded on both sides by nil.
+// both (k1, nil) and (nil, k2) return -1
 func keyCompare(k1, k2 []byte) int {
-	if k1 == nil || k2 == nil {
+	if k1 == nil && k2 == nil {
 		return 0
+	} else if k1 == nil || k2 == nil {
+		return -1
 	}
 	return bytes.Compare(k1, k2)
 }

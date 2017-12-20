@@ -17,7 +17,7 @@ func NewContext(header abci.Header, isCheckTx bool, txBytes []byte) Context {
 		Context: context.Background(),
 	}
 	c = c.setBlockHeader(header)
-	c = c.setBlockHeight(int64(header.Height))
+	c = c.setBlockHeight(header.Height)
 	c = c.setChainID(header.ChainId)
 	c = c.setIsCheckTx(isCheckTx)
 	c = c.setTxBytes(txBytes)

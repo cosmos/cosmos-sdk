@@ -112,7 +112,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: bb9bb4aa465a31fd6a272765be381888e6898c74
+  version: 98a38737c432a91c72d100e2f648d1b9d14d6535
   subpackages:
   - client
   - example/dummy
@@ -136,7 +136,7 @@ imports:
   - data
   - data/base58
 - name: github.com/tendermint/iavl
-  version: f7907c566544e542d22edbf98f429ead5595fc81
+  version: 887bb9097d50cad4d5dc209a0b8f0aca0955831b
 - name: github.com/tendermint/light-client
   version: 76313d625e662ed7b284d066d68ff71edd7a9fac
   subpackages:
@@ -174,7 +174,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: 92266594131564924136a056902a11d4d76c30cb
+  version: b70ae4919befb6ae3e5cb40ae8174e122e771d08
   subpackages:
   - autofile
   - cli

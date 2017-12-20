@@ -1,7 +1,6 @@
 package store
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,8 +9,13 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
-func keyFmt(i int) []byte { return bz(cmn.Fmt("key%d", i)) }
-func valFmt(i int) []byte { return bz(cmn.Fmt("value%d", i)) }
+func newCacheKVStore() CacheKVStore {
+	mem := dbm.NewMemDB()
+	return NewCacheKVStore(mem)
+}
+
+func keyFmt(i int) []byte { return bz(cmn.Fmt("key%0.8d", i)) }
+func valFmt(i int) []byte { return bz(cmn.Fmt("value%0.8d", i)) }
 
 func TestCacheKVStore(t *testing.T) {
 	mem := dbm.NewMemDB()
@@ -86,8 +90,7 @@ func TestCacheKVStoreNested(t *testing.T) {
 }
 
 func TestCacheKVIteratorBounds(t *testing.T) {
-	mem := dbm.NewMemDB()
-	st := NewCacheKVStore(mem)
+	st := newCacheKVStore()
 
 	// set some items
 	nItems := 5
@@ -110,7 +113,6 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 	itr = st.Iterator(bz("money"), nil)
 	i = 0
 	for ; itr.Valid(); itr.Next() {
-		fmt.Println(string(itr.Key()))
 		i += 1
 	}
 	assert.Equal(t, 0, i)
@@ -139,10 +141,9 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 }
 
 func TestCacheKVMergeIteratorBasics(t *testing.T) {
-	mem := dbm.NewMemDB()
-	st := NewCacheKVStore(mem)
+	st := newCacheKVStore()
 
-	// set an item in the cache, iterator should be empty
+	// set and delete an item in the cache, iterator should be empty
 	k, v := keyFmt(0), valFmt(0)
 	st.Set(k, v)
 	st.Delete(k)
@@ -187,9 +188,8 @@ func TestCacheKVMergeIteratorBasics(t *testing.T) {
 	assertIterateDomain(t, st, 0)
 }
 
-func TestCacheKVMergeIterator(t *testing.T) {
-	mem := dbm.NewMemDB()
-	st := NewCacheKVStore(mem)
+func TestCacheKVMergeIteratorDeleteLast(t *testing.T) {
+	st := newCacheKVStore()
 
 	// set some items and write them
 	nItems := 5
@@ -206,20 +206,160 @@ func TestCacheKVMergeIterator(t *testing.T) {
 	// iterate over all of them
 	assertIterateDomain(t, st, nItems*2)
 
-	// delete the last dirty item, ensure we dont see it
-	last := nItems*2 - 1
-	st.Delete(keyFmt(last))
-	assertIterateDomain(t, st, nItems*2-1)
-
-	// write and check again
-	st.Write()
-	assertIterateDomain(t, st, nItems*2-1)
-
-	// delete the next last one, ensure we dont see it
-	last = last - 1
-	st.Delete(keyFmt(last))
-	assertIterateDomain(t, st, nItems*2-2)
+	// delete them all
+	for i := 0; i < nItems*2; i++ {
+		last := nItems*2 - 1 - i
+		st.Delete(keyFmt(last))
+		assertIterateDomain(t, st, last)
+	}
 }
+
+func TestCacheKVMergeIteratorDeletes(t *testing.T) {
+	st := newCacheKVStore()
+	truth := dbm.NewMemDB()
+
+	// set some items and write them
+	nItems := 10
+	for i := 0; i < nItems; i++ {
+		doOp(st, truth, opSet, i)
+	}
+	st.Write()
+
+	// delete every other item, starting from 0
+	for i := 0; i < nItems; i += 2 {
+		doOp(st, truth, opDel, i)
+		assertIterateDomainCompare(t, st, truth)
+	}
+
+	// reset
+	st = newCacheKVStore()
+	truth = dbm.NewMemDB()
+
+	// set some items and write them
+	for i := 0; i < nItems; i++ {
+		doOp(st, truth, opSet, i)
+	}
+	st.Write()
+
+	// delete every other item, starting from 1
+	for i := 1; i < nItems; i += 2 {
+		doOp(st, truth, opDel, i)
+		assertIterateDomainCompare(t, st, truth)
+	}
+}
+
+func TestCacheKVMergeIteratorChunks(t *testing.T) {
+	st := newCacheKVStore()
+
+	// Use the truth to check values on the merge iterator
+	truth := dbm.NewMemDB()
+
+	// sets to the parent
+	setRange(st, truth, 0, 20)
+	setRange(st, truth, 40, 60)
+	st.Write()
+
+	// sets to the cache
+	setRange(st, truth, 20, 40)
+	setRange(st, truth, 60, 80)
+	assertIterateDomainCheck(t, st, truth, []keyRange{{0, 80}})
+
+	// remove some parents and some cache
+	deleteRange(st, truth, 15, 25)
+	assertIterateDomainCheck(t, st, truth, []keyRange{{0, 15}, {25, 80}})
+
+	// remove some parents and some cache
+	deleteRange(st, truth, 35, 45)
+	assertIterateDomainCheck(t, st, truth, []keyRange{{0, 15}, {25, 35}, {45, 80}})
+
+	// write, add more to the cache, and delete some cache
+	st.Write()
+	setRange(st, truth, 38, 42)
+	deleteRange(st, truth, 40, 43)
+	assertIterateDomainCheck(t, st, truth, []keyRange{{0, 15}, {25, 35}, {38, 40}, {45, 80}})
+}
+
+func TestCacheKVMergeIteratorRandom(t *testing.T) {
+	st := newCacheKVStore()
+	truth := dbm.NewMemDB()
+
+	start, end := 25, 75
+	max := 100
+	setRange(st, truth, start, end)
+
+	// do an op, test the iterator
+	for i := 0; i < 2000; i++ {
+		doRandomOp(st, truth, max)
+		assertIterateDomainCompare(t, st, truth)
+	}
+}
+
+//-------------------------------------------------------------------------------------------
+// do some random ops
+
+const (
+	opSet      = 0
+	opSetRange = 1
+	opDel      = 2
+	opDelRange = 3
+	opWrite    = 4
+
+	totalOps = 5 // number of possible operations
+)
+
+func randInt(n int) int {
+	return cmn.RandInt() % n
+}
+
+// useful for replaying a error case if we find one
+func doOp(st CacheKVStore, truth dbm.DB, op int, args ...int) {
+	switch op {
+	case opSet:
+		k := args[0]
+		st.Set(keyFmt(k), valFmt(k))
+		truth.Set(keyFmt(k), valFmt(k))
+	case opSetRange:
+		start := args[0]
+		end := args[1]
+		setRange(st, truth, start, end)
+	case opDel:
+		k := args[0]
+		st.Delete(keyFmt(k))
+		truth.Delete(keyFmt(k))
+	case opDelRange:
+		start := args[0]
+		end := args[1]
+		deleteRange(st, truth, start, end)
+	case opWrite:
+		st.Write()
+	}
+}
+
+func doRandomOp(st CacheKVStore, truth dbm.DB, maxKey int) {
+	r := randInt(totalOps)
+	switch r {
+	case opSet:
+		k := randInt(maxKey)
+		st.Set(keyFmt(k), valFmt(k))
+		truth.Set(keyFmt(k), valFmt(k))
+	case opSetRange:
+		start := randInt(maxKey - 2)
+		end := randInt(maxKey-start) + start
+		setRange(st, truth, start, end)
+	case opDel:
+		k := randInt(maxKey)
+		st.Delete(keyFmt(k))
+		truth.Delete(keyFmt(k))
+	case opDelRange:
+		start := randInt(maxKey - 2)
+		end := randInt(maxKey-start) + start
+		deleteRange(st, truth, start, end)
+	case opWrite:
+		st.Write()
+	}
+}
+
+//-------------------------------------------------------------------------------------------
 
 // iterate over whole domain
 func assertIterateDomain(t *testing.T, st KVStore, expectedN int) {
@@ -233,5 +373,124 @@ func assertIterateDomain(t *testing.T, st KVStore, expectedN int) {
 	}
 	assert.Equal(t, expectedN, i)
 }
+
+func assertIterateDomainCheck(t *testing.T, st KVStore, mem dbm.DB, r []keyRange) {
+	// iterate over each and check they match the other
+	itr := st.Iterator(nil, nil)
+	itr2 := mem.Iterator(nil, nil) // ground truth
+
+	krc := newKeyRangeCounter(r)
+	i := 0
+
+	for ; krc.valid(); krc.next() {
+		assert.True(t, itr.Valid())
+		assert.True(t, itr2.Valid())
+
+		// check the key/val matches the ground truth
+		k, v := itr.Key(), itr.Value()
+		k2, v2 := itr2.Key(), itr2.Value()
+		assert.Equal(t, k, k2)
+		assert.Equal(t, v, v2)
+
+		// check they match the counter
+		assert.Equal(t, k, keyFmt(krc.key()))
+
+		itr.Next()
+		itr2.Next()
+		i += 1
+	}
+
+	assert.False(t, itr.Valid())
+	assert.False(t, itr2.Valid())
+}
+
+func assertIterateDomainCompare(t *testing.T, st KVStore, mem dbm.DB) {
+	// iterate over each and check they match the other
+	itr := st.Iterator(nil, nil)
+	itr2 := mem.Iterator(nil, nil) // ground truth
+	checkIterators(t, itr, itr2)
+	checkIterators(t, itr2, itr)
+}
+
+func checkIterators(t *testing.T, itr, itr2 Iterator) {
+	for ; itr.Valid(); itr.Next() {
+		assert.True(t, itr2.Valid())
+		k, v := itr.Key(), itr.Value()
+		k2, v2 := itr2.Key(), itr2.Value()
+		assert.Equal(t, k, k2)
+		assert.Equal(t, v, v2)
+		itr2.Next()
+	}
+	assert.False(t, itr.Valid())
+	assert.False(t, itr2.Valid())
+}
+
+//--------------------------------------------------------
+
+func setRange(st KVStore, mem dbm.DB, start, end int) {
+	for i := start; i < end; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+		mem.Set(keyFmt(i), valFmt(i))
+	}
+}
+
+func deleteRange(st KVStore, mem dbm.DB, start, end int) {
+	for i := start; i < end; i++ {
+		st.Delete(keyFmt(i))
+		mem.Delete(keyFmt(i))
+	}
+}
+
+//--------------------------------------------------------
+
+type keyRange struct {
+	start int
+	end   int
+}
+
+func (kr keyRange) len() int {
+	return kr.end - kr.start
+}
+
+func newKeyRangeCounter(kr []keyRange) *keyRangeCounter {
+	return &keyRangeCounter{keyRanges: kr}
+}
+
+// we can iterate over this and make sure our real iterators have all the right keys
+type keyRangeCounter struct {
+	rangeIdx  int
+	idx       int
+	keyRanges []keyRange
+}
+
+func (krc *keyRangeCounter) valid() bool {
+	maxRangeIdx := len(krc.keyRanges) - 1
+	maxRange := krc.keyRanges[maxRangeIdx]
+
+	// if we're not in the max range, we're valid
+	if krc.rangeIdx <= maxRangeIdx &&
+		krc.idx < maxRange.len() {
+		return true
+	}
+
+	return false
+}
+
+func (krc *keyRangeCounter) next() {
+	thisKeyRange := krc.keyRanges[krc.rangeIdx]
+	if krc.idx == thisKeyRange.len()-1 {
+		krc.rangeIdx += 1
+		krc.idx = 0
+	} else {
+		krc.idx += 1
+	}
+}
+
+func (krc *keyRangeCounter) key() int {
+	thisKeyRange := krc.keyRanges[krc.rangeIdx]
+	return thisKeyRange.start + krc.idx
+}
+
+//--------------------------------------------------------
 
 func bz(s string) []byte { return []byte(s) }

@@ -66,13 +66,17 @@ func (iter *cacheMergeIterator) Valid() bool {
 
 	// If cache is ahead, return true - we're on the parent.
 	cmp := iter.compare(iter.parent.Key(), iter.cache.Key())
-	if cmp == -1 {
+	if cmp < 0 {
 		return true
 	}
 
-	// Otherwise, skip deletes and return cache
+	// Otherwise, skip deletes.
+	// If the cache runs out, return the parent
 	iter.skipCacheDeletes(nil)
-	return iter.cache.Valid()
+	if !iter.cache.Valid() {
+		return iter.parent.Valid()
+	}
+	return true
 }
 
 // Next implements Iterator
@@ -194,11 +198,18 @@ func (iter *cacheMergeIterator) skipCacheDeletes(until []byte) {
 	for (until == nil || iter.compare(iter.cache.Key(), until) < 0) &&
 		iter.cache.Value() == nil {
 
-		// if the parent is the same as the cache, we need to advance it too
-		if iter.parent.Valid() &&
-			bytes.Compare(iter.parent.Key(), iter.cache.Key()) == 0 {
-			iter.parent.Next()
+		if iter.parent.Valid() {
+			// if the parent is the same as the cache, we need to advance it too.
+			// else, if the cache got ahead, return (we can skip more deletes later)
+			cmp := iter.compare(iter.parent.Key(), iter.cache.Key())
+			switch cmp {
+			case 0:
+				iter.parent.Next()
+			case -1:
+				return
+			}
 		}
+
 		iter.cache.Next()
 		if !iter.cache.Valid() {
 			return

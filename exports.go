@@ -14,5 +14,5 @@ type (
 	Decorator = types.Decorator
 
 	// Type aliases for other modules.
-	MultiStore = store.MultiStore modules.
+	MultiStore = store.MultiStore
 )

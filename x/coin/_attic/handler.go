@@ -6,10 +6,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/errors"
-	"github.com/cosmos/cosmos-sdk/modules/auth"
-	"github.com/cosmos/cosmos-sdk/modules/ibc"
-	"github.com/cosmos/cosmos-sdk/stack"
-	"github.com/cosmos/cosmos-sdk/state"
+	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	// "github.com/cosmos/cosmos-sdk/x/ibc"
+	// "github.com/cosmos/cosmos-sdk/stack"
 )
 
 const (
@@ -23,10 +24,10 @@ const (
 
 // Handler includes an accountant
 type Handler struct {
-	stack.PassInitValidate
+	// stack.PassInitValidate
 }
 
-var _ stack.Dispatchable = Handler{}
+// var _ stack.Dispatchable = Handler{}
 
 // NewHandler - new accountant handler for the coin module
 func NewHandler() Handler {
@@ -42,8 +43,8 @@ func (Handler) Name() string {
 func (Handler) AssertDispatcher() {}
 
 // CheckTx checks if there is enough money in the account
-func (h Handler) CheckTx(ctx sdk.Context, store state.SimpleDB,
-	tx sdk.Tx, _ sdk.Checker) (res sdk.CheckResult, err error) {
+func (h Handler) CheckTx(ctx types.Context, store store.MultiStore,
+	tx types.Tx, _ sdk.Checker) (res sdk.CheckResult, err error) {
 
 	err = tx.ValidateBasic()
 	if err != nil {
@@ -63,8 +64,8 @@ func (h Handler) CheckTx(ctx sdk.Context, store state.SimpleDB,
 }
 
 // DeliverTx moves the money
-func (h Handler) DeliverTx(ctx sdk.Context, store state.SimpleDB,
-	tx sdk.Tx, cb sdk.Deliver) (res sdk.DeliverResult, err error) {
+func (h Handler) DeliverTx(ctx types.Context, store store.MultiStore,
+	tx types.Tx, cb sdk.Deliver) (res sdk.DeliverResult, err error) {
 
 	err = tx.ValidateBasic()
 	if err != nil {
@@ -81,7 +82,7 @@ func (h Handler) DeliverTx(ctx sdk.Context, store state.SimpleDB,
 }
 
 // InitState - sets the genesis account balance
-func (h Handler) InitState(l log.Logger, store state.SimpleDB,
+func (h Handler) InitState(l log.Logger, store store.MultiStore,
 	module, key, value string, cb sdk.InitStater) (log string, err error) {
 	if module != NameCoin {
 		return "", errors.ErrUnknownModule(module)
@@ -95,7 +96,7 @@ func (h Handler) InitState(l log.Logger, store state.SimpleDB,
 	return "", errors.ErrUnknownKey(key)
 }
 
-func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
+func (h Handler) sendTx(ctx types.Context, store store.MultiStore,
 	send SendTx, cb sdk.Deliver) error {
 
 	err := checkTx(ctx, send)
@@ -136,6 +137,8 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 			}
 
 			outTx := NewSendTx(inputs, []TxOutput{out})
+			_ = outTx
+			/* TODO
 			packet := ibc.CreatePacketTx{
 				DestChain:   out.Address.ChainID,
 				Permissions: senders,
@@ -146,6 +149,7 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 			if err != nil {
 				return err
 			}
+			*/
 		}
 	}
 
@@ -153,7 +157,7 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 	return nil
 }
 
-func (h Handler) creditTx(ctx sdk.Context, store state.SimpleDB,
+func (h Handler) creditTx(ctx types.Context, store store.MultiStore,
 	credit CreditTx) error {
 
 	// first check permissions!!
@@ -186,7 +190,7 @@ func (h Handler) creditTx(ctx sdk.Context, store state.SimpleDB,
 	return err
 }
 
-func checkTx(ctx sdk.Context, send SendTx) error {
+func checkTx(ctx types.Context, send SendTx) error {
 	// check if all inputs have permission
 	for _, in := range send.Inputs {
 		if !ctx.HasPermission(in.Address) {
@@ -196,7 +200,7 @@ func checkTx(ctx sdk.Context, send SendTx) error {
 	return nil
 }
 
-func (Handler) checkSendTx(ctx sdk.Context, store state.SimpleDB, send SendTx) error {
+func (Handler) checkSendTx(ctx types.Context, store store.MultiStore, send SendTx) error {
 	err := checkTx(ctx, send)
 	if err != nil {
 		return err
@@ -211,7 +215,7 @@ func (Handler) checkSendTx(ctx sdk.Context, store state.SimpleDB, send SendTx) e
 	return nil
 }
 
-func setAccount(store state.SimpleDB, value string) (log string, err error) {
+func setAccount(store store.MultiStore, value string) (log string, err error) {
 	var acc GenesisAccount
 	err = data.FromJSON([]byte(value), &acc)
 	if err != nil {
@@ -233,7 +237,7 @@ func setAccount(store state.SimpleDB, value string) (log string, err error) {
 
 // setIssuer sets a permission for some super-powerful account to
 // mint money
-func setIssuer(store state.SimpleDB, value string) (log string, err error) {
+func setIssuer(store store.MultiStore, value string) (log string, err error) {
 	var issuer sdk.Actor
 	err = data.FromJSON([]byte(value), &issuer)
 	if err != nil {

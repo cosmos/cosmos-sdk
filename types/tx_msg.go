@@ -32,5 +32,5 @@ type Tx interface {
 	// CONTRACT: If the signature is missing (ie the Msg is
 	// invalid), then the corresponding signature is
 	// .Empty().
-	Signatures() []Signature
+	Signatures() []StdSignature
 }

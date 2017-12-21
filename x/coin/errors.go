@@ -9,11 +9,12 @@ import (
 
 const (
 	// Coin errors reserve 100 ~ 199.
-	CodeInvalidInput   uint32 = 101
-	CodeInvalidOutput  uint32 = 102
-	CodeInvalidAddress uint32 = 103
-	CodeUnknownAddress uint32 = 103
-	CodeUnknownRequest uint32 = errors.CodeUnknownRequest
+	CodeInvalidInput      uint32 = 101
+	CodeInvalidOutput     uint32 = 102
+	CodeInvalidAddress    uint32 = 103
+	CodeUnknownAddress    uint32 = 103
+	CodeUnknownRequest    uint32 = errors.CodeUnknownRequest
+	CodeInsufficientFunds uint32 = errors.CodeInsufficientFunds
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
@@ -55,6 +56,10 @@ func ErrUnknownAddress(log string) error {
 
 func ErrUnknownRequest(log string) error {
 	return newError(CodeUnknownRequest, log)
+}
+
+func ErrInsufficientFunds(log string) error {
+	return newError(CodeInsufficientFunds, log)
 }
 
 //----------------------------------------

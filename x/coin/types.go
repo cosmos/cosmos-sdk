@@ -1,6 +1,6 @@
 package coin
 
-type Coinser interface {
+type CoinHolder interface {
 	GetCoins() Coins
 	SetCoins(Coins)
 }

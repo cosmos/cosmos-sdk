@@ -1,167 +1,206 @@
 package coin
 
-// TODO rename this to msg.go
-
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types"
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
+// NOTE: How the app decodes a SendMsg or IssueMsg is up to
+// the app implementation.  Do not include parsing logic
+// here.
 type CoinMsg interface {
 	AssertIsCoinMsg()
-	Type() string // "send", "credit"
 }
 
-//-----------------------------------------------------------------------------
+func (_ SendMsg) AssertIsCoinMsg()  {}
+func (_ IssueMsg) AssertIsCoinMsg() {}
+
+//----------------------------------------
+// SendMsg
+
+// SendMsg - high level transaction of the coin module
+type SendMsg struct {
+	Inputs  []Input  `json:"inputs"`
+	Outputs []Output `json:"outputs"`
+}
+
+var _ CoinMsg = SendMsg
+
+func NewSendMsg(in []Input, out []Output) SendMsg {
+	return SendMsg{Inputs: in, Outputs: out}
+}
+
+// Implements types.Msg.
+func (msg SendMsg) Get(key interface{}) (value interface{}) {
+	panic("not implemented yet") // XXX
+}
+
+// Implements types.Msg.
+func (msg SendMsg) SignBytes() []byte {
+	panic("SendMsg does not implement SignBytes. Implement it by embedding SendMsg in a custom struct")
+}
+
+// Implements types.Msg.
+func (msg SendMsg) ValidateBasic() error {
+	return nil
+}
+
+// Implements types.Msg.
+func (msg SendMsg) ValidateBasic() error {
+	if len(msg.Inputs) == 0 {
+		return ErrInvalidInput("SendMsg needs 1 or more inputs")
+	}
+	if len(msg.Outputs) == 0 {
+		return ErrInvalidOutput("SendMsg needs 1 or more outputs")
+	}
+
+	// While tallying totals, validate inputs and outputs.
+	var totalIn, totalOut Coins
+	for _, in := range msg.Inputs {
+		if err := in.ValidateBasic(); err != nil {
+			return ErrInvalidInput("").WithCause(err)
+		}
+		totalIn = totalIn.Plus(in.Coins)
+	}
+	for _, out := range msg.Outputs {
+		if err := out.ValidateBasic(); err != nil {
+			return ErrInvalidOutput("").WithCause(err)
+		}
+		totalOut = totalOut.Plus(out.Coins)
+	}
+
+	// Ensure that totals match.
+	// TODO: Handle fees, whether too low, legative, or too high.
+	if !totalIn.IsEqual(totalOut) {
+		return ErrInsufficientFunds("")
+	}
+
+	// All good!
+	return nil
+}
+
+// Implements types.Msg.
+func (msg SendMsg) Signers() [][]byte {
+	panic("not implemented yet") // XXX
+}
+
+func (msg SendMsg) String() string {
+	return fmt.Sprintf("SendMsg{%v->%v}", msg.Inputs, msg.Outputs)
+}
+
+//----------------------------------------
+// IssueMsg
+
+// IssueMsg allows issuer to issue new coins.
+type IssueMsg struct {
+	Issuer []byte `json:"issuer"`
+	Target []byte `json:"target"`
+	Coins  `json:"coins"`
+}
+
+var _ CoinMsg = IssueMsg
+
+func NewIssueMsg(issuer []byte, target []byte, coins Coins) IssueMsg {
+	return IssueMsg{
+		Issuer: issuer,
+		Target: target,
+		Coins:  coins,
+	}
+}
+
+// Implements types.Msg.
+func (msg IssueMsg) Get(key interface{}) (value interface{}) {
+	panic("not implemented yet") // XXX
+}
+
+// Implements types.Msg.
+func (msg IssueMsg) SignBytes() []byte {
+	panic("IssueMsg does not implement SignBytes. Implement it by embedding IssueMsg in a custom struct")
+}
+
+// Implements types.Msg.
+func (msg IssueMsg) ValidateBasic() error {
+	return nil
+}
+
+// Implements types.Msg.
+func (msg IssueMsg) Signers() [][]byte {
+	panic("not implemented yet") // XXX
+}
+
+func (msg IssueMsg) String() string {
+	return fmt.Sprintf("IssueMsg{%X:%v->%X}",
+		msg.Issuer, msg.Coins, msg.Target)
+}
+
+//----------------------------------------
+// Input
 
 // Input is a source of coins in a transaction.
 type Input struct {
-	Address cmn.Bytes
-	Coins   Coins
+	Address cmn.Bytes `json:"address"`
+	Coins   Coins     `json:"coins"`
 }
 
-func (in Input) ValidateBasic() error {
-	if !auth.IsValidAddress(in.Address) {
-		return ErrInvalidAddress()
-	}
-	if !in.Coins.IsValid() {
-		return ErrInvalidInput()
-	}
-	if !in.Coins.IsPositive() {
-		return ErrInvalidInput()
-	}
-	return nil
-}
-
-func (txIn TxInput) String() string {
-	return fmt.Sprintf("TxInput{%v,%v}", txIn.Address, txIn.Coins)
-}
-
-// NewTxInput - create a transaction input, used with SendTx
-func NewTxInput(addr Actor, coins Coins) TxInput {
-	input := TxInput{
+func NewInput(addr []byte, coins Coins) Input {
+	return Input{
 		Address: addr,
 		Coins:   coins,
 	}
-	return input
 }
 
-//-----------------------------------------------------------------------------
-
-// TxOutput - expected coin movement output, used with SendTx
-type TxOutput struct {
-	Address Actor `json:"address"`
-	Coins   Coins `json:"coins"`
-}
-
-// ValidateBasic - validate transaction output
-func (txOut TxOutput) ValidateBasic() error {
-	if txOut.Address.App == "" {
-		return ErrInvalidAddress()
+func (inp Input) ValidateBasic() error {
+	if !auth.IsValidAddress(inp.Address) {
+		return ErrInvalidAddress(fmt.Sprintf(
+			"Invalid input address %X", inp.Address))
 	}
-	// TODO: knowledge of app-specific codings?
-	if len(txOut.Address.Address) == 0 {
-		return ErrInvalidAddress()
+	if !inp.Coins.IsValid() {
+		return ErrInvalidInput(fmt.Sprintf(
+			"Input coins not valid: %v", inp.Coins))
 	}
-	if !txOut.Coins.IsValid() {
-		return ErrInvalidCoins()
-	}
-	if !txOut.Coins.IsPositive() {
-		return ErrInvalidCoins()
+	if !inp.Coins.IsPositive() {
+		return ErrInvalidInput("Input coins must be positive")
 	}
 	return nil
 }
 
-func (txOut TxOutput) String() string {
-	return fmt.Sprintf("TxOutput{%X,%v}", txOut.Address, txOut.Coins)
+func (inp Input) String() string {
+	return fmt.Sprintf("Input{%v,%v}", inp.Address, inp.Coins)
 }
 
-// NewTxOutput - create a transaction output, used with SendTx
-func NewTxOutput(addr Actor, coins Coins) TxOutput {
-	output := TxOutput{
+//----------------------------------------
+// Output
+
+// Output is a destination of coins in a transaction.
+type Output struct {
+	Address cmn.Bytes `json:"address"`
+	Coins   Coins     `json:"coins"`
+}
+
+func NewOutput(addr []byte, coins Coins) Output {
+	output := Output{
 		Address: addr,
 		Coins:   coins,
 	}
 	return output
 }
 
-//-----------------------------------------------------------------------------
-
-// SendTx - high level transaction of the coin module
-// Satisfies: TxInner
-type SendTx struct {
-	Inputs  []TxInput  `json:"inputs"`
-	Outputs []TxOutput `json:"outputs"`
-}
-
-// var _ types.Tx = NewSendTx(nil, nil)
-
-// NewSendTx - construct arbitrary multi-in, multi-out sendtx
-func NewSendTx(in []TxInput, out []TxOutput) SendTx { // types.Tx {
-	return SendTx{Inputs: in, Outputs: out}
-}
-
-// NewSendOneTx is a helper for the standard (?) case where there is exactly
-// one sender and one recipient
-func NewSendOneTx(sender, recipient Actor, amount Coins) SendTx {
-	in := []TxInput{{Address: sender, Coins: amount}}
-	out := []TxOutput{{Address: recipient, Coins: amount}}
-	return SendTx{Inputs: in, Outputs: out}
-}
-
-// ValidateBasic - validate the send transaction
-func (tx SendTx) ValidateBasic() error {
-	// this just makes sure all the inputs and outputs are properly formatted,
-	// not that they actually have the money inside
-	if len(tx.Inputs) == 0 {
-		return ErrNoInputs()
+func (out Output) ValidateBasic() error {
+	if !auth.IsValidAddress(out.Address) {
+		return ErrInvalidAddress(fmt.Sprintf(
+			"Invalid output address %X", out.Address))
 	}
-	if len(tx.Outputs) == 0 {
-		return ErrNoOutputs()
+	if !out.Coins.IsValid() {
+		return ErrInvalidOutput(fmt.Sprintf(
+			"Output coins not valid: %v", out.Coins))
 	}
-	// make sure all inputs and outputs are individually valid
-	var totalIn, totalOut Coins
-	for _, in := range tx.Inputs {
-		if err := in.ValidateBasic(); err != nil {
-			return err
-		}
-		totalIn = totalIn.Plus(in.Coins)
-	}
-	for _, out := range tx.Outputs {
-		if err := out.ValidateBasic(); err != nil {
-			return err
-		}
-		totalOut = totalOut.Plus(out.Coins)
-	}
-	// make sure inputs and outputs match
-	if !totalIn.IsEqual(totalOut) {
-		return ErrInvalidCoins()
+	if !out.Coins.IsPositive() {
+		return ErrInvalidOutput("Output coins must be positive")
 	}
 	return nil
 }
 
-func (tx SendTx) String() string {
-	return fmt.Sprintf("SendTx{%v->%v}", tx.Inputs, tx.Outputs)
-}
-
-//-----------------------------------------------------------------------------
-
-// CreditTx - this allows a special issuer to give an account credit
-// Satisfies: TxInner
-type CreditTx struct {
-	Debitor Actor `json:"debitor"`
-	// Credit is the amount to change the credit...
-	// This may be negative to remove some over-issued credit,
-	// but can never bring the credit or the balance to negative
-	Credit Coins `json:"credit"`
-}
-
-// NewCreditTx - modify the credit granted to a given account
-func NewCreditTx(debitor Actor, credit Coins) CreditTx {
-	return CreditTx{Debitor: debitor, Credit: credit}
-}
-
-// ValidateBasic - used to satisfy TxInner
-func (tx CreditTx) ValidateBasic() error {
-	return nil
+func (out Output) String() string {
+	return fmt.Sprintf("Output{%X,%v}", out.Address, out.Coins)
 }

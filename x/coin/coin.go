@@ -2,7 +2,6 @@ package coin
 
 import (
 	"fmt"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -33,33 +32,8 @@ func (coin Coin) IsGTE(other Coin) bool {
 		(coin.Amount >= other.Amount)
 }
 
-//regex codes for extracting coins from string
-var reDenom = regexp.MustCompile("")
-var reAmt = regexp.MustCompile("(\\d+)")
-
-var reCoin = regexp.MustCompile("^([[:digit:]]+)[[:space:]]*([[:alpha:]]+)$")
-
-// ParseCoin parses a cli input for one coin type, returning errors if invalid.
-// This returns an error on an empty string as well.
-func ParseCoin(str string) (Coin, error) {
-	var coin Coin
-
-	matches := reCoin.FindStringSubmatch(strings.TrimSpace(str))
-	if matches == nil {
-		return coin, errors.Errorf("%s is invalid coin definition", str)
-	}
-
-	// parse the amount (should always parse properly)
-	amt, err := strconv.Atoi(matches[1])
-	if err != nil {
-		return coin, err
-	}
-
-	coin = Coin{matches[2], int64(amt)}
-	return coin, nil
-}
-
 //----------------------------------------
+// Coins
 
 // Coins is a set of Coin, one per currency
 type Coins []Coin
@@ -74,34 +48,6 @@ func (coins Coins) String() string {
 		out += fmt.Sprintf("%v,", coin.String())
 	}
 	return out[:len(out)-1]
-}
-
-// ParseCoins will parse out a list of coins separated by commas.
-// If nothing is provided, it returns an empty array
-func ParseCoins(str string) (Coins, error) {
-	// empty string is empty list...
-	if len(str) == 0 {
-		return nil, nil
-	}
-
-	split := strings.Split(str, ",")
-	var coins Coins
-
-	for _, el := range split {
-		coin, err := ParseCoin(el)
-		if err != nil {
-			return coins, err
-		}
-		coins = append(coins, coin)
-	}
-
-	// ensure they are in proper order, to avoid random failures later
-	coins.Sort()
-	if !coins.IsValid() {
-		return nil, errors.Errorf("ParseCoins invalid: %#v", coins)
-	}
-
-	return coins, nil
 }
 
 // IsValid asserts the Coins are sorted, and don't have 0 amounts
@@ -242,7 +188,8 @@ func (coins Coins) IsNonnegative() bool {
 	return true
 }
 
-/*** Implement Sort interface ***/
+//----------------------------------------
+// Sort interface
 
 //nolint
 func (coins Coins) Len() int           { return len(coins) }

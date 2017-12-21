@@ -36,7 +36,7 @@ type App struct {
 	handler sdk.Handler
 
 	// Cached validator changes from DeliverTx
-	valSetDiff []abci.Validator
+	valUpdates []abci.Validator
 }
 
 var _ abci.Application = &App{}
@@ -57,14 +57,21 @@ func (app *App) SetHandler(handler Handler) {
 }
 
 func (app *App) LoadLatestVersion() error {
-	curVersion := app.store.NextVersion()
-	app.
+	store := app.store
+	store.LoadLastVersion()
+	return app.initFromStore()
 }
 
 func (app *App) LoadVersion(version int64) error {
 	store := app.store
+	store.LoadVersion(version)
+	return app.initFromStore()
+}
+
+// Initializes the remaining logic from app.store.
+func (app *App) initFromStore() error {
+	store := app.store
 	lastCommitID := store.LastCommitID()
-	curVersion := store.NextVersion()
 	main := store.GetKVStore("main")
 	header := (*abci.Header)(nil)
 	storeCheck := store.CacheMultiStore()
@@ -74,12 +81,7 @@ func (app *App) LoadVersion(version int64) error {
 		return errors.New("App expects MultiStore with 'main' KVStore")
 	}
 
-	// Basic sanity check.
-	if curVersion != lastCommitID.Version+1 {
-		return errors.New("NextVersion != LastCommitID.Version+1")
-	}
-
-	// If we've committed before, we expect store(main)/<mainKeyHeader>.
+	// If we've committed before, we expect main://<mainKeyHeader>.
 	if !lastCommitID.IsZero() {
 		headerBytes, ok := main.Get(mainKeyHeader)
 		if !ok {
@@ -90,11 +92,18 @@ func (app *App) LoadVersion(version int64) error {
 		if err != nil {
 			return errors.Wrap(err, "Failed to parse Header")
 		}
-		if header.Height != curVersion-1 {
-			errStr := fmt.Sprintf("Expected header.Height %v but got %v", version, headerHeight)
+		if header.Height != lastCommitID.Version {
+			errStr := fmt.Sprintf("Expected main://%s.Height %v but got %v", mainKeyHeader, version, headerHeight)
 			return errors.New(errStr)
 		}
 	}
+
+	// Set App state.
+	app.header = header
+	app.storeCheck = app.store.CacheMultiStore()
+	app.valUpdates = nil
+
+	return nil
 }
 
 //----------------------------------------
@@ -112,10 +121,8 @@ func (app *App) DeliverTx(txBytes []byte) abci.ResponseDeliverTx {
 	var result = app.handler(ctx, app.store, tx)
 
 	// After-handler hooks.
-	// TODO move to app.afterHandler(...).
 	if result.Code == abci.CodeType_OK {
-		// XXX No longer "diff", we need to replace old entries.
-		app.ValSetDiff = append(app.ValSetDiff, result.ValSetDiff)
+		app.valUpdates = append(app.valUpdates, result.ValUpdate)
 	} else {
 		// Even though the Code is not OK, there will be some side effects,
 		// like those caused by fee deductions or sequence incrementations.
@@ -247,8 +254,8 @@ func (app *App) BeginBlock(req abci.RequestBeginBlock) {
 // Returns a list of all validator changes made in this block
 func (app *App) EndBlock(height uint64) (res abci.ResponseEndBlock) {
 	// XXX Update to res.Updates.
-	res.Diffs = app.valSetDiff
-	app.valSetDiff = nil
+	res.Diffs = app.valUpdates
+	app.valUpdates = nil
 	return
 }
 

@@ -1,9 +1,9 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/store"
 )
 
 // Handler handles both ABCI DeliverTx and CheckTx requests.
 // Iff ABCI.CheckTx, ctx.IsCheckTx() returns true.
-type Handler func(ctx Context, ms sdk.MultiStore, tx Tx) Result
+type Handler func(ctx Context, ms store.MultiStore, tx Tx) Result

@@ -141,6 +141,7 @@ func (err sdkError) WithCause(cause error) sdkError {
 
 // HasErrorCode checks if this error would return the named error code
 func HasErrorCode(err error, code uint32) bool {
+	// XXX Get the cause if not ABCIError
 	if abciErr, ok := err.(ABCIError); ok {
 		return abciErr.ABCICode() == code
 	}
@@ -155,5 +156,6 @@ func WithCode(err error, code uint32) sdkError {
 	return sdkError{
 		code:  code,
 		cause: err,
+		log:   "",
 	}
 }

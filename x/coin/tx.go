@@ -1,47 +1,34 @@
 package coin
 
+// TODO rename this to msg.go
+
 import (
 	"fmt"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
-/*func init() {
-	sdk.TxMapper.
-		RegisterImplementation(SendTx{}, TypeSend, ByteSend).
-		RegisterImplementation(CreditTx{}, TypeCredit, ByteCredit)
-}*/
-
-// we reserve the 0x20-0x3f range for standard modules
-const (
-	NameCoin = "coin"
-
-	ByteSend   = 0x20
-	TypeSend   = NameCoin + "/send"
-	ByteCredit = 0x21
-	TypeCredit = NameCoin + "/credit"
-)
+type CoinMsg interface {
+	AssertIsCoinMsg()
+	Type() string // "send", "credit"
+}
 
 //-----------------------------------------------------------------------------
 
-// TxInput - expected coin movement outputs, used with SendTx
-type TxInput struct {
-	Address Actor `json:"address"`
-	Coins   Coins `json:"coins"`
+// Input is a source of coins in a transaction.
+type Input struct {
+	Address cmn.Bytes
+	Coins   Coins
 }
 
-// ValidateBasic - validate transaction input
-func (txIn TxInput) ValidateBasic() error {
-	if txIn.Address.App == "" {
+func (in Input) ValidateBasic() error {
+	if !auth.IsValidAddress(in.Address) {
 		return ErrInvalidAddress()
 	}
-	// TODO: knowledge of app-specific codings?
-	if len(txIn.Address.Address) == 0 {
-		return ErrInvalidAddress()
+	if !in.Coins.IsValid() {
+		return ErrInvalidInput()
 	}
-	if !txIn.Coins.IsValid() {
-		return ErrInvalidCoins()
-	}
-	if !txIn.Coins.IsPositive() {
-		return ErrInvalidCoins()
+	if !in.Coins.IsPositive() {
+		return ErrInvalidInput()
 	}
 	return nil
 }

@@ -8,6 +8,7 @@ import (
 
 const (
 	// ABCI Response Codes
+	// Base SDK reserves 0 ~ 99.
 	CodeInternalError     uint32 = 1
 	CodeTxParseError             = 2
 	CodeBadNonce                 = 3
@@ -17,7 +18,7 @@ const (
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
-func codeToDefaultLog(code uint32) string {
+func CodeToDefaultLog(code uint32) string {
 	switch code {
 	case CodeInternalError:
 		return "Internal error"
@@ -40,37 +41,41 @@ func codeToDefaultLog(code uint32) string {
 // All errors are created via constructors so as to enable us to hijack them
 // and inject stack traces if we really want to.
 
-func InternalError(log string) sdkError {
+func InternalError(log string) *sdkError {
 	return newSDKError(CodeInternalError, log)
 }
 
-func TxParseError(log string) sdkError {
+func TxParseError(log string) *sdkError {
 	return newSDKError(CodeTxParseError, log)
 }
 
-func BadNonce(log string) sdkError {
+func BadNonce(log string) *sdkError {
 	return newSDKError(CodeBadNonce, log)
 }
 
-func Unauthorized(log string) sdkError {
+func Unauthorized(log string) *sdkError {
 	return newSDKError(CodeUnauthorized, log)
 }
 
-func InsufficientFunds(log string) sdkError {
+func InsufficientFunds(log string) *sdkError {
 	return newSDKError(CodeInsufficientFunds, log)
 }
 
-func UnknownRequest(log string) sdkError {
+func UnknownRequest(log string) *sdkError {
 	return newSDKError(CodeUnknownRequest, log)
 }
 
 //----------------------------------------
+// ABCIError & sdkError
 
 type ABCIError interface {
 	ABCICode() uint32
 	ABCILog() string
-
 	Error() string
+}
+
+func NewABCIError(code uint32, log string) ABCIError {
+	return newSDKError(code, log)
 }
 
 /*
@@ -101,61 +106,103 @@ type sdkError struct {
 	code  uint32
 	log   string
 	cause error
-	// TODO stacktrace
+	// TODO stacktrace, optional.
 }
 
-func newSDKError(code uint32, log string) sdkError {
-	// TODO capture stacktrace if ENV is set
+func newSDKError(code uint32, log string) *sdkError {
+	// TODO capture stacktrace if ENV is set.
 	if log == "" {
-		log = codeToDefaultLog(code)
+		log = CodeToDefaultLog(code)
 	}
-	return sdkError{
-		code: code,
-		log:  log,
+	return &sdkError{
+		code:  code,
+		log:   log,
+		cause: nil,
 	}
 }
 
-func (err sdkError) Error() string {
+// Implements ABCIError
+func (err *sdkError) Error() string {
 	return fmt.Sprintf("SDKError{%d: %s}", err.code, err.log)
 }
 
 // Implements ABCIError
-func (err sdkError) ABCICode() uint32 {
+func (err *sdkError) ABCICode() uint32 {
 	return err.code
 }
 
 // Implements ABCIError
-func (err sdkError) ABCILog() string {
+func (err *sdkError) ABCILog() string {
 	return err.log
 }
 
-func (err sdkError) Cause() error {
-	return err.cause
+// Implements pkg/errors.causer
+func (err *sdkError) Cause() error {
+	if err.cause != nil {
+		return err.cause
+	}
+	return err
 }
 
-func (err sdkError) WithCause(cause error) sdkError {
-	copy := err
+// Creates a cloned *sdkError with specific cause
+func (err *sdkError) WithCause(cause error) *sdkError {
+	copy := *err
 	copy.cause = cause
-	return copy
+	return &copy
 }
 
-// HasErrorCode checks if this error would return the named error code
-func HasErrorCode(err error, code uint32) bool {
-	// XXX Get the cause if not ABCIError
-	if abciErr, ok := err.(ABCIError); ok {
-		return abciErr.ABCICode() == code
+//----------------------------------------
+
+// HasSameCause returns true if both errors
+// have the same cause.
+func HasSameCause(err1 error, err2 error) bool {
+	if err1 != nil || err2 != nil {
+		panic("HasSomeCause() requires non-nil arguments")
 	}
-	return code == CodeInternalError
+	return Cause(err1) == Cause(err2)
 }
 
-func IsSameError(pattern error, err error) bool {
-	return err != nil && (errors.Cause(err) == errors.Cause(pattern))
-}
-
-func WithCode(err error, code uint32) sdkError {
-	return sdkError{
-		code:  code,
-		cause: err,
-		log:   "",
+// Like Cause but stops upon finding an ABCIError.
+// If no error in the cause chain is an ABCIError,
+// returns nil.
+func ABCIErrorCause(err error) ABCIError {
+	for err != nil {
+		abciErr, ok := err.(ABCIError)
+		if ok {
+			return abciErr
+		}
+		cause, ok := err.(causer)
+		if !ok {
+			return nil
+		}
+		errCause := cause.Cause()
+		if errCause == nil || errCause == err {
+			return err
+		}
+		err = errCause
 	}
+	return err
+}
+
+// Identitical to pkg/errors.Cause, except handles .Cause()
+// returning itself.
+// TODO: Merge https://github.com/pkg/errors/issues/89 and
+// delete this.
+func Cause(err error) error {
+	for err != nil {
+		cause, ok := err.(causer)
+		if !ok {
+			return err
+		}
+		errCause := cause.Cause()
+		if errCause == nil || errCause == err {
+			return err
+		}
+		err = errCause
+	}
+	return err
+}
+
+type causer interface {
+	Cause() error
 }

@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
-	"github.com/cosmos/cosmos-sdk/modules/coin"
+	"github.com/cosmos/cosmos-sdk/x/coin"
 )
 
 // SendTxCmd is CLI command to send tokens between basecoin accounts

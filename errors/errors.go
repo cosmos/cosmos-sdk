@@ -1,15 +1,19 @@
 package errors
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/pkg/errors"
+)
 
 const (
 	// ABCI Response Codes
-	CodeInternalError     = 1
-	CodeTxParseError      = 2
-	CodeBadNonce          = 3
-	CodeUnauthorized      = 4
-	CodeInsufficientFunds = 5
-	CodeUnknownRequest    = 6
+	CodeInternalError     uint32 = 1
+	CodeTxParseError             = 2
+	CodeBadNonce                 = 3
+	CodeUnauthorized             = 4
+	CodeInsufficientFunds        = 5
+	CodeUnknownRequest           = 6
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
@@ -65,6 +69,8 @@ func UnknownRequest(log string) sdkError {
 type ABCIError interface {
 	ABCICode() uint32
 	ABCILog() string
+
+	Error() string
 }
 
 /*
@@ -131,4 +137,25 @@ func (err sdkError) WithCause(cause error) sdkError {
 	copy := err
 	copy.cause = cause
 	return copy
+}
+
+// HasErrorCode checks if this error would return the named error code
+func HasErrorCode(err error, code uint32) bool {
+	// XXX Get the cause if not ABCIError
+	if abciErr, ok := err.(ABCIError); ok {
+		return abciErr.ABCICode() == code
+	}
+	return code == CodeInternalError
+}
+
+func IsSameError(pattern error, err error) bool {
+	return err != nil && (errors.Cause(err) == errors.Cause(pattern))
+}
+
+func WithCode(err error, code uint32) sdkError {
+	return sdkError{
+		code:  code,
+		cause: err,
+		log:   "",
+	}
 }

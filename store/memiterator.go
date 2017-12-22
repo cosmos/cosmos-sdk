@@ -1,6 +1,8 @@
 package store
 
 import (
+	"bytes"
+
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 )
@@ -61,4 +63,18 @@ func (mi *memIterator) Close() {
 	mi.start = nil
 	mi.end = nil
 	mi.items = nil
+}
+
+//----------------------------------------
+// Misc.
+
+// bytes.Compare but bounded on both sides by nil.
+// both (k1, nil) and (nil, k2) return -1
+func keyCompare(k1, k2 []byte) int {
+	if k1 == nil && k2 == nil {
+		return 0
+	} else if k1 == nil || k2 == nil {
+		return -1
+	}
+	return bytes.Compare(k1, k2)
 }

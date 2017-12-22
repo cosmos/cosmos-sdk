@@ -1,8 +1,8 @@
 package types
 
 import (
-	cmn "github.com/tendemrint/tmlibs/common"
 	abci "github.com/tendermint/abci/types"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 // Result is the union of ResponseDeliverTx and ResponseCheckTx.

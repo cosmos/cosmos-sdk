@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-const mainKeyHeader = "header"
+var mainHeaderKey = "header"
 
 // App - The ABCI application
 type App struct {
@@ -22,11 +22,14 @@ type App struct {
 	// App name from abci.Info
 	name string
 
-	// DeliverTx (main) state
-	store types.MultiStore
+	// Main (uncached) state
+	store types.CommitMultiStore
 
-	// CheckTx state
+	// CheckTx state, a cache-wrap of store.
 	storeCheck types.CacheMultiStore
+
+	// DeliverTx state, a cache-wrap of store.
+	storeDeliver types.CacheMultiStore
 
 	// Current block header
 	header *abci.Header
@@ -47,7 +50,11 @@ func NewApp(name string) *App {
 	}
 }
 
-func (app *App) SetStore(store types.MultiStore) {
+func (app *App) Name() string {
+	return app.name
+}
+
+func (app *App) SetCommitStore(store types.CommitMultiStore) {
 	app.store = store
 }
 
@@ -73,33 +80,34 @@ func (app *App) initFromStore() error {
 	lastCommitID := store.LastCommitID()
 	main := store.GetKVStore("main")
 	header := (*abci.Header)(nil)
-	storeCheck := store.CacheMultiStore()
 
 	// Main store should exist.
 	if store.GetKVStore("main") == nil {
 		return errors.New("App expects MultiStore with 'main' KVStore")
 	}
 
-	// If we've committed before, we expect main://<mainKeyHeader>.
+	// If we've committed before, we expect main://<mainHeaderKey>.
 	if !lastCommitID.IsZero() {
-		headerBytes, ok := main.Get(mainKeyHeader)
-		if !ok {
-			errStr := fmt.Sprintf("Version > 0 but missing key %s", mainKeyHeader)
+		headerBytes := main.Get(mainHeaderKey)
+		if len(headerBytes) == 0 {
+			errStr := fmt.Sprintf("Version > 0 but missing key %s", mainHeaderKey)
 			return errors.New(errStr)
 		}
-		err = proto.Unmarshal(headerBytes, header)
+		err := proto.Unmarshal(headerBytes, header)
 		if err != nil {
 			return errors.Wrap(err, "Failed to parse Header")
 		}
-		if header.Height != lastCommitID.Version {
-			errStr := fmt.Sprintf("Expected main://%s.Height %v but got %v", mainKeyHeader, version, headerHeight)
+		lastVersion := lastCommitID.Version
+		if header.Height != lastVersion {
+			errStr := fmt.Sprintf("Expected main://%s.Height %v but got %v", mainHeaderKey, lastVersion, header.Height)
 			return errors.New(errStr)
 		}
 	}
 
 	// Set App state.
 	app.header = header
-	app.storeCheck = app.store.CacheMultiStore()
+	app.storeCheck = nil
+	app.storeDeliver = nil
 	app.valUpdates = nil
 
 	return nil
@@ -113,34 +121,40 @@ func (app *App) Info(req abci.RequestInfo) abci.ResponseInfo {
 	lastCommitID := app.store.LastCommitID()
 
 	return abci.ResponseInfo{
-		Data:             app.Name,
+		Data:             app.name,
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
 	}
 }
 
 // Implements ABCI
-func (app *App) SetOption(req abci.RequestSetOption) abci.ResponseSetOption {
-	return "Not Implemented"
+func (app *App) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
+	// TODO: Implement
+	return
 }
 
 // Implements ABCI
-func (app *App) InitChain(req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *App) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	// TODO: Use req.Validators
+	return
 }
 
 // Implements ABCI
-func (app *App) Query(req abci.RequestQuery) abci.ResponseQuery {
+func (app *App) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	// TODO: See app/query.go
+	return
 }
 
 // Implements ABCI
-func (app *App) BeginBlock(req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *App) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	app.header = req.Header
+	app.storeDeliver = app.store.CacheMultiStore()
+	app.storeCheck = app.store.CacheMultiStore()
+	return
 }
 
 // Implements ABCI
-func (app *App) CheckTx(txBytes []byte) abci.ResponseCheckTx {
+func (app *App) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 
 	// Initialize arguments to Handler.
 	var isCheckTx = true
@@ -163,7 +177,7 @@ func (app *App) CheckTx(txBytes []byte) abci.ResponseCheckTx {
 }
 
 // Implements ABCI
-func (app *App) DeliverTx(txBytes []byte) abci.ResponseDeliverTx {
+func (app *App) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 
 	// Initialize arguments to Handler.
 	var isCheckTx = false
@@ -193,7 +207,6 @@ func (app *App) DeliverTx(txBytes []byte) abci.ResponseDeliverTx {
 
 // Implements ABCI
 func (app *App) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-	// XXX Update to res.Updates.
 	res.ValidatorUpdates = app.valUpdates
 	app.valUpdates = nil
 	return
@@ -201,6 +214,7 @@ func (app *App) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 
 // Implements ABCI
 func (app *App) Commit() (res abci.ResponseCommit) {
+	app.storeDeliver.Write()
 	commitID := app.store.Commit()
 	app.logger.Debug("Commit synced",
 		"commit", commitID,

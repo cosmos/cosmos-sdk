@@ -136,7 +136,7 @@ func (c Context) TxBytes() []byte {
 
 // Unexposed to prevent overriding.
 func (c Context) setBlockHeader(header abci.Header) Context {
-	var _ proto.Message = header // for cloning.
+	var _ proto.Message = &header // for cloning.
 	return c.withValue(contextKeyBlockHeader, header)
 }
 

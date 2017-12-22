@@ -141,3 +141,27 @@ func TestWrapping(t *testing.T) {
 	}
 
 }
+
+func TestPrivKeyEquality(t *testing.T) {
+	{
+		privKey := GenPrivKeySecp256k1().Wrap()
+		privKey2 := GenPrivKeySecp256k1().Wrap()
+		assert.False(t, privKey.Equals(privKey2))
+		assert.False(t, privKey2.Equals(privKey))
+
+		privKeyCopy := privKey // copy
+		assert.True(t, privKey.Equals(privKeyCopy))
+		assert.True(t, privKeyCopy.Equals(privKey))
+	}
+
+	{
+		privKey := GenPrivKeyEd25519().Wrap()
+		privKey2 := GenPrivKeyEd25519().Wrap()
+		assert.False(t, privKey.Equals(privKey2))
+		assert.False(t, privKey2.Equals(privKey))
+
+		privKeyCopy := privKey // copy
+		assert.True(t, privKey.Equals(privKeyCopy))
+		assert.True(t, privKeyCopy.Equals(privKey))
+	}
+}

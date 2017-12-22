@@ -1,7 +1,7 @@
 package crypto
 
 import (
-	"bytes"
+	"crypto/subtle"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/tendermint/ed25519"
@@ -69,9 +69,11 @@ func (privKey PrivKeyEd25519) PubKey() PubKey {
 	return PubKeyEd25519(pubBytes).Wrap()
 }
 
+// Equals - you probably don't need to use this.
+// Runs in constant time based on length of the keys.
 func (privKey PrivKeyEd25519) Equals(other PrivKey) bool {
 	if otherEd, ok := other.Unwrap().(PrivKeyEd25519); ok {
-		return bytes.Equal(privKey[:], otherEd[:])
+		return subtle.ConstantTimeCompare(privKey[:], otherEd[:]) == 1
 	} else {
 		return false
 	}
@@ -156,9 +158,11 @@ func (privKey PrivKeySecp256k1) PubKey() PubKey {
 	return pub.Wrap()
 }
 
+// Equals - you probably don't need to use this.
+// Runs in constant time based on length of the keys.
 func (privKey PrivKeySecp256k1) Equals(other PrivKey) bool {
 	if otherSecp, ok := other.Unwrap().(PrivKeySecp256k1); ok {
-		return bytes.Equal(privKey[:], otherSecp[:])
+		return subtle.ConstantTimeCompare(privKey[:], otherSecp[:]) == 1
 	} else {
 		return false
 	}

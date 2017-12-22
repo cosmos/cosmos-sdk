@@ -14,7 +14,7 @@ type memIterator struct {
 }
 
 func newMemIterator(start, end []byte, items []cmn.KVPair) *memIterator {
-	itemsInDomain := make([]KVPair, 0)
+	itemsInDomain := make([]cmn.KVPair, 0)
 	for _, item := range items {
 		ascending := keyCompare(start, end) < 0
 		if dbm.IsKeyInDomain(item.Key, start, end, !ascending) {

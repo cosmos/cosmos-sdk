@@ -96,10 +96,7 @@ func NewABCIError(code uint32, log string) ABCIError {
 		}
 	```
 
-	Then, to get the ABCI code/log:
-
-	1. Check if err.(ABCIError)
-	2. Check if err.(causer).Cause().(ABCIError)
+	Then, to get the ABCI code/log, use ABCIErrorCause()
 
 */
 type sdkError struct {

@@ -2,9 +2,45 @@ package types
 
 import (
 	"context"
+	"github.com/golang/protobuf/proto"
 
 	abci "github.com/tendermint/abci/types"
 )
+
+/*
+
+A note on Context security:
+
+The intent of Context is for it to be an immutable object that can be cloned
+and updated cheaply with WithValue() and passed forward to the next decorator
+or handler. For example,
+
+```golang
+func Decorator(ctx Context, ms MultiStore, tx Tx, next Handler) Result {
+
+	// Clone and update context with new kv pair.
+	ctx2 := ctx.WithValueSDK(key, value)
+
+	// Call the next decorator/handler.
+	res := next(ctx2, ms, tx)
+
+	// At this point, while `ctx` and `ctx2`'s shallow values haven't changed,
+	// it's possible that slices or addressable struct fields have been
+	// modified by the call to `next(...)`.
+	//
+	// This is generally undesirable because it prevents a decorator from
+	// rolling back all side effects--which is the intent of immutable
+	// `Context`s and store cache-wraps.
+}
+```
+
+While well-written decorators wouldn't mutate any mutable context values, a malicious or buggy plugin can create unwanted side-effects, so it is highly advised for users of Context to only set immutable values.  To help enforce this contract, we require values to be certain primitive types, or a Cloner.
+
+*/
+
+type Cloner interface {
+	Clone() interface{} // deep copy
+}
 
 type Context struct {
 	context.Context
@@ -13,9 +49,7 @@ type Context struct {
 }
 
 func NewContext(header abci.Header, isCheckTx bool, txBytes []byte) Context {
-	c := Context{
-		Context: context.Background(),
-	}
+	c := Context{context.Background()}
 	c = c.setBlockHeader(header)
 	c = c.setBlockHeight(header.Height)
 	c = c.setChainID(header.ChainID)
@@ -24,16 +58,47 @@ func NewContext(header abci.Header, isCheckTx bool, txBytes []byte) Context {
 	return c
 }
 
-// The original context.Context API.
-func (c Context) WithValue(key interface{}, value interface{}) context.Context {
-	return context.WithValue(c.Context, key, value)
+func (c Context) Value(key interface{}) interface{} {
+	value := c.Context.Value(key)
+	if cloner, ok := value.(Cloner); ok {
+		return cloner.Clone()
+	}
+	if message, ok := value.(proto.Message); ok {
+		return proto.Clone(message)
+	}
+	return value
 }
 
-// Like WithValue() but retains this API.
-func (c Context) WithValueSDK(key interface{}, value interface{}) Context {
-	return Context{
-		Context: context.WithValue(c.Context, key, value),
-	}
+func (c Context) WithValue(key interface{}, value Cloner) Context {
+	return c.withValue(key, value)
+}
+
+func (c Context) WithValueProto(key interface{}, value proto.Message) Context {
+	return c.withValue(key, value)
+}
+
+func (c Context) WithValueString(key interface{}, value string) Context {
+	return c.withValue(key, value)
+}
+
+func (c Context) WithValueInt32(key interface{}, value int32) Context {
+	return c.withValue(key, value)
+}
+
+func (c Context) WithValueUint32(key interface{}, value uint32) Context {
+	return c.withValue(key, value)
+}
+
+func (c Context) WithValueUint64(key interface{}, value uint64) Context {
+	return c.withValue(key, value)
+}
+
+func (c Context) WithValueUnsafe(key interface{}, value interface{}) Context {
+	return c.withValue(key, value)
+}
+
+func (c Context) withValue(key interface{}, value interface{}) Context {
+	return Context{context.WithValue(c.Context, key, value)}
 }
 
 //----------------------------------------
@@ -71,25 +136,26 @@ func (c Context) TxBytes() []byte {
 
 // Unexposed to prevent overriding.
 func (c Context) setBlockHeader(header abci.Header) Context {
-	return c.WithValueSDK(contextKeyBlockHeader, header)
+	var _ proto.Message = header // for cloning.
+	return c.withValue(contextKeyBlockHeader, header)
 }
 
 // Unexposed to prevent overriding.
 func (c Context) setBlockHeight(height int64) Context {
-	return c.WithValueSDK(contextKeyBlockHeight, height)
+	return c.withValue(contextKeyBlockHeight, height)
 }
 
 // Unexposed to prevent overriding.
 func (c Context) setChainID(chainID string) Context {
-	return c.WithValueSDK(contextKeyChainID, chainID)
+	return c.withValue(contextKeyChainID, chainID)
 }
 
 // Unexposed to prevent overriding.
 func (c Context) setIsCheckTx(isCheckTx bool) Context {
-	return c.WithValueSDK(contextKeyIsCheckTx, isCheckTx)
+	return c.withValue(contextKeyIsCheckTx, isCheckTx)
 }
 
 // Unexposed to prevent overriding.
 func (c Context) setTxBytes(txBytes []byte) Context {
-	return c.WithValueSDK(contextKeyTxBytes, txBytes)
+	return c.withValue(contextKeyTxBytes, txBytes)
 }

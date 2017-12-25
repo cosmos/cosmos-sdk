@@ -5,6 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire/data"
 )
@@ -16,7 +17,7 @@ type GenesisAccount struct {
 	Address data.Bytes `json:"address"`
 	// this from types.Account (don't know how to embed this properly)
 	PubKey  crypto.PubKey `json:"pub_key"` // May be nil, if not known.
-	Balance Coins         `json:"coins"`
+	Balance types.Coins   `json:"coins"`
 }
 
 // ToAccount - GenesisAccount struct to a basecoin Account

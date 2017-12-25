@@ -4,6 +4,7 @@ package coin
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types"
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
@@ -17,7 +18,7 @@ type CoinMsg interface {
 // Input is a source of coins in a transaction.
 type Input struct {
 	Address cmn.Bytes
-	Coins   Coins
+	Coins   types.Coins
 }
 
 func (in Input) ValidateBasic() error {
@@ -38,7 +39,7 @@ func (txIn TxInput) String() string {
 }
 
 // NewTxInput - create a transaction input, used with SendTx
-func NewTxInput(addr Actor, coins Coins) TxInput {
+func NewTxInput(addr Actor, coins types.Coins) TxInput {
 	input := TxInput{
 		Address: addr,
 		Coins:   coins,
@@ -50,8 +51,8 @@ func NewTxInput(addr Actor, coins Coins) TxInput {
 
 // TxOutput - expected coin movement output, used with SendTx
 type TxOutput struct {
-	Address Actor `json:"address"`
-	Coins   Coins `json:"coins"`
+	Address Actor       `json:"address"`
+	Coins   types.Coins `json:"coins"`
 }
 
 // ValidateBasic - validate transaction output
@@ -77,7 +78,7 @@ func (txOut TxOutput) String() string {
 }
 
 // NewTxOutput - create a transaction output, used with SendTx
-func NewTxOutput(addr Actor, coins Coins) TxOutput {
+func NewTxOutput(addr Actor, coins types.Coins) TxOutput {
 	output := TxOutput{
 		Address: addr,
 		Coins:   coins,
@@ -103,7 +104,7 @@ func NewSendTx(in []TxInput, out []TxOutput) SendTx { // types.Tx {
 
 // NewSendOneTx is a helper for the standard (?) case where there is exactly
 // one sender and one recipient
-func NewSendOneTx(sender, recipient Actor, amount Coins) SendTx {
+func NewSendOneTx(sender, recipient Actor, amount types.Coins) SendTx {
 	in := []TxInput{{Address: sender, Coins: amount}}
 	out := []TxOutput{{Address: recipient, Coins: amount}}
 	return SendTx{Inputs: in, Outputs: out}
@@ -120,7 +121,7 @@ func (tx SendTx) ValidateBasic() error {
 		return ErrNoOutputs()
 	}
 	// make sure all inputs and outputs are individually valid
-	var totalIn, totalOut Coins
+	var totalIn, totalOut types.Coins
 	for _, in := range tx.Inputs {
 		if err := in.ValidateBasic(); err != nil {
 			return err
@@ -153,11 +154,11 @@ type CreditTx struct {
 	// Credit is the amount to change the credit...
 	// This may be negative to remove some over-issued credit,
 	// but can never bring the credit or the balance to negative
-	Credit Coins `json:"credit"`
+	Credit types.Coins `json:"credit"`
 }
 
 // NewCreditTx - modify the credit granted to a given account
-func NewCreditTx(debitor Actor, credit Coins) CreditTx {
+func NewCreditTx(debitor Actor, credit types.Coins) CreditTx {
 	return CreditTx{Debitor: debitor, Credit: credit}
 }
 

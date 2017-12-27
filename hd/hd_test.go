@@ -2,9 +2,6 @@ package hd
 
 import (
 	"bytes"
-	//"crypto/hmac"
-	//"crypto/sha512"
-	//"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -14,11 +11,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tyler-smith/go-bip39"
-
-	//"github.com/btcsuite/btcd/chaincfg"
-	//"github.com/btcsuite/btcutil/hdkeychain"
-	//"github.com/mndrix/btcutil"
-	//"github.com/tyler-smith/go-bip32"
 
 	"github.com/tendermint/go-crypto"
 )
@@ -84,7 +76,7 @@ func TestHDToAddr(t *testing.T) {
 		copy(pubT[:], pub)
 		addr := pubT.Address()
 		fmt.Printf("ADDR  \t%X %X\n", addrB, addr)
-		assert.Equal(t, addr, addrB, fmt.Sprintf("Expected addresses to match %d", i))
+		assert.Equal(t, addr, crypto.Address(addrB), fmt.Sprintf("Expected addresses to match %d", i))
 
 	}
 }

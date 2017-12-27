@@ -3,15 +3,20 @@ package crypto
 import (
 	"bytes"
 	"crypto/sha256"
+	"fmt"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/tendermint/ed25519"
 	"github.com/tendermint/ed25519/extra25519"
 	"github.com/tendermint/go-wire"
 	data "github.com/tendermint/go-wire/data"
-	. "github.com/tendermint/tmlibs/common"
+	cmn "github.com/tendermint/tmlibs/common"
 	"golang.org/x/crypto/ripemd160"
 )
+
+// An address is a []byte, but hex-encoded even in JSON.
+// []byte leaves us the option to change the address length.
+type Address cmn.HexBytes
 
 func PubKeyFromBytes(pubKeyBytes []byte) (pubKey PubKey, err error) {
 	if err := wire.ReadBinaryBytes(pubKeyBytes, &pubKey); err != nil {
@@ -27,7 +32,7 @@ func PubKeyFromBytes(pubKeyBytes []byte) (pubKey PubKey, err error) {
 // +gen wrapper:"PubKey,Impl[PubKeyEd25519,PubKeySecp256k1],ed25519,secp256k1"
 type PubKeyInner interface {
 	AssertIsPubKeyInner()
-	Address() []byte
+	Address() Address
 	Bytes() []byte
 	KeyString() string
 	VerifyBytes(msg []byte, sig Signature) bool
@@ -44,17 +49,17 @@ type PubKeyEd25519 [32]byte
 
 func (pubKey PubKeyEd25519) AssertIsPubKeyInner() {}
 
-func (pubKey PubKeyEd25519) Address() []byte {
+func (pubKey PubKeyEd25519) Address() Address {
 	w, n, err := new(bytes.Buffer), new(int), new(error)
 	wire.WriteBinary(pubKey[:], w, n, err)
 	if *err != nil {
-		PanicCrisis(*err)
+		panic(*err)
 	}
 	// append type byte
 	encodedPubkey := append([]byte{TypeEd25519}, w.Bytes()...)
 	hasher := ripemd160.New()
 	hasher.Write(encodedPubkey) // does not error
-	return hasher.Sum(nil)
+	return Address(hasher.Sum(nil))
 }
 
 func (pubKey PubKeyEd25519) Bytes() []byte {
@@ -95,13 +100,13 @@ func (pubKey PubKeyEd25519) ToCurve25519() *[32]byte {
 }
 
 func (pubKey PubKeyEd25519) String() string {
-	return Fmt("PubKeyEd25519{%X}", pubKey[:])
+	return fmt.Sprintf("PubKeyEd25519{%X}", pubKey[:])
 }
 
 // Must return the full bytes in hex.
 // Used for map keying, etc.
 func (pubKey PubKeyEd25519) KeyString() string {
-	return Fmt("%X", pubKey[:])
+	return fmt.Sprintf("%X", pubKey[:])
 }
 
 func (pubKey PubKeyEd25519) Equals(other PubKey) bool {
@@ -124,14 +129,14 @@ type PubKeySecp256k1 [33]byte
 func (pubKey PubKeySecp256k1) AssertIsPubKeyInner() {}
 
 // Implements Bitcoin style addresses: RIPEMD160(SHA256(pubkey))
-func (pubKey PubKeySecp256k1) Address() []byte {
+func (pubKey PubKeySecp256k1) Address() Address {
 	hasherSHA256 := sha256.New()
 	hasherSHA256.Write(pubKey[:]) // does not error
 	sha := hasherSHA256.Sum(nil)
 
 	hasherRIPEMD160 := ripemd160.New()
 	hasherRIPEMD160.Write(sha) // does not error
-	return hasherRIPEMD160.Sum(nil)
+	return Address(hasherRIPEMD160.Sum(nil))
 }
 
 func (pubKey PubKeySecp256k1) Bytes() []byte {
@@ -168,13 +173,13 @@ func (p *PubKeySecp256k1) UnmarshalJSON(enc []byte) error {
 }
 
 func (pubKey PubKeySecp256k1) String() string {
-	return Fmt("PubKeySecp256k1{%X}", pubKey[:])
+	return fmt.Sprintf("PubKeySecp256k1{%X}", pubKey[:])
 }
 
 // Must return the full bytes in hex.
 // Used for map keying, etc.
 func (pubKey PubKeySecp256k1) KeyString() string {
-	return Fmt("%X", pubKey[:])
+	return fmt.Sprintf("%X", pubKey[:])
 }
 
 func (pubKey PubKeySecp256k1) Equals(other PubKey) bool {

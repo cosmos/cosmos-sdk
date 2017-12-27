@@ -1,5 +1,9 @@
 package hd
 
+// XXX This package doesn't work with our address scheme,
+// XXX and it probably doesn't work for our other pubkey types.
+// XXX Fix it up to be more general but compatible.
+
 import (
 	"crypto/ecdsa"
 	"crypto/hmac"

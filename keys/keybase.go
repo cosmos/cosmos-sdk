@@ -86,7 +86,9 @@ func (kb dbKeybase) Recover(name, passphrase, seedphrase string) (Info, error) {
 // List loads the keys from the storage and enforces alphabetical order
 func (kb dbKeybase) List() ([]Info, error) {
 	var res []Info
-	for iter := kb.db.Iterator(); iter.Valid(); iter.Next() {
+	iter := kb.db.Iterator(nil, nil)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()
 		if isPub(key) {
 			info, err := readInfo(iter.Value())

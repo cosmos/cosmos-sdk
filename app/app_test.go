@@ -7,12 +7,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-crypto"
 	cmn "github.com/tendermint/tmlibs/common"
+	dbm "github.com/tendermint/tmlibs/db"
 )
 
 func TestBasic(t *testing.T) {
@@ -24,31 +25,33 @@ func TestBasic(t *testing.T) {
 	}
 
 	// Create app.
-	app := sdk.NewApp(t.Name())
-	app.SetStore(mockMultiStore())
-	app.SetHandler(func(ctx Context, store MultiStore, tx Tx) Result {
+	app := NewApp(t.Name())
+	app.SetCommitMultiStore(newCommitMultiStore())
+	app.SetHandler(func(ctx types.Context, store types.MultiStore, tx types.Tx) types.Result {
 
 		// This could be a decorator.
-		fromJSON(ctx.TxBytes(), &tx)
+		var ttx testTx
+		fromJSON(ctx.TxBytes(), &ttx)
 
-		fmt.Println(">>", tx)
+		// XXX
+		return types.Result{}
 	})
 
 	// Load latest state, which should be empty.
 	err := app.LoadLatestVersion()
 	assert.Nil(t, err)
-	assert.Equal(t, app.NextVersion(), 1)
+	assert.Equal(t, app.LastBlockHeight(), int64(0))
 
 	// Create the validators
 	var numVals = 3
-	var valSet = make([]*abci.Validator, numVals)
+	var valSet = make([]abci.Validator, numVals)
 	for i := 0; i < numVals; i++ {
 		valSet[i] = makeVal(secret(i))
 	}
 
 	// Initialize the chain
 	app.InitChain(abci.RequestInitChain{
-		Validators: valset,
+		Validators: valSet,
 	})
 
 	// Simulate the start of a block.
@@ -62,24 +65,26 @@ func TestBasic(t *testing.T) {
 		}
 		txBytes := toJSON(tx)
 		res := app.DeliverTx(txBytes)
-		require.True(res.IsOK(), "%#v", res)
+		assert.True(t, res.IsOK(), "%#v", res)
 	}
 
 	// Simulate the end of a block.
 	// Get the summary of validator updates.
-	res := app.EndBlock(app.height)
+	res := app.EndBlock(abci.RequestEndBlock{})
 	valUpdates := res.ValidatorUpdates
 
 	// Assert that validator updates are correct.
 	for _, val := range valSet {
+		// Sanity
+		assert.NotEqual(t, len(val.PubKey), 0)
 
 		// Find matching update and splice it out.
 		for j := 0; j < len(valUpdates); {
-			assert.NotEqual(len(valUpdates.PubKey), 0)
+			valUpdate := valUpdates[j]
 
 			// Matched.
 			if bytes.Equal(valUpdate.PubKey, val.PubKey) {
-				assert.Equal(valUpdate.NewPower, val.Power+1)
+				assert.Equal(t, valUpdate.Power, val.Power+1)
 				if j < len(valUpdates)-1 {
 					// Splice it out.
 					valUpdates = append(valUpdates[:j], valUpdates[j+1:]...)
@@ -100,9 +105,9 @@ func randPower() int64 {
 	return cmn.RandInt64()
 }
 
-func makeVal(secret string) *abci.Validator {
-	return &abci.Validator{
-		PubKey: makePubKey(string).Bytes(),
+func makeVal(secret string) abci.Validator {
+	return abci.Validator{
+		PubKey: makePubKey(secret).Bytes(),
 		Power:  randPower(),
 	}
 }
@@ -112,29 +117,43 @@ func makePubKey(secret string) crypto.PubKey {
 }
 
 func makePrivKey(secret string) crypto.PrivKey {
-	return crypto.GenPrivKeyEd25519FromSecret([]byte(id))
+	privKey := crypto.GenPrivKeyEd25519FromSecret([]byte(secret))
+	return privKey.Wrap()
 }
 
-func secret(index int) []byte {
-	return []byte(fmt.Sprintf("secret%d", index))
+func secret(index int) string {
+	return fmt.Sprintf("secret%d", index)
 }
 
-func copyVal(val *abci.Validator) *abci.Validator {
-	val2 := *val
-	return &val2
+func copyVal(val abci.Validator) abci.Validator {
+	// val2 := *val
+	// return &val2
+	return val
 }
 
 func toJSON(o interface{}) []byte {
-	bytes, err := json.Marshal(o)
+	bz, err := json.Marshal(o)
 	if err != nil {
 		panic(err)
 	}
-	return bytes
+	// fmt.Println(">> toJSON:", string(bz))
+	return bz
 }
 
-func fromJSON(bytes []byte, ptr interface{}) {
-	err := json.Unmarshal(bytes, ptr)
+func fromJSON(bz []byte, ptr interface{}) {
+	// fmt.Println(">> fromJSON:", string(bz))
+	err := json.Unmarshal(bz, ptr)
 	if err != nil {
 		panic(err)
 	}
+}
+
+// Creates a sample CommitMultiStore
+func newCommitMultiStore() types.CommitMultiStore {
+	dbMain := dbm.NewMemDB()
+	dbXtra := dbm.NewMemDB()
+	ms := store.NewMultiStore(dbMain) // Also store rootMultiStore metadata here (it shouldn't clash)
+	ms.SetSubstoreLoader("main", store.NewIAVLStoreLoader(dbMain, 0, 0))
+	ms.SetSubstoreLoader("xtra", store.NewIAVLStoreLoader(dbXtra, 0, 0))
+	return ms
 }

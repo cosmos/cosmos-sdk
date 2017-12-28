@@ -6,8 +6,11 @@ import (
 	"os"
 
 	"github.com/golang/protobuf/proto"
+
 	"github.com/pkg/errors"
+
 	abci "github.com/tendermint/abci/types"
+
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
@@ -42,8 +45,9 @@ type App struct {
 	valUpdates []abci.Validator
 }
 
-var _ abci.Application = &App{}
+var _ abci.Application = (*App)(nil)
 
+// NewApp returns a new application with a default logger.
 func NewApp(name string) *App {
 	return &App{
 		name:   name,
@@ -51,34 +55,39 @@ func NewApp(name string) *App {
 	}
 }
 
+// Name returns the name of the application.
 func (app *App) Name() string {
 	return app.name
 }
 
+// SetCommitMultiStore sets the multistore for the main state of the application.
 func (app *App) SetCommitMultiStore(ms types.CommitMultiStore) {
 	app.ms = ms
 }
 
+// SetHandler sets the handler for CheckTx and DeliverTx.
 func (app *App) SetHandler(handler types.Handler) {
 	app.handler = handler
 }
 
+// LoadLatestVersion loads the latest version of the state.
 func (app *App) LoadLatestVersion() error {
 	app.ms.LoadLatestVersion()
 	return app.initFromStore()
 }
 
+// LoadVersion loads a specific version of the state.
 func (app *App) LoadVersion(version int64) error {
 	app.ms.LoadVersion(version)
 	return app.initFromStore()
 }
 
-// The last CommitID of the multistore.
+// LastCommitID retrieves the last commit id of the state.
 func (app *App) LastCommitID() types.CommitID {
 	return app.ms.LastCommitID()
 }
 
-// The last commited block height.
+// LastBlockHeight retrieves the last commited block height.
 func (app *App) LastBlockHeight() int64 {
 	return app.ms.LastCommitID().Version
 }
@@ -90,7 +99,7 @@ func (app *App) initFromStore() error {
 	header := abci.Header{}
 
 	// Main store should exist.
-	if app.ms.GetKVStore("main") == nil {
+	if main == nil {
 		return errors.New("App expects MultiStore with 'main' KVStore")
 	}
 
@@ -107,7 +116,8 @@ func (app *App) initFromStore() error {
 		}
 		lastVersion := lastCommitID.Version
 		if header.Height != lastVersion {
-			errStr := fmt.Sprintf("Expected main://%s.Height %v but got %v", mainHeaderKey, lastVersion, header.Height)
+			errStr := fmt.Sprintf("Expected main://%s.Height %v but got %v", mainHeaderKey,
+				lastVersion, header.Height)
 			return errors.New(errStr)
 		}
 	}
@@ -123,7 +133,7 @@ func (app *App) initFromStore() error {
 
 //----------------------------------------
 
-// Implements ABCI
+// Info implements ABCI
 func (app *App) Info(req abci.RequestInfo) abci.ResponseInfo {
 
 	lastCommitID := app.ms.LastCommitID()
@@ -135,25 +145,27 @@ func (app *App) Info(req abci.RequestInfo) abci.ResponseInfo {
 	}
 }
 
-// Implements ABCI
+// SetOption implements ABCI
 func (app *App) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
 	// TODO: Implement
+	res.Log = "Not yet implemented."
 	return
 }
 
-// Implements ABCI
+// InitChain implements ABCI
 func (app *App) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	// TODO: Use req.Validators
 	return
 }
 
-// Implements ABCI
+// Query implements ABCI
 func (app *App) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	// TODO: See app/query.go
+	res.Log = "Not yet implemented."
 	return
 }
 
-// Implements ABCI
+// BeginBlock implements ABCI
 func (app *App) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	app.header = req.Header
 	app.msDeliver = app.ms.CacheMultiStore()
@@ -161,13 +173,13 @@ func (app *App) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBl
 	return
 }
 
-// Implements ABCI
+// CheckTx implements ABCI
 func (app *App) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 
 	// Initialize arguments to Handler.
 	var isCheckTx = true
 	var ctx = types.NewContext(app.header, isCheckTx, txBytes)
-	var tx types.Tx = nil // nil until a decorator parses one.
+	var tx types.Tx // nil until a decorator parses one.
 
 	// Run the handler.
 	var result = app.handler(ctx, app.ms, tx)
@@ -186,13 +198,13 @@ func (app *App) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 	}
 }
 
-// Implements ABCI
+// DeliverTx implements ABCI
 func (app *App) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 
 	// Initialize arguments to Handler.
 	var isCheckTx = false
 	var ctx = types.NewContext(app.header, isCheckTx, txBytes)
-	var tx types.Tx = nil // nil until a decorator parses one.
+	var tx types.Tx // nil until a decorator parses one.
 
 	// Run the handler.
 	var result = app.handler(ctx, app.ms, tx)
@@ -216,20 +228,18 @@ func (app *App) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	}
 }
 
-// Implements ABCI
+// EndBlock implements ABCI
 func (app *App) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	res.ValidatorUpdates = app.valUpdates
 	app.valUpdates = nil
 	return
 }
 
-// Implements ABCI
+// Commit implements ABCI
 func (app *App) Commit() (res abci.ResponseCommit) {
 	app.msDeliver.Write()
 	commitID := app.ms.Commit()
-	app.logger.Debug("Commit synced",
-		"commit", commitID,
-	)
+	app.logger.Debug("Commit synced", "commit", commitID)
 	return abci.ResponseCommit{
 		Data: commitID.Hash,
 	}

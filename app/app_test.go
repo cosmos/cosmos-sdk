@@ -8,12 +8,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/abci/types"
+
 	"github.com/tendermint/go-crypto"
+
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
+
+	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestBasic(t *testing.T) {
@@ -152,7 +155,8 @@ func fromJSON(bz []byte, ptr interface{}) {
 func newCommitMultiStore() types.CommitMultiStore {
 	dbMain := dbm.NewMemDB()
 	dbXtra := dbm.NewMemDB()
-	ms := store.NewMultiStore(dbMain) // Also store rootMultiStore metadata here (it shouldn't clash)
+	// Also store rootMultiStore metadata here (it shouldn't clash)
+	ms := store.NewMultiStore(dbMain)
 	ms.SetSubstoreLoader("main", store.NewIAVLStoreLoader(dbMain, 0, 0))
 	ms.SetSubstoreLoader("xtra", store.NewIAVLStoreLoader(dbXtra, 0, 0))
 	return ms

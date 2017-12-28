@@ -5,9 +5,13 @@ import (
 )
 
 func Decorator(ctx sdk.Context, store sdk.MultiStore, tx sdk.Tx, next sdk.Handler) sdk.Result {
-	if msg, ok := tx.(CoinsMsg); ok {
-		handleCoinsMsg(ctx, store, msg)
+	if msg, ok := tx.(CoinMsg); ok {
+		return handleCoinsMsg(ctx, store, msg)
 	} else {
-		next(ctx, store, tx)
+		return next(ctx, store, tx)
 	}
+}
+
+func handleCoinsMsg(ctx sdk.Context, store sdk.MultiStore, tx sdk.Tx) sdk.Result {
+	panic("not implemented yet") // XXX
 }

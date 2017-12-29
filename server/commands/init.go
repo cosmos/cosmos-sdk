@@ -36,7 +36,7 @@ func GetInitCmd(defaultDenom string, options []string) *cobra.Command {
 		Short: "Initialize genesis files for a blockchain",
 		RunE:  initCmd,
 	}
-	initCmd.Flags().String(FlagChainID, "test_chain_id", "Chain ID")
+	initCmd.Flags().String(FlagChainID, "local", "Chain ID")
 	initCmd.Flags().String(FlagDenom, defaultDenom, "Coin denomination for genesis account")
 	initCmd.Flags().StringSliceP(FlagOption, "p", options, "Genesis option in the format <app>/<option>/<value>")
 	initCmd.Flags().Bool(FlagStatic, false, "use a static private validator")

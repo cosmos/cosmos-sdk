@@ -214,7 +214,7 @@ func (app *StoreApp) BeginBlock(_ abci.RequestBeginBlock) (res abci.ResponseBegi
 // Returns a list of all validator changes made in this block
 func (app *StoreApp) EndBlock(_ abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	// TODO: cleanup in case a validator exists multiple times in the list
-	res.Diffs = app.pending
+	res.ValidatorUpdates = app.pending
 	app.pending = nil
 	return
 }

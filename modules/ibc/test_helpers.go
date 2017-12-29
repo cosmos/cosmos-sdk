@@ -50,9 +50,11 @@ func (m MockChain) MakePostPacket(packet Packet, h int64) (
 
 func genEmptyCommit(keys lite.ValKeys, chain string, h int64,
 	appHash []byte, count int) lite.FullCommit {
+	var consHash []byte
+	var resHash []byte
 
 	vals := keys.ToValidators(10, 0)
-	return keys.GenFullCommit(chain, h, nil, vals, appHash, 0, count)
+	return keys.GenFullCommit(chain, h, nil, vals, appHash, consHash, resHash, 0, count)
 }
 
 func makePostPacket(tree *iavl.Tree, packet Packet, fromID string, fromHeight int64) PostPacketTx {

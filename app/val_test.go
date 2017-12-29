@@ -83,6 +83,6 @@ func TestEndBlock(t *testing.T) {
 		}
 		diff := app.EndBlock(abci.RequestEndBlock{app.height})
 		// TODO: don't care about order here...
-		assert.Equal(tc.expected, diff.Diffs, "%d", i)
+		assert.Equal(tc.expected, diff.ValidatorUpdates, "%d", i)
 	}
 }

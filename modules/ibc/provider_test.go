@@ -84,7 +84,8 @@ func makeCommits(keys lite.ValKeys, count int, chainID, app string) []lite.FullC
 		// (10, 0), (10, 1), (10, 1), (10, 2), (10, 2), ...
 		vals := keys.ToValidators(10, int64(count/2))
 		h := int64(20 + 10*i)
-		commits[i] = keys.GenFullCommit(chainID, h, nil, vals, appHash, 0, len(keys))
+		consHash, resHash := []byte{}, []byte{}
+		commits[i] = keys.GenFullCommit(chainID, h, nil, vals, appHash, consHash, resHash, 0, len(keys))
 	}
 	return commits
 }

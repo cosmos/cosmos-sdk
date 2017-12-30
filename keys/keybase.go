@@ -8,6 +8,7 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 	dbm "github.com/tendermint/tmlibs/db"
 
+	"github.com/tendermint/go-crypto/keys/words"
 	"github.com/tendermint/go-crypto/nano"
 )
 
@@ -19,10 +20,10 @@ import (
 // a full-featured key manager
 type dbKeybase struct {
 	db    dbm.DB
-	codec Codec
+	codec words.Codec
 }
 
-func New(db dbm.DB, codec Codec) dbKeybase {
+func New(db dbm.DB, codec words.Codec) dbKeybase {
 	return dbKeybase{
 		db:    db,
 		codec: codec,
@@ -214,7 +215,7 @@ func generate(algo string, secret []byte) (crypto.PrivKey, error) {
 	case crypto.NameSecp256k1:
 		return crypto.GenPrivKeySecp256k1FromSecret(secret).Wrap(), nil
 	case nano.NameLedgerEd25519:
-		return nano.NewPrivKeyLedgerEd25519Ed25519()
+		return nano.NewPrivKeyLedgerEd25519()
 	default:
 		err := errors.Errorf("Cannot generate keys for algorithm: %s", algo)
 		return crypto.PrivKey{}, err
@@ -228,7 +229,7 @@ func generateByType(typ byte, secret []byte) (crypto.PrivKey, error) {
 	case crypto.TypeSecp256k1:
 		return crypto.GenPrivKeySecp256k1FromSecret(secret).Wrap(), nil
 	case nano.TypeLedgerEd25519:
-		return nano.NewPrivKeyLedgerEd25519Ed25519()
+		return nano.NewPrivKeyLedgerEd25519()
 	default:
 		err := errors.Errorf("Cannot generate keys for algorithm: %X", typ)
 		return crypto.PrivKey{}, err

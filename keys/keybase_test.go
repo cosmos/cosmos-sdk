@@ -13,6 +13,7 @@ import (
 
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-crypto/keys"
+	"github.com/tendermint/go-crypto/keys/words"
 	"github.com/tendermint/go-crypto/nano"
 )
 
@@ -23,7 +24,7 @@ func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := keys.New(
 		dbm.NewMemDB(),
-		keys.MustLoadCodec("english"),
+		words.MustLoadCodec("english"),
 	)
 
 	algo := crypto.NameEd25519
@@ -91,7 +92,7 @@ func TestSignVerify(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := keys.New(
 		dbm.NewMemDB(),
-		keys.MustLoadCodec("english"),
+		words.MustLoadCodec("english"),
 	)
 	algo := crypto.NameSecp256k1
 
@@ -165,7 +166,7 @@ func TestSignWithLedger(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := keys.New(
 		dbm.NewMemDB(),
-		keys.MustLoadCodec("english"),
+		words.MustLoadCodec("english"),
 	)
 	n := "nano-s"
 	p := "hard2hack"
@@ -219,7 +220,7 @@ func TestImportUnencrypted(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := keys.New(
 		dbm.NewMemDB(),
-		keys.MustLoadCodec("english"),
+		words.MustLoadCodec("english"),
 	)
 
 	key := crypto.GenPrivKeyEd25519FromSecret(cmn.RandBytes(16)).Wrap()
@@ -245,7 +246,7 @@ func TestAdvancedKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := keys.New(
 		dbm.NewMemDB(),
-		keys.MustLoadCodec("english"),
+		words.MustLoadCodec("english"),
 	)
 
 	algo := crypto.NameSecp256k1
@@ -288,7 +289,7 @@ func TestSeedPhrase(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := keys.New(
 		dbm.NewMemDB(),
-		keys.MustLoadCodec("english"),
+		words.MustLoadCodec("english"),
 	)
 
 	algo := crypto.NameEd25519
@@ -319,7 +320,7 @@ func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
 	cstore := keys.New(
 		dbm.NewMemDB(),
-		keys.MustLoadCodec("english"),
+		words.MustLoadCodec("english"),
 	)
 	ed := crypto.NameEd25519
 	sec := crypto.NameSecp256k1

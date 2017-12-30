@@ -38,9 +38,9 @@ type Keybase interface {
 	// Sign some bytes
 	Sign(name, passphrase string, msg []byte) (crypto.Signature, crypto.PubKey, error)
 	// Create a new keypair
-	Create(name, passphrase, algo string) (_ Info, seedphrase string, _ error)
+	Create(name, passphrase, algo string) (seedphrase string, _ Info, _ error)
 	// Recover takes a seedphrase and loads in the key
-	Recover(name, passphrase, seedphrase string) (Info, error)
+	Recover(name, passphrase, algo, seedphrase string) (Info, error)
 	List() ([]Info, error)
 	Get(name string) (Info, error)
 	Update(name, oldpass, newpass string) error

@@ -1,10 +1,11 @@
 GOTOOLS = \
 	github.com/Masterminds/glide \
-	github.com/jteeuwen/go-bindata/go-bindata \
-	gopkg.in/alecthomas/gometalinter.v2 \
-GOTOOLS_CHECK = glide go-bindata gometalinter.v2
+	github.com/jteeuwen/go-bindata/go-bindata 
+	# gopkg.in/alecthomas/gometalinter.v2 \
+		#
+GOTOOLS_CHECK = glide go-bindata #gometalinter.v2
 
-all: check get_vendor_deps build test install metalinter
+all: check get_vendor_deps build test install 
 
 check: check_tools
 
@@ -34,7 +35,7 @@ check_tools:
 get_tools:
 	@echo "--> Installing tools"
 	go get -u -v $(GOTOOLS)
-	@gometalinter.v2 --install
+	#@gometalinter.v2 --install
 
 update_tools:
 	@echo "--> Updating tools"

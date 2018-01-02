@@ -8,6 +8,7 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 	dbm "github.com/tendermint/tmlibs/db"
 
+	"github.com/tendermint/go-crypto/keys/words"
 	"github.com/tendermint/go-crypto/nano"
 )
 
@@ -19,10 +20,10 @@ import (
 // a full-featured key manager
 type dbKeybase struct {
 	db    dbm.DB
-	codec Codec
+	codec words.Codec
 }
 
-func New(db dbm.DB, codec Codec) dbKeybase {
+func New(db dbm.DB, codec words.Codec) dbKeybase {
 	return dbKeybase{
 		db:    db,
 		codec: codec,
@@ -31,59 +32,61 @@ func New(db dbm.DB, codec Codec) dbKeybase {
 
 var _ Keybase = dbKeybase{}
 
-// Create adds a new key to the storage engine, returning error if
-// another key already stored under this name
-//
-// algo must be a supported go-crypto algorithm: ed25519, secp256k1
-func (kb dbKeybase) Create(name, passphrase, algo string) (Info, string, error) {
-	// 128-bits are the all the randomness we can make use of
+// Create generates a new key and persists it storage, encrypted using the passphrase.
+// It returns the generated seedphrase (mnemonic) and the key Info.
+// It returns an error if it fails to generate a key for the given algo type,
+// or if another key is already stored under the same name.
+func (kb dbKeybase) Create(name, passphrase, algo string) (string, Info, error) {
+	// NOTE: secret is SHA256 hashed by secp256k1 and ed25519.
+	// 16 byte secret corresponds to 12 BIP39 words.
+	// XXX: Ledgers use 24 words now - should we ?
 	secret := crypto.CRandBytes(16)
 	key, err := generate(algo, secret)
 	if err != nil {
-		return Info{}, "", err
+		return "", Info{}, err
 	}
 
+	// encrypt and persist the key
 	public := kb.writeKey(key, name, passphrase)
 
-	// we append the type byte to the serialized secret to help with recovery
-	// ie [secret] = [secret] + [type]
-	typ := key.Bytes()[0]
-	secret = append(secret, typ)
-
-	seed, err := kb.codec.BytesToWords(secret)
-	phrase := strings.Join(seed, " ")
-	return public, phrase, err
+	// return the mnemonic phrase
+	words, err := kb.codec.BytesToWords(secret)
+	seedphrase := strings.Join(words, " ")
+	return seedphrase, public, err
 }
 
-// Recover takes a seed phrase and tries to recover the private key.
-//
-// If the seed phrase is valid, it will create the private key and store
-// it under name, protected by passphrase.
-//
-// Result similar to New(), except it doesn't return the seed again...
-func (kb dbKeybase) Recover(name, passphrase, seedphrase string) (Info, error) {
+// Recover converts a seedphrase to a private key and persists it, encrypted with the given passphrase.
+// Functions like Create, but seedphrase is input not output.
+func (kb dbKeybase) Recover(name, passphrase, algo string, seedphrase string) (Info, error) {
+
+	key, err := kb.SeedToPrivKey(algo, seedphrase)
+	if err != nil {
+		return Info{}, err
+	}
+
+	// Valid seedphrase. Encrypt key and persist to disk.
+	public := kb.writeKey(key, name, passphrase)
+	return public, nil
+}
+
+// SeedToPrivKey returns the private key corresponding to a seedphrase
+// without persisting the private key.
+// TODO: enable the keybase to just hold these in memory so we can sign without persisting (?)
+func (kb dbKeybase) SeedToPrivKey(algo, seedphrase string) (crypto.PrivKey, error) {
 	words := strings.Split(strings.TrimSpace(seedphrase), " ")
 	secret, err := kb.codec.WordsToBytes(words)
 	if err != nil {
-		return Info{}, err
+		return crypto.PrivKey{}, err
 	}
 
-	// secret is comprised of the actual secret with the type appended
-	// ie [secret] = [secret] + [type]
-	l := len(secret)
-	secret, typ := secret[:l-1], secret[l-1]
-
-	key, err := generateByType(typ, secret)
+	key, err := generate(algo, secret)
 	if err != nil {
-		return Info{}, err
+		return crypto.PrivKey{}, err
 	}
-
-	// d00d, it worked!  create the bugger....
-	public := kb.writeKey(key, name, passphrase)
-	return public, err
+	return key, nil
 }
 
-// List loads the keys from the storage and enforces alphabetical order
+// List returns the keys from storage in alphabetical order.
 func (kb dbKeybase) List() ([]Info, error) {
 	var res []Info
 	iter := kb.db.Iterator(nil, nil)
@@ -101,20 +104,19 @@ func (kb dbKeybase) List() ([]Info, error) {
 	return res, nil
 }
 
-// Get returns the public information about one key
+// Get returns the public information about one key.
 func (kb dbKeybase) Get(name string) (Info, error) {
 	bs := kb.db.Get(pubName(name))
 	return readInfo(bs)
 }
 
-// Sign will modify the Signable in order to attach a valid signature with
-// this public key
-//
-// If no key for this name, or the passphrase doesn't match, returns an error
+// Sign signs the msg with the named key.
+// It returns an error if the key doesn't exist or the decryption fails.
+// TODO: what if leddger fails ?
 func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig crypto.Signature, pk crypto.PubKey, err error) {
 	var key crypto.PrivKey
-	bs := kb.db.Get(privName(name))
-	key, err = unarmorDecryptPrivKey(string(bs), passphrase)
+	armorStr := kb.db.Get(privName(name))
+	key, err = unarmorDecryptPrivKey(string(armorStr), passphrase)
 	if err != nil {
 		return
 	}
@@ -124,15 +126,15 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig crypto.Signat
 	return
 }
 
-// Export decodes the private key with the current password, encodes
-// it with a secure one-time password and generates a sequence that can be
-// Imported by another dbKeybase
+// Export decodes the private key with the current password, encrypts
+// it with a secure one-time password and generates an armored private key
+// that can be Imported by another dbKeybase.
 //
 // This is designed to copy from one device to another, or provide backups
 // during version updates.
 func (kb dbKeybase) Export(name, oldpass, transferpass string) ([]byte, error) {
-	bs := kb.db.Get(privName(name))
-	key, err := unarmorDecryptPrivKey(string(bs), oldpass)
+	armorStr := kb.db.Get(privName(name))
+	key, err := unarmorDecryptPrivKey(string(armorStr), oldpass)
 	if err != nil {
 		return nil, err
 	}
@@ -140,11 +142,11 @@ func (kb dbKeybase) Export(name, oldpass, transferpass string) ([]byte, error) {
 	if transferpass == "" {
 		return key.Bytes(), nil
 	}
-	res := encryptArmorPrivKey(key, transferpass)
-	return []byte(res), nil
+	armorBytes := encryptArmorPrivKey(key, transferpass)
+	return []byte(armorBytes), nil
 }
 
-// Import accepts bytes generated by Export along with the same transferpass
+// Import accepts bytes generated by Export along with the same transferpass.
 // If they are valid, it stores the password under the given name with the
 // new passphrase.
 func (kb dbKeybase) Import(name, newpass, transferpass string, data []byte) (err error) {
@@ -163,7 +165,7 @@ func (kb dbKeybase) Import(name, newpass, transferpass string, data []byte) (err
 }
 
 // Delete removes key forever, but we must present the
-// proper passphrase before deleting it (for security)
+// proper passphrase before deleting it (for security).
 func (kb dbKeybase) Delete(name, passphrase string) error {
 	// verify we have the proper password before deleting
 	bs := kb.db.Get(privName(name))
@@ -176,10 +178,10 @@ func (kb dbKeybase) Delete(name, passphrase string) error {
 	return nil
 }
 
-// Update changes the passphrase with which a already stored key is encoded.
+// Update changes the passphrase with which an already stored key is encrypted.
 //
-// oldpass must be the current passphrase used for encoding, newpass will be
-// the only valid passphrase from this time forward
+// oldpass must be the current passphrase used for encryption, newpass will be
+// the only valid passphrase from this time forward.
 func (kb dbKeybase) Update(name, oldpass, newpass string) error {
 	bs := kb.db.Get(privName(name))
 	key, err := unarmorDecryptPrivKey(string(bs), oldpass)
@@ -187,26 +189,37 @@ func (kb dbKeybase) Update(name, oldpass, newpass string) error {
 		return err
 	}
 
-	// we must delete first, as Putting over an existing name returns an error
-	kb.db.DeleteSync(pubName(name))
-	kb.db.DeleteSync(privName(name))
-	kb.writeKey(key, name, newpass)
+	// Generate the public bytes and the encrypted privkey
+	public := info(name, key)
+	private := encryptArmorPrivKey(key, newpass)
+
+	// We must delete first, as Putting over an existing name returns an error.
+	// Must be done atomically with the write or we could lose the key.
+	batch := kb.db.NewBatch()
+	batch.Delete(pubName(name))
+	batch.Delete(privName(name))
+	batch.Set(pubName(name), public.bytes())
+	batch.Set(privName(name), []byte(private))
+	batch.Write()
+
 	return nil
 }
 
+//---------------------------------------------------------------------------------------
+
 func (kb dbKeybase) writeKey(priv crypto.PrivKey, name, passphrase string) Info {
-	// generate the public bytes
+	// Generate the public bytes and the encrypted privkey
 	public := info(name, priv)
-	// generate the encrypted privkey
 	private := encryptArmorPrivKey(priv, passphrase)
 
-	// write them both
+	// Write them both
 	kb.db.SetSync(pubName(name), public.bytes())
 	kb.db.SetSync(privName(name), []byte(private))
 
 	return public
 }
 
+// TODO: use a `type TypeKeyAlgo string` (?)
 func generate(algo string, secret []byte) (crypto.PrivKey, error) {
 	switch algo {
 	case crypto.NameEd25519:
@@ -214,23 +227,9 @@ func generate(algo string, secret []byte) (crypto.PrivKey, error) {
 	case crypto.NameSecp256k1:
 		return crypto.GenPrivKeySecp256k1FromSecret(secret).Wrap(), nil
 	case nano.NameLedgerEd25519:
-		return nano.NewPrivKeyLedgerEd25519Ed25519()
+		return nano.NewPrivKeyLedgerEd25519()
 	default:
 		err := errors.Errorf("Cannot generate keys for algorithm: %s", algo)
-		return crypto.PrivKey{}, err
-	}
-}
-
-func generateByType(typ byte, secret []byte) (crypto.PrivKey, error) {
-	switch typ {
-	case crypto.TypeEd25519:
-		return crypto.GenPrivKeyEd25519FromSecret(secret).Wrap(), nil
-	case crypto.TypeSecp256k1:
-		return crypto.GenPrivKeySecp256k1FromSecret(secret).Wrap(), nil
-	case nano.TypeLedgerEd25519:
-		return nano.NewPrivKeyLedgerEd25519Ed25519()
-	default:
-		err := errors.Errorf("Cannot generate keys for algorithm: %X", typ)
 		return crypto.PrivKey{}, err
 	}
 }

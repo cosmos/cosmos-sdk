@@ -33,21 +33,21 @@ func getLedger() (*ledger.Ledger, error) {
 	return device, err
 }
 
-func signLedger(device *ledger.Ledger, msg []byte) (pk crypto.PubKey, sig crypto.Signature, err error) {
+func signLedger(device *ledger.Ledger, msg []byte) (pub crypto.PubKey, sig crypto.Signature, err error) {
 	var resp []byte
 
 	packets := generateSignRequests(msg)
 	for _, pack := range packets {
 		resp, err = device.Exchange(pack, Timeout)
 		if err != nil {
-			return pk, sig, err
+			return pub, sig, err
 		}
 	}
 
 	// the last call is the result we want and needs to be parsed
 	key, bsig, err := parseDigest(resp)
 	if err != nil {
-		return pk, sig, err
+		return pub, sig, err
 	}
 
 	var b [32]byte
@@ -64,9 +64,9 @@ type PrivKeyLedgerEd25519 struct {
 	CachedPubKey crypto.PubKey
 }
 
-// NewPrivKeyLedgerEd25519Ed25519 will generate a new key and store the
+// NewPrivKeyLedgerEd25519 will generate a new key and store the
 // public key for later use.
-func NewPrivKeyLedgerEd25519Ed25519() (crypto.PrivKey, error) {
+func NewPrivKeyLedgerEd25519() (crypto.PrivKey, error) {
 	var pk PrivKeyLedgerEd25519
 	// getPubKey will cache the pubkey for later use,
 	// this allows us to return an error early if the ledger
@@ -94,13 +94,13 @@ func (pk *PrivKeyLedgerEd25519) ValidateKey() error {
 // AssertIsPrivKeyInner fulfils PrivKey Interface
 func (pk *PrivKeyLedgerEd25519) AssertIsPrivKeyInner() {}
 
-// Bytes fulfils pk Interface - stores the cached pubkey so we can verify
+// Bytes fulfils PrivKey Interface - but it stores the cached pubkey so we can verify
 // the same key when we reconnect to a ledger
 func (pk *PrivKeyLedgerEd25519) Bytes() []byte {
 	return wire.BinaryBytes(pk.Wrap())
 }
 
-// Sign calls the ledger and stores the pk for future use
+// Sign calls the ledger and stores the PubKey for future use
 //
 // XXX/TODO: panics if there is an error communicating with the ledger.
 //

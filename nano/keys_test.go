@@ -83,7 +83,7 @@ func TestRealLedger(t *testing.T) {
 	}
 	msg := []byte("kuhehfeohg")
 
-	priv, err := NewPrivKeyLedgerEd25519Ed25519()
+	priv, err := NewPrivKeyLedgerEd25519()
 	require.Nil(err, "%+v", err)
 	pub := priv.PubKey()
 	sig := priv.Sign(msg)
@@ -123,7 +123,7 @@ func TestRealLedgerErrorHandling(t *testing.T) {
 
 	// first, try to generate a key, must return an error
 	// (no panic)
-	_, err := NewPrivKeyLedgerEd25519Ed25519()
+	_, err := NewPrivKeyLedgerEd25519()
 	require.Error(err)
 
 	led := PrivKeyLedgerEd25519{} // empty

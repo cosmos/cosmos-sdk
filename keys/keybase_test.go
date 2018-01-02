@@ -13,6 +13,7 @@ import (
 
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-crypto/keys"
+	"github.com/tendermint/go-crypto/keys/words"
 	"github.com/tendermint/go-crypto/nano"
 )
 
@@ -23,7 +24,7 @@ func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := keys.New(
 		dbm.NewMemDB(),
-		keys.MustLoadCodec("english"),
+		words.MustLoadCodec("english"),
 	)
 
 	algo := crypto.NameEd25519
@@ -38,7 +39,7 @@ func TestKeyManagement(t *testing.T) {
 	// create some keys
 	_, err = cstore.Get(n1)
 	assert.NotNil(err)
-	i, _, err := cstore.Create(n1, p1, algo)
+	_, i, err := cstore.Create(n1, p1, algo)
 	require.Equal(n1, i.Name)
 	require.Nil(err)
 	_, _, err = cstore.Create(n2, p2, algo)
@@ -91,7 +92,7 @@ func TestSignVerify(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := keys.New(
 		dbm.NewMemDB(),
-		keys.MustLoadCodec("english"),
+		words.MustLoadCodec("english"),
 	)
 	algo := crypto.NameSecp256k1
 
@@ -99,10 +100,10 @@ func TestSignVerify(t *testing.T) {
 	p1, p2 := "1234", "foobar"
 
 	// create two users and get their info
-	i1, _, err := cstore.Create(n1, p1, algo)
+	_, i1, err := cstore.Create(n1, p1, algo)
 	require.Nil(err)
 
-	i2, _, err := cstore.Create(n2, p2, algo)
+	_, i2, err := cstore.Create(n2, p2, algo)
 	require.Nil(err)
 
 	// let's try to sign some messages
@@ -165,13 +166,13 @@ func TestSignWithLedger(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := keys.New(
 		dbm.NewMemDB(),
-		keys.MustLoadCodec("english"),
+		words.MustLoadCodec("english"),
 	)
 	n := "nano-s"
 	p := "hard2hack"
 
 	// create a nano user
-	c, _, err := cstore.Create(n, p, nano.NameLedgerEd25519)
+	_, c, err := cstore.Create(n, p, nano.NameLedgerEd25519)
 	require.Nil(err, "%+v", err)
 	assert.Equal(c.Name, n)
 	_, ok := c.PubKey.Unwrap().(nano.PubKeyLedgerEd25519)
@@ -219,7 +220,7 @@ func TestImportUnencrypted(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := keys.New(
 		dbm.NewMemDB(),
-		keys.MustLoadCodec("english"),
+		words.MustLoadCodec("english"),
 	)
 
 	key := crypto.GenPrivKeyEd25519FromSecret(cmn.RandBytes(16)).Wrap()
@@ -245,7 +246,7 @@ func TestAdvancedKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := keys.New(
 		dbm.NewMemDB(),
-		keys.MustLoadCodec("english"),
+		words.MustLoadCodec("english"),
 	)
 
 	algo := crypto.NameSecp256k1
@@ -288,7 +289,7 @@ func TestSeedPhrase(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := keys.New(
 		dbm.NewMemDB(),
-		keys.MustLoadCodec("english"),
+		words.MustLoadCodec("english"),
 	)
 
 	algo := crypto.NameEd25519
@@ -296,7 +297,7 @@ func TestSeedPhrase(t *testing.T) {
 	p1, p2 := "1234", "foobar"
 
 	// make sure key works with initial password
-	info, seed, err := cstore.Create(n1, p1, algo)
+	seed, info, err := cstore.Create(n1, p1, algo)
 	require.Nil(err, "%+v", err)
 	assert.Equal(n1, info.Name)
 	assert.NotEmpty(seed)
@@ -308,7 +309,7 @@ func TestSeedPhrase(t *testing.T) {
 	require.NotNil(err)
 
 	// let us re-create it from the seed-phrase
-	newInfo, err := cstore.Recover(n2, p2, seed)
+	newInfo, err := cstore.Recover(n2, p2, algo, seed)
 	require.Nil(err, "%+v", err)
 	assert.Equal(n2, newInfo.Name)
 	assert.Equal(info.Address(), newInfo.Address())
@@ -319,13 +320,13 @@ func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
 	cstore := keys.New(
 		dbm.NewMemDB(),
-		keys.MustLoadCodec("english"),
+		words.MustLoadCodec("english"),
 	)
 	ed := crypto.NameEd25519
 	sec := crypto.NameSecp256k1
 
 	// Add keys and see they return in alphabetical order
-	bob, _, err := cstore.Create("Bob", "friend", ed)
+	_, bob, err := cstore.Create("Bob", "friend", ed)
 	if err != nil {
 		// this should never happen
 		fmt.Println(err)

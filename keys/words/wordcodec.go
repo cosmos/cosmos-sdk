@@ -1,4 +1,4 @@
-package keys
+package words
 
 import (
 	"math/big"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/tendermint/go-crypto/keys/wordlist"
+	"github.com/tendermint/go-crypto/keys/words/wordlist"
 )
 
 const BankSize = 2048

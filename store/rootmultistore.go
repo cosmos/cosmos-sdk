@@ -28,7 +28,7 @@ type rootMultiStore struct {
 
 var _ CommitMultiStore = (*rootMultiStore)(nil)
 
-func NewMultiStore(db dbm.DB) *rootMultiStore {
+func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 	return &rootMultiStore{
 		db:           db,
 		nextVersion:  0,

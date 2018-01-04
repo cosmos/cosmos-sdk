@@ -2,8 +2,6 @@ package errors
 
 import (
 	"fmt"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -174,11 +172,11 @@ func ABCIErrorCause(err error) ABCIError {
 		}
 		errCause := cause.Cause()
 		if errCause == nil || errCause == err {
-			return err
+			return nil
 		}
 		err = errCause
 	}
-	return err
+	return nil
 }
 
 // Identitical to pkg/errors.Cause, except handles .Cause()

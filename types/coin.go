@@ -136,7 +136,7 @@ func (coins Coins) IsGTE(coinsB Coins) bool {
 	if len(diff) == 0 {
 		return true
 	}
-	return diff.IsNonnegative()
+	return diff.IsNotNegative()
 }
 
 // IsZero returns true if there are no coins
@@ -171,9 +171,9 @@ func (coins Coins) IsPositive() bool {
 	return true
 }
 
-// IsNonnegative returns true if there is no currency with a negative value
+// IsNotNegative returns true if there is no currency with a negative value
 // (even no coins is true here)
-func (coins Coins) IsNonnegative() bool {
+func (coins Coins) IsNotNegative() bool {
 	if len(coins) == 0 {
 		return true
 	}

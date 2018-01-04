@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	asrt "github.com/stretchr/testify/assert"
+	rqr "github.com/stretchr/testify/require"
+
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -29,7 +30,7 @@ func parseSig(data []byte) (key crypto.Signature, err error) {
 }
 
 func TestParseDigest(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 
 	cases := []struct {
 		output string
@@ -91,7 +92,7 @@ func toBytes(c cryptoCase) (msg, key, sig []byte, err error) {
 }
 
 func TestCryptoConvert(t *testing.T) {
-	assert, require := assert.New(t), require.New(t)
+	assert, require := asrt.New(t), rqr.New(t)
 
 	cases := []cryptoCase{
 		0: {

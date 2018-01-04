@@ -27,7 +27,8 @@ func TestPubKeySecp256k1Address(t *testing.T) {
 	for _, d := range secpDataTable {
 		privB, _ := hex.DecodeString(d.priv)
 		pubB, _ := hex.DecodeString(d.pub)
-		addrB, _, _ := base58.CheckDecode(d.addr)
+		addrBbz, _, _ := base58.CheckDecode(d.addr)
+		addrB := Address(addrBbz)
 
 		var priv PrivKeySecp256k1
 		copy(priv[:], privB)

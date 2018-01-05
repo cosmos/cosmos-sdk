@@ -10,15 +10,12 @@ machine:
 
 dependencies:
   override:
-    - go get github.com/Masterminds/glide
     - go version
-    - go get -u github.com/tendermint/tendermint/cmd/tendermint
-    - glide --version
     - mkdir -p "$PROJECT_PARENT_PATH"
     - ln -sf "$HOME/$CIRCLE_PROJECT_REPONAME/" "$REPO"
     - env
 
 test:
   override:
-    - "cd $REPO && make all"
+    - "cd $REPO && make get_vendor_deps && make test_unit"
     - ls $GOPATH/bin

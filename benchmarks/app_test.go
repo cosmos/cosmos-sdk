@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/app"
+	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/modules/auth"
 	"github.com/cosmos/cosmos-sdk/modules/base"
 	"github.com/cosmos/cosmos-sdk/modules/coin"
@@ -21,7 +21,7 @@ import (
 )
 
 type BenchApp struct {
-	App      *app.Basecoin
+	App      *sdkapp.BaseApp
 	Accounts []*coin.AccountWithKey
 	ChainID  string
 }
@@ -53,27 +53,20 @@ func NewBenchApp(h sdk.Handler, chainID string, n int,
 	// logger := log.NewFilter(log.NewTMLogger(os.Stdout), log.AllowError())
 	// logger = log.NewTracingLogger(logger)
 
-	// TODO: disk writing
-	var store *app.Store
-	var err error
-
+	dbDir, cache := "", 0
 	if persist {
-		tmpDir, _ := ioutil.TempDir("", "bc-app-benchmark")
-		store, err = app.NewStore(tmpDir, 500, logger)
-	} else {
-		store, err = app.NewStore("", 0, logger)
+		dbDir, _ = ioutil.TempDir("", "bc-app-benchmark")
+		cache = 500
 	}
+
+	store, err := sdkapp.NewStoreApp("bench", dbDir, cache, logger)
 	if err != nil {
 		panic(err)
 	}
+	app := sdkapp.NewBaseApp(store, h, nil)
 
-	app := app.NewBasecoin(
-		h,
-		store,
-		logger.With("module", "app"),
-	)
-	res := app.InitState("base/chain_id", chainID)
-	if res != "Success" {
+	err = app.InitState("base", "chain_id", chainID)
+	if err != nil {
 		panic("cannot set chain")
 	}
 
@@ -82,8 +75,8 @@ func NewBenchApp(h sdk.Handler, chainID string, n int,
 	accts := make([]*coin.AccountWithKey, n)
 	for i := 0; i < n; i++ {
 		accts[i] = coin.NewAccountWithKey(money)
-		res := app.InitState("coin/account", accts[i].MakeOption())
-		if res != "Success" {
+		err = app.InitState("coin", "account", accts[i].MakeOption())
+		if err != nil {
 			panic("can't set account")
 		}
 	}

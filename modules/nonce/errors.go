@@ -4,8 +4,6 @@ package nonce
 import (
 	"fmt"
 
-	abci "github.com/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/errors"
 )
 
@@ -16,9 +14,9 @@ var (
 	errNoSigners    = fmt.Errorf("There are no signers")
 	errTxEmpty      = fmt.Errorf("The provided Tx is empty")
 
-	unauthorized = abci.CodeType_Unauthorized
-	badNonce     = abci.CodeType_BadNonce
-	invalidInput = abci.CodeType_BaseInvalidInput
+	unauthorized = errors.CodeTypeUnauthorized
+	badNonce     = errors.CodeTypeBadNonce
+	invalidInput = errors.CodeTypeBaseInvalidInput
 )
 
 func ErrBadNonce(got, expected uint32) errors.TMError {

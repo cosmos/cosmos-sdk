@@ -20,7 +20,7 @@ type secureContext struct {
 }
 
 // NewContext - create a new secureContext
-func NewContext(chain string, height uint64, logger log.Logger) sdk.Context {
+func NewContext(chain string, height int64, logger log.Logger) sdk.Context {
 	mock := MockContext(chain, height).(naiveContext)
 	mock.Logger = logger
 	return secureContext{

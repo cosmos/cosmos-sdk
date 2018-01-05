@@ -44,7 +44,7 @@ func (c Chain) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx, next 
 
 // checkChainTx makes sure the tx is a Chain Tx, it is on the proper chain,
 // and it has not expired.
-func (c Chain) checkChainTx(chainID string, height uint64, tx sdk.Tx) (sdk.Tx, error) {
+func (c Chain) checkChainTx(chainID string, height int64, tx sdk.Tx) (sdk.Tx, error) {
 	// make sure it is a chaintx
 	ctx, ok := tx.Unwrap().(ChainTx)
 	if !ok {

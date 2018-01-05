@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/tendermint/iavl"
-	"github.com/tendermint/light-client/certifiers"
+	"github.com/tendermint/tendermint/lite"
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"
@@ -16,47 +16,48 @@ import (
 // It is able to produce ibc packets and all verification for
 // them, but cannot respond to any responses.
 type MockChain struct {
-	keys    certifiers.ValKeys
+	keys    lite.ValKeys
 	chainID string
-	tree    *iavl.IAVLTree
+	tree    *iavl.Tree
 }
 
 // NewMockChain initializes a teststore and test validators
 func NewMockChain(chainID string, numKeys int) MockChain {
 	return MockChain{
-		keys:    certifiers.GenValKeys(numKeys),
+		keys:    lite.GenValKeys(numKeys),
 		chainID: chainID,
-		tree:    iavl.NewIAVLTree(0, nil),
+		tree:    iavl.NewTree(0, nil),
 	}
 }
 
 // GetRegistrationTx returns a valid tx to register this chain
-func (m MockChain) GetRegistrationTx(h int) RegisterChainTx {
-	seed := genEmptySeed(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
-	return RegisterChainTx{seed}
+func (m MockChain) GetRegistrationTx(h int64) RegisterChainTx {
+	fc := genEmptyCommit(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
+	return RegisterChainTx{fc}
 }
 
 // MakePostPacket commits the packet locally and returns the proof,
 // in the form of two packets to update the header and prove this packet.
-func (m MockChain) MakePostPacket(packet Packet, h int) (
+func (m MockChain) MakePostPacket(packet Packet, h int64) (
 	PostPacketTx, UpdateChainTx) {
 
 	post := makePostPacket(m.tree, packet, m.chainID, h)
-	seed := genEmptySeed(m.keys, m.chainID, h, m.tree.Hash(), len(m.keys))
-	update := UpdateChainTx{seed}
+	fc := genEmptyCommit(m.keys, m.chainID, h+1, m.tree.Hash(), len(m.keys))
+	update := UpdateChainTx{fc}
 
 	return post, update
 }
 
-func genEmptySeed(keys certifiers.ValKeys, chain string, h int,
-	appHash []byte, count int) certifiers.Seed {
+func genEmptyCommit(keys lite.ValKeys, chain string, h int64,
+	appHash []byte, count int) lite.FullCommit {
+	var consHash []byte
+	var resHash []byte
 
 	vals := keys.ToValidators(10, 0)
-	cp := keys.GenCheckpoint(chain, h, nil, vals, appHash, 0, count)
-	return certifiers.Seed{cp, vals}
+	return keys.GenFullCommit(chain, h, nil, vals, appHash, consHash, resHash, 0, count)
 }
 
-func makePostPacket(tree *iavl.IAVLTree, packet Packet, fromID string, fromHeight int) PostPacketTx {
+func makePostPacket(tree *iavl.Tree, packet Packet, fromID string, fromHeight int64) PostPacketTx {
 	key := []byte(fmt.Sprintf("some-long-prefix-%06d", packet.Sequence))
 	tree.Set(key, packet.Bytes())
 	_, proof, err := tree.GetWithProof(key)
@@ -69,7 +70,7 @@ func makePostPacket(tree *iavl.IAVLTree, packet Packet, fromID string, fromHeigh
 
 	return PostPacketTx{
 		FromChainID:     fromID,
-		FromChainHeight: uint64(fromHeight),
+		FromChainHeight: int64(fromHeight),
 		Proof:           proof.(*iavl.KeyExistsProof),
 		Key:             key,
 		Packet:          packet,
@@ -81,7 +82,7 @@ type AppChain struct {
 	chainID string
 	app     sdk.Handler
 	store   state.SimpleDB
-	height  int
+	height  int64
 }
 
 // NewAppChain returns a chain that is ready to respond to tx
@@ -96,7 +97,7 @@ func NewAppChain(app sdk.Handler, chainID string) *AppChain {
 
 // IncrementHeight allows us to jump heights, more than the auto-step
 // of 1.  It returns the new height we are at.
-func (a *AppChain) IncrementHeight(delta int) int {
+func (a *AppChain) IncrementHeight(delta int64) int64 {
 	a.height += delta
 	return a.height
 }
@@ -104,7 +105,7 @@ func (a *AppChain) IncrementHeight(delta int) int {
 // DeliverTx runs the tx and commits the new tree, incrementing height
 // by one.
 func (a *AppChain) DeliverTx(tx sdk.Tx, perms ...sdk.Actor) (sdk.DeliverResult, error) {
-	ctx := stack.MockContext(a.chainID, uint64(a.height)).WithPermissions(perms...)
+	ctx := stack.MockContext(a.chainID, int64(a.height)).WithPermissions(perms...)
 	store := a.store.Checkpoint()
 	res, err := a.app.DeliverTx(ctx, store, tx)
 	if err == nil {

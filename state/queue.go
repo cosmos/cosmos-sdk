@@ -19,15 +19,15 @@ func QueueTailKey() []byte {
 }
 
 // QueueItemKey gives us the key to look up one item by sequence
-func QueueItemKey(i uint64) []byte {
+func QueueItemKey(i int64) []byte {
 	return makeKey(i)
 }
 
 // Queue allows us to fill up a range of the db, and grab from either end
 type Queue struct {
 	store KVStore
-	head  uint64 // if Size() > 0, the first element is here
-	tail  uint64 // this is the first empty slot to Push() to
+	head  int64 // if Size() > 0, the first element is here
+	tail  int64 // this is the first empty slot to Push() to
 }
 
 // NewQueue will load or initialize a queue in this state-space
@@ -41,7 +41,7 @@ func NewQueue(store KVStore) *Queue {
 }
 
 // Tail returns the next slot that Push() will use
-func (q *Queue) Tail() uint64 {
+func (q *Queue) Tail() int64 {
 	return q.tail
 }
 
@@ -51,7 +51,7 @@ func (q *Queue) Size() int {
 }
 
 // Push adds an element to the tail of the queue and returns it's location
-func (q *Queue) Push(value []byte) uint64 {
+func (q *Queue) Push(value []byte) int64 {
 	key := makeKey(q.tail)
 	q.store.Set(key, value)
 	q.tail++
@@ -72,31 +72,32 @@ func (q *Queue) Pop() []byte {
 }
 
 // Item looks at any element in the queue, without modifying anything
-func (q *Queue) Item(seq uint64) []byte {
+func (q *Queue) Item(seq int64) []byte {
 	if seq >= q.tail || seq < q.head {
 		return nil
 	}
 	return q.store.Get(makeKey(seq))
 }
 
-func (q *Queue) setCount(key []byte, val uint64) {
+func (q *Queue) setCount(key []byte, val int64) {
 	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, val)
+	binary.BigEndian.PutUint64(b, uint64(val))
 	q.store.Set(key, b)
 }
 
-func (q *Queue) getCount(key []byte) (val uint64) {
+func (q *Queue) getCount(key []byte) (val int64) {
 	b := q.store.Get(key)
+	var v uint64
 	if b != nil {
-		val = binary.BigEndian.Uint64(b)
+		v = binary.BigEndian.Uint64(b)
 	}
-	return val
+	return int64(v)
 }
 
 // makeKey returns the key for a data point
-func makeKey(val uint64) []byte {
+func makeKey(val int64) []byte {
 	b := make([]byte, 8+len(dataKey))
 	copy(b, dataKey)
-	binary.BigEndian.PutUint64(b[len(dataKey):], val)
+	binary.BigEndian.PutUint64(b[len(dataKey):], uint64(val))
 	return b
 }

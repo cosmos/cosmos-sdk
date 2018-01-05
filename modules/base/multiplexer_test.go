@@ -16,7 +16,7 @@ func TestMultiplexer(t *testing.T) {
 	assert := assert.New(t)
 	msg := "diddly"
 	chainID := "multi-verse"
-	height := uint64(100)
+	height := int64(100)
 
 	// Generic args here...
 	store := state.NewMemKVStore()
@@ -43,8 +43,8 @@ func TestMultiplexer(t *testing.T) {
 	cases := [...]struct {
 		tx           sdk.Tx
 		valid        bool
-		gasAllocated uint64
-		gasPayment   uint64
+		gasAllocated int64
+		gasPayment   int64
 		log          string
 		data         data.Bytes
 	}{

@@ -36,13 +36,13 @@ var newCmd = &cobra.Command{
 	Use:   "new [name]",
 	Short: "Create a new public/private key pair",
 	Long: `Add a public/private key pair to the key store.
-The password muts be entered in the terminal and not
+The password must be entered in the terminal and not
 passed as a command line argument for security.`,
 	RunE: runNewCmd,
 }
 
 func init() {
-	newCmd.Flags().StringP(flagType, "t", "ed25519", "Type of key (ed25519|secp256k1)")
+	newCmd.Flags().StringP(flagType, "t", "ed25519", "Type of key (ed25519|secp256k1|ledger")
 	newCmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 }
 

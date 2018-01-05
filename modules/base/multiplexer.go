@@ -77,7 +77,7 @@ func runAllDelivers(ctx sdk.Context, store state.SimpleDB, txs []sdk.Tx, next sd
 func combineChecks(all []sdk.CheckResult) sdk.CheckResult {
 	datas := make([]data.Bytes, len(all))
 	logs := make([]string, len(all))
-	var allocated, payments uint64
+	var allocated, payments int64
 	for i, r := range all {
 		datas[i] = r.Data
 		logs[i] = r.Log
@@ -97,7 +97,7 @@ func combineChecks(all []sdk.CheckResult) sdk.CheckResult {
 func combineDelivers(all []sdk.DeliverResult) sdk.DeliverResult {
 	datas := make([]data.Bytes, len(all))
 	logs := make([]string, len(all))
-	var used uint64
+	var used int64
 	var diffs []*abci.Validator
 	for i, r := range all {
 		datas[i] = r.Data

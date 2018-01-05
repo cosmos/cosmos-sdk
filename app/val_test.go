@@ -17,8 +17,8 @@ import (
 //-----------------------------------
 // Test cases start here
 
-func randPower() uint64 {
-	return uint64(cmn.RandInt()%50 + 60)
+func randPower() int64 {
+	return int64(cmn.RandInt()%50 + 60)
 }
 
 func makeVal() *abci.Validator {
@@ -39,9 +39,10 @@ func TestEndBlock(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	logger := log.NewNopLogger()
-	store := MockStore()
 	handler := base.ValSetHandler{}
-	app := NewBasecoin(handler, store, logger)
+	store, err := MockStoreApp("vals", logger)
+	require.Nil(err, "%+v", err)
+	app := NewBaseApp(store, handler, nil)
 
 	val1 := makeVal()
 	val2 := makeVal()
@@ -80,8 +81,8 @@ func TestEndBlock(t *testing.T) {
 			res := app.DeliverTx(txBytes)
 			require.True(res.IsOK(), "%#v", res)
 		}
-		diff := app.EndBlock(app.height)
+		diff := app.EndBlock(abci.RequestEndBlock{app.height})
 		// TODO: don't care about order here...
-		assert.Equal(tc.expected, diff.Diffs, "%d", i)
+		assert.Equal(tc.expected, diff.ValidatorUpdates, "%d", i)
 	}
 }

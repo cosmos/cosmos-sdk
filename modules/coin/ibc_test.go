@@ -3,14 +3,14 @@ package coin
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/errors"
 	"github.com/cosmos/cosmos-sdk/modules/auth"
 	"github.com/cosmos/cosmos-sdk/modules/ibc"
 	"github.com/cosmos/cosmos-sdk/stack"
 	"github.com/cosmos/cosmos-sdk/state"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	wire "github.com/tendermint/go-wire"
 )
 
@@ -24,7 +24,7 @@ func TestIBCPostPacket(t *testing.T) {
 
 	otherID := "chain-2"
 	ourID := "dex"
-	start := 200
+	start := int64(200)
 
 	// create the app and our chain
 	app := stack.New().

@@ -30,8 +30,8 @@ func LoadInfo(store state.SimpleDB) (h HandlerInfo) {
 // ChainInfo is the global info we store for each registered chain,
 // besides the headers, proofs, and packets
 type ChainInfo struct {
-	RegisteredAt uint64 `json:"registered_at"`
-	RemoteBlock  int    `json:"remote_block"`
+	RegisteredAt int64 `json:"registered_at"`
+	RemoteBlock  int64 `json:"remote_block"`
 }
 
 // ChainSet is the set of all registered chains
@@ -49,7 +49,7 @@ func NewChainSet(store state.SimpleDB) ChainSet {
 
 // Register adds the named chain with some info
 // returns error if already present
-func (c ChainSet) Register(chainID string, ourHeight uint64, theirHeight int) error {
+func (c ChainSet) Register(chainID string, ourHeight int64, theirHeight int64) error {
 	if c.Exists([]byte(chainID)) {
 		return ErrAlreadyRegistered(chainID)
 	}
@@ -64,7 +64,7 @@ func (c ChainSet) Register(chainID string, ourHeight uint64, theirHeight int) er
 
 // Update sets the new tracked height on this chain
 // returns error if not present
-func (c ChainSet) Update(chainID string, theirHeight int) error {
+func (c ChainSet) Update(chainID string, theirHeight int64) error {
 	d := c.Set.Get([]byte(chainID))
 	if len(d) == 0 {
 		return ErrNotRegistered(chainID)
@@ -86,14 +86,14 @@ func (c ChainSet) Update(chainID string, theirHeight int) error {
 // Packet is a wrapped transaction and permission that we want to
 // send off to another chain.
 type Packet struct {
-	DestChain   string          `json:"dest_chain"`
-	Sequence    uint64          `json:"sequence"`
+	DestChain   string     `json:"dest_chain"`
+	Sequence    int64      `json:"sequence"`
 	Permissions sdk.Actors `json:"permissions"`
 	Tx          sdk.Tx     `json:"tx"`
 }
 
 // NewPacket creates a new outgoing packet
-func NewPacket(tx sdk.Tx, dest string, seq uint64, perm ...sdk.Actor) Packet {
+func NewPacket(tx sdk.Tx, dest string, seq int64, perm ...sdk.Actor) Packet {
 	return Packet{
 		DestChain:   dest,
 		Sequence:    seq,

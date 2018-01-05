@@ -46,14 +46,14 @@ func QueueOutKey(chainID string) []byte {
 }
 
 // QueueInPacketKey is the key to get given packet from this chain's input queue
-func QueueInPacketKey(chainID string, seq uint64) []byte {
+func QueueInPacketKey(chainID string, seq int64) []byte {
 	return stack.PrefixedKey(chainID,
 		stack.PrefixedKey(prefixInput,
 			state.QueueItemKey(seq)))
 }
 
 // QueueOutPacketKey is the key to get given packet from this chain's output queue
-func QueueOutPacketKey(chainID string, seq uint64) []byte {
+func QueueOutPacketKey(chainID string, seq int64) []byte {
 	return stack.PrefixedKey(chainID,
 		stack.PrefixedKey(prefixOutput,
 			state.QueueItemKey(seq)))

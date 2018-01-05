@@ -61,7 +61,7 @@ multi-sig wallet. Let's look a the command and dissect it below:
 
 In the first part we are sending a transaction that creates a role,
 rather than transfering coins. The ``--role`` flag is the name of the
-role (in hex only) and must be in double quotes. The ``--min-sigs`` and
+role (in hex only). The ``--min-sigs`` and
 ``--members`` define your multi-sig parameters. Here, we require a
 minimum of 2 signatures out of 3 members but we could easily say 3 of 5
 or 9 of 10, or whatever your application requires. The ``--members``

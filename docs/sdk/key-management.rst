@@ -2,7 +2,9 @@ Key Management
 ==============
 
 Here we explain a bit how to work with your keys, using the
-``basecli keys`` subcommand.
+``basecli keys`` subcommand. Note that because ``basecli`` is
+an implementation of the Cosmmos SDK, other implementations, such
+as ``gaia`` will have a compatible set of tooling.
 
 **Note:** This keys tooling is not considered production ready and is
 for dev only.
@@ -179,7 +181,7 @@ which prompts for a new password then the seed:
     alice-again CBF5D9CE6DDCC32806162979495D07B851C53451
 
 and voila! You've recovered your key. Note that the seed can be typed
-our, pasted in, or piped into the command alongside the password.
+out, pasted in, or piped into the command alongside the password.
 
 To change the password of a key, we can:
 

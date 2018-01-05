@@ -59,7 +59,7 @@ type ChainTx struct {
 	// name of chain, must be [A-Za-z0-9_-]+
 	ChainID string `json:"chain_id"`
 	// block height at which it is no longer valid, 0 means no expiration
-	ExpiresAt uint64      `json:"expires_at"`
+	ExpiresAt int64 `json:"expires_at"`
 	Tx        sdk.Tx `json:"tx"`
 }
 
@@ -71,7 +71,7 @@ var (
 
 // NewChainTx wraps a particular tx with the ChainTx wrapper,
 // to enforce chain and height
-func NewChainTx(chainID string, expires uint64, tx sdk.Tx) sdk.Tx {
+func NewChainTx(chainID string, expires int64, tx sdk.Tx) sdk.Tx {
 	c := ChainTx{
 		ChainID:   chainID,
 		ExpiresAt: expires,
@@ -96,4 +96,7 @@ func (c ChainTx) ValidateBasic() error {
 	}
 	// TODO: more checks? chainID?
 	return c.Tx.ValidateBasic()
+}
+func (c ChainTx) Next() sdk.Tx {
+	return c.Tx
 }

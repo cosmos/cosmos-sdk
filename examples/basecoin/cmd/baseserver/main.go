@@ -10,12 +10,16 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
+	"github.com/tendermint/tmlibs/cli"
+	tmlog "github.com/tendermint/tmlibs/log"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/commands"
 	rest "github.com/cosmos/cosmos-sdk/client/rest"
 	coinrest "github.com/cosmos/cosmos-sdk/modules/coin/rest"
 	noncerest "github.com/cosmos/cosmos-sdk/modules/nonce/rest"
 	rolerest "github.com/cosmos/cosmos-sdk/modules/roles/rest"
-	"github.com/tendermint/tmlibs/cli"
 )
 
 var srvCli = &cobra.Command{
@@ -43,22 +47,27 @@ func init() {
 func serve(cmd *cobra.Command, args []string) error {
 	router := mux.NewRouter()
 
+	rootDir := viper.GetString(cli.HomeFlag)
+	keyMan := client.GetKeyManager(rootDir)
+	serviceKeys := rest.NewServiceKeys(keyMan)
+
+	rpcClient := commands.GetNode()
+	serviceTxs := rest.NewServiceTxs(rpcClient)
+
 	routeRegistrars := []func(*mux.Router) error{
 		// rest.Keys handlers
-		rest.NewDefaultKeysManager(defaultAlgo).RegisterAllCRUD,
+		serviceKeys.RegisterCRUD,
 
 		// Coin send handler
-		coinrest.RegisterCoinSend,
-		// Coin query account handler
-		coinrest.RegisterQueryAccount,
+		coinrest.RegisterAll,
 
 		// Roles createRole handler
 		rolerest.RegisterCreateRole,
 
 		// Basecoin sign transactions handler
-		rest.RegisterSignTx,
+		serviceKeys.RegisterSignTx,
 		// Basecoin post transaction handler
-		rest.RegisterPostTx,
+		serviceTxs.RegisterPostTx,
 
 		// Nonce query handler
 		noncerest.RegisterQueryNonce,
@@ -72,6 +81,12 @@ func serve(cmd *cobra.Command, args []string) error {
 
 	port := viper.GetInt(envPortFlag)
 	addr := fmt.Sprintf(":%d", port)
+
+	routes := client.RPCRoutes(rpcClient)
+	wm := rpcserver.NewWebsocketManager(routes, rpcserver.EventSubscriber(rpcClient))
+	wsLogger := tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout)).With("module", "ws")
+	wm.SetLogger(wsLogger)
+	router.HandleFunc("/websocket", wm.WebsocketHandler)
 
 	log.Printf("Serving on %q", addr)
 	return http.ListenAndServe(addr, router)

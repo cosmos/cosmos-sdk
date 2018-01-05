@@ -4,8 +4,6 @@ package coin
 import (
 	"fmt"
 
-	abci "github.com/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/errors"
 )
 
@@ -18,10 +16,10 @@ var (
 	errInvalidAddress     = fmt.Errorf("Invalid address")
 	errInvalidCoins       = fmt.Errorf("Invalid coins")
 
-	invalidInput   = abci.CodeType_BaseInvalidInput
-	invalidOutput  = abci.CodeType_BaseInvalidOutput
-	unknownAddress = abci.CodeType_BaseUnknownAddress
-	unknownRequest = abci.CodeType_UnknownRequest
+	invalidInput   = errors.CodeTypeBaseInvalidInput
+	invalidOutput  = errors.CodeTypeBaseInvalidOutput
+	unknownAddress = errors.CodeTypeBaseUnknownAddress
+	unknownRequest = errors.CodeTypeUnknownRequest
 )
 
 // here are some generic handlers to grab classes of errors based on code

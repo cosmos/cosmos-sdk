@@ -31,6 +31,12 @@ func (a Actor) Bytes() []byte {
 	return wire.BinaryBytes(a)
 }
 
+// String provides a human-readable representation of an actor
+func (a Actor) String() string {
+	return fmt.Sprintf("%s", a.Address)
+	// return fmt.Sprintf("%s:%s:%s", a.ChainID, a.App, a.Address)
+}
+
 // Equals checks if two actors are the same
 func (a Actor) Equals(b Actor) bool {
 	return a.ChainID == b.ChainID &&
@@ -72,15 +78,11 @@ type Context interface {
 	IsParent(ctx Context) bool
 	Reset() Context
 	ChainID() string
-	BlockHeight() uint64
+	BlockHeight() int64
 }
 
 //////////////////////////////// Sort Interface
 // USAGE sort.Sort(ByAll(<actor instance>))
-
-func (a Actor) String() string {
-	return fmt.Sprintf("%x", a.Address)
-}
 
 // ByAll implements sort.Interface for []Actor.
 // It sorts be the ChainID, followed by the App, followed by the Address

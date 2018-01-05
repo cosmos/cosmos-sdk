@@ -100,20 +100,20 @@ func (h Handler) DeliverTx(ctx sdk.Context, store state.SimpleDB, tx sdk.Tx) (re
 
 	switch t := tx.Unwrap().(type) {
 	case RegisterChainTx:
-		return h.initSeed(ctx, store, t)
+		return h.registerChain(ctx, store, t)
 	case UpdateChainTx:
-		return h.updateSeed(ctx, store, t)
+		return h.updateChain(ctx, store, t)
 	case CreatePacketTx:
 		return h.createPacket(ctx, store, t)
 	}
 	return res, errors.ErrUnknownTxType(tx.Unwrap())
 }
 
-// initSeed imports the first seed for this chain and
+// registerChain imports the first seed for this chain and
 // accepts it as the root of trust.
 //
 // only the registrar, if set, is allowed to do this
-func (h Handler) initSeed(ctx sdk.Context, store state.SimpleDB,
+func (h Handler) registerChain(ctx sdk.Context, store state.SimpleDB,
 	t RegisterChainTx) (res sdk.DeliverResult, err error) {
 
 	info := LoadInfo(store)
@@ -124,20 +124,20 @@ func (h Handler) initSeed(ctx sdk.Context, store state.SimpleDB,
 	// verify that the header looks reasonable
 	chainID := t.ChainID()
 	s := NewChainSet(store)
-	err = s.Register(chainID, ctx.BlockHeight(), t.Seed.Height())
+	err = s.Register(chainID, ctx.BlockHeight(), t.Commit.Height())
 	if err != nil {
 		return res, err
 	}
 
 	space := stack.PrefixedStore(chainID, store)
 	provider := newDBProvider(space)
-	err = provider.StoreSeed(t.Seed)
+	err = provider.StoreCommit(t.Commit)
 	return res, err
 }
 
-// updateSeed checks the seed against the existing chain data and rejects it if it
+// updateChain checks the seed against the existing chain data and rejects it if it
 // doesn't fit (or no chain data)
-func (h Handler) updateSeed(ctx sdk.Context, store state.SimpleDB,
+func (h Handler) updateChain(ctx sdk.Context, store state.SimpleDB,
 	t UpdateChainTx) (res sdk.DeliverResult, err error) {
 
 	chainID := t.ChainID()
@@ -147,21 +147,21 @@ func (h Handler) updateSeed(ctx sdk.Context, store state.SimpleDB,
 	}
 
 	// load the certifier for this chain
-	seed := t.Seed
+	fc := t.Commit
 	space := stack.PrefixedStore(chainID, store)
-	cert, err := newCertifier(space, chainID, seed.Height())
+	cert, err := newCertifier(space, chainID, fc.Height())
 	if err != nil {
 		return res, err
 	}
 
-	// this will import the seed if it is valid in the current context
-	err = cert.Update(seed.Checkpoint, seed.Validators)
+	// this will import the commit if it is valid in the current context
+	err = cert.Update(fc)
 	if err != nil {
 		return res, ErrInvalidCommit(err)
 	}
 
 	// update the tracked height in chain info
-	err = s.Update(chainID, t.Seed.Height())
+	err = s.Update(chainID, fc.Height())
 	return res, err
 }
 

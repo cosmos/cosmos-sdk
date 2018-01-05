@@ -49,7 +49,7 @@ test00SetGetRemove() {
     TX_HEIGHT=$(echo $TXRES | jq .height)
 
     # make sure it is set
-    DATA=$(${CLIENT_EXE} query eyes ${KEY})
+    DATA=$(${CLIENT_EXE} query eyes ${KEY} --height=$TX_HEIGHT)
     assertTrue "line=${LINENO} data not set" $?
     assertEquals "line=${LINENO}" "\"${VALUE}\"" $(echo $DATA | jq .data.value)
 

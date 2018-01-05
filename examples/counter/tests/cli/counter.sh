@@ -41,8 +41,8 @@ test01SendTx() {
     HASH=$(echo $TX | jq .hash | tr -d \")
     TX_HEIGHT=$(echo $TX | jq .height)
 
-    checkAccount $SENDER "9007199254740000"
-    checkAccount $RECV "992"
+    checkAccount $SENDER "9007199254740000" "$TX_HEIGHT"
+    checkAccount $RECV "992" "$TX_HEIGHT"
 
     # make sure tx is indexed
     checkSendTx $HASH $TX_HEIGHT $SENDER "992"
@@ -53,11 +53,15 @@ test02GetCounter() {
     assertFalse "Line=${LINENO}, no default count" $?
 }
 
-# checkCounter $COUNT $BALANCE
+# checkCounter $COUNT $BALANCE [$HEIGHT]
 # Assumes just one coin, checks the balance of first coin in any case
+# pass optional height to query which block to query
 checkCounter() {
+    # default height of 0, but accept an argument
+    HEIGHT=${3:-0}
+
     # make sure sender goes down
-    ACCT=$(${CLIENT_EXE} query counter)
+    ACCT=$(${CLIENT_EXE} query counter --height=$HEIGHT)
     if assertTrue "Line=${LINENO}, count is set" $?; then
         assertEquals "Line=${LINENO}, proper count" "$1" $(echo $ACCT | jq .data.counter)
         assertEquals "Line=${LINENO}, proper money" "$2" $(echo $ACCT | jq .data.total_fees[0].amount)
@@ -74,10 +78,10 @@ test03AddCount() {
     TX_HEIGHT=$(echo $TX | jq .height)
 
     # make sure the counter was updated
-    checkCounter "1" "10"
+    checkCounter "1" "10" "$TX_HEIGHT"
 
     # make sure the account was debited
-    checkAccount $SENDER "9007199254739990"
+    checkAccount $SENDER "9007199254739990" "$TX_HEIGHT"
 
     # make sure tx is indexed
     TX=$(${CLIENT_EXE} query tx $HASH --trace)
@@ -96,18 +100,20 @@ test03AddCount() {
     # test again with fees...
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --countfee=7mycoin --fee=4mycoin --sequence=3 --name=${RICH} --valid)
     txSucceeded $? "$TX" "counter"
+    TX_HEIGHT=$(echo $TX | jq .height)
 
     # make sure the counter was updated, added 7
-    checkCounter "2" "17"
-
+    checkCounter "2" "17" "$TX_HEIGHT"
     # make sure the account was debited 11
-    checkAccount $SENDER "9007199254739979"
+    checkAccount $SENDER "9007199254739979" "$TX_HEIGHT"
 
     # make sure we cannot replay the counter, no state change
     TX=$(echo qwertyuiop | ${CLIENT_EXE} tx counter --countfee=10mycoin --sequence=2 --name=${RICH} --valid 2>/dev/null)
     assertFalse "line=${LINENO}, replay: $TX" $?
-    checkCounter "2" "17"
-    checkAccount $SENDER "9007199254739979"
+    TX_HEIGHT=$(echo $TX | jq .height)
+
+    checkCounter "2" "17" "$TX_HEIGHT"
+    checkAccount $SENDER "9007199254739979" "$TX_HEIGHT"
 }
 
 # Load common then run these tests with shunit2!

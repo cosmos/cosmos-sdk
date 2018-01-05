@@ -48,6 +48,7 @@ type iavlStore struct {
 	tree *iavl.VersionedTree
 
 	// How many old versions we hold onto.
+	// A value of 0 means keep all history.
 	numHistory int64
 }
 
@@ -71,7 +72,7 @@ func (st *iavlStore) Commit() CommitID {
 	}
 
 	// Release an old version of history
-	if st.numHistory < st.tree.Version64() {
+	if st.numHistory > 0 && (st.numHistory < st.tree.Version64()) {
 		toRelease := version - st.numHistory
 		st.tree.DeleteVersion(toRelease)
 	}

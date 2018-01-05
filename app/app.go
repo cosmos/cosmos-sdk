@@ -11,10 +11,10 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
-	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
-const mainKeyHeader = "header"
+var mainHeaderKey = []byte("header")
 
 // App - The ABCI application
 type App struct {
@@ -23,17 +23,20 @@ type App struct {
 	// App name from abci.Info
 	name string
 
-	// DeliverTx (main) state
-	store MultiStore
+	// Main (uncached) state
+	ms types.CommitMultiStore
 
-	// CheckTx state
-	storeCheck CacheMultiStore
+	// CheckTx state, a cache-wrap of `.ms`.
+	msCheck types.CacheMultiStore
+
+	// DeliverTx state, a cache-wrap of `.ms`.
+	msDeliver types.CacheMultiStore
 
 	// Current block header
-	header *abci.Header
+	header abci.Header
 
 	// Handler for CheckTx and DeliverTx.
-	handler sdk.Handler
+	handler types.Handler
 
 	// Cached validator changes from DeliverTx
 	valUpdates []abci.Validator
@@ -48,59 +51,71 @@ func NewApp(name string) *App {
 	}
 }
 
-func (app *App) SetStore(store MultiStore) {
-	app.store = store
+func (app *App) Name() string {
+	return app.name
 }
 
-func (app *App) SetHandler(handler Handler) {
+func (app *App) SetCommitMultiStore(ms types.CommitMultiStore) {
+	app.ms = ms
+}
+
+func (app *App) SetHandler(handler types.Handler) {
 	app.handler = handler
 }
 
 func (app *App) LoadLatestVersion() error {
-	store := app.store
-	store.LoadLastVersion()
+	app.ms.LoadLatestVersion()
 	return app.initFromStore()
 }
 
 func (app *App) LoadVersion(version int64) error {
-	store := app.store
-	store.LoadVersion(version)
+	app.ms.LoadVersion(version)
 	return app.initFromStore()
 }
 
-// Initializes the remaining logic from app.store.
+// The last CommitID of the multistore.
+func (app *App) LastCommitID() types.CommitID {
+	return app.ms.LastCommitID()
+}
+
+// The last commited block height.
+func (app *App) LastBlockHeight() int64 {
+	return app.ms.LastCommitID().Version
+}
+
+// Initializes the remaining logic from app.ms.
 func (app *App) initFromStore() error {
-	store := app.store
-	lastCommitID := store.LastCommitID()
-	main := store.GetKVStore("main")
-	header := (*abci.Header)(nil)
-	storeCheck := store.CacheMultiStore()
+	lastCommitID := app.ms.LastCommitID()
+	main := app.ms.GetKVStore("main")
+	header := abci.Header{}
 
 	// Main store should exist.
-	if store.GetKVStore("main") == nil {
+	if app.ms.GetKVStore("main") == nil {
 		return errors.New("App expects MultiStore with 'main' KVStore")
 	}
 
-	// If we've committed before, we expect main://<mainKeyHeader>.
+	// If we've committed before, we expect main://<mainHeaderKey>.
 	if !lastCommitID.IsZero() {
-		headerBytes, ok := main.Get(mainKeyHeader)
-		if !ok {
-			errStr := fmt.Sprintf("Version > 0 but missing key %s", mainKeyHeader)
+		headerBytes := main.Get(mainHeaderKey)
+		if len(headerBytes) == 0 {
+			errStr := fmt.Sprintf("Version > 0 but missing key %s", mainHeaderKey)
 			return errors.New(errStr)
 		}
-		err = proto.Unmarshal(headerBytes, header)
+		err := proto.Unmarshal(headerBytes, &header)
 		if err != nil {
 			return errors.Wrap(err, "Failed to parse Header")
 		}
-		if header.Height != lastCommitID.Version {
-			errStr := fmt.Sprintf("Expected main://%s.Height %v but got %v", mainKeyHeader, version, headerHeight)
+		lastVersion := lastCommitID.Version
+		if header.Height != lastVersion {
+			errStr := fmt.Sprintf("Expected main://%s.Height %v but got %v", mainHeaderKey, lastVersion, header.Height)
 			return errors.New(errStr)
 		}
 	}
 
 	// Set App state.
 	app.header = header
-	app.storeCheck = app.store.CacheMultiStore()
+	app.msCheck = nil
+	app.msDeliver = nil
 	app.valUpdates = nil
 
 	return nil
@@ -108,21 +123,83 @@ func (app *App) initFromStore() error {
 
 //----------------------------------------
 
-// DeliverTx - ABCI - dispatches to the handler
-func (app *App) DeliverTx(txBytes []byte) abci.ResponseDeliverTx {
+// Implements ABCI
+func (app *App) Info(req abci.RequestInfo) abci.ResponseInfo {
+
+	lastCommitID := app.ms.LastCommitID()
+
+	return abci.ResponseInfo{
+		Data:             app.name,
+		LastBlockHeight:  lastCommitID.Version,
+		LastBlockAppHash: lastCommitID.Hash,
+	}
+}
+
+// Implements ABCI
+func (app *App) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
+	// TODO: Implement
+	return
+}
+
+// Implements ABCI
+func (app *App) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
+	// TODO: Use req.Validators
+	return
+}
+
+// Implements ABCI
+func (app *App) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
+	// TODO: See app/query.go
+	return
+}
+
+// Implements ABCI
+func (app *App) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+	app.header = req.Header
+	app.msDeliver = app.ms.CacheMultiStore()
+	app.msCheck = app.ms.CacheMultiStore()
+	return
+}
+
+// Implements ABCI
+func (app *App) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
+
+	// Initialize arguments to Handler.
+	var isCheckTx = true
+	var ctx = types.NewContext(app.header, isCheckTx, txBytes)
+	var tx types.Tx = nil // nil until a decorator parses one.
+
+	// Run the handler.
+	var result = app.handler(ctx, app.ms, tx)
+
+	// Tell the blockchain engine (i.e. Tendermint).
+	return abci.ResponseCheckTx{
+		Code:      result.Code,
+		Data:      result.Data,
+		Log:       result.Log,
+		GasWanted: result.GasWanted,
+		Fee: cmn.KI64Pair{
+			[]byte(result.FeeDenom),
+			result.FeeAmount,
+		},
+		Tags: result.Tags,
+	}
+}
+
+// Implements ABCI
+func (app *App) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 
 	// Initialize arguments to Handler.
 	var isCheckTx = false
-	var ctx = sdk.NewContext(app.header, isCheckTx, txBytes)
-	var store = app.store
-	var tx Tx = nil // nil until a decorator parses one.
+	var ctx = types.NewContext(app.header, isCheckTx, txBytes)
+	var tx types.Tx = nil // nil until a decorator parses one.
 
 	// Run the handler.
-	var result = app.handler(ctx, app.store, tx)
+	var result = app.handler(ctx, app.ms, tx)
 
 	// After-handler hooks.
-	if result.Code == abci.CodeType_OK {
-		app.valUpdates = append(app.valUpdates, result.ValUpdate)
+	if result.Code == abci.CodeTypeOK {
+		app.valUpdates = append(app.valUpdates, result.ValidatorUpdates...)
 	} else {
 		// Even though the Code is not OK, there will be some side effects,
 		// like those caused by fee deductions or sequence incrementations.
@@ -130,134 +207,36 @@ func (app *App) DeliverTx(txBytes []byte) abci.ResponseDeliverTx {
 
 	// Tell the blockchain engine (i.e. Tendermint).
 	return abci.ResponseDeliverTx{
-		Code: result.Code,
-		Data: result.Data,
-		Log:  result.Log,
-		Tags: result.Tags,
-	}
-}
-
-// CheckTx - ABCI - dispatches to the handler
-func (app *App) CheckTx(txBytes []byte) abci.ResponseCheckTx {
-
-	// Initialize arguments to Handler.
-	var isCheckTx = true
-	var ctx = sdk.NewContext(app.header, isCheckTx, txBytes)
-	var store = app.store
-	var tx Tx = nil // nil until a decorator parses one.
-
-	// Run the handler.
-	var result = app.handler(ctx, app.store, tx)
-
-	// Tell the blockchain engine (i.e. Tendermint).
-	return abci.ResponseDeliverTx{
 		Code:      result.Code,
 		Data:      result.Data,
 		Log:       result.Log,
-		Gas:       result.Gas,
-		FeeDenom:  result.FeeDenom,
-		FeeAmount: result.FeeAmount,
+		GasWanted: result.GasWanted,
+		GasUsed:   result.GasUsed,
+		Tags:      result.Tags,
 	}
 }
 
-// Info - ABCI
-func (app *App) Info(req abci.RequestInfo) abci.ResponseInfo {
-
-	lastCommitID := app.store.LastCommitID()
-
-	return abci.ResponseInfo{
-		Data:             app.Name,
-		LastBlockHeight:  lastCommitID.Version,
-		LastBlockAppHash: lastCommitID.Hash,
-	}
-}
-
-// SetOption - ABCI
-func (app *App) SetOption(key string, value string) string {
-	return "Not Implemented"
-}
-
-// Query - ABCI
-func (app *App) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQuery) {
-	/*
-		XXX Make this work with MultiStore.
-		XXX It will require some interfaces updates in store/types.go.
-
-		if len(reqQuery.Data) == 0 {
-			resQuery.Log = "Query cannot be zero length"
-			resQuery.Code = abci.CodeType_EncodingError
-			return
-		}
-
-		// set the query response height to current
-		tree := app.state.Committed()
-
-		height := reqQuery.Height
-		if height == 0 {
-			// TODO: once the rpc actually passes in non-zero
-			// heights we can use to query right after a tx
-			// we must retrun most recent, even if apphash
-			// is not yet in the blockchain
-
-			withProof := app.CommittedHeight() - 1
-			if tree.Tree.VersionExists(withProof) {
-				height = withProof
-			} else {
-				height = app.CommittedHeight()
-			}
-		}
-		resQuery.Height = height
-
-		switch reqQuery.Path {
-		case "/store", "/key": // Get by key
-			key := reqQuery.Data // Data holds the key bytes
-			resQuery.Key = key
-			if reqQuery.Prove {
-				value, proof, err := tree.GetVersionedWithProof(key, height)
-				if err != nil {
-					resQuery.Log = err.Error()
-					break
-				}
-				resQuery.Value = value
-				resQuery.Proof = proof.Bytes()
-			} else {
-				value := tree.Get(key)
-				resQuery.Value = value
-			}
-
-		default:
-			resQuery.Code = abci.CodeType_UnknownRequest
-			resQuery.Log = cmn.Fmt("Unexpected Query path: %v", reqQuery.Path)
-		}
-		return
-	*/
-}
-
-// Commit implements abci.Application
-func (app *App) Commit() (res abci.Result) {
-	commitID := app.store.Commit()
-	app.logger.Debug("Commit synced",
-		"commit", commitID,
-	)
-	return abci.NewResultOK(hash, "")
-}
-
-// InitChain - ABCI
-func (app *App) InitChain(req abci.RequestInitChain) {}
-
-// BeginBlock - ABCI
-func (app *App) BeginBlock(req abci.RequestBeginBlock) {
-	app.header = req.Header
-}
-
-// EndBlock - ABCI
-// Returns a list of all validator changes made in this block
-func (app *App) EndBlock(height uint64) (res abci.ResponseEndBlock) {
-	// XXX Update to res.Updates.
-	res.Diffs = app.valUpdates
+// Implements ABCI
+func (app *App) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
+	res.ValidatorUpdates = app.valUpdates
 	app.valUpdates = nil
 	return
 }
+
+// Implements ABCI
+func (app *App) Commit() (res abci.ResponseCommit) {
+	app.msDeliver.Write()
+	commitID := app.ms.Commit()
+	app.logger.Debug("Commit synced",
+		"commit", commitID,
+	)
+	return abci.ResponseCommit{
+		Data: commitID.Hash,
+	}
+}
+
+//----------------------------------------
+// Misc.
 
 // Return index of list with validator of same PubKey, or -1 if no match
 func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {
@@ -274,39 +253,4 @@ func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {
 // ResponseDeliverTx.Log and ResponseCheckTx.Log.
 func makeDefaultLogger() log.Logger {
 	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-}
-
-// InitState - used to setup state (was SetOption)
-// to be call from setting up the genesis file
-func (app *InitApp) InitState(module, key, value string) error {
-	state := app.Append()
-	logger := app.Logger().With("module", module, "key", key)
-
-	if module == sdk.ModuleNameBase {
-		if key == sdk.ChainKey {
-			app.info.SetChainID(state, value)
-			return nil
-		}
-		logger.Error("Invalid genesis option")
-		return fmt.Errorf("Unknown base option: %s", key)
-	}
-
-	log, err := app.initState.InitState(logger, state, module, key, value)
-	if err != nil {
-		logger.Error("Invalid genesis option", "err", err)
-	} else {
-		logger.Info(log)
-	}
-	return err
-}
-
-// InitChain - ABCI - sets the initial validators
-func (app *InitApp) InitChain(req abci.RequestInitChain) {
-	// return early if no InitValidator registered
-	if app.initVals == nil {
-		return
-	}
-
-	logger, store := app.Logger(), app.Append()
-	app.initVals.InitValidators(logger, store, req.Validators)
 }

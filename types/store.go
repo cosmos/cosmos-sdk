@@ -26,7 +26,7 @@ type MultiStore interface {
 	// call CacheMultiStore.Write().
 	CacheMultiStore() CacheMultiStore
 
-	// Convenience
+	// Convenience for fetching substores.
 	GetStore(name string) interface{}
 	GetKVStore(name string) KVStore
 }
@@ -56,7 +56,11 @@ type CommitMultiStore interface {
 	// Add a substore loader.
 	SetSubstoreLoader(name string, loader CommitStoreLoader)
 
+	// Gets the substore, which is a CommitSubstore.
+	GetSubstore(name string) CommitStore
+
 	// Load the latest persisted version.
+	// Called once after all calls to SetSubstoreLoader are complete.
 	LoadLatestVersion() error
 
 	// Load a specific persisted version.  When you load an old version, or

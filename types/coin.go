@@ -1,12 +1,9 @@
-package coin
+package types
 
 import (
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // Coin hold some amount of one currency
@@ -200,3 +197,11 @@ var _ sort.Interface = Coins{}
 
 // Sort is a helper function to sort the set of coins inplace
 func (coins Coins) Sort() { sort.Sort(coins) }
+
+//----------------------------------------
+// Misc
+
+type Coinser interface {
+	GetCoins() Coins
+	SetCoins(Coins)
+}

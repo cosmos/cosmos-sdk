@@ -26,6 +26,8 @@ type rootMultiStore struct {
 	substores    map[string]CommitStore
 }
 
+var _ CommitMultiStore = (*rootMultiStore)(nil)
+
 func NewMultiStore(db dbm.DB) *rootMultiStore {
 	return &rootMultiStore{
 		db:           db,
@@ -35,6 +37,7 @@ func NewMultiStore(db dbm.DB) *rootMultiStore {
 	}
 }
 
+// Implements CommitMultiStore.
 func (rs *rootMultiStore) SetSubstoreLoader(name string, loader CommitStoreLoader) {
 	if _, ok := rs.storeLoaders[name]; ok {
 		panic(fmt.Sprintf("rootMultiStore duplicate substore name " + name))
@@ -42,17 +45,18 @@ func (rs *rootMultiStore) SetSubstoreLoader(name string, loader CommitStoreLoade
 	rs.storeLoaders[name] = loader
 }
 
-// Call once after all calls to SetSubstoreLoader are complete.
+// Implements CommitMultiStore.
+func (rs *rootMultiStore) GetSubstore(name string) CommitStore {
+	return rs.substores[name]
+}
+
+// Implements CommitMultiStore.
 func (rs *rootMultiStore) LoadLatestVersion() error {
 	ver := getLatestVersion(rs.db)
 	return rs.LoadVersion(ver)
 }
 
-// NOTE: Returns 0 unless LoadVersion() or LoadLatestVersion() is called.
-func (rs *rootMultiStore) NextVersion() int64 {
-	return rs.nextVersion
-}
-
+// Implements CommitMultiStore.
 func (rs *rootMultiStore) LoadVersion(ver int64) error {
 
 	// Special logic for version 0
@@ -106,10 +110,13 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	return nil
 }
 
-// Implements CommitStore
+//----------------------------------------
+// +CommitStore
+
+// Implements CommitStore.
 func (rs *rootMultiStore) Commit() CommitID {
 
-	// Commit substores
+	// Commit substores.
 	version := rs.nextVersion
 	state := commitSubstores(version, rs.substores)
 
@@ -129,27 +136,36 @@ func (rs *rootMultiStore) Commit() CommitID {
 	return commitID
 }
 
-// Implements CommitStore
+// Implements CommitStore.
 func (rs *rootMultiStore) CacheWrap() CacheWrap {
 	return rs.CacheMultiStore().(CacheWrap)
 }
 
-// Get the last committed CommitID
+//----------------------------------------
+// +MultiStore
+
+// Implements MultiStore.
 func (rs *rootMultiStore) LastCommitID() CommitID {
 	return rs.lastCommitID
 }
 
-// Implements MultiStore
+// Implements MultiStore.
+// NOTE: Returns 0 unless LoadVersion() or LoadLatestVersion() is called.
+func (rs *rootMultiStore) NextVersion() int64 {
+	return rs.nextVersion
+}
+
+// Implements MultiStore.
 func (rs *rootMultiStore) CacheMultiStore() CacheMultiStore {
 	return newCacheMultiStoreFromRMS(rs)
 }
 
-// Implements MultiStore
-func (rs *rootMultiStore) GetCommitStore(name string) CommitStore {
+// Implements MultiStore.
+func (rs *rootMultiStore) GetStore(name string) interface{} {
 	return rs.substores[name]
 }
 
-// Implements MultiStore
+// Implements MultiStore.
 func (rs *rootMultiStore) GetKVStore(name string) KVStore {
 	return rs.substores[name].(KVStore)
 }
@@ -208,6 +224,7 @@ func (sc substoreCore) Hash() []byte {
 }
 
 //----------------------------------------
+// Misc.
 
 func getLatestVersion(db dbm.DB) int64 {
 	var latest int64

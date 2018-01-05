@@ -17,8 +17,8 @@ type Result struct {
 	// Log is just debug information. NOTE: nondeterministic.
 	Log string
 
-	// GasAllocated is the maximum units of work we allow this tx to perform.
-	GasAllocated int64
+	// GasWanted is the maximum units of work we allow this tx to perform.
+	GasWanted int64
 
 	// GasUsed is the amount of gas actually consumed. NOTE: not used.
 	GasUsed int64
@@ -28,7 +28,7 @@ type Result struct {
 	FeeDenom  string
 
 	// Changes to the validator set.
-	ValSetDiff []abci.Validator
+	ValidatorUpdates []abci.Validator
 
 	// Tags are used for transaction indexing and pubsub.
 	Tags []cmn.KVPair

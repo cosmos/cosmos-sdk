@@ -15,7 +15,7 @@ type Msg interface {
 	// Signers returns the addrs of signers that must sign.
 	// CONTRACT: All signatures must be present to be valid.
 	// CONTRACT: Returns addrs in some deterministic order.
-	Signers() [][]byte
+	Signers() []Address
 }
 
 type Tx interface {

@@ -24,10 +24,10 @@ const (
 	contextKeyAccount contextKey = iota
 )
 
-func SetAccount(ctx types.Context, account Account) types.Context {
-	return ctx.WithValueSDK(contextKeyAccount, account)
+func SetAccount(ctx types.Context, account types.Account) types.Context {
+	return ctx.WithValueUnsafe(contextKeyAccount, account)
 }
 
-func GetAccount(ctx types.Context) Account {
-	return ctx.Value(contextKeyAccount).(Account)
+func GetAccount(ctx types.Context) types.Account {
+	return ctx.Value(contextKeyAccount).(types.Account)
 }

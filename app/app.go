@@ -35,6 +35,9 @@ type App struct {
 	// Current block header
 	header abci.Header
 
+	// Unmarshal []byte into types.Tx
+	txParser TxParser
+
 	// Handler for CheckTx and DeliverTx.
 	handler types.Handler
 
@@ -57,6 +60,18 @@ func (app *App) Name() string {
 
 func (app *App) SetCommitMultiStore(ms types.CommitMultiStore) {
 	app.ms = ms
+}
+
+/*
+SetBeginBlocker
+SetEndBlocker
+SetInitStater
+*/
+
+type TxParser func(txBytes []byte) (types.Tx, error)
+
+func (app *App) SetTxParser(txParser TxParser) {
+	app.txParser = txParser
 }
 
 func (app *App) SetHandler(handler types.Handler) {
@@ -167,7 +182,15 @@ func (app *App) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 	// Initialize arguments to Handler.
 	var isCheckTx = true
 	var ctx = types.NewContext(app.header, isCheckTx, txBytes)
-	var tx types.Tx = nil // nil until a decorator parses one.
+	var tx types.Tx
+
+	var err error
+	tx, err = app.txParser(txBytes)
+	if err != nil {
+		return abci.ResponseCheckTx{
+			Code: 1, //  TODO
+		}
+	}
 
 	// Run the handler.
 	var result = app.handler(ctx, app.ms, tx)
@@ -192,7 +215,15 @@ func (app *App) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	// Initialize arguments to Handler.
 	var isCheckTx = false
 	var ctx = types.NewContext(app.header, isCheckTx, txBytes)
-	var tx types.Tx = nil // nil until a decorator parses one.
+	var tx types.Tx
+
+	var err error
+	tx, err = app.txParser(txBytes)
+	if err != nil {
+		return abci.ResponseDeliverTx{
+			Code: 1, //  TODO
+		}
+	}
 
 	// Run the handler.
 	var result = app.handler(ctx, app.ms, tx)

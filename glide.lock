@@ -1,5 +1,5 @@
-hash: eb64d9f89795d1e99233cda008f7b7e770345b12cd774775e317680d518d777d
-updated: 2017-12-29T21:13:38.992435295-05:00
+hash: 973081bb50ace30fad94bec01e96ecb839e02b0656473ad84c85dcdd2eac42f9
+updated: 2018-01-04T22:15:05.434027424-05:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -120,7 +120,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 70da70d8529392676b803f64f61092079391946b
+  version: 5d5ea6869b91cadb55dbc4211ad7b326f053a33e
   subpackages:
   - client
   - example/code
@@ -133,7 +133,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 4041adbf92a970d01792b99d43312d08fc4a794a
+  version: dd20358a264c772b4a83e477b0cfce4c88a7001d
   subpackages:
   - keys
   - keys/cryptostore
@@ -142,13 +142,13 @@ imports:
   - keys/wordlist
   - nano
 - name: github.com/tendermint/go-wire
-  version: 27be46e25124ddf775e23317a83647ce62a93f6b
+  version: b6fc872b42d41158a60307db4da051dd6f179415
   subpackages:
   - data
   - data/base58
   - nowriter/tmlegacy
 - name: github.com/tendermint/iavl
-  version: 595f3dcd5b6cd4a292e90757ae6d367fd7a6e653
+  version: 594cc0c062a7174475f0ab654384038d77067917
 - name: github.com/tendermint/tendermint
   version: 381fe19335ba8825e04d1d0fefa5cac709bb7178
   subpackages:
@@ -188,7 +188,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: f2bfa83b4236af4d32f2a41dea98727785189fee
+  version: 91b4b534ad78e442192c8175db92a06a51064064
   subpackages:
   - autofile
   - cli
@@ -204,7 +204,7 @@ imports:
   - pubsub
   - pubsub/query
 - name: golang.org/x/crypto
-  version: 95a4943f35d008beabde8c11e5075a1b714e6419
+  version: 0fcca4842a8d74bfddc2c96a073bd2a4d2a7a2e8
   subpackages:
   - curve25519
   - nacl/box
@@ -215,7 +215,7 @@ imports:
   - ripemd160
   - salsa20/salsa
 - name: golang.org/x/net
-  version: d866cfc389cec985d6fda2859936a575a55a3ab6
+  version: 42fe2e1c20de1054d3d30f82cc9fb5b41e2e3767
   subpackages:
   - context
   - http2
@@ -225,7 +225,7 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/sys
-  version: 83801418e1b59fb1880e363299581ee543af32ca
+  version: a3f2cbd54cf5dfe3fbaccf76375fdb12f67654c8
   subpackages:
   - unix
 - name: golang.org/x/text
@@ -261,18 +261,18 @@ imports:
 - name: gopkg.in/go-playground/validator.v9
   version: b1f51f36f1c98cc97f777d6fc9d4b05eaa0cabb5
 - name: gopkg.in/yaml.v2
-  version: 287cf08546ab5e7e37d55a84f7ed3fd1db036de5
+  version: 0e4404da71227dcc02fb1deee803d93e86d08f72
 testImports:
 - name: github.com/davecgh/go-spew
-  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  version: ecdeabc65495df2dec95d7c4a4c3e021903035e5
   subpackages:
   - spew
 - name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:
   - difflib
 - name: github.com/stretchr/testify
-  version: 2aa2c176b9dab406a6970f6a55f513e8a8c8b18f
+  version: 87b1dfb5b2fa649f52695dd9eae19abe404a4308
   subpackages:
   - assert
   - require

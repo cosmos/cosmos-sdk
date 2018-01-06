@@ -3,8 +3,7 @@ GOTOOLS =	github.com/mitchellh/gox \
 			github.com/rigelrozanski/shelldown/cmd/shelldown
 TUTORIALS=$(shell find docs/guide -name "*md" -type f)
 
-# EXAMPLES := counter eyes basecoin
-EXAMPLES := eyes
+EXAMPLES := dummy basecoin
 
 INSTALL_EXAMPLES := $(addprefix install_,${EXAMPLES})
 TEST_EXAMPLES := $(addprefix testex_,${EXAMPLES})
@@ -13,17 +12,13 @@ LINKER_FLAGS:="-X github.com/cosmos/cosmos-sdk/client/commands.CommitHash=`git r
 
 all: get_vendor_deps install test
 
-build:
-	@go build ./cmd/...
-
 $(INSTALL_EXAMPLES): install_%:
-	cd ./examples/$* && make install
+	cd ./examples/$* && go install
 
 $(TEST_EXAMPLES): testex_%:
 	cd ./examples/$* && make test_cli
 
 install: $(INSTALL_EXAMPLES)
-	@go install -ldflags $(LINKER_FLAGS) ./cmd/...
 
 dist:
 	@bash publish/dist.sh
@@ -33,10 +28,10 @@ benchmark:
 	@go test -bench=. ./modules/...
 
 #test: test_unit test_cli test_tutorial
-test: test_unit test_cli
+test: test_unit # test_cli
 
 test_unit:
-	@go test `glide novendor | grep -v _attic | grep -v examples`
+	@go test `glide novendor | grep -v _attic`
 
 test_cli: $(TEST_EXAMPLES)
 	# sudo apt-get install jq
@@ -48,10 +43,7 @@ test_tutorial:
 		bash $$script ; \
 	done
 
-test_store:
-	@go test store/*.go
-
-get_vendor_deps: tools
+get_vendor_deps: get_tools
 	@glide install
 
 build-docker:
@@ -59,7 +51,7 @@ build-docker:
 		"/go/src/github.com/tendermint/basecoin" -e "CGO_ENABLED=0" golang:alpine go build ./cmd/basecoin
 	@docker build -t "tendermint/basecoin" .
 
-tools:
+get_tools:
 	@go get $(GOTOOLS)
 
 clean:

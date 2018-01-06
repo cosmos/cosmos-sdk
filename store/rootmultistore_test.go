@@ -64,7 +64,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 // utils
 
 func newMultiStoreWithLoaders(db dbm.DB) *rootMultiStore {
-	store := NewMultiStore(db)
+	store := NewCommitMultiStore(db)
 	storeLoaders := map[string]CommitStoreLoader{
 		"store1": newMockCommitStore,
 		"store2": newMockCommitStore,

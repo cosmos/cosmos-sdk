@@ -7,12 +7,12 @@ import:
 - package: github.com/spf13/pflag
 - package: github.com/spf13/viper
 - package: github.com/tendermint/abci
-  version: develop
+  version: sdk2
   subpackages:
   - server
   - types
 - package: github.com/tendermint/go-crypto
-  version: sdk2
+  version: develop
   subpackages:
   - keys
 - package: github.com/tendermint/go-wire
@@ -29,7 +29,7 @@ import:
 - package: github.com/tendermint/iavl
   version: sdk2
 - package: github.com/tendermint/tendermint
-  version: develop
+  version: sdk2
   subpackages:
   - config
   - node
@@ -40,7 +40,7 @@ import:
   - rpc/lib/types
   - types
 - package: github.com/tendermint/tmlibs
-  version: sdk2
+  version: develop
   subpackages:
   - cli
   - cli/flags

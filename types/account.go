@@ -1,16 +1,10 @@
 package types
 
 import (
-	"encoding/hex"
-
 	crypto "github.com/tendermint/go-crypto"
 )
 
-type Address []byte // TODO: cmn.HexBytes
-
-func (a Address) String() string {
-	return hex.EncodeToString(a)
-}
+type Address = crypto.Address
 
 type Account interface {
 	Address() Address

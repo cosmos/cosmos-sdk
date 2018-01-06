@@ -7,10 +7,10 @@ import (
 
 // AppAccount - coin account structure
 type AppAccount struct {
-	Address_ types.Address `json:"address"`
-	Coins    types.Coins   `json:"coins"`
-	PubKey_  crypto.PubKey `json:"public_key"` // can't conflict with PubKey()
-	Sequence int64         `json:"sequence"`
+	Address_ crypto.Address `json:"address"`
+	Coins    types.Coins    `json:"coins"`
+	PubKey_  crypto.PubKey  `json:"public_key"` // can't conflict with PubKey()
+	Sequence int64          `json:"sequence"`
 }
 
 // Implements auth.Account

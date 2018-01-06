@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/store"
 )
 
 /*
@@ -24,10 +25,10 @@ const (
 	contextKeyAccount contextKey = iota
 )
 
-func SetAccount(ctx types.Context, account types.Account) types.Context {
+func SetAccount(ctx types.Context, account store.Account) types.Context {
 	return ctx.WithValueUnsafe(contextKeyAccount, account)
 }
 
-func GetAccount(ctx types.Context) types.Account {
-	return ctx.Value(contextKeyAccount).(types.Account)
+func GetAccount(ctx types.Context) store.Account {
+	return ctx.Value(contextKeyAccount).(store.Account)
 }

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/tendermint/abci/server"
+	crypto "github.com/tendermint/go-crypto"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 
@@ -89,7 +90,7 @@ func (tx dummyTx) ValidateBasic() error {
 	return nil
 }
 
-func (tx dummyTx) Signers() []types.Address {
+func (tx dummyTx) Signers() []crypto.Address {
 	return nil
 }
 

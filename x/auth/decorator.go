@@ -2,15 +2,14 @@ package auth
 
 import (
 	"github.com/cosmos/cosmos-sdk/types"
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/cosmos/cosmos-sdk/x/store"
 )
 
-func DecoratorFn(newAccountStore func(types.KVStore) types.AccountStore) types.Decorator {
+func DecoratorFn(newAccountStore func(types.KVStore) store.AccountStore) types.Decorator {
 	return func(ctx types.Context, ms types.MultiStore, tx types.Tx, next types.Handler) types.Result {
 
 		accountStore := newAccountStore(ms.GetKVStore("main"))
 
-		// NOTE: we actually dont need Signers() since we have pubkeys in Signatures()
 		signers := tx.Signers()
 		signatures := tx.Signatures()
 
@@ -67,12 +66,4 @@ func DecoratorFn(newAccountStore func(types.KVStore) types.AccountStore) types.D
 		}
 		return next(ctx, ms, tx)
 	}
-}
-
-type Auther interface {
-	GetPubKey() crypto.PubKey
-	SetPubKey(crypto.PubKey) error
-
-	GetSequence() int64
-	SetSequence() (int64, error)
 }

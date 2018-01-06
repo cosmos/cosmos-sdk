@@ -30,7 +30,7 @@ func main() {
 	loader := store.NewIAVLStoreLoader(db, cacheSize, numHistory)
 
 	// Create MultiStore
-	multiStore := store.NewMultiStore(db)
+	multiStore := store.NewCommitMultiStore(db)
 	multiStore.SetSubstoreLoader("main", loader)
 
 	// Create Handler
@@ -89,7 +89,7 @@ func (tx dummyTx) ValidateBasic() error {
 	return nil
 }
 
-func (tx dummyTx) Signers() [][]byte {
+func (tx dummyTx) Signers() []types.Address {
 	return nil
 }
 

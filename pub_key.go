@@ -16,7 +16,8 @@ import (
 
 // An address is a []byte, but hex-encoded even in JSON.
 // []byte leaves us the option to change the address length.
-type Address cmn.HexBytes
+// Use an alias so Unmarshal methods (with ptr receivers) are available too.
+type Address = cmn.HexBytes
 
 func PubKeyFromBytes(pubKeyBytes []byte) (pubKey PubKey, err error) {
 	if err := wire.ReadBinaryBytes(pubKeyBytes, &pubKey); err != nil {

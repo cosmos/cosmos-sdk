@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -72,12 +71,4 @@ func main() {
 		srv.Stop()
 	})
 	return
-}
-
-// create ctx in begin block to be used as background for txs ...
-
-func txParser(txBytes []byte) (types.Tx, error) {
-	var tx sendtx.SendTx
-	err := json.Unmarshal(txBytes, &tx)
-	return tx, err
 }

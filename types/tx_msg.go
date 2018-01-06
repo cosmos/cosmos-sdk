@@ -1,5 +1,7 @@
 package types
 
+import crypto "github.com/tendermint/go-crypto"
+
 type Msg interface {
 
 	// Get some property of the Msg.
@@ -15,7 +17,7 @@ type Msg interface {
 	// Signers returns the addrs of signers that must sign.
 	// CONTRACT: All signatures must be present to be valid.
 	// CONTRACT: Returns addrs in some deterministic order.
-	Signers() []Address
+	Signers() []crypto.Address
 }
 
 type Tx interface {

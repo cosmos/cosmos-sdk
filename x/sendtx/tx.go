@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/types"
-	coinstore "github.com/cosmos/cosmos-sdk/x/coinstore"
 	crypto "github.com/tendermint/go-crypto"
+
+	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/coin"
+	"github.com/cosmos/cosmos-sdk/x/store"
 )
 
 type (
-	Address = types.Address
-	Coins   = types.Coins
+	Address = crypto.Address
+	Coins   = coin.Coins
 )
 
 //-----------------------------------------------------------------------------
@@ -28,16 +30,16 @@ type TxInput struct {
 // ValidateBasic - validate transaction input
 func (txIn TxInput) ValidateBasic() error {
 	if len(txIn.Address) == 0 {
-		return coinstore.ErrInvalidAddress(txIn.Address.String())
+		return store.ErrInvalidAddress(txIn.Address.String())
 	}
 	if txIn.Sequence < 0 {
 		return ErrInvalidSequence(txIn.Sequence)
 	}
 	if !txIn.Coins.IsValid() {
-		return coinstore.ErrInvalidCoins(txIn.Coins.String())
+		return store.ErrInvalidCoins(txIn.Coins.String())
 	}
 	if !txIn.Coins.IsPositive() {
-		return coinstore.ErrInvalidCoins(txIn.Coins.String())
+		return store.ErrInvalidCoins(txIn.Coins.String())
 	}
 	return nil
 }
@@ -66,13 +68,13 @@ type TxOutput struct {
 // ValidateBasic - validate transaction output
 func (txOut TxOutput) ValidateBasic() error {
 	if len(txOut.Address) == 0 {
-		return coinstore.ErrInvalidAddress(txOut.Address.String())
+		return store.ErrInvalidAddress(txOut.Address.String())
 	}
 	if !txOut.Coins.IsValid() {
-		return coinstore.ErrInvalidCoins(txOut.Coins.String())
+		return store.ErrInvalidCoins(txOut.Coins.String())
 	}
 	if !txOut.Coins.IsPositive() {
-		return coinstore.ErrInvalidCoins(txOut.Coins.String())
+		return store.ErrInvalidCoins(txOut.Coins.String())
 	}
 	return nil
 }
@@ -92,26 +94,12 @@ func NewTxOutput(addr Address, coins Coins) TxOutput {
 
 //-----------------------------------------------------------------------------
 
+var _ types.Tx = (*SendTx)(nil)
+
 // SendTx - high level transaction of the coin module
-// Satisfies: TxInner
 type SendTx struct {
 	Inputs  []TxInput  `json:"inputs"`
 	Outputs []TxOutput `json:"outputs"`
-}
-
-var _ types.Tx = (*SendTx)(nil)
-
-// NewSendTx - construct arbitrary multi-in, multi-out sendtx
-func NewSendTx(in []TxInput, out []TxOutput) types.Tx {
-	return SendTx{Inputs: in, Outputs: out}
-}
-
-// NewSendOneTx is a helper for the standard (?) case where there is exactly
-// one sender and one recipient
-func NewSendOneTx(sender, recipient types.Address, amount types.Coins) types.Tx {
-	in := []TxInput{{Address: sender, Coins: amount}}
-	out := []TxOutput{{Address: recipient, Coins: amount}}
-	return SendTx{Inputs: in, Outputs: out}
 }
 
 // ValidateBasic - validate the send transaction
@@ -140,7 +128,7 @@ func (tx SendTx) ValidateBasic() error {
 	}
 	// make sure inputs and outputs match
 	if !totalIn.IsEqual(totalOut) {
-		return coinstore.ErrInvalidCoins(totalIn.String()) // TODO
+		return store.ErrInvalidCoins(totalIn.String()) // TODO
 	}
 	return nil
 }
@@ -149,8 +137,22 @@ func (tx SendTx) String() string {
 	return fmt.Sprintf("SendTx{%v->%v}", tx.Inputs, tx.Outputs)
 }
 
-// TODO
+// NewSendTx - construct arbitrary multi-in, multi-out sendtx
+func NewSendTx(in []TxInput, out []TxOutput) types.Tx {
+	return SendTx{Inputs: in, Outputs: out}
+}
+
+// NewSendOneTx is a helper for the standard (?) case where there is exactly
+// one sender and one recipient
+func NewSendOneTx(sender, recipient crypto.Address, amount coin.Coins) types.Tx {
+	in := []TxInput{{Address: sender, Coins: amount}}
+	out := []TxOutput{{Address: recipient, Coins: amount}}
+	return SendTx{Inputs: in, Outputs: out}
+}
+
 //------------------------
+// Implements types.Tx
+
 func (tx SendTx) Get(key interface{}) (value interface{}) {
 	switch k := key.(type) {
 	case string:
@@ -170,8 +172,8 @@ func (tx SendTx) SignBytes() []byte {
 	return b
 }
 
-func (tx SendTx) Signers() []types.Address {
-	addrs := make([]types.Address, len(tx.Inputs))
+func (tx SendTx) Signers() []crypto.Address {
+	addrs := make([]crypto.Address, len(tx.Inputs))
 	for i, in := range tx.Inputs {
 		addrs[i] = in.Address
 	}

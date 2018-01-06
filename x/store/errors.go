@@ -1,5 +1,5 @@
 //nolint
-package coin
+package store
 
 import (
 	"github.com/cosmos/cosmos-sdk/errors"

@@ -25,7 +25,7 @@ type testTx struct {
 func (tx testTx) Get(key interface{}) (value interface{}) { return nil }
 func (tx testTx) SignBytes() []byte                       { return nil }
 func (tx testTx) ValidateBasic() error                    { return nil }
-func (tx testTx) Signers() []types.Address                { return nil }
+func (tx testTx) Signers() []crypto.Address               { return nil }
 func (tx testTx) TxBytes() []byte                         { return nil }
 func (tx testTx) Signatures() []types.StdSignature        { return nil }
 

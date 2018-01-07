@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/coin"
-	"github.com/cosmos/cosmos-sdk/x/store"
+	"github.com/cosmos/cosmos-sdk/x/coinstore"
 )
 
 type (
@@ -30,16 +30,16 @@ type TxInput struct {
 // ValidateBasic - validate transaction input
 func (txIn TxInput) ValidateBasic() error {
 	if len(txIn.Address) == 0 {
-		return store.ErrInvalidAddress(txIn.Address.String())
+		return coinstore.ErrInvalidAddress(txIn.Address.String())
 	}
 	if txIn.Sequence < 0 {
 		return ErrInvalidSequence(txIn.Sequence)
 	}
 	if !txIn.Coins.IsValid() {
-		return store.ErrInvalidCoins(txIn.Coins.String())
+		return coinstore.ErrInvalidCoins(txIn.Coins.String())
 	}
 	if !txIn.Coins.IsPositive() {
-		return store.ErrInvalidCoins(txIn.Coins.String())
+		return coinstore.ErrInvalidCoins(txIn.Coins.String())
 	}
 	return nil
 }
@@ -75,13 +75,13 @@ type TxOutput struct {
 // ValidateBasic - validate transaction output
 func (txOut TxOutput) ValidateBasic() error {
 	if len(txOut.Address) == 0 {
-		return store.ErrInvalidAddress(txOut.Address.String())
+		return coinstore.ErrInvalidAddress(txOut.Address.String())
 	}
 	if !txOut.Coins.IsValid() {
-		return store.ErrInvalidCoins(txOut.Coins.String())
+		return coinstore.ErrInvalidCoins(txOut.Coins.String())
 	}
 	if !txOut.Coins.IsPositive() {
-		return store.ErrInvalidCoins(txOut.Coins.String())
+		return coinstore.ErrInvalidCoins(txOut.Coins.String())
 	}
 	return nil
 }
@@ -135,7 +135,7 @@ func (tx SendTx) ValidateBasic() error {
 	}
 	// make sure inputs and outputs match
 	if !totalIn.IsEqual(totalOut) {
-		return store.ErrInvalidCoins(totalIn.String()) // TODO
+		return coinstore.ErrInvalidCoins(totalIn.String()) // TODO
 	}
 	return nil
 }

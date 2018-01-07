@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/types"
+	acm "github.com/cosmos/cosmos-sdk/x/account"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/sendtx"
 )
@@ -38,14 +40,14 @@ func main() {
 	handler := types.ChainDecorators(
 		// recover.Decorator(),
 		// logger.Decorator(),
-		auth.DecoratorFn(newAccountStore),
+		auth.DecoratorFn(acm.NewAccountStore),
 	).WithHandler(
-		sendtx.TransferHandlerFn(newAccountStore),
+		sendtx.TransferHandlerFn(acm.NewAccountStore),
 	)
 
 	// TODO: load genesis
 	// TODO: InitChain with validators
-	// accounts := newAccountStore(multiStore.GetKVStore("main"))
+	// accounts := acm.NewAccountStore(multiStore.GetKVStore("main"))
 	// TODO: set the genesis accounts
 
 	// Set everything on the app and load latest
@@ -72,3 +74,11 @@ func main() {
 	})
 	return
 }
+
+func txParser(txBytes []byte) (types.Tx, error) {
+	var tx sendtx.SendTx
+	err := json.Unmarshal(txBytes, &tx)
+	return tx, err
+}
+
+//-----------------------------------------------------------------------------

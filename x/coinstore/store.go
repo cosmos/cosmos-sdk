@@ -1,8 +1,9 @@
-package store
+package coinstore
 
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/coin"
 	crypto "github.com/tendermint/go-crypto"
 )
@@ -17,7 +18,7 @@ type Coinser interface {
 
 // CoinStore manages transfers between accounts
 type CoinStore struct {
-	AccountStore
+	types.AccountStore
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
@@ -36,7 +37,7 @@ func (cs CoinStore) SubtractCoins(addr crypto.Address, amt Coins) (Coins, error)
 	}
 
 	acc.SetCoins(newCoins)
-	cs.SetAccount(acc.(Account))
+	cs.SetAccount(acc.(types.Account))
 	return newCoins, nil
 }
 
@@ -53,7 +54,7 @@ func (cs CoinStore) AddCoins(addr crypto.Address, amt Coins) (Coins, error) {
 	newCoins := coins.Plus(amt)
 
 	acc.SetCoins(newCoins)
-	cs.SetAccount(acc.(Account))
+	cs.SetAccount(acc.(types.Account))
 	return newCoins, nil
 }
 

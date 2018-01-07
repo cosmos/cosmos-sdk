@@ -1,9 +1,7 @@
-package store
+package types
 
 import (
 	crypto "github.com/tendermint/go-crypto"
-
-	"github.com/cosmos/cosmos-sdk/x/coin"
 )
 
 // AccountStore indexes accounts by address.
@@ -13,18 +11,13 @@ type AccountStore interface {
 	SetAccount(acc Account)
 }
 
-// Account is a standard balance account
-// using a sequence number for replay protection
-// and a single pubkey for authentication.
-// TODO: multisig accounts?
+// Account is a standard account using a sequence number for replay protection
+// and a pubkey for authentication.
 type Account interface {
 	Address() crypto.Address
 
 	GetPubKey() crypto.PubKey
 	SetPubKey(crypto.PubKey) error
-
-	GetCoins() coin.Coins
-	SetCoins(coin.Coins) error
 
 	GetSequence() int64
 	SetSequence(int64) error

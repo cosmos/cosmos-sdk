@@ -1,11 +1,8 @@
 package auth
 
-import (
-	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/store"
-)
+import "github.com/cosmos/cosmos-sdk/types"
 
-func DecoratorFn(newAccountStore func(types.KVStore) store.AccountStore) types.Decorator {
+func DecoratorFn(newAccountStore func(types.KVStore) types.AccountStore) types.Decorator {
 	return func(ctx types.Context, ms types.MultiStore, tx types.Tx, next types.Handler) types.Result {
 
 		accountStore := newAccountStore(ms.GetKVStore("main"))
@@ -29,15 +26,7 @@ func DecoratorFn(newAccountStore func(types.KVStore) store.AccountStore) types.D
 		for i, sig := range signatures {
 
 			// get account
-			_acc := accountStore.GetAccount(signers[i])
-
-			// assert it has the right methods
-			acc, ok := _acc.(Auther)
-			if !ok {
-				return types.Result{
-					Code: 1, // TODO
-				}
-			}
+			acc := accountStore.GetAccount(signers[i])
 
 			// if no pubkey, set pubkey
 			if acc.GetPubKey().Empty() {
@@ -49,13 +38,14 @@ func DecoratorFn(newAccountStore func(types.KVStore) store.AccountStore) types.D
 				}
 			}
 
-			// check sequence number
+			// check and incremenet sequence number
 			seq := acc.GetSequence()
 			if seq != sig.Sequence {
 				return types.Result{
 					Code: 1, // TODO
 				}
 			}
+			acc.SetSequence(seq + 1)
 
 			// check sig
 			if !sig.PubKey.VerifyBytes(tx.SignBytes(), sig.Signature) {

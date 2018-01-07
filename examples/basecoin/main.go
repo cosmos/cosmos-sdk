@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	acm "github.com/cosmos/cosmos-sdk/x/account"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/sendtx"
+	"github.com/cosmos/cosmos-sdk/x/coinstore"
 )
 
 func main() {
@@ -42,7 +42,7 @@ func main() {
 		// logger.Decorator(),
 		auth.DecoratorFn(acm.NewAccountStore),
 	).WithHandler(
-		sendtx.TransferHandlerFn(acm.NewAccountStore),
+		coinstore.TransferHandlerFn(acm.NewAccountStore),
 	)
 
 	// TODO: load genesis
@@ -76,7 +76,7 @@ func main() {
 }
 
 func txParser(txBytes []byte) (types.Tx, error) {
-	var tx sendtx.SendTx
+	var tx coinstore.SendTx
 	err := json.Unmarshal(txBytes, &tx)
 	return tx, err
 }

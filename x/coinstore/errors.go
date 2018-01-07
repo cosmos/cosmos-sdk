@@ -2,6 +2,8 @@
 package coinstore
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/errors"
 )
 
@@ -67,6 +69,21 @@ func ErrInvalidCoins(log string) error {
 
 func ErrUnknownRequest(log string) error {
 	return newError(CodeUnknownRequest, log)
+}
+
+//----------------------------------------
+// TODO: clean up
+
+func ErrNoInputs() error {
+	return fmt.Errorf("No inputs")
+}
+
+func ErrNoOutputs() error {
+	return fmt.Errorf("No outputs")
+}
+
+func ErrInvalidSequence(seq int64) error {
+	return fmt.Errorf("Bad sequence %d", seq)
 }
 
 //----------------------------------------

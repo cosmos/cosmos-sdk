@@ -1,15 +1,14 @@
-package sendtx
+package coinstore
 
 import (
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/coinstore"
 )
 
 func TransferHandlerFn(newAccStore func(types.KVStore) types.AccountStore) types.Handler {
 	return func(ctx types.Context, ms types.MultiStore, tx types.Tx) types.Result {
 
 		accStore := newAccStore(ms.GetKVStore("main"))
-		cs := coinstore.CoinStore{accStore}
+		cs := CoinStore{accStore}
 
 		sendTx, ok := tx.(SendTx)
 		if !ok {

@@ -59,9 +59,6 @@ func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
 func (acc *BaseAccount) Get(key interface{}) (value interface{}, err error) {
 	switch key.(type) {
 	case string:
-		//
-	default:
-		panic("HURAH!")
 	}
 	return nil, nil
 }
@@ -70,16 +67,14 @@ func (acc *BaseAccount) Get(key interface{}) (value interface{}, err error) {
 func (acc *BaseAccount) Set(key interface{}, value interface{}) error {
 	switch key.(type) {
 	case string:
-		//
-	default:
-		panic("HURAH!")
 	}
 	return nil
 }
 
 // Implements Account
 func (acc *BaseAccount) Address() crypto.Address {
-	return acc.pubKey.Address()
+	// TODO: assert address == pubKey.Address()
+	return acc.address
 }
 
 // Implements Account

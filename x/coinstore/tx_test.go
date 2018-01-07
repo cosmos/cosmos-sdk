@@ -1,4 +1,4 @@
-package sendtx
+package coinstore
 
 import (
 	"testing"

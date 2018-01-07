@@ -1,4 +1,4 @@
-package sendtx
+package coinstore
 
 import (
 	"encoding/json"
@@ -8,21 +8,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/coin"
-	"github.com/cosmos/cosmos-sdk/x/coinstore"
-)
-
-type (
-	Address = crypto.Address
-	Coins   = coin.Coins
 )
 
 //-----------------------------------------------------------------------------
 
 // TxInput
 type TxInput struct {
-	Address  Address `json:"address"`
-	Coins    Coins   `json:"coins"`
-	Sequence int64   `json:"sequence"`
+	Address  crypto.Address `json:"address"`
+	Coins    Coins          `json:"coins"`
+	Sequence int64          `json:"sequence"`
 
 	signature crypto.Signature
 }
@@ -30,16 +24,16 @@ type TxInput struct {
 // ValidateBasic - validate transaction input
 func (txIn TxInput) ValidateBasic() error {
 	if len(txIn.Address) == 0 {
-		return coinstore.ErrInvalidAddress(txIn.Address.String())
+		return ErrInvalidAddress(txIn.Address.String())
 	}
 	if txIn.Sequence < 0 {
 		return ErrInvalidSequence(txIn.Sequence)
 	}
 	if !txIn.Coins.IsValid() {
-		return coinstore.ErrInvalidCoins(txIn.Coins.String())
+		return ErrInvalidCoins(txIn.Coins.String())
 	}
 	if !txIn.Coins.IsPositive() {
-		return coinstore.ErrInvalidCoins(txIn.Coins.String())
+		return ErrInvalidCoins(txIn.Coins.String())
 	}
 	return nil
 }
@@ -49,7 +43,7 @@ func (txIn TxInput) String() string {
 }
 
 // NewTxInput - create a transaction input, used with SendTx
-func NewTxInput(addr Address, coins Coins) TxInput {
+func NewTxInput(addr crypto.Address, coins Coins) TxInput {
 	input := TxInput{
 		Address: addr,
 		Coins:   coins,
@@ -58,7 +52,7 @@ func NewTxInput(addr Address, coins Coins) TxInput {
 }
 
 // NewTxInputWithSequence - create a transaction input, used with SendTx
-func NewTxInputWithSequence(addr Address, coins Coins, seq int64) TxInput {
+func NewTxInputWithSequence(addr crypto.Address, coins Coins, seq int64) TxInput {
 	input := NewTxInput(addr, coins)
 	input.Sequence = seq
 	return input
@@ -68,20 +62,20 @@ func NewTxInputWithSequence(addr Address, coins Coins, seq int64) TxInput {
 
 // TxOutput - expected coin movement output, used with SendTx
 type TxOutput struct {
-	Address Address `json:"address"`
-	Coins   Coins   `json:"coins"`
+	Address crypto.Address `json:"address"`
+	Coins   Coins          `json:"coins"`
 }
 
 // ValidateBasic - validate transaction output
 func (txOut TxOutput) ValidateBasic() error {
 	if len(txOut.Address) == 0 {
-		return coinstore.ErrInvalidAddress(txOut.Address.String())
+		return ErrInvalidAddress(txOut.Address.String())
 	}
 	if !txOut.Coins.IsValid() {
-		return coinstore.ErrInvalidCoins(txOut.Coins.String())
+		return ErrInvalidCoins(txOut.Coins.String())
 	}
 	if !txOut.Coins.IsPositive() {
-		return coinstore.ErrInvalidCoins(txOut.Coins.String())
+		return ErrInvalidCoins(txOut.Coins.String())
 	}
 	return nil
 }
@@ -91,7 +85,7 @@ func (txOut TxOutput) String() string {
 }
 
 // NewTxOutput - create a transaction output, used with SendTx
-func NewTxOutput(addr Address, coins Coins) TxOutput {
+func NewTxOutput(addr crypto.Address, coins Coins) TxOutput {
 	output := TxOutput{
 		Address: addr,
 		Coins:   coins,
@@ -135,7 +129,7 @@ func (tx SendTx) ValidateBasic() error {
 	}
 	// make sure inputs and outputs match
 	if !totalIn.IsEqual(totalOut) {
-		return coinstore.ErrInvalidCoins(totalIn.String()) // TODO
+		return ErrInvalidCoins(totalIn.String()) // TODO
 	}
 	return nil
 }

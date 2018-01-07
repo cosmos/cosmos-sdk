@@ -57,6 +57,13 @@ func NewTxInput(addr Address, coins Coins) TxInput {
 	return input
 }
 
+// NewTxInputWithSequence - create a transaction input, used with SendTx
+func NewTxInputWithSequence(addr Address, coins Coins, seq int64) TxInput {
+	input := NewTxInput(addr, coins)
+	input.Sequence = seq
+	return input
+}
+
 //-----------------------------------------------------------------------------
 
 // TxOutput - expected coin movement output, used with SendTx

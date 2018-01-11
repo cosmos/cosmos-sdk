@@ -34,7 +34,7 @@ func Decorator(ctx Context, ms MultiStore, tx Tx, next Handler) Result {
 }
 ```
 
-While well-written decorators wouldn't mutate any mutable context values, a malicious or buggy plugin can create unwanted side-effects, so it is highly advised for users of Context to only set immutable values.  To help enforce this contract, we require values to be certain primitive types, or a Cloner.
+While well-written decorators wouldn't mutate any mutable context values, a malicious or buggy plugin can create unwanted side-effects, so it is highly advised for users of Context to only set immutable values.  To help enforce this contract, we require values to be certain primitive types, a Cloner, or a CacheWrapper.
 
 */
 
@@ -60,6 +60,7 @@ func NewContext(header abci.Header, isCheckTx bool, txBytes []byte) Context {
 
 func (c Context) Value(key interface{}) interface{} {
 	value := c.Context.Value(key)
+	// XXX Cachewrap?  Probably not?
 	if cloner, ok := value.(Cloner); ok {
 		return cloner.Clone()
 	}
@@ -69,31 +70,35 @@ func (c Context) Value(key interface{}) interface{} {
 	return value
 }
 
-func (c Context) WithValue(key interface{}, value Cloner) Context {
-	return c.withValue(key, value)
-}
-
-func (c Context) WithValueProto(key interface{}, value proto.Message) Context {
-	return c.withValue(key, value)
-}
-
-func (c Context) WithValueString(key interface{}, value string) Context {
-	return c.withValue(key, value)
-}
-
-func (c Context) WithValueInt32(key interface{}, value int32) Context {
-	return c.withValue(key, value)
-}
-
-func (c Context) WithValueUint32(key interface{}, value uint32) Context {
-	return c.withValue(key, value)
-}
-
-func (c Context) WithValueUint64(key interface{}, value uint64) Context {
-	return c.withValue(key, value)
-}
-
 func (c Context) WithValueUnsafe(key interface{}, value interface{}) Context {
+	return c.withValue(key, value)
+}
+
+func (c Context) WithCloner(key interface{}, value Cloner) Context {
+	return c.withValue(key, value)
+}
+
+func (c Context) WithCacheWrapper(key interface{}, value CacheWrapper) Context {
+	return c.withValue(key, value)
+}
+
+func (c Context) WithProtoMsg(key interface{}, value proto.Message) Context {
+	return c.withValue(key, value)
+}
+
+func (c Context) WithString(key interface{}, value string) Context {
+	return c.withValue(key, value)
+}
+
+func (c Context) WithInt32(key interface{}, value int32) Context {
+	return c.withValue(key, value)
+}
+
+func (c Context) WithUint32(key interface{}, value uint32) Context {
+	return c.withValue(key, value)
+}
+
+func (c Context) WithUint64(key interface{}, value uint64) Context {
 	return c.withValue(key, value)
 }
 
@@ -132,6 +137,10 @@ func (c Context) IsCheckTx() bool {
 
 func (c Context) TxBytes() []byte {
 	return c.Value(contextKeyTxBytes).([]byte)
+}
+
+func (c Context) KVStore(key interface{}) KVStore {
+	return c.Value(key).(KVStore)
 }
 
 // Unexposed to prevent overriding.

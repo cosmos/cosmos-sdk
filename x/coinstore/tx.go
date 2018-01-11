@@ -7,7 +7,6 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/coin"
 )
 
 //-----------------------------------------------------------------------------
@@ -15,7 +14,7 @@ import (
 // TxInput
 type TxInput struct {
 	Address  crypto.Address `json:"address"`
-	Coins    Coins          `json:"coins"`
+	Coins    types.Coins    `json:"coins"`
 	Sequence int64          `json:"sequence"`
 
 	signature crypto.Signature
@@ -43,7 +42,7 @@ func (txIn TxInput) String() string {
 }
 
 // NewTxInput - create a transaction input, used with SendTx
-func NewTxInput(addr crypto.Address, coins Coins) TxInput {
+func NewTxInput(addr crypto.Address, coins types.Coins) TxInput {
 	input := TxInput{
 		Address: addr,
 		Coins:   coins,
@@ -52,7 +51,7 @@ func NewTxInput(addr crypto.Address, coins Coins) TxInput {
 }
 
 // NewTxInputWithSequence - create a transaction input, used with SendTx
-func NewTxInputWithSequence(addr crypto.Address, coins Coins, seq int64) TxInput {
+func NewTxInputWithSequence(addr crypto.Address, coins types.Coins, seq int64) TxInput {
 	input := NewTxInput(addr, coins)
 	input.Sequence = seq
 	return input
@@ -63,7 +62,7 @@ func NewTxInputWithSequence(addr crypto.Address, coins Coins, seq int64) TxInput
 // TxOutput - expected coin movement output, used with SendTx
 type TxOutput struct {
 	Address crypto.Address `json:"address"`
-	Coins   Coins          `json:"coins"`
+	Coins   types.Coins    `json:"coins"`
 }
 
 // ValidateBasic - validate transaction output
@@ -85,7 +84,7 @@ func (txOut TxOutput) String() string {
 }
 
 // NewTxOutput - create a transaction output, used with SendTx
-func NewTxOutput(addr crypto.Address, coins Coins) TxOutput {
+func NewTxOutput(addr crypto.Address, coins types.Coins) TxOutput {
 	output := TxOutput{
 		Address: addr,
 		Coins:   coins,
@@ -95,13 +94,21 @@ func NewTxOutput(addr crypto.Address, coins Coins) TxOutput {
 
 //-----------------------------------------------------------------------------
 
-var _ types.Tx = (*SendTx)(nil)
+type CoinstoreTx interface {
+	Tx
+	AssertIsCoinstoreTx()
+}
+
+var _ CoinstoreTx = (*SendTx)(nil)
 
 // SendTx - high level transaction of the coin module
 type SendTx struct {
 	Inputs  []TxInput  `json:"inputs"`
 	Outputs []TxOutput `json:"outputs"`
 }
+
+// Used to switch in the decorator to process all Coinstore txs.
+func (tx SendTx) AssertIsCoinstoreTx() {}
 
 // ValidateBasic - validate the send transaction
 func (tx SendTx) ValidateBasic() error {
@@ -114,7 +121,7 @@ func (tx SendTx) ValidateBasic() error {
 		return ErrNoOutputs()
 	}
 	// make sure all inputs and outputs are individually valid
-	var totalIn, totalOut Coins
+	var totalIn, totalOut types.Coins
 	for _, in := range tx.Inputs {
 		if err := in.ValidateBasic(); err != nil {
 			return err

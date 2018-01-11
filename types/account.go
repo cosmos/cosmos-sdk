@@ -4,19 +4,12 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
-// AccountStore indexes accounts by address.
-type AccountStore interface {
-	NewAccountWithAddress(addr crypto.Address) Account
-	GetAccount(addr crypto.Address) Account
-	SetAccount(acc Account)
-}
-
 // Account is a standard account using a sequence number for replay protection
 // and a pubkey for authentication.
 type Account interface {
 	Address() crypto.Address
 
-	GetPubKey() crypto.PubKey
+	GetPubKey() crypto.PubKey // can return nil.
 	SetPubKey(crypto.PubKey) error
 
 	GetSequence() int64
@@ -24,4 +17,11 @@ type Account interface {
 
 	Get(key interface{}) (value interface{}, err error)
 	Set(key interface{}, value interface{}) error
+}
+
+// AccountStore indexes accounts by address.
+type AccountStore interface {
+	NewAccountWithAddress(addr crypto.Address) Account
+	GetAccount(addr crypto.Address) Account
+	SetAccount(acc Account)
 }

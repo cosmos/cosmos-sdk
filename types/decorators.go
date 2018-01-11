@@ -1,12 +1,12 @@
 package types
 
 // A Decorator executes before/during/after a handler to enhance functionality.
-type Decorator func(ctx Context, ms MultiStore, tx Tx, next Handler) Result
+type Decorator func(ctx Context, tx Tx, next Handler) Result
 
 // Return a decorated handler
 func Decorate(dec Decorator, next Handler) Handler {
-	return func(ctx Context, ms MultiStore, tx Tx) Result {
-		return dec(ctx, ms, tx, next)
+	return func(ctx Context, tx Tx) Result {
+		return dec(ctx, tx, next)
 	}
 }
 

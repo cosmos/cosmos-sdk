@@ -80,6 +80,12 @@ type CommitStoreLoader func(id CommitID) (CommitStore, error)
 // KVStore is a simple interface to get/set data
 type KVStore interface {
 
+	// TODO Not yet implemented.
+	// CreateSubKVStore(key *storeKey) (KVStore, error)
+
+	// TODO Not yet implemented.
+	// GetSubKVStore(key *storeKey) KVStore
+
 	// Get returns nil iff key doesn't exist. Panics on nil key.
 	Get(key []byte) []byte
 

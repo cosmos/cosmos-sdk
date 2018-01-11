@@ -1,4 +1,4 @@
-package coin
+package types
 
 import (
 	"testing"

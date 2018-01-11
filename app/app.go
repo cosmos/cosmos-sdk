@@ -193,7 +193,7 @@ func (app *App) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 	}
 
 	// Run the handler.
-	var result = app.handler(ctx, app.ms, tx)
+	var result = app.handler(ctx, app.msCheck, tx)
 
 	// Tell the blockchain engine (i.e. Tendermint).
 	return abci.ResponseCheckTx{
@@ -226,7 +226,7 @@ func (app *App) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	}
 
 	// Run the handler.
-	var result = app.handler(ctx, app.ms, tx)
+	var result = app.handler(ctx, app.msDeliver, tx)
 
 	// After-handler hooks.
 	if result.Code == abci.CodeTypeOK {

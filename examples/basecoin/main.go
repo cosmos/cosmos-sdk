@@ -30,20 +30,40 @@ func main() {
 	// create CommitStoreLoader
 	cacheSize := 10000
 	numHistory := int64(100)
-	loader := store.NewIAVLStoreLoader(db, cacheSize, numHistory)
+	mainLoader := store.NewIAVLStoreLoader(db, cacheSize, numHistory)
+	ibcLoader := store.NewIAVLStoreLoader(db, cacheSize, numHistory)
+
+	// The key to access the main KVStore.
+	var mainKey = storeKey("main")
+	var ibcKey = storeKey("ibc")
 
 	// Create MultiStore
 	multiStore := store.NewCommitMultiStore(db)
-	multiStore.SetSubstoreLoader("main", loader)
+	multiStore.SetSubstoreLoader(mainKey, mainLoader)
+	multiStore.SetSubstoreLoader(ibcKey, ibcLoader)
+
+	// XXX
+	var appAccountCodec AccountCodec = nil
 
 	// Create Handler
 	handler := types.ChainDecorators(
-		// recover.Decorator(),
-		// logger.Decorator(),
-		auth.DecoratorFn(acm.NewAccountStore),
-	).WithHandler(
-		coinstore.TransferHandlerFn(acm.NewAccountStore),
-	)
+		recover.Decorator(),
+		logger.Decorator(),
+		auth.Decorator(appAccountCodec),
+		fees.Decorator(mainKey),
+		rollbackDecorator(),      // XXX define.
+		ibc.Decorator(ibcKey),    // Handle IBC messages.
+		pos.Decorator(mainKey),   // Handle staking messages.
+		gov.Decorator(mainKey),   // Handle governance messages.
+		coins.Decorator(mainKey), // Handle coinstore messages.
+	).WithHandler(func(ctx types.context, tx Tx) Result {
+		/*
+			switch tx.(type) {
+			case CustomTx1: ...
+			case CustomTx2: ...
+			}
+		*/
+	})
 
 	// TODO: load genesis
 	// TODO: InitChain with validators
@@ -75,10 +95,25 @@ func main() {
 	return
 }
 
+//----------------------------------------
+// Misc.
+
 func txParser(txBytes []byte) (types.Tx, error) {
 	var tx coinstore.SendTx
 	err := json.Unmarshal(txBytes, &tx)
 	return tx, err
 }
 
-//-----------------------------------------------------------------------------
+// an unexported (private) key which no module could know of unless
+// it was passed in from the app.
+type storeKey struct {
+	writeable bool
+	name      string
+}
+
+func newStoreKey(name string) storeKey {
+	return storeKey{true, name}
+}
+func (s storeKey) ReadOnly() storeKey {
+	return storeKey{false, s.name}
+}

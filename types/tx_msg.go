@@ -8,7 +8,7 @@ type Msg interface {
 	Get(key interface{}) (value interface{})
 
 	// Get the canonical byte representation of the Msg.
-	SignBytes() []byte
+	GetSignBytes() []byte
 
 	// ValidateBasic does a simple validation check that
 	// doesn't require access to any other information.

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -36,13 +35,13 @@ func main() {
 	ibcLoader := store.NewIAVLStoreLoader(db, cacheSize, numHistory)
 
 	// The key to access the main KVStore.
-	var mainStoreKey = new(KVStoreKey)
-	var ibcStoreKey = new(KVStoreKey)
+	var mainStoreKey = sdk.NewKVStoreKey("main")
+	var ibcStoreKey = sdk.NewKVStoreKey("ibc")
 
 	// Create MultiStore
 	multiStore := store.NewCommitMultiStore(db)
-	multiStore.SetSubstoreLoader("main", mainStoreKey, mainLoader)
-	multiStore.SetSubstoreLoader("ibc", ibcStoreKey, ibcLoader)
+	multiStore.SetSubstoreLoader(mainStoreKey, mainLoader)
+	multiStore.SetSubstoreLoader(ibcStoreKey, ibcLoader)
 	app.SetCommitMultiStore(multiStore)
 
 	// Set Tx decoder

@@ -2,6 +2,8 @@ package types
 
 import (
 	"context"
+	"sync"
+
 	"github.com/golang/protobuf/proto"
 
 	abci "github.com/tendermint/abci/types"
@@ -83,7 +85,7 @@ func (c Context) WithProtoMsg(key interface{}, value proto.Message) Context {
 	return c.withValue(key, value)
 }
 
-func (c Context) WithMultiStore(key *MultiStoreKey, ms MultiStore) Context {
+func (c Context) WithMultiStore(key *KVStoreKey, ms MultiStore) Context {
 	return c.withValue(key, ms)
 }
 
@@ -218,7 +220,7 @@ type thePast struct {
 
 func newThePast() *thePast {
 	return &thePast{
-		val: 0,
+		ver: 0,
 		ops: nil,
 	}
 }
@@ -238,10 +240,11 @@ func (pst *thePast) version() int {
 
 // Returns false if ver > 0.
 // The first operation is version 1.
-func (pst *thePast) getOp(ver int) (Op, bool) {
+func (pst *thePast) getOp(ver int64) (Op, bool) {
 	pst.mtx.RLock()
 	defer pst.mtx.RUnlock()
-	if len(pst.ops) < ver {
+	l := int64(len(pst.ops))
+	if l < ver {
 		return Op{}, false
 	} else {
 		return pst.ops[ver-1], true

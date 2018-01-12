@@ -17,3 +17,4 @@ type CacheKVStore = types.CacheKVStore
 type CacheWrapper = types.CacheWrapper
 type CacheWrap = types.CacheWrap
 type CommitID = types.CommitID
+type SubstoreKey = types.SubstoreKey

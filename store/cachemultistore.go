@@ -9,7 +9,7 @@ type cacheMultiStore struct {
 	db           CacheKVStore
 	nextVersion  int64
 	lastCommitID CommitID
-	substores    map[string]CacheWrap
+	substores    map[SubstoreKey]CacheWrap
 }
 
 func newCacheMultiStoreFromRMS(rms *rootMultiStore) cacheMultiStore {
@@ -17,10 +17,10 @@ func newCacheMultiStoreFromRMS(rms *rootMultiStore) cacheMultiStore {
 		db:           NewCacheKVStore(rms.db),
 		nextVersion:  rms.nextVersion,
 		lastCommitID: rms.lastCommitID,
-		substores:    make(map[string]CacheWrap, len(rms.substores)),
+		substores:    make(map[SubstoreKey]CacheWrap, len(rms.substores)),
 	}
-	for name, substore := range rms.substores {
-		cms.substores[name] = substore.CacheWrap()
+	for key, substore := range rms.substores {
+		cms.substores[key] = substore.CacheWrap()
 	}
 	return cms
 }
@@ -30,10 +30,10 @@ func newCacheMultiStoreFromCMS(cms cacheMultiStore) cacheMultiStore {
 		db:           NewCacheKVStore(cms.db),
 		nextVersion:  cms.nextVersion,
 		lastCommitID: cms.lastCommitID,
-		substores:    make(map[string]CacheWrap, len(cms.substores)),
+		substores:    make(map[SubstoreKey]CacheWrap, len(cms.substores)),
 	}
-	for name, substore := range cms.substores {
-		cms2.substores[name] = substore.CacheWrap()
+	for key, substore := range cms.substores {
+		cms2.substores[key] = substore.CacheWrap()
 	}
 	return cms2
 }
@@ -67,11 +67,11 @@ func (cms cacheMultiStore) CacheMultiStore() CacheMultiStore {
 }
 
 // Implements CacheMultiStore
-func (cms cacheMultiStore) GetStore(name string) interface{} {
-	return cms.substores[name]
+func (cms cacheMultiStore) GetStore(key SubstoreKey) interface{} {
+	return cms.substores[key]
 }
 
 // Implements CacheMultiStore
-func (cms cacheMultiStore) GetKVStore(name string) KVStore {
-	return cms.substores[name].(KVStore)
+func (cms cacheMultiStore) GetKVStore(key SubstoreKey) KVStore {
+	return cms.substores[key].(KVStore)
 }

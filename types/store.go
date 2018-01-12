@@ -27,8 +27,8 @@ type MultiStore interface {
 	CacheMultiStore() CacheMultiStore
 
 	// Convenience for fetching substores.
-	GetStore(name string) interface{}
-	GetKVStore(name string) KVStore
+	GetStore(SubstoreKey) interface{}
+	GetKVStore(SubstoreKey) KVStore
 }
 
 // From MultiStore.CacheMultiStore()....
@@ -54,10 +54,10 @@ type CommitMultiStore interface {
 	MultiStore
 
 	// Add a substore loader.
-	SetSubstoreLoader(name string, loader CommitStoreLoader)
+	SetSubstoreLoader(key SubstoreKey, loader CommitStoreLoader)
 
 	// Gets the substore, which is a CommitSubstore.
-	GetSubstore(name string) CommitStore
+	GetSubstore(key SubstoreKey) CommitStore
 
 	// Load the latest persisted version.
 	// Called once after all calls to SetSubstoreLoader are complete.
@@ -148,7 +148,7 @@ type CacheWrap interface {
 }
 
 //----------------------------------------
-// etc
+// CommitID
 
 // CommitID contains the tree version number and its merkle root.
 type CommitID struct {
@@ -164,5 +164,34 @@ func (cid CommitID) String() string {
 	return fmt.Sprintf("CommitID{%v:%X}", cid.Hash, cid.Version)
 }
 
-// new(KVStoreKey) is a capabilities key.
-type KVStoreKey struct{}
+//----------------------------------------
+// Keys for accessing substores
+
+// SubstoreKey is a key used to index substores.
+type SubstoreKey interface {
+	Name() string
+
+	String() string
+}
+
+// KVStoreKey is used for accessing substores.
+// Only the pointer value should ever be used - it functions as a capabilities key.
+type KVStoreKey struct {
+	name string
+}
+
+// NewKVStoreKey returns a new pointer to a KVStoreKey.
+// Use a pointer so keys don't collide.
+func NewKVStoreKey(name string) *KVStoreKey {
+	return &KVStoreKey{
+		name: name,
+	}
+}
+
+func (key *KVStoreKey) Name() string {
+	return key.name
+}
+
+func (key *KVStoreKey) String() string {
+	return fmt.Sprintf("KVStoreKey{%p, %s}", key, key.name)
+}

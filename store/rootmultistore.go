@@ -22,8 +22,8 @@ type rootMultiStore struct {
 	db           dbm.DB
 	nextVersion  int64
 	lastCommitID CommitID
-	storeLoaders map[string]CommitStoreLoader
-	substores    map[string]CommitStore
+	storeLoaders map[SubstoreKey]CommitStoreLoader
+	substores    map[SubstoreKey]CommitStore
 }
 
 var _ CommitMultiStore = (*rootMultiStore)(nil)
@@ -32,22 +32,22 @@ func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 	return &rootMultiStore{
 		db:           db,
 		nextVersion:  0,
-		storeLoaders: make(map[string]CommitStoreLoader),
-		substores:    make(map[string]CommitStore),
+		storeLoaders: make(map[SubstoreKey]CommitStoreLoader),
+		substores:    make(map[SubstoreKey]CommitStore),
 	}
 }
 
 // Implements CommitMultiStore.
-func (rs *rootMultiStore) SetSubstoreLoader(name string, loader CommitStoreLoader) {
-	if _, ok := rs.storeLoaders[name]; ok {
-		panic(fmt.Sprintf("rootMultiStore duplicate substore name " + name))
+func (rs *rootMultiStore) SetSubstoreLoader(key SubstoreKey, loader CommitStoreLoader) {
+	if _, ok := rs.storeLoaders[key]; ok {
+		panic(fmt.Sprintf("rootMultiStore duplicate substore key", key))
 	}
-	rs.storeLoaders[name] = loader
+	rs.storeLoaders[key] = loader
 }
 
 // Implements CommitMultiStore.
-func (rs *rootMultiStore) GetSubstore(name string) CommitStore {
-	return rs.substores[name]
+func (rs *rootMultiStore) GetSubstore(key SubstoreKey) CommitStore {
+	return rs.substores[key]
 }
 
 // Implements CommitMultiStore.
@@ -61,12 +61,12 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 
 	// Special logic for version 0
 	if ver == 0 {
-		for name, storeLoader := range rs.storeLoaders {
+		for key, storeLoader := range rs.storeLoaders {
 			store, err := storeLoader(CommitID{})
 			if err != nil {
 				return fmt.Errorf("Failed to load rootMultiStore: %v", err)
 			}
-			rs.substores[name] = store
+			rs.substores[key] = store
 		}
 
 		rs.nextVersion = 1
@@ -82,24 +82,24 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	}
 
 	// Load each Substore
-	var newSubstores = make(map[string]CommitStore)
+	var newSubstores = make(map[SubstoreKey]CommitStore)
 	for _, store := range state.Substores {
-		name, commitID := store.Name, store.CommitID
-		storeLoader := rs.storeLoaders[name]
+		key, commitID := rs.nameToKey(store.Name), store.CommitID
+		storeLoader := rs.storeLoaders[key]
 		if storeLoader == nil {
-			return fmt.Errorf("Failed to load rootMultiStore substore %v for commitID %v: %v", name, commitID, err)
+			return fmt.Errorf("Failed to load rootMultiStore substore %v for commitID %v: %v", key, commitID, err)
 		}
 		store, err := storeLoader(commitID)
 		if err != nil {
 			return fmt.Errorf("Failed to load rootMultiStore: %v", err)
 		}
-		newSubstores[name] = store
+		newSubstores[key] = store
 	}
 
 	// If any CommitStoreLoaders were not used, return error.
-	for name := range rs.storeLoaders {
-		if _, ok := newSubstores[name]; !ok {
-			return fmt.Errorf("Unused CommitStoreLoader: %v", name)
+	for key := range rs.storeLoaders {
+		if _, ok := newSubstores[key]; !ok {
+			return fmt.Errorf("Unused CommitStoreLoader: %v", key)
 		}
 	}
 
@@ -108,6 +108,15 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	rs.lastCommitID = state.CommitID()
 	rs.substores = newSubstores
 	return nil
+}
+
+func (rs *rootMultiStore) nameToKey(name string) SubstoreKey {
+	for key, _ := range rs.substores {
+		if key.Name() == name {
+			return key
+		}
+	}
+	panic("Unknown name " + name)
 }
 
 //----------------------------------------
@@ -161,13 +170,13 @@ func (rs *rootMultiStore) CacheMultiStore() CacheMultiStore {
 }
 
 // Implements MultiStore.
-func (rs *rootMultiStore) GetStore(name string) interface{} {
-	return rs.substores[name]
+func (rs *rootMultiStore) GetStore(key SubstoreKey) interface{} {
+	return rs.substores[key]
 }
 
 // Implements MultiStore.
-func (rs *rootMultiStore) GetKVStore(name string) KVStore {
-	return rs.substores[name].(KVStore)
+func (rs *rootMultiStore) GetKVStore(key SubstoreKey) KVStore {
+	return rs.substores[key].(KVStore)
 }
 
 //----------------------------------------
@@ -246,16 +255,16 @@ func setLatestVersion(batch dbm.Batch, version int64) {
 }
 
 // Commits each substore and returns a new commitState.
-func commitSubstores(version int64, substoresMap map[string]CommitStore) commitState {
+func commitSubstores(version int64, substoresMap map[SubstoreKey]CommitStore) commitState {
 	substores := make([]substore, 0, len(substoresMap))
 
-	for name, store := range substoresMap {
+	for key, store := range substoresMap {
 		// Commit
 		commitID := store.Commit()
 
 		// Record CommitID
 		substore := substore{}
-		substore.Name = name
+		substore.Name = key.Name()
 		substore.CommitID = commitID
 		substores = append(substores, substore)
 	}

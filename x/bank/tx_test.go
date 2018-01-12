@@ -1,4 +1,4 @@
-package coinstore
+package bank
 
 import (
 	"testing"

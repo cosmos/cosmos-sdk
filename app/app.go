@@ -26,6 +26,18 @@ type App struct {
 	// Main (uncached) state
 	ms types.CommitMultiStore
 
+	// Unmarshal []byte into types.Tx
+	txDecoder types.TxDecoder
+
+	// Ante handler for fee and auth.
+	defaultAnteHandler types.AnteHandler
+
+	// Handle any kind of message.
+	router Router
+
+	//--------------------
+	// Volatile
+
 	// CheckTx state, a cache-wrap of `.ms`.
 	msCheck types.CacheMultiStore
 
@@ -35,22 +47,18 @@ type App struct {
 	// Current block header
 	header abci.Header
 
-	// Unmarshal []byte into types.Tx
-	txParser TxParser
-
-	// Handler for CheckTx and DeliverTx.
-	handler types.Handler
-
-	// Cached validator changes from DeliverTx
+	// Cached validator changes from DeliverTx.
 	valUpdates []abci.Validator
 }
 
 var _ abci.Application = &App{}
 
-func NewApp(name string) *App {
+func NewApp(name string, ms CommitMultiStore) *App {
 	return &App{
-		name:   name,
 		logger: makeDefaultLogger(),
+		name:   name,
+		ms:     ms,
+		router: NewRouter(),
 	}
 }
 
@@ -58,25 +66,23 @@ func (app *App) Name() string {
 	return app.name
 }
 
-func (app *App) SetCommitMultiStore(ms types.CommitMultiStore) {
-	app.ms = ms
+func (app *App) SetTxDecoder(txDecoder types.TxDecoder) {
+	app.txDecoder = txDecoder
 }
 
-/*
-SetBeginBlocker
-SetEndBlocker
-SetInitStater
+func (app *App) SetDefaultAnteHandler(ah types.AnteHandler) {
+	app.defaultAnteHandler = ah
+}
+
+func (app *App) Router() Router {
+	return app.router
+}
+
+/* TODO consider:
+func (app *App) SetBeginBlocker(...) {}
+func (app *App) SetEndBlocker(...) {}
+func (app *App) SetInitStater(...) {}
 */
-
-type TxParser func(txBytes []byte) (types.Tx, error)
-
-func (app *App) SetTxParser(txParser TxParser) {
-	app.txParser = txParser
-}
-
-func (app *App) SetHandler(handler types.Handler) {
-	app.handler = handler
-}
 
 func (app *App) LoadLatestVersion() error {
 	app.ms.LoadLatestVersion()
@@ -179,23 +185,8 @@ func (app *App) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBl
 // Implements ABCI
 func (app *App) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 
-	// Initialize arguments to Handler.
-	var isCheckTx = true
-	var ctx = types.NewContext(app.header, isCheckTx, txBytes)
-	var tx types.Tx
+	result := app.runTx(true, txBytes)
 
-	var err error
-	tx, err = app.txParser(txBytes)
-	if err != nil {
-		return abci.ResponseCheckTx{
-			Code: 1, //  TODO
-		}
-	}
-
-	// Run the handler.
-	var result = app.handler(ctx, app.msCheck, tx)
-
-	// Tell the blockchain engine (i.e. Tendermint).
 	return abci.ResponseCheckTx{
 		Code:      result.Code,
 		Data:      result.Data,
@@ -207,33 +198,21 @@ func (app *App) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 		},
 		Tags: result.Tags,
 	}
+
 }
 
 // Implements ABCI
 func (app *App) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 
-	// Initialize arguments to Handler.
-	var isCheckTx = false
-	var ctx = types.NewContext(app.header, isCheckTx, txBytes)
-	var tx types.Tx
-
-	var err error
-	tx, err = app.txParser(txBytes)
-	if err != nil {
-		return abci.ResponseDeliverTx{
-			Code: 1, //  TODO
-		}
-	}
-
-	// Run the handler.
-	var result = app.handler(ctx, app.msDeliver, tx)
+	result := app.runTx(false, txBytes)
 
 	// After-handler hooks.
 	if result.Code == abci.CodeTypeOK {
 		app.valUpdates = append(app.valUpdates, result.ValidatorUpdates...)
 	} else {
-		// Even though the Code is not OK, there will be some side effects,
-		// like those caused by fee deductions or sequence incrementations.
+		// Even though the Code is not OK, there will be some side
+		// effects, like those caused by fee deductions or sequence
+		// incrementations.
 	}
 
 	// Tell the blockchain engine (i.e. Tendermint).
@@ -245,6 +224,56 @@ func (app *App) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 		GasUsed:   result.GasUsed,
 		Tags:      result.Tags,
 	}
+}
+
+func (app *App) runTx(isCheckTx bool, txBytes []byte) (result types.Result) {
+
+	// Handle any panics.
+	defer func() {
+		if r := recover(); r != nil {
+			result = types.Result{
+				Code: 1, // TODO
+				Log:  fmt.Sprintf("Recovered: %v\n", r),
+			}
+		}
+	}()
+
+	var store types.MultiStore
+	if isCheckTx {
+		store = app.msCheck
+	} else {
+		store = app.msDeliver
+	}
+
+	// Initialize arguments to Handler.
+	var ctx = types.NewContext(
+		store,
+		app.header,
+		isCheckTx,
+		txBytes,
+	)
+
+	// Decode the Tx.
+	var err error
+	tx, err = app.txDecoder(txBytes)
+	if err != nil {
+		return types.Result{
+			Code: 1, //  TODO
+		}
+	}
+
+	// Run the ante handler.
+	ctx, result, abort := app.defaultAnteHandler(ctx, tx)
+	if isCheckTx || abort {
+		return result
+	}
+
+	// Match and run route.
+	msgType := tx.Type()
+	handler := app.router.Route(msgType)
+	result = handler(ctx, tx)
+
+	return result
 }
 
 // Implements ABCI

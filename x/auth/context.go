@@ -6,28 +6,37 @@ import (
 
 /*
 
-	Usage:
+Usage:
 
-	import "accounts"
+var accountStore types.AccountStore
 
-	var acc accounts.Account
+// Fetch all signer accounts.
+addrs := tx.GetSigners()
+signers := make([]types.Account, len(addrs))
+for i, addr := range addrs {
+	acc := accountStore.GetAccount(ctx)
+	signers[i] = acc
+}
+ctx = auth.SetSigners(ctx, signers)
 
-	accounts.SetAccount(ctx, acc)
-	acc2 := accounts.GetAccount(ctx)
+// Get all signer accounts.
+signers := auth.GetSigners(ctx)
+for i, signer := range signers {
+	signer.Address() == tx.GetSigners()[i]
+}
 
 */
 
 type contextKey int // local to the auth module
 
 const (
-	// A context key of the Account variety
-	contextKeyAccount contextKey = iota
+	contextKeySigners contextKey = iota
 )
 
-func SetAccount(ctx types.Context, account types.Account) types.Context {
-	return ctx.WithValueUnsafe(contextKeyAccount, account)
+func WithSigners(ctx types.Context, accounts []types.Account) types.Context {
+	return ctx.WithValueUnsafe(contextKeySigners, accounts)
 }
 
-func GetAccount(ctx types.Context) types.Account {
-	return ctx.Value(contextKeyAccount).(types.Account)
+func GetSigners(ctx types.Context) []types.Account {
+	return ctx.Value(contextKeySigners).([]types.Account)
 }

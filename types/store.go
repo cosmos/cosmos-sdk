@@ -80,12 +80,6 @@ type CommitStoreLoader func(id CommitID) (CommitStore, error)
 // KVStore is a simple interface to get/set data
 type KVStore interface {
 
-	// TODO Not yet implemented.
-	// CreateSubKVStore(key *storeKey) (KVStore, error)
-
-	// TODO Not yet implemented.
-	// GetSubKVStore(key *storeKey) KVStore
-
 	// Get returns nil iff key doesn't exist. Panics on nil key.
 	Get(key []byte) []byte
 
@@ -107,6 +101,13 @@ type KVStore interface {
 	// Start must be greater than end, or the Iterator is invalid.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	ReverseIterator(start, end []byte) Iterator
+
+	// TODO Not yet implemented.
+	// CreateSubKVStore(key *storeKey) (KVStore, error)
+
+	// TODO Not yet implemented.
+	// GetSubKVStore(key *storeKey) KVStore
+
 }
 
 // dbm.DB implements KVStore so we can CacheKVStore it.
@@ -162,3 +163,6 @@ func (cid CommitID) IsZero() bool {
 func (cid CommitID) String() string {
 	return fmt.Sprintf("CommitID{%v:%X}", cid.Hash, cid.Version)
 }
+
+// new(KVStoreKey) is a capabilities key.
+type KVStoreKey struct{}

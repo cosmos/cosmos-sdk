@@ -4,6 +4,10 @@ import crypto "github.com/tendermint/go-crypto"
 
 type Msg interface {
 
+	// Return the message type.
+	// Must be alphanumeric or empty.
+	Type() string
+
 	// Get some property of the Msg.
 	Get(key interface{}) (value interface{})
 
@@ -17,15 +21,19 @@ type Msg interface {
 	// Signers returns the addrs of signers that must sign.
 	// CONTRACT: All signatures must be present to be valid.
 	// CONTRACT: Returns addrs in some deterministic order.
-	Signers() []crypto.Address
+	GetSigners() []crypto.Address
 }
 
 type Tx interface {
 	Msg
 
+	// The address that pays the base fee for this message.  The fee is
+	// deducted before the Msg is processed.
+	GetFeePayer() crypto.Address
+
 	// Get the canonical byte representation of the Tx.
 	// Includes any signatures (or empty slots).
-	TxBytes() []byte
+	GetTxBytes() []byte
 
 	// Signatures returns the signature of signers who signed the Msg.
 	// CONTRACT: Length returned is same as length of
@@ -34,5 +42,12 @@ type Tx interface {
 	// CONTRACT: If the signature is missing (ie the Msg is
 	// invalid), then the corresponding signature is
 	// .Empty().
-	Signatures() []StdSignature
+	GetSignatures() []StdSignature
 }
+
+type StdTx struct {
+	Msg
+	Signatures []StdSignature
+}
+
+type TxDecoder func(txBytes []byte) (Tx, error)

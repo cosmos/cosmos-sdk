@@ -262,7 +262,7 @@ func (app *App) runTx(isCheckTx bool, txBytes []byte) (result sdk.Result) {
 	}
 
 	// Run the ante handler.
-	result, abort := app.defaultAnteHandler(ctx, tx)
+	ctx, result, abort := app.defaultAnteHandler(ctx, tx)
 	if isCheckTx || abort {
 		return result
 	}

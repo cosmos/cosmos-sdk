@@ -1,45 +1,47 @@
 package auth
 
 import (
-	"github.com/cosmos/cosmos-sdk/types"
+	crypto "github.com/tendermint/go-crypto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Implements types.AccountStore
+// Implements sdk.AccountStore
 type accountStore struct {
-	key   *types.KVStoreKey
-	codec types.Codec
+	key   sdk.SubstoreKey
+	codec sdk.Codec
 }
 
-func NewAccountStore(key *types.KVStoreKey, codec types.Codec) accountStore {
+func NewAccountStore(key sdk.SubstoreKey, codec sdk.Codec) accountStore {
 	return accountStore{
 		key:   key,
 		codec: codec,
 	}
 }
 
-// Implements types.AccountStore
-func (as accountStore) NewAccountWithAddress(ctx types.Context, addr crypto.Address) {
-	acc := as.codec.Prototype().(types.Account)
+// Implements sdk.AccountStore
+func (as accountStore) NewAccountWithAddress(ctx sdk.Context, addr crypto.Address) sdk.Account {
+	acc := as.codec.Prototype().(sdk.Account)
 	acc.SetAddress(addr)
 	return acc
 }
 
-// Implements types.AccountStore
-func (as accountStore) GetAccount(ctx types.Context, addr crypto.Address) types.Account {
+// Implements sdk.AccountStore
+func (as accountStore) GetAccount(ctx sdk.Context, addr crypto.Address) sdk.Account {
 	store := ctx.KVStore(as.key)
 	bz := store.Get(addr)
 	if bz == nil {
-		return
+		return nil // XXX
 	}
 	o, err := as.codec.Decode(bz)
 	if err != nil {
 		panic(err)
 	}
-	return o.(types.Account)
+	return o.(sdk.Account)
 }
 
-// Implements types.AccountStore
-func (as accountStore) SetAccount(ctx types.Context, acc types.Account) {
+// Implements sdk.AccountStore
+func (as accountStore) SetAccount(ctx sdk.Context, acc sdk.Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(as.key)
 	bz, err := as.codec.Encode(acc)

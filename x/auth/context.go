@@ -34,7 +34,7 @@ const (
 )
 
 func WithSigners(ctx types.Context, accounts []types.Account) types.Context {
-	return ctx.WithValueUnsafe(contextKeySigners, accounts)
+	return ctx.WithValue(contextKeySigners, accounts)
 }
 
 func GetSigners(ctx types.Context) []types.Account {

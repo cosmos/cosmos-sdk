@@ -1,13 +1,13 @@
 package auth
 
 import (
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewAnteHandler(store types.AccountStore) types.AnteHandler {
+func NewAnteHandler(store sdk.AccountStore) sdk.AnteHandler {
 	return func(
-		ctx types.Context, tx types.Tx,
-	) (newCtx types.Context, res types.Result, abort bool) {
+		ctx sdk.Context, tx sdk.Tx,
+	) (newCtx sdk.Context, res sdk.Result, abort bool) {
 
 		// Deduct the fee from the fee payer.
 		// This is done first because it only
@@ -15,26 +15,26 @@ func NewAnteHandler(store types.AccountStore) types.AnteHandler {
 		payerAddr := tx.GetFeePayer()
 		payerAcc := store.GetAccount(ctx, payerAddr)
 		if payerAcc == nil {
-			return ctx, Result{
+			return ctx, sdk.Result{
 				Code: 1, // TODO
 			}, true
 		}
 
-		payerAcc.Subtract
+		// payerAcc.Subtract ?
 
 		// Ensure that signatures are correct.
-		var signerAddrs = tx.Signers()
-		var signerAccs = make([]types.Account, len(signerAddrs))
-		var signatures = tx.Signatures()
+		var signerAddrs = tx.GetSigners()
+		var signerAccs = make([]sdk.Account, len(signerAddrs))
+		var signatures = tx.GetSignatures()
 
 		// Assert that there are signers.
 		if len(signatures) == 0 {
-			return ctx, types.Result{
+			return ctx, sdk.Result{
 				Code: 1, // TODO
 			}, true
 		}
-		if len(signatures) != len(signers) {
-			return ctx, types.Result{
+		if len(signatures) != len(signerAddrs) {
+			return ctx, sdk.Result{
 				Code: 1, // TODO
 			}, true
 		}
@@ -42,40 +42,40 @@ func NewAnteHandler(store types.AccountStore) types.AnteHandler {
 		// Check each nonce and sig.
 		for i, sig := range signatures {
 
-			var signerAcc = store.GetAccount(signers[i])
+			var signerAcc = store.GetAccount(ctx, signerAddrs[i])
 			signerAccs[i] = signerAcc
 
 			// If no pubkey, set pubkey.
-			if acc.GetPubKey().Empty() {
-				err := acc.SetPubKey(sig.PubKey)
+			if signerAcc.GetPubKey().Empty() {
+				err := signerAcc.SetPubKey(sig.PubKey)
 				if err != nil {
-					return ctx, types.Result{
+					return ctx, sdk.Result{
 						Code: 1, // TODO
 					}, true
 				}
 			}
 
 			// Check and incremenet sequence number.
-			seq := acc.GetSequence()
+			seq := signerAcc.GetSequence()
 			if seq != sig.Sequence {
-				return ctx, types.Result{
+				return ctx, sdk.Result{
 					Code: 1, // TODO
 				}, true
 			}
-			acc.SetSequence(seq + 1)
+			signerAcc.SetSequence(seq + 1)
 
 			// Check sig.
-			if !sig.PubKey.VerifyBytes(tx.SignBytes(), sig.Signature) {
-				return ctx, types.Result{
+			if !sig.PubKey.VerifyBytes(tx.GetSignBytes(), sig.Signature) {
+				return ctx, sdk.Result{
 					Code: 1, // TODO
 				}, true
 			}
 
 			// Save the account.
-			store.SetAccount(acc)
+			store.SetAccount(ctx, signerAcc)
 		}
 
 		ctx = WithSigners(ctx, signerAccs)
-		return ctx, types.Result{}, false // continue...
+		return ctx, sdk.Result{}, false // continue...
 	}
 }

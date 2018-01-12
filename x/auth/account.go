@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"encoding/json"
+	"errors"
 
 	crypto "github.com/tendermint/go-crypto"
 
@@ -37,50 +37,50 @@ func (acc *BaseAccount) Set(key interface{}, value interface{}) error {
 
 // Implements Account
 func (acc BaseAccount) GetAddress() crypto.Address {
-	return acc.address
+	return acc.Address
 }
 
 // Implements Account
 func (acc *BaseAccount) SetAddress(addr crypto.Address) error {
-	if acc.address != "" {
+	if len(acc.Address) != 0 {
 		return errors.New("cannot override BaseAccount address")
 	}
-	acc.address = addr
+	acc.Address = addr
 	return nil
 }
 
 // Implements Account
 func (acc BaseAccount) GetPubKey() crypto.PubKey {
-	return acc.pubKey
+	return acc.PubKey
 }
 
 // Implements Account
 func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
-	if acc.pubKey != "" {
+	if !acc.PubKey.Empty() {
 		return errors.New("cannot override BaseAccount pubkey")
 	}
-	acc.pubKey = pubKey
+	acc.PubKey = pubKey
 	return nil
 }
 
 // Implements Account
 func (acc *BaseAccount) GetCoins() sdk.Coins {
-	return acc.coins
+	return acc.Coins
 }
 
 // Implements Account
 func (acc *BaseAccount) SetCoins(coins sdk.Coins) error {
-	acc.coins = coins
+	acc.Coins = coins
 	return nil
 }
 
 // Implements Account
 func (acc *BaseAccount) GetSequence() int64 {
-	return acc.sequence
+	return acc.Sequence
 }
 
 // Implements Account
 func (acc *BaseAccount) SetSequence(seq int64) error {
-	acc.sequence = seq
+	acc.Sequence = seq
 	return nil
 }

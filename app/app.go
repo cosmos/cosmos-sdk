@@ -11,7 +11,7 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var mainHeaderKey = []byte("header")
@@ -24,13 +24,13 @@ type App struct {
 	name string
 
 	// Main (uncached) state
-	ms types.CommitMultiStore
+	ms sdk.CommitMultiStore
 
-	// Unmarshal []byte into types.Tx
-	txDecoder types.TxDecoder
+	// Unmarshal []byte into sdk.Tx
+	txDecoder sdk.TxDecoder
 
 	// Ante handler for fee and auth.
-	defaultAnteHandler types.AnteHandler
+	defaultAnteHandler sdk.AnteHandler
 
 	// Handle any kind of message.
 	router Router
@@ -39,10 +39,10 @@ type App struct {
 	// Volatile
 
 	// CheckTx state, a cache-wrap of `.ms`.
-	msCheck types.CacheMultiStore
+	msCheck sdk.CacheMultiStore
 
 	// DeliverTx state, a cache-wrap of `.ms`.
-	msDeliver types.CacheMultiStore
+	msDeliver sdk.CacheMultiStore
 
 	// Current block header
 	header abci.Header
@@ -53,7 +53,7 @@ type App struct {
 
 var _ abci.Application = &App{}
 
-func NewApp(name string, ms CommitMultiStore) *App {
+func NewApp(name string, ms sdk.CommitMultiStore) *App {
 	return &App{
 		logger: makeDefaultLogger(),
 		name:   name,
@@ -66,11 +66,11 @@ func (app *App) Name() string {
 	return app.name
 }
 
-func (app *App) SetTxDecoder(txDecoder types.TxDecoder) {
+func (app *App) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
 
-func (app *App) SetDefaultAnteHandler(ah types.AnteHandler) {
+func (app *App) SetDefaultAnteHandler(ah sdk.AnteHandler) {
 	app.defaultAnteHandler = ah
 }
 
@@ -84,18 +84,18 @@ func (app *App) SetEndBlocker(...) {}
 func (app *App) SetInitStater(...) {}
 */
 
-func (app *App) LoadLatestVersion() error {
+func (app *App) LoadLatestVersion(mainKey sdk.SubstoreKey) error {
 	app.ms.LoadLatestVersion()
-	return app.initFromStore()
+	return app.initFromStore(mainKey)
 }
 
-func (app *App) LoadVersion(version int64) error {
+func (app *App) LoadVersion(version int64, mainKey sdk.SubstoreKey) error {
 	app.ms.LoadVersion(version)
-	return app.initFromStore()
+	return app.initFromStore(mainKey)
 }
 
 // The last CommitID of the multistore.
-func (app *App) LastCommitID() types.CommitID {
+func (app *App) LastCommitID() sdk.CommitID {
 	return app.ms.LastCommitID()
 }
 
@@ -105,13 +105,13 @@ func (app *App) LastBlockHeight() int64 {
 }
 
 // Initializes the remaining logic from app.ms.
-func (app *App) initFromStore() error {
+func (app *App) initFromStore(mainKey sdk.SubstoreKey) error {
 	lastCommitID := app.ms.LastCommitID()
-	main := app.ms.GetKVStore("main")
+	main := app.ms.GetKVStore(mainKey)
 	header := abci.Header{}
 
 	// Main store should exist.
-	if app.ms.GetKVStore("main") == nil {
+	if main == nil {
 		return errors.New("App expects MultiStore with 'main' KVStore")
 	}
 
@@ -226,19 +226,19 @@ func (app *App) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	}
 }
 
-func (app *App) runTx(isCheckTx bool, txBytes []byte) (result types.Result) {
+func (app *App) runTx(isCheckTx bool, txBytes []byte) (result sdk.Result) {
 
 	// Handle any panics.
 	defer func() {
 		if r := recover(); r != nil {
-			result = types.Result{
+			result = sdk.Result{
 				Code: 1, // TODO
 				Log:  fmt.Sprintf("Recovered: %v\n", r),
 			}
 		}
 	}()
 
-	var store types.MultiStore
+	var store sdk.MultiStore
 	if isCheckTx {
 		store = app.msCheck
 	} else {
@@ -246,7 +246,7 @@ func (app *App) runTx(isCheckTx bool, txBytes []byte) (result types.Result) {
 	}
 
 	// Initialize arguments to Handler.
-	var ctx = types.NewContext(
+	var ctx = sdk.NewContext(
 		store,
 		app.header,
 		isCheckTx,
@@ -254,16 +254,15 @@ func (app *App) runTx(isCheckTx bool, txBytes []byte) (result types.Result) {
 	)
 
 	// Decode the Tx.
-	var err error
-	tx, err = app.txDecoder(txBytes)
+	tx, err := app.txDecoder(txBytes)
 	if err != nil {
-		return types.Result{
+		return sdk.Result{
 			Code: 1, //  TODO
 		}
 	}
 
 	// Run the ante handler.
-	ctx, result, abort := app.defaultAnteHandler(ctx, tx)
+	result, abort := app.defaultAnteHandler(ctx, tx)
 	if isCheckTx || abort {
 		return result
 	}

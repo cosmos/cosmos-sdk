@@ -1,13 +1,19 @@
 package app
 
+import (
+	"regexp"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 type Router interface {
-	AddRoute(r string, h Handler)
-	Route(path string) (h Handler)
+	AddRoute(r string, h sdk.Handler)
+	Route(path string) (h sdk.Handler)
 }
 
 type route struct {
 	r string
-	h Handler
+	h sdk.Handler
 }
 
 type router struct {
@@ -16,13 +22,13 @@ type router struct {
 
 func NewRouter() router {
 	return router{
-		routes: make([]route),
+		routes: make([]route, 0),
 	}
 }
 
 var isAlpha = regexp.MustCompile(`^[a-zA-Z]+$`).MatchString
 
-func (rtr router) AddRoute(r string, h Handler) {
+func (rtr router) AddRoute(r string, h sdk.Handler) {
 	if !isAlpha(r) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
@@ -30,7 +36,7 @@ func (rtr router) AddRoute(r string, h Handler) {
 }
 
 // TODO handle expressive matches.
-func (rtr router) Route(path string) (h Handler) {
+func (rtr router) Route(path string) (h sdk.Handler) {
 	for _, route := range rtr.routes {
 		if route.r == path {
 			return route.h

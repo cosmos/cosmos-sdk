@@ -1,5 +1,5 @@
 //nolint
-package coinstore
+package bank
 
 import (
 	"fmt"

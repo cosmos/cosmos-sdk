@@ -13,76 +13,52 @@ import (
 
 // BaseAccount - coin account structure
 type BaseAccount struct {
-	address  crypto.Address
-	coins    coin.Coins
-	pubKey   crypto.PubKey
-	sequence int64
-}
-
-func NewBaseAccountWithAddress(addr crypto.Address) *BaseAccount {
-	return &BaseAccount{
-		address: addr,
-	}
-}
-
-// BaseAccountWire is the account structure used for serialization
-type BaseAccountWire struct {
 	Address  crypto.Address `json:"address"`
 	Coins    coin.Coins     `json:"coins"`
-	PubKey   crypto.PubKey  `json:"public_key"` // can't conflict with PubKey()
+	PubKey   crypto.PubKey  `json:"public_key"`
 	Sequence int64          `json:"sequence"`
 }
 
-func (acc *BaseAccount) MarshalJSON() ([]byte, error) {
-	return json.Marshal(BaseAccountWire{
-		Address:  acc.address,
-		Coins:    acc.coins,
-		PubKey:   acc.pubKey,
-		Sequence: acc.sequence,
-	})
-}
-
-func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
-	accWire := new(BaseAccountWire)
-	err := json.Unmarshal(bz, accWire)
-	if err != nil {
-		return err
+func NewBaseAccountWithAddress(addr crypto.Address) BaseAccount {
+	return BaseAccount{
+		Address: addr,
 	}
-	acc.address = accWire.Address
-	acc.coins = accWire.Coins
-	acc.pubKey = accWire.PubKey
-	acc.sequence = accWire.Sequence
-	return nil
 }
 
 // Implements Account
-func (acc *BaseAccount) Get(key interface{}) (value interface{}, err error) {
-	switch key.(type) {
-	case string:
-	}
-	return nil, nil
+func (acc BaseAccount) Get(key interface{}) (value interface{}, err error) {
+	panic("not implemented yet")
 }
 
 // Implements Account
 func (acc *BaseAccount) Set(key interface{}, value interface{}) error {
-	switch key.(type) {
-	case string:
-	}
-	return nil
+	panic("not implemented yet")
 }
 
 // Implements Account
-func (acc *BaseAccount) Address() crypto.Address {
-	// TODO: assert address == pubKey.Address()
+func (acc BaseAccount) GetAddress() crypto.Address {
 	return acc.address
 }
 
 // Implements Account
-func (acc *BaseAccount) GetPubKey() crypto.PubKey {
+func (acc *BaseAccount) SetAddress(addr crypto.Address) error {
+	if acc.address != "" {
+		return errors.New("cannot override BaseAccount address")
+	}
+	acc.address = addr
+	return nil
+}
+
+// Implements Account
+func (acc BaseAccount) GetPubKey() crypto.PubKey {
 	return acc.pubKey
 }
 
+// Implements Account
 func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
+	if acc.pubKey != "" {
+		return errors.New("cannot override BaseAccount pubkey")
+	}
 	acc.pubKey = pubKey
 	return nil
 }

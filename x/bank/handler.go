@@ -1,4 +1,4 @@
-package coinstore
+package bank
 
 import (
 	"github.com/cosmos/cosmos-sdk/types"

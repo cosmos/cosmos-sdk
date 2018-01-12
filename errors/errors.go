@@ -7,12 +7,13 @@ import (
 const (
 	// ABCI Response Codes
 	// Base SDK reserves 0 ~ 99.
-	CodeInternalError     uint32 = 1
-	CodeTxParseError             = 2
-	CodeBadNonce                 = 3
-	CodeUnauthorized             = 4
-	CodeInsufficientFunds        = 5
-	CodeUnknownRequest           = 6
+	CodeInternalError       uint32 = 1
+	CodeTxParseError               = 2
+	CodeBadNonce                   = 3
+	CodeUnauthorized               = 4
+	CodeInsufficientFunds          = 5
+	CodeUnknownRequest             = 6
+	CodeUnrecognizedAddress        = 7
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
@@ -30,6 +31,8 @@ func CodeToDefaultLog(code uint32) string {
 		return "Insufficent funds"
 	case CodeUnknownRequest:
 		return "Unknown request"
+	case CodeUnrecognizeAddress:
+		return "Unrecognized address"
 	default:
 		return fmt.Sprintf("Unknown code %d", code)
 	}
@@ -61,6 +64,10 @@ func InsufficientFunds(log string) *sdkError {
 
 func UnknownRequest(log string) *sdkError {
 	return newSDKError(CodeUnknownRequest, log)
+}
+
+func UnrecognizedAddress(log string) *sdkError {
+	return newSDKError(CodeUnrecognizedAddress, log)
 }
 
 //----------------------------------------

@@ -7,48 +7,21 @@ import (
 	abci "github.com/tendermint/abci/types"
 )
 
+// TODO: Add a default logger.
+
 /*
-
-A note on Context security:
-
 The intent of Context is for it to be an immutable object that can be
 cloned and updated cheaply with WithValue() and passed forward to the
 next decorator or handler. For example,
 
 ```golang
-func Decorator(ctx Context, tx Tx, next Handler) Result {
-
-	// Clone and update context with new kv pair.
-	ctx2 := ctx.WithValueSDK(key, value)
-
-	// Call the next decorator/handler.
-	res := next(ctx2, ms, tx)
-
+func MsgHandler(ctx Context, tx Tx) Result {
+	...
+	ctx = ctx.WithValue(key, value)
 	...
 }
 ```
-
-While `ctx` and `ctx2`'s shallow values haven't changed, it's
-possible that slices or addressable struct fields have been modified
-by the call to `next(...)`.
-
-This is generally undesirable because it prevents a decorator from
-rolling back all side effects--which is the intent of immutable
-Context's and store cache-wraps.
-
-While well-written decorators wouldn't mutate any mutable context
-values, a malicious or buggy plugin can create unwanted side-effects,
-so it is highly advised for users of Context to only set immutable
-values.  To help enforce this contract, we require values to be
-certain primitive types, a cloner, or a CacheWrapper.
-
-If an outer (higher) decorator wants to know what an inner decorator
-had set on the context, it can consult `context.GetOp(ver int64) Op`,
-which retrieves the ver'th opertion to the context, globally since `NewContext()`.
-
-TODO: Add a default logger.
 */
-
 type Context struct {
 	context.Context
 	pst *thePast
@@ -57,12 +30,13 @@ type Context struct {
 	// it's probably not what you want to do.
 }
 
-func NewContext(header abci.Header, isCheckTx bool, txBytes []byte) Context {
+func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byte) Context {
 	c := Context{
 		Context: context.Background(),
 		pst:     newThePast(),
 		gen:     0,
 	}
+	c = c.withMultiStore(ms)
 	c = c.withBlockHeader(header)
 	c = c.withBlockHeight(header.Height)
 	c = c.withChainID(header.ChainID)
@@ -72,7 +46,7 @@ func NewContext(header abci.Header, isCheckTx bool, txBytes []byte) Context {
 }
 
 //----------------------------------------
-// Get a value
+// Getting a value
 
 func (c Context) Value(key interface{}) interface{} {
 	value := c.Context.Value(key)
@@ -85,10 +59,15 @@ func (c Context) Value(key interface{}) interface{} {
 	return value
 }
 
-//----------------------------------------
-// Set a value
+// KVStore fetches a KVStore from the MultiStore.
+func (c Context) KVStore(key *KVStoreKey) KVStore {
+	return c.multiStore().GetKVStore(key)
+}
 
-func (c Context) WithValueUnsafe(key interface{}, value interface{}) Context {
+//----------------------------------------
+// With* (setting a value)
+
+func (c Context) WithValue(key interface{}, value interface{}) Context {
 	return c.withValue(key, value)
 }
 
@@ -102,6 +81,10 @@ func (c Context) WithCacheWrapper(key interface{}, value CacheWrapper) Context {
 
 func (c Context) WithProtoMsg(key interface{}, value proto.Message) Context {
 	return c.withValue(key, value)
+}
+
+func (c Context) WithMultiStore(key *MultiStoreKey, ms MultiStore) Context {
+	return c.withValue(key, ms)
 }
 
 func (c Context) WithString(key interface{}, value string) Context {
@@ -135,17 +118,23 @@ func (c Context) withValue(key interface{}, value interface{}) Context {
 }
 
 //----------------------------------------
-// Our extensions
+// Values that require no key.
 
 type contextKey int // local to the context module
 
 const (
-	contextKeyBlockHeader contextKey = iota
+	contextKeyMultiStore contextKey = iota
+	contextKeyBlockHeader
 	contextKeyBlockHeight
 	contextKeyChainID
 	contextKeyIsCheckTx
 	contextKeyTxBytes
 )
+
+// NOTE: Do not expose MultiStore, to require the store key.
+func (c Context) multiStore() MultiStore {
+	return c.Value(contextKeyMultiStore).(MultiStore)
+}
 
 func (c Context) BlockHeader() abci.Header {
 	return c.Value(contextKeyBlockHeader).(abci.Header)
@@ -167,8 +156,9 @@ func (c Context) TxBytes() []byte {
 	return c.Value(contextKeyTxBytes).([]byte)
 }
 
-func (c Context) KVStore(key interface{}) KVStore {
-	return c.Value(key).(KVStore)
+// Unexposed to prevent overriding.
+func (c Context) withMultiStore(ms MultiStore) Context {
+	return c.withValue(contextKeyMultiStore, ms)
 }
 
 // Unexposed to prevent overriding.

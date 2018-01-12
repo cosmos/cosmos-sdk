@@ -5,7 +5,7 @@ import (
 
 	crypto "github.com/tendermint/go-crypto"
 
-	"github.com/cosmos/cosmos-sdk/x/coin"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 //-----------------------------------------------------------
@@ -14,7 +14,7 @@ import (
 // BaseAccount - coin account structure
 type BaseAccount struct {
 	Address  crypto.Address `json:"address"`
-	Coins    coin.Coins     `json:"coins"`
+	Coins    sdk.Coins      `json:"coins"`
 	PubKey   crypto.PubKey  `json:"public_key"`
 	Sequence int64          `json:"sequence"`
 }
@@ -63,21 +63,23 @@ func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
 	return nil
 }
 
-// Implements coinstore.Coinser
-func (acc *BaseAccount) GetCoins() coin.Coins {
+// Implements Account
+func (acc *BaseAccount) GetCoins() sdk.Coins {
 	return acc.coins
 }
 
-// Implements coinstore.Coinser
-func (acc *BaseAccount) SetCoins(coins coin.Coins) error {
+// Implements Account
+func (acc *BaseAccount) SetCoins(coins sdk.Coins) error {
 	acc.coins = coins
 	return nil
 }
 
+// Implements Account
 func (acc *BaseAccount) GetSequence() int64 {
 	return acc.sequence
 }
 
+// Implements Account
 func (acc *BaseAccount) SetSequence(seq int64) error {
 	acc.sequence = seq
 	return nil

@@ -7,22 +7,22 @@ import (
 
 	crypto "github.com/tendermint/go-crypto"
 
-	"github.com/cosmos/cosmos-sdk/x/coin"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestTxInputValidation(t *testing.T) {
 	addr1 := crypto.Address([]byte{1, 2})
 	addr2 := crypto.Address([]byte{7, 8})
-	someCoins := coin.Coins{{"atom", 123}}
-	multiCoins := coin.Coins{{"atom", 123}, {"eth", 20}}
+	someCoins := sdk.Coins{{"atom", 123}}
+	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
 
 	var emptyAddr crypto.Address
-	emptyCoins := coin.Coins{}
-	emptyCoins2 := coin.Coins{{"eth", 0}}
-	someEmptyCoins := coin.Coins{{"eth", 10}, {"atom", 0}}
-	minusCoins := coin.Coins{{"eth", -34}}
-	someMinusCoins := coin.Coins{{"atom", 20}, {"eth", -34}}
-	unsortedCoins := coin.Coins{{"eth", 1}, {"atom", 1}}
+	emptyCoins := sdk.Coins{}
+	emptyCoins2 := sdk.Coins{{"eth", 0}}
+	someEmptyCoins := sdk.Coins{{"eth", 10}, {"atom", 0}}
+	minusCoins := sdk.Coins{{"eth", -34}}
+	someMinusCoins := sdk.Coins{{"atom", 20}, {"eth", -34}}
+	unsortedCoins := sdk.Coins{{"eth", 1}, {"atom", 1}}
 
 	cases := []struct {
 		valid bool
@@ -57,16 +57,16 @@ func TestTxInputValidation(t *testing.T) {
 func TestTxOutputValidation(t *testing.T) {
 	addr1 := crypto.Address([]byte{1, 2})
 	addr2 := crypto.Address([]byte{7, 8})
-	someCoins := coin.Coins{{"atom", 123}}
-	multiCoins := coin.Coins{{"atom", 123}, {"eth", 20}}
+	someCoins := sdk.Coins{{"atom", 123}}
+	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
 
 	var emptyAddr crypto.Address
-	emptyCoins := coin.Coins{}
-	emptyCoins2 := coin.Coins{{"eth", 0}}
-	someEmptyCoins := coin.Coins{{"eth", 10}, {"atom", 0}}
-	minusCoins := coin.Coins{{"eth", -34}}
-	someMinusCoins := coin.Coins{{"atom", 20}, {"eth", -34}}
-	unsortedCoins := coin.Coins{{"eth", 1}, {"atom", 1}}
+	emptyCoins := sdk.Coins{}
+	emptyCoins2 := sdk.Coins{{"eth", 0}}
+	someEmptyCoins := sdk.Coins{{"eth", 10}, {"atom", 0}}
+	minusCoins := sdk.Coins{{"eth", -34}}
+	someMinusCoins := sdk.Coins{{"atom", 20}, {"eth", -34}}
+	unsortedCoins := sdk.Coins{{"eth", 1}, {"atom", 1}}
 
 	cases := []struct {
 		valid bool
@@ -100,10 +100,10 @@ func TestSendTxValidation(t *testing.T) {
 
 	addr1 := crypto.Address([]byte{1, 2})
 	addr2 := crypto.Address([]byte{7, 8})
-	atom123 := coin.Coins{{"atom", 123}}
-	atom124 := coin.Coins{{"atom", 124}}
-	eth123 := coin.Coins{{"eth", 123}}
-	atom123eth123 := coin.Coins{{"atom", 123}, {"eth", 123}}
+	atom123 := sdk.Coins{{"atom", 123}}
+	atom124 := sdk.Coins{{"atom", 124}}
+	eth123 := sdk.Coins{{"eth", 123}}
+	atom123eth123 := sdk.Coins{{"atom", 123}, {"eth", 123}}
 
 	input1 := NewTxInput(addr1, atom123)
 	input2 := NewTxInput(addr1, eth123)
@@ -172,7 +172,7 @@ func TestSendTxSigners(t *testing.T) {
 		{7, 8, 9},
 	}
 
-	someCoins := coin.Coins{{"atom", 123}}
+	someCoins := sdk.Coins{{"atom", 123}}
 	inputs := make([]TxInput, len(signers))
 	for i, signer := range signers {
 		inputs[i] = NewTxInput(signer, someCoins)

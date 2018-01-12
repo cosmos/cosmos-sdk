@@ -16,7 +16,7 @@ type SendMsg struct {
 }
 
 // NewSendMsg - construct arbitrary multi-in, multi-out send msg.
-func NewSendMsg(in []Input, out []Output) types.Tx {
+func NewSendMsg(in []Input, out []Output) SendMsg {
 	return SendMsg{Inputs: in, Outputs: out}
 }
 

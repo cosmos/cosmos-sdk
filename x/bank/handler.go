@@ -1,16 +1,16 @@
 package bank
 
 import (
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TransferHandlerFn(newAccStore func(types.KVStore) types.AccountStore) types.Handler {
-	return func(ctx types.Context, ms types.MultiStore, tx types.Tx) types.Result {
+func TransferHandlerFn(key sdk.SubstoreKey, newAccStore func(sdk.KVStore) sdk.AccountStore) sdk.Handler {
+	return func(ctx sdk.Context, tx sdk.Tx) sdk.Result {
 
-		accStore := newAccStore(ms.GetKVStore("main"))
+		accStore := newAccStore(ctx.KVStore(key))
 		cs := CoinStore{accStore}
 
-		sendTx, ok := tx.(SendTx)
+		sendTx, ok := tx.(sdk.Msg).(SendMsg)
 		if !ok {
 			panic("tx is not SendTx") // ?
 		}
@@ -18,23 +18,23 @@ func TransferHandlerFn(newAccStore func(types.KVStore) types.AccountStore) types
 		// NOTE: totalIn == totalOut should already have been checked
 
 		for _, in := range sendTx.Inputs {
-			_, err := cs.SubtractCoins(in.Address, in.Coins)
+			_, err := cs.SubtractCoins(ctx, in.Address, in.Coins)
 			if err != nil {
-				return types.Result{
+				return sdk.Result{
 					Code: 1, // TODO
 				}
 			}
 		}
 
 		for _, out := range sendTx.Outputs {
-			_, err := cs.AddCoins(out.Address, out.Coins)
+			_, err := cs.AddCoins(ctx, out.Address, out.Coins)
 			if err != nil {
-				return types.Result{
+				return sdk.Result{
 					Code: 1, // TODO
 				}
 			}
 		}
 
-		return types.Result{} // TODO
+		return sdk.Result{} // TODO
 	}
 }

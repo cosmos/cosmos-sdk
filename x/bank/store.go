@@ -14,10 +14,8 @@ type CoinStore struct {
 
 // SubtractCoins subtracts amt from the coins at the addr.
 func (cs CoinStore) SubtractCoins(ctx sdk.Context, addr crypto.Address, amt sdk.Coins) (sdk.Coins, error) {
-	acc, err := cs.store.GetAccount(ctx, addr)
-	if err != nil {
-		return amt, err
-	} else if acc == nil {
+	acc := cs.store.GetAccount(ctx, addr)
+	if acc == nil {
 		return amt, fmt.Errorf("Sending account (%s) does not exist", addr)
 	}
 
@@ -34,10 +32,8 @@ func (cs CoinStore) SubtractCoins(ctx sdk.Context, addr crypto.Address, amt sdk.
 
 // AddCoins adds amt to the coins at the addr.
 func (cs CoinStore) AddCoins(ctx sdk.Context, addr crypto.Address, amt sdk.Coins) (sdk.Coins, error) {
-	acc, err := cs.store.GetAccount(ctx, addr)
-	if err != nil {
-		return amt, err
-	} else if acc == nil {
+	acc := cs.store.GetAccount(ctx, addr)
+	if acc == nil {
 		acc = cs.store.NewAccountWithAddress(ctx, addr)
 	}
 

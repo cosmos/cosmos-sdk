@@ -62,7 +62,7 @@ func (c Context) Value(key interface{}) interface{} {
 }
 
 // KVStore fetches a KVStore from the MultiStore.
-func (c Context) KVStore(key *KVStoreKey) KVStore {
+func (c Context) KVStore(key SubstoreKey) KVStore {
 	return c.multiStore().GetKVStore(key)
 }
 
@@ -85,7 +85,7 @@ func (c Context) WithProtoMsg(key interface{}, value proto.Message) Context {
 	return c.withValue(key, value)
 }
 
-func (c Context) WithMultiStore(key *KVStoreKey, ms MultiStore) Context {
+func (c Context) WithMultiStore(key SubstoreKey, ms MultiStore) Context {
 	return c.withValue(key, ms)
 }
 

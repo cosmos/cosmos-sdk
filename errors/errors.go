@@ -31,7 +31,7 @@ func CodeToDefaultLog(code uint32) string {
 		return "Insufficent funds"
 	case CodeUnknownRequest:
 		return "Unknown request"
-	case CodeUnrecognizeAddress:
+	case CodeUnrecognizedAddress:
 		return "Unrecognized address"
 	default:
 		return fmt.Sprintf("Unknown code %d", code)

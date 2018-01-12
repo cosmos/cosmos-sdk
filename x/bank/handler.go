@@ -4,10 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TransferHandlerFn(key sdk.SubstoreKey, newAccStore func(sdk.KVStore) sdk.AccountStore) sdk.Handler {
-	return func(ctx sdk.Context, tx sdk.Tx) sdk.Result {
+func NewHandler(accStore sdk.AccountStore) sdk.Handler {
 
-		accStore := newAccStore(ctx.KVStore(key))
+	return func(ctx sdk.Context, tx sdk.Tx) sdk.Result {
 		cs := CoinStore{accStore}
 
 		sendTx, ok := tx.(sdk.Msg).(SendMsg)

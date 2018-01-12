@@ -3,7 +3,7 @@ package auth
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/coin"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	crypto "github.com/tendermint/go-crypto"
 )
@@ -12,7 +12,7 @@ func TestBaseAccount(t *testing.T) {
 	key := crypto.GenPrivKeyEd25519()
 	pub := key.PubKey()
 	addr := pub.Address()
-	someCoins := coin.Coins{{"atom", 123}, {"eth", 246}}
+	someCoins := sdk.Coins{{"atom", 123}, {"eth", 246}}
 	seq := int64(7)
 
 	acc := NewBaseAccountWithAddress(addr)
@@ -21,7 +21,7 @@ func TestBaseAccount(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, pub, acc.GetPubKey())
 
-	assert.Equal(t, addr, acc.Address())
+	assert.Equal(t, addr, acc.GetAddress())
 
 	err = acc.SetCoins(someCoins)
 	assert.Nil(t, err)
@@ -30,11 +30,6 @@ func TestBaseAccount(t *testing.T) {
 	err = acc.SetSequence(seq)
 	assert.Nil(t, err)
 	assert.Equal(t, seq, acc.GetSequence())
-
-	_, err = acc.Get("hello") // NOP
-	assert.Nil(t, err)
-	err = acc.Set("hello", "goodbyte") // NOP
-	assert.Nil(t, err)
 
 	b, err := acc.MarshalJSON()
 	assert.Nil(t, err)

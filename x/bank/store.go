@@ -3,18 +3,17 @@ package bank
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/coin"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
 )
 
 // CoinStore manages transfers between accounts
 type CoinStore struct {
-	store types.AccountStore
+	store sdk.AccountStore
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
-func (cs CoinStore) SubtractCoins(ctx types.Context, addr crypto.Address, amt types.Coins) (types.Coins, error) {
+func (cs CoinStore) SubtractCoins(ctx sdk.Context, addr crypto.Address, amt sdk.Coins) (sdk.Coins, error) {
 	acc, err := cs.store.GetAccount(ctx, addr)
 	if err != nil {
 		return amt, err
@@ -34,7 +33,7 @@ func (cs CoinStore) SubtractCoins(ctx types.Context, addr crypto.Address, amt ty
 }
 
 // AddCoins adds amt to the coins at the addr.
-func (cs CoinStore) AddCoins(ctx types.Context, addr crypto.Address, amt types.Coins) (types.Coins, error) {
+func (cs CoinStore) AddCoins(ctx sdk.Context, addr crypto.Address, amt sdk.Coins) (sdk.Coins, error) {
 	acc, err := cs.store.GetAccount(ctx, addr)
 	if err != nil {
 		return amt, err

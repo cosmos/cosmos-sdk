@@ -62,7 +62,7 @@ func main() {
 	// TODO: set the genesis accounts
 
 	// Load the stores.
-	if err := app.LoadLatestVersion(); err != nil {
+	if err := app.LoadLatestVersion(mainStoreKey); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

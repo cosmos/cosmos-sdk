@@ -1,5 +1,5 @@
-hash: 4be2e3865e5582ef762c8aab865808b647be8b333ae7d329f3f80215d3ca91b1
-updated: 2018-01-06T16:06:32.617293876-05:00
+hash: faf3b372fd15fa4ee41114e8f0f76707e648c79b418f55b845b023b2069f88d0
+updated: 2018-01-13T12:34:01.209505425-05:00
 imports:
 - name: github.com/btcsuite/btcd
   version: c7588cbf7690cd9f047a28efa2dcd8f2435a4e5e
@@ -88,7 +88,6 @@ imports:
   version: 27be46e25124ddf775e23317a83647ce62a93f6b
   subpackages:
   - data
-  - nowriter/tmlegacy
 - name: github.com/tendermint/iavl
   version: ed0bbf0acc51e75f72c76099293113c2d67199b9
 - name: github.com/tendermint/light-client
@@ -99,7 +98,7 @@ imports:
   - certifiers/files
   - proofs
 - name: github.com/tendermint/tendermint
-  version: 36b543de49f7e60c61c6a290bae6da1d04055d3c
+  version: ec1ca04a1608eb947b6692343744cbce08778d61
   subpackages:
   - config
   - consensus/types
@@ -114,7 +113,7 @@ imports:
   - state
   - types
 - name: github.com/tendermint/tmlibs
-  version: 1afc0340069d38e71f137bc9e4fa4fadf12f76df
+  version: 2bb538b150f197a04a0b969a27e9ea24d35edbc1
   subpackages:
   - cli
   - cli/flags

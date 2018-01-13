@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/tendermint/abci/server"
 	"github.com/tendermint/go-wire"
 	cmn "github.com/tendermint/tmlibs/common"
@@ -16,9 +18,6 @@ import (
 )
 
 func main() {
-
-	// First, create the Application.
-	app := sdk.NewApp("basecoin")
 
 	// Create the underlying leveldb datastore which will
 	// persist the Merkle tree inner & leaf nodes.
@@ -42,7 +41,9 @@ func main() {
 	multiStore := store.NewCommitMultiStore(db)
 	multiStore.SetSubstoreLoader(mainStoreKey, mainLoader)
 	multiStore.SetSubstoreLoader(ibcStoreKey, ibcLoader)
-	app.SetCommitMultiStore(multiStore)
+
+	// Create the Application.
+	app := app.NewApp("basecoin", multiStore)
 
 	// Set Tx decoder
 	app.SetTxDecoder(decodeTx)

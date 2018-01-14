@@ -1,18 +1,18 @@
-hash: a21061afc44c148eb6bfeb91478b520661f3d086234383a0208d915b0cb058b8
-updated: 2017-12-27T14:29:49.534901894-08:00
+hash: ed34b08bfc24f64edbc1a16ad2e34198afefc0e2dc133be2c92c6f764f953234
+updated: 2018-01-13T18:02:43.833267692-08:00
 imports:
 - name: github.com/btcsuite/btcd
-  version: c7588cbf7690cd9f047a28efa2dcd8f2435a4e5e
+  version: 2e60448ffcc6bf78332d1fe590260095f554dd78
   subpackages:
   - btcec
 - name: github.com/btcsuite/btcutil
-  version: 66871daeb12123ece012a9628d2798d01195c4b3
+  version: 501929d3d046174c3d39f0ea54ece471aa17238c
   subpackages:
   - base58
-- name: github.com/ethanfrey/ledger
-  version: 5e432577be582bd18a3b4a9cd75dae7a317ade36
-- name: github.com/flynn/hid
-  version: ed06a31c6245d4552e8dbba7e32e5b010b875d65
+- name: github.com/davecgh/go-spew
+  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  subpackages:
+  - spew
 - name: github.com/go-kit/kit
   version: e2b298466b32c7cd5579a9b9b07e968fc9d9452c
   subpackages:
@@ -32,7 +32,7 @@ imports:
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/howeyc/crc16
-  version: 96a97a1abb579c7ff1a8ffa77f2e72d1c314b57f
+  version: 2b2a61e366a66d3efb279e46176e7291001e0354
 - name: github.com/jmhodges/levigo
   version: c42d9e0ca023e2198120196f842701bb4c55d7b9
 - name: github.com/kr/logfmt
@@ -55,17 +55,14 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/ed25519
-  version: 1f52c6f8b8a5c7908aff4497c186af344b428925
+  version: d8387025d2b9d158cf4efb07e7ebf814bcce2057
   subpackages:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-wire
-  version: 27be46e25124ddf775e23317a83647ce62a93f6b
-  subpackages:
-  - data
-  - data/base58
+  version: fde4a0bf4dd4c0ec0df2504f79f23ed7e6b3b452
 - name: github.com/tendermint/tmlibs
-  version: 93c05aa8c06ef38f2b15fcdd1d91eafefda2732d
+  version: 2bb538b150f197a04a0b969a27e9ea24d35edbc1
   subpackages:
   - common
   - db
@@ -83,10 +80,6 @@ imports:
   - ripemd160
   - salsa20/salsa
 testImports:
-- name: github.com/davecgh/go-spew
-  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
-  subpackages:
-  - spew
 - name: github.com/mndrix/btcutil
   version: d3a63a5752ecf3fbc06bd97365da752111c263df
 - name: github.com/pmezard/go-difflib
@@ -94,11 +87,11 @@ testImports:
   subpackages:
   - difflib
 - name: github.com/stretchr/testify
-  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
+  version: b91bfb9ebec76498946beb6af7c0230c7cc7ba6c
   subpackages:
   - assert
   - require
 - name: github.com/tyler-smith/go-bip32
-  version: eb790af526c30f23a7c8b00a48e342f9d0bd6386
+  version: 2c9cfd17756470a0b7c3e4b7954bae7d11035504
 - name: github.com/tyler-smith/go-bip39
   version: 8e7a99b3e716f36d3b080a9a70f9eb45abe4edcc

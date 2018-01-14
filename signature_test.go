@@ -1,13 +1,12 @@
 package crypto
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/ed25519"
-	data "github.com/tendermint/go-wire/data"
+	"github.com/tendermint/go-wire"
 )
 
 func TestSignAndValidateEd25519(t *testing.T) {
@@ -22,9 +21,9 @@ func TestSignAndValidateEd25519(t *testing.T) {
 	assert.True(t, pubKey.VerifyBytes(msg, sig))
 
 	// Mutate the signature, just one bit.
-	sigEd := sig.Unwrap().(SignatureEd25519)
+	sigEd := sig.(SignatureEd25519)
 	sigEd[7] ^= byte(0x01)
-	sig = sigEd.Wrap()
+	sig = sigEd
 
 	assert.False(t, pubKey.VerifyBytes(msg, sig))
 }
@@ -39,31 +38,28 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 	assert.True(t, pubKey.VerifyBytes(msg, sig))
 
 	// Mutate the signature, just one bit.
-	sigEd := sig.Unwrap().(SignatureSecp256k1)
+	sigEd := sig.(SignatureSecp256k1)
 	sigEd[3] ^= byte(0x01)
-	sig = sigEd.Wrap()
+	sig = sigEd
 
 	assert.False(t, pubKey.VerifyBytes(msg, sig))
 }
 
 func TestSignatureEncodings(t *testing.T) {
 	cases := []struct {
-		privKey PrivKey
-		sigSize int
-		sigType byte
-		sigName string
+		privKey   PrivKey
+		sigSize   int
+		sigPrefix wire.PrefixBytes
 	}{
 		{
-			privKey: GenPrivKeyEd25519().Wrap(),
-			sigSize: ed25519.SignatureSize,
-			sigType: TypeEd25519,
-			sigName: NameEd25519,
+			privKey:   GenPrivKeyEd25519(),
+			sigSize:   ed25519.SignatureSize,
+			sigPrefix: [4]byte{0xe4, 0x51, 0x7b, 0xa3},
 		},
 		{
-			privKey: GenPrivKeySecp256k1().Wrap(),
-			sigSize: 0, // unknown
-			sigType: TypeSecp256k1,
-			sigName: NameSecp256k1,
+			privKey:   GenPrivKeySecp256k1(),
+			sigSize:   0, // unknown
+			sigPrefix: [4]byte{0x37, 0xb9, 0x21, 0x3e},
 		},
 	}
 
@@ -75,91 +71,37 @@ func TestSignatureEncodings(t *testing.T) {
 		sig := tc.privKey.Sign(msg)
 
 		// store as wire
-		bin, err := data.ToWire(sig)
+		bin, err := cdc.MarshalBinary(sig)
 		require.Nil(t, err, "%+v", err)
 		if tc.sigSize != 0 {
-			assert.Equal(t, tc.sigSize+1, len(bin))
+			assert.Equal(t, tc.sigSize+4, len(bin))
 		}
-		assert.Equal(t, tc.sigType, bin[0])
+		assert.Equal(t, tc.sigPrefix[:], bin[0:4])
 
 		// and back
-		sig2 := Signature{}
-		err = data.FromWire(bin, &sig2)
+		sig2 := Signature(nil)
+		err = cdc.UnmarshalBinary(bin, &sig2)
 		require.Nil(t, err, "%+v", err)
 		assert.EqualValues(t, sig, sig2)
 		assert.True(t, pubKey.VerifyBytes(msg, sig2))
 
-		// store as json
-		js, err := data.ToJSON(sig)
-		require.Nil(t, err, "%+v", err)
-		assert.True(t, strings.Contains(string(js), tc.sigName))
+		/*
+			// store as json
+			js, err := data.ToJSON(sig)
+			require.Nil(t, err, "%+v", err)
+			assert.True(t, strings.Contains(string(js), tc.sigName))
 
-		// and back
-		sig3 := Signature{}
-		err = data.FromJSON(js, &sig3)
-		require.Nil(t, err, "%+v", err)
-		assert.EqualValues(t, sig, sig3)
-		assert.True(t, pubKey.VerifyBytes(msg, sig3))
+			// and back
+			sig3 := Signature{}
+			err = data.FromJSON(js, &sig3)
+			require.Nil(t, err, "%+v", err)
+			assert.EqualValues(t, sig, sig3)
+			assert.True(t, pubKey.VerifyBytes(msg, sig3))
 
-		// and make sure we can textify it
-		text, err := data.ToText(sig)
-		require.Nil(t, err, "%+v", err)
-		assert.True(t, strings.HasPrefix(text, tc.sigName))
-	}
-}
-
-func TestWrapping(t *testing.T) {
-	// construct some basic constructs
-	msg := CRandBytes(128)
-	priv := GenPrivKeyEd25519()
-	pub := priv.PubKey()
-	sig := priv.Sign(msg)
-
-	// do some wrapping
-	pubs := []PubKey{
-		PubKey{nil},
-		pub.Wrap(),
-		pub.Wrap().Wrap().Wrap(),
-		PubKey{PubKey{PubKey{pub}}}.Wrap(),
-	}
-	for _, p := range pubs {
-		_, ok := p.PubKeyInner.(PubKey)
-		assert.False(t, ok)
-	}
-
-	sigs := []Signature{
-		Signature{nil},
-		sig.Wrap(),
-		sig.Wrap().Wrap().Wrap(),
-		Signature{Signature{Signature{sig}}}.Wrap(),
-	}
-	for _, s := range sigs {
-		_, ok := s.SignatureInner.(Signature)
-		assert.False(t, ok)
-	}
-
-}
-
-func TestPrivKeyEquality(t *testing.T) {
-	{
-		privKey := GenPrivKeySecp256k1().Wrap()
-		privKey2 := GenPrivKeySecp256k1().Wrap()
-		assert.False(t, privKey.Equals(privKey2))
-		assert.False(t, privKey2.Equals(privKey))
-
-		privKeyCopy := privKey // copy
-		assert.True(t, privKey.Equals(privKeyCopy))
-		assert.True(t, privKeyCopy.Equals(privKey))
-	}
-
-	{
-		privKey := GenPrivKeyEd25519().Wrap()
-		privKey2 := GenPrivKeyEd25519().Wrap()
-		assert.False(t, privKey.Equals(privKey2))
-		assert.False(t, privKey2.Equals(privKey))
-
-		privKeyCopy := privKey // copy
-		assert.True(t, privKey.Equals(privKeyCopy))
-		assert.True(t, privKeyCopy.Equals(privKey))
+			// and make sure we can textify it
+			text, err := data.ToText(sig)
+			require.Nil(t, err, "%+v", err)
+			assert.True(t, strings.HasPrefix(text, tc.sigName))
+		*/
 	}
 }

@@ -19,10 +19,7 @@ import:
 - package: github.com/tendermint/tmlibs
   version: sdk2
 - package: github.com/tendermint/go-wire
-  version: develop
-  subpackages:
-  - data
-  - data/base58
+  version: sdk2
 - package: golang.org/x/crypto
   subpackages:
   - blowfish
@@ -31,7 +28,8 @@ import:
   - ripemd160
 - package: github.com/pkg/errors
 - package: github.com/howeyc/crc16
-- package: github.com/ethanfrey/ledger
+# Needs refactoring, shouldn't be implementing PrivKey
+#- package: github.com/ethanfrey/ledger
 testImport:
 - package: github.com/mndrix/btcutil
 - package: github.com/stretchr/testify

@@ -1,10 +1,14 @@
-hash: faf3b372fd15fa4ee41114e8f0f76707e648c79b418f55b845b023b2069f88d0
-updated: 2018-01-13T12:34:01.209505425-05:00
+hash: a48b72c21e7e4eaf17cf54ae0ab8104c15a9b230adc3f33318fe5c068dd94996
+updated: 2018-01-14T22:42:37.763378242-05:00
 imports:
 - name: github.com/btcsuite/btcd
   version: c7588cbf7690cd9f047a28efa2dcd8f2435a4e5e
   subpackages:
   - btcec
+- name: github.com/davecgh/go-spew
+  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  subpackages:
+  - spew
 - name: github.com/ebuchman/fail-test
   version: 95f809107225be108efcf10a3509e4ea6ceef3c4
 - name: github.com/go-kit/kit
@@ -37,7 +41,7 @@ imports:
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/gorilla/websocket
-  version: 71fa72d4842364bc5f74185f4161e0099ea3624a
+  version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
 - name: github.com/jmhodges/levigo
   version: c42d9e0ca023e2198120196f842701bb4c55d7b9
 - name: github.com/kr/logfmt
@@ -51,7 +55,7 @@ imports:
 - name: github.com/spf13/pflag
   version: 97afa5e7ca8a08a383cb259e06636b5e2cc7897f
 - name: github.com/spf13/viper
-  version: 8ef37cbca71638bf32f3d5e194117d4cb46da163
+  version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: github.com/syndtr/goleveldb
   version: b89cc31ef7977104127d34c1bd31ebd1a9db2199
   subpackages:
@@ -68,7 +72,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 2bd556205d1679683fddcd5a91eeccf37a8a1007
+  version: 4243954d8d940f9ee0646a83d48ea7a1a907529e
   subpackages:
   - client
   - example/code
@@ -81,15 +85,15 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 67a47e6a0bf474a76f6a8f09b39cfdf382f39b90
+  version: 32741be2126500d600cede1e2016bbbe2754cb46
   subpackages:
   - keys
 - name: github.com/tendermint/go-wire
-  version: 27be46e25124ddf775e23317a83647ce62a93f6b
+  version: b93ebdd4f306833936c243561ec30af3455dc764
   subpackages:
   - data
 - name: github.com/tendermint/iavl
-  version: ed0bbf0acc51e75f72c76099293113c2d67199b9
+  version: 1dfe265ab4b491418e88e1da6577a8ad594fc989
 - name: github.com/tendermint/light-client
   version: 76313d625e662ed7b284d066d68ff71edd7a9fac
   subpackages:
@@ -98,7 +102,7 @@ imports:
   - certifiers/files
   - proofs
 - name: github.com/tendermint/tendermint
-  version: ec1ca04a1608eb947b6692343744cbce08778d61
+  version: 81ecbd4e5f82fbd2f657571e3154c68240080127
   subpackages:
   - config
   - consensus/types
@@ -113,7 +117,7 @@ imports:
   - state
   - types
 - name: github.com/tendermint/tmlibs
-  version: 2bb538b150f197a04a0b969a27e9ea24d35edbc1
+  version: f2bc5432c31974bb3f5b1a80a53c38e37d481b8d
   subpackages:
   - cli
   - cli/flags
@@ -178,16 +182,12 @@ imports:
   - tap
   - transport
 testImports:
-- name: github.com/davecgh/go-spew
-  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
-  subpackages:
-  - spew
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
 - name: github.com/stretchr/testify
-  version: 2aa2c176b9dab406a6970f6a55f513e8a8c8b18f
+  version: b91bfb9ebec76498946beb6af7c0230c7cc7ba6c
   subpackages:
   - assert
   - require

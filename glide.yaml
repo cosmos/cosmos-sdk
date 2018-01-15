@@ -12,7 +12,7 @@ import:
   - server
   - types
 - package: github.com/tendermint/go-crypto
-  version: develop
+  version: sdk2
   subpackages:
   - keys
 - package: github.com/tendermint/go-wire

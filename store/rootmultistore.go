@@ -226,7 +226,7 @@ type substoreCore struct {
 
 // Hash returns the RIPEMD160 of the wire-encoded substore.
 func (sc substoreCore) Hash() []byte {
-	scBytes, _ := wire.Marshal(sc) // Does not error
+	scBytes, _ := wire.MarshalBinary(sc) // Does not error
 	hasher := ripemd160.New()
 	hasher.Write(scBytes)
 	return hasher.Sum(nil)
@@ -241,7 +241,7 @@ func getLatestVersion(db dbm.DB) int64 {
 	if latestBytes == nil {
 		return 0
 	}
-	err := wire.Unmarshal(latestBytes, &latest)
+	err := wire.UnmarshalBinary(latestBytes, &latest)
 	if err != nil {
 		panic(err)
 	}
@@ -250,7 +250,7 @@ func getLatestVersion(db dbm.DB) int64 {
 
 // Set the latest version.
 func setLatestVersion(batch dbm.Batch, version int64) {
-	latestBytes, _ := wire.Marshal(version) // Does not error
+	latestBytes, _ := wire.MarshalBinary(version) // Does not error
 	batch.Set([]byte(latestVersionKey), latestBytes)
 }
 
@@ -287,7 +287,7 @@ func getCommitState(db dbm.DB, ver int64) (commitState, error) {
 
 	// Parse bytes.
 	var state commitState
-	err := wire.Unmarshal(stateBytes, &state)
+	err := wire.UnmarshalBinary(stateBytes, &state)
 	if err != nil {
 		return commitState{}, fmt.Errorf("Failed to get rootMultiStore: %v", err)
 	}
@@ -296,7 +296,7 @@ func getCommitState(db dbm.DB, ver int64) (commitState, error) {
 
 // Set a commit state for given version.
 func setCommitState(batch dbm.Batch, version int64, state commitState) {
-	stateBytes, err := wire.Marshal(state)
+	stateBytes, err := wire.MarshalBinary(state)
 	if err != nil {
 		panic(err)
 	}

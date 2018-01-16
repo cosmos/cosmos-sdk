@@ -111,7 +111,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 }
 
 func (rs *rootMultiStore) nameToKey(name string) SubstoreKey {
-	for key, _ := range rs.substores {
+	for key, _ := range rs.storeLoaders {
 		if key.Name() == name {
 			return key
 		}

@@ -1,41 +1,49 @@
-GOTOOLS =	github.com/mitchellh/gox \
-			github.com/Masterminds/glide \
-			github.com/rigelrozanski/shelldown/cmd/shelldown
-TUTORIALS=$(shell find docs/guide -name "*md" -type f)
+PACKAGES=$(shell go list ./... | grep -v '/vendor/' | grep -v '_attic')
+BUILD_FLAGS = -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=`git rev-parse --short HEAD`"
 
-EXAMPLES := dummy basecoin
+all: check_tools get_vendor_deps build test install
 
-INSTALL_EXAMPLES := $(addprefix install_,${EXAMPLES})
-TEST_EXAMPLES := $(addprefix testex_,${EXAMPLES})
+########################################
+### Build
 
-LINKER_FLAGS:="-X github.com/cosmos/cosmos-sdk/client/commands.CommitHash=`git rev-parse --short HEAD`"
-
-all: get_vendor_deps install test
-
-$(INSTALL_EXAMPLES): install_%:
-	cd ./examples/$* && go install
-
-$(TEST_EXAMPLES): testex_%:
-	cd ./examples/$* && make test_cli
-
-install: $(INSTALL_EXAMPLES)
+build:
+	go build $(BUILD_FLAGS) -o build/basecoin ./examples/basecoin/cmd/...
 
 dist:
 	@bash publish/dist.sh
 	@bash publish/publish.sh
 
-benchmark:
-	@go test -bench=. ./modules/...
+
+########################################
+### Tools & dependencies
+
+check_tools:
+	cd tools && $(MAKE) check
+
+get_tools:
+	cd tools && $(MAKE)
+
+get_vendor_deps:
+	@rm -rf vendor/
+	@echo "--> Running glide install"
+	@glide install
+
+draw_deps:
+	@# requires brew install graphviz or apt-get install graphviz
+	go get github.com/RobotsAndPencils/goviz
+	@goviz -i github.com/tendermint/tendermint/cmd/tendermint -d 3 | dot -Tpng -o dependency-graph.png
+
+
+########################################
+### Testing
+
+TUTORIALS=$(shell find docs/guide -name "*md" -type f)
 
 #test: test_unit test_cli test_tutorial
 test: test_unit # test_cli
 
 test_unit:
-	@go test `glide novendor | grep -v _attic`
-
-test_cli: $(TEST_EXAMPLES)
-	# sudo apt-get install jq
-	# wget "https://raw.githubusercontent.com/kward/shunit2/master/source/2.1/src/shunit2"
+	@go test $(PACKAGES)
 
 test_tutorial:
 	@shelldown ${TUTORIALS}
@@ -43,26 +51,35 @@ test_tutorial:
 		bash $$script ; \
 	done
 
-get_vendor_deps: get_tools
-	@glide install
+benchmark:
+	@go test -bench=. $(PACKAGES)
 
-build-docker:
-	@docker run -it --rm -v "$(PWD):/go/src/github.com/tendermint/basecoin" -w \
-		"/go/src/github.com/tendermint/basecoin" -e "CGO_ENABLED=0" golang:alpine go build ./cmd/basecoin
-	@docker build -t "tendermint/basecoin" .
 
-get_tools:
-	@go get $(GOTOOLS)
+########################################
+### Devdoc
 
-clean:
-	# maybe cleaning up cache and vendor is overkill, but sometimes
-	# you don't get the most recent versions with lots of branches, changes, rebases...
-	@rm -rf ~/.glide/cache/src/https-github.com-tendermint-*
-	@rm -rf ./vendor
-	@rm -f $GOPATH/bin/{basecoin,basecli,counter,countercli}
+DEVDOC_SAVE = docker commit `docker ps -a -n 1 -q` devdoc:local
 
-# when your repo is getting a little stale... just make fresh
-fresh: clean get_vendor_deps install
-	@if [ "$(git status -s)" ]; then echo; echo "Warning: uncommited changes"; git status -s; fi
+devdoc_init:
+	docker run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" tendermint/devdoc echo
+	# TODO make this safer
+	$(call DEVDOC_SAVE)
 
-.PHONY: all build install test test_cli test_unit test_store get_vendor_deps build-docker clean fresh benchmark
+devdoc:
+	docker run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" devdoc:local bash
+
+devdoc_save:
+	# TODO make this safer
+	$(call DEVDOC_SAVE)
+
+devdoc_clean:
+	docker rmi -f $$(docker images -f "dangling=true" -q)
+
+devdoc_update:
+	docker pull tendermint/devdoc
+
+
+# To avoid unintended conflicts with file names, always add to .PHONY
+# unless there is a reason not to.
+# https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
+.PHONY: build dist check_tools get_tools get_vendor_deps draw_deps test test_unit test_tutorial benchmark devdoc_init devdoc devdoc_save devdoc_update

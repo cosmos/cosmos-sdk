@@ -6,3 +6,4 @@ merkleeyes.db
 build
 docs/guide/*.sh
 tools/bin/*
+examples/build/*

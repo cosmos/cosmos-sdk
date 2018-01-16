@@ -1,10 +1,14 @@
-hash: faf3b372fd15fa4ee41114e8f0f76707e648c79b418f55b845b023b2069f88d0
-updated: 2018-01-13T12:34:01.209505425-05:00
+hash: f811e937dd655e26217ee95fff2749a4d6ceba181e0fa285c8b0abbc6cadaed0
+updated: 2018-01-15T17:22:52.8191107-08:00
 imports:
 - name: github.com/btcsuite/btcd
-  version: c7588cbf7690cd9f047a28efa2dcd8f2435a4e5e
+  version: 2e60448ffcc6bf78332d1fe590260095f554dd78
   subpackages:
   - btcec
+- name: github.com/davecgh/go-spew
+  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  subpackages:
+  - spew
 - name: github.com/ebuchman/fail-test
   version: 95f809107225be108efcf10a3509e4ea6ceef3c4
 - name: github.com/go-kit/kit
@@ -27,7 +31,7 @@ imports:
   - sortkeys
   - types
 - name: github.com/golang/protobuf
-  version: 1643683e1b54a9e88ad26d98f81400c8c9d9f4f9
+  version: 1e59b77b52bf8e4b449a57e6f79f21226d571845
   subpackages:
   - proto
   - ptypes
@@ -37,7 +41,7 @@ imports:
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/gorilla/websocket
-  version: 71fa72d4842364bc5f74185f4161e0099ea3624a
+  version: 292fd08b2560ad524ee37396253d71570339a821
 - name: github.com/jmhodges/levigo
   version: c42d9e0ca023e2198120196f842701bb4c55d7b9
 - name: github.com/kr/logfmt
@@ -45,13 +49,11 @@ imports:
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/rcrowley/go-metrics
-  version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
-- name: github.com/spf13/cobra
-  version: 7b2c5ac9fc04fc5efafb60700713d4fa609b777b
-- name: github.com/spf13/pflag
-  version: 97afa5e7ca8a08a383cb259e06636b5e2cc7897f
-- name: github.com/spf13/viper
-  version: 8ef37cbca71638bf32f3d5e194117d4cb46da163
+  version: e181e095bae94582363434144c61a9653aff6e50
+- name: github.com/rigelrozanski/shelldown
+  version: 2e18b6eb9bf428aa524e71433296e0b7c73ae0a3
+  subpackages:
+  - cmd/shelldown
 - name: github.com/syndtr/goleveldb
   version: b89cc31ef7977104127d34c1bd31ebd1a9db2199
   subpackages:
@@ -68,7 +70,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 2bd556205d1679683fddcd5a91eeccf37a8a1007
+  version: 4243954d8d940f9ee0646a83d48ea7a1a907529e
   subpackages:
   - client
   - example/code
@@ -76,54 +78,40 @@ imports:
   - server
   - types
 - name: github.com/tendermint/ed25519
-  version: 1f52c6f8b8a5c7908aff4497c186af344b428925
+  version: d8387025d2b9d158cf4efb07e7ebf814bcce2057
   subpackages:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 67a47e6a0bf474a76f6a8f09b39cfdf382f39b90
-  subpackages:
-  - keys
+  version: 32741be2126500d600cede1e2016bbbe2754cb46
 - name: github.com/tendermint/go-wire
-  version: 27be46e25124ddf775e23317a83647ce62a93f6b
+  version: b93ebdd4f306833936c243561ec30af3455dc764
   subpackages:
   - data
 - name: github.com/tendermint/iavl
-  version: ed0bbf0acc51e75f72c76099293113c2d67199b9
-- name: github.com/tendermint/light-client
-  version: 76313d625e662ed7b284d066d68ff71edd7a9fac
-  subpackages:
-  - certifiers
-  - certifiers/client
-  - certifiers/files
-  - proofs
+  version: 1dfe265ab4b491418e88e1da6577a8ad594fc989
 - name: github.com/tendermint/tendermint
-  version: ec1ca04a1608eb947b6692343744cbce08778d61
+  version: b8d9f30ea6196e280ff3a4b879f3281c4e727c4d
   subpackages:
   - config
   - consensus/types
-  - node
   - p2p
   - p2p/upnp
   - proxy
-  - rpc/client
   - rpc/core/types
   - rpc/lib/client
   - rpc/lib/types
   - state
   - types
 - name: github.com/tendermint/tmlibs
-  version: 2bb538b150f197a04a0b969a27e9ea24d35edbc1
+  version: 7a52d47a1676a9fe61d07fde0a48a733cce564c6
   subpackages:
-  - cli
-  - cli/flags
   - common
   - db
-  - events
   - flowrate
   - log
-  - logger
   - merkle
+  - process
   - pubsub
   - pubsub/query
 - name: golang.org/x/crypto
@@ -138,7 +126,7 @@ imports:
   - ripemd160
   - salsa20/salsa
 - name: golang.org/x/net
-  version: cd69bc3fc700721b709c3a59e16e24c67b58f6ff
+  version: 5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec
   subpackages:
   - context
   - http2
@@ -155,7 +143,7 @@ imports:
   - unicode/bidi
   - unicode/norm
 - name: google.golang.org/genproto
-  version: f676e0f3ac6395ff1a529ae59a6670878a8371a6
+  version: a8101f21cf983e773d0c1133ebc5424792003214
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
@@ -177,17 +165,15 @@ imports:
   - status
   - tap
   - transport
+- name: gopkg.in/alecthomas/gometalinter.v2
+  version: 88d47c66988c5a5cb3945925da47c883800a94df
 testImports:
-- name: github.com/davecgh/go-spew
-  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
-  subpackages:
-  - spew
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
 - name: github.com/stretchr/testify
-  version: 2aa2c176b9dab406a6970f6a55f513e8a8c8b18f
+  version: b91bfb9ebec76498946beb6af7c0230c7cc7ba6c
   subpackages:
   - assert
   - require

@@ -88,11 +88,11 @@ func main() {
 // Misc.
 
 func registerMsgs() {
-	wire.RegisterInterface((*types.Msg), nil)
-	wire.RegisterConcrete((*bank.SendMsg), nil)
+	wire.RegisterInterface((*sdk.Msg)(nil), nil)
+	wire.RegisterConcrete(&bank.SendMsg{}, "com.cosmos.basecoin.send_msg", nil)
 }
 
-func decodeTx(txBytes []byte) (types.Tx, error) {
+func decodeTx(txBytes []byte) (sdk.Tx, error) {
 	var tx = sdk.StdTx{}
 	err := wire.UnmarshalBinary(txBytes, &tx)
 	return tx, err

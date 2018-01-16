@@ -46,7 +46,7 @@ func NewAnteHandler(store sdk.AccountStore) sdk.AnteHandler {
 			signerAccs[i] = signerAcc
 
 			// If no pubkey, set pubkey.
-			if signerAcc.GetPubKey().Empty() {
+			if signerAcc.GetPubKey() == nil {
 				err := signerAcc.SetPubKey(sig.PubKey)
 				if err != nil {
 					return ctx, sdk.Result{

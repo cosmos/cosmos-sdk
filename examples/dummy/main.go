@@ -12,12 +12,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func main() {
-
-	app := app.NewApp("dummy")
 
 	db, err := dbm.NewGoLevelDB("dummy", "dummy-data")
 	if err != nil {
@@ -30,17 +28,22 @@ func main() {
 	numHistory := int64(100)
 	loader := store.NewIAVLStoreLoader(db, cacheSize, numHistory)
 
+	// key to access the main KVStore
+	var mainStoreKey = sdk.NewKVStoreKey("main")
+
 	// Create MultiStore
 	multiStore := store.NewCommitMultiStore(db)
-	multiStore.SetSubstoreLoader("main", loader)
-
-	// Create Handler
-	handler := types.Decorate(unmarshalDecorator, dummyHandler)
+	multiStore.SetSubstoreLoader(mainStoreKey, loader)
 
 	// Set everything on the app and load latest
-	app.SetCommitMultiStore(multiStore)
-	app.SetHandler(handler)
-	if err := app.LoadLatestVersion(); err != nil {
+	app := app.NewApp("dummy", multiStore)
+
+	// Set Tx decoder
+	app.SetTxDecoder(decodeTx)
+
+	app.Router().AddRoute("dummy", DummyHandler(mainStoreKey))
+
+	if err := app.LoadLatestVersion(mainStoreKey); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -81,7 +84,11 @@ func (tx dummyTx) Get(key interface{}) (value interface{}) {
 	return nil
 }
 
-func (tx dummyTx) SignBytes() []byte {
+func (tx dummyTx) Type() string {
+	return "dummy"
+}
+
+func (tx dummyTx) GetSignBytes() []byte {
 	return tx.bytes
 }
 
@@ -90,20 +97,24 @@ func (tx dummyTx) ValidateBasic() error {
 	return nil
 }
 
-func (tx dummyTx) Signers() []crypto.Address {
+func (tx dummyTx) GetSigners() []crypto.Address {
 	return nil
 }
 
-func (tx dummyTx) TxBytes() []byte {
+func (tx dummyTx) GetTxBytes() []byte {
 	return tx.bytes
 }
 
-func (tx dummyTx) Signatures() []types.StdSignature {
+func (tx dummyTx) GetSignatures() []sdk.StdSignature {
 	return nil
 }
 
-func unmarshalDecorator(ctx types.Context, ms types.MultiStore, tx types.Tx, next types.Handler) types.Result {
-	txBytes := ctx.TxBytes()
+func (tx dummyTx) GetFeePayer() crypto.Address {
+	return nil
+}
+
+func decodeTx(txBytes []byte) (sdk.Tx, error) {
+	var tx sdk.Tx
 
 	split := bytes.Split(txBytes, []byte("="))
 	if len(split) == 1 {
@@ -113,25 +124,24 @@ func unmarshalDecorator(ctx types.Context, ms types.MultiStore, tx types.Tx, nex
 		k, v := split[0], split[1]
 		tx = dummyTx{k, v, txBytes}
 	} else {
-		return types.Result{
-			Code: 1,
-			Log:  "too many =",
-		}
+		return nil, fmt.Errorf("too many =")
 	}
 
-	return next(ctx, ms, tx)
+	return tx, nil
 }
 
-func dummyHandler(ctx types.Context, ms types.MultiStore, tx types.Tx) types.Result {
-	// tx is already unmarshalled
-	key := tx.Get("key").([]byte)
-	value := tx.Get("value").([]byte)
+func DummyHandler(storeKey sdk.SubstoreKey) sdk.Handler {
+	return func(ctx sdk.Context, tx sdk.Tx) sdk.Result {
+		// tx is already unmarshalled
+		key := tx.Get("key").([]byte)
+		value := tx.Get("value").([]byte)
 
-	main := ms.GetKVStore("main")
-	main.Set(key, value)
+		store := ctx.KVStore(storeKey)
+		store.Set(key, value)
 
-	return types.Result{
-		Code: 0,
-		Log:  fmt.Sprintf("set %s=%s", key, value),
+		return sdk.Result{
+			Code: 0,
+			Log:  fmt.Sprintf("set %s=%s", key, value),
+		}
 	}
 }

@@ -4,8 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/merkle"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestMultistoreCommitLoad(t *testing.T) {
@@ -65,13 +68,13 @@ func TestMultistoreCommitLoad(t *testing.T) {
 
 func newMultiStoreWithLoaders(db dbm.DB) *rootMultiStore {
 	store := NewCommitMultiStore(db)
-	storeLoaders := map[string]CommitStoreLoader{
-		"store1": newMockCommitStore,
-		"store2": newMockCommitStore,
-		"store3": newMockCommitStore,
+	storeLoaders := map[SubstoreKey]CommitStoreLoader{
+		sdk.NewKVStoreKey("store1"): newMockCommitStore,
+		sdk.NewKVStoreKey("store2"): newMockCommitStore,
+		sdk.NewKVStoreKey("store3"): newMockCommitStore,
 	}
-	for name, loader := range storeLoaders {
-		store.SetSubstoreLoader(name, loader)
+	for key, loader := range storeLoaders {
+		store.SetSubstoreLoader(key, loader)
 	}
 	return store
 }
@@ -90,9 +93,10 @@ func getExpectedCommitID(store *rootMultiStore, ver int64) CommitID {
 	}
 }
 
-func hashStores(stores map[string]CommitStore) []byte {
+func hashStores(stores map[SubstoreKey]CommitStore) []byte {
 	m := make(map[string]interface{}, len(stores))
-	for name, store := range stores {
+	for key, store := range stores {
+		name := key.Name()
 		m[name] = substore{
 			Name: name,
 			substoreCore: substoreCore{

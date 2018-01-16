@@ -8,12 +8,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-crypto"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
+
+	"github.com/cosmos/cosmos-sdk/store"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // A mock transaction to update a validator's voting power.
@@ -22,30 +23,36 @@ type testTx struct {
 	NewPower int64
 }
 
+const txType = "testTx"
+
+func (tx testTx) Type() string                            { return txType }
 func (tx testTx) Get(key interface{}) (value interface{}) { return nil }
-func (tx testTx) SignBytes() []byte                       { return nil }
+func (tx testTx) GetSignBytes() []byte                    { return nil }
 func (tx testTx) ValidateBasic() error                    { return nil }
-func (tx testTx) Signers() []crypto.Address               { return nil }
-func (tx testTx) TxBytes() []byte                         { return nil }
-func (tx testTx) Signatures() []types.StdSignature        { return nil }
+func (tx testTx) GetSigners() []crypto.Address            { return nil }
+func (tx testTx) GetTxBytes() []byte                      { return nil }
+func (tx testTx) GetFeePayer() crypto.Address             { return nil }
+func (tx testTx) GetSignatures() []sdk.StdSignature       { return nil }
 
 func TestBasic(t *testing.T) {
+	store, storeKeys := newCommitMultiStore()
 
 	// Create app.
-	app := NewApp(t.Name())
-	app.SetCommitMultiStore(newCommitMultiStore())
-	app.SetTxParser(func(txBytes []byte) (types.Tx, error) {
+	app := NewApp(t.Name(), store)
+	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, error) {
 		var ttx testTx
 		fromJSON(txBytes, &ttx)
 		return ttx, nil
 	})
-	app.SetHandler(func(ctx types.Context, store types.MultiStore, tx types.Tx) types.Result {
+
+	app.SetDefaultAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+	app.Router().AddRoute(txType, func(ctx sdk.Context, tx sdk.Tx) sdk.Result {
 		// TODO
-		return types.Result{}
+		return sdk.Result{}
 	})
 
 	// Load latest state, which should be empty.
-	err := app.LoadLatestVersion()
+	err := app.LoadLatestVersion(storeKeys["main"])
 	assert.Nil(t, err)
 	assert.Equal(t, app.LastBlockHeight(), int64(0))
 
@@ -125,7 +132,7 @@ func makePubKey(secret string) crypto.PubKey {
 
 func makePrivKey(secret string) crypto.PrivKey {
 	privKey := crypto.GenPrivKeyEd25519FromSecret([]byte(secret))
-	return privKey.Wrap()
+	return privKey
 }
 
 func secret(index int) string {
@@ -156,11 +163,16 @@ func fromJSON(bz []byte, ptr interface{}) {
 }
 
 // Creates a sample CommitMultiStore
-func newCommitMultiStore() types.CommitMultiStore {
+func newCommitMultiStore() (sdk.CommitMultiStore, map[string]sdk.SubstoreKey) {
 	dbMain := dbm.NewMemDB()
 	dbXtra := dbm.NewMemDB()
+	keyMain := sdk.NewKVStoreKey("main")
+	keyXtra := sdk.NewKVStoreKey("xtra")
 	ms := store.NewCommitMultiStore(dbMain) // Also store rootMultiStore metadata here (it shouldn't clash)
-	ms.SetSubstoreLoader("main", store.NewIAVLStoreLoader(dbMain, 0, 0))
-	ms.SetSubstoreLoader("xtra", store.NewIAVLStoreLoader(dbXtra, 0, 0))
-	return ms
+	ms.SetSubstoreLoader(keyMain, store.NewIAVLStoreLoader(dbMain, 0, 0))
+	ms.SetSubstoreLoader(keyXtra, store.NewIAVLStoreLoader(dbXtra, 0, 0))
+	return ms, map[string]sdk.SubstoreKey{
+		"main": keyMain,
+		"xtra": keyXtra,
+	}
 }

@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	crypto "github.com/tendermint/go-crypto"
+	wire "github.com/tendermint/go-wire"
 )
 
 func TestBaseAccount(t *testing.T) {
@@ -31,16 +32,15 @@ func TestBaseAccount(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, seq, acc.GetSequence())
 
-	b, err := acc.MarshalJSON()
+	b, err := wire.MarshalBinary(acc)
 	assert.Nil(t, err)
 
-	acc2 := new(BaseAccount)
-	err = acc2.UnmarshalJSON(b)
+	var acc2 BaseAccount
+	err = wire.UnmarshalBinary(b, &acc2)
 	assert.Nil(t, err)
 	assert.Equal(t, acc, acc2)
 
-	acc2 = new(BaseAccount)
-	err = acc2.UnmarshalJSON(b[:len(b)/2])
+	acc2 = BaseAccount{}
+	err = wire.UnmarshalBinary(b[:len(b)/2], &acc2)
 	assert.NotNil(t, err)
-
 }

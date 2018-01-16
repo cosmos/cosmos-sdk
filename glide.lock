@@ -1,5 +1,5 @@
-hash: f811e937dd655e26217ee95fff2749a4d6ceba181e0fa285c8b0abbc6cadaed0
-updated: 2018-01-15T17:22:52.8191107-08:00
+hash: a48b72c21e7e4eaf17cf54ae0ab8104c15a9b230adc3f33318fe5c068dd94996
+updated: 2018-01-16T11:19:24.354963539-08:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 2e60448ffcc6bf78332d1fe590260095f554dd78
@@ -50,10 +50,14 @@ imports:
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/rcrowley/go-metrics
   version: e181e095bae94582363434144c61a9653aff6e50
-- name: github.com/rigelrozanski/shelldown
-  version: 2e18b6eb9bf428aa524e71433296e0b7c73ae0a3
-  subpackages:
-  - cmd/shelldown
+- name: github.com/rigelrozanski/common
+  version: f691f115798593d783b9999b1263c2f4ffecc439
+- name: github.com/spf13/cobra
+  version: 7b2c5ac9fc04fc5efafb60700713d4fa609b777b
+- name: github.com/spf13/pflag
+  version: 97afa5e7ca8a08a383cb259e06636b5e2cc7897f
+- name: github.com/spf13/viper
+  version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: github.com/syndtr/goleveldb
   version: b89cc31ef7977104127d34c1bd31ebd1a9db2199
   subpackages:
@@ -84,20 +88,31 @@ imports:
   - extra25519
 - name: github.com/tendermint/go-crypto
   version: 32741be2126500d600cede1e2016bbbe2754cb46
+  subpackages:
+  - keys
 - name: github.com/tendermint/go-wire
   version: b93ebdd4f306833936c243561ec30af3455dc764
   subpackages:
   - data
 - name: github.com/tendermint/iavl
   version: 1dfe265ab4b491418e88e1da6577a8ad594fc989
+- name: github.com/tendermint/light-client
+  version: 76313d625e662ed7b284d066d68ff71edd7a9fac
+  subpackages:
+  - certifiers
+  - certifiers/client
+  - certifiers/files
+  - proofs
 - name: github.com/tendermint/tendermint
   version: b8d9f30ea6196e280ff3a4b879f3281c4e727c4d
   subpackages:
   - config
   - consensus/types
+  - node
   - p2p
   - p2p/upnp
   - proxy
+  - rpc/client
   - rpc/core/types
   - rpc/lib/client
   - rpc/lib/types
@@ -106,12 +121,15 @@ imports:
 - name: github.com/tendermint/tmlibs
   version: 7a52d47a1676a9fe61d07fde0a48a733cce564c6
   subpackages:
+  - cli
+  - cli/flags
   - common
   - db
+  - events
   - flowrate
   - log
+  - logger
   - merkle
-  - process
   - pubsub
   - pubsub/query
 - name: golang.org/x/crypto
@@ -165,8 +183,6 @@ imports:
   - status
   - tap
   - transport
-- name: gopkg.in/alecthomas/gometalinter.v2
-  version: 88d47c66988c5a5cb3945925da47c883800a94df
 testImports:
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d

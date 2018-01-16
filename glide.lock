@@ -1,8 +1,8 @@
 hash: a48b72c21e7e4eaf17cf54ae0ab8104c15a9b230adc3f33318fe5c068dd94996
-updated: 2018-01-14T22:42:37.763378242-05:00
+updated: 2018-01-16T11:19:24.354963539-08:00
 imports:
 - name: github.com/btcsuite/btcd
-  version: c7588cbf7690cd9f047a28efa2dcd8f2435a4e5e
+  version: 2e60448ffcc6bf78332d1fe590260095f554dd78
   subpackages:
   - btcec
 - name: github.com/davecgh/go-spew
@@ -31,7 +31,7 @@ imports:
   - sortkeys
   - types
 - name: github.com/golang/protobuf
-  version: 1643683e1b54a9e88ad26d98f81400c8c9d9f4f9
+  version: 1e59b77b52bf8e4b449a57e6f79f21226d571845
   subpackages:
   - proto
   - ptypes
@@ -41,7 +41,7 @@ imports:
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/gorilla/websocket
-  version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
+  version: 292fd08b2560ad524ee37396253d71570339a821
 - name: github.com/jmhodges/levigo
   version: c42d9e0ca023e2198120196f842701bb4c55d7b9
 - name: github.com/kr/logfmt
@@ -49,7 +49,9 @@ imports:
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/rcrowley/go-metrics
-  version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
+  version: e181e095bae94582363434144c61a9653aff6e50
+- name: github.com/rigelrozanski/common
+  version: f691f115798593d783b9999b1263c2f4ffecc439
 - name: github.com/spf13/cobra
   version: 7b2c5ac9fc04fc5efafb60700713d4fa609b777b
 - name: github.com/spf13/pflag
@@ -80,7 +82,7 @@ imports:
   - server
   - types
 - name: github.com/tendermint/ed25519
-  version: 1f52c6f8b8a5c7908aff4497c186af344b428925
+  version: d8387025d2b9d158cf4efb07e7ebf814bcce2057
   subpackages:
   - edwards25519
   - extra25519
@@ -102,7 +104,7 @@ imports:
   - certifiers/files
   - proofs
 - name: github.com/tendermint/tendermint
-  version: 81ecbd4e5f82fbd2f657571e3154c68240080127
+  version: b8d9f30ea6196e280ff3a4b879f3281c4e727c4d
   subpackages:
   - config
   - consensus/types
@@ -117,7 +119,7 @@ imports:
   - state
   - types
 - name: github.com/tendermint/tmlibs
-  version: f2bc5432c31974bb3f5b1a80a53c38e37d481b8d
+  version: 7a52d47a1676a9fe61d07fde0a48a733cce564c6
   subpackages:
   - cli
   - cli/flags
@@ -142,7 +144,7 @@ imports:
   - ripemd160
   - salsa20/salsa
 - name: golang.org/x/net
-  version: cd69bc3fc700721b709c3a59e16e24c67b58f6ff
+  version: 5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec
   subpackages:
   - context
   - http2
@@ -159,7 +161,7 @@ imports:
   - unicode/bidi
   - unicode/norm
 - name: google.golang.org/genproto
-  version: f676e0f3ac6395ff1a529ae59a6670878a8371a6
+  version: a8101f21cf983e773d0c1133ebc5424792003214
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc

@@ -1,20 +1,26 @@
-GLIDE = github.com/tendermint/glide
-TOOLS_CHECK = glide
-
 all: install_glide check get_vendor_deps install
 
 
 ########################################
 ### Glide
 
+GLIDE = github.com/tendermint/glide
+GLIDE_CHECK := $(shell command -v glide 2> /dev/null)
+
 check:
-	@# https://stackoverflow.com/a/25668869
-	@echo "Found tools: $(foreach tool,$(TOOLS_CHECK),\
-        $(if $(shell which $(tool)),$(tool),$(error "No $(tool) in PATH")))"
+ifndef GLIDE_CHECK
+	@echo "No glide in path.  Install with 'make install_glide'."
+else
+	@echo "Found glide in path."
+endif
 
 install_glide:
+ifdef GLIDE_CHECK
+	@echo "Glide is already installed.  Run 'make update_glide' to update."
+else
 	@echo "$(ansi_grn)Installing glide$(ansi_end)"
-	go get -u -v $(GLIDE)
+	go get -v $(GLIDE)
+endif
 
 update_glide:
 	@echo "$(ansi_grn)Updating glide$(ansi_end)"

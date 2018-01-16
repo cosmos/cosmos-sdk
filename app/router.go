@@ -20,15 +20,15 @@ type router struct {
 	routes []route
 }
 
-func NewRouter() router {
-	return router{
+func NewRouter() *router {
+	return &router{
 		routes: make([]route, 0),
 	}
 }
 
 var isAlpha = regexp.MustCompile(`^[a-zA-Z]+$`).MatchString
 
-func (rtr router) AddRoute(r string, h sdk.Handler) {
+func (rtr *router) AddRoute(r string, h sdk.Handler) {
 	if !isAlpha(r) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
@@ -36,7 +36,7 @@ func (rtr router) AddRoute(r string, h sdk.Handler) {
 }
 
 // TODO handle expressive matches.
-func (rtr router) Route(path string) (h sdk.Handler) {
+func (rtr *router) Route(path string) (h sdk.Handler) {
 	for _, route := range rtr.routes {
 		if route.r == path {
 			return route.h

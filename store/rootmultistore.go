@@ -39,6 +39,9 @@ func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 
 // Implements CommitMultiStore.
 func (rs *rootMultiStore) SetSubstoreLoader(key SubstoreKey, loader CommitStoreLoader) {
+	if key == nil {
+		panic("SetSubstoreLoader() key cannot be nil")
+	}
 	if _, ok := rs.storeLoaders[key]; ok {
 		panic(fmt.Sprintf("rootMultiStore duplicate substore key", key))
 	}

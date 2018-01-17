@@ -55,7 +55,7 @@ func NewAnteHandler(store sdk.AccountStore) sdk.AnteHandler {
 				}
 			}
 
-			// Check and incremenet sequence number.
+			// Check and increment sequence number.
 			seq := signerAcc.GetSequence()
 			if seq != sig.Sequence {
 				return ctx, sdk.Result{

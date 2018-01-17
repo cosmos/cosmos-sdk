@@ -18,7 +18,8 @@ func (app *BasecoinApp) registerMsgs() {
 
 	// Register the Msg interface.
 	cdc.RegisterInterface((*types.Msg), nil)
-	cdc.RegisterConcrete((*bank.SendMsg), nil)
+	cdc.RegisterConcrete(bank.SendMsg{}, nil)  // XXX refactor out
+	cdc.RegisterConcrete(bank.IssueMsg{}, nil) // XXX refactor out to bank/msgs.go
 	// more msgs here...
 
 	// All interfaces to be encoded/decoded in a Msg must be

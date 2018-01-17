@@ -4,17 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/app"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/tendermint/abci/server"
 	"github.com/tendermint/go-wire"
 	cmn "github.com/tendermint/tmlibs/common"
-	dbm "github.com/tendermint/tmlibs/db"
-
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 )
 
 const appName = "BasecoinApp"
@@ -74,40 +68,6 @@ func (app *BasecoinApp) RunForever() {
 func (app *BasecoinApp) initKeys() {
 	app.mainStoreKey = sdk.NewKVStoreKey("main")
 	app.ibcStoreKey = sdk.NewKVStoreKey("ibc")
-}
-
-// depends on initKeys()
-func (app *BasecoinApp) initMultiStore() {
-
-	// Create the underlying leveldb datastore which will
-	// persist the Merkle tree inner & leaf nodes.
-	db, err := dbm.NewGoLevelDB("basecoin", "basecoin-data")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	// Create CommitStoreLoader.
-	cacheSize := 10000
-	numHistory := int64(100)
-	mainLoader := store.NewIAVLStoreLoader(db, cacheSize, numHistory)
-	ibcLoader := store.NewIAVLStoreLoader(db, cacheSize, numHistory)
-
-	// Create MultiStore
-	multiStore := store.NewCommitMultiStore(db)
-	multiStore.SetSubstoreLoader(app.mainStoreKey, mainLoader)
-	multiStore.SetSubstoreLoader(app.ibcStoreKey, ibcLoader)
-
-	// Finally,
-	app.multiStore = multiStore
-}
-
-// depends on initKeys()
-func (app *BasecoinApp) initAppStore() {
-	app.appStore = auth.NewAccountStore(
-		app.mainStoreKey,
-		types.AppAccountCodec{},
-	)
 }
 
 // depends on initMultiStore()

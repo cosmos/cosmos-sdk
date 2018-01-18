@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/rational"
 )
 
 func newPubKey(pk string) (res crypto.PubKey, err error) {
@@ -38,6 +38,8 @@ func TestState(t *testing.T) {
 	multiStore.SetSubstoreLoader(stakeStoreKey, stakeLoader)
 	multiStore.LoadLatestVersion()
 	store := multiStore.GetKVStore(stakeStoreKey)
+	wire.RegisterInterface((*crypto.PubKey)(nil), nil)
+	wire.RegisterConcrete(crypto.PubKeyEd25519{}, "crypto/PubKeyEd25519", nil)
 
 	//delegator := crypto.Address{[]byte("addressdelegator")}
 	//validator := crypto.Address{[]byte("addressvalidator")}
@@ -54,9 +56,9 @@ func TestState(t *testing.T) {
 	candidate := &Candidate{
 		Owner:       validator,
 		PubKey:      pk,
-		Assets:      rational.New(9),
-		Liabilities: rational.New(9),
-		VotingPower: rational.Zero,
+		Assets:      9, //rational.New(9),
+		Liabilities: 9, // rational.New(9),
+		VotingPower: 0, //rational.Zero,
 	}
 
 	candidatesEqual := func(c1, c2 *Candidate) bool {
@@ -81,7 +83,7 @@ func TestState(t *testing.T) {
 	assert.True(candidatesEqual(candidate, resCand))
 
 	// modify a records, save, and retrieve
-	candidate.Liabilities = rational.New(99)
+	candidate.Liabilities = 99 //rational.New(99)
 	saveCandidate(store, candidate)
 	resCand = loadCandidate(store, pk)
 	assert.True(candidatesEqual(candidate, resCand))
@@ -96,7 +98,7 @@ func TestState(t *testing.T) {
 
 	bond := &DelegatorBond{
 		PubKey: pk,
-		Shares: rational.New(9),
+		Shares: 9, // rational.New(9),
 	}
 
 	bondsEqual := func(b1, b2 *DelegatorBond) bool {
@@ -114,7 +116,7 @@ func TestState(t *testing.T) {
 	assert.True(bondsEqual(bond, resBond))
 
 	//modify a records, save, and retrieve
-	bond.Shares = rational.New(99)
+	bond.Shares = 99 //rational.New(99)
 	saveDelegatorBond(store, delegator, bond)
 	resBond = loadDelegatorBond(store, delegator, pk)
 	assert.True(bondsEqual(bond, resBond))

@@ -1,11 +1,25 @@
 package main
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/version"
+)
 
 var (
 	versionCmd = &cobra.Command{
 		Use:   "version",
 		Short: "Print the app version",
-		RunE:  todoNotImplemented,
+		Run:   doVersionCmd,
 	}
 )
+
+func doVersionCmd(cmd *cobra.Command, args []string) {
+	v := version.Version
+	if version.GitCommit != "" {
+		v = v + " " + version.GitCommit
+	}
+	fmt.Println(v)
+}

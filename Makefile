@@ -4,6 +4,11 @@ BUILD_FLAGS = -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=`git r
 all: check_tools get_vendor_deps build test 
 
 ########################################
+### CI
+
+ci: get_tools get_vendor_deps build test_cover
+
+########################################
 ### Build
 
 build:
@@ -43,6 +48,9 @@ test: test_unit # test_cli
 
 test_unit:
 	@go test $(PACKAGES)
+
+test_cover:
+	@bash test_cover.sh
 
 test_tutorial:
 	@shelldown ${TUTORIALS}

@@ -17,5 +17,7 @@ dependencies:
 
 test:
   override:
-    - "cd $REPO && make get_tools && make all"
+    - "cd $REPO && make ci"
     - ls $GOPATH/bin
+    - bash <(curl -s https://codecov.io/bash) -f coverage.txt
+

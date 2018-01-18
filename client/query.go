@@ -51,7 +51,7 @@ func GetWithProofOptions(path string, key []byte, opts rpcclient.ABCIQueryOption
 
 	// make sure the proof is the proper height
 	if resp.IsErr() {
-		err = errors.Errorf("Query error %d: %d", resp.Code)
+		err = errors.Errorf("Query error %d: %s", resp.Code, resp.Log)
 		return nil, nil, err
 	}
 	if len(resp.Key) == 0 || len(resp.Proof) == 0 {

@@ -1,6 +1,9 @@
 package app
 
-import "github.com/cosmos/cosmos-sdk/x/bank"
+import (
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+)
 
 // Handle charging tx fees and checking signatures.
 func (app *BasecoinApp) initAnteHandler() {

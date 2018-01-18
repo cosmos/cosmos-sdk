@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	dbm "github.com/tendermint/tmlibs/db"
 )
 
 // depends on initKeys()
@@ -37,7 +38,7 @@ func (app *BasecoinApp) initMultiStore() {
 
 // depends on initKeys()
 func (app *BasecoinApp) initAppStore() {
-	app.appStore = auth.NewAccountStore(
+	app.accStore = auth.NewAccountStore(
 		app.mainStoreKey,
 		types.AppAccountCodec{},
 	)

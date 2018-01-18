@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	apm "github.com/cosmos/cosmos-sdk/app"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/tendermint/abci/server"
 	"github.com/tendermint/go-wire"
 	cmn "github.com/tendermint/tmlibs/common"
@@ -14,14 +14,16 @@ import (
 const appName = "BasecoinApp"
 
 type BasecoinApp struct {
-	*sdk.App
+	*apm.App
 	cdc        *wire.Codec
 	multiStore sdk.CommitMultiStore
-	appStore   *auth.AccountStore
 
-	// The key to access the main KVStore.
+	// The key to access the substores.
 	mainStoreKey *sdk.KVStoreKey
 	ibcStoreKey  *sdk.KVStoreKey
+
+	// Additional stores:
+	accStore sdk.AccountStore
 }
 
 // TODO: This should take in more configuration options.
@@ -38,10 +40,9 @@ func NewBasecoinApp() *BasecoinApp {
 	app.initAnteHandler()
 	app.initRoutes()
 
-	// TODO: load genesis
+	// TODO: Load genesis
 	// TODO: InitChain with validators
-	// accounts := auth.NewAccountStore(multiStore.GetKVStore("main"))
-	// TODO: set the genesis accounts
+	// TODO: Set the genesis accounts
 	app.loadStores()
 
 	return app
@@ -72,7 +73,7 @@ func (app *BasecoinApp) initKeys() {
 
 // depends on initMultiStore()
 func (app *BasecoinApp) initSDKApp() {
-	app.App = sdk.NewApp(appName, app.multiStore)
+	app.App = apm.NewApp(appName, app.multiStore)
 }
 
 func (app *BasecoinApp) initCodec() {
@@ -89,7 +90,7 @@ func (app *BasecoinApp) initTxDecoder() {
 
 // Load the stores.
 func (app *BasecoinApp) loadStores() {
-	if err := app.LoadLatestVersion(mainStoreKey); err != nil {
+	if err := app.LoadLatestVersion(app.mainStoreKey); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

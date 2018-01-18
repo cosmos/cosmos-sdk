@@ -3,18 +3,24 @@ package stake
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk"
+	"github.com/cosmos/cosmos-sdk/modules/auth"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tmlibs/rational"
-
-	"github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/state"
 )
 
 func TestState(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
-	store := state.NewMemKVStore()
+	db, err := dbm.NewGoLevelDB("basecoin", "basecoin-data")
+	require.Nil(err)
+	mainLoader := store.NewIAVLStoreLoader(int64(100), 10000, numHistory)
+	var mainStoreKey = sdk.NewKVStoreKey("main")
+	multiStore := store.NewCommitMultiStore(db)
+	multiStore.SetSubstoreLoader(mainStoreKey, mainLoader)
+	var store = auth.NewAccountStore(mainStoreKey, bcm.AppAccountCodec{})
 
 	delegator := sdk.Actor{"testChain", "testapp", []byte("addressdelegator")}
 	validator := sdk.Actor{"testChain", "testapp", []byte("addressvalidator")}

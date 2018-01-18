@@ -6,8 +6,7 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 
-	sdk "github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/state"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 // nolint
@@ -29,41 +28,52 @@ func GetCandidateKey(pubKey crypto.PubKey) []byte {
 }
 
 // GetDelegatorBondKey - get the key for delegator bond with candidate
-func GetDelegatorBondKey(delegator sdk.Actor, candidate crypto.PubKey) []byte {
+func GetDelegatorBondKey(delegator crypto.Address, candidate crypto.PubKey) []byte {
 	return append(GetDelegatorBondKeyPrefix(delegator), candidate.Bytes()...)
 }
 
 // GetDelegatorBondKeyPrefix - get the prefix for a delegator for all candidates
-func GetDelegatorBondKeyPrefix(delegator sdk.Actor) []byte {
-	return append(DelegatorBondKeyPrefix, wire.BinaryBytes(&delegator)...)
+func GetDelegatorBondKeyPrefix(delegator crypto.Address) []byte {
+	res, err := wire.MarshalBinary(&delegator)
+	if err != nil {
+		panic(err)
+	}
+	return append(DelegatorBondKeyPrefix, res...)
 }
 
 // GetDelegatorBondsKey - get the key for list of all the delegator's bonds
-func GetDelegatorBondsKey(delegator sdk.Actor) []byte {
-	return append(DelegatorBondsKeyPrefix, wire.BinaryBytes(&delegator)...)
+func GetDelegatorBondsKey(delegator crypto.Address) []byte {
+	res, err := wire.MarshalBinary(&delegator)
+	if err != nil {
+		panic(err)
+	}
+	return append(DelegatorBondsKeyPrefix, res...)
 }
 
 //---------------------------------------------------------------------
 
 // Get the active list of all the candidate pubKeys and owners
-func loadCandidatesPubKeys(store state.SimpleDB) (pubKeys []crypto.PubKey) {
+func loadCandidatesPubKeys(store types.KVStore) (pubKeys []crypto.PubKey) {
 	bytes := store.Get(CandidatesPubKeysKey)
 	if bytes == nil {
 		return
 	}
-	err := wire.ReadBinaryBytes(bytes, &pubKeys)
+	err := wire.UnmarshalBinary(bytes, &pubKeys)
 	if err != nil {
 		panic(err)
 	}
 	return
 }
-func saveCandidatesPubKeys(store state.SimpleDB, pubKeys []crypto.PubKey) {
-	b := wire.BinaryBytes(pubKeys)
+func saveCandidatesPubKeys(store types.KVStore, pubKeys []crypto.PubKey) {
+	b, err := wire.MarshalBinary(pubKeys)
+	if err != nil {
+		panic(err)
+	}
 	store.Set(CandidatesPubKeysKey, b)
 }
 
 // loadCandidates - get the active list of all candidates TODO replace with  multistore
-func loadCandidates(store state.SimpleDB) (candidates Candidates) {
+func loadCandidates(store types.KVStore) (candidates Candidates) {
 	pks := loadCandidatesPubKeys(store)
 	for _, pk := range pks {
 		candidates = append(candidates, loadCandidate(store, pk))
@@ -74,10 +84,10 @@ func loadCandidates(store state.SimpleDB) (candidates Candidates) {
 //---------------------------------------------------------------------
 
 // loadCandidate - loads the candidate object for the provided pubkey
-func loadCandidate(store state.SimpleDB, pubKey crypto.PubKey) *Candidate {
-	if pubKey.Empty() {
-		return nil
-	}
+func loadCandidate(store types.KVStore, pubKey crypto.PubKey) *Candidate {
+	//if pubKey.Empty() {
+	//return nil
+	//}
 	b := store.Get(GetCandidateKey(pubKey))
 	if b == nil {
 		return nil
@@ -90,7 +100,7 @@ func loadCandidate(store state.SimpleDB, pubKey crypto.PubKey) *Candidate {
 	return candidate
 }
 
-func saveCandidate(store state.SimpleDB, candidate *Candidate) {
+func saveCandidate(store types.KVStore, candidate *Candidate) {
 
 	if !store.Has(GetCandidateKey(candidate.PubKey)) {
 		// TODO to be replaced with iteration in the multistore?
@@ -105,8 +115,8 @@ func saveCandidate(store state.SimpleDB, candidate *Candidate) {
 	store.Set(GetCandidateKey(candidate.PubKey), b)
 }
 
-func removeCandidate(store state.SimpleDB, pubKey crypto.PubKey) {
-	store.Remove(GetCandidateKey(pubKey))
+func removeCandidate(store types.KVStore, pubKey crypto.PubKey) {
+	store.Delete(GetCandidateKey(pubKey))
 
 	// TODO to be replaced with iteration in the multistore?
 	pks := loadCandidatesPubKeys(store)
@@ -122,15 +132,15 @@ func removeCandidate(store state.SimpleDB, pubKey crypto.PubKey) {
 //---------------------------------------------------------------------
 
 // load the pubkeys of all candidates a delegator is delegated too
-func loadDelegatorCandidates(store state.SimpleDB,
-	delegator sdk.Actor) (candidates []crypto.PubKey) {
+func loadDelegatorCandidates(store types.KVStore,
+	delegator crypto.Address) (candidates []crypto.PubKey) {
 
 	candidateBytes := store.Get(GetDelegatorBondsKey(delegator))
 	if candidateBytes == nil {
 		return nil
 	}
 
-	err := wire.ReadBinaryBytes(candidateBytes, &candidates)
+	err := wire.UnmarshalBinary(candidateBytes, &candidates)
 	if err != nil {
 		panic(err)
 	}
@@ -139,8 +149,8 @@ func loadDelegatorCandidates(store state.SimpleDB,
 
 //---------------------------------------------------------------------
 
-func loadDelegatorBond(store state.SimpleDB,
-	delegator sdk.Actor, candidate crypto.PubKey) *DelegatorBond {
+func loadDelegatorBond(store types.KVStore,
+	delegator crypto.Address, candidate crypto.PubKey) *DelegatorBond {
 
 	delegatorBytes := store.Get(GetDelegatorBondKey(delegator, candidate))
 	if delegatorBytes == nil {
@@ -155,13 +165,16 @@ func loadDelegatorBond(store state.SimpleDB,
 	return bond
 }
 
-func saveDelegatorBond(store state.SimpleDB, delegator sdk.Actor, bond *DelegatorBond) {
+func saveDelegatorBond(store types.KVStore, delegator crypto.Address, bond *DelegatorBond) {
 
 	// if a new bond add to the list of bonds
 	if loadDelegatorBond(store, delegator, bond.PubKey) == nil {
 		pks := loadDelegatorCandidates(store, delegator)
 		pks = append(pks, (*bond).PubKey)
-		b := wire.BinaryBytes(pks)
+		b, err := wire.MarshalBinary(pks)
+		if err != nil {
+			panic(err)
+		}
 		store.Set(GetDelegatorBondsKey(delegator), b)
 	}
 
@@ -174,7 +187,7 @@ func saveDelegatorBond(store state.SimpleDB, delegator sdk.Actor, bond *Delegato
 	//updateDelegatorBonds(store, delegator)
 }
 
-func removeDelegatorBond(store state.SimpleDB, delegator sdk.Actor, candidate crypto.PubKey) {
+func removeDelegatorBond(store types.KVStore, delegator crypto.Address, candidate crypto.PubKey) {
 
 	// TODO use list queries on multistore to remove iterations here!
 	// first remove from the list of bonds
@@ -184,16 +197,19 @@ func removeDelegatorBond(store state.SimpleDB, delegator sdk.Actor, candidate cr
 			pks = append(pks[:i], pks[i+1:]...)
 		}
 	}
-	b := wire.BinaryBytes(pks)
+	b, err := wire.MarshalBinary(pks)
+	if err != nil {
+		panic(err)
+	}
 	store.Set(GetDelegatorBondsKey(delegator), b)
 
 	// now remove the actual bond
-	store.Remove(GetDelegatorBondKey(delegator, candidate))
+	store.Delete(GetDelegatorBondKey(delegator, candidate))
 	//updateDelegatorBonds(store, delegator)
 }
 
-//func updateDelegatorBonds(store state.SimpleDB,
-//delegator sdk.Actor) {
+//func updateDelegatorBonds(store types.KVStore,
+//delegator crypto.Address) {
 
 //var bonds []*DelegatorBond
 
@@ -209,7 +225,7 @@ func removeDelegatorBond(store state.SimpleDB, delegator sdk.Actor, candidate cr
 //}
 
 //bond := new(DelegatorBond)
-//err := wire.ReadBinaryBytes(delegatorBytes, bond)
+//err := wire.UnmarshalBinary(delegatorBytes, bond)
 //if err != nil {
 //panic(err)
 //}
@@ -221,14 +237,14 @@ func removeDelegatorBond(store state.SimpleDB, delegator sdk.Actor, candidate cr
 //return
 //}
 
-//b := wire.BinaryBytes(bonds)
+//b := wire.MarshalBinary(bonds)
 //store.Set(GetDelegatorBondsKey(delegator), b)
 //}
 
 //_______________________________________________________________________
 
 // load/save the global staking params
-func loadParams(store state.SimpleDB) (params Params) {
+func loadParams(store types.KVStore) (params Params) {
 	b := store.Get(ParamKey)
 	if b == nil {
 		return defaultParams()
@@ -241,7 +257,7 @@ func loadParams(store state.SimpleDB) (params Params) {
 
 	return
 }
-func saveParams(store state.SimpleDB, params Params) {
+func saveParams(store types.KVStore, params Params) {
 	b, err := json.Marshal(params)
 	if err != nil {
 		panic(err)
@@ -252,7 +268,7 @@ func saveParams(store state.SimpleDB, params Params) {
 //_______________________________________________________________________
 
 // load/save the global staking state
-func loadGlobalState(store state.SimpleDB) (gs *GlobalState) {
+func loadGlobalState(store types.KVStore) (gs *GlobalState) {
 	b := store.Get(GlobalStateKey)
 	if b == nil {
 		return initialGlobalState()
@@ -264,7 +280,7 @@ func loadGlobalState(store state.SimpleDB) (gs *GlobalState) {
 	}
 	return
 }
-func saveGlobalState(store state.SimpleDB, gs *GlobalState) {
+func saveGlobalState(store types.KVStore, gs *GlobalState) {
 	b, err := json.Marshal(*gs)
 	if err != nil {
 		panic(err)

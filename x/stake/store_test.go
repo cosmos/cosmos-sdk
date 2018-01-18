@@ -1,31 +1,51 @@
 package stake
 
 import (
+	"bytes"
+	"encoding/hex"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/modules/auth"
-	"github.com/cosmos/cosmos-sdk/store"
+	sdkstore "github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	crypto "github.com/tendermint/go-crypto"
+	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/rational"
 )
+
+func newPubKey(pk string) (res crypto.PubKey, err error) {
+	pkBytes, err := hex.DecodeString(pk)
+	if err != nil {
+		return
+	}
+	//res, err = crypto.PubKeyFromBytes(pkBytes)
+	var pkEd crypto.PubKeyEd25519
+	copy(pkEd[:], pkBytes[:])
+	return pkEd, nil
+}
 
 func TestState(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	db, err := dbm.NewGoLevelDB("basecoin", "basecoin-data")
 	require.Nil(err)
-	mainLoader := store.NewIAVLStoreLoader(int64(100), 10000, numHistory)
-	var mainStoreKey = sdk.NewKVStoreKey("main")
-	multiStore := store.NewCommitMultiStore(db)
-	multiStore.SetSubstoreLoader(mainStoreKey, mainLoader)
-	var store = auth.NewAccountStore(mainStoreKey, bcm.AppAccountCodec{})
+	cacheSize := 10000
+	numHistory := int64(100)
+	stakeLoader := sdkstore.NewIAVLStoreLoader(db, cacheSize, numHistory)
+	var stakeStoreKey = types.NewKVStoreKey("stake")
+	multiStore := sdkstore.NewCommitMultiStore(db)
+	multiStore.SetSubstoreLoader(stakeStoreKey, stakeLoader)
+	multiStore.LoadLatestVersion()
+	store := multiStore.GetKVStore(stakeStoreKey)
 
-	delegator := sdk.Actor{"testChain", "testapp", []byte("addressdelegator")}
-	validator := sdk.Actor{"testChain", "testapp", []byte("addressvalidator")}
+	//delegator := crypto.Address{[]byte("addressdelegator")}
+	//validator := crypto.Address{[]byte("addressvalidator")}
+	delegator := []byte("addressdelegator")
+	validator := []byte("addressvalidator")
 
-	pk := newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB57")
+	pk, err := newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB57")
+	require.Nil(err)
 
 	//----------------------------------------------------------------------
 	// Candidate checks
@@ -42,7 +62,7 @@ func TestState(t *testing.T) {
 	candidatesEqual := func(c1, c2 *Candidate) bool {
 		return c1.Status == c2.Status &&
 			c1.PubKey.Equals(c2.PubKey) &&
-			c1.Owner.Equals(c2.Owner) &&
+			bytes.Equal(c1.Owner, c2.Owner) &&
 			c1.Assets.Equal(c2.Assets) &&
 			c1.Liabilities.Equal(c2.Liabilities) &&
 			c1.VotingPower.Equal(c2.VotingPower) &&

@@ -17,5 +17,5 @@ dependencies:
 
 test:
   override:
-    - "cd $REPO && make all"
+    - "cd $REPO && make get_tools && make all"
     - ls $GOPATH/bin

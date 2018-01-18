@@ -4,8 +4,7 @@ import (
 	"bytes"
 	"sort"
 
-	"github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/state"
+	"github.com/cosmos/cosmos-sdk/types"
 
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
@@ -15,8 +14,8 @@ import (
 
 // Params defines the high level settings for staking
 type Params struct {
-	HoldBonded   sdk.Actor `json:"hold_bonded"`   // account  where all bonded coins are held
-	HoldUnbonded sdk.Actor `json:"hold_unbonded"` // account where all delegated but unbonded coins are held
+	HoldBonded   crypto.Address `json:"hold_bonded"`   // account  where all bonded coins are held
+	HoldUnbonded crypto.Address `json:"hold_unbonded"` // account where all delegated but unbonded coins are held
 
 	InflationRateChange rational.Rat `json:"inflation_rate_change"` // maximum annual change in inflation rate
 	InflationMax        rational.Rat `json:"inflation_max"`         // maximum inflation rate
@@ -35,8 +34,8 @@ type Params struct {
 
 func defaultParams() Params {
 	return Params{
-		HoldBonded:          sdk.NewActor(stakingModuleName, []byte("77777777777777777777777777777777")),
-		HoldUnbonded:        sdk.NewActor(stakingModuleName, []byte("88888888888888888888888888888888")),
+		HoldBonded:          []byte("77777777777777777777777777777777"),
+		HoldUnbonded:        []byte("88888888888888888888888888888888"),
 		InflationRateChange: rational.New(13, 100),
 		InflationMax:        rational.New(20, 100),
 		InflationMin:        rational.New(7, 100),
@@ -151,7 +150,7 @@ const (
 type Candidate struct {
 	Status      CandidateStatus `json:"status"`       // Bonded status
 	PubKey      crypto.PubKey   `json:"pub_key"`      // Pubkey of candidate
-	Owner       sdk.Actor       `json:"owner"`        // Sender of BondTx - UnbondTx returns here
+	Owner       crypto.Address  `json:"owner"`        // Sender of BondTx - UnbondTx returns here
 	Assets      rational.Rat    `json:"assets"`       // total shares of a global hold pools TODO custom type PoolShares
 	Liabilities rational.Rat    `json:"liabilities"`  // total shares issued to a candidate's delegators TODO custom type DelegatorShares
 	VotingPower rational.Rat    `json:"voting_power"` // Voting power if considered a validator
@@ -167,7 +166,7 @@ type Description struct {
 }
 
 // NewCandidate - initialize a new candidate
-func NewCandidate(pubKey crypto.PubKey, owner sdk.Actor, description Description) *Candidate {
+func NewCandidate(pubKey crypto.PubKey, owner crypto.Address, description Description) *Candidate {
 	return &Candidate{
 		Status:      Unbonded,
 		PubKey:      pubKey,
@@ -234,8 +233,13 @@ type Validator Candidate
 
 // ABCIValidator - Get the validator from a bond value
 func (v Validator) ABCIValidator() *abci.Validator {
+	pk, err := wire.MarshalBinary(v.PubKey)
+	if err != nil {
+		panic(err)
+	}
+
 	return &abci.Validator{
-		PubKey: wire.BinaryBytes(v.PubKey),
+		PubKey: pk,
 		Power:  v.VotingPower.Evaluate(),
 	}
 }
@@ -269,7 +273,7 @@ func (cs Candidates) Sort() {
 }
 
 // update the voting power and save
-func (cs Candidates) updateVotingPower(store state.SimpleDB, gs *GlobalState, params Params) Candidates {
+func (cs Candidates) updateVotingPower(store types.KVStore, gs *GlobalState, params Params) Candidates {
 
 	// update voting power
 	for _, c := range cs {
@@ -391,7 +395,7 @@ func (vs Validators) validatorsUpdated(vs2 Validators) (updated []*abci.Validato
 
 // UpdateValidatorSet - Updates the voting power for the candidate set and
 // returns the subset of validators which have been updated for Tendermint
-func UpdateValidatorSet(store state.SimpleDB, gs *GlobalState, params Params) (change []*abci.Validator, err error) {
+func UpdateValidatorSet(store types.KVStore, gs *GlobalState, params Params) (change []*abci.Validator, err error) {
 
 	// get the validators before update
 	candidates := loadCandidates(store)

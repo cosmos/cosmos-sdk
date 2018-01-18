@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	versionCmd = &cobra.Command{
+	// VersionCmd prints out the current sdk version
+	VersionCmd = &cobra.Command{
 		Use:   "version",
 		Short: "Print the app version",
 		Run:   doVersionCmd,

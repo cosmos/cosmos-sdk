@@ -24,11 +24,12 @@ var (
 	}
 )
 
-func keyCommand() *cobra.Command {
+// KeyCommands registers a sub-tree of commands to interact with
+// local private key storage.
+func KeyCommands() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "keys",
 		Short: "Add or view local private keys",
-		Run:   help,
 	}
 	cmd.AddCommand(
 		addKeyCommand(),

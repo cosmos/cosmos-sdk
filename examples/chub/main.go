@@ -11,23 +11,42 @@ import (
 	"github.com/cosmos/cosmos-sdk/app"
 )
 
+const (
+	flagTo     = "to"
+	flagAmount = "amount"
+	flagFee    = "fee"
+)
+
 // chubCmd is the entry point for this binary
 var (
 	chubCmd = &cobra.Command{
 		Use:   "chub",
 		Short: "Cosmos Hub command-line tool",
-		Run:   help,
 	}
 
 	lineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}}
+
+	getAccountCmd = &cobra.Command{
+		Use:   "account <address>",
+		Short: "Query account balance",
+		RunE:  todoNotImplemented,
+	}
 )
 
 func todoNotImplemented(_ *cobra.Command, _ []string) error {
 	return errors.New("TODO: Command not yet implemented")
 }
 
-func help(cmd *cobra.Command, args []string) {
-	cmd.Help()
+func postSendCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "send",
+		Short: "Create and sign a send tx",
+		RunE:  todoNotImplemented,
+	}
+	cmd.Flags().String(flagTo, "", "Address to send coins")
+	cmd.Flags().String(flagAmount, "", "Amount of coins to send")
+	cmd.Flags().String(flagFee, "", "Fee to pay along with transaction")
+	return cmd
 }
 
 func main() {
@@ -38,15 +57,16 @@ func main() {
 	var node app.App
 
 	// add commands
-	// prepareClientCommands()
+	AddGetCommand(getAccountCmd)
+	AddPostCommand(postSendCommand())
 
 	chubCmd.AddCommand(
-		nodeCommand(node),
-		keyCommand(),
-		clientCommand(),
+		NodeCommands(node),
+		KeyCommands(),
+		ClientCommands(),
 
 		lineBreak,
-		versionCmd,
+		VersionCmd,
 	)
 
 	// prepare and add flags

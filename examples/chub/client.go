@@ -32,7 +32,6 @@ var (
 		Short: "Query ABCI state data",
 		Long: `Query ABCI state data.
 Subcommands should be defined for each particular object to query.`,
-		Run: help,
 	}
 
 	postCmd = &cobra.Command{
@@ -40,15 +39,16 @@ Subcommands should be defined for each particular object to query.`,
 		Short: "Create a new transaction and post it to the chain",
 		Long: `Create a new transaction and post it to the chain.
 Subcommands should be defined for each particular transaction type.`,
-		Run: help,
 	}
 )
 
-func clientCommand() *cobra.Command {
+// ClientCommands returns a sub-tree of all basic client commands
+//
+// Call AddGetCommand and AddPostCommand to add custom txs and queries
+func ClientCommands() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "client",
 		Short: "Interact with the chain via a light-client",
-		Run:   help,
 	}
 	cmd.AddCommand(
 		initClientCommand(),
@@ -65,6 +65,16 @@ func clientCommand() *cobra.Command {
 		serveCommand(),
 	)
 	return cmd
+}
+
+// AddGetCommand adds one or more query subcommands
+func AddGetCommand(cmds ...*cobra.Command) {
+	getCmd.AddCommand(cmds...)
+}
+
+// AddPostCommand adds one or more subcommands to create transactions
+func AddPostCommand(cmds ...*cobra.Command) {
+	postCmd.AddCommand(cmds...)
 }
 
 func initClientCommand() *cobra.Command {

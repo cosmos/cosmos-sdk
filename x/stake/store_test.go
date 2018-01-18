@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/rational"
 )
@@ -38,6 +39,8 @@ func TestState(t *testing.T) {
 	multiStore.SetSubstoreLoader(stakeStoreKey, stakeLoader)
 	multiStore.LoadLatestVersion()
 	store := multiStore.GetKVStore(stakeStoreKey)
+	wire.RegisterInterface((*crypto.PubKey)(nil), nil)
+	wire.RegisterConcrete(crypto.PubKeyEd25519{}, "crypto/PubKeyEd25519", nil)
 
 	//delegator := crypto.Address{[]byte("addressdelegator")}
 	//validator := crypto.Address{[]byte("addressvalidator")}

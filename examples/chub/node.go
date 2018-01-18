@@ -33,7 +33,7 @@ func nodeCommand(node app.App) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "node",
 		Short: "Run the full node",
-		RunE:  todoNotImplemented,
+		Run:   help,
 	}
 	cmd.AddCommand(
 		initNodeCmd,

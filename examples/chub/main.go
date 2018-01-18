@@ -43,7 +43,7 @@ func main() {
 	chubCmd.AddCommand(
 		nodeCommand(node),
 		keyCommand(),
-		// clientCmd,
+		clientCommand(),
 
 		lineBreak,
 		versionCmd,

@@ -82,6 +82,60 @@ func (msg SendMsg) GetSigners() []crypto.Address {
 }
 
 //----------------------------------------
+// IssueMsg
+
+// IssueMsg - high level transaction of the coin module
+type IssueMsg struct {
+	Banker  crypto.Address `json:"banker"`
+	Outputs []Output       `json:"outputs"`
+}
+
+// NewIssueMsg - construct arbitrary multi-in, multi-out send msg.
+func NewIssueMsg(banker crypto.Address, out []Output) IssueMsg {
+	return IssueMsg{Banker: banker, Outputs: out}
+}
+
+// Implements Msg.
+func (msg IssueMsg) Type() string { return "bank" } // TODO: "bank/send"
+
+// Implements Msg.
+func (msg IssueMsg) ValidateBasic() error {
+	// XXX
+	if len(msg.Outputs) == 0 {
+		return ErrNoOutputs()
+	}
+	for _, out := range msg.Outputs {
+		if err := out.ValidateBasic(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (msg IssueMsg) String() string {
+	return fmt.Sprintf("IssueMsg{%v#%v}", msg.Banker, msg.Outputs)
+}
+
+// Implements Msg.
+func (msg IssueMsg) Get(key interface{}) (value interface{}) {
+	return nil
+}
+
+// Implements Msg.
+func (msg IssueMsg) GetSignBytes() []byte {
+	b, err := json.Marshal(msg) // XXX: ensure some canonical form
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+// Implements Msg.
+func (msg IssueMsg) GetSigners() []crypto.Address {
+	return []crypto.Address{msg.Banker}
+}
+
+//----------------------------------------
 // Input
 
 type Input struct {

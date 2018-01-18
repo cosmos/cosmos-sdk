@@ -54,9 +54,11 @@ type CommitMultiStore interface {
 	MultiStore
 
 	// Add a substore loader.
+	// Panics on a nil key.
 	SetSubstoreLoader(key SubstoreKey, loader CommitStoreLoader)
 
 	// Gets the substore, which is a CommitSubstore.
+	// Panics on a nil key.
 	GetSubstore(key SubstoreKey) CommitStore
 
 	// Load the latest persisted version.

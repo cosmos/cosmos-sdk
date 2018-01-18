@@ -261,6 +261,8 @@ func (app *App) runTx(isCheckTx bool, txBytes []byte) (result sdk.Result) {
 		}
 	}
 
+	// TODO: override default ante handler w/ custom ante handler.
+
 	// Run the ante handler.
 	ctx, result, abort := app.defaultAnteHandler(ctx, tx)
 	if isCheckTx || abort {

@@ -37,12 +37,12 @@ It comes with batteries included, is easily extensible, and does not require dev
 to fork it to access any of its current or extended functionality.
 It provides both REST and command line interfaces for secure user interactions.
 
-Applications in the Cosmos-SDK are defined in terms of a chain of handlers that process messages
+Applications in the Cosmos-SDK are defined in terms of handlers that process messages
 and read and write to a store. Handlers are given restricted capabilities that determine which 
 parts of the store they can access. The SDK provides common data structures for Accounts,
 multi-asset Coins, checking signatures, preventing replay, and so on.
 
-For more details on the design goals, see the [Design Document]()
+For more details on the design goals, see the [Design Document](docs/design.md)
 
 ## Prerequisites
 
@@ -50,7 +50,4 @@ For more details on the design goals, see the [Design Document]()
 
 ## Getting Started
 
-The main application built with the Cosmos-SDK is the Cosmos Hub.
-Setup a local Cosmos Hub blockchain by following [this guide]().
-Connect to a testnet by following [this guide]().
-Learn how to build your own SDK application [here]().
+- See the [SDK Basics](docs/basics.md)

@@ -28,8 +28,6 @@ Sections:
 ## ######################################
 ## TODO bring the below up.
 
-More details about the design goals of particular components follows.
-
 ### Store
 
 - Fast balanced dynamic Merkle tree for storing application state
@@ -61,6 +59,4 @@ More details about the design goals of particular components follows.
 
 - Default Ethereum-style Account 
 - Default multi-asset Coins
-
-
 

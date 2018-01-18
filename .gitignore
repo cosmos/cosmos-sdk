@@ -1,9 +1,14 @@
 *.swp
 *.swo
 vendor
-.vagrant
 merkleeyes.db
 build
 docs/guide/*.sh
 tools/bin/*
 examples/build/*
+
+### Vagrant ###
+.vagrant/
+*.box
+*.log
+vagrant

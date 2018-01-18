@@ -2,9 +2,7 @@
 package bank
 
 import (
-	"fmt"
-
-	"github.com/cosmos/cosmos-sdk/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -15,7 +13,8 @@ const (
 	CodeUnknownAddress    uint32 = 104
 	CodeInsufficientCoins uint32 = 105
 	CodeInvalidCoins      uint32 = 106
-	CodeUnknownRequest    uint32 = errors.CodeUnknownRequest
+	CodeInvalidSequence   uint32 = 107
+	CodeUnknownRequest    uint32 = sdk.CodeUnknownRequest
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
@@ -33,61 +32,59 @@ func codeToDefaultLog(code uint32) string {
 		return "Insufficient coins"
 	case CodeInvalidCoins:
 		return "Invalid coins"
+	case CodeInvalidSequence:
+		return "Invalid sequence"
 	case CodeUnknownRequest:
 		return "Unknown request"
 	default:
-		return errors.CodeToDefaultLog(code)
+		return sdk.CodeToDefaultLog(code)
 	}
 }
 
 //----------------------------------------
 // Error constructors
 
-func ErrInvalidInput(log string) error {
+func ErrInvalidInput(log string) sdk.Error {
 	return newError(CodeInvalidInput, log)
 }
 
-func ErrInvalidOutput(log string) error {
+func ErrNoInputs() sdk.Error {
+	return newError(CodeInvalidInput, "")
+}
+
+func ErrInvalidOutput(log string) sdk.Error {
 	return newError(CodeInvalidOutput, log)
 }
 
-func ErrInvalidAddress(log string) error {
+func ErrNoOutputs() sdk.Error {
+	return newError(CodeInvalidOutput, "")
+}
+
+func ErrInvalidSequence(seq int64) sdk.Error {
+	return newError(CodeInvalidSequence, "")
+}
+
+func ErrInvalidAddress(log string) sdk.Error {
 	return newError(CodeInvalidAddress, log)
 }
 
-func ErrUnknownAddress(log string) error {
+func ErrUnknownAddress(log string) sdk.Error {
 	return newError(CodeUnknownAddress, log)
 }
 
-func ErrInsufficientCoins(log string) error {
+func ErrInsufficientCoins(log string) sdk.Error {
 	return newError(CodeInsufficientCoins, log)
 }
 
-func ErrInvalidCoins(log string) error {
+func ErrInvalidCoins(log string) sdk.Error {
 	return newError(CodeInvalidCoins, log)
 }
 
-func ErrUnknownRequest(log string) error {
+func ErrUnknownRequest(log string) sdk.Error {
 	return newError(CodeUnknownRequest, log)
 }
 
 //----------------------------------------
-// TODO: clean up
-
-func ErrNoInputs() error {
-	return fmt.Errorf("No inputs")
-}
-
-func ErrNoOutputs() error {
-	return fmt.Errorf("No outputs")
-}
-
-func ErrInvalidSequence(seq int64) error {
-	return fmt.Errorf("Bad sequence %d", seq)
-}
-
-//----------------------------------------
-// Misc
 
 func logOrDefaultLog(log string, code uint32) string {
 	if log != "" {
@@ -97,7 +94,7 @@ func logOrDefaultLog(log string, code uint32) string {
 	}
 }
 
-func newError(code uint32, log string) error {
+func newError(code uint32, log string) sdk.Error {
 	log = logOrDefaultLog(log, code)
-	return errors.NewABCIError(code, log)
+	return sdk.NewError(code, log)
 }

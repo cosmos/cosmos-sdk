@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
@@ -25,6 +26,9 @@ type App struct {
 
 	// Main (uncached) state
 	ms sdk.CommitMultiStore
+
+	// mapping from strings to keys to allow queries
+	storeKeys map[string]sdk.SubstoreKey
 
 	// Unmarshal []byte into sdk.Tx
 	txDecoder sdk.TxDecoder
@@ -168,8 +172,52 @@ func (app *App) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain
 	return
 }
 
-// Implements ABCI
+// Query implements ABCI and allows use to externally inspect state
 func (app *App) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
+	// TODO: actually implement this
+	if req.Prove {
+		return abci.ResponseQuery{Code: 500, "Log": "Query with proof not implemented"}
+	}
+	if req.Height != 0 {
+		return abci.ResponseQuery{Code: 500, "Log": "Historical query not implemented"}
+	}
+
+	// First step is to figure which substore to route the query to....
+	path := req.Path
+	switch path {
+	// To keep backwards compatibility ???
+	case "/key", "/store":
+		path = "main"
+	default:
+		if strings.HasPrefix(path, "/") {
+			// TODO: better error code
+			return abci.ResponseQuery{Code: 101, "Log": "Path must start with /"}
+		}
+		path = path[1:]
+	}
+
+	storeKey := app.storeKeys[path]
+	if storeKey == nil {
+		// TODO: better error code
+		msg := fmt.Sprintf("Unknown store: %s", path)
+		return abci.ResponseQuery{Code: 102, "Log": msg}
+	}
+
+	store := ms.GetKVStore(storeKey)
+	if store == nil {
+		// TODO: better error code
+		msg := fmt.Sprintf("No KVStore registered: %s", path)
+		return abci.ResponseQuery{Code: 103, "Log": msg}
+	}
+
+	// great, now let's just make a query....
+	res.Key = req.Data
+	res.Value = store.Get(res.Key)
+	if res.Value == nil {
+		res.Code = 404
+		res.Log = "No value for this key"
+	}
+
 	// TODO: See app/query.go
 	return
 }

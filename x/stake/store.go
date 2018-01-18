@@ -1,8 +1,6 @@
 package stake
 
 import (
-	"encoding/json"
-
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 
@@ -93,7 +91,7 @@ func loadCandidate(store types.KVStore, pubKey crypto.PubKey) *Candidate {
 		return nil
 	}
 	candidate := new(Candidate)
-	err := json.Unmarshal(b, candidate)
+	err := wire.UnmarshalBinary(b, candidate)
 	if err != nil {
 		panic(err) // This error should never occure big problem if does
 	}
@@ -108,7 +106,7 @@ func saveCandidate(store types.KVStore, candidate *Candidate) {
 		saveCandidatesPubKeys(store, append(pks, candidate.PubKey))
 	}
 
-	b, err := json.Marshal(*candidate)
+	b, err := wire.MarshalBinary(*candidate)
 	if err != nil {
 		panic(err)
 	}
@@ -158,7 +156,7 @@ func loadDelegatorBond(store types.KVStore,
 	}
 
 	bond := new(DelegatorBond)
-	err := json.Unmarshal(delegatorBytes, bond)
+	err := wire.UnmarshalBinary(delegatorBytes, bond)
 	if err != nil {
 		panic(err)
 	}
@@ -179,7 +177,7 @@ func saveDelegatorBond(store types.KVStore, delegator crypto.Address, bond *Dele
 	}
 
 	// now actually save the bond
-	b, err := json.Marshal(*bond)
+	b, err := wire.MarshalBinary(*bond)
 	if err != nil {
 		panic(err)
 	}
@@ -250,7 +248,7 @@ func loadParams(store types.KVStore) (params Params) {
 		return defaultParams()
 	}
 
-	err := json.Unmarshal(b, &params)
+	err := wire.UnmarshalBinary(b, &params)
 	if err != nil {
 		panic(err) // This error should never occure big problem if does
 	}
@@ -258,7 +256,7 @@ func loadParams(store types.KVStore) (params Params) {
 	return
 }
 func saveParams(store types.KVStore, params Params) {
-	b, err := json.Marshal(params)
+	b, err := wire.MarshalBinary(params)
 	if err != nil {
 		panic(err)
 	}
@@ -274,14 +272,14 @@ func loadGlobalState(store types.KVStore) (gs *GlobalState) {
 		return initialGlobalState()
 	}
 	gs = new(GlobalState)
-	err := json.Unmarshal(b, gs)
+	err := wire.UnmarshalBinary(b, gs)
 	if err != nil {
 		panic(err) // This error should never occure big problem if does
 	}
 	return
 }
 func saveGlobalState(store types.KVStore, gs *GlobalState) {
-	b, err := json.Marshal(*gs)
+	b, err := wire.MarshalBinary(*gs)
 	if err != nil {
 		panic(err)
 	}

@@ -8,7 +8,7 @@ import (
 
 var (
 	initNodeCmd = &cobra.Command{
-		Use:   "init",
+		Use:   "init <flags???>",
 		Short: "Initialize full node",
 		RunE:  todoNotImplemented,
 	}

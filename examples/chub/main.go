@@ -38,12 +38,11 @@ func main() {
 	var node app.App
 
 	// add commands
-	// prepareRestServerCommands()
 	// prepareClientCommands()
 
 	chubCmd.AddCommand(
 		nodeCommand(node),
-		// restServerCmd,
+		keyCommand(),
 		// clientCmd,
 
 		lineBreak,

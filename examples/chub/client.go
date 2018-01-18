@@ -16,8 +16,12 @@ const (
 	flagTags   = "tag"
 	flagAny    = "any"
 
-	flagBind = "bind"
-	flagCORS = "cors"
+	flagBind      = "bind"
+	flagCORS      = "cors"
+	flagTrustNode = "trust-node"
+
+	// this is for signing
+	flagName = "name"
 )
 
 var (
@@ -41,6 +45,13 @@ Subcommands should be defined for each particular object to query.`,
 Subcommands should be defined for each particular transaction type.`,
 	}
 )
+
+func init() {
+	getCmd.PersistentFlags().Bool(flagTrustNode, false, "Don't verify proofs for responses")
+
+	postCmd.PersistentFlags().String(flagName, "", "Name of private key with which to sign")
+	postCmd.PersistentFlags().String(flagPassword, "", "Password to use the named private key")
+}
 
 // ClientCommands returns a sub-tree of all basic client commands
 //

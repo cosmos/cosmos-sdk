@@ -18,6 +18,10 @@ func TestBaseAccount(t *testing.T) {
 
 	acc := NewBaseAccountWithAddress(addr)
 
+	// need a codec for marshaling
+	codec := wire.NewCodec()
+	crypto.RegisterWire(codec)
+
 	err := acc.SetPubKey(pub)
 	assert.Nil(t, err)
 	assert.Equal(t, pub, acc.GetPubKey())
@@ -32,15 +36,15 @@ func TestBaseAccount(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, seq, acc.GetSequence())
 
-	b, err := wire.MarshalBinary(acc)
+	b, err := codec.MarshalBinary(acc)
 	assert.Nil(t, err)
 
 	var acc2 BaseAccount
-	err = wire.UnmarshalBinary(b, &acc2)
+	err = codec.UnmarshalBinary(b, &acc2)
 	assert.Nil(t, err)
 	assert.Equal(t, acc, acc2)
 
 	acc2 = BaseAccount{}
-	err = wire.UnmarshalBinary(b[:len(b)/2], &acc2)
+	err = codec.UnmarshalBinary(b[:len(b)/2], &acc2)
 	assert.NotNil(t, err)
 }

@@ -11,6 +11,10 @@ ci: get_tools get_vendor_deps build test_cover
 ########################################
 ### Build
 
+# This can be unified later, here for easy demos
+chub:
+	go install $(BUILD_FLAGS) ./examples/chub
+
 build:
 	@rm -rf examples/basecoin/vendor/
 	go build $(BUILD_FLAGS) -o build/basecoin ./examples/basecoin/cmd/...

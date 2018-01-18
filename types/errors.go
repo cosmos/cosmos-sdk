@@ -42,31 +42,31 @@ func CodeToDefaultLog(code uint32) string {
 // All errors are created via constructors so as to enable us to hijack them
 // and inject stack traces if we really want to.
 
-func InternalError(log string) Error {
+func ErrInternal(log string) Error {
 	return newError(CodeInternalError, log)
 }
 
-func TxParseError(log string) Error {
+func ErrTxParse(log string) Error {
 	return newError(CodeTxParseError, log)
 }
 
-func BadNonce(log string) Error {
+func ErrBadNonce(log string) Error {
 	return newError(CodeBadNonce, log)
 }
 
-func Unauthorized(log string) Error {
+func ErrUnauthorized(log string) Error {
 	return newError(CodeUnauthorized, log)
 }
 
-func InsufficientFunds(log string) Error {
+func ErrInsufficientFunds(log string) Error {
 	return newError(CodeInsufficientFunds, log)
 }
 
-func UnknownRequest(log string) Error {
+func ErrUnknownRequest(log string) Error {
 	return newError(CodeUnknownRequest, log)
 }
 
-func UnrecognizedAddress(log string) Error {
+func ErrUnrecognizedAddress(log string) Error {
 	return newError(CodeUnrecognizedAddress, log)
 }
 

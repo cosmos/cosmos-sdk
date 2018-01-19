@@ -16,11 +16,32 @@ import (
 )
 
 func main() {
-
-	db, err := dbm.NewGoLevelDB("dummy", "dummy-data")
+	app, err := newDummyApp()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+	}
+
+	// Start the ABCI server
+	srv, err := server.NewServer("0.0.0.0:46658", "socket", app)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	srv.Start()
+
+	// Wait forever
+	cmn.TrapSignal(func() {
+		// Cleanup
+		srv.Stop()
+	})
+	return
+}
+
+func newDummyApp() (*app.App, error) {
+	db, err := dbm.NewGoLevelDB("dummy", "dummy-data")
+	if err != nil {
+		return nil, err
 	}
 
 	// create CommitStoreLoader
@@ -47,24 +68,9 @@ func main() {
 	app.Router().AddRoute("dummy", DummyHandler(mainStoreKey))
 
 	if err := app.LoadLatestVersion(mainStoreKey); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return nil, err
 	}
-
-	// Start the ABCI server
-	srv, err := server.NewServer("0.0.0.0:46658", "socket", app)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	srv.Start()
-
-	// Wait forever
-	cmn.TrapSignal(func() {
-		// Cleanup
-		srv.Stop()
-	})
-	return
+	return app, nil
 }
 
 type dummyTx struct {

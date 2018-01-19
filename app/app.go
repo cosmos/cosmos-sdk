@@ -191,7 +191,7 @@ func (app *App) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	case "/key", "/store":
 		path = "main"
 	default:
-		if strings.HasPrefix(path, "/") {
+		if !strings.HasPrefix(path, "/") {
 			// TODO: better error code
 			return abci.ResponseQuery{Code: 101, Log: "Path must start with /"}
 		}

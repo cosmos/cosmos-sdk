@@ -30,13 +30,16 @@ func main() {
 
 	// key to access the main KVStore
 	var mainStoreKey = sdk.NewKVStoreKey("main")
+	keys := map[string]sdk.SubstoreKey{
+		"main": mainStoreKey,
+	}
 
 	// Create MultiStore
 	multiStore := store.NewCommitMultiStore(db)
 	multiStore.SetSubstoreLoader(mainStoreKey, loader)
 
 	// Set everything on the app and load latest
-	app := app.NewApp("dummy", multiStore)
+	app := app.NewApp("dummy", multiStore, keys)
 
 	// Set Tx decoder
 	app.SetTxDecoder(decodeTx)

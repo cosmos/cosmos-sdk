@@ -57,12 +57,14 @@ type App struct {
 
 var _ abci.Application = &App{}
 
-func NewApp(name string, ms sdk.CommitMultiStore) *App {
+// func NewApp(name string, ms sdk.CommitMultiStore) *App {
+func NewApp(name string, ms sdk.CommitMultiStore, keys map[string]sdk.SubstoreKey) *App {
 	return &App{
-		logger: makeDefaultLogger(),
-		name:   name,
-		ms:     ms,
-		router: NewRouter(),
+		logger:    makeDefaultLogger(),
+		name:      name,
+		ms:        ms,
+		storeKeys: keys,
+		router:    NewRouter(),
 	}
 }
 
@@ -176,10 +178,10 @@ func (app *App) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain
 func (app *App) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	// TODO: actually implement this
 	if req.Prove {
-		return abci.ResponseQuery{Code: 500, "Log": "Query with proof not implemented"}
+		return abci.ResponseQuery{Code: 500, Log: "Query with proof not implemented"}
 	}
 	if req.Height != 0 {
-		return abci.ResponseQuery{Code: 500, "Log": "Historical query not implemented"}
+		return abci.ResponseQuery{Code: 500, Log: "Historical query not implemented"}
 	}
 
 	// First step is to figure which substore to route the query to....
@@ -191,7 +193,7 @@ func (app *App) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	default:
 		if strings.HasPrefix(path, "/") {
 			// TODO: better error code
-			return abci.ResponseQuery{Code: 101, "Log": "Path must start with /"}
+			return abci.ResponseQuery{Code: 101, Log: "Path must start with /"}
 		}
 		path = path[1:]
 	}
@@ -200,14 +202,14 @@ func (app *App) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if storeKey == nil {
 		// TODO: better error code
 		msg := fmt.Sprintf("Unknown store: %s", path)
-		return abci.ResponseQuery{Code: 102, "Log": msg}
+		return abci.ResponseQuery{Code: 102, Log: msg}
 	}
 
-	store := ms.GetKVStore(storeKey)
+	store := app.ms.GetKVStore(storeKey)
 	if store == nil {
 		// TODO: better error code
 		msg := fmt.Sprintf("No KVStore registered: %s", path)
-		return abci.ResponseQuery{Code: 103, "Log": msg}
+		return abci.ResponseQuery{Code: 103, Log: msg}
 	}
 
 	// great, now let's just make a query....

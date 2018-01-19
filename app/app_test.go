@@ -38,7 +38,7 @@ func TestBasic(t *testing.T) {
 	store, storeKeys := newCommitMultiStore()
 
 	// Create app.
-	app := NewApp(t.Name(), store)
+	app := NewApp(t.Name(), store, storeKeys)
 	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, error) {
 		var ttx testTx
 		fromJSON(txBytes, &ttx)

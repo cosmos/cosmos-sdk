@@ -32,8 +32,11 @@ func (app *BasecoinApp) initMultiStore() {
 	multiStore.SetSubstoreLoader(app.mainStoreKey, mainLoader)
 	multiStore.SetSubstoreLoader(app.ibcStoreKey, ibcLoader)
 
-	// Finally,
+	// Finally, set variables on app
 	app.multiStore = multiStore
+	app.storeKeys = map[string]store.SubstoreKey{}
+	app.storeKeys[app.mainStoreKey.Name()] = app.mainStoreKey
+	app.storeKeys[app.ibcStoreKey.Name()] = app.ibcStoreKey
 }
 
 // depends on initKeys()

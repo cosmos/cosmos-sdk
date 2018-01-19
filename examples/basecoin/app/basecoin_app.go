@@ -17,6 +17,7 @@ type BasecoinApp struct {
 	*apm.App
 	cdc        *wire.Codec
 	multiStore sdk.CommitMultiStore
+	storeKeys  map[string]sdk.SubstoreKey
 
 	// The key to access the substores.
 	mainStoreKey *sdk.KVStoreKey
@@ -73,7 +74,7 @@ func (app *BasecoinApp) initKeys() {
 
 // depends on initMultiStore()
 func (app *BasecoinApp) initSDKApp() {
-	app.App = apm.NewApp(appName, app.multiStore)
+	app.App = apm.NewApp(appName, app.multiStore, app.storeKeys)
 }
 
 func (app *BasecoinApp) initCodec() {

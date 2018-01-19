@@ -16,34 +16,8 @@ import (
 )
 
 func main() {
-
-	db, err := dbm.NewGoLevelDB("dummy", "dummy-data")
+	app, err := newDummyApp()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	// create CommitStoreLoader
-	cacheSize := 10000
-	numHistory := int64(100)
-	loader := store.NewIAVLStoreLoader(db, cacheSize, numHistory)
-
-	// key to access the main KVStore
-	var mainStoreKey = sdk.NewKVStoreKey("main")
-
-	// Create MultiStore
-	multiStore := store.NewCommitMultiStore(db)
-	multiStore.SetSubstoreLoader(mainStoreKey, loader)
-
-	// Set everything on the app and load latest
-	app := app.NewApp("dummy", multiStore)
-
-	// Set Tx decoder
-	app.SetTxDecoder(decodeTx)
-
-	app.Router().AddRoute("dummy", DummyHandler(mainStoreKey))
-
-	if err := app.LoadLatestVersion(mainStoreKey); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -62,6 +36,48 @@ func main() {
 		srv.Stop()
 	})
 	return
+}
+
+func newDummyApp() (*app.App, error) {
+	db, err := dbm.NewGoLevelDB("dummy", "dummy-data")
+	if err != nil {
+		return nil, err
+	}
+
+	// create CommitStoreLoader
+	cacheSize := 10000
+	numHistory := int64(100)
+	loader := store.NewIAVLStoreLoader(db, cacheSize, numHistory)
+
+	// key to access the main KVStore
+	var mainStoreKey = sdk.NewKVStoreKey("main")
+	keys := map[string]sdk.SubstoreKey{
+		"main": mainStoreKey,
+	}
+
+	// Create MultiStore
+	multiStore := store.NewCommitMultiStore(db)
+	multiStore.SetSubstoreLoader(mainStoreKey, loader)
+
+	// Set everything on the app and load latest
+	app := app.NewApp("dummy", multiStore, keys)
+
+	// Set Tx decoder
+	app.SetTxDecoder(decodeTx)
+
+	app.SetDefaultAnteHandler(noAnte)
+
+	app.Router().AddRoute("dummy", DummyHandler(mainStoreKey))
+
+	if err := app.LoadLatestVersion(mainStoreKey); err != nil {
+		return nil, err
+	}
+	return app, nil
+}
+
+// noAnte is a noop
+func noAnte(ctx sdk.Context, tx sdk.Tx) (sdk.Context, sdk.Result, bool) {
+	return ctx, sdk.Result{}, false
 }
 
 type dummyTx struct {

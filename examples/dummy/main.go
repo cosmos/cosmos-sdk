@@ -65,12 +65,19 @@ func newDummyApp() (*app.App, error) {
 	// Set Tx decoder
 	app.SetTxDecoder(decodeTx)
 
+	app.SetDefaultAnteHandler(noAnte)
+
 	app.Router().AddRoute("dummy", DummyHandler(mainStoreKey))
 
 	if err := app.LoadLatestVersion(mainStoreKey); err != nil {
 		return nil, err
 	}
 	return app, nil
+}
+
+// noAnte is a noop
+func noAnte(ctx sdk.Context, tx sdk.Tx) (sdk.Context, sdk.Result, bool) {
+	return ctx, sdk.Result{}, false
 }
 
 type dummyTx struct {

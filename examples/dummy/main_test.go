@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,6 +11,9 @@ import (
 )
 
 func TestQuery(t *testing.T) {
+	// delete all data first
+	os.RemoveAll("./dummy-data")
+
 	app, err := newDummyApp()
 	require.NoError(t, err)
 
@@ -28,7 +31,9 @@ func TestQuery(t *testing.T) {
 
 	// submit a tx and commit
 	txBytes := append(append(k, '='), v...)
-	fmt.Printf("tx: %x\n", txBytes)
+
+	// Note: need to call BeginBlock before DeliverTX or it panics
+	app.BeginBlock(abci.RequestBeginBlock{})
 	dres := app.DeliverTx(txBytes)
 	require.Equal(t, 0, int(dres.Code), dres.Log)
 	cres := app.Commit()

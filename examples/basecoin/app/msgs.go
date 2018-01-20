@@ -3,6 +3,7 @@ package app
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	crypto "github.com/tendermint/go-crypto"
 )
 
 // Set via `app.App.SetTxDecoder(app.decodeTx)`
@@ -15,6 +16,9 @@ func (app *BasecoinApp) decodeTx(txBytes []byte) (sdk.Tx, error) {
 // Wire requires registration of interfaces & concrete types.
 func (app *BasecoinApp) registerMsgs() {
 	cdc := app.cdc
+
+	// Register the crypto
+	crypto.RegisterWire(cdc)
 
 	// Register the Msg interface.
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)

@@ -11,6 +11,8 @@ import (
 //-----------------------------------------------------------
 // BaseAccount
 
+var _ sdk.Account = (*BaseAccount)(nil)
+
 // BaseAccount - coin account structure
 type BaseAccount struct {
 	Address  crypto.Address `json:"address"`

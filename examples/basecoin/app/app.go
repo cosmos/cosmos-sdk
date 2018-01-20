@@ -78,6 +78,7 @@ func (app *BasecoinApp) initSDKApp() {
 
 func (app *BasecoinApp) initCodec() {
 	app.cdc = wire.NewCodec()
+	app.registerMsgs()
 }
 
 // depends on initSDKApp()

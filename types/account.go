@@ -17,7 +17,7 @@ type Account interface {
 	SetSequence(int64) error
 
 	GetCoins() Coins
-	SetCoins(Coins)
+	SetCoins(Coins) error
 
 	Get(key interface{}) (value interface{}, err error)
 	Set(key interface{}, value interface{}) error

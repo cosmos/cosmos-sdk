@@ -57,7 +57,7 @@ type StdTx struct {
 
 func (tx StdTx) GetFeePayer() crypto.Address { return tx.Signatures[0].PubKey.Address() }
 func (tx StdTx) GetTxBytes() []byte {
-	bz, err := wire.MarshalBinary(tx)
+	bz, err := wire.MarshalBinary(tx) // XXX: this is bad
 	if err != nil {
 		panic(err)
 	}

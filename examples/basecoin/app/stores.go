@@ -40,6 +40,6 @@ func (app *BasecoinApp) initMultiStore() {
 func (app *BasecoinApp) initAppStore() {
 	app.accStore = auth.NewAccountStore(
 		app.mainStoreKey,
-		types.AppAccountCodec{},
+		types.NewAppAccountCodecFromWireCodec(app.cdc),
 	)
 }

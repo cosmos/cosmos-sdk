@@ -17,7 +17,7 @@ type Account interface {
 	SetSequence(int64) error
 
 	GetCoins() Coins
-	SetCoins(Coins)
+	SetCoins(Coins) error
 
 	Get(key interface{}) (value interface{}, err error)
 	Set(key interface{}, value interface{}) error
@@ -27,7 +27,7 @@ type Account interface {
 type AccountStore interface {
 	NewAccountWithAddress(ctx Context, addr crypto.Address) Account
 	GetAccount(ctx Context, addr crypto.Address) Account
-	SetAccount(ctx Context, acc Account)
+	SetAccount(ctx Context, acc Account) error
 }
 
 // new(AccountStoreKey) is a capabilities key.

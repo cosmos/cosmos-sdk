@@ -39,6 +39,14 @@ draw_deps:
 
 
 ########################################
+### Documentation
+
+godocs:
+	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
+	godoc -http=:6060
+
+
+########################################
 ### Testing
 
 TUTORIALS=$(shell find docs/guide -name "*md" -type f)

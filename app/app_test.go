@@ -30,7 +30,6 @@ func (tx testTx) Get(key interface{}) (value interface{}) { return nil }
 func (tx testTx) GetSignBytes() []byte                    { return nil }
 func (tx testTx) ValidateBasic() error                    { return nil }
 func (tx testTx) GetSigners() []crypto.Address            { return nil }
-func (tx testTx) GetTxBytes() []byte                      { return nil }
 func (tx testTx) GetFeePayer() crypto.Address             { return nil }
 func (tx testTx) GetSignatures() []sdk.StdSignature       { return nil }
 

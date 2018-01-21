@@ -38,8 +38,18 @@ func (app *BasecoinApp) initMultiStore() {
 
 // depends on initKeys()
 func (app *BasecoinApp) initAppStore() {
-	app.accStore = auth.NewAccountStore(
-		app.mainStoreKey,
-		types.NewAppAccountCodecFromWireCodec(app.cdc),
+	accStore := auth.NewAccountStore(
+		app.mainStoreKey,    // where accounts are persisted.
+		&types.AppAccount{}, // prototype sdk.Account.
 	)
+
+	// If there are additional interfaces & concrete types that need to be
+	// registered w/ wire.Codec, they can be registered here before the
+	// accStore is sealed.
+	//
+	// cdc := accStore.WireCodec()
+	// cdc.RegisterInterface(...)
+	// cdc.RegisterConcrete(...)
+
+	app.accStore = accStore.Seal()
 }

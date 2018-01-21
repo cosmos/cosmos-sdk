@@ -101,10 +101,6 @@ func (tx dummyTx) GetSigners() []crypto.Address {
 	return nil
 }
 
-func (tx dummyTx) GetTxBytes() []byte {
-	return tx.bytes
-}
-
 func (tx dummyTx) GetSignatures() []sdk.StdSignature {
 	return nil
 }

@@ -2,7 +2,6 @@ package types
 
 import (
 	crypto "github.com/tendermint/go-crypto"
-	wire "github.com/tendermint/go-wire"
 )
 
 type Msg interface {
@@ -34,10 +33,6 @@ type Tx interface {
 	// deducted before the Msg is processed.
 	GetFeePayer() crypto.Address
 
-	// Get the canonical byte representation of the Tx.
-	// Includes any signatures (or empty slots).
-	GetTxBytes() []byte
-
 	// Signatures returns the signature of signers who signed the Msg.
 	// CONTRACT: Length returned is same as length of
 	// pubkeys returned from MsgKeySigners, and the order
@@ -55,14 +50,7 @@ type StdTx struct {
 	Signatures []StdSignature
 }
 
-func (tx StdTx) GetFeePayer() crypto.Address { return tx.Signatures[0].PubKey.Address() }
-func (tx StdTx) GetTxBytes() []byte {
-	bz, err := wire.MarshalBinary(tx) // XXX: this is bad
-	if err != nil {
-		panic(err)
-	}
-	return bz
-}
+func (tx StdTx) GetFeePayer() crypto.Address   { return tx.Signatures[0].PubKey.Address() }
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 
 type TxDecoder func(txBytes []byte) (Tx, error)

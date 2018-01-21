@@ -1,0 +1,4 @@
+package: github.com/cosmos/cosmos-sdk/examples/basecoin
+import:
+- package: github.com/cosmos/cosmos-sdk
+  version: sdk2

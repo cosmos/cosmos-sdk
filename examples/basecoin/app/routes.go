@@ -6,7 +6,7 @@ import (
 
 // initRoutes() happens after initCapKeys(), initStores(), and initSDKApp().
 func (app *BasecoinApp) initRoutes() {
-	var router = app.App.Router()
+	var router = app.BaseApp.Router()
 	var accStore = app.accStore
 
 	// All handlers must be added here.

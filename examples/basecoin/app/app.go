@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	apm "github.com/cosmos/cosmos-sdk/app"
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/abci/server"
 	"github.com/tendermint/go-wire"
@@ -14,7 +14,7 @@ import (
 const appName = "BasecoinApp"
 
 type BasecoinApp struct {
-	*apm.App
+	*bam.BaseApp
 	cdc        *wire.Codec
 	multiStore sdk.CommitMultiStore
 
@@ -33,7 +33,7 @@ func NewBasecoinApp() *BasecoinApp {
 	var app = &BasecoinApp{}
 	app.initCapKeys() // ./capkeys.go
 	app.initStores()  // ./stores.go
-	app.initSDKApp()  // ./sdkapp.go
+	app.initBaseApp() // ./baseapp.go
 	app.initRoutes()  // ./routes.go
 
 	// TODO: Load genesis

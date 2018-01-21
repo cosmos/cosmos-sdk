@@ -13,7 +13,9 @@ import (
 
 var _ sdk.Account = (*BaseAccount)(nil)
 
-// BaseAccount - coin account structure
+// BaseAccount - base account structure.
+// Extend this by embedding this in your AppAccount.
+// See the examples/basecoin/types/account.go for an example.
 type BaseAccount struct {
 	Address  crypto.Address `json:"address"`
 	Coins    sdk.Coins      `json:"coins"`
@@ -27,22 +29,22 @@ func NewBaseAccountWithAddress(addr crypto.Address) BaseAccount {
 	}
 }
 
-// Implements Account
+// Implements sdk.Account.
 func (acc BaseAccount) Get(key interface{}) (value interface{}, err error) {
 	panic("not implemented yet")
 }
 
-// Implements Account
+// Implements sdk.Account.
 func (acc *BaseAccount) Set(key interface{}, value interface{}) error {
 	panic("not implemented yet")
 }
 
-// Implements Account
+// Implements sdk.Account.
 func (acc BaseAccount) GetAddress() crypto.Address {
 	return acc.Address
 }
 
-// Implements Account
+// Implements sdk.Account.
 func (acc *BaseAccount) SetAddress(addr crypto.Address) error {
 	if len(acc.Address) != 0 {
 		return errors.New("cannot override BaseAccount address")
@@ -51,12 +53,12 @@ func (acc *BaseAccount) SetAddress(addr crypto.Address) error {
 	return nil
 }
 
-// Implements Account
+// Implements sdk.Account.
 func (acc BaseAccount) GetPubKey() crypto.PubKey {
 	return acc.PubKey
 }
 
-// Implements Account
+// Implements sdk.Account.
 func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
 	if acc.PubKey != nil {
 		return errors.New("cannot override BaseAccount pubkey")
@@ -65,23 +67,23 @@ func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
 	return nil
 }
 
-// Implements Account
+// Implements sdk.Account.
 func (acc *BaseAccount) GetCoins() sdk.Coins {
 	return acc.Coins
 }
 
-// Implements Account
+// Implements sdk.Account.
 func (acc *BaseAccount) SetCoins(coins sdk.Coins) error {
 	acc.Coins = coins
 	return nil
 }
 
-// Implements Account
+// Implements sdk.Account.
 func (acc *BaseAccount) GetSequence() int64 {
 	return acc.Sequence
 }
 
-// Implements Account
+// Implements sdk.Account.
 func (acc *BaseAccount) SetSequence(seq int64) error {
 	acc.Sequence = seq
 	return nil

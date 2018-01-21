@@ -12,6 +12,7 @@ ci: get_tools get_vendor_deps build test_cover
 ### Build
 
 build:
+	@rm -rf examples/basecoin/vendor/
 	go build $(BUILD_FLAGS) -o build/basecoin ./examples/basecoin/cmd/...
 
 dist:

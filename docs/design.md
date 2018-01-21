@@ -1,4 +1,32 @@
-## Design Goals
+## Design philosphy
+
+The design of the Cosmos SDK is based on the principles of "cababilities systems".
+
+TODO If you see this on the sdk2 branch, it's because I'm still expanding this high-level section.
+
+Sections:
+
+* Introduction
+ - Note to skip to Basecoin example to dive into code.
+* Capabilities systems
+ - http://www.erights.org/elib/capability/ode/ode.pdf
+* Tx & Msg
+* MultiStore
+* Context & Handler
+* AnteHandler
+ - Fees
+ - Authentication
+* Accounts and x/auth
+* AccountStore
+* Wire codec
+ - vs encoding/json
+ - vs protobuf
+* Dummy example
+* Basecoin example
+* Conclusion
+
+## ######################################
+## TODO bring the below up.
 
 More details about the design goals of particular components follows.
 

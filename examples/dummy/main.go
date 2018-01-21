@@ -10,7 +10,7 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 
-	"github.com/cosmos/cosmos-sdk/app"
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -35,21 +35,21 @@ func main() {
 	multiStore := store.NewCommitMultiStore(db)
 	multiStore.SetSubstoreLoader(mainStoreKey, loader)
 
-	// Set everything on the app and load latest
-	app := app.NewApp("dummy", multiStore)
+	// Set everything on the baseApp and load latest
+	baseApp := bam.NewBaseApp("dummy", multiStore)
 
 	// Set Tx decoder
-	app.SetTxDecoder(decodeTx)
+	baseApp.SetTxDecoder(decodeTx)
 
-	app.Router().AddRoute("dummy", DummyHandler(mainStoreKey))
+	baseApp.Router().AddRoute("dummy", DummyHandler(mainStoreKey))
 
-	if err := app.LoadLatestVersion(mainStoreKey); err != nil {
+	if err := baseApp.LoadLatestVersion(mainStoreKey); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	// Start the ABCI server
-	srv, err := server.NewServer("0.0.0.0:46658", "socket", app)
+	srv, err := server.NewServer("0.0.0.0:46658", "socket", baseApp)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

@@ -54,10 +54,8 @@ func (app *BasecoinApp) initAccountStore() {
 	// If there are additional interfaces & concrete types that
 	// need to be registered w/ wire.Codec, they can be registered
 	// here before the accStore is sealed.
-	//
-	// cdc := accStore.WireCodec()
-	// cdc.RegisterInterface(...)
-	// cdc.RegisterConcrete(...)
+	cdc := accStore.WireCodec()
+	auth.RegisterWireBaseAccount(cdc)
 
 	app.accStore = accStore.Seal()
 }

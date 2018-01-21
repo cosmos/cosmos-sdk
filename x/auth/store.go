@@ -28,10 +28,11 @@ type accountStore struct {
 // NewAccountStore returns a new sdk.AccountStore that
 // uses go-wire to (binary) encode and decode concrete sdk.Accounts.
 func NewAccountStore(key sdk.SubstoreKey, proto sdk.Account) accountStore {
+	cdc := wire.NewCodec()
 	return accountStore{
 		key:   key,
 		proto: proto,
-		cdc:   wire.NewCodec(),
+		cdc:   cdc,
 	}
 }
 

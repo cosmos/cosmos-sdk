@@ -31,10 +31,10 @@ func NewBasecoinApp() *BasecoinApp {
 
 	// Create and configure app.
 	var app = &BasecoinApp{}
-	app.initCapKeys() // ./capkeys.go
-	app.initStores()  // ./stores.go
-	app.initBaseApp() // ./baseapp.go
-	app.initRoutes()  // ./routes.go
+	app.initCapKeys() // ./init_capkeys.go
+	app.initStores()  // ./init_stores.go
+	app.initBaseApp() // ./init_baseapp.go
+	app.initRoutes()  // ./init_routes.go
 
 	// TODO: Load genesis
 	// TODO: InitChain with validators

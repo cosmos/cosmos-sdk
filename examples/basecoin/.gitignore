@@ -1,0 +1,10 @@
+*.swp
+*.swo
+vendor
+build
+
+### Vagrant ###
+.vagrant/
+*.box
+*.log
+vagrant

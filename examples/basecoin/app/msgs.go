@@ -1,32 +1,22 @@
 package app
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	crypto "github.com/tendermint/go-crypto"
+	wire "github.com/tendermint/go-wire"
 )
 
-// Set via `app.App.SetTxDecoder(app.decodeTx)`
-func (app *BasecoinApp) decodeTx(txBytes []byte) (sdk.Tx, error) {
-	var tx = sdk.StdTx{}
-	err := app.cdc.UnmarshalBinary(txBytes, &tx)
-	return tx, err
-}
+// Wire requires registration of interfaces & concrete types.  All
+// interfaces to be encoded/decoded in a Msg must be registered
+// here, along with all the concrete types that implement them.
+func makeTxCodec() (cdc *wire.Codec) {
+	cdc = wire.NewCodec()
 
-// Wire requires registration of interfaces & concrete types.
-func (app *BasecoinApp) registerMsgs() {
-	cdc := app.cdc
-
-	// Register the crypto
+	// Register crypto.[PubKey,PrivKey,Signature] types.
 	crypto.RegisterWire(cdc)
 
-	// Register the Msg interface.
-	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	cdc.RegisterConcrete(bank.SendMsg{}, "cosmos-sdk/SendMsg", nil)   // XXX refactor out
-	cdc.RegisterConcrete(bank.IssueMsg{}, "cosmos-sdk/IssueMsg", nil) // XXX refactor out to bank/msgs.go
-	// more msgs here...
+	// Register bank.[SendMsg,IssueMsg] types.
+	bank.RegisterWire(cdc)
 
-	// All interfaces to be encoded/decoded in a Msg must be
-	// registered here, along with all the concrete types that
-	// implement them.
+	return
 }

@@ -31,18 +31,15 @@ func NewBasecoinApp() *BasecoinApp {
 
 	// Create and configure app.
 	var app = &BasecoinApp{}
-	app.initKeys()
-	app.initMultiStore()
-	app.initAppStore()
-	app.initSDKApp()
-	app.initCodec()
-	app.initTxDecoder()
-	app.initAnteHandler()
-	app.initRoutes()
+	app.initCapKeys() // ./capkeys.go
+	app.initStores()  // ./stores.go
+	app.initSDKApp()  // ./sdkapp.go
+	app.initRoutes()  // ./routes.go
 
 	// TODO: Load genesis
 	// TODO: InitChain with validators
 	// TODO: Set the genesis accounts
+
 	app.loadStores()
 
 	return app
@@ -65,29 +62,6 @@ func (app *BasecoinApp) RunForever() {
 	})
 
 }
-
-func (app *BasecoinApp) initKeys() {
-	app.mainStoreKey = sdk.NewKVStoreKey("main")
-	app.ibcStoreKey = sdk.NewKVStoreKey("ibc")
-}
-
-// depends on initMultiStore()
-func (app *BasecoinApp) initSDKApp() {
-	app.App = apm.NewApp(appName, app.multiStore)
-}
-
-func (app *BasecoinApp) initCodec() {
-	app.cdc = wire.NewCodec()
-	app.registerMsgs()
-}
-
-// depends on initSDKApp()
-func (app *BasecoinApp) initTxDecoder() {
-	app.App.SetTxDecoder(app.decodeTx)
-}
-
-// initAnteHandler defined in app/routes.go
-// initRoutes defined in app/routes.go
 
 // Load the stores.
 func (app *BasecoinApp) loadStores() {

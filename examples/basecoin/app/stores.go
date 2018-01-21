@@ -10,7 +10,13 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
-// depends on initKeys()
+// initStores() happens after initCapKeys(), but before initSDKApp() and initRoutes().
+func (app *BasecoinApp) initStores() {
+	app.initMultiStore()
+	app.initAccountStore()
+}
+
+// Initialize root MultiStore.
 func (app *BasecoinApp) initMultiStore() {
 
 	// Create the underlying leveldb datastore which will
@@ -36,16 +42,18 @@ func (app *BasecoinApp) initMultiStore() {
 	app.multiStore = multiStore
 }
 
-// depends on initKeys()
-func (app *BasecoinApp) initAppStore() {
+// Initialize the AccountStore, which accesses the MultiStore.
+func (app *BasecoinApp) initAccountStore() {
 	accStore := auth.NewAccountStore(
-		app.mainStoreKey,    // where accounts are persisted.
-		&types.AppAccount{}, // prototype sdk.Account.
+		// where accounts are persisted in the MultiStore.
+		app.mainStoreKey,
+		// prototype sdk.Account.
+		&types.AppAccount{},
 	)
 
-	// If there are additional interfaces & concrete types that need to be
-	// registered w/ wire.Codec, they can be registered here before the
-	// accStore is sealed.
+	// If there are additional interfaces & concrete types that
+	// need to be registered w/ wire.Codec, they can be registered
+	// here before the accStore is sealed.
 	//
 	// cdc := accStore.WireCodec()
 	// cdc.RegisterInterface(...)

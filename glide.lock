@@ -104,7 +104,7 @@ imports:
   - certifiers/files
   - proofs
 - name: github.com/tendermint/tendermint
-  version: 0673f27d872effcc10c67f5c0e4b9755c49866c8
+  version: b8d9f30ea6196e280ff3a4b879f3281c4e727c4d
   subpackages:
   - config
   - consensus/types

@@ -16,13 +16,11 @@ The intent of Context is for it to be an immutable object that can be
 cloned and updated cheaply with WithValue() and passed forward to the
 next decorator or handler. For example,
 
-```golang
-func MsgHandler(ctx Context, tx Tx) Result {
-	...
-	ctx = ctx.WithValue(key, value)
-	...
-}
-```
+ func MsgHandler(ctx Context, tx Tx) Result {
+ 	...
+ 	ctx = ctx.WithValue(key, value)
+ 	...
+ }
 */
 type Context struct {
 	context.Context

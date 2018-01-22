@@ -3,7 +3,6 @@ package store
 import (
 	"fmt"
 
-	"github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/merkle"
 	"golang.org/x/crypto/ripemd160"
@@ -198,7 +197,7 @@ type commitState struct {
 // Hash returns the simple merkle root hash of the substores sorted by name.
 func (cs commitState) Hash() []byte {
 	// TODO cache to cs.hash []byte
-	m := make(map[string]interface{}, len(cs.Substores))
+	m := make(map[string]merkle.Hasher, len(cs.Substores))
 	for _, substore := range cs.Substores {
 		m[substore.Name] = substore
 	}
@@ -227,11 +226,13 @@ type substoreCore struct {
 	// ... maybe add more state
 }
 
-// Hash returns the RIPEMD160 of the wire-encoded substore.
-func (sc substoreCore) Hash() []byte {
-	scBytes, _ := wire.MarshalBinary(sc) // Does not error
+// Implements merkle.Hasher.
+func (sw substore) Hash() []byte {
+	// Doesn't write Name, since merkle.SimpleHashFromMap() will
+	// include them via the keys.
+	bz, _ := cdc.MarshalBinary(sw.substoreCore) // Does not error
 	hasher := ripemd160.New()
-	hasher.Write(scBytes)
+	hasher.Write(bz)
 	return hasher.Sum(nil)
 }
 
@@ -244,7 +245,7 @@ func getLatestVersion(db dbm.DB) int64 {
 	if latestBytes == nil {
 		return 0
 	}
-	err := wire.UnmarshalBinary(latestBytes, &latest)
+	err := cdc.UnmarshalBinary(latestBytes, &latest)
 	if err != nil {
 		panic(err)
 	}
@@ -253,7 +254,7 @@ func getLatestVersion(db dbm.DB) int64 {
 
 // Set the latest version.
 func setLatestVersion(batch dbm.Batch, version int64) {
-	latestBytes, _ := wire.MarshalBinary(version) // Does not error
+	latestBytes, _ := cdc.MarshalBinary(version) // Does not error
 	batch.Set([]byte(latestVersionKey), latestBytes)
 }
 
@@ -290,7 +291,7 @@ func getCommitState(db dbm.DB, ver int64) (commitState, error) {
 
 	// Parse bytes.
 	var state commitState
-	err := wire.UnmarshalBinary(stateBytes, &state)
+	err := cdc.UnmarshalBinary(stateBytes, &state)
 	if err != nil {
 		return commitState{}, fmt.Errorf("Failed to get rootMultiStore: %v", err)
 	}
@@ -299,7 +300,7 @@ func getCommitState(db dbm.DB, ver int64) (commitState, error) {
 
 // Set a commit state for given version.
 func setCommitState(batch dbm.Batch, version int64, state commitState) {
-	stateBytes, err := wire.MarshalBinary(state)
+	stateBytes, err := cdc.MarshalBinary(state)
 	if err != nil {
 		panic(err)
 	}

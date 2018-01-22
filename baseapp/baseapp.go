@@ -1,4 +1,4 @@
-package app
+package baseapp
 
 import (
 	"bytes"
@@ -16,11 +16,11 @@ import (
 
 var mainHeaderKey = []byte("header")
 
-// App - The ABCI application
-type App struct {
+// BaseApp - The ABCI application
+type BaseApp struct {
 	logger log.Logger
 
-	// App name from abci.Info
+	// Application name from abci.Info
 	name string
 
 	// Main (uncached) state
@@ -51,10 +51,10 @@ type App struct {
 	valUpdates []abci.Validator
 }
 
-var _ abci.Application = &App{}
+var _ abci.Application = &BaseApp{}
 
-func NewApp(name string, ms sdk.CommitMultiStore) *App {
-	return &App{
+func NewBaseApp(name string, ms sdk.CommitMultiStore) *BaseApp {
+	return &BaseApp{
 		logger: makeDefaultLogger(),
 		name:   name,
 		ms:     ms,
@@ -62,57 +62,57 @@ func NewApp(name string, ms sdk.CommitMultiStore) *App {
 	}
 }
 
-func (app *App) Name() string {
+func (app *BaseApp) Name() string {
 	return app.name
 }
 
-func (app *App) SetTxDecoder(txDecoder sdk.TxDecoder) {
+func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
 
-func (app *App) SetDefaultAnteHandler(ah sdk.AnteHandler) {
+func (app *BaseApp) SetDefaultAnteHandler(ah sdk.AnteHandler) {
 	app.defaultAnteHandler = ah
 }
 
-func (app *App) Router() Router {
+func (app *BaseApp) Router() Router {
 	return app.router
 }
 
 /* TODO consider:
-func (app *App) SetBeginBlocker(...) {}
-func (app *App) SetEndBlocker(...) {}
-func (app *App) SetInitStater(...) {}
+func (app *BaseApp) SetBeginBlocker(...) {}
+func (app *BaseApp) SetEndBlocker(...) {}
+func (app *BaseApp) SetInitStater(...) {}
 */
 
-func (app *App) LoadLatestVersion(mainKey sdk.SubstoreKey) error {
+func (app *BaseApp) LoadLatestVersion(mainKey sdk.SubstoreKey) error {
 	app.ms.LoadLatestVersion()
 	return app.initFromStore(mainKey)
 }
 
-func (app *App) LoadVersion(version int64, mainKey sdk.SubstoreKey) error {
+func (app *BaseApp) LoadVersion(version int64, mainKey sdk.SubstoreKey) error {
 	app.ms.LoadVersion(version)
 	return app.initFromStore(mainKey)
 }
 
 // The last CommitID of the multistore.
-func (app *App) LastCommitID() sdk.CommitID {
+func (app *BaseApp) LastCommitID() sdk.CommitID {
 	return app.ms.LastCommitID()
 }
 
 // The last commited block height.
-func (app *App) LastBlockHeight() int64 {
+func (app *BaseApp) LastBlockHeight() int64 {
 	return app.ms.LastCommitID().Version
 }
 
 // Initializes the remaining logic from app.ms.
-func (app *App) initFromStore(mainKey sdk.SubstoreKey) error {
+func (app *BaseApp) initFromStore(mainKey sdk.SubstoreKey) error {
 	lastCommitID := app.ms.LastCommitID()
 	main := app.ms.GetKVStore(mainKey)
 	header := abci.Header{}
 
 	// Main store should exist.
 	if main == nil {
-		return errors.New("App expects MultiStore with 'main' KVStore")
+		return errors.New("BaseApp expects MultiStore with 'main' KVStore")
 	}
 
 	// If we've committed before, we expect main://<mainHeaderKey>.
@@ -133,7 +133,7 @@ func (app *App) initFromStore(mainKey sdk.SubstoreKey) error {
 		}
 	}
 
-	// Set App state.
+	// Set BaseApp state.
 	app.header = header
 	app.msCheck = nil
 	app.msDeliver = nil
@@ -145,7 +145,7 @@ func (app *App) initFromStore(mainKey sdk.SubstoreKey) error {
 //----------------------------------------
 
 // Implements ABCI
-func (app *App) Info(req abci.RequestInfo) abci.ResponseInfo {
+func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 
 	lastCommitID := app.ms.LastCommitID()
 
@@ -157,25 +157,25 @@ func (app *App) Info(req abci.RequestInfo) abci.ResponseInfo {
 }
 
 // Implements ABCI
-func (app *App) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
+func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
 	// TODO: Implement
 	return
 }
 
 // Implements ABCI
-func (app *App) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
+func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	// TODO: Use req.Validators
 	return
 }
 
 // Implements ABCI
-func (app *App) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
+func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	// TODO: See app/query.go
 	return
 }
 
 // Implements ABCI
-func (app *App) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	app.header = req.Header
 	app.msDeliver = app.ms.CacheMultiStore()
 	app.msCheck = app.ms.CacheMultiStore()
@@ -183,7 +183,7 @@ func (app *App) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBl
 }
 
 // Implements ABCI
-func (app *App) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
+func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 
 	result := app.runTx(true, txBytes)
 
@@ -202,7 +202,7 @@ func (app *App) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 }
 
 // Implements ABCI
-func (app *App) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
+func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 
 	result := app.runTx(false, txBytes)
 
@@ -226,7 +226,7 @@ func (app *App) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	}
 }
 
-func (app *App) runTx(isCheckTx bool, txBytes []byte) (result sdk.Result) {
+func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte) (result sdk.Result) {
 
 	// Handle any panics.
 	defer func() {
@@ -278,14 +278,14 @@ func (app *App) runTx(isCheckTx bool, txBytes []byte) (result sdk.Result) {
 }
 
 // Implements ABCI
-func (app *App) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
+func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	res.ValidatorUpdates = app.valUpdates
 	app.valUpdates = nil
 	return
 }
 
 // Implements ABCI
-func (app *App) Commit() (res abci.ResponseCommit) {
+func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	app.msDeliver.Write()
 	commitID := app.ms.Commit()
 	app.logger.Debug("Commit synced",

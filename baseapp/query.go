@@ -1,4 +1,4 @@
-package app
+package baseapp
 
 /*
 	XXX Make this work with MultiStore.

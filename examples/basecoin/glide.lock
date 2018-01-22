@@ -1,16 +1,22 @@
-hash: e8435271aa9fdfc49efff9016427eca1fd6b43093a17187619360edda9f265e6
-updated: 2018-01-21T19:17:17.451995428-08:00
+hash: 80794a3459988a7eb794baf7688c71dad4f6c26653d7b707ac0ada93f21e0776
+updated: 2018-01-20T22:01:39.658469011-08:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 2e60448ffcc6bf78332d1fe590260095f554dd78
   subpackages:
   - btcec
+- name: github.com/cosmos/cosmos-sdk
+  version: 633eaa87b38d9c5b0e938fe6b4f1dfd016247e76
+  subpackages:
+  - baseapp
+  - store
+  - types
+  - x/auth
+  - x/bank
 - name: github.com/davecgh/go-spew
   version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
   subpackages:
   - spew
-- name: github.com/ebuchman/fail-test
-  version: 95f809107225be108efcf10a3509e4ea6ceef3c4
 - name: github.com/go-kit/kit
   version: e2b298466b32c7cd5579a9b9b07e968fc9d9452c
   subpackages:
@@ -40,24 +46,14 @@ imports:
   - ptypes/timestamp
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
-- name: github.com/gorilla/websocket
-  version: 292fd08b2560ad524ee37396253d71570339a821
 - name: github.com/jmhodges/levigo
   version: c42d9e0ca023e2198120196f842701bb4c55d7b9
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
-- name: github.com/rcrowley/go-metrics
-  version: e181e095bae94582363434144c61a9653aff6e50
 - name: github.com/rigelrozanski/common
   version: f691f115798593d783b9999b1263c2f4ffecc439
-- name: github.com/spf13/cobra
-  version: 7b2c5ac9fc04fc5efafb60700713d4fa609b777b
-- name: github.com/spf13/pflag
-  version: 97afa5e7ca8a08a383cb259e06636b5e2cc7897f
-- name: github.com/spf13/viper
-  version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: github.com/syndtr/goleveldb
   version: b89cc31ef7977104127d34c1bd31ebd1a9db2199
   subpackages:
@@ -76,9 +72,6 @@ imports:
 - name: github.com/tendermint/abci
   version: 4243954d8d940f9ee0646a83d48ea7a1a907529e
   subpackages:
-  - client
-  - example/code
-  - example/dummy
   - server
   - types
 - name: github.com/tendermint/ed25519
@@ -87,56 +80,29 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 12142af1cb4e3479ea4ac98a3171debff87519c6
+  version: 32741be2126500d600cede1e2016bbbe2754cb46
   subpackages:
   - keys
 - name: github.com/tendermint/go-wire
-  version: 0cce10e82786f2d501827fbe158747dbc4ceeb43
+  version: 90af61ec85415e05c7777cd50ff93ba40d34b1e8
   subpackages:
   - data
 - name: github.com/tendermint/iavl
-  version: 02885cf5a7461430e9d9e84b81fbda1e26645ab5
-- name: github.com/tendermint/light-client
-  version: 76313d625e662ed7b284d066d68ff71edd7a9fac
-  subpackages:
-  - certifiers
-  - certifiers/client
-  - certifiers/files
-  - proofs
-- name: github.com/tendermint/tendermint
-  version: b8d9f30ea6196e280ff3a4b879f3281c4e727c4d
-  subpackages:
-  - config
-  - consensus/types
-  - node
-  - p2p
-  - p2p/upnp
-  - proxy
-  - rpc/client
-  - rpc/core/types
-  - rpc/lib/client
-  - rpc/lib/types
-  - state
-  - types
+  version: 1dfe265ab4b491418e88e1da6577a8ad594fc989
 - name: github.com/tendermint/tmlibs
-  version: 80029abc6e20f85079cd751e659a05508773288c
+  version: 7a52d47a1676a9fe61d07fde0a48a733cce564c6
   subpackages:
   - cli
   - cli/flags
   - common
   - db
   - events
-  - flowrate
   - log
   - logger
   - merkle
-  - pubsub
-  - pubsub/query
 - name: golang.org/x/crypto
   version: edd5e9b0879d13ee6970a50153d85b8fec9f7686
   subpackages:
-  - curve25519
-  - nacl/box
   - nacl/secretbox
   - openpgp/armor
   - openpgp/errors
@@ -183,13 +149,4 @@ imports:
   - status
   - tap
   - transport
-testImports:
-- name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
-  subpackages:
-  - difflib
-- name: github.com/stretchr/testify
-  version: b91bfb9ebec76498946beb6af7c0230c7cc7ba6c
-  subpackages:
-  - assert
-  - require
+testImports: []

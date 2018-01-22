@@ -94,7 +94,7 @@ func getExpectedCommitID(store *rootMultiStore, ver int64) CommitID {
 }
 
 func hashStores(stores map[SubstoreKey]CommitStore) []byte {
-	m := make(map[string]interface{}, len(stores))
+	m := make(map[string]merkle.Hasher, len(stores))
 	for key, store := range stores {
 		name := key.Name()
 		m[name] = substore{

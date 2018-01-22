@@ -1,4 +1,4 @@
-package app
+package baseapp
 
 import (
 	"bytes"
@@ -30,7 +30,6 @@ func (tx testTx) Get(key interface{}) (value interface{}) { return nil }
 func (tx testTx) GetSignBytes() []byte                    { return nil }
 func (tx testTx) ValidateBasic() error                    { return nil }
 func (tx testTx) GetSigners() []crypto.Address            { return nil }
-func (tx testTx) GetTxBytes() []byte                      { return nil }
 func (tx testTx) GetFeePayer() crypto.Address             { return nil }
 func (tx testTx) GetSignatures() []sdk.StdSignature       { return nil }
 
@@ -38,7 +37,7 @@ func TestBasic(t *testing.T) {
 	store, storeKeys := newCommitMultiStore()
 
 	// Create app.
-	app := NewApp(t.Name(), store)
+	app := NewBaseApp(t.Name(), store)
 	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, error) {
 		var ttx testTx
 		fromJSON(txBytes, &ttx)

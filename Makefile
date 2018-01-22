@@ -12,6 +12,7 @@ ci: get_tools get_vendor_deps build test_cover
 ### Build
 
 build:
+	@rm -rf examples/basecoin/vendor/
 	go build $(BUILD_FLAGS) -o build/basecoin ./examples/basecoin/cmd/...
 
 dist:
@@ -36,6 +37,14 @@ draw_deps:
 	@# requires brew install graphviz or apt-get install graphviz
 	go get github.com/RobotsAndPencils/goviz
 	@goviz -i github.com/tendermint/tendermint/cmd/tendermint -d 3 | dot -Tpng -o dependency-graph.png
+
+
+########################################
+### Documentation
+
+godocs:
+	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
+	godoc -http=:6060
 
 
 ########################################

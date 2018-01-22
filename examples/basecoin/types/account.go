@@ -1,13 +1,20 @@
 package types
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
+
+var _ sdk.Account = (*AppAccount)(nil)
 
 type AppAccount struct {
 	auth.BaseAccount
 
-	// Custom extensions for this application.
+	// Custom extensions for this application.  This is just an example of
+	// extending auth.BaseAccount with custom fields.
+	//
+	// This is compatible with the stock auth.AccountStore, since
+	// auth.AccountStore uses the flexible go-wire library.
 	Name string
 }
 
@@ -17,20 +24,4 @@ func (acc AppAccount) GetName() string {
 
 func (acc *AppAccount) SetName(name string) {
 	acc.Name = name
-}
-
-//----------------------------------------
-
-type AppAccountCodec struct{}
-
-func (_ AppAccountCodec) Prototype() interface{} {
-	return AppAccount{}
-}
-
-func (_ AppAccountCodec) Encode(o interface{}) (bz []byte, err error) {
-	panic("not yet implemented")
-}
-
-func (_ AppAccountCodec) Decode(bz []byte) (o interface{}, err error) {
-	panic("not yet implemented")
 }

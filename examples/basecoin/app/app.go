@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	apm "github.com/cosmos/cosmos-sdk/app"
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/abci/server"
 	"github.com/tendermint/go-wire"
@@ -14,7 +14,7 @@ import (
 const appName = "BasecoinApp"
 
 type BasecoinApp struct {
-	*apm.App
+	*bam.BaseApp
 	cdc        *wire.Codec
 	multiStore sdk.CommitMultiStore
 
@@ -31,18 +31,15 @@ func NewBasecoinApp() *BasecoinApp {
 
 	// Create and configure app.
 	var app = &BasecoinApp{}
-	app.initKeys()
-	app.initMultiStore()
-	app.initAppStore()
-	app.initSDKApp()
-	app.initCodec()
-	app.initTxDecoder()
-	app.initAnteHandler()
-	app.initRoutes()
+	app.initCapKeys() // ./init_capkeys.go
+	app.initStores()  // ./init_stores.go
+	app.initBaseApp() // ./init_baseapp.go
+	app.initRoutes()  // ./init_routes.go
 
 	// TODO: Load genesis
 	// TODO: InitChain with validators
 	// TODO: Set the genesis accounts
+
 	app.loadStores()
 
 	return app
@@ -65,28 +62,6 @@ func (app *BasecoinApp) RunForever() {
 	})
 
 }
-
-func (app *BasecoinApp) initKeys() {
-	app.mainStoreKey = sdk.NewKVStoreKey("main")
-	app.ibcStoreKey = sdk.NewKVStoreKey("ibc")
-}
-
-// depends on initMultiStore()
-func (app *BasecoinApp) initSDKApp() {
-	app.App = apm.NewApp(appName, app.multiStore)
-}
-
-func (app *BasecoinApp) initCodec() {
-	app.cdc = wire.NewCodec()
-}
-
-// depends on initSDKApp()
-func (app *BasecoinApp) initTxDecoder() {
-	app.App.SetTxDecoder(app.decodeTx)
-}
-
-// initAnteHandler defined in app/routes.go
-// initRoutes defined in app/routes.go
 
 // Load the stores.
 func (app *BasecoinApp) loadStores() {

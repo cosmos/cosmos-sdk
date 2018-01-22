@@ -1,5 +1,5 @@
 hash: ed34b08bfc24f64edbc1a16ad2e34198afefc0e2dc133be2c92c6f764f953234
-updated: 2018-01-14T17:39:01.480031112-05:00
+updated: 2018-01-21T19:02:30.081003208-08:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 2e60448ffcc6bf78332d1fe590260095f554dd78
@@ -14,7 +14,7 @@ imports:
   subpackages:
   - spew
 - name: github.com/go-kit/kit
-  version: 953e747656a7bbb5e1f998608b460458958b70cc
+  version: e2b298466b32c7cd5579a9b9b07e968fc9d9452c
   subpackages:
   - log
   - log/level
@@ -22,7 +22,7 @@ imports:
 - name: github.com/go-logfmt/logfmt
   version: 390ab7935ee28ec6b286364bba9b4dd6410cb3d5
 - name: github.com/go-stack/stack
-  version: 259ab82a6cad3992b4e21ff5cac294ccb06474bc
+  version: 817915b46b97fd7bb80e8ab6b69f01a53ac3eebf
 - name: github.com/gogo/protobuf
   version: 342cbe0a04158f6dcb03ca0079991a51a4248c02
   subpackages:
@@ -40,7 +40,7 @@ imports:
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/syndtr/goleveldb
-  version: 34011bf325bce385408353a30b101fe5e923eb6e
+  version: b89cc31ef7977104127d34c1bd31ebd1a9db2199
   subpackages:
   - leveldb
   - leveldb/cache
@@ -60,15 +60,15 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-wire
-  version: b93ebdd4f306833936c243561ec30af3455dc764
+  version: 0cce10e82786f2d501827fbe158747dbc4ceeb43
 - name: github.com/tendermint/tmlibs
-  version: f2bc5432c31974bb3f5b1a80a53c38e37d481b8d
+  version: 7a52d47a1676a9fe61d07fde0a48a733cce564c6
   subpackages:
   - common
   - db
   - log
 - name: golang.org/x/crypto
-  version: 95a4943f35d008beabde8c11e5075a1b714e6419
+  version: edd5e9b0879d13ee6970a50153d85b8fec9f7686
   subpackages:
   - bcrypt
   - blowfish

@@ -6,7 +6,6 @@ import (
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/tendermint/ed25519"
 	"github.com/tendermint/ed25519/extra25519"
-	"github.com/tendermint/go-wire"
 	. "github.com/tendermint/tmlibs/common"
 )
 
@@ -76,7 +75,7 @@ func (privKey PrivKeyEd25519) String() string {
 
 // Deterministically generates new priv-key bytes from key.
 func (privKey PrivKeyEd25519) Generate(index int) PrivKeyEd25519 {
-	bz, err := wire.MarshalBinary(struct {
+	bz, err := cdc.MarshalBinary(struct {
 		PrivKey [64]byte
 		Index   int
 	}{privKey, index})
@@ -156,7 +155,7 @@ func (privKey PrivKeySecp256k1) String() string {
 /*
 // Deterministically generates new priv-key bytes from key.
 func (key PrivKeySecp256k1) Generate(index int) PrivKeySecp256k1 {
-	newBytes := wire.BinarySha256(struct {
+	newBytes := cdc.BinarySha256(struct {
 		PrivKey [64]byte
 		Index   int
 	}{key, index})

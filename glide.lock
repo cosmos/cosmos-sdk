@@ -1,5 +1,5 @@
-hash: a48b72c21e7e4eaf17cf54ae0ab8104c15a9b230adc3f33318fe5c068dd94996
-updated: 2018-01-16T11:19:24.354963539-08:00
+hash: e8435271aa9fdfc49efff9016427eca1fd6b43093a17187619360edda9f265e6
+updated: 2018-01-21T19:17:17.451995428-08:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 2e60448ffcc6bf78332d1fe590260095f554dd78
@@ -87,15 +87,15 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 32741be2126500d600cede1e2016bbbe2754cb46
+  version: 12142af1cb4e3479ea4ac98a3171debff87519c6
   subpackages:
   - keys
 - name: github.com/tendermint/go-wire
-  version: b93ebdd4f306833936c243561ec30af3455dc764
+  version: 0cce10e82786f2d501827fbe158747dbc4ceeb43
   subpackages:
   - data
 - name: github.com/tendermint/iavl
-  version: 1dfe265ab4b491418e88e1da6577a8ad594fc989
+  version: 02885cf5a7461430e9d9e84b81fbda1e26645ab5
 - name: github.com/tendermint/light-client
   version: 76313d625e662ed7b284d066d68ff71edd7a9fac
   subpackages:
@@ -119,7 +119,7 @@ imports:
   - state
   - types
 - name: github.com/tendermint/tmlibs
-  version: 7a52d47a1676a9fe61d07fde0a48a733cce564c6
+  version: 80029abc6e20f85079cd751e659a05508773288c
   subpackages:
   - cli
   - cli/flags

@@ -11,6 +11,7 @@ users to issue new coins.
 
 Here we explain the concepts of the SDK using Basecoin as an example.
 
+
 ## Transactions and Messages
 
 The SDK distinguishes between transactions and messages.
@@ -19,11 +20,12 @@ A message is the core input data to the application.
 A transaction is a message wrapped with authentication data,
 like cryptographic signatures.
 
+
 ### Messages
 
 Users can create messages containing arbitrary information by implementing the `Msg` interface:
 
-```
+```golang
 type Msg interface {
 
 	// Return the message type.
@@ -66,7 +68,7 @@ but this is mostly for convenience and not type-safe.
 
 For instance, the `Basecoin` message types are defined in `x/bank/tx.go`: 
 
-```
+```golang
 type SendMsg struct {
 	Inputs  []Input  `json:"inputs"`
 	Outputs []Output `json:"outputs"`
@@ -80,7 +82,7 @@ type IssueMsg struct {
 
 Each specifies the addresses that must sign the message:
 
-```
+```golang
 func (msg SendMsg) GetSigners() []crypto.Address {
 	addrs := make([]crypto.Address, len(msg.Inputs))
 	for i, in := range msg.Inputs {
@@ -99,7 +101,7 @@ func (msg IssueMsg) GetSigners() []crypto.Address {
 
 A transaction is a message with additional information for authentication:
 
-```
+```golang
 type Tx interface {
 	Msg
 
@@ -125,7 +127,7 @@ type Tx interface {
 The `tx.GetSignatures()` method returns a list of signatures, which must match the list of 
 addresses returned by `tx.Msg.GetSigners()`. The signatures come in a standard form:
 
-```
+```golang
 type StdSignature struct {
 	crypto.PubKey // optional
 	crypto.Signature
@@ -147,12 +149,13 @@ Transactions can also specify the address responsible for paying the transaction
 
 The standard way to create a transaction from a message is to use the `StdTx`: 
 
-```
+```golang
 type StdTx struct {
 	Msg
 	Signatures []StdSignature
 }
 ```
+
 
 ### Encoding and Decoding Transactions
 
@@ -163,7 +166,7 @@ for instance Ethereum.
 When initializing an application, a developer must specify a `TxDecoder` function which determines how an arbitrary
 byte array should be unmarshalled into a `Tx`: 
 
-```
+```golang
 type TxDecoder func(txBytes []byte) (Tx, error)
 ```
 
@@ -173,7 +176,7 @@ to be registered ahead of type. Registration happens on a `Codec` object, so as 
 
 For instance, in `Basecoin`, we wish to register the `SendMsg` and `IssueMsg` types:
 
-```
+```golang
 cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 cdc.RegisterConcrete(bank.SendMsg{}, "cosmos-sdk/SendMsg", nil)
 cdc.RegisterConcrete(bank.IssueMsg{}, "cosmos-sdk/IssueMsg", nil)
@@ -182,6 +185,7 @@ cdc.RegisterConcrete(bank.IssueMsg{}, "cosmos-sdk/IssueMsg", nil)
 Note how each concrete type is given a name - these name determines the types unique "prefix bytes" during encoding.
 A registered type will always use the same prefix-bytes, regardless of what interface it is satisfying.
 For more details, see the [go-wire documentation]().
+
 
 ## Context 
 
@@ -195,11 +199,12 @@ may be necessary for processing a transaction.
 
 Many methods on SDK objects receive a context as the first argument. 
 
+
 ## Handlers
 
 Transaction processing in the SDK is defined through `Handler` functions:
 
-```
+```golang
 type Handler func(ctx Context, tx Tx) Result
 ```
 
@@ -211,9 +216,20 @@ some subset of the store. Access to substores is managed using capabilities -
 when a handler is initialized, it is passed capability keys that determine which parts of the 
 store it can access.
 
-
 TODO: example
+
 
 ## Store
 
-## App 
+- IAVLStore: Fast balanced dynamic Merkle store.
+  - supports iteration.
+- MultiStore: multiple Merkle tree backends in a single store 
+  - allows using Ethereum Patricia Trie and Tendermint IAVL in same app
+- Provide caching for intermediate state during execution of blocks and transactions (including for iteration)
+- Historical state pruning and snapshotting.
+- Query proofs (existence, absence, range, etc.) on current and retained historical state.
+
+
+## BaseApp 
+
+TODO

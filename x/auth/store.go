@@ -80,6 +80,21 @@ func (as accountStore) SetAccount(ctx sdk.Context, acc sdk.Account) {
 //----------------------------------------
 // misc.
 
+func (as accountStore) clonePrototypePtr() interface{} {
+	protoRt := reflect.TypeOf(as.proto)
+	if protoRt.Kind() == reflect.Ptr {
+		protoErt := protoRt.Elem()
+		if protoErt.Kind() != reflect.Struct {
+			panic("AccountStore requires a struct proto sdk.Account, or a pointer to one")
+		}
+		protoRv := reflect.New(protoErt)
+		return protoRv.Interface()
+	} else {
+		protoRv := reflect.New(protoRt)
+		return protoRv.Interface()
+	}
+}
+
 // Creates a new struct (or pointer to struct) from as.proto.
 func (as accountStore) clonePrototype() sdk.Account {
 	protoRt := reflect.TypeOf(as.proto)
@@ -113,12 +128,16 @@ func (as accountStore) encodeAccount(acc sdk.Account) []byte {
 }
 
 func (as accountStore) decodeAccount(bz []byte) sdk.Account {
-	acc := as.clonePrototype()
-	err := as.cdc.UnmarshalBinary(bz, &acc)
+	accPtr := as.clonePrototypePtr()
+	err := as.cdc.UnmarshalBinary(bz, accPtr)
 	if err != nil {
 		panic(err)
 	}
-	return acc
+	if reflect.ValueOf(as.proto).Kind() == reflect.Ptr {
+		return reflect.ValueOf(accPtr).Interface().(sdk.Account)
+	} else {
+		return reflect.ValueOf(accPtr).Elem().Interface().(sdk.Account)
+	}
 }
 
 //----------------------------------------

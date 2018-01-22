@@ -1,38 +1,29 @@
 package store
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/tendermint/iavl"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// iavlStoreLoader contains info on what store we want to load from
-type iavlStoreLoader struct {
-	db         dbm.DB
-	cacheSize  int
-	numHistory int64
-}
+const (
+	defaultIAVLCacheSize  = 10000
+	defaultIAVLNumHistory = 1<<53 - 1 // DEPRECATED
+)
 
-// NewIAVLStoreLoader returns a CommitStoreLoader that returns an iavlStore
-func NewIAVLStoreLoader(db dbm.DB, cacheSize int, numHistory int64) CommitStoreLoader {
-	l := iavlStoreLoader{
-		db:         db,
-		cacheSize:  cacheSize,
-		numHistory: numHistory,
-	}
-	return l.Load
-}
-
-// Load implements CommitLoader.
-func (isl iavlStoreLoader) Load(id CommitID) (CommitStore, error) {
-	tree := iavl.NewVersionedTree(isl.db, isl.cacheSize)
-	err := tree.Load()
+func LoadIAVLStore(db dbm.DB, id CommitID) (CommitStore, error) {
+	tree := iavl.NewVersionedTree(db, defaultIAVLCacheSize)
+	fmt.Println("LoadIAVLStore Version ", id.Version)
+	err := tree.LoadVersion(id.Version)
 	if err != nil {
 		return nil, err
 	}
-	store := newIAVLStore(tree, isl.numHistory)
+	store := newIAVLStore(tree, defaultIAVLNumHistory)
 	return store, nil
 }
 
@@ -61,7 +52,7 @@ func newIAVLStore(tree *iavl.VersionedTree, numHistory int64) *iavlStore {
 	return st
 }
 
-// Commit persists the store.
+// Implements Committer.
 func (st *iavlStore) Commit() CommitID {
 
 	// Save a new version.
@@ -83,45 +74,58 @@ func (st *iavlStore) Commit() CommitID {
 	}
 }
 
-// CacheWrap implements KVStore.
+// Implements Committer.
+func (st *iavlStore) LastCommitID() CommitID {
+	return CommitID{
+		Version: st.tree.Version64(),
+		Hash:    st.tree.Hash(),
+	}
+}
+
+// Implements Store.
+func (st *iavlStore) GetStoreType() StoreType {
+	return sdk.StoreTypeIAVL
+}
+
+// Implements Store.
 func (st *iavlStore) CacheWrap() CacheWrap {
 	return NewCacheKVStore(st)
 }
 
-// Set implements KVStore.
+// Implements KVStore.
 func (st *iavlStore) Set(key, value []byte) {
 	st.tree.Set(key, value)
 }
 
-// Get implements KVStore.
+// Implements KVStore.
 func (st *iavlStore) Get(key []byte) (value []byte) {
 	_, v := st.tree.Get(key)
 	return v
 }
 
-// Has implements KVStore.
+// Implements KVStore.
 func (st *iavlStore) Has(key []byte) (exists bool) {
 	return st.tree.Has(key)
 }
 
-// Delete implements KVStore.
+// Implements KVStore.
 func (st *iavlStore) Delete(key []byte) {
 	st.tree.Remove(key)
 }
 
-// Iterator implements KVStore.
+// Implements KVStore.
 func (st *iavlStore) Iterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, true)
 }
 
-// ReverseIterator implements IterKVStore.
+// Implements IterKVStore.
 func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, false)
 }
 
 //----------------------------------------
 
-// Implements Iterator
+// Implements Iterator.
 type iavlIterator struct {
 	// Underlying store
 	tree *iavl.Tree
@@ -192,12 +196,12 @@ func (iter *iavlIterator) initRoutine() {
 	close(iter.initCh)
 }
 
-// Domain implements Iterator
+// Implements Iterator.
 func (iter *iavlIterator) Domain() (start, end []byte) {
 	return iter.start, iter.end
 }
 
-// Valid implements Iterator
+// Implements Iterator.
 func (iter *iavlIterator) Valid() bool {
 	iter.waitInit()
 	iter.mtx.Lock()
@@ -206,7 +210,7 @@ func (iter *iavlIterator) Valid() bool {
 	return !iter.invalid
 }
 
-// Next implements Iterator
+// Implements Iterator.
 func (iter *iavlIterator) Next() {
 	iter.waitInit()
 	iter.mtx.Lock()
@@ -216,7 +220,7 @@ func (iter *iavlIterator) Next() {
 	iter.receiveNext()
 }
 
-// Key implements Iterator
+// Implements Iterator.
 func (iter *iavlIterator) Key() []byte {
 	iter.waitInit()
 	iter.mtx.Lock()
@@ -226,7 +230,7 @@ func (iter *iavlIterator) Key() []byte {
 	return iter.key
 }
 
-// Value implements Iterator
+// Implements Iterator.
 func (iter *iavlIterator) Value() []byte {
 	iter.waitInit()
 	iter.mtx.Lock()
@@ -236,7 +240,7 @@ func (iter *iavlIterator) Value() []byte {
 	return iter.value
 }
 
-// Close implements Iterator
+// Implements Iterator.
 func (iter *iavlIterator) Close() {
 	close(iter.quitCh)
 }

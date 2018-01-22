@@ -35,6 +35,12 @@ func NewCacheKVStore(parent KVStore) *cacheKVStore {
 	return ci
 }
 
+// Implements Store.
+func (ci *cacheKVStore) GetStoreType() StoreType {
+	return ci.parent.GetStoreType()
+}
+
+// Implements KVStore.
 func (ci *cacheKVStore) Get(key []byte) (value []byte) {
 	ci.mtx.Lock()
 	defer ci.mtx.Unlock()
@@ -51,6 +57,7 @@ func (ci *cacheKVStore) Get(key []byte) (value []byte) {
 	return value
 }
 
+// Implements KVStore.
 func (ci *cacheKVStore) Set(key []byte, value []byte) {
 	ci.mtx.Lock()
 	defer ci.mtx.Unlock()
@@ -59,11 +66,13 @@ func (ci *cacheKVStore) Set(key []byte, value []byte) {
 	ci.setCacheValue(key, value, false, true)
 }
 
+// Implements KVStore.
 func (ci *cacheKVStore) Has(key []byte) bool {
 	value := ci.Get(key)
 	return value != nil
 }
 
+// Implements KVStore.
 func (ci *cacheKVStore) Delete(key []byte) {
 	ci.mtx.Lock()
 	defer ci.mtx.Unlock()
@@ -72,7 +81,7 @@ func (ci *cacheKVStore) Delete(key []byte) {
 	ci.setCacheValue(key, nil, true, true)
 }
 
-// Write writes pending updates to the parent database and clears the cache.
+// Implements CacheKVStore.
 func (ci *cacheKVStore) Write() {
 	ci.mtx.Lock()
 	defer ci.mtx.Unlock()
@@ -107,6 +116,7 @@ func (ci *cacheKVStore) Write() {
 //----------------------------------------
 // To cache-wrap this cacheKVStore further.
 
+// Implements CacheWrapper.
 func (ci *cacheKVStore) CacheWrap() CacheWrap {
 	return NewCacheKVStore(ci)
 }
@@ -114,10 +124,12 @@ func (ci *cacheKVStore) CacheWrap() CacheWrap {
 //----------------------------------------
 // Iteration
 
+// Implements KVStore.
 func (ci *cacheKVStore) Iterator(start, end []byte) Iterator {
 	return ci.iterator(start, end, true)
 }
 
+// Implements KVStore.
 func (ci *cacheKVStore) ReverseIterator(start, end []byte) Iterator {
 	return ci.iterator(start, end, false)
 }

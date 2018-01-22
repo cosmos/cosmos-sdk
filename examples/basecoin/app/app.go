@@ -19,11 +19,11 @@ type BasecoinApp struct {
 	multiStore sdk.CommitMultiStore
 
 	// The key to access the substores.
-	mainStoreKey *sdk.KVStoreKey
-	ibcStoreKey  *sdk.KVStoreKey
+	capKeyMainStore *sdk.KVStoreKey
+	capKeyIBCStore  *sdk.KVStoreKey
 
-	// Additional stores:
-	accStore sdk.AccountStore
+	// Object mappers :
+	accountMapper sdk.AccountMapper
 }
 
 // TODO: This should take in more configuration options.
@@ -32,8 +32,8 @@ func NewBasecoinApp() *BasecoinApp {
 	// Create and configure app.
 	var app = &BasecoinApp{}
 	app.initCapKeys() // ./init_capkeys.go
-	app.initStores()  // ./init_stores.go
 	app.initBaseApp() // ./init_baseapp.go
+	app.initStores()  // ./init_stores.go
 	app.initRoutes()  // ./init_routes.go
 
 	// TODO: Load genesis
@@ -65,7 +65,7 @@ func (app *BasecoinApp) RunForever() {
 
 // Load the stores.
 func (app *BasecoinApp) loadStores() {
-	if err := app.LoadLatestVersion(app.mainStoreKey); err != nil {
+	if err := app.LoadLatestVersion(app.capKeyMainStore); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

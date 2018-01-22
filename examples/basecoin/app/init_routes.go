@@ -4,12 +4,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-// initRoutes() happens after initCapKeys(), initStores(), and initSDKApp().
+// initCapKeys, initBaseApp, initStores, initRoutes.
 func (app *BasecoinApp) initRoutes() {
 	var router = app.BaseApp.Router()
-	var accStore = app.accStore
+	var accountMapper = app.accountMapper
 
 	// All handlers must be added here.
 	// The order matters.
-	router.AddRoute("bank", bank.NewHandler(accStore))
+	router.AddRoute("bank", bank.NewHandler(accountMapper))
 }

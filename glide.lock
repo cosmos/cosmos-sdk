@@ -1,5 +1,5 @@
 hash: e8435271aa9fdfc49efff9016427eca1fd6b43093a17187619360edda9f265e6
-updated: 2018-01-21T19:17:17.451995428-08:00
+updated: 2018-01-21T20:59:37.606138723-08:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 2e60448ffcc6bf78332d1fe590260095f554dd78
@@ -91,7 +91,7 @@ imports:
   subpackages:
   - keys
 - name: github.com/tendermint/go-wire
-  version: 0cce10e82786f2d501827fbe158747dbc4ceeb43
+  version: c7801c1586f51bb28028cd420c599516d7ac9c36
   subpackages:
   - data
 - name: github.com/tendermint/iavl

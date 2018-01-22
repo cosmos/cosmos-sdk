@@ -13,7 +13,6 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -34,10 +33,10 @@ func (tx testTx) GetFeePayer() crypto.Address             { return nil }
 func (tx testTx) GetSignatures() []sdk.StdSignature       { return nil }
 
 func TestBasic(t *testing.T) {
-	store, storeKeys := newCommitMultiStore()
 
 	// Create app.
-	app := NewBaseApp(t.Name(), store)
+	app := NewBaseApp(t.Name())
+	storeKeys := createMounts(app.ms)
 	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, error) {
 		var ttx testTx
 		fromJSON(txBytes, &ttx)
@@ -161,16 +160,15 @@ func fromJSON(bz []byte, ptr interface{}) {
 	}
 }
 
-// Creates a sample CommitMultiStore
-func newCommitMultiStore() (sdk.CommitMultiStore, map[string]sdk.SubstoreKey) {
+// Mounts stores to CommitMultiStore and returns a map of keys.
+func createMounts(ms sdk.CommitMultiStore) map[string]sdk.StoreKey {
 	dbMain := dbm.NewMemDB()
 	dbXtra := dbm.NewMemDB()
 	keyMain := sdk.NewKVStoreKey("main")
 	keyXtra := sdk.NewKVStoreKey("xtra")
-	ms := store.NewCommitMultiStore(dbMain) // Also store rootMultiStore metadata here (it shouldn't clash)
-	ms.SetSubstoreLoader(keyMain, store.NewIAVLStoreLoader(dbMain, 0, 0))
-	ms.SetSubstoreLoader(keyXtra, store.NewIAVLStoreLoader(dbXtra, 0, 0))
-	return ms, map[string]sdk.SubstoreKey{
+	ms.MountStoreWithDB(keyMain, sdk.StoreTypeIAVL, dbMain)
+	ms.MountStoreWithDB(keyXtra, sdk.StoreTypeIAVL, dbXtra)
+	return map[string]sdk.StoreKey{
 		"main": keyMain,
 		"xtra": keyXtra,
 	}

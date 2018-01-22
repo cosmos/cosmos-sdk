@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/merkle"
 
@@ -13,7 +12,7 @@ import (
 
 func TestMultistoreCommitLoad(t *testing.T) {
 	db := dbm.NewMemDB()
-	store := newMultiStoreWithLoaders(db)
+	store := newMultiStoreWithMounts(db)
 	err := store.LoadLatestVersion()
 	assert.Nil(t, err)
 
@@ -30,7 +29,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	}
 
 	// Load the latest multistore again and check version
-	store = newMultiStoreWithLoaders(db)
+	store = newMultiStoreWithMounts(db)
 	err = store.LoadLatestVersion()
 	assert.Nil(t, err)
 	commitID = getExpectedCommitID(store, nCommits)
@@ -43,7 +42,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 
 	// Load an older multistore and check version
 	ver := nCommits - 1
-	store = newMultiStoreWithLoaders(db)
+	store = newMultiStoreWithMounts(db)
 	err = store.LoadVersion(ver)
 	assert.Nil(t, err)
 	commitID = getExpectedCommitID(store, ver)
@@ -56,7 +55,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 
 	// XXX: confirm old commit is overwritten and
 	// we have rolled back LatestVersion
-	store = newMultiStoreWithLoaders(db)
+	store = newMultiStoreWithMounts(db)
 	err = store.LoadLatestVersion()
 	assert.Nil(t, err)
 	commitID = getExpectedCommitID(store, ver+1)
@@ -66,21 +65,18 @@ func TestMultistoreCommitLoad(t *testing.T) {
 //-----------------------------------------------------------------------
 // utils
 
-func newMultiStoreWithLoaders(db dbm.DB) *rootMultiStore {
+func newMultiStoreWithMounts(db dbm.DB) *rootMultiStore {
 	store := NewCommitMultiStore(db)
-	storeLoaders := map[SubstoreKey]CommitStoreLoader{
-		sdk.NewKVStoreKey("store1"): newMockCommitStore,
-		sdk.NewKVStoreKey("store2"): newMockCommitStore,
-		sdk.NewKVStoreKey("store3"): newMockCommitStore,
-	}
-	for key, loader := range storeLoaders {
-		store.SetSubstoreLoader(key, loader)
-	}
+	store.MountStoreWithDB(
+		sdk.NewKVStoreKey("store1"), sdk.StoreTypeIAVL, db)
+	store.MountStoreWithDB(
+		sdk.NewKVStoreKey("store2"), sdk.StoreTypeIAVL, db)
+	store.MountStoreWithDB(
+		sdk.NewKVStoreKey("store3"), sdk.StoreTypeIAVL, db)
 	return store
 }
 
 func checkStore(t *testing.T, store *rootMultiStore, expect, got CommitID) {
-	assert.EqualValues(t, expect.Version+1, store.NextVersion())
 	assert.Equal(t, expect, got)
 	assert.Equal(t, expect, store.LastCommitID())
 
@@ -89,42 +85,21 @@ func checkStore(t *testing.T, store *rootMultiStore, expect, got CommitID) {
 func getExpectedCommitID(store *rootMultiStore, ver int64) CommitID {
 	return CommitID{
 		Version: ver,
-		Hash:    hashStores(store.substores),
+		Hash:    hashStores(store.stores),
 	}
 }
 
-func hashStores(stores map[SubstoreKey]CommitStore) []byte {
+func hashStores(stores map[StoreKey]CommitStore) []byte {
 	m := make(map[string]merkle.Hasher, len(stores))
 	for key, store := range stores {
 		name := key.Name()
-		m[name] = substore{
+		m[name] = storeInfo{
 			Name: name,
-			substoreCore: substoreCore{
-				CommitID: store.Commit(),
+			Core: storeCore{
+				CommitID: store.LastCommitID(),
+				// StoreType: store.GetStoreType(),
 			},
 		}
 	}
 	return merkle.SimpleHashFromMap(m)
 }
-
-//-----------------------------------------------------------------------
-// mockCommitStore
-
-var _ CommitStore = (*mockCommitStore)(nil)
-
-type mockCommitStore struct {
-	id CommitID
-}
-
-func newMockCommitStore(id CommitID) (CommitStore, error) {
-	return &mockCommitStore{id}, nil
-}
-
-func (cs *mockCommitStore) Commit() CommitID {
-	return cs.id
-}
-func (cs *mockCommitStore) CacheWrap() CacheWrap {
-	cs2 := *cs
-	return &cs2
-}
-func (cs *mockCommitStore) Write() {}

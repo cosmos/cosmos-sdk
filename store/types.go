@@ -5,16 +5,17 @@ import (
 )
 
 // Import cosmos-sdk/types/store.go for convenience.
+type Store = types.Store
 type MultiStore = types.MultiStore
 type CacheMultiStore = types.CacheMultiStore
 type CommitStore = types.CommitStore
 type Committer = types.Committer
 type CommitMultiStore = types.CommitMultiStore
-type CommitStoreLoader = types.CommitStoreLoader
 type KVStore = types.KVStore
 type Iterator = types.Iterator
 type CacheKVStore = types.CacheKVStore
 type CacheWrapper = types.CacheWrapper
 type CacheWrap = types.CacheWrap
 type CommitID = types.CommitID
-type SubstoreKey = types.SubstoreKey
+type StoreKey = types.StoreKey
+type StoreType = types.StoreType

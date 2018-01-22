@@ -7,6 +7,7 @@ docs/guide/*.sh
 tools/bin/*
 examples/build/*
 baseapp/data/*
+*basecoin-data
 
 ### Vagrant ###
 .vagrant/

@@ -3,12 +3,13 @@ package stake
 import (
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
-	"github.com/tendermint/tmlibs/rational"
 
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
 /////////////////////////////////////////////////////////// temp types
+
+var cdc = wire.NewCodec()
 
 //nolint
 type Params struct {
@@ -34,10 +35,10 @@ func defaultParams() Params {
 	return Params{
 		HoldBonded:          []byte("77777777777777777777777777777777"),
 		HoldUnbonded:        []byte("88888888888888888888888888888888"),
-		InflationRateChange: rational.New(13, 100),
-		InflationMax:        rational.New(20, 100),
-		InflationMin:        rational.New(7, 100),
-		GoalBonded:          rational.New(67, 100),
+		InflationRateChange: 13, //rational.New(13, 100),
+		InflationMax:        20, //rational.New(20, 100),
+		InflationMin:        7,  //rational.New(7, 100),
+		GoalBonded:          67, //rational.New(67, 100),
 		MaxVals:             100,
 		AllowedBondDenom:    "fermion",
 		GasDeclareCandidacy: 20,
@@ -63,12 +64,12 @@ type GlobalState struct {
 func initialGlobalState() *GlobalState {
 	return &GlobalState{
 		TotalSupply:       0,
-		BondedShares:      rational.Zero,
-		UnbondedShares:    rational.Zero,
+		BondedShares:      0, //rational.Zero,
+		UnbondedShares:    0, //rational.Zero,
 		BondedPool:        0,
 		UnbondedPool:      0,
 		InflationLastTime: 0,
-		Inflation:         rational.New(7, 100),
+		Inflation:         0, //rational.New(7, 100),
 	}
 }
 
@@ -99,6 +100,9 @@ type Candidate struct {
 	Description Description     `json:"description"`  // Description terms for the candidate
 }
 
+//nolint
+type Candidates []*Candidate
+
 // Description - description fields for a candidate
 type Description struct {
 	Moniker  string `json:"moniker"`
@@ -113,9 +117,9 @@ func NewCandidate(pubKey crypto.PubKey, owner crypto.Address, description Descri
 		Status:      Unbonded,
 		PubKey:      pubKey,
 		Owner:       owner,
-		Assets:      rational.Zero,
-		Liabilities: rational.Zero,
-		VotingPower: rational.Zero,
+		Assets:      0, // rational.Zero,
+		Liabilities: 0, // rational.Zero,
+		VotingPower: 0, //rational.Zero,
 		Description: description,
 	}
 }
@@ -153,7 +157,7 @@ func GetDelegatorBondKey(delegator crypto.Address, candidate crypto.PubKey) []by
 
 // GetDelegatorBondKeyPrefix - get the prefix for a delegator for all candidates
 func GetDelegatorBondKeyPrefix(delegator crypto.Address) []byte {
-	res, err := wire.MarshalBinary(&delegator)
+	res, err := cdc.MarshalBinary(&delegator)
 	if err != nil {
 		panic(err)
 	}
@@ -162,7 +166,7 @@ func GetDelegatorBondKeyPrefix(delegator crypto.Address) []byte {
 
 // GetDelegatorBondsKey - get the key for list of all the delegator's bonds
 func GetDelegatorBondsKey(delegator crypto.Address) []byte {
-	res, err := wire.MarshalBinary(&delegator)
+	res, err := cdc.MarshalBinary(&delegator)
 	if err != nil {
 		panic(err)
 	}
@@ -177,14 +181,14 @@ func loadCandidatesPubKeys(store types.KVStore) (pubKeys []crypto.PubKey) {
 	if bytes == nil {
 		return
 	}
-	err := wire.UnmarshalBinary(bytes, &pubKeys)
+	err := cdc.UnmarshalBinary(bytes, &pubKeys)
 	if err != nil {
 		panic(err)
 	}
 	return
 }
 func saveCandidatesPubKeys(store types.KVStore, pubKeys []crypto.PubKey) {
-	b, err := wire.MarshalBinary(pubKeys)
+	b, err := cdc.MarshalBinary(pubKeys)
 	if err != nil {
 		panic(err)
 	}
@@ -212,7 +216,7 @@ func loadCandidate(store types.KVStore, pubKey crypto.PubKey) *Candidate {
 		return nil
 	}
 	candidate := new(Candidate)
-	err := wire.UnmarshalBinary(b, candidate)
+	err := cdc.UnmarshalBinary(b, candidate)
 	if err != nil {
 		panic(err) // This error should never occure big problem if does
 	}
@@ -227,7 +231,7 @@ func saveCandidate(store types.KVStore, candidate *Candidate) {
 		saveCandidatesPubKeys(store, append(pks, candidate.PubKey))
 	}
 
-	b, err := wire.MarshalBinary(*candidate)
+	b, err := cdc.MarshalBinary(*candidate)
 	if err != nil {
 		panic(err)
 	}
@@ -259,7 +263,7 @@ func loadDelegatorCandidates(store types.KVStore,
 		return nil
 	}
 
-	err := wire.UnmarshalBinary(candidateBytes, &candidates)
+	err := cdc.UnmarshalBinary(candidateBytes, &candidates)
 	if err != nil {
 		panic(err)
 	}
@@ -277,7 +281,7 @@ func loadDelegatorBond(store types.KVStore,
 	}
 
 	bond := new(DelegatorBond)
-	err := wire.UnmarshalBinary(delegatorBytes, bond)
+	err := cdc.UnmarshalBinary(delegatorBytes, bond)
 	if err != nil {
 		panic(err)
 	}
@@ -290,7 +294,7 @@ func saveDelegatorBond(store types.KVStore, delegator crypto.Address, bond *Dele
 	if loadDelegatorBond(store, delegator, bond.PubKey) == nil {
 		pks := loadDelegatorCandidates(store, delegator)
 		pks = append(pks, (*bond).PubKey)
-		b, err := wire.MarshalBinary(pks)
+		b, err := cdc.MarshalBinary(pks)
 		if err != nil {
 			panic(err)
 		}
@@ -298,7 +302,7 @@ func saveDelegatorBond(store types.KVStore, delegator crypto.Address, bond *Dele
 	}
 
 	// now actually save the bond
-	b, err := wire.MarshalBinary(*bond)
+	b, err := cdc.MarshalBinary(*bond)
 	if err != nil {
 		panic(err)
 	}
@@ -316,7 +320,7 @@ func removeDelegatorBond(store types.KVStore, delegator crypto.Address, candidat
 			pks = append(pks[:i], pks[i+1:]...)
 		}
 	}
-	b, err := wire.MarshalBinary(pks)
+	b, err := cdc.MarshalBinary(pks)
 	if err != nil {
 		panic(err)
 	}
@@ -369,7 +373,7 @@ func loadParams(store types.KVStore) (params Params) {
 		return defaultParams()
 	}
 
-	err := wire.UnmarshalBinary(b, &params)
+	err := cdc.UnmarshalBinary(b, &params)
 	if err != nil {
 		panic(err) // This error should never occure big problem if does
 	}
@@ -377,7 +381,7 @@ func loadParams(store types.KVStore) (params Params) {
 	return
 }
 func saveParams(store types.KVStore, params Params) {
-	b, err := wire.MarshalBinary(params)
+	b, err := cdc.MarshalBinary(params)
 	if err != nil {
 		panic(err)
 	}
@@ -393,14 +397,14 @@ func loadGlobalState(store types.KVStore) (gs *GlobalState) {
 		return initialGlobalState()
 	}
 	gs = new(GlobalState)
-	err := wire.UnmarshalBinary(b, gs)
+	err := cdc.UnmarshalBinary(b, gs)
 	if err != nil {
 		panic(err) // This error should never occure big problem if does
 	}
 	return
 }
 func saveGlobalState(store types.KVStore, gs *GlobalState) {
-	b, err := wire.MarshalBinary(*gs)
+	b, err := cdc.MarshalBinary(*gs)
 	if err != nil {
 		panic(err)
 	}

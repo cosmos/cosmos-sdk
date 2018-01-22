@@ -9,8 +9,10 @@ import (
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
+	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -22,6 +24,9 @@ type BaseApp struct {
 
 	// Application name from abci.Info
 	name string
+
+	// Common DB backend
+	db dbm.DB
 
 	// Main (uncached) state
 	ms sdk.CommitMultiStore
@@ -53,17 +58,41 @@ type BaseApp struct {
 
 var _ abci.Application = &BaseApp{}
 
-func NewBaseApp(name string, ms sdk.CommitMultiStore) *BaseApp {
-	return &BaseApp{
+func NewBaseApp(name string) *BaseApp {
+	var baseapp = &BaseApp{
 		logger: makeDefaultLogger(),
 		name:   name,
-		ms:     ms,
+		db:     nil,
+		ms:     nil,
 		router: NewRouter(),
 	}
+	baseapp.initDB()
+	baseapp.initMultiStore()
+	return baseapp
+}
+
+// Create the underlying leveldb datastore which will
+// persist the Merkle tree inner & leaf nodes.
+func (app *BaseApp) initDB() {
+	db, err := dbm.NewGoLevelDB(app.name, "data")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	app.db = db
+}
+
+func (app *BaseApp) initMultiStore() {
+	ms := store.NewCommitMultiStore(app.db)
+	app.ms = ms
 }
 
 func (app *BaseApp) Name() string {
 	return app.name
+}
+
+func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
+	app.ms.MountStoreWithDB(key, typ, app.db)
 }
 
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
@@ -84,12 +113,12 @@ func (app *BaseApp) SetEndBlocker(...) {}
 func (app *BaseApp) SetInitStater(...) {}
 */
 
-func (app *BaseApp) LoadLatestVersion(mainKey sdk.SubstoreKey) error {
+func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
 	app.ms.LoadLatestVersion()
 	return app.initFromStore(mainKey)
 }
 
-func (app *BaseApp) LoadVersion(version int64, mainKey sdk.SubstoreKey) error {
+func (app *BaseApp) LoadVersion(version int64, mainKey sdk.StoreKey) error {
 	app.ms.LoadVersion(version)
 	return app.initFromStore(mainKey)
 }
@@ -105,7 +134,7 @@ func (app *BaseApp) LastBlockHeight() int64 {
 }
 
 // Initializes the remaining logic from app.ms.
-func (app *BaseApp) initFromStore(mainKey sdk.SubstoreKey) error {
+func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 	lastCommitID := app.ms.LastCommitID()
 	main := app.ms.GetKVStore(mainKey)
 	header := abci.Header{}

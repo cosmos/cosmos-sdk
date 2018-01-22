@@ -23,12 +23,10 @@ type Account interface {
 	Set(key interface{}, value interface{}) error
 }
 
-// AccountStore indexes accounts by address.
-type AccountStore interface {
+// AccountMapper stores and retrieves accounts from stores
+// retrieved from the context.
+type AccountMapper interface {
 	NewAccountWithAddress(ctx Context, addr crypto.Address) Account
 	GetAccount(ctx Context, addr crypto.Address) Account
 	SetAccount(ctx Context, acc Account)
 }
-
-// new(AccountStoreKey) is a capabilities key.
-type AccountStoreKey struct{}

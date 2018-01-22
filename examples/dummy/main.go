@@ -8,42 +8,30 @@ import (
 	"github.com/tendermint/abci/server"
 	crypto "github.com/tendermint/go-crypto"
 	cmn "github.com/tendermint/tmlibs/common"
-	dbm "github.com/tendermint/tmlibs/db"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func main() {
 
-	db, err := dbm.NewGoLevelDB("dummy", "dummy-data")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	// Capabilities key to access the main KVStore.
+	var capKeyMainStore = sdk.NewKVStoreKey("main")
 
-	// create CommitStoreLoader
-	cacheSize := 10000
-	numHistory := int64(100)
-	loader := store.NewIAVLStoreLoader(db, cacheSize, numHistory)
+	// Create BaseApp.
+	var baseApp = bam.NewBaseApp("dummy")
 
-	// key to access the main KVStore
-	var mainStoreKey = sdk.NewKVStoreKey("main")
-
-	// Create MultiStore
-	multiStore := store.NewCommitMultiStore(db)
-	multiStore.SetSubstoreLoader(mainStoreKey, loader)
-
-	// Set everything on the baseApp and load latest
-	baseApp := bam.NewBaseApp("dummy", multiStore)
+	// Set mounts for BaseApp's MultiStore.
+	baseApp.MountStore(capKeyMainStore, sdk.StoreTypeIAVL)
 
 	// Set Tx decoder
 	baseApp.SetTxDecoder(decodeTx)
 
-	baseApp.Router().AddRoute("dummy", DummyHandler(mainStoreKey))
+	// Set a handler Route.
+	baseApp.Router().AddRoute("dummy", DummyHandler(capKeyMainStore))
 
-	if err := baseApp.LoadLatestVersion(mainStoreKey); err != nil {
+	// Load latest version.
+	if err := baseApp.LoadLatestVersion(capKeyMainStore); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -126,7 +114,7 @@ func decodeTx(txBytes []byte) (sdk.Tx, error) {
 	return tx, nil
 }
 
-func DummyHandler(storeKey sdk.SubstoreKey) sdk.Handler {
+func DummyHandler(storeKey sdk.StoreKey) sdk.Handler {
 	return func(ctx sdk.Context, tx sdk.Tx) sdk.Result {
 		// tx is already unmarshalled
 		key := tx.Get("key").([]byte)

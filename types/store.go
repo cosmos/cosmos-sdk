@@ -8,18 +8,28 @@ import (
 
 // NOTE: These are implemented in cosmos-sdk/store.
 
+type Store interface {
+	GetStoreType() StoreType
+	CacheWrapper
+}
+
+// Something that can persist to disk.
+type Committer interface {
+	Commit() CommitID
+	LastCommitID() CommitID
+}
+
+// Stores of MultiStore must implement CommitStore.
+type CommitStore interface {
+	Committer
+	Store
+}
+
 //----------------------------------------
 // MultiStore
 
 type MultiStore interface {
-
-	// Last commit, or the zero CommitID.
-	// If not zero, CommitID.Version is NextVersion()-1.
-	LastCommitID() CommitID
-
-	// Current version being worked on now, not yet committed.
-	// Should be greater than 0.
-	NextVersion() int64
+	Store
 
 	// Cache wrap MultiStore.
 	// NOTE: Caller should probably not call .Write() on each, but
@@ -27,8 +37,8 @@ type MultiStore interface {
 	CacheMultiStore() CacheMultiStore
 
 	// Convenience for fetching substores.
-	GetStore(SubstoreKey) interface{}
-	GetKVStore(SubstoreKey) KVStore
+	GetStore(StoreKey) Store
+	GetKVStore(StoreKey) KVStore
 }
 
 // From MultiStore.CacheMultiStore()....
@@ -37,50 +47,34 @@ type CacheMultiStore interface {
 	Write() // Writes operations to underlying KVStore
 }
 
-// Substores of MultiStore must implement CommitStore.
-type CommitStore interface {
-	Committer
-	CacheWrapper
-}
-
-// A non-cache store that can commit (persist) and get a Merkle root.
-type Committer interface {
-	Commit() CommitID
-}
-
 // A non-cache MultiStore.
 type CommitMultiStore interface {
-	CommitStore
+	Committer
 	MultiStore
 
-	// Add a substore loader.
-	// Panics on a nil key.
-	SetSubstoreLoader(key SubstoreKey, loader CommitStoreLoader)
+	// Mount a store of type.
+	MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB)
 
-	// Gets the substore, which is a CommitSubstore.
 	// Panics on a nil key.
-	GetSubstore(key SubstoreKey) CommitStore
+	GetCommitStore(key StoreKey) CommitStore
 
-	// Load the latest persisted version.
-	// Called once after all calls to SetSubstoreLoader are complete.
+	// Load the latest persisted version.  Called once after all
+	// calls to Mount*Store() are complete.
 	LoadLatestVersion() error
 
-	// Load a specific persisted version.  When you load an old version, or
-	// when the last commit attempt didn't complete, the next commit after
-	// loading must be idempotent (return the same commit id).  Otherwise the
-	// behavior is undefined.
+	// Load a specific persisted version.  When you load an old
+	// version, or when the last commit attempt didn't complete,
+	// the next commit after loading must be idempotent (return the
+	// same commit id).  Otherwise the behavior is undefined.
 	LoadVersion(ver int64) error
 }
-
-// These must be added to the MultiStore before calling LoadVersion() or
-// LoadLatest().
-type CommitStoreLoader func(id CommitID) (CommitStore, error)
 
 //----------------------------------------
 // KVStore
 
 // KVStore is a simple interface to get/set data
 type KVStore interface {
+	Store
 
 	// Get returns nil iff key doesn't exist. Panics on nil key.
 	Get(key []byte) []byte
@@ -112,17 +106,17 @@ type KVStore interface {
 
 }
 
-// dbm.DB implements KVStore so we can CacheKVStore it.
-var _ KVStore = dbm.DB(nil)
-
 // Alias iterator to db's Iterator for convenience.
 type Iterator = dbm.Iterator
 
-// CacheKVStore cache-wraps a KVStore.  After calling .Write() on the
-// CacheKVStore, all previously created CacheKVStores on the object expire.
+// CacheKVStore cache-wraps a KVStore.  After calling .Write() on
+// the CacheKVStore, all previously created CacheKVStores on the
+// object expire.
 type CacheKVStore interface {
 	KVStore
-	Write() // Writes operations to underlying KVStore
+
+	// Writes operations to underlying KVStore
+	Write()
 }
 
 //----------------------------------------
@@ -167,12 +161,22 @@ func (cid CommitID) String() string {
 }
 
 //----------------------------------------
+// Store types
+
+type StoreType int
+
+const (
+	StoreTypeMulti StoreType = iota
+	StoreTypeDB
+	StoreTypeIAVL
+)
+
+//----------------------------------------
 // Keys for accessing substores
 
-// SubstoreKey is a key used to index substores.
-type SubstoreKey interface {
+// StoreKey is a key used to index stores in a MultiStore.
+type StoreKey interface {
 	Name() string
-
 	String() string
 }
 

@@ -4,13 +4,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// initCapKeys() happens before initStores(), initSDKApp(), and initRoutes().
+// initCapKeys, initBaseApp, initStores, initRoutes.
 func (app *BasecoinApp) initCapKeys() {
 
 	// All top-level capabilities keys
 	// should be constructed here.
 	// For more information, see http://www.erights.org/elib/capability/ode/ode.pdf.
-	app.mainStoreKey = sdk.NewKVStoreKey("main")
-	app.ibcStoreKey = sdk.NewKVStoreKey("ibc")
+	app.capKeyMainStore = sdk.NewKVStoreKey("main")
+	app.capKeyIBCStore = sdk.NewKVStoreKey("ibc")
 
 }

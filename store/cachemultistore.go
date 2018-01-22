@@ -1,5 +1,9 @@
 package store
 
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 //----------------------------------------
 // cacheMultiStore
 
@@ -7,20 +11,18 @@ package store
 // Implements MultiStore.
 type cacheMultiStore struct {
 	db           CacheKVStore
-	nextVersion  int64
 	lastCommitID CommitID
-	substores    map[SubstoreKey]CacheWrap
+	stores       map[StoreKey]CacheWrap
 }
 
 func newCacheMultiStoreFromRMS(rms *rootMultiStore) cacheMultiStore {
 	cms := cacheMultiStore{
-		db:           NewCacheKVStore(rms.db),
-		nextVersion:  rms.nextVersion,
+		db:           NewCacheKVStore(dbStoreAdapter{rms.db}),
 		lastCommitID: rms.lastCommitID,
-		substores:    make(map[SubstoreKey]CacheWrap, len(rms.substores)),
+		stores:       make(map[StoreKey]CacheWrap, len(rms.stores)),
 	}
-	for key, substore := range rms.substores {
-		cms.substores[key] = substore.CacheWrap()
+	for key, store := range rms.stores {
+		cms.stores[key] = store.CacheWrap()
 	}
 	return cms
 }
@@ -28,50 +30,49 @@ func newCacheMultiStoreFromRMS(rms *rootMultiStore) cacheMultiStore {
 func newCacheMultiStoreFromCMS(cms cacheMultiStore) cacheMultiStore {
 	cms2 := cacheMultiStore{
 		db:           NewCacheKVStore(cms.db),
-		nextVersion:  cms.nextVersion,
 		lastCommitID: cms.lastCommitID,
-		substores:    make(map[SubstoreKey]CacheWrap, len(cms.substores)),
+		stores:       make(map[StoreKey]CacheWrap, len(cms.stores)),
 	}
-	for key, substore := range cms.substores {
-		cms2.substores[key] = substore.CacheWrap()
+	for key, store := range cms.stores {
+		cms2.stores[key] = store.CacheWrap()
 	}
 	return cms2
 }
 
-// Implements CacheMultiStore
+// Implements Store.
+func (cms cacheMultiStore) GetStoreType() StoreType {
+	return sdk.StoreTypeMulti
+}
+
+// Implements MultiStore.
 func (cms cacheMultiStore) LastCommitID() CommitID {
 	return cms.lastCommitID
 }
 
-// Implements CacheMultiStore
-func (cms cacheMultiStore) NextVersion() int64 {
-	return cms.nextVersion
-}
-
-// Implements CacheMultiStore
+// Implements CacheMultiStore.
 func (cms cacheMultiStore) Write() {
 	cms.db.Write()
-	for _, substore := range cms.substores {
-		substore.Write()
+	for _, store := range cms.stores {
+		store.Write()
 	}
 }
 
-// Implements CacheMultiStore
+// Implements CacheWrapper.
 func (cms cacheMultiStore) CacheWrap() CacheWrap {
 	return cms.CacheMultiStore().(CacheWrap)
 }
 
-// Implements CacheMultiStore
+// Implements MultiStore.
 func (cms cacheMultiStore) CacheMultiStore() CacheMultiStore {
 	return newCacheMultiStoreFromCMS(cms)
 }
 
-// Implements CacheMultiStore
-func (cms cacheMultiStore) GetStore(key SubstoreKey) interface{} {
-	return cms.substores[key]
+// Implements MultiStore.
+func (cms cacheMultiStore) GetStore(key StoreKey) Store {
+	return cms.stores[key].(Store)
 }
 
-// Implements CacheMultiStore
-func (cms cacheMultiStore) GetKVStore(key SubstoreKey) KVStore {
-	return cms.substores[key].(KVStore)
+// Implements MultiStore.
+func (cms cacheMultiStore) GetKVStore(key StoreKey) KVStore {
+	return cms.stores[key].(KVStore)
 }

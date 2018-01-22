@@ -6,16 +6,16 @@ import (
 )
 
 // Handle all "bank" type messages.
-func NewHandler(accStore sdk.AccountStore) sdk.Handler {
+func NewHandler(am sdk.AccountMapper) sdk.Handler {
 
 	return func(ctx sdk.Context, tx sdk.Tx) sdk.Result {
-		cs := CoinStore{accStore}
+		cm := CoinMapper{am}
 		msg := tx.(sdk.Msg)
 		switch msg := msg.(type) {
 		case SendMsg:
-			return handleSendMsg(ctx, cs, msg)
+			return handleSendMsg(ctx, cm, msg)
 		case IssueMsg:
-			return handleIssueMsg(ctx, cs, msg)
+			return handleIssueMsg(ctx, cm, msg)
 		default:
 			return sdk.Result{
 				Code: 1, // TODO
@@ -27,11 +27,11 @@ func NewHandler(accStore sdk.AccountStore) sdk.Handler {
 }
 
 // Handle SendMsg.
-func handleSendMsg(ctx sdk.Context, cs CoinStore, msg SendMsg) sdk.Result {
+func handleSendMsg(ctx sdk.Context, cm CoinMapper, msg SendMsg) sdk.Result {
 	// NOTE: totalIn == totalOut should already have been checked
 
 	for _, in := range msg.Inputs {
-		_, err := cs.SubtractCoins(ctx, in.Address, in.Coins)
+		_, err := cm.SubtractCoins(ctx, in.Address, in.Coins)
 		if err != nil {
 			return sdk.Result{
 				Code: 1, // TODO
@@ -40,7 +40,7 @@ func handleSendMsg(ctx sdk.Context, cs CoinStore, msg SendMsg) sdk.Result {
 	}
 
 	for _, out := range msg.Outputs {
-		_, err := cs.AddCoins(ctx, out.Address, out.Coins)
+		_, err := cm.AddCoins(ctx, out.Address, out.Coins)
 		if err != nil {
 			return sdk.Result{
 				Code: 1, // TODO
@@ -52,6 +52,6 @@ func handleSendMsg(ctx sdk.Context, cs CoinStore, msg SendMsg) sdk.Result {
 }
 
 // Handle IssueMsg.
-func handleIssueMsg(ctx sdk.Context, cs CoinStore, msg IssueMsg) sdk.Result {
+func handleIssueMsg(ctx sdk.Context, cm CoinMapper, msg IssueMsg) sdk.Result {
 	panic("not implemented yet")
 }

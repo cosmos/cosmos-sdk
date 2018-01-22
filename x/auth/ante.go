@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewAnteHandler(store sdk.AccountStore) sdk.AnteHandler {
+func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
@@ -13,7 +13,7 @@ func NewAnteHandler(store sdk.AccountStore) sdk.AnteHandler {
 		// This is done first because it only
 		// requires fetching 1 account.
 		payerAddr := tx.GetFeePayer()
-		payerAcc := store.GetAccount(ctx, payerAddr)
+		payerAcc := accountMapper.GetAccount(ctx, payerAddr)
 		if payerAcc == nil {
 			return ctx, sdk.Result{
 				Code: 1, // TODO
@@ -42,7 +42,7 @@ func NewAnteHandler(store sdk.AccountStore) sdk.AnteHandler {
 		// Check each nonce and sig.
 		for i, sig := range signatures {
 
-			var signerAcc = store.GetAccount(ctx, signerAddrs[i])
+			var signerAcc = accountMapper.GetAccount(ctx, signerAddrs[i])
 			signerAccs[i] = signerAcc
 
 			// If no pubkey, set pubkey.
@@ -72,7 +72,7 @@ func NewAnteHandler(store sdk.AccountStore) sdk.AnteHandler {
 			}
 
 			// Save the account.
-			store.SetAccount(ctx, signerAcc)
+			accountMapper.SetAccount(ctx, signerAcc)
 		}
 
 		ctx = WithSigners(ctx, signerAccs)

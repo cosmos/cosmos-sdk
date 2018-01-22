@@ -8,13 +8,13 @@ import (
 
 Usage:
 
-var accountStore types.AccountStore
+var accounts types.AccountMapper
 
 // Fetch all signer accounts.
 addrs := tx.GetSigners()
 signers := make([]types.Account, len(addrs))
 for i, addr := range addrs {
-	acc := accountStore.GetAccount(ctx)
+	acc := accounts.GetAccount(ctx)
 	signers[i] = acc
 }
 ctx = auth.SetSigners(ctx, signers)

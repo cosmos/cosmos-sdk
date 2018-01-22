@@ -10,7 +10,7 @@ import (
 )
 
 func newCacheKVStore() CacheKVStore {
-	mem := dbm.NewMemDB()
+	mem := dbStoreAdapter{dbm.NewMemDB()}
 	return NewCacheKVStore(mem)
 }
 
@@ -18,7 +18,7 @@ func keyFmt(i int) []byte { return bz(cmn.Fmt("key%0.8d", i)) }
 func valFmt(i int) []byte { return bz(cmn.Fmt("value%0.8d", i)) }
 
 func TestCacheKVStore(t *testing.T) {
-	mem := dbm.NewMemDB()
+	mem := dbStoreAdapter{dbm.NewMemDB()}
 	st := NewCacheKVStore(mem)
 
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
@@ -61,7 +61,7 @@ func TestCacheKVStore(t *testing.T) {
 }
 
 func TestCacheKVStoreNested(t *testing.T) {
-	mem := dbm.NewMemDB()
+	mem := dbStoreAdapter{dbm.NewMemDB()}
 	st := NewCacheKVStore(mem)
 
 	// set. check its there on st and not on mem.

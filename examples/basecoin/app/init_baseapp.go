@@ -6,10 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-// initBaseApp() happens after initCapKeys() and initStores().
-// initBaseApp() happens before initRoutes().
+// initCapKeys, initBaseApp, initStores, initRoutes.
 func (app *BasecoinApp) initBaseApp() {
-	app.BaseApp = baseapp.NewBaseApp(appName, app.multiStore)
+	app.BaseApp = baseapp.NewBaseApp(appName)
 	app.initBaseAppTxDecoder()
 	app.initBaseAppAnteHandler()
 }
@@ -24,6 +23,6 @@ func (app *BasecoinApp) initBaseAppTxDecoder() {
 }
 
 func (app *BasecoinApp) initBaseAppAnteHandler() {
-	var authAnteHandler = auth.NewAnteHandler(app.accStore)
+	var authAnteHandler = auth.NewAnteHandler(app.accountMapper)
 	app.BaseApp.SetDefaultAnteHandler(authAnteHandler)
 }

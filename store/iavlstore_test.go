@@ -40,20 +40,6 @@ func newTree(t *testing.T, db dbm.DB) (*iavl.VersionedTree, CommitID) {
 	return tree, CommitID{ver, hash}
 }
 
-func TestIAVLStoreLoader(t *testing.T) {
-	db := dbm.NewMemDB()
-	_, id := newTree(t, db)
-
-	iavlLoader := NewIAVLStoreLoader(db, cacheSize, numHistory)
-	commitStore, err := iavlLoader(id)
-	assert.Nil(t, err)
-
-	id2 := commitStore.Commit()
-
-	assert.Equal(t, id.Hash, id2.Hash)
-	assert.Equal(t, id.Version+1, id2.Version)
-}
-
 func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newTree(t, db)

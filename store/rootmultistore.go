@@ -6,11 +6,13 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/merkle"
 	"golang.org/x/crypto/ripemd160"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
-	latestVersionKey  = "s/latest"
-	commitStateKeyFmt = "s/%d" // s/<version>
+	latestVersionKey = "s/latest"
+	commitInfoKeyFmt = "s/%d" // s/<version>
 )
 
 // rootMultiStore is composed of many CommitStores.
@@ -19,10 +21,9 @@ const (
 // Implements MultiStore.
 type rootMultiStore struct {
 	db           dbm.DB
-	nextVersion  int64
 	lastCommitID CommitID
-	storeLoaders map[SubstoreKey]CommitStoreLoader
-	substores    map[SubstoreKey]CommitStore
+	storesParams map[StoreKey]storeParams
+	stores       map[StoreKey]CommitStore
 }
 
 var _ CommitMultiStore = (*rootMultiStore)(nil)
@@ -30,26 +31,33 @@ var _ CommitMultiStore = (*rootMultiStore)(nil)
 func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 	return &rootMultiStore{
 		db:           db,
-		nextVersion:  0,
-		storeLoaders: make(map[SubstoreKey]CommitStoreLoader),
-		substores:    make(map[SubstoreKey]CommitStore),
+		storesParams: make(map[StoreKey]storeParams),
+		stores:       make(map[StoreKey]CommitStore),
 	}
 }
 
+// Implements Store.
+func (rs *rootMultiStore) GetStoreType() StoreType {
+	return sdk.StoreTypeMulti
+}
+
 // Implements CommitMultiStore.
-func (rs *rootMultiStore) SetSubstoreLoader(key SubstoreKey, loader CommitStoreLoader) {
+func (rs *rootMultiStore) MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB) {
 	if key == nil {
-		panic("SetSubstoreLoader() key cannot be nil")
+		panic("MountIAVLStore() key cannot be nil")
 	}
-	if _, ok := rs.storeLoaders[key]; ok {
-		panic(fmt.Sprintf("rootMultiStore duplicate substore key", key))
+	if _, ok := rs.storesParams[key]; ok {
+		panic(fmt.Sprintf("rootMultiStore duplicate store key", key))
 	}
-	rs.storeLoaders[key] = loader
+	rs.storesParams[key] = storeParams{
+		db:  db,
+		typ: typ,
+	}
 }
 
 // Implements CommitMultiStore.
-func (rs *rootMultiStore) GetSubstore(key SubstoreKey) CommitStore {
-	return rs.substores[key]
+func (rs *rootMultiStore) GetCommitStore(key StoreKey) CommitStore {
+	return rs.stores[key]
 }
 
 // Implements CommitMultiStore.
@@ -63,62 +71,49 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 
 	// Special logic for version 0
 	if ver == 0 {
-		for key, storeLoader := range rs.storeLoaders {
-			store, err := storeLoader(CommitID{})
+		for key, storeParams := range rs.storesParams {
+			id := CommitID{}
+			store, err := rs.loadCommitStoreFromParams(id, storeParams)
 			if err != nil {
 				return fmt.Errorf("Failed to load rootMultiStore: %v", err)
 			}
-			rs.substores[key] = store
+			rs.stores[key] = store
 		}
 
-		rs.nextVersion = 1
 		rs.lastCommitID = CommitID{}
 		return nil
 	}
 	// Otherwise, version is 1 or greater
 
-	// Get commitState
-	state, err := getCommitState(rs.db, ver)
+	// Get commitInfo
+	cInfo, err := getCommitInfo(rs.db, ver)
 	if err != nil {
 		return err
 	}
 
-	// Load each Substore
-	var newSubstores = make(map[SubstoreKey]CommitStore)
-	for _, store := range state.Substores {
-		key, commitID := rs.nameToKey(store.Name), store.CommitID
-		storeLoader := rs.storeLoaders[key]
-		if storeLoader == nil {
-			return fmt.Errorf("Failed to load rootMultiStore substore %v for commitID %v: %v", key, commitID, err)
-		}
-		store, err := storeLoader(commitID)
+	// Load each Store
+	var newStores = make(map[StoreKey]CommitStore)
+	for _, storeInfo := range cInfo.StoreInfos {
+		key, commitID := rs.nameToKey(storeInfo.Name), storeInfo.Core.CommitID
+		storeParams := rs.storesParams[key]
+		store, err := rs.loadCommitStoreFromParams(commitID, storeParams)
 		if err != nil {
 			return fmt.Errorf("Failed to load rootMultiStore: %v", err)
 		}
-		newSubstores[key] = store
+		newStores[key] = store
 	}
 
 	// If any CommitStoreLoaders were not used, return error.
-	for key := range rs.storeLoaders {
-		if _, ok := newSubstores[key]; !ok {
+	for key := range rs.storesParams {
+		if _, ok := newStores[key]; !ok {
 			return fmt.Errorf("Unused CommitStoreLoader: %v", key)
 		}
 	}
 
 	// Success.
-	rs.nextVersion = ver + 1
-	rs.lastCommitID = state.CommitID()
-	rs.substores = newSubstores
+	rs.lastCommitID = cInfo.CommitID()
+	rs.stores = newStores
 	return nil
-}
-
-func (rs *rootMultiStore) nameToKey(name string) SubstoreKey {
-	for key, _ := range rs.storeLoaders {
-		if key.Name() == name {
-			return key
-		}
-	}
-	panic("Unknown name " + name)
 }
 
 //----------------------------------------
@@ -127,21 +122,20 @@ func (rs *rootMultiStore) nameToKey(name string) SubstoreKey {
 // Implements CommitStore.
 func (rs *rootMultiStore) Commit() CommitID {
 
-	// Commit substores.
-	version := rs.nextVersion
-	state := commitSubstores(version, rs.substores)
+	// Commit stores.
+	version := rs.lastCommitID.Version + 1
+	commitInfo := commitStores(version, rs.stores)
 
-	// Need to update self state atomically.
+	// Need to update atomically.
 	batch := rs.db.NewBatch()
-	setCommitState(batch, version, state)
+	setCommitInfo(batch, version, commitInfo)
 	setLatestVersion(batch, version)
 	batch.Write()
 
 	// Prepare for next version.
-	rs.nextVersion = version + 1
 	commitID := CommitID{
 		Version: version,
-		Hash:    state.Hash(),
+		Hash:    commitInfo.Hash(),
 	}
 	rs.lastCommitID = commitID
 	return commitID
@@ -161,76 +155,111 @@ func (rs *rootMultiStore) LastCommitID() CommitID {
 }
 
 // Implements MultiStore.
-// NOTE: Returns 0 unless LoadVersion() or LoadLatestVersion() is called.
-func (rs *rootMultiStore) NextVersion() int64 {
-	return rs.nextVersion
-}
-
-// Implements MultiStore.
 func (rs *rootMultiStore) CacheMultiStore() CacheMultiStore {
 	return newCacheMultiStoreFromRMS(rs)
 }
 
 // Implements MultiStore.
-func (rs *rootMultiStore) GetStore(key SubstoreKey) interface{} {
-	return rs.substores[key]
+func (rs *rootMultiStore) GetStore(key StoreKey) Store {
+	return rs.stores[key]
 }
 
 // Implements MultiStore.
-func (rs *rootMultiStore) GetKVStore(key SubstoreKey) KVStore {
-	return rs.substores[key].(KVStore)
+func (rs *rootMultiStore) GetKVStore(key StoreKey) KVStore {
+	return rs.stores[key].(KVStore)
 }
 
 //----------------------------------------
-// commitState
 
-// NOTE: Keep commitState a simple immutable struct.
-type commitState struct {
+func (rs *rootMultiStore) loadCommitStoreFromParams(id CommitID, params storeParams) (store CommitStore, err error) {
+	db := rs.db
+	if params.db != nil {
+		db = params.db
+	}
+	switch params.typ {
+	case sdk.StoreTypeMulti:
+		panic("recursive MultiStores not yet supported")
+		// TODO: id?
+		// return NewCommitMultiStore(db, id)
+	case sdk.StoreTypeIAVL:
+		store, err = LoadIAVLStore(db, id)
+		return
+	case sdk.StoreTypeDB:
+		panic("dbm.DB is not a CommitStore")
+	default:
+		panic(fmt.Sprintf("unrecognized store type %v", params.typ))
+	}
+}
+
+func (rs *rootMultiStore) nameToKey(name string) StoreKey {
+	for key, _ := range rs.storesParams {
+		if key.Name() == name {
+			return key
+		}
+	}
+	panic("Unknown name " + name)
+}
+
+//----------------------------------------
+// storeParams
+
+type storeParams struct {
+	db  dbm.DB
+	typ StoreType
+}
+
+//----------------------------------------
+// commitInfo
+
+// NOTE: Keep commitInfo a simple immutable struct.
+type commitInfo struct {
 
 	// Version
 	Version int64
 
-	// Substore info for
-	Substores []substore
+	// Store info for
+	StoreInfos []storeInfo
 }
 
-// Hash returns the simple merkle root hash of the substores sorted by name.
-func (cs commitState) Hash() []byte {
-	// TODO cache to cs.hash []byte
-	m := make(map[string]merkle.Hasher, len(cs.Substores))
-	for _, substore := range cs.Substores {
-		m[substore.Name] = substore
+// Hash returns the simple merkle root hash of the stores sorted by name.
+func (ci commitInfo) Hash() []byte {
+	// TODO cache to ci.hash []byte
+	m := make(map[string]merkle.Hasher, len(ci.StoreInfos))
+	for _, storeInfo := range ci.StoreInfos {
+		m[storeInfo.Name] = storeInfo
 	}
 	return merkle.SimpleHashFromMap(m)
 }
 
-func (cs commitState) CommitID() CommitID {
+func (ci commitInfo) CommitID() CommitID {
 	return CommitID{
-		Version: cs.Version,
-		Hash:    cs.Hash(),
+		Version: ci.Version,
+		Hash:    ci.Hash(),
 	}
 }
 
 //----------------------------------------
-// substore state
+// storeInfo
 
-// substore contains the name and core reference for an underlying store.
-// It is the leaf of the rootMultiStores top level simple merkle tree.
-type substore struct {
+// storeInfo contains the name and core reference for an
+// underlying store.  It is the leaf of the rootMultiStores top
+// level simple merkle tree.
+type storeInfo struct {
 	Name string
-	substoreCore
+	Core storeCore
 }
 
-type substoreCore struct {
+type storeCore struct {
+	// StoreType StoreType
 	CommitID CommitID
 	// ... maybe add more state
 }
 
 // Implements merkle.Hasher.
-func (sw substore) Hash() []byte {
+func (si storeInfo) Hash() []byte {
 	// Doesn't write Name, since merkle.SimpleHashFromMap() will
 	// include them via the keys.
-	bz, _ := cdc.MarshalBinary(sw.substoreCore) // Does not error
+	bz, _ := cdc.MarshalBinary(si.Core) // Does not error
 	hasher := ripemd160.New()
 	hasher.Write(bz)
 	return hasher.Sum(nil)
@@ -258,52 +287,53 @@ func setLatestVersion(batch dbm.Batch, version int64) {
 	batch.Set([]byte(latestVersionKey), latestBytes)
 }
 
-// Commits each substore and returns a new commitState.
-func commitSubstores(version int64, substoresMap map[SubstoreKey]CommitStore) commitState {
-	substores := make([]substore, 0, len(substoresMap))
+// Commits each store and returns a new commitInfo.
+func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
+	storeInfos := make([]storeInfo, 0, len(storeMap))
 
-	for key, store := range substoresMap {
+	for key, store := range storeMap {
 		// Commit
 		commitID := store.Commit()
 
 		// Record CommitID
-		substore := substore{}
-		substore.Name = key.Name()
-		substore.CommitID = commitID
-		substores = append(substores, substore)
+		si := storeInfo{}
+		si.Name = key.Name()
+		si.Core.CommitID = commitID
+		// si.Core.StoreType = store.GetStoreType()
+		storeInfos = append(storeInfos, si)
 	}
 
-	return commitState{
-		Version:   version,
-		Substores: substores,
+	return commitInfo{
+		Version:    version,
+		StoreInfos: storeInfos,
 	}
 }
 
-// Gets commitState from disk.
-func getCommitState(db dbm.DB, ver int64) (commitState, error) {
+// Gets commitInfo from disk.
+func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
 
 	// Get from DB.
-	commitStateKey := fmt.Sprintf(commitStateKeyFmt, ver)
-	stateBytes := db.Get([]byte(commitStateKey))
-	if stateBytes == nil {
-		return commitState{}, fmt.Errorf("Failed to get rootMultiStore: no data")
+	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, ver)
+	cInfoBytes := db.Get([]byte(cInfoKey))
+	if cInfoBytes == nil {
+		return commitInfo{}, fmt.Errorf("Failed to get rootMultiStore: no data")
 	}
 
 	// Parse bytes.
-	var state commitState
-	err := cdc.UnmarshalBinary(stateBytes, &state)
+	var cInfo commitInfo
+	err := cdc.UnmarshalBinary(cInfoBytes, &cInfo)
 	if err != nil {
-		return commitState{}, fmt.Errorf("Failed to get rootMultiStore: %v", err)
+		return commitInfo{}, fmt.Errorf("Failed to get rootMultiStore: %v", err)
 	}
-	return state, nil
+	return cInfo, nil
 }
 
-// Set a commit state for given version.
-func setCommitState(batch dbm.Batch, version int64, state commitState) {
-	stateBytes, err := cdc.MarshalBinary(state)
+// Set a commitInfo for given version.
+func setCommitInfo(batch dbm.Batch, version int64, cInfo commitInfo) {
+	cInfoBytes, err := cdc.MarshalBinary(cInfo)
 	if err != nil {
 		panic(err)
 	}
-	commitStateKey := fmt.Sprintf(commitStateKeyFmt, version)
-	batch.Set([]byte(commitStateKey), stateBytes)
+	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, version)
+	batch.Set([]byte(cInfoKey), cInfoBytes)
 }

@@ -6,6 +6,7 @@ build
 docs/guide/*.sh
 tools/bin/*
 examples/build/*
+baseapp/data/*
 
 ### Vagrant ###
 .vagrant/

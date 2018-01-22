@@ -22,31 +22,30 @@ Vagrant.configure("2") do |config|
 
     # install base requirements
     apt-get update
-    apt-get upgrade -y
     apt-get install -y --no-install-recommends wget curl jq \
-        make shellcheck bsdmainutils psmisc golang-1.9-go docker-ce
-
-    # needed for docker
-    usermod -a -G docker ubuntu
+        make shellcheck bsdmainutils psmisc 
+    apt-get install -y golang-1.9-go docker-ce
+    apt-get install -y language-pack-en
 
     # cleanup
     apt-get autoremove -y
 
+    # needed for docker
+    usermod -a -G docker vagrant
+
     # use "EOF" not EOF to avoid variable substitution of $PATH
-    cat << "EOF" >> /home/ubuntu/.bash_profile
-export PATH=$PATH:/usr/lib/go-1.9/bin:/home/ubuntu/go/bin
-export GOPATH=/home/ubuntu/go
-export LC_ALL=en_US.UTF-8
-cd go/src/github.com/cosmos/cosmos-sdk
-EOF
+    echo 'export PATH=$PATH:/usr/lib/go-1.9/bin:/home/vagrant/go/bin' >> /home/vagrant/.bash_profile
+    echo 'export GOPATH=/home/vagrant/go' >> /home/vagrant/.bash_profile
+    echo 'export LC_ALL=en_US.UTF-8' >> /home/vagrant/.bash_profile
 
-    mkdir -p /home/ubuntu/go/bin
-    mkdir -p /home/ubuntu/go/src/github.com/cosmos
-    ln -s /vagrant /home/ubuntu/go/src/github.com/cosmos/cosmos-sdk
+    mkdir -p /home/vagrant/go/bin
+    mkdir -p /home/vagrant/go/src/github.com/cosmos
+    ln -s /vagrant /home/vagrant/go/src/github.com/cosmos/cosmos-sdk
 
-    chown -R ubuntu:ubuntu /home/ubuntu/go
-    chown ubuntu:ubuntu /home/ubuntu/.bash_profile
+    chown -R vagrant:vagrant /home/vagrant/go
+    chown vagrant:vagrant /home/vagrant/.bash_profile
 
-    su - ubuntu -c 'cd /home/ubuntu/go/src/github.com/cosmos/cosmos-sdk && make get_tools'
+    su - vagrant -c 'source /home/vagrant/.bash_profile'
+    su - vagrant -c 'cd /home/vagrant/go/src/github.com/cosmos/cosmos-sdk && make get_tools'
   SHELL
 end

@@ -216,4 +216,14 @@ TODO: example
 
 ## Store
 
-## App 
+- IAVLStore: Fast balanced dynamic Merkle store.
+  - supports iteration.
+- MultiStore: multiple Merkle tree backends in a single store 
+  - allows using Ethereum Patricia Trie and Tendermint IAVL in same app
+- Provide caching for intermediate state during execution of blocks and transactions (including for iteration)
+- Historical state pruning and snapshotting.
+- Query proofs (existence, absence, range, etc.) on current and retained historical state.
+
+## BaseApp 
+
+TODO

@@ -145,7 +145,7 @@ func ParseFlag(flag string) ([]byte, error) {
 	if arg == "" {
 		return nil, errors.Errorf("No such flag: %s", flag)
 	}
-	return arg, nil
+	return []byte(arg), nil
 }
 
 // ParseHexFlag takes a flag name and parses the viper contents as hex

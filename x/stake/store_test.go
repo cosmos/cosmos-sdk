@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
@@ -38,8 +37,8 @@ func TestState(t *testing.T) {
 	multiStore.SetSubstoreLoader(stakeStoreKey, stakeLoader)
 	multiStore.LoadLatestVersion()
 	store := multiStore.GetKVStore(stakeStoreKey)
-	wire.RegisterInterface((*crypto.PubKey)(nil), nil)
-	wire.RegisterConcrete(crypto.PubKeyEd25519{}, "crypto/PubKeyEd25519", nil)
+	cdc.RegisterInterface((*crypto.PubKey)(nil), nil)
+	cdc.RegisterConcrete(crypto.PubKeyEd25519{}, "crypto/PubKeyEd25519", nil)
 
 	//delegator := crypto.Address{[]byte("addressdelegator")}
 	//validator := crypto.Address{[]byte("addressvalidator")}
@@ -65,9 +64,9 @@ func TestState(t *testing.T) {
 		return c1.Status == c2.Status &&
 			c1.PubKey.Equals(c2.PubKey) &&
 			bytes.Equal(c1.Owner, c2.Owner) &&
-			c1.Assets.Equal(c2.Assets) &&
-			c1.Liabilities.Equal(c2.Liabilities) &&
-			c1.VotingPower.Equal(c2.VotingPower) &&
+			c1.Assets == c2.Assets &&
+			c1.Liabilities == c2.Liabilities &&
+			c1.VotingPower == c2.VotingPower &&
 			c1.Description == c2.Description
 	}
 
@@ -103,7 +102,7 @@ func TestState(t *testing.T) {
 
 	bondsEqual := func(b1, b2 *DelegatorBond) bool {
 		return b1.PubKey.Equals(b2.PubKey) &&
-			b1.Shares.Equal(b2.Shares)
+			b1.Shares == b2.Shares
 	}
 
 	//check the empty store first

@@ -72,10 +72,7 @@ func (coins Coins) IsValid() bool {
 	}
 }
 
-// Plus combines to sets of coins
-//
-// TODO: handle empty coins!
-// Currently appends an empty coin ...
+// Plus combines two sets of coins
 func (coins Coins) Plus(coinsB Coins) Coins {
 	sum := []Coin{}
 	indexA, indexB := 0, 0
@@ -110,7 +107,6 @@ func (coins Coins) Plus(coinsB Coins) Coins {
 			indexB++
 		}
 	}
-	return sum
 }
 
 // Negative returns a set of coins with all amount negative

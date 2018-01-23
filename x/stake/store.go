@@ -102,6 +102,8 @@ type Candidate struct {
 
 //nolint
 type Candidates []*Candidate
+type Validator Candidate
+type Validators []Validator
 
 // Description - description fields for a candidate
 type Description struct {
@@ -175,37 +177,6 @@ func GetDelegatorBondsKey(delegator crypto.Address) []byte {
 
 //---------------------------------------------------------------------
 
-// Get the active list of all the candidate pubKeys and owners
-func loadCandidatesPubKeys(store types.KVStore) (pubKeys []crypto.PubKey) {
-	bytes := store.Get(CandidatesPubKeysKey)
-	if bytes == nil {
-		return
-	}
-	err := cdc.UnmarshalBinary(bytes, &pubKeys)
-	if err != nil {
-		panic(err)
-	}
-	return
-}
-func saveCandidatesPubKeys(store types.KVStore, pubKeys []crypto.PubKey) {
-	b, err := cdc.MarshalBinary(pubKeys)
-	if err != nil {
-		panic(err)
-	}
-	store.Set(CandidatesPubKeysKey, b)
-}
-
-// loadCandidates - get the active list of all candidates TODO replace with  multistore
-func loadCandidates(store types.KVStore) (candidates Candidates) {
-	pks := loadCandidatesPubKeys(store)
-	for _, pk := range pks {
-		candidates = append(candidates, loadCandidate(store, pk))
-	}
-	return
-}
-
-//---------------------------------------------------------------------
-
 // loadCandidate - loads the candidate object for the provided pubkey
 func loadCandidate(store types.KVStore, pubKey crypto.PubKey) *Candidate {
 	//if pubKey.Empty() {
@@ -250,6 +221,64 @@ func removeCandidate(store types.KVStore, pubKey crypto.PubKey) {
 			break
 		}
 	}
+}
+
+//---------------------------------------------------------------------
+
+// Get the active list of all the candidate pubKeys and owners
+func loadCandidatesPubKeys(store types.KVStore) (pubKeys []crypto.PubKey) {
+	bytes := store.Get(CandidatesPubKeysKey)
+	if bytes == nil {
+		return
+	}
+	err := cdc.UnmarshalBinary(bytes, &pubKeys)
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+func saveCandidatesPubKeys(store types.KVStore, pubKeys []crypto.PubKey) {
+	b, err := cdc.MarshalBinary(pubKeys)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(CandidatesPubKeysKey, b)
+}
+
+// loadCandidates - get the active list of all candidates TODO replace with  multistore
+func loadCandidates(store types.KVStore) (candidates Candidates) {
+	pks := loadCandidatesPubKeys(store)
+	for _, pk := range pks {
+		candidates = append(candidates, loadCandidate(store, pk))
+	}
+	return
+}
+
+// Validators - get the most recent updated validator set from the
+// Candidates. These bonds are already sorted by VotingPower from
+// the UpdateVotingPower function which is the only function which
+// is to modify the VotingPower
+func getValidators(powerStore types.KVStore, maxVal int) Validators {
+
+	iterator := powerStore.Iterator([]byte{}, []byte{nil}) //smallest to largest
+
+	validators := make(Validators, maxVal)
+	for i := 0; ; i++ {
+		if !iterator.Valid() || i > maxVal {
+			iterator.Close()
+			break
+		}
+		pkBytes := iterator.Value()
+		var pk crypto.PubKey
+		err := cdc.UnmarshalBinary(pkBytes, &pk)
+		if err != nil {
+			panic(err)
+		}
+		validators[i] = pk
+		iterator.Next()
+	}
+
+	return validators
 }
 
 //---------------------------------------------------------------------

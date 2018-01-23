@@ -64,12 +64,13 @@ func TestPlusCoins(t *testing.T) {
 		{Coins{{"A", 0}, {"B", 1}}, Coins{{"A", 0}, {"B", 0}}, Coins{{"B", 1}}},
 		{Coins{{"A", 0}, {"B", 0}}, Coins{{"A", 0}, {"B", 0}}, Coins{}},
 		{Coins{{"A", 1}, {"B", 0}}, Coins{{"A", -1}, {"B", 0}}, Coins{}},
+		{Coins{{"A", -1}, {"B", 0}}, Coins{{"A", 0}, {"B", 0}}, Coins{{"A", -1}}},
 	}
 
 	for _, tc := range cases {
 		res := tc.inputOne.Plus(tc.inputTwo)
 		assert.True(res.IsValid())
-		assert.Equal(res, tc.expected)
+		assert.Equal(tc.expected, res)
 	}
 }
 

@@ -24,7 +24,8 @@ func TestCoins(t *testing.T) {
 		{"GAS", 1},
 		{"MINERAL", 1},
 	}
-	badSort2 := Coins{ // both are after the first one, but the second and third are in the wrong order
+	// both are after the first one, but the second and third are in the wrong order
+	badSort2 := Coins{
 		{"GAS", 1},
 		{"TREE", 1},
 		{"MINERAL", 1},

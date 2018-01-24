@@ -50,7 +50,7 @@ type BaseApp struct {
 	msDeliver sdk.CacheMultiStore
 
 	// Current block header
-	header abci.Header
+	header *abci.Header
 
 	// Cached validator changes from DeliverTx.
 	valUpdates []abci.Validator
@@ -155,9 +155,9 @@ func (app *BaseApp) LastBlockHeight() int64 {
 
 // Initializes the remaining logic from app.ms.
 func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
-	lastCommitID := app.ms.LastCommitID()
-	main := app.ms.GetKVStore(mainKey)
-	header := abci.Header{}
+	var lastCommitID = app.ms.LastCommitID()
+	var main = app.ms.GetKVStore(mainKey)
+	var header *abci.Header
 
 	// Main store should exist.
 	if main == nil {
@@ -171,7 +171,7 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 			errStr := fmt.Sprintf("Version > 0 but missing key %s", mainHeaderKey)
 			return errors.New(errStr)
 		}
-		err := proto.Unmarshal(headerBytes, &header)
+		err := proto.Unmarshal(headerBytes, header)
 		if err != nil {
 			return errors.Wrap(err, "Failed to parse Header")
 		}
@@ -225,9 +225,11 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 // Implements ABCI.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	app.header = req.Header
+	// NOTE: For consistency we should unset these upon EndBlock.
+	app.header = &req.Header
 	app.msDeliver = app.ms.CacheMultiStore()
 	app.msCheck = app.ms.CacheMultiStore()
+	app.valUpdates = nil
 	return
 }
 
@@ -318,6 +320,9 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte) (result sdk.Result) {
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	res.ValidatorUpdates = app.valUpdates
 	app.valUpdates = nil
+	app.header = nil
+	app.msDeliver = nil
+	app.msCheck = nil
 	return
 }
 

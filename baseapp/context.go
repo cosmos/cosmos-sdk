@@ -11,11 +11,17 @@ func (app *BaseApp) NewContext(isCheckTx bool, txBytes []byte) sdk.Context {
 	} else {
 		store = app.msDeliver
 	}
+	if store == nil {
+		panic("BaseApp.NewContext() requires BeginBlock(): missing store")
+	}
+	if app.header == nil {
+		panic("BaseApp.NewContext() requires BeginBlock(): missing header")
+	}
 
 	// Initialize arguments to Handler.
 	var ctx = sdk.NewContext(
 		store,
-		app.header,
+		*app.header,
 		isCheckTx,
 		txBytes,
 	)

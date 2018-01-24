@@ -1,14 +1,15 @@
 hash: 80794a3459988a7eb794baf7688c71dad4f6c26653d7b707ac0ada93f21e0776
-updated: 2018-01-20T22:01:39.658469011-08:00
+updated: 2018-01-23T19:03:56.956668196-08:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 2e60448ffcc6bf78332d1fe590260095f554dd78
   subpackages:
   - btcec
 - name: github.com/cosmos/cosmos-sdk
-  version: 633eaa87b38d9c5b0e938fe6b4f1dfd016247e76
+  version: 8650fd70c92686a192585e95413915b4302156b7
   subpackages:
   - baseapp
+  - examples/basecoin/types
   - store
   - types
   - x/auth
@@ -80,17 +81,17 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 32741be2126500d600cede1e2016bbbe2754cb46
+  version: 12142af1cb4e3479ea4ac98a3171debff87519c6
   subpackages:
   - keys
 - name: github.com/tendermint/go-wire
-  version: 90af61ec85415e05c7777cd50ff93ba40d34b1e8
+  version: c7801c1586f51bb28028cd420c599516d7ac9c36
   subpackages:
   - data
 - name: github.com/tendermint/iavl
-  version: 1dfe265ab4b491418e88e1da6577a8ad594fc989
+  version: ae2ea4a62f60c72dae81ca6642944ca28cf59889
 - name: github.com/tendermint/tmlibs
-  version: 7a52d47a1676a9fe61d07fde0a48a733cce564c6
+  version: 80029abc6e20f85079cd751e659a05508773288c
   subpackages:
   - cli
   - cli/flags

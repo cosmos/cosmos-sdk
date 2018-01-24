@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
 )
 

@@ -1,12 +1,12 @@
 hash: 80794a3459988a7eb794baf7688c71dad4f6c26653d7b707ac0ada93f21e0776
-updated: 2018-01-22T06:23:09.965668932-08:00
+updated: 2018-01-23T19:03:56.956668196-08:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 2e60448ffcc6bf78332d1fe590260095f554dd78
   subpackages:
   - btcec
 - name: github.com/cosmos/cosmos-sdk
-  version: 9480f976e1feb5773b1673650d7d7451cf2ca782
+  version: 8650fd70c92686a192585e95413915b4302156b7
   subpackages:
   - baseapp
   - examples/basecoin/types

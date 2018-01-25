@@ -265,7 +265,7 @@ func removeValidatorFromKey(store types.KVStore, pubKey crypto.PubKey) {
 // is to modify the VotingPower
 func getValidators(store types.KVStore, maxVal int) Validators {
 
-	iterator := store.Iterator(ValidatorKeyPrefix, ValidatorKeyPrefix) //smallest to largest
+	iterator := store.Iterator(subspace(ValidatorKeyPrefix)) //smallest to largest
 
 	validators := make(Validators, maxVal)
 	for i := 0; ; i++ {
@@ -291,7 +291,7 @@ func getValidators(store types.KVStore, maxVal int) Validators {
 // loadCandidates - get the active list of all candidates TODO replace with  multistore
 func loadCandidates(store types.KVStore) (candidates Candidates) {
 
-	iterator := store.Iterator(CandidateKeyPrefix, CandidateKeyPrefix) //smallest to largest
+	iterator := store.Iterator(subspace(CandidateKeyPrefix)) //smallest to largest
 
 	for i := 0; ; i++ {
 		if !iterator.Valid() {

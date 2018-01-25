@@ -155,7 +155,7 @@ func WasInited(root string) (bool, error) {
 	os.MkdirAll(root, dirPerm)
 
 	// check if there is a config.toml file
-	cfgFile := filepath.Join(root, "config.toml")
+	cfgFile := filepath.Join(root, "config", ConfigFile)
 	_, err := os.Stat(cfgFile)
 	if os.IsNotExist(err) {
 		return false, nil

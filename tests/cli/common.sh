@@ -76,11 +76,11 @@ initServer() {
     # optionally set the port
     if [ -n "$3" ]; then
         echo "setting port $3"
-        sed -ie "s/4665/$3/" $SERVE_DIR/config.toml
+        sed -ie "s/4665/$3/" $SERVE_DIR/config/config.toml
     fi
 
     # add indexing
-    cat >> $SERVE_DIR/config.toml << EOF
+    cat >> $SERVE_DIR/config/config.toml << EOF
 
 [tx_index]
 indexer = "kv"

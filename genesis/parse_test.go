@@ -11,7 +11,7 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
-const genesisFilepath = "./testdata/genesis.json"
+const genesisFilepath = "./testdata/config/genesis.json"
 
 func TestParseList(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)

@@ -74,7 +74,7 @@ func GetProviders() (trusted lite.Provider, source lite.Provider) {
 }
 
 // GetCertifier constructs a dynamic certifier from the config info
-func GetCertifier() (*lite.Inquiring, error) {
+func GetCertifier() (*lite.InquiringCertifier, error) {
 	// load up the latest store....
 	trust := GetTrustedProvider()
 	source := GetSourceProvider()

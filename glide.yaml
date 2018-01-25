@@ -27,7 +27,7 @@ import:
 - package: github.com/tendermint/iavl
   version: master
 - package: github.com/tendermint/tendermint
-  version: v0.15.0
+  version: develop
   subpackages:
   - certifiers
   - certifiers/client

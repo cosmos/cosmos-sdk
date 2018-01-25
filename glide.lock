@@ -1,5 +1,5 @@
-hash: 973081bb50ace30fad94bec01e96ecb839e02b0656473ad84c85dcdd2eac42f9
-updated: 2018-01-04T22:15:05.434027424-05:00
+hash: 892275b5ad4cde0bc9a4df296407c9b738225ac4c30b1fccb8d1061a3833e477
+updated: 2018-01-25T11:08:57.365820684-05:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -16,7 +16,7 @@ imports:
 - name: github.com/ethanfrey/ledger
   version: f7f2f056357db77db845a79aa1abdadc3ae66369
 - name: github.com/fsnotify/fsnotify
-  version: 4da3e2cfbabc9f751898f250b49f2439785783a1
+  version: c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9
 - name: github.com/go-kit/kit
   version: 953e747656a7bbb5e1f998608b460458958b70cc
   subpackages:
@@ -43,7 +43,7 @@ imports:
   - sortkeys
   - types
 - name: github.com/golang/protobuf
-  version: 1e59b77b52bf8e4b449a57e6f79f21226d571845
+  version: c65a0412e71e8b9b3bfd22925720d23c0f054237
   subpackages:
   - proto
   - ptypes
@@ -55,7 +55,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: 5ab525f4fb1678e197ae59401e9050fa0b6cb5fd
+  version: c0091a029979286890368b4c7b301261e448e242
 - name: github.com/gorilla/websocket
   version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
 - name: github.com/hashicorp/hcl
@@ -83,15 +83,15 @@ imports:
 - name: github.com/mattn/go-isatty
   version: 6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c
 - name: github.com/mitchellh/mapstructure
-  version: 06020f85339e21b2478f756a78e295255ffa4d6a
+  version: b4575eea38cca1123ec2dc90c26529b5c5acfcff
 - name: github.com/pelletier/go-toml
-  version: 0131db6d737cfbbfb678f8b7d92e55e27ce46224
+  version: acdc4509485b587f5e675510c4f2c63e90ff68a8
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/rcrowley/go-metrics
   version: e181e095bae94582363434144c61a9653aff6e50
 - name: github.com/spf13/afero
-  version: 57afd63c68602b63ed976de00dd066ccb3c319db
+  version: bb8f1927f2a9d3ab41c9340aa034f6b803f4359c
   subpackages:
   - mem
 - name: github.com/spf13/cast
@@ -99,7 +99,7 @@ imports:
 - name: github.com/spf13/cobra
   version: 7b2c5ac9fc04fc5efafb60700713d4fa609b777b
 - name: github.com/spf13/jwalterweatherman
-  version: 12bd96e66386c1960ab0f74ced1362f66f552f7b
+  version: 7c0cea34c8ece3fbeb2b27ab9b59511d360fb394
 - name: github.com/spf13/pflag
   version: 4c012f6dcd9546820e378d0bdda4d8fc772cdfea
 - name: github.com/spf13/viper
@@ -150,7 +150,7 @@ imports:
 - name: github.com/tendermint/iavl
   version: 594cc0c062a7174475f0ab654384038d77067917
 - name: github.com/tendermint/tendermint
-  version: 381fe19335ba8825e04d1d0fefa5cac709bb7178
+  version: 3366dfe32aa0fb71ec13d4e174a017133b902dba
   subpackages:
   - blockchain
   - certifiers
@@ -169,6 +169,8 @@ imports:
   - mempool
   - node
   - p2p
+  - p2p/conn
+  - p2p/pex
   - p2p/trust
   - p2p/upnp
   - proxy
@@ -204,7 +206,7 @@ imports:
   - pubsub
   - pubsub/query
 - name: golang.org/x/crypto
-  version: 0fcca4842a8d74bfddc2c96a073bd2a4d2a7a2e8
+  version: 3d37316aaa6bd9929127ac9a527abf408178ea7b
   subpackages:
   - curve25519
   - nacl/box
@@ -215,7 +217,7 @@ imports:
   - ripemd160
   - salsa20/salsa
 - name: golang.org/x/net
-  version: 42fe2e1c20de1054d3d30f82cc9fb5b41e2e3767
+  version: 0ed95abb35c445290478a5348a7b38bb154135fd
   subpackages:
   - context
   - http2
@@ -225,7 +227,7 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/sys
-  version: a3f2cbd54cf5dfe3fbaccf76375fdb12f67654c8
+  version: 03467258950d845cd1877eab69461b98e8c09219
   subpackages:
   - unix
 - name: golang.org/x/text
@@ -236,7 +238,7 @@ imports:
   - unicode/bidi
   - unicode/norm
 - name: google.golang.org/genproto
-  version: a8101f21cf983e773d0c1133ebc5424792003214
+  version: 4eb30f4778eed4c258ba66527a0d4f9ec8a36c45
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
@@ -259,9 +261,9 @@ imports:
   - tap
   - transport
 - name: gopkg.in/go-playground/validator.v9
-  version: b1f51f36f1c98cc97f777d6fc9d4b05eaa0cabb5
+  version: 48a433ba4bcadc5be9aa16d4bdcb383d3f57a741
 - name: gopkg.in/yaml.v2
-  version: 0e4404da71227dcc02fb1deee803d93e86d08f72
+  version: d670f9405373e636a5a2765eea47fac0c9bc91a4
 testImports:
 - name: github.com/davecgh/go-spew
   version: ecdeabc65495df2dec95d7c4a4c3e021903035e5

@@ -18,7 +18,7 @@ const (
 // newCertifier loads up the current state of this chain to make a proper certifier
 // it will load the most recent height before block h if h is positive
 // if h < 0, it will load the latest height
-func newCertifier(store state.SimpleDB, chainID string, h int64) (*lite.Inquiring, error) {
+func newCertifier(store state.SimpleDB, chainID string, h int64) (*lite.InquiringCertifier, error) {
 	// each chain has their own prefixed subspace
 	p := newDBProvider(store)
 
@@ -36,9 +36,8 @@ func newCertifier(store state.SimpleDB, chainID string, h int64) (*lite.Inquirin
 	}
 
 	// we have no source for untrusted keys, but use the db to load trusted history
-	cert := lite.NewInquiring(chainID, fc, p,
+	return lite.NewInquiringCertifier(chainID, fc, p,
 		NewMissingProvider())
-	return cert, nil
 }
 
 // dbProvider wraps our kv store so it integrates with light-client verification

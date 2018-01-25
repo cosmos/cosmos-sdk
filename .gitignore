@@ -11,6 +11,7 @@ examples/basecoin/app/data
 baseapp/data/*
 docs/_build
 <<<<<<< HEAD
+<<<<<<< HEAD
 .DS_Store
 coverage.txt
 profile.out

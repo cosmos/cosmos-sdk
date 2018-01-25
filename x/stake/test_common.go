@@ -9,6 +9,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func subspace(prefix []byte) (start, end []byte) {
+	start, end = prefix, prefix
+	end[len(end)-1]++
+	return
+}
+
 func newAddrs(n int) (addrs []crypto.Address) {
 	for i := 0; i < n; i++ {
 		addrs = append(addrs, []byte(fmt.Sprintf("addr%d", i)))

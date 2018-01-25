@@ -2,41 +2,32 @@ package stake
 
 import (
 	"bytes"
-	"encoding/hex"
 	"testing"
 
-	sdkstore "github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	dbm "github.com/tendermint/tmlibs/db"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	crypto "github.com/tendermint/go-crypto"
-	dbm "github.com/tendermint/tmlibs/db"
 )
 
-func newPubKey(pk string) (res crypto.PubKey, err error) {
-	pkBytes, err := hex.DecodeString(pk)
-	if err != nil {
-		return
-	}
-	//res, err = crypto.PubKeyFromBytes(pkBytes)
-	var pkEd crypto.PubKeyEd25519
-	copy(pkEd[:], pkBytes[:])
-	return pkEd, nil
+func initTestStore(t *testing.T) sdk.KVStore {
+	// Capabilities key to access the main KVStore.
+	db, err := dbm.NewGoLevelDB("stake", "data")
+	require.Nil(t, err)
+	stakeStoreKey := sdk.NewKVStoreKey("stake")
+	ms := store.NewCommitMultiStore(db)
+	ms.MountStoreWithDB(stakeStoreKey, sdk.StoreTypeIAVL, db)
+	ms.LoadLatestVersion()
+	return ms.GetKVStore(stakeStoreKey)
 }
 
 func TestState(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
-	db, err := dbm.NewGoLevelDB("basecoin", "basecoin-data")
-	require.Nil(err)
-	cacheSize := 10000
-	numHistory := int64(100)
-	stakeLoader := sdkstore.NewIAVLStoreLoader(db, cacheSize, numHistory)
-	var stakeStoreKey = types.NewKVStoreKey("stake")
-	multiStore := sdkstore.NewCommitMultiStore(db)
-	multiStore.SetSubstoreLoader(stakeStoreKey, stakeLoader)
-	multiStore.LoadLatestVersion()
-	store := multiStore.GetKVStore(stakeStoreKey)
+	store := initTestStore(t)
 	cdc.RegisterInterface((*crypto.PubKey)(nil), nil)
 	cdc.RegisterConcrete(crypto.PubKeyEd25519{}, "crypto/PubKeyEd25519", nil)
 
@@ -45,8 +36,7 @@ func TestState(t *testing.T) {
 	delegator := []byte("addressdelegator")
 	validator := []byte("addressvalidator")
 
-	pk, err := newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB57")
-	require.Nil(err)
+	pk := newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB57")
 
 	//----------------------------------------------------------------------
 	// Candidate checks
@@ -73,7 +63,7 @@ func TestState(t *testing.T) {
 	// check the empty store first
 	resCand := loadCandidate(store, pk)
 	assert.Nil(resCand)
-	resPks := loadCandidatesPubKeys(store)
+	resPks := loadCandidates(store)
 	assert.Zero(len(resPks))
 
 	// set and retrieve a record
@@ -88,9 +78,9 @@ func TestState(t *testing.T) {
 	assert.True(candidatesEqual(candidate, resCand))
 
 	// also test that the pubkey has been added to pubkey list
-	resPks = loadCandidatesPubKeys(store)
+	resPks = loadCandidates(store)
 	require.Equal(1, len(resPks))
-	assert.Equal(pk, resPks[0])
+	assert.Equal(pk, resPks[0].PubKey)
 
 	//----------------------------------------------------------------------
 	// Bond checks
@@ -136,29 +126,16 @@ func TestState(t *testing.T) {
 	assert.Equal(params, resParams)
 }
 
-func candidatesFromActors(actors []sdk.Actor, amts []int) (candidates Candidates) {
-	for i := 0; i < len(actors); i++ {
-		c := &Candidate{
-			PubKey:      pks[i],
-			Owner:       actors[i],
-			Shares:      int64(amts[i]),
-			VotingPower: int64(amts[i]),
-		}
-		candidates = append(candidates, c)
-	}
-
-	return
-}
-
 func TestGetValidators(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
+	store := initTestStore(t)
 	N := 5
-	actors := newActors(N)
-	candidates := candidatesFromActors(actors, []int{400, 200, 0, 0, 0})
+	addrs := newAddrs(N)
+	candidatesFromActors(store, addrs, []int{400, 200, 0, 0, 0})
 
-	validators := candidates.Validators()
+	validators := getValidators(store, 5)
 	require.Equal(2, len(validators))
-	assert.Equal(candidates[0].PubKey, validators[0].PubKey)
-	assert.Equal(candidates[1].PubKey, validators[1].PubKey)
+	assert.Equal(pks[0], validators[0].PubKey)
+	assert.Equal(pks[1], validators[1].PubKey)
 }

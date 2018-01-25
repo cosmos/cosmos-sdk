@@ -34,7 +34,7 @@ const (
 	GenesisFlag   = "genesis"
 	FlagTrustNode = "trust-node"
 
-	ConfigFile = "config.toml"
+	ConfigFile = "config/config.toml"
 )
 
 // InitCmd will initialize the basecli store
@@ -155,7 +155,7 @@ func WasInited(root string) (bool, error) {
 	os.MkdirAll(root, dirPerm)
 
 	// check if there is a config.toml file
-	cfgFile := filepath.Join(root, "config", ConfigFile)
+	cfgFile := filepath.Join(root, ConfigFile)
 	_, err := os.Stat(cfgFile)
 	if os.IsNotExist(err) {
 		return false, nil
@@ -260,7 +260,9 @@ func initConfigFile(cmd *cobra.Command) error {
 	setConfig(flags, cli.OutputFlag, &cfg.Output)
 	setConfig(flags, cli.EncodingFlag, &cfg.Encoding)
 
-	out, err := os.Create(filepath.Join(viper.GetString(cli.HomeFlag), ConfigFile))
+	cfgPath := filepath.Join(viper.GetString(cli.HomeFlag), ConfigFile)
+	cmn.EnsureDir(filepath.Dir(cfgPath), 0700)
+	out, err := os.Create(cfgPath)
 	if err != nil {
 		return errors.WithStack(err)
 	}

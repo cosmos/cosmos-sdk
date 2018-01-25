@@ -13,12 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/modules/coin"
 )
 
-const genesisFilepath = "./testdata/config/genesis.json"
-const genesisAcctFilepath = "./testdata/config/genesis2.json"
+const genesisFilepath = "./testdata/genesis.json"
+const genesisAcctFilepath = "./testdata/genesis2.json"
 
 // 2b is just like 2, but add carl who has inconsistent
 // pubkey and address
-const genesisBadAcctFilepath = "./testdata/config/genesis2b.json"
+const genesisBadAcctFilepath = "./testdata/genesis2b.json"
 
 func TestLoadGenesisDoNotFailIfAppOptionsAreMissing(t *testing.T) {
 	logger := log.TestingLogger()
@@ -26,7 +26,7 @@ func TestLoadGenesisDoNotFailIfAppOptionsAreMissing(t *testing.T) {
 	require.Nil(t, err, "%+v", err)
 	app := NewBaseApp(store, DefaultHandler("mycoin"), nil)
 
-	err = genesis.Load(app, "./testdata/config/genesis3.json")
+	err = genesis.Load(app, "./testdata/genesis3.json")
 	require.Nil(t, err, "%+v", err)
 }
 

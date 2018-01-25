@@ -136,15 +136,29 @@ func TestState(t *testing.T) {
 	assert.Equal(params, resParams)
 }
 
-//func TestGetValidators(t *testing.T) {
-//assert, require := assert.New(t), require.New(t)
+func candidatesFromActors(actors []sdk.Actor, amts []int) (candidates Candidates) {
+	for i := 0; i < len(actors); i++ {
+		c := &Candidate{
+			PubKey:      pks[i],
+			Owner:       actors[i],
+			Shares:      int64(amts[i]),
+			VotingPower: int64(amts[i]),
+		}
+		candidates = append(candidates, c)
+	}
 
-//N := 5
-//actors := newActors(N)
-//candidates := candidatesFromActors(actors, []int{400, 200, 0, 0, 0})
+	return
+}
 
-//validators := candidates.Validators()
-//require.Equal(2, len(validators))
-//assert.Equal(candidates[0].PubKey, validators[0].PubKey)
-//assert.Equal(candidates[1].PubKey, validators[1].PubKey)
-//}
+func TestGetValidators(t *testing.T) {
+	assert, require := assert.New(t), require.New(t)
+
+	N := 5
+	actors := newActors(N)
+	candidates := candidatesFromActors(actors, []int{400, 200, 0, 0, 0})
+
+	validators := candidates.Validators()
+	require.Equal(2, len(validators))
+	assert.Equal(candidates[0].PubKey, validators[0].PubKey)
+	assert.Equal(candidates[1].PubKey, validators[1].PubKey)
+}

@@ -2,6 +2,8 @@
 *.swo
 vendor
 build
+app/data
+
 
 ### Vagrant ###
 .vagrant/

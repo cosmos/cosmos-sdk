@@ -1,6 +1,7 @@
 package auth
 
 import (
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,14 +14,20 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 		// This is done first because it only
 		// requires fetching 1 account.
 		payerAddr := tx.GetFeePayer()
-		payerAcc := accountMapper.GetAccount(ctx, payerAddr)
-		if payerAcc == nil {
-			return ctx, sdk.Result{
-				Code: 1, // TODO
-			}, true
+		if payerAddr != nil {
+			payerAcc := accountMapper.GetAccount(ctx, payerAddr)
+			if payerAcc == nil {
+				return ctx,
+					sdk.ErrUnrecognizedAddress("").Result(),
+					true
+			}
+			// TODO: Charge fee from payerAcc.
+			// TODO: accountMapper.SetAccount(ctx, payerAddr)
+		} else {
+			// TODO: Ensure that some other spam prevention is used.
+			// NOTE: bam.TestApp.RunDeliverMsg/RunCheckMsg will
+			// create a Tx with no payer.
 		}
-
-		// payerAcc.Subtract ?
 
 		// Ensure that signatures are correct.
 		var signerAddrs = tx.GetSigners()
@@ -28,15 +35,19 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 		var signatures = tx.GetSignatures()
 
 		// Assert that there are signers.
-		if len(signatures) == 0 {
-			return ctx, sdk.Result{
-				Code: 1, // TODO
-			}, true
+		if len(signerAddrs) == 0 {
+			if !bam.IsTestAppTx(tx) {
+				return ctx,
+					sdk.ErrUnauthorized("no signers").Result(),
+					true
+			}
 		}
+
+		// Assert that number of signatures is correct.
 		if len(signatures) != len(signerAddrs) {
-			return ctx, sdk.Result{
-				Code: 1, // TODO
-			}, true
+			return ctx,
+				sdk.ErrUnauthorized("wrong number of signers").Result(),
+				true
 		}
 
 		// Check each nonce and sig.
@@ -49,26 +60,26 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 			if signerAcc.GetPubKey() == nil {
 				err := signerAcc.SetPubKey(sig.PubKey)
 				if err != nil {
-					return ctx, sdk.Result{
-						Code: 1, // TODO
-					}, true
+					return ctx,
+						sdk.ErrInternal("setting PubKey on signer").Result(),
+						true
 				}
 			}
 
 			// Check and increment sequence number.
 			seq := signerAcc.GetSequence()
 			if seq != sig.Sequence {
-				return ctx, sdk.Result{
-					Code: 1, // TODO
-				}, true
+				return ctx,
+					sdk.ErrInvalidSequence("").Result(),
+					true
 			}
 			signerAcc.SetSequence(seq + 1)
 
 			// Check sig.
 			if !sig.PubKey.VerifyBytes(tx.GetSignBytes(), sig.Signature) {
-				return ctx, sdk.Result{
-					Code: 1, // TODO
-				}, true
+				return ctx,
+					sdk.ErrUnauthorized("").Result(),
+					true
 			}
 
 			// Save the account.

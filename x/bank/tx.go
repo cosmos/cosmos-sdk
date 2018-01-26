@@ -6,7 +6,7 @@ import (
 
 	crypto "github.com/tendermint/go-crypto"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // SendMsg - high level transaction of the coin module
@@ -24,32 +24,32 @@ func NewSendMsg(in []Input, out []Output) SendMsg {
 func (msg SendMsg) Type() string { return "bank" } // TODO: "bank/send"
 
 // Implements Msg.
-func (msg SendMsg) ValidateBasic() error {
+func (msg SendMsg) ValidateBasic() sdk.Error {
 	// this just makes sure all the inputs and outputs are properly formatted,
 	// not that they actually have the money inside
 	if len(msg.Inputs) == 0 {
-		return ErrNoInputs()
+		return ErrNoInputs().Trace("")
 	}
 	if len(msg.Outputs) == 0 {
-		return ErrNoOutputs()
+		return ErrNoOutputs().Trace("")
 	}
 	// make sure all inputs and outputs are individually valid
-	var totalIn, totalOut types.Coins
+	var totalIn, totalOut sdk.Coins
 	for _, in := range msg.Inputs {
 		if err := in.ValidateBasic(); err != nil {
-			return err
+			return err.Trace("")
 		}
 		totalIn = totalIn.Plus(in.Coins)
 	}
 	for _, out := range msg.Outputs {
 		if err := out.ValidateBasic(); err != nil {
-			return err
+			return err.Trace("")
 		}
 		totalOut = totalOut.Plus(out.Coins)
 	}
 	// make sure inputs and outputs match
 	if !totalIn.IsEqual(totalOut) {
-		return ErrInvalidCoins(totalIn.String()) // TODO
+		return ErrInvalidCoins(totalIn.String()).Trace("inputs and outputs don't match")
 	}
 	return nil
 }
@@ -99,14 +99,14 @@ func NewIssueMsg(banker crypto.Address, out []Output) IssueMsg {
 func (msg IssueMsg) Type() string { return "bank" } // TODO: "bank/send"
 
 // Implements Msg.
-func (msg IssueMsg) ValidateBasic() error {
+func (msg IssueMsg) ValidateBasic() sdk.Error {
 	// XXX
 	if len(msg.Outputs) == 0 {
-		return ErrNoOutputs()
+		return ErrNoOutputs().Trace("")
 	}
 	for _, out := range msg.Outputs {
 		if err := out.ValidateBasic(); err != nil {
-			return err
+			return err.Trace("")
 		}
 	}
 	return nil
@@ -140,19 +140,19 @@ func (msg IssueMsg) GetSigners() []crypto.Address {
 
 type Input struct {
 	Address  crypto.Address `json:"address"`
-	Coins    types.Coins    `json:"coins"`
+	Coins    sdk.Coins      `json:"coins"`
 	Sequence int64          `json:"sequence"`
 
 	signature crypto.Signature
 }
 
 // ValidateBasic - validate transaction input
-func (in Input) ValidateBasic() error {
+func (in Input) ValidateBasic() sdk.Error {
 	if len(in.Address) == 0 {
 		return ErrInvalidAddress(in.Address.String())
 	}
 	if in.Sequence < 0 {
-		return ErrInvalidSequence(in.Sequence)
+		return ErrInvalidSequence("negative sequence")
 	}
 	if !in.Coins.IsValid() {
 		return ErrInvalidCoins(in.Coins.String())
@@ -168,7 +168,7 @@ func (in Input) String() string {
 }
 
 // NewInput - create a transaction input, used with SendMsg
-func NewInput(addr crypto.Address, coins types.Coins) Input {
+func NewInput(addr crypto.Address, coins sdk.Coins) Input {
 	input := Input{
 		Address: addr,
 		Coins:   coins,
@@ -177,7 +177,7 @@ func NewInput(addr crypto.Address, coins types.Coins) Input {
 }
 
 // NewInputWithSequence - create a transaction input, used with SendMsg
-func NewInputWithSequence(addr crypto.Address, coins types.Coins, seq int64) Input {
+func NewInputWithSequence(addr crypto.Address, coins sdk.Coins, seq int64) Input {
 	input := NewInput(addr, coins)
 	input.Sequence = seq
 	return input
@@ -188,11 +188,11 @@ func NewInputWithSequence(addr crypto.Address, coins types.Coins, seq int64) Inp
 
 type Output struct {
 	Address crypto.Address `json:"address"`
-	Coins   types.Coins    `json:"coins"`
+	Coins   sdk.Coins      `json:"coins"`
 }
 
 // ValidateBasic - validate transaction output
-func (out Output) ValidateBasic() error {
+func (out Output) ValidateBasic() sdk.Error {
 	if len(out.Address) == 0 {
 		return ErrInvalidAddress(out.Address.String())
 	}
@@ -210,7 +210,7 @@ func (out Output) String() string {
 }
 
 // NewOutput - create a transaction output, used with SendMsg
-func NewOutput(addr crypto.Address, coins types.Coins) Output {
+func NewOutput(addr crypto.Address, coins sdk.Coins) Output {
 	output := Output{
 		Address: addr,
 		Coins:   coins,

@@ -13,12 +13,11 @@ const (
 	CodeUnknownAddress    uint32 = 104
 	CodeInsufficientCoins uint32 = 105
 	CodeInvalidCoins      uint32 = 106
-	CodeInvalidSequence   uint32 = 107
 	CodeUnknownRequest    uint32 = sdk.CodeUnknownRequest
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
-func codeToDefaultLog(code uint32) string {
+func codeToDefaultMsg(code uint32) string {
 	switch code {
 	case CodeInvalidInput:
 		return "Invalid input coins"
@@ -32,69 +31,67 @@ func codeToDefaultLog(code uint32) string {
 		return "Insufficient coins"
 	case CodeInvalidCoins:
 		return "Invalid coins"
-	case CodeInvalidSequence:
-		return "Invalid sequence"
 	case CodeUnknownRequest:
 		return "Unknown request"
 	default:
-		return sdk.CodeToDefaultLog(code)
+		return sdk.CodeToDefaultMsg(code)
 	}
 }
 
 //----------------------------------------
 // Error constructors
 
-func ErrInvalidInput(log string) sdk.Error {
-	return newError(CodeInvalidInput, log)
+func ErrInvalidInput(msg string) sdk.Error {
+	return newError(CodeInvalidInput, msg)
 }
 
 func ErrNoInputs() sdk.Error {
 	return newError(CodeInvalidInput, "")
 }
 
-func ErrInvalidOutput(log string) sdk.Error {
-	return newError(CodeInvalidOutput, log)
+func ErrInvalidOutput(msg string) sdk.Error {
+	return newError(CodeInvalidOutput, msg)
 }
 
 func ErrNoOutputs() sdk.Error {
 	return newError(CodeInvalidOutput, "")
 }
 
-func ErrInvalidSequence(seq int64) sdk.Error {
-	return newError(CodeInvalidSequence, "")
+func ErrInvalidSequence(msg string) sdk.Error {
+	return sdk.ErrInvalidSequence(msg)
 }
 
-func ErrInvalidAddress(log string) sdk.Error {
-	return newError(CodeInvalidAddress, log)
+func ErrInvalidAddress(msg string) sdk.Error {
+	return newError(CodeInvalidAddress, msg)
 }
 
-func ErrUnknownAddress(log string) sdk.Error {
-	return newError(CodeUnknownAddress, log)
+func ErrUnknownAddress(msg string) sdk.Error {
+	return newError(CodeUnknownAddress, msg)
 }
 
-func ErrInsufficientCoins(log string) sdk.Error {
-	return newError(CodeInsufficientCoins, log)
+func ErrInsufficientCoins(msg string) sdk.Error {
+	return newError(CodeInsufficientCoins, msg)
 }
 
-func ErrInvalidCoins(log string) sdk.Error {
-	return newError(CodeInvalidCoins, log)
+func ErrInvalidCoins(msg string) sdk.Error {
+	return newError(CodeInvalidCoins, msg)
 }
 
-func ErrUnknownRequest(log string) sdk.Error {
-	return newError(CodeUnknownRequest, log)
+func ErrUnknownRequest(msg string) sdk.Error {
+	return newError(CodeUnknownRequest, msg)
 }
 
 //----------------------------------------
 
-func logOrDefaultLog(log string, code uint32) string {
-	if log != "" {
-		return log
+func msgOrDefaultMsg(msg string, code uint32) string {
+	if msg != "" {
+		return msg
 	} else {
-		return codeToDefaultLog(code)
+		return codeToDefaultMsg(code)
 	}
 }
 
-func newError(code uint32, log string) sdk.Error {
-	log = logOrDefaultLog(log, code)
-	return sdk.NewError(code, log)
+func newError(code uint32, msg string) sdk.Error {
+	msg = msgOrDefaultMsg(msg, code)
+	return sdk.NewError(code, msg)
 }

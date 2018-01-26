@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// initCapKeys, initBaseApp, initStores, initRoutes.
+// initCapKeys, initBaseApp, initStores, initHandlers.
 func (app *BasecoinApp) initCapKeys() {
 
 	// All top-level capabilities keys

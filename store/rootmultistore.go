@@ -119,7 +119,12 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 //----------------------------------------
 // +CommitStore
 
-// Implements CommitStore.
+// Implements Committer/CommitStore.
+func (rs *rootMultiStore) LastCommitID() CommitID {
+	return rs.lastCommitID
+}
+
+// Implements Committer/CommitStore.
 func (rs *rootMultiStore) Commit() CommitID {
 
 	// Commit stores.
@@ -141,18 +146,13 @@ func (rs *rootMultiStore) Commit() CommitID {
 	return commitID
 }
 
-// Implements CommitStore.
+// Implements CacheWrapper/Store/CommitStore.
 func (rs *rootMultiStore) CacheWrap() CacheWrap {
 	return rs.CacheMultiStore().(CacheWrap)
 }
 
 //----------------------------------------
 // +MultiStore
-
-// Implements MultiStore.
-func (rs *rootMultiStore) LastCommitID() CommitID {
-	return rs.lastCommitID
-}
 
 // Implements MultiStore.
 func (rs *rootMultiStore) CacheMultiStore() CacheMultiStore {

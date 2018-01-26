@@ -18,7 +18,7 @@ type Msg interface {
 
 	// ValidateBasic does a simple validation check that
 	// doesn't require access to any other information.
-	ValidateBasic() error
+	ValidateBasic() Error
 
 	// Signers returns the addrs of signers that must sign.
 	// CONTRACT: All signatures must be present to be valid.
@@ -53,4 +53,4 @@ type StdTx struct {
 func (tx StdTx) GetFeePayer() crypto.Address   { return tx.Signatures[0].PubKey.Address() }
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 
-type TxDecoder func(txBytes []byte) (Tx, error)
+type TxDecoder func(txBytes []byte) (Tx, Error)

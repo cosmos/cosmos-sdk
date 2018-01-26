@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
@@ -36,7 +35,7 @@ func (tx dummyTx) GetSignBytes() []byte {
 }
 
 // Should the app be calling this? Or only handlers?
-func (tx dummyTx) ValidateBasic() error {
+func (tx dummyTx) ValidateBasic() sdk.Error {
 	return nil
 }
 
@@ -52,7 +51,7 @@ func (tx dummyTx) GetFeePayer() crypto.Address {
 	return nil
 }
 
-func decodeTx(txBytes []byte) (sdk.Tx, error) {
+func decodeTx(txBytes []byte) (sdk.Tx, sdk.Error) {
 	var tx sdk.Tx
 
 	split := bytes.Split(txBytes, []byte("="))
@@ -63,7 +62,7 @@ func decodeTx(txBytes []byte) (sdk.Tx, error) {
 		k, v := split[0], split[1]
 		tx = dummyTx{k, v, txBytes}
 	} else {
-		return nil, fmt.Errorf("too many =")
+		return nil, sdk.ErrTxParse("too many =")
 	}
 
 	return tx, nil

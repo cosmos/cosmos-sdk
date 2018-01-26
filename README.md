@@ -20,29 +20,32 @@ WARNING: the libraries are still undergoing breaking changes as we get better id
 
 **Note: Requires Go 1.9+**
 
-The Cosmos SDK is a platform for building multi-asset Proof-of-Stake cryptocurrencies,
-like the [Cosmos Hub](https://cosmos.network). It is both a library for building applications 
-and a set of tools for securely interacting with them.
+The Cosmos SDK is a platform for building multi-asset Proof-of-Stake
+cryptocurrencies, like the [Cosmos Hub](https://cosmos.network). It is both a
+library for building applications and a set of tools for securely interacting
+with them.
 
-The goals of the SDK are to abstract away the complexities of building a Tendermint ABCI application in Golang
-and to provide a framework for building interoperable blockchain applications in the Cosmos Network.
+The goals of the SDK are to abstract away the complexities of building a
+Tendermint ABCI application in Golang and to provide a framework for building
+interoperable blockchain applications in the Cosmos Network.
 
-It is inspired by the routing and middleware model of many web application frameworks, and informed by years
-of wrestling with blockchain state machines. 
+It is inspired by capabilities-based security, and informed by years of
+wrestling with blockchain state machines. 
 
-The SDK is fast, safe, easy-to-use, and easy-to-reason-about.
-It is generic enough to be used to implement the state machines of other existing blockchains,
-like Bitcoin and Ethereum, allowing seamless integration with them and their data structures.
-It comes with batteries included, is easily extensible, and does not require developers
-to fork it to access any of its current or extended functionality.
+The SDK is fast, safe, and easy-to-use.  It is generic enough to be used to
+implement the state machines of other existing blockchains, like Bitcoin and
+Ethereum, allowing seamless integration with them and their data structures.
+It comes with batteries included, is easily extensible, and does not require
+developers to fork it to access any of its current or extended functionality.
 It provides both REST and command line interfaces for secure user interactions.
 
-Applications in the Cosmos-SDK are defined in terms of handlers that process messages
-and read and write to a store. Handlers are given restricted capabilities that determine which 
-parts of the store they can access. The SDK provides common data structures for Accounts,
-multi-asset Coins, checking signatures, preventing replay, and so on.
+Applications in the Cosmos-SDK are defined in terms of handlers that process
+messages and read and write to a store. Handlers are given restricted
+capabilities that determine which parts of the store they can access. The SDK
+provides common data structures for Accounts, multi-asset Coins, checking
+signatures, preventing replay, and so on.
 
-For more details on the design goals, see the [Design Document](docs/design.md)
+For more details on the design goals, see the [SDK Guide](docs/guide.md)
 
 ## Prerequisites
 
@@ -50,4 +53,4 @@ For more details on the design goals, see the [Design Document](docs/design.md)
 
 ## Getting Started
 
-- See the [SDK Basics](docs/basics.md)
+- See the [SDK Guide](docs/guide.md)

@@ -77,6 +77,7 @@ func TestState(t *testing.T) {
 	resCand = loadCandidate(store, pk)
 	assert.True(candidatesEqual(candidate, resCand))
 
+	store.Write()
 	// also test that the pubkey has been added to pubkey list
 	resPks = loadCandidates(store)
 	require.Equal(1, len(resPks))

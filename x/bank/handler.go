@@ -17,10 +17,8 @@ func NewHandler(am sdk.AccountMapper) sdk.Handler {
 		case IssueMsg:
 			return handleIssueMsg(ctx, cm, msg)
 		default:
-			return sdk.Result{
-				Code: 1, // TODO
-				Log:  "Unrecognized bank Tx type: " + reflect.TypeOf(tx).Name(),
-			}
+			errMsg := "Unrecognized bank Tx type: " + reflect.TypeOf(tx).Name()
+			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
 
@@ -33,18 +31,14 @@ func handleSendMsg(ctx sdk.Context, cm CoinMapper, msg SendMsg) sdk.Result {
 	for _, in := range msg.Inputs {
 		_, err := cm.SubtractCoins(ctx, in.Address, in.Coins)
 		if err != nil {
-			return sdk.Result{
-				Code: 1, // TODO
-			}
+			return ErrInvalidInput("").TraceCause(err, "").Result()
 		}
 	}
 
 	for _, out := range msg.Outputs {
 		_, err := cm.AddCoins(ctx, out.Address, out.Coins)
 		if err != nil {
-			return sdk.Result{
-				Code: 1, // TODO
-			}
+			return ErrInvalidOutput("").TraceCause(err, "").Result()
 		}
 	}
 

@@ -2,26 +2,29 @@ package types
 
 import (
 	"fmt"
+	"runtime"
 )
 
 const (
 	// ABCI Response Codes
 	// Base SDK reserves 0 ~ 99.
-	CodeInternalError       uint32 = 1
-	CodeTxParseError               = 2
+	CodeOK                  uint32 = 0
+	CodeInternal                   = 1
+	CodeTxParse                    = 2
 	CodeBadNonce                   = 3
 	CodeUnauthorized               = 4
 	CodeInsufficientFunds          = 5
 	CodeUnknownRequest             = 6
 	CodeUnrecognizedAddress        = 7
+	CodeInvalidSequence            = 8
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
-func CodeToDefaultLog(code uint32) string {
+func CodeToDefaultMsg(code uint32) string {
 	switch code {
-	case CodeInternalError:
+	case CodeInternal:
 		return "Internal error"
-	case CodeTxParseError:
+	case CodeTxParse:
 		return "Tx parse error"
 	case CodeBadNonce:
 		return "Bad nonce"
@@ -33,6 +36,8 @@ func CodeToDefaultLog(code uint32) string {
 		return "Unknown request"
 	case CodeUnrecognizedAddress:
 		return "Unrecognized address"
+	case CodeInvalidSequence:
+		return "Invalid sequence"
 	default:
 		return fmt.Sprintf("Unknown code %d", code)
 	}
@@ -42,32 +47,36 @@ func CodeToDefaultLog(code uint32) string {
 // All errors are created via constructors so as to enable us to hijack them
 // and inject stack traces if we really want to.
 
-func ErrInternal(log string) Error {
-	return newError(CodeInternalError, log)
+func ErrInternal(msg string) Error {
+	return newError(CodeInternal, msg)
 }
 
-func ErrTxParse(log string) Error {
-	return newError(CodeTxParseError, log)
+func ErrTxParse(msg string) Error {
+	return newError(CodeTxParse, msg)
 }
 
-func ErrBadNonce(log string) Error {
-	return newError(CodeBadNonce, log)
+func ErrBadNonce(msg string) Error {
+	return newError(CodeBadNonce, msg)
 }
 
-func ErrUnauthorized(log string) Error {
-	return newError(CodeUnauthorized, log)
+func ErrUnauthorized(msg string) Error {
+	return newError(CodeUnauthorized, msg)
 }
 
-func ErrInsufficientFunds(log string) Error {
-	return newError(CodeInsufficientFunds, log)
+func ErrInsufficientFunds(msg string) Error {
+	return newError(CodeInsufficientFunds, msg)
 }
 
-func ErrUnknownRequest(log string) Error {
-	return newError(CodeUnknownRequest, log)
+func ErrUnknownRequest(msg string) Error {
+	return newError(CodeUnknownRequest, msg)
 }
 
-func ErrUnrecognizedAddress(log string) Error {
-	return newError(CodeUnrecognizedAddress, log)
+func ErrUnrecognizedAddress(msg string) Error {
+	return newError(CodeUnrecognizedAddress, msg)
+}
+
+func ErrInvalidSequence(msg string) Error {
+	return newError(CodeInvalidSequence, msg)
 }
 
 //----------------------------------------
@@ -83,8 +92,8 @@ type Error interface {
 	Result() Result
 }
 
-func NewError(code uint32, log string) Error {
-	return newError(code, log)
+func NewError(code uint32, msg string) Error {
+	return newError(code, msg)
 }
 
 type traceItem struct {
@@ -93,21 +102,25 @@ type traceItem struct {
 	lineno   int
 }
 
+func (ti traceItem) String() string {
+	return fmt.Sprintf("%v:%v %v", ti.filename, ti.lineno, ti.msg)
+}
+
 type sdkError struct {
 	code  uint32
-	log   string
+	msg   string
 	cause error
 	trace []traceItem
 }
 
-func newError(code uint32, log string) *sdkError {
+func newError(code uint32, msg string) *sdkError {
 	// TODO capture stacktrace if ENV is set.
-	if log == "" {
-		log = CodeToDefaultLog(code)
+	if msg == "" {
+		msg = CodeToDefaultMsg(code)
 	}
 	return &sdkError{
 		code:  code,
-		log:   log,
+		msg:   msg,
 		cause: nil,
 		trace: nil,
 	}
@@ -115,7 +128,7 @@ func newError(code uint32, log string) *sdkError {
 
 // Implements ABCIError.
 func (err *sdkError) Error() string {
-	return fmt.Sprintf("Error{%d:%s,%v,%v}", err.code, err.log, err.cause, len(err.trace))
+	return fmt.Sprintf("Error{%d:%s,%v,%v}", err.code, err.msg, err.cause, len(err.trace))
 }
 
 // Implements ABCIError.
@@ -125,32 +138,41 @@ func (err *sdkError) ABCICode() uint32 {
 
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
-	return err.log
+	traceLog := ""
+	for _, ti := range err.trace {
+		traceLog += ti.String() + "\n"
+	}
+	return fmt.Sprintf("msg: %v\ntrace:\n%v",
+		err.msg,
+		traceLog,
+	)
 }
 
-// Add tracing information to log with msg.
+// Add tracing information with msg.
 func (err *sdkError) Trace(msg string) Error {
-	// Include file & line number & msg to log.
+	_, fn, line, ok := runtime.Caller(1)
+	if !ok {
+		if fn == "" {
+			fn = "<unknown>"
+		}
+		if line <= 0 {
+			line = -1
+		}
+	}
+	// Include file & line number & msg.
 	// Do not include the whole stack trace.
 	err.trace = append(err.trace, traceItem{
-		filename: "todo", // TODO
-		lineno:   -1,     // TODO
+		filename: fn,
+		lineno:   line,
 		msg:      msg,
 	})
 	return err
 }
 
-// Add tracing information to log with cause and msg.
+// Add tracing information with cause and msg.
 func (err *sdkError) TraceCause(cause error, msg string) Error {
 	err.cause = cause
-	// Include file & line number & cause & msg to log.
-	// Do not include the whole stack trace.
-	err.trace = append(err.trace, traceItem{
-		filename: "todo", // TODO
-		lineno:   -1,     // TODO
-		msg:      msg,
-	})
-	return err
+	return err.Trace(msg)
 }
 
 func (err *sdkError) Cause() error {

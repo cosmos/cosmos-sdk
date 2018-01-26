@@ -17,28 +17,28 @@ import (
 )
 
 // A mock transaction to update a validator's voting power.
-type testTx struct {
+type testUpdatePowerTx struct {
 	Addr     []byte
 	NewPower int64
 }
 
-const txType = "testTx"
+const txType = "testUpdatePowerTx"
 
-func (tx testTx) Type() string                            { return txType }
-func (tx testTx) Get(key interface{}) (value interface{}) { return nil }
-func (tx testTx) GetSignBytes() []byte                    { return nil }
-func (tx testTx) ValidateBasic() error                    { return nil }
-func (tx testTx) GetSigners() []crypto.Address            { return nil }
-func (tx testTx) GetFeePayer() crypto.Address             { return nil }
-func (tx testTx) GetSignatures() []sdk.StdSignature       { return nil }
+func (tx testUpdatePowerTx) Type() string                            { return txType }
+func (tx testUpdatePowerTx) Get(key interface{}) (value interface{}) { return nil }
+func (tx testUpdatePowerTx) GetSignBytes() []byte                    { return nil }
+func (tx testUpdatePowerTx) ValidateBasic() sdk.Error                { return nil }
+func (tx testUpdatePowerTx) GetSigners() []crypto.Address            { return nil }
+func (tx testUpdatePowerTx) GetFeePayer() crypto.Address             { return nil }
+func (tx testUpdatePowerTx) GetSignatures() []sdk.StdSignature       { return nil }
 
 func TestBasic(t *testing.T) {
 
 	// Create app.
 	app := NewBaseApp(t.Name())
-	storeKeys := createMounts(app.ms)
-	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, error) {
-		var ttx testTx
+	storeKeys := createMounts(app.cms)
+	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var ttx testUpdatePowerTx
 		fromJSON(txBytes, &ttx)
 		return ttx, nil
 	})
@@ -71,7 +71,7 @@ func TestBasic(t *testing.T) {
 
 	// Add 1 to each validator's voting power.
 	for i, val := range valSet {
-		tx := testTx{
+		tx := testUpdatePowerTx{
 			Addr:     makePubKey(secret(i)).Address(),
 			NewPower: val.Power + 1,
 		}

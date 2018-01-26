@@ -10,16 +10,14 @@ import (
 // cacheMultiStore holds many cache-wrapped stores.
 // Implements MultiStore.
 type cacheMultiStore struct {
-	db           CacheKVStore
-	lastCommitID CommitID
-	stores       map[StoreKey]CacheWrap
+	db     CacheKVStore
+	stores map[StoreKey]CacheWrap
 }
 
 func newCacheMultiStoreFromRMS(rms *rootMultiStore) cacheMultiStore {
 	cms := cacheMultiStore{
-		db:           NewCacheKVStore(dbStoreAdapter{rms.db}),
-		lastCommitID: rms.lastCommitID,
-		stores:       make(map[StoreKey]CacheWrap, len(rms.stores)),
+		db:     NewCacheKVStore(dbStoreAdapter{rms.db}),
+		stores: make(map[StoreKey]CacheWrap, len(rms.stores)),
 	}
 	for key, store := range rms.stores {
 		cms.stores[key] = store.CacheWrap()
@@ -29,9 +27,8 @@ func newCacheMultiStoreFromRMS(rms *rootMultiStore) cacheMultiStore {
 
 func newCacheMultiStoreFromCMS(cms cacheMultiStore) cacheMultiStore {
 	cms2 := cacheMultiStore{
-		db:           NewCacheKVStore(cms.db),
-		lastCommitID: cms.lastCommitID,
-		stores:       make(map[StoreKey]CacheWrap, len(cms.stores)),
+		db:     NewCacheKVStore(cms.db),
+		stores: make(map[StoreKey]CacheWrap, len(cms.stores)),
 	}
 	for key, store := range cms.stores {
 		cms2.stores[key] = store.CacheWrap()
@@ -42,11 +39,6 @@ func newCacheMultiStoreFromCMS(cms cacheMultiStore) cacheMultiStore {
 // Implements Store.
 func (cms cacheMultiStore) GetStoreType() StoreType {
 	return sdk.StoreTypeMulti
-}
-
-// Implements MultiStore.
-func (cms cacheMultiStore) LastCommitID() CommitID {
-	return cms.lastCommitID
 }
 
 // Implements CacheMultiStore.

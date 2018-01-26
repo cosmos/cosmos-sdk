@@ -56,6 +56,7 @@ TUTORIALS=$(shell find docs/guide -name "*md" -type f)
 test: test_unit # test_cli
 
 test_unit:
+	@rm -rf examples/basecoin/vendor/
 	@go test $(PACKAGES)
 
 test_cover:

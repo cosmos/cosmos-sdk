@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
@@ -29,7 +30,7 @@ type BaseApp struct {
 	db dbm.DB
 
 	// Main (uncached) state
-	ms sdk.CommitMultiStore
+	cms sdk.CommitMultiStore
 
 	// Unmarshal []byte into sdk.Tx
 	txDecoder sdk.TxDecoder
@@ -43,10 +44,10 @@ type BaseApp struct {
 	//--------------------
 	// Volatile
 
-	// CheckTx state, a cache-wrap of `.ms`.
+	// CheckTx state, a cache-wrap of `.cms`.
 	msCheck sdk.CacheMultiStore
 
-	// DeliverTx state, a cache-wrap of `.ms`.
+	// DeliverTx state, a cache-wrap of `.cms`.
 	msDeliver sdk.CacheMultiStore
 
 	// Current block header
@@ -63,7 +64,7 @@ func NewBaseApp(name string) *BaseApp {
 		logger: makeDefaultLogger(),
 		name:   name,
 		db:     nil,
-		ms:     nil,
+		cms:    nil,
 		router: NewRouter(),
 	}
 	baseapp.initDB()
@@ -83,8 +84,8 @@ func (app *BaseApp) initDB() {
 }
 
 func (app *BaseApp) initMultiStore() {
-	ms := store.NewCommitMultiStore(app.db)
-	app.ms = ms
+	cms := store.NewCommitMultiStore(app.db)
+	app.cms = cms
 }
 
 func (app *BaseApp) Name() string {
@@ -92,35 +93,15 @@ func (app *BaseApp) Name() string {
 }
 
 func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
-	app.ms.MountStoreWithDB(key, typ, app.db)
-}
-
-func (app *BaseApp) TxDecoder() sdk.TxDecoder {
-	return app.txDecoder
+	app.cms.MountStoreWithDB(key, typ, app.db)
 }
 
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
 
-func (app *BaseApp) DefaultAnteHandler() sdk.AnteHandler {
-	return app.defaultAnteHandler
-}
-
 func (app *BaseApp) SetDefaultAnteHandler(ah sdk.AnteHandler) {
 	app.defaultAnteHandler = ah
-}
-
-func (app *BaseApp) MultiStore() sdk.MultiStore {
-	return app.ms
-}
-
-func (app *BaseApp) MultiStoreCheck() sdk.MultiStore {
-	return app.msCheck
-}
-
-func (app *BaseApp) MultiStoreDeliver() sdk.MultiStore {
-	return app.msDeliver
 }
 
 func (app *BaseApp) Router() Router {
@@ -134,29 +115,29 @@ func (app *BaseApp) SetInitStater(...) {}
 */
 
 func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
-	app.ms.LoadLatestVersion()
+	app.cms.LoadLatestVersion()
 	return app.initFromStore(mainKey)
 }
 
 func (app *BaseApp) LoadVersion(version int64, mainKey sdk.StoreKey) error {
-	app.ms.LoadVersion(version)
+	app.cms.LoadVersion(version)
 	return app.initFromStore(mainKey)
 }
 
 // The last CommitID of the multistore.
 func (app *BaseApp) LastCommitID() sdk.CommitID {
-	return app.ms.LastCommitID()
+	return app.cms.LastCommitID()
 }
 
 // The last commited block height.
 func (app *BaseApp) LastBlockHeight() int64 {
-	return app.ms.LastCommitID().Version
+	return app.cms.LastCommitID().Version
 }
 
-// Initializes the remaining logic from app.ms.
+// Initializes the remaining logic from app.cms.
 func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
-	var lastCommitID = app.ms.LastCommitID()
-	var main = app.ms.GetKVStore(mainKey)
+	var lastCommitID = app.cms.LastCommitID()
+	var main = app.cms.GetKVStore(mainKey)
 	var header *abci.Header
 
 	// Main store should exist.
@@ -196,7 +177,7 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 // Implements ABCI.
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 
-	lastCommitID := app.ms.LastCommitID()
+	lastCommitID := app.cms.LastCommitID()
 
 	return abci.ResponseInfo{
 		Data:             app.name,
@@ -227,8 +208,8 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	// NOTE: For consistency we should unset these upon EndBlock.
 	app.header = &req.Header
-	app.msDeliver = app.ms.CacheMultiStore()
-	app.msCheck = app.ms.CacheMultiStore()
+	app.msDeliver = app.cms.CacheMultiStore()
+	app.msCheck = app.cms.CacheMultiStore()
 	app.valUpdates = nil
 	return
 }
@@ -236,7 +217,14 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 // Implements ABCI.
 func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 
-	result := app.runTx(true, txBytes)
+	// Decode the Tx.
+	var result sdk.Result
+	var tx, err = app.txDecoder(txBytes)
+	if err != nil {
+		result = err.Result()
+	} else {
+		result = app.runTx(true, txBytes, tx)
+	}
 
 	return abci.ResponseCheckTx{
 		Code:      result.Code,
@@ -255,7 +243,14 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 // Implements ABCI.
 func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 
-	result := app.runTx(false, txBytes)
+	// Decode the Tx.
+	var result sdk.Result
+	var tx, err = app.txDecoder(txBytes)
+	if err != nil {
+		result = err.Result()
+	} else {
+		result = app.runTx(false, txBytes, tx)
+	}
 
 	// After-handler hooks.
 	if result.Code == abci.CodeTypeOK {
@@ -277,28 +272,27 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	}
 }
 
-func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte) (result sdk.Result) {
+// txBytes may be nil in some cases, for example, when tx is
+// coming from TestApp.  Also, in the future we may support
+// "internal" transactions.
+func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
 
 	// Handle any panics.
 	defer func() {
 		if r := recover(); r != nil {
-			result = sdk.Result{
-				Code: 1, // TODO
-				Log:  fmt.Sprintf("Recovered: %v\n", r),
-			}
+			log := fmt.Sprintf("Recovered: %v\nstack:\n%v", r, string(debug.Stack()))
+			result = sdk.ErrInternal(log).Result()
 		}
 	}()
 
-	// Construct a Context.
-	var ctx = app.NewContext(isCheckTx, txBytes)
-
-	// Decode the Tx.
-	tx, err := app.txDecoder(txBytes)
+	// Validate the Tx.Msg.
+	err := tx.ValidateBasic()
 	if err != nil {
-		return sdk.Result{
-			Code: 1, //  TODO
-		}
+		return err.Result()
 	}
+
+	// Construct a Context.
+	var ctx = app.newContext(isCheckTx, txBytes)
 
 	// TODO: override default ante handler w/ custom ante handler.
 
@@ -329,7 +323,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // Implements ABCI.
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	app.msDeliver.Write()
-	commitID := app.ms.Commit()
+	commitID := app.cms.Commit()
 	app.logger.Debug("Commit synced",
 		"commit", commitID,
 	)

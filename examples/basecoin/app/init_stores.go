@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-// initCapKeys, initBaseApp, initStores, initRoutes.
+// initCapKeys, initBaseApp, initStores, initHandlers.
 func (app *BasecoinApp) initStores() {
 	app.mountStores()
 	app.initAccountMapper()

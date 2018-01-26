@@ -1,23 +1,23 @@
 package bank
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"reflect"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Handle all "bank" type messages.
 func NewHandler(am sdk.AccountMapper) sdk.Handler {
 
-	return func(ctx sdk.Context, tx sdk.Tx) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		cm := CoinMapper{am}
-		msg := tx.(sdk.Msg)
 		switch msg := msg.(type) {
 		case SendMsg:
 			return handleSendMsg(ctx, cm, msg)
 		case IssueMsg:
 			return handleIssueMsg(ctx, cm, msg)
 		default:
-			errMsg := "Unrecognized bank Tx type: " + reflect.TypeOf(tx).Name()
+			errMsg := "Unrecognized bank Msg type: " + reflect.TypeOf(msg).Name()
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
@@ -31,14 +31,14 @@ func handleSendMsg(ctx sdk.Context, cm CoinMapper, msg SendMsg) sdk.Result {
 	for _, in := range msg.Inputs {
 		_, err := cm.SubtractCoins(ctx, in.Address, in.Coins)
 		if err != nil {
-			return ErrInvalidInput("").TraceCause(err, "").Result()
+			return err.Result()
 		}
 	}
 
 	for _, out := range msg.Outputs {
 		_, err := cm.AddCoins(ctx, out.Address, out.Coins)
 		if err != nil {
-			return ErrInvalidOutput("").TraceCause(err, "").Result()
+			return err.Result()
 		}
 	}
 

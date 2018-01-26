@@ -30,7 +30,11 @@ func TestSendMsg(t *testing.T) {
 		},
 	}
 
-	// Run a SendMsg.
+	// Run a Check on SendMsg.
 	res := tba.RunCheckMsg(msg)
 	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+
+	// Run a Deliver on SendMsg.
+	res = tba.RunDeliverMsg(msg)
+	assert.Equal(t, sdk.CodeUnrecognizedAddress, res.Code, res.Log)
 }

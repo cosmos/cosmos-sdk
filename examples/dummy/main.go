@@ -51,10 +51,10 @@ func main() {
 }
 
 func DummyHandler(storeKey sdk.StoreKey) sdk.Handler {
-	return func(ctx sdk.Context, tx sdk.Tx) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		// tx is already unmarshalled
-		key := tx.Get("key").([]byte)
-		value := tx.Get("value").([]byte)
+		key := msg.Get("key").([]byte)
+		value := msg.Get("value").([]byte)
 
 		store := ctx.KVStore(storeKey)
 		store.Set(key, value)

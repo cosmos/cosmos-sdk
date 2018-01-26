@@ -5,19 +5,21 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+type CodeType = sdk.CodeType
+
 const (
 	// Coin errors reserve 100 ~ 199.
-	CodeInvalidInput      uint32 = 101
-	CodeInvalidOutput     uint32 = 102
-	CodeInvalidAddress    uint32 = 103
-	CodeUnknownAddress    uint32 = 104
-	CodeInsufficientCoins uint32 = 105
-	CodeInvalidCoins      uint32 = 106
-	CodeUnknownRequest    uint32 = sdk.CodeUnknownRequest
+	CodeInvalidInput      CodeType = 101
+	CodeInvalidOutput     CodeType = 102
+	CodeInvalidAddress    CodeType = 103
+	CodeUnknownAddress    CodeType = 104
+	CodeInsufficientCoins CodeType = 105
+	CodeInvalidCoins      CodeType = 106
+	CodeUnknownRequest    CodeType = sdk.CodeUnknownRequest
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
-func codeToDefaultMsg(code uint32) string {
+func codeToDefaultMsg(code CodeType) string {
 	switch code {
 	case CodeInvalidInput:
 		return "Invalid input coins"
@@ -83,7 +85,7 @@ func ErrUnknownRequest(msg string) sdk.Error {
 
 //----------------------------------------
 
-func msgOrDefaultMsg(msg string, code uint32) string {
+func msgOrDefaultMsg(msg string, code CodeType) string {
 	if msg != "" {
 		return msg
 	} else {
@@ -91,7 +93,7 @@ func msgOrDefaultMsg(msg string, code uint32) string {
 	}
 }
 
-func newError(code uint32, msg string) sdk.Error {
+func newError(code CodeType, msg string) sdk.Error {
 	msg = msgOrDefaultMsg(msg, code)
 	return sdk.NewError(code, msg)
 }

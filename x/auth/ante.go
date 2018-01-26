@@ -18,7 +18,7 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 			payerAcc := accountMapper.GetAccount(ctx, payerAddr)
 			if payerAcc == nil {
 				return ctx,
-					sdk.ErrUnrecognizedAddress("").Result(),
+					sdk.ErrUnrecognizedAddress(payerAddr).Result(),
 					true
 			}
 			// TODO: Charge fee from payerAcc.
@@ -29,61 +29,66 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 			// create a Tx with no payer.
 		}
 
-		// Ensure that signatures are correct.
-		var signerAddrs = tx.GetSigners()
-		var signerAccs = make([]sdk.Account, len(signerAddrs))
-		var signatures = tx.GetSignatures()
+		var sigs = tx.GetSignatures()
 
-		// Assert that there are signers.
-		if len(signerAddrs) == 0 {
-			if !bam.IsTestAppTx(tx) {
+		// Assert that there are signatures.
+		if !bam.IsTestAppTx(tx) {
+			if len(sigs) == 0 {
 				return ctx,
 					sdk.ErrUnauthorized("no signers").Result(),
 					true
 			}
 		}
 
+		// Ensure that sigs are correct.
+		var msg = tx.GetMsg()
+		var signerAddrs = msg.GetSigners()
+		var signerAccs = make([]sdk.Account, len(signerAddrs))
+
 		// Assert that number of signatures is correct.
-		if len(signatures) != len(signerAddrs) {
-			return ctx,
-				sdk.ErrUnauthorized("wrong number of signers").Result(),
-				true
-		}
+		if !bam.IsTestAppTx(tx) {
+			if len(sigs) != len(signerAddrs) {
+				return ctx,
+					sdk.ErrUnauthorized("wrong number of signers").Result(),
+					true
+			}
 
-		// Check each nonce and sig.
-		for i, sig := range signatures {
+			// Check each nonce and sig.
+			// TODO Refactor out.
+			for i, sig := range sigs {
 
-			var signerAcc = accountMapper.GetAccount(ctx, signerAddrs[i])
-			signerAccs[i] = signerAcc
+				var signerAcc = accountMapper.GetAccount(ctx, signerAddrs[i])
+				signerAccs[i] = signerAcc
 
-			// If no pubkey, set pubkey.
-			if signerAcc.GetPubKey() == nil {
-				err := signerAcc.SetPubKey(sig.PubKey)
-				if err != nil {
+				// If no pubkey, set pubkey.
+				if signerAcc.GetPubKey() == nil {
+					err := signerAcc.SetPubKey(sig.PubKey)
+					if err != nil {
+						return ctx,
+							sdk.ErrInternal("setting PubKey on signer").Result(),
+							true
+					}
+				}
+
+				// Check and increment sequence number.
+				seq := signerAcc.GetSequence()
+				if seq != sig.Sequence {
 					return ctx,
-						sdk.ErrInternal("setting PubKey on signer").Result(),
+						sdk.ErrInvalidSequence("").Result(),
 						true
 				}
-			}
+				signerAcc.SetSequence(seq + 1)
 
-			// Check and increment sequence number.
-			seq := signerAcc.GetSequence()
-			if seq != sig.Sequence {
-				return ctx,
-					sdk.ErrInvalidSequence("").Result(),
-					true
-			}
-			signerAcc.SetSequence(seq + 1)
+				// Check sig.
+				if !sig.PubKey.VerifyBytes(msg.GetSignBytes(), sig.Signature) {
+					return ctx,
+						sdk.ErrUnauthorized("").Result(),
+						true
+				}
 
-			// Check sig.
-			if !sig.PubKey.VerifyBytes(tx.GetSignBytes(), sig.Signature) {
-				return ctx,
-					sdk.ErrUnauthorized("").Result(),
-					true
+				// Save the account.
+				accountMapper.SetAccount(ctx, signerAcc)
 			}
-
-			// Save the account.
-			accountMapper.SetAccount(ctx, signerAcc)
 		}
 
 		ctx = WithSigners(ctx, signerAccs)

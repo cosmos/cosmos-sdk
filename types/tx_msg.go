@@ -27,7 +27,9 @@ type Msg interface {
 }
 
 type Tx interface {
-	Msg
+
+	// Gets the Msg.
+	GetMsg() Msg
 
 	// The address that pays the base fee for this message.  The fee is
 	// deducted before the Msg is processed.
@@ -50,6 +52,7 @@ type StdTx struct {
 	Signatures []StdSignature
 }
 
+func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
 func (tx StdTx) GetFeePayer() crypto.Address   { return tx.Signatures[0].PubKey.Address() }
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 

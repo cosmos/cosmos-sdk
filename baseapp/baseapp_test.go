@@ -22,10 +22,11 @@ type testUpdatePowerTx struct {
 	NewPower int64
 }
 
-const txType = "testUpdatePowerTx"
+const msgType = "testUpdatePowerTx"
 
-func (tx testUpdatePowerTx) Type() string                            { return txType }
+func (tx testUpdatePowerTx) Type() string                            { return msgType }
 func (tx testUpdatePowerTx) Get(key interface{}) (value interface{}) { return nil }
+func (tx testUpdatePowerTx) GetMsg() sdk.Msg                         { return tx }
 func (tx testUpdatePowerTx) GetSignBytes() []byte                    { return nil }
 func (tx testUpdatePowerTx) ValidateBasic() sdk.Error                { return nil }
 func (tx testUpdatePowerTx) GetSigners() []crypto.Address            { return nil }
@@ -44,7 +45,7 @@ func TestBasic(t *testing.T) {
 	})
 
 	app.SetDefaultAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
-	app.Router().AddRoute(txType, func(ctx sdk.Context, tx sdk.Tx) sdk.Result {
+	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		// TODO
 		return sdk.Result{}
 	})

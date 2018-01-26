@@ -8,7 +8,7 @@ import (
 func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx,
-	) (newCtx sdk.Context, res sdk.Result, abort bool) {
+	) (_ sdk.Context, _ sdk.Result, abort bool) {
 
 		// Deduct the fee from the fee payer.
 		// This is done first because it only

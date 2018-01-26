@@ -36,13 +36,17 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byt
 		pst:     newThePast(),
 		gen:     0,
 	}
-	c = c.withMultiStore(ms)
-	c = c.withBlockHeader(header)
-	c = c.withBlockHeight(header.Height)
-	c = c.withChainID(header.ChainID)
-	c = c.withIsCheckTx(isCheckTx)
-	c = c.withTxBytes(txBytes)
+	c = c.WithMultiStore(ms)
+	c = c.WithBlockHeader(header)
+	c = c.WithBlockHeight(header.Height)
+	c = c.WithChainID(header.ChainID)
+	c = c.WithIsCheckTx(isCheckTx)
+	c = c.WithTxBytes(txBytes)
 	return c
+}
+
+func (c Context) IsZero() bool {
+	return c.Context == nil
 }
 
 //----------------------------------------
@@ -81,10 +85,6 @@ func (c Context) WithCacheWrapper(key interface{}, value CacheWrapper) Context {
 
 func (c Context) WithProtoMsg(key interface{}, value proto.Message) Context {
 	return c.withValue(key, value)
-}
-
-func (c Context) WithMultiStore(key StoreKey, ms MultiStore) Context {
-	return c.withValue(key, ms)
 }
 
 func (c Context) WithString(key interface{}, value string) Context {
@@ -156,34 +156,28 @@ func (c Context) TxBytes() []byte {
 	return c.Value(contextKeyTxBytes).([]byte)
 }
 
-// Unexposed to prevent overriding.
-func (c Context) withMultiStore(ms MultiStore) Context {
+func (c Context) WithMultiStore(ms MultiStore) Context {
 	return c.withValue(contextKeyMultiStore, ms)
 }
 
-// Unexposed to prevent overriding.
-func (c Context) withBlockHeader(header abci.Header) Context {
+func (c Context) WithBlockHeader(header abci.Header) Context {
 	var _ proto.Message = &header // for cloning.
 	return c.withValue(contextKeyBlockHeader, header)
 }
 
-// Unexposed to prevent overriding.
-func (c Context) withBlockHeight(height int64) Context {
+func (c Context) WithBlockHeight(height int64) Context {
 	return c.withValue(contextKeyBlockHeight, height)
 }
 
-// Unexposed to prevent overriding.
-func (c Context) withChainID(chainID string) Context {
+func (c Context) WithChainID(chainID string) Context {
 	return c.withValue(contextKeyChainID, chainID)
 }
 
-// Unexposed to prevent overriding.
-func (c Context) withIsCheckTx(isCheckTx bool) Context {
+func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	return c.withValue(contextKeyIsCheckTx, isCheckTx)
 }
 
-// Unexposed to prevent overriding.
-func (c Context) withTxBytes(txBytes []byte) Context {
+func (c Context) WithTxBytes(txBytes []byte) Context {
 	return c.withValue(contextKeyTxBytes, txBytes)
 }
 

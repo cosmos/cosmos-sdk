@@ -33,3 +33,8 @@ type Result struct {
 	// Tags are used for transaction indexing and pubsub.
 	Tags []cmn.KVPair
 }
+
+// TODO: In the future, more codes may be OK.
+func (res Result) IsOK() bool {
+	return res.Code == CodeOK
+}

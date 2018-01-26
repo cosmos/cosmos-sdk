@@ -77,7 +77,7 @@ func TestBasic(t *testing.T) {
 		}
 		txBytes := toJSON(tx)
 		res := app.DeliverTx(txBytes)
-		assert.True(t, res.IsOK(), "%#v", res)
+		assert.True(t, res.IsOK(), "%#v\nABCI log: %s", res, res.Log)
 	}
 
 	// Simulate the end of a block.

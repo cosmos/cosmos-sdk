@@ -297,15 +297,30 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	// TODO: override default ante handler w/ custom ante handler.
 
 	// Run the ante handler.
-	ctx, result, abort := app.defaultAnteHandler(ctx, tx)
+	if ctx.IsZero() {
+		panic("why? before")
+	}
+	newCtx, result, abort := app.defaultAnteHandler(ctx, tx)
 	if isCheckTx || abort {
 		return result
 	}
+	if !newCtx.IsZero() {
+		ctx = newCtx
+	}
+
+	// CacheWrap app.msDeliver in case it fails.
+	msCache := app.getMultiStore(isCheckTx).CacheMultiStore()
+	ctx = ctx.WithMultiStore(msCache)
 
 	// Match and run route.
 	msgType := tx.Type()
 	handler := app.router.Route(msgType)
 	result = handler(ctx, tx)
+
+	// If result was successful, write to app.msDeliver or app.msCheck.
+	if result.IsOK() {
+		msCache.Write()
+	}
 
 	return result
 }
@@ -334,6 +349,14 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 //----------------------------------------
 // Misc.
+
+func (app *BaseApp) getMultiStore(isCheckTx bool) sdk.MultiStore {
+	if isCheckTx {
+		return app.msCheck
+	} else {
+		return app.msDeliver
+	}
+}
 
 // Return index of list with validator of same PubKey, or -1 if no match
 func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {

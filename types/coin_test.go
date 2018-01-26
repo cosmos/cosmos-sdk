@@ -7,55 +7,53 @@ import (
 )
 
 func TestCoins(t *testing.T) {
-	assert := assert.New(t)
 
 	//Define the coins to be used in tests
 	good := Coins{
-		Coin{"GAS", 1},
-		Coin{"MINERAL", 1},
-		Coin{"TREE", 1},
+		{"GAS", 1},
+		{"MINERAL", 1},
+		{"TREE", 1},
 	}
 	neg := good.Negative()
 	sum := good.Plus(neg)
 	empty := Coins{
-		Coin{"GOLD", 0},
+		{"GOLD", 0},
 	}
 	badSort1 := Coins{
-		Coin{"TREE", 1},
-		Coin{"GAS", 1},
-		Coin{"MINERAL", 1},
+		{"TREE", 1},
+		{"GAS", 1},
+		{"MINERAL", 1},
 	}
 	badSort2 := Coins{ // both are after the first one, but the second and third are in the wrong order
-		Coin{"GAS", 1},
-		Coin{"TREE", 1},
-		Coin{"MINERAL", 1},
+		{"GAS", 1},
+		{"TREE", 1},
+		{"MINERAL", 1},
 	}
 	badAmt := Coins{
-		Coin{"GAS", 1},
-		Coin{"TREE", 0},
-		Coin{"MINERAL", 1},
+		{"GAS", 1},
+		{"TREE", 0},
+		{"MINERAL", 1},
 	}
 	dup := Coins{
-		Coin{"GAS", 1},
-		Coin{"GAS", 1},
-		Coin{"MINERAL", 1},
+		{"GAS", 1},
+		{"GAS", 1},
+		{"MINERAL", 1},
 	}
 
-	assert.True(good.IsValid(), "Coins are valid")
-	assert.True(good.IsPositive(), "Expected coins to be positive: %v", good)
-	assert.True(good.IsGTE(empty), "Expected %v to be >= %v", good, empty)
-	assert.False(neg.IsPositive(), "Expected neg coins to not be positive: %v", neg)
-	assert.Zero(len(sum), "Expected 0 coins")
-	assert.False(badSort1.IsValid(), "Coins are not sorted")
-	assert.False(badSort2.IsValid(), "Coins are not sorted")
-	assert.False(badAmt.IsValid(), "Coins cannot include 0 amounts")
-	assert.False(dup.IsValid(), "Duplicate coin")
+	assert.True(t, good.IsValid(), "Coins are valid")
+	assert.True(t, good.IsPositive(), "Expected coins to be positive: %v", good)
+	assert.True(t, good.IsGTE(empty), "Expected %v to be >= %v", good, empty)
+	assert.False(t, neg.IsPositive(), "Expected neg coins to not be positive: %v", neg)
+	assert.Zero(t, len(sum), "Expected 0 coins")
+	assert.False(t, badSort1.IsValid(), "Coins are not sorted")
+	assert.False(t, badSort2.IsValid(), "Coins are not sorted")
+	assert.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")
+	assert.False(t, dup.IsValid(), "Duplicate coin")
 
 }
 
 //Test the parse coin and parse coins functionality
 func TestParse(t *testing.T) {
-	assert := assert.New(t)
 
 	cases := []struct {
 		input    string
@@ -79,44 +77,43 @@ func TestParse(t *testing.T) {
 	for _, tc := range cases {
 		res, err := ParseCoins(tc.input)
 		if !tc.valid {
-			assert.NotNil(err, "%s: %#v", tc.input, res)
-		} else if assert.Nil(err, "%s: %+v", tc.input, err) {
-			assert.Equal(tc.expected, res)
+			assert.NotNil(t, err, "%s: %#v", tc.input, res)
+		} else if assert.Nil(t, err, "%s: %+v", tc.input, err) {
+			assert.Equal(t, tc.expected, res)
 		}
 	}
 
 }
 
 func TestSortCoins(t *testing.T) {
-	assert := assert.New(t)
 
 	good := Coins{
-		Coin{"GAS", 1},
-		Coin{"MINERAL", 1},
-		Coin{"TREE", 1},
+		{"GAS", 1},
+		{"MINERAL", 1},
+		{"TREE", 1},
 	}
 	empty := Coins{
-		Coin{"GOLD", 0},
+		{"GOLD", 0},
 	}
 	badSort1 := Coins{
-		Coin{"TREE", 1},
-		Coin{"GAS", 1},
-		Coin{"MINERAL", 1},
+		{"TREE", 1},
+		{"GAS", 1},
+		{"MINERAL", 1},
 	}
 	badSort2 := Coins{ // both are after the first one, but the second and third are in the wrong order
-		Coin{"GAS", 1},
-		Coin{"TREE", 1},
-		Coin{"MINERAL", 1},
+		{"GAS", 1},
+		{"TREE", 1},
+		{"MINERAL", 1},
 	}
 	badAmt := Coins{
-		Coin{"GAS", 1},
-		Coin{"TREE", 0},
-		Coin{"MINERAL", 1},
+		{"GAS", 1},
+		{"TREE", 0},
+		{"MINERAL", 1},
 	}
 	dup := Coins{
-		Coin{"GAS", 1},
-		Coin{"GAS", 1},
-		Coin{"MINERAL", 1},
+		{"GAS", 1},
+		{"GAS", 1},
+		{"MINERAL", 1},
 	}
 
 	cases := []struct {
@@ -132,8 +129,67 @@ func TestSortCoins(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		assert.Equal(tc.before, tc.coins.IsValid())
+		assert.Equal(t, tc.before, tc.coins.IsValid())
 		tc.coins.Sort()
-		assert.Equal(tc.after, tc.coins.IsValid())
+		assert.Equal(t, tc.after, tc.coins.IsValid())
+	}
+}
+
+func TestAmountOf(t *testing.T) {
+
+	case0 := Coins{}
+	case1 := Coins{
+		{"", 0},
+	}
+	case2 := Coins{
+		{" ", 0},
+	}
+	case3 := Coins{
+		{"GOLD", 0},
+	}
+	case4 := Coins{
+		{"GAS", 1},
+		{"MINERAL", 1},
+		{"TREE", 1},
+	}
+	case5 := Coins{
+		{"MINERAL", 1},
+		{"TREE", 1},
+	}
+	case6 := Coins{
+		{"", 6},
+	}
+	case7 := Coins{
+		{" ", 7},
+	}
+	case8 := Coins{
+		{"GAS", 8},
+	}
+
+	cases := []struct {
+		coins           Coins
+		amountOf        int64
+		amountOf_       int64
+		amountOfGAS     int64
+		amountOfMINERAL int64
+		amountOfTREE    int64
+	}{
+		{case0, 0, 0, 0, 0, 0},
+		{case1, 0, 0, 0, 0, 0},
+		{case2, 0, 0, 0, 0, 0},
+		{case3, 0, 0, 0, 0, 0},
+		{case4, 0, 0, 1, 1, 1},
+		{case5, 0, 0, 0, 1, 1},
+		{case6, 6, 0, 0, 0, 0},
+		{case7, 0, 7, 0, 0, 0},
+		{case8, 0, 0, 8, 0, 0},
+	}
+
+	for _, tc := range cases {
+		assert.Equal(t, tc.amountOf, tc.coins.AmountOf(""))
+		assert.Equal(t, tc.amountOf_, tc.coins.AmountOf(" "))
+		assert.Equal(t, tc.amountOfGAS, tc.coins.AmountOf("GAS"))
+		assert.Equal(t, tc.amountOfMINERAL, tc.coins.AmountOf("MINERAL"))
+		assert.Equal(t, tc.amountOfTREE, tc.coins.AmountOf("TREE"))
 	}
 }

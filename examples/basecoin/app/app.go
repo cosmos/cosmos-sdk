@@ -22,7 +22,7 @@ type BasecoinApp struct {
 	capKeyMainStore *sdk.KVStoreKey
 	capKeyIBCStore  *sdk.KVStoreKey
 
-	// Object mappers :
+	// Object mappers:
 	accountMapper sdk.AccountMapper
 }
 

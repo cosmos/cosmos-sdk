@@ -187,6 +187,30 @@ func (coins Coins) IsNotNegative() bool {
 	return true
 }
 
+func (coins Coins) AmountOf(denom string) int64 {
+	switch len(coins) {
+	case 0:
+		return 0
+	case 1:
+		coin := coins[0]
+		if coin.Denom == denom {
+			return coin.Amount
+		} else {
+			return 0
+		}
+	default:
+		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2
+		coin := coins[midIdx]
+		if denom < coin.Denom {
+			return Coins(coins[:midIdx]).AmountOf(denom)
+		} else if denom == coin.Denom {
+			return coin.Amount
+		} else {
+			return Coins(coins[midIdx+1:]).AmountOf(denom)
+		}
+	}
+}
+
 //----------------------------------------
 // Sort interface
 

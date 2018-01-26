@@ -63,7 +63,7 @@ func (tapp *TestApp) RunCheckTx(tx sdk.Tx) sdk.Result {
 
 func (tapp *TestApp) RunDeliverTx(tx sdk.Tx) sdk.Result {
 	tapp.ensureBeginBlock()
-	return tapp.BaseApp.runTx(true, nil, tx)
+	return tapp.BaseApp.runTx(false, nil, tx)
 }
 
 // NOTE: Skips authentication by wrapping msg in testTx{}.
@@ -75,7 +75,7 @@ func (tapp *TestApp) RunCheckMsg(msg sdk.Msg) sdk.Result {
 // NOTE: Skips authentication by wrapping msg in testTx{}.
 func (tapp *TestApp) RunDeliverMsg(msg sdk.Msg) sdk.Result {
 	var tx = testTx{msg}
-	return tapp.RunCheckTx(tx)
+	return tapp.RunDeliverTx(tx)
 }
 
 func (tapp *TestApp) CommitMultiStore() sdk.CommitMultiStore {
@@ -97,6 +97,7 @@ type testTx struct {
 	sdk.Msg
 }
 
+func (tx testTx) GetMsg() sdk.Msg                   { return tx.Msg }
 func (tx testTx) GetSigners() []crypto.Address      { return nil }
 func (tx testTx) GetFeePayer() crypto.Address       { return nil }
 func (tx testTx) GetSignatures() []sdk.StdSignature { return nil }

@@ -2,25 +2,36 @@ package types
 
 import (
 	"fmt"
+	"github.com/tendermint/go-crypto"
 	"runtime"
 )
+
+type CodeType uint32
+
+func (code CodeType) IsOK() bool {
+	if code == CodeOK {
+		return true
+	} else {
+		return false
+	}
+}
 
 const (
 	// ABCI Response Codes
 	// Base SDK reserves 0 ~ 99.
-	CodeOK                  uint32 = 0
-	CodeInternal                   = 1
-	CodeTxParse                    = 2
-	CodeBadNonce                   = 3
-	CodeUnauthorized               = 4
-	CodeInsufficientFunds          = 5
-	CodeUnknownRequest             = 6
-	CodeUnrecognizedAddress        = 7
-	CodeInvalidSequence            = 8
+	CodeOK                  CodeType = 0
+	CodeInternal            CodeType = 1
+	CodeTxParse             CodeType = 2
+	CodeBadNonce            CodeType = 3
+	CodeUnauthorized        CodeType = 4
+	CodeInsufficientFunds   CodeType = 5
+	CodeUnknownRequest      CodeType = 6
+	CodeUnrecognizedAddress CodeType = 7
+	CodeInvalidSequence     CodeType = 8
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
-func CodeToDefaultMsg(code uint32) string {
+func CodeToDefaultMsg(code CodeType) string {
 	switch code {
 	case CodeInternal:
 		return "Internal error"
@@ -71,8 +82,8 @@ func ErrUnknownRequest(msg string) Error {
 	return newError(CodeUnknownRequest, msg)
 }
 
-func ErrUnrecognizedAddress(msg string) Error {
-	return newError(CodeUnrecognizedAddress, msg)
+func ErrUnrecognizedAddress(addr crypto.Address) Error {
+	return newError(CodeUnrecognizedAddress, addr.String())
 }
 
 func ErrInvalidSequence(msg string) Error {
@@ -84,7 +95,7 @@ func ErrInvalidSequence(msg string) Error {
 
 type Error interface {
 	Error() string
-	ABCICode() uint32
+	ABCICode() CodeType
 	ABCILog() string
 	Trace(msg string) Error
 	TraceCause(cause error, msg string) Error
@@ -92,7 +103,7 @@ type Error interface {
 	Result() Result
 }
 
-func NewError(code uint32, msg string) Error {
+func NewError(code CodeType, msg string) Error {
 	return newError(code, msg)
 }
 
@@ -107,39 +118,39 @@ func (ti traceItem) String() string {
 }
 
 type sdkError struct {
-	code  uint32
-	msg   string
-	cause error
-	trace []traceItem
+	code   CodeType
+	msg    string
+	cause  error
+	traces []traceItem
 }
 
-func newError(code uint32, msg string) *sdkError {
+func newError(code CodeType, msg string) *sdkError {
 	// TODO capture stacktrace if ENV is set.
 	if msg == "" {
 		msg = CodeToDefaultMsg(code)
 	}
 	return &sdkError{
-		code:  code,
-		msg:   msg,
-		cause: nil,
-		trace: nil,
+		code:   code,
+		msg:    msg,
+		cause:  nil,
+		traces: nil,
 	}
 }
 
 // Implements ABCIError.
 func (err *sdkError) Error() string {
-	return fmt.Sprintf("Error{%d:%s,%v,%v}", err.code, err.msg, err.cause, len(err.trace))
+	return fmt.Sprintf("Error{%d:%s,%v,%v}", err.code, err.msg, err.cause, len(err.traces))
 }
 
 // Implements ABCIError.
-func (err *sdkError) ABCICode() uint32 {
+func (err *sdkError) ABCICode() CodeType {
 	return err.code
 }
 
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
 	traceLog := ""
-	for _, ti := range err.trace {
+	for _, ti := range err.traces {
 		traceLog += ti.String() + "\n"
 	}
 	return fmt.Sprintf("msg: %v\ntrace:\n%v",
@@ -150,7 +161,17 @@ func (err *sdkError) ABCILog() string {
 
 // Add tracing information with msg.
 func (err *sdkError) Trace(msg string) Error {
-	_, fn, line, ok := runtime.Caller(1)
+	return err.doTrace(msg, 2)
+}
+
+// Add tracing information with cause and msg.
+func (err *sdkError) TraceCause(cause error, msg string) Error {
+	err.cause = cause
+	return err.doTrace(msg, 2)
+}
+
+func (err *sdkError) doTrace(msg string, n int) Error {
+	_, fn, line, ok := runtime.Caller(n)
 	if !ok {
 		if fn == "" {
 			fn = "<unknown>"
@@ -161,18 +182,12 @@ func (err *sdkError) Trace(msg string) Error {
 	}
 	// Include file & line number & msg.
 	// Do not include the whole stack trace.
-	err.trace = append(err.trace, traceItem{
+	err.traces = append(err.traces, traceItem{
 		filename: fn,
 		lineno:   line,
 		msg:      msg,
 	})
 	return err
-}
-
-// Add tracing information with cause and msg.
-func (err *sdkError) TraceCause(cause error, msg string) Error {
-	err.cause = cause
-	return err.Trace(msg)
 }
 
 func (err *sdkError) Cause() error {

@@ -13,10 +13,10 @@ type CoinMapper struct {
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
-func (cm CoinMapper) SubtractCoins(ctx sdk.Context, addr crypto.Address, amt sdk.Coins) (sdk.Coins, error) {
+func (cm CoinMapper) SubtractCoins(ctx sdk.Context, addr crypto.Address, amt sdk.Coins) (sdk.Coins, sdk.Error) {
 	acc := cm.am.GetAccount(ctx, addr)
 	if acc == nil {
-		return amt, fmt.Errorf("Sending account (%s) does not exist", addr)
+		return amt, sdk.ErrUnrecognizedAddress(addr)
 	}
 
 	coins := acc.GetCoins()
@@ -31,7 +31,7 @@ func (cm CoinMapper) SubtractCoins(ctx sdk.Context, addr crypto.Address, amt sdk
 }
 
 // AddCoins adds amt to the coins at the addr.
-func (cm CoinMapper) AddCoins(ctx sdk.Context, addr crypto.Address, amt sdk.Coins) (sdk.Coins, error) {
+func (cm CoinMapper) AddCoins(ctx sdk.Context, addr crypto.Address, amt sdk.Coins) (sdk.Coins, sdk.Error) {
 	acc := cm.am.GetAccount(ctx, addr)
 	if acc == nil {
 		acc = cm.am.NewAccountWithAddress(ctx, addr)

@@ -7,6 +7,7 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
+// An sdk.Tx which is its own sdk.Msg.
 type dummyTx struct {
 	key   []byte
 	value []byte
@@ -28,6 +29,10 @@ func (tx dummyTx) Get(key interface{}) (value interface{}) {
 
 func (tx dummyTx) Type() string {
 	return "dummy"
+}
+
+func (tx dummyTx) GetMsg() sdk.Msg {
+	return tx
 }
 
 func (tx dummyTx) GetSignBytes() []byte {

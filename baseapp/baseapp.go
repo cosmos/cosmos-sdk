@@ -227,7 +227,7 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 	}
 
 	return abci.ResponseCheckTx{
-		Code:      result.Code,
+		Code:      uint32(result.Code),
 		Data:      result.Data,
 		Log:       result.Log,
 		GasWanted: result.GasWanted,
@@ -253,7 +253,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	}
 
 	// After-handler hooks.
-	if result.Code == abci.CodeTypeOK {
+	if result.IsOK() {
 		app.valUpdates = append(app.valUpdates, result.ValidatorUpdates...)
 	} else {
 		// Even though the Code is not OK, there will be some side
@@ -263,7 +263,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 
 	// Tell the blockchain engine (i.e. Tendermint).
 	return abci.ResponseDeliverTx{
-		Code:      result.Code,
+		Code:      uint32(result.Code),
 		Data:      result.Data,
 		Log:       result.Log,
 		GasWanted: result.GasWanted,
@@ -285,8 +285,14 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 	}()
 
-	// Validate the Tx.Msg.
-	err := tx.ValidateBasic()
+	// Get the Msg.
+	var msg = tx.GetMsg()
+	if msg == nil {
+		return sdk.ErrInternal("Tx.GetMsg() returned nil").Result()
+	}
+
+	// Validate the Msg.
+	err := msg.ValidateBasic()
 	if err != nil {
 		return err.Result()
 	}
@@ -297,9 +303,6 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	// TODO: override default ante handler w/ custom ante handler.
 
 	// Run the ante handler.
-	if ctx.IsZero() {
-		panic("why? before")
-	}
 	newCtx, result, abort := app.defaultAnteHandler(ctx, tx)
 	if isCheckTx || abort {
 		return result
@@ -313,9 +316,9 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	ctx = ctx.WithMultiStore(msCache)
 
 	// Match and run route.
-	msgType := tx.Type()
+	msgType := msg.Type()
 	handler := app.router.Route(msgType)
-	result = handler(ctx, tx)
+	result = handler(ctx, msg)
 
 	// If result was successful, write to app.msDeliver or app.msCheck.
 	if result.IsOK() {

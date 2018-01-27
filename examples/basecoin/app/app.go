@@ -15,6 +15,7 @@ const appName = "BasecoinApp"
 
 type BasecoinApp struct {
 	*bam.BaseApp
+	router     bam.Router
 	cdc        *wire.Codec
 	multiStore sdk.CommitMultiStore
 

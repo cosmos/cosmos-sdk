@@ -12,15 +12,17 @@ func (app *BasecoinApp) initHandlers() {
 }
 
 func (app *BasecoinApp) initDefaultAnteHandler() {
-	var authAnteHandler = auth.NewAnteHandler(app.accountMapper)
-	app.BaseApp.SetDefaultAnteHandler(authAnteHandler)
+
+	// Deducts fee from payer.
+	// Verifies signatures and nonces.
+	// Sets Signers to ctx.
+	app.BaseApp.SetDefaultAnteHandler(
+		auth.NewAnteHandler(app.accountMapper))
 }
 
 func (app *BasecoinApp) initRouterHandlers() {
-	var router = app.BaseApp.Router()
-	var accountMapper = app.accountMapper
 
 	// All handlers must be added here.
 	// The order matters.
-	router.AddRoute("bank", bank.NewHandler(accountMapper))
+	app.router.AddRoute("bank", bank.NewHandler(app.accountMapper))
 }

@@ -7,6 +7,7 @@ import (
 )
 
 // Handle all "bank" type messages.
+// NOTE: Technically, NewHandler only needs a CoinMapper
 func NewHandler(am sdk.AccountMapper) sdk.Handler {
 
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {

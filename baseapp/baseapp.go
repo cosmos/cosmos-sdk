@@ -7,11 +7,15 @@ import (
 	"runtime/debug"
 
 	"github.com/golang/protobuf/proto"
+
 	"github.com/pkg/errors"
+
 	abci "github.com/tendermint/abci/types"
+
+	"github.com/tendermint/tmlibs/log"
+
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +27,7 @@ var mainHeaderKey = []byte("header")
 type BaseApp struct {
 	logger log.Logger
 
-	// Application name from abci.Info
+	// Application name for abci.Info
 	name string
 
 	// Common DB backend
@@ -57,7 +61,7 @@ type BaseApp struct {
 	valUpdates []abci.Validator
 }
 
-var _ abci.Application = &BaseApp{}
+var _ abci.Application = (*BaseApp)(nil)
 
 func NewBaseApp(name string) *BaseApp {
 	var baseapp = &BaseApp{
@@ -77,7 +81,7 @@ func NewBaseApp(name string) *BaseApp {
 func (app *BaseApp) initDB() {
 	db, err := dbm.NewGoLevelDB(app.name, "data")
 	if err != nil {
-		fmt.Println(err)
+		app.logger.Debug("Error during initDB", "err", err)
 		os.Exit(1)
 	}
 	app.db = db
@@ -114,22 +118,24 @@ func (app *BaseApp) SetEndBlocker(...) {}
 func (app *BaseApp) SetInitStater(...) {}
 */
 
+// LoadLatestVersion loads the latest version from the store.
 func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
 	app.cms.LoadLatestVersion()
 	return app.initFromStore(mainKey)
 }
 
+// LoadVersion returns the specific version from the store.
 func (app *BaseApp) LoadVersion(version int64, mainKey sdk.StoreKey) error {
 	app.cms.LoadVersion(version)
 	return app.initFromStore(mainKey)
 }
 
-// The last CommitID of the multistore.
+// LastCommitID returns the last CommitID of the multistore.
 func (app *BaseApp) LastCommitID() sdk.CommitID {
 	return app.cms.LastCommitID()
 }
 
-// The last commited block height.
+// LastBlockHeight returns the last commited block height.
 func (app *BaseApp) LastBlockHeight() int64 {
 	return app.cms.LastCommitID().Version
 }
@@ -158,7 +164,8 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 		}
 		lastVersion := lastCommitID.Version
 		if header.Height != lastVersion {
-			errStr := fmt.Sprintf("Expected main://%s.Height %v but got %v", mainHeaderKey, lastVersion, header.Height)
+			errStr := fmt.Sprintf("Expected main://%s.Height %v but got %v",
+				mainHeaderKey, lastVersion, header.Height)
 			return errors.New(errStr)
 		}
 	}
@@ -174,9 +181,8 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 
 //----------------------------------------
 
-// Implements ABCI.
+// Info implements ABCI.
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
-
 	lastCommitID := app.cms.LastCommitID()
 
 	return abci.ResponseInfo{
@@ -186,25 +192,25 @@ func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 	}
 }
 
-// Implements ABCI.
+// SetOption implements ABCI.
 func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
 	// TODO: Implement
 	return
 }
 
-// Implements ABCI.
+// InitChain implements ABCI.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	// TODO: Use req.Validators
 	return
 }
 
-// Implements ABCI.
+// Query implements ABCI.
 func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	// TODO: See app/query.go
 	return
 }
 
-// Implements ABCI.
+// BeginBlock implements ABCI.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	// NOTE: For consistency we should unset these upon EndBlock.
 	app.header = &req.Header
@@ -214,7 +220,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	return
 }
 
-// Implements ABCI.
+// CheckTx implements ABCI.
 func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 
 	// Decode the Tx.
@@ -240,7 +246,7 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 
 }
 
-// Implements ABCI.
+// DeliverTx implements ABCI.
 func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 
 	// Decode the Tx.
@@ -275,7 +281,8 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 // txBytes may be nil in some cases, for example, when tx is
 // coming from TestApp.  Also, in the future we may support
 // "internal" transactions.
-func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
+func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte,
+	tx sdk.Tx) (result sdk.Result) {
 
 	// Handle any panics.
 	defer func() {
@@ -286,7 +293,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	}()
 
 	// Get the Msg.
-	var msg = tx.GetMsg()
+	msg := tx.GetMsg()
 	if msg == nil {
 		return sdk.ErrInternal("Tx.GetMsg() returned nil").Result()
 	}
@@ -298,7 +305,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	// Construct a Context.
-	var ctx = app.newContext(isCheckTx, txBytes)
+	ctx := app.newContext(isCheckTx, txBytes)
 
 	// TODO: override default ante handler w/ custom ante handler.
 
@@ -328,7 +335,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	return result
 }
 
-// Implements ABCI.
+// EndBlock implements ABCI.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	res.ValidatorUpdates = app.valUpdates
 	app.valUpdates = nil
@@ -338,7 +345,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	return
 }
 
-// Implements ABCI.
+// Commit implements ABCI.
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	app.msDeliver.Write()
 	commitID := app.cms.Commit()
@@ -361,7 +368,7 @@ func (app *BaseApp) getMultiStore(isCheckTx bool) sdk.MultiStore {
 	}
 }
 
-// Return index of list with validator of same PubKey, or -1 if no match
+// NOTE: Return index of list with validator of same PubKey, or -1 if no match.
 func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {
 	for i, v := range list {
 		if bytes.Equal(val.PubKey, v.PubKey) {

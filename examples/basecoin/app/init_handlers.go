@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/sketchy"
 )
 
 // initCapKeys, initBaseApp, initStores, initHandlers.
@@ -25,4 +26,5 @@ func (app *BasecoinApp) initRouterHandlers() {
 	// All handlers must be added here.
 	// The order matters.
 	app.router.AddRoute("bank", bank.NewHandler(app.accountMapper))
+	app.router.AddRoute("sketchy", sketchy.NewHandler())
 }

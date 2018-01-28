@@ -131,7 +131,9 @@ const (
 	contextKeyTxBytes
 )
 
-// NOTE: Do not expose MultiStore, to require the store key.
+// NOTE: Do not expose MultiStore.
+// MultiStore exposes all the keys.
+// Instead, pass the context and the store key.
 func (c Context) multiStore() MultiStore {
 	return c.Value(contextKeyMultiStore).(MultiStore)
 }

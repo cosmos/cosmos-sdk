@@ -28,5 +28,5 @@ type Account interface {
 type AccountMapper interface {
 	NewAccountWithAddress(ctx Context, addr crypto.Address) Account
 	GetAccount(ctx Context, addr crypto.Address) Account
-	SetAccount(ctx Context, acc Account)
+	SetAccount(ctx Context, acc Account) error
 }

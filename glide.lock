@@ -1,5 +1,5 @@
-hash: e8435271aa9fdfc49efff9016427eca1fd6b43093a17187619360edda9f265e6
-updated: 2018-01-22T05:53:49.683395197-08:00
+hash: 563d600a0d26653d423f4d7ff830b09ef9bddc61ee3a3ae402ae22ffe6678a0a
+updated: 2018-01-28T18:13:54.132995+01:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 2e60448ffcc6bf78332d1fe590260095f554dd78
@@ -11,6 +11,14 @@ imports:
   - spew
 - name: github.com/ebuchman/fail-test
   version: 95f809107225be108efcf10a3509e4ea6ceef3c4
+- name: github.com/ethereumproject/go-ethereum
+  version: d3deb0eacf635def39f1afd8eca4bcb7172c2568
+  subpackages:
+  - common
+- name: github.com/ethereumproject/sputnikvm-ffi
+  version: a6c914124a94151706443826c8124896ab1473bc
+  subpackages:
+  - go/sputnikvm
 - name: github.com/go-kit/kit
   version: e2b298466b32c7cd5579a9b9b07e968fc9d9452c
   subpackages:
@@ -119,7 +127,7 @@ imports:
   - state
   - types
 - name: github.com/tendermint/tmlibs
-  version: 80029abc6e20f85079cd751e659a05508773288c
+  version: dc2111f0ddc779216e99758660a15ec831135706
   subpackages:
   - cli
   - cli/flags

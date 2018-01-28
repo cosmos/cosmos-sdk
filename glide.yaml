@@ -48,6 +48,11 @@ import:
   - events
   - log
   - logger
+- package: github.com/ethereumproject/sputnikvm-ffi
+  subpackages:
+  - go/sputnikvm
+- package: github.com/ethereumproject/go-ethereum
+  version: ^4.2.1
 testImport:
 - package: github.com/stretchr/testify
   subpackages:

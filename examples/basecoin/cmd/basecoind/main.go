@@ -8,7 +8,7 @@ import (
 
 	"github.com/tendermint/tmlibs/cli"
 
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/version"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 var rootCmd = &cobra.Command{

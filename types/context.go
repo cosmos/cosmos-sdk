@@ -238,7 +238,7 @@ func (pst *thePast) getOp(ver int64) (Op, bool) {
 	pst.mtx.RLock()
 	defer pst.mtx.RUnlock()
 	l := int64(len(pst.ops))
-	if l < ver {
+	if l < ver || ver <= 0 {
 		return Op{}, false
 	} else {
 		return pst.ops[ver-1], true

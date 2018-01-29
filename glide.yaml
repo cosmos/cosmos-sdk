@@ -16,7 +16,7 @@ import:
   subpackages:
   - keys
 - package: github.com/tendermint/go-wire
-  version: sdk2
+  version: develop
   subpackages:
   - data
 - package: github.com/tendermint/light-client

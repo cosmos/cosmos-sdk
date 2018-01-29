@@ -298,7 +298,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	// Construct a Context.
-	var ctx = app.newContext(isCheckTx, txBytes)
+	var ctx = app.NewContext(isCheckTx, txBytes)
 
 	// TODO: override default ante handler w/ custom ante handler.
 

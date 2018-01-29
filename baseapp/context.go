@@ -2,10 +2,10 @@ package baseapp
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
-// Returns a new Context suitable for AnteHandler (and indirectly Handler) processing.
+// NewContext returns a new Context suitable for AnteHandler (and indirectly Handler) processing.
 // NOTE: txBytes may be nil to support TestApp.RunCheckTx
 // and TestApp.RunDeliverTx.
-func (app *BaseApp) newContext(isCheckTx bool, txBytes []byte) sdk.Context {
+func (app *BaseApp) NewContext(isCheckTx bool, txBytes []byte) sdk.Context {
 	var store sdk.MultiStore
 	if isCheckTx {
 		store = app.msCheck

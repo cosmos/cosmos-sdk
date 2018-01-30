@@ -19,3 +19,4 @@ type CacheWrap = types.CacheWrap
 type CommitID = types.CommitID
 type StoreKey = types.StoreKey
 type StoreType = types.StoreType
+type Queryable = types.Queryable

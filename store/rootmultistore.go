@@ -2,10 +2,13 @@ package store
 
 import (
 	"fmt"
+	"strings"
 
+	"golang.org/x/crypto/ripemd160"
+
+	abci "github.com/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/merkle"
-	"golang.org/x/crypto/ripemd160"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -28,6 +31,7 @@ type rootMultiStore struct {
 }
 
 var _ CommitMultiStore = (*rootMultiStore)(nil)
+var _ Queryable = (*rootMultiStore)(nil)
 
 func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 	return &rootMultiStore{
@@ -183,6 +187,52 @@ func (rs *rootMultiStore) GetStoreByName(name string) Store {
 		return nil
 	}
 	return rs.stores[key]
+}
+
+//---------------------- Query ------------------
+
+func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
+	// Query just routes this to a substore.
+	path := req.Path
+	storeName, subpath, err := parsePath(path)
+	if err != nil {
+		return err.Result().ToQuery()
+	}
+
+	store := rs.GetStoreByName(storeName)
+	if store == nil {
+		msg := fmt.Sprintf("no such store: %s", storeName)
+		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+	}
+	query, ok := store.(Queryable)
+	if !ok {
+		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
+		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+	}
+
+	// trim the path and make the query
+	req.Path = subpath
+	res := query.Query(req)
+
+	// Note: later we have to think about adding information about
+	// the multistore -> store path to the proof
+	return res
+}
+
+// parsePath expects a format like /<storeName>[/<subpath>]
+// Must start with /, subpath may be empty
+// Returns error if it doesn't start with /
+func parsePath(path string) (storeName string, subpath string, err sdk.Error) {
+	if !strings.HasPrefix(path, "/") {
+		err = sdk.ErrUnknownRequest(fmt.Sprintf("invalid path: %s", path))
+		return
+	}
+	paths := strings.SplitN(path[1:], "/", 2)
+	storeName = paths[0]
+	if len(paths) == 2 {
+		subpath = paths[1]
+	}
+	return
 }
 
 //----------------------------------------

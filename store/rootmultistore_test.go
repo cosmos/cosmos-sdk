@@ -20,6 +20,14 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	commitID := CommitID{}
 	checkStore(t, store, commitID, commitID)
 
+	// make sure we can get stores by name
+	s1 := store.GetStoreByName("store1")
+	assert.NotNil(t, s1)
+	s3 := store.GetStoreByName("store3")
+	assert.NotNil(t, s3)
+	s77 := store.GetStoreByName("store77")
+	assert.Nil(t, s77)
+
 	// make a few commits and check them
 	nCommits := int64(3)
 	for i := int64(0); i < nCommits; i++ {
@@ -60,6 +68,27 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	assert.Nil(t, err)
 	commitID = getExpectedCommitID(store, ver+1)
 	checkStore(t, store, commitID, commitID)
+}
+
+func TestParsePath(t *testing.T) {
+	_, _, err := parsePath("foo")
+	assert.Error(t, err)
+
+	store, subpath, err := parsePath("/foo")
+	assert.NoError(t, err)
+	assert.Equal(t, store, "foo")
+	assert.Equal(t, subpath, "")
+
+	store, subpath, err = parsePath("/fizz/bang/baz")
+	assert.NoError(t, err)
+	assert.Equal(t, store, "fizz")
+	assert.Equal(t, subpath, "/bang/baz")
+
+	substore, subsubpath, err := parsePath(subpath)
+	assert.NoError(t, err)
+	assert.Equal(t, substore, "bang")
+	assert.Equal(t, subsubpath, "/baz")
+
 }
 
 //-----------------------------------------------------------------------

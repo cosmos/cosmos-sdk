@@ -230,7 +230,7 @@ func parsePath(path string) (storeName string, subpath string, err sdk.Error) {
 	paths := strings.SplitN(path[1:], "/", 2)
 	storeName = paths[0]
 	if len(paths) == 2 {
-		subpath = paths[1]
+		subpath = "/" + paths[1]
 	}
 	return
 }

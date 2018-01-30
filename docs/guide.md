@@ -4,7 +4,7 @@ If you want to see some examples, take a look at the [examples/basecoin](/exampl
 
 ## Design Goals
 
-The design of the Cosmos SDK is based on the principles of "cababilities systems".
+The design of the Cosmos SDK is based on the principles of "capabilities systems".
 
 ## Capabilities systems
 

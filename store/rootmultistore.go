@@ -24,6 +24,7 @@ type rootMultiStore struct {
 	lastCommitID CommitID
 	storesParams map[StoreKey]storeParams
 	stores       map[StoreKey]CommitStore
+	keysByName   map[string]StoreKey
 }
 
 var _ CommitMultiStore = (*rootMultiStore)(nil)
@@ -33,6 +34,7 @@ func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 		db:           db,
 		storesParams: make(map[StoreKey]storeParams),
 		stores:       make(map[StoreKey]CommitStore),
+		keysByName:   make(map[string]StoreKey),
 	}
 }
 
@@ -53,6 +55,7 @@ func (rs *rootMultiStore) MountStoreWithDB(key StoreKey, typ StoreType, db dbm.D
 		db:  db,
 		typ: typ,
 	}
+	rs.keysByName[key.Name()] = key
 }
 
 // Implements CommitMultiStore.
@@ -167,6 +170,19 @@ func (rs *rootMultiStore) GetStore(key StoreKey) Store {
 // Implements MultiStore.
 func (rs *rootMultiStore) GetKVStore(key StoreKey) KVStore {
 	return rs.stores[key].(KVStore)
+}
+
+// GetStoreByName will first convert the original name to
+// a special key, before looking up the CommitStore.
+// This is not exposed to the extensions (which will need the
+// StoreKey), but is useful in main, and particularly app.Query,
+// in order to convert human strings into CommitStores.
+func (rs *rootMultiStore) GetStoreByName(name string) Store {
+	key := rs.keysByName[name]
+	if key == nil {
+		return nil
+	}
+	return rs.stores[key]
 }
 
 //----------------------------------------

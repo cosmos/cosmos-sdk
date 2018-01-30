@@ -39,6 +39,8 @@ type MultiStore interface {
 	// Convenience for fetching substores.
 	GetStore(StoreKey) Store
 	GetKVStore(StoreKey) KVStore
+
+	GetStoreByName(string) Store
 }
 
 // From MultiStore.CacheMultiStore()....

@@ -3,22 +3,27 @@ package app
 import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/paymentchannels"
 	"github.com/cosmos/cosmos-sdk/x/sketchy"
 )
 
 // initCapKeys, initBaseApp, initStores, initHandlers.
 func (app *BasecoinApp) initHandlers() {
-	app.initDefaultAnteHandler()
 	app.initRouterHandlers()
+	app.initAnteHandlers()
 }
 
-func (app *BasecoinApp) initDefaultAnteHandler() {
+func (app *BasecoinApp) initAnteHandlers() {
 
 	// Deducts fee from payer.
 	// Verifies signatures and nonces.
 	// Sets Signers to ctx.
 	app.BaseApp.SetDefaultAnteHandler(
 		auth.NewAnteHandler(app.accountMapper))
+
+
+	// init custom ante handlers
+	app.router.AddAnte("paymentchannels", paymentchannels.NewAnteHandler(app.accountMapper))
 }
 
 func (app *BasecoinApp) initRouterHandlers() {

@@ -22,7 +22,6 @@ func NewHandler(am sdk.AccountMapper) sdk.Handler {
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
-
 }
 
 // Handle SendMsg.

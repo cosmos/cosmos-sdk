@@ -3,9 +3,15 @@ package stake
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	crypto "github.com/tendermint/go-crypto"
+	dbm "github.com/tendermint/tmlibs/db"
+	"github.com/tendermint/tmlibs/rational"
 
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,6 +19,17 @@ func subspace(prefix []byte) (start, end []byte) {
 	start, end = prefix, prefix
 	end[len(end)-1]++
 	return
+}
+
+func initTestStore(t *testing.T) sdk.KVStore {
+	// Capabilities key to access the main KVStore.
+	db, err := dbm.NewGoLevelDB("stake", "data")
+	require.Nil(t, err)
+	stakeStoreKey := sdk.NewKVStoreKey("stake")
+	ms := store.NewCommitMultiStore(db)
+	ms.MountStoreWithDB(stakeStoreKey, sdk.StoreTypeIAVL, db)
+	ms.LoadLatestVersion()
+	return ms.GetKVStore(stakeStoreKey)
 }
 
 func newAddrs(n int) (addrs []crypto.Address) {
@@ -49,15 +66,15 @@ var pks = []crypto.PubKey{
 
 // NOTE: PubKey is supposed to be the binaryBytes of the crypto.PubKey
 // instead this is just being set the address here for testing purposes
-func candidatesFromActors(store sdk.KVStore, addrs []crypto.Address, amts []int) {
+func candidatesFromActors(store sdk.KVStore, addrs []crypto.Address, amts []int64) {
 	for i := 0; i < len(addrs); i++ {
 		c := &Candidate{
 			Status:      Unbonded,
 			PubKey:      pks[i],
 			Owner:       addrs[i],
-			Assets:      int64(amts[i]), //rational.New(amts[i]),
-			Liabilities: int64(amts[i]), //rational.New(amts[i]),
-			VotingPower: int64(amts[i]), //rational.New(amts[i]),
+			Assets:      rational.New(amts[i]),
+			Liabilities: rational.New(amts[i]),
+			VotingPower: rational.New(amts[i]),
 		}
 		saveCandidate(store, c)
 	}
@@ -69,9 +86,9 @@ func candidatesFromActorsEmpty(addrs []crypto.Address) (candidates Candidates) {
 			Status:      Unbonded,
 			PubKey:      pks[i],
 			Owner:       addrs[i],
-			Assets:      0, //rational.Zero,
-			Liabilities: 0, //rational.Zero,
-			VotingPower: 0, //rational.Zero,
+			Assets:      rational.Zero,
+			Liabilities: rational.Zero,
+			VotingPower: rational.Zero,
 		}
 		candidates = append(candidates, c)
 	}

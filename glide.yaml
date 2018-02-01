@@ -24,6 +24,7 @@ import:
   - common
   - db
   - log
+  - logger
   - merkle
 - package: golang.org/x/crypto
   subpackages:

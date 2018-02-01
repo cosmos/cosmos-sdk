@@ -13,7 +13,7 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
-func initTestStore(t *testing.T) sdk.KVStore {
+func initTestStore(t *testing.T) sdk.CommitKVStore {
 	// Capabilities key to access the main KVStore.
 	db, err := dbm.NewGoLevelDB("stake", "data")
 	require.Nil(t, err)
@@ -21,7 +21,7 @@ func initTestStore(t *testing.T) sdk.KVStore {
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(stakeStoreKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
-	return ms.GetKVStore(stakeStoreKey)
+	return ms.GetCommitKVStore(stakeStoreKey)
 }
 
 func TestState(t *testing.T) {

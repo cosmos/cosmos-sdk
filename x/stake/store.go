@@ -29,8 +29,9 @@ var (
 
 func init() {
 	cdc = wire.NewCodec()
-	cdc.RegisterInterface((*rational.Rational)(nil), nil)
+	cdc.RegisterInterface((*rational.Rational)(nil), nil) // XXX make like crypto.RegisterWire()
 	cdc.RegisterConcrete(rational.Rat{}, "rat", nil)
+	crypto.RegisterWire(cdc)
 }
 
 // GetCandidateKey - get the key for the candidate with pubKey

@@ -29,7 +29,7 @@ Create keys
 
 First, we name our key:
 
-.. code:: shelldown
+::
 
     basecli keys new alice
 

@@ -10,8 +10,6 @@ Install
 
 With go, it's one command:
 
-..  code:: shelldown[0]
-
 ::
 
     go get -u github.com/cosmos/cosmos-sdk
@@ -25,8 +23,6 @@ Generate some keys
 
 Let's generate two keys, one to receive an initial allocation of coins,
 and one to send some coins to later:
-
-..  code:: shelldown[1]
 
 ::
 
@@ -42,16 +38,12 @@ Initialize Basecoin
 
 To initialize a new Basecoin blockchain, run:
 
-..  code:: shelldown[2]
-
 ::
 
     basecoin init <ADDRESS>
 
 If you prefer not to copy-paste, you can provide the address
 programatically:
-
-..  code:: shelldown[3]
 
 ::
 
@@ -70,8 +62,6 @@ Start Basecoin
 
 Now we can start Basecoin:
 
-..  code:: shelldown[4]
-
 ::
 
     basecoin start
@@ -85,8 +75,6 @@ Now that Basecoin is running we can initialize ``basecli``, the
 light-client utility. Basecli is used for sending transactions and
 querying the state. Leave Basecoin running and open a new terminal
 window. Here run:
-
-..  code:: shelldown[5]
 
 ::
 
@@ -108,8 +96,6 @@ Send transactions
 Now we are ready to send some transactions. First Let's check the
 balance of the two accounts we setup earlier:
 
-..  code:: shelldown[6]
-
 ::
 
     ME=$(basecli keys get cool | awk '{print $2}')
@@ -120,8 +106,6 @@ balance of the two accounts we setup earlier:
 The first account is flush with cash, while the second account doesn't
 exist. Let's send funds from the first account to the second:
 
-..  code:: shelldown[7]
-
 ::
 
     basecli tx send --name=cool --amount=1000mycoin --to=$YOU --sequence=1
@@ -129,15 +113,11 @@ exist. Let's send funds from the first account to the second:
 Now if we check the second account, it should have ``1000`` 'mycoin'
 coins!
 
-..  code:: shelldown[8]
-
 ::
 
     basecli query account $YOU
 
 We can send some of these coins back like so:
-
-..  code:: shelldown[9]
 
 ::
 
@@ -148,15 +128,11 @@ send from.
 
 If we try to send too much, we'll get an error:
 
-..  code:: shelldown[10]
-
 ::
 
     basecli tx send --name=friend --amount=500000mycoin --to=$ME --sequence=2
 
 Let's send another transaction:
-
-..  code:: shelldown[11]
 
 ::
 
@@ -164,8 +140,6 @@ Let's send another transaction:
 
 Note the ``hash`` value in the response - this is the hash of the
 transaction. We can query for the transaction by this hash:
-
-..  code:: shelldown[12]
 
 ::
 
@@ -204,8 +178,6 @@ unlike Bitcoin's use of Unspent Transaction Outputs (UTXOs). Note
 Basecoin is a multi-asset cryptocurrency, so each account can have many
 different kinds of tokens.
 
-..  code:: golang
-
 ::
 
     type Account struct {
@@ -242,8 +214,6 @@ to be sent to other accounts. The ``SendTx`` takes a list of inputs and
 a list of outputs, and transfers all the tokens listed in the inputs
 from their corresponding accounts to the accounts listed in the output.
 The ``SendTx`` is structured as follows:
-
-..  code:: golang
 
 ::
 
@@ -306,8 +276,6 @@ including private keys.
 To remove all the files created and refresh your environment (e.g., if
 starting this tutorial again or trying something new), the following
 commands are run:
-
-..  code:: shelldown[end-of-tutorials]
 
 ::
 

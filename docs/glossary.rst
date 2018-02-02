@@ -44,8 +44,7 @@ Context (ctx)
 -------------
 
 As a request passes through the system, it may pick up information such
-as the authorization it has received from another middleware, or the
-block height the request runs at. In order to carry this information
+as the block height the request runs at. In order to carry this information
 between modules it is saved to the context. Further, all information
 must be deterministic from the context in which the request runs (based
 on the transaction and the block it was included in) and can be used to
@@ -90,18 +89,18 @@ separate module.
 
 The second is to add permissions to the transaction context. The
 transaction context can specify that the tx has been signed by one or
-multiple specific
-`actors <https://github.com/tendermint/basecoin/blob/unstable/context.go#L18>`__.
+multiple specific actors.
+
 A transactions will only be executed if the permission requirements have
 been fulfilled. For example the sender of funds must have signed, or 2
 out of 3 multi-signature actors must have signed a joint account. To
 prevent the forgery of account signatures from unintended modules each
 permission is associated with the module that granted it (in this case
-`auth <https://github.com/cosmos/cosmos-sdk/tree/master/modules/auth>`__),
+`auth <https://github.com/cosmos/cosmos-sdk/tree/master/x/auth>`__),
 and if a module tries to add a permission for another module, it will
 panic. There is also protection if a module creates a brand new fake
 context to trick the downstream modules. Each context enforces the rules
-on how to make child contexts, and the stack middleware builder enforces
+on how to make child contexts, and the stack builder enforces
 that the context passed from one level to the next is a valid child of
 the original one.
 
@@ -152,7 +151,7 @@ the super minimal
 `negroni <https://github.com/urfave/negroni/blob/master/README.md>`__
 package, we just provide one more ``Middleware`` interface, which has an
 extra ``next`` parameter, and a ``Stack`` that can wire all the levels
-together (which also gives us a place to perform isolation of each
+together (which also gives us a place to perform seperation of each
 step).
 
 .. code:: golang
@@ -165,6 +164,8 @@ step).
 Modules
 -------
 
+TODO: update (s/Modules/handlers+mappers+stores/g) & add Msg + Tx (a signed message)
+
 A module is a set of functionality which should be typically designed as
 self-sufficient. Common elements of a module are:
 
@@ -172,13 +173,6 @@ self-sufficient. Common elements of a module are:
 -  custom error codes
 -  data models (to persist in the kv-store)
 -  handler (to handle any end transactions)
--  middleware (to handler any wrapper transactions)
-
-To enable a module, you must add the appropriate middleware (if any) to
-the stack in ``main.go`` for the client application (default:
-``basecli/main.go``), as well as adding the handler (if any) to the
-dispatcher (default: ``app/app.go``). Once the stack is compiled into a
-``Handler``, then each transaction is handled by the appropriate module.
 
 Dispatcher
 ----------
@@ -189,7 +183,7 @@ have ``coin`` sending money, ``roles`` to create multi-sig accounts, and
 ``ibc`` for following other chains all working together without
 interference.
 
-After the chain of middleware, we can register a ``Dispatcher``, which
+We can then register a ``Dispatcher``, which
 also implements the ``Handler`` interface. We then register a list of
 modules with the dispatcher. Every module has a unique ``Name()``, which
 is used for isolating its state space. We use this same name for routing
@@ -300,8 +294,3 @@ and charge a fee. Within the SDK this can be achieved using separate
 modules in a stack, one to send the coins and the other to charge the
 fee, however both modules do not need to check the nonce. This can occur
 as a separate module earlier in the stack.
-
-IBC (Inter-Blockchain Communication)
-------------------------------------
-
-Stay tuned!

@@ -21,11 +21,11 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	checkStore(t, store, commitID, commitID)
 
 	// make sure we can get stores by name
-	s1 := store.GetStoreByName("store1")
+	s1 := store.getStoreByName("store1")
 	assert.NotNil(t, s1)
-	s3 := store.GetStoreByName("store3")
+	s3 := store.getStoreByName("store3")
 	assert.NotNil(t, s3)
-	s77 := store.GetStoreByName("store77")
+	s77 := store.getStoreByName("store77")
 	assert.Nil(t, s77)
 
 	// make a few commits and check them

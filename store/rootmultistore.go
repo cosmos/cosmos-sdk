@@ -176,12 +176,12 @@ func (rs *rootMultiStore) GetKVStore(key StoreKey) KVStore {
 	return rs.stores[key].(KVStore)
 }
 
-// GetStoreByName will first convert the original name to
+// getStoreByName will first convert the original name to
 // a special key, before looking up the CommitStore.
 // This is not exposed to the extensions (which will need the
 // StoreKey), but is useful in main, and particularly app.Query,
 // in order to convert human strings into CommitStores.
-func (rs *rootMultiStore) GetStoreByName(name string) Store {
+func (rs *rootMultiStore) getStoreByName(name string) Store {
 	key := rs.keysByName[name]
 	if key == nil {
 		return nil
@@ -199,7 +199,7 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return err.Result().ToQuery()
 	}
 
-	store := rs.GetStoreByName(storeName)
+	store := rs.getStoreByName(storeName)
 	if store == nil {
 		msg := fmt.Sprintf("no such store: %s", storeName)
 		return sdk.ErrUnknownRequest(msg).Result().ToQuery()

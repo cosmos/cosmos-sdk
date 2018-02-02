@@ -1,8 +1,8 @@
-hash: ed34b08bfc24f64edbc1a16ad2e34198afefc0e2dc133be2c92c6f764f953234
-updated: 2018-01-21T19:02:30.081003208-08:00
+hash: fd4a3648af3dd1d49623ce248ba98804bf5a9c6a1bc28d61d93d5e878ccd04d4
+updated: 2018-02-02T14:07:48.239589+01:00
 imports:
 - name: github.com/btcsuite/btcd
-  version: 2e60448ffcc6bf78332d1fe590260095f554dd78
+  version: c7588cbf7690cd9f047a28efa2dcd8f2435a4e5e
   subpackages:
   - btcec
 - name: github.com/btcsuite/btcutil
@@ -55,14 +55,14 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/ed25519
-  version: d8387025d2b9d158cf4efb07e7ebf814bcce2057
+  version: 1f52c6f8b8a5c7908aff4497c186af344b428925
   subpackages:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-wire
-  version: 0cce10e82786f2d501827fbe158747dbc4ceeb43
+  version: e723d95ac2838b7ae9919ada25004859236c32ff
 - name: github.com/tendermint/tmlibs
-  version: 7a52d47a1676a9fe61d07fde0a48a733cce564c6
+  version: 95b53c80e1771be6b8c7083771a417e2a888c765
   subpackages:
   - common
   - db
@@ -87,7 +87,7 @@ testImports:
   subpackages:
   - difflib
 - name: github.com/stretchr/testify
-  version: b91bfb9ebec76498946beb6af7c0230c7cc7ba6c
+  version: 12b6f73e6084dad08a7c6e575284b177ecafbc71
   subpackages:
   - assert
   - require

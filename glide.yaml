@@ -19,7 +19,7 @@ import:
 - package: github.com/tendermint/tmlibs
   version: sdk2
 - package: github.com/tendermint/go-wire
-  version: sdk2
+  version: develop
 - package: golang.org/x/crypto
   subpackages:
   - blowfish

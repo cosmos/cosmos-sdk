@@ -27,9 +27,7 @@ Basecoin
    :maxdepth: 2
 
    basecoin/basics.rst
-   basecoin/tool.rst
    basecoin/plugins.rst
-   basecoin/kubernetes.rst
 
 Staking Module
 --------------

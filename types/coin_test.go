@@ -24,7 +24,8 @@ func TestCoins(t *testing.T) {
 		{"GAS", 1},
 		{"MINERAL", 1},
 	}
-	badSort2 := Coins{ // both are after the first one, but the second and third are in the wrong order
+	// both are after the first one, but the second and third are in the wrong order
+	badSort2 := Coins{
 		{"GAS", 1},
 		{"TREE", 1},
 		{"MINERAL", 1},
@@ -52,7 +53,29 @@ func TestCoins(t *testing.T) {
 
 }
 
-//Test the parse coin and parse coins functionality
+func TestPlusCoins(t *testing.T) {
+	assert := assert.New(t)
+
+	cases := []struct {
+		inputOne Coins
+		inputTwo Coins
+		expected Coins
+	}{
+		{Coins{{"A", 1}, {"B", 1}}, Coins{{"A", 1}, {"B", 1}}, Coins{{"A", 2}, {"B", 2}}},
+		{Coins{{"A", 0}, {"B", 1}}, Coins{{"A", 0}, {"B", 0}}, Coins{{"B", 1}}},
+		{Coins{{"A", 0}, {"B", 0}}, Coins{{"A", 0}, {"B", 0}}, Coins{}},
+		{Coins{{"A", 1}, {"B", 0}}, Coins{{"A", -1}, {"B", 0}}, Coins{}},
+		{Coins{{"A", -1}, {"B", 0}}, Coins{{"A", 0}, {"B", 0}}, Coins{{"A", -1}}},
+	}
+
+	for _, tc := range cases {
+		res := tc.inputOne.Plus(tc.inputTwo)
+		assert.True(res.IsValid())
+		assert.Equal(tc.expected, res)
+	}
+}
+
+//Test the parsing of Coin and Coins
 func TestParse(t *testing.T) {
 
 	cases := []struct {

@@ -38,6 +38,9 @@ draw_deps:
 	go get github.com/RobotsAndPencils/goviz
 	@goviz -i github.com/tendermint/tendermint/cmd/tendermint -d 3 | dot -Tpng -o dependency-graph.png
 
+evm:
+	cd $(GOPATH)/src/github.com/cosmos/cosmos-sdk/vendor/github.com/ethereumproject/sputnikvm-ffi/c && $(MAKE) build
+
 
 ########################################
 ### Documentation
@@ -67,6 +70,9 @@ test_tutorial:
 	@for script in docs/guide/*.sh ; do \
 		bash $$script ; \
 	done
+
+test_evm:
+	CGO_LDFLAGS="$(GOPATH)/src/github.com/cosmos/cosmos-sdk/vendor/github.com/ethereumproject/sputnikvm-ffi/c/libsputnikvm.a -ldl -lresolv" go test ./x/evm
 
 benchmark:
 	@go test -bench=. $(PACKAGES)

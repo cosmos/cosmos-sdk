@@ -203,7 +203,7 @@ func TestState(t *testing.T) {
 	// set and retrieve a record
 	saveCandidate(store, candidate)
 	resCand = loadCandidate(store, pk)
-	assert.Equal(candidate, resCand)
+	//assert.Equal(candidate, resCand)
 	assert.True(candidatesEqual(candidate, resCand), "%#v \n %#v", resCand, candidate)
 
 	// modify a records, save, and retrieve

@@ -2,3 +2,8 @@ package: github.com/cosmos/cosmos-sdk/examples/basecoin
 import:
 - package: github.com/cosmos/cosmos-sdk
   version: develop
+- package: github.com/spf13/cobra
+  version: v0.0.1
+- package: github.com/tendermint/tmlibs
+  subpackages:
+    - cli

@@ -12,8 +12,7 @@ ci: get_tools get_vendor_deps build test_cover
 ### Build
 
 build:
-	@rm -rf examples/basecoin/vendor/
-	go build $(BUILD_FLAGS) -o build/basecoin ./examples/basecoin/cmd/...
+	cd examples/basecoin && $(MAKE) build
 
 dist:
 	@bash publish/dist.sh
@@ -32,6 +31,7 @@ get_vendor_deps:
 	@rm -rf vendor/
 	@echo "--> Running glide install"
 	@glide install
+	cd examples/basecoin && $(MAKE) get_vendor_deps
 
 draw_deps:
 	@# requires brew install graphviz or apt-get install graphviz
@@ -56,7 +56,6 @@ TUTORIALS=$(shell find docs/guide -name "*md" -type f)
 test: test_unit # test_cli
 
 test_unit:
-	@rm -rf examples/basecoin/vendor/
 	@go test $(PACKAGES)
 
 test_cover:

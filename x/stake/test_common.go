@@ -16,9 +16,10 @@ import (
 )
 
 func subspace(prefix []byte) (start, end []byte) {
-	start, end = prefix, prefix
+	end = make([]byte, len(prefix))
+	copy(end, prefix)
 	end[len(end)-1]++
-	return
+	return prefix, end
 }
 
 func initTestStore(t *testing.T) sdk.KVStore {

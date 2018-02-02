@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"testing"
 
+	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/tmlibs/rational"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	crypto "github.com/tendermint/go-crypto"
 )
 
 // XXX XXX XXX
@@ -105,29 +105,7 @@ import (
 //// test validator added at the end
 //vs2 = []Validator{v1, v2, v4, v5}
 //changed = vs1.validatorsUpdated(vs2)
-//require.Equal(1, len(changed))
-//testChange(t, vs2[3], changed[0])
-
-//// test multiple validators added
-//vs2 = []Validator{v1, v2, v3, v4, v5}
-//changed = vs1.validatorsUpdated(vs2)
-//require.Equal(2, len(changed))
-//testChange(t, vs2[2], changed[0])
-//testChange(t, vs2[4], changed[1])
-
-//// test validator removed at the beginning
-//vs2 = []Validator{v2, v4}
-//changed = vs1.validatorsUpdated(vs2)
-//require.Equal(1, len(changed))
-//testRemove(t, vs1[0], changed[0])
-
-//// test validator removed in the middle
-//vs2 = []Validator{v1, v4}
-//changed = vs1.validatorsUpdated(vs2)
-//require.Equal(1, len(changed))
-//testRemove(t, vs1[1], changed[0])
-
-//// test validator removed at the end
+//require.Equal(1, len(changed)) //testChange(t, vs2[3], changed[0]) //// test multiple validators added //vs2 = []Validator{v1, v2, v3, v4, v5} //changed = vs1.validatorsUpdated(vs2) //require.Equal(2, len(changed)) //testChange(t, vs2[2], changed[0]) //testChange(t, vs2[4], changed[1]) //// test validator removed at the beginning //vs2 = []Validator{v2, v4} //changed = vs1.validatorsUpdated(vs2) //require.Equal(1, len(changed)) //testRemove(t, vs1[0], changed[0]) //// test validator removed in the middle //vs2 = []Validator{v1, v4} //changed = vs1.validatorsUpdated(vs2) //require.Equal(1, len(changed)) //testRemove(t, vs1[1], changed[0]) //// test validator removed at the end
 //vs2 = []Validator{v1, v2}
 //changed = vs1.validatorsUpdated(vs2)
 //require.Equal(1, len(changed))
@@ -140,25 +118,7 @@ import (
 //testRemove(t, vs1[1], changed[0])
 //testRemove(t, vs1[2], changed[1])
 
-//// test many types of changes
-//vs2 = []Validator{v1, v3, v4, v5}
-//vs2[2].VotingPower = rational.New(11)
-//changed = vs1.validatorsUpdated(vs2)
-//require.Equal(4, len(changed), "%v", changed) // change 1, remove 1, add 2
-//testRemove(t, vs1[1], changed[0])
-//testChange(t, vs2[1], changed[1])
-//testChange(t, vs2[2], changed[2])
-//testChange(t, vs2[3], changed[3])
-
-//}
-
-//func TestUpdateValidatorSet(t *testing.T) {
-//assert, require := assert.New(t), require.New(t)
-//store := initTestStore(t)
-//params := loadParams(store)
-//gs := loadGlobalState(store)
-
-//N := 5
+//// test many types of changes //vs2 = []Validator{v1, v3, v4, v5} //vs2[2].VotingPower = rational.New(11) //changed = vs1.validatorsUpdated(vs2) //require.Equal(4, len(changed), "%v", changed) // change 1, remove 1, add 2 //testRemove(t, vs1[1], changed[0]) //testChange(t, vs2[1], changed[1]) //testChange(t, vs2[2], changed[2]) //testChange(t, vs2[3], changed[3]) //} //func TestUpdateValidatorSet(t *testing.T) { //assert, require := assert.New(t), require.New(t) //store := initTestStore(t) //params := loadParams(store) //gs := loadGlobalState(store) //N := 5
 //actors := newAddrs(N)
 //candidates := candidatesFromActors(actors, []int64{400, 200, 100, 10, 1})
 //for _, c := range candidates {
@@ -204,15 +164,13 @@ func TestState(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	store := initTestStore(t)
-	cdc.RegisterInterface((*crypto.PubKey)(nil), nil)
-	cdc.RegisterConcrete(crypto.PubKeyEd25519{}, "crypto/PubKeyEd25519", nil)
 
 	//delegator := crypto.Address{[]byte("addressdelegator")}
 	//validator := crypto.Address{[]byte("addressvalidator")}
 	delegator := []byte("addressdelegator")
 	validator := []byte("addressvalidator")
-
-	pk := newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB57")
+	//pk := newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB57")
+	pk := crypto.GenPrivKeyEd25519().PubKey()
 
 	//----------------------------------------------------------------------
 	// Candidate checks
@@ -230,9 +188,9 @@ func TestState(t *testing.T) {
 		return c1.Status == c2.Status &&
 			c1.PubKey.Equals(c2.PubKey) &&
 			bytes.Equal(c1.Owner, c2.Owner) &&
-			c1.Assets == c2.Assets &&
-			c1.Liabilities == c2.Liabilities &&
-			c1.VotingPower == c2.VotingPower &&
+			c1.Assets.Equal(c2.Assets) &&
+			c1.Liabilities.Equal(c2.Liabilities) &&
+			c1.VotingPower.Equal(c2.VotingPower) &&
 			c1.Description == c2.Description
 	}
 
@@ -245,7 +203,8 @@ func TestState(t *testing.T) {
 	// set and retrieve a record
 	saveCandidate(store, candidate)
 	resCand = loadCandidate(store, pk)
-	assert.True(candidatesEqual(candidate, resCand))
+	assert.Equal(candidate, resCand)
+	assert.True(candidatesEqual(candidate, resCand), "%#v \n %#v", resCand, candidate)
 
 	// modify a records, save, and retrieve
 	candidate.Liabilities = rational.New(99)

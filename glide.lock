@@ -1,5 +1,5 @@
-hash: fd4a3648af3dd1d49623ce248ba98804bf5a9c6a1bc28d61d93d5e878ccd04d4
-updated: 2018-02-02T14:07:48.239589+01:00
+hash: 1466255448cc0ab79ed6e575df6db01d53895f9e39c141dbb4494fe8cb9ba506
+updated: 2018-02-02T18:29:54.201489+01:00
 imports:
 - name: github.com/btcsuite/btcd
   version: c7588cbf7690cd9f047a28efa2dcd8f2435a4e5e
@@ -10,11 +10,11 @@ imports:
   subpackages:
   - base58
 - name: github.com/davecgh/go-spew
-  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  version: 346938d642f2ec3594ed81d874461961cd0faa76
   subpackages:
   - spew
 - name: github.com/go-kit/kit
-  version: e2b298466b32c7cd5579a9b9b07e968fc9d9452c
+  version: 4dc7be5d2d12881735283bcab7352178e190fc71
   subpackages:
   - log
   - log/level
@@ -24,7 +24,7 @@ imports:
 - name: github.com/go-stack/stack
   version: 817915b46b97fd7bb80e8ab6b69f01a53ac3eebf
 - name: github.com/gogo/protobuf
-  version: 342cbe0a04158f6dcb03ca0079991a51a4248c02
+  version: 1adfc126b41513cc696b209667c8656ea7aac67c
   subpackages:
   - gogoproto
   - proto
@@ -62,7 +62,7 @@ imports:
 - name: github.com/tendermint/go-wire
   version: e723d95ac2838b7ae9919ada25004859236c32ff
 - name: github.com/tendermint/tmlibs
-  version: 95b53c80e1771be6b8c7083771a417e2a888c765
+  version: 2e765462234e7749806cd00fa326acc25d704448
   subpackages:
   - common
   - db
@@ -80,8 +80,6 @@ imports:
   - ripemd160
   - salsa20/salsa
 testImports:
-- name: github.com/mndrix/btcutil
-  version: d3a63a5752ecf3fbc06bd97365da752111c263df
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
@@ -91,7 +89,5 @@ testImports:
   subpackages:
   - assert
   - require
-- name: github.com/tyler-smith/go-bip32
-  version: 2c9cfd17756470a0b7c3e4b7954bae7d11035504
 - name: github.com/tyler-smith/go-bip39
   version: 8e7a99b3e716f36d3b080a9a70f9eb45abe4edcc

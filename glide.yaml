@@ -6,36 +6,29 @@ import:
 - package: github.com/btcsuite/btcutil
   subpackages:
   - base58
-- package: github.com/syndtr/goleveldb
-  subpackages:
-  - leveldb
-  - leveldb/errors
-  - leveldb/iterator
-  - leveldb/opt
-  - leveldb/util
+- package: github.com/howeyc/crc16
+- package: github.com/pkg/errors
+  version: ^0.8.0
 - package: github.com/tendermint/ed25519
   subpackages:
   - extra25519
-- package: github.com/tendermint/tmlibs
-  version: sdk2
 - package: github.com/tendermint/go-wire
   version: develop
+- package: github.com/tendermint/tmlibs
+  version: 2e765462234e7749806cd00fa326acc25d704448
+  subpackages:
+  - common
+  - db
 - package: golang.org/x/crypto
   subpackages:
   - blowfish
   - nacl/secretbox
   - openpgp/armor
   - ripemd160
-- package: github.com/pkg/errors
-- package: github.com/howeyc/crc16
-# Needs refactoring, shouldn't be implementing PrivKey
-#- package: github.com/ethanfrey/ledger
 testImport:
-- package: github.com/mndrix/btcutil
 - package: github.com/stretchr/testify
-  version: ^1.1.4
+  version: ^1.2.1
   subpackages:
   - assert
   - require
-- package: github.com/tyler-smith/go-bip32
 - package: github.com/tyler-smith/go-bip39

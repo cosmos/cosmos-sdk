@@ -23,12 +23,13 @@ func subspace(prefix []byte) (start, end []byte) {
 
 func initTestStore(t *testing.T) sdk.KVStore {
 	// Capabilities key to access the main KVStore.
-	db, err := dbm.NewGoLevelDB("stake", "data")
-	require.Nil(t, err)
+	//db, err := dbm.NewGoLevelDB("stake", "data")
+	db := dbm.NewMemDB()
 	stakeStoreKey := sdk.NewKVStoreKey("stake")
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(stakeStoreKey, sdk.StoreTypeIAVL, db)
-	ms.LoadLatestVersion()
+	err := ms.LoadLatestVersion()
+	require.Nil(t, err)
 	return ms.GetKVStore(stakeStoreKey)
 }
 

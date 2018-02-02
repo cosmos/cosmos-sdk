@@ -27,7 +27,16 @@ Basecoin
    :maxdepth: 2
 
    basecoin/basics.rst
-   basecoin/plugins.rst
+   basecoin/extensions.rst
+
+Extensions
+----------
+
+.. toctree::
+   :maxdepth: 2
+
+   x/replay-protection.rst
+
 
 Staking Module
 --------------

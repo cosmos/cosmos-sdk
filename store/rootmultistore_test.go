@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	abci "github.com/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/merkle"
 
@@ -89,6 +90,68 @@ func TestParsePath(t *testing.T) {
 	assert.Equal(t, substore, "bang")
 	assert.Equal(t, subsubpath, "/baz")
 
+}
+
+func TestMultiStoreQuery(t *testing.T) {
+	db := dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db)
+	err := multi.LoadLatestVersion()
+	assert.Nil(t, err)
+
+	k, v := []byte("wind"), []byte("blows")
+	k2, v2 := []byte("water"), []byte("flows")
+	// v3 := []byte("is cold")
+
+	cid := multi.Commit()
+
+	// make sure we can get by name
+	garbage := multi.getStoreByName("bad-name")
+	assert.Nil(t, garbage)
+
+	// set and commit data in one store
+	store1 := multi.getStoreByName("store1").(KVStore)
+	store1.Set(k, v)
+
+	// and another
+	store2 := multi.getStoreByName("store2").(KVStore)
+	store2.Set(k2, v2)
+
+	// commit the multistore
+	cid = multi.Commit()
+	ver := cid.Version
+
+	// bad path
+	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
+	qres := multi.Query(query)
+	assert.Equal(t, uint32(sdk.CodeUnknownRequest), qres.Code)
+
+	query.Path = "h897fy32890rf63296r92"
+	qres = multi.Query(query)
+	assert.Equal(t, uint32(sdk.CodeUnknownRequest), qres.Code)
+
+	// invalid store name
+	query.Path = "/garbage/key"
+	qres = multi.Query(query)
+	assert.Equal(t, uint32(sdk.CodeUnknownRequest), qres.Code)
+
+	// valid query with data
+	query.Path = "/store1/key"
+	qres = multi.Query(query)
+	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	assert.Equal(t, v, qres.Value)
+
+	// valid but empty
+	query.Path = "/store2/key"
+	query.Prove = true
+	qres = multi.Query(query)
+	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	assert.Nil(t, qres.Value)
+
+	// store2 data
+	query.Data = k2
+	qres = multi.Query(query)
+	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	assert.Equal(t, v2, qres.Value)
 }
 
 //-----------------------------------------------------------------------

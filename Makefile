@@ -68,7 +68,7 @@ test_unit:
 	@go test $(PACKAGES)
 
 test_cover:
-	@bash test_cover.sh
+	@bash tests/test_cover.sh
 
 benchmark:
 	@go test -bench=. $(PACKAGES)

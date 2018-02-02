@@ -1,9 +1,0 @@
-
-* global state dumper.
-	for developer to list accounts, etc.
-	e.g. what does the world look like?
-	cmd cli.
-
-* something that can list transactions ... 
-	make all decorators actually use the logger
-	so you can see all the txs and see what's going on

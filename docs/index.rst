@@ -19,7 +19,6 @@ SDK
    
    sdk/overview.rst
    sdk/install.rst
-   sdk/roles-and-multi-sig.rst
 
 Basecoin
 --------

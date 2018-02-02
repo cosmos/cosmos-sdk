@@ -19,7 +19,6 @@ SDK
    
    sdk/overview.rst
    sdk/install.rst
-   sdk/key-management.rst
    sdk/roles-and-multi-sig.rst
 
 Basecoin
@@ -40,6 +39,7 @@ Staking Module
    :maxdepth: 2
 
    staking/intro.rst
+   staking/key-management.rst
    staking/local-testnet.rst
    staking/public-testnet.rst
 

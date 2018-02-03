@@ -33,7 +33,7 @@ func TestPubKeySecp256k1Address(t *testing.T) {
 		var priv PrivKeySecp256k1
 		copy(priv[:], privB)
 
-		pubT := priv.PubKey().Unwrap().(PubKeySecp256k1)
+		pubT := priv.PubKey().(PubKeySecp256k1)
 		pub := pubT[:]
 		addr := priv.PubKey().Address()
 
@@ -45,5 +45,5 @@ func TestPubKeySecp256k1Address(t *testing.T) {
 func TestPubKeyInvalidDataProperReturnsEmpty(t *testing.T) {
 	pk, err := PubKeyFromBytes([]byte("foo"))
 	require.NotNil(t, err, "expecting a non-nil error")
-	require.True(t, pk.Empty(), "expecting an empty public key on error")
+	require.Nil(t, pk, "expecting an empty public key on error")
 }

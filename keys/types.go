@@ -1,15 +1,39 @@
 package keys
 
 import (
-	wire "github.com/tendermint/go-wire"
-
 	crypto "github.com/tendermint/go-crypto"
 )
 
+// Keybase allows simple CRUD on a keystore, as an aid to signing
+type Keybase interface {
+	// Sign some bytes
+	Sign(name, passphrase string, msg []byte) (crypto.Signature, crypto.PubKey, error)
+	// Create a new keypair
+	Create(name, passphrase string, algo CryptoAlgo) (info Info, seed string, err error)
+	// Recover takes a seedphrase and loads in the key
+	Recover(name, passphrase, seedphrase string) (info Info, erro error)
+	List() ([]Info, error)
+	Get(name string) (Info, error)
+	Update(name, oldpass, newpass string) error
+	Delete(name, passphrase string) error
+
+	Import(name string, armor string) (err error)
+	Export(name string) (armor string, err error)
+}
+
 // Info is the public information about a key
 type Info struct {
-	Name   string        `json:"name"`
-	PubKey crypto.PubKey `json:"pubkey"`
+	Name         string        `json:"name"`
+	PubKey       crypto.PubKey `json:"pubkey"`
+	PrivKeyArmor string        `json:"privkey.armor"`
+}
+
+func newInfo(name string, pub crypto.PubKey, privArmor string) Info {
+	return Info{
+		Name:         name,
+		PubKey:       pub,
+		PrivKeyArmor: privArmor,
+	}
 }
 
 // Address is a helper function to calculate the address from the pubkey
@@ -18,31 +42,14 @@ func (i Info) Address() []byte {
 }
 
 func (i Info) bytes() []byte {
-	return wire.BinaryBytes(i)
-}
-
-func readInfo(bs []byte) (info Info, err error) {
-	err = wire.ReadBinaryBytes(bs, &info)
-	return
-}
-
-func info(name string, privKey crypto.PrivKey) Info {
-	return Info{
-		Name:   name,
-		PubKey: privKey.PubKey(),
+	bz, err := cdc.MarshalBinary(i)
+	if err != nil {
+		panic(err)
 	}
+	return bz
 }
 
-// Keybase allows simple CRUD on a keystore, as an aid to signing
-type Keybase interface {
-	// Sign some bytes
-	Sign(name, passphrase string, msg []byte) (crypto.Signature, crypto.PubKey, error)
-	// Create a new keypair
-	Create(name, passphrase, algo string) (seedphrase string, _ Info, _ error)
-	// Recover takes a seedphrase and loads in the key
-	Recover(name, passphrase, algo, seedphrase string) (Info, error)
-	List() ([]Info, error)
-	Get(name string) (Info, error)
-	Update(name, oldpass, newpass string) error
-	Delete(name, passphrase string) error
+func readInfo(bz []byte) (info Info, err error) {
+	err = cdc.UnmarshalBinary(bz, &info)
+	return
 }

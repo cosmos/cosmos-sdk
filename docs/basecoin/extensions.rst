@@ -31,7 +31,7 @@ coins is greater than ``countfee`` that the user provides.
 A new blockchain can be initialized and started just like in the
 `previous guide <basecoin-basics.md>`__:
 
-.. code:: shelldown[0]
+::
 
     # WARNING: this wipes out data - but counter is only for demos...
     rm -rf ~/.counter
@@ -47,7 +47,7 @@ A new blockchain can be initialized and started just like in the
 The default files are stored in ``~/.counter``. In another window we can
 initialize the light-client and send a transaction:
 
-.. code:: shelldown[1]
+::
 
     countercli init --node=tcp://localhost:46657 --genesis=$HOME/.counter/genesis.json
 
@@ -57,7 +57,7 @@ initialize the light-client and send a transaction:
 But the Counter has an additional command, ``countercli tx counter``,
 which crafts an ``AppTx`` specifically for this plugin:
 
-.. code:: shelldown[2]
+::
 
     countercli tx counter --name cool
     countercli tx counter --name cool --valid
@@ -68,7 +68,7 @@ plugins that take many arguments of different types, and easily extend
 the tool to accomodate them. Of course, we can also expose queries on
 our plugin:
 
-.. code:: shelldown[3]
+::
 
     countercli query counter
 
@@ -79,7 +79,7 @@ again, we will see the value increment. Note that we need the sequence
 number here to send the coins (it didn't increment when we just pinged
 the counter)
 
-.. code:: shelldown[4]
+::
 
     countercli tx counter --name cool --countfee=2mycoin --sequence=2 --valid
     countercli query counter
@@ -102,7 +102,7 @@ The ``AppTx`` is similar to the ``SendTx``, but instead of sending coins
 from inputs to outputs, it sends coins from one input to a plugin, and
 can also send some data.
 
-.. code:: golang
+::
 
     type AppTx struct {
       Gas   int64   `json:"gas"`
@@ -129,7 +129,7 @@ Plugins
 A plugin is simply a Go package that implements the ``Plugin``
 interface:
 
-.. code:: golang
+::
 
     type Plugin interface {
 

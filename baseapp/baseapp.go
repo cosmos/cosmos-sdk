@@ -312,7 +312,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	// CacheWrap app.msDeliver in case it fails.
-	msCache := app.getMultiStore(isCheckTx).CacheMultiStore()
+	msCache := app.GetMultiStore(isCheckTx).CacheMultiStore()
 	ctx = ctx.WithMultiStore(msCache)
 
 	// Match and run route.
@@ -353,7 +353,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 //----------------------------------------
 // Misc.
 
-func (app *BaseApp) getMultiStore(isCheckTx bool) sdk.MultiStore {
+func (app *BaseApp) GetMultiStore(isCheckTx bool) sdk.MultiStore {
 	if isCheckTx {
 		return app.msCheck
 	} else {

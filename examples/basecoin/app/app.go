@@ -13,11 +13,12 @@ import (
 
 const appName = "BasecoinApp"
 
+// BasecoinApp - extended ABCI application
 type BasecoinApp struct {
 	*bam.BaseApp
 	router     bam.Router
 	cdc        *wire.Codec
-	multiStore sdk.CommitMultiStore
+	multiStore sdk.CommitMultiStore //TODO distinguish this store from *bam.BaseApp.cms <- is this one master?? confused
 
 	// The key to access the substores.
 	capKeyMainStore *sdk.KVStoreKey
@@ -27,6 +28,7 @@ type BasecoinApp struct {
 	accountMapper sdk.AccountMapper
 }
 
+// NewBasecoinApp - create new BasecoinApp
 // TODO: This should take in more configuration options.
 func NewBasecoinApp() *BasecoinApp {
 
@@ -46,6 +48,7 @@ func NewBasecoinApp() *BasecoinApp {
 	return app
 }
 
+// RunForever - BasecoinApp execution and cleanup
 func (app *BasecoinApp) RunForever() {
 
 	// Start the ABCI server
@@ -64,7 +67,7 @@ func (app *BasecoinApp) RunForever() {
 
 }
 
-// Load the stores.
+// Load the stores
 func (app *BasecoinApp) loadStores() {
 	if err := app.LoadLatestVersion(app.capKeyMainStore); err != nil {
 		fmt.Println(err)

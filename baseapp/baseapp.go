@@ -59,6 +59,7 @@ type BaseApp struct {
 
 var _ abci.Application = &BaseApp{}
 
+// NewBaseApp - create and name new BaseApp
 func NewBaseApp(name string) *BaseApp {
 	var baseapp = &BaseApp{
 		logger: makeDefaultLogger(),
@@ -88,22 +89,26 @@ func (app *BaseApp) initMultiStore() {
 	app.cms = cms
 }
 
+// Name - BaseApp Name
 func (app *BaseApp) Name() string {
 	return app.name
 }
 
+// MountStore - Mount a store to the provided key in the BaseApp multistore
 func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, app.db)
 }
 
+// nolint
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
-
+func (app *BaseApp) SetInitStater(initStater sdk.InitStater) {
+	app.initStater = initStater
+}
 func (app *BaseApp) SetDefaultAnteHandler(ah sdk.AnteHandler) {
 	app.defaultAnteHandler = ah
 }
-
 func (app *BaseApp) Router() Router {
 	return app.router
 }
@@ -111,25 +116,26 @@ func (app *BaseApp) Router() Router {
 /* TODO consider:
 func (app *BaseApp) SetBeginBlocker(...) {}
 func (app *BaseApp) SetEndBlocker(...) {}
-func (app *BaseApp) SetInitStater(...) {}
 */
 
+// LoadLatestVersion - TODO add description
 func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
 	app.cms.LoadLatestVersion()
 	return app.initFromStore(mainKey)
 }
 
+// LoadVersion - load application version
 func (app *BaseApp) LoadVersion(version int64, mainKey sdk.StoreKey) error {
 	app.cms.LoadVersion(version)
 	return app.initFromStore(mainKey)
 }
 
-// The last CommitID of the multistore.
+// LastCommitID -  The last CommitID of the multistore.
 func (app *BaseApp) LastCommitID() sdk.CommitID {
 	return app.cms.LastCommitID()
 }
 
-// The last commited block height.
+// LastBlockHeight -  The last commited block height.
 func (app *BaseApp) LastBlockHeight() int64 {
 	return app.cms.LastCommitID().Version
 }
@@ -174,7 +180,7 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 
 //----------------------------------------
 
-// Implements ABCI.
+// Info - Implements ABCI
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 
 	lastCommitID := app.cms.LastCommitID()
@@ -186,13 +192,13 @@ func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 	}
 }
 
-// Implements ABCI.
+// SetOption - Implements ABCI
 func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
 	// TODO: Implement
 	return
 }
 
-// Implements ABCI.
+// InitChain - Implements ABCI
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	// TODO: Use req.Validators
 	return
@@ -209,7 +215,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	return queryable.Query(req)
 }
 
-// Implements ABCI.
+// BeginBlock - Implements ABCI
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	// NOTE: For consistency we should unset these upon EndBlock.
 	app.header = &req.Header
@@ -219,7 +225,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	return
 }
 
-// Implements ABCI.
+// CheckTx - Implements ABCI
 func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 
 	// Decode the Tx.
@@ -245,7 +251,7 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 
 }
 
-// Implements ABCI.
+// DeliverTx - Implements ABCI
 func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 
 	// Decode the Tx.
@@ -333,7 +339,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	return result
 }
 
-// Implements ABCI.
+// EndBlock - Implements ABCI
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	res.ValidatorUpdates = app.valUpdates
 	app.valUpdates = nil
@@ -343,7 +349,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	return
 }
 
-// Implements ABCI.
+// Commit - Implements ABCI
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	app.msDeliver.Write()
 	commitID := app.cms.Commit()
@@ -361,9 +367,8 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 func (app *BaseApp) getMultiStore(isCheckTx bool) sdk.MultiStore {
 	if isCheckTx {
 		return app.msCheck
-	} else {
-		return app.msDeliver
 	}
+	return app.msDeliver
 }
 
 // Return index of list with validator of same PubKey, or -1 if no match

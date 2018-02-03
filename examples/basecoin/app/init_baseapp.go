@@ -11,6 +11,7 @@ func (app *BasecoinApp) initBaseApp() {
 	app.BaseApp = bapp
 	app.router = bapp.Router()
 	app.initBaseAppTxDecoder()
+	app.initBaseAppInitStater()
 }
 
 func (app *BasecoinApp) initBaseAppTxDecoder() {
@@ -24,5 +25,14 @@ func (app *BasecoinApp) initBaseAppTxDecoder() {
 			return nil, sdk.ErrTxParse("").TraceCause(err, "")
 		}
 		return tx, nil
+	})
+}
+
+// used to define the custom logic for initialization
+func (app *BasecoinApp) initBaseAppInitStater() {
+	accountMapper := app.accountMapper
+	app.BaseApp.SetInitStater(func(ctx sdk.Context, stateJSON []byte) sdk.Error {
+		// TODO: parse JSON
+		//accountMapper.SetAccount(ctx, ...)
 	})
 }

@@ -54,6 +54,7 @@ func (rtr *router) AddAnte(r string, a sdk.AnteHandler) {
 
 }
 
+// TODO handle expressive matches.
 func (rtr *router) Route(path string) (h sdk.Handler) {
 	for _, route := range rtr.routes {
 		if route.r == path {

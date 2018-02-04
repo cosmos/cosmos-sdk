@@ -8,17 +8,21 @@ import (
 
 // initCapKeys, initBaseApp, initStores, initHandlers.
 func (app *BasecoinApp) initHandlers() {
-	app.initDefaultAnteHandler()
 	app.initRouterHandlers()
+	app.initAnteHandlers()
 }
 
-func (app *BasecoinApp) initDefaultAnteHandler() {
+func (app *BasecoinApp) initAnteHandlers() {
 
 	// Deducts fee from payer.
 	// Verifies signatures and nonces.
 	// Sets Signers to ctx.
 	app.BaseApp.SetDefaultAnteHandler(
 		auth.NewAnteHandler(app.accountMapper))
+
+
+	// init custom ante handlers
+	// Example: app.router.AddAnte("paymentchannels", paymentchannels.NewAnteHandler(app.accountMapper))
 }
 
 func (app *BasecoinApp) initRouterHandlers() {

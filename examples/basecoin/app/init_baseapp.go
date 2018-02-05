@@ -30,9 +30,10 @@ func (app *BasecoinApp) initBaseAppTxDecoder() {
 
 // used to define the custom logic for initialization
 func (app *BasecoinApp) initBaseAppInitStater() {
-	accountMapper := app.accountMapper
+	//accountMapper := app.accountMapper
 	app.BaseApp.SetInitStater(func(ctx sdk.Context, stateJSON []byte) sdk.Error {
 		// TODO: parse JSON
 		//accountMapper.SetAccount(ctx, ...)
+		return nil
 	})
 }

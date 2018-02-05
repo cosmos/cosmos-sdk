@@ -192,7 +192,7 @@ func TestAmountOf(t *testing.T) {
 	cases := []struct {
 		coins           Coins
 		amountOf        int64
-		amountOf_       int64
+		amountOfSpace   int64
 		amountOfGAS     int64
 		amountOfMINERAL int64
 		amountOfTREE    int64
@@ -210,7 +210,7 @@ func TestAmountOf(t *testing.T) {
 
 	for _, tc := range cases {
 		assert.Equal(t, tc.amountOf, tc.coins.AmountOf(""))
-		assert.Equal(t, tc.amountOf_, tc.coins.AmountOf(" "))
+		assert.Equal(t, tc.amountOfSpace, tc.coins.AmountOf(" "))
 		assert.Equal(t, tc.amountOfGAS, tc.coins.AmountOf("GAS"))
 		assert.Equal(t, tc.amountOfMINERAL, tc.coins.AmountOf("MINERAL"))
 		assert.Equal(t, tc.amountOfTREE, tc.coins.AmountOf("TREE"))

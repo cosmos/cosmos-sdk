@@ -35,26 +35,29 @@ type BaseApp struct {
 	// Unmarshal []byte into sdk.Tx
 	txDecoder sdk.TxDecoder
 
-	// Ante handler for fee and auth.
+	// Ante handler for fee and auth
 	defaultAnteHandler sdk.AnteHandler
 
-	// Handle any kind of message.
+	// Handle any kind of message
 	router Router
 
 	//--------------------
 	// Volatile
 
-	// CheckTx state, a cache-wrap of `.cms`.
+	// CheckTx state, a cache-wrap of `.cms`
 	msCheck sdk.CacheMultiStore
 
-	// DeliverTx state, a cache-wrap of `.cms`.
+	// DeliverTx state, a cache-wrap of `.cms`
 	msDeliver sdk.CacheMultiStore
 
 	// Current block header
 	header *abci.Header
 
-	// Cached validator changes from DeliverTx.
+	// Cached validator changes from DeliverTx
 	valUpdates []abci.Validator
+
+	// function to
+	initStater sdk.InitStater
 }
 
 var _ abci.Application = &BaseApp{}

@@ -184,6 +184,7 @@ func (coins Coins) IsNotNegative() bool {
 	return true
 }
 
+// Returns the amount of a denom from coins
 func (coins Coins) AmountOf(denom string) int64 {
 	switch len(coins) {
 	case 0:
@@ -192,9 +193,8 @@ func (coins Coins) AmountOf(denom string) int64 {
 		coin := coins[0]
 		if coin.Denom == denom {
 			return coin.Amount
-		} else {
-			return 0
 		}
+		return 0
 	default:
 		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2
 		coin := coins[midIdx]

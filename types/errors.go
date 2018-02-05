@@ -7,19 +7,20 @@ import (
 	"github.com/tendermint/go-crypto"
 )
 
+// ABCI Response Code
 type CodeType uint32
 
+// is everything okay?
 func (code CodeType) IsOK() bool {
 	if code == CodeOK {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
+// ABCI Response Codes
+// Base SDK reserves 0 ~ 99.
 const (
-	// ABCI Response Codes
-	// Base SDK reserves 0 ~ 99.
 	CodeOK                  CodeType = 0
 	CodeInternal            CodeType = 1
 	CodeTxParse             CodeType = 2
@@ -59,34 +60,28 @@ func CodeToDefaultMsg(code CodeType) string {
 // All errors are created via constructors so as to enable us to hijack them
 // and inject stack traces if we really want to.
 
+// nolint
 func ErrInternal(msg string) Error {
 	return newError(CodeInternal, msg)
 }
-
 func ErrTxParse(msg string) Error {
 	return newError(CodeTxParse, msg)
 }
-
 func ErrBadNonce(msg string) Error {
 	return newError(CodeBadNonce, msg)
 }
-
 func ErrUnauthorized(msg string) Error {
 	return newError(CodeUnauthorized, msg)
 }
-
 func ErrInsufficientFunds(msg string) Error {
 	return newError(CodeInsufficientFunds, msg)
 }
-
 func ErrUnknownRequest(msg string) Error {
 	return newError(CodeUnknownRequest, msg)
 }
-
 func ErrUnrecognizedAddress(addr crypto.Address) Error {
 	return newError(CodeUnrecognizedAddress, addr.String())
 }
-
 func ErrInvalidSequence(msg string) Error {
 	return newError(CodeInvalidSequence, msg)
 }
@@ -94,6 +89,7 @@ func ErrInvalidSequence(msg string) Error {
 //----------------------------------------
 // Error & sdkError
 
+// sdk Error type
 type Error interface {
 	Error() string
 	ABCICode() CodeType

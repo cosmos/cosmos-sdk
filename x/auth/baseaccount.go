@@ -18,7 +18,6 @@ var _ sdk.Account = (*BaseAccount)(nil)
 // See the examples/basecoin/types/account.go for an example.
 type BaseAccount struct {
 	Address  crypto.Address `json:"address"`
-	Coins    sdk.Coins      `json:"coins"`
 	PubKey   crypto.PubKey  `json:"public_key"`
 	Sequence int64          `json:"sequence"`
 }

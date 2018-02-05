@@ -1,4 +1,4 @@
-package types
+package bank
 
 import (
 	"testing"

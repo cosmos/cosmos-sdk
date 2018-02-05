@@ -1,4 +1,4 @@
-package types
+package bank
 
 import (
 	"fmt"
@@ -17,6 +17,29 @@ type Coin struct {
 // String provides a human-readable representation of a coin
 func (coin Coin) String() string {
 	return fmt.Sprintf("%v%v", coin.Amount, coin.Denom)
+}
+
+func NewCoin(denom string, amount int64) Coin {
+	Coin{
+		Denom: denom,
+		Amount: amount,
+	}
+}
+
+func (coin Coin) GetDenom() string {
+	return coin.Denom
+}
+
+func (coin Coin) SetDenom(denom string) {
+	coin.Denom = denom
+}
+
+func (coin Coin) GetAmount() int64 {
+	return coin.Amount
+}
+
+func (coin Coin) SetAmount() {
+	coin.Amount = Amount
 }
 
 // IsZero returns if this represents no money
@@ -47,6 +70,10 @@ func (coins Coins) String() string {
 		out += fmt.Sprintf("%v,", coin.String())
 	}
 	return out[:len(out)-1]
+}
+
+func NewCoins() Coins {
+	return []Coin{}
 }
 
 // IsValid asserts the Coins are sorted, and don't have 0 amounts

@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Implements sdk.AccountMapper.
 // This AccountMapper encodes/decodes accounts using the
 // go-wire (binary) encoding/decoding library.
 type accountMapper struct {
@@ -18,8 +17,8 @@ type accountMapper struct {
 	// The (unexposed) key used to access the store from the Context.
 	key sdk.StoreKey
 
-	// The prototypical sdk.Account concrete type.
-	proto sdk.Account
+	// The prototypical Account concrete type.
+	proto BaseAccount
 
 	// The wire codec for binary encoding/decoding of accounts.
 	cdc *wire.Codec
@@ -27,7 +26,7 @@ type accountMapper struct {
 
 // NewAccountMapper returns a new sdk.AccountMapper that
 // uses go-wire to (binary) encode and decode concrete sdk.Accounts.
-func NewAccountMapper(key sdk.StoreKey, proto sdk.Account) accountMapper {
+func NewAccountMapper(key sdk.StoreKey, proto BaseAccount) accountMapper {
 	cdc := wire.NewCodec()
 	return accountMapper{
 		key:   key,
@@ -52,7 +51,7 @@ func (am accountMapper) Seal() sealedAccountMapper {
 }
 
 // Implements sdk.AccountMapper.
-func (am accountMapper) NewAccountWithAddress(ctx sdk.Context, addr crypto.Address) sdk.Account {
+func (am accountMapper) MakeAccount(ctx sdk.Context, addr crypto.Address) sdk.Account {
 	acc := am.clonePrototype()
 	acc.SetAddress(addr)
 	return acc

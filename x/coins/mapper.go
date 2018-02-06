@@ -1,4 +1,4 @@
-package bank
+package coins
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ type coinMapper struct {
 
 // NewCoinMapper returns a new CoinMapper that
 // uses go-wire to (binary) encode and decode CoinAccounts.
-func NewCoinMapper(key sdk.StoreKey, proto sdk.Account, am sdk.AccountMapper) coinMapper {
+func NewCoinMapper(key sdk.StoreKey, proto sdk.Account, am auth.AccountMapper) coinMapper {
 	cdc := wire.NewCodec()
 	return coinMapper{
 		am:    am,

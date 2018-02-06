@@ -1,4 +1,4 @@
-package bank
+package coins
 
 import (
 	"reflect"
@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Handle all "bank" type messages.
+// Handle all "coins" type messages.
 // NOTE: Technically, NewHandler only needs a CoinMapper
-func NewHandler(am sdk.AccountMapper) sdk.Handler {
+func NewHandler(cm CoinMapper) sdk.Handler {
 
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		cm := CoinMapper{am}
@@ -18,7 +18,7 @@ func NewHandler(am sdk.AccountMapper) sdk.Handler {
 		case IssueMsg:
 			return handleIssueMsg(ctx, cm, msg)
 		default:
-			errMsg := "Unrecognized bank Msg type: " + reflect.TypeOf(msg).Name()
+			errMsg := "Unrecognized coins Msg type: " + reflect.TypeOf(msg).Name()
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
@@ -27,7 +27,25 @@ func NewHandler(am sdk.AccountMapper) sdk.Handler {
 
 // Handle SendMsg.
 func handleSendMsg(ctx sdk.Context, cm CoinMapper, msg SendMsg) sdk.Result {
-	// NOTE: totalIn == totalOut should already have been checked
+
+	fromAccount := ctx, cm.am.GetAccount(ctx, msg.FromAddress)
+	if fromAccount == nil {
+		return ErrUnknownAddress(msg.FromAddress.String())
+	}
+	
+	fromAccount := cm.GetCoinAccount(fromAccount)
+	if fromAccount == nil {
+		return ErrUnknownAddress(msg.FromAddress.String())
+	}
+
+
+	toAccount := cm.am.GetAccount(ctx, msg.ToAccount)
+	if fromAccount == nil {
+		NewBaseAccountWithAddress(msg.FromAddress)
+		NewBaseAccountWithAddress(msg.FromAddress.String())
+	} else {
+
+	}
 
 	for _, in := range msg.Inputs {
 		_, err := cm.SubtractCoins(ctx, in.Address, in.Coins)

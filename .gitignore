@@ -9,6 +9,8 @@ examples/build/*
 examples/basecoin/glide.lock
 examples/basecoin/app/data
 baseapp/data/*
+x/stake/data/*
+*basecoin-data
 
 ### Vagrant ###
 .vagrant/

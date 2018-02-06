@@ -191,6 +191,10 @@ func (rs *rootMultiStore) getStoreByName(name string) Store {
 
 //---------------------- Query ------------------
 
+// Query calls substore.Query with the same `req` where `req.Path` is
+// modified to remove the substore prefix.
+// Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
+// TODO: add proof for `multistore -> substore`.
 func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	// Query just routes this to a substore.
 	path := req.Path
@@ -204,7 +208,7 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 		msg := fmt.Sprintf("no such store: %s", storeName)
 		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
 	}
-	query, ok := store.(Queryable)
+	queryable, ok := store.(Queryable)
 	if !ok {
 		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
 		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
@@ -212,10 +216,7 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 
 	// trim the path and make the query
 	req.Path = subpath
-	res := query.Query(req)
-
-	// Note: later we have to think about adding information about
-	// the multistore -> store path to the proof
+	res := queryable.Query(req)
 	return res
 }
 

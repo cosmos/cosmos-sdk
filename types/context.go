@@ -186,7 +186,7 @@ func (c Context) WithTxBytes(txBytes []byte) Context {
 //----------------------------------------
 // thePast
 
-// Returns false if ver > 0.
+// Returns false if ver <= 0 || ver > len(c.pst.ops).
 // The first operation is version 1.
 func (c Context) GetOp(ver int64) (Op, bool) {
 	return c.pst.getOp(ver)
@@ -232,7 +232,7 @@ func (pst *thePast) version() int {
 	return pst.ver
 }
 
-// Returns false if ver > 0.
+// Returns false if ver <= 0 || ver > len(pst.ops).
 // The first operation is version 1.
 func (pst *thePast) getOp(ver int64) (Op, bool) {
 	pst.mtx.RLock()

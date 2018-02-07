@@ -1,5 +1,5 @@
-SDK Overview
-============
+Overview
+========
 
 The SDK design optimizes flexibility and security. The
 framework is designed around a modular execution stack which allows

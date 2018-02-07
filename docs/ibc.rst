@@ -1,5 +1,5 @@
-InterBlockchain Communication with the Cosmos SDK
-=================================================
+IBC
+===
 
 TODO: update in light of latest SDK (this document is currently out of date)
 
@@ -18,8 +18,8 @@ serialized IBC transaction type.
 
 We'll demonstrate exactly how this works below.
 
-IBC
----
+Inter BlockChain Communication
+------------------------------
 
 Let's review the IBC protocol. The purpose of IBC is to enable one
 blockchain to function as a light-client of another. Since we are using

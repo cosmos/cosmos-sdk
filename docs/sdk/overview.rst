@@ -118,6 +118,7 @@ Capabilities systems
 ~~~~~~~~~~~~~~~~~~~~
 
 TODO:
+
 * Need for module isolation
 * Capability is implied permission
 * Link to thesis
@@ -126,7 +127,7 @@ Tx & Msg
 ~~~~~~~~
 
 The SDK distinguishes between transactions (Tx) and messages
-(Msg).  A Tx is a Msg wrapped with authentication and fee data.
+(Msg). A Tx is a Msg wrapped with authentication and fee data.
 
 Messages
 ^^^^^^^^
@@ -319,6 +320,7 @@ Mounting an IAVLStore
 ^^^^^^^^^^^^^^^^^^^^^
 
 TODO:
+
 * IAVLStore: Fast balanced dynamic Merkle store.
 
   * supports iteration.

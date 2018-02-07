@@ -14,11 +14,14 @@ Welcome to the Cosmos SDK!
 SDK
 ---
 
+.. One maxdepth for now
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    
    sdk/overview.rst
    sdk/install.rst
+   sdk/glossary.rst
 
 .. Basecoin
 .. --------
@@ -52,8 +55,9 @@ Staking Module
 Extras
 ------
 
+.. One maxdepth for now
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    ibc.rst
-   glossary.rst

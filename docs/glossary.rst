@@ -32,7 +32,7 @@ users (or apps) to inspect the chain.
 Note how we can wrap any other transaction, add a fee level, and not
 worry about the encoding in our module any more?
 
-.. code:: golang
+::
 
     type Fee struct {
       Fee   coin.Coin      `json:"fee"`
@@ -118,7 +118,7 @@ structures into an internal format that is more convenient, but unable
 to travel over the wire. The basic interface for any code that modifies
 state is the ``Handler`` interface, which provides four methods:
 
-.. code:: golang
+::
 
       Name() string
       CheckTx(ctx Context, store state.KVStore, tx Tx) (Result, error)
@@ -154,7 +154,7 @@ extra ``next`` parameter, and a ``Stack`` that can wire all the levels
 together (which also gives us a place to perform seperation of each
 step).
 
-.. code:: golang
+::
 
       Name() string
       CheckTx(ctx Context, store state.KVStore, tx Tx, next Checker) (Result, error)
@@ -198,7 +198,7 @@ go-wire magic that we are already using, rather than add another layer.
 For all the transactions to be properly routed, the only thing you need
 to remember is to use the following pattern:
 
-.. code:: golang
+::
 
     const (
       NameCoin = "coin"
@@ -217,7 +217,7 @@ permissions than simple public key signatures. Rather than just use an
 address to identify who is performing an action, we can use a more
 complex structure:
 
-.. code:: golang
+::
 
     type Actor struct {
       ChainID string     `json:"chain"` // this is empty unless it comes from a different chain

@@ -69,7 +69,7 @@ The ``IBCRegisterChainTx`` is used to register one chain on another. It
 contains the chain ID and genesis configuration of the chain to
 register:
 
-.. code:: golang
+::
 
     type IBCRegisterChainTx struct { BlockchainGenesis }
 
@@ -85,7 +85,7 @@ The ``IBCUpdateChainTx`` is used to update the state of one chain on
 another. It contains the header and commit signatures for some block in
 the chain:
 
-.. code:: golang
+::
 
     type IBCUpdateChainTx struct {
       Header tm.Header
@@ -106,7 +106,7 @@ a sequence number (i.e. an integer that increments with every message
 sent between this pair of chains), a packet type (e.g. coin, data,
 etc.), and a payload.
 
-.. code:: golang
+::
 
     type IBCPacketCreateTx struct {
       Packet
@@ -137,7 +137,7 @@ The ``IBCPacketPostTx`` is used to post an outgoing packet from one
 chain to another. It contains the packet and a proof that the packet was
 committed into the state of the sending chain:
 
-.. code:: golang
+::
 
     type IBCPacketPostTx struct {
       FromChainID     string // The immediate source of the packet, not always Packet.SrcChainID

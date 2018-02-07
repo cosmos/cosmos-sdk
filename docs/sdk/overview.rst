@@ -322,6 +322,7 @@ TODO:
 * IAVLStore: Fast balanced dynamic Merkle store.
 
   * supports iteration.
+
 * MultiStore: multiple Merkle tree backends in a single store 
   
   * allows using Ethereum Patricia Trie and Tendermint IAVL in same app

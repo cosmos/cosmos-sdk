@@ -3,7 +3,7 @@ SDK Overview
 
 The SDK design optimizes flexibility and security. The
 framework is designed around a modular execution stack which allows
-applications to mix and match modular elements as desired. In addition,
+applications to mix and match elements as desired. In addition,
 all modules are sandboxed for greater application security.
 
 Framework Overview

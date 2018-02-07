@@ -135,32 +135,6 @@ that execute transactions, and this can provide a large degree of code
 interoperability, much like ``http.Handler`` does in golang web
 development.
 
-Middleware
-----------
-
-Middleware is a series of processing steps that any request must travel
-through before (and after) executing the registered ``Handler``. Some
-examples are a logger (that records the time before executing the
-transaction, then outputs info - including duration - after the
-execution), of a signature checker (which unwraps the transaction by one
-layer, verifies signatures, and adds the permissions to the Context
-before passing the request along).
-
-In keeping with the standardization of ``http.Handler`` and inspired by
-the super minimal
-`negroni <https://github.com/urfave/negroni/blob/master/README.md>`__
-package, we just provide one more ``Middleware`` interface, which has an
-extra ``next`` parameter, and a ``Stack`` that can wire all the levels
-together (which also gives us a place to perform seperation of each
-step).
-
-::
-
-      Name() string
-      CheckTx(ctx Context, store state.KVStore, tx Tx, next Checker) (Result, error)
-      DeliverTx(ctx Context, store state.KVStore, tx Tx, next Deliver) (Result, error)
-      SetOption(l log.Logger, store state.KVStore, module, key, value string, next Optioner) (string, error)
-
 Modules
 -------
 

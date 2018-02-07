@@ -2,15 +2,13 @@ Key Management
 ==============
 
 Here we explain a bit how to work with your keys, using the
-``basecli keys`` subcommand. Note that because ``basecli`` is
-an implementation of the Cosmmos SDK, other implementations, such
-as ``gaia`` will have a compatible set of tooling.
+``gaia client keys`` subcommand. 
 
 **Note:** This keys tooling is not considered production ready and is
 for dev only.
 
 We'll look at what you can do using the six sub-commands of
-``basecli keys``:
+``gaia client keys``:
 
 ::
 
@@ -24,14 +22,14 @@ We'll look at what you can do using the six sub-commands of
 Create keys
 -----------
 
-``basecli keys new`` has two inputs (name, password) and two outputs
+``gaia client keys new`` has two inputs (name, password) and two outputs
 (address, seed).
 
 First, we name our key:
 
 ::
 
-    basecli keys new alice
+    gaia client keys new alice
 
 This will prompt (10 character minimum) password entry which must be
 re-typed. You'll see:
@@ -73,13 +71,13 @@ command, e.g.:
 
 ::
 
-    echo 1234567890 | basecli keys new fred --output json
+    echo 1234567890 | gaia client keys new fred --output json
 
 After trying each of the three ways to create a key, look at them, use:
 
 ::
 
-    basecli keys list
+    gaia client keys list
 
 to list all the keys:
 
@@ -127,18 +125,18 @@ If we want information about one specific key, then:
 
 ::
 
-    basecli keys get charlie --output json
+    gaia client keys get charlie --output json
 
 will, for example, return the info for only the "charlie" key returned
-from the previous ``basecoin keys list`` command.
+from the previous ``gaia client keys list`` command.
 
 The keys tooling can support different types of keys with a flag:
 
 ::
 
-    basecli keys new bit --type secp256k1
+    gaia client keys new bit --type secp256k1
 
-and you'll see the difference in the ``"type": field from``\ basecli
+and you'll see the difference in the ``"type": field from``\ gaia client
 keys get\`
 
 Before moving on, let's set an enviroment variable to make
@@ -160,7 +158,7 @@ First, let's simulate the loss by deleting a key:
 
 ::
 
-    basecli keys delete alice
+    gaia client keys delete alice
 
 which prompts for your current password, now rendered obsolete, and
 gives a warning message. The only way you can recover your key now is
@@ -169,7 +167,7 @@ it:
 
 ::
 
-    basecli keys recover alice-again
+    gaia client keys recover alice-again
 
 which prompts for a new password then the seed:
 
@@ -187,7 +185,7 @@ To change the password of a key, we can:
 
 ::
 
-    basecli keys update alice-again
+    gaia client keys update alice-again
 
 and follow the prompts.
 
@@ -196,11 +194,11 @@ That covers most features of the keys sub command.
 .. raw:: html
 
    <!-- use later in a test script, or more advance tutorial?
-   SEED=$(echo 1234567890 | basecli keys new fred -o json | jq .seed | tr -d \")
+   SEED=$(echo 1234567890 | gaia client keys new fred -o json | jq .seed | tr -d \")
    echo $SEED
-   (echo qwertyuiop; echo $SEED stamp) | basecli keys recover oops
-   (echo qwertyuiop; echo $SEED) | basecli keys recover derf
-   basecli keys get fred -o json
-   basecli keys get derf -o json
+   (echo qwertyuiop; echo $SEED stamp) | gaia client keys recover oops
+   (echo qwertyuiop; echo $SEED) | gaia client keys recover derf
+   gaia client keys get fred -o json
+   gaia client keys get derf -o json
    ```
    -->

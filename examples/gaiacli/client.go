@@ -30,28 +30,7 @@ var (
 		Short: "Query remote node for status",
 		RunE:  todoNotImplemented,
 	}
-
-	getCmd = &cobra.Command{
-		Use:   "get",
-		Short: "Query ABCI state data",
-		Long: `Query ABCI state data.
-Subcommands should be defined for each particular object to query.`,
-	}
-
-	postCmd = &cobra.Command{
-		Use:   "post",
-		Short: "Create a new transaction and post it to the chain",
-		Long: `Create a new transaction and post it to the chain.
-Subcommands should be defined for each particular transaction type.`,
-	}
 )
-
-func init() {
-	getCmd.PersistentFlags().Bool(flagTrustNode, false, "Don't verify proofs for responses")
-
-	postCmd.PersistentFlags().String(flagName, "", "Name of private key with which to sign")
-	postCmd.PersistentFlags().String(flagPassword, "", "Password to use the named private key")
-}
 
 // AddClientCommands returns a sub-tree of all basic client commands
 //
@@ -66,21 +45,24 @@ func AddClientCommands(cmd *cobra.Command) {
 		txSearchCommand(),
 		txCommand(),
 		lineBreak,
-		getCmd,
-		postCmd,
-		lineBreak,
-		serveCommand(),
 	)
 }
 
-// AddGetCommand adds one or more query subcommands
-func AddGetCommand(cmds ...*cobra.Command) {
-	getCmd.AddCommand(cmds...)
+// GetCommands adds common flags to query commands
+func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
+	for _, c := range cmds {
+		c.Flags().Bool(flagTrustNode, false, "Don't verify proofs for responses")
+	}
+	return cmds
 }
 
-// AddPostCommand adds one or more subcommands to create transactions
-func AddPostCommand(cmds ...*cobra.Command) {
-	postCmd.AddCommand(cmds...)
+// PostCommands adds common flags for commands to post tx
+func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
+	for _, c := range cmds {
+		c.Flags().String(flagName, "", "Name of private key with which to sign")
+		c.Flags().String(flagPassword, "", "Password to use the named private key")
+	}
+	return cmds
 }
 
 func initClientCommand() *cobra.Command {

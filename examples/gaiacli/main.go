@@ -51,14 +51,19 @@ func main() {
 	// disable sorting
 	cobra.EnableCommandSorting = false
 
-	// add commands
-	AddGetCommand(getAccountCmd)
-	AddPostCommand(postSendCommand())
-
+	// generic client commands
 	AddClientCommands(gaiacliCmd)
+	// query commands (custom to binary)
 	gaiacliCmd.AddCommand(
+		GetCommands(getAccountCmd)...)
+	// post tx commands (custom to binary)
+	gaiacliCmd.AddCommand(
+		PostCommands(postSendCommand())...)
+	// add proxy, version and key info
+	gaiacliCmd.AddCommand(
+		lineBreak,
+		serveCommand(),
 		KeyCommands(),
-
 		lineBreak,
 		VersionCmd,
 	)

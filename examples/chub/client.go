@@ -95,10 +95,10 @@ func initClientCommand() *cobra.Command {
 		RunE:  todoNotImplemented,
 	}
 	cmd.Flags().StringP(flagChainID, "c", "", "ID of chain we connect to")
-	cmd.Flags().StringP(flagNode, "n", "tcp://localhost:46657", "node to connect to")
-	cmd.Flags().String(flagGenesis, "", "genesis file to verify header validity")
-	cmd.Flags().String(flagCommit, "", "file with trusted and signed header")
-	cmd.Flags().String(flagValHash, "", "hash of trusted validator set (hex-encoded)")
+	cmd.Flags().StringP(flagNode, "n", "tcp://localhost:46657", "Node to connect to")
+	cmd.Flags().String(flagGenesis, "", "Genesis file to verify header validity")
+	cmd.Flags().String(flagCommit, "", "File with trusted and signed header")
+	cmd.Flags().String(flagValHash, "", "Hash of trusted validator set (hex-encoded)")
 	return cmd
 }
 
@@ -108,7 +108,7 @@ func blockCommand() *cobra.Command {
 		Short: "Get verified data for a the block at given height",
 		RunE:  todoNotImplemented,
 	}
-	cmd.Flags().StringSlice(flagSelect, []string{"header", "tx"}, "fields to return (header|txs|results)")
+	cmd.Flags().StringSlice(flagSelect, []string{"header", "tx"}, "Fields to return (header|txs|results)")
 	return cmd
 }
 
@@ -128,7 +128,7 @@ func serveCommand() *cobra.Command {
 		RunE:  todoNotImplemented,
 	}
 	// TODO: handle unix sockets also?
-	cmd.Flags().StringP(flagBind, "b", "localhost:1317", "interface and port that server binds to")
+	cmd.Flags().StringP(flagBind, "b", "localhost:1317", "Interface and port that server binds to")
 	cmd.Flags().String(flagCORS, "", "Set to domains that can make CORS requests (* for all)")
 	return cmd
 }
@@ -139,7 +139,7 @@ func txSearchCommand() *cobra.Command {
 		Short: "Search for all transactions that match the given tags",
 		RunE:  todoNotImplemented,
 	}
-	cmd.Flags().StringSlice(flagTags, nil, "tags that must match (may provide multiple)")
+	cmd.Flags().StringSlice(flagTags, nil, "Tags that must match (may provide multiple)")
 	cmd.Flags().Bool(flagAny, false, "Return transactions that match ANY tag, rather than ALL")
 	return cmd
 }

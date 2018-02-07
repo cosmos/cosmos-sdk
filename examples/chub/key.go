@@ -48,8 +48,8 @@ func addKeyCommand() *cobra.Command {
 		Short: "Create a new key, or import from seed",
 		RunE:  todoNotImplemented,
 	}
-	cmd.Flags().StringP(flagPassword, "p", "", "password to encrypt private key")
-	cmd.Flags().StringP(flagType, "t", "ed25519", "type of private key (ed25519|secp256k1|ledger)")
+	cmd.Flags().StringP(flagPassword, "p", "", "Password to encrypt private key")
+	cmd.Flags().StringP(flagType, "t", "ed25519", "Type of private key (ed25519|secp256k1|ledger)")
 	cmd.Flags().StringP(flagSeed, "s", "", "Provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
 	return cmd
@@ -61,8 +61,8 @@ func updateKeyCommand() *cobra.Command {
 		Short: "Change the password used to protect private key",
 		RunE:  todoNotImplemented,
 	}
-	cmd.Flags().StringP(flagPassword, "p", "", "current password to decrypt key")
-	cmd.Flags().String(flagNewPassword, "", "new password to use to protect key")
+	cmd.Flags().StringP(flagPassword, "p", "", "Current password to decrypt key")
+	cmd.Flags().String(flagNewPassword, "", "New password to use to protect key")
 	return cmd
 }
 
@@ -72,6 +72,6 @@ func deleteKeyCommand() *cobra.Command {
 		Short: "Delete the given key",
 		RunE:  todoNotImplemented,
 	}
-	cmd.Flags().StringP(flagPassword, "p", "", "password of existing key to delete")
+	cmd.Flags().StringP(flagPassword, "p", "", "Password of existing key to delete")
 	return cmd
 }

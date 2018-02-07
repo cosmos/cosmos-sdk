@@ -35,17 +35,20 @@ SDK
 Extensions
 ----------
 
+Replay Protection
+~~~~~~~~~~~~~~~~~
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    x/replay-protection.rst
 
 
-Staking Module
---------------
+Staking
+~~~~~~~
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    staking/intro.rst
    staking/key-management.rst

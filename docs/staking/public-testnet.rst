@@ -9,7 +9,7 @@ other testnets, choose different initialization files, described below.
 Get Tokens
 ----------
 
-If you haven't already `created a key <../sdk/key-management.html>`__,
+If you haven't already `created a key <../key-management.html>`__,
 do so now. Copy your key's address and enter it into
 `this utility <http://www.cosmosvalidators.com/>`__ which will send you
 some ``fermion`` testnet tokens.

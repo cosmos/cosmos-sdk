@@ -1,7 +1,6 @@
-PACKAGES=$(shell go list ./... | grep -v '/vendor/' | grep -v '_attic')
 BUILD_FLAGS = -ldflags "-X github.com/cosmos/cosmos-sdk/examples/basecoin/version.GitCommit=`git rev-parse --short HEAD`"
 
-all: check_tools get_vendor_deps build test 
+all: check_tools get_vendor_deps build test
 
 ########################################
 ### Build
@@ -28,6 +27,8 @@ get_vendor_deps:
 ########################################
 ### Testing
 
+PACKAGES=$(shell go list ./... | grep -v '/vendor/' | grep -v '/tools/')
+
 test:
 	@go test $(PACKAGES)
 
@@ -38,4 +39,4 @@ benchmark:
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build check_tools get_tools get_vendor_deps test benchmark 
+.PHONY: build check_tools get_tools get_vendor_deps test benchmark

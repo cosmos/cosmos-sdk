@@ -1,7 +1,4 @@
-PACKAGES=$(shell go list ./... | grep -v '/vendor/' | grep -v '_attic')
-BUILD_FLAGS = -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=`git rev-parse --short HEAD`"
-
-all: check_tools get_vendor_deps build test 
+all: check_tools get_vendor_deps build test
 
 ########################################
 ### CI
@@ -12,8 +9,8 @@ ci: get_tools get_vendor_deps build test_cover
 ### Build
 
 build:
-	@rm -rf examples/basecoin/vendor/
-	go build $(BUILD_FLAGS) -o build/basecoin ./examples/basecoin/cmd/...
+	@rm -rf examples/basecoin/vendor
+	cd examples/basecoin && $(MAKE) get_vendor_deps build
 
 dist:
 	@bash publish/dist.sh
@@ -53,13 +50,17 @@ godocs:
 ########################################
 ### Testing
 
+PACKAGES=$(shell go list ./... | grep -v '/vendor/' | grep -v '/examples/' | grep -v '/tools/')
 TUTORIALS=$(shell find docs/guide -name "*md" -type f)
 
 #test: test_unit test_cli test_tutorial
 test: test_unit # test_cli
 
+test_basecoin:
+	@rm -rf examples/basecoin/vendor
+	@cd examples/basecoin $(MAKE) get_vendor_deps test
+
 test_unit:
-	@rm -rf examples/basecoin/vendor/
 	@go test $(PACKAGES)
 
 test_cover:
@@ -102,4 +103,4 @@ devdoc_update:
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build dist check_tools get_tools get_vendor_deps draw_deps test test_unit test_tutorial benchmark devdoc_init devdoc devdoc_save devdoc_update
+.PHONY: build dist check_tools get_tools get_vendor_deps draw_deps test test_unit test_tutorial benchmark devdoc_init devdoc devdoc_save devdoc_update test_basecoin

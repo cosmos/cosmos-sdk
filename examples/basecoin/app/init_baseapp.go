@@ -1,7 +1,10 @@
 package app
 
 import (
+	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -28,12 +31,21 @@ func (app *BasecoinApp) initBaseAppTxDecoder() {
 	})
 }
 
-// used to define the custom logic for initialization
+// define the custom logic for basecoin initialization
 func (app *BasecoinApp) initBaseAppInitStater() {
-	//accountMapper := app.accountMapper
+	accountMapper := app.accountMapper
 	app.BaseApp.SetInitStater(func(ctx sdk.Context, stateJSON []byte) sdk.Error {
-		// TODO: parse JSON
-		//accountMapper.SetAccount(ctx, ...)
+
+		var accs []*types.AppAccount
+
+		err := json.Unmarshal(stateJSON, &accs)
+		if err != nil {
+			return sdk.ErrGenesisParse("").TraceCause(err, "")
+		}
+
+		for _, acc := range accs {
+			accountMapper.SetAccount(ctx, acc)
+		}
 		return nil
 	})
 }

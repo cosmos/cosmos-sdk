@@ -17,7 +17,6 @@ type TestApp struct {
 	*abci.ResponseEndBlock
 }
 
-// NewTestApp - new app for tests
 func NewTestApp(bapp *BaseApp) *TestApp {
 	app := &TestApp{
 		BaseApp: bapp,
@@ -25,7 +24,7 @@ func NewTestApp(bapp *BaseApp) *TestApp {
 	return app
 }
 
-// RunBeginBlock - Execute BaseApp BeginBlock
+// execute BaseApp BeginBlock
 func (tapp *TestApp) RunBeginBlock() {
 	if tapp.header != nil {
 		panic("TestApp.header not nil, BeginBlock already run, or EndBlock not yet run.")
@@ -58,43 +57,43 @@ func (tapp *TestApp) ensureBeginBlock() {
 	}
 }
 
-// RunCheckTx - run tx through CheckTx of TestApp
+// run tx through CheckTx of TestApp
 func (tapp *TestApp) RunCheckTx(tx sdk.Tx) sdk.Result {
 	tapp.ensureBeginBlock()
 	return tapp.BaseApp.runTx(true, nil, tx)
 }
 
-// RunDeliverTx - run tx through DeliverTx of TestApp
+// run tx through DeliverTx of TestApp
 func (tapp *TestApp) RunDeliverTx(tx sdk.Tx) sdk.Result {
 	tapp.ensureBeginBlock()
 	return tapp.BaseApp.runTx(false, nil, tx)
 }
 
-// RunCheckMsg - run tx through CheckTx of TestApp
+// run tx through CheckTx of TestApp
 // NOTE: Skips authentication by wrapping msg in testTx{}.
 func (tapp *TestApp) RunCheckMsg(msg sdk.Msg) sdk.Result {
 	var tx = testTx{msg}
 	return tapp.RunCheckTx(tx)
 }
 
-// RunDeliverMsg - run tx through DeliverTx of TestApp
+// run tx through DeliverTx of TestApp
 // NOTE: Skips authentication by wrapping msg in testTx{}.
 func (tapp *TestApp) RunDeliverMsg(msg sdk.Msg) sdk.Result {
 	var tx = testTx{msg}
 	return tapp.RunDeliverTx(tx)
 }
 
-// CommitMultiStore - return the commited multistore
+// return the commited multistore
 func (tapp *TestApp) CommitMultiStore() sdk.CommitMultiStore {
 	return tapp.BaseApp.cms
 }
 
-// MultiStoreCheck - return a cache-wrap CheckTx state of multistore
+// return a cache-wrap CheckTx state of multistore
 func (tapp *TestApp) MultiStoreCheck() sdk.MultiStore {
 	return tapp.BaseApp.msCheck
 }
 
-// MultiStoreDeliver - return a cache-wrap DeliverTx state of multistore
+// return a cache-wrap DeliverTx state of multistore
 func (tapp *TestApp) MultiStoreDeliver() sdk.MultiStore {
 	return tapp.BaseApp.msDeliver
 }

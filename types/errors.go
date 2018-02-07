@@ -24,12 +24,13 @@ const (
 	CodeOK                  CodeType = 0
 	CodeInternal            CodeType = 1
 	CodeTxParse             CodeType = 2
-	CodeBadNonce            CodeType = 3
-	CodeUnauthorized        CodeType = 4
-	CodeInsufficientFunds   CodeType = 5
-	CodeUnknownRequest      CodeType = 6
-	CodeUnrecognizedAddress CodeType = 7
-	CodeInvalidSequence     CodeType = 8
+	CodeGenesisParse        CodeType = 3
+	CodeBadNonce            CodeType = 4
+	CodeUnauthorized        CodeType = 5
+	CodeInsufficientFunds   CodeType = 6
+	CodeUnknownRequest      CodeType = 7
+	CodeUnrecognizedAddress CodeType = 8
+	CodeInvalidSequence     CodeType = 9
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
@@ -39,6 +40,8 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "Internal error"
 	case CodeTxParse:
 		return "Tx parse error"
+	case CodeGenesisParse:
+		return "Genesis parse error"
 	case CodeBadNonce:
 		return "Bad nonce"
 	case CodeUnauthorized:
@@ -66,6 +69,9 @@ func ErrInternal(msg string) Error {
 }
 func ErrTxParse(msg string) Error {
 	return newError(CodeTxParse, msg)
+}
+func ErrGenesisParse(msg string) Error {
+	return newError(CodeGenesisParse, msg)
 }
 func ErrBadNonce(msg string) Error {
 	return newError(CodeBadNonce, msg)

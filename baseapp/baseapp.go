@@ -32,13 +32,16 @@ type BaseApp struct {
 	// Main (uncached) state
 	cms sdk.CommitMultiStore
 
-	// Unmarshal []byte into sdk.Tx
+	// unmarshal []byte into sdk.Tx
 	txDecoder sdk.TxDecoder
 
-	// Ante handler for fee and auth
+	// unmarshal rawjsonbytes to the initialize application
+	initStater sdk.InitStater
+
+	// ante handler for fee and auth
 	defaultAnteHandler sdk.AnteHandler
 
-	// Handle any kind of message
+	// handle any kind of message
 	router Router
 
 	//--------------------
@@ -50,14 +53,11 @@ type BaseApp struct {
 	// DeliverTx state, a cache-wrap of `.cms`
 	msDeliver sdk.CacheMultiStore
 
-	// Current block header
+	// current block header
 	header *abci.Header
 
-	// Cached validator changes from DeliverTx
+	// cached validator changes from DeliverTx
 	valUpdates []abci.Validator
-
-	// function to
-	initStater sdk.InitStater
 }
 
 var _ abci.Application = &BaseApp{}

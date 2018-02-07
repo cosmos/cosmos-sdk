@@ -20,14 +20,14 @@ SDK
    sdk/overview.rst
    sdk/install.rst
 
-Basecoin
---------
+.. Basecoin
+.. --------
 
-.. toctree::
+.. .. toctree::
    :maxdepth: 2
 
-   basecoin/basics.rst
-   basecoin/extensions.rst
+.. basecoin/basics.rst
+.. basecoin/extensions.rst
 
 Extensions
 ----------

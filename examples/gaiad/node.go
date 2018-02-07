@@ -24,21 +24,16 @@ var (
 	}
 )
 
-// NodeCommands registers a sub-tree of commands to interact with
-// a local full-node.
+// AddNodeCommands registers all commands to interact
+// with a local full-node as subcommands of the argument.
 //
 // Accept an application it should start
-func NodeCommands(node baseapp.BaseApp) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "node",
-		Short: "Run the full node",
-	}
+func AddNodeCommands(cmd *cobra.Command, node baseapp.BaseApp) {
 	cmd.AddCommand(
 		initNodeCmd,
 		startNodeCmd(node),
 		resetNodeCmd,
 	)
-	return cmd
 }
 
 func startNodeCmd(node baseapp.BaseApp) *cobra.Command {

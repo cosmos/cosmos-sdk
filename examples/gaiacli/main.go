@@ -7,8 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/tmlibs/cli"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
 const (
@@ -53,15 +51,11 @@ func main() {
 	// disable sorting
 	cobra.EnableCommandSorting = false
 
-	// TODO: set this to something real
-	var node baseapp.BaseApp
-
 	// add commands
 	AddGetCommand(getAccountCmd)
 	AddPostCommand(postSendCommand())
 
 	chubCmd.AddCommand(
-		NodeCommands(node),
 		KeyCommands(),
 		ClientCommands(),
 

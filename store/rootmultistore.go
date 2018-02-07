@@ -2,10 +2,13 @@ package store
 
 import (
 	"fmt"
+	"strings"
 
+	"golang.org/x/crypto/ripemd160"
+
+	abci "github.com/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/merkle"
-	"golang.org/x/crypto/ripemd160"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -24,15 +27,18 @@ type rootMultiStore struct {
 	lastCommitID CommitID
 	storesParams map[StoreKey]storeParams
 	stores       map[StoreKey]CommitStore
+	keysByName   map[string]StoreKey
 }
 
 var _ CommitMultiStore = (*rootMultiStore)(nil)
+var _ Queryable = (*rootMultiStore)(nil)
 
 func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 	return &rootMultiStore{
 		db:           db,
 		storesParams: make(map[StoreKey]storeParams),
 		stores:       make(map[StoreKey]CommitStore),
+		keysByName:   make(map[string]StoreKey),
 	}
 }
 
@@ -53,6 +59,7 @@ func (rs *rootMultiStore) MountStoreWithDB(key StoreKey, typ StoreType, db dbm.D
 		db:  db,
 		typ: typ,
 	}
+	rs.keysByName[key.Name()] = key
 }
 
 // Implements CommitMultiStore.
@@ -167,6 +174,66 @@ func (rs *rootMultiStore) GetStore(key StoreKey) Store {
 // Implements MultiStore.
 func (rs *rootMultiStore) GetKVStore(key StoreKey) KVStore {
 	return rs.stores[key].(KVStore)
+}
+
+// getStoreByName will first convert the original name to
+// a special key, before looking up the CommitStore.
+// This is not exposed to the extensions (which will need the
+// StoreKey), but is useful in main, and particularly app.Query,
+// in order to convert human strings into CommitStores.
+func (rs *rootMultiStore) getStoreByName(name string) Store {
+	key := rs.keysByName[name]
+	if key == nil {
+		return nil
+	}
+	return rs.stores[key]
+}
+
+//---------------------- Query ------------------
+
+// Query calls substore.Query with the same `req` where `req.Path` is
+// modified to remove the substore prefix.
+// Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
+// TODO: add proof for `multistore -> substore`.
+func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
+	// Query just routes this to a substore.
+	path := req.Path
+	storeName, subpath, err := parsePath(path)
+	if err != nil {
+		return err.Result().ToQuery()
+	}
+
+	store := rs.getStoreByName(storeName)
+	if store == nil {
+		msg := fmt.Sprintf("no such store: %s", storeName)
+		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+	}
+	queryable, ok := store.(Queryable)
+	if !ok {
+		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
+		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+	}
+
+	// trim the path and make the query
+	req.Path = subpath
+	res := queryable.Query(req)
+	return res
+}
+
+// parsePath expects a format like /<storeName>[/<subpath>]
+// Must start with /, subpath may be empty
+// Returns error if it doesn't start with /
+func parsePath(path string) (storeName string, subpath string, err sdk.Error) {
+	if !strings.HasPrefix(path, "/") {
+		err = sdk.ErrUnknownRequest(fmt.Sprintf("invalid path: %s", path))
+		return
+	}
+	paths := strings.SplitN(path[1:], "/", 2)
+	storeName = paths[0]
+	if len(paths) == 2 {
+		subpath = "/" + paths[1]
+	}
+	return
 }
 
 //----------------------------------------

@@ -10,14 +10,18 @@ import (
 // cacheMultiStore holds many cache-wrapped stores.
 // Implements MultiStore.
 type cacheMultiStore struct {
-	db     CacheKVStore
-	stores map[StoreKey]CacheWrap
+	db         CacheKVStore
+	stores     map[StoreKey]CacheWrap
+	keysByName map[string]StoreKey
 }
+
+var _ CacheMultiStore = cacheMultiStore{}
 
 func newCacheMultiStoreFromRMS(rms *rootMultiStore) cacheMultiStore {
 	cms := cacheMultiStore{
-		db:     NewCacheKVStore(dbStoreAdapter{rms.db}),
-		stores: make(map[StoreKey]CacheWrap, len(rms.stores)),
+		db:         NewCacheKVStore(dbStoreAdapter{rms.db}),
+		stores:     make(map[StoreKey]CacheWrap, len(rms.stores)),
+		keysByName: rms.keysByName,
 	}
 	for key, store := range rms.stores {
 		cms.stores[key] = store.CacheWrap()

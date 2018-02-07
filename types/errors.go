@@ -2,8 +2,9 @@ package types
 
 import (
 	"fmt"
-	"github.com/tendermint/go-crypto"
 	"runtime"
+
+	"github.com/tendermint/go-crypto"
 )
 
 type CodeType uint32

@@ -199,9 +199,14 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 }
 
 // Implements ABCI.
+// Delegates to CommitMultiStore if it implements Queryable
 func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-	// TODO: See app/query.go
-	return
+	queryable, ok := app.cms.(sdk.Queryable)
+	if !ok {
+		msg := "application doesn't support queries"
+		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+	}
+	return queryable.Query(req)
 }
 
 // Implements ABCI.

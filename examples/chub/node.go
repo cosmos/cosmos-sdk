@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/app"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
 const (
@@ -28,7 +28,7 @@ var (
 // a local full-node.
 //
 // Accept an application it should start
-func NodeCommands(node app.App) *cobra.Command {
+func NodeCommands(node baseapp.BaseApp) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "node",
 		Short: "Run the full node",
@@ -41,7 +41,7 @@ func NodeCommands(node app.App) *cobra.Command {
 	return cmd
 }
 
-func startNodeCmd(node app.App) *cobra.Command {
+func startNodeCmd(node baseapp.BaseApp) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",

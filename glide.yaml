@@ -28,6 +28,10 @@ import:
 - package: golang.org/x/crypto
   subpackages:
   - ripemd160
+- package: github.com/spf13/cobra
+  version: ~0.0.1
+- package: github.com/spf13/viper
+  version: ^1.0.0
 testImport:
 - package: github.com/stretchr/testify
   version: ^1.2.1

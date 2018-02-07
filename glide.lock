@@ -46,6 +46,10 @@ imports:
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/rigelrozanski/common
   version: f691f115798593d783b9999b1263c2f4ffecc439
+- name: github.com/spf13/cobra
+  version: 93959269ad99e80983c9ba742a7e01203a4c0e4f
+- name: github.com/spf13/viper
+  version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: github.com/syndtr/goleveldb
   version: 211f780988068502fe874c44dae530528ebd840f
   subpackages:

@@ -15,11 +15,11 @@ const (
 	flagFee    = "fee"
 )
 
-// chubCmd is the entry point for this binary
+// gaiacliCmd is the entry point for this binary
 var (
-	chubCmd = &cobra.Command{
-		Use:   "chub",
-		Short: "Cosmos Hub command-line tool",
+	gaiacliCmd = &cobra.Command{
+		Use:   "gaiacli",
+		Short: "Gaia light-client",
 	}
 
 	lineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}}
@@ -55,16 +55,15 @@ func main() {
 	AddGetCommand(getAccountCmd)
 	AddPostCommand(postSendCommand())
 
-	chubCmd.AddCommand(
+	AddClientCommands(gaiacliCmd)
+	gaiacliCmd.AddCommand(
 		KeyCommands(),
-		ClientCommands(),
 
 		lineBreak,
 		VersionCmd,
 	)
 
 	// prepare and add flags
-	// executor := cli.PrepareMainCmd(chubCmd, "CH", os.ExpandEnv("$HOME/.cosmos-chub"))
-	executor := cli.PrepareBaseCmd(chubCmd, "CH", os.ExpandEnv("$HOME/.cosmos-chub"))
+	executor := cli.PrepareBaseCmd(gaiacliCmd, "GA", os.ExpandEnv("$HOME/.cosmos-chub"))
 	executor.Execute()
 }

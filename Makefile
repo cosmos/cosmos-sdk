@@ -13,7 +13,7 @@ ci: get_tools get_vendor_deps build test_cover
 
 # This can be unified later, here for easy demos
 gaia:
-	go build $(BUILD_FLAGS) -o build/gaid ./examples/gaiad
+	go build $(BUILD_FLAGS) -o build/gaiad ./examples/gaiad
 	go build $(BUILD_FLAGS) -o build/gaiacli ./examples/gaiacli
 
 build:

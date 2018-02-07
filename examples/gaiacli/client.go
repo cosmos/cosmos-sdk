@@ -53,14 +53,10 @@ func init() {
 	postCmd.PersistentFlags().String(flagPassword, "", "Password to use the named private key")
 }
 
-// ClientCommands returns a sub-tree of all basic client commands
+// AddClientCommands returns a sub-tree of all basic client commands
 //
 // Call AddGetCommand and AddPostCommand to add custom txs and queries
-func ClientCommands() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "client",
-		Short: "Interact with the chain via a light-client",
-	}
+func AddClientCommands(cmd *cobra.Command) {
 	cmd.AddCommand(
 		initClientCommand(),
 		statusCmd,
@@ -75,7 +71,6 @@ func ClientCommands() *cobra.Command {
 		lineBreak,
 		serveCommand(),
 	)
-	return cmd
 }
 
 // AddGetCommand adds one or more query subcommands

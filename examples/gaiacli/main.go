@@ -59,6 +59,7 @@ func main() {
 	// post tx commands (custom to binary)
 	gaiacliCmd.AddCommand(
 		PostCommands(postSendCommand())...)
+
 	// add proxy, version and key info
 	gaiacliCmd.AddCommand(
 		lineBreak,
@@ -69,6 +70,6 @@ func main() {
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareBaseCmd(gaiacliCmd, "GA", os.ExpandEnv("$HOME/.cosmos-chub"))
+	executor := cli.PrepareBaseCmd(gaiacliCmd, "GA", os.ExpandEnv("$HOME/.gaiacli"))
 	executor.Execute()
 }

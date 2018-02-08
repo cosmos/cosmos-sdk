@@ -34,7 +34,10 @@ func (app *BasecoinApp) initBaseAppTxDecoder() {
 // define the custom logic for basecoin initialization
 func (app *BasecoinApp) initBaseAppInitStater() {
 	accountMapper := app.accountMapper
-	app.BaseApp.SetInitStater(func(ctx sdk.Context, stateJSON []byte) sdk.Error {
+	ctxCheckTx := app.BaseApp.NewContext(true, nil)
+	ctxDeliverTx := app.BaseApp.NewContext(false, nil)
+
+	app.BaseApp.SetInitStater(func(stateJSON []byte) sdk.Error {
 
 		var accs []*types.AppAccount
 
@@ -44,7 +47,8 @@ func (app *BasecoinApp) initBaseAppInitStater() {
 		}
 
 		for _, acc := range accs {
-			accountMapper.SetAccount(ctx, acc)
+			accountMapper.SetAccount(ctxCheckTx, acc)
+			accountMapper.SetAccount(ctxDeliverTx, acc)
 		}
 		return nil
 	})

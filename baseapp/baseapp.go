@@ -36,7 +36,7 @@ type BaseApp struct {
 	txDecoder sdk.TxDecoder
 
 	// unmarshal rawjsonbytes to the initialize application
-	initStater sdk.InitStater
+	InitStater sdk.InitStater // TODO make unexposed once certain refactoring from basecoin -> baseapp
 
 	// ante handler for fee and auth
 	defaultAnteHandler sdk.AnteHandler
@@ -107,7 +107,7 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
 func (app *BaseApp) SetInitStater(initStater sdk.InitStater) {
-	app.initStater = initStater
+	app.InitStater = initStater
 }
 func (app *BaseApp) SetDefaultAnteHandler(ah sdk.AnteHandler) {
 	app.defaultAnteHandler = ah

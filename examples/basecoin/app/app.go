@@ -6,6 +6,7 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/tendermint/abci/server"
 	"github.com/tendermint/go-wire"
 	cmn "github.com/tendermint/tmlibs/common"
@@ -30,7 +31,8 @@ type BasecoinApp struct {
 
 // NewBasecoinApp - create new BasecoinApp
 // TODO: This should take in more configuration options.
-func NewBasecoinApp() *BasecoinApp {
+// TODO: This should be moved into
+func NewBasecoinApp(genesisPath string) *BasecoinApp {
 
 	// Create and configure app.
 	var app = &BasecoinApp{}
@@ -39,12 +41,20 @@ func NewBasecoinApp() *BasecoinApp {
 	app.initStores()   // ./init_stores.go
 	app.initHandlers() // ./init_handlers.go
 
-	// TODO: Load genesis
-	// TODO: InitChain with validators
-	// TODO: Set the genesis accounts
+	genesisiDoc, err := bam.GenesisDocFromFile(genesisPath)
+	if err != nil {
+		panic(fmt.Errorf("error loading genesis state: %v", err))
+	}
+
+	// TODO: InitChain with validators from genesis transaction bytes
+
+	// load application initial state
+	err = app.BaseApp.InitStater(genesisiDoc.AppState)
+	if err != nil {
+		panic(fmt.Errorf("error loading application genesis state: %v", err))
+	}
 
 	app.loadStores()
-
 	return app
 }
 

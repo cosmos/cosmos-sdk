@@ -10,7 +10,7 @@ type testBasecoinApp struct {
 }
 
 func newTestBasecoinApp() *testBasecoinApp {
-	app := NewBasecoinApp()
+	app := NewBasecoinApp("")
 	tba := &testBasecoinApp{
 		BasecoinApp: app,
 	}

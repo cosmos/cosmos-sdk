@@ -43,7 +43,7 @@ type GenesisAccount struct {
 	Sequence int64          `json:"sequence"`
 }
 
-func NewGenesisAccount(aa types.AppAccount) *GenesisAccount {
+func NewGenesisAccount(aa *types.AppAccount) *GenesisAccount {
 	return &GenesisAccount{
 		Name:     aa.Name,
 		Address:  aa.Address,
@@ -54,7 +54,7 @@ func NewGenesisAccount(aa types.AppAccount) *GenesisAccount {
 }
 
 // convert GenesisAccount to AppAccount
-func (ga *GenesisAccount) toAppAccount() (acc types.AppAccount, err error) {
+func (ga *GenesisAccount) toAppAccount() (acc *types.AppAccount, err error) {
 
 	pk, err := crypto.PubKeyFromBytes(ga.PubKey)
 	if err != nil {
@@ -66,7 +66,7 @@ func (ga *GenesisAccount) toAppAccount() (acc types.AppAccount, err error) {
 		PubKey:   pk,
 		Sequence: ga.Sequence,
 	}
-	return types.AppAccount{
+	return &types.AppAccount{
 		BaseAccount: baseAcc,
 		Name:        "foobart",
 	}, nil
@@ -93,8 +93,8 @@ func (app *BasecoinApp) initBaseAppInitStater() {
 			if err != nil {
 				return sdk.ErrGenesisParse("").TraceCause(err, "")
 			}
-			accountMapper.SetAccount(ctxCheckTx, acc.BaseAccount)
-			accountMapper.SetAccount(ctxDeliverTx, acc.BaseAccount)
+			accountMapper.SetAccount(ctxCheckTx, acc)
+			accountMapper.SetAccount(ctxDeliverTx, acc)
 		}
 		return nil
 	})

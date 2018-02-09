@@ -57,7 +57,7 @@ func TestSendMsg(t *testing.T) {
 		PubKey:   pk,
 		Sequence: 0,
 	}
-	acc := types.AppAccount{baseAcc, "foobart"}
+	acc := &types.AppAccount{baseAcc, "foobart"}
 
 	gaccs := []*GenesisAccount{
 		NewGenesisAccount(acc),
@@ -71,5 +71,5 @@ func TestSendMsg(t *testing.T) {
 	require.Nil(t, err)
 
 	res1 := app.accountMapper.GetAccount(ctxDeliverTx, baseAcc.Address)
-	assert.Equal(t, baseAcc, res1)
+	assert.Equal(t, acc, res1)
 }

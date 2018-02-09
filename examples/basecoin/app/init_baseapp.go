@@ -35,11 +35,14 @@ func (app *BasecoinApp) initBaseAppTxDecoder() {
 func (app *BasecoinApp) initBaseAppInitStater() {
 	accountMapper := app.accountMapper
 
-	app.BaseApp.SetInitStater(func(ctxCheckTx, ctxDeliverTx sdk.Context, stateJSON []byte) sdk.Error {
+	app.BaseApp.SetInitStater(func(ctxCheckTx, ctxDeliverTx sdk.Context, state json.RawMessage) sdk.Error {
+		if state == nil {
+			return nil
+		}
 
 		var accs []*types.AppAccount
 
-		err := json.Unmarshal(stateJSON, &accs)
+		err := json.Unmarshal(state, &accs)
 		if err != nil {
 			return sdk.ErrGenesisParse("").TraceCause(err, "")
 		}

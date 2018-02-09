@@ -57,11 +57,16 @@ func TestSendMsg(t *testing.T) {
 		PubKey:   pk,
 		Sequence: 0,
 	}
-	accs := []types.AppAccount{
-		{baseAcc, "foobart"},
-		{baseAcc, "endofzeworld"},
+	accs := []*GenesisAccount{
+		NewGenesisAccount(types.AppAccount{baseAcc, "foobart"}),
+		NewGenesisAccount(types.AppAccount{baseAcc, "endofzeworld"}),
 	}
 	bytes, err := json.MarshalIndent(&accs, "", "\t")
-	_ = bytes
-	// XXX test the json bytes in the InitStater
+
+	app := tba.BasecoinApp
+	ctxCheckTx := app.BaseApp.NewContext(true, nil)
+	ctxDeliverTx := app.BaseApp.NewContext(false, nil)
+	err = app.BaseApp.InitStater(ctxCheckTx, ctxDeliverTx, bytes)
+	require.Nil(t, err)
+
 }

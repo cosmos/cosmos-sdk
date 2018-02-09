@@ -25,6 +25,6 @@ func (app *BasecoinApp) initRouterHandlers() {
 
 	// All handlers must be added here.
 	// The order matters.
-	app.router.AddRoute("bank", bank.NewHandler(app.accountMapper))
+	app.router.AddRoute("bank", bank.NewHandler(bank.NewCoinKeeper(app.accountMapper)))
 	app.router.AddRoute("sketchy", sketchy.NewHandler())
 }

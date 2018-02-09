@@ -78,6 +78,19 @@ func (am accountMapper) SetAccount(ctx sdk.Context, acc sdk.Account) {
 }
 
 //----------------------------------------
+// sealedAccountMapper
+
+type sealedAccountMapper struct {
+	accountMapper
+}
+
+// There's no way for external modules to mutate the
+// sam.accountMapper.ctx from here, even with reflection.
+func (sam sealedAccountMapper) WireCodec() *wire.Codec {
+	panic("accountMapper is sealed")
+}
+
+//----------------------------------------
 // misc.
 
 func (am accountMapper) clonePrototypePtr() interface{} {
@@ -138,17 +151,4 @@ func (am accountMapper) decodeAccount(bz []byte) sdk.Account {
 	} else {
 		return reflect.ValueOf(accPtr).Elem().Interface().(sdk.Account)
 	}
-}
-
-//----------------------------------------
-// sealedAccountMapper
-
-type sealedAccountMapper struct {
-	accountMapper
-}
-
-// There's no way for external modules to mutate the
-// sam.accountMapper.ctx from here, even with reflection.
-func (sam sealedAccountMapper) WireCodec() *wire.Codec {
-	panic("accountMapper is sealed")
 }

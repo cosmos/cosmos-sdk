@@ -7,37 +7,33 @@ import (
 )
 
 // Handle all "bank" type messages.
-// NOTE: Technically, NewHandler only needs a CoinMapper
-func NewHandler(am sdk.AccountMapper) sdk.Handler {
-
+func NewHandler(ck CoinKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		cm := CoinMapper{am}
 		switch msg := msg.(type) {
 		case SendMsg:
-			return handleSendMsg(ctx, cm, msg)
+			return handleSendMsg(ctx, ck, msg)
 		case IssueMsg:
-			return handleIssueMsg(ctx, cm, msg)
+			return handleIssueMsg(ctx, ck, msg)
 		default:
 			errMsg := "Unrecognized bank Msg type: " + reflect.TypeOf(msg).Name()
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
-
 }
 
 // Handle SendMsg.
-func handleSendMsg(ctx sdk.Context, cm CoinMapper, msg SendMsg) sdk.Result {
+func handleSendMsg(ctx sdk.Context, ck CoinKeeper, msg SendMsg) sdk.Result {
 	// NOTE: totalIn == totalOut should already have been checked
 
 	for _, in := range msg.Inputs {
-		_, err := cm.SubtractCoins(ctx, in.Address, in.Coins)
+		_, err := ck.SubtractCoins(ctx, in.Address, in.Coins)
 		if err != nil {
 			return err.Result()
 		}
 	}
 
 	for _, out := range msg.Outputs {
-		_, err := cm.AddCoins(ctx, out.Address, out.Coins)
+		_, err := ck.AddCoins(ctx, out.Address, out.Coins)
 		if err != nil {
 			return err.Result()
 		}
@@ -47,6 +43,6 @@ func handleSendMsg(ctx sdk.Context, cm CoinMapper, msg SendMsg) sdk.Result {
 }
 
 // Handle IssueMsg.
-func handleIssueMsg(ctx sdk.Context, cm CoinMapper, msg IssueMsg) sdk.Result {
+func handleIssueMsg(ctx sdk.Context, ck CoinKeeper, msg IssueMsg) sdk.Result {
 	panic("not implemented yet")
 }

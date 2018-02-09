@@ -1,7 +1,7 @@
-PACKAGES=$(shell go list ./... | grep -v '/vendor/' | grep -v '_attic')
+PACKAGES=$(shell go list ./... | grep -v '/vendor/')
 BUILD_FLAGS = -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=`git rev-parse --short HEAD`"
 
-all: check_tools get_vendor_deps build test 
+all: check_tools get_vendor_deps build test
 
 ########################################
 ### CI

@@ -32,15 +32,18 @@ type BasecoinApp struct {
 
 // NewBasecoinApp - create new BasecoinApp
 // TODO: This should take in more configuration options.
-// TODO: This should be moved into
+// TODO: This should be moved into baseapp to isolate complexity
 func NewBasecoinApp(genesisPath string) *BasecoinApp {
 
 	// Create and configure app.
 	var app = &BasecoinApp{}
 
-	app.initCapKeys()  // ./init_capkeys.go
-	app.initBaseApp()  // ./init_baseapp.go
-	app.initStores()   // ./init_stores.go
+	// TODO open up out of functions, or introduce clarity,
+	// interdependancies are a nightmare to debug
+	app.initCapKeys() // ./init_capkeys.go
+	app.initBaseApp() // ./init_baseapp.go
+	app.initStores()  // ./init_stores.go
+	app.initBaseAppInitStater()
 	app.initHandlers() // ./init_handlers.go
 
 	genesisiDoc, err := bam.GenesisDocFromFile(genesisPath)
@@ -50,26 +53,27 @@ func NewBasecoinApp(genesisPath string) *BasecoinApp {
 
 	// TODO: InitChain with validators from genesis transaction bytes
 
-	// set first begin block
+	// very first begin block used for context when setting genesis accounts
 	header := abci.Header{
 		ChainID:        "",
 		Height:         0,
-		Time:           -1, // TODO
-		NumTxs:         -1, // TODO
+		Time:           -1,
+		NumTxs:         -1,
 		LastCommitHash: []byte{0x00},
-		DataHash:       nil, // TODO
-		ValidatorsHash: nil, // TODO
-		AppHash:        nil, // TODO
+		DataHash:       nil,
+		ValidatorsHash: nil,
+		AppHash:        nil,
 	}
 	app.BaseApp.BeginBlock(abci.RequestBeginBlock{
-		Hash:                nil, // TODO
+		Hash:                nil,
 		Header:              header,
-		AbsentValidators:    nil, // TODO
-		ByzantineValidators: nil, // TODO
+		AbsentValidators:    nil,
+		ByzantineValidators: nil,
 	})
 
 	ctxCheckTx := app.BaseApp.NewContext(true, nil)
 	ctxDeliverTx := app.BaseApp.NewContext(false, nil)
+
 	err = app.BaseApp.InitStater(ctxCheckTx, ctxDeliverTx, genesisiDoc.AppState)
 	if err != nil {
 		panic(fmt.Errorf("error loading application genesis state: %v", err))

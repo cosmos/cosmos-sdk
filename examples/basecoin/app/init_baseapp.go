@@ -93,10 +93,8 @@ func (app *BasecoinApp) initBaseAppInitStater() {
 			if err != nil {
 				return sdk.ErrGenesisParse("").TraceCause(err, "")
 			}
-
-			//panic(fmt.Sprintf("debug acc: %s\n", acc))
-			accountMapper.SetAccount(ctxCheckTx, &acc.BaseAccount)
-			accountMapper.SetAccount(ctxDeliverTx, &acc.BaseAccount)
+			accountMapper.SetAccount(ctxCheckTx, acc.BaseAccount)
+			accountMapper.SetAccount(ctxDeliverTx, acc.BaseAccount)
 		}
 		return nil
 	})

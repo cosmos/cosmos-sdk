@@ -1,4 +1,4 @@
-package auth
+package coins
 
 import (
 	"testing"
@@ -9,10 +9,11 @@ import (
 	wire "github.com/tendermint/go-wire"
 )
 
-func TestBaseAccount(t *testing.T) {
+func TestCoinAccount(t *testing.T) {
 	key := crypto.GenPrivKeyEd25519()
 	pub := key.PubKey()
 	addr := pub.Address()
+	someCoins := Coins{{"atom", 123}, {"eth", 246}}
 	seq := int64(7)
 
 	acc := NewBaseAccountWithAddress(addr)
@@ -27,6 +28,10 @@ func TestBaseAccount(t *testing.T) {
 
 	assert.Equal(t, addr, acc.GetAddress())
 
+	err = acc.SetCoins(someCoins)
+	assert.Nil(t, err)
+	assert.Equal(t, someCoins, acc.GetCoins())
+
 	err = acc.SetSequence(seq)
 	assert.Nil(t, err)
 	assert.Equal(t, seq, acc.GetSequence())
@@ -34,7 +39,17 @@ func TestBaseAccount(t *testing.T) {
 	b, err := codec.MarshalBinary(acc)
 	assert.Nil(t, err)
 
-	var acc2 BaseAccount
+	key2 := crypto.GenPrivKeyEd25519()
+	pub2 := key.PubKey()
+	addr2 := pub.Address()
+
+	acc.SetAddress(addr2)
+
+	err = codec.UnmarshalBinary(b, &acc)
+
+	assert.NotEqual(addr2, acc.GetAddress())
+
+	var acc2 auth.BaseAccount
 	err = codec.UnmarshalBinary(b, &acc2)
 	assert.Nil(t, err)
 	assert.Equal(t, acc, acc2)

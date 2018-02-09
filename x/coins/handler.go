@@ -40,9 +40,12 @@ func handleSendMsg(ctx sdk.Context, cm CoinMapper, msg SendMsg) sdk.Result {
 
 
 	toAccount := cm.am.GetAccount(ctx, msg.ToAccount)
-	if fromAccount == nil {
-		NewBaseAccountWithAddress(msg.FromAddress)
-		NewBaseAccountWithAddress(msg.FromAddress.String())
+	if toAccount == nil {
+		toAccount, err := cm.am.makeAccount(msg.ToAddress)
+		if err != nil {
+			return err.Result()
+		}
+		am.SetAccount(ctx, )
 	} else {
 
 	}

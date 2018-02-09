@@ -1,4 +1,4 @@
-package coins
+ package coins
 
 import (
 	"errors"
@@ -40,9 +40,13 @@ func (acc *CoinAccount) AddCoins(coins Coins) {
 	acc.SetCoins(acc.GetCoins().Plus(coins))
 }
 
-// Implements sdk.Account.
 func (acc *CoinAccount) SubtractCoins(coins Coins) {
 	acc.SetCoins(acc.GetCoins().Minus(coins))
+}
+
+func (acc *CoinAccount) SendCoins(acc2 CoinAccount, coins Coins) {
+	acc2.SubtractCoins(coins)
+	acc.AddCoins(coins)
 }
 
 

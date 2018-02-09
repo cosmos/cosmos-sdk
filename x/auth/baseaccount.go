@@ -67,17 +67,6 @@ func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
 }
 
 // Implements sdk.Account.
-func (acc *BaseAccount) GetCoins() sdk.Coins {
-	return acc.Coins
-}
-
-// Implements sdk.Account.
-func (acc *BaseAccount) SetCoins(coins sdk.Coins) error {
-	acc.Coins = coins
-	return nil
-}
-
-// Implements sdk.Account.
 func (acc *BaseAccount) GetSequence() int64 {
 	return acc.Sequence
 }

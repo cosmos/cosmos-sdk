@@ -23,7 +23,7 @@ var mainHeaderKey = []byte("header")
 type BaseApp struct {
 	logger log.Logger
 
-	// Application name from abci.Info
+	// Application name for abci.Info
 	name string
 
 	// Common DB backend
@@ -36,7 +36,7 @@ type BaseApp struct {
 	txDecoder sdk.TxDecoder
 
 	// Ante handler for fee and auth.
-	defaultAnteHandler sdk.AnteHandler
+	anteHandler sdk.AnteHandler
 
 	// Handle any kind of message.
 	router Router
@@ -57,7 +57,7 @@ type BaseApp struct {
 	valUpdates []abci.Validator
 }
 
-var _ abci.Application = &BaseApp{}
+var _ abci.Application = (*BaseApp)(nil)
 
 func NewBaseApp(name string) *BaseApp {
 	var baseapp = &BaseApp{
@@ -100,8 +100,8 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
 
-func (app *BaseApp) SetDefaultAnteHandler(ah sdk.AnteHandler) {
-	app.defaultAnteHandler = ah
+func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
+	app.anteHandler = ah
 }
 
 func (app *BaseApp) Router() Router {
@@ -264,6 +264,8 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 		// Even though the Code is not OK, there will be some side
 		// effects, like those caused by fee deductions or sequence
 		// incrementations.
+		// The AnteHandler ran but the state transition within the transaction
+		// failed.
 	}
 
 	// Tell the blockchain engine (i.e. Tendermint).
@@ -308,7 +310,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	// TODO: override default ante handler w/ custom ante handler.
 
 	// Run the ante handler.
-	newCtx, result, abort := app.defaultAnteHandler(ctx, tx)
+	newCtx, result, abort := app.anteHandler(ctx, tx)
 	if isCheckTx || abort {
 		return result
 	}

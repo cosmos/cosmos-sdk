@@ -1,6 +1,8 @@
 package baseapp
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // NewContext returns a new Context suitable for AnteHandler (and indirectly Handler) processing.
 // NOTE: txBytes may be nil to support TestApp.RunCheckTx
@@ -12,6 +14,7 @@ func (app *BaseApp) NewContext(isCheckTx bool, txBytes []byte) sdk.Context {
 	} else {
 		store = app.msDeliver
 	}
+
 	if store == nil {
 		panic("BaseApp.NewContext() requires BeginBlock(): missing store")
 	}

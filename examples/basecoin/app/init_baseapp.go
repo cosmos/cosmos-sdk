@@ -68,7 +68,7 @@ func (ga *GenesisAccount) toAppAccount() (acc *types.AppAccount, err error) {
 	}
 	return &types.AppAccount{
 		BaseAccount: baseAcc,
-		Name:        "foobart",
+		Name:        ga.Name,
 	}, nil
 }
 

@@ -226,6 +226,7 @@ func (tx testUpdatePowerTx) ValidateBasic() sdk.Error                { return ni
 func (tx testUpdatePowerTx) GetSigners() []crypto.Address            { return nil }
 func (tx testUpdatePowerTx) GetFeePayer() crypto.Address             { return nil }
 func (tx testUpdatePowerTx) GetSignatures() []sdk.StdSignature       { return nil }
+func (tx testUpdatePowerTx) GetSequence() uint64                     { return 0 }
 
 func TestValidatorChange(t *testing.T) {
 

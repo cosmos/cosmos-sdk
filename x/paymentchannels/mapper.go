@@ -10,8 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Implements sdk.AccountMapper.
-// This AccountMapper encodes/decodes accounts using the
+// This PaymentChannelMapper encodes/decodes paymentchannels using the
 // go-wire (binary) encoding/decoding library.
 type paymentChannelMapper struct {
 
@@ -25,8 +24,8 @@ type paymentChannelMapper struct {
 	cdc *wire.Codec
 }
 
-// NewAccountMapper returns a new sdk.AccountMapper that
-// uses go-wire to (binary) encode and decode concrete sdk.Accounts.
+// NewPaymentChannelMapper returns a new PaymentChannelMapper that
+// uses go-wire to (binary) encode and decode PaymentChannels.
 func NewPaymentChannelMapper(key sdk.StoreKey, proto PaymentChannel) accountMapper {
 	cdc := wire.NewCodec()
 	return paymentChannelMapper{
@@ -86,10 +85,10 @@ func (am accountMapper) clonePrototypePtr() interface{} {
 		}
 		protoRv := reflect.New(protoErt)
 		return protoRv.Interface()
-	} else {
-		protoRv := reflect.New(protoRt)
-		return protoRv.Interface()
 	}
+
+	protoRv := reflect.New(protoRt)
+	return protoRv.Interface()
 }
 
 // Creates a new struct (or pointer to struct) from pcm.proto.
@@ -106,14 +105,13 @@ func (pcm paymentChannelMapper) clonePrototype() PaymentChannel {
 			panic(fmt.Sprintf("paymentChannelMapper requires a proto PaymentChannel, but %v doesn't implement PaymentChannel", protoRt))
 		}
 		return clone
-	} else {
-		protoRv := reflect.New(protoRt).Elem()
-		clone, ok := protoRv.Interface().(sdk.Account)
-		if !ok {
-			panic(fmt.Sprintf("paymentChannelMapper requires a proto PaymentChannel, but %v doesn't implement PaymentChannel", protoRt))
-		}
-		return clone
 	}
+	protoRv := reflect.New(protoRt).Elem()
+	clone, ok := protoRv.Interface().(sdk.Account)
+	if !ok {
+		panic(fmt.Sprintf("paymentChannelMapper requires a proto PaymentChannel, but %v doesn't implement PaymentChannel", protoRt))
+	}
+	return clone
 }
 
 func (pcm paymentChannelMapper) encodePaymentChannel(channel PaymentChannel) []byte {
@@ -132,9 +130,9 @@ func (pcm paymentChannelMapper) decodePaymentChannel(bz []byte) PaymentChannel {
 	}
 	if reflect.ValueOf(pcm.proto).Kind() == reflect.Ptr {
 		return reflect.ValueOf(channelPtr).Interface().(PaymentChannel)
-	} else {
-		return reflect.ValueOf(channelPtr).Elem().Interface().(PaymentChannel)
 	}
+
+	return reflect.ValueOf(channelPtr).Elem().Interface().(PaymentChannel)
 }
 
 //----------------------------------------

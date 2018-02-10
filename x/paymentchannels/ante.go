@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// NewAnteHandler creates a new auth AnteHandler
 func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx,

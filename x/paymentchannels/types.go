@@ -2,49 +2,22 @@ package paymentchannels
 
 import (
 	"fmt"
-	"regexp"
-	"sort"
-	"strconv"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bank "github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-// Coin hold some amount of one currency
+// PaymentChannel is a one way payment channel
 type PaymentChannel struct {
-
-	ChannelId          uint            `json:"channelId"`
-	Participants       []sdk.Account   `json:"participants"`
-	Pot                sdk.Coins       `json:"pot"`
-	LastSettlement     Settlement      `json:"lastState"`
-	ChallengePeriod    uint            `json:"challenge_period"`
-	
-}
-
-funct (channel PaymentChannel) getChannelId() uint {
-	return channel.ChannelId
-}
-
-funct (channel PaymentChannel) getParticipants() []sdk.Account {
-	return channel.Participants
-}
-
-funct (channel PaymentChannel) getChannelId() sdk.Coins {
-	return channel.Pot
-}
-
-funct (channel PaymentChannel) getLastSettlement() Settlement {
-	return channel.LastSettlement
-}
-
-funct (channel PaymentChannel) getChallengePeriod() uint {
-	return channel.ChallengePeriod
+	ChannelID       uint          `json:"channelId"`
+	Participants    []sdk.Account `json:"participants"`
+	Pot             sdk.Coins     `json:"pot"`
+	LastSettlement  Settlement    `json:"lastState"`
+	ChallengePeriod uint          `json:"challenge_period"`
 }
 
 // String provides a human-readable representation of a coin
 func (channel PapymentChannel) String() string {
-	return fmt.Srintf("%v %v", channel.Participants, channel.Amount)
+	return fmt.Sprintf("%v %v", channel.Participants, channel.Amount)
 }
 
 // IsSettled returns if a settlement has already been submitted to the chain
@@ -63,33 +36,41 @@ func (channel PaymentChannel) IsValidSettlement(settlement Settlement) bool {
 	if settlement.ChannelId == channel.ChannelId {
 		return false
 	}
-	
+
 	// check that the sequence number is greater than the last settled.
 	if channel.LastSettlement && settlement.Sequence < channel.LastSettlement.Sequence {
-		return false;
+		return false
 	}
 
 	// check that coins aren't created or destroyed
-	totalCoins := sdk.Coins{};
+	totalCoins := sdk.Coins{}
 
-	for _,accountCoins := range settlement.Distribution {
+	for _, accountCoins := range settlement.Distribution {
 		totalCoins.plus(accountCoins)
 	}
 
 	if !totalCoins.IsEqual(channel.Pot) {
-		return false;
+		return false
 	}
+	
+	for i, participant := range channel.Participants {
+		
+
+	if !sig.PubKey.VerifyBytes(msg.GetSignBytes(), sig.Signature) {
+					return ctx,
+						sdk.ErrUnauthorized("").Result(),
+						true
+				}
 }
 
-
+// Settlement is a settlement of a PaymentChannel
 type Settlement struct {
-	ChannelId       uint           `json:"channelId"`
-	Sequence        uint           `json:"stateNum"`
-	Distribution    []sdk.Coins    `json:"finalState`
+	ChannelID    uint               `json:"channelId"`
+	Sequence     uint               `json:"sequence"`
+	Distribution []sdk.Coins        `json:"disribution"`
+	Signatures   []crypto.Signature `json:"signatures"`
 }
-
 
 func (settlement Settlement) String() string {
-	return fmt.Sprintf("%v %v %v", channel.Participants, channel.Amount)
+	return fmt.Sprintf("%v %v %v", channel.Participants, channel.Amount, channel.Distribution)
 }
-

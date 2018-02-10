@@ -9,31 +9,33 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-// SendMsg - high level transaction of the coin module
+// OpenChannelMsg - high level transaction to create a new channel
 type OpenChannelMsg struct {
 	Inputs  []Input  `json:"inputs"`
 	Outputs []Output `json:"outputs"`
 }
 
+// SettleChannelMsg - high level transaction to submit a settlement
 type SettleChannelMsg struct {
 	Inputs  []Input  `json:"inputs"`
 	Outputs []Output `json:"outputs"`
 }
 
+// CloseChannelMsg - high level transaction to close a channel
 type CloseChannelMsg struct {
 	Inputs  []Input  `json:"inputs"`
 	Outputs []Output `json:"outputs"`
 }
 
-// NewSendMsg - construct arbitrary multi-in, multi-out send msg.
+// NewOpenChannelMsg - construct msg to open new channel
 func NewOpenChannelMsg(in []Input, out []Output) SendMsg {
 	return SendMsg{Inputs: in, Outputs: out}
 }
 
-// Implements Msg.
+// Type - Implements Msg.
 func (msg NewCreateChannelMsg) Type() string { return "paymentchannels/create" } // TODO: "bank/send"
 
-// Implements Msg.
+// ValidateBasic - Implements Msg.
 func (msg NewCreateChannelMsg) ValidateBasic() error {
 	// this just makes sure all the inputs and outputs are properly formatted,
 	// not that they actually have the money inside
@@ -68,12 +70,12 @@ func (msg NewCreateChannelMsg) String() string {
 	return fmt.Sprintf("SendMsg{%v->%v}", msg.Inputs, msg.Outputs)
 }
 
-// Implements Msg.
+// Get - Implements Msg.
 func (msg SendMsg) Get(key interface{}) (value interface{}) {
 	return nil
 }
 
-// Implements Msg.
+// GetSignBytes - Implements Msg.
 func (msg SendMsg) GetSignBytes() []byte {
 	b, err := json.Marshal(msg) // XXX: ensure some canonical form
 	if err != nil {
@@ -82,148 +84,11 @@ func (msg SendMsg) GetSignBytes() []byte {
 	return b
 }
 
-// Implements Msg.
+// GetSigners - Implements Msg.
 func (msg SendMsg) GetSigners() []crypto.Address {
 	addrs := make([]crypto.Address, len(msg.Inputs))
 	for i, in := range msg.Inputs {
 		addrs[i] = in.Address
 	}
 	return addrs
-}
-
-//----------------------------------------
-// IssueMsg
-
-// IssueMsg - high level transaction of the coin module
-type IssueMsg struct {
-	Banker  crypto.Address `json:"banker"`
-	Outputs []Output       `json:"outputs"`
-}
-
-// NewIssueMsg - construct arbitrary multi-in, multi-out send msg.
-func NewIssueMsg(banker crypto.Address, out []Output) IssueMsg {
-	return IssueMsg{Banker: banker, Outputs: out}
-}
-
-// Implements Msg.
-func (msg IssueMsg) Type() string { return "bank" } // TODO: "bank/send"
-
-// Implements Msg.
-func (msg IssueMsg) ValidateBasic() error {
-	// XXX
-	if len(msg.Outputs) == 0 {
-		return ErrNoOutputs()
-	}
-	for _, out := range msg.Outputs {
-		if err := out.ValidateBasic(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (msg IssueMsg) String() string {
-	return fmt.Sprintf("IssueMsg{%v#%v}", msg.Banker, msg.Outputs)
-}
-
-// Implements Msg.
-func (msg IssueMsg) Get(key interface{}) (value interface{}) {
-	return nil
-}
-
-// Implements Msg.
-func (msg IssueMsg) GetSignBytes() []byte {
-	b, err := json.Marshal(msg) // XXX: ensure some canonical form
-	if err != nil {
-		panic(err)
-	}
-	return b
-}
-
-// Implements Msg.
-func (msg IssueMsg) GetSigners() []crypto.Address {
-	return []crypto.Address{msg.Banker}
-}
-
-//----------------------------------------
-// Input
-
-type Input struct {
-	Address  crypto.Address `json:"address"`
-	Coins    types.Coins    `json:"coins"`
-	Sequence int64          `json:"sequence"`
-
-	signature crypto.Signature
-}
-
-// ValidateBasic - validate transaction input
-func (in Input) ValidateBasic() error {
-	if len(in.Address) == 0 {
-		return ErrInvalidAddress(in.Address.String())
-	}
-	if in.Sequence < 0 {
-		return ErrInvalidSequence(in.Sequence)
-	}
-	if !in.Coins.IsValid() {
-		return ErrInvalidCoins(in.Coins.String())
-	}
-	if !in.Coins.IsPositive() {
-		return ErrInvalidCoins(in.Coins.String())
-	}
-	return nil
-}
-
-func (in Input) String() string {
-	return fmt.Sprintf("Input{%v,%v}", in.Address, in.Coins)
-}
-
-// NewInput - create a transaction input, used with SendMsg
-func NewInput(addr crypto.Address, coins types.Coins) Input {
-	input := Input{
-		Address: addr,
-		Coins:   coins,
-	}
-	return input
-}
-
-// NewInputWithSequence - create a transaction input, used with SendMsg
-func NewInputWithSequence(addr crypto.Address, coins types.Coins, seq int64) Input {
-	input := NewInput(addr, coins)
-	input.Sequence = seq
-	return input
-}
-
-//----------------------------------------
-// Output
-
-type Output struct {
-	Address crypto.Address `json:"address"`
-	Coins   types.Coins    `json:"coins"`
-}
-
-// ValidateBasic - validate transaction output
-func (out Output) ValidateBasic() error {
-	if len(out.Address) == 0 {
-		return ErrInvalidAddress(out.Address.String())
-	}
-	if !out.Coins.IsValid() {
-		return ErrInvalidCoins(out.Coins.String())
-	}
-	if !out.Coins.IsPositive() {
-		return ErrInvalidCoins(out.Coins.String())
-	}
-	return nil
-}
-
-func (out Output) String() string {
-	return fmt.Sprintf("Output{%X,%v}", out.Address, out.Coins)
-}
-
-// NewOutput - create a transaction output, used with SendMsg
-func NewOutput(addr crypto.Address, coins types.Coins) Output {
-	output := Output{
-		Address: addr,
-		Coins:   coins,
-	}
-	return output
 }

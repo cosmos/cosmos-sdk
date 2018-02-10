@@ -20,7 +20,7 @@ type BaseAccount struct {
 	Address  crypto.Address `json:"address"`
 	Coins    sdk.Coins      `json:"coins"`
 	PubKey   crypto.PubKey  `json:"public_key"`
-	Sequence int64          `json:"sequence"`
+	Sequence uint64         `json:"sequence"`
 }
 
 func NewBaseAccountWithAddress(addr crypto.Address) BaseAccount {
@@ -79,12 +79,12 @@ func (acc *BaseAccount) SetCoins(coins sdk.Coins) error {
 }
 
 // Implements sdk.Account.
-func (acc *BaseAccount) GetSequence() int64 {
+func (acc *BaseAccount) GetSequence() uint64 {
 	return acc.Sequence
 }
 
 // Implements sdk.Account.
-func (acc *BaseAccount) SetSequence(seq int64) error {
+func (acc *BaseAccount) SetSequence(seq uint64) error {
 	acc.Sequence = seq
 	return nil
 }

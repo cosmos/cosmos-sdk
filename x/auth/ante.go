@@ -66,11 +66,12 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 
 			// Check and increment sequence number.
 			seq := signerAcc.GetSequence()
-			if seq != sig.Sequence {
+			if seq != tx.GetSequence() {
 				return ctx,
-					sdk.ErrInvalidSequence("").Result(),
+					sdk.ErrInternal("setting PubKey on signer").Result(),
 					true
 			}
+
 			signerAcc.SetSequence(seq + 1)
 
 			// Check sig.

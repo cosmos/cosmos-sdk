@@ -5,10 +5,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/iavl"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 
-	"github.com/tendermint/iavl"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -78,4 +80,64 @@ func TestIAVLIterator(t *testing.T) {
 		assert.EqualValues(t, value, treeData[expectedKey])
 		i += 1
 	}
+}
+
+func TestIAVLStoreQuery(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree := iavl.NewVersionedTree(db, cacheSize)
+	iavlStore := newIAVLStore(tree, numHistory)
+
+	k, v := []byte("wind"), []byte("blows")
+	k2, v2 := []byte("water"), []byte("flows")
+	v3 := []byte("is cold")
+	// k3, v3 := []byte("earth"), []byte("soes")
+	// k4, v4 := []byte("fire"), []byte("woes")
+
+	cid := iavlStore.Commit()
+	ver := cid.Version
+	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
+
+	// set data without commit, doesn't show up
+	iavlStore.Set(k, v)
+	qres := iavlStore.Query(query)
+	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	assert.Nil(t, qres.Value)
+
+	// commit it, but still don't see on old version
+	cid = iavlStore.Commit()
+	qres = iavlStore.Query(query)
+	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	assert.Nil(t, qres.Value)
+
+	// but yes on the new version
+	query.Height = cid.Version
+	qres = iavlStore.Query(query)
+	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	assert.Equal(t, v, qres.Value)
+
+	// modify
+	iavlStore.Set(k2, v2)
+	iavlStore.Set(k, v3)
+	cid = iavlStore.Commit()
+
+	// query will return old values, as height is fixed
+	qres = iavlStore.Query(query)
+	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	assert.Equal(t, v, qres.Value)
+
+	// update to latest in the query and we are happy
+	query.Height = cid.Version
+	qres = iavlStore.Query(query)
+	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	assert.Equal(t, v3, qres.Value)
+	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
+	qres = iavlStore.Query(query2)
+	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	assert.Equal(t, v2, qres.Value)
+
+	// default (height 0) will show latest -1
+	query0 := abci.RequestQuery{Path: "/store", Data: k}
+	qres = iavlStore.Query(query0)
+	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	assert.Equal(t, v, qres.Value)
 }

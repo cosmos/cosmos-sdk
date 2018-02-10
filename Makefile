@@ -25,6 +25,9 @@ dist:
 check_tools:
 	cd tools && $(MAKE) check
 
+update_tools:
+	cd tools && $(MAKE) glide_update
+
 get_tools:
 	cd tools && $(MAKE)
 

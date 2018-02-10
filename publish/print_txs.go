@@ -2,6 +2,7 @@
 
 package main
 
+/*
 import (
 	"encoding/json"
 	"fmt"
@@ -58,3 +59,4 @@ func main() {
 
 	ws.Stop()
 }
+*/

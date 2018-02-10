@@ -38,3 +38,11 @@ type Result struct {
 func (res Result) IsOK() bool {
 	return res.Code.IsOK()
 }
+
+// ToQuery allows us to return sdk.Error.Result() in query responses
+func (res Result) ToQuery() abci.ResponseQuery {
+	return abci.ResponseQuery{
+		Code: uint32(res.Code),
+		Log:  res.Log,
+	}
+}

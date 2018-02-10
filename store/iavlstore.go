@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/iavl"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -31,6 +32,7 @@ func LoadIAVLStore(db dbm.DB, id CommitID) (CommitStore, error) {
 
 var _ KVStore = (*iavlStore)(nil)
 var _ CommitStore = (*iavlStore)(nil)
+var _ Queryable = (*iavlStore)(nil)
 
 // iavlStore Implements KVStore and CommitStore.
 type iavlStore struct {
@@ -121,6 +123,55 @@ func (st *iavlStore) Iterator(start, end []byte) Iterator {
 // Implements IterKVStore.
 func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, false)
+}
+
+// Query implements ABCI interface, allows queries
+//
+// by default we will return from (latest height -1),
+// as we will have merkle proofs immediately (header height = data height + 1)
+// If latest-1 is not present, use latest (which must be present)
+// if you care to have the latest data to see a tx results, you must
+// explicitly set the height you want to see
+func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
+	if len(req.Data) == 0 {
+		msg := "Query cannot be zero length"
+		return sdk.ErrTxParse(msg).Result().ToQuery()
+	}
+
+	tree := st.tree
+	height := req.Height
+	if height == 0 {
+		latest := tree.Version64()
+		if tree.VersionExists(latest - 1) {
+			height = latest - 1
+		} else {
+			height = latest
+		}
+	}
+	// store the height we chose in the response
+	res.Height = height
+
+	switch req.Path {
+	case "/store", "/key": // Get by key
+		key := req.Data // Data holds the key bytes
+		res.Key = key
+		if req.Prove {
+			value, proof, err := tree.GetVersionedWithProof(key, height)
+			if err != nil {
+				res.Log = err.Error()
+				break
+			}
+			res.Value = value
+			res.Proof = proof.Bytes()
+		} else {
+			_, res.Value = tree.GetVersioned(key, height)
+		}
+
+	default:
+		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
+		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+	}
+	return
 }
 
 //----------------------------------------

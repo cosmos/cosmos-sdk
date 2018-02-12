@@ -71,10 +71,9 @@ func NewBasecoinApp(genesisPath string) *BasecoinApp {
 		ByzantineValidators: nil,
 	})
 
-	ctxCheckTx := app.BaseApp.NewContext(true, nil)
-	ctxDeliverTx := app.BaseApp.NewContext(false, nil)
+	ctx := app.BaseApp.NewContext(false, nil) // context for DeliverTx
 
-	err = app.BaseApp.InitStater(ctxCheckTx, ctxDeliverTx, genesisiDoc.AppState)
+	err = app.BaseApp.InitStater(ctx, genesisiDoc.AppState)
 	if err != nil {
 		panic(fmt.Errorf("error loading application genesis state: %v", err))
 	}

@@ -65,11 +65,10 @@ func TestSendMsg(t *testing.T) {
 	bytes, err := json.MarshalIndent(&gaccs, "", "\t")
 
 	app := tba.BasecoinApp
-	ctxCheckTx := app.BaseApp.NewContext(true, nil)
-	ctxDeliverTx := app.BaseApp.NewContext(false, nil)
-	err = app.BaseApp.InitStater(ctxCheckTx, ctxDeliverTx, bytes)
+	ctx := app.BaseApp.NewContext(false, nil) // context for DeliverTx
+	err = app.BaseApp.InitStater(ctx, bytes)
 	require.Nil(t, err)
 
-	res1 := app.accountMapper.GetAccount(ctxDeliverTx, baseAcc.Address)
+	res1 := app.accountMapper.GetAccount(ctx, baseAcc.Address)
 	assert.Equal(t, acc, res1)
 }

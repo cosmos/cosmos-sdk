@@ -76,7 +76,7 @@ func (ga *GenesisAccount) toAppAccount() (acc *types.AppAccount, err error) {
 func (app *BasecoinApp) initBaseAppInitStater() {
 	accountMapper := app.accountMapper
 
-	app.BaseApp.SetInitStater(func(ctxCheckTx, ctxDeliverTx sdk.Context, state json.RawMessage) sdk.Error {
+	app.BaseApp.SetInitStater(func(ctx sdk.Context, state json.RawMessage) sdk.Error {
 		if state == nil {
 			return nil
 		}
@@ -93,8 +93,7 @@ func (app *BasecoinApp) initBaseAppInitStater() {
 			if err != nil {
 				return sdk.ErrGenesisParse("").TraceCause(err, "")
 			}
-			accountMapper.SetAccount(ctxCheckTx, acc)
-			accountMapper.SetAccount(ctxDeliverTx, acc)
+			accountMapper.SetAccount(ctx, acc)
 		}
 		return nil
 	})

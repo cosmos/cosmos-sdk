@@ -56,7 +56,7 @@ func (tx dummyTx) GetFeePayer() crypto.Address {
 	return nil
 }
 
-func (tx dummyTx) GetSequence() crypto.Address {
+func (tx dummyTx) GetSequence() int64 {
 	return 0
 }
 

@@ -46,7 +46,7 @@ type Tx interface {
 	// .Empty().
 	GetSignatures() []StdSignature
 
-	GetSequence() uint64
+	GetSequence() int64
 }
 
 var _ Tx = (*StdTx)(nil)
@@ -56,7 +56,7 @@ var _ Tx = (*StdTx)(nil)
 type StdTx struct {
 	Msg
 	Signatures []StdSignature
-	Sequence   uint64
+	Sequence   int64
 }
 
 func NewStdTx(msg Msg, sigs []StdSignature) StdTx {
@@ -70,7 +70,7 @@ func NewStdTx(msg Msg, sigs []StdSignature) StdTx {
 func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
 func (tx StdTx) GetFeePayer() crypto.Address   { return tx.Signatures[0].PubKey.Address() } // XXX but PubKey is optional!
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
-func (tx StdTx) GetSequence() uint64           { return tx.Sequence }
+func (tx StdTx) GetSequence() int64            { return tx.Sequence }
 
 //-------------------------------------
 

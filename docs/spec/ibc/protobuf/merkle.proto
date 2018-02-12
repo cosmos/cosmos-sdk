@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package protobuf;
+
+
+// HashOp is the hashing algorithm we use at each level
+enum HashOp {
+    RIPEMD160 = 0;
+    SHA224 = 1;
+    SHA256 = 2;
+    SHA384 = 3;
+    SHA512 = 4;
+    SHA3_224 = 5;
+    SHA3_256 = 6;
+    SHA3_384 = 7;
+    SHA3_512 = 8;
+    SHA256_X2 = 9;
+};
+
+// Op represents one hash in a chain of hashes.
+// An operation takes the output of the last level and returns
+// a hash for the next level:
+// Op(last) => Operation(prefix + last + sufix)
+//
+// A simple left/right hash would simply set prefix=left or
+// suffix=right and leave the other blank. However, one could
+// also represent the a Patricia trie proof by setting
+// prefix to the rlp encoding of all nodes before the branch
+// we select, and suffix to all those after the one we select.
+message Op {
+    bytes prefix = 1;
+    bytes suffix = 2;
+    HashOp op = 3;
+}
+
+// Data is the end value stored,
+// used to generate the initial hash store
+message Data {
+    // optional prefix allows second preimage resistance
+    bytes prefix = 1;
+    bytes key = 2;
+    bytes value = 3;
+    HashOp op = 4;
+    // If it is KeyValue, this is the data we want
+    // If it is SubTree, key is name of the tree,
+    //   value is root hash
+    enum DataType {
+        KeyValue = 0;
+        SubTree = 1;
+    }
+    DataType dataType = 5;
+}
+
+// Branch will hash data and then pass it through operations
+// from first to last in order to calculate the root node.
+//
+// Visualize Branch as representing the data closest to
+// root as the first item, and the leaf as the last item.
+message Branch {
+    // if either are non-empty, enforce this prefix on all
+    // leaf/inner nodes to provide second preimage resistence
+    bytes prefixLeaf = 1;
+    bytes prefixInner = 2;
+    // this is the data to get the original hash,
+    // and a set of operations to calculate the root hash
+    Data data = 3;
+    repeated Op operations = 4;
+}
+
+message MerkleProof {
+    // TODO: root, height, chain_id, etc...
+
+    // branches start from the value, and then may
+    // include multiple subtree branches to embed it
+    //
+    // The first branch must have dataType KeyValue
+    // Following branches must have dataType SubTree
+    repeated Branch branches = 1;
+}

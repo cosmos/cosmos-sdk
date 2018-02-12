@@ -3,8 +3,9 @@ package main
 import (
 	"bytes"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // An sdk.Tx which is its own sdk.Msg.

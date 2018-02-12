@@ -17,7 +17,7 @@ func (app *BasecoinApp) initDefaultAnteHandler() {
 	// Deducts fee from payer.
 	// Verifies signatures and nonces.
 	// Sets Signers to ctx.
-	app.BaseApp.SetDefaultAnteHandler(
+	app.BaseApp.SetAnteHandler(
 		auth.NewAnteHandler(app.accountMapper))
 }
 

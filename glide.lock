@@ -1,5 +1,5 @@
-hash: b0d6b76ffe90ef74c9c9672f18eb9abb90c3e7636dbc0504e343d88c337b1ea0
-updated: 2018-02-03T12:28:51.055275+01:00
+hash: 2b4ad3bf1489a7cb5e62c6cb4c1fa976d4ae21993743e4968418c4e81925fb99
+updated: 2018-02-13T08:33:22.402132782-05:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 50de9da05b50eb15658bb350f6ea24368a111ab7
@@ -9,6 +9,8 @@ imports:
   version: 346938d642f2ec3594ed81d874461961cd0faa76
   subpackages:
   - spew
+- name: github.com/fsnotify/fsnotify
+  version: c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9
 - name: github.com/go-kit/kit
   version: 4dc7be5d2d12881735283bcab7352178e190fc71
   subpackages:
@@ -38,16 +40,45 @@ imports:
   - ptypes/timestamp
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
+- name: github.com/hashicorp/hcl
+  version: 23c074d0eceb2b8a5bfdbb271ab780cde70f05a8
+  subpackages:
+  - hcl/ast
+  - hcl/parser
+  - hcl/scanner
+  - hcl/strconv
+  - hcl/token
+  - json/parser
+  - json/scanner
+  - json/token
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jmhodges/levigo
   version: c42d9e0ca023e2198120196f842701bb4c55d7b9
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
+- name: github.com/magiconair/properties
+  version: 49d762b9817ba1c2e9d0c69183c2b4a8b8f1d934
+- name: github.com/mitchellh/mapstructure
+  version: b4575eea38cca1123ec2dc90c26529b5c5acfcff
+- name: github.com/pelletier/go-toml
+  version: acdc4509485b587f5e675510c4f2c63e90ff68a8
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/rigelrozanski/common
   version: f691f115798593d783b9999b1263c2f4ffecc439
+- name: github.com/spf13/afero
+  version: bb8f1927f2a9d3ab41c9340aa034f6b803f4359c
+  subpackages:
+  - mem
+- name: github.com/spf13/cast
+  version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 93959269ad99e80983c9ba742a7e01203a4c0e4f
+  version: 7b2c5ac9fc04fc5efafb60700713d4fa609b777b
+- name: github.com/spf13/jwalterweatherman
+  version: 7c0cea34c8ece3fbeb2b27ab9b59511d360fb394
+- name: github.com/spf13/pflag
+  version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
 - name: github.com/spf13/viper
   version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: github.com/syndtr/goleveldb
@@ -66,7 +97,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 5a4f56056e23cdfd5f3733db056968e016468508
+  version: bf70f5e273bd7dd6e22e64186cd1ccc4e3a03df1
   subpackages:
   - server
   - types
@@ -82,8 +113,9 @@ imports:
 - name: github.com/tendermint/iavl
   version: 1a59ec0c82dc940c25339dd7c834df5cb76a95cb
 - name: github.com/tendermint/tmlibs
-  version: deaaf014d8b8d1095054380a38b1b00e293f725f
+  version: c858b3ba78316fdd9096a11409a7e7a493e7d974
   subpackages:
+  - cli
   - common
   - db
   - log
@@ -107,6 +139,10 @@ imports:
   - internal/timeseries
   - lex/httplex
   - trace
+- name: golang.org/x/sys
+  version: 37707fdb30a5b38865cfb95e5aab41707daec7fd
+  subpackages:
+  - unix
 - name: golang.org/x/text
   version: e19ae1496984b1c655b8044a65c0300a3c878dd3
   subpackages:
@@ -137,6 +173,8 @@ imports:
   - status
   - tap
   - transport
+- name: gopkg.in/yaml.v2
+  version: d670f9405373e636a5a2765eea47fac0c9bc91a4
 testImports:
 - name: github.com/pmezard/go-difflib
   version: 792786c7400a136282c1664665ae0a8db921c6c2

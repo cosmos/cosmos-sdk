@@ -4,6 +4,7 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
+// Transactions messages must fulfill the Msg
 type Msg interface {
 
 	// Return the message type.
@@ -26,6 +27,7 @@ type Msg interface {
 	GetSigners() []crypto.Address
 }
 
+// Transactions objects must fulfill the Tx
 type Tx interface {
 
 	// Gets the Msg.
@@ -47,13 +49,18 @@ type Tx interface {
 
 var _ Tx = (*StdTx)(nil)
 
+// standard transaction form
 type StdTx struct {
 	Msg
 	Signatures []StdSignature
 }
 
+//nolint
 func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
 func (tx StdTx) GetFeePayer() crypto.Address   { return tx.Signatures[0].PubKey.Address() }
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 
+//-------------------------------------
+
+// Application function variable used to unmarshal transaction bytes
 type TxDecoder func(txBytes []byte) (Tx, Error)

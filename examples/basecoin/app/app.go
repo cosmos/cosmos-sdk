@@ -6,18 +6,21 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/tendermint/abci/server"
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-wire"
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
 const appName = "BasecoinApp"
 
+// BasecoinApp - extended ABCI application
 type BasecoinApp struct {
 	*bam.BaseApp
 	router     bam.Router
 	cdc        *wire.Codec
-	multiStore sdk.CommitMultiStore
+	multiStore sdk.CommitMultiStore //TODO distinguish this store from *bam.BaseApp.cms <- is this one master?? confused
 
 	// The key to access the substores.
 	capKeyMainStore *sdk.KVStoreKey
@@ -27,25 +30,44 @@ type BasecoinApp struct {
 	accountMapper sdk.AccountMapper
 }
 
+// NewBasecoinApp - create new BasecoinApp
 // TODO: This should take in more configuration options.
-func NewBasecoinApp() *BasecoinApp {
+// TODO: This should be moved into baseapp to isolate complexity
+func NewBasecoinApp(genesisPath string) *BasecoinApp {
 
 	// Create and configure app.
 	var app = &BasecoinApp{}
-	app.initCapKeys()  // ./init_capkeys.go
-	app.initBaseApp()  // ./init_baseapp.go
-	app.initStores()   // ./init_stores.go
+
+	// TODO open up out of functions, or introduce clarity,
+	// interdependancies are a nightmare to debug
+	app.initCapKeys() // ./init_capkeys.go
+	app.initBaseApp() // ./init_baseapp.go
+	app.initStores()  // ./init_stores.go
+	app.initBaseAppInitStater()
 	app.initHandlers() // ./init_handlers.go
 
-	// TODO: Load genesis
-	// TODO: InitChain with validators
-	// TODO: Set the genesis accounts
+	genesisiDoc, err := bam.GenesisDocFromFile(genesisPath)
+	if err != nil {
+		panic(fmt.Errorf("error loading genesis state: %v", err))
+	}
+
+	// set up the cache store for ctx, get ctx
+	// TODO: can InitChain handle this too ?
+	app.BaseApp.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{}})
+	ctx := app.BaseApp.NewContext(false, nil) // context for DeliverTx
+
+	// TODO: combine with InitChain and let tendermint invoke it.
+	err = app.BaseApp.InitStater(ctx, genesisiDoc.AppState)
+	if err != nil {
+		panic(fmt.Errorf("error initializing application genesis state: %v", err))
+	}
 
 	app.loadStores()
 
 	return app
 }
 
+// RunForever - BasecoinApp execution and cleanup
 func (app *BasecoinApp) RunForever() {
 
 	// Start the ABCI server
@@ -64,7 +86,7 @@ func (app *BasecoinApp) RunForever() {
 
 }
 
-// Load the stores.
+// Load the stores
 func (app *BasecoinApp) loadStores() {
 	if err := app.LoadLatestVersion(app.capKeyMainStore); err != nil {
 		fmt.Println(err)

@@ -19,7 +19,7 @@ import (
 
 var mainHeaderKey = []byte("header")
 
-// BaseApp - The ABCI application
+// The ABCI application
 type BaseApp struct {
 	logger log.Logger
 
@@ -32,33 +32,38 @@ type BaseApp struct {
 	// Main (uncached) state
 	cms sdk.CommitMultiStore
 
-	// Unmarshal []byte into sdk.Tx
+	// unmarshal []byte into sdk.Tx
 	txDecoder sdk.TxDecoder
 
-	// Ante handler for fee and auth.
+	// unmarshal rawjsonbytes to initialize the application
+	// TODO unexpose and call from InitChain
+	InitStater sdk.InitStater
+
+	// ante handler for fee and auth
 	defaultAnteHandler sdk.AnteHandler
 
-	// Handle any kind of message.
+	// handle any kind of message
 	router Router
 
 	//--------------------
 	// Volatile
 
-	// CheckTx state, a cache-wrap of `.cms`.
+	// CheckTx state, a cache-wrap of `.cms`
 	msCheck sdk.CacheMultiStore
 
-	// DeliverTx state, a cache-wrap of `.cms`.
+	// DeliverTx state, a cache-wrap of `.cms`
 	msDeliver sdk.CacheMultiStore
 
-	// Current block header
+	// current block header
 	header *abci.Header
 
-	// Cached validator changes from DeliverTx.
+	// cached validator changes from DeliverTx
 	valUpdates []abci.Validator
 }
 
 var _ abci.Application = &BaseApp{}
 
+// Create and name new BaseApp
 func NewBaseApp(name string) *BaseApp {
 	var baseapp = &BaseApp{
 		logger: makeDefaultLogger(),
@@ -88,22 +93,26 @@ func (app *BaseApp) initMultiStore() {
 	app.cms = cms
 }
 
+// BaseApp Name
 func (app *BaseApp) Name() string {
 	return app.name
 }
 
+// Mount a store to the provided key in the BaseApp multistore
 func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, app.db)
 }
 
+// nolint
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
-
+func (app *BaseApp) SetInitStater(initStater sdk.InitStater) {
+	app.InitStater = initStater
+}
 func (app *BaseApp) SetDefaultAnteHandler(ah sdk.AnteHandler) {
 	app.defaultAnteHandler = ah
 }
-
 func (app *BaseApp) Router() Router {
 	return app.router
 }
@@ -111,14 +120,15 @@ func (app *BaseApp) Router() Router {
 /* TODO consider:
 func (app *BaseApp) SetBeginBlocker(...) {}
 func (app *BaseApp) SetEndBlocker(...) {}
-func (app *BaseApp) SetInitStater(...) {}
 */
 
+// TODO add description
 func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
 	app.cms.LoadLatestVersion()
 	return app.initFromStore(mainKey)
 }
 
+// Load application version
 func (app *BaseApp) LoadVersion(version int64, mainKey sdk.StoreKey) error {
 	app.cms.LoadVersion(version)
 	return app.initFromStore(mainKey)
@@ -174,7 +184,7 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 
 //----------------------------------------
 
-// Implements ABCI.
+// Implements ABCI
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 
 	lastCommitID := app.cms.LastCommitID()
@@ -186,15 +196,16 @@ func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 	}
 }
 
-// Implements ABCI.
+// Implements ABCI
 func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
 	// TODO: Implement
 	return
 }
 
-// Implements ABCI.
+// Implements ABCI
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	// TODO: Use req.Validators
+	// TODO: Use req.AppStateJSON (?)
 	return
 }
 
@@ -209,7 +220,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	return queryable.Query(req)
 }
 
-// Implements ABCI.
+// Implements ABCI
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	// NOTE: For consistency we should unset these upon EndBlock.
 	app.header = &req.Header
@@ -219,7 +230,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	return
 }
 
-// Implements ABCI.
+// Implements ABCI
 func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 
 	// Decode the Tx.
@@ -245,7 +256,7 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 
 }
 
-// Implements ABCI.
+// Implements ABCI
 func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 
 	// Decode the Tx.
@@ -333,7 +344,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	return result
 }
 
-// Implements ABCI.
+// Implements ABCI
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	res.ValidatorUpdates = app.valUpdates
 	app.valUpdates = nil
@@ -343,7 +354,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	return
 }
 
-// Implements ABCI.
+// Implements ABCI
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	app.msDeliver.Write()
 	commitID := app.cms.Commit()
@@ -361,9 +372,8 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 func (app *BaseApp) getMultiStore(isCheckTx bool) sdk.MultiStore {
 	if isCheckTx {
 		return app.msCheck
-	} else {
-		return app.msDeliver
 	}
+	return app.msDeliver
 }
 
 // Return index of list with validator of same PubKey, or -1 if no match

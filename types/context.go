@@ -30,6 +30,7 @@ type Context struct {
 	// it's probably not what you want to do.
 }
 
+// create a new context
 func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byte) Context {
 	c := Context{
 		Context: context.Background(),
@@ -45,6 +46,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byt
 	return c
 }
 
+// is context nil
 func (c Context) IsZero() bool {
 	return c.Context == nil
 }
@@ -52,6 +54,7 @@ func (c Context) IsZero() bool {
 //----------------------------------------
 // Getting a value
 
+// context value for the provided key
 func (c Context) Value(key interface{}) interface{} {
 	value := c.Context.Value(key)
 	if cloner, ok := value.(cloner); ok {
@@ -71,34 +74,28 @@ func (c Context) KVStore(key StoreKey) KVStore {
 //----------------------------------------
 // With* (setting a value)
 
+// nolint
 func (c Context) WithValue(key interface{}, value interface{}) Context {
 	return c.withValue(key, value)
 }
-
 func (c Context) WithCloner(key interface{}, value cloner) Context {
 	return c.withValue(key, value)
 }
-
 func (c Context) WithCacheWrapper(key interface{}, value CacheWrapper) Context {
 	return c.withValue(key, value)
 }
-
 func (c Context) WithProtoMsg(key interface{}, value proto.Message) Context {
 	return c.withValue(key, value)
 }
-
 func (c Context) WithString(key interface{}, value string) Context {
 	return c.withValue(key, value)
 }
-
 func (c Context) WithInt32(key interface{}, value int32) Context {
 	return c.withValue(key, value)
 }
-
 func (c Context) WithUint32(key interface{}, value uint32) Context {
 	return c.withValue(key, value)
 }
-
 func (c Context) WithUint64(key interface{}, value uint64) Context {
 	return c.withValue(key, value)
 }
@@ -138,47 +135,38 @@ func (c Context) multiStore() MultiStore {
 	return c.Value(contextKeyMultiStore).(MultiStore)
 }
 
+// nolint
 func (c Context) BlockHeader() abci.Header {
 	return c.Value(contextKeyBlockHeader).(abci.Header)
 }
-
 func (c Context) BlockHeight() int64 {
 	return c.Value(contextKeyBlockHeight).(int64)
 }
-
 func (c Context) ChainID() string {
 	return c.Value(contextKeyChainID).(string)
 }
-
 func (c Context) IsCheckTx() bool {
 	return c.Value(contextKeyIsCheckTx).(bool)
 }
-
 func (c Context) TxBytes() []byte {
 	return c.Value(contextKeyTxBytes).([]byte)
 }
-
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	return c.withValue(contextKeyMultiStore, ms)
 }
-
 func (c Context) WithBlockHeader(header abci.Header) Context {
 	var _ proto.Message = &header // for cloning.
 	return c.withValue(contextKeyBlockHeader, header)
 }
-
 func (c Context) WithBlockHeight(height int64) Context {
 	return c.withValue(contextKeyBlockHeight, height)
 }
-
 func (c Context) WithChainID(chainID string) Context {
 	return c.withValue(contextKeyChainID, chainID)
 }
-
 func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	return c.withValue(contextKeyIsCheckTx, isCheckTx)
 }
-
 func (c Context) WithTxBytes(txBytes []byte) Context {
 	return c.withValue(contextKeyTxBytes, txBytes)
 }
@@ -199,6 +187,7 @@ type cloner interface {
 	Clone() interface{} // deep copy
 }
 
+// XXX add description
 type Op struct {
 	// type is always 'with'
 	gen   int
@@ -221,7 +210,7 @@ func newThePast() *thePast {
 
 func (pst *thePast) bump(op Op) {
 	pst.mtx.Lock()
-	pst.ver += 1
+	pst.ver++
 	pst.ops = append(pst.ops, op)
 	pst.mtx.Unlock()
 }
@@ -240,7 +229,6 @@ func (pst *thePast) getOp(ver int64) (Op, bool) {
 	l := int64(len(pst.ops))
 	if l < ver || ver <= 0 {
 		return Op{}, false
-	} else {
-		return pst.ops[ver-1], true
 	}
+	return pst.ops[ver-1], true
 }

@@ -9,12 +9,12 @@ import (
 
 // NOTE: These are implemented in cosmos-sdk/store.
 
-type Store interface {
+type Store interface { //nolint
 	GetStoreType() StoreType
 	CacheWrapper
 }
 
-// Something that can persist to disk.
+// something that can persist to disk
 type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
@@ -37,7 +37,7 @@ type Queryable interface {
 //----------------------------------------
 // MultiStore
 
-type MultiStore interface {
+type MultiStore interface { //nolint
 	Store
 
 	// Cache wrap MultiStore.
@@ -139,16 +139,16 @@ type CacheKVStore interface {
 	cache-wraps make no sense.  It can return KVStore, HeapStore,
 	SpaceStore, etc.
 */
-type CacheWrapper interface {
-	CacheWrap() CacheWrap
-}
-
 type CacheWrap interface {
 
 	// Write syncs with the underlying store.
 	Write()
 
 	// CacheWrap recursively wraps again.
+	CacheWrap() CacheWrap
+}
+
+type CacheWrapper interface { //nolint
 	CacheWrap() CacheWrap
 }
 
@@ -161,7 +161,7 @@ type CommitID struct {
 	Hash    []byte
 }
 
-func (cid CommitID) IsZero() bool {
+func (cid CommitID) IsZero() bool { //nolint
 	return cid.Version == 0 && len(cid.Hash) == 0
 }
 
@@ -172,9 +172,11 @@ func (cid CommitID) String() string {
 //----------------------------------------
 // Store types
 
+// kind of store
 type StoreType int
 
 const (
+	//nolint
 	StoreTypeMulti StoreType = iota
 	StoreTypeDB
 	StoreTypeIAVL

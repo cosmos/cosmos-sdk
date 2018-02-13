@@ -106,7 +106,7 @@ func TestBasic(t *testing.T) {
 			}
 
 			// Not matched.
-			j += 1
+			j++
 		}
 	}
 	assert.Equal(t, len(valUpdates), 0, "Some validator updates were unexpected")

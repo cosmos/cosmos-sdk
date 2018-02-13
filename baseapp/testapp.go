@@ -24,6 +24,7 @@ func NewTestApp(bapp *BaseApp) *TestApp {
 	return app
 }
 
+// execute BaseApp BeginBlock
 func (tapp *TestApp) RunBeginBlock() {
 	if tapp.header != nil {
 		panic("TestApp.header not nil, BeginBlock already run, or EndBlock not yet run.")
@@ -56,36 +57,43 @@ func (tapp *TestApp) ensureBeginBlock() {
 	}
 }
 
+// run tx through CheckTx of TestApp
 func (tapp *TestApp) RunCheckTx(tx sdk.Tx) sdk.Result {
 	tapp.ensureBeginBlock()
 	return tapp.BaseApp.runTx(true, nil, tx)
 }
 
+// run tx through DeliverTx of TestApp
 func (tapp *TestApp) RunDeliverTx(tx sdk.Tx) sdk.Result {
 	tapp.ensureBeginBlock()
 	return tapp.BaseApp.runTx(false, nil, tx)
 }
 
+// run tx through CheckTx of TestApp
 // NOTE: Skips authentication by wrapping msg in testTx{}.
 func (tapp *TestApp) RunCheckMsg(msg sdk.Msg) sdk.Result {
 	var tx = testTx{msg}
 	return tapp.RunCheckTx(tx)
 }
 
+// run tx through DeliverTx of TestApp
 // NOTE: Skips authentication by wrapping msg in testTx{}.
 func (tapp *TestApp) RunDeliverMsg(msg sdk.Msg) sdk.Result {
 	var tx = testTx{msg}
 	return tapp.RunDeliverTx(tx)
 }
 
+// return the commited multistore
 func (tapp *TestApp) CommitMultiStore() sdk.CommitMultiStore {
 	return tapp.BaseApp.cms
 }
 
+// return a cache-wrap CheckTx state of multistore
 func (tapp *TestApp) MultiStoreCheck() sdk.MultiStore {
 	return tapp.BaseApp.msCheck
 }
 
+// return a cache-wrap DeliverTx state of multistore
 func (tapp *TestApp) MultiStoreDeliver() sdk.MultiStore {
 	return tapp.BaseApp.msDeliver
 }
@@ -97,11 +105,11 @@ type testTx struct {
 	sdk.Msg
 }
 
+// nolint
 func (tx testTx) GetMsg() sdk.Msg                   { return tx.Msg }
 func (tx testTx) GetSigners() []crypto.Address      { return nil }
 func (tx testTx) GetFeePayer() crypto.Address       { return nil }
 func (tx testTx) GetSignatures() []sdk.StdSignature { return nil }
-
 func IsTestAppTx(tx sdk.Tx) bool {
 	_, ok := tx.(testTx)
 	return ok

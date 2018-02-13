@@ -10,7 +10,8 @@ This paper specifies the IBC (inter blockchain communication) protocol, which wa
 
 Each chain maintains a local partial order, while inter-chain messages track any cross-chain causality relations. Once two chains have registered a trust relationship, cryptographically provable packets can be securely sent between the chains, using Tendermint's instant finality for quick and efficient transmission.
 
-We currently use this protocol for secure value transfer in the Cosmos Hub, but the protocol can support arbitrary application logic. Details of how Cosmos Hub uses IBC to securely route and transfer value are provided in a separate paper, along with a framework for expressing global invariants. Designing secure communication logic for other types of applications is still an area of research.
+We currently use this protocol for secure value transfer in the Cosmos Hub, but the protocol can support arbitrary application logic. Details of how Cosmos Hub uses IBC to securely route and transfer value ar
+e provided in a separate paper, along with a framework for expressing global invariants. Designing secure communication logic for other types of applications is still an area of research.
 
 The protocol makes no assumptions of block times or network delays in the transmission of the packets between chains and requires cryptographic proofs for every message, and thus is highly robust in a heterogeneous environment with Byzantine actors. This paper explains the requirements and structure of the Cosmos IBC protocol. It aims to provide enough detail to fully understand and analyze the security of the protocol.
 

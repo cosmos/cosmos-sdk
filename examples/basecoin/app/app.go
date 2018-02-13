@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"os"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,22 +14,20 @@ import (
 
 const appName = "BasecoinApp"
 
-// BasecoinApp - extended ABCI application
+// Extended ABCI application
 type BasecoinApp struct {
 	*bam.BaseApp
-	router     bam.Router
-	cdc        *wire.Codec
-	multiStore sdk.CommitMultiStore //TODO distinguish this store from *bam.BaseApp.cms <- is this one master?? confused
+	router bam.Router
+	cdc    *wire.Codec
 
-	// The key to access the substores.
+	// keys to access the substores
 	capKeyMainStore *sdk.KVStoreKey
 	capKeyIBCStore  *sdk.KVStoreKey
 
-	// Object mappers:
+	// object mappers
 	accountMapper sdk.AccountMapper
 }
 
-// NewBasecoinApp - create new BasecoinApp
 // TODO: This should take in more configuration options.
 // TODO: This should be moved into baseapp to isolate complexity
 func NewBasecoinApp(genesisPath string) *BasecoinApp {
@@ -73,8 +70,7 @@ func (app *BasecoinApp) RunForever() {
 	// Start the ABCI server
 	srv, err := server.NewServer("0.0.0.0:46658", "socket", app)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		cmn.Exit(err.Error())
 	}
 	srv.Start()
 
@@ -89,7 +85,6 @@ func (app *BasecoinApp) RunForever() {
 // Load the stores
 func (app *BasecoinApp) loadStores() {
 	if err := app.LoadLatestVersion(app.capKeyMainStore); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		cmn.Exit(err.Error())
 	}
 }

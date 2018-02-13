@@ -61,6 +61,7 @@ func (app *BasecoinApp) initBaseAppInitStater() {
 
 //-----------------------------------------------------
 
+// State to Unmarshal
 type GenesisState struct {
 	Accounts []*GenesisAccount `accounts`
 }

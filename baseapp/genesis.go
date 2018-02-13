@@ -30,3 +30,24 @@ func GenesisDocFromFile(genDocFile string) (*GenesisDoc, error) {
 	}
 	return &genDoc, nil
 }
+
+// read app state from the genesis file
+//func GenesisAppState(genesisFile string) (state json.RawMessage, err error) {
+//if genesisFile == "" {
+//return
+//}
+//jsonBlob, err := ioutil.ReadFile(genesisFile)
+//if err != nil {
+//return nil, err
+//}
+//data := make(map[string]interface{})
+//err = json.Unmarshal(jsonBlob, &data)
+//if err != nil {
+//return nil, err
+//}
+//state, ok := data["app_state"].(json.RawMessage)
+//if !ok {
+//return nil, errors.New("app state genesis parse error")
+//}
+//return state, nil
+//}

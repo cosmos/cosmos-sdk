@@ -53,24 +53,8 @@ func NewBasecoinApp(genesisPath string) *BasecoinApp {
 
 	// TODO: InitChain with validators from genesis transaction bytes
 
-	// very first begin block used for context when setting genesis accounts
-	header := abci.Header{
-		ChainID:        "",
-		Height:         0,
-		Time:           -1,
-		NumTxs:         -1,
-		LastCommitHash: []byte{0x00},
-		DataHash:       nil,
-		ValidatorsHash: nil,
-		AppHash:        nil,
-	}
-	app.BaseApp.BeginBlock(abci.RequestBeginBlock{
-		Hash:                nil,
-		Header:              header,
-		AbsentValidators:    nil,
-		ByzantineValidators: nil,
-	})
-
+	// set up the cache store for ctx, get ctx
+	app.BaseApp.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{}})
 	ctx := app.BaseApp.NewContext(false, nil) // context for DeliverTx
 
 	err = app.BaseApp.InitStater(ctx, genesisiDoc.AppState)

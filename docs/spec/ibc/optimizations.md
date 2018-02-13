@@ -12,175 +12,47 @@ One solution to this is to include a timeout in the IBC message itself.  When se
 
 For a sending chain _A_ and a receiving chain _B_, with _k=(_, _, i)_ for _A:q<sub>B.send</sub>_ or _B:q<sub>A.receipt</sub>_ we currently have the following guarantees:
 
-_A:M<sub>k,v,h</sub> = _
+_A:M<sub>k,v,h</sub> =_ &#8709; _if message i was not sent before height h_
 
-<p id="gdcalert64" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert65">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
+_A:M<sub>k,v,h</sub> =_ &#8709; _if message i was sent and receipt received before height h (and the receipts for all messages j < i were also handled)_
 
-_if message i was not sent before height h_
+_A:M<sub>k,v,h </sub>_ &#8800; &#8709; _otherwise (message result is not yet processed)_
 
-_A:M<sub>k,v,h</sub> = _
+_B:M<sub>k,v,h</sub> =_ &#8709; _if message i was not received before height h_
 
-<p id="gdcalert65" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert66">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
+_B:M<sub>k,v,h </sub>_ &#8800; &#8709; _if message i was received before height h (and all messages j < i were received)_
 
-_if message i was sent and receipt received before height h _
-
-
-        _(and the receipts for all messages j < i were also handled)_
-
-_A:M<sub>k,v,h </sub>_
-
-<p id="gdcalert66" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert67">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-
-<p id="gdcalert67" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert68">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_otherwise (message result is not yet processed)_
-
-_B:M<sub>k,v,h</sub> = _
-
-<p id="gdcalert68" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert69">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_if message i was not received before height h_
-
-_B:M<sub>k,v,h </sub>_
-
-<p id="gdcalert69" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert70">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-
-<p id="gdcalert70" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert71">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_if message i was received before height h_
-
-_       (and all messages j < i were received)_
-
-Based on these guarantees, we can make a few modifications of the above protocol to allow us to prove timeouts, by adding some fields to the messages in the send queue, and defining an expired function that returns true iff _h > maxHeight_ or _timestamp(H<sub>h </sub>) > maxTime._
+Based on these guarantees, we can make a few modifications of the above protocol to allow us to prove timeouts, by adding some fields to the messages in the send queue, and defining an expired function that returns true iff _h > maxHeight_ or _timestamp(H<sub>h </sub>) > maxTime_.
 
 _V<sub>send</sub> = (maxHeight, maxTime, type, data)_
 
-_expired(H<sub>h </sub>,V<sub>send </sub>)  _
-
-<p id="gdcalert71" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert72">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_[true/false]_
+_expired(H<sub>h </sub>,V<sub>send </sub>)_ &#8658; _[true/false]_
 
 We then update message handling in _IBCreceive_, so it doesn't even call the handler function if the timeout was reached, but rather directly writes and error in the receipt queue:
 
 _IBCreceive:_
-
-_   …._
-
-_   expired(latestHeader, v) _
-
-<p id="gdcalert72" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert73">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_push(q<sub>S.receipt </sub>, (None, TimeoutError));_
-
-_   v = (_, _, type, data) _
-
-<p id="gdcalert73" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert74">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_(result, err) :=f<sub>type</sub>(data); push(q<sub>S.receipt </sub>, (result, err)); _
+  * ….
+  * _expired(latestHeader, v)_ &#8658; _push(q<sub>S.receipt </sub>, (None, TimeoutError)),_
+  * _v = (\_, \_, type, data)_ &#8658; _(result, err) := f<sub>type</sub>(data); push(q<sub>S.receipt </sub>, (result, err));_
 
 and add a new _IBCtimeout_ function to accept tail proofs to demonstrate that the message was not processed at some given header on the recipient chain. This allows the sender chain to assert timeouts locally.
 
-_S:IBCtimeout(A, M<sub>k,v,h</sub>) _
 
-<p id="gdcalert74" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert75">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_ match_
-
-_q<sub>A.send</sub> =_
-
-<p id="gdcalert75" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert76">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-
-<p id="gdcalert76" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert77">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("unregistered sender"), _
-
-_   k = (_, send, _) _
-
-<p id="gdcalert77" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert78">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("must be a receipt"),_
-
-_   k = (d, _, _) and d _
-
-<p id="gdcalert78" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert79">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_S_
-
-<p id="gdcalert79" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert80">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("sent to a different chain"),_
-
-_   H<sub>h</sub> _
-
-<p id="gdcalert80" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert81">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_T<sub>A</sub> _
-
-<p id="gdcalert81" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert82">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("must submit header for height h"),_
-
-_   not valid(H<sub>h</sub> ,M<sub>k,v,h </sub>) _
-
-<p id="gdcalert82" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert83">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("invalid merkle proof"),_
-
-_   k = (S, receipt, tail)_
-
-<p id="gdcalert83" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert84">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_match_
-
-
-    _tail _
-
-<p id="gdcalert84" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert85">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_head(q<sub>S.send </sub>)_
-
-<p id="gdcalert85" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert86">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("receipt exists, no timeout proof")_
-
-
-    _not expired(peek(q<sub>S.send </sub>)) _
-
-<p id="gdcalert86" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert87">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("message timeout not yet reached")_
-
-
-    _default _
-
-<p id="gdcalert87" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert88">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_(_, _, type, data) := pop(q<sub>S.send </sub>); rollback<sub>type</sub>(data); Success_
-
-
-    _default _
-
-<p id="gdcalert88" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert89">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("must be a tail proof")_
+_S:IBCtimeout(A, M<sub>k,v,h</sub>)_ &#8658; _match_
+  * _q<sub>A.send</sub> =_ &#8709; &#8658; _Error("unregistered sender"),_
+  * _k = (\_, send, \_)_ &#8658; _Error("must be a receipt"),_
+  * _k = (d, \_, \_) and d_ &#8800; _S_ &#8658; _Error("sent to a different chain"),_
+  * _H<sub>h</sub>_ &#8713; _T<sub>A</sub>_ &#8658; _Error("must submit header for height h"),_
+  * _not valid(H<sub>h</sub> , M<sub>k,v,h </sub>)_ &#8658; _Error("invalid merkle proof"),_
+  * _k = (S, receipt, tail)_ &#8658; _match_
+    * _tail_ &#8805; _head(q<sub>S.send </sub>)_ &#8658; _Error("receipt exists, no timeout proof")_
+    * _not expired(peek(q<sub>S.send </sub>))_ &#8658; _Error("message timeout not yet reached")_
+    * _default_ &#8658; _(\_, \_, type, data) := pop(q<sub>S.send </sub>); rollback<sub>type</sub>(data); Success_
+  * _default_ &#8658; _Error("must be a tail proof")_
 
 which processes timeouts in order, and adds one more condition to the queues:
 
-_A:M<sub>k,v,h</sub> = _
-
-<p id="gdcalert89" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert90">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_if message i was sent and timeout proven before height h_
-
-
-        _(and the receipts for all messages j < i were also handled)_
+_A:M<sub>k,v,h</sub> =_ &#8709; _if message i was sent and timeout proven before height h (and the receipts for all messages j < i were also handled)_
 
 Now chain A can rollback all transactions that were blocked by this flood of unrelayed messages, without waiting for chain B to process them and return a receipt. Adding reasonable time outs to all packets allows us to gracefully handle any errors with the IBC relay processes, or a flood of unrelayed "spam" IBC packets. If a blockchain requires a timeout on all messages, and imposes some reasonable upper limit (or just assigns it automatically), we can guarantee that if message _i_ is not processed by the upper limit of the timeout period, then all previous messages must also have either been processed or reached the timeout period.
 
@@ -192,118 +64,30 @@ While we clean up the _send queue_ upon getting a receipt, if left to run indefi
 
 The observant reader may also notice, that when we perform the timeout on the sending chain, we do not update the _receipt queue_ on the receiving chain, and now it is blocked waiting for a message _i_, which **no longer exists** on the sending chain. We can update the guarantees of the receipt queue as follows to allow us to handle both:
 
-_B:M<sub>k,v,h</sub> = _
+_B:M<sub>k,v,h</sub> =_ &#8709; _if message i was not received before height h_
 
-<p id="gdcalert90" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert91">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
+_B:M<sub>k,v,h</sub> =_ &#8709; _if message i was provably resolved on the sending chain before height h_
 
-_if message i was not received before height h_
-
-_B:M<sub>k,v,h</sub> = _
-
-<p id="gdcalert91" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert92">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_if message i was provably resolved on the sending chain before height h_
-
-_B:M<sub>k,v,h </sub>_
-
-<p id="gdcalert92" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert93">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-
-<p id="gdcalert93" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert94">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_otherwise (if message i was processed before height h,_
-
-_       and no ack of receipt from the sending chain)_
+_B:M<sub>k,v,h </sub>_ &#8800; &#8709; _otherwise (if message i was processed before height h, and no ack of receipt from the sending chain)_
 
 Consider a connection where many messages have been sent, and their receipts processed on the sending chain, either explicitly or through a timeout. We wish to quickly advance over all the processed messages, either for a normal cleanup, or to prepare the queue for normal use again after timeouts.
 
 Through the definition of the send queue above, we see that all messages _i < head_ have been fully processed, and all messages _head <= i < tail_ are awaiting processing. By proving a much advanced _head_ of the _send queue_, we can demonstrate that the sending chain already handled all messages. Thus, we can safely advance our local _receipt queue_ to the new head of the remote _send queue_.
 
-_S:IBCcleanup(A, M<sub>k,v,h</sub>) _
-
-<p id="gdcalert94" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert95">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_ match_
-
-_q<sub>A.receipt</sub> =_
-
-<p id="gdcalert95" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert96">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-
-<p id="gdcalert96" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert97">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("unknown sender"), _
-
-_   k = (_, send, _) _
-
-<p id="gdcalert97" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert98">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("must be for the send queue"),_
-
-_   k = (d, _, _) and d _
-
-<p id="gdcalert98" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert99">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_S_
-
-<p id="gdcalert99" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert100">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("sent to a different chain"),_
-
-_   k_
-
-<p id="gdcalert100" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert101">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_ (_, _, head) _
-
-<p id="gdcalert101" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert102">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("Need a proof of the head of the queue"),_
-
-_   H<sub>h</sub> _
-
-<p id="gdcalert102" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert103">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_T<sub>A</sub> _
-
-<p id="gdcalert103" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert104">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("must submit header for height h"),_
-
-_   not valid(H<sub>h</sub> ,M<sub>k,v,h </sub>) _
-
-<p id="gdcalert104" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert105">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("invalid merkle proof"),_
-
-_   head := v _
-
-<p id="gdcalert105" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert106">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_match_
-
-_       head <= head(q<sub>A.receipt</sub>) _
-
-<p id="gdcalert106" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert107">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_Error("cleanup must go forward"),_
-
-_       default _
-
-<p id="gdcalert107" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: equation: use MathJax/LaTeX if your publishing platform supports it. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert108">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-_advance(q<sub>A.receipt  </sub>, head); Success_
+_S:IBCcleanup(A, M<sub>k,v,h</sub>)_ &#8658; _match_
+  * _q<sub>A.receipt</sub> =_ &#8709; &#8658; _Error("unknown sender"),_
+  * _k = (\_, send, \_)_ &#8658; _Error("must be for the send queue"),_
+  * _k = (d, \_, \_) and d_ &#8800; _S_ &#8658; _Error("sent to a different chain"),_
+  * _k_ &#8800; _(\_, \_, head)_ &#8658; _Error("Need a proof of the head of the queue"),_
+  * _H<sub>h</sub>_ &#8713; _T<sub>A</sub>_ &#8658; _Error("must submit header for height h"),_
+  * _not valid(H<sub>h</sub> ,M<sub>k,v,h </sub>)_ &#8658; _Error("invalid merkle proof"),_
+  * _head := v_ &#8658; _match_
+    * _head <= head(q<sub>A.receipt</sub>)_ &#8658; _Error("cleanup must go forward"),_
+    * _default_ &#8658; _advance(q<sub>A.receipt  </sub>, head); Success_
 
 This allows us to invoke the _IBCcleanup _function to resolve all outstanding messages up to and including _head_ with one merkle proof. Note that if this handles both recovering from a blocked queue after timeouts, as well as a routine cleanup method to recover space. In the cleanup scenario, we assume that there may also be a number of messages that have been processed by the receiving chain, but not yet posted to the sending chain, _tail(B:q<sub>A.reciept </sub>) > head(A:q<sub>B.send </sub>)_. As such, the _advance_ function must not modify any messages between the head and the tail.
 
-
-
-<p id="gdcalert108" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/Cosmos-IBC3.png). Store image on your image server and adjust path/filename if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert109">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-![alt_text](images/Cosmos-IBC3.png "image_tooltip")
+![Cleaning up Packets](images/CleanUp.png)
 
 
 ### 4.3   Handling Byzantine Failures

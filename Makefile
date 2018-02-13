@@ -68,13 +68,7 @@ test_unit:
 	@go test $(PACKAGES)
 
 test_cover:
-	@bash test_cover.sh
-
-test_tutorial:
-	@shelldown ${TUTORIALS}
-	@for script in docs/guide/*.sh ; do \
-		bash $$script ; \
-	done
+	@bash tests/test_cover.sh
 
 benchmark:
 	@go test -bench=. $(PACKAGES)

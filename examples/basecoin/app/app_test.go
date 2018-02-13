@@ -52,17 +52,17 @@ func TestSendMsg(t *testing.T) {
 	coins, err := sdk.ParseCoins("77foocoin,99barcoin")
 	require.Nil(t, err)
 	baseAcc := auth.BaseAccount{
-		Address:  addr,
-		Coins:    coins,
-		PubKey:   pk,
-		Sequence: 0,
+		Address: addr,
+		Coins:   coins,
 	}
 	acc := &types.AppAccount{baseAcc, "foobart"}
 
-	gaccs := []*GenesisAccount{
-		NewGenesisAccount(acc),
+	genesisState := GenesisState{
+		Accounts: []*GenesisAccount{
+			NewGenesisAccount(acc),
+		},
 	}
-	bytes, err := json.MarshalIndent(&gaccs, "", "\t")
+	bytes, err := json.MarshalIndent(genesisState, "", "\t")
 
 	app := tba.BasecoinApp
 	ctx := app.BaseApp.NewContext(false, nil) // context for DeliverTx

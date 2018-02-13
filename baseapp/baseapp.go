@@ -35,8 +35,9 @@ type BaseApp struct {
 	// unmarshal []byte into sdk.Tx
 	txDecoder sdk.TxDecoder
 
-	// unmarshal rawjsonbytes to the initialize application
-	InitStater sdk.InitStater // TODO make unexposed once certain refactoring from basecoin -> baseapp
+	// unmarshal rawjsonbytes to initialize the application
+	// TODO unexpose and call from InitChain
+	InitStater sdk.InitStater
 
 	// ante handler for fee and auth
 	defaultAnteHandler sdk.AnteHandler
@@ -204,6 +205,7 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // Implements ABCI
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	// TODO: Use req.Validators
+	// TODO: Use req.AppStateJSON (?)
 	return
 }
 

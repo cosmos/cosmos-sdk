@@ -58,7 +58,7 @@ Based upon this needed functionality, we define a set of keys to be stored in th
 
 The index is stored as a fixed-length unsigned integer in big endian format, so that the lexicographical order of the byte representation of the key is consistent with their sequence number. This allows us to quickly iterate over the queue, as well as prove the content of a packet (or lack of packet) at a given sequence. _head_ and _tail_ are two special constants that store an integer index, and are chosen such that their serialization cannot collide with any possible index.
 
-A message queue is simply a set of serialized packets stored at predefined keys in a merkle store, which can produce proofs for any key. Once a packet is written it must be immutable (except for deleting when popped from the queue). That is, if a value _v_ is written to a queue, then every valid proof _M<sub>k,v,h </sub>_must refer to the same _v_. This property is essential to safely process asynchronous messages.
+A message queue is simply a set of serialized packets stored at predefined keys in a merkle store, which can produce proofs for any key. Once a packet is written it must be immutable (except for deleting when popped from the queue). That is, if a value _v_ is written to a queue, then every valid proof _M<sub>k,v,h </sub>_ must refer to the same _v_. This property is essential to safely process asynchronous messages.
 
 Every IBC implementation must provide a protected subspace of the merkle store for use by each queue that cannot be affected by other modules.
 
@@ -77,7 +77,7 @@ These two queues have different purposes and store messages of different types. 
 
 Up to this point, we have focused on the semantics of the message key, and how we can produce a unique identifier for every possible message in every possible connection. The actual data written at the location has been left as an opaque blob, put by providing some structure to the messages, we can enable more functionality.
 
-We define every message in a _send queue _to consist of a well-known type and opaque data. The IBC protocol relies on the type for routing, and lets the appropriate module process the data as it sees fit. The _receipt queue_ stores if it was an error, an optional error code, and an optional return value. We use the same index as the received message, so that the results of _A:q<sub>B.send</sub>[i]_ are stored at _B:q<sub>A.receipt</sub>[i]_. (read: the message at index _i_ in the _send_ queue for chain B as stored on chain A)
+We define every message in a _send queue_ to consist of a well-known type and opaque data. The IBC protocol relies on the type for routing, and lets the appropriate module process the data as it sees fit. The _receipt queue_ stores if it was an error, an optional error code, and an optional return value. We use the same index as the received message, so that the results of _A:q<sub>B.send</sub>[i]_ are stored at _B:q<sub>A.receipt</sub>[i]_. (read: the message at index _i_ in the _send_ queue for chain B as stored on chain A)
 
 _V<sub>send</sub> = (type, data)_
 
@@ -94,7 +94,7 @@ The permissioning of which module can write which packet can be defined per type
 _(IBCsend(D, type, data)_ &#8658; _Success)_
   &#8658; _push(q<sub>D.send</sub> ,V<sub>send</sub>{type, data})_
 
-We also consider how a given blockchain _A _is expected to receive the packet from a source chain _S_ with a merkle proof, given the current set of trusted headers for that chain, _T<sub>S</sub>_:
+We also consider how a given blockchain _A_ is expected to receive the packet from a source chain _S_ with a merkle proof, given the current set of trusted headers for that chain, _T<sub>S</sub>_:
 
 _A:IBCreceive(S, M<sub>k,v,h</sub>)_ &#8658; _match_
   * _q<sub>S.receipt</sub> =_ &#8709; &#8658; _Error("unregistered sender"),_
@@ -114,7 +114,7 @@ When we wish to create a transaction that atomically commits or rolls back acros
 To do this requires that we not only provable send a message from chain A to chain B, but provably return the result of that message (the receipt) from chain B to chain A. As one noticed above in the implementation of _IBCreceive_, if the valid IBC message was sent from A to B, then the result of executing it, even if it was an error, is stored in _B:q<sub>A.receipt</sub>_. Since the receipts are stored in a queue with the same key construction as the sending queue, we can generate the same set of proofs for them, and perform a similar sequence of steps to handle a receipt coming back to _S_ for a message previously sent to _A_:
 
 _S:IBCreceipt(A, M<sub>k,v,h</sub>)_ &#8658; _match_
-  * _q<sub>A.send</sub> =_ &#8709; &#8658; _Error("unregistered sender"), _
+  * _q<sub>A.send</sub> =_ &#8709; &#8658; _Error("unregistered sender"),_
   * _k = (\_, send, \_)_  &#8658; _Error("must be a recipient"),_
   * _k = (d, \_, \_) and d_ &#8800; _S_ &#8658; _Error("sent to a different chain"),_
   * _H<sub>h</sub>_ &#8713; _T<sub>A</sub>_ &#8658; _Error("must submit header for height h"),_

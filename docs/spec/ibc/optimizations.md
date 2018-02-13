@@ -10,7 +10,7 @@ Sometimes it is desirable to have some timeout, an upper limit to how long you w
 
 One solution to this is to include a timeout in the IBC message itself.  When sending it, one can specify a block height or timestamp on the **receiving** chain after which it is no longer valid. If the message is posted before the cutoff, it will be processed normally. If it is posted after that cutoff, it will be a guaranteed error. Note that to make this secure, the timeout must be relative to a condition on the **receiving** chain, and the sending chain must have proof of the state of the receiving chain after the cutoff.
 
-For a sending chain _A_ and a receiving chain _B_, with _k=(_, _, i)_ for _A:q<sub>B.send</sub>_ or _B:q<sub>A.receipt</sub>_ we currently have the following guarantees:
+For a sending chain _A_ and a receiving chain _B_, with _k=(\_, \_, i)_ for _A:q<sub>B.send</sub>_ or _B:q<sub>A.receipt</sub>_ we currently have the following guarantees:
 
 _A:M<sub>k,v,h</sub> =_ &#8709; _if message i was not sent before height h_
 
@@ -26,7 +26,7 @@ Based on these guarantees, we can make a few modifications of the above protocol
 
 _V<sub>send</sub> = (maxHeight, maxTime, type, data)_
 
-_expired(H<sub>h </sub>,V<sub>send </sub>)_ &#8658; _[true/false]_
+_expired(H<sub>h </sub>,V<sub>send </sub>)_ &#8658; _[true|false]_
 
 We then update message handling in _IBCreceive_, so it doesn't even call the handler function if the timeout was reached, but rather directly writes and error in the receipt queue:
 

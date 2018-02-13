@@ -3,6 +3,7 @@ package sdk
 import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-wire/data"
+	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/state"
@@ -125,10 +126,10 @@ func NewCheck(gasAllocated int64, log string) CheckResult {
 
 func (c CheckResult) ToABCI() abci.ResponseCheckTx {
 	return abci.ResponseCheckTx{
-		Data: c.Data,
-		Log:  c.Log,
-		Gas:  c.GasAllocated,
-		Fee:  c.GasPayment,
+		Data:      c.Data,
+		Log:       c.Log,
+		GasWanted: c.GasAllocated,
+		Fee:       cmn.KI64Pair{[]byte("gas"), c.GasPayment},
 	}
 }
 
@@ -142,7 +143,7 @@ type DeliverResult struct {
 	Data    data.Bytes
 	Log     string
 	Diff    []*abci.Validator
-	Tags    []*abci.KVPair
+	Tags    []cmn.KVPair
 	GasUsed int64 // unused
 }
 

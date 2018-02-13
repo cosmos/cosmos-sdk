@@ -1,8 +1,9 @@
 package coin
 
 import (
-	abci "github.com/tendermint/abci/types"
+	wire "github.com/tendermint/go-wire"
 	"github.com/tendermint/go-wire/data"
+	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk"
@@ -151,18 +152,16 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 	}
 
 	// now we build the tags
-	tags := make([]*abci.KVPair, 0, 1+len(send.Inputs)+len(send.Outputs))
+	tags := make([]cmn.KVPair, 0, 1+len(send.Inputs)+len(send.Outputs))
 
-	tags = append(tags, abci.KVPairInt("height", int64(ctx.BlockHeight())))
+	tags = append(tags, cmn.KVPair{[]byte("height"), wire.BinaryBytes(int64(ctx.BlockHeight()))})
 
 	for _, in := range send.Inputs {
-		addr := in.Address.String()
-		tags = append(tags, abci.KVPairString("coin.sender", addr))
+		tags = append(tags, cmn.KVPair{[]byte("coin.sender"), wire.BinaryBytes(in.Address)})
 	}
 
 	for _, out := range send.Outputs {
-		addr := out.Address.String()
-		tags = append(tags, abci.KVPairString("coin.receiver", addr))
+		tags = append(tags, cmn.KVPair{[]byte("coin.receiver"), wire.BinaryBytes(out.Address)})
 	}
 
 	// a-ok!

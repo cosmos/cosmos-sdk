@@ -12,7 +12,7 @@ import:
 - package: github.com/spf13/viper
 # update this when tendermint/tendermint updates
 - package: github.com/tendermint/abci
-  version: master
+  version: develop
   subpackages:
   - server
   - types
@@ -25,7 +25,7 @@ import:
   subpackages:
   - data
 - package: github.com/tendermint/iavl
-  version: master
+  version: develop-pre-wire
 - package: github.com/tendermint/tendermint
   version: develop
   subpackages:
@@ -41,7 +41,7 @@ import:
   - rpc/lib/types
   - types
 - package: github.com/tendermint/tmlibs
-  version: master
+  version: develop
   subpackages:
   - cli
   - cli/flags

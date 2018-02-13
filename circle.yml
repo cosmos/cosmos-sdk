@@ -18,6 +18,7 @@ dependencies:
 test:
   override:
     - "cd $REPO && make ci"
+    - "cd $REPO/examples/basecoin && make get_vendor_deps && make build && make test"
     - ls $GOPATH/bin
     - bash <(curl -s https://codecov.io/bash) -f coverage.txt
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.0 (February 13, 2017)
+
+BREAKING CHANGES
+
+* Massive refactor. Basecoin works. Still needs <3
+
+## 0.8.1 
+
+* Updates for dependencies
+
+## 0.8.0 (December 18, 2017)
+
+* Updates for dependencies
+
 ## 0.7.1 (October 11, 2017)
 
 IMPROVEMENTS:

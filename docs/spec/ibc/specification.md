@@ -36,13 +36,13 @@ The protocol makes no assumptions of block times or network delays in the transm
     1.  Handling Byzantine Failures
 1.  **[Conclusion](conclusion.md)**
 
-**[Appendix A: Encoding Libraries](appendix-a.md)**
+**[Appendix A: Encoding Libraries](appendix.md#appendix-a-encoding-libraries)**
 
-**[Appendix B: IBC Queue Format](appendix-b.md)**
+**[Appendix B: IBC Queue Format](appendix.md#appendix-b-ibc-queue-format)**
 
-**[Appendix C: Merkle Proof Format](appendix-c.md)**
+**[Appendix C: Merkle Proof Format](appendix.md#appendix-c-merkle-proof-formats)**
 
-**[Appendix D: Universal IBC Packets](appendix-d.md)**
+**[Appendix D: Universal IBC Packets](appendix.md#appendix-d-universal-ibc-packets)**
 
-**[Appendix E: Tendermint Header Proofs](appendix-e.md)**
+**[Appendix E: Tendermint Header Proofs](appendix.md#appendix-e-tendermint-header-proofs)**
 

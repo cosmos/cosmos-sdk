@@ -21,10 +21,10 @@ const (
 	flagAddress        = "address"
 )
 
-// StartNodeCmd runs the service passed in, either
+// StartCmd runs the service passed in, either
 // stand-alone, or in-process with tendermint
-func StartNodeCmd(app *baseapp.BaseApp) *cobra.Command {
-	start := startNodeCmd{
+func StartCmd(app *baseapp.BaseApp) *cobra.Command {
+	start := startCmd{
 		app: app,
 	}
 	cmd := &cobra.Command{
@@ -42,14 +42,14 @@ func StartNodeCmd(app *baseapp.BaseApp) *cobra.Command {
 	return cmd
 }
 
-type startNodeCmd struct {
+type startCmd struct {
 	// do this in main:
 	// rootDir := viper.GetString(cli.HomeFlag)
 	// node.Logger = ....
 	app *baseapp.BaseApp
 }
 
-func (s startNodeCmd) run(cmd *cobra.Command, args []string) error {
+func (s startCmd) run(cmd *cobra.Command, args []string) error {
 	logger := s.app.Logger
 	if !viper.GetBool(flagWithTendermint) {
 		logger.Info("Starting ABCI without Tendermint")
@@ -59,7 +59,7 @@ func (s startNodeCmd) run(cmd *cobra.Command, args []string) error {
 	return s.startInProcess()
 }
 
-func (s startNodeCmd) startStandAlone() error {
+func (s startCmd) startStandAlone() error {
 	logger := s.app.Logger
 	// Start the ABCI listener
 	addr := viper.GetString(flagAddress)
@@ -78,7 +78,7 @@ func (s startNodeCmd) startStandAlone() error {
 	return nil
 }
 
-func (s startNodeCmd) startInProcess() error {
+func (s startCmd) startInProcess() error {
 	logger := s.app.Logger
 	cfg, err := tcmd.ParseConfig()
 	if err != nil {

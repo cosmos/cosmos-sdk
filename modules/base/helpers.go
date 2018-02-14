@@ -52,7 +52,7 @@ func (ValSetHandler) DeliverTx(ctx sdk.Context, store state.SimpleDB,
 }
 
 type ValChangeTx struct {
-	Diff []*abci.Validator
+	Diff []abci.Validator
 }
 
 func (v ValChangeTx) Wrap() sdk.Tx {

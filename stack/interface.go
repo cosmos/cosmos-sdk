@@ -61,14 +61,14 @@ func (c InitStaterMiddleFunc) InitState(l log.Logger, store state.SimpleDB,
 }
 
 type InitValidaterMiddle interface {
-	InitValidate(l log.Logger, store state.SimpleDB, vals []*abci.Validator, next sdk.InitValidater)
+	InitValidate(l log.Logger, store state.SimpleDB, vals []abci.Validator, next sdk.InitValidater)
 }
 
 type InitValidaterMiddleFunc func(log.Logger, state.SimpleDB,
-	[]*abci.Validator, sdk.InitValidater)
+	[]abci.Validator, sdk.InitValidater)
 
 func (c InitValidaterMiddleFunc) InitValidate(l log.Logger, store state.SimpleDB,
-	vals []*abci.Validator, next sdk.InitValidater) {
+	vals []abci.Validator, next sdk.InitValidater) {
 	c(l, store, vals, next)
 }
 
@@ -97,7 +97,7 @@ func (_ PassInitState) InitState(l log.Logger, store state.SimpleDB, module,
 type PassInitValidate struct{}
 
 func (_ PassInitValidate) InitValidate(l log.Logger, store state.SimpleDB,
-	vals []*abci.Validator, next sdk.InitValidater) {
+	vals []abci.Validator, next sdk.InitValidater) {
 	next.InitValidate(l, store, vals)
 }
 
@@ -142,6 +142,6 @@ func (w wrapped) InitState(l log.Logger, store state.SimpleDB,
 }
 
 func (w wrapped) InitValidate(l log.Logger, store state.SimpleDB,
-	vals []*abci.Validator, next sdk.InitValidater) {
+	vals []abci.Validator, next sdk.InitValidater) {
 	w.h.InitValidate(l, store, vals)
 }

@@ -60,7 +60,7 @@ func (m *middleware) InitState(l log.Logger, store state.SimpleDB, module, key, 
 	return m.middleware.InitState(l, store, module, key, value, m.next)
 }
 
-func (m *middleware) InitValidate(l log.Logger, store state.SimpleDB, vals []*abci.Validator) {
+func (m *middleware) InitValidate(l log.Logger, store state.SimpleDB, vals []abci.Validator) {
 	// set the namespace for the app
 	store = stateSpace(store, m.space)
 	m.middleware.InitValidate(l, store, vals, m.next)

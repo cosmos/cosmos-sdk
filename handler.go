@@ -35,13 +35,13 @@ type Handler interface {
 
 // Ticker can be executed every block
 type Ticker interface {
-	Tick(Context, state.SimpleDB) ([]*abci.Validator, error)
+	Tick(Context, state.SimpleDB) ([]abci.Validator, error)
 }
 
 // TickerFunc allows a function to implement the interface
-type TickerFunc func(Context, state.SimpleDB) ([]*abci.Validator, error)
+type TickerFunc func(Context, state.SimpleDB) ([]abci.Validator, error)
 
-func (t TickerFunc) Tick(ctx Context, store state.SimpleDB) ([]*abci.Validator, error) {
+func (t TickerFunc) Tick(ctx Context, store state.SimpleDB) ([]abci.Validator, error) {
 	return t(ctx, store)
 }
 
@@ -88,13 +88,13 @@ func (c InitStateFunc) InitState(l log.Logger, store state.SimpleDB, module, key
 
 // InitValidater sets the initial validator set
 type InitValidater interface {
-	InitValidate(log log.Logger, store state.SimpleDB, vals []*abci.Validator)
+	InitValidate(log log.Logger, store state.SimpleDB, vals []abci.Validator)
 }
 
 // InitValidateFunc (like http.HandlerFunc) is a shortcut for making wrappers
-type InitValidateFunc func(log.Logger, state.SimpleDB, []*abci.Validator)
+type InitValidateFunc func(log.Logger, state.SimpleDB, []abci.Validator)
 
-func (c InitValidateFunc) InitValidate(l log.Logger, store state.SimpleDB, vals []*abci.Validator) {
+func (c InitValidateFunc) InitValidate(l log.Logger, store state.SimpleDB, vals []abci.Validator) {
 	c(l, store, vals)
 }
 
@@ -142,7 +142,7 @@ func (c CheckResult) GetData() data.Bytes {
 type DeliverResult struct {
 	Data    data.Bytes
 	Log     string
-	Diff    []*abci.Validator
+	Diff    []abci.Validator
 	Tags    []cmn.KVPair
 	GasUsed int64 // unused
 }
@@ -177,4 +177,4 @@ func (_ NopInitState) InitState(log.Logger, state.SimpleDB, string, string, stri
 
 type NopInitValidate struct{}
 
-func (_ NopInitValidate) InitValidate(log log.Logger, store state.SimpleDB, vals []*abci.Validator) {}
+func (_ NopInitValidate) InitValidate(log log.Logger, store state.SimpleDB, vals []abci.Validator) {}

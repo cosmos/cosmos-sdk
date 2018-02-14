@@ -34,7 +34,7 @@ type StoreApp struct {
 	state *sm.State
 
 	// cached validator changes from DeliverTx
-	pending []*abci.Validator
+	pending []abci.Validator
 
 	// height is last committed block, DeliverTx is the next one
 	height int64
@@ -150,7 +150,7 @@ func (app *StoreApp) Query(reqQuery abci.RequestQuery) (resQuery abci.ResponseQu
 		// is not yet in the blockchain
 
 		withProof := app.CommittedHeight() - 1
-		if tree.Tree.VersionExists(uint64(withProof)) {
+		if tree.Tree.VersionExists(int64(withProof)) {
 			height = withProof
 		} else {
 			height = app.CommittedHeight()
@@ -197,7 +197,7 @@ func (app *StoreApp) Commit() (res abci.ResponseCommit) {
 	)
 
 	if app.state.Size() == 0 {
-		return abci.ResponseCommit{Log: "Empty hash for empty tree"}
+		return abci.ResponseCommit{Data: []byte("Empty hash for empty tree")}
 	}
 	return abci.ResponseCommit{Data: hash}
 }
@@ -222,7 +222,7 @@ func (app *StoreApp) EndBlock(_ abci.RequestEndBlock) (res abci.ResponseEndBlock
 // AddValChange is meant to be called by apps on DeliverTx
 // results, this is added to the cache for the endblock
 // changeset
-func (app *StoreApp) AddValChange(diffs []*abci.Validator) {
+func (app *StoreApp) AddValChange(diffs []abci.Validator) {
 	for _, d := range diffs {
 		idx := pubKeyIndex(d, app.pending)
 		if idx >= 0 {
@@ -234,7 +234,7 @@ func (app *StoreApp) AddValChange(diffs []*abci.Validator) {
 }
 
 // return index of list with validator of same PubKey, or -1 if no match
-func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {
+func pubKeyIndex(val abci.Validator, list []abci.Validator) int {
 	for i, v := range list {
 		if bytes.Equal(val.PubKey, v.PubKey) {
 			return i
@@ -246,7 +246,7 @@ func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {
 func loadState(dbName string, cacheSize int, historySize int64) (*sm.State, error) {
 	// memory backed case, just for testing
 	if dbName == "" {
-		tree := iavl.NewVersionedTree(0, dbm.NewMemDB())
+		tree := iavl.NewVersionedTree(dbm.NewMemDB(), 0)
 		return sm.NewState(tree, historySize), nil
 	}
 
@@ -264,8 +264,8 @@ func loadState(dbName string, cacheSize int, historySize int64) (*sm.State, erro
 	name := path.Base(dbPath)
 
 	// Open database called "dir/name.db", if it doesn't exist it will be created
-	db := dbm.NewDB(name, dbm.LevelDBBackendStr, dir)
-	tree := iavl.NewVersionedTree(cacheSize, db)
+	db := dbm.NewDB(name, dbm.LevelDBBackend, dir)
+	tree := iavl.NewVersionedTree(db, cacheSize)
 	if err = tree.Load(); err != nil {
 		return nil, errors.ErrInternal("Loading tree: " + err.Error())
 	}

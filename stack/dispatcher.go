@@ -122,7 +122,7 @@ func (d *Dispatcher) InitState(l log.Logger, store state.SimpleDB, module, key, 
 }
 
 // InitValidate makes sure all modules are informed
-func (d *Dispatcher) InitValidate(log log.Logger, store state.SimpleDB, vals []*abci.Validator) {
+func (d *Dispatcher) InitValidate(log log.Logger, store state.SimpleDB, vals []abci.Validator) {
 	for _, mod := range d.sortedModules() {
 		// no ctx, so secureCheck not needed
 		cb := d

@@ -18,7 +18,7 @@ import (
 func makeState() state.SimpleDB {
 	// return state.NewMemKVStore()
 
-	return state.NewBonsai(iavl.NewVersionedTree(0, db.NewMemDB()))
+	return state.NewBonsai(iavl.NewVersionedTree(db.NewMemDB(), 0))
 
 	// tree with persistence....
 	// tmpDir, err := ioutil.TempDir("", "state-tests")

@@ -59,7 +59,7 @@ func (Recovery) InitState(l log.Logger, store state.SimpleDB, module, key, value
 // InitValidate catches any panic and logs it
 // TODO: return an error???
 func (Recovery) InitValidate(l log.Logger, store state.SimpleDB,
-	vals []*abci.Validator, next sdk.InitValidater) {
+	vals []abci.Validator, next sdk.InitValidater) {
 
 	defer func() {
 		if r := recover(); r != nil {

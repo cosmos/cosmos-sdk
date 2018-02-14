@@ -51,6 +51,11 @@ func (tapp *TestApp) RunBeginBlock() {
 	return
 }
 
+// kill resources used by basecapp
+func (tapp *TestApp) Close() {
+	tapp.db.Close()
+}
+
 func (tapp *TestApp) ensureBeginBlock() {
 	if tapp.header == nil {
 		panic("TestApp.header was nil, call TestApp.RunBeginBlock()")

@@ -1,7 +1,8 @@
 package main
 
 import (
-	"errors"
+	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -21,17 +22,28 @@ var (
 	}
 )
 
-// TODO: move into server
-var (
-	initNodeCmd = &cobra.Command{
-		Use:   "init <flags???>",
-		Short: "Initialize full node",
-		RunE:  todoNotImplemented,
+// defaultOptions sets up the app_options for the
+// default genesis file
+func defaultOptions(args []string) (json.RawMessage, error) {
+	addr, secret, err := server.GenerateCoinKey()
+	if err != nil {
+		return nil, err
 	}
-)
+	fmt.Println("Secret phrase to access coins:")
+	fmt.Println(secret)
 
-func todoNotImplemented(_ *cobra.Command, _ []string) error {
-	return errors.New("TODO: Command not yet implemented")
+	opts := fmt.Sprintf(`{
+      "accounts": [{
+        "address": "%s",
+        "coins": [
+          {
+            "denom": "mycoin",
+            "amount": 9007199254740992
+          }
+        ]
+      }]
+    }`, addr)
+	return json.RawMessage(opts), nil
 }
 
 func main() {
@@ -39,8 +51,8 @@ func main() {
 	var app *baseapp.BaseApp
 
 	gaiadCmd.AddCommand(
-		initNodeCmd,
-		server.StartNodeCmd(app),
+		server.InitCmd(defaultOptions),
+		server.StartCmd(app),
 		server.UnsafeResetAllCmd(app.Logger),
 		version.VersionCmd,
 	)

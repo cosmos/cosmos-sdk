@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
+
 	abci "github.com/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -21,44 +22,22 @@ var mainHeaderKey = []byte("header")
 
 // The ABCI application
 type BaseApp struct {
-	logger log.Logger
-
-	// Application name from abci.Info
-	name string
-
-	// Common DB backend
-	db dbm.DB
-
-	// Main (uncached) state
-	cms sdk.CommitMultiStore
-
-	// unmarshal []byte into sdk.Tx
-	txDecoder sdk.TxDecoder
-
-	// unmarshal rawjsonbytes to initialize the application
-	// TODO unexpose and call from InitChain
-	InitStater sdk.InitStater
-
-	// ante handler for fee and auth
-	defaultAnteHandler sdk.AnteHandler
-
-	// handle any kind of message
-	router Router
+	logger             log.Logger
+	name               string               // application name from abci.Info
+	db                 dbm.DB               // common DB backend
+	cms                sdk.CommitMultiStore // Main (uncached) state
+	txDecoder          sdk.TxDecoder        // unmarshal []byte into sdk.Tx
+	InitStater         sdk.InitStater       // TODO unexpose
+	defaultAnteHandler sdk.AnteHandler      // ante handler for fee and auth
+	router             Router               // handle any kind of message
 
 	//--------------------
 	// Volatile
 
-	// CheckTx state, a cache-wrap of `.cms`
-	msCheck sdk.CacheMultiStore
-
-	// DeliverTx state, a cache-wrap of `.cms`
-	msDeliver sdk.CacheMultiStore
-
-	// current block header
-	header *abci.Header
-
-	// cached validator changes from DeliverTx
-	valUpdates []abci.Validator
+	msCheck    sdk.CacheMultiStore // CheckTx state, a cache-wrap of `.cms`
+	msDeliver  sdk.CacheMultiStore // DeliverTx state, a cache-wrap of `.cms`
+	header     *abci.Header        // current block header
+	valUpdates []abci.Validator    // cached validator changes from DeliverTx
 }
 
 var _ abci.Application = &BaseApp{}
@@ -122,40 +101,40 @@ func (app *BaseApp) SetBeginBlocker(...) {}
 func (app *BaseApp) SetEndBlocker(...) {}
 */
 
-// TODO add description
+// load latest application version
 func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
 	app.cms.LoadLatestVersion()
 	return app.initFromStore(mainKey)
 }
 
-// Load application version
+// load application version
 func (app *BaseApp) LoadVersion(version int64, mainKey sdk.StoreKey) error {
 	app.cms.LoadVersion(version)
 	return app.initFromStore(mainKey)
 }
 
-// The last CommitID of the multistore.
+// the last CommitID of the multistore
 func (app *BaseApp) LastCommitID() sdk.CommitID {
 	return app.cms.LastCommitID()
 }
 
-// The last commited block height.
+// the last commited block height
 func (app *BaseApp) LastBlockHeight() int64 {
 	return app.cms.LastCommitID().Version
 }
 
-// Initializes the remaining logic from app.cms.
+// initializes the remaining logic from app.cms
 func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 	var lastCommitID = app.cms.LastCommitID()
 	var main = app.cms.GetKVStore(mainKey)
 	var header *abci.Header
 
-	// Main store should exist.
+	// main store should exist.
 	if main == nil {
 		return errors.New("BaseApp expects MultiStore with 'main' KVStore")
 	}
 
-	// If we've committed before, we expect main://<mainHeaderKey>.
+	// if we've committed before, we expect main://<mainHeaderKey>
 	if !lastCommitID.IsZero() {
 		headerBytes := main.Get(mainHeaderKey)
 		if len(headerBytes) == 0 {
@@ -173,7 +152,7 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 		}
 	}
 
-	// Set BaseApp state.
+	// set BaseApp state
 	app.header = header
 	app.msCheck = nil
 	app.msDeliver = nil
@@ -183,6 +162,7 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 }
 
 //----------------------------------------
+// ABCI
 
 // Implements ABCI
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
@@ -205,7 +185,7 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // Implements ABCI
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	// TODO: Use req.Validators
-	// TODO: Use req.AppStateJSON (?)
+	// TODO: Use req.AppState
 	return
 }
 
@@ -367,7 +347,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 }
 
 //----------------------------------------
-// Misc.
+// Helpers
 
 func (app *BaseApp) getMultiStore(isCheckTx bool) sdk.MultiStore {
 	if isCheckTx {

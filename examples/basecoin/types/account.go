@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	crypto "github.com/tendermint/go-crypto"
-	cmn "github.com/tendermint/tmlibs/common"
 )
 
 var _ sdk.Account = (*AppAccount)(nil)
@@ -25,36 +24,31 @@ func (acc *AppAccount) SetName(name string) { acc.Name = name }
 
 //___________________________________________________________________________________
 
-// We use GenesisAccount instead of AppAccount for cleaner json input of PubKey
+// State to Unmarshal
+type GenesisState struct {
+	Accounts []*GenesisAccount `json:"accounts"`
+}
+
+// GenesisAccount doesn't need pubkey or sequence
 type GenesisAccount struct {
-	Name     string         `json:"name"`
-	Address  crypto.Address `json:"address"`
-	Coins    sdk.Coins      `json:"coins"`
-	PubKey   cmn.HexBytes   `json:"public_key"`
-	Sequence int64          `json:"sequence"`
+	Name    string         `json:"name"`
+	Address crypto.Address `json:"address"`
+	Coins   sdk.Coins      `json:"coins"`
 }
 
 func NewGenesisAccount(aa *AppAccount) *GenesisAccount {
 	return &GenesisAccount{
-		Name:     aa.Name,
-		Address:  aa.Address,
-		Coins:    aa.Coins,
-		PubKey:   aa.PubKey.Bytes(),
-		Sequence: aa.Sequence,
+		Name:    aa.Name,
+		Address: aa.Address,
+		Coins:   aa.Coins,
 	}
 }
 
 // convert GenesisAccount to AppAccount
-func (ga *GenesisAccount) toAppAccount() (acc *AppAccount, err error) {
-	pk, err := crypto.PubKeyFromBytes(ga.PubKey)
-	if err != nil {
-		return
-	}
+func (ga *GenesisAccount) ToAppAccount() (acc *AppAccount, err error) {
 	baseAcc := auth.BaseAccount{
-		Address:  ga.Address,
-		Coins:    ga.Coins,
-		PubKey:   pk,
-		Sequence: ga.Sequence,
+		Address: ga.Address,
+		Coins:   ga.Coins,
 	}
 	return &AppAccount{
 		BaseAccount: baseAcc,

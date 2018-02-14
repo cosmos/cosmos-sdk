@@ -6,7 +6,7 @@ import (
 	wire "github.com/tendermint/go-wire"
 )
 
-// Wire requires registration of interfaces & concrete types.  All
+// Wire requires registration of interfaces & concrete types. All
 // interfaces to be encoded/decoded in a Msg must be registered
 // here, along with all the concrete types that implement them.
 func makeTxCodec() (cdc *wire.Codec) {

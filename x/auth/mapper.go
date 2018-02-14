@@ -36,6 +36,19 @@ func NewAccountMapper(key sdk.StoreKey, proto sdk.Account) accountMapper {
 	}
 }
 
+// XXX add comment
+func NewAccountMapperSealed(key sdk.StoreKey, proto sdk.Account) accountMapper {
+	cdc := wire.NewCodec()
+	am := accountMapper{
+		key:   key,
+		proto: proto,
+		cdc:   cdc,
+	}
+	RegisterWireBaseAccount(cdc)
+	am.Seal()
+	return am
+}
+
 // Returns the go-wire codec.  You may need to register interfaces
 // and concrete types here, if your app's sdk.Account
 // implementation includes interface fields.

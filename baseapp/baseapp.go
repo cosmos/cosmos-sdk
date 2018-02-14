@@ -16,6 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 var mainHeaderKey = []byte("header")
@@ -34,10 +35,11 @@ type BaseApp struct {
 	//--------------------
 	// Volatile
 
-	msCheck    sdk.CacheMultiStore // CheckTx state, a cache-wrap of `.cms`
-	msDeliver  sdk.CacheMultiStore // DeliverTx state, a cache-wrap of `.cms`
-	header     *abci.Header        // current block header
-	valUpdates []abci.Validator    // cached validator changes from DeliverTx
+	accountMapper sdk.AccountMapper   // Manage getting and setting accounts
+	msCheck       sdk.CacheMultiStore // CheckTx state, a cache-wrap of `.cms`
+	msDeliver     sdk.CacheMultiStore // DeliverTx state, a cache-wrap of `.cms`
+	header        *abci.Header        // current block header
+	valUpdates    []abci.Validator    // cached validator changes from DeliverTx
 }
 
 var _ abci.Application = &BaseApp{}
@@ -53,7 +55,42 @@ func NewBaseApp(name string) *BaseApp {
 	}
 	baseapp.initDB()
 	baseapp.initMultiStore()
+
 	return baseapp
+}
+
+// Create and name new BaseApp
+func NewBaseAppExpanded(name string, accountMapper sdk.AccountMapper, keys []*sdk.KVStoreKey) *BaseApp {
+	var baseapp = &BaseApp{
+		logger:             makeDefaultLogger(),
+		name:               name,
+		db:                 nil,
+		cms:                nil,
+		defaultAnteHandler: auth.NewAnteHandler(app.AccountMapper()),
+		router:             NewRouter(),
+		accountMapper:      accountMapper,
+	}
+	baseapp.initDB()
+	baseapp.initMultiStore()
+	baseapp.initAccountMapper()
+
+	for _, key := range keys {
+		baseApp.MountStore(key, sdk.StoreTypeIAVL)
+	}
+
+	return baseapp
+}
+
+// Initialize the AccountMapper.
+func (app *BaseApp) initAccountMapper() {
+
+	// Register all interfaces and concrete types that
+	// implement those interfaces, here.
+	cdc := accountMapper.WireCodec()
+	auth.RegisterWireBaseAccount(cdc)
+
+	// Make accountMapper's WireCodec() inaccessible.
+	app.accountMapper = accountMapper.Seal()
 }
 
 // Create the underlying leveldb datastore which will
@@ -82,7 +119,7 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, app.db)
 }
 
-// nolint
+// nolint - Set functions
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
@@ -90,11 +127,13 @@ func (app *BaseApp) SetInitStater(initStater sdk.InitStater) {
 	app.InitStater = initStater
 }
 func (app *BaseApp) SetDefaultAnteHandler(ah sdk.AnteHandler) {
+	// deducts fee from payer, verifies signatures and nonces, sets Signers to ctx.
 	app.defaultAnteHandler = ah
 }
-func (app *BaseApp) Router() Router {
-	return app.router
-}
+
+// nolint - Get functions
+func (app *BaseApp) Router() Router                   { return app.router }
+func (app *BaseApp) AccountMapper() sdk.AccountMapper { return app.accountMapper }
 
 /* TODO consider:
 func (app *BaseApp) SetBeginBlocker(...) {}

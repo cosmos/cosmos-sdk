@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 const (
@@ -35,7 +36,7 @@ func main() {
 
 	AddNodeCommands(gaiadCmd, node)
 	gaiadCmd.AddCommand(
-		VersionCmd,
+		version.VersionCmd,
 	)
 
 	// prepare and add flags

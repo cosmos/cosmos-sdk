@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/tmlibs/cli"
+
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 const (
@@ -66,7 +68,7 @@ func main() {
 		serveCommand(),
 		KeyCommands(),
 		lineBreak,
-		VersionCmd,
+		version.VersionCmd,
 	)
 
 	// prepare and add flags

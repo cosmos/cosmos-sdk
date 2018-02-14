@@ -9,13 +9,8 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/version"
-)
-
-const (
-	flagTo     = "to"
-	flagAmount = "amount"
-	flagFee    = "fee"
 )
 
 // gaiadCmd is the entry point for this binary
@@ -26,16 +21,27 @@ var (
 	}
 )
 
+// TODO: move into server
+var (
+	initNodeCmd = &cobra.Command{
+		Use:   "init <flags???>",
+		Short: "Initialize full node",
+		RunE:  todoNotImplemented,
+	}
+)
+
 func todoNotImplemented(_ *cobra.Command, _ []string) error {
 	return errors.New("TODO: Command not yet implemented")
 }
 
 func main() {
 	// TODO: set this to something real
-	var node baseapp.BaseApp
+	var app *baseapp.BaseApp
 
-	AddNodeCommands(gaiadCmd, node)
 	gaiadCmd.AddCommand(
+		initNodeCmd,
+		server.StartNodeCmd(app),
+		server.UnsafeResetAllCmd(app.Logger),
 		version.VersionCmd,
 	)
 

@@ -24,7 +24,7 @@ var dbHeaderKey = []byte("header")
 // The ABCI application
 type BaseApp struct {
 	// initialized on creation
-	logger log.Logger
+	Logger log.Logger
 	name   string               // application name from abci.Info
 	db     dbm.DB               // common DB backend
 	cms    sdk.CommitMultiStore // Main (uncached) state
@@ -56,7 +56,7 @@ var _ abci.Application = (*BaseApp)(nil)
 // Create and name new BaseApp
 func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
 	return &BaseApp{
-		logger: logger,
+		Logger: logger,
 		name:   name,
 		db:     db,
 		cms:    store.NewCommitMultiStore(db),
@@ -420,7 +420,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// Write the Deliver state and commit the MultiStore
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
-	app.logger.Debug("Commit synced",
+	app.Logger.Debug("Commit synced",
 		"commit", commitID,
 	)
 

@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	crypto "github.com/tendermint/go-crypto"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 var _ sdk.Account = (*AppAccount)(nil)

@@ -18,6 +18,7 @@ import (
 func TestSendMsg(t *testing.T) {
 	tba := newTestBasecoinApp()
 	tba.RunBeginBlock()
+	defer tba.Close()
 
 	// Construct a SendMsg.
 	var msg = bank.SendMsg{
@@ -43,8 +44,12 @@ func TestSendMsg(t *testing.T) {
 	// Run a Deliver on SendMsg.
 	res = tba.RunDeliverMsg(msg)
 	assert.Equal(t, sdk.CodeUnrecognizedAddress, res.Code, res.Log)
+}
 
-	// TODO seperate this test, need a closer on db? keep getting resource unavailable
+func TestGenesis(t *testing.T) {
+	tba := newTestBasecoinApp()
+	tba.RunBeginBlock()
+	defer tba.Close()
 
 	// construct some genesis bytes to reflect basecoin/types/AppAccount
 	pk := crypto.GenPrivKeyEd25519().PubKey()

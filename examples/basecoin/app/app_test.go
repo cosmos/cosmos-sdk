@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -14,6 +15,20 @@ import (
 
 	crypto "github.com/tendermint/go-crypto"
 )
+
+type testBasecoinApp struct {
+	*BasecoinApp
+	*bam.TestApp
+}
+
+func newTestBasecoinApp() *testBasecoinApp {
+	app := NewBasecoinApp("")
+	tba := &testBasecoinApp{
+		BasecoinApp: app,
+	}
+	tba.TestApp = bam.NewTestApp(app.BaseApp)
+	return tba
+}
 
 func TestSendMsg(t *testing.T) {
 	tba := newTestBasecoinApp()
@@ -62,9 +77,9 @@ func TestGenesis(t *testing.T) {
 	}
 	acc := &types.AppAccount{baseAcc, "foobart"}
 
-	genesisState := GenesisState{
-		Accounts: []*GenesisAccount{
-			NewGenesisAccount(acc),
+	genesisState := types.GenesisState{
+		Accounts: []*types.GenesisAccount{
+			types.NewGenesisAccount(acc),
 		},
 	}
 	bytes, err := json.MarshalIndent(genesisState, "", "\t")

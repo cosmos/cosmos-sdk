@@ -1,5 +1,5 @@
 hash: b367d760bede213a37549edbcfb490e1502dcbc00e3d93c801d707ef531c313b
-updated: 2018-02-12T20:37:38.745378443-05:00
+updated: 2018-02-15T12:30:28.010391+01:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -181,7 +181,7 @@ imports:
   - types
   - version
 - name: github.com/tendermint/tmlibs
-  version: c858b3ba78316fdd9096a11409a7e7a493e7d974
+  version: a0f652dc2e131be86fc8d9e4e2beec9831a8a6ec
   subpackages:
   - autofile
   - cli

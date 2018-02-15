@@ -316,10 +316,16 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	// Construct a Context.
 	var ctx = app.NewContext(isCheckTx, txBytes)
 
-	// TODO: override default ante handler w/ custom ante handler.
+	msgType := msg.Type()
+
+	anteHandler := app.router.Ante(msgType)
+
+	if anteHandler == nil {
+		anteHandler = app.defaultAnteHandler
+	}
 
 	// Run the ante handler.
-	newCtx, result, abort := app.defaultAnteHandler(ctx, tx)
+	newCtx, result, abort := anteHandler(ctx, tx)
 	if isCheckTx || abort {
 		return result
 	}
@@ -332,7 +338,6 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	ctx = ctx.WithMultiStore(msCache)
 
 	// Match and run route.
-	msgType := msg.Type()
 	handler := app.router.Route(msgType)
 	result = handler(ctx, msg)
 

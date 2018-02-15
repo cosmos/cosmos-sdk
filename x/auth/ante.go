@@ -1,7 +1,7 @@
 package auth
 
 import (
-	tax "github.com/cosmos/cosmos-sdk/baseapp/testapp/x"
+	"github.com/cosmos/cosmos-sdk/baseapp/testtx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -32,7 +32,7 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 		var sigs = tx.GetSignatures()
 
 		// Assert that there are signatures.
-		if !tax.IsTestAppTx(tx) {
+		if !testtx.IsTestAppTx(tx) {
 			if len(sigs) == 0 {
 				return ctx,
 					sdk.ErrUnauthorized("no signers").Result(),
@@ -46,7 +46,7 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 		var signerAccs = make([]sdk.Account, len(signerAddrs))
 
 		// Assert that number of signatures is correct.
-		if !tax.IsTestAppTx(tx) {
+		if !testtx.IsTestAppTx(tx) {
 			if len(sigs) != len(signerAddrs) {
 				return ctx,
 					sdk.ErrUnauthorized("wrong number of signers").Result(),

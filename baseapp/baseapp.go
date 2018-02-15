@@ -196,6 +196,10 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// TODO: Use req.Validators
 	// TODO: Use req.AppState in InitStater
 
+	if app.InitStater == nil {
+		return
+	}
+
 	app.msDeliver = app.cms.CacheMultiStore()
 	ctx := app.GenesisContext(nil)
 

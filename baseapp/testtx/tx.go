@@ -1,4 +1,4 @@
-package baseapp
+package testtx
 
 import (
 	"github.com/tendermint/go-crypto"

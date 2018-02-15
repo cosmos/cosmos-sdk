@@ -44,16 +44,17 @@ func NewBasecoinApp(genesisPath string) *BasecoinApp {
 	)
 	cdc := accountMapper.WireCodec()
 	auth.RegisterWireBaseAccount(cdc)
-	// Make accountMapper's WireCodec() inaccessible.
-	app.accountMapper = accountMapper.Seal()
 
 	// create your application object
 	var app = &BasecoinApp{
-		BaseApp:         bam.NewBaseApp(appName, accountMapper),
+		BaseApp:         bam.NewBaseApp(appName),
 		cdc:             makeTxCodec(),
 		capKeyMainStore: mainKey,
 		capKeyIBCStore:  ibcKey,
 	}
+
+	// Make accountMapper's WireCodec() inaccessible.
+	app.accountMapper = accountMapper.Seal()
 
 	app.initBaseAppTxDecoder()
 	app.initBaseAppInitStater(genesisPath)
@@ -110,6 +111,12 @@ func (app *BasecoinApp) initBaseAppInitStater(genesisPath string) {
 	}
 
 	app.BaseApp.SetInitStater(func(ctx sdk.Context, state json.RawMessage) sdk.Error {
+
+		// TODO use state ABCI
+		if state == nil {
+			state = genesisAppState
+		}
+
 		if state == nil {
 			return nil
 		}

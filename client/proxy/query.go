@@ -83,8 +83,6 @@ func GetWithProofOptions(path string, key []byte, opts rpcclient.ABCIQueryOption
 	_ = commit
 	return &ctypes.ResultABCIQuery{Response: resp}, nil, nil
 
-	/* // TODO refactor so iavl stuff is not in tendermint core
-	   // https://github.com/tendermint/tendermint/issues/1183
 	if len(resp.Value) > 0 {
 		// The key was found, construct a proof of existence.
 		proof, err := iavl.ReadKeyProof(resp.Proof)
@@ -122,7 +120,6 @@ func GetWithProofOptions(path string, key []byte, opts rpcclient.ABCIQueryOption
 		return nil, nil, errors.Wrap(err, "Couldn't verify proof")
 	}
 	return &ctypes.ResultABCIQuery{Response: resp}, aproof, ErrNoData()
-	*/
 }
 
 // GetCertifiedCommit gets the signed header for a given height

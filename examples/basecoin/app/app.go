@@ -16,8 +16,6 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
-const appName = "BasecoinApp"
-
 // Extended ABCI application
 type BasecoinApp struct {
 	*bam.BaseApp
@@ -33,63 +31,47 @@ type BasecoinApp struct {
 
 func NewBasecoinApp(genesisPath string) *BasecoinApp {
 
-	// define some keys
-	mainKey := sdk.NewKVStoreKey("main")
-	ibcKey := sdk.NewKVStoreKey("ibc")
-
-	// define a mapper
-	accountMapper := auth.NewAccountMapper(
-		mainKey,             // target store
-		&types.AppAccount{}, // prototype
-	)
-	cdc := accountMapper.WireCodec()
-	auth.RegisterWireBaseAccount(cdc)
-
 	// create your application object
 	var app = &BasecoinApp{
-		BaseApp:         bam.NewBaseApp(appName),
-		cdc:             makeTxCodec(),
-		capKeyMainStore: mainKey,
-		capKeyIBCStore:  ibcKey,
+		BaseApp:         bam.NewBaseApp("BasecoinApp"),
+		cdc:             MakeTxCodec(),
+		capKeyMainStore: sdk.NewKVStoreKey("main"),
+		capKeyIBCStore:  sdk.NewKVStoreKey("ibc"),
 	}
 
-	// Make accountMapper's WireCodec() inaccessible.
-	app.accountMapper = accountMapper.Seal()
-
-	app.initBaseAppTxDecoder()
-	app.initBaseAppInitStater(genesisPath)
-
-	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore)
+	// define the accountMapper
+	app.accountMapper = auth.NewAccountMapperSealed(
+		app.capKeyMainStore, // target store
+		&types.AppAccount{}, // prototype
+	)
 
 	// add handlers
-	app.SetAnteHandler(auth.NewAnteHandler(accountMapper))
-	app.Router().AddRoute("bank", bank.NewHandler(bank.NewCoinKeeper(accountMapper)))
+	app.Router().AddRoute("bank", bank.NewHandler(bank.NewCoinKeeper(app.accountMapper)))
 	app.Router().AddRoute("sketchy", sketchy.NewHandler())
 
-	// load the stores
-	if err := app.LoadLatestVersion(app.capKeyMainStore); err != nil {
+	// initialize BaseApp
+	app.SetTxDecoder()
+	app.SetInitStater(genesisPath)
+	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore)
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
+	err := app.LoadLatestVersion(app.capKeyMainStore)
+	if err != nil {
 		cmn.Exit(err.Error())
 	}
 
 	return app
 }
 
-// Wire requires registration of interfaces & concrete types. All
-// interfaces to be encoded/decoded in a Msg must be registered
-// here, along with all the concrete types that implement them.
-func makeTxCodec() (cdc *wire.Codec) {
-	cdc = wire.NewCodec()
-
-	// Register crypto.[PubKey,PrivKey,Signature] types.
-	crypto.RegisterWire(cdc)
-
-	// Register bank.[SendMsg,IssueMsg] types.
-	bank.RegisterWire(cdc)
-
-	return
+// custom tx codec
+func MakeTxCodec() *wire.Codec {
+	cdc := wire.NewCodec()
+	crypto.RegisterWire(cdc) // Register crypto.[PubKey,PrivKey,Signature] types.
+	bank.RegisterWire(cdc)   // Register bank.[SendMsg,IssueMsg] types.
+	return cdc
 }
 
-func (app *BasecoinApp) initBaseAppTxDecoder() {
+// custom logic for transaction decoding
+func (app *BasecoinApp) SetTxDecoder() {
 	app.BaseApp.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx = sdk.StdTx{}
 		// StdTx.Msg is an interface whose concrete
@@ -102,9 +84,10 @@ func (app *BasecoinApp) initBaseAppTxDecoder() {
 	})
 }
 
-// define the custom logic for basecoin initialization
-func (app *BasecoinApp) initBaseAppInitStater(genesisPath string) {
+// custom logic for basecoin initialization
+func (app *BasecoinApp) SetInitStater(genesisPath string) {
 
+	// TODO remove, use state ABCI
 	genesisAppState, err := bam.LoadGenesisAppState(genesisPath)
 	if err != nil {
 		panic(fmt.Errorf("error loading genesis state: %v", err))
@@ -116,7 +99,6 @@ func (app *BasecoinApp) initBaseAppInitStater(genesisPath string) {
 		if state == nil {
 			state = genesisAppState
 		}
-
 		if state == nil {
 			return nil
 		}

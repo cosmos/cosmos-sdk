@@ -1,13 +1,12 @@
 package client
 
 import (
-	"github.com/tendermint/go-wire/data"
-
 	"github.com/tendermint/tendermint/lite"
 	certclient "github.com/tendermint/tendermint/lite/client"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
+	"github.com/tendermint/tmlibs/common"
 )
 
 var _ rpcclient.Client = Wrapper{}
@@ -35,13 +34,13 @@ func SecureClient(c rpcclient.Client, cert *lite.InquiringCertifier) Wrapper {
 }
 
 // ABCIQueryWithOptions exposes all options for the ABCI query and verifies the returned proof
-func (w Wrapper) ABCIQueryWithOptions(path string, data data.Bytes, opts rpcclient.ABCIQueryOptions) (*ctypes.ResultABCIQuery, error) {
+func (w Wrapper) ABCIQueryWithOptions(path string, data common.HexBytes, opts rpcclient.ABCIQueryOptions) (*ctypes.ResultABCIQuery, error) {
 	res, _, err := GetWithProofOptions(path, data, opts, w.Client, w.cert)
 	return res, err
 }
 
 // ABCIQuery uses default options for the ABCI query and verifies the returned proof
-func (w Wrapper) ABCIQuery(path string, data data.Bytes) (*ctypes.ResultABCIQuery, error) {
+func (w Wrapper) ABCIQuery(path string, data common.HexBytes) (*ctypes.ResultABCIQuery, error) {
 	return w.ABCIQueryWithOptions(path, data, rpcclient.DefaultABCIQueryOptions)
 }
 

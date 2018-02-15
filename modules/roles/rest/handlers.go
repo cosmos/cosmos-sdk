@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/tendermint/tmlibs/common"
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/client/commands"
@@ -12,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/modules/base"
 	"github.com/cosmos/cosmos-sdk/modules/nonce"
 	"github.com/cosmos/cosmos-sdk/modules/roles"
-	"github.com/tendermint/tmlibs/common"
 )
 
 // RoleInput encapsulates the fields needed to create a role
@@ -53,14 +53,14 @@ func RegisterCreateRole(r *mux.Router) error {
 
 func doCreateRole(w http.ResponseWriter, r *http.Request) {
 	ri := new(RoleInput)
-	if err := common.ParseRequestAndValidateJSON(r, ri); err != nil {
-		common.WriteError(w, err)
+	if err := sdk.ParseRequestAndValidateJSON(r, ri); err != nil {
+		sdk.WriteError(w, err)
 		return
 	}
 
 	parsedRole, err := decodeRoleHex(ri.Role)
 	if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
 
@@ -75,7 +75,7 @@ func doCreateRole(w http.ResponseWriter, r *http.Request) {
 	// 3. ChainTx
 	tx = base.NewChainTx(commands.GetChainID(), 0, tx)
 
-	common.WriteSuccess(w, tx)
+	sdk.WriteSuccess(w, tx)
 }
 
 // End of mux.Router registrars

@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/modules/fee"
 	"github.com/cosmos/cosmos-sdk/modules/nonce"
 	"github.com/cosmos/cosmos-sdk/stack"
-	"github.com/tendermint/tmlibs/common"
 )
 
 // SendInput is the request to send an amount from one actor to another.
@@ -44,7 +43,7 @@ func doQueryAccount(w http.ResponseWriter, r *http.Request) {
 	signature := args["signature"]
 	actor, err := commands.ParseActor(signature)
 	if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
 
@@ -53,7 +52,7 @@ func doQueryAccount(w http.ResponseWriter, r *http.Request) {
 	if qHeight != "" {
 		_h, err := strconv.Atoi(qHeight)
 		if err != nil {
-			common.WriteError(w, err)
+			sdk.WriteError(w, err)
 			return
 		}
 		h = int64(_h)
@@ -66,15 +65,15 @@ func doQueryAccount(w http.ResponseWriter, r *http.Request) {
 	height, err := query.GetParsed(key, account, h, prove)
 	if client.IsNoDataErr(err) {
 		err := fmt.Errorf("account bytes are empty for address: %q", signature)
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	} else if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
 
 	if err := query.FoutputProof(w, account, height); err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 	}
 }
 
@@ -86,7 +85,7 @@ func doSearchSent(w http.ResponseWriter, r *http.Request) {
 	account := args["account"]
 	actor, err := commands.ParseActor(account)
 	if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
 
@@ -106,20 +105,20 @@ func doSearchSent(w http.ResponseWriter, r *http.Request) {
 	prove := !viper.GetBool(commands.FlagTrustNode)
 	all, err := search.FindAnyTx(prove, findSender, findReceiver)
 	if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
 
 	// format....
 	output, err := search.FormatSearch(all, coin.ExtractCoinTx)
 	if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
 
 	// display
 	if err := search.Foutput(w, output); err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 	}
 }
 
@@ -145,8 +144,8 @@ func PrepareSendTx(si *SendInput) sdk.Tx {
 func doSend(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	si := new(SendInput)
-	if err := common.ParseRequestAndValidateJSON(r, si); err != nil {
-		common.WriteError(w, err)
+	if err := sdk.ParseRequestAndValidateJSON(r, si); err != nil {
+		sdk.WriteError(w, err)
 		return
 	}
 
@@ -165,16 +164,16 @@ func doSend(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(errsList) > 0 {
 		code := http.StatusBadRequest
-		err := &common.ErrorResponse{
+		err := &sdk.ErrorResponse{
 			Err:  strings.Join(errsList, ", "),
 			Code: code,
 		}
-		common.WriteCode(w, err, code)
+		sdk.WriteCode(w, err, code)
 		return
 	}
 
 	tx := PrepareSendTx(si)
-	common.WriteSuccess(w, tx)
+	sdk.WriteSuccess(w, tx)
 }
 
 // mux.Router registrars

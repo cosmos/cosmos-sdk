@@ -5,9 +5,9 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-
 	keys "github.com/tendermint/go-crypto/keys"
-	"github.com/tendermint/tmlibs/common"
+
+	sdk "github.com/cosmos/cosmos-sdk"
 )
 
 const (
@@ -35,19 +35,19 @@ func (s *ServiceKeys) Create(w http.ResponseWriter, r *http.Request) {
 	req := &RequestCreate{
 		Algo: defaultAlgo,
 	}
-	if err := common.ParseRequestAndValidateJSON(r, req); err != nil {
-		common.WriteError(w, err)
+	if err := sdk.ParseRequestAndValidateJSON(r, req); err != nil {
+		sdk.WriteError(w, err)
 		return
 	}
 
 	key, seed, err := s.manager.Create(req.Name, req.Passphrase, req.Algo)
 	if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
 
 	res := &ResponseCreate{Key: key, Seed: seed}
-	common.WriteSuccess(w, res)
+	sdk.WriteSuccess(w, res)
 }
 
 func (s *ServiceKeys) Get(w http.ResponseWriter, r *http.Request) {
@@ -55,94 +55,94 @@ func (s *ServiceKeys) Get(w http.ResponseWriter, r *http.Request) {
 	name := query["name"]
 	key, err := s.manager.Get(name)
 	if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
-	common.WriteSuccess(w, &key)
+	sdk.WriteSuccess(w, &key)
 }
 
 func (s *ServiceKeys) List(w http.ResponseWriter, r *http.Request) {
 	keys, err := s.manager.List()
 	if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
-	common.WriteSuccess(w, keys)
+	sdk.WriteSuccess(w, keys)
 }
 
 func (s *ServiceKeys) Update(w http.ResponseWriter, r *http.Request) {
 	req := new(RequestUpdate)
-	if err := common.ParseRequestAndValidateJSON(r, req); err != nil {
-		common.WriteError(w, err)
+	if err := sdk.ParseRequestAndValidateJSON(r, req); err != nil {
+		sdk.WriteError(w, err)
 		return
 	}
 
 	query := mux.Vars(r)
 	name := query["name"]
 	if name != req.Name {
-		common.WriteError(w, errNonMatchingPathAndJSONKeyNames)
+		sdk.WriteError(w, errNonMatchingPathAndJSONKeyNames)
 		return
 	}
 
 	if err := s.manager.Update(req.Name, req.OldPass, req.NewPass); err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
 
 	key, err := s.manager.Get(req.Name)
 	if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
-	common.WriteSuccess(w, &key)
+	sdk.WriteSuccess(w, &key)
 }
 
 func (s *ServiceKeys) Delete(w http.ResponseWriter, r *http.Request) {
 	req := new(RequestDelete)
-	if err := common.ParseRequestAndValidateJSON(r, req); err != nil {
-		common.WriteError(w, err)
+	if err := sdk.ParseRequestAndValidateJSON(r, req); err != nil {
+		sdk.WriteError(w, err)
 		return
 	}
 
 	query := mux.Vars(r)
 	name := query["name"]
 	if name != req.Name {
-		common.WriteError(w, errNonMatchingPathAndJSONKeyNames)
+		sdk.WriteError(w, errNonMatchingPathAndJSONKeyNames)
 		return
 	}
 
 	if err := s.manager.Delete(req.Name, req.Passphrase); err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
 
-	resp := &common.ErrorResponse{Success: true}
-	common.WriteSuccess(w, resp)
+	resp := &sdk.ErrorResponse{Success: true}
+	sdk.WriteSuccess(w, resp)
 }
 
 func (s *ServiceKeys) Recover(w http.ResponseWriter, r *http.Request) {
 	req := &RequestRecover{
 		Algo: defaultAlgo,
 	}
-	if err := common.ParseRequestAndValidateJSON(r, req); err != nil {
-		common.WriteError(w, err)
+	if err := sdk.ParseRequestAndValidateJSON(r, req); err != nil {
+		sdk.WriteError(w, err)
 		return
 	}
 
 	key, err := s.manager.Recover(req.Name, req.Passphrase, req.Seed)
 	if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
 
 	res := &ResponseRecover{Key: key}
-	common.WriteSuccess(w, res)
+	sdk.WriteSuccess(w, res)
 }
 
 func (s *ServiceKeys) SignTx(w http.ResponseWriter, r *http.Request) {
 	req := new(RequestSign)
-	if err := common.ParseRequestAndValidateJSON(r, req); err != nil {
-		common.WriteError(w, err)
+	if err := sdk.ParseRequestAndValidateJSON(r, req); err != nil {
+		sdk.WriteError(w, err)
 		return
 	}
 
@@ -153,10 +153,10 @@ func (s *ServiceKeys) SignTx(w http.ResponseWriter, r *http.Request) {
 		err = s.manager.Sign(req.Name, req.Password, sign)
 	}
 	if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
-	common.WriteSuccess(w, tx)
+	sdk.WriteSuccess(w, tx)
 }
 
 // mux.Router registrars

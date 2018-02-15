@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
+	wire "github.com/tendermint/go-wire"
 
 	sdk "github.com/cosmos/cosmos-sdk"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -16,8 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/modules/coin"
 	"github.com/cosmos/cosmos-sdk/modules/nonce"
 	"github.com/cosmos/cosmos-sdk/stack"
-	wire "github.com/tendermint/go-wire"
-	"github.com/tendermint/tmlibs/common"
 )
 
 // doQueryNonce is the HTTP handlerfunc to query a nonce
@@ -26,7 +25,7 @@ func doQueryNonce(w http.ResponseWriter, r *http.Request) {
 	signature := args["signature"]
 	actor, err := commands.ParseActor(signature)
 	if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
 
@@ -35,7 +34,7 @@ func doQueryNonce(w http.ResponseWriter, r *http.Request) {
 	if qHeight != "" {
 		_h, err := strconv.Atoi(qHeight)
 		if err != nil {
-			common.WriteError(w, err)
+			sdk.WriteError(w, err)
 			return
 		}
 		h = int64(_h)
@@ -51,10 +50,10 @@ func doQueryNonce(w http.ResponseWriter, r *http.Request) {
 	data, height, err := query.Get(key, h, prove)
 	if client.IsNoDataErr(err) {
 		err = fmt.Errorf("nonce empty for address: %q", signature)
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	} else if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
 
@@ -63,13 +62,13 @@ func doQueryNonce(w http.ResponseWriter, r *http.Request) {
 	err = wire.ReadBinaryBytes(data, &seq)
 	if err != nil {
 		msg := fmt.Sprintf("Error reading sequence for %X", key)
-		common.WriteError(w, errors.ErrInternal(msg))
+		sdk.WriteError(w, errors.ErrInternal(msg))
 		return
 	}
 
 	// write result to client
 	if err := query.FoutputProof(w, seq, height); err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 	}
 }
 

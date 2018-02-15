@@ -6,11 +6,9 @@ import (
 	"github.com/gorilla/mux"
 
 	wire "github.com/tendermint/go-wire"
-	"github.com/tendermint/tmlibs/common"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	sdk "github.com/cosmos/cosmos-sdk"
-
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )
 
 // ServiceTxs exposes a REST API service for sendings txs.
@@ -27,19 +25,19 @@ func NewServiceTxs(c rpcclient.Client) *ServiceTxs {
 
 func (s *ServiceTxs) PostTx(w http.ResponseWriter, r *http.Request) {
 	tx := new(sdk.Tx)
-	if err := common.ParseRequestAndValidateJSON(r, tx); err != nil {
-		common.WriteError(w, err)
+	if err := sdk.ParseRequestAndValidateJSON(r, tx); err != nil {
+		sdk.WriteError(w, err)
 		return
 	}
 
 	packet := wire.BinaryBytes(*tx)
 	commit, err := s.node.BroadcastTxCommit(packet)
 	if err != nil {
-		common.WriteError(w, err)
+		sdk.WriteError(w, err)
 		return
 	}
 
-	common.WriteSuccess(w, commit)
+	sdk.WriteSuccess(w, commit)
 }
 
 // mux.Router registrars

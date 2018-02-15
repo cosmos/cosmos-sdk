@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-
 	wire "github.com/tendermint/go-wire"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 

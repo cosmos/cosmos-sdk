@@ -1,20 +1,16 @@
-hash: b367d760bede213a37549edbcfb490e1502dcbc00e3d93c801d707ef531c313b
-updated: 2018-02-15T12:47:37.775161+01:00
+hash: 9d7657fc665bc37b9dba044906954a748bb1e1eb61508b49ee6831bffc23cbe8
+updated: 2018-02-15T17:00:35.108489+01:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
 - name: github.com/btcsuite/btcd
-  version: 50de9da05b50eb15658bb350f6ea24368a111ab7
+  version: c7588cbf7690cd9f047a28efa2dcd8f2435a4e5e
   subpackages:
   - btcec
 - name: github.com/BurntSushi/toml
-  version: a368813c5e648fee92e5f6c30e3944ff9d5e8895
+  version: b26d9c308763d68093482582cea63d69be07a0f0
 - name: github.com/ebuchman/fail-test
   version: 95f809107225be108efcf10a3509e4ea6ceef3c4
-- name: github.com/ethanfrey/hid
-  version: dce75af84cf849c60f39bf1b8192fb5cd597b5d9
-- name: github.com/ethanfrey/ledger
-  version: f7f2f056357db77db845a79aa1abdadc3ae66369
 - name: github.com/fsnotify/fsnotify
   version: c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9
 - name: github.com/go-kit/kit
@@ -32,7 +28,7 @@ imports:
 - name: github.com/go-playground/universal-translator
   version: 71201497bace774495daed26a3874fd339e0b538
 - name: github.com/go-stack/stack
-  version: 259ab82a6cad3992b4e21ff5cac294ccb06474bc
+  version: 817915b46b97fd7bb80e8ab6b69f01a53ac3eebf
 - name: github.com/gogo/protobuf
   version: 1adfc126b41513cc696b209667c8656ea7aac67c
   subpackages:
@@ -70,7 +66,7 @@ imports:
   - json/scanner
   - json/token
 - name: github.com/howeyc/crc16
-  version: 2b2a61e366a66d3efb279e46176e7291001e0354
+  version: 96a97a1abb579c7ff1a8ffa77f2e72d1c314b57f
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jmhodges/levigo
@@ -80,7 +76,7 @@ imports:
 - name: github.com/magiconair/properties
   version: 49d762b9817ba1c2e9d0c69183c2b4a8b8f1d934
 - name: github.com/mattn/go-isatty
-  version: 6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c
+  version: 0360b2af4f38e8d38c7fce2a9f4e702702d73a39
 - name: github.com/mitchellh/mapstructure
   version: b4575eea38cca1123ec2dc90c26529b5c5acfcff
 - name: github.com/pelletier/go-toml
@@ -100,7 +96,7 @@ imports:
 - name: github.com/spf13/jwalterweatherman
   version: 7c0cea34c8ece3fbeb2b27ab9b59511d360fb394
 - name: github.com/spf13/pflag
-  version: 4c012f6dcd9546820e378d0bdda4d8fc772cdfea
+  version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
 - name: github.com/spf13/viper
   version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: github.com/syndtr/goleveldb
@@ -132,14 +128,13 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: dd20358a264c772b4a83e477b0cfce4c88a7001d
+  version: 2017856384589234024cda848a6332157d1f527c
   subpackages:
   - keys
   - keys/cryptostore
   - keys/storage/filestorage
   - keys/storage/memstorage
   - keys/wordlist
-  - nano
 - name: github.com/tendermint/go-wire
   version: b6fc872b42d41158a60307db4da051dd6f179415
   subpackages:
@@ -150,9 +145,6 @@ imports:
   version: 0e68638af3fcac7af3289c3c308302b56d6277d6
   subpackages:
   - blockchain
-  - certifiers
-  - certifiers/client
-  - certifiers/files
   - cmd/tendermint/commands
   - config
   - consensus
@@ -195,15 +187,13 @@ imports:
   - clist
   - common
   - db
-  - events
   - flowrate
   - log
-  - logger
   - merkle
   - pubsub
   - pubsub/query
 - name: golang.org/x/crypto
-  version: 13931e22f9e72ea58bb73048bc752b48c6d4d4ac
+  version: edd5e9b0879d13ee6970a50153d85b8fec9f7686
   subpackages:
   - curve25519
   - nacl/box
@@ -263,11 +253,11 @@ imports:
   version: d670f9405373e636a5a2765eea47fac0c9bc91a4
 testImports:
 - name: github.com/davecgh/go-spew
-  version: ecdeabc65495df2dec95d7c4a4c3e021903035e5
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
 - name: github.com/pmezard/go-difflib
-  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
 - name: github.com/stretchr/testify

@@ -1,25 +1,34 @@
 package: github.com/cosmos/cosmos-sdk
 import:
-- package: github.com/ethanfrey/hid
-  version: dce75af84cf849c60f39bf1b8192fb5cd597b5d9
-- package: github.com/ethanfrey/ledger
-  version: f7f2f056357db77db845a79aa1abdadc3ae66369
+- package: github.com/BurntSushi/toml
+  version: ^0.3.0
+- package: github.com/bgentry/speakeasy
+  version: ^0.1.0
+- package: github.com/gorilla/mux
+  version: ^1.6.1
 - package: github.com/gorilla/websocket
+  version: ^1.2.0
+- package: github.com/mattn/go-isatty
+  version: ^0.0.3
 - package: github.com/pkg/errors
   version: ^0.8.0
 - package: github.com/spf13/cobra
+  version: ^0.0.1
 - package: github.com/spf13/pflag
+  version: ^1.0.0
 - package: github.com/spf13/viper
-# update this when tendermint/tendermint updates
+  version: ^1.0.0
 - package: github.com/tendermint/abci
   version: develop
   subpackages:
   - server
   - types
 - package: github.com/tendermint/go-crypto
-  version: master
+  version: 2017856384589234024cda848a6332157d1f527c
   subpackages:
   - keys
+  - keys/cryptostore
+  - keys/storage/filestorage
 - package: github.com/tendermint/go-wire
   version: master
   subpackages:
@@ -29,15 +38,19 @@ import:
 - package: github.com/tendermint/tendermint
   version: develop
   subpackages:
-  - certifiers
-  - certifiers/client
-  - certifiers/files
+  - cmd/tendermint/commands
   - config
+  - lite
+  - lite/client
+  - lite/errors
+  - lite/files
   - node
   - proxy
   - rpc/client
+  - rpc/core
   - rpc/core/types
   - rpc/lib/client
+  - rpc/lib/server
   - rpc/lib/types
   - types
 - package: github.com/tendermint/tmlibs
@@ -46,11 +59,13 @@ import:
   - cli
   - cli/flags
   - common
-  - events
+  - db
   - log
-  - logger
+- package: gopkg.in/go-playground/validator.v9
+  version: ^9.9.4
 testImport:
 - package: github.com/stretchr/testify
+  version: ^1.2.1
   subpackages:
   - assert
   - require

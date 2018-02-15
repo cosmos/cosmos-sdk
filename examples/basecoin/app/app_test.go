@@ -26,7 +26,7 @@ func newTestBasecoinApp() *testBasecoinApp {
 	tba := &testBasecoinApp{
 		BasecoinApp: app,
 	}
-	tba.TestApp = bam.NewTestApp(app.BaseApp)
+	tba.TestApp = testapp.NewTestApp(app.BaseApp)
 	return tba
 }
 

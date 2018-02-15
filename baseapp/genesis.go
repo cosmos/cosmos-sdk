@@ -13,7 +13,7 @@ type GenesisDoc struct {
 }
 
 // GenesisDocFromFile reads JSON data from a file and unmarshalls it into a GenesisDoc.
-func ReadGenesisAppState(genesisPath string) (state json.RawMessage, err error) {
+func LoadGenesisAppState(genesisPath string) (state json.RawMessage, err error) {
 	if genesisPath == "" {
 		return
 	}

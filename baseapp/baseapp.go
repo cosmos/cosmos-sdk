@@ -16,30 +16,28 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 var mainHeaderKey = []byte("header")
 
 // The ABCI application
 type BaseApp struct {
-	logger             log.Logger
-	name               string               // application name from abci.Info
-	db                 dbm.DB               // common DB backend
-	cms                sdk.CommitMultiStore // Main (uncached) state
-	txDecoder          sdk.TxDecoder        // unmarshal []byte into sdk.Tx
-	InitStater         sdk.InitStater       // TODO unexpose
-	defaultAnteHandler sdk.AnteHandler      // ante handler for fee and auth
-	router             Router               // handle any kind of message
+	logger      log.Logger
+	name        string               // application name from abci.Info
+	db          dbm.DB               // common DB backend
+	cms         sdk.CommitMultiStore // Main (uncached) state
+	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
+	InitStater  sdk.InitStater       // TODO unexpose
+	anteHandler sdk.AnteHandler      // ante handler for fee and auth
+	router      Router               // handle any kind of message
 
 	//--------------------
 	// Volatile
 
-	accountMapper sdk.AccountMapper   // Manage getting and setting accounts
-	msCheck       sdk.CacheMultiStore // CheckTx state, a cache-wrap of `.cms`
-	msDeliver     sdk.CacheMultiStore // DeliverTx state, a cache-wrap of `.cms`
-	header        *abci.Header        // current block header
-	valUpdates    []abci.Validator    // cached validator changes from DeliverTx
+	msCheck    sdk.CacheMultiStore // CheckTx state, a cache-wrap of `.cms`
+	msDeliver  sdk.CacheMultiStore // DeliverTx state, a cache-wrap of `.cms`
+	header     *abci.Header        // current block header
+	valUpdates []abci.Validator    // cached validator changes from DeliverTx
 }
 
 var _ abci.Application = &BaseApp{}
@@ -57,40 +55,6 @@ func NewBaseApp(name string) *BaseApp {
 	baseapp.initMultiStore()
 
 	return baseapp
-}
-
-// Create and name new BaseApp
-func NewBaseAppExpanded(name string, accountMapper sdk.AccountMapper, keys []*sdk.KVStoreKey) *BaseApp {
-	var baseapp = &BaseApp{
-		logger:             makeDefaultLogger(),
-		name:               name,
-		db:                 nil,
-		cms:                nil,
-		defaultAnteHandler: auth.NewAnteHandler(app.AccountMapper()),
-		router:             NewRouter(),
-		accountMapper:      accountMapper,
-	}
-	baseapp.initDB()
-	baseapp.initMultiStore()
-	baseapp.initAccountMapper()
-
-	for _, key := range keys {
-		baseApp.MountStore(key, sdk.StoreTypeIAVL)
-	}
-
-	return baseapp
-}
-
-// Initialize the AccountMapper.
-func (app *BaseApp) initAccountMapper() {
-
-	// Register all interfaces and concrete types that
-	// implement those interfaces, here.
-	cdc := accountMapper.WireCodec()
-	auth.RegisterWireBaseAccount(cdc)
-
-	// Make accountMapper's WireCodec() inaccessible.
-	app.accountMapper = accountMapper.Seal()
 }
 
 // Create the underlying leveldb datastore which will
@@ -115,6 +79,13 @@ func (app *BaseApp) Name() string {
 }
 
 // Mount a store to the provided key in the BaseApp multistore
+func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
+	for _, key := range keys {
+		app.MountStore(key, sdk.StoreTypeIAVL)
+	}
+}
+
+// Mount a store to the provided key in the BaseApp multistore
 func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, app.db)
 }
@@ -126,14 +97,13 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 func (app *BaseApp) SetInitStater(initStater sdk.InitStater) {
 	app.InitStater = initStater
 }
-func (app *BaseApp) SetDefaultAnteHandler(ah sdk.AnteHandler) {
+func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	// deducts fee from payer, verifies signatures and nonces, sets Signers to ctx.
-	app.defaultAnteHandler = ah
+	app.anteHandler = ah
 }
 
 // nolint - Get functions
-func (app *BaseApp) Router() Router                   { return app.router }
-func (app *BaseApp) AccountMapper() sdk.AccountMapper { return app.accountMapper }
+func (app *BaseApp) Router() Router { return app.router }
 
 /* TODO consider:
 func (app *BaseApp) SetBeginBlocker(...) {}
@@ -224,7 +194,15 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // Implements ABCI
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	// TODO: Use req.Validators
-	// TODO: Use req.AppState
+	// TODO: Use req.AppState in InitStater
+
+	app.msDeliver = app.cms.CacheMultiStore()
+	ctx := app.GenesisContext(nil)
+
+	err := app.InitStater(ctx, nil)
+	if err != nil {
+		cmn.Exit(fmt.Sprintf("error initializing application genesis state: %v", err))
+	}
 	return
 }
 
@@ -338,7 +316,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	// TODO: override default ante handler w/ custom ante handler.
 
 	// Run the ante handler.
-	newCtx, result, abort := app.defaultAnteHandler(ctx, tx)
+	newCtx, result, abort := app.anteHandler(ctx, tx)
 	if isCheckTx || abort {
 		return result
 	}

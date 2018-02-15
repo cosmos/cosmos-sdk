@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/sketchy"
 
-	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 	cmn "github.com/tendermint/tmlibs/common"
@@ -27,27 +26,43 @@ type BasecoinApp struct {
 	// keys to access the substores
 	capKeyMainStore *sdk.KVStoreKey
 	capKeyIBCStore  *sdk.KVStoreKey
+
+	// Manage getting and setting accounts
+	accountMapper sdk.AccountMapper
 }
 
 func NewBasecoinApp(genesisPath string) *BasecoinApp {
 
-	var app = &BasecoinApp{
-		cdc:             makeCodex(),
-		capKeyMainStore: sdk.NewKVStoreKey("main"),
-		capKeyIBCStore:  sdk.NewKVStoreKey("ibc"),
-	}
+	// define some keys
+	mainKey := sdk.NewKVStoreKey("main")
+	ibcKey := sdk.NewKVStoreKey("ibc")
 
-	var accMapper = auth.NewAccountMapper(
-		app.capKeyMainStore, // target store
+	// define a mapper
+	accountMapper := auth.NewAccountMapper(
+		mainKey,             // target store
 		&types.AppAccount{}, // prototype
 	)
+	cdc := accountMapper.WireCodec()
+	auth.RegisterWireBaseAccount(cdc)
+	// Make accountMapper's WireCodec() inaccessible.
+	app.accountMapper = accountMapper.Seal()
 
-	app.BaseApp = bam.NewBaseAppExpanded(appName, accMapper)
+	// create your application object
+	var app = &BasecoinApp{
+		BaseApp:         bam.NewBaseApp(appName, accountMapper),
+		cdc:             makeTxCodec(),
+		capKeyMainStore: mainKey,
+		capKeyIBCStore:  ibcKey,
+	}
+
 	app.initBaseAppTxDecoder()
 	app.initBaseAppInitStater(genesisPath)
 
-	// Add the handlers
-	app.Router().AddRoute("bank", bank.NewHandler(bank.NewCoinKeeper(app.AccountMapper())))
+	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore)
+
+	// add handlers
+	app.SetAnteHandler(auth.NewAnteHandler(accountMapper))
+	app.Router().AddRoute("bank", bank.NewHandler(bank.NewCoinKeeper(accountMapper)))
 	app.Router().AddRoute("sketchy", sketchy.NewHandler())
 
 	// load the stores
@@ -89,18 +104,9 @@ func (app *BasecoinApp) initBaseAppTxDecoder() {
 // define the custom logic for basecoin initialization
 func (app *BasecoinApp) initBaseAppInitStater(genesisPath string) {
 
-	genesisAppState, err := bam.ReadGenesisAppState(genesisPath)
+	genesisAppState, err := bam.LoadGenesisAppState(genesisPath)
 	if err != nil {
 		panic(fmt.Errorf("error loading genesis state: %v", err))
-	}
-
-	// set up the cache store for ctx, get ctx
-	// TODO: combine with InitChain and let tendermint invoke it.
-	app.BaseApp.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{}})
-	ctx := app.BaseApp.NewContext(false, nil) // context for DeliverTx
-	err = app.BaseApp.InitStater(ctx, genesisAppState)
-	if err != nil {
-		cmn.Exit(fmt.Sprintf("error initializing application genesis state: %v", err))
 	}
 
 	app.BaseApp.SetInitStater(func(ctx sdk.Context, state json.RawMessage) sdk.Error {
@@ -119,7 +125,7 @@ func (app *BasecoinApp) initBaseAppInitStater(genesisPath string) {
 			if err != nil {
 				return sdk.ErrGenesisParse("").TraceCause(err, "")
 			}
-			app.AccountMapper().SetAccount(ctx, acc)
+			app.accountMapper.SetAccount(ctx, acc)
 		}
 		return nil
 	})

@@ -1,7 +1,7 @@
 package auth
 
 import (
-	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	tax "github.com/cosmos/cosmos-sdk/baseapp/testapp/x"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,14 +25,14 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 			// TODO: accountMapper.SetAccount(ctx, payerAddr)
 		} else {
 			// TODO: Ensure that some other spam prevention is used.
-			// NOTE: bam.TestApp.RunDeliverMsg/RunCheckMsg will
-			// create a Tx with no payer.
+			// NOTE: testapp.TestApp.RunDeliverMsg/RunCheckMsg will
+			//       create a Tx with no payer.
 		}
 
 		var sigs = tx.GetSignatures()
 
 		// Assert that there are signatures.
-		if !bam.IsTestAppTx(tx) {
+		if !tax.IsTestAppTx(tx) {
 			if len(sigs) == 0 {
 				return ctx,
 					sdk.ErrUnauthorized("no signers").Result(),
@@ -46,7 +46,7 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 		var signerAccs = make([]sdk.Account, len(signerAddrs))
 
 		// Assert that number of signatures is correct.
-		if !bam.IsTestAppTx(tx) {
+		if !tax.IsTestAppTx(tx) {
 			if len(sigs) != len(signerAddrs) {
 				return ctx,
 					sdk.ErrUnauthorized("wrong number of signers").Result(),

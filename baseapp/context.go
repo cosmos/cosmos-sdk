@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	abci "github.com/tendermint/abci/types"
 )
 
 // NewContext returns a new Context suitable for AnteHandler (and indirectly Handler) processing.
@@ -22,12 +23,14 @@ func (app *BaseApp) NewContext(isCheckTx bool, txBytes []byte) sdk.Context {
 		panic("BaseApp.NewContext() requires BeginBlock(): missing header")
 	}
 
-	// Initialize arguments to Handler.
-	var ctx = sdk.NewContext(
-		store,
-		*app.header,
-		isCheckTx,
-		txBytes,
-	)
-	return ctx
+	return sdk.NewContext(store, *app.header, isCheckTx, txBytes)
+}
+
+// context used during genesis
+func (app *BaseApp) GenesisContext(txBytes []byte) sdk.Context {
+	store := app.msDeliver
+	if store == nil {
+		panic("BaseApp.NewContext() requires BeginBlock(): missing store")
+	}
+	return sdk.NewContext(store, abci.Header{}, false, txBytes)
 }

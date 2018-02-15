@@ -1,23 +1,24 @@
-package baseapp
+package testapp
 
 import (
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/go-crypto"
 
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	x "github.com/cosmos/cosmos-sdk/baseapp/testapp/x"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TestApp wraps BaseApp with helper methods,
 // and exposes more functionality than otherwise needed.
 type TestApp struct {
-	*BaseApp
+	*bam.BaseApp
 
 	// These get set as we receive them.
 	*abci.ResponseBeginBlock
 	*abci.ResponseEndBlock
 }
 
-func NewTestApp(bapp *BaseApp) *TestApp {
+func NewTestApp(bapp *bam.BaseApp) *TestApp {
 	app := &TestApp{
 		BaseApp: bapp,
 	}
@@ -75,16 +76,16 @@ func (tapp *TestApp) RunDeliverTx(tx sdk.Tx) sdk.Result {
 }
 
 // run tx through CheckTx of TestApp
-// NOTE: Skips authentication by wrapping msg in testTx{}.
+// NOTE: Skips authentication by wrapping msg in TestTx{}.
 func (tapp *TestApp) RunCheckMsg(msg sdk.Msg) sdk.Result {
-	var tx = testTx{msg}
+	var tx = x.TestTx{msg}
 	return tapp.RunCheckTx(tx)
 }
 
 // run tx through DeliverTx of TestApp
-// NOTE: Skips authentication by wrapping msg in testTx{}.
+// NOTE: Skips authentication by wrapping msg in TestTx{}.
 func (tapp *TestApp) RunDeliverMsg(msg sdk.Msg) sdk.Result {
-	var tx = testTx{msg}
+	var tx = x.TestTx{msg}
 	return tapp.RunDeliverTx(tx)
 }
 
@@ -101,21 +102,4 @@ func (tapp *TestApp) MultiStoreCheck() sdk.MultiStore {
 // return a cache-wrap DeliverTx state of multistore
 func (tapp *TestApp) MultiStoreDeliver() sdk.MultiStore {
 	return tapp.BaseApp.msDeliver
-}
-
-//----------------------------------------
-// testTx
-
-type testTx struct {
-	sdk.Msg
-}
-
-// nolint
-func (tx testTx) GetMsg() sdk.Msg                   { return tx.Msg }
-func (tx testTx) GetSigners() []crypto.Address      { return nil }
-func (tx testTx) GetFeePayer() crypto.Address       { return nil }
-func (tx testTx) GetSignatures() []sdk.StdSignature { return nil }
-func IsTestAppTx(tx sdk.Tx) bool {
-	_, ok := tx.(testTx)
-	return ok
 }

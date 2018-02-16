@@ -1,10 +1,7 @@
 package coins
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	crypto "github.com/tendermint/go-crypto"
 	auth "github.com/cosmos/cosmos-sdk/x/auth"
 )
 
@@ -16,22 +13,18 @@ type coinMapper struct {
 	// The (unexposed) key used to access the store from the Context.
 	key sdk.StoreKey
 
-	// The prototypical sdk.Account concrete type.
-	proto CoinAccount
-
 	// The wire codec for binary encoding/decoding of accounts.
 	cdc *wire.Codec
 }
 
 // NewCoinMapper returns a new CoinMapper that
 // uses go-wire to (binary) encode and decode CoinAccounts.
-func NewCoinMapper(key sdk.StoreKey, proto sdk.Account, am auth.AccountMapper) coinMapper {
+func NewCoinMapper(key sdk.StoreKey, am auth.AccountMapper) coinMapper {
 	cdc := wire.NewCodec()
 	return coinMapper{
-		am:    am,
-		key:   key,
-		proto: proto,
-		cdc:   cdc,
+		am:  am,
+		key: key,
+		cdc: cdc,
 	}
 }
 
@@ -45,7 +38,6 @@ func (cm CoinMapper) MakeCoinAccount(ctx sdk.Context, acc auth.BaseAccount, amt 
 	cm.SetCoinAccount(ctx, coinAcc)
 	return coinAcc, nil
 }
-
 
 // GetCoinAccount reads a CoinAccount from store
 func (cm CoinMapper) GetCoinAccount(ctx sdk.Context, acc auth.BaseAccount) CoinAccount {

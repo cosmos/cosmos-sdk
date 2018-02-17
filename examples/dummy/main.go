@@ -62,9 +62,14 @@ func main() {
 
 func DummyHandler(storeKey sdk.StoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		dTx, ok := msg.(dummyTx)
+		if !ok {
+			panic("DummyHandler should only receive dummyTx")
+		}
+
 		// tx is already unmarshalled
-		key := msg.Get("key").([]byte)
-		value := msg.Get("value").([]byte)
+		key := dTx.key
+		value := dTx.value
 
 		store := ctx.KVStore(storeKey)
 		store.Set(key, value)

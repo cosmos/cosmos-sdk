@@ -186,21 +186,28 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 }
 
 // Implements ABCI
+// InitChain runs the initialization logic directly on the CommitMultiStore and commits it.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	if app.initChainer == nil {
 		// TODO: should we have some default handling of validators?
 		return
 	}
 
-	// get the store and make a context for the initialization
-	store := app.cms.CacheMultiStore()
-	ctx := sdk.NewContext(store, abci.Header{}, false, nil)
+	// make a context for the initialization.
+	// NOTE: we're writing to the cms directly, without a CacheWrap
+	ctx := sdk.NewContext(app.cms, abci.Header{}, false, nil)
 
 	err := app.initChainer(ctx, req)
 	if err != nil {
 		// TODO: something better https://github.com/cosmos/cosmos-sdk/issues/468
 		cmn.Exit(fmt.Sprintf("error initializing application genesis state: %v", err))
 	}
+
+	// XXX this commits everything and bumps the version.
+	// With this, block 1 executes against state with version 1, but results in state with version 2.
+	// Is that what we want ?
+	app.cms.Commit()
+
 	return
 }
 

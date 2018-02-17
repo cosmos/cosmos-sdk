@@ -29,7 +29,9 @@ func newBaseApp(name string) *BaseApp {
 }
 
 func TestMountStores(t *testing.T) {
-	app := newBaseApp(t.Name())
+	name := t.Name()
+	app := newBaseApp(name)
+	assert.Equal(t, name, app.Name())
 
 	// make some cap keys
 	capKey1 := sdk.NewKVStoreKey("key1")
@@ -51,8 +53,39 @@ func TestLoadVersion(t *testing.T) {
 	// TODO
 }
 
-func TestInitStater(t *testing.T) {
-	// TODO
+func TestInitChainer(t *testing.T) {
+	app := newBaseApp(t.Name())
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+
+	key, value := []byte("hello"), []byte("goodbye")
+
+	// initChainer sets a value in the store
+	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abci.RequestInitChain) sdk.Error {
+		store := ctx.KVStore(capKey)
+		store.Set(key, value)
+		return nil
+	}
+
+	query := abci.RequestQuery{
+		Path: "/main/key",
+		Data: key,
+	}
+
+	// initChainer is nil - nothing happens
+	app.InitChain(abci.RequestInitChain{})
+	res := app.Query(query)
+	assert.Equal(t, 0, len(res.Value))
+
+	// set initChainer and try again - should see the value
+	app.SetInitChainer(initChainer)
+	app.InitChain(abci.RequestInitChain{})
+	res = app.Query(query)
+	assert.Equal(t, value, res.Value)
 }
 
 //----------------------

@@ -2,8 +2,8 @@ package baseapp
 
 import (
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/go-crypto"
 
+	"github.com/cosmos/cosmos-sdk/baseapp/testtx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -51,6 +51,11 @@ func (tapp *TestApp) RunBeginBlock() {
 	return
 }
 
+// kill resources used by baseapp
+func (tapp *TestApp) Close() {
+	tapp.db.Close()
+}
+
 func (tapp *TestApp) ensureBeginBlock() {
 	if tapp.header == nil {
 		panic("TestApp.header was nil, call TestApp.RunBeginBlock()")
@@ -70,16 +75,16 @@ func (tapp *TestApp) RunDeliverTx(tx sdk.Tx) sdk.Result {
 }
 
 // run tx through CheckTx of TestApp
-// NOTE: Skips authentication by wrapping msg in testTx{}.
+// NOTE: Skips authentication by wrapping msg in TestTx{}.
 func (tapp *TestApp) RunCheckMsg(msg sdk.Msg) sdk.Result {
-	var tx = testTx{msg}
+	var tx = testtx.TestTx{msg}
 	return tapp.RunCheckTx(tx)
 }
 
 // run tx through DeliverTx of TestApp
-// NOTE: Skips authentication by wrapping msg in testTx{}.
+// NOTE: Skips authentication by wrapping msg in TestTx{}.
 func (tapp *TestApp) RunDeliverMsg(msg sdk.Msg) sdk.Result {
-	var tx = testTx{msg}
+	var tx = testtx.TestTx{msg}
 	return tapp.RunDeliverTx(tx)
 }
 
@@ -96,21 +101,4 @@ func (tapp *TestApp) MultiStoreCheck() sdk.MultiStore {
 // return a cache-wrap DeliverTx state of multistore
 func (tapp *TestApp) MultiStoreDeliver() sdk.MultiStore {
 	return tapp.BaseApp.msDeliver
-}
-
-//----------------------------------------
-// testTx
-
-type testTx struct {
-	sdk.Msg
-}
-
-// nolint
-func (tx testTx) GetMsg() sdk.Msg                   { return tx.Msg }
-func (tx testTx) GetSigners() []crypto.Address      { return nil }
-func (tx testTx) GetFeePayer() crypto.Address       { return nil }
-func (tx testTx) GetSignatures() []sdk.StdSignature { return nil }
-func IsTestAppTx(tx sdk.Tx) bool {
-	_, ok := tx.(testTx)
-	return ok
 }

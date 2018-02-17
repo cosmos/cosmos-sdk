@@ -1,6 +1,0 @@
-package: github.com/cosmos/cosmos-sdk/tools
-import:
-- package: github.com/rigelrozanski/shelldown
-  subpackages:
-  - cmd/shelldown
-- package: gopkg.in/alecthomas/gometalinter.v2

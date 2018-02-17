@@ -5,8 +5,7 @@ import (
 	"io/ioutil"
 )
 
-// TODO: remove from here and pass the AppState
-// through InitChain
+// TODO: remove from here and pass the AppState through InitChain
 
 // GenesisDoc defines the initial conditions for a tendermint blockchain, in particular its validator set.
 type GenesisDoc struct {
@@ -14,12 +13,11 @@ type GenesisDoc struct {
 }
 
 // GenesisDocFromFile reads JSON data from a file and unmarshalls it into a GenesisDoc.
-func GenesisDocFromFile(genDocFile string) (*GenesisDoc, error) {
-	if genDocFile == "" {
-		var g GenesisDoc
-		return &g, nil
+func LoadGenesisAppState(genesisPath string) (state json.RawMessage, err error) {
+	if genesisPath == "" {
+		return
 	}
-	jsonBlob, err := ioutil.ReadFile(genDocFile)
+	jsonBlob, err := ioutil.ReadFile(genesisPath)
 	if err != nil {
 		return nil, err
 	}
@@ -28,5 +26,5 @@ func GenesisDocFromFile(genDocFile string) (*GenesisDoc, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &genDoc, nil
+	return genDoc.AppState, nil
 }

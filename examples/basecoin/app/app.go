@@ -3,19 +3,20 @@ package app
 import (
 	"encoding/json"
 
-	bam "github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/sketchy"
-
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
+
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/sketchy"
 )
 
 const (

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,9 +13,82 @@ import (
 	"github.com/tendermint/go-crypto"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
+	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+func defaultLogger() log.Logger {
+	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
+}
+
+func newBaseApp(name string) *BaseApp {
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	return NewBaseApp(name, logger, db)
+}
+
+func TestMountStores(t *testing.T) {
+	name := t.Name()
+	app := newBaseApp(name)
+	assert.Equal(t, name, app.Name())
+
+	// make some cap keys
+	capKey1 := sdk.NewKVStoreKey("key1")
+	capKey2 := sdk.NewKVStoreKey("key2")
+
+	// no stores are mounted
+	assert.Panics(t, func() { app.LoadLatestVersion(capKey1) })
+
+	app.MountStoresIAVL(capKey1, capKey2)
+
+	// both stores are mounted
+	err := app.LoadLatestVersion(capKey1)
+	assert.Nil(t, err)
+	err = app.LoadLatestVersion(capKey2)
+	assert.Nil(t, err)
+}
+
+func TestLoadVersion(t *testing.T) {
+	// TODO
+}
+
+func TestInitChainer(t *testing.T) {
+	app := newBaseApp(t.Name())
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+
+	key, value := []byte("hello"), []byte("goodbye")
+
+	// initChainer sets a value in the store
+	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abci.RequestInitChain) sdk.Error {
+		store := ctx.KVStore(capKey)
+		store.Set(key, value)
+		return nil
+	}
+
+	query := abci.RequestQuery{
+		Path: "/main/key",
+		Data: key,
+	}
+
+	// initChainer is nil - nothing happens
+	app.InitChain(abci.RequestInitChain{})
+	res := app.Query(query)
+	assert.Equal(t, 0, len(res.Value))
+
+	// set initChainer and try again - should see the value
+	app.SetInitChainer(initChainer)
+	app.InitChain(abci.RequestInitChain{})
+	res = app.Query(query)
+	assert.Equal(t, value, res.Value)
+}
+
+//----------------------
 
 // A mock transaction to update a validator's voting power.
 type testUpdatePowerTx struct {
@@ -33,10 +107,10 @@ func (tx testUpdatePowerTx) GetSigners() []crypto.Address            { return ni
 func (tx testUpdatePowerTx) GetFeePayer() crypto.Address             { return nil }
 func (tx testUpdatePowerTx) GetSignatures() []sdk.StdSignature       { return nil }
 
-func TestBasic(t *testing.T) {
+func TestExecution(t *testing.T) {
 
 	// Create app.
-	app := NewBaseApp(t.Name())
+	app := newBaseApp(t.Name())
 	storeKeys := createMounts(app.cms)
 	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var ttx testUpdatePowerTx
@@ -44,7 +118,7 @@ func TestBasic(t *testing.T) {
 		return ttx, nil
 	})
 
-	app.SetDefaultAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
 	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		// TODO
 		return sdk.Result{}

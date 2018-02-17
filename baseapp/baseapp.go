@@ -1,13 +1,12 @@
 package baseapp
 
 import (
-	"bytes"
 	"fmt"
-	"os"
 	"runtime/debug"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
+
 	abci "github.com/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -21,76 +20,39 @@ var mainHeaderKey = []byte("header")
 
 // The ABCI application
 type BaseApp struct {
-	logger log.Logger
-
-	// Application name from abci.Info
-	name string
-
-	// Common DB backend
-	db dbm.DB
-
-	// Main (uncached) state
-	cms sdk.CommitMultiStore
-
-	// unmarshal []byte into sdk.Tx
-	txDecoder sdk.TxDecoder
-
-	// unmarshal rawjsonbytes to initialize the application
-	// TODO unexpose and call from InitChain
-	InitStater sdk.InitStater
-
-	// ante handler for fee and auth
-	defaultAnteHandler sdk.AnteHandler
-
-	// handle any kind of message
-	router Router
+	logger      log.Logger
+	name        string               // application name from abci.Info
+	db          dbm.DB               // common DB backend
+	cms         sdk.CommitMultiStore // Main (uncached) state
+	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
+	initChainer sdk.InitChainer      //
+	anteHandler sdk.AnteHandler      // ante handler for fee and auth
+	router      Router               // handle any kind of message
 
 	//--------------------
 	// Volatile
+	// .msCheck and .header are set on initialization.
+	// .msDeliver is only set (and reset) in BeginBlock.
+	// .header and .valUpdates are also reset in BeginBlock.
+	// .msCheck is only reset in Commit.
 
-	// CheckTx state, a cache-wrap of `.cms`
-	msCheck sdk.CacheMultiStore
-
-	// DeliverTx state, a cache-wrap of `.cms`
-	msDeliver sdk.CacheMultiStore
-
-	// current block header
-	header *abci.Header
-
-	// cached validator changes from DeliverTx
-	valUpdates []abci.Validator
+	header     abci.Header         // current block header
+	msCheck    sdk.CacheMultiStore // CheckTx state, a cache-wrap of `.cms`
+	msDeliver  sdk.CacheMultiStore // DeliverTx state, a cache-wrap of `.cms`
+	valUpdates []abci.Validator    // cached validator changes from DeliverTx
 }
 
 var _ abci.Application = &BaseApp{}
 
 // Create and name new BaseApp
-func NewBaseApp(name string) *BaseApp {
-	var baseapp = &BaseApp{
-		logger: makeDefaultLogger(),
+func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
+	return &BaseApp{
+		logger: logger,
 		name:   name,
-		db:     nil,
-		cms:    nil,
+		db:     db,
+		cms:    store.NewCommitMultiStore(db),
 		router: NewRouter(),
 	}
-	baseapp.initDB()
-	baseapp.initMultiStore()
-	return baseapp
-}
-
-// Create the underlying leveldb datastore which will
-// persist the Merkle tree inner & leaf nodes.
-func (app *BaseApp) initDB() {
-	db, err := dbm.NewGoLevelDB(app.name, "data")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	app.db = db
-}
-
-func (app *BaseApp) initMultiStore() {
-	cms := store.NewCommitMultiStore(app.db)
-	app.cms = cms
 }
 
 // BaseApp Name
@@ -99,70 +61,78 @@ func (app *BaseApp) Name() string {
 }
 
 // Mount a store to the provided key in the BaseApp multistore
+func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
+	for _, key := range keys {
+		app.MountStore(key, sdk.StoreTypeIAVL)
+	}
+}
+
+// Mount a store to the provided key in the BaseApp multistore
 func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, app.db)
 }
 
-// nolint
+// nolint - Set functions
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
-func (app *BaseApp) SetInitStater(initStater sdk.InitStater) {
-	app.InitStater = initStater
+func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
+	app.initChainer = initChainer
 }
-func (app *BaseApp) SetDefaultAnteHandler(ah sdk.AnteHandler) {
-	app.defaultAnteHandler = ah
+func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
+	// deducts fee from payer, verifies signatures and nonces, sets Signers to ctx.
+	app.anteHandler = ah
 }
-func (app *BaseApp) Router() Router {
-	return app.router
-}
+
+// nolint - Get functions
+func (app *BaseApp) Router() Router { return app.router }
 
 /* TODO consider:
 func (app *BaseApp) SetBeginBlocker(...) {}
 func (app *BaseApp) SetEndBlocker(...) {}
 */
 
-// TODO add description
+// load latest application version
 func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
 	app.cms.LoadLatestVersion()
 	return app.initFromStore(mainKey)
 }
 
-// Load application version
+// load application version
 func (app *BaseApp) LoadVersion(version int64, mainKey sdk.StoreKey) error {
 	app.cms.LoadVersion(version)
 	return app.initFromStore(mainKey)
 }
 
-// The last CommitID of the multistore.
+// the last CommitID of the multistore
 func (app *BaseApp) LastCommitID() sdk.CommitID {
 	return app.cms.LastCommitID()
 }
 
-// The last commited block height.
+// the last commited block height
 func (app *BaseApp) LastBlockHeight() int64 {
 	return app.cms.LastCommitID().Version
 }
 
-// Initializes the remaining logic from app.cms.
+// initializes the remaining logic from app.cms
 func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 	var lastCommitID = app.cms.LastCommitID()
 	var main = app.cms.GetKVStore(mainKey)
-	var header *abci.Header
+	var header abci.Header
 
-	// Main store should exist.
+	// main store should exist.
 	if main == nil {
 		return errors.New("BaseApp expects MultiStore with 'main' KVStore")
 	}
 
-	// If we've committed before, we expect main://<mainHeaderKey>.
+	// if we've committed before, we expect main://<mainHeaderKey>
 	if !lastCommitID.IsZero() {
 		headerBytes := main.Get(mainHeaderKey)
 		if len(headerBytes) == 0 {
 			errStr := fmt.Sprintf("Version > 0 but missing key %s", mainHeaderKey)
 			return errors.New(errStr)
 		}
-		err := proto.Unmarshal(headerBytes, header)
+		err := proto.Unmarshal(headerBytes, &header)
 		if err != nil {
 			return errors.Wrap(err, "Failed to parse Header")
 		}
@@ -173,16 +143,27 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 		}
 	}
 
-	// Set BaseApp state.
+	// set BaseApp state
 	app.header = header
-	app.msCheck = nil
+	app.msCheck = app.cms.CacheMultiStore()
 	app.msDeliver = nil
 	app.valUpdates = nil
 
 	return nil
 }
 
+// NewContext returns a new Context suitable for AnteHandler and Handler processing.
+// NOTE: header is empty for checkTx
+// NOTE: txBytes may be nil, for instance in tests (using app.Check or app.Deliver directly).
+func (app *BaseApp) NewContext(isCheckTx bool, txBytes []byte) sdk.Context {
+	store := app.getMultiStore(isCheckTx)
+	// XXX CheckTx can't safely get the header
+	header := abci.Header{}
+	return sdk.NewContext(store, header, isCheckTx, txBytes)
+}
+
 //----------------------------------------
+// ABCI
 
 // Implements ABCI
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
@@ -203,9 +184,27 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 }
 
 // Implements ABCI
+// InitChain runs the initialization logic directly on the CommitMultiStore and commits it.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
-	// TODO: Use req.Validators
-	// TODO: Use req.AppStateJSON (?)
+	if app.initChainer == nil {
+		// TODO: should we have some default handling of validators?
+		return
+	}
+
+	// make a context for the initialization.
+	// NOTE: we're writing to the cms directly, without a CacheWrap
+	ctx := sdk.NewContext(app.cms, abci.Header{}, false, nil)
+
+	err := app.initChainer(ctx, req)
+	if err != nil {
+		// TODO: something better https://github.com/cosmos/cosmos-sdk/issues/468
+		cmn.Exit(fmt.Sprintf("error initializing application genesis state: %v", err))
+	}
+
+	// XXX this commits everything and bumps the version.
+	// https://github.com/cosmos/cosmos-sdk/issues/442#issuecomment-366470148
+	app.cms.Commit()
+
 	return
 }
 
@@ -223,9 +222,8 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 // Implements ABCI
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	// NOTE: For consistency we should unset these upon EndBlock.
-	app.header = &req.Header
+	app.header = req.Header
 	app.msDeliver = app.cms.CacheMultiStore()
-	app.msCheck = app.cms.CacheMultiStore()
 	app.valUpdates = nil
 	return
 }
@@ -253,7 +251,6 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 		},
 		Tags: result.Tags,
 	}
-
 }
 
 // Implements ABCI
@@ -288,9 +285,16 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	}
 }
 
-// txBytes may be nil in some cases, for example, when tx is
-// coming from TestApp.  Also, in the future we may support
-// "internal" transactions.
+// Mostly for testing
+func (app *BaseApp) Check(tx sdk.Tx) (result sdk.Result) {
+	return app.runTx(true, nil, tx)
+}
+func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
+	return app.runTx(false, nil, tx)
+}
+
+// txBytes may be nil in some cases, eg. in tests.
+// Also, in the future we may support "internal" transactions.
 func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
 
 	// Handle any panics.
@@ -319,7 +323,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	// TODO: override default ante handler w/ custom ante handler.
 
 	// Run the ante handler.
-	newCtx, result, abort := app.defaultAnteHandler(ctx, tx)
+	newCtx, result, abort := app.anteHandler(ctx, tx)
 	if isCheckTx || abort {
 		return result
 	}
@@ -328,7 +332,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	// CacheWrap app.msDeliver in case it fails.
-	msCache := app.getMultiStore(isCheckTx).CacheMultiStore()
+	msCache := app.getMultiStore(false).CacheMultiStore()
 	ctx = ctx.WithMultiStore(msCache)
 
 	// Match and run route.
@@ -348,9 +352,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	res.ValidatorUpdates = app.valUpdates
 	app.valUpdates = nil
-	app.header = nil
 	app.msDeliver = nil
-	app.msCheck = nil
 	return
 }
 
@@ -367,28 +369,11 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 }
 
 //----------------------------------------
-// Misc.
+// Helpers
 
 func (app *BaseApp) getMultiStore(isCheckTx bool) sdk.MultiStore {
 	if isCheckTx {
 		return app.msCheck
 	}
 	return app.msDeliver
-}
-
-// Return index of list with validator of same PubKey, or -1 if no match
-func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {
-	for i, v := range list {
-		if bytes.Equal(val.PubKey, v.PubKey) {
-			return i
-		}
-	}
-	return -1
-}
-
-// Make a simple default logger
-// TODO: Make log capturable for each transaction, and return it in
-// ResponseDeliverTx.Log and ResponseCheckTx.Log.
-func makeDefaultLogger() log.Logger {
-	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 }

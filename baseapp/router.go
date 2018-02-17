@@ -6,12 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Router - TODO add description
+// Router provides handlers for each transaction type.
 type Router interface {
 	AddRoute(r string, h sdk.Handler)
 	Route(path string) (h sdk.Handler)
 }
 
+// map a transaction type to a handler
 type route struct {
 	r string
 	h sdk.Handler

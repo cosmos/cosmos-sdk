@@ -16,6 +16,35 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func TestMountStores(t *testing.T) {
+	app := NewBaseApp(t.Name())
+
+	// make some cap keys
+	capKey1 := sdk.NewKVStoreKey("key1")
+	capKey2 := sdk.NewKVStoreKey("key2")
+
+	// no stores are mounted
+	assert.Panics(t, func() { app.LoadLatestVersion(capKey1) })
+
+	app.MountStoresIAVL(capKey1, capKey2)
+
+	// both stores are mounted
+	err := app.LoadLatestVersion(capKey1)
+	assert.Nil(t, err)
+	err = app.LoadLatestVersion(capKey2)
+	assert.Nil(t, err)
+}
+
+func TestLoadVersion(t *testing.T) {
+	// TODO
+}
+
+func TestInitStater(t *testing.T) {
+	// TODO
+}
+
+//----------------------
+
 // A mock transaction to update a validator's voting power.
 type testUpdatePowerTx struct {
 	Addr     []byte
@@ -33,7 +62,7 @@ func (tx testUpdatePowerTx) GetSigners() []crypto.Address            { return ni
 func (tx testUpdatePowerTx) GetFeePayer() crypto.Address             { return nil }
 func (tx testUpdatePowerTx) GetSignatures() []sdk.StdSignature       { return nil }
 
-func TestBasic(t *testing.T) {
+func TestExecution(t *testing.T) {
 
 	// Create app.
 	app := NewBaseApp(t.Name())

@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
@@ -11,9 +12,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/sketchy"
 
+	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 	cmn "github.com/tendermint/tmlibs/common"
+	dbm "github.com/tendermint/tmlibs/db"
+	"github.com/tendermint/tmlibs/log"
+)
+
+const (
+	appName = "BasecoinApp"
 )
 
 // Extended ABCI application
@@ -29,11 +37,18 @@ type BasecoinApp struct {
 	accountMapper sdk.AccountMapper
 }
 
-func NewBasecoinApp(genesisPath string) *BasecoinApp {
+func NewBasecoinApp() *BasecoinApp {
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
+	db, err := dbm.NewGoLevelDB(appName, "data")
+	if err != nil {
+		// TODO: better
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	// create your application object
 	var app = &BasecoinApp{
-		BaseApp:         bam.NewBaseApp("BasecoinApp"),
+		BaseApp:         bam.NewBaseApp(appName, logger, db),
 		cdc:             MakeTxCodec(),
 		capKeyMainStore: sdk.NewKVStoreKey("main"),
 		capKeyIBCStore:  sdk.NewKVStoreKey("ibc"),
@@ -51,10 +66,10 @@ func NewBasecoinApp(genesisPath string) *BasecoinApp {
 
 	// initialize BaseApp
 	app.SetTxDecoder()
-	app.SetInitStater(genesisPath)
+	app.SetInitChainer()
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
-	err := app.LoadLatestVersion(app.capKeyMainStore)
+	err = app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())
 	}
@@ -85,26 +100,12 @@ func (app *BasecoinApp) SetTxDecoder() {
 }
 
 // custom logic for basecoin initialization
-func (app *BasecoinApp) SetInitStater(genesisPath string) {
-
-	// TODO remove, use state ABCI
-	genesisAppState, err := bam.LoadGenesisAppState(genesisPath)
-	if err != nil {
-		panic(fmt.Errorf("error loading genesis state: %v", err))
-	}
-
-	app.BaseApp.SetInitStater(func(ctx sdk.Context, state json.RawMessage) sdk.Error {
-
-		// TODO use state ABCI
-		if state == nil {
-			state = genesisAppState
-		}
-		if state == nil {
-			return nil
-		}
+func (app *BasecoinApp) SetInitChainer() {
+	app.BaseApp.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) sdk.Error {
+		stateJSON := req.AppStateBytes
 
 		genesisState := new(types.GenesisState)
-		err := json.Unmarshal(state, genesisState)
+		err := json.Unmarshal(stateJSON, genesisState)
 		if err != nil {
 			return sdk.ErrGenesisParse("").TraceCause(err, "")
 		}

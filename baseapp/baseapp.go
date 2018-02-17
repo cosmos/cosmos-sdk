@@ -1,9 +1,7 @@
 package baseapp
 
 import (
-	"bytes"
 	"fmt"
-	"os"
 	"runtime/debug"
 
 	"github.com/golang/protobuf/proto"
@@ -27,7 +25,7 @@ type BaseApp struct {
 	db          dbm.DB               // common DB backend
 	cms         sdk.CommitMultiStore // Main (uncached) state
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
-	InitStater  sdk.InitStater       // TODO unexpose
+	initChainer sdk.InitChainer      //
 	anteHandler sdk.AnteHandler      // ante handler for fee and auth
 	router      Router               // handle any kind of message
 
@@ -43,34 +41,14 @@ type BaseApp struct {
 var _ abci.Application = &BaseApp{}
 
 // Create and name new BaseApp
-func NewBaseApp(name string) *BaseApp {
-	var baseapp = &BaseApp{
-		logger: makeDefaultLogger(),
+func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
+	return &BaseApp{
+		logger: logger,
 		name:   name,
-		db:     nil,
-		cms:    nil,
+		db:     db,
+		cms:    store.NewCommitMultiStore(db),
 		router: NewRouter(),
 	}
-	baseapp.initDB()
-	baseapp.initMultiStore()
-
-	return baseapp
-}
-
-// Create the underlying leveldb datastore which will
-// persist the Merkle tree inner & leaf nodes.
-func (app *BaseApp) initDB() {
-	db, err := dbm.NewGoLevelDB(app.name, "data")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	app.db = db
-}
-
-func (app *BaseApp) initMultiStore() {
-	cms := store.NewCommitMultiStore(app.db)
-	app.cms = cms
 }
 
 // BaseApp Name
@@ -94,8 +72,8 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
-func (app *BaseApp) SetInitStater(initStater sdk.InitStater) {
-	app.InitStater = initStater
+func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
+	app.initChainer = initChainer
 }
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	// deducts fee from payer, verifies signatures and nonces, sets Signers to ctx.
@@ -170,6 +148,22 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 	return nil
 }
 
+// NewContext returns a new Context suitable for AnteHandler (and indirectly Handler) processing.
+// NOTE: txBytes may be nil to support TestApp.RunCheckTx
+// and TestApp.RunDeliverTx.
+func (app *BaseApp) NewContext(isCheckTx bool, txBytes []byte) sdk.Context {
+
+	store := app.getMultiStore(isCheckTx)
+	if store == nil {
+		panic("BaseApp.NewContext() requires BeginBlock(): missing store")
+	}
+	if app.header == nil {
+		panic("BaseApp.NewContext() requires BeginBlock(): missing header")
+	}
+
+	return sdk.NewContext(store, *app.header, isCheckTx, txBytes)
+}
+
 //----------------------------------------
 // ABCI
 
@@ -193,18 +187,18 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 
 // Implements ABCI
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
-	// TODO: Use req.Validators
-	// TODO: Use req.AppState in InitStater
-
-	if app.InitStater == nil {
+	if app.initChainer == nil {
+		// TODO: should we have some default handling of validators?
 		return
 	}
 
-	app.msDeliver = app.cms.CacheMultiStore()
-	ctx := app.GenesisContext(nil)
+	// get the store and make a context for the initialization
+	store := app.cms.CacheMultiStore()
+	ctx := sdk.NewContext(store, abci.Header{}, false, nil)
 
-	err := app.InitStater(ctx, nil)
+	err := app.initChainer(ctx, req)
 	if err != nil {
+		// TODO: something better https://github.com/cosmos/cosmos-sdk/issues/468
 		cmn.Exit(fmt.Sprintf("error initializing application genesis state: %v", err))
 	}
 	return
@@ -375,21 +369,4 @@ func (app *BaseApp) getMultiStore(isCheckTx bool) sdk.MultiStore {
 		return app.msCheck
 	}
 	return app.msDeliver
-}
-
-// Return index of list with validator of same PubKey, or -1 if no match
-func pubKeyIndex(val *abci.Validator, list []*abci.Validator) int {
-	for i, v := range list {
-		if bytes.Equal(val.PubKey, v.PubKey) {
-			return i
-		}
-	}
-	return -1
-}
-
-// Make a simple default logger
-// TODO: Make log capturable for each transaction, and return it in
-// ResponseDeliverTx.Log and ResponseCheckTx.Log.
-func makeDefaultLogger() log.Logger {
-	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 }

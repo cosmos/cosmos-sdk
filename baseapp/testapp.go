@@ -51,7 +51,7 @@ func (tapp *TestApp) RunBeginBlock() {
 	return
 }
 
-// kill resources used by basecapp
+// kill resources used by baseapp
 func (tapp *TestApp) Close() {
 	tapp.db.Close()
 }

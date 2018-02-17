@@ -46,7 +46,8 @@ func NewBasecoinApp(genesisPath string) *BasecoinApp {
 	)
 
 	// add handlers
-	app.Router().AddRoute("bank", bank.NewHandler(bank.NewCoinKeeper(app.accountMapper)))
+	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
+	app.Router().AddRoute("bank", bank.NewHandler(coinKeeper))
 	app.Router().AddRoute("sketchy", sketchy.NewHandler())
 
 	// initialize BaseApp

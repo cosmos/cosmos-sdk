@@ -31,10 +31,14 @@ type BaseApp struct {
 
 	//--------------------
 	// Volatile
+	// .msCheck and .header are set on initialization.
+	// .msDeliver is only set (and reset) in BeginBlock.
+	// .header and .valUpdates are also reset in BeginBlock.
+	// .msCheck is only reset in Commit.
 
+	header     abci.Header         // current block header
 	msCheck    sdk.CacheMultiStore // CheckTx state, a cache-wrap of `.cms`
 	msDeliver  sdk.CacheMultiStore // DeliverTx state, a cache-wrap of `.cms`
-	header     *abci.Header        // current block header
 	valUpdates []abci.Validator    // cached validator changes from DeliverTx
 }
 
@@ -114,7 +118,7 @@ func (app *BaseApp) LastBlockHeight() int64 {
 func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 	var lastCommitID = app.cms.LastCommitID()
 	var main = app.cms.GetKVStore(mainKey)
-	var header *abci.Header
+	var header abci.Header
 
 	// main store should exist.
 	if main == nil {
@@ -128,7 +132,7 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 			errStr := fmt.Sprintf("Version > 0 but missing key %s", mainHeaderKey)
 			return errors.New(errStr)
 		}
-		err := proto.Unmarshal(headerBytes, header)
+		err := proto.Unmarshal(headerBytes, &header)
 		if err != nil {
 			return errors.Wrap(err, "Failed to parse Header")
 		}
@@ -141,27 +145,21 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 
 	// set BaseApp state
 	app.header = header
-	app.msCheck = nil
+	app.msCheck = app.cms.CacheMultiStore()
 	app.msDeliver = nil
 	app.valUpdates = nil
 
 	return nil
 }
 
-// NewContext returns a new Context suitable for AnteHandler (and indirectly Handler) processing.
-// NOTE: txBytes may be nil to support TestApp.RunCheckTx
-// and TestApp.RunDeliverTx.
+// NewContext returns a new Context suitable for AnteHandler and Handler processing.
+// NOTE: header is empty for checkTx
+// NOTE: txBytes may be nil, for instance in tests (using app.Check or app.Deliver directly).
 func (app *BaseApp) NewContext(isCheckTx bool, txBytes []byte) sdk.Context {
-
 	store := app.getMultiStore(isCheckTx)
-	if store == nil {
-		panic("BaseApp.NewContext() requires BeginBlock(): missing store")
-	}
-	if app.header == nil {
-		panic("BaseApp.NewContext() requires BeginBlock(): missing header")
-	}
-
-	return sdk.NewContext(store, *app.header, isCheckTx, txBytes)
+	// XXX CheckTx can't safely get the header
+	header := abci.Header{}
+	return sdk.NewContext(store, header, isCheckTx, txBytes)
 }
 
 //----------------------------------------
@@ -204,8 +202,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	}
 
 	// XXX this commits everything and bumps the version.
-	// With this, block 1 executes against state with version 1, but results in state with version 2.
-	// Is that what we want ?
+	// https://github.com/cosmos/cosmos-sdk/issues/442#issuecomment-366470148
 	app.cms.Commit()
 
 	return
@@ -225,9 +222,8 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 // Implements ABCI
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	// NOTE: For consistency we should unset these upon EndBlock.
-	app.header = &req.Header
+	app.header = req.Header
 	app.msDeliver = app.cms.CacheMultiStore()
-	app.msCheck = app.cms.CacheMultiStore()
 	app.valUpdates = nil
 	return
 }
@@ -255,7 +251,6 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 		},
 		Tags: result.Tags,
 	}
-
 }
 
 // Implements ABCI
@@ -290,9 +285,16 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	}
 }
 
-// txBytes may be nil in some cases, for example, when tx is
-// coming from TestApp.  Also, in the future we may support
-// "internal" transactions.
+// Mostly for testing
+func (app *BaseApp) Check(tx sdk.Tx) (result sdk.Result) {
+	return app.runTx(true, nil, tx)
+}
+func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
+	return app.runTx(false, nil, tx)
+}
+
+// txBytes may be nil in some cases, eg. in tests.
+// Also, in the future we may support "internal" transactions.
 func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
 
 	// Handle any panics.
@@ -330,7 +332,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	// CacheWrap app.msDeliver in case it fails.
-	msCache := app.getMultiStore(isCheckTx).CacheMultiStore()
+	msCache := app.getMultiStore(false).CacheMultiStore()
 	ctx = ctx.WithMultiStore(msCache)
 
 	// Match and run route.
@@ -350,9 +352,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	res.ValidatorUpdates = app.valUpdates
 	app.valUpdates = nil
-	app.header = nil
 	app.msDeliver = nil
-	app.msCheck = nil
 	return
 }
 

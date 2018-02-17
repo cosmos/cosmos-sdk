@@ -2,8 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
-	"os"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
@@ -37,15 +35,7 @@ type BasecoinApp struct {
 	accountMapper sdk.AccountMapper
 }
 
-func NewBasecoinApp() *BasecoinApp {
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-	db, err := dbm.NewGoLevelDB(appName, "data")
-	if err != nil {
-		// TODO: better
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
+func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	// create your application object
 	var app = &BasecoinApp{
 		BaseApp:         bam.NewBaseApp(appName, logger, db),
@@ -61,7 +51,8 @@ func NewBasecoinApp() *BasecoinApp {
 	)
 
 	// add handlers
-	app.Router().AddRoute("bank", bank.NewHandler(bank.NewCoinKeeper(app.accountMapper)))
+	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
+	app.Router().AddRoute("bank", bank.NewHandler(coinKeeper))
 	app.Router().AddRoute("sketchy", sketchy.NewHandler())
 
 	// initialize BaseApp
@@ -69,7 +60,7 @@ func NewBasecoinApp() *BasecoinApp {
 	app.SetInitChainer()
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
-	err = app.LoadLatestVersion(app.capKeyMainStore)
+	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())
 	}

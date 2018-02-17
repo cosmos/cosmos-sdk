@@ -49,15 +49,23 @@ type Tx interface {
 
 var _ Tx = (*StdTx)(nil)
 
-// standard transaction form
+// StdTx is a standard way to wrap a Msg with Signatures.
+// NOTE: the first signature is the FeePayer (Signatures must not be nil).
 type StdTx struct {
 	Msg
 	Signatures []StdSignature
 }
 
+func NewStdTx(msg Msg, sigs []StdSignature) StdTx {
+	return StdTx{
+		Msg:        msg,
+		Signatures: sigs,
+	}
+}
+
 //nolint
 func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
-func (tx StdTx) GetFeePayer() crypto.Address   { return tx.Signatures[0].PubKey.Address() }
+func (tx StdTx) GetFeePayer() crypto.Address   { return tx.Signatures[0].PubKey.Address() } // XXX but PubKey is optional!
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 
 //-------------------------------------

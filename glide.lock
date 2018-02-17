@@ -1,5 +1,5 @@
-hash: 2b4ad3bf1489a7cb5e62c6cb4c1fa976d4ae21993743e4968418c4e81925fb99
-updated: 2018-02-13T08:33:22.402132782-05:00
+hash: 4d523b19f5b2f54caca37e196582c85d459fdfa5d5383d7e97ee81639b46129d
+updated: 2018-02-16T19:52:42.711474619-05:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 50de9da05b50eb15658bb350f6ea24368a111ab7
@@ -82,7 +82,7 @@ imports:
 - name: github.com/spf13/viper
   version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: github.com/syndtr/goleveldb
-  version: 211f780988068502fe874c44dae530528ebd840f
+  version: 34011bf325bce385408353a30b101fe5e923eb6e
   subpackages:
   - leveldb
   - leveldb/cache
@@ -97,7 +97,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: bf70f5e273bd7dd6e22e64186cd1ccc4e3a03df1
+  version: a6be687088a7158e9e431931c3769d6706f90c4c
   subpackages:
   - server
   - types
@@ -113,7 +113,7 @@ imports:
 - name: github.com/tendermint/iavl
   version: 1a59ec0c82dc940c25339dd7c834df5cb76a95cb
 - name: github.com/tendermint/tmlibs
-  version: c858b3ba78316fdd9096a11409a7e7a493e7d974
+  version: a0f652dc2e131be86fc8d9e4e2beec9831a8a6ec
   subpackages:
   - cli
   - common

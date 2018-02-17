@@ -8,7 +8,7 @@ import:
   version: ^0.8.0
 - package: github.com/rigelrozanski/common
 - package: github.com/tendermint/abci
-  version: develop
+  version: feature/init-chain-app-state
   subpackages:
   - server
   - types

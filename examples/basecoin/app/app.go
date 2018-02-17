@@ -57,8 +57,8 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	app.Router().AddRoute("sketchy", sketchy.NewHandler())
 
 	// initialize BaseApp
-	app.SetTxDecoder()
-	app.SetInitChainer()
+	app.SetTxDecoder(app.txDecoder)
+	app.SetInitChainer(app.initChainer)
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
@@ -78,37 +78,35 @@ func MakeTxCodec() *wire.Codec {
 }
 
 // custom logic for transaction decoding
-func (app *BasecoinApp) SetTxDecoder() {
-	app.BaseApp.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
-		var tx = sdk.StdTx{}
-		// StdTx.Msg is an interface whose concrete
-		// types are registered in app/msgs.go.
-		err := app.cdc.UnmarshalBinary(txBytes, &tx)
-		if err != nil {
-			return nil, sdk.ErrTxParse("").TraceCause(err, "")
-		}
-		return tx, nil
-	})
+func (app *BasecoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
+	var tx = sdk.StdTx{}
+	// StdTx.Msg is an interface whose concrete
+	// types are registered in app/msgs.go.
+	err := app.cdc.UnmarshalBinary(txBytes, &tx)
+	if err != nil {
+		return nil, sdk.ErrTxParse("").TraceCause(err, "")
+	}
+	return tx, nil
 }
 
 // custom logic for basecoin initialization
-func (app *BasecoinApp) SetInitChainer() {
-	app.BaseApp.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) sdk.Error {
-		stateJSON := req.AppStateBytes
+func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	stateJSON := req.AppStateBytes
 
-		genesisState := new(types.GenesisState)
-		err := json.Unmarshal(stateJSON, genesisState)
+	genesisState := new(types.GenesisState)
+	err := json.Unmarshal(stateJSON, genesisState)
+	if err != nil {
+		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
+		// return sdk.ErrGenesisParse("").TraceCause(err, "")
+	}
+
+	for _, gacc := range genesisState.Accounts {
+		acc, err := gacc.ToAppAccount()
 		if err != nil {
-			return sdk.ErrGenesisParse("").TraceCause(err, "")
+			panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
+			//	return sdk.ErrGenesisParse("").TraceCause(err, "")
 		}
-
-		for _, gacc := range genesisState.Accounts {
-			acc, err := gacc.ToAppAccount()
-			if err != nil {
-				return sdk.ErrGenesisParse("").TraceCause(err, "")
-			}
-			app.accountMapper.SetAccount(ctx, acc)
-		}
-		return nil
-	})
+		app.accountMapper.SetAccount(ctx, acc)
+	}
+	return abci.ResponseInitChain{}
 }

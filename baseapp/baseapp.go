@@ -20,25 +20,31 @@ var mainHeaderKey = []byte("header")
 
 // The ABCI application
 type BaseApp struct {
-	logger      log.Logger
-	name        string               // application name from abci.Info
-	db          dbm.DB               // common DB backend
-	cms         sdk.CommitMultiStore // Main (uncached) state
-	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
-	initChainer sdk.InitChainer      //
-	anteHandler sdk.AnteHandler      // ante handler for fee and auth
-	router      Router               // handle any kind of message
+	// initialized on creation
+	logger log.Logger
+	name   string               // application name from abci.Info
+	db     dbm.DB               // common DB backend
+	cms    sdk.CommitMultiStore // Main (uncached) state
+	router Router               // handle any kind of message
+
+	// may be nil
+	txDecoder    sdk.TxDecoder    // unmarshal []byte into sdk.Tx
+	initChainer  sdk.InitChainer  // initialize state with validators and state blob
+	beginBlocker sdk.BeginBlocker // logic to run before any txs
+	endBlocker   sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
+	anteHandler  sdk.AnteHandler  // ante handler for fee and auth
 
 	//--------------------
 	// Volatile
-	// .msCheck and .header are set on initialization.
-	// .msDeliver is only set (and reset) in BeginBlock.
-	// .header and .valUpdates are also reset in BeginBlock.
-	// .msCheck is only reset in Commit.
+	// .msCheck and .ctxCheck are set on initialization and reset on Commit.
+	// .msDeliver and .ctxDeliver are (re-)set on BeginBlock.
+	// .valUpdates accumulate in DeliverTx and reset in BeginBlock.
+	// QUESTION: should we put valUpdates in the ctxDeliver?
 
-	header     abci.Header         // current block header
 	msCheck    sdk.CacheMultiStore // CheckTx state, a cache-wrap of `.cms`
 	msDeliver  sdk.CacheMultiStore // DeliverTx state, a cache-wrap of `.cms`
+	ctxCheck   sdk.Context         // CheckTx context
+	ctxDeliver sdk.Context         // DeliverTx context
 	valUpdates []abci.Validator    // cached validator changes from DeliverTx
 }
 
@@ -143,23 +149,19 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 		}
 	}
 
-	// set BaseApp state
-	app.header = header
+	// initialize Check state
 	app.msCheck = app.cms.CacheMultiStore()
-	app.msDeliver = nil
-	app.valUpdates = nil
+	app.ctxCheck = app.NewContext(true, abci.Header{})
 
 	return nil
 }
 
-// NewContext returns a new Context suitable for AnteHandler and Handler processing.
-// NOTE: header is empty for checkTx
-// NOTE: txBytes may be nil, for instance in tests (using app.Check or app.Deliver directly).
-func (app *BaseApp) NewContext(isCheckTx bool, txBytes []byte) sdk.Context {
-	store := app.getMultiStore(isCheckTx)
-	// XXX CheckTx can't safely get the header
-	header := abci.Header{}
-	return sdk.NewContext(store, header, isCheckTx, txBytes)
+// NewContext returns a new Context with the correct store, the given header, and nil txBytes.
+func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
+	if isCheckTx {
+		return sdk.NewContext(app.msCheck, header, true, nil)
+	}
+	return sdk.NewContext(app.msDeliver, header, false, nil)
 }
 
 //----------------------------------------
@@ -195,11 +197,8 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// NOTE: we're writing to the cms directly, without a CacheWrap
 	ctx := sdk.NewContext(app.cms, abci.Header{}, false, nil)
 
-	err := app.initChainer(ctx, req)
-	if err != nil {
-		// TODO: something better https://github.com/cosmos/cosmos-sdk/issues/468
-		cmn.Exit(fmt.Sprintf("error initializing application genesis state: %v", err))
-	}
+	res = app.initChainer(ctx, req)
+	// TODO: handle error https://github.com/cosmos/cosmos-sdk/issues/468
 
 	// XXX this commits everything and bumps the version.
 	// https://github.com/cosmos/cosmos-sdk/issues/442#issuecomment-366470148
@@ -221,10 +220,12 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 // Implements ABCI
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	// NOTE: For consistency we should unset these upon EndBlock.
-	app.header = req.Header
 	app.msDeliver = app.cms.CacheMultiStore()
+	app.ctxDeliver = app.NewContext(false, req.Header)
 	app.valUpdates = nil
+	if app.beginBlocker != nil {
+		res = app.beginBlocker(app.ctxDeliver, req)
+	}
 	return
 }
 
@@ -317,8 +318,13 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 		return err.Result()
 	}
 
-	// Construct a Context.
-	var ctx = app.NewContext(isCheckTx, txBytes)
+	// Get the context
+	var ctx sdk.Context
+	if isCheckTx {
+		ctx = app.ctxCheck.WithTxBytes(txBytes)
+	} else {
+		ctx = app.ctxDeliver.WithTxBytes(txBytes)
+	}
 
 	// TODO: override default ante handler w/ custom ante handler.
 
@@ -332,7 +338,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	// CacheWrap app.msDeliver in case it fails.
-	msCache := app.getMultiStore(false).CacheMultiStore()
+	msCache := app.msDeliver.CacheMultiStore()
 	ctx = ctx.WithMultiStore(msCache)
 
 	// Match and run route.
@@ -350,19 +356,30 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 
 // Implements ABCI
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-	res.ValidatorUpdates = app.valUpdates
-	app.valUpdates = nil
-	app.msDeliver = nil
+	if app.endBlocker != nil {
+		res = app.endBlocker(app.ctxDeliver, req)
+	} else {
+		res.ValidatorUpdates = app.valUpdates
+	}
 	return
 }
 
 // Implements ABCI
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
+	// Write the Deliver state and commit the MultiStore
 	app.msDeliver.Write()
 	commitID := app.cms.Commit()
 	app.logger.Debug("Commit synced",
 		"commit", commitID,
 	)
+
+	// Reset the Check state
+	// NOTE: safe because Tendermint holds a lock on the mempool for Commit.
+	// Use the header from this latest block.
+	header := app.ctxDeliver.BlockHeader()
+	app.msCheck = app.cms.CacheMultiStore()
+	app.ctxCheck = app.NewContext(true, header)
+
 	return abci.ResponseCommit{
 		Data: commitID.Hash,
 	}

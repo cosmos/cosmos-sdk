@@ -87,7 +87,7 @@ func TestGenesis(t *testing.T) {
 	bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
 
 	// a checkTx context
-	ctx := bapp.BaseApp.NewContext(true, nil)
+	ctx := bapp.BaseApp.NewContext(true, abci.Header{})
 
 	res1 := bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
 	assert.Equal(t, acc, res1)

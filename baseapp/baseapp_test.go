@@ -65,10 +65,10 @@ func TestInitChainer(t *testing.T) {
 	key, value := []byte("hello"), []byte("goodbye")
 
 	// initChainer sets a value in the store
-	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abci.RequestInitChain) sdk.Error {
+	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		store := ctx.KVStore(capKey)
 		store.Set(key, value)
-		return nil
+		return abci.ResponseInitChain{}
 	}
 
 	query := abci.RequestQuery{

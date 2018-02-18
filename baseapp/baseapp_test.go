@@ -51,6 +51,19 @@ func TestMountStores(t *testing.T) {
 
 func TestLoadVersion(t *testing.T) {
 	// TODO
+	// Test that we can make commits and then reload old versions.
+	// Test that LoadLatestVersion actually does.
+}
+
+func TestTxDecoder(t *testing.T) {
+	// TODO
+	// Test that txs can be unmarshalled and read and that
+	// correct error codes are returned when not
+}
+
+func TestInfo(t *testing.T) {
+	// TODO
+	// Test that Info returns the latest committed state.
 }
 
 func TestInitChainer(t *testing.T) {
@@ -65,10 +78,10 @@ func TestInitChainer(t *testing.T) {
 	key, value := []byte("hello"), []byte("goodbye")
 
 	// initChainer sets a value in the store
-	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abci.RequestInitChain) sdk.Error {
+	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		store := ctx.KVStore(capKey)
 		store.Set(key, value)
-		return nil
+		return abci.ResponseInitChain{}
 	}
 
 	query := abci.RequestQuery{
@@ -88,7 +101,114 @@ func TestInitChainer(t *testing.T) {
 	assert.Equal(t, value, res.Value)
 }
 
+// Test that successive CheckTx can see eachothers effects
+// on the store within a block, and that the CheckTx state
+// gets reset to the latest Committed state during Commit
+func TestCheckTx(t *testing.T) {
+	// TODO
+}
+
+// Test that successive DeliverTx can see eachothers effects
+// on the store, both within and across blocks.
+func TestDeliverTx(t *testing.T) {
+	app := newBaseApp(t.Name())
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+
+	counter := 0
+	txPerHeight := 2
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		store := ctx.KVStore(capKey)
+		if counter > 0 {
+			// check previous value in store
+			counterBytes := []byte{byte(counter - 1)}
+			prevBytes := store.Get(counterBytes)
+			assert.Equal(t, prevBytes, counterBytes)
+		}
+
+		// set the current counter in the store
+		counterBytes := []byte{byte(counter)}
+		store.Set(counterBytes, counterBytes)
+
+		// check we can see the current header
+		thisHeader := ctx.BlockHeader()
+		height := int64((counter / txPerHeight) + 1)
+		assert.Equal(t, height, thisHeader.Height)
+
+		counter += 1
+		return sdk.Result{}
+	})
+
+	tx := testUpdatePowerTx{} // doesn't matter
+	header := abci.Header{AppHash: []byte("apphash")}
+
+	nBlocks := 3
+	for blockN := 0; blockN < nBlocks; blockN++ {
+		// block1
+		header.Height = int64(blockN + 1)
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
+		for i := 0; i < txPerHeight; i++ {
+			app.Deliver(tx)
+		}
+		app.EndBlock(abci.RequestEndBlock{})
+		app.Commit()
+	}
+}
+
+// Test that we can only query from the latest committed state.
+func TestQuery(t *testing.T) {
+	app := newBaseApp(t.Name())
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+
+	key, value := []byte("hello"), []byte("goodbye")
+
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		store := ctx.KVStore(capKey)
+		store.Set(key, value)
+		return sdk.Result{}
+	})
+
+	query := abci.RequestQuery{
+		Path: "/main/key",
+		Data: key,
+	}
+
+	// query is empty before we do anything
+	res := app.Query(query)
+	assert.Equal(t, 0, len(res.Value))
+
+	tx := testUpdatePowerTx{} // doesn't matter
+
+	// query is still empty after a CheckTx
+	app.Check(tx)
+	res = app.Query(query)
+	assert.Equal(t, 0, len(res.Value))
+
+	// query is still empty after a DeliverTx before we commit
+	app.BeginBlock(abci.RequestBeginBlock{})
+	app.Deliver(tx)
+	res = app.Query(query)
+	assert.Equal(t, 0, len(res.Value))
+
+	// query returns correct value after Commit
+	app.Commit()
+	res = app.Query(query)
+	assert.Equal(t, value, res.Value)
+}
+
 //----------------------
+// TODO: clean this up
 
 // A mock transaction to update a validator's voting power.
 type testUpdatePowerTx struct {
@@ -107,7 +227,7 @@ func (tx testUpdatePowerTx) GetSigners() []crypto.Address            { return ni
 func (tx testUpdatePowerTx) GetFeePayer() crypto.Address             { return nil }
 func (tx testUpdatePowerTx) GetSignatures() []sdk.StdSignature       { return nil }
 
-func TestExecution(t *testing.T) {
+func TestValidatorChange(t *testing.T) {
 
 	// Create app.
 	app := newBaseApp(t.Name())

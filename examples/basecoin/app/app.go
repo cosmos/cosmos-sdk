@@ -80,8 +80,8 @@ func MakeTxCodec() *wire.Codec {
 // custom logic for transaction decoding
 func (app *BasecoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 	var tx = sdk.StdTx{}
-	// StdTx.Msg is an interface whose concrete
-	// types are registered in app/msgs.go.
+	// StdTx.Msg is an interface. The concrete types
+	// are registered by MakeTxCodec in bank.RegisterWire.
 	err := app.cdc.UnmarshalBinary(txBytes, &tx)
 	if err != nil {
 		return nil, sdk.ErrTxParse("").TraceCause(err, "")

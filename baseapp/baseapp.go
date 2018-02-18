@@ -87,6 +87,12 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
 	app.initChainer = initChainer
 }
+func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
+	app.beginBlocker = beginBlocker
+}
+func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
+	app.endBlocker = endBlocker
+}
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	// deducts fee from payer, verifies signatures and nonces, sets Signers to ctx.
 	app.anteHandler = ah
@@ -94,11 +100,6 @@ func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 
 // nolint - Get functions
 func (app *BaseApp) Router() Router { return app.router }
-
-/* TODO consider:
-func (app *BaseApp) SetBeginBlocker(...) {}
-func (app *BaseApp) SetEndBlocker(...) {}
-*/
 
 // load latest application version
 func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {

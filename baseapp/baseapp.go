@@ -384,13 +384,3 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 		Data: commitID.Hash,
 	}
 }
-
-//----------------------------------------
-// Helpers
-
-func (app *BaseApp) getMultiStore(isCheckTx bool) sdk.MultiStore {
-	if isCheckTx {
-		return app.msCheck
-	}
-	return app.msDeliver
-}

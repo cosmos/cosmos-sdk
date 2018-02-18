@@ -53,7 +53,7 @@ func (rs *rootMultiStore) MountStoreWithDB(key StoreKey, typ StoreType, db dbm.D
 		panic("MountIAVLStore() key cannot be nil")
 	}
 	if _, ok := rs.storesParams[key]; ok {
-		panic(fmt.Sprintf("rootMultiStore duplicate store key", key))
+		panic(fmt.Sprintf("rootMultiStore duplicate store key %v", key))
 	}
 	rs.storesParams[key] = storeParams{
 		db:  db,

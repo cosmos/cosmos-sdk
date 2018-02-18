@@ -27,12 +27,14 @@ type BaseApp struct {
 	cms    sdk.CommitMultiStore // Main (uncached) state
 	router Router               // handle any kind of message
 
+	// must be set
+	txDecoder   sdk.TxDecoder   // unmarshal []byte into sdk.Tx
+	anteHandler sdk.AnteHandler // ante handler for fee and auth
+
 	// may be nil
-	txDecoder    sdk.TxDecoder    // unmarshal []byte into sdk.Tx
 	initChainer  sdk.InitChainer  // initialize state with validators and state blob
 	beginBlocker sdk.BeginBlocker // logic to run before any txs
 	endBlocker   sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
-	anteHandler  sdk.AnteHandler  // ante handler for fee and auth
 
 	//--------------------
 	// Volatile

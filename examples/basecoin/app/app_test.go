@@ -29,21 +29,14 @@ func newBasecoinApp() *BasecoinApp {
 func TestSendMsg(t *testing.T) {
 	bapp := newBasecoinApp()
 
+	addr1 := crypto.Address("input")
+	addr2 := crypto.Address("output")
+	coins := sdk.Coins{{"atom", 10}}
+
 	// Construct a SendMsg
 	var msg = bank.SendMsg{
-		Inputs: []bank.Input{
-			{
-				Address:  crypto.Address([]byte("input")),
-				Coins:    sdk.Coins{{"atom", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []bank.Output{
-			{
-				Address: crypto.Address([]byte("output")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
+		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
 	}
 
 	ctx := bapp.BaseApp.NewContext(true, abci.Header{})
@@ -136,24 +129,14 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	assert.Equal(t, acc1, res1)
 
 	// Construct a SendMsg
+	amt := sdk.Coins{{"foocoin", 10}}
 	var msg = bank.SendMsg{
-		Inputs: []bank.Input{
-			{
-				Address:  crypto.Address(addr1),
-				Coins:    sdk.Coins{{"foocoin", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []bank.Output{
-			{
-				Address: crypto.Address(addr2),
-				Coins:   sdk.Coins{{"foocoin", 10}},
-			},
-		},
+		Inputs:  []bank.Input{bank.NewInput(addr1, amt)},
+		Outputs: []bank.Output{bank.NewOutput(addr2, amt)},
 	}
 
 	// Sign the tx
-	sig := priv1.Sign(msg.GetSignBytes())
+	sig := priv1.Sign(msg.GetSignBytes(ctxCheck))
 	tx := sdk.NewStdTx(msg, []sdk.StdSignature{{
 		PubKey:    priv1.PubKey(),
 		Signature: sig,

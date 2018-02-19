@@ -1,7 +1,6 @@
 package bank
 
 import (
-	"encoding/json"
 	"fmt"
 
 	crypto "github.com/tendermint/go-crypto"
@@ -65,11 +64,7 @@ func (msg SendMsg) Get(key interface{}) (value interface{}) {
 
 // Implements Msg.
 func (msg SendMsg) GetSignBytes(ctx sdk.Context) []byte {
-	b, err := json.Marshal(msg) // XXX: ensure some canonical form
-	if err != nil {
-		panic(err)
-	}
-	return b
+	return sdk.CanonicalSignBytes(ctx, msg)
 }
 
 // Implements Msg.
@@ -123,11 +118,7 @@ func (msg IssueMsg) Get(key interface{}) (value interface{}) {
 
 // Implements Msg.
 func (msg IssueMsg) GetSignBytes(ctx sdk.Context) []byte {
-	b, err := json.Marshal(msg) // XXX: ensure some canonical form
-	if err != nil {
-		panic(err)
-	}
-	return b
+	return sdk.CanonicalSignBytes(ctx, msg)
 }
 
 // Implements Msg.

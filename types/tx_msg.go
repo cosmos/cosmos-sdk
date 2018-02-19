@@ -1,6 +1,8 @@
 package types
 
 import (
+	"encoding/json"
+
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -53,6 +55,8 @@ var _ Tx = (*StdTx)(nil)
 
 // StdTx is a standard way to wrap a Msg with Signatures.
 // NOTE: the first signature is the FeePayer (Signatures must not be nil).
+// NOTE: a single Sequence is included in the StdTx, separate from the Msg
+// 	- it must be incldued in the SignBytes to actually provide replay protection
 type StdTx struct {
 	Msg
 	Signatures []StdSignature
@@ -68,9 +72,29 @@ func NewStdTx(msg Msg, sigs []StdSignature) StdTx {
 
 //nolint
 func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
-func (tx StdTx) GetFeePayer() crypto.Address   { return tx.Signatures[0].PubKey.Address() } // XXX but PubKey is optional!
+func (tx StdTx) GetFeePayer() crypto.Address   { return tx.GetSigners()[0] }
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 func (tx StdTx) GetSequence() int64            { return tx.Sequence }
+
+func CanonicalSignBytes(ctx Context, msg Msg) []byte {
+	obj := SignBytesObject{
+		ChainID:  "", // TODO
+		Sequence: 0,  // TODO
+		Msg:      msg,
+	}
+	// XXX: ensure some canonical form
+	b, err := json.Marshal(obj)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+type SignBytesObject struct {
+	ChainID  string `json:"chain_id"`
+	Sequence int    `json:"sequence"`
+	Msg      Msg    `json:"msg"`
+}
 
 //-------------------------------------
 

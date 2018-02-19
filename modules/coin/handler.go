@@ -1,7 +1,8 @@
 package coin
 
 import (
-	wire "github.com/tendermint/go-wire"
+	"fmt"
+
 	"github.com/tendermint/go-wire/data"
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
@@ -154,14 +155,16 @@ func (h Handler) sendTx(ctx sdk.Context, store state.SimpleDB,
 	// now we build the tags
 	tags := make([]cmn.KVPair, 0, 1+len(send.Inputs)+len(send.Outputs))
 
-	tags = append(tags, cmn.KVPair{[]byte("height"), wire.BinaryBytes(int64(ctx.BlockHeight()))})
+	tags = append(tags, cmn.KVPair{[]byte("height"), []byte(fmt.Sprintf("%d", int64(ctx.BlockHeight())))})
 
 	for _, in := range send.Inputs {
-		tags = append(tags, cmn.KVPair{[]byte("coin.sender"), wire.BinaryBytes(in.Address)})
+		addr := []byte(in.Address.Address)
+		tags = append(tags, cmn.KVPair{[]byte("coin.sender"), addr})
 	}
 
 	for _, out := range send.Outputs {
-		tags = append(tags, cmn.KVPair{[]byte("coin.receiver"), wire.BinaryBytes(out.Address)})
+		addr := []byte(out.Address.Address)
+		tags = append(tags, cmn.KVPair{[]byte("coin.receiver"), addr})
 	}
 
 	// a-ok!

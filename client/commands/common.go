@@ -139,6 +139,15 @@ func GetOneArg(args []string, argname string) (string, error) {
 	return args[0], nil
 }
 
+// ParseFlag takes a flag name and gets the viper contents
+func ParseFlag(flag string) ([]byte, error) {
+	arg := viper.GetString(flag)
+	if arg == "" {
+		return nil, errors.Errorf("No such flag: %s", flag)
+	}
+	return []byte(arg), nil
+}
+
 // ParseHexFlag takes a flag name and parses the viper contents as hex
 func ParseHexFlag(flag string) ([]byte, error) {
 	arg := viper.GetString(flag)

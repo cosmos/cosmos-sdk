@@ -46,8 +46,9 @@ func TestSendMsg(t *testing.T) {
 		},
 	}
 
+	ctx := bapp.BaseApp.NewContext(true, abci.Header{})
 	priv := crypto.GenPrivKeyEd25519()
-	sig := priv.Sign(msg.GetSignBytes())
+	sig := priv.Sign(msg.GetSignBytes(ctx))
 	tx := sdk.NewStdTx(msg, []sdk.StdSignature{{
 		PubKey:    priv.PubKey(),
 		Signature: sig,

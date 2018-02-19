@@ -64,7 +64,7 @@ func (msg SendMsg) Get(key interface{}) (value interface{}) {
 }
 
 // Implements Msg.
-func (msg SendMsg) GetSignBytes() []byte {
+func (msg SendMsg) GetSignBytes(ctx sdk.Context) []byte {
 	b, err := json.Marshal(msg) // XXX: ensure some canonical form
 	if err != nil {
 		panic(err)
@@ -122,7 +122,7 @@ func (msg IssueMsg) Get(key interface{}) (value interface{}) {
 }
 
 // Implements Msg.
-func (msg IssueMsg) GetSignBytes() []byte {
+func (msg IssueMsg) GetSignBytes(ctx sdk.Context) []byte {
 	b, err := json.Marshal(msg) // XXX: ensure some canonical form
 	if err != nil {
 		panic(err)

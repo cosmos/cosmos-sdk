@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -9,6 +11,7 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 		ctx sdk.Context, tx sdk.Tx,
 	) (_ sdk.Context, _ sdk.Result, abort bool) {
 
+		// Check sequence number based on the fee payer.
 		// Deduct the fee from the fee payer.
 		// This is done first because it only
 		// requires fetching 1 account.
@@ -20,10 +23,22 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 					sdk.ErrUnrecognizedAddress(payerAddr).Result(),
 					true
 			}
+
+			// Check the sequence number on the fee payer
+			// (it will get incremented when sigs are checked)
+			seq := payerAcc.GetSequence()
+			if seq != tx.GetSequence() {
+				return ctx,
+					sdk.ErrBadNonce(fmt.Sprintf("Got %d, expected %d", tx.GetSequence(), seq)).Result(),
+					true
+			}
+
 			// TODO: Charge fee from payerAcc.
 			// TODO: accountMapper.SetAccount(ctx, payerAddr)
 		} else {
-			// TODO: Ensure that some other spam prevention is used.
+			// XXX:
+			// TODO: Ensure that some other spam and replay prevention is used.
+			// XXX:
 		}
 
 		var sigs = tx.GetSignatures()
@@ -64,18 +79,12 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 				}
 			}
 
-			// Check and increment sequence number.
+			// increment sequence number
 			seq := signerAcc.GetSequence()
-			if seq != tx.GetSequence() {
-				return ctx,
-					sdk.ErrInternal("setting PubKey on signer").Result(),
-					true
-			}
-
 			signerAcc.SetSequence(seq + 1)
 
 			// Check sig.
-			if !sig.PubKey.VerifyBytes(msg.GetSignBytes(), sig.Signature) {
+			if !sig.PubKey.VerifyBytes(msg.GetSignBytes(ctx), sig.Signature) {
 				return ctx,
 					sdk.ErrUnauthorized("").Result(),
 					true

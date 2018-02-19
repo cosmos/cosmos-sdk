@@ -35,7 +35,7 @@ func (tx dummyTx) GetMsg() sdk.Msg {
 	return tx
 }
 
-func (tx dummyTx) GetSignBytes() []byte {
+func (tx dummyTx) GetSignBytes(ctx sdk.Context) []byte {
 	return tx.bytes
 }
 

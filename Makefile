@@ -58,9 +58,6 @@ godocs:
 ########################################
 ### Testing
 
-TUTORIALS=$(shell find docs/guide -name "*md" -type f)
-
-#test: test_unit test_cli test_tutorial
 test: test_unit # test_cli
 
 test_unit:

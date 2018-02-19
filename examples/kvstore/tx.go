@@ -8,13 +8,13 @@ import (
 )
 
 // An sdk.Tx which is its own sdk.Msg.
-type dummyTx struct {
+type kvstoreTx struct {
 	key   []byte
 	value []byte
 	bytes []byte
 }
 
-func (tx dummyTx) Get(key interface{}) (value interface{}) {
+func (tx kvstoreTx) Get(key interface{}) (value interface{}) {
 	switch k := key.(type) {
 	case string:
 		switch k {
@@ -27,32 +27,32 @@ func (tx dummyTx) Get(key interface{}) (value interface{}) {
 	return nil
 }
 
-func (tx dummyTx) Type() string {
-	return "dummy"
+func (tx kvstoreTx) Type() string {
+	return "kvstore"
 }
 
-func (tx dummyTx) GetMsg() sdk.Msg {
+func (tx kvstoreTx) GetMsg() sdk.Msg {
 	return tx
 }
 
-func (tx dummyTx) GetSignBytes() []byte {
+func (tx kvstoreTx) GetSignBytes() []byte {
 	return tx.bytes
 }
 
 // Should the app be calling this? Or only handlers?
-func (tx dummyTx) ValidateBasic() sdk.Error {
+func (tx kvstoreTx) ValidateBasic() sdk.Error {
 	return nil
 }
 
-func (tx dummyTx) GetSigners() []crypto.Address {
+func (tx kvstoreTx) GetSigners() []crypto.Address {
 	return nil
 }
 
-func (tx dummyTx) GetSignatures() []sdk.StdSignature {
+func (tx kvstoreTx) GetSignatures() []sdk.StdSignature {
 	return nil
 }
 
-func (tx dummyTx) GetFeePayer() crypto.Address {
+func (tx kvstoreTx) GetFeePayer() crypto.Address {
 	return nil
 }
 
@@ -64,10 +64,10 @@ func decodeTx(txBytes []byte) (sdk.Tx, sdk.Error) {
 	split := bytes.Split(txBytes, []byte("="))
 	if len(split) == 1 {
 		k := split[0]
-		tx = dummyTx{k, k, txBytes}
+		tx = kvstoreTx{k, k, txBytes}
 	} else if len(split) == 2 {
 		k, v := split[0], split[1]
-		tx = dummyTx{k, v, txBytes}
+		tx = kvstoreTx{k, v, txBytes}
 	} else {
 		return nil, sdk.ErrTxParse("too many =")
 	}

@@ -97,7 +97,7 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	pk1 := priv1.PubKey()
 	addr1 := pk1.Address()
 
-	// Second key receies
+	// Second key receives
 	pk2 := crypto.GenPrivKeyEd25519().PubKey()
 	addr2 := pk2.Address()
 
@@ -160,4 +160,19 @@ func TestSendMsgWithAccounts(t *testing.T) {
 
 	assert.Equal(t, fmt.Sprintf("%v", res2.GetCoins()), "67foocoin")
 	assert.Equal(t, fmt.Sprintf("%v", res3.GetCoins()), "10foocoin")
+
+	// Delivering again should cause replay error
+	res = bapp.Deliver(tx)
+	assert.Equal(t, sdk.CodeBadNonce, res.Code, res.Log)
+
+	// bumping the sequence number without resigning should be an auth error
+	tx.Sequence += 1
+	res = bapp.Deliver(tx)
+	assert.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
+
+	// resigning the tx with the bumped sequence should work
+	sig = priv1.Sign(tx.Msg.GetSignBytes(ctxCheck))
+	tx.Signatures[0].Signature = sig
+	res = bapp.Deliver(tx)
+	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
 }

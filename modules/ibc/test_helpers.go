@@ -26,7 +26,7 @@ func NewMockChain(chainID string, numKeys int) MockChain {
 	return MockChain{
 		keys:    lite.GenValKeys(numKeys),
 		chainID: chainID,
-		tree:    iavl.NewTree(0, nil),
+		tree:    iavl.NewTree(nil, 0),
 	}
 }
 

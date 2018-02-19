@@ -118,7 +118,7 @@ func start(rootDir string, basecoinApp *app.BaseApp) error {
 	// else, assume it's been loaded
 	if basecoinApp.GetChainID() == "" {
 		// If genesis file exists, set key-value options
-		genesisFile := path.Join(rootDir, "genesis.json")
+		genesisFile := path.Join(rootDir, "config", "genesis.json")
 		if _, err := os.Stat(genesisFile); err == nil {
 			err = genesis.Load(basecoinApp, genesisFile)
 			if err != nil {

@@ -98,7 +98,7 @@ func combineDelivers(all []sdk.DeliverResult) sdk.DeliverResult {
 	datas := make([]data.Bytes, len(all))
 	logs := make([]string, len(all))
 	var used int64
-	var diffs []*abci.Validator
+	var diffs []abci.Validator
 	for i, r := range all {
 		datas[i] = r.Data
 		logs[i] = r.Log

@@ -47,7 +47,7 @@ that you've setup or joined a testnet.
 Generating Keys
 ---------------
 
-Review the `key management tutorial <../sdk/key-management.html>`__ and create one key
+Review the `key management tutorial <./key-management.html>`__ and create one key
 if you'll be joining the public testnet, and three keys if you'll be trying out a local
 testnet.
 
@@ -116,7 +116,7 @@ First, we need the pub_key data:
 
 ::
 
-    cat $HOME/.gaia2/priv_validator.json 
+    cat $HOME/.gaia2/config/priv_validator.json 
 
 the first part will look like:
 

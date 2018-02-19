@@ -65,7 +65,7 @@ func TestStateCommitHash(t *testing.T) {
 			result := make([][]byte, len(tc.rounds))
 
 			// make the store...
-			tree := iavl.NewVersionedTree(0, db.NewMemDB())
+			tree := iavl.NewVersionedTree(db.NewMemDB(), 0)
 			store := NewState(tree, 2)
 
 			for n, r := range tc.rounds {
@@ -105,7 +105,7 @@ func TestGetDoesntWrite(t *testing.T) {
 	assert, require := assert.New(t), require.New(t)
 
 	// make the store...
-	tree := iavl.NewVersionedTree(0, db.NewMemDB())
+	tree := iavl.NewVersionedTree(db.NewMemDB(), 0)
 	store := NewState(tree, 5)
 
 	k, v := []byte("foo"), []byte("bar")

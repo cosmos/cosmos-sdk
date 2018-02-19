@@ -21,18 +21,18 @@ func randPower() int64 {
 	return int64(cmn.RandInt()%50 + 60)
 }
 
-func makeVal() *abci.Validator {
-	return &abci.Validator{
+func makeVal() abci.Validator {
+	return abci.Validator{
 		PubKey: cmn.RandBytes(10),
 		Power:  randPower(),
 	}
 }
 
 // withNewPower returns a copy of the validator with a different power
-func withNewPower(val *abci.Validator) *abci.Validator {
-	res := *val
+func withNewPower(val abci.Validator) abci.Validator {
+	res := val
 	res.Power = randPower()
-	return &res
+	return res
 }
 
 func TestEndBlock(t *testing.T) {
@@ -51,25 +51,25 @@ func TestEndBlock(t *testing.T) {
 	val2a := withNewPower(val2)
 
 	cases := [...]struct {
-		changes  [][]*abci.Validator
-		expected []*abci.Validator
+		changes  [][]abci.Validator
+		expected []abci.Validator
 	}{
 		// Nothing in, nothing out, no crash
 		0: {},
 		// One in, one out, no problem
 		1: {
-			changes:  [][]*abci.Validator{{val1}},
-			expected: []*abci.Validator{val1},
+			changes:  [][]abci.Validator{{val1}},
+			expected: []abci.Validator{val1},
 		},
 		// Combine a few ones
 		2: {
-			changes:  [][]*abci.Validator{{val1}, {val2, val3}},
-			expected: []*abci.Validator{val1, val2, val3},
+			changes:  [][]abci.Validator{{val1}, {val2, val3}},
+			expected: []abci.Validator{val1, val2, val3},
 		},
 		// Make sure changes all to one validators are squished into one diff
 		3: {
-			changes:  [][]*abci.Validator{{val1}, {val2, val1a}, {val2a, val3}},
-			expected: []*abci.Validator{val1a, val2a, val3},
+			changes:  [][]abci.Validator{{val1}, {val2, val1a}, {val2a, val3}},
+			expected: []abci.Validator{val1a, val2a, val3},
 		},
 	}
 

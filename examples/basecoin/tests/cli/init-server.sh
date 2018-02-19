@@ -9,7 +9,7 @@ test01initOption() {
     mkdir -p "$BASE"
 
     SERVE_DIR="${BASE}/server"
-    GENESIS_FILE=${SERVE_DIR}/genesis.json
+    GENESIS_FILE=${SERVE_DIR}/config/genesis.json
     HEX="deadbeef1234deadbeef1234deadbeef1234aaaa"
 
     ${SERVER_EXE} init ${HEX} --home="$SERVE_DIR" -p=eyes/key1/val1 -p='"eyes/key2/{""name"": ""joe"", ""age"": ""100""}"' >/dev/null

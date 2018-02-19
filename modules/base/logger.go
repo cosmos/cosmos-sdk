@@ -72,7 +72,7 @@ func (Logger) InitState(l log.Logger, store state.SimpleDB, module, key, value s
 }
 
 // InitValidate logs time and result - fulfills Middlware interface
-func (Logger) InitValidate(l log.Logger, store state.SimpleDB, vals []*abci.Validator, next sdk.InitValidater) {
+func (Logger) InitValidate(l log.Logger, store state.SimpleDB, vals []abci.Validator, next sdk.InitValidater) {
 	start := time.Now()
 	next.InitValidate(l, store, vals)
 	delta := time.Now().Sub(start)

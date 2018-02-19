@@ -34,7 +34,7 @@ func GetLocalProvider(dir string) lite.Provider {
 // GetCertifier initializes an inquiring certifier given a fixed chainID
 // and a local source of trusted data with at least one seed
 func GetCertifier(chainID string, trust lite.Provider,
-	source lite.Provider) (*lite.Inquiring, error) {
+	source lite.Provider) (*lite.InquiringCertifier, error) {
 
 	// this gets the most recent verified commit
 	fc, err := trust.LatestCommit()
@@ -44,6 +44,5 @@ func GetCertifier(chainID string, trust lite.Provider,
 	if err != nil {
 		return nil, err
 	}
-	cert := lite.NewInquiring(chainID, fc, trust, source)
-	return cert, nil
+	return lite.NewInquiringCertifier(chainID, fc, trust, source)
 }

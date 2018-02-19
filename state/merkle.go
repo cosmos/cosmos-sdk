@@ -54,7 +54,7 @@ func (s State) Check() SimpleDB {
 
 // LatestHeight is the last block height we have committed
 func (s State) LatestHeight() int64 {
-	return int64(s.committed.Tree.LatestVersion())
+	return int64(s.committed.Tree.Version())
 }
 
 // LatestHash is the root hash of the last state we have
@@ -74,7 +74,7 @@ func (s *State) Commit(version int64) ([]byte, error) {
 	// store a new version
 	var hash []byte
 	if !s.IsEmpty() {
-		hash, err = s.committed.Tree.SaveVersion(uint64(version))
+		hash, _, err = s.committed.Tree.SaveVersion()
 		if err != nil {
 			return nil, err
 		}
@@ -82,7 +82,7 @@ func (s *State) Commit(version int64) ([]byte, error) {
 
 	// release an old version
 	if version > s.historySize {
-		s.committed.Tree.DeleteVersion(uint64(version - s.historySize))
+		s.committed.Tree.DeleteVersion(version - s.historySize)
 	}
 
 	s.deliverTx = s.committed.Checkpoint()

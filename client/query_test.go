@@ -6,16 +6,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/go-wire"
 	"github.com/tendermint/tendermint/lite"
 	certclient "github.com/tendermint/tendermint/lite/client"
-	"github.com/tendermint/tmlibs/log"
-
 	nm "github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/rpc/client"
 	rpctest "github.com/tendermint/tendermint/rpc/test"
 	"github.com/tendermint/tendermint/types"
+	"github.com/tendermint/tmlibs/log"
 
 	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/modules/eyes"
@@ -61,7 +59,7 @@ func TestAppProofs(t *testing.T) {
 	source := certclient.NewProvider(cl)
 	seed, err := source.GetByHeight(brh - 2)
 	require.NoError(err, "%+v", err)
-	cert := lite.NewStatic("my-chain", seed.Validators)
+	cert := lite.NewStaticCertifier("my-chain", seed.Validators)
 
 	client.WaitForHeight(cl, 3, nil)
 	latest, err := source.LatestCommit()
@@ -124,7 +122,7 @@ func TestTxProofs(t *testing.T) {
 	source := certclient.NewProvider(cl)
 	seed, err := source.GetByHeight(brh - 2)
 	require.NoError(err, "%+v", err)
-	cert := lite.NewStatic("my-chain", seed.Validators)
+	cert := lite.NewStaticCertifier("my-chain", seed.Validators)
 
 	// First let's make sure a bogus transaction hash returns a valid non-existence proof.
 	key := types.Tx([]byte("bogus")).Hash()

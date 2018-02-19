@@ -130,7 +130,7 @@ validator and one account (corresponding to your key) in
 Basecoin tool </docs/guide/basecoin-tool.md>`__.
 
 If you like, you can manually add some more accounts to the blockchain
-by generating keys and editing the ``~/.basecoin/genesis.json``.
+by generating keys and editing the ``~/.basecoin/config/genesis.json``.
 
 Start Basecoin
 ~~~~~~~~~~~~~~
@@ -157,7 +157,7 @@ window. Here run:
 
 ::
 
-    basecli init --node=tcp://localhost:46657 --genesis=$HOME/.basecoin/genesis.json
+    basecli init --node=tcp://localhost:46657 --genesis=$HOME/.basecoin/config/genesis.json
 
 If you provide the genesis file to basecli, it can calculate the proper
 chainID and validator hash. Basecli needs to get this information from

@@ -50,7 +50,7 @@ type BaseApp struct {
 	valUpdates []abci.Validator    // cached validator changes from DeliverTx
 }
 
-var _ abci.Application = &BaseApp{}
+var _ abci.Application = (*BaseApp)(nil)
 
 // Create and name new BaseApp
 func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {

@@ -9,7 +9,6 @@ import (
 
 	crypto "github.com/tendermint/go-crypto"
 	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/rational"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -74,9 +73,9 @@ func candidatesFromActors(store sdk.KVStore, addrs []crypto.Address, amts []int6
 			Status:      Unbonded,
 			PubKey:      pks[i],
 			Owner:       addrs[i],
-			Assets:      rational.New(amts[i]),
-			Liabilities: rational.New(amts[i]),
-			VotingPower: rational.New(amts[i]),
+			Assets:      sdk.New(amts[i]),
+			Liabilities: sdk.New(amts[i]),
+			VotingPower: sdk.New(amts[i]),
 		}
 		saveCandidate(store, c)
 	}
@@ -88,9 +87,9 @@ func candidatesFromActorsEmpty(addrs []crypto.Address) (candidates Candidates) {
 			Status:      Unbonded,
 			PubKey:      pks[i],
 			Owner:       addrs[i],
-			Assets:      rational.Zero,
-			Liabilities: rational.Zero,
-			VotingPower: rational.Zero,
+			Assets:      sdk.Zero,
+			Liabilities: sdk.Zero,
+			VotingPower: sdk.Zero,
 		}
 		candidates = append(candidates, c)
 	}

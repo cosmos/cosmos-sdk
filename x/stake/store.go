@@ -3,7 +3,6 @@ package stake
 import (
 	crypto "github.com/tendermint/go-crypto"
 	wire "github.com/tendermint/go-wire"
-	"github.com/tendermint/tmlibs/rational"
 
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -29,8 +28,8 @@ var (
 
 func init() {
 	cdc = wire.NewCodec()
-	cdc.RegisterInterface((*rational.Rational)(nil), nil) // XXX make like crypto.RegisterWire()
-	cdc.RegisterConcrete(rational.Rat{}, "rat", nil)
+	cdc.RegisterInterface((*types.Rational)(nil), nil) // XXX make like crypto.RegisterWire()
+	cdc.RegisterConcrete(types.Rat{}, "rat", nil)
 	crypto.RegisterWire(cdc)
 }
 
@@ -40,7 +39,7 @@ func GetCandidateKey(pubKey crypto.PubKey) []byte {
 }
 
 // GetValidatorKey - get the key for the validator used in the power-store
-func GetValidatorKey(pubKey crypto.PubKey, power rational.Rational) []byte {
+func GetValidatorKey(pubKey crypto.PubKey, power types.Rational) []byte {
 	b, _ := cdc.MarshalJSON(power)                                     // TODO need to handle error here?
 	return append(ValidatorKeyPrefix, append(b, pubKey.Bytes()...)...) // TODO does this need prefix if its in its own store
 }
@@ -111,7 +110,7 @@ func removeCandidate(store types.KVStore, pubKey crypto.PubKey) {
 
 //---------------------------------------------------------------------
 
-//func loadValidator(store types.KVStore, pubKey crypto.PubKey, votingPower rational.Rational) *Validator {
+//func loadValidator(store types.KVStore, pubKey crypto.PubKey, votingPower types.Rational) *Validator {
 //b := store.Get(GetValidatorKey(pubKey, votingPower))
 //if b == nil {
 //return nil
@@ -143,7 +142,7 @@ func updateValidator(store types.KVStore, validator *Validator) {
 func removeValidator(store types.KVStore, pubKey crypto.PubKey) {
 
 	//add validator with zero power to the validator updates
-	b, err := cdc.MarshalJSON(Validator{pubKey, rational.Zero})
+	b, err := cdc.MarshalJSON(Validator{pubKey, types.Zero})
 	if err != nil {
 		panic(err)
 	}

@@ -10,13 +10,18 @@ import (
 	wire "github.com/tendermint/go-wire"
 )
 
-var cdc *wire.Codec
-
-func init() {
-	cdc = wire.NewCodec()
+// add rational codec elements to provided codec
+func RationalCodec(cdc *wire.Codec) *wire.Codec {
 	cdc.RegisterInterface((*Rational)(nil), nil)
 	cdc.RegisterConcrete(Rat{}, "rat", nil)
+	return cdc
 }
+
+//   "that's one big rat!"
+//          ______
+//         / / /\ \____oo
+//     __ /___...._____ _\o
+//  __|     |_    |_
 
 // Rat - extend big.Rat
 type Rat struct {
@@ -45,12 +50,12 @@ var _ Rational = Rat{} // enforce at compile time
 
 // nolint - common values
 var (
-	Zero = Rat{big.NewRat(0, 1)}
-	One  = Rat{big.NewRat(1, 1)}
+	ZeroRat = Rat{big.NewRat(0, 1)}
+	OneRat  = Rat{big.NewRat(1, 1)}
 )
 
 // New - create a new Rat from integers
-func New(Numerator int64, Denominator ...int64) Rat {
+func NewRational(Numerator int64, Denominator ...int64) Rat {
 	switch len(Denominator) {
 	case 0:
 		return Rat{big.NewRat(Numerator, 1)}
@@ -62,7 +67,7 @@ func New(Numerator int64, Denominator ...int64) Rat {
 }
 
 //NewFromDecimal - create a rational from decimal string or integer string
-func NewFromDecimal(decimalStr string) (f Rat, err error) {
+func NewRationlFromDecimal(decimalStr string) (f Rat, err error) {
 
 	// first extract any negative symbol
 	neg := false

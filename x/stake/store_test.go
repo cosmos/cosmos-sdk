@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/tmlibs/rational"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,12 +26,12 @@ import (
 //candidates := candidatesFromActors(actors, []int64{400, 200, 100, 10, 1})
 
 //// test a basic change in voting power
-//candidates[0].Assets = rational.New(500)
+//candidates[0].Assets = types.New(500)
 //candidates.updateVotingPower(store, gs, params)
 //assert.Equal(int64(500), candidates[0].VotingPower.Evaluate(), "%v", candidates[0])
 
 //// test a swap in voting power
-//candidates[1].Assets = rational.New(600)
+//candidates[1].Assets = types.New(600)
 //candidates.updateVotingPower(store, gs, params)
 //assert.Equal(int64(600), candidates[0].VotingPower.Evaluate(), "%v", candidates[0])
 //assert.Equal(int64(500), candidates[1].VotingPower.Evaluate(), "%v", candidates[1])
@@ -46,11 +46,11 @@ import (
 //func TestValidatorsChanged(t *testing.T) {
 //require := require.New(t)
 
-//v1 := (&Candidate{PubKey: pks[0], VotingPower: rational.New(10)}).validator()
-//v2 := (&Candidate{PubKey: pks[1], VotingPower: rational.New(10)}).validator()
-//v3 := (&Candidate{PubKey: pks[2], VotingPower: rational.New(10)}).validator()
-//v4 := (&Candidate{PubKey: pks[3], VotingPower: rational.New(10)}).validator()
-//v5 := (&Candidate{PubKey: pks[4], VotingPower: rational.New(10)}).validator()
+//v1 := (&Candidate{PubKey: pks[0], VotingPower: types.New(10)}).validator()
+//v2 := (&Candidate{PubKey: pks[1], VotingPower: types.New(10)}).validator()
+//v3 := (&Candidate{PubKey: pks[2], VotingPower: types.New(10)}).validator()
+//v4 := (&Candidate{PubKey: pks[3], VotingPower: types.New(10)}).validator()
+//v5 := (&Candidate{PubKey: pks[4], VotingPower: types.New(10)}).validator()
 
 //// test from nothing to something
 //vs1 := []Validator{}
@@ -75,14 +75,14 @@ import (
 //require.Zero(len(changed))
 
 //// test single value change
-//vs2[2].VotingPower = rational.One
+//vs2[2].VotingPower = types.One
 //changed = vs1.validatorsUpdated(vs2)
 //require.Equal(1, len(changed))
 //testChange(t, vs2[2], changed[0])
 
 //// test multiple value change
-//vs2[0].VotingPower = rational.New(11)
-//vs2[2].VotingPower = rational.New(5)
+//vs2[0].VotingPower = types.New(11)
+//vs2[2].VotingPower = types.New(5)
 //changed = vs1.validatorsUpdated(vs2)
 //require.Equal(2, len(changed))
 //testChange(t, vs2[0], changed[0])
@@ -118,7 +118,7 @@ import (
 //testRemove(t, vs1[1], changed[0])
 //testRemove(t, vs1[2], changed[1])
 
-//// test many types of changes //vs2 = []Validator{v1, v3, v4, v5} //vs2[2].VotingPower = rational.New(11) //changed = vs1.validatorsUpdated(vs2) //require.Equal(4, len(changed), "%v", changed) // change 1, remove 1, add 2 //testRemove(t, vs1[1], changed[0]) //testChange(t, vs2[1], changed[1]) //testChange(t, vs2[2], changed[2]) //testChange(t, vs2[3], changed[3]) //} //func TestUpdateValidatorSet(t *testing.T) { //assert, require := assert.New(t), require.New(t) //store := initTestStore(t) //params := loadParams(store) //gs := loadGlobalState(store) //N := 5
+//// test many types of changes //vs2 = []Validator{v1, v3, v4, v5} //vs2[2].VotingPower = types.New(11) //changed = vs1.validatorsUpdated(vs2) //require.Equal(4, len(changed), "%v", changed) // change 1, remove 1, add 2 //testRemove(t, vs1[1], changed[0]) //testChange(t, vs2[1], changed[1]) //testChange(t, vs2[2], changed[2]) //testChange(t, vs2[3], changed[3]) //} //func TestUpdateValidatorSet(t *testing.T) { //assert, require := assert.New(t), require.New(t) //store := initTestStore(t) //params := loadParams(store) //gs := loadGlobalState(store) //N := 5
 //actors := newAddrs(N)
 //candidates := candidatesFromActors(actors, []int64{400, 200, 100, 10, 1})
 //for _, c := range candidates {
@@ -141,11 +141,11 @@ import (
 //assert.Equal(int64(0), candidates[4].VotingPower.Evaluate())
 
 //// mess with the power's of the candidates and test
-//candidates[0].Assets = rational.New(10)
-//candidates[1].Assets = rational.New(600)
-//candidates[2].Assets = rational.New(1000)
-//candidates[3].Assets = rational.One
-//candidates[4].Assets = rational.New(10)
+//candidates[0].Assets = types.New(10)
+//candidates[1].Assets = types.New(600)
+//candidates[2].Assets = types.New(1000)
+//candidates[3].Assets = types.One
+//candidates[4].Assets = types.New(10)
 //for _, c := range candidates {
 //saveCandidate(store, c)
 //}
@@ -179,9 +179,9 @@ func TestState(t *testing.T) {
 	candidate := &Candidate{
 		Owner:       validator,
 		PubKey:      pk,
-		Assets:      rational.New(9),
-		Liabilities: rational.New(9),
-		VotingPower: rational.Zero,
+		Assets:      types.New(9),
+		Liabilities: types.New(9),
+		VotingPower: types.Zero,
 	}
 
 	candidatesEqual := func(c1, c2 *Candidate) bool {
@@ -207,7 +207,7 @@ func TestState(t *testing.T) {
 	assert.True(candidatesEqual(candidate, resCand), "%#v \n %#v", resCand, candidate)
 
 	// modify a records, save, and retrieve
-	candidate.Liabilities = rational.New(99)
+	candidate.Liabilities = types.New(99)
 	saveCandidate(store, candidate)
 	resCand = loadCandidate(store, pk)
 	assert.True(candidatesEqual(candidate, resCand))
@@ -222,7 +222,7 @@ func TestState(t *testing.T) {
 
 	bond := &DelegatorBond{
 		PubKey: pk,
-		Shares: rational.New(9),
+		Shares: types.New(9),
 	}
 
 	bondsEqual := func(b1, b2 *DelegatorBond) bool {
@@ -240,7 +240,7 @@ func TestState(t *testing.T) {
 	assert.True(bondsEqual(bond, resBond))
 
 	//modify a records, save, and retrieve
-	bond.Shares = rational.New(99)
+	bond.Shares = types.New(99)
 	saveDelegatorBond(store, delegator, bond)
 	resBond = loadDelegatorBond(store, delegator, pk)
 	assert.True(bondsEqual(bond, resBond))

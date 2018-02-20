@@ -1,6 +1,7 @@
 package bank
 
 import (
+	//"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,6 +10,27 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+func TestSendMsgType(t *testing.T) {
+	// Construct a SendMsg
+	var msg = SendMsg{
+		Inputs: []Input{
+			{
+				Address:  crypto.Address([]byte("input")),
+				Coins:    sdk.Coins{{"atom", 10}},
+				Sequence: 1,
+			},
+		},
+		Outputs: []Output{
+			{
+				Address: crypto.Address([]byte("output")),
+				Coins:   sdk.Coins{{"atom", 10}},
+			},
+		},
+	}
+
+	assert.Equal(t, msg.Type(), "bank")
+}
 
 func TestInputValidation(t *testing.T) {
 	addr1 := crypto.Address([]byte{1, 2})
@@ -163,6 +185,60 @@ func TestSendMsgValidation(t *testing.T) {
 			assert.NotNil(t, err, "%d", i)
 		}
 	}
+}
+
+func TestSendMsgString(t *testing.T) {
+	// Construct a SendMsg
+	var msg = SendMsg{
+		Inputs: []Input{
+			{
+				Address:  crypto.Address([]byte("input")),
+				Coins:    sdk.Coins{{"atom", 10}},
+				Sequence: 1,
+			},
+		},
+		Outputs: []Output{
+			{
+				Address: crypto.Address([]byte("output")),
+				Coins:   sdk.Coins{{"atom", 10}},
+			},
+		},
+	}
+	res := msg.String()
+	assert.Equal(t, res, "SendMsg{[Input{696E707574,10atom}]->[Output{364637353734373037353734,10atom}]}")
+}
+
+// ----------------------------------------
+// IssueMsg Tests
+
+func TestIssueMsgString(t *testing.T) {
+	// Construct a IssueMsg
+	var msg = IssueMsg{
+		Banker: crypto.Address([]byte("input")),
+		Outputs: []Output{
+			{
+				Address: crypto.Address([]byte("loan-from-bank")),
+				Coins:   sdk.Coins{{"atom", 10}},
+			},
+		},
+	}
+	res := msg.String()
+	assert.Equal(t, res, "IssueMsg{696E707574#[Output{36433646363136453244363637323646364432443632363136453642,10atom}]}")
+}
+
+func TestIssueMsgType(t *testing.T) {
+	// Construct an IssueMsg
+	var msg = IssueMsg{
+		Banker: crypto.Address([]byte("input")),
+		Outputs: []Output{
+			{
+				Address: crypto.Address([]byte("loan-from-bank")),
+				Coins:   sdk.Coins{{"atom", 10}},
+			},
+		},
+	}
+
+	assert.Equal(t, msg.Type(), "bank")
 }
 
 /*

@@ -10,9 +10,13 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/go-crypto/keys/words"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	tmtypes "github.com/tendermint/tendermint/types"
+	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
+	"github.com/tendermint/tmlibs/log"
+
+	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	cfg "github.com/tendermint/tendermint/config"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // InitCmd will initialize all files for tendermint,
@@ -20,9 +24,10 @@ import (
 // The application can pass in a function to generate
 // proper options. And may want to use GenerateCoinKey
 // to create default account(s).
-func InitCmd(gen GenOptions) *cobra.Command {
+func InitCmd(gen GenOptions, logger log.Logger) *cobra.Command {
 	cmd := initCmd{
-		gen: gen,
+		gen:    gen,
+		logger: logger,
 	}
 	return &cobra.Command{
 		Use:   "init",
@@ -56,22 +61,31 @@ func GenerateCoinKey() (crypto.Address, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
+
+	// debug
+	bz, err := json.Marshal(info.PubKey)
+	fmt.Printf("PubKey: %s\n", string(bz))
+
 	addr := info.PubKey.Address()
 	return addr, secret, nil
 }
 
 type initCmd struct {
-	gen GenOptions
+	gen    GenOptions
+	logger log.Logger
 }
 
 func (c initCmd) run(cmd *cobra.Command, args []string) error {
 	// Run the basic tendermint initialization,
 	// set up a default genesis with no app_options
-	cfg, err := tcmd.ParseConfig()
+	config, err := tcmd.ParseConfig()
 	if err != nil {
 		return err
 	}
-	tcmd.InitFilesCmd.Run(cmd, args)
+	err = c.initTendermintFiles(config)
+	if err != nil {
+		return err
+	}
 
 	// no app_options, leave like tendermint
 	if c.gen == nil {
@@ -85,8 +99,44 @@ func (c initCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	// And add them to the genesis file
-	genFile := cfg.GenesisFile()
+	genFile := config.GenesisFile()
 	return addGenesisOptions(genFile, options)
+}
+
+// This was copied from tendermint/cmd/tendermint/commands/init.go
+// so we could pass in the config and the logger.
+func (c initCmd) initTendermintFiles(config *cfg.Config) error {
+	// private validator
+	privValFile := config.PrivValidatorFile()
+	var privValidator *tmtypes.PrivValidatorFS
+	if cmn.FileExists(privValFile) {
+		privValidator = tmtypes.LoadPrivValidatorFS(privValFile)
+		c.logger.Info("Found private validator", "path", privValFile)
+	} else {
+		privValidator = tmtypes.GenPrivValidatorFS(privValFile)
+		privValidator.Save()
+		c.logger.Info("Genetated private validator", "path", privValFile)
+	}
+
+	// genesis file
+	genFile := config.GenesisFile()
+	if cmn.FileExists(genFile) {
+		c.logger.Info("Found genesis file", "path", genFile)
+	} else {
+		genDoc := tmtypes.GenesisDoc{
+			ChainID: cmn.Fmt("test-chain-%v", cmn.RandStr(6)),
+		}
+		genDoc.Validators = []tmtypes.GenesisValidator{{
+			PubKey: privValidator.GetPubKey(),
+			Power:  10,
+		}}
+
+		if err := genDoc.SaveAs(genFile); err != nil {
+			return err
+		}
+		c.logger.Info("Genetated genesis file", "path", genFile)
+	}
+	return nil
 }
 
 func addGenesisOptions(filename string, options json.RawMessage) error {

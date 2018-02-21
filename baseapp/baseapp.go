@@ -21,7 +21,7 @@ var mainHeaderKey = []byte("header")
 // The ABCI application
 type BaseApp struct {
 	// initialized on creation
-	logger log.Logger
+	Logger log.Logger
 	name   string               // application name from abci.Info
 	db     dbm.DB               // common DB backend
 	cms    sdk.CommitMultiStore // Main (uncached) state
@@ -55,7 +55,7 @@ var _ abci.Application = &BaseApp{}
 // Create and name new BaseApp
 func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
 	return &BaseApp{
-		logger: logger,
+		Logger: logger,
 		name:   name,
 		db:     db,
 		cms:    store.NewCommitMultiStore(db),
@@ -331,13 +331,15 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// TODO: override default ante handler w/ custom ante handler.
 
-	// Run the ante handler.
-	newCtx, result, abort := app.anteHandler(ctx, tx)
-	if isCheckTx || abort {
-		return result
-	}
-	if !newCtx.IsZero() {
-		ctx = newCtx
+	// Run the ante handler if present
+	if app.anteHandler != nil {
+		newCtx, result, abort := app.anteHandler(ctx, tx)
+		if isCheckTx || abort {
+			return result
+		}
+		if !newCtx.IsZero() {
+			ctx = newCtx
+		}
 	}
 
 	// CacheWrap app.msDeliver in case it fails.
@@ -372,7 +374,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// Write the Deliver state and commit the MultiStore
 	app.msDeliver.Write()
 	commitID := app.cms.Commit()
-	app.logger.Debug("Commit synced",
+	app.Logger.Debug("Commit synced",
 		"commit", commitID,
 	)
 

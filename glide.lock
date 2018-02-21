@@ -1,5 +1,5 @@
 hash: 89fd2ad769c283b6b29b02b84dd6459a40a47de5dfdfb15d7ced95d53ee9ec18
-updated: 2018-02-21T12:53:23.608467+01:00
+updated: 2018-02-21T19:39:16.798141851+01:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 50de9da05b50eb15658bb350f6ea24368a111ab7
@@ -105,7 +105,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 68592f4d8ee34e97db94b7a7976b1309efdb7eb9
+  version: c960c5275617ef141c92c3d7fc65a396c97662df
   subpackages:
   - client
   - example/code
@@ -129,7 +129,7 @@ imports:
 - name: github.com/tendermint/iavl
   version: 1a59ec0c82dc940c25339dd7c834df5cb76a95cb
 - name: github.com/tendermint/tendermint
-  version: b24792244d6d03be5a566fd48572743faf3c02e0
+  version: 4a63409d5c72a36eee49c962b060fd0063958bda
   subpackages:
   - blockchain
   - cmd/tendermint/commands
@@ -166,7 +166,7 @@ imports:
   - version
   - wire
 - name: github.com/tendermint/tmlibs
-  version: 1b9b5652a199ab0be2e781393fb275b66377309d
+  version: a0f652dc2e131be86fc8d9e4e2beec9831a8a6ec
   subpackages:
   - autofile
   - cli

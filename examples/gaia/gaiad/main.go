@@ -52,7 +52,7 @@ func main() {
 
 	gaiadCmd.AddCommand(
 		server.InitCmd(defaultOptions),
-		server.StartCmd(app),
+		server.StartCmd(app, app.Logger),
 		server.UnsafeResetAllCmd(app.Logger),
 		version.VersionCmd,
 	)

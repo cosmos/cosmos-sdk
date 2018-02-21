@@ -7,7 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/cli"
+	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -46,14 +48,20 @@ func defaultOptions(args []string) (json.RawMessage, error) {
 	return json.RawMessage(opts), nil
 }
 
-func main() {
+func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	// TODO: set this to something real
 	app := new(baseapp.BaseApp)
+	return app, nil
+}
+
+func main() {
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
+		With("module", "main")
 
 	gaiadCmd.AddCommand(
-		server.InitCmd(defaultOptions, app.Logger),
-		server.StartCmd(app, app.Logger),
-		server.UnsafeResetAllCmd(app.Logger),
+		server.InitCmd(defaultOptions, logger),
+		server.StartCmd(generateApp, logger),
+		server.UnsafeResetAllCmd(logger),
 		version.VersionCmd,
 	)
 

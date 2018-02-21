@@ -49,18 +49,18 @@ func defaultOptions(args []string) (json.RawMessage, error) {
 	return json.RawMessage(opts), nil
 }
 
-func generateApp(rootDir string, logger log.Logger) abci.Application {
+func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	db, err := dbm.NewGoLevelDB("basecoin", rootDir)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return nil, err
 	}
 	bapp := app.NewBasecoinApp(logger, db)
-	return bapp
+	return bapp, nil
 }
 
 func main() {
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "main")
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
+		With("module", "main")
 
 	basecoindCmd.AddCommand(
 		server.InitCmd(defaultOptions, logger),

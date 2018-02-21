@@ -10,21 +10,21 @@ The governance process is divided in a few steps that are outlined below:
 
 - **Proposal submission:** Proposal is submitted to the blockchain with a deposit 
 - **Vote:** Once deposit reaches a certain value (`MinDeposit`), proposal is confirmed and vote opens. Bonded Atom holders can then send `TxGovVote` transactions to vote on the proposal
-- If the proposal involves a software upgrade
-  - **Signal:** Validator start signaling that they are ready to switch to the new version
-  - **Switch:** Once more than 2/3rd validators have signaled their readiness to switch, their software automatically flips to the new version
+- If the proposal involves a software upgrade:
+  - **Signal:** Validators start signaling that they are ready to switch to the new version
+  - **Switch:** Once more than 75% of validators have signaled that they are ready to switch, their software automatically flips to the new version
   
 ## Proposal submission
 
 ### Right to submit a proposal
 
-Any Atom holder, whether bonded or unbonded, can submit proposals by sending a `TxProposal` transaction. Once a proposal is submitted, it is identified by its unique `proposalID`.
+Any Atom holder, whether bonded or unbonded, can submit proposals by sending a `TxGovProposal` transaction. Once a proposal is submitted, it is identified by its unique `proposalID`.
 
 ### Proposal filter (minimum deposit)
 
-To prevent spam, proposals must be submitted with a deposit in Atoms. Voting period will not start as long as the proposal's deposit is smaller than the minimum deposit parameter `MinDeposit`.
+To prevent spam, proposals must be submitted with a deposit in Atoms. Voting period will not start as long as the proposal's deposit is smaller than the minimum deposit `MinDeposit`.
 
-When a proposal is submitted, it has to be accompagnied by a deposit that must be strictly positive but that can be inferior to `MinDeposit`. Indeed, the submitter need not pay for the entire deposit on its own. If a proposal's deposit is strictly inferior to `MinDeposit`, other Atom holders can increase the proposal's deposit by sending a `TxGovDeposit` transaction. Once the proposals's deposit reaches `minDeposit`, it enters voting period. 
+When a proposal is submitted, it has to be accompagnied by a deposit that must be strictly positive but can be inferior to `MinDeposit`. Indeed, the submitter need not pay for the entire deposit on its own. If a proposal's deposit is strictly inferior to `MinDeposit`, other Atom holders can increase the proposal's deposit by sending a `TxGovDeposit` transaction. Once the proposals's deposit reaches `MinDeposit`, it enters voting period. 
 
 ### Deposit refund
 
@@ -48,7 +48,6 @@ There are two categories of proposal:
 
 These two categories are strictly identical except that `Urgent` proposals can be accepted faster if a certain condition is met. For more information, see [Threshold](#threshold) section.
 
-
 ## Vote
 
 ### Participants
@@ -58,6 +57,8 @@ These two categories are strictly identical except that `Urgent` proposals can b
 Note that some *participants* can be forbidden to vote on a proposal under a certain validator if:
 - *participant* bonded or unbonded Atoms to said validator after proposal entered voting period
 - *participant* became validator after proposal entered voting period
+
+This does not prevent *participant* to vote with Atoms bonded to other validators. For example, if a *participant* bonded some Atoms to validator A before a proposal entered voting period and other Atoms to validator B after proposal entered voting period, only the vote under validator B will be forbidden.
 
 ### Voting period
 
@@ -96,13 +97,13 @@ Initially, the threshold is set at 50% with a possibility to veto if more than 1
 If a delegator does not vote, it will inherit its validator vote.
 
 - If the delegator votes before its validator, it will not inherit from the validator's vote.
-- If the delegator votes after its validaotor, it will override its validator vote with its own vote. If the proposal is a `Urgent` proposal, it is possible that the vote will close before delegators have a chance to react and override their validator's vote. This is not a problem, as `Urgent` proposals require more than 2/3rd of the total voting power to pass before the end of the voting period. If more than 2/3rd of validators collude, they can censor the votes of delegators anyway.  
+- If the delegator votes after its validator, it will override its validator vote with its own. If the proposal is a `Urgent` proposal, it is possible that the vote will close before delegators have a chance to react and override their validator's vote. This is not a problem, as `Urgent` proposals require more than 2/3rd of the total voting power to pass before the end of the voting period. If more than 2/3rd of validators collude, they can censor the votes of delegators anyway.  
 
 ### Validator’s punishment for non-voting
 
 Validators are required to vote on all proposals to ensure that results have legitimacy. Voting is part of validators' directives and failure to do it will result in a penalty. 
 
-If a validator’s address is not in the list of addresses that voted on a proposal and if the vote is closed (i.e. `MinDeposit` was reached and `Voting period` is over), then this validator will automatically be partially slashed of `GovernancePenalty`.
+If a validator’s address is not in the list of addresses that voted on a proposal and the vote is closed (i.e. `MinDeposit` was reached and `Voting period` is over), then the validator will automatically be partially slashed of `GovernancePenalty`.
 
 *Note: Need to define values for `GovernancePenalty`*
 
@@ -110,7 +111,7 @@ If a validator’s address is not in the list of addresses that voted on a propo
 
 ### Governance key and governance address
 
-Validators can make use of an additional slot where they can designate a `Governance PubKey`. By default, a validator's `Governance PubKey` will be the same as its main PubKey. Validators can change this `Governance PubKey` by sending a `Change Governance PubKey` transaction signed by their main `Consensus PrivKey`. From there, they will be able to sign vote using the `Governance PrivKey` associated with their `Governance PubKey`. The `Governance PubKey` can be changed at any moment.
+Validators can make use of a slot where they can designate a `Governance PubKey`. By default, a validator's `Governance PubKey` will be the same as its main PubKey. Validators can change this `Governance PubKey` by sending a `Change Governance PubKey` transaction signed by their main `Consensus PrivKey`. From there, they will be able to sign votes using the `Governance PrivKey` associated with their `Governance PubKey`. The `Governance PubKey` can be changed at any moment.
 
 
 ## Software Upgrade
@@ -151,13 +152,13 @@ type Procedure struct {
   MaxDepositPeriod  int64               //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
   GovernancePenalty int64               //  Penalty if validator does not vote
   
-  ProcedureNumber   int16               //  Incremented each time a new procedure is created
   IsActive          bool                //  If true, procedure is active. Only one procedure can have isActive true.
 }
 ```
 
 **Store**:
 - `Procedures`: a mapping `map[int16]Procedure` of procedures indexed by their `ProcedureNumber`
+- `ActiveProcedureNumber`: returns current procedure number
 
 #### Proposals
 
@@ -191,7 +192,7 @@ type ValidatorGovInfo struct {
 **Store:**
 
 - `Proposals`: A mapping `map[int64]Proposal` of proposals indexed by their `proposalID`
-- `Deposits`: A mapping `map[[]byte]int64` of deposits indexed by `<proposalID>:<depositorPubKey>` as `[]byte`. Given a `proposalID` and a `PubKey`, returns deposit (`nil` if `PubKey` has not deposited)
+- `Deposits`: A mapping `map[[]byte]int64` of deposits indexed by `<proposalID>:<depositorPubKey>` as `[]byte`. Given a `proposalID` and a `PubKey`, returns deposit (`nil` if `PubKey` has not deposited on the proposal)
 - `Options`: A mapping `map[[]byte]string` of options indexed by `<proposalID>:<voterPubKey>:<validatorPubKey>` as `[]byte`. Given a `proposalID`, a `PubKey` and a validator's `PubKey`, returns option chosen by this `PubKey` for this validator (`nil` if `PubKey` has not voted under this validator)
 - `ValidatorGovInfos`: A mapping `map[[]byte]ValidatorGovInfo` of validator's governance infos indexed by `<proposalID>:<validatorGovPubKey>`. Returns `nil` if proposal has not entered voting period or if `PubKey` was not the governance public key of a validator when proposal entered voting period.
 
@@ -200,8 +201,6 @@ type ValidatorGovInfo struct {
 
 **Store:**
 - `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the `ProposalIDs` of proposals that reached `MinDeposit`. Each round, the oldest element of `ProposalProcessingQueue` is checked during `BeginBlock` to see if `CurrentBlock == VotingStartBlock + InitProcedure.VotingPeriod`. If it is, then the application checks if validators in `InitVotingPowerList` have voted and, if not, applies `GovernancePenalty`. After that proposal is ejected from `ProposalProcessingQueue` and the next element of the queue is evaluated. Note that if a proposal is urgent and accepted under the special condition, its `ProposalID` must be ejected from `ProposalProcessingQueue`.
-
-*Note: Actual data structure may differ*
 
 And the pseudocode for the `ProposalProcessingQueue`:
 
@@ -229,7 +228,9 @@ And the pseudocode for the `ProposalProcessingQueue`:
         ProposalProcessingQueue.pop()
         checkProposal()
 
-       else if (CurrentBlock == proposal.VotingStartBlock + initProcedure.VotingPeriod)
+      else if (CurrentBlock == proposal.VotingStartBlock + initProcedure.VotingPeriod)
+
+        activeProcedure = load(store, Procedures, ActiveProcedureNumber)
 
         for each validator in CurrentBondedValidators
           validatorGovInfo = load(store, ValidatorGovInfos, validator.GovPubKey)
@@ -240,7 +241,7 @@ And the pseudocode for the `ProposalProcessingQueue`:
             validatorOption = load(store, Options, validator.GovPubKey)
             if (validatorOption == nil)
               // validator did not vote
-              slash validator by ActiveProcedure.GovernancePenalty
+              slash validator by activeProcedure.GovernancePenalty
 
         ProposalProcessingQueue.pop()
         checkProposal()        
@@ -250,7 +251,6 @@ And the pseudocode for the `ProposalProcessingQueue`:
 ### Transactions
 
 #### Proposal Submission
-
 
 Proposals can be submitted by any Atom holder via a `TxGovSubmitProposal` transaction.
 
@@ -307,8 +307,9 @@ upon receiving txGovSubmitProposal from sender do
       proposal.SubmitBlock = CurrentBlock
       
       store(Deposits, <proposalID>:<sender>, txGovSubmitProposal.InitialDeposit)
+      activeProcedure = load(store, Procedures, ActiveProcedureNumber)
   
-      if (txGovSubmitProposal.InitialDeposit < ActiveProcedure.MinDeposit) then  
+      if (txGovSubmitProposal.InitialDeposit < activeProcedure.MinDeposit) then  
         // MinDeposit is not reached
         
         proposal.VotingStartBlock = -1
@@ -320,7 +321,7 @@ upon receiving txGovSubmitProposal from sender do
         
         proposal.VotingStartBlock = CurrentBlock
         proposal.InitTotalVotingPower = TotalVotingPower
-        proposal.InitProcedureNumber = ActiveProcedure.ProcedureNumber
+        proposal.InitProcedureNumber = ActiveProcedureNumber
         
         for each validator in CurrentBondedValidators
           // Store voting power of each bonded validator
@@ -379,19 +380,20 @@ upon receiving txGovDeposit from sender do
       throw
     
     else
-      if (txGovDeposit.Deposit <= 0 OR sender.AtomBalance < txGovDeposit.Deposit)
+      if (txGovDeposit.Deposit <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit)
         // deposit is negative or null OR sender has insufficient funds
         
         throw
       
       else        
-        if (proposal.Deposit >= ActiveProcedure.MinDeposit) then  
+        activeProcedure = load(store, Procedures, ActiveProcedureNumber)
+        if (proposal.Deposit >= activeProcedure.MinDeposit) then  
           // MinDeposit was reached
           
           throw
         
         else
-          if (CurrentBlock >= proposal.SubmitBlock + ActiveProcedure.MaxDepositPeriod) then 
+          if (CurrentBlock >= proposal.SubmitBlock + activeProcedure.MaxDepositPeriod) then 
             // Maximum deposit period reached
             
             throw
@@ -404,21 +406,23 @@ upon receiving txGovDeposit from sender do
 
             if (deposit == nil)
               // sender has never deposited on this proposal 
+
               store(Deposits, <txGovDeposit.ProposalID>:<sender>, deposit)
 
             else
               // sender has already deposited on this proposal
+
               newDeposit = deposit + txGovDeposit.Deposit
               store(Deposits, <txGovDeposit.ProposalID>:<sender>, newDeposit)
 
             proposal.Deposit += txGovDeposit.Deposit
             
-            if (proposal.Deposit >= ActiveProcedure.MinDeposit) then  
+            if (proposal.Deposit >= activeProcedure.MinDeposit) then  
               // MinDeposit is reached, vote opens
               
               proposal.VotingStartBlock = CurrentBlock
               proposal.InitTotalVotingPower = TotalVotingPower
-              proposal.InitProcedureNumber = ActiveProcedure.ProcedureNumber
+              proposal.InitProcedureNumber = ActiveProcedureNumber
               
               for each validator in CurrentBondedValidators
                 // Store voting power of each bonded validator
@@ -476,16 +480,17 @@ And the associated pseudocode
           throw
           
         else          
-          if deposit <= 0
+          if (deposit <= 0)
             // deposit has already been claimed
             
             throw
             
           else            
-            if proposal.VotingStartBlock <= 0
+            if (proposal.VotingStartBlock <= 0)
             // Vote never started
-            
-              if (CurrentBlock <= proposal.SubmitBlock + ActiveProcedure.MaxDepositPeriod)
+              
+              activeProcedure = load(store, Procedures, ActiveProcedureNumber)
+              if (CurrentBlock <= proposal.SubmitBlock + activeProcedure.MaxDepositPeriod)
                 // MaxDepositPeriod is not reached
                 
                 throw
@@ -563,7 +568,7 @@ Next is a pseudocode proposal of the way `TxGovVote` transactions can be handled
         validator = load(store, Validators, txGovVote.ValidatorPubKey)
       
         if  !initProcedure.OptionSet.includes(txGovVote.Option) OR 
-            validator == nil) then 
+            (validator == nil) then 
          
           // Throws if
           // Option is not in Option Set of procedure that was active when vote opened OR if

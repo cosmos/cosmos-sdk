@@ -16,7 +16,7 @@ import (
 // It should work similar to a real app.
 // Make sure rootDir is empty before running the test,
 // in order to guarantee consistent results
-func NewApp(logger log.Logger, rootDir string) (abci.Application, error) {
+func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	db, err := dbm.NewGoLevelDB("mock", rootDir)
 	if err != nil {
 		return nil, err

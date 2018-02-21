@@ -22,14 +22,10 @@ func TestStartStandAlone(t *testing.T) {
 	err := initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
-	rootDir := viper.GetString("home")
-	app, err := mock.NewApp(logger, rootDir)
-	require.NoError(t, err)
-
 	// set up app and start up
 	viper.Set(flagWithTendermint, false)
 	viper.Set(flagAddress, "localhost:11122")
-	startCmd := StartCmd(app, logger)
+	startCmd := StartCmd(mock.NewApp, logger)
 	timeout := time.Duration(3) * time.Second
 
 	err = runOrTimeout(startCmd, timeout)
@@ -46,13 +42,9 @@ func TestStartWithTendermint(t *testing.T) {
 	err := initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
-	rootDir := viper.GetString("home")
-	app, err := mock.NewApp(logger, rootDir)
-	require.NoError(t, err)
-
 	// set up app and start up
 	viper.Set(flagWithTendermint, true)
-	startCmd := StartCmd(app, logger)
+	startCmd := StartCmd(mock.NewApp, logger)
 	timeout := time.Duration(3) * time.Second
 
 	err = runOrTimeout(startCmd, timeout)

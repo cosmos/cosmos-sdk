@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/cli"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -16,9 +17,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-// gaiadCmd is the entry point for this binary
+// basecoindCmd is the entry point for this binary
 var (
-	gaiadCmd = &cobra.Command{
+	basecoindCmd = &cobra.Command{
 		Use:   "gaiad",
 		Short: "Gaia Daemon (server)",
 	}
@@ -48,27 +49,28 @@ func defaultOptions(args []string) (json.RawMessage, error) {
 	return json.RawMessage(opts), nil
 }
 
-func main() {
-	// TODO: this should somehow be updated on cli flags?
-	// But we need to create the app first... hmmm.....
-	rootDir := os.ExpandEnv("$HOME/.basecoind")
-
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "main")
+func generateApp(rootDir string, logger log.Logger) abci.Application {
 	db, err := dbm.NewGoLevelDB("basecoin", rootDir)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 	bapp := app.NewBasecoinApp(logger, db)
+	return bapp
+}
 
-	gaiadCmd.AddCommand(
-		server.InitCmd(defaultOptions, bapp.Logger),
-		server.StartCmd(bapp, bapp.Logger),
-		server.UnsafeResetAllCmd(bapp.Logger),
+func main() {
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "main")
+
+	basecoindCmd.AddCommand(
+		server.InitCmd(defaultOptions, logger),
+		server.StartCmd(generateApp, logger),
+		server.UnsafeResetAllCmd(logger),
 		version.VersionCmd,
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareBaseCmd(gaiadCmd, "BC", rootDir)
+	rootDir := os.ExpandEnv("$HOME/.basecoind")
+	executor := cli.PrepareBaseCmd(basecoindCmd, "BC", rootDir)
 	executor.Execute()
 }

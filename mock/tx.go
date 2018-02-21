@@ -2,6 +2,7 @@ package mock
 
 import (
 	"bytes"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
@@ -12,6 +13,17 @@ type kvstoreTx struct {
 	key   []byte
 	value []byte
 	bytes []byte
+}
+
+var _ sdk.Tx = kvstoreTx{}
+
+func NewTx(key, value string) kvstoreTx {
+	bytes := fmt.Sprintf("%s=%s", key, value)
+	return kvstoreTx{
+		key:   []byte(key),
+		value: []byte(value),
+		bytes: []byte(bytes),
+	}
 }
 
 func (tx kvstoreTx) Get(key interface{}) (value interface{}) {

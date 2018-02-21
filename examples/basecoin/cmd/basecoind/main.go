@@ -49,8 +49,12 @@ func defaultOptions(args []string) (json.RawMessage, error) {
 }
 
 func main() {
+	// TODO: this should somehow be updated on cli flags?
+	// But we need to create the app first... hmmm.....
+	rootDir := os.ExpandEnv("$HOME/.basecoind")
+
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "main")
-	db, err := dbm.NewGoLevelDB("/tmp/basecoind", "data")
+	db, err := dbm.NewGoLevelDB("basecoin", rootDir)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -58,13 +62,13 @@ func main() {
 	bapp := app.NewBasecoinApp(logger, db)
 
 	gaiadCmd.AddCommand(
-		server.InitCmd(defaultOptions),
+		server.InitCmd(defaultOptions, bapp.Logger),
 		server.StartCmd(bapp, bapp.Logger),
 		server.UnsafeResetAllCmd(bapp.Logger),
 		version.VersionCmd,
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareBaseCmd(gaiadCmd, "GA", os.ExpandEnv("$HOME/.gaiad"))
+	executor := cli.PrepareBaseCmd(gaiadCmd, "BC", rootDir)
 	executor.Execute()
 }

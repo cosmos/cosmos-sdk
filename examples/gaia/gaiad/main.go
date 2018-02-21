@@ -48,10 +48,10 @@ func defaultOptions(args []string) (json.RawMessage, error) {
 
 func main() {
 	// TODO: set this to something real
-	var app *baseapp.BaseApp
+	app := new(baseapp.BaseApp)
 
 	gaiadCmd.AddCommand(
-		server.InitCmd(defaultOptions),
+		server.InitCmd(defaultOptions, app.Logger),
 		server.StartCmd(app, app.Logger),
 		server.UnsafeResetAllCmd(app.Logger),
 		version.VersionCmd,

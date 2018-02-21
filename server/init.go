@@ -139,19 +139,24 @@ func (c initCmd) initTendermintFiles(config *cfg.Config) error {
 	return nil
 }
 
+// GenesisDoc involves some tendermint-specific structures we don't
+// want to parse, so we just grab it into a raw object format,
+// so we can add one line.
+type GenesisDoc map[string]json.RawMessage
+
 func addGenesisOptions(filename string, options json.RawMessage) error {
 	bz, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
 	}
 
-	var doc tmtypes.GenesisDoc
+	var doc GenesisDoc
 	err = json.Unmarshal(bz, &doc)
 	if err != nil {
 		return err
 	}
 
-	doc.AppOptions = options
+	doc["app_state"] = options
 	out, err := json.MarshalIndent(doc, "", "  ")
 	if err != nil {
 		return err
@@ -165,20 +170,6 @@ func addGenesisOptions(filename string, options json.RawMessage) error {
 // TODO: A better UX for generating genesis files
 func GetGenesisJSON(pubkey, chainID, denom, addr string, options string) string {
 	return fmt.Sprintf(`{
-  "app_hash": "",
-  "chain_id": "%s",
-  "genesis_time": "0001-01-01T00:00:00.000Z",
-  "validators": [
-    {
-      "power": 10,
-      "name": "",
-      "pub_key": {
-        "type": "ed25519",
-        "data": "%s"
-      }
-    }
-  ],
-  "app_options": {
     "accounts": [{
       "address": "%s",
       "coins": [
@@ -191,6 +182,5 @@ func GetGenesisJSON(pubkey, chainID, denom, addr string, options string) string 
     "plugin_options": [
       "coin/issuer", {"app": "sigs", "addr": "%s"}%s
     ]
-  }
 }`, chainID, pubkey, addr, denom, addr, options)
 }

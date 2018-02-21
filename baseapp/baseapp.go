@@ -333,13 +333,15 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// TODO: override default ante handler w/ custom ante handler.
 
-	// Run the ante handler.
-	newCtx, result, abort := app.anteHandler(ctx, tx)
-	if isCheckTx || abort {
-		return result
-	}
-	if !newCtx.IsZero() {
-		ctx = newCtx
+	// Run the ante handler if present
+	if app.anteHandler != nil {
+		newCtx, result, abort := app.anteHandler(ctx, tx)
+		if isCheckTx || abort {
+			return result
+		}
+		if !newCtx.IsZero() {
+			ctx = newCtx
+		}
 	}
 
 	// CacheWrap app.msDeliver in case it fails.

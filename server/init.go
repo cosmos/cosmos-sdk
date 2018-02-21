@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/go-crypto/keys/words"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmtypes "github.com/tendermint/tendermint/types"
+	dbm "github.com/tendermint/tmlibs/db"
 )
 
 // InitCmd will initialize all files for tendermint,

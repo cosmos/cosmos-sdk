@@ -25,6 +25,14 @@ import:
   - db
   - log
   - merkle
+- package: github.com/tendermint/tendermint
+  version: breaking/wire-sdk2
+  subpackages:
+  - cmd/tendermint/commands
+  - config
+  - lite
+  - rpc/client
+  - types
 - package: golang.org/x/crypto
   subpackages:
   - ripemd160

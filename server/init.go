@@ -111,7 +111,7 @@ func (c initCmd) initTendermintFiles(config *cfg.Config) error {
 	} else {
 		privValidator = tmtypes.GenPrivValidatorFS(privValFile)
 		privValidator.Save()
-		c.logger.Info("Genetated private validator", "path", privValFile)
+		c.logger.Info("Generated private validator", "path", privValFile)
 	}
 
 	// genesis file
@@ -130,7 +130,7 @@ func (c initCmd) initTendermintFiles(config *cfg.Config) error {
 		if err := genDoc.SaveAs(genFile); err != nil {
 			return err
 		}
-		c.logger.Info("Genetated genesis file", "path", genFile)
+		c.logger.Info("Generated genesis file", "path", genFile)
 	}
 	return nil
 }

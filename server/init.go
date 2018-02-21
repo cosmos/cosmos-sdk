@@ -62,10 +62,6 @@ func GenerateCoinKey() (crypto.Address, string, error) {
 		return nil, "", err
 	}
 
-	// debug
-	bz, err := json.Marshal(info.PubKey)
-	fmt.Printf("PubKey: %s\n", string(bz))
-
 	addr := info.PubKey.Address()
 	return addr, secret, nil
 }

@@ -1,5 +1,5 @@
 hash: 89fd2ad769c283b6b29b02b84dd6459a40a47de5dfdfb15d7ced95d53ee9ec18
-updated: 2018-02-21T10:37:20.800957+01:00
+updated: 2018-02-21T12:53:23.608467+01:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 50de9da05b50eb15658bb350f6ea24368a111ab7
@@ -129,7 +129,7 @@ imports:
 - name: github.com/tendermint/iavl
   version: 1a59ec0c82dc940c25339dd7c834df5cb76a95cb
 - name: github.com/tendermint/tendermint
-  version: edeebb7d202467179d1cf6372fd014d36bebf961
+  version: b24792244d6d03be5a566fd48572743faf3c02e0
   subpackages:
   - blockchain
   - cmd/tendermint/commands

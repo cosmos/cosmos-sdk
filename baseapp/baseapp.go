@@ -200,6 +200,8 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// NOTE: we're writing to the cms directly, without a CacheWrap
 	ctx := sdk.NewContext(app.cms, abci.Header{}, false, nil)
 
+	// TODO: d00d, tendermint sends nil, until that is fixed, we gotta
+	// read in the genesis file ourselves here
 	res = app.initChainer(ctx, req)
 	// TODO: handle error https://github.com/cosmos/cosmos-sdk/issues/468
 

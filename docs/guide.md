@@ -282,7 +282,7 @@ func NewHandler(am sdk.AccountMapper) sdk.Handler {
 ### vs encoding/json
 ### vs protobuf
 
-## Dummy example
+## KVStore example
 
 ## Basecoin example
 

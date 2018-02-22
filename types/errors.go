@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 	"runtime"
-
-	"github.com/tendermint/go-crypto"
 )
 
 // ABCI Response Code
@@ -86,7 +84,7 @@ func ErrInsufficientFunds(msg string) Error {
 func ErrUnknownRequest(msg string) Error {
 	return newError(CodeUnknownRequest, msg)
 }
-func ErrUnrecognizedAddress(addr crypto.Address) Error {
+func ErrUnrecognizedAddress(addr Address) Error {
 	return newError(CodeUnrecognizedAddress, addr.String())
 }
 func ErrInvalidSequence(msg string) Error {

@@ -1,11 +1,12 @@
 package auth
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 
-	crypto "github.com/tendermint/go-crypto"
-	wire "github.com/tendermint/go-wire"
+	wire "github.com/cosmos/cosmos-sdk/wire"
+	oldwire "github.com/tendermint/go-wire"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -66,14 +67,14 @@ func (am accountMapper) Seal() sealedAccountMapper {
 }
 
 // Implements sdk.AccountMapper.
-func (am accountMapper) NewAccountWithAddress(ctx sdk.Context, addr crypto.Address) sdk.Account {
+func (am accountMapper) NewAccountWithAddress(ctx sdk.Context, addr sdk.Address) sdk.Account {
 	acc := am.clonePrototype()
 	acc.SetAddress(addr)
 	return acc
 }
 
 // Implements sdk.AccountMapper.
-func (am accountMapper) GetAccount(ctx sdk.Context, addr crypto.Address) sdk.Account {
+func (am accountMapper) GetAccount(ctx sdk.Context, addr sdk.Address) sdk.Account {
 	store := ctx.KVStore(am.key)
 	bz := store.Get(addr)
 	if bz == nil {
@@ -155,14 +156,26 @@ func (am accountMapper) encodeAccount(acc sdk.Account) []byte {
 }
 
 func (am accountMapper) decodeAccount(bz []byte) sdk.Account {
-	accPtr := am.clonePrototypePtr()
-	err := am.cdc.UnmarshalBinary(bz, accPtr)
-	if err != nil {
-		panic(err)
+
+	// ... old go-wire ...
+	r, n, err := bytes.NewBuffer(bz), new(int), new(error)
+	accI := oldwire.ReadBinary(struct{ sdk.Account }{}, r, len(bz), n, err)
+	if *err != nil {
+		panic(*err)
 	}
-	if reflect.ValueOf(am.proto).Kind() == reflect.Ptr {
-		return reflect.ValueOf(accPtr).Interface().(sdk.Account)
-	} else {
-		return reflect.ValueOf(accPtr).Elem().Interface().(sdk.Account)
-	}
+	acc := accI.(struct{ sdk.Account }).Account
+	return acc
+
+	/*
+		accPtr := am.clonePrototypePtr()
+			err := am.cdc.UnmarshalBinary(bz, accPtr)
+			if err != nil {
+				panic(err)
+			}
+			if reflect.ValueOf(am.proto).Kind() == reflect.Ptr {
+				return reflect.ValueOf(accPtr).Interface().(sdk.Account)
+			} else {
+				return reflect.ValueOf(accPtr).Elem().Interface().(sdk.Account)
+			}
+	*/
 }

@@ -19,7 +19,8 @@ gaia:
 build:
 	@rm -rf examples/basecoin/vendor/
 	#cd examples/basecoin && $(MAKE) get_vendor_deps
-	go build $(BUILD_FLAGS) -o build/basecoind ./examples/basecoin/cmd/basecoind/...
+	go build $(BUILD_FLAGS) -o build/basecoind ./examples/basecoin/cmd/basecoind
+	go build $(BUILD_FLAGS) -o build/basecli ./examples/basecoin/cmd/basecli
 
 dist:
 	@bash publish/dist.sh

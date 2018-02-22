@@ -60,7 +60,6 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
 		c.Flags().String(flagName, "", "Name of private key with which to sign")
-		c.Flags().String(flagPassword, "", "Password to use the named private key")
 	}
 	return cmds
 }

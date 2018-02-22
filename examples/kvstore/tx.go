@@ -56,7 +56,7 @@ func (tx kvstoreTx) GetFeePayer() crypto.Address {
 	return nil
 }
 
-func (tx dummyTx) GetFees() sdk.Coins {
+func (tx kvstoreTx) GetFees() sdk.Coins {
 	return nil
 }
 

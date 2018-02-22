@@ -27,7 +27,7 @@ func main() {
 	var capKeyMainStore = sdk.NewKVStoreKey("main")
 
 	// Create BaseApp.
-	var baseApp = bam.NewBaseApp("dummy", logger, db)
+	var baseApp = bam.NewBaseApp("kvstore", logger, db)
 
 	// Set mounts for BaseApp's MultiStore.
 	baseApp.MountStore(capKeyMainStore, sdk.StoreTypeIAVL)
@@ -36,7 +36,7 @@ func main() {
 	baseApp.SetTxDecoder(decodeTx)
 
 	// Set a handler Route.
-	baseApp.Router().AddRoute("dummy", DummyHandler(capKeyMainStore))
+	baseApp.Router().AddRoute("kvstore", KVStoreHandler(capKeyMainStore))
 
 	// Load latest version.
 	if err := baseApp.LoadLatestVersion(capKeyMainStore); err != nil {
@@ -60,11 +60,11 @@ func main() {
 	return
 }
 
-func DummyHandler(storeKey sdk.StoreKey) sdk.Handler {
+func KVStoreHandler(storeKey sdk.StoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		dTx, ok := msg.(dummyTx)
+		dTx, ok := msg.(kvstoreTx)
 		if !ok {
-			panic("DummyHandler should only receive dummyTx")
+			panic("KVStoreHandler should only receive kvstoreTx")
 		}
 
 		// tx is already unmarshalled

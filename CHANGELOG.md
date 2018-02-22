@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.10.0 (February 20, 2017)
+
+BREAKING CHANGES
+
+* [baseapp] NewBaseApp(logger, db)
+* [baseapp] NewContext(isCheckTx, header)
+* [x/bank] CoinMapper -> CoinKeeper
+
+FEATURES
+
+* [examples/gaia] Mock CLI !
+* [baseapp] InitChainer, BeginBlocker, EndBlocker
+* [baseapp] MountStoresIAVL
+
+IMPROVEMENTS
+
+* [docs] Various improvements.
+* [basecoin] Much simpler :)
+
+BUG FIXES
+
+* [baseapp] initialize and reset msCheck and msDeliver properly
+
 ## 0.9.0 (February 13, 2017)
 
 BREAKING CHANGES

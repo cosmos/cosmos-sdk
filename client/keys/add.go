@@ -105,7 +105,8 @@ type addOutput struct {
 }
 
 func printCreate(info keys.Info, seed string) {
-	switch viper.Get(cli.OutputFlag) {
+	output := viper.Get(cli.OutputFlag)
+	switch output {
 	case "text":
 		printInfo(info)
 		// print seed unless requested not to.
@@ -124,5 +125,7 @@ func printCreate(info keys.Info, seed string) {
 			panic(err) // really shouldn't happen...
 		}
 		fmt.Println(string(json))
+	default:
+		panic(fmt.Sprintf("I can't speak: %s", output))
 	}
 }

@@ -22,11 +22,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// updateCmd represents the update command
-var updateCmd = &cobra.Command{
-	Use:   "update [name]",
-	Short: "Change the password for a private key",
-	RunE:  runUpdateCmd,
+func updateKeyCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update <name>",
+		Short: "Change the password used to protect private key",
+		RunE:  runUpdateCmd,
+	}
+	return cmd
 }
 
 func runUpdateCmd(cmd *cobra.Command, args []string) error {

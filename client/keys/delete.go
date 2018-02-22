@@ -22,11 +22,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// deleteCmd represents the delete command
-var deleteCmd = &cobra.Command{
-	Use:   "delete [name]",
-	Short: "DANGER: Delete a private key from your system",
-	RunE:  runDeleteCmd,
+func deleteKeyCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delete <name>",
+		Short: "Delete the given key",
+		RunE:  runDeleteCmd,
+	}
+	return cmd
 }
 
 func runDeleteCmd(cmd *cobra.Command, args []string) error {

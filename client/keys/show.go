@@ -20,15 +20,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// getCmd represents the get command
-var getCmd = &cobra.Command{
-	Use:   "get [name]",
-	Short: "Get details of one key",
+var showKeysCmd = &cobra.Command{
+	Use:   "show <name>",
+	Short: "Show key info for the given name",
 	Long:  `Return public details of one local key.`,
-	RunE:  runGetCmd,
+	RunE:  runShowCmd,
 }
 
-func runGetCmd(cmd *cobra.Command, args []string) error {
+func runShowCmd(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 || len(args[0]) == 0 {
 		return errors.New("You must provide a name for the key")
 	}

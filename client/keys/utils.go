@@ -29,11 +29,11 @@ var (
 func GetKeyBase() (keys.Keybase, error) {
 	if keybase == nil {
 		rootDir := viper.GetString(cli.HomeFlag)
-		keyman, err := client.GetKeyManager(rootDir)
+		kb, err := client.GetKeyBase(rootDir)
 		if err != nil {
 			return nil, err
 		}
-		keybase = keyman
+		keybase = kb
 	}
 	return keybase, nil
 }

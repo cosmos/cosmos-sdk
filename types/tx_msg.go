@@ -1,9 +1,5 @@
 package types
 
-import (
-	crypto "github.com/tendermint/go-crypto"
-)
-
 // Transactions messages must fulfill the Msg
 type Msg interface {
 
@@ -24,7 +20,7 @@ type Msg interface {
 	// Signers returns the addrs of signers that must sign.
 	// CONTRACT: All signatures must be present to be valid.
 	// CONTRACT: Returns addrs in some deterministic order.
-	GetSigners() []crypto.Address
+	GetSigners() []Address
 }
 
 // Transactions objects must fulfill the Tx
@@ -35,7 +31,7 @@ type Tx interface {
 
 	// The address that pays the base fee for this message.  The fee is
 	// deducted before the Msg is processed.
-	GetFeePayer() crypto.Address
+	GetFeePayer() Address
 
 	// Signatures returns the signature of signers who signed the Msg.
 	// CONTRACT: Length returned is same as length of
@@ -65,7 +61,7 @@ func NewStdTx(msg Msg, sigs []StdSignature) StdTx {
 
 //nolint
 func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
-func (tx StdTx) GetFeePayer() crypto.Address   { return tx.Signatures[0].PubKey.Address() } // XXX but PubKey is optional!
+func (tx StdTx) GetFeePayer() Address          { return tx.Signatures[0].PubKey.Address() } // XXX but PubKey is optional!
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 
 //-------------------------------------

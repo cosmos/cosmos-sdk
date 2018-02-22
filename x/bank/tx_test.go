@@ -5,18 +5,16 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	crypto "github.com/tendermint/go-crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestInputValidation(t *testing.T) {
-	addr1 := crypto.Address([]byte{1, 2})
-	addr2 := crypto.Address([]byte{7, 8})
+	addr1 := sdk.Address([]byte{1, 2})
+	addr2 := sdk.Address([]byte{7, 8})
 	someCoins := sdk.Coins{{"atom", 123}}
 	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
 
-	var emptyAddr crypto.Address
+	var emptyAddr sdk.Address
 	emptyCoins := sdk.Coins{}
 	emptyCoins2 := sdk.Coins{{"eth", 0}}
 	someEmptyCoins := sdk.Coins{{"eth", 10}, {"atom", 0}}
@@ -55,12 +53,12 @@ func TestInputValidation(t *testing.T) {
 }
 
 func TestOutputValidation(t *testing.T) {
-	addr1 := crypto.Address([]byte{1, 2})
-	addr2 := crypto.Address([]byte{7, 8})
+	addr1 := sdk.Address([]byte{1, 2})
+	addr2 := sdk.Address([]byte{7, 8})
 	someCoins := sdk.Coins{{"atom", 123}}
 	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
 
-	var emptyAddr crypto.Address
+	var emptyAddr sdk.Address
 	emptyCoins := sdk.Coins{}
 	emptyCoins2 := sdk.Coins{{"eth", 0}}
 	someEmptyCoins := sdk.Coins{{"eth", 10}, {"atom", 0}}
@@ -98,8 +96,8 @@ func TestOutputValidation(t *testing.T) {
 
 func TestSendMsgValidation(t *testing.T) {
 
-	addr1 := crypto.Address([]byte{1, 2})
-	addr2 := crypto.Address([]byte{7, 8})
+	addr1 := sdk.Address([]byte{1, 2})
+	addr2 := sdk.Address([]byte{7, 8})
 	atom123 := sdk.Coins{{"atom", 123}}
 	atom124 := sdk.Coins{{"atom", 124}}
 	eth123 := sdk.Coins{{"eth", 123}}
@@ -112,7 +110,7 @@ func TestSendMsgValidation(t *testing.T) {
 	output3 := NewOutput(addr2, eth123)
 	outputMulti := NewOutput(addr2, atom123eth123)
 
-	var emptyAddr crypto.Address
+	var emptyAddr sdk.Address
 
 	cases := []struct {
 		valid bool
@@ -168,7 +166,7 @@ func TestSendMsgValidation(t *testing.T) {
 /*
 // TODO where does this test belong ?
 func TestSendMsgSigners(t *testing.T) {
-	signers := []crypto.Address{
+	signers := []sdk.Address{
 		{1, 2, 3},
 		{4, 5, 6},
 		{7, 8, 9},

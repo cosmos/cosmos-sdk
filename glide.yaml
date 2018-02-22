@@ -8,18 +8,18 @@ import:
   version: ^0.8.0
 - package: github.com/rigelrozanski/common
 - package: github.com/tendermint/abci
-  version: develop
+  version: master
   subpackages:
   - server
   - types
 - package: github.com/tendermint/go-crypto
-  version: develop
+  version: master
 - package: github.com/tendermint/go-wire
-  version: develop
+  version: master
 - package: github.com/tendermint/iavl
-  version: develop
+  version: develop-pre-wire
 - package: github.com/tendermint/tmlibs
-  version: develop
+  version: master
   subpackages:
   - common
   - db

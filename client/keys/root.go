@@ -18,22 +18,27 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// RootCmd represents the base command when called without any subcommands
-var RootCmd = &cobra.Command{
-	Use:   "keys",
-	Short: "Key manager for tendermint clients",
-	Long: `Keys allows you to manage your local keystore for tendermint.
+var lineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}}
 
-These keys may be in any format supported by go-crypto and can be
-used by light-clients, full nodes, or any other application that
-needs to sign with a private key.`,
-}
+// Commands registers a sub-tree of commands to interact with
+// local private key storage.
+func Commands() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "keys",
+		Short: "Add or view local private keys",
+		Long: `Keys allows you to manage your local keystore for tendermint.
 
-func init() {
-	RootCmd.AddCommand(getCmd)
-	RootCmd.AddCommand(listCmd)
-	RootCmd.AddCommand(newCmd)
-	RootCmd.AddCommand(updateCmd)
-	RootCmd.AddCommand(deleteCmd)
-	RootCmd.AddCommand(recoverCmd)
+    These keys may be in any format supported by go-crypto and can be
+    used by light-clients, full nodes, or any other application that
+    needs to sign with a private key.`,
+	}
+	cmd.AddCommand(
+		addKeyCommand(),
+		listKeysCmd,
+		showKeysCmd,
+		lineBreak,
+		deleteKeyCommand(),
+		updateKeyCommand(),
+	)
+	return cmd
 }

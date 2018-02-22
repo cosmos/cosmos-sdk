@@ -16,8 +16,8 @@ package keys
 
 import "github.com/spf13/cobra"
 
-// listCmd represents the list command
-var listCmd = &cobra.Command{
+// listKeysCmd represents the list command
+var listKeysCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all keys",
 	Long: `Return a list of all public keys stored by this key manager

@@ -20,12 +20,6 @@ var (
 	}
 
 	lineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}}
-
-	getAccountCmd = &cobra.Command{
-		Use:   "account <address>",
-		Short: "Query account balance",
-		RunE:  todoNotImplemented,
-	}
 )
 
 func todoNotImplemented(_ *cobra.Command, _ []string) error {
@@ -38,10 +32,10 @@ func main() {
 
 	// generic client commands
 	AddClientCommands(basecliCmd)
-	// query commands (custom to binary)
+
+	// query/post commands (custom to binary)
 	basecliCmd.AddCommand(
-		GetCommands(getAccountCmd)...)
-	// post tx commands (custom to binary)
+		GetCommands(getAccountCmd())...)
 	basecliCmd.AddCommand(
 		PostCommands(postSendCommand())...)
 

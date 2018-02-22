@@ -12,6 +12,7 @@ const (
 	flagCommit  = "commit"
 	flagValHash = "validator-set"
 
+	flagHeight = "height"
 	flagSelect = "select"
 	flagTags   = "tag"
 	flagAny    = "any"
@@ -51,7 +52,11 @@ func AddClientCommands(cmd *cobra.Command) {
 // GetCommands adds common flags to query commands
 func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
-		c.Flags().Bool(flagTrustNode, false, "Don't verify proofs for responses")
+		// TODO: make this default false when we support proofs
+		c.Flags().Bool(flagTrustNode, true, "Don't verify proofs for responses")
+		c.Flags().String(flagChainID, "", "Chain ID of tendermint node")
+		c.Flags().String(flagNode, "", "<host>:<port> to tendermint rpc interface for this chain")
+		c.Flags().Int64(flagHeight, 0, "block height to query, omit to get most recent provable block")
 	}
 	return cmds
 }
@@ -60,6 +65,8 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
 		c.Flags().String(flagName, "", "Name of private key with which to sign")
+		c.Flags().String(flagChainID, "", "Chain ID of tendermint node")
+		c.Flags().String(flagNode, "", "<host>:<port> to tendermint rpc interface for this chain")
 	}
 	return cmds
 }

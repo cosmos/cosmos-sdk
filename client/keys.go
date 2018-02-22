@@ -9,8 +9,8 @@ import (
 // KeyDBName is the directory under root where we store the keys
 const KeyDBName = "keys"
 
-// GetKeyManager initializes a key manager based on the configuration
-func GetKeyManager(rootDir string) (keys.Keybase, error) {
+// GetKeyBase initializes a keybase based on the configuration
+func GetKeyBase(rootDir string) (keys.Keybase, error) {
 	db, err := dbm.NewGoLevelDB(KeyDBName, rootDir)
 	if err != nil {
 		return nil, err
@@ -20,4 +20,14 @@ func GetKeyManager(rootDir string) (keys.Keybase, error) {
 		words.MustLoadCodec("english"),
 	)
 	return keybase, nil
+}
+
+// MockKeyBase generates an in-memory keybase that will be discarded
+// useful for --dry-run to generate a seed phrase without
+// storing the key
+func MockKeyBase() keys.Keybase {
+	return keys.New(
+		dbm.NewMemDB(),
+		words.MustLoadCodec("english"),
+	)
 }

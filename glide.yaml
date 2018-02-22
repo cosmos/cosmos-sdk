@@ -4,6 +4,10 @@ import:
   version: ^1.0.0
   subpackages:
   - proto
+- package: github.com/bgentry/speakeasy
+  version: ^0.1.0
+- package: github.com/mattn/go-isatty
+  version: ~0.0.3
 - package: github.com/pkg/errors
   version: ^0.8.0
 - package: github.com/rigelrozanski/common

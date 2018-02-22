@@ -1,6 +1,8 @@
-hash: 89fd2ad769c283b6b29b02b84dd6459a40a47de5dfdfb15d7ced95d53ee9ec18
-updated: 2018-02-21T19:39:16.798141851+01:00
+hash: fa45c8a4f5512ed730f793b93d4876bdc604a1333a5a1f938c98a0f7dd55f22e
+updated: 2018-02-22T16:18:43.639619321+01:00
 imports:
+- name: github.com/bgentry/speakeasy
+  version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
 - name: github.com/btcsuite/btcd
   version: 50de9da05b50eb15658bb350f6ea24368a111ab7
   subpackages:
@@ -65,6 +67,8 @@ imports:
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/magiconair/properties
   version: 49d762b9817ba1c2e9d0c69183c2b4a8b8f1d934
+- name: github.com/mattn/go-isatty
+  version: 0360b2af4f38e8d38c7fce2a9f4e702702d73a39
 - name: github.com/mitchellh/mapstructure
   version: b4575eea38cca1123ec2dc90c26529b5c5acfcff
 - name: github.com/pelletier/go-toml
@@ -105,7 +109,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: c960c5275617ef141c92c3d7fc65a396c97662df
+  version: 68592f4d8ee34e97db94b7a7976b1309efdb7eb9
   subpackages:
   - client
   - example/code
@@ -166,7 +170,7 @@ imports:
   - version
   - wire
 - name: github.com/tendermint/tmlibs
-  version: a0f652dc2e131be86fc8d9e4e2beec9831a8a6ec
+  version: 1b9b5652a199ab0be2e781393fb275b66377309d
   subpackages:
   - autofile
   - cli

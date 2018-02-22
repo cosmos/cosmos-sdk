@@ -53,14 +53,21 @@ func TestSendMsg(t *testing.T) {
 		Signature: sig,
 	}})
 
+	// just marshal/unmarshal!
+	cdc := MakeTxCodec()
+	txBytes, err := cdc.MarshalBinary(tx)
+	require.NoError(t, err)
+
 	// Run a Check
-	res := bapp.Check(tx)
-	assert.Equal(t, sdk.CodeUnrecognizedAddress, res.Code, res.Log)
+	cres := bapp.CheckTx(txBytes)
+	assert.Equal(t, sdk.CodeUnrecognizedAddress,
+		sdk.CodeType(cres.Code), cres.Log)
 
 	// Simulate a Block
 	bapp.BeginBlock(abci.RequestBeginBlock{})
-	res = bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeUnrecognizedAddress, res.Code, res.Log)
+	dres := bapp.DeliverTx(txBytes)
+	assert.Equal(t, sdk.CodeUnrecognizedAddress,
+		sdk.CodeType(dres.Code), dres.Log)
 }
 
 func TestGenesis(t *testing.T) {

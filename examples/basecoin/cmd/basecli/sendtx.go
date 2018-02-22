@@ -64,24 +64,7 @@ func sendTx(cmd *cobra.Command, args []string) error {
 			result.DeliverTx.Log)
 	}
 
-	fmt.Printf("Result: %#v\n", result)
-
-	// // parse out the value
-	// acct := new(types.AppAccount)
-	// cdc := app.MakeTxCodec()
-	// err = cdc.UnmarshalBinary(resp.Value, acct)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// // TODO: better
-	// // fmt.Printf("Account: %#v\n", acct)
-	// output, err := json.MarshalIndent(acct, "", "  ")
-	// // output, err := json.MarshalIndent(acct.BaseAccount.Coins, "", "  ")
-	// if err != nil {
-	// 	return err
-	// }
-	// fmt.Println(string(output))
+	fmt.Printf("Committed at block %d. Hash: %s\n", result.Height, result.Hash.String())
 	return nil
 }
 

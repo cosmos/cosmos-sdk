@@ -74,7 +74,7 @@ func (am accountMapper) NewAccountWithAddress(ctx sdk.Context, addr crypto.Addre
 
 // Implements sdk.AccountMapper.
 func (am accountMapper) GetAccount(ctx sdk.Context, addr crypto.Address) sdk.Account {
-	store := ctx.KVStore(am.key)
+	store := ctx.GetKVStore(am.key)
 	bz := store.Get(addr)
 	if bz == nil {
 		return nil
@@ -86,7 +86,7 @@ func (am accountMapper) GetAccount(ctx sdk.Context, addr crypto.Address) sdk.Acc
 // Implements sdk.AccountMapper.
 func (am accountMapper) SetAccount(ctx sdk.Context, acc sdk.Account) {
 	addr := acc.GetAddress()
-	store := ctx.KVStore(am.key)
+	store := ctx.GetKVStore(am.key)
 	bz := am.encodeAccount(acc)
 	store.Set(addr, bz)
 }

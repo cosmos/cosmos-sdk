@@ -79,7 +79,7 @@ func TestInitChainer(t *testing.T) {
 
 	// initChainer sets a value in the store
 	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-		store := ctx.KVStore(capKey)
+		store := ctx.GetKVStore(capKey)
 		store.Set(key, value)
 		return abci.ResponseInitChain{}
 	}
@@ -123,7 +123,7 @@ func TestDeliverTx(t *testing.T) {
 	txPerHeight := 2
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
 	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		store := ctx.KVStore(capKey)
+		store := ctx.GetKVStore(capKey)
 		if counter > 0 {
 			// check previous value in store
 			counterBytes := []byte{byte(counter - 1)}
@@ -174,7 +174,7 @@ func TestQuery(t *testing.T) {
 
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
 	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		store := ctx.KVStore(capKey)
+		store := ctx.GetKVStore(capKey)
 		store.Set(key, value)
 		return sdk.Result{}
 	})

@@ -1,10 +1,10 @@
-package auth
+package types
 
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+
 	crypto "github.com/tendermint/go-crypto"
 	wire "github.com/tendermint/go-wire"
 )
@@ -13,7 +13,7 @@ func TestBaseAccount(t *testing.T) {
 	key := crypto.GenPrivKeyEd25519()
 	pub := key.PubKey()
 	addr := pub.Address()
-	someCoins := sdk.Coins{{"atom", 123}, {"eth", 246}}
+	someCoins := Coins{{"atom", 123}, {"eth", 246}}
 	seq := int64(7)
 
 	acc := NewBaseAccountWithAddress(addr)

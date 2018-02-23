@@ -44,7 +44,7 @@ func NewAccountMapperSealed(key sdk.StoreKey, proto sdk.Account) sealedAccountMa
 		proto: proto,
 		cdc:   cdc,
 	}
-	RegisterWireBaseAccount(cdc)
+	sdk.RegisterWireBaseAccount(cdc)
 
 	// make accountMapper's WireCodec() inaccessible, return
 	return am.Seal()

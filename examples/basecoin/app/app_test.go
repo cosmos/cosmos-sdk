@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 
 	abci "github.com/tendermint/abci/types"
@@ -71,7 +70,7 @@ func TestGenesis(t *testing.T) {
 	addr := pk.Address()
 	coins, err := sdk.ParseCoins("77foocoin,99barcoin")
 	require.Nil(t, err)
-	baseAcc := auth.BaseAccount{
+	baseAcc := sdk.BaseAccount{
 		Address: addr,
 		Coins:   coins,
 	}
@@ -110,7 +109,7 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	// Give 77 foocoin to the first key
 	coins, err := sdk.ParseCoins("77foocoin")
 	require.Nil(t, err)
-	baseAcc := auth.BaseAccount{
+	baseAcc := sdk.BaseAccount{
 		Address: addr1,
 		Coins:   coins,
 	}

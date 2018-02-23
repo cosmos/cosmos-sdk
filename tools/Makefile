@@ -40,10 +40,10 @@ install: get_vendor_deps
 	@echo "$(ansi_grn)Installing tools$(ansi_end)"
 	@echo "$(ansi_yel)Install go-vendorinstall$(ansi_end)"
 	go build -o bin/go-vendorinstall go-vendorinstall/*.go
-	
+
 	@echo "$(ansi_yel)Install gometalinter.v2$(ansi_end)"
-	GOBIN=$(CURDIR)/bin ./bin/go-vendorinstall gopkg.in/alecthomas/gometalinter.v2
-	
+	GOBIN=$(CURDIR)/bin ./bin/go-vendorinstall github.com/alecthomas/gometalinter
+
 	@echo "$(ansi_yel)Install shelldown$(ansi_end)"
 	GOBIN=$(CURDIR)/bin ./bin/go-vendorinstall github.com/rigelrozanski/shelldown/cmd/shelldown
 

@@ -8,8 +8,10 @@ import (
 
 	"github.com/tendermint/tmlibs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/version"
+	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
 )
 
 // gaiacliCmd is the entry point for this binary
@@ -35,9 +37,9 @@ func main() {
 
 	// query/post commands (custom to binary)
 	basecliCmd.AddCommand(
-		GetCommands(getAccountCmd())...)
+		client.GetCommands(bankcmd.GetAccountCmd())...)
 	basecliCmd.AddCommand(
-		PostCommands(postSendCommand())...)
+		client.PostCommands(bankcmd.SendTxCommand())...)
 
 	// add proxy, version and key info
 	basecliCmd.AddCommand(

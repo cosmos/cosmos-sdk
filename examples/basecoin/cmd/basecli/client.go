@@ -1,28 +1,23 @@
 package main
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client"
+)
 
 const (
-	// these are needed for every init
-	flagChainID = "chain-id"
-	flagNode    = "node"
-
 	// one of the following should be provided to verify the connection
 	flagGenesis = "genesis"
 	flagCommit  = "commit"
 	flagValHash = "validator-set"
 
-	flagHeight = "height"
 	flagSelect = "select"
 	flagTags   = "tag"
 	flagAny    = "any"
 
-	flagBind      = "bind"
-	flagCORS      = "cors"
-	flagTrustNode = "trust-node"
-
-	// this is for signing
-	flagName = "name"
+	flagBind = "bind"
+	flagCORS = "cors"
 )
 
 var (
@@ -49,36 +44,14 @@ func AddClientCommands(cmd *cobra.Command) {
 	)
 }
 
-// GetCommands adds common flags to query commands
-func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
-	for _, c := range cmds {
-		// TODO: make this default false when we support proofs
-		c.Flags().Bool(flagTrustNode, true, "Don't verify proofs for responses")
-		c.Flags().String(flagChainID, "", "Chain ID of tendermint node")
-		c.Flags().String(flagNode, "", "<host>:<port> to tendermint rpc interface for this chain")
-		c.Flags().Int64(flagHeight, 0, "block height to query, omit to get most recent provable block")
-	}
-	return cmds
-}
-
-// PostCommands adds common flags for commands to post tx
-func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
-	for _, c := range cmds {
-		c.Flags().String(flagName, "", "Name of private key with which to sign")
-		c.Flags().String(flagChainID, "", "Chain ID of tendermint node")
-		c.Flags().String(flagNode, "", "<host>:<port> to tendermint rpc interface for this chain")
-	}
-	return cmds
-}
-
 func initClientCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize light client",
 		RunE:  todoNotImplemented,
 	}
-	cmd.Flags().StringP(flagChainID, "c", "", "ID of chain we connect to")
-	cmd.Flags().StringP(flagNode, "n", "tcp://localhost:46657", "Node to connect to")
+	cmd.Flags().StringP(client.FlagChainID, "c", "", "ID of chain we connect to")
+	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
 	cmd.Flags().String(flagGenesis, "", "Genesis file to verify header validity")
 	cmd.Flags().String(flagCommit, "", "File with trusted and signed header")
 	cmd.Flags().String(flagValHash, "", "Hash of trusted validator set (hex-encoded)")

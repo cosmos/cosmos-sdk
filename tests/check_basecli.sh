@@ -54,5 +54,8 @@ echo; echo "Empty account got some cash"
 echo; echo "View tx"
 ./build/basecli tx $HASH
 
-# shutdown
+# shutdown, but add a sleep if you want to manually run some cli scripts
+# against this server before it goes away
+# sleep 120
 kill $PID_SERVER
+

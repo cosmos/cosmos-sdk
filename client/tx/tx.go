@@ -2,6 +2,7 @@ package tx
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -56,8 +57,7 @@ func queryTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cdc := app.MakeTxCodec()
-	output, err := cdc.MarshalJSON(info)
+	output, err := json.MarshalIndent(info, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -67,19 +67,16 @@ func queryTx(cmd *cobra.Command, args []string) error {
 }
 
 func formatTxResult(res *ctypes.ResultTx) (txInfo, error) {
-	height := res.Height
-	result := res.TxResult
 	// TODO: verify the proof if requested
-
 	tx, err := parseTx(res.Tx)
 	if err != nil {
 		return txInfo{}, err
 	}
 
 	info := txInfo{
-		Height: height,
+		Height: res.Height,
 		Tx:     tx,
-		Result: result,
+		Result: res.TxResult,
 	}
 	return info, nil
 }

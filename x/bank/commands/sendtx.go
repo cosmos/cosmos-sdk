@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/app" // XXX: not good
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	crypto "github.com/tendermint/go-crypto"

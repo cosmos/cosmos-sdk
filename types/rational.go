@@ -10,8 +10,10 @@ import (
 	wire "github.com/tendermint/go-wire"
 )
 
+var ratCdc = RegisterWire(wire.NewCodec())
+
 // add rational codec elements to provided codec
-func RationalCodec(cdc *wire.Codec) *wire.Codec {
+func RegisterWire(cdc *wire.Codec) *wire.Codec {
 	cdc.RegisterInterface((*Rational)(nil), nil)
 	cdc.RegisterConcrete(Rat{}, "rat", nil)
 	return cdc
@@ -55,7 +57,7 @@ var (
 )
 
 // New - create a new Rat from integers
-func NewRational(Numerator int64, Denominator ...int64) Rat {
+func NewRat(Numerator int64, Denominator ...int64) Rat {
 	switch len(Denominator) {
 	case 0:
 		return Rat{big.NewRat(Numerator, 1)}
@@ -67,7 +69,7 @@ func NewRational(Numerator int64, Denominator ...int64) Rat {
 }
 
 //NewFromDecimal - create a rational from decimal string or integer string
-func NewRationlFromDecimal(decimalStr string) (f Rat, err error) {
+func NewRatFromDecimal(decimalStr string) (f Rat, err error) {
 
 	// first extract any negative symbol
 	neg := false
@@ -183,7 +185,7 @@ type RatMarshal struct {
 
 // MarshalJSON - custom implementation of JSON Marshal
 func (r Rat) MarshalJSON() ([]byte, error) {
-	return cdc.MarshalJSON(RatMarshal{r.Num(), r.Denom()})
+	return ratCdc.MarshalJSON(RatMarshal{r.Num(), r.Denom()})
 }
 
 // UnmarshalJSON - custom implementation of JSON Unmarshal
@@ -195,7 +197,7 @@ func (r *Rat) UnmarshalJSON(data []byte) (err error) {
 	}()
 
 	ratMar := new(RatMarshal)
-	if err := cdc.UnmarshalJSON(data, ratMar); err != nil {
+	if err := ratCdc.UnmarshalJSON(data, ratMar); err != nil {
 		return err
 	}
 	r.Rat = big.NewRat(ratMar.Numerator, ratMar.Denominator)

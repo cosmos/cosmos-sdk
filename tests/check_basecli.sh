@@ -42,7 +42,9 @@ HASH=`echo $TX | cut -d' ' -f6`
 echo "tx hash:" $HASH
 
 # let some blocks come up....
+./build/basecli status | jq .latest_block_height
 sleep 2
+./build/basecli status | jq .latest_block_height
 
 # balances change
 echo; echo "My account went down"
@@ -53,6 +55,12 @@ echo; echo "Empty account got some cash"
 # query original tx
 echo; echo "View tx"
 ./build/basecli tx $HASH
+
+# wait a bit then dump out some blockchain state
+sleep 10
+./build/basecli status --trace
+./build/basecli block --trace
+./build/basecli validatorset --trace
 
 # shutdown, but add a sleep if you want to manually run some cli scripts
 # against this server before it goes away

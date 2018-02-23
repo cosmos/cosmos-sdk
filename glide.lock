@@ -1,5 +1,5 @@
 hash: fa45c8a4f5512ed730f793b93d4876bdc604a1333a5a1f938c98a0f7dd55f22e
-updated: 2018-02-22T16:18:43.639619321+01:00
+updated: 2018-02-23T14:49:05.743112+01:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -123,7 +123,7 @@ imports:
   - extra25519
 - name: github.com/tendermint/go-crypto
   version: 4fc3055dbd17aa1203d0abc64b9293f378da22ec
-  subpackages:
+  subpackages
   - keys
   - keys/bcrypt
   - keys/words
@@ -133,7 +133,7 @@ imports:
 - name: github.com/tendermint/iavl
   version: 1a59ec0c82dc940c25339dd7c834df5cb76a95cb
 - name: github.com/tendermint/tendermint
-  version: 4a63409d5c72a36eee49c962b060fd0063958bda
+  version: 6947e118f54e4df24f5e2c79bcdd66199e54d885
   subpackages:
   - blockchain
   - cmd/tendermint/commands

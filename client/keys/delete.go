@@ -17,6 +17,7 @@ package keys
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
@@ -37,7 +38,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	oldpass, err := getPassword("DANGER - enter password to permanently delete key:")
+	oldpass, err := client.GetPassword("DANGER - enter password to permanently delete key:")
 	if err != nil {
 		return err
 	}

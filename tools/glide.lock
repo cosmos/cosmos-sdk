@@ -1,8 +1,8 @@
-hash: a163b1c4806024cfc9062db75a0abed285ec40461243e59af0e147db2c4bf0ce
-updated: 2018-01-15T19:02:49.834182027-08:00
+hash: 934ad5be72c9c240e8555eb6e1b2319840266c04c0fa9e024008cf841c0cee65
+updated: 2018-02-23T19:33:08.596187+01:00
 imports:
-- name: github.com/inconshreveable/mousetrap
-  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/alecthomas/gometalinter
+  version: 46cc1ea3778b247666c2949669a3333c532fa9c6
 - name: github.com/rigelrozanski/common
   version: f691f115798593d783b9999b1263c2f4ffecc439
 - name: github.com/rigelrozanski/shelldown
@@ -12,7 +12,7 @@ imports:
 - name: github.com/spf13/cobra
   version: 7b2c5ac9fc04fc5efafb60700713d4fa609b777b
 - name: github.com/spf13/pflag
-  version: 97afa5e7ca8a08a383cb259e06636b5e2cc7897f
-- name: gopkg.in/alecthomas/gometalinter.v2
-  version: 88d47c66988c5a5cb3945925da47c883800a94df
+  version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
+- name: github.com/spf13/viper
+  version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 testImports: []

@@ -17,6 +17,7 @@ package keys
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
@@ -37,11 +38,11 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	oldpass, err := getPassword("Enter the current passphrase:")
+	oldpass, err := client.GetPassword("Enter the current passphrase:")
 	if err != nil {
 		return err
 	}
-	newpass, err := getCheckPassword("Enter the new passphrase:", "Repeat the new passphrase:")
+	newpass, err := client.GetCheckPassword("Enter the new passphrase:", "Repeat the new passphrase:")
 	if err != nil {
 		return err
 	}

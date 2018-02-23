@@ -69,14 +69,14 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		pass, err = getCheckPassword("Enter a passphrase for your key:", "Repeat the passphrase:")
+		pass, err = client.GetCheckPassword("Enter a passphrase for your key:", "Repeat the passphrase:")
 		if err != nil {
 			return err
 		}
 	}
 
 	if viper.GetBool(flagRecover) {
-		seed, err := getPassword("Enter your recovery seed phrase:")
+		seed, err := client.GetSeed("Enter your recovery seed phrase:")
 		if err != nil {
 			return err
 		}

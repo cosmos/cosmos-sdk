@@ -70,8 +70,7 @@ func getAccount(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// TODO: better
-	// fmt.Printf("Account: %#v\n", acct)
+	// print out whole account or just coins?
 	output, err := json.MarshalIndent(acct, "", "  ")
 	// output, err := json.MarshalIndent(acct.BaseAccount.Coins, "", "  ")
 	if err != nil {

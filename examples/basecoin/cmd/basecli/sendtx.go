@@ -89,7 +89,11 @@ func buildTx() ([]byte, error) {
 
 	// sign and build
 	bz := msg.GetSignBytes()
-	passphrase := "1234567890" // XXX: adults only
+	prompt := fmt.Sprintf("Password to sign with '%s':", name)
+	passphrase, err := client.GetPassword(prompt)
+	if err != nil {
+		return nil, err
+	}
 	sig, pubkey, err := keybase.Sign(name, passphrase, bz)
 	if err != nil {
 		return nil, err

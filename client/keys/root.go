@@ -15,10 +15,9 @@
 package keys
 
 import (
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 )
-
-var lineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}}
 
 // Commands registers a sub-tree of commands to interact with
 // local private key storage.
@@ -36,7 +35,7 @@ func Commands() *cobra.Command {
 		addKeyCommand(),
 		listKeysCmd,
 		showKeysCmd,
-		lineBreak,
+		client.LineBreak,
 		deleteKeyCommand(),
 		updateKeyCommand(),
 	)

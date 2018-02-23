@@ -10,6 +10,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/lcd"
+	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
 )
@@ -20,8 +23,6 @@ var (
 		Use:   "basecli",
 		Short: "Basecoin light-client",
 	}
-
-	lineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}}
 )
 
 func todoNotImplemented(_ *cobra.Command, _ []string) error {
@@ -32,10 +33,13 @@ func main() {
 	// disable sorting
 	cobra.EnableCommandSorting = false
 
-	// generic client commands
-	AddClientCommands(basecliCmd)
+	// add standard rpc, and tx commands
+	rpc.AddCommands(basecliCmd)
+	basecliCmd.AddCommand(client.LineBreak)
+	tx.AddCommands(basecliCmd)
+	basecliCmd.AddCommand(client.LineBreak)
 
-	// query/post commands (custom to binary)
+	// add query/post commands (custom to binary)
 	basecliCmd.AddCommand(
 		client.GetCommands(
 			bankcmd.GetAccountCmd("main"),
@@ -47,10 +51,10 @@ func main() {
 
 	// add proxy, version and key info
 	basecliCmd.AddCommand(
-		lineBreak,
-		serveCommand(),
+		client.LineBreak,
+		lcd.ServeCommand(),
 		keys.Commands(),
-		lineBreak,
+		client.LineBreak,
 		version.VersionCmd,
 	)
 

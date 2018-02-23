@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/tendermint/abci/server"
-	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
@@ -14,7 +12,6 @@ import (
 )
 
 func main() {
-
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "main")
 
 	db, err := dbm.NewGoLevelDB("basecoind", "data")
@@ -44,19 +41,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Start the ABCI server
-	srv, err := server.NewServer("0.0.0.0:46658", "socket", baseApp)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	srv.Start()
+	bam.RunForever(baseApp)
 
-	// Wait forever
-	cmn.TrapSignal(func() {
-		// Cleanup
-		srv.Stop()
-	})
 	return
 }
 
@@ -71,7 +57,7 @@ func KVStoreHandler(storeKey sdk.StoreKey) sdk.Handler {
 		key := dTx.key
 		value := dTx.value
 
-		store := ctx.KVStore(storeKey)
+		store := ctx.GetKVStore(storeKey)
 		store.Set(key, value)
 
 		return sdk.Result{

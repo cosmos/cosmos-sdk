@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"encoding/hex"
@@ -23,7 +23,8 @@ const (
 	flagSequence = "seq"
 )
 
-func postSendCommand() *cobra.Command {
+// SendTxCommand will create a send tx and sign it with the given key
+func SendTxCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "send",
 		Short: "Create and sign a send tx",
@@ -42,7 +43,7 @@ func sendTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	uri := viper.GetString(flagNode)
+	uri := viper.GetString(client.FlagNode)
 	if uri == "" {
 		return errors.New("Must define which node to query with --node")
 	}
@@ -75,7 +76,7 @@ func buildTx() ([]byte, error) {
 		return nil, err
 	}
 
-	name := viper.GetString(flagName)
+	name := viper.GetString(client.FlagName)
 	info, err := keybase.Get(name)
 	if err != nil {
 		return nil, errors.WithMessage(err, "No key for name")

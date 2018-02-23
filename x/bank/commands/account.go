@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"encoding/hex"
@@ -17,7 +17,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 )
 
-func getAccountCmd() *cobra.Command {
+// GetAccountCmd returns a query account that will display the
+// state of the account at a given address
+func GetAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account <address>",
 		Short: "Query account balance",
@@ -42,16 +44,15 @@ func getAccount(cmd *cobra.Command, args []string) error {
 	// TODO: make the store name a variable in getAccountCmd?
 	path := "/main/key"
 
-	uri := viper.GetString(flagNode)
+	uri := viper.GetString(client.FlagNode)
 	if uri == "" {
 		return errors.New("Must define which node to query with --node")
 	}
 	node := client.GetNode(uri)
 
 	opts := rpcclient.ABCIQueryOptions{
-		Height: viper.GetInt64(flagHeight),
-		// Trusted: viper.GetBool(flagTrustNode),
-		Trusted: true,
+		Height:  viper.GetInt64(client.FlagHeight),
+		Trusted: viper.GetBool(client.FlagTrustNode),
 	}
 	result, err := node.ABCIQueryWithOptions(path, key, opts)
 	if err != nil {

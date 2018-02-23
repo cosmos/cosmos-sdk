@@ -73,9 +73,9 @@ func candidatesFromActors(store sdk.KVStore, addrs []crypto.Address, amts []int6
 			Status:      Unbonded,
 			PubKey:      pks[i],
 			Owner:       addrs[i],
-			Assets:      sdk.New(amts[i]),
-			Liabilities: sdk.New(amts[i]),
-			VotingPower: sdk.New(amts[i]),
+			Assets:      sdk.NewRat(amts[i]),
+			Liabilities: sdk.NewRat(amts[i]),
+			VotingPower: sdk.NewRat(amts[i]),
 		}
 		saveCandidate(store, c)
 	}
@@ -87,9 +87,9 @@ func candidatesFromActorsEmpty(addrs []crypto.Address) (candidates Candidates) {
 			Status:      Unbonded,
 			PubKey:      pks[i],
 			Owner:       addrs[i],
-			Assets:      sdk.Zero,
-			Liabilities: sdk.Zero,
-			VotingPower: sdk.Zero,
+			Assets:      sdk.ZeroRat,
+			Liabilities: sdk.ZeroRat,
+			VotingPower: sdk.ZeroRat,
 		}
 		candidates = append(candidates, c)
 	}

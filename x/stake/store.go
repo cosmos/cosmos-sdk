@@ -142,7 +142,7 @@ func updateValidator(store types.KVStore, validator *Validator) {
 func removeValidator(store types.KVStore, pubKey crypto.PubKey) {
 
 	//add validator with zero power to the validator updates
-	b, err := cdc.MarshalJSON(Validator{pubKey, types.Zero})
+	b, err := cdc.MarshalJSON(Validator{pubKey, types.ZeroRat})
 	if err != nil {
 		panic(err)
 	}

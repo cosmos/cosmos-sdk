@@ -10,6 +10,10 @@ const (
 	FlagName      = "name"
 )
 
+// LineBreak can be included in a command list to provide a blank line
+// to help with readability
+var LineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}}
+
 // GetCommands adds common flags to query commands
 func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {

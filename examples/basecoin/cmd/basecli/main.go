@@ -37,9 +37,13 @@ func main() {
 
 	// query/post commands (custom to binary)
 	basecliCmd.AddCommand(
-		client.GetCommands(bankcmd.GetAccountCmd())...)
+		client.GetCommands(
+			bankcmd.GetAccountCmd("main"),
+		)...)
 	basecliCmd.AddCommand(
-		client.PostCommands(bankcmd.SendTxCommand())...)
+		client.PostCommands(
+			bankcmd.SendTxCommand(),
+		)...)
 
 	// add proxy, version and key info
 	basecliCmd.AddCommand(

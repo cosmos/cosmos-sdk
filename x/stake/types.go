@@ -30,10 +30,10 @@ func defaultParams() Params {
 	return Params{
 		HoldBonded:          []byte("77777777777777777777777777777777"),
 		HoldUnbonded:        []byte("88888888888888888888888888888888"),
-		InflationRateChange: sdk.New(13, 100),
-		InflationMax:        sdk.New(20, 100),
-		InflationMin:        sdk.New(7, 100),
-		GoalBonded:          sdk.New(67, 100),
+		InflationRateChange: sdk.NewRat(13, 100),
+		InflationMax:        sdk.NewRat(20, 100),
+		InflationMin:        sdk.NewRat(7, 100),
+		GoalBonded:          sdk.NewRat(67, 100),
 		MaxVals:             100,
 		AllowedBondDenom:    "fermion",
 		GasDeclareCandidacy: 20,
@@ -61,41 +61,41 @@ type GlobalState struct {
 func initialGlobalState() *GlobalState {
 	return &GlobalState{
 		TotalSupply:       0,
-		BondedShares:      sdk.Zero,
-		UnbondedShares:    sdk.Zero,
+		BondedShares:      sdk.ZeroRat,
+		UnbondedShares:    sdk.ZeroRat,
 		BondedPool:        0,
 		UnbondedPool:      0,
 		InflationLastTime: 0,
-		Inflation:         sdk.New(7, 100),
+		Inflation:         sdk.NewRat(7, 100),
 	}
 }
 
 // get the bond ratio of the global state
 func (gs *GlobalState) bondedRatio() sdk.Rational {
 	if gs.TotalSupply > 0 {
-		return sdk.New(gs.BondedPool, gs.TotalSupply)
+		return sdk.NewRat(gs.BondedPool, gs.TotalSupply)
 	}
-	return sdk.Zero
+	return sdk.ZeroRat
 }
 
 // get the exchange rate of bonded token per issued share
 func (gs *GlobalState) bondedShareExRate() sdk.Rational {
 	if gs.BondedShares.IsZero() {
-		return sdk.One
+		return sdk.OneRat
 	}
-	return gs.BondedShares.Inv().Mul(sdk.New(gs.BondedPool))
+	return gs.BondedShares.Inv().Mul(sdk.NewRat(gs.BondedPool))
 }
 
 // get the exchange rate of unbonded tokens held in candidates per issued share
 func (gs *GlobalState) unbondedShareExRate() sdk.Rational {
 	if gs.UnbondedShares.IsZero() {
-		return sdk.One
+		return sdk.OneRat
 	}
-	return gs.UnbondedShares.Inv().Mul(sdk.New(gs.UnbondedPool))
+	return gs.UnbondedShares.Inv().Mul(sdk.NewRat(gs.UnbondedPool))
 }
 
 func (gs *GlobalState) addTokensBonded(amount int64) (issuedShares sdk.Rational) {
-	issuedShares = gs.bondedShareExRate().Inv().Mul(sdk.New(amount)) // (tokens/shares)^-1 * tokens
+	issuedShares = gs.bondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
 	gs.BondedPool += amount
 	gs.BondedShares = gs.BondedShares.Add(issuedShares)
 	return
@@ -109,7 +109,7 @@ func (gs *GlobalState) removeSharesBonded(shares sdk.Rational) (removedTokens in
 }
 
 func (gs *GlobalState) addTokensUnbonded(amount int64) (issuedShares sdk.Rational) {
-	issuedShares = gs.unbondedShareExRate().Inv().Mul(sdk.New(amount)) // (tokens/shares)^-1 * tokens
+	issuedShares = gs.unbondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
 	gs.UnbondedShares = gs.UnbondedShares.Add(issuedShares)
 	gs.UnbondedPool += amount
 	return
@@ -165,9 +165,9 @@ func NewCandidate(pubKey crypto.PubKey, owner crypto.Address, description Descri
 		Status:      Unbonded,
 		PubKey:      pubKey,
 		Owner:       owner,
-		Assets:      sdk.Zero,
-		Liabilities: sdk.Zero,
-		VotingPower: sdk.Zero,
+		Assets:      sdk.ZeroRat,
+		Liabilities: sdk.ZeroRat,
+		VotingPower: sdk.ZeroRat,
 		Description: description,
 	}
 }
@@ -177,7 +177,7 @@ func NewCandidate(pubKey crypto.PubKey, owner crypto.Address, description Descri
 // get the exchange rate of global pool shares over delegator shares
 func (c *Candidate) delegatorShareExRate() sdk.Rational {
 	if c.Liabilities.IsZero() {
-		return sdk.One
+		return sdk.OneRat
 	}
 	return c.Assets.Quo(c.Liabilities)
 }

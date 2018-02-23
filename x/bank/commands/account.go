@@ -19,16 +19,21 @@ import (
 
 // GetAccountCmd returns a query account that will display the
 // state of the account at a given address
-func GetAccountCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func GetAccountCmd(storeName string) *cobra.Command {
+	cmd := acctCmd{storeName}
+
+	return &cobra.Command{
 		Use:   "account <address>",
 		Short: "Query account balance",
-		RunE:  getAccount,
+		RunE:  cmd.get,
 	}
-	return cmd
 }
 
-func getAccount(cmd *cobra.Command, args []string) error {
+type acctCmd struct {
+	storeName string
+}
+
+func (a acctCmd) get(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 || len(args[0]) == 0 {
 		return errors.New("You must provide an account name")
 	}
@@ -40,9 +45,7 @@ func getAccount(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	key := crypto.Address(bz)
-
-	// TODO: make the store name a variable in getAccountCmd?
-	path := "/main/key"
+	path := fmt.Sprintf("/%s/key", a.storeName)
 
 	uri := viper.GetString(client.FlagNode)
 	if uri == "" {

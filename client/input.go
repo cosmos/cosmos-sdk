@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/bgentry/speakeasy"
+	isatty "github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
-	isatty "github.com/tendermint/vendor-bak/github.com/mattn/go-isatty"
 )
 
 // MinPassLength is the minimum acceptable password length

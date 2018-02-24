@@ -8,7 +8,6 @@ import (
 )
 
 func TestGetInflation(t *testing.T) {
-	assert := assert.New(t)
 	store := initTestStore(t)
 	params := loadParams(store)
 	gs := loadGlobalState(store)
@@ -48,13 +47,12 @@ func TestGetInflation(t *testing.T) {
 		inflation := nextInflation(gs, params)
 		diffInflation := inflation.Sub(tc.setInflation)
 
-		assert.True(diffInflation.Equal(tc.expectedChange),
+		assert.True(t, diffInflation.Equal(tc.expectedChange),
 			"%v, %v", diffInflation, tc.expectedChange)
 	}
 }
 
 func TestProcessProvisions(t *testing.T) {
-	assert := assert.New(t)
 	store := initTestStore(t)
 	params := loadParams(store)
 	gs := loadGlobalState(store)
@@ -77,15 +75,15 @@ func TestProcessProvisions(t *testing.T) {
 	var unbondedShares int64 = 400000000
 
 	// initial bonded ratio ~ 27%
-	assert.True(gs.bondedRatio().Equal(rational.New(bondedShares, totalSupply)), "%v", gs.bondedRatio())
+	assert.True(t, gs.bondedRatio().Equal(rational.New(bondedShares, totalSupply)), "%v", gs.bondedRatio())
 
 	// Supplies
-	assert.Equal(totalSupply, gs.TotalSupply)
-	assert.Equal(bondedShares, gs.BondedPool)
-	assert.Equal(unbondedShares, gs.UnbondedPool)
+	assert.Equal(t, totalSupply, gs.TotalSupply)
+	assert.Equal(t, bondedShares, gs.BondedPool)
+	assert.Equal(t, unbondedShares, gs.UnbondedPool)
 
 	// test the value of candidate shares
-	assert.True(gs.bondedShareExRate().Equal(rational.One), "%v", gs.bondedShareExRate())
+	assert.True(t, gs.bondedShareExRate().Equal(rational.One), "%v", gs.bondedShareExRate())
 
 	initialSupply := gs.TotalSupply
 	initialUnbonded := gs.TotalSupply - gs.BondedPool
@@ -97,22 +95,22 @@ func TestProcessProvisions(t *testing.T) {
 		startBondedPool := gs.BondedPool
 		startTotalSupply := gs.TotalSupply
 		processProvisions(store, gs, params)
-		assert.Equal(startBondedPool+expProvisions, gs.BondedPool)
-		assert.Equal(startTotalSupply+expProvisions, gs.TotalSupply)
+		assert.Equal(t, startBondedPool+expProvisions, gs.BondedPool)
+		assert.Equal(t, startTotalSupply+expProvisions, gs.TotalSupply)
 	}
-	assert.NotEqual(initialSupply, gs.TotalSupply)
-	assert.Equal(initialUnbonded, gs.UnbondedPool)
+	assert.NotEqual(t, initialSupply, gs.TotalSupply)
+	assert.Equal(t, initialUnbonded, gs.UnbondedPool)
 	//panic(fmt.Sprintf("debug total %v, bonded  %v, diff %v\n", gs.TotalSupply, gs.BondedPool, gs.TotalSupply-gs.BondedPool))
 
 	// initial bonded ratio ~ 35% ~ 30% increase for bonded holders
-	assert.True(gs.bondedRatio().Equal(rational.New(105906511, 305906511)), "%v", gs.bondedRatio())
+	assert.True(t, gs.bondedRatio().Equal(rational.New(105906511, 305906511)), "%v", gs.bondedRatio())
 
 	// global supply
-	assert.Equal(int64(611813022), gs.TotalSupply)
-	assert.Equal(int64(211813022), gs.BondedPool)
-	assert.Equal(unbondedShares, gs.UnbondedPool)
+	assert.Equal(t, int64(611813022), gs.TotalSupply)
+	assert.Equal(t, int64(211813022), gs.BondedPool)
+	assert.Equal(t, unbondedShares, gs.UnbondedPool)
 
 	// test the value of candidate shares
-	assert.True(gs.bondedShareExRate().Mul(rational.New(bondedShares)).Equal(rational.New(211813022)), "%v", gs.bondedShareExRate())
+	assert.True(t, gs.bondedShareExRate().Mul(rational.New(bondedShares)).Equal(rational.New(211813022)), "%v", gs.bondedShareExRate())
 
 }

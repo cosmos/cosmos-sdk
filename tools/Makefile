@@ -1,8 +1,8 @@
-all: install_glide check get_vendor_deps install
+all: install_dep check get_vendor_deps install
 
 
 ########################################
-### Glide
+### DEP
 
 DEP = github.com/golang/dep/cmd/dep
 DEP_CHECK := $(shell command -v dep 2> /dev/null)

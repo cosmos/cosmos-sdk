@@ -2,7 +2,7 @@ This is the "Basecoin" example application built on the Cosmos-SDK.  This
 "Basecoin" is not affiliated with [Coinbase](http://www.getbasecoin.com/), nor
 the [stable coin](http://www.getbasecoin.com/).
 
-You need a recent version of `glide` to install Basecoin's dependencies.
+You need a recent version of `dep` to install Basecoin's dependencies.
 
 ```bash
 > make get_tools

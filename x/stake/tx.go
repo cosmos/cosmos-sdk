@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	coin "github.com/cosmos/cosmos-sdk/x/bank" // XXX fix
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -38,7 +37,7 @@ const (
 // BondUpdate - struct for bonding or unbonding transactions
 type BondUpdate struct {
 	PubKey crypto.PubKey `json:"pub_key"`
-	Bond   coin.Coin     `json:"amount"`
+	Bond   sdk.Coin      `json:"amount"`
 }
 
 // ValidateBasic - Check for non-empty candidate, and valid coins
@@ -46,9 +45,9 @@ func (tx BondUpdate) ValidateBasic() error {
 	if tx.PubKey.Empty() {
 		return errCandidateEmpty
 	}
-	coins := coin.Coins{tx.Bond}
-	if !coins.IsValid() {
-		return coin.ErrInvalidCoins()
+	coins := sdk.Coins{tx.Bond}
+	if !sdk.IsValid() {
+		return sdk.ErrInvalidCoins()
 	}
 	if !coins.IsPositive() {
 		return fmt.Errorf("Amount must be > 0")
@@ -63,7 +62,7 @@ type TxDeclareCandidacy struct {
 }
 
 // NewTxDeclareCandidacy - new TxDeclareCandidacy
-func NewTxDeclareCandidacy(bond coin.Coin, pubKey crypto.PubKey, description Description) sdk.Tx {
+func NewTxDeclareCandidacy(bond sdk.Coin, pubKey crypto.PubKey, description Description) sdk.Tx {
 	return TxDeclareCandidacy{
 		BondUpdate{
 			PubKey: pubKey,
@@ -110,7 +109,7 @@ func (tx TxEditCandidacy) ValidateBasic() error {
 type TxDelegate struct{ BondUpdate }
 
 // NewTxDelegate - new TxDelegate
-func NewTxDelegate(bond coin.Coin, pubKey crypto.PubKey) sdk.Tx {
+func NewTxDelegate(bond sdk.Coin, pubKey crypto.PubKey) sdk.Tx {
 	return TxDelegate{BondUpdate{
 		PubKey: pubKey,
 		Bond:   bond,

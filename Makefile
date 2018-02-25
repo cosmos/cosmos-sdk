@@ -32,15 +32,15 @@ check_tools:
 	cd tools && $(MAKE) check
 
 update_tools:
-	cd tools && $(MAKE) glide_update
+	cd tools && $(MAKE) dep_update
 
 get_tools:
 	cd tools && $(MAKE)
 
 get_vendor_deps:
 	@rm -rf vendor/
-	@echo "--> Running glide install"
-	@glide install
+	@echo "--> Running dep ensure"
+	@dep ensure
 
 draw_deps:
 	@# requires brew install graphviz or apt-get install graphviz

@@ -4,27 +4,27 @@ all: install_glide check get_vendor_deps install
 ########################################
 ### Glide
 
-GLIDE = github.com/tendermint/glide
-GLIDE_CHECK := $(shell command -v glide 2> /dev/null)
+DEP = github.com/golang/dep/cmd/dep
+DEP_CHECK := $(shell command -v dep 2> /dev/null)
 
 check:
-ifndef GLIDE_CHECK
-	@echo "No glide in path.  Install with 'make install_glide'."
+ifndef DEP_CHECK
+	@echo "No dep in path.  Install with 'make install_dep'."
 else
-	@echo "Found glide in path."
+	@echo "Found dep in path."
 endif
 
-install_glide:
-ifdef GLIDE_CHECK
-	@echo "Glide is already installed.  Run 'make update_glide' to update."
+install_dep:
+ifdef DEP_CHECK
+	@echo "Dep is already installed.  Run 'make update_dep' to update."
 else
-	@echo "$(ansi_grn)Installing glide$(ansi_end)"
-	go get -v $(GLIDE)
+	@echo "$(ansi_grn)Installing dep$(ansi_end)"
+	go get -v $(DEP)
 endif
 
-update_glide:
-	@echo "$(ansi_grn)Updating glide$(ansi_end)"
-	go get -u -v $(GLIDE)
+update_dep:
+	@echo "$(ansi_grn)Updating dep$(ansi_end)"
+	go get -u -v $(DEP)
 
 
 ########################################
@@ -33,8 +33,8 @@ update_glide:
 
 get_vendor_deps: check
 	@rm -rf vendor/
-	@echo "--> Running glide install"
-	@glide install
+	@echo "--> Running dep ensure"
+	@dep ensure
 
 install: get_vendor_deps
 	@echo "$(ansi_grn)Installing tools$(ansi_end)"
@@ -62,4 +62,4 @@ ansi_end=\033[0m
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: check install_glide update_glide get_vendor_deps install
+.PHONY: check install_dep update_dep get_vendor_deps install

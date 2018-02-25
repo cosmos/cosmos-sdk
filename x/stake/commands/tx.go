@@ -4,17 +4,16 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/tmlibs/rational"
 
-	txcmd "github.com/cosmos/cosmos-sdk/client/commands/txs"
-	"github.com/cosmos/cosmos-sdk/modules/coin"
-
-	"github.com/cosmos/gaia/modules/stake"
+	"github.com/cosmos/cosmos-sdk/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 // nolint
@@ -87,7 +86,7 @@ func init() {
 }
 
 func cmdDeclareCandidacy(cmd *cobra.Command, args []string) error {
-	amount, err := coin.ParseCoin(viper.GetString(FlagAmount))
+	amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
 	if err != nil {
 		return err
 	}
@@ -109,7 +108,7 @@ func cmdDeclareCandidacy(cmd *cobra.Command, args []string) error {
 	}
 
 	tx := stake.NewTxDeclareCandidacy(amount, pk, description)
-	return txcmd.DoTx(tx)
+	return doTx(tx)
 }
 
 func cmdEditCandidacy(cmd *cobra.Command, args []string) error {
@@ -127,11 +126,11 @@ func cmdEditCandidacy(cmd *cobra.Command, args []string) error {
 	}
 
 	tx := stake.NewTxEditCandidacy(pk, description)
-	return txcmd.DoTx(tx)
+	return doTx(tx)
 }
 
 func cmdDelegate(cmd *cobra.Command, args []string) error {
-	amount, err := coin.ParseCoin(viper.GetString(FlagAmount))
+	amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
 	if err != nil {
 		return err
 	}
@@ -142,7 +141,7 @@ func cmdDelegate(cmd *cobra.Command, args []string) error {
 	}
 
 	tx := stake.NewTxDelegate(amount, pk)
-	return txcmd.DoTx(tx)
+	return doTx(tx)
 }
 
 func cmdUnbond(cmd *cobra.Command, args []string) error {
@@ -151,14 +150,14 @@ func cmdUnbond(cmd *cobra.Command, args []string) error {
 
 	// check the shares before broadcasting
 	sharesStr := viper.GetString(FlagShares)
-	var shares rational.Rat
+	var shares sdk.Rat
 	if sharesStr != "MAX" {
 		var err error
-		shares, err = rational.NewFromDecimal(sharesStr)
+		shares, err = sdk.NewRatFromDecimal(sharesStr)
 		if err != nil {
 			return err
 		}
-		if !shares.GT(rational.Zero) {
+		if !shares.GT(sdk.ZeroRat) {
 			return fmt.Errorf("shares must be positive integer or decimal (ex. 123, 1.23456789)")
 		}
 	}
@@ -169,7 +168,7 @@ func cmdUnbond(cmd *cobra.Command, args []string) error {
 	}
 
 	tx := stake.NewTxUnbond(sharesStr, pk)
-	return txcmd.DoTx(tx)
+	return doTx(tx)
 }
 
 // GetPubKey - create the pubkey from a pubkey string
@@ -192,4 +191,35 @@ func GetPubKey(pubKeyStr string) (pk crypto.PubKey, err error) {
 	copy(pkEd[:], pkBytes[:])
 	pk = pkEd.Wrap()
 	return
+}
+
+//--------------------------------------------------------------------
+// XXX consolidate to client
+
+func doTx(tx []byte) {
+
+	uri := viper.GetString(client.FlagNode)
+	if uri == "" {
+		return errors.New("Must define which node to query with --node")
+	}
+	node := client.GetNode(uri)
+
+	result, err := node.BroadcastTxCommit(tx)
+	if err != nil {
+		return err
+	}
+
+	if result.CheckTx.Code != uint32(0) {
+		fmt.Printf("CheckTx failed: (%d) %s\n",
+			result.CheckTx.Code,
+			result.CheckTx.Log)
+	}
+	if result.DeliverTx.Code != uint32(0) {
+		fmt.Printf("DeliverTx failed: (%d) %s\n",
+			result.DeliverTx.Code,
+			result.DeliverTx.Log)
+	}
+
+	fmt.Printf("Committed at block %d. Hash: %s\n", result.Height, result.Hash.String())
+	return nil
 }

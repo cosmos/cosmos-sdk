@@ -40,9 +40,8 @@ type BaseApp struct {
 	// Volatile
 	// .msCheck and .ctxCheck are set on initialization and reset on Commit.
 	// .msDeliver and .ctxDeliver are (re-)set on BeginBlock.
-	// .valUpdates accumulate in DeliverTx and reset in BeginBlock.
+	// .valUpdates accumulate in DeliverTx and are reset in BeginBlock.
 	// QUESTION: should we put valUpdates in the ctxDeliver?
-
 	msCheck    sdk.CacheMultiStore // CheckTx state, a cache-wrap of `.cms`
 	msDeliver  sdk.CacheMultiStore // DeliverTx state, a cache-wrap of `.cms`
 	ctxCheck   sdk.Context         // CheckTx context
@@ -51,6 +50,7 @@ type BaseApp struct {
 }
 
 var _ abci.Application = &BaseApp{}
+var _ abci.Application = (*BaseApp)(nil)
 
 // Create and name new BaseApp
 func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
@@ -94,11 +94,9 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 	app.endBlocker = endBlocker
 }
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
-	// deducts fee from payer, verifies signatures and nonces, sets Signers to ctx.
 	app.anteHandler = ah
 }
 
-// nolint - Get functions
 func (app *BaseApp) Router() Router { return app.router }
 
 // load latest application version
@@ -172,7 +170,6 @@ func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 
 // Implements ABCI
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
-
 	lastCommitID := app.cms.LastCommitID()
 
 	return abci.ResponseInfo{
@@ -234,7 +231,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 // Implements ABCI
 func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
-
 	// Decode the Tx.
 	var result sdk.Result
 	var tx, err = app.txDecoder(txBytes)
@@ -259,7 +255,6 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 
 // Implements ABCI
 func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
-
 	// Decode the Tx.
 	var result sdk.Result
 	var tx, err = app.txDecoder(txBytes)
@@ -300,7 +295,6 @@ func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
 // txBytes may be nil in some cases, eg. in tests.
 // Also, in the future we may support "internal" transactions.
 func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
-
 	// Handle any panics.
 	defer func() {
 		if r := recover(); r != nil {
@@ -329,20 +323,27 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 		ctx = app.ctxDeliver.WithTxBytes(txBytes)
 	}
 
-	// TODO: override default ante handler w/ custom ante handler.
-
 	// Run the ante handler.
 	newCtx, result, abort := app.anteHandler(ctx, tx)
-	if isCheckTx || abort {
+	if abort {
 		return result
 	}
 	if !newCtx.IsZero() {
 		ctx = newCtx
 	}
 
-	// CacheWrap app.msDeliver in case it fails.
-	msCache := app.msDeliver.CacheMultiStore()
-	ctx = ctx.WithMultiStore(msCache)
+	// Get the correct cache
+	var msCache sdk.CacheMultiStore
+	if isCheckTx == true {
+		// CacheWrap app.msCheck in case it fails.
+		msCache = app.msCheck.CacheMultiStore()
+		ctx = ctx.WithMultiStore(msCache)
+	} else {
+		// CacheWrap app.msDeliver in case it fails.
+		msCache = app.msDeliver.CacheMultiStore()
+		ctx = ctx.WithMultiStore(msCache)
+
+	}
 
 	// Match and run route.
 	msgType := msg.Type()

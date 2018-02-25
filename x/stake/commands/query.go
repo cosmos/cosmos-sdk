@@ -1,16 +1,21 @@
 package commands
 
 import (
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	crypto "github.com/tendermint/go-crypto"
 
-	"github.com/cosmos/cosmos-sdk/client/commands"
-	"github.com/cosmos/cosmos-sdk/client/commands/query"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	coin "github.com/cosmos/cosmos-sdk/x/bank" // XXX fix
-	"github.com/cosmos/gaia/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 // XXX remove dependancy
@@ -61,18 +66,59 @@ func init() {
 	CmdQueryDelegatorCandidates.Flags().AddFlagSet(fsAddr)
 }
 
+// XXX move to common directory in client helpers
+func makeQuery(key, storeName string) (res []byte, err error) {
+
+	path := fmt.Sprintf("/%s/key", a.storeName)
+
+	uri := viper.GetString(client.FlagNode)
+	if uri == "" {
+		return res, errors.New("Must define which node to query with --node")
+	}
+	node := client.GetNode(uri)
+
+	opts := rpcclient.ABCIQueryOptions{
+		Height:  viper.GetInt64(client.FlagHeight),
+		Trusted: viper.GetBool(client.FlagTrustNode),
+	}
+	result, err := node.ABCIQueryWithOptions(path, key, opts)
+	if err != nil {
+		return res, err
+	}
+	resp := result.Response
+	if resp.Code != uint32(0) {
+		return res, errors.Errorf("Query failed: (%d) %s", resp.Code, resp.Log)
+	}
+	return resp.val, nil
+}
+
 func cmdQueryCandidates(cmd *cobra.Command, args []string) error {
 
 	var pks []crypto.PubKey
 
-	prove := !viper.GetBool(commands.FlagTrustNode)
+	prove := !viper.GetBool(client.FlagTrustNode)
 	key := PrefixedKey(stake.Name(), stake.CandidatesPubKeysKey)
-	height, err := query.GetParsed(key, &pks, query.GetHeight(), prove)
+
+	res, err := makeQuery(key, "gaia-store-name") // XXX move gaia store name out of here
 	if err != nil {
 		return err
 	}
 
-	return query.OutputProof(pks, height)
+	// parse out the candidates
+	candidates := new(stake.Candidates)
+	cdc := app.MakeTxCodec() // XXX create custom Tx for Staking Module
+	err = cdc.UnmarshalBinary(res, candidates)
+	if err != nil {
+		return err
+	}
+	output, err := json.MarshalIndent(candidates, "", "  ")
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(output))
+	return nil
+
+	// TODO output with proofs / machine parseable etc.
 }
 
 func cmdQueryCandidate(cmd *cobra.Command, args []string) error {
@@ -84,58 +130,85 @@ func cmdQueryCandidate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	prove := !viper.GetBool(commands.FlagTrustNode)
+	prove := !viper.GetBool(client.FlagTrustNode)
 	key := PrefixedKey(stake.Name(), stake.GetCandidateKey(pk))
-	height, err := query.GetParsed(key, &candidate, query.GetHeight(), prove)
+
+	// parse out the candidate
+	candidate := new(stake.Candidate)
+	cdc := app.MakeTxCodec() // XXX create custom Tx for Staking Module
+	err = cdc.UnmarshalBinary(res, candidate)
 	if err != nil {
 		return err
 	}
+	output, err := json.MarshalIndent(candidate, "", "  ")
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(output))
+	return nil
 
-	return query.OutputProof(candidate, height)
+	// TODO output with proofs / machine parseable etc.
 }
 
 func cmdQueryDelegatorBond(cmd *cobra.Command, args []string) error {
-
-	var bond stake.DelegatorBond
 
 	pk, err := GetPubKey(viper.GetString(FlagPubKey))
 	if err != nil {
 		return err
 	}
 
-	delegatorAddr := viper.GetString(FlagDelegatorAddress)
-	delegator, err := commands.ParseActor(delegatorAddr)
+	bz, err := hex.DecodeString(viper.GetString(FlagDelegatorAddress))
 	if err != nil {
 		return err
 	}
+	delegator := crypto.Address(bz)
 	delegator = coin.ChainAddr(delegator)
 
-	prove := !viper.GetBool(commands.FlagTrustNode)
+	prove := !viper.GetBool(client.FlagTrustNode)
 	key := PrefixedKey(stake.Name(), stake.GetDelegatorBondKey(delegator, pk))
-	height, err := query.GetParsed(key, &bond, query.GetHeight(), prove)
+
+	// parse out the bond
+	var bond stake.DelegatorBond
+	cdc := app.MakeTxCodec() // XXX create custom Tx for Staking Module
+	err = cdc.UnmarshalBinary(res, bond)
 	if err != nil {
 		return err
 	}
+	output, err := json.MarshalIndent(bond, "", "  ")
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(output))
+	return nil
 
-	return query.OutputProof(bond, height)
+	// TODO output with proofs / machine parseable etc.
 }
 
 func cmdQueryDelegatorCandidates(cmd *cobra.Command, args []string) error {
 
-	delegatorAddr := viper.GetString(FlagDelegatorAddress)
-	delegator, err := commands.ParseActor(delegatorAddr)
+	bz, err := hex.DecodeString(viper.GetString(FlagDelegatorAddress))
 	if err != nil {
 		return err
 	}
+	delegator := crypto.Address(bz)
 	delegator = coin.ChainAddr(delegator)
 
-	prove := !viper.GetBool(commands.FlagTrustNode)
+	prove := !viper.GetBool(client.FlagTrustNode)
 	key := PrefixedKey(stake.Name(), stake.GetDelegatorBondsKey(delegator))
+
+	// parse out the candidates list
 	var candidates []crypto.PubKey
-	height, err := query.GetParsed(key, &candidates, query.GetHeight(), prove)
+	cdc := app.MakeTxCodec() // XXX create custom Tx for Staking Module
+	err = cdc.UnmarshalBinary(res, candidates)
 	if err != nil {
 		return err
 	}
+	output, err := json.MarshalIndent(candidates, "", "  ")
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(output))
+	return nil
 
-	return query.OutputProof(candidates, height)
+	// TODO output with proofs / machine parseable etc.
 }

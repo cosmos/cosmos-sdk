@@ -6,30 +6,29 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cosmos/cosmos-sdk"
-	"github.com/cosmos/cosmos-sdk/modules/coin"
-
 	crypto "github.com/tendermint/go-crypto"
 	wire "github.com/tendermint/go-wire"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
 	validator = sdk.Actor{"testChain", "testapp", []byte("addressvalidator1")}
 	empty     sdk.Actor
 
-	coinPos          = coin.Coin{"fermion", 1000}
-	coinZero         = coin.Coin{"fermion", 0}
-	coinNeg          = coin.Coin{"fermion", -10000}
-	coinPosNotAtoms  = coin.Coin{"foo", 10000}
-	coinZeroNotAtoms = coin.Coin{"foo", 0}
-	coinNegNotAtoms  = coin.Coin{"foo", -10000}
+	coinPos          = sdk.Coin{"fermion", 1000}
+	coinZero         = sdk.Coin{"fermion", 0}
+	coinNeg          = sdk.Coin{"fermion", -10000}
+	coinPosNotAtoms  = sdk.Coin{"foo", 10000}
+	coinZeroNotAtoms = sdk.Coin{"foo", 0}
+	coinNegNotAtoms  = sdk.Coin{"foo", -10000}
 )
 
 func TestBondUpdateValidateBasic(t *testing.T) {
 	tests := []struct {
 		name    string
 		PubKey  crypto.PubKey
-		Bond    coin.Coin
+		Bond    sdk.Coin
 		wantErr bool
 	}{
 		{"basic good", pks[0], coinPos, false},
@@ -49,40 +48,38 @@ func TestBondUpdateValidateBasic(t *testing.T) {
 }
 
 func TestAllAreTx(t *testing.T) {
-	assert := assert.New(t)
 
 	// make sure all types construct properly
 	pubKey := newPubKey("1234567890")
 	bondAmt := 1234321
-	bond := coin.Coin{Denom: "ATOM", Amount: int64(bondAmt)}
+	bond := sdk.Coin{Denom: "ATOM", Amount: int64(bondAmt)}
 
 	// Note that Wrap is only defined on BondUpdate, so when you call it,
 	// you lose all info on the embedding type. Please add Wrap()
 	// method to all the parents
 	txDelegate := NewTxDelegate(bond, pubKey)
 	_, ok := txDelegate.Unwrap().(TxDelegate)
-	assert.True(ok, "%#v", txDelegate)
+	assert.True(t, ok, "%#v", txDelegate)
 
 	txUnbond := NewTxUnbond(strconv.Itoa(bondAmt), pubKey)
 	_, ok = txUnbond.Unwrap().(TxUnbond)
-	assert.True(ok, "%#v", txUnbond)
+	assert.True(t, ok, "%#v", txUnbond)
 
 	txDecl := NewTxDeclareCandidacy(bond, pubKey, Description{})
 	_, ok = txDecl.Unwrap().(TxDeclareCandidacy)
-	assert.True(ok, "%#v", txDecl)
+	assert.True(t, ok, "%#v", txDecl)
 
 	txEditCan := NewTxEditCandidacy(pubKey, Description{})
 	_, ok = txEditCan.Unwrap().(TxEditCandidacy)
-	assert.True(ok, "%#v", txEditCan)
+	assert.True(t, ok, "%#v", txEditCan)
 }
 
 func TestSerializeTx(t *testing.T) {
-	assert := assert.New(t)
 
 	// make sure all types construct properly
 	pubKey := newPubKey("1234567890")
 	bondAmt := 1234321
-	bond := coin.Coin{Denom: "ATOM", Amount: int64(bondAmt)}
+	bond := sdk.Coin{Denom: "ATOM", Amount: int64(bondAmt)}
 
 	tests := []struct {
 		tx sdk.Tx
@@ -97,8 +94,8 @@ func TestSerializeTx(t *testing.T) {
 		var tx sdk.Tx
 		bs := wire.BinaryBytes(tc.tx)
 		err := wire.ReadBinaryBytes(bs, &tx)
-		if assert.NoError(err, "%d", i) {
-			assert.Equal(tc.tx, tx, "%d", i)
+		if assert.NoError(t, err, "%d", i) {
+			assert.Equal(t, tc.tx, tx, "%d", i)
 		}
 	}
 }

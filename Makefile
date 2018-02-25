@@ -51,7 +51,7 @@ get_vendor_deps:
 ### Testing
 
 test:
-	go test -p 1 $(go list ./... | grep -v vendor)
+	go test -p 1 $(shell go list ./... | grep -v vendor)
 
 ########################################
 ### Formatting, linting, and vetting

@@ -71,10 +71,16 @@ func GetCheckPassword(prompt, prompt2 string) (string, error) {
 	return pass, nil
 }
 
+// inputIsTty returns true iff we have an interactive prompt,
+// where we can disable echo and request to repeat the password.
+// If false, we can optimize for piped input from another command
 func inputIsTty() bool {
 	return isatty.IsTerminal(os.Stdin.Fd()) || isatty.IsCygwinTerminal(os.Stdin.Fd())
 }
 
+// stdinPassword reads one line from stdin.
+// Subsequent calls reuse the same buffer, so we don't lose
+// any input when reading a password twice (to verify)
 func stdinPassword() (string, error) {
 	if buf == nil {
 		buf = bufio.NewReader(os.Stdin)

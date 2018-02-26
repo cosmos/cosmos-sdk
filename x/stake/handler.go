@@ -1,16 +1,17 @@
 package stake
 
 import (
+	"errors"
 	"fmt"
+	"reflect"
 	"strconv"
 
 	"github.com/spf13/viper"
-	"github.com/tendermint/tmlibs/log"
+	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/tmlibs/rational"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	coin "github.com/cosmos/cosmos-sdk/x/bank" // XXX fix
 )
 
 // nolint
@@ -32,46 +33,44 @@ type delegatedProofOfStake interface {
 }
 
 type coinSend interface {
-	transferFn(sender, receiver sdk.Actor, coins coin.Coins) error
+	transferFn(sender, receiver crypto.Address, coins sdk.Coins) error
 }
 
 //_______________________________________________________________________
 
 // Handler - the transaction processing handler
-type Handler struct {
-}
+type Handler struct{}
 
-// NewHandler returns a new Handler with the default Params
-func NewHandler() Handler {
-	return Handler{}
-}
+// Handle all "bank" type messages.
+func NewHandler() sdk.Handler {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 
-// Name - return stake namespace
-func (Handler) Name() string {
-	return stakingModuleName
+		switch msg := msg.(type) {
+		case SendMsg:
+			return handleSendMsg(ctx, ck, msg)
+		case IssueMsg:
+			return handleIssueMsg(ctx, ck, msg)
+		default:
+			errMsg := "Unrecognized bank Msg type: " + reflect.TypeOf(msg).Name()
+			return sdk.ErrUnknownRequest(errMsg).Result()
+		}
+	}
 }
 
 // InitState - set genesis parameters for staking
-func (h Handler) InitState(l log.Logger, store types.KVStore,
-	module, key, value string, cb sdk.InitStater) (log string, err error) {
-	return "", h.initState(module, key, value, store)
+func (h Handler) InitState(key, value string, store sdk.KVStore) error {
+	return h.initState(key, value, store)
 }
 
 // separated for testing
-func (Handler) initState(module, key, value string, store types.KVStore) error {
-	if module != stakingModuleName {
-		return sdk.ErrUnknownModule(module)
-	}
+func (Handler) initState(key, value string, store sdk.KVStore) error {
 
 	params := loadParams(store)
 	switch key {
 	case "allowed_bond_denom":
 		params.AllowedBondDenom = value
-	case "max_vals",
-		"gas_bond",
-		"gas_unbond":
+	case "max_vals", "gas_bond", "gas_unbond":
 
-		// TODO: enforce non-negative integers in input
 		i, err := strconv.Atoi(value)
 		if err != nil {
 			return fmt.Errorf("input must be integer, Error: %v", err.Error())
@@ -79,6 +78,9 @@ func (Handler) initState(module, key, value string, store types.KVStore) error {
 
 		switch key {
 		case "max_vals":
+			if i < 0 {
+				return errors.New("cannot designate negative max validators")
+			}
 			params.MaxVals = uint16(i)
 		case "gas_bond":
 			params.GasDelegate = int64(i)
@@ -94,7 +96,7 @@ func (Handler) initState(module, key, value string, store types.KVStore) error {
 }
 
 // CheckTx checks if the tx is properly structured
-func (h Handler) CheckTx(ctx sdk.Context, store types.KVStore,
+func (h Handler) CheckTx(ctx sdk.Context, store sdk.KVStore,
 	tx sdk.Tx, _ sdk.Checker) (res sdk.CheckResult, err error) {
 
 	err = tx.ValidateBasic()
@@ -136,7 +138,7 @@ func (h Handler) CheckTx(ctx sdk.Context, store types.KVStore,
 }
 
 // DeliverTx executes the tx if valid
-func (h Handler) DeliverTx(ctx sdk.Context, store types.KVStore,
+func (h Handler) DeliverTx(ctx sdk.Context, store sdk.KVStore,
 	tx sdk.Tx, dispatch sdk.Deliver) (res sdk.DeliverResult, err error) {
 
 	// TODO: remove redundancy
@@ -190,7 +192,7 @@ func (h Handler) DeliverTx(ctx sdk.Context, store types.KVStore,
 }
 
 // get the sender from the ctx and ensure it matches the tx pubkey
-func getTxSender(ctx sdk.Context) (sender sdk.Actor, err error) {
+func getTxSender(ctx sdk.Context) (sender crypto.Address, err error) {
 	senders := ctx.GetPermissions("", auth.NameSigs)
 	if len(senders) != 1 {
 		return sender, ErrMissingSignature()
@@ -201,15 +203,15 @@ func getTxSender(ctx sdk.Context) (sender sdk.Actor, err error) {
 //_______________________________________________________________________
 
 type coinSender struct {
-	store    types.KVStore
+	store    sdk.KVStore
 	dispatch sdk.Deliver
 	ctx      sdk.Context
 }
 
 var _ coinSend = coinSender{} // enforce interface at compile time
 
-func (c coinSender) transferFn(sender, receiver sdk.Actor, coins coin.Coins) error {
-	send := coin.NewSendOneTx(sender, receiver, coins)
+func (c coinSender) transferFn(sender, receiver crypto.Address, coins sdk.Coins) error {
+	send := sdk.NewSendOneTx(sender, receiver, coins)
 
 	// If the deduction fails (too high), abort the command
 	_, err := c.dispatch.DeliverTx(c.ctx, c.store, send)
@@ -219,8 +221,8 @@ func (c coinSender) transferFn(sender, receiver sdk.Actor, coins coin.Coins) err
 //_____________________________________________________________________
 
 type check struct {
-	store  types.KVStore
-	sender sdk.Actor
+	store  sdk.KVStore
+	sender crypto.Address
 }
 
 var _ delegatedProofOfStake = check{} // enforce interface at compile time
@@ -285,7 +287,7 @@ func (c check) unbond(tx TxUnbond) error {
 	return nil
 }
 
-func checkDenom(tx BondUpdate, store types.KVStore) error {
+func checkDenom(tx BondUpdate, store sdk.KVStore) error {
 	if tx.Bond.Denom != loadParams(store).AllowedBondDenom {
 		return fmt.Errorf("Invalid coin denomination")
 	}
@@ -295,14 +297,14 @@ func checkDenom(tx BondUpdate, store types.KVStore) error {
 //_____________________________________________________________________
 
 type deliver struct {
-	store    types.KVStore
-	sender   sdk.Actor
+	store    sdk.KVStore
+	sender   crypto.Address
 	params   Params
 	gs       *GlobalState
 	transfer transferFn
 }
 
-type transferFn func(sender, receiver sdk.Actor, coins coin.Coins) error
+type transferFn func(sender, receiver crypto.Address, coins sdk.Coins) error
 
 var _ delegatedProofOfStake = deliver{} // enforce interface at compile time
 
@@ -320,7 +322,7 @@ func (d deliver) bondedToUnbondedPool(candidate *Candidate) error {
 	candidate.Status = Unbonded
 
 	return d.transfer(d.params.HoldBonded, d.params.HoldUnbonded,
-		coin.Coins{{d.params.AllowedBondDenom, tokens}})
+		sdk.Coins{{d.params.AllowedBondDenom, tokens}})
 }
 
 // move a candidates asset pool from unbonded to bonded pool
@@ -332,7 +334,7 @@ func (d deliver) unbondedToBondedPool(candidate *Candidate) error {
 	candidate.Status = Bonded
 
 	return d.transfer(d.params.HoldUnbonded, d.params.HoldBonded,
-		coin.Coins{{d.params.AllowedBondDenom, tokens}})
+		sdk.Coins{{d.params.AllowedBondDenom, tokens}})
 }
 
 //_____________________________________________________________________
@@ -399,7 +401,7 @@ func (d deliver) delegateWithCandidate(tx TxDelegate, candidate *Candidate) erro
 		return ErrBondNotNominated()
 	}
 
-	var poolAccount sdk.Actor
+	var poolAccount crypto.Address
 	if candidate.Status == Bonded {
 		poolAccount = d.params.HoldBonded
 	} else {
@@ -408,7 +410,7 @@ func (d deliver) delegateWithCandidate(tx TxDelegate, candidate *Candidate) erro
 
 	// TODO maybe refactor into GlobalState.addBondedTokens(), maybe with new SDK
 	// Move coins from the delegator account to the bonded pool account
-	err := d.transfer(d.sender, poolAccount, coin.Coins{tx.Bond})
+	err := d.transfer(d.sender, poolAccount, sdk.Coins{tx.Bond})
 	if err != nil {
 		return err
 	}
@@ -479,7 +481,7 @@ func (d deliver) unbond(tx TxUnbond) error {
 	}
 
 	// transfer coins back to account
-	var poolAccount sdk.Actor
+	var poolAccount crypto.Address
 	if candidate.Status == Bonded {
 		poolAccount = d.params.HoldBonded
 	} else {
@@ -488,7 +490,7 @@ func (d deliver) unbond(tx TxUnbond) error {
 
 	returnCoins := candidate.removeShares(shares, d.gs)
 	err := d.transfer(poolAccount, d.sender,
-		coin.Coins{{d.params.AllowedBondDenom, returnCoins}})
+		sdk.Coins{{d.params.AllowedBondDenom, returnCoins}})
 	if err != nil {
 		return err
 	}

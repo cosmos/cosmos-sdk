@@ -13,7 +13,7 @@ type TxGovSubmitProposal struct {
   Description     string        //  Description of the proposal
   Type            string        //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
   Category        bool          //  false=regular, true=urgent
-  InitialDeposit  int64        //  Initial deposit paid by sender. Must be strictly positive.
+  InitialDeposit  int64         //  Initial deposit paid by sender. Must be strictly positive.
 }
 ```
 
@@ -61,7 +61,8 @@ upon receiving txGovSubmitProposal from sender do
       proposal.SubmitBlock = CurrentBlock
       
       store(Deposits, <proposalID>:<sender>, txGovSubmitProposal.InitialDeposit)
-      activeProcedure = load(store, Procedures, ActiveProcedureNumber)
+      activeProcedureNumber = load(Procedures, '0')
+      activeProcedure = load(Procedures, activeProcedureNumber)
   
       if (txGovSubmitProposal.InitialDeposit < activeProcedure.MinDeposit) then  
         // MinDeposit is not reached
@@ -127,7 +128,7 @@ upon receiving txGovDeposit from sender do
     throw
   
   else
-    proposal = load(store, Proposals, txGovDeposit.ProposalID)
+    proposal = load(Proposals, txGovDeposit.ProposalID)
 
     if (proposal == nil) then  
       // There is no proposal for this proposalID
@@ -141,7 +142,8 @@ upon receiving txGovDeposit from sender do
         throw
       
       else        
-        activeProcedure = load(store, Procedures, ActiveProcedureNumber)
+        activeProcedureNumber = load(Procedures, '0')
+        activeProcedure = load(Procedures, activeProcedureNumber)
         if (proposal.Deposit >= activeProcedure.MinDeposit) then  
           // MinDeposit was reached
           
@@ -157,7 +159,7 @@ upon receiving txGovDeposit from sender do
             // sender can deposit
             
             sender.AtomBalance -= txGovDeposit.Deposit
-            deposit = load(store, Deposits, <txGovDeposit.ProposalID>:<sender>)
+            deposit = load(Deposits, <txGovDeposit.ProposalID>:<sender>)
 
             if (deposit == nil)
               // sender has never deposited on this proposal 
@@ -221,7 +223,7 @@ And the associated pseudocode.
       throw
       
     else 
-      proposal = load(store, Proposals, txGovDeposit.ProposalID)
+      proposal = load(Proposals, txGovDeposit.ProposalID)
 
       if (proposal == nil) then  
         // There is no proposal for this proposalID
@@ -229,7 +231,7 @@ And the associated pseudocode.
         throw
         
       else 
-        deposit = load(store, Deposits, <txGovClaimDeposit.ProposalID>:<sender>)
+        deposit = load(Deposits, <txGovClaimDeposit.ProposalID>:<sender>)
         
         if (deposit == nil)
           // sender has not deposited on this proposal
@@ -246,7 +248,8 @@ And the associated pseudocode.
             if (proposal.VotingStartBlock <= 0)
             // Vote never started
               
-              activeProcedure = load(store, Procedures, ActiveProcedureNumber)
+              activeProcedureNumber = load(Procedures, '0')
+              activeProcedure = load(Procedures, ActiveProcedureNumber)
               if (CurrentBlock <= proposal.SubmitBlock + activeProcedure.MaxDepositPeriod)
                 // MaxDepositPeriod is not reached
                 
@@ -262,7 +265,7 @@ And the associated pseudocode.
             else
               // Vote started
                 
-              initProcedure = load(store, Procedures, proposal.InitProcedureNumber)
+              initProcedure = load(Procedures, proposal.InitProcedureNumber)
               
               if  (proposal.Category AND proposal.Votes['Yes']/proposal.InitTotalVotingPower >= 2/3) OR ((CurrentBlock > proposal.VotingStartBlock + initProcedure.VotingPeriod) AND (proposal.Votes['NoWithVeto']/(proposal.Votes['Yes']+proposal.Votes['No']+proposal.Votes['NoWithVeto']) < 1/3) AND (proposal.Votes['Yes']/(proposal.Votes['Yes']+proposal.Votes['No']+proposal.Votes['NoWithVeto']) > 1/2)) then
                 
@@ -318,7 +321,7 @@ handled:
       throw
     
     else   
-      proposal = load(store, Proposals, txGovDeposit.ProposalID)
+      proposal = load(Proposals, txGovDeposit.ProposalID)
 
       if (proposal == nil) then  
         // There is no proposal for this proposalID
@@ -326,8 +329,8 @@ handled:
         throw
       
       else
-        initProcedure = load(store, Procedures, proposal.InitProcedureNumber) // get procedure that was active when vote opened
-        validator = load(store, Validators, txGovVote.ValidatorPubKey)
+        initProcedure = load(Procedures, proposal.InitProcedureNumber) // get procedure that was active when vote opened
+        validator = load(Validators, txGovVote.ValidatorPubKey)
       
         if  !initProcedure.OptionSet.includes(txGovVote.Option) OR 
             (validator == nil) then 
@@ -339,7 +342,7 @@ handled:
           throw
           
         else
-           option = load(store, Options, <txGovVote.ProposalID>:<sender>:<txGovVote.ValidatorPubKey>)
+           option = load(Options, <txGovVote.ProposalID>:<sender>:<txGovVote.ValidatorPubKey>)
 
            if (option != nil)
             // sender has already voted with the Atoms bonded to ValidatorPubKey
@@ -363,7 +366,7 @@ handled:
               throw     
 
             else
-              validatorGovInfo = load(store, ValidatorGovInfos, <txGovVote.ProposalID>:<validator.ValidatorGovPubKey>)
+              validatorGovInfo = load(ValidatorGovInfos, <txGovVote.ProposalID>:<validator.ValidatorGovPubKey>)
 
               if (validatorGovInfo == nil)
                 // validator became validator after proposal entered voting period 
@@ -384,7 +387,7 @@ handled:
                     throw
 
                   else
-                    validatorOption = load(store, Options, <txGovVote.ProposalID>:<sender>:<txGovVote.ValidatorPubKey)
+                    validatorOption = load(Options, <txGovVote.ProposalID>:<sender>:<txGovVote.ValidatorPubKey)
 
                     if (validatorOption == nil)
                       // Validator has not voted already

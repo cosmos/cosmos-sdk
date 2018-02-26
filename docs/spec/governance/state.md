@@ -24,10 +24,6 @@ type Procedure struct {
 }
 ```
 
-**Store**:
-* `Procedures`: a mapping `map[int16]Procedure` of procedures indexed by their 
-  `ProcedureNumber`
-* `ActiveProcedureNumber`: returns current procedure number
 
 ### Proposals
 
@@ -58,8 +54,12 @@ type ValidatorGovInfo struct {
 }
 ```
 
-**Store:**
+### Stores
 
+*Stores are KVStores in the multistore. The key to find the store is the first parameter in the list*
+
+* `Procedures`: a mapping `map[int16]Procedure` of procedures indexed by their 
+  `ProcedureNumber`. First ever procedure is found at index '1'. Index '0' is reserved for parameter `ActiveProcedureNumber` which returns the number of the current procedure.
 * `Proposals`: A mapping `map[int64]Proposal` of proposals indexed by their 
   `proposalID`
 * `Deposits`: A mapping `map[[]byte]int64` of deposits indexed by 
@@ -76,6 +76,10 @@ type ValidatorGovInfo struct {
   `nil` if proposal has not entered voting period or if `PubKey` was not the 
   governance public key of a validator when proposal entered voting period.
 
+For pseudocode purposes, here are the two function we will use to read or write in stores:
+
+* `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore
+* `store(StoreKey, Key, value)`: Write value `Value` at key `Key` in store found at key `StoreKey` in the multistore
 
 ### Proposal Processing Queue
 
@@ -105,8 +109,8 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
     else
       proposalID = ProposalProcessingQueue.Peek()
-      proposal = load(store, Proposals, proposalID)
-      initProcedure = load(store, Procedures, proposal.InitProcedureNumber)
+      proposal = load(Proposals, proposalID) 
+      initProcedure = load(Procedures, proposal.InitProcedureNumber)
 
       if (proposal.Category AND proposal.Votes['Yes']/proposal.InitTotalVotingPower >= 2/3)
 
@@ -118,15 +122,16 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
       else if (CurrentBlock == proposal.VotingStartBlock + initProcedure.VotingPeriod)
 
-        activeProcedure = load(store, Procedures, ActiveProcedureNumber)
+        activeProcedureNumber = load(Procedures, '0')
+        activeProcedure = load(Procedures, activeProcedureNumber)
 
         for each validator in CurrentBondedValidators
-          validatorGovInfo = load(store, ValidatorGovInfos, validator.GovPubKey)
+          validatorGovInfo = load(multistore, ValidatorGovInfos, validator.GovPubKey)
           
           if (validatorGovInfo.InitVotingPower != nil)
             // validator was bonded when vote started
 
-            validatorOption = load(store, Options, validator.GovPubKey)
+            validatorOption = load(Options, validator.GovPubKey)
             if (validatorOption == nil)
               // validator did not vote
               slash validator by activeProcedure.GovernancePenalty

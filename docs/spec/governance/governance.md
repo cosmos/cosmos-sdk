@@ -102,7 +102,7 @@ forbidden.
 ### Voting period
 
 Once a proposal reaches `MinDeposit`, it immediately enters `Voting period`. We
-define `Voting period` as the interval between the moment the vote opens and 
+define `Voting period` as the interval between the moment the vote opens and
 the moment the vote closes. `Voting period` should always be shorter than 
 `Unbonding period` to prevent double voting. The initial value of 
 `Voting period` is 2 weeks.
@@ -557,7 +557,7 @@ upon receiving txGovDeposit from sender do
               ProposalProcessingQueue.push(txGovDeposit.ProposalID)  
 ```
 
-#### Claiming deposit
+#### Claim deposit
 
 Finally, if the proposal is accepted or `MinDeposit` was not reached before the 
 end of the `MaximumDepositPeriod`, then Atom holders can send 

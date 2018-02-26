@@ -53,13 +53,17 @@ type BaseApp struct {
 var _ abci.Application = &BaseApp{}
 
 // Create and name new BaseApp
-func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
+func NewBaseApp(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder,
+	ah sdk.AnteHandler) *BaseApp {
+
 	return &BaseApp{
-		logger: logger,
-		name:   name,
-		db:     db,
-		cms:    store.NewCommitMultiStore(db),
-		router: NewRouter(),
+		logger:      logger,
+		name:        name,
+		db:          db,
+		cms:         store.NewCommitMultiStore(db),
+		router:      NewRouter(),
+		txDecoder:   txDecoder,
+		anteHandler: ah,
 	}
 }
 
@@ -80,10 +84,6 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, app.db)
 }
 
-// nolint - Set functions
-func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
-	app.txDecoder = txDecoder
-}
 func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
 	app.initChainer = initChainer
 }
@@ -92,10 +92,6 @@ func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
 }
 func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 	app.endBlocker = endBlocker
-}
-func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
-	// deducts fee from payer, verifies signatures and nonces, sets Signers to ctx.
-	app.anteHandler = ah
 }
 
 // nolint - Get functions
@@ -328,8 +324,6 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	} else {
 		ctx = app.ctxDeliver.WithTxBytes(txBytes)
 	}
-
-	// TODO: override default ante handler w/ custom ante handler.
 
 	// Run the ante handler.
 	newCtx, result, abort := app.anteHandler(ctx, tx)

@@ -34,7 +34,6 @@ type Proposal struct {
   Title                 string              //  Title of the proposal
   Description           string              //  Description of the proposal
   Type                  string              //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-  Category              bool                //  false=regular, true=urgent
   Deposit               int64               //  Current deposit on this proposal. Initial value is set at InitialDeposit
   SubmitBlock           int64               //  Height of the block where TxGovSubmitProposal was included
   
@@ -112,7 +111,7 @@ And the pseudocode for the `ProposalProcessingQueue`:
       proposal = load(Proposals, proposalID) 
       initProcedure = load(Procedures, proposal.InitProcedureNumber)
 
-      if (proposal.Category AND proposal.Votes['Yes']/proposal.InitTotalVotingPower >= 2/3)
+      if (proposal.Votes['Yes']/proposal.InitTotalVotingPower >= 2/3)
 
         // proposal was urgent and accepted under the special condition
         // no punishment

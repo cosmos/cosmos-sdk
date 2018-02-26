@@ -62,15 +62,6 @@ proposal:
   `PlainTextProposals`, but actual software upgrades must be performed via 
   `SoftwareUpgradeProposals`.
 
-### Proposal categories
-
-There are two categories of proposal:
-* `Regular`
-* `Urgent`
-
-These two categories are strictly identical except that `Urgent` proposals can 
-be accepted faster if a certain condition is met. For more information, see 
-[Threshold](#threshold) section.
 
 ## Vote
 
@@ -140,12 +131,8 @@ that proposals are accepted if the proportion of `Yes` votes (excluding
 proportion of `NoWithVeto` votes is inferior to 1/3 (excluding `Abstain` 
 votes).
 
-`Urgent` proposals also work with the aforementioned threshold, except there is
-another condition that can accelerate the acceptance of the proposal. Namely, 
-if the ratio of `Yes` votes to `InitTotalVotingPower` exceeds 2:3, 
-`UrgentProposal` will be immediately accepted, even if the `Voting period` is 
-not finished. `InitTotalVotingPower` is the total voting power of all bonded 
-Atom holders at the moment when the vote opens.
+Proposals can be accepted before the end of the voting period if they meet a special condtion. Namely, if the ratio of `Yes` votes to `InitTotalVotingPower`exceeds 2:3, the proposal will be immediately accepted, even if the `Voting period` is not finished. `InitTotalVotingPower` is the total voting power of all bonded Atom holders at the moment when the vote opens. 
+This condition exists so that the network can react quickly in case of urgency.
 
 ### Inheritance
 
@@ -154,12 +141,9 @@ If a delegator does not vote, it will inherit its validator vote.
 * If the delegator votes before its validator, it will not inherit from the 
   validator's vote.
 * If the delegator votes after its validator, it will override its validator 
-  vote with its own. If the proposal is a `Urgent` proposal, it is possible 
+  vote with its own. If the proposal is urgent, it is possible 
   that the vote will close before delegators have a chance to react and 
-  override their validator's vote. This is not a problem, as `Urgent` proposals 
-  require more than 2/3rd of the total voting power to pass before the end of 
-  the voting period. If more than 2/3rd of validators collude, they can censor 
-  the votes of delegators anyway.
+  override their validator's vote. This is not a problem, as proposals require more than 2/3rd of the total voting power to pass before the end of the voting period. If more than 2/3rd of validators collude, they can censor the votes of delegators anyway.
 
 ### Validator’s punishment for non-voting
 
@@ -174,9 +158,7 @@ period` is over), then the validator will automatically be partially slashed by
 
 *Note: Need to define values for `GovernancePenalty`*
 
-**Exception:** If a proposal is an `Urgent` proposal and is accepted via the 
-special condition of having a ratio of `Yes` votes to `InitTotalVotingPower` 
-that exceeds 2:3, validators cannot be punished for not having voted on it. 
+**Exception:** If a proposal is accepted via the special condition of having a ratio of `Yes` votes to `InitTotalVotingPower` that exceeds 2:3, validators cannot be punished for not having voted on it. 
 That is because the proposal will close as soon as the ratio exceeds 2:3, 
 making it mechanically impossible for some validators to vote on it.
 

@@ -12,7 +12,6 @@ type TxGovSubmitProposal struct {
   Title           string        //  Title of the proposal
   Description     string        //  Description of the proposal
   Type            string        //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-  Category        bool          //  false=regular, true=urgent
   InitialDeposit  int64         //  Initial deposit paid by sender. Must be strictly positive.
 }
 ```
@@ -56,7 +55,6 @@ upon receiving txGovSubmitProposal from sender do
       proposal.Title = txGovSubmitProposal.Title
       proposal.Description = txGovSubmitProposal.Description
       proposal.Type = txGovSubmitProposal.Type
-      proposal.Category = txGovSubmitProposal.Category
       proposal.Deposit = txGovSubmitProposal.InitialDeposit
       proposal.SubmitBlock = CurrentBlock
       
@@ -267,10 +265,10 @@ And the associated pseudocode.
                 
               initProcedure = load(Procedures, proposal.InitProcedureNumber)
               
-              if  (proposal.Category AND proposal.Votes['Yes']/proposal.InitTotalVotingPower >= 2/3) OR ((CurrentBlock > proposal.VotingStartBlock + initProcedure.VotingPeriod) AND (proposal.Votes['NoWithVeto']/(proposal.Votes['Yes']+proposal.Votes['No']+proposal.Votes['NoWithVeto']) < 1/3) AND (proposal.Votes['Yes']/(proposal.Votes['Yes']+proposal.Votes['No']+proposal.Votes['NoWithVeto']) > 1/2)) then
+              if  (proposal.Votes['Yes']/proposal.InitTotalVotingPower >= 2/3) OR ((CurrentBlock > proposal.VotingStartBlock + initProcedure.VotingPeriod) AND (proposal.Votes['NoWithVeto']/(proposal.Votes['Yes']+proposal.Votes['No']+proposal.Votes['NoWithVeto']) < 1/3) AND (proposal.Votes['Yes']/(proposal.Votes['Yes']+proposal.Votes['No']+proposal.Votes['NoWithVeto']) > 1/2)) then
                 
                 // Proposal was accepted either because
-                // Proposal was urgent and special condition was met
+                // pecial condition was met OR
                 // Voting period ended and vote satisfies threshold
                 
                 store(Deposits, <txGovClaimDeposit.ProposalID>:<sender>, 0)
@@ -354,14 +352,14 @@ handled:
                 (CurrentBlock > proposal.VotingStartBlock + initProcedure.VotingPeriod) OR 
                 (proposal.VotingStartBlock < lastBondingBlock(sender, txGovVote.ValidatorPubKey) OR   
                 (proposal.VotingStartBlock < lastUnbondingBlock(sender, txGovVote.ValidatorPubKey) OR   
-                (proposal.Category AND proposal.Votes['Yes']/proposal.InitTotalVotingPower >= 2/3) then   
+                (proposal.Votes['Yes']/proposal.InitTotalVotingPower >= 2/3) then   
 
                 // Throws if
                 // Vote has not started OR if
                 // Vote had ended OR if
                 // sender bonded Atoms to ValidatorPubKey after start of vote OR if
                 // sender unbonded Atoms from ValidatorPubKey after start of vote OR if
-                // proposal is urgent and special condition is met, i.e. proposal is accepted and closed
+                // special condition is met, i.e. proposal is accepted and closed
 
               throw     
 

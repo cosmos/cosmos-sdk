@@ -23,44 +23,50 @@ const (
 	appName = "BasecoinApp"
 )
 
+var (
+	cdc *wire.Codec
+)
+
+func init() {
+	cdc = MakeTxCodec()
+}
+
 // Extended ABCI application
 type BasecoinApp struct {
 	*bam.BaseApp
-	cdc *wire.Codec
 
 	// keys to access the substores
 	capKeyMainStore *sdk.KVStoreKey
-	capKeyIBCStore  *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
 }
 
 func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
-	// create your application object
-	var app = &BasecoinApp{
-		BaseApp:         bam.NewBaseApp(appName, logger, db),
-		cdc:             MakeTxCodec(),
-		capKeyMainStore: sdk.NewKVStoreKey("main"),
-		capKeyIBCStore:  sdk.NewKVStoreKey("ibc"),
-	}
+	capKeyMainStore := sdk.NewKVStoreKey("main")
 
-	// define the accountMapper
-	app.accountMapper = auth.NewAccountMapperSealed(
-		app.capKeyMainStore, // target store
+	accountMapper := auth.NewAccountMapperSealed(
+		capKeyMainStore,     // target store
 		&types.AppAccount{}, // prototype
 	)
+	coinKeeper := bank.NewCoinKeeper(accountMapper)
+
+	ah := auth.NewAnteHandler(accountMapper)
+
+	// create your application object
+	var app = &BasecoinApp{
+		BaseApp:         bam.NewBaseApp(appName, logger, db, txDecoder, ah),
+		capKeyMainStore: capKeyMainStore,
+		accountMapper:   accountMapper,
+	}
 
 	// add handlers
-	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	app.Router().AddRoute("bank", bank.NewHandler(coinKeeper))
 	app.Router().AddRoute("sketchy", sketchy.NewHandler())
 
 	// initialize BaseApp
-	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
-	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
+	app.MountStoresIAVL(app.capKeyMainStore)
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -78,11 +84,11 @@ func MakeTxCodec() *wire.Codec {
 }
 
 // custom logic for transaction decoding
-func (app *BasecoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
+func txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 	var tx = sdk.StdTx{}
 	// StdTx.Msg is an interface. The concrete types
 	// are registered by MakeTxCodec in bank.RegisterWire.
-	err := app.cdc.UnmarshalBinary(txBytes, &tx)
+	err := cdc.UnmarshalBinary(txBytes, &tx)
 	if err != nil {
 		return nil, sdk.ErrTxParse("").TraceCause(err, "")
 	}

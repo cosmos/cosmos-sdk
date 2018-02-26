@@ -22,15 +22,16 @@ func defaultLogger() log.Logger {
 	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 }
 
-func newBaseApp(name string) *BaseApp {
+func newBaseApp(name string, txDecoder sdk.TxDecoder) *BaseApp {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	return NewBaseApp(name, logger, db)
+	ah := func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return }
+	return NewBaseApp(name, logger, db, txDecoder, ah)
 }
 
 func TestMountStores(t *testing.T) {
 	name := t.Name()
-	app := newBaseApp(name)
+	app := newBaseApp(name, nil)
 	assert.Equal(t, name, app.Name())
 
 	// make some cap keys
@@ -67,7 +68,7 @@ func TestInfo(t *testing.T) {
 }
 
 func TestInitChainer(t *testing.T) {
-	app := newBaseApp(t.Name())
+	app := newBaseApp(t.Name(), nil)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
@@ -111,7 +112,7 @@ func TestCheckTx(t *testing.T) {
 // Test that successive DeliverTx can see eachothers effects
 // on the store, both within and across blocks.
 func TestDeliverTx(t *testing.T) {
-	app := newBaseApp(t.Name())
+	app := newBaseApp(t.Name(), nil)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
@@ -121,7 +122,6 @@ func TestDeliverTx(t *testing.T) {
 
 	counter := 0
 	txPerHeight := 2
-	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
 	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		store := ctx.KVStore(capKey)
 		if counter > 0 {
@@ -162,7 +162,7 @@ func TestDeliverTx(t *testing.T) {
 
 // Test that we can only query from the latest committed state.
 func TestQuery(t *testing.T) {
-	app := newBaseApp(t.Name())
+	app := newBaseApp(t.Name(), nil)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
@@ -172,7 +172,6 @@ func TestQuery(t *testing.T) {
 
 	key, value := []byte("hello"), []byte("goodbye")
 
-	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
 	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		store := ctx.KVStore(capKey)
 		store.Set(key, value)
@@ -230,15 +229,15 @@ func (tx testUpdatePowerTx) GetSignatures() []sdk.StdSignature       { return ni
 func TestValidatorChange(t *testing.T) {
 
 	// Create app.
-	app := newBaseApp(t.Name())
-	storeKeys := createMounts(app.cms)
-	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
+	txDecoder := func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var ttx testUpdatePowerTx
 		fromJSON(txBytes, &ttx)
 		return ttx, nil
-	})
+	}
 
-	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+	app := newBaseApp(t.Name(), txDecoder)
+	storeKeys := createMounts(app.cms)
+
 	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		// TODO
 		return sdk.Result{}

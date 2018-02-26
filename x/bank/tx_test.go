@@ -122,7 +122,6 @@ func TestOutputValidation(t *testing.T) {
 }
 
 func TestSendMsgValidation(t *testing.T) {
-
 	addr1 := crypto.Address([]byte{1, 2})
 	addr2 := crypto.Address([]byte{7, 8})
 	atom123 := sdk.Coins{{"atom", 123}}

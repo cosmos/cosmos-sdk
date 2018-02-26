@@ -60,7 +60,7 @@ func sendTx(cmd *cobra.Command, args []string) error {
 			result.CheckTx.Log)
 	}
 	if result.DeliverTx.Code != uint32(0) {
-		return errors.Errorf("CheckTx failed: (%d) %s",
+		return errors.Errorf("DeliverTx failed: (%d) %s",
 			result.DeliverTx.Code,
 			result.DeliverTx.Log)
 	}

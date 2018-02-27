@@ -40,7 +40,6 @@ type Proposal struct {
   VotingStartBlock      int64               //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
   InitTotalVotingPower  int64               //  Total voting power when proposal enters voting period (default 0)
   InitProcedureNumber   int16               //  Procedure number of the active procedure when proposal enters voting period (default -1)
-  Votes                 map[string]int64    //  Votes for each option (Yes, No, NoWithVeto, Abstain)
 }
 ```
 
@@ -61,6 +60,7 @@ type ValidatorGovInfo struct {
   `ProcedureNumber`. First ever procedure is found at index '1'. Index '0' is reserved for parameter `ActiveProcedureNumber` which returns the number of the current procedure.
 * `Proposals`: A mapping `map[int64]Proposal` of proposals indexed by their 
   `proposalID`
+* `Votes`: A mapping `map[[]byte]int64` of votes indexed by `<proposalID>:<option>` as `[]byte`. Given a `proposalID` and an `option`, returns votes for  that option.
 * `Deposits`: A mapping `map[[]byte]int64` of deposits indexed by 
   `<proposalID>:<depositorPubKey>` as `[]byte`. Given a `proposalID` and a 
   `PubKey`, returns deposit (`nil` if `PubKey` has not deposited on the 
@@ -110,8 +110,9 @@ And the pseudocode for the `ProposalProcessingQueue`:
       proposalID = ProposalProcessingQueue.Peek()
       proposal = load(Proposals, proposalID) 
       initProcedure = load(Procedures, proposal.InitProcedureNumber)
+      yesVotes = load(Votes, <proposalID>:<'Yes'>)
 
-      if (proposal.Votes['Yes']/proposal.InitTotalVotingPower >= 2/3)
+      if (yesVotes/proposal.InitTotalVotingPower >= 2/3)
 
         // proposal was urgent and accepted under the special condition
         // no punishment

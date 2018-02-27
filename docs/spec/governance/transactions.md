@@ -264,8 +264,11 @@ And the associated pseudocode.
               // Vote started
                 
               initProcedure = load(Procedures, proposal.InitProcedureNumber)
+              yesVotes = load(Votes, <txGovClaimDeposi.ProposalIDt>:<'Yes'>)
+              noVotes = load(Votes, <txGovClaimDeposit.ProposalID>:<'No'>)
+              noWithVetoVotes = load(Votes, <txGovClaimDeposit.ProposalID>:<'NoWithVeto'>)
               
-              if  (proposal.Votes['Yes']/proposal.InitTotalVotingPower >= 2/3) OR ((CurrentBlock > proposal.VotingStartBlock + initProcedure.VotingPeriod) AND (proposal.Votes['NoWithVeto']/(proposal.Votes['Yes']+proposal.Votes['No']+proposal.Votes['NoWithVeto']) < 1/3) AND (proposal.Votes['Yes']/(proposal.Votes['Yes']+proposal.Votes['No']+proposal.Votes['NoWithVeto']) > 1/2)) then
+              if  (yesVotes/proposal.InitTotalVotingPower >= 2/3) OR ((CurrentBlock > proposal.VotingStartBlock + initProcedure.VotingPeriod) AND (noWithVetoVotes/(yesVotes+noVotes+noWithVetoVotes)) < 1/3) AND (yesVotes/(yesVotes+noVotes+noWithVetoVotes)) > 1/2)) then
                 
                 // Proposal was accepted either because
                 // pecial condition was met OR
@@ -293,10 +296,10 @@ vote on the proposal.
 * If sender is not a validator and validator has not voted, initialize or 
   increase minus of validator by sender's `voting power`
 * If sender is not a validator and validator has voted, decrease 
-  `proposal.Votes['validatorOption']` by sender's `voting power`
-* If sender is not a validator, increase `[proposal.Votes['txGovVote.Option']` 
+  `Votes['validatorOption']` by sender's `voting power`
+* If sender is not a validator, increase `Votes['txGovVote.Option']` 
   by sender's `voting power`
-* If sender is a validator, increase `proposal.Votes['txGovVote.Option']` by 
+* If sender is a validator, increase `Votes['txGovVote.Option']` by 
   validator's `InitialVotingPower - minus` (`minus` can be equal to 0)
 
 Votes need to be tied to a validator in order to compute validator's voting 
@@ -348,11 +351,13 @@ handled:
             throw
 
            else
+            yesVotes = load(Votes, <txGovVote.ProposalID>:<'Yes'>)
+
             if  (proposal.VotingStartBlock < 0) OR  
                 (CurrentBlock > proposal.VotingStartBlock + initProcedure.VotingPeriod) OR 
                 (proposal.VotingStartBlock < lastBondingBlock(sender, txGovVote.ValidatorPubKey) OR   
                 (proposal.VotingStartBlock < lastUnbondingBlock(sender, txGovVote.ValidatorPubKey) OR   
-                (proposal.Votes['Yes']/proposal.InitTotalVotingPower >= 2/3) then   
+                (yesVotes/proposal.InitTotalVotingPower >= 2/3) then   
 
                 // Throws if
                 // Vote has not started OR if
@@ -397,14 +402,18 @@ handled:
                       // Validator has already voted
                       // Reduce votes of option chosen by validator by sender's bonded Amount
 
-                      proposal.Votes['validatorOption'] -= sender.bondedAmountTo(txGovVote.ValidatorPubKey)
+                      validatorVotes = load(Votes, <txGovVote.ProposalID>:<'validatorOption'>)
+                      store(Votes, <txGovVote.ProposalID>:<'validatorOption'>, validatorVotes - sender.bondedAmountTo(txGovVote.ValidatorPubKey))
 
                     // increase votes of option chosen by sender by bonded Amount
-                    proposal.Votes['txGovVote.Option'] += sender.bondedAmountTo(txGovVote.ValidatorPubKey)
+                    optionVotes = load(Votes, <txGovVote.ProposalID>:<txGovVote.Option>)
+                    store(Votes,<txGovVote.ProposalID>:<txGovVote.Option>, optionVotes + sender.bondedAmountTo(txGovVote.ValidatorPubKey))
+                    
 
                 else 
                   // sender is the Governance PubKey of the validator whose main PubKey is txGovVote.ValidatorPubKey
                   // i.e. sender == validator
-      
-                  proposal.Votes['txGovVote.Option'] += (validatorGovInfo.InitVotingPower - validatorGovInfo.Minus)
+
+                  optionVotes = load(Votes, <txGovVote.ProposalID>:<txGovVote.Option>)
+                  store(Votes,<txGovVote.ProposalID>:<txGovVote.Option>, optionVotes + (validatorGovInfo.InitVotingPower - validatorGovInfo.Minus))
 ```

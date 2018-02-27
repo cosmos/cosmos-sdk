@@ -12,16 +12,16 @@ import (
 )
 
 func main() {
+	fmt.Println("This is temporary, for unblocking our build process.")
+	return
+
 	// TODO CREATE CLI
-
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "main")
-
 	db, err := dbm.NewGoLevelDB("basecoind", "data")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
 	bapp := app.NewBasecoinApp(logger, db)
 	baseapp.RunForever(bapp)
 }

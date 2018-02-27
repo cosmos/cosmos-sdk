@@ -421,8 +421,8 @@ vs encoding/json
 vs protobuf
 ~~~~~~~~~~~
 
-Dummy example
--------------
+KVStore example
+---------------
 
 Basecoin example
 ----------------

@@ -18,7 +18,8 @@ gaia:
 
 build:
 	@rm -rf examples/basecoin/vendor/
-	go build $(BUILD_FLAGS) -o build/basecoin ./examples/basecoin/cmd/...
+	cd examples/basecoin && $(MAKE) get_vendor_deps
+	go build $(BUILD_FLAGS) -o build/basecoind ./examples/basecoin/cmd/basecoind/...
 
 dist:
 	@bash publish/dist.sh
@@ -58,9 +59,6 @@ godocs:
 ########################################
 ### Testing
 
-TUTORIALS=$(shell find docs/guide -name "*md" -type f)
-
-#test: test_unit test_cli test_tutorial
 test: test_unit # test_cli
 
 test_unit:

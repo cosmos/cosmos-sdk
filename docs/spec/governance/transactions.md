@@ -83,7 +83,7 @@ upon receiving txGovSubmitProposal from sender do
           validatorGovInfo.InitVotingPower = validator.VotingPower
           validatorGovInfo.Minus = 0
 
-          store(ValidatorGovInfos, <proposalID>:<validator.GovPubKey>, validatorGovInfo)
+          store(ValidatorGovInfos, <proposalID>:<validator.PubKey>, validatorGovInfo)
         
         ProposalProcessingQueue.push(proposalID)
   
@@ -186,7 +186,7 @@ upon receiving txGovDeposit from sender do
                 validatorGovInfo.InitVotingPower = validator.VotingPower
                 validatorGovInfo.Minus = 0
 
-                store(ValidatorGovInfos, <proposalID>:<validator.GovPubKey>, validatorGovInfo)
+                store(ValidatorGovInfos, <proposalID>:<validator.PubKey>, validatorGovInfo)
               
               ProposalProcessingQueue.push(txGovDeposit.ProposalID)  
 ```
@@ -338,7 +338,7 @@ handled:
          
           // Throws if
           // Option is not in Option Set of procedure that was active when vote opened OR if
-          // ValidatorPubKey is not the GovPubKey of a current validator
+          // ValidatorPubKey is not the PubKey of a current validator
           
           throw
           
@@ -369,7 +369,7 @@ handled:
               throw     
 
             else
-              validatorGovInfo = load(ValidatorGovInfos, <txGovVote.ProposalID>:<validator.ValidatorGovPubKey>)
+              validatorGovInfo = load(ValidatorGovInfos, <txGovVote.ProposalID>:<validator.ValidatorPubKey>)
 
               if (validatorGovInfo == nil)
                 // validator became validator after proposal entered voting period 
@@ -381,8 +381,8 @@ handled:
                 
                 store(Options, <txGovVote.ProposalID>:<sender>:<txGovVote.ValidatorPubKey>, txGovVote.Option)
 
-                if (sender != validator.GovPubKey)
-                  // Here, sender is not the Governance PubKey of the validator whose PubKey is txGovVote.ValidatorPubKey
+                if (sender != validator.PubKey)
+                  // Here, sender is not the  PubKey of the validator whose PubKey is txGovVote.ValidatorPubKey
 
                   if sender does not have bonded Atoms to txGovVote.ValidatorPubKey then
                     // check in Staking module
@@ -396,7 +396,7 @@ handled:
                       // Validator has not voted already
 
                       validatorGovInfo.Minus += sender.bondedAmounTo(txGovVote.ValidatorPubKey)
-                      store(ValidatorGovInfos, <txGovVote.ProposalID>:<validator.ValidatorGovPubKey>, validatorGovInfo)
+                      store(ValidatorGovInfos, <txGovVote.ProposalID>:<validator.ValidatorPubKey>, validatorGovInfo)
 
                     else
                       // Validator has already voted
@@ -411,7 +411,7 @@ handled:
                     
 
                 else 
-                  // sender is the Governance PubKey of the validator whose main PubKey is txGovVote.ValidatorPubKey
+                  // sender is the PubKey of the validator whose main PubKey is txGovVote.ValidatorPubKey
                   // i.e. sender == validator
 
                   optionVotes = load(Votes, <txGovVote.ProposalID>:<txGovVote.Option>)

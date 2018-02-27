@@ -164,13 +164,7 @@ making it mechanically impossible for some validators to vote on it.
 
 ### Governance key and governance address
 
-Validators can make use of a slot where they can designate a 
-`Governance PubKey`. By default, a validator's `Governance PubKey` will be the 
-same as its main PubKey. Validators can change this `Governance PubKey` by 
-sending a `Change Governance PubKey` transaction signed by their main 
-`Consensus PrivKey`. From there, they will be able to sign votes using the 
-`Governance PrivKey` associated with their `Governance PubKey`. The 
-`Governance PubKey` can be changed at any moment.
+Later, we may add permissionned keys that could only sign txs from certain modules. For the MVP, the `Governance PubKey` will be the main validator PubKey generated at account creation. This PubKey corresponds to a different PrivKey than the Tendermint PrivKey which is responsible for signing consensus messages. Validators thus do not have to sign governance transactions with the sensitive Tendermint PrivKey.
 
 ## Software Upgrade
 

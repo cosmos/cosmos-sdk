@@ -71,9 +71,9 @@ type ValidatorGovInfo struct {
   this `PubKey` for this validator (`nil` if `PubKey` has not voted under this 
   validator)
 * `ValidatorGovInfos`: A mapping `map[[]byte]ValidatorGovInfo` of validator's 
-  governance infos indexed by `<proposalID>:<validatorGovPubKey>`. Returns 
+  governance infos indexed by `<proposalID>:<validatorPubKey>`. Returns 
   `nil` if proposal has not entered voting period or if `PubKey` was not the 
-  governance public key of a validator when proposal entered voting period.
+  public key of a validator when proposal entered voting period.
 
 For pseudocode purposes, here are the two function we will use to read or write in stores:
 
@@ -126,12 +126,12 @@ And the pseudocode for the `ProposalProcessingQueue`:
         activeProcedure = load(Procedures, activeProcedureNumber)
 
         for each validator in CurrentBondedValidators
-          validatorGovInfo = load(multistore, ValidatorGovInfos, validator.GovPubKey)
+          validatorGovInfo = load(multistore, ValidatorGovInfos, validator.PubKey)
           
           if (validatorGovInfo.InitVotingPower != nil)
             // validator was bonded when vote started
 
-            validatorOption = load(Options, validator.GovPubKey)
+            validatorOption = load(Options, validator.PubKey)
             if (validatorOption == nil)
               // validator did not vote
               slash validator by activeProcedure.GovernancePenalty

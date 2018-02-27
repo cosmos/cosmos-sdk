@@ -35,7 +35,7 @@ func (tx kvstoreTx) GetMsg() sdk.Msg {
 	return tx
 }
 
-func (tx dummyTx) GetSignBytes(ctx sdk.Context) []byte {
+func (tx kvstoreTx) GetSignBytes(ctx sdk.Context) []byte {
 	return tx.bytes
 }
 
@@ -56,11 +56,11 @@ func (tx kvstoreTx) GetFeePayer() crypto.Address {
 	return nil
 }
 
-func (tx dummyTx) GetAccNonce() int64 {
+func (tx kvstoreTx) GetAccNonce() int64 {
 	return 0
 }
 
-func (tx dummyTx) GetTxNonce() int64 {
+func (tx kvstoreTx) GetTxNonce() int64 {
 	return 0
 }
 

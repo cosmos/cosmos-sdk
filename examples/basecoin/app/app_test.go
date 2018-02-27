@@ -166,7 +166,7 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	assert.Equal(t, sdk.CodeBadNonce, res.Code, res.Log)
 
 	// bumping the sequence number without resigning should be an auth error
-	tx.Sequence += 1
+	tx.TxNonce += 1
 	res = bapp.Deliver(tx)
 	assert.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
 

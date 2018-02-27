@@ -14,9 +14,10 @@ func TestBaseAccount(t *testing.T) {
 	pub := key.PubKey()
 	addr := pub.Address()
 	someCoins := sdk.Coins{{"atom", 123}, {"eth", 246}}
-	seq := int64(7)
+	accNonce := int64(7)
+	txNonce := int64(9)
 
-	acc := NewBaseAccountWithAddress(addr)
+	acc := NewBaseAccountWithAddress(addr, accNonce)
 
 	// need a codec for marshaling
 	codec := wire.NewCodec()
@@ -32,9 +33,9 @@ func TestBaseAccount(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, someCoins, acc.GetCoins())
 
-	err = acc.SetSequence(seq)
+	err = acc.SetTxNonce(txNonce)
 	assert.Nil(t, err)
-	assert.Equal(t, seq, acc.GetSequence())
+	assert.Equal(t, txNonce, acc.GetTxNonce())
 
 	b, err := codec.MarshalBinary(acc)
 	assert.Nil(t, err)

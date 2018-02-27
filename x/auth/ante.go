@@ -24,17 +24,28 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 					true
 			}
 
-			// Check the sequence number on the fee payer
-			// (it will get incremented when sigs are checked)
-			seq := payerAcc.GetSequence()
-			if seq != tx.GetSequence() {
+			// Check the nonces on the fee payer
+			accNonce := payerAcc.GetAccNonce()
+			txNonce := payerAcc.GetTxNonce()
+
+			if accNonce != tx.GetAccNonce() {
 				return ctx,
-					sdk.ErrBadNonce(fmt.Sprintf("Got %d, expected %d", tx.GetSequence(), seq)).Result(),
+					sdk.ErrBadNonce(fmt.Sprintf("Got %d, expected %d", tx.GetAccNonce(), accNonce)).Result(),
 					true
 			}
 
+			if txNonce != tx.GetAccNonce() {
+				return ctx,
+					sdk.ErrBadNonce(fmt.Sprintf("Got %d, expected %d", tx.GetTxNonce(), txNonce)).Result(),
+					true
+			}
+
+			// Increment Tx Nonce
+			payerAcc.SetTxNonce(txNonce + 1)
+
 			// TODO: Charge fee from payerAcc.
-			// TODO: accountMapper.SetAccount(ctx, payerAddr)
+
+			accountMapper.SetAccount(ctx, payerAcc)
 		} else {
 			// XXX:
 			// TODO: Ensure that some other spam and replay prevention is used.
@@ -78,10 +89,6 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 						true
 				}
 			}
-
-			// increment sequence number
-			seq := signerAcc.GetSequence()
-			signerAcc.SetSequence(seq + 1)
 
 			// Check sig.
 			if !sig.PubKey.VerifyBytes(msg.GetSignBytes(ctx), sig.Signature) {

@@ -48,7 +48,11 @@ type Tx interface {
 	// .Empty().
 	GetSignatures() []StdSignature
 
-	GetSequence() int64
+	// AccNonce returns the nonce of the feepayer account
+	GetAccNonce() int64
+
+	// TxSequence returns the nonce of the tx within the feepayer account
+	GetTxNonce() int64
 }
 
 var _ Tx = (*StdTx)(nil)
@@ -60,7 +64,8 @@ var _ Tx = (*StdTx)(nil)
 type StdTx struct {
 	Msg
 	Signatures []StdSignature
-	Sequence   int64
+	TxNonce    int64
+	AccNonce   int64
 }
 
 func NewStdTx(msg Msg, sigs []StdSignature) StdTx {
@@ -74,12 +79,14 @@ func NewStdTx(msg Msg, sigs []StdSignature) StdTx {
 func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
 func (tx StdTx) GetFeePayer() crypto.Address   { return tx.GetSigners()[0] }
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
-func (tx StdTx) GetSequence() int64            { return tx.Sequence }
+func (tx StdTx) GetAccNonce() int64            { return tx.AccNonce }
+func (tx StdTx) GetTxNonce() int64             { return tx.TxNonce }
 
 func CanonicalSignBytes(ctx Context, msg Msg) []byte {
 	obj := SignBytesObject{
 		ChainID:  "", // TODO
-		Sequence: 0,  // TODO
+		AccNonce: 0,  // TODO
+		TxNonce:  0,  // TODO
 		Msg:      msg,
 	}
 	// XXX: ensure some canonical form
@@ -92,7 +99,8 @@ func CanonicalSignBytes(ctx Context, msg Msg) []byte {
 
 type SignBytesObject struct {
 	ChainID  string `json:"chain_id"`
-	Sequence int    `json:"sequence"`
+	AccNonce int64  `json:"acc_nonce"`
+	TxNonce  int64  `json:"tx_nonce"`
 	Msg      Msg    `json:"msg"`
 }
 

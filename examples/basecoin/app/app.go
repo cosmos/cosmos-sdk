@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-wire"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -74,8 +73,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 func MakeTxCodec() *wire.Codec {
 	cdc := wire.NewCodec()
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	crypto.RegisterWire(cdc) // Register crypto.[PubKey,PrivKey,Signature] types.
-	bank.RegisterWire(cdc)   // Register bank.[SendMsg,IssueMsg] types.
+	bank.RegisterWire(cdc) // Register bank.[SendMsg,IssueMsg] types.
 	return cdc
 }
 

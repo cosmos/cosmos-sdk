@@ -1,0 +1,741 @@
+openapi: 3.0.0
+servers:
+  - url: 'http://localhost:8998'
+info:
+  version: "1.0.0-oas3"
+  title: Light client daemon to interface with Cosmos baseserver via REST
+  description: Specification for the LCD provided by `gaia rest-server`
+  
+paths:
+  /version:
+    get:
+      summary: Version of the light client daemon
+      description: Get the version of the LCD running locally to compare against expected
+      responses:
+        200:
+          description: Plaintext version i.e. "v0.5.0"
+  /node_info:
+    description: Only the node info. Block information can be queried via /block/latest
+    get:
+      summary: The propertied of the connected node
+      responses:
+        200:
+          description: Node status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pub_key:
+                    $ref: '#/components/schemas/PubKey'
+                  moniker:
+                    type: string
+                    example: 159.89.198.221
+                  network:
+                    type: string
+                    example: gaia-2
+                  remote_addr:
+                    type: string
+                  listen_addr:
+                    type: string
+                    example: 192.168.56.1:46656
+                  version:
+                    description: Tendermint version
+                    type: string
+                    example: 0.15.0
+                  other:
+                    description: more information on versions
+                    type: array
+  /keys:
+    get:
+      summary: List of accounts stored locally
+      responses:
+        200:
+          description: Array of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+    post:
+      summary: Create a new account locally
+      responses:
+        200:
+          description: OK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - password
+                - seed
+              properties:
+                name:
+                  type: string
+                password:
+                  type: string
+                seed:
+                  type: string
+        description: The account to create.
+  /keys/seed:
+    get:
+      summary: Create a new seed to create a new account with
+      responses:
+        200:
+          description: 12 word Seed
+          content:
+            application/json:
+              schema:
+                type: string
+  /keys/{name}:
+    parameters:
+      - in: path
+        name: name
+        description: Account name
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get a certain locally stored account
+      responses:
+        200:
+          description: Locally stored account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        404:
+          description: Account is not available
+    put:
+      summary: Update the password for this account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  type: string
+      responses:
+        200:
+          description: Updated password
+        401:
+          description: Password is wrong
+        404:
+          description: Account is not available
+    delete:
+      summary: Remove an account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  type: string
+      responses:
+        200:
+          description: Removed account
+        401:
+          description: Password is wrong
+        404:
+          description: Account is not available
+  /accounts/send:
+    post:
+      summary: Send coins (build -> sign -> send)
+      security:
+        - sign: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fees:
+                  $ref: "#/components/schemas/Coins"
+                outputs:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      pub_key:
+                        $ref: "#/components/schemas/PubKey"
+                      amount:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Coins"
+      responses:
+        202:
+          description: Tx was send and will probably be added to the next block
+        400:
+          description: The Tx was malformated
+    
+  /accounts/{address}:
+    parameters:
+      - in: path
+        name: address
+        description: Account address
+        required: true
+        schema:
+          $ref: "#/components/schemas/Address"
+    get:
+      summary: Get the account balances
+      responses:
+        200:
+          description: Account balances
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Balance"
+        204:
+          description: There is no data for the requested account. This is not a 404 as the account might exist, just does not hold data.
+  /accounts/{address}/send:
+    parameters:
+      - in: path
+        name: address
+        description: Account address
+        required: true
+        schema:
+          $ref: "#/components/schemas/Address"
+    post:
+      summary: Send coins (build -> sign -> send)
+      security:
+        - sign: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fees:
+                  $ref: "#/components/schemas/Coins"
+                amount:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Coins"
+      responses:
+        202:
+          description: Tx was send and will probably be added to the next block
+        400:
+          description: The Tx was malformated
+  /accounts/{address}/nonce:
+    parameters:
+      - in: path
+        name: address
+        description: Account address
+        required: true
+        schema:
+          $ref: "#/components/schemas/Address"
+    get:
+      summary: Get the nonce for a certain account
+      responses:
+        200:
+          description: Plaintext nonce i.e. "4" defaults to "0"
+  /blocks/latest:
+    get:
+      summary: Get the latest block
+      responses:
+        200:
+          description: The latest block
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Block"
+  /blocks/{height}:
+    parameters:
+      - in: path
+        name: height
+        description: Block height
+        required: true
+        schema:
+          type: number
+    get:
+      summary: Get a block at a certain height
+      responses:
+        200:
+          description: The block at a specific height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Block"
+        404:
+          description: Block at height is not available
+  /validatorsets/latest:
+    get:
+      summary: Get the latest validator set
+      responses:
+        200:
+          description: The validator set at the latest block height
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Delegate"
+  /validatorsets/{height}:
+    parameters:
+      - in: path
+        name: height
+        description: Block height
+        required: true
+        schema:
+          type: number
+    get:
+      summary: Get a validator set a certain height
+      responses:
+        200:
+          description: The validator set at a specific block height
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Delegate"
+        404:
+          description: Block at height not available
+  /txs:
+    parameters:
+      - in: query
+        name: tag
+        schema:
+          type: string
+          example: "coin.sender=EE5F3404034C524501629B56E0DDC38FAD651F04"
+        required: true
+      - in: query
+        name: page
+        description: Pagination page
+        schema:
+          type: number
+          default: 0
+      - in: query
+        name: size
+        description: Pagination size
+        schema:
+          type: number
+          default: 50
+    get:
+      summary: Query Tx
+      responses:
+        200:
+          description: All Tx matching the provided tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tx"
+        404:
+          description: Pagination is out of bounds
+  /txs/sign:
+    post:
+      summary: Sign a Tx
+      description: Sign a Tx providing locally stored account and according password
+      security:
+        - sign: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TxBuild"
+      responses:
+        200:
+          description: The signed Tx
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TxSigned"
+        401:
+          description: Account name and/or password where wrong
+  /txs/broadcast:
+    post:
+      summary: Send signed Tx
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TxSigned"
+      responses:
+        202:
+          description: Tx was send and will probably be added to the next block
+        400:
+          description: The Tx was malformated
+  /txs/{hash}:
+    parameters:
+      - in: path
+        name: hash
+        description: Tx hash
+        required: true
+        schema:
+          $ref: "#/components/schemas/Hash"
+    get:
+      summary: Get a Tx by hash
+      responses:
+        200:
+          description: Tx with the provided hash
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tx"
+        404:
+          description: Tx not available for provided hash
+  /delegates:
+    parameters:
+      - in: query
+        name: delegator
+        description: Query for all delegates a delegator has stake with
+        schema:
+          $ref: "#/components/schemas/Address"
+    get:
+      summary: Get a list of canidates/delegates/validators (optionally filtered by delegator)
+      responses:
+        200:
+          description: List of delegates, filtered by provided delegator address
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Delegate"
+  /delegates/bond:
+    post:
+      summary: Bond atoms (build -> sign -> send)
+      security:
+        - sign: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  amount:
+                    $ref: "#/components/schemas/Coins"
+                  pub_key:
+                    $ref: "#/components/schemas/PubKey"
+      responses:
+        202:
+          description: Tx was send and will probably be added to the next block
+        400:
+          description: The Tx was malformated
+  /delegates/unbond:
+    post:
+      summary: Unbond atoms (build -> sign -> send)
+      security:
+        - sign: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  amount:
+                    $ref: "#/components/schemas/Coins"
+                  pub_key:
+                    $ref: "#/components/schemas/PubKey"
+      responses:
+        202:
+          description: Tx was send and will probably be added to the next block
+        400:
+          description: The Tx was malformated
+  /delegates/{pubkey}:
+    parameters:
+      - in: path
+        name: pubkey
+        description: Pubkey of a delegate
+        required: true
+        schema:
+          type: string
+          example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
+    get:
+      summary: Get a certain canidate/delegate/validator
+      responses:
+        200:
+          description: Delegate for specified pub_key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delegate"
+        404:
+          description: No delegate found for provided pub_key
+  /delegates/{pubkey}/bond:
+    parameters:
+      - in: path
+        name: pubkey
+        description: Pubkey of a delegate
+        required: true
+        schema:
+          type: string
+          example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
+    post:
+      summary: Bond atoms (build -> sign -> send)
+      security:
+        - sign: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  $ref: "#/components/schemas/Coins"
+      responses:
+        202:
+          description: Tx was send and will probably be added to the next block
+        400:
+          description: The Tx was malformated
+  /delegates/{pubkey}/unbond:
+    parameters:
+      - in: path
+        name: pubkey
+        description: Pubkey of a delegate
+        required: true
+        schema:
+          type: string
+          example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
+    post:
+      summary: Unbond atoms  (build -> sign -> send)
+      security:
+        - sign: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  $ref: "#/components/schemas/Coins"
+      responses:
+        202:
+          description: Tx was send and will probably be added to the next block
+        400:
+          description: The Tx was malformated
+    
+components:
+  schemas:
+    Address:
+      type: string
+      example: DF096FDE8D380FA5B2AD20DB2962C82DDEA1ED9B
+    Coins:
+      type: object
+      properties:
+        denom:
+          type: string
+          example: fermion
+        amount:
+          type: number
+          example: 50
+    Hash:
+      type: string
+      example: EE5F3404034C524501629B56E0DDC38FAD651F04
+    Tx:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - stake/delegate
+        data:
+          type: object
+    TxChain:
+      type: object
+      properties:
+        type:
+          type: string
+          default: chain/tx
+        data:
+          type: object
+          properties:
+            chain_id:
+              type: string
+              example: gaia-2
+            expires_at:
+              type: number
+              example: 0
+            tx:
+              type: object
+              properties:
+                type:
+                  type: string
+                  default: nonce
+                data:
+                  type: object
+                  properties:
+                    sequence:
+                      type: number
+                      example: 0
+                    signers:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          chain:
+                            type: string
+                            example: ''
+                          app:
+                            type: string
+                            default: sigs
+                          addr:
+                            $ref: "#/components/schemas/Address"
+                    tx:
+                      $ref: "#/components/schemas/Tx"
+    TxBuild:
+      type: object
+      properties:
+        type:
+          type: string
+          default: sigs/one
+        data:
+          type: object
+          properties:
+            tx:
+              $ref: "#/components/schemas/Tx"
+            signature:
+              type: object
+              properties:
+                Sig:
+                  type: string
+                  default: ''
+                Pubkey: 
+                  type: string
+                  default: ''
+    TxSigned:
+      type: object
+      properties:
+        type:
+          type: string
+          default: sigs/one
+        data:
+          type: object
+          properties:
+            tx:
+              $ref: "#/components/schemas/Tx"
+            signature:
+              type: object
+              properties:
+                Sig:
+                  type: string
+                  example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
+                Pubkey:
+                  $ref: "#/components/schemas/PubKey"
+    PubKey:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - ed25519
+        data:
+          type: string
+          example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
+    Account:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Main Account
+        address:
+          $ref: "#/components/schemas/Address"
+        pub_key:
+          $ref: "#/components/schemas/PubKey"
+    Balance:
+      type: object
+      properties:
+        height:
+          type: number
+          example: 123456
+        coins:
+          type: array
+          items:
+            $ref: "#/components/schemas/Coins"
+        credit:
+          type: array
+    BlockID:
+      type: object
+      properties:
+        hash:
+          $ref: "#/components/schemas/Hash"
+        parts:
+          type: object
+          properties:
+            total:
+              type: number
+              example: 0
+            hash:
+              $ref: "#/components/schemas/Hash"
+    Block:
+      type: object
+      properties:
+        header:
+          type: object
+          properties: 
+            chain_id:
+              type: string
+              example: gaia-2
+            height: 
+              type: number
+              example: 1
+            time: 
+              type: string
+              example: '2017-12-30T05:53:09.287+01:00'
+            num_txs: 
+              type: number
+              example: 0
+            last_block_id:
+              $ref: "#/components/schemas/BlockID"
+            total_txs:
+              type: number
+              example: 35
+            last_commit_hash:
+              $ref: "#/components/schemas/Hash"
+            data_hash:
+              $ref: "#/components/schemas/Hash"
+            validators_hash:
+              $ref: "#/components/schemas/Hash"
+            consensus_hash:
+              $ref: "#/components/schemas/Hash"
+            app_hash:
+              $ref: "#/components/schemas/Hash"
+            last_results_hash:
+              $ref: "#/components/schemas/Hash"
+            evidence_hash:
+              $ref: "#/components/schemas/Hash"
+        txs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tx"
+        evidence:
+          type: array
+        last_commit:
+          type: object
+          properties:
+            blockID:
+              $ref: "#/components/schemas/BlockID"
+            precommits:
+              type: array
+    Delegate:
+      type: object
+      properties:
+        pub_key:
+          $ref: "#/components/schemas/PubKey"
+        power:
+          type: number
+          example: 1000
+        name:
+          type: string
+          example: "159.89.3.34"
+        
+
+  securitySchemes:
+    sign:
+      type: http
+      scheme: basic

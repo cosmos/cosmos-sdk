@@ -49,21 +49,36 @@ func TestMountStores(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+// Test that we can make commits and then reload old versions.
+// Test that LoadLatestVersion actually does.
 func TestLoadVersion(t *testing.T) {
 	// TODO
-	// Test that we can make commits and then reload old versions.
-	// Test that LoadLatestVersion actually does.
 }
 
+// Test that txs can be unmarshalled and read and that
+// correct error codes are returned when not
 func TestTxDecoder(t *testing.T) {
 	// TODO
-	// Test that txs can be unmarshalled and read and that
-	// correct error codes are returned when not
 }
 
+// Test that Info returns the latest committed state.
 func TestInfo(t *testing.T) {
+
+	app := newBaseApp(t.Name())
+
+	// ----- test an empty response -------
+	reqInfo := abci.RequestInfo{}
+	res := app.Info(reqInfo)
+
+	// should be empty
+	assert.Equal(t, "", res.Version)
+	assert.Equal(t, t.Name(), res.GetData())
+	assert.Equal(t, int64(0), res.LastBlockHeight)
+	assert.Equal(t, []uint8(nil), res.LastBlockAppHash)
+
+	// ----- test a proper response -------
 	// TODO
-	// Test that Info returns the latest committed state.
+
 }
 
 func TestInitChainer(t *testing.T) {
@@ -101,14 +116,14 @@ func TestInitChainer(t *testing.T) {
 	assert.Equal(t, value, res.Value)
 }
 
-// Test that successive CheckTx can see eachothers effects
+// Test that successive CheckTx can see each others' effects
 // on the store within a block, and that the CheckTx state
 // gets reset to the latest Committed state during Commit
 func TestCheckTx(t *testing.T) {
 	// TODO
 }
 
-// Test that successive DeliverTx can see eachothers effects
+// Test that successive DeliverTx can see each others' effects
 // on the store, both within and across blocks.
 func TestDeliverTx(t *testing.T) {
 	app := newBaseApp(t.Name())

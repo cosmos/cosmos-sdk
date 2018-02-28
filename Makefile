@@ -60,6 +60,11 @@ godocs:
 
 test: test_unit # test_cli
 
+# Must  be run in each package seperately for the visualization
+# Added here for easy reference
+# coverage:
+#	 go test -coverprofile=c.out && go tool cover -html=c.out
+
 test_unit:
 	@rm -rf examples/basecoin/vendor/
 	@go test $(PACKAGES)

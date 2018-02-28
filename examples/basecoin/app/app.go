@@ -72,7 +72,6 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 // custom tx codec
 func MakeTxCodec() *wire.Codec {
 	cdc := wire.NewCodec()
-	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	bank.RegisterWire(cdc) // Register bank.[SendMsg,IssueMsg] types.
 	return cdc
 }

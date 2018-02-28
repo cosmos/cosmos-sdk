@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/binary"
 	"fmt"
 	"reflect"
 
@@ -69,6 +70,11 @@ func (am accountMapper) Seal() sealedAccountMapper {
 func (am accountMapper) NewAccountWithAddress(ctx sdk.Context, addr crypto.Address) sdk.Account {
 	acc := am.clonePrototype()
 	acc.SetAddress(addr)
+	globalAccNonce := am.GetGlobalAccNonce(ctx)
+	acc.SetAccNonce(globalAccNonce)
+	acc.SetTxNonce(0)
+	am.SetGlobalAccNonce(ctx, globalAccNonce+1)
+
 	return acc
 }
 
@@ -89,6 +95,25 @@ func (am accountMapper) SetAccount(ctx sdk.Context, acc sdk.Account) {
 	store := ctx.KVStore(am.key)
 	bz := am.encodeAccount(acc)
 	store.Set(addr, bz)
+}
+
+// Implements sdk.AccountMapper.
+func (am accountMapper) GetGlobalAccNonce(ctx sdk.Context) int64 {
+	store := ctx.KVStore(am.key)
+	bz := store.Get([]byte("GlobalAccNonce"))
+	if bz == nil {
+		return -1
+	}
+	nonce := int64(binary.LittleEndian.Uint64(bz))
+	return nonce
+}
+
+// Implements sdk.AccountMapper.
+func (am accountMapper) SetGlobalAccNonce(ctx sdk.Context, nonce int64) {
+	bz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bz, uint64(nonce))
+	store := ctx.KVStore(am.key)
+	store.Set([]byte("GlobalAccNonce"), bz)
 }
 
 //----------------------------------------

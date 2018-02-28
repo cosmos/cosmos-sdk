@@ -147,7 +147,7 @@ implementing the ``Msg`` interface:
     	Get(key interface{}) (value interface{})
     
     	// Get the canonical byte representation of the Msg.
-    	GetSignBytes() []byte
+    	GetSignBytes(ctx Context) []byte
     
     	// ValidateBasic does a simple validation check that
     	// doesn't require access to any other information.
@@ -165,7 +165,7 @@ type.
 
 Messages must also specify how they are to be authenticated. The ``GetSigners()``
 method return a list of addresses that must sign the message, while the
-``GetSignBytes()`` method returns the bytes that must be signed for a signature
+``GetSignBytes(ctx Context)`` method returns the bytes that must be signed for a signature
 to be valid.
 
 Addresses in the SDK are arbitrary byte arrays that are hex-encoded when

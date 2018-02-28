@@ -59,10 +59,6 @@ func ErrNoOutputs() sdk.Error {
 	return newError(CodeInvalidOutput, "")
 }
 
-func ErrInvalidSequence(msg string) sdk.Error {
-	return sdk.ErrInvalidSequence(msg)
-}
-
 func ErrInvalidAddress(msg string) sdk.Error {
 	return newError(CodeInvalidAddress, msg)
 }

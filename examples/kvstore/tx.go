@@ -35,7 +35,7 @@ func (tx kvstoreTx) GetMsg() sdk.Msg {
 	return tx
 }
 
-func (tx kvstoreTx) GetSignBytes() []byte {
+func (tx kvstoreTx) GetSignBytes(ctx sdk.Context) []byte {
 	return tx.bytes
 }
 
@@ -54,6 +54,14 @@ func (tx kvstoreTx) GetSignatures() []sdk.StdSignature {
 
 func (tx kvstoreTx) GetFeePayer() crypto.Address {
 	return nil
+}
+
+func (tx kvstoreTx) GetAccNonce() int64 {
+	return 0
+}
+
+func (tx kvstoreTx) GetTxNonce() int64 {
+	return 0
 }
 
 // takes raw transaction bytes and decodes them into an sdk.Tx. An sdk.Tx has

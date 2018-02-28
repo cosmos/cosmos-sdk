@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -9,6 +11,7 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 		ctx sdk.Context, tx sdk.Tx,
 	) (_ sdk.Context, _ sdk.Result, abort bool) {
 
+		// Check sequence number based on the fee payer.
 		// Deduct the fee from the fee payer.
 		// This is done first because it only
 		// requires fetching 1 account.
@@ -20,10 +23,33 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 					sdk.ErrUnrecognizedAddress(payerAddr).Result(),
 					true
 			}
+
+			// Check the nonces on the fee payer
+			accNonce := payerAcc.GetAccNonce()
+			txNonce := payerAcc.GetTxNonce()
+
+			if accNonce != tx.GetAccNonce() {
+				return ctx,
+					sdk.ErrBadNonce(fmt.Sprintf("Got %d, expected %d", tx.GetAccNonce(), accNonce)).Result(),
+					true
+			}
+
+			if txNonce != tx.GetAccNonce() {
+				return ctx,
+					sdk.ErrBadNonce(fmt.Sprintf("Got %d, expected %d", tx.GetTxNonce(), txNonce)).Result(),
+					true
+			}
+
+			// Increment Tx Nonce
+			payerAcc.SetTxNonce(txNonce + 1)
+
 			// TODO: Charge fee from payerAcc.
-			// TODO: accountMapper.SetAccount(ctx, payerAddr)
+
+			accountMapper.SetAccount(ctx, payerAcc)
 		} else {
-			// TODO: Ensure that some other spam prevention is used.
+			// XXX:
+			// TODO: Ensure that some other spam and replay prevention is used.
+			// XXX:
 		}
 
 		var sigs = tx.GetSignatures()
@@ -64,17 +90,8 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 				}
 			}
 
-			// Check and increment sequence number.
-			seq := signerAcc.GetSequence()
-			if seq != sig.Sequence {
-				return ctx,
-					sdk.ErrInvalidSequence("").Result(),
-					true
-			}
-			signerAcc.SetSequence(seq + 1)
-
 			// Check sig.
-			if !sig.PubKey.VerifyBytes(msg.GetSignBytes(), sig.Signature) {
+			if !sig.PubKey.VerifyBytes(msg.GetSignBytes(ctx), sig.Signature) {
 				return ctx,
 					sdk.ErrUnauthorized("").Result(),
 					true

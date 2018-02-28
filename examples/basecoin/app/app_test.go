@@ -29,25 +29,19 @@ func newBasecoinApp() *BasecoinApp {
 func TestSendMsg(t *testing.T) {
 	bapp := newBasecoinApp()
 
+	addr1 := crypto.Address("input")
+	addr2 := crypto.Address("output")
+	coins := sdk.Coins{{"atom", 10}}
+
 	// Construct a SendMsg
 	var msg = bank.SendMsg{
-		Inputs: []bank.Input{
-			{
-				Address:  crypto.Address([]byte("input")),
-				Coins:    sdk.Coins{{"atom", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []bank.Output{
-			{
-				Address: crypto.Address([]byte("output")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
+		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
 	}
 
+	ctx := bapp.BaseApp.NewContext(true, abci.Header{})
 	priv := crypto.GenPrivKeyEd25519()
-	sig := priv.Sign(msg.GetSignBytes())
+	sig := priv.Sign(msg.GetSignBytes(ctx))
 	tx := sdk.NewStdTx(msg, []sdk.StdSignature{{
 		PubKey:    priv.PubKey(),
 		Signature: sig,
@@ -104,7 +98,7 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	pk1 := priv1.PubKey()
 	addr1 := pk1.Address()
 
-	// Second key receies
+	// Second key receives
 	pk2 := crypto.GenPrivKeyEd25519().PubKey()
 	addr2 := pk2.Address()
 
@@ -137,24 +131,14 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	assert.Equal(t, acc1, res1)
 
 	// Construct a SendMsg
+	amt := sdk.Coins{{"foocoin", 10}}
 	var msg = bank.SendMsg{
-		Inputs: []bank.Input{
-			{
-				Address:  crypto.Address(addr1),
-				Coins:    sdk.Coins{{"foocoin", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []bank.Output{
-			{
-				Address: crypto.Address(addr2),
-				Coins:   sdk.Coins{{"foocoin", 10}},
-			},
-		},
+		Inputs:  []bank.Input{bank.NewInput(addr1, amt)},
+		Outputs: []bank.Output{bank.NewOutput(addr2, amt)},
 	}
 
 	// Sign the tx
-	sig := priv1.Sign(msg.GetSignBytes())
+	sig := priv1.Sign(msg.GetSignBytes(ctxCheck))
 	tx := sdk.NewStdTx(msg, []sdk.StdSignature{{
 		PubKey:    priv1.PubKey(),
 		Signature: sig,
@@ -178,4 +162,19 @@ func TestSendMsgWithAccounts(t *testing.T) {
 
 	assert.Equal(t, fmt.Sprintf("%v", res2.GetCoins()), "67foocoin")
 	assert.Equal(t, fmt.Sprintf("%v", res3.GetCoins()), "10foocoin")
+
+	// Delivering again should cause replay error
+	res = bapp.Deliver(tx)
+	assert.Equal(t, sdk.CodeBadNonce, res.Code, res.Log)
+
+	// bumping the txnonce number without resigning should be an auth error
+	tx.TxNonce += 1
+	res = bapp.Deliver(tx)
+	assert.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
+
+	// resigning the tx with the bumped sequence should work
+	sig = priv1.Sign(tx.Msg.GetSignBytes(ctxCheck))
+	tx.Signatures[0].Signature = sig
+	res = bapp.Deliver(tx)
+	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
 }

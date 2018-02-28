@@ -1,7 +1,6 @@
 package bank
 
 import (
-	"encoding/json"
 	"fmt"
 
 	crypto "github.com/tendermint/go-crypto"
@@ -64,12 +63,8 @@ func (msg SendMsg) Get(key interface{}) (value interface{}) {
 }
 
 // Implements Msg.
-func (msg SendMsg) GetSignBytes() []byte {
-	b, err := json.Marshal(msg) // XXX: ensure some canonical form
-	if err != nil {
-		panic(err)
-	}
-	return b
+func (msg SendMsg) GetSignBytes(ctx sdk.Context) []byte {
+	return sdk.CanonicalSignBytes(ctx, msg)
 }
 
 // Implements Msg.
@@ -122,12 +117,8 @@ func (msg IssueMsg) Get(key interface{}) (value interface{}) {
 }
 
 // Implements Msg.
-func (msg IssueMsg) GetSignBytes() []byte {
-	b, err := json.Marshal(msg) // XXX: ensure some canonical form
-	if err != nil {
-		panic(err)
-	}
-	return b
+func (msg IssueMsg) GetSignBytes(ctx sdk.Context) []byte {
+	return sdk.CanonicalSignBytes(ctx, msg)
 }
 
 // Implements Msg.
@@ -139,20 +130,14 @@ func (msg IssueMsg) GetSigners() []crypto.Address {
 // Input
 
 type Input struct {
-	Address  crypto.Address `json:"address"`
-	Coins    sdk.Coins      `json:"coins"`
-	Sequence int64          `json:"sequence"`
-
-	signature crypto.Signature
+	Address crypto.Address `json:"address"`
+	Coins   sdk.Coins      `json:"coins"`
 }
 
 // ValidateBasic - validate transaction input
 func (in Input) ValidateBasic() sdk.Error {
 	if len(in.Address) == 0 {
 		return ErrInvalidAddress(in.Address.String())
-	}
-	if in.Sequence < 0 {
-		return ErrInvalidSequence("negative sequence")
 	}
 	if !in.Coins.IsValid() {
 		return ErrInvalidCoins(in.Coins.String())
@@ -173,13 +158,6 @@ func NewInput(addr crypto.Address, coins sdk.Coins) Input {
 		Address: addr,
 		Coins:   coins,
 	}
-	return input
-}
-
-// NewInputWithSequence - create a transaction input, used with SendMsg
-func NewInputWithSequence(addr crypto.Address, coins sdk.Coins, seq int64) Input {
-	input := NewInput(addr, coins)
-	input.Sequence = seq
 	return input
 }
 

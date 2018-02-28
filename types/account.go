@@ -13,8 +13,11 @@ type Account interface {
 	GetPubKey() crypto.PubKey // can return nil.
 	SetPubKey(crypto.PubKey) error
 
-	GetSequence() int64
-	SetSequence(int64) error
+	GetAccNonce() int64
+	SetAccNonce(int64) error
+
+	GetTxNonce() int64
+	SetTxNonce(int64) error
 
 	GetCoins() Coins
 	SetCoins(Coins) error

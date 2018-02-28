@@ -2,6 +2,7 @@ package client
 
 import "github.com/spf13/cobra"
 
+// nolint
 const (
 	FlagChainID   = "chain-id"
 	FlagNode      = "node"

@@ -28,6 +28,7 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
+// command to query for a transaction
 func queryTx(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 || len(args[0]) == 0 {
 		return errors.New("You must provide a tx hash")
@@ -41,11 +42,10 @@ func queryTx(cmd *cobra.Command, args []string) error {
 	}
 
 	// get the node
-	uri := viper.GetString(client.FlagNode)
-	if uri == "" {
-		return errors.New("Must define which node to query with --node")
+	node, err := client.GetNode()
+	if err != nil {
+		return err
 	}
-	node := client.GetNode(uri)
 	prove := !viper.GetBool(client.FlagTrustNode)
 
 	res, err := node.Tx(hash, prove)

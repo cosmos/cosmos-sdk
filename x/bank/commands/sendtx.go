@@ -8,12 +8,14 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	crypto "github.com/tendermint/go-crypto"
+	wire "github.com/tendermint/go-wire"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/app" // XXX: not good
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	crypto "github.com/tendermint/go-crypto"
 )
 
 const (
@@ -43,29 +45,12 @@ func sendTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	uri := viper.GetString(client.FlagNode)
-	if uri == "" {
-		return errors.New("Must define which node to query with --node")
-	}
-	node := client.GetNode(uri)
-
-	result, err := node.BroadcastTxCommit(txBytes)
+	res, err := client.BroadcastTx(txBytes)
 	if err != nil {
 		return err
 	}
 
-	if result.CheckTx.Code != uint32(0) {
-		return errors.Errorf("CheckTx failed: (%d) %s",
-			result.CheckTx.Code,
-			result.CheckTx.Log)
-	}
-	if result.DeliverTx.Code != uint32(0) {
-		return errors.Errorf("DeliverTx failed: (%d) %s",
-			result.DeliverTx.Code,
-			result.DeliverTx.Log)
-	}
-
-	fmt.Printf("Committed at block %d. Hash: %s\n", result.Height, result.Hash.String())
+	fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
 	return nil
 }
 
@@ -107,7 +92,9 @@ func buildTx() ([]byte, error) {
 
 	// marshal bytes
 	tx := sdk.NewStdTx(msg, sigs)
-	cdc := app.MakeTxCodec()
+	cdc := wire.NewCodec()
+	bank.RegisterWire(cdc)
+
 	txBytes, err := cdc.MarshalBinary(tx)
 	if err != nil {
 		return nil, err
@@ -116,6 +103,7 @@ func buildTx() ([]byte, error) {
 }
 
 func buildMsg(from crypto.Address) (sdk.Msg, error) {
+
 	// parse coins
 	amount := viper.GetString(flagAmount)
 	coins, err := sdk.ParseCoins(amount)

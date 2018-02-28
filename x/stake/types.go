@@ -8,9 +8,6 @@ import (
 
 // Params defines the high level settings for staking
 type Params struct {
-	HoldBonded   crypto.Address `json:"hold_bonded"`   // account  where all bonded coins are held
-	HoldUnbonded crypto.Address `json:"hold_unbonded"` // account where all delegated but unbonded coins are held
-
 	InflationRateChange sdk.Rational `json:"inflation_rate_change"` // maximum annual change in inflation rate
 	InflationMax        sdk.Rational `json:"inflation_max"`         // maximum inflation rate
 	InflationMin        sdk.Rational `json:"inflation_min"`         // minimum inflation rate
@@ -28,8 +25,6 @@ type Params struct {
 
 func defaultParams() Params {
 	return Params{
-		HoldBonded:          []byte("77777777777777777777777777777777"),
-		HoldUnbonded:        []byte("88888888888888888888888888888888"),
 		InflationRateChange: sdk.NewRat(13, 100),
 		InflationMax:        sdk.NewRat(20, 100),
 		InflationMin:        sdk.NewRat(7, 100),
@@ -93,6 +88,9 @@ func (gs *GlobalState) unbondedShareExRate() sdk.Rational {
 	}
 	return gs.UnbondedShares.Inv().Mul(sdk.NewRat(gs.UnbondedPool))
 }
+
+// XXX XXX XXX
+// expand to include the function of actually transfering the tokens
 
 func (gs *GlobalState) addTokensBonded(amount int64) (issuedShares sdk.Rational) {
 	issuedShares = gs.bondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens

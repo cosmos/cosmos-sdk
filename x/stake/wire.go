@@ -1,4 +1,4 @@
-package bank
+package stake
 
 import (
 	"github.com/tendermint/go-wire"

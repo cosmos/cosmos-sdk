@@ -54,6 +54,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	var err error
 	var name, pass string
 
+	buf := client.BufferStdin()
 	if viper.GetBool(flagDryRun) {
 		// we throw this away, so don't enforce args,
 		// we want to get a new random seed phrase quickly
@@ -69,14 +70,17 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		pass, err = client.GetCheckPassword("Enter a passphrase for your key:", "Repeat the passphrase:")
+		pass, err = client.GetCheckPassword(
+			"Enter a passphrase for your key:",
+			"Repeat the passphrase:", buf)
 		if err != nil {
 			return err
 		}
 	}
 
 	if viper.GetBool(flagRecover) {
-		seed, err := client.GetSeed("Enter your recovery seed phrase:")
+		seed, err := client.GetSeed(
+			"Enter your recovery seed phrase:", buf)
 		if err != nil {
 			return err
 		}

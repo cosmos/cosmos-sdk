@@ -90,8 +90,9 @@ func buildTx() ([]byte, error) {
 
 	// sign and build
 	bz := msg.GetSignBytes()
+	buf := client.BufferStdin()
 	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-	passphrase, err := client.GetPassword(prompt)
+	passphrase, err := client.GetPassword(prompt, buf)
 	if err != nil {
 		return nil, err
 	}

@@ -86,6 +86,7 @@ func TestGenesis(t *testing.T) {
 
 	vals := []abci.Validator{}
 	bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
+	bapp.Commit()
 
 	// A checkTx context
 	ctx := bapp.BaseApp.NewContext(true, abci.Header{})
@@ -127,6 +128,7 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	// Initialize the chain
 	vals := []abci.Validator{}
 	bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
+	bapp.Commit()
 
 	// A checkTx context (true)
 	ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})

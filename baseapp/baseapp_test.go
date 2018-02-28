@@ -175,6 +175,7 @@ func TestInitChainer(t *testing.T) {
 	// set initChainer and try again - should see the value
 	app.SetInitChainer(initChainer)
 	app.InitChain(abci.RequestInitChain{})
+	app.Commit()
 	res = app.Query(query)
 	assert.Equal(t, value, res.Value)
 }

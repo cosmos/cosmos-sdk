@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 
 	abci "github.com/tendermint/abci/types"
@@ -129,8 +128,6 @@ func (app *BaseApp) LastBlockHeight() int64 {
 
 // initializes the remaining logic from app.cms
 func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
-	var lastCommitID = app.cms.LastCommitID()
-	var header abci.Header
 
 	// main store should exist.
 	// TODO: we don't actually need the main store here
@@ -139,23 +136,35 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 		return errors.New("BaseApp expects MultiStore with 'main' KVStore")
 	}
 
+	// XXX: Do we really need the header? What does it have that we want
+	// here that's not already in the CommitID ? If an app wants to have it,
+	// they can do so in their BeginBlocker. If we force it in baseapp,
+	// then either we force the AppHash to change with every block (since the header
+	// will be in the merkle store) or we can't write the state and the header to the
+	// db atomically without doing some surgery on the store interfaces ...
+
 	// if we've committed before, we expect <dbHeaderKey> to exist in the db
-	if !lastCommitID.IsZero() {
-		headerBytes := app.db.Get(dbHeaderKey)
-		if len(headerBytes) == 0 {
-			errStr := fmt.Sprintf("Version > 0 but missing key %s", dbHeaderKey)
-			return errors.New(errStr)
+	/*
+		var lastCommitID = app.cms.LastCommitID()
+		var header abci.Header
+
+		if !lastCommitID.IsZero() {
+			headerBytes := app.db.Get(dbHeaderKey)
+			if len(headerBytes) == 0 {
+				errStr := fmt.Sprintf("Version > 0 but missing key %s", dbHeaderKey)
+				return errors.New(errStr)
+			}
+			err := proto.Unmarshal(headerBytes, &header)
+			if err != nil {
+				return errors.Wrap(err, "Failed to parse Header")
+			}
+			lastVersion := lastCommitID.Version
+			if header.Height != lastVersion {
+				errStr := fmt.Sprintf("Expected db://%s.Height %v but got %v", dbHeaderKey, lastVersion, header.Height)
+				return errors.New(errStr)
+			}
 		}
-		err := proto.Unmarshal(headerBytes, &header)
-		if err != nil {
-			return errors.Wrap(err, "Failed to parse Header")
-		}
-		lastVersion := lastCommitID.Version
-		if header.Height != lastVersion {
-			errStr := fmt.Sprintf("Expected main://%s.Height %v but got %v", dbHeaderKey, lastVersion, header.Height)
-			return errors.New(errStr)
-		}
-	}
+	*/
 
 	// initialize Check state
 	app.msCheck = app.cms.CacheMultiStore()
@@ -201,16 +210,14 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		return
 	}
 
-	// make a context for the initialization.
-	// NOTE: we're writing to the cms directly, without a CacheWrap
-	ctx := sdk.NewContext(app.cms, abci.Header{}, false, nil)
+	// Initialize the deliver state
+	app.msDeliver = app.cms.CacheMultiStore()
+	app.ctxDeliver = app.NewContext(false, abci.Header{})
 
-	res = app.initChainer(ctx, req)
-	// TODO: handle error https://github.com/cosmos/cosmos-sdk/issues/468
+	app.initChainer(app.ctxDeliver, req) // no error
 
-	// XXX this commits everything and bumps the version.
-	// https://github.com/cosmos/cosmos-sdk/issues/442#issuecomment-366470148
-	app.cms.Commit()
+	// NOTE: we don't commit, but BeginBlock for block 1
+	// starts from this state
 
 	return
 }
@@ -228,8 +235,14 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 // Implements ABCI
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	app.msDeliver = app.cms.CacheMultiStore()
-	app.ctxDeliver = app.NewContext(false, req.Header)
+	// Initialize the DeliverTx state.
+	// If this is the first block, it was already
+	// initialized in InitChain. If we're testing,
+	// then we may not have run InitChain and these could be nil
+	if req.Header.Height > 1 || app.msDeliver == nil {
+		app.msDeliver = app.cms.CacheMultiStore()
+		app.ctxDeliver = app.NewContext(false, req.Header)
+	}
 	app.valUpdates = nil
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.ctxDeliver, req)
@@ -374,13 +387,15 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 // Implements ABCI
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
-	// Write the latest Header to the store
 	header := app.ctxDeliver.BlockHeader()
-	headerBytes, err := proto.Marshal(&header)
-	if err != nil {
-		panic(err)
-	}
-	app.db.Set(dbHeaderKey, headerBytes)
+	/*
+		// Write the latest Header to the store
+			headerBytes, err := proto.Marshal(&header)
+			if err != nil {
+				panic(err)
+			}
+			app.db.SetSync(dbHeaderKey, headerBytes)
+	*/
 
 	// Write the Deliver state and commit the MultiStore
 	app.msDeliver.Write()

@@ -63,8 +63,7 @@ func (c commander) sendTxCmd(cmd *cobra.Command, args []string) error {
 func buildMsg(from sdk.Address) (sdk.Msg, error) {
 
 	// parse coins
-	amount := viper.GetString(flagAmount)
-	coins, err := sdk.ParseCoins(amount)
+	amount, err := sdk.ParseCoins(viper.GetString(flagAmount))
 	if err != nil {
 		return nil, err
 	}
@@ -77,8 +76,7 @@ func buildMsg(from sdk.Address) (sdk.Msg, error) {
 	}
 	to := sdk.Address(bz)
 
-	input := bank.NewInput(from, coins)
-	output := bank.NewOutput(to, coins)
+	input := bank.NewInput(from, amount)
+	output := bank.NewOutput(to, amount)
 	msg := bank.NewSendMsg([]bank.Input{input}, []bank.Output{output})
-	return msg, nil
 }

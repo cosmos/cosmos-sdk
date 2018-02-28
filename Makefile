@@ -18,7 +18,6 @@ gaia:
 
 build:
 	@rm -rf examples/basecoin/vendor/
-	cd examples/basecoin && $(MAKE) get_vendor_deps
 	go build $(BUILD_FLAGS) -o build/basecoind ./examples/basecoin/cmd/basecoind/...
 
 dist:
@@ -61,11 +60,17 @@ godocs:
 
 test: test_unit # test_cli
 
+# Must  be run in each package seperately for the visualization
+# Added here for easy reference
+# coverage:
+#	 go test -coverprofile=c.out && go tool cover -html=c.out
+
 test_unit:
 	@rm -rf examples/basecoin/vendor/
 	@go test $(PACKAGES)
 
 test_cover:
+	@rm -rf examples/basecoin/vendor/
 	@bash tests/test_cover.sh
 
 benchmark:

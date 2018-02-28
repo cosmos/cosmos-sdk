@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.11.0 (TBD)
+
+BREAKING CHANGES
+
+* [examples] dummy -> kvstore
+* [types] CommitMultiStore interface has new `GetCommitKVStore(key StoreKey) CommitKVStore` method
+
 ## 0.10.0 (February 20, 2017)
 
 BREAKING CHANGES

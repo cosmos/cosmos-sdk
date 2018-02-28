@@ -68,6 +68,11 @@ func (rs *rootMultiStore) GetCommitStore(key StoreKey) CommitStore {
 }
 
 // Implements CommitMultiStore.
+func (rs *rootMultiStore) GetCommitKVStore(key StoreKey) CommitKVStore {
+	return rs.stores[key].(CommitKVStore)
+}
+
+// Implements CommitMultiStore.
 func (rs *rootMultiStore) LoadLatestVersion() error {
 	ver := getLatestVersion(rs.db)
 	return rs.LoadVersion(ver)

@@ -38,11 +38,15 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	oldpass, err := client.GetPassword("Enter the current passphrase:")
+	buf := client.BufferStdin()
+	oldpass, err := client.GetPassword(
+		"Enter the current passphrase:", buf)
 	if err != nil {
 		return err
 	}
-	newpass, err := client.GetCheckPassword("Enter the new passphrase:", "Repeat the new passphrase:")
+	newpass, err := client.GetCheckPassword(
+		"Enter the new passphrase:",
+		"Repeat the new passphrase:", buf)
 	if err != nil {
 		return err
 	}

@@ -14,17 +14,19 @@ import (
 // MinPassLength is the minimum acceptable password length
 const MinPassLength = 8
 
-// if we read from non-tty, we just need to init the buffer reader once,
-// in case we try to read multiple passwords (eg. update)
-var buf *bufio.Reader
+// BufferStdin is used to allow reading prompts for stdin
+// multiple times, when we read from non-tty
+func BufferStdin() *bufio.Reader {
+	return bufio.NewReader(os.Stdin)
+}
 
 // GetPassword will prompt for a password one-time (to sign a tx)
 // It enforces the password length
-func GetPassword(prompt string) (pass string, err error) {
+func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 	if inputIsTty() {
 		pass, err = speakeasy.Ask(prompt)
 	} else {
-		pass, err = stdinPassword()
+		pass, err = readLineFromBuf(buf)
 	}
 	if err != nil {
 		return "", err
@@ -37,11 +39,11 @@ func GetPassword(prompt string) (pass string, err error) {
 
 // GetSeed will request a seed phrase from stdin and trims off
 // leading/trailing spaces
-func GetSeed(prompt string) (seed string, err error) {
+func GetSeed(prompt string, buf *bufio.Reader) (seed string, err error) {
 	if inputIsTty() {
 		fmt.Println(prompt)
 	}
-	seed, err = stdinPassword()
+	seed, err = readLineFromBuf(buf)
 	seed = strings.TrimSpace(seed)
 	return
 }
@@ -50,18 +52,18 @@ func GetSeed(prompt string) (seed string, err error) {
 // match (for creating a new password).
 // It enforces the password length. Only parses password once if
 // input is piped in.
-func GetCheckPassword(prompt, prompt2 string) (string, error) {
+func GetCheckPassword(prompt, prompt2 string, buf *bufio.Reader) (string, error) {
 	// simple read on no-tty
 	if !inputIsTty() {
-		return GetPassword(prompt)
+		return GetPassword(prompt, buf)
 	}
 
 	// TODO: own function???
-	pass, err := GetPassword(prompt)
+	pass, err := GetPassword(prompt, buf)
 	if err != nil {
 		return "", err
 	}
-	pass2, err := GetPassword(prompt2)
+	pass2, err := GetPassword(prompt2, buf)
 	if err != nil {
 		return "", err
 	}
@@ -78,13 +80,10 @@ func inputIsTty() bool {
 	return isatty.IsTerminal(os.Stdin.Fd()) || isatty.IsCygwinTerminal(os.Stdin.Fd())
 }
 
-// stdinPassword reads one line from stdin.
+// readLineFromBuf reads one line from stdin.
 // Subsequent calls reuse the same buffer, so we don't lose
 // any input when reading a password twice (to verify)
-func stdinPassword() (string, error) {
-	if buf == nil {
-		buf = bufio.NewReader(os.Stdin)
-	}
+func readLineFromBuf(buf *bufio.Reader) (string, error) {
 	pass, err := buf.ReadString('\n')
 	if err != nil {
 		return "", err

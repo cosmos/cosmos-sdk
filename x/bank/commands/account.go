@@ -13,8 +13,8 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"   // XXX: not good
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/types" // XXX: not good
 )
 
 // GetAccountCmd returns a query account that will display the

@@ -2,7 +2,6 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -14,7 +13,7 @@ var _ sdk.Account = (*AppAccount)(nil)
 // This is compatible with the stock auth.AccountStore, since
 // auth.AccountStore uses the flexible go-wire library.
 type AppAccount struct {
-	auth.BaseAccount
+	sdk.BaseAccount
 	Name string
 }
 
@@ -46,7 +45,7 @@ func NewGenesisAccount(aa *AppAccount) *GenesisAccount {
 
 // convert GenesisAccount to AppAccount
 func (ga *GenesisAccount) ToAppAccount() (acc *AppAccount, err error) {
-	baseAcc := auth.BaseAccount{
+	baseAcc := sdk.BaseAccount{
 		Address: ga.Address,
 		Coins:   ga.Coins,
 	}

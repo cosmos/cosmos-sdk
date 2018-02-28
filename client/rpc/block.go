@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	tmwire "github.com/tendermint/tendermint/wire"
@@ -43,8 +42,10 @@ func getBlock(cmd *cobra.Command, args []string) error {
 	}
 
 	// get the node
-	uri := viper.GetString(client.FlagNode)
-	node := client.GetNode(uri)
+	node, err := client.GetNode()
+	if err != nil {
+		return err
+	}
 
 	// TODO: actually honor the --select flag!
 	// header -> BlockchainInfo

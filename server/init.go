@@ -178,5 +178,5 @@ func GetGenesisJSON(pubkey, chainID, denom, addr string, options string) string 
     "plugin_options": [
       "coin/issuer", {"app": "sigs", "addr": "%s"}%s
     ]
-}`, chainID, pubkey, addr, denom, addr, options)
+}`, addr, denom, addr, options)
 }

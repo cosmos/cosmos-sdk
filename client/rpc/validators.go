@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	tmwire "github.com/tendermint/tendermint/wire"
 )
 
 func validatorCommand() *cobra.Command {
@@ -46,7 +46,8 @@ func getValidators(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output, err := json.MarshalIndent(res, "  ", "")
+	output, err := tmwire.MarshalJSON(res)
+	// output, err := json.MarshalIndent(res, "  ", "")
 	if err != nil {
 		return err
 	}

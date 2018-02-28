@@ -1,13 +1,13 @@
 package rpc
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	tmwire "github.com/tendermint/tendermint/wire"
 )
 
 func statusCommand() *cobra.Command {
@@ -29,7 +29,8 @@ func checkStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output, err := json.MarshalIndent(res, "  ", "")
+	output, err := tmwire.MarshalJSON(res)
+	// output, err := json.MarshalIndent(res, "  ", "")
 	if err != nil {
 		return err
 	}

@@ -1,10 +1,10 @@
 package main
 
 import (
-	// Include dependencies here so glide picks them up
+	// Include dependencies here so dep picks them up
 	// and installs sub-dependencies.
 
-	// TODO: Ideally this gets auto-imported on glide update.
+	// TODO: Ideally this gets auto-imported on dep update.
 	// Any way to make that happen?
 	_ "github.com/rigelrozanski/common"
 )

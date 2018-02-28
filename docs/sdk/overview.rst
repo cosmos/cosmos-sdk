@@ -56,7 +56,7 @@ Strictly speaking, Golang does not implement object capabilities completely, bec
 * pervasive ability to override module vars https://github.com/golang/go/issues/23161
 * data-race vulnerability where 2+ goroutines can create illegal interface values
 
-The first is easy to catch by auditing imports and using a proper dependency version control system like Glide.  The second and third are unfortunate but it can be audited with some cost.
+The first is easy to catch by auditing imports and using a proper dependency version control system like Dep.  The second and third are unfortunate but it can be audited with some cost.
 
 Perhaps `Go2 will implement the object capability model <https://github.com/golang/go/issues/23157>`__.
 

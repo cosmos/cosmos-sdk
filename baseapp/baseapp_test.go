@@ -304,6 +304,7 @@ func (tx testUpdatePowerTx) GetSignBytes() []byte                    { return ni
 func (tx testUpdatePowerTx) ValidateBasic() sdk.Error                { return nil }
 func (tx testUpdatePowerTx) GetSigners() []crypto.Address            { return nil }
 func (tx testUpdatePowerTx) GetFeePayer() crypto.Address             { return nil }
+func (tx testUpdatePowerTx) GetFees() sdk.Coins                      { return nil }
 func (tx testUpdatePowerTx) GetSignatures() []sdk.StdSignature       { return nil }
 
 func TestValidatorChange(t *testing.T) {

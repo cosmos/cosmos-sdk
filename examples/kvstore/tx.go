@@ -56,6 +56,10 @@ func (tx kvstoreTx) GetFeePayer() crypto.Address {
 	return nil
 }
 
+func (tx kvstoreTx) GetFees() sdk.Coins {
+	return nil
+}
+
 // takes raw transaction bytes and decodes them into an sdk.Tx. An sdk.Tx has
 // all the signatures and can be used to authenticate.
 func decodeTx(txBytes []byte) (sdk.Tx, sdk.Error) {

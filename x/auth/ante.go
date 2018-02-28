@@ -5,9 +5,8 @@ import (
 )
 
 func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
-	return func(
-		ctx sdk.Context, tx sdk.Tx,
-	) (_ sdk.Context, _ sdk.Result, abort bool) {
+	return func(ctx sdk.Context,
+		tx sdk.Tx) (_ sdk.Context, _ sdk.Result, abort bool) {
 
 		// Deduct the fee from the fee payer.
 		// This is done first because it only
@@ -20,10 +19,13 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 					sdk.ErrUnrecognizedAddress(payerAddr).Result(),
 					true
 			}
-			// TODO: Charge fee from payerAcc.
-			// TODO: accountMapper.SetAccount(ctx, payerAddr)
+			coins := payerAcc.GetCoins().Minus(tx.GetFees())
+			payerAcc.SetCoins(coins)
+			accountMapper.SetAccount(ctx, payerAcc)
 		} else {
-			// TODO: Ensure that some other spam prevention is used.
+			return ctx,
+				sdk.ErrNoFeePayer("No fee payer specified").Result(),
+				true
 		}
 
 		var sigs = tx.GetSignatures()

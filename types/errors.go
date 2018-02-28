@@ -30,6 +30,7 @@ const (
 	CodeUnknownRequest      CodeType = 6
 	CodeUnrecognizedAddress CodeType = 7
 	CodeInvalidSequence     CodeType = 8
+	CodeNoFeePayer          CodeType = 9
 
 	CodeGenesisParse CodeType = 0xdead // TODO: remove ?
 )
@@ -55,6 +56,8 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "Unrecognized address"
 	case CodeInvalidSequence:
 		return "Invalid sequence"
+	case CodeNoFeePayer:
+		return "No fee payer"
 	default:
 		return fmt.Sprintf("Unknown code %d", code)
 	}
@@ -91,6 +94,9 @@ func ErrUnrecognizedAddress(addr crypto.Address) Error {
 }
 func ErrInvalidSequence(msg string) Error {
 	return newError(CodeInvalidSequence, msg)
+}
+func ErrNoFeePayer(msg string) Error {
+	return newError(CodeNoFeePayer, msg)
 }
 
 //----------------------------------------

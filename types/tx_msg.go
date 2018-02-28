@@ -37,6 +37,9 @@ type Tx interface {
 	// deducted before the Msg is processed.
 	GetFeePayer() crypto.Address
 
+	// Specify the fees included with the transaction.
+	GetFees() Coins
+
 	// Signatures returns the signature of signers who signed the Msg.
 	// CONTRACT: Length returned is same as length of
 	// pubkeys returned from MsgKeySigners, and the order
@@ -54,6 +57,7 @@ var _ Tx = (*StdTx)(nil)
 type StdTx struct {
 	Msg
 	Signatures []StdSignature
+	Fees       Coins
 }
 
 func NewStdTx(msg Msg, sigs []StdSignature) StdTx {
@@ -66,6 +70,7 @@ func NewStdTx(msg Msg, sigs []StdSignature) StdTx {
 //nolint
 func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
 func (tx StdTx) GetFeePayer() crypto.Address   { return tx.Signatures[0].PubKey.Address() } // XXX but PubKey is optional!
+func (tx StdTx) GetFees() Coins                { return tx.Fees }
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 
 //-------------------------------------

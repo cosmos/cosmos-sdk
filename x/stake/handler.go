@@ -13,24 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-//_______________________________________________________________________
-
-// DelegatedProofOfStake - interface to enforce delegation stake
-type delegatedProofOfStake interface {
-	declareCandidacy(TxDeclareCandidacy) error
-	editCandidacy(TxEditCandidacy) error
-	delegate(TxDelegate) error
-	unbond(TxUnbond) error
-}
-
-type coinSend interface {
-	transferFn(sender, receiver crypto.Address, coins sdk.Coins) error
-}
-
-//_______________________________________________________________________
-
 // separated for testing
-func InitState(key, value string, store sdk.KVStore) error {
+func InitState(ctx sdk.Context, key, value string) error {
 
 	params := loadParams(store)
 	switch key {
@@ -64,22 +48,19 @@ func InitState(key, value string, store sdk.KVStore) error {
 
 //_______________________________________________________________________
 
-func NewHandler(ck bank.CoinKeeper) sdk.Handler {
+func NewHandler(stakeKey sdk.StoreKey, ck bank.CoinKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 
-		params := loadParams(store)
-		params := loadGlobalState(store)
+		res := sdk.Result{}
 
+		err := msg.ValidateBasic()
+		if err != nil {
+			return res, err
+		}
+
+		// return the fee for each tx type
 		if ctx.IsCheckTx() {
-
-			err = tx.ValidateBasic()
-			if err != nil {
-				return res, err
-			}
-
-			res := sdk.Result{}
-
-			// return the fee for each tx type
+			// XXX: add some tags so we can search it!
 			switch txInner := tx.Unwrap().(type) {
 			case TxDeclareCandidacy:
 				return sdk.NewCheck(params.GasDeclareCandidacy, "")
@@ -89,11 +70,9 @@ func NewHandler(ck bank.CoinKeeper) sdk.Handler {
 				return sdk.NewCheck(params.GasDelegate, "")
 			case TxUnbond:
 				return sdk.NewCheck(params.GasUnbond, "")
+			default:
+				return sdk.ErrUnknownTxType(tx)
 			}
-
-			// TODO: add some tags so we can search it!
-			return sdk.ErrUnknownTxType(tx)
-			//return sdk.Result{} // TODO
 		}
 
 		// TODO: remove redundancy
@@ -108,32 +87,26 @@ func NewHandler(ck bank.CoinKeeper) sdk.Handler {
 			return
 		}
 
-		params := loadParams(store)
-		deliverer := deliver{
-			store:  store,
-			sender: sender,
-			params: params,
-			ck:     ck,
-			gs:     gs,
-		}
+		keeper := NewKeeper(ctx, stakeKey)
+		transact := NewTransact(ctx, ck)
 
 		// Run the transaction
 		switch _tx := tx.Unwrap().(type) {
 		case TxDeclareCandidacy:
 			res.GasUsed = params.GasDeclareCandidacy
-			return res, deliverer.declareCandidacy(_tx)
+			return res, transact.declareCandidacy(_tx)
 		case TxEditCandidacy:
 			res.GasUsed = params.GasEditCandidacy
-			return res, deliverer.editCandidacy(_tx)
+			return res, transact.editCandidacy(_tx)
 		case TxDelegate:
 			res.GasUsed = params.GasDelegate
-			return res, deliverer.delegate(_tx)
+			return res, transact.delegate(_tx)
 		case TxUnbond:
 			//context with hold account permissions
 			params := loadParams(store)
 			res.GasUsed = params.GasUnbond
 			//ctx2 := ctx.WithPermissions(params.HoldBonded) //TODO remove this line if non-permissioned ctx works
-			return res, deliverer.unbond(_tx)
+			return res, transact.unbond(_tx)
 		}
 		return
 	}
@@ -150,47 +123,57 @@ func getTxSender(ctx sdk.Context) (sender crypto.Address, err error) {
 
 //_____________________________________________________________________
 
-type deliver struct {
-	store  sdk.KVStore
-	sender crypto.Address
-	params Params
-	ck     bank.CoinKeeper
-	gs     *GlobalState
+// common fields to all transactions
+type transact struct {
+	sender     crypto.Address
+	keeper     Keeper
+	coinKeeper bank.CoinKeeper
+	params     Params
+	gs         *GlobalState
 }
 
-var _ delegatedProofOfStake = deliver{} // enforce interface at compile time
+//  XXX move keeper creation to application?
+func newTransact(ctx sdk.Context, keeper Keeper, ck bank.CoinKeeper) transact {
+	return transact{
+		sender:     sender,
+		keeper:     keeper,
+		coinKeeper: ck,
+		params:     keeper.loadParams(),
+		gs:         keeper.loadGlobalState(),
+	}
+}
 
 //_____________________________________________________________________
 // helper functions
 // TODO move from deliver with new SDK should only be dependant on store to send coins in NEW SDK
 
 // move a candidates asset pool from bonded to unbonded pool
-func (d deliver) bondedToUnbondedPool(candidate *Candidate) error {
+func (tr transact) bondedToUnbondedPool(candidate *Candidate) error {
 
 	// replace bonded shares with unbonded shares
-	tokens := d.gs.removeSharesBonded(candidate.Assets)
-	candidate.Assets = d.gs.addTokensUnbonded(tokens)
+	tokens := tr.gs.removeSharesBonded(candidate.Assets)
+	candidate.Assets = tr.gs.addTokensUnbonded(tokens)
 	candidate.Status = Unbonded
 
-	return d.transfer(d.params.HoldBonded, d.params.HoldUnbonded,
-		sdk.Coins{{d.params.AllowedBondDenom, tokens}})
+	return tr.transfer(tr.params.HoldBonded, tr.params.HoldUnbonded,
+		sdk.Coins{{tr.params.AllowedBondDenom, tokens}})
 }
 
 // move a candidates asset pool from unbonded to bonded pool
-func (d deliver) unbondedToBondedPool(candidate *Candidate) error {
+func (tr transact) unbondedToBondedPool(candidate *Candidate) error {
 
 	// replace bonded shares with unbonded shares
-	tokens := d.gs.removeSharesUnbonded(candidate.Assets)
-	candidate.Assets = d.gs.addTokensBonded(tokens)
+	tokens := tr.gs.removeSharesUnbonded(candidate.Assets)
+	candidate.Assets = tr.gs.addTokensBonded(tokens)
 	candidate.Status = Bonded
 
-	return d.transfer(d.params.HoldUnbonded, d.params.HoldBonded,
-		sdk.Coins{{d.params.AllowedBondDenom, tokens}})
+	return tr.transfer(tr.params.HoldUnbonded, tr.params.HoldBonded,
+		sdk.Coins{{tr.params.AllowedBondDenom, tokens}})
 }
 
 // return an error if the bonds coins are incorrect
-func checkDenom(tx BondUpdate, store sdk.KVStore) error {
-	if tx.Bond.Denom != loadParams(store).AllowedBondDenom {
+func checkDenom(keeper Keeper, tx BondUpdate) error {
+	if tx.Bond.Denom != keeper.loadParams().AllowedBondDenom {
 		return fmt.Errorf("Invalid coin denomination")
 	}
 	return nil
@@ -200,46 +183,46 @@ func checkDenom(tx BondUpdate, store sdk.KVStore) error {
 
 // These functions assume everything has been authenticated,
 // now we just perform action and save
-func (d deliver) declareCandidacy(tx TxDeclareCandidacy) error {
+func (tr transact) declareCandidacy(tx TxDeclareCandidacy) error {
 
 	// check to see if the pubkey or sender has been registered before
-	candidate := loadCandidate(d.store, tx.PubKey)
+	candidate := tr.keeper.loadCandidate(tx.PubKey)
 	if candidate != nil {
 		return fmt.Errorf("cannot bond to pubkey which is already declared candidacy"+
 			" PubKey %v already registered with %v candidate address",
 			candidate.PubKey, candidate.Owner)
 	}
-	err := checkDenom(tx.BondUpdate, d.store)
+	err := checkDenom(tx.BondUpdate, tr.keeper)
 	if err != nil {
 		return err
 	}
 	// XXX end of old check tx
 
 	// create and save the empty candidate
-	bond := loadCandidate(d.store, tx.PubKey)
+	bond := tr.keeper.loadCandidate(tx.PubKey)
 	if bond != nil {
 		return ErrCandidateExistsAddr()
 	}
-	candidate := NewCandidate(tx.PubKey, d.sender, tx.Description)
-	saveCandidate(d.store, candidate)
+	candidate := NewCandidate(tx.PubKey, tr.sender, tx.Description)
+	tr.keeper.saveCandidate(candidate)
 
-	// move coins from the d.sender account to a (self-bond) delegator account
+	// move coins from the tr.sender account to a (self-bond) delegator account
 	// the candidate account and global shares are updated within here
 	txDelegate := TxDelegate{tx.BondUpdate}
-	return d.delegateWithCandidate(txDelegate, candidate)
+	return tr.delegateWithCandidate(txDelegate, candidate)
 }
 
-func (d deliver) editCandidacy(tx TxEditCandidacy) error {
+func (tr transact) editCandidacy(tx TxEditCandidacy) error {
 
 	// candidate must already be registered
-	candidate := loadCandidate(d.store, tx.PubKey)
+	candidate := tr.keeper.loadCandidate(tx.PubKey)
 	if candidate == nil { // does PubKey exist
 		return fmt.Errorf("cannot delegate to non-existant PubKey %v", tx.PubKey)
 	}
 	// XXX end of old check tx
 
 	// Get the pubKey bond account
-	candidate := loadCandidate(d.store, tx.PubKey)
+	candidate := tr.keeper.loadCandidate(tx.PubKey)
 	if candidate == nil {
 		return ErrBondNotNominated()
 	}
@@ -261,31 +244,31 @@ func (d deliver) editCandidacy(tx TxEditCandidacy) error {
 		candidate.Description.Details = tx.Description.Details
 	}
 
-	saveCandidate(d.store, candidate)
+	tr.keeper.saveCandidate(candidate)
 	return nil
 }
 
-func (d deliver) delegate(tx TxDelegate) error {
+func (tr transact) delegate(tx TxDelegate) error {
 
-	candidate := loadCandidate(c.store, tx.PubKey)
+	candidate := tr.keeper.loadCandidate(tx.PubKey)
 	if candidate == nil { // does PubKey exist
 		return fmt.Errorf("cannot delegate to non-existant PubKey %v", tx.PubKey)
 	}
-	err := checkDenom(tx.BondUpdate, c.store)
+	err := checkDenom(tx.BondUpdate, tr.keeper)
 	if err != nil {
 		return err
 	}
 	// end of old check tx
 
 	// Get the pubKey bond account
-	candidate := loadCandidate(d.store, tx.PubKey)
+	candidate := tr.keeper.loadCandidate(tx.PubKey)
 	if candidate == nil {
 		return ErrBondNotNominated()
 	}
-	return d.delegateWithCandidate(tx, candidate)
+	return tr.delegateWithCandidate(tx, candidate)
 }
 
-func (d deliver) delegateWithCandidate(tx TxDelegate, candidate *Candidate) error {
+func (tr transact) delegateWithCandidate(tx TxDelegate, candidate *Candidate) error {
 
 	if candidate.Status == Revoked { //candidate has been withdrawn
 		return ErrBondNotNominated()
@@ -293,20 +276,20 @@ func (d deliver) delegateWithCandidate(tx TxDelegate, candidate *Candidate) erro
 
 	var poolAccount crypto.Address
 	if candidate.Status == Bonded {
-		poolAccount = d.params.HoldBonded
+		poolAccount = tr.params.HoldBonded
 	} else {
-		poolAccount = d.params.HoldUnbonded
+		poolAccount = tr.params.HoldUnbonded
 	}
 
-	// TODO maybe refactor into GlobalState.addBondedTokens(), maybe with new SDK
+	// XXX refactor all steps like this into GlobalState.addBondedTokens()
 	// Move coins from the delegator account to the bonded pool account
-	err := d.transfer(d.sender, poolAccount, sdk.Coins{tx.Bond})
+	err := tr.transfer(tr.sender, poolAccount, sdk.Coins{tx.Bond})
 	if err != nil {
 		return err
 	}
 
 	// Get or create the delegator bond
-	bond := loadDelegatorBond(d.store, d.sender, tx.PubKey)
+	bond := tr.keeper.loadDelegatorBond(tr.sender, tx.PubKey)
 	if bond == nil {
 		bond = &DelegatorBond{
 			PubKey: tx.PubKey,
@@ -315,17 +298,17 @@ func (d deliver) delegateWithCandidate(tx TxDelegate, candidate *Candidate) erro
 	}
 
 	// Account new shares, save
-	bond.Shares = bond.Shares.Add(candidate.addTokens(tx.Bond.Amount, d.gs))
-	saveCandidate(d.store, candidate)
-	saveDelegatorBond(d.store, d.sender, bond)
-	saveGlobalState(d.store, d.gs)
+	bond.Shares = bond.Shares.Add(candidate.addTokens(tx.Bond.Amount, tr.gs))
+	tr.keeper.saveCandidate(candidate)
+	tr.keeper.saveDelegatorBond(tr.sender, bond)
+	tr.keeper.saveGlobalState(tr.gs)
 	return nil
 }
 
-func (d deliver) unbond(tx TxUnbond) error {
+func (tr transact) unbond(tx TxUnbond) error {
 
 	// check if bond has any shares in it unbond
-	bond := loadDelegatorBond(d.store, d.sender, tx.PubKey)
+	bond := tr.keeper.loadDelegatorBond(tr.sender, tx.PubKey)
 	sharesStr := viper.GetString(tx.Shares)
 	if bond.Shares.LT(sdk.ZeroRat) { // bond shares < tx shares
 		return fmt.Errorf("no shares in account to unbond")
@@ -348,7 +331,7 @@ func (d deliver) unbond(tx TxUnbond) error {
 	// XXX end of old checkTx
 
 	// get delegator bond
-	bond := loadDelegatorBond(d.store, d.sender, tx.PubKey)
+	bond := tr.keeper.loadDelegatorBond(tr.sender, tx.PubKey)
 	if bond == nil {
 		return ErrNoDelegatorForAddress()
 	}
@@ -372,7 +355,7 @@ func (d deliver) unbond(tx TxUnbond) error {
 	bond.Shares = bond.Shares.Sub(shares)
 
 	// get pubKey candidate
-	candidate := loadCandidate(d.store, tx.PubKey)
+	candidate := tr.keeper.loadCandidate(tx.PubKey)
 	if candidate == nil {
 		return ErrNoCandidateForAddress()
 	}
@@ -382,28 +365,28 @@ func (d deliver) unbond(tx TxUnbond) error {
 
 		// if the bond is the owner of the candidate then
 		// trigger a revoke candidacy
-		if d.sender.Equals(candidate.Owner) &&
+		if tr.sender.Equals(candidate.Owner) &&
 			candidate.Status != Revoked {
 			revokeCandidacy = true
 		}
 
 		// remove the bond
-		removeDelegatorBond(d.store, d.sender, tx.PubKey)
+		tr.keeper.removeDelegatorBond(tr.sender, tx.PubKey)
 	} else {
-		saveDelegatorBond(d.store, d.sender, bond)
+		tr.keeper.saveDelegatorBond(tr.sender, bond)
 	}
 
 	// transfer coins back to account
 	var poolAccount crypto.Address
 	if candidate.Status == Bonded {
-		poolAccount = d.params.HoldBonded
+		poolAccount = tr.params.HoldBonded
 	} else {
-		poolAccount = d.params.HoldUnbonded
+		poolAccount = tr.params.HoldUnbonded
 	}
 
-	returnCoins := candidate.removeShares(shares, d.gs)
-	err := d.transfer(poolAccount, d.sender,
-		sdk.Coins{{d.params.AllowedBondDenom, returnCoins}})
+	returnCoins := candidate.removeShares(shares, tr.gs)
+	err := tr.transfer(poolAccount, tr.sender,
+		sdk.Coins{{tr.params.AllowedBondDenom, returnCoins}})
 	if err != nil {
 		return err
 	}
@@ -413,7 +396,7 @@ func (d deliver) unbond(tx TxUnbond) error {
 
 		// change the share types to unbonded if they were not already
 		if candidate.Status == Bonded {
-			err = d.bondedToUnbondedPool(candidate)
+			err = tr.bondedToUnbondedPool(candidate)
 			if err != nil {
 				return err
 			}
@@ -425,11 +408,11 @@ func (d deliver) unbond(tx TxUnbond) error {
 
 	// deduct shares from the candidate and save
 	if candidate.Liabilities.IsZero() {
-		removeCandidate(d.store, tx.PubKey)
+		tr.keeper.removeCandidate(tx.PubKey)
 	} else {
-		saveCandidate(d.store, candidate)
+		tr.keeper.saveCandidate(candidate)
 	}
 
-	saveGlobalState(d.store, d.gs)
+	tr.keeper.saveGlobalState(tr.gs)
 	return nil
 }

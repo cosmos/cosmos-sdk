@@ -189,6 +189,8 @@ upon receiving txGovDeposit from sender do
                 store(ValidatorGovInfos, <proposalID>:<validator.PubKey>, validatorGovInfo)
               
               ProposalProcessingQueue.push(txGovDeposit.ProposalID)  
+
+            store(Proposals, <txGovVote.ProposalID>, proposal)
 ```
 
 ### Claim deposit

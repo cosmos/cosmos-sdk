@@ -1,5 +1,7 @@
 # Keys CLI
 
+**WARNING: out-of-date and parts are wrong.... please update**
+
 This is as much an example how to expose cobra/viper, as for a cli itself
 (I think this code is overkill for what go-keys needs). But please look at
 the commands, and give feedback and changes.

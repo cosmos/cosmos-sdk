@@ -9,3 +9,9 @@ func RegisterWire(cdc *wire.Codec) {
 	cdc.RegisterConcrete(SendMsg{}, "cosmos-sdk/SendMsg", nil)
 	cdc.RegisterConcrete(IssueMsg{}, "cosmos-sdk/IssueMsg", nil)
 }
+
+func getCodec() *wire.Codec {
+	cdc := wire.NewCodec()
+	RegisterWire(cdc)
+	return cdc
+}

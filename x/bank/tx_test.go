@@ -248,8 +248,14 @@ func TestSendMsgGetSignBytes(t *testing.T) {
 		},
 	}
 	res := msg.GetSignBytes()
+
+	cdc := getCodec()
+	unmarshaledMsg := &SendMsg{}
+	cdc.UnmarshalJSON(res, unmarshaledMsg)
+
+	assert.Equal(t, &msg, unmarshaledMsg)
 	// TODO bad results
-	assert.Equal(t, string(res), `{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10}],"sequence":1}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10}]}]}`)
+	assert.Equal(t, string(res), `{"_df":"3CAAA78D13BAE4","_v":{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10}],"sequence":1}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10}]}]}}`)
 }
 
 func TestSendMsgGetSigners(t *testing.T) {
@@ -357,8 +363,15 @@ func TestIssueMsgGetSignBytes(t *testing.T) {
 		},
 	}
 	res := msg.GetSignBytes()
+
+	cdc := getCodec()
+	unmarshaledMsg := &IssueMsg{}
+	cdc.UnmarshalJSON(res, unmarshaledMsg)
+
+	assert.Equal(t, &msg, unmarshaledMsg)
+
 	// TODO bad results
-	assert.Equal(t, string(res), `{"banker":"696E707574","outputs":[{"address":"6C6F616E2D66726F6D2D62616E6B","coins":[{"denom":"atom","amount":10}]}]}`)
+	assert.Equal(t, string(res), `{"_df":"B5D562E578B450","_v":{"banker":"696E707574","outputs":[{"address":"6C6F616E2D66726F6D2D62616E6B","coins":[{"denom":"atom","amount":10}]}]}}`)
 }
 
 func TestIssueMsgGetSigners(t *testing.T) {

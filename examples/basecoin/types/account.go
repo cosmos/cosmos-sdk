@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	crypto "github.com/tendermint/go-crypto"
+	wire "github.com/tendermint/go-wire"
 )
 
 var _ sdk.Account = (*AppAccount)(nil)
@@ -15,12 +16,21 @@ var _ sdk.Account = (*AppAccount)(nil)
 // auth.AccountStore uses the flexible go-wire library.
 type AppAccount struct {
 	auth.BaseAccount
-	Name string
+	Name string `json:"name"`
 }
 
 // nolint
 func (acc AppAccount) GetName() string      { return acc.Name }
 func (acc *AppAccount) SetName(name string) { acc.Name = name }
+
+// Get the ParseAccount function for the custom AppAccount
+func GetParseAccount(cdc *wire.Codec) sdk.ParseAccount {
+	return func(accBytes []byte) (res sdk.Account, err error) {
+		acct := new(AppAccount)
+		err = cdc.UnmarshalBinary(accBytes, acct)
+		return acct, err
+	}
+}
 
 //___________________________________________________________________________________
 

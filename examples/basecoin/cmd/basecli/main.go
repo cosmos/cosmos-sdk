@@ -68,7 +68,7 @@ func main() {
 	// add proxy, version and key info
 	basecliCmd.AddCommand(
 		client.LineBreak,
-		lcd.ServeCommand(),
+		lcd.ServeCommand(cdc),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,

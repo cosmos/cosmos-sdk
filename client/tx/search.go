@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
+	wire "github.com/tendermint/go-wire"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -18,21 +18,22 @@ const (
 	flagAny  = "any"
 )
 
-func txSearchCommand() *cobra.Command {
+// default client command to search through tagged transactions
+func SearchTxCmd(cmdr commander) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "txs",
 		Short: "Search for all transactions that match the given tags",
-		RunE:  searchTx,
+		RunE:  cmdr.searchTxCmd,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
-	// TODO: change this to false when we can
+	// TODO: change this to false once proofs built in
 	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
 	cmd.Flags().StringSlice(flagTags, nil, "Tags that must match (may provide multiple)")
 	cmd.Flags().Bool(flagAny, false, "Return transactions that match ANY tag, rather than ALL")
 	return cmd
 }
 
-func searchTx(cmd *cobra.Command, args []string) error {
+func (c commander) searchTxCmd(cmd *cobra.Command, args []string) error {
 	tags := viper.GetStringSlice(flagTags)
 	if len(tags) == 0 {
 		return errors.New("Must declare at least one tag to search")
@@ -52,13 +53,12 @@ func searchTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	info, err := formatTxResults(res)
+	info, err := formatTxResults(c.cdc, res)
 	if err != nil {
 		return err
 	}
 
-	cdc := app.MakeTxCodec()
-	output, err := cdc.MarshalJSON(info)
+	output, err := c.cdc.MarshalJSON(info)
 	if err != nil {
 		return err
 	}
@@ -67,11 +67,11 @@ func searchTx(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func formatTxResults(res []*ctypes.ResultTx) ([]txInfo, error) {
+func formatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]txInfo, error) {
 	var err error
 	out := make([]txInfo, len(res))
 	for i := range res {
-		out[i], err = formatTxResult(res[i])
+		out[i], err = formatTxResult(cdc, res[i])
 		if err != nil {
 			return nil, err
 		}

@@ -54,7 +54,7 @@ func TestSendMsg(t *testing.T) {
 	}})
 
 	// just marshal/unmarshal!
-	cdc := MakeTxCodec()
+	cdc := MakeCodec()
 	txBytes, err := cdc.MarshalBinary(tx)
 	require.NoError(t, err)
 

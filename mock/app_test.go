@@ -25,16 +25,17 @@ func TestInitApp(t *testing.T) {
 	require.NoError(t, err)
 	req := abci.RequestInitChain{AppStateBytes: opts}
 	app.InitChain(req)
+	app.Commit()
 
 	// XXX test failing
-	//	// make sure we can query these values
-	//query := abci.RequestQuery{
-	//Path: "/main/key",
-	//Data: []byte("foo"),
-	//}
-	//qres := app.Query(query)
-	//require.Equal(t, uint32(0), qres.Code, qres.Log)
-	//assert.Equal(t, []byte("bar"), qres.Value)
+	// make sure we can query these values
+	query := abci.RequestQuery{
+		Path: "/main/key",
+		Data: []byte("foo"),
+	}
+	qres := app.Query(query)
+	require.Equal(t, uint32(0), qres.Code, qres.Log)
+	assert.Equal(t, []byte("bar"), qres.Value)
 }
 
 // TextDeliverTx ensures we can write a tx

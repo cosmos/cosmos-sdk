@@ -70,11 +70,13 @@ func KVStoreHandler(storeKey sdk.StoreKey) sdk.Handler {
 	}
 }
 
+// basic KV structure
 type KV struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 }
 
+// What Genesis JSON is formatted as
 type GenesisJSON struct {
 	Values []KV `json:"values"`
 }

@@ -11,7 +11,7 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 	wire "github.com/tendermint/go-wire"
 
-	"github.com/cosmos/cosmos-sdk/client" // XXX: not good
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )

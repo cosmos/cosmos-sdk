@@ -236,13 +236,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState
 
-	res = app.initChainer(ctx, req)
-	// TODO: handle error https://github.com/cosmos/cosmos-sdk/issues/468
-
-	// XXX this commits everything and bumps the version.
-	// https://github.com/cosmos/cosmos-sdk/issues/442#issuecomment-366470148
-	app.cms.Commit()
-
 	return
 }
 
@@ -368,12 +361,14 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	// Run the ante handler.
-	newCtx, result, abort := app.anteHandler(ctx, tx)
-	if abort {
-		return result
-	}
-	if !newCtx.IsZero() {
-		ctx = newCtx
+	if app.anteHandler != nil {
+		newCtx, result, abort := app.anteHandler(ctx, tx)
+		if abort {
+			return result
+		}
+		if !newCtx.IsZero() {
+			ctx = newCtx
+		}
 	}
 
 	// Get the correct cache

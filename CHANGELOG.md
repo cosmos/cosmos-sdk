@@ -24,6 +24,7 @@ BUG FIXES
 
 * [baseapp] Fix panic on app restart
 * [baseapp] InitChain does not call Commit
+* [basecoin] Remove IBCStore because mounting multiple stores is currently broken
 
 ## 0.10.0 (February 20, 2017)
 

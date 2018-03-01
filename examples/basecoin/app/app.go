@@ -60,7 +60,9 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	// initialize BaseApp
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
-	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore)
+	// TODO: mounting multiple stores is broken
+	// https://github.com/cosmos/cosmos-sdk/issues/532
+	app.MountStoresIAVL(app.capKeyMainStore) // , app.capKeyIBCStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {

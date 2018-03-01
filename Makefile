@@ -18,7 +18,8 @@ gaia:
 
 build:
 	@rm -rf examples/basecoin/vendor/
-	go build $(BUILD_FLAGS) -o build/basecoind ./examples/basecoin/cmd/basecoind/...
+	go build $(BUILD_FLAGS) -o build/basecoind ./examples/basecoin/cmd/basecoind
+	go build $(BUILD_FLAGS) -o build/basecli ./examples/basecoin/cmd/basecli
 
 dist:
 	@bash publish/dist.sh
@@ -58,16 +59,19 @@ godocs:
 ########################################
 ### Testing
 
-TUTORIALS=$(shell find docs/guide -name "*md" -type f)
-
-#test: test_unit test_cli test_tutorial
 test: test_unit # test_cli
+
+# Must  be run in each package seperately for the visualization
+# Added here for easy reference
+# coverage:
+#	 go test -coverprofile=c.out && go tool cover -html=c.out
 
 test_unit:
 	@rm -rf examples/basecoin/vendor/
 	@go test $(PACKAGES)
 
 test_cover:
+	@rm -rf examples/basecoin/vendor/
 	@bash tests/test_cover.sh
 
 benchmark:

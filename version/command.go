@@ -1,11 +1,9 @@
-package main
+package version
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-
-	"github.com/cosmos/cosmos-sdk/version"
 )
 
 var (
@@ -18,9 +16,9 @@ var (
 )
 
 func doVersionCmd(cmd *cobra.Command, args []string) {
-	v := version.Version
-	if version.GitCommit != "" {
-		v = v + " " + version.GitCommit
+	v := Version
+	if GitCommit != "" {
+		v = v + " " + GitCommit
 	}
 	fmt.Println(v)
 }

@@ -42,36 +42,120 @@ func TestMountStores(t *testing.T) {
 
 	app.MountStoresIAVL(capKey1, capKey2)
 
-	// both stores are mounted
+	// stores are mounted
 	err := app.LoadLatestVersion(capKey1)
 	assert.Nil(t, err)
-	err = app.LoadLatestVersion(capKey2)
-	assert.Nil(t, err)
+
+	// check both stores
+	store1 := app.cms.GetCommitKVStore(capKey1)
+	assert.NotNil(t, store1)
+	store2 := app.cms.GetCommitKVStore(capKey2)
+	assert.NotNil(t, store2)
 }
 
+// Test that we can make commits and then reload old versions.
+// Test that LoadLatestVersion actually does.
 func TestLoadVersion(t *testing.T) {
-	// TODO
-	// Test that we can make commits and then reload old versions.
-	// Test that LoadLatestVersion actually does.
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := NewBaseApp(name, logger, db)
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+
+	emptyCommitID := sdk.CommitID{}
+
+	lastHeight := app.LastBlockHeight()
+	lastID := app.LastCommitID()
+	assert.Equal(t, int64(0), lastHeight)
+	assert.Equal(t, emptyCommitID, lastID)
+
+	// execute some blocks
+	header := abci.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res := app.Commit()
+	commitID := sdk.CommitID{1, res.Data}
+
+	// reload
+	app = NewBaseApp(name, logger, db)
+	app.MountStoresIAVL(capKey)
+	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+
+	lastHeight = app.LastBlockHeight()
+	lastID = app.LastCommitID()
+	assert.Equal(t, int64(1), lastHeight)
+	assert.Equal(t, commitID, lastID)
 }
 
-func TestTxDecoder(t *testing.T) {
-	// TODO
-	// Test that txs can be unmarshalled and read and that
-	// correct error codes are returned when not
-}
-
-func TestInfo(t *testing.T) {
-	// TODO
-	// Test that Info returns the latest committed state.
-}
-
-func TestInitChainer(t *testing.T) {
+// Test that the app hash is static
+// TODO: https://github.com/cosmos/cosmos-sdk/issues/520
+/*func TestStaticAppHash(t *testing.T) {
 	app := newBaseApp(t.Name())
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
 	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+
+	// execute some blocks
+	header := abci.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res := app.Commit()
+	commitID1 := sdk.CommitID{1, res.Data}
+
+	header = abci.Header{Height: 2}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res = app.Commit()
+	commitID2 := sdk.CommitID{2, res.Data}
+
+	assert.Equal(t, commitID1.Hash, commitID2.Hash)
+}
+*/
+
+// Test that txs can be unmarshalled and read and that
+// correct error codes are returned when not
+func TestTxDecoder(t *testing.T) {
+	// TODO
+}
+
+// Test that Info returns the latest committed state.
+func TestInfo(t *testing.T) {
+
+	app := newBaseApp(t.Name())
+
+	// ----- test an empty response -------
+	reqInfo := abci.RequestInfo{}
+	res := app.Info(reqInfo)
+
+	// should be empty
+	assert.Equal(t, "", res.Version)
+	assert.Equal(t, t.Name(), res.GetData())
+	assert.Equal(t, int64(0), res.LastBlockHeight)
+	assert.Equal(t, []uint8(nil), res.LastBlockAppHash)
+
+	// ----- test a proper response -------
+	// TODO
+
+}
+
+func TestInitChainer(t *testing.T) {
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := NewBaseApp(name, logger, db)
+
+	// make cap keys and mount the stores
+	// NOTE/TODO: mounting multiple stores is broken
+	// see https://github.com/cosmos/cosmos-sdk/issues/532
+	capKey := sdk.NewKVStoreKey("main")
+	// capKey2 := sdk.NewKVStoreKey("key2")
+	app.MountStoresIAVL(capKey)          // , capKey2)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
 
@@ -97,18 +181,38 @@ func TestInitChainer(t *testing.T) {
 	// set initChainer and try again - should see the value
 	app.SetInitChainer(initChainer)
 	app.InitChain(abci.RequestInitChain{})
+	app.Commit()
+	res = app.Query(query)
+	assert.Equal(t, value, res.Value)
+
+	// reload app
+	app = NewBaseApp(name, logger, db)
+	capKey = sdk.NewKVStoreKey("main")
+	// capKey2 = sdk.NewKVStoreKey("key2") // TODO
+	app.MountStoresIAVL(capKey)         //, capKey2)
+	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+	app.SetInitChainer(initChainer)
+
+	// ensure we can still query after reloading
+	res = app.Query(query)
+	assert.Equal(t, value, res.Value)
+
+	// commit and ensure we can still query
+	app.BeginBlock(abci.RequestBeginBlock{})
+	app.Commit()
 	res = app.Query(query)
 	assert.Equal(t, value, res.Value)
 }
 
-// Test that successive CheckTx can see eachothers effects
+// Test that successive CheckTx can see each others' effects
 // on the store within a block, and that the CheckTx state
 // gets reset to the latest Committed state during Commit
 func TestCheckTx(t *testing.T) {
 	// TODO
 }
 
-// Test that successive DeliverTx can see eachothers effects
+// Test that successive DeliverTx can see each others' effects
 // on the store, both within and across blocks.
 func TestDeliverTx(t *testing.T) {
 	app := newBaseApp(t.Name())
@@ -231,7 +335,8 @@ func TestValidatorChange(t *testing.T) {
 
 	// Create app.
 	app := newBaseApp(t.Name())
-	storeKeys := createMounts(app.cms)
+	capKey := sdk.NewKVStoreKey("key")
+	app.MountStoresIAVL(capKey)
 	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var ttx testUpdatePowerTx
 		fromJSON(txBytes, &ttx)
@@ -245,7 +350,7 @@ func TestValidatorChange(t *testing.T) {
 	})
 
 	// Load latest state, which should be empty.
-	err := app.LoadLatestVersion(storeKeys["main"])
+	err := app.LoadLatestVersion(capKey)
 	assert.Nil(t, err)
 	assert.Equal(t, app.LastBlockHeight(), int64(0))
 
@@ -352,19 +457,5 @@ func fromJSON(bz []byte, ptr interface{}) {
 	err := json.Unmarshal(bz, ptr)
 	if err != nil {
 		panic(err)
-	}
-}
-
-// Mounts stores to CommitMultiStore and returns a map of keys.
-func createMounts(ms sdk.CommitMultiStore) map[string]sdk.StoreKey {
-	dbMain := dbm.NewMemDB()
-	dbXtra := dbm.NewMemDB()
-	keyMain := sdk.NewKVStoreKey("main")
-	keyXtra := sdk.NewKVStoreKey("xtra")
-	ms.MountStoreWithDB(keyMain, sdk.StoreTypeIAVL, dbMain)
-	ms.MountStoreWithDB(keyXtra, sdk.StoreTypeIAVL, dbXtra)
-	return map[string]sdk.StoreKey{
-		"main": keyMain,
-		"xtra": keyXtra,
 	}
 }

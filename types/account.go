@@ -30,3 +30,6 @@ type AccountMapper interface {
 	GetAccount(ctx Context, addr crypto.Address) Account
 	SetAccount(ctx Context, acc Account)
 }
+
+// Application function variable used to unmarshal account
+type ParseAccount func([]byte) (Account, error)

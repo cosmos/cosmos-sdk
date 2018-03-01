@@ -40,7 +40,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	// create your application object
 	var app = &BasecoinApp{
 		BaseApp:         bam.NewBaseApp(appName, logger, db),
-		cdc:             MakeTxCodec(),
+		cdc:             MakeCodec(),
 		capKeyMainStore: sdk.NewKVStoreKey("main"),
 		capKeyIBCStore:  sdk.NewKVStoreKey("ibc"),
 	}
@@ -53,13 +53,16 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// add handlers
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
-	app.Router().AddRoute("bank", bank.NewHandler(coinKeeper))
-	app.Router().AddRoute("sketchy", sketchy.NewHandler())
+	app.Router().
+		AddRoute("bank", bank.NewHandler(coinKeeper)).
+		AddRoute("sketchy", sketchy.NewHandler())
 
 	// initialize BaseApp
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
-	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore)
+	// TODO: mounting multiple stores is broken
+	// https://github.com/cosmos/cosmos-sdk/issues/532
+	app.MountStoresIAVL(app.capKeyMainStore) // , app.capKeyIBCStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
@@ -70,10 +73,11 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 }
 
 // custom tx codec
-func MakeTxCodec() *wire.Codec {
+func MakeCodec() *wire.Codec {
 	cdc := wire.NewCodec()
-	crypto.RegisterWire(cdc) // Register crypto.[PubKey,PrivKey,Signature] types.
+	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	bank.RegisterWire(cdc)   // Register bank.[SendMsg,IssueMsg] types.
+	crypto.RegisterWire(cdc) // Register crypto.[PubKey,PrivKey,Signature] types.
 	return cdc
 }
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 
 	abci "github.com/tendermint/abci/types"
@@ -16,12 +15,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var mainHeaderKey = []byte("header")
+// Key to store the header in the DB itself.
+// Use the db directly instead of a store to avoid
+// conflicts with handlers writing to the store
+// and to avoid affecting the Merkle root.
+var dbHeaderKey = []byte("header")
 
 // The ABCI application
 type BaseApp struct {
 	// initialized on creation
-	logger log.Logger
+	Logger log.Logger
 	name   string               // application name from abci.Info
 	db     dbm.DB               // common DB backend
 	cms    sdk.CommitMultiStore // Main (uncached) state
@@ -38,24 +41,22 @@ type BaseApp struct {
 
 	//--------------------
 	// Volatile
-	// .msCheck and .ctxCheck are set on initialization and reset on Commit.
-	// .msDeliver and .ctxDeliver are (re-)set on BeginBlock.
-	// .valUpdates accumulate in DeliverTx and reset in BeginBlock.
-	// QUESTION: should we put valUpdates in the ctxDeliver?
-
-	msCheck    sdk.CacheMultiStore // CheckTx state, a cache-wrap of `.cms`
-	msDeliver  sdk.CacheMultiStore // DeliverTx state, a cache-wrap of `.cms`
-	ctxCheck   sdk.Context         // CheckTx context
-	ctxDeliver sdk.Context         // DeliverTx context
-	valUpdates []abci.Validator    // cached validator changes from DeliverTx
+	// checkState is set on initialization and reset on Commit.
+	// deliverState is set in InitChain and BeginBlock and cleared on Commit.
+	// See methods setCheckState and setDeliverState.
+	// .valUpdates accumulate in DeliverTx and are reset in BeginBlock.
+	// QUESTION: should we put valUpdates in the deliverState.ctx?
+	checkState   *state           // for CheckTx
+	deliverState *state           // for DeliverTx
+	valUpdates   []abci.Validator // cached validator changes from DeliverTx
 }
 
-var _ abci.Application = &BaseApp{}
+var _ abci.Application = (*BaseApp)(nil)
 
 // Create and name new BaseApp
 func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
 	return &BaseApp{
-		logger: logger,
+		Logger: logger,
 		name:   name,
 		db:     db,
 		cms:    store.NewCommitMultiStore(db),
@@ -94,11 +95,9 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 	app.endBlocker = endBlocker
 }
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
-	// deducts fee from payer, verifies signatures and nonces, sets Signers to ctx.
 	app.anteHandler = ah
 }
 
-// nolint - Get functions
 func (app *BaseApp) Router() Router { return app.router }
 
 // load latest application version
@@ -125,36 +124,46 @@ func (app *BaseApp) LastBlockHeight() int64 {
 
 // initializes the remaining logic from app.cms
 func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
-	var lastCommitID = app.cms.LastCommitID()
-	var main = app.cms.GetKVStore(mainKey)
-	var header abci.Header
 
 	// main store should exist.
+	// TODO: we don't actually need the main store here
+	main := app.cms.GetKVStore(mainKey)
 	if main == nil {
 		return errors.New("BaseApp expects MultiStore with 'main' KVStore")
 	}
 
-	// if we've committed before, we expect main://<mainHeaderKey>
-	if !lastCommitID.IsZero() {
-		headerBytes := main.Get(mainHeaderKey)
-		if len(headerBytes) == 0 {
-			errStr := fmt.Sprintf("Version > 0 but missing key %s", mainHeaderKey)
-			return errors.New(errStr)
+	// XXX: Do we really need the header? What does it have that we want
+	// here that's not already in the CommitID ? If an app wants to have it,
+	// they can do so in their BeginBlocker. If we force it in baseapp,
+	// then either we force the AppHash to change with every block (since the header
+	// will be in the merkle store) or we can't write the state and the header to the
+	// db atomically without doing some surgery on the store interfaces ...
+
+	// if we've committed before, we expect <dbHeaderKey> to exist in the db
+	/*
+		var lastCommitID = app.cms.LastCommitID()
+		var header abci.Header
+
+		if !lastCommitID.IsZero() {
+			headerBytes := app.db.Get(dbHeaderKey)
+			if len(headerBytes) == 0 {
+				errStr := fmt.Sprintf("Version > 0 but missing key %s", dbHeaderKey)
+				return errors.New(errStr)
+			}
+			err := proto.Unmarshal(headerBytes, &header)
+			if err != nil {
+				return errors.Wrap(err, "Failed to parse Header")
+			}
+			lastVersion := lastCommitID.Version
+			if header.Height != lastVersion {
+				errStr := fmt.Sprintf("Expected db://%s.Height %v but got %v", dbHeaderKey, lastVersion, header.Height)
+				return errors.New(errStr)
+			}
 		}
-		err := proto.Unmarshal(headerBytes, &header)
-		if err != nil {
-			return errors.Wrap(err, "Failed to parse Header")
-		}
-		lastVersion := lastCommitID.Version
-		if header.Height != lastVersion {
-			errStr := fmt.Sprintf("Expected main://%s.Height %v but got %v", mainHeaderKey, lastVersion, header.Height)
-			return errors.New(errStr)
-		}
-	}
+	*/
 
 	// initialize Check state
-	app.msCheck = app.cms.CacheMultiStore()
-	app.ctxCheck = app.NewContext(true, abci.Header{})
+	app.setCheckState(abci.Header{})
 
 	return nil
 }
@@ -162,9 +171,34 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.msCheck, header, true, nil)
+		return sdk.NewContext(app.checkState.ms, header, true, nil)
 	}
-	return sdk.NewContext(app.msDeliver, header, false, nil)
+	return sdk.NewContext(app.deliverState.ms, header, false, nil)
+}
+
+type state struct {
+	ms  sdk.CacheMultiStore
+	ctx sdk.Context
+}
+
+func (st *state) CacheMultiStore() sdk.CacheMultiStore {
+	return st.ms.CacheMultiStore()
+}
+
+func (app *BaseApp) setCheckState(header abci.Header) {
+	ms := app.cms.CacheMultiStore()
+	app.checkState = &state{
+		ms:  ms,
+		ctx: sdk.NewContext(ms, header, true, nil),
+	}
+}
+
+func (app *BaseApp) setDeliverState(header abci.Header) {
+	ms := app.cms.CacheMultiStore()
+	app.deliverState = &state{
+		ms:  ms,
+		ctx: sdk.NewContext(ms, header, false, nil),
+	}
 }
 
 //----------------------------------------
@@ -172,7 +206,6 @@ func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 
 // Implements ABCI
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
-
 	lastCommitID := app.cms.LastCommitID()
 
 	return abci.ResponseInfo{
@@ -196,16 +229,12 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		return
 	}
 
-	// make a context for the initialization.
-	// NOTE: we're writing to the cms directly, without a CacheWrap
-	ctx := sdk.NewContext(app.cms, abci.Header{}, false, nil)
+	// Initialize the deliver state and run initChain
+	app.setDeliverState(abci.Header{})
+	app.initChainer(app.deliverState.ctx, req) // no error
 
-	res = app.initChainer(ctx, req)
-	// TODO: handle error https://github.com/cosmos/cosmos-sdk/issues/468
-
-	// XXX this commits everything and bumps the version.
-	// https://github.com/cosmos/cosmos-sdk/issues/442#issuecomment-366470148
-	app.cms.Commit()
+	// NOTE: we don't commit, but BeginBlock for block 1
+	// starts from this deliverState
 
 	return
 }
@@ -223,18 +252,22 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 // Implements ABCI
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	app.msDeliver = app.cms.CacheMultiStore()
-	app.ctxDeliver = app.NewContext(false, req.Header)
+	// Initialize the DeliverTx state.
+	// If this is the first block, it should already
+	// be initialized in InitChain. It may also be nil
+	// if this is a test and InitChain was never called.
+	if app.deliverState == nil {
+		app.setDeliverState(req.Header)
+	}
 	app.valUpdates = nil
 	if app.beginBlocker != nil {
-		res = app.beginBlocker(app.ctxDeliver, req)
+		res = app.beginBlocker(app.deliverState.ctx, req)
 	}
 	return
 }
 
 // Implements ABCI
 func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
-
 	// Decode the Tx.
 	var result sdk.Result
 	var tx, err = app.txDecoder(txBytes)
@@ -259,7 +292,6 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 
 // Implements ABCI
 func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
-
 	// Decode the Tx.
 	var result sdk.Result
 	var tx, err = app.txDecoder(txBytes)
@@ -300,7 +332,6 @@ func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
 // txBytes may be nil in some cases, eg. in tests.
 // Also, in the future we may support "internal" transactions.
 func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
-
 	// Handle any panics.
 	defer func() {
 		if r := recover(); r != nil {
@@ -324,32 +355,41 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	// Get the context
 	var ctx sdk.Context
 	if isCheckTx {
-		ctx = app.ctxCheck.WithTxBytes(txBytes)
+		ctx = app.checkState.ctx.WithTxBytes(txBytes)
 	} else {
-		ctx = app.ctxDeliver.WithTxBytes(txBytes)
+		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
 	}
-
-	// TODO: override default ante handler w/ custom ante handler.
 
 	// Run the ante handler.
-	newCtx, result, abort := app.anteHandler(ctx, tx)
-	if isCheckTx || abort {
-		return result
-	}
-	if !newCtx.IsZero() {
-		ctx = newCtx
+	if app.anteHandler != nil {
+		newCtx, result, abort := app.anteHandler(ctx, tx)
+		if abort {
+			return result
+		}
+		if !newCtx.IsZero() {
+			ctx = newCtx
+		}
 	}
 
-	// CacheWrap app.msDeliver in case it fails.
-	msCache := app.msDeliver.CacheMultiStore()
-	ctx = ctx.WithMultiStore(msCache)
+	// Get the correct cache
+	var msCache sdk.CacheMultiStore
+	if isCheckTx == true {
+		// CacheWrap app.checkState.ms in case it fails.
+		msCache = app.checkState.CacheMultiStore()
+		ctx = ctx.WithMultiStore(msCache)
+	} else {
+		// CacheWrap app.deliverState.ms in case it fails.
+		msCache = app.deliverState.CacheMultiStore()
+		ctx = ctx.WithMultiStore(msCache)
+
+	}
 
 	// Match and run route.
 	msgType := msg.Type()
 	handler := app.router.Route(msgType)
 	result = handler(ctx, msg)
 
-	// If result was successful, write to app.msDeliver or app.msCheck.
+	// If result was successful, write to app.checkState.ms or app.deliverState.ms
 	if result.IsOK() {
 		msCache.Write()
 	}
@@ -360,7 +400,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 // Implements ABCI
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	if app.endBlocker != nil {
-		res = app.endBlocker(app.ctxDeliver, req)
+		res = app.endBlocker(app.deliverState.ctx, req)
 	} else {
 		res.ValidatorUpdates = app.valUpdates
 	}
@@ -369,19 +409,30 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 // Implements ABCI
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
+	header := app.deliverState.ctx.BlockHeader()
+	/*
+		// Write the latest Header to the store
+			headerBytes, err := proto.Marshal(&header)
+			if err != nil {
+				panic(err)
+			}
+			app.db.SetSync(dbHeaderKey, headerBytes)
+	*/
+
 	// Write the Deliver state and commit the MultiStore
-	app.msDeliver.Write()
+	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
-	app.logger.Debug("Commit synced",
+	app.Logger.Debug("Commit synced",
 		"commit", commitID,
 	)
 
-	// Reset the Check state
+	// Reset the Check state to the latest committed
 	// NOTE: safe because Tendermint holds a lock on the mempool for Commit.
 	// Use the header from this latest block.
-	header := app.ctxDeliver.BlockHeader()
-	app.msCheck = app.cms.CacheMultiStore()
-	app.ctxCheck = app.NewContext(true, header)
+	app.setCheckState(header)
+
+	// Emtpy the Deliver state
+	app.deliverState = nil
 
 	return abci.ResponseCommit{
 		Data: commitID.Hash,

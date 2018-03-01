@@ -1,11 +1,29 @@
 # Changelog
 
-## 0.11.0 (TBD)
+## 0.11.0 (March 1, 2017)
 
 BREAKING CHANGES
 
 * [examples] dummy -> kvstore
+* [examples] Remove gaia
+* [examples/basecoin] MakeTxCodec -> MakeCodec
 * [types] CommitMultiStore interface has new `GetCommitKVStore(key StoreKey) CommitKVStore` method
+
+FEATURES
+
+* [examples/basecoin] CLI for `basecli` and `basecoind` (!)
+* [baseapp] router.AddRoute returns Router
+
+IMPROVEMENTS
+
+* [baseapp] Run msg handlers on CheckTx
+* [docs] Add spec for REST API
+* [all] More tests!
+
+BUG FIXES
+
+* [baseapp] Fix panic on app restart
+* [baseapp] InitChain does not call Commit
 
 ## 0.10.0 (February 20, 2017)
 

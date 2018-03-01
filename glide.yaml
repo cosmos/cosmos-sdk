@@ -28,6 +28,7 @@ import:
   - common
   - db
   - log
+  - logger
   - merkle
 - package: github.com/tendermint/tendermint
   version: breaking/wire-sdk2

@@ -145,11 +145,15 @@ func TestInfo(t *testing.T) {
 }
 
 func TestInitChainer(t *testing.T) {
-	app := newBaseApp(t.Name())
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := NewBaseApp(name, logger, db)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
-	app.MountStoresIAVL(capKey)
+	capKey2 := sdk.NewKVStoreKey("key2")
+	app.MountStoresIAVL(capKey, capKey2)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
 
@@ -175,6 +179,25 @@ func TestInitChainer(t *testing.T) {
 	// set initChainer and try again - should see the value
 	app.SetInitChainer(initChainer)
 	app.InitChain(abci.RequestInitChain{})
+	app.Commit()
+	res = app.Query(query)
+	assert.Equal(t, value, res.Value)
+
+	// reload app
+	app = NewBaseApp(name, logger, db)
+	capKey = sdk.NewKVStoreKey("main")
+	capKey2 = sdk.NewKVStoreKey("key2")
+	app.MountStoresIAVL(capKey, capKey2)
+	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+	app.SetInitChainer(initChainer)
+
+	// ensure we can still query after reloading
+	res = app.Query(query)
+	assert.Equal(t, value, res.Value)
+
+	// commit and ensure we can still query
+	app.BeginBlock(abci.RequestBeginBlock{})
 	app.Commit()
 	res = app.Query(query)
 	assert.Equal(t, value, res.Value)

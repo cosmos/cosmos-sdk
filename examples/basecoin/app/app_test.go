@@ -71,7 +71,9 @@ func TestSendMsg(t *testing.T) {
 }
 
 func TestGenesis(t *testing.T) {
-	bapp := newBasecoinApp()
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
+	db := dbm.NewMemDB()
+	bapp := NewBasecoinApp(logger, db)
 
 	// Construct some genesis bytes to reflect basecoin/types/AppAccount
 	pk := crypto.GenPrivKeyEd25519().PubKey()
@@ -97,9 +99,15 @@ func TestGenesis(t *testing.T) {
 
 	// A checkTx context
 	ctx := bapp.BaseApp.NewContext(true, abci.Header{})
-
 	res1 := bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
 	assert.Equal(t, acc, res1)
+
+	// reload app and ensure the account is still there
+	bapp = NewBasecoinApp(logger, db)
+	ctx = bapp.BaseApp.NewContext(true, abci.Header{})
+	res1 = bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
+	assert.Equal(t, acc, res1)
+
 }
 
 func TestSendMsgWithAccounts(t *testing.T) {

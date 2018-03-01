@@ -44,6 +44,7 @@ func startRESTServer(cmd *cobra.Command, args []string) error {
 
 func initRouter() http.Handler {
 	r := mux.NewRouter()
-	r.HandleFunc("/status", rpc.NodeStatusRequestHandler)
+	r.HandleFunc("/node_info", rpc.NodeStatusRequestHandler)
+	r.HandleFunc("/blocks/{height}", rpc.BlockRequestHandler)
 	return r
 }

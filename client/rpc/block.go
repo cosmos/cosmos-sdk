@@ -1,13 +1,15 @@
 package rpc
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	tmwire "github.com/tendermint/tendermint/wire"
 )
 
 const (
@@ -18,7 +20,7 @@ func blockCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block [height]",
 		Short: "Get verified data for a the block at given height",
-		RunE:  getBlock,
+		RunE:  printBlock,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
 	// TODO: change this to false when we can
@@ -27,7 +29,31 @@ func blockCommand() *cobra.Command {
 	return cmd
 }
 
-func getBlock(cmd *cobra.Command, args []string) error {
+func getBlock(height *int64) ([]byte, error) {
+	// get the node
+	node, err := client.GetNode()
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: actually honor the --select flag!
+	// header -> BlockchainInfo
+	// header, tx -> Block
+	// results -> BlockResults
+	res, err := node.Block(height)
+	if err != nil {
+		return nil, err
+	}
+
+	// output, err := tmwire.MarshalJSON(res)
+	output, err := json.MarshalIndent(res, "  ", "")
+	if err != nil {
+		return nil, err
+	}
+	return output, nil
+}
+
+func printBlock(cmd *cobra.Command, args []string) error {
 	var height *int64
 	// optional height
 	if len(args) > 0 {
@@ -41,26 +67,25 @@ func getBlock(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// get the node
-	node, err := client.GetNode()
-	if err != nil {
-		return err
-	}
-
-	// TODO: actually honor the --select flag!
-	// header -> BlockchainInfo
-	// header, tx -> Block
-	// results -> BlockResults
-	res, err := node.Block(height)
-	if err != nil {
-		return err
-	}
-
-	output, err := tmwire.MarshalJSON(res)
-	// output, err := json.MarshalIndent(res, "  ", "")
+	output, err := getBlock(height)
 	if err != nil {
 		return err
 	}
 	fmt.Println(string(output))
 	return nil
+}
+
+func BlockRequestHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	height, err := strconv.ParseInt(vars["height"], 10, 64)
+	if err != nil {
+		w.WriteHeader(400)
+		w.Write([]byte("ERROR: Couldn't parse block height. Assumed format is '/block/{height}'."))
+	}
+	output, err := getBlock(&height)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+	}
+	w.Write(output)
 }

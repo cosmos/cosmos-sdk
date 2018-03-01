@@ -89,3 +89,23 @@ func BlockRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(output)
 }
+
+func LatestBlockRequestHandler(w http.ResponseWriter, r *http.Request) {
+	node, err := client.GetNode()
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+	}
+	status, err := node.Status()
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+	}
+	height := status.LatestBlockHeight
+	output, err := getBlock(&height)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+	}
+	w.Write(output)
+}

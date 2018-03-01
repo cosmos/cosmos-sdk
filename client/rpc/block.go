@@ -75,37 +75,54 @@ func printBlock(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func getChainHeight() (int64, error) {
+	node, err := client.GetNode()
+	if err != nil {
+		return -1, err
+	}
+	status, err := node.Status()
+	if err != nil {
+		return -1, err
+	}
+	height := status.LatestBlockHeight
+	return height, nil
+}
+
 func BlockRequestHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	height, err := strconv.ParseInt(vars["height"], 10, 64)
 	if err != nil {
 		w.WriteHeader(400)
 		w.Write([]byte("ERROR: Couldn't parse block height. Assumed format is '/block/{height}'."))
+		return
+	}
+	chainHeight, err := getChainHeight()
+	if height > chainHeight {
+		w.WriteHeader(404)
+		w.Write([]byte("ERROR: Requested block height is bigger then the chain length."))
+		return
 	}
 	output, err := getBlock(&height)
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
+		return
 	}
 	w.Write(output)
 }
 
 func LatestBlockRequestHandler(w http.ResponseWriter, r *http.Request) {
-	node, err := client.GetNode()
+	height, err := getChainHeight()
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
+		return
 	}
-	status, err := node.Status()
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-	}
-	height := status.LatestBlockHeight
 	output, err := getBlock(&height)
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
+		return
 	}
 	w.Write(output)
 }

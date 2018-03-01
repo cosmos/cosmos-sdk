@@ -33,20 +33,16 @@ When a proposal is submitted, it has to be accompanied by a deposit that must
 be strictly positive but can be inferior to `MinDeposit`. Indeed, the submitter
 need not pay for the entire deposit on its own. If a proposal's deposit is 
 strictly inferior to `MinDeposit`, other Atom holders can increase the 
-proposal's deposit by sending a `TxGovDeposit` transaction. Once the proposal's 
-deposit reaches `MinDeposit`, it enters voting period. 
+proposal's deposit by sending a `TxGovDeposit` transaction. Once the proposal's deposit reaches `MinDeposit`, it enters voting period. 
+
+If proposal's deposit does not reach `MinDeposit` before `MaxDepositPeriod`, proposal closes and nobody can deposit on it anymore.
 
 ### Deposit refund
 
-There are two instances where Atom holders that deposited can claim back their 
-deposit:
+There is one instance where Atom holders that deposits can be refunded:
 * If the proposal is accepted.
-* If the proposal's deposit does not reach `MinDeposit` for a period longer 
-  than `MaxDepositPeriod` (initial value: 2 months). Then the proposal is 
-  considered closed and nobody can deposit on it anymore.
 
-In such instances, Atom holders that deposited can send a `TxGovClaimDeposit` 
-transaction to retrieve their share of the deposit.
+Then, deposits will automatically be refunded to their respective depositer.
 
 ### Proposal types
 
@@ -162,9 +158,9 @@ period` is over), then the validator will automatically be partially slashed by
 That is because the proposal will close as soon as the ratio exceeds 2:3, 
 making it mechanically impossible for some validators to vote on it.
 
-### Governance key and governance address
+### Governance address
 
-Later, we may add permissionned keys that could only sign txs from certain modules. For the MVP, the `Governance PubKey` will be the main validator PubKey generated at account creation. This PubKey corresponds to a different PrivKey than the Tendermint PrivKey which is responsible for signing consensus messages. Validators thus do not have to sign governance transactions with the sensitive Tendermint PrivKey.
+Later, we may add permissionned keys that could only sign txs from certain modules. For the MVP, the `Governance address` will be the main validator address generated at account creation. This address corresponds to a different PrivKey than the Tendermint PrivKey which is responsible for signing consensus messages. Validators thus do not have to sign governance transactions with the sensitive Tendermint PrivKey.
 
 ## Software Upgrade
 

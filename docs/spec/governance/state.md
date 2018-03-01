@@ -24,6 +24,28 @@ type Procedure struct {
 }
 ```
 
+The current active procedure is stored in a global `params` KVStore.
+
+### Deposit
+
+```go
+  type Deposit struct {
+    Amount      sdk.Coins       //  sAmount of coins deposited by depositer
+    Depositer   crypto.address  //  Address of depositer
+  }
+```
+
+### Votes
+
+```go
+  type Votes struct {
+    YesVotes          int64
+    NoVote            int64
+    NoWithVetoVotes   int64
+    AbstainVotes      int64
+  }
+```
+
 
 ### Proposals
 
@@ -34,12 +56,15 @@ type Proposal struct {
   Title                 string              //  Title of the proposal
   Description           string              //  Description of the proposal
   Type                  string              //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-  Deposit               int64               //  Current deposit on this proposal. Initial value is set at InitialDeposit
+  TotalDeposit          sdk.Coins           //  Current deposit on this proposal. Initial value is set at InitialDeposit
+  Deposits              []Deposit           //  List of deposits on the proposal
   SubmitBlock           int64               //  Height of the block where TxGovSubmitProposal was included
   
   VotingStartBlock      int64               //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
   InitTotalVotingPower  int64               //  Total voting power when proposal enters voting period (default 0)
-  InitProcedureNumber   int16               //  Procedure number of the active procedure when proposal enters voting period (default -1)
+  InitProcedure         Procedure           //  Active Procedure when proposal enters voting period
+
+  Votes                 Votes               //  Total votes for each option
 }
 ```
 
@@ -56,24 +81,16 @@ type ValidatorGovInfo struct {
 
 *Stores are KVStores in the multistore. The key to find the store is the first parameter in the list*
 
-* `Procedures`: a mapping `map[int16]Procedure` of procedures indexed by their 
-  `ProcedureNumber`. First ever procedure is found at index '1'. Index '0' is reserved for parameter `ActiveProcedureNumber` which returns the number of the current procedure.
+
 * `Proposals`: A mapping `map[int64]Proposal` of proposals indexed by their 
   `proposalID`
-* `Votes`: A mapping `map[[]byte]int64` of votes indexed by `<proposalID>:<option>` as `[]byte`. Given a `proposalID` and an `option`, returns votes for  that option.
-* `Deposits`: A mapping `map[[]byte]int64` of deposits indexed by 
-  `<proposalID>:<depositorPubKey>` as `[]byte`. Given a `proposalID` and a 
-  `PubKey`, returns deposit (`nil` if `PubKey` has not deposited on the 
-  proposal)
 * `Options`: A mapping `map[[]byte]string` of options indexed by 
-  `<proposalID>:<voterPubKey>:<validatorPubKey>` as `[]byte`. Given a 
-  `proposalID`, a `PubKey` and a validator's `PubKey`, returns option chosen by
-  this `PubKey` for this validator (`nil` if `PubKey` has not voted under this 
-  validator)
+  `<proposalID>:<voterAddress>:<validatorAddress>` as `[]byte`. Given a 
+  `proposalID`, an `address` and a validator's `address`, returns option chosen by this `address` for this validator (`nil` if `address` has not voted under this validator)
 * `ValidatorGovInfos`: A mapping `map[[]byte]ValidatorGovInfo` of validator's 
-  governance infos indexed by `<proposalID>:<validatorPubKey>`. Returns 
-  `nil` if proposal has not entered voting period or if `PubKey` was not the 
-  public key of a validator when proposal entered voting period.
+  governance infos indexed by `<proposalID>:<validatorAddress>`. Returns 
+  `nil` if proposal has not entered voting period or if `address` was not the 
+  address of a validator when proposal entered voting period.
 
 For pseudocode purposes, here are the two function we will use to read or write in stores:
 
@@ -88,9 +105,9 @@ For pseudocode purposes, here are the two function we will use to read or write 
   element of `ProposalProcessingQueue` is checked during `BeginBlock` to see if
   `CurrentBlock == VotingStartBlock + InitProcedure.VotingPeriod`. If it is, 
   then the application checks if validators in `InitVotingPowerList` have voted
-  and, if not, applies `GovernancePenalty`. After that proposal is ejected from 
-  `ProposalProcessingQueue` and the next element of the queue is evaluated. 
-  Note that if a proposal is urgent and accepted under the special condition, 
+  and, if not, applies `GovernancePenalty`. If the proposal is accepted, deposits are refunded.
+  After that proposal is ejected from `ProposalProcessingQueue` and the next element of the queue is evaluated. 
+  Note that if a proposal is accepted under the special condition, 
   its `ProposalID` must be ejected from `ProposalProcessingQueue`.
 
 And the pseudocode for the `ProposalProcessingQueue`:
@@ -109,33 +126,56 @@ And the pseudocode for the `ProposalProcessingQueue`:
     else
       proposalID = ProposalProcessingQueue.Peek()
       proposal = load(Proposals, proposalID) 
-      initProcedure = load(Procedures, proposal.InitProcedureNumber)
-      yesVotes = load(Votes, <proposalID>:<'Yes'>)
 
-      if (yesVotes/proposal.InitTotalVotingPower >= 2/3)
+      if (proposal.Votes.YesVotes/proposal.InitTotalVotingPower >= 2/3)
 
         // proposal was urgent and accepted under the special condition
         // no punishment
+        // refund deposits
 
         ProposalProcessingQueue.pop()
+
+        newDeposits = new []Deposits
+
+        for each (amount, depositer) in proposal.Deposits
+          newDeposits.append[{0, depositer}]
+          depositer.AtomBalance += amount
+
+        proposal.Deposits = newDeposits
+        store(Proposals, <proposalID>, proposal)
+
         checkProposal()
 
-      else if (CurrentBlock == proposal.VotingStartBlock + initProcedure.VotingPeriod)
+      else if (CurrentBlock == proposal.VotingStartBlock + proposal.Procedure.VotingPeriod)
 
-        activeProcedureNumber = load(Procedures, '0')
-        activeProcedure = load(Procedures, activeProcedureNumber)
+        ProposalProcessingQueue.pop()
+        activeProcedure = load(params, 'ActiveProcedure')
 
         for each validator in CurrentBondedValidators
-          validatorGovInfo = load(multistore, ValidatorGovInfos, validator.PubKey)
+          validatorGovInfo = load(ValidatorGovInfos, <proposalID>:<validator.address>)
           
           if (validatorGovInfo.InitVotingPower != nil)
             // validator was bonded when vote started
 
-            validatorOption = load(Options, validator.PubKey)
+            validatorOption = load(Options, <proposalID>:<validator.address><validator.address>)
             if (validatorOption == nil)
               // validator did not vote
               slash validator by activeProcedure.GovernancePenalty
 
-        ProposalProcessingQueue.pop()
+
+        if((proposal.Votes.YesVotes/(proposal.Votes.YesVotes + proposal.Votes.NoVotes + proposal.Votes.NoWithVetoVotes)) > 0.5 AND (proposal.Votes.NoWithVetoVotes/(proposal.Votes.YesVotes + proposal.Votes.NoVotes + proposal.Votes.NoWithVetoVotes) < 1/3))
+
+        //  proposal was accepted at the end of the voting period
+        //  refund deposits
+
+        newDeposits = new []Deposits
+
+        for each (amount, depositer) in proposal.Deposits
+          newDeposits.append[{0, depositer}]
+          depositer.AtomBalance += amount
+
+        proposal.Deposits = newDeposits
+        store(Proposals, <proposalID>, proposal)
+
         checkProposal()        
 ```

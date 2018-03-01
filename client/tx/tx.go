@@ -9,18 +9,19 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/app" // XXX: not good
+	"github.com/cosmos/cosmos-sdk/client" // XXX: not good
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/abci/types"
+	wire "github.com/tendermint/go-wire"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
-func txCommand() *cobra.Command {
+// Get the default command for a tx query
+func QueryTxCmd(cmdr commander) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tx <hash>",
+		Use:   "tx [hash]",
 		Short: "Matches this txhash over all committed blocks",
-		RunE:  queryTx,
+		RunE:  cmdr.queryTxCmd,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
 	// TODO: change this to false when we can
@@ -29,7 +30,7 @@ func txCommand() *cobra.Command {
 }
 
 // command to query for a transaction
-func queryTx(cmd *cobra.Command, args []string) error {
+func (c commander) queryTxCmd(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 || len(args[0]) == 0 {
 		return errors.New("You must provide a tx hash")
 	}
@@ -52,7 +53,7 @@ func queryTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	info, err := formatTxResult(res)
+	info, err := formatTxResult(c.cdc, res)
 	if err != nil {
 		return err
 	}
@@ -66,9 +67,9 @@ func queryTx(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func formatTxResult(res *ctypes.ResultTx) (txInfo, error) {
+func formatTxResult(cdc *wire.Codec, res *ctypes.ResultTx) (txInfo, error) {
 	// TODO: verify the proof if requested
-	tx, err := parseTx(res.Tx)
+	tx, err := parseTx(cdc, res.Tx)
 	if err != nil {
 		return txInfo{}, err
 	}
@@ -88,9 +89,8 @@ type txInfo struct {
 	Result abci.ResponseDeliverTx `json:"result"`
 }
 
-func parseTx(txBytes []byte) (sdk.Tx, error) {
+func parseTx(cdc *wire.Codec, txBytes []byte) (sdk.Tx, error) {
 	var tx sdk.StdTx
-	cdc := app.MakeTxCodec()
 	err := cdc.UnmarshalBinary(txBytes, &tx)
 	if err != nil {
 		return nil, err

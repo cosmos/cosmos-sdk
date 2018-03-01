@@ -26,11 +26,12 @@ const (
 )
 
 // SendTxCommand will create a send tx and sign it with the given key
-func SendTxCommand() *cobra.Command {
+func SendTxCmd(cdc *wire.Codec) *cobra.Command {
+	cmdr := commander{cdc}
 	cmd := &cobra.Command{
 		Use:   "send",
 		Short: "Create and sign a send tx",
-		RunE:  sendTx,
+		RunE:  cmdr.sendTxCmd,
 	}
 	cmd.Flags().String(flagTo, "", "Address to send coins")
 	cmd.Flags().String(flagAmount, "", "Amount of coins to send")
@@ -39,8 +40,12 @@ func SendTxCommand() *cobra.Command {
 	return cmd
 }
 
-func sendTx(cmd *cobra.Command, args []string) error {
-	txBytes, err := buildTx()
+type commander struct {
+	cdc *wire.Codec
+}
+
+func (c commander) sendTxCmd(cmd *cobra.Command, args []string) error {
+	txBytes, err := c.buildTx()
 	if err != nil {
 		return err
 	}
@@ -54,7 +59,7 @@ func sendTx(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func buildTx() ([]byte, error) {
+func (c commander) buildTx() ([]byte, error) {
 	keybase, err := keys.GetKeyBase()
 	if err != nil {
 		return nil, err
@@ -92,10 +97,8 @@ func buildTx() ([]byte, error) {
 
 	// marshal bytes
 	tx := sdk.NewStdTx(msg, sigs)
-	cdc := wire.NewCodec()
-	bank.RegisterWire(cdc)
 
-	txBytes, err := cdc.MarshalBinary(tx)
+	txBytes, err := c.cdc.MarshalBinary(tx)
 	if err != nil {
 		return nil, err
 	}

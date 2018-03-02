@@ -156,7 +156,7 @@ implementing the ``Msg`` interface:
     	// Signers returns the addrs of signers that must sign.
     	// CONTRACT: All signatures must be present to be valid.
     	// CONTRACT: Returns addrs in some deterministic order.
-    	GetSigners() []crypto.Address
+    	GetSigners() []Address
     }
 
 Messages must specify their type via the ``Type()`` method. The type should
@@ -188,7 +188,7 @@ For instance, the ``Basecoin`` message types are defined in ``x/bank/tx.go``:
     }
     
     type IssueMsg struct {
-    	Banker  crypto.Address `json:"banker"`
+    	Banker  sdk.Address `json:"banker"`
     	Outputs []Output       `json:"outputs"`
     }
 
@@ -196,16 +196,16 @@ Each specifies the addresses that must sign the message:
 
 ::
 
-    func (msg SendMsg) GetSigners() []crypto.Address {
-    	addrs := make([]crypto.Address, len(msg.Inputs))
+    func (msg SendMsg) GetSigners() []sdk.Address {
+    	addrs := make([]sdk.Address, len(msg.Inputs))
     	for i, in := range msg.Inputs {
     		addrs[i] = in.Address
     	}
     	return addrs
     }
     
-    func (msg IssueMsg) GetSigners() []crypto.Address {
-    	return []crypto.Address{msg.Banker}
+    func (msg IssueMsg) GetSigners() []sdk.Address {
+    	return []sdk.Address{msg.Banker}
     }
 
 Transactions
@@ -221,7 +221,7 @@ A transaction is a message with additional information for authentication:
     
     	// The address that pays the base fee for this message.  The fee is
     	// deducted before the Msg is processed.
-    	GetFeePayer() crypto.Address
+    	GetFeePayer() Address
     
     	// Get the canonical byte representation of the Tx.
     	// Includes any signatures (or empty slots).

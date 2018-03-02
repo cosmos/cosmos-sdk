@@ -33,14 +33,14 @@ func TestSendMsg(t *testing.T) {
 	var msg = bank.SendMsg{
 		Inputs: []bank.Input{
 			{
-				Address:  crypto.Address([]byte("input")),
+				Address:  sdk.Address([]byte("input")),
 				Coins:    sdk.Coins{{"atom", 10}},
 				Sequence: 1,
 			},
 		},
 		Outputs: []bank.Output{
 			{
-				Address: crypto.Address([]byte("output")),
+				Address: sdk.Address([]byte("output")),
 				Coins:   sdk.Coins{{"atom", 10}},
 			},
 		},
@@ -155,14 +155,14 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	var msg = bank.SendMsg{
 		Inputs: []bank.Input{
 			{
-				Address:  crypto.Address(addr1),
+				Address:  sdk.Address(addr1),
 				Coins:    sdk.Coins{{"foocoin", 10}},
 				Sequence: 1,
 			},
 		},
 		Outputs: []bank.Output{
 			{
-				Address: crypto.Address(addr2),
+				Address: sdk.Address(addr2),
 				Coins:   sdk.Coins{{"foocoin", 10}},
 			},
 		},

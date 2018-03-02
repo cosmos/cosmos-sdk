@@ -73,8 +73,8 @@ func (msg SendMsg) GetSignBytes() []byte {
 }
 
 // Implements Msg.
-func (msg SendMsg) GetSigners() []crypto.Address {
-	addrs := make([]crypto.Address, len(msg.Inputs))
+func (msg SendMsg) GetSigners() []sdk.Address {
+	addrs := make([]sdk.Address, len(msg.Inputs))
 	for i, in := range msg.Inputs {
 		addrs[i] = in.Address
 	}
@@ -86,12 +86,12 @@ func (msg SendMsg) GetSigners() []crypto.Address {
 
 // IssueMsg - high level transaction of the coin module
 type IssueMsg struct {
-	Banker  crypto.Address `json:"banker"`
+	Banker  sdk.Address `json:"banker"`
 	Outputs []Output       `json:"outputs"`
 }
 
 // NewIssueMsg - construct arbitrary multi-in, multi-out send msg.
-func NewIssueMsg(banker crypto.Address, out []Output) IssueMsg {
+func NewIssueMsg(banker sdk.Address, out []Output) IssueMsg {
 	return IssueMsg{Banker: banker, Outputs: out}
 }
 
@@ -131,15 +131,15 @@ func (msg IssueMsg) GetSignBytes() []byte {
 }
 
 // Implements Msg.
-func (msg IssueMsg) GetSigners() []crypto.Address {
-	return []crypto.Address{msg.Banker}
+func (msg IssueMsg) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.Banker}
 }
 
 //----------------------------------------
 // Input
 
 type Input struct {
-	Address  crypto.Address `json:"address"`
+	Address  sdk.Address `json:"address"`
 	Coins    sdk.Coins      `json:"coins"`
 	Sequence int64          `json:"sequence"`
 
@@ -168,7 +168,7 @@ func (in Input) String() string {
 }
 
 // NewInput - create a transaction input, used with SendMsg
-func NewInput(addr crypto.Address, coins sdk.Coins) Input {
+func NewInput(addr sdk.Address, coins sdk.Coins) Input {
 	input := Input{
 		Address: addr,
 		Coins:   coins,
@@ -177,7 +177,7 @@ func NewInput(addr crypto.Address, coins sdk.Coins) Input {
 }
 
 // NewInputWithSequence - create a transaction input, used with SendMsg
-func NewInputWithSequence(addr crypto.Address, coins sdk.Coins, seq int64) Input {
+func NewInputWithSequence(addr sdk.Address, coins sdk.Coins, seq int64) Input {
 	input := NewInput(addr, coins)
 	input.Sequence = seq
 	return input
@@ -187,7 +187,7 @@ func NewInputWithSequence(addr crypto.Address, coins sdk.Coins, seq int64) Input
 // Output
 
 type Output struct {
-	Address crypto.Address `json:"address"`
+	Address sdk.Address `json:"address"`
 	Coins   sdk.Coins      `json:"coins"`
 }
 
@@ -210,7 +210,7 @@ func (out Output) String() string {
 }
 
 // NewOutput - create a transaction output, used with SendMsg
-func NewOutput(addr crypto.Address, coins sdk.Coins) Output {
+func NewOutput(addr sdk.Address, coins sdk.Coins) Output {
 	output := Output{
 		Address: addr,
 		Coins:   coins,

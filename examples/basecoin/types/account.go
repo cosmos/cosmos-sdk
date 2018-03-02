@@ -3,7 +3,6 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	crypto "github.com/tendermint/go-crypto"
 	wire "github.com/tendermint/go-wire"
 )
 
@@ -41,9 +40,9 @@ type GenesisState struct {
 
 // GenesisAccount doesn't need pubkey or sequence
 type GenesisAccount struct {
-	Name    string         `json:"name"`
-	Address crypto.Address `json:"address"`
-	Coins   sdk.Coins      `json:"coins"`
+	Name    string      `json:"name"`
+	Address sdk.Address `json:"address"`
+	Coins   sdk.Coins   `json:"coins"`
 }
 
 func NewGenesisAccount(aa *AppAccount) *GenesisAccount {

@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	crypto "github.com/tendermint/go-crypto"
 	wire "github.com/tendermint/go-wire"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -105,7 +104,7 @@ func (c commander) buildTx() ([]byte, error) {
 	return txBytes, nil
 }
 
-func buildMsg(from crypto.Address) (sdk.Msg, error) {
+func buildMsg(from sdk.Address) (sdk.Msg, error) {
 
 	// parse coins
 	amount := viper.GetString(flagAmount)
@@ -120,7 +119,7 @@ func buildMsg(from crypto.Address) (sdk.Msg, error) {
 	if err != nil {
 		return nil, err
 	}
-	to := crypto.Address(bz)
+	to := sdk.Address(bz)
 
 	input := bank.NewInput(from, coins)
 	output := bank.NewOutput(to, coins)

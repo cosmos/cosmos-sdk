@@ -87,8 +87,8 @@ func (sig SignatureSecp256k1) IsZero() bool { return len(sig) == 0 }
 func (sig SignatureSecp256k1) String() string { return fmt.Sprintf("/%X.../", Fingerprint(sig[:])) }
 
 func (sig SignatureSecp256k1) Equals(other Signature) bool {
-	if otherEd, ok := other.Unwrap().(SignatureSecp256k1); ok {
-		return bytes.Equal(sig[:], otherEd[:])
+	if otherSecp, ok := other.Unwrap().(SignatureSecp256k1); ok {
+		return bytes.Equal(sig[:], otherSecp[:])
 	} else {
 		return false
 	}

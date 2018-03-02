@@ -1,9 +1,9 @@
-package keys
+package words
 
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 
 	cmn "github.com/tendermint/tmlibs/common"
 )
@@ -21,7 +21,7 @@ var codecs = []ECC{
 
 // TestECCPasses makes sure that the AddECC/CheckECC methods are symetric
 func TestECCPasses(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	checks := append(codecs, NoECC{})
 
@@ -41,7 +41,7 @@ func TestECCPasses(t *testing.T) {
 
 // TestECCFails makes sure random data will (usually) fail the checksum
 func TestECCFails(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	checks := codecs
 	attempts := 2000

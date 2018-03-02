@@ -18,4 +18,4 @@ dependencies:
 test:
   override:
     - "go version"
-    - "cd $PROJECT_PATH && make all"
+    - "cd $PROJECT_PATH && make get_tools && make all"

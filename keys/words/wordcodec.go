@@ -1,4 +1,4 @@
-package keys
+package words
 
 import (
 	"math/big"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/tendermint/go-crypto/keys/wordlist"
+	"github.com/tendermint/go-crypto/keys/words/wordlist"
 )
 
 const BankSize = 2048
@@ -61,7 +61,7 @@ func MustLoadCodec(bank string) *WordCodec {
 
 // loadBank opens a wordlist file and returns all words inside
 func loadBank(bank string) ([]string, error) {
-	filename := "keys/wordlist/" + bank + ".txt"
+	filename := "keys/words/wordlist/" + bank + ".txt"
 	words, err := wordlist.Asset(filename)
 	if err != nil {
 		return nil, err

@@ -6,13 +6,20 @@ import:
 - package: github.com/btcsuite/btcutil
   subpackages:
   - base58
+- package: github.com/syndtr/goleveldb
+  subpackages:
+  - leveldb
+  - leveldb/errors
+  - leveldb/iterator
+  - leveldb/opt
+  - leveldb/util
 - package: github.com/tendermint/ed25519
   subpackages:
   - extra25519
 - package: github.com/tendermint/tmlibs
-  version: develop
+  version: v0.7.0
 - package: github.com/tendermint/go-wire
-  version: develop
+  version: v0.7.3
   subpackages:
   - data
   - data/base58

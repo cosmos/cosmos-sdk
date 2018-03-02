@@ -57,6 +57,7 @@ upon receiving txGovSubmitProposal from sender do
       proposal.TotalDeposit = txGovSubmitProposal.InitialDeposit
       proposal.SubmitBlock = CurrentBlock
       proposal.Deposits.append({InitialDeposit, sender})
+      proposal.Submitter = sender
       proposal.Votes.YesVotes = 0
       proposal.Votes.NoVotes = 0
       proposal.Votes.NoWithVetoVotes = 0

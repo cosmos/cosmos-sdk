@@ -59,6 +59,7 @@ type Proposal struct {
   TotalDeposit          sdk.Coins           //  Current deposit on this proposal. Initial value is set at InitialDeposit
   Deposits              []Deposit           //  List of deposits on the proposal
   SubmitBlock           int64               //  Height of the block where TxGovSubmitProposal was included
+  Submitter             crypto.address      //  Address of the submitter
   
   VotingStartBlock      int64               //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
   InitTotalVotingPower  int64               //  Total voting power when proposal enters voting period (default 0)

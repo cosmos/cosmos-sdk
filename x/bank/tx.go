@@ -15,6 +15,8 @@ type SendMsg struct {
 	Outputs []Output `json:"outputs"`
 }
 
+var _ SendMsg = (nil)(sdk.Msg)
+
 // NewSendMsg - construct arbitrary multi-in, multi-out send msg.
 func NewSendMsg(in []Input, out []Output) SendMsg {
 	return SendMsg{Inputs: in, Outputs: out}
@@ -87,7 +89,7 @@ func (msg SendMsg) GetSigners() []sdk.Address {
 // IssueMsg - high level transaction of the coin module
 type IssueMsg struct {
 	Banker  sdk.Address `json:"banker"`
-	Outputs []Output       `json:"outputs"`
+	Outputs []Output    `json:"outputs"`
 }
 
 // NewIssueMsg - construct arbitrary multi-in, multi-out send msg.
@@ -96,7 +98,7 @@ func NewIssueMsg(banker sdk.Address, out []Output) IssueMsg {
 }
 
 // Implements Msg.
-func (msg IssueMsg) Type() string { return "bank" } // TODO: "bank/send"
+func (msg IssueMsg) Type() string { return "bank" } // TODO: "bank/issue"
 
 // Implements Msg.
 func (msg IssueMsg) ValidateBasic() sdk.Error {
@@ -138,10 +140,11 @@ func (msg IssueMsg) GetSigners() []sdk.Address {
 //----------------------------------------
 // Input
 
+// Transaction Output
 type Input struct {
 	Address  sdk.Address `json:"address"`
-	Coins    sdk.Coins      `json:"coins"`
-	Sequence int64          `json:"sequence"`
+	Coins    sdk.Coins   `json:"coins"`
+	Sequence int64       `json:"sequence"`
 
 	signature crypto.Signature
 }
@@ -186,9 +189,10 @@ func NewInputWithSequence(addr sdk.Address, coins sdk.Coins, seq int64) Input {
 //----------------------------------------
 // Output
 
+// Transaction Output
 type Output struct {
 	Address sdk.Address `json:"address"`
-	Coins   sdk.Coins      `json:"coins"`
+	Coins   sdk.Coins   `json:"coins"`
 }
 
 // ValidateBasic - validate transaction output

@@ -24,11 +24,11 @@
 #   go-tests = true
 #   unused-packages = true
 
-
 [[constraint]]
-  branch = "master"
-  name = "github.com/rigelrozanski/common"
+  name = "github.com/alecthomas/gometalinter"
+  version = "2.0.5"
 
 [prune]
   go-tests = true
   unused-packages = true
+

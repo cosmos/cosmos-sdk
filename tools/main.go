@@ -6,7 +6,7 @@ import (
 
 	// TODO: Ideally this gets auto-imported on dep update.
 	// Any way to make that happen?
-	_ "github.com/rigelrozanski/common"
+	_ "github.com/alecthomas/gometalinter"
 )
 
 func main() {}

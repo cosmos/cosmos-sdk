@@ -1,4 +1,4 @@
-all: install_dep check get_vendor_deps install
+all: install
 
 
 ########################################
@@ -7,22 +7,22 @@ all: install_dep check get_vendor_deps install
 DEP = github.com/golang/dep/cmd/dep
 DEP_CHECK := $(shell command -v dep 2> /dev/null)
 
-check:
+check_tools:
 ifndef DEP_CHECK
-	@echo "No dep in path.  Install with 'make install_dep'."
+	@echo "No dep in path.  Install with 'make get_tools'."
 else
 	@echo "Found dep in path."
 endif
 
-install_dep:
+install_tools:
 ifdef DEP_CHECK
-	@echo "Dep is already installed.  Run 'make update_dep' to update."
+	@echo "Dep is already installed.  Run 'make update_tools' to update."
 else
 	@echo "$(ansi_grn)Installing dep$(ansi_end)"
 	go get -v $(DEP)
 endif
 
-update_dep:
+update_tools:
 	@echo "$(ansi_grn)Updating dep$(ansi_end)"
 	go get -u -v $(DEP)
 
@@ -31,10 +31,10 @@ update_dep:
 ### Install tools
 
 
-get_vendor_deps: check
+get_vendor_deps: check_tools
 	@rm -rf vendor/
 	@echo "--> Running dep ensure"
-	@dep ensure
+	@dep ensure -v
 
 install: get_vendor_deps
 	@echo "$(ansi_grn)Installing tools$(ansi_end)"
@@ -62,4 +62,4 @@ ansi_end=\033[0m
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: check install_dep update_dep get_vendor_deps install
+.PHONY: check_tools install_tools update_tools get_vendor_deps install

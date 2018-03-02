@@ -1,5 +1,5 @@
-hash: fa45c8a4f5512ed730f793b93d4876bdc604a1333a5a1f938c98a0f7dd55f22e
-updated: 2018-03-01T00:41:12.97082395-05:00
+hash: bb3fc7a1729189d36ebf8e7b47bfecdcbc3450c911d9966e665b8c6b01b9df80
+updated: 2018-03-02T04:23:04.095993751-05:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -7,10 +7,6 @@ imports:
   version: 50de9da05b50eb15658bb350f6ea24368a111ab7
   subpackages:
   - btcec
-- name: github.com/davecgh/go-spew
-  version: 346938d642f2ec3594ed81d874461961cd0faa76
-  subpackages:
-  - spew
 - name: github.com/ebuchman/fail-test
   version: 95f809107225be108efcf10a3509e4ea6ceef3c4
 - name: github.com/fsnotify/fsnotify
@@ -109,11 +105,11 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 68592f4d8ee34e97db94b7a7976b1309efdb7eb9
+  version: 9e0e00bef42aebf6b402f66bf0f3dc607de8a6f3
   subpackages:
   - client
   - example/code
-  - example/dummy
+  - example/kvstore
   - server
   - types
 - name: github.com/tendermint/ed25519
@@ -122,18 +118,20 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-crypto
-  version: 4fc3055dbd17aa1203d0abc64b9293f378da22ec
+  version: 6c6d01b51c56f8b155cf9712e79de8fb12a82803
   subpackages:
   - keys
   - keys/bcrypt
   - keys/words
   - keys/words/wordlist
 - name: github.com/tendermint/go-wire
-  version: 5d7845f24b843c914cf571dad2ca13c91cf70f0d
+  version: 67ee274c5f9da166622f3b6e6747003b563e3742
+  subpackages:
+  - data
 - name: github.com/tendermint/iavl
-  version: 1a59ec0c82dc940c25339dd7c834df5cb76a95cb
+  version: 39de8f0b4ee758fdd5bb3a9afc6dd9bf42c04785
 - name: github.com/tendermint/tendermint
-  version: c330b9e43c93351a5c3040333d7d0c7c27859a20
+  version: c394eef7b8f4b71f3e077c22f697040694eb6c74
   subpackages:
   - blockchain
   - cmd/tendermint/commands
@@ -167,6 +165,7 @@ imports:
   - state/txindex/kv
   - state/txindex/null
   - types
+  - types/priv_validator
   - version
   - wire
 - name: github.com/tendermint/tmlibs
@@ -204,6 +203,7 @@ imports:
   - idna
   - internal/timeseries
   - lex/httplex
+  - netutil
   - trace
 - name: golang.org/x/sys
   version: 37707fdb30a5b38865cfb95e5aab41707daec7fd
@@ -242,6 +242,10 @@ imports:
 - name: gopkg.in/yaml.v2
   version: d670f9405373e636a5a2765eea47fac0c9bc91a4
 testImports:
+- name: github.com/davecgh/go-spew
+  version: 346938d642f2ec3594ed81d874461961cd0faa76
+  subpackages:
+  - spew
 - name: github.com/pmezard/go-difflib
   version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:

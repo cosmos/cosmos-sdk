@@ -2,8 +2,8 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	wire "github.com/tendermint/go-wire"
 )
 
 var _ sdk.Account = (*AppAccount)(nil)

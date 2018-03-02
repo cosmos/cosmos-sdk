@@ -1,12 +1,14 @@
 package auth
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 
-	wire "github.com/tendermint/go-wire"
+	oldwire "github.com/tendermint/go-wire"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Implements sdk.AccountMapper.
@@ -154,14 +156,27 @@ func (am accountMapper) encodeAccount(acc sdk.Account) []byte {
 }
 
 func (am accountMapper) decodeAccount(bz []byte) sdk.Account {
-	accPtr := am.clonePrototypePtr()
-	err := am.cdc.UnmarshalBinary(bz, accPtr)
-	if err != nil {
-		panic(err)
+	// ... old go-wire ...
+	r, n, err := bytes.NewBuffer(bz), new(int), new(error)
+	accI := oldwire.ReadBinary(struct{ sdk.Account }{}, r, len(bz), n, err)
+	if *err != nil {
+		panic(*err)
+
 	}
-	if reflect.ValueOf(am.proto).Kind() == reflect.Ptr {
-		return reflect.ValueOf(accPtr).Interface().(sdk.Account)
-	} else {
-		return reflect.ValueOf(accPtr).Elem().Interface().(sdk.Account)
-	}
+
+	acc := accI.(struct{ sdk.Account }).Account
+	return acc
+
+	/*
+		accPtr := am.clonePrototypePtr()
+			err := am.cdc.UnmarshalBinary(bz, accPtr)
+			if err != nil {
+				panic(err)
+			}
+			if reflect.ValueOf(am.proto).Kind() == reflect.Ptr {
+				return reflect.ValueOf(accPtr).Interface().(sdk.Account)
+			} else {
+				return reflect.ValueOf(accPtr).Elem().Interface().(sdk.Account)
+			}
+	*/
 }

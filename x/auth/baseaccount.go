@@ -3,9 +3,10 @@ package auth
 import (
 	"errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-wire"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 //-----------------------------------------------------------
@@ -17,10 +18,10 @@ var _ sdk.Account = (*BaseAccount)(nil)
 // Extend this by embedding this in your AppAccount.
 // See the examples/basecoin/types/account.go for an example.
 type BaseAccount struct {
-	Address  sdk.Address `json:"address"`
-	Coins    sdk.Coins      `json:"coins"`
-	PubKey   crypto.PubKey  `json:"public_key"`
-	Sequence int64          `json:"sequence"`
+	Address  sdk.Address   `json:"address"`
+	Coins    sdk.Coins     `json:"coins"`
+	PubKey   crypto.PubKey `json:"public_key"`
+	Sequence int64         `json:"sequence"`
 }
 
 func NewBaseAccountWithAddress(addr sdk.Address) BaseAccount {
@@ -60,7 +61,7 @@ func (acc BaseAccount) GetPubKey() crypto.PubKey {
 
 // Implements sdk.Account.
 func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
-	if acc.PubKey != nil {
+	if !acc.PubKey.Empty() {
 		return errors.New("cannot override BaseAccount pubkey")
 	}
 	acc.PubKey = pubKey
@@ -94,5 +95,5 @@ func (acc *BaseAccount) SetSequence(seq int64) error {
 
 func RegisterWireBaseAccount(cdc *wire.Codec) {
 	// Register crypto.[PubKey,PrivKey,Signature] types.
-	crypto.RegisterWire(cdc)
+	wire.RegisterCrypto(cdc)
 }

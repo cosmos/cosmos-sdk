@@ -9,11 +9,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	abci "github.com/tendermint/abci/types"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/abci/types"
-	wire "github.com/tendermint/go-wire"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Get the default command for a tx query

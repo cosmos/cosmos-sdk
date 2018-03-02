@@ -21,7 +21,7 @@ import:
 - package: github.com/tendermint/go-wire
   version: v0.7.3
 - package: github.com/tendermint/iavl
-  version: develop-pre-wire
+  version: v0.6.1
 - package: github.com/tendermint/tmlibs
   version: develop
   subpackages:

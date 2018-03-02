@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.5.0 (March 2, 2017)
+
+BREAKING CHANGES
+
+- nano: moved to `_nano` now while we're having build issues
+- bcrypt: moved to `keys/bcrypt`
+- hd: moved to `keys/hd`; `BTC` added to some function names; other function cleanup
+- keys/cryptostore: moved to `keys`, renamed to `keybase`, and completely refactored
+- keys: moved BIP39 related code to `keys/words`
+
+FEATURE
+
+- `Address` is a type alias for `cmn.HexBytes`
+
+BUG FIX
+
+- PrivKey comparisons done in constant time
+
 ## 0.4.1 (October 27, 2017)
 
 This release removes support for bcrypt as it was merged too soon without an upgrade plan

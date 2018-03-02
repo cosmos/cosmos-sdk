@@ -1,16 +1,16 @@
-hash: 575a7b42282ded36e66490c44105140387d305b07e8e5a9e8e4b9eeb6f995e66
-updated: 2018-03-02T03:06:22.122862726-05:00
+hash: 2b121bf7364ed02c60faff6d619a22acb0489d59843be669be3f8823b8658b75
+updated: 2018-03-02T10:39:45.076725737-05:00
 imports:
 - name: github.com/btcsuite/btcd
-  version: 50de9da05b50eb15658bb350f6ea24368a111ab7
+  version: 2be2f12b358dc57d70b8f501b00be450192efbc3
   subpackages:
   - btcec
 - name: github.com/btcsuite/btcutil
-  version: 66871daeb12123ece012a9628d2798d01195c4b3
+  version: 501929d3d046174c3d39f0ea54ece471aa17238c
   subpackages:
   - base58
 - name: github.com/ethanfrey/ledger
-  version: 23a7bb9d74bc83a862fcb4bddde24215b2295ad9
+  version: f7f2f056357db77db845a79aa1abdadc3ae66369
 - name: github.com/go-kit/kit
   version: 4dc7be5d2d12881735283bcab7352178e190fc71
   subpackages:
@@ -30,15 +30,15 @@ imports:
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/howeyc/crc16
-  version: 96a97a1abb579c7ff1a8ffa77f2e72d1c314b57f
+  version: 2b2a61e366a66d3efb279e46176e7291001e0354
 - name: github.com/jmhodges/levigo
   version: c42d9e0ca023e2198120196f842701bb4c55d7b9
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/pkg/errors
-  version: 645ef00459ed84a119197bfb8d8205042c6df63d
+  version: 30136e27e2ac8d167177e8a583aa4c3fea5be833
 - name: github.com/syndtr/goleveldb
-  version: 34011bf325bce385408353a30b101fe5e923eb6e
+  version: c7a14d4b00e222eab6111b4cd1af829c13f53ec2
   subpackages:
   - leveldb
   - leveldb/cache
@@ -58,7 +58,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-wire
-  version: 67ee274c5f9da166622f3b6e6747003b563e3742
+  version: fa721242b042ecd4c6ed1a934ee740db4f74e45c
   subpackages:
   - data
   - data/base58
@@ -69,7 +69,7 @@ imports:
   - db
   - log
 - name: golang.org/x/crypto
-  version: 1875d0a70c90e57f11972aefd42276df65e895b9
+  version: 91a49db82a88618983a78a06c1cbd4e00ab749ab
   subpackages:
   - bcrypt
   - blowfish
@@ -82,7 +82,7 @@ imports:
   - salsa20/salsa
 testImports:
 - name: github.com/davecgh/go-spew
-  version: 346938d642f2ec3594ed81d874461961cd0faa76
+  version: 8991bc29aa16c548c550c7ff78260e27b9ab7c73
   subpackages:
   - spew
 - name: github.com/mndrix/btcutil
@@ -97,6 +97,6 @@ testImports:
   - assert
   - require
 - name: github.com/tyler-smith/go-bip32
-  version: eb790af526c30f23a7c8b00a48e342f9d0bd6386
+  version: 2c9cfd17756470a0b7c3e4b7954bae7d11035504
 - name: github.com/tyler-smith/go-bip39
   version: 8e7a99b3e716f36d3b080a9a70f9eb45abe4edcc

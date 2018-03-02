@@ -17,11 +17,11 @@ import:
   - server
   - types
 - package: github.com/tendermint/go-crypto
-  version: develop
+  version: v0.5.0
 - package: github.com/tendermint/go-wire
-  version: develop
+  version: v0.7.3
 - package: github.com/tendermint/iavl
-  version: develop
+  version: v0.6.1
 - package: github.com/tendermint/tmlibs
   version: develop
   subpackages:
@@ -30,7 +30,7 @@ import:
   - log
   - merkle
 - package: github.com/tendermint/tendermint
-  version: breaking/wire-sdk2
+  version: develop
   subpackages:
   - cmd/tendermint/commands
   - config

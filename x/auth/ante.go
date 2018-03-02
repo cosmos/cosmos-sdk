@@ -55,7 +55,7 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 			signerAccs[i] = signerAcc
 
 			// If no pubkey, set pubkey.
-			if signerAcc.GetPubKey() == nil {
+			if signerAcc.GetPubKey().Empty() {
 				err := signerAcc.SetPubKey(sig.PubKey)
 				if err != nil {
 					return ctx,

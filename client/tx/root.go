@@ -2,7 +2,8 @@ package tx
 
 import (
 	"github.com/spf13/cobra"
-	wire "github.com/tendermint/go-wire"
+
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // type used to pass around the provided cdc

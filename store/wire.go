@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/tendermint/go-wire"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 var cdc = wire.NewCodec()

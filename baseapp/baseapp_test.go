@@ -327,8 +327,8 @@ func (tx testUpdatePowerTx) Get(key interface{}) (value interface{}) { return ni
 func (tx testUpdatePowerTx) GetMsg() sdk.Msg                         { return tx }
 func (tx testUpdatePowerTx) GetSignBytes() []byte                    { return nil }
 func (tx testUpdatePowerTx) ValidateBasic() sdk.Error                { return nil }
-func (tx testUpdatePowerTx) GetSigners() []sdk.Address            { return nil }
-func (tx testUpdatePowerTx) GetFeePayer() sdk.Address             { return nil }
+func (tx testUpdatePowerTx) GetSigners() []sdk.Address               { return nil }
+func (tx testUpdatePowerTx) GetFeePayer() sdk.Address                { return nil }
 func (tx testUpdatePowerTx) GetSignatures() []sdk.StdSignature       { return nil }
 
 func TestValidatorChange(t *testing.T) {
@@ -430,7 +430,7 @@ func makePubKey(secret string) crypto.PubKey {
 
 func makePrivKey(secret string) crypto.PrivKey {
 	privKey := crypto.GenPrivKeyEd25519FromSecret([]byte(secret))
-	return privKey
+	return privKey.Wrap()
 }
 
 func secret(index int) string {

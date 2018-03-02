@@ -8,10 +8,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	wire "github.com/tendermint/go-wire"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 

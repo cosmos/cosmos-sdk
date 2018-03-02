@@ -1,8 +1,8 @@
 hash: 95b2c2a089ca7242bc52c3bfe5a0286ae68201197f7f5855dd6e8f2ee3974068
-updated: 2018-02-02T23:50:03.327504896-05:00
+updated: 2018-03-02T11:41:11.205350024-05:00
 imports:
 - name: github.com/btcsuite/btcd
-  version: 2e60448ffcc6bf78332d1fe590260095f554dd78
+  version: 2be2f12b358dc57d70b8f501b00be450192efbc3
   subpackages:
   - btcec
 - name: github.com/btcsuite/btcutil
@@ -22,7 +22,7 @@ imports:
 - name: github.com/go-logfmt/logfmt
   version: 390ab7935ee28ec6b286364bba9b4dd6410cb3d5
 - name: github.com/go-stack/stack
-  version: 817915b46b97fd7bb80e8ab6b69f01a53ac3eebf
+  version: 259ab82a6cad3992b4e21ff5cac294ccb06474bc
 - name: github.com/gogo/protobuf
   version: 1adfc126b41513cc696b209667c8656ea7aac67c
   subpackages:
@@ -40,7 +40,7 @@ imports:
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/syndtr/goleveldb
-  version: b89cc31ef7977104127d34c1bd31ebd1a9db2199
+  version: c7a14d4b00e222eab6111b4cd1af829c13f53ec2
   subpackages:
   - leveldb
   - leveldb/cache
@@ -60,15 +60,15 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/go-wire
-  version: dec83f641903b22f039da3974607859715d0377e
+  version: 3d2fb07b5c65de21d624919c4680b1cd1b2cfe90
 - name: github.com/tendermint/tmlibs
-  version: 1d7fc78ea171587e9e63da566d3da1b127bfd14c
+  version: 26f2ab65f82cfc6873c312e8030104c47c05f10e
   subpackages:
   - common
   - db
   - log
 - name: golang.org/x/crypto
-  version: edd5e9b0879d13ee6970a50153d85b8fec9f7686
+  version: 91a49db82a88618983a78a06c1cbd4e00ab749ab
   subpackages:
   - bcrypt
   - blowfish
@@ -81,7 +81,7 @@ imports:
   - salsa20/salsa
 testImports:
 - name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:
   - difflib
 - name: github.com/stretchr/testify

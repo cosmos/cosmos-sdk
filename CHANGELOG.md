@@ -1,5 +1,16 @@
 # Changelog
 
+## Pending
+
+BREAKING CHANGES
+
+FEATURES
+
+IMPROVEMENTS
+* bank module uses go-wire codec instead of 'encoding/json'
+
+FIXES
+
 ## 0.11.0 (March 1, 2017)
 
 BREAKING CHANGES

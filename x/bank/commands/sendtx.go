@@ -4,13 +4,10 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/builder"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 
@@ -44,64 +41,27 @@ type commander struct {
 }
 
 func (c commander) sendTxCmd(cmd *cobra.Command, args []string) error {
-	txBytes, err := c.buildTx()
+
+	// get the from address
+	from, err := builder.GetFromAddress()
 	if err != nil {
 		return err
 	}
 
-	res, err := builder.BroadcastTx(txBytes)
+	// build send msg
+	msg, err := buildMsg(from)
+	if err != nil {
+		return err
+	}
+
+	// build and sign the transaction, then broadcast to Tendermint
+	res, err := builder.SignBuildBroadcast(msg, c.cdc)
 	if err != nil {
 		return err
 	}
 
 	fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
 	return nil
-}
-
-func (c commander) buildTx() ([]byte, error) {
-	keybase, err := keys.GetKeyBase()
-	if err != nil {
-		return nil, err
-	}
-
-	name := viper.GetString(client.FlagName)
-	info, err := keybase.Get(name)
-	if err != nil {
-		return nil, errors.Errorf("No key for: %s", name)
-	}
-	from := info.PubKey.Address()
-
-	msg, err := buildMsg(from)
-	if err != nil {
-		return nil, err
-	}
-
-	// sign and build
-	bz := msg.GetSignBytes()
-	buf := client.BufferStdin()
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-	passphrase, err := client.GetPassword(prompt, buf)
-	if err != nil {
-		return nil, err
-	}
-	sig, pubkey, err := keybase.Sign(name, passphrase, bz)
-	if err != nil {
-		return nil, err
-	}
-	sigs := []sdk.StdSignature{{
-		PubKey:    pubkey,
-		Signature: sig,
-		Sequence:  viper.GetInt64(flagSequence),
-	}}
-
-	// marshal bytes
-	tx := sdk.NewStdTx(msg, sigs)
-
-	txBytes, err := c.cdc.MarshalBinary(tx)
-	if err != nil {
-		return nil, err
-	}
-	return txBytes, nil
 }
 
 func buildMsg(from sdk.Address) (sdk.Msg, error) {

@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
 )
 
-// what cool trasaction
+// what cool transaction
 func WhatCoolTxCmd(cdc *wire.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "whatcool [answer]",
@@ -43,7 +43,7 @@ func WhatCoolTxCmd(cdc *wire.Codec) *cobra.Command {
 	}
 }
 
-// set what cool trasaction
+// set what cool transaction
 func SetWhatCoolTxCmd(cdc *wire.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "setwhatcool [answer]",

@@ -75,6 +75,10 @@ func GetFromAddress() (from sdk.Address, err error) {
 	}
 
 	name := viper.GetString(client.FlagName)
+	if name == "" {
+		return nil, errors.Errorf("must provide a name using --name")
+	}
+
 	info, err := keybase.Get(name)
 	if err != nil {
 		return nil, errors.Errorf("No key for: %s", name)

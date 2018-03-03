@@ -1,5 +1,19 @@
 # Changelog
 
+## unrealease 
+
+BREAKING CHANGES
+
+FEATURES
+
+* [examples/basecoin] new cool module to demonstrate use of state and custom transactions
+
+IMPROVEMENTS
+
+* [client] refactor to now include more standard code
+
+BUG FIXES
+
 ## 0.11.0 (March 1, 2017)
 
 BREAKING CHANGES

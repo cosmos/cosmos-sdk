@@ -15,10 +15,8 @@ import (
 )
 
 const (
-	flagTo       = "to"
-	flagAmount   = "amount"
-	flagFee      = "fee"
-	flagSequence = "seq"
+	flagTo     = "to"
+	flagAmount = "amount"
 )
 
 // SendTxCommand will create a send tx and sign it with the given key
@@ -31,8 +29,6 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 	}
 	cmd.Flags().String(flagTo, "", "Address to send coins")
 	cmd.Flags().String(flagAmount, "", "Amount of coins to send")
-	cmd.Flags().String(flagFee, "", "Fee to pay along with transaction")
-	cmd.Flags().Int64(flagSequence, 0, "Sequence number to sign the tx")
 	return cmd
 }
 

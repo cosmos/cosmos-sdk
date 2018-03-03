@@ -26,7 +26,7 @@ func (acc *AppAccount) SetName(name string) { acc.Name = name }
 func GetParseAccount(cdc *wire.Codec) sdk.ParseAccount {
 	return func(accBytes []byte) (res sdk.Account, err error) {
 		acct := new(AppAccount)
-		err = cdc.UnmarshalBinary(accBytes, acct)
+		err = cdc.UnmarshalBinary(accBytes, &acct)
 		return acct, err
 	}
 }

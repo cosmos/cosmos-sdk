@@ -15,7 +15,7 @@ type SendMsg struct {
 	Outputs []Output `json:"outputs"`
 }
 
-var _ SendMsg = (nil)(sdk.Msg)
+var _ sdk.Msg = SendMsg{}
 
 // NewSendMsg - construct arbitrary multi-in, multi-out send msg.
 func NewSendMsg(in []Input, out []Output) SendMsg {

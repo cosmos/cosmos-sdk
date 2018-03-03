@@ -23,6 +23,9 @@ func getParseAccount(cdc *wire.Codec) sdk.ParseAccount {
 	return func(accBytes []byte) (sdk.Account, error) {
 		acct := new(auth.BaseAccount)
 		err := cdc.UnmarshalBinary(accBytes, acct)
+		if err != nil {
+			panic(err)
+		}
 		return acct, err
 	}
 }

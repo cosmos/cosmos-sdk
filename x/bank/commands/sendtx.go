@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/builder"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -48,7 +49,7 @@ func (c commander) sendTxCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	res, err := client.BroadcastTx(txBytes)
+	res, err := builder.BroadcastTx(txBytes)
 	if err != nil {
 		return err
 	}

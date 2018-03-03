@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/builder"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -61,7 +61,7 @@ func (c commander) getAccountCmd(cmd *cobra.Command, args []string) error {
 	}
 	key := sdk.Address(bz)
 
-	res, err := client.Query(key, c.storeName)
+	res, err := builder.Query(key, c.storeName)
 
 	// parse out the value
 	account, err := c.parser(res)

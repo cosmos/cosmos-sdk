@@ -66,7 +66,18 @@ func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
 func (tx StdTx) GetFeePayer() Address          { return tx.Signatures[0].PubKey.Address() } // XXX but PubKey is optional!
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 
-//__________________________________________________________
+// StdSignDoc is replay-prevention structure.
+// It includes the result of msg.GetSignBytes(),
+// as well as the ChainID (prevent cross chain replay)
+// and the Sequence (prevent inchain replay).
+type StdSignDoc struct {
+	ChainID  string `json:"chain_id"`
+	Sequence int64  `json:"sequence"`
+	MsgBytes []byte `json:"msg_bytes"`
+	AltBytes []byte `json:"alt_bytes"` // TODO: do we really want this ?
+}
+
+//-------------------------------------
 
 // Application function variable used to unmarshal transaction bytes
 type TxDecoder func(txBytes []byte) (Tx, Error)

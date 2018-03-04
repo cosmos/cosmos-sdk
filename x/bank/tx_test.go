@@ -13,20 +13,12 @@ func TestNewSendMsg(t *testing.T) {}
 
 func TestSendMsgType(t *testing.T) {
 	// Construct a SendMsg
+	addr1 := sdk.Address([]byte("input"))
+	addr2 := sdk.Address([]byte("output"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = SendMsg{
-		Inputs: []Input{
-			{
-				Address:  sdk.Address([]byte("input")),
-				Coins:    sdk.Coins{{"atom", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []Output{
-			{
-				Address: sdk.Address([]byte("output")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Inputs:  []Input{NewInput(addr1, coins)},
+		Outputs: []Output{NewOutput(addr2, coins)},
 	}
 
 	// TODO some failures for bad result
@@ -53,18 +45,16 @@ func TestInputValidation(t *testing.T) {
 	}{
 		// auth works with different apps
 		{true, NewInput(addr1, someCoins)},
-		{true, NewInputWithSequence(addr1, someCoins, 100)},
-		{true, NewInputWithSequence(addr2, someCoins, 100)},
-		{true, NewInputWithSequence(addr2, multiCoins, 100)},
+		{true, NewInput(addr2, someCoins)},
+		{true, NewInput(addr2, multiCoins)},
 
-		{false, NewInput(emptyAddr, someCoins)},             // empty address
-		{false, NewInputWithSequence(addr1, someCoins, -1)}, // negative sequence
-		{false, NewInput(addr1, emptyCoins)},                // invalid coins
-		{false, NewInput(addr1, emptyCoins2)},               // invalid coins
-		{false, NewInput(addr1, someEmptyCoins)},            // invalid coins
-		{false, NewInput(addr1, minusCoins)},                // negative coins
-		{false, NewInput(addr1, someMinusCoins)},            // negative coins
-		{false, NewInput(addr1, unsortedCoins)},             // unsorted coins
+		{false, NewInput(emptyAddr, someCoins)},  // empty address
+		{false, NewInput(addr1, emptyCoins)},     // invalid coins
+		{false, NewInput(addr1, emptyCoins2)},    // invalid coins
+		{false, NewInput(addr1, someEmptyCoins)}, // invalid coins
+		{false, NewInput(addr1, minusCoins)},     // negative coins
+		{false, NewInput(addr1, someMinusCoins)}, // negative coins
+		{false, NewInput(addr1, unsortedCoins)},  // unsorted coins
 	}
 
 	for i, tc := range cases {
@@ -144,7 +134,7 @@ func TestSendMsgValidation(t *testing.T) {
 		{false, SendMsg{Inputs: []Input{input1}}},    // just input
 		{false, SendMsg{Outputs: []Output{output1}}}, // just ouput
 		{false, SendMsg{
-			Inputs:  []Input{NewInputWithSequence(emptyAddr, atom123, 1)}, // invalid input
+			Inputs:  []Input{NewInput(emptyAddr, atom123)}, // invalid input
 			Outputs: []Output{output1}}},
 		{false, SendMsg{
 			Inputs:  []Input{input1},

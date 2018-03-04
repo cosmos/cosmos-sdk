@@ -58,7 +58,7 @@
   version = "1.2.1"
 
 [[constraint]]
-  branch = "master"
+  branch = "develop"
   name = "github.com/tendermint/abci"
 
 [[constraint]]
@@ -74,11 +74,11 @@
   name = "github.com/tendermint/iavl"
 
 [[override]]
-  branch = "master"
+  branch = "develop"
   name = "github.com/tendermint/tendermint"
 
 [[constraint]]
-  branch = "master"
+  branch = "develop"
   name = "github.com/tendermint/tmlibs"
 
 [prune]

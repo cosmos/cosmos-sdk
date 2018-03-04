@@ -2,10 +2,10 @@
 
 
 [[projects]]
+  branch = "master"
   name = "github.com/alecthomas/gometalinter"
   packages = ["."]
-  revision = "46cc1ea3778b247666c2949669a3333c532fa9c6"
-  version = "v2.0.5"
+  revision = "39a4757a714702004d3fdca45ff83af4dc484af9"
 
 [[projects]]
   branch = "master"
@@ -483,6 +483,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6216c6050ed92cf576681bc92b41c491e359cbd8fef9e14cb36ef90ce9e2f16d"
+  inputs-digest = "3543b28082202588ae2dba3be755aeb6330015ae2632cc3748ccc6e631eaa4cf"
   solver-name = "gps-cdcl"
   solver-version = 1

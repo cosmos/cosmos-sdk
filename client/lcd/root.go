@@ -49,5 +49,7 @@ func initRouter() http.Handler {
 	r.HandleFunc("/node_info", rpc.NodeStatusRequestHandler)
 	r.HandleFunc("/blocks/latest", rpc.LatestBlockRequestHandler)
 	r.HandleFunc("/blocks/{height}", rpc.BlockRequestHandler)
+	r.HandleFunc("/validatorsets/latest", rpc.LatestValidatorsetRequestHandler)
+	r.HandleFunc("/validatorsets/{height}", rpc.ValidatorsetRequestHandler)
 	return r
 }

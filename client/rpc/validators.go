@@ -14,7 +14,7 @@ func validatorCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validatorset <height>",
 		Short: "Get the full validator set at given height",
-		RunE:  getValidators,
+		RunE:  printValidators,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
 	// TODO: change this to false when we can
@@ -22,7 +22,29 @@ func validatorCommand() *cobra.Command {
 	return cmd
 }
 
-func getValidators(cmd *cobra.Command, args []string) error {
+func getValidators(height *int64) ([]byte, error) {
+	// get the node
+	node, err := client.GetNode()
+	if err != nil {
+		return err
+	}
+
+	res, err := node.Validators(height)
+	if err != nil {
+		return err
+	}
+
+	output, err := json.MarshalIndent(res, "  ", "")
+	if err != nil {
+		return err
+	}
+	return output, nil
+}
+
+
+// CMD
+
+func printValidators(cmd *cobra.Command, args []string) error {
 	var height *int64
 	// optional height
 	if len(args) > 0 {
@@ -36,22 +58,51 @@ func getValidators(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// get the node
-	node, err := client.GetNode()
-	if err != nil {
+	output, err := getValidators(height)
+	if (err != nil) {
 		return err
 	}
 
-	res, err := node.Validators(height)
-	if err != nil {
-		return err
-	}
-
-	output, err := tmwire.MarshalJSON(res)
-	// output, err := json.MarshalIndent(res, "  ", "")
-	if err != nil {
-		return err
-	}
 	fmt.Println(string(output))
 	return nil
+}
+
+// REST
+
+func ValidatorsetRequestHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	height, err := strconv.ParseInt(vars["height"], 10, 64)
+	if err != nil {
+		w.WriteHeader(400)
+		w.Write([]byte("ERROR: Couldn't parse block height. Assumed format is '/validatorsets/{height}'."))
+		return
+	}
+	chainHeight, err := GetChainHeight()
+	if height > chainHeight {
+		w.WriteHeader(404)
+		w.Write([]byte("ERROR: Requested block height is bigger then the chain length."))
+		return
+	}
+	output, err := getValidators(&height)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+	}
+	w.Write(output)
+}
+
+func LatestValidatorsetRequestHandler(w http.ResponseWriter, r *http.Request) {
+	height, err := GetChainHeight()
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	output, err := getValidators(&height)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write(output)
 }

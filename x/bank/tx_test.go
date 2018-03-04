@@ -179,82 +179,54 @@ func TestSendMsgValidation(t *testing.T) {
 
 func TestSendMsgString(t *testing.T) {
 	// Construct a SendMsg
+	addr1 := sdk.Address([]byte("input"))
+	addr2 := sdk.Address([]byte("output"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = SendMsg{
-		Inputs: []Input{
-			{
-				Address:  sdk.Address([]byte("input")),
-				Coins:    sdk.Coins{{"atom", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []Output{
-			{
-				Address: sdk.Address([]byte("output")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Inputs:  []Input{NewInput(addr1, coins)},
+		Outputs: []Output{NewOutput(addr2, coins)},
 	}
+
 	res := msg.String()
 	// TODO some failures for bad results
 	assert.Equal(t, res, "SendMsg{[Input{696E707574,10atom}]->[Output{364637353734373037353734,10atom}]}")
 }
 
 func TestSendMsgGet(t *testing.T) {
+	addr1 := sdk.Address([]byte("input"))
+	addr2 := sdk.Address([]byte("output"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = SendMsg{
-		Inputs: []Input{
-			{
-				Address:  sdk.Address([]byte("input")),
-				Coins:    sdk.Coins{{"atom", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []Output{
-			{
-				Address: sdk.Address([]byte("output")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Inputs:  []Input{NewInput(addr1, coins)},
+		Outputs: []Output{NewOutput(addr2, coins)},
 	}
 	res := msg.Get(nil)
 	assert.Nil(t, res)
 }
 
 func TestSendMsgGetSignBytes(t *testing.T) {
+	addr1 := sdk.Address([]byte("input"))
+	addr2 := sdk.Address([]byte("output"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = SendMsg{
-		Inputs: []Input{
-			{
-				Address:  sdk.Address([]byte("input")),
-				Coins:    sdk.Coins{{"atom", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []Output{
-			{
-				Address: sdk.Address([]byte("output")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Inputs:  []Input{NewInput(addr1, coins)},
+		Outputs: []Output{NewOutput(addr2, coins)},
 	}
 	res := msg.GetSignBytes()
 	// TODO bad results
-	assert.Equal(t, string(res), `{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10}],"sequence":1}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10}]}]}`)
+	assert.Equal(t, string(res), `{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10}]}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10}]}]}`)
 }
 
 func TestSendMsgGetSigners(t *testing.T) {
 	var msg = SendMsg{
 		Inputs: []Input{
-			{
-				Address: sdk.Address([]byte("input1")),
-			},
-			{
-				Address: sdk.Address([]byte("input2")),
-			},
-			{
-				Address: sdk.Address([]byte("input3")),
-			},
+			NewInput(sdk.Address([]byte("input1")), nil),
+			NewInput(sdk.Address([]byte("input2")), nil),
+			NewInput(sdk.Address([]byte("input3")), nil),
 		},
 	}
 	res := msg.GetSigners()
+	// TODO: fix this !
 	assert.Equal(t, fmt.Sprintf("%v", res), "[696E70757431 696E70757432 696E70757433]")
 }
 
@@ -287,14 +259,11 @@ func TestNewIssueMsg(t *testing.T) {
 
 func TestIssueMsgType(t *testing.T) {
 	// Construct an IssueMsg
+	addr := sdk.Address([]byte("loan-from-bank"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = IssueMsg{
-		Banker: sdk.Address([]byte("input")),
-		Outputs: []Output{
-			{
-				Address: sdk.Address([]byte("loan-from-bank")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Banker:  sdk.Address([]byte("input")),
+		Outputs: []Output{NewOutput(addr, coins)},
 	}
 
 	// TODO some failures for bad result
@@ -307,42 +276,34 @@ func TestIssueMsgValidation(t *testing.T) {
 
 func TestIssueMsgString(t *testing.T) {
 	// Construct a IssueMsg
+	addr := sdk.Address([]byte("loan-from-bank"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = IssueMsg{
-		Banker: sdk.Address([]byte("input")),
-		Outputs: []Output{
-			{
-				Address: sdk.Address([]byte("loan-from-bank")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Banker:  sdk.Address([]byte("input")),
+		Outputs: []Output{NewOutput(addr, coins)},
 	}
 	res := msg.String()
+	// TODO: FIX THIS OUTPUT!
 	assert.Equal(t, res, "IssueMsg{696E707574#[Output{36433646363136453244363637323646364432443632363136453642,10atom}]}")
 }
 
 func TestIssueMsgGet(t *testing.T) {
+	addr := sdk.Address([]byte("loan-from-bank"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = IssueMsg{
-		Banker: sdk.Address([]byte("input")),
-		Outputs: []Output{
-			{
-				Address: sdk.Address([]byte("loan-from-bank")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Banker:  sdk.Address([]byte("input")),
+		Outputs: []Output{NewOutput(addr, coins)},
 	}
 	res := msg.Get(nil)
 	assert.Nil(t, res)
 }
 
 func TestIssueMsgGetSignBytes(t *testing.T) {
+	addr := sdk.Address([]byte("loan-from-bank"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = IssueMsg{
-		Banker: sdk.Address([]byte("input")),
-		Outputs: []Output{
-			{
-				Address: sdk.Address([]byte("loan-from-bank")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Banker:  sdk.Address([]byte("input")),
+		Outputs: []Output{NewOutput(addr, coins)},
 	}
 	res := msg.GetSignBytes()
 	// TODO bad results

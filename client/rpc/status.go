@@ -52,6 +52,7 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 
 // REST
 
+// TODO match desired spec output
 func NodeStatusRequestHandler(w http.ResponseWriter, r *http.Request) {
 	status, err := getNodeStatus()
 	if err != nil {

@@ -9,6 +9,7 @@ import (
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
+	version "github.com/cosmos/cosmos-sdk/version"
 )
 
 const (
@@ -44,6 +45,7 @@ func startRESTServer(cmd *cobra.Command, args []string) error {
 
 func initRouter() http.Handler {
 	r := mux.NewRouter()
+	r.HandleFunc("/version", version.VersionRequestHandler)
 	r.HandleFunc("/node_info", rpc.NodeStatusRequestHandler)
 	r.HandleFunc("/blocks/latest", rpc.LatestBlockRequestHandler)
 	r.HandleFunc("/blocks/{height}", rpc.BlockRequestHandler)

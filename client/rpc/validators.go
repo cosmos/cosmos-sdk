@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
+	wire "github.com/tendermint/go-wire"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	tmwire "github.com/tendermint/tendermint/wire"
 )
 
 func validatorCommand() *cobra.Command {
@@ -47,7 +47,7 @@ func getValidators(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output, err := tmwire.MarshalJSON(res)
+	output, err := wire.MarshalJSON(res)
 	// output, err := json.MarshalIndent(res, "  ", "")
 	if err != nil {
 		return err

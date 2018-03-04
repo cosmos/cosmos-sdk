@@ -58,27 +58,27 @@
   version = "1.2.1"
 
 [[constraint]]
-  branch = "develop"
+  branch = "master"
   name = "github.com/tendermint/abci"
 
 [[constraint]]
-  branch = "develop"
+  branch = "master"
   name = "github.com/tendermint/go-crypto"
 
 [[constraint]]
-  branch = "develop"
+  branch = "master"
   name = "github.com/tendermint/go-wire"
 
 [[constraint]]
-  branch = "develop"
+  branch = "master"
   name = "github.com/tendermint/iavl"
 
-[[constraint]]
-  branch = "breaking/wire-sdk2"
+[[override]]
+  branch = "master"
   name = "github.com/tendermint/tendermint"
 
 [[constraint]]
-  branch = "develop"
+  branch = "master"
   name = "github.com/tendermint/tmlibs"
 
 [prune]

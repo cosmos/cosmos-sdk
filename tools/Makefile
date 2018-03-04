@@ -14,7 +14,7 @@ else
 	@echo "Found dep in path."
 endif
 
-install_tools:
+get_tools:
 ifdef DEP_CHECK
 	@echo "Dep is already installed.  Run 'make update_tools' to update."
 else

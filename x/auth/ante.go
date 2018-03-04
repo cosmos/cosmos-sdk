@@ -31,13 +31,16 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 		// Collect accounts to set in the context
 		var signerAccs = make([]sdk.Account, len(signerAddrs))
 
-		signBytes := msg.GetSignBytes()
-
 		// First sig is the fee payer.
-		// Check sig and nonce, deduct fee.
+		// signBytes uses the sequence of the fee payer
+		// (ie. the first account)
+		payerAddr, payerSig := signerAddrs[0], sigs[0]
+		signBytes := sdk.StdSignBytes(ctx.ChainID(), payerSig.Sequence, msg)
+
+		// Check fee payer sig and nonce, and deduct fee.
 		// This is done first because it only
 		// requires fetching 1 account.
-		payerAcc, res := processSig(ctx, accountMapper, signerAddrs[0], sigs[0], signBytes)
+		payerAcc, res := processSig(ctx, accountMapper, payerAddr, payerSig, signBytes)
 		if !res.IsOK() {
 			return ctx, res, true
 		}
@@ -47,7 +50,8 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 
 		// Check sig and nonce for the rest.
 		for i := 1; i < len(sigs); i++ {
-			signerAcc, res := processSig(ctx, accountMapper, signerAddrs[i], sigs[i], signBytes)
+			signerAddr, sig := signerAddrs[i], sigs[i]
+			signerAcc, res := processSig(ctx, accountMapper, signerAddr, sig, signBytes)
 			if !res.IsOK() {
 				return ctx, res, true
 			}
@@ -90,7 +94,7 @@ func processSig(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, sig sdk
 
 	// Check sig.
 	if !sig.PubKey.VerifyBytes(signBytes, sig.Signature) {
-		return nil, sdk.ErrUnauthorized("").Result()
+		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
 
 	// Save the account.

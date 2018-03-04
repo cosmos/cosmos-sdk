@@ -1,5 +1,7 @@
 package types
 
+import "encoding/json"
+
 // Transactions messages must fulfill the Msg
 type Msg interface {
 
@@ -75,6 +77,18 @@ type StdSignDoc struct {
 	Sequence int64  `json:"sequence"`
 	MsgBytes []byte `json:"msg_bytes"`
 	AltBytes []byte `json:"alt_bytes"` // TODO: do we really want this ?
+}
+
+func StdSignBytes(chainID string, sequence int64, msg Msg) []byte {
+	bz, err := json.Marshal(StdSignDoc{
+		ChainID:  chainID,
+		Sequence: sequence,
+		MsgBytes: msg.GetSignBytes(),
+	})
+	if err != nil {
+		panic(err)
+	}
+	return bz
 }
 
 //-------------------------------------

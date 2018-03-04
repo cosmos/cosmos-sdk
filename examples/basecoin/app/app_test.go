@@ -169,6 +169,9 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	assert.Equal(t, acc1, res1)
 
 	// Sign the tx
+	chainID := "" // TODO: InitChain should get the ChainID
+	sequence := int64(0)
+	sig := priv1.Sign(sdk.StdSignBytes(chainID, sequence, sendMsg))
 	tx := sdk.NewStdTx(sendMsg, []sdk.StdSignature{{
 		PubKey:    priv1.PubKey(),
 		Signature: priv1.Sign(sendMsg.GetSignBytes()),
@@ -189,6 +192,22 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	res3 := bapp.accountMapper.GetAccount(ctxDeliver, addr2)
 	assert.Equal(t, fmt.Sprintf("%v", res2.GetCoins()), "67foocoin")
 	assert.Equal(t, fmt.Sprintf("%v", res3.GetCoins()), "10foocoin")
+
+	// Delivering again should cause replay error
+	res = bapp.Deliver(tx)
+	assert.Equal(t, sdk.CodeInvalidSequence, res.Code, res.Log)
+
+	// bumping the txnonce number without resigning should be an auth error
+	sequence += 1
+	tx.Signatures[0].Sequence = sequence
+	res = bapp.Deliver(tx)
+	assert.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
+
+	// resigning the tx with the bumped sequence should work
+	sig = priv1.Sign(sdk.StdSignBytes(chainID, sequence, tx.Msg))
+	tx.Signatures[0].Signature = sig
+	res = bapp.Deliver(tx)
+	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
 }
 
 //func TestWhatCoolMsg(t *testing.T) {

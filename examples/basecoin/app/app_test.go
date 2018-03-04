@@ -28,21 +28,12 @@ var (
 	priv1 = crypto.GenPrivKeyEd25519()
 	addr1 = priv1.PubKey().Address()
 	addr2 = crypto.GenPrivKeyEd25519().PubKey().Address()
+	coins = sdk.Coins{{"foocoin", 10}}
 
+	// Construct a SendMsg
 	sendMsg = bank.SendMsg{
-		Inputs: []bank.Input{
-			{
-				Address:  addr1,
-				Coins:    sdk.Coins{{"foocoin", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []bank.Output{
-			{
-				Address: addr2,
-				Coins:   sdk.Coins{{"foocoin", 10}},
-			},
-		},
+		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
+		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
 	}
 
 	whatCoolMsg1 = cool.WhatCoolMsg{

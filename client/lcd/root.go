@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	client "github.com/cosmos/cosmos-sdk/client"
+	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	version "github.com/cosmos/cosmos-sdk/version"
 )
@@ -51,5 +52,11 @@ func initRouter() http.Handler {
 	r.HandleFunc("/blocks/{height}", rpc.BlockRequestHandler)
 	r.HandleFunc("/validatorsets/latest", rpc.LatestValidatorsetRequestHandler)
 	r.HandleFunc("/validatorsets/{height}", rpc.ValidatorsetRequestHandler)
+	r.HandleFunc("/keys", keys.QueryKeysRequestHandler).Methods("GET")
+	r.HandleFunc("/keys", keys.AddNewKeyRequestHandler).Methods("POST")
+	r.HandleFunc("/keys/seed", keys.SeedRequestHandler).Methods("GET")
+	r.HandleFunc("/keys/{name}", keys.GetKeyRequestHandler).Methods("GET")
+	r.HandleFunc("/keys/{name}", keys.UpdateKeyRequestHandler).Methods("PUT")
+	r.HandleFunc("/keys/{name}", keys.DeleteKeyRequestHandler).Methods("DELETE")
 	return r
 }

@@ -1,10 +1,15 @@
 package keys
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	keys "github.com/tendermint/go-crypto/keys"
 
 	"github.com/spf13/cobra"
 )
@@ -42,4 +47,37 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println("Password deleted forever (uh oh!)")
 	return nil
+}
+
+// REST
+
+type DeleteKeyBody struct {
+	Password string `json:"password"`
+}
+
+func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["name"]
+	var kb keys.Keybase
+	var m NewKeyBody
+
+	b, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(b, &m)
+
+	kb, err := GetKeyBase()
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	// TODO handle error if key is not available or pass is wrong
+	err = kb.Delete(name, m.Password)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	w.WriteHeader(200)
 }

@@ -1,10 +1,15 @@
 package keys
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	keys "github.com/tendermint/go-crypto/keys"
 
 	"github.com/spf13/cobra"
 )
@@ -47,4 +52,38 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println("Password successfully updated!")
 	return nil
+}
+
+// REST
+
+type UpdateKeyBody struct {
+	NewPassword string `json:"new_password"`
+	OldPassword string `json:"old_password"`
+}
+
+func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["name"]
+	var kb keys.Keybase
+	var m UpdateKeyBody
+
+	b, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(b, &m)
+
+	kb, err := GetKeyBase()
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	// TODO check if account exists and if password is correct
+	err = kb.Update(name, m.OldPassword, m.NewPassword)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	w.WriteHeader(200)
 }

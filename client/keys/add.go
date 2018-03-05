@@ -1,9 +1,13 @@
 package keys
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -119,4 +123,58 @@ func printCreate(info keys.Info, seed string) {
 	default:
 		panic(fmt.Sprintf("I can't speak: %s", output))
 	}
+}
+
+// REST
+
+type NewKeyBody struct {
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	Type     string `json:"type"`
+}
+
+func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
+	var kb keys.Keybase
+	var m NewKeyBody
+
+	b, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(b, &m)
+
+	// algo type defaults to ed25519
+	if m.Type == "" {
+		m.Type = "ed25519"
+	}
+	algo := keys.CryptoAlgo(m.Type)
+
+	_, _, err := kb.Create(m.Name, m.Password, algo)
+	// TODO handle different errors
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.WriteHeader(200)
+}
+
+// function to just a new seed to display in the UI before actually persisting it in the keybase
+func getSeed(algo keys.CryptoAlgo) string {
+	kb := client.MockKeyBase()
+	pass := "throwing-this-key-away"
+	name := "inmemorykey"
+
+	_, seed, _ := kb.Create(name, pass, algo)
+	return seed
+}
+
+func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	algoType := vars["type"]
+	// algo type defaults to ed25519
+	if algoType == "" {
+		algoType = "ed25519"
+	}
+	algo := keys.CryptoAlgo(algoType)
+
+	seed := getSeed(algo)
+	w.Write([]byte(seed))
 }

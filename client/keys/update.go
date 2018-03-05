@@ -3,7 +3,6 @@ package keys
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -67,10 +66,15 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	var kb keys.Keybase
 	var m UpdateKeyBody
 
-	b, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(b, &m)
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&m)
+	if err != nil {
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return
+	}
 
-	kb, err := GetKeyBase()
+	kb, err = GetKeyBase()
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))

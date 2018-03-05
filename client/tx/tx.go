@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -150,10 +149,15 @@ func SignTxRequstHandler(w http.ResponseWriter, r *http.Request) {
 	var kb keys.Keybase
 	var m SignTxBody
 
-	b, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(b, &m)
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&m)
+	if err != nil {
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return
+	}
 
-	kb, err := keybase.GetKeyBase()
+	kb, err = keybase.GetKeyBase()
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
@@ -178,8 +182,13 @@ type BroadcastTxBody struct {
 func BroadcastTxRequestHandler(w http.ResponseWriter, r *http.Request) {
 	var m BroadcastTxBody
 
-	b, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(b, &m)
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&m)
+	if err != nil {
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return
+	}
 
 	res, err := client.BroadcastTx([]byte(m.TxBytes))
 	if err != nil {

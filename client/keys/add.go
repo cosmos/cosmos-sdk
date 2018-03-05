@@ -3,7 +3,6 @@ package keys
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -130,15 +129,34 @@ func printCreate(info keys.Info, seed string) {
 type NewKeyBody struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
-	Type     string `json:"type"`
+	// TODO make seed mandatory
+	// Seed     string `json="seed"`
+	Type string `json:"type"`
 }
 
 func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	var kb keys.Keybase
 	var m NewKeyBody
 
-	b, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(b, &m)
+	kb, err := GetKeyBase()
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(&m)
+	if err != nil {
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	if m.Name == "" {
+		w.WriteHeader(400)
+		w.Write([]byte("You have to specify a name for the locally stored account."))
+		return
+	}
 
 	// algo type defaults to ed25519
 	if m.Type == "" {
@@ -146,7 +164,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	algo := keys.CryptoAlgo(m.Type)
 
-	_, _, err := kb.Create(m.Name, m.Password, algo)
+	_, _, err = kb.Create(m.Name, m.Password, algo)
 	// TODO handle different errors
 	if err != nil {
 		w.WriteHeader(500)

@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 func statusCommand() *cobra.Command {
@@ -20,23 +21,13 @@ func statusCommand() *cobra.Command {
 	return cmd
 }
 
-func getNodeStatus() ([]byte, error) {
+func getNodeStatus() (*ctypes.ResultStatus, error) {
 	// get the node
 	node, err := client.GetNode()
 	if err != nil {
-		return nil, err
+		return &ctypes.ResultStatus{}, err
 	}
-	res, err := node.Status()
-	if err != nil {
-		return nil, err
-	}
-
-	output, err := json.MarshalIndent(res, "", "  ")
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
+	return node.Status()
 }
 
 // CMD
@@ -46,7 +37,13 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(status))
+
+	output, err := json.MarshalIndent(status, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(output))
 	return nil
 }
 
@@ -58,6 +55,15 @@ func NodeStatusRequestHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
+		return
 	}
-	w.Write(status)
+
+	nodeInfo := status.NodeInfo
+	output, err := json.MarshalIndent(nodeInfo, "", "  ")
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write(output)
 }

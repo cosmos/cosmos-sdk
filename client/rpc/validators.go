@@ -1,13 +1,15 @@
 package rpc
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	tmwire "github.com/tendermint/tendermint/wire"
 )
 
 func validatorCommand() *cobra.Command {
@@ -26,21 +28,20 @@ func getValidators(height *int64) ([]byte, error) {
 	// get the node
 	node, err := client.GetNode()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	res, err := node.Validators(height)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	output, err := json.MarshalIndent(res, "  ", "")
+	output, err := json.MarshalIndent(res, "", "  ")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	return output, nil
 }
-
 
 // CMD
 
@@ -59,7 +60,7 @@ func printValidators(cmd *cobra.Command, args []string) error {
 	}
 
 	output, err := getValidators(height)
-	if (err != nil) {
+	if err != nil {
 		return err
 	}
 
@@ -87,6 +88,7 @@ func ValidatorsetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
+		return
 	}
 	w.Write(output)
 }

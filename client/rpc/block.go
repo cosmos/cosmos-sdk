@@ -45,8 +45,9 @@ func getBlock(height *int64) ([]byte, error) {
 		return nil, err
 	}
 
+	// TODO move maarshalling into cmd/rest functions
 	// output, err := tmwire.MarshalJSON(res)
-	output, err := json.MarshalIndent(res, "  ", "")
+	output, err := json.MarshalIndent(res, "", "  ")
 	if err != nil {
 		return nil, err
 	}

@@ -22,7 +22,7 @@ func GetAccountCmdDefault(storeName string, cdc *wire.Codec) *cobra.Command {
 func getParseAccount(cdc *wire.Codec) sdk.ParseAccount {
 	return func(accBytes []byte) (sdk.Account, error) {
 		acct := new(auth.BaseAccount)
-		err := cdc.UnmarshalBinary(accBytes, acct)
+		err := cdc.UnmarshalBinary(accBytes, &acct)
 		if err != nil {
 			panic(err)
 		}

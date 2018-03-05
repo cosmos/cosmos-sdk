@@ -6,10 +6,12 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	wire "github.com/tendermint/go-wire"
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
+	tx "github.com/cosmos/cosmos-sdk/client/tx"
 	version "github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -21,11 +23,11 @@ const (
 // ServeCommand will generate a long-running rest server
 // (aka Light Client Daemon) that exposes functionality similar
 // to the cli, but over rest
-func ServeCommand() *cobra.Command {
+func ServeCommand(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rest-server",
 		Short: "Start LCD (light-client daemon), a local REST server",
-		RunE:  startRESTServer,
+		RunE:  startRESTServer(cdc),
 	}
 	// TODO: handle unix sockets also?
 	cmd.Flags().StringP(flagBind, "b", "localhost:1317", "Interface and port that server binds to")
@@ -35,16 +37,15 @@ func ServeCommand() *cobra.Command {
 	return cmd
 }
 
-func startRESTServer(cmd *cobra.Command, args []string) error {
-	r := initRouter()
-
-	bind := viper.GetString(flagBind)
-	http.ListenAndServe(bind, r)
-
-	return nil
+func startRESTServer(cdc *wire.Codec) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		bind := viper.GetString(flagBind)
+		r := initRouter(cdc)
+		return http.ListenAndServe(bind, r)
+	}
 }
 
-func initRouter() http.Handler {
+func initRouter(cdc *wire.Codec) http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/version", version.VersionRequestHandler)
 	r.HandleFunc("/node_info", rpc.NodeStatusRequestHandler)
@@ -58,5 +59,9 @@ func initRouter() http.Handler {
 	r.HandleFunc("/keys/{name}", keys.GetKeyRequestHandler).Methods("GET")
 	r.HandleFunc("/keys/{name}", keys.UpdateKeyRequestHandler).Methods("PUT")
 	r.HandleFunc("/keys/{name}", keys.DeleteKeyRequestHandler).Methods("DELETE")
+	r.HandleFunc("/txs", tx.SearchTxRequestHandler(cdc)).Methods("GET")
+	r.HandleFunc("/txs/{hash}", tx.QueryTxRequestHandler(cdc)).Methods("GET")
+	r.HandleFunc("/txs/sign", tx.SignTxRequstHandler).Methods("POST")
+	r.HandleFunc("/txs/broadcast", tx.BroadcastTxRequestHandler).Methods("POST")
 	return r
 }

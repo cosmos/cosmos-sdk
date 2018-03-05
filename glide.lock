@@ -1,5 +1,5 @@
-hash: bff8e6213ad8494602f2095adde9bdbab0fd891345675920175cf05c65702e07
-updated: 2018-03-02T12:01:38.719098766-05:00
+hash: 9f09fece8535abc405f5a624312a0cc18316fb9cd35986de63bff28f29343ce8
+updated: 2018-03-05T13:56:23.9966479+01:00
 imports:
 - name: github.com/bgentry/speakeasy
   version: 4aabc24848ce5fd31929f7d1e4ea74d3709c14cd
@@ -40,6 +40,10 @@ imports:
   - ptypes/timestamp
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/mux
+  version: 53c1911da2b537f792e7cafcb446b05ffe33b996
 - name: github.com/gorilla/websocket
   version: 0647012449a1878977514a346b26637dd022446c
 - name: github.com/hashicorp/hcl
@@ -105,7 +109,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tendermint/abci
-  version: 9e0e00bef42aebf6b402f66bf0f3dc607de8a6f3
+  version: d5361de3001184de7cd3a0ccbae12eccde3d724e
   subpackages:
   - client
   - example/code
@@ -131,7 +135,7 @@ imports:
 - name: github.com/tendermint/iavl
   version: 669ff61054a14c4542dbd657ab438800d5630e45
 - name: github.com/tendermint/tendermint
-  version: 3cedd8cf070ef120964ac99367cd69414665604b
+  version: bdd50c5f3750238fbd60948cd1a747f9016e50d9
   subpackages:
   - blockchain
   - cmd/tendermint/commands

@@ -41,6 +41,11 @@ func GetKeyBase() (keys.Keybase, error) {
 	return keybase, nil
 }
 
+// used to set the keybase manually in test
+func SetKeyBase(kb keys.Keybase) {
+	keybase = kb
+}
+
 func printInfo(info keys.Info) {
 	switch viper.Get(cli.OutputFlag) {
 	case "text":

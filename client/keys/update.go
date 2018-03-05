@@ -84,7 +84,7 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO check if account exists and if password is correct
 	err = kb.Update(name, m.OldPassword, m.NewPassword)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(401)
 		w.Write([]byte(err.Error()))
 		return
 	}

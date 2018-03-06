@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -20,54 +21,88 @@ import (
 	"github.com/tendermint/tmlibs/log"
 )
 
+// helper variables and functions
+
+var (
+	// Construct genesis key/accounts
+	priv1 = crypto.GenPrivKeyEd25519()
+	addr1 = priv1.PubKey().Address()
+	addr2 = crypto.GenPrivKeyEd25519().PubKey().Address()
+
+	sendMsg = bank.SendMsg{
+		Inputs: []bank.Input{
+			{
+				Address:  addr1,
+				Coins:    sdk.Coins{{"foocoin", 10}},
+				Sequence: 1,
+			},
+		},
+		Outputs: []bank.Output{
+			{
+				Address: addr2,
+				Coins:   sdk.Coins{{"foocoin", 10}},
+			},
+		},
+	}
+
+	whatCoolMsg1 = cool.WhatCoolMsg{
+		Sender:         addr1,
+		CoolerThanCool: "icecold",
+	}
+
+	whatCoolMsg2 = cool.WhatCoolMsg{
+		Sender:         addr1,
+		CoolerThanCool: "icecold",
+	}
+
+	setWhatCoolMsg = cool.SetWhatCoolMsg{
+		Sender:   addr1,
+		WhatCool: "goodbye",
+	}
+)
+
 func newBasecoinApp() *BasecoinApp {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 	db := dbm.NewMemDB()
 	return NewBasecoinApp(logger, db)
 }
 
-func TestSendMsg(t *testing.T) {
+//_______________________________________________________________________
+
+func TestMsgs(t *testing.T) {
 	bapp := newBasecoinApp()
 
-	// Construct a SendMsg
-	var msg = bank.SendMsg{
-		Inputs: []bank.Input{
-			{
-				Address:  sdk.Address([]byte("input")),
-				Coins:    sdk.Coins{{"atom", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []bank.Output{
-			{
-				Address: sdk.Address([]byte("output")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+	msgs := []struct {
+		msg sdk.Msg
+	}{
+		{sendMsg},
+		{whatCoolMsg1},
+		{setWhatCoolMsg},
 	}
 
-	priv := crypto.GenPrivKeyEd25519()
-	sig := priv.Sign(msg.GetSignBytes())
-	tx := sdk.NewStdTx(msg, []sdk.StdSignature{{
-		PubKey:    priv.PubKey(),
-		Signature: sig,
-	}})
+	for i, m := range msgs {
+		sig := priv1.Sign(m.msg.GetSignBytes())
+		tx := sdk.NewStdTx(m.msg, []sdk.StdSignature{{
+			PubKey:    priv1.PubKey(),
+			Signature: sig,
+		}})
 
-	// just marshal/unmarshal!
-	cdc := MakeCodec()
-	txBytes, err := cdc.MarshalBinary(tx)
-	require.NoError(t, err)
+		// just marshal/unmarshal!
+		cdc := MakeCodec()
+		txBytes, err := cdc.MarshalBinary(tx)
+		require.NoError(t, err, "i: %v", i)
 
-	// Run a Check
-	cres := bapp.CheckTx(txBytes)
-	assert.Equal(t, sdk.CodeUnrecognizedAddress,
-		sdk.CodeType(cres.Code), cres.Log)
+		// Run a Check
+		cres := bapp.CheckTx(txBytes)
+		assert.Equal(t, sdk.CodeUnrecognizedAddress,
+			sdk.CodeType(cres.Code), "i: %v, log: %v", i, cres.Log)
 
-	// Simulate a Block
-	bapp.BeginBlock(abci.RequestBeginBlock{})
-	dres := bapp.DeliverTx(txBytes)
-	assert.Equal(t, sdk.CodeUnrecognizedAddress,
-		sdk.CodeType(dres.Code), dres.Log)
+		// Simulate a Block
+		bapp.BeginBlock(abci.RequestBeginBlock{})
+		dres := bapp.DeliverTx(txBytes)
+		assert.Equal(t, sdk.CodeUnrecognizedAddress,
+			sdk.CodeType(dres.Code), "i: %v, log: %v", i, dres.Log)
+	}
 }
 
 func TestGenesis(t *testing.T) {
@@ -114,15 +149,6 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	bapp := newBasecoinApp()
 
 	// Construct some genesis bytes to reflect basecoin/types/AppAccount
-	// First key goes in genesis, used for sending
-	priv1 := crypto.GenPrivKeyEd25519()
-	pk1 := priv1.PubKey()
-	addr1 := pk1.Address()
-
-	// Second key receies
-	pk2 := crypto.GenPrivKeyEd25519().PubKey()
-	addr2 := pk2.Address()
-
 	// Give 77 foocoin to the first key
 	coins, err := sdk.ParseCoins("77foocoin")
 	require.Nil(t, err)
@@ -139,6 +165,7 @@ func TestSendMsgWithAccounts(t *testing.T) {
 		},
 	}
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
+	require.Nil(t, err)
 
 	// Initialize the chain
 	vals := []abci.Validator{}
@@ -147,32 +174,13 @@ func TestSendMsgWithAccounts(t *testing.T) {
 
 	// A checkTx context (true)
 	ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
-
 	res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
 	assert.Equal(t, acc1, res1)
 
-	// Construct a SendMsg
-	var msg = bank.SendMsg{
-		Inputs: []bank.Input{
-			{
-				Address:  sdk.Address(addr1),
-				Coins:    sdk.Coins{{"foocoin", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []bank.Output{
-			{
-				Address: sdk.Address(addr2),
-				Coins:   sdk.Coins{{"foocoin", 10}},
-			},
-		},
-	}
-
 	// Sign the tx
-	sig := priv1.Sign(msg.GetSignBytes())
-	tx := sdk.NewStdTx(msg, []sdk.StdSignature{{
+	tx := sdk.NewStdTx(sendMsg, []sdk.StdSignature{{
 		PubKey:    priv1.PubKey(),
-		Signature: sig,
+		Signature: priv1.Sign(sendMsg.GetSignBytes()),
 	}})
 
 	// Run a Check
@@ -184,13 +192,64 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	res = bapp.Deliver(tx)
 	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
 
-	// A deliverTx context
-	ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
-
 	// Check balances
+	ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
 	res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr1)
 	res3 := bapp.accountMapper.GetAccount(ctxDeliver, addr2)
-
 	assert.Equal(t, fmt.Sprintf("%v", res2.GetCoins()), "67foocoin")
 	assert.Equal(t, fmt.Sprintf("%v", res3.GetCoins()), "10foocoin")
 }
+
+//func TestWhatCoolMsg(t *testing.T) {
+//bapp := newBasecoinApp()
+
+//// Construct genesis state
+//// Construct some genesis bytes to reflect basecoin/types/AppAccount
+//// Give 77 foocoin to the first key
+//coins, err := sdk.ParseCoins("1icecold")
+//require.Nil(t, err)
+//baseAcc := auth.BaseAccount{
+//Address: addr1,
+//Coins:   coins,
+//}
+//acc1 := &types.AppAccount{baseAcc, "foobart"}
+
+//// Construct genesis state
+//genesisState := types.GenesisState{
+//Accounts: []*types.GenesisAccount{
+//types.NewGenesisAccount(acc1),
+//},
+//}
+//stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
+//require.Nil(t, err)
+
+//// Initialize the chain (nil)
+//vals := []abci.Validator{}
+//bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
+//bapp.Commit()
+
+//// A checkTx context (true)
+//ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
+//res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
+//assert.Equal(t, acc1, res1)
+
+//// Sign the tx
+//tx := sdk.NewStdTx(whatCoolMsg1, []sdk.StdSignature{{
+//PubKey:    priv1.PubKey(),
+//Signature: priv1.Sign(whatCoolMsg1.GetSignBytes()),
+//}})
+
+//// Run a Check
+//res := bapp.Check(tx)
+//assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+
+//// Simulate a Block
+//bapp.BeginBlock(abci.RequestBeginBlock{})
+//res = bapp.Deliver(tx)
+//assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+
+//// Check balances
+//ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
+//res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr1)
+//assert.Equal(t, "70icecold", fmt.Sprintf("%v", res2.GetCoins()))
+//}

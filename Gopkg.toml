@@ -41,9 +41,9 @@
   name = "github.com/pkg/errors"
   version = "0.8.0"
 
-[[constraint]]
-  branch = "master"
-  name = "github.com/rigelrozanski/common"
+# [[constraint]]
+#   branch = "master"
+#   name = "github.com/rigelrozanski/common"
 
 [[constraint]]
   name = "github.com/spf13/cobra"
@@ -65,7 +65,7 @@
   branch = "master"
   name = "github.com/tendermint/go-crypto"
 
-[[constraint]]
+[[override]]
   branch = "master"
   name = "github.com/tendermint/go-wire"
 
@@ -73,11 +73,11 @@
   branch = "master"
   name = "github.com/tendermint/iavl"
 
-[[override]]
+[[constraint]]
   branch = "develop"
   name = "github.com/tendermint/tendermint"
 
-[[constraint]]
+[[override]]
   branch = "develop"
   name = "github.com/tendermint/tmlibs"
 

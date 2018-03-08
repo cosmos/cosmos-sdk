@@ -8,15 +8,19 @@ import (
 	"os"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
+	abci "github.com/tendermint/abci/types"
 	cryptoKeys "github.com/tendermint/go-crypto/keys"
+	"github.com/tendermint/tendermint/p2p"
 	dbm "github.com/tendermint/tmlibs/db"
+	"github.com/tendermint/tmlibs/log"
 )
 
 func TestKeys(t *testing.T) {
-	kb, err := initKeybase()
+	kb, db, err := initKeybase()
 	if err != nil {
 		t.Errorf("Couldn't init Keybase. Error $s", err.Error())
 	}
@@ -94,17 +98,59 @@ func TestKeys(t *testing.T) {
 
 	r.ServeHTTP(res, req)
 	checkResponseCode(t, http.StatusOK, res.Code)
+
+	db.Close()
 }
 
-func initKeybase() (cryptoKeys.Keybase, error) {
+func TestNodeInfo(t *testing.T) {
+	prepareApp(t)
+	_, db, err := initKeybase()
+	if err != nil {
+		t.Errorf("Couldn't init Keybase. Error $s", err.Error())
+	}
+	cdc := app.MakeCodec()
+	r := initRouter(cdc)
+
+	req, _ := http.NewRequest("GET", "/node_info", nil)
+	res := httptest.NewRecorder()
+
+	r.ServeHTTP(res, req)
+	checkResponseCode(t, http.StatusOK, res.Code)
+
+	var m p2p.NodeInfo
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&m)
+	if err != nil {
+		t.Errorf("Couldn't parse node info, Got %s", res.Body.String())
+	}
+
+	db.Close()
+}
+
+func defaultLogger() log.Logger {
+	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
+}
+
+func prepareApp(t *testing.T) {
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := baseapp.NewBaseApp(name, logger, db)
+
+	header := abci.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.Commit()
+}
+
+func initKeybase() (cryptoKeys.Keybase, *dbm.GoLevelDB, error) {
 	os.RemoveAll("./testKeybase")
 	db, err := dbm.NewGoLevelDB("keys", "./testKeybase")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	kb := client.GetKeyBase(db)
 	keys.SetKeyBase(kb)
-	return kb, nil
+	return kb, db, nil
 }
 
 func checkResponseCode(t *testing.T, expected, actual int) {

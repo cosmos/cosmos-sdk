@@ -45,12 +45,10 @@ capabilities that determine which parts of the store they can access. The SDK
 provides common data structures for Accounts, multi-asset Coins, checking
 signatures, preventing replay, and so on.
 
-For more details on the design goals, see the [SDK Guide](docs/guide.md)
-
 ## Prerequisites
 
 * [golang](https://golang.org/doc/install)
 
 ## Getting Started
 
-- See the [SDK Guide](docs/guide.md)
+-[Read The Docs](http://cosmos-sdk.readthedocs.io/en/develop/)

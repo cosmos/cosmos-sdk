@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/spf13/cobra"
 	wire "github.com/tendermint/go-wire"
@@ -51,8 +52,7 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 
 // REST
 
-// TODO match desired spec output
-func NodeStatusRequestHandler(w http.ResponseWriter, r *http.Request) {
+func NodeInfoRequestHandler(w http.ResponseWriter, r *http.Request) {
 	status, err := getNodeStatus()
 	if err != nil {
 		w.WriteHeader(500)
@@ -68,4 +68,21 @@ func NodeStatusRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(output)
+}
+
+func NodeSyncingRequestHandler(w http.ResponseWriter, r *http.Request) {
+	status, err := getNodeStatus()
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	syncing := status.Syncing
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write([]byte(strconv.FormatBool(syncing)))
 }

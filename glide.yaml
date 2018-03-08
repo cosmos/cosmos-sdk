@@ -23,7 +23,7 @@ import:
 - package: github.com/tendermint/iavl
   version: v0.6.1
 - package: github.com/tendermint/tmlibs
-  version: develop
+  version: 6ef3e36e82ab95739c5beacddca8e931f62d2cef #develop
   subpackages:
   - common
   - db

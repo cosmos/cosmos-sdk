@@ -22,8 +22,8 @@ import (
 )
 
 func TestKeys(t *testing.T) {
-	kb, db, err := initKeybase(t)
-	require.Nil(t, err, "Couldn't init Keybase")
+	kb, db := initKeybase(t)
+	defer db.Close()
 
 	cdc := app.MakeCodec()
 	r := initRouter(cdc)
@@ -93,14 +93,11 @@ func TestKeys(t *testing.T) {
 
 	r.ServeHTTP(res, req)
 	assert.Equal(t, http.StatusOK, res.Code, "Expected response code")
-
-	db.Close()
 }
 
 func TestNodeInfo(t *testing.T) {
-	prepareApp(t)
-	_, db, err := initKeybase(t)
-	require.Nil(t, err, "Couldn't init Keybase")
+	db := prepareApp(t)
+	defer db.Close()
 	cdc := app.MakeCodec()
 	r := initRouter(cdc)
 
@@ -115,8 +112,6 @@ func TestNodeInfo(t *testing.T) {
 	decoder := json.NewDecoder(res.Body)
 	err = decoder.Decode(&m)
 	require.Nil(t, err, "Couldn't parse node info")
-
-	db.Close()
 }
 
 //__________________________________________________________
@@ -126,22 +121,23 @@ func defaultLogger() log.Logger {
 	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 }
 
-func prepareApp(t *testing.T) {
-	logger := defaultLogger()
+func prepareApp(t *testing.T) *dbm.MemDB {
+
 	db := dbm.NewMemDB()
-	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db)
+	app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db)
+	//XXX Prepare Viper CRAP
 
 	header := abci.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	app.Commit()
+	return db
 }
 
-func initKeybase(t *testing.T) (cryptoKeys.Keybase, *dbm.GoLevelDB, error) {
+func initKeybase(t *testing.T) (cryptoKeys.Keybase, *dbm.GoLevelDB) {
 	os.RemoveAll("./testKeybase")
 	db, err := dbm.NewGoLevelDB("keys", "./testKeybase")
-	require.Nil(t, err)
+	require.Nil(t, err, "Couldn't init Keybase")
 	kb := client.GetKeyBase(db)
 	keys.SetKeyBase(kb)
-	return kb, db, nil
+	return kb, db
 }

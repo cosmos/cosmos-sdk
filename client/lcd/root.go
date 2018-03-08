@@ -48,7 +48,8 @@ func startRESTServer(cdc *wire.Codec) func(cmd *cobra.Command, args []string) er
 func initRouter(cdc *wire.Codec) http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/version", version.VersionRequestHandler).Methods("GET")
-	r.HandleFunc("/node_info", rpc.NodeStatusRequestHandler).Methods("GET")
+	r.HandleFunc("/node_info", rpc.NodeInfoRequestHandler).Methods("GET")
+	r.HandleFunc("/syncing", rpc.NodeSyncingRequestHandler).Methods("GET")
 	r.HandleFunc("/keys", keys.QueryKeysRequestHandler).Methods("GET")
 	r.HandleFunc("/keys", keys.AddNewKeyRequestHandler).Methods("POST")
 	r.HandleFunc("/keys/seed", keys.SeedRequestHandler).Methods("GET")

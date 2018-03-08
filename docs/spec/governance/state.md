@@ -13,7 +13,6 @@ has to be created and the previous one rendered inactive.
 type Procedure struct {
   VotingPeriod      int64               //  Length of the voting period. Initial value: 2 weeks
   MinDeposit        int64               //  Minimum deposit for a proposal to enter voting period. 
-  OptionSet         []string            //  Options available to voters. {Yes, No, NoWithVeto, Abstain}
   ProposalTypes     []string            //  Types available to submitters. {PlainTextProposal, SoftwareUpgradeProposal}
   Threshold         rational.Rational   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
   Veto              rational.Rational   //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3

@@ -193,7 +193,7 @@ vote on the proposal.
 ```go
   type TxGovVote struct {
     ProposalID           int64           //  proposalID of the proposal
-    Option               string          //  option from OptionSet chosen by the voter
+    Option               string          //  option chosen by the voter
     ValidatorAddress      crypto.address //  Address of the validator voter wants to tie its vote to
   }
 ```
@@ -238,11 +238,9 @@ handled:
       else
         validator = load(CurrentValidators, txGovVote.ValidatorAddress)
       
-        if  !proposal.InitProcedure.OptionSet.includes(txGovVote.Option) OR 
-            (validator == nil) then 
+        if (validator == nil) then 
          
           // Throws if
-          // Option is not in Option Set of procedure that was active when vote opened OR if
           // ValidatorAddress is not the address of a current validator
           
           throw

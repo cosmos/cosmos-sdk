@@ -108,34 +108,3 @@ func initServer() error {
 	fmt.Sprintf("OUT: %s", string(outByte))
 	return nil
 }
-
-/*func RunCommand(cmd *exec.Cmd) {
-	fmt.Println(">", strings.Join(cmd.Args, " "))
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	if err := cmd.Run(); err != nil {
-		panic(err)
-	}
-}
-
-func RunCommandWithArgs(cmd string, args ...string) {
-	RunCommand(exec.Command(cmd, args...))
-}*/
-
-// Execute - Execute the command, return standard output and error
-func Execute(command string) (stdOut string, err error) {
-	//split command into command and args
-	var outByte []byte
-	split := strings.Split(command, " ")
-	switch len(split) {
-	case 0:
-		return "", errors.New("no command provided")
-	case 1:
-		outByte, err = exec.Command(split[0]).Output()
-	default:
-		outByte, err = exec.Command(split[0], split[1:]...).Output()
-	}
-	stdOut = string(outByte)
-	stdOut = strings.Trim(stdOut, "\n") //trim any new lines
-	return
-}

@@ -19,6 +19,9 @@ var (
 
 	basecoindDir = "./basecoind-tests"
 	basecliDir   = "./basecli-tests"
+
+	from = "demo" // but we need to create the named key first ... ?
+	to   = "ABCAFE00DEADBEEF00CAFE00DEADBEEF00CAFE00"
 )
 
 func gopath() string {
@@ -69,6 +72,20 @@ func TestSendCoins(t *testing.T) {
 	if err := startServer(); err != nil {
 		t.Error(err)
 	}
+
+	// send some coins
+	// [zr] where dafuq do I get a FROM (oh, use --name)
+
+	sendTo := fmt.Sprintf("--to=%s", to)
+	sendFrom := fmt.Sprintf("--from=%s", from)
+
+	cmdOut, err := exec.Command(whereisBasecli(), "send", sendTo, "--amount=1000mycoin", sendFrom, "--seq=0")
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Printf("sent: %s", string(cmdOut))
+
 }
 
 // expects TestInitBaseCoin to have been run
@@ -86,7 +103,7 @@ func startServer() error {
 	scanner := bufio.NewScanner(cmdReader)
 	go func() {
 		for scanner.Scan() {
-			fmt.Printf("basecoind start | %s\n", scanner.Text())
+			fmt.Printf("running [basecoind start] %s\n", scanner.Text())
 		}
 	}()
 
@@ -100,7 +117,13 @@ func startServer() error {
 		return err
 	}
 
+	time.Sleep(5 * time.Seconds())
+
 	return nil
+
+	// TODO return cmd.Process so that we can later do something like:
+	// cmd.Process.Kill()
+	// see: https://stackoverflow.com/questions/11886531/terminating-a-process-started-with-os-exec-in-golang
 }
 
 func clean() {

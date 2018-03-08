@@ -20,6 +20,14 @@ var (
 	keybase keys.Keybase
 )
 
+// used for outputting keys.Info over REST
+type KeyOutput struct {
+	Name    string `json:"name"`
+	Address string `json:"address"`
+	// TODO add pubkey?
+	// Pubkey  string `json:"pubkey"`
+}
+
 // GetKeyBase initializes a keybase based on the configuration
 func GetKeyBase() (keys.Keybase, error) {
 	if keybase == nil {
@@ -31,6 +39,11 @@ func GetKeyBase() (keys.Keybase, error) {
 		keybase = client.GetKeyBase(db)
 	}
 	return keybase, nil
+}
+
+// used to set the keybase manually in test
+func SetKeyBase(kb keys.Keybase) {
+	keybase = kb
 }
 
 func printInfo(info keys.Info) {

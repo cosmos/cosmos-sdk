@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/go-crypto/keys/words"
 	cmn "github.com/tendermint/tmlibs/common"
@@ -17,6 +16,8 @@ import (
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	cfg "github.com/tendermint/tendermint/config"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitCmd will initialize all files for tendermint,
@@ -45,7 +46,7 @@ type GenOptions func(args []string) (json.RawMessage, error)
 // along with the secret phrase to recover the private key.
 // You can give coins to this address and return the recovery
 // phrase to the user to access them.
-func GenerateCoinKey() (crypto.Address, string, error) {
+func GenerateCoinKey() (sdk.Address, string, error) {
 	// construct an in-memory key store
 	codec, err := words.LoadCodec("english")
 	if err != nil {

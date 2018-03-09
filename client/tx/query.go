@@ -12,11 +12,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	abci "github.com/tendermint/abci/types"
-	keys "github.com/tendermint/go-crypto/keys"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	keybase "github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
@@ -131,67 +129,4 @@ func QueryTxRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Requ
 		}
 		w.Write(output)
 	}
-}
-
-// TODO refactor into different files show, sign, broadcast
-
-type SignTxBody struct {
-	Name     string `json="name"`
-	Password string `json="password"`
-	TxBytes  string `json="tx"`
-}
-
-func SignTxRequstHandler(w http.ResponseWriter, r *http.Request) {
-	var kb keys.Keybase
-	var m SignTxBody
-
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&m)
-	if err != nil {
-		w.WriteHeader(400)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	kb, err = keybase.GetKeyBase()
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	//TODO check if account exists
-	sig, _, err := kb.Sign(m.Name, m.Password, []byte(m.TxBytes))
-	if err != nil {
-		w.WriteHeader(403)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	w.Write(sig.Bytes())
-}
-
-type BroadcastTxBody struct {
-	TxBytes string `json="tx"`
-}
-
-func BroadcastTxRequestHandler(w http.ResponseWriter, r *http.Request) {
-	var m BroadcastTxBody
-
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&m)
-	if err != nil {
-		w.WriteHeader(400)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	res, err := client.BroadcastTx([]byte(m.TxBytes))
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	w.Write([]byte(string(res.Height)))
 }

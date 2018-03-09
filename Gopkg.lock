@@ -343,7 +343,7 @@
   revision = "6120a4c5e4f4b0ea9d5f22cedee949b862b11a5e"
 
 [[projects]]
-  branch = "develop"
+  branch = "rigel/cli-refactor"
   name = "github.com/tendermint/tmlibs"
   packages = [
     "autofile",
@@ -358,7 +358,7 @@
     "pubsub",
     "pubsub/query"
   ]
-  revision = "26f2ab65f82cfc6873c312e8030104c47c05f10e"
+  revision = "6ef3e36e82ab95739c5beacddca8e931f62d2cef"
 
 [[projects]]
   branch = "master"
@@ -463,6 +463,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "49709ce967a0ef0f717661f731aec5d9c9fbba7af69a82d577fa87c5bc235c3f"
+  inputs-digest = "be899407a3eba820c3c0f26694051991ac68771045ee597450b3166273fdf5b6"
   solver-name = "gps-cdcl"
   solver-version = 1

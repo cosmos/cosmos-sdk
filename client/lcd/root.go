@@ -48,21 +48,9 @@ func startRESTServer(cdc *wire.Codec) func(cmd *cobra.Command, args []string) er
 func initRouter(cdc *wire.Codec) http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/version", version.VersionRequestHandler).Methods("GET")
-	r.HandleFunc("/node_info", rpc.NodeInfoRequestHandler).Methods("GET")
-	r.HandleFunc("/syncing", rpc.NodeSyncingRequestHandler).Methods("GET")
-	r.HandleFunc("/keys", keys.QueryKeysRequestHandler).Methods("GET")
-	r.HandleFunc("/keys", keys.AddNewKeyRequestHandler).Methods("POST")
-	r.HandleFunc("/keys/seed", keys.SeedRequestHandler).Methods("GET")
-	r.HandleFunc("/keys/{name}", keys.GetKeyRequestHandler).Methods("GET")
-	r.HandleFunc("/keys/{name}", keys.UpdateKeyRequestHandler).Methods("PUT")
-	r.HandleFunc("/keys/{name}", keys.DeleteKeyRequestHandler).Methods("DELETE")
-	r.HandleFunc("/txs", tx.SearchTxRequestHandler(cdc)).Methods("GET")
-	r.HandleFunc("/txs/{hash}", tx.QueryTxRequestHandler(cdc)).Methods("GET")
-	r.HandleFunc("/txs/sign", tx.SignTxRequstHandler).Methods("POST")
-	r.HandleFunc("/txs/broadcast", tx.BroadcastTxRequestHandler).Methods("POST")
-	r.HandleFunc("/blocks/latest", rpc.LatestBlockRequestHandler).Methods("GET")
-	r.HandleFunc("/blocks/{height}", rpc.BlockRequestHandler).Methods("GET")
-	r.HandleFunc("/validatorsets/latest", rpc.LatestValidatorsetRequestHandler).Methods("GET")
-	r.HandleFunc("/validatorsets/{height}", rpc.ValidatorsetRequestHandler).Methods("GET")
+
+	keys.RegisterRoutes(r)
+	rpc.RegisterRoutes(r)
+	tx.RegisterRoutes(r, cdc)
 	return r
 }

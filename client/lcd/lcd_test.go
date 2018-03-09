@@ -25,6 +25,7 @@ import (
 	abci "github.com/tendermint/abci/types"
 	cryptoKeys "github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/tendermint/p2p"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 )
@@ -107,9 +108,8 @@ func TestKeys(t *testing.T) {
 
 func TestNodeStatus(t *testing.T) {
 	startServer(t)
+	// TODO need to kill server after
 	prepareClient(t)
-	_, db, err := initKeybase(t)
-	require.Nil(t, err, "Couldn't init Keybase")
 	cdc := app.MakeCodec()
 	r := initRouter(cdc)
 
@@ -137,8 +137,82 @@ func TestNodeStatus(t *testing.T) {
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	assert.Equal(t, "true", res.Body.String())
+}
 
-	db.Close()
+func TestBlock(t *testing.T) {
+	startServer(t)
+	// TODO need to kill server after
+	prepareClient(t)
+	cdc := app.MakeCodec()
+	r := initRouter(cdc)
+
+	req, err := http.NewRequest("GET", "/blocks/latest", nil)
+	require.Nil(t, err)
+	res := httptest.NewRecorder()
+
+	r.ServeHTTP(res, req)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+	var m ctypes.ResultBlock
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&m)
+	require.Nil(t, err, "Couldn't parse block")
+
+	assert.NotEqual(t, ctypes.ResultBlock{}, m)
+
+	req, err = http.NewRequest("GET", "/blocks/1", nil)
+	require.Nil(t, err)
+	res = httptest.NewRecorder()
+
+	r.ServeHTTP(res, req)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+	assert.NotEqual(t, ctypes.ResultBlock{}, m)
+
+	req, err = http.NewRequest("GET", "/blocks/2", nil)
+	require.Nil(t, err)
+	res = httptest.NewRecorder()
+
+	r.ServeHTTP(res, req)
+	require.Equal(t, http.StatusNotFound, res.Code)
+}
+
+func TestValidators(t *testing.T) {
+	startServer(t)
+	// TODO need to kill server after
+	prepareClient(t)
+	cdc := app.MakeCodec()
+	r := initRouter(cdc)
+
+	req, err := http.NewRequest("GET", "/validatorsets/latest", nil)
+	require.Nil(t, err)
+	res := httptest.NewRecorder()
+
+	r.ServeHTTP(res, req)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+	var m ctypes.ResultValidators
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&m)
+	require.Nil(t, err, "Couldn't parse block")
+
+	assert.NotEqual(t, ctypes.ResultValidators{}, m)
+
+	req, err = http.NewRequest("GET", "/validatorsets/1", nil)
+	require.Nil(t, err)
+	res = httptest.NewRecorder()
+
+	r.ServeHTTP(res, req)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+	assert.NotEqual(t, ctypes.ResultValidators{}, m)
+
+	req, err = http.NewRequest("GET", "/validatorsets/2", nil)
+	require.Nil(t, err)
+	res = httptest.NewRecorder()
+
+	r.ServeHTTP(res, req)
+	require.Equal(t, http.StatusNotFound, res.Code)
 }
 
 //__________________________________________________________

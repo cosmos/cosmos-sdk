@@ -343,7 +343,7 @@
   revision = "cd2ba4aa7f95e16fe99570260ad58415e7ad4660"
 
 [[projects]]
-  branch = "develop"
+  branch = "rigel/cli-refactor"
   name = "github.com/tendermint/tmlibs"
   packages = [
     "autofile",

@@ -82,8 +82,9 @@
   name = "github.com/tendermint/tendermint"
 
 [[override]]
-  branch = "develop"
+  branch = "rigel/cli-refactor"
   name = "github.com/tendermint/tmlibs"
+  #version = "6ef3e36e82ab95739c5beacddca8e931f62d2cef"
 
 [prune]
   go-tests = true

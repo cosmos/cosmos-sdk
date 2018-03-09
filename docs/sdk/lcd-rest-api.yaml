@@ -1,12 +1,18 @@
 openapi: 3.0.0
 servers:
-  - url: 'http://localhost:8998'
+  - url: 'https://localhost:1317'
 info:
   version: "1.0.0-oas3"
   title: Light client daemon to interface with Cosmos baseserver via REST
   description: Specification for the LCD provided by `gaia rest-server`
   
 paths:
+  /health:
+    get:
+      summary: Check if the REST server is running
+        responses:
+          200:
+            description: Returns "alive"
   /version:
     get:
       summary: Version of the light client daemon

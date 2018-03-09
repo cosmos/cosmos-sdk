@@ -8,31 +8,37 @@ import (
 	"path/filepath"
 	//"strings"
 	"testing"
+	"time"
 )
 
 // Tests assume the `basecoind` and `basecli` binaries
 // have been built and are located in `./build`
 
+// TODO remove test dirs if tests are successful
+
 var (
 	basecoind = "build/basecoind"
 	basecli   = "build/basecli"
 
-	basecoindDir = "./basecoind-tests"
-	basecliDir   = "./basecli-tests"
+	basecoindDir = "./tmp-basecoind-tests"
+	basecliDir   = "./tmp-basecli-tests"
 
-	from = "demo" // but we need to create the named key first ... ?
-	to   = "ABCAFE00DEADBEEF00CAFE00DEADBEEF00CAFE00"
+	ACCOUNTS = []string{"alice", "bob", "charlie", "igor"}
+	alice    = ACCOUNTS[0]
+	bob      = ACCOUNTS[1]
+	charlie  = ACCOUNTS[2]
+	igor     = ACCOUNTS[3]
 )
 
 func gopath() string {
 	return filepath.Join(os.Getenv("GOPATH"), "src", "github.com", "cosmos", "cosmos-sdk")
 }
 
-func whereisBasecoind() string {
+func whereIsBasecoind() string {
 	return filepath.Join(gopath(), basecoind)
 }
 
-func whereisBasecli() string {
+func whereIsBasecli() string {
 	return filepath.Join(gopath(), basecli)
 }
 
@@ -44,7 +50,7 @@ func TestInitBaseCoin(t *testing.T) {
 	password := "some-random-password"
 	usePassword := exec.Command("echo", password)
 
-	initBasecoind := exec.Command(whereisBasecoind(), "init", "--home", basecoindDir)
+	initBasecoind := exec.Command(whereIsBasecoind(), "init", "--home", basecoindDir)
 
 	initBasecoind.Stdin, err = usePassword.StdoutPipe()
 	if err != nil {
@@ -62,13 +68,44 @@ func TestInitBaseCoin(t *testing.T) {
 	if err := initBasecoind.Wait(); err != nil {
 		t.Error(err)
 	}
+
+	if err := makeKeys(); err != nil {
+		t.Error(err)
+	}
+}
+
+func makeKeys() error {
+	var err error
+	for _, acc := range ACCOUNTS {
+		pass := exec.Command("echo", "1234567890")
+		makeKeys := exec.Command(whereIsBasecli(), "keys", "add", acc, "--home", basecliDir)
+
+		makeKeys.Stdin, err = pass.StdoutPipe()
+		if err != nil {
+			return err
+		}
+
+		makeKeys.Stdout = os.Stdout
+		if err := makeKeys.Start(); err != nil {
+			return err
+		}
+		if err := pass.Run(); err != nil {
+			return err
+		}
+
+		if err := makeKeys.Wait(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // these are in the original bash tests
 func TestBaseCliRecover(t *testing.T) {}
 func TestBaseCliShow(t *testing.T)    {}
 
-func TestSendCoins(t *testing.T) {
+func _TestSendCoins(t *testing.T) {
 	if err := startServer(); err != nil {
 		t.Error(err)
 	}
@@ -76,10 +113,10 @@ func TestSendCoins(t *testing.T) {
 	// send some coins
 	// [zr] where dafuq do I get a FROM (oh, use --name)
 
-	sendTo := fmt.Sprintf("--to=%s", to)
-	sendFrom := fmt.Sprintf("--from=%s", from)
+	sendTo := fmt.Sprintf("--to=%s", bob)
+	sendFrom := fmt.Sprintf("--from=%s", alice)
 
-	cmdOut, err := exec.Command(whereisBasecli(), "send", sendTo, "--amount=1000mycoin", sendFrom, "--seq=0")
+	cmdOut, err := exec.Command(whereIsBasecli(), "send", sendTo, "--amount=1000mycoin", sendFrom, "--seq=0").Output()
 	if err != nil {
 		t.Error(err)
 	}
@@ -91,7 +128,7 @@ func TestSendCoins(t *testing.T) {
 // expects TestInitBaseCoin to have been run
 func startServer() error {
 	// straight outta https://nathanleclaire.com/blog/2014/12/29/shelled-out-commands-in-golang/
-	cmdName := whereisBasecoind()
+	cmdName := whereIsBasecoind()
 	cmdArgs := []string{"start", "--home", basecoindDir}
 
 	cmd := exec.Command(cmdName, cmdArgs...)
@@ -117,7 +154,7 @@ func startServer() error {
 		return err
 	}
 
-	time.Sleep(5 * time.Seconds())
+	time.Sleep(5 * time.Second)
 
 	return nil
 
@@ -133,17 +170,6 @@ func clean() {
 }
 
 /*
-
-initial attempt from gaia repo
-var (
-	GAIA       = "gaia"
-	SERVER_EXE = "node"
-	CLIENT_EXE = "client"
-	ACCOUNTS   = []string{"alice", "bob", "charlie", "igor"}
-	RICH       = ACCOUNTS[0]
-	CANDIDATE  = ACCOUNTS[1]
-	DELEGATOR  = ACCOUNTS[2]
-	POOR       = ACCOUNTS[3]
 
 	chainID = "staking_test"
 	testDir = "./tmp_tests"
@@ -167,36 +193,6 @@ func runTests() {
 		panic(err)
 	}
 
-}
-
-func makeKeys() error {
-	fmt.Println("make keys")
-	var err error
-	for _, acc := range ACCOUNTS {
-		pass := exec.Command("echo", "1234567890")
-		makeKeys := exec.Command(GAIA, CLIENT_EXE, "keys", "new", acc)
-
-		makeKeys.Stdin, err = pass.StdoutPipe()
-		if err != nil {
-			return err
-		}
-
-		makeKeys.Stdout = os.Stdout
-		if err := makeKeys.Start(); err != nil {
-			return err
-		}
-		if err := pass.Run(); err != nil {
-			return err
-		}
-
-		if err := makeKeys.Wait(); err != nil {
-			return err
-		}
-
-		fmt.Printf("OUT: %v", makeKeys)
-	}
-
-	return nil
 }
 
 func initServer() error {

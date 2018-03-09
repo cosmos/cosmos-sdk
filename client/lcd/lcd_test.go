@@ -106,6 +106,27 @@ func TestKeys(t *testing.T) {
 	db.Close()
 }
 
+func TestVersion(t *testing.T) {
+	prepareClient(t)
+	cdc := app.MakeCodec()
+	r := initRouter(cdc)
+
+	// node info
+	req, err := http.NewRequest("GET", "/version", nil)
+	require.Nil(t, err)
+	res := httptest.NewRecorder()
+
+	r.ServeHTTP(res, req)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+	// TODO fix regexp
+	// reg, err := regexp.Compile(`v\d+\.\d+\.\d+(-dev)?`)
+	// require.Nil(t, err)
+	// match := reg.MatchString(res.Body.String())
+	// assert.True(t, match, res.Body.String())
+	assert.Equal(t, "0.11.1-dev", res.Body.String())
+}
+
 func TestNodeStatus(t *testing.T) {
 	startServer(t)
 	// TODO need to kill server after

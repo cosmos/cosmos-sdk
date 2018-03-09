@@ -6,13 +6,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	wire "github.com/tendermint/go-wire"
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	tx "github.com/cosmos/cosmos-sdk/client/tx"
 	version "github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 const (

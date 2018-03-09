@@ -3,15 +3,23 @@ package lcd
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
+	"github.com/cosmos/cosmos-sdk/mock"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/abci/types"
@@ -97,13 +105,15 @@ func TestKeys(t *testing.T) {
 	db.Close()
 }
 
-func TestNodeInfo(t *testing.T) {
-	prepareApp(t)
+func TestNodeStatus(t *testing.T) {
+	startServer(t)
+	prepareClient(t)
 	_, db, err := initKeybase(t)
 	require.Nil(t, err, "Couldn't init Keybase")
 	cdc := app.MakeCodec()
 	r := initRouter(cdc)
 
+	// node info
 	req, err := http.NewRequest("GET", "/node_info", nil)
 	require.Nil(t, err)
 	res := httptest.NewRecorder()
@@ -116,6 +126,18 @@ func TestNodeInfo(t *testing.T) {
 	err = decoder.Decode(&m)
 	require.Nil(t, err, "Couldn't parse node info")
 
+	assert.NotEqual(t, p2p.NodeInfo{}, m)
+
+	// syncing
+	req, err = http.NewRequest("GET", "/syncing", nil)
+	require.Nil(t, err)
+	res = httptest.NewRecorder()
+
+	r.ServeHTTP(res, req)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+	assert.Equal(t, "true", res.Body.String())
+
 	db.Close()
 }
 
@@ -126,15 +148,64 @@ func defaultLogger() log.Logger {
 	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 }
 
-func prepareApp(t *testing.T) {
-	logger := defaultLogger()
+func prepareClient(t *testing.T) {
 	db := dbm.NewMemDB()
-	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db)
+	app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db)
+	viper.Set(client.FlagNode, "localhost:46657")
 
 	header := abci.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	app.Commit()
+}
+
+// setupViper creates a homedir to run inside,
+// and returns a cleanup function to defer
+func setupViper() func() {
+	rootDir, err := ioutil.TempDir("", "mock-sdk-cmd")
+	if err != nil {
+		panic(err) // fuck it!
+	}
+	viper.Set("home", rootDir)
+	return func() {
+		os.RemoveAll(rootDir)
+	}
+}
+
+func startServer(t *testing.T) {
+	defer setupViper()()
+	// init server
+	initCmd := server.InitCmd(mock.GenInitOptions, log.NewNopLogger())
+	err := initCmd.RunE(nil, nil)
+	require.NoError(t, err)
+
+	// start server
+	viper.Set("with-tendermint", true)
+	startCmd := server.StartCmd(mock.NewApp, log.NewNopLogger())
+	timeout := time.Duration(3) * time.Second
+
+	err = runOrTimeout(startCmd, timeout)
+	require.NoError(t, err)
+}
+
+// copied from server/start_test.go
+func runOrTimeout(cmd *cobra.Command, timeout time.Duration) error {
+	done := make(chan error)
+	go func(out chan<- error) {
+		// this should NOT exit
+		err := cmd.RunE(nil, nil)
+		if err != nil {
+			out <- err
+		}
+		out <- fmt.Errorf("start died for unknown reasons")
+	}(done)
+	timer := time.NewTimer(timeout)
+
+	select {
+	case err := <-done:
+		return err
+	case <-timer.C:
+		return nil
+	}
 }
 
 func initKeybase(t *testing.T) (cryptoKeys.Keybase, *dbm.GoLevelDB, error) {

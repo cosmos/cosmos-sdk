@@ -63,10 +63,10 @@ func startRESTServer(cdc *wire.Codec) func(cmd *cobra.Command, args []string) er
 		exPath := filepath.Dir(ex)
 
 		if _, err := os.Stat(filepath.Join(exPath, "server.crt")); os.IsNotExist(err) {
-			return errors.Errorf("The REST server needs a https certificate 'server.crt' in the same folder as the CLI binary.")
+			return errors.Errorf("The REST server needs a https certificate 'server.crt' in the same folder as the CLI binary. Read https://devcenter.heroku.com/articles/ssl-certificate-self on how to create a self-signed certificate.")
 		}
 		if _, err := os.Stat(filepath.Join(exPath, "server.key")); os.IsNotExist(err) {
-			return errors.Errorf("The REST server needs the certifcate private key 'server.key' in the same folder as the CLI binary.")
+			return errors.Errorf("The REST server needs the certifcate private key 'server.key' in the same folder as the CLI binary. Read https://devcenter.heroku.com/articles/ssl-certificate-self on how to create a self-signed certificate.")
 		}
 		return http.ListenAndServeTLS(bind, filepath.Join(exPath, "server.crt"), filepath.Join(exPath, "server.key"), r)
 	}

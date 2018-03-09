@@ -34,7 +34,7 @@ func TestKeys(t *testing.T) {
 	res := httptest.NewRecorder()
 
 	r.ServeHTTP(res, req)
-	assert.Equal(t, http.StatusOK, res.Code, "Expected response code")
+	assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
 	body := res.Body.String()
 	require.Equal(t, body, "[]", "Expected an empty array")
 
@@ -47,7 +47,7 @@ func TestKeys(t *testing.T) {
 	res = httptest.NewRecorder()
 
 	r.ServeHTTP(res, req)
-	assert.Equal(t, http.StatusOK, res.Code, "Expected response code")
+	assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
 	var m [1]keys.KeyOutput
 	decoder := json.NewDecoder(res.Body)
 	err = decoder.Decode(&m)
@@ -60,7 +60,7 @@ func TestKeys(t *testing.T) {
 	res = httptest.NewRecorder()
 
 	r.ServeHTTP(res, req)
-	assert.Equal(t, http.StatusOK, res.Code, "Expected response code")
+	assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
 	var m2 keys.KeyOutput
 	decoder = json.NewDecoder(res.Body)
 	err = decoder.Decode(&m2)
@@ -75,7 +75,7 @@ func TestKeys(t *testing.T) {
 	res = httptest.NewRecorder()
 
 	r.ServeHTTP(res, req)
-	assert.Equal(t, http.StatusOK, res.Code, "Expected response code")
+	assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	// here it should say unauthorized as we changed the password before
 	req, err = http.NewRequest("PUT", "/keys/test", bytes.NewBuffer(jsonStr))
@@ -83,7 +83,7 @@ func TestKeys(t *testing.T) {
 	res = httptest.NewRecorder()
 
 	r.ServeHTTP(res, req)
-	assert.Equal(t, http.StatusUnauthorized, res.Code, "Expected response code")
+	assert.Equal(t, http.StatusUnauthorized, res.Code, res.Body.String())
 
 	// delete key
 	jsonStr = []byte(`{"password":"12345678901"}`)
@@ -92,7 +92,7 @@ func TestKeys(t *testing.T) {
 	res = httptest.NewRecorder()
 
 	r.ServeHTTP(res, req)
-	assert.Equal(t, http.StatusOK, res.Code, "Expected response code")
+	assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	db.Close()
 }
@@ -109,7 +109,7 @@ func TestNodeInfo(t *testing.T) {
 	res := httptest.NewRecorder()
 
 	r.ServeHTTP(res, req)
-	require.Equal(t, http.StatusOK, res.Code, "Expected response code")
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	var m p2p.NodeInfo
 	decoder := json.NewDecoder(res.Body)

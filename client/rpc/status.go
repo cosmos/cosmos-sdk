@@ -40,7 +40,7 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output, err := wire.MarshalJSON(res)
+	output, err := wire.MarshalJSON(status)
 	// output, err := json.MarshalIndent(res, "  ", "")
 	if err != nil {
 		return err

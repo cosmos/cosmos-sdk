@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -61,6 +62,12 @@ func startRESTServer(cdc *wire.Codec) func(cmd *cobra.Command, args []string) er
 		}
 		exPath := filepath.Dir(ex)
 
+		if _, err := os.Stat(filepath.Join(exPath, "server.crt")); os.IsNotExist(err) {
+			return errors.Errorf("The REST server needs a https certificate 'server.crt' in the same folder as the CLI binary.")
+		}
+		if _, err := os.Stat(filepath.Join(exPath, "server.key")); os.IsNotExist(err) {
+			return errors.Errorf("The REST server needs the certifcate private key 'server.key' in the same folder as the CLI binary.")
+		}
 		return http.ListenAndServeTLS(bind, filepath.Join(exPath, "server.crt"), filepath.Join(exPath, "server.key"), r)
 	}
 }

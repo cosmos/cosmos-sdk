@@ -129,9 +129,7 @@ func printCreate(info keys.Info, seed string) {
 type NewKeyBody struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
-	// TODO make seed mandatory
-	// Seed     string `json="seed"`
-	Type string `json:"type"`
+	Seed     string `json="seed"`
 }
 
 func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
@@ -157,14 +155,18 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("You have to specify a name for the locally stored account."))
 		return
 	}
-
-	// algo type defaults to ed25519
-	if m.Type == "" {
-		m.Type = "ed25519"
+	if m.Password == "" {
+		w.WriteHeader(400)
+		w.Write([]byte("You have to specify a password for the locally stored account."))
+		return
 	}
-	algo := keys.CryptoAlgo(m.Type)
+	if m.Seed == "" {
+		w.WriteHeader(400)
+		w.Write([]byte("You have to specify a seed for the locally stored account."))
+		return
+	}
 
-	info, _, err := kb.Create(m.Name, m.Password, algo)
+	info, err := kb.Recover(m.Name, m.Password, m.Seed)
 	// TODO handle different errors
 	if err != nil {
 		w.WriteHeader(500)

@@ -7,9 +7,18 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/spf13/viper"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
+	keys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
+	"github.com/cosmos/cosmos-sdk/mock"
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -40,9 +49,27 @@ func TestKeys(t *testing.T) {
 	body := res.Body.String()
 	assert.Equal(t, body, "[]", "Expected an empty array")
 
+	// get seed
+	res = request(t, r, "GET", "/keys/seed", nil)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+	seed := res.Body.String()
+	reg, err := regexp.Compile(`([a-z]+ ){12}`)
+	require.Nil(t, err)
+	match := reg.MatchString(seed)
+	assert.True(t, match, "Returned seed has wrong foramt", seed)
+
 	// add key
-	addr := createKey(t, r)
-	assert.Len(t, addr, 40, "Returned address has wrong format", res.Body.String())
+	var jsonStr = []byte(`{"name":"test_fail", "password":"1234567890"}`)
+	res = request(t, r, "POST", "/keys", jsonStr)
+
+	assert.Equal(t, http.StatusBadRequest, res.Code, "Account creation should require a seed")
+
+	jsonStr = []byte(fmt.Sprintf(`{"name":"test", "password":"1234567890", "seed": "%s"}`, seed))
+	res = request(t, r, "POST", "/keys", jsonStr)
+
+	assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
+	addr := res.Body.String()
+	assert.Len(t, addr, 40, "Returned address has wrong format", addr)
 
 	// existing keys
 	res = request(t, r, "GET", "/keys", nil)
@@ -66,7 +93,7 @@ func TestKeys(t *testing.T) {
 	assert.Equal(t, m2.Address, addr, "Did not serve keys Address correctly")
 
 	// update key
-	var jsonStr = []byte(`{"old_password":"1234567890", "new_password":"12345678901"}`)
+	jsonStr = []byte(`{"old_password":"1234567890", "new_password":"12345678901"}`)
 	res = request(t, r, "PUT", "/keys/test", jsonStr)
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 

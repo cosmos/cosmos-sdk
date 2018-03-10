@@ -13,6 +13,8 @@ import (
 	tx "github.com/cosmos/cosmos-sdk/client/tx"
 	version "github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/wire"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/rest"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/rest"
 )
 
 const (
@@ -52,5 +54,7 @@ func initRouter(cdc *wire.Codec) http.Handler {
 	keys.RegisterRoutes(r)
 	rpc.RegisterRoutes(r)
 	tx.RegisterRoutes(r, cdc)
+	auth.RegisterRoutes(r, cdc, "main")
+	bank.RegisterRoutes(r, cdc)
 	return r
 }

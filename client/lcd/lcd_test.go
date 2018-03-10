@@ -127,8 +127,8 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNodeStatus(t *testing.T) {
-	ch := server.StartServer(t)
-	defer close(ch)
+	_, _ = startServer(t)
+	// TODO need to kill server after
 	prepareClient(t)
 
 	cdc := app.MakeCodec()
@@ -153,8 +153,8 @@ func TestNodeStatus(t *testing.T) {
 }
 
 func TestBlock(t *testing.T) {
-	ch := server.StartServer(t)
-	defer close(ch)
+	_, _ = startServer(t)
+	// TODO need to kill server after
 	prepareClient(t)
 
 	cdc := app.MakeCodec()
@@ -184,9 +184,8 @@ func TestBlock(t *testing.T) {
 }
 
 func TestValidators(t *testing.T) {
-	ch := server.StartServer(t)
-	defer close(ch)
-
+	_, _ = startServer(t)
+	// TODO need to kill server after
 	prepareClient(t)
 	cdc := app.MakeCodec()
 	r := initRouter(cdc)
@@ -214,6 +213,67 @@ func TestValidators(t *testing.T) {
 	require.Equal(t, http.StatusNotFound, res.Code)
 }
 
+func TestCoinSend(t *testing.T) {
+	addr, seed := startServer(t)
+	// TODO need to kill server after
+	prepareClient(t)
+	cdc := app.MakeCodec()
+	r := initRouter(cdc)
+
+	// query empty
+	res := request(t, r, "GET", "/accounts/1234567890123456789012345678901234567890", nil)
+	require.Equal(t, http.StatusNoContent, res.Code, res.Body.String())
+
+	// query
+	res = request(t, r, "GET", "/accounts/"+addr.String(), nil)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+	assert.Equal(t, `{
+		"coins": [
+			{
+				"denom": "mycoin",
+				"amount": 9007199254740992
+			}
+		]
+	}`, res.Body.String())
+
+	// create account for default coins
+	var jsonStr = []byte(fmt.Sprintf(`{"name":"test", "password":"1234567890", "seed": "%s"}`, seed))
+	res = request(t, r, "POST", "/keys", jsonStr)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+	// create random account
+	res = request(t, r, "GET", "/keys/seed", nil)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+	receiveSeed := res.Body.String()
+
+	jsonStr = []byte(fmt.Sprintf(`{"name":"receive", "password":"1234567890", "seed": "%s"}`, receiveSeed))
+	res = request(t, r, "POST", "/keys", jsonStr)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+	receiveAddr := res.Body.String()
+
+	// send
+	jsonStr = []byte(`{"name":"test", "password":"1234567890", "amount":[{
+		"denom": "mycoin",
+		"amount": 1
+	}]}`)
+	res = request(t, r, "POST", "/accounts/"+receiveAddr+"/send", jsonStr)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+	// check if received
+	res = request(t, r, "GET", "/accounts/"+receiveAddr, nil)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+	assert.Equal(t, `{
+		"coins": [
+			{
+				"denom": "mycoin",
+				"amount": 1
+			}
+		]
+	}`, res.Body.String())
+}
+
 //__________________________________________________________
 // helpers
 
@@ -225,6 +285,8 @@ func prepareClient(t *testing.T) {
 	db := dbm.NewMemDB()
 	app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db)
 	viper.Set(client.FlagNode, "localhost:46657")
+
+	_ = client.GetKeyBase(db)
 
 	header := abci.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -244,11 +306,31 @@ func setupViper() func() {
 	}
 }
 
-func startServer(t *testing.T) {
+// from baseoind.main
+func defaultOptions(addr string) func(args []string) (json.RawMessage, error) {
+	return func(args []string) (json.RawMessage, error) {
+		opts := fmt.Sprintf(`{
+      "accounts": [{
+        "address": "%s",
+        "coins": [
+          {
+            "denom": "mycoin",
+            "amount": 9007199254740992
+          }
+        ]
+      }]
+    }`, addr)
+		return json.RawMessage(opts), nil
+	}
+}
+
+func startServer(t *testing.T) (types.Address, string) {
 	defer setupViper()()
 	// init server
-	initCmd := server.InitCmd(mock.GenInitOptions, log.NewNopLogger())
-	err := initCmd.RunE(nil, nil)
+	addr, secret, err := server.GenerateCoinKey()
+	require.NoError(t, err)
+	initCmd := server.InitCmd(defaultOptions(addr.String()), log.NewNopLogger())
+	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
 	// start server
@@ -258,6 +340,8 @@ func startServer(t *testing.T) {
 
 	err = runOrTimeout(startCmd, timeout)
 	require.NoError(t, err)
+
+	return addr, secret
 }
 
 // copied from server/start_test.go
@@ -279,16 +363,6 @@ func runOrTimeout(cmd *cobra.Command, timeout time.Duration) error {
 	case <-timer.C:
 		return nil
 	}
-}
-
-func createKey(t *testing.T, r http.Handler) string {
-	var jsonStr = []byte(`{"name":"test", "password":"1234567890"}`)
-	res := request(t, r, "POST", "/keys", jsonStr)
-
-	assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
-
-	addr := res.Body.String()
-	return addr
 }
 
 func request(t *testing.T, r http.Handler, method string, path string, payload []byte) *httptest.ResponseRecorder {

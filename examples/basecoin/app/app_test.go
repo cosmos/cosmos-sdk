@@ -21,16 +21,13 @@ import (
 	"github.com/tendermint/tmlibs/log"
 )
 
-// helper variables and functions
-
+// Construct some global addrs and txs for tests.
 var (
-	// Construct genesis key/accounts
 	priv1 = crypto.GenPrivKeyEd25519()
 	addr1 = priv1.PubKey().Address()
 	addr2 = crypto.GenPrivKeyEd25519().PubKey().Address()
 	coins = sdk.Coins{{"foocoin", 10}}
 
-	// Construct a SendMsg
 	sendMsg = bank.SendMsg{
 		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
 		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
@@ -71,8 +68,10 @@ func TestMsgs(t *testing.T) {
 		{setWhatCoolMsg},
 	}
 
+	chainID := ""
+	sequence := int64(0)
 	for i, m := range msgs {
-		sig := priv1.Sign(m.msg.GetSignBytes())
+		sig := priv1.Sign(sdk.StdSignBytes(chainID, sequence, m.msg))
 		tx := sdk.NewStdTx(m.msg, []sdk.StdSignature{{
 			PubKey:    priv1.PubKey(),
 			Signature: sig,
@@ -174,7 +173,7 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	sig := priv1.Sign(sdk.StdSignBytes(chainID, sequence, sendMsg))
 	tx := sdk.NewStdTx(sendMsg, []sdk.StdSignature{{
 		PubKey:    priv1.PubKey(),
-		Signature: priv1.Sign(sendMsg.GetSignBytes()),
+		Signature: sig,
 	}})
 
 	// Run a Check

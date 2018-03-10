@@ -23,6 +23,8 @@ type Msg interface {
 	GetSigners() []Address
 }
 
+//__________________________________________________________
+
 // Transactions objects must fulfill the Tx
 type Tx interface {
 
@@ -64,7 +66,7 @@ func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
 func (tx StdTx) GetFeePayer() Address          { return tx.Signatures[0].PubKey.Address() } // XXX but PubKey is optional!
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 
-//-------------------------------------
+//__________________________________________________________
 
 // Application function variable used to unmarshal transaction bytes
 type TxDecoder func(txBytes []byte) (Tx, Error)

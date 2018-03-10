@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/sketchy"
 )
 
@@ -53,8 +54,10 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// add handlers
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
+	coolMapper := cool.NewMapper(app.capKeyMainStore)
 	app.Router().
 		AddRoute("bank", bank.NewHandler(coinKeeper)).
+		AddRoute("cool", cool.NewHandler(coinKeeper, coolMapper)).
 		AddRoute("sketchy", sketchy.NewHandler())
 
 	// initialize BaseApp
@@ -73,39 +76,38 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 }
 
 // custom tx codec
+// TODO: use new go-wire
 func MakeCodec() *wire.Codec {
 
-	// XXX: Using old wire for now :)
-	const (
-		msgTypeSend  = 0x1
-		msgTypeIssue = 0x2
-	)
+	const msgTypeSend = 0x1
+	const msgTypeIssue = 0x2
+	const msgTypeWhatCool = 0x3
+	const msgTypeSetWhatCool = 0x4
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Msg }{},
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
 		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
+		oldwire.ConcreteType{cool.WhatCoolMsg{}, msgTypeWhatCool},
+		oldwire.ConcreteType{cool.SetWhatCoolMsg{}, msgTypeSetWhatCool},
 	)
 
-	const (
-		accTypeApp = 0x1
-	)
+	const accTypeApp = 0x1
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Account }{},
 		oldwire.ConcreteType{&types.AppAccount{}, accTypeApp},
 	)
-
 	cdc := wire.NewCodec()
-	// TODO: use new go-wire
+
 	// cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	// bank.RegisterWire(cdc)   // Register bank.[SendMsg,IssueMsg] types.
 	// crypto.RegisterWire(cdc) // Register crypto.[PubKey,PrivKey,Signature] types.
 	return cdc
-
 }
 
 // custom logic for transaction decoding
 func (app *BasecoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 	var tx = sdk.StdTx{}
+
 	// StdTx.Msg is an interface. The concrete types
 	// are registered by MakeTxCodec in bank.RegisterWire.
 	err := app.cdc.UnmarshalBinary(txBytes, &tx)

@@ -164,14 +164,14 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	algo := keys.CryptoAlgo(m.Type)
 
-	_, _, err = kb.Create(m.Name, m.Password, algo)
+	info, _, err := kb.Create(m.Name, m.Password, algo)
 	// TODO handle different errors
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
 	}
-	w.WriteHeader(200)
+	w.Write([]byte(info.PubKey.Address().String()))
 }
 
 // function to just a new seed to display in the UI before actually persisting it in the keybase

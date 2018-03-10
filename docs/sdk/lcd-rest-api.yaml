@@ -62,7 +62,7 @@ paths:
       summary: Create a new account locally
       responses:
         200:
-          description: OK
+          description: Returns address of the account created
       requestBody:
         content:
           application/json:

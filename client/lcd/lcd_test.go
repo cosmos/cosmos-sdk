@@ -28,45 +28,36 @@ import (
 )
 
 func TestKeys(t *testing.T) {
-	prepareClient(t)
+	_, db, err := initKeybase(t)
+	require.Nil(t, err, "Couldn't init Keybase")
 
 	cdc := app.MakeCodec()
 	r := initRouter(cdc)
 
 	// empty keys
-	req, err := http.NewRequest("GET", "/keys", nil)
-	require.Nil(t, err)
-	res := httptest.NewRecorder()
-
-	r.ServeHTTP(res, req)
-	assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
+	res := request(t, r, "GET", "/keys", nil)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 	body := res.Body.String()
-	require.Equal(t, body, "[]", "Expected an empty array")
+	assert.Equal(t, body, "[]", "Expected an empty array")
 
 	// add key
 	addr := createKey(t, r)
 	assert.Len(t, addr, 40, "Returned address has wrong format", res.Body.String())
 
 	// existing keys
-	req, err = http.NewRequest("GET", "/keys", nil)
-	require.Nil(t, err)
-	res = httptest.NewRecorder()
-
-	r.ServeHTTP(res, req)
-	assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
+	res = request(t, r, "GET", "/keys", nil)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 	var m [1]keys.KeyOutput
 	decoder := json.NewDecoder(res.Body)
 	err = decoder.Decode(&m)
+	require.NoError(t, err)
 
 	assert.Equal(t, m[0].Name, "test", "Did not serve keys name correctly")
 	assert.Equal(t, m[0].Address, addr, "Did not serve keys Address correctly")
 
 	// select key
-	req, _ = http.NewRequest("GET", "/keys/test", nil)
-	res = httptest.NewRecorder()
-
-	r.ServeHTTP(res, req)
-	assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
+	res = request(t, r, "GET", "/keys/test", nil)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 	var m2 keys.KeyOutput
 	decoder = json.NewDecoder(res.Body)
 	err = decoder.Decode(&m2)
@@ -76,29 +67,19 @@ func TestKeys(t *testing.T) {
 
 	// update key
 	var jsonStr = []byte(`{"old_password":"1234567890", "new_password":"12345678901"}`)
-	req, err = http.NewRequest("PUT", "/keys/test", bytes.NewBuffer(jsonStr))
-	require.Nil(t, err)
-	res = httptest.NewRecorder()
-
-	r.ServeHTTP(res, req)
-	assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
+	res = request(t, r, "PUT", "/keys/test", jsonStr)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	// here it should say unauthorized as we changed the password before
-	req, err = http.NewRequest("PUT", "/keys/test", bytes.NewBuffer(jsonStr))
-	require.Nil(t, err)
-	res = httptest.NewRecorder()
-
-	r.ServeHTTP(res, req)
-	assert.Equal(t, http.StatusUnauthorized, res.Code, res.Body.String())
+	res = request(t, r, "PUT", "/keys/test", jsonStr)
+	require.Equal(t, http.StatusUnauthorized, res.Code, res.Body.String())
 
 	// delete key
 	jsonStr = []byte(`{"password":"12345678901"}`)
-	req, err = http.NewRequest("DELETE", "/keys/test", bytes.NewBuffer(jsonStr))
-	require.Nil(t, err)
-	res = httptest.NewRecorder()
+	res = request(t, r, "DELETE", "/keys/test", jsonStr)
+	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
-	r.ServeHTTP(res, req)
-	assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
+	db.Close()
 }
 
 func TestVersion(t *testing.T) {
@@ -107,11 +88,7 @@ func TestVersion(t *testing.T) {
 	r := initRouter(cdc)
 
 	// node info
-	req, err := http.NewRequest("GET", "/version", nil)
-	require.Nil(t, err)
-	res := httptest.NewRecorder()
-
-	r.ServeHTTP(res, req)
+	res := request(t, r, "GET", "/version", nil)
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	// TODO fix regexp
@@ -131,26 +108,18 @@ func TestNodeStatus(t *testing.T) {
 	r := initRouter(cdc)
 
 	// node info
-	req, err := http.NewRequest("GET", "/node_info", nil)
-	require.Nil(t, err)
-	res := httptest.NewRecorder()
-
-	r.ServeHTTP(res, req)
+	res := request(t, r, "GET", "/node_info", nil)
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	var m p2p.NodeInfo
 	decoder := json.NewDecoder(res.Body)
-	err = decoder.Decode(&m)
+	err := decoder.Decode(&m)
 	require.Nil(t, err, "Couldn't parse node info")
 
 	assert.NotEqual(t, p2p.NodeInfo{}, m, "res: %v", res)
 
 	// syncing
-	req, err = http.NewRequest("GET", "/syncing", nil)
-	require.Nil(t, err)
-	res = httptest.NewRecorder()
-
-	r.ServeHTTP(res, req)
+	res = request(t, r, "GET", "/syncing", nil)
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	assert.Equal(t, "true", res.Body.String())
@@ -164,35 +133,27 @@ func TestBlock(t *testing.T) {
 	cdc := app.MakeCodec()
 	r := initRouter(cdc)
 
-	req, err := http.NewRequest("GET", "/blocks/latest", nil)
-	require.Nil(t, err)
-	res := httptest.NewRecorder()
-
-	r.ServeHTTP(res, req)
+	res := request(t, r, "GET", "/blocks/latest", nil)
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	var m ctypes.ResultBlock
 	decoder := json.NewDecoder(res.Body)
-	err = decoder.Decode(&m)
+	err := decoder.Decode(&m)
 	require.Nil(t, err, "Couldn't parse block")
 
 	assert.NotEqual(t, ctypes.ResultBlock{}, m)
 
-	req, err = http.NewRequest("GET", "/blocks/1", nil)
-	require.Nil(t, err)
-	res = httptest.NewRecorder()
+	// --
 
-	r.ServeHTTP(res, req)
+	res = request(t, r, "GET", "/blocks/1", nil)
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	assert.NotEqual(t, ctypes.ResultBlock{}, m)
 
-	req, err = http.NewRequest("GET", "/blocks/2", nil)
-	require.Nil(t, err)
-	res = httptest.NewRecorder()
+	// --
 
-	r.ServeHTTP(res, req)
-	require.Equal(t, http.StatusNotFound, res.Code)
+	res = request(t, r, "GET", "/blocks/2", nil)
+	require.Equal(t, http.StatusNotFound, res.Code, res.Body.String())
 }
 
 func TestValidators(t *testing.T) {
@@ -203,34 +164,26 @@ func TestValidators(t *testing.T) {
 	cdc := app.MakeCodec()
 	r := initRouter(cdc)
 
-	req, err := http.NewRequest("GET", "/validatorsets/latest", nil)
-	require.Nil(t, err)
-	res := httptest.NewRecorder()
-
-	r.ServeHTTP(res, req)
+	res := request(t, r, "GET", "/validatorsets/latest", nil)
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	var m ctypes.ResultValidators
 	decoder := json.NewDecoder(res.Body)
-	err = decoder.Decode(&m)
-	require.Nil(t, err, "Couldn't parse block")
+	err := decoder.Decode(&m)
+	require.Nil(t, err, "Couldn't parse validatorset")
 
 	assert.NotEqual(t, ctypes.ResultValidators{}, m)
 
-	req, err = http.NewRequest("GET", "/validatorsets/1", nil)
-	require.Nil(t, err)
-	res = httptest.NewRecorder()
+	// --
 
-	r.ServeHTTP(res, req)
+	res = request(t, r, "GET", "/validatorsets/1", nil)
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	assert.NotEqual(t, ctypes.ResultValidators{}, m)
 
-	req, err = http.NewRequest("GET", "/validatorsets/2", nil)
-	require.Nil(t, err)
-	res = httptest.NewRecorder()
+	// --
 
-	r.ServeHTTP(res, req)
+	res = request(t, r, "GET", "/validatorsets/2", nil)
 	require.Equal(t, http.StatusNotFound, res.Code)
 }
 
@@ -303,13 +256,28 @@ func runOrTimeout(cmd *cobra.Command, timeout time.Duration) error {
 
 func createKey(t *testing.T, r http.Handler) string {
 	var jsonStr = []byte(`{"name":"test", "password":"1234567890"}`)
-	req, err := http.NewRequest("POST", "/keys", bytes.NewBuffer(jsonStr))
-	require.Nil(t, err)
-	res := httptest.NewRecorder()
+	res := request(t, r, "POST", "/keys", jsonStr)
 
-	r.ServeHTTP(res, req)
 	assert.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	addr := res.Body.String()
 	return addr
+}
+
+func request(t *testing.T, r http.Handler, method string, path string, payload []byte) *httptest.ResponseRecorder {
+	req, err := http.NewRequest(method, path, bytes.NewBuffer(payload))
+	require.Nil(t, err)
+	res := httptest.NewRecorder()
+
+	r.ServeHTTP(res, req)
+	return res
+}
+
+func initKeybase(t *testing.T) (cryptoKeys.Keybase, *dbm.GoLevelDB, error) {
+	os.RemoveAll("./testKeybase")
+	db, err := dbm.NewGoLevelDB("keys", "./testKeybase")
+	require.Nil(t, err)
+	kb := client.GetKeyBase(db)
+	keys.SetKeyBase(kb)
+	return kb, db, nil
 }

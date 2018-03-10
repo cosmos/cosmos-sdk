@@ -71,19 +71,20 @@ func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 // StdSignDoc is replay-prevention structure.
 // It includes the result of msg.GetSignBytes(),
 // as well as the ChainID (prevent cross chain replay)
-// and the Sequence (prevent inchain replay).
+// and the Sequence numbers for each signature (prevent
+// inchain replay and enforce tx ordering per account).
 type StdSignDoc struct {
-	ChainID  string `json:"chain_id"`
-	Sequence int64  `json:"sequence"`
-	MsgBytes []byte `json:"msg_bytes"`
-	AltBytes []byte `json:"alt_bytes"` // TODO: do we really want this ?
+	ChainID   string  `json:"chain_id"`
+	Sequences []int64 `json:"sequences"`
+	MsgBytes  []byte  `json:"msg_bytes"`
+	AltBytes  []byte  `json:"alt_bytes"` // TODO: do we really want this ?
 }
 
-func StdSignBytes(chainID string, sequence int64, msg Msg) []byte {
+func StdSignBytes(chainID string, sequences []int64, msg Msg) []byte {
 	bz, err := json.Marshal(StdSignDoc{
-		ChainID:  chainID,
-		Sequence: sequence,
-		MsgBytes: msg.GetSignBytes(),
+		ChainID:   chainID,
+		Sequences: sequences,
+		MsgBytes:  msg.GetSignBytes(),
 	})
 	if err != nil {
 		panic(err)

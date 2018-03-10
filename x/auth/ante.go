@@ -31,15 +31,17 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 		// Collect accounts to set in the context
 		var signerAccs = make([]sdk.Account, len(signerAddrs))
 
-		// First sig is the fee payer.
-		// signBytes uses the sequence of the fee payer
-		// (ie. the first account)
-		payerAddr, payerSig := signerAddrs[0], sigs[0]
-		signBytes := sdk.StdSignBytes(ctx.ChainID(), payerSig.Sequence, msg)
+		// Get the sign bytes by collecting all sequence numbers
+		sequences := make([]int64, len(signerAddrs))
+		for i := 0; i < len(signerAddrs); i++ {
+			sequences[i] = sigs[i].Sequence
+		}
+		signBytes := sdk.StdSignBytes(ctx.ChainID(), sequences, msg)
 
 		// Check fee payer sig and nonce, and deduct fee.
 		// This is done first because it only
 		// requires fetching 1 account.
+		payerAddr, payerSig := signerAddrs[0], sigs[0]
 		payerAcc, res := processSig(ctx, accountMapper, payerAddr, payerSig, signBytes)
 		if !res.IsOK() {
 			return ctx, res, true

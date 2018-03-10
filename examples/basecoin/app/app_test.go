@@ -69,9 +69,9 @@ func TestMsgs(t *testing.T) {
 	}
 
 	chainID := ""
-	sequence := int64(0)
+	sequences := []int64{0}
 	for i, m := range msgs {
-		sig := priv1.Sign(sdk.StdSignBytes(chainID, sequence, m.msg))
+		sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, m.msg))
 		tx := sdk.NewStdTx(m.msg, []sdk.StdSignature{{
 			PubKey:    priv1.PubKey(),
 			Signature: sig,
@@ -169,8 +169,8 @@ func TestSendMsgWithAccounts(t *testing.T) {
 
 	// Sign the tx
 	chainID := "" // TODO: InitChain should get the ChainID
-	sequence := int64(0)
-	sig := priv1.Sign(sdk.StdSignBytes(chainID, sequence, sendMsg))
+	sequences := []int64{0}
+	sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, sendMsg))
 	tx := sdk.NewStdTx(sendMsg, []sdk.StdSignature{{
 		PubKey:    priv1.PubKey(),
 		Signature: sig,
@@ -197,13 +197,13 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	assert.Equal(t, sdk.CodeInvalidSequence, res.Code, res.Log)
 
 	// bumping the txnonce number without resigning should be an auth error
-	sequence += 1
-	tx.Signatures[0].Sequence = sequence
+	tx.Signatures[0].Sequence = 1
 	res = bapp.Deliver(tx)
 	assert.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
 
 	// resigning the tx with the bumped sequence should work
-	sig = priv1.Sign(sdk.StdSignBytes(chainID, sequence, tx.Msg))
+	sequences = []int64{1}
+	sig = priv1.Sign(sdk.StdSignBytes(chainID, sequences, tx.Msg))
 	tx.Signatures[0].Signature = sig
 	res = bapp.Deliver(tx)
 	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)

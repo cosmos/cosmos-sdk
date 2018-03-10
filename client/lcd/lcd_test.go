@@ -118,12 +118,10 @@ func TestVersion(t *testing.T) {
 	res := request(t, r, "GET", "/version", nil)
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
-	// TODO fix regexp
-	// reg, err := regexp.Compile(`v\d+\.\d+\.\d+(-dev)?`)
-	// require.Nil(t, err)
-	// match := reg.MatchString(res.Body.String())
-	// assert.True(t, match, res.Body.String())
-	assert.Equal(t, "0.11.1-dev", res.Body.String())
+	reg, err := regexp.Compile(`\d+\.\d+\.\d+(-dev)?`)
+	require.Nil(t, err)
+	match := reg.MatchString(res.Body.String())
+	assert.True(t, match, res.Body.String())
 }
 
 func TestNodeStatus(t *testing.T) {

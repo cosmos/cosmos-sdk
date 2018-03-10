@@ -3,6 +3,7 @@ package lcd
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,9 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
-	"github.com/cosmos/cosmos-sdk/mock"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -27,12 +26,6 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
-	"github.com/cosmos/cosmos-sdk/server"
 )
 
 func TestKeys(t *testing.T) {
@@ -211,18 +204,22 @@ func TestValidators(t *testing.T) {
 }
 
 func TestCoinSend(t *testing.T) {
-	addr, seed := startServer(t)
-	// TODO need to kill server after
+	ch := server.StartServer(t)
+	defer close(ch)
+
 	prepareClient(t)
 	cdc := app.MakeCodec()
 	r := initRouter(cdc)
+
+	addr := "some address in genesis"
+	seed := "some seed of a address in genesis"
 
 	// query empty
 	res := request(t, r, "GET", "/accounts/1234567890123456789012345678901234567890", nil)
 	require.Equal(t, http.StatusNoContent, res.Code, res.Body.String())
 
 	// query
-	res = request(t, r, "GET", "/accounts/"+addr.String(), nil)
+	res = request(t, r, "GET", "/accounts/"+addr, nil)
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	assert.Equal(t, `{

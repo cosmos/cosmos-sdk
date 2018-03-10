@@ -47,8 +47,8 @@ func initClientCommand() *cobra.Command {
 func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/node_info", NodeInfoRequestHandler).Methods("GET")
 	r.HandleFunc("/syncing", NodeSyncingRequestHandler).Methods("GET")
-	r.HandleFunc("/blocks/latest", LatestBlockRequestHandler).Methods("GET")
+	// r.HandleFunc("/blocks/latest", LatestBlockRequestHandler).Methods("GET")
 	r.HandleFunc("/blocks/{height}", BlockRequestHandler).Methods("GET")
-	r.HandleFunc("/validatorsets/latest", LatestValidatorsetRequestHandler).Methods("GET")
+	// r.HandleFunc("/validatorsets/latest", LatestValidatorsetRequestHandler).Methods("GET")
 	r.HandleFunc("/validatorsets/{height}", ValidatorsetRequestHandler).Methods("GET")
 }

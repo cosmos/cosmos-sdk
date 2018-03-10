@@ -150,20 +150,25 @@ func TestBlock(t *testing.T) {
 	cdc := app.MakeCodec()
 	r := initRouter(cdc)
 
-	res := request(t, r, "GET", "/blocks/latest", nil)
+	// res := request(t, r, "GET", "/blocks/latest", nil)
+	// require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+	// var m ctypes.ResultBlock
+	// decoder := json.NewDecoder(res.Body)
+	// err := decoder.Decode(&m)
+	// require.Nil(t, err, "Couldn't parse block")
+
+	// assert.NotEqual(t, ctypes.ResultBlock{}, m)
+
+	// --
+
+	res := request(t, r, "GET", "/blocks/1", nil)
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	var m ctypes.ResultBlock
 	decoder := json.NewDecoder(res.Body)
 	err := decoder.Decode(&m)
 	require.Nil(t, err, "Couldn't parse block")
-
-	assert.NotEqual(t, ctypes.ResultBlock{}, m)
-
-	// --
-
-	res = request(t, r, "GET", "/blocks/1", nil)
-	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	assert.NotEqual(t, ctypes.ResultBlock{}, m)
 
@@ -180,20 +185,25 @@ func TestValidators(t *testing.T) {
 	cdc := app.MakeCodec()
 	r := initRouter(cdc)
 
-	res := request(t, r, "GET", "/validatorsets/latest", nil)
+	// res := request(t, r, "GET", "/validatorsets/latest", nil)
+	// require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+
+	// var m ctypes.ResultValidators
+	// decoder := json.NewDecoder(res.Body)
+	// err := decoder.Decode(&m)
+	// require.Nil(t, err, "Couldn't parse validatorset")
+
+	// assert.NotEqual(t, ctypes.ResultValidators{}, m)
+
+	// --
+
+	res := request(t, r, "GET", "/validatorsets/1", nil)
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	var m ctypes.ResultValidators
 	decoder := json.NewDecoder(res.Body)
 	err := decoder.Decode(&m)
 	require.Nil(t, err, "Couldn't parse validatorset")
-
-	assert.NotEqual(t, ctypes.ResultValidators{}, m)
-
-	// --
-
-	res = request(t, r, "GET", "/validatorsets/1", nil)
-	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
 	assert.NotEqual(t, ctypes.ResultValidators{}, m)
 

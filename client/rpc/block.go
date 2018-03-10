@@ -101,12 +101,12 @@ func BlockRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ERROR: Couldn't parse block height. Assumed format is '/block/{height}'."))
 		return
 	}
-	chainHeight, err := GetChainHeight()
-	if height > chainHeight {
-		w.WriteHeader(404)
-		w.Write([]byte("ERROR: Requested block height is bigger then the chain length."))
-		return
-	}
+	// chainHeight, err := GetChainHeight()
+	// if height > chainHeight {
+	// 	w.WriteHeader(404)
+	// 	w.Write([]byte("ERROR: Requested block height is bigger then the chain length."))
+	// 	return
+	// }
 	output, err := getBlock(&height)
 	if err != nil {
 		w.WriteHeader(500)

@@ -221,8 +221,11 @@ func TestCoinSend(t *testing.T) {
 	cdc := app.MakeCodec()
 	r := initRouter(cdc)
 
-	addr := "some address in genesis"
-	seed := "some seed of a address in genesis"
+	// TODO make that account has coins
+	kb := client.MockKeyBase()
+	info, seed, err := kb.Create("account_with_coins", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
+	require.NoError(t, err)
+	addr := string(info.Address())
 
 	// query empty
 	res := request(t, r, "GET", "/accounts/1234567890123456789012345678901234567890", nil)
@@ -241,26 +244,25 @@ func TestCoinSend(t *testing.T) {
 		]
 	}`, res.Body.String())
 
-	// create account for default coins
+	// create account to send in keybase
 	var jsonStr = []byte(fmt.Sprintf(`{"name":"test", "password":"1234567890", "seed": "%s"}`, seed))
 	res = request(t, r, "POST", "/keys", jsonStr)
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 
-	// create random account
-	res = request(t, r, "GET", "/keys/seed", nil)
-	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
-	receiveSeed := res.Body.String()
-
-	jsonStr = []byte(fmt.Sprintf(`{"name":"receive", "password":"1234567890", "seed": "%s"}`, receiveSeed))
-	res = request(t, r, "POST", "/keys", jsonStr)
-	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
-	receiveAddr := res.Body.String()
+	// create receive address
+	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
+	require.NoError(t, err)
+	receiveAddr := string(receiveInfo.Address())
 
 	// send
-	jsonStr = []byte(`{"name":"test", "password":"1234567890", "amount":[{
-		"denom": "mycoin",
-		"amount": 1
-	}]}`)
+	jsonStr = []byte(`{
+		"name":"test", 
+		"password":"1234567890", 
+		"amount":[{
+			"denom": "mycoin",
+			"amount": 1
+		}]
+	}`)
 	res = request(t, r, "POST", "/accounts/"+receiveAddr+"/send", jsonStr)
 	require.Equal(t, http.StatusOK, res.Code, res.Body.String())
 

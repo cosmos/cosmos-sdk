@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"regexp"
 	"testing"
 
@@ -28,10 +29,8 @@ import (
 )
 
 func TestKeys(t *testing.T) {
-	err := tests.InitServer()
-	require.Nil(t, err)
-	err := tests.StartServer()
-	require.Nil(t, err)
+	cmd := junkInit(t)
+	defer cmd.Process.Kill()
 
 	// empty keys
 	res, body := request(t, "GET", "/keys", nil)
@@ -94,15 +93,17 @@ func TestKeys(t *testing.T) {
 	jsonStr = []byte(`{"password":"12345678901"}`)
 	res, body = request(t, "DELETE", "/keys/test", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+}
 
-	db.Close()
+//XXX
+func junkInit(t *testing.T) *exec.Cmd {
+	tests.TestInitBasecoin(t)
+	return tests.StartServerForTest(t)
 }
 
 func TestVersion(t *testing.T) {
-	err := tests.InitServer()
-	require.Nil(t, err)
-	err := tests.StartServer()
-	require.Nil(t, err)
+	cmd := junkInit(t)
+	defer cmd.Process.Kill()
 
 	// node info
 	res, body := request(t, "GET", "/version", nil)
@@ -115,10 +116,8 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNodeStatus(t *testing.T) {
-	err := tests.InitServer()
-	require.Nil(t, err)
-	err := tests.StartServer()
-	require.Nil(t, err)
+	cmd := junkInit(t)
+	defer cmd.Process.Kill()
 
 	// node info
 	res, body := request(t, "GET", "/node_info", nil)
@@ -139,10 +138,8 @@ func TestNodeStatus(t *testing.T) {
 }
 
 func TestBlock(t *testing.T) {
-	err := tests.InitServer()
-	require.Nil(t, err)
-	err := tests.StartServer()
-	require.Nil(t, err)
+	cmd := junkInit(t)
+	defer cmd.Process.Kill()
 
 	// res, body := request(t, "GET", "/blocks/latest", nil)
 	// require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -173,10 +170,8 @@ func TestBlock(t *testing.T) {
 }
 
 func TestValidators(t *testing.T) {
-	err := tests.InitServer()
-	require.Nil(t, err)
-	err := tests.StartServer()
-	require.Nil(t, err)
+	cmd := junkInit(t)
+	defer cmd.Process.Kill()
 
 	// res, body := request(t, "GET", "/validatorsets/latest", nil)
 	// require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -207,10 +202,8 @@ func TestValidators(t *testing.T) {
 }
 
 func TestCoinSend(t *testing.T) {
-	err := tests.InitServer()
-	require.Nil(t, err)
-	err := tests.StartServer()
-	require.Nil(t, err)
+	cmd := junkInit(t)
+	defer cmd.Process.Kill()
 
 	// TODO make that account has coins
 	kb := client.MockKeyBase()

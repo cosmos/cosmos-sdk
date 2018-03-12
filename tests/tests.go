@@ -9,6 +9,8 @@ import (
 	//"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 // Tests assume the `basecoind` and `basecli` binaries
@@ -16,6 +18,7 @@ import (
 
 // TODO remove test dirs if tests are successful
 
+//nolint
 var (
 	basecoind = "build/basecoind"
 	basecli   = "build/basecli"
@@ -42,7 +45,8 @@ func whereIsBasecli() string {
 	return filepath.Join(gopath(), basecli)
 }
 
-func TestInitBaseCoin(t *testing.T) {
+// Init Basecoin Test
+func TestInitBasecoin(t *testing.T) {
 	Clean()
 
 	var err error
@@ -100,10 +104,6 @@ func makeKeys() error {
 
 	return nil
 }
-
-// these are in the original bash tests
-func TestBaseCliRecover(t *testing.T) {}
-func TestBaseCliShow(t *testing.T)    {}
 
 func _TestSendCoins(t *testing.T) {
 	if err := StartServer(); err != nil {
@@ -163,6 +163,17 @@ func StartServer() error {
 	// see: https://stackoverflow.com/questions/11886531/terminating-a-process-started-with-os-exec-in-golang
 }
 
+// expects TestInitBaseCoin to have been run
+func StartServerForTest(t *testing.T) *exec.Cmd {
+	cmdName := whereIsBasecoind()
+	cmdArgs := []string{"start", "--home", basecoindDir}
+	cmd := exec.Command(cmdName, cmdArgs...)
+	err := cmd.Start()
+	require.Nil(t, err)
+	return cmd
+}
+
+// clean the directories
 func Clean() {
 	// ignore errors b/c the dirs may not yet exist
 	os.Remove(basecoindDir)

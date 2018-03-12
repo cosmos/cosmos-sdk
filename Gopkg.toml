@@ -47,7 +47,7 @@
 
 [[constraint]]
   branch = "develop"
-  name = "github.com/tendermint/go-wire"
+  name = "github.com/tendermint/go-amino"
 
 [[constraint]]
   branch = "develop"

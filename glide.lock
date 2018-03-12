@@ -59,7 +59,7 @@ imports:
   subpackages:
   - edwards25519
   - extra25519
-- name: github.com/tendermint/go-wire
+- name: github.com/tendermint/go-amino
   version: dec83f641903b22f039da3974607859715d0377e
 - name: github.com/tendermint/tmlibs
   version: 26f2ab65f82cfc6873c312e8030104c47c05f10e

@@ -9,7 +9,7 @@ import (
 	ledger "github.com/ethanfrey/ledger"
 
 	crypto "github.com/tendermint/go-crypto"
-	wire "github.com/tendermint/go-wire"
+	amino "github.com/tendermint/go-amino"
 )
 
 //nolint
@@ -58,7 +58,7 @@ func signLedger(device *ledger.Ledger, msg []byte) (pub crypto.PubKey, sig crypt
 // PrivKeyLedgerEd25519 implements PrivKey, calling the ledger nano
 // we cache the PubKey from the first call to use it later
 type PrivKeyLedgerEd25519 struct {
-	// PubKey should be private, but we want to encode it via go-wire
+	// PubKey should be private, but we want to encode it via go-amino
 	// so we can view the address later, even without having the ledger
 	// attached
 	CachedPubKey crypto.PubKey
@@ -97,7 +97,7 @@ func (pk *PrivKeyLedgerEd25519) AssertIsPrivKeyInner() {}
 // Bytes fulfils PrivKey Interface - but it stores the cached pubkey so we can verify
 // the same key when we reconnect to a ledger
 func (pk *PrivKeyLedgerEd25519) Bytes() []byte {
-	return wire.BinaryBytes(pk.Wrap())
+	return amino.BinaryBytes(pk.Wrap())
 }
 
 // Sign calls the ledger and stores the PubKey for future use
@@ -250,7 +250,7 @@ func PubKeyLedgerEd25519FromBytes(key [32]byte) crypto.PubKey {
 
 // Bytes fulfils pk Interface - no data, just type info
 func (pk PubKeyLedgerEd25519) Bytes() []byte {
-	return wire.BinaryBytes(pk.Wrap())
+	return amino.BinaryBytes(pk.Wrap())
 }
 
 // VerifyBytes uses the normal Ed25519 algorithm but a sha512 hash beforehand

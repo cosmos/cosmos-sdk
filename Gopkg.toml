@@ -69,6 +69,10 @@
   branch = "master"
   name = "github.com/tendermint/go-wire"
 
+[[override]]
+  branch = "develop"
+  name = "github.com/tendermint/go-amino"
+
 [[constraint]]
   branch = "master"
   name = "github.com/tendermint/iavl"

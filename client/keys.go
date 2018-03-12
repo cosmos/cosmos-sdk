@@ -6,6 +6,7 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
+// TODO explain what the keybase is used for
 // GetKeyBase initializes a keybase based on the configuration
 func GetKeyBase(db dbm.DB) keys.Keybase {
 	keybase := keys.New(

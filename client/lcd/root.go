@@ -51,10 +51,11 @@ func initRouter(cdc *wire.Codec) http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/version", version.VersionRequestHandler).Methods("GET")
 
+	// TODO make more functional? aka r = keys.RegisterRoutes(r)
 	keys.RegisterRoutes(r)
 	rpc.RegisterRoutes(r)
 	tx.RegisterRoutes(r, cdc)
-	auth.RegisterRoutes(r, cdc, "main")
+	auth.RegisterRoutes(r, cdc, "main") // TODO should use a variable not just a string
 	bank.RegisterRoutes(r, cdc)
 	return r
 }

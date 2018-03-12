@@ -117,12 +117,17 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNodeStatus(t *testing.T) {
-	_, _ = startServer(t)
-	// TODO need to kill server after
-	prepareClient(t)
+	//ch := server.StartServer(t)
+	//defer close(ch)
+	//prepareClient(t)
 
-	cdc := app.MakeCodec()
-	r := initRouter(cdc)
+	//cdc := app.MakeCodec() // TODO refactor so that cdc is included from a common test init function
+	//r := initRouter(cdc)
+
+	err := tests.InitServer()
+	require.Nil(t, err)
+	err := tests.StartServer()
+	require.Nil(t, err)
 
 	// node info
 	res := request(t, r, "GET", "/node_info", nil)
@@ -291,9 +296,6 @@ func prepareClient(t *testing.T) {
 	db := dbm.NewMemDB()
 	app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db)
 	viper.Set(client.FlagNode, "localhost:46657")
-
-	_ = client.GetKeyBase(db)
-
 	header := abci.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	app.Commit()
@@ -372,6 +374,7 @@ func runOrTimeout(cmd *cobra.Command, timeout time.Duration) error {
 }
 
 func request(t *testing.T, r http.Handler, method string, path string, payload []byte) *httptest.ResponseRecorder {
+
 	req, err := http.NewRequest(method, path, bytes.NewBuffer(payload))
 	require.Nil(t, err)
 	res := httptest.NewRecorder()

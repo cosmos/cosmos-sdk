@@ -6,10 +6,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	//"strings"
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/stretchr/testify/require"
 )
 
@@ -163,14 +165,58 @@ func StartServer() error {
 	// see: https://stackoverflow.com/questions/11886531/terminating-a-process-started-with-os-exec-in-golang
 }
 
+// Init Basecoin Test
+func InitServerForTest(t *testing.T) {
+	Clean()
+
+	var err error
+
+	password := "some-random-password"
+	usePassword := exec.Command("echo", password)
+
+	initBasecoind := exec.Command(whereIsBasecoind(), "init", "--home", basecoindDir)
+
+	initBasecoind.Stdin, err = usePassword.StdoutPipe()
+	require.Nil(t, err)
+
+	initBasecoind.Stdout = os.Stdout
+
+	err = initBasecoind.Start()
+	require.Nil(t, err)
+	err = usePassword.Run()
+	require.Nil(t, err)
+	err = initBasecoind.Wait()
+	require.Nil(t, err)
+
+	err = makeKeys()
+	require.Nil(t, err)
+}
+
 // expects TestInitBaseCoin to have been run
-func StartServerForTest(t *testing.T) *exec.Cmd {
+func StartNodeServerForTest(t *testing.T) *exec.Cmd {
 	cmdName := whereIsBasecoind()
 	cmdArgs := []string{"start", "--home", basecoindDir}
 	cmd := exec.Command(cmdName, cmdArgs...)
 	err := cmd.Start()
 	require.Nil(t, err)
 	return cmd
+}
+
+// expects TestInitBaseCoin to have been run
+func StartLCDServerForTest(t *testing.T) (cmd *exec.Cmd, port string) {
+	cmdName := whereIsBasecli()
+	port = strings.Split(server.FreeTCPAddr(t), ":")[2]
+	cmdArgs := []string{
+		"rest-server",
+		"--home",
+		basecoindDir,
+		"--port",
+		port,
+	}
+	cmd = exec.Command(cmdName, cmdArgs...)
+	err := cmd.Start()
+	require.Nil(t, err)
+	return cmd, port
 }
 
 // clean the directories

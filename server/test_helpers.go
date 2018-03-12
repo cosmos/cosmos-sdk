@@ -17,7 +17,8 @@ import (
 )
 
 // Get a free address for a test tendermint server
-func FreeAddr(t *testing.T) string {
+// protocol is either tcp, http, etc
+func FreeTCPAddr(t *testing.T) string {
 	l, err := net.Listen("tcp", "0.0.0.0:0")
 	defer l.Close()
 	require.Nil(t, err)
@@ -51,7 +52,7 @@ func StartServer(t *testing.T) chan error {
 	// start server
 	viper.Set(flagWithTendermint, true)
 	startCmd := StartCmd(mock.NewApp, log.NewNopLogger())
-	startCmd.Flags().Set(flagAddress, FreeAddr(t)) // set to a new free address
+	startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
 	timeout := time.Duration(3) * time.Second
 
 	return RunOrTimeout(startCmd, timeout, t)

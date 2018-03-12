@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"regexp"
 	"testing"
 
@@ -29,16 +28,16 @@ import (
 )
 
 func TestKeys(t *testing.T) {
-	cmd := junkInit(t)
-	defer cmd.Process.Kill()
+	kill, port := junkInit(t)
+	defer kill()
 
 	// empty keys
-	res, body := request(t, "GET", "/keys", nil)
+	res, body := request(t, port, "GET", "/keys", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	assert.Equal(t, body, "[]", "Expected an empty array")
 
 	// get seed
-	res, body = request(t, "GET", "/keys/seed", nil)
+	res, body = request(t, port, "GET", "/keys/seed", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	seed := body
 	reg, err := regexp.Compile(`([a-z]+ ){12}`)
@@ -48,30 +47,30 @@ func TestKeys(t *testing.T) {
 
 	// add key
 	var jsonStr = []byte(`{"name":"test_fail", "password":"1234567890"}`)
-	res, body = request(t, "POST", "/keys", jsonStr)
+	res, body = request(t, port, "POST", "/keys", jsonStr)
 
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode, "Account creation should require a seed")
 
 	jsonStr = []byte(fmt.Sprintf(`{"name":"test", "password":"1234567890", "seed": "%s"}`, seed))
-	res, body = request(t, "POST", "/keys", jsonStr)
+	res, body = request(t, port, "POST", "/keys", jsonStr)
 
 	assert.Equal(t, http.StatusOK, res.StatusCode, body)
 	addr := body
 	assert.Len(t, addr, 40, "Returned address has wrong format", addr)
 
 	// existing keys
-	res, body = request(t, "GET", "/keys", nil)
+	res, body = request(t, port, "GET", "/keys", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var m [1]keys.KeyOutput
 	decoder := json.NewDecoder(res.Body)
 	err = decoder.Decode(&m)
-	require.NoError(t, err)
+	require.Nil(t, err)
 
 	assert.Equal(t, m[0].Name, "test", "Did not serve keys name correctly")
 	assert.Equal(t, m[0].Address, addr, "Did not serve keys Address correctly")
 
 	// select key
-	res, body = request(t, "GET", "/keys/test", nil)
+	res, body = request(t, port, "GET", "/keys/test", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var m2 keys.KeyOutput
 	decoder = json.NewDecoder(res.Body)
@@ -82,31 +81,37 @@ func TestKeys(t *testing.T) {
 
 	// update key
 	jsonStr = []byte(`{"old_password":"1234567890", "new_password":"12345678901"}`)
-	res, body = request(t, "PUT", "/keys/test", jsonStr)
+	res, body = request(t, port, "PUT", "/keys/test", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	// here it should say unauthorized as we changed the password before
-	res, body = request(t, "PUT", "/keys/test", jsonStr)
+	res, body = request(t, port, "PUT", "/keys/test", jsonStr)
 	require.Equal(t, http.StatusUnauthorized, res.StatusCode, body)
 
 	// delete key
 	jsonStr = []byte(`{"password":"12345678901"}`)
-	res, body = request(t, "DELETE", "/keys/test", jsonStr)
+	res, body = request(t, port, "DELETE", "/keys/test", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 }
 
 //XXX
-func junkInit(t *testing.T) *exec.Cmd {
+func junkInit(t *testing.T) (kill func(), port string) {
 	tests.TestInitBasecoin(t)
-	return tests.StartServerForTest(t)
+	cmdStart := tests.StartNodeServerForTest(t)
+	cmdLCD, port := tests.StartLCDServerForTest(t)
+	kill = func() {
+		cmdLCD.Process.Kill()
+		cmdStart.Process.Kill()
+	}
+	return kill, port
 }
 
 func TestVersion(t *testing.T) {
-	cmd := junkInit(t)
-	defer cmd.Process.Kill()
+	kill, port := junkInit(t)
+	defer kill()
 
 	// node info
-	res, body := request(t, "GET", "/version", nil)
+	res, body := request(t, port, "GET", "/version", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	reg, err := regexp.Compile(`\d+\.\d+\.\d+(-dev)?`)
@@ -116,11 +121,11 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNodeStatus(t *testing.T) {
-	cmd := junkInit(t)
-	defer cmd.Process.Kill()
+	kill, port := junkInit(t)
+	defer kill()
 
 	// node info
-	res, body := request(t, "GET", "/node_info", nil)
+	res, body := request(t, port, "GET", "/node_info", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var m p2p.NodeInfo
@@ -131,17 +136,17 @@ func TestNodeStatus(t *testing.T) {
 	assert.NotEqual(t, p2p.NodeInfo{}, m, "res: %v", res)
 
 	// syncing
-	res, body = request(t, "GET", "/syncing", nil)
+	res, body = request(t, port, "GET", "/syncing", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	assert.Equal(t, "true", body)
 }
 
 func TestBlock(t *testing.T) {
-	cmd := junkInit(t)
-	defer cmd.Process.Kill()
+	kill, port := junkInit(t)
+	defer kill()
 
-	// res, body := request(t, "GET", "/blocks/latest", nil)
+	// res, body := request(t, port,  "GET", "/blocks/latest", nil)
 	// require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	// var m ctypes.ResultBlock
@@ -153,7 +158,7 @@ func TestBlock(t *testing.T) {
 
 	// --
 
-	res, body := request(t, "GET", "/blocks/1", nil)
+	res, body := request(t, port, "GET", "/blocks/1", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var m ctypes.ResultBlock
@@ -165,15 +170,15 @@ func TestBlock(t *testing.T) {
 
 	// --
 
-	res, body = request(t, "GET", "/blocks/2", nil)
+	res, body = request(t, port, "GET", "/blocks/2", nil)
 	require.Equal(t, http.StatusNotFound, res.StatusCode, body)
 }
 
 func TestValidators(t *testing.T) {
-	cmd := junkInit(t)
-	defer cmd.Process.Kill()
+	kill, port := junkInit(t)
+	defer kill()
 
-	// res, body := request(t, "GET", "/validatorsets/latest", nil)
+	// res, body := request(t, port,  "GET", "/validatorsets/latest", nil)
 	// require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	// var m ctypes.ResultValidators
@@ -185,7 +190,7 @@ func TestValidators(t *testing.T) {
 
 	// --
 
-	res, body := request(t, "GET", "/validatorsets/1", nil)
+	res, body := request(t, port, "GET", "/validatorsets/1", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var m ctypes.ResultValidators
@@ -197,26 +202,26 @@ func TestValidators(t *testing.T) {
 
 	// --
 
-	res, body = request(t, "GET", "/validatorsets/2", nil)
+	res, body = request(t, port, "GET", "/validatorsets/2", nil)
 	require.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
 func TestCoinSend(t *testing.T) {
-	cmd := junkInit(t)
-	defer cmd.Process.Kill()
+	kill, port := junkInit(t)
+	defer kill()
 
 	// TODO make that account has coins
 	kb := client.MockKeyBase()
 	info, seed, err := kb.Create("account_with_coins", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
-	require.NoError(t, err)
+	require.Nil(t, err)
 	addr := string(info.Address())
 
 	// query empty
-	res, body := request(t, "GET", "/accounts/1234567890123456789012345678901234567890", nil)
+	res, body := request(t, port, "GET", "/accounts/1234567890123456789012345678901234567890", nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	// query
-	res, body = request(t, "GET", "/accounts/"+addr, nil)
+	res, body = request(t, port, "GET", "/accounts/"+addr, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	assert.Equal(t, `{
@@ -230,12 +235,12 @@ func TestCoinSend(t *testing.T) {
 
 	// create account to send in keybase
 	var jsonStr = []byte(fmt.Sprintf(`{"name":"test", "password":"1234567890", "seed": "%s"}`, seed))
-	res, body = request(t, "POST", "/keys", jsonStr)
+	res, body = request(t, port, "POST", "/keys", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	// create receive address
 	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
-	require.NoError(t, err)
+	require.Nil(t, err)
 	receiveAddr := string(receiveInfo.Address())
 
 	// send
@@ -247,11 +252,11 @@ func TestCoinSend(t *testing.T) {
 			"amount": 1
 		}]
 	}`)
-	res, body = request(t, "POST", "/accounts/"+receiveAddr+"/send", jsonStr)
+	res, body = request(t, port, "POST", "/accounts/"+receiveAddr+"/send", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	// check if received
-	res, body = request(t, "GET", "/accounts/"+receiveAddr, nil)
+	res, body = request(t, port, "GET", "/accounts/"+receiveAddr, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	assert.Equal(t, `{
@@ -280,19 +285,20 @@ func prepareClient(t *testing.T) {
 	app.Commit()
 }
 
-func request(t *testing.T, method string, path string, payload []byte) (*http.Response, string) {
+func request(t *testing.T, port, method, path string, payload []byte) (*http.Response, string) {
 	var res *http.Response
 	var err error
+	url := fmt.Sprintf("http://localhost:%v%v", port, path)
 	if method == "GET" {
-		res, err = http.Get(path)
+		res, err = http.Get(url)
 	}
 	if method == "POST" {
-		res, err = http.Post(path, "application/json", bytes.NewBuffer(payload))
+		res, err = http.Post(url, "application/json", bytes.NewBuffer(payload))
 	}
-	require.NoError(t, err)
+	require.Nil(t, err)
 
 	output, err := ioutil.ReadAll(res.Body)
-	require.NoError(t, err)
+	require.Nil(t, err)
 
 	return res, string(output)
 }

@@ -9,18 +9,33 @@ IBC module will store its own router for handling custom incoming msgs. `IBCPush
 ### IBC Module
 
 ```golang
-type IBCOutMsg struct {
-    IBCTransfer
+// User facing API
+
+type IBCTransferData struct {
+    SrcAddr  sdk.Address
+    DestAddr sdk.Address
+    Coins    sdk.Coins
 }
 
-type IBCInMsg struct {
-    IBCTransfer
+// Implements sdk.Msg
+type IBCTransferMsg struct {
+    IBCTransferData
 }
 
-type IBCTransfer struct {
-    Destination sdk.Address
-    Coins       sdk.Coins
+// Implements sdk.Msg
+type IBCReceiveMsg struct {
+    IBCTransferData    
 }
+
+type IBCPacket struct {
+    Msg       IBCMsg
+    SrcChain  string    
+    DestChain string
+}
+
+// Internal API
+
+func NewHandler(router sdk.Router, ibcm IBCMapper) sdk.Handler
 
 type IBCMapper struct {
     ingressKey sdk.StoreKey // Source Chain ID            => last income msg's sequence
@@ -36,6 +51,8 @@ type EgressKey struct {
     Index       int64
 }
 
+// Used by other modules
+func (ibcm IBCMapper) PushPacket(ctx sdk.Context, dest string, packet IBCTransferPacket)
 ```
 
 `egressKey` stores the outgoing `IBCTransfer`s as a list. Its getter takes an `EgressKey` and returns the length if `egressKey.Index == -1`, an element if `egressKey.Index > 0`.

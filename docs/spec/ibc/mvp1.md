@@ -9,18 +9,24 @@ The initial implementation of IBC will include just enough for simple coin trans
 ### IBC Module
 
 ```golang
-type IBCOutMsg struct {
-    IBCTransfer
+// User facing API
+
+type IBCTransferPacket struct {
+    DestAddr sdk.Address
+    Coins    sdk.Coins
 }
 
-type IBCInMsg struct {
-    IBCTransfer
+type IBCTransferMsg struct {
+    IBCTransferPacket
+    DestChain string
 }
 
-type IBCTransfer struct {
-    Destination sdk.Address
-    Coins       sdk.Coins
+type IBCReceiveMsg struct {
+    IBCTransferPacket
+    SrcChain string
 }
+
+// Internal API
 
 type IBCMapper struct {
     ingressKey sdk.StoreKey // Source Chain ID            => last income msg's sequence
@@ -28,7 +34,7 @@ type IBCMapper struct {
 }
 
 type IngressKey struct {
-    SourceChain string
+    SrcChain string
 }
 
 type EgressKey struct {

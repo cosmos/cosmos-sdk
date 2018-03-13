@@ -3,12 +3,12 @@ package stake
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
-	"github.com/tendermint/tmlibs/rational"
 )
 
 func TestGetInflation(t *testing.T) {
-	store := initTestStore(t)
+	store, ctx, key := createTestInput(t, false)
 	params := loadParams(store)
 	gs := loadGlobalState(store)
 
@@ -18,27 +18,27 @@ func TestGetInflation(t *testing.T) {
 
 	tests := []struct {
 		setBondedPool, setTotalSupply int64
-		setInflation, expectedChange  rational.Rat
+		setInflation, expectedChange  sdk.Rat
 	}{
 		// with 0% bonded atom supply the inflation should increase by InflationRateChange
-		{0, 0, rational.New(7, 100), params.InflationRateChange.Quo(hrsPerYr)},
+		{0, 0, sdk.New(7, 100), params.InflationRateChange.Quo(hrsPerYr)},
 
 		// 100% bonded, starting at 20% inflation and being reduced
-		{1, 1, rational.New(20, 100), rational.One.Sub(rational.One.Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(hrsPerYr)},
+		{1, 1, sdk.New(20, 100), sdk.One.Sub(sdk.One.Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(hrsPerYr)},
 
 		// 50% bonded, starting at 10% inflation and being increased
-		{1, 2, rational.New(10, 100), rational.One.Sub(rational.New(1, 2).Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(hrsPerYr)},
+		{1, 2, sdk.New(10, 100), sdk.One.Sub(sdk.New(1, 2).Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(hrsPerYr)},
 
 		// test 7% minimum stop (testing with 100% bonded)
-		{1, 1, rational.New(7, 100), rational.Zero},
-		{1, 1, rational.New(70001, 1000000), rational.New(-1, 1000000)},
+		{1, 1, sdk.New(7, 100), sdk.Zero},
+		{1, 1, sdk.New(70001, 1000000), sdk.New(-1, 1000000)},
 
 		// test 20% maximum stop (testing with 0% bonded)
-		{0, 0, rational.New(20, 100), rational.Zero},
-		{0, 0, rational.New(199999, 1000000), rational.New(1, 1000000)},
+		{0, 0, sdk.New(20, 100), sdk.Zero},
+		{0, 0, sdk.New(199999, 1000000), sdk.New(1, 1000000)},
 
 		// perfect balance shouldn't change inflation
-		{67, 100, rational.New(15, 100), rational.Zero},
+		{67, 100, sdk.New(15, 100), sdk.Zero},
 	}
 	for _, tc := range tests {
 		gs.BondedPool, gs.TotalSupply = tc.setBondedPool, tc.setTotalSupply
@@ -53,7 +53,7 @@ func TestGetInflation(t *testing.T) {
 }
 
 func TestProcessProvisions(t *testing.T) {
-	store := initTestStore(t)
+	store, ctx, key := createTestInput(t, false)
 	params := loadParams(store)
 	gs := loadGlobalState(store)
 
@@ -75,7 +75,7 @@ func TestProcessProvisions(t *testing.T) {
 	var unbondedShares int64 = 400000000
 
 	// initial bonded ratio ~ 27%
-	assert.True(t, gs.bondedRatio().Equal(rational.New(bondedShares, totalSupply)), "%v", gs.bondedRatio())
+	assert.True(t, gs.bondedRatio().Equal(sdk.New(bondedShares, totalSupply)), "%v", gs.bondedRatio())
 
 	// Supplies
 	assert.Equal(t, totalSupply, gs.TotalSupply)
@@ -83,7 +83,7 @@ func TestProcessProvisions(t *testing.T) {
 	assert.Equal(t, unbondedShares, gs.UnbondedPool)
 
 	// test the value of candidate shares
-	assert.True(t, gs.bondedShareExRate().Equal(rational.One), "%v", gs.bondedShareExRate())
+	assert.True(t, gs.bondedShareExRate().Equal(sdk.One), "%v", gs.bondedShareExRate())
 
 	initialSupply := gs.TotalSupply
 	initialUnbonded := gs.TotalSupply - gs.BondedPool
@@ -91,7 +91,7 @@ func TestProcessProvisions(t *testing.T) {
 	// process the provisions a year
 	for hr := 0; hr < 8766; hr++ {
 		expInflation := nextInflation(gs, params).Round(1000000000)
-		expProvisions := (expInflation.Mul(rational.New(gs.TotalSupply)).Quo(hrsPerYr)).Evaluate()
+		expProvisions := (expInflation.Mul(sdk.New(gs.TotalSupply)).Quo(hrsPerYr)).Evaluate()
 		startBondedPool := gs.BondedPool
 		startTotalSupply := gs.TotalSupply
 		processProvisions(store, gs, params)
@@ -103,7 +103,7 @@ func TestProcessProvisions(t *testing.T) {
 	//panic(fmt.Sprintf("debug total %v, bonded  %v, diff %v\n", gs.TotalSupply, gs.BondedPool, gs.TotalSupply-gs.BondedPool))
 
 	// initial bonded ratio ~ 35% ~ 30% increase for bonded holders
-	assert.True(t, gs.bondedRatio().Equal(rational.New(105906511, 305906511)), "%v", gs.bondedRatio())
+	assert.True(t, gs.bondedRatio().Equal(sdk.New(105906511, 305906511)), "%v", gs.bondedRatio())
 
 	// global supply
 	assert.Equal(t, int64(611813022), gs.TotalSupply)
@@ -111,6 +111,6 @@ func TestProcessProvisions(t *testing.T) {
 	assert.Equal(t, unbondedShares, gs.UnbondedPool)
 
 	// test the value of candidate shares
-	assert.True(t, gs.bondedShareExRate().Mul(rational.New(bondedShares)).Equal(rational.New(211813022)), "%v", gs.bondedShareExRate())
+	assert.True(t, gs.bondedShareExRate().Mul(sdk.New(bondedShares)).Equal(sdk.New(211813022)), "%v", gs.bondedShareExRate())
 
 }

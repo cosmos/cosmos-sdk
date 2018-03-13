@@ -18,10 +18,11 @@ const (
 	ByteTxEditCandidacy    = 0x56
 	ByteTxDelegate         = 0x57
 	ByteTxUnbond           = 0x58
-	TypeTxDeclareCandidacy = stakingModuleName + "/declareCandidacy"
-	TypeTxEditCandidacy    = stakingModuleName + "/editCandidacy"
-	TypeTxDelegate         = stakingModuleName + "/delegate"
-	TypeTxUnbond           = stakingModuleName + "/unbond"
+
+	TypeTxDeclareCandidacy = "staking/declareCandidacy"
+	TypeTxEditCandidacy    = "staking/editCandidacy"
+	TypeTxDelegate         = "staking/delegate"
+	TypeTxUnbond           = "staking/unbond"
 )
 
 //func init() {

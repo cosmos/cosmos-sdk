@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/tmlibs/rational"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coin "github.com/cosmos/cosmos-sdk/x/bank" // XXX fix
@@ -16,23 +15,7 @@ import (
 
 //______________________________________________________________________
 
-// dummy transfer functions, represents store operations on account balances
-
-type testCoinSender struct {
-	store map[string]int64
-}
-
-var _ coinSend = testCoinSender{} // enforce interface at compile time
-
-func (c testCoinSender) transferFn(sender, receiver sdk.Actor, coins coin.Coins) error {
-	c.store[string(sender.Address)] -= coins[0].Amount
-	c.store[string(receiver.Address)] += coins[0].Amount
-	return nil
-}
-
-//______________________________________________________________________
-
-func initAccounts(n int, amount int64) ([]sdk.Actor, map[string]int64) {
+func initAccounts(n int, amount int64) ([]sdk.Address, map[string]int64) {
 	accStore := map[string]int64{}
 	senders := newActors(n)
 	for _, sender := range senders {
@@ -69,10 +52,10 @@ func paramsNoInflation() Params {
 	return Params{
 		HoldBonded:          sdk.NewActor(stakingModuleName, []byte("77777777777777777777777777777777")),
 		HoldUnbonded:        sdk.NewActor(stakingModuleName, []byte("88888888888888888888888888888888")),
-		InflationRateChange: rational.Zero,
-		InflationMax:        rational.Zero,
-		InflationMin:        rational.Zero,
-		GoalBonded:          rational.New(67, 100),
+		InflationRateChange: sdk.Zero,
+		InflationMax:        sdk.Zero,
+		InflationMin:        sdk.Zero,
+		GoalBonded:          sdk.New(67, 100),
 		MaxVals:             100,
 		AllowedBondDenom:    "fermion",
 		GasDeclareCandidacy: 20,
@@ -82,17 +65,11 @@ func paramsNoInflation() Params {
 	}
 }
 
-func newDeliver(t, sender sdk.Actor, accStore map[string]int64) deliver {
-	store := initTestStore()
+func newTestTransact(t, sender sdk.Address, isCheckTx bool) transact {
+	store, mapper, coinKeeper := createTestInput(t, isCheckTx)
 	params := paramsNoInflation()
-	saveParams(store, params)
-	return deliver{
-		store:    store,
-		sender:   sender,
-		params:   params,
-		gs:       loadGlobalState(store),
-		transfer: testCoinSender{accStore}.transferFn,
-	}
+	mapper.saveParams(params)
+	newTransact(ctx, sender, mapper, coinKeeper)
 }
 
 func TestDuplicatesTxDeclareCandidacy(t *testing.T) {

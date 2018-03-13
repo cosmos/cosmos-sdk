@@ -1,7 +1,7 @@
 package stake
 
 import (
-	"github.com/tendermint/go-wire"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // XXX complete

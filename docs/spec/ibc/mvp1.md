@@ -14,18 +14,18 @@ The initial implementation of IBC will include just enough for simple coin trans
 type IBCTransferPacket struct {
     DestAddr sdk.Address
     Coins    sdk.Coins
+    SrcChain string
+    DestChain string
 }
 
 // Implements sdk.Msg
 type IBCTransferMsg struct {
     IBCTransferPacket
-    DestChain string
 }
 
 // Implements sdk.Msg
 type IBCReceiveMsg struct {
     IBCTransferPacket
-    SrcChain string
 }
 
 // Internal API

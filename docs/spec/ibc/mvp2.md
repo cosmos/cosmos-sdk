@@ -4,7 +4,7 @@
 
 ## MVP2
 
-IBC module will store its own router for handling custom incoming msgs. `IBCPush` and `IBCReceive` are made for inter-module communication 
+IBC module will store its own router for handling custom incoming msgs. `IBCPush` are made for inter-module communication. `IBCRegisterMsg` adds a handler in the router of the module.
 
 ### IBC Module
 
@@ -17,25 +17,25 @@ type IBCTransferData struct {
     Coins    sdk.Coins
 }
 
-// Implements sdk.Msg
-type IBCTransferMsg struct {
+// Implements ibc.PacketData
+type IBCTransferPacket struct {
     IBCTransferData
 }
 
-// Implements sdk.Msg
-type IBCReceiveMsg struct {
+// Implements ibc.PacketData
+type IBCReceivePacket struct {
     IBCTransferData    
 }
 
-type IBCPacket struct {
-    Msg       IBCMsg
+type Packet struct {
+    Data      PacketData
     SrcChain  string    
     DestChain string
 }
 
 // Internal API
 
-func NewHandler(router sdk.Router, ibcm IBCMapper) sdk.Handler
+func NewHandler(dispatcher Dispatcher, ibcm IBCMapper) sdk.Handler
 
 type IBCMapper struct {
     ingressKey sdk.StoreKey // Source Chain ID            => last income msg's sequence
@@ -52,7 +52,7 @@ type EgressKey struct {
 }
 
 // Used by other modules
-func (ibcm IBCMapper) PushPacket(ctx sdk.Context, dest string, packet IBCTransferPacket)
+func (ibcm IBCMapper) PushPacket(ctx sdk.Context, dest string, data PacketData)
 ```
 
 `egressKey` stores the outgoing `IBCTransfer`s as a list. Its getter takes an `EgressKey` and returns the length if `egressKey.Index == -1`, an element if `egressKey.Index > 0`.

@@ -16,11 +16,13 @@ type IBCTransferPacket struct {
     Coins    sdk.Coins
 }
 
+// Implements sdk.Msg
 type IBCTransferMsg struct {
     IBCTransferPacket
     DestChain string
 }
 
+// Implements sdk.Msg
 type IBCReceiveMsg struct {
     IBCTransferPacket
     SrcChain string

@@ -15,18 +15,18 @@ type IBCTransferData struct {
     Coins    sdk.Coins
 }
 
-// Implements sdk.Msg
-type IBCTransferMsg struct {
+// Implements ibc.PacketData
+type IBCTransferPacket struct {
     IBCTransferData
 }
 
-// Implements sdk.Msg
-type IBCReceiveMsg struct {
+// Implements ibc.PacketData
+type IBCReceivePacket struct {
     IBCTransferData    
 }
 
-type IBCPacket struct {
-    Msg       IBCMsg
+type Packet struct {
+    Data      PacketData
     SrcChain  string    
     DestChain string
 }
@@ -49,7 +49,7 @@ type IBCUpdateMsg struct {
 
 // Internal API
 
-func NewHandler(router sdk.Router, ibcm IBCMapper) sdk.Handler
+func NewHandler(dispatcher Dispatcher, ibcm IBCMapper) sdk.Handler
 
 type IBCMapper struct {
     ingressKey sdk.StoreKey // ChannelID              => last income msg's sequence
@@ -71,7 +71,7 @@ type HeaderKey struct {
 }
 
 // Used by other modules
-func (ibcm IBCMapper) PushPacket(ctx sdk.Context, dest string, packet IBCTransferPacket)
+func (ibcm IBCMapper) PushPacket(ctx sdk.Context, dest string, data PacketData)
 
 ```
 

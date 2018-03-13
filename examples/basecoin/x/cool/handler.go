@@ -42,16 +42,10 @@ func handleSetTrendMsg(ctx sdk.Context, cm Mapper, msg SetTrendMsg) sdk.Result {
 // Handle QuizMsg This is the engine of your module
 func handleQuizMsg(ctx sdk.Context, ck bank.CoinKeeper, cm Mapper, msg QuizMsg) sdk.Result {
 
-	whatsCool := cm.GetCool(ctx)
+	currentTrend := cm.GetTrend(ctx)
 
-	// set default if nothing is set
-	//if whatsCool == "" {
-	//cm.SetTrend(ctx, "icecold")
-	//}
-
-	if msg.CoolAnswer == whatsCool {
-
-		bonusCoins := sdk.Coins{{whatsCool, 69}}
+	if msg.CoolAnswer == currentTrend {
+		bonusCoins := sdk.Coins{{currentTrend, 69}}
 		_, err := ck.AddCoins(ctx, msg.Sender, bonusCoins)
 		if err != nil {
 			return err.Result()

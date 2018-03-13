@@ -21,28 +21,16 @@ import (
 	"github.com/tendermint/tmlibs/log"
 )
 
-// helper variables and functions
-
+// Construct some global addrs and txs for tests.
 var (
-	// Construct genesis key/accounts
 	priv1 = crypto.GenPrivKeyEd25519()
 	addr1 = priv1.PubKey().Address()
 	addr2 = crypto.GenPrivKeyEd25519().PubKey().Address()
+	coins = sdk.Coins{{"foocoin", 10}}
 
 	sendMsg = bank.SendMsg{
-		Inputs: []bank.Input{
-			{
-				Address:  addr1,
-				Coins:    sdk.Coins{{"foocoin", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []bank.Output{
-			{
-				Address: addr2,
-				Coins:   sdk.Coins{{"foocoin", 10}},
-			},
-		},
+		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
+		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
 	}
 
 	whatCoolMsg1 = cool.WhatCoolMsg{
@@ -80,8 +68,10 @@ func TestMsgs(t *testing.T) {
 		{setWhatCoolMsg},
 	}
 
+	chainID := ""
+	sequences := []int64{0}
 	for i, m := range msgs {
-		sig := priv1.Sign(m.msg.GetSignBytes())
+		sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, m.msg))
 		tx := sdk.NewStdTx(m.msg, []sdk.StdSignature{{
 			PubKey:    priv1.PubKey(),
 			Signature: sig,
@@ -178,9 +168,12 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	assert.Equal(t, acc1, res1)
 
 	// Sign the tx
+	chainID := "" // TODO: InitChain should get the ChainID
+	sequences := []int64{0}
+	sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, sendMsg))
 	tx := sdk.NewStdTx(sendMsg, []sdk.StdSignature{{
 		PubKey:    priv1.PubKey(),
-		Signature: priv1.Sign(sendMsg.GetSignBytes()),
+		Signature: sig,
 	}})
 
 	// Run a Check
@@ -198,6 +191,22 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	res3 := bapp.accountMapper.GetAccount(ctxDeliver, addr2)
 	assert.Equal(t, fmt.Sprintf("%v", res2.GetCoins()), "67foocoin")
 	assert.Equal(t, fmt.Sprintf("%v", res3.GetCoins()), "10foocoin")
+
+	// Delivering again should cause replay error
+	res = bapp.Deliver(tx)
+	assert.Equal(t, sdk.CodeInvalidSequence, res.Code, res.Log)
+
+	// bumping the txnonce number without resigning should be an auth error
+	tx.Signatures[0].Sequence = 1
+	res = bapp.Deliver(tx)
+	assert.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
+
+	// resigning the tx with the bumped sequence should work
+	sequences = []int64{1}
+	sig = priv1.Sign(sdk.StdSignBytes(chainID, sequences, tx.Msg))
+	tx.Signatures[0].Signature = sig
+	res = bapp.Deliver(tx)
+	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
 }
 
 //func TestWhatCoolMsg(t *testing.T) {

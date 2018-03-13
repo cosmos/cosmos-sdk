@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -9,82 +11,98 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 		ctx sdk.Context, tx sdk.Tx,
 	) (_ sdk.Context, _ sdk.Result, abort bool) {
 
-		// Deduct the fee from the fee payer.
-		// This is done first because it only
-		// requires fetching 1 account.
-		payerAddr := tx.GetFeePayer()
-		if payerAddr != nil {
-			payerAcc := accountMapper.GetAccount(ctx, payerAddr)
-			if payerAcc == nil {
-				return ctx,
-					sdk.ErrUnrecognizedAddress(payerAddr).Result(),
-					true
-			}
-			// TODO: Charge fee from payerAcc.
-			// TODO: accountMapper.SetAccount(ctx, payerAddr)
-		} else {
-			// TODO: Ensure that some other spam prevention is used.
-		}
-
-		var sigs = tx.GetSignatures()
-
 		// Assert that there are signatures.
+		var sigs = tx.GetSignatures()
 		if len(sigs) == 0 {
 			return ctx,
 				sdk.ErrUnauthorized("no signers").Result(),
 				true
 		}
 
-		// Ensure that sigs are correct.
-		var msg = tx.GetMsg()
-		var signerAddrs = msg.GetSigners()
-		var signerAccs = make([]sdk.Account, len(signerAddrs))
+		// TODO: can tx just implement message?
+		msg := tx.GetMsg()
 
 		// Assert that number of signatures is correct.
+		var signerAddrs = msg.GetSigners()
 		if len(sigs) != len(signerAddrs) {
 			return ctx,
 				sdk.ErrUnauthorized("wrong number of signers").Result(),
 				true
 		}
 
-		// Check each nonce and sig.
-		// TODO Refactor out.
-		for i, sig := range sigs {
+		// Collect accounts to set in the context
+		var signerAccs = make([]sdk.Account, len(signerAddrs))
 
-			var signerAcc = accountMapper.GetAccount(ctx, signerAddrs[i])
+		// Get the sign bytes by collecting all sequence numbers
+		sequences := make([]int64, len(signerAddrs))
+		for i := 0; i < len(signerAddrs); i++ {
+			sequences[i] = sigs[i].Sequence
+		}
+		signBytes := sdk.StdSignBytes(ctx.ChainID(), sequences, msg)
+
+		// Check fee payer sig and nonce, and deduct fee.
+		// This is done first because it only
+		// requires fetching 1 account.
+		payerAddr, payerSig := signerAddrs[0], sigs[0]
+		payerAcc, res := processSig(ctx, accountMapper, payerAddr, payerSig, signBytes)
+		if !res.IsOK() {
+			return ctx, res, true
+		}
+		signerAccs[0] = payerAcc
+		// TODO: Charge fee from payerAcc.
+		// TODO: accountMapper.SetAccount(ctx, payerAddr)
+
+		// Check sig and nonce for the rest.
+		for i := 1; i < len(sigs); i++ {
+			signerAddr, sig := signerAddrs[i], sigs[i]
+			signerAcc, res := processSig(ctx, accountMapper, signerAddr, sig, signBytes)
+			if !res.IsOK() {
+				return ctx, res, true
+			}
 			signerAccs[i] = signerAcc
-
-			// If no pubkey, set pubkey.
-			if signerAcc.GetPubKey().Empty() {
-				err := signerAcc.SetPubKey(sig.PubKey)
-				if err != nil {
-					return ctx,
-						sdk.ErrInternal("setting PubKey on signer").Result(),
-						true
-				}
-			}
-
-			// Check and increment sequence number.
-			seq := signerAcc.GetSequence()
-			if seq != sig.Sequence {
-				return ctx,
-					sdk.ErrInvalidSequence("").Result(),
-					true
-			}
-			signerAcc.SetSequence(seq + 1)
-
-			// Check sig.
-			if !sig.PubKey.VerifyBytes(msg.GetSignBytes(), sig.Signature) {
-				return ctx,
-					sdk.ErrUnauthorized("").Result(),
-					true
-			}
-
-			// Save the account.
-			accountMapper.SetAccount(ctx, signerAcc)
 		}
 
 		ctx = WithSigners(ctx, signerAccs)
 		return ctx, sdk.Result{}, false // continue...
 	}
+}
+
+// verify the signature and increment the sequence.
+// if the account doesn't have a pubkey, set it as well.
+func processSig(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, sig sdk.StdSignature, signBytes []byte) (acc sdk.Account, res sdk.Result) {
+
+	// Get the account
+	acc = am.GetAccount(ctx, addr)
+	if acc == nil {
+		return nil, sdk.ErrUnrecognizedAddress(addr).Result()
+	}
+
+	// Check and increment sequence number.
+	seq := acc.GetSequence()
+	if seq != sig.Sequence {
+		return nil, sdk.ErrInvalidSequence(
+			fmt.Sprintf("Invalid sequence. Got %d, expected %d", sig.Sequence, seq)).Result()
+	}
+	acc.SetSequence(seq + 1)
+
+	// Check and possibly set pubkey.
+	pubKey := acc.GetPubKey()
+	if pubKey.Empty() {
+		pubKey = sig.PubKey
+		err := acc.SetPubKey(pubKey)
+		if err != nil {
+			return nil, sdk.ErrInternal("setting PubKey on signer").Result()
+		}
+	}
+	// TODO: should we enforce pubKey == sig.PubKey ?
+	// If not, ppl can send useless PubKeys after first tx
+
+	// Check sig.
+	if !sig.PubKey.VerifyBytes(signBytes, sig.Signature) {
+		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
+	}
+
+	// Save the account.
+	am.SetAccount(ctx, acc)
+	return
 }

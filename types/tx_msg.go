@@ -1,5 +1,7 @@
 package types
 
+import "encoding/json"
+
 // Transactions messages must fulfill the Msg
 type Msg interface {
 
@@ -66,7 +68,31 @@ func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
 func (tx StdTx) GetFeePayer() Address          { return tx.Signatures[0].PubKey.Address() } // XXX but PubKey is optional!
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 
-//__________________________________________________________
+// StdSignDoc is replay-prevention structure.
+// It includes the result of msg.GetSignBytes(),
+// as well as the ChainID (prevent cross chain replay)
+// and the Sequence numbers for each signature (prevent
+// inchain replay and enforce tx ordering per account).
+type StdSignDoc struct {
+	ChainID   string  `json:"chain_id"`
+	Sequences []int64 `json:"sequences"`
+	MsgBytes  []byte  `json:"msg_bytes"`
+	AltBytes  []byte  `json:"alt_bytes"` // TODO: do we really want this ?
+}
+
+func StdSignBytes(chainID string, sequences []int64, msg Msg) []byte {
+	bz, err := json.Marshal(StdSignDoc{
+		ChainID:   chainID,
+		Sequences: sequences,
+		MsgBytes:  msg.GetSignBytes(),
+	})
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
+
+//-------------------------------------
 
 // Application function variable used to unmarshal transaction bytes
 type TxDecoder func(txBytes []byte) (Tx, Error)

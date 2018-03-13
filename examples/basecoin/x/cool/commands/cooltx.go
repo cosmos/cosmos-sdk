@@ -13,9 +13,9 @@ import (
 )
 
 // what cool transaction
-func WhatCoolTxCmd(cdc *wire.Codec) *cobra.Command {
+func CoolTxCmd(cdc *wire.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "whatcool [answer]",
+		Use:   "cool [answer]",
 		Short: "What's cooler than being cool?",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 || len(args[0]) == 0 {
@@ -29,7 +29,7 @@ func WhatCoolTxCmd(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// create the message
-			msg := cool.NewWhatCoolMsg(from, args[0])
+			msg := cool.NewCoolMsg(from, args[0])
 
 			// build and sign the transaction, then broadcast to Tendermint
 			res, err := builder.SignBuildBroadcast(msg, cdc)
@@ -44,9 +44,9 @@ func WhatCoolTxCmd(cdc *wire.Codec) *cobra.Command {
 }
 
 // set what cool transaction
-func SetWhatCoolTxCmd(cdc *wire.Codec) *cobra.Command {
+func SetCoolTxCmd(cdc *wire.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "setwhatcool [answer]",
+		Use:   "setcool [answer]",
 		Short: "You're so cool, tell us what is cool!",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 || len(args[0]) == 0 {
@@ -60,7 +60,7 @@ func SetWhatCoolTxCmd(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// create the message
-			msg := cool.NewSetWhatCoolMsg(from, args[0])
+			msg := cool.NewSetCoolMsg(from, args[0])
 
 			// build and sign the transaction, then broadcast to Tendermint
 			res, err := builder.SignBuildBroadcast(msg, cdc)

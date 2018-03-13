@@ -10,46 +10,46 @@ import (
 
 // A really cool msg type, these fields are can be entirely arbitrary and
 // custom to your message
-type SetWhatCoolMsg struct {
-	Sender   sdk.Address
-	WhatCool string
+type SetCoolMsg struct {
+	Sender sdk.Address
+	Cool   string
 }
 
 // New cool message
-func NewSetWhatCoolMsg(sender sdk.Address, whatcool string) SetWhatCoolMsg {
-	return SetWhatCoolMsg{
-		Sender:   sender,
-		WhatCool: whatcool,
+func NewSetCoolMsg(sender sdk.Address, cool string) SetCoolMsg {
+	return SetCoolMsg{
+		Sender: sender,
+		Cool:   cool,
 	}
 }
 
 // enforce the msg type at compile time
-var _ sdk.Msg = SetWhatCoolMsg{}
+var _ sdk.Msg = SetCoolMsg{}
 
 // nolint
-func (msg SetWhatCoolMsg) Type() string                            { return "cool" }
-func (msg SetWhatCoolMsg) Get(key interface{}) (value interface{}) { return nil }
-func (msg SetWhatCoolMsg) GetSigners() []sdk.Address               { return []sdk.Address{msg.Sender} }
-func (msg SetWhatCoolMsg) String() string {
-	return fmt.Sprintf("SetWhatCoolMsg{Sender: %v, WhatCool: %v}", msg.Sender, msg.WhatCool)
+func (msg SetCoolMsg) Type() string                            { return "cool" }
+func (msg SetCoolMsg) Get(key interface{}) (value interface{}) { return nil }
+func (msg SetCoolMsg) GetSigners() []sdk.Address               { return []sdk.Address{msg.Sender} }
+func (msg SetCoolMsg) String() string {
+	return fmt.Sprintf("SetCoolMsg{Sender: %v, Cool: %v}", msg.Sender, msg.Cool)
 }
 
 // Validate Basic is used to quickly disqualify obviously invalid messages quickly
-func (msg SetWhatCoolMsg) ValidateBasic() sdk.Error {
+func (msg SetCoolMsg) ValidateBasic() sdk.Error {
 	if len(msg.Sender) == 0 {
 		return sdk.ErrUnrecognizedAddress(msg.Sender).Trace("")
 	}
-	if strings.Contains(msg.WhatCool, "hot") {
+	if strings.Contains(msg.Cool, "hot") {
 		return sdk.ErrUnauthorized("").Trace("hot is not cool")
 	}
-	if strings.Contains(msg.WhatCool, "warm") {
+	if strings.Contains(msg.Cool, "warm") {
 		return sdk.ErrUnauthorized("").Trace("warm is not very cool")
 	}
 	return nil
 }
 
 // Get the bytes for the message signer to sign on
-func (msg SetWhatCoolMsg) GetSignBytes() []byte {
+func (msg SetCoolMsg) GetSignBytes() []byte {
 	b, err := json.Marshal(msg)
 	if err != nil {
 		panic(err)
@@ -61,32 +61,32 @@ func (msg SetWhatCoolMsg) GetSignBytes() []byte {
 
 // A really cool msg type, these fields are can be entirely arbitrary and
 // custom to your message
-type WhatCoolMsg struct {
+type TestYourCoolnessMsg struct {
 	Sender         sdk.Address
 	CoolerThanCool string
 }
 
 // New cool message
-func NewWhatCoolMsg(sender sdk.Address, coolerthancool string) WhatCoolMsg {
-	return WhatCoolMsg{
+func NewTestYourCoolnessMsg(sender sdk.Address, coolerthancool string) TestYourCoolnessMsg {
+	return TestYourCoolnessMsg{
 		Sender:         sender,
 		CoolerThanCool: coolerthancool,
 	}
 }
 
 // enforce the msg type at compile time
-var _ sdk.Msg = WhatCoolMsg{}
+var _ sdk.Msg = TestYourCoolnessMsg{}
 
 // nolint
-func (msg WhatCoolMsg) Type() string                            { return "cool" }
-func (msg WhatCoolMsg) Get(key interface{}) (value interface{}) { return nil }
-func (msg WhatCoolMsg) GetSigners() []sdk.Address               { return []sdk.Address{msg.Sender} }
-func (msg WhatCoolMsg) String() string {
-	return fmt.Sprintf("WhatCoolMsg{Sender: %v, CoolerThanCool: %v}", msg.Sender, msg.CoolerThanCool)
+func (msg TestYourCoolnessMsg) Type() string                            { return "cool" }
+func (msg TestYourCoolnessMsg) Get(key interface{}) (value interface{}) { return nil }
+func (msg TestYourCoolnessMsg) GetSigners() []sdk.Address               { return []sdk.Address{msg.Sender} }
+func (msg TestYourCoolnessMsg) String() string {
+	return fmt.Sprintf("TestYourCoolnessMsg{Sender: %v, CoolerThanCool: %v}", msg.Sender, msg.CoolerThanCool)
 }
 
 // Validate Basic is used to quickly disqualify obviously invalid messages quickly
-func (msg WhatCoolMsg) ValidateBasic() sdk.Error {
+func (msg TestYourCoolnessMsg) ValidateBasic() sdk.Error {
 	if len(msg.Sender) == 0 {
 		return sdk.ErrUnrecognizedAddress(msg.Sender).Trace("")
 	}
@@ -94,7 +94,7 @@ func (msg WhatCoolMsg) ValidateBasic() sdk.Error {
 }
 
 // Get the bytes for the message signer to sign on
-func (msg WhatCoolMsg) GetSignBytes() []byte {
+func (msg TestYourCoolnessMsg) GetSignBytes() []byte {
 	b, err := json.Marshal(msg)
 	if err != nil {
 		panic(err)

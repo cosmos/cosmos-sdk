@@ -33,19 +33,19 @@ var (
 		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
 	}
 
-	whatCoolMsg1 = cool.WhatCoolMsg{
+	coolMsg1 = cool.CoolMsg{
 		Sender:         addr1,
 		CoolerThanCool: "icecold",
 	}
 
-	whatCoolMsg2 = cool.WhatCoolMsg{
+	coolMsg2 = cool.CoolMsg{
 		Sender:         addr1,
 		CoolerThanCool: "icecold",
 	}
 
-	setWhatCoolMsg = cool.SetWhatCoolMsg{
-		Sender:   addr1,
-		WhatCool: "goodbye",
+	setCoolMsg = cool.SetCoolMsg{
+		Sender: addr1,
+		Cool:   "goodbye",
 	}
 )
 
@@ -64,8 +64,8 @@ func TestMsgs(t *testing.T) {
 		msg sdk.Msg
 	}{
 		{sendMsg},
-		{whatCoolMsg1},
-		{setWhatCoolMsg},
+		{coolMsg1},
+		{setCoolMsg},
 	}
 
 	chainID := ""
@@ -209,56 +209,54 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
 }
 
-//func TestWhatCoolMsg(t *testing.T) {
-//bapp := newBasecoinApp()
+func TestCoolMsg(t *testing.T) {
+	bapp := newBasecoinApp()
 
-//// Construct genesis state
-//// Construct some genesis bytes to reflect basecoin/types/AppAccount
-//// Give 77 foocoin to the first key
-//coins, err := sdk.ParseCoins("1icecold")
-//require.Nil(t, err)
-//baseAcc := auth.BaseAccount{
-//Address: addr1,
-//Coins:   coins,
-//}
-//acc1 := &types.AppAccount{baseAcc, "foobart"}
+	// Construct genesis state
+	// Construct some genesis bytes to reflect basecoin/types/AppAccount
+	coins := sdk.Coins{}
+	baseAcc := auth.BaseAccount{
+		Address: addr1,
+		Coins:   coins,
+	}
+	acc1 := &types.AppAccount{baseAcc, "foobart"}
 
-//// Construct genesis state
-//genesisState := types.GenesisState{
-//Accounts: []*types.GenesisAccount{
-//types.NewGenesisAccount(acc1),
-//},
-//}
-//stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
-//require.Nil(t, err)
+	// Construct genesis state
+	genesisState := types.GenesisState{
+		Accounts: []*types.GenesisAccount{
+			types.NewGenesisAccount(acc1),
+		},
+	}
+	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
+	require.Nil(t, err)
 
-//// Initialize the chain (nil)
-//vals := []abci.Validator{}
-//bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
-//bapp.Commit()
+	// Initialize the chain (nil)
+	vals := []abci.Validator{}
+	bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
+	bapp.Commit()
 
-//// A checkTx context (true)
-//ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
-//res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
-//assert.Equal(t, acc1, res1)
+	// A checkTx context (true)
+	ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
+	res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
+	assert.Equal(t, acc1, res1)
 
-//// Sign the tx
-//tx := sdk.NewStdTx(whatCoolMsg1, []sdk.StdSignature{{
-//PubKey:    priv1.PubKey(),
-//Signature: priv1.Sign(whatCoolMsg1.GetSignBytes()),
-//}})
+	// Sign the tx
+	tx := sdk.NewStdTx(coolMsg1, []sdk.StdSignature{{
+		PubKey:    priv1.PubKey(),
+		Signature: priv1.Sign(coolMsg1.GetSignBytes()),
+	}})
 
-//// Run a Check
-//res := bapp.Check(tx)
-//assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	// Run a Check
+	res := bapp.Check(tx)
+	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
 
-//// Simulate a Block
-//bapp.BeginBlock(abci.RequestBeginBlock{})
-//res = bapp.Deliver(tx)
-//assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	// Simulate a Block
+	bapp.BeginBlock(abci.RequestBeginBlock{})
+	res = bapp.Deliver(tx)
+	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
 
-//// Check balances
-//ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
-//res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr1)
-//assert.Equal(t, "70icecold", fmt.Sprintf("%v", res2.GetCoins()))
-//}
+	// Check balances
+	ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
+	res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr1)
+	assert.Equal(t, "70icecold", fmt.Sprintf("%v", res2.GetCoins()))
+}

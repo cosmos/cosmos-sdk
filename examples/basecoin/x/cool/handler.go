@@ -22,10 +22,10 @@ import (
 func NewHandler(ck bank.CoinKeeper, cm Mapper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
-		case SetWhatCoolMsg:
-			return handleSetWhatCoolMsg(ctx, cm, msg)
-		case WhatCoolMsg:
-			return handleWhatCoolMsg(ctx, ck, cm, msg)
+		case SetCoolMsg:
+			return handleSetCoolMsg(ctx, cm, msg)
+		case CoolMsg:
+			return handleCoolMsg(ctx, ck, cm, msg)
 		default:
 			errMsg := fmt.Sprintf("Unrecognized cool Msg type: %v", reflect.TypeOf(msg).Name())
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -33,16 +33,21 @@ func NewHandler(ck bank.CoinKeeper, cm Mapper) sdk.Handler {
 	}
 }
 
-// Handle WhatCoolMsg This is the engine of your module
-func handleSetWhatCoolMsg(ctx sdk.Context, cm Mapper, msg SetWhatCoolMsg) sdk.Result {
-	cm.SetWhatCool(ctx, msg.WhatCool)
+// Handle CoolMsg This is the engine of your module
+func handleSetCoolMsg(ctx sdk.Context, cm Mapper, msg SetCoolMsg) sdk.Result {
+	cm.SetCool(ctx, msg.Cool)
 	return sdk.Result{}
 }
 
-// Handle WhatCoolMsg This is the engine of your module
-func handleWhatCoolMsg(ctx sdk.Context, ck bank.CoinKeeper, cm Mapper, msg WhatCoolMsg) sdk.Result {
+// Handle CoolMsg This is the engine of your module
+func handleCoolMsg(ctx sdk.Context, ck bank.CoinKeeper, cm Mapper, msg CoolMsg) sdk.Result {
 
-	whatsCool := cm.GetWhatCool(ctx)
+	whatsCool := cm.GetCool(ctx)
+
+	// set default if nothing is set
+	//if whatsCool == "" {
+	//cm.SetCool(ctx, "icecold")
+	//}
 
 	if msg.CoolerThanCool == whatsCool {
 

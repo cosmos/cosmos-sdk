@@ -14,17 +14,17 @@ func NewMapper(key sdk.StoreKey) Mapper {
 }
 
 // Key to knowing whats cool
-var whatCoolKey = []byte("WhatsCoolKey")
+var coolKey = []byte("WhatsCoolKey")
 
 // Implements sdk.AccountMapper.
-func (am Mapper) GetWhatCool(ctx sdk.Context) string {
+func (am Mapper) GetCool(ctx sdk.Context) string {
 	store := ctx.KVStore(am.key)
-	bz := store.Get(whatCoolKey)
+	bz := store.Get(coolKey)
 	return string(bz)
 }
 
 // Implements sdk.AccountMapper.
-func (am Mapper) SetWhatCool(ctx sdk.Context, whatscool string) {
+func (am Mapper) SetCool(ctx sdk.Context, whatscool string) {
 	store := ctx.KVStore(am.key)
-	store.Set(whatCoolKey, []byte(whatscool))
+	store.Set(coolKey, []byte(whatscool))
 }

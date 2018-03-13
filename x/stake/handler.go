@@ -48,8 +48,10 @@ func InitState(ctx sdk.Context, mapper Mapper, key, value string) error {
 
 //_______________________________________________________________________
 
-func NewHandler(stakeKey sdk.StoreKey, ck bank.CoinKeeper) sdk.Handler {
+func NewHandler(mapper Mapper, ck bank.CoinKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+
+		params := mapper.loadParams()
 
 		res := msg.ValidateBasic().Result()
 		if res.Code != sdk.CodeOK {
@@ -60,7 +62,7 @@ func NewHandler(stakeKey sdk.StoreKey, ck bank.CoinKeeper) sdk.Handler {
 		if ctx.IsCheckTx() {
 
 			// XXX: add some tags so we can search it!
-			switch msg := msg.(type) {
+			switch msgType := msg.(type) {
 			case TxDeclareCandidacy:
 				return sdk.NewCheck(params.GasDeclareCandidacy, "")
 			case TxEditCandidacy:
@@ -70,7 +72,7 @@ func NewHandler(stakeKey sdk.StoreKey, ck bank.CoinKeeper) sdk.Handler {
 			case TxUnbond:
 				return sdk.NewCheck(params.GasUnbond, "")
 			default:
-				return sdk.ErrUnknownTxType(msg)
+				return sdk.ErrUnknownTxType(msgType)
 			}
 		}
 
@@ -86,7 +88,6 @@ func NewHandler(stakeKey sdk.StoreKey, ck bank.CoinKeeper) sdk.Handler {
 			return
 		}
 
-		mapper := NewMapper(ctx, stakeKey)
 		transact := NewTransact(ctx, ck)
 
 		// Run the transaction

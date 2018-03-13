@@ -1,80 +1,21 @@
 # IBC Specification
 
-*This is a living document and should be edited as the IBC spec and 
-implementation change*
+IBC(Inter-Blockchain Communication) protocol is used by multiple zones on Cosmos. Using IBC, the zones can send coins or arbitrary data to other zones.
 
-## Engineering Philosophy
+## MVP Specifications
 
-The goal is to get the simplest implementation working end-to-end first. Once
-the simplest and most insecure and most feature-less use-case is implemented
-we can start adding features. Let's get to the end-to-end process first though.
+### [MVP1](./mvp1.md)
 
+MVP1 will contain the basic functionalities, including packet generation and packet receivement. There will be no security check for incoming packets.
 
-## MVP One
+### [MVP2](./mvp2.md)
 
-The initial implementation of IBC will include just enough for simple coin 
-transfers between chains, with safety features such as ACK messages being added 
-later.
+IBC module will be more modular in MVP2. Indivisual modules can register custom handlers to IBC module.
 
-### IBC Module
+### [MVP3](./mvp3.md)
 
-* handles message processing
+Light client verification is added to verify the message from the other chain. Registering chains with their ROT(Root Of Trust) is needed.
 
-```golang
-type IBCOutMsg struct {
-  IBCTransfer
-}
+### [MVP4](./mvp4.md)
 
-type IBCInMsg struct {
-  IBCTransfer
-}
-
-type IBCTransfer struct {
-  Destination sdk.Address
-  Coins       sdk.Coins
-}
-```
-
-### Relayer
-
-**Packets**
-* Connect to 2 Tendermint RPC endpoints
-* Query for IBC outgoing `IBCOutMsg` queue (can poll on a certain time 
-  interval, or check after each new block, etc)
-* For any new `IBCOutMsg`, build `IBCInMsg` and post to destination chain
-
-### CLI
-
-* Load relay process
-* Execute `IBCOutMsg`
-
-
-## MVP2
-
-* `IBCUpdate` is added, making it able to prove the header.
-
-### IBC Module
-
-```golang
-type IBCOutMsg struct {
-  IBCTransfer
-}
-
-type IBCInMsg struct {
-  IBCTransfer
-  Proof           merkle.IAVLProof
-  FromChainID     string
-  FromChainHeight uint64
-}
-
-// update sync state of other blockchain
-type IBCUpdateMsg struct {
-  Header tm.Header
-  Commit tm.Commit
-}
-
-type IBCTransfer struct {
-  Destination sdk.Address
-  Coins       sdk.Coins
-}
-```
+ACK verification and messaging queue is implemented to make it failsafe. Modules will register callback to handle failure when they register handlers.

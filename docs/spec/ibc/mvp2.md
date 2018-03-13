@@ -1,0 +1,55 @@
+# IBC Spec
+
+*This is a living document and should be edited as the IBC spec and implementation change*
+
+## MVP2
+
+IBC module will store its own router for handling custom incoming msgs. `IBCPush` and `IBCReceive` are made for inter-module communication 
+
+### IBC Module
+
+```golang
+type IBCOutMsg struct {
+    IBCTransfer
+}
+
+type IBCInMsg struct {
+    IBCTransfer
+}
+
+type IBCTransfer struct {
+    Destination sdk.Address
+    Coins       sdk.Coins
+}
+
+type IBCMapper struct {
+    ingressKey sdk.StoreKey // Source Chain ID            => last income msg's sequence
+    egressKey  sdk.StoreKey // (Dest chain ID, Msg index) => length / indexed msg
+}
+
+type IngressKey struct {
+    SourceChain string
+}
+
+type EgressKey struct {
+    DestChain   string
+    Index       int64
+}
+
+```
+
+`egressKey` stores the outgoing `IBCTransfer`s as a list. Its getter takes an `EgressKey` and returns the length if `egressKey.Index == -1`, an element if `egressKey.Index > 0`.
+
+`ingressKey` stores the last income `IBCTransfer`'s sequence. Its getter takes an `IngressKey`.
+
+## Relayer
+
+**Packets**
+- Connect to 2 Tendermint RPC endpoints
+- Query for IBC outgoing `IBCOutMsg` queue (can poll on a certain time interval, or check after each new block, etc)
+- For any new `IBCOutMsg`, build `IBCInMsg` and post to destination chain
+
+## CLI
+
+- Load relay process
+- Execute `IBCOutMsg`

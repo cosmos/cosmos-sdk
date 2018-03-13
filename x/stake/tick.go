@@ -23,7 +23,7 @@ func Tick(ctx sdk.Context, store sdk.KVStore) (change []*abci.Validator, err err
 	return UpdateValidatorSet(store, gs, params)
 }
 
-var hrsPerYr = sdk.New(8766) // as defined by a julian year of 365.25 days
+var hrsPerYr = sdk.NewRat(8766) // as defined by a julian year of 365.25 days
 
 // process provisions for an hour period
 func processProvisions(store sdk.KVStore, gs *GlobalState, params Params) {

@@ -12,17 +12,17 @@ IBC module will store its own router for handling custom incoming msgs. `IBCPush
 // User facing API
 
 type Packet struct {
-    Data      PacketData
+    Data      Payload
     SrcChain  string
     DestChain string
 }
 
-type PacketData interface {
+type Payload interface {
     Type() string
     ValidateBasic() sdk.Error
 }
 
-type TransferPacketData struct {
+type TransferPayload struct {
     DestAddr sdk.Address
     Coins    sdk.Coins
 }
@@ -66,7 +66,7 @@ type EgressKey struct {
 }
 
 // Used by other modules
-func (ibcm IBCMapper) PushPacket(ctx sdk.Context, dest string, data PacketData)
+func (ibcm IBCMapper) PushPacket(ctx sdk.Context, dest string, payload Payload)
 ```
 
 `egressKey` stores the outgoing `IBCTransfer`s as a list. Its getter takes an `EgressKey` and returns the length if `egressKey.Index == -1`, an element if `egressKey.Index > 0`.

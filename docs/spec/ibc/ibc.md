@@ -10,7 +10,7 @@ How IBC module treats incoming IBC packets is simillar with how BaseApp treats i
 | ------------- | ---------- |
 | Router        | Dispatcher |
 | Tx            | Packet     |
-| Msg           | PacketData |
+| Msg           | Payload    |
 
 ## MVP Specifications
 

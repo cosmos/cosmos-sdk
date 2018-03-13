@@ -25,17 +25,17 @@ type IBCReceiveMsg struct {
 // User facing API
 
 type Packet struct {
-    Data      PacketData
+    Data      Payload
     SrcChain  string
     DestChain string
 }
 
-type PacketData interface {
+type Payload interface {
     Type() string
     ValidateBasic() sdk.Error
 }
 
-type TransferPacketData struct {
+type TransferPayload struct {
     SrcAddr  sdk.Address
     DestAddr sdk.Address
     Coins    sdk.Coins
@@ -104,7 +104,7 @@ type HeaderKey struct {
 }
 
 // Used by other modules
-func (ibcm IBCMapper) PushPacket(ctx sdk.Context, dest string, data PacketData)
+func (ibcm IBCMapper) PushPacket(ctx sdk.Context, dest string, payload Payload)
 
 ```
 

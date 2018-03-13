@@ -6,29 +6,52 @@
 
 ### IBC Module
 
+
+// Implements sdk.Msg
+type IBCTransferMsg struct {
+    Packet
+}
+
+// Implements sdk.Msg
+type IBCReceiveMsg struct {
+    Packet
+}
+
+// Internal API
+
+
+
 ```golang
 // User facing API
 
-type IBCTransferData struct {
+type Packet struct {
+    Data      PacketData
+    SrcChain  string
+    DestChain string
+}
+
+type PacketData interface {
+    Type() string
+    ValidateBasic() sdk.Error
+}
+
+type TransferPacketData struct {
     SrcAddr  sdk.Address
     DestAddr sdk.Address
     Coins    sdk.Coins
 }
 
-// Implements ibc.PacketData
-type IBCPacket struct {
-    IBCData
+// Implements sdk.Msg
+type IBCTransferMsg struct {
+    Packet
 }
 
-// Implements ibc.PacketData
-type IBCReceivePacket struct {
-    IBCData    
-}
-
-type Packet struct {
-    Data      PacketData
-    SrcChain  string    
-    DestChain string
+// Implements sdk.Msg
+type IBCReceiveMsg struct {
+    Packet
+    Proof           iavl.Proof
+    FromChainID     string
+    FromChainHeight uint64
 }
 
 type RootOfTrust struct {
@@ -48,6 +71,15 @@ type IBCUpdateMsg struct {
 }
 
 // Internal API
+
+type rule struct {
+    r string
+    f func(sdk.Context, IBCPacket) sdk.Result
+}
+
+type Dispatcher struct {
+    rules []rule
+}
 
 func NewHandler(dispatcher Dispatcher, ibcm IBCMapper) sdk.Handler
 

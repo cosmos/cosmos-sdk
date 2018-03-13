@@ -2,6 +2,16 @@
 
 IBC(Inter-Blockchain Communication) protocol is used by multiple zones on Cosmos. Using IBC, the zones can send coins or arbitrary data to other zones.
 
+## Terms
+
+How IBC module treats incoming IBC packets is simillar with how BaseApp treats incoming transactions. Therefore, the components of IBC module have their corresponding pair in BaseApp.
+
+| BaseApp Terms | IBC Terms  |
+| ------------- | ---------- |
+| Router        | Dispatcher |
+| Tx            | Packet     |
+| Msg           | PacketData |
+
 ## MVP Specifications
 
 ### [MVP1](./mvp1.md)
@@ -18,4 +28,4 @@ Light client verification is added to verify the message from the other chain. R
 
 ### [MVP4](./mvp4.md)
 
-ACK verification and messaging queue is implemented to make it failsafe. Modules will register callback to handle failure when they register handlers.
+ACK verification / timeout handler helper functions and messaging queue are implemented to make it failsafe. Callbacks will be registered to the dispatcher to handle failure when they register handlers.

@@ -33,10 +33,6 @@ type Tx interface {
 	// Gets the Msg.
 	GetMsg() Msg
 
-	// The address that pays the base fee for this message.  The fee is
-	// deducted before the Msg is processed.
-	GetFeePayer() Address
-
 	// Signatures returns the signature of signers who signed the Msg.
 	// CONTRACT: Length returned is same as length of
 	// pubkeys returned from MsgKeySigners, and the order
@@ -63,9 +59,15 @@ func NewStdTx(msg Msg, sigs []StdSignature) StdTx {
 	}
 }
 
+// FeePayer returns the address responsible for paying the fees
+// for the transactions. It's the first address returned by msg.GetSigners().
+// If GetSigners() is empty, this panics.
+func FeePayer(tx Tx) Address {
+	return tx.GetMsg().GetSigners()[0]
+}
+
 //nolint
 func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
-func (tx StdTx) GetFeePayer() Address          { return tx.Signatures[0].PubKey.Address() } // XXX but PubKey is optional!
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 
 // StdSignDoc is replay-prevention structure.

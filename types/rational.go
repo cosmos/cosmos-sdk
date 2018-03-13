@@ -2,22 +2,10 @@ package types
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
-
-	wire "github.com/tendermint/go-wire"
 )
-
-var ratCdc = RegisterWire(wire.NewCodec())
-
-// add rational codec elements to provided codec
-func RegisterWire(cdc *wire.Codec) *wire.Codec {
-	cdc.RegisterInterface((*Rational)(nil), nil)
-	cdc.RegisterConcrete(Rat{}, "rat", nil)
-	return cdc
-}
 
 //   "that's one big rat!"
 //          ______
@@ -175,32 +163,44 @@ func (r Rat) Round(precisionFactor int64) Rational {
 
 //___________________________________________________________________________________
 
+//var ratCdc = RegisterWire(wire.NewCodec())
+//// add rational codec elements to provided codec
+//func RegisterWire(cdc *wire.Codec) *wire.Codec {
+//cdc.RegisterInterface((*Rational)(nil), nil)
+//cdc.RegisterConcrete(Rat{}, "rat", nil)
+//return cdc
+//}
+
 //TODO there has got to be a better way using native MarshalText and UnmarshalText
 
 // RatMarshal - Marshable Rat Struct
-type RatMarshal struct {
-	Numerator   int64 `json:"numerator"`
-	Denominator int64 `json:"denominator"`
-}
+//type RatMarshal struct {
+//Numerator   int64 `json:"numerator"`
+//Denominator int64 `json:"denominator"`
+//}
 
-// MarshalJSON - custom implementation of JSON Marshal
-func (r Rat) MarshalJSON() ([]byte, error) {
-	return ratCdc.MarshalJSON(RatMarshal{r.Num(), r.Denom()})
-}
+//// MarshalJSON - custom implementation of JSON Marshal
+//func (r Rat) MarshalJSON() ([]byte, error) {
+//return ratCdc.MarshalJSON(RatMarshal{r.Num(), r.Denom()})
+//}
 
-// UnmarshalJSON - custom implementation of JSON Unmarshal
-func (r *Rat) UnmarshalJSON(data []byte) (err error) {
-	defer func() {
-		if rcv := recover(); rcv != nil {
-			err = fmt.Errorf("Panic during UnmarshalJSON: %v", rcv)
-		}
-	}()
+//// UnmarshalJSON - custom implementation of JSON Unmarshal
+//func (r *Rat) UnmarshalJSON(data []byte) (err error) {
+//defer func() {
+//if rcv := recover(); rcv != nil {
+//err = fmt.Errorf("Panic during UnmarshalJSON: %v", rcv)
+//}
+//}()
 
-	ratMar := new(RatMarshal)
-	if err := ratCdc.UnmarshalJSON(data, ratMar); err != nil {
-		return err
-	}
-	r.Rat = big.NewRat(ratMar.Numerator, ratMar.Denominator)
+//ratMar := new(RatMarshal)
+//if err := ratCdc.UnmarshalJSON(data, ratMar); err != nil {
+//return err
+//}
+//r.Rat = big.NewRat(ratMar.Numerator, ratMar.Denominator)
 
-	return nil
-}
+//return nil
+//}
+
+//nolint
+func (r Rat) MarshalJSON() ([]byte, error)           { return r.MarshalText() }
+func (r *Rat) UnmarshalJSON(data []byte) (err error) { return r.UnmarshalText(data) }

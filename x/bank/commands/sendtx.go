@@ -89,4 +89,5 @@ func buildMsg(from sdk.Address) (sdk.Msg, error) {
 	input := bank.NewInput(from, amount)
 	output := bank.NewOutput(to, amount)
 	msg := bank.NewSendMsg([]bank.Input{input}, []bank.Output{output})
+	return msg, nil
 }

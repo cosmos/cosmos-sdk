@@ -33,13 +33,13 @@ func NewHandler(ck bank.CoinKeeper, cm Mapper) sdk.Handler {
 	}
 }
 
-// Handle CoolMsg This is the engine of your module
+// Handle QuizMsg This is the engine of your module
 func handleSetTrendMsg(ctx sdk.Context, cm Mapper, msg SetTrendMsg) sdk.Result {
 	cm.SetTrend(ctx, msg.Cool)
 	return sdk.Result{}
 }
 
-// Handle CoolMsg This is the engine of your module
+// Handle QuizMsg This is the engine of your module
 func handleQuizMsg(ctx sdk.Context, ck bank.CoinKeeper, cm Mapper, msg QuizMsg) sdk.Result {
 
 	whatsCool := cm.GetCool(ctx)

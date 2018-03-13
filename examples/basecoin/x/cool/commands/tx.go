@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
 )
 
-// what cool transaction
-func CoolTxCmd(cdc *wire.Codec) *cobra.Command {
+// take the coolness quiz transaction
+func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "cool [answer]",
 		Short: "What's cooler than being cool?",
@@ -43,7 +43,7 @@ func CoolTxCmd(cdc *wire.Codec) *cobra.Command {
 	}
 }
 
-// set what cool transaction
+// set a new cool trend transaction
 func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "setcool [answer]",

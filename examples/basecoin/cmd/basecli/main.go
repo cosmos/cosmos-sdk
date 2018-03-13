@@ -58,7 +58,7 @@ func main() {
 		)...)
 	basecliCmd.AddCommand(
 		client.PostCommands(
-			coolcmd.CoolTxCmd(cdc),
+			coolcmd.QuizTxCmd(cdc),
 		)...)
 	basecliCmd.AddCommand(
 		client.PostCommands(

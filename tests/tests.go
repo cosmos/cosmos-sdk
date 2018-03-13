@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -63,7 +64,8 @@ func TestInitBasecoin(t *testing.T) {
 		t.Error(err)
 	}
 
-	initBasecoind.Stdout = os.Stdout
+	buf := new(bytes.Buffer)
+	initBasecoind.Stdout = buf
 
 	if err := initBasecoind.Start(); err != nil {
 		t.Error(err)
@@ -78,6 +80,13 @@ func TestInitBasecoin(t *testing.T) {
 	if err := makeKeys(); err != nil {
 		t.Error(err)
 	}
+
+	fmt.Println("-----------------")
+	theOutput := strings.Split(buf.String(), "\n")
+	for i, o := range theOutput {
+		fmt.Println(i, o)
+	}
+	fmt.Println("-----------------")
 }
 
 func makeKeys() error {

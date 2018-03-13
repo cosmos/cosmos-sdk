@@ -34,7 +34,7 @@ func TestKeys(t *testing.T) {
 	// empty keys
 	res, body := request(t, port, "GET", "/keys", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	assert.Equal(t, body, "[]", "Expected an empty array")
+	assert.Equal(t, "[]", body, "Expected an empty array")
 
 	// get seed
 	res, body = request(t, port, "GET", "/keys/seed", nil)
@@ -62,8 +62,8 @@ func TestKeys(t *testing.T) {
 	res, body = request(t, port, "GET", "/keys", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var m [1]keys.KeyOutput
-	decoder := json.NewDecoder(res.Body)
-	err = decoder.Decode(&m)
+	fmt.Println("BUF", body)
+	err = json.Unmarshal([]byte(body), &m)
 	require.Nil(t, err)
 
 	assert.Equal(t, m[0].Name, "test", "Did not serve keys name correctly")
@@ -73,11 +73,12 @@ func TestKeys(t *testing.T) {
 	res, body = request(t, port, "GET", "/keys/test", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var m2 keys.KeyOutput
-	decoder = json.NewDecoder(res.Body)
-	err = decoder.Decode(&m2)
+	fmt.Println("BUF", body)
+	err = json.Unmarshal([]byte(body), &m2)
+	require.Nil(t, err)
 
-	assert.Equal(t, m2.Name, "test", "Did not serve keys name correctly")
-	assert.Equal(t, m2.Address, addr, "Did not serve keys Address correctly")
+	assert.Equal(t, "test", m2.Name, "Did not serve keys name correctly")
+	assert.Equal(t, addr, m2.Address, "Did not serve keys Address correctly")
 
 	// update key
 	jsonStr = []byte(`{"old_password":"1234567890", "new_password":"12345678901"}`)
@@ -94,7 +95,7 @@ func TestKeys(t *testing.T) {
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 }
 
-//XXX
+// TODO/XXX: We should be spawning what we need in process, not shelling out
 func junkInit(t *testing.T) (kill func(), port string) {
 	tests.TestInitBasecoin(t)
 	cmdStart := tests.StartNodeServerForTest(t)
@@ -128,12 +129,11 @@ func TestNodeStatus(t *testing.T) {
 	res, body := request(t, port, "GET", "/node_info", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var m p2p.NodeInfo
-	decoder := json.NewDecoder(res.Body)
-	err := decoder.Decode(&m)
+	var nodeInfo p2p.NodeInfo
+	err := json.Unmarshal([]byte(body), &nodeInfo)
 	require.Nil(t, err, "Couldn't parse node info")
 
-	assert.NotEqual(t, p2p.NodeInfo{}, m, "res: %v", res)
+	assert.NotEqual(t, p2p.NodeInfo{}, nodeInfo, "res: %v", res)
 
 	// syncing
 	res, body = request(t, port, "GET", "/syncing", nil)
@@ -161,12 +161,11 @@ func TestBlock(t *testing.T) {
 	res, body := request(t, port, "GET", "/blocks/1", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var m ctypes.ResultBlock
-	decoder := json.NewDecoder(res.Body)
-	err := decoder.Decode(&m)
+	var resultBlock ctypes.ResultBlock
+	err := json.Unmarshal([]byte(body), &resultBlock)
 	require.Nil(t, err, "Couldn't parse block")
 
-	assert.NotEqual(t, ctypes.ResultBlock{}, m)
+	assert.NotEqual(t, ctypes.ResultBlock{}, resultBlock)
 
 	// --
 
@@ -193,12 +192,11 @@ func TestValidators(t *testing.T) {
 	res, body := request(t, port, "GET", "/validatorsets/1", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var m ctypes.ResultValidators
-	decoder := json.NewDecoder(res.Body)
-	err := decoder.Decode(&m)
+	var resultVals ctypes.ResultValidators
+	err := json.Unmarshal([]byte(body), &resultVals)
 	require.Nil(t, err, "Couldn't parse validatorset")
 
-	assert.NotEqual(t, ctypes.ResultValidators{}, m)
+	assert.NotEqual(t, ctypes.ResultValidators{}, resultVals)
 
 	// --
 
@@ -289,12 +287,13 @@ func request(t *testing.T, port, method, path string, payload []byte) (*http.Res
 	var res *http.Response
 	var err error
 	url := fmt.Sprintf("http://localhost:%v%v", port, path)
-	if method == "GET" {
-		res, err = http.Get(url)
-	}
-	if method == "POST" {
-		res, err = http.Post(url, "application/json", bytes.NewBuffer(payload))
-	}
+	fmt.Println("URL", url)
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(payload))
+	require.Nil(t, err)
+	res, err = http.DefaultClient.Do(req)
+	//	res, err = http.Post(url, "application/json", bytes.NewBuffer(payload))
+	fmt.Println("METHOD", method)
+	fmt.Println("RES", res)
 	require.Nil(t, err)
 
 	output, err := ioutil.ReadAll(res.Body)

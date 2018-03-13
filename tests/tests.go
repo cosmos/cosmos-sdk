@@ -210,12 +210,19 @@ func StartLCDServerForTest(t *testing.T) (cmd *exec.Cmd, port string) {
 		"rest-server",
 		"--home",
 		basecoindDir,
-		"--port",
-		port,
+		"--bind",
+		fmt.Sprintf("localhost:%s", port),
 	}
+	fmt.Println("----------------------------")
 	cmd = exec.Command(cmdName, cmdArgs...)
+	fmt.Println("CMD", cmd)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	err := cmd.Start()
 	require.Nil(t, err)
+	fmt.Println("PORT", port)
+	fmt.Println("----------------------------")
+	time.Sleep(time.Second * 2) // TODO: LOL
 	return cmd, port
 }
 

@@ -93,6 +93,7 @@ func (msg StdSignMsg) Bytes() []byte {
 	return StdSignBytes(msg.ChainID, msg.Sequences, msg.Msg)
 }
 
+// get the sign bytes for the standard signature
 func StdSignBytes(chainID string, sequences []int64, msg Msg) []byte {
 	bz, err := json.Marshal(StdSignDoc{
 		ChainID:   chainID,

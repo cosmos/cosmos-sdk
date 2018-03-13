@@ -28,7 +28,7 @@ import (
 )
 
 func TestKeys(t *testing.T) {
-	kill, port := junkInit(t)
+	kill, port, _ := junkInit(t)
 	defer kill()
 
 	// empty keys
@@ -96,19 +96,19 @@ func TestKeys(t *testing.T) {
 }
 
 // TODO/XXX: We should be spawning what we need in process, not shelling out
-func junkInit(t *testing.T) (kill func(), port string) {
-	tests.TestInitBasecoin(t)
+func junkInit(t *testing.T) (kill func(), port string, seed string) {
+	seed = tests.TestInitBasecoin(t)
 	cmdStart := tests.StartNodeServerForTest(t)
 	cmdLCD, port := tests.StartLCDServerForTest(t)
 	kill = func() {
 		cmdLCD.Process.Kill()
 		cmdStart.Process.Kill()
 	}
-	return kill, port
+	return kill, port, seed
 }
 
 func TestVersion(t *testing.T) {
-	kill, port := junkInit(t)
+	kill, port, _ := junkInit(t)
 	defer kill()
 
 	// node info
@@ -122,7 +122,7 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNodeStatus(t *testing.T) {
-	kill, port := junkInit(t)
+	kill, port, _ := junkInit(t)
 	defer kill()
 
 	// node info
@@ -143,25 +143,14 @@ func TestNodeStatus(t *testing.T) {
 }
 
 func TestBlock(t *testing.T) {
-	kill, port := junkInit(t)
+	kill, port, _ := junkInit(t)
 	defer kill()
 
-	// res, body := request(t, port,  "GET", "/blocks/latest", nil)
-	// require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var resultBlock ctypes.ResultBlock
 
-	// var m ctypes.ResultBlock
-	// decoder := json.NewDecoder(res.Body)
-	// err := decoder.Decode(&m)
-	// require.Nil(t, err, "Couldn't parse block")
-
-	// assert.NotEqual(t, ctypes.ResultBlock{}, m)
-
-	// --
-
-	res, body := request(t, port, "GET", "/blocks/1", nil)
+	res, body := request(t, port, "GET", "/blocks/latest", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var resultBlock ctypes.ResultBlock
 	err := json.Unmarshal([]byte(body), &resultBlock)
 	require.Nil(t, err, "Couldn't parse block")
 
@@ -169,30 +158,29 @@ func TestBlock(t *testing.T) {
 
 	// --
 
-	res, body = request(t, port, "GET", "/blocks/2", nil)
+	res, body = request(t, port, "GET", "/blocks/1", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err = json.Unmarshal([]byte(body), &resultBlock)
+	require.Nil(t, err, "Couldn't parse block")
+
+	assert.NotEqual(t, ctypes.ResultBlock{}, resultBlock)
+
+	// --
+
+	res, body = request(t, port, "GET", "/blocks/1000000000", nil)
 	require.Equal(t, http.StatusNotFound, res.StatusCode, body)
 }
 
 func TestValidators(t *testing.T) {
-	kill, port := junkInit(t)
+	kill, port, _ := junkInit(t)
 	defer kill()
 
-	// res, body := request(t, port,  "GET", "/validatorsets/latest", nil)
-	// require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var resultVals ctypes.ResultValidators
 
-	// var m ctypes.ResultValidators
-	// decoder := json.NewDecoder(res.Body)
-	// err := decoder.Decode(&m)
-	// require.Nil(t, err, "Couldn't parse validatorset")
-
-	// assert.NotEqual(t, ctypes.ResultValidators{}, m)
-
-	// --
-
-	res, body := request(t, port, "GET", "/validatorsets/1", nil)
+	res, body := request(t, port, "GET", "/validatorsets/latest", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var resultVals ctypes.ResultValidators
 	err := json.Unmarshal([]byte(body), &resultVals)
 	require.Nil(t, err, "Couldn't parse validatorset")
 
@@ -200,12 +188,22 @@ func TestValidators(t *testing.T) {
 
 	// --
 
-	res, body = request(t, port, "GET", "/validatorsets/2", nil)
+	res, body = request(t, port, "GET", "/validatorsets/1", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err = json.Unmarshal([]byte(body), &resultVals)
+	require.Nil(t, err, "Couldn't parse validatorset")
+
+	assert.NotEqual(t, ctypes.ResultValidators{}, resultVals)
+
+	// --
+
+	res, body = request(t, port, "GET", "/validatorsets/1000000000", nil)
 	require.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
 func TestCoinSend(t *testing.T) {
-	kill, port := junkInit(t)
+	kill, port, _ := junkInit(t)
 	defer kill()
 
 	// TODO make that account has coins

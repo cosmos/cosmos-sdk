@@ -40,7 +40,7 @@ func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, parser sdk.Pa
 		}
 
 		// the query will return empty if there is no data for this account
-		if len(res) == 0 {
+		if res == nil {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}

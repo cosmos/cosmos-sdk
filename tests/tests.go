@@ -49,20 +49,16 @@ func whereIsBasecli() string {
 }
 
 // Init Basecoin Test
-func TestInitBasecoin(t *testing.T) {
+func TestInitBasecoin(t *testing.T) string {
 	Clean()
 
 	var err error
 
 	password := "some-random-password"
-	usePassword := exec.Command("echo", password)
 
 	initBasecoind := exec.Command(whereIsBasecoind(), "init", "--home", basecoindDir)
-
-	initBasecoind.Stdin, err = usePassword.StdoutPipe()
-	if err != nil {
-		t.Error(err)
-	}
+	cmdWriter, err := initBasecoind.StdinPipe()
+	require.Nil(t, err)
 
 	buf := new(bytes.Buffer)
 	initBasecoind.Stdout = buf
@@ -70,32 +66,32 @@ func TestInitBasecoin(t *testing.T) {
 	if err := initBasecoind.Start(); err != nil {
 		t.Error(err)
 	}
-	if err := usePassword.Run(); err != nil {
-		t.Error(err)
-	}
+
+	_, err = cmdWriter.Write([]byte(password))
+	require.Nil(t, err)
+	cmdWriter.Close()
+
 	if err := initBasecoind.Wait(); err != nil {
 		t.Error(err)
 	}
 
-	if err := makeKeys(); err != nil {
-		t.Error(err)
+	// get seed from initialization
+	theOutput := strings.Split(buf.String(), "\n")
+	var seedLine int
+	for seedLine, o := range theOutput {
+		if strings.HasPrefix(string(o), "Secret phrase") {
+			seedLine++
+			break
+		}
 	}
 
-	fmt.Println("-----------------")
-	theOutput := strings.Split(buf.String(), "\n")
-	for i, o := range theOutput {
-		fmt.Println(i, o)
-	}
-	fmt.Println("-----------------")
+	return string(theOutput[seedLine])
 }
 
 func makeKeys() error {
-	var err error
 	for _, acc := range ACCOUNTS {
-		pass := exec.Command("echo", "1234567890")
 		makeKeys := exec.Command(whereIsBasecli(), "keys", "add", acc, "--home", basecliDir)
-
-		makeKeys.Stdin, err = pass.StdoutPipe()
+		cmdWriter, err := makeKeys.StdinPipe()
 		if err != nil {
 			return err
 		}
@@ -104,9 +100,11 @@ func makeKeys() error {
 		if err := makeKeys.Start(); err != nil {
 			return err
 		}
-		if err := pass.Run(); err != nil {
+		cmdWriter.Write([]byte("1234567890"))
+		if err != nil {
 			return err
 		}
+		cmdWriter.Close()
 
 		if err := makeKeys.Wait(); err != nil {
 			return err
@@ -176,6 +174,7 @@ func StartServer() error {
 
 // Init Basecoin Test
 func InitServerForTest(t *testing.T) {
+	// TODO cleanup doesn't work -> keys are still there in each iteration
 	Clean()
 
 	var err error

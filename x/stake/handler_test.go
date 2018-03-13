@@ -23,7 +23,7 @@ type testCoinSender struct {
 
 var _ coinSend = testCoinSender{} // enforce interface at compile time
 
-func (c testCoinSender) transferFn(sender, receiver sdk.Actor, coins coin.Coins) error {
+func (c testCoinSender) transferFn(sender, receiver sdk.Address, coins sdk.Coins) error {
 	c.store[string(sender.Address)] -= coins[0].Amount
 	c.store[string(receiver.Address)] += coins[0].Amount
 	return nil
@@ -31,7 +31,7 @@ func (c testCoinSender) transferFn(sender, receiver sdk.Actor, coins coin.Coins)
 
 //______________________________________________________________________
 
-func initAccounts(n int, amount int64) ([]sdk.Actor, map[string]int64) {
+func initAccounts(n int, amount int64) ([]sdk.Address, map[string]int64) {
 	accStore := map[string]int64{}
 	senders := newActors(n)
 	for _, sender := range senders {
@@ -81,7 +81,7 @@ func paramsNoInflation() Params {
 	}
 }
 
-func newDeliver(t, sender sdk.Actor, accStore map[string]int64) deliver {
+func newDeliver(t, sender sdk.Address, accStore map[string]int64) deliver {
 	store := initTestStore()
 	params := paramsNoInflation()
 	saveParams(store, params)

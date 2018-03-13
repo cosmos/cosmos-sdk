@@ -139,6 +139,8 @@ const (
 // bond shares is based on the amount of coins delegated divided by the current
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
+
+// XXX update to use Address as the main key NOT the pubkey
 type Candidate struct {
 	Status      CandidateStatus `json:"status"`       // Bonded status
 	PubKey      crypto.PubKey   `json:"pub_key"`      // Pubkey of candidate

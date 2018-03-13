@@ -75,27 +75,4 @@ func (ibcm IBCMapper) PushPacket(ctx sdk.Context, dest string, packet IBCTransfe
 
 ```
 
-```golang
-type IBCOutMsg struct {
-  IBCTransfer
-  DestChainID string
-}
 
-type IBCInMsg struct {
-  IBCTransfer
-  Proof             merkle.IAVLProof
-  SourceChainID     string
-  SourceChainHeight uint64
-}
-
-// update sync state of other blockchain
-type IBCUpdateMsg struct {
-  Header tm.Header
-  Commit tm.Commit
-}
-
-type IBCTransfer struct {
-  Destination sdk.Address
-  Coins       sdk.Coins
-}
-```

@@ -49,6 +49,7 @@ var _ Tx = (*StdTx)(nil)
 // NOTE: the first signature is the FeePayer (Signatures must not be nil).
 type StdTx struct {
 	Msg        `json:"msg"`
+	Fee        StdFee         `json:"fee"`
 	Signatures []StdSignature `json:"signatures"`
 }
 
@@ -59,6 +60,16 @@ func NewStdTx(msg Msg, sigs []StdSignature) StdTx {
 	}
 }
 
+// SetFee sets the StdFee on the transaction.
+func (tx StdTx) SetFee(fee StdFee) StdTx {
+	tx.Fee = fee
+	return tx
+}
+
+//nolint
+func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
+func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
+
 // FeePayer returns the address responsible for paying the fees
 // for the transactions. It's the first address returned by msg.GetSigners().
 // If GetSigners() is empty, this panics.
@@ -66,9 +77,20 @@ func FeePayer(tx Tx) Address {
 	return tx.GetMsg().GetSigners()[0]
 }
 
-//nolint
-func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
-func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
+// StdFee includes the amount of coins paid in fees and the maximum
+// gas to be used by the transaction. The ratio yields an effectie "gasprice",
+// which must be above some miminum to be accepted into the mempool.
+type StdFee struct {
+	Amount Coins `json"amount"`
+	Gas    int64 `json"gas"`
+}
+
+func NewStdFee(gas int64, amount ...Coin) StdFee {
+	return StdFee{
+		Amount: amount,
+		Gas:    gas,
+	}
+}
 
 // StdSignDoc is replay-prevention structure.
 // It includes the result of msg.GetSignBytes(),

@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -78,7 +80,8 @@ func processSig(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, sig sdk
 	// Check and increment sequence number.
 	seq := acc.GetSequence()
 	if seq != sig.Sequence {
-		return nil, sdk.ErrInvalidSequence("").Result()
+		return nil, sdk.ErrInvalidSequence(
+			fmt.Sprintf("Invalid sequence. Got %d, expected %d", sig.Sequence, seq)).Result()
 	}
 	acc.SetSequence(seq + 1)
 

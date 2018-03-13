@@ -23,6 +23,8 @@ import (
 
 // Construct some global addrs and txs for tests.
 var (
+	chainID = "" // TODO
+
 	priv1 = crypto.GenPrivKeyEd25519()
 	addr1 = priv1.PubKey().Address()
 	addr2 = crypto.GenPrivKeyEd25519().PubKey().Address()
@@ -78,7 +80,6 @@ func TestMsgs(t *testing.T) {
 		{setTrendMsg1},
 	}
 
-	chainID := ""
 	sequences := []int64{0}
 	for i, m := range msgs {
 		sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, m.msg))
@@ -178,7 +179,6 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	assert.Equal(t, acc1, res1)
 
 	// Sign the tx
-	chainID := "" // TODO: InitChain should get the ChainID
 	sequences := []int64{0}
 	sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, sendMsg))
 	tx := sdk.NewStdTx(sendMsg, []sdk.StdSignature{{
@@ -272,7 +272,7 @@ func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, e
 	// Sign the tx
 	tx := sdk.NewStdTx(msg, []sdk.StdSignature{{
 		PubKey:    priv1.PubKey(),
-		Signature: priv1.Sign(msg.GetSignBytes()),
+		Signature: priv1.Sign(sdk.StdSignBytes(chainID, []int64{seq}, msg)),
 		Sequence:  seq,
 	}})
 

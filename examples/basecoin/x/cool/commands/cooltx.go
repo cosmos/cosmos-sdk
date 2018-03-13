@@ -29,7 +29,7 @@ func CoolTxCmd(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// create the message
-			msg := cool.NewCoolMsg(from, args[0])
+			msg := cool.NewQuizMsg(from, args[0])
 
 			// build and sign the transaction, then broadcast to Tendermint
 			res, err := builder.SignBuildBroadcast(msg, cdc)
@@ -44,7 +44,7 @@ func CoolTxCmd(cdc *wire.Codec) *cobra.Command {
 }
 
 // set what cool transaction
-func SetCoolTxCmd(cdc *wire.Codec) *cobra.Command {
+func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "setcool [answer]",
 		Short: "You're so cool, tell us what is cool!",
@@ -60,7 +60,7 @@ func SetCoolTxCmd(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// create the message
-			msg := cool.NewSetCoolMsg(from, args[0])
+			msg := cool.NewSetTrendMsg(from, args[0])
 
 			// build and sign the transaction, then broadcast to Tendermint
 			res, err := builder.SignBuildBroadcast(msg, cdc)

@@ -33,17 +33,17 @@ var (
 		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
 	}
 
-	coolMsg1 = cool.CoolMsg{
-		Sender:         addr1,
-		CoolerThanCool: "icecold",
+	coolMsg1 = cool.QuizMsg{
+		Sender:     addr1,
+		CoolAnswer: "icecold",
 	}
 
-	coolMsg2 = cool.CoolMsg{
-		Sender:         addr1,
-		CoolerThanCool: "icecold",
+	coolMsg2 = cool.QuizMsg{
+		Sender:     addr1,
+		CoolAnswer: "icecold",
 	}
 
-	setCoolMsg = cool.SetCoolMsg{
+	setTrendMsg = cool.SetTrendMsg{
 		Sender: addr1,
 		Cool:   "goodbye",
 	}
@@ -65,7 +65,7 @@ func TestMsgs(t *testing.T) {
 	}{
 		{sendMsg},
 		{coolMsg1},
-		{setCoolMsg},
+		{setTrendMsg},
 	}
 
 	chainID := ""

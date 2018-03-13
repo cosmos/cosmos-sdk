@@ -81,14 +81,14 @@ func MakeCodec() *wire.Codec {
 
 	const msgTypeSend = 0x1
 	const msgTypeIssue = 0x2
-	const msgTypeCool = 0x3
-	const msgTypeSetCool = 0x4
+	const msgTypeQuiz = 0x3
+	const msgTypeSetTrend = 0x4
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Msg }{},
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
 		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
-		oldwire.ConcreteType{cool.CoolMsg{}, msgTypeCool},
-		oldwire.ConcreteType{cool.SetCoolMsg{}, msgTypeSetCool},
+		oldwire.ConcreteType{cool.QuizMsg{}, msgTypeQuiz},
+		oldwire.ConcreteType{cool.SetTrendMsg{}, msgTypeSetTrend},
 	)
 
 	const accTypeApp = 0x1

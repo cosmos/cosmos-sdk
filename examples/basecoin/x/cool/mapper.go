@@ -24,7 +24,7 @@ func (am Mapper) GetCool(ctx sdk.Context) string {
 }
 
 // Implements sdk.AccountMapper.
-func (am Mapper) SetCool(ctx sdk.Context, whatscool string) {
+func (am Mapper) SetTrend(ctx sdk.Context, whatscool string) {
 	store := ctx.KVStore(am.key)
 	store.Set(coolKey, []byte(whatscool))
 }

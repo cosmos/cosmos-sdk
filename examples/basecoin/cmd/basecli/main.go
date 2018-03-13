@@ -62,7 +62,7 @@ func main() {
 		)...)
 	basecliCmd.AddCommand(
 		client.PostCommands(
-			coolcmd.SetCoolTxCmd(cdc),
+			coolcmd.SetTrendTxCmd(cdc),
 		)...)
 
 	// add proxy, version and key info

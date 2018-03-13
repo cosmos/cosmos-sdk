@@ -23,6 +23,8 @@ import (
 
 // Construct some global addrs and txs for tests.
 var (
+	chainID = "" // TODO
+
 	priv1 = crypto.GenPrivKeyEd25519()
 	addr1 = priv1.PubKey().Address()
 	addr2 = crypto.GenPrivKeyEd25519().PubKey().Address()
@@ -33,19 +35,29 @@ var (
 		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
 	}
 
-	whatCoolMsg1 = cool.WhatCoolMsg{
-		Sender:         addr1,
-		CoolerThanCool: "icecold",
+	quizMsg1 = cool.QuizMsg{
+		Sender:     addr1,
+		CoolAnswer: "icecold",
 	}
 
-	whatCoolMsg2 = cool.WhatCoolMsg{
-		Sender:         addr1,
-		CoolerThanCool: "icecold",
+	quizMsg2 = cool.QuizMsg{
+		Sender:     addr1,
+		CoolAnswer: "badvibesonly",
 	}
 
-	setWhatCoolMsg = cool.SetWhatCoolMsg{
-		Sender:   addr1,
-		WhatCool: "goodbye",
+	setTrendMsg1 = cool.SetTrendMsg{
+		Sender: addr1,
+		Cool:   "icecold",
+	}
+
+	setTrendMsg2 = cool.SetTrendMsg{
+		Sender: addr1,
+		Cool:   "badvibesonly",
+	}
+
+	setTrendMsg3 = cool.SetTrendMsg{
+		Sender: addr1,
+		Cool:   "warmandkind",
 	}
 )
 
@@ -64,11 +76,10 @@ func TestMsgs(t *testing.T) {
 		msg sdk.Msg
 	}{
 		{sendMsg},
-		{whatCoolMsg1},
-		{setWhatCoolMsg},
+		{quizMsg1},
+		{setTrendMsg1},
 	}
 
-	chainID := ""
 	sequences := []int64{0}
 	for i, m := range msgs {
 		sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, m.msg))
@@ -168,7 +179,6 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	assert.Equal(t, acc1, res1)
 
 	// Sign the tx
-	chainID := "" // TODO: InitChain should get the ChainID
 	sequences := []int64{0}
 	sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, sendMsg))
 	tx := sdk.NewStdTx(sendMsg, []sdk.StdSignature{{
@@ -209,56 +219,83 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
 }
 
-//func TestWhatCoolMsg(t *testing.T) {
-//bapp := newBasecoinApp()
+func TestQuizMsg(t *testing.T) {
+	bapp := newBasecoinApp()
 
-//// Construct genesis state
-//// Construct some genesis bytes to reflect basecoin/types/AppAccount
-//// Give 77 foocoin to the first key
-//coins, err := sdk.ParseCoins("1icecold")
-//require.Nil(t, err)
-//baseAcc := auth.BaseAccount{
-//Address: addr1,
-//Coins:   coins,
-//}
-//acc1 := &types.AppAccount{baseAcc, "foobart"}
+	// Construct genesis state
+	// Construct some genesis bytes to reflect basecoin/types/AppAccount
+	coins := sdk.Coins{}
+	baseAcc := auth.BaseAccount{
+		Address: addr1,
+		Coins:   coins,
+	}
+	acc1 := &types.AppAccount{baseAcc, "foobart"}
 
-//// Construct genesis state
-//genesisState := types.GenesisState{
-//Accounts: []*types.GenesisAccount{
-//types.NewGenesisAccount(acc1),
-//},
-//}
-//stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
-//require.Nil(t, err)
+	// Construct genesis state
+	genesisState := types.GenesisState{
+		Accounts: []*types.GenesisAccount{
+			types.NewGenesisAccount(acc1),
+		},
+	}
+	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
+	require.Nil(t, err)
 
-//// Initialize the chain (nil)
-//vals := []abci.Validator{}
-//bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
-//bapp.Commit()
+	// Initialize the chain (nil)
+	vals := []abci.Validator{}
+	bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
+	bapp.Commit()
 
-//// A checkTx context (true)
-//ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
-//res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
-//assert.Equal(t, acc1, res1)
+	// A checkTx context (true)
+	ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
+	res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
+	assert.Equal(t, acc1, res1)
 
-//// Sign the tx
-//tx := sdk.NewStdTx(whatCoolMsg1, []sdk.StdSignature{{
-//PubKey:    priv1.PubKey(),
-//Signature: priv1.Sign(whatCoolMsg1.GetSignBytes()),
-//}})
+	// Set the trend, submit a really cool quiz and check for reward
+	SignCheckDeliver(t, bapp, setTrendMsg1, 0, true)
+	SignCheckDeliver(t, bapp, quizMsg1, 1, true)
+	CheckBalance(t, bapp, "69icecold")
+	SignCheckDeliver(t, bapp, quizMsg2, 2, true) // result without reward
+	CheckBalance(t, bapp, "69icecold")
+	SignCheckDeliver(t, bapp, quizMsg1, 3, true)
+	CheckBalance(t, bapp, "138icecold")
+	SignCheckDeliver(t, bapp, setTrendMsg2, 4, true) // reset the trend
+	SignCheckDeliver(t, bapp, quizMsg1, 5, true)     // the same answer will nolonger do!
+	CheckBalance(t, bapp, "138icecold")
+	SignCheckDeliver(t, bapp, quizMsg2, 6, true) // earlier answer now relavent again
+	CheckBalance(t, bapp, "69badvibesonly,138icecold")
+	SignCheckDeliver(t, bapp, setTrendMsg3, 7, false) // expect to fail to set the trend to something which is not cool
 
-//// Run a Check
-//res := bapp.Check(tx)
-//assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+}
 
-//// Simulate a Block
-//bapp.BeginBlock(abci.RequestBeginBlock{})
-//res = bapp.Deliver(tx)
-//assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, expPass bool) {
 
-//// Check balances
-//ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
-//res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr1)
-//assert.Equal(t, "70icecold", fmt.Sprintf("%v", res2.GetCoins()))
-//}
+	// Sign the tx
+	tx := sdk.NewStdTx(msg, []sdk.StdSignature{{
+		PubKey:    priv1.PubKey(),
+		Signature: priv1.Sign(sdk.StdSignBytes(chainID, []int64{seq}, msg)),
+		Sequence:  seq,
+	}})
+
+	// Run a Check
+	res := bapp.Check(tx)
+	if expPass {
+		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	} else {
+		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
+	}
+
+	// Simulate a Block
+	bapp.BeginBlock(abci.RequestBeginBlock{})
+	res = bapp.Deliver(tx)
+	if expPass {
+		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	} else {
+		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
+	}
+}
+
+func CheckBalance(t *testing.T, bapp *BasecoinApp, balExpected string) {
+	ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
+	res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr1)
+	assert.Equal(t, balExpected, fmt.Sprintf("%v", res2.GetCoins()))
+}

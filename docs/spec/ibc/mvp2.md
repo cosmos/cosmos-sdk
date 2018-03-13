@@ -11,7 +11,7 @@ IBC module will store its own router for handling custom incoming msgs. `IBCPush
 ```golang
 // User facing API
 
-type IBCTransferPacket struct {
+type IBCPacket struct {
     DestAddr sdk.Address
     Coins    sdk.Coins
     SrcChain string
@@ -20,12 +20,12 @@ type IBCTransferPacket struct {
 
 // Implements sdk.Msg
 type IBCTransferMsg struct {
-    IBCTransferPacket
+    IBCPacket
 }
 
 // Implements sdk.Msg
 type IBCReceiveMsg struct {
-    IBCTransferPacket
+    IBCPacket
 }
 
 // Internal API
@@ -33,12 +33,13 @@ type IBCReceiveMsg struct {
 func NewHandler(dispatcher Dispatcher, ibcm IBCMapper) sdk.Handler
 
 type IBCMapper struct {
-    ingressKey sdk.StoreKey // Source Chain ID            => last income msg's sequence
-    egressKey  sdk.StoreKey // (Dest chain ID, Msg index) => length / indexed msg
+    ibcKey sdk.StoreKey // IngressKey / EgressKey             => Value
+                        // Ingress: Source Chain ID           => last income msg's sequence
+                        // Egress: (Dest chain ID, Msg index) => length / indexed msg
 }
 
 type IngressKey struct {
-    SourceChain string
+    SrcChain string
 }
 
 type EgressKey struct {

@@ -16,13 +16,13 @@ type IBCTransferData struct {
 }
 
 // Implements ibc.PacketData
-type IBCTransferPacket struct {
-    IBCTransferData
+type IBCPacket struct {
+    IBCData
 }
 
 // Implements ibc.PacketData
 type IBCReceivePacket struct {
-    IBCTransferData    
+    IBCData    
 }
 
 type Packet struct {
@@ -52,9 +52,10 @@ type IBCUpdateMsg struct {
 func NewHandler(dispatcher Dispatcher, ibcm IBCMapper) sdk.Handler
 
 type IBCMapper struct {
-    ingressKey sdk.StoreKey // ChannelID              => last income msg's sequence
-    egressKey  sdk.StoreKey // (ChannelID, Msg index) => length / indexed msg
-    headerKey  sdk.StoreKey // ChannelID              => last known header
+    ibcKey sdk.StoreKey // IngressKey / EgressKey / HeaderKey => Value
+                        // ChannelID              => last income msg's sequence
+                        // (ChannelID, Msg index) => length / indexed msg
+                        // ChannelID              => last known header
 }
 
 type IngressKey struct {

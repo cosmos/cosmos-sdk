@@ -11,7 +11,7 @@ The initial implementation of IBC will include just enough for simple coin trans
 ```golang
 // User facing API
 
-type IBCTransferPacket struct {
+type IBCPacket struct {
     DestAddr sdk.Address
     Coins    sdk.Coins
     SrcChain string
@@ -20,19 +20,20 @@ type IBCTransferPacket struct {
 
 // Implements sdk.Msg
 type IBCTransferMsg struct {
-    IBCTransferPacket
+    IBCPacket
 }
 
 // Implements sdk.Msg
 type IBCReceiveMsg struct {
-    IBCTransferPacket
+    IBCPacket
 }
 
 // Internal API
 
 type IBCMapper struct {
-    ingressKey sdk.StoreKey // Source Chain ID            => last income msg's sequence
-    egressKey  sdk.StoreKey // (Dest chain ID, Msg index) => length / indexed msg
+    ibcKey sdk.StoreKey // IngressKey / EgressKey             => Value
+                        // Ingress: Source Chain ID           => last income msg's sequence
+                        // Egress: (Dest chain ID, Msg index) => length / indexed msg
 }
 
 type IngressKey struct {

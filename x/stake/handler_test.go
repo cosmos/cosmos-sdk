@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	crypto "github.com/tendermint/go-crypto"
-	"github.com/tendermint/tmlibs/rational"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coin "github.com/cosmos/cosmos-sdk/x/bank" // XXX fix
@@ -69,10 +68,10 @@ func paramsNoInflation() Params {
 	return Params{
 		HoldBonded:          sdk.NewActor(stakingModuleName, []byte("77777777777777777777777777777777")),
 		HoldUnbonded:        sdk.NewActor(stakingModuleName, []byte("88888888888888888888888888888888")),
-		InflationRateChange: rational.Zero,
-		InflationMax:        rational.Zero,
-		InflationMin:        rational.Zero,
-		GoalBonded:          rational.New(67, 100),
+		InflationRateChange: sdk.Zero,
+		InflationMax:        sdk.Zero,
+		InflationMin:        sdk.Zero,
+		GoalBonded:          sdk.New(67, 100),
 		MaxVals:             100,
 		AllowedBondDenom:    "fermion",
 		GasDeclareCandidacy: 20,

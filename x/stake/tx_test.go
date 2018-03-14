@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	validator = sdk.Actor{"testChain", "testapp", []byte("addressvalidator1")}
-	empty     sdk.Actor
+	validator = []byte("addressvalidator1")
+	empty     sdk.Address
 
 	coinPos          = sdk.Coin{"fermion", 1000}
 	coinZero         = sdk.Coin{"fermion", 0}

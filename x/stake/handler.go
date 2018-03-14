@@ -57,32 +57,6 @@ func NewHandler(mapper Mapper, ck bank.CoinKeeper) sdk.Handler {
 		if res.Code != sdk.CodeOK {
 			return res
 		}
-
-		// return the fee for each tx type
-		if ctx.IsCheckTx() {
-
-			// XXX: add some tags so we can search it!
-			switch msgType := msg.(type) {
-			case TxDeclareCandidacy:
-				return sdk.NewCheck(params.GasDeclareCandidacy, "")
-			case TxEditCandidacy:
-				return sdk.NewCheck(params.GasEditCandidacy, "")
-			case TxDelegate:
-				return sdk.NewCheck(params.GasDelegate, "")
-			case TxUnbond:
-				return sdk.NewCheck(params.GasUnbond, "")
-			default:
-				return sdk.ErrUnknownTxType(msgType)
-			}
-		}
-
-		// TODO: remove redundancy
-		// also we don't need to check the res - gas is already deducted in sdk
-		_, err = h.CheckTx(ctx, store, tx, nil)
-		if err != nil {
-			return
-		}
-
 		sender, err := getTxSender(ctx)
 		if err != nil {
 			return
@@ -93,20 +67,29 @@ func NewHandler(mapper Mapper, ck bank.CoinKeeper) sdk.Handler {
 		// Run the transaction
 		switch _tx := tx.Unwrap().(type) {
 		case TxDeclareCandidacy:
-			res.GasUsed = params.GasDeclareCandidacy
+			if !ctx.IsCheckTx() {
+				res.GasUsed = params.GasDeclareCandidacy
+			}
 			return res, transact.declareCandidacy(_tx)
 		case TxEditCandidacy:
-			res.GasUsed = params.GasEditCandidacy
+			if !ctx.IsCheckTx() {
+				res.GasUsed = params.GasEditCandidacy
+			}
 			return res, transact.editCandidacy(_tx)
 		case TxDelegate:
-			res.GasUsed = params.GasDelegate
+			if !ctx.IsCheckTx() {
+				res.GasUsed = params.GasDelegate
+			}
 			return res, transact.delegate(_tx)
 		case TxUnbond:
 			//context with hold account permissions
-			params := loadParams(store)
-			res.GasUsed = params.GasUnbond
-			//ctx2 := ctx.WithPermissions(params.HoldBonded) //TODO remove this line if non-permissioned ctx works
+			if !ctx.IsCheckTx() {
+				params := loadParams(store)
+				res.GasUsed = params.GasUnbond
+			}
 			return res, transact.unbond(_tx)
+		default:
+			return sdk.ErrUnknownTxType(msgType)
 		}
 		return
 	}
@@ -130,11 +113,10 @@ type transact struct {
 	coinKeeper bank.CoinKeeper
 	params     Params
 	gs         *GlobalState
-	isCheckTx  bool
+	isCheckTx  sdk.Context
 }
 
-//  XXX move mapper creation to application?
-func newTransact(ctx sdk.Context, mapper Mapper, ck bank.CoinKeeper) transact {
+func newTransact(ctx sdk.Context, sender sdk.Address, mapper Mapper, ck bank.CoinKeeper) transact {
 	return transact{
 		sender:     sender,
 		mapper:     mapper,

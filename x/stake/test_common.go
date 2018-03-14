@@ -7,10 +7,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 	dbm "github.com/tendermint/tmlibs/db"
 
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,16 +21,18 @@ func subspace(prefix []byte) (start, end []byte) {
 	return prefix, end
 }
 
-func initTestStore(t *testing.T) sdk.KVStore {
-	// Capabilities key to access the main KVStore.
-	//db, err := dbm.NewGoLevelDB("stake", "data")
+func createTestInput(t *testing.T, isCheckTx bool) (store sdk.KVStore, ctx sdk.Context, key sdk.StoreKey) {
 	db := dbm.NewMemDB()
-	stakeStoreKey := sdk.NewKVStoreKey("stake")
+	key = sdk.NewKVStoreKey("stake")
+
 	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(stakeStoreKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
-	return ms.GetKVStore(stakeStoreKey)
+
+	ctx = sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil)
+	store = ms.GetKVStore(key)
+	return
 }
 
 func newAddrs(n int) (addrs []crypto.Address) {

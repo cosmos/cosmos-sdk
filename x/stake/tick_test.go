@@ -8,7 +8,7 @@ import (
 )
 
 func TestGetInflation(t *testing.T) {
-	store := initTestStore(t)
+	store, ctx, key := createTestInput(t, false)
 	params := loadParams(store)
 	gs := loadGlobalState(store)
 
@@ -53,7 +53,7 @@ func TestGetInflation(t *testing.T) {
 }
 
 func TestProcessProvisions(t *testing.T) {
-	store := initTestStore(t)
+	store, ctx, key := createTestInput(t, false)
 	params := loadParams(store)
 	gs := loadGlobalState(store)
 

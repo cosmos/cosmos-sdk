@@ -23,14 +23,14 @@ const (
 
 // appGenerator lets us lazily initialize app, using home dir
 // and other flags (?) to start
-type appGenerator func(string, log.Logger) (abci.Application, error)
+type appCreator func(string, log.Logger) (abci.Application, error)
 
 // StartCmd runs the service passed in, either
 // stand-alone, or in-process with tendermint
-func StartCmd(app appGenerator, logger log.Logger) *cobra.Command {
+func StartCmd(app appCreator, logger log.Logger) *cobra.Command {
 	start := startCmd{
-		app:    app,
-		logger: logger,
+		appCreator: appCreator,
+		logger:     logger,
 	}
 	cmd := &cobra.Command{
 		Use:   "start",
@@ -48,8 +48,8 @@ func StartCmd(app appGenerator, logger log.Logger) *cobra.Command {
 }
 
 type startCmd struct {
-	app    appGenerator
-	logger log.Logger
+	appCreator appCreator
+	logger     log.Logger
 }
 
 func (s startCmd) run(cmd *cobra.Command, args []string) error {
@@ -65,7 +65,7 @@ func (s startCmd) startStandAlone() error {
 	// Generate the app in the proper dir
 	addr := viper.GetString(flagAddress)
 	home := viper.GetString("home")
-	app, err := s.app(home, s.logger)
+	app, err := s.appCreator(home, s.logger)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (s startCmd) startInProcess() error {
 	}
 
 	home := cfg.RootDir
-	app, err := s.app(home, s.logger)
+	app, err := s.appCreator(home, s.logger)
 	if err != nil {
 		return err
 	}

@@ -13,13 +13,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	coolcmd "github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool/commands"
+
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	coolcmd "github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool/commands"
 )
 
 // gaiacliCmd is the entry point for this binary

@@ -1,10 +1,21 @@
 package lcd
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
+	"fmt"
+	"log"
+	"math/big"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -62,14 +73,76 @@ func startRESTServer(cdc *wire.Codec) func(cmd *cobra.Command, args []string) er
 		}
 		exPath := filepath.Dir(ex)
 
-		if _, err := os.Stat(filepath.Join(exPath, "server.crt")); os.IsNotExist(err) {
-			return errors.Errorf("The REST server needs a https certificate 'server.crt' in the same folder as the CLI binary. Read https://devcenter.heroku.com/articles/ssl-certificate-self on how to create a self-signed certificate.")
+		_, err = os.Stat(filepath.Join(exPath, "server.crt"))
+		os.IsNotExist(err)
+		_, err = os.Stat(filepath.Join(exPath, "server.key"))
+		os.IsNotExist(err)
+
+		if err != nil {
+			err = generateAndSaveCertificate(exPath)
+			if err != nil {
+				return err
+			}
 		}
-		if _, err := os.Stat(filepath.Join(exPath, "server.key")); os.IsNotExist(err) {
-			return errors.Errorf("The REST server needs the certifcate private key 'server.key' in the same folder as the CLI binary. Read https://devcenter.heroku.com/articles/ssl-certificate-self on how to create a self-signed certificate.")
-		}
+
 		return http.ListenAndServeTLS(bind, filepath.Join(exPath, "server.crt"), filepath.Join(exPath, "server.key"), r)
 	}
+}
+
+func pemBlockForKey(priv *ecdsa.PrivateKey) *pem.Block {
+
+	b, err := x509.MarshalECPrivateKey(priv)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to marshal ECDSA private key: %v", err)
+		os.Exit(2)
+	}
+	return &pem.Block{Type: "EC PRIVATE KEY", Bytes: b}
+
+}
+
+func generateAndSaveCertificate(exPath string) error {
+
+	privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+
+	keyOut, err := os.OpenFile(filepath.Join(exPath, "server.key"), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return errors.Errorf("failed to open server.key for writing:", err)
+	}
+	pem.Encode(keyOut, pemBlockForKey(privKey))
+	keyOut.Close()
+
+	validFor := time.Duration(365 * 24 * time.Hour)
+	notBefore := time.Now()
+	notAfter := notBefore.Add(validFor)
+
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+
+	template := x509.Certificate{
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			Organization: []string{"Acme Co"},
+		},
+		NotBefore: notBefore,
+		NotAfter:  notAfter,
+
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+	template.IPAddresses = append(template.IPAddresses, net.IP("127.0.0.1"))
+	template.DNSNames = append(template.DNSNames, "localhost")
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, privKey.PublicKey, privKey)
+	if err != nil {
+		return errors.Errorf("Failed to create certificate: %s", err)
+	}
+	certOut, err := os.Create(filepath.Join(exPath, "server.crt"))
+	if err != nil {
+		log.Fatalf("failed to open cert.pem for writing: %s", err)
+	}
+	pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+	certOut.Close()
+	return nil
 }
 
 func initRouter(cdc *wire.Codec) http.Handler {

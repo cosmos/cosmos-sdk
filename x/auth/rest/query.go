@@ -25,8 +25,6 @@ func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, parser sdk.Pa
 		vars := mux.Vars(r)
 		addr := vars["address"]
 
-		fmt.Println("ADDR", addr)
-
 		bz, err := hex.DecodeString(addr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)

@@ -98,6 +98,12 @@ func SearchTxRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Req
 	c := commander{cdc}
 	return func(w http.ResponseWriter, r *http.Request) {
 		tag := r.FormValue("tag")
+		if tag == "" {
+			w.WriteHeader(400)
+			w.Write([]byte("You need to provide a tag to search for."))
+			return
+		}
+
 		tags := []string{tag}
 		output, err := c.searchTx(tags)
 		if err != nil {

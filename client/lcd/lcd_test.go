@@ -197,14 +197,10 @@ func TestCoinSend(t *testing.T) {
 	res, body := request(t, port, "GET", "/accounts/8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6", nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
-	// create account from seed who has keys
-	var jsonStr = []byte(fmt.Sprintf(`{"name":"account_with_coins", "password":"1234567890", "seed": "%s"}`, seed))
-	res, body = request(t, port, "POST", "/keys", jsonStr)
+	// create TX
+	addr, receiveAddr := doSend(t, port, seed)
 
-	assert.Equal(t, http.StatusOK, res.StatusCode, body)
-	addr := body
-
-	// query
+	// query sender
 	res, body = request(t, port, "GET", "/accounts/"+addr, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -212,30 +208,12 @@ func TestCoinSend(t *testing.T) {
 		"coins": [
 			{
 				"denom": "mycoin",
-				"amount": 9007199254740992
+				"amount": 9007199254740991
 			}
 		]
 	}`, body)
 
-	// create receive address
-	kb := client.MockKeyBase()
-	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
-	require.Nil(t, err)
-	receiveAddr := string(receiveInfo.Address())
-
-	// send
-	jsonStr = []byte(`{
-		"name":"account_with_coins", 
-		"password":"1234567890", 
-		"amount":[{
-			"denom": "mycoin",
-			"amount": 1
-		}]
-	}`)
-	res, body = request(t, port, "POST", "/accounts/"+receiveAddr+"/send", jsonStr)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	// check if received
+	// query receiver
 	res, body = request(t, port, "GET", "/accounts/"+receiveAddr, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -247,6 +225,38 @@ func TestCoinSend(t *testing.T) {
 			}
 		]
 	}`, body)
+}
+
+func TestTxs(t *testing.T) {
+	kill, port, seed := junkInit(t)
+	defer kill()
+
+	// query wrong
+	res, body := request(t, port, "GET", "/txs", nil)
+	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
+
+	// query empty
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.sender='%s'", "8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6"), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	assert.Equal(t, "[]", body)
+
+	// create TX
+	addr, receiveAddr := doSend(t, port, seed)
+
+	// query sender
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.sender='%s'", addr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	assert.NotEqual(t, "[]", body)
+
+	// query receiver
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.receiver='%s'", receiveAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	assert.NotEqual(t, "[]", body)
+
+	// get TX by hash
 }
 
 //__________________________________________________________
@@ -282,4 +292,26 @@ func request(t *testing.T, port, method, path string, payload []byte) (*http.Res
 	require.Nil(t, err)
 
 	return res, string(output)
+}
+
+func doSend(t *testing.T, port, seed string) (sendAddr string, receiveAddr string) {
+	// create account from seed who has keys
+	var jsonStr = []byte(fmt.Sprintf(`{"name":"test", "password":"1234567890", "seed": "%s"}`, seed))
+	res, body := request(t, port, "POST", "/keys", jsonStr)
+
+	assert.Equal(t, http.StatusOK, res.StatusCode, body)
+	sendAddr = body
+
+	// create receive address
+	kb := client.MockKeyBase()
+	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
+	require.Nil(t, err)
+	receiveAddr = receiveInfo.PubKey.Address().String()
+
+	// send
+	jsonStr = []byte(`{ "name":"test", "password":"1234567890", "amount":[{ "denom": "mycoin", "amount": 1 }] }`)
+	res, body = request(t, port, "POST", "/accounts/"+receiveAddr+"/send", jsonStr)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	return sendAddr, receiveAddr
 }

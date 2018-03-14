@@ -220,5 +220,5 @@ func (key *KVStoreKey) Name() string {
 }
 
 func (key *KVStoreKey) String() string {
-	return fmt.Sprintf("KVStoreKey{%p, %s}", key, key.name)
+	return fmt.Sprintf("KVStoreKey{%s:%p}", key.name, key)
 }

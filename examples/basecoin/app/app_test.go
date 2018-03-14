@@ -138,6 +138,27 @@ func TestMsgs(t *testing.T) {
 	for i, m := range msgs {
 		// Run a CheckDeliver
 		SignCheckDeliver(t, bapp, m.msg, []int64{int64(i)}, false, priv1)
+		sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, m.msg))
+		tx := sdk.NewStdTx(m.msg, []sdk.StdSignature{{
+			PubKey:    priv1.PubKey(),
+			Signature: sig,
+		}})
+
+		// Just marshal/unmarshal!
+		cdc := MakeCodec()
+		txBytes, err := cdc.MarshalBinary(tx)
+		require.NoError(t, err, "i: %v", i)
+
+		// Run a Check
+		cres := bapp.CheckTx(txBytes)
+		assert.Equal(t, sdk.CodeUnrecognizedAddress,
+			sdk.CodeType(cres.Code), "i: %v, log: %v", i, cres.Log)
+
+		// Simulate a Block
+		bapp.BeginBlock(abci.RequestBeginBlock{})
+		dres := bapp.DeliverTx(txBytes)
+		assert.Equal(t, sdk.CodeUnrecognizedAddress,
+			sdk.CodeType(dres.Code), "i: %v, log: %v", i, dres.Log)
 	}
 }
 

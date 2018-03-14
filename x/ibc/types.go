@@ -32,7 +32,7 @@ func (msg IBCTransferMsg) Get(key interface{}) interface{} {
 
 func (msg IBCTransferMsg) GetSignBytes() []byte {
 	cdc := newCodec()
-	bz, err := cdc.MarshalBinary(msg)
+	bz, err := cdc.MarshalBinary(msg.IBCPacket)
 	if err != nil {
 		panic(err)
 	}
@@ -40,15 +40,42 @@ func (msg IBCTransferMsg) GetSignBytes() []byte {
 }
 
 func (msg IBCTransferMsg) ValidateBasic() sdk.Error {
-	return msg.Coins.ValidateBasic()
+	return nil
 }
 
 // x/bank/tx.go SendMsg.GetSigners()
 func (msg IBCTransferMsg) GetSigners() []sdk.Address {
-	addrs := []sdk.Address{msg.SrcAddr}
+	return []sdk.Address{msg.SrcAddr}
 }
 
 type IBCReceiveMsg struct {
 	IBCPacket
-	Relayer sdk.Address
+	Relayer  sdk.Address
+	Sequence int64
+}
+
+func (msg IBCReceiveMsg) Type() string {
+	return "ibcreceive"
+}
+
+func (msg IBCReceiveMsg) Get(key interface{}) interface{} {
+	return nil
+}
+
+func (msg IBCReceiveMsg) GetSignBytes() []byte {
+	cdc := newCodec()
+	bz, err := cdc.MarshalBinary(msg.IBCPacket)
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
+
+func (msg IBCReceiveMsg) ValidateBasic() sdk.Error {
+	return nil
+}
+
+// x/bank/tx.go SendMsg.GetSigners()
+func (msg IBCReceiveMsg) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.Relayer}
 }

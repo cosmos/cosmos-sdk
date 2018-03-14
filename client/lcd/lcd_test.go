@@ -121,7 +121,9 @@ func TestNodeStatus(t *testing.T) {
 	res, body = request(t, port, "GET", "/syncing", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	assert.Equal(t, "true", body)
+	// we expect that there is no other node running so the syncing state is "false"
+	// we c
+	assert.Equal(t, "false", body)
 }
 
 func TestBlock(t *testing.T) {
@@ -204,8 +206,8 @@ func TestCoinSend(t *testing.T) {
 	time.Sleep(time.Second * 2) // T
 
 	// check if tx was commited
-	assert.Equal(t, 0, resultTx.CheckTx.Code)
-	assert.Equal(t, 0, resultTx.DeliverTx.Code)
+	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	// query sender
 	res, body = request(t, port, "GET", "/accounts/"+addr, nil)

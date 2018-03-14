@@ -62,7 +62,7 @@ func TestInitBasecoin(t *testing.T, home string) string {
 	buf := new(bytes.Buffer)
 	initBasecoind.Stdout = buf
 
-	if err := initBasecoind.Start(); err != nil {
+	if err = initBasecoind.Start(); err != nil {
 		t.Error(err)
 	}
 
@@ -70,7 +70,7 @@ func TestInitBasecoin(t *testing.T, home string) string {
 	require.Nil(t, err)
 	cmdWriter.Close()
 
-	if err := initBasecoind.Wait(); err != nil {
+	if err = initBasecoind.Wait(); err != nil {
 		t.Error(err)
 	}
 
@@ -87,7 +87,7 @@ func TestInitBasecoin(t *testing.T, home string) string {
 	seed := string(theOutput[seedLine])
 
 	// enable indexing
-	err = appendToFile(path.Join(home, "config", "config.toml"), "\n\n[tx_indexing]\nindex_all_tags true\n")
+	err = appendToFile(path.Join(home, "config", "config.toml"), "\n\n[tx_indexing]\nindex_all_tags = true\n")
 	require.Nil(t, err)
 
 	return seed
@@ -226,6 +226,11 @@ func StartNodeServerForTest(t *testing.T, home string) *exec.Cmd {
 	cmd := exec.Command(cmdName, cmdArgs...)
 	err := cmd.Start()
 	require.Nil(t, err)
+
+	// FIXME: if there is a nondeterministic node start failure,
+	//        we should probably make this read the logs to wait for RPC
+	time.Sleep(time.Second)
+
 	return cmd
 }
 

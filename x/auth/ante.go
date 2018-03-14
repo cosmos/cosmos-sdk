@@ -7,6 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// NewAnteHandler returns an AnteHandler that checks
+// and increments sequence numbers, checks signatures,
+// and deducts fees from the first signer.
 func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx,
@@ -31,32 +34,20 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 				true
 		}
 
-		// Collect accounts to set in the context
-		var signerAccs = make([]sdk.Account, len(signerAddrs))
-
-		// Get the sign bytes by collecting all sequence numbers
+		// Get the sign bytes (requires all sequence numbers)
 		sequences := make([]int64, len(signerAddrs))
 		for i := 0; i < len(signerAddrs); i++ {
 			sequences[i] = sigs[i].Sequence
 		}
 		signBytes := sdk.StdSignBytes(ctx.ChainID(), sequences, msg)
 
-		// Check fee payer sig and nonce, and deduct fee.
-		// This is done first because it only
-		// requires fetching 1 account.
-		payerAddr, payerSig := signerAddrs[0], sigs[0]
-		payerAcc, res := processSig(ctx, accountMapper, payerAddr, payerSig, signBytes)
-		if !res.IsOK() {
-			return ctx, res, true
-		}
-		signerAccs[0] = payerAcc
-		// TODO: Charge fee from payerAcc.
-		// TODO: accountMapper.SetAccount(ctx, payerAddr)
+		// Check sig and nonce and collect signer accounts.
+		var signerAccs = make([]sdk.Account, len(signerAddrs))
+		for i := 0; i < len(sigs); i++ {
+			isFeePayer := i == 0 // first sig pays the fees
 
-		// Check sig and nonce for the rest.
-		for i := 1; i < len(sigs); i++ {
 			signerAddr, sig := signerAddrs[i], sigs[i]
-			signerAcc, res := processSig(ctx, accountMapper, signerAddr, sig, signBytes)
+			signerAcc, res := processSig(ctx, accountMapper, signerAddr, sig, signBytes, isFeePayer)
 			if !res.IsOK() {
 				return ctx, res, true
 			}
@@ -64,13 +55,17 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 		}
 
 		ctx = WithSigners(ctx, signerAccs)
+		// TODO: tx tags (?)
 		return ctx, sdk.Result{}, false // continue...
 	}
 }
 
 // verify the signature and increment the sequence.
-// if the account doesn't have a pubkey, set it as well.
-func processSig(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, sig sdk.StdSignature, signBytes []byte) (acc sdk.Account, res sdk.Result) {
+// if the account doesn't have a pubkey, set it.
+// deduct fee from fee payer.
+func processSig(ctx sdk.Context, am sdk.AccountMapper,
+	addr sdk.Address, sig sdk.StdSignature, signBytes []byte,
+	isFeePayer bool) (acc sdk.Account, res sdk.Result) {
 
 	// Get the account
 	acc = am.GetAccount(ctx, addr)
@@ -86,7 +81,8 @@ func processSig(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, sig sdk
 	}
 	acc.SetSequence(seq + 1)
 
-	// Check and possibly set pubkey.
+	// If pubkey is not known for account,
+	// set it from the StdSignature
 	pubKey := acc.GetPubKey()
 	if pubKey.Empty() {
 		if sig.PubKey.Empty() {
@@ -97,6 +93,9 @@ func processSig(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, sig sdk
 				fmt.Sprintf("invalid PubKey for address %v", addr)).Result()
 		}
 		pubKey = sig.PubKey
+		if pubKey.Empty() {
+			return nil, sdk.ErrMissingPubKey(addr).Result()
+		}
 		err := acc.SetPubKey(pubKey)
 		if err != nil {
 			return nil, sdk.ErrInternal("setting PubKey on signer").Result()
@@ -105,6 +104,10 @@ func processSig(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, sig sdk
 	// Check sig.
 	if !pubKey.VerifyBytes(signBytes, sig.Signature) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
+	}
+
+	if isFeePayer {
+		// TODO: pay fees
 	}
 
 	// Save the account.

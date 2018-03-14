@@ -19,7 +19,7 @@ func InitState(ctx sdk.Context, mapper Mapper, key, value string) error {
 	params := mapper.loadParams()
 	switch key {
 	case "allowed_bond_denom":
-		params.AllowedBondDenom = value
+		params.BondDenom = value
 	case "max_vals", "gas_bond", "gas_unbond":
 
 		i, err := strconv.Atoi(value)
@@ -108,56 +108,49 @@ func getTxSender(ctx sdk.Context) (sender crypto.Address, err error) {
 
 // common fields to all transactions
 type transact struct {
+	ctx        sdk.Context
 	sender     crypto.Address
 	mapper     Mapper
 	coinKeeper bank.CoinKeeper
 	params     Params
 	gs         *GlobalState
-	isCheckTx  sdk.Context
 }
 
 func newTransact(ctx sdk.Context, sender sdk.Address, mapper Mapper, ck bank.CoinKeeper) transact {
 	return transact{
+		cxt:        ctx,
 		sender:     sender,
 		mapper:     mapper,
 		coinKeeper: ck,
 		params:     mapper.loadParams(),
 		gs:         mapper.loadGlobalState(),
-		isCheckTx:  ctx.IsCheckTx(),
 	}
 }
 
 //_____________________________________________________________________
 // helper functions
-// TODO move from deliver with new SDK should only be dependant on store to send coins in NEW SDK
 
 // move a candidates asset pool from bonded to unbonded pool
-func (tr transact) bondedToUnbondedPool(candidate *Candidate) error {
+func (tr transact) bondedToUnbondedPool(candidate *Candidate) {
 
 	// replace bonded shares with unbonded shares
 	tokens := tr.gs.removeSharesBonded(candidate.Assets)
 	candidate.Assets = tr.gs.addTokensUnbonded(tokens)
 	candidate.Status = Unbonded
-
-	return tr.transfer(tr.params.HoldBonded, tr.params.HoldUnbonded,
-		sdk.Coins{{tr.params.AllowedBondDenom, tokens}})
 }
 
 // move a candidates asset pool from unbonded to bonded pool
-func (tr transact) unbondedToBondedPool(candidate *Candidate) error {
+func (tr transact) unbondedToBondedPool(candidate *Candidate) {
 
-	// replace bonded shares with unbonded shares
+	// replace unbonded shares with bonded shares
 	tokens := tr.gs.removeSharesUnbonded(candidate.Assets)
 	candidate.Assets = tr.gs.addTokensBonded(tokens)
 	candidate.Status = Bonded
-
-	return tr.transfer(tr.params.HoldUnbonded, tr.params.HoldBonded,
-		sdk.Coins{{tr.params.AllowedBondDenom, tokens}})
 }
 
 // return an error if the bonds coins are incorrect
-func checkDenom(mapper Mapper, tx BondUpdate) error {
-	if tx.Bond.Denom != mapper.loadParams().AllowedBondDenom {
+func checkDenom(mapper Mapper, tx BondUpdate) sdk.Error {
+	if tx.Bond.Denom != mapper.loadParams().BondDenom {
 		return fmt.Errorf("Invalid coin denomination")
 	}
 	return nil
@@ -167,28 +160,22 @@ func checkDenom(mapper Mapper, tx BondUpdate) error {
 
 // These functions assume everything has been authenticated,
 // now we just perform action and save
-func (tr transact) declareCandidacy(tx TxDeclareCandidacy) error {
+
+func (tr transact) declareCandidacy(tx TxDeclareCandidacy) sdk.Error {
 
 	// check to see if the pubkey or sender has been registered before
-	if tr.mapper.loadCandidate(tx.PubKey) != nil {
-		return fmt.Errorf("cannot bond to pubkey which is already declared candidacy"+
-			" PubKey %v already registered with %v candidate address",
-			candidate.PubKey, candidate.Owner)
+	if tr.mapper.loadCandidate(tx.Address) != nil {
+		return ErrCandidateExistsAddr()
 	}
 	err := checkDenom(tx.BondUpdate, tr.mapper)
 	if err != nil {
 		return err
 	}
-	if tr.IsCheckTx {
+	if tr.ctx.IsCheckTx() {
 		return nil
 	}
 
-	// create and save the empty candidate
-	bond := tr.mapper.loadCandidate(tx.PubKey)
-	if bond != nil {
-		return ErrCandidateExistsAddr()
-	}
-	candidate := NewCandidate(tx.PubKey, tr.sender, tx.Description)
+	candidate := NewCandidate(tx.Address, tr.sender, tx.Description)
 	tr.mapper.saveCandidate(candidate)
 
 	// move coins from the tr.sender account to a (self-bond) delegator account
@@ -197,18 +184,18 @@ func (tr transact) declareCandidacy(tx TxDeclareCandidacy) error {
 	return tr.delegateWithCandidate(txDelegate, candidate)
 }
 
-func (tr transact) editCandidacy(tx TxEditCandidacy) error {
+func (tr transact) editCandidacy(tx TxEditCandidacy) sdk.Error {
 
 	// candidate must already be registered
-	if tr.mapper.loadCandidate(tx.PubKey) == nil { // does PubKey exist
-		return fmt.Errorf("cannot delegate to non-existant PubKey %v", tx.PubKey)
+	if tr.mapper.loadCandidate(tx.Address) == nil { // does PubKey exist
+		return fmt.Errorf("cannot delegate to non-existant PubKey %v", tx.Address)
 	}
-	if tr.IsCheckTx {
+	if tr.ctx.IsCheckTx() {
 		return nil
 	}
 
 	// Get the pubKey bond account
-	candidate := tr.mapper.loadCandidate(tx.PubKey)
+	candidate := tr.mapper.loadCandidate(tx.Address)
 	if candidate == nil {
 		return ErrBondNotNominated()
 	}
@@ -234,28 +221,28 @@ func (tr transact) editCandidacy(tx TxEditCandidacy) error {
 	return nil
 }
 
-func (tr transact) delegate(tx TxDelegate) error {
+func (tr transact) delegate(tx TxDelegate) sdk.Error {
 
-	if tr.mapper.loadCandidate(tx.PubKey) == nil { // does PubKey exist
-		return fmt.Errorf("cannot delegate to non-existant PubKey %v", tx.PubKey)
+	if tr.mapper.loadCandidate(tx.Address) == nil { // does PubKey exist
+		return fmt.Errorf("cannot delegate to non-existant PubKey %v", tx.Address)
 	}
 	err := checkDenom(tx.BondUpdate, tr.mapper)
 	if err != nil {
 		return err
 	}
-	if tr.IsCheckTx {
+	if tr.ctx.IsCheckTx() {
 		return nil
 	}
 
 	// Get the pubKey bond account
-	candidate := tr.mapper.loadCandidate(tx.PubKey)
+	candidate := tr.mapper.loadCandidate(tx.Address)
 	if candidate == nil {
 		return ErrBondNotNominated()
 	}
 	return tr.delegateWithCandidate(tx, candidate)
 }
 
-func (tr transact) delegateWithCandidate(tx TxDelegate, candidate *Candidate) error {
+func (tr transact) delegateWithCandidate(tx TxDelegate, candidate *Candidate) sdk.Error {
 
 	if candidate.Status == Revoked { //candidate has been withdrawn
 		return ErrBondNotNominated()
@@ -268,34 +255,30 @@ func (tr transact) delegateWithCandidate(tx TxDelegate, candidate *Candidate) er
 		poolAccount = tr.params.HoldUnbonded
 	}
 
-	// XXX refactor all steps like this into GlobalState.addBondedTokens()
-	// Move coins from the delegator account to the bonded pool account
-	err := tr.transfer(tr.sender, poolAccount, sdk.Coins{tx.Bond})
-	if err != nil {
-		return err
-	}
-
 	// Get or create the delegator bond
-	bond := tr.mapper.loadDelegatorBond(tr.sender, tx.PubKey)
+	bond := tr.mapper.loadDelegatorBond(tr.sender, tx.Address)
 	if bond == nil {
 		bond = &DelegatorBond{
-			PubKey: tx.PubKey,
+			PubKey: tx.Address,
 			Shares: sdk.ZeroRat,
 		}
 	}
 
 	// Account new shares, save
-	bond.Shares = bond.Shares.Add(candidate.addTokens(tx.Bond.Amount, tr.gs))
-	tr.mapper.saveCandidate(candidate)
+	err := bond.BondTokens(candidate, tx.Bond, tr)
+	if err != nil {
+		return err
+	}
 	tr.mapper.saveDelegatorBond(tr.sender, bond)
+	tr.mapper.saveCandidate(candidate)
 	tr.mapper.saveGlobalState(tr.gs)
 	return nil
 }
 
-func (tr transact) unbond(tx TxUnbond) error {
+func (tr transact) unbond(tx TxUnbond) sdk.Error {
 
 	// check if bond has any shares in it unbond
-	existingBond := tr.mapper.loadDelegatorBond(tr.sender, tx.PubKey)
+	existingBond := tr.mapper.loadDelegatorBond(tr.sender, tx.Address)
 	sharesStr := viper.GetString(tx.Shares)
 	if existingBond.Shares.LT(sdk.ZeroRat) { // bond shares < tx shares
 		return errors.New("no shares in account to unbond")
@@ -315,10 +298,12 @@ func (tr transact) unbond(tx TxUnbond) error {
 				bond.Shares, tx.Shares)
 		}
 	}
-	// XXX end of old checkTx
+	if tr.ctx.IsCheckTx() {
+		return nil
+	}
 
 	// get delegator bond
-	bond := tr.mapper.loadDelegatorBond(tr.sender, tx.PubKey)
+	bond := tr.mapper.loadDelegatorBond(tr.sender, tx.Address)
 	if bond == nil {
 		return ErrNoDelegatorForAddress()
 	}
@@ -342,7 +327,7 @@ func (tr transact) unbond(tx TxUnbond) error {
 	bond.Shares = bond.Shares.Sub(shares)
 
 	// get pubKey candidate
-	candidate := tr.mapper.loadCandidate(tx.PubKey)
+	candidate := tr.mapper.loadCandidate(tx.Address)
 	if candidate == nil {
 		return ErrNoCandidateForAddress()
 	}
@@ -358,7 +343,7 @@ func (tr transact) unbond(tx TxUnbond) error {
 		}
 
 		// remove the bond
-		tr.mapper.removeDelegatorBond(tr.sender, tx.PubKey)
+		tr.mapper.removeDelegatorBond(tr.sender, tx.Address)
 	} else {
 		tr.mapper.saveDelegatorBond(tr.sender, bond)
 	}
@@ -373,7 +358,7 @@ func (tr transact) unbond(tx TxUnbond) error {
 
 	returnCoins := candidate.removeShares(shares, tr.gs)
 	err := tr.transfer(poolAccount, tr.sender,
-		sdk.Coins{{tr.params.AllowedBondDenom, returnCoins}})
+		sdk.Coins{{tr.params.BondDenom, returnCoins}})
 	if err != nil {
 		return err
 	}
@@ -383,10 +368,7 @@ func (tr transact) unbond(tx TxUnbond) error {
 
 		// change the share types to unbonded if they were not already
 		if candidate.Status == Bonded {
-			err = tr.bondedToUnbondedPool(candidate)
-			if err != nil {
-				return err
-			}
+			tr.bondedToUnbondedPool(candidate)
 		}
 
 		// lastly update the status
@@ -395,7 +377,7 @@ func (tr transact) unbond(tx TxUnbond) error {
 
 	// deduct shares from the candidate and save
 	if candidate.Liabilities.IsZero() {
-		tr.mapper.removeCandidate(tx.PubKey)
+		tr.mapper.removeCandidate(tx.Address)
 	} else {
 		tr.mapper.saveCandidate(candidate)
 	}

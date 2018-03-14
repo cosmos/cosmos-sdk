@@ -50,7 +50,7 @@ type Params struct {
 	ReserveTax          rational.Rational // Tax collected on all fees
 
 	MaxVals          uint16  // maximum number of validators
-	AllowedBondDenom string  // bondable coin denomination
+	BondDenom string  // bondable coin denomination
 
 	// gas costs for txs
 	GasDeclareCandidacy int64 

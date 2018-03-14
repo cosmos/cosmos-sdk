@@ -15,22 +15,6 @@ import (
 
 //______________________________________________________________________
 
-// dummy transfer functions, represents store operations on account balances
-
-type testCoinSender struct {
-	store map[string]int64
-}
-
-var _ coinSend = testCoinSender{} // enforce interface at compile time
-
-func (c testCoinSender) transferFn(sender, receiver sdk.Address, coins sdk.Coins) error {
-	c.store[string(sender.Address)] -= coins[0].Amount
-	c.store[string(receiver.Address)] += coins[0].Amount
-	return nil
-}
-
-//______________________________________________________________________
-
 func initAccounts(n int, amount int64) ([]sdk.Address, map[string]int64) {
 	accStore := map[string]int64{}
 	senders := newActors(n)
@@ -81,17 +65,11 @@ func paramsNoInflation() Params {
 	}
 }
 
-func newDeliver(t, sender sdk.Address, accStore map[string]int64) deliver {
-	store := initTestStore()
+func newTestTransact(t, sender sdk.Address, isCheckTx bool) transact {
+	store, mapper, coinKeeper := createTestInput(t, isCheckTx)
 	params := paramsNoInflation()
-	saveParams(store, params)
-	return deliver{
-		store:    store,
-		sender:   sender,
-		params:   params,
-		gs:       loadGlobalState(store),
-		transfer: testCoinSender{accStore}.transferFn,
-	}
+	mapper.saveParams(params)
+	newTransact(ctx, sender, mapper, coinKeeper)
 }
 
 func TestDuplicatesTxDeclareCandidacy(t *testing.T) {

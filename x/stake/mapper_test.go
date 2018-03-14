@@ -161,7 +161,7 @@ import (
 //}
 
 func TestState(t *testing.T) {
-	store := initTestStore(t)
+	store := createTestInput(t)
 
 	//delegator := crypto.Address{[]byte("addressdelegator")}
 	//validator := crypto.Address{[]byte("addressvalidator")}
@@ -260,7 +260,7 @@ func TestState(t *testing.T) {
 }
 
 func TestGetValidators(t *testing.T) {
-	store := initTestStore(t)
+	store, ctx, key := createTestInput(t, false)
 	N := 5
 	addrs := newAddrs(N)
 	candidatesFromActors(store, addrs, []int64{400, 200, 0, 0, 0})

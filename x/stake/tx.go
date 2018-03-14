@@ -1,146 +1,209 @@
 package stake
 
 import (
+	"encoding/json"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
 )
 
-// Tx
-//--------------------------------------------------------------------------------
-
-// register the tx type with its validation logic
-// make sure to use the name of the handler as the prefix in the tx type,
-// so it gets routed properly
-const (
-	ByteTxDeclareCandidacy = 0x55
-	ByteTxEditCandidacy    = 0x56
-	ByteTxDelegate         = 0x57
-	ByteTxUnbond           = 0x58
-
-	TypeTxDeclareCandidacy = "staking/declareCandidacy"
-	TypeTxEditCandidacy    = "staking/editCandidacy"
-	TypeTxDelegate         = "staking/delegate"
-	TypeTxUnbond           = "staking/unbond"
-)
-
-//func init() {
-//sdk.TxMapper.RegisterImplementation(TxDeclareCandidacy{}, TypeTxDeclareCandidacy, ByteTxDeclareCandidacy)
-//sdk.TxMapper.RegisterImplementation(TxEditCandidacy{}, TypeTxEditCandidacy, ByteTxEditCandidacy)
-//sdk.TxMapper.RegisterImplementation(TxDelegate{}, TypeTxDelegate, ByteTxDelegate)
-//sdk.TxMapper.RegisterImplementation(TxUnbond{}, TypeTxUnbond, ByteTxUnbond)
-//}
-
 //Verify interface at compile time
-//var _, _, _, _ sdk.TxInner = &TxDeclareCandidacy{}, &TxEditCandidacy{}, &TxDelegate{}, &TxUnbond{}
+var _, _, _, _ sdk.Msg = &MsgDeclareCandidacy{}, &MsgEditCandidacy{}, &MsgDelegate{}, &MsgUnbond{}
 
-// BondUpdate - struct for bonding or unbonding transactions
-type BondUpdate struct {
-	PubKey crypto.PubKey `json:"pub_key"`
-	Bond   sdk.Coin      `json:"amount"`
+//______________________________________________________________________
+
+// MsgAddr - struct for bonding or unbonding transactions
+type MsgAddr struct {
+	Address sdk.Address `json:"address"`
+}
+
+func NewMsgAddr(address sdk.Address) MsgAddr {
+	return MsgAddr{
+		Address: address,
+	}
+}
+
+// nolint
+func (msg MsgAddr) Type() string                            { return "stake" }
+func (msg MsgAddr) Get(key interface{}) (value interface{}) { return nil }
+func (msg MsgAddr) GetSigners() []sdk.Address               { return []sdk.Address{msg.Address} }
+func (msg MsgAddr) String() string {
+	return fmt.Sprintf("MsgAddr{Address: %v}", msg.Address)
 }
 
 // ValidateBasic - Check for non-empty candidate, and valid coins
-func (tx BondUpdate) ValidateBasic() error {
-	if tx.PubKey.Empty() {
+func (msg MsgAddr) ValidateBasic() sdk.Error {
+	if msg.Address.Empty() {
 		return errCandidateEmpty
 	}
-	coins := sdk.Coins{tx.Bond}
-	if !sdk.IsValid() {
-		return sdk.ErrInvalidCoins()
+}
+
+//______________________________________________________________________
+
+// MsgDeclareCandidacy - struct for unbonding transactions
+type MsgDeclareCandidacy struct {
+	MsgAddr
+	Description
+	Bond   sdk.Coin      `json:"bond"`
+	PubKey crypto.PubKey `json:"pubkey"`
+}
+
+func NewMsgDeclareCandidacy(bond sdk.Coin, address sdk.Address, pubkey crypto.PubKey, description Description) MsgDeclareCandidacy {
+	return MsgDeclareCandidacy{
+		MsgAddr:     NewMsgAddr(address),
+		Description: description,
+		Bond:        bond,
+		PubKey:      PubKey,
 	}
-	if !coins.IsPositive() {
-		return fmt.Errorf("Amount must be > 0")
+}
+
+// get the bytes for the message signer to sign on
+func (msg MsgDeclareCandidacy) GetSignBytes() []byte {
+	b, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+// quick validity check
+func (msg MsgDeclareCandidacy) ValidateBasic() sdk.Error {
+	err := MsgAddr.ValidateBasic()
+	if err != nil {
+		return err
+	}
+	err := validateCoin(msg.Bond)
+	if err != nil {
+		return err
+	}
+	empty := Description{}
+	if msg.Description == empty {
+		return fmt.Errorf("description must be included")
 	}
 	return nil
 }
 
-// TxDeclareCandidacy - struct for unbonding transactions
-type TxDeclareCandidacy struct {
-	BondUpdate
+//______________________________________________________________________
+
+// MsgEditCandidacy - struct for editing a candidate
+type MsgEditCandidacy struct {
+	MsgAddr
 	Description
 }
 
-// NewTxDeclareCandidacy - new TxDeclareCandidacy
-func NewTxDeclareCandidacy(bond sdk.Coin, pubKey crypto.PubKey, description Description) sdk.Tx {
-	return TxDeclareCandidacy{
-		BondUpdate{
-			PubKey: pubKey,
-			Bond:   bond,
-		},
-		description,
-	}.Wrap()
-}
-
-// Wrap - Wrap a Tx as a Basecoin Tx
-func (tx TxDeclareCandidacy) Wrap() sdk.Tx { return sdk.Tx{tx} }
-
-// TxEditCandidacy - struct for editing a candidate
-type TxEditCandidacy struct {
-	PubKey crypto.PubKey `json:"pub_key"`
-	Description
-}
-
-// NewTxEditCandidacy - new TxEditCandidacy
-func NewTxEditCandidacy(pubKey crypto.PubKey, description Description) sdk.Tx {
-	return TxEditCandidacy{
-		PubKey:      pubKey,
+func NewMsgEditCandidacy(address sdk.Address, description Description) MsgEditCandidacy {
+	return MsgEditCandidacy{
+		MsgAddr:     NewMsgAddr(address),
 		Description: description,
-	}.Wrap()
+	}
 }
 
-// Wrap - Wrap a Tx as a Basecoin Tx
-func (tx TxEditCandidacy) Wrap() sdk.Tx { return sdk.Tx{tx} }
-
-// ValidateBasic - Check for non-empty candidate,
-func (tx TxEditCandidacy) ValidateBasic() error {
-	if tx.PubKey.Empty() {
-		return errCandidateEmpty
+// get the bytes for the message signer to sign on
+func (msg MsgEditCandidacy) GetSignBytes() []byte {
+	b, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
 	}
+	return b
+}
 
+// quick validity check
+func (msg MsgEditCandidacy) ValidateBasic() sdk.Error {
+	err := MsgAddr.ValidateBasic()
+	if err != nil {
+		return err
+	}
 	empty := Description{}
-	if tx.Description == empty {
+	if msg.Description == empty {
 		return fmt.Errorf("Transaction must include some information to modify")
 	}
 	return nil
 }
 
-// TxDelegate - struct for bonding transactions
-type TxDelegate struct{ BondUpdate }
+//______________________________________________________________________
 
-// NewTxDelegate - new TxDelegate
-func NewTxDelegate(bond sdk.Coin, pubKey crypto.PubKey) sdk.Tx {
-	return TxDelegate{BondUpdate{
-		PubKey: pubKey,
-		Bond:   bond,
-	}}.Wrap()
+// MsgDelegate - struct for bonding transactions
+type MsgDelegate struct {
+	MsgAddr
+	Bond sdk.Coin `json:"bond"`
 }
 
-// Wrap - Wrap a Tx as a Basecoin Tx
-func (tx TxDelegate) Wrap() sdk.Tx { return sdk.Tx{tx} }
-
-// TxUnbond - struct for unbonding transactions
-type TxUnbond struct {
-	PubKey crypto.PubKey `json:"pub_key"`
-	Shares string        `json:"amount"`
+func NewMsgDelegate(address sdk.Address, bond sdk.Coin) MsgDelegate {
+	return MsgDelegate{
+		MsgAddr: NewMsgAddr(address),
+		Bond:    bond,
+	}
 }
 
-// NewTxUnbond - new TxUnbond
-func NewTxUnbond(shares string, pubKey crypto.PubKey) sdk.Tx {
-	return TxUnbond{
-		PubKey: pubKey,
-		Shares: shares,
-	}.Wrap()
+// get the bytes for the message signer to sign on
+func (msg MsgDelegate) GetSignBytes() []byte {
+	b, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
 
-// Wrap - Wrap a Tx as a Basecoin Tx
-func (tx TxUnbond) Wrap() sdk.Tx { return sdk.Tx{tx} }
+// quick validity check
+func (msg MsgDelegate) ValidateBasic() sdk.Error {
+	err := MsgAddr.ValidateBasic()
+	if err != nil {
+		return err
+	}
+	err := validateCoin(msg.Bond)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-// ValidateBasic - Check for non-empty candidate, positive shares
-func (tx TxUnbond) ValidateBasic() error {
-	if tx.PubKey.Empty() {
-		return errCandidateEmpty
+//______________________________________________________________________
+
+// MsgUnbond - struct for unbonding transactions
+type MsgUnbond struct {
+	MsgAddr
+	Shares string `json:"shares"`
+}
+
+func NewMsgUnbond(shares string, address sdk.Address) MsgDelegate {
+	return MsgUnbond{
+		MsgAddr: NewMsgAddr(address),
+		Shares:  shares,
+	}
+}
+
+// get the bytes for the message signer to sign on
+func (msg MsgUnbond) GetSignBytes() []byte {
+	b, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+// quick validity check
+func (msg MsgUnbond) ValidateBasic() sdk.Error {
+	err := MsgAddr.ValidateBasic()
+	if err != nil {
+		return err
+	}
+	if msg.Shares {
+		return ErrCandidateEmpty()
+	}
+	return nil
+}
+
+//______________________________________________________________________
+// helper
+
+func validateCoin(coin coin.Coin) sdk.Error {
+	coins := sdk.Coins{bond}
+	if !sdk.IsValid() {
+		return sdk.ErrInvalidCoins()
+	}
+	if !coins.IsPositive() {
+		return fmt.Errorf("Amount must be > 0")
 	}
 	return nil
 }

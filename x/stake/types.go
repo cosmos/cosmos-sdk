@@ -13,8 +13,8 @@ type Params struct {
 	InflationMin        sdk.Rational `json:"inflation_min"`         // minimum inflation rate
 	GoalBonded          sdk.Rational `json:"goal_bonded"`           // Goal of percent bonded atoms
 
-	MaxVals          uint16 `json:"max_vals"`           // maximum number of validators
-	AllowedBondDenom string `json:"allowed_bond_denom"` // bondable coin denomination
+	MaxVals   uint16 `json:"max_vals"`   // maximum number of validators
+	BondDenom string `json:"bond_denom"` // bondable coin denomination
 
 	// gas costs for txs
 	GasDeclareCandidacy int64 `json:"gas_declare_candidacy"`
@@ -30,7 +30,7 @@ func defaultParams() Params {
 		InflationMin:        sdk.NewRat(7, 100),
 		GoalBonded:          sdk.NewRat(67, 100),
 		MaxVals:             100,
-		AllowedBondDenom:    "fermion",
+		BondDenom:           "fermion",
 		GasDeclareCandidacy: 20,
 		GasEditCandidacy:    20,
 		GasDelegate:         20,
@@ -92,6 +92,7 @@ func (gs *GlobalState) unbondedShareExRate() sdk.Rational {
 // XXX XXX XXX
 // expand to include the function of actually transfering the tokens
 
+//XXX CONFIRM that use of the exRate is correct with Zarko Spec!
 func (gs *GlobalState) addTokensBonded(amount int64) (issuedShares sdk.Rational) {
 	issuedShares = gs.bondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
 	gs.BondedPool += amount
@@ -99,6 +100,7 @@ func (gs *GlobalState) addTokensBonded(amount int64) (issuedShares sdk.Rational)
 	return
 }
 
+//XXX CONFIRM that use of the exRate is correct with Zarko Spec!
 func (gs *GlobalState) removeSharesBonded(shares sdk.Rational) (removedTokens int64) {
 	removedTokens = gs.bondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	gs.BondedShares = gs.BondedShares.Sub(shares)
@@ -106,6 +108,7 @@ func (gs *GlobalState) removeSharesBonded(shares sdk.Rational) (removedTokens in
 	return
 }
 
+//XXX CONFIRM that use of the exRate is correct with Zarko Spec!
 func (gs *GlobalState) addTokensUnbonded(amount int64) (issuedShares sdk.Rational) {
 	issuedShares = gs.unbondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
 	gs.UnbondedShares = gs.UnbondedShares.Add(issuedShares)
@@ -113,6 +116,7 @@ func (gs *GlobalState) addTokensUnbonded(amount int64) (issuedShares sdk.Rationa
 	return
 }
 
+//XXX CONFIRM that use of the exRate is correct with Zarko Spec!
 func (gs *GlobalState) removeSharesUnbonded(shares sdk.Rational) (removedTokens int64) {
 	removedTokens = gs.unbondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	gs.UnbondedShares = gs.UnbondedShares.Sub(shares)
@@ -144,7 +148,7 @@ const (
 type Candidate struct {
 	Status      CandidateStatus `json:"status"`       // Bonded status
 	PubKey      crypto.PubKey   `json:"pub_key"`      // Pubkey of candidate
-	Owner       crypto.Address  `json:"owner"`        // Sender of BondTx - UnbondTx returns here
+	Address     sdk.Address     `json:"owner"`        // Sender of BondTx - UnbondTx returns here
 	Assets      sdk.Rational    `json:"assets"`       // total shares of a global hold pools TODO custom type PoolShares
 	Liabilities sdk.Rational    `json:"liabilities"`  // total shares issued to a candidate's delegators TODO custom type DelegatorShares
 	VotingPower sdk.Rational    `json:"voting_power"` // Voting power if considered a validator
@@ -160,19 +164,17 @@ type Description struct {
 }
 
 // NewCandidate - initialize a new candidate
-func NewCandidate(pubKey crypto.PubKey, owner crypto.Address, description Description) *Candidate {
+func NewCandidate(pubKey crypto.PubKey, address sdk.Address, description Description) *Candidate {
 	return &Candidate{
 		Status:      Unbonded,
-		PubKey:      pubKey,
-		Owner:       owner,
+		PubKey:      pubKet,
+		Address:     address,
 		Assets:      sdk.ZeroRat,
 		Liabilities: sdk.ZeroRat,
 		VotingPower: sdk.ZeroRat,
 		Description: description,
 	}
 }
-
-// XXX define candidate interface?
 
 // get the exchange rate of global pool shares over delegator shares
 func (c *Candidate) delegatorShareExRate() sdk.Rational {
@@ -254,6 +256,37 @@ type Candidates []*Candidate
 // owned by one delegator, and is associated with the voting power of one
 // pubKey.
 type DelegatorBond struct {
-	PubKey crypto.PubKey `json:"pub_key"`
-	Shares sdk.Rational  `json:"shares"`
+	Address sdk.Address  `json:"pub_key"`
+	Shares  sdk.Rational `json:"shares"`
+}
+
+// Perform all the actions required to bond tokens to a delegator bond from their account
+func (bond *DelegatorBond) BondCoins(candidate *Candidate, tokens sdk.Coin, tr transact) sdk.Error {
+
+	_, err := tr.coinKeeper.SubtractCoins(tr.ctx, d.Address, sdk.Coins{tokens})
+	if err != nil {
+		return err
+	}
+	newShares = candidate.addTokens(tokens.Amount, tr.gs)
+	bond.Shares = bond.Shares.Add(newShares)
+	return nil
+}
+
+// Perform all the actions required to bond tokens to a delegator bond from their account
+func (bond *DelegatorBond) UnbondCoins(candidate *Candidate, shares int64, tr transact) sdk.Error {
+
+	// subtract bond tokens from delegator bond
+	if bond.Shares.LT(shares) {
+		return ErrInsufficientFunds()
+	}
+	bond.Shares = bond.Shares.Sub(shares)
+
+	returnAmount := candidate.removeShares(shares, tr.gs)
+	returnCoins := sdk.Coins{{tr.params.BondDenom, returnAmount}}
+
+	_, err := tr.coinKeeper.AddCoins(tr.ctx, d.Address, returnCoins)
+	if err != nil {
+		return err
+	}
+	return nil
 }

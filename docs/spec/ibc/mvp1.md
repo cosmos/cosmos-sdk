@@ -12,9 +12,10 @@ The initial implementation of IBC will include just enough for simple coin trans
 // User facing API
 
 type IBCPacket struct {
-    DestAddr sdk.Address
-    Coins    sdk.Coins
-    SrcChain string
+    SrcAddr   sdk.Address
+    DestAddr  sdk.Address
+    Coins     sdk.Coins
+    SrcChain  string
     DestChain string
 }
 
@@ -26,6 +27,8 @@ type IBCTransferMsg struct {
 // Implements sdk.Msg
 type IBCReceiveMsg struct {
     IBCPacket
+    Relayer  sdk.Address
+    Sequence int64
 }
 
 // Internal API

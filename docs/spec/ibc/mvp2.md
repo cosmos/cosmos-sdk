@@ -35,6 +35,8 @@ type IBCTransferMsg struct {
 // Implements sdk.Msg
 type IBCReceiveMsg struct {
     Packet
+    Relayer  sdk.Address
+    Sequence int64
 }
 
 // Internal API

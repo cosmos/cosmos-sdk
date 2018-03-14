@@ -37,13 +37,13 @@ const (
 
 // BondUpdate - struct for bonding or unbonding transactions
 type BondUpdate struct {
-	PubKey crypto.PubKey `json:"pub_key"`
-	Bond   sdk.Coin      `json:"amount"`
+	Address sdk.Address `json:"address"`
+	Bond    sdk.Coin    `json:"amount"`
 }
 
 // ValidateBasic - Check for non-empty candidate, and valid coins
 func (tx BondUpdate) ValidateBasic() error {
-	if tx.PubKey.Empty() {
+	if tx.Address.Empty() {
 		return errCandidateEmpty
 	}
 	coins := sdk.Coins{tx.Bond}
@@ -95,8 +95,8 @@ func (tx TxEditCandidacy) Wrap() sdk.Tx { return sdk.Tx{tx} }
 
 // ValidateBasic - Check for non-empty candidate,
 func (tx TxEditCandidacy) ValidateBasic() error {
-	if tx.PubKey.Empty() {
-		return errCandidateEmpty
+	if tx.Address.Empty() {
+		return ErrCandidateEmpty()
 	}
 
 	empty := Description{}
@@ -139,8 +139,8 @@ func (tx TxUnbond) Wrap() sdk.Tx { return sdk.Tx{tx} }
 
 // ValidateBasic - Check for non-empty candidate, positive shares
 func (tx TxUnbond) ValidateBasic() error {
-	if tx.PubKey.Empty() {
-		return errCandidateEmpty
+	if tx.Address.Empty() {
+		return ErrCandidateEmpty()
 	}
 	return nil
 }

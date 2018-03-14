@@ -88,7 +88,7 @@ func TestMsgs(t *testing.T) {
 			Signature: sig,
 		}})
 
-		// just marshal/unmarshal!
+		// Just marshal/unmarshal!
 		cdc := MakeCodec()
 		txBytes, err := cdc.MarshalBinary(tx)
 		require.NoError(t, err, "i: %v", i)

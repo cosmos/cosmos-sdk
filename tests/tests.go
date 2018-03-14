@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 	//"strings"
@@ -83,7 +84,28 @@ func TestInitBasecoin(t *testing.T, home string) string {
 		}
 	}
 
-	return string(theOutput[seedLine])
+	seed := string(theOutput[seedLine])
+
+	// enable indexing
+	err = appendToFile(path.Join(home, "config", "config.toml"), "\n\n[tx_indexing]\nindex_all_tags true\n")
+	require.Nil(t, err)
+
+	return seed
+}
+
+func appendToFile(path string, text string) error {
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	if _, err = f.WriteString(text); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func makeKeys() error {

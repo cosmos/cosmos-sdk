@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -198,33 +199,36 @@ func TestCoinSend(t *testing.T) {
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	// create TX
-	addr, receiveAddr := doSend(t, port, seed)
+	addr, receiveAddr, resultTx := doSend(t, port, seed)
+
+	time.Sleep(time.Second * 2) // T
+
+	// check if tx was commited
+	assert.Equal(t, 0, resultTx.CheckTx.Code)
+	assert.Equal(t, 0, resultTx.DeliverTx.Code)
 
 	// query sender
 	res, body = request(t, port, "GET", "/accounts/"+addr, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	assert.Equal(t, `{
-		"coins": [
-			{
-				"denom": "mycoin",
-				"amount": 9007199254740991
-			}
-		]
-	}`, body)
+	var m auth.BaseAccount
+	err := json.Unmarshal([]byte(body), &m)
+	require.Nil(t, err)
+	coins := m.Coins
+	mycoins := coins[0]
+	assert.Equal(t, "mycoin", mycoins.Denom)
+	assert.Equal(t, int64(9007199254740991), mycoins.Amount)
 
 	// query receiver
 	res, body = request(t, port, "GET", "/accounts/"+receiveAddr, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	assert.Equal(t, `{
-		"coins": [
-			{
-				"denom": "mycoin",
-				"amount": 1
-			}
-		]
-	}`, body)
+	err = json.Unmarshal([]byte(body), &m)
+	require.Nil(t, err)
+	coins = m.Coins
+	mycoins = coins[0]
+	assert.Equal(t, "mycoin", mycoins.Denom)
+	assert.Equal(t, int64(1), mycoins.Amount)
 }
 
 func TestTxs(t *testing.T) {
@@ -242,21 +246,25 @@ func TestTxs(t *testing.T) {
 	assert.Equal(t, "[]", body)
 
 	// create TX
-	addr, receiveAddr := doSend(t, port, seed)
+	_, _, resultTx := doSend(t, port, seed)
 
-	// query sender
-	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.sender='%s'", addr), nil)
+	time.Sleep(time.Second * 2) // TO
+
+	// check if tx is findable
+	res, body = request(t, port, "GET", fmt.Sprintf("/txs/%s", resultTx.Hash), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	assert.NotEqual(t, "[]", body)
+	// // query sender
+	// res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.sender='%s'", addr), nil)
+	// require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	// query receiver
-	res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.receiver='%s'", receiveAddr), nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	// assert.NotEqual(t, "[]", body)
 
-	assert.NotEqual(t, "[]", body)
+	// // query receiver
+	// res, body = request(t, port, "GET", fmt.Sprintf("/txs?tag=coin.receiver='%s'", receiveAddr), nil)
+	// require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	// get TX by hash
+	// assert.NotEqual(t, "[]", body)
 }
 
 //__________________________________________________________
@@ -268,11 +276,12 @@ func junkInit(t *testing.T) (kill func(), port string, seed string) {
 	require.Nil(t, err)
 
 	seed = tests.TestInitBasecoin(t, dir)
-	cmdStart := tests.StartNodeServerForTest(t, dir)
+	cmdNode := tests.StartNodeServerForTest(t, dir)
 	cmdLCD, port := tests.StartLCDServerForTest(t, dir)
+
 	kill = func() {
 		cmdLCD.Process.Kill()
-		cmdStart.Process.Kill()
+		cmdNode.Process.Kill()
 		os.Remove(dir)
 	}
 	return kill, port, seed
@@ -294,7 +303,7 @@ func request(t *testing.T, port, method, path string, payload []byte) (*http.Res
 	return res, string(output)
 }
 
-func doSend(t *testing.T, port, seed string) (sendAddr string, receiveAddr string) {
+func doSend(t *testing.T, port, seed string) (sendAddr string, receiveAddr string, resultTx ctypes.ResultBroadcastTxCommit) {
 	// create account from seed who has keys
 	var jsonStr = []byte(fmt.Sprintf(`{"name":"test", "password":"1234567890", "seed": "%s"}`, seed))
 	res, body := request(t, port, "POST", "/keys", jsonStr)
@@ -313,5 +322,8 @@ func doSend(t *testing.T, port, seed string) (sendAddr string, receiveAddr strin
 	res, body = request(t, port, "POST", "/accounts/"+receiveAddr+"/send", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	return sendAddr, receiveAddr
+	err = json.Unmarshal([]byte(body), &resultTx)
+	require.Nil(t, err)
+
+	return sendAddr, receiveAddr, resultTx
 }

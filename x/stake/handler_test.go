@@ -57,7 +57,7 @@ func paramsNoInflation() Params {
 		InflationMin:        sdk.Zero,
 		GoalBonded:          sdk.New(67, 100),
 		MaxVals:             100,
-		AllowedBondDenom:    "fermion",
+		BondDenom:    "fermion",
 		GasDeclareCandidacy: 20,
 		GasEditCandidacy:    20,
 		GasDelegate:         20,

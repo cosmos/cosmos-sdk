@@ -3,6 +3,7 @@ package keys
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -129,7 +130,7 @@ func printCreate(info keys.Info, seed string) {
 type NewKeyBody struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
-	Seed     string `json="seed"`
+	Seed     string `json:"seed"`
 }
 
 func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
@@ -143,33 +144,44 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&m)
+	body, err := ioutil.ReadAll(r.Body)
+	err = json.Unmarshal(body, &m)
+
 	if err != nil {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
 	if m.Name == "" {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("You have to specify a name for the locally stored account."))
 		return
 	}
 	if m.Password == "" {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("You have to specify a password for the locally stored account."))
 		return
 	}
 	if m.Seed == "" {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("You have to specify a seed for the locally stored account."))
 		return
 	}
 
+	// check if already exists
+	infos, err := kb.List()
+	for _, i := range infos {
+		if i.Name == m.Name {
+			w.WriteHeader(http.StatusConflict)
+			w.Write([]byte(fmt.Sprintf("Account with name %s already exists.", m.Name)))
+			return
+		}
+	}
+
+	// create account
 	info, err := kb.Recover(m.Name, m.Password, m.Seed)
-	// TODO handle different errors
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}

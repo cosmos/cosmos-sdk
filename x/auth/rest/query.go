@@ -8,7 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/builder"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
@@ -24,6 +24,9 @@ func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, parser sdk.Pa
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		addr := vars["address"]
+
+		fmt.Println("ADDR", addr)
+
 		bz, err := hex.DecodeString(addr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -32,7 +35,7 @@ func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, parser sdk.Pa
 		}
 		key := sdk.Address(bz)
 
-		res, err := client.Query(key, c.storeName)
+		res, err := builder.Query(key, c.storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("Could't query account. Error: %s", err.Error())))
@@ -40,7 +43,7 @@ func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, parser sdk.Pa
 		}
 
 		// the query will return empty if there is no data for this account
-		if res == nil {
+		if len(res) == 0 {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}

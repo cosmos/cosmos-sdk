@@ -49,14 +49,12 @@ func whereIsBasecli() string {
 }
 
 // Init Basecoin Test
-func TestInitBasecoin(t *testing.T) string {
-	Clean()
-
+func TestInitBasecoin(t *testing.T, home string) string {
 	var err error
 
 	password := "some-random-password"
 
-	initBasecoind := exec.Command(whereIsBasecoind(), "init", "--home", basecoindDir)
+	initBasecoind := exec.Command(whereIsBasecoind(), "init", "--home", home)
 	cmdWriter, err := initBasecoind.StdinPipe()
 	require.Nil(t, err)
 
@@ -78,9 +76,9 @@ func TestInitBasecoin(t *testing.T) string {
 	// get seed from initialization
 	theOutput := strings.Split(buf.String(), "\n")
 	var seedLine int
-	for seedLine, o := range theOutput {
+	for _seedLine, o := range theOutput {
 		if strings.HasPrefix(string(o), "Secret phrase") {
-			seedLine++
+			seedLine = _seedLine + 1
 			break
 		}
 	}
@@ -174,7 +172,6 @@ func StartServer() error {
 
 // Init Basecoin Test
 func InitServerForTest(t *testing.T) {
-	// TODO cleanup doesn't work -> keys are still there in each iteration
 	Clean()
 
 	var err error
@@ -201,9 +198,9 @@ func InitServerForTest(t *testing.T) {
 }
 
 // expects TestInitBaseCoin to have been run
-func StartNodeServerForTest(t *testing.T) *exec.Cmd {
+func StartNodeServerForTest(t *testing.T, home string) *exec.Cmd {
 	cmdName := whereIsBasecoind()
-	cmdArgs := []string{"start", "--home", basecoindDir}
+	cmdArgs := []string{"start", "--home", home}
 	cmd := exec.Command(cmdName, cmdArgs...)
 	err := cmd.Start()
 	require.Nil(t, err)
@@ -211,25 +208,21 @@ func StartNodeServerForTest(t *testing.T) *exec.Cmd {
 }
 
 // expects TestInitBaseCoin to have been run
-func StartLCDServerForTest(t *testing.T) (cmd *exec.Cmd, port string) {
+func StartLCDServerForTest(t *testing.T, home string) (cmd *exec.Cmd, port string) {
 	cmdName := whereIsBasecli()
 	port = strings.Split(server.FreeTCPAddr(t), ":")[2]
 	cmdArgs := []string{
 		"rest-server",
 		"--home",
-		basecoindDir,
+		home,
 		"--bind",
 		fmt.Sprintf("localhost:%s", port),
 	}
-	fmt.Println("----------------------------")
 	cmd = exec.Command(cmdName, cmdArgs...)
-	fmt.Println("CMD", cmd)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Start()
 	require.Nil(t, err)
-	fmt.Println("PORT", port)
-	fmt.Println("----------------------------")
 	time.Sleep(time.Second * 2) // TODO: LOL
 	return cmd, port
 }
@@ -237,8 +230,10 @@ func StartLCDServerForTest(t *testing.T) (cmd *exec.Cmd, port string) {
 // clean the directories
 func Clean() {
 	// ignore errors b/c the dirs may not yet exist
-	os.Remove(basecoindDir)
-	os.Remove(basecliDir)
+	err := os.Remove(basecoindDir)
+	panic(err)
+	err = os.Remove(basecliDir)
+	panic(err)
 }
 
 /*

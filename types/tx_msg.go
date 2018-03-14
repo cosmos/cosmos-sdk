@@ -147,6 +147,7 @@ type StdSignMsg struct {
 	// XXX: Alt
 }
 
+// get message bytes
 func (msg StdSignMsg) Bytes() []byte {
 	return StdSignBytes(msg.ChainID, msg.Sequences, msg.Fee, msg.Msg)
 }

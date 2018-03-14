@@ -43,46 +43,49 @@ func codeToDefaultMsg(code CodeType) string {
 //----------------------------------------
 // Error constructors
 
-func ErrCandidateEmpty() error {
+func ErrCandidateEmpty() sdk.Error {
 	return newError(CodeInvalidValidator, "Cannot bond to an empty candidate")
 }
-func ErrBadBondingDenom() error {
+func ErrBadBondingDenom() sdk.Error {
 	return newError(CodeInvalidValidator, "Invalid coin denomination")
 }
-func ErrBadBondingAmount() error {
+func ErrBadBondingAmount() sdk.Error {
 	return newError(CodeInvalidValidator, "Amount must be > 0")
 }
-func ErrNoBondingAcct() error {
+func ErrNoBondingAcct() sdk.Error {
 	return newError(CodeInvalidValidator, "No bond account for this (address, validator) pair")
 }
-func ErrCommissionNegative() error {
+func ErrCommissionNegative() sdk.Error {
 	return newError(CodeInvalidValidator, "Commission must be positive")
 }
-func ErrCommissionHuge() error {
+func ErrCommissionHuge() sdk.Error {
 	return newError(CodeInvalidValidator, "Commission cannot be more than 100%")
 }
-func ErrBadValidatorAddr() error {
+func ErrBadValidatorAddr() sdk.Error {
 	return newError(CodeInvalidValidator, "Validator does not exist for that address")
 }
-func ErrCandidateExistsAddr() error {
+func ErrBadCandidateAddr() sdk.Error {
+	return newError(CodeInvalidValidator, "Candidate does not exist for that address")
+}
+func ErrCandidateExistsAddr() sdk.Error {
 	return newError(CodeInvalidValidator, "Candidate already exist, cannot re-declare candidacy")
 }
-func ErrMissingSignature() error {
+func ErrMissingSignature() sdk.Error {
 	return newError(CodeInvalidValidator, "Missing signature")
 }
-func ErrBondNotNominated() error {
+func ErrBondNotNominated() sdk.Error {
 	return newError(CodeInvalidValidator, "Cannot bond to non-nominated account")
 }
-func ErrNoCandidateForAddress() error {
+func ErrNoCandidateForAddress() sdk.Error {
 	return newError(CodeInvalidValidator, "Validator does not exist for that address")
 }
-func ErrNoDelegatorForAddress() error {
+func ErrNoDelegatorForAddress() sdk.Error {
 	return newError(CodeInvalidValidator, "Delegator does not contain validator bond")
 }
-func ErrInsufficientFunds() error {
+func ErrInsufficientFunds() sdk.Error {
 	return newError(CodeInvalidValidator, "Insufficient bond shares")
 }
-func ErrBadRemoveValidator() error {
+func ErrBadRemoveValidator() sdk.Error {
 	return newError(CodeInvalidValidator, "Error removing validator")
 }
 

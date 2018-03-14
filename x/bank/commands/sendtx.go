@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/builder"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -50,8 +51,17 @@ func (c commander) sendTxCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	chainID := viper.GetString(client.FlagChainID)
+	sequence := int64(viper.GetInt(client.FlagSequence))
+
+	signMsg := sdk.StdSignMsg{
+		ChainID:   chainID,
+		Sequences: []int64{sequence},
+		Msg:       msg,
+	}
+
 	// build and sign the transaction, then broadcast to Tendermint
-	res, err := builder.SignBuildBroadcast(msg, c.cdc)
+	res, err := builder.SignBuildBroadcast(signMsg, c.cdc)
 	if err != nil {
 		return err
 	}

@@ -80,6 +80,19 @@ type StdSignDoc struct {
 	AltBytes  []byte  `json:"alt_bytes"` // TODO: do we really want this ?
 }
 
+// StdSignMsg is a convenience structure for passing along
+// a Msg with the other requirements for a StdSignDoc before
+// it is signed. For use in the CLI
+type StdSignMsg struct {
+	ChainID   string
+	Sequences []int64
+	Msg       Msg
+}
+
+func (msg StdSignMsg) Bytes() []byte {
+	return StdSignBytes(msg.ChainID, msg.Sequences, msg.Msg)
+}
+
 func StdSignBytes(chainID string, sequences []int64, msg Msg) []byte {
 	bz, err := json.Marshal(StdSignDoc{
 		ChainID:   chainID,

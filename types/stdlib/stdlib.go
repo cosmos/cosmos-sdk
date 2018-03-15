@@ -3,24 +3,25 @@ package types
 import (
 	"errors"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 type ListMapper interface { // Solidity list like structure
-	Len(Context) int64
-	Get(Context, int64, interface{})
-	Set(Context, int64, interface{})
-	Push(Context, interface{})
-	Iterate(Context, interface{}, func(Context, int64))
+	Len(sdk.Context) int64
+	Get(sdk.Context, int64, interface{})
+	Set(sdk.Context, int64, interface{})
+	Push(sdk.Context, interface{})
+	Iterate(sdk.Context, interface{}, func(sdk.Context, int64))
 }
 
 type listMapper struct {
-	key StoreKey
+	key sdk.StoreKey
 	cdc *wire.Codec
 	lk  []byte
 }
 
-func NewListMapper(cdc *wire.Codec, key StoreKey) ListMapper {
+func NewListMapper(cdc *wire.Codec, key sdk.StoreKey) ListMapper {
 	lk, err := cdc.MarshalBinary(int64(-1))
 	if err != nil {
 		panic(err)
@@ -32,7 +33,7 @@ func NewListMapper(cdc *wire.Codec, key StoreKey) ListMapper {
 	}
 }
 
-func (lm listMapper) Len(ctx Context) int64 {
+func (lm listMapper) Len(ctx sdk.Context) int64 {
 	store := ctx.KVStore(lm.key)
 	bz := store.Get(lm.lk)
 	if bz == nil {
@@ -50,7 +51,7 @@ func (lm listMapper) Len(ctx Context) int64 {
 	return res
 }
 
-func (lm listMapper) Get(ctx Context, index int64, ptr interface{}) {
+func (lm listMapper) Get(ctx sdk.Context, index int64, ptr interface{}) {
 	if index < 0 {
 		panic(errors.New(""))
 	}
@@ -61,7 +62,7 @@ func (lm listMapper) Get(ctx Context, index int64, ptr interface{}) {
 	}
 }
 
-func (lm listMapper) Set(ctx Context, index int64, value interface{}) {
+func (lm listMapper) Set(ctx sdk.Context, index int64, value interface{}) {
 	if index < 0 {
 		panic(errors.New(""))
 	}
@@ -73,7 +74,7 @@ func (lm listMapper) Set(ctx Context, index int64, value interface{}) {
 	store.Set(marshalInt64(lm.cdc, index), bz)
 }
 
-func (lm listMapper) Push(ctx Context, value interface{}) {
+func (lm listMapper) Push(ctx sdk.Context, value interface{}) {
 	length := lm.Len(ctx)
 	lm.Set(ctx, length, value)
 
@@ -81,7 +82,7 @@ func (lm listMapper) Push(ctx Context, value interface{}) {
 	store.Set(lm.lk, marshalInt64(lm.cdc, length+1))
 }
 
-func (lm listMapper) Iterate(ctx Context, ptr interface{}, fn func(Context, int64)) {
+func (lm listMapper) Iterate(ctx sdk.Context, ptr interface{}, fn func(sdk.Context, int64)) {
 	length := lm.Len(ctx)
 	for i := int64(0); i < length; i++ {
 		lm.Get(ctx, i, ptr)
@@ -90,20 +91,20 @@ func (lm listMapper) Iterate(ctx Context, ptr interface{}, fn func(Context, int6
 }
 
 type QueueMapper interface {
-	Push(Context, interface{})
-	Peek(Context, interface{})
-	Pop(Context)
-	IsEmpty(Context) bool
-	Iterate(Context, interface{}, func(Context) bool)
+	Push(sdk.Context, interface{})
+	Peek(sdk.Context, interface{})
+	Pop(sdk.Context)
+	IsEmpty(sdk.Context) bool
+	Iterate(sdk.Context, interface{}, func(sdk.Context) bool)
 }
 
 type queueMapper struct {
-	key StoreKey
+	key sdk.StoreKey
 	cdc *wire.Codec
 	ik  []byte
 }
 
-func NewQueueMapper(cdc *wire.Codec, key StoreKey) QueueMapper {
+func NewQueueMapper(cdc *wire.Codec, key sdk.StoreKey) QueueMapper {
 	ik, err := cdc.MarshalBinary(int64(-1))
 	if err != nil {
 		panic(err)
@@ -132,7 +133,7 @@ func (info queueInfo) isEmpty() bool {
 	return info.Begin == info.End
 }
 
-func (qm queueMapper) getQueueInfo(store KVStore) queueInfo {
+func (qm queueMapper) getQueueInfo(store sdk.KVStore) queueInfo {
 	bz := store.Get(qm.ik)
 	if bz == nil {
 		store.Set(qm.ik, marshalQueueInfo(qm.cdc, queueInfo{0, 0}))
@@ -148,7 +149,7 @@ func (qm queueMapper) getQueueInfo(store KVStore) queueInfo {
 	return info
 }
 
-func (qm queueMapper) setQueueInfo(store KVStore, info queueInfo) {
+func (qm queueMapper) setQueueInfo(store sdk.KVStore, info queueInfo) {
 	bz, err := qm.cdc.MarshalBinary(info)
 	if err != nil {
 		panic(err)
@@ -156,7 +157,7 @@ func (qm queueMapper) setQueueInfo(store KVStore, info queueInfo) {
 	store.Set(qm.ik, bz)
 }
 
-func (qm queueMapper) Push(ctx Context, value interface{}) {
+func (qm queueMapper) Push(ctx sdk.Context, value interface{}) {
 	store := ctx.KVStore(qm.key)
 	info := qm.getQueueInfo(store)
 
@@ -170,7 +171,7 @@ func (qm queueMapper) Push(ctx Context, value interface{}) {
 	qm.setQueueInfo(store, info)
 }
 
-func (qm queueMapper) Peek(ctx Context, ptr interface{}) {
+func (qm queueMapper) Peek(ctx sdk.Context, ptr interface{}) {
 	store := ctx.KVStore(qm.key)
 	info := qm.getQueueInfo(store)
 	bz := store.Get(marshalInt64(qm.cdc, info.Begin))
@@ -179,7 +180,7 @@ func (qm queueMapper) Peek(ctx Context, ptr interface{}) {
 	}
 }
 
-func (qm queueMapper) Pop(ctx Context) {
+func (qm queueMapper) Pop(ctx sdk.Context) {
 	store := ctx.KVStore(qm.key)
 	info := qm.getQueueInfo(store)
 	store.Delete(marshalInt64(qm.cdc, info.Begin))
@@ -187,13 +188,13 @@ func (qm queueMapper) Pop(ctx Context) {
 	qm.setQueueInfo(store, info)
 }
 
-func (qm queueMapper) IsEmpty(ctx Context) bool {
+func (qm queueMapper) IsEmpty(ctx sdk.Context) bool {
 	store := ctx.KVStore(qm.key)
 	info := qm.getQueueInfo(store)
 	return info.isEmpty()
 }
 
-func (qm queueMapper) Iterate(ctx Context, ptr interface{}, fn func(Context) bool) {
+func (qm queueMapper) Iterate(ctx sdk.Context, ptr interface{}, fn func(sdk.Context) bool) {
 	store := ctx.KVStore(qm.key)
 	info := qm.getQueueInfo(store)
 

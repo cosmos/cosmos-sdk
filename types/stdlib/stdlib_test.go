@@ -32,7 +32,7 @@ func defaultComponents(key sdk.StoreKey) (sdk.Context, *wire.Codec) {
 func TestListMapper(t *testing.T) {
 	key := sdk.NewKVStoreKey("list")
 	ctx, cdc := defaultComponents(key)
-	lm := sdk.NewListMapper(cdc, key)
+	lm := NewListMapper(cdc, key)
 
 	val := S{1, true}
 	var res S
@@ -51,7 +51,7 @@ func TestListMapper(t *testing.T) {
 func TestQueueMapper(t *testing.T) {
 	key := sdk.NewKVStoreKey("queue")
 	ctx, cdc := defaultComponents(key)
-	qm := sdk.NewQueueMapper(cdc, key)
+	qm := NewQueueMapper(cdc, key)
 
 	val := S{1, true}
 	var res S

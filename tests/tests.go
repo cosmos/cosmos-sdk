@@ -227,9 +227,12 @@ func StartNodeServerForTest(t *testing.T, home string) *exec.Cmd {
 	err := cmd.Start()
 	require.Nil(t, err)
 
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
 	// FIXME: if there is a nondeterministic node start failure,
 	//        we should probably make this read the logs to wait for RPC
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 2)
 
 	return cmd
 }

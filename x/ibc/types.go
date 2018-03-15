@@ -1,9 +1,10 @@
 package ibc
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"encoding/json"
 
-	wire "github.com/cosmos/cosmos-sdk/wire"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	//wire "github.com/tendermint/go-amino"
 )
 
 type IBCPacket struct {
@@ -14,16 +15,17 @@ type IBCPacket struct {
 	DestChain string
 }
 
+/*
 func newCodec() *wire.Codec {
 	return wire.NewCodec()
 }
-
+*/
 type IBCTransferMsg struct {
 	IBCPacket
 }
 
 func (msg IBCTransferMsg) Type() string {
-	return "ibctransfer"
+	return "ibc"
 }
 
 func (msg IBCTransferMsg) Get(key interface{}) interface{} {
@@ -31,12 +33,18 @@ func (msg IBCTransferMsg) Get(key interface{}) interface{} {
 }
 
 func (msg IBCTransferMsg) GetSignBytes() []byte {
-	cdc := newCodec()
-	bz, err := cdc.MarshalBinary(msg.IBCPacket)
+	/*	cdc := newCodec()
+		bz, err := cdc.MarshalBinary(msg.IBCPacket)
+		if err != nil {
+			panic(err)
+		}
+		return bz*/
+	res, err := json.Marshal(msg)
 	if err != nil {
 		panic(err)
 	}
-	return bz
+
+	return res
 }
 
 func (msg IBCTransferMsg) ValidateBasic() sdk.Error {
@@ -55,7 +63,7 @@ type IBCReceiveMsg struct {
 }
 
 func (msg IBCReceiveMsg) Type() string {
-	return "ibcreceive"
+	return "ibc"
 }
 
 func (msg IBCReceiveMsg) Get(key interface{}) interface{} {
@@ -63,12 +71,18 @@ func (msg IBCReceiveMsg) Get(key interface{}) interface{} {
 }
 
 func (msg IBCReceiveMsg) GetSignBytes() []byte {
-	cdc := newCodec()
+	/*cdc := newCodec()
 	bz, err := cdc.MarshalBinary(msg.IBCPacket)
 	if err != nil {
 		panic(err)
 	}
-	return bz
+	return bz*/
+	res, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+
+	return res
 }
 
 func (msg IBCReceiveMsg) ValidateBasic() sdk.Error {

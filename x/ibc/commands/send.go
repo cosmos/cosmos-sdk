@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/builder"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
+	//	wire "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
@@ -20,12 +20,19 @@ func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
 	cmdr := sendCommander{cdc}
 
 	cmd := &cobra.Command{
-		Use:  "send",
+		Use:  "transfer",
 		RunE: cmdr.runIBCTransfer,
 	}
 	cmd.Flags().String(flagTo, "", "Address to send coins")
 	cmd.Flags().String(flagAmount, "", "Amount of coins to send")
 	cmd.Flags().String(flagChain, "", "Destination chain to send coins")
+	viper.BindPFlag(flagTo, cmd.Flags().Lookup(flagTo))
+	viper.BindPFlag(flagAmount, cmd.Flags().Lookup(flagAmount))
+	viper.BindPFlag(flagChain, cmd.Flags().Lookup(flagChain))
+	cmd.MarkFlagRequired(flagTo)
+	cmd.MarkFlagRequired(flagAmount)
+	cmd.MarkFlagRequired(flagChain)
+
 	return cmd
 }
 
@@ -34,13 +41,15 @@ type sendCommander struct {
 }
 
 func (c sendCommander) runIBCTransfer(cmd *cobra.Command, args []string) error {
-	address := getAddress()
+	keyname := viper.GetString(client.FlagName)
+
+	address := getAddress(keyname)
 	msg, err := buildMsg(address)
 	if err != nil {
 		return err
 	}
 
-	txBytes, err := buildTx(c.cdc, msg)
+	txBytes, err := buildTx(c.cdc, msg, keyname)
 	if err != nil {
 		return err
 	}

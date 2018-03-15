@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -10,13 +11,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/builder"
 
-	wire "github.com/tendermint/go-amino"
+	//wire "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
-func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
-	cmdr := relayCommander{cdc, "ibc"}
+func IBCRelayCmd() *cobra.Command {
+	cmdr := relayCommander{"ibc"}
 
 	cmd := &cobra.Command{
 		Use: "relay",
@@ -27,7 +28,7 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 }
 
 type relayCommander struct {
-	cdc      *wire.Codec
+	// cdc      *wire.Codec
 	ibcStore string
 }
 
@@ -59,7 +60,7 @@ func broadcastTx(id string, tx []byte) error {
 
 func (c relayCommander) refine(bz []byte, sequence int64) []byte {
 	var packet ibc.IBCPacket
-	if err := c.cdc.UnmarshalBinary(bz, &packet); err != nil {
+	if err := json.Unmarshal(bz, &packet); err != nil {
 		panic(err)
 	}
 
@@ -71,7 +72,7 @@ func (c relayCommander) refine(bz []byte, sequence int64) []byte {
 		Relayer:   address,
 		Sequence:  sequence,
 	}
-	res, err := buildTx(c.cdc, msg, name)
+	res, err := buildTx(msg, name)
 	if err != nil {
 		panic(err)
 	}
@@ -87,7 +88,7 @@ func (c relayCommander) loop(fromID, toID string) {
 	}
 
 	var processed int64
-	if err = c.cdc.UnmarshalBinary(processedbz, &processed); err != nil {
+	if err = json.Unmarshal(processedbz, &processed); err != nil {
 		panic(err)
 	}
 
@@ -102,7 +103,7 @@ OUTER:
 			continue OUTER
 		}
 		var egressLength int64
-		if err = c.cdc.UnmarshalBinary(egressLengthbz, &egressLength); err != nil {
+		if err = json.Unmarshal(egressLengthbz, &egressLength); err != nil {
 			panic(err)
 		}
 

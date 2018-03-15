@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/viper"
@@ -8,10 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/tendermint/go-amino"
+	// wire "github.com/tendermint/go-amino"
 )
 
-func buildTx(cdc *wire.Codec, msg sdk.Msg, name string) ([]byte, error) {
+func buildTx(msg sdk.Msg, name string) ([]byte, error) {
 	keybase, err := keys.GetKeyBase()
 	if err != nil {
 		return nil, err
@@ -36,7 +37,7 @@ func buildTx(cdc *wire.Codec, msg sdk.Msg, name string) ([]byte, error) {
 
 	tx := sdk.NewStdTx(msg, sigs)
 
-	txBytes, err := cdc.MarshalBinary(tx)
+	txBytes, err := json.Marshal(tx)
 	if err != nil {
 		return nil, err
 	}

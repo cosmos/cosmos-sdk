@@ -26,6 +26,12 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 		// TODO: can tx just implement message?
 		msg := tx.GetMsg()
 
+		// TODO: will this always be a stdtx? should that be used in the function signature?
+		stdTx, ok := tx.(sdk.StdTx)
+		if !ok {
+			return ctx, sdk.ErrInternal("tx must be sdk.StdTx").Result(), true
+		}
+
 		// Assert that number of signatures is correct.
 		var signerAddrs = msg.GetSigners()
 		if len(sigs) != len(signerAddrs) {
@@ -47,7 +53,8 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 			isFeePayer := i == 0 // first sig pays the fees
 
 			signerAddr, sig := signerAddrs[i], sigs[i]
-			signerAcc, res := processSig(ctx, accountMapper, signerAddr, sig, signBytes, isFeePayer)
+			signerAcc, res := processSig(ctx, accountMapper, signerAddr, sig,
+				signBytes, isFeePayer, stdTx.Fee.Amount)
 			if !res.IsOK() {
 				return ctx, res, true
 			}
@@ -65,7 +72,7 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 // deduct fee from fee payer.
 func processSig(ctx sdk.Context, am sdk.AccountMapper,
 	addr sdk.Address, sig sdk.StdSignature, signBytes []byte,
-	isFeePayer bool) (acc sdk.Account, res sdk.Result) {
+	isFeePayer bool, feeAmount sdk.Coins) (acc sdk.Account, res sdk.Result) {
 
 	// Get the account
 	acc = am.GetAccount(ctx, addr)
@@ -106,8 +113,16 @@ func processSig(ctx sdk.Context, am sdk.AccountMapper,
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
 
+	// If this is the fee payer, deduct the fee.
 	if isFeePayer {
-		// TODO: pay fees
+		coins := acc.GetCoins()
+		newCoins := coins.Minus(feeAmount)
+		if !newCoins.IsNotNegative() {
+			errMsg := fmt.Sprintf("%s < %s", coins, feeAmount)
+			return nil, sdk.ErrInsufficientFunds(errMsg).Result()
+		}
+
+		acc.SetCoins(newCoins)
 	}
 
 	// Save the account.

@@ -2,10 +2,12 @@ package lcd
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/tendermint/tmlibs/log"
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
@@ -18,8 +20,8 @@ import (
 )
 
 const (
-	flagBind = "bind"
-	flagCORS = "cors"
+	flagListenAddr = "laddr"
+	flagCORS       = "cors"
 )
 
 // ServeCommand will generate a long-running rest server
@@ -29,25 +31,35 @@ func ServeCommand(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rest-server",
 		Short: "Start LCD (light-client daemon), a local REST server",
-		RunE:  startRESTServer(cdc),
+		RunE:  startRESTServerFn(cdc),
 	}
-	// TODO: handle unix sockets also?
-	cmd.Flags().StringP(flagBind, "b", "localhost:1317", "Interface and port that server binds to")
+	cmd.Flags().StringP(flagListenAddr, "a", "tcp://localhost:1317", "Address for server to listen on")
 	cmd.Flags().String(flagCORS, "", "Set to domains that can make CORS requests (* for all)")
 	cmd.Flags().StringP(client.FlagChainID, "c", "", "ID of chain we connect to")
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
 	return cmd
 }
 
-func startRESTServer(cdc *wire.Codec) func(cmd *cobra.Command, args []string) error {
+func startRESTServerFn(cdc *wire.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		bind := viper.GetString(flagBind)
-		r := initRouter(cdc)
-		return http.ListenAndServe(bind, r)
+		listenAddr := viper.GetString(flagListenAddr)
+		handler := createHandler(cdc)
+		logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
+			With("module", "rest-server")
+		listener, err := StartHTTPServer(listenAddr, handler, logger)
+		if err != nil {
+			return err
+		}
+
+		// Wait forever and cleanup
+		cmn.TrapSignal(func() {
+			err := listener.Close()
+			logger.Error("Error closing listener", "err", err)
+		})
 	}
 }
 
-func initRouter(cdc *wire.Codec) http.Handler {
+func createHandler(cdc *wire.Codec) http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/version", version.VersionRequestHandler).Methods("GET")
 

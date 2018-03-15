@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,18 +13,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	cryptoKeys "github.com/tendermint/go-crypto/keys"
-	"github.com/tendermint/tendermint/p2p"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/chain/core/config"
+	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/wire"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/rest"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	p2p "github.com/tendermint/go-p2p"
+	"github.com/tendermint/mintdb/types"
+	"github.com/tendermint/tendermint/proxy"
+	"github.com/tendermint/tmlibs/log"
 )
 
 func TestKeys(t *testing.T) {
@@ -299,7 +300,51 @@ func setupEnvironment(t *testing.T) (kill func(), port string, seed string) {
 		cmdNode.Process.Wait()
 		os.Remove(dir)
 	}
+}
+
+// strt TM and the LCD in process, listening on their respective sockets
+func startTMAndLCD(t *testing.T) (kill func(), port string, seed string) {
+
+	// make the keybase and its key ...
+
+	startTM(cfg, genDoc, app)
+	startLCD(cdc, listenAddr, logger)
+
+	kill = func() {
+		// TODO: cleanup
+		// TODO: it would be great if TM could run without
+		// persiting anything in the first place
+	}
 	return kill, port, seed
+}
+
+// Create & start in-process tendermint node with memdb
+// and in-process abci application.
+// TODO: need to clean up the WAL dir or enable it to be not persistent
+func startTM(cfg *config.Config, genDoc types.GenesisDoc, app abci.Application) (*Node, error) {
+	genDocProvider := func() (*types.GenesisDoc, error) { return genDoc, nil }
+	dbProvider := func() (*dbm.DB, error) { return dbm.NewMemDB(), nil }
+	n, err := node.NewNode(cfg,
+		privVal,
+		proxy.NewLocalClientCreator(app),
+		genDocProvider,
+		dbProvider,
+		logger.With("module", "node"))
+	if err != nil {
+		return nil, err
+	}
+
+	err = n.Start()
+	if err != nil {
+		return nil, err
+	}
+	return n, err
+}
+
+// start the LCD. note this blocks!
+func startLCD(cdc *wire.Codec, listenAddr string, logger log.Logger) (net.Listener, error) {
+	handler := createHandler(cdc)
+	return StartHTTPServer(listenAddr, handler, logger)
 }
 
 func request(t *testing.T, port, method, path string, payload []byte) (*http.Response, string) {

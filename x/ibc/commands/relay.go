@@ -10,32 +10,47 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/builder"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
+const (
+	flagChain1 = "chain1"
+	flagChain2 = "chain2"
+)
+
 func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
-	cmdr := relayCommander{cdc, "ibc"}
+	cmdr := relayCommander{
+		cdc:      cdc,
+		ibcStore: "ibc",
+	}
 
 	cmd := &cobra.Command{
 		Use: "relay",
 		Run: cmdr.runIBCRelay,
 	}
-	cmd.Flags().String(flagTo, "", "Address to send coins")
-	cmd.Flags().String(flagAmount, "", "Amount of coins to send")
-	cmd.Flags().Int64(flagSequence, 0, "Sequence number to sign the tx")
+	cmd.Flags().String(flagChain1, "", "Chain ID to relay IBC packets")
+	cmd.Flags().String(flagChain2, "", "Chain ID to relay IBC packets")
 	return cmd
 }
 
 type relayCommander struct {
 	cdc      *wire.Codec
+	address  sdk.Address
 	ibcStore string
 }
 
 func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	chain1 := viper.GetString(flagChain1)
 	chain2 := viper.GetString(flagChain2)
+
+	address, err := builder.GetFromAddress()
+	if err != nil {
+		panic(err)
+	}
+	c.address = address
 
 	go c.loop(chain1, chain2)
 	go c.loop(chain2, chain1)
@@ -64,13 +79,13 @@ func (c relayCommander) refine(bz []byte, sequence int64) []byte {
 	if err := c.cdc.UnmarshalBinary(bz, &packet); err != nil {
 		panic(err)
 	}
-	address := getAddress()
+
 	msg := ibc.IBCReceiveMsg{
 		IBCPacket: packet,
-		Relayer:   address,
+		Relayer:   c.address,
 		Sequence:  sequence,
 	}
-	res, err := buildTx(c.cdc, msg)
+	res, err := builder.SignAndBuild(msg, c.cdc)
 	if err != nil {
 		panic(err)
 	}
@@ -124,48 +139,3 @@ OUTER:
 		processed = egressLength
 	}
 }
-
-/*
-func (c relayCommander) buildTx() ([]byte, error) {
-	keybase, err := keys.GetKeyBase()
-	if err != nil {
-		return nil, err
-	}
-
-	name := viper.GetString(client.FlagName)
-	info, err := keybase.Get(name)
-	if err != nil {
-		return nil, fmt.Errorf("No key for: %s, name")
-	}
-	from := info.PubKey.Address()
-
-	msg, err := buildMsg(from)
-	if err != nil {
-		return nil, err
-	}
-
-	bz := msg.GetSignBytes()
-	buf := client.BufferStdin()
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-	passphrase, err := client.GetPassword(prompt, buf)
-	if err != nil {
-		return nil, err
-	}
-	sig, pubkey, err := keybase.Sign(name, passphrase, bz)
-	if err != nil {
-		return nil, err
-	}
-	sigs := []sdk.StdSignature{{
-		PubKey:    pubkey,
-		Signature: sig,
-		Sequence:  viper.GetInt64(flagSequence),
-	}}
-
-	tx := sdk.NewStdTx(msg, sigs)
-
-	txBytes, err := c.cdc.MarshalBinary(tx)
-	if err != nil {
-		return nil, err
-	}
-	return txBytes, nil
-}*/

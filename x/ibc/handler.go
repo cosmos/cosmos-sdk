@@ -4,15 +4,17 @@ import (
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-func NewHandler(ibcm IBCMapper) sdk.Handler {
+func NewHandler(ibcm IBCMapper, ck bank.CoinKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
 		case IBCTransferMsg:
-			return handleIBCTransferMsg(ctx, ibcm, msg)
+			return handleIBCTransferMsg(ctx, ibcm, ck, msg)
 		case IBCReceiveMsg:
-			return handleIBCReceiveMsg(ctx, ibcm, msg)
+			return handleIBCReceiveMsg(ctx, ibcm, ck, msg)
 		default:
 			errMsg := "Unrecognized IBC Msg type: " + reflect.TypeOf(msg).Name()
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -20,16 +22,16 @@ func NewHandler(ibcm IBCMapper) sdk.Handler {
 	}
 }
 
-func handleIBCTransferMsg(ctx sdk.Context, ibcm IBCMapper, msg IBCTransferMsg) sdk.Result {
+func handleIBCTransferMsg(ctx sdk.Context, ibcm IBCMapper, ck bank.CoinKeeper, msg IBCTransferMsg) sdk.Result {
 	ibcm.PushPacket(ctx, msg.IBCPacket)
 	return sdk.Result{}
 }
 
-func handleIBCReceiveMsg(ctx sdk.Context, ibcm IBCMapper, msg IBCReceiveMsg) sdk.Result {
+func handleIBCReceiveMsg(ctx sdk.Context, ibcm IBCMapper, ck bank.CoinKeeper, msg IBCReceiveMsg) sdk.Result {
 	packet := msg.IBCPacket
 	seq := ibcm.GetIngressSequence(ctx, packet.SrcChain)
 	if msg.Sequence != seq {
-		return sdk.Result{} // error
+		return ErrInvalidSequence().Result()
 	}
 	ibcm.SetIngressSequence(ctx, packet.SrcChain, seq+1)
 

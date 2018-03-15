@@ -16,8 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
-func IBCTransferCmd() *cobra.Command {
-	cmdr := sendCommander{}
+func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
+	cmdr := sendCommander{cdc}
 
 	cmd := &cobra.Command{
 		Use:  "transfer",
@@ -37,7 +37,7 @@ func IBCTransferCmd() *cobra.Command {
 }
 
 type sendCommander struct {
-	//	cdc *wire.Codec
+	cdc *wire.Codec
 }
 
 func (c sendCommander) runIBCTransfer(cmd *cobra.Command, args []string) error {
@@ -49,7 +49,7 @@ func (c sendCommander) runIBCTransfer(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	txBytes, err := buildTx(msg, keyname)
+	txBytes, err := buildTx(c.cdc, msg, keyname)
 	if err != nil {
 		return err
 	}

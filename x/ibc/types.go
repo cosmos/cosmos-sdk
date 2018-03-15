@@ -19,6 +19,18 @@ type IBCPacket struct {
 	DestChain string
 }
 
+func NewIBCPacket(srcAddr sdk.Address, destAddr sdk.Address, coins sdk.Coins,
+	srcChain string, destChain string) IBCPacket {
+
+	return IBCPacket{
+		SrcAddr:   srcAddr,
+		DestAddr:  destAddr,
+		Coins:     coins,
+		SrcChain:  srcChain,
+		DestChain: destChain,
+	}
+}
+
 // ----------------------------------
 // IBCTransferMsg
 

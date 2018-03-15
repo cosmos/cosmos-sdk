@@ -16,9 +16,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
+const (
+	flagTo     = "to"
+	flagAmount = "amount"
+	flagChain  = "chain"
+)
+
 func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
 	cmdr := sendCommander{cdc}
-
 	cmd := &cobra.Command{
 		Use:  "send",
 		RunE: cmdr.runIBCTransfer,
@@ -33,19 +38,18 @@ type sendCommander struct {
 	cdc *wire.Codec
 }
 
-func (c sendCommander) runIBCTransfer(cmd *cobra.Command, args []string) error {
-	address := getAddress()
-	msg, err := buildMsg(address)
+func (c commander) sendIBCTransfer(cmd *cobra.Command, args []string) error {
+	from, err := builder.GetFromAddress()
 	if err != nil {
 		return err
 	}
 
-	txBytes, err := buildTx(c.cdc, msg)
+	msg, err := buildMsg(from)
 	if err != nil {
 		return err
 	}
 
-	res, err := builder.BroadcastTx(txBytes)
+	res, err := builder.SignBuildBroadcast(msg, c.cdc)
 	if err != nil {
 		return err
 	}
@@ -66,15 +70,10 @@ func buildMsg(from sdk.Address) (sdk.Msg, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	to := sdk.Address(bz)
 
-	return ibc.IBCTransferMsg{
-		IBCPacket: ibc.IBCPacket{
-			SrcAddr:   from,
-			DestAddr:  to,
-			Coins:     coins,
-			SrcChain:  viper.GetString(client.FlagNode),
-			DestChain: viper.GetString(flagChain),
-		},
-	}, nil
+	msg := ibc.NewIBCPacket(from, to, coins, viper.GetString(client.FlagNode),
+		viper.GetString(flagChain))
+	return msg, nil
 }

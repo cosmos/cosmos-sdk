@@ -46,6 +46,14 @@ paths:
                   other:
                     description: more information on versions
                     type: array
+  /syncing:
+    get:
+      summary: Syncing state of node
+      description: Get if the node is currently syning with other nodes
+      responses:
+        200:
+          description: "true" or "false"
+          
   /keys:
     get:
       summary: List of accounts stored locally
@@ -117,9 +125,12 @@ paths:
             schema:
               type: object
               required:
-                - password
+                - new_password
+                - old_password
               properties:
-                password:
+                new_password:
+                  type: string
+                old_password:
                   type: string
       responses:
         200:
@@ -147,35 +158,35 @@ paths:
           description: Password is wrong
         404:
           description: Account is not available
-  /accounts/send:
-    post:
-      summary: Send coins (build -> sign -> send)
-      security:
-        - sign: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                fees:
-                  $ref: "#/components/schemas/Coins"
-                outputs:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      pub_key:
-                        $ref: "#/components/schemas/PubKey"
-                      amount:
-                        type: array
-                        items:
-                          $ref: "#/components/schemas/Coins"
-      responses:
-        202:
-          description: Tx was send and will probably be added to the next block
-        400:
-          description: The Tx was malformated
+  # /accounts/send:
+  #   post:
+  #     summary: Send coins (build -> sign -> send)
+  #     security:
+  #       - sign: []
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               fees:
+  #                 $ref: "#/components/schemas/Coins"
+  #               outputs:
+  #                 type: array
+  #                 items:
+  #                   type: object
+  #                   properties:
+  #                     pub_key:
+  #                       $ref: "#/components/schemas/PubKey"
+  #                     amount:
+  #                       type: array
+  #                       items:
+  #                         $ref: "#/components/schemas/Coins"
+  #     responses:
+  #       202:
+  #         description: Tx was send and will probably be added to the next block
+  #       400:
+  #         description: The Tx was malformated
     
   /accounts/{address}:
     parameters:
@@ -214,12 +225,18 @@ paths:
             schema:
               type: object
               properties:
-                fees:
-                  $ref: "#/components/schemas/Coins"
+                name:
+                  type: string
+                password:
+                  type: string
                 amount:
                   type: array
                   items:
                     $ref: "#/components/schemas/Coins"
+                chain_id:
+                  type: string
+                squence:
+                  type: number
       responses:
         202:
           description: Tx was send and will probably be added to the next block
@@ -300,72 +317,72 @@ paths:
                   $ref: "#/components/schemas/Delegate"
         404:
           description: Block at height not available
-  /txs:
-    parameters:
-      - in: query
-        name: tag
-        schema:
-          type: string
-          example: "coin.sender=EE5F3404034C524501629B56E0DDC38FAD651F04"
-        required: true
-      - in: query
-        name: page
-        description: Pagination page
-        schema:
-          type: number
-          default: 0
-      - in: query
-        name: size
-        description: Pagination size
-        schema:
-          type: number
-          default: 50
-    get:
-      summary: Query Tx
-      responses:
-        200:
-          description: All Tx matching the provided tags
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Tx"
-        404:
-          description: Pagination is out of bounds
-  /txs/sign:
-    post:
-      summary: Sign a Tx
-      description: Sign a Tx providing locally stored account and according password
-      security:
-        - sign: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TxBuild"
-      responses:
-        200:
-          description: The signed Tx
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TxSigned"
-        401:
-          description: Account name and/or password where wrong
-  /txs/broadcast:
-    post:
-      summary: Send signed Tx
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TxSigned"
-      responses:
-        202:
-          description: Tx was send and will probably be added to the next block
-        400:
-          description: The Tx was malformated
+  # /txs:
+  #   parameters:
+  #     - in: query
+  #       name: tag
+  #       schema:
+  #         type: string
+  #         example: "coin.sender=EE5F3404034C524501629B56E0DDC38FAD651F04"
+  #       required: true
+  #     - in: query
+  #       name: page
+  #       description: Pagination page
+  #       schema:
+  #         type: number
+  #         default: 0
+  #     - in: query
+  #       name: size
+  #       description: Pagination size
+  #       schema:
+  #         type: number
+  #         default: 50
+  #   get:
+  #     summary: Query Tx
+  #     responses:
+  #       200:
+  #         description: All Tx matching the provided tags
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: array
+  #               items:
+  #                 $ref: "#/components/schemas/Tx"
+  #       404:
+  #         description: Pagination is out of bounds
+  # /txs/sign:
+  #   post:
+  #     summary: Sign a Tx
+  #     description: Sign a Tx providing locally stored account and according password
+  #     security:
+  #       - sign: []
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: "#/components/schemas/TxBuild"
+  #     responses:
+  #       200:
+  #         description: The signed Tx
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/TxSigned"
+  #       401:
+  #         description: Account name and/or password where wrong
+  # /txs/broadcast:
+  #   post:
+  #     summary: Send signed Tx
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: "#/components/schemas/TxSigned"
+  #     responses:
+  #       202:
+  #         description: Tx was send and will probably be added to the next block
+  #       400:
+  #         description: The Tx was malformated
   /txs/{hash}:
     parameters:
       - in: path
@@ -385,140 +402,140 @@ paths:
                 $ref: "#/components/schemas/Tx"
         404:
           description: Tx not available for provided hash
-  /delegates:
-    parameters:
-      - in: query
-        name: delegator
-        description: Query for all delegates a delegator has stake with
-        schema:
-          $ref: "#/components/schemas/Address"
-    get:
-      summary: Get a list of canidates/delegates/validators (optionally filtered by delegator)
-      responses:
-        200:
-          description: List of delegates, filtered by provided delegator address
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Delegate"
-  /delegates/bond:
-    post:
-      summary: Bond atoms (build -> sign -> send)
-      security:
-        - sign: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                type: object
-                properties:
-                  amount:
-                    $ref: "#/components/schemas/Coins"
-                  pub_key:
-                    $ref: "#/components/schemas/PubKey"
-      responses:
-        202:
-          description: Tx was send and will probably be added to the next block
-        400:
-          description: The Tx was malformated
-  /delegates/unbond:
-    post:
-      summary: Unbond atoms (build -> sign -> send)
-      security:
-        - sign: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                type: object
-                properties:
-                  amount:
-                    $ref: "#/components/schemas/Coins"
-                  pub_key:
-                    $ref: "#/components/schemas/PubKey"
-      responses:
-        202:
-          description: Tx was send and will probably be added to the next block
-        400:
-          description: The Tx was malformated
-  /delegates/{pubkey}:
-    parameters:
-      - in: path
-        name: pubkey
-        description: Pubkey of a delegate
-        required: true
-        schema:
-          type: string
-          example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
-    get:
-      summary: Get a certain canidate/delegate/validator
-      responses:
-        200:
-          description: Delegate for specified pub_key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Delegate"
-        404:
-          description: No delegate found for provided pub_key
-  /delegates/{pubkey}/bond:
-    parameters:
-      - in: path
-        name: pubkey
-        description: Pubkey of a delegate
-        required: true
-        schema:
-          type: string
-          example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
-    post:
-      summary: Bond atoms (build -> sign -> send)
-      security:
-        - sign: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                amount:
-                  $ref: "#/components/schemas/Coins"
-      responses:
-        202:
-          description: Tx was send and will probably be added to the next block
-        400:
-          description: The Tx was malformated
-  /delegates/{pubkey}/unbond:
-    parameters:
-      - in: path
-        name: pubkey
-        description: Pubkey of a delegate
-        required: true
-        schema:
-          type: string
-          example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
-    post:
-      summary: Unbond atoms  (build -> sign -> send)
-      security:
-        - sign: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                amount:
-                  $ref: "#/components/schemas/Coins"
-      responses:
-        202:
-          description: Tx was send and will probably be added to the next block
-        400:
-          description: The Tx was malformated
+  # /delegates:
+  #   parameters:
+  #     - in: query
+  #       name: delegator
+  #       description: Query for all delegates a delegator has stake with
+  #       schema:
+  #         $ref: "#/components/schemas/Address"
+  #   get:
+  #     summary: Get a list of canidates/delegates/validators (optionally filtered by delegator)
+  #     responses:
+  #       200:
+  #         description: List of delegates, filtered by provided delegator address
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: array
+  #               items:
+  #                 $ref: "#/components/schemas/Delegate"
+  # /delegates/bond:
+  #   post:
+  #     summary: Bond atoms (build -> sign -> send)
+  #     security:
+  #       - sign: []
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: array
+  #             items:
+  #               type: object
+  #               properties:
+  #                 amount:
+  #                   $ref: "#/components/schemas/Coins"
+  #                 pub_key:
+  #                   $ref: "#/components/schemas/PubKey"
+  #     responses:
+  #       202:
+  #         description: Tx was send and will probably be added to the next block
+  #       400:
+  #         description: The Tx was malformated
+  # /delegates/unbond:
+  #   post:
+  #     summary: Unbond atoms (build -> sign -> send)
+  #     security:
+  #       - sign: []
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: array
+  #             items:
+  #               type: object
+  #               properties:
+  #                 amount:
+  #                   $ref: "#/components/schemas/Coins"
+  #                 pub_key:
+  #                   $ref: "#/components/schemas/PubKey"
+  #     responses:
+  #       202:
+  #         description: Tx was send and will probably be added to the next block
+  #       400:
+  #         description: The Tx was malformated
+  # /delegates/{pubkey}:
+  #   parameters:
+  #     - in: path
+  #       name: pubkey
+  #       description: Pubkey of a delegate
+  #       required: true
+  #       schema:
+  #         type: string
+  #         example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
+  #   get:
+  #     summary: Get a certain canidate/delegate/validator
+  #     responses:
+  #       200:
+  #         description: Delegate for specified pub_key
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/Delegate"
+  #       404:
+  #         description: No delegate found for provided pub_key
+  # /delegates/{pubkey}/bond:
+  #   parameters:
+  #     - in: path
+  #       name: pubkey
+  #       description: Pubkey of a delegate
+  #       required: true
+  #       schema:
+  #         type: string
+  #         example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
+  #   post:
+  #     summary: Bond atoms (build -> sign -> send)
+  #     security:
+  #       - sign: []
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               amount:
+  #                 $ref: "#/components/schemas/Coins"
+  #     responses:
+  #       202:
+  #         description: Tx was send and will probably be added to the next block
+  #       400:
+  #         description: The Tx was malformated
+  # /delegates/{pubkey}/unbond:
+  #   parameters:
+  #     - in: path
+  #       name: pubkey
+  #       description: Pubkey of a delegate
+  #       required: true
+  #       schema:
+  #         type: string
+  #         example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
+  #   post:
+  #     summary: Unbond atoms  (build -> sign -> send)
+  #     security:
+  #       - sign: []
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               amount:
+  #                 $ref: "#/components/schemas/Coins"
+  #     responses:
+  #       202:
+  #         description: Tx was send and will probably be added to the next block
+  #       400:
+  #         description: The Tx was malformated
     
 components:
   schemas:

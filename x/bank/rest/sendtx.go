@@ -8,7 +8,6 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/builder"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,16 +15,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/commands"
 )
 
-type SendBody struct {
+type sendBody struct {
 	// fees is not used currently
 	// Fees             sdk.Coin  `json="fees"`
 	Amount           sdk.Coins `json:"amount"`
 	LocalAccountName string    `json:"name"`
 	Password         string    `json:"password"`
 	ChainID          string    `json:"chain_id"`
-	Sequence         string    `json:"sequence"`
+	Sequence         int64     `json:"sequence"`
 }
 
+// SendRequestHandler - http request handler to send coins to a address
 func SendRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Request) {
 	c := commands.Commander{cdc}
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +33,7 @@ func SendRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Request
 		vars := mux.Vars(r)
 		address := vars["address"]
 
-		var m SendBody
+		var m sendBody
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -92,7 +92,7 @@ func SendRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Request
 		}
 
 		// send
-		res, err := client.BroadcastTx(txBytes)
+		res, err := builder.BroadcastTx(txBytes)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

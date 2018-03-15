@@ -100,7 +100,7 @@ func (c Commander) SignMessage(msg sdk.Msg, kb cryptokeys.Keybase, accountName s
 	sigs := []sdk.StdSignature{{
 		PubKey:    pubkey,
 		Signature: sig,
-		Sequence:  viper.GetInt64(flagSequence),
+		Sequence:  viper.GetInt64(client.FlagName),
 	}}
 
 	// marshal bytes

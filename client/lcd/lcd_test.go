@@ -24,7 +24,7 @@ import (
 )
 
 func TestKeys(t *testing.T) {
-	kill, port, _ := junkInit(t)
+	kill, port, _ := setupEnvironment(t)
 	defer kill()
 
 	// empty keys
@@ -90,7 +90,7 @@ func TestKeys(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
-	kill, port, _ := junkInit(t)
+	kill, port, _ := setupEnvironment(t)
 	defer kill()
 
 	// node info
@@ -104,7 +104,7 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNodeStatus(t *testing.T) {
-	kill, port, _ := junkInit(t)
+	kill, port, _ := setupEnvironment(t)
 	defer kill()
 
 	// node info
@@ -127,7 +127,7 @@ func TestNodeStatus(t *testing.T) {
 }
 
 func TestBlock(t *testing.T) {
-	kill, port, _ := junkInit(t)
+	kill, port, _ := setupEnvironment(t)
 	defer kill()
 
 	time.Sleep(time.Second * 2) // TODO: LOL -> wait for blocks
@@ -159,7 +159,7 @@ func TestBlock(t *testing.T) {
 }
 
 func TestValidators(t *testing.T) {
-	kill, port, _ := junkInit(t)
+	kill, port, _ := setupEnvironment(t)
 	defer kill()
 
 	time.Sleep(time.Second * 2) // TODO: LOL -> wait for blocks
@@ -191,7 +191,7 @@ func TestValidators(t *testing.T) {
 }
 
 func TestCoinSend(t *testing.T) {
-	kill, port, seed := junkInit(t)
+	kill, port, seed := setupEnvironment(t)
 	defer kill()
 
 	time.Sleep(time.Second * 2) // TO
@@ -234,7 +234,7 @@ func TestCoinSend(t *testing.T) {
 }
 
 func TestTxs(t *testing.T) {
-	kill, port, seed := junkInit(t)
+	kill, port, seed := setupEnvironment(t)
 	defer kill()
 
 	// TODO: re-enable once we can get txs by tag
@@ -275,7 +275,7 @@ func TestTxs(t *testing.T) {
 // helpers
 
 // TODO/XXX: We should be spawning what we need in process, not shelling out
-func junkInit(t *testing.T) (kill func(), port string, seed string) {
+func setupEnvironment(t *testing.T) (kill func(), port string, seed string) {
 	dir, err := ioutil.TempDir("", "tmp-basecoin-")
 	require.Nil(t, err)
 

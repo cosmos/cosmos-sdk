@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
 
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
@@ -265,6 +266,58 @@ func TestQuizMsg(t *testing.T) {
 	CheckBalance(t, bapp, "69badvibesonly,138icecold")
 	SignCheckDeliver(t, bapp, setTrendMsg3, 7, false) // expect to fail to set the trend to something which is not cool
 
+}
+
+func TestHandler(t *testing.T) {
+	bapp := newBasecoinApp()
+
+	chainid := "ibcchain"
+
+	vals := []abci.Validator{}
+	baseAcc := auth.BaseAccount{
+		Address: addr1,
+		Coins:   coins,
+	}
+	acc1 := &types.AppAccount{baseAcc, "foobart"}
+	genesisState := types.GenesisState{
+		Accounts: []*types.GenesisAccount{
+			types.NewGenesisAccount(acc1),
+		},
+	}
+	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
+	require.Nil(t, err)
+	bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
+	bapp.Commit()
+
+	// A checkTx context (true)
+	ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
+	res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
+	assert.Equal(t, acc1, res1)
+
+	packet := ibc.IBCPacket{
+		SrcAddr:   addr1,
+		DestAddr:  addr1,
+		Coins:     coins,
+		SrcChain:  chainid,
+		DestChain: chainid,
+	}
+
+	transferMsg := ibc.IBCTransferMsg{
+		IBCPacket: packet,
+	}
+
+	receiveMsg := ibc.IBCReceiveMsg{
+		IBCPacket: packet,
+		Relayer:   addr1,
+		Sequence:  0,
+	}
+
+	SignCheckDeliver(t, bapp, transferMsg, 0, true)
+	CheckBalance(t, bapp, "")
+	SignCheckDeliver(t, bapp, transferMsg, 1, false)
+	SignCheckDeliver(t, bapp, receiveMsg, 2, true)
+	CheckBalance(t, bapp, "10foocoin")
+	SignCheckDeliver(t, bapp, receiveMsg, 3, false)
 }
 
 func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, expPass bool) {

@@ -13,7 +13,7 @@ type IBCMapper struct {
 	cdc    *wire.Codec
 }
 
-func NewIBCMapper(ibcKey sdk.StoreKey) IBCMapper {
+func NewMapper(ibcKey sdk.StoreKey) IBCMapper {
 	cdc := wire.NewCodec()
 
 	return IBCMapper{

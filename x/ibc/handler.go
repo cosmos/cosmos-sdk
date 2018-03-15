@@ -23,7 +23,13 @@ func NewHandler(ibcm IBCMapper, ck bank.CoinKeeper) sdk.Handler {
 }
 
 func handleIBCTransferMsg(ctx sdk.Context, ibcm IBCMapper, ck bank.CoinKeeper, msg IBCTransferMsg) sdk.Result {
-	ibcm.PushPacket(ctx, msg.IBCPacket)
+	packet := msg.IBCPacket
+	_, err := ck.SubtractCoins(ctx, packet.SrcAddr, packet.Coins)
+	if err != nil {
+		return err.Result()
+	}
+	ibcm.PushPacket(ctx, packet)
+
 	return sdk.Result{}
 }
 
@@ -34,6 +40,11 @@ func handleIBCReceiveMsg(ctx sdk.Context, ibcm IBCMapper, ck bank.CoinKeeper, ms
 		return ErrInvalidSequence().Result()
 	}
 	ibcm.SetIngressSequence(ctx, packet.SrcChain, seq+1)
+
+	_, err := ck.AddCoins(ctx, packet.DestAddr, packet.Coins)
+	if err != nil {
+		return err.Result()
+	}
 
 	// handle packet
 	// packet.Handle(ctx)...

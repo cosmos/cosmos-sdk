@@ -61,14 +61,14 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 		AddRoute("bank", bank.NewHandler(coinKeeper)).
 		AddRoute("cool", cool.NewHandler(coinKeeper, coolMapper)).
 		AddRoute("sketchy", sketchy.NewHandler()).
-		AddRoute("ibc", ibc.NewHandler(ibcMapper))
+		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper))
 
 	// initialize BaseApp
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
 	// TODO: mounting multiple stores is broken
 	// https://github.com/cosmos/cosmos-sdk/issues/532
-	app.MountStoresIAVL(app.capKeyMainStore) // , app.capKeyIBCStore)
+	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {

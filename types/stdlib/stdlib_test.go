@@ -1,4 +1,4 @@
-package types
+package stdlib
 
 import (
 	"testing"
@@ -46,6 +46,12 @@ func TestListMapper(t *testing.T) {
 	lm.Set(ctx, int64(0), val)
 	lm.Get(ctx, int64(0), &res)
 	assert.Equal(t, val, res)
+
+	lm.Iterate(ctx, &res, func(ctx sdk.Context, index int64) {
+		lm.Set(ctx, index, S{res.I + 1, !res.B})
+	})
+	lm.Get(ctx, int64(0), &res)
+	assert.Equal(t, S{3, true}, res)
 }
 
 func TestQueueMapper(t *testing.T) {
@@ -63,7 +69,20 @@ func TestQueueMapper(t *testing.T) {
 	qm.Pop(ctx)
 	empty := qm.IsEmpty(ctx)
 
-	assert.Equal(t, true, empty)
-
+	assert.True(t, empty)
 	assert.Panics(t, func() { qm.Peek(ctx, &res) })
+
+	qm.Push(ctx, S{1, true})
+	qm.Push(ctx, S{2, true})
+	qm.Push(ctx, S{3, true})
+	qm.Iterate(ctx, &res, func(ctx sdk.Context) (brk bool) {
+		if res.I == 3 {
+			brk = true
+		}
+		return
+	})
+
+	assert.False(t, qm.IsEmpty(ctx))
+	qm.Pop(ctx)
+	assert.True(t, qm.IsEmpty(ctx))
 }

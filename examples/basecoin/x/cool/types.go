@@ -34,6 +34,15 @@ func (msg SetTrendMsg) String() string {
 	return fmt.Sprintf("SetTrendMsg{Sender: %v, Cool: %v}", msg.Sender, msg.Cool)
 }
 
+// Get the bytes for the message signer to sign on
+func (msg SetTrendMsg) GetSignBytes() []byte {
+	b, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
 // Validate Basic is used to quickly disqualify obviously invalid messages quickly
 func (msg SetTrendMsg) ValidateBasic() sdk.Error {
 	if len(msg.Sender) == 0 {
@@ -46,15 +55,6 @@ func (msg SetTrendMsg) ValidateBasic() sdk.Error {
 		return sdk.ErrUnauthorized("").Trace("warm is not very cool")
 	}
 	return nil
-}
-
-// Get the bytes for the message signer to sign on
-func (msg SetTrendMsg) GetSignBytes() []byte {
-	b, err := json.Marshal(msg)
-	if err != nil {
-		panic(err)
-	}
-	return b
 }
 
 //_______________________________________________________________________
@@ -85,14 +85,6 @@ func (msg QuizMsg) String() string {
 	return fmt.Sprintf("QuizMsg{Sender: %v, CoolAnswer: %v}", msg.Sender, msg.CoolAnswer)
 }
 
-// Validate Basic is used to quickly disqualify obviously invalid messages quickly
-func (msg QuizMsg) ValidateBasic() sdk.Error {
-	if len(msg.Sender) == 0 {
-		return sdk.ErrUnrecognizedAddress(msg.Sender).Trace("")
-	}
-	return nil
-}
-
 // Get the bytes for the message signer to sign on
 func (msg QuizMsg) GetSignBytes() []byte {
 	b, err := json.Marshal(msg)
@@ -100,4 +92,12 @@ func (msg QuizMsg) GetSignBytes() []byte {
 		panic(err)
 	}
 	return b
+}
+
+// Validate Basic is used to quickly disqualify obviously invalid messages quickly
+func (msg QuizMsg) ValidateBasic() sdk.Error {
+	if len(msg.Sender) == 0 {
+		return sdk.ErrUnrecognizedAddress(msg.Sender).Trace("")
+	}
+	return nil
 }

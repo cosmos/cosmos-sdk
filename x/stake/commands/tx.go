@@ -107,7 +107,7 @@ func cmdDeclareCandidacy(cmd *cobra.Command, args []string) error {
 		Details:  viper.GetString(FlagDetails),
 	}
 
-	tx := stake.NewTxDeclareCandidacy(amount, pk, description)
+	tx := stake.NewMsgDeclareCandidacy(amount, pk, description)
 	return doTx(tx)
 }
 
@@ -125,7 +125,7 @@ func cmdEditCandidacy(cmd *cobra.Command, args []string) error {
 		Details:  viper.GetString(FlagDetails),
 	}
 
-	tx := stake.NewTxEditCandidacy(pk, description)
+	tx := stake.NewMsgEditCandidacy(pk, description)
 	return doTx(tx)
 }
 
@@ -140,7 +140,7 @@ func cmdDelegate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	tx := stake.NewTxDelegate(amount, pk)
+	tx := stake.NewMsgDelegate(amount, pk)
 	return doTx(tx)
 }
 
@@ -167,7 +167,7 @@ func cmdUnbond(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	tx := stake.NewTxUnbond(sharesStr, pk)
+	tx := stake.NewMsgUnbond(sharesStr, pk)
 	return doTx(tx)
 }
 

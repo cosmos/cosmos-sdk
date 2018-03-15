@@ -148,7 +148,7 @@ const (
 type Candidate struct {
 	Status      CandidateStatus `json:"status"`       // Bonded status
 	PubKey      crypto.PubKey   `json:"pub_key"`      // Pubkey of candidate
-	Owner       crypto.Address  `json:"owner"`        // Sender of BondTx - UnbondTx returns here
+	Address     sdk.Address     `json:"owner"`        // Sender of BondTx - UnbondTx returns here
 	Assets      sdk.Rational    `json:"assets"`       // total shares of a global hold pools TODO custom type PoolShares
 	Liabilities sdk.Rational    `json:"liabilities"`  // total shares issued to a candidate's delegators TODO custom type DelegatorShares
 	VotingPower sdk.Rational    `json:"voting_power"` // Voting power if considered a validator
@@ -164,11 +164,11 @@ type Description struct {
 }
 
 // NewCandidate - initialize a new candidate
-func NewCandidate(pubKey crypto.PubKey, owner crypto.Address, description Description) *Candidate {
+func NewCandidate(pubKey crypto.PubKey, address sdk.Address, description Description) *Candidate {
 	return &Candidate{
 		Status:      Unbonded,
-		PubKey:      pubKey,
-		Owner:       owner,
+		PubKey:      pubKet,
+		Address:     address,
 		Assets:      sdk.ZeroRat,
 		Liabilities: sdk.ZeroRat,
 		VotingPower: sdk.ZeroRat,

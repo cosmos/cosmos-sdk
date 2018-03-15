@@ -1,7 +1,6 @@
 package stake
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 
@@ -9,12 +8,11 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 // separated for testing
-func InitState(ctx sdk.Context, mapper Mapper, key, value string) error {
+func InitState(ctx sdk.Context, mapper Mapper, key, value string) sdk.Error {
 
 	params := mapper.loadParams()
 	switch key {
@@ -24,13 +22,13 @@ func InitState(ctx sdk.Context, mapper Mapper, key, value string) error {
 
 		i, err := strconv.Atoi(value)
 		if err != nil {
-			return fmt.Errorf("input must be integer, Error: %v", err.Error())
+			return sdk.ErrUnknownRequest(fmt.Sprintf("input must be integer, Error: %v", err.Error()))
 		}
 
 		switch key {
 		case "max_vals":
 			if i < 0 {
-				return errors.New("cannot designate negative max validators")
+				return sdk.ErrUnknownRequest("cannot designate negative max validators")
 			}
 			params.MaxVals = uint16(i)
 		case "gas_bond":
@@ -53,55 +51,48 @@ func NewHandler(mapper Mapper, ck bank.CoinKeeper) sdk.Handler {
 
 		params := mapper.loadParams()
 
-		res := msg.ValidateBasic().Result()
+		res := msg.ValidateBasic()
 		if res.Code != sdk.CodeOK {
 			return res
 		}
-		sender, err := getTxSender(ctx)
-		if err != nil {
-			return
+		signers := msg.GetSigners()
+		if len(signers) != 1 {
+			return sdk.ErrUnauthorized("there can only be one signer for staking transaction")
 		}
+		sender := signers[0]
 
-		transact := NewTransact(ctx, ck)
+		transact := newTransact(ctx, sender, mapper, ck)
 
 		// Run the transaction
-		switch _tx := tx.Unwrap().(type) {
-		case TxDeclareCandidacy:
+		switch msg := msg.(type) {
+		case MsgDeclareCandidacy:
+			res := transact.declareCandidacy(msg).Result()
 			if !ctx.IsCheckTx() {
 				res.GasUsed = params.GasDeclareCandidacy
 			}
-			return res, transact.declareCandidacy(_tx)
-		case TxEditCandidacy:
+			return res
+		case MsgEditCandidacy:
+			res := transact.editCandidacy(msg).Result()
 			if !ctx.IsCheckTx() {
 				res.GasUsed = params.GasEditCandidacy
 			}
-			return res, transact.editCandidacy(_tx)
-		case TxDelegate:
+			return res
+		case MsgDelegate:
+			res := transact.delegate(msg).Result()
 			if !ctx.IsCheckTx() {
 				res.GasUsed = params.GasDelegate
 			}
-			return res, transact.delegate(_tx)
-		case TxUnbond:
-			//context with hold account permissions
+			return res
+		case MsgUnbond:
+			res := transact.unbond(msg).Result()
 			if !ctx.IsCheckTx() {
-				params := loadParams(store)
 				res.GasUsed = params.GasUnbond
 			}
-			return res, transact.unbond(_tx)
+			return res
 		default:
-			return sdk.ErrUnknownTxType(msgType)
+			return sdk.ErrTxParse("invalid message parse in staking module")
 		}
-		return
 	}
-}
-
-// get the sender from the ctx and ensure it matches the tx pubkey
-func getTxSender(ctx sdk.Context) (sender crypto.Address, err error) {
-	senders := ctx.GetPermissions("", auth.NameSigs)
-	if len(senders) != 1 {
-		return sender, ErrMissingSignature()
-	}
-	return senders[0], nil
 }
 
 //_____________________________________________________________________
@@ -118,7 +109,7 @@ type transact struct {
 
 func newTransact(ctx sdk.Context, sender sdk.Address, mapper Mapper, ck bank.CoinKeeper) transact {
 	return transact{
-		cxt:        ctx,
+		ctx:        ctx,
 		sender:     sender,
 		mapper:     mapper,
 		coinKeeper: ck,
@@ -149,9 +140,9 @@ func (tr transact) unbondedToBondedPool(candidate *Candidate) {
 }
 
 // return an error if the bonds coins are incorrect
-func checkDenom(mapper Mapper, tx BondUpdate) sdk.Error {
-	if tx.Bond.Denom != mapper.loadParams().BondDenom {
-		return fmt.Errorf("Invalid coin denomination")
+func checkDenom(mapper Mapper, bond sdk.Coin) sdk.Error {
+	if bond.Denom != mapper.loadParams().BondDenom {
+		return ErrBadBondingDenom()
 	}
 	return nil
 }
@@ -161,13 +152,13 @@ func checkDenom(mapper Mapper, tx BondUpdate) sdk.Error {
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
-func (tr transact) declareCandidacy(tx TxDeclareCandidacy) sdk.Error {
+func (tr transact) declareCandidacy(tx MsgDeclareCandidacy) sdk.Error {
 
 	// check to see if the pubkey or sender has been registered before
 	if tr.mapper.loadCandidate(tx.Address) != nil {
 		return ErrCandidateExistsAddr()
 	}
-	err := checkDenom(tx.BondUpdate, tr.mapper)
+	err := checkDenom(tr.mapper, tx.Bond)
 	if err != nil {
 		return err
 	}
@@ -175,16 +166,16 @@ func (tr transact) declareCandidacy(tx TxDeclareCandidacy) sdk.Error {
 		return nil
 	}
 
-	candidate := NewCandidate(tx.Address, tr.sender, tx.Description)
+	candidate := NewCandidate(tx.PubKey, tr.sender, tx.Description)
 	tr.mapper.saveCandidate(candidate)
 
 	// move coins from the tr.sender account to a (self-bond) delegator account
 	// the candidate account and global shares are updated within here
-	txDelegate := TxDelegate{tx.BondUpdate}
+	txDelegate := NewMsgDelegate(tx.Address, tx.Bond)
 	return tr.delegateWithCandidate(txDelegate, candidate)
 }
 
-func (tr transact) editCandidacy(tx TxEditCandidacy) sdk.Error {
+func (tr transact) editCandidacy(tx MsgEditCandidacy) sdk.Error {
 
 	// candidate must already be registered
 	if tr.mapper.loadCandidate(tx.Address) == nil { // does PubKey exist
@@ -221,12 +212,12 @@ func (tr transact) editCandidacy(tx TxEditCandidacy) sdk.Error {
 	return nil
 }
 
-func (tr transact) delegate(tx TxDelegate) sdk.Error {
+func (tr transact) delegate(tx MsgDelegate) sdk.Error {
 
 	if tr.mapper.loadCandidate(tx.Address) == nil { // does PubKey exist
 		return fmt.Errorf("cannot delegate to non-existant PubKey %v", tx.Address)
 	}
-	err := checkDenom(tx.BondUpdate, tr.mapper)
+	err := checkDenom(tr.mapper, tx.Bond)
 	if err != nil {
 		return err
 	}
@@ -242,7 +233,7 @@ func (tr transact) delegate(tx TxDelegate) sdk.Error {
 	return tr.delegateWithCandidate(tx, candidate)
 }
 
-func (tr transact) delegateWithCandidate(tx TxDelegate, candidate *Candidate) sdk.Error {
+func (tr transact) delegateWithCandidate(tx MsgDelegate, candidate *Candidate) sdk.Error {
 
 	if candidate.Status == Revoked { //candidate has been withdrawn
 		return ErrBondNotNominated()
@@ -275,13 +266,13 @@ func (tr transact) delegateWithCandidate(tx TxDelegate, candidate *Candidate) sd
 	return nil
 }
 
-func (tr transact) unbond(tx TxUnbond) sdk.Error {
+func (tr transact) unbond(tx MsgUnbond) sdk.Error {
 
 	// check if bond has any shares in it unbond
 	existingBond := tr.mapper.loadDelegatorBond(tr.sender, tx.Address)
 	sharesStr := viper.GetString(tx.Shares)
 	if existingBond.Shares.LT(sdk.ZeroRat) { // bond shares < tx shares
-		return errors.New("no shares in account to unbond")
+		return ErrInsufficientFunds()
 	}
 
 	// if shares set to special case Max then we're good
@@ -313,7 +304,6 @@ func (tr transact) unbond(tx TxUnbond) sdk.Error {
 	if tx.Shares == "MAX" {
 		shares = bond.Shares
 	} else {
-		var err error
 		shares, err = sdk.NewRatFromDecimal(tx.Shares)
 		if err != nil {
 			return err

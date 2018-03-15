@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"math/big"
 	"strconv"
 	"strings"
@@ -57,7 +56,7 @@ func NewRat(Numerator int64, Denominator ...int64) Rat {
 }
 
 //NewFromDecimal - create a rational from decimal string or integer string
-func NewRatFromDecimal(decimalStr string) (f Rat, err error) {
+func NewRatFromDecimal(decimalStr string) (f Rat, err Error) {
 
 	// first extract any negative symbol
 	neg := false
@@ -73,23 +72,23 @@ func NewRatFromDecimal(decimalStr string) (f Rat, err error) {
 	switch len(str) {
 	case 1:
 		if len(str[0]) == 0 {
-			return f, errors.New("not a decimal string")
+			return f, NewError(CodeUnknownRequest, "not a decimal string")
 		}
 		numStr = str[0]
 	case 2:
 		if len(str[0]) == 0 || len(str[1]) == 0 {
-			return f, errors.New("not a decimal string")
+			return f, NewError(CodeUnknownRequest, "not a decimal string")
 		}
 		numStr = str[0] + str[1]
 		len := int64(len(str[1]))
 		denom = new(big.Int).Exp(big.NewInt(10), big.NewInt(len), nil).Int64()
 	default:
-		return f, errors.New("not a decimal string")
+		return f, NewError(CodeUnknownRequest, "not a decimal string")
 	}
 
-	num, err := strconv.Atoi(numStr)
-	if err != nil {
-		return f, err
+	num, errConv := strconv.Atoi(numStr)
+	if errConv != nil {
+		return f, NewError(CodeUnknownRequest, errConv.Error())
 	}
 
 	if neg {

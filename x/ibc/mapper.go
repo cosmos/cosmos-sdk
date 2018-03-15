@@ -10,8 +10,7 @@ import (
 
 type IBCMapper struct {
 	ibcKey sdk.StoreKey
-
-	cdc *wire.Codec
+	cdc    *wire.Codec
 }
 
 func NewIBCMapper(ibcKey sdk.StoreKey) IBCMapper {

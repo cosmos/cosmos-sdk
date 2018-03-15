@@ -6,6 +6,11 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
+// ------------------------------
+// IBCPacket
+
+// IBCPacket defines a piece of data that can be send between two separate
+// blockchains.
 type IBCPacket struct {
 	SrcAddr   sdk.Address
 	DestAddr  sdk.Address
@@ -14,10 +19,10 @@ type IBCPacket struct {
 	DestChain string
 }
 
-func newCodec() *wire.Codec {
-	return wire.NewCodec()
-}
+// ----------------------------------
+// IBCTransferMsg
 
+// IBCTransferMsg defines how another module can send an IBCPacket.
 type IBCTransferMsg struct {
 	IBCPacket
 }
@@ -48,6 +53,11 @@ func (msg IBCTransferMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.SrcAddr}
 }
 
+// ----------------------------------
+// IBCReceiveMsg
+
+// IBCReceiveMsg defines the message that a relayer uses to post an IBCPacket
+// to the destination chain.
 type IBCReceiveMsg struct {
 	IBCPacket
 	Relayer  sdk.Address
@@ -78,4 +88,11 @@ func (msg IBCReceiveMsg) ValidateBasic() sdk.Error {
 // x/bank/tx.go SendMsg.GetSigners()
 func (msg IBCReceiveMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Relayer}
+}
+
+// -------------------------
+// Helpers
+
+func newCodec() *wire.Codec {
+	return wire.NewCodec()
 }

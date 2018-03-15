@@ -1,14 +1,17 @@
 # IBC Spec
 
-*This is a living document and should be edited as the IBC spec and implementation change*
+*This is a living document and should be edited as the IBC spec and 
+implementation change*
 
 ## MVP1
 
-The initial implementation of IBC will include just enough for simple coin transfers between chains, with safety features such as ACK messages being added later.
+The initial implementation of IBC will include just enough for simple coin 
+transfers between chains, with safety features such as ACK messages being added 
+later.
 
 ### IBC Module
 
-```golang
+```go
 // User facing API
 
 type IBCPacket struct {
@@ -47,12 +50,14 @@ type EgressKey struct {
     DestChain   string
     Index       int64
 }
-
 ```
 
-`egressKey` stores the outgoing `IBCTransfer`s as a list. Its getter takes an `EgressKey` and returns the length if `egressKey.Index == -1`, an element if `egressKey.Index > 0`.
+`egressKey` stores the outgoing `IBCTransfer`s as a list. Its getter takes an 
+`EgressKey` and returns the length if `egressKey.Index == -1`, an element if 
+`egressKey.Index > 0`.
 
-`ingressKey` stores the last income `IBCTransfer`'s sequence. Its getter takes an `IngressKey`.
+`ingressKey` stores the latest income `IBCTransfer`'s sequence. It's getter 
+takes an `IngressKey`.
 
 ## Relayer
 

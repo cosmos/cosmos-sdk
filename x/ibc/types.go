@@ -28,7 +28,7 @@ type IBCTransferMsg struct {
 }
 
 func (msg IBCTransferMsg) Type() string {
-	return "ibctransfer"
+	return "ibc"
 }
 
 func (msg IBCTransferMsg) Get(key interface{}) interface{} {
@@ -65,7 +65,7 @@ type IBCReceiveMsg struct {
 }
 
 func (msg IBCReceiveMsg) Type() string {
-	return "ibcreceive"
+	return "ibc"
 }
 
 func (msg IBCReceiveMsg) Get(key interface{}) interface{} {

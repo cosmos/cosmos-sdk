@@ -1,15 +1,21 @@
-package types
+package stdlib
 
 import (
-	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
-type ListMapper interface { // Solidity list like structure
+// ListMapper is a Mapper interface that provides list-like functions
+// It panics when the element type cannot be (un/)marshalled by the codec
+
+type ListMapper interface {
+	// ListMapper dosen't checks index out of range
+	// The user should check Len() before doing any actions
 	Len(sdk.Context) int64
 	Get(sdk.Context, int64, interface{})
+	// Setting element out of range is harmful; use Push() when adding new elements
 	Set(sdk.Context, int64, interface{})
 	Push(sdk.Context, interface{})
 	Iterate(sdk.Context, interface{}, func(sdk.Context, int64))
@@ -53,7 +59,7 @@ func (lm listMapper) Len(ctx sdk.Context) int64 {
 
 func (lm listMapper) Get(ctx sdk.Context, index int64, ptr interface{}) {
 	if index < 0 {
-		panic(errors.New(""))
+		panic(fmt.Errorf("Invalid index in ListMapper.Get(ctx, %d, ptr)", index))
 	}
 	store := ctx.KVStore(lm.key)
 	bz := store.Get(marshalInt64(lm.cdc, index))
@@ -64,7 +70,7 @@ func (lm listMapper) Get(ctx sdk.Context, index int64, ptr interface{}) {
 
 func (lm listMapper) Set(ctx sdk.Context, index int64, value interface{}) {
 	if index < 0 {
-		panic(errors.New(""))
+		panic(fmt.Errorf("Invalid index in ListMapper.Set(ctx, %d, value)", index))
 	}
 	store := ctx.KVStore(lm.key)
 	bz, err := lm.cdc.MarshalBinary(value)
@@ -90,11 +96,17 @@ func (lm listMapper) Iterate(ctx sdk.Context, ptr interface{}, fn func(sdk.Conte
 	}
 }
 
+// QueueMapper is a Mapper interface that provides queue-like functions
+// It panics when the element type cannot be (un/)marshalled by the codec
+
 type QueueMapper interface {
 	Push(sdk.Context, interface{})
+	// Popping/Peeking on an empty queue will cause panic
+	// The user should check IsEmpty() before doing any actions
 	Peek(sdk.Context, interface{})
 	Pop(sdk.Context)
 	IsEmpty(sdk.Context) bool
+	// Iterate() removes elements it processed; return true in the continuation to break
 	Iterate(sdk.Context, interface{}, func(sdk.Context) bool)
 }
 
@@ -124,7 +136,7 @@ type queueInfo struct {
 
 func (info queueInfo) validateBasic() error {
 	if info.End < info.Begin || info.Begin < 0 || info.End < 0 {
-		return errors.New("")
+		return fmt.Errorf("Invalid queue information: {Begin: %d, End: %d}", info.Begin, info.End)
 	}
 	return nil
 }

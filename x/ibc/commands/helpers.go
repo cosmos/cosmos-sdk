@@ -8,14 +8,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/tendermint/go-amino"
+	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
-func buildTx(cdc *wire.Codec, msg sdk.Msg, name string) ([]byte, error) {
+func buildTx(cdc *wire.Codec, msg sdk.Msg) ([]byte, error) {
 	keybase, err := keys.GetKeyBase()
 	if err != nil {
 		return nil, err
 	}
+
+	name := viper.GetString(client.FlagName)
 
 	bz := msg.GetSignBytes()
 	buf := client.BufferStdin()
@@ -43,12 +45,13 @@ func buildTx(cdc *wire.Codec, msg sdk.Msg, name string) ([]byte, error) {
 	return txBytes, nil
 }
 
-func getAddress(name string) []byte {
+func getAddress() []byte {
 	keybase, err := keys.GetKeyBase()
 	if err != nil {
 		panic(err)
 	}
 
+	name := viper.GetString(client.FlagName)
 	info, err := keybase.Get(name)
 	if err != nil {
 		panic(err)

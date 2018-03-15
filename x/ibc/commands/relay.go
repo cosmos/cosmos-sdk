@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/builder"
 
-	wire "github.com/tendermint/go-amino"
+	wire "github.com/cosmos/cosmos-sdk/wire"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
@@ -22,7 +22,9 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 		Use: "relay",
 		Run: cmdr.runIBCRelay,
 	}
-	cmd.Flags().String(client.FlagName, "", "Name of the key to sign")
+	cmd.Flags().String(flagTo, "", "Address to send coins")
+	cmd.Flags().String(flagAmount, "", "Amount of coins to send")
+	cmd.Flags().Int64(flagSequence, 0, "Sequence number to sign the tx")
 	return cmd
 }
 
@@ -62,16 +64,13 @@ func (c relayCommander) refine(bz []byte, sequence int64) []byte {
 	if err := c.cdc.UnmarshalBinary(bz, &packet); err != nil {
 		panic(err)
 	}
-
-	name := viper.GetString(client.FlagName)
-
-	address := getAddress(name)
+	address := getAddress()
 	msg := ibc.IBCReceiveMsg{
 		IBCPacket: packet,
 		Relayer:   address,
 		Sequence:  sequence,
 	}
-	res, err := buildTx(c.cdc, msg, name)
+	res, err := buildTx(c.cdc, msg)
 	if err != nil {
 		panic(err)
 	}

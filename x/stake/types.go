@@ -2,7 +2,6 @@ package stake
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -167,7 +166,7 @@ type Description struct {
 func NewCandidate(pubKey crypto.PubKey, address sdk.Address, description Description) *Candidate {
 	return &Candidate{
 		Status:      Unbonded,
-		PubKey:      pubKet,
+		PubKey:      pubKey,
 		Address:     address,
 		Assets:      sdk.ZeroRat,
 		Liabilities: sdk.ZeroRat,
@@ -222,7 +221,7 @@ func (c *Candidate) removeShares(shares sdk.Rat, gs *GlobalState) (createdCoins 
 // Should only be called when the Candidate qualifies as a validator.
 func (c *Candidate) validator() Validator {
 	return Validator{
-		PubKey:      c.PubKey,
+		Address:     c.Address, // XXX !!!
 		VotingPower: c.VotingPower,
 	}
 }
@@ -234,8 +233,9 @@ type Validator struct {
 }
 
 // ABCIValidator - Get the validator from a bond value
+/* TODO
 func (v Validator) ABCIValidator() (*abci.Validator, error) {
-	pkBytes, err := cdc.MarshalBinary(v.PubKey)
+	pkBytes, err := wire.MarshalBinary(v.PubKey)
 	if err != nil {
 		return nil, err
 	}
@@ -244,6 +244,7 @@ func (v Validator) ABCIValidator() (*abci.Validator, error) {
 		Power:  v.VotingPower.Evaluate(),
 	}, nil
 }
+*/
 
 //_________________________________________________________________________
 
@@ -263,11 +264,11 @@ type DelegatorBond struct {
 // Perform all the actions required to bond tokens to a delegator bond from their account
 func (bond *DelegatorBond) BondCoins(candidate *Candidate, tokens sdk.Coin, tr transact) sdk.Error {
 
-	_, err := tr.coinKeeper.SubtractCoins(tr.ctx, d.Address, sdk.Coins{tokens})
+	_, err := tr.coinKeeper.SubtractCoins(tr.ctx, candidate.Address, sdk.Coins{tokens})
 	if err != nil {
 		return err
 	}
-	newShares = candidate.addTokens(tokens.Amount, tr.gs)
+	newShares := candidate.addTokens(tokens.Amount, tr.gs)
 	bond.Shares = bond.Shares.Add(newShares)
 	return nil
 }
@@ -277,14 +278,14 @@ func (bond *DelegatorBond) UnbondCoins(candidate *Candidate, shares int64, tr tr
 
 	// subtract bond tokens from delegator bond
 	if bond.Shares.LT(shares) {
-		return ErrInsufficientFunds()
+		return sdk.ErrInsufficientFunds("") // TODO
 	}
 	bond.Shares = bond.Shares.Sub(shares)
 
 	returnAmount := candidate.removeShares(shares, tr.gs)
 	returnCoins := sdk.Coins{{tr.params.BondDenom, returnAmount}}
 
-	_, err := tr.coinKeeper.AddCoins(tr.ctx, d.Address, returnCoins)
+	_, err := tr.coinKeeper.AddCoins(tr.ctx, candidate.Address, returnCoins)
 	if err != nil {
 		return err
 	}

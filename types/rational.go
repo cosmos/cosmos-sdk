@@ -1,6 +1,9 @@
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
@@ -13,12 +16,21 @@ import (
 //  __|     |_    |_
 
 // Rat - extend big.Rat
+// NOTE: never use new(Rat) or else
+// we will panic unmarshalling into the
+// nil embedded big.Rat
 type Rat struct {
 	*big.Rat `json:"rat"`
 }
 
-// Rational - big Rat with additional functionality
-type Rational interface {
+type Rational = Rat
+
+// RationalInterface - big Rat with additional functionality
+// NOTE: we only have one implementation of this interface
+// and don't use it anywhere, but it might come in handy
+// if we want to provide Rational types that include
+// the units of the value in the type system.
+type RationalInterface interface {
 	GetRat() *big.Rat
 	Num() int64
 	Denom() int64
@@ -200,6 +212,37 @@ func (r Rat) Round(precisionFactor int64) Rational {
 //return nil
 //}
 
-//nolint
-func (r Rat) MarshalJSON() ([]byte, error)           { return r.MarshalText() }
-func (r *Rat) UnmarshalJSON(data []byte) (err error) { return r.UnmarshalText(data) }
+var ratCdc JSONCodec // TODO wire.Codec
+
+// Hack to just use json.Marshal for everything until
+// we update for amino
+type JSONCodec struct{}
+
+func (jc JSONCodec) MarshalJSON(o interface{}) ([]byte, error) {
+	return json.Marshal(o)
+}
+
+func (jc JSONCodec) UnmarshalJSON(bz []byte, o interface{}) error {
+	return json.Unmarshal(bz, o)
+}
+
+// Wraps r.MarshalText() in quotes to make it a valid JSON string.
+func (r Rat) MarshalJSON() ([]byte, error) {
+	bz, err := r.MarshalText()
+	if err != nil {
+		return bz, err
+	}
+	return []byte(fmt.Sprintf(`"%s"`, bz)), nil
+}
+
+// Requires a valid JSON string - strings quotes and calls UnmarshalText
+func (r *Rat) UnmarshalJSON(data []byte) (err error) {
+	quote := []byte(`"`)
+	if len(data) < 2 ||
+		!bytes.HasPrefix(data, quote) ||
+		!bytes.HasSuffix(data, quote) {
+		return fmt.Errorf("JSON encoded Rat must be a quote-delimitted string")
+	}
+	data = bytes.Trim(data, `"`)
+	return r.UnmarshalText(data)
+}

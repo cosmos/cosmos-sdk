@@ -260,34 +260,3 @@ type DelegatorBond struct {
 	Address sdk.Address `json:"pub_key"`
 	Shares  sdk.Rat     `json:"shares"`
 }
-
-// Perform all the actions required to bond tokens to a delegator bond from their account
-func (bond *DelegatorBond) BondCoins(candidate *Candidate, tokens sdk.Coin, tr transact) sdk.Error {
-
-	_, err := tr.coinKeeper.SubtractCoins(tr.ctx, candidate.Address, sdk.Coins{tokens})
-	if err != nil {
-		return err
-	}
-	newShares := candidate.addTokens(tokens.Amount, tr.gs)
-	bond.Shares = bond.Shares.Add(newShares)
-	return nil
-}
-
-// Perform all the actions required to bond tokens to a delegator bond from their account
-func (bond *DelegatorBond) UnbondCoins(candidate *Candidate, shares int64, tr transact) sdk.Error {
-
-	// subtract bond tokens from delegator bond
-	if bond.Shares.LT(shares) {
-		return sdk.ErrInsufficientFunds("") // TODO
-	}
-	bond.Shares = bond.Shares.Sub(shares)
-
-	returnAmount := candidate.removeShares(shares, tr.gs)
-	returnCoins := sdk.Coins{{tr.params.BondDenom, returnAmount}}
-
-	_, err := tr.coinKeeper.AddCoins(tr.ctx, candidate.Address, returnCoins)
-	if err != nil {
-		return err
-	}
-	return nil
-}

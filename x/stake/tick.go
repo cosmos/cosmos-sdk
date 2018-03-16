@@ -6,27 +6,29 @@ import (
 )
 
 // Tick - called at the end of every block
-func Tick(ctx sdk.Context, store sdk.KVStore) (change []*abci.Validator, err error) {
+func Tick(ctx sdk.Context, m Mapper) (change []*abci.Validator, err error) {
 
 	// retrieve params
-	params := loadParams(store)
-	gs := loadGlobalState(store)
+	params := m.loadParams()
+	gs := m.loadGlobalState()
 	height := ctx.BlockHeight()
 
 	// Process Validator Provisions
 	// XXX right now just process every 5 blocks, in new SDK make hourly
 	if gs.InflationLastTime+5 <= height {
 		gs.InflationLastTime = height
-		processProvisions(store, gs, params)
+		processProvisions(m, gs, params)
 	}
 
-	return UpdateValidatorSet(store, gs, params)
+	newVals := m.getValidators(params.MaxVals)
+	// XXX determine change from old validators, set to change
+	return change, nil
 }
 
 var hrsPerYr = sdk.NewRat(8766) // as defined by a julian year of 365.25 days
 
 // process provisions for an hour period
-func processProvisions(store sdk.KVStore, gs *GlobalState, params Params) {
+func processProvisions(m Mapper, gs *GlobalState, params Params) {
 
 	gs.Inflation = nextInflation(gs, params).Round(1000000000)
 
@@ -34,7 +36,7 @@ func processProvisions(store sdk.KVStore, gs *GlobalState, params Params) {
 	// more bonded tokens are added proportionally to all validators the only term
 	// which needs to be updated is the `BondedPool`. So for each previsions cycle:
 
-	provisions := gs.Inflation.Mul(sdk.New(gs.TotalSupply)).Quo(hrsPerYr).Evaluate()
+	provisions := gs.Inflation.Mul(sdk.NewRat(gs.TotalSupply)).Quo(hrsPerYr).Evaluate()
 	gs.BondedPool += provisions
 	gs.TotalSupply += provisions
 
@@ -43,7 +45,7 @@ func processProvisions(store sdk.KVStore, gs *GlobalState, params Params) {
 	// XXX XXX XXX XXX XXX XXX XXX XXX XXX
 
 	// save the params
-	saveGlobalState(store, gs)
+	m.saveGlobalState(gs)
 }
 
 // get the next inflation rate for the hour
@@ -56,7 +58,7 @@ func nextInflation(gs *GlobalState, params Params) (inflation sdk.Rat) {
 	// 7% and 20%.
 
 	// (1 - bondedRatio/GoalBonded) * InflationRateChange
-	inflationRateChangePerYear := sdk.One.Sub(gs.bondedRatio().Quo(params.GoalBonded)).Mul(params.InflationRateChange)
+	inflationRateChangePerYear := sdk.OneRat.Sub(gs.bondedRatio().Quo(params.GoalBonded)).Mul(params.InflationRateChange)
 	inflationRateChange := inflationRateChangePerYear.Quo(hrsPerYr)
 
 	// increase the new annual inflation for this next cycle

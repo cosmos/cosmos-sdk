@@ -193,6 +193,20 @@ func GetPubKey(pubKeyStr string) (pk crypto.PubKey, err error) {
 	return
 }
 
+// GetPubKey - create an Address from a pubkey string
+func GetAddress(Address string) (addr sdk.Address, err error) {
+
+	if len(Address) == 0 {
+		err = fmt.Errorf("must use provide address")
+		return
+	}
+	err = addr.UnmarshalJSON([]byte(Address))
+	if err != nil {
+		return
+	}
+	return
+}
+
 //--------------------------------------------------------------------
 // XXX consolidate to client
 

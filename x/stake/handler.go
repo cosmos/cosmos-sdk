@@ -272,7 +272,7 @@ func (tr *transact) BondCoins(bond *DelegatorBond, candidate *Candidate, tokens 
 }
 
 // Perform all the actions required to bond tokens to a delegator bond from their account
-func (tr *transact) UnbondCoins(bond *DelegatorBond, candidate *Candidate, shares int64) sdk.Error {
+func (tr *transact) UnbondCoins(bond *DelegatorBond, candidate *Candidate, shares sdk.Rat) sdk.Error {
 
 	// subtract bond tokens from delegator bond
 	if bond.Shares.LT(shares) {

@@ -8,6 +8,9 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
+// name to idetify transaction types
+var Name = "stake"
+
 //Verify interface at compile time
 var _, _, _, _ sdk.Msg = &MsgDeclareCandidacy{}, &MsgEditCandidacy{}, &MsgDelegate{}, &MsgUnbond{}
 
@@ -25,7 +28,7 @@ func NewMsgAddr(address sdk.Address) MsgAddr {
 }
 
 // nolint
-func (msg MsgAddr) Type() string                            { return "stake" }
+func (msg MsgAddr) Type() string                            { return Name }
 func (msg MsgAddr) Get(key interface{}) (value interface{}) { return nil }
 func (msg MsgAddr) GetSigners() []sdk.Address               { return []sdk.Address{msg.Address} }
 func (msg MsgAddr) String() string {
@@ -167,10 +170,10 @@ type MsgUnbond struct {
 	Shares string `json:"shares"`
 }
 
-func NewMsgUnbond(bond sdk.Coin, address sdk.Address) MsgDelegate {
-	return MsgDelegate{
+func NewMsgUnbond(address sdk.Address, shares string) MsgUnbond {
+	return MsgUnbond{
 		MsgAddr: NewMsgAddr(address),
-		Bond:    bond, // Shares:  shares,
+		Shares:  shares,
 	}
 }
 

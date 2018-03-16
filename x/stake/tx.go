@@ -167,10 +167,10 @@ type MsgUnbond struct {
 	Shares string `json:"shares"`
 }
 
-func NewMsgUnbond(shares string, address sdk.Address) MsgDelegate {
+func NewMsgUnbond(bond sdk.Coin, address sdk.Address) MsgDelegate {
 	return MsgDelegate{
 		MsgAddr: NewMsgAddr(address),
-		Shares:  shares,
+		Bond:    bond, // Shares:  shares,
 	}
 }
 
@@ -202,10 +202,10 @@ func (msg MsgUnbond) ValidateBasic() sdk.Error {
 func validateCoin(coin sdk.Coin) sdk.Error {
 	coins := sdk.Coins{coin}
 	if !coins.IsValid() {
-		return sdk.ErrInvalidCoins()
+		return sdk.ErrInvalidCoins(coins)
 	}
 	if !coins.IsPositive() {
-		return fmt.Errorf("Amount must be > 0")
+		return sdk.ErrInvalidCoins(coins) // XXX: add "Amount must be > 0" ?
 	}
 	return nil
 }

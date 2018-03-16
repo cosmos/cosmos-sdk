@@ -109,6 +109,10 @@ func ErrInvalidCoins(msg string) Error {
 	return newError(CodeInvalidCoins, msg)
 }
 
+func ErrInvalidCoins(coins Coins) Error {
+	return newError(CodeInvalidCoins, coins.String())
+}
+
 //----------------------------------------
 // Error & sdkError
 

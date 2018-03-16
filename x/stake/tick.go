@@ -22,6 +22,7 @@ func Tick(ctx sdk.Context, m Mapper) (change []*abci.Validator, err error) {
 
 	newVals := m.getValidators(params.MaxVals)
 	// XXX determine change from old validators, set to change
+	_ = newVals
 	return change, nil
 }
 

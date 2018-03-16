@@ -27,6 +27,7 @@ const (
 	CodeInsufficientFunds   CodeType = 5
 	CodeUnknownRequest      CodeType = 6
 	CodeUnrecognizedAddress CodeType = 7
+	CodeInvalidCoins        CodeType = 8
 
 	CodeGenesisParse CodeType = 0xdead // TODO: remove ?
 )
@@ -50,6 +51,8 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "Unknown request"
 	case CodeUnrecognizedAddress:
 		return "Unrecognized address"
+	case CodeInvalidCoins:
+		return "Code invalid coins"
 	default:
 		return fmt.Sprintf("Unknown code %d", code)
 	}
@@ -83,6 +86,10 @@ func ErrUnknownRequest(msg string) Error {
 }
 func ErrUnrecognizedAddress(addr Address) Error {
 	return newError(CodeUnrecognizedAddress, addr.String())
+}
+
+func ErrInvalidCoins(coins Coins) Error {
+	return newError(CodeInvalidCoins, coins.String())
 }
 
 //----------------------------------------

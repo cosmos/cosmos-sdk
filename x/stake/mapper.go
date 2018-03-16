@@ -157,11 +157,6 @@ func (m Mapper) removeValidator(address sdk.Address) {
 	}
 }
 
-// TODO
-func subspace(key []byte) ([]byte, []byte) {
-	return nil, nil
-}
-
 // get the most recent updated validator set from the Candidates. These bonds
 // are already sorted by VotingPower from the UpdateVotingPower function which
 // is the only function which is to modify the VotingPower

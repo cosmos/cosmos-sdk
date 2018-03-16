@@ -33,7 +33,7 @@ func (msg MsgAddr) String() string {
 }
 
 // ValidateBasic - Check for non-empty candidate, and valid coins
-func (msg MsgAddr) ValidateBasic() error {
+func (msg MsgAddr) ValidateBasic() sdk.Error {
 	if msg.Address.Empty() {
 		return errCandidateEmpty
 	}
@@ -49,7 +49,7 @@ type MsgDeclareCandidacy struct {
 	PubKey crypto.PubKey `json:"pubkey"`
 }
 
-func NewMsgDeclareCandidacy(bond sdk.Coin, address sdk.Address, pubkey crypto.PubKey, description Description) sdk.Msg {
+func NewMsgDeclareCandidacy(bond sdk.Coin, address sdk.Address, pubkey crypto.PubKey, description Description) MsgDeclareCandidacy {
 	return MsgDeclareCandidacy{
 		MsgAddr:     NewMsgAddr(address),
 		Description: description,
@@ -68,7 +68,7 @@ func (msg MsgDeclareCandidacy) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgDeclareCandidacy) ValidateBasic() error {
+func (msg MsgDeclareCandidacy) ValidateBasic() sdk.Error {
 	err := MsgAddr.ValidateBasic()
 	if err != nil {
 		return err
@@ -92,15 +92,24 @@ type MsgEditCandidacy struct {
 	Description
 }
 
-func NewMsgEditCandidacy(address sdk.Address, description Description) sdk.Msg {
+func NewMsgEditCandidacy(address sdk.Address, description Description) MsgEditCandidacy {
 	return MsgEditCandidacy{
 		MsgAddr:     NewMsgAddr(address),
 		Description: description,
 	}
 }
 
+// get the bytes for the message signer to sign on
+func (msg MsgEditCandidacy) GetSignBytes() []byte {
+	b, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
 // quick validity check
-func (msg MsgEditCandidacy) ValidateBasic() error {
+func (msg MsgEditCandidacy) ValidateBasic() sdk.Error {
 	err := MsgAddr.ValidateBasic()
 	if err != nil {
 		return err
@@ -120,7 +129,7 @@ type MsgDelegate struct {
 	Bond sdk.Coin `json:"bond"`
 }
 
-func NewMsgDelegate(address sdk.Address, bond sdk.Coin) sdk.Msg {
+func NewMsgDelegate(address sdk.Address, bond sdk.Coin) MsgDelegate {
 	return MsgDelegate{
 		MsgAddr: NewMsgAddr(address),
 		Bond:    bond,
@@ -137,7 +146,7 @@ func (msg MsgDelegate) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgDelegate) ValidateBasic() error {
+func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	err := MsgAddr.ValidateBasic()
 	if err != nil {
 		return err
@@ -157,7 +166,7 @@ type MsgUnbond struct {
 	Shares string `json:"shares"`
 }
 
-func NewMsgUnbond(shares string, address sdk.Address) sdk.Msg {
+func NewMsgUnbond(shares string, address sdk.Address) MsgDelegate {
 	return MsgUnbond{
 		MsgAddr: NewMsgAddr(address),
 		Shares:  shares,
@@ -174,7 +183,7 @@ func (msg MsgUnbond) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgUnbond) ValidateBasic() error {
+func (msg MsgUnbond) ValidateBasic() sdk.Error {
 	err := MsgAddr.ValidateBasic()
 	if err != nil {
 		return err
@@ -188,7 +197,7 @@ func (msg MsgUnbond) ValidateBasic() error {
 //______________________________________________________________________
 // helper
 
-func validateCoin(coin coin.Coin) error {
+func validateCoin(coin coin.Coin) sdk.Error {
 	coins := sdk.Coins{bond}
 	if !sdk.IsValid() {
 		return sdk.ErrInvalidCoins()

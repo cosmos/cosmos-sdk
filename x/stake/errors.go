@@ -64,6 +64,9 @@ func ErrCommissionHuge() sdk.Error {
 func ErrBadValidatorAddr() sdk.Error {
 	return newError(CodeInvalidValidator, "Validator does not exist for that address")
 }
+func ErrBadCandidateAddr() sdk.Error {
+	return newError(CodeInvalidValidator, "Candidate does not exist for that address")
+}
 func ErrCandidateExistsAddr() sdk.Error {
 	return newError(CodeInvalidValidator, "Candidate already exist, cannot re-declare candidacy")
 }

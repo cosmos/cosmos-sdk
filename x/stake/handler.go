@@ -51,13 +51,13 @@ func NewHandler(mapper Mapper, ck bank.CoinKeeper) sdk.Handler {
 
 		params := mapper.loadParams()
 
-		res := msg.ValidateBasic()
-		if res.Code != sdk.CodeOK {
-			return res
+		err := msg.ValidateBasic()
+		if err != nil {
+			return err.Result() // TODO should also return gasUsed?
 		}
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
-			return sdk.ErrUnauthorized("there can only be one signer for staking transaction")
+			return sdk.ErrUnauthorized("there can only be one signer for staking transaction").Result()
 		}
 		sender := signers[0]
 
@@ -90,7 +90,7 @@ func NewHandler(mapper Mapper, ck bank.CoinKeeper) sdk.Handler {
 			}
 			return res
 		default:
-			return sdk.ErrTxParse("invalid message parse in staking module")
+			return sdk.ErrTxParse("invalid message parse in staking module").Result()
 		}
 	}
 }
@@ -178,8 +178,8 @@ func (tr transact) declareCandidacy(tx MsgDeclareCandidacy) sdk.Error {
 func (tr transact) editCandidacy(tx MsgEditCandidacy) sdk.Error {
 
 	// candidate must already be registered
-	if tr.mapper.loadCandidate(tx.Address) == nil { // does PubKey exist
-		return fmt.Errorf("cannot delegate to non-existant PubKey %v", tx.Address)
+	if tr.mapper.loadCandidate(tx.Address) == nil {
+		return ErrBadCandidateAddr()
 	}
 	if tr.ctx.IsCheckTx() {
 		return nil
@@ -215,7 +215,7 @@ func (tr transact) editCandidacy(tx MsgEditCandidacy) sdk.Error {
 func (tr transact) delegate(tx MsgDelegate) sdk.Error {
 
 	if tr.mapper.loadCandidate(tx.Address) == nil { // does PubKey exist
-		return fmt.Errorf("cannot delegate to non-existant PubKey %v", tx.Address)
+		return ErrBadCandidateAddr()
 	}
 	err := checkDenom(tr.mapper, tx.Bond)
 	if err != nil {

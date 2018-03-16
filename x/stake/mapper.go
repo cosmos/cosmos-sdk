@@ -301,7 +301,7 @@ func (m Mapper) removeDelegatorBond(delegator sdk.Address, candidateAddr sdk.Add
 			addrs = append(addrs[:i], addrs[i+1:]...)
 		}
 	}
-	b, err := m.cdc.MarshalJSON(pks)
+	b, err := m.cdc.MarshalJSON(addrs)
 	if err != nil {
 		panic(err)
 	}

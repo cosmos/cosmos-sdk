@@ -249,13 +249,44 @@ func (tr transact) delegateWithCandidate(tx MsgDelegate, candidate *Candidate) s
 	}
 
 	// Account new shares, save
-	err := bond.BondCoins(candidate, tx.Bond, tr)
+	err := tr.BondCoins(bond, candidate, tx.Bond)
 	if err != nil {
 		return err
 	}
 	tr.mapper.saveDelegatorBond(tr.sender, bond)
 	tr.mapper.saveCandidate(candidate)
 	tr.mapper.saveGlobalState(tr.gs)
+	return nil
+}
+
+// Perform all the actions required to bond tokens to a delegator bond from their account
+func (tr *transact) BondCoins(bond *DelegatorBond, candidate *Candidate, tokens sdk.Coin) sdk.Error {
+
+	_, err := tr.coinKeeper.SubtractCoins(tr.ctx, candidate.Address, sdk.Coins{tokens})
+	if err != nil {
+		return err
+	}
+	newShares := candidate.addTokens(tokens.Amount, tr.gs)
+	bond.Shares = bond.Shares.Add(newShares)
+	return nil
+}
+
+// Perform all the actions required to bond tokens to a delegator bond from their account
+func (tr *transact) UnbondCoins(bond *DelegatorBond, candidate *Candidate, shares sdk.Rat) sdk.Error {
+
+	// subtract bond tokens from delegator bond
+	if bond.Shares.LT(shares) {
+		return sdk.ErrInsufficientFunds("") // TODO
+	}
+	bond.Shares = bond.Shares.Sub(shares)
+
+	returnAmount := candidate.removeShares(shares, tr.gs)
+	returnCoins := sdk.Coins{{tr.params.BondDenom, returnAmount}}
+
+	_, err := tr.coinKeeper.AddCoins(tr.ctx, candidate.Address, returnCoins)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

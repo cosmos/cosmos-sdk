@@ -11,6 +11,7 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 	dbm "github.com/tendermint/tmlibs/db"
 
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,18 +22,18 @@ func subspace(prefix []byte) (start, end []byte) {
 	return prefix, end
 }
 
-func createTestInput(t *testing.T, isCheckTx bool) (store sdk.KVStore, ctx sdk.Context, key sdk.StoreKey) {
+func createTestInput(t *testing.T, isCheckTx bool) (sdk.KVStore, sdk.Context, sdk.StoreKey) {
 	db := dbm.NewMemDB()
-	key = sdk.NewKVStoreKey("stake")
+	key := sdk.NewKVStoreKey("stake")
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	ctx = sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil)
-	store = ms.GetKVStore(key)
-	return
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil)
+	store := ms.GetKVStore(key)
+	return store, ctx, key
 }
 
 func newAddrs(n int) (addrs []crypto.Address) {
@@ -50,7 +51,7 @@ func newPubKey(pk string) (res crypto.PubKey) {
 	//res, err = crypto.PubKeyFromBytes(pkBytes)
 	var pkEd crypto.PubKeyEd25519
 	copy(pkEd[:], pkBytes[:])
-	return pkEd
+	return pkEd.Wrap()
 }
 
 // dummy pubkeys used for testing
@@ -74,7 +75,7 @@ func candidatesFromActors(store sdk.KVStore, addrs []crypto.Address, amts []int6
 		c := &Candidate{
 			Status:      Unbonded,
 			PubKey:      pks[i],
-			Owner:       addrs[i],
+			Address:     addrs[i],
 			Assets:      sdk.NewRat(amts[i]),
 			Liabilities: sdk.NewRat(amts[i]),
 			VotingPower: sdk.NewRat(amts[i]),
@@ -83,12 +84,14 @@ func candidatesFromActors(store sdk.KVStore, addrs []crypto.Address, amts []int6
 	}
 }
 
+func saveCandidate(store sdk.KVStore, c *Candidate) {} // TODO
+
 func candidatesFromActorsEmpty(addrs []crypto.Address) (candidates Candidates) {
 	for i := 0; i < len(addrs); i++ {
 		c := &Candidate{
 			Status:      Unbonded,
 			PubKey:      pks[i],
-			Owner:       addrs[i],
+			Address:     addrs[i],
 			Assets:      sdk.ZeroRat,
 			Liabilities: sdk.ZeroRat,
 			VotingPower: sdk.ZeroRat,

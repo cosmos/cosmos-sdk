@@ -1,12 +1,12 @@
 package keys
 
 import (
-	"github.com/tendermint/go-crypto"
-	"github.com/tendermint/go-wire"
+	amino "github.com/tendermint/go-amino"
+	crypto "github.com/tendermint/go-crypto"
 )
 
-var cdc = wire.NewCodec()
+var cdc = amino.NewCodec()
 
 func init() {
-	crypto.RegisterWire(cdc)
+	crypto.RegisterAmino(cdc)
 }

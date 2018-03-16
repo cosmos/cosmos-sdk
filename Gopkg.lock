@@ -125,9 +125,9 @@
 
 [[projects]]
   branch = "develop"
-  name = "github.com/tendermint/go-wire"
+  name = "github.com/tendermint/go-amino"
   packages = ["."]
-  revision = "dec83f641903b22f039da3974607859715d0377e"
+  revision = "3b9e2b978447707c255922bc3f87a53d55c400c9"
 
 [[projects]]
   branch = "develop"
@@ -163,6 +163,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e0628df240b8ceeb91403f5218f5561d8580f15f3d5b0ea0da40710d1cba3707"
+  inputs-digest = "375b661ad202b62c6847981416c03ce0518c33ac293f5f0863b69af04d2af91f"
   solver-name = "gps-cdcl"
   solver-version = 1

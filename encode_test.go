@@ -1,7 +1,7 @@
 package crypto
 
 /*
-XXX Needs to be refactored to not use go-wire/data
+XXX Needs to be refactored to not use go-amino/data
 
 import (
 	"fmt"
@@ -10,15 +10,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	wire "github.com/tendermint/go-wire"
-	data "github.com/tendermint/go-wire/data"
+	amino "github.com/tendermint/go-amino"
+	data "github.com/tendermint/go-amino/data"
 )
 
 type byter interface {
 	Bytes() []byte
 }
 
-// go to wire encoding and back
+// go to amino encoding and back
 func checkWire(t *testing.T, in byter, reader interface{}, typ byte, size int) {
 	// test to and from binary
 	bin, err := data.ToWire(in)
@@ -55,15 +55,15 @@ func checkJSON(t *testing.T, in interface{}, reader interface{}, typ string) {
 	assert.True(t, strings.Contains(string(js), parts[1]))
 }
 
-// make sure go-wire json can still figure this out...
+// make sure go-amino json can still figure this out...
 func checkWireJSON(t *testing.T, in interface{}, reader interface{}, typ byte) {
 	// test to and from binary
 	var err error
-	js := wire.JSONBytes(in)
+	js := amino.JSONBytes(in)
 	btyp := fmt.Sprintf("[%d,", typ)
 	assert.True(t, strings.HasPrefix(string(js), btyp), string(js), btyp)
 
-	wire.ReadJSON(reader, js, &err)
+	amino.ReadJSON(reader, js, &err)
 	require.Nil(t, err, "%+v", err)
 }
 
@@ -144,7 +144,7 @@ type SigMessage struct {
 }
 
 func (s SigMessage) Bytes() []byte {
-	return wire.BinaryBytes(s)
+	return amino.BinaryBytes(s)
 }
 
 func TestEmbededWireEncodings(t *testing.T) {

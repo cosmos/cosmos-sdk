@@ -1,11 +1,11 @@
 GOTOOLS = \
 	github.com/golang/dep/cmd/dep \
-	github.com/jteeuwen/go-bindata/go-bindata 
+	github.com/jteeuwen/go-bindata/go-bindata
 	# gopkg.in/alecthomas/gometalinter.v2 \
 		#
-GOTOOLS_CHECK = glide go-bindata #gometalinter.v2
+GOTOOLS_CHECK = dep go-bindata #gometalinter.v2
 
-all: check get_vendor_deps build test install 
+all: check get_vendor_deps build test install
 
 check: check_tools
 

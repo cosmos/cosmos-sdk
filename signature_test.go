@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/ed25519"
-	"github.com/tendermint/go-wire"
+	amino "github.com/tendermint/go-amino"
 )
 
 func TestSignAndValidateEd25519(t *testing.T) {
@@ -49,17 +49,17 @@ func TestSignatureEncodings(t *testing.T) {
 	cases := []struct {
 		privKey   PrivKey
 		sigSize   int
-		sigPrefix wire.PrefixBytes
+		sigPrefix amino.PrefixBytes
 	}{
 		{
 			privKey:   GenPrivKeyEd25519(),
 			sigSize:   ed25519.SignatureSize,
-			sigPrefix: [4]byte{0xe4, 0x51, 0x7b, 0xa3},
+			sigPrefix: [4]byte{0xc8, 0x5d, 0xf4, 0xba},
 		},
 		{
 			privKey:   GenPrivKeySecp256k1(),
 			sigSize:   0, // unknown
-			sigPrefix: [4]byte{0x37, 0xb9, 0x21, 0x3e},
+			sigPrefix: [4]byte{0xc6, 0xa0, 0xa, 0x42},
 		},
 	}
 
@@ -70,17 +70,18 @@ func TestSignatureEncodings(t *testing.T) {
 		msg := CRandBytes(128)
 		sig := tc.privKey.Sign(msg)
 
-		// store as wire
-		bin, err := cdc.MarshalBinary(sig)
+		// store as amino
+		bin, err := cdc.MarshalBinaryBare(sig)
 		require.Nil(t, err, "%+v", err)
 		if tc.sigSize != 0 {
-			assert.Equal(t, tc.sigSize+4, len(bin))
+			// Q: where is 1 byte coming from?
+			assert.Equal(t, tc.sigSize+amino.PrefixBytesLen+1, len(bin))
 		}
-		assert.Equal(t, tc.sigPrefix[:], bin[0:4])
+		assert.Equal(t, tc.sigPrefix[:], bin[0:amino.PrefixBytesLen])
 
 		// and back
 		sig2 := Signature(nil)
-		err = cdc.UnmarshalBinary(bin, &sig2)
+		err = cdc.UnmarshalBinaryBare(bin, &sig2)
 		require.Nil(t, err, "%+v", err)
 		assert.EqualValues(t, sig, sig2)
 		assert.True(t, pubKey.VerifyBytes(msg, sig2))

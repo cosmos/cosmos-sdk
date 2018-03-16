@@ -1,6 +1,8 @@
 package stake
 
 import (
+	"bytes"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
@@ -26,7 +28,7 @@ func GetCandidateKey(address sdk.Address) []byte {
 }
 
 // GetValidatorKey - get the key for the validator used in the power-store
-func GetValidatorKey(address sdk.Address, power sdk.Rational) []byte {
+func GetValidatorKey(address sdk.Address, power sdk.Rational, cdc *wire.Codec) []byte {
 	b, _ := cdc.MarshalJSON(power)                                      // TODO need to handle error here?
 	return append(ValidatorKeyPrefix, append(b, address.Bytes()...)...) // TODO does this need prefix if its in its own store
 }
@@ -37,12 +39,12 @@ func GetValidatorUpdatesKey(address sdk.Address) []byte {
 }
 
 // GetDelegatorBondKey - get the key for delegator bond with candidate
-func GetDelegatorBondKey(delegator, candidate sdk.Address) []byte {
-	return append(GetDelegatorBondKeyPrefix(delegator), candidate.Bytes()...)
+func GetDelegatorBondKey(delegator, candidate sdk.Address, cdc *wire.Codec) []byte {
+	return append(GetDelegatorBondKeyPrefix(delegator, cdc), candidate.Bytes()...)
 }
 
 // GetDelegatorBondKeyPrefix - get the prefix for a delegator for all candidates
-func GetDelegatorBondKeyPrefix(delegator sdk.Address) []byte {
+func GetDelegatorBondKeyPrefix(delegator sdk.Address, cdc *wire.Codec) []byte {
 	res, err := cdc.MarshalJSON(&delegator)
 	if err != nil {
 		panic(err)
@@ -51,7 +53,7 @@ func GetDelegatorBondKeyPrefix(delegator sdk.Address) []byte {
 }
 
 // GetDelegatorBondsKey - get the key for list of all the delegator's bonds
-func GetDelegatorBondsKey(delegator sdk.Address) []byte {
+func GetDelegatorBondsKey(delegator sdk.Address, cdc *wire.Codec) []byte {
 	res, err := cdc.MarshalJSON(&delegator)
 	if err != nil {
 		panic(err)
@@ -68,8 +70,8 @@ type Mapper struct {
 }
 
 func NewMapper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey) Mapper {
-	return StakeMapper{
-		store: ctx.KVStore(m.key),
+	return Mapper{
+		store: ctx.KVStore(key),
 		cdc:   cdc,
 	}
 }
@@ -80,7 +82,7 @@ func (m Mapper) loadCandidate(address sdk.Address) *Candidate {
 		return nil
 	}
 	candidate := new(Candidate)
-	err := cdc.UnmarshalJSON(b, candidate)
+	err := m.cdc.UnmarshalJSON(b, candidate)
 	if err != nil {
 		panic(err) // This error should never occur big problem if does
 	}
@@ -90,11 +92,11 @@ func (m Mapper) loadCandidate(address sdk.Address) *Candidate {
 func (m Mapper) saveCandidate(candidate *Candidate) {
 
 	// XXX should only remove validator if we know candidate is a validator
-	removeValidator(m.store, candidate.Address)
+	m.removeValidator(candidate.Address)
 	validator := &Validator{candidate.Address, candidate.VotingPower}
-	updateValidator(m.store, validator)
+	m.updateValidator(validator)
 
-	b, err := cdc.MarshalJSON(*candidate)
+	b, err := m.cdc.MarshalJSON(*candidate)
 	if err != nil {
 		panic(err)
 	}
@@ -104,7 +106,7 @@ func (m Mapper) saveCandidate(candidate *Candidate) {
 func (m Mapper) removeCandidate(address sdk.Address) {
 
 	// XXX should only remove validator if we know candidate is a validator
-	removeValidator(m.store, address)
+	m.removeValidator(address)
 	m.store.Delete(GetCandidateKey(address))
 }
 
@@ -127,7 +129,7 @@ func (m Mapper) removeCandidate(address sdk.Address) {
 // in the changed validator substore
 func (m Mapper) updateValidator(validator *Validator) {
 
-	b, err := cdc.MarshalJSON(*validator)
+	b, err := m.cdc.MarshalJSON(*validator)
 	if err != nil {
 		panic(err)
 	}
@@ -136,41 +138,41 @@ func (m Mapper) updateValidator(validator *Validator) {
 	m.store.Set(GetValidatorUpdatesKey(validator.Address), b)
 
 	// update the list ordered by voting power
-	m.store.Set(GetValidatorKey(validator.Address, validator.VotingPower), b)
+	m.store.Set(GetValidatorKey(validator.Address, validator.VotingPower, m.cdc), b)
 }
 
 func (m Mapper) removeValidator(address sdk.Address) {
 
 	//add validator with zero power to the validator updates
-	b, err := cdc.MarshalJSON(Validator{address, sdk.ZeroRat})
+	b, err := m.cdc.MarshalJSON(Validator{address, sdk.ZeroRat})
 	if err != nil {
 		panic(err)
 	}
 	m.store.Set(GetValidatorUpdatesKey(address), b)
 
 	// now actually delete from the validator set
-	candidate := loadCandidate(m.store, address)
+	candidate := m.loadCandidate(address)
 	if candidate != nil {
-		m.store.Delete(GetValidatorKey(address, candidate.VotingPower))
+		m.store.Delete(GetValidatorKey(address, candidate.VotingPower, m.cdc))
 	}
 }
 
 // get the most recent updated validator set from the Candidates. These bonds
 // are already sorted by VotingPower from the UpdateVotingPower function which
 // is the only function which is to modify the VotingPower
-func (m Mapper) getValidators(maxVal int) (validators []Validator) {
+func (m Mapper) getValidators(maxVal uint16) (validators []Validator) {
 
 	iterator := m.store.Iterator(subspace(ValidatorKeyPrefix)) //smallest to largest
 
 	validators = make([]Validator, maxVal)
 	for i := 0; ; i++ {
-		if !iterator.Valid() || i > maxVal {
+		if !iterator.Valid() || i > int(maxVal) {
 			iterator.Close()
 			break
 		}
 		valBytes := iterator.Value()
 		var val Validator
-		err := cdc.UnmarshalJSON(valBytes, &val)
+		err := m.cdc.UnmarshalJSON(valBytes, &val)
 		if err != nil {
 			panic(err)
 		}
@@ -191,7 +193,7 @@ func (m Mapper) getValidatorUpdates() (updates []Validator) {
 	for ; iterator.Valid(); iterator.Next() {
 		valBytes := iterator.Value()
 		var val Validator
-		err := cdc.UnmarshalJSON(valBytes, &val)
+		err := m.cdc.UnmarshalJSON(valBytes, &val)
 		if err != nil {
 			panic(err)
 		}
@@ -223,7 +225,7 @@ func (m Mapper) loadCandidates() (candidates Candidates) {
 	for ; iterator.Valid(); iterator.Next() {
 		candidateBytes := iterator.Value()
 		var candidate Candidate
-		err := cdc.UnmarshalJSON(candidateBytes, &candidate)
+		err := m.cdc.UnmarshalJSON(candidateBytes, &candidate)
 		if err != nil {
 			panic(err)
 		}
@@ -238,12 +240,12 @@ func (m Mapper) loadCandidates() (candidates Candidates) {
 // load the pubkeys of all candidates a delegator is delegated too
 func (m Mapper) loadDelegatorCandidates(delegator sdk.Address) (candidateAddrs []sdk.Address) {
 
-	candidateBytes := m.store.Get(GetDelegatorBondsKey(delegator))
+	candidateBytes := m.store.Get(GetDelegatorBondsKey(delegator, m.cdc))
 	if candidateBytes == nil {
 		return nil
 	}
 
-	err := cdc.UnmarshalJSON(candidateBytes, &candidateAddrs)
+	err := m.cdc.UnmarshalJSON(candidateBytes, &candidateAddrs)
 	if err != nil {
 		panic(err)
 	}
@@ -254,13 +256,13 @@ func (m Mapper) loadDelegatorCandidates(delegator sdk.Address) (candidateAddrs [
 
 func (m Mapper) loadDelegatorBond(delegator, candidate sdk.Address) *DelegatorBond {
 
-	delegatorBytes := m.store.Get(GetDelegatorBondKey(delegator, candidate))
+	delegatorBytes := m.store.Get(GetDelegatorBondKey(delegator, candidate, m.cdc))
 	if delegatorBytes == nil {
 		return nil
 	}
 
 	bond := new(DelegatorBond)
-	err := cdc.UnmarshalJSON(delegatorBytes, bond)
+	err := m.cdc.UnmarshalJSON(delegatorBytes, bond)
 	if err != nil {
 		panic(err)
 	}
@@ -271,43 +273,43 @@ func (m Mapper) saveDelegatorBond(delegator sdk.Address,
 	bond *DelegatorBond) {
 
 	// if a new bond add to the list of bonds
-	if loadDelegatorBond(m.store, delegator, bond.Address) == nil {
-		pks := loadDelegatorCandidates(m.store, delegator)
+	if m.loadDelegatorBond(delegator, bond.Address) == nil {
+		pks := m.loadDelegatorCandidates(delegator)
 		pks = append(pks, (*bond).Address)
-		b, err := cdc.MarshalJSON(pks)
+		b, err := m.cdc.MarshalJSON(pks)
 		if err != nil {
 			panic(err)
 		}
-		m.store.Set(GetDelegatorBondsKey(delegator), b)
+		m.store.Set(GetDelegatorBondsKey(delegator, m.cdc), b)
 	}
 
 	// now actually save the bond
-	b, err := cdc.MarshalJSON(*bond)
+	b, err := m.cdc.MarshalJSON(*bond)
 	if err != nil {
 		panic(err)
 	}
-	m.store.Set(GetDelegatorBondKey(delegator, bond.Address), b)
-	//updateDelegatorBonds(store, delegator)
+	m.store.Set(GetDelegatorBondKey(delegator, bond.Address, m.cdc), b)
+	//updateDelegatorBonds(store, delegator) //XXX remove?
 }
 
-func (m Mapper) removeDelegatorBond(delegator sdk.Address, candidate sdk.Address) {
+func (m Mapper) removeDelegatorBond(delegator sdk.Address, candidateAddr sdk.Address) {
 	// TODO use list queries on multistore to remove iterations here!
 	// first remove from the list of bonds
-	pks := loadDelegatorCandidates(m.store, delegator)
-	for i, pk := range pks {
-		if candidate.Equals(pk) {
-			pks = append(pks[:i], pks[i+1:]...)
+	addrs := m.loadDelegatorCandidates(delegator)
+	for i, addr := range addrs {
+		if bytes.Equal(candidateAddr, addr) {
+			addrs = append(addrs[:i], addrs[i+1:]...)
 		}
 	}
-	b, err := cdc.MarshalJSON(pks)
+	b, err := m.cdc.MarshalJSON(pks)
 	if err != nil {
 		panic(err)
 	}
-	m.store.Set(GetDelegatorBondsKey(delegator), b)
+	m.store.Set(GetDelegatorBondsKey(delegator, m.cdc), b)
 
 	// now remove the actual bond
-	m.store.Delete(GetDelegatorBondKey(delegator, candidate))
-	//updateDelegatorBonds(store, delegator)
+	m.store.Delete(GetDelegatorBondKey(delegator, candidateAddr, m.cdc))
+	//updateDelegatorBonds(store, delegator) //XXX remove?
 }
 
 //_______________________________________________________________________
@@ -319,14 +321,14 @@ func (m Mapper) loadParams() (params Params) {
 		return defaultParams()
 	}
 
-	err := cdc.UnmarshalJSON(b, &params)
+	err := m.cdc.UnmarshalJSON(b, &params)
 	if err != nil {
 		panic(err) // This error should never occur big problem if does
 	}
 	return
 }
 func (m Mapper) saveParams(params Params) {
-	b, err := cdc.MarshalJSON(params)
+	b, err := m.cdc.MarshalJSON(params)
 	if err != nil {
 		panic(err)
 	}
@@ -342,7 +344,7 @@ func (m Mapper) loadGlobalState() (gs *GlobalState) {
 		return initialGlobalState()
 	}
 	gs = new(GlobalState)
-	err := cdc.UnmarshalJSON(b, gs)
+	err := m.cdc.UnmarshalJSON(b, gs)
 	if err != nil {
 		panic(err) // This error should never occur big problem if does
 	}
@@ -350,7 +352,7 @@ func (m Mapper) loadGlobalState() (gs *GlobalState) {
 }
 
 func (m Mapper) saveGlobalState(gs *GlobalState) {
-	b, err := cdc.MarshalJSON(*gs)
+	b, err := m.cdc.MarshalJSON(*gs)
 	if err != nil {
 		panic(err)
 	}

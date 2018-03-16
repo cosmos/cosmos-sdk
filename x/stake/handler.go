@@ -1,10 +1,10 @@
 package stake
 
 import (
+	"bytes"
 	"fmt"
 	"strconv"
 
-	"github.com/spf13/viper"
 	crypto "github.com/tendermint/go-crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -214,7 +214,7 @@ func (tr transact) editCandidacy(tx MsgEditCandidacy) sdk.Error {
 
 func (tr transact) delegate(tx MsgDelegate) sdk.Error {
 
-	if tr.mapper.loadCandidate(tx.Address) == nil { // does PubKey exist
+	if tr.mapper.loadCandidate(tx.Address) == nil {
 		return ErrBadCandidateAddr()
 	}
 	err := checkDenom(tr.mapper, tx.Bond)
@@ -239,24 +239,17 @@ func (tr transact) delegateWithCandidate(tx MsgDelegate, candidate *Candidate) s
 		return ErrBondNotNominated()
 	}
 
-	var poolAccount crypto.Address
-	if candidate.Status == Bonded {
-		poolAccount = tr.params.HoldBonded
-	} else {
-		poolAccount = tr.params.HoldUnbonded
-	}
-
 	// Get or create the delegator bond
 	bond := tr.mapper.loadDelegatorBond(tr.sender, tx.Address)
 	if bond == nil {
 		bond = &DelegatorBond{
-			PubKey: tx.Address,
-			Shares: sdk.ZeroRat,
+			Address: tx.Address,
+			Shares:  sdk.ZeroRat,
 		}
 	}
 
 	// Account new shares, save
-	err := bond.BondTokens(candidate, tx.Bond, tr)
+	err := bond.BondCoins(candidate, tx.Bond, tr)
 	if err != nil {
 		return err
 	}
@@ -269,38 +262,34 @@ func (tr transact) delegateWithCandidate(tx MsgDelegate, candidate *Candidate) s
 func (tr transact) unbond(tx MsgUnbond) sdk.Error {
 
 	// check if bond has any shares in it unbond
-	existingBond := tr.mapper.loadDelegatorBond(tr.sender, tx.Address)
-	sharesStr := viper.GetString(tx.Shares)
-	if existingBond.Shares.LT(sdk.ZeroRat) { // bond shares < tx shares
+	bond := tr.mapper.loadDelegatorBond(tr.sender, tx.Address)
+	if bond == nil {
+		return ErrNoDelegatorForAddress()
+	}
+	if !bond.Shares.GT(sdk.ZeroRat) { // bond shares < tx shares
 		return ErrInsufficientFunds()
 	}
 
 	// if shares set to special case Max then we're good
-	if sharesStr != "MAX" {
+	if tx.Shares != "MAX" {
 		// test getting rational number from decimal provided
-		shares, err := sdk.NewRatFromDecimal(sharesStr)
+		shares, err := sdk.NewRatFromDecimal(tx.Shares)
 		if err != nil {
 			return err
 		}
 
 		// test that there are enough shares to unbond
-		if bond.Shares.LT(shares) {
-			return fmt.Errorf("not enough bond shares to unbond, have %v, trying to unbond %v",
-				bond.Shares, tx.Shares)
+		if !bond.Shares.GT(shares) {
+			return ErrNotEnoughBondShares(tx.Shares)
 		}
 	}
 	if tr.ctx.IsCheckTx() {
 		return nil
 	}
 
-	// get delegator bond
-	bond := tr.mapper.loadDelegatorBond(tr.sender, tx.Address)
-	if bond == nil {
-		return ErrNoDelegatorForAddress()
-	}
-
 	// retrieve the amount of bonds to remove (TODO remove redundancy already serialized)
 	var shares sdk.Rat
+	var err sdk.Error
 	if tx.Shares == "MAX" {
 		shares = bond.Shares
 	} else {
@@ -327,7 +316,7 @@ func (tr transact) unbond(tx MsgUnbond) sdk.Error {
 
 		// if the bond is the owner of the candidate then
 		// trigger a revoke candidacy
-		if tr.sender.Equals(candidate.Owner) &&
+		if bytes.Equal(tr.sender, candidate.Address) &&
 			candidate.Status != Revoked {
 			revokeCandidacy = true
 		}
@@ -338,20 +327,10 @@ func (tr transact) unbond(tx MsgUnbond) sdk.Error {
 		tr.mapper.saveDelegatorBond(tr.sender, bond)
 	}
 
-	// transfer coins back to account
-	var poolAccount crypto.Address
-	if candidate.Status == Bonded {
-		poolAccount = tr.params.HoldBonded
-	} else {
-		poolAccount = tr.params.HoldUnbonded
-	}
-
-	returnCoins := candidate.removeShares(shares, tr.gs)
-	err := tr.transfer(poolAccount, tr.sender,
-		sdk.Coins{{tr.params.BondDenom, returnCoins}})
-	if err != nil {
-		return err
-	}
+	// Add the coins
+	returnAmount := candidate.removeShares(shares, tr.gs)
+	returnCoins := sdk.Coins{{tr.params.BondDenom, returnAmount}}
+	tr.coinKeeper.AddCoins(tr.ctx, tr.sender, returnCoins)
 
 	// lastly if an revoke candidate if necessary
 	if revokeCandidacy {

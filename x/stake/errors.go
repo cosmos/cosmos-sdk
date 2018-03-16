@@ -2,6 +2,8 @@
 package stake
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -43,6 +45,9 @@ func codeToDefaultMsg(code CodeType) string {
 //----------------------------------------
 // Error constructors
 
+func ErrNotEnoughBondShares(shares string) sdk.Error {
+	return newError(CodeInvalidBond, fmt.Sprintf("not enough shares only have %v", shares))
+}
 func ErrCandidateEmpty() sdk.Error {
 	return newError(CodeInvalidValidator, "Cannot bond to an empty candidate")
 }

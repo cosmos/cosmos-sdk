@@ -21,7 +21,7 @@ func (code CodeType) IsOK() bool {
 const (
 	CodeOK                CodeType = 0
 	CodeInternal          CodeType = 1
-	CodeTxDecode           CodeType = 2
+	CodeTxDecode          CodeType = 2
 	CodeInvalidSequence   CodeType = 3
 	CodeUnauthorized      CodeType = 4
 	CodeInsufficientFunds CodeType = 5
@@ -107,6 +107,10 @@ func ErrInsufficientCoins(msg string) Error {
 }
 func ErrInvalidCoins(msg string) Error {
 	return newError(CodeInvalidCoins, msg)
+}
+
+func ErrInvalidCoins(coins Coins) Error {
+	return newError(CodeInvalidCoins, coins.String())
 }
 
 //----------------------------------------

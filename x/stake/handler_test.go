@@ -17,7 +17,7 @@ import (
 
 func initAccounts(n int, amount int64) ([]sdk.Address, map[string]int64) {
 	accStore := map[string]int64{}
-	senders := newActors(n)
+	senders := newAddrs(n)
 	for _, sender := range senders {
 		accStore[string(sender.Address)] = amount
 	}
@@ -49,9 +49,9 @@ func newMsgUnbond(shares string, pubKey crypto.PubKey) MsgUnbond {
 
 func paramsNoInflation() Params {
 	return Params{
-		InflationRateChange: sdk.Zero,
-		InflationMax:        sdk.Zero,
-		InflationMin:        sdk.Zero,
+		InflationRateChange: sdk.ZeroRat,
+		InflationMax:        sdk.ZeroRat,
+		InflationMin:        sdk.ZeroRat,
 		GoalBonded:          sdk.New(67, 100),
 		MaxVals:             100,
 		BondDenom:           "fermion",

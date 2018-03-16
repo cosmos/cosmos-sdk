@@ -18,9 +18,10 @@ import (
 
 // nolint
 const (
-	FlagPubKey = "pubkey"
-	FlagAmount = "amount"
-	FlagShares = "shares"
+	FlagAddress = "address"
+	FlagPubKey  = "pubkey"
+	FlagAmount  = "amount"
+	FlagShares  = "shares"
 
 	FlagMoniker  = "moniker"
 	FlagIdentity = "keybase-sig"
@@ -91,6 +92,11 @@ func cmdDeclareCandidacy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	addr, err := GetAddress(viper.GetString(FlagAddress))
+	if err != nil {
+		return err
+	}
+
 	pk, err := GetPubKey(viper.GetString(FlagPubKey))
 	if err != nil {
 		return err
@@ -107,13 +113,13 @@ func cmdDeclareCandidacy(cmd *cobra.Command, args []string) error {
 		Details:  viper.GetString(FlagDetails),
 	}
 
-	tx := stake.NewMsgDeclareCandidacy(amount, pk, description)
+	tx := stake.NewMsgDeclareCandidacy(addr, pk, amount, description)
 	return doTx(tx)
 }
 
 func cmdEditCandidacy(cmd *cobra.Command, args []string) error {
 
-	pk, err := GetPubKey(viper.GetString(FlagPubKey))
+	addr, err := GetAddress(viper.GetString(FlagAddress))
 	if err != nil {
 		return err
 	}
@@ -125,7 +131,7 @@ func cmdEditCandidacy(cmd *cobra.Command, args []string) error {
 		Details:  viper.GetString(FlagDetails),
 	}
 
-	tx := stake.NewMsgEditCandidacy(pk, description)
+	tx := stake.NewMsgEditCandidacy(addr, description)
 	return doTx(tx)
 }
 
@@ -135,12 +141,12 @@ func cmdDelegate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pk, err := GetPubKey(viper.GetString(FlagPubKey))
+	addr, err := GetAddress(viper.GetString(FlagAddress))
 	if err != nil {
 		return err
 	}
 
-	tx := stake.NewMsgDelegate(amount, pk)
+	tx := stake.NewMsgDelegate(addr, amount)
 	return doTx(tx)
 }
 
@@ -162,14 +168,16 @@ func cmdUnbond(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	pk, err := GetPubKey(viper.GetString(FlagPubKey))
+	addr, err := GetAddress(viper.GetString(FlagAddress))
 	if err != nil {
 		return err
 	}
 
-	tx := stake.NewMsgUnbond(sharesStr, pk)
+	tx := stake.NewMsgUnbond(addr, sharesStr)
 	return doTx(tx)
 }
+
+//______________________________________________________________________________________
 
 // GetPubKey - create the pubkey from a pubkey string
 func GetPubKey(pubKeyStr string) (pk crypto.PubKey, err error) {
@@ -193,7 +201,19 @@ func GetPubKey(pubKeyStr string) (pk crypto.PubKey, err error) {
 	return
 }
 
-//--------------------------------------------------------------------
+// GetPubKey - create an Address from a pubkey string
+func GetAddress(Address string) (addr sdk.Address, err error) {
+	if len(Address) == 0 {
+		return addr, errors.New("must use provide address")
+	}
+	bz, err := hex.DecodeString(addr)
+	if err != nil {
+		return nil, err
+	}
+	return sdk.Address(bz), nil
+}
+
+//______________________________________________________________________________________
 // XXX consolidate to client
 
 func doTx(tx []byte) {

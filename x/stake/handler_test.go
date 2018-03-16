@@ -17,7 +17,7 @@ import (
 
 func initAccounts(n int, amount int64) ([]sdk.Address, map[string]int64) {
 	accStore := map[string]int64{}
-	senders := newActors(n)
+	senders := newAddrs(n)
 	for _, sender := range senders {
 		accStore[string(sender.Address)] = amount
 	}

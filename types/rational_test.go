@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"math/big"
 	"testing"
 
@@ -193,41 +192,44 @@ func TestRound(t *testing.T) {
 }
 
 func TestZeroSerializationJSON(t *testing.T) {
-	var r Rat
-	err := json.Unmarshal([]byte("{\"numerator\":0,\"denominator\":1}"), &r)
+	r := NewRat(0, 1)
+	err := r.UnmarshalJSON([]byte(`"0/1"`))
 	assert.Nil(t, err)
-	err = json.Unmarshal([]byte("{\"numerator\":0,\"denominator\":0}"), &r)
+	err = r.UnmarshalJSON([]byte(`"0/0"`))
 	assert.NotNil(t, err)
-	err = json.Unmarshal([]byte("{\"numerator\":1,\"denominator\":0}"), &r)
+	err = r.UnmarshalJSON([]byte(`"1/0"`))
 	assert.NotNil(t, err)
-	err = json.Unmarshal([]byte("{}"), &r)
+	err = r.UnmarshalJSON([]byte(`"{}"`))
 	assert.NotNil(t, err)
 }
 
 func TestSerializationJSON(t *testing.T) {
 	r := NewRat(1, 3)
 
-	rMarshal, err := json.Marshal(r)
+	bz, err := r.MarshalText()
 	require.Nil(t, err)
 
-	var rUnmarshal Rat
-	err = json.Unmarshal(rMarshal, &rUnmarshal)
+	r2 := NewRat(0, 1)
+	err = r2.UnmarshalText(bz)
 	require.Nil(t, err)
 
-	assert.True(t, r.Equal(rUnmarshal), "original: %v, unmarshalled: %v", r, rUnmarshal)
+	assert.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
 }
 
 func TestSerializationGoWire(t *testing.T) {
 	r := NewRat(1, 3)
 
-	rMarshal, err := ratCdc.MarshalJSON(r)
+	bz, err := ratCdc.MarshalJSON(r)
 	require.Nil(t, err)
 
-	var rUnmarshal Rat
-	err = ratCdc.UnmarshalJSON(rMarshal, &rUnmarshal)
+	bz, err = r.MarshalJSON()
 	require.Nil(t, err)
 
-	assert.True(t, r.Equal(rUnmarshal), "original: %v, unmarshalled: %v", r, rUnmarshal)
+	r2 := NewRat(0, 1)
+	err = ratCdc.UnmarshalJSON(bz, &r2)
+	require.Nil(t, err)
+
+	assert.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
 }
 
 type testEmbedStruct struct {
@@ -237,38 +239,18 @@ type testEmbedStruct struct {
 }
 
 func TestEmbeddedStructSerializationGoWire(t *testing.T) {
-	r := testEmbedStruct{"foo", 10, NewRat(1, 3)}
+	obj := testEmbedStruct{"foo", 10, NewRat(1, 3)}
 
-	rMarshal, err := ratCdc.MarshalJSON(r)
+	bz, err := ratCdc.MarshalJSON(obj)
 	require.Nil(t, err)
 
-	var rUnmarshal testEmbedStruct
-	err = ratCdc.UnmarshalJSON(rMarshal, &rUnmarshal)
+	var obj2 testEmbedStruct
+	obj2.Field3 = NewRat(0, 1) // ... needs to be initialized
+	err = ratCdc.UnmarshalJSON(bz, &obj2)
 	require.Nil(t, err)
 
-	assert.Equal(t, r.Field1, rUnmarshal.Field1)
-	assert.Equal(t, r.Field2, rUnmarshal.Field2)
-	assert.True(t, r.Field3.Equal(rUnmarshal.Field3), "original: %v, unmarshalled: %v", r, rUnmarshal)
+	assert.Equal(t, obj.Field1, obj2.Field1)
+	assert.Equal(t, obj.Field2, obj2.Field2)
+	assert.True(t, obj.Field3.Equal(obj2.Field3), "original: %v, unmarshalled: %v", obj, obj2)
 
-}
-
-type testEmbedInterface struct {
-	Field1 string   `json:"f1"`
-	Field2 int      `json:"f2"`
-	Field3 Rational `json:"f3"`
-}
-
-func TestEmbeddedInterfaceSerializationGoWire(t *testing.T) {
-	r := testEmbedInterface{"foo", 10, NewRat(1, 3)}
-
-	rMarshal, err := ratCdc.MarshalJSON(r)
-	require.Nil(t, err)
-
-	var rUnmarshal testEmbedInterface
-	err = ratCdc.UnmarshalJSON(rMarshal, &rUnmarshal)
-	require.Nil(t, err)
-
-	assert.Equal(t, r.Field1, rUnmarshal.Field1)
-	assert.Equal(t, r.Field2, rUnmarshal.Field2)
-	assert.True(t, r.Field3.Equal(rUnmarshal.Field3), "original: %v, unmarshalled: %v", r, rUnmarshal)
 }

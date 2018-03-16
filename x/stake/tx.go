@@ -34,9 +34,10 @@ func (msg MsgAddr) String() string {
 
 // ValidateBasic - Check for non-empty candidate, and valid coins
 func (msg MsgAddr) ValidateBasic() sdk.Error {
-	if msg.Address.Empty() {
-		return errCandidateEmpty
+	if msg.Address == nil {
+		return ErrCandidateEmpty()
 	}
+	return nil
 }
 
 //______________________________________________________________________
@@ -54,7 +55,7 @@ func NewMsgDeclareCandidacy(bond sdk.Coin, address sdk.Address, pubkey crypto.Pu
 		MsgAddr:     NewMsgAddr(address),
 		Description: description,
 		Bond:        bond,
-		PubKey:      PubKey,
+		PubKey:      pubkey,
 	}
 }
 
@@ -69,17 +70,17 @@ func (msg MsgDeclareCandidacy) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgDeclareCandidacy) ValidateBasic() sdk.Error {
-	err := MsgAddr.ValidateBasic()
+	err := msg.MsgAddr.ValidateBasic()
 	if err != nil {
 		return err
 	}
-	err := validateCoin(msg.Bond)
+	err = validateCoin(msg.Bond)
 	if err != nil {
 		return err
 	}
 	empty := Description{}
 	if msg.Description == empty {
-		return fmt.Errorf("description must be included")
+		return newError(CodeInvalidInput, "description must be included")
 	}
 	return nil
 }
@@ -110,13 +111,13 @@ func (msg MsgEditCandidacy) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgEditCandidacy) ValidateBasic() sdk.Error {
-	err := MsgAddr.ValidateBasic()
+	err := msg.MsgAddr.ValidateBasic()
 	if err != nil {
 		return err
 	}
 	empty := Description{}
 	if msg.Description == empty {
-		return fmt.Errorf("Transaction must include some information to modify")
+		return newError(CodeInvalidInput, "Transaction must include some information to modify")
 	}
 	return nil
 }
@@ -147,11 +148,11 @@ func (msg MsgDelegate) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgDelegate) ValidateBasic() sdk.Error {
-	err := MsgAddr.ValidateBasic()
+	err := msg.MsgAddr.ValidateBasic()
 	if err != nil {
 		return err
 	}
-	err := validateCoin(msg.Bond)
+	err = validateCoin(msg.Bond)
 	if err != nil {
 		return err
 	}
@@ -167,7 +168,7 @@ type MsgUnbond struct {
 }
 
 func NewMsgUnbond(shares string, address sdk.Address) MsgDelegate {
-	return MsgUnbond{
+	return MsgDelegate{
 		MsgAddr: NewMsgAddr(address),
 		Shares:  shares,
 	}
@@ -184,11 +185,12 @@ func (msg MsgUnbond) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgUnbond) ValidateBasic() sdk.Error {
-	err := MsgAddr.ValidateBasic()
+	err := msg.MsgAddr.ValidateBasic()
 	if err != nil {
 		return err
 	}
-	if msg.Shares {
+
+	if msg.Shares == "MAX" {
 		return ErrCandidateEmpty()
 	}
 	return nil
@@ -197,9 +199,9 @@ func (msg MsgUnbond) ValidateBasic() sdk.Error {
 //______________________________________________________________________
 // helper
 
-func validateCoin(coin coin.Coin) sdk.Error {
-	coins := sdk.Coins{bond}
-	if !sdk.IsValid() {
+func validateCoin(coin sdk.Coin) sdk.Error {
+	coins := sdk.Coins{coin}
+	if !coins.IsValid() {
 		return sdk.ErrInvalidCoins()
 	}
 	if !coins.IsPositive() {

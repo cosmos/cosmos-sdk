@@ -8,10 +8,10 @@ import (
 
 // Params defines the high level settings for staking
 type Params struct {
-	InflationRateChange sdk.Rational `json:"inflation_rate_change"` // maximum annual change in inflation rate
-	InflationMax        sdk.Rational `json:"inflation_max"`         // maximum inflation rate
-	InflationMin        sdk.Rational `json:"inflation_min"`         // minimum inflation rate
-	GoalBonded          sdk.Rational `json:"goal_bonded"`           // Goal of percent bonded atoms
+	InflationRateChange sdk.Rat `json:"inflation_rate_change"` // maximum annual change in inflation rate
+	InflationMax        sdk.Rat `json:"inflation_max"`         // maximum inflation rate
+	InflationMin        sdk.Rat `json:"inflation_min"`         // minimum inflation rate
+	GoalBonded          sdk.Rat `json:"goal_bonded"`           // Goal of percent bonded atoms
 
 	MaxVals   uint16 `json:"max_vals"`   // maximum number of validators
 	BondDenom string `json:"bond_denom"` // bondable coin denomination
@@ -42,13 +42,13 @@ func defaultParams() Params {
 
 // GlobalState - dynamic parameters of the current state
 type GlobalState struct {
-	TotalSupply       int64        `json:"total_supply"`        // total supply of all tokens
-	BondedShares      sdk.Rational `json:"bonded_shares"`       // sum of all shares distributed for the Bonded Pool
-	UnbondedShares    sdk.Rational `json:"unbonded_shares"`     // sum of all shares distributed for the Unbonded Pool
-	BondedPool        int64        `json:"bonded_pool"`         // reserve of bonded tokens
-	UnbondedPool      int64        `json:"unbonded_pool"`       // reserve of unbonded tokens held with candidates
-	InflationLastTime int64        `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
-	Inflation         sdk.Rational `json:"inflation"`           // current annual inflation rate
+	TotalSupply       int64   `json:"total_supply"`        // total supply of all tokens
+	BondedShares      sdk.Rat `json:"bonded_shares"`       // sum of all shares distributed for the Bonded Pool
+	UnbondedShares    sdk.Rat `json:"unbonded_shares"`     // sum of all shares distributed for the Unbonded Pool
+	BondedPool        int64   `json:"bonded_pool"`         // reserve of bonded tokens
+	UnbondedPool      int64   `json:"unbonded_pool"`       // reserve of unbonded tokens held with candidates
+	InflationLastTime int64   `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
+	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
 }
 
 // XXX define globalstate interface?
@@ -66,7 +66,7 @@ func initialGlobalState() *GlobalState {
 }
 
 // get the bond ratio of the global state
-func (gs *GlobalState) bondedRatio() sdk.Rational {
+func (gs *GlobalState) bondedRatio() sdk.Rat {
 	if gs.TotalSupply > 0 {
 		return sdk.NewRat(gs.BondedPool, gs.TotalSupply)
 	}
@@ -74,7 +74,7 @@ func (gs *GlobalState) bondedRatio() sdk.Rational {
 }
 
 // get the exchange rate of bonded token per issued share
-func (gs *GlobalState) bondedShareExRate() sdk.Rational {
+func (gs *GlobalState) bondedShareExRate() sdk.Rat {
 	if gs.BondedShares.IsZero() {
 		return sdk.OneRat
 	}
@@ -82,7 +82,7 @@ func (gs *GlobalState) bondedShareExRate() sdk.Rational {
 }
 
 // get the exchange rate of unbonded tokens held in candidates per issued share
-func (gs *GlobalState) unbondedShareExRate() sdk.Rational {
+func (gs *GlobalState) unbondedShareExRate() sdk.Rat {
 	if gs.UnbondedShares.IsZero() {
 		return sdk.OneRat
 	}
@@ -93,7 +93,7 @@ func (gs *GlobalState) unbondedShareExRate() sdk.Rational {
 // expand to include the function of actually transfering the tokens
 
 //XXX CONFIRM that use of the exRate is correct with Zarko Spec!
-func (gs *GlobalState) addTokensBonded(amount int64) (issuedShares sdk.Rational) {
+func (gs *GlobalState) addTokensBonded(amount int64) (issuedShares sdk.Rat) {
 	issuedShares = gs.bondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
 	gs.BondedPool += amount
 	gs.BondedShares = gs.BondedShares.Add(issuedShares)
@@ -101,7 +101,7 @@ func (gs *GlobalState) addTokensBonded(amount int64) (issuedShares sdk.Rational)
 }
 
 //XXX CONFIRM that use of the exRate is correct with Zarko Spec!
-func (gs *GlobalState) removeSharesBonded(shares sdk.Rational) (removedTokens int64) {
+func (gs *GlobalState) removeSharesBonded(shares sdk.Rat) (removedTokens int64) {
 	removedTokens = gs.bondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	gs.BondedShares = gs.BondedShares.Sub(shares)
 	gs.BondedPool -= removedTokens
@@ -109,7 +109,7 @@ func (gs *GlobalState) removeSharesBonded(shares sdk.Rational) (removedTokens in
 }
 
 //XXX CONFIRM that use of the exRate is correct with Zarko Spec!
-func (gs *GlobalState) addTokensUnbonded(amount int64) (issuedShares sdk.Rational) {
+func (gs *GlobalState) addTokensUnbonded(amount int64) (issuedShares sdk.Rat) {
 	issuedShares = gs.unbondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
 	gs.UnbondedShares = gs.UnbondedShares.Add(issuedShares)
 	gs.UnbondedPool += amount
@@ -117,7 +117,7 @@ func (gs *GlobalState) addTokensUnbonded(amount int64) (issuedShares sdk.Rationa
 }
 
 //XXX CONFIRM that use of the exRate is correct with Zarko Spec!
-func (gs *GlobalState) removeSharesUnbonded(shares sdk.Rational) (removedTokens int64) {
+func (gs *GlobalState) removeSharesUnbonded(shares sdk.Rat) (removedTokens int64) {
 	removedTokens = gs.unbondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	gs.UnbondedShares = gs.UnbondedShares.Sub(shares)
 	gs.UnbondedPool -= removedTokens
@@ -149,9 +149,9 @@ type Candidate struct {
 	Status      CandidateStatus `json:"status"`       // Bonded status
 	PubKey      crypto.PubKey   `json:"pub_key"`      // Pubkey of candidate
 	Address     sdk.Address     `json:"owner"`        // Sender of BondTx - UnbondTx returns here
-	Assets      sdk.Rational    `json:"assets"`       // total shares of a global hold pools TODO custom type PoolShares
-	Liabilities sdk.Rational    `json:"liabilities"`  // total shares issued to a candidate's delegators TODO custom type DelegatorShares
-	VotingPower sdk.Rational    `json:"voting_power"` // Voting power if considered a validator
+	Assets      sdk.Rat         `json:"assets"`       // total shares of a global hold pools TODO custom type PoolShares
+	Liabilities sdk.Rat         `json:"liabilities"`  // total shares issued to a candidate's delegators TODO custom type DelegatorShares
+	VotingPower sdk.Rat         `json:"voting_power"` // Voting power if considered a validator
 	Description Description     `json:"description"`  // Description terms for the candidate
 }
 
@@ -177,7 +177,7 @@ func NewCandidate(pubKey crypto.PubKey, address sdk.Address, description Descrip
 }
 
 // get the exchange rate of global pool shares over delegator shares
-func (c *Candidate) delegatorShareExRate() sdk.Rational {
+func (c *Candidate) delegatorShareExRate() sdk.Rat {
 	if c.Liabilities.IsZero() {
 		return sdk.OneRat
 	}
@@ -185,11 +185,11 @@ func (c *Candidate) delegatorShareExRate() sdk.Rational {
 }
 
 // add tokens to a candidate
-func (c *Candidate) addTokens(amount int64, gs *GlobalState) (issuedDelegatorShares sdk.Rational) {
+func (c *Candidate) addTokens(amount int64, gs *GlobalState) (issuedDelegatorShares sdk.Rat) {
 
 	exRate := c.delegatorShareExRate()
 
-	var receivedGlobalShares sdk.Rational
+	var receivedGlobalShares sdk.Rat
 	if c.Status == Bonded {
 		receivedGlobalShares = gs.addTokensBonded(amount)
 	} else {
@@ -203,14 +203,14 @@ func (c *Candidate) addTokens(amount int64, gs *GlobalState) (issuedDelegatorSha
 }
 
 // remove shares from a candidate
-func (c *Candidate) removeShares(shares sdk.Rational, gs *GlobalState) (removedTokens int64) {
+func (c *Candidate) removeShares(shares sdk.Rat, gs *GlobalState) (createdCoins int64) {
 
 	globalPoolSharesToRemove := c.delegatorShareExRate().Mul(shares)
 
 	if c.Status == Bonded {
-		removedTokens = gs.removeSharesBonded(globalPoolSharesToRemove)
+		createdCoins = gs.removeSharesBonded(globalPoolSharesToRemove)
 	} else {
-		removedTokens = gs.removeSharesUnbonded(globalPoolSharesToRemove)
+		createdCoins = gs.removeSharesUnbonded(globalPoolSharesToRemove)
 	}
 	c.Assets = c.Assets.Sub(globalPoolSharesToRemove)
 
@@ -229,8 +229,8 @@ func (c *Candidate) validator() Validator {
 
 // Validator is one of the top Candidates
 type Validator struct {
-	PubKey      crypto.PubKey `json:"pub_key"`      // Pubkey of candidate
-	VotingPower sdk.Rational  `json:"voting_power"` // Voting power if considered a validator
+	Address     sdk.Address `json:"address"`      // Address of validator
+	VotingPower sdk.Rat     `json:"voting_power"` // Voting power if considered a validator
 }
 
 // ABCIValidator - Get the validator from a bond value
@@ -256,8 +256,8 @@ type Candidates []*Candidate
 // owned by one delegator, and is associated with the voting power of one
 // pubKey.
 type DelegatorBond struct {
-	Address sdk.Address  `json:"pub_key"`
-	Shares  sdk.Rational `json:"shares"`
+	Address sdk.Address `json:"pub_key"`
+	Shares  sdk.Rat     `json:"shares"`
 }
 
 // Perform all the actions required to bond tokens to a delegator bond from their account

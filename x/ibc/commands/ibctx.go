@@ -25,7 +25,7 @@ const (
 func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
 	cmdr := sendCommander{cdc}
 	cmd := &cobra.Command{
-		Use:  "send",
+		Use:  "transfer",
 		RunE: cmdr.sendIBCTransfer,
 	}
 	cmd.Flags().String(flagTo, "", "Address to send coins")
@@ -49,7 +49,10 @@ func (c sendCommander) sendIBCTransfer(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	res, err := builder.SignBuildBroadcast(msg, c.cdc)
+	fmt.Printf("%+v\n", msg)
+
+	bz := sdk.StdSignBytes(viper.GetString(flagChain), []int64{viper.GetInt64(client.FlagSequence)}, msg)
+	res, err := builder.BroadcastTx(bz)
 	if err != nil {
 		return err
 	}
@@ -73,7 +76,7 @@ func buildMsg(from sdk.Address) (sdk.Msg, error) {
 
 	to := sdk.Address(bz)
 
-	packet := ibc.NewIBCPacket(from, to, coins, viper.GetString(client.FlagNode),
+	packet := ibc.NewIBCPacket(from, to, coins, viper.GetString(flagChain),
 		viper.GetString(flagChain))
 
 	msg := ibc.IBCTransferMsg{

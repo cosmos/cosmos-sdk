@@ -17,8 +17,10 @@ import (
 )
 
 const (
-	flagChain1 = "chain1"
-	flagChain2 = "chain2"
+	FlagFromChainID   = "from-chain-id"
+	FlagFromChainNode = "from-chain-node"
+	FlagToChainID     = "to-chain-id"
+	FlagToChainNode   = "to-chain-node"
 )
 
 func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
@@ -31,8 +33,24 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 		Use: "relay",
 		Run: cmdr.runIBCRelay,
 	}
-	cmd.Flags().String(flagChain1, "", "Chain ID to relay IBC packets")
-	cmd.Flags().String(flagChain2, "", "Chain ID to relay IBC packets")
+	cmd.Flags().String(client.FlagName, "", "Name of private key with which to sign")
+	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
+	cmd.Flags().String(FlagFromChainID, "", "Chain ID for ibc node to check outgoing packets")
+	cmd.Flags().String(FlagFromChainNode, "tcp://localhost:46657", "<host>:<port> to tendermint rpc interface for this chain")
+	cmd.Flags().String(FlagToChainID, "", "Chain ID for ibc node to broadcast incoming packets")
+	cmd.Flags().String(FlagToChainNode, "tcp://localhost:46658", "<host>:<port> to tendermint rpc interface for this chain")
+	cmd.MarkFlagRequired(client.FlagName)
+	cmd.MarkFlagRequired(FlagFromChainID)
+	cmd.MarkFlagRequired(FlagFromChainNode)
+	cmd.MarkFlagRequired(FlagToChainID)
+	cmd.MarkFlagRequired(FlagToChainNode)
+	viper.BindPFlag(client.FlagName, cmd.Flags().Lookup(client.FlagName))
+	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
+	viper.BindPFlag(FlagFromChainID, cmd.Flags().Lookup(FlagFromChainID))
+	viper.BindPFlag(FlagFromChainNode, cmd.Flags().Lookup(FlagFromChainNode))
+	viper.BindPFlag(FlagToChainID, cmd.Flags().Lookup(FlagToChainID))
+	viper.BindPFlag(FlagToChainNode, cmd.Flags().Lookup(FlagToChainNode))
+
 	return cmd
 }
 
@@ -43,17 +61,17 @@ type relayCommander struct {
 }
 
 func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
-	chain1 := viper.GetString(flagChain1)
-	chain2 := viper.GetString(flagChain2)
-
+	fromChainID := viper.GetString(FlagFromChainID)
+	fromChainNode := viper.GetString(FlagFromChainNode)
+	toChainID := viper.GetString(FlagToChainID)
+	toChainNode := viper.GetString(FlagToChainNode)
 	address, err := builder.GetFromAddress()
 	if err != nil {
 		panic(err)
 	}
 	c.address = address
 
-	go c.loop(chain1, chain2)
-	go c.loop(chain2, chain1)
+	c.loop(fromChainID, fromChainNode, toChainID, toChainNode)
 }
 
 // https://github.com/cosmos/cosmos-sdk/blob/master/client/helpers.go using specified address
@@ -92,16 +110,18 @@ func (c relayCommander) refine(bz []byte, sequence int64) []byte {
 	return res
 }
 
-func (c relayCommander) loop(fromID, toID string) {
-	ingressKey := ibc.IngressKey(fromID)
+func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
+	ingressKey := ibc.IngressKey(fromChainID)
 
-	processedbz, err := query(toID, ingressKey, c.ibcStore)
+	processedbz, err := query(toChainNode, ingressKey, c.ibcStore)
 	if err != nil {
 		panic(err)
 	}
 
 	var processed int64
-	if err = c.cdc.UnmarshalBinary(processedbz, &processed); err != nil {
+	if processedbz == nil {
+		processed = 0
+	} else if err = c.cdc.UnmarshalBinary(processedbz, &processed); err != nil {
 		panic(err)
 	}
 
@@ -109,25 +129,27 @@ OUTER:
 	for {
 		time.Sleep(time.Second)
 
-		lengthKey := ibc.EgressLengthKey(toID)
-		egressLengthbz, err := query(fromID, lengthKey, c.ibcStore)
+		lengthKey := ibc.EgressLengthKey(toChainID)
+		egressLengthbz, err := query(fromChainNode, lengthKey, c.ibcStore)
 		if err != nil {
 			fmt.Printf("Error querying outgoing packet list length: '%s'\n", err)
 			continue OUTER
 		}
 		var egressLength int64
-		if err = c.cdc.UnmarshalBinary(egressLengthbz, &egressLength); err != nil {
+		if egressLengthbz == nil {
+			egressLength = 0
+		} else if err = c.cdc.UnmarshalBinary(egressLengthbz, &egressLength); err != nil {
 			panic(err)
 		}
 
 		for i := processed; i < egressLength; i++ {
-			egressbz, err := query(fromID, ibc.EgressKey(toID, i), c.ibcStore)
+			egressbz, err := query(fromChainNode, ibc.EgressKey(toChainID, i), c.ibcStore)
 			if err != nil {
 				fmt.Printf("Error querying egress packet: '%s'\n", err)
 				continue OUTER
 			}
 
-			err = broadcastTx(toID, c.refine(egressbz, i))
+			err = broadcastTx(toChainNode, c.refine(egressbz, i))
 			if err != nil {
 				fmt.Printf("Error broadcasting ingress packet: '%s'\n", err)
 				continue OUTER

@@ -2,9 +2,10 @@
 
 
 [[projects]]
+  branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "2e60448ffcc6bf78332d1fe590260095f554dd78"
+  revision = "2be2f12b358dc57d70b8f501b00be450192efbc3"
 
 [[projects]]
   branch = "master"
@@ -37,8 +38,8 @@
 [[projects]]
   name = "github.com/go-stack/stack"
   packages = ["."]
-  revision = "817915b46b97fd7bb80e8ab6b69f01a53ac3eebf"
-  version = "v1.6.0"
+  revision = "259ab82a6cad3992b4e21ff5cac294ccb06474bc"
+  version = "v1.7.0"
 
 [[projects]]
   name = "github.com/gogo/protobuf"
@@ -96,6 +97,7 @@
   version = "v1.2.1"
 
 [[projects]]
+  branch = "master"
   name = "github.com/syndtr/goleveldb"
   packages = [
     "leveldb",
@@ -111,7 +113,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "b89cc31ef7977104127d34c1bd31ebd1a9db2199"
+  revision = "169b1b37be738edb2813dab48c97a549bcf99bb5"
 
 [[projects]]
   branch = "master"
@@ -137,7 +139,7 @@
     "db",
     "log"
   ]
-  revision = "1d7fc78ea171587e9e63da566d3da1b127bfd14c"
+  revision = "d289c9286e816a37336289a75752752a751bc918"
 
 [[projects]]
   branch = "master"
@@ -146,6 +148,7 @@
   revision = "8e7a99b3e716f36d3b080a9a70f9eb45abe4edcc"
 
 [[projects]]
+  branch = "master"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
@@ -158,7 +161,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "edd5e9b0879d13ee6970a50153d85b8fec9f7686"
+  revision = "b4956d363a8b14623cc81db401707679605930a3"
 
 [solve-meta]
   analyzer-name = "dep"

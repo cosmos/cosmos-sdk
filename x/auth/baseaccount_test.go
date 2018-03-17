@@ -11,42 +11,106 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
-func TestBaseAccount(t *testing.T) {
+func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.Address) {
 	key := crypto.GenPrivKeyEd25519()
 	pub := key.PubKey()
 	addr := pub.Address()
+	return key.Wrap(), pub, addr
+}
+
+func TestBaseAccountAddressPubKey(t *testing.T) {
+	_, pub1, addr1 := keyPubAddr()
+	_, pub2, addr2 := keyPubAddr()
+	acc := NewBaseAccountWithAddress(addr1)
+
+	// check the address (set) and pubkey (not set)
+	assert.EqualValues(t, addr1, acc.GetAddress())
+	assert.EqualValues(t, crypto.PubKey{}, acc.GetPubKey())
+
+	// cant override address
+	err := acc.SetAddress(addr2)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, addr1, acc.GetAddress())
+
+	// set the pubkey
+	err = acc.SetPubKey(pub1)
+	assert.Nil(t, err)
+	assert.Equal(t, pub1, acc.GetPubKey())
+
+	// cant override pubkey
+	err = acc.SetPubKey(pub2)
+	assert.NotNil(t, err)
+	assert.Equal(t, pub1, acc.GetPubKey())
+
+	//------------------------------------
+
+	// can set address on empty account
+	acc2 := BaseAccount{}
+	err = acc2.SetAddress(addr2)
+	assert.Nil(t, err)
+	assert.EqualValues(t, addr2, acc2.GetAddress())
+}
+
+func TestBaseAccountCoins(t *testing.T) {
+	_, _, addr := keyPubAddr()
+	acc := NewBaseAccountWithAddress(addr)
+
+	someCoins := sdk.Coins{{"atom", 123}, {"eth", 246}}
+
+	err := acc.SetCoins(someCoins)
+	assert.Nil(t, err)
+	assert.Equal(t, someCoins, acc.GetCoins())
+}
+
+func TestBaseAccountSequence(t *testing.T) {
+	_, _, addr := keyPubAddr()
+	acc := NewBaseAccountWithAddress(addr)
+
+	seq := int64(7)
+
+	err := acc.SetSequence(seq)
+	assert.Nil(t, err)
+	assert.Equal(t, seq, acc.GetSequence())
+}
+
+func TestBaseAccountMarshal(t *testing.T) {
+	_, pub, addr := keyPubAddr()
+	acc := NewBaseAccountWithAddress(addr)
+
 	someCoins := sdk.Coins{{"atom", 123}, {"eth", 246}}
 	seq := int64(7)
 
-	acc := NewBaseAccountWithAddress(addr)
+	// set everything on the account
+	err := acc.SetPubKey(pub)
+	assert.Nil(t, err)
+	err = acc.SetSequence(seq)
+	assert.Nil(t, err)
+	err = acc.SetCoins(someCoins)
+	assert.Nil(t, err)
 
 	// need a codec for marshaling
 	codec := wire.NewCodec()
 	wire.RegisterCrypto(codec)
 
-	err := acc.SetPubKey(pub)
-	assert.Nil(t, err)
-	assert.Equal(t, pub, acc.GetPubKey())
-
-	assert.EqualValues(t, addr, acc.GetAddress())
-
-	err = acc.SetCoins(someCoins)
-	assert.Nil(t, err)
-	assert.Equal(t, someCoins, acc.GetCoins())
-
-	err = acc.SetSequence(seq)
-	assert.Nil(t, err)
-	assert.Equal(t, seq, acc.GetSequence())
-
 	b, err := codec.MarshalBinary(acc)
 	assert.Nil(t, err)
 
-	var acc2 BaseAccount
+	acc2 := BaseAccount{}
 	err = codec.UnmarshalBinary(b, &acc2)
 	assert.Nil(t, err)
 	assert.Equal(t, acc, acc2)
 
+	// error on bad bytes
 	acc2 = BaseAccount{}
 	err = codec.UnmarshalBinary(b[:len(b)/2], &acc2)
 	assert.NotNil(t, err)
+
+}
+
+func TestBaseAccountGetSet(t *testing.T) {
+	_, _, addr := keyPubAddr()
+	acc := NewBaseAccountWithAddress(addr)
+
+	assert.Panics(t, func() { acc.Get("key") })
+	assert.Panics(t, func() { acc.Set("key", "value") })
 }

@@ -64,9 +64,12 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 
 			// first sig pays the fees
 			if i == 0 {
-				signerAcc, res = deductFees(signerAcc, fee)
-				if !res.IsOK() {
-					return ctx, res, true
+				// TODO: min fee
+				if !fee.Amount.IsZero() {
+					signerAcc, res = deductFees(signerAcc, fee)
+					if !res.IsOK() {
+						return ctx, res, true
+					}
 				}
 			}
 
@@ -134,6 +137,7 @@ func processSig(
 func deductFees(acc sdk.Account, fee sdk.StdFee) (sdk.Account, sdk.Result) {
 	coins := acc.GetCoins()
 	feeAmount := fee.Amount
+
 	newCoins := coins.Minus(feeAmount)
 	if !newCoins.IsNotNegative() {
 		errMsg := fmt.Sprintf("%s < %s", coins, feeAmount)

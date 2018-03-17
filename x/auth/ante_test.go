@@ -190,28 +190,38 @@ func TestAnteHandlerSequences(t *testing.T) {
 
 // Test logic around fee deduction.
 func TestAnteHandlerFees(t *testing.T) {
-	// // setup
-	// ms, capKey := setupMultiStore()
-	// mapper := NewAccountMapper(capKey, &BaseAccount{})
-	// anteHandler := NewAnteHandler(mapper)
-	// ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
-	//
-	// // keys and addresses
-	// priv1, addr1 := privAndAddr()
-	// priv2, addr2 := privAndAddr()
-	//
-	// // set the accounts
-	// acc1 := mapper.NewAccountWithAddress(ctx, addr1)
-	// mapper.SetAccount(ctx, acc1)
-	// acc2 := mapper.NewAccountWithAddress(ctx, addr2)
-	// mapper.SetAccount(ctx, acc2)
-	//
-	// // msg and signatures
-	// var tx sdk.Tx
-	// msg := newTestMsg(addr1)
-	// tx = newTestTx(ctx, msg, []crypto.PrivKey{priv1}, []int64{0}, int64(1))
+	// setup
+	ms, capKey := setupMultiStore()
+	mapper := NewAccountMapper(capKey, &BaseAccount{})
+	anteHandler := NewAnteHandler(mapper)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
-	// TODO
+	// keys and addresses
+	priv1, addr1 := privAndAddr()
+
+	// set the accounts
+	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	mapper.SetAccount(ctx, acc1)
+
+	// msg and signatures
+	var tx sdk.Tx
+	msg := newTestMsg(addr1)
+	privs, seqs := []crypto.PrivKey{priv1}, []int64{0}
+	fee := sdk.NewStdFee(100,
+		sdk.Coin{"atom", 150},
+	)
+
+	// signer does not have enough funds to pay the fee
+	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInsufficientFunds)
+
+	acc1.SetCoins(sdk.Coins{{"atom", 149}})
+	mapper.SetAccount(ctx, acc1)
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInsufficientFunds)
+
+	acc1.SetCoins(sdk.Coins{{"atom", 150}})
+	mapper.SetAccount(ctx, acc1)
+	checkValidTx(t, anteHandler, ctx, tx)
 }
 
 func TestAnteHandlerBadSignBytes(t *testing.T) {

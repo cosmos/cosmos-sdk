@@ -273,9 +273,6 @@ func TestQuizMsg(t *testing.T) {
 
 func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, expPass bool) {
 
-	// TODO:
-	var fee sdk.StdFee
-
 	// Sign the tx
 	tx := sdk.NewStdTx(msg, fee, []sdk.StdSignature{{
 		PubKey:    priv1.PubKey(),

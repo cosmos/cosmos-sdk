@@ -53,7 +53,7 @@ type MsgDeclareCandidacy struct {
 	PubKey crypto.PubKey `json:"pubkey"`
 }
 
-func NewMsgDeclareCandidacy(bond sdk.Coin, address sdk.Address, pubkey crypto.PubKey, description Description) MsgDeclareCandidacy {
+func NewMsgDeclareCandidacy(address sdk.Address, pubkey crypto.PubKey, bond sdk.Coin, description Description) MsgDeclareCandidacy {
 	return MsgDeclareCandidacy{
 		MsgAddr:     NewMsgAddr(address),
 		Description: description,

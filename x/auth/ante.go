@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -88,17 +89,21 @@ func processSig(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, sig sdk
 	// Check and possibly set pubkey.
 	pubKey := acc.GetPubKey()
 	if pubKey.Empty() {
+		if sig.PubKey.Empty() {
+			return nil, sdk.ErrInternal("public Key not found").Result()
+		}
+		if !reflect.DeepEqual(sig.PubKey.Address(), addr) {
+			return nil, sdk.ErrInternal(
+				fmt.Sprintf("invalid PubKey for address %v", addr)).Result()
+		}
 		pubKey = sig.PubKey
 		err := acc.SetPubKey(pubKey)
 		if err != nil {
 			return nil, sdk.ErrInternal("setting PubKey on signer").Result()
 		}
 	}
-	// TODO: should we enforce pubKey == sig.PubKey ?
-	// If not, ppl can send useless PubKeys after first tx
-
 	// Check sig.
-	if !sig.PubKey.VerifyBytes(signBytes, sig.Signature) {
+	if !pubKey.VerifyBytes(signBytes, sig.Signature) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
 

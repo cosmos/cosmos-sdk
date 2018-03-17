@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"reflect"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +18,7 @@ type testMsg struct {
 
 func newTestMsg(addrs ...sdk.Address) *testMsg {
 	return &testMsg{
-		signBytes: []byte("some sign bytes"),
+		signBytes: []byte(addrs[0]),
 		signers:   addrs,
 	}
 }
@@ -56,6 +57,10 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 
 func newTestTx(ctx sdk.Context, msg sdk.Msg, privs []crypto.PrivKey, seqs []int64) sdk.Tx {
 	signBytes := sdk.StdSignBytes(ctx.ChainID(), seqs, msg)
+	return newTestTxWithSignBytes(msg, privs, seqs, signBytes)
+}
+
+func newTestTxWithSignBytes(msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, signBytes []byte) sdk.Tx {
 	sigs := make([]sdk.StdSignature, len(privs))
 	for i, priv := range privs {
 		sigs[i] = sdk.StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), Sequence: seqs[i]}
@@ -78,7 +83,6 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	// msg and signatures
 	var tx sdk.Tx
 	msg := newTestMsg(addr1, addr2)
-	tx = newTestTx(ctx, msg, []crypto.PrivKey{priv1, priv2}, []int64{0, 0})
 
 	// test no signatures
 	tx = newTestTx(ctx, msg, []crypto.PrivKey{}, []int64{})
@@ -155,9 +159,91 @@ func TestAnteHandlerSequences(t *testing.T) {
 }
 
 func TestAnteHandlerBadSignBytes(t *testing.T) {
-	// TODO: test various cases of bad sign bytes
+	// setup
+	ms, capKey := setupMultiStore()
+	mapper := NewAccountMapper(capKey, &BaseAccount{})
+	anteHandler := NewAnteHandler(mapper)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
+
+	// keys and addresses
+	priv1, addr1 := privAndAddr()
+	priv2, addr2 := privAndAddr()
+
+	// set the accounts
+	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	mapper.SetAccount(ctx, acc1)
+	acc2 := mapper.NewAccountWithAddress(ctx, addr2)
+	mapper.SetAccount(ctx, acc2)
+
+	var tx sdk.Tx
+
+	// test good tx and signBytes
+	msg := newTestMsg(addr1)
+	tx = newTestTx(ctx, msg, []crypto.PrivKey{priv1}, []int64{0})
+	checkValidTx(t, anteHandler, ctx, tx)
+
+	// test invalid chain_id
+	tx = newTestTxWithSignBytes(msg, []crypto.PrivKey{priv1}, []int64{1}, sdk.StdSignBytes("", []int64{1}, msg))
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnauthorized)
+	// test wrong seqs
+	tx = newTestTxWithSignBytes(msg, []crypto.PrivKey{priv1}, []int64{1}, sdk.StdSignBytes(ctx.ChainID(), []int64{2}, msg))
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnauthorized)
+	// test wrong msg
+	tx = newTestTxWithSignBytes(msg, []crypto.PrivKey{priv1}, []int64{1}, sdk.StdSignBytes(ctx.ChainID(), []int64{1}, newTestMsg(addr2)))
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnauthorized)
+
+	// test wrong signer if public key exist
+	tx = newTestTx(ctx, msg, []crypto.PrivKey{priv2}, []int64{1})
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnauthorized)
+
+	// test wrong signer if public doesn't exist
+	msg = newTestMsg(addr2)
+	tx = newTestTx(ctx, msg, []crypto.PrivKey{priv1}, []int64{0})
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInternal)
+
 }
 
 func TestAnteHandlerSetPubKey(t *testing.T) {
-	// TODO: test cases where pubkey is already set on the account
+	// setup
+	ms, capKey := setupMultiStore()
+	mapper := NewAccountMapper(capKey, &BaseAccount{})
+	anteHandler := NewAnteHandler(mapper)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
+
+	// keys and addresses
+	priv1, addr1 := privAndAddr()
+	_, addr2 := privAndAddr()
+
+	// set the accounts
+	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	mapper.SetAccount(ctx, acc1)
+	acc2 := mapper.NewAccountWithAddress(ctx, addr2)
+	mapper.SetAccount(ctx, acc2)
+
+	var tx sdk.Tx
+
+	// test good tx and set public key
+	msg := newTestMsg(addr1)
+	tx = newTestTx(ctx, msg, []crypto.PrivKey{priv1}, []int64{0})
+	checkValidTx(t, anteHandler, ctx, tx)
+
+	acc1 = mapper.GetAccount(ctx, addr1)
+	reflect.DeepEqual(acc1.GetPubKey(), priv1.PubKey())
+
+	// test public key not found
+	msg = newTestMsg(addr2)
+	tx = newTestTx(ctx, msg, []crypto.PrivKey{priv1}, []int64{0})
+	sigs := tx.GetSignatures()
+	sigs[0].PubKey = crypto.PubKey{}
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInternal)
+
+	acc2 = mapper.GetAccount(ctx, addr2)
+	assert.True(t, acc2.GetPubKey().Empty())
+
+	// test invalid signature and public key
+	tx = newTestTx(ctx, msg, []crypto.PrivKey{priv1}, []int64{0})
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInternal)
+
+	acc2 = mapper.GetAccount(ctx, addr2)
+	assert.True(t, acc2.GetPubKey().Empty())
 }

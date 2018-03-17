@@ -45,7 +45,7 @@ type Tx interface {
 
 var _ Tx = (*StdTx)(nil)
 
-// StdTx is a standard way to wrap a Msg with Signatures.
+// StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the FeePayer (Signatures must not be nil).
 type StdTx struct {
 	Msg        `json:"msg"`
@@ -53,17 +53,12 @@ type StdTx struct {
 	Signatures []StdSignature `json:"signatures"`
 }
 
-func NewStdTx(msg Msg, sigs []StdSignature) StdTx {
+func NewStdTx(msg Msg, fee StdFee, sigs []StdSignature) StdTx {
 	return StdTx{
 		Msg:        msg,
+		Fee:        fee,
 		Signatures: sigs,
 	}
-}
-
-// SetFee sets the StdFee on the transaction.
-func (tx StdTx) SetFee(fee StdFee) StdTx {
-	tx.Fee = fee
-	return tx
 }
 
 //nolint
@@ -76,6 +71,8 @@ func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 func FeePayer(tx Tx) Address {
 	return tx.GetMsg().GetSigners()[0]
 }
+
+//__________________________________________________________
 
 // StdFee includes the amount of coins paid in fees and the maximum
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
@@ -92,6 +89,16 @@ func NewStdFee(gas int64, amount ...Coin) StdFee {
 	}
 }
 
+func (fee StdFee) Bytes() []byte {
+	bz, err := json.Marshal(fee) // TODO
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
+
+//__________________________________________________________
+
 // StdSignDoc is replay-prevention structure.
 // It includes the result of msg.GetSignBytes(),
 // as well as the ChainID (prevent cross chain replay)
@@ -100,27 +107,18 @@ func NewStdFee(gas int64, amount ...Coin) StdFee {
 type StdSignDoc struct {
 	ChainID   string  `json:"chain_id"`
 	Sequences []int64 `json:"sequences"`
+	FeeBytes  []byte  `json:"fee_bytes"`
 	MsgBytes  []byte  `json:"msg_bytes"`
-	AltBytes  []byte  `json:"alt_bytes"` // TODO: do we really want this ?
+	AltBytes  []byte  `json:"alt_bytes"`
 }
 
-// StdSignMsg is a convenience structure for passing along
-// a Msg with the other requirements for a StdSignDoc before
-// it is signed. For use in the CLI
-type StdSignMsg struct {
-	ChainID   string
-	Sequences []int64
-	Msg       Msg
-}
-
-func (msg StdSignMsg) Bytes() []byte {
-	return StdSignBytes(msg.ChainID, msg.Sequences, msg.Msg)
-}
-
-func StdSignBytes(chainID string, sequences []int64, msg Msg) []byte {
+// StdSignBytes returns the bytes to sign for a transaction.
+// TODO: change the API to just take a chainID and StdTx ?
+func StdSignBytes(chainID string, sequences []int64, fee StdFee, msg Msg) []byte {
 	bz, err := json.Marshal(StdSignDoc{
 		ChainID:   chainID,
 		Sequences: sequences,
+		FeeBytes:  fee.Bytes(),
 		MsgBytes:  msg.GetSignBytes(),
 	})
 	if err != nil {
@@ -129,7 +127,22 @@ func StdSignBytes(chainID string, sequences []int64, msg Msg) []byte {
 	return bz
 }
 
-//-------------------------------------
+// StdSignMsg is a convenience structure for passing along
+// a Msg with the other requirements for a StdSignDoc before
+// it is signed. For use in the CLI.
+type StdSignMsg struct {
+	ChainID   string
+	Sequences []int64
+	Fee       StdFee
+	Msg       Msg
+	// XXX: Alt
+}
+
+func (msg StdSignMsg) Bytes() []byte {
+	return StdSignBytes(msg.ChainID, msg.Sequences, msg.Fee, msg.Msg)
+}
+
+//__________________________________________________________
 
 // Application function variable used to unmarshal transaction bytes
 type TxDecoder func(txBytes []byte) (Tx, Error)

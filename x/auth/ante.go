@@ -1,8 +1,8 @@
 package auth
 
 import (
+	"bytes"
 	"fmt"
-	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -40,44 +40,61 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 				true
 		}
 
-		// Get the sign bytes (requires all sequence numbers)
+		// Get the sign bytes (requires all sequence numbers and the fee)
 		sequences := make([]int64, len(signerAddrs))
 		for i := 0; i < len(signerAddrs); i++ {
 			sequences[i] = sigs[i].Sequence
 		}
-		signBytes := sdk.StdSignBytes(ctx.ChainID(), sequences, msg)
+		fee := stdTx.Fee
+		signBytes := sdk.StdSignBytes(ctx.ChainID(), sequences, fee, msg)
 
 		// Check sig and nonce and collect signer accounts.
 		var signerAccs = make([]sdk.Account, len(signerAddrs))
 		for i := 0; i < len(sigs); i++ {
-			isFeePayer := i == 0 // first sig pays the fees
-
 			signerAddr, sig := signerAddrs[i], sigs[i]
-			signerAcc, res := processSig(ctx, accountMapper, signerAddr, sig,
-				signBytes, isFeePayer, stdTx.Fee.Amount)
+
+			// check signature, return account with incremented nonce
+			signerAcc, res := processSig(
+				ctx, accountMapper,
+				signerAddr, sig, signBytes,
+			)
 			if !res.IsOK() {
 				return ctx, res, true
 			}
+
+			// first sig pays the fees
+			if i == 0 {
+				signerAcc, res = deductFees(signerAcc, fee)
+				if !res.IsOK() {
+					return ctx, res, true
+				}
+			}
+
+			// Save the account.
+			accountMapper.SetAccount(ctx, signerAcc)
 			signerAccs[i] = signerAcc
 		}
 
+		// cache the signer accounts in the context
 		ctx = WithSigners(ctx, signerAccs)
+
 		// TODO: tx tags (?)
+
 		return ctx, sdk.Result{}, false // continue...
 	}
 }
 
 // verify the signature and increment the sequence.
 // if the account doesn't have a pubkey, set it.
-// deduct fee from fee payer.
-func processSig(ctx sdk.Context, am sdk.AccountMapper,
-	addr sdk.Address, sig sdk.StdSignature, signBytes []byte,
-	isFeePayer bool, feeAmount sdk.Coins) (acc sdk.Account, res sdk.Result) {
+func processSig(
+	ctx sdk.Context, am sdk.AccountMapper,
+	addr sdk.Address, sig sdk.StdSignature, signBytes []byte) (
+	acc sdk.Account, res sdk.Result) {
 
-	// Get the account
+	// Get the account.
 	acc = am.GetAccount(ctx, addr)
 	if acc == nil {
-		return nil, sdk.ErrUnrecognizedAddress(addr).Result()
+		return nil, sdk.ErrUnrecognizedAddress(addr.String()).Result()
 	}
 
 	// Check and increment sequence number.
@@ -89,23 +106,20 @@ func processSig(ctx sdk.Context, am sdk.AccountMapper,
 	acc.SetSequence(seq + 1)
 
 	// If pubkey is not known for account,
-	// set it from the StdSignature
+	// set it from the StdSignature.
 	pubKey := acc.GetPubKey()
 	if pubKey.Empty() {
-		if sig.PubKey.Empty() {
-			return nil, sdk.ErrInternal("public Key not found").Result()
-		}
-		if !reflect.DeepEqual(sig.PubKey.Address(), addr) {
-			return nil, sdk.ErrInternal(
-				fmt.Sprintf("invalid PubKey for address %v", addr)).Result()
-		}
 		pubKey = sig.PubKey
 		if pubKey.Empty() {
-			return nil, sdk.ErrMissingPubKey(addr).Result()
+			return nil, sdk.ErrInvalidPubKey("PubKey not found").Result()
+		}
+		if !bytes.Equal(pubKey.Address(), addr) {
+			return nil, sdk.ErrInvalidPubKey(
+				fmt.Sprintf("PubKey does not match Signer address %v", addr)).Result()
 		}
 		err := acc.SetPubKey(pubKey)
 		if err != nil {
-			return nil, sdk.ErrInternal("setting PubKey on signer").Result()
+			return nil, sdk.ErrInternal("setting PubKey on signer's account").Result()
 		}
 	}
 	// Check sig.
@@ -113,19 +127,18 @@ func processSig(ctx sdk.Context, am sdk.AccountMapper,
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
 
-	// If this is the fee payer, deduct the fee.
-	if isFeePayer {
-		coins := acc.GetCoins()
-		newCoins := coins.Minus(feeAmount)
-		if !newCoins.IsNotNegative() {
-			errMsg := fmt.Sprintf("%s < %s", coins, feeAmount)
-			return nil, sdk.ErrInsufficientFunds(errMsg).Result()
-		}
-
-		acc.SetCoins(newCoins)
-	}
-
-	// Save the account.
-	am.SetAccount(ctx, acc)
 	return
+}
+
+// deduct the fee from the account
+func deductFees(acc sdk.Account, fee sdk.StdFee) (sdk.Account, sdk.Result) {
+	coins := acc.GetCoins()
+	feeAmount := fee.Amount
+	newCoins := coins.Minus(feeAmount)
+	if !newCoins.IsNotNegative() {
+		errMsg := fmt.Sprintf("%s < %s", coins, feeAmount)
+		return nil, sdk.ErrInsufficientFunds(errMsg).Result()
+	}
+	acc.SetCoins(newCoins)
+	return acc, sdk.Result{}
 }

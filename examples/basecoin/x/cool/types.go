@@ -37,7 +37,7 @@ func (msg SetTrendMsg) String() string {
 // Validate Basic is used to quickly disqualify obviously invalid messages quickly
 func (msg SetTrendMsg) ValidateBasic() sdk.Error {
 	if len(msg.Sender) == 0 {
-		return sdk.ErrUnrecognizedAddress(msg.Sender).Trace("")
+		return sdk.ErrUnrecognizedAddress(msg.Sender.String()).Trace("")
 	}
 	if strings.Contains(msg.Cool, "hot") {
 		return sdk.ErrUnauthorized("").Trace("hot is not cool")
@@ -88,7 +88,7 @@ func (msg QuizMsg) String() string {
 // Validate Basic is used to quickly disqualify obviously invalid messages quickly
 func (msg QuizMsg) ValidateBasic() sdk.Error {
 	if len(msg.Sender) == 0 {
-		return sdk.ErrUnrecognizedAddress(msg.Sender).Trace("")
+		return sdk.ErrUnrecognizedAddress(msg.Sender.String()).Trace("")
 	}
 	return nil
 }

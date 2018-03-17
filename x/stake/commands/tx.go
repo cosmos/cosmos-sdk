@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -60,7 +59,7 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			addr, err := GetAddress(viper.GetString(FlagAddress))
+			addr, err := sdk.GetAddress(viper.GetString(FlagAddress))
 			if err != nil {
 				return err
 			}
@@ -103,7 +102,7 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 		Short: "edit and existing validator-candidate account",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			addr, err := GetAddress(viper.GetString(FlagAddress))
+			addr, err := sdk.GetAddress(viper.GetString(FlagAddress))
 			if err != nil {
 				return err
 			}
@@ -142,7 +141,7 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			addr, err := GetAddress(viper.GetString(FlagAddress))
+			addr, err := sdk.GetAddress(viper.GetString(FlagAddress))
 			if err != nil {
 				return err
 			}
@@ -186,7 +185,7 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 				}
 			}
 
-			addr, err := GetAddress(viper.GetString(FlagAddress))
+			addr, err := sdk.GetAddress(viper.GetString(FlagAddress))
 			if err != nil {
 				return err
 			}
@@ -211,7 +210,8 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 
 //______________________________________________________________________________________
 
-// GetPubKey - create the pubkey from a pubkey string
+// create the pubkey from a pubkey string
+// TODO move to a better reusable place
 func GetPubKey(pubKeyStr string) (pk crypto.PubKey, err error) {
 
 	if len(pubKeyStr) == 0 {
@@ -231,16 +231,4 @@ func GetPubKey(pubKeyStr string) (pk crypto.PubKey, err error) {
 	copy(pkEd[:], pkBytes[:])
 	pk = pkEd.Wrap()
 	return
-}
-
-// GetPubKey - create an Address from a pubkey string
-func GetAddress(address string) (addr sdk.Address, err error) {
-	if len(address) == 0 {
-		return addr, errors.New("must use provide address")
-	}
-	bz, err := hex.DecodeString(address)
-	if err != nil {
-		return nil, err
-	}
-	return sdk.Address(bz), nil
 }

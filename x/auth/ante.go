@@ -133,7 +133,9 @@ func processSig(
 	return
 }
 
-// deduct the fee from the account
+// Deduct the fee from the account.
+// We could use the CoinKeeper (in addition to the AccountMapper,
+// because the CoinKeeper doesn't give us accounts), but it seems easier to do this.
 func deductFees(acc sdk.Account, fee sdk.StdFee) (sdk.Account, sdk.Result) {
 	coins := acc.GetCoins()
 	feeAmount := fee.Amount

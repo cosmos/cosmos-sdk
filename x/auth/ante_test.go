@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"encoding/json"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,29 +10,8 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
-// msg type for testing
-type testMsg struct {
-	signers []sdk.Address
-}
-
-func newTestMsg(addrs ...sdk.Address) *testMsg {
-	return &testMsg{
-		signers: addrs,
-	}
-}
-
-func (msg *testMsg) Type() string                            { return "testMsg" }
-func (msg *testMsg) Get(key interface{}) (value interface{}) { return nil }
-func (msg *testMsg) GetSignBytes() []byte {
-	bz, err := json.Marshal(msg.signers)
-	if err != nil {
-		panic(err)
-	}
-	return bz
-}
-func (msg *testMsg) ValidateBasic() sdk.Error { return nil }
-func (msg *testMsg) GetSigners() []sdk.Address {
-	return msg.signers
+func newTestMsg(addrs ...sdk.Address) *sdk.TestMsg {
+	return sdk.NewTestMsg(addrs...)
 }
 
 func newStdFee() sdk.StdFee {
@@ -246,6 +224,10 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	var tx sdk.Tx
 	msg := newTestMsg(addr1)
 	fee := newStdFee()
+	fee2 := newStdFee()
+	fee2.Gas += 100
+	fee3 := newStdFee()
+	fee3.Amount[0].Amount += 100
 
 	// test good tx and signBytes
 	privs, seqs := []crypto.PrivKey{priv1}, []int64{0}
@@ -253,6 +235,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	checkValidTx(t, anteHandler, ctx, tx)
 
 	chainID := ctx.ChainID()
+	chainID2 := chainID + "somemorestuff"
 	codeUnauth := sdk.CodeUnauthorized
 
 	cases := []struct {
@@ -262,9 +245,12 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 		msg     sdk.Msg
 		code    sdk.CodeType
 	}{
-		{"", []int64{1}, fee, msg, codeUnauth},                    // test invalid chain_id
-		{chainID, []int64{2}, fee, msg, codeUnauth},               // test wrong seqs
-		{chainID, []int64{1}, fee, newTestMsg(addr2), codeUnauth}, // test wrong msg
+		{chainID2, []int64{1}, fee, msg, codeUnauth},               // test wrong chain_id
+		{chainID, []int64{2}, fee, msg, codeUnauth},                // test wrong seqs
+		{chainID, []int64{1, 2}, fee, msg, codeUnauth},             // test wrong seqs
+		{chainID, []int64{1}, fee, newTestMsg(addr2), codeUnauth},  // test wrong msg
+		{chainID, []int64{1}, fee2, newTestMsg(addr2), codeUnauth}, // test wrong fee
+		{chainID, []int64{1}, fee3, newTestMsg(addr2), codeUnauth}, // test wrong fee
 	}
 
 	privs, seqs = []crypto.PrivKey{priv1}, []int64{1}

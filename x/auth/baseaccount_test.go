@@ -27,7 +27,7 @@ func TestBaseAccountAddressPubKey(t *testing.T) {
 	assert.EqualValues(t, addr1, acc.GetAddress())
 	assert.EqualValues(t, crypto.PubKey{}, acc.GetPubKey())
 
-	// cant override address
+	// can't override address
 	err := acc.SetAddress(addr2)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, addr1, acc.GetAddress())
@@ -37,7 +37,7 @@ func TestBaseAccountAddressPubKey(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, pub1, acc.GetPubKey())
 
-	// cant override pubkey
+	// can't override pubkey
 	err = acc.SetPubKey(pub2)
 	assert.NotNil(t, err)
 	assert.Equal(t, pub1, acc.GetPubKey())
@@ -111,6 +111,7 @@ func TestBaseAccountGetSet(t *testing.T) {
 	_, _, addr := keyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
+	// Get/Set are not yet defined - all values cause a panic.
 	assert.Panics(t, func() { acc.Get("key") })
 	assert.Panics(t, func() { acc.Set("key", "value") })
 }

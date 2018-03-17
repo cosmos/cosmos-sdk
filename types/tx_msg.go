@@ -146,3 +146,32 @@ func (msg StdSignMsg) Bytes() []byte {
 
 // Application function variable used to unmarshal transaction bytes
 type TxDecoder func(txBytes []byte) (Tx, Error)
+
+//__________________________________________________________
+
+var _ Msg = (*TestMsg)(nil)
+
+// msg type for testing
+type TestMsg struct {
+	signers []Address
+}
+
+func NewTestMsg(addrs ...Address) *TestMsg {
+	return &TestMsg{
+		signers: addrs,
+	}
+}
+
+func (msg *TestMsg) Type() string                            { return "TestMsg" }
+func (msg *TestMsg) Get(key interface{}) (value interface{}) { return nil }
+func (msg *TestMsg) GetSignBytes() []byte {
+	bz, err := json.Marshal(msg.signers)
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
+func (msg *TestMsg) ValidateBasic() Error { return nil }
+func (msg *TestMsg) GetSigners() []Address {
+	return msg.signers
+}

@@ -52,7 +52,7 @@ func CodeToDefaultMsg(code CodeType) string {
 	case CodeUnrecognizedAddress:
 		return "Unrecognized address"
 	case CodeInvalidPubKey:
-		return "Missing pubkey"
+		return "Invalid pubkey"
 	default:
 		return fmt.Sprintf("Unknown code %d", code)
 	}

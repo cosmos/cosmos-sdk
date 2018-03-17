@@ -88,7 +88,16 @@ func GetFromAddress() (from sdk.Address, err error) {
 }
 
 // sign and build the transaction from the msg
-func SignAndBuild(signMsg sdk.StdSignMsg, cdc *wire.Codec) ([]byte, error) {
+func SignAndBuild(msg sdk.Msg, cdc *wire.Codec) ([]byte, error) {
+
+	// build the Sign Messsage from the Standard Message
+	chainID := viper.GetString(client.FlagChainID)
+	sequence := int64(viper.GetInt(client.FlagSequence))
+	signMsg := sdk.StdSignMsg{
+		ChainID:   chainID,
+		Sequences: []int64{sequence},
+		Msg:       msg,
+	}
 
 	keybase, err := keys.GetKeyBase()
 	if err != nil {
@@ -121,8 +130,8 @@ func SignAndBuild(signMsg sdk.StdSignMsg, cdc *wire.Codec) ([]byte, error) {
 }
 
 // sign and build the transaction from the msg
-func SignBuildBroadcast(signMsg sdk.StdSignMsg, cdc *wire.Codec) (*ctypes.ResultBroadcastTxCommit, error) {
-	txBytes, err := SignAndBuild(signMsg, cdc)
+func SignBuildBroadcast(msg sdk.Msg, cdc *wire.Codec) (*ctypes.ResultBroadcastTxCommit, error) {
+	txBytes, err := SignAndBuild(msg, cdc)
 	if err != nil {
 		return nil, err
 	}

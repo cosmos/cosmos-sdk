@@ -103,8 +103,11 @@ func (c Commander) SignMessage(msg sdk.Msg, kb cryptokeys.Keybase, accountName s
 		Sequence:  viper.GetInt64(client.FlagName),
 	}}
 
+	// TODO: fees
+	var fee sdk.StdFee
+
 	// marshal bytes
-	tx := sdk.NewStdTx(msg, sigs)
+	tx := sdk.NewStdTx(msg, fee, sigs)
 
 	txBytes, err := c.Cdc.MarshalBinary(tx)
 	if err != nil {

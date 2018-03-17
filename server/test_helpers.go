@@ -53,6 +53,7 @@ func StartServer(t *testing.T) chan error {
 	viper.Set(flagWithTendermint, true)
 	startCmd := StartCmd(mock.NewApp, log.NewNopLogger())
 	startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
+	startCmd.Flags().Set("rpc.laddr", FreeTCPAddr(t)) // set to a new free address
 	timeout := time.Duration(3) * time.Second
 
 	return RunOrTimeout(startCmd, timeout, t)

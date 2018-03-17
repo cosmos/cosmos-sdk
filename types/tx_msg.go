@@ -1,6 +1,9 @@
 package types
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // Transactions messages must fulfill the Msg
 type Msg interface {
@@ -90,6 +93,13 @@ func NewStdFee(gas int64, amount ...Coin) StdFee {
 }
 
 func (fee StdFee) Bytes() []byte {
+	// normalize. XXX
+	// this is a sign of something ugly
+	// (in the lcd_test, client side its null,
+	// server side its [])
+	if len(fee.Amount) == 0 {
+		fee.Amount = Coins{}
+	}
 	bz, err := json.Marshal(fee) // TODO
 	if err != nil {
 		panic(err)
@@ -115,6 +125,7 @@ type StdSignDoc struct {
 // StdSignBytes returns the bytes to sign for a transaction.
 // TODO: change the API to just take a chainID and StdTx ?
 func StdSignBytes(chainID string, sequences []int64, fee StdFee, msg Msg) []byte {
+	fmt.Println("FEE BYTES BABY", fee, string(fee.Bytes()))
 	bz, err := json.Marshal(StdSignDoc{
 		ChainID:   chainID,
 		Sequences: sequences,

@@ -224,11 +224,10 @@ func StartNodeServerForTest(t *testing.T, home string) *exec.Cmd {
 	cmdName := whereIsBasecoind()
 	cmdArgs := []string{"start", "--home", home}
 	cmd := exec.Command(cmdName, cmdArgs...)
-	err := cmd.Start()
-	require.Nil(t, err)
-
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	err := cmd.Start()
+	require.Nil(t, err)
 
 	// FIXME: if there is a nondeterministic node start failure,
 	//        we should probably make this read the logs to wait for RPC
@@ -238,7 +237,7 @@ func StartNodeServerForTest(t *testing.T, home string) *exec.Cmd {
 }
 
 // expects TestInitBaseCoin to have been run
-func StartLCDServerForTest(t *testing.T, home string) (cmd *exec.Cmd, port string) {
+func StartLCDServerForTest(t *testing.T, home, chainID string) (cmd *exec.Cmd, port string) {
 	cmdName := whereIsBasecli()
 	port = strings.Split(server.FreeTCPAddr(t), ":")[2]
 	cmdArgs := []string{
@@ -247,6 +246,8 @@ func StartLCDServerForTest(t *testing.T, home string) (cmd *exec.Cmd, port strin
 		home,
 		"--bind",
 		fmt.Sprintf("localhost:%s", port),
+		"--chain-id",
+		chainID,
 	}
 	cmd = exec.Command(cmdName, cmdArgs...)
 	cmd.Stdout = os.Stdout

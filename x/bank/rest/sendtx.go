@@ -71,20 +71,14 @@ func SendRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Request
 
 		// build message
 		msg := commands.BuildMsg(info.PubKey.Address(), to, m.Amount)
-		if err != nil {
+		if err != nil { // XXX rechecking same error ?
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		signMsg := sdk.StdSignMsg{
-			ChainID:   m.ChainID,
-			Sequences: []int64{m.Sequence},
-			Msg:       msg,
-		}
-
 		// sign
-		txBytes, err := builder.SignAndBuild(m.LocalAccountName, m.Password, signMsg, c.Cdc)
+		txBytes, err := builder.SignAndBuild(m.LocalAccountName, m.Password, msg, c.Cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))

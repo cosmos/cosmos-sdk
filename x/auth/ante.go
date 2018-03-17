@@ -125,6 +125,7 @@ func processSig(
 			return nil, sdk.ErrInternal("setting PubKey on signer's account").Result()
 		}
 	}
+
 	// Check sig.
 	if !pubKey.VerifyBytes(signBytes, sig.Signature) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()

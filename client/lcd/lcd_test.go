@@ -7,20 +7,23 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	cryptoKeys "github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	keys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 func TestKeys(t *testing.T) {
@@ -280,12 +283,20 @@ func setupEnvironment(t *testing.T) (kill func(), port string, seed string) {
 	require.Nil(t, err)
 
 	seed = tests.TestInitBasecoin(t, dir)
+	// get chain ID
+	bz, err := ioutil.ReadFile(filepath.Join(dir, "config", "genesis.json"))
+	require.Nil(t, err)
+	var gen tmtypes.GenesisDoc
+	err = json.Unmarshal(bz, &gen)
+	require.Nil(t, err)
 	cmdNode := tests.StartNodeServerForTest(t, dir)
-	cmdLCD, port := tests.StartLCDServerForTest(t, dir)
+	cmdLCD, port := tests.StartLCDServerForTest(t, dir, gen.ChainID)
 
 	kill = func() {
 		cmdLCD.Process.Kill()
+		cmdLCD.Process.Wait()
 		cmdNode.Process.Kill()
+		cmdNode.Process.Wait()
 		os.Remove(dir)
 	}
 	return kill, port, seed

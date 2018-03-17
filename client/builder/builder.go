@@ -124,7 +124,7 @@ func SignAndBuild(msg sdk.Msg, cdc *wire.Codec) ([]byte, error) {
 	}}
 
 	// marshal bytes
-	tx := sdk.NewStdTx(signMsg.Msg, sigs)
+	tx := sdk.NewStdTx(signMsg.Msg, signMsg.Fee, sigs)
 
 	return cdc.MarshalBinary(tx)
 }

@@ -38,5 +38,9 @@ func WithSigners(ctx types.Context, accounts []types.Account) types.Context {
 }
 
 func GetSigners(ctx types.Context) []types.Account {
-	return ctx.Value(contextKeySigners).([]types.Account)
+	v := ctx.Value(contextKeySigners)
+	if v == nil {
+		return []types.Account{}
+	}
+	return v.([]types.Account)
 }

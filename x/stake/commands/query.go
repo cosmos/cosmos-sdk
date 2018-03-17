@@ -11,7 +11,6 @@ import (
 
 	crypto "github.com/tendermint/go-crypto"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/builder"
 	"github.com/cosmos/cosmos-sdk/wire" // XXX fix
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -45,9 +44,6 @@ func GetCmdQueryCandidates(cdc *wire.Codec, storeName string) *cobra.Command {
 		Short: "Query for the set of validator-candidates pubkeys",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			var pks []crypto.PubKey
-
-			prove := !viper.GetBool(client.FlagTrustNode)
 			key := PrefixedKey(stake.Name, stake.CandidatesAddrKey)
 
 			res, err := builder.Query(key, storeName)
@@ -88,7 +84,6 @@ func GetCmdQueryCandidate(cdc *wire.Codec, storeName string) *cobra.Command {
 				return err
 			}
 
-			prove := !viper.GetBool(client.FlagTrustNode)
 			key := PrefixedKey(stake.Name, stake.GetCandidateKey(addr))
 
 			res, err := builder.Query(key, storeName)
@@ -135,7 +130,6 @@ func GetCmdQueryDelegatorBond(cdc *wire.Codec, storeName string) *cobra.Command 
 			}
 			delegator := crypto.Address(bz)
 
-			prove := !viper.GetBool(client.FlagTrustNode)
 			key := PrefixedKey(stake.Name, stake.GetDelegatorBondKey(delegator, addr, cdc))
 
 			res, err := builder.Query(key, storeName)
@@ -178,7 +172,6 @@ func GetCmdQueryDelegatorBonds(cdc *wire.Codec, storeName string) *cobra.Command
 			}
 			delegator := crypto.Address(bz)
 
-			prove := !viper.GetBool(client.FlagTrustNode)
 			key := PrefixedKey(stake.Name, stake.GetDelegatorBondsKey(delegator, cdc))
 
 			res, err := builder.Query(key, storeName)

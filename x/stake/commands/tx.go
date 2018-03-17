@@ -11,8 +11,9 @@ import (
 
 	crypto "github.com/tendermint/go-crypto"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/builder"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
@@ -29,152 +30,183 @@ const (
 	FlagDetails  = "details"
 )
 
-// nolint
+// common flagsets to add to various functions
 var (
-	CmdDeclareCandidacy = &cobra.Command{
-		Use:   "declare-candidacy",
-		Short: "create new validator-candidate account and delegate some coins to it",
-		RunE:  cmdDeclareCandidacy,
-	}
-	CmdEditCandidacy = &cobra.Command{
-		Use:   "edit-candidacy",
-		Short: "edit and existing validator-candidate account",
-		RunE:  cmdEditCandidacy,
-	}
-	CmdDelegate = &cobra.Command{
-		Use:   "delegate",
-		Short: "delegate coins to an existing validator/candidate",
-		RunE:  cmdDelegate,
-	}
-	CmdUnbond = &cobra.Command{
-		Use:   "unbond",
-		Short: "unbond coins from a validator/candidate",
-		RunE:  cmdUnbond,
-	}
+	fsPk        = flag.NewFlagSet("", flag.ContinueOnError)
+	fsAmount    = flag.NewFlagSet("", flag.ContinueOnError)
+	fsShares    = flag.NewFlagSet("", flag.ContinueOnError)
+	fsCandidate = flag.NewFlagSet("", flag.ContinueOnError)
 )
 
 func init() {
-
-	// define the flags
-	fsPk := flag.NewFlagSet("", flag.ContinueOnError)
 	fsPk.String(FlagPubKey, "", "PubKey of the validator-candidate")
-
-	fsAmount := flag.NewFlagSet("", flag.ContinueOnError)
 	fsAmount.String(FlagAmount, "1fermion", "Amount of coins to bond")
-
-	fsShares := flag.NewFlagSet("", flag.ContinueOnError)
 	fsShares.String(FlagShares, "", "Amount of shares to unbond, either in decimal or keyword MAX (ex. 1.23456789, 99, MAX)")
-
-	fsCandidate := flag.NewFlagSet("", flag.ContinueOnError)
 	fsCandidate.String(FlagMoniker, "", "validator-candidate name")
 	fsCandidate.String(FlagIdentity, "", "optional keybase signature")
 	fsCandidate.String(FlagWebsite, "", "optional website")
 	fsCandidate.String(FlagDetails, "", "optional detailed description space")
-
-	// add the flags
-	CmdDelegate.Flags().AddFlagSet(fsPk)
-	CmdDelegate.Flags().AddFlagSet(fsAmount)
-
-	CmdUnbond.Flags().AddFlagSet(fsPk)
-	CmdUnbond.Flags().AddFlagSet(fsShares)
-
-	CmdDeclareCandidacy.Flags().AddFlagSet(fsPk)
-	CmdDeclareCandidacy.Flags().AddFlagSet(fsAmount)
-	CmdDeclareCandidacy.Flags().AddFlagSet(fsCandidate)
-
-	CmdEditCandidacy.Flags().AddFlagSet(fsPk)
-	CmdEditCandidacy.Flags().AddFlagSet(fsCandidate)
 }
 
-func cmdDeclareCandidacy(cmd *cobra.Command, args []string) error {
-	amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
-	if err != nil {
-		return err
+//_________________________________________________________________________________________
+
+// create declare candidacy command
+func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "declare-candidacy",
+		Short: "create new validator-candidate account and delegate some coins to it",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
+			if err != nil {
+				return err
+			}
+			addr, err := GetAddress(viper.GetString(FlagAddress))
+			if err != nil {
+				return err
+			}
+			pk, err := GetPubKey(viper.GetString(FlagPubKey))
+			if err != nil {
+				return err
+			}
+			if viper.GetString(FlagMoniker) == "" {
+				return fmt.Errorf("please enter a moniker for the validator-candidate using --moniker")
+			}
+			description := stake.Description{
+				Moniker:  viper.GetString(FlagMoniker),
+				Identity: viper.GetString(FlagIdentity),
+				Website:  viper.GetString(FlagWebsite),
+				Details:  viper.GetString(FlagDetails),
+			}
+			msg := stake.NewMsgDeclareCandidacy(addr, pk, amount, description)
+
+			// build and sign the transaction, then broadcast to Tendermint
+			res, err := builder.SignBuildBroadcast(msg, cdc)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
+			return nil
+		},
 	}
 
-	addr, err := GetAddress(viper.GetString(FlagAddress))
-	if err != nil {
-		return err
-	}
-
-	pk, err := GetPubKey(viper.GetString(FlagPubKey))
-	if err != nil {
-		return err
-	}
-
-	if viper.GetString(FlagMoniker) == "" {
-		return fmt.Errorf("please enter a moniker for the validator-candidate using --moniker")
-	}
-
-	description := stake.Description{
-		Moniker:  viper.GetString(FlagMoniker),
-		Identity: viper.GetString(FlagIdentity),
-		Website:  viper.GetString(FlagWebsite),
-		Details:  viper.GetString(FlagDetails),
-	}
-
-	tx := stake.NewMsgDeclareCandidacy(addr, pk, amount, description)
-	return doTx(tx)
+	cmd.Flags().AddFlagSet(fsPk)
+	cmd.Flags().AddFlagSet(fsAmount)
+	cmd.Flags().AddFlagSet(fsCandidate)
+	return cmd
 }
 
-func cmdEditCandidacy(cmd *cobra.Command, args []string) error {
+// create edit candidacy command
+func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "edit-candidacy",
+		Short: "edit and existing validator-candidate account",
+		RunE: func(cmd *cobra.Command, args []string) error {
 
-	addr, err := GetAddress(viper.GetString(FlagAddress))
-	if err != nil {
-		return err
+			addr, err := GetAddress(viper.GetString(FlagAddress))
+			if err != nil {
+				return err
+			}
+			description := stake.Description{
+				Moniker:  viper.GetString(FlagMoniker),
+				Identity: viper.GetString(FlagIdentity),
+				Website:  viper.GetString(FlagWebsite),
+				Details:  viper.GetString(FlagDetails),
+			}
+			msg := stake.NewMsgEditCandidacy(addr, description)
+
+			// build and sign the transaction, then broadcast to Tendermint
+			res, err := builder.SignBuildBroadcast(msg, cdc)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
+			return nil
+		},
 	}
 
-	description := stake.Description{
-		Moniker:  viper.GetString(FlagMoniker),
-		Identity: viper.GetString(FlagIdentity),
-		Website:  viper.GetString(FlagWebsite),
-		Details:  viper.GetString(FlagDetails),
-	}
-
-	tx := stake.NewMsgEditCandidacy(addr, description)
-	return doTx(tx)
+	cmd.Flags().AddFlagSet(fsPk)
+	cmd.Flags().AddFlagSet(fsCandidate)
+	return cmd
 }
 
-func cmdDelegate(cmd *cobra.Command, args []string) error {
-	amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
-	if err != nil {
-		return err
+// create edit candidacy command
+func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delegate",
+		Short: "delegate coins to an existing validator/candidate",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
+			if err != nil {
+				return err
+			}
+
+			addr, err := GetAddress(viper.GetString(FlagAddress))
+			if err != nil {
+				return err
+			}
+
+			msg := stake.NewMsgDelegate(addr, amount)
+
+			// build and sign the transaction, then broadcast to Tendermint
+			res, err := builder.SignBuildBroadcast(msg, cdc)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
+			return nil
+		},
 	}
 
-	addr, err := GetAddress(viper.GetString(FlagAddress))
-	if err != nil {
-		return err
-	}
-
-	tx := stake.NewMsgDelegate(addr, amount)
-	return doTx(tx)
+	cmd.Flags().AddFlagSet(fsPk)
+	cmd.Flags().AddFlagSet(fsAmount)
+	return cmd
 }
 
-func cmdUnbond(cmd *cobra.Command, args []string) error {
+// create edit candidacy command
+func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "unbond",
+		Short: "unbond coins from a validator/candidate",
+		RunE: func(cmd *cobra.Command, args []string) error {
 
-	// TODO once go-wire refactored the shares can be broadcast as a Rat instead of a string
+			// check the shares before broadcasting
+			sharesStr := viper.GetString(FlagShares)
+			var shares sdk.Rat
+			if sharesStr != "MAX" {
+				var err error
+				shares, err = sdk.NewRatFromDecimal(sharesStr)
+				if err != nil {
+					return err
+				}
+				if !shares.GT(sdk.ZeroRat) {
+					return fmt.Errorf("shares must be positive integer or decimal (ex. 123, 1.23456789)")
+				}
+			}
 
-	// check the shares before broadcasting
-	sharesStr := viper.GetString(FlagShares)
-	var shares sdk.Rat
-	if sharesStr != "MAX" {
-		var err error
-		shares, err = sdk.NewRatFromDecimal(sharesStr)
-		if err != nil {
-			return err
-		}
-		if !shares.GT(sdk.ZeroRat) {
-			return fmt.Errorf("shares must be positive integer or decimal (ex. 123, 1.23456789)")
-		}
+			addr, err := GetAddress(viper.GetString(FlagAddress))
+			if err != nil {
+				return err
+			}
+
+			msg := stake.NewMsgUnbond(addr, sharesStr)
+
+			// build and sign the transaction, then broadcast to Tendermint
+			res, err := builder.SignBuildBroadcast(msg, cdc)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
+			return nil
+		},
 	}
 
-	addr, err := GetAddress(viper.GetString(FlagAddress))
-	if err != nil {
-		return err
-	}
-
-	tx := stake.NewMsgUnbond(addr, sharesStr)
-	return doTx(tx)
+	cmd.Flags().AddFlagSet(fsPk)
+	cmd.Flags().AddFlagSet(fsShares)
+	return cmd
 }
 
 //______________________________________________________________________________________
@@ -202,44 +234,13 @@ func GetPubKey(pubKeyStr string) (pk crypto.PubKey, err error) {
 }
 
 // GetPubKey - create an Address from a pubkey string
-func GetAddress(Address string) (addr sdk.Address, err error) {
-	if len(Address) == 0 {
+func GetAddress(address string) (addr sdk.Address, err error) {
+	if len(address) == 0 {
 		return addr, errors.New("must use provide address")
 	}
-	bz, err := hex.DecodeString(addr)
+	bz, err := hex.DecodeString(address)
 	if err != nil {
 		return nil, err
 	}
 	return sdk.Address(bz), nil
-}
-
-//______________________________________________________________________________________
-// XXX consolidate to client
-
-func doTx(tx []byte) {
-
-	uri := viper.GetString(client.FlagNode)
-	if uri == "" {
-		return errors.New("Must define which node to query with --node")
-	}
-	node := client.GetNode(uri)
-
-	result, err := node.BroadcastTxCommit(tx)
-	if err != nil {
-		return err
-	}
-
-	if result.CheckTx.Code != uint32(0) {
-		fmt.Printf("CheckTx failed: (%d) %s\n",
-			result.CheckTx.Code,
-			result.CheckTx.Log)
-	}
-	if result.DeliverTx.Code != uint32(0) {
-		fmt.Printf("DeliverTx failed: (%d) %s\n",
-			result.DeliverTx.Code,
-			result.DeliverTx.Log)
-	}
-
-	fmt.Printf("Committed at block %d. Hash: %s\n", result.Height, result.Hash.String())
-	return nil
 }

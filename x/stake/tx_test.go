@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	crypto "github.com/tendermint/go-crypto"
 	wire "github.com/tendermint/go-wire"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,8 +29,8 @@ func TestMsgAddrValidateBasic(t *testing.T) {
 		address sdk.Address
 		wantErr bool
 	}{
-		{"basic good", pks[0], false},
-		{"empty delegator", crypto.PubKey{}, true},
+		{"basic good", addrs[0], false},
+		{"empty delegator", sdk.Address{}, true},
 	}
 
 	for _, tc := range tests {
@@ -53,49 +52,24 @@ func TestValidateCoin(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		assert.Equal(t, tc.wantErr, tx.validateCoin(tc.coin) != nil,
-			"test: %v, tx.ValidateBasic: %v", tc.name, tx.ValidateBasic())
+		assert.Equal(t, tc.wantErr, validateCoin(tc.coin) != nil,
+			"test: %v, tx.ValidateBasic: %v", tc.name, validateCoin(tc.coin))
 	}
 }
 
-func TestAllAreTx(t *testing.T) {
+func TestSerializeMsg(t *testing.T) {
 
 	// make sure all types construct properly
-	pubKey := newPubKey("1234567890")
 	bondAmt := 1234321
-	bond := sdk.Coin{Denom: "ATOM", Amount: int64(bondAmt)}
-
-	txDelegate := NewMsgDelegate(bond, pubKey)
-	_, ok := txDelegate.(MsgDelegate)
-	assert.True(t, ok, "%#v", txDelegate)
-
-	txUnbond := NewMsgUnbond(strconv.Itoa(bondAmt), pubKey)
-	_, ok = txUnbond.(MsgUnbond)
-	assert.True(t, ok, "%#v", txUnbond)
-
-	txDecl := NewMsgDeclareCandidacy(bond, pubKey, Description{})
-	_, ok = txDecl.(MsgDeclareCandidacy)
-	assert.True(t, ok, "%#v", txDecl)
-
-	txEditCan := NewMsgEditCandidacy(pubKey, Description{})
-	_, ok = txEditCan.(MsgEditCandidacy)
-	assert.True(t, ok, "%#v", txEditCan)
-}
-
-func TestSerializeTx(t *testing.T) {
-
-	// make sure all types construct properly
-	pubKey := newPubKey("1234567890")
-	bondAmt := 1234321
-	bond := sdk.Coin{Denom: "ATOM", Amount: int64(bondAmt)}
+	bond := sdk.Coin{Denom: "atom", Amount: int64(bondAmt)}
 
 	tests := []struct {
-		tx sdk.Tx
+		tx sdk.Msg
 	}{
-		{NewMsgUnbond(strconv.Itoa(bondAmt), pubKey)},
-		{NewMsgDeclareCandidacy(bond, pubKey, Description{})},
-		{NewMsgDeclareCandidacy(bond, pubKey, Description{})},
-		// {NewTxRevokeCandidacy(pubKey)},
+		{NewMsgDeclareCandidacy(addrs[0], pks[0], bond, Description{})},
+		{NewMsgEditCandidacy(addrs[0], Description{})},
+		{NewMsgDelegate(addrs[0], bond)},
+		{NewMsgUnbond(addrs[0], strconv.Itoa(bondAmt))},
 	}
 
 	for i, tc := range tests {

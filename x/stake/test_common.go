@@ -87,7 +87,6 @@ func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool) (Mapper, 
 	require.Nil(t, err)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil)
-	store := ms.GetKVStore(keyStake)
 
 	cdc := makeTestCodec()
 	mapper := NewMapper(ctx, cdc, keyStake)
@@ -155,7 +154,7 @@ var addrs = []sdk.Address{
 // NOTE: PubKey is supposed to be the binaryBytes of the crypto.PubKey
 // instead this is just being set the address here for testing purposes
 func candidatesFromAddrs(mapper Mapper, addrs []crypto.Address, amts []int64) {
-	for i := 0; i < len(addrs); i++ {
+	for i := 0; i < len(amts); i++ {
 		c := &Candidate{
 			Status:      Unbonded,
 			PubKey:      pks[i],
@@ -168,7 +167,7 @@ func candidatesFromAddrs(mapper Mapper, addrs []crypto.Address, amts []int64) {
 	}
 }
 
-func candidatesFromActorsEmpty(addrs []crypto.Address) (candidates Candidates) {
+func candidatesFromAddrsEmpty(addrs []crypto.Address) (candidates Candidates) {
 	for i := 0; i < len(addrs); i++ {
 		c := &Candidate{
 			Status:      Unbonded,

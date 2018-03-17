@@ -222,7 +222,7 @@ func TestState(t *testing.T) {
 	}
 
 	bondsEqual := func(b1, b2 *DelegatorBond) bool {
-		return b1.PubKey.Equals(b2.PubKey) &&
+		return bytes.Equal(b1.Address, b2.Address) &&
 			b1.Shares == b2.Shares
 	}
 
@@ -259,8 +259,6 @@ func TestState(t *testing.T) {
 
 func TestGetValidators(t *testing.T) {
 	mapper, _ := createTestInput(t, nil, false)
-	N := 5
-	addrs := newAddrs(N)
 	candidatesFromAddrs(mapper, addrs, []int64{400, 200, 0, 0, 0})
 
 	validators := mapper.getValidators(5)

@@ -13,9 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/builder"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
-	"github.com/cosmos/cosmos-sdk/wire"
-	coin "github.com/cosmos/cosmos-sdk/x/bank" // XXX fix
+	"github.com/cosmos/cosmos-sdk/wire" // XXX fix
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
@@ -41,7 +39,7 @@ func init() {
 }
 
 // create command to query for all candidates
-func GetCmdQueryCandidates(cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryCandidates(cdc *wire.Codec, storeName string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "candidates",
 		Short: "Query for the set of validator-candidates pubkeys",
@@ -52,7 +50,7 @@ func GetCmdQueryCandidates(cdc *wire.Codec) *cobra.Command {
 			prove := !viper.GetBool(client.FlagTrustNode)
 			key := PrefixedKey(stake.Name, stake.CandidatesAddrKey)
 
-			res, err := builder.Query(key, "gaia-store-name") // XXX move gaia store name out of here
+			res, err := builder.Query(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -79,7 +77,7 @@ func GetCmdQueryCandidates(cdc *wire.Codec) *cobra.Command {
 }
 
 // get the command to query a candidate
-func GetCmdQueryCandidate(cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryCandidate(cdc *wire.Codec, storeName string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "candidate",
 		Short: "Query a validator-candidate account",
@@ -92,6 +90,11 @@ func GetCmdQueryCandidate(cdc *wire.Codec) *cobra.Command {
 
 			prove := !viper.GetBool(client.FlagTrustNode)
 			key := PrefixedKey(stake.Name, stake.GetCandidateKey(addr))
+
+			res, err := builder.Query(key, storeName)
+			if err != nil {
+				return err
+			}
 
 			// parse out the candidate
 			candidate := new(stake.Candidate)
@@ -115,7 +118,7 @@ func GetCmdQueryCandidate(cdc *wire.Codec) *cobra.Command {
 }
 
 // get the command to query a single delegator bond
-func GetCmdQueryDelegatorBond(cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryDelegatorBond(cdc *wire.Codec, storeName string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegator-bond",
 		Short: "Query a delegators bond based on address and candidate pubkey",
@@ -131,14 +134,17 @@ func GetCmdQueryDelegatorBond(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 			delegator := crypto.Address(bz)
-			delegator = coin.ChainAddr(delegator)
 
 			prove := !viper.GetBool(client.FlagTrustNode)
-			key := PrefixedKey(stake.Name, stake.GetDelegatorBondKey(delegator, addr))
+			key := PrefixedKey(stake.Name, stake.GetDelegatorBondKey(delegator, addr, cdc))
+
+			res, err := builder.Query(key, storeName)
+			if err != nil {
+				return err
+			}
 
 			// parse out the bond
 			var bond stake.DelegatorBond
-			cdc := app.MakeTxCodec() // XXX create custom Tx for Staking Module
 			err = cdc.UnmarshalBinary(res, bond)
 			if err != nil {
 				return err
@@ -160,7 +166,7 @@ func GetCmdQueryDelegatorBond(cdc *wire.Codec) *cobra.Command {
 }
 
 // get the command to query all the candidates bonded to a delegator
-func GetCmdQueryDelegatorBond(cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryDelegatorBonds(cdc *wire.Codec, storeName string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegator-candidates",
 		Short: "Query all delegators candidates' pubkeys based on address",
@@ -171,10 +177,14 @@ func GetCmdQueryDelegatorBond(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 			delegator := crypto.Address(bz)
-			delegator = coin.ChainAddr(delegator)
 
 			prove := !viper.GetBool(client.FlagTrustNode)
-			key := PrefixedKey(stake.Name, stake.GetDelegatorBondsKey(delegator))
+			key := PrefixedKey(stake.Name, stake.GetDelegatorBondsKey(delegator, cdc))
+
+			res, err := builder.Query(key, storeName)
+			if err != nil {
+				return err
+			}
 
 			// parse out the candidates list
 			var candidates []crypto.PubKey

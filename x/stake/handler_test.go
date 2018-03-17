@@ -49,9 +49,9 @@ func newMsgUnbond(shares string, pubKey crypto.PubKey) MsgUnbond {
 
 func paramsNoInflation() Params {
 	return Params{
-		InflationRateChange: sdk.Zero,
-		InflationMax:        sdk.Zero,
-		InflationMin:        sdk.Zero,
+		InflationRateChange: sdk.ZeroRat,
+		InflationMax:        sdk.ZeroRat,
+		InflationMin:        sdk.ZeroRat,
 		GoalBonded:          sdk.New(67, 100),
 		MaxVals:             100,
 		BondDenom:           "fermion",

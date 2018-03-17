@@ -5,11 +5,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/builder"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
@@ -33,17 +30,9 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			// create the message
 			msg := cool.NewQuizMsg(from, args[0])
-			chainID := viper.GetString(client.FlagChainID)
-			sequence := int64(viper.GetInt(client.FlagSequence))
-
-			signMsg := sdk.StdSignMsg{
-				ChainID:   chainID,
-				Sequences: []int64{sequence},
-				Msg:       msg,
-			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := builder.SignBuildBroadcast(signMsg, cdc)
+			res, err := builder.SignBuildBroadcast(msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -72,17 +61,9 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			// create the message
 			msg := cool.NewSetTrendMsg(from, args[0])
-			chainID := viper.GetString(client.FlagChainID)
-			sequence := int64(viper.GetInt(client.FlagSequence))
-
-			signMsg := sdk.StdSignMsg{
-				ChainID:   chainID,
-				Sequences: []int64{sequence},
-				Msg:       msg,
-			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := builder.SignBuildBroadcast(signMsg, cdc)
+			res, err := builder.SignBuildBroadcast(msg, cdc)
 			if err != nil {
 				return err
 			}

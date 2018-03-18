@@ -27,8 +27,7 @@ func TestStartStandAlone(t *testing.T) {
 	startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
 	timeout := time.Duration(3) * time.Second
 
-	ch := RunOrTimeout(startCmd, timeout, t)
-	close(ch)
+	RunOrTimeout(startCmd, timeout, t)
 }
 
 func TestStartWithTendermint(t *testing.T) {
@@ -50,6 +49,5 @@ func TestStartWithTendermint(t *testing.T) {
 	//a, _ := startCmd.Flags().GetString(flagAddress)
 	//panic(a)
 
-	ch := RunOrTimeout(startCmd, timeout, t)
-	close(ch)
+	RunOrTimeout(startCmd, timeout, t)
 }

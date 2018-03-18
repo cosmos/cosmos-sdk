@@ -21,8 +21,8 @@ import (
 // to create default account(s).
 func InitCmd(gen GenAppState, logger log.Logger) *cobra.Command {
 	cmd := initCmd{
-		gen:    gen,
-		logger: logger,
+		genAppState: gen,
+		logger:      logger,
 	}
 	return &cobra.Command{
 		Use:   "init",

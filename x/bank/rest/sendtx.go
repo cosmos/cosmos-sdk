@@ -7,10 +7,11 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
 	"github.com/tendermint/go-crypto/keys"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/builder"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank/commands"
@@ -72,6 +73,8 @@ func SendRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWrit
 		}
 
 		// sign
+		// XXX: OMG
+		viper.Set(client.FlagSequence, m.Sequence)
 		txBytes, err := builder.SignAndBuild(m.LocalAccountName, m.Password, msg, c.Cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)

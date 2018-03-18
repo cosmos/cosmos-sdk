@@ -8,50 +8,76 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
 	"regexp"
 	"testing"
 	"time"
 
-	"github.com/chain/core/config"
-	client "github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/wire"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/rest"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	p2p "github.com/tendermint/go-p2p"
-	"github.com/tendermint/mintdb/types"
+
+	abci "github.com/tendermint/abci/types"
+	cryptoKeys "github.com/tendermint/go-crypto/keys"
+	tmcfg "github.com/tendermint/tendermint/config"
+	nm "github.com/tendermint/tendermint/node"
+	p2p "github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/proxy"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
+	tmtypes "github.com/tendermint/tendermint/types"
+	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
+
+	client "github.com/cosmos/cosmos-sdk/client"
+	keys "github.com/cosmos/cosmos-sdk/client/keys"
+	bapp "github.com/cosmos/cosmos-sdk/examples/basecoin/app"
+	btypes "github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+)
+
+var (
+	coinDenom  = "mycoin"
+	coinAmount = int64(10000000)
+
+	// XXX bad globals
+	port     string // XXX: but it's the int ...
+	name     string = "test"
+	password string = "0123456789"
+	seed     string
+	sendAddr string
 )
 
 func TestKeys(t *testing.T) {
-	kill, port, _ := setupEnvironment(t)
-	defer kill()
 
 	// empty keys
-	res, body := request(t, port, "GET", "/keys", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	assert.Equal(t, "[]", body, "Expected an empty array")
+	// XXX: the test comes with a key setup
+	/*
+		res, body := request(t, port, "GET", "/keys", nil)
+		require.Equal(t, http.StatusOK, res.StatusCode, body)
+		assert.Equal(t, "[]", body, "Expected an empty array")
+	*/
 
 	// get seed
-	res, body = request(t, port, "GET", "/keys/seed", nil)
+	res, body := request(t, port, "GET", "/keys/seed", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	seed := body
+	newSeed := body
 	reg, err := regexp.Compile(`([a-z]+ ){12}`)
 	require.Nil(t, err)
 	match := reg.MatchString(seed)
 	assert.True(t, match, "Returned seed has wrong foramt", seed)
 
+	newName := "test_newname"
+	newPassword := "0987654321"
+
 	// add key
-	var jsonStr = []byte(`{"name":"test_fail", "password":"1234567890"}`)
+	var jsonStr = []byte(fmt.Sprintf(`{"name":"test_fail", "password":"%s"}`, password))
 	res, body = request(t, port, "POST", "/keys", jsonStr)
 
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode, "Account creation should require a seed")
 
-	jsonStr = []byte(fmt.Sprintf(`{"name":"test", "password":"1234567890", "seed": "%s"}`, seed))
+	jsonStr = []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed": "%s"}`, newName, newPassword, newSeed))
 	res, body = request(t, port, "POST", "/keys", jsonStr)
 
 	assert.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -61,41 +87,42 @@ func TestKeys(t *testing.T) {
 	// existing keys
 	res, body = request(t, port, "GET", "/keys", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var m [1]keys.KeyOutput
+	var m [2]keys.KeyOutput
 	err = json.Unmarshal([]byte(body), &m)
 	require.Nil(t, err)
 
-	assert.Equal(t, m[0].Name, "test", "Did not serve keys name correctly")
-	assert.Equal(t, m[0].Address, addr, "Did not serve keys Address correctly")
+	assert.Equal(t, m[0].Name, name, "Did not serve keys name correctly")
+	assert.Equal(t, m[0].Address, sendAddr, "Did not serve keys Address correctly")
+	assert.Equal(t, m[1].Name, newName, "Did not serve keys name correctly")
+	assert.Equal(t, m[1].Address, addr, "Did not serve keys Address correctly")
 
 	// select key
-	res, body = request(t, port, "GET", "/keys/test", nil)
+	keyEndpoint := fmt.Sprintf("/keys/%s", newName)
+	res, body = request(t, port, "GET", keyEndpoint, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var m2 keys.KeyOutput
 	err = json.Unmarshal([]byte(body), &m2)
 	require.Nil(t, err)
 
-	assert.Equal(t, "test", m2.Name, "Did not serve keys name correctly")
+	assert.Equal(t, newName, m2.Name, "Did not serve keys name correctly")
 	assert.Equal(t, addr, m2.Address, "Did not serve keys Address correctly")
 
 	// update key
-	jsonStr = []byte(`{"old_password":"1234567890", "new_password":"12345678901"}`)
-	res, body = request(t, port, "PUT", "/keys/test", jsonStr)
+	jsonStr = []byte(fmt.Sprintf(`{"old_password":"%s", "new_password":"12345678901"}`, newPassword))
+	res, body = request(t, port, "PUT", keyEndpoint, jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	// here it should say unauthorized as we changed the password before
-	res, body = request(t, port, "PUT", "/keys/test", jsonStr)
+	res, body = request(t, port, "PUT", keyEndpoint, jsonStr)
 	require.Equal(t, http.StatusUnauthorized, res.StatusCode, body)
 
 	// delete key
 	jsonStr = []byte(`{"password":"12345678901"}`)
-	res, body = request(t, port, "DELETE", "/keys/test", jsonStr)
+	res, body = request(t, port, "DELETE", keyEndpoint, jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 }
 
 func TestVersion(t *testing.T) {
-	kill, port, _ := setupEnvironment(t)
-	defer kill()
 
 	// node info
 	res, body := request(t, port, "GET", "/version", nil)
@@ -108,8 +135,6 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNodeStatus(t *testing.T) {
-	kill, port, _ := setupEnvironment(t)
-	defer kill()
 
 	// node info
 	res, body := request(t, port, "GET", "/node_info", nil)
@@ -131,8 +156,6 @@ func TestNodeStatus(t *testing.T) {
 }
 
 func TestBlock(t *testing.T) {
-	kill, port, _ := setupEnvironment(t)
-	defer kill()
 
 	time.Sleep(time.Second * 2) // TODO: LOL -> wait for blocks
 
@@ -163,10 +186,6 @@ func TestBlock(t *testing.T) {
 }
 
 func TestValidators(t *testing.T) {
-	kill, port, _ := setupEnvironment(t)
-	defer kill()
-
-	time.Sleep(time.Second * 2) // TODO: LOL -> wait for blocks
 
 	var resultVals ctypes.ResultValidators
 
@@ -195,17 +214,13 @@ func TestValidators(t *testing.T) {
 }
 
 func TestCoinSend(t *testing.T) {
-	kill, port, seed := setupEnvironment(t)
-	defer kill()
-
-	time.Sleep(time.Second * 2) // TO
 
 	// query empty
 	res, body := request(t, port, "GET", "/accounts/8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6", nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	// create TX
-	addr, receiveAddr, resultTx := doSend(t, port, seed)
+	receiveAddr, resultTx := doSend(t, port, seed)
 
 	time.Sleep(time.Second * 2) // T
 
@@ -214,7 +229,7 @@ func TestCoinSend(t *testing.T) {
 	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	// query sender
-	res, body = request(t, port, "GET", "/accounts/"+addr, nil)
+	res, body = request(t, port, "GET", "/accounts/"+sendAddr, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var m auth.BaseAccount
@@ -222,8 +237,8 @@ func TestCoinSend(t *testing.T) {
 	require.Nil(t, err)
 	coins := m.Coins
 	mycoins := coins[0]
-	assert.Equal(t, "mycoin", mycoins.Denom)
-	assert.Equal(t, int64(9007199254740991), mycoins.Amount)
+	assert.Equal(t, coinDenom, mycoins.Denom)
+	assert.Equal(t, coinAmount-1, mycoins.Amount)
 
 	// query receiver
 	res, body = request(t, port, "GET", "/accounts/"+receiveAddr, nil)
@@ -233,13 +248,11 @@ func TestCoinSend(t *testing.T) {
 	require.Nil(t, err)
 	coins = m.Coins
 	mycoins = coins[0]
-	assert.Equal(t, "mycoin", mycoins.Denom)
+	assert.Equal(t, coinDenom, mycoins.Denom)
 	assert.Equal(t, int64(1), mycoins.Amount)
 }
 
 func TestTxs(t *testing.T) {
-	kill, port, seed := setupEnvironment(t)
-	defer kill()
 
 	// TODO: re-enable once we can get txs by tag
 
@@ -254,7 +267,7 @@ func TestTxs(t *testing.T) {
 	// assert.Equal(t, "[]", body)
 
 	// create TX
-	_, _, resultTx := doSend(t, port, seed)
+	_, resultTx := doSend(t, port, seed)
 
 	time.Sleep(time.Second * 2) // TO
 
@@ -278,53 +291,85 @@ func TestTxs(t *testing.T) {
 //__________________________________________________________
 // helpers
 
-// TODO/XXX: We should be spawning what we need in process, not shelling out
-func setupEnvironment(t *testing.T) (kill func(), port string, seed string) {
-	dir, err := ioutil.TempDir("", "tmp-basecoin-")
-	require.Nil(t, err)
-
-	seed = tests.TestInitBasecoin(t, dir)
-	// get chain ID
-	bz, err := ioutil.ReadFile(filepath.Join(dir, "config", "genesis.json"))
-	require.Nil(t, err)
-	var gen tmtypes.GenesisDoc
-	err = json.Unmarshal(bz, &gen)
-	require.Nil(t, err)
-	cmdNode := tests.StartNodeServerForTest(t, dir)
-	cmdLCD, port := tests.StartLCDServerForTest(t, dir, gen.ChainID)
-
-	kill = func() {
-		cmdLCD.Process.Kill()
-		cmdLCD.Process.Wait()
-		cmdNode.Process.Kill()
-		cmdNode.Process.Wait()
-		os.Remove(dir)
-	}
-}
-
 // strt TM and the LCD in process, listening on their respective sockets
-func startTMAndLCD(t *testing.T) (kill func(), port string, seed string) {
+func startTMAndLCD() (*nm.Node, net.Listener, error) {
 
-	// make the keybase and its key ...
-
-	startTM(cfg, genDoc, app)
-	startLCD(cdc, listenAddr, logger)
-
-	kill = func() {
-		// TODO: cleanup
-		// TODO: it would be great if TM could run without
-		// persiting anything in the first place
+	kb, err := keys.GetKeyBase() // dbm.NewMemDB()) // :(
+	if err != nil {
+		return nil, nil, err
 	}
-	return kill, port, seed
+	var info cryptoKeys.Info
+	info, seed, err = kb.Create(name, password, cryptoKeys.AlgoEd25519) // XXX global seed
+	if err != nil {
+		return nil, nil, err
+	}
+
+	pubKey := info.PubKey
+	sendAddr = pubKey.Address().String() // XXX global
+
+	config := GetConfig()
+	config.Consensus.TimeoutCommit = 1000
+	config.Consensus.SkipTimeoutCommit = false
+
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger = log.NewFilter(logger, log.AllowError())
+	privValidatorFile := config.PrivValidatorFile()
+	privVal := tmtypes.LoadOrGenPrivValidatorFS(privValidatorFile)
+	app := bapp.NewBasecoinApp(logger, dbm.NewMemDB())
+
+	genesisFile := config.GenesisFile()
+	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	coins := sdk.Coins{{coinDenom, coinAmount}}
+	appState := btypes.GenesisState{
+		Accounts: []*btypes.GenesisAccount{
+			{
+				Name:    "tester",
+				Address: pubKey.Address(),
+				Coins:   coins,
+			},
+		},
+	}
+	stateBytes, err := json.Marshal(appState)
+	if err != nil {
+		return nil, nil, err
+	}
+	genDoc.AppState = stateBytes
+
+	cdc := wire.NewCodec()
+
+	// LCD listen address
+	port = fmt.Sprintf("%d", 17377)                       // XXX
+	listenAddr := fmt.Sprintf("tcp://localhost:%s", port) // XXX
+
+	// XXX: need to set this so LCD knows the tendermint node address!
+	viper.Set(client.FlagNode, config.RPC.ListenAddress)
+	viper.Set(client.FlagChainID, genDoc.ChainID)
+
+	node, err := startTM(config, logger, genDoc, privVal, app)
+	if err != nil {
+		return nil, nil, err
+	}
+	lcd, err := startLCD(cdc, logger, listenAddr)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	time.Sleep(time.Second * 2)
+
+	return node, lcd, nil
 }
 
 // Create & start in-process tendermint node with memdb
 // and in-process abci application.
 // TODO: need to clean up the WAL dir or enable it to be not persistent
-func startTM(cfg *config.Config, genDoc types.GenesisDoc, app abci.Application) (*Node, error) {
-	genDocProvider := func() (*types.GenesisDoc, error) { return genDoc, nil }
-	dbProvider := func() (*dbm.DB, error) { return dbm.NewMemDB(), nil }
-	n, err := node.NewNode(cfg,
+func startTM(cfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc, privVal tmtypes.PrivValidator, app abci.Application) (*nm.Node, error) {
+	genDocProvider := func() (*tmtypes.GenesisDoc, error) { return genDoc, nil }
+	dbProvider := func(*nm.DBContext) (dbm.DB, error) { return dbm.NewMemDB(), nil }
+	n, err := nm.NewNode(cfg,
 		privVal,
 		proxy.NewLocalClientCreator(app),
 		genDocProvider,
@@ -338,13 +383,18 @@ func startTM(cfg *config.Config, genDoc types.GenesisDoc, app abci.Application) 
 	if err != nil {
 		return nil, err
 	}
+
+	// wait for rpc
+	waitForRPC()
+
+	logger.Info("Tendermint running!")
 	return n, err
 }
 
 // start the LCD. note this blocks!
-func startLCD(cdc *wire.Codec, listenAddr string, logger log.Logger) (net.Listener, error) {
+func startLCD(cdc *wire.Codec, logger log.Logger, listenAddr string) (net.Listener, error) {
 	handler := createHandler(cdc)
-	return StartHTTPServer(listenAddr, handler, logger)
+	return tmrpc.StartHTTPServer(listenAddr, handler, logger)
 }
 
 func request(t *testing.T, port, method, path string, payload []byte) (*http.Response, string) {
@@ -363,13 +413,7 @@ func request(t *testing.T, port, method, path string, payload []byte) (*http.Res
 	return res, string(output)
 }
 
-func doSend(t *testing.T, port, seed string) (sendAddr string, receiveAddr string, resultTx ctypes.ResultBroadcastTxCommit) {
-	// create account from seed who has keys
-	var jsonStr = []byte(fmt.Sprintf(`{"name":"test", "password":"1234567890", "seed": "%s"}`, seed))
-	res, body := request(t, port, "POST", "/keys", jsonStr)
-
-	assert.Equal(t, http.StatusOK, res.StatusCode, body)
-	sendAddr = body
+func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctypes.ResultBroadcastTxCommit) {
 
 	// create receive address
 	kb := client.MockKeyBase()
@@ -377,13 +421,23 @@ func doSend(t *testing.T, port, seed string) (sendAddr string, receiveAddr strin
 	require.Nil(t, err)
 	receiveAddr = receiveInfo.PubKey.Address().String()
 
+	// get the account to get the sequence
+	res, body := request(t, port, "GET", "/accounts/"+sendAddr, nil)
+	// require.Equal(t, http.StatusOK, res.StatusCode, body)
+	acc := auth.BaseAccount{}
+	err = json.Unmarshal([]byte(body), &acc)
+	require.Nil(t, err)
+	fmt.Println("BODY", body)
+	fmt.Println("ACC", acc)
+	sequence := acc.Sequence
+
 	// send
-	jsonStr = []byte(`{ "name":"test", "password":"1234567890", "amount":[{ "denom": "mycoin", "amount": 1 }] }`)
+	jsonStr := []byte(fmt.Sprintf(`{ "name":"%s", "password":"%s", "sequence":%d, "amount":[{ "denom": "%s", "amount": 1 }] }`, name, password, sequence, coinDenom))
 	res, body = request(t, port, "POST", "/accounts/"+receiveAddr+"/send", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err = json.Unmarshal([]byte(body), &resultTx)
 	require.Nil(t, err)
 
-	return sendAddr, receiveAddr, resultTx
+	return receiveAddr, resultTx
 }

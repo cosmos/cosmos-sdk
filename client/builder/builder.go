@@ -106,6 +106,7 @@ func SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *wire.Codec) ([]byte
 
 	// sign and build
 	bz := signMsg.Bytes()
+
 	sig, pubkey, err := keybase.Sign(name, passphrase, bz)
 	if err != nil {
 		return nil, err

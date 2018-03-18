@@ -9,6 +9,9 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tmlibs/log"
 
+	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
+	cmn "github.com/tendermint/tmlibs/common"
+
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
@@ -46,7 +49,7 @@ func startRESTServerFn(cdc *wire.Codec) func(cmd *cobra.Command, args []string) 
 		handler := createHandler(cdc)
 		logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
 			With("module", "rest-server")
-		listener, err := StartHTTPServer(listenAddr, handler, logger)
+		listener, err := tmserver.StartHTTPServer(listenAddr, handler, logger)
 		if err != nil {
 			return err
 		}
@@ -56,6 +59,7 @@ func startRESTServerFn(cdc *wire.Codec) func(cmd *cobra.Command, args []string) 
 			err := listener.Close()
 			logger.Error("Error closing listener", "err", err)
 		})
+		return nil
 	}
 }
 
@@ -63,11 +67,16 @@ func createHandler(cdc *wire.Codec) http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/version", version.VersionRequestHandler).Methods("GET")
 
+	kb, err := keys.GetKeyBase() //XXX
+	if err != nil {
+		panic(err)
+	}
+
 	// TODO make more functional? aka r = keys.RegisterRoutes(r)
 	keys.RegisterRoutes(r)
 	rpc.RegisterRoutes(r)
 	tx.RegisterRoutes(r, cdc)
-	auth.RegisterRoutes(r, cdc, "main") // TODO should use a variable not just a string
-	bank.RegisterRoutes(r, cdc)
+	auth.RegisterRoutes(r, cdc, "main")
+	bank.RegisterRoutes(r, cdc, kb)
 	return r
 }

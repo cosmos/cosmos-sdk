@@ -371,6 +371,13 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 	}
 
+	// Match route.
+	msgType := msg.Type()
+	handler := app.router.Route(msgType)
+	if handler == nil {
+		return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
+	}
+
 	// Get the correct cache
 	var msCache sdk.CacheMultiStore
 	if isCheckTx == true {
@@ -384,9 +391,6 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 
 	}
 
-	// Match and run route.
-	msgType := msg.Type()
-	handler := app.router.Route(msgType)
 	result = handler(ctx, msg)
 
 	// If result was successful, write to app.checkState.ms or app.deliverState.ms

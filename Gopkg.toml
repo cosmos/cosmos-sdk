@@ -77,7 +77,7 @@
   name = "github.com/tendermint/tendermint"
 
 [[override]]
-  branch = "develop"
+  branch = "rigel/cli-refactor"
   name = "github.com/tendermint/tmlibs"
 
 [prune]

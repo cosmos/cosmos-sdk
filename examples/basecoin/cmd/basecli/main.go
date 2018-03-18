@@ -69,6 +69,10 @@ func main() {
 		client.PostCommands(
 			ibccmd.IBCTransferCmd(cdc),
 		)...)
+	basecliCmd.AddCommand(
+		client.PostCommands(
+			ibccmd.IBCRelayCmd(cdc),
+		)...)
 
 	// add proxy, version and key info
 	basecliCmd.AddCommand(

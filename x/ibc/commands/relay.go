@@ -40,21 +40,16 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 		Run: cmdr.runIBCRelay,
 	}
 
-	cmd.Flags().String(client.FlagName, "", "Name of private key with which to sign")
-	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
 	cmd.Flags().String(FlagFromChainID, "", "Chain ID for ibc node to check outgoing packets")
 	cmd.Flags().String(FlagFromChainNode, "tcp://localhost:46657", "<host>:<port> to tendermint rpc interface for this chain")
 	cmd.Flags().String(FlagToChainID, "", "Chain ID for ibc node to broadcast incoming packets")
-	cmd.Flags().String(FlagToChainNode, "tcp://localhost:46658", "<host>:<port> to tendermint rpc interface for this chain")
+	cmd.Flags().String(FlagToChainNode, "tcp://localhost:36657", "<host>:<port> to tendermint rpc interface for this chain")
 
-	cmd.MarkFlagRequired(client.FlagName)
 	cmd.MarkFlagRequired(FlagFromChainID)
 	cmd.MarkFlagRequired(FlagFromChainNode)
 	cmd.MarkFlagRequired(FlagToChainID)
 	cmd.MarkFlagRequired(FlagToChainNode)
 
-	viper.BindPFlag(client.FlagName, cmd.Flags().Lookup(client.FlagName))
-	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	viper.BindPFlag(FlagFromChainID, cmd.Flags().Lookup(FlagFromChainID))
 	viper.BindPFlag(FlagFromChainNode, cmd.Flags().Lookup(FlagFromChainNode))
 	viper.BindPFlag(FlagToChainID, cmd.Flags().Lookup(FlagToChainID))

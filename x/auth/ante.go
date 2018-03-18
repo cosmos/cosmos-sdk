@@ -97,7 +97,7 @@ func processSig(
 	// Get the account.
 	acc = am.GetAccount(ctx, addr)
 	if acc == nil {
-		return nil, sdk.ErrUnrecognizedAddress(addr.String()).Result()
+		return nil, sdk.ErrUnknownAddress(addr.String()).Result()
 	}
 
 	// Check and increment sequence number.

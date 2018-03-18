@@ -147,12 +147,22 @@ func (c relayCommander) refine(bz []byte, sequence int64) []byte {
 		panic(err)
 	}
 
+	// get password
+	name := viper.GetString(client.FlagName)
+	buf := client.BufferStdin()
+	prompt := fmt.Sprintf("Password to sign with '%s':", name)
+	passphrase, err := client.GetPassword(prompt, buf)
+	if err != nil {
+		panic(err)
+	}
+
 	msg := ibc.IBCReceiveMsg{
 		IBCPacket: packet,
 		Relayer:   c.address,
 		Sequence:  sequence,
 	}
-	res, err := builder.SignAndBuild(msg, c.cdc)
+
+	res, err := builder.SignAndBuild(name, passphrase, msg, c.cdc)
 	if err != nil {
 		panic(err)
 	}

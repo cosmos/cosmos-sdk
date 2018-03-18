@@ -39,25 +39,33 @@ type sendCommander struct {
 }
 
 func (c sendCommander) sendIBCTransfer(cmd *cobra.Command, args []string) error {
+	// get the from address
 	from, err := builder.GetFromAddress()
 	if err != nil {
 		return err
 	}
 
+	// build the message
 	msg, err := buildMsg(from)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("%+v\n", msg)
+	// get password
+	name := viper.GetString(client.FlagName)
+	buf := client.BufferStdin()
+	prompt := fmt.Sprintf("Password to sign with '%s':", name)
+	passphrase, err := client.GetPassword(prompt, buf)
+	if err != nil {
+		return err
+	}
 
-	res, err := builder.SignBuildBroadcast(msg, c.cdc)
+	res, err := builder.SignBuildBroadcast(name, passphrase, msg, c.cdc)
 	if err != nil {
 		return err
 	}
 
 	fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
-
 	return nil
 }
 

@@ -17,7 +17,7 @@ func (code CodeType) IsOK() bool {
 }
 
 // ABCI Response Codes
-// Base SDK reserves 0 ~ 99.
+// Base SDK reserves 0 - 99.
 const (
 	CodeOK                  CodeType = 0
 	CodeInternal            CodeType = 1

@@ -8,13 +8,13 @@ import (
 type CodeType = sdk.CodeType
 
 const (
-	// Coin errors reserve 100 ~ 199.
-	CodeInvalidInput      CodeType = 101
-	CodeInvalidOutput     CodeType = 102
-	CodeInvalidAddress    CodeType = 103
-	CodeUnknownAddress    CodeType = 104
-	CodeInsufficientCoins CodeType = 105
-	CodeInvalidCoins      CodeType = 106
+	// Coin errors reserve 100 - 199.
+	CodeInvalidInput      CodeType = 100
+	CodeInvalidOutput     CodeType = 101
+	CodeInvalidAddress    CodeType = 102
+	CodeUnknownAddress    CodeType = 103
+	CodeInsufficientCoins CodeType = 104
+	CodeInvalidCoins      CodeType = 105
 	CodeUnknownRequest    CodeType = sdk.CodeUnknownRequest
 )
 

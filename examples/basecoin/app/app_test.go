@@ -271,7 +271,8 @@ func TestQuizMsg(t *testing.T) {
 func TestHandler(t *testing.T) {
 	bapp := newBasecoinApp()
 
-	chainid := "ibcchain"
+	sourceChain := "source-chain"
+	destChain := "dest-chain"
 
 	vals := []abci.Validator{}
 	baseAcc := auth.BaseAccount{
@@ -298,8 +299,8 @@ func TestHandler(t *testing.T) {
 		SrcAddr:   addr1,
 		DestAddr:  addr1,
 		Coins:     coins,
-		SrcChain:  chainid,
-		DestChain: chainid,
+		SrcChain:  sourceChain,
+		DestChain: destChain,
 	}
 
 	transferMsg := ibc.IBCTransferMsg{

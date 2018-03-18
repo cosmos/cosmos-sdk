@@ -108,6 +108,7 @@ func MakeCodec() *wire.Codec {
 	// cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	// bank.RegisterWire(cdc)   // Register bank.[SendMsg,IssueMsg] types.
 	// crypto.RegisterWire(cdc) // Register crypto.[PubKey,PrivKey,Signature] types.
+	// ibc.RegisterWire(cdc) // Register ibc.[IBCTransferMsg, IBCReceiveMsg] types.
 	return cdc
 }
 

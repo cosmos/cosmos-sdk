@@ -4,12 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	wire "github.com/cosmos/cosmos-sdk/wire"
-
-	// temporal
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	oldwire "github.com/tendermint/go-wire"
 )
 
 // ------------------------------
@@ -61,7 +55,7 @@ func (msg IBCTransferMsg) Get(key interface{}) interface{} {
 }
 
 func (msg IBCTransferMsg) GetSignBytes() []byte {
-	cdc := makeCodec()
+	cdc := wire.NewCodec()
 	bz, err := cdc.MarshalBinary(msg.IBCPacket)
 	if err != nil {
 		panic(err)
@@ -98,7 +92,7 @@ func (msg IBCReceiveMsg) Get(key interface{}) interface{} {
 }
 
 func (msg IBCReceiveMsg) GetSignBytes() []byte {
-	cdc := newCodec()
+	cdc := wire.NewCodec()
 	bz, err := cdc.MarshalBinary(msg.IBCPacket)
 	if err != nil {
 		panic(err)
@@ -113,41 +107,4 @@ func (msg IBCReceiveMsg) ValidateBasic() sdk.Error {
 // x/bank/tx.go SendMsg.GetSigners()
 func (msg IBCReceiveMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Relayer}
-}
-
-// -------------------------
-// Helpers
-
-func newCodec() *wire.Codec {
-	return wire.NewCodec()
-}
-
-func makeCodec() *wire.Codec { // basecoin/app.MakeCodec()
-	const (
-		msgTypeSend        = 0x1
-		msgTypeIssue       = 0x2
-		msgTypeQuiz        = 0x3
-		msgTypeSetTrend    = 0x4
-		msgTypeIBCTransfer = 0x5
-		msgTypeIBCReceive  = 0x6
-	)
-
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Msg }{},
-		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
-		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
-		oldwire.ConcreteType{cool.QuizMsg{}, msgTypeQuiz},
-		oldwire.ConcreteType{cool.SetTrendMsg{}, msgTypeSetTrend},
-		oldwire.ConcreteType{IBCTransferMsg{}, msgTypeIBCTransfer},
-		oldwire.ConcreteType{IBCReceiveMsg{}, msgTypeIBCReceive},
-	)
-
-	const accTypeApp = 0x1
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Account }{},
-		oldwire.ConcreteType{&types.AppAccount{}, accTypeApp},
-	)
-
-	cdc := wire.NewCodec()
-	return cdc
 }

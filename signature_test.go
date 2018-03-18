@@ -54,12 +54,12 @@ func TestSignatureEncodings(t *testing.T) {
 		{
 			privKey:   GenPrivKeyEd25519(),
 			sigSize:   ed25519.SignatureSize,
-			sigPrefix: [4]byte{0xc8, 0x5d, 0xf4, 0xba},
+			sigPrefix: [4]byte{0x3d, 0xa1, 0xdb, 0x2a},
 		},
 		{
 			privKey:   GenPrivKeySecp256k1(),
 			sigSize:   0, // unknown
-			sigPrefix: [4]byte{0xc6, 0xa0, 0xa, 0x42},
+			sigPrefix: [4]byte{0x16, 0xe1, 0xfe, 0xea},
 		},
 	}
 

@@ -7,9 +7,11 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
+	"github.com/tendermint/go-crypto/keys"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/builder"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank/commands"
@@ -26,7 +28,7 @@ type sendBody struct {
 }
 
 // SendRequestHandler - http request handler to send coins to a address
-func SendRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Request) {
+func SendRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWriter, *http.Request) {
 	c := commands.Commander{cdc}
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
@@ -43,13 +45,6 @@ func SendRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Request
 		err = json.Unmarshal(body, &m)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		kb, err := keys.GetKeyBase()
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}
@@ -78,6 +73,8 @@ func SendRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Request
 		}
 
 		// sign
+		// XXX: OMG
+		viper.Set(client.FlagSequence, m.Sequence)
 		txBytes, err := builder.SignAndBuild(m.LocalAccountName, m.Password, msg, c.Cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)

@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 // Transactions messages must fulfill the Msg
@@ -125,7 +124,6 @@ type StdSignDoc struct {
 // StdSignBytes returns the bytes to sign for a transaction.
 // TODO: change the API to just take a chainID and StdTx ?
 func StdSignBytes(chainID string, sequences []int64, fee StdFee, msg Msg) []byte {
-	fmt.Println("FEE BYTES BABY", fee, string(fee.Bytes()))
 	bz, err := json.Marshal(StdSignDoc{
 		ChainID:   chainID,
 		Sequences: sequences,

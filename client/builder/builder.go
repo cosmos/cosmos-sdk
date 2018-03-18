@@ -88,7 +88,7 @@ func GetFromAddress() (from sdk.Address, err error) {
 }
 
 // sign and build the transaction from the msg
-func SignAndBuild(msg sdk.Msg, cdc *wire.Codec) ([]byte, error) {
+func SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *wire.Codec) ([]byte, error) {
 
 	// build the Sign Messsage from the Standard Message
 	chainID := viper.GetString(client.FlagChainID)
@@ -103,16 +103,10 @@ func SignAndBuild(msg sdk.Msg, cdc *wire.Codec) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	name := viper.GetString(client.FlagName)
 
 	// sign and build
 	bz := signMsg.Bytes()
-	buf := client.BufferStdin()
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-	passphrase, err := client.GetPassword(prompt, buf)
-	if err != nil {
-		return nil, err
-	}
+
 	sig, pubkey, err := keybase.Sign(name, passphrase, bz)
 	if err != nil {
 		return nil, err
@@ -130,8 +124,8 @@ func SignAndBuild(msg sdk.Msg, cdc *wire.Codec) ([]byte, error) {
 }
 
 // sign and build the transaction from the msg
-func SignBuildBroadcast(msg sdk.Msg, cdc *wire.Codec) (*ctypes.ResultBroadcastTxCommit, error) {
-	txBytes, err := SignAndBuild(msg, cdc)
+func SignBuildBroadcast(name string, passphrase string, msg sdk.Msg, cdc *wire.Codec) (*ctypes.ResultBroadcastTxCommit, error) {
+	txBytes, err := SignAndBuild(name, passphrase, msg, cdc)
 	if err != nil {
 		return nil, err
 	}

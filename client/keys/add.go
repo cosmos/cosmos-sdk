@@ -1,9 +1,13 @@
 package keys
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -119,4 +123,90 @@ func printCreate(info keys.Info, seed string) {
 	default:
 		panic(fmt.Sprintf("I can't speak: %s", output))
 	}
+}
+
+// REST
+
+type NewKeyBody struct {
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	Seed     string `json:"seed"`
+}
+
+func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
+	var kb keys.Keybase
+	var m NewKeyBody
+
+	kb, err := GetKeyBase()
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	err = json.Unmarshal(body, &m)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	if m.Name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("You have to specify a name for the locally stored account."))
+		return
+	}
+	if m.Password == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("You have to specify a password for the locally stored account."))
+		return
+	}
+	if m.Seed == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("You have to specify a seed for the locally stored account."))
+		return
+	}
+
+	// check if already exists
+	infos, err := kb.List()
+	for _, i := range infos {
+		if i.Name == m.Name {
+			w.WriteHeader(http.StatusConflict)
+			w.Write([]byte(fmt.Sprintf("Account with name %s already exists.", m.Name)))
+			return
+		}
+	}
+
+	// create account
+	info, err := kb.Recover(m.Name, m.Password, m.Seed)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write([]byte(info.PubKey.Address().String()))
+}
+
+// function to just a new seed to display in the UI before actually persisting it in the keybase
+func getSeed(algo keys.CryptoAlgo) string {
+	kb := client.MockKeyBase()
+	pass := "throwing-this-key-away"
+	name := "inmemorykey"
+
+	_, seed, _ := kb.Create(name, pass, algo)
+	return seed
+}
+
+func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	algoType := vars["type"]
+	// algo type defaults to ed25519
+	if algoType == "" {
+		algoType = "ed25519"
+	}
+	algo := keys.CryptoAlgo(algoType)
+
+	seed := getSeed(algo)
+	w.Write([]byte(seed))
 }

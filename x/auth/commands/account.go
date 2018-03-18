@@ -16,10 +16,10 @@ import (
 
 // GetAccountCmd for the auth.BaseAccount type
 func GetAccountCmdDefault(storeName string, cdc *wire.Codec) *cobra.Command {
-	return GetAccountCmd(storeName, cdc, getParseAccount(cdc))
+	return GetAccountCmd(storeName, cdc, GetParseAccount(cdc))
 }
 
-func getParseAccount(cdc *wire.Codec) sdk.ParseAccount {
+func GetParseAccount(cdc *wire.Codec) sdk.ParseAccount {
 	return func(accBytes []byte) (sdk.Account, error) {
 		acct := new(auth.BaseAccount)
 		err := cdc.UnmarshalBinary(accBytes, &acct)

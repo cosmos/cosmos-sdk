@@ -1,6 +1,8 @@
 package types
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // Transactions messages must fulfill the Msg
 type Msg interface {
@@ -90,6 +92,13 @@ func NewStdFee(gas int64, amount ...Coin) StdFee {
 }
 
 func (fee StdFee) Bytes() []byte {
+	// normalize. XXX
+	// this is a sign of something ugly
+	// (in the lcd_test, client side its null,
+	// server side its [])
+	if len(fee.Amount) == 0 {
+		fee.Amount = Coins{}
+	}
 	bz, err := json.Marshal(fee) // TODO
 	if err != nil {
 		panic(err)

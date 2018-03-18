@@ -9,12 +9,12 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	//"strings"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/stretchr/testify/require"
 )
 
 // Tests assume the `basecoind` and `basecli` binaries
@@ -57,22 +57,20 @@ func TestInitBasecoin(t *testing.T, home string) string {
 
 	initBasecoind := exec.Command(whereIsBasecoind(), "init", "--home", home)
 	cmdWriter, err := initBasecoind.StdinPipe()
-	require.Nil(t, err)
+	assert.Nil(t, err)
 
 	buf := new(bytes.Buffer)
 	initBasecoind.Stdout = buf
 
-	if err = initBasecoind.Start(); err != nil {
-		t.Error(err)
-	}
+	err = initBasecoind.Start()
+	assert.Nil(t, err)
 
 	_, err = cmdWriter.Write([]byte(password))
-	require.Nil(t, err)
+	assert.Nil(t, err)
 	cmdWriter.Close()
 
-	if err = initBasecoind.Wait(); err != nil {
-		t.Error(err)
-	}
+	err = initBasecoind.Wait()
+	assert.NotNil(t, err)
 
 	// get seed from initialization
 	theOutput := strings.Split(buf.String(), "\n")
@@ -88,9 +86,91 @@ func TestInitBasecoin(t *testing.T, home string) string {
 
 	// enable indexing
 	err = appendToFile(path.Join(home, "config", "config.toml"), "\n\n[tx_indexing]\nindex_all_tags = true\n")
-	require.Nil(t, err)
+	assert.Nil(t, err)
 
 	return seed
+}
+
+func _TestSendCoins(t *testing.T) {
+	err := StartServer()
+	assert.NotNil(t, err)
+
+	// send some coins
+	// [zr] where dafuq do I get a FROM (oh, use --name)
+
+	sendTo := fmt.Sprintf("--to=%s", bob)
+	sendFrom := fmt.Sprintf("--from=%s", alice)
+
+	cmdOut, err := exec.Command(whereIsBasecli(), "send", sendTo, "--amount=1000mycoin", sendFrom, "--seq=0").Output()
+	assert.Nil(t, err)
+
+	fmt.Printf("sent: %s", string(cmdOut))
+}
+
+// Init Basecoin Test
+func InitServerForTest(t *testing.T) {
+	Clean()
+
+	var err error
+
+	password := "some-random-password"
+	usePassword := exec.Command("echo", password)
+
+	initBasecoind := exec.Command(whereIsBasecoind(), "init", "--home", basecoindDir)
+
+	initBasecoind.Stdin, err = usePassword.StdoutPipe()
+	assert.Nil(t, err)
+
+	initBasecoind.Stdout = os.Stdout
+
+	err = initBasecoind.Start()
+	assert.Nil(t, err)
+	err = usePassword.Run()
+	assert.Nil(t, err)
+	err = initBasecoind.Wait()
+	assert.Nil(t, err)
+
+	err = makeKeys()
+	assert.Nil(t, err)
+}
+
+// expects TestInitBaseCoin to have been run
+func StartNodeServerForTest(t *testing.T, home string) *exec.Cmd {
+	cmdName := whereIsBasecoind()
+	cmdArgs := []string{"start", "--home", home}
+	cmd := exec.Command(cmdName, cmdArgs...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Start()
+	assert.Nil(t, err)
+
+	// FIXME: if there is a nondeterministic node start failure,
+	//        we should probably make this read the logs to wait for RPC
+	time.Sleep(time.Second * 2)
+
+	return cmd
+}
+
+// expects TestInitBaseCoin to have been run
+func StartLCDServerForTest(t *testing.T, home, chainID string) (cmd *exec.Cmd, port string) {
+	cmdName := whereIsBasecli()
+	port = strings.Split(server.FreeTCPAddr(t), ":")[2]
+	cmdArgs := []string{
+		"rest-server",
+		"--home",
+		home,
+		"--bind",
+		fmt.Sprintf("localhost:%s", port),
+		"--chain-id",
+		chainID,
+	}
+	cmd = exec.Command(cmdName, cmdArgs...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Start()
+	assert.Nil(t, err)
+	time.Sleep(time.Second * 2) // TODO: LOL
+	return cmd, port
 }
 
 func appendToFile(path string, text string) error {
@@ -134,25 +214,6 @@ func makeKeys() error {
 	return nil
 }
 
-func _TestSendCoins(t *testing.T) {
-	if err := StartServer(); err != nil {
-		t.Error(err)
-	}
-
-	// send some coins
-	// [zr] where dafuq do I get a FROM (oh, use --name)
-
-	sendTo := fmt.Sprintf("--to=%s", bob)
-	sendFrom := fmt.Sprintf("--from=%s", alice)
-
-	cmdOut, err := exec.Command(whereIsBasecli(), "send", sendTo, "--amount=1000mycoin", sendFrom, "--seq=0").Output()
-	if err != nil {
-		t.Error(err)
-	}
-
-	fmt.Printf("sent: %s", string(cmdOut))
-}
-
 // expects TestInitBaseCoin to have been run
 func StartServer() error {
 	// straight outta https://nathanleclaire.com/blog/2014/12/29/shelled-out-commands-in-golang/
@@ -191,72 +252,6 @@ func StartServer() error {
 	// see: https://stackoverflow.com/questions/11886531/terminating-a-process-started-with-os-exec-in-golang
 }
 
-// Init Basecoin Test
-func InitServerForTest(t *testing.T) {
-	Clean()
-
-	var err error
-
-	password := "some-random-password"
-	usePassword := exec.Command("echo", password)
-
-	initBasecoind := exec.Command(whereIsBasecoind(), "init", "--home", basecoindDir)
-
-	initBasecoind.Stdin, err = usePassword.StdoutPipe()
-	require.Nil(t, err)
-
-	initBasecoind.Stdout = os.Stdout
-
-	err = initBasecoind.Start()
-	require.Nil(t, err)
-	err = usePassword.Run()
-	require.Nil(t, err)
-	err = initBasecoind.Wait()
-	require.Nil(t, err)
-
-	err = makeKeys()
-	require.Nil(t, err)
-}
-
-// expects TestInitBaseCoin to have been run
-func StartNodeServerForTest(t *testing.T, home string) *exec.Cmd {
-	cmdName := whereIsBasecoind()
-	cmdArgs := []string{"start", "--home", home}
-	cmd := exec.Command(cmdName, cmdArgs...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Start()
-	require.Nil(t, err)
-
-	// FIXME: if there is a nondeterministic node start failure,
-	//        we should probably make this read the logs to wait for RPC
-	time.Sleep(time.Second * 2)
-
-	return cmd
-}
-
-// expects TestInitBaseCoin to have been run
-func StartLCDServerForTest(t *testing.T, home, chainID string) (cmd *exec.Cmd, port string) {
-	cmdName := whereIsBasecli()
-	port = strings.Split(server.FreeTCPAddr(t), ":")[2]
-	cmdArgs := []string{
-		"rest-server",
-		"--home",
-		home,
-		"--bind",
-		fmt.Sprintf("localhost:%s", port),
-		"--chain-id",
-		chainID,
-	}
-	cmd = exec.Command(cmdName, cmdArgs...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Start()
-	require.Nil(t, err)
-	time.Sleep(time.Second * 2) // TODO: LOL
-	return cmd, port
-}
-
 // clean the directories
 func Clean() {
 	// ignore errors b/c the dirs may not yet exist
@@ -267,7 +262,6 @@ func Clean() {
 }
 
 /*
-
 	chainID = "staking_test"
 	testDir = "./tmp_tests"
 )
@@ -315,5 +309,4 @@ func initServer() error {
 	fmt.Sprintf("OUT: %s", string(outByte))
 	return nil
 }
-
 */

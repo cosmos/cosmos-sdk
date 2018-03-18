@@ -66,10 +66,10 @@ func TestSerializeMsg(t *testing.T) {
 	tests := []struct {
 		tx sdk.Msg
 	}{
-		{NewMsgDeclareCandidacy(addrs[0], pks[0], bond, Description{})},
-		{NewMsgEditCandidacy(addrs[0], Description{})},
-		{NewMsgDelegate(addrs[0], bond)},
-		{NewMsgUnbond(addrs[0], strconv.Itoa(bondAmt))},
+		{NewDeclareCandidacyMsg(addrs[0], pks[0], bond, Description{})},
+		{NewEditCandidacyMsg(addrs[0], Description{})},
+		{NewDelegateMsg(addrs[0], bond)},
+		{NewUnbondMsg(addrs[0], strconv.Itoa(bondAmt))},
 	}
 
 	for i, tc := range tests {

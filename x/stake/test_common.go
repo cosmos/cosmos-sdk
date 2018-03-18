@@ -40,10 +40,10 @@ func makeTestCodec() *wire.Codec {
 		struct{ sdk.Msg }{},
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
 		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
-		oldwire.ConcreteType{MsgDeclareCandidacy{}, msgTypeDeclareCandidacy},
-		oldwire.ConcreteType{MsgEditCandidacy{}, msgTypeEditCandidacy},
-		oldwire.ConcreteType{MsgDelegate{}, msgTypeDelegate},
-		oldwire.ConcreteType{MsgUnbond{}, msgTypeUnbond},
+		oldwire.ConcreteType{DeclareCandidacyMsg{}, msgTypeDeclareCandidacy},
+		oldwire.ConcreteType{EditCandidacyMsg{}, msgTypeEditCandidacy},
+		oldwire.ConcreteType{DelegateMsg{}, msgTypeDelegate},
+		oldwire.ConcreteType{UnbondMsg{}, msgTypeUnbond},
 	)
 
 	const accTypeApp = 0x1

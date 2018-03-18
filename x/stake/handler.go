@@ -65,25 +65,25 @@ func NewHandler(mapper Mapper, ck bank.CoinKeeper) sdk.Handler {
 
 		// Run the transaction
 		switch msg := msg.(type) {
-		case MsgDeclareCandidacy:
+		case DeclareCandidacyMsg:
 			res := transact.declareCandidacy(msg).Result()
 			if !ctx.IsCheckTx() {
 				res.GasUsed = params.GasDeclareCandidacy
 			}
 			return res
-		case MsgEditCandidacy:
+		case EditCandidacyMsg:
 			res := transact.editCandidacy(msg).Result()
 			if !ctx.IsCheckTx() {
 				res.GasUsed = params.GasEditCandidacy
 			}
 			return res
-		case MsgDelegate:
+		case DelegateMsg:
 			res := transact.delegate(msg).Result()
 			if !ctx.IsCheckTx() {
 				res.GasUsed = params.GasDelegate
 			}
 			return res
-		case MsgUnbond:
+		case UnbondMsg:
 			res := transact.unbond(msg).Result()
 			if !ctx.IsCheckTx() {
 				res.GasUsed = params.GasUnbond
@@ -152,7 +152,7 @@ func checkDenom(mapper Mapper, bond sdk.Coin) sdk.Error {
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
-func (tr transact) declareCandidacy(tx MsgDeclareCandidacy) sdk.Error {
+func (tr transact) declareCandidacy(tx DeclareCandidacyMsg) sdk.Error {
 
 	// check to see if the pubkey or sender has been registered before
 	if tr.mapper.loadCandidate(tx.Address) != nil {
@@ -171,11 +171,11 @@ func (tr transact) declareCandidacy(tx MsgDeclareCandidacy) sdk.Error {
 
 	// move coins from the tr.sender account to a (self-bond) delegator account
 	// the candidate account and global shares are updated within here
-	txDelegate := NewMsgDelegate(tx.Address, tx.Bond)
+	txDelegate := NewDelegateMsg(tx.Address, tx.Bond)
 	return tr.delegateWithCandidate(txDelegate, candidate)
 }
 
-func (tr transact) editCandidacy(tx MsgEditCandidacy) sdk.Error {
+func (tr transact) editCandidacy(tx EditCandidacyMsg) sdk.Error {
 
 	// candidate must already be registered
 	if tr.mapper.loadCandidate(tx.Address) == nil {
@@ -212,7 +212,7 @@ func (tr transact) editCandidacy(tx MsgEditCandidacy) sdk.Error {
 	return nil
 }
 
-func (tr transact) delegate(tx MsgDelegate) sdk.Error {
+func (tr transact) delegate(tx DelegateMsg) sdk.Error {
 
 	if tr.mapper.loadCandidate(tx.Address) == nil {
 		return ErrBadCandidateAddr()
@@ -233,7 +233,7 @@ func (tr transact) delegate(tx MsgDelegate) sdk.Error {
 	return tr.delegateWithCandidate(tx, candidate)
 }
 
-func (tr transact) delegateWithCandidate(tx MsgDelegate, candidate *Candidate) sdk.Error {
+func (tr transact) delegateWithCandidate(tx DelegateMsg, candidate *Candidate) sdk.Error {
 
 	if candidate.Status == Revoked { //candidate has been withdrawn
 		return ErrBondNotNominated()
@@ -290,7 +290,7 @@ func (tr *transact) UnbondCoins(bond *DelegatorBond, candidate *Candidate, share
 	return nil
 }
 
-func (tr transact) unbond(tx MsgUnbond) sdk.Error {
+func (tr transact) unbond(tx UnbondMsg) sdk.Error {
 
 	// check if bond has any shares in it unbond
 	bond := tr.mapper.loadDelegatorBond(tr.sender, tx.Address)

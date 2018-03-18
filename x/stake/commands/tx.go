@@ -76,7 +76,7 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 				Website:  viper.GetString(FlagWebsite),
 				Details:  viper.GetString(FlagDetails),
 			}
-			msg := stake.NewMsgDeclareCandidacy(addr, pk, amount, description)
+			msg := stake.NewDeclareCandidacyMsg(addr, pk, amount, description)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			res, err := builder.SignBuildBroadcast(msg, cdc)
@@ -112,7 +112,7 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 				Website:  viper.GetString(FlagWebsite),
 				Details:  viper.GetString(FlagDetails),
 			}
-			msg := stake.NewMsgEditCandidacy(addr, description)
+			msg := stake.NewEditCandidacyMsg(addr, description)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			res, err := builder.SignBuildBroadcast(msg, cdc)
@@ -146,7 +146,7 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := stake.NewMsgDelegate(addr, amount)
+			msg := stake.NewDelegateMsg(addr, amount)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			res, err := builder.SignBuildBroadcast(msg, cdc)
@@ -190,7 +190,7 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := stake.NewMsgUnbond(addr, sharesStr)
+			msg := stake.NewUnbondMsg(addr, sharesStr)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			res, err := builder.SignBuildBroadcast(msg, cdc)

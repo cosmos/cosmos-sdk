@@ -151,7 +151,6 @@ func _TestSendCoins(t *testing.T) {
 	}
 
 	fmt.Printf("sent: %s", string(cmdOut))
-
 }
 
 // expects TestInitBaseCoin to have been run

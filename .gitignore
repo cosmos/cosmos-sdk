@@ -11,6 +11,9 @@ examples/basecoin/app/data
 baseapp/data/*
 docs/_build
 .DS_Store
+coverage.txt
+tmp-basecli-tests/
+tmp-basecoind-tests/
 
 
 ### Vagrant ###

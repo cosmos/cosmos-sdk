@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"os"
+	//	"os"
 	"testing"
 	"time"
 
@@ -32,6 +32,7 @@ func TestStartStandAlone(t *testing.T) {
 	require.NoError(t, err)
 }
 
+/*
 func TestStartWithTendermint(t *testing.T) {
 	defer setupViper()()
 
@@ -50,6 +51,7 @@ func TestStartWithTendermint(t *testing.T) {
 	err = runOrTimeout(startCmd, timeout)
 	require.NoError(t, err)
 }
+*/
 
 func runOrTimeout(cmd *cobra.Command, timeout time.Duration) error {
 	done := make(chan error)

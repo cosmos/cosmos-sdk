@@ -51,13 +51,13 @@ func (c sendCommander) sendIBCTransfer(cmd *cobra.Command, args []string) error 
 
 	fmt.Printf("%+v\n", msg)
 
-	bz := sdk.StdSignBytes(viper.GetString(flagChain), []int64{viper.GetInt64(client.FlagSequence)}, msg)
-	res, err := builder.BroadcastTx(bz)
+	res, err := builder.SignBuildBroadcast(msg, c.cdc)
 	if err != nil {
 		return err
 	}
 
 	fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
+
 	return nil
 }
 
@@ -73,10 +73,9 @@ func buildMsg(from sdk.Address) (sdk.Msg, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	to := sdk.Address(bz)
 
-	packet := ibc.NewIBCPacket(from, to, coins, viper.GetString(flagChain),
+	packet := ibc.NewIBCPacket(from, to, coins, client.FlagChainID,
 		viper.GetString(flagChain))
 
 	msg := ibc.IBCTransferMsg{

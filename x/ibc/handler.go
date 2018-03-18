@@ -4,7 +4,6 @@ import (
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
@@ -22,32 +21,37 @@ func NewHandler(ibcm IBCMapper, ck bank.CoinKeeper) sdk.Handler {
 	}
 }
 
+// Handle outgoing IBC packets.
 func handleIBCTransferMsg(ctx sdk.Context, ibcm IBCMapper, ck bank.CoinKeeper, msg IBCTransferMsg) sdk.Result {
 	packet := msg.IBCPacket
+
 	_, err := ck.SubtractCoins(ctx, packet.SrcAddr, packet.Coins)
 	if err != nil {
 		return err.Result()
 	}
-	ibcm.PushPacket(ctx, packet)
+
+	err = ibcm.PostIBCPacket(ctx, packet)
+	if err != nil {
+		return err.Result()
+	}
 
 	return sdk.Result{}
 }
 
 func handleIBCReceiveMsg(ctx sdk.Context, ibcm IBCMapper, ck bank.CoinKeeper, msg IBCReceiveMsg) sdk.Result {
 	packet := msg.IBCPacket
+
 	seq := ibcm.GetIngressSequence(ctx, packet.SrcChain)
 	if msg.Sequence != seq {
 		return ErrInvalidSequence().Result()
 	}
-	ibcm.SetIngressSequence(ctx, packet.SrcChain, seq+1)
 
 	_, err := ck.AddCoins(ctx, packet.DestAddr, packet.Coins)
 	if err != nil {
 		return err.Result()
 	}
 
-	// handle packet
-	// packet.Handle(ctx)...
+	ibcm.SetIngressSequence(ctx, packet.SrcChain, seq+1)
 
 	return sdk.Result{}
 }

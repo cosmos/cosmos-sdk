@@ -9,6 +9,9 @@ The initial implementation of IBC will include just enough for simple coin
 transfers between chains, with safety features such as ACK messages being added 
 later.
 
+It is a complete stand-alone module. It includes the commands to send IBC
+packets as well as to post them to the destination chain.
+
 ### IBC Module
 
 ```go

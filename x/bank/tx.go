@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	crypto "github.com/tendermint/go-crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -14,6 +12,8 @@ type SendMsg struct {
 	Inputs  []Input  `json:"inputs"`
 	Outputs []Output `json:"outputs"`
 }
+
+var _ sdk.Msg = SendMsg{}
 
 // NewSendMsg - construct arbitrary multi-in, multi-out send msg.
 func NewSendMsg(in []Input, out []Output) SendMsg {
@@ -87,7 +87,7 @@ func (msg SendMsg) GetSigners() []sdk.Address {
 // IssueMsg - high level transaction of the coin module
 type IssueMsg struct {
 	Banker  sdk.Address `json:"banker"`
-	Outputs []Output       `json:"outputs"`
+	Outputs []Output    `json:"outputs"`
 }
 
 // NewIssueMsg - construct arbitrary multi-in, multi-out send msg.
@@ -96,7 +96,7 @@ func NewIssueMsg(banker sdk.Address, out []Output) IssueMsg {
 }
 
 // Implements Msg.
-func (msg IssueMsg) Type() string { return "bank" } // TODO: "bank/send"
+func (msg IssueMsg) Type() string { return "bank" } // TODO: "bank/issue"
 
 // Implements Msg.
 func (msg IssueMsg) ValidateBasic() sdk.Error {
@@ -138,21 +138,16 @@ func (msg IssueMsg) GetSigners() []sdk.Address {
 //----------------------------------------
 // Input
 
+// Transaction Output
 type Input struct {
-	Address  sdk.Address `json:"address"`
-	Coins    sdk.Coins      `json:"coins"`
-	Sequence int64          `json:"sequence"`
-
-	signature crypto.Signature
+	Address sdk.Address `json:"address"`
+	Coins   sdk.Coins   `json:"coins"`
 }
 
 // ValidateBasic - validate transaction input
 func (in Input) ValidateBasic() sdk.Error {
 	if len(in.Address) == 0 {
 		return ErrInvalidAddress(in.Address.String())
-	}
-	if in.Sequence < 0 {
-		return ErrInvalidSequence("negative sequence")
 	}
 	if !in.Coins.IsValid() {
 		return ErrInvalidCoins(in.Coins.String())
@@ -176,19 +171,13 @@ func NewInput(addr sdk.Address, coins sdk.Coins) Input {
 	return input
 }
 
-// NewInputWithSequence - create a transaction input, used with SendMsg
-func NewInputWithSequence(addr sdk.Address, coins sdk.Coins, seq int64) Input {
-	input := NewInput(addr, coins)
-	input.Sequence = seq
-	return input
-}
-
 //----------------------------------------
 // Output
 
+// Transaction Output
 type Output struct {
 	Address sdk.Address `json:"address"`
-	Coins   sdk.Coins      `json:"coins"`
+	Coins   sdk.Coins   `json:"coins"`
 }
 
 // ValidateBasic - validate transaction output

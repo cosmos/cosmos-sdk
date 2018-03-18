@@ -11,6 +11,9 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
+var _ sdk.AccountMapper = (*accountMapper)(nil)
+var _ sdk.AccountMapper = (*sealedAccountMapper)(nil)
+
 // Implements sdk.AccountMapper.
 // This AccountMapper encodes/decodes accounts using the
 // go-wire (binary) encoding/decoding library.
@@ -108,6 +111,7 @@ func (sam sealedAccountMapper) WireCodec() *wire.Codec {
 //----------------------------------------
 // misc.
 
+// NOTE: currently unused
 func (am accountMapper) clonePrototypePtr() interface{} {
 	protoRt := reflect.TypeOf(am.proto)
 	if protoRt.Kind() == reflect.Ptr {

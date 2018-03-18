@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/builder"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -16,13 +16,16 @@ import (
 
 // GetAccountCmd for the auth.BaseAccount type
 func GetAccountCmdDefault(storeName string, cdc *wire.Codec) *cobra.Command {
-	return GetAccountCmd(storeName, cdc, getParseAccount(cdc))
+	return GetAccountCmd(storeName, cdc, GetParseAccount(cdc))
 }
 
-func getParseAccount(cdc *wire.Codec) sdk.ParseAccount {
+func GetParseAccount(cdc *wire.Codec) sdk.ParseAccount {
 	return func(accBytes []byte) (sdk.Account, error) {
 		acct := new(auth.BaseAccount)
-		err := cdc.UnmarshalBinary(accBytes, acct)
+		err := cdc.UnmarshalBinary(accBytes, &acct)
+		if err != nil {
+			panic(err)
+		}
 		return acct, err
 	}
 }
@@ -61,7 +64,7 @@ func (c commander) getAccountCmd(cmd *cobra.Command, args []string) error {
 	}
 	key := sdk.Address(bz)
 
-	res, err := client.Query(key, c.storeName)
+	res, err := builder.Query(key, c.storeName)
 
 	// parse out the value
 	account, err := c.parser(res)

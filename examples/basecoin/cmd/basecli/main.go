@@ -13,12 +13,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	coolcmd "github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool/commands"
 )
 
 // gaiacliCmd is the entry point for this binary
@@ -40,6 +42,10 @@ func main() {
 	// get the codec
 	cdc := app.MakeCodec()
 
+	// TODO: setup keybase, viper object, etc. to be passed into
+	// the below functions and eliminate global vars, like we do
+	// with the cdc
+
 	// add standard rpc, and tx commands
 	rpc.AddCommands(basecliCmd)
 	basecliCmd.AddCommand(client.LineBreak)
@@ -55,11 +61,19 @@ func main() {
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
 		)...)
+	basecliCmd.AddCommand(
+		client.PostCommands(
+			coolcmd.QuizTxCmd(cdc),
+		)...)
+	basecliCmd.AddCommand(
+		client.PostCommands(
+			coolcmd.SetTrendTxCmd(cdc),
+		)...)
 
 	// add proxy, version and key info
 	basecliCmd.AddCommand(
 		client.LineBreak,
-		lcd.ServeCommand(),
+		lcd.ServeCommand(cdc),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,

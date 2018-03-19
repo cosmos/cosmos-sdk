@@ -9,7 +9,7 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/store"
+	store "github.com/cosmos/cosmos-sdk/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )

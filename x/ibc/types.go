@@ -35,6 +35,9 @@ func (ibcp IBCPacket) ValidateBasic() sdk.Error {
 	if ibcp.SrcChain == ibcp.DestChain {
 		return ErrIdenticalChains().Trace("")
 	}
+	if !ibcp.Coins.IsValid() {
+		return sdk.ErrInvalidCoins("")
+	}
 	return nil
 }
 
@@ -56,7 +59,7 @@ func (msg IBCTransferMsg) Get(key interface{}) interface{} {
 
 func (msg IBCTransferMsg) GetSignBytes() []byte {
 	cdc := wire.NewCodec()
-	bz, err := cdc.MarshalBinary(msg.IBCPacket)
+	bz, err := cdc.MarshalBinary(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -93,7 +96,7 @@ func (msg IBCReceiveMsg) Get(key interface{}) interface{} {
 
 func (msg IBCReceiveMsg) GetSignBytes() []byte {
 	cdc := wire.NewCodec()
-	bz, err := cdc.MarshalBinary(msg.IBCPacket)
+	bz, err := cdc.MarshalBinary(msg)
 	if err != nil {
 		panic(err)
 	}

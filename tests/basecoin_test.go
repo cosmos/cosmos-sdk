@@ -146,21 +146,6 @@ func startLCDServerForTest(t *testing.T, home, chainID string) (cmd *exec.Cmd, p
 	return cmd, port
 }
 
-func appendToFile(path string, text string) error {
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		return err
-	}
-
-	defer f.Close()
-
-	if _, err = f.WriteString(text); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func makeKeys(t *testing.T) {
 	for _, acc := range ACCOUNTS {
 		makeKeys := exec.Command(basecliPath, "keys", "add", acc, "--home", basecliDir)
@@ -210,7 +195,7 @@ func startServer(t *testing.T) {
 }
 
 // clean the directories
-func Clean() {
+func clean() {
 	// ignore errors b/c the dirs may not yet exist
 	err := os.Remove(basecoindDir)
 	panic(err)

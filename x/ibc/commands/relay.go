@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
@@ -24,15 +25,19 @@ const (
 )
 
 type relayCommander struct {
-	cdc      *wire.Codec
-	address  sdk.Address
-	ibcStore string
+	cdc       *wire.Codec
+	address   sdk.Address
+	parser    sdk.ParseAccount
+	mainStore string
+	ibcStore  string
 }
 
 func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 	cmdr := relayCommander{
-		cdc:      cdc,
-		ibcStore: "ibc",
+		cdc:       cdc,
+		parser:    authcmd.GetParseAccount(cdc),
+		ibcStore:  "ibc",
+		mainStore: "main",
 	}
 
 	cmd := &cobra.Command{
@@ -64,7 +69,6 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	toChainID := viper.GetString(FlagToChainID)
 	toChainNode := viper.GetString(FlagToChainNode)
 	address, err := builder.GetFromAddress()
-
 	if err != nil {
 		panic(err)
 	}
@@ -74,6 +78,15 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 }
 
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
+	// get password
+	name := viper.GetString(client.FlagName)
+	buf := client.BufferStdin()
+	prompt := fmt.Sprintf("Password to sign with '%s':", name)
+	passphrase, err := client.GetPassword(prompt, buf)
+	if err != nil {
+		panic(err)
+	}
+
 	ingressKey := ibc.IngressSequenceKey(fromChainID)
 
 	processedbz, err := query(toChainNode, ingressKey, c.ibcStore)
@@ -104,6 +117,7 @@ OUTER:
 		} else if err = c.cdc.UnmarshalBinary(egressLengthbz, &egressLength); err != nil {
 			panic(err)
 		}
+		fmt.Printf("egressLength queried: %d\n", egressLength)
 
 		for i := processed; i < egressLength; i++ {
 			egressbz, err := query(fromChainNode, ibc.EgressKey(toChainID, i), c.ibcStore)
@@ -112,7 +126,7 @@ OUTER:
 				continue OUTER
 			}
 
-			err = broadcastTx(toChainNode, c.refine(egressbz, i))
+			err = c.broadcastTx(toChainNode, c.refine(egressbz, i, passphrase))
 			if err != nil {
 				fmt.Printf("Error broadcasting ingress packet: '%s'\n", err)
 				continue OUTER
@@ -125,34 +139,40 @@ OUTER:
 	}
 }
 
-func query(id string, key []byte, storeName string) (res []byte, err error) {
+func query(node string, key []byte, storeName string) (res []byte, err error) {
 	orig := viper.GetString(client.FlagNode)
-	viper.Set(client.FlagNode, id)
+	viper.Set(client.FlagNode, node)
 	res, err = builder.Query(key, storeName)
 	viper.Set(client.FlagNode, orig)
 	return res, err
 }
 
-func broadcastTx(id string, tx []byte) error {
+func (c relayCommander) broadcastTx(node string, tx []byte) error {
 	orig := viper.GetString(client.FlagNode)
-	viper.Set(client.FlagNode, id)
+	viper.Set(client.FlagNode, node)
+	seq := c.getSequence(node) + 1
+	viper.Set(client.FlagSequence, seq)
 	_, err := builder.BroadcastTx(tx)
 	viper.Set(client.FlagNode, orig)
 	return err
 }
 
-func (c relayCommander) refine(bz []byte, sequence int64) []byte {
-	var packet ibc.IBCPacket
-	if err := c.cdc.UnmarshalBinary(bz, &packet); err != nil {
+func (c relayCommander) getSequence(node string) int64 {
+	res, err := query(node, c.address, c.mainStore)
+	if err != nil {
+		panic(err)
+	}
+	account, err := c.parser(res)
+	if err != nil {
 		panic(err)
 	}
 
-	// get password
-	name := viper.GetString(client.FlagName)
-	buf := client.BufferStdin()
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-	passphrase, err := client.GetPassword(prompt, buf)
-	if err != nil {
+	return account.GetSequence()
+}
+
+func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []byte {
+	var packet ibc.IBCPacket
+	if err := c.cdc.UnmarshalBinary(bz, &packet); err != nil {
 		panic(err)
 	}
 
@@ -162,6 +182,7 @@ func (c relayCommander) refine(bz []byte, sequence int64) []byte {
 		Sequence:  sequence,
 	}
 
+	name := viper.GetString(client.FlagName)
 	res, err := builder.SignAndBuild(name, passphrase, msg, c.cdc)
 	if err != nil {
 		panic(err)

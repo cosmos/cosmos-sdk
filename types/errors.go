@@ -17,7 +17,7 @@ func (code CodeType) IsOK() bool {
 }
 
 // ABCI Response Codes
-// Base SDK reserves 0 ~ 99.
+// Base SDK reserves 0 - 99.
 const (
 	CodeOK                CodeType = 0
 	CodeInternal          CodeType = 1
@@ -56,6 +56,8 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "Invalid address"
 	case CodeInvalidPubKey:
 		return "Invalid pubkey"
+	case CodeUnknownAddress:
+		return "Unknown address"
 	case CodeInsufficientCoins:
 		return "Insufficient coins"
 	case CodeInvalidCoins:

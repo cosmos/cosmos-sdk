@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
+	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/commands"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
@@ -68,6 +69,14 @@ func main() {
 	basecliCmd.AddCommand(
 		client.PostCommands(
 			coolcmd.SetTrendTxCmd(cdc),
+		)...)
+	basecliCmd.AddCommand(
+		client.PostCommands(
+			ibccmd.IBCTransferCmd(cdc),
+		)...)
+	basecliCmd.AddCommand(
+		client.PostCommands(
+			ibccmd.IBCRelayCmd(cdc),
 		)...)
 
 	// add proxy, version and key info

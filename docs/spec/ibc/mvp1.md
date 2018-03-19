@@ -1,20 +1,27 @@
 # IBC Spec
 
-*This is a living document and should be edited as the IBC spec and implementation change*
+*This is a living document and should be edited as the IBC spec and 
+implementation change*
 
 ## MVP1
 
-The initial implementation of IBC will include just enough for simple coin transfers between chains, with safety features such as ACK messages being added later.
+The initial implementation of IBC will include just enough for simple coin 
+transfers between chains, with safety features such as ACK messages being added 
+later.
+
+It is a complete stand-alone module. It includes the commands to send IBC
+packets as well as to post them to the destination chain.
 
 ### IBC Module
 
-```golang
+```go
 // User facing API
 
 type IBCPacket struct {
-    DestAddr sdk.Address
-    Coins    sdk.Coins
-    SrcChain string
+    SrcAddr   sdk.Address
+    DestAddr  sdk.Address
+    Coins     sdk.Coins
+    SrcChain  string
     DestChain string
 }
 
@@ -26,6 +33,8 @@ type IBCTransferMsg struct {
 // Implements sdk.Msg
 type IBCReceiveMsg struct {
     IBCPacket
+    Relayer  sdk.Address
+    Sequence int64
 }
 
 // Internal API
@@ -47,9 +56,12 @@ type EgressKey struct {
 
 ```
 
-`egressKey` stores the outgoing `IBCTransfer`s as a list. Its getter takes an `EgressKey` and returns the length if `egressKey.Index == -1`, an element if `egressKey.Index > 0`.
+`egressKey` stores the outgoing `IBCTransfer`s as a list. Its getter takes an 
+`EgressKey` and returns the length if `egressKey.Index == -1`, an element if 
+`egressKey.Index > 0`.
 
-`ingressKey` stores the last income `IBCTransfer`'s sequence. Its getter takes an `IngressKey`.
+`ingressKey` stores the latest income `IBCTransfer`'s sequence. It's getter 
+takes an `IngressKey`.
 
 ## Relayer
 

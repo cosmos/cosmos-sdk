@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
@@ -55,17 +56,19 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	// add handlers
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	coolMapper := cool.NewMapper(app.capKeyMainStore)
+	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
 	app.Router().
 		AddRoute("bank", bank.NewHandler(coinKeeper)).
 		AddRoute("cool", cool.NewHandler(coinKeeper, coolMapper)).
-		AddRoute("sketchy", sketchy.NewHandler())
+		AddRoute("sketchy", sketchy.NewHandler()).
+		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper))
 
 	// initialize BaseApp
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
 	// TODO: mounting multiple stores is broken
 	// https://github.com/cosmos/cosmos-sdk/issues/532
-	app.MountStoresIAVL(app.capKeyMainStore) // , app.capKeyIBCStore)
+	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
@@ -83,12 +86,16 @@ func MakeCodec() *wire.Codec {
 	const msgTypeIssue = 0x2
 	const msgTypeQuiz = 0x3
 	const msgTypeSetTrend = 0x4
+	const msgTypeIBCTransferMsg = 0x5
+	const msgTypeIBCReceiveMsg = 0x6
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Msg }{},
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
 		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
 		oldwire.ConcreteType{cool.QuizMsg{}, msgTypeQuiz},
 		oldwire.ConcreteType{cool.SetTrendMsg{}, msgTypeSetTrend},
+		oldwire.ConcreteType{ibc.IBCTransferMsg{}, msgTypeIBCTransferMsg},
+		oldwire.ConcreteType{ibc.IBCReceiveMsg{}, msgTypeIBCReceiveMsg},
 	)
 
 	const accTypeApp = 0x1
@@ -101,6 +108,7 @@ func MakeCodec() *wire.Codec {
 	// cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	// bank.RegisterWire(cdc)   // Register bank.[SendMsg,IssueMsg] types.
 	// crypto.RegisterWire(cdc) // Register crypto.[PubKey,PrivKey,Signature] types.
+	// ibc.RegisterWire(cdc) // Register ibc.[IBCTransferMsg, IBCReceiveMsg] types.
 	return cdc
 }
 

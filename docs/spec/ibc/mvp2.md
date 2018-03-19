@@ -23,6 +23,7 @@ type Payload interface {
 }
 
 type TransferPayload struct {
+    SrcAddr  sdk.Address
     DestAddr sdk.Address
     Coins    sdk.Coins
 }
@@ -35,6 +36,8 @@ type IBCTransferMsg struct {
 // Implements sdk.Msg
 type IBCReceiveMsg struct {
     Packet
+    Relayer  sdk.Address
+    Sequence int64
 }
 
 // Internal API

@@ -24,7 +24,6 @@
 #   go-tests = true
 #   unused-packages = true
 
-
 [[constraint]]
   name = "github.com/bgentry/speakeasy"
   version = "0.1.0"
@@ -40,10 +39,6 @@
 [[constraint]]
   name = "github.com/pkg/errors"
   version = "0.8.0"
-
-# [[constraint]]
-#   branch = "master"
-#   name = "github.com/rigelrozanski/common"
 
 [[constraint]]
   name = "github.com/spf13/cobra"

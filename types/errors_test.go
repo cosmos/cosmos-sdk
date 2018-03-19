@@ -14,7 +14,7 @@ var codeTypes = []CodeType{
 	CodeUnauthorized,
 	CodeInsufficientFunds,
 	CodeUnknownRequest,
-	CodeUnrecognizedAddress,
+	CodeUnknownAddress,
 	CodeInvalidPubKey,
 	CodeGenesisParse,
 }
@@ -28,7 +28,7 @@ var errFns = []errFn{
 	ErrUnauthorized,
 	ErrInsufficientFunds,
 	ErrUnknownRequest,
-	ErrUnrecognizedAddress,
+	ErrUnknownAddress,
 	ErrInvalidPubKey,
 	ErrGenesisParse,
 }

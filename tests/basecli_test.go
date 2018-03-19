@@ -17,8 +17,13 @@ import (
 // TODO remove test dirs if tests are successful
 
 var (
+	gopath = filepath.Join(os.Getenv("GOPATH"), "src", "github.com", "cosmos", "cosmos-sdk")
+
 	basecoind = "build/basecoind"
 	basecli   = "build/basecli"
+
+	basecoindPath = filepath.Join(gopath, basecoind)
+	basecliPath   = filepath.Join(gopath, basecli)
 
 	basecoindDir = "./tmp-basecoind-tests"
 	basecliDir   = "./tmp-basecli-tests"
@@ -30,27 +35,22 @@ var (
 	igor     = ACCOUNTS[3]
 )
 
-func gopath() string {
-	return filepath.Join(os.Getenv("GOPATH"), "src", "github.com", "cosmos", "cosmos-sdk")
-}
+func TestMain(m *testing.M) {
+	cleanUp()
 
-func whereIsBasecoind() string {
-	return filepath.Join(gopath(), basecoind)
-}
+	m.Run()
 
-func whereIsBasecli() string {
-	return filepath.Join(gopath(), basecli)
+	cleanUp()
 }
 
 func TestInitBaseCoin(t *testing.T) {
-	clean()
 
 	var err error
 
 	password := "some-random-password"
 	usePassword := exec.Command("echo", password)
 
-	initBasecoind := exec.Command(whereIsBasecoind(), "init", "--home", basecoindDir)
+	initBasecoind := exec.Command(basecoindPath, "init", "--home", basecoindDir)
 
 	initBasecoind.Stdin, err = usePassword.StdoutPipe()
 	if err != nil {
@@ -78,7 +78,7 @@ func makeKeys() error {
 	var err error
 	for _, acc := range ACCOUNTS {
 		pass := exec.Command("echo", "1234567890")
-		makeKeys := exec.Command(whereIsBasecli(), "keys", "add", acc, "--home", basecliDir)
+		makeKeys := exec.Command(basecliPath, "keys", "add", acc, "--home", basecliDir)
 
 		makeKeys.Stdin, err = pass.StdoutPipe()
 		if err != nil {
@@ -116,7 +116,7 @@ func _TestSendCoins(t *testing.T) {
 	sendTo := fmt.Sprintf("--to=%s", bob)
 	sendFrom := fmt.Sprintf("--from=%s", alice)
 
-	cmdOut, err := exec.Command(whereIsBasecli(), "send", sendTo, "--amount=1000mycoin", sendFrom, "--seq=0").Output()
+	cmdOut, err := exec.Command(basecliPath, "send", sendTo, "--amount=1000mycoin", sendFrom, "--seq=0").Output()
 	if err != nil {
 		t.Error(err)
 	}
@@ -128,7 +128,7 @@ func _TestSendCoins(t *testing.T) {
 // expects TestInitBaseCoin to have been run
 func startServer() error {
 	// straight outta https://nathanleclaire.com/blog/2014/12/29/shelled-out-commands-in-golang/
-	cmdName := whereIsBasecoind()
+	cmdName := basecoindPath
 	cmdArgs := []string{"start", "--home", basecoindDir}
 
 	cmd := exec.Command(cmdName, cmdArgs...)
@@ -163,60 +163,8 @@ func startServer() error {
 	// see: https://stackoverflow.com/questions/11886531/terminating-a-process-started-with-os-exec-in-golang
 }
 
-func clean() {
+func cleanUp() {
 	// ignore errors b/c the dirs may not yet exist
-	os.Remove(basecoindDir)
-	os.Remove(basecliDir)
+	os.RemoveAll(basecoindDir)
+	os.RemoveAll(basecliDir)
 }
-
-/*
-
-	chainID = "staking_test"
-	testDir = "./tmp_tests"
-)
-
-func runTests() {
-
-	if err := os.Mkdir(testDir, 0666); err != nil {
-		panic(err)
-	}
-	defer os.Remove(testDir)
-
-	// make some keys
-
-	//if err := makeKeys(); err != nil {
-	//	panic(err)
-	//}
-
-	if err := initServer(); err != nil {
-		fmt.Printf("Err: %v", err)
-		panic(err)
-	}
-
-}
-
-func initServer() error {
-	serveDir := filepath.Join(testDir, "server")
-	//serverLog := filepath.Join(testDir, "gaia-node.log")
-
-	// get RICH
-	keyOut, err := exec.Command(GAIA, CLIENT_EXE, "keys", "get", "alice").Output()
-	if err != nil {
-		fmt.Println("one")
-		return err
-	}
-	key := strings.Split(string(keyOut), "\t")
-	fmt.Printf("wit:%s", key[2])
-
-	outByte, err := exec.Command(GAIA, SERVER_EXE, "init", "--static", fmt.Sprintf("--chain-id=%s", chainID), fmt.Sprintf("--home=%s", serveDir), key[2]).Output()
-	if err != nil {
-		fmt.Println("teo")
-		fmt.Printf("Error: %v", err)
-
-		return err
-	}
-	fmt.Sprintf("OUT: %s", string(outByte))
-	return nil
-}
-
-*/

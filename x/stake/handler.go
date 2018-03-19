@@ -236,6 +236,7 @@ func (tr transact) delegate(tx MsgDelegate) sdk.Error {
 func (tr transact) delegateWithCandidate(tx MsgDelegate, candidate *Candidate) sdk.Error {
 
 	if candidate.Status == Revoked { //candidate has been withdrawn
+		panic("1")
 		return ErrBondNotNominated()
 	}
 
@@ -251,6 +252,7 @@ func (tr transact) delegateWithCandidate(tx MsgDelegate, candidate *Candidate) s
 	// Account new shares, save
 	err := tr.BondCoins(bond, candidate, tx.Bond)
 	if err != nil {
+		panic("2")
 		return err
 	}
 	tr.mapper.saveDelegatorBond(tr.sender, bond)

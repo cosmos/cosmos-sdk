@@ -124,7 +124,7 @@ func SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *wire.Codec) ([]byte
 }
 
 // sign and build the transaction from the msg
-func SignBuildBroadcast(name string, passphrase string, msg sdk.Msg, cdc *wire.Codec) (*ctypes.ResultBroadcastTxCommit, error) {
+func SignBuildBroadcast(name, passphrase string, msg sdk.Msg, cdc *wire.Codec) (*ctypes.ResultBroadcastTxCommit, error) {
 	txBytes, err := SignAndBuild(name, passphrase, msg, cdc)
 	if err != nil {
 		return nil, err

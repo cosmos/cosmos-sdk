@@ -10,6 +10,7 @@ import (
 
 	crypto "github.com/tendermint/go-crypto"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/builder"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -47,6 +48,15 @@ func init() {
 	fsCandidate.String(FlagDetails, "", "optional detailed description space")
 }
 
+//TODO refactor to common functionality
+func getNamePassword() (name, passphrase string, err error) {
+	name = viper.GetString(client.FlagName)
+	buf := client.BufferStdin()
+	prompt := fmt.Sprintf("Password to sign with '%s':", name)
+	passphrase, err = client.GetPassword(prompt, buf)
+	return
+}
+
 //_________________________________________________________________________________________
 
 // create declare candidacy command
@@ -78,8 +88,13 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 			}
 			msg := stake.NewMsgDeclareCandidacy(addr, pk, amount, description)
 
+			name, pass, err := getNamePassword()
+			if err != nil {
+				return err
+			}
+
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := builder.SignBuildBroadcast(msg, cdc)
+			res, err := builder.SignBuildBroadcast(name, pass, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -114,8 +129,13 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 			}
 			msg := stake.NewMsgEditCandidacy(addr, description)
 
+			name, pass, err := getNamePassword()
+			if err != nil {
+				return err
+			}
+
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := builder.SignBuildBroadcast(msg, cdc)
+			res, err := builder.SignBuildBroadcast(name, pass, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -148,8 +168,13 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 
 			msg := stake.NewMsgDelegate(addr, amount)
 
+			name, pass, err := getNamePassword()
+			if err != nil {
+				return err
+			}
+
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := builder.SignBuildBroadcast(msg, cdc)
+			res, err := builder.SignBuildBroadcast(name, pass, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -192,8 +217,13 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 
 			msg := stake.NewMsgUnbond(addr, sharesStr)
 
+			name, pass, err := getNamePassword()
+			if err != nil {
+				return err
+			}
+
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := builder.SignBuildBroadcast(msg, cdc)
+			res, err := builder.SignBuildBroadcast(name, pass, msg, cdc)
 			if err != nil {
 				return err
 			}

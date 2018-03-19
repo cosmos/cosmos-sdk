@@ -20,8 +20,6 @@ import (
 // Tests assume the `basecoind` and `basecli` binaries
 // have been built and are located in `./build`
 
-// TODO remove test dirs if tests are successful
-
 //nolint
 var (
 	gopath = filepath.Join(os.Getenv("GOPATH"), "src", "github.com", "cosmos", "cosmos-sdk")
@@ -41,6 +39,16 @@ var (
 	charlie  = ACCOUNTS[2]
 	igor     = ACCOUNTS[3]
 )
+
+func TestMain(m *testing.M) {
+	// setup should start server
+	// and make keys, then run tests
+
+	m.Run()
+
+	cleanUp()
+
+}
 
 // Init Basecoin Test
 func TestInitBasecoin(t *testing.T) {
@@ -83,7 +91,6 @@ func _TestSendCoins(t *testing.T) {
 
 // Init Basecoin Test
 func initServerForTest(t *testing.T) {
-	Clean()
 
 	var err error
 
@@ -195,10 +202,8 @@ func startServer(t *testing.T) {
 }
 
 // clean the directories
-func clean() {
+func cleanUp() {
 	// ignore errors b/c the dirs may not yet exist
-	err := os.Remove(basecoindDir)
-	panic(err)
-	err = os.Remove(basecliDir)
-	panic(err)
+	os.RemoveAll(basecoindDir)
+	os.RemoveAll(basecliDir)
 }

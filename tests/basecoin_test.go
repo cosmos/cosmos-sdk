@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path"
+	//"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -43,12 +43,12 @@ var (
 )
 
 // Init Basecoin Test
-func TestInitBasecoin(t *testing.T) string {
+func TestInitBasecoin(t *testing.T) {
 	var err error
 
 	password := "some-random-password"
 
-	initBasecoind := exec.Command(basecoindPath, "init", "--home", basecoinDir)
+	initBasecoind := exec.Command(basecoindPath, "init", "--home", basecoindDir)
 	cmdWriter, err := initBasecoind.StdinPipe()
 	assert.Nil(t, err)
 
@@ -63,25 +63,7 @@ func TestInitBasecoin(t *testing.T) string {
 	cmdWriter.Close()
 
 	err = initBasecoind.Wait()
-	assert.NotNil(t, err)
-
-	// get seed from initialization
-	theOutput := strings.Split(buf.String(), "\n")
-	var seedLine int
-	for _seedLine, o := range theOutput {
-		if strings.HasPrefix(string(o), "Secret phrase") {
-			seedLine = _seedLine + 1
-			break
-		}
-	}
-
-	seed := string(theOutput[seedLine])
-
-	// enable indexing
-	err = appendToFile(path.Join(home, "config", "config.toml"), "\n\n[tx_indexing]\nindex_all_tags = true\n")
 	assert.Nil(t, err)
-
-	return seed
 }
 
 func _TestSendCoins(t *testing.T) {

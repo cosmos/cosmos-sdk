@@ -1,7 +1,7 @@
 package server
 
 import (
-	"os"
+	//"os"
 	"testing"
 	"time"
 
@@ -30,6 +30,7 @@ func TestStartStandAlone(t *testing.T) {
 	RunOrTimeout(startCmd, timeout, t)
 }
 
+/*
 func TestStartWithTendermint(t *testing.T) {
 	defer setupViper(t)()
 
@@ -51,3 +52,4 @@ func TestStartWithTendermint(t *testing.T) {
 
 	RunOrTimeout(startCmd, timeout, t)
 }
+*/

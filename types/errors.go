@@ -19,15 +19,18 @@ func (code CodeType) IsOK() bool {
 // ABCI Response Codes
 // Base SDK reserves 0 - 99.
 const (
-	CodeOK                  CodeType = 0
-	CodeInternal            CodeType = 1
-	CodeTxParse             CodeType = 2
-	CodeInvalidSequence     CodeType = 3
-	CodeUnauthorized        CodeType = 4
-	CodeInsufficientFunds   CodeType = 5
-	CodeUnknownRequest      CodeType = 6
-	CodeUnrecognizedAddress CodeType = 7
-	CodeInvalidPubKey       CodeType = 8
+	CodeOK                CodeType = 0
+	CodeInternal          CodeType = 1
+	CodeTxParse           CodeType = 2
+	CodeInvalidSequence   CodeType = 3
+	CodeUnauthorized      CodeType = 4
+	CodeInsufficientFunds CodeType = 5
+	CodeUnknownRequest    CodeType = 6
+	CodeInvalidAddress    CodeType = 7
+	CodeInvalidPubKey     CodeType = 8
+	CodeUnknownAddress    CodeType = 9
+	CodeInsufficientCoins CodeType = 10
+	CodeInvalidCoins      CodeType = 11
 
 	CodeGenesisParse CodeType = 0xdead // TODO: remove ?
 )
@@ -49,10 +52,14 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "Insufficent funds"
 	case CodeUnknownRequest:
 		return "Unknown request"
-	case CodeUnrecognizedAddress:
-		return "Unrecognized address"
+	case CodeInvalidAddress:
+		return "Invalid address"
 	case CodeInvalidPubKey:
 		return "Invalid pubkey"
+	case CodeInsufficientCoins:
+		return "Insufficient coins"
+	case CodeInvalidCoins:
+		return "Invalid coins"
 	default:
 		return fmt.Sprintf("Unknown code %d", code)
 	}
@@ -84,11 +91,20 @@ func ErrInsufficientFunds(msg string) Error {
 func ErrUnknownRequest(msg string) Error {
 	return newError(CodeUnknownRequest, msg)
 }
-func ErrUnrecognizedAddress(msg string) Error {
-	return newError(CodeUnrecognizedAddress, msg)
+func ErrInvalidAddress(msg string) Error {
+	return newError(CodeInvalidAddress, msg)
+}
+func ErrUnknownAddress(msg string) Error {
+	return newError(CodeUnknownAddress, msg)
 }
 func ErrInvalidPubKey(msg string) Error {
 	return newError(CodeInvalidPubKey, msg)
+}
+func ErrInsufficientCoins(msg string) Error {
+	return newError(CodeInsufficientCoins, msg)
+}
+func ErrInvalidCoins(msg string) Error {
+	return newError(CodeInvalidCoins, msg)
 }
 
 //----------------------------------------

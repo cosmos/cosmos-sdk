@@ -1,3 +1,4 @@
+.DS_Store
 *.swp
 *.swo
 vendor
@@ -10,8 +11,6 @@ examples/basecoin/glide.lock
 examples/basecoin/app/data
 baseapp/data/*
 docs/_build
-<<<<<<< HEAD
-<<<<<<< HEAD
 .DS_Store
 coverage.txt
 profile.out

@@ -21,7 +21,7 @@ func NewHandler(ibcm IBCMapper, ck bank.CoinKeeper) sdk.Handler {
 	}
 }
 
-// Handle outgoing IBC packets.
+// IBCTransferMsg deducts coins from the account and creates an egress IBC packet.
 func handleIBCTransferMsg(ctx sdk.Context, ibcm IBCMapper, ck bank.CoinKeeper, msg IBCTransferMsg) sdk.Result {
 	packet := msg.IBCPacket
 
@@ -38,6 +38,7 @@ func handleIBCTransferMsg(ctx sdk.Context, ibcm IBCMapper, ck bank.CoinKeeper, m
 	return sdk.Result{}
 }
 
+// IBCReceiveMsg adds coins to the destination address and creates an ingress IBC packet.
 func handleIBCReceiveMsg(ctx sdk.Context, ibcm IBCMapper, ck bank.CoinKeeper, msg IBCReceiveMsg) sdk.Result {
 	packet := msg.IBCPacket
 

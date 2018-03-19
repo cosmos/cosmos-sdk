@@ -53,6 +53,7 @@ type EgressKey struct {
     DestChain   string
     Index       int64
 }
+
 ```
 
 `egressKey` stores the outgoing `IBCTransfer`s as a list. Its getter takes an 

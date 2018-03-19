@@ -252,6 +252,41 @@ func TestCoinSend(t *testing.T) {
 	assert.Equal(t, int64(1), mycoins.Amount)
 }
 
+func TestIBCTransfer(t *testing.T) {
+
+	// create TX
+	receiveAddr, resultTx := doSend(t, port, seed)
+
+	time.Sleep(time.Second * 2) // T
+
+	// check if tx was commited
+	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	// query sender
+	res, body := request(t, port, "GET", "/accounts/"+sendAddr, nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var m auth.BaseAccount
+	err := json.Unmarshal([]byte(body), &m)
+	require.Nil(t, err)
+	coins := m.Coins
+	mycoins := coins[0]
+	assert.Equal(t, coinDenom, mycoins.Denom)
+	assert.Equal(t, coinAmount-2, mycoins.Amount)
+
+	// query ibc egress packet state
+	res, body = request(t, port, "GET", "/accounts/"+receiveAddr, nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err = json.Unmarshal([]byte(body), &m)
+	require.Nil(t, err)
+	coins = m.Coins
+	mycoins = coins[0]
+	assert.Equal(t, coinDenom, mycoins.Denom)
+	assert.Equal(t, int64(1), mycoins.Amount)
+}
+
 func TestTxs(t *testing.T) {
 
 	// TODO: re-enable once we can get txs by tag
@@ -434,6 +469,35 @@ func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctype
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{ "name":"%s", "password":"%s", "sequence":%d, "amount":[{ "denom": "%s", "amount": 1 }] }`, name, password, sequence, coinDenom))
 	res, body = request(t, port, "POST", "/accounts/"+receiveAddr+"/send", jsonStr)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err = json.Unmarshal([]byte(body), &resultTx)
+	require.Nil(t, err)
+
+	return receiveAddr, resultTx
+}
+
+func doIBCTransfer(t *testing.T, port, seed string) (receiveAddr string, resultTx ctypes.ResultBroadcastTxCommit) {
+
+	// create receive address
+	kb := client.MockKeyBase()
+	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
+	require.Nil(t, err)
+	receiveAddr = receiveInfo.PubKey.Address().String()
+
+	// get the account to get the sequence
+	res, body := request(t, port, "GET", "/accounts/"+sendAddr, nil)
+	// require.Equal(t, http.StatusOK, res.StatusCode, body)
+	acc := auth.BaseAccount{}
+	err = json.Unmarshal([]byte(body), &acc)
+	require.Nil(t, err)
+	fmt.Println("BODY", body)
+	fmt.Println("ACC", acc)
+	sequence := acc.Sequence
+
+	// send
+	jsonStr := []byte(fmt.Sprintf(`{ "name":"%s", "password":"%s", "sequence":%d, "amount":[{ "denom": "%s", "amount": 1 }] }`, name, password, sequence, coinDenom))
+	res, body = request(t, port, "POST", "/ibc/testchain/"+receiveAddr+"/send", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err = json.Unmarshal([]byte(body), &resultTx)

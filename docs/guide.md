@@ -105,14 +105,6 @@ type Tx interface {
 
 	GetMsg() Msg
 
-	// The address that pays the base fee for this message.  The fee is
-	// deducted before the Msg is processed.
-	GetFeePayer() Address
-
-	// Get the canonical byte representation of the Tx.
-	// Includes any signatures (or empty slots).
-	GetTxBytes() []byte
-
 	// Signatures returns the signature of signers who signed the Msg.
 	// CONTRACT: Length returned is same as length of
 	// pubkeys returned from MsgKeySigners, and the order
@@ -148,8 +140,9 @@ case of Basecoin, the public key only needs to be included in the first
 transaction send by a given account - after that, the public key is forever
 stored by the application and can be left out of transactions.
 
-Transactions can also specify the address responsible for paying the
-transaction's fees using the `tx.GetFeePayer()` method.
+The address responsible for paying the transactions fee is the first address
+returned by msg.GetSigners(). The convenience function `FeePayer(tx Tx)` is provided
+to return this.
 
 The standard way to create a transaction from a message is to use the `StdTx`: 
 

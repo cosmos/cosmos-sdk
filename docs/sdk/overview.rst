@@ -219,14 +219,6 @@ A transaction is a message with additional information for authentication:
     
     	GetMsg() Msg
     
-    	// The address that pays the base fee for this message.  The fee is
-    	// deducted before the Msg is processed.
-    	GetFeePayer() Address
-    
-    	// Get the canonical byte representation of the Tx.
-    	// Includes any signatures (or empty slots).
-    	GetTxBytes() []byte
-    
     	// Signatures returns the signature of signers who signed the Msg.
     	// CONTRACT: Length returned is same as length of
     	// pubkeys returned from MsgKeySigners, and the order
@@ -260,9 +252,6 @@ about, making it optional to include the public key in the transaction. In the
 case of Basecoin, the public key only needs to be included in the first
 transaction send by a given account - after that, the public key is forever
 stored by the application and can be left out of transactions.
-
-Transactions can also specify the address responsible for paying the
-transaction's fees using the ``tx.GetFeePayer()`` method.
 
 The standard way to create a transaction from a message is to use the ``StdTx``: 
 

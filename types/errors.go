@@ -56,6 +56,8 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "Invalid address"
 	case CodeInvalidPubKey:
 		return "Invalid pubkey"
+	case CodeUnknownAddress:
+		return "Unknown address"
 	case CodeInsufficientCoins:
 		return "Insufficient coins"
 	case CodeInvalidCoins:

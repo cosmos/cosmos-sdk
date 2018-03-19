@@ -161,7 +161,7 @@ import (
 //}
 
 func TestState(t *testing.T) {
-	mapper, _ := createTestInput(t, nil, false)
+	_, _, mapper, _ := createTestInput(t, nil, false, 0)
 
 	addrDel := sdk.Address([]byte("addressdelegator"))
 	addrVal := sdk.Address([]byte("addressvalidator"))
@@ -258,7 +258,7 @@ func TestState(t *testing.T) {
 }
 
 func TestGetValidators(t *testing.T) {
-	mapper, _ := createTestInput(t, nil, false)
+	_, _, mapper, _ := createTestInput(t, nil, false, 0)
 	candidatesFromAddrs(mapper, addrs, []int64{400, 200, 0, 0, 0})
 
 	validators := mapper.getValidators(5)

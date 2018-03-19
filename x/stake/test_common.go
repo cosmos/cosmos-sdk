@@ -75,11 +75,10 @@ func paramsNoInflation() Params {
 }
 
 // hogpodge of all sorts of input required for testing
-//func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool) (sdk.KVStore, sdk.Context, sdk.StoreKey, Mapper, bank.CoinKeeper, transact) {
-func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool) (Mapper, transact) {
+func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool, initCoins int64) (sdk.Context, sdk.AccountMapper, Mapper, transact) {
 	db := dbm.NewMemDB()
-	keyMain := sdk.NewKVStoreKey("main")
 	keyStake := sdk.NewKVStoreKey("stake")
+	keyMain := keyStake //sdk.NewKVStoreKey("main") //XXX fix multistore
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
@@ -96,12 +95,17 @@ func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool) (Mapper, 
 		&auth.BaseAccount{}, // prototype
 	)
 	ck := bank.NewCoinKeeper(accountMapper)
-
 	params := paramsNoInflation()
 	mapper.saveParams(params)
+
+	// fill all the addresses with some coins
+	for _, addr := range addrs {
+		ck.AddCoins(ctx, addr, sdk.Coins{{params.BondDenom, initCoins}})
+	}
+
 	tr := newTransact(ctx, sender, mapper, ck)
 
-	return mapper, tr
+	return ctx, accountMapper, mapper, tr
 }
 
 func newPubKey(pk string) (res crypto.PubKey) {
@@ -130,7 +134,7 @@ var pks = []crypto.PubKey{
 
 // for incode address generation
 func testAddr(addr string) sdk.Address {
-	res, err := sdk.GetAddress("0XA58856F0FD53BF058B4909A21AEC019107BA6160")
+	res, err := sdk.GetAddress(addr)
 	if err != nil {
 		panic(err)
 	}
@@ -139,16 +143,16 @@ func testAddr(addr string) sdk.Address {
 
 // dummy addresses used for testing
 var addrs = []sdk.Address{
-	testAddr("0XA58856F0FD53BF058B4909A21AEC019107BA6160"),
-	testAddr("0XA58856F0FD53BF058B4909A21AEC019107BA6161"),
-	testAddr("0XA58856F0FD53BF058B4909A21AEC019107BA6162"),
-	testAddr("0XA58856F0FD53BF058B4909A21AEC019107BA6163"),
-	testAddr("0XA58856F0FD53BF058B4909A21AEC019107BA6164"),
-	testAddr("0XA58856F0FD53BF058B4909A21AEC019107BA6165"),
-	testAddr("0XA58856F0FD53BF058B4909A21AEC019107BA6166"),
-	testAddr("0XA58856F0FD53BF058B4909A21AEC019107BA6167"),
-	testAddr("0XA58856F0FD53BF058B4909A21AEC019107BA6168"),
-	testAddr("0XA58856F0FD53BF058B4909A21AEC019107BA6169"),
+	testAddr("A58856F0FD53BF058B4909A21AEC019107BA6160"),
+	testAddr("A58856F0FD53BF058B4909A21AEC019107BA6161"),
+	testAddr("A58856F0FD53BF058B4909A21AEC019107BA6162"),
+	testAddr("A58856F0FD53BF058B4909A21AEC019107BA6163"),
+	testAddr("A58856F0FD53BF058B4909A21AEC019107BA6164"),
+	testAddr("A58856F0FD53BF058B4909A21AEC019107BA6165"),
+	testAddr("A58856F0FD53BF058B4909A21AEC019107BA6166"),
+	testAddr("A58856F0FD53BF058B4909A21AEC019107BA6167"),
+	testAddr("A58856F0FD53BF058B4909A21AEC019107BA6168"),
+	testAddr("A58856F0FD53BF058B4909A21AEC019107BA6169"),
 }
 
 // NOTE: PubKey is supposed to be the binaryBytes of the crypto.PubKey

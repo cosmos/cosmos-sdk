@@ -3,12 +3,18 @@ package stake
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 	"strconv"
-
-	crypto "github.com/tendermint/go-crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+)
+
+const (
+	GasDeclareCandidacy int64 = 20
+	GasEditCandidacy    int64 = 20
+	GasDelegate         int64 = 20
+	GasUnbond           int64 = 20
 )
 
 // separated for testing
@@ -46,75 +52,66 @@ func InitState(ctx sdk.Context, mapper Mapper, key, value string) sdk.Error {
 
 //_______________________________________________________________________
 
-func NewHandler(mapper Mapper, ck bank.CoinKeeper) sdk.Handler {
+func NewHandler(sm StakeMapper, ck bank.CoinKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 
-		params := mapper.loadParams()
-
-		err := msg.ValidateBasic()
-		if err != nil {
-			return err.Result() // TODO should also return gasUsed?
+		return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+			switch msg := msg.(type) {
+			case DepositMsg:
+				return handleDepositMsg(ctx, gm, msg)
+			case SubmitProposalMsg:
+				return handleSubmitProposalMsg(ctx, gm, msg)
+			case VoteMsg:
+				return handleVoteMsg(ctx, gm, msg)
+			default:
+				errMsg := "Unrecognized gov Msg type: " + reflect.TypeOf(msg).Name()
+				return sdk.ErrUnknownRequest(errMsg).Result()
+			}
 		}
-		signers := msg.GetSigners()
-		if len(signers) != 1 {
-			return sdk.ErrUnauthorized("there can only be one signer for staking transaction").Result()
-		}
-		sender := signers[0]
 
-		transact := newTransact(ctx, sender, mapper, ck)
+		// params := mapper.loadParams()
 
-		// Run the transaction
-		switch msg := msg.(type) {
-		case DeclareCandidacyMsg:
-			res := transact.declareCandidacy(msg).Result()
-			if !ctx.IsCheckTx() {
-				res.GasUsed = params.GasDeclareCandidacy
-			}
-			return res
-		case EditCandidacyMsg:
-			res := transact.editCandidacy(msg).Result()
-			if !ctx.IsCheckTx() {
-				res.GasUsed = params.GasEditCandidacy
-			}
-			return res
-		case DelegateMsg:
-			res := transact.delegate(msg).Result()
-			if !ctx.IsCheckTx() {
-				res.GasUsed = params.GasDelegate
-			}
-			return res
-		case UnbondMsg:
-			res := transact.unbond(msg).Result()
-			if !ctx.IsCheckTx() {
-				res.GasUsed = params.GasUnbond
-			}
-			return res
-		default:
-			return sdk.ErrTxParse("invalid message parse in staking module").Result()
-		}
-	}
-}
+		// err := msg.ValidateBasic()
+		// if err != nil {
+		// 	return err.Result() // TODO should also return gasUsed?
+		// }
+		// signers := msg.GetSigners()
+		// if len(signers) != 1 {
+		// 	return sdk.ErrUnauthorized("there can only be one signer for staking transaction").Result()
+		// }
+		// sender := signers[0]
 
-//_____________________________________________________________________
+		// transact := newTransact(ctx, sender, mapper, ck)
 
-// common fields to all transactions
-type transact struct {
-	ctx        sdk.Context
-	sender     crypto.Address
-	mapper     Mapper
-	coinKeeper bank.CoinKeeper
-	params     Params
-	gs         *GlobalState
-}
-
-func newTransact(ctx sdk.Context, sender sdk.Address, mapper Mapper, ck bank.CoinKeeper) transact {
-	return transact{
-		ctx:        ctx,
-		sender:     sender,
-		mapper:     mapper,
-		coinKeeper: ck,
-		params:     mapper.loadParams(),
-		gs:         mapper.loadGlobalState(),
+		// // Run the transaction
+		// switch msg := msg.(type) {
+		// case DeclareCandidacyMsg:
+		// 	res := transact.declareCandidacy(msg).Result()
+		// 	if !ctx.IsCheckTx() {
+		// 		res.GasUsed = params.GasDeclareCandidacy
+		// 	}
+		// 	return res
+		// case EditCandidacyMsg:
+		// 	res := transact.editCandidacy(msg).Result()
+		// 	if !ctx.IsCheckTx() {
+		// 		res.GasUsed = params.GasEditCandidacy
+		// 	}
+		// 	return res
+		// case DelegateMsg:
+		// 	res := transact.delegate(msg).Result()
+		// 	if !ctx.IsCheckTx() {
+		// 		res.GasUsed = params.GasDelegate
+		// 	}
+		// 	return res
+		// case UnbondMsg:
+		// 	res := transact.unbond(msg).Result()
+		// 	if !ctx.IsCheckTx() {
+		// 		res.GasUsed = params.GasUnbond
+		// 	}
+		// 	return res
+		// default:
+		// 	return sdk.ErrTxParse("invalid message parse in staking module").Result()
+		// }
 	}
 }
 
@@ -140,7 +137,7 @@ func (tr transact) unbondedToBondedPool(candidate *Candidate) {
 }
 
 // return an error if the bonds coins are incorrect
-func checkDenom(mapper Mapper, bond sdk.Coin) sdk.Error {
+func checkDenom(sm stakeMapper, bond sdk.Coin) sdk.Error {
 	if bond.Denom != mapper.loadParams().BondDenom {
 		return ErrBadBondingDenom()
 	}
@@ -152,81 +149,62 @@ func checkDenom(mapper Mapper, bond sdk.Coin) sdk.Error {
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
-func (tr transact) declareCandidacy(tx DeclareCandidacyMsg) sdk.Error {
-
+func handleDeclareCandidacyMsg(ctx sdk.Context, sm stakeMapper, msg DeclareCandidacyMsg) sdk.Result {
 	// check to see if the pubkey or sender has been registered before
-	if tr.mapper.loadCandidate(tx.Address) != nil {
+	if sm.loadCandidate(msg.Address) != nil {
 		return ErrCandidateExistsAddr()
 	}
-	err := checkDenom(tr.mapper, tx.Bond)
-	if err != nil {
-		return err
+	if bond.Denom != mapper.loadParams().BondDenom {
+		return ErrBadBondingDenom()
 	}
-	if tr.ctx.IsCheckTx() {
-		return nil
+	if ctx.IsCheckTx() {
+		return sdk.Result{} // TODO
 	}
 
-	candidate := NewCandidate(tx.PubKey, tr.sender, tx.Description)
-	tr.mapper.saveCandidate(candidate)
+	candidate := NewCandidate(msg.Address, msg.PubKey, msg.Description)
+
+	sm.setCandidate(candidate)
 
 	// move coins from the tr.sender account to a (self-bond) delegator account
 	// the candidate account and global shares are updated within here
-	txDelegate := NewDelegateMsg(tx.Address, tx.Bond)
-	return tr.delegateWithCandidate(txDelegate, candidate)
+	selfDelegateMsg := NewDelegateMsg(msg.Address, msg.Bond)
+	return delegateWithCandidate(txDelegate, candidate)
 }
 
-func (tr transact) editCandidacy(tx EditCandidacyMsg) sdk.Error {
-
+func handleEditCandidacyMsg(ctx sdk.Context, sm stakeMapper, msg EditCandidacyMsg) sdk.Result {
 	// candidate must already be registered
-	if tr.mapper.loadCandidate(tx.Address) == nil {
+	if sm.loadCandidate(msg.Address) == nil {
 		return ErrBadCandidateAddr()
 	}
-	if tr.ctx.IsCheckTx() {
+	if ctx.IsCheckTx() {
 		return nil
 	}
 
-	// Get the pubKey bond account
-	candidate := tr.mapper.loadCandidate(tx.Address)
-	if candidate == nil {
-		return ErrBondNotNominated()
-	}
-	if candidate.Status == Unbonded { //candidate has been withdrawn
+	// Get the bond account
+	candidate := sm.getCandidate(msg.Address)
+	if candidate == nil || candidate.Status == Unbonded {
 		return ErrBondNotNominated()
 	}
 
-	//check and edit any of the editable terms
-	if tx.Description.Moniker != "" {
-		candidate.Description.Moniker = tx.Description.Moniker
-	}
-	if tx.Description.Identity != "" {
-		candidate.Description.Identity = tx.Description.Identity
-	}
-	if tx.Description.Website != "" {
-		candidate.Description.Website = tx.Description.Website
-	}
-	if tx.Description.Details != "" {
-		candidate.Description.Details = tx.Description.Details
-	}
+	candidate.updateDescription(msg.Description)
 
 	tr.mapper.saveCandidate(candidate)
 	return nil
 }
 
-func (tr transact) delegate(tx DelegateMsg) sdk.Error {
-
-	if tr.mapper.loadCandidate(tx.Address) == nil {
+func handleDelegateMsg(ctx sdk.Context, sm stakeMapper, msg DelegateMsg) sdk.Result {
+	if sm.getCandidate(msg.Delegatee) == nil {
 		return ErrBadCandidateAddr()
 	}
-	err := checkDenom(tr.mapper, tx.Bond)
-	if err != nil {
-		return err
+	if bond.Denom != mapper.loadParams().BondDenom {
+		return ErrBadBondingDenom()
 	}
-	if tr.ctx.IsCheckTx() {
+	if ctx.IsCheckTx() {
 		return nil
 	}
 
 	// Get the pubKey bond account
-	candidate := tr.mapper.loadCandidate(tx.Address)
+	candidate := sm.loadCandidate(tx.Address)
 	if candidate == nil {
 		return ErrBondNotNominated()
 	}
@@ -259,62 +237,30 @@ func (tr transact) delegateWithCandidate(tx DelegateMsg, candidate *Candidate) s
 	return nil
 }
 
-// Perform all the actions required to bond tokens to a delegator bond from their account
-func (tr *transact) BondCoins(bond *DelegatorBond, candidate *Candidate, tokens sdk.Coin) sdk.Error {
-
-	_, err := tr.coinKeeper.SubtractCoins(tr.ctx, candidate.Address, sdk.Coins{tokens})
-	if err != nil {
-		return err
-	}
-	newShares := candidate.addTokens(tokens.Amount, tr.gs)
-	bond.Shares = bond.Shares.Add(newShares)
-	return nil
-}
-
-// Perform all the actions required to bond tokens to a delegator bond from their account
-func (tr *transact) UnbondCoins(bond *DelegatorBond, candidate *Candidate, shares sdk.Rat) sdk.Error {
-
-	// subtract bond tokens from delegator bond
-	if bond.Shares.LT(shares) {
-		return sdk.ErrInsufficientFunds("") // TODO
-	}
-	bond.Shares = bond.Shares.Sub(shares)
-
-	returnAmount := candidate.removeShares(shares, tr.gs)
-	returnCoins := sdk.Coins{{tr.params.BondDenom, returnAmount}}
-
-	_, err := tr.coinKeeper.AddCoins(tr.ctx, candidate.Address, returnCoins)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (tr transact) unbond(tx UnbondMsg) sdk.Error {
-
+func handleUnbondMsg(ctx sdk.Context, sm stakeMapper, msg UnbondMsg) sdk.Result {
 	// check if bond has any shares in it unbond
-	bond := tr.mapper.loadDelegatorBond(tr.sender, tx.Address)
+	bond := sm.loadDelegatorBond(msg.delegator, msg.delegatee)
 	if bond == nil {
 		return ErrNoDelegatorForAddress()
 	}
-	if !bond.Shares.GT(sdk.ZeroRat) { // bond shares < tx shares
+	if !bond.Shares.GT(sdk.ZeroRat) { // bond shares <= tx shares
 		return ErrInsufficientFunds()
 	}
 
 	// if shares set to special case Max then we're good
 	if tx.Shares != "MAX" {
-		// test getting rational number from decimal provided
-		shares, err := sdk.NewRatFromDecimal(tx.Shares)
-		if err != nil {
-			return err
-		}
+		// tesst getting rational number from decimal provided
+		sharess, err := sdk.NewRatFromDecimal(tx.Shares)
+		if errs != nil {
+			resturn err
+		}s
 
 		// test that there are enough shares to unbond
 		if !bond.Shares.GT(shares) {
 			return ErrNotEnoughBondShares(tx.Shares)
 		}
 	}
-	if tr.ctx.IsCheckTx() {
+	if ctx.IsCheckTx() {
 		return nil
 	}
 

@@ -5,10 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 //nolint
-var (
+const (
 	// Keys for store prefixes
 	CandidatesAddrKey = []byte{0x01} // key for all candidates' addresses
 	ParamKey          = []byte{0x02} // key for global parameters relating to staking
@@ -22,38 +23,34 @@ var (
 	DelegatorBondsKeyPrefix   = []byte{0x08} // prefix for each key to a delegator's bond
 )
 
-// GetCandidateKey - get the key for the candidate with address
-func GetCandidateKey(address sdk.Address) []byte {
+// CandidateKey - get the key for the candidate with address
+func CandidateKey(address sdk.Address) []byte {
 	return append(CandidateKeyPrefix, address.Bytes()...)
 }
 
-// GetValidatorKey - get the key for the validator used in the power-store
-func GetValidatorKey(address sdk.Address, power sdk.Rational, cdc *wire.Codec) []byte {
+// ValidatorKey - get the key for the validator used in the power-store
+func ValidatorKey(address sdk.Address, power sdk.Rational, cdc *wire.Codec) []byte {
 	b, _ := cdc.MarshalJSON(power)                                      // TODO need to handle error here?
 	return append(ValidatorKeyPrefix, append(b, address.Bytes()...)...) // TODO does this need prefix if its in its own store
 }
 
-// GetValidatorUpdatesKey - get the key for the validator used in the power-store
-func GetValidatorUpdatesKey(address sdk.Address) []byte {
+// ValidatorUpdatesKey - get the key for the validator used in the power-store
+func ValidatorUpdatesKey(address sdk.Address) []byte {
 	return append(ValidatorUpdatesKeyPrefix, address.Bytes()...) // TODO does this need prefix if its in its own store
 }
 
-// GetDelegatorBondKey - get the key for delegator bond with candidate
-func GetDelegatorBondKey(delegator, candidate sdk.Address, cdc *wire.Codec) []byte {
-	return append(GetDelegatorBondKeyPrefix(delegator, cdc), candidate.Bytes()...)
+// DelegatorBondKey - get the key for delegator bond with candidate
+func DelegatorBondKey(delegator sdk.Address, delegatee sdk.Address) []byte {
+	return append(append(DelegatorBondKeyPrefix, delegator), delegatee)
 }
 
-// GetDelegatorBondKeyPrefix - get the prefix for a delegator for all candidates
-func GetDelegatorBondKeyPrefix(delegator sdk.Address, cdc *wire.Codec) []byte {
-	res, err := cdc.MarshalJSON(&delegator)
-	if err != nil {
-		panic(err)
-	}
-	return append(DelegatorBondKeyPrefix, res...)
-}
+// // DelegatorBondKeyPrefix - get the prefix for a delegator for all candidates
+// func DelegatorBondKeyPrefix(delegator sdk.Address, cdc *wire.Codec) []byte {
+// 	return append(DelegatorBondKeyPrefix, res...)
+// }
 
-// GetDelegatorBondsKey - get the key for list of all the delegator's bonds
-func GetDelegatorBondsKey(delegator sdk.Address, cdc *wire.Codec) []byte {
+// DelegatorBondsKey - get the key for list of all the delegator's bonds
+func DelegatorBondsKey(delegator sdk.Address, cdc *wire.Codec) []byte {
 	res, err := cdc.MarshalJSON(&delegator)
 	if err != nil {
 		panic(err)
@@ -64,46 +61,64 @@ func GetDelegatorBondsKey(delegator sdk.Address, cdc *wire.Codec) []byte {
 //___________________________________________________________________________
 
 // mapper of the staking store
-type Mapper struct {
-	store sdk.KVStore
-	cdc   *wire.Codec
+type stakeMapper struct {
+
+	// The reference to the CoinKeeper to modify balances
+	ck bank.CoinKeeper
+
+	// The (unexposed) keys used to access the stores from the Context.
+	stakeStoreKey sdk.StoreKey
+
+	// The wire codec for binary encoding/decoding.
+	cdc *wire.Codec
 }
 
-func NewMapper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey) Mapper {
-	return Mapper{
-		store: ctx.KVStore(key),
-		cdc:   cdc,
+func NewStakeMapper(key sdk.StoreKey, ck bank.CoinKeeper) StakeMapper {
+	cdc := wire.NewCodec()
+	return stakeMapper{
+		ck:            ck,
+		stakeStoreKey: key,
+		cdc:           cdc,
 	}
 }
 
-func (m Mapper) loadCandidate(address sdk.Address) *Candidate {
-	b := m.store.Get(GetCandidateKey(address))
-	if b == nil {
-		return nil
-	}
+// Returns the go-wire codec.
+func (sm stakingMapper) WireCodec() *wire.Codec {
+	return gm.cdc
+}
+
+func (sm stakeMapper) getCandidate(ctx sdk.Context, address sdk.Address) Candidate, sdk.Error {
+	
 	candidate := new(Candidate)
-	err := m.cdc.UnmarshalJSON(b, candidate)
+
+	store := ctx.KVStore(sm.stakeStoreKey)
+	bz := sm.store.Get(CandidateKey(address))
+	if bz == nil {
+		return *candidate, ErrCandidateEmpty()
+	}
+
+	err := sm.cdc.UnmarshalJSON(bz, candidate)
 	if err != nil {
 		panic(err) // This error should never occur big problem if does
 	}
-	return candidate
+	return *candidate, nil
 }
 
-func (m Mapper) saveCandidate(candidate *Candidate) {
+func (sm stakeMapper) setCandidate(candidate Candidate) {
 
 	// XXX should only remove validator if we know candidate is a validator
-	m.removeValidator(candidate.Address)
+	sm.removeValidator(candidate.Address)
 	validator := &Validator{candidate.Address, candidate.VotingPower}
-	m.updateValidator(validator)
+	sm.updateValidator(validator)
 
-	b, err := m.cdc.MarshalJSON(*candidate)
+	bz, err := m.cdc.MarshalJSON(*candidate)
 	if err != nil {
 		panic(err)
 	}
-	m.store.Set(GetCandidateKey(candidate.Address), b)
+	sm.store.Set(CandidateKey(candidate.Address), b)
 }
 
-func (m Mapper) removeCandidate(address sdk.Address) {
+func (sm stakeMapper) removeCandidate(address sdk.Address) {
 
 	// XXX should only remove validator if we know candidate is a validator
 	m.removeValidator(address)
@@ -127,7 +142,7 @@ func (m Mapper) removeCandidate(address sdk.Address) {
 
 // updateValidator - update a validator and create accumulate any changes
 // in the changed validator substore
-func (m Mapper) updateValidator(validator *Validator) {
+func (sm stakeMapper) updateValidator(validator *Validator) {
 
 	b, err := m.cdc.MarshalJSON(*validator)
 	if err != nil {
@@ -141,7 +156,7 @@ func (m Mapper) updateValidator(validator *Validator) {
 	m.store.Set(GetValidatorKey(validator.Address, validator.VotingPower, m.cdc), b)
 }
 
-func (m Mapper) removeValidator(address sdk.Address) {
+func (sm stakeMapper) removeValidator(address sdk.Address) {
 
 	//add validator with zero power to the validator updates
 	b, err := m.cdc.MarshalJSON(Validator{address, sdk.ZeroRat})
@@ -160,7 +175,7 @@ func (m Mapper) removeValidator(address sdk.Address) {
 // get the most recent updated validator set from the Candidates. These bonds
 // are already sorted by VotingPower from the UpdateVotingPower function which
 // is the only function which is to modify the VotingPower
-func (m Mapper) getValidators(maxVal uint16) (validators []Validator) {
+func (sm stakeMapper) getValidators(maxVal uint16) (validators []Validator) {
 
 	iterator := m.store.Iterator(subspace(ValidatorKeyPrefix)) //smallest to largest
 
@@ -186,7 +201,7 @@ func (m Mapper) getValidators(maxVal uint16) (validators []Validator) {
 //_________________________________________________________________________
 
 // get the most updated validators
-func (m Mapper) getValidatorUpdates() (updates []Validator) {
+func (sm stakeMapper) getValidatorUpdates() (updates []Validator) {
 
 	iterator := m.store.Iterator(subspace(ValidatorUpdatesKeyPrefix)) //smallest to largest
 
@@ -205,7 +220,7 @@ func (m Mapper) getValidatorUpdates() (updates []Validator) {
 }
 
 // remove all validator update entries
-func (m Mapper) clearValidatorUpdates(maxVal int) {
+func (sm stakeMapper) clearValidatorUpdates(maxVal int) {
 	iterator := m.store.Iterator(subspace(ValidatorUpdatesKeyPrefix))
 	for ; iterator.Valid(); iterator.Next() {
 		m.store.Delete(iterator.Key()) // XXX write test for this, may need to be in a second loop
@@ -216,7 +231,7 @@ func (m Mapper) clearValidatorUpdates(maxVal int) {
 //---------------------------------------------------------------------
 
 // loadCandidates - get the active list of all candidates TODO replace with  multistore
-func (m Mapper) loadCandidates() (candidates Candidates) {
+func (sm stakeMapper) loadCandidates() (candidates Candidates) {
 
 	iterator := m.store.Iterator(subspace(CandidateKeyPrefix))
 	//iterator := m.store.Iterator(CandidateKeyPrefix, []byte(nil))
@@ -238,7 +253,23 @@ func (m Mapper) loadCandidates() (candidates Candidates) {
 //_____________________________________________________________________
 
 // load the pubkeys of all candidates a delegator is delegated too
-func (m Mapper) loadDelegatorCandidates(delegator sdk.Address) (candidateAddrs []sdk.Address) {
+func (sm stakeMapper) getDelegators(delegator sdk.Address) (candidateAddrs []sdk.Address) {
+
+	candidateBytes := m.store.Get(GetDelegatorBondsKey(delegator, m.cdc))
+	if candidateBytes == nil {
+		return nil
+	}
+
+	err := m.cdc.UnmarshalJSON(candidateBytes, &candidateAddrs)
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+
+// load the pubkeys of all candidates a delegator is delegated too
+func (sm stakeMapper) getDelegations(delegator sdk.Address) (candidateAddrs []sdk.Address) {
 
 	candidateBytes := m.store.Get(GetDelegatorBondsKey(delegator, m.cdc))
 	if candidateBytes == nil {
@@ -254,26 +285,26 @@ func (m Mapper) loadDelegatorCandidates(delegator sdk.Address) (candidateAddrs [
 
 //_____________________________________________________________________
 
-func (m Mapper) loadDelegatorBond(delegator, candidate sdk.Address) *DelegatorBond {
-
-	delegatorBytes := m.store.Get(GetDelegatorBondKey(delegator, candidate, m.cdc))
-	if delegatorBytes == nil {
+func (sm stakeMapper) getDelegatorBond(delegator sdk.Address, delegatee sdk.Address) *DelegatorBond {
+	store := ctx.KVStore(gm.proposalStoreKey)
+	bz := store.Get(DelegatorBondKey(delegator, candidate))
+	if bz == nil {
 		return nil
 	}
 
 	bond := new(DelegatorBond)
-	err := m.cdc.UnmarshalJSON(delegatorBytes, bond)
+	err := m.cdc.UnmarshalJSON(bz, bond)
 	if err != nil {
 		panic(err)
 	}
+
 	return bond
 }
 
-func (m Mapper) saveDelegatorBond(delegator sdk.Address,
-	bond *DelegatorBond) {
+func (sm stakeMapper) setDelegatorBond(bond *DelegatorBond) {
 
 	// if a new bond add to the list of bonds
-	if m.loadDelegatorBond(delegator, bond.Address) == nil {
+	if sm.getDelegatorBond(bond.Delegator, bond.Delegatee) == nil {
 		pks := m.loadDelegatorCandidates(delegator)
 		pks = append(pks, (*bond).Address)
 		b, err := m.cdc.MarshalJSON(pks)
@@ -292,7 +323,7 @@ func (m Mapper) saveDelegatorBond(delegator sdk.Address,
 	//updateDelegatorBonds(store, delegator) //XXX remove?
 }
 
-func (m Mapper) removeDelegatorBond(delegator sdk.Address, candidateAddr sdk.Address) {
+func (sm stakeMapper) removeDelegatorBond(delegator sdk.Address, candidateAddr sdk.Address) {
 	// TODO use list queries on multistore to remove iterations here!
 	// first remove from the list of bonds
 	addrs := m.loadDelegatorCandidates(delegator)
@@ -315,7 +346,7 @@ func (m Mapper) removeDelegatorBond(delegator sdk.Address, candidateAddr sdk.Add
 //_______________________________________________________________________
 
 // load/save the global staking params
-func (m Mapper) loadParams() (params Params) {
+func (sm stakeMapper) loadParams() (params Params) {
 	b := m.store.Get(ParamKey)
 	if b == nil {
 		return defaultParams()
@@ -338,7 +369,21 @@ func (m Mapper) saveParams(params Params) {
 //_______________________________________________________________________
 
 // load/save the global staking state
-func (m Mapper) loadGlobalState() (gs *GlobalState) {
+func (sm stakeMap// load the pubkeys of all candidates a delegator is delegated too
+func (sm stakeMapper) getDelegations(delegator sdk.Address) (candidateAddrs []sdk.Address) {
+
+	candidateBytes := m.store.Get(GetDelegatorBondsKey(delegator, m.cdc))
+	if candidateBytes == nil {
+		return nil
+	}
+
+	err := m.cdc.UnmarshalJSON(candidateBytes, &candidateAddrs)
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+per) loadGlobalState() (gs *GlobalState) {
 	b := m.store.Get(GlobalStateKey)
 	if b == nil {
 		return initialGlobalState()
@@ -351,10 +396,41 @@ func (m Mapper) loadGlobalState() (gs *GlobalState) {
 	return
 }
 
-func (m Mapper) saveGlobalState(gs *GlobalState) {
+func (sm stakeMapper) saveGlobalState(gs *GlobalState) {
 	b, err := m.cdc.MarshalJSON(*gs)
 	if err != nil {
 		panic(err)
 	}
 	m.store.Set(GlobalStateKey, b)
+}
+
+// Perform all the actions required to bond tokens to a delegator bond from their account
+func (sm stakeMapper) BondCoins(bond *DelegatorBond, candidate *Candidate, tokens sdk.Coin) sdk.Error {
+
+	_, err := tr.coinKeeper.SubtractCoins(tr.ctx, candidate.Address, sdk.Coins{tokens})
+	if err != nil {
+		return err
+	}
+	newShares := candidate.addTokens(tokens.Amount, tr.gs)
+	bond.Shares = bond.Shares.Add(newShares)
+	return nil
+}
+
+// Perform all the actions required to bond tokens to a delegator bond from their account
+func (sm stakeMapper) UnbondCoins(bond *DelegatorBond, candidate *Candidate, shares sdk.Rat) sdk.Error {
+
+	// subtract bond tokens from delegator bond
+	if bond.Shares.LT(shares) {
+		return sdk.ErrInsufficientFunds("") // TODO
+	}
+	bond.Shares = bond.Shares.Sub(shares)
+
+	returnAmount := candidate.removeShares(shares, tr.gs)
+	returnCoins := sdk.Coins{{tr.params.BondDenom, returnAmount}}
+
+	_, err := tr.coinKeeper.AddCoins(tr.ctx, candidate.Address, returnCoins)
+	if err != nil {
+		return err
+	}
+	return nil
 }

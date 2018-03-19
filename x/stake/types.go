@@ -6,41 +6,34 @@ import (
 )
 
 // Params defines the high level settings for staking
-type Params struct {
+type StakeParams struct {
 	InflationRateChange sdk.Rat `json:"inflation_rate_change"` // maximum annual change in inflation rate
 	InflationMax        sdk.Rat `json:"inflation_max"`         // maximum inflation rate
 	InflationMin        sdk.Rat `json:"inflation_min"`         // minimum inflation rate
 	GoalBonded          sdk.Rat `json:"goal_bonded"`           // Goal of percent bonded atoms
 
-	MaxVals   uint16 `json:"max_vals"`   // maximum number of validators
-	BondDenom string `json:"bond_denom"` // bondable coin denomination
+	MaxValidators uint16 `json:"max_vals"`   // maximum number of validators
+	BondDenom     string `json:"bond_denom"` // bondable coin denomination
 
 	// gas costs for txs
-	GasDeclareCandidacy int64 `json:"gas_declare_candidacy"`
-	GasEditCandidacy    int64 `json:"gas_edit_candidacy"`
-	GasDelegate         int64 `json:"gas_delegate"`
-	GasUnbond           int64 `json:"gas_unbond"`
+
 }
 
-func defaultParams() Params {
-	return Params{
+func defaultStakeParams() StakeParams {
+	return StakeParams{
 		InflationRateChange: sdk.NewRat(13, 100),
 		InflationMax:        sdk.NewRat(20, 100),
 		InflationMin:        sdk.NewRat(7, 100),
 		GoalBonded:          sdk.NewRat(67, 100),
-		MaxVals:             100,
+		MaxValidators:       100,
 		BondDenom:           "fermion",
-		GasDeclareCandidacy: 20,
-		GasEditCandidacy:    20,
-		GasDelegate:         20,
-		GasUnbond:           20,
 	}
 }
 
 //_________________________________________________________________________
 
-// GlobalState - dynamic parameters of the current state
-type GlobalState struct {
+// StateState - dynamic parameters of the current state
+type StakeState struct {
 	TotalSupply       int64   `json:"total_supply"`        // total supply of all tokens
 	BondedShares      sdk.Rat `json:"bonded_shares"`       // sum of all shares distributed for the Bonded Pool
 	UnbondedShares    sdk.Rat `json:"unbonded_shares"`     // sum of all shares distributed for the Unbonded Pool
@@ -52,8 +45,8 @@ type GlobalState struct {
 
 // XXX define globalstate interface?
 
-func initialGlobalState() *GlobalState {
-	return &GlobalState{
+func initialStakeState() *GlobalState {
+	return &StakeState{
 		TotalSupply:       0,
 		BondedShares:      sdk.ZeroRat,
 		UnbondedShares:    sdk.ZeroRat,
@@ -65,61 +58,61 @@ func initialGlobalState() *GlobalState {
 }
 
 // get the bond ratio of the global state
-func (gs *GlobalState) bondedRatio() sdk.Rat {
-	if gs.TotalSupply > 0 {
-		return sdk.NewRat(gs.BondedPool, gs.TotalSupply)
+func (ss *StakeState) bondedRatio() sdk.Rat {
+	if ss.TotalSupply > 0 {
+		return sdk.NewRat(gs.BondedPool, ss.TotalSupply)
 	}
 	return sdk.ZeroRat
 }
 
 // get the exchange rate of bonded token per issued share
-func (gs *GlobalState) bondedShareExRate() sdk.Rat {
-	if gs.BondedShares.IsZero() {
+func (ss *StakeState) bondedShareExRate() sdk.Rat {
+	if ss.BondedShares.IsZero() {
 		return sdk.OneRat
 	}
-	return gs.BondedShares.Inv().Mul(sdk.NewRat(gs.BondedPool))
+	return gs.BondedShares.Inv().Mul(sdk.NewRat(ss.BondedPool))
 }
 
 // get the exchange rate of unbonded tokens held in candidates per issued share
-func (gs *GlobalState) unbondedShareExRate() sdk.Rat {
-	if gs.UnbondedShares.IsZero() {
+func (ss *StakeState) unbondedShareExRate() sdk.Rat {
+	if ss.UnbondedShares.IsZero() {
 		return sdk.OneRat
 	}
-	return gs.UnbondedShares.Inv().Mul(sdk.NewRat(gs.UnbondedPool))
+	return gs.UnbondedShares.Inv().Mul(sdk.NewRat(ss.UnbondedPool))
 }
 
 // XXX XXX XXX
 // expand to include the function of actually transfering the tokens
 
 //XXX CONFIRM that use of the exRate is correct with Zarko Spec!
-func (gs *GlobalState) addTokensBonded(amount int64) (issuedShares sdk.Rat) {
+func (ss *StakeState) addTokensBonded(amount int64) (issuedShares sdk.Rat) {
 	issuedShares = gs.bondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
-	gs.BondedPool += amount
-	gs.BondedShares = gs.BondedShares.Add(issuedShares)
+	ss.BondedPool += amount
+	ss.BondedShares = ss.BondedShares.Add(issuedShares)
 	return
 }
 
 //XXX CONFIRM that use of the exRate is correct with Zarko Spec!
-func (gs *GlobalState) removeSharesBonded(shares sdk.Rat) (removedTokens int64) {
-	removedTokens = gs.bondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
-	gs.BondedShares = gs.BondedShares.Sub(shares)
-	gs.BondedPool -= removedTokens
+func (ss *StakeState) removeSharesBonded(shares sdk.Rat) (removedTokens int64) {
+	removedTokens = ss.bondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
+	ss.BondedShares = ss.BondedShares.Sub(shares)
+	ss.BondedPool -= removedTokens
 	return
 }
 
 //XXX CONFIRM that use of the exRate is correct with Zarko Spec!
-func (gs *GlobalState) addTokensUnbonded(amount int64) (issuedShares sdk.Rat) {
-	issuedShares = gs.unbondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
-	gs.UnbondedShares = gs.UnbondedShares.Add(issuedShares)
-	gs.UnbondedPool += amount
+func (ss *StakeState) addTokensUnbonded(amount int64) (issuedShares sdk.Rat) {
+	issuedShares = ss.unbondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
+	ss.UnbondedShares = ss.UnbondedShares.Add(issuedShares)
+	ss.UnbondedPool += amount
 	return
 }
 
 //XXX CONFIRM that use of the exRate is correct with Zarko Spec!
-func (gs *GlobalState) removeSharesUnbonded(shares sdk.Rat) (removedTokens int64) {
-	removedTokens = gs.unbondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
-	gs.UnbondedShares = gs.UnbondedShares.Sub(shares)
-	gs.UnbondedPool -= removedTokens
+func (ss *StakeState) removeSharesUnbonded(shares sdk.Rat) (removedTokens int64) {
+	removedTokens = ss.unbondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
+	ss.UnbondedShares = ss.UnbondedShares.Sub(shares)
+	ss.UnbondedPool -= removedTokens
 	return
 }
 
@@ -163,7 +156,7 @@ type Description struct {
 }
 
 // NewCandidate - initialize a new candidate
-func NewCandidate(pubKey crypto.PubKey, address sdk.Address, description Description) *Candidate {
+func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Description) *Candidate {
 	return &Candidate{
 		Status:      Unbonded,
 		PubKey:      pubKey,
@@ -172,6 +165,21 @@ func NewCandidate(pubKey crypto.PubKey, address sdk.Address, description Descrip
 		Liabilities: sdk.ZeroRat,
 		VotingPower: sdk.ZeroRat,
 		Description: description,
+	}
+}
+
+func (c *Candidate) updateDescription(description Description) {
+	if description.Moniker != "" {
+		candidate.Description.Moniker = description.Moniker
+	}
+	if description.Identity != "" {
+		candidate.Description.Identity = description.Identity
+	}
+	if description.Website != "" {
+		candidate.Description.Website = description.Website
+	}
+	if description.Details != "" {
+		candidate.Description.Details = description.Details
 	}
 }
 
@@ -217,21 +225,6 @@ func (c *Candidate) removeShares(shares sdk.Rat, gs *GlobalState) (createdCoins 
 	return
 }
 
-// Validator returns a copy of the Candidate as a Validator.
-// Should only be called when the Candidate qualifies as a validator.
-func (c *Candidate) validator() Validator {
-	return Validator{
-		Address:     c.Address, // XXX !!!
-		VotingPower: c.VotingPower,
-	}
-}
-
-// Validator is one of the top Candidates
-type Validator struct {
-	Address     sdk.Address `json:"address"`      // Address of validator
-	VotingPower sdk.Rat     `json:"voting_power"` // Voting power if considered a validator
-}
-
 // ABCIValidator - Get the validator from a bond value
 /* TODO
 func (v Validator) ABCIValidator() (*abci.Validator, error) {
@@ -257,6 +250,7 @@ type Candidates []*Candidate
 // owned by one delegator, and is associated with the voting power of one
 // pubKey.
 type DelegatorBond struct {
-	Address sdk.Address `json:"pub_key"`
-	Shares  sdk.Rat     `json:"shares"`
+	Delegator sdk.Address `json:"delegator"`
+	Delegatee sdk.Address `json:"delegatee"`
+	Shares    sdk.Rat     `json:"shares"`
 }

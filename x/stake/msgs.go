@@ -16,52 +16,44 @@ var _, _, _, _ sdk.Msg = &DeclareCandidacyMsg{}, &EditCandidacyMsg{}, &DelegateM
 
 //______________________________________________________________________
 
-// MsgAddr - struct for bonding or unbonding transactions
-type MsgAddr struct {
-	Address sdk.Address `json:"address"`
-}
-
-func NewMsgAddr(address sdk.Address) MsgAddr {
-	return MsgAddr{
-		Address: address,
-	}
-}
-
-// nolint
-func (msg MsgAddr) Type() string                            { return Name }
-func (msg MsgAddr) Get(key interface{}) (value interface{}) { return nil }
-func (msg MsgAddr) GetSigners() []sdk.Address               { return []sdk.Address{msg.Address} }
-func (msg MsgAddr) String() string {
-	return fmt.Sprintf("MsgAddr{Address: %v}", msg.Address)
-}
-
-// ValidateBasic - Check for non-empty candidate, and valid coins
-func (msg MsgAddr) ValidateBasic() sdk.Error {
-	if msg.Address == nil {
-		return ErrCandidateEmpty()
-	}
-	return nil
-}
-
-//______________________________________________________________________
-
 // DeclareCandidacyMsg - struct for unbonding transactions
 type DeclareCandidacyMsg struct {
-	MsgAddr
-	Description
-	Bond    sdk.Coin      `json:"bond"`
-	Address sdk.Address   `json:"address"`
-	PubKey  crypto.PubKey `json:"pubkey"`
+	Address     sdk.Address   `json:"address"`
+	Bond        sdk.Coin      `json:"bond"`
+	PubKey      crypto.PubKey `json:"pubkey"`
+	Description Description   `json:"description"`
 }
 
 func NewDeclareCandidacyMsg(address sdk.Address, pubkey crypto.PubKey, bond sdk.Coin, description Description) DeclareCandidacyMsg {
 	return DeclareCandidacyMsg{
-		MsgAddr:     NewMsgAddr(address),
-		Description: description,
-		Bond:        bond,
 		Address:     address,
+		Bond:        bond,
+		Description: description,
 		PubKey:      pubkey,
 	}
+}
+
+func (msg DeclareCandidacyMsg) Type() string                            { return MsgType }
+func (msg DeclareCandidacyMsg) Get(key interface{}) (value interface{}) { return nil }
+func (msg DeclareCandidacyMsg) GetSigners() []sdk.Address               { return []sdk.Address{msg.Address} }
+func (msg DeclareCandidacyMsg) String() string {
+	return fmt.Sprintf("DeclareCandidacyMsg{Address: %v, Bond: %v, PubKey: %v, Description: %v}", msg.Address, msg.Bond, msg.PubKey, msg.Description)
+}
+
+// ValidateBasic - Check for non-empty candidate, and valid coins
+func (msg DeclareCandidacyMsg) ValidateBasic() sdk.Error {
+	if len(msg.Address) == 0 {
+		return sdk.ErrInvalidAddress(msg.Address.String())
+	}
+	if !msg.Bond.Amount <= 0 {
+		return sdk.ErrInvalidCoins(msg.Bond.String())
+	}
+	empty := Description{}
+	if msg.Description == empty {
+		return ErrInvalidDescription(msg.Description) // TODO: Create Error
+	}
+	// TODO: Verify pubkey somehow?
+	return nil
 }
 
 // get the bytes for the message signer to sign on
@@ -73,36 +65,39 @@ func (msg DeclareCandidacyMsg) GetSignBytes() []byte {
 	return b
 }
 
-// quick validity check
-func (msg DeclareCandidacyMsg) ValidateBasic() sdk.Error {
-	err := msg.MsgAddr.ValidateBasic()
-	if err != nil {
-		return err
-	}
-	err = validateCoin(msg.Bond)
-	if err != nil {
-		return err
-	}
-	empty := Description{}
-	if msg.Description == empty {
-		return newError(CodeInvalidInput, "description must be included")
-	}
-	return nil
-}
-
 //______________________________________________________________________
 
 // EditCandidacyMsg - struct for editing a candidate
 type EditCandidacyMsg struct {
-	MsgAddr
-	Description
+	Address     sdk.Address `json:"address"`
+	Description Description `json:"description"`
 }
 
 func NewEditCandidacyMsg(address sdk.Address, description Description) EditCandidacyMsg {
 	return EditCandidacyMsg{
-		MsgAddr:     NewMsgAddr(address),
+		Address:     address,
 		Description: description,
 	}
+}
+
+func (msg EditCandidacyMsg) Type() string                            { return MsgType }
+func (msg EditCandidacyMsg) Get(key interface{}) (value interface{}) { return nil }
+func (msg EditCandidacyMsg) GetSigners() []sdk.Address               { return []sdk.Address{msg.Address} }
+func (msg EditCandidacyMsg) String() string {
+	return fmt.Sprintf("EditCandidacyMsg{Address: %v, Description: %v}", msg.Address, msg.Description)
+}
+
+// quick validity check
+func (msg EditCandidacyMsg) ValidateBasic() sdk.Error {
+	if len(msg.Address) == 0 {
+		return sdk.ErrInvalidAddress(msg.Address.String())
+	}
+	empty := Description{}
+	if msg.Description == empty {
+		return ErrInvalidDescription(msg.Description)
+	}
+	// TODO: Verify pubkey somehow?
+	return nil
 }
 
 // get the bytes for the message signer to sign on
@@ -114,32 +109,42 @@ func (msg EditCandidacyMsg) GetSignBytes() []byte {
 	return b
 }
 
-// quick validity check
-func (msg EditCandidacyMsg) ValidateBasic() sdk.Error {
-	err := msg.MsgAddr.ValidateBasic()
-	if err != nil {
-		return err
-	}
-	empty := Description{}
-	if msg.Description == empty {
-		return newError(CodeInvalidInput, "Transaction must include some information to modify")
-	}
-	return nil
-}
-
 //______________________________________________________________________
 
 // DelegateMsg - struct for bonding transactions
 type DelegateMsg struct {
-	MsgAddr
-	Bond sdk.Coin `json:"bond"`
+	Delegator sdk.Address `json:"delegator"`
+	Delegatee sdk.Address `json:"delegatee"`
+	Bond      sdk.Coin    `json:"bond"`
 }
 
-func NewDelegateMsg(address sdk.Address, bond sdk.Coin) DelegateMsg {
+func NewDelegateMsg(delegator sdk.Address, delegatee sdk.Address, bond sdk.Coin) DelegateMsg {
 	return DelegateMsg{
-		MsgAddr: NewMsgAddr(address),
-		Bond:    bond,
+		Delegator: delegator,
+		Delegatee: delegatee,
+		Bond:      bond,
 	}
+}
+
+func (msg DelegateMsg) Type() string                            { return MsgType }
+func (msg DelegateMsg) Get(key interface{}) (value interface{}) { return nil }
+func (msg DelegateMsg) GetSigners() []sdk.Address               { return []sdk.Address{msg.Delegator} }
+func (msg DelegateMsg) String() string {
+	return fmt.Sprintf("DelegateMsg{Delegator: %v, Delegatee: %v, Bond: %v}", msg.Delegator, msg.Delegatee, msg.Bond)
+}
+
+// quick validity check
+func (msg DelegateMsg) ValidateBasic() sdk.Error {
+	if len(msg.Delegator) == 0 {
+		return sdk.ErrInvalidAddress(msg.Delegator.String())
+	}
+	if len(msg.Delegatee) == 0 {
+		return sdk.ErrInvalidAddress(msg.Delegatee.String())
+	}
+	if !msg.Bond.Amount <= 0 {
+		return sdk.ErrInvalidCoins(msg.Bond.String())
+	}
+	return nil
 }
 
 // get the bytes for the message signer to sign on
@@ -151,41 +156,26 @@ func (msg DelegateMsg) GetSignBytes() []byte {
 	return b
 }
 
-// quick validity check
-func (msg DelegateMsg) ValidateBasic() sdk.Error {
-	err := msg.MsgAddr.ValidateBasic()
-	if err != nil {
-		return err
-	}
-	err = validateCoin(msg.Bond)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 //______________________________________________________________________
 
 // UnbondMsg - struct for unbonding transactions
 type UnbondMsg struct {
-	MsgAddr
-	Shares string `json:"shares"`
+	Address sdk.Address `json:"address"`
+	Shares  string      `json:"shares"`
 }
 
 func NewUnbondMsg(address sdk.Address, shares string) UnbondMsg {
 	return UnbondMsg{
-		MsgAddr: NewMsgAddr(address),
+		Address: address,
 		Shares:  shares,
 	}
 }
 
-// get the bytes for the message signer to sign on
-func (msg UnbondMsg) GetSignBytes() []byte {
-	b, err := json.Marshal(msg)
-	if err != nil {
-		panic(err)
-	}
-	return b
+func (msg UnbondMsg) Type() string                            { return MsgType }
+func (msg UnbondMsg) Get(key interface{}) (value interface{}) { return nil }
+func (msg UnbondMsg) GetSigners() []sdk.Address               { return []sdk.Address{msg.Delegator} }
+func (msg UnbondMsg) String() string {
+	return fmt.Sprintf("UnbondMsg{Address: %v, Shares: %v}", msg.Address, msg.Shares)
 }
 
 // quick validity check
@@ -196,21 +186,16 @@ func (msg UnbondMsg) ValidateBasic() sdk.Error {
 	}
 
 	if msg.Shares == "MAX" {
-		return ErrCandidateEmpty()
+		return ErrCandidateEmpty() // TODO: Understand?
 	}
 	return nil
 }
 
-//______________________________________________________________________
-// helper
-
-func validateCoin(coin sdk.Coin) sdk.Error {
-	coins := sdk.Coins{coin}
-	if !coins.IsValid() {
-		return sdk.ErrInvalidCoins(coins)
+// get the bytes for the message signer to sign on
+func (msg UnbondMsg) GetSignBytes() []byte {
+	b, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
 	}
-	if !coins.IsPositive() {
-		return sdk.ErrInvalidCoins(coins) // XXX: add "Amount must be > 0" ?
-	}
-	return nil
+	return b
 }

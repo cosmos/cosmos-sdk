@@ -3,7 +3,6 @@
 vendor
 merkleeyes.db
 build
-docs/guide/*.sh
 tools/bin/*
 examples/build/*
 examples/basecoin/glide.lock
@@ -11,7 +10,10 @@ examples/basecoin/app/data
 baseapp/data/*
 docs/_build
 .DS_Store
+coverage.txt
 .vscode
+profile.out
+client/lcd/keys.db/
 
 
 ### Vagrant ###

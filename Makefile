@@ -72,7 +72,7 @@ test_unit:
 
 test_cover:
 	@rm -rf examples/basecoin/vendor/
-	@bash tests/test_cover.sh
+	@bash tests/cover.sh
 
 benchmark:
 	@go test -bench=. $(PACKAGES)

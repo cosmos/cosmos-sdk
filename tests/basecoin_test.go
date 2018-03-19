@@ -43,12 +43,12 @@ var (
 )
 
 // Init Basecoin Test
-func TestInitBasecoin(t *testing.T, home string) string {
+func TestInitBasecoin(t *testing.T) string {
 	var err error
 
 	password := "some-random-password"
 
-	initBasecoind := exec.Command(basecoindPath, "init", "--home", home)
+	initBasecoind := exec.Command(basecoindPath, "init", "--home", basecoinDir)
 	cmdWriter, err := initBasecoind.StdinPipe()
 	assert.Nil(t, err)
 

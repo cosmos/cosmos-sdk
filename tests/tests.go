@@ -24,8 +24,13 @@ import (
 
 //nolint
 var (
+	gopath = filepath.Join(os.Getenv("GOPATH"), "src", "github.com", "cosmos", "cosmos-sdk")
+
 	basecoind = "build/basecoind"
 	basecli   = "build/basecli"
+
+	basecoindPath = filepath.Join(gopath, basecoind)
+	basecliPath   = filepath.Join(gopath, basecli)
 
 	basecoindDir = "./tmp-basecoind-tests"
 	basecliDir   = "./tmp-basecli-tests"
@@ -37,25 +42,13 @@ var (
 	igor     = ACCOUNTS[3]
 )
 
-func gopath() string {
-	return filepath.Join(os.Getenv("GOPATH"), "src", "github.com", "cosmos", "cosmos-sdk")
-}
-
-func whereIsBasecoind() string {
-	return filepath.Join(gopath(), basecoind)
-}
-
-func whereIsBasecli() string {
-	return filepath.Join(gopath(), basecli)
-}
-
 // Init Basecoin Test
 func TestInitBasecoin(t *testing.T, home string) string {
 	var err error
 
 	password := "some-random-password"
 
-	initBasecoind := exec.Command(whereIsBasecoind(), "init", "--home", home)
+	initBasecoind := exec.Command(basecoindPath, "init", "--home", home)
 	cmdWriter, err := initBasecoind.StdinPipe()
 	assert.Nil(t, err)
 
@@ -92,8 +85,7 @@ func TestInitBasecoin(t *testing.T, home string) string {
 }
 
 func _TestSendCoins(t *testing.T) {
-	err := StartServer()
-	assert.NotNil(t, err)
+	startServer(t)
 
 	// send some coins
 	// [zr] where dafuq do I get a FROM (oh, use --name)
@@ -101,14 +93,14 @@ func _TestSendCoins(t *testing.T) {
 	sendTo := fmt.Sprintf("--to=%s", bob)
 	sendFrom := fmt.Sprintf("--from=%s", alice)
 
-	cmdOut, err := exec.Command(whereIsBasecli(), "send", sendTo, "--amount=1000mycoin", sendFrom, "--seq=0").Output()
+	cmdOut, err := exec.Command(basecliPath, "send", sendTo, "--amount=1000mycoin", sendFrom, "--seq=0").Output()
 	assert.Nil(t, err)
 
 	fmt.Printf("sent: %s", string(cmdOut))
 }
 
 // Init Basecoin Test
-func InitServerForTest(t *testing.T) {
+func initServerForTest(t *testing.T) {
 	Clean()
 
 	var err error
@@ -116,7 +108,7 @@ func InitServerForTest(t *testing.T) {
 	password := "some-random-password"
 	usePassword := exec.Command("echo", password)
 
-	initBasecoind := exec.Command(whereIsBasecoind(), "init", "--home", basecoindDir)
+	initBasecoind := exec.Command(basecoindPath, "init", "--home", basecoindDir)
 
 	initBasecoind.Stdin, err = usePassword.StdoutPipe()
 	assert.Nil(t, err)
@@ -130,13 +122,12 @@ func InitServerForTest(t *testing.T) {
 	err = initBasecoind.Wait()
 	assert.Nil(t, err)
 
-	err = makeKeys()
-	assert.Nil(t, err)
+	makeKeys(t)
 }
 
 // expects TestInitBaseCoin to have been run
-func StartNodeServerForTest(t *testing.T, home string) *exec.Cmd {
-	cmdName := whereIsBasecoind()
+func startNodeServerForTest(t *testing.T, home string) *exec.Cmd {
+	cmdName := basecoindPath
 	cmdArgs := []string{"start", "--home", home}
 	cmd := exec.Command(cmdName, cmdArgs...)
 	cmd.Stdout = os.Stdout
@@ -145,15 +136,15 @@ func StartNodeServerForTest(t *testing.T, home string) *exec.Cmd {
 	assert.Nil(t, err)
 
 	// FIXME: if there is a nondeterministic node start failure,
-	//        we should probably make this read the logs to wait for RPC
+	// we should probably make this read the logs to wait for RPC
 	time.Sleep(time.Second * 2)
 
 	return cmd
 }
 
 // expects TestInitBaseCoin to have been run
-func StartLCDServerForTest(t *testing.T, home, chainID string) (cmd *exec.Cmd, port string) {
-	cmdName := whereIsBasecli()
+func startLCDServerForTest(t *testing.T, home, chainID string) (cmd *exec.Cmd, port string) {
+	cmdName := basecliPath
 	port = strings.Split(server.FreeTCPAddr(t), ":")[2]
 	cmdArgs := []string{
 		"rest-server",
@@ -188,43 +179,33 @@ func appendToFile(path string, text string) error {
 	return nil
 }
 
-func makeKeys() error {
+func makeKeys(t *testing.T) {
 	for _, acc := range ACCOUNTS {
-		makeKeys := exec.Command(whereIsBasecli(), "keys", "add", acc, "--home", basecliDir)
+		makeKeys := exec.Command(basecliPath, "keys", "add", acc, "--home", basecliDir)
 		cmdWriter, err := makeKeys.StdinPipe()
-		if err != nil {
-			return err
-		}
+		assert.Nil(t, err)
 
 		makeKeys.Stdout = os.Stdout
-		if err := makeKeys.Start(); err != nil {
-			return err
-		}
+		err = makeKeys.Start()
+		assert.Nil(t, err)
+
 		cmdWriter.Write([]byte("1234567890"))
-		if err != nil {
-			return err
-		}
 		cmdWriter.Close()
 
-		if err := makeKeys.Wait(); err != nil {
-			return err
-		}
+		err = makeKeys.Wait()
+		assert.Nil(t, err)
 	}
-
-	return nil
 }
 
 // expects TestInitBaseCoin to have been run
-func StartServer() error {
+func startServer(t *testing.T) {
 	// straight outta https://nathanleclaire.com/blog/2014/12/29/shelled-out-commands-in-golang/
-	cmdName := whereIsBasecoind()
+	cmdName := basecoindPath
 	cmdArgs := []string{"start", "--home", basecoindDir}
 
 	cmd := exec.Command(cmdName, cmdArgs...)
 	cmdReader, err := cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
+	assert.Nil(t, err)
 
 	scanner := bufio.NewScanner(cmdReader)
 	go func() {
@@ -234,18 +215,12 @@ func StartServer() error {
 	}()
 
 	err = cmd.Start()
-	if err != nil {
-		return err
-	}
+	assert.Nil(t, err)
 
 	err = cmd.Wait()
-	if err != nil {
-		return err
-	}
+	assert.Nil(t, err)
 
 	time.Sleep(5 * time.Second)
-
-	return nil
 
 	// TODO return cmd.Process so that we can later do something like:
 	// cmd.Process.Kill()
@@ -260,53 +235,3 @@ func Clean() {
 	err = os.Remove(basecliDir)
 	panic(err)
 }
-
-/*
-	chainID = "staking_test"
-	testDir = "./tmp_tests"
-)
-
-func runTests() {
-
-	if err := os.Mkdir(testDir, 0666); err != nil {
-		panic(err)
-	}
-	defer os.Remove(testDir)
-
-	// make some keys
-
-	//if err := makeKeys(); err != nil {
-	//	panic(err)
-	//}
-
-	if err := initServer(); err != nil {
-		fmt.Printf("Err: %v", err)
-		panic(err)
-	}
-
-}
-
-func initServer() error {
-	serveDir := filepath.Join(testDir, "server")
-	//serverLog := filepath.Join(testDir, "gaia-node.log")
-
-	// get RICH
-	keyOut, err := exec.Command(GAIA, CLIENT_EXE, "keys", "get", "alice").Output()
-	if err != nil {
-		fmt.Println("one")
-		return err
-	}
-	key := strings.Split(string(keyOut), "\t")
-	fmt.Printf("wit:%s", key[2])
-
-	outByte, err := exec.Command(GAIA, SERVER_EXE, "init", "--static", fmt.Sprintf("--chain-id=%s", chainID), fmt.Sprintf("--home=%s", serveDir), key[2]).Output()
-	if err != nil {
-		fmt.Println("teo")
-		fmt.Printf("Error: %v", err)
-
-		return err
-	}
-	fmt.Sprintf("OUT: %s", string(outByte))
-	return nil
-}
-*/

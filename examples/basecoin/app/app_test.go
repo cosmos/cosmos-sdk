@@ -99,13 +99,13 @@ func TestMsgs(t *testing.T) {
 
 		// Run a Check
 		cres := bapp.CheckTx(txBytes)
-		assert.Equal(t, sdk.CodeUnrecognizedAddress,
+		assert.Equal(t, sdk.CodeUnknownAddress,
 			sdk.CodeType(cres.Code), "i: %v, log: %v", i, cres.Log)
 
 		// Simulate a Block
 		bapp.BeginBlock(abci.RequestBeginBlock{})
 		dres := bapp.DeliverTx(txBytes)
-		assert.Equal(t, sdk.CodeUnrecognizedAddress,
+		assert.Equal(t, sdk.CodeUnknownAddress,
 			sdk.CodeType(dres.Code), "i: %v, log: %v", i, dres.Log)
 	}
 }

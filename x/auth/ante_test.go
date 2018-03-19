@@ -93,13 +93,13 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	// test an unrecognized account
 	privs, seqs = []crypto.PrivKey{priv1, priv2}, []int64{0, 0}
 	tx = newTestTx(ctx, msg, privs, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnrecognizedAddress)
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnknownAddress)
 
 	// save the first account, but second is still unrecognized
 	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
 	acc1.SetCoins(fee.Amount)
 	mapper.SetAccount(ctx, acc1)
-	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnrecognizedAddress)
+	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnknownAddress)
 }
 
 // Test logic around sequence checking with one signer and many signers.

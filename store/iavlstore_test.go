@@ -82,6 +82,26 @@ func TestIAVLIterator(t *testing.T) {
 	}
 }
 
+func TestIAVLSubspace(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree, _ := newTree(t, db)
+	iavlStore := newIAVLStore(tree, numHistory)
+
+	iavlStore.Set([]byte("test1"), []byte("test1"))
+	iavlStore.Set([]byte("test2"), []byte("test2"))
+	iavlStore.Set([]byte("test3"), []byte("test3"))
+
+	iter := iavlStore.Subspace([]byte("test"))
+	expected := []string{"test1", "test2", "test3"}
+	for i := 0; iter.Valid(); iter.Next() {
+		expectedKey := expected[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, expectedKey)
+		i += 1
+	}
+}
+
 func TestIAVLStoreQuery(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree := iavl.NewVersionedTree(db, cacheSize)

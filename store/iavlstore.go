@@ -119,6 +119,13 @@ func (st *iavlStore) Iterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, true)
 }
 
+func (st *iavlStore) Subspace(prefix []byte) Iterator {
+	end := make([]byte, len(prefix))
+	copy(end, prefix)
+	end[len(end)-1]++
+	return st.Iterator(prefix, end)
+}
+
 // Implements IterKVStore.
 func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, false)

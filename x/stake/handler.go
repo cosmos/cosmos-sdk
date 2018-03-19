@@ -173,18 +173,19 @@ func handleDeclareCandidacyMsg(ctx sdk.Context, sm stakeMapper, msg DeclareCandi
 
 func handleEditCandidacyMsg(ctx sdk.Context, sm stakeMapper, msg EditCandidacyMsg) sdk.Result {
 	// candidate must already be registered
-	if sm.loadCandidate(msg.Address) == nil {
-		return ErrBadCandidateAddr()
-	}
-	if ctx.IsCheckTx() {
-		return nil
+	candidate,err := sm.getCandidate(ctx, msg.Address)
+	if err != nil {
+		return err
 	}
 
-	// Get the bond account
-	candidate := sm.getCandidate(msg.Address)
-	if candidate == nil || candidate.Status == Unbonded {
+	if candidate.Status == Unbonded {
 		return ErrBondNotNominated()
 	}
+
+	if ctx.IsCheckTx() {
+		return sdk.Result{} // TODO
+	}
+	
 
 	candidate.updateDescription(msg.Description)
 

@@ -8,7 +8,7 @@ import (
 )
 
 func TestGetInflation(t *testing.T) {
-	mapper, _ := createTestInput(t, nil, false)
+	_, _, mapper, _ := createTestInput(t, nil, false, 0)
 	params := mapper.loadParams()
 	gs := mapper.loadGlobalState()
 
@@ -53,7 +53,7 @@ func TestGetInflation(t *testing.T) {
 }
 
 func TestProcessProvisions(t *testing.T) {
-	mapper, _ := createTestInput(t, nil, false)
+	_, _, mapper, _ := createTestInput(t, nil, false, 0)
 	params := mapper.loadParams()
 	gs := mapper.loadGlobalState()
 

@@ -49,9 +49,8 @@ func (msg MsgAddr) ValidateBasic() sdk.Error {
 type MsgDeclareCandidacy struct {
 	MsgAddr
 	Description
-	Bond    sdk.Coin      `json:"bond"`
-	Address sdk.Address   `json:"address"`
-	PubKey  crypto.PubKey `json:"pubkey"`
+	Bond   sdk.Coin      `json:"bond"`
+	PubKey crypto.PubKey `json:"pubkey"`
 }
 
 func NewMsgDeclareCandidacy(address sdk.Address, pubkey crypto.PubKey, bond sdk.Coin, description Description) MsgDeclareCandidacy {
@@ -59,7 +58,6 @@ func NewMsgDeclareCandidacy(address sdk.Address, pubkey crypto.PubKey, bond sdk.
 		MsgAddr:     NewMsgAddr(address),
 		Description: description,
 		Bond:        bond,
-		Address:     address,
 		PubKey:      pubkey,
 	}
 }

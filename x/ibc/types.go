@@ -7,22 +7,32 @@ import (
 )
 
 // ------------------------------
-// IBCPacket
+// Msg
+// Msg defines inter-blockchain Msg
+// that can be proved by light-client protocol
 
-// IBCPacket defines a piece of data that can be send between two separate
+type Msg interface {
+	Type() string
+	GetSigners() []sdk.Address
+	ValidateBasic() sdk.Error
+}
+
+// ------------------------------
+// Packet
+
+// Packet defines a piece of data that can be send between two separate
 // blockchains.
-type IBCPacket struct {
-	SrcAddr   sdk.Address
-	DestAddr  sdk.Address
-	Coins     sdk.Coins
+type Packet struct {
+	Msg       Msg
 	SrcChain  string
 	DestChain string
 }
 
+/*
 func NewIBCPacket(srcAddr sdk.Address, destAddr sdk.Address, coins sdk.Coins,
 	srcChain string, destChain string) IBCPacket {
 
-	return IBCPacket{
+	return Packet{
 		SrcAddr:   srcAddr,
 		DestAddr:  destAddr,
 		Coins:     coins,
@@ -30,34 +40,31 @@ func NewIBCPacket(srcAddr sdk.Address, destAddr sdk.Address, coins sdk.Coins,
 		DestChain: destChain,
 	}
 }
-
-func (ibcp IBCPacket) ValidateBasic() sdk.Error {
-	if ibcp.SrcChain == ibcp.DestChain {
+*/
+func (packet Packet) ValidateBasic() sdk.Error {
+	if packet.SrcChain == packet.DestChain {
 		return ErrIdenticalChains().Trace("")
 	}
-	if !ibcp.Coins.IsValid() {
-		return sdk.ErrInvalidCoins("")
-	}
-	return nil
+	return packet.Msg.ValidateBasic()
 }
 
 // ----------------------------------
-// IBCTransferMsg
+// IBCSendMsg
 
-// IBCTransferMsg defines how another module can send an IBCPacket.
-type IBCTransferMsg struct {
-	IBCPacket
+// IBCSendMsg defines how another module can send an IBCPacket.
+type IBCSendMsg struct {
+	Packet
 }
 
-func (msg IBCTransferMsg) Type() string {
+func (msg IBCSendMsg) Type() string {
 	return "ibc"
 }
 
-func (msg IBCTransferMsg) Get(key interface{}) interface{} {
+func (msg IBCSendMsg) Get(key interface{}) interface{} {
 	return nil
 }
 
-func (msg IBCTransferMsg) GetSignBytes() []byte {
+func (msg IBCSendMsg) GetSignBytes() []byte {
 	cdc := wire.NewCodec()
 	bz, err := cdc.MarshalBinary(msg)
 	if err != nil {
@@ -66,13 +73,13 @@ func (msg IBCTransferMsg) GetSignBytes() []byte {
 	return bz
 }
 
-func (msg IBCTransferMsg) ValidateBasic() sdk.Error {
-	return msg.IBCPacket.ValidateBasic()
+func (msg IBCSendMsg) ValidateBasic() sdk.Error {
+	return msg.Packet.ValidateBasic()
 }
 
 // x/bank/tx.go SendMsg.GetSigners()
-func (msg IBCTransferMsg) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.SrcAddr}
+func (msg IBCSendMsg) GetSigners() []sdk.Address {
+	return msg.Packet.Msg.GetSigners()
 }
 
 // ----------------------------------
@@ -81,7 +88,7 @@ func (msg IBCTransferMsg) GetSigners() []sdk.Address {
 // IBCReceiveMsg defines the message that a relayer uses to post an IBCPacket
 // to the destination chain.
 type IBCReceiveMsg struct {
-	IBCPacket
+	Packet
 	Relayer  sdk.Address
 	Sequence int64
 }
@@ -104,7 +111,7 @@ func (msg IBCReceiveMsg) GetSignBytes() []byte {
 }
 
 func (msg IBCReceiveMsg) ValidateBasic() sdk.Error {
-	return msg.IBCPacket.ValidateBasic()
+	return msg.Packet.ValidateBasic()
 }
 
 // x/bank/tx.go SendMsg.GetSigners()

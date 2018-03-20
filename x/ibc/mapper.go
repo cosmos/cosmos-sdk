@@ -26,7 +26,7 @@ func NewIBCMapper(cdc *wire.Codec, key sdk.StoreKey) IBCMapper {
 // only be invoked from another module directly and not through a user
 // transaction.
 // TODO: Handle invalid IBC packets and return errors.
-func (ibcm IBCMapper) PostIBCPacket(ctx sdk.Context, packet IBCPacket) sdk.Error {
+func (ibcm IBCMapper) PostIBCPacket(ctx sdk.Context, packet Packet) sdk.Error {
 	// write everything into the state
 	store := ctx.KVStore(ibcm.key)
 	index := ibcm.getEgressLength(store, packet.DestChain)
@@ -50,7 +50,7 @@ func (ibcm IBCMapper) PostIBCPacket(ctx sdk.Context, packet IBCPacket) sdk.Error
 // to the appropriate callbacks.
 // XXX: For now this handles all interactions with the CoinKeeper.
 // XXX: This needs to do some authentication checking.
-func (ibcm IBCMapper) ReceiveIBCPacket(ctx sdk.Context, packet IBCPacket) sdk.Error {
+func (ibcm IBCMapper) ReceiveIBCPacket(ctx sdk.Context, packet Packet) sdk.Error {
 	return nil
 }
 

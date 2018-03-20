@@ -12,24 +12,24 @@ IBC module will store its own router for handling custom incoming msgs. `IBCPush
 // User facing API
 
 type Packet struct {
-    Data      Payload
+    Data      Msg
     SrcChain  string
     DestChain string
 }
 
-type Payload interface {
+type Msg interface {
     Type() string
     ValidateBasic() sdk.Error
 }
 
-type TransferPayload struct {
+type TransferMsg struct {
     SrcAddr  sdk.Address
     DestAddr sdk.Address
     Coins    sdk.Coins
 }
 
 // Implements sdk.Msg
-type IBCTransferMsg struct {
+type IBCSendMsg struct {
     Packet
 }
 

@@ -1,12 +1,13 @@
 package ibc
 
 import (
-	"reflect"
+	//"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	//"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
+/*
 func NewHandler(ibcm IBCMapper, ck bank.CoinKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
@@ -55,4 +56,6 @@ func handleIBCReceiveMsg(ctx sdk.Context, ibcm IBCMapper, ck bank.CoinKeeper, ms
 	ibcm.SetIngressSequence(ctx, packet.SrcChain, seq+1)
 
 	return sdk.Result{}
-}
+}*/
+
+type Handler func(ctx sdk.Context, msg Msg) sdk.Result

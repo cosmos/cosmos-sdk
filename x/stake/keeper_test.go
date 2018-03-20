@@ -18,8 +18,8 @@ import (
 //func TestUpdateVotingPower(t *testing.T) {
 //assert := assert.New(t)
 //store := initTestStore(t)
-//params := loadParams(store)
-//gs := loadGlobalState(store)
+//params := getParams(store)
+//gs := getGlobalState(store)
 
 //N := 5
 //actors := newAddrs(N)
@@ -38,7 +38,7 @@ import (
 
 //// test the max validators term
 //params.MaxVals = 4
-//saveParams(store, params)
+//setParams(store, params)
 //candidates.updateVotingPower(store, gs, params)
 //assert.Equal(int64(0), candidates[4].VotingPower.Evaluate(), "%v", candidates[4])
 //}
@@ -118,11 +118,11 @@ import (
 //testRemove(t, vs1[1], changed[0])
 //testRemove(t, vs1[2], changed[1])
 
-//// test many sdk of changes //vs2 = []Validator{v1, v3, v4, v5} //vs2[2].VotingPower = sdk.NewRat(11) //changed = vs1.validatorsUpdated(vs2) //require.Equal(4, len(changed), "%v", changed) // change 1, remove 1, add 2 //testRemove(t, vs1[1], changed[0]) //testChange(t, vs2[1], changed[1]) //testChange(t, vs2[2], changed[2]) //testChange(t, vs2[3], changed[3]) //} //func TestUpdateValidatorSet(t *testing.T) { //assert, require := assert.New(t), require.New(t) //store := initTestStore(t) //params := loadParams(store) //gs := loadGlobalState(store) //N := 5
+//// test many sdk of changes //vs2 = []Validator{v1, v3, v4, v5} //vs2[2].VotingPower = sdk.NewRat(11) //changed = vs1.validatorsUpdated(vs2) //require.Equal(4, len(changed), "%v", changed) // change 1, remove 1, add 2 //testRemove(t, vs1[1], changed[0]) //testChange(t, vs2[1], changed[1]) //testChange(t, vs2[2], changed[2]) //testChange(t, vs2[3], changed[3]) //} //func TestUpdateValidatorSet(t *testing.T) { //assert, require := assert.New(t), require.New(t) //store := initTestStore(t) //params := getParams(store) //gs := getGlobalState(store) //N := 5
 //actors := newAddrs(N)
 //candidates := candidatesFromActors(actors, []int64{400, 200, 100, 10, 1})
 //for _, c := range candidates {
-//saveCandidate(store, c)
+//setCandidate(store, c)
 //}
 
 //// they should all already be validators
@@ -132,12 +132,12 @@ import (
 
 //// test the max value and test again
 //params.MaxVals = 4
-//saveParams(store, params)
+//setParams(store, params)
 //change, err = UpdateValidatorSet(store, gs, params)
 //require.Nil(err)
 //require.Equal(1, len(change), "%v", change)
 //testRemove(t, candidates[4].validator(), change[0])
-//candidates = loadCandidates(store)
+//candidates = getCandidates(store)
 //assert.Equal(int64(0), candidates[4].VotingPower.Evaluate())
 
 //// mess with the power's of the candidates and test
@@ -147,12 +147,12 @@ import (
 //candidates[3].Assets = sdk.OneRat
 //candidates[4].Assets = sdk.NewRat(10)
 //for _, c := range candidates {
-//saveCandidate(store, c)
+//setCandidate(store, c)
 //}
 //change, err = UpdateValidatorSet(store, gs, params)
 //require.Nil(err)
 //require.Equal(5, len(change), "%v", change) // 3 changed, 1 added, 1 removed
-//candidates = loadCandidates(store)
+//candidates = getCandidates(store)
 //testChange(t, candidates[0].validator(), change[0])
 //testChange(t, candidates[1].validator(), change[1])
 //testChange(t, candidates[2].validator(), change[2])
@@ -161,7 +161,7 @@ import (
 //}
 
 func TestState(t *testing.T) {
-	_, _, mapper, _ := createTestInput(t, nil, false, 0)
+	_, _, keeper, _ := createTestInput(t, nil, false, 0)
 
 	addrDel := sdk.Address([]byte("addressdelegator"))
 	addrVal := sdk.Address([]byte("addressvalidator"))
@@ -190,26 +190,26 @@ func TestState(t *testing.T) {
 			c1.Description == c2.Description
 	}
 
-	// check the empty mapper first
-	resCand := mapper.loadCandidate(addrVal)
+	// check the empty keeper first
+	resCand := keeper.getCandidate(addrVal)
 	assert.Nil(t, resCand)
-	resPks := mapper.loadCandidates()
+	resPks := keeper.getCandidates()
 	assert.Zero(t, len(resPks))
 
 	// set and retrieve a record
-	mapper.saveCandidate(candidate)
-	resCand = mapper.loadCandidate(addrVal)
+	keeper.setCandidate(candidate)
+	resCand = keeper.getCandidate(addrVal)
 	//assert.Equal(candidate, resCand)
 	assert.True(t, candidatesEqual(candidate, resCand), "%#v \n %#v", resCand, candidate)
 
 	// modify a records, save, and retrieve
 	candidate.Liabilities = sdk.NewRat(99)
-	mapper.saveCandidate(candidate)
-	resCand = mapper.loadCandidate(addrVal)
+	keeper.setCandidate(candidate)
+	resCand = keeper.getCandidate(addrVal)
 	assert.True(t, candidatesEqual(candidate, resCand))
 
 	// also test that the pubkey has been added to pubkey list
-	resPks = mapper.loadCandidates()
+	resPks = keeper.getCandidates()
 	require.Equal(t, 1, len(resPks))
 	assert.Equal(t, addrVal, resPks[0].PubKey)
 
@@ -226,19 +226,19 @@ func TestState(t *testing.T) {
 			b1.Shares == b2.Shares
 	}
 
-	//check the empty mapper first
-	resBond := mapper.loadDelegatorBond(addrDel, addrVal)
+	//check the empty keeper first
+	resBond := keeper.getDelegatorBond(addrDel, addrVal)
 	assert.Nil(t, resBond)
 
 	//Set and retrieve a record
-	mapper.saveDelegatorBond(addrDel, bond)
-	resBond = mapper.loadDelegatorBond(addrDel, addrVal)
+	keeper.setDelegatorBond(addrDel, bond)
+	resBond = keeper.getDelegatorBond(addrDel, addrVal)
 	assert.True(t, bondsEqual(bond, resBond))
 
 	//modify a records, save, and retrieve
 	bond.Shares = sdk.NewRat(99)
-	mapper.saveDelegatorBond(addrDel, bond)
-	resBond = mapper.loadDelegatorBond(addrDel, addrVal)
+	keeper.setDelegatorBond(addrDel, bond)
+	resBond = keeper.getDelegatorBond(addrDel, addrVal)
 	assert.True(t, bondsEqual(bond, resBond))
 
 	//----------------------------------------------------------------------
@@ -246,22 +246,22 @@ func TestState(t *testing.T) {
 
 	params := defaultParams()
 
-	//check that the empty mapper loads the default
-	resParams := mapper.loadParams()
+	//check that the empty keeper loads the default
+	resParams := keeper.getParams()
 	assert.Equal(t, params, resParams)
 
 	//modify a params, save, and retrieve
 	params.MaxVals = 777
-	mapper.saveParams(params)
-	resParams = mapper.loadParams()
+	keeper.setParams(params)
+	resParams = keeper.getParams()
 	assert.Equal(t, params, resParams)
 }
 
 func TestGetValidators(t *testing.T) {
-	_, _, mapper, _ := createTestInput(t, nil, false, 0)
-	candidatesFromAddrs(mapper, addrs, []int64{400, 200, 0, 0, 0})
+	_, _, keeper, _ := createTestInput(t, nil, false, 0)
+	candidatesFromAddrs(keeper, addrs, []int64{400, 200, 0, 0, 0})
 
-	validators := mapper.getValidators(5)
+	validators := keeper.getValidators(5)
 	require.Equal(t, 2, len(validators))
 	assert.Equal(t, addrs[0], validators[0].Address)
 	assert.Equal(t, addrs[1], validators[1].Address)

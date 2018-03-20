@@ -9,8 +9,8 @@ import (
 func Tick(ctx sdk.Context, m Mapper) (change []*abci.Validator, err error) {
 
 	// retrieve params
-	params := m.loadParams()
-	gs := m.loadGlobalState()
+	params := m.getParams()
+	gs := m.getGlobalState()
 	height := ctx.BlockHeight()
 
 	// Process Validator Provisions
@@ -46,7 +46,7 @@ func processProvisions(m Mapper, gs *GlobalState, params Params) {
 	// XXX XXX XXX XXX XXX XXX XXX XXX XXX
 
 	// save the params
-	m.saveGlobalState(gs)
+	m.setGlobalState(gs)
 }
 
 // get the next inflation rate for the hour

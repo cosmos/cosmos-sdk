@@ -12,14 +12,8 @@ type Params struct {
 	InflationMin        sdk.Rat `json:"inflation_min"`         // minimum inflation rate
 	GoalBonded          sdk.Rat `json:"goal_bonded"`           // Goal of percent bonded atoms
 
-	MaxVals   uint16 `json:"max_vals"`   // maximum number of validators
-	BondDenom string `json:"bond_denom"` // bondable coin denomination
-
-	// gas costs for txs
-	GasDeclareCandidacy int64 `json:"gas_declare_candidacy"`
-	GasEditCandidacy    int64 `json:"gas_edit_candidacy"`
-	GasDelegate         int64 `json:"gas_delegate"`
-	GasUnbond           int64 `json:"gas_unbond"`
+	MaxValidators uint16 `json:"max_validators"` // maximum number of validators
+	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
 }
 
 func defaultParams() Params {
@@ -28,12 +22,8 @@ func defaultParams() Params {
 		InflationMax:        sdk.NewRat(20, 100),
 		InflationMin:        sdk.NewRat(7, 100),
 		GoalBonded:          sdk.NewRat(67, 100),
-		MaxVals:             100,
+		MaxValidators:       100,
 		BondDenom:           "fermion",
-		GasDeclareCandidacy: 20,
-		GasEditCandidacy:    20,
-		GasDelegate:         20,
-		GasUnbond:           20,
 	}
 }
 
@@ -142,12 +132,10 @@ const (
 // bond shares is based on the amount of coins delegated divided by the current
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
-
-// XXX update to use Address as the main key NOT the pubkey
 type Candidate struct {
 	Status      CandidateStatus `json:"status"`       // Bonded status
-	PubKey      crypto.PubKey   `json:"pub_key"`      // Pubkey of candidate
 	Address     sdk.Address     `json:"owner"`        // Sender of BondTx - UnbondTx returns here
+	PubKey      crypto.PubKey   `json:"pub_key"`      // Pubkey of candidate
 	Assets      sdk.Rat         `json:"assets"`       // total shares of a global hold pools TODO custom type PoolShares
 	Liabilities sdk.Rat         `json:"liabilities"`  // total shares issued to a candidate's delegators TODO custom type DelegatorShares
 	VotingPower sdk.Rat         `json:"voting_power"` // Voting power if considered a validator
@@ -163,11 +151,11 @@ type Description struct {
 }
 
 // NewCandidate - initialize a new candidate
-func NewCandidate(pubKey crypto.PubKey, address sdk.Address, description Description) *Candidate {
+func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Description) *Candidate {
 	return &Candidate{
 		Status:      Unbonded,
-		PubKey:      pubKey,
 		Address:     address,
+		PubKey:      pubKey,
 		Assets:      sdk.ZeroRat,
 		Liabilities: sdk.ZeroRat,
 		VotingPower: sdk.ZeroRat,
@@ -226,6 +214,11 @@ func (c *Candidate) validator() Validator {
 	}
 }
 
+//XXX updateDescription function
+//XXX enforce limit to number of description characters
+
+//______________________________________________________________________
+
 // Validator is one of the top Candidates
 type Validator struct {
 	Address     sdk.Address `json:"address"`      // Address of validator
@@ -256,7 +249,9 @@ type Candidates []*Candidate
 // DelegatorBond represents the bond with tokens held by an account.  It is
 // owned by one delegator, and is associated with the voting power of one
 // pubKey.
+// TODO better way of managing space
 type DelegatorBond struct {
-	Address sdk.Address `json:"pub_key"`
-	Shares  sdk.Rat     `json:"shares"`
+	Address       sdk.Address `json:"address"`
+	CandidateAddr sdk.Address `json:"candidate_addr"`
+	Shares        sdk.Rat     `json:"shares"`
 }

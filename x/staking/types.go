@@ -30,6 +30,10 @@ func (msg BondMsg) Type() string {
 }
 
 func (msg BondMsg) ValidateBasic() sdk.Error {
+	if msg.Stake.IsZero() {
+		return ErrEmptyStake()
+	}
+
 	return nil
 }
 

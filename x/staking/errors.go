@@ -8,6 +8,7 @@ const (
 	// Staking errors reserve 300 - 399.
 	CodeEmptyValidator sdk.CodeType = 300
 	CodeInvalidUnbond  sdk.CodeType = 301
+	CodeEmptyStake     sdk.CodeType = 302
 )
 
 func ErrEmptyValidator() sdk.Error {
@@ -16,6 +17,10 @@ func ErrEmptyValidator() sdk.Error {
 
 func ErrInvalidUnbond() sdk.Error {
 	return newError(CodeInvalidUnbond, "")
+}
+
+func ErrEmptyStake() sdk.Error {
+	return newError(CodeEmptyStake, "")
 }
 
 // -----------------------------

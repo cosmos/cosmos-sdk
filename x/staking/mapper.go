@@ -20,23 +20,23 @@ func NewMapper(key sdk.StoreKey) StakingMapper {
 	}
 }
 
-func (sm StakingMapper) getBondInfo(ctx sdk.Context, addr sdk.Address) *bondInfo {
+func (sm StakingMapper) getBondInfo(ctx sdk.Context, addr sdk.Address) bondInfo {
 	store := ctx.KVStore(sm.key)
 	bz := store.Get(addr)
 	if bz == nil {
-		return nil
+		return bondInfo{}
 	}
 	var bi bondInfo
 	err := sm.cdc.UnmarshalBinary(bz, &bi)
 	if err != nil {
 		panic(err)
 	}
-	return &bi
+	return bi
 }
 
-func (sm StakingMapper) setBondInfo(ctx sdk.Context, addr sdk.Address, bi *bondInfo) {
+func (sm StakingMapper) setBondInfo(ctx sdk.Context, addr sdk.Address, bi bondInfo) {
 	store := ctx.KVStore(sm.key)
-	bz, err := sm.cdc.MarshalBinary(*bi)
+	bz, err := sm.cdc.MarshalBinary(bi)
 	if err != nil {
 		panic(err)
 	}
@@ -50,8 +50,8 @@ func (sm StakingMapper) deleteBondInfo(ctx sdk.Context, addr sdk.Address) {
 
 func (sm StakingMapper) Bond(ctx sdk.Context, addr sdk.Address, pubKey crypto.PubKey, power int64) (int64, sdk.Error) {
 	bi := sm.getBondInfo(ctx, addr)
-	if bi == nil {
-		bi = &bondInfo{
+	if bi.isEmpty() {
+		bi = bondInfo{
 			PubKey: pubKey,
 			Power:  power,
 		}
@@ -60,7 +60,7 @@ func (sm StakingMapper) Bond(ctx sdk.Context, addr sdk.Address, pubKey crypto.Pu
 	}
 
 	newPower := bi.Power + power
-	newBi := &bondInfo{
+	newBi := bondInfo{
 		PubKey: bi.PubKey,
 		Power:  newPower,
 	}
@@ -71,7 +71,7 @@ func (sm StakingMapper) Bond(ctx sdk.Context, addr sdk.Address, pubKey crypto.Pu
 
 func (sm StakingMapper) Unbond(ctx sdk.Context, addr sdk.Address) (crypto.PubKey, int64, sdk.Error) {
 	bi := sm.getBondInfo(ctx, addr)
-	if bi == nil {
+	if bi.isEmpty() {
 		return crypto.PubKey{}, 0, ErrInvalidUnbond()
 	}
 	sm.deleteBondInfo(ctx, addr)
@@ -81,4 +81,11 @@ func (sm StakingMapper) Unbond(ctx sdk.Context, addr sdk.Address) (crypto.PubKey
 type bondInfo struct {
 	PubKey crypto.PubKey
 	Power  int64
+}
+
+func (bi bondInfo) isEmpty() bool {
+	if bi == (bondInfo{}) {
+		return true
+	}
+	return false
 }

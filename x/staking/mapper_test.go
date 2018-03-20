@@ -32,11 +32,11 @@ func TestStakingMapperGetSet(t *testing.T) {
 	addr := sdk.Address([]byte("some-address"))
 
 	bi := stakingMapper.getBondInfo(ctx, addr)
-	assert.Nil(t, bi)
+	assert.Equal(t, bi, bondInfo{})
 
 	privKey := crypto.GenPrivKeyEd25519()
 
-	bi = &bondInfo{
+	bi = bondInfo{
 		PubKey: privKey.PubKey(),
 		Power:  int64(10),
 	}
@@ -47,4 +47,30 @@ func TestStakingMapperGetSet(t *testing.T) {
 	assert.NotNil(t, savedBi)
 	fmt.Printf("Bond Info: %v\n", savedBi)
 	assert.Equal(t, int64(10), savedBi.Power)
+}
+
+func TestBonding(t *testing.T) {
+	ms, capKey := setupMultiStore()
+
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
+	stakingMapper := NewMapper(capKey)
+	addr := sdk.Address([]byte("some-address"))
+	privKey := crypto.GenPrivKeyEd25519()
+	pubKey := privKey.PubKey()
+
+	_, _, err := stakingMapper.Unbond(ctx, addr)
+	assert.Equal(t, err, ErrInvalidUnbond())
+
+	_, err = stakingMapper.Bond(ctx, addr, pubKey, 10)
+	assert.Nil(t, err)
+
+	power, err := stakingMapper.Bond(ctx, addr, pubKey, 10)
+	assert.Equal(t, int64(20), power)
+
+	pk, _, err := stakingMapper.Unbond(ctx, addr)
+	assert.Nil(t, err)
+	assert.Equal(t, pubKey, pk)
+
+	_, _, err = stakingMapper.Unbond(ctx, addr)
+	assert.Equal(t, err, ErrInvalidUnbond())
 }

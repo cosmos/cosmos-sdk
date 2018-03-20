@@ -2,9 +2,8 @@ package main
 
 import (
 	"errors"
-	"os"
-
 	"github.com/spf13/cobra"
+	"os"
 
 	"github.com/tendermint/tmlibs/cli"
 
@@ -14,14 +13,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
+	coolcmd "github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool/commands"
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/commands"
+	stakingcmd "github.com/cosmos/cosmos-sdk/x/staking/commands"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
-	coolcmd "github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool/commands"
 )
 
 // gaiacliCmd is the entry point for this binary
@@ -77,6 +77,11 @@ func main() {
 	basecliCmd.AddCommand(
 		client.PostCommands(
 			ibccmd.IBCRelayCmd(cdc),
+			stakingcmd.BondTxCmd(cdc),
+		)...)
+	basecliCmd.AddCommand(
+		client.PostCommands(
+			stakingcmd.UnbondTxCmd(cdc),
 		)...)
 
 	// add proxy, version and key info

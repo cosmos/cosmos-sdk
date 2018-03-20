@@ -255,7 +255,7 @@ func TestCoinSend(t *testing.T) {
 func TestIBCTransfer(t *testing.T) {
 
 	// create TX
-	receiveAddr, resultTx := doSend(t, port, seed)
+	resultTx := doIBCTransfer(t, port, seed)
 
 	time.Sleep(time.Second * 2) // T
 
@@ -275,16 +275,14 @@ func TestIBCTransfer(t *testing.T) {
 	assert.Equal(t, coinDenom, mycoins.Denom)
 	assert.Equal(t, coinAmount-2, mycoins.Amount)
 
-	// query ibc egress packet state
-	res, body = request(t, port, "GET", "/accounts/"+receiveAddr, nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	// TODO: query ibc egress packet state
 
 	err = json.Unmarshal([]byte(body), &m)
 	require.Nil(t, err)
 	coins = m.Coins
 	mycoins = coins[0]
 	assert.Equal(t, coinDenom, mycoins.Denom)
-	assert.Equal(t, int64(1), mycoins.Amount)
+	assert.Equal(t, int64(9999998), mycoins.Amount)
 }
 
 func TestTxs(t *testing.T) {
@@ -477,13 +475,13 @@ func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctype
 	return receiveAddr, resultTx
 }
 
-func doIBCTransfer(t *testing.T, port, seed string) (receiveAddr string, resultTx ctypes.ResultBroadcastTxCommit) {
+func doIBCTransfer(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	// create receive address
 	kb := client.MockKeyBase()
 	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
 	require.Nil(t, err)
-	receiveAddr = receiveInfo.PubKey.Address().String()
+	receiveAddr := receiveInfo.PubKey.Address().String()
 
 	// get the account to get the sequence
 	res, body := request(t, port, "GET", "/accounts/"+sendAddr, nil)
@@ -503,5 +501,5 @@ func doIBCTransfer(t *testing.T, port, seed string) (receiveAddr string, resultT
 	err = json.Unmarshal([]byte(body), &resultTx)
 	require.Nil(t, err)
 
-	return receiveAddr, resultTx
+	return resultTx
 }

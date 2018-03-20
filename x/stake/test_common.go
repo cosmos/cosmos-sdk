@@ -65,20 +65,16 @@ func paramsNoInflation() Params {
 		InflationMax:        sdk.ZeroRat,
 		InflationMin:        sdk.ZeroRat,
 		GoalBonded:          sdk.NewRat(67, 100),
-		MaxVals:             100,
+		MaxValidators:       100,
 		BondDenom:           "fermion",
-		GasDeclareCandidacy: 20,
-		GasEditCandidacy:    20,
-		GasDelegate:         20,
-		GasUnbond:           20,
 	}
 }
 
 // hogpodge of all sorts of input required for testing
-func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool, initCoins int64) (sdk.Context, sdk.AccountMapper, Mapper, transact) {
+func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool, initCoins int64) (sdk.Context, sdk.AccountMapper, Keeper) {
 	db := dbm.NewMemDB()
 	keyStake := sdk.NewKVStoreKey("stake")
-	keyMain := keyStake //sdk.NewKVStoreKey("main") //XXX fix multistore
+	keyMain := keyStake //sdk.NewKVStoreKey("main") //TODO fix multistore
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
@@ -86,26 +82,23 @@ func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool, initCoins
 	require.Nil(t, err)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil)
-
 	cdc := makeTestCodec()
-	mapper := NewMapper(ctx, cdc, keyStake)
-
 	accountMapper := auth.NewAccountMapperSealed(
 		keyMain,             // target store
 		&auth.BaseAccount{}, // prototype
 	)
 	ck := bank.NewCoinKeeper(accountMapper)
+	keeper := NewKeeper(ctx, cdc, keyStake, ck)
+
 	params := paramsNoInflation()
-	mapper.setParams(params)
+	keeper.setParams(ctx, params)
 
 	// fill all the addresses with some coins
 	for _, addr := range addrs {
 		ck.AddCoins(ctx, addr, sdk.Coins{{params.BondDenom, initCoins}})
 	}
 
-	tr := newTransact(ctx, sender, mapper, ck)
-
-	return ctx, accountMapper, mapper, tr
+	return ctx, accountMapper, keeper
 }
 
 func newPubKey(pk string) (res crypto.PubKey) {
@@ -157,9 +150,9 @@ var addrs = []sdk.Address{
 
 // NOTE: PubKey is supposed to be the binaryBytes of the crypto.PubKey
 // instead this is just being set the address here for testing purposes
-func candidatesFromAddrs(mapper Mapper, addrs []crypto.Address, amts []int64) {
+func candidatesFromAddrs(ctx sdk.Context, keeper Keeper, addrs []crypto.Address, amts []int64) {
 	for i := 0; i < len(amts); i++ {
-		c := &Candidate{
+		c := Candidate{
 			Status:      Unbonded,
 			PubKey:      pks[i],
 			Address:     addrs[i],
@@ -167,13 +160,13 @@ func candidatesFromAddrs(mapper Mapper, addrs []crypto.Address, amts []int64) {
 			Liabilities: sdk.NewRat(amts[i]),
 			VotingPower: sdk.NewRat(amts[i]),
 		}
-		mapper.setCandidate(c)
+		keeper.setCandidate(ctx, c)
 	}
 }
 
 func candidatesFromAddrsEmpty(addrs []crypto.Address) (candidates Candidates) {
 	for i := 0; i < len(addrs); i++ {
-		c := &Candidate{
+		c := Candidate{
 			Status:      Unbonded,
 			PubKey:      pks[i],
 			Address:     addrs[i],

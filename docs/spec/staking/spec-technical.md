@@ -274,7 +274,7 @@ type TxDeclareCandidacy struct {
 }
 
 declareCandidacy(tx TxDeclareCandidacy):
-    candidate = loadCandidate(store, tx.PubKey)
+    candidate = getCandidate(store, msg.Address)
     if candidate != nil return // candidate with that public key already exists 
    	
     candidate = NewCandidate(tx.PubKey)
@@ -285,7 +285,7 @@ declareCandidacy(tx TxDeclareCandidacy):
     candidate.ProposerRewardPool = Coin(0)  
     candidate.Description = tx.Description
    	
-    saveCandidate(store, candidate)
+    setCandidate(store, candidate)
    
     txDelegate = TxDelegate(tx.PubKey, tx.Amount)
     return delegateWithCandidate(txDelegate, candidate) 
@@ -343,7 +343,7 @@ delegateWithCandidate(tx TxDelegate, candidate Candidate):
 	    poolAccount = params.HoldBonded
     else 
 	    poolAccount = params.HoldUnbonded
-	
+
     err = transfer(sender, poolAccount, tx.Amount)
     if err != nil return 
 

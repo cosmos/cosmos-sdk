@@ -67,7 +67,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 		assert.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the accounts and the bond account have the appropriate values
-		candidates := mapper.loadCandidates()
+		candidates := mapper.getCandidates()
 		expectedBond += bondAmount
 		//expectedSender := initSender - expectedBond
 		gotBonded := candidates[0].Liabilities.Evaluate()
@@ -96,7 +96,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		assert.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the accounts and the bond account have the appropriate values
-		candidates := mapper.loadCandidates()
+		candidates := mapper.getCandidates()
 		expectedBond := initBond - int64(i+1)*unbondShares // +1 since we send 1 at the start of loop
 		//expectedSender := initSender + (initBond - expectedBond)
 		gotBonded := candidates[0].Liabilities.Evaluate()
@@ -147,7 +147,7 @@ func TestMultipleMsgDeclareCandidacy(t *testing.T) {
 		assert.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the account is bonded
-		candidates := mapper.loadCandidates()
+		candidates := mapper.getCandidates()
 		require.Equal(t, i, len(candidates))
 		val := candidates[i]
 		balanceExpd := initSender - 10
@@ -159,17 +159,17 @@ func TestMultipleMsgDeclareCandidacy(t *testing.T) {
 
 	// unbond them all
 	for i, addr := range addrs {
-		candidatePre := mapper.loadCandidate(addrs[i])
+		candidatePre := mapper.getCandidate(addrs[i])
 		msgUndelegate := NewMsgUnbond(addrs[i], "10")
 		deliverer.sender = addr
 		got := deliverer.unbond(msgUndelegate)
 		assert.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the account is unbonded
-		candidates := mapper.loadCandidates()
+		candidates := mapper.getCandidates()
 		assert.Equal(t, len(addrs)-(i+1), len(candidates), "expected %d candidates got %d", len(addrs)-(i+1), len(candidates))
 
-		candidatePost := mapper.loadCandidate(addrs[i])
+		candidatePost := mapper.getCandidate(addrs[i])
 		balanceExpd := initSender
 		balanceGot := accStore.GetAccount(ctx, candidatePre.Address).GetCoins()
 		assert.Nil(t, candidatePost, "expected nil candidate retrieve, got %d", 0, candidatePost)
@@ -194,7 +194,7 @@ func TestMultipleMsgDelegate(t *testing.T) {
 		require.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the account is bonded
-		bond := mapper.loadDelegatorBond(delegator, sender)
+		bond := mapper.getDelegatorBond(delegator, sender)
 		assert.NotNil(t, bond, "expected delegatee bond %d to exist", bond)
 	}
 
@@ -206,7 +206,7 @@ func TestMultipleMsgDelegate(t *testing.T) {
 		require.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the account is unbonded
-		bond := mapper.loadDelegatorBond(delegator, sender)
+		bond := mapper.getDelegatorBond(delegator, sender)
 		assert.Nil(t, bond, "expected delegatee bond %d to be nil", bond)
 	}
 }

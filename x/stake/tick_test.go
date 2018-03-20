@@ -9,8 +9,8 @@ import (
 
 func TestGetInflation(t *testing.T) {
 	_, _, mapper, _ := createTestInput(t, nil, false, 0)
-	params := mapper.loadParams()
-	gs := mapper.loadGlobalState()
+	params := mapper.getParams()
+	gs := mapper.getGlobalState()
 
 	// Governing Mechanism:
 	//    bondedRatio = BondedPool / TotalSupply
@@ -54,8 +54,8 @@ func TestGetInflation(t *testing.T) {
 
 func TestProcessProvisions(t *testing.T) {
 	_, _, mapper, _ := createTestInput(t, nil, false, 0)
-	params := mapper.loadParams()
-	gs := mapper.loadGlobalState()
+	params := mapper.getParams()
+	gs := mapper.getGlobalState()
 
 	// create some candidates some bonded, some unbonded
 	candidates := candidatesFromAddrsEmpty(addrs)
@@ -66,7 +66,7 @@ func TestProcessProvisions(t *testing.T) {
 		mintedTokens := int64((i + 1) * 10000000)
 		gs.TotalSupply += mintedTokens
 		candidate.addTokens(mintedTokens, gs)
-		mapper.saveCandidate(candidate)
+		mapper.setCandidate(candidate)
 	}
 	var totalSupply int64 = 550000000
 	var bondedShares int64 = 150000000

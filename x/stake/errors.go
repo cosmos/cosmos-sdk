@@ -72,6 +72,9 @@ func ErrBadValidatorAddr() sdk.Error {
 func ErrBadCandidateAddr() sdk.Error {
 	return newError(CodeInvalidValidator, "Candidate does not exist for that address")
 }
+func ErrBadDelegatorAddr() sdk.Error {
+	return newError(CodeInvalidValidator, "Delegator does not exist for that address")
+}
 func ErrCandidateExistsAddr() sdk.Error {
 	return newError(CodeInvalidValidator, "Candidate already exist, cannot re-declare candidacy")
 }

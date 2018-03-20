@@ -24,10 +24,7 @@ type IBCSendMsg struct {
 func (msg IBCSendMsg) Type() string { return "bank" }
 
 func (msg IBCSendMsg) ValidateBasic() sdk.Error {
-	if !msg.SendPayload.Coins.IsValid() {
-		sdk.ErrInvalidCoins("")
-	}
-	return nil
+	return msg.SendPayload.ValidateBasic()
 }
 
 func (msg IBCSendMsg) Get(key interface{}) interface{} {
@@ -59,7 +56,10 @@ func (p SendPayload) Type() string {
 
 func (p SendPayload) ValidateBasic() sdk.Error {
 	if !p.Coins.IsValid() {
-		return sdk.ErrInvalidCoins("")
+		return sdk.ErrInvalidCoins(p.Coins.String())
+	}
+	if !p.Coins.IsPositive() {
+		return sdk.ErrInvalidCoins(p.Coins.String())
 	}
 	return nil
 }

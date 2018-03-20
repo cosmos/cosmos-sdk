@@ -249,6 +249,60 @@ func TestSendMsgSigners(t *testing.T) {
 	assert.Equal(t, signers, tx.Signers())
 }
 */
+//---------------------------
+// IBCSendMsg tests
+
+func TestIBCSendMsgType(t *testing.T) {
+	src := sdk.Address([]byte("src"))
+	dest := sdk.Address([]byte("dest"))
+	coins := sdk.Coins{{"atom", 10}}
+	payload := SendPayload{
+		SrcAddr:  src,
+		DestAddr: dest,
+		Coins:    coins,
+	}
+	msg := IBCSendMsg{
+		SendPayload: payload,
+	}
+
+	assert.Equal(t, msg.Type(), "bank")
+}
+
+func TestIBCSendCoins(t *testing.T) {
+	addr := sdk.Address([]byte{1, 2})
+	someCoins := sdk.Coins{{"atom", 1233}}
+	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 456}}
+	emptyCoins := sdk.Coins{}
+	emptyCoins2 := sdk.Coins{{"atom", 0}}
+	minusCoins := sdk.Coins{{"atom", -12}}
+	cases := []struct {
+		valid bool
+		coins sdk.Coins
+	}{
+		{true, someCoins},
+		{true, multiCoins},
+
+		{false, emptyCoins},
+		{false, emptyCoins2},
+		{false, minusCoins},
+	}
+
+	for i, tc := range cases {
+		err := IBCSendMsg{
+			DestChain: "",
+			SendPayload: SendPayload{
+				SrcAddr:  addr,
+				DestAddr: addr,
+				Coins:    tc.coins,
+			},
+		}.ValidateBasic()
+		if tc.valid {
+			assert.Nil(t, err, "%d: %+v", i, err)
+		} else {
+			assert.NotNil(t, err, "%d", i)
+		}
+	}
+}
 
 // ----------------------------------------
 // IssueMsg Tests

@@ -276,13 +276,6 @@ func TestIBCTransfer(t *testing.T) {
 	assert.Equal(t, coinAmount-2, mycoins.Amount)
 
 	// TODO: query ibc egress packet state
-
-	err = json.Unmarshal([]byte(body), &m)
-	require.Nil(t, err)
-	coins = m.Coins
-	mycoins = coins[0]
-	assert.Equal(t, coinDenom, mycoins.Denom)
-	assert.Equal(t, int64(9999998), mycoins.Amount)
 }
 
 func TestTxs(t *testing.T) {

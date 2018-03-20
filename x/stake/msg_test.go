@@ -23,39 +23,40 @@ var (
 	coinNegNotAtoms  = sdk.Coin{"foo", -10000}
 )
 
-func TestMsgAddrValidateBasic(t *testing.T) {
-	tests := []struct {
-		name    string
-		address sdk.Address
-		wantErr bool
-	}{
-		{"basic good", addrs[0], false},
-		{"empty delegator", sdk.Address{}, true},
-	}
+//TODO add these tests to one of some of the types
+//func TestMsgAddrValidateBasic(t *testing.T) {
+//tests := []struct {
+//name    string
+//address sdk.Address
+//wantErr bool
+//}{
+//{"basic good", addrs[0], false},
+//{"empty delegator", sdk.Address{}, true},
+//}
 
-	for _, tc := range tests {
-		tx := NewMsgAddr(tc.address)
-		assert.Equal(t, tc.wantErr, tx.ValidateBasic() != nil,
-			"test: %v, tx.ValidateBasic: %v", tc.name, tx.ValidateBasic())
-	}
-}
+//for _, tc := range tests {
+//tx := NewMsgAddr(tc.address)
+//assert.Equal(t, tc.wantErr, tx.ValidateBasic() != nil,
+//"test: %v, tx.ValidateBasic: %v", tc.name, tx.ValidateBasic())
+//}
+//}
 
-func TestValidateCoin(t *testing.T) {
-	tests := []struct {
-		name    string
-		coin    sdk.Coin
-		wantErr bool
-	}{
-		{"basic good", coinPos, false},
-		{"zero coin", coinZero, true},
-		{"neg coin", coinNeg, true},
-	}
+//func TestValidateCoin(t *testing.T) {
+//tests := []struct {
+//name    string
+//coin    sdk.Coin
+//wantErr bool
+//}{
+//{"basic good", coinPos, false},
+//{"zero coin", coinZero, true},
+//{"neg coin", coinNeg, true},
+//}
 
-	for _, tc := range tests {
-		assert.Equal(t, tc.wantErr, validateCoin(tc.coin) != nil,
-			"test: %v, tx.ValidateBasic: %v", tc.name, validateCoin(tc.coin))
-	}
-}
+//for _, tc := range tests {
+//assert.Equal(t, tc.wantErr, validateCoin(tc.coin) != nil,
+//"test: %v, tx.ValidateBasic: %v", tc.name, validateCoin(tc.coin))
+//}
+//}
 
 func TestSerializeMsg(t *testing.T) {
 
@@ -68,8 +69,8 @@ func TestSerializeMsg(t *testing.T) {
 	}{
 		{NewMsgDeclareCandidacy(addrs[0], pks[0], bond, Description{})},
 		{NewMsgEditCandidacy(addrs[0], Description{})},
-		{NewMsgDelegate(addrs[0], bond)},
-		{NewMsgUnbond(addrs[0], strconv.Itoa(bondAmt))},
+		{NewMsgDelegate(addrs[0], addrs[1], bond)},
+		{NewMsgUnbond(addrs[0], addrs[1], strconv.Itoa(bondAmt))},
 	}
 
 	for i, tc := range tests {

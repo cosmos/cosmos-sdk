@@ -20,8 +20,8 @@ var _, _, _, _ sdk.Msg = &MsgDeclareCandidacy{}, &MsgEditCandidacy{}, &MsgDelega
 type MsgDeclareCandidacy struct {
 	Description
 	CandidateAddr sdk.Address   `json:"address"`
-	Bond          sdk.Coin      `json:"bond"`
 	PubKey        crypto.PubKey `json:"pubkey"`
+	Bond          sdk.Coin      `json:"bond"`
 }
 
 func NewMsgDeclareCandidacy(candidateAddr sdk.Address, pubkey crypto.PubKey,
@@ -29,8 +29,8 @@ func NewMsgDeclareCandidacy(candidateAddr sdk.Address, pubkey crypto.PubKey,
 	return MsgDeclareCandidacy{
 		Description:   description,
 		CandidateAddr: candidateAddr,
-		Bond:          bond,
 		PubKey:        pubkey,
+		Bond:          bond,
 	}
 }
 
@@ -39,7 +39,7 @@ func (msg MsgDeclareCandidacy) Type() string                            { return
 func (msg MsgDeclareCandidacy) Get(key interface{}) (value interface{}) { return nil }
 func (msg MsgDeclareCandidacy) GetSigners() []sdk.Address               { return []sdk.Address{msg.CandidateAddr} }
 func (msg MsgDeclareCandidacy) String() string {
-	return fmt.Sprintf("CandidateAddr{Address: %v}", msg.Address) // XXX fix
+	return fmt.Sprintf("CandidateAddr{Address: %v}", msg.CandidateAddr) // XXX fix
 }
 
 // get the bytes for the message signer to sign on
@@ -53,11 +53,11 @@ func (msg MsgDeclareCandidacy) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgDeclareCandidacy) ValidateBasic() sdk.Error {
-	if msg.Address == nil {
+	if msg.CandidateAddr == nil {
 		return ErrCandidateEmpty()
 	}
-	if msg.Bond.Denom <= 0 {
-		return sdk.ErrInvalidCoins(coins)
+	if msg.Bond.Amount <= 0 {
+		return sdk.ErrInvalidCoins(sdk.Coins{msg.Bond})
 	}
 	empty := Description{}
 	if msg.Description == empty {
@@ -74,10 +74,10 @@ type MsgEditCandidacy struct {
 	CandidateAddr sdk.Address `json:"address"`
 }
 
-func NewMsgEditCandidacy(address sdk.Address, description Description) MsgEditCandidacy {
+func NewMsgEditCandidacy(candidateAddr sdk.Address, description Description) MsgEditCandidacy {
 	return MsgEditCandidacy{
-		Description: description,
-		Address:     address,
+		Description:   description,
+		CandidateAddr: candidateAddr,
 	}
 }
 
@@ -86,7 +86,7 @@ func (msg MsgEditCandidacy) Type() string                            { return Ms
 func (msg MsgEditCandidacy) Get(key interface{}) (value interface{}) { return nil }
 func (msg MsgEditCandidacy) GetSigners() []sdk.Address               { return []sdk.Address{msg.CandidateAddr} }
 func (msg MsgEditCandidacy) String() string {
-	return fmt.Sprintf("CandidateAddr{Address: %v}", msg.Address) // XXX fix
+	return fmt.Sprintf("CandidateAddr{Address: %v}", msg.CandidateAddr) // XXX fix
 }
 
 // get the bytes for the message signer to sign on
@@ -100,11 +100,8 @@ func (msg MsgEditCandidacy) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgEditCandidacy) ValidateBasic() sdk.Error {
-	if msg.Address == nil {
+	if msg.CandidateAddr == nil {
 		return ErrCandidateEmpty()
-	}
-	if err != nil {
-		return err
 	}
 	empty := Description{}
 	if msg.Description == empty {
@@ -155,8 +152,8 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.CandidateAddr == nil {
 		return ErrBadCandidateAddr()
 	}
-	if msg.Bond.Denom <= 0 {
-		return sdk.ErrInvalidCoins(coins)
+	if msg.Bond.Amount <= 0 {
+		return sdk.ErrInvalidCoins(sdk.Coins{msg.Bond})
 	}
 	return nil
 }
@@ -204,7 +201,7 @@ func (msg MsgUnbond) ValidateBasic() sdk.Error {
 		return ErrBadCandidateAddr()
 	}
 	if msg.Shares != "MAX" {
-		shares, err = sdk.NewRatFromDecimal(msg.Shares)
+		_, err := sdk.NewRatFromDecimal(msg.Shares)
 		if err != nil {
 			return ErrBadShares()
 		}

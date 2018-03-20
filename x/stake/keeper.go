@@ -84,39 +84,39 @@ func NewKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, ck bank.CoinK
 }
 
 //XXX load/save -> get/set
-func (m Keeper) getCandidate(ctx sdk.Context, addr sdk.Address) (candidate Candidate) {
-	store := ctx.KVStore(storeKey)
+func (k Keeper) getCandidate(ctx sdk.Context, addr sdk.Address) (candidate Candidate, found bool) {
+	store := ctx.KVStore(k.storeKey)
 	b := store.Get(GetCandidateKey(addr))
 	if b == nil {
-		return nil
+		return candidate, false
 	}
-	err := m.cdc.UnmarshalJSON(b, &candidate)
+	err := k.cdc.UnmarshalJSON(b, &candidate)
 	if err != nil {
-		panic(err) // This error should never occur big problem if does
+		panic(err)
 	}
-	return
+	return candidate, true
 }
 
-func (m Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
-	store := ctx.KVStore(storeKey)
+func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
+	store := ctx.KVStore(k.storeKey)
 
 	// XXX should only remove validator if we know candidate is a validator
-	m.removeValidator(candidate.Address)
-	validator := &Validator{candidate.Address, candidate.VotingPower}
-	m.updateValidator(validator)
+	k.removeValidator(ctx, candidate.Address)
+	validator := Validator{candidate.Address, candidate.VotingPower}
+	k.updateValidator(ctx, validator)
 
-	b, err := m.cdc.MarshalJSON(candidate)
+	b, err := k.cdc.MarshalJSON(candidate)
 	if err != nil {
 		panic(err)
 	}
 	store.Set(GetCandidateKey(candidate.Address), b)
 }
 
-func (m Keeper) removeCandidate(ctx sdk.Context, candidateAddr sdk.Address) {
-	store := ctx.KVStore(storeKey)
+func (k Keeper) removeCandidate(ctx sdk.Context, candidateAddr sdk.Address) {
+	store := ctx.KVStore(k.storeKey)
 
 	// XXX should only remove validator if we know candidate is a validator
-	m.removeValidator(candidateAddr)
+	k.removeValidator(ctx, candidateAddr)
 	store.Delete(GetCandidateKey(candidateAddr))
 }
 
@@ -137,10 +137,10 @@ func (m Keeper) removeCandidate(ctx sdk.Context, candidateAddr sdk.Address) {
 
 // updateValidator - update a validator and create accumulate any changes
 // in the changed validator substore
-func (m Keeper) updateValidator(ctx sdk.Context, validator Validator) {
-	store := ctx.KVStore(storeKey)
+func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) {
+	store := ctx.KVStore(k.storeKey)
 
-	b, err := m.cdc.MarshalJSON(validator)
+	b, err := k.cdc.MarshalJSON(validator)
 	if err != nil {
 		panic(err)
 	}
@@ -149,31 +149,31 @@ func (m Keeper) updateValidator(ctx sdk.Context, validator Validator) {
 	store.Set(GetValidatorUpdatesKey(validator.Address), b)
 
 	// update the list ordered by voting power
-	store.Set(GetValidatorKey(validator.Address, validator.VotingPower, m.cdc), b)
+	store.Set(GetValidatorKey(validator.Address, validator.VotingPower, k.cdc), b)
 }
 
-func (m Keeper) removeValidator(ctx sdk.Context, address sdk.Address) {
-	store := ctx.KVStore(storeKey)
+func (k Keeper) removeValidator(ctx sdk.Context, address sdk.Address) {
+	store := ctx.KVStore(k.storeKey)
 
 	//add validator with zero power to the validator updates
-	b, err := m.cdc.MarshalJSON(Validator{address, sdk.ZeroRat})
+	b, err := k.cdc.MarshalJSON(Validator{address, sdk.ZeroRat})
 	if err != nil {
 		panic(err)
 	}
 	store.Set(GetValidatorUpdatesKey(address), b)
 
 	// now actually delete from the validator set
-	candidate := m.getCandidate(address)
-	if candidate != nil {
-		store.Delete(GetValidatorKey(address, candidate.VotingPower, m.cdc))
+	candidate, found := k.getCandidate(ctx, address)
+	if found {
+		store.Delete(GetValidatorKey(address, candidate.VotingPower, k.cdc))
 	}
 }
 
 // get the most recent updated validator set from the Candidates. These bonds
 // are already sorted by VotingPower from the UpdateVotingPower function which
 // is the only function which is to modify the VotingPower
-func (m Keeper) getValidators(ctx sdk.Context, maxVal uint16) (validators []Validator) {
-	store := ctx.KVStore(storeKey)
+func (k Keeper) getValidators(ctx sdk.Context, maxVal uint16) (validators []Validator) {
+	store := ctx.KVStore(k.storeKey)
 
 	iterator := store.Iterator(subspace(ValidatorKeyPrefix)) //smallest to largest
 
@@ -185,7 +185,7 @@ func (m Keeper) getValidators(ctx sdk.Context, maxVal uint16) (validators []Vali
 		}
 		valBytes := iterator.Value()
 		var val Validator
-		err := m.cdc.UnmarshalJSON(valBytes, &val)
+		err := k.cdc.UnmarshalJSON(valBytes, &val)
 		if err != nil {
 			panic(err)
 		}
@@ -199,15 +199,15 @@ func (m Keeper) getValidators(ctx sdk.Context, maxVal uint16) (validators []Vali
 //_________________________________________________________________________
 
 // get the most updated validators
-func (m Keeper) getValidatorUpdates(ctx sdk.Context) (updates []Validator) {
-	store := ctx.KVStore(storeKey)
+func (k Keeper) getValidatorUpdates(ctx sdk.Context) (updates []Validator) {
+	store := ctx.KVStore(k.storeKey)
 
 	iterator := store.Iterator(subspace(ValidatorUpdatesKeyPrefix)) //smallest to largest
 
 	for ; iterator.Valid(); iterator.Next() {
 		valBytes := iterator.Value()
 		var val Validator
-		err := m.cdc.UnmarshalJSON(valBytes, &val)
+		err := k.cdc.UnmarshalJSON(valBytes, &val)
 		if err != nil {
 			panic(err)
 		}
@@ -219,8 +219,8 @@ func (m Keeper) getValidatorUpdates(ctx sdk.Context) (updates []Validator) {
 }
 
 // remove all validator update entries
-func (m Keeper) clearValidatorUpdates(ctx sdk.Context, maxVal int) {
-	store := ctx.KVStore(storeKey)
+func (k Keeper) clearValidatorUpdates(ctx sdk.Context, maxVal int) {
+	store := ctx.KVStore(k.storeKey)
 	iterator := store.Iterator(subspace(ValidatorUpdatesKeyPrefix))
 	for ; iterator.Valid(); iterator.Next() {
 		store.Delete(iterator.Key()) // XXX write test for this, may need to be in a second loop
@@ -230,22 +230,19 @@ func (m Keeper) clearValidatorUpdates(ctx sdk.Context, maxVal int) {
 
 //---------------------------------------------------------------------
 
-// getCandidates - get the active list of all candidates TODO replace with  multistore
-func (m Keeper) getCandidates(ctx sdk.Context) (candidates Candidates) {
-	store := ctx.KVStore(storeKey)
-
+// getCandidates - get the active list of all candidates
+func (k Keeper) getCandidates(ctx sdk.Context) (candidates Candidates) {
+	store := ctx.KVStore(k.storeKey)
 	iterator := store.Iterator(subspace(CandidateKeyPrefix))
-	//iterator := store.Iterator(CandidateKeyPrefix, []byte(nil))
-	//iterator := store.Iterator([]byte{}, []byte(nil))
 
 	for ; iterator.Valid(); iterator.Next() {
 		candidateBytes := iterator.Value()
 		var candidate Candidate
-		err := m.cdc.UnmarshalJSON(candidateBytes, &candidate)
+		err := k.cdc.UnmarshalJSON(candidateBytes, &candidate)
 		if err != nil {
 			panic(err)
 		}
-		candidates = append(candidates, &candidate)
+		candidates = append(candidates, candidate)
 	}
 	iterator.Close()
 	return candidates
@@ -253,17 +250,17 @@ func (m Keeper) getCandidates(ctx sdk.Context) (candidates Candidates) {
 
 //_____________________________________________________________________
 
-// XXX use a store iterator to get
+// XXX use a store iterator here instead
 //// load the pubkeys of all candidates a delegator is delegated too
-//func (m Keeper) getDelegatorCandidates(ctx sdk.Context, delegator sdk.Address) (candidateAddrs []sdk.Address) {
-//store := ctx.KVStore(storeKey)
+//func (k Keeper) getDelegatorCandidates(ctx sdk.Context, delegator sdk.Address) (candidateAddrs []sdk.Address) {
+//store := ctx.KVStore(k.storeKey)
 
-//candidateBytes := store.Get(GetDelegatorBondsKey(delegator, m.cdc))
+//candidateBytes := store.Get(GetDelegatorBondsKey(delegator, k.cdc))
 //if candidateBytes == nil {
 //return nil
 //}
 
-//err := m.cdc.UnmarshalJSON(candidateBytes, &candidateAddrs)
+//err := k.cdc.UnmarshalJSON(candidateBytes, &candidateAddrs)
 //if err != nil {
 //panic(err)
 //}
@@ -272,126 +269,229 @@ func (m Keeper) getCandidates(ctx sdk.Context) (candidates Candidates) {
 
 //_____________________________________________________________________
 
-func (m Keeper) getDelegatorBond(ctx sdk.Context,
-	delegator, candidate sdk.Address) (bond DelegatorBond) {
+func (k Keeper) getDelegatorBond(ctx sdk.Context,
+	delegatorAddr, candidateAddr sdk.Address) (bond DelegatorBond, found bool) {
 
-	store := ctx.KVStore(storeKey)
-	delegatorBytes := store.Get(GetDelegatorBondKey(delegator, candidate, m.cdc))
+	store := ctx.KVStore(k.storeKey)
+	delegatorBytes := store.Get(GetDelegatorBondKey(delegatorAddr, candidateAddr, k.cdc))
 	if delegatorBytes == nil {
-		return nil
+		return bond, false
 	}
 
-	err := m.cdc.UnmarshalJSON(delegatorBytes, &bond)
+	err := k.cdc.UnmarshalJSON(delegatorBytes, &bond)
 	if err != nil {
 		panic(err)
 	}
-	return bond
+	return bond, true
 }
 
-func (m Keeper) setDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
-	store := ctx.KVStore(storeKey)
+func (k Keeper) setDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
+	store := ctx.KVStore(k.storeKey)
 
 	// XXX use store iterator
 	// if a new bond add to the list of bonds
-	//if m.getDelegatorBond(delegator, bond.Address) == nil {
-	//pks := m.getDelegatorCandidates(delegator)
+	//if k.getDelegatorBond(delegator, bond.Address) == nil {
+	//pks := k.getDelegatorCandidates(delegator)
 	//pks = append(pks, bond.Address)
-	//b, err := m.cdc.MarshalJSON(pks)
+	//b, err := k.cdc.MarshalJSON(pks)
 	//if err != nil {
 	//panic(err)
 	//}
-	//store.Set(GetDelegatorBondsKey(delegator, m.cdc), b)
+	//store.Set(GetDelegatorBondsKey(delegator, k.cdc), b)
 	//}
 
 	// now actually save the bond
-	b, err := m.cdc.MarshalJSON(bond)
+	b, err := k.cdc.MarshalJSON(bond)
 	if err != nil {
 		panic(err)
 	}
-	store.Set(GetDelegatorBondKey(delegator, bond.Address, m.cdc), b)
+	store.Set(GetDelegatorBondKey(bond.DelegatorAddr, bond.CandidateAddr, k.cdc), b)
 }
 
-func (m Keeper) removeDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
-	store := ctx.KVStore(storeKey)
+func (k Keeper) removeDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
+	store := ctx.KVStore(k.storeKey)
 
 	// XXX use store iterator
 	// TODO use list queries on multistore to remove iterations here!
 	// first remove from the list of bonds
-	//addrs := m.getDelegatorCandidates(delegator)
+	//addrs := k.getDelegatorCandidates(delegator)
 	//for i, addr := range addrs {
 	//if bytes.Equal(candidateAddr, addr) {
 	//addrs = append(addrs[:i], addrs[i+1:]...)
 	//}
 	//}
-	//b, err := m.cdc.MarshalJSON(addrs)
+	//b, err := k.cdc.MarshalJSON(addrs)
 	//if err != nil {
 	//panic(err)
 	//}
-	//store.Set(GetDelegatorBondsKey(delegator, m.cdc), b)
+	//store.Set(GetDelegatorBondsKey(delegator, k.cdc), b)
 
 	// now remove the actual bond
-	store.Delete(GetDelegatorBondKey(bond.delegatorAddr, bond.candidateAddr, m.cdc))
+	store.Delete(GetDelegatorBondKey(bond.DelegatorAddr, bond.CandidateAddr, k.cdc))
 	//updateDelegatorBonds(store, delegator) //XXX remove?
 }
 
 //_______________________________________________________________________
 
 // load/save the global staking params
-func (m Keeper) getParams(ctx sdk.Context) (params Params) {
+func (k Keeper) getParams(ctx sdk.Context) (params Params) {
 	// check if cached before anything
-	if m.params != (Params{}) {
-		return m.params
+	if k.params != (Params{}) {
+		return k.params
 	}
-	store := ctx.KVStore(storeKey)
+	store := ctx.KVStore(k.storeKey)
 	b := store.Get(ParamKey)
 	if b == nil {
 		return defaultParams()
 	}
 
-	err := m.cdc.UnmarshalJSON(b, &params)
+	err := k.cdc.UnmarshalJSON(b, &params)
 	if err != nil {
 		panic(err) // This error should never occur big problem if does
 	}
 	return
 }
-func (m Keeper) setParams(ctx sdk.Context, params Params) {
-	store := ctx.KVStore(storeKey)
-	b, err := m.cdc.MarshalJSON(params)
+func (k Keeper) setParams(ctx sdk.Context, params Params) {
+	store := ctx.KVStore(k.storeKey)
+	b, err := k.cdc.MarshalJSON(params)
 	if err != nil {
 		panic(err)
 	}
 	store.Set(ParamKey, b)
-	m.params = Params{} // clear the cache
+	k.params = Params{} // clear the cache
 }
 
 //_______________________________________________________________________
 
 // XXX nothing is this Keeper should return a pointer...!!!!!!
 // load/save the global staking state
-func (m Keeper) getGlobalState(ctx sdk.Context) (gs GlobalState) {
+func (k Keeper) getGlobalState(ctx sdk.Context) (gs GlobalState) {
 	// check if cached before anything
-	if m.gs != nil {
-		return m.gs
+	if k.gs != (GlobalState{}) {
+		return k.gs
 	}
-	store := ctx.KVStore(storeKey)
+	store := ctx.KVStore(k.storeKey)
 	b := store.Get(GlobalStateKey)
 	if b == nil {
 		return initialGlobalState()
 	}
-	gs = new(GlobalState)
-	err := m.cdc.UnmarshalJSON(b, &gs)
+	err := k.cdc.UnmarshalJSON(b, &gs)
 	if err != nil {
 		panic(err) // This error should never occur big problem if does
 	}
 	return
 }
 
-func (m Keeper) setGlobalState(ctx sdk.Context, gs GlobalState) {
-	store := ctx.KVStore(storeKey)
-	b, err := m.cdc.MarshalJSON(gs)
+func (k Keeper) setGlobalState(ctx sdk.Context, gs GlobalState) {
+	store := ctx.KVStore(k.storeKey)
+	b, err := k.cdc.MarshalJSON(gs)
 	if err != nil {
 		panic(err)
 	}
 	store.Set(GlobalStateKey, b)
-	m.gs = GlobalState{} // clear the cache
+	k.gs = GlobalState{} // clear the cache
+}
+
+//_______________________________________________________________________
+
+//TODO make these next two functions more efficient should be reading and writting to state ye know
+
+// move a candidates asset pool from bonded to unbonded pool
+func (k Keeper) bondedToUnbondedPool(ctx sdk.Context, candidate Candidate) {
+
+	// replace bonded shares with unbonded shares
+	tokens := k.removeSharesBonded(ctx, candidate.Assets)
+	candidate.Assets = k.addTokensUnbonded(ctx, tokens)
+	candidate.Status = Unbonded
+	k.setCandidate(ctx, candidate)
+}
+
+// move a candidates asset pool from unbonded to bonded pool
+func (k Keeper) unbondedToBondedPool(ctx sdk.Context, candidate Candidate) {
+
+	// replace unbonded shares with bonded shares
+	tokens := k.removeSharesUnbonded(ctx, candidate.Assets)
+	candidate.Assets = k.addTokensBonded(ctx, tokens)
+	candidate.Status = Bonded
+	k.setCandidate(ctx, candidate)
+}
+
+// XXX expand to include the function of actually transfering the tokens
+
+//XXX CONFIRM that use of the exRate is correct with Zarko Spec!
+func (k Keeper) addTokensBonded(ctx sdk.Context, amount int64) (issuedShares sdk.Rat) {
+	gs := k.getGlobalState(ctx)
+	issuedShares = gs.bondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
+	gs.BondedPool += amount
+	gs.BondedShares = gs.BondedShares.Add(issuedShares)
+	k.setGlobalState(ctx, gs)
+	return
+}
+
+//XXX CONFIRM that use of the exRate is correct with Zarko Spec!
+func (k Keeper) removeSharesBonded(ctx sdk.Context, shares sdk.Rat) (removedTokens int64) {
+	gs := k.getGlobalState(ctx)
+	removedTokens = gs.bondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
+	gs.BondedShares = gs.BondedShares.Sub(shares)
+	gs.BondedPool -= removedTokens
+	k.setGlobalState(ctx, gs)
+	return
+}
+
+//XXX CONFIRM that use of the exRate is correct with Zarko Spec!
+func (k Keeper) addTokensUnbonded(ctx sdk.Context, amount int64) (issuedShares sdk.Rat) {
+	gs := k.getGlobalState(ctx)
+	issuedShares = gs.unbondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
+	gs.UnbondedShares = gs.UnbondedShares.Add(issuedShares)
+	gs.UnbondedPool += amount
+	k.setGlobalState(ctx, gs)
+	return
+}
+
+//XXX CONFIRM that use of the exRate is correct with Zarko Spec!
+func (k Keeper) removeSharesUnbonded(ctx sdk.Context, shares sdk.Rat) (removedTokens int64) {
+	gs := k.getGlobalState(ctx)
+	removedTokens = gs.unbondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
+	gs.UnbondedShares = gs.UnbondedShares.Sub(shares)
+	gs.UnbondedPool -= removedTokens
+	k.setGlobalState(ctx, gs)
+	return
+}
+
+// add tokens to a candidate
+func (k Keeper) candidateAddTokens(ctx sdk.Context, candidate Candidate, amount int64) (issuedDelegatorShares sdk.Rat) {
+
+	gs := k.getGlobalState(ctx)
+	exRate := candidate.delegatorShareExRate()
+
+	var receivedGlobalShares sdk.Rat
+	if candidate.Status == Bonded {
+		receivedGlobalShares = k.addTokensBonded(ctx, amount)
+	} else {
+		receivedGlobalShares = k.addTokensUnbonded(ctx, amount)
+	}
+	candidate.Assets = candidate.Assets.Add(receivedGlobalShares)
+
+	issuedDelegatorShares = exRate.Mul(receivedGlobalShares)
+	candidate.Liabilities = candidate.Liabilities.Add(issuedDelegatorShares)
+	k.setGlobalState(ctx, gs) // TODO cache GlobalState?
+	return
+}
+
+// remove shares from a candidate
+func (k Keeper) candidateRemoveShares(ctx sdk.Context, candidate Candidate, shares sdk.Rat) (createdCoins int64) {
+
+	gs := k.getGlobalState(ctx)
+	//exRate := candidate.delegatorShareExRate() //XXX make sure not used
+
+	globalPoolSharesToRemove := candidate.delegatorShareExRate().Mul(shares)
+	if candidate.Status == Bonded {
+		createdCoins = k.removeSharesBonded(ctx, globalPoolSharesToRemove)
+	} else {
+		createdCoins = k.removeSharesUnbonded(ctx, globalPoolSharesToRemove)
+	}
+	candidate.Assets = candidate.Assets.Sub(globalPoolSharesToRemove)
+	candidate.Liabilities = candidate.Liabilities.Sub(shares)
+	k.setGlobalState(ctx, gs) // TODO cache GlobalState?
+	return
 }

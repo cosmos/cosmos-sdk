@@ -8,9 +8,9 @@ import (
 )
 
 func TestGetInflation(t *testing.T) {
-	_, _, mapper, _ := createTestInput(t, nil, false, 0)
-	params := mapper.getParams()
-	gs := mapper.getGlobalState()
+	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	params := keeper.getParams(ctx)
+	gs := keeper.getGlobalState(ctx)
 
 	// Governing Mechanism:
 	//    bondedRatio = BondedPool / TotalSupply
@@ -53,9 +53,9 @@ func TestGetInflation(t *testing.T) {
 }
 
 func TestProcessProvisions(t *testing.T) {
-	_, _, mapper, _ := createTestInput(t, nil, false, 0)
-	params := mapper.getParams()
-	gs := mapper.getGlobalState()
+	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	params := keeper.getParams(ctx)
+	gs := keeper.getGlobalState(ctx)
 
 	// create some candidates some bonded, some unbonded
 	candidates := candidatesFromAddrsEmpty(addrs)
@@ -65,8 +65,8 @@ func TestProcessProvisions(t *testing.T) {
 		}
 		mintedTokens := int64((i + 1) * 10000000)
 		gs.TotalSupply += mintedTokens
-		candidate.addTokens(mintedTokens, gs)
-		mapper.setCandidate(candidate)
+		keeper.candidateAddTokens(ctx, candidate, mintedTokens)
+		keeper.setCandidate(ctx, candidate)
 	}
 	var totalSupply int64 = 550000000
 	var bondedShares int64 = 150000000
@@ -92,7 +92,7 @@ func TestProcessProvisions(t *testing.T) {
 		expProvisions := (expInflation.Mul(sdk.NewRat(gs.TotalSupply)).Quo(hrsPerYr)).Evaluate()
 		startBondedPool := gs.BondedPool
 		startTotalSupply := gs.TotalSupply
-		processProvisions(mapper, gs, params)
+		processProvisions(ctx, keeper, gs, params)
 		assert.Equal(t, startBondedPool+expProvisions, gs.BondedPool)
 		assert.Equal(t, startTotalSupply+expProvisions, gs.TotalSupply)
 	}

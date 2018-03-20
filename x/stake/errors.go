@@ -91,7 +91,10 @@ func ErrNoDelegatorForAddress() sdk.Error {
 	return newError(CodeInvalidValidator, "Delegator does not contain validator bond")
 }
 func ErrInsufficientFunds() sdk.Error {
-	return newError(CodeInvalidValidator, "Insufficient bond shares")
+	return newError(CodeInvalidInput, "Insufficient bond shares")
+}
+func ErrBadShares() sdk.Error {
+	return newError(CodeInvalidInput, "bad shares provided as input, must be MAX or decimal")
 }
 func ErrBadRemoveValidator() sdk.Error {
 	return newError(CodeInvalidValidator, "Error removing validator")

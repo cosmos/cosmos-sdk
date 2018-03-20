@@ -49,7 +49,7 @@ type Params struct {
 	GoalBonded          rational.Rational // Goal of percent bonded atoms
 	ReserveTax          rational.Rational // Tax collected on all fees
 
-	MaxVals          uint16  // maximum number of validators
+	MaxValidators          uint16  // maximum number of validators
 	BondDenom string  // bondable coin denomination
 
 	// gas costs for txs

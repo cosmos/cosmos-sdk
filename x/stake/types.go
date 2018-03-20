@@ -42,8 +42,8 @@ type GlobalState struct {
 
 // XXX define globalstate interface?
 
-func initialGlobalState() *GlobalState {
-	return &GlobalState{
+func initialGlobalState() GlobalState {
+	return GlobalState{
 		TotalSupply:       0,
 		BondedShares:      sdk.ZeroRat,
 		UnbondedShares:    sdk.ZeroRat,
@@ -55,7 +55,7 @@ func initialGlobalState() *GlobalState {
 }
 
 // get the bond ratio of the global state
-func (gs *GlobalState) bondedRatio() sdk.Rat {
+func (gs GlobalState) bondedRatio() sdk.Rat {
 	if gs.TotalSupply > 0 {
 		return sdk.NewRat(gs.BondedPool, gs.TotalSupply)
 	}
@@ -63,7 +63,7 @@ func (gs *GlobalState) bondedRatio() sdk.Rat {
 }
 
 // get the exchange rate of bonded token per issued share
-func (gs *GlobalState) bondedShareExRate() sdk.Rat {
+func (gs GlobalState) bondedShareExRate() sdk.Rat {
 	if gs.BondedShares.IsZero() {
 		return sdk.OneRat
 	}
@@ -71,46 +71,11 @@ func (gs *GlobalState) bondedShareExRate() sdk.Rat {
 }
 
 // get the exchange rate of unbonded tokens held in candidates per issued share
-func (gs *GlobalState) unbondedShareExRate() sdk.Rat {
+func (gs GlobalState) unbondedShareExRate() sdk.Rat {
 	if gs.UnbondedShares.IsZero() {
 		return sdk.OneRat
 	}
 	return gs.UnbondedShares.Inv().Mul(sdk.NewRat(gs.UnbondedPool))
-}
-
-// XXX XXX XXX
-// expand to include the function of actually transfering the tokens
-
-//XXX CONFIRM that use of the exRate is correct with Zarko Spec!
-func (gs *GlobalState) addTokensBonded(amount int64) (issuedShares sdk.Rat) {
-	issuedShares = gs.bondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
-	gs.BondedPool += amount
-	gs.BondedShares = gs.BondedShares.Add(issuedShares)
-	return
-}
-
-//XXX CONFIRM that use of the exRate is correct with Zarko Spec!
-func (gs *GlobalState) removeSharesBonded(shares sdk.Rat) (removedTokens int64) {
-	removedTokens = gs.bondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
-	gs.BondedShares = gs.BondedShares.Sub(shares)
-	gs.BondedPool -= removedTokens
-	return
-}
-
-//XXX CONFIRM that use of the exRate is correct with Zarko Spec!
-func (gs *GlobalState) addTokensUnbonded(amount int64) (issuedShares sdk.Rat) {
-	issuedShares = gs.unbondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
-	gs.UnbondedShares = gs.UnbondedShares.Add(issuedShares)
-	gs.UnbondedPool += amount
-	return
-}
-
-//XXX CONFIRM that use of the exRate is correct with Zarko Spec!
-func (gs *GlobalState) removeSharesUnbonded(shares sdk.Rat) (removedTokens int64) {
-	removedTokens = gs.unbondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
-	gs.UnbondedShares = gs.UnbondedShares.Sub(shares)
-	gs.UnbondedPool -= removedTokens
-	return
 }
 
 //_______________________________________________________________________________________________________
@@ -151,8 +116,8 @@ type Description struct {
 }
 
 // NewCandidate - initialize a new candidate
-func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Description) *Candidate {
-	return &Candidate{
+func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Description) Candidate {
+	return Candidate{
 		Status:      Unbonded,
 		Address:     address,
 		PubKey:      pubKey,
@@ -164,50 +129,16 @@ func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Descrip
 }
 
 // get the exchange rate of global pool shares over delegator shares
-func (c *Candidate) delegatorShareExRate() sdk.Rat {
+func (c Candidate) delegatorShareExRate() sdk.Rat {
 	if c.Liabilities.IsZero() {
 		return sdk.OneRat
 	}
 	return c.Assets.Quo(c.Liabilities)
 }
 
-// add tokens to a candidate
-func (c *Candidate) addTokens(amount int64, gs *GlobalState) (issuedDelegatorShares sdk.Rat) {
-
-	exRate := c.delegatorShareExRate()
-
-	var receivedGlobalShares sdk.Rat
-	if c.Status == Bonded {
-		receivedGlobalShares = gs.addTokensBonded(amount)
-	} else {
-		receivedGlobalShares = gs.addTokensUnbonded(amount)
-	}
-	c.Assets = c.Assets.Add(receivedGlobalShares)
-
-	issuedDelegatorShares = exRate.Mul(receivedGlobalShares)
-	c.Liabilities = c.Liabilities.Add(issuedDelegatorShares)
-	return
-}
-
-// remove shares from a candidate
-func (c *Candidate) removeShares(shares sdk.Rat, gs *GlobalState) (createdCoins int64) {
-
-	globalPoolSharesToRemove := c.delegatorShareExRate().Mul(shares)
-
-	if c.Status == Bonded {
-		createdCoins = gs.removeSharesBonded(globalPoolSharesToRemove)
-	} else {
-		createdCoins = gs.removeSharesUnbonded(globalPoolSharesToRemove)
-	}
-	c.Assets = c.Assets.Sub(globalPoolSharesToRemove)
-
-	c.Liabilities = c.Liabilities.Sub(shares)
-	return
-}
-
 // Validator returns a copy of the Candidate as a Validator.
 // Should only be called when the Candidate qualifies as a validator.
-func (c *Candidate) validator() Validator {
+func (c Candidate) validator() Validator {
 	return Validator{
 		Address:     c.Address, // XXX !!!
 		VotingPower: c.VotingPower,
@@ -242,7 +173,7 @@ func (v Validator) ABCIValidator() (*abci.Validator, error) {
 //_________________________________________________________________________
 
 // Candidates - list of Candidates
-type Candidates []*Candidate
+type Candidates []Candidate
 
 //_________________________________________________________________________
 
@@ -251,7 +182,7 @@ type Candidates []*Candidate
 // pubKey.
 // TODO better way of managing space
 type DelegatorBond struct {
-	Address       sdk.Address `json:"address"`
+	DelegatorAddr sdk.Address `json:"delegatoraddr"`
 	CandidateAddr sdk.Address `json:"candidate_addr"`
 	Shares        sdk.Rat     `json:"shares"`
 }

@@ -140,4 +140,8 @@ func TestIBC(t *testing.T) {
 
 	res = ibch(ctx, receiveMsg)
 	assert.False(t, res.IsOK())
+
+	unknownMsg := sdk.NewTestMsg(newAddress())
+	res = ibch(ctx, unknownMsg)
+	assert.False(t, res.IsOK())
 }

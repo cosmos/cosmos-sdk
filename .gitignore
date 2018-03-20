@@ -14,6 +14,9 @@ docs/_build
 coverage.txt
 profile.out
 .vscode
+coverage.txt
+profile.out
+client/lcd/keys.db/
 
 ### Vagrant ###
 .vagrant/

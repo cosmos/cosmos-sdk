@@ -14,8 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+
 	ibcm "github.com/cosmos/cosmos-sdk/x/ibc"
 	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
@@ -32,8 +34,9 @@ type BasecoinApp struct {
 	cdc *wire.Codec
 
 	// keys to access the substores
-	capKeyMainStore *sdk.KVStoreKey
-	capKeyIBCStore  *sdk.KVStoreKey
+	capKeyMainStore    *sdk.KVStoreKey
+	capKeyIBCStore     *sdk.KVStoreKey
+	capKeyStakingStore *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
@@ -42,10 +45,11 @@ type BasecoinApp struct {
 func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	// create your application object
 	var app = &BasecoinApp{
-		BaseApp:         bam.NewBaseApp(appName, logger, db),
-		cdc:             MakeCodec(),
-		capKeyMainStore: sdk.NewKVStoreKey("main"),
-		capKeyIBCStore:  sdk.NewKVStoreKey("ibc"),
+		BaseApp:            bam.NewBaseApp(appName, logger, db),
+		cdc:                MakeCodec(),
+		capKeyMainStore:    sdk.NewKVStoreKey("main"),
+		capKeyIBCStore:     sdk.NewKVStoreKey("ibc"),
+		capKeyStakingStore: sdk.NewKVStoreKey("staking"),
 	}
 
 	// define the accountMapper
@@ -57,22 +61,24 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	// add handlers
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	coolMapper := cool.NewMapper(app.capKeyMainStore)
+
 	ibcKeeper := ibc.NewKeeper(app.cdc, app.capKeyIBCStore)
 
 	ibcKeeper.RegisterHandler("bank", bank.NewIBCHandler(coinKeeper))
+
+	stakingMapper := staking.NewMapper(app.capKeyStakingStore)
 
 	app.Router().
 		AddRoute("bank", bank.NewHandler(coinKeeper, ibcKeeper.Sender(bank.SendPayload{}))).
 		AddRoute("cool", cool.NewHandler(coinKeeper, coolMapper)).
 		AddRoute("sketchy", sketchy.NewHandler()).
-		AddRoute("ibc", ibcm.NewHandler(ibcKeeper))
+		AddRoute("ibc", ibcm.NewHandler(ibcKeeper)).
+		AddRoute("staking", staking.NewHandler(stakingMapper, coinKeeper)).
 
 	// initialize BaseApp
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
-	// TODO: mounting multiple stores is broken
-	// https://github.com/cosmos/cosmos-sdk/issues/532
-	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore)
+	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore, app.capKeyStakingStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
@@ -85,13 +91,14 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 // custom tx codec
 // TODO: use new go-wire
 func MakeCodec() *wire.Codec {
-
 	const msgTypeSend = 0x1
 	const msgTypeIBCSend = 0x2
 	const msgTypeIssue = 0x3
 	const msgTypeQuiz = 0x4
 	const msgTypeSetTrend = 0x5
 	const msgTypeReceive = 0x6
+	const msgTypeBondMsg = 0x7
+	const msgTypeUnbondMsg = 0x8
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Msg }{},
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
@@ -100,6 +107,8 @@ func MakeCodec() *wire.Codec {
 		oldwire.ConcreteType{cool.QuizMsg{}, msgTypeQuiz},
 		oldwire.ConcreteType{cool.SetTrendMsg{}, msgTypeSetTrend},
 		oldwire.ConcreteType{ibcm.ReceiveMsg{}, msgTypeReceive},
+		oldwire.ConcreteType{staking.BondMsg{}, msgTypeBondMsg},
+		oldwire.ConcreteType{staking.UnbondMsg{}, msgTypeUnbondMsg},
 	)
 
 	const accTypeApp = 0x1

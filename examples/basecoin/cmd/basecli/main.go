@@ -64,16 +64,17 @@ func main() {
 		)...)
 	basecliCmd.AddCommand(
 		client.PostCommands(
+			bankcmd.IBCSendCmd(cdc),
+		)...)
+	basecliCmd.AddCommand(
+		client.PostCommands(
 			coolcmd.QuizTxCmd(cdc),
 		)...)
 	basecliCmd.AddCommand(
 		client.PostCommands(
 			coolcmd.SetTrendTxCmd(cdc),
 		)...)
-	basecliCmd.AddCommand(
-		client.PostCommands(
-			ibccmd.IBCTransferCmd(cdc),
-		)...)
+
 	basecliCmd.AddCommand(
 		client.PostCommands(
 			ibccmd.IBCRelayCmd(cdc),

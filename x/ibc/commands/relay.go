@@ -14,7 +14,8 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
+	ibcm "github.com/cosmos/cosmos-sdk/x/ibc"
+	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -171,15 +172,15 @@ func (c relayCommander) getSequence(node string) int64 {
 }
 
 func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []byte {
-	var packet ibc.IBCPacket
+	var packet ibc.Packet
 	if err := c.cdc.UnmarshalBinary(bz, &packet); err != nil {
 		panic(err)
 	}
 
-	msg := ibc.IBCReceiveMsg{
-		IBCPacket: packet,
-		Relayer:   c.address,
-		Sequence:  sequence,
+	msg := ibcm.ReceiveMsg{
+		Packet:   packet,
+		Relayer:  c.address,
+		Sequence: sequence,
 	}
 
 	name := viper.GetString(client.FlagName)

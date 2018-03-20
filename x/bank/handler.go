@@ -4,12 +4,15 @@ import (
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // Handle all "bank" type messages.
-func NewHandler(ck CoinKeeper) sdk.Handler {
+func NewHandler(ck CoinKeeper, ibcs ibc.Sender) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
+		case IBCSendMsg:
+			return handleIBCSendMsg(ctx, ibcs, ck, msg)
 		case SendMsg:
 			return handleSendMsg(ctx, ck, msg)
 		case IssueMsg:

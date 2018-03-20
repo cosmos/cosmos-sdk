@@ -96,7 +96,7 @@ func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool, initCoins
 	)
 	ck := bank.NewCoinKeeper(accountMapper)
 	params := paramsNoInflation()
-	mapper.saveParams(params)
+	mapper.setParams(params)
 
 	// fill all the addresses with some coins
 	for _, addr := range addrs {
@@ -167,7 +167,7 @@ func candidatesFromAddrs(mapper Mapper, addrs []crypto.Address, amts []int64) {
 			Liabilities: sdk.NewRat(amts[i]),
 			VotingPower: sdk.NewRat(amts[i]),
 		}
-		mapper.saveCandidate(c)
+		mapper.setCandidate(c)
 	}
 }
 

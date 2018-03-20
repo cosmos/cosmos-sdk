@@ -1,9 +1,9 @@
 package ibc
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"encoding/json"
 
-	wire "github.com/cosmos/cosmos-sdk/wire"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	types "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -28,8 +28,7 @@ func (msg ReceiveMsg) Get(key interface{}) interface{} {
 }
 
 func (msg ReceiveMsg) GetSignBytes() []byte {
-	cdc := wire.NewCodec()
-	bz, err := cdc.MarshalBinary(msg)
+	bz, err := json.Marshal(msg)
 	if err != nil {
 		panic(err)
 	}

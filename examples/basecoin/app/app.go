@@ -107,6 +107,13 @@ func MakeCodec() *wire.Codec {
 		struct{ sdk.Account }{},
 		oldwire.ConcreteType{&types.AppAccount{}, accTypeApp},
 	)
+
+	const payTypeSend = 0x1
+	var _ = oldwire.RegisterInterface(
+		struct{ ibc.Payload }{},
+		oldwire.ConcreteType{bank.SendPayload{}, payTypeSend},
+	)
+
 	cdc := wire.NewCodec()
 
 	// cdc.RegisterInterface((*sdk.Msg)(nil), nil)

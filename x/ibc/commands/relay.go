@@ -55,6 +55,7 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 	cmd.MarkFlagRequired(FlagFromChainNode)
 	cmd.MarkFlagRequired(FlagToChainID)
 	cmd.MarkFlagRequired(FlagToChainNode)
+	cmd.MarkFlagRequired(client.FlagChainID)
 
 	viper.BindPFlag(FlagFromChainID, cmd.Flags().Lookup(FlagFromChainID))
 	viper.BindPFlag(FlagFromChainNode, cmd.Flags().Lookup(FlagFromChainNode))
@@ -151,7 +152,7 @@ func query(node string, key []byte, storeName string) (res []byte, err error) {
 func (c relayCommander) broadcastTx(node string, tx []byte) error {
 	orig := viper.GetString(client.FlagNode)
 	viper.Set(client.FlagNode, node)
-	seq := c.getSequence(node) + 1
+	seq := c.getSequence(node)
 	viper.Set(client.FlagSequence, seq)
 	_, err := builder.BroadcastTx(tx)
 	viper.Set(client.FlagNode, orig)

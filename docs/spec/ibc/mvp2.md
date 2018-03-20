@@ -13,7 +13,7 @@ IBC module will store its own router for handling custom incoming msgs. `IBCPush
 // x/ibc/types
 
 type Packet struct {
-    Paylod    Payload
+    Payload   Payload
     SrcChain  string
     DestChain string
 }

@@ -252,7 +252,7 @@ func TestSendMsgSigners(t *testing.T) {
 //---------------------------
 // IBCSendMsg tests
 
-func TestIBCSendMsgType(t *testing.T) {
+func TestIBCSendType(t *testing.T) {
 	src := sdk.Address([]byte("src"))
 	dest := sdk.Address([]byte("dest"))
 	coins := sdk.Coins{{"atom", 10}}
@@ -266,6 +266,22 @@ func TestIBCSendMsgType(t *testing.T) {
 	}
 
 	assert.Equal(t, msg.Type(), "bank")
+}
+
+func TestIBCSendSigners(t *testing.T) {
+	src := sdk.Address([]byte("src"))
+	dest := sdk.Address([]byte("dest"))
+	coins := sdk.Coins{{"atom", 10}}
+	payload := SendPayload{
+		SrcAddr:  src,
+		DestAddr: dest,
+		Coins:    coins,
+	}
+	msg := IBCSendMsg{
+		SendPayload: payload,
+	}
+
+	assert.Equal(t, []sdk.Address{src}, msg.GetSigners())
 }
 
 func TestIBCSendCoins(t *testing.T) {
@@ -302,6 +318,22 @@ func TestIBCSendCoins(t *testing.T) {
 			assert.NotNil(t, err, "%d", i)
 		}
 	}
+}
+
+// --------------------------------------
+// SendPayload Tests
+
+func TestSendPayloadType(t *testing.T) {
+	src := sdk.Address([]byte("src"))
+	dest := sdk.Address([]byte("dest"))
+	coins := sdk.Coins{{"atom", 10}}
+	payload := SendPayload{
+		SrcAddr:  src,
+		DestAddr: dest,
+		Coins:    coins,
+	}
+
+	assert.Equal(t, "bank", payload.Type())
 }
 
 // ----------------------------------------

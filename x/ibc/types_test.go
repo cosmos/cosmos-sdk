@@ -9,6 +9,12 @@ import (
 	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
+func TestIBCReceiveMsgType(t *testing.T) {
+	packet := constructIBCPacket(true)
+	msg := constructReceiveMsg(packet)
+	assert.Equal(t, msg.Type(), "ibc")
+}
+
 func TestIBCReceiveMsgValidation(t *testing.T) {
 	validPacket := constructIBCPacket(true)
 	invalidPacket := constructIBCPacket(false)
@@ -17,8 +23,8 @@ func TestIBCReceiveMsgValidation(t *testing.T) {
 		valid bool
 		msg   ReceiveMsg
 	}{
-		{true, ReceiveMsg{validPacket, sdk.Address([]byte("relayer")), 0}},
-		{false, ReceiveMsg{invalidPacket, sdk.Address([]byte("relayer")), 0}},
+		{true, constructReceiveMsg(validPacket)},
+		{false, constructReceiveMsg(invalidPacket)},
 	}
 
 	for i, tc := range cases {
@@ -29,6 +35,17 @@ func TestIBCReceiveMsgValidation(t *testing.T) {
 			assert.NotNil(t, err, "%d", i)
 		}
 	}
+}
+
+func TestIBCReceiveMsgSigners(t *testing.T) {
+	packet := constructIBCPacket(true)
+	relayer := sdk.Address([]byte("relayer"))
+	msg := ReceiveMsg{
+		Packet:   packet,
+		Relayer:  relayer,
+		Sequence: 0,
+	}
+	assert.Equal(t, []sdk.Address{relayer}, msg.GetSigners())
 }
 
 // -------------------------------
@@ -62,4 +79,13 @@ func constructIBCPacket(valid bool) ibc.Packet {
 		SrcChain:  srcChain,
 		DestChain: destChain,
 	}
+}
+
+func constructReceiveMsg(packet ibc.Packet) ReceiveMsg {
+	return ReceiveMsg{
+		Packet:   packet,
+		Relayer:  sdk.Address([]byte("relayer")),
+		Sequence: 0,
+	}
+
 }

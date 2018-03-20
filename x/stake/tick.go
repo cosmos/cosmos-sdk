@@ -6,21 +6,21 @@ import (
 )
 
 // Tick - called at the end of every block
-func Tick(ctx sdk.Context, m Mapper) (change []*abci.Validator, err error) {
+func Tick(ctx sdk.Context, k Keeper) (change []*abci.Validator, err error) {
 
 	// retrieve params
-	params := m.getParams()
-	gs := m.getGlobalState()
+	params := k.getParams(ctx)
+	gs := k.getGlobalState(ctx)
 	height := ctx.BlockHeight()
 
 	// Process Validator Provisions
 	// XXX right now just process every 5 blocks, in new SDK make hourly
 	if gs.InflationLastTime+5 <= height {
 		gs.InflationLastTime = height
-		processProvisions(m, gs, params)
+		processProvisions(ctx, k, gs, params)
 	}
 
-	newVals := m.getValidators(params.MaxVals)
+	newVals := k.getValidators(ctx, params.MaxValidators)
 	// XXX determine change from old validators, set to change
 	_ = newVals
 	return change, nil
@@ -29,7 +29,7 @@ func Tick(ctx sdk.Context, m Mapper) (change []*abci.Validator, err error) {
 var hrsPerYr = sdk.NewRat(8766) // as defined by a julian year of 365.25 days
 
 // process provisions for an hour period
-func processProvisions(m Mapper, gs *GlobalState, params Params) {
+func processProvisions(ctx sdk.Context, k Keeper, gs GlobalState, params Params) {
 
 	gs.Inflation = nextInflation(gs, params).Round(1000000000)
 
@@ -46,11 +46,11 @@ func processProvisions(m Mapper, gs *GlobalState, params Params) {
 	// XXX XXX XXX XXX XXX XXX XXX XXX XXX
 
 	// save the params
-	m.setGlobalState(gs)
+	k.setGlobalState(ctx, gs)
 }
 
 // get the next inflation rate for the hour
-func nextInflation(gs *GlobalState, params Params) (inflation sdk.Rat) {
+func nextInflation(gs GlobalState, params Params) (inflation sdk.Rat) {
 
 	// The target annual inflation rate is recalculated for each previsions cycle. The
 	// inflation is also subject to a rate change (positive of negative) depending or

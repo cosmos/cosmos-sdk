@@ -45,7 +45,7 @@ func GetCmdQueryCandidates(cdc *wire.Codec, storeName string) *cobra.Command {
 		Short: "Query for the set of validator-candidates pubkeys",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			key := PrefixedKey(stake.Name, stake.CandidatesAddrKey)
+			key := PrefixedKey(stake.MsgType, stake.CandidatesAddrKey)
 
 			res, err := builder.Query(key, storeName)
 			if err != nil {
@@ -85,7 +85,7 @@ func GetCmdQueryCandidate(cdc *wire.Codec, storeName string) *cobra.Command {
 				return err
 			}
 
-			key := PrefixedKey(stake.Name, stake.GetCandidateKey(addr))
+			key := PrefixedKey(stake.MsgType, stake.GetCandidateKey(addr))
 
 			res, err := builder.Query(key, storeName)
 			if err != nil {
@@ -131,7 +131,7 @@ func GetCmdQueryDelegatorBond(cdc *wire.Codec, storeName string) *cobra.Command 
 			}
 			delegator := crypto.Address(bz)
 
-			key := PrefixedKey(stake.Name, stake.GetDelegatorBondKey(delegator, addr, cdc))
+			key := PrefixedKey(stake.MsgType, stake.GetDelegatorBondKey(delegator, addr, cdc))
 
 			res, err := builder.Query(key, storeName)
 			if err != nil {
@@ -173,7 +173,7 @@ func GetCmdQueryDelegatorBonds(cdc *wire.Codec, storeName string) *cobra.Command
 			}
 			delegator := crypto.Address(bz)
 
-			key := PrefixedKey(stake.Name, stake.GetDelegatorBondsKey(delegator, cdc))
+			key := PrefixedKey(stake.MsgType, stake.GetDelegatorBondsKey(delegator, cdc))
 
 			res, err := builder.Query(key, storeName)
 			if err != nil {

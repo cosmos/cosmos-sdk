@@ -37,7 +37,7 @@ import (
 //assert.Equal(int64(500), candidates[1].VotingPower.Evaluate(), "%v", candidates[1])
 
 //// test the max validators term
-//params.MaxVals = 4
+//params.MaxValidators = 4
 //setParams(store, params)
 //candidates.updateVotingPower(store, gs, params)
 //assert.Equal(int64(0), candidates[4].VotingPower.Evaluate(), "%v", candidates[4])
@@ -131,7 +131,7 @@ import (
 //require.Equal(0, len(change), "%v", change) // change 1, remove 1, add 2
 
 //// test the max value and test again
-//params.MaxVals = 4
+//params.MaxValidators = 4
 //setParams(store, params)
 //change, err = UpdateValidatorSet(store, gs, params)
 //require.Nil(err)
@@ -161,7 +161,7 @@ import (
 //}
 
 func TestState(t *testing.T) {
-	_, _, keeper, _ := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, nil, false, 0)
 
 	addrDel := sdk.Address([]byte("addressdelegator"))
 	addrVal := sdk.Address([]byte("addressvalidator"))
@@ -172,7 +172,7 @@ func TestState(t *testing.T) {
 	// Candidate checks
 
 	// XXX expand to include both liabilities and assets use/test all candidate fields
-	candidate := &Candidate{
+	candidate := Candidate{
 		Address:     addrVal,
 		PubKey:      pk,
 		Assets:      sdk.NewRat(9),
@@ -180,7 +180,7 @@ func TestState(t *testing.T) {
 		VotingPower: sdk.ZeroRat,
 	}
 
-	candidatesEqual := func(c1, c2 *Candidate) bool {
+	candidatesEqual := func(c1, c2 Candidate) bool {
 		return c1.Status == c2.Status &&
 			c1.PubKey.Equals(c2.PubKey) &&
 			bytes.Equal(c1.Address, c2.Address) &&
@@ -191,54 +191,59 @@ func TestState(t *testing.T) {
 	}
 
 	// check the empty keeper first
-	resCand := keeper.getCandidate(addrVal)
-	assert.Nil(t, resCand)
-	resPks := keeper.getCandidates()
+	_, found := keeper.getCandidate(ctx, addrVal)
+	assert.False(t, found)
+	resPks := keeper.getCandidates(ctx)
 	assert.Zero(t, len(resPks))
 
 	// set and retrieve a record
-	keeper.setCandidate(candidate)
-	resCand = keeper.getCandidate(addrVal)
-	//assert.Equal(candidate, resCand)
+	keeper.setCandidate(ctx, candidate)
+	resCand, found := keeper.getCandidate(ctx, addrVal)
+	assert.True(t, found)
 	assert.True(t, candidatesEqual(candidate, resCand), "%#v \n %#v", resCand, candidate)
 
 	// modify a records, save, and retrieve
 	candidate.Liabilities = sdk.NewRat(99)
-	keeper.setCandidate(candidate)
-	resCand = keeper.getCandidate(addrVal)
+	keeper.setCandidate(ctx, candidate)
+	resCand, found = keeper.getCandidate(ctx, addrVal)
+	assert.True(t, found)
 	assert.True(t, candidatesEqual(candidate, resCand))
 
 	// also test that the pubkey has been added to pubkey list
-	resPks = keeper.getCandidates()
+	resPks = keeper.getCandidates(ctx)
 	require.Equal(t, 1, len(resPks))
 	assert.Equal(t, addrVal, resPks[0].PubKey)
 
 	//----------------------------------------------------------------------
 	// Bond checks
 
-	bond := &DelegatorBond{
-		Address: addrDel,
-		Shares:  sdk.NewRat(9),
+	bond := DelegatorBond{
+		DelegatorAddr: addrDel,
+		CandidateAddr: addrVal,
+		Shares:        sdk.NewRat(9),
 	}
 
-	bondsEqual := func(b1, b2 *DelegatorBond) bool {
-		return bytes.Equal(b1.Address, b2.Address) &&
+	bondsEqual := func(b1, b2 DelegatorBond) bool {
+		return bytes.Equal(b1.DelegatorAddr, b2.DelegatorAddr) &&
+			bytes.Equal(b1.CandidateAddr, b2.CandidateAddr) &&
 			b1.Shares == b2.Shares
 	}
 
 	//check the empty keeper first
-	resBond := keeper.getDelegatorBond(addrDel, addrVal)
-	assert.Nil(t, resBond)
+	_, found = keeper.getDelegatorBond(ctx, addrDel, addrVal)
+	assert.False(t, found)
 
 	//Set and retrieve a record
-	keeper.setDelegatorBond(addrDel, bond)
-	resBond = keeper.getDelegatorBond(addrDel, addrVal)
+	keeper.setDelegatorBond(ctx, bond)
+	resBond, found := keeper.getDelegatorBond(ctx, addrDel, addrVal)
+	assert.True(t, found)
 	assert.True(t, bondsEqual(bond, resBond))
 
 	//modify a records, save, and retrieve
 	bond.Shares = sdk.NewRat(99)
-	keeper.setDelegatorBond(addrDel, bond)
-	resBond = keeper.getDelegatorBond(addrDel, addrVal)
+	keeper.setDelegatorBond(ctx, bond)
+	resBond, found = keeper.getDelegatorBond(ctx, addrDel, addrVal)
+	assert.True(t, found)
 	assert.True(t, bondsEqual(bond, resBond))
 
 	//----------------------------------------------------------------------
@@ -247,21 +252,21 @@ func TestState(t *testing.T) {
 	params := defaultParams()
 
 	//check that the empty keeper loads the default
-	resParams := keeper.getParams()
+	resParams := keeper.getParams(ctx)
 	assert.Equal(t, params, resParams)
 
 	//modify a params, save, and retrieve
-	params.MaxVals = 777
-	keeper.setParams(params)
-	resParams = keeper.getParams()
+	params.MaxValidators = 777
+	keeper.setParams(ctx, params)
+	resParams = keeper.getParams(ctx)
 	assert.Equal(t, params, resParams)
 }
 
 func TestGetValidators(t *testing.T) {
-	_, _, keeper, _ := createTestInput(t, nil, false, 0)
-	candidatesFromAddrs(keeper, addrs, []int64{400, 200, 0, 0, 0})
+	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	candidatesFromAddrs(ctx, keeper, addrs, []int64{400, 200, 0, 0, 0})
 
-	validators := keeper.getValidators(5)
+	validators := keeper.getValidators(ctx, 5)
 	require.Equal(t, 2, len(validators))
 	assert.Equal(t, addrs[0], validators[0].Address)
 	assert.Equal(t, addrs[1], validators[1].Address)

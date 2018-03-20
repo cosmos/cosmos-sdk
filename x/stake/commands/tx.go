@@ -19,10 +19,11 @@ import (
 
 // nolint
 const (
-	FlagAddress = "address"
-	FlagPubKey  = "pubkey"
-	FlagAmount  = "amount"
-	FlagShares  = "shares"
+	FlagAddressDelegator = "addressD"
+	FlagAddressCandidate = "addressC"
+	FlagPubKey           = "pubkey"
+	FlagAmount           = "amount"
+	FlagShares           = "shares"
 
 	FlagMoniker  = "moniker"
 	FlagIdentity = "keybase-sig"
@@ -36,6 +37,7 @@ var (
 	fsAmount    = flag.NewFlagSet("", flag.ContinueOnError)
 	fsShares    = flag.NewFlagSet("", flag.ContinueOnError)
 	fsCandidate = flag.NewFlagSet("", flag.ContinueOnError)
+	fsDelegator = flag.NewFlagSet("", flag.ContinueOnError)
 )
 
 func init() {
@@ -45,7 +47,8 @@ func init() {
 	fsCandidate.String(FlagMoniker, "", "validator-candidate name")
 	fsCandidate.String(FlagIdentity, "", "optional keybase signature")
 	fsCandidate.String(FlagWebsite, "", "optional website")
-	fsCandidate.String(FlagDetails, "", "optional detailed description space")
+	fsCandidate.String(FlagAddressCandidate, "", "hex address of the validator/candidate")
+	fsDelegator.String(FlagAddressDelegator, "", "hex address of the delegator")
 }
 
 //TODO refactor to common functionality
@@ -69,7 +72,7 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			addr, err := sdk.GetAddress(viper.GetString(FlagAddress))
+			candidateAddr, err := sdk.GetAddress(viper.GetString(FlagAddressCandidate))
 			if err != nil {
 				return err
 			}
@@ -86,7 +89,7 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 				Website:  viper.GetString(FlagWebsite),
 				Details:  viper.GetString(FlagDetails),
 			}
-			msg := stake.NewMsgDeclareCandidacy(addr, pk, amount, description)
+			msg := stake.NewMsgDeclareCandidacy(candidateAddr, pk, amount, description)
 
 			name, pass, err := getNamePassword()
 			if err != nil {
@@ -117,7 +120,7 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 		Short: "edit and existing validator-candidate account",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			addr, err := sdk.GetAddress(viper.GetString(FlagAddress))
+			candidateAddr, err := sdk.GetAddress(viper.GetString(FlagAddressCandidate))
 			if err != nil {
 				return err
 			}
@@ -127,7 +130,7 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 				Website:  viper.GetString(FlagWebsite),
 				Details:  viper.GetString(FlagDetails),
 			}
-			msg := stake.NewMsgEditCandidacy(addr, description)
+			msg := stake.NewMsgEditCandidacy(candidateAddr, description)
 
 			name, pass, err := getNamePassword()
 			if err != nil {
@@ -161,12 +164,13 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			addr, err := sdk.GetAddress(viper.GetString(FlagAddress))
+			delegatorAddr, err := sdk.GetAddress(viper.GetString(FlagAddressDelegator))
+			candidateAddr, err := sdk.GetAddress(viper.GetString(FlagAddressCandidate))
 			if err != nil {
 				return err
 			}
 
-			msg := stake.NewMsgDelegate(addr, amount)
+			msg := stake.NewMsgDelegate(delegatorAddr, candidateAddr, amount)
 
 			name, pass, err := getNamePassword()
 			if err != nil {
@@ -186,6 +190,7 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 
 	cmd.Flags().AddFlagSet(fsPk)
 	cmd.Flags().AddFlagSet(fsAmount)
+	cmd.Flags().AddFlagSet(fsDelegator)
 	return cmd
 }
 
@@ -210,12 +215,13 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 				}
 			}
 
-			addr, err := sdk.GetAddress(viper.GetString(FlagAddress))
+			delegatorAddr, err := sdk.GetAddress(viper.GetString(FlagAddressDelegator))
+			candidateAddr, err := sdk.GetAddress(viper.GetString(FlagAddressCandidate))
 			if err != nil {
 				return err
 			}
 
-			msg := stake.NewMsgUnbond(addr, sharesStr)
+			msg := stake.NewMsgUnbond(delegatorAddr, candidateAddr, sharesStr)
 
 			name, pass, err := getNamePassword()
 			if err != nil {
@@ -235,6 +241,7 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 
 	cmd.Flags().AddFlagSet(fsPk)
 	cmd.Flags().AddFlagSet(fsShares)
+	cmd.Flags().AddFlagSet(fsDelegator)
 	return cmd
 }
 

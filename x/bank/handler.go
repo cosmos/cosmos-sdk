@@ -7,17 +7,15 @@ import (
 )
 
 // Handle all "bank" type messages.
-func NewHandler(ck CoinKeeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		switch msg := msg.(type) {
-		case SendMsg:
-			return handleSendMsg(ctx, ck, msg)
-		case IssueMsg:
-			return handleIssueMsg(ctx, ck, msg)
-		default:
-			errMsg := "Unrecognized bank Msg type: " + reflect.TypeOf(msg).Name()
-			return sdk.ErrUnknownRequest(errMsg).Result()
-		}
+func (ck CoinKeeper) Handler(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	switch msg := msg.(type) {
+	case SendMsg:
+		return handleSendMsg(ctx, ck, msg)
+	case IssueMsg:
+		return handleIssueMsg(ctx, ck, msg)
+	default:
+		errMsg := "Unrecognized bank Msg type: " + reflect.TypeOf(msg).Name()
+		return sdk.ErrUnknownRequest(errMsg).Result()
 	}
 }
 

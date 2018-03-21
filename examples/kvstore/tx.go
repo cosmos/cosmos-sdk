@@ -64,7 +64,7 @@ func decodeTx(txBytes []byte) (sdk.Tx, sdk.Error) {
 		k, v := split[0], split[1]
 		tx = kvstoreTx{k, v, txBytes}
 	} else {
-		return nil, sdk.ErrTxParse("too many =")
+		return nil, sdk.ErrTxDecode("too many =")
 	}
 
 	return tx, nil

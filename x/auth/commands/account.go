@@ -65,6 +65,9 @@ func (c commander) getAccountCmd(cmd *cobra.Command, args []string) error {
 	key := sdk.Address(bz)
 
 	res, err := builder.Query(key, c.storeName)
+	if err != nil {
+		return err
+	}
 
 	// decode the value
 	account, err := c.decoder(res)

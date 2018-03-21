@@ -325,6 +325,7 @@ func TestHandler(t *testing.T) {
 	SignCheckDeliver(t, bapp, receiveMsg, 3, false)
 }
 
+// TODO describe the use of this function
 func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, expPass bool) {
 
 	// Sign the tx
@@ -350,6 +351,8 @@ func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, e
 	} else {
 		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
 	}
+	bapp.EndBlock(abci.RequestEndBlock{})
+	//bapp.Commit()
 }
 
 func CheckBalance(t *testing.T, bapp *BasecoinApp, balExpected string) {

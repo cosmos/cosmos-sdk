@@ -28,7 +28,7 @@ func GetCandidateKey(addr sdk.Address) []byte {
 }
 
 // GetValidatorKey - get the key for the validator used in the power-store
-func GetValidatorKey(addr sdk.Address, power sdk.Rational, cdc *wire.Codec) []byte {
+func GetValidatorKey(addr sdk.Address, power sdk.Rat, cdc *wire.Codec) []byte {
 	b, _ := cdc.MarshalJSON(power)                                   // TODO need to handle error here?
 	return append(ValidatorKeyPrefix, append(b, addr.Bytes()...)...) // TODO does this need prefix if its in its own store
 }
@@ -122,7 +122,7 @@ func (k Keeper) removeCandidate(ctx sdk.Context, candidateAddr sdk.Address) {
 
 //___________________________________________________________________________
 
-//func loadValidator(store sdk.KVStore, address sdk.Address, votingPower sdk.Rational) *Validator {
+//func loadValidator(store sdk.KVStore, address sdk.Address, votingPower sdk.Rat) *Validator {
 //b := store.Get(GetValidatorKey(address, votingPower))
 //if b == nil {
 //return nil

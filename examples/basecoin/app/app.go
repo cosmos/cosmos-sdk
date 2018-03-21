@@ -73,7 +73,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 		AddRoute("cool", cool.NewHandler(coinKeeper, coolMapper)).
 		AddRoute("sketchy", sketchy.NewHandler()).
 		AddRoute("ibc", ibcm.NewHandler(ibcKeeper)).
-		AddRoute("staking", staking.NewHandler(stakingMapper, coinKeeper)).
+		AddRoute("staking", staking.NewHandler(stakingMapper, coinKeeper))
 
 	// initialize BaseApp
 	app.SetTxDecoder(app.txDecoder)

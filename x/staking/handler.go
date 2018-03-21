@@ -4,29 +4,21 @@ import (
 	abci "github.com/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-func NewHandler(sm StakingMapper, ck bank.CoinKeeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		switch msg := msg.(type) {
-		case BondMsg:
-			return handleBondMsg(ctx, sm, ck, msg)
-		case UnbondMsg:
-			return handleUnbondMsg(ctx, sm, ck, msg)
-		default:
-			return sdk.ErrUnknownRequest("No match for message type.").Result()
-		}
+func (k Keeper) Handler(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	switch msg := msg.(type) {
+	case BondMsg:
+		return handleBondMsg(ctx, k, msg)
+	case UnbondMsg:
+		return handleUnbondMsg(ctx, k, msg)
+	default:
+		return sdk.ErrUnknownRequest("No match for message type.").Result()
 	}
 }
 
-func handleBondMsg(ctx sdk.Context, sm StakingMapper, ck bank.CoinKeeper, msg BondMsg) sdk.Result {
-	_, err := ck.SubtractCoins(ctx, msg.Address, []sdk.Coin{msg.Stake})
-	if err != nil {
-		return err.Result()
-	}
-
-	power, err := sm.Bond(ctx, msg.Address, msg.PubKey, msg.Stake.Amount)
+func handleBondMsg(ctx sdk.Context, k Keeper, msg BondMsg) sdk.Result {
+	_, err := k.Bond(ctx, msg.Address, msg.Stake)
 	if err != nil {
 		return err.Result()
 	}
@@ -42,8 +34,8 @@ func handleBondMsg(ctx sdk.Context, sm StakingMapper, ck bank.CoinKeeper, msg Bo
 	}
 }
 
-func handleUnbondMsg(ctx sdk.Context, sm StakingMapper, ck bank.CoinKeeper, msg UnbondMsg) sdk.Result {
-	pubKey, power, err := sm.Unbond(ctx, msg.Address)
+func handleUnbondMsg(ctx sdk.Context, k Keeper, msg UnbondMsg) sdk.Result {
+	pubKey, power, err := k.Unbond(ctx, msg.Address)
 	if err != nil {
 		return err.Result()
 	}
@@ -52,7 +44,7 @@ func handleUnbondMsg(ctx sdk.Context, sm StakingMapper, ck bank.CoinKeeper, msg 
 		Denom:  "mycoin",
 		Amount: power,
 	}
-	_, err = ck.AddCoins(ctx, msg.Address, sdk.Coins{stake})
+	_, err = k.ck.AddCoins(ctx, msg.Address, sdk.Coins{stake})
 	if err != nil {
 		return err.Result()
 	}

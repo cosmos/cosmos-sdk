@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
@@ -24,14 +25,14 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 	return ms, capKey
 }
 
-func TestStakingMapperGetSet(t *testing.T) {
+func TestKeeperGetSet(t *testing.T) {
 	ms, capKey := setupMultiStore()
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	stakingMapper := NewMapper(capKey)
+	stakeKeeper := NewKeeper(capKey, bank.NewCoinKeeper(nil))
 	addr := sdk.Address([]byte("some-address"))
 
-	bi := stakingMapper.getBondInfo(ctx, addr)
+	bi := stakeKeeper.getBondInfo(ctx, addr)
 	assert.Equal(t, bi, bondInfo{})
 
 	privKey := crypto.GenPrivKeyEd25519()
@@ -41,9 +42,9 @@ func TestStakingMapperGetSet(t *testing.T) {
 		Power:  int64(10),
 	}
 	fmt.Printf("Pubkey: %v\n", privKey.PubKey())
-	stakingMapper.setBondInfo(ctx, addr, bi)
+	stakeKeeper.setBondInfo(ctx, addr, bi)
 
-	savedBi := stakingMapper.getBondInfo(ctx, addr)
+	savedBi := stakeKeeper.getBondInfo(ctx, addr)
 	assert.NotNil(t, savedBi)
 	fmt.Printf("Bond Info: %v\n", savedBi)
 	assert.Equal(t, int64(10), savedBi.Power)
@@ -53,24 +54,24 @@ func TestBonding(t *testing.T) {
 	ms, capKey := setupMultiStore()
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	stakingMapper := NewMapper(capKey)
+	stakeKeeper := NewKeeper(capKey, bank.NewCoinKeeper(nil))
 	addr := sdk.Address([]byte("some-address"))
 	privKey := crypto.GenPrivKeyEd25519()
 	pubKey := privKey.PubKey()
 
-	_, _, err := stakingMapper.Unbond(ctx, addr)
+	_, _, err := stakeKeeper.Unbond(ctx, addr)
 	assert.Equal(t, err, ErrInvalidUnbond())
 
-	_, err = stakingMapper.Bond(ctx, addr, pubKey, 10)
+	_, err = stakeKeeper.Bond(ctx, addr, pubKey, 10)
 	assert.Nil(t, err)
 
-	power, err := stakingMapper.Bond(ctx, addr, pubKey, 10)
+	power, err := stakeKeeper.Bond(ctx, addr, pubKey, 10)
 	assert.Equal(t, int64(20), power)
 
-	pk, _, err := stakingMapper.Unbond(ctx, addr)
+	pk, _, err := stakeKeeper.Unbond(ctx, addr)
 	assert.Nil(t, err)
 	assert.Equal(t, pubKey, pk)
 
-	_, _, err = stakingMapper.Unbond(ctx, addr)
+	_, _, err = stakeKeeper.Unbond(ctx, addr)
 	assert.Equal(t, err, ErrInvalidUnbond())
 }

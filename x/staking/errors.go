@@ -6,10 +6,15 @@ import (
 
 const (
 	// Staking errors reserve 300 - 399.
-	CodeEmptyValidator sdk.CodeType = 300
-	CodeInvalidUnbond  sdk.CodeType = 301
-	CodeEmptyStake     sdk.CodeType = 302
+	CodeEmptyValidator        sdk.CodeType = 300
+	CodeInvalidUnbond         sdk.CodeType = 301
+	CodeEmptyStake            sdk.CodeType = 302
+	CodeIncorrectStakingToken sdk.CodeType = 303
 )
+
+func ErrIncorrectStakingToken() sdk.Error {
+	return newError(CodeIncorrectStakingToken, "")
+}
 
 func ErrEmptyValidator() sdk.Error {
 	return newError(CodeEmptyValidator, "")

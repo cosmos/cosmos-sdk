@@ -153,7 +153,7 @@ func (msg StdSignMsg) Bytes() []byte {
 
 //__________________________________________________________
 
-// Application function variable used to unmarshal transaction bytes
+// TxDeocder unmarshals transaction bytes
 type TxDecoder func(txBytes []byte) (Tx, Error)
 
 //__________________________________________________________

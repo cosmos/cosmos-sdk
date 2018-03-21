@@ -27,7 +27,7 @@ const (
 type relayCommander struct {
 	cdc       *wire.Codec
 	address   sdk.Address
-	parser    sdk.ParseAccount
+	decoder    sdk.AccountDecoder
 	mainStore string
 	ibcStore  string
 }
@@ -35,7 +35,7 @@ type relayCommander struct {
 func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 	cmdr := relayCommander{
 		cdc:       cdc,
-		parser:    authcmd.GetParseAccount(cdc),
+		decoder:    authcmd.GetAccountDecoder(cdc),
 		ibcStore:  "ibc",
 		mainStore: "main",
 	}
@@ -162,7 +162,7 @@ func (c relayCommander) getSequence(node string) int64 {
 	if err != nil {
 		panic(err)
 	}
-	account, err := c.parser(res)
+	account, err := c.decoder(res)
 	if err != nil {
 		panic(err)
 	}

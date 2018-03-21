@@ -122,11 +122,15 @@ func MakeCodec() *wire.Codec {
 func (app *BasecoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 	var tx = sdk.StdTx{}
 
+	if len(txBytes) == 0 {
+		return nil, sdk.ErrTxDecode("txBytes are empty")
+	}
+
 	// StdTx.Msg is an interface. The concrete types
 	// are registered by MakeTxCodec in bank.RegisterWire.
 	err := app.cdc.UnmarshalBinary(txBytes, &tx)
 	if err != nil {
-		return nil, sdk.ErrTxParse("").TraceCause(err, "")
+		return nil, sdk.ErrTxDecode("").TraceCause(err, "")
 	}
 	return tx, nil
 }

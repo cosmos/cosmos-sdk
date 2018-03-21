@@ -6,6 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const moduleName = "bank"
+
 // CoinKeeper manages transfers between accounts
 type CoinKeeper struct {
 	am sdk.AccountMapper
@@ -47,4 +49,19 @@ func (ck CoinKeeper) AddCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) 
 	acc.SetCoins(newCoins)
 	ck.am.SetAccount(ctx, acc)
 	return newCoins, nil
+}
+
+// SendCoins moves coins from one account to another
+func (ck CoinKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.Address, toAddr sdk.Address, amt sdk.Coins) sdk.Error {
+	_, err := ck.SubtractCoins(ctx, fromAddr, amt)
+	if err != nil {
+		return err
+	}
+
+	_, err = ck.AddCoins(ctx, toAddr, amt)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

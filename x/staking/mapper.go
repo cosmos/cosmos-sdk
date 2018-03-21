@@ -49,6 +49,7 @@ func (sm StakingMapper) deleteBondInfo(ctx sdk.Context, addr sdk.Address) {
 }
 
 func (sm StakingMapper) Bond(ctx sdk.Context, addr sdk.Address, pubKey crypto.PubKey, power int64) (int64, sdk.Error) {
+
 	bi := sm.getBondInfo(ctx, addr)
 	if bi.isEmpty() {
 		bi = bondInfo{

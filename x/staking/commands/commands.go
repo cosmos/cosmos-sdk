@@ -53,19 +53,30 @@ func (co commander) bondTxCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	stake, err := sdk.ParseCoin(viper.GetString(flagStake))
+	stakeString := viper.GetString(flagStake)
+	if len(stakeString) == 0 {
+		return fmt.Errorf("specify coins to bond with --stake")
+	}
+
+	valString := viper.GetString(flagValidator)
+	if len(valString) == 0 {
+		return fmt.Errorf("specify pubkey to bond to with --validator")
+	}
+
+	stake, err := sdk.ParseCoin(stakeString)
 	if err != nil {
 		return err
 	}
 
-	rawPubKey, err := hex.DecodeString(viper.GetString(flagValidator))
+	// TODO: bech32 ...
+	rawPubKey, err := hex.DecodeString(valString)
 	if err != nil {
 		return err
 	}
-	var pubKey crypto.PubKeyEd25519
-	copy(pubKey[:], rawPubKey)
+	var pubKeyEd crypto.PubKeyEd25519
+	copy(pubKeyEd[:], rawPubKey)
 
-	msg := staking.NewBondMsg(from, stake, pubKey.Wrap())
+	msg := staking.NewBondMsg(from, stake, pubKeyEd.Wrap())
 
 	return co.sendMsg(msg)
 }

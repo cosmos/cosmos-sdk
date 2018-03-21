@@ -200,7 +200,7 @@ func TestState(t *testing.T) {
 	keeper.setCandidate(ctx, candidate)
 	resCand, found := keeper.getCandidate(ctx, addrVal)
 	assert.True(t, found)
-	assert.True(t, candidatesEqual(candidate, resCand), "%#v \n %#v", resCand, candidate)
+	assert.True(t, candidatesEqual(candidate, resCand), "%v \n %v", resCand, candidate)
 
 	// modify a records, save, and retrieve
 	candidate.Liabilities = sdk.NewRat(99)

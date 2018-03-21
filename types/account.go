@@ -35,5 +35,5 @@ type AccountMapper interface {
 	SetAccount(ctx Context, acc Account)
 }
 
-// Application function variable used to unmarshal account
-type ParseAccount func([]byte) (Account, error)
+// AccountDecoder unmarshals account bytes
+type AccountDecoder func(accountBytes []byte) (Account, error)

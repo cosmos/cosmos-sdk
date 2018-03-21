@@ -7,5 +7,5 @@ import (
 )
 
 func RegisterRoutes(r *mux.Router, cdc *wire.Codec, storeName string) {
-	r.HandleFunc("/accounts/{address}", QueryAccountRequestHandler(storeName, cdc, auth.GetParseAccount(cdc))).Methods("GET")
+	r.HandleFunc("/accounts/{address}", QueryAccountRequestHandler(storeName, cdc, auth.GetAccountDecoder(cdc))).Methods("GET")
 }

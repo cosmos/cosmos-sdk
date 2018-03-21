@@ -16,10 +16,10 @@ import (
 
 // GetAccountCmd for the auth.BaseAccount type
 func GetAccountCmdDefault(storeName string, cdc *wire.Codec) *cobra.Command {
-	return GetAccountCmd(storeName, cdc, GetParseAccount(cdc))
+	return GetAccountCmd(storeName, cdc, GetAccountDecoder(cdc))
 }
 
-func GetParseAccount(cdc *wire.Codec) sdk.ParseAccount {
+func GetAccountDecoder(cdc *wire.Codec) sdk.AccountDecoder {
 	return func(accBytes []byte) (sdk.Account, error) {
 		acct := new(auth.BaseAccount)
 		err := cdc.UnmarshalBinary(accBytes, &acct)
@@ -32,7 +32,7 @@ func GetParseAccount(cdc *wire.Codec) sdk.ParseAccount {
 
 // GetAccountCmd returns a query account that will display the
 // state of the account at a given address
-func GetAccountCmd(storeName string, cdc *wire.Codec, parser sdk.ParseAccount) *cobra.Command {
+func GetAccountCmd(storeName string, cdc *wire.Codec, parser sdk.AccountDecoder) *cobra.Command {
 	cmdr := commander{
 		storeName,
 		cdc,
@@ -48,7 +48,7 @@ func GetAccountCmd(storeName string, cdc *wire.Codec, parser sdk.ParseAccount) *
 type commander struct {
 	storeName string
 	cdc       *wire.Codec
-	parser    sdk.ParseAccount
+	parser    sdk.AccountDecoder
 }
 
 func (c commander) getAccountCmd(cmd *cobra.Command, args []string) error {

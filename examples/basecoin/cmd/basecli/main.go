@@ -56,7 +56,7 @@ func main() {
 	// add query/post commands (custom to binary)
 	basecliCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("main", cdc, types.GetParseAccount(cdc)),
+			authcmd.GetAccountCmd("main", cdc, types.GetAccountDecoder(cdc)),
 		)...)
 	basecliCmd.AddCommand(
 		client.PostCommands(

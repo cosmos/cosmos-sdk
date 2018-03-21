@@ -16,10 +16,10 @@ import (
 type commander struct {
 	storeName string
 	cdc       *wire.Codec
-	parser    sdk.ParseAccount
+	parser    sdk.AccountDecoder
 }
 
-func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, parser sdk.ParseAccount) func(http.ResponseWriter, *http.Request) {
+func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, parser sdk.AccountDecoder) func(http.ResponseWriter, *http.Request) {
 	c := commander{storeName, cdc, parser}
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

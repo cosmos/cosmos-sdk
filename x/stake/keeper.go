@@ -342,7 +342,8 @@ func (k Keeper) getParams(ctx sdk.Context) (params Params) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(ParamKey)
 	if b == nil {
-		return defaultParams()
+		k.params = defaultParams()
+		return k.params
 	}
 
 	err := k.cdc.UnmarshalJSON(b, &params)

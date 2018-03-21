@@ -101,8 +101,8 @@ type Candidate struct {
 	Status      CandidateStatus `json:"status"`       // Bonded status
 	Address     sdk.Address     `json:"owner"`        // Sender of BondTx - UnbondTx returns here
 	PubKey      crypto.PubKey   `json:"pub_key"`      // Pubkey of candidate
-	Assets      sdk.Rat         `json:"assets"`       // total shares of a global hold pools TODO custom type PoolShares
-	Liabilities sdk.Rat         `json:"liabilities"`  // total shares issued to a candidate's delegators TODO custom type DelegatorShares
+	Assets      sdk.Rat         `json:"assets"`       // total shares of a global hold pools
+	Liabilities sdk.Rat         `json:"liabilities"`  // total shares issued to a candidate's delegators
 	VotingPower sdk.Rat         `json:"voting_power"` // Voting power if considered a validator
 	Description Description     `json:"description"`  // Description terms for the candidate
 }

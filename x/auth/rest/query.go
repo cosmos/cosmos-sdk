@@ -16,11 +16,11 @@ import (
 type commander struct {
 	storeName string
 	cdc       *wire.Codec
-	parser    sdk.AccountDecoder
+	decoder    sdk.AccountDecoder
 }
 
-func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, parser sdk.AccountDecoder) func(http.ResponseWriter, *http.Request) {
-	c := commander{storeName, cdc, parser}
+func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, decoder sdk.AccountDecoder) func(http.ResponseWriter, *http.Request) {
+	c := commander{storeName, cdc, decoder}
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		addr := vars["address"]
@@ -46,8 +46,8 @@ func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, parser sdk.Ac
 			return
 		}
 
-		// parse out the value
-		account, err := c.parser(res)
+		// decode the value
+		account, err := c.decoder(res)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("Could't parse query result. Result: %s. Error: %s", res, err.Error())))

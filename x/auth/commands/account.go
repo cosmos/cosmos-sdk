@@ -32,11 +32,11 @@ func GetAccountDecoder(cdc *wire.Codec) sdk.AccountDecoder {
 
 // GetAccountCmd returns a query account that will display the
 // state of the account at a given address
-func GetAccountCmd(storeName string, cdc *wire.Codec, parser sdk.AccountDecoder) *cobra.Command {
+func GetAccountCmd(storeName string, cdc *wire.Codec, decoder sdk.AccountDecoder) *cobra.Command {
 	cmdr := commander{
 		storeName,
 		cdc,
-		parser,
+		decoder,
 	}
 	return &cobra.Command{
 		Use:   "account <address>",
@@ -48,7 +48,7 @@ func GetAccountCmd(storeName string, cdc *wire.Codec, parser sdk.AccountDecoder)
 type commander struct {
 	storeName string
 	cdc       *wire.Codec
-	parser    sdk.AccountDecoder
+	decoder   sdk.AccountDecoder
 }
 
 func (c commander) getAccountCmd(cmd *cobra.Command, args []string) error {
@@ -66,8 +66,8 @@ func (c commander) getAccountCmd(cmd *cobra.Command, args []string) error {
 
 	res, err := builder.Query(key, c.storeName)
 
-	// parse out the value
-	account, err := c.parser(res)
+	// decode the value
+	account, err := c.decoder(res)
 	if err != nil {
 		return err
 	}

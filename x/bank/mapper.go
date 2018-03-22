@@ -35,7 +35,7 @@ func (ck CoinKeeper) SubtractCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Co
 }
 
 // AddCoins adds amt to the coins at the addr.
-func (ck CoinKeeper) AddCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) (sdk.Coins, sdk.Error) {
+func (ck CoinKeeper) AddCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) sdk.Coins {
 	acc := ck.am.GetAccount(ctx, addr)
 	if acc == nil {
 		acc = ck.am.NewAccountWithAddress(ctx, addr)
@@ -46,7 +46,7 @@ func (ck CoinKeeper) AddCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) 
 
 	acc.SetCoins(newCoins)
 	ck.am.SetAccount(ctx, acc)
-	return newCoins, nil
+	return newCoins
 }
 
 func (ck CoinKeeper) GetCoins(ctx sdk.Context, addr sdk.Address) sdk.Coins {

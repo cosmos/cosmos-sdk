@@ -34,11 +34,6 @@ func newAddress() crypto.Address {
 	return crypto.GenPrivKeyEd25519().PubKey().Address()
 }
 
-func getCoins(ck bank.CoinKeeper, ctx sdk.Context, addr crypto.Address) (sdk.Coins, sdk.Error) {
-	zero := sdk.Coins{}
-	return ck.AddCoins(ctx, addr, zero)
-}
-
 // custom tx codec
 // TODO: use new go-wire
 func makeCodec() *wire.Codec {
@@ -88,8 +83,7 @@ func TestIBC(t *testing.T) {
 	zero := sdk.Coins{}
 	mycoins := sdk.Coins{sdk.Coin{"mycoin", 10}}
 
-	coins, err := ck.AddCoins(ctx, src, mycoins)
-	assert.Nil(t, err)
+	coins := ck.AddCoins(ctx, src, mycoins)
 	assert.Equal(t, mycoins, coins)
 
 	ibcm := NewIBCMapper(cdc, key)
@@ -118,8 +112,7 @@ func TestIBC(t *testing.T) {
 	res = h(ctx, msg)
 	assert.True(t, res.IsOK())
 
-	coins, err = getCoins(ck, ctx, src)
-	assert.Nil(t, err)
+	coins = ck.GetCoins(ctx, src)
 	assert.Equal(t, zero, coins)
 
 	egl = ibcm.getEgressLength(store, chainid)
@@ -136,8 +129,7 @@ func TestIBC(t *testing.T) {
 	res = h(ctx, msg)
 	assert.True(t, res.IsOK())
 
-	coins, err = getCoins(ck, ctx, dest)
-	assert.Nil(t, err)
+	coins = ck.GetCoins(ctx, dest)
 	assert.Equal(t, mycoins, coins)
 
 	igs = ibcm.GetIngressSequence(ctx, chainid)

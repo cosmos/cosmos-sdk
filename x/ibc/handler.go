@@ -47,10 +47,7 @@ func handleIBCReceiveMsg(ctx sdk.Context, ibcm IBCMapper, ck bank.CoinKeeper, ms
 		return ErrInvalidSequence().Result()
 	}
 
-	_, err := ck.AddCoins(ctx, packet.DestAddr, packet.Coins)
-	if err != nil {
-		return err.Result()
-	}
+	ck.AddCoins(ctx, packet.DestAddr, packet.Coins)
 
 	ibcm.SetIngressSequence(ctx, packet.SrcChain, seq+1)
 

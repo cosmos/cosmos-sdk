@@ -67,7 +67,7 @@ func (gs GlobalState) bondedShareExRate() sdk.Rat {
 	if gs.BondedShares.IsZero() {
 		return sdk.OneRat
 	}
-	return gs.BondedShares.Inv().Mul(sdk.NewRat(gs.BondedPool))
+	return sdk.NewRat(gs.BondedPool).Quo(gs.BondedShares)
 }
 
 // get the exchange rate of unbonded tokens held in candidates per issued share
@@ -75,7 +75,7 @@ func (gs GlobalState) unbondedShareExRate() sdk.Rat {
 	if gs.UnbondedShares.IsZero() {
 		return sdk.OneRat
 	}
-	return gs.UnbondedShares.Inv().Mul(sdk.NewRat(gs.UnbondedPool))
+	return sdk.NewRat(gs.UnbondedPool).Quo(gs.UnbondedShares)
 }
 
 //_______________________________________________________________________________________________________

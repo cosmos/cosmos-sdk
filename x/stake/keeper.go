@@ -12,7 +12,7 @@ type Keeper struct {
 	cdc        *wire.Codec
 	coinKeeper bank.CoinKeeper
 
-	//just caches
+	// caches
 	gs     Pool
 	params Params
 }
@@ -42,30 +42,10 @@ func (k Keeper) GetCandidate(ctx sdk.Context, addr sdk.Address) (candidate Candi
 	return candidate, true
 }
 
-func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
-	store := ctx.KVStore(k.storeKey)
-
-	k.removeValidator(ctx, candidate.Address)
-	validator := Validator{candidate.Address, candidate.VotingPower}
-	k.updateValidator(ctx, validator)
-
-	b, err := k.cdc.MarshalBinary(candidate)
-	if err != nil {
-		panic(err)
-	}
-	store.Set(GetCandidateKey(candidate.Address), b)
-}
-
-func (k Keeper) removeCandidate(ctx sdk.Context, candidateAddr sdk.Address) {
-	store := ctx.KVStore(k.storeKey)
-	k.removeValidator(ctx, candidateAddr)
-	store.Delete(GetCandidateKey(candidateAddr))
-}
-
 // Get the set of all candidates, retrieve a maxRetrieve number of records
 func (k Keeper) GetCandidates(ctx sdk.Context, maxRetrieve int16) (candidates Candidates) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := store.Iterator(subspace(CandidateKeyPrefix))
+	iterator := store.Iterator(subspace(CandidatesKey))
 
 	candidates = make([]Candidate, maxRetrieve)
 	i := 0
@@ -86,53 +66,82 @@ func (k Keeper) GetCandidates(ctx sdk.Context, maxRetrieve int16) (candidates Ca
 	return candidates[:i] // trim
 }
 
-//___________________________________________________________________________
-
-// updateValidator - update a validator and create accumulate any changes
-// in the changed validator substore
-func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) {
+func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	store := ctx.KVStore(k.storeKey)
+	address := candidate.Address
 
-	b, err := k.cdc.MarshalBinary(validator)
+	// retreive the old candidate record
+	oldCandidate, oldFound := k.GetCandidate(ctx, address)
+
+	// marshal the candidate record and add to the state
+	bz, err := k.cdc.MarshalBinary(candidate)
 	if err != nil {
 		panic(err)
 	}
+	store.Set(GetCandidateKey(candidate.Address), bz)
 
-	// add to the validators to update list if necessary
-	store.Set(GetValidatorUpdatesKey(validator.Address), b)
+	// mashal the new validator record
+	validator := Validator{address, candidate.VotingPower}
+	bz, err = k.cdc.MarshalBinary(validator)
+	if err != nil {
+		panic(err)
+	}
 
 	// update the list ordered by voting power
-	store.Set(GetValidatorKey(validator.Address, validator.VotingPower, k.cdc), b)
+	if oldFound {
+		store.Delete(GetValidatorKey(address, oldCandidate.VotingPower, k.cdc))
+	}
+	store.Set(GetValidatorKey(address, validator.VotingPower, k.cdc), bz)
+
+	// add to the validators to update list if is already a validator
+	if store.Get(GetRecentValidatorKey(address)) == nil {
+		return
+	}
+	store.Set(GetAccUpdateValidatorKey(validator.Address), bz)
+
 }
 
-func (k Keeper) removeValidator(ctx sdk.Context, address sdk.Address) {
+func (k Keeper) removeCandidate(ctx sdk.Context, address sdk.Address) {
+
+	// first retreive the old candidate record
+	oldCandidate, found := k.GetCandidate(ctx, address)
+	if !found {
+		return
+	}
+
+	// delete the old candidate record
 	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetCandidateKey(address))
 
-	// XXX ensure that this record is a validator even?
-
-	//add validator with zero power to the validator updates
-	b, err := k.cdc.MarshalBinary(Validator{address, sdk.ZeroRat})
+	// delete from recent and power weighted validator groups if the validator
+	// exists and add validator with zero power to the validator updates
+	if store.Get(GetRecentValidatorKey(address)) == nil {
+		return
+	}
+	bz, err := k.cdc.MarshalBinary(Validator{address, sdk.ZeroRat})
 	if err != nil {
 		panic(err)
 	}
-	store.Set(GetValidatorUpdatesKey(address), b)
-
-	// now actually delete from the validator set
-	candidate, found := k.GetCandidate(ctx, address)
-	if found {
-		store.Delete(GetValidatorKey(address, candidate.VotingPower, k.cdc))
-	}
+	store.Set(GetAccUpdateValidatorKey(address), bz)
+	store.Delete(GetRecentValidatorKey(address))
+	store.Delete(GetValidatorKey(address, oldCandidate.VotingPower, k.cdc))
 }
+
+//___________________________________________________________________________
 
 // get the most recent updated validator set from the Candidates. These bonds
 // are already sorted by VotingPower from the UpdateVotingPower function which
 // is the only function which is to modify the VotingPower
+// this function also updaates the most recent validators saved in store
 func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 	store := ctx.KVStore(k.storeKey)
+
+	// clear the recent validators store
+	k.deleteSubSpace(store, RecentValidatorsKey)
+
+	// add the actual validator power sorted store
 	maxVal := k.GetParams(ctx).MaxValidators
-
-	iterator := store.Iterator(subspace(ValidatorKeyPrefix)) //smallest to largest
-
+	iterator := store.Iterator(subspace(ValidatorsKey)) //smallest to largest
 	validators = make([]Validator, maxVal)
 	i := 0
 	for ; ; i++ {
@@ -140,26 +149,40 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 			iterator.Close()
 			break
 		}
-		valBytes := iterator.Value()
+		bz := iterator.Value()
 		var val Validator
-		err := k.cdc.UnmarshalBinary(valBytes, &val)
+		err := k.cdc.UnmarshalBinary(bz, &val)
 		if err != nil {
 			panic(err)
 		}
 		validators[i] = val
+
+		// also add to the recent validators group
+		store.Set(GetRecentValidatorKey(val.Address), bz)
+
 		iterator.Next()
 	}
+
 	return validators[:i] // trim
 }
 
-//_________________________________________________________________________
+// Is the address provided a part of the most recently saved validator group?
+func (k Keeper) IsRecentValidator(ctx sdk.Context, address sdk.Address) bool {
+	store := ctx.KVStore(k.storeKey)
+	if store.Get(GetRecentValidatorKey(address)) == nil {
+		return false
+	}
+	return true
+}
 
-// get the most updated validators
-func (k Keeper) getValidatorUpdates(ctx sdk.Context) (updates []Validator) {
+//_________________________________________________________________________
+// Accumulated updates to the validator set
+
+// get the most recently updated validators
+func (k Keeper) getAccUpdateValidators(ctx sdk.Context) (updates []Validator) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := store.Iterator(subspace(ValidatorUpdatesKeyPrefix)) //smallest to largest
-
+	iterator := store.Iterator(subspace(AccUpdateValidatorsKey)) //smallest to largest
 	for ; iterator.Valid(); iterator.Next() {
 		valBytes := iterator.Value()
 		var val Validator
@@ -169,17 +192,21 @@ func (k Keeper) getValidatorUpdates(ctx sdk.Context) (updates []Validator) {
 		}
 		updates = append(updates, val)
 	}
-
 	iterator.Close()
 	return
 }
 
 // remove all validator update entries
-func (k Keeper) clearValidatorUpdates(ctx sdk.Context, maxVal int) {
+func (k Keeper) clearAccUpdateValidators(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := store.Iterator(subspace(ValidatorUpdatesKeyPrefix))
+	k.deleteSubSpace(store, AccUpdateValidatorsKey)
+}
+
+// TODO move to common functionality somewhere
+func (k Keeper) deleteSubSpace(store sdk.KVStore, key []byte) {
+	iterator := store.Iterator(subspace(key))
 	for ; iterator.Valid(); iterator.Next() {
-		store.Delete(iterator.Key()) // XXX write test for this, may need to be in a second loop
+		store.Delete(iterator.Key())
 	}
 	iterator.Close()
 }
@@ -200,20 +227,6 @@ func (k Keeper) getDelegatorBond(ctx sdk.Context,
 		panic(err)
 	}
 	return bond, true
-}
-
-func (k Keeper) setDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
-	store := ctx.KVStore(k.storeKey)
-	b, err := k.cdc.MarshalBinary(bond)
-	if err != nil {
-		panic(err)
-	}
-	store.Set(GetDelegatorBondKey(bond.DelegatorAddr, bond.CandidateAddr, k.cdc), b)
-}
-
-func (k Keeper) removeDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
-	store := ctx.KVStore(k.storeKey)
-	store.Delete(GetDelegatorBondKey(bond.DelegatorAddr, bond.CandidateAddr, k.cdc))
 }
 
 // load all bonds of a delegator
@@ -239,6 +252,20 @@ func (k Keeper) getDelegatorBonds(ctx sdk.Context, delegator sdk.Address, maxRet
 		iterator.Next()
 	}
 	return bonds[:i] // trim
+}
+
+func (k Keeper) setDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
+	store := ctx.KVStore(k.storeKey)
+	b, err := k.cdc.MarshalBinary(bond)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(GetDelegatorBondKey(bond.DelegatorAddr, bond.CandidateAddr, k.cdc), b)
+}
+
+func (k Keeper) removeDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetDelegatorBondKey(bond.DelegatorAddr, bond.CandidateAddr, k.cdc))
 }
 
 //_______________________________________________________________________

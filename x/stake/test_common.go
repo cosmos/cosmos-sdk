@@ -90,8 +90,8 @@ func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool, initCoins
 	ck := bank.NewCoinKeeper(accountMapper)
 	keeper := NewKeeper(ctx, cdc, keyStake, ck)
 
-	params := paramsNoInflation()
-	keeper.setParams(ctx, params)
+	//params := paramsNoInflation()
+	params := keeper.getParams(ctx)
 
 	// fill all the addresses with some coins
 	for _, addr := range addrs {

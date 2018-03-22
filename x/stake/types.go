@@ -29,8 +29,8 @@ func defaultParams() Params {
 
 //_________________________________________________________________________
 
-// GlobalState - dynamic parameters of the current state
-type GlobalState struct {
+// Pool - dynamic parameters of the current state
+type Pool struct {
 	TotalSupply       int64   `json:"total_supply"`        // total supply of all tokens
 	BondedShares      sdk.Rat `json:"bonded_shares"`       // sum of all shares distributed for the Bonded Pool
 	UnbondedShares    sdk.Rat `json:"unbonded_shares"`     // sum of all shares distributed for the Unbonded Pool
@@ -42,8 +42,8 @@ type GlobalState struct {
 
 // XXX define globalstate interface?
 
-func initialGlobalState() GlobalState {
-	return GlobalState{
+func initialPool() Pool {
+	return Pool{
 		TotalSupply:       0,
 		BondedShares:      sdk.ZeroRat,
 		UnbondedShares:    sdk.ZeroRat,
@@ -55,27 +55,27 @@ func initialGlobalState() GlobalState {
 }
 
 // get the bond ratio of the global state
-func (gs GlobalState) bondedRatio() sdk.Rat {
-	if gs.TotalSupply > 0 {
-		return sdk.NewRat(gs.BondedPool, gs.TotalSupply)
+func (p Pool) bondedRatio() sdk.Rat {
+	if p.TotalSupply > 0 {
+		return sdk.NewRat(p.BondedPool, p.TotalSupply)
 	}
 	return sdk.ZeroRat
 }
 
 // get the exchange rate of bonded token per issued share
-func (gs GlobalState) bondedShareExRate() sdk.Rat {
-	if gs.BondedShares.IsZero() {
+func (p Pool) bondedShareExRate() sdk.Rat {
+	if p.BondedShares.IsZero() {
 		return sdk.OneRat
 	}
-	return sdk.NewRat(gs.BondedPool).Quo(gs.BondedShares)
+	return sdk.NewRat(p.BondedPool).Quo(p.BondedShares)
 }
 
 // get the exchange rate of unbonded tokens held in candidates per issued share
-func (gs GlobalState) unbondedShareExRate() sdk.Rat {
-	if gs.UnbondedShares.IsZero() {
+func (p Pool) unbondedShareExRate() sdk.Rat {
+	if p.UnbondedShares.IsZero() {
 		return sdk.OneRat
 	}
-	return sdk.NewRat(gs.UnbondedPool).Quo(gs.UnbondedShares)
+	return sdk.NewRat(p.UnbondedPool).Quo(p.UnbondedShares)
 }
 
 //_______________________________________________________________________________________________________

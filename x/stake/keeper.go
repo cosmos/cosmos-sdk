@@ -6,63 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-//nolint
-var (
-	// Keys for store prefixes
-	CandidatesAddrKey = []byte{0x01} // key for all candidates' addresses
-	ParamKey          = []byte{0x02} // key for global parameters relating to staking
-	GlobalStateKey    = []byte{0x03} // key for global parameters relating to staking
-
-	// Key prefixes
-	CandidateKeyPrefix        = []byte{0x04} // prefix for each key to a candidate
-	ValidatorKeyPrefix        = []byte{0x05} // prefix for each key to a candidate
-	ValidatorUpdatesKeyPrefix = []byte{0x06} // prefix for each key to a candidate
-	DelegatorBondKeyPrefix    = []byte{0x07} // prefix for each key to a delegator's bond
-	DelegatorBondsKeyPrefix   = []byte{0x08} // prefix for each key to a delegator's bond
-)
-
-// XXX remove beggining word get from all these keys
-// GetCandidateKey - get the key for the candidate with address
-func GetCandidateKey(addr sdk.Address) []byte {
-	return append(CandidateKeyPrefix, addr.Bytes()...)
-}
-
-// GetValidatorKey - get the key for the validator used in the power-store
-func GetValidatorKey(addr sdk.Address, power sdk.Rat, cdc *wire.Codec) []byte {
-	b, _ := cdc.MarshalBinary(power)                                 // TODO need to handle error here?
-	return append(ValidatorKeyPrefix, append(b, addr.Bytes()...)...) // TODO does this need prefix if its in its own store
-}
-
-// GetValidatorUpdatesKey - get the key for the validator used in the power-store
-func GetValidatorUpdatesKey(addr sdk.Address) []byte {
-	return append(ValidatorUpdatesKeyPrefix, addr.Bytes()...) // TODO does this need prefix if its in its own store
-}
-
-// GetDelegatorBondKey - get the key for delegator bond with candidate
-func GetDelegatorBondKey(delegatorAddr, candidateAddr sdk.Address, cdc *wire.Codec) []byte {
-	return append(GetDelegatorBondKeyPrefix(delegatorAddr, cdc), candidateAddr.Bytes()...)
-}
-
-// GetDelegatorBondKeyPrefix - get the prefix for a delegator for all candidates
-func GetDelegatorBondKeyPrefix(delegatorAddr sdk.Address, cdc *wire.Codec) []byte {
-	res, err := cdc.MarshalBinary(&delegatorAddr)
-	if err != nil {
-		panic(err)
-	}
-	return append(DelegatorBondKeyPrefix, res...)
-}
-
-// GetDelegatorBondsKey - get the key for list of all the delegator's bonds
-func GetDelegatorBondsKey(delegatorAddr sdk.Address, cdc *wire.Codec) []byte {
-	res, err := cdc.MarshalBinary(&delegatorAddr)
-	if err != nil {
-		panic(err)
-	}
-	return append(DelegatorBondsKeyPrefix, res...)
-}
-
-//___________________________________________________________________________
-
 // keeper of the staking store
 type Keeper struct {
 	storeKey   sdk.StoreKey
@@ -70,7 +13,7 @@ type Keeper struct {
 	coinKeeper bank.CoinKeeper
 
 	//just caches
-	gs     GlobalState
+	gs     Pool
 	params Params
 }
 
@@ -83,7 +26,8 @@ func NewKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, ck bank.CoinK
 	return keeper
 }
 
-//XXX load/save -> get/set
+//_________________________________________________________________________
+
 func (k Keeper) getCandidate(ctx sdk.Context, addr sdk.Address) (candidate Candidate, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(GetCandidateKey(addr))
@@ -100,7 +44,6 @@ func (k Keeper) getCandidate(ctx sdk.Context, addr sdk.Address) (candidate Candi
 func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	store := ctx.KVStore(k.storeKey)
 
-	// XXX should only remove validator if we know candidate is a validator
 	k.removeValidator(ctx, candidate.Address)
 	validator := Validator{candidate.Address, candidate.VotingPower}
 	k.updateValidator(ctx, validator)
@@ -114,26 +57,34 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 
 func (k Keeper) removeCandidate(ctx sdk.Context, candidateAddr sdk.Address) {
 	store := ctx.KVStore(k.storeKey)
-
-	// XXX should only remove validator if we know candidate is a validator
 	k.removeValidator(ctx, candidateAddr)
 	store.Delete(GetCandidateKey(candidateAddr))
 }
 
-//___________________________________________________________________________
+func (k Keeper) getCandidates(ctx sdk.Context, maxRetrieve int16) (candidates Candidates) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := store.Iterator(subspace(CandidateKeyPrefix))
 
-//func loadValidator(store sdk.KVStore, address sdk.Address, votingPower sdk.Rat) *Validator {
-//b := store.Get(GetValidatorKey(address, votingPower))
-//if b == nil {
-//return nil
-//}
-//validator := new(Validator)
-//err := cdc.UnmarshalBinary(b, validator)
-//if err != nil {
-//panic(err) // This error should never occur big problem if does
-//}
-//return validator
-//}
+	candidates = make([]Candidate, maxRetrieve)
+	i := 0
+	for ; ; i++ {
+		if !iterator.Valid() || i > int(maxRetrieve-1) {
+			iterator.Close()
+			break
+		}
+		bz := iterator.Value()
+		var candidate Candidate
+		err := k.cdc.UnmarshalBinary(bz, &candidate)
+		if err != nil {
+			panic(err)
+		}
+		candidates[i] = candidate
+		iterator.Next()
+	}
+	return candidates[:i] // trim
+}
+
+//___________________________________________________________________________
 
 // updateValidator - update a validator and create accumulate any changes
 // in the changed validator substore
@@ -154,6 +105,8 @@ func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) {
 
 func (k Keeper) removeValidator(ctx sdk.Context, address sdk.Address) {
 	store := ctx.KVStore(k.storeKey)
+
+	// XXX ensure that this record is a validator even?
 
 	//add validator with zero power to the validator updates
 	b, err := k.cdc.MarshalBinary(Validator{address, sdk.ZeroRat})
@@ -193,7 +146,6 @@ func (k Keeper) getValidators(ctx sdk.Context, maxVal uint16) (validators []Vali
 		validators[i] = val
 		iterator.Next()
 	}
-
 	return
 }
 
@@ -229,45 +181,6 @@ func (k Keeper) clearValidatorUpdates(ctx sdk.Context, maxVal int) {
 	iterator.Close()
 }
 
-//---------------------------------------------------------------------
-
-// getCandidates - get the active list of all candidates
-func (k Keeper) getCandidates(ctx sdk.Context) (candidates Candidates) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := store.Iterator(subspace(CandidateKeyPrefix))
-
-	for ; iterator.Valid(); iterator.Next() {
-		candidateBytes := iterator.Value()
-		var candidate Candidate
-		err := k.cdc.UnmarshalBinary(candidateBytes, &candidate)
-		if err != nil {
-			panic(err)
-		}
-		candidates = append(candidates, candidate)
-	}
-	iterator.Close()
-	return candidates
-}
-
-//_____________________________________________________________________
-
-// XXX use a store iterator here instead
-//// load the pubkeys of all candidates a delegator is delegated too
-//func (k Keeper) getDelegatorCandidates(ctx sdk.Context, delegator sdk.Address) (candidateAddrs []sdk.Address) {
-//store := ctx.KVStore(k.storeKey)
-
-//candidateBytes := store.Get(GetDelegatorBondsKey(delegator, k.cdc))
-//if candidateBytes == nil {
-//return nil
-//}
-
-//err := k.cdc.UnmarshalBinary(candidateBytes, &candidateAddrs)
-//if err != nil {
-//panic(err)
-//}
-//return
-//}
-
 //_____________________________________________________________________
 
 func (k Keeper) getDelegatorBond(ctx sdk.Context,
@@ -288,20 +201,6 @@ func (k Keeper) getDelegatorBond(ctx sdk.Context,
 
 func (k Keeper) setDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
 	store := ctx.KVStore(k.storeKey)
-
-	// XXX use store iterator
-	// if a new bond add to the list of bonds
-	//if k.getDelegatorBond(delegator, bond.Address) == nil {
-	//pks := k.getDelegatorCandidates(delegator)
-	//pks = append(pks, bond.Address)
-	//b, err := k.cdc.MarshalBinary(pks)
-	//if err != nil {
-	//panic(err)
-	//}
-	//store.Set(GetDelegatorBondsKey(delegator, k.cdc), b)
-	//}
-
-	// now actually save the bond
 	b, err := k.cdc.MarshalBinary(bond)
 	if err != nil {
 		panic(err)
@@ -311,25 +210,32 @@ func (k Keeper) setDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
 
 func (k Keeper) removeDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
 	store := ctx.KVStore(k.storeKey)
-
-	// XXX use store iterator
-	// TODO use list queries on multistore to remove iterations here!
-	// first remove from the list of bonds
-	//addrs := k.getDelegatorCandidates(delegator)
-	//for i, addr := range addrs {
-	//if bytes.Equal(candidateAddr, addr) {
-	//addrs = append(addrs[:i], addrs[i+1:]...)
-	//}
-	//}
-	//b, err := k.cdc.MarshalBinary(addrs)
-	//if err != nil {
-	//panic(err)
-	//}
-	//store.Set(GetDelegatorBondsKey(delegator, k.cdc), b)
-
-	// now remove the actual bond
 	store.Delete(GetDelegatorBondKey(bond.DelegatorAddr, bond.CandidateAddr, k.cdc))
-	//updateDelegatorBonds(store, delegator) //XXX remove?
+}
+
+// load all bonds of a delegator
+func (k Keeper) getDelegatorBonds(ctx sdk.Context, delegator sdk.Address, maxRetrieve int16) (bonds []DelegatorBond) {
+	store := ctx.KVStore(k.storeKey)
+	delegatorPrefixKey := GetDelegatorBondsKey(delegator, k.cdc)
+	iterator := store.Iterator(subspace(delegatorPrefixKey)) //smallest to largest
+
+	bonds = make([]DelegatorBond, maxRetrieve)
+	i := 0
+	for ; ; i++ {
+		if !iterator.Valid() || i > int(maxRetrieve-1) {
+			iterator.Close()
+			break
+		}
+		bondBytes := iterator.Value()
+		var bond DelegatorBond
+		err := k.cdc.UnmarshalBinary(bondBytes, &bond)
+		if err != nil {
+			panic(err)
+		}
+		bonds[i] = bond
+		iterator.Next()
+	}
+	return bonds[:i] // trim
 }
 
 //_______________________________________________________________________
@@ -349,7 +255,7 @@ func (k Keeper) getParams(ctx sdk.Context) (params Params) {
 
 	err := k.cdc.UnmarshalBinary(b, &params)
 	if err != nil {
-		panic(err) // This error should never occur big problem if does
+		panic(err)
 	}
 	return
 }
@@ -361,35 +267,4 @@ func (k Keeper) setParams(ctx sdk.Context, params Params) {
 	}
 	store.Set(ParamKey, b)
 	k.params = Params{} // clear the cache
-}
-
-//_______________________________________________________________________
-
-// XXX nothing is this Keeper should return a pointer...!!!!!!
-// load/save the global staking state
-func (k Keeper) getGlobalState(ctx sdk.Context) (gs GlobalState) {
-	// check if cached before anything
-	if k.gs != (GlobalState{}) {
-		return k.gs
-	}
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(GlobalStateKey)
-	if b == nil {
-		return initialGlobalState()
-	}
-	err := k.cdc.UnmarshalBinary(b, &gs)
-	if err != nil {
-		panic(err) // This error should never occur big problem if does
-	}
-	return
-}
-
-func (k Keeper) setGlobalState(ctx sdk.Context, gs GlobalState) {
-	store := ctx.KVStore(k.storeKey)
-	b, err := k.cdc.MarshalBinary(gs)
-	if err != nil {
-		panic(err)
-	}
-	store.Set(GlobalStateKey, b)
-	k.gs = GlobalState{} // clear the cache
 }

@@ -45,7 +45,7 @@ func GetCmdQueryCandidates(cdc *wire.Codec, storeName string) *cobra.Command {
 		Short: "Query for the set of validator-candidates pubkeys",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			key := PrefixedKey(stake.MsgType, stake.CandidatesAddrKey)
+			key := PrefixedKey(stake.MsgType, stake.CandidatesKey)
 
 			res, err := builder.Query(key, storeName)
 			if err != nil {

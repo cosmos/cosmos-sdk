@@ -19,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/pow"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/sketchy"
 )
 
@@ -59,11 +60,13 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	// add handlers
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	coolMapper := cool.NewMapper(app.capKeyMainStore)
+	powMapper := pow.NewMapper(app.capKeyMainStore)
 	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
 	stakingMapper := staking.NewMapper(app.capKeyStakingStore)
 	app.Router().
 		AddRoute("bank", bank.NewHandler(coinKeeper)).
 		AddRoute("cool", cool.NewHandler(coinKeeper, coolMapper)).
+		AddRoute("pow", pow.NewHandler(coinKeeper, powMapper, pow.NewPowConfig("pow", int64(1)))).
 		AddRoute("sketchy", sketchy.NewHandler()).
 		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
 		AddRoute("staking", staking.NewHandler(stakingMapper, coinKeeper))
@@ -92,6 +95,7 @@ func MakeCodec() *wire.Codec {
 	const msgTypeIBCReceiveMsg = 0x6
 	const msgTypeBondMsg = 0x7
 	const msgTypeUnbondMsg = 0x8
+	const msgTypeMineMsg = 0x9
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Msg }{},
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
@@ -102,6 +106,7 @@ func MakeCodec() *wire.Codec {
 		oldwire.ConcreteType{ibc.IBCReceiveMsg{}, msgTypeIBCReceiveMsg},
 		oldwire.ConcreteType{staking.BondMsg{}, msgTypeBondMsg},
 		oldwire.ConcreteType{staking.UnbondMsg{}, msgTypeUnbondMsg},
+		oldwire.ConcreteType{pow.MineMsg{}, msgTypeMineMsg},
 	)
 
 	const accTypeApp = 0x1

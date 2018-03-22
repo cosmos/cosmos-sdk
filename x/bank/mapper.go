@@ -48,3 +48,11 @@ func (ck CoinKeeper) AddCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) 
 	ck.am.SetAccount(ctx, acc)
 	return newCoins, nil
 }
+
+func (ck CoinKeeper) GetCoins(ctx sdk.Context, addr sdk.Address) sdk.Coins {
+	acc := ck.am.GetAccount(ctx, addr)
+	if acc == nil {
+		return sdk.Coins{}
+	}
+	return acc.GetCoins()
+}

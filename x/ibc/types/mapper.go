@@ -74,15 +74,15 @@ func (keeper keeper) RegisterHandler(name string, handler Handler) {
 	keeper.dispatch[name] = handler
 }
 
-func (keeper keeper) Receive(ctx sdk.Context, packet Packet, seq int64) sdk.Result {
+func (keeper keeper) Receive(ctx sdk.Context, packet Packet, seq int64) sdk.Error {
 	if packet.DestChain != ctx.ChainID() {
 		// TODO: route?
-		return ErrChainMismatch().Result()
+		return ErrChainMismatch()
 	}
 
 	expected := keeper.getIngressSequence(ctx, packet.SrcChain)
 	if seq != expected {
-		return ErrInvalidSequence().Result()
+		return ErrInvalidSequence()
 	}
 
 	payload := packet.Payload
@@ -96,7 +96,7 @@ func (keeper keeper) Receive(ctx sdk.Context, packet Packet, seq int64) sdk.Resu
 type Keeper interface {
 	Sender(...Payload) Sender
 	RegisterHandler(string, Handler)
-	Receive(sdk.Context, Packet, int64) sdk.Result
+	Receive(sdk.Context, Packet, int64) sdk.Error
 }
 
 // XXX: The Keeper should not take a CoinKeeper. Rather have the CoinKeeper

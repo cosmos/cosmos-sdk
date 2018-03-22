@@ -70,7 +70,7 @@ func TestIBCHandler(t *testing.T) {
 	assert.Equal(t, sdk.Coins{}, coins)
 
 	res := h(ctx, payload)
-	assert.True(t, res.IsOK())
+	assert.Nil(t, res)
 
 	coins, err = getCoins(ck, ctx, addr)
 	assert.Nil(t, err)

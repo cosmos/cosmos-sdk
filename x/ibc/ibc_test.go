@@ -82,11 +82,11 @@ func remoteSaveHandler(sender ibc.Sender) sdk.Handler {
 }
 
 func remoteSaveIBCHandler(key sdk.StoreKey) ibc.Handler {
-	return func(ctx sdk.Context, p ibc.Payload) sdk.Result {
+	return func(ctx sdk.Context, p ibc.Payload) sdk.Error {
 		rsp := p.(remoteSavePayload)
 		store := ctx.KVStore(key)
 		store.Set(rsp.key, rsp.value)
-		return sdk.Result{}
+		return nil
 	}
 }
 

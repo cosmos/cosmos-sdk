@@ -65,19 +65,19 @@ func handleIssueMsg(ctx sdk.Context, ck CoinKeeper, msg IssueMsg) sdk.Result {
 // Handle all "bank" type IBC payloads
 
 func NewIBCHandler(ck CoinKeeper) ibc.Handler {
-	return func(ctx sdk.Context, p ibc.Payload) sdk.Result {
+	return func(ctx sdk.Context, p ibc.Payload) sdk.Error {
 		switch p := p.(type) {
 		case SendPayload:
 			return handleTransferMsg(ctx, ck, p)
 		default:
 			errMsg := "Unrecognized bank Payload type: " + reflect.TypeOf(p).Name()
-			return sdk.ErrUnknownRequest(errMsg).Result()
+			return sdk.ErrUnknownRequest(errMsg)
 		}
 	}
 }
 
-func handleTransferMsg(ctx sdk.Context, ck CoinKeeper, p SendPayload) sdk.Result {
+func handleTransferMsg(ctx sdk.Context, ck CoinKeeper, p SendPayload) sdk.Error {
 	_, err := ck.AddCoins(ctx, p.DestAddr, p.Coins)
-	return err.Result()
+	return err
 
 }

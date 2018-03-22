@@ -21,5 +21,10 @@ func NewHandler(keeper types.Keeper) sdk.Handler {
 
 // IBCReceiveMsg adds coins to the destination address and creates an ingress IBC packet.
 func handleReceiveMsg(ctx sdk.Context, keeper types.Keeper, msg ReceiveMsg) sdk.Result {
-	return keeper.Receive(ctx, msg.Packet, msg.Sequence)
+	err := keeper.Receive(ctx, msg.Packet, msg.Sequence)
+	if err != nil {
+		return err.Result()
+	}
+
+	return sdk.Result{}
 }

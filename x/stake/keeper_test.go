@@ -18,8 +18,8 @@ import (
 //func TestUpdateVotingPower(t *testing.T) {
 //assert := assert.New(t)
 //store := initTestStore(t)
-//params := getParams(store)
-//gs := getPool(store)
+//params := GetParams(store)
+//gs := GetPool(store)
 
 //N := 5
 //actors := newAddrs(N)
@@ -118,7 +118,7 @@ import (
 //testRemove(t, vs1[1], changed[0])
 //testRemove(t, vs1[2], changed[1])
 
-//// test many sdk of changes //vs2 = []Validator{v1, v3, v4, v5} //vs2[2].VotingPower = sdk.NewRat(11) //changed = vs1.validatorsUpdated(vs2) //require.Equal(4, len(changed), "%v", changed) // change 1, remove 1, add 2 //testRemove(t, vs1[1], changed[0]) //testChange(t, vs2[1], changed[1]) //testChange(t, vs2[2], changed[2]) //testChange(t, vs2[3], changed[3]) //} //func TestUpdateValidatorSet(t *testing.T) { //assert, require := assert.New(t), require.New(t) //store := initTestStore(t) //params := getParams(store) //gs := getPool(store) //N := 5
+//// test many sdk of changes //vs2 = []Validator{v1, v3, v4, v5} //vs2[2].VotingPower = sdk.NewRat(11) //changed = vs1.validatorsUpdated(vs2) //require.Equal(4, len(changed), "%v", changed) // change 1, remove 1, add 2 //testRemove(t, vs1[1], changed[0]) //testChange(t, vs2[1], changed[1]) //testChange(t, vs2[2], changed[2]) //testChange(t, vs2[3], changed[3]) //} //func TestUpdateValidatorSet(t *testing.T) { //assert, require := assert.New(t), require.New(t) //store := initTestStore(t) //params := GetParams(store) //gs := GetPool(store) //N := 5
 //actors := newAddrs(N)
 //candidates := candidatesFromActors(actors, []int64{400, 200, 100, 10, 1})
 //for _, c := range candidates {
@@ -137,7 +137,7 @@ import (
 //require.Nil(err)
 //require.Equal(1, len(change), "%v", change)
 //testRemove(t, candidates[4].validator(), change[0])
-//candidates = getCandidates(store)
+//candidates = GetCandidates(store)
 //assert.Equal(int64(0), candidates[4].VotingPower.Evaluate())
 
 //// mess with the power's of the candidates and test
@@ -152,7 +152,7 @@ import (
 //change, err = UpdateValidatorSet(store, p, params)
 //require.Nil(err)
 //require.Equal(5, len(change), "%v", change) // 3 changed, 1 added, 1 removed
-//candidates = getCandidates(store)
+//candidates = GetCandidates(store)
 //testChange(t, candidates[0].validator(), change[0])
 //testChange(t, candidates[1].validator(), change[1])
 //testChange(t, candidates[2].validator(), change[2])
@@ -164,7 +164,7 @@ import (
 //ctx, _, keeper := createTestInput(t, nil, false, 0)
 //candidatesFromAddrs(ctx, keeper, addrs, []int64{400, 200, 0, 0, 0})
 
-//validators := keeper.getValidators(ctx, 2)
+//validators := keeper.GetValidators(ctx, 2)
 //require.Equal(t, 2, len(validators))
 //assert.Equal(t, addrs[0], validators[0].Address)
 //assert.Equal(t, addrs[1], validators[1].Address)
@@ -218,26 +218,26 @@ func TestCandidate(t *testing.T) {
 	}
 
 	// check the empty keeper first
-	_, found := keeper.getCandidate(ctx, addrVal1)
+	_, found := keeper.GetCandidate(ctx, addrVal1)
 	assert.False(t, found)
-	resAddrs := keeper.getCandidates(ctx, 100)
+	resAddrs := keeper.GetCandidates(ctx, 100)
 	assert.Zero(t, len(resAddrs))
 
 	// set and retrieve a record
 	keeper.setCandidate(ctx, candidate1)
-	resCand, found := keeper.getCandidate(ctx, addrVal1)
+	resCand, found := keeper.GetCandidate(ctx, addrVal1)
 	assert.True(t, found)
 	assert.True(t, candidatesEqual(candidate1, resCand), "%v \n %v", resCand, candidate1)
 
 	// modify a records, save, and retrieve
 	candidate1.Liabilities = sdk.NewRat(99)
 	keeper.setCandidate(ctx, candidate1)
-	resCand, found = keeper.getCandidate(ctx, addrVal1)
+	resCand, found = keeper.GetCandidate(ctx, addrVal1)
 	assert.True(t, found)
 	assert.True(t, candidatesEqual(candidate1, resCand))
 
 	// also test that the address has been added to address list
-	resAddrs = keeper.getCandidates(ctx, 100)
+	resAddrs = keeper.GetCandidates(ctx, 100)
 	require.Equal(t, 1, len(resAddrs))
 	assert.Equal(t, addrVal1, resAddrs[0].Address)
 
@@ -314,12 +314,12 @@ func TestParams(t *testing.T) {
 	expParams := defaultParams()
 
 	//check that the empty keeper loads the default
-	resParams := keeper.getParams(ctx)
+	resParams := keeper.GetParams(ctx)
 	assert.Equal(t, expParams, resParams)
 
 	//modify a params, save, and retrieve
 	expParams.MaxValidators = 777
 	keeper.setParams(ctx, expParams)
-	resParams = keeper.getParams(ctx)
+	resParams = keeper.GetParams(ctx)
 	assert.Equal(t, expParams, resParams)
 }

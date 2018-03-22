@@ -19,7 +19,7 @@ const (
 // separated for testing
 //func InitState(ctx sdk.Context, k Keeper, key, value string) sdk.Error {
 
-//params := k.getParams(ctx)
+//params := k.GetParams(ctx)
 //switch key {
 //case "allowed_bond_denom":
 //params.BondDenom = value
@@ -88,11 +88,11 @@ func NewHandler(k Keeper, ck bank.CoinKeeper) sdk.Handler {
 func (k Keeper) handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy) sdk.Result {
 
 	// check to see if the pubkey or sender has been registered before
-	_, found := k.getCandidate(ctx, msg.CandidateAddr)
+	_, found := k.GetCandidate(ctx, msg.CandidateAddr)
 	if found {
 		return ErrCandidateExistsAddr().Result()
 	}
-	if msg.Bond.Denom != k.getParams(ctx).BondDenom {
+	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadBondingDenom().Result()
 	}
 	if ctx.IsCheckTx() {
@@ -112,7 +112,7 @@ func (k Keeper) handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandida
 func (k Keeper) handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy) sdk.Result {
 
 	// candidate must already be registered
-	candidate, found := k.getCandidate(ctx, msg.CandidateAddr)
+	candidate, found := k.GetCandidate(ctx, msg.CandidateAddr)
 	if !found {
 		return ErrBadCandidateAddr().Result()
 	}
@@ -146,11 +146,11 @@ func (k Keeper) handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy) sd
 
 func (k Keeper) handleMsgDelegate(ctx sdk.Context, msg MsgDelegate) sdk.Result {
 
-	candidate, found := k.getCandidate(ctx, msg.CandidateAddr)
+	candidate, found := k.GetCandidate(ctx, msg.CandidateAddr)
 	if !found {
 		return ErrBadCandidateAddr().Result()
 	}
-	if msg.Bond.Denom != k.getParams(ctx).BondDenom {
+	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadBondingDenom().Result()
 	}
 	if ctx.IsCheckTx() {
@@ -250,7 +250,7 @@ func (k Keeper) handleMsgUnbond(ctx sdk.Context, msg MsgUnbond) sdk.Result {
 	bond.Shares = bond.Shares.Sub(shares)
 
 	// get pubKey candidate
-	candidate, found := k.getCandidate(ctx, msg.CandidateAddr)
+	candidate, found := k.GetCandidate(ctx, msg.CandidateAddr)
 	if !found {
 		return ErrNoCandidateForAddress().Result()
 	}
@@ -273,7 +273,7 @@ func (k Keeper) handleMsgUnbond(ctx sdk.Context, msg MsgUnbond) sdk.Result {
 
 	// Add the coins
 	returnAmount := k.candidateRemoveShares(ctx, candidate, shares)
-	returnCoins := sdk.Coins{{k.getParams(ctx).BondDenom, returnAmount}}
+	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
 	k.coinKeeper.AddCoins(ctx, bond.DelegatorAddr, returnCoins)
 
 	// lastly if an revoke candidate if necessary
@@ -308,7 +308,7 @@ func (k Keeper) UnbondCoins(ctx sdk.Context, bond DelegatorBond, candidate Candi
 	bond.Shares = bond.Shares.Sub(shares)
 
 	returnAmount := k.candidateRemoveShares(ctx, candidate, shares)
-	returnCoins := sdk.Coins{{k.getParams(ctx).BondDenom, returnAmount}}
+	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
 
 	_, err := k.coinKeeper.AddCoins(ctx, candidate.Address, returnCoins)
 	if err != nil {

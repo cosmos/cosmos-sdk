@@ -91,7 +91,7 @@ func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool, initCoins
 	keeper := NewKeeper(ctx, cdc, keyStake, ck)
 
 	//params := paramsNoInflation()
-	params := keeper.getParams(ctx)
+	params := keeper.GetParams(ctx)
 
 	// fill all the addresses with some coins
 	for _, addr := range addrs {

@@ -11,7 +11,7 @@ package stake
 //ctx, _, keeper := createTestInput(t, nil, false, 0)
 //params := defaultParams()
 //keeper.setParams(ctx, params)
-//gs := keeper.getPool(ctx)
+//gs := keeper.GetPool(ctx)
 
 //// Governing Mechanism:
 ////    bondedRatio = BondedPool / TotalSupply
@@ -57,7 +57,7 @@ package stake
 //ctx, _, keeper := createTestInput(t, nil, false, 0)
 //params := defaultParams()
 //keeper.setParams(ctx, params)
-//gs := keeper.getPool(ctx)
+//gs := keeper.GetPool(ctx)
 
 //// create some candidates some bonded, some unbonded
 //candidates := candidatesFromAddrsEmpty(addrs)

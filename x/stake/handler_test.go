@@ -68,7 +68,7 @@ package stake
 //assert.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
 
 ////Check that the accounts and the bond account have the appropriate values
-//candidates := mapper.getCandidates()
+//candidates := mapper.GetCandidates()
 //expectedBond += bondAmount
 ////expectedSender := initSender - expectedBond
 //gotBonded := candidates[0].Liabilities.Evaluate()
@@ -97,7 +97,7 @@ package stake
 //assert.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
 
 ////Check that the accounts and the bond account have the appropriate values
-//candidates := mapper.getCandidates()
+//candidates := mapper.GetCandidates()
 //expectedBond := initBond - int64(i+1)*unbondShares // +1 since we send 1 at the start of loop
 ////expectedSender := initSender + (initBond - expectedBond)
 //gotBonded := candidates[0].Liabilities.Evaluate()
@@ -148,7 +148,7 @@ package stake
 //assert.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
 
 ////Check that the account is bonded
-//candidates := mapper.getCandidates()
+//candidates := mapper.GetCandidates()
 //require.Equal(t, i, len(candidates))
 //val := candidates[i]
 //balanceExpd := initSender - 10
@@ -160,17 +160,17 @@ package stake
 
 //// unbond them all
 //for i, addr := range addrs {
-//candidatePre := mapper.getCandidate(addrs[i])
+//candidatePre := mapper.GetCandidate(addrs[i])
 //msgUndelegate := NewMsgUnbond(addrs[i], "10")
 //deliverer.sender = addr
 //got := deliverer.unbond(msgUndelegate)
 //assert.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
 
 ////Check that the account is unbonded
-//candidates := mapper.getCandidates()
+//candidates := mapper.GetCandidates()
 //assert.Equal(t, len(addrs)-(i+1), len(candidates), "expected %d candidates got %d", len(addrs)-(i+1), len(candidates))
 
-//candidatePost := mapper.getCandidate(addrs[i])
+//candidatePost := mapper.GetCandidate(addrs[i])
 //balanceExpd := initSender
 //balanceGot := accStore.GetAccount(ctx, candidatePre.Address).GetCoins()
 //assert.Nil(t, candidatePost, "expected nil candidate retrieve, got %d", 0, candidatePost)

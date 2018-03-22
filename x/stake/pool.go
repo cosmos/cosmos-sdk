@@ -5,7 +5,7 @@ import (
 )
 
 // load/save the global staking state
-func (k Keeper) getPool(ctx sdk.Context) (gs Pool) {
+func (k Keeper) GetPool(ctx sdk.Context) (gs Pool) {
 	// check if cached before anything
 	if k.gs != (Pool{}) {
 		return k.gs
@@ -59,7 +59,7 @@ func (k Keeper) unbondedToBondedPool(ctx sdk.Context, candidate Candidate) {
 //_______________________________________________________________________
 
 func (k Keeper) addTokensBonded(ctx sdk.Context, amount int64) (issuedShares sdk.Rat) {
-	p := k.getPool(ctx)
+	p := k.GetPool(ctx)
 	issuedShares = p.bondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
 	p.BondedPool += amount
 	p.BondedShares = p.BondedShares.Add(issuedShares)
@@ -68,7 +68,7 @@ func (k Keeper) addTokensBonded(ctx sdk.Context, amount int64) (issuedShares sdk
 }
 
 func (k Keeper) removeSharesBonded(ctx sdk.Context, shares sdk.Rat) (removedTokens int64) {
-	p := k.getPool(ctx)
+	p := k.GetPool(ctx)
 	removedTokens = p.bondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	p.BondedShares = p.BondedShares.Sub(shares)
 	p.BondedPool -= removedTokens
@@ -77,7 +77,7 @@ func (k Keeper) removeSharesBonded(ctx sdk.Context, shares sdk.Rat) (removedToke
 }
 
 func (k Keeper) addTokensUnbonded(ctx sdk.Context, amount int64) (issuedShares sdk.Rat) {
-	p := k.getPool(ctx)
+	p := k.GetPool(ctx)
 	issuedShares = p.unbondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
 	p.UnbondedShares = p.UnbondedShares.Add(issuedShares)
 	p.UnbondedPool += amount
@@ -86,7 +86,7 @@ func (k Keeper) addTokensUnbonded(ctx sdk.Context, amount int64) (issuedShares s
 }
 
 func (k Keeper) removeSharesUnbonded(ctx sdk.Context, shares sdk.Rat) (removedTokens int64) {
-	p := k.getPool(ctx)
+	p := k.GetPool(ctx)
 	removedTokens = p.unbondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	p.UnbondedShares = p.UnbondedShares.Sub(shares)
 	p.UnbondedPool -= removedTokens
@@ -99,7 +99,7 @@ func (k Keeper) removeSharesUnbonded(ctx sdk.Context, shares sdk.Rat) (removedTo
 // add tokens to a candidate
 func (k Keeper) candidateAddTokens(ctx sdk.Context, candidate Candidate, amount int64) (issuedDelegatorShares sdk.Rat) {
 
-	p := k.getPool(ctx)
+	p := k.GetPool(ctx)
 	exRate := candidate.delegatorShareExRate()
 
 	var receivedGlobalShares sdk.Rat
@@ -119,7 +119,7 @@ func (k Keeper) candidateAddTokens(ctx sdk.Context, candidate Candidate, amount 
 // remove shares from a candidate
 func (k Keeper) candidateRemoveShares(ctx sdk.Context, candidate Candidate, shares sdk.Rat) (createdCoins int64) {
 
-	p := k.getPool(ctx)
+	p := k.GetPool(ctx)
 	//exRate := candidate.delegatorShareExRate() //XXX make sure not used
 
 	globalPoolSharesToRemove := candidate.delegatorShareExRate().Mul(shares)

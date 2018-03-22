@@ -28,7 +28,8 @@ func NewKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, ck bank.CoinK
 
 //_________________________________________________________________________
 
-func (k Keeper) getCandidate(ctx sdk.Context, addr sdk.Address) (candidate Candidate, found bool) {
+// get a single candidate
+func (k Keeper) GetCandidate(ctx sdk.Context, addr sdk.Address) (candidate Candidate, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(GetCandidateKey(addr))
 	if b == nil {
@@ -61,7 +62,8 @@ func (k Keeper) removeCandidate(ctx sdk.Context, candidateAddr sdk.Address) {
 	store.Delete(GetCandidateKey(candidateAddr))
 }
 
-func (k Keeper) getCandidates(ctx sdk.Context, maxRetrieve int16) (candidates Candidates) {
+// Get the set of all candidates, retrieve a maxRetrieve number of records
+func (k Keeper) GetCandidates(ctx sdk.Context, maxRetrieve int16) (candidates Candidates) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := store.Iterator(subspace(CandidateKeyPrefix))
 
@@ -116,7 +118,7 @@ func (k Keeper) removeValidator(ctx sdk.Context, address sdk.Address) {
 	store.Set(GetValidatorUpdatesKey(address), b)
 
 	// now actually delete from the validator set
-	candidate, found := k.getCandidate(ctx, address)
+	candidate, found := k.GetCandidate(ctx, address)
 	if found {
 		store.Delete(GetValidatorKey(address, candidate.VotingPower, k.cdc))
 	}
@@ -125,14 +127,15 @@ func (k Keeper) removeValidator(ctx sdk.Context, address sdk.Address) {
 // get the most recent updated validator set from the Candidates. These bonds
 // are already sorted by VotingPower from the UpdateVotingPower function which
 // is the only function which is to modify the VotingPower
-func (k Keeper) getValidators(ctx sdk.Context, maxVal uint16) (validators []Validator) {
+func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 	store := ctx.KVStore(k.storeKey)
+	maxVal := k.GetParams(ctx).MaxValidators
 
 	iterator := store.Iterator(subspace(ValidatorKeyPrefix)) //smallest to largest
 
 	validators = make([]Validator, maxVal)
-
-	for i := 0; ; i++ {
+	i := 0
+	for ; ; i++ {
 		if !iterator.Valid() || i > int(maxVal-1) {
 			iterator.Close()
 			break
@@ -146,7 +149,7 @@ func (k Keeper) getValidators(ctx sdk.Context, maxVal uint16) (validators []Vali
 		validators[i] = val
 		iterator.Next()
 	}
-	return
+	return validators[:i] // trim
 }
 
 //_________________________________________________________________________
@@ -241,7 +244,7 @@ func (k Keeper) getDelegatorBonds(ctx sdk.Context, delegator sdk.Address, maxRet
 //_______________________________________________________________________
 
 // load/save the global staking params
-func (k Keeper) getParams(ctx sdk.Context) (params Params) {
+func (k Keeper) GetParams(ctx sdk.Context) (params Params) {
 	// check if cached before anything
 	if k.params != (Params{}) {
 		return k.params

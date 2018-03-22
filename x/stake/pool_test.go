@@ -11,12 +11,12 @@ func TestPool(t *testing.T) {
 	expPool := initialPool()
 
 	//check that the empty keeper loads the default
-	resPool := keeper.getPool(ctx)
+	resPool := keeper.GetPool(ctx)
 	assert.Equal(t, expPool, resPool)
 
 	//modify a params, save, and retrieve
 	expPool.TotalSupply = 777
 	keeper.setPool(ctx, expPool)
-	resPool = keeper.getPool(ctx)
+	resPool = keeper.GetPool(ctx)
 	assert.Equal(t, expPool, resPool)
 }

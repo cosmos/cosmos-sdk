@@ -160,6 +160,16 @@ import (
 //testChange(t, candidates[4].validator(), change[4])
 //}
 
+//func TestGetValidators(t *testing.T) {
+//ctx, _, keeper := createTestInput(t, nil, false, 0)
+//candidatesFromAddrs(ctx, keeper, addrs, []int64{400, 200, 0, 0, 0})
+
+//validators := keeper.getValidators(ctx, 2)
+//require.Equal(t, 2, len(validators))
+//assert.Equal(t, addrs[0], validators[0].Address)
+//assert.Equal(t, addrs[1], validators[1].Address)
+//}
+
 func TestState(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
 
@@ -193,8 +203,8 @@ func TestState(t *testing.T) {
 	// check the empty keeper first
 	_, found := keeper.getCandidate(ctx, addrVal)
 	assert.False(t, found)
-	resPks := keeper.getCandidates(ctx)
-	assert.Zero(t, len(resPks))
+	resAddrs := keeper.getCandidates(ctx)
+	assert.Zero(t, len(resAddrs))
 
 	// set and retrieve a record
 	keeper.setCandidate(ctx, candidate)
@@ -209,10 +219,10 @@ func TestState(t *testing.T) {
 	assert.True(t, found)
 	assert.True(t, candidatesEqual(candidate, resCand))
 
-	// also test that the pubkey has been added to pubkey list
-	resPks = keeper.getCandidates(ctx)
-	require.Equal(t, 1, len(resPks))
-	assert.Equal(t, addrVal, resPks[0].PubKey)
+	// also test that the address has been added to address list
+	resAddrs = keeper.getCandidates(ctx)
+	require.Equal(t, 1, len(resAddrs))
+	assert.Equal(t, addrVal, resAddrs[0].Address)
 
 	//----------------------------------------------------------------------
 	// Bond checks
@@ -249,6 +259,7 @@ func TestState(t *testing.T) {
 	//----------------------------------------------------------------------
 	// Param checks
 
+	keeper.setParams(ctx, defaultParams())
 	params := defaultParams()
 
 	//check that the empty keeper loads the default
@@ -260,14 +271,4 @@ func TestState(t *testing.T) {
 	keeper.setParams(ctx, params)
 	resParams = keeper.getParams(ctx)
 	assert.Equal(t, params, resParams)
-}
-
-func TestGetValidators(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
-	candidatesFromAddrs(ctx, keeper, addrs, []int64{400, 200, 0, 0, 0})
-
-	validators := keeper.getValidators(ctx, 5)
-	require.Equal(t, 2, len(validators))
-	assert.Equal(t, addrs[0], validators[0].Address)
-	assert.Equal(t, addrs[1], validators[1].Address)
 }

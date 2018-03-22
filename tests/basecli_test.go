@@ -114,9 +114,7 @@ func _TestSendCoins(t *testing.T) {
 	sendFrom := fmt.Sprintf("--from=%s", validatorAddress)
 
 	cmdOut, err := exec.Command(basecliPath, "send", sendTo, "--amount=1000mycoin", sendFrom, "--seq=0").Output()
-	if err != nil {
-		t.Error(err)
-	}
+	assert.Nil(t, err)
 
 	fmt.Printf("sent: %s", string(cmdOut))
 
@@ -149,16 +147,14 @@ func TestBaseCliRecover(t *testing.T) {}
 func TestBaseCliShow(t *testing.T)    {}
 
 // expects initBasecoinServer to have been run
-func startServer() error {
+func startServer(t *testing.T) {
 	// straight outta https://nathanleclaire.com/blog/2014/12/29/shelled-out-commands-in-golang/
 	cmdName := basecoindPath
 	cmdArgs := []string{"start", "--home", basecoindDir}
 
 	cmd := exec.Command(cmdName, cmdArgs...)
 	cmdReader, err := cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
+	assert.Nil(t, err)
 
 	scanner := bufio.NewScanner(cmdReader)
 	go func() {
@@ -168,18 +164,12 @@ func startServer() error {
 	}()
 
 	err = cmd.Start()
-	if err != nil {
-		return err
-	}
+	assert.Nil(t, err)
 
 	err = cmd.Wait()
-	if err != nil {
-		return err
-	}
+	assert.Nil(t, err)
 
 	time.Sleep(5 * time.Second)
-
-	return nil
 
 	// TODO return cmd.Process so that we can later do something like:
 	// cmd.Process.Kill()

@@ -46,6 +46,7 @@ func TestMain(m *testing.M) {
 	cleanUp()
 }
 
+// `basecoind init`
 func TestInitBasecoin(t *testing.T) {
 	var err error
 
@@ -100,26 +101,7 @@ func initBasecoinServer(t *testing.T) string {
 
 }
 
-// TODO see https://github.com/cosmos/cosmos-sdk/issues/674
-func _TestSendCoins(t *testing.T) {
-	var err error
-
-	validatorAddress := initBasecoinServer(t)
-
-	err = startServer()
-	assert.Nil(t, err)
-
-	// send some coins
-	sendTo := fmt.Sprintf("--to=%s", bob)
-	sendFrom := fmt.Sprintf("--from=%s", validatorAddress)
-
-	cmdOut, err := exec.Command(basecliPath, "send", sendTo, "--amount=1000mycoin", sendFrom, "--seq=0").Output()
-	assert.Nil(t, err)
-
-	fmt.Printf("sent: %s", string(cmdOut))
-
-}
-
+// `basecli keys add`
 func makeKeys(t *testing.T) {
 	var err error
 	for _, acc := range ACCOUNTS {
@@ -142,11 +124,86 @@ func makeKeys(t *testing.T) {
 
 }
 
-// these are in the original bash tests
-func TestBaseCliRecover(t *testing.T) {}
-func TestBaseCliShow(t *testing.T)    {}
+// `basecli init`
+func TestBasecliInit(t *testing.T) {}
+
+// `basecli rest-server`
+func TestBasecliRestServer(t *testing.T) {}
+
+// `basecli status`
+func TestBasecliStatus(t *testing.T) {}
+
+// `basecli block`
+func TestBasecliBlock(t *testing.T) {}
+
+// `basecli validatorset`
+func TestBasecliValidatorSet(t *testing.T) {}
+
+// `basecli txs`
+func TestBasecliTxs(t *testing.T) {}
+
+// `basecli tx`
+func TestBasecliTx(t *testing.T) {}
+
+// `basecli account`
+func TestBasecliAccount(t *testing.T) {}
+
+// TODO see https://github.com/cosmos/cosmos-sdk/issues/674
+// `basecli send`
+func _TestBasecliSend(t *testing.T) {
+	var err error
+
+	validatorAddress := initBasecoinServer(t)
+
+	err = startServer()
+	assert.Nil(t, err)
+
+	// send some coins
+	sendTo := fmt.Sprintf("--to=%s", bob)
+	sendFrom := fmt.Sprintf("--from=%s", validatorAddress)
+
+	cmdOut, err := exec.Command(basecliPath, "send", sendTo, "--amount=1000mycoin", sendFrom, "--seq=0").Output()
+	assert.Nil(t, err)
+
+	fmt.Printf("sent: %s", string(cmdOut))
+
+}
+
+// `basecli transfer`
+func TestBasecliTransfer(t *testing.T) {}
+
+// `basecli relay`
+func TestBasecliRelay(t *testing.T) {}
+
+// `basecli declare-candidacy`
+func TestBasecliDeclareCandidacy(t *testing.T) {}
+
+// `basecli bond`
+func TestBasecliBond(t *testing.T) {}
+
+// `basecli unbond`
+func TestBasecliUnbond(t *testing.T) {}
+
+// `basecli keys add`
+func TestBasecliKeysAdd(t *testing.T) {}
+
+// `basecli keys add --recover`
+func TestBasecliKeysAddRecover(t *testing.T) {}
+
+// `basecli keys list`
+func TestBasecliKeysList(t *testing.T) {}
+
+// `basecli keys show`
+func TestBasecliKeysShow(t *testing.T) {}
+
+// `basecli keys delete`
+func TestBasecliKeysDelete(t *testing.T) {}
+
+// `basecli keys update`
+func TestBasecliKeysUpdate(t *testing.T) {}
 
 // expects initBasecoinServer to have been run
+// `basecoind start`
 func startServer(t *testing.T) {
 	// straight outta https://nathanleclaire.com/blog/2014/12/29/shelled-out-commands-in-golang/
 	cmdName := basecoindPath

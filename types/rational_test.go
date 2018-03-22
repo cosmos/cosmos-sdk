@@ -245,12 +245,12 @@ type testEmbedStruct struct {
 func TestEmbeddedStructSerializationGoWire(t *testing.T) {
 	obj := testEmbedStruct{"foo", 10, NewRat(1, 3)}
 
-	bz, err := cdc.MarshalJSON(obj)
+	bz, err := cdc.MarshalBinary(obj)
 	require.Nil(t, err)
 
 	var obj2 testEmbedStruct
 	obj2.Field3 = NewRat(0, 1) // ... needs to be initialized
-	err = cdc.UnmarshalJSON(bz, &obj2)
+	err = cdc.UnmarshalBinary(bz, &obj2)
 	require.Nil(t, err)
 
 	assert.Equal(t, obj.Field1, obj2.Field1)

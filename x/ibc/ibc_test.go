@@ -99,9 +99,10 @@ func TestIBC(t *testing.T) {
 	chainid := ctx.ChainID()
 
 	keeper := ibc.NewKeeper(cdc, key)
-	keeper.RegisterHandler("remote", remoteSaveIBCHandler(rskey))
+	keeper.Dispatcher().
+		AddDispatch("remote", remoteSaveIBCHandler(rskey))
 
-	rsh := remoteSaveHandler(keeper.Sender(remoteSavePayload{}))
+	rsh := remoteSaveHandler(keeper.Sender())
 	ibch := NewHandler(keeper)
 
 	payload := remoteSavePayload{

@@ -11,67 +11,44 @@ type Sender interface {
 	Push(sdk.Context, Payload, string)
 }
 
-type sender struct {
-	keeper  keeper
-	allowed map[string]bool
-}
-
 // XXX: This is not the public API. This will change in MVP2 and will henceforth
 // only be invoked from another module directly and not through a user
 // transaction.
 // TODO: Handle invalid IBC packets and return errors.
-func (sender sender) push(ctx sdk.Context, payload Payload, dest string) sdk.Error {
+func (sender keeper) Push(ctx sdk.Context, payload Payload, dest string) {
 	// write everything into the state
-	store := ctx.KVStore(sender.keeper.key)
+	store := ctx.KVStore(sender.key)
 	packet := Packet{
 		Payload:   payload,
 		SrcChain:  ctx.ChainID(),
 		DestChain: dest,
 	}
-	keeper := sender.keeper
-	index := keeper.getEgressLength(store, dest)
-	bz, err := keeper.cdc.MarshalBinary(packet)
+	index := sender.getEgressLength(store, dest)
+	bz, err := sender.cdc.MarshalBinary(packet)
 	if err != nil {
 		panic(err)
 	}
 
 	store.Set(EgressKey(dest, index), bz)
-	bz, err = keeper.cdc.MarshalBinary(int64(index + 1))
+	bz, err = sender.cdc.MarshalBinary(int64(index + 1))
 	if err != nil {
 		panic(err)
 	}
 	store.Set(EgressLengthKey(dest), bz)
-
-	return nil
-}
-
-func (sender sender) Push(ctx sdk.Context, payload Payload, dest string) {
-	_, ok := sender.allowed[payload.Type()]
-	if !ok {
-		panic("")
-	}
-	sender.push(ctx, payload, dest)
 }
 
 type keeper struct {
-	key      sdk.StoreKey
-	cdc      *wire.Codec
-	dispatch map[string]Handler
+	key        sdk.StoreKey
+	cdc        *wire.Codec
+	dispatcher Dispatcher
 }
 
-func (keeper keeper) Sender(payloads ...Payload) Sender {
-	allowed := make(map[string]bool)
-	for _, payload := range payloads {
-		allowed[payload.Type()] = true
-	}
-	return sender{
-		keeper:  keeper,
-		allowed: allowed,
-	}
+func (keeper keeper) Dispatcher() Dispatcher {
+	return keeper.dispatcher
 }
 
-func (keeper keeper) RegisterHandler(name string, handler Handler) {
-	keeper.dispatch[name] = handler
+func (keeper keeper) Sender() Sender {
+	return keeper
 }
 
 func (keeper keeper) Receive(ctx sdk.Context, packet Packet, seq int64) sdk.Error {
@@ -86,7 +63,7 @@ func (keeper keeper) Receive(ctx sdk.Context, packet Packet, seq int64) sdk.Erro
 	}
 
 	payload := packet.Payload
-	res := keeper.dispatch[payload.Type()](ctx, payload)
+	res := keeper.dispatcher.Dispatch(payload.Type())(ctx, payload)
 
 	keeper.setIngressSequence(ctx, packet.SrcChain, seq+1)
 
@@ -94,8 +71,8 @@ func (keeper keeper) Receive(ctx sdk.Context, packet Packet, seq int64) sdk.Erro
 }
 
 type Keeper interface {
-	Sender(...Payload) Sender
-	RegisterHandler(string, Handler)
+	Sender() Sender
+	Dispatcher() Dispatcher
 	Receive(sdk.Context, Packet, int64) sdk.Error
 }
 
@@ -104,9 +81,9 @@ type Keeper interface {
 func NewKeeper(cdc *wire.Codec, key sdk.StoreKey) Keeper {
 	// XXX: How are these codecs supposed to work?
 	return keeper{
-		key:      key,
-		cdc:      cdc,
-		dispatch: make(map[string]Handler),
+		key:        key,
+		cdc:        cdc,
+		dispatcher: NewDispatcher(),
 	}
 }
 

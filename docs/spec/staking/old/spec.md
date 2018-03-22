@@ -43,14 +43,14 @@ type Params struct {
 	HoldBonded   Address // account  where all bonded coins are held
 	HoldUnbonded Address // account where all delegated but unbonded coins are held
 
-	InflationRateChange rational.Rat // maximum annual change in inflation rate
-	InflationMax        rational.Rat // maximum inflation rate
-	InflationMin        rational.Rat // minimum inflation rate
-	GoalBonded          rational.Rat // Goal of percent bonded atoms
-	ReserveTax          rational.Rat // Tax collected on all fees
+	InflationRateChange rational.Rational // maximum annual change in inflation rate
+	InflationMax        rational.Rational // maximum inflation rate
+	InflationMin        rational.Rational // minimum inflation rate
+	GoalBonded          rational.Rational // Goal of percent bonded atoms
+	ReserveTax          rational.Rational // Tax collected on all fees
 
-	MaxValidators          uint16  // maximum number of validators
-	BondDenom string  // bondable coin denomination
+	MaxVals          uint16  // maximum number of validators
+	AllowedBondDenom string  // bondable coin denomination
 
 	// gas costs for txs
 	GasDeclareCandidacy int64 

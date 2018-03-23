@@ -151,17 +151,19 @@ func (keeper keeper) getEgressLength(store sdk.KVStore, destChain string) int64 
 	return res
 }
 
-// Stores an outgoing IBC packet under "egress/chain_id/index".
-func EgressKey(destChain string, index int64) []byte {
-	return []byte(fmt.Sprintf("egress/%s/%d", destChain, index))
+// Stores an outgoing IBC packet under "egress/$chain_id/$channel/$index".
+func EgressKey(destChain string, channel uint64, index int64) []byte {
+	return []byte(fmt.Sprintf("egress/%s/%d/%d", destChain, channel, index))
 }
 
-// Stores the number of outgoing IBC packets under "egress/index".
-func EgressLengthKey(destChain string) []byte {
-	return []byte(fmt.Sprintf("egress/%s", destChain))
+// Stores the number of outgoing IBC packets under "egress/$chain_id/$channel".
+func EgressLengthKey(destChain string, channel uint64) []byte {
+	return []byte(fmt.Sprintf("egress/%s/%d", destChain, channel))
 }
 
-// Stores the sequence number of incoming IBC packet under "ingress/index".
-func IngressSequenceKey(srcChain string) []byte {
-	return []byte(fmt.Sprintf("ingress/%s", srcChain))
+// Stores the sequence number of incoming IBC packet under "ingress/$channel".
+func IngressSequenceKey(channel uint64) []byte {
+	return []byte(fmt.Sprintf("ingress/%d", channel))
 }
+
+// Stores

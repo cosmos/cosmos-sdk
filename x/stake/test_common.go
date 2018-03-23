@@ -148,8 +148,7 @@ var addrs = []sdk.Address{
 	testAddr("A58856F0FD53BF058B4909A21AEC019107BA6169"),
 }
 
-// NOTE: PubKey is supposed to be the binaryBytes of the crypto.PubKey
-// instead this is just being set the address here for testing purposes
+// XXX TODO remove this dep
 func candidatesFromAddrs(ctx sdk.Context, keeper Keeper, addrs []crypto.Address, amts []int64) {
 	for i := 0; i < len(amts); i++ {
 		c := Candidate{
@@ -158,37 +157,7 @@ func candidatesFromAddrs(ctx sdk.Context, keeper Keeper, addrs []crypto.Address,
 			Address:     addrs[i],
 			Assets:      sdk.NewRat(amts[i]),
 			Liabilities: sdk.NewRat(amts[i]),
-			VotingPower: sdk.NewRat(amts[i]),
 		}
 		keeper.setCandidate(ctx, c)
 	}
 }
-
-func candidatesFromAddrsEmpty(addrs []crypto.Address) (candidates Candidates) {
-	for i := 0; i < len(addrs); i++ {
-		c := Candidate{
-			Status:      Unbonded,
-			PubKey:      pks[i],
-			Address:     addrs[i],
-			Assets:      sdk.ZeroRat,
-			Liabilities: sdk.ZeroRat,
-			VotingPower: sdk.ZeroRat,
-		}
-		candidates = append(candidates, c)
-	}
-	return
-}
-
-//// helper function test if Candidate is changed asabci.Validator
-//func testChange(t *testing.T, val Validator, chg *abci.Validator) {
-//assert := assert.New(t)
-//assert.Equal(val.PubKey.Bytes(), chg.PubKey)
-//assert.Equal(val.VotingPower.Evaluate(), chg.Power)
-//}
-
-//// helper function test if Candidate is removed as abci.Validator
-//func testRemove(t *testing.T, val Validator, chg *abci.Validator) {
-//assert := assert.New(t)
-//assert.Equal(val.PubKey.Bytes(), chg.PubKey)
-//assert.Equal(int64(0), chg.Power)
-//}

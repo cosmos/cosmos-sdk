@@ -81,7 +81,7 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	store.Set(GetCandidateKey(candidate.Address), bz)
 
 	// mashal the new validator record
-	validator := Validator{address, candidate.VotingPower}
+	validator := Validator{address, candidate.Assets}
 	bz, err = k.cdc.MarshalBinary(validator)
 	if err != nil {
 		panic(err)
@@ -89,7 +89,7 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 
 	// update the list ordered by voting power
 	if oldFound {
-		store.Delete(GetValidatorKey(address, oldCandidate.VotingPower, k.cdc))
+		store.Delete(GetValidatorKey(address, oldCandidate.Assets, k.cdc))
 	}
 	store.Set(GetValidatorKey(address, validator.VotingPower, k.cdc), bz)
 
@@ -124,14 +124,14 @@ func (k Keeper) removeCandidate(ctx sdk.Context, address sdk.Address) {
 	}
 	store.Set(GetAccUpdateValidatorKey(address), bz)
 	store.Delete(GetRecentValidatorKey(address))
-	store.Delete(GetValidatorKey(address, oldCandidate.VotingPower, k.cdc))
+	store.Delete(GetValidatorKey(address, oldCandidate.Assets, k.cdc))
 }
 
 //___________________________________________________________________________
 
 // get the most recent updated validator set from the Candidates. These bonds
-// are already sorted by VotingPower from the UpdateVotingPower function which
-// is the only function which is to modify the VotingPower
+// are already sorted by Assets from the UpdateVotingPower function which
+// is the only function which is to modify the Assets
 // this function also updaates the most recent validators saved in store
 func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 	store := ctx.KVStore(k.storeKey)

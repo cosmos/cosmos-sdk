@@ -11,19 +11,60 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// XXX XXX XXX
-// XXX revive these tests but for the store update proceedure
-// XXX XXX XXX
+var (
+	addrDel1 = addrs[0]
+	addrDel2 = addrs[1]
+	addrVal1 = addrs[2]
+	addrVal2 = addrs[3]
+	addrVal3 = addrs[4]
+	pk1      = crypto.GenPrivKeyEd25519().PubKey()
+	pk2      = crypto.GenPrivKeyEd25519().PubKey()
+	pk3      = crypto.GenPrivKeyEd25519().PubKey()
+
+	candidate1 = Candidate{
+		Address:     addrVal1,
+		PubKey:      pk1,
+		Assets:      sdk.NewRat(9),
+		Liabilities: sdk.NewRat(9),
+	}
+	candidate2 = Candidate{
+		Address:     addrVal2,
+		PubKey:      pk2,
+		Assets:      sdk.NewRat(9),
+		Liabilities: sdk.NewRat(9),
+	}
+	candidate3 = Candidate{
+		Address:     addrVal3,
+		PubKey:      pk3,
+		Assets:      sdk.NewRat(9),
+		Liabilities: sdk.NewRat(9),
+	}
+)
 
 func TestUpdateVotingPower(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
 
-	candidates := candidatesFromAddrs(ctx, keeper, addrs, []int64{400, 200, 100, 10, 1})
+	// initialize some candidates into the state
+	amts := []int64{400, 200, 100, 10, 1}
+	candidates := make([]Candidate, 5)
+	for i := 0; i < len(5); i++ {
+		c := Candidate{
+			Status:      Unbonded,
+			PubKey:      pks[i],
+			Address:     addrs[i],
+			Assets:      sdk.NewRat(amts[i]),
+			Liabilities: sdk.NewRat(amts[i]),
+			VotingPower: sdk.NewRat(amts[i]),
+		}
+		keeper.setCandidate(ctx, c)
+		candidate[i] = c
+	}
 
 	// test a basic change in voting power
 	candidates[0].Assets = sdk.NewRat(500)
-	candidates.updateVotingPower(store, p, params)
-	keeper.updaate
+	keeper.setCandidate(ctx, candidate[0])
+	validators
+
 	assert.Equal(int64(500), candidates[0].VotingPower.Evaluate(), "%v", candidates[0])
 
 	// test a swap in voting power
@@ -169,39 +210,6 @@ func TestGetValidators(t *testing.T) {
 	assert.Equal(t, addrs[0], validators[0].Address, "%v", validators)
 	assert.Equal(t, addrs[1], validators[1].Address, "%v", validators)
 }
-
-var (
-	addrDel1 = addrs[0]
-	addrDel2 = addrs[1]
-	addrVal1 = addrs[2]
-	addrVal2 = addrs[3]
-	addrVal3 = addrs[4]
-	pk1      = crypto.GenPrivKeyEd25519().PubKey()
-	pk2      = crypto.GenPrivKeyEd25519().PubKey()
-	pk3      = crypto.GenPrivKeyEd25519().PubKey()
-
-	candidate1 = Candidate{
-		Address:     addrVal1,
-		PubKey:      pk1,
-		Assets:      sdk.NewRat(9),
-		Liabilities: sdk.NewRat(9),
-		VotingPower: sdk.ZeroRat,
-	}
-	candidate2 = Candidate{
-		Address:     addrVal2,
-		PubKey:      pk2,
-		Assets:      sdk.NewRat(9),
-		Liabilities: sdk.NewRat(9),
-		VotingPower: sdk.ZeroRat,
-	}
-	candidate3 = Candidate{
-		Address:     addrVal3,
-		PubKey:      pk3,
-		Assets:      sdk.NewRat(9),
-		Liabilities: sdk.NewRat(9),
-		VotingPower: sdk.ZeroRat,
-	}
-)
 
 // XXX expand to include both liabilities and assets use/test all candidate1 fields
 func TestCandidate(t *testing.T) {

@@ -1,6 +1,6 @@
 # Changelog
 
-## unrealease 
+## 0.12.0 (TBD)
 
 BREAKING CHANGES
 
@@ -9,6 +9,7 @@ BREAKING CHANGES
 * [types] ErrBadNonce -> ErrInvalidSequence
 * [types] Replace tx.GetFeePayer with FeePayer(tx) - returns the first signer
 * [types] NewStdTx takes the Fee
+* [types] ParseAccount -> AccountDecoder; ErrTxParse -> ErrTxDecoder
 * [auth] AnteHandler deducts fees
 * [bank] Move some errors to `types`
 * [bank] Remove sequence and signature from Input
@@ -24,6 +25,7 @@ FEATURES
 * [types] StdFee, and StdTx takes the StdFee
 * [specs] Progression of MVPs for IBC
 * [x/ibc] Initial shell of IBC functionality (no proofs)
+* [x/staking] Simple staking module with bonding/unbonding
 
 IMPROVEMENTS
 
@@ -36,6 +38,7 @@ BUG FIXES
 * [auth] Fix setting pubkey on new account
 * [auth] Require signatures to include the sequences
 * [baseapp] Dont panic on nil handler
+* [basecoin] Check for empty bytes in account and tx
 
 ## 0.11.0 (March 1, 2017)
 

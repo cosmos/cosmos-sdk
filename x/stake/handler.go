@@ -64,7 +64,7 @@ func NewHandler(k Keeper, ck bank.CoinKeeper) sdk.Handler {
 		case MsgUnbond:
 			return k.handleMsgUnbond(ctx, msg)
 		default:
-			return sdk.ErrTxParse("invalid message parse in staking module").Result()
+			return sdk.ErrTxDecode("invalid message parse in staking module").Result()
 		}
 	}
 }

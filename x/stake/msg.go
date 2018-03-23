@@ -57,7 +57,7 @@ func (msg MsgDeclareCandidacy) ValidateBasic() sdk.Error {
 		return ErrCandidateEmpty()
 	}
 	if msg.Bond.Amount <= 0 {
-		return sdk.ErrInvalidCoins(sdk.Coins{msg.Bond})
+		return sdk.ErrInvalidCoins(sdk.Coins{msg.Bond}.String())
 	}
 	empty := Description{}
 	if msg.Description == empty {
@@ -153,7 +153,7 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 		return ErrBadCandidateAddr()
 	}
 	if msg.Bond.Amount <= 0 {
-		return sdk.ErrInvalidCoins(sdk.Coins{msg.Bond})
+		return sdk.ErrInvalidCoins(sdk.Coins{msg.Bond}.String())
 	}
 	return nil
 }

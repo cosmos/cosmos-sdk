@@ -47,14 +47,13 @@ func TestUpdateVotingPower(t *testing.T) {
 	// initialize some candidates into the state
 	amts := []int64{400, 200, 100, 10, 1}
 	candidates := make([]Candidate, 5)
-	for i := 0; i < len(5); i++ {
+	for i := 0; i < 5; i++ {
 		c := Candidate{
 			Status:      Unbonded,
 			PubKey:      pks[i],
 			Address:     addrs[i],
 			Assets:      sdk.NewRat(amts[i]),
 			Liabilities: sdk.NewRat(amts[i]),
-			VotingPower: sdk.NewRat(amts[i]),
 		}
 		keeper.setCandidate(ctx, c)
 		candidate[i] = c

@@ -4,15 +4,38 @@
 
 BREAKING CHANGES
 
+* Revert to old go-wire for now
+* glide -> godep
+* [types] ErrBadNonce -> ErrInvalidSequence
+* [types] Replace tx.GetFeePayer with FeePayer(tx) - returns the first signer
+* [types] NewStdTx takes the Fee
+* [auth] AnteHandler deducts fees
+* [bank] Move some errors to `types`
+* [bank] Remove sequence and signature from Input
+
 FEATURES
 
-* [examples/basecoin] new cool module to demonstrate use of state and custom transactions
+* [examples/basecoin] New cool module to demonstrate use of state and custom transactions
+* [lcd] Implement the Light Client Daemon and endpoints
+* [types/stdlib] Queue functionality
+* [store] Subspace iterator on IAVLTree
+* [types] StdSignDoc is the document that gets signed (chainid, msg, sequence, fee)
+* [types] CodeInvalidPubKey
+* [types] StdFee, and StdTx takes the StdFee
+* [specs] Progression of MVPs for IBC
+* [x/ibc] Initial shell of IBC functionality (no proofs)
 
 IMPROVEMENTS
 
-* [client] refactor to now include more standard code
+* Lots more tests!
+* [client/builder] Helpers for forming and signing transactions 
+* [types] sdk.Address
+* [specs] Staking
 
 BUG FIXES
+* [auth] Fix setting pubkey on new account
+* [auth] Require signatures to include the sequences
+* [baseapp] Dont panic on nil handler
 
 ## 0.11.0 (March 1, 2017)
 

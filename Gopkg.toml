@@ -70,7 +70,7 @@
   name = "github.com/tendermint/iavl"
 
 [[constraint]]
-  branch = "bucky/dep"
+  branch = "develop"
   name = "github.com/tendermint/tendermint"
 
 [[constraint]]

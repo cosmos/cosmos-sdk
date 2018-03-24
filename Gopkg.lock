@@ -303,7 +303,7 @@
   version = "v0.7.0"
 
 [[projects]]
-  branch = "bucky/dep"
+  branch = "develop"
   name = "github.com/tendermint/tendermint"
   packages = [
     "blockchain",
@@ -342,7 +342,7 @@
     "version",
     "wire"
   ]
-  revision = "b7b22e3d6bebd9294b067f66010936ec1135f300"
+  revision = "e3337d764a0da9b4f8ed84a65cd842a2a08d72b0"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -423,7 +423,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "f8c8703595236ae70fdf8789ecb656ea0bcdcf46"
+  revision = "ab0870e398d5dd054b868c0db1481ab029b9a9f2"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -458,6 +458,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7630556bbf21a341e69052d7371c82682b4985e842d29070ab9d616734994936"
+  inputs-digest = "25be8b1057a6f24ab743bf0602823e83fb42f42b6a6ba4ba0925c783df97d9c1"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -17,11 +17,11 @@ func TestPowHandler(t *testing.T) {
 
 	am := auth.NewAccountMapper(capKey, &auth.BaseAccount{})
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	mapper := NewMapper(capKey)
 	config := NewPowConfig("pow", int64(1))
 	ck := bank.NewCoinKeeper(am)
+	keeper := NewKeeper(capKey, config, ck)
 
-	handler := NewHandler(ck, mapper, config)
+	handler := keeper.Handler
 
 	addr := sdk.Address([]byte("sender"))
 	count := uint64(1)
@@ -32,11 +32,11 @@ func TestPowHandler(t *testing.T) {
 	result := handler(ctx, msg)
 	assert.Equal(t, result, sdk.Result{})
 
-	newDiff, err := mapper.GetLastDifficulty(ctx)
+	newDiff, err := keeper.GetLastDifficulty(ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, newDiff, uint64(2))
 
-	newCount, err := mapper.GetLastCount(ctx)
+	newCount, err := keeper.GetLastCount(ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, newCount, uint64(1))
 

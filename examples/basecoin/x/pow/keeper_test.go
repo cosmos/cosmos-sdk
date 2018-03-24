@@ -10,6 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	auth "github.com/cosmos/cosmos-sdk/x/auth"
+	bank "github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 // possibly share this kind of setup functionality between module testsuites?
@@ -23,19 +25,22 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 	return ms, capKey
 }
 
-func TestPowMapperGetSet(t *testing.T) {
+func TestPowKeeperGetSet(t *testing.T) {
 	ms, capKey := setupMultiStore()
 
+	am := auth.NewAccountMapper(capKey, &auth.BaseAccount{})
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	mapper := NewMapper(capKey)
+	config := NewPowConfig("pow", int64(1))
+	ck := bank.NewCoinKeeper(am)
+	keeper := NewKeeper(capKey, config, ck)
 
-	res, err := mapper.GetLastDifficulty(ctx)
+	res, err := keeper.GetLastDifficulty(ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, res, uint64(1))
 
-	mapper.SetLastDifficulty(ctx, 2)
+	keeper.SetLastDifficulty(ctx, 2)
 
-	res, err = mapper.GetLastDifficulty(ctx)
+	res, err = keeper.GetLastDifficulty(ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, res, uint64(2))
 }

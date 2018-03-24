@@ -60,13 +60,13 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	// add handlers
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	coolMapper := cool.NewMapper(app.capKeyMainStore)
-	powMapper := pow.NewMapper(app.capKeyMainStore)
+	powKeeper := pow.NewKeeper(app.capKeyMainStore, pow.NewPowConfig("pow", int64(1)), coinKeeper)
 	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
 	stakingMapper := staking.NewMapper(app.capKeyStakingStore)
 	app.Router().
 		AddRoute("bank", bank.NewHandler(coinKeeper)).
 		AddRoute("cool", cool.NewHandler(coinKeeper, coolMapper)).
-		AddRoute("pow", pow.NewHandler(coinKeeper, powMapper, pow.NewPowConfig("pow", int64(1)))).
+		AddRoute("pow", powKeeper.Handler).
 		AddRoute("sketchy", sketchy.NewHandler()).
 		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
 		AddRoute("staking", staking.NewHandler(stakingMapper, coinKeeper))

@@ -18,7 +18,7 @@ func (k Keeper) Handler(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 }
 
 func handleBondMsg(ctx sdk.Context, k Keeper, msg BondMsg) sdk.Result {
-	_, err := k.Bond(ctx, msg.Address, msg.Stake)
+	power, err := k.Bond(ctx, msg.Address, msg.PubKey, msg.Stake)
 	if err != nil {
 		return err.Result()
 	}
@@ -35,16 +35,7 @@ func handleBondMsg(ctx sdk.Context, k Keeper, msg BondMsg) sdk.Result {
 }
 
 func handleUnbondMsg(ctx sdk.Context, k Keeper, msg UnbondMsg) sdk.Result {
-	pubKey, power, err := k.Unbond(ctx, msg.Address)
-	if err != nil {
-		return err.Result()
-	}
-
-	stake := sdk.Coin{
-		Denom:  "mycoin",
-		Amount: power,
-	}
-	_, err = k.ck.AddCoins(ctx, msg.Address, sdk.Coins{stake})
+	pubKey, _, err := k.Unbond(ctx, msg.Address)
 	if err != nil {
 		return err.Result()
 	}

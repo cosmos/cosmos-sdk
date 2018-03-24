@@ -84,5 +84,13 @@ func (k Keeper) Unbond(ctx sdk.Context, addr sdk.Address) (crypto.PubKey, int64,
 		return crypto.PubKey{}, 0, ErrInvalidUnbond()
 	}
 	k.deleteBondInfo(ctx, addr)
+
+	returnedBond := sdk.Coin{stakingToken, bi.Power}
+
+	_, err := k.ck.AddCoins(ctx, addr, []sdk.Coin{returnedBond})
+	if err != nil {
+		return bi.PubKey, bi.Power, err
+	}
+
 	return bi.PubKey, bi.Power, nil
 }

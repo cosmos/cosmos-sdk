@@ -1,8 +1,6 @@
 package bank
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,13 +23,15 @@ func (ck CoinKeeper) SubtractCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Co
 		return amt, sdk.ErrUnknownAddress(addr.String())
 	}
 
-	coins := acc.GetCoins()
-	newCoins := coins.Minus(amt)
-	if !newCoins.IsNotNegative() {
-		return amt, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", coins, amt))
-	}
+	// coins := acc.GetCoins()
+	// newCoins := coins.Minus(amt)
+	// if !newCoins.IsNotNegative() {
+	// 	return amt, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", coins, amt))
+	// }
 
-	acc.SetCoins(newCoins)
+	newCoins := sdk.Coins{}
+
+	// acc.SetCoins(newCoins)
 	ck.am.SetAccount(ctx, acc)
 	return newCoins, nil
 }

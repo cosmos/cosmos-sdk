@@ -94,3 +94,34 @@ func (k Keeper) Unbond(ctx sdk.Context, addr sdk.Address) (crypto.PubKey, int64,
 
 	return bi.PubKey, bi.Power, nil
 }
+
+// FOR TESTING PURPOSES -------------------------------------------------
+
+func (k Keeper) bondWithoutCoins(ctx sdk.Context, addr sdk.Address, pubKey crypto.PubKey, stake sdk.Coin) (int64, sdk.Error) {
+	if stake.Denom != stakingToken {
+		return 0, ErrIncorrectStakingToken()
+	}
+
+	bi := k.getBondInfo(ctx, addr)
+	if bi.isEmpty() {
+		bi = bondInfo{
+			PubKey: pubKey,
+			Power:  0,
+		}
+	}
+
+	bi.Power = bi.Power + stake.Amount
+
+	k.setBondInfo(ctx, addr, bi)
+	return bi.Power, nil
+}
+
+func (k Keeper) unbondWithoutCoins(ctx sdk.Context, addr sdk.Address) (crypto.PubKey, int64, sdk.Error) {
+	bi := k.getBondInfo(ctx, addr)
+	if bi.isEmpty() {
+		return crypto.PubKey{}, 0, ErrInvalidUnbond()
+	}
+	k.deleteBondInfo(ctx, addr)
+
+	return bi.PubKey, bi.Power, nil
+}

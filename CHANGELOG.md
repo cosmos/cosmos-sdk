@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0 (March 2, 2017)
+
+BREAKING CHANGES
+
+- Update Amino names from "com.tendermint/..." to "tendermint/"
+
 ## 0.5.0 (March 2, 2017)
 
 BREAKING CHANGES

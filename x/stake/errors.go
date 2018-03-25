@@ -52,10 +52,10 @@ func ErrCandidateEmpty() sdk.Error {
 	return newError(CodeInvalidValidator, "Cannot bond to an empty candidate")
 }
 func ErrBadBondingDenom() sdk.Error {
-	return newError(CodeInvalidValidator, "Invalid coin denomination")
+	return newError(CodeInvalidBond, "Invalid coin denomination")
 }
 func ErrBadBondingAmount() sdk.Error {
-	return newError(CodeInvalidValidator, "Amount must be > 0")
+	return newError(CodeInvalidBond, "Amount must be > 0")
 }
 func ErrNoBondingAcct() sdk.Error {
 	return newError(CodeInvalidValidator, "No bond account for this (address, validator) pair")

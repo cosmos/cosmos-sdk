@@ -9,7 +9,9 @@ import (
 )
 
 // name to idetify transaction types
-var MsgType = "stake"
+const MsgType = "stake"
+
+const StakingToken = "fermion"
 
 //Verify interface at compile time
 var _, _, _, _ sdk.Msg = &MsgDeclareCandidacy{}, &MsgEditCandidacy{}, &MsgDelegate{}, &MsgUnbond{}
@@ -56,8 +58,12 @@ func (msg MsgDeclareCandidacy) ValidateBasic() sdk.Error {
 	if msg.CandidateAddr == nil {
 		return ErrCandidateEmpty()
 	}
+	if msg.Bond.Denom != StakingToken {
+		return ErrBadBondingDenom()
+	}
 	if msg.Bond.Amount <= 0 {
-		return sdk.ErrInvalidCoins(sdk.Coins{msg.Bond}.String())
+		return ErrBadBondingAmount()
+		// return sdk.ErrInvalidCoins(sdk.Coins{msg.Bond}.String())
 	}
 	empty := Description{}
 	if msg.Description == empty {
@@ -152,8 +158,12 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.CandidateAddr == nil {
 		return ErrBadCandidateAddr()
 	}
+	if msg.Bond.Denom != StakingToken {
+		return ErrBadBondingDenom()
+	}
 	if msg.Bond.Amount <= 0 {
-		return sdk.ErrInvalidCoins(sdk.Coins{msg.Bond}.String())
+		return ErrBadBondingAmount()
+		// return sdk.ErrInvalidCoins(sdk.Coins{msg.Bond}.String())
 	}
 	return nil
 }
@@ -201,8 +211,11 @@ func (msg MsgUnbond) ValidateBasic() sdk.Error {
 		return ErrBadCandidateAddr()
 	}
 	if msg.Shares != "MAX" {
-		_, err := sdk.NewRatFromDecimal(msg.Shares)
+		rat, err := sdk.NewRatFromDecimal(msg.Shares)
 		if err != nil {
+			return ErrBadShares()
+		}
+		if rat.IsZero() || rat.LT(sdk.ZeroRat) {
 			return ErrBadShares()
 		}
 	}

@@ -1,12 +1,21 @@
 package stake
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/magiconair/properties/assert"
+	crypto "github.com/tendermint/go-crypto"
 )
 
 var (
-	validator = []byte("addressvalidator1")
-	empty     sdk.Address
+	addr1     = []byte("addr1")
+	addr2     = []byte("addr2")
+	addr3     = []byte("addr3")
+	emptyAddr sdk.Address
+
+	pubkey1     = crypto.GenPrivKeyEd25519().PubKey()
+	emptyPubkey crypto.PubKey
 
 	coinPos          = sdk.Coin{"fermion", 1000}
 	coinZero         = sdk.Coin{"fermion", 0}
@@ -16,42 +25,118 @@ var (
 	coinNegNotAtoms  = sdk.Coin{"foo", -10000}
 )
 
-// TODO SUNNY make validate basic tests for each msg.. take these commented tests as inspiration
-/*
-func TestMsgAddrValidateBasic(t *testing.T) {
+func TestMsgDeclareCandidacy(t *testing.T) {
 	tests := []struct {
-		name    string
-		address sdk.Address
-		wantErr bool
+		name          string
+		moniker       string
+		identity      string
+		website       string
+		details       string
+		candidateAddr sdk.Address
+		pubkey        crypto.PubKey
+		bond          sdk.Coin
+		expectPass    bool
 	}{
-		{"basic good", addrs[0], false},
-		{"empty delegator", sdk.Address{}, true},
+		{"basic good", "a", "b", "c", "d", addr1, pubkey1, coinPos, true},
+		{"partial description", "", "", "c", "", addr1, pubkey1, coinPos, true},
+		{"empty description", "", "", "", "", addr1, pubkey1, coinPos, false},
+		{"empty address", "a", "b", "c", "d", emptyAddr, pubkey1, coinPos, false},
+		{"empty pubkey", "a", "b", "c", "d", addr1, emptyPubkey, coinPos, true},
+		{"empty bond", "a", "b", "c", "d", addr1, pubkey1, coinZero, false},
+		{"negative bond", "a", "b", "c", "d", addr1, pubkey1, coinNeg, false},
+		{"negative bond", "a", "b", "c", "d", addr1, pubkey1, coinNeg, false},
+		{"wrong staking token", "a", "b", "c", "d", addr1, pubkey1, coinPosNotAtoms, false},
 	}
 
 	for _, tc := range tests {
-		tx := NewMsgAddr(tc.address)
-		assert.Equal(t, tc.wantErr, tx.ValidateBasic() != nil,
-			"test: %v, tx.ValidateBasic: %v", tc.name, tx.ValidateBasic())
+		description := Description{
+			Moniker:  tc.moniker,
+			Identity: tc.identity,
+			Website:  tc.website,
+			Details:  tc.details,
+		}
+		msg := NewMsgDeclareCandidacy(tc.candidateAddr, tc.pubkey, tc.bond, description)
+		assert.Equal(t, tc.expectPass, msg.ValidateBasic() == nil,
+			"test: ", tc.name)
 	}
 }
 
-func TestValidateCoin(t *testing.T) {
+func TestMsgEditCandidacy(t *testing.T) {
 	tests := []struct {
-		name    string
-		coin    sdk.Coin
-		wantErr bool
+		name          string
+		moniker       string
+		identity      string
+		website       string
+		details       string
+		candidateAddr sdk.Address
+		expectPass    bool
 	}{
-		{"basic good", coinPos, false},
-		{"zero coin", coinZero, true},
-		{"neg coin", coinNeg, true},
+		{"basic good", "a", "b", "c", "d", addr1, true},
+		{"partial description", "", "", "c", "", addr1, true},
+		{"empty description", "", "", "", "", addr1, false},
+		{"empty address", "a", "b", "c", "d", emptyAddr, false},
 	}
 
 	for _, tc := range tests {
-		assert.Equal(t, tc.wantErr, validateCoin(tc.coin) != nil,
-			"test: %v, tx.ValidateBasic: %v", tc.name, validateCoin(tc.coin))
+		description := Description{
+			Moniker:  tc.moniker,
+			Identity: tc.identity,
+			Website:  tc.website,
+			Details:  tc.details,
+		}
+		msg := NewMsgEditCandidacy(tc.candidateAddr, description)
+		assert.Equal(t, tc.expectPass, msg.ValidateBasic() == nil,
+			"test: ", tc.name)
 	}
 }
-*/
+
+func TestMsgDelegate(t *testing.T) {
+	tests := []struct {
+		name          string
+		delegatorAddr sdk.Address
+		candidateAddr sdk.Address
+		bond          sdk.Coin
+		expectPass    bool
+	}{
+		{"basic good", addr1, addr2, coinPos, true},
+		{"self bond", addr1, addr1, coinPos, true},
+		{"empty delegator", emptyAddr, addr1, coinPos, false},
+		{"empty candidate", addr1, emptyAddr, coinPos, false},
+		{"empty bond", addr1, addr2, coinZero, false},
+		{"negative bond", addr1, addr2, coinNeg, false},
+		{"wrong staking token", addr1, addr2, coinPosNotAtoms, false},
+	}
+
+	for _, tc := range tests {
+		msg := NewMsgDelegate(tc.delegatorAddr, tc.candidateAddr, tc.bond)
+		assert.Equal(t, tc.expectPass, msg.ValidateBasic() == nil,
+			"test: ", tc.name)
+	}
+}
+
+func TestMsgUnbond(t *testing.T) {
+	tests := []struct {
+		name          string
+		delegatorAddr sdk.Address
+		candidateAddr sdk.Address
+		shares        string
+		expectPass    bool
+	}{
+		{"max unbond", addr1, addr2, "MAX", true},
+		{"decimal unbond", addr1, addr2, "0.1", true},
+		{"negative decimal unbond", addr1, addr2, "-0.1", false},
+		{"zero unbond", addr1, addr2, "0.0", false},
+		{"invalid decimal", addr1, addr1, "sunny", false},
+		{"empty delegator", emptyAddr, addr1, "0.1", false},
+		{"empty candidate", addr1, emptyAddr, "0.1", false},
+	}
+
+	for _, tc := range tests {
+		msg := NewMsgUnbond(tc.delegatorAddr, tc.candidateAddr, tc.shares)
+		assert.Equal(t, tc.expectPass, msg.ValidateBasic() == nil,
+			"test: ", tc.name)
+	}
+}
 
 // TODO introduce with go-amino
 //func TestSerializeMsg(t *testing.T) {

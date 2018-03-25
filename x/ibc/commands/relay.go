@@ -27,7 +27,7 @@ const (
 type relayCommander struct {
 	cdc       *wire.Codec
 	address   sdk.Address
-	decoder    sdk.AccountDecoder
+	decoder   sdk.AccountDecoder
 	mainStore string
 	ibcStore  string
 }
@@ -35,7 +35,7 @@ type relayCommander struct {
 func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 	cmdr := relayCommander{
 		cdc:       cdc,
-		decoder:    authcmd.GetAccountDecoder(cdc),
+		decoder:   authcmd.GetAccountDecoder(cdc),
 		ibcStore:  "ibc",
 		mainStore: "main",
 	}
@@ -80,9 +80,7 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
 	// get password
 	name := viper.GetString(client.FlagName)
-	buf := client.BufferStdin()
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-	passphrase, err := client.GetPassword(prompt, buf)
+	passphrase, err := builder.GetPassphraseFromStdin(name)
 	if err != nil {
 		panic(err)
 	}

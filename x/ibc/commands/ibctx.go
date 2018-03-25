@@ -53,14 +53,8 @@ func (c sendCommander) sendIBCTransfer(cmd *cobra.Command, args []string) error 
 
 	// get password
 	name := viper.GetString(client.FlagName)
-	buf := client.BufferStdin()
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-	passphrase, err := client.GetPassword(prompt, buf)
-	if err != nil {
-		return err
-	}
 
-	res, err := builder.SignBuildBroadcast(name, passphrase, msg, c.cdc)
+	res, err := builder.SignBuildBroadcast(name, msg, c.cdc)
 	if err != nil {
 		return err
 	}

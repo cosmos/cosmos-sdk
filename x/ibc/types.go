@@ -3,10 +3,11 @@ package ibc
 import (
 	"encoding/json"
 
+	"github.com/tendermint/iavl"
+
 	"github.com/tendermint/tendermint/lite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	types "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -17,6 +18,7 @@ import (
 // to the destination chain.
 type ReceiveMsg struct {
 	types.Packet
+	Proof    *iavl.KeyExistsProof
 	Relayer  sdk.Address
 	Sequence int64
 }
@@ -82,12 +84,12 @@ func (msg OpenChannelMsg) GetSigners() []sdk.Address {
 }
 
 //------------------------------------
-// UpdateCommitMsg
+// UpdateChannelMsg
 
 type UpdateChannelMsg struct {
-	Channel uint
-	Commit  lite.FullCommit
-	Signer  sdk.Address
+	SrcChain string
+	Commit   lite.FullCommit
+	Signer   sdk.Address
 }
 
 func (msg UpdateChannelMsg) Type() string {

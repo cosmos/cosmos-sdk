@@ -6,10 +6,14 @@ import (
 
 const (
 	// IBC errors reserve 200 - 299.
-	CodeInvalidSequence sdk.CodeType = 200
-	CodeIdenticalChains sdk.CodeType = 201
-	CodeChainMismatch   sdk.CodeType = 202
-	CodeUnknownRequest  sdk.CodeType = sdk.CodeUnknownRequest
+	CodeInvalidSequence      sdk.CodeType = 200
+	CodeIdenticalChains      sdk.CodeType = 201
+	CodeChainMismatch        sdk.CodeType = 202
+	CodeUnknownRequest       sdk.CodeType = sdk.CodeUnknownRequest
+	CodeNoChannelOpened      sdk.CodeType = 203
+	CodeChannelAlreadyOpened sdk.CodeType = 204
+	CodeUpdateCommitFailed   sdk.CodeType = 205
+	CodeInvalidPacket        sdk.CodeType = 206
 )
 
 func codeToDefaultMsg(code sdk.CodeType) string {
@@ -35,6 +39,22 @@ func ErrIdenticalChains() sdk.Error {
 
 func ErrChainMismatch() sdk.Error {
 	return newError(CodeChainMismatch, "")
+}
+
+func ErrNoChannelOpened(srcChain string) sdk.Error {
+	return newError(CodeNoChannelOpened, srcChain)
+}
+
+func ErrChannelAlreadyOpened(srcChain string) sdk.Error {
+	return newError(CodeChannelAlreadyOpened, srcChain)
+}
+
+func ErrUpdateCommitFailed(err error) sdk.Error {
+	return newError(CodeUpdateCommitFailed, err.Error())
+}
+
+func ErrInvalidPacket(err error) sdk.Error {
+	return newError(CodeInvalidPacket, err.Error())
 }
 
 // -------------------------

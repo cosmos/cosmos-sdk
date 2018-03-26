@@ -2,10 +2,15 @@ package commands
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
+
+	"github.com/tendermint/iavl"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/builder"
@@ -89,9 +94,9 @@ func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode 
 		panic(err)
 	}
 
-	ingressKey := ibc.IngressSequenceKey(fromChainID)
+	ingressKey := ibcm.IngressSequenceKey(fromChainID)
 
-	processedbz, err := query(toChainNode, ingressKey, c.ibcStore)
+	processedbz, _, err := query(toChainNode, ingressKey, c.ibcStore)
 	if err != nil {
 		panic(err)
 	}
@@ -107,8 +112,8 @@ OUTER:
 	for {
 		time.Sleep(time.Second)
 
-		lengthKey := ibc.EgressLengthKey(toChainID)
-		egressLengthbz, err := query(fromChainNode, lengthKey, c.ibcStore)
+		lengthKey := ibcm.EgressLengthKey(toChainID)
+		egressLengthbz, _, err := query(fromChainNode, lengthKey, c.ibcStore)
 		if err != nil {
 			fmt.Printf("Error querying outgoing packet list length: '%s'\n", err)
 			continue OUTER
@@ -122,13 +127,13 @@ OUTER:
 		fmt.Printf("egressLength queried: %d\n", egressLength)
 
 		for i := processed; i < egressLength; i++ {
-			egressbz, err := query(fromChainNode, ibc.EgressKey(toChainID, i), c.ibcStore)
+			egressbz, proofbz, err := query(fromChainNode, ibcm.EgressKey(toChainID, i), c.ibcStore)
 			if err != nil {
 				fmt.Printf("Error querying egress packet: '%s'\n", err)
 				continue OUTER
 			}
 
-			err = c.broadcastTx(toChainNode, c.refine(egressbz, i, passphrase))
+			err = c.broadcastTx(toChainNode, c.refine(egressbz, proofbz, i, passphrase))
 			if err != nil {
 				fmt.Printf("Error broadcasting ingress packet: '%s'\n", err)
 				continue OUTER
@@ -141,12 +146,31 @@ OUTER:
 	}
 }
 
-func query(node string, key []byte, storeName string) (res []byte, err error) {
+func query(nodeAddr string, key []byte, storeName string) (res []byte, proof []byte, err error) {
 	orig := viper.GetString(client.FlagNode)
-	viper.Set(client.FlagNode, node)
-	res, err = builder.Query(key, storeName)
+	viper.Set(client.FlagNode, nodeAddr)
+
+	// copied from sdk/client/builder/builder.go to access to proof
+	path := fmt.Sprintf("/%s/key", storeName)
+	node, err := client.GetNode()
+	if err != nil {
+		return res, proof, err
+	}
+	opts := rpcclient.ABCIQueryOptions{
+		Height:  viper.GetInt64(client.FlagHeight),
+		Trusted: viper.GetBool(client.FlagTrustNode),
+	}
+	result, err := node.ABCIQueryWithOptions(path, key, opts)
+	if err != nil {
+		return res, proof, err
+	}
+	resp := result.Response
+	if resp.Code != uint32(0) {
+		return res, proof, errors.Errorf("Query failed: (%d) %s", resp.Code, resp.Log)
+	}
+
 	viper.Set(client.FlagNode, orig)
-	return res, err
+	return resp.Value, resp.Proof, err
 }
 
 func (c relayCommander) broadcastTx(node string, tx []byte) error {
@@ -160,7 +184,7 @@ func (c relayCommander) broadcastTx(node string, tx []byte) error {
 }
 
 func (c relayCommander) getSequence(node string) int64 {
-	res, err := query(node, c.address, c.mainStore)
+	res, _, err := query(node, c.address, c.mainStore)
 	if err != nil {
 		panic(err)
 	}
@@ -172,14 +196,25 @@ func (c relayCommander) getSequence(node string) int64 {
 	return account.GetSequence()
 }
 
-func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []byte {
+func (c relayCommander) refine(bz []byte, pbz []byte, sequence int64, passphrase string) []byte {
 	var packet ibc.Packet
 	if err := c.cdc.UnmarshalBinary(bz, &packet); err != nil {
 		panic(err)
 	}
 
+	proof, err := iavl.ReadKeyProof(pbz)
+	if err != nil {
+		panic(err)
+	}
+
+	eproof, ok := proof.(*iavl.KeyExistsProof)
+	if !ok {
+		panic("Expected KeyExistsProof for non-empty value")
+	}
+
 	msg := ibcm.ReceiveMsg{
 		Packet:   packet,
+		Proof:    eproof,
 		Relayer:  c.address,
 		Sequence: sequence,
 	}

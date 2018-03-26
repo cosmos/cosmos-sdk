@@ -18,7 +18,9 @@ func checkAminoBinary(t *testing.T, src byter, dst interface{}, size int) {
 	// Make sure this is compatible with current (Bytes()) encoding.
 	assert.Equal(t, src.Bytes(), bz, "Amino binary vs Bytes() mismatch")
 	// Make sure we have the expected length.
-	assert.Equal(t, size, len(bz), "Amino binary size mismatch")
+	if size != -1 {
+		assert.Equal(t, size, len(bz), "Amino binary size mismatch")
+	}
 	// Unmarshal.
 	err = cdc.UnmarshalBinaryBare(bz, dst)
 	require.Nil(t, err, "%+v", err)
@@ -41,9 +43,8 @@ func checkAminoJSON(t *testing.T, src interface{}, dst interface{}, isNil bool) 
 
 func TestKeyEncodings(t *testing.T) {
 	cases := []struct {
-		privKey PrivKey
-		// 1 (type byte) + size of byte array
-		privSize, pubSize int
+		privKey           PrivKey
+		privSize, pubSize int // binary sizes
 	}{
 		{
 			privKey:  GenPrivKeyEd25519(),
@@ -58,12 +59,21 @@ func TestKeyEncodings(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+
 		// Check (de/en)codings of PrivKeys.
 		var priv2, priv3 PrivKey
 		checkAminoBinary(t, tc.privKey, &priv2, tc.privSize)
 		assert.EqualValues(t, tc.privKey, priv2)
 		checkAminoJSON(t, tc.privKey, &priv3, false) // TODO also check Prefix bytes.
 		assert.EqualValues(t, tc.privKey, priv3)
+
+		// Check (de/en)codings of Signatures.
+		var sig1, sig2, sig3 Signature
+		sig1 = tc.privKey.Sign([]byte("something"))
+		checkAminoBinary(t, sig1, &sig2, -1) // Siganture size changes for Secp anyways.
+		assert.EqualValues(t, sig1, sig2)
+		checkAminoJSON(t, sig1, &sig3, false) // TODO also check Prefix bytes.
+		assert.EqualValues(t, sig1, sig3)
 
 		// Check (de/en)codings of PubKeys.
 		pubKey := tc.privKey.PubKey()

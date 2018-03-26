@@ -33,10 +33,7 @@ func handleSendMsg(ctx sdk.Context, ck CoinKeeper, msg SendMsg) sdk.Result {
 	}
 
 	for _, out := range msg.Outputs {
-		_, err := ck.AddCoins(ctx, out.Address, out.Coins)
-		if err != nil {
-			return err.Result()
-		}
+		ck.AddCoins(ctx, out.Address, out.Coins)
 	}
 
 	// TODO: add some tags so we can search it!

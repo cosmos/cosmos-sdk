@@ -46,10 +46,7 @@ func handleQuizMsg(ctx sdk.Context, ck bank.CoinKeeper, cm Mapper, msg QuizMsg) 
 
 	if msg.CoolAnswer == currentTrend {
 		bonusCoins := sdk.Coins{{currentTrend, 69}}
-		_, err := ck.AddCoins(ctx, msg.Sender, bonusCoins)
-		if err != nil {
-			return err.Result()
-		}
+		ck.AddCoins(ctx, msg.Sender, bonusCoins)
 	}
 
 	return sdk.Result{}

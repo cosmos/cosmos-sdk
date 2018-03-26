@@ -52,10 +52,7 @@ func handleUnbondMsg(ctx sdk.Context, sm StakingMapper, ck bank.CoinKeeper, msg 
 		Denom:  "mycoin",
 		Amount: power,
 	}
-	_, err = ck.AddCoins(ctx, msg.Address, sdk.Coins{stake})
-	if err != nil {
-		return err.Result()
-	}
+	ck.AddCoins(ctx, msg.Address, sdk.Coins{stake})
 
 	valSet := abci.Validator{
 		PubKey: pubKey.Bytes(),

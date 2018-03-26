@@ -106,14 +106,6 @@ type Candidate struct {
 	Description Description     `json:"description"` // Description terms for the candidate
 }
 
-// Description - description fields for a candidate
-type Description struct {
-	Moniker  string `json:"moniker"`
-	Identity string `json:"identity"`
-	Website  string `json:"website"`
-	Details  string `json:"details"`
-}
-
 // NewCandidate - initialize a new candidate
 func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Description) Candidate {
 	return Candidate{
@@ -123,6 +115,23 @@ func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Descrip
 		Assets:      sdk.ZeroRat,
 		Liabilities: sdk.ZeroRat,
 		Description: description,
+	}
+}
+
+// Description - description fields for a candidate
+type Description struct {
+	Moniker  string `json:"moniker"`
+	Identity string `json:"identity"`
+	Website  string `json:"website"`
+	Details  string `json:"details"`
+}
+
+func NewDescription(moniker, identity, website, details string) Description {
+	return Description{
+		Moniker:  moniker,
+		Identity: identity,
+		Website:  website,
+		Details:  details,
 	}
 }
 

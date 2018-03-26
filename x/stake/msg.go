@@ -11,6 +11,10 @@ import (
 // name to idetify transaction types
 const MsgType = "stake"
 
+// XXX remove: think it makes more sense belonging with the Params so we can
+// initialize at genesis - to allow for the same tests we should should make
+// the ValidateBasic() function a return from an initializable function
+// ValidateBasic(bondDenom string) function
 const StakingToken = "fermion"
 
 //Verify interface at compile time

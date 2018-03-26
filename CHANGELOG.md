@@ -1,12 +1,18 @@
 # Changelog
 
-## 0.6.0 (March 2, 2017)
+## 0.6.1 (March 26, 2018)
+
+BREAKING CHANGES
+
+- Encoding uses MarshalBinaryBare rather than MarshalBinary (which auto-length-prefixes) for pub/priv/sig.
+
+## 0.6.0 (March 2, 2018)
 
 BREAKING CHANGES
 
 - Update Amino names from "com.tendermint/..." to "tendermint/"
 
-## 0.5.0 (March 2, 2017)
+## 0.5.0 (March 2, 2018)
 
 BREAKING CHANGES
 

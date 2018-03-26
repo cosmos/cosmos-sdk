@@ -16,6 +16,8 @@ type Params struct {
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
 }
 
+// XXX do we want to allow for default params even or do we want to enforce that you
+// need to be explicit about defining all params in genesis?
 func defaultParams() Params {
 	return Params{
 		InflationRateChange: sdk.NewRat(13, 100),

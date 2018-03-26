@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
@@ -79,7 +80,7 @@ func NewRat(num int64, denom ...int64) Rat {
 	}
 }
 
-//NewFromDecimal - create a rational from decimal string or integer string
+// create a rational from decimal string or integer string
 func NewRatFromDecimal(decimalStr string) (f Rat, err Error) {
 
 	// first extract any negative symbol
@@ -148,14 +149,16 @@ func (r Rat) Sub(r2 Rat) Rat    { return ToRat(new(big.Rat).Sub(r.GetRat(), r2.G
 //func (r Rat) Sub(r2 Rat) Rat    { return Rat{new(big.Rat).Sub(r.Rat, r2.GetRat())} } // Sub - subtraction
 //func (r Rat) String() string    { return fmt.Sprintf("%v/%v", r.Num(), r.Denom()) }  // Sub - subtraction
 
-var zero = big.NewInt(0)
-var one = big.NewInt(1)
-var two = big.NewInt(2)
-var five = big.NewInt(5)
-var nFive = big.NewInt(-5)
-var ten = big.NewInt(10)
+var (
+	zero  = big.NewInt(0)
+	one   = big.NewInt(1)
+	two   = big.NewInt(2)
+	five  = big.NewInt(5)
+	nFive = big.NewInt(-5)
+	ten   = big.NewInt(10)
+)
 
-// EvaluateBig - evaluate the rational using bankers rounding
+// evaluate the rational using bankers rounding
 func (r Rat) EvaluateBig() *big.Int {
 
 	num := r.GetRat().Num()
@@ -185,15 +188,23 @@ func (r Rat) EvaluateBig() *big.Int {
 	return d
 }
 
-// Evaluate - evaluate the rational using bankers rounding
+// evaluate the rational using bankers rounding
 func (r Rat) Evaluate() int64 {
 	return r.EvaluateBig().Int64()
 }
 
-// Round - round Rat with the provided precisionFactor
+// round Rat with the provided precisionFactor
 func (r Rat) Round(precisionFactor int64) Rat {
 	rTen := ToRat(new(big.Rat).Mul(r.GetRat(), big.NewRat(precisionFactor, 1)))
 	return ToRat(big.NewRat(rTen.Evaluate(), precisionFactor))
+}
+
+// TODO panic if negative or if totalDigits < len(initStr)???
+// evaluate as an integer and return left padded string
+func (r Rat) ToLeftPadded(totalDigits int8) string {
+	intStr := r.EvaluateBig().String()
+	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
+	return fmt.Sprintf(fcode, intStr)
 }
 
 //___________________________________________________________________________________

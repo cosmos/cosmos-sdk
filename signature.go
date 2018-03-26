@@ -8,7 +8,7 @@ import (
 )
 
 func SignatureFromBytes(pubKeyBytes []byte) (pubKey Signature, err error) {
-	err = cdc.UnmarshalBinary(pubKeyBytes, &pubKey)
+	err = cdc.UnmarshalBinaryBare(pubKeyBytes, &pubKey)
 	return
 }
 
@@ -28,7 +28,7 @@ var _ Signature = SignatureEd25519{}
 type SignatureEd25519 [64]byte
 
 func (sig SignatureEd25519) Bytes() []byte {
-	bz, err := cdc.MarshalBinary(sig)
+	bz, err := cdc.MarshalBinaryBare(sig)
 	if err != nil {
 		panic(err)
 	}
@@ -61,7 +61,7 @@ var _ Signature = SignatureSecp256k1{}
 type SignatureSecp256k1 []byte
 
 func (sig SignatureSecp256k1) Bytes() []byte {
-	bz, err := cdc.MarshalBinary(sig)
+	bz, err := cdc.MarshalBinaryBare(sig)
 	if err != nil {
 		panic(err)
 	}

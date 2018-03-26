@@ -42,7 +42,7 @@ func (i Info) Address() []byte {
 }
 
 func (i Info) bytes() []byte {
-	bz, err := cdc.MarshalBinary(i)
+	bz, err := cdc.MarshalBinaryBare(i)
 	if err != nil {
 		panic(err)
 	}
@@ -50,6 +50,6 @@ func (i Info) bytes() []byte {
 }
 
 func readInfo(bz []byte) (info Info, err error) {
-	err = cdc.UnmarshalBinary(bz, &info)
+	err = cdc.UnmarshalBinaryBare(bz, &info)
 	return
 }

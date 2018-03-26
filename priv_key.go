@@ -10,7 +10,7 @@ import (
 )
 
 func PrivKeyFromBytes(privKeyBytes []byte) (privKey PrivKey, err error) {
-	err = cdc.UnmarshalBinary(privKeyBytes, &privKey)
+	err = cdc.UnmarshalBinaryBare(privKeyBytes, &privKey)
 	return
 }
 
@@ -31,7 +31,7 @@ var _ PrivKey = PrivKeyEd25519{}
 type PrivKeyEd25519 [64]byte
 
 func (privKey PrivKeyEd25519) Bytes() []byte {
-	bz, err := cdc.MarshalBinary(privKey)
+	bz, err := cdc.MarshalBinaryBare(privKey)
 	if err != nil {
 		panic(err)
 	}
@@ -75,7 +75,7 @@ func (privKey PrivKeyEd25519) String() string {
 
 // Deterministically generates new priv-key bytes from key.
 func (privKey PrivKeyEd25519) Generate(index int) PrivKeyEd25519 {
-	bz, err := cdc.MarshalBinary(struct {
+	bz, err := cdc.MarshalBinaryBare(struct {
 		PrivKey [64]byte
 		Index   int
 	}{privKey, index})
@@ -113,7 +113,7 @@ var _ PrivKey = PrivKeySecp256k1{}
 type PrivKeySecp256k1 [32]byte
 
 func (privKey PrivKeySecp256k1) Bytes() []byte {
-	bz, err := cdc.MarshalBinary(privKey)
+	bz, err := cdc.MarshalBinaryBare(privKey)
 	if err != nil {
 		panic(err)
 	}

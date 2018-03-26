@@ -18,7 +18,7 @@ import (
 type Address = cmn.HexBytes
 
 func PubKeyFromBytes(pubKeyBytes []byte) (pubKey PubKey, err error) {
-	err = cdc.UnmarshalBinary(pubKeyBytes, &pubKey)
+	err = cdc.UnmarshalBinaryBare(pubKeyBytes, &pubKey)
 	return
 }
 
@@ -46,7 +46,7 @@ func (pubKey PubKeyEd25519) Address() Address {
 }
 
 func (pubKey PubKeyEd25519) Bytes() []byte {
-	bz, err := cdc.MarshalBinary(pubKey)
+	bz, err := cdc.MarshalBinaryBare(pubKey)
 	if err != nil {
 		panic(err)
 	}
@@ -108,7 +108,7 @@ func (pubKey PubKeySecp256k1) Address() Address {
 }
 
 func (pubKey PubKeySecp256k1) Bytes() []byte {
-	bz, err := cdc.MarshalBinary(pubKey)
+	bz, err := cdc.MarshalBinaryBare(pubKey)
 	if err != nil {
 		panic(err)
 	}

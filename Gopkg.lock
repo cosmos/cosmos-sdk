@@ -128,8 +128,8 @@
 [[projects]]
   name = "github.com/tendermint/go-amino"
   packages = ["."]
-  revision = "8b10adccaa7e4c2edc29c7b762169c34f4a36b32"
-  version = "0.9.1"
+  revision = "f55c3351f30e5987500020631f00e87a035ed415"
+  version = "0.9.3"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -166,6 +166,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ff08a2810853f018b3ce056747de63fe4c1782268796f457d3fa28305de2bd1d"
+  inputs-digest = "9748e96106582387ac49df1db8e4456bd51c8e9362c86992d6ce7011c1783f55"
   solver-name = "gps-cdcl"
   solver-version = 1

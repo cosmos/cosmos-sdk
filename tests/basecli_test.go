@@ -12,8 +12,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Tests assume the `basecoind` and `basecli` binaries
-// have been built and are located in `./build`
+/*
+
+Cosmos-SDK integration tests using golang (instead of bash)
+
+Tests assume the `basecoind` and `basecli` binaries
+have been built and are located in `./build`
+The CI handles this already
+
+NOTE: a few Test* functions have duplicate functions
+that aren't specifically "tests" but rather pre-requisite
+functionality that's called from within a particular Test*
+function. We do this because Test* functions provide reporting
+capabilities for the CI. This duplication is considered an
+acceptable trade-off.
+
+*/
 
 var (
 	gopath = filepath.Join(os.Getenv("GOPATH"), "src", "github.com", "cosmos", "cosmos-sdk")
@@ -74,7 +88,7 @@ func TestInitBasecoin(t *testing.T) {
 
 // identical to above test but doesn't make keys
 // and returns the address as string
-func initBasecoinServer(t *testing.T) string {
+func initBasecoindServer(t *testing.T) string {
 	var err error
 
 	usePassword := exec.Command("echo", password)
@@ -102,6 +116,8 @@ func initBasecoinServer(t *testing.T) string {
 }
 
 // `basecli keys add`
+// duplicate of TestBasecliKeysAdd
+// but see note at top of file
 func makeKeys(t *testing.T) {
 	var err error
 	for _, acc := range ACCOUNTS {
@@ -121,7 +137,6 @@ func makeKeys(t *testing.T) {
 		err = makeKeys.Wait()
 		assert.Nil(t, err)
 	}
-
 }
 
 // `basecli init`
@@ -153,9 +168,10 @@ func TestBasecliAccount(t *testing.T) {}
 func _TestBasecliSend(t *testing.T) {
 	var err error
 
-	validatorAddress := initBasecoinServer(t)
-
-	err = startServer()
+	// init basecoind
+	validatorAddress := initBasecoindServer(t)
+	// start the server
+	startServer(t)
 	assert.Nil(t, err)
 
 	// send some coins
@@ -185,7 +201,30 @@ func TestBasecliBond(t *testing.T) {}
 func TestBasecliUnbond(t *testing.T) {}
 
 // `basecli keys add`
-func TestBasecliKeysAdd(t *testing.T) {}
+// duplicate with "makeKeys" function
+func TestBasecliKeysAdd(t *testing.T) {
+	_ = initBasecoindServer(t)
+
+	var err error
+	for _, acc := range ACCOUNTS {
+		pass := exec.Command("echo", password)
+		makeKeys := exec.Command(basecliPath, "keys", "add", acc, "--home", basecliDir)
+
+		makeKeys.Stdin, err = pass.StdoutPipe()
+		assert.Nil(t, err)
+
+		makeKeys.Stdout = os.Stdout
+		err = makeKeys.Start()
+		assert.Nil(t, err)
+
+		err = pass.Run()
+		assert.Nil(t, err)
+
+		err = makeKeys.Wait()
+		assert.Nil(t, err)
+	}
+
+}
 
 // `basecli keys add --recover`
 func TestBasecliKeysAddRecover(t *testing.T) {}
@@ -202,7 +241,7 @@ func TestBasecliKeysDelete(t *testing.T) {}
 // `basecli keys update`
 func TestBasecliKeysUpdate(t *testing.T) {}
 
-// expects initBasecoinServer to have been run
+// expects initBasecoindServer to have been run
 // `basecoind start`
 func startServer(t *testing.T) {
 	// straight outta https://nathanleclaire.com/blog/2014/12/29/shelled-out-commands-in-golang/

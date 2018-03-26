@@ -1,5 +1,6 @@
 PACKAGES=$(shell go list ./... | grep -v '/vendor/')
-BUILD_FLAGS = -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=`git rev-parse --short HEAD`"
+COMMIT_HASH := $(shell git rev-parse --short HEAD)
+BUILD_FLAGS = -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
 
 all: check_tools get_vendor_deps build test
 
@@ -17,9 +18,14 @@ gaia:
 	go build $(BUILD_FLAGS) -o build/gaiacli ./examples/gaia/gaiacli
 
 build:
-	@rm -rf examples/basecoin/vendor/
+	@rm -rf $(shell pwd)/examples/basecoin/vendor/
+ifeq ($(OS),Windows_NT)
+	go build $(BUILD_FLAGS) -o build/basecoind.exe ./examples/basecoin/cmd/basecoind
+	go build $(BUILD_FLAGS) -o build/basecli.exe ./examples/basecoin/cmd/basecli
+else
 	go build $(BUILD_FLAGS) -o build/basecoind ./examples/basecoin/cmd/basecoind
 	go build $(BUILD_FLAGS) -o build/basecli ./examples/basecoin/cmd/basecli
+endif
 
 dist:
 	@bash publish/dist.sh

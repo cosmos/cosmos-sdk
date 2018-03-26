@@ -138,28 +138,109 @@ func makeKeys(t *testing.T) {
 }
 
 // `basecli init`
-func TestBasecliInit(t *testing.T) {}
+// initialize the light client
+func _TestBasecliInit(t *testing.T) {
+	usePassword := exec.Command("echo", password)
+
+	initBasecli := exec.Command(basecliPath, "init", "--home", basecliDir)
+
+	initBasecli.Stdin, err = usePassword.StdoutPipe()
+	assert.Nil(t, err)
+
+	initBasecli.Stdout = os.Stdout
+
+	err = initBasecli.Start()
+	assert.Nil(t, err)
+
+	err = usePassword.Run()
+	assert.Nil(t, err)
+
+	err = initBasecli.Wait()
+	assert.Nil(t, err)
+}
 
 // `basecli rest-server`
-func TestBasecliRestServer(t *testing.T) {}
+// not sure what this is supposed to test
+func _TestBasecliRestServer(t *testing.T) {
+
+	startBasecli, err := exec.Command(basecliPath, "rest-server", "--home", basecliDir).Output()
+	assert.Nil(t, err)
+
+}
 
 // `basecli status`
-func TestBasecliStatus(t *testing.T) {}
+func _TestBasecliStatus(t *testing.T) {
+	// start `basecli rest-server` (TODO a seperate, nearly identical function from the one above)
+
+	// then query node for status
+	basecliStatus, err := exec.Command(basecliPath, "status", "--home", basecliDir).Output()
+	assert.Nil(t, err)
+
+	// check that the status is what it is supposed to be
+}
 
 // `basecli block`
-func TestBasecliBlock(t *testing.T) {}
+func _TestBasecliBlock(t *testing.T) {
+	// start `basecli rest-server`
+
+	height := 5 // some height
+
+	// get block information
+	basecliBlock, err := exec.Command(basecliPath, "block", height, "--home", basecliDir).Output()
+	assert.Nil(t, err)
+
+	// confirm that the block information is correct
+}
 
 // `basecli validatorset`
-func TestBasecliValidatorSet(t *testing.T) {}
+func _TestBasecliValidatorSet(t *testing.T) {
+	// start `basecli rest-server`
+
+	height := 5 // some height
+
+	// get validator set information
+	basecliValidatorSet, err := exec.Command(basecliPath, "validatorset", height, "--home", basecliDir).Output()
+	assert.Nil(t, err)
+
+	// check that it is what it should be
+
+}
 
 // `basecli txs`
-func TestBasecliTxs(t *testing.T) {}
+func TestBasecliTxs(t *testing.T) {
+	// start `basecli rest-server`
+
+	someTag := "i dont know"
+
+	basecliTxs, err := exec.Command(basecliPath, "txs", "--tag", someTag, "--home", basecliDir).Output()
+	assert.Nil(t, err)
+
+	// validate output
+}
 
 // `basecli tx`
-func TestBasecliTx(t *testing.T) {}
+func TestBasecliTx(t *testing.T) {
+	// start `basecli rest-server`
+
+	someHash := "TBD"
+
+	basecliTxs, err := exec.Command(basecliPath, "tx", someHash, "--home", basecliDir).Output()
+	assert.Nil(t, err)
+
+	// validate output
+}
 
 // `basecli account`
-func TestBasecliAccount(t *testing.T) {}
+func TestBasecliAccount(t *testing.T) {
+	// start `basecli rest-server`
+
+	someAddress := "TBD"
+
+	basecliAccount, err := exec.Command(basecliPath, "account", someAddress, "--home", basecliDir).Output()
+	assert.Nil(t, err)
+
+	// validate output
+}
 
 // TODO see https://github.com/cosmos/cosmos-sdk/issues/674
 // instead of the above, we're using already init'd files

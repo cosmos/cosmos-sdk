@@ -37,7 +37,7 @@ func (k Keeper) Tick(ctx sdk.Context) (change []*abci.Validator, err error) {
 func (k Keeper) processProvisions(ctx sdk.Context) {
 
 	pool := k.GetPool(ctx)
-	pool.Inflation = k.nextInflation(ctx).Round(precision) //TODO make this number a const somewhere?
+	pool.Inflation = k.nextInflation(ctx).Round(precision)
 
 	// Because the validators hold a relative bonded share (`GlobalStakeShare`), when
 	// more bonded tokens are added proportionally to all validators the only term

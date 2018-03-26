@@ -192,6 +192,20 @@ func TestRound(t *testing.T) {
 	}
 }
 
+func TestToLeftPaddedString(t *testing.T) {
+	tests := []struct {
+		rat    Rat
+		digits int8
+		res    string
+	}{
+		{NewRat(100, 3), 8, "00000033"},
+	}
+
+	for _, tc := range tests {
+		assert.Equal(t, tc.res, tc.rat.ToLeftPadded(tc.digits))
+	}
+}
+
 //func TestZeroSerializationJSON(t *testing.T) {
 //r := NewRat(0, 1)
 //err := r.UnmarshalJSON([]byte(`"0/1"`))

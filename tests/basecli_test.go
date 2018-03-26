@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bufio"
+	//"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -38,8 +38,9 @@ var (
 	basecoindPath = filepath.Join(gopath, basecoind)
 	basecliPath   = filepath.Join(gopath, basecli)
 
-	basecoindDir = "./tmp-basecoind-tests"
-	basecliDir   = "./tmp-basecli-tests"
+	basecoindDir    = "./tmp-basecoind-tests"
+	basecliDir      = "./tmp-basecli-tests"
+	files_for_tests = "./files-for-tests"
 
 	ACCOUNTS = []string{"alice", "bob", "charlie", "igor"}
 	alice    = ACCOUNTS[0]
@@ -61,7 +62,7 @@ func TestMain(m *testing.M) {
 }
 
 // `basecoind init`
-func TestInitBasecoin(t *testing.T) {
+func _TestInitBasecoin(t *testing.T) {
 	var err error
 
 	usePassword := exec.Command("echo", password)
@@ -81,9 +82,6 @@ func TestInitBasecoin(t *testing.T) {
 
 	err = initBasecoind.Wait()
 	assert.Nil(t, err)
-
-	// left here as a sanity test
-	makeKeys(t)
 }
 
 // identical to above test but doesn't make keys
@@ -164,25 +162,79 @@ func TestBasecliTx(t *testing.T) {}
 func TestBasecliAccount(t *testing.T) {}
 
 // TODO see https://github.com/cosmos/cosmos-sdk/issues/674
+// instead of the above, we're using already init'd files
 // `basecli send`
-func _TestBasecliSend(t *testing.T) {
+func TestBasecliSend(t *testing.T) {
 	var err error
 
-	// init basecoind
-	validatorAddress := initBasecoindServer(t)
-	// start the server
-	startServer(t)
+	// seed that created the file priv_validator.json in tests/files-for-tests/config/priv_validator.json
+	seed := "\"choose method diagram error travel conduct juice loop calm ridge gesture reason damp spider arm abandon\""
+	namedKey := "badux"
+	// address from that seed
+	//validatorAddress := "7AA8E48D709A9E28EA9E81026522F4A924FDA3E7"
+
+	// make a named key (TODO, remove this awful UX)
+	err = addNamedKeyFromSeed(namedKey, seed)
 	assert.Nil(t, err)
+
+	// copy the pre-made bob key to the temp dir
+	err = os.Link(filepath.Join(files_for_tests, "keys.db"), filepath.Join(basecliPath, "keys.db"))
+	assert.Nil(t, err)
+
+	// start the server
+	toKill := startServer(t)
 
 	// send some coins
 	sendTo := fmt.Sprintf("--to=%s", bob)
-	sendFrom := fmt.Sprintf("--from=%s", validatorAddress)
+	sendFrom := fmt.Sprintf("--name=%s", namedKey)
 
-	cmdOut, err := exec.Command(basecliPath, "send", sendTo, "--amount=1000mycoin", sendFrom, "--seq=0").Output()
+	cmdOut, err := exec.Command(basecliPath, "send", sendTo, "--amount=1000mycoin", sendFrom, "--seq=0", "--home", basecliPath).Output()
 	assert.Nil(t, err)
 
 	fmt.Printf("sent: %s", string(cmdOut))
 
+	// kill startServer
+	// see: https://stackoverflow.com/questions/11886531/terminating-a-process-started-with-os-exec-in-golang
+	toKill.Process.Kill()
+
+}
+
+func addNamedKeyFromSeed(name, seed string) error {
+	var err error
+
+	useSeed := exec.Command("echo", password, ";", "echo", seed)
+
+	addKey := exec.Command(basecliPath, "keys", "add", name, "--home", basecliPath, "--recover")
+
+	addKey.Stdin, err = useSeed.StdoutPipe()
+	if err != nil {
+		return err
+	}
+
+	addKey.Stdout = os.Stdout
+
+	err = addKey.Start()
+	if err != nil {
+		return err
+	}
+
+	err = useSeed.Run()
+	if err != nil {
+		return err
+	}
+
+	err = addKey.Wait()
+	if err != nil {
+		return err
+	}
+
+	out, err := addKey.Output()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("name (%s) added: %s", name, string(out))
+	return nil
 }
 
 // `basecli transfer`
@@ -202,7 +254,7 @@ func TestBasecliUnbond(t *testing.T) {}
 
 // `basecli keys add`
 // duplicate with "makeKeys" function
-func TestBasecliKeysAdd(t *testing.T) {
+func _TestBasecliKeysAdd(t *testing.T) {
 	_ = initBasecoindServer(t)
 
 	var err error
@@ -241,35 +293,22 @@ func TestBasecliKeysDelete(t *testing.T) {}
 // `basecli keys update`
 func TestBasecliKeysUpdate(t *testing.T) {}
 
-// expects initBasecoindServer to have been run
 // `basecoind start`
-func startServer(t *testing.T) {
-	// straight outta https://nathanleclaire.com/blog/2014/12/29/shelled-out-commands-in-golang/
-	cmdName := basecoindPath
+func startServer(t *testing.T) *exec.Cmd {
+	var err error
+
 	cmdArgs := []string{"start", "--home", basecoindDir}
 
-	cmd := exec.Command(cmdName, cmdArgs...)
-	cmdReader, err := cmd.StdoutPipe()
-	assert.Nil(t, err)
-
-	scanner := bufio.NewScanner(cmdReader)
-	go func() {
-		for scanner.Scan() {
-			fmt.Printf("running [basecoind start] %s\n", scanner.Text())
-		}
-	}()
+	cmd := exec.Command(basecoindPath, cmdArgs...)
+	//cmd.Stdout = os.Stdout
 
 	err = cmd.Start()
 	assert.Nil(t, err)
 
-	err = cmd.Wait()
-	assert.Nil(t, err)
+	time.Sleep(2 * time.Second)
 
-	time.Sleep(5 * time.Second)
+	return cmd
 
-	// TODO return cmd.Process so that we can later do something like:
-	// cmd.Process.Kill()
-	// see: https://stackoverflow.com/questions/11886531/terminating-a-process-started-with-os-exec-in-golang
 }
 
 func cleanUp() {

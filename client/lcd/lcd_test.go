@@ -337,7 +337,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	genDoc.AppState = stateBytes
+	genDoc.AppStateJSON = stateBytes
 
 	cdc := wire.NewCodec()
 

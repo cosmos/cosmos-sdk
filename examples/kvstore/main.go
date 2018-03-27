@@ -36,7 +36,7 @@ func main() {
 	baseApp.SetTxDecoder(decodeTx)
 
 	// Set a handler Route.
-	baseApp.Router().AddRoute("kvstore", KVStoreHandler(capKeyMainStore))
+	baseApp.Router().AddRoute("kvstore", KVStoreHandler(capKeyMainStore), nil)
 
 	// Load latest version.
 	if err := baseApp.LoadLatestVersion(capKeyMainStore); err != nil {

@@ -71,3 +71,22 @@ func (ck CoinKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.Address, toAddr sdk
 
 	return nil
 }
+
+// InputOutputCoins handles a list of inputs and outputs
+func (ck CoinKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) sdk.Error {
+	for _, in := range inputs {
+		_, err := ck.SubtractCoins(ctx, in.Address, in.Coins)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, out := range outputs {
+		_, err := ck.AddCoins(ctx, out.Address, out.Coins)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

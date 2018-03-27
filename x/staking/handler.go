@@ -6,14 +6,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) Handler(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-	switch msg := msg.(type) {
-	case BondMsg:
-		return handleBondMsg(ctx, k, msg)
-	case UnbondMsg:
-		return handleUnbondMsg(ctx, k, msg)
-	default:
-		return sdk.ErrUnknownRequest("No match for message type.").Result()
+// NewHandler returns a handler for "bank" type messages.
+func NewHandler(k Keeper) sdk.Handler {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		switch msg := msg.(type) {
+		case BondMsg:
+			return handleBondMsg(ctx, k, msg)
+		case UnbondMsg:
+			return handleUnbondMsg(ctx, k, msg)
+		default:
+			return sdk.ErrUnknownRequest("No match for message type.").Result()
+		}
 	}
 }
 

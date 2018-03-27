@@ -11,5 +11,5 @@ const (
 
 // ErrIncorrectCoolAnswer - Error returned upon an incorrect guess
 func ErrIncorrectCoolAnswer(answer string) sdk.Error {
-	return sdk.NewError(CodeIncorrectCoolAnswer, "Incorrect Cool answer - `"+answer+"'")
+	return sdk.NewError(CodeIncorrectCoolAnswer, "Incorrect cool answer")
 }

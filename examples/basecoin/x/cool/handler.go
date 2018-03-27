@@ -17,16 +17,18 @@ import (
 //|  $$$$$$$|  $$$$$$/|  $$$$$$/| $$$$$$$
 // \_______/ \______/  \______/ |______/
 
-// Handle all "coolmodule" type objects
-func (k Keeper) Handler(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-	switch msg := msg.(type) {
-	case SetTrendMsg:
-		return handleSetTrendMsg(ctx, k, msg)
-	case QuizMsg:
-		return handleQuizMsg(ctx, k, msg)
-	default:
-		errMsg := fmt.Sprintf("Unrecognized cool Msg type: %v", reflect.TypeOf(msg).Name())
-		return sdk.ErrUnknownRequest(errMsg).Result()
+// NewHandler returns a handler for "cool" type messages.
+func NewHandler(k Keeper) sdk.Handler {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		switch msg := msg.(type) {
+		case SetTrendMsg:
+			return handleSetTrendMsg(ctx, k, msg)
+		case QuizMsg:
+			return handleQuizMsg(ctx, k, msg)
+		default:
+			errMsg := fmt.Sprintf("Unrecognized cool Msg type: %v", reflect.TypeOf(msg).Name())
+			return sdk.ErrUnknownRequest(errMsg).Result()
+		}
 	}
 }
 

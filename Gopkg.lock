@@ -303,7 +303,6 @@
   version = "v0.7.0"
 
 [[projects]]
-  branch = "develop"
   name = "github.com/tendermint/tendermint"
   packages = [
     "blockchain",
@@ -342,7 +341,8 @@
     "version",
     "wire"
   ]
-  revision = "e3337d764a0da9b4f8ed84a65cd842a2a08d72b0"
+  revision = "6f9956990c444d53f62f2a3905ed410cfe9afe77"
+  version = "v0.17.1"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -396,7 +396,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "91ee8cde435411ca3f1cd365e8f20131aed4d0a1"
+  revision = "13d03a9a82fba647c21a0ef8fba44a795d0f0835"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -452,12 +452,12 @@
 [[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "7f97868eec74b32b0982dd158a51a446d1da7eb5"
-  version = "v2.1.1"
+  revision = "86f5ed62f8a0ee96bd888d2efdfd6d4fb100a4eb"
+  version = "v2.2.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "25be8b1057a6f24ab743bf0602823e83fb42f42b6a6ba4ba0925c783df97d9c1"
+  inputs-digest = "0eb39694057c8ab8c9ecbaeb25bc43cbf1d2422976a09a67392a62dcef149a7b"
   solver-name = "gps-cdcl"
   solver-version = 1

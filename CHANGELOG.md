@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.12.0 (TBD)
+## 0.12.0 (March 27 2018)
 
 BREAKING CHANGES
 
@@ -17,6 +17,7 @@ BREAKING CHANGES
 FEATURES
 
 * [examples/basecoin] New cool module to demonstrate use of state and custom transactions
+* [basecoind] `show_node_id` command
 * [lcd] Implement the Light Client Daemon and endpoints
 * [types/stdlib] Queue functionality
 * [store] Subspace iterator on IAVLTree

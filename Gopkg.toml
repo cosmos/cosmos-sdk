@@ -70,7 +70,7 @@
   name = "github.com/tendermint/iavl"
 
 [[constraint]]
-  branch = "develop"
+  version = "~0.17.1"
   name = "github.com/tendermint/tendermint"
 
 [[constraint]]

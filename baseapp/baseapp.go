@@ -241,18 +241,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		// TODO Return something intelligent
 		panic(err)
 	}
-	err = app.Router().ForEach(func(r string, _ sdk.Handler, i sdk.InitGenesis) error {
-		if i != nil {
-			encoded, exists := (*genesisState)[r]
-			if !exists {
-				// TODO should this be a Cosmos SDK standard error?
-				return errors.New(fmt.Sprintf("Expected module genesis information for module %s but it was not present", r))
-			} else {
-				return i(app.deliverState.ctx, encoded)
-			}
-		}
-		return nil
-	})
+	err = app.Router().InitGenesis(app.deliverState.ctx, *genesisState)
 	if err != nil {
 		// TODO Return something intelligent
 		panic(err)

@@ -1,6 +1,8 @@
 package baseapp
 
 import (
+	"encoding/json"
+	"fmt"
 	"regexp"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,8 +12,7 @@ import (
 type Router interface {
 	AddRoute(r string, h sdk.Handler, i sdk.InitGenesis) (rtr Router)
 	Route(path string) (h sdk.Handler)
-	RouteGenesis(path string) (i sdk.InitGenesis)
-	ForEach(func(r string, h sdk.Handler, i sdk.InitGenesis) error) error
+	InitGenesis(ctx sdk.Context, data map[string]json.RawMessage) error
 }
 
 // map a transaction type to a handler and an initgenesis function
@@ -46,34 +47,29 @@ func (rtr *router) AddRoute(r string, h sdk.Handler, i sdk.InitGenesis) Router {
 	return rtr
 }
 
-// TODO handle expressive matches.
-func matchRoute(path string, route string) bool {
-	return path == route
-}
-
 // Route - TODO add description
+// TODO handle expressive matches.
 func (rtr *router) Route(path string) (h sdk.Handler) {
 	for _, route := range rtr.routes {
-		if matchRoute(path, route.r) {
+		if route.r == path {
 			return route.h
 		}
 	}
 	return nil
 }
 
-func (rtr *router) RouteGenesis(path string) (i sdk.InitGenesis) {
+// InitGenesis - call `InitGenesis`, where specified, for all routes
+// Return the first error if any, otherwise nil
+func (rtr *router) InitGenesis(ctx sdk.Context, data map[string]json.RawMessage) error {
 	for _, route := range rtr.routes {
-		if matchRoute(path, route.r) {
-			return route.i
-		}
-	}
-	return nil
-}
-
-func (rtr *router) ForEach(f func(string, sdk.Handler, sdk.InitGenesis) error) error {
-	for _, route := range rtr.routes {
-		if err := f(route.r, route.h, route.i); err != nil {
-			return err
+		if route.i != nil {
+			encoded, found := data[route.r]
+			if !found {
+				return sdk.ErrGenesisParse(fmt.Sprintf("Expected module genesis information for module %s but it was not present", route.r))
+			}
+			if err := route.i(ctx, encoded); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

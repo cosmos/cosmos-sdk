@@ -32,7 +32,7 @@ const (
 	CodeInsufficientCoins CodeType = 10
 	CodeInvalidCoins      CodeType = 11
 
-	CodeGenesisParse CodeType = 0xdead // TODO: remove ?
+	CodeGenesisParse CodeType = 0xdead // TODO: remove ? // why remove?
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.

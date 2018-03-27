@@ -19,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/sketchy"
 )
 
 const (

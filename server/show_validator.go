@@ -31,7 +31,10 @@ func (s showValidator) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	privValidator := types.LoadOrGenPrivValidatorFS(cfg.PrivValidatorFile())
-	pubKeyJSONBytes, _ := data.ToJSON(privValidator.PubKey)
+	pubKeyJSONBytes, err := data.ToJSON(privValidator.PubKey)
+	if err != nil {
+		return err
+	}
 	fmt.Println(string(pubKeyJSONBytes))
 	return nil
 }

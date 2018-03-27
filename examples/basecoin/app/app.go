@@ -62,7 +62,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	coolMapper := cool.NewMapper(app.capKeyMainStore)
 
-	ibcKeeper := ibc.NewKeeper(app.cdc, app.capKeyIBCStore)
+	ibcKeeper := ibcm.NewKeeper(app.cdc, app.capKeyIBCStore)
 	ibcKeeper.Dispatcher().
 		AddDispatch("bank", bank.NewIBCHandler(coinKeeper))
 
@@ -96,9 +96,11 @@ func MakeCodec() *wire.Codec {
 	const msgTypeIssue = 0x3
 	const msgTypeQuiz = 0x4
 	const msgTypeSetTrend = 0x5
-	const msgTypeReceive = 0x6
-	const msgTypeBondMsg = 0x7
-	const msgTypeUnbondMsg = 0x8
+	const msgTypeOpenChannel = 0x6
+	const msgTypeUpdateChannel = 0x7
+	const msgTypeReceive = 0x8
+	const msgTypeBondMsg = 0x9
+	const msgTypeUnbondMsg = 0x10
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Msg }{},
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
@@ -106,6 +108,8 @@ func MakeCodec() *wire.Codec {
 		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
 		oldwire.ConcreteType{cool.QuizMsg{}, msgTypeQuiz},
 		oldwire.ConcreteType{cool.SetTrendMsg{}, msgTypeSetTrend},
+		oldwire.ConcreteType{ibcm.OpenChannelMsg{}, msgTypeOpenChannel},
+		oldwire.ConcreteType{ibcm.UpdateChannelMsg{}, msgTypeUpdateChannel},
 		oldwire.ConcreteType{ibcm.ReceiveMsg{}, msgTypeReceive},
 		oldwire.ConcreteType{staking.BondMsg{}, msgTypeBondMsg},
 		oldwire.ConcreteType{staking.UnbondMsg{}, msgTypeUnbondMsg},

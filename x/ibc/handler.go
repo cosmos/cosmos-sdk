@@ -39,9 +39,14 @@ func handleOpenChannelMsg(ctx sdk.Context, keeper keeper, msg OpenChannelMsg) sd
 }
 
 func handleUpdateChannelMsg(ctx sdk.Context, keeper keeper, msg UpdateChannelMsg) sdk.Result {
-	height, commit, err := keeper.getChannelRecentCommit(ctx, msg.SrcChain)
+	height, err := keeper.getChannelCommitHeight(ctx, msg.SrcChain)
 	if err != nil {
 		return err.Result()
+	}
+
+	commit, ok := keeper.getChannelCommit(ctx, msg.SrcChain, height)
+	if !ok {
+		panic("Should not be happened")
 	}
 
 	cert := lite.NewDynamicCertifier(msg.SrcChain, commit.Validators, height)
@@ -64,9 +69,9 @@ func handleReceiveMsg(ctx sdk.Context, keeper keeper, msg ReceiveMsg) sdk.Result
 
 	keeper.setIngressSequence(ctx, msg.SrcChain, seq+1)
 
-	_, commit, err := keeper.getChannelRecentCommit(ctx, msg.SrcChain)
-	if err != nil {
-		return err.Result()
+	commit, ok := keeper.getChannelCommit(ctx, msg.SrcChain, msg.Height)
+	if !ok {
+		return types.ErrNoCommitFound().Result()
 	}
 
 	key := []byte(fmt.Sprintf("ibc/%s", EgressKey(ctx.ChainID(), msg.Sequence)))
@@ -79,7 +84,7 @@ func handleReceiveMsg(ctx sdk.Context, keeper keeper, msg ReceiveMsg) sdk.Result
 		return types.ErrInvalidPacket(rawerr).Result()
 	}
 
-	err = keeper.Receive(ctx, msg.Packet)
+	err := keeper.Receive(ctx, msg.Packet)
 	if err != nil {
 		return err.Result()
 	}

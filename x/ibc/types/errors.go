@@ -14,6 +14,7 @@ const (
 	CodeChannelAlreadyOpened sdk.CodeType = 204
 	CodeUpdateCommitFailed   sdk.CodeType = 205
 	CodeInvalidPacket        sdk.CodeType = 206
+	CodeNoCommitFound        sdk.CodeType = 207
 )
 
 func codeToDefaultMsg(code sdk.CodeType) string {
@@ -55,6 +56,10 @@ func ErrUpdateCommitFailed(err error) sdk.Error {
 
 func ErrInvalidPacket(err error) sdk.Error {
 	return newError(CodeInvalidPacket, err.Error())
+}
+
+func ErrNoCommitFound() sdk.Error {
+	return newError(CodeNoCommitFound, "")
 }
 
 // -------------------------

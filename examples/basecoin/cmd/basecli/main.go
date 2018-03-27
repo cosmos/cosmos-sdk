@@ -78,6 +78,7 @@ func main() {
 	basecliCmd.AddCommand(
 		client.PostCommands(
 			ibccmd.IBCRelayCmd(cdc),
+			ibccmd.IBCOpenCmd(cdc),
 			stakingcmd.BondTxCmd(cdc),
 		)...)
 	basecliCmd.AddCommand(

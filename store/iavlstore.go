@@ -19,7 +19,7 @@ const (
 
 func LoadIAVLStore(db dbm.DB, id CommitID) (CommitStore, error) {
 	tree := iavl.NewVersionedTree(db, defaultIAVLCacheSize)
-	err := tree.LoadVersion(id.Version)
+	_, err := tree.LoadVersion(id.Version)
 	if err != nil {
 		return nil, err
 	}

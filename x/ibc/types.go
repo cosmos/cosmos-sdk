@@ -19,6 +19,7 @@ import (
 type ReceiveMsg struct {
 	types.Packet
 	Proof    *iavl.KeyExistsProof
+	Height   int64
 	Relayer  sdk.Address
 	Sequence int64
 }

@@ -26,9 +26,6 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey) keeper {
 	}
 }
 
-// XXX: This is not the public API. This will change in MVP2 and will henceforth
-// only be invoked from another module directly and not through a user
-// transaction.
 // TODO: Handle invalid IBC packets and return errors.
 func (sender keeper) Push(ctx sdk.Context, payload types.Payload, dest string) {
 	// write everything into the state
@@ -38,7 +35,7 @@ func (sender keeper) Push(ctx sdk.Context, payload types.Payload, dest string) {
 		SrcChain:  ctx.ChainID(),
 		DestChain: dest,
 	}
-	index := sender.getEgressLength(store, dest)
+	index := sender.getEgressLength(ctx, dest)
 	bz, err := sender.cdc.MarshalBinary(packet)
 	if err != nil {
 		panic(err)
@@ -137,15 +134,19 @@ func (keeper keeper) setChannelCommit(ctx sdk.Context, srcChain string, height i
 	store.Set(CommitHeightKey(srcChain), bz)
 }
 
-func (keeper keeper) getChannelCommit(ctx sdk.Context, srcChain string, height int64) (commit lite.FullCommit) {
+func (keeper keeper) getChannelCommit(ctx sdk.Context, srcChain string, height int64) (commit lite.FullCommit, ok bool) {
 	store := ctx.KVStore(keeper.key)
 
 	bz := store.Get(CommitByHeightKey(srcChain, height))
+	if bz == nil {
+		return commit, false
+	}
+
 	if err := keeper.cdc.UnmarshalBinary(bz, &commit); err != nil {
 		panic(err)
 	}
 
-	return
+	return commit, true
 }
 
 func (keeper keeper) getChannelCommitHeight(ctx sdk.Context, srcChain string) (res int64, err sdk.Error) {
@@ -160,16 +161,6 @@ func (keeper keeper) getChannelCommitHeight(ctx sdk.Context, srcChain string) (r
 		panic(err)
 	}
 
-	return
-}
-
-func (keeper keeper) getChannelRecentCommit(ctx sdk.Context, srcChain string) (height int64, commit lite.FullCommit, err sdk.Error) {
-	height, err = keeper.getChannelCommitHeight(ctx, srcChain)
-	if err != nil {
-		return
-	}
-
-	commit = keeper.getChannelCommit(ctx, srcChain, height)
 	return
 }
 
@@ -216,7 +207,8 @@ func (keeper keeper) setIngressSequence(ctx sdk.Context, srcChain string, sequen
 }
 
 // Retrieves the index of the currently stored outgoing IBC packets.
-func (keeper keeper) getEgressLength(store sdk.KVStore, destChain string) int64 {
+func (keeper keeper) getEgressLength(ctx sdk.Context, destChain string) int64 {
+	store := ctx.KVStore(keeper.key)
 	bz := store.Get(EgressLengthKey(destChain))
 	if bz == nil {
 		zero := marshalBinaryPanic(keeper.cdc, int64(0))

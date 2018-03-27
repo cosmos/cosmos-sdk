@@ -74,7 +74,7 @@ test_cover:
 	@rm -rf examples/basecoin/vendor/
 	@rm -rf client/lcd/keys.db ~/.tendermint_test
 	@bash tests/test_cover.sh
-	@rm -rf client/lcd/keys.db ~/.tendermint_test
+	@rm -rf client/lcd/keys.db "$(HOME)/.tendermint_test"
 
 benchmark:
 	@go test -bench=. $(PACKAGES)

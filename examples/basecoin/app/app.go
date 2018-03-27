@@ -154,5 +154,15 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 		}
 		app.accountMapper.SetAccount(ctx, acc)
 	}
+
+	// Execute all transactions in the block, start with BeginBlock, DeliverTx,
+	// EndBlock, Commit
+	app.BeginBlock(abci.RequestBeginBlock{})
+	for _, btx := range genesisState.BondingTransaction {
+		app.DeliverTx(btx)
+	}
+	res := app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+
 	return abci.ResponseInitChain{}
 }

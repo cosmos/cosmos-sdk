@@ -3,8 +3,6 @@ package bank
 import (
 	"fmt"
 
-	crypto "github.com/tendermint/go-crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -19,16 +17,16 @@ func NewCoinKeeper(am sdk.AccountMapper) CoinKeeper {
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
-func (ck CoinKeeper) SubtractCoins(ctx sdk.Context, addr crypto.Address, amt sdk.Coins) (sdk.Coins, sdk.Error) {
+func (ck CoinKeeper) SubtractCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) (sdk.Coins, sdk.Error) {
 	acc := ck.am.GetAccount(ctx, addr)
 	if acc == nil {
-		return amt, sdk.ErrUnrecognizedAddress(addr)
+		return amt, sdk.ErrUnknownAddress(addr.String())
 	}
 
 	coins := acc.GetCoins()
 	newCoins := coins.Minus(amt)
 	if !newCoins.IsNotNegative() {
-		return amt, ErrInsufficientCoins(fmt.Sprintf("%s < %s", coins, amt))
+		return amt, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", coins, amt))
 	}
 
 	acc.SetCoins(newCoins)
@@ -37,7 +35,7 @@ func (ck CoinKeeper) SubtractCoins(ctx sdk.Context, addr crypto.Address, amt sdk
 }
 
 // AddCoins adds amt to the coins at the addr.
-func (ck CoinKeeper) AddCoins(ctx sdk.Context, addr crypto.Address, amt sdk.Coins) (sdk.Coins, sdk.Error) {
+func (ck CoinKeeper) AddCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) (sdk.Coins, sdk.Error) {
 	acc := ck.am.GetAccount(ctx, addr)
 	if acc == nil {
 		acc = ck.am.NewAccountWithAddress(ctx, addr)

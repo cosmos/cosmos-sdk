@@ -59,6 +59,7 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 }
 
 func main() {
+	// TODO: set logger through CLI
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
 		With("module", "main")
 
@@ -66,6 +67,7 @@ func main() {
 		server.InitCmd(defaultOptions, logger),
 		server.StartCmd(generateApp, logger),
 		server.UnsafeResetAllCmd(logger),
+		server.ShowNodeIdCmd(logger),
 		version.VersionCmd,
 	)
 

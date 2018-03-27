@@ -42,7 +42,7 @@ type Msg interface {
 	// Signers returns the addrs of signers that must sign.
 	// CONTRACT: All signatures must be present to be valid.
 	// CONTRACT: Returns addrs in some deterministic order.
-	GetSigners() []crypto.Address
+	GetSigners() []Address
 }
 
 ```
@@ -75,7 +75,7 @@ type SendMsg struct {
 }
 
 type IssueMsg struct {
-	Banker  crypto.Address `json:"banker"`
+	Banker  sdk.Address `json:"banker"`
 	Outputs []Output       `json:"outputs"`
 }
 ```
@@ -83,16 +83,16 @@ type IssueMsg struct {
 Each specifies the addresses that must sign the message:
 
 ```golang
-func (msg SendMsg) GetSigners() []crypto.Address {
-	addrs := make([]crypto.Address, len(msg.Inputs))
+func (msg SendMsg) GetSigners() []sdk.Address {
+	addrs := make([]sdk.Address, len(msg.Inputs))
 	for i, in := range msg.Inputs {
 		addrs[i] = in.Address
 	}
 	return addrs
 }
 
-func (msg IssueMsg) GetSigners() []crypto.Address {
-	return []crypto.Address{msg.Banker}
+func (msg IssueMsg) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.Banker}
 }
 ```
 
@@ -104,14 +104,6 @@ A transaction is a message with additional information for authentication:
 type Tx interface {
 
 	GetMsg() Msg
-
-	// The address that pays the base fee for this message.  The fee is
-	// deducted before the Msg is processed.
-	GetFeePayer() crypto.Address
-
-	// Get the canonical byte representation of the Tx.
-	// Includes any signatures (or empty slots).
-	GetTxBytes() []byte
 
 	// Signatures returns the signature of signers who signed the Msg.
 	// CONTRACT: Length returned is same as length of
@@ -148,8 +140,9 @@ case of Basecoin, the public key only needs to be included in the first
 transaction send by a given account - after that, the public key is forever
 stored by the application and can be left out of transactions.
 
-Transactions can also specify the address responsible for paying the
-transaction's fees using the `tx.GetFeePayer()` method.
+The address responsible for paying the transactions fee is the first address
+returned by msg.GetSigners(). The convenience function `FeePayer(tx Tx)` is provided
+to return this.
 
 The standard way to create a transaction from a message is to use the `StdTx`: 
 

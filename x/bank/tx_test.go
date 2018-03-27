@@ -6,8 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	crypto "github.com/tendermint/go-crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,20 +13,12 @@ func TestNewSendMsg(t *testing.T) {}
 
 func TestSendMsgType(t *testing.T) {
 	// Construct a SendMsg
+	addr1 := sdk.Address([]byte("input"))
+	addr2 := sdk.Address([]byte("output"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = SendMsg{
-		Inputs: []Input{
-			{
-				Address:  crypto.Address([]byte("input")),
-				Coins:    sdk.Coins{{"atom", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []Output{
-			{
-				Address: crypto.Address([]byte("output")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Inputs:  []Input{NewInput(addr1, coins)},
+		Outputs: []Output{NewOutput(addr2, coins)},
 	}
 
 	// TODO some failures for bad result
@@ -36,12 +26,12 @@ func TestSendMsgType(t *testing.T) {
 }
 
 func TestInputValidation(t *testing.T) {
-	addr1 := crypto.Address([]byte{1, 2})
-	addr2 := crypto.Address([]byte{7, 8})
+	addr1 := sdk.Address([]byte{1, 2})
+	addr2 := sdk.Address([]byte{7, 8})
 	someCoins := sdk.Coins{{"atom", 123}}
 	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
 
-	var emptyAddr crypto.Address
+	var emptyAddr sdk.Address
 	emptyCoins := sdk.Coins{}
 	emptyCoins2 := sdk.Coins{{"eth", 0}}
 	someEmptyCoins := sdk.Coins{{"eth", 10}, {"atom", 0}}
@@ -55,18 +45,16 @@ func TestInputValidation(t *testing.T) {
 	}{
 		// auth works with different apps
 		{true, NewInput(addr1, someCoins)},
-		{true, NewInputWithSequence(addr1, someCoins, 100)},
-		{true, NewInputWithSequence(addr2, someCoins, 100)},
-		{true, NewInputWithSequence(addr2, multiCoins, 100)},
+		{true, NewInput(addr2, someCoins)},
+		{true, NewInput(addr2, multiCoins)},
 
-		{false, NewInput(emptyAddr, someCoins)},             // empty address
-		{false, NewInputWithSequence(addr1, someCoins, -1)}, // negative sequence
-		{false, NewInput(addr1, emptyCoins)},                // invalid coins
-		{false, NewInput(addr1, emptyCoins2)},               // invalid coins
-		{false, NewInput(addr1, someEmptyCoins)},            // invalid coins
-		{false, NewInput(addr1, minusCoins)},                // negative coins
-		{false, NewInput(addr1, someMinusCoins)},            // negative coins
-		{false, NewInput(addr1, unsortedCoins)},             // unsorted coins
+		{false, NewInput(emptyAddr, someCoins)},  // empty address
+		{false, NewInput(addr1, emptyCoins)},     // invalid coins
+		{false, NewInput(addr1, emptyCoins2)},    // invalid coins
+		{false, NewInput(addr1, someEmptyCoins)}, // invalid coins
+		{false, NewInput(addr1, minusCoins)},     // negative coins
+		{false, NewInput(addr1, someMinusCoins)}, // negative coins
+		{false, NewInput(addr1, unsortedCoins)},  // unsorted coins
 	}
 
 	for i, tc := range cases {
@@ -80,12 +68,12 @@ func TestInputValidation(t *testing.T) {
 }
 
 func TestOutputValidation(t *testing.T) {
-	addr1 := crypto.Address([]byte{1, 2})
-	addr2 := crypto.Address([]byte{7, 8})
+	addr1 := sdk.Address([]byte{1, 2})
+	addr2 := sdk.Address([]byte{7, 8})
 	someCoins := sdk.Coins{{"atom", 123}}
 	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
 
-	var emptyAddr crypto.Address
+	var emptyAddr sdk.Address
 	emptyCoins := sdk.Coins{}
 	emptyCoins2 := sdk.Coins{{"eth", 0}}
 	someEmptyCoins := sdk.Coins{{"eth", 10}, {"atom", 0}}
@@ -122,8 +110,8 @@ func TestOutputValidation(t *testing.T) {
 }
 
 func TestSendMsgValidation(t *testing.T) {
-	addr1 := crypto.Address([]byte{1, 2})
-	addr2 := crypto.Address([]byte{7, 8})
+	addr1 := sdk.Address([]byte{1, 2})
+	addr2 := sdk.Address([]byte{7, 8})
 	atom123 := sdk.Coins{{"atom", 123}}
 	atom124 := sdk.Coins{{"atom", 124}}
 	eth123 := sdk.Coins{{"eth", 123}}
@@ -136,7 +124,7 @@ func TestSendMsgValidation(t *testing.T) {
 	output3 := NewOutput(addr2, eth123)
 	outputMulti := NewOutput(addr2, atom123eth123)
 
-	var emptyAddr crypto.Address
+	var emptyAddr sdk.Address
 
 	cases := []struct {
 		valid bool
@@ -146,7 +134,7 @@ func TestSendMsgValidation(t *testing.T) {
 		{false, SendMsg{Inputs: []Input{input1}}},    // just input
 		{false, SendMsg{Outputs: []Output{output1}}}, // just ouput
 		{false, SendMsg{
-			Inputs:  []Input{NewInputWithSequence(emptyAddr, atom123, 1)}, // invalid input
+			Inputs:  []Input{NewInput(emptyAddr, atom123)}, // invalid input
 			Outputs: []Output{output1}}},
 		{false, SendMsg{
 			Inputs:  []Input{input1},
@@ -191,89 +179,61 @@ func TestSendMsgValidation(t *testing.T) {
 
 func TestSendMsgString(t *testing.T) {
 	// Construct a SendMsg
+	addr1 := sdk.Address([]byte("input"))
+	addr2 := sdk.Address([]byte("output"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = SendMsg{
-		Inputs: []Input{
-			{
-				Address:  crypto.Address([]byte("input")),
-				Coins:    sdk.Coins{{"atom", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []Output{
-			{
-				Address: crypto.Address([]byte("output")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Inputs:  []Input{NewInput(addr1, coins)},
+		Outputs: []Output{NewOutput(addr2, coins)},
 	}
+
 	res := msg.String()
 	// TODO some failures for bad results
 	assert.Equal(t, res, "SendMsg{[Input{696E707574,10atom}]->[Output{364637353734373037353734,10atom}]}")
 }
 
 func TestSendMsgGet(t *testing.T) {
+	addr1 := sdk.Address([]byte("input"))
+	addr2 := sdk.Address([]byte("output"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = SendMsg{
-		Inputs: []Input{
-			{
-				Address:  crypto.Address([]byte("input")),
-				Coins:    sdk.Coins{{"atom", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []Output{
-			{
-				Address: crypto.Address([]byte("output")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Inputs:  []Input{NewInput(addr1, coins)},
+		Outputs: []Output{NewOutput(addr2, coins)},
 	}
 	res := msg.Get(nil)
 	assert.Nil(t, res)
 }
 
 func TestSendMsgGetSignBytes(t *testing.T) {
+	addr1 := sdk.Address([]byte("input"))
+	addr2 := sdk.Address([]byte("output"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = SendMsg{
-		Inputs: []Input{
-			{
-				Address:  crypto.Address([]byte("input")),
-				Coins:    sdk.Coins{{"atom", 10}},
-				Sequence: 1,
-			},
-		},
-		Outputs: []Output{
-			{
-				Address: crypto.Address([]byte("output")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Inputs:  []Input{NewInput(addr1, coins)},
+		Outputs: []Output{NewOutput(addr2, coins)},
 	}
 	res := msg.GetSignBytes()
 	// TODO bad results
-	assert.Equal(t, string(res), `{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10}],"sequence":1}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10}]}]}`)
+	assert.Equal(t, string(res), `{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10}]}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10}]}]}`)
 }
 
 func TestSendMsgGetSigners(t *testing.T) {
 	var msg = SendMsg{
 		Inputs: []Input{
-			{
-				Address: crypto.Address([]byte("input1")),
-			},
-			{
-				Address: crypto.Address([]byte("input2")),
-			},
-			{
-				Address: crypto.Address([]byte("input3")),
-			},
+			NewInput(sdk.Address([]byte("input1")), nil),
+			NewInput(sdk.Address([]byte("input2")), nil),
+			NewInput(sdk.Address([]byte("input3")), nil),
 		},
 	}
 	res := msg.GetSigners()
+	// TODO: fix this !
 	assert.Equal(t, fmt.Sprintf("%v", res), "[696E70757431 696E70757432 696E70757433]")
 }
 
 /*
 // what to do w/ this test?
 func TestSendMsgSigners(t *testing.T) {
-	signers := []crypto.Address{
+	signers := []sdk.Address{
 		{1, 2, 3},
 		{4, 5, 6},
 		{7, 8, 9},
@@ -299,14 +259,11 @@ func TestNewIssueMsg(t *testing.T) {
 
 func TestIssueMsgType(t *testing.T) {
 	// Construct an IssueMsg
+	addr := sdk.Address([]byte("loan-from-bank"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = IssueMsg{
-		Banker: crypto.Address([]byte("input")),
-		Outputs: []Output{
-			{
-				Address: crypto.Address([]byte("loan-from-bank")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Banker:  sdk.Address([]byte("input")),
+		Outputs: []Output{NewOutput(addr, coins)},
 	}
 
 	// TODO some failures for bad result
@@ -319,42 +276,34 @@ func TestIssueMsgValidation(t *testing.T) {
 
 func TestIssueMsgString(t *testing.T) {
 	// Construct a IssueMsg
+	addr := sdk.Address([]byte("loan-from-bank"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = IssueMsg{
-		Banker: crypto.Address([]byte("input")),
-		Outputs: []Output{
-			{
-				Address: crypto.Address([]byte("loan-from-bank")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Banker:  sdk.Address([]byte("input")),
+		Outputs: []Output{NewOutput(addr, coins)},
 	}
 	res := msg.String()
+	// TODO: FIX THIS OUTPUT!
 	assert.Equal(t, res, "IssueMsg{696E707574#[Output{36433646363136453244363637323646364432443632363136453642,10atom}]}")
 }
 
 func TestIssueMsgGet(t *testing.T) {
+	addr := sdk.Address([]byte("loan-from-bank"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = IssueMsg{
-		Banker: crypto.Address([]byte("input")),
-		Outputs: []Output{
-			{
-				Address: crypto.Address([]byte("loan-from-bank")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Banker:  sdk.Address([]byte("input")),
+		Outputs: []Output{NewOutput(addr, coins)},
 	}
 	res := msg.Get(nil)
 	assert.Nil(t, res)
 }
 
 func TestIssueMsgGetSignBytes(t *testing.T) {
+	addr := sdk.Address([]byte("loan-from-bank"))
+	coins := sdk.Coins{{"atom", 10}}
 	var msg = IssueMsg{
-		Banker: crypto.Address([]byte("input")),
-		Outputs: []Output{
-			{
-				Address: crypto.Address([]byte("loan-from-bank")),
-				Coins:   sdk.Coins{{"atom", 10}},
-			},
-		},
+		Banker:  sdk.Address([]byte("input")),
+		Outputs: []Output{NewOutput(addr, coins)},
 	}
 	res := msg.GetSignBytes()
 	// TODO bad results
@@ -363,7 +312,7 @@ func TestIssueMsgGetSignBytes(t *testing.T) {
 
 func TestIssueMsgGetSigners(t *testing.T) {
 	var msg = IssueMsg{
-		Banker: crypto.Address([]byte("onlyone")),
+		Banker: sdk.Address([]byte("onlyone")),
 	}
 	res := msg.GetSigners()
 	assert.Equal(t, fmt.Sprintf("%v", res), "[6F6E6C796F6E65]")

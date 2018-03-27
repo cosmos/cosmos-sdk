@@ -56,7 +56,7 @@ Strictly speaking, Golang does not implement object capabilities completely, bec
 * pervasive ability to override module vars https://github.com/golang/go/issues/23161
 * data-race vulnerability where 2+ goroutines can create illegal interface values
 
-The first is easy to catch by auditing imports and using a proper dependency version control system like Glide.  The second and third are unfortunate but it can be audited with some cost.
+The first is easy to catch by auditing imports and using a proper dependency version control system like Dep.  The second and third are unfortunate but it can be audited with some cost.
 
 Perhaps `Go2 will implement the object capability model <https://github.com/golang/go/issues/23157>`__.
 
@@ -156,7 +156,7 @@ implementing the ``Msg`` interface:
     	// Signers returns the addrs of signers that must sign.
     	// CONTRACT: All signatures must be present to be valid.
     	// CONTRACT: Returns addrs in some deterministic order.
-    	GetSigners() []crypto.Address
+    	GetSigners() []Address
     }
 
 Messages must specify their type via the ``Type()`` method. The type should
@@ -188,7 +188,7 @@ For instance, the ``Basecoin`` message types are defined in ``x/bank/tx.go``:
     }
     
     type IssueMsg struct {
-    	Banker  crypto.Address `json:"banker"`
+    	Banker  sdk.Address `json:"banker"`
     	Outputs []Output       `json:"outputs"`
     }
 
@@ -196,16 +196,16 @@ Each specifies the addresses that must sign the message:
 
 ::
 
-    func (msg SendMsg) GetSigners() []crypto.Address {
-    	addrs := make([]crypto.Address, len(msg.Inputs))
+    func (msg SendMsg) GetSigners() []sdk.Address {
+    	addrs := make([]sdk.Address, len(msg.Inputs))
     	for i, in := range msg.Inputs {
     		addrs[i] = in.Address
     	}
     	return addrs
     }
     
-    func (msg IssueMsg) GetSigners() []crypto.Address {
-    	return []crypto.Address{msg.Banker}
+    func (msg IssueMsg) GetSigners() []sdk.Address {
+    	return []sdk.Address{msg.Banker}
     }
 
 Transactions
@@ -218,14 +218,6 @@ A transaction is a message with additional information for authentication:
     type Tx interface {
     
     	GetMsg() Msg
-    
-    	// The address that pays the base fee for this message.  The fee is
-    	// deducted before the Msg is processed.
-    	GetFeePayer() crypto.Address
-    
-    	// Get the canonical byte representation of the Tx.
-    	// Includes any signatures (or empty slots).
-    	GetTxBytes() []byte
     
     	// Signatures returns the signature of signers who signed the Msg.
     	// CONTRACT: Length returned is same as length of
@@ -260,9 +252,6 @@ about, making it optional to include the public key in the transaction. In the
 case of Basecoin, the public key only needs to be included in the first
 transaction send by a given account - after that, the public key is forever
 stored by the application and can be left out of transactions.
-
-Transactions can also specify the address responsible for paying the
-transaction's fees using the ``tx.GetFeePayer()`` method.
 
 The standard way to create a transaction from a message is to use the ``StdTx``: 
 

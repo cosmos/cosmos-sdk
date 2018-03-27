@@ -2,9 +2,8 @@ package main
 
 import (
 	"errors"
-	"os"
-
 	"github.com/spf13/cobra"
+	"os"
 
 	"github.com/tendermint/tmlibs/cli"
 
@@ -13,9 +12,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+
+	coolcmd "github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool/commands"
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
+	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/commands"
+	stakingcmd "github.com/cosmos/cosmos-sdk/x/staking/commands"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
@@ -40,6 +43,10 @@ func main() {
 	// get the codec
 	cdc := app.MakeCodec()
 
+	// TODO: setup keybase, viper object, etc. to be passed into
+	// the below functions and eliminate global vars, like we do
+	// with the cdc
+
 	// add standard rpc, and tx commands
 	rpc.AddCommands(basecliCmd)
 	basecliCmd.AddCommand(client.LineBreak)
@@ -49,17 +56,38 @@ func main() {
 	// add query/post commands (custom to binary)
 	basecliCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("main", cdc, types.GetParseAccount(cdc)),
+			authcmd.GetAccountCmd("main", cdc, types.GetAccountDecoder(cdc)),
 		)...)
 	basecliCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
 		)...)
+	basecliCmd.AddCommand(
+		client.PostCommands(
+			coolcmd.QuizTxCmd(cdc),
+		)...)
+	basecliCmd.AddCommand(
+		client.PostCommands(
+			coolcmd.SetTrendTxCmd(cdc),
+		)...)
+	basecliCmd.AddCommand(
+		client.PostCommands(
+			ibccmd.IBCTransferCmd(cdc),
+		)...)
+	basecliCmd.AddCommand(
+		client.PostCommands(
+			ibccmd.IBCRelayCmd(cdc),
+			stakingcmd.BondTxCmd(cdc),
+		)...)
+	basecliCmd.AddCommand(
+		client.PostCommands(
+			stakingcmd.UnbondTxCmd(cdc),
+		)...)
 
 	// add proxy, version and key info
 	basecliCmd.AddCommand(
 		client.LineBreak,
-		lcd.ServeCommand(),
+		lcd.ServeCommand(cdc),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,

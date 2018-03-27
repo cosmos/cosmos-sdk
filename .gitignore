@@ -10,6 +10,13 @@ examples/basecoin/glide.lock
 examples/basecoin/app/data
 baseapp/data/*
 docs/_build
+.DS_Store
+coverage.txt
+profile.out
+.vscode
+coverage.txt
+profile.out
+client/lcd/keys.db/
 
 ### Vagrant ###
 .vagrant/

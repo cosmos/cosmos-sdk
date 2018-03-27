@@ -4,16 +4,19 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	abci "github.com/tendermint/abci/types"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/abci/types"
-	wire "github.com/tendermint/go-wire"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Get the default command for a tx query
@@ -21,7 +24,7 @@ func QueryTxCmd(cmdr commander) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tx [hash]",
 		Short: "Matches this txhash over all committed blocks",
-		RunE:  cmdr.queryTxCmd,
+		RunE:  cmdr.queryAndPrintTx,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
 	// TODO: change this to false when we can
@@ -29,42 +32,28 @@ func QueryTxCmd(cmdr commander) *cobra.Command {
 	return cmd
 }
 
-// command to query for a transaction
-func (c commander) queryTxCmd(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 || len(args[0]) == 0 {
-		return errors.New("You must provide a tx hash")
-	}
-
-	// find the key to look up the account
-	hexStr := args[0]
-	hash, err := hex.DecodeString(hexStr)
+func (c commander) queryTx(hashHexStr string, trustNode bool) ([]byte, error) {
+	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// get the node
 	node, err := client.GetNode()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	prove := !viper.GetBool(client.FlagTrustNode)
 
-	res, err := node.Tx(hash, prove)
+	res, err := node.Tx(hash, !trustNode)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	info, err := formatTxResult(c.cdc, res)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	output, err := json.MarshalIndent(info, "", "  ")
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(output))
-
-	return nil
+	return json.MarshalIndent(info, "", "  ")
 }
 
 func formatTxResult(cdc *wire.Codec, res *ctypes.ResultTx) (txInfo, error) {
@@ -96,4 +85,48 @@ func parseTx(cdc *wire.Codec, txBytes []byte) (sdk.Tx, error) {
 		return nil, err
 	}
 	return tx, nil
+}
+
+// CMD
+
+// command to query for a transaction
+func (c commander) queryAndPrintTx(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 || len(args[0]) == 0 {
+		return errors.New("You must provide a tx hash")
+	}
+
+	// find the key to look up the account
+	hashHexStr := args[0]
+	trustNode := viper.GetBool(client.FlagTrustNode)
+
+	output, err := c.queryTx(hashHexStr, trustNode)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(output))
+
+	return nil
+}
+
+// REST
+
+func QueryTxRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Request) {
+	c := commander{cdc}
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		hashHexStr := vars["hash"]
+		trustNode, err := strconv.ParseBool(r.FormValue("trust_node"))
+		// trustNode defaults to true
+		if err != nil {
+			trustNode = true
+		}
+
+		output, err := c.queryTx(hashHexStr, trustNode)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(output)
+	}
 }

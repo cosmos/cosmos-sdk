@@ -8,34 +8,35 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	crypto "github.com/tendermint/go-crypto"
-	wire "github.com/tendermint/go-wire"
-
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/builder"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // GetAccountCmd for the auth.BaseAccount type
 func GetAccountCmdDefault(storeName string, cdc *wire.Codec) *cobra.Command {
-	return GetAccountCmd(storeName, cdc, getParseAccount(cdc))
+	return GetAccountCmd(storeName, cdc, GetAccountDecoder(cdc))
 }
 
-func getParseAccount(cdc *wire.Codec) sdk.ParseAccount {
+func GetAccountDecoder(cdc *wire.Codec) sdk.AccountDecoder {
 	return func(accBytes []byte) (sdk.Account, error) {
 		acct := new(auth.BaseAccount)
-		err := cdc.UnmarshalBinary(accBytes, acct)
+		err := cdc.UnmarshalBinary(accBytes, &acct)
+		if err != nil {
+			panic(err)
+		}
 		return acct, err
 	}
 }
 
 // GetAccountCmd returns a query account that will display the
 // state of the account at a given address
-func GetAccountCmd(storeName string, cdc *wire.Codec, parser sdk.ParseAccount) *cobra.Command {
+func GetAccountCmd(storeName string, cdc *wire.Codec, decoder sdk.AccountDecoder) *cobra.Command {
 	cmdr := commander{
 		storeName,
 		cdc,
-		parser,
+		decoder,
 	}
 	return &cobra.Command{
 		Use:   "account <address>",
@@ -47,7 +48,7 @@ func GetAccountCmd(storeName string, cdc *wire.Codec, parser sdk.ParseAccount) *
 type commander struct {
 	storeName string
 	cdc       *wire.Codec
-	parser    sdk.ParseAccount
+	decoder   sdk.AccountDecoder
 }
 
 func (c commander) getAccountCmd(cmd *cobra.Command, args []string) error {
@@ -61,12 +62,15 @@ func (c commander) getAccountCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	key := crypto.Address(bz)
+	key := sdk.Address(bz)
 
-	res, err := client.Query(key, c.storeName)
+	res, err := builder.Query(key, c.storeName)
+	if err != nil {
+		return err
+	}
 
-	// parse out the value
-	account, err := c.parser(res)
+	// decode the value
+	account, err := c.decoder(res)
 	if err != nil {
 		return err
 	}

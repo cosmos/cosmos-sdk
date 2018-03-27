@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 	"runtime"
-
-	"github.com/tendermint/go-crypto"
 )
 
 // ABCI Response Code
@@ -19,17 +17,20 @@ func (code CodeType) IsOK() bool {
 }
 
 // ABCI Response Codes
-// Base SDK reserves 0 ~ 99.
+// Base SDK reserves 0 - 99.
 const (
-	CodeOK                  CodeType = 0
-	CodeInternal            CodeType = 1
-	CodeTxParse             CodeType = 2
-	CodeBadNonce            CodeType = 3
-	CodeUnauthorized        CodeType = 4
-	CodeInsufficientFunds   CodeType = 5
-	CodeUnknownRequest      CodeType = 6
-	CodeUnrecognizedAddress CodeType = 7
-	CodeInvalidSequence     CodeType = 8
+	CodeOK                CodeType = 0
+	CodeInternal          CodeType = 1
+	CodeTxDecode           CodeType = 2
+	CodeInvalidSequence   CodeType = 3
+	CodeUnauthorized      CodeType = 4
+	CodeInsufficientFunds CodeType = 5
+	CodeUnknownRequest    CodeType = 6
+	CodeInvalidAddress    CodeType = 7
+	CodeInvalidPubKey     CodeType = 8
+	CodeUnknownAddress    CodeType = 9
+	CodeInsufficientCoins CodeType = 10
+	CodeInvalidCoins      CodeType = 11
 
 	CodeGenesisParse CodeType = 0xdead // TODO: remove ?
 )
@@ -39,22 +40,28 @@ func CodeToDefaultMsg(code CodeType) string {
 	switch code {
 	case CodeInternal:
 		return "Internal error"
-	case CodeTxParse:
+	case CodeTxDecode:
 		return "Tx parse error"
 	case CodeGenesisParse:
 		return "Genesis parse error"
-	case CodeBadNonce:
-		return "Bad nonce"
+	case CodeInvalidSequence:
+		return "Invalid sequence"
 	case CodeUnauthorized:
 		return "Unauthorized"
 	case CodeInsufficientFunds:
 		return "Insufficent funds"
 	case CodeUnknownRequest:
 		return "Unknown request"
-	case CodeUnrecognizedAddress:
-		return "Unrecognized address"
-	case CodeInvalidSequence:
-		return "Invalid sequence"
+	case CodeInvalidAddress:
+		return "Invalid address"
+	case CodeInvalidPubKey:
+		return "Invalid pubkey"
+	case CodeUnknownAddress:
+		return "Unknown address"
+	case CodeInsufficientCoins:
+		return "Insufficient coins"
+	case CodeInvalidCoins:
+		return "Invalid coins"
 	default:
 		return fmt.Sprintf("Unknown code %d", code)
 	}
@@ -68,14 +75,14 @@ func CodeToDefaultMsg(code CodeType) string {
 func ErrInternal(msg string) Error {
 	return newError(CodeInternal, msg)
 }
-func ErrTxParse(msg string) Error {
-	return newError(CodeTxParse, msg)
+func ErrTxDecode(msg string) Error {
+	return newError(CodeTxDecode, msg)
 }
 func ErrGenesisParse(msg string) Error {
 	return newError(CodeGenesisParse, msg)
 }
-func ErrBadNonce(msg string) Error {
-	return newError(CodeBadNonce, msg)
+func ErrInvalidSequence(msg string) Error {
+	return newError(CodeInvalidSequence, msg)
 }
 func ErrUnauthorized(msg string) Error {
 	return newError(CodeUnauthorized, msg)
@@ -86,11 +93,20 @@ func ErrInsufficientFunds(msg string) Error {
 func ErrUnknownRequest(msg string) Error {
 	return newError(CodeUnknownRequest, msg)
 }
-func ErrUnrecognizedAddress(addr crypto.Address) Error {
-	return newError(CodeUnrecognizedAddress, addr.String())
+func ErrInvalidAddress(msg string) Error {
+	return newError(CodeInvalidAddress, msg)
 }
-func ErrInvalidSequence(msg string) Error {
-	return newError(CodeInvalidSequence, msg)
+func ErrUnknownAddress(msg string) Error {
+	return newError(CodeUnknownAddress, msg)
+}
+func ErrInvalidPubKey(msg string) Error {
+	return newError(CodeInvalidPubKey, msg)
+}
+func ErrInsufficientCoins(msg string) Error {
+	return newError(CodeInsufficientCoins, msg)
+}
+func ErrInvalidCoins(msg string) Error {
+	return newError(CodeInvalidCoins, msg)
 }
 
 //----------------------------------------

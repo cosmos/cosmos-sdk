@@ -4,7 +4,6 @@ import (
 	"bytes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	crypto "github.com/tendermint/go-crypto"
 )
 
 // An sdk.Tx which is its own sdk.Msg.
@@ -44,15 +43,11 @@ func (tx kvstoreTx) ValidateBasic() sdk.Error {
 	return nil
 }
 
-func (tx kvstoreTx) GetSigners() []crypto.Address {
+func (tx kvstoreTx) GetSigners() []sdk.Address {
 	return nil
 }
 
 func (tx kvstoreTx) GetSignatures() []sdk.StdSignature {
-	return nil
-}
-
-func (tx kvstoreTx) GetFeePayer() crypto.Address {
 	return nil
 }
 
@@ -69,7 +64,7 @@ func decodeTx(txBytes []byte) (sdk.Tx, sdk.Error) {
 		k, v := split[0], split[1]
 		tx = kvstoreTx{k, v, txBytes}
 	} else {
-		return nil, sdk.ErrTxParse("too many =")
+		return nil, sdk.ErrTxDecode("too many =")
 	}
 
 	return tx, nil

@@ -29,18 +29,18 @@ dist:
 ### Tools & dependencies
 
 check_tools:
-	cd tools && $(MAKE) check
+	cd tools && $(MAKE) check_tools
 
 update_tools:
-	cd tools && $(MAKE) glide_update
+	cd tools && $(MAKE) update_tools
 
 get_tools:
-	cd tools && $(MAKE)
+	cd tools && $(MAKE) get_tools
 
 get_vendor_deps:
 	@rm -rf vendor/
-	@echo "--> Running glide install"
-	@glide install
+	@echo "--> Running dep ensure"
+	@dep ensure -v
 
 draw_deps:
 	@# requires brew install graphviz or apt-get install graphviz
@@ -72,7 +72,9 @@ test_unit:
 
 test_cover:
 	@rm -rf examples/basecoin/vendor/
+	@rm -rf client/lcd/keys.db ~/.tendermint_test
 	@bash tests/test_cover.sh
+	@rm -rf client/lcd/keys.db ~/.tendermint_test
 
 benchmark:
 	@go test -bench=. $(PACKAGES)

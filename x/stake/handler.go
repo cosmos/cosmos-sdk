@@ -242,15 +242,8 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	}
 
 	// retrieve the amount of bonds to remove (TODO remove redundancy already serialized)
-	var shares sdk.Rat
-	var err sdk.Error
 	if msg.Shares == "MAX" {
 		shares = bond.Shares
-	} else {
-		shares, err = sdk.NewRatFromDecimal(msg.Shares)
-		if err != nil {
-			return err.Result()
-		}
 	}
 
 	// subtract bond tokens from delegator bond

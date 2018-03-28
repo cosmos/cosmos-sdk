@@ -94,14 +94,7 @@ func (co commander) unbondTxCmd(cmd *cobra.Command, args []string) error {
 
 func (co commander) sendMsg(msg sdk.Msg) error {
 	name := viper.GetString(client.FlagName)
-	buf := client.BufferStdin()
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-	passphrase, err := client.GetPassword(prompt, buf)
-	if err != nil {
-		return err
-	}
-
-	res, err := builder.SignBuildBroadcast(name, passphrase, msg, co.cdc)
+	res, err := builder.SignBuildBroadcast(name, msg, co.cdc)
 	if err != nil {
 		return err
 	}

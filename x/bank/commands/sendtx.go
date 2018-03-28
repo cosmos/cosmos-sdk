@@ -62,19 +62,11 @@ func (c Commander) sendTxCmd(cmd *cobra.Command, args []string) error {
 	// get account name
 	name := viper.GetString(client.FlagName)
 
-	// get password
-	buf := client.BufferStdin()
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-	passphrase, err := client.GetPassword(prompt, buf)
-	if err != nil {
-		return err
-	}
-
 	// build message
 	msg := BuildMsg(from, to, coins)
 
 	// build and sign the transaction, then broadcast to Tendermint
-	res, err := builder.SignBuildBroadcast(name, passphrase, msg, c.Cdc)
+	res, err := builder.SignBuildBroadcast(name, msg, c.Cdc)
 	if err != nil {
 		return err
 	}

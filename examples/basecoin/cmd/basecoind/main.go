@@ -69,6 +69,7 @@ func main() {
 		server.StartCmd(generateApp, logger),
 		server.UnsafeResetAllCmd(logger),
 		server.ShowNodeIdCmd(logger),
+		server.ShowValidatorCmd(logger),
 		version.VersionCmd,
 	)
 

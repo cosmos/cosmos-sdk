@@ -192,15 +192,18 @@ func TestRound(t *testing.T) {
 	}
 }
 
-func TestToLeftPaddedString(t *testing.T) {
+func TestToLeftPadded(t *testing.T) {
 	tests := []struct {
 		rat    Rat
 		digits int8
 		res    string
 	}{
 		{NewRat(100, 3), 8, "00000033"},
+		{NewRat(1, 3), 8, "00000000"},
+		{NewRat(100, 2), 8, "00000050"},
+		{NewRat(1000, 3), 8, "00000333"},
+		{NewRat(1000, 3), 12, "000000000333"},
 	}
-
 	for _, tc := range tests {
 		assert.Equal(t, tc.res, tc.rat.ToLeftPadded(tc.digits))
 	}

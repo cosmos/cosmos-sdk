@@ -154,17 +154,3 @@ func testAddr(addr string) sdk.Address {
 	}
 	return res
 }
-
-// XXX TODO remove this dep
-func candidatesFromAddrs(ctx sdk.Context, keeper Keeper, addrs []crypto.Address, amts []int64) {
-	for i := 0; i < len(amts); i++ {
-		c := Candidate{
-			Status:      Unbonded,
-			PubKey:      pks[i],
-			Address:     addrs[i],
-			Assets:      sdk.NewRat(amts[i]),
-			Liabilities: sdk.NewRat(amts[i]),
-		}
-		keeper.setCandidate(ctx, c)
-	}
-}

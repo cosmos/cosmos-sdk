@@ -1,6 +1,8 @@
 package stake
 
 import (
+	"bytes"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -94,11 +96,20 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	store.Set(GetValidatorKey(address, validator.VotingPower, k.cdc), bz)
 
 	// add to the validators to update list if is already a validator
-	if store.Get(GetRecentValidatorKey(address)) == nil {
-		return
+	updateAcc := false
+	if store.Get(GetRecentValidatorKey(address)) != nil {
+		updateAcc = true
 	}
-	store.Set(GetAccUpdateValidatorKey(validator.Address), bz)
 
+	// test if this is a new validator
+	if k.isNewValidator(ctx, store, address) {
+		updateAcc = true
+	}
+
+	if updateAcc {
+		store.Set(GetAccUpdateValidatorKey(validator.Address), bz)
+	}
+	return
 }
 
 func (k Keeper) removeCandidate(ctx sdk.Context, address sdk.Address) {
@@ -141,7 +152,7 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 
 	// add the actual validator power sorted store
 	maxVal := k.GetParams(ctx).MaxValidators
-	iterator := store.ReverseIterator(subspace(ValidatorsKey)) //smallest to largest
+	iterator := store.ReverseIterator(subspace(ValidatorsKey)) // largest to smallest
 	validators = make([]Validator, maxVal)
 	i := 0
 	for ; ; i++ {
@@ -164,6 +175,33 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 	}
 
 	return validators[:i] // trim
+}
+
+// TODO this is madly inefficient because need to call every time we set a candidate
+// Should use something better than an iterator maybe?
+// Used to determine if something has just been added to the actual validator set
+func (k Keeper) isNewValidator(ctx sdk.Context, store sdk.KVStore, address sdk.Address) bool {
+	// add the actual validator power sorted store
+	maxVal := k.GetParams(ctx).MaxValidators
+	iterator := store.ReverseIterator(subspace(ValidatorsKey)) // largest to smallest
+	for i := 0; ; i++ {
+		if !iterator.Valid() || i > int(maxVal-1) {
+			iterator.Close()
+			break
+		}
+		bz := iterator.Value()
+		var val Validator
+		err := k.cdc.UnmarshalBinary(bz, &val)
+		if err != nil {
+			panic(err)
+		}
+		if bytes.Equal(val.Address, address) {
+			return true
+		}
+		iterator.Next()
+	}
+
+	return false
 }
 
 // Is the address provided a part of the most recently saved validator group?

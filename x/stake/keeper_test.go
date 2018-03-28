@@ -2,6 +2,7 @@ package stake
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -262,21 +263,115 @@ func TestGetValidators(t *testing.T) {
 // TODO
 // test the mechanism which keeps track of a validator set change
 func TestGetAccUpdateValidators(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, nil, false, 0)
+
+	validatorsEqual := func(t *testing.T, expected []Validator, actual []Validator) {
+		require.Equal(t, len(expected), len(actual))
+		for i := 0; i < len(expected); i++ {
+			assert.Equal(t, expected[i], actual[i])
+		}
+	}
+
+	amts := []int64{100, 300}
+	genCandidates := func(amts []int64) ([]Candidate, []Validator) {
+		candidates := make([]Candidate, len(amts))
+		validators := make([]Validator, len(amts))
+		for i := 0; i < len(amts); i++ {
+			c := Candidate{
+				Status:      Unbonded,
+				PubKey:      pks[i],
+				Address:     addrs[i],
+				Assets:      sdk.NewRat(amts[i]),
+				Liabilities: sdk.NewRat(amts[i]),
+			}
+			candidates[i] = c
+			validators[i] = c.validator()
+		}
+		return candidates, validators
+	}
+
+	candidates, validators := genCandidates(amts)
+
 	//TODO
 	// test from nothing to something
-	// test from something to nothing
+	acc := keeper.getAccUpdateValidators(ctx)
+	assert.Equal(t, 0, len(acc))
+	keeper.setCandidate(ctx, candidates[0])
+	keeper.setCandidate(ctx, candidates[1])
+	//_ = keeper.GetValidators(ctx) // to init recent validator set
+	acc = keeper.getAccUpdateValidators(ctx)
+	validatorsEqual(t, validators, acc)
+
 	// test identical
-	// test single value change
-	// test multiple value change
-	// test validator added at the beginning
-	// test validator added in the middle
-	// test validator added at the end
-	// test multiple validators removed
+	keeper.setCandidate(ctx, candidates[0])
+	keeper.setCandidate(ctx, candidates[1])
+	acc = keeper.getAccUpdateValidators(ctx)
+	validatorsEqual(t, validators, acc)
+
+	acc = keeper.getAccUpdateValidators(ctx)
+	fmt.Printf("%+v\n", acc)
+
+	// test from something to nothing
+	keeper.removeCandidate(ctx, candidates[0].Address)
+	keeper.removeCandidate(ctx, candidates[1].Address)
+	acc = keeper.getAccUpdateValidators(ctx)
+	fmt.Printf("%+v\n", acc)
+	assert.Equal(t, 2, len(acc))
+	assert.Equal(t, validators[0].Address, acc[0].Address)
+	assert.Equal(t, 0, acc[0].VotingPower.Evaluate())
+	assert.Equal(t, validators[1].Address, acc[1].Address)
+	assert.Equal(t, 0, acc[1].VotingPower.Evaluate())
+
+	//// test single value change
+	//amts[0] = 600
+	//candidates, validators = genCandidates(amts)
+	//setCandidates(ctx, candidates)
+	//acc = keeper.getAccUpdateValidators(ctx)
+	//validatorsEqual(t, validators, acc)
+
+	//// test multiple value change
+	//amts[0] = 200
+	//amts[1] = 0
+	//candidates, validators = genCandidates(amts)
+	//setCandidates(ctx, candidates)
+	//acc = keeper.getAccUpdateValidators(ctx)
+	//validatorsEqual(t, validators, acc)
+
+	//// test validator added at the beginning
+	//// test validator added in the middle
+	//// test validator added at the end
+	//amts = append(amts, 100)
+	//candidates, validators = genCandidates(amts)
+	//setCandidates(ctx, candidates)
+	//acc = keeper.getAccUpdateValidators(ctx)
+	//validatorsEqual(t, validators, acc)
+
+	//// test multiple validators removed
 }
 
 // clear the tracked changes to the validator set
 func TestClearAccUpdateValidators(t *testing.T) {
-	//TODO
+	ctx, _, keeper := createTestInput(t, nil, false, 0)
+
+	amts := []int64{0, 400}
+	candidates := make([]Candidate, len(amts))
+	for i, amt := range amts {
+		c := Candidate{
+			Status:      Unbonded,
+			PubKey:      pks[i],
+			Address:     addrs[i],
+			Assets:      sdk.NewRat(amt),
+			Liabilities: sdk.NewRat(amt),
+		}
+		candidates[i] = c
+		keeper.setCandidate(ctx, c)
+	}
+
+	acc := keeper.getAccUpdateValidators(ctx)
+	assert.Equal(t, len(amts), len(acc))
+	keeper.clearAccUpdateValidators(ctx)
+	acc = keeper.getAccUpdateValidators(ctx)
+	assert.Equal(t, 0, len(acc))
 }
 
 // test if is a validator from the last update

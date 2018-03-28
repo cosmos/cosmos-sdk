@@ -34,15 +34,6 @@ func (msg SetTrendMsg) String() string {
 	return fmt.Sprintf("SetTrendMsg{Sender: %v, Cool: %v}", msg.Sender, msg.Cool)
 }
 
-// Get the bytes for the message signer to sign on
-func (msg SetTrendMsg) GetSignBytes() []byte {
-	b, err := json.Marshal(msg)
-	if err != nil {
-		panic(err)
-	}
-	return b
-}
-
 // Validate Basic is used to quickly disqualify obviously invalid messages quickly
 func (msg SetTrendMsg) ValidateBasic() sdk.Error {
 	if len(msg.Sender) == 0 {
@@ -55,6 +46,15 @@ func (msg SetTrendMsg) ValidateBasic() sdk.Error {
 		return sdk.ErrUnauthorized("").Trace("warm is not very cool")
 	}
 	return nil
+}
+
+// Get the bytes for the message signer to sign on
+func (msg SetTrendMsg) GetSignBytes() []byte {
+	b, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
 
 //_______________________________________________________________________

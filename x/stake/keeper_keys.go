@@ -20,6 +20,8 @@ var (
 	DelegatorBondKeyPrefix = []byte{0x05} // prefix for each key to a delegator's bond
 )
 
+const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
+
 // get the key for the candidate with address
 func GetCandidateKey(addr sdk.Address) []byte {
 	return append(CandidatesKey, addr.Bytes()...)
@@ -27,11 +29,8 @@ func GetCandidateKey(addr sdk.Address) []byte {
 
 // get the key for the validator used in the power-store
 func GetValidatorKey(addr sdk.Address, power sdk.Rat, cdc *wire.Codec) []byte {
-	b, err := cdc.MarshalBinary(power)
-	if err != nil {
-		panic(err)
-	}
-	return append(ValidatorsKey, append(b, addr.Bytes()...)...)
+	powerBytes := []byte(power.ToLeftPadded(maxDigitsForAccount))
+	return append(ValidatorsKey, append(powerBytes, addr.Bytes()...)...)
 }
 
 // get the key for the accumulated update validators

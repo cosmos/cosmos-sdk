@@ -141,7 +141,7 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 
 	// add the actual validator power sorted store
 	maxVal := k.GetParams(ctx).MaxValidators
-	iterator := store.Iterator(subspace(ValidatorsKey)) //smallest to largest
+	iterator := store.ReverseIterator(subspace(ValidatorsKey)) //smallest to largest
 	validators = make([]Validator, maxVal)
 	i := 0
 	for ; ; i++ {

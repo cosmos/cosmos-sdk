@@ -19,12 +19,17 @@ gaia:
 
 build:
 	@rm -rf $(shell pwd)/examples/basecoin/vendor/
-ifeq ($(OS),Windows_NT)
 	go build $(BUILD_FLAGS) -o build/basecoind.exe ./examples/basecoin/cmd/basecoind
 	go build $(BUILD_FLAGS) -o build/basecli.exe ./examples/basecoin/cmd/basecli
+
+install:
+	@rm -rf $(shell pwd)/examples/basecoin/vendor/
+ifeq ($(OS),Windows_NT)
+	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecoind
+	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecli
 else
-	go build $(BUILD_FLAGS) -o build/basecoind ./examples/basecoin/cmd/basecoind
-	go build $(BUILD_FLAGS) -o build/basecli ./examples/basecoin/cmd/basecli
+	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecoind
+	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecli
 endif
 
 dist:

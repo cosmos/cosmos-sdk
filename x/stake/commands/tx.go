@@ -91,13 +91,9 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 			}
 			msg := stake.NewMsgDeclareCandidacy(candidateAddr, pk, amount, description)
 
-			name, pass, err := getNamePassword()
-			if err != nil {
-				return err
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := builder.SignBuildBroadcast(name, pass, msg, cdc)
+			name := viper.GetString(client.FlagName)
+			res, err := builder.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -132,13 +128,9 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 			}
 			msg := stake.NewMsgEditCandidacy(candidateAddr, description)
 
-			name, pass, err := getNamePassword()
-			if err != nil {
-				return err
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := builder.SignBuildBroadcast(name, pass, msg, cdc)
+			name := viper.GetString(client.FlagName)
+			res, err := builder.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -172,13 +164,9 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 
 			msg := stake.NewMsgDelegate(delegatorAddr, candidateAddr, amount)
 
-			name, pass, err := getNamePassword()
-			if err != nil {
-				return err
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := builder.SignBuildBroadcast(name, pass, msg, cdc)
+			name := viper.GetString(client.FlagName)
+			res, err := builder.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -223,13 +211,9 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 
 			msg := stake.NewMsgUnbond(delegatorAddr, candidateAddr, sharesStr)
 
-			name, pass, err := getNamePassword()
-			if err != nil {
-				return err
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := builder.SignBuildBroadcast(name, pass, msg, cdc)
+			name := viper.GetString(client.FlagName)
+			res, err := builder.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}

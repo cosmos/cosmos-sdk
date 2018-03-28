@@ -13,25 +13,29 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
+func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 	db := dbm.NewMemDB()
+	authKey := sdk.NewKVStoreKey("authkey")
 	capKey := sdk.NewKVStoreKey("capkey")
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(authKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
-	return ms, capKey
+	return ms, authKey, capKey
 }
 
-func TestStakingMapperGetSet(t *testing.T) {
-	ms, capKey := setupMultiStore()
+func TestKeeperGetSet(t *testing.T) {
+	ms, _, capKey := setupMultiStore()
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	stakingMapper := NewMapper(capKey)
+	stakeKeeper := NewKeeper(capKey, bank.NewCoinKeeper(nil))
 	addr := sdk.Address([]byte("some-address"))
 
-	bi := stakingMapper.getBondInfo(ctx, addr)
+	bi := stakeKeeper.getBondInfo(ctx, addr)
 	assert.Equal(t, bi, bondInfo{})
 
 	privKey := crypto.GenPrivKeyEd25519()
@@ -41,36 +45,39 @@ func TestStakingMapperGetSet(t *testing.T) {
 		Power:  int64(10),
 	}
 	fmt.Printf("Pubkey: %v\n", privKey.PubKey())
-	stakingMapper.setBondInfo(ctx, addr, bi)
+	stakeKeeper.setBondInfo(ctx, addr, bi)
 
-	savedBi := stakingMapper.getBondInfo(ctx, addr)
+	savedBi := stakeKeeper.getBondInfo(ctx, addr)
 	assert.NotNil(t, savedBi)
 	fmt.Printf("Bond Info: %v\n", savedBi)
 	assert.Equal(t, int64(10), savedBi.Power)
 }
 
 func TestBonding(t *testing.T) {
-	ms, capKey := setupMultiStore()
+	ms, authKey, capKey := setupMultiStore()
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	stakingMapper := NewMapper(capKey)
+
+	accountMapper := auth.NewAccountMapper(authKey, &auth.BaseAccount{})
+	coinKeeper := bank.NewCoinKeeper(accountMapper)
+	stakeKeeper := NewKeeper(capKey, coinKeeper)
 	addr := sdk.Address([]byte("some-address"))
 	privKey := crypto.GenPrivKeyEd25519()
 	pubKey := privKey.PubKey()
 
-	_, _, err := stakingMapper.Unbond(ctx, addr)
+	_, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)
 	assert.Equal(t, err, ErrInvalidUnbond())
 
-	_, err = stakingMapper.Bond(ctx, addr, pubKey, 10)
+	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.Coin{"steak", 10})
 	assert.Nil(t, err)
 
-	power, err := stakingMapper.Bond(ctx, addr, pubKey, 10)
+	power, err := stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.Coin{"steak", 10})
 	assert.Equal(t, int64(20), power)
 
-	pk, _, err := stakingMapper.Unbond(ctx, addr)
+	pk, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)
 	assert.Nil(t, err)
 	assert.Equal(t, pubKey, pk)
 
-	_, _, err = stakingMapper.Unbond(ctx, addr)
+	_, _, err = stakeKeeper.unbondWithoutCoins(ctx, addr)
 	assert.Equal(t, err, ErrInvalidUnbond())
 }

@@ -259,12 +259,12 @@ func TestQuizMsg(t *testing.T) {
 	SignCheckDeliver(t, bapp, setTrendMsg1, 0, true)
 	SignCheckDeliver(t, bapp, quizMsg1, 1, true)
 	CheckBalance(t, bapp, "69icecold")
-	SignCheckDeliver(t, bapp, quizMsg2, 2, true) // result without reward
+	SignCheckDeliver(t, bapp, quizMsg2, 2, false) // result without reward
 	CheckBalance(t, bapp, "69icecold")
 	SignCheckDeliver(t, bapp, quizMsg1, 3, true)
 	CheckBalance(t, bapp, "138icecold")
 	SignCheckDeliver(t, bapp, setTrendMsg2, 4, true) // reset the trend
-	SignCheckDeliver(t, bapp, quizMsg1, 5, true)     // the same answer will nolonger do!
+	SignCheckDeliver(t, bapp, quizMsg1, 5, false)    // the same answer will nolonger do!
 	CheckBalance(t, bapp, "138icecold")
 	SignCheckDeliver(t, bapp, quizMsg2, 6, true) // earlier answer now relavent again
 	CheckBalance(t, bapp, "69badvibesonly,138icecold")
@@ -325,6 +325,7 @@ func TestHandler(t *testing.T) {
 	SignCheckDeliver(t, bapp, receiveMsg, 3, false)
 }
 
+// TODO describe the use of this function
 func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, expPass bool) {
 
 	// Sign the tx
@@ -350,6 +351,8 @@ func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, e
 	} else {
 		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
 	}
+	bapp.EndBlock(abci.RequestEndBlock{})
+	//bapp.Commit()
 }
 
 func CheckBalance(t *testing.T, bapp *BasecoinApp, balExpected string) {

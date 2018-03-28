@@ -56,13 +56,13 @@ func NewHandler(k Keeper, ck bank.CoinKeeper) sdk.Handler {
 		// NOTE msg already has validate basic run
 		switch msg := msg.(type) {
 		case MsgDeclareCandidacy:
-			return k.handleMsgDeclareCandidacy(ctx, msg)
+			return handleMsgDeclareCandidacy(ctx, msg, k)
 		case MsgEditCandidacy:
-			return k.handleMsgEditCandidacy(ctx, msg)
+			return handleMsgEditCandidacy(ctx, msg, k)
 		case MsgDelegate:
-			return k.handleMsgDelegate(ctx, msg)
+			return handleMsgDelegate(ctx, msg, k)
 		case MsgUnbond:
-			return k.handleMsgUnbond(ctx, msg)
+			return handleMsgUnbond(ctx, msg, k)
 		default:
 			return sdk.ErrTxDecode("invalid message parse in staking module").Result()
 		}
@@ -85,7 +85,7 @@ func NewHandler(k Keeper, ck bank.CoinKeeper) sdk.Handler {
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
-func (k Keeper) handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy) sdk.Result {
+func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keeper) sdk.Result {
 
 	// check to see if the pubkey or sender has been registered before
 	_, found := k.GetCandidate(ctx, msg.CandidateAddr)
@@ -106,10 +106,10 @@ func (k Keeper) handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandida
 
 	// move coins from the msg.Address account to a (self-bond) delegator account
 	// the candidate account and global shares are updated within here
-	return k.delegateWithCandidate(ctx, msg.CandidateAddr, msg.Bond, candidate).Result()
+	return delegateWithCandidate(ctx, k, msg.CandidateAddr, msg.Bond, candidate).Result()
 }
 
-func (k Keeper) handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy) sdk.Result {
+func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk.Result {
 
 	// candidate must already be registered
 	candidate, found := k.GetCandidate(ctx, msg.CandidateAddr)
@@ -144,7 +144,7 @@ func (k Keeper) handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy) sd
 	return sdk.Result{}
 }
 
-func (k Keeper) handleMsgDelegate(ctx sdk.Context, msg MsgDelegate) sdk.Result {
+func handleMsgDelegate(ctx sdk.Context, msg MsgDelegate, k Keeper) sdk.Result {
 
 	candidate, found := k.GetCandidate(ctx, msg.CandidateAddr)
 	if !found {
@@ -158,10 +158,10 @@ func (k Keeper) handleMsgDelegate(ctx sdk.Context, msg MsgDelegate) sdk.Result {
 			GasUsed: GasDelegate,
 		}
 	}
-	return k.delegateWithCandidate(ctx, msg.DelegatorAddr, msg.Bond, candidate).Result()
+	return delegateWithCandidate(ctx, k, msg.DelegatorAddr, msg.Bond, candidate).Result()
 }
 
-func (k Keeper) delegateWithCandidate(ctx sdk.Context, delegatorAddr sdk.Address,
+func delegateWithCandidate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	bondAmt sdk.Coin, candidate Candidate) sdk.Error {
 
 	if candidate.Status == Revoked { //candidate has been withdrawn
@@ -179,7 +179,7 @@ func (k Keeper) delegateWithCandidate(ctx sdk.Context, delegatorAddr sdk.Address
 	}
 
 	// Account new shares, save
-	err := k.BondCoins(ctx, existingBond, candidate, bondAmt)
+	err := BondCoins(ctx, k, existingBond, candidate, bondAmt)
 	if err != nil {
 		return err
 	}
@@ -189,7 +189,7 @@ func (k Keeper) delegateWithCandidate(ctx sdk.Context, delegatorAddr sdk.Address
 }
 
 // Perform all the actions required to bond tokens to a delegator bond from their account
-func (k Keeper) BondCoins(ctx sdk.Context, bond DelegatorBond, candidate Candidate, amount sdk.Coin) sdk.Error {
+func BondCoins(ctx sdk.Context, k Keeper, bond DelegatorBond, candidate Candidate, amount sdk.Coin) sdk.Error {
 
 	_, err := k.coinKeeper.SubtractCoins(ctx, bond.DelegatorAddr, sdk.Coins{amount})
 	if err != nil {
@@ -201,7 +201,7 @@ func (k Keeper) BondCoins(ctx sdk.Context, bond DelegatorBond, candidate Candida
 	return nil
 }
 
-func (k Keeper) handleMsgUnbond(ctx sdk.Context, msg MsgUnbond) sdk.Result {
+func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 	// check if bond has any shares in it unbond
 	bond, found := k.getDelegatorBond(ctx, msg.DelegatorAddr, msg.CandidateAddr)
@@ -299,7 +299,7 @@ func (k Keeper) handleMsgUnbond(ctx sdk.Context, msg MsgUnbond) sdk.Result {
 
 // XXX where this used
 // Perform all the actions required to bond tokens to a delegator bond from their account
-func (k Keeper) UnbondCoins(ctx sdk.Context, bond DelegatorBond, candidate Candidate, shares sdk.Rat) sdk.Error {
+func UnbondCoins(ctx sdk.Context, k Keeper, bond DelegatorBond, candidate Candidate, shares sdk.Rat) sdk.Error {
 
 	// subtract bond tokens from delegator bond
 	if bond.Shares.LT(shares) {

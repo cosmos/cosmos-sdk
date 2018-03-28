@@ -2,8 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"os"
-	"path/filepath"
 
 	abci "github.com/tendermint/abci/types"
 	oldwire "github.com/tendermint/go-wire"
@@ -34,6 +32,7 @@ type BasecoinApp struct {
 
 	// keys to access the substores
 	capKeyMainStore    *sdk.KVStoreKey
+	capKeyAccountStore *sdk.KVStoreKey
 	capKeyIBCStore     *sdk.KVStoreKey
 	capKeyStakingStore *sdk.KVStoreKey
 
@@ -41,12 +40,13 @@ type BasecoinApp struct {
 	accountMapper sdk.AccountMapper
 }
 
-func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
+func NewBasecoinApp(logger log.Logger, dbMain, dbAcc, dbIBC, dbStaking dbm.DB) *BasecoinApp {
 	// create your application object
 	var app = &BasecoinApp{
-		BaseApp:            bam.NewBaseApp(appName, logger, db),
+		BaseApp:            bam.NewBaseApp(appName, logger, dbMain),
 		cdc:                MakeCodec(),
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
+		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
 		capKeyIBCStore:     sdk.NewKVStoreKey("ibc"),
 		capKeyStakingStore: sdk.NewKVStoreKey("staking"),
 	}
@@ -68,30 +68,17 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
 		AddRoute("staking", staking.NewHandler(stakeKeeper))
 
-	rootDir := os.ExpandEnv("$HOME/.basecoind")
-	dbMain, err := dbm.NewGoLevelDB("basecoin-main", filepath.Join(rootDir, "data"))
-	if err != nil {
-		cmn.Exit(err.Error())
-	}
-	dbIBC, err := dbm.NewGoLevelDB("basecoin-ibc", filepath.Join(rootDir, "data"))
-	if err != nil {
-		cmn.Exit(err.Error())
-	}
-	dbStaking, err := dbm.NewGoLevelDB("basecoin-staking", filepath.Join(rootDir, "data"))
-	if err != nil {
-		cmn.Exit(err.Error())
-	}
-
 	// initialize BaseApp
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
 	app.MountStore(app.capKeyMainStore, sdk.StoreTypeIAVL, dbMain)
+	app.MountStore(app.capKeyAccountStore, sdk.StoreTypeIAVL, dbAcc)
 	app.MountStore(app.capKeyIBCStore, sdk.StoreTypeIAVL, dbIBC)
 	app.MountStore(app.capKeyStakingStore, sdk.StoreTypeIAVL, dbStaking)
 	// NOTE: Broken until #532 lands
 	//app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore, app.capKeyStakingStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
-	err = app.LoadLatestVersion(app.capKeyMainStore)
+	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())
 	}

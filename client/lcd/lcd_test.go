@@ -315,7 +315,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	logger = log.NewFilter(logger, log.AllowError())
 	privValidatorFile := config.PrivValidatorFile()
 	privVal := tmtypes.LoadOrGenPrivValidatorFS(privValidatorFile)
-	app := bapp.NewBasecoinApp(logger, dbm.NewMemDB())
+	app := bapp.NewBasecoinApp(logger, dbm.NewMemDB(), dbm.NewMemDB(), dbm.NewMemDB(), dbm.NewMemDB())
 
 	genesisFile := config.GenesisFile()
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)

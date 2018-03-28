@@ -212,19 +212,29 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 		return ErrInsufficientFunds().Result()
 	}
 
-	// if shares set to special case Max then we're good
-	if msg.Shares != "MAX" {
-		// test getting rational number from decimal provided
-		shares, err := sdk.NewRatFromDecimal(msg.Shares)
-		if err != nil {
-			return err.Result()
-		}
+	// test getting rational number from decimal provided
+	shares, err := sdk.NewRatFromDecimal(msg.Shares)
+	if err != nil {
+		return err.Result()
+	}
 
-		// test that there are enough shares to unbond
+	// test that there are enough shares to unbond
+	if msg.Shares == "MAX" {
+		if !bond.Shares.GT(sdk.ZeroRat) {
+			return ErrNotEnoughBondShares(msg.Shares).Result()
+		}
+	} else {
 		if !bond.Shares.GT(shares) {
 			return ErrNotEnoughBondShares(msg.Shares).Result()
 		}
 	}
+
+	// get candidate
+	candidate, found := k.GetCandidate(ctx, msg.CandidateAddr)
+	if !found {
+		return ErrNoCandidateForAddress().Result()
+	}
+
 	if ctx.IsCheckTx() {
 		return sdk.Result{
 			GasUsed: GasUnbond,
@@ -244,17 +254,9 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	}
 
 	// subtract bond tokens from delegator bond
-	if bond.Shares.LT(shares) { // bond shares < msg shares
-		return ErrInsufficientFunds().Result()
-	}
 	bond.Shares = bond.Shares.Sub(shares)
 
-	// get pubKey candidate
-	candidate, found := k.GetCandidate(ctx, msg.CandidateAddr)
-	if !found {
-		return ErrNoCandidateForAddress().Result()
-	}
-
+	// remove the bond
 	revokeCandidacy := false
 	if bond.Shares.IsZero() {
 
@@ -265,7 +267,6 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 			revokeCandidacy = true
 		}
 
-		// remove the bond
 		k.removeDelegatorBond(ctx, bond)
 	} else {
 		k.setDelegatorBond(ctx, bond)
@@ -276,7 +277,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
 	k.coinKeeper.AddCoins(ctx, bond.DelegatorAddr, returnCoins)
 
-	// lastly if an revoke candidate if necessary
+	// revoke candidate if necessary
 	if revokeCandidacy {
 
 		// change the share types to unbonded if they were not already

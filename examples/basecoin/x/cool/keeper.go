@@ -1,9 +1,16 @@
 package cool
 
 import (
+	"encoding/json"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
+
+// Cool genesis state, containing the genesis trend
+type GenesisState struct {
+	trend string
+}
 
 // Keeper - handlers sets/gets of custom variables for your module
 type Keeper struct {
@@ -39,4 +46,14 @@ func (k Keeper) CheckTrend(ctx sdk.Context, guessedTrend string) bool {
 		return true
 	}
 	return false
+}
+
+// InitGenesis - store the genesis trend
+func (k Keeper) InitGenesis(ctx sdk.Context, data json.RawMessage) error {
+	var state GenesisState
+	if err := json.Unmarshal(data, &state); err != nil {
+		return err
+	}
+	k.setTrend(ctx, state.trend)
+	return nil
 }

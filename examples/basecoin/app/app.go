@@ -19,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/sketchy"
 )
 
 const (
@@ -61,10 +62,11 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
 	stakeKeeper := staking.NewKeeper(app.capKeyStakingStore, coinKeeper)
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper)).
-		AddRoute("cool", cool.NewHandler(coolKeeper)).
-		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
-		AddRoute("staking", staking.NewHandler(stakeKeeper))
+		AddRoute("bank", bank.NewHandler(coinKeeper), nil).
+		AddRoute("cool", cool.NewHandler(coolKeeper), coolKeeper.InitGenesis).
+		AddRoute("sketchy", sketchy.NewHandler(), nil).
+		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper), nil).
+		AddRoute("staking", staking.NewHandler(stakeKeeper), nil)
 
 	// initialize BaseApp
 	app.SetTxDecoder(app.txDecoder)

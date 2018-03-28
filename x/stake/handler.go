@@ -126,19 +126,11 @@ func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk
 	}
 
 	// XXX move to types
-	//check and edit any of the editable terms
-	if msg.Description.Moniker != "" {
-		candidate.Description.Moniker = msg.Description.Moniker
-	}
-	if msg.Description.Identity != "" {
-		candidate.Description.Identity = msg.Description.Identity
-	}
-	if msg.Description.Website != "" {
-		candidate.Description.Website = msg.Description.Website
-	}
-	if msg.Description.Details != "" {
-		candidate.Description.Details = msg.Description.Details
-	}
+	// replace all editable fields (clients should autofill existing values)
+	candidate.Description.Moniker = msg.Description.Moniker
+	candidate.Description.Identity = msg.Description.Identity
+	candidate.Description.Website = msg.Description.Website
+	candidate.Description.Details = msg.Description.Details
 
 	k.setCandidate(ctx, candidate)
 	return sdk.Result{}

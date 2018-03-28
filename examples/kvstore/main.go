@@ -3,8 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+
+	"github.com/spf13/viper"
 
 	"github.com/tendermint/abci/server"
+	"github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -17,7 +21,8 @@ func main() {
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "main")
 
-	db, err := dbm.NewGoLevelDB("basecoind", "data")
+	rootDir := viper.GetString(cli.HomeFlag)
+	db, err := dbm.NewGoLevelDB("basecoind", filepath.Join(rootDir, "data"))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

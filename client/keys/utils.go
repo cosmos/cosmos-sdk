@@ -2,6 +2,7 @@ package keys
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 
@@ -31,8 +32,8 @@ type KeyOutput struct {
 // GetKeyBase initializes a keybase based on the configuration
 func GetKeyBase() (keys.Keybase, error) {
 	if keybase == nil {
-		rootDir := viper.GetString(cli.HomeFlag)
-		db, err := dbm.NewGoLevelDB(KeyDBName, rootDir)
+		rootDir := filepath.Join(viper.GetString(cli.HomeFlag), ".basecoind")
+		db, err := dbm.NewGoLevelDB(KeyDBName, filepath.Join(rootDir, "data"))
 		if err != nil {
 			return nil, err
 		}

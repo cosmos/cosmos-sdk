@@ -275,7 +275,6 @@ func TestGetValidators(t *testing.T) {
 	assert.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
 }
 
-// TODO
 // test the mechanism which keeps track of a validator set change
 func TestGetAccUpdateValidators(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
@@ -299,7 +298,6 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	candidates := []Candidate{candidate2, candidate4}
 	validators := genValidators(candidates)
 
-	//TODO
 	// test from nothing to something
 	acc := keeper.getAccUpdateValidators(ctx)
 	assert.Equal(t, 0, len(acc))

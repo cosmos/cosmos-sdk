@@ -10,8 +10,8 @@ import (
 func (p Pool) bondedToUnbondedPool(candidate Candidate) (Pool, Candidate) {
 
 	// replace bonded shares with unbonded shares
-	tokens := k.removeSharesBonded(ctx, candidate.Assets)
-	candidate.Assets = k.addTokensUnbonded(ctx, tokens)
+	p, tokens := p.removeSharesBonded(candidate.Assets)
+	p, candidate.Assets = p.addTokensUnbonded(tokens)
 	candidate.Status = Unbonded
 	return p, candidate
 }
@@ -20,36 +20,36 @@ func (p Pool) bondedToUnbondedPool(candidate Candidate) (Pool, Candidate) {
 func (p Pool) unbondedToBondedPool(candidate Candidate) (Pool, Candidate) {
 
 	// replace unbonded shares with bonded shares
-	tokens := k.removeSharesUnbonded(ctx, candidate.Assets)
-	candidate.Assets = k.addTokensBonded(ctx, tokens)
+	p, tokens := p.removeSharesUnbonded(candidate.Assets)
+	p, candidate.Assets = p.addTokensBonded(tokens)
 	candidate.Status = Bonded
 	return p, candidate
 }
 
 //_______________________________________________________________________
 
-func (p Pool) addTokensBonded(ctx sdk.Context, amount int64) (p Pool, issuedShares sdk.Rat) {
+func (p Pool) addTokensBonded(amount int64) (p2 Pool, issuedShares sdk.Rat) {
 	issuedShares = p.bondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
 	p.BondedPool += amount
 	p.BondedShares = p.BondedShares.Add(issuedShares)
 	return p, issuedShares
 }
 
-func (p Pool) removeSharesBonded(ctx sdk.Context, shares sdk.Rat) (p Pool, removedTokens int64) {
+func (p Pool) removeSharesBonded(shares sdk.Rat) (p2 Pool, removedTokens int64) {
 	removedTokens = p.bondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	p.BondedShares = p.BondedShares.Sub(shares)
 	p.BondedPool -= removedTokens
 	return p, removedTokens
 }
 
-func (p Pool) addTokensUnbonded(ctx sdk.Context, amount int64) (p Pool, issuedShares sdk.Rat) {
+func (p Pool) addTokensUnbonded(amount int64) (p2 Pool, issuedShares sdk.Rat) {
 	issuedShares = p.unbondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
 	p.UnbondedShares = p.UnbondedShares.Add(issuedShares)
 	p.UnbondedPool += amount
 	return p, issuedShares
 }
 
-func (p Pool) removeSharesUnbonded(ctx sdk.Context, shares sdk.Rat) (p Pool, removedTokens int64) {
+func (p Pool) removeSharesUnbonded(shares sdk.Rat) (p2 Pool, removedTokens int64) {
 	removedTokens = p.unbondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	p.UnbondedShares = p.UnbondedShares.Sub(shares)
 	p.UnbondedPool -= removedTokens
@@ -59,16 +59,16 @@ func (p Pool) removeSharesUnbonded(ctx sdk.Context, shares sdk.Rat) (p Pool, rem
 //_______________________________________________________________________
 
 // add tokens to a candidate
-func (p Pool) candidateAddTokens(ctx sdk.Context, candidate Candidate,
-	amount int64) (p Pool, candidate Candidate, issuedDelegatorShares sdk.Rat) {
+func (p Pool) candidateAddTokens(candidate Candidate,
+	amount int64) (p2 Pool, candidate2 Candidate, issuedDelegatorShares sdk.Rat) {
 
 	exRate := candidate.delegatorShareExRate()
 
 	var receivedGlobalShares sdk.Rat
 	if candidate.Status == Bonded {
-		receivedGlobalShares = k.addTokensBonded(ctx, amount)
+		p, receivedGlobalShares = p.addTokensBonded(amount)
 	} else {
-		receivedGlobalShares = k.addTokensUnbonded(ctx, amount)
+		p, receivedGlobalShares = p.addTokensUnbonded(amount)
 	}
 	candidate.Assets = candidate.Assets.Add(receivedGlobalShares)
 
@@ -78,16 +78,16 @@ func (p Pool) candidateAddTokens(ctx sdk.Context, candidate Candidate,
 }
 
 // remove shares from a candidate
-func (p Pool) candidateRemoveShares(ctx sdk.Context, candidate Candidate,
-	shares sdk.Rat) (p Pool, candidate Candidate, createdCoins int64) {
+func (p Pool) candidateRemoveShares(candidate Candidate,
+	shares sdk.Rat) (p2 Pool, candidate2 Candidate, createdCoins int64) {
 
 	//exRate := candidate.delegatorShareExRate() //XXX make sure not used
 
 	globalPoolSharesToRemove := candidate.delegatorShareExRate().Mul(shares)
 	if candidate.Status == Bonded {
-		createdCoins = k.removeSharesBonded(ctx, globalPoolSharesToRemove)
+		p, createdCoins = p.removeSharesBonded(globalPoolSharesToRemove)
 	} else {
-		createdCoins = k.removeSharesUnbonded(ctx, globalPoolSharesToRemove)
+		p, createdCoins = p.removeSharesUnbonded(globalPoolSharesToRemove)
 	}
 	candidate.Assets = candidate.Assets.Sub(globalPoolSharesToRemove)
 	candidate.Liabilities = candidate.Liabilities.Sub(shares)

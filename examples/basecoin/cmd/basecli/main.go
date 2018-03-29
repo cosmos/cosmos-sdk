@@ -2,8 +2,9 @@ package main
 
 import (
 	"errors"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 
 	"github.com/tendermint/tmlibs/cli"
 
@@ -18,7 +19,7 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/commands"
-	stakingcmd "github.com/cosmos/cosmos-sdk/x/staking/commands"
+	simplestakingcmd "github.com/cosmos/cosmos-sdk/x/simplestake/commands"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
@@ -77,11 +78,11 @@ func main() {
 	basecliCmd.AddCommand(
 		client.PostCommands(
 			ibccmd.IBCRelayCmd(cdc),
-			stakingcmd.BondTxCmd(cdc),
+			simplestakingcmd.BondTxCmd(cdc),
 		)...)
 	basecliCmd.AddCommand(
 		client.PostCommands(
-			stakingcmd.UnbondTxCmd(cdc),
+			simplestakingcmd.UnbondTxCmd(cdc),
 		)...)
 
 	// add proxy, version and key info

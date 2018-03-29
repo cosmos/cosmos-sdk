@@ -1,4 +1,4 @@
-package staking
+package simplestake
 
 import (
 	"encoding/json"
@@ -26,7 +26,7 @@ func NewBondMsg(addr sdk.Address, stake sdk.Coin, pubKey crypto.PubKey) BondMsg 
 }
 
 func (msg BondMsg) Type() string {
-	return "staking"
+	return moduleName
 }
 
 func (msg BondMsg) ValidateBasic() sdk.Error {
@@ -71,7 +71,7 @@ func NewUnbondMsg(addr sdk.Address) UnbondMsg {
 }
 
 func (msg UnbondMsg) Type() string {
-	return "staking"
+	return moduleName
 }
 
 func (msg UnbondMsg) ValidateBasic() sdk.Error {

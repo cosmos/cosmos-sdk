@@ -262,7 +262,9 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	}
 
 	// Add the coins
-	returnAmount := k.candidateRemoveShares(ctx, candidate, shares)
+	p := k.GetPool(ctx)
+	var returnAmount int64
+	p, candidate, returnAmount = p.candidateRemoveShares(candidate, shares)
 	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
 	k.coinKeeper.AddCoins(ctx, bond.DelegatorAddr, returnCoins)
 
@@ -271,7 +273,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 		// change the share types to unbonded if they were not already
 		if candidate.Status == Bonded {
-			k.bondedToUnbondedPool(ctx, candidate)
+			p, candidate = p.bondedToUnbondedPool(candidate)
 		}
 
 		// lastly update the status
@@ -284,6 +286,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	} else {
 		k.setCandidate(ctx, candidate)
 	}
+	k.setPool(ctx, p)
 	return sdk.Result{}
 }
 
@@ -297,12 +300,16 @@ func UnbondCoins(ctx sdk.Context, k Keeper, bond DelegatorBond, candidate Candid
 	}
 	bond.Shares = bond.Shares.Sub(shares)
 
-	returnAmount := k.candidateRemoveShares(ctx, candidate, shares)
+	p := k.GetPool(ctx)
+	var returnAmount int64
+	p, candidate, returnAmount = p.candidateRemoveShares(candidate, shares)
 	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
 
 	_, err := k.coinKeeper.AddCoins(ctx, candidate.Address, returnCoins)
 	if err != nil {
 		return err
 	}
+	k.setPool(ctx, p)
+	k.setCandidate(ctx, candidate)
 	return nil
 }

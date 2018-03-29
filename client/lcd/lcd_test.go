@@ -295,7 +295,7 @@ func TestTxs(t *testing.T) {
 // strt TM and the LCD in process, listening on their respective sockets
 func startTMAndLCD() (*nm.Node, net.Listener, error) {
 
-	viper.Set(cli.HomeFlag, os.ExpandEnv("/tmp/$HOME"))
+	viper.Set(cli.HomeFlag, os.TempDir())
 	kb, err := keys.GetKeyBase() // dbm.NewMemDB()) // :(
 	if err != nil {
 		return nil, nil, err

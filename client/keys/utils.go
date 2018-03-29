@@ -32,7 +32,7 @@ type KeyOutput struct {
 // GetKeyBase initializes a keybase based on the configuration
 func GetKeyBase() (keys.Keybase, error) {
 	if keybase == nil {
-		rootDir := filepath.Join(viper.GetString(cli.HomeFlag), ".basecoind")
+		rootDir := filepath.Join(viper.GetString(cli.HomeFlag), ".tlc")
 		db, err := dbm.NewGoLevelDB(KeyDBName, filepath.Join(rootDir, "data"))
 		if err != nil {
 			return nil, err

@@ -1,4 +1,4 @@
-package staking
+package simplestake
 
 import (
 	"encoding/json"

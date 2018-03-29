@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/builder"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	simplestake "github.com/cosmos/cosmos-sdk/x/simplestake"
+	"github.com/cosmos/cosmos-sdk/x/simplestake"
 )
 
 const (

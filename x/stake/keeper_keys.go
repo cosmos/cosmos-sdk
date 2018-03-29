@@ -15,9 +15,9 @@ var (
 	CandidatesKey          = []byte{0x02} // prefix for each key to a candidate
 	ValidatorsKey          = []byte{0x03} // prefix for each key to a validator
 	AccUpdateValidatorsKey = []byte{0x04} // prefix for each key to a validator which is being updated
-	RecentValidatorsKey    = []byte{0x04} // prefix for each key to the last updated validator group
+	RecentValidatorsKey    = []byte{0x05} // prefix for each key to the last updated validator group
 
-	DelegatorBondKeyPrefix = []byte{0x05} // prefix for each key to a delegator's bond
+	DelegatorBondKeyPrefix = []byte{0x06} // prefix for each key to a delegator's bond
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch

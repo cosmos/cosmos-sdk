@@ -17,9 +17,13 @@ var (
 	addrVal1 = addrs[2]
 	addrVal2 = addrs[3]
 	addrVal3 = addrs[4]
+	addrVal4 = addrs[5]
+	addrVal5 = addrs[6]
 	pk1      = crypto.GenPrivKeyEd25519().PubKey()
 	pk2      = crypto.GenPrivKeyEd25519().PubKey()
 	pk3      = crypto.GenPrivKeyEd25519().PubKey()
+	pk4      = crypto.GenPrivKeyEd25519().PubKey()
+	pk5      = crypto.GenPrivKeyEd25519().PubKey()
 
 	candidate1 = Candidate{
 		Address:     addrVal1,
@@ -38,6 +42,18 @@ var (
 		PubKey:      pk3,
 		Assets:      sdk.NewRat(7),
 		Liabilities: sdk.NewRat(7),
+	}
+	candidate4 = Candidate{
+		Address:     addrVal4,
+		PubKey:      pk4,
+		Assets:      sdk.NewRat(10),
+		Liabilities: sdk.NewRat(10),
+	}
+	candidate5 = Candidate{
+		Address:     addrVal5,
+		PubKey:      pk5,
+		Assets:      sdk.NewRat(6),
+		Liabilities: sdk.NewRat(6),
 	}
 )
 
@@ -271,25 +287,17 @@ func TestGetAccUpdateValidators(t *testing.T) {
 		}
 	}
 
-	amts := []int64{100, 300}
-	genCandidates := func(amts []int64) ([]Candidate, []Validator) {
-		candidates := make([]Candidate, len(amts))
-		validators := make([]Validator, len(amts))
-		for i := 0; i < len(amts); i++ {
-			c := Candidate{
-				Status:      Unbonded,
-				PubKey:      pks[i],
-				Address:     addrs[i],
-				Assets:      sdk.NewRat(amts[i]),
-				Liabilities: sdk.NewRat(amts[i]),
-			}
-			candidates[i] = c
+	genValidators := func(candidates []Candidate) []Validator {
+		validators := make([]Validator, len(candidates))
+		for i, c := range candidates {
 			validators[i] = c.validator()
 		}
-		return candidates, validators
+
+		return validators
 	}
 
-	candidates, validators := genCandidates(amts)
+	candidates := []Candidate{candidate2, candidate4}
+	validators := genValidators(candidates)
 
 	//TODO
 	// test from nothing to something
@@ -320,41 +328,58 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	assert.Equal(t, int64(0), acc[1].VotingPower.Evaluate())
 
 	// test single value change
-	amts[0] = 600
-	candidates, validators = genCandidates(amts)
+	candidates[0].Assets = sdk.NewRat(600)
+	validators = genValidators(candidates)
 	keeper.setCandidate(ctx, candidates[0])
 	keeper.setCandidate(ctx, candidates[1])
 	acc = keeper.getAccUpdateValidators(ctx)
 	validatorsEqual(t, validators, acc)
 
 	// test multiple value change
-	amts[0] = 200
-	amts[1] = 0
-	candidates, validators = genCandidates(amts)
+	candidates[0].Assets = sdk.NewRat(200)
+	candidates[1].Assets = sdk.NewRat(0)
+	validators = genValidators(candidates)
 	keeper.setCandidate(ctx, candidates[0])
 	keeper.setCandidate(ctx, candidates[1])
 	acc = keeper.getAccUpdateValidators(ctx)
 	validatorsEqual(t, validators, acc)
 
 	// test validator added at the beginning
-	// test validator added in the middle
-	// test validator added at the end
-	amts = append(amts, 100)
-	candidates, validators = genCandidates(amts)
+	candidates = append([]Candidate{candidate1}, candidates...)
+	validators = genValidators(candidates)
 	keeper.setCandidate(ctx, candidates[0])
 	keeper.setCandidate(ctx, candidates[1])
 	keeper.setCandidate(ctx, candidates[2])
 	acc = keeper.getAccUpdateValidators(ctx)
 	validatorsEqual(t, validators, acc)
 
-	// test multiple validators removed
+	// test validator added at the middle
+	candidates = []Candidate{candidates[0], candidates[1], candidate3, candidates[2]}
+	validators = genValidators(candidates)
+	keeper.setCandidate(ctx, candidates[0])
+	keeper.setCandidate(ctx, candidates[1])
+	keeper.setCandidate(ctx, candidates[2])
+	keeper.setCandidate(ctx, candidates[3])
+	acc = keeper.getAccUpdateValidators(ctx)
+	validatorsEqual(t, validators, acc)
+
+	// test validator added at the end
+	candidates = append(candidates, candidate5)
+	validators = genValidators(candidates)
+	keeper.setCandidate(ctx, candidates[0])
+	keeper.setCandidate(ctx, candidates[1])
+	keeper.setCandidate(ctx, candidates[2])
+	keeper.setCandidate(ctx, candidates[3])
+	keeper.setCandidate(ctx, candidates[4])
+	acc = keeper.getAccUpdateValidators(ctx)
+	validatorsEqual(t, validators, acc)
 }
 
 // clear the tracked changes to the validator set
 func TestClearAccUpdateValidators(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
 
-	amts := []int64{0, 400}
+	amts := []int64{100, 400, 200}
 	candidates := make([]Candidate, len(amts))
 	for i, amt := range amts {
 		c := Candidate{

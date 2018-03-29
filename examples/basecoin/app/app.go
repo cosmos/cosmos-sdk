@@ -71,10 +71,10 @@ func NewBasecoinApp(logger log.Logger, dbMain, dbAcc, dbIBC, dbStaking dbm.DB) *
 	// initialize BaseApp
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
-	app.MountStore(app.capKeyMainStore, sdk.StoreTypeIAVL, dbMain)
-	app.MountStore(app.capKeyAccountStore, sdk.StoreTypeIAVL, dbAcc)
-	app.MountStore(app.capKeyIBCStore, sdk.StoreTypeIAVL, dbIBC)
-	app.MountStore(app.capKeyStakingStore, sdk.StoreTypeIAVL, dbStaking)
+	app.MountStoreWithDB(app.capKeyMainStore, sdk.StoreTypeIAVL, dbMain)
+	app.MountStoreWithDB(app.capKeyAccountStore, sdk.StoreTypeIAVL, dbAcc)
+	app.MountStoreWithDB(app.capKeyIBCStore, sdk.StoreTypeIAVL, dbIBC)
+	app.MountStoreWithDB(app.capKeyStakingStore, sdk.StoreTypeIAVL, dbStaking)
 	// NOTE: Broken until #532 lands
 	//app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore, app.capKeyStakingStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))

@@ -74,13 +74,18 @@ func (app *BaseApp) Name() string {
 // Broken until #532 is implemented.
 func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
-		app.MountStore(key, sdk.StoreTypeIAVL, app.db)
+		app.MountStore(key, sdk.StoreTypeIAVL)
 	}
 }
 
 // Mount a store to the provided key in the BaseApp multistore
-func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType, db dbm.DB) {
+func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, typ sdk.StoreType, db dbm.DB) {
 	app.cms.MountStoreWithDB(key, typ, db)
+}
+
+// Mount a store to the provided key in the BaseApp multistore
+func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
+	app.cms.MountStoreWithDB(key, typ, app.db)
 }
 
 // nolint - Set functions

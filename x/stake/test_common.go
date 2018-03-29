@@ -124,12 +124,11 @@ func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool, initCoins
 	ck := bank.NewCoinKeeper(accountMapper)
 	keeper := NewKeeper(ctx, cdc, keyStake, ck)
 
-	//params := paramsNoInflation()
-	params := keeper.GetParams(ctx)
-
 	// fill all the addresses with some coins
 	for _, addr := range addrs {
-		ck.AddCoins(ctx, addr, sdk.Coins{{params.BondDenom, initCoins}})
+		ck.AddCoins(ctx, addr, sdk.Coins{
+			{keeper.GetParams(ctx).BondDenom, initCoins},
+		})
 	}
 
 	return ctx, accountMapper, keeper

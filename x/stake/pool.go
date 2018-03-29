@@ -4,7 +4,29 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-//TODO make these next two functions more efficient should be reading and writting to state ye know
+// get the bond ratio of the global state
+func (p Pool) bondedRatio() sdk.Rat {
+	if p.TotalSupply > 0 {
+		return sdk.NewRat(p.BondedPool, p.TotalSupply)
+	}
+	return sdk.ZeroRat
+}
+
+// get the exchange rate of bonded token per issued share
+func (p Pool) bondedShareExRate() sdk.Rat {
+	if p.BondedShares.IsZero() {
+		return sdk.OneRat
+	}
+	return sdk.NewRat(p.BondedPool).Quo(p.BondedShares)
+}
+
+// get the exchange rate of unbonded tokens held in candidates per issued share
+func (p Pool) unbondedShareExRate() sdk.Rat {
+	if p.UnbondedShares.IsZero() {
+		return sdk.OneRat
+	}
+	return sdk.NewRat(p.UnbondedPool).Quo(p.UnbondedShares)
+}
 
 // move a candidates asset pool from bonded to unbonded pool
 func (p Pool) bondedToUnbondedPool(candidate Candidate) (Pool, Candidate) {
@@ -62,8 +84,6 @@ func (p Pool) removeSharesUnbonded(shares sdk.Rat) (p2 Pool, removedTokens int64
 func (p Pool) candidateAddTokens(candidate Candidate,
 	amount int64) (p2 Pool, candidate2 Candidate, issuedDelegatorShares sdk.Rat) {
 
-	exRate := candidate.delegatorShareExRate()
-
 	var receivedGlobalShares sdk.Rat
 	if candidate.Status == Bonded {
 		p, receivedGlobalShares = p.addTokensBonded(amount)
@@ -72,8 +92,10 @@ func (p Pool) candidateAddTokens(candidate Candidate,
 	}
 	candidate.Assets = candidate.Assets.Add(receivedGlobalShares)
 
+	exRate := candidate.delegatorShareExRate()
 	issuedDelegatorShares = exRate.Mul(receivedGlobalShares)
 	candidate.Liabilities = candidate.Liabilities.Add(issuedDelegatorShares)
+
 	return p, candidate, issuedDelegatorShares
 }
 

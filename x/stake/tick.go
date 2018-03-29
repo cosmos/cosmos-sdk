@@ -2,39 +2,35 @@ package stake
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/abci/types"
 )
 
 const (
-	hrsPerYear = 8766 // as defined by a julian year of 365.25 days
-	precision  = 1000000000
+	hrsPerYr  = 8766 // as defined by a julian year of 365.25 days
+	precision = 1000000000
 )
 
-var hrsPerYrRat = sdk.NewRat(hrsPerYear) // as defined by a julian year of 365.25 days
+var hrsPerYrRat = sdk.NewRat(hrsPerYr) // as defined by a julian year of 365.25 days
 
 // Tick - called at the end of every block
-func (k Keeper) Tick(ctx sdk.Context) (change []*abci.Validator, err error) {
-
-	// retrieve params
+func (k Keeper) Tick(ctx sdk.Context) (change []Validator) {
 	p := k.GetPool(ctx)
-	height := ctx.BlockHeight()
 
 	// Process Validator Provisions
-	// XXX right now just process every 5 blocks, in new SDK make hourly
-	if p.InflationLastTime+5 <= height {
-		p.InflationLastTime = height
-		k.processProvisions(ctx)
+	blockTime := ctx.BlockHeader().Time // XXX assuming in seconds, confirm
+	if p.InflationLastTime+blockTime >= 3600 {
+		p.InflationLastTime = blockTime
+		p = k.processProvisions(ctx)
 	}
 
-	newVals := k.GetValidators(ctx)
+	// save the params
+	k.setPool(ctx, p)
 
-	// XXX determine change from old validators, set to change
-	_ = newVals
-	return change, nil
+	change = k.getAccUpdateValidators(ctx)
+	return
 }
 
 // process provisions for an hour period
-func (k Keeper) processProvisions(ctx sdk.Context) {
+func (k Keeper) processProvisions(ctx sdk.Context) Pool {
 
 	pool := k.GetPool(ctx)
 	pool.Inflation = k.nextInflation(ctx).Round(precision)
@@ -46,9 +42,7 @@ func (k Keeper) processProvisions(ctx sdk.Context) {
 	provisions := pool.Inflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat).Evaluate()
 	pool.BondedPool += provisions
 	pool.TotalSupply += provisions
-
-	// save the params
-	k.setPool(ctx, pool)
+	return pool
 }
 
 // get the next inflation rate for the hour

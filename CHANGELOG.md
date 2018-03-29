@@ -26,7 +26,7 @@ FEATURES
 * [types] StdFee, and StdTx takes the StdFee
 * [specs] Progression of MVPs for IBC
 * [x/ibc] Initial shell of IBC functionality (no proofs)
-* [x/staking] Simple staking module with bonding/unbonding
+* [x/simplestake] Simple staking module with bonding/unbonding
 
 IMPROVEMENTS
 

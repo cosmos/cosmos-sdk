@@ -10,6 +10,8 @@ import (
 
 const stakingToken = "steak"
 
+const moduleName = "simplestake"
+
 type Keeper struct {
 	ck bank.CoinKeeper
 

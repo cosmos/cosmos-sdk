@@ -2,7 +2,6 @@ package stake
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,14 +30,14 @@ var (
 	candidate2 = Candidate{
 		Address:     addrVal2,
 		PubKey:      pk2,
-		Assets:      sdk.NewRat(9),
-		Liabilities: sdk.NewRat(9),
+		Assets:      sdk.NewRat(8),
+		Liabilities: sdk.NewRat(8),
 	}
 	candidate3 = Candidate{
 		Address:     addrVal3,
 		PubKey:      pk3,
-		Assets:      sdk.NewRat(9),
-		Liabilities: sdk.NewRat(9),
+		Assets:      sdk.NewRat(7),
+		Liabilities: sdk.NewRat(7),
 	}
 )
 
@@ -298,7 +297,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	assert.Equal(t, 0, len(acc))
 	keeper.setCandidate(ctx, candidates[0])
 	keeper.setCandidate(ctx, candidates[1])
-	//_ = keeper.GetValidators(ctx) // to init recent validator set
+	_ = keeper.GetValidators(ctx) // to init recent validator set
 	acc = keeper.getAccUpdateValidators(ctx)
 	validatorsEqual(t, validators, acc)
 
@@ -309,44 +308,46 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	validatorsEqual(t, validators, acc)
 
 	acc = keeper.getAccUpdateValidators(ctx)
-	fmt.Printf("%+v\n", acc)
 
 	// test from something to nothing
 	keeper.removeCandidate(ctx, candidates[0].Address)
 	keeper.removeCandidate(ctx, candidates[1].Address)
 	acc = keeper.getAccUpdateValidators(ctx)
-	fmt.Printf("%+v\n", acc)
 	assert.Equal(t, 2, len(acc))
 	assert.Equal(t, validators[0].Address, acc[0].Address)
-	assert.Equal(t, 0, acc[0].VotingPower.Evaluate())
+	assert.Equal(t, int64(0), acc[0].VotingPower.Evaluate())
 	assert.Equal(t, validators[1].Address, acc[1].Address)
-	assert.Equal(t, 0, acc[1].VotingPower.Evaluate())
+	assert.Equal(t, int64(0), acc[1].VotingPower.Evaluate())
 
-	//// test single value change
-	//amts[0] = 600
-	//candidates, validators = genCandidates(amts)
-	//setCandidates(ctx, candidates)
-	//acc = keeper.getAccUpdateValidators(ctx)
-	//validatorsEqual(t, validators, acc)
+	// test single value change
+	amts[0] = 600
+	candidates, validators = genCandidates(amts)
+	keeper.setCandidate(ctx, candidates[0])
+	keeper.setCandidate(ctx, candidates[1])
+	acc = keeper.getAccUpdateValidators(ctx)
+	validatorsEqual(t, validators, acc)
 
-	//// test multiple value change
-	//amts[0] = 200
-	//amts[1] = 0
-	//candidates, validators = genCandidates(amts)
-	//setCandidates(ctx, candidates)
-	//acc = keeper.getAccUpdateValidators(ctx)
-	//validatorsEqual(t, validators, acc)
+	// test multiple value change
+	amts[0] = 200
+	amts[1] = 0
+	candidates, validators = genCandidates(amts)
+	keeper.setCandidate(ctx, candidates[0])
+	keeper.setCandidate(ctx, candidates[1])
+	acc = keeper.getAccUpdateValidators(ctx)
+	validatorsEqual(t, validators, acc)
 
-	//// test validator added at the beginning
-	//// test validator added in the middle
-	//// test validator added at the end
-	//amts = append(amts, 100)
-	//candidates, validators = genCandidates(amts)
-	//setCandidates(ctx, candidates)
-	//acc = keeper.getAccUpdateValidators(ctx)
-	//validatorsEqual(t, validators, acc)
+	// test validator added at the beginning
+	// test validator added in the middle
+	// test validator added at the end
+	amts = append(amts, 100)
+	candidates, validators = genCandidates(amts)
+	keeper.setCandidate(ctx, candidates[0])
+	keeper.setCandidate(ctx, candidates[1])
+	keeper.setCandidate(ctx, candidates[2])
+	acc = keeper.getAccUpdateValidators(ctx)
+	validatorsEqual(t, validators, acc)
 
-	//// test multiple validators removed
+	// test multiple validators removed
 }
 
 // clear the tracked changes to the validator set
@@ -376,14 +377,32 @@ func TestClearAccUpdateValidators(t *testing.T) {
 
 // test if is a validator from the last update
 func TestIsRecentValidator(t *testing.T) {
-	//TODO
+	ctx, _, keeper := createTestInput(t, nil, false, 0)
 
 	// test that an empty validator set doesn't have any validators
+	validators := keeper.GetValidators(ctx)
+	assert.Equal(t, 0, len(validators))
+
 	// get the validators for the first time
+	keeper.setCandidate(ctx, candidate1)
+	keeper.setCandidate(ctx, candidate2)
+	validators = keeper.GetValidators(ctx)
+	require.Equal(t, 2, len(validators))
+	assert.Equal(t, candidate1.validator(), validators[0])
+	assert.Equal(t, candidate2.validator(), validators[1])
+
 	// test a basic retrieve of something that should be a recent validator
+	assert.True(t, keeper.IsRecentValidator(ctx, candidate1.Address))
+	assert.True(t, keeper.IsRecentValidator(ctx, candidate2.Address))
+
 	// test a basic retrieve of something that should not be a recent validator
+	assert.False(t, keeper.IsRecentValidator(ctx, candidate3.Address))
+
 	// remove that validator, but don't retrieve the recent validator group
+	keeper.removeCandidate(ctx, candidate1.Address)
+
 	// test that removed validator is not considered a recent validator
+	assert.False(t, keeper.IsRecentValidator(ctx, candidate1.Address))
 }
 
 func TestParams(t *testing.T) {

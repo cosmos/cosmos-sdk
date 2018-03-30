@@ -364,9 +364,6 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 				Coins:   coins,
 			},
 		},
-		"cool": map[string]string{
-			"trend": "ice-cold",
-		},
 	}
 	stateBytes, err := json.Marshal(appState)
 	if err != nil {

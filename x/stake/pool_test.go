@@ -132,13 +132,14 @@ func TestRemoveSharesUnbonded(t *testing.T) {
 
 func TestCandidateAddTokens(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
+
 	poolA := keeper.GetPool(ctx)
 	candA := Candidate{
+		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
 		Assets:      sdk.NewRat(9),
 		Liabilities: sdk.NewRat(9),
-		Status:      Bonded,
 	}
 	poolA.BondedPool = candA.Assets.Evaluate()
 	poolA.BondedShares = candA.Assets
@@ -148,11 +149,11 @@ func TestCandidateAddTokens(t *testing.T) {
 	poolB, candB, sharesB := poolA.candidateAddTokens(candA, 10)
 
 	// shares were issued
-	assert.Equal(t, sharesB, sdk.NewRat(10).Mul(candA.delegatorShareExRate()))
+	assert.Equal(t, sdk.NewRat(10).Mul(candA.delegatorShareExRate()), sharesB)
 	// pool shares were added
 	assert.Equal(t, candB.Assets, candA.Assets.Add(sdk.NewRat(10)))
 	// conservation of tokens
-	assert.Equal(t, poolB.UnbondedPool+poolB.BondedPool, 10+poolA.UnbondedPool+poolA.BondedPool)
+	assert.Equal(t, poolB.BondedPool, 10+poolA.BondedPool)
 }
 
 func TestCandidateRemoveShares(t *testing.T) {

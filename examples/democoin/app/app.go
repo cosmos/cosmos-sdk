@@ -18,6 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simplestake"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
+	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
+	"github.com/cosmos/cosmos-sdk/examples/democoin/x/sketchy"
 )
 
 const (
@@ -58,10 +60,13 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 
 	// add handlers
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
+	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper)
 	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
 	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper)
 	app.Router().
 		AddRoute("bank", bank.NewHandler(coinKeeper), nil).
+		AddRoute("cool", cool.NewHandler(coolKeeper), coolKeeper.InitGenesis).
+		AddRoute("sketchy", sketchy.NewHandler(), nil).
 		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper), nil).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper), nil)
 
@@ -98,6 +103,8 @@ func MakeCodec() *wire.Codec {
 		struct{ sdk.Msg }{},
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
 		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
+		oldwire.ConcreteType{cool.QuizMsg{}, msgTypeQuiz},
+		oldwire.ConcreteType{cool.SetTrendMsg{}, msgTypeSetTrend},
 		oldwire.ConcreteType{ibc.IBCTransferMsg{}, msgTypeIBCTransferMsg},
 		oldwire.ConcreteType{ibc.IBCReceiveMsg{}, msgTypeIBCReceiveMsg},
 		oldwire.ConcreteType{simplestake.BondMsg{}, msgTypeBondMsg},

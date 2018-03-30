@@ -96,17 +96,7 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	store.Set(GetValidatorKey(address, validator.VotingPower, k.cdc), bz)
 
 	// add to the validators to update list if is already a validator
-	updateAcc := false
-	if store.Get(GetRecentValidatorKey(address)) != nil {
-		updateAcc = true
-	}
-
-	// test if this is a new validator
-	if k.isNewValidator(ctx, store, address) {
-		updateAcc = true
-	}
-
-	if updateAcc {
+	if store.Get(GetRecentValidatorKey(address)) != nil || k.isNewValidator(ctx, store, address) {
 		store.Set(GetAccUpdateValidatorKey(validator.Address), bz)
 	}
 	return
@@ -126,13 +116,14 @@ func (k Keeper) removeCandidate(ctx sdk.Context, address sdk.Address) {
 
 	// delete from recent and power weighted validator groups if the validator
 	// exists and add validator with zero power to the validator updates
-	if store.Get(GetRecentValidatorKey(address)) == nil {
+	if store.Get(GetRecentValidatorKey(address)) == nil && !k.isNewValidator(ctx, store, address) {
 		return
 	}
 	bz, err := k.cdc.MarshalBinary(Validator{address, sdk.ZeroRat})
 	if err != nil {
 		panic(err)
 	}
+
 	store.Set(GetAccUpdateValidatorKey(address), bz)
 	store.Delete(GetRecentValidatorKey(address))
 	store.Delete(GetValidatorKey(address, oldCandidate.Assets, k.cdc))

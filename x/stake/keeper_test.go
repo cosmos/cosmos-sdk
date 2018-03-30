@@ -5,61 +5,40 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	crypto "github.com/tendermint/go-crypto"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	addrDel1 = addrs[0]
-	addrDel2 = addrs[1]
-	addrVal1 = addrs[2]
-	addrVal2 = addrs[3]
-	addrVal3 = addrs[4]
-	addrVal4 = addrs[5]
-	addrVal5 = addrs[6]
-	pk1      = crypto.GenPrivKeyEd25519().PubKey()
-	pk2      = crypto.GenPrivKeyEd25519().PubKey()
-	pk3      = crypto.GenPrivKeyEd25519().PubKey()
-	pk4      = crypto.GenPrivKeyEd25519().PubKey()
-	pk5      = crypto.GenPrivKeyEd25519().PubKey()
-
-	candidate1 = Candidate{
-		Address:     addrVal1,
-		PubKey:      pk1,
-		Assets:      sdk.NewRat(9),
-		Liabilities: sdk.NewRat(9),
+	addrDels = []sdk.Address{
+		addrs[0],
+		addrs[1],
 	}
-	candidate2 = Candidate{
-		Address:     addrVal2,
-		PubKey:      pk2,
-		Assets:      sdk.NewRat(8),
-		Liabilities: sdk.NewRat(8),
-	}
-	candidate3 = Candidate{
-		Address:     addrVal3,
-		PubKey:      pk3,
-		Assets:      sdk.NewRat(7),
-		Liabilities: sdk.NewRat(7),
-	}
-	candidate4 = Candidate{
-		Address:     addrVal4,
-		PubKey:      pk4,
-		Assets:      sdk.NewRat(10),
-		Liabilities: sdk.NewRat(10),
-	}
-	candidate5 = Candidate{
-		Address:     addrVal5,
-		PubKey:      pk5,
-		Assets:      sdk.NewRat(6),
-		Liabilities: sdk.NewRat(6),
+	addrVals = []sdk.Address{
+		addrs[2],
+		addrs[3],
+		addrs[4],
+		addrs[5],
+		addrs[6],
 	}
 )
 
 // This function tests GetCandidate, GetCandidates, setCandidate, removeCandidate
 func TestCandidate(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
+
+	//construct the candidates
+	var candidates [3]Candidate
+	amts := []int64{9, 8, 7}
+	for i, amt := range amts {
+		candidates[i] = Candidate{
+			Address:     addrVals[i],
+			PubKey:      pks[i],
+			Assets:      sdk.NewRat(amt),
+			Liabilities: sdk.NewRat(amt),
+		}
+	}
 
 	candidatesEqual := func(c1, c2 Candidate) bool {
 		return c1.Status == c2.Status &&
@@ -71,47 +50,47 @@ func TestCandidate(t *testing.T) {
 	}
 
 	// check the empty keeper first
-	_, found := keeper.GetCandidate(ctx, addrVal1)
+	_, found := keeper.GetCandidate(ctx, addrVals[0])
 	assert.False(t, found)
 	resCands := keeper.GetCandidates(ctx, 100)
 	assert.Zero(t, len(resCands))
 
 	// set and retrieve a record
-	keeper.setCandidate(ctx, candidate1)
-	resCand, found := keeper.GetCandidate(ctx, addrVal1)
+	keeper.setCandidate(ctx, candidates[0])
+	resCand, found := keeper.GetCandidate(ctx, addrVals[0])
 	require.True(t, found)
-	assert.True(t, candidatesEqual(candidate1, resCand), "%v \n %v", resCand, candidate1)
+	assert.True(t, candidatesEqual(candidates[0], resCand), "%v \n %v", resCand, candidates[0])
 
 	// modify a records, save, and retrieve
-	candidate1.Liabilities = sdk.NewRat(99)
-	keeper.setCandidate(ctx, candidate1)
-	resCand, found = keeper.GetCandidate(ctx, addrVal1)
+	candidates[0].Liabilities = sdk.NewRat(99)
+	keeper.setCandidate(ctx, candidates[0])
+	resCand, found = keeper.GetCandidate(ctx, addrVals[0])
 	require.True(t, found)
-	assert.True(t, candidatesEqual(candidate1, resCand))
+	assert.True(t, candidatesEqual(candidates[0], resCand))
 
 	// also test that the address has been added to address list
 	resCands = keeper.GetCandidates(ctx, 100)
 	require.Equal(t, 1, len(resCands))
-	assert.Equal(t, addrVal1, resCands[0].Address)
+	assert.Equal(t, addrVals[0], resCands[0].Address)
 
 	// add other candidates
-	keeper.setCandidate(ctx, candidate2)
-	keeper.setCandidate(ctx, candidate3)
-	resCand, found = keeper.GetCandidate(ctx, addrVal2)
+	keeper.setCandidate(ctx, candidates[1])
+	keeper.setCandidate(ctx, candidates[2])
+	resCand, found = keeper.GetCandidate(ctx, addrVals[1])
 	require.True(t, found)
-	assert.True(t, candidatesEqual(candidate2, resCand), "%v \n %v", resCand, candidate2)
-	resCand, found = keeper.GetCandidate(ctx, addrVal3)
+	assert.True(t, candidatesEqual(candidates[1], resCand), "%v \n %v", resCand, candidates[1])
+	resCand, found = keeper.GetCandidate(ctx, addrVals[2])
 	require.True(t, found)
-	assert.True(t, candidatesEqual(candidate3, resCand), "%v \n %v", resCand, candidate3)
+	assert.True(t, candidatesEqual(candidates[2], resCand), "%v \n %v", resCand, candidates[2])
 	resCands = keeper.GetCandidates(ctx, 100)
 	require.Equal(t, 3, len(resCands))
-	assert.True(t, candidatesEqual(candidate1, resCands[0]), "%v \n %v", resCands[0], candidate1)
-	assert.True(t, candidatesEqual(candidate2, resCands[1]), "%v \n %v", resCands[1], candidate2)
-	assert.True(t, candidatesEqual(candidate3, resCands[2]), "%v \n %v", resCands[2], candidate3)
+	assert.True(t, candidatesEqual(candidates[0], resCands[0]), "%v \n %v", resCands[0], candidates[0])
+	assert.True(t, candidatesEqual(candidates[1], resCands[1]), "%v \n %v", resCands[1], candidates[1])
+	assert.True(t, candidatesEqual(candidates[2], resCands[2]), "%v \n %v", resCands[2], candidates[2])
 
 	// remove a record
-	keeper.removeCandidate(ctx, candidate2.Address)
-	_, found = keeper.GetCandidate(ctx, addrVal2)
+	keeper.removeCandidate(ctx, candidates[1].Address)
+	_, found = keeper.GetCandidate(ctx, addrVals[1])
 	assert.False(t, found)
 }
 
@@ -119,12 +98,24 @@ func TestCandidate(t *testing.T) {
 func TestBond(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
 
-	// first add a candidate1 to delegate too
-	keeper.setCandidate(ctx, candidate1)
+	//construct the candidates
+	amts := []int64{9, 8, 7}
+	var candidates [3]Candidate
+	for i, amt := range amts {
+		candidates[i] = Candidate{
+			Address:     addrVals[i],
+			PubKey:      pks[i],
+			Assets:      sdk.NewRat(amt),
+			Liabilities: sdk.NewRat(amt),
+		}
+	}
+
+	// first add a candidates[0] to delegate too
+	keeper.setCandidate(ctx, candidates[0])
 
 	bond1to1 := DelegatorBond{
-		DelegatorAddr: addrDel1,
-		CandidateAddr: addrVal1,
+		DelegatorAddr: addrDels[0],
+		CandidateAddr: addrVals[0],
 		Shares:        sdk.NewRat(9),
 	}
 
@@ -135,30 +126,30 @@ func TestBond(t *testing.T) {
 	}
 
 	// check the empty keeper first
-	_, found := keeper.getDelegatorBond(ctx, addrDel1, addrVal1)
+	_, found := keeper.getDelegatorBond(ctx, addrDels[0], addrVals[0])
 	assert.False(t, found)
 
 	// set and retrieve a record
 	keeper.setDelegatorBond(ctx, bond1to1)
-	resBond, found := keeper.getDelegatorBond(ctx, addrDel1, addrVal1)
+	resBond, found := keeper.getDelegatorBond(ctx, addrDels[0], addrVals[0])
 	assert.True(t, found)
 	assert.True(t, bondsEqual(bond1to1, resBond))
 
 	// modify a records, save, and retrieve
 	bond1to1.Shares = sdk.NewRat(99)
 	keeper.setDelegatorBond(ctx, bond1to1)
-	resBond, found = keeper.getDelegatorBond(ctx, addrDel1, addrVal1)
+	resBond, found = keeper.getDelegatorBond(ctx, addrDels[0], addrVals[0])
 	assert.True(t, found)
 	assert.True(t, bondsEqual(bond1to1, resBond))
 
 	// add some more records
-	keeper.setCandidate(ctx, candidate2)
-	keeper.setCandidate(ctx, candidate3)
-	bond1to2 := DelegatorBond{addrDel1, addrVal2, sdk.NewRat(9)}
-	bond1to3 := DelegatorBond{addrDel1, addrVal3, sdk.NewRat(9)}
-	bond2to1 := DelegatorBond{addrDel2, addrVal1, sdk.NewRat(9)}
-	bond2to2 := DelegatorBond{addrDel2, addrVal2, sdk.NewRat(9)}
-	bond2to3 := DelegatorBond{addrDel2, addrVal3, sdk.NewRat(9)}
+	keeper.setCandidate(ctx, candidates[1])
+	keeper.setCandidate(ctx, candidates[2])
+	bond1to2 := DelegatorBond{addrDels[0], addrVals[1], sdk.NewRat(9)}
+	bond1to3 := DelegatorBond{addrDels[0], addrVals[2], sdk.NewRat(9)}
+	bond2to1 := DelegatorBond{addrDels[1], addrVals[0], sdk.NewRat(9)}
+	bond2to2 := DelegatorBond{addrDels[1], addrVals[1], sdk.NewRat(9)}
+	bond2to3 := DelegatorBond{addrDels[1], addrVals[2], sdk.NewRat(9)}
 	keeper.setDelegatorBond(ctx, bond1to2)
 	keeper.setDelegatorBond(ctx, bond1to3)
 	keeper.setDelegatorBond(ctx, bond2to1)
@@ -166,16 +157,16 @@ func TestBond(t *testing.T) {
 	keeper.setDelegatorBond(ctx, bond2to3)
 
 	// test all bond retrieve capabilities
-	resBonds := keeper.getDelegatorBonds(ctx, addrDel1, 5)
+	resBonds := keeper.getDelegatorBonds(ctx, addrDels[0], 5)
 	require.Equal(t, 3, len(resBonds))
 	assert.True(t, bondsEqual(bond1to1, resBonds[0]))
 	assert.True(t, bondsEqual(bond1to2, resBonds[1]))
 	assert.True(t, bondsEqual(bond1to3, resBonds[2]))
-	resBonds = keeper.getDelegatorBonds(ctx, addrDel1, 3)
+	resBonds = keeper.getDelegatorBonds(ctx, addrDels[0], 3)
 	require.Equal(t, 3, len(resBonds))
-	resBonds = keeper.getDelegatorBonds(ctx, addrDel1, 2)
+	resBonds = keeper.getDelegatorBonds(ctx, addrDels[0], 2)
 	require.Equal(t, 2, len(resBonds))
-	resBonds = keeper.getDelegatorBonds(ctx, addrDel2, 5)
+	resBonds = keeper.getDelegatorBonds(ctx, addrDels[1], 5)
 	require.Equal(t, 3, len(resBonds))
 	assert.True(t, bondsEqual(bond2to1, resBonds[0]))
 	assert.True(t, bondsEqual(bond2to2, resBonds[1]))
@@ -183,9 +174,9 @@ func TestBond(t *testing.T) {
 
 	// delete a record
 	keeper.removeDelegatorBond(ctx, bond2to3)
-	_, found = keeper.getDelegatorBond(ctx, addrDel2, addrVal3)
+	_, found = keeper.getDelegatorBond(ctx, addrDels[1], addrVals[2])
 	assert.False(t, found)
-	resBonds = keeper.getDelegatorBonds(ctx, addrDel2, 5)
+	resBonds = keeper.getDelegatorBonds(ctx, addrDels[1], 5)
 	require.Equal(t, 2, len(resBonds))
 	assert.True(t, bondsEqual(bond2to1, resBonds[0]))
 	assert.True(t, bondsEqual(bond2to2, resBonds[1]))
@@ -193,11 +184,11 @@ func TestBond(t *testing.T) {
 	// delete all the records from delegator 2
 	keeper.removeDelegatorBond(ctx, bond2to1)
 	keeper.removeDelegatorBond(ctx, bond2to2)
-	_, found = keeper.getDelegatorBond(ctx, addrDel2, addrVal1)
+	_, found = keeper.getDelegatorBond(ctx, addrDels[1], addrVals[0])
 	assert.False(t, found)
-	_, found = keeper.getDelegatorBond(ctx, addrDel2, addrVal2)
+	_, found = keeper.getDelegatorBond(ctx, addrDels[1], addrVals[1])
 	assert.False(t, found)
-	resBonds = keeper.getDelegatorBonds(ctx, addrDel2, 5)
+	resBonds = keeper.getDelegatorBonds(ctx, addrDels[1], 5)
 	require.Equal(t, 0, len(resBonds))
 }
 
@@ -209,14 +200,14 @@ func TestGetValidators(t *testing.T) {
 	// initialize some candidates into the state
 	amts := []int64{0, 100, 1, 400, 200}
 	n := len(amts)
-	candidates := make([]Candidate, n)
-	for i := 0; i < n; i++ {
+	var candidates [5]Candidate
+	for i, amt := range amts {
 		c := Candidate{
 			Status:      Unbonded,
 			PubKey:      pks[i],
 			Address:     addrs[i],
-			Assets:      sdk.NewRat(amts[i]),
-			Liabilities: sdk.NewRat(amts[i]),
+			Assets:      sdk.NewRat(amt),
+			Liabilities: sdk.NewRat(amt),
 		}
 		keeper.setCandidate(ctx, c)
 		candidates[i] = c
@@ -278,99 +269,185 @@ func TestGetValidators(t *testing.T) {
 // test the mechanism which keeps track of a validator set change
 func TestGetAccUpdateValidators(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	params := defaultParams()
+	params.MaxValidators = 4
+	keeper.setParams(ctx, params)
 
-	validatorsEqual := func(t *testing.T, expected []Validator, actual []Validator) {
-		require.Equal(t, len(expected), len(actual))
-		for i := 0; i < len(expected); i++ {
-			assert.Equal(t, expected[i], actual[i])
+	amts := []int64{9, 8, 7, 10, 3}
+	var candidatesIn [5]Candidate
+	for i, amt := range amts {
+		candidatesIn[i] = Candidate{
+			Address:     addrVals[i],
+			PubKey:      pks[i],
+			Assets:      sdk.NewRat(amt),
+			Liabilities: sdk.NewRat(amt),
 		}
 	}
-
-	genValidators := func(candidates []Candidate) []Validator {
-		validators := make([]Validator, len(candidates))
-		for i, c := range candidates {
-			validators[i] = c.validator()
-		}
-
-		return validators
-	}
-
-	candidates := []Candidate{candidate2, candidate4}
-	validators := genValidators(candidates)
 
 	// test from nothing to something
+	// candidate set: {} -> {c1, c3}
+	// validator set: {} -> {c1, c3}
+	// accUpdate set: {} -> {c1, c3}
 	acc := keeper.getAccUpdateValidators(ctx)
 	assert.Equal(t, 0, len(acc))
-	keeper.setCandidate(ctx, candidates[0])
-	keeper.setCandidate(ctx, candidates[1])
+	keeper.setCandidate(ctx, candidatesIn[1])
+	keeper.setCandidate(ctx, candidatesIn[3])
 	_ = keeper.GetValidators(ctx) // to init recent validator set
 	acc = keeper.getAccUpdateValidators(ctx)
-	validatorsEqual(t, validators, acc)
+	require.Equal(t, 2, len(acc))
+	candidates := keeper.GetCandidates(ctx, 5)
+	require.Equal(t, 2, len(candidates))
+	assert.Equal(t, candidates[0].validator(), acc[0])
+	assert.Equal(t, candidates[1].validator(), acc[1])
 
 	// test identical
+	// {c1, c3} -> {c1, c3}
+	// {c1, c3} -> {c1, c3}
+	// {c1, c3} -> {c1, c3}
 	keeper.setCandidate(ctx, candidates[0])
 	keeper.setCandidate(ctx, candidates[1])
 	acc = keeper.getAccUpdateValidators(ctx)
-	validatorsEqual(t, validators, acc)
-
-	acc = keeper.getAccUpdateValidators(ctx)
-
-	// test from something to nothing
-	keeper.removeCandidate(ctx, candidates[0].Address)
-	keeper.removeCandidate(ctx, candidates[1].Address)
-	acc = keeper.getAccUpdateValidators(ctx)
-	assert.Equal(t, 2, len(acc))
-	assert.Equal(t, validators[0].Address, acc[0].Address)
-	assert.Equal(t, int64(0), acc[0].VotingPower.Evaluate())
-	assert.Equal(t, validators[1].Address, acc[1].Address)
-	assert.Equal(t, int64(0), acc[1].VotingPower.Evaluate())
+	require.Equal(t, 2, len(acc))
+	candidates = keeper.GetCandidates(ctx, 5)
+	require.Equal(t, 2, len(candidates))
+	assert.Equal(t, candidates[0].validator(), acc[0])
+	assert.Equal(t, candidates[1].validator(), acc[1])
 
 	// test single value change
+	// {c1, c3} -> {c1', c3}
+	// {c1, c3} -> {c1', c3}
+	// {c1, c3} -> {c1', c3}
 	candidates[0].Assets = sdk.NewRat(600)
-	validators = genValidators(candidates)
 	keeper.setCandidate(ctx, candidates[0])
-	keeper.setCandidate(ctx, candidates[1])
 	acc = keeper.getAccUpdateValidators(ctx)
-	validatorsEqual(t, validators, acc)
+	require.Equal(t, 2, len(acc))
+	candidates = keeper.GetCandidates(ctx, 5)
+	require.Equal(t, 2, len(candidates))
+	assert.Equal(t, candidates[0].validator(), acc[0])
+	assert.Equal(t, candidates[1].validator(), acc[1])
 
 	// test multiple value change
+	// {c1, c3} -> {c1', c3'}
+	// {c1, c3} -> {c1', c3'}
+	// {c1, c3} -> {c1', c3'}
 	candidates[0].Assets = sdk.NewRat(200)
-	candidates[1].Assets = sdk.NewRat(0)
-	validators = genValidators(candidates)
+	candidates[1].Assets = sdk.NewRat(100)
 	keeper.setCandidate(ctx, candidates[0])
 	keeper.setCandidate(ctx, candidates[1])
 	acc = keeper.getAccUpdateValidators(ctx)
-	validatorsEqual(t, validators, acc)
+	require.Equal(t, 2, len(acc))
+	candidates = keeper.GetCandidates(ctx, 5)
+	require.Equal(t, 2, len(candidates))
+	require.Equal(t, candidates[0].validator(), acc[0])
+	require.Equal(t, candidates[1].validator(), acc[1])
 
-	// test validator added at the beginning
-	candidates = append([]Candidate{candidate1}, candidates...)
-	validators = genValidators(candidates)
+	// test validtor added at the beginning
+	// {c1, c3} -> {c0, c1, c3}
+	// {c1, c3} -> {c0, c1, c3}
+	// {c1, c3} -> {c0, c1, c3}
+	candidates = append([]Candidate{candidatesIn[0]}, candidates...)
 	keeper.setCandidate(ctx, candidates[0])
 	keeper.setCandidate(ctx, candidates[1])
 	keeper.setCandidate(ctx, candidates[2])
 	acc = keeper.getAccUpdateValidators(ctx)
-	validatorsEqual(t, validators, acc)
+	require.Equal(t, 3, len(acc))
+	candidates = keeper.GetCandidates(ctx, 5)
+	require.Equal(t, 3, len(candidates))
+	assert.Equal(t, candidates[0].validator(), acc[0])
+	assert.Equal(t, candidates[1].validator(), acc[1])
+	assert.Equal(t, candidates[2].validator(), acc[2])
 
 	// test validator added at the middle
-	candidates = []Candidate{candidates[0], candidates[1], candidate3, candidates[2]}
-	validators = genValidators(candidates)
+	// {c0, c1, c3} -> {c0, c1, c2, c3]
+	// {c0, c1, c3} -> {c0, c1, c2, c3}
+	// {c0, c1, c3} -> {c0, c1, c2, c3}
+	candidates = []Candidate{candidates[0], candidates[1], candidatesIn[2], candidates[2]}
 	keeper.setCandidate(ctx, candidates[0])
 	keeper.setCandidate(ctx, candidates[1])
 	keeper.setCandidate(ctx, candidates[2])
 	keeper.setCandidate(ctx, candidates[3])
 	acc = keeper.getAccUpdateValidators(ctx)
-	validatorsEqual(t, validators, acc)
+	require.Equal(t, 4, len(acc))
+	candidates = keeper.GetCandidates(ctx, 5)
+	require.Equal(t, 4, len(candidates))
+	assert.Equal(t, candidates[0].validator(), acc[0])
+	assert.Equal(t, candidates[1].validator(), acc[1])
+	assert.Equal(t, candidates[2].validator(), acc[2])
+	assert.Equal(t, candidates[3].validator(), acc[3])
 
-	// test validator added at the end
-	candidates = append(candidates, candidate5)
-	validators = genValidators(candidates)
+	// test candidate(not validator) added at the end
+	// {c0, c1, c2, c3} -> {c0, c1, c2, c3, c4}
+	// {c0, c1, c2, c3} -> {c0, c1, c2, c3}
+	// {c0, c1, c2, c3} -> {c0, c1, c2, c3}
+	candidates = append(candidates, candidatesIn[4])
 	keeper.setCandidate(ctx, candidates[0])
 	keeper.setCandidate(ctx, candidates[1])
 	keeper.setCandidate(ctx, candidates[2])
 	keeper.setCandidate(ctx, candidates[3])
 	keeper.setCandidate(ctx, candidates[4])
 	acc = keeper.getAccUpdateValidators(ctx)
-	validatorsEqual(t, validators, acc)
+	require.Equal(t, 4, len(acc)) // max validator number is 4
+	candidates = keeper.GetCandidates(ctx, 5)
+	require.Equal(t, 5, len(candidates))
+	assert.Equal(t, candidates[0].validator(), acc[0])
+	assert.Equal(t, candidates[1].validator(), acc[1])
+	assert.Equal(t, candidates[2].validator(), acc[2])
+	assert.Equal(t, candidates[3].validator(), acc[3])
+
+	// test candidate(not validator) change its power but still not in the valset
+	// {c0, c1, c2, c3, c4} -> {c0, c1, c2, c3, c4}
+	// {c0, c1, c2, c3}     -> {c0, c1, c2, c3}
+	// {c0, c1, c2, c3}     -> {c0, c1, c2, c3}
+	candidates[4].Assets = sdk.NewRat(5)
+	keeper.setCandidate(ctx, candidates[4])
+	acc = keeper.getAccUpdateValidators(ctx)
+	require.Equal(t, 4, len(acc))
+	candidates = keeper.GetCandidates(ctx, 5)
+	require.Equal(t, 5, len(candidates))
+	assert.Equal(t, candidates[0].validator(), acc[0])
+	assert.Equal(t, candidates[1].validator(), acc[1])
+	assert.Equal(t, candidates[2].validator(), acc[2])
+	assert.Equal(t, candidates[3].validator(), acc[3])
+
+	// test candidate change its power and become a validator(pushing out an existing)
+	// {c0, c1, c2, c3, c4} -> {c0, c1, c2, c3, c4}
+	// {c0, c1, c2, c3}     -> {c0, c1, c3, c4}
+	// {c0, c1, c2, c3}     -> {c0, c1, c2, c3, c4}
+	candidates[4].Assets = sdk.NewRat(1000)
+	keeper.setCandidate(ctx, candidates[4])
+	acc = keeper.getAccUpdateValidators(ctx)
+	require.Equal(t, 5, len(acc))
+	candidates = keeper.GetCandidates(ctx, 5)
+	require.Equal(t, 5, len(candidates))
+	assert.Equal(t, candidates[0].validator(), acc[0])
+	assert.Equal(t, candidates[1].validator(), acc[1])
+	assert.Equal(t, candidates[2].validator(), acc[2])
+	assert.Equal(t, candidates[3].validator(), acc[3])
+	assert.Equal(t, candidates[4].validator(), acc[4])
+
+	// test from something to nothing
+	// {c0, c1, c2, c3, c4} -> {}
+	// {c0, c1, c3, c4}     -> {}
+	// {c0, c1, c2, c3, c4} -> {c0, c1, c2, c3, c4}
+	keeper.removeCandidate(ctx, candidates[0].Address)
+	keeper.removeCandidate(ctx, candidates[1].Address)
+	keeper.removeCandidate(ctx, candidates[2].Address)
+	keeper.removeCandidate(ctx, candidates[3].Address)
+	keeper.removeCandidate(ctx, candidates[4].Address)
+	acc = keeper.getAccUpdateValidators(ctx)
+	require.Equal(t, 5, len(acc))
+	candidates = keeper.GetCandidates(ctx, 5)
+	require.Equal(t, 0, len(candidates))
+	assert.Equal(t, candidatesIn[0].Address, acc[0].Address)
+	assert.Equal(t, int64(0), acc[0].VotingPower.Evaluate())
+	assert.Equal(t, candidatesIn[1].Address, acc[1].Address)
+	assert.Equal(t, int64(0), acc[1].VotingPower.Evaluate())
+	assert.Equal(t, candidatesIn[2].Address, acc[2].Address)
+	assert.Equal(t, int64(0), acc[2].VotingPower.Evaluate())
+	assert.Equal(t, candidatesIn[3].Address, acc[3].Address)
+	assert.Equal(t, int64(0), acc[3].VotingPower.Evaluate())
+	assert.Equal(t, candidatesIn[4].Address, acc[4].Address)
+	assert.Equal(t, int64(0), acc[4].VotingPower.Evaluate())
 }
 
 // clear the tracked changes to the validator set
@@ -402,30 +479,41 @@ func TestClearAccUpdateValidators(t *testing.T) {
 func TestIsRecentValidator(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
 
+	amts := []int64{9, 8, 7, 10, 6}
+	var candidatesIn [5]Candidate
+	for i, amt := range amts {
+		candidatesIn[i] = Candidate{
+			Address:     addrVals[i],
+			PubKey:      pks[i],
+			Assets:      sdk.NewRat(amt),
+			Liabilities: sdk.NewRat(amt),
+		}
+	}
+
 	// test that an empty validator set doesn't have any validators
 	validators := keeper.GetValidators(ctx)
 	assert.Equal(t, 0, len(validators))
 
 	// get the validators for the first time
-	keeper.setCandidate(ctx, candidate1)
-	keeper.setCandidate(ctx, candidate2)
+	keeper.setCandidate(ctx, candidatesIn[0])
+	keeper.setCandidate(ctx, candidatesIn[1])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, 2, len(validators))
-	assert.Equal(t, candidate1.validator(), validators[0])
-	assert.Equal(t, candidate2.validator(), validators[1])
+	assert.Equal(t, candidatesIn[0].validator(), validators[0])
+	assert.Equal(t, candidatesIn[1].validator(), validators[1])
 
 	// test a basic retrieve of something that should be a recent validator
-	assert.True(t, keeper.IsRecentValidator(ctx, candidate1.Address))
-	assert.True(t, keeper.IsRecentValidator(ctx, candidate2.Address))
+	assert.True(t, keeper.IsRecentValidator(ctx, candidatesIn[0].Address))
+	assert.True(t, keeper.IsRecentValidator(ctx, candidatesIn[1].Address))
 
 	// test a basic retrieve of something that should not be a recent validator
-	assert.False(t, keeper.IsRecentValidator(ctx, candidate3.Address))
+	assert.False(t, keeper.IsRecentValidator(ctx, candidatesIn[2].Address))
 
 	// remove that validator, but don't retrieve the recent validator group
-	keeper.removeCandidate(ctx, candidate1.Address)
+	keeper.removeCandidate(ctx, candidatesIn[0].Address)
 
 	// test that removed validator is not considered a recent validator
-	assert.False(t, keeper.IsRecentValidator(ctx, candidate1.Address))
+	assert.False(t, keeper.IsRecentValidator(ctx, candidatesIn[0].Address))
 }
 
 func TestParams(t *testing.T) {

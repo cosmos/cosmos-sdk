@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/spf13/viper"
 	"github.com/tendermint/go-crypto/keys"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -72,8 +71,8 @@ func TransferRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.Response
 
 		// sign
 		// XXX: OMG
-		viper.Set(client.FlagSequence, m.Sequence)
 		ctx := core.NewCoreContextFromViper()
+		ctx.Sequence = m.Sequence
 		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, c.Cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)

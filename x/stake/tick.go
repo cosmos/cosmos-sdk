@@ -1,6 +1,8 @@
 package stake
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/abci/types"
 )
@@ -17,12 +19,11 @@ func (k Keeper) Tick(ctx sdk.Context) (change []*abci.Validator, err error) {
 
 	// retrieve params
 	p := k.GetPool(ctx)
-	height := ctx.BlockHeight()
+	time := ctx.BlockHeader().Time
 
 	// Process Validator Provisions
-	// XXX right now just process every 5 blocks, in new SDK make hourly
-	if p.InflationLastTime+5 <= height {
-		p.InflationLastTime = height
+	if p.InflationLastTime+3600 <= time {
+		p.InflationLastTime = time
 		k.processProvisions(ctx)
 	}
 
@@ -64,10 +65,14 @@ func (k Keeper) nextInflation(ctx sdk.Context) (inflation sdk.Rat) {
 
 	// (1 - bondedRatio/GoalBonded) * InflationRateChange
 	inflationRateChangePerYear := sdk.OneRat.Sub(pool.bondedRatio().Quo(params.GoalBonded)).Mul(params.InflationRateChange)
+	fmt.Printf("pyr: %+v\n", inflationRateChangePerYear)
 	inflationRateChange := inflationRateChangePerYear.Quo(hrsPerYrRat)
+	fmt.Printf("cha: %+v\n", inflationRateChange)
+	fmt.Printf("pin: %+v\n", pool.Inflation)
 
 	// increase the new annual inflation for this next cycle
 	inflation = pool.Inflation.Add(inflationRateChange)
+	fmt.Printf("ori: %+v\n", inflation)
 	if inflation.GT(params.InflationMax) {
 		inflation = params.InflationMax
 	}

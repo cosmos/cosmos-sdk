@@ -3,6 +3,8 @@ package types
 import (
 	"fmt"
 	"runtime"
+
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 // ABCI Response Code
@@ -31,8 +33,9 @@ const (
 	CodeUnknownAddress    CodeType = 9
 	CodeInsufficientCoins CodeType = 10
 	CodeInvalidCoins      CodeType = 11
+	CodeGeneric           CodeType = 12
 
-	CodeGenesisParse CodeType = 0xdead // TODO: remove ? // why remove?
+	CodeGenesisParse CodeType = 0xdead
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
@@ -62,6 +65,8 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "Insufficient coins"
 	case CodeInvalidCoins:
 		return "Invalid coins"
+	case CodeGeneric:
+		return "Generic error"
 	default:
 		return fmt.Sprintf("Unknown code %d", code)
 	}
@@ -73,40 +78,43 @@ func CodeToDefaultMsg(code CodeType) string {
 
 // nolint
 func ErrInternal(msg string) Error {
-	return newError(CodeInternal, msg)
+	return newError(CodeInternal, msg, []cmn.KVPair{})
 }
 func ErrTxDecode(msg string) Error {
-	return newError(CodeTxDecode, msg)
+	return newError(CodeTxDecode, msg, []cmn.KVPair{})
 }
 func ErrGenesisParse(msg string) Error {
-	return newError(CodeGenesisParse, msg)
+	return newError(CodeGenesisParse, msg, []cmn.KVPair{})
 }
 func ErrInvalidSequence(msg string) Error {
-	return newError(CodeInvalidSequence, msg)
+	return newError(CodeInvalidSequence, msg, []cmn.KVPair{})
 }
 func ErrUnauthorized(msg string) Error {
-	return newError(CodeUnauthorized, msg)
+	return newError(CodeUnauthorized, msg, []cmn.KVPair{})
 }
 func ErrInsufficientFunds(msg string) Error {
-	return newError(CodeInsufficientFunds, msg)
+	return newError(CodeInsufficientFunds, msg, []cmn.KVPair{})
 }
 func ErrUnknownRequest(msg string) Error {
-	return newError(CodeUnknownRequest, msg)
+	return newError(CodeUnknownRequest, msg, []cmn.KVPair{})
 }
 func ErrInvalidAddress(msg string) Error {
-	return newError(CodeInvalidAddress, msg)
+	return newError(CodeInvalidAddress, msg, []cmn.KVPair{})
 }
 func ErrUnknownAddress(msg string) Error {
-	return newError(CodeUnknownAddress, msg)
+	return newError(CodeUnknownAddress, msg, []cmn.KVPair{})
 }
 func ErrInvalidPubKey(msg string) Error {
-	return newError(CodeInvalidPubKey, msg)
+	return newError(CodeInvalidPubKey, msg, []cmn.KVPair{})
 }
 func ErrInsufficientCoins(msg string) Error {
-	return newError(CodeInsufficientCoins, msg)
+	return newError(CodeInsufficientCoins, msg, []cmn.KVPair{})
 }
 func ErrInvalidCoins(msg string) Error {
-	return newError(CodeInvalidCoins, msg)
+	return newError(CodeInvalidCoins, msg, []cmn.KVPair{})
+}
+func ErrGeneric(msg string, tags []cmn.KVPair) Error {
+	return newError(CodeGeneric, msg, tags)
 }
 
 //----------------------------------------
@@ -124,7 +132,11 @@ type Error interface {
 }
 
 func NewError(code CodeType, msg string) Error {
-	return newError(code, msg)
+	return newError(code, msg, []cmn.KVPair{})
+}
+
+func NewTaggedError(code CodeType, msg string, tags []cmn.KVPair) Error {
+	return newError(code, msg, tags)
 }
 
 type traceItem struct {
@@ -142,9 +154,10 @@ type sdkError struct {
 	msg    string
 	cause  error
 	traces []traceItem
+	tags   []cmn.KVPair
 }
 
-func newError(code CodeType, msg string) *sdkError {
+func newError(code CodeType, msg string, tags []cmn.KVPair) *sdkError {
 	// TODO capture stacktrace if ENV is set.
 	if msg == "" {
 		msg = CodeToDefaultMsg(code)
@@ -154,6 +167,7 @@ func newError(code CodeType, msg string) *sdkError {
 		msg:    msg,
 		cause:  nil,
 		traces: nil,
+		tags:   tags,
 	}
 }
 
@@ -218,5 +232,6 @@ func (err *sdkError) Result() Result {
 	return Result{
 		Code: err.ABCICode(),
 		Log:  err.ABCILog(),
+		Tags: err.tags,
 	}
 }

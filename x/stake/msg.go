@@ -71,7 +71,7 @@ func (msg MsgDeclareCandidacy) ValidateBasic() sdk.Error {
 	}
 	empty := Description{}
 	if msg.Description == empty {
-		return newError(CodeInvalidInput, "description must be included")
+		return ErrNoDescription()
 	}
 	return nil
 }
@@ -115,7 +115,7 @@ func (msg MsgEditCandidacy) ValidateBasic() sdk.Error {
 	}
 	empty := Description{}
 	if msg.Description == empty {
-		return newError(CodeInvalidInput, "Transaction must include some information to modify")
+		return ErrNoDescription()
 	}
 	return nil
 }

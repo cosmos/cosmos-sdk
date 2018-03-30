@@ -24,22 +24,24 @@ func TestGetInflation(t *testing.T) {
 		setInflation, expectedChange  sdk.Rat
 	}{
 		// with 0% bonded atom supply the inflation should increase by InflationRateChange
-		{"test 1", 0, 0, sdk.NewRat(7, 100), params.InflationRateChange.Quo(hrsPerYrRat)},
+		{"test 1", 0, 0, sdk.NewRat(7, 100), params.InflationRateChange.Quo(hrsPerYrRat).Round(precision)},
 
 		// 100% bonded, starting at 20% inflation and being reduced
 		// (1 - (1/0.67))*(0.13/8667)
-		{"test 2", 1, 1, sdk.NewRat(20, 100), sdk.OneRat.Sub(sdk.OneRat.Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(hrsPerYrRat)},
+		{"test 2", 1, 1, sdk.NewRat(20, 100),
+			sdk.OneRat.Sub(sdk.OneRat.Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(hrsPerYrRat).Round(precision)},
 
 		// 50% bonded, starting at 10% inflation and being increased
-		{"test 3", 1, 2, sdk.NewRat(10, 100), sdk.OneRat.Sub(sdk.NewRat(1, 2).Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(hrsPerYrRat)},
+		{"test 3", 1, 2, sdk.NewRat(10, 100),
+			sdk.OneRat.Sub(sdk.NewRat(1, 2).Quo(params.GoalBonded)).Mul(params.InflationRateChange).Quo(hrsPerYrRat).Round(precision)},
 
 		// test 7% minimum stop (testing with 100% bonded)
 		{"test 4", 1, 1, sdk.NewRat(7, 100), sdk.ZeroRat},
-		{"test 5", 1, 1, sdk.NewRat(70001, 1000000), sdk.NewRat(-1, 1000000)},
+		{"test 5", 1, 1, sdk.NewRat(70001, 1000000), sdk.NewRat(-1, 1000000).Round(precision)},
 
 		// test 20% maximum stop (testing with 0% bonded)
 		{"test 6", 0, 0, sdk.NewRat(20, 100), sdk.ZeroRat},
-		{"test 7", 0, 0, sdk.NewRat(199999, 1000000), sdk.NewRat(1, 1000000)},
+		{"test 7", 0, 0, sdk.NewRat(199999, 1000000), sdk.NewRat(1, 1000000).Round(precision)},
 
 		// perfect balance shouldn't change inflation
 		{"test 8", 67, 100, sdk.NewRat(15, 100), sdk.ZeroRat},

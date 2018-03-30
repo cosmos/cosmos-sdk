@@ -33,7 +33,7 @@ func (k Keeper) Tick(ctx sdk.Context) (change []Validator) {
 func (k Keeper) processProvisions(ctx sdk.Context) Pool {
 
 	pool := k.GetPool(ctx)
-	pool.Inflation = k.nextInflation(ctx).Round(precision)
+	pool.Inflation = k.nextInflation(ctx)
 
 	// Because the validators hold a relative bonded share (`GlobalStakeShare`), when
 	// more bonded tokens are added proportionally to all validators the only term
@@ -69,5 +69,5 @@ func (k Keeper) nextInflation(ctx sdk.Context) (inflation sdk.Rat) {
 		inflation = params.InflationMin
 	}
 
-	return
+	return inflation.Round(precision)
 }

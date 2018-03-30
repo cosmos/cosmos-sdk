@@ -48,7 +48,9 @@ type commander struct {
 }
 
 func (co commander) bondTxCmd(cmd *cobra.Command, args []string) error {
-	from, err := core.GetFromAddress()
+	ctx := core.NewCoreContextFromViper()
+
+	from, err := ctx.GetFromAddress()
 	if err != nil {
 		return err
 	}
@@ -82,7 +84,7 @@ func (co commander) bondTxCmd(cmd *cobra.Command, args []string) error {
 }
 
 func (co commander) unbondTxCmd(cmd *cobra.Command, args []string) error {
-	from, err := core.GetFromAddress()
+	from, err := core.NewCoreContextFromViper().GetFromAddress()
 	if err != nil {
 		return err
 	}
@@ -94,7 +96,7 @@ func (co commander) unbondTxCmd(cmd *cobra.Command, args []string) error {
 
 func (co commander) sendMsg(msg sdk.Msg) error {
 	name := viper.GetString(client.FlagName)
-	res, err := core.SignBuildBroadcast(name, msg, co.cdc)
+	res, err := core.NewCoreContextFromViper().SignBuildBroadcast(name, msg, co.cdc)
 	if err != nil {
 		return err
 	}

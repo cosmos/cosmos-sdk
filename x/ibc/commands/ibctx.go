@@ -39,8 +39,10 @@ type sendCommander struct {
 }
 
 func (c sendCommander) sendIBCTransfer(cmd *cobra.Command, args []string) error {
+	ctx := core.NewCoreContextFromViper()
+
 	// get the from address
-	from, err := core.GetFromAddress()
+	from, err := ctx.GetFromAddress()
 	if err != nil {
 		return err
 	}
@@ -54,7 +56,7 @@ func (c sendCommander) sendIBCTransfer(cmd *cobra.Command, args []string) error 
 	// get password
 	name := viper.GetString(client.FlagName)
 
-	res, err := core.SignBuildBroadcast(name, msg, c.cdc)
+	res, err := ctx.SignBuildBroadcast(name, msg, c.cdc)
 	if err != nil {
 		return err
 	}

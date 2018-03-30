@@ -47,7 +47,8 @@ func GetCmdQueryCandidates(cdc *wire.Codec, storeName string) *cobra.Command {
 
 			key := PrefixedKey(stake.MsgType, stake.CandidatesKey)
 
-			res, err := core.Query(key, storeName)
+			ctx := core.NewCoreContextFromViper()
+			res, err := ctx.Query(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -87,7 +88,9 @@ func GetCmdQueryCandidate(cdc *wire.Codec, storeName string) *cobra.Command {
 
 			key := PrefixedKey(stake.MsgType, stake.GetCandidateKey(addr))
 
-			res, err := core.Query(key, storeName)
+			ctx := core.NewCoreContextFromViper()
+
+			res, err := ctx.Query(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -133,7 +136,9 @@ func GetCmdQueryDelegatorBond(cdc *wire.Codec, storeName string) *cobra.Command 
 
 			key := PrefixedKey(stake.MsgType, stake.GetDelegatorBondKey(delegator, addr, cdc))
 
-			res, err := core.Query(key, storeName)
+			ctx := core.NewCoreContextFromViper()
+
+			res, err := ctx.Query(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -175,7 +180,9 @@ func GetCmdQueryDelegatorBonds(cdc *wire.Codec, storeName string) *cobra.Command
 
 			key := PrefixedKey(stake.MsgType, stake.GetDelegatorBondsKey(delegator, cdc))
 
-			res, err := core.Query(key, storeName)
+			ctx := core.NewCoreContextFromViper()
+
+			res, err := ctx.Query(key, storeName)
 			if err != nil {
 				return err
 			}

@@ -75,7 +75,8 @@ func SendRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWrit
 		// sign
 		// XXX: OMG
 		viper.Set(client.FlagSequence, m.Sequence)
-		txBytes, err := core.SignAndBuild(m.LocalAccountName, m.Password, msg, c.Cdc)
+		ctx := core.NewCoreContextFromViper()
+		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, c.Cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))
@@ -83,7 +84,7 @@ func SendRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWrit
 		}
 
 		// send
-		res, err := core.BroadcastTx(txBytes)
+		res, err := ctx.BroadcastTx(txBytes)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

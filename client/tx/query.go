@@ -15,6 +15,7 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/core"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
@@ -39,7 +40,7 @@ func (c commander) queryTx(hashHexStr string, trustNode bool) ([]byte, error) {
 	}
 
 	// get the node
-	node, err := client.GetNode()
+	node, err := core.NewCoreContextFromViper().GetNode()
 	if err != nil {
 		return nil, err
 	}

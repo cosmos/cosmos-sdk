@@ -64,7 +64,9 @@ func (c commander) getAccountCmd(cmd *cobra.Command, args []string) error {
 	}
 	key := sdk.Address(bz)
 
-	res, err := core.Query(key, c.storeName)
+	ctx := core.NewCoreContextFromViper()
+
+	res, err := ctx.Query(key, c.storeName)
 	if err != nil {
 		return err
 	}

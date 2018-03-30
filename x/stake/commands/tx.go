@@ -93,7 +93,8 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			name := viper.GetString(client.FlagName)
-			res, err := core.SignBuildBroadcast(name, msg, cdc)
+			ctx := core.NewCoreContextFromViper()
+			res, err := ctx.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -130,7 +131,8 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			name := viper.GetString(client.FlagName)
-			res, err := core.SignBuildBroadcast(name, msg, cdc)
+			ctx := core.NewCoreContextFromViper()
+			res, err := ctx.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -166,7 +168,8 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			name := viper.GetString(client.FlagName)
-			res, err := core.SignBuildBroadcast(name, msg, cdc)
+			ctx := core.NewCoreContextFromViper()
+			res, err := ctx.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -213,7 +216,8 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			name := viper.GetString(client.FlagName)
-			res, err := core.SignBuildBroadcast(name, msg, cdc)
+			ctx := core.NewCoreContextFromViper()
+			res, err := ctx.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}

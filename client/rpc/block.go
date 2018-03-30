@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/core"
 )
 
 const (
@@ -31,7 +32,8 @@ func blockCommand() *cobra.Command {
 
 func getBlock(height *int64) ([]byte, error) {
 	// get the node
-	node, err := client.GetNode()
+	ctx := core.NewCoreContextFromViper()
+	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +57,7 @@ func getBlock(height *int64) ([]byte, error) {
 }
 
 func GetChainHeight() (int64, error) {
-	node, err := client.GetNode()
+	node, err := core.NewCoreContextFromViper().GetNode()
 	if err != nil {
 		return -1, err
 	}

@@ -22,7 +22,7 @@ func BroadcastTxRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := core.BroadcastTx([]byte(m.TxBytes))
+	res, err := core.NewCoreContextFromViper().BroadcastTx([]byte(m.TxBytes))
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))

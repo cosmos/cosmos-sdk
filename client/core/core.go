@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/wire"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -17,9 +16,9 @@ import (
 )
 
 // Broadcast the transaction bytes to Tendermint
-func BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, error) {
+func (ctx CoreContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, error) {
 
-	node, err := client.GetNode()
+	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err
 	}
@@ -43,17 +42,17 @@ func BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, error) {
 }
 
 // Query from Tendermint with the provided key and storename
-func Query(key cmn.HexBytes, storeName string) (res []byte, err error) {
+func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, err error) {
 
 	path := fmt.Sprintf("/%s/key", storeName)
-	node, err := client.GetNode()
+	node, err := ctx.GetNode()
 	if err != nil {
 		return res, err
 	}
 
 	opts := rpcclient.ABCIQueryOptions{
-		Height:  viper.GetInt64(client.FlagHeight),
-		Trusted: viper.GetBool(client.FlagTrustNode),
+		Height:  ctx.Height,
+		Trusted: ctx.TrustNode,
 	}
 	result, err := node.ABCIQueryWithOptions(path, key, opts)
 	if err != nil {
@@ -67,16 +66,16 @@ func Query(key cmn.HexBytes, storeName string) (res []byte, err error) {
 }
 
 // Get the from address from the name flag
-func GetFromAddress() (from sdk.Address, err error) {
+func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 
 	keybase, err := keys.GetKeyBase()
 	if err != nil {
 		return nil, err
 	}
 
-	name := viper.GetString(client.FlagName)
+	name := ctx.FromAddressName
 	if name == "" {
-		return nil, errors.Errorf("must provide a name using --name")
+		return nil, errors.Errorf("must provide a from address name")
 	}
 
 	info, err := keybase.Get(name)
@@ -88,11 +87,11 @@ func GetFromAddress() (from sdk.Address, err error) {
 }
 
 // sign and build the transaction from the msg
-func SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *wire.Codec) ([]byte, error) {
+func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *wire.Codec) ([]byte, error) {
 
 	// build the Sign Messsage from the Standard Message
-	chainID := viper.GetString(client.FlagChainID)
-	sequence := int64(viper.GetInt(client.FlagSequence))
+	chainID := ctx.ChainID
+	sequence := ctx.Sequence
 	signMsg := sdk.StdSignMsg{
 		ChainID:   chainID,
 		Sequences: []int64{sequence},
@@ -114,7 +113,7 @@ func SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *wire.Codec) ([]byte
 	sigs := []sdk.StdSignature{{
 		PubKey:    pubkey,
 		Signature: sig,
-		Sequence:  viper.GetInt64(client.FlagSequence),
+		Sequence:  sequence,
 	}}
 
 	// marshal bytes
@@ -124,23 +123,31 @@ func SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *wire.Codec) ([]byte
 }
 
 // sign and build the transaction from the msg
-func SignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Codec) (*ctypes.ResultBroadcastTxCommit, error) {
-	passphrase, err := GetPassphraseFromStdin(name)
+func (ctx CoreContext) SignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Codec) (*ctypes.ResultBroadcastTxCommit, error) {
+	passphrase, err := ctx.GetPassphraseFromStdin(name)
 	if err != nil {
 		return nil, err
 	}
 
-	txBytes, err := SignAndBuild(name, passphrase, msg, cdc)
+	txBytes, err := ctx.SignAndBuild(name, passphrase, msg, cdc)
 	if err != nil {
 		return nil, err
 	}
 
-	return BroadcastTx(txBytes)
+	return ctx.BroadcastTx(txBytes)
 }
 
 // get passphrase from std input
-func GetPassphraseFromStdin(name string) (pass string, err error) {
+func (ctx CoreContext) GetPassphraseFromStdin(name string) (pass string, err error) {
 	buf := client.BufferStdin()
 	prompt := fmt.Sprintf("Password to sign with '%s':", name)
 	return client.GetPassword(prompt, buf)
+}
+
+// GetNode prepares a simple rpc.Client
+func (ctx CoreContext) GetNode() (rpcclient.Client, error) {
+	if ctx.NodeURI == "" {
+		return nil, errors.New("Must define node URI")
+	}
+	return rpcclient.NewHTTP(ctx.NodeURI, "/websocket"), nil
 }

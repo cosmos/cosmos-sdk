@@ -24,8 +24,10 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 				return errors.New("You must provide an answer")
 			}
 
+			ctx := core.NewCoreContextFromViper()
+
 			// get the from address from the name flag
-			from, err := core.GetFromAddress()
+			from, err := ctx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -37,7 +39,7 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 			name := viper.GetString(client.FlagName)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := core.SignBuildBroadcast(name, msg, cdc)
+			res, err := ctx.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -58,8 +60,10 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 				return errors.New("You must provide an answer")
 			}
 
+			ctx := core.NewCoreContextFromViper()
+
 			// get the from address from the name flag
-			from, err := core.GetFromAddress()
+			from, err := ctx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -71,7 +75,7 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 			msg := cool.NewSetTrendMsg(from, args[0])
 
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := core.SignBuildBroadcast(name, msg, cdc)
+			res, err := ctx.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}

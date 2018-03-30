@@ -74,7 +74,7 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	fromChainNode := viper.GetString(FlagFromChainNode)
 	toChainID := viper.GetString(FlagToChainID)
 	toChainNode := viper.GetString(FlagToChainNode)
-	address, err := core.GetFromAddress()
+	address, err := core.NewCoreContextFromViper().GetFromAddress()
 	if err != nil {
 		panic(err)
 	}
@@ -84,9 +84,10 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 }
 
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
+	ctx := core.NewCoreContextFromViper()
 	// get password
 	name := viper.GetString(client.FlagName)
-	passphrase, err := core.GetPassphraseFromStdin(name)
+	passphrase, err := ctx.GetPassphraseFromStdin(name)
 	if err != nil {
 		panic(err)
 	}
@@ -150,16 +151,13 @@ OUTER:
 func query(node string, key []byte, storeName string) (res []byte, err error) {
 	orig := viper.GetString(client.FlagNode)
 	viper.Set(client.FlagNode, node)
-	res, err = core.Query(key, storeName)
+	res, err = core.NewCoreContextFromViper().Query(key, storeName)
 	viper.Set(client.FlagNode, orig)
 	return res, err
 }
 
 func (c relayCommander) broadcastTx(node string, tx []byte) error {
-	viper.Set(client.FlagNode, node)
-	seq := c.getSequence(node) + 1
-	viper.Set(client.FlagSequence, seq)
-	_, err := core.BroadcastTx(tx)
+	_, err := core.NewCoreContextFromViper().WithSequence(c.getSequence(node) + 1).WithNodeURI(node).BroadcastTx(tx)
 	return err
 }
 
@@ -194,7 +192,7 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 	}
 
 	name := viper.GetString(client.FlagName)
-	res, err := core.SignAndBuild(name, passphrase, msg, c.cdc)
+	res, err := core.NewCoreContextFromViper().SignAndBuild(name, passphrase, msg, c.cdc)
 	if err != nil {
 		panic(err)
 	}

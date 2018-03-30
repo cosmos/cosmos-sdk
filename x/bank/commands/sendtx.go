@@ -38,8 +38,10 @@ type Commander struct {
 }
 
 func (c Commander) sendTxCmd(cmd *cobra.Command, args []string) error {
+	ctx := core.NewCoreContextFromViper()
+
 	// get the from address
-	from, err := core.GetFromAddress()
+	from, err := ctx.GetFromAddress()
 	if err != nil {
 		return err
 	}
@@ -66,7 +68,7 @@ func (c Commander) sendTxCmd(cmd *cobra.Command, args []string) error {
 	msg := BuildMsg(from, to, coins)
 
 	// build and sign the transaction, then broadcast to Tendermint
-	res, err := core.SignBuildBroadcast(name, msg, c.Cdc)
+	res, err := ctx.SignBuildBroadcast(name, msg, c.Cdc)
 	if err != nil {
 		return err
 	}

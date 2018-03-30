@@ -9,15 +9,21 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	crypto "github.com/tendermint/go-crypto"
 )
 
 func TestBondedToUnbondedPool(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
+
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat)
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat)
-	candA := candidate1
+	candA := Candidate{
+		Status:      Bonded,
+		Address:     addrs[0],
+		PubKey:      pks[0],
+		Assets:      sdk.OneRat,
+		Liabilities: sdk.OneRat,
+	}
 	poolB, candB := poolA.bondedToUnbondedPool(candA)
 
 	// status unbonded
@@ -34,10 +40,17 @@ func TestBondedToUnbondedPool(t *testing.T) {
 
 func TestUnbonbedtoBondedPool(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
+
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat)
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat)
-	candA := candidate1
+	candA := Candidate{
+		Status:      Bonded,
+		Address:     addrs[0],
+		PubKey:      pks[0],
+		Assets:      sdk.OneRat,
+		Liabilities: sdk.OneRat,
+	}
 	candA.Status = Unbonded
 	poolB, candB := poolA.unbondedToBondedPool(candA)
 
@@ -55,6 +68,7 @@ func TestUnbonbedtoBondedPool(t *testing.T) {
 
 func TestAddTokensBonded(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
+
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat)
 	poolB, sharesB := poolA.addTokensBonded(10)
@@ -70,6 +84,7 @@ func TestAddTokensBonded(t *testing.T) {
 
 func TestRemoveSharesBonded(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
+
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat)
 	poolB, tokensB := poolA.removeSharesBonded(sdk.NewRat(10))
@@ -85,6 +100,7 @@ func TestRemoveSharesBonded(t *testing.T) {
 
 func TestAddTokensUnbonded(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
+
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat)
 	poolB, sharesB := poolA.addTokensUnbonded(10)
@@ -100,6 +116,7 @@ func TestAddTokensUnbonded(t *testing.T) {
 
 func TestRemoveSharesUnbonded(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
+
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat)
 	poolB, tokensB := poolA.removeSharesUnbonded(sdk.NewRat(10))
@@ -117,8 +134,8 @@ func TestCandidateAddTokens(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
 	poolA := keeper.GetPool(ctx)
 	candA := Candidate{
-		Address:     addrVal1,
-		PubKey:      pk1,
+		Address:     addrs[0],
+		PubKey:      pks[0],
 		Assets:      sdk.NewRat(9),
 		Liabilities: sdk.NewRat(9),
 		Status:      Bonded,
@@ -140,13 +157,14 @@ func TestCandidateAddTokens(t *testing.T) {
 
 func TestCandidateRemoveShares(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
+
 	poolA := keeper.GetPool(ctx)
 	candA := Candidate{
-		Address:     addrVal1,
-		PubKey:      pk1,
+		Status:      Bonded,
+		Address:     addrs[0],
+		PubKey:      pks[0],
 		Assets:      sdk.NewRat(9),
 		Liabilities: sdk.NewRat(9),
-		Status:      Bonded,
 	}
 	poolA.BondedPool = candA.Assets.Evaluate()
 	poolA.BondedShares = candA.Assets
@@ -171,14 +189,12 @@ func randomCandidate(r *rand.Rand) Candidate {
 	} else {
 		status = Unbonded
 	}
-	address := testAddr("A58856F0FD53BF058B4909A21AEC019107BA6160")
-	pubkey := crypto.GenPrivKeyEd25519().PubKey()
 	assets := sdk.NewRat(int64(r.Int31n(10000)))
 	liabilities := sdk.NewRat(int64(r.Int31n(10000)))
 	return Candidate{
 		Status:      status,
-		Address:     address,
-		PubKey:      pubkey,
+		Address:     addrs[0],
+		PubKey:      pks[0],
 		Assets:      assets,
 		Liabilities: liabilities,
 	}
@@ -195,6 +211,7 @@ func randomSetup(r *rand.Rand) (Pool, Candidates, int64) {
 		InflationLastTime: 0,
 		Inflation:         sdk.NewRat(7, 100),
 	}
+
 	var candidates []Candidate
 	for i := int32(0); i < r.Int31n(1000); i++ {
 		candidate := randomCandidate(r)
@@ -314,6 +331,7 @@ func assertInvariants(t *testing.T, pA Pool, cA Candidates, tA int64, pB Pool, c
 			unbondedSharesHeld = unbondedSharesHeld.Add(candidate.Assets)
 		}
 	}
+
 	// shares outstanding = total shares held by candidates, both bonded and unbonded
 	require.Equal(t, bondedSharesHeld, pB.BondedShares)
 	require.Equal(t, unbondedSharesHeld, pB.UnbondedShares)

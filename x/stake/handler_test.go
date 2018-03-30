@@ -32,27 +32,20 @@ func newTestMsgDelegate(amt int64, delegatorAddr, candidateAddr sdk.Address) Msg
 }
 
 func TestDuplicatesMsgDeclareCandidacy(t *testing.T) {
-	ctxDeliver, _, keeper := createTestInput(t, addrs[0], false, 1000)
-	ctxCheck, _, _ := createTestInput(t, addrs[0], true, 1000)
+	ctx, _, keeper := createTestInput(t, addrs[0], false, 1000)
 
 	msgDeclareCandidacy := newTestMsgDeclareCandidacy(addrs[0], pks[0], 10)
-	got := keeper.declareCandidacy(ctxDeliver, msgDeclareCandidacy)
-	assert.NoError(t, got, "expected no error on runMsgDeclareCandidacy")
+	got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+	assert.True(t, got.IsOK(), "%v", got)
 
-	// one sender can bond to two different addresses
-	msgDeclareCandidacy.Address = addrs[1]
-	err := checker.declareCandidacy(msgDeclareCandidacy)
-	assert.Nil(t, err, "didn't expected error on checkTx")
-
-	// two addrs cant bond to the same pubkey
-	checker.sender = addrs[1]
-	msgDeclareCandidacy.Address = addrs[0]
-	err = checker.declareCandidacy(msgDeclareCandidacy)
-	assert.NotNil(t, err, "expected error on checkTx")
+	// one sender cannot bond twice
+	msgDeclareCandidacy.PubKey = pks[1]
+	got = handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+	assert.False(t, got.IsOK(), "%v", got)
 }
 
 func TestIncrementsMsgDelegate(t *testing.T) {
-	_, _, mapper, deliverer := createTestInput(t, addrs[0], false, 1000)
+	ctx, _, keeper := createTestInput(t, addrs[0], false, 1000)
 
 	// first declare candidacy
 	bondAmount := int64(10)
@@ -79,7 +72,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 }
 
 func TestIncrementsMsgUnbond(t *testing.T) {
-	_, _, mapper, deliverer := createTestInput(t, addrs[0], false, 0)
+	ctx, _, keeper := createTestInput(t, addrs[0], false, 0)
 
 	// set initial bond
 	initBond := int64(1000)
@@ -137,7 +130,8 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 
 func TestMultipleMsgDeclareCandidacy(t *testing.T) {
 	initSender := int64(1000)
-	ctx, accStore, mapper, deliverer := createTestInput(t, addrs[0], false, initSender)
+	//ctx, accStore, mapper, deliverer := createTestInput(t, addrs[0], false, initSender)
+	ctx, mapper, keeper := createTestInput(t, addrs[0], false, initSender)
 	addrs := []sdk.Address{addrs[0], addrs[1], addrs[2]}
 
 	// bond them all
@@ -181,6 +175,7 @@ func TestMultipleMsgDeclareCandidacy(t *testing.T) {
 func TestMultipleMsgDelegate(t *testing.T) {
 	sender, delegators := addrs[0], addrs[1:]
 	_, _, mapper, deliverer := createTestInput(t, addrs[0], false, 1000)
+	ctx, _, keeper := createTestInput(t, addrs[0], false, 0)
 
 	//first make a candidate
 	msgDeclareCandidacy := newTestMsgDeclareCandidacy(sender, pks[0], 10)

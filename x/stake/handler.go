@@ -71,17 +71,6 @@ func NewHandler(k Keeper, ck bank.CoinKeeper) sdk.Handler {
 
 //_____________________________________________________________________
 
-// XXX should be send in the msg (init in CLI)
-//func getSender() sdk.Address {
-//signers := msg.GetSigners()
-//if len(signers) != 1 {
-//return sdk.ErrUnauthorized("there can only be one signer for staking transaction").Result()
-//}
-//sender := signers[0]
-//}
-
-//_____________________________________________________________________
-
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 

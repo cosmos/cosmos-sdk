@@ -9,7 +9,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/tendermint/go-crypto/keys"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/core"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"

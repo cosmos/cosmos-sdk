@@ -9,7 +9,6 @@ import (
 
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/core"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

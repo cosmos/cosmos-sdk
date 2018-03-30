@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
-	coolcmd "github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool/commands"
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
@@ -62,14 +61,6 @@ func main() {
 	basecliCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
-		)...)
-	basecliCmd.AddCommand(
-		client.PostCommands(
-			coolcmd.QuizTxCmd(cdc),
-		)...)
-	basecliCmd.AddCommand(
-		client.PostCommands(
-			coolcmd.SetTrendTxCmd(cdc),
 		)...)
 	basecliCmd.AddCommand(
 		client.PostCommands(

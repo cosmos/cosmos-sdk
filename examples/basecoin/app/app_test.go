@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -39,31 +38,6 @@ var (
 		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
 		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
 	}
-
-	quizMsg1 = cool.QuizMsg{
-		Sender:     addr1,
-		CoolAnswer: "icecold",
-	}
-
-	quizMsg2 = cool.QuizMsg{
-		Sender:     addr1,
-		CoolAnswer: "badvibesonly",
-	}
-
-	setTrendMsg1 = cool.SetTrendMsg{
-		Sender: addr1,
-		Cool:   "icecold",
-	}
-
-	setTrendMsg2 = cool.SetTrendMsg{
-		Sender: addr1,
-		Cool:   "badvibesonly",
-	}
-
-	setTrendMsg3 = cool.SetTrendMsg{
-		Sender: addr1,
-		Cool:   "warmandkind",
-	}
 )
 
 func loggerAndDBs() (log.Logger, map[string]dbm.DB) {
@@ -91,8 +65,6 @@ func TestMsgs(t *testing.T) {
 		msg sdk.Msg
 	}{
 		{sendMsg},
-		{quizMsg1},
-		{setTrendMsg1},
 	}
 
 	sequences := []int64{0}
@@ -140,9 +112,6 @@ func TestGenesis(t *testing.T) {
 		"accounts": []*types.GenesisAccount{
 			types.NewGenesisAccount(acc),
 		},
-		"cool": map[string]string{
-			"trend": "ice-cold",
-		},
 	}
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
 
@@ -179,9 +148,6 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	genesisState := map[string]interface{}{
 		"accounts": []*types.GenesisAccount{
 			types.NewGenesisAccount(acc1),
-		},
-		"cool": map[string]string{
-			"trend": "ice-cold",
 		},
 	}
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
@@ -255,9 +221,6 @@ func TestQuizMsg(t *testing.T) {
 		"accounts": []*types.GenesisAccount{
 			types.NewGenesisAccount(acc1),
 		},
-		"cool": map[string]string{
-			"trend": "ice-cold",
-		},
 	}
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
 	require.Nil(t, err)
@@ -271,21 +234,6 @@ func TestQuizMsg(t *testing.T) {
 	ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
 	assert.Equal(t, acc1, res1)
-
-	// Set the trend, submit a really cool quiz and check for reward
-	SignCheckDeliver(t, bapp, setTrendMsg1, 0, true)
-	SignCheckDeliver(t, bapp, quizMsg1, 1, true)
-	CheckBalance(t, bapp, "69icecold")
-	SignCheckDeliver(t, bapp, quizMsg2, 2, false) // result without reward
-	CheckBalance(t, bapp, "69icecold")
-	SignCheckDeliver(t, bapp, quizMsg1, 3, true)
-	CheckBalance(t, bapp, "138icecold")
-	SignCheckDeliver(t, bapp, setTrendMsg2, 4, true) // reset the trend
-	SignCheckDeliver(t, bapp, quizMsg1, 5, false)    // the same answer will nolonger do!
-	CheckBalance(t, bapp, "138icecold")
-	SignCheckDeliver(t, bapp, quizMsg2, 6, true) // earlier answer now relavent again
-	CheckBalance(t, bapp, "69badvibesonly,138icecold")
-	SignCheckDeliver(t, bapp, setTrendMsg3, 7, false) // expect to fail to set the trend to something which is not cool
 
 }
 
@@ -304,9 +252,6 @@ func TestHandler(t *testing.T) {
 	genesisState := map[string]interface{}{
 		"accounts": []*types.GenesisAccount{
 			types.NewGenesisAccount(acc1),
-		},
-		"cool": map[string]string{
-			"trend": "ice-cold",
 		},
 	}
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")

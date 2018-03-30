@@ -211,12 +211,12 @@ func randomOperation(r *rand.Rand) Operation {
 			cand := c[index]
 			var msg string
 			if cand.Status == Bonded {
+				msg = fmt.Sprintf("Unbonded previously bonded candidate %s (assets: %d, liabilities: %d, delegatorShareExRate: %d)", cand.PubKey, cand.Assets.Evaluate(), cand.Liabilities.Evaluate(), cand.delegatorShareExRate().Evaluate())
 				p, cand = p.bondedToUnbondedPool(cand)
-				msg = fmt.Sprintf("Unbonded candidate %s", cand.PubKey)
 				cand.Status = Unbonded
 			} else {
+				msg = fmt.Sprintf("Bonded previously unbonded candidate %s (assets: %d, liabilities: %d, delegatorShareExRate: %d)", cand.PubKey, cand.Assets.Evaluate(), cand.Liabilities.Evaluate(), cand.delegatorShareExRate().Evaluate())
 				p, cand = p.unbondedToBondedPool(cand)
-				msg = fmt.Sprintf("Bonded candidate %s", cand.PubKey)
 				cand.Status = Bonded
 			}
 			c[index] = cand
@@ -227,25 +227,28 @@ func randomOperation(r *rand.Rand) Operation {
 			tokens := int64(r.Int31n(1000))
 			index := int(r.Int31n(int32(len(c))))
 			cand := c[index]
-			msg := fmt.Sprintf("candidate with %d assets, %d liabilities, and %d delegatorShareExRate", cand.Assets.Evaluate(), cand.Liabilities.Evaluate(), cand.delegatorShareExRate().Evaluate())
+			msg := fmt.Sprintf("candidate with pubkey %s, %d assets, %d liabilities, and %d delegatorShareExRate", cand.PubKey, cand.Assets.Evaluate(), cand.Liabilities.Evaluate(), cand.delegatorShareExRate().Evaluate())
 			p, cand, _ = p.candidateAddTokens(cand, tokens)
 			c[index] = cand
 			t -= tokens
 			msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)
 			return p, c, t, msg
 		},
-		/*
-			// remove some shares from a candidate
-			func(p Pool, c Candidates, t int64) (Pool, Candidates, int64) {
-				shares := sdk.NewRat(int64(r.Int31n(1000)))
-				index := int(r.Int31n(int32(len(c))))
-				cand := c[index]
-				p, cand, tokens := p.candidateRemoveShares(cand, shares)
-				c[index] = cand
-				t += tokens
-				return p, c, t
-			},
-		*/
+		// remove some shares from a candidate
+		func(p Pool, c Candidates, t int64) (Pool, Candidates, int64, string) {
+			shares := sdk.NewRat(int64(r.Int31n(1000)))
+			index := int(r.Int31n(int32(len(c))))
+			cand := c[index]
+			if shares.GT(cand.Liabilities) {
+				shares = cand.Liabilities.Quo(sdk.NewRat(2))
+			}
+			msg := fmt.Sprintf("candidate with pubkey %s, %d assets, %d liabilities, and %d delegatorShareExRate", cand.PubKey, cand.Assets.Evaluate(), cand.Liabilities.Evaluate(), cand.delegatorShareExRate().Evaluate())
+			p, cand, tokens := p.candidateRemoveShares(cand, shares)
+			c[index] = cand
+			t += tokens
+			msg = fmt.Sprintf("Removed %d shares from %s", shares.Evaluate(), msg)
+			return p, c, t, msg
+		},
 	}
 	r.Shuffle(len(operations), func(i, j int) {
 		operations[i], operations[j] = operations[j], operations[i]
@@ -267,10 +270,10 @@ func assertInvariants(t *testing.T, pA Pool, cA Candidates, tA int64, pB Pool, c
 	unbondedSharesHeld := sdk.ZeroRat
 	for _, candidate := range cA {
 		// nonnegative ex rate
-		require.Equal(t, false, candidate.delegatorShareExRate().LT(sdk.ZeroRat))
+		require.Equal(t, false, candidate.delegatorShareExRate().LT(sdk.ZeroRat), "Applying operation \"%s\" resulted in negative candidate.delegatorShareExRate(): %s (candidate.PubKey: %s)", msg, candidate.delegatorShareExRate(), candidate.PubKey)
 		// nonnegative assets / liabilities
-		require.Equal(t, false, candidate.Assets.LT(sdk.ZeroRat), "Applying operation \"%s\" resulted in negative candidate.Assets: %d", msg, candidate.Assets.Evaluate())
-		require.Equal(t, false, candidate.Liabilities.LT(sdk.ZeroRat), "Applying operation \"%s\" resulted in negative candidate.Liabilities: %d", msg, candidate.Liabilities.Evaluate())
+		require.Equal(t, false, candidate.Assets.LT(sdk.ZeroRat), "Applying operation \"%s\" resulted in negative candidate.Assets: %d (candidate.Liabilities: %d, candidate.PubKey: %s)", msg, candidate.Assets.Evaluate(), candidate.Liabilities.Evaluate(), candidate.PubKey)
+		require.Equal(t, false, candidate.Liabilities.LT(sdk.ZeroRat), "Applying operation \"%s\" resulted in negative candidate.Liabilities: %d (candidate.Assets: %d, candidate.PubKey: %s)", msg, candidate.Liabilities.Evaluate(), candidate.Assets.Evaluate(), candidate.PubKey)
 		if candidate.Status == Bonded {
 			bondedSharesHeld = bondedSharesHeld.Add(candidate.Assets)
 		} else {

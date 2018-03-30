@@ -66,7 +66,7 @@ var (
 	}
 )
 
-func newBasecoinApp() *BasecoinApp {
+func loggerAndDBs() (log.Logger, map[string]dbm.DB) {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 	dbs := map[string]dbm.DB{
 		"main":    dbm.NewMemDB(),
@@ -74,6 +74,11 @@ func newBasecoinApp() *BasecoinApp {
 		"ibc":     dbm.NewMemDB(),
 		"staking": dbm.NewMemDB(),
 	}
+	return logger, dbs
+}
+
+func newBasecoinApp() *BasecoinApp {
+	logger, dbs := loggerAndDBs()
 	return NewBasecoinApp(logger, dbs)
 }
 
@@ -117,7 +122,8 @@ func TestMsgs(t *testing.T) {
 }
 
 func TestGenesis(t *testing.T) {
-	bapp := newBasecoinApp()
+	logger, dbs := loggerAndDBs()
+	bapp := NewBasecoinApp(logger, dbs)
 
 	// Construct some genesis bytes to reflect basecoin/types/AppAccount
 	pk := crypto.GenPrivKeyEd25519().PubKey()
@@ -145,13 +151,12 @@ func TestGenesis(t *testing.T) {
 	ctx := bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
 	assert.Equal(t, acc, res1)
-	/*
-		// reload app and ensure the account is still there
-		bapp = NewBasecoinApp(logger, db)
-		ctx = bapp.BaseApp.NewContext(true, abci.Header{})
-		res1 = bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
-		assert.Equal(t, acc, res1)
-	*/
+
+	// reload app and ensure the account is still there
+	bapp = NewBasecoinApp(logger, dbs)
+	ctx = bapp.BaseApp.NewContext(true, abci.Header{})
+	res1 = bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
+	assert.Equal(t, acc, res1)
 }
 
 func TestSendMsgWithAccounts(t *testing.T) {

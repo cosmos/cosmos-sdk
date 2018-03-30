@@ -68,11 +68,13 @@ var (
 
 func newBasecoinApp() *BasecoinApp {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-	dbMain := dbm.NewMemDB()
-	dbAcc := dbm.NewMemDB()
-	dbIBC := dbm.NewMemDB()
-	dbStaking := dbm.NewMemDB()
-	return NewBasecoinApp(logger, dbMain, dbAcc, dbIBC, dbStaking)
+	dbs := map[string]dbm.DB{
+		"main":    dbm.NewMemDB(),
+		"acc":     dbm.NewMemDB(),
+		"ibc":     dbm.NewMemDB(),
+		"staking": dbm.NewMemDB(),
+	}
+	return NewBasecoinApp(logger, dbs)
 }
 
 //_______________________________________________________________________

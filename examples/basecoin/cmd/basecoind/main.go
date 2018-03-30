@@ -67,7 +67,13 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	if err != nil {
 		return nil, err
 	}
-	bapp := app.NewBasecoinApp(logger, dbMain, dbAcc, dbIBC, dbStaking)
+	dbs := map[string]dbm.DB{
+		"main":    dbMain,
+		"acc":     dbAcc,
+		"ibc":     dbIBC,
+		"staking": dbStaking,
+	}
+	bapp := app.NewBasecoinApp(logger, dbs)
 	return bapp, nil
 }
 

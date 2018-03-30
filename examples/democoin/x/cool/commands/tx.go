@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/builder"
+	"github.com/cosmos/cosmos-sdk/client/core"
 	"github.com/cosmos/cosmos-sdk/wire"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
@@ -25,7 +25,7 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// get the from address from the name flag
-			from, err := builder.GetFromAddress()
+			from, err := core.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -37,7 +37,7 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 			name := viper.GetString(client.FlagName)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := builder.SignBuildBroadcast(name, msg, cdc)
+			res, err := core.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -59,7 +59,7 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// get the from address from the name flag
-			from, err := builder.GetFromAddress()
+			from, err := core.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -71,7 +71,7 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 			msg := cool.NewSetTrendMsg(from, args[0])
 
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := builder.SignBuildBroadcast(name, msg, cdc)
+			res, err := core.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}

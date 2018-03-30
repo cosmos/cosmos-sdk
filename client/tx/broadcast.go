@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/builder"
+	"github.com/cosmos/cosmos-sdk/client/core"
 )
 
 type BroadcastTxBody struct {
@@ -22,7 +22,7 @@ func BroadcastTxRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := builder.BroadcastTx([]byte(m.TxBytes))
+	res, err := core.BroadcastTx([]byte(m.TxBytes))
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))

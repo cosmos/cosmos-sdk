@@ -10,7 +10,7 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/builder"
+	"github.com/cosmos/cosmos-sdk/client/core"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/simplestake"
@@ -48,7 +48,7 @@ type commander struct {
 }
 
 func (co commander) bondTxCmd(cmd *cobra.Command, args []string) error {
-	from, err := builder.GetFromAddress()
+	from, err := core.GetFromAddress()
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (co commander) bondTxCmd(cmd *cobra.Command, args []string) error {
 }
 
 func (co commander) unbondTxCmd(cmd *cobra.Command, args []string) error {
-	from, err := builder.GetFromAddress()
+	from, err := core.GetFromAddress()
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func (co commander) unbondTxCmd(cmd *cobra.Command, args []string) error {
 
 func (co commander) sendMsg(msg sdk.Msg) error {
 	name := viper.GetString(client.FlagName)
-	res, err := builder.SignBuildBroadcast(name, msg, co.cdc)
+	res, err := core.SignBuildBroadcast(name, msg, co.cdc)
 	if err != nil {
 		return err
 	}

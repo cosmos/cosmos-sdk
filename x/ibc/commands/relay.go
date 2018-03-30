@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/builder"
+	"github.com/cosmos/cosmos-sdk/client/core"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -74,7 +74,7 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	fromChainNode := viper.GetString(FlagFromChainNode)
 	toChainID := viper.GetString(FlagToChainID)
 	toChainNode := viper.GetString(FlagToChainNode)
-	address, err := builder.GetFromAddress()
+	address, err := core.GetFromAddress()
 	if err != nil {
 		panic(err)
 	}
@@ -86,7 +86,7 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
 	// get password
 	name := viper.GetString(client.FlagName)
-	passphrase, err := builder.GetPassphraseFromStdin(name)
+	passphrase, err := core.GetPassphraseFromStdin(name)
 	if err != nil {
 		panic(err)
 	}
@@ -150,16 +150,16 @@ OUTER:
 func query(node string, key []byte, storeName string) (res []byte, err error) {
 	orig := viper.GetString(client.FlagNode)
 	viper.Set(client.FlagNode, node)
-	res, err = builder.Query(key, storeName)
+	res, err = core.Query(key, storeName)
 	viper.Set(client.FlagNode, orig)
 	return res, err
 }
 
 func (c relayCommander) broadcastTx(node string, tx []byte) error {
-	orig := viper.GetString(client.FlagNode)
 	viper.Set(client.FlagNode, node)
-	_, err := builder.BroadcastTx(tx)
-	viper.Set(client.FlagNode, orig)
+	seq := c.getSequence(node) + 1
+	viper.Set(client.FlagSequence, seq)
+	_, err := core.BroadcastTx(tx)
 	return err
 }
 
@@ -194,7 +194,7 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 	}
 
 	name := viper.GetString(client.FlagName)
-	res, err := builder.SignAndBuild(name, passphrase, msg, c.cdc)
+	res, err := core.SignAndBuild(name, passphrase, msg, c.cdc)
 	if err != nil {
 		panic(err)
 	}

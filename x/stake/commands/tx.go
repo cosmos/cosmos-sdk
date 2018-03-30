@@ -11,7 +11,7 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/builder"
+	"github.com/cosmos/cosmos-sdk/client/core"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -93,7 +93,7 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			name := viper.GetString(client.FlagName)
-			res, err := builder.SignBuildBroadcast(name, msg, cdc)
+			res, err := core.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -130,7 +130,7 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			name := viper.GetString(client.FlagName)
-			res, err := builder.SignBuildBroadcast(name, msg, cdc)
+			res, err := core.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -166,7 +166,7 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			name := viper.GetString(client.FlagName)
-			res, err := builder.SignBuildBroadcast(name, msg, cdc)
+			res, err := core.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -213,7 +213,7 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			name := viper.GetString(client.FlagName)
-			res, err := builder.SignBuildBroadcast(name, msg, cdc)
+			res, err := core.SignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}

@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/builder"
+	"github.com/cosmos/cosmos-sdk/client/core"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -40,7 +40,7 @@ type sendCommander struct {
 
 func (c sendCommander) sendIBCTransfer(cmd *cobra.Command, args []string) error {
 	// get the from address
-	from, err := builder.GetFromAddress()
+	from, err := core.GetFromAddress()
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (c sendCommander) sendIBCTransfer(cmd *cobra.Command, args []string) error 
 	// get password
 	name := viper.GetString(client.FlagName)
 
-	res, err := builder.SignBuildBroadcast(name, msg, c.cdc)
+	res, err := core.SignBuildBroadcast(name, msg, c.cdc)
 	if err != nil {
 		return err
 	}

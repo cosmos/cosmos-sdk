@@ -177,8 +177,7 @@ func BondCoins(ctx sdk.Context, k Keeper, bond DelegatorBond, candidate Candidat
 		return err
 	}
 	p := k.GetPool(ctx)
-	var newShares sdk.Rat
-	p, candidate, newShares = p.candidateAddTokens(candidate, amount.Amount)
+	p, candidate, newShares := p.candidateAddTokens(candidate, amount.Amount)
 	bond.Shares = bond.Shares.Add(newShares)
 	k.setPool(ctx, p)
 	k.setCandidate(ctx, candidate)

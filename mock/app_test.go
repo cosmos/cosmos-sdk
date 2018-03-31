@@ -21,7 +21,7 @@ func TestInitApp(t *testing.T) {
 	require.NoError(t, err)
 
 	// initialize it future-way
-	opts, err := GenInitOptions(nil)
+	opts, _, _, err := GenInitOptions(nil)
 	require.NoError(t, err)
 	req := abci.RequestInitChain{AppStateBytes: opts}
 	app.InitChain(req)

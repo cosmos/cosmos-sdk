@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/builder"
 	"github.com/cosmos/cosmos-sdk/wire"
 
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
+	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
 )
 
 // take the coolness quiz transaction

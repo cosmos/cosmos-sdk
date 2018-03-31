@@ -1,23 +1,23 @@
+# OS
 .DS_Store
 *.swp
 *.swo
+.vscode
+
+# Build
 vendor
-merkleeyes.db
 build
-docs/guide/*.sh
 tools/bin/*
 examples/build/*
-examples/basecoin/glide.lock
+docs/_build
+
+# Data - ideally these don't exist
 examples/basecoin/app/data
 baseapp/data/*
-docs/_build
-.DS_Store
+
+# Testing
 coverage.txt
 profile.out
-.vscode
-coverage.txt
-profile.out
-client/lcd/keys.db/
 
 ### Vagrant ###
 .vagrant/

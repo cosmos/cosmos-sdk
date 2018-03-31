@@ -143,29 +143,9 @@ func TestMsgs(t *testing.T) {
 		{setTrendMsg1},
 	}
 
-	sequences := []int64{0}
 	for i, m := range msgs {
-		sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, fee, m.msg))
-		tx := sdk.NewStdTx(m.msg, fee, []sdk.StdSignature{{
-			PubKey:    priv1.PubKey(),
-			Signature: sig,
-		}})
-
-		// just marshal/unmarshal!
-		cdc := MakeCodec()
-		txBytes, err := cdc.MarshalBinary(tx)
-		require.NoError(t, err, "i: %v", i)
-
-		// Run a Check
-		cres := bapp.CheckTx(txBytes)
-		assert.Equal(t, sdk.CodeUnknownAddress,
-			sdk.CodeType(cres.Code), "i: %v, log: %v", i, cres.Log)
-
-		// Simulate a Block
-		bapp.BeginBlock(abci.RequestBeginBlock{})
-		dres := bapp.DeliverTx(txBytes)
-		assert.Equal(t, sdk.CodeUnknownAddress,
-			sdk.CodeType(dres.Code), "i: %v, log: %v", i, dres.Log)
+		// Run a CheckDeliver
+		SignCheckDeliver(t, bapp, m.msg, int64(i), false, priv1)
 	}
 }
 
@@ -220,45 +200,25 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
 	assert.Equal(t, baseAcc, res1.(*types.AppAccount).BaseAccount)
 
-	// Sign the tx
-	sequences := []int64{0}
-	sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, fee, sendMsg1))
-	tx := sdk.NewStdTx(sendMsg1, fee, []sdk.StdSignature{{
-		PubKey:    priv1.PubKey(),
-		Signature: sig,
-	}})
-
-	// Run a Check
-	res := bapp.Check(tx)
-	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
-
-	// Simulate a Block
-	bapp.BeginBlock(abci.RequestBeginBlock{})
-	res = bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	// Run a CheckDeliver
+	SignCheckDeliver(t, bapp, sendMsg1, 0, true, priv1)
 
 	// Check balances
-	ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
-	res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr1)
-	res3 := bapp.accountMapper.GetAccount(ctxDeliver, addr2)
-	assert.Equal(t, fmt.Sprintf("%v", res2.GetCoins()), "67foocoin")
-	assert.Equal(t, fmt.Sprintf("%v", res3.GetCoins()), "10foocoin")
+	CheckBalance(t, bapp, addr1, "67foocoin")
+	CheckBalance(t, bapp, addr2, "10foocoin")
 
 	// Delivering again should cause replay error
-	res = bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeInvalidSequence, res.Code, res.Log)
+	SignCheckDeliver(t, bapp, sendMsg1, 0, false, priv1)
 
 	// bumping the txnonce number without resigning should be an auth error
+	tx := genTx(sendMsg1, 0, priv1)
 	tx.Signatures[0].Sequence = 1
-	res = bapp.Deliver(tx)
+	res := bapp.Deliver(tx)
+
 	assert.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
 
 	// resigning the tx with the bumped sequence should work
-	sequences = []int64{1}
-	sig = priv1.Sign(sdk.StdSignBytes(chainID, sequences, fee, tx.Msg))
-	tx.Signatures[0].Signature = sig
-	res = bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	SignCheckDeliver(t, bapp, sendMsg1, 1, true, priv1)
 }
 
 func TestSendMsgMultipleOut(t *testing.T) {
@@ -280,26 +240,13 @@ func TestSendMsgMultipleOut(t *testing.T) {
 	err = setGenesisAccounts(bapp, acc1, acc2)
 	assert.Nil(t, err)
 
-	sequences := []int64{0}
-	sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, fee, sendMsg2))
-	tx := sdk.NewStdTx(sendMsg2, fee, []sdk.StdSignature{{
-		PubKey:    priv1.PubKey(),
-		Signature: sig,
-	}})
-
 	// Simulate a Block
-	bapp.BeginBlock(abci.RequestBeginBlock{})
-	res := bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	SignCheckDeliver(t, bapp, sendMsg2, 0, true, priv1)
 
 	// Check balances
-	ctx := bapp.BaseApp.NewContext(false, abci.Header{})
-	acc := bapp.accountMapper.GetAccount(ctx, addr1)
-	assert.Equal(t, fmt.Sprintf("%v", acc.GetCoins()), "32foocoin")
-	acc = bapp.accountMapper.GetAccount(ctx, addr2)
-	assert.Equal(t, fmt.Sprintf("%v", acc.GetCoins()), "47foocoin")
-	acc = bapp.accountMapper.GetAccount(ctx, addr3)
-	assert.Equal(t, fmt.Sprintf("%v", acc.GetCoins()), "5foocoin")
+	CheckBalance(t, bapp, addr1, "32foocoin")
+	CheckBalance(t, bapp, addr2, "47foocoin")
+	CheckBalance(t, bapp, addr3, "5foocoin")
 }
 
 func TestSengMsgMultipleInOut(t *testing.T) {
@@ -347,16 +294,10 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
 
 	// Check balances
-	ctx := bapp.BaseApp.NewContext(false, abci.Header{})
-	acc := bapp.accountMapper.GetAccount(ctx, addr1)
-	assert.Equal(t, fmt.Sprintf("%v", acc.GetCoins()), "32foocoin")
-	acc = bapp.accountMapper.GetAccount(ctx, addr4)
-	assert.Equal(t, fmt.Sprintf("%v", acc.GetCoins()), "32foocoin")
-	acc = bapp.accountMapper.GetAccount(ctx, addr2)
-	assert.Equal(t, fmt.Sprintf("%v", acc.GetCoins()), "52foocoin")
-	acc = bapp.accountMapper.GetAccount(ctx, addr3)
-	assert.Equal(t, fmt.Sprintf("%v", acc.GetCoins()), "10foocoin")
-
+	CheckBalance(t, bapp, addr1, "32foocoin")
+	CheckBalance(t, bapp, addr4, "32foocoin")
+	CheckBalance(t, bapp, addr2, "52foocoin")
+	CheckBalance(t, bapp, addr3, "10foocoin")
 }
 
 func TestSendMsgDependent(t *testing.T) {
@@ -406,9 +347,7 @@ func TestSendMsgDependent(t *testing.T) {
 	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
 
 	// Check balances
-	ctx = bapp.BaseApp.NewContext(false, abci.Header{})
-	acc = bapp.accountMapper.GetAccount(ctx, addr1)
-	assert.Equal(t, fmt.Sprintf("%v", acc.GetCoins()), "42foocoin")
+	CheckBalance(t, bapp, addr1, "42foocoin")
 }
 
 func TestQuizMsg(t *testing.T) {
@@ -446,19 +385,19 @@ func TestQuizMsg(t *testing.T) {
 	assert.Equal(t, acc1, res1)
 
 	// Set the trend, submit a really cool quiz and check for reward
-	SignCheckDeliver(t, bapp, setTrendMsg1, 0, true)
-	SignCheckDeliver(t, bapp, quizMsg1, 1, true)
-	CheckBalance(t, bapp, "69icecold")
-	SignCheckDeliver(t, bapp, quizMsg2, 2, false) // result without reward
-	CheckBalance(t, bapp, "69icecold")
-	SignCheckDeliver(t, bapp, quizMsg1, 3, true)
-	CheckBalance(t, bapp, "138icecold")
-	SignCheckDeliver(t, bapp, setTrendMsg2, 4, true) // reset the trend
-	SignCheckDeliver(t, bapp, quizMsg1, 5, false)    // the same answer will nolonger do!
-	CheckBalance(t, bapp, "138icecold")
-	SignCheckDeliver(t, bapp, quizMsg2, 6, true) // earlier answer now relavent again
-	CheckBalance(t, bapp, "69badvibesonly,138icecold")
-	SignCheckDeliver(t, bapp, setTrendMsg3, 7, false) // expect to fail to set the trend to something which is not cool
+	SignCheckDeliver(t, bapp, setTrendMsg1, 0, true, priv1)
+	SignCheckDeliver(t, bapp, quizMsg1, 1, true, priv1)
+	CheckBalance(t, bapp, addr1, "69icecold")
+	SignCheckDeliver(t, bapp, quizMsg2, 2, true, priv1) // result without reward
+	CheckBalance(t, bapp, addr1, "69icecold")
+	SignCheckDeliver(t, bapp, quizMsg1, 3, true, priv1)
+	CheckBalance(t, bapp, addr1, "138icecold")
+	SignCheckDeliver(t, bapp, setTrendMsg2, 4, true, priv1) // reset the trend
+	SignCheckDeliver(t, bapp, quizMsg1, 5, true, priv1)     // the same answer will nolonger do!
+	CheckBalance(t, bapp, addr1, "138icecold")
+	SignCheckDeliver(t, bapp, quizMsg2, 6, true, priv1) // earlier answer now relavent again
+	CheckBalance(t, bapp, addr1, "69badvibesonly,138icecold")
+	SignCheckDeliver(t, bapp, setTrendMsg3, 7, false, priv1) // expect to fail to set the trend to something which is not cool
 
 }
 
@@ -499,24 +438,32 @@ func TestHandler(t *testing.T) {
 		Sequence:  0,
 	}
 
-	SignCheckDeliver(t, bapp, transferMsg, 0, true)
-	CheckBalance(t, bapp, "")
-	SignCheckDeliver(t, bapp, transferMsg, 1, false)
-	SignCheckDeliver(t, bapp, receiveMsg, 2, true)
-	CheckBalance(t, bapp, "10foocoin")
-	SignCheckDeliver(t, bapp, receiveMsg, 3, false)
+	SignCheckDeliver(t, bapp, transferMsg, 0, true, priv1)
+	CheckBalance(t, bapp, addr1, "")
+	SignCheckDeliver(t, bapp, transferMsg, 1, false, priv1)
+	SignCheckDeliver(t, bapp, receiveMsg, 2, true, priv1)
+	CheckBalance(t, bapp, addr1, "10foocoin")
+	SignCheckDeliver(t, bapp, receiveMsg, 3, false, priv1)
 }
 
-// TODO describe the use of this function
-func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, expPass bool) {
+func genTx(msg sdk.Msg, seq int64, priv ...crypto.PrivKeyEd25519) sdk.StdTx {
+	sigs := make([]sdk.StdSignature, len(priv))
+	for i, p := range priv {
+		sigs[i] = sdk.StdSignature{
+			PubKey:    p.PubKey(),
+			Signature: p.Sign(sdk.StdSignBytes(chainID, []int64{seq}, fee, msg)),
+			Sequence:  seq,
+		}
+	}
+
+	return sdk.NewStdTx(msg, fee, sigs)
+
+}
+
+func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
 
 	// Sign the tx
-	tx := sdk.NewStdTx(msg, fee, []sdk.StdSignature{{
-		PubKey:    priv1.PubKey(),
-		Signature: priv1.Sign(sdk.StdSignBytes(chainID, []int64{seq}, fee, msg)),
-		Sequence:  seq,
-	}})
-
+	tx := genTx(msg, seq, priv...)
 	// Run a Check
 	res := bapp.Check(tx)
 	if expPass {
@@ -537,8 +484,8 @@ func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, e
 	//bapp.Commit()
 }
 
-func CheckBalance(t *testing.T, bapp *BasecoinApp, balExpected string) {
+func CheckBalance(t *testing.T, bapp *BasecoinApp, addr sdk.Address, balExpected string) {
 	ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
-	res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr1)
+	res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr)
 	assert.Equal(t, balExpected, fmt.Sprintf("%v", res2.GetCoins()))
 }

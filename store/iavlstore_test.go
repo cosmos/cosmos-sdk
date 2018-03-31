@@ -81,7 +81,7 @@ func TestIAVLIterator(t *testing.T) {
 		assert.EqualValues(t, value, treeData[expectedKey])
 		i += 1
 	}
-	assert.Equal(t, i, len(expected))
+	assert.Equal(t, len(expected), i)
 
 	iter = iavlStore.Iterator([]byte("golang"), []byte("rocks"))
 	expected = []string{"hello"}
@@ -92,7 +92,18 @@ func TestIAVLIterator(t *testing.T) {
 		assert.EqualValues(t, value, treeData[expectedKey])
 		i += 1
 	}
-	assert.Equal(t, i, len(expected))
+	assert.Equal(t, len(expected), i)
+
+	iter = iavlStore.Iterator([]byte("golang"), nil)
+	expected = []string{"hello"}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, treeData[expectedKey])
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
 }
 
 func TestIAVLSubspace(t *testing.T) {
@@ -117,7 +128,7 @@ func TestIAVLSubspace(t *testing.T) {
 		assert.EqualValues(t, value, expectedKey)
 		i += 1
 	}
-	assert.Equal(t, i, len(expected))
+	assert.Equal(t, len(expected), i)
 
 	iter = iavlStore.Subspace([]byte{byte(55), byte(255), byte(255)})
 	expected2 := [][]byte{
@@ -132,7 +143,7 @@ func TestIAVLSubspace(t *testing.T) {
 		assert.EqualValues(t, value, []byte("test4"))
 		i += 1
 	}
-	assert.Equal(t, i, len(expected))
+	assert.Equal(t, len(expected), i)
 
 	iter = iavlStore.Subspace([]byte{byte(255), byte(255)})
 	expected2 = [][]byte{
@@ -147,7 +158,7 @@ func TestIAVLSubspace(t *testing.T) {
 		assert.EqualValues(t, value, []byte("test4"))
 		i += 1
 	}
-	assert.Equal(t, i, len(expected))
+	assert.Equal(t, len(expected), i)
 }
 
 func TestIAVLStoreQuery(t *testing.T) {

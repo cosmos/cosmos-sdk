@@ -401,7 +401,7 @@ func TestQuizMsg(t *testing.T) {
 
 }
 
-func TestHandler(t *testing.T) {
+func TestIBCMsgs(t *testing.T) {
 	bapp := newBasecoinApp()
 
 	sourceChain := "source-chain"

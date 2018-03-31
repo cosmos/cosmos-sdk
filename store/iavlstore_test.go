@@ -150,6 +150,10 @@ func TestIAVLSubspace(t *testing.T) {
 	iavlStore.Set([]byte{byte(55), byte(255), byte(255), byte(0)}, []byte("test4"))
 	iavlStore.Set([]byte{byte(55), byte(255), byte(255), byte(1)}, []byte("test4"))
 	iavlStore.Set([]byte{byte(55), byte(255), byte(255), byte(255)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(255), byte(255), byte(0)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(255), byte(255), byte(1)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(255), byte(255), byte(255)}, []byte("test4"))
+
 	i := 0
 
 	iter := iavlStore.Subspace([]byte("test"))

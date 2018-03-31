@@ -345,10 +345,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	// {c1, c3} -> {c0, c1, c3}
 	// {c1, c3} -> {c0, c1, c3}
 	// {c1, c3} -> {c0, c1, c3}
-	candidates = append([]Candidate{candidatesIn[0]}, candidates...)
-	keeper.setCandidate(ctx, candidates[0])
-	keeper.setCandidate(ctx, candidates[1])
-	keeper.setCandidate(ctx, candidates[2])
+	keeper.setCandidate(ctx, candidatesIn[0])
 	acc = keeper.getAccUpdateValidators(ctx)
 	require.Equal(t, 3, len(acc))
 	candidates = keeper.GetCandidates(ctx, 5)
@@ -361,11 +358,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	// {c0, c1, c3} -> {c0, c1, c2, c3]
 	// {c0, c1, c3} -> {c0, c1, c2, c3}
 	// {c0, c1, c3} -> {c0, c1, c2, c3}
-	candidates = []Candidate{candidates[0], candidates[1], candidatesIn[2], candidates[2]}
-	keeper.setCandidate(ctx, candidates[0])
-	keeper.setCandidate(ctx, candidates[1])
-	keeper.setCandidate(ctx, candidates[2])
-	keeper.setCandidate(ctx, candidates[3])
+	keeper.setCandidate(ctx, candidatesIn[2])
 	acc = keeper.getAccUpdateValidators(ctx)
 	require.Equal(t, 4, len(acc))
 	candidates = keeper.GetCandidates(ctx, 5)
@@ -375,16 +368,11 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	assert.Equal(t, candidates[2].validator(), acc[2])
 	assert.Equal(t, candidates[3].validator(), acc[3])
 
-	// test candidate(not validator) added at the end
+	// test candidate added at the end but not inserted in the valset
 	// {c0, c1, c2, c3} -> {c0, c1, c2, c3, c4}
 	// {c0, c1, c2, c3} -> {c0, c1, c2, c3}
 	// {c0, c1, c2, c3} -> {c0, c1, c2, c3}
-	candidates = append(candidates, candidatesIn[4])
-	keeper.setCandidate(ctx, candidates[0])
-	keeper.setCandidate(ctx, candidates[1])
-	keeper.setCandidate(ctx, candidates[2])
-	keeper.setCandidate(ctx, candidates[3])
-	keeper.setCandidate(ctx, candidates[4])
+	keeper.setCandidate(ctx, candidatesIn[4])
 	acc = keeper.getAccUpdateValidators(ctx)
 	require.Equal(t, 4, len(acc)) // max validator number is 4
 	candidates = keeper.GetCandidates(ctx, 5)
@@ -394,12 +382,12 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	assert.Equal(t, candidates[2].validator(), acc[2])
 	assert.Equal(t, candidates[3].validator(), acc[3])
 
-	// test candidate(not validator) change its power but still not in the valset
+	// test candidate change its power but still not in the valset
 	// {c0, c1, c2, c3, c4} -> {c0, c1, c2, c3, c4}
 	// {c0, c1, c2, c3}     -> {c0, c1, c2, c3}
 	// {c0, c1, c2, c3}     -> {c0, c1, c2, c3}
-	candidates[4].Assets = sdk.NewRat(5)
-	keeper.setCandidate(ctx, candidates[4])
+	candidatesIn[4].Assets = sdk.NewRat(5)
+	keeper.setCandidate(ctx, candidatesIn[4])
 	acc = keeper.getAccUpdateValidators(ctx)
 	require.Equal(t, 4, len(acc))
 	candidates = keeper.GetCandidates(ctx, 5)

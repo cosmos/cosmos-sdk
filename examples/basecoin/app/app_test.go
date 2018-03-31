@@ -273,25 +273,8 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 	err = setGenesisAccounts(bapp, acc1, acc2, acc4)
 	assert.Nil(t, err)
 
-	sequences := []int64{0, 0}
-	signbz := sdk.StdSignBytes(chainID, sequences, fee, sendMsg3)
-	sig1 := priv1.Sign(signbz)
-	sig4 := priv4.Sign(signbz)
-	tx := sdk.NewStdTx(sendMsg3, fee, []sdk.StdSignature{
-		{
-			PubKey:    priv1.PubKey(),
-			Signature: sig1,
-		},
-		{
-			PubKey:    priv4.PubKey(),
-			Signature: sig4,
-		},
-	})
-
-	// Simulate a Block
-	bapp.BeginBlock(abci.RequestBeginBlock{})
-	res := bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	// CheckDeliver
+	SignCheckDeliver(t, bapp, sendMsg3, 0, true, priv1, priv4)
 
 	// Check balances
 	CheckBalance(t, bapp, addr1, "32foocoin")
@@ -314,37 +297,15 @@ func TestSendMsgDependent(t *testing.T) {
 	err = setGenesisAccounts(bapp, acc1)
 	assert.Nil(t, err)
 
-	sequences := []int64{0}
-
-	// Simulate a block
-	signbz := sdk.StdSignBytes(chainID, sequences, fee, sendMsg1)
-	sig1 := priv1.Sign(signbz)
-	tx := sdk.NewStdTx(sendMsg1, fee, []sdk.StdSignature{{
-		PubKey:    priv1.PubKey(),
-		Signature: sig1,
-	}})
-
-	bapp.BeginBlock(abci.RequestBeginBlock{})
-	res := bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	// CheckDeliver
+	SignCheckDeliver(t, bapp, sendMsg1, 0, true, priv1)
 
 	// Check balances
-	ctx := bapp.BaseApp.NewContext(false, abci.Header{})
-	acc := bapp.accountMapper.GetAccount(ctx, addr1)
-	assert.Equal(t, fmt.Sprintf("%v", acc.GetCoins()), "32foocoin")
-	acc = bapp.accountMapper.GetAccount(ctx, addr2)
-	assert.Equal(t, fmt.Sprintf("%v", acc.GetCoins()), "10foocoin")
+	CheckBalance(t, bapp, addr1, "32foocoin")
+	CheckBalance(t, bapp, addr2, "10foocoin")
 
 	// Simulate a Block
-	signbz = sdk.StdSignBytes(chainID, sequences, fee, sendMsg4)
-	sig2 := priv2.Sign(signbz)
-	tx = sdk.NewStdTx(sendMsg4, fee, []sdk.StdSignature{{
-		PubKey:    priv2.PubKey(),
-		Signature: sig2,
-	}})
-
-	res = bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	SignCheckDeliver(t, bapp, sendMsg4, 0, true, priv2)
 
 	// Check balances
 	CheckBalance(t, bapp, addr1, "42foocoin")

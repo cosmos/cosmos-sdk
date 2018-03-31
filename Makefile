@@ -32,6 +32,12 @@ else
 	go build $(BUILD_FLAGS) -o build/democli ./examples/democoin/cmd/democli
 endif
 
+install: 
+	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecoind
+	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecli
+	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democoind
+	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democli
+
 dist:
 	@bash publish/dist.sh
 	@bash publish/publish.sh

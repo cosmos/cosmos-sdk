@@ -94,6 +94,39 @@ func TestIAVLIterator(t *testing.T) {
 	}
 	assert.Equal(t, len(expected), i)
 
+	iter = iavlStore.Iterator(nil, []byte("golang"))
+	expected = []string{"aloha"}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, treeData[expectedKey])
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
+
+	iter = iavlStore.Iterator(nil, []byte("shalom"))
+	expected = []string{"aloha", "hello"}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, treeData[expectedKey])
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
+
+	iter = iavlStore.Iterator(nil, nil)
+	expected = []string{"aloha", "hello"}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, treeData[expectedKey])
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
+
 	iter = iavlStore.Iterator([]byte("golang"), nil)
 	expected = []string{"hello"}
 	for i = 0; iter.Valid(); iter.Next() {

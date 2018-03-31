@@ -10,6 +10,7 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/cli"
+	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
@@ -28,14 +29,11 @@ var (
 
 // defaultOptions sets up the app_options for the
 // default genesis file
-func defaultOptions(args []string) (json.RawMessage, error) {
+func defaultOptions(args []string) (json.RawMessage, string, cmn.HexBytes, error) {
 	addr, secret, err := server.GenerateCoinKey()
 	if err != nil {
-		return nil, err
+		return nil, "", nil, err
 	}
-	fmt.Println("Secret phrase to access coins:")
-	fmt.Println(secret)
-
 	opts := fmt.Sprintf(`{
       "accounts": [{
         "address": "%s",
@@ -47,7 +45,7 @@ func defaultOptions(args []string) (json.RawMessage, error) {
         ]
       }]
     }`, addr)
-	return json.RawMessage(opts), nil
+	return json.RawMessage(opts), secret, addr, nil
 }
 
 func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {

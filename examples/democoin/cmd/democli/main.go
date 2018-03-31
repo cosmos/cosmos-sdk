@@ -20,15 +20,15 @@ import (
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/commands"
 	simplestakingcmd "github.com/cosmos/cosmos-sdk/x/simplestake/commands"
 
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
+	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
 )
 
 // gaiacliCmd is the entry point for this binary
 var (
-	basecliCmd = &cobra.Command{
-		Use:   "basecli",
-		Short: "Basecoin light-client",
+	democliCmd = &cobra.Command{
+		Use:   "democli",
+		Short: "Democoin light-client",
 	}
 )
 
@@ -48,36 +48,36 @@ func main() {
 	// with the cdc
 
 	// add standard rpc, and tx commands
-	rpc.AddCommands(basecliCmd)
-	basecliCmd.AddCommand(client.LineBreak)
-	tx.AddCommands(basecliCmd, cdc)
-	basecliCmd.AddCommand(client.LineBreak)
+	rpc.AddCommands(democliCmd)
+	democliCmd.AddCommand(client.LineBreak)
+	tx.AddCommands(democliCmd, cdc)
+	democliCmd.AddCommand(client.LineBreak)
 
 	// add query/post commands (custom to binary)
-	basecliCmd.AddCommand(
+	democliCmd.AddCommand(
 		client.GetCommands(
 			authcmd.GetAccountCmd("main", cdc, types.GetAccountDecoder(cdc)),
 		)...)
-	basecliCmd.AddCommand(
+	democliCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
 		)...)
-	basecliCmd.AddCommand(
+	democliCmd.AddCommand(
 		client.PostCommands(
 			ibccmd.IBCTransferCmd(cdc),
 		)...)
-	basecliCmd.AddCommand(
+	democliCmd.AddCommand(
 		client.PostCommands(
 			ibccmd.IBCRelayCmd(cdc),
 			simplestakingcmd.BondTxCmd(cdc),
 		)...)
-	basecliCmd.AddCommand(
+	democliCmd.AddCommand(
 		client.PostCommands(
 			simplestakingcmd.UnbondTxCmd(cdc),
 		)...)
 
 	// add proxy, version and key info
-	basecliCmd.AddCommand(
+	democliCmd.AddCommand(
 		client.LineBreak,
 		lcd.ServeCommand(cdc),
 		keys.Commands(),
@@ -86,6 +86,6 @@ func main() {
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareMainCmd(basecliCmd, "BC", os.ExpandEnv("$HOME/.basecli"))
+	executor := cli.PrepareMainCmd(democliCmd, "BC", os.ExpandEnv("$HOME/.democli"))
 	executor.Execute()
 }

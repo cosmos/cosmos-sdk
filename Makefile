@@ -19,12 +19,17 @@ gaia:
 
 build:
 	@rm -rf $(shell pwd)/examples/basecoin/vendor/
+	@rm -rf $(shell pwd)/examples/democoin/vendor/
 ifeq ($(OS),Windows_NT)
 	go build $(BUILD_FLAGS) -o build/basecoind.exe ./examples/basecoin/cmd/basecoind
 	go build $(BUILD_FLAGS) -o build/basecli.exe ./examples/basecoin/cmd/basecli
+	go build $(BUILD_FLAGS) -o build/democoind.exe ./examples/democoin/cmd/democoind
+	go build $(BUILD_FLAGS) -o build/democli.exe ./examples/democoin/cmd/democli
 else
 	go build $(BUILD_FLAGS) -o build/basecoind ./examples/basecoin/cmd/basecoind
 	go build $(BUILD_FLAGS) -o build/basecli ./examples/basecoin/cmd/basecli
+	go build $(BUILD_FLAGS) -o build/democoind ./examples/democoin/cmd/democoind
+	go build $(BUILD_FLAGS) -o build/democli ./examples/democoin/cmd/democli
 endif
 
 dist:
@@ -74,6 +79,7 @@ test: test_unit # test_cli
 
 test_unit:
 	@rm -rf examples/basecoin/vendor/
+	@rm -rf examples/democoin/vendor/
 	@go test $(PACKAGES)
 
 test_cover:

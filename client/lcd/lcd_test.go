@@ -253,6 +253,32 @@ func TestCoinSend(t *testing.T) {
 	assert.Equal(t, int64(1), mycoins.Amount)
 }
 
+func TestIBCTransfer(t *testing.T) {
+
+	// create TX
+	resultTx := doIBCTransfer(t, port, seed)
+
+	time.Sleep(time.Second * 2) // T
+
+	// check if tx was commited
+	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	// query sender
+	res, body := request(t, port, "GET", "/accounts/"+sendAddr, nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var m auth.BaseAccount
+	err := json.Unmarshal([]byte(body), &m)
+	require.Nil(t, err)
+	coins := m.Coins
+	mycoins := coins[0]
+	assert.Equal(t, coinDenom, mycoins.Denom)
+	assert.Equal(t, coinAmount-2, mycoins.Amount)
+
+	// TODO: query ibc egress packet state
+}
+
 func TestTxs(t *testing.T) {
 
 	// TODO: re-enable once we can get txs by tag
@@ -317,7 +343,13 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	logger = log.NewFilter(logger, log.AllowError())
 	privValidatorFile := config.PrivValidatorFile()
 	privVal := tmtypes.LoadOrGenPrivValidatorFS(privValidatorFile)
-	app := bapp.NewBasecoinApp(logger, dbm.NewMemDB())
+	dbs := map[string]dbm.DB{
+		"main":    dbm.NewMemDB(),
+		"acc":     dbm.NewMemDB(),
+		"ibc":     dbm.NewMemDB(),
+		"staking": dbm.NewMemDB(),
+	}
+	app := bapp.NewBasecoinApp(logger, dbs)
 
 	genesisFile := config.GenesisFile()
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
@@ -333,9 +365,6 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 				Address: pubKey.Address(),
 				Coins:   coins,
 			},
-		},
-		"cool": map[string]string{
-			"trend": "ice-cold",
 		},
 	}
 	stateBytes, err := json.Marshal(appState)
@@ -445,4 +474,33 @@ func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctype
 	require.Nil(t, err)
 
 	return receiveAddr, resultTx
+}
+
+func doIBCTransfer(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {
+
+	// create receive address
+	kb := client.MockKeyBase()
+	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
+	require.Nil(t, err)
+	receiveAddr := receiveInfo.PubKey.Address().String()
+
+	// get the account to get the sequence
+	res, body := request(t, port, "GET", "/accounts/"+sendAddr, nil)
+	// require.Equal(t, http.StatusOK, res.StatusCode, body)
+	acc := auth.BaseAccount{}
+	err = json.Unmarshal([]byte(body), &acc)
+	require.Nil(t, err)
+	fmt.Println("BODY", body)
+	fmt.Println("ACC", acc)
+	sequence := acc.Sequence
+
+	// send
+	jsonStr := []byte(fmt.Sprintf(`{ "name":"%s", "password":"%s", "sequence":%d, "amount":[{ "denom": "%s", "amount": 1 }] }`, name, password, sequence, coinDenom))
+	res, body = request(t, port, "POST", "/ibc/testchain/"+receiveAddr+"/send", jsonStr)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err = json.Unmarshal([]byte(body), &resultTx)
+	require.Nil(t, err)
+
+	return resultTx
 }

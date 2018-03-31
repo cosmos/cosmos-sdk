@@ -9,7 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
+	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -38,6 +39,31 @@ var (
 		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
 		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
 	}
+
+	quizMsg1 = cool.QuizMsg{
+		Sender:     addr1,
+		CoolAnswer: "icecold",
+	}
+
+	quizMsg2 = cool.QuizMsg{
+		Sender:     addr1,
+		CoolAnswer: "badvibesonly",
+	}
+
+	setTrendMsg1 = cool.SetTrendMsg{
+		Sender: addr1,
+		Cool:   "icecold",
+	}
+
+	setTrendMsg2 = cool.SetTrendMsg{
+		Sender: addr1,
+		Cool:   "badvibesonly",
+	}
+
+	setTrendMsg3 = cool.SetTrendMsg{
+		Sender: addr1,
+		Cool:   "warmandkind",
+	}
 )
 
 func loggerAndDBs() (log.Logger, map[string]dbm.DB) {
@@ -51,20 +77,22 @@ func loggerAndDBs() (log.Logger, map[string]dbm.DB) {
 	return logger, dbs
 }
 
-func newBasecoinApp() *BasecoinApp {
+func newDemocoinApp() *DemocoinApp {
 	logger, dbs := loggerAndDBs()
-	return NewBasecoinApp(logger, dbs)
+	return NewDemocoinApp(logger, dbs)
 }
 
 //_______________________________________________________________________
 
 func TestMsgs(t *testing.T) {
-	bapp := newBasecoinApp()
+	bapp := newDemocoinApp()
 
 	msgs := []struct {
 		msg sdk.Msg
 	}{
 		{sendMsg},
+		{quizMsg1},
+		{setTrendMsg1},
 	}
 
 	sequences := []int64{0}
@@ -95,9 +123,9 @@ func TestMsgs(t *testing.T) {
 
 func TestGenesis(t *testing.T) {
 	logger, dbs := loggerAndDBs()
-	bapp := NewBasecoinApp(logger, dbs)
+	bapp := NewDemocoinApp(logger, dbs)
 
-	// Construct some genesis bytes to reflect basecoin/types/AppAccount
+	// Construct some genesis bytes to reflect democoin/types/AppAccount
 	pk := crypto.GenPrivKeyEd25519().PubKey()
 	addr := pk.Address()
 	coins, err := sdk.ParseCoins("77foocoin,99barcoin")
@@ -112,6 +140,9 @@ func TestGenesis(t *testing.T) {
 		"accounts": []*types.GenesisAccount{
 			types.NewGenesisAccount(acc),
 		},
+		"cool": map[string]string{
+			"trend": "ice-cold",
+		},
 	}
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
 
@@ -125,16 +156,16 @@ func TestGenesis(t *testing.T) {
 	assert.Equal(t, acc, res1)
 
 	// reload app and ensure the account is still there
-	bapp = NewBasecoinApp(logger, dbs)
+	bapp = NewDemocoinApp(logger, dbs)
 	ctx = bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 = bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
 	assert.Equal(t, acc, res1)
 }
 
 func TestSendMsgWithAccounts(t *testing.T) {
-	bapp := newBasecoinApp()
+	bapp := newDemocoinApp()
 
-	// Construct some genesis bytes to reflect basecoin/types/AppAccount
+	// Construct some genesis bytes to reflect democoin/types/AppAccount
 	// Give 77 foocoin to the first key
 	coins, err := sdk.ParseCoins("77foocoin")
 	require.Nil(t, err)
@@ -148,6 +179,9 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	genesisState := map[string]interface{}{
 		"accounts": []*types.GenesisAccount{
 			types.NewGenesisAccount(acc1),
+		},
+		"cool": map[string]string{
+			"trend": "ice-cold",
 		},
 	}
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
@@ -205,10 +239,10 @@ func TestSendMsgWithAccounts(t *testing.T) {
 }
 
 func TestQuizMsg(t *testing.T) {
-	bapp := newBasecoinApp()
+	bapp := newDemocoinApp()
 
 	// Construct genesis state
-	// Construct some genesis bytes to reflect basecoin/types/AppAccount
+	// Construct some genesis bytes to reflect democoin/types/AppAccount
 	coins := sdk.Coins{}
 	baseAcc := auth.BaseAccount{
 		Address: addr1,
@@ -220,6 +254,9 @@ func TestQuizMsg(t *testing.T) {
 	genesisState := map[string]interface{}{
 		"accounts": []*types.GenesisAccount{
 			types.NewGenesisAccount(acc1),
+		},
+		"cool": map[string]string{
+			"trend": "ice-cold",
 		},
 	}
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
@@ -235,10 +272,25 @@ func TestQuizMsg(t *testing.T) {
 	res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
 	assert.Equal(t, acc1, res1)
 
+	// Set the trend, submit a really cool quiz and check for reward
+	SignCheckDeliver(t, bapp, setTrendMsg1, 0, true)
+	SignCheckDeliver(t, bapp, quizMsg1, 1, true)
+	CheckBalance(t, bapp, "69icecold")
+	SignCheckDeliver(t, bapp, quizMsg2, 2, false) // result without reward
+	CheckBalance(t, bapp, "69icecold")
+	SignCheckDeliver(t, bapp, quizMsg1, 3, true)
+	CheckBalance(t, bapp, "138icecold")
+	SignCheckDeliver(t, bapp, setTrendMsg2, 4, true) // reset the trend
+	SignCheckDeliver(t, bapp, quizMsg1, 5, false)    // the same answer will nolonger do!
+	CheckBalance(t, bapp, "138icecold")
+	SignCheckDeliver(t, bapp, quizMsg2, 6, true) // earlier answer now relavent again
+	CheckBalance(t, bapp, "69badvibesonly,138icecold")
+	SignCheckDeliver(t, bapp, setTrendMsg3, 7, false) // expect to fail to set the trend to something which is not cool
+
 }
 
 func TestHandler(t *testing.T) {
-	bapp := newBasecoinApp()
+	bapp := newDemocoinApp()
 
 	sourceChain := "source-chain"
 	destChain := "dest-chain"
@@ -252,6 +304,9 @@ func TestHandler(t *testing.T) {
 	genesisState := map[string]interface{}{
 		"accounts": []*types.GenesisAccount{
 			types.NewGenesisAccount(acc1),
+		},
+		"cool": map[string]string{
+			"trend": "ice-cold",
 		},
 	}
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
@@ -291,7 +346,7 @@ func TestHandler(t *testing.T) {
 }
 
 // TODO describe the use of this function
-func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, expPass bool) {
+func SignCheckDeliver(t *testing.T, bapp *DemocoinApp, msg sdk.Msg, seq int64, expPass bool) {
 
 	// Sign the tx
 	tx := sdk.NewStdTx(msg, fee, []sdk.StdSignature{{
@@ -320,7 +375,7 @@ func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, e
 	//bapp.Commit()
 }
 
-func CheckBalance(t *testing.T, bapp *BasecoinApp, balExpected string) {
+func CheckBalance(t *testing.T, bapp *DemocoinApp, balExpected string) {
 	ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
 	res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr1)
 	assert.Equal(t, balExpected, fmt.Sprintf("%v", res2.GetCoins()))

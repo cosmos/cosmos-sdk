@@ -15,8 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
 )
 
 // AccountMapper(/CoinKeeper) and IBCMapper should use different StoreKey later
@@ -53,8 +51,6 @@ func makeCodec() *wire.Codec {
 		struct{ sdk.Msg }{},
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
 		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
-		oldwire.ConcreteType{cool.QuizMsg{}, msgTypeQuiz},
-		oldwire.ConcreteType{cool.SetTrendMsg{}, msgTypeSetTrend},
 		oldwire.ConcreteType{IBCTransferMsg{}, msgTypeIBCTransferMsg},
 		oldwire.ConcreteType{IBCReceiveMsg{}, msgTypeIBCReceiveMsg},
 	)

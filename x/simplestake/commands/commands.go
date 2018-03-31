@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/builder"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/simplestake"
 )
 
 const (
@@ -76,7 +76,7 @@ func (co commander) bondTxCmd(cmd *cobra.Command, args []string) error {
 	var pubKeyEd crypto.PubKeyEd25519
 	copy(pubKeyEd[:], rawPubKey)
 
-	msg := staking.NewBondMsg(from, stake, pubKeyEd.Wrap())
+	msg := simplestake.NewBondMsg(from, stake, pubKeyEd.Wrap())
 
 	return co.sendMsg(msg)
 }
@@ -87,7 +87,7 @@ func (co commander) unbondTxCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	msg := staking.NewUnbondMsg(from)
+	msg := simplestake.NewUnbondMsg(from)
 
 	return co.sendMsg(msg)
 }

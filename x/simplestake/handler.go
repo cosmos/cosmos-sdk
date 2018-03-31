@@ -1,4 +1,4 @@
-package staking
+package simplestake
 
 import (
 	abci "github.com/tendermint/abci/types"
@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// NewHandler returns a handler for "bank" type messages.
+// NewHandler returns a handler for "simplestake" type messages.
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {

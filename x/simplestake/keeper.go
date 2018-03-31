@@ -1,4 +1,4 @@
-package staking
+package simplestake
 
 import (
 	crypto "github.com/tendermint/go-crypto"
@@ -9,6 +9,8 @@ import (
 )
 
 const stakingToken = "steak"
+
+const moduleName = "simplestake"
 
 type Keeper struct {
 	ck bank.CoinKeeper

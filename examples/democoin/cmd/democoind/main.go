@@ -10,30 +10,32 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/tmlibs/cli"
-	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
+	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-// basecoindCmd is the entry point for this binary
+// democoindCmd is the entry point for this binary
 var (
-	basecoindCmd = &cobra.Command{
-		Use:   "gaiad",
+	democoindCmd = &cobra.Command{
+		Use:   "democoind",
 		Short: "Gaia Daemon (server)",
 	}
 )
 
 // defaultOptions sets up the app_options for the
 // default genesis file
-func defaultOptions(args []string) (json.RawMessage, string, cmn.HexBytes, error) {
+func defaultOptions(args []string) (json.RawMessage, error) {
 	addr, secret, err := server.GenerateCoinKey()
 	if err != nil {
-		return nil, "", nil, err
+		return nil, err
 	}
+	fmt.Println("Secret phrase to access coins:")
+	fmt.Println(secret)
+
 	opts := fmt.Sprintf(`{
       "accounts": [{
         "address": "%s",
@@ -45,23 +47,23 @@ func defaultOptions(args []string) (json.RawMessage, string, cmn.HexBytes, error
         ]
       }]
     }`, addr)
-	return json.RawMessage(opts), secret, addr, nil
+	return json.RawMessage(opts), nil
 }
 
 func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	dbMain, err := dbm.NewGoLevelDB("basecoin", filepath.Join(rootDir, "data"))
+	dbMain, err := dbm.NewGoLevelDB("democoin", filepath.Join(rootDir, "data"))
 	if err != nil {
 		return nil, err
 	}
-	dbAcc, err := dbm.NewGoLevelDB("basecoin-acc", filepath.Join(rootDir, "data"))
+	dbAcc, err := dbm.NewGoLevelDB("democoin-acc", filepath.Join(rootDir, "data"))
 	if err != nil {
 		return nil, err
 	}
-	dbIBC, err := dbm.NewGoLevelDB("basecoin-ibc", filepath.Join(rootDir, "data"))
+	dbIBC, err := dbm.NewGoLevelDB("democoin-ibc", filepath.Join(rootDir, "data"))
 	if err != nil {
 		return nil, err
 	}
-	dbStaking, err := dbm.NewGoLevelDB("basecoin-staking", filepath.Join(rootDir, "data"))
+	dbStaking, err := dbm.NewGoLevelDB("democoin-staking", filepath.Join(rootDir, "data"))
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +73,7 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 		"ibc":     dbIBC,
 		"staking": dbStaking,
 	}
-	bapp := app.NewBasecoinApp(logger, dbs)
+	bapp := app.NewDemocoinApp(logger, dbs)
 	return bapp, nil
 }
 
@@ -80,7 +82,7 @@ func main() {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
 		With("module", "main")
 
-	basecoindCmd.AddCommand(
+	democoindCmd.AddCommand(
 		server.InitCmd(defaultOptions, logger),
 		server.StartCmd(generateApp, logger),
 		server.UnsafeResetAllCmd(logger),
@@ -90,7 +92,7 @@ func main() {
 	)
 
 	// prepare and add flags
-	rootDir := os.ExpandEnv("$HOME/.basecoind")
-	executor := cli.PrepareBaseCmd(basecoindCmd, "BC", rootDir)
+	rootDir := os.ExpandEnv("$HOME/.democoind")
+	executor := cli.PrepareBaseCmd(democoindCmd, "BC", rootDir)
 	executor.Execute()
 }

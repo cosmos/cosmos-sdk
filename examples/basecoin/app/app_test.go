@@ -25,18 +25,53 @@ import (
 var (
 	chainID = "" // TODO
 
-	priv1 = crypto.GenPrivKeyEd25519()
-	addr1 = priv1.PubKey().Address()
-	addr2 = crypto.GenPrivKeyEd25519().PubKey().Address()
-	coins = sdk.Coins{{"foocoin", 10}}
-	fee   = sdk.StdFee{
+	accName = "foobart"
+
+	priv1     = crypto.GenPrivKeyEd25519()
+	addr1     = priv1.PubKey().Address()
+	priv2     = crypto.GenPrivKeyEd25519()
+	addr2     = priv2.PubKey().Address()
+	addr3     = crypto.GenPrivKeyEd25519().PubKey().Address()
+	priv4     = crypto.GenPrivKeyEd25519()
+	addr4     = priv4.PubKey().Address()
+	coins     = sdk.Coins{{"foocoin", 10}}
+	halfCoins = sdk.Coins{{"foocoin", 5}}
+	fee       = sdk.StdFee{
 		sdk.Coins{{"foocoin", 0}},
 		0,
 	}
 
-	sendMsg = bank.SendMsg{
+	sendMsg1 = bank.SendMsg{
 		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
 		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
+	}
+
+	sendMsg2 = bank.SendMsg{
+		Inputs: []bank.Input{bank.NewInput(addr1, coins)},
+		Outputs: []bank.Output{
+			bank.NewOutput(addr2, halfCoins),
+			bank.NewOutput(addr3, halfCoins),
+		},
+	}
+
+	sendMsg3 = bank.SendMsg{
+		Inputs: []bank.Input{
+			bank.NewInput(addr1, coins),
+			bank.NewInput(addr4, coins),
+		},
+		Outputs: []bank.Output{
+			bank.NewOutput(addr2, coins),
+			bank.NewOutput(addr3, coins),
+		},
+	}
+
+	sendMsg4 = bank.SendMsg{
+		Inputs: []bank.Input{
+			bank.NewInput(addr2, coins),
+		},
+		Outputs: []bank.Output{
+			bank.NewOutput(addr1, coins),
+		},
 	}
 )
 
@@ -56,6 +91,29 @@ func newBasecoinApp() *BasecoinApp {
 	return NewBasecoinApp(logger, dbs)
 }
 
+func setGenesisAccounts(bapp *BasecoinApp, accs ...auth.BaseAccount) error {
+	genaccs := make([]*types.GenesisAccount, len(accs))
+	for i, acc := range accs {
+		genaccs[i] = types.NewGenesisAccount(&types.AppAccount{acc, accName})
+	}
+
+	genesisState := types.GenesisState{
+		Accounts: genaccs,
+	}
+
+	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	// Initialize the chain
+	vals := []abci.Validator{}
+	bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
+	bapp.Commit()
+
+	return nil
+}
+
 //_______________________________________________________________________
 
 func TestMsgs(t *testing.T) {
@@ -64,32 +122,12 @@ func TestMsgs(t *testing.T) {
 	msgs := []struct {
 		msg sdk.Msg
 	}{
-		{sendMsg},
+		{sendMsg1},
 	}
 
-	sequences := []int64{0}
 	for i, m := range msgs {
-		sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, fee, m.msg))
-		tx := sdk.NewStdTx(m.msg, fee, []sdk.StdSignature{{
-			PubKey:    priv1.PubKey(),
-			Signature: sig,
-		}})
-
-		// just marshal/unmarshal!
-		cdc := MakeCodec()
-		txBytes, err := cdc.MarshalBinary(tx)
-		require.NoError(t, err, "i: %v", i)
-
-		// Run a Check
-		cres := bapp.CheckTx(txBytes)
-		assert.Equal(t, sdk.CodeUnknownAddress,
-			sdk.CodeType(cres.Code), "i: %v, log: %v", i, cres.Log)
-
-		// Simulate a Block
-		bapp.BeginBlock(abci.RequestBeginBlock{})
-		dres := bapp.DeliverTx(txBytes)
-		assert.Equal(t, sdk.CodeUnknownAddress,
-			sdk.CodeType(dres.Code), "i: %v, log: %v", i, dres.Log)
+		// Run a CheckDeliver
+		SignCheckDeliver(t, bapp, m.msg, []int64{int64(i)}, false, priv1)
 	}
 }
 
@@ -108,16 +146,8 @@ func TestGenesis(t *testing.T) {
 	}
 	acc := &types.AppAccount{baseAcc, "foobart"}
 
-	genesisState := map[string]interface{}{
-		"accounts": []*types.GenesisAccount{
-			types.NewGenesisAccount(acc),
-		},
-	}
-	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
-
-	vals := []abci.Validator{}
-	bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
-	bapp.Commit()
+	err = setGenesisAccounts(bapp, baseAcc)
+	assert.Nil(t, err)
 
 	// A checkTx context
 	ctx := bapp.BaseApp.NewContext(true, abci.Header{})
@@ -142,66 +172,124 @@ func TestSendMsgWithAccounts(t *testing.T) {
 		Address: addr1,
 		Coins:   coins,
 	}
-	acc1 := &types.AppAccount{baseAcc, "foobart"}
 
 	// Construct genesis state
-	genesisState := map[string]interface{}{
-		"accounts": []*types.GenesisAccount{
-			types.NewGenesisAccount(acc1),
-		},
-	}
-	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
-	require.Nil(t, err)
-
-	// Initialize the chain
-	vals := []abci.Validator{}
-	bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
-	bapp.Commit()
-
+	err = setGenesisAccounts(bapp, baseAcc)
+	assert.Nil(t, err)
 	// A checkTx context (true)
 	ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
-	assert.Equal(t, acc1, res1)
+	assert.Equal(t, baseAcc, res1.(*types.AppAccount).BaseAccount)
 
-	// Sign the tx
-	sequences := []int64{0}
-	sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, fee, sendMsg))
-	tx := sdk.NewStdTx(sendMsg, fee, []sdk.StdSignature{{
-		PubKey:    priv1.PubKey(),
-		Signature: sig,
-	}})
-
-	// Run a Check
-	res := bapp.Check(tx)
-	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
-
-	// Simulate a Block
-	bapp.BeginBlock(abci.RequestBeginBlock{})
-	res = bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	// Run a CheckDeliver
+	SignCheckDeliver(t, bapp, sendMsg1, []int64{0}, true, priv1)
 
 	// Check balances
-	ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
-	res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr1)
-	res3 := bapp.accountMapper.GetAccount(ctxDeliver, addr2)
-	assert.Equal(t, fmt.Sprintf("%v", res2.GetCoins()), "67foocoin")
-	assert.Equal(t, fmt.Sprintf("%v", res3.GetCoins()), "10foocoin")
+	CheckBalance(t, bapp, addr1, "67foocoin")
+	CheckBalance(t, bapp, addr2, "10foocoin")
 
 	// Delivering again should cause replay error
-	res = bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeInvalidSequence, res.Code, res.Log)
+	SignCheckDeliver(t, bapp, sendMsg1, []int64{0}, false, priv1)
 
 	// bumping the txnonce number without resigning should be an auth error
+	tx := genTx(sendMsg1, []int64{0}, priv1)
 	tx.Signatures[0].Sequence = 1
-	res = bapp.Deliver(tx)
+	res := bapp.Deliver(tx)
+
 	assert.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
 
 	// resigning the tx with the bumped sequence should work
-	sequences = []int64{1}
-	sig = priv1.Sign(sdk.StdSignBytes(chainID, sequences, fee, tx.Msg))
-	tx.Signatures[0].Signature = sig
-	res = bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	SignCheckDeliver(t, bapp, sendMsg1, []int64{1}, true, priv1)
+}
+
+func TestSendMsgMultipleOut(t *testing.T) {
+	bapp := newBasecoinApp()
+
+	genCoins, err := sdk.ParseCoins("42foocoin")
+	require.Nil(t, err)
+
+	acc1 := auth.BaseAccount{
+		Address: addr1,
+		Coins:   genCoins,
+	}
+
+	acc2 := auth.BaseAccount{
+		Address: addr2,
+		Coins:   genCoins,
+	}
+
+	err = setGenesisAccounts(bapp, acc1, acc2)
+	assert.Nil(t, err)
+
+	// Simulate a Block
+	SignCheckDeliver(t, bapp, sendMsg2, []int64{0}, true, priv1)
+
+	// Check balances
+	CheckBalance(t, bapp, addr1, "32foocoin")
+	CheckBalance(t, bapp, addr2, "47foocoin")
+	CheckBalance(t, bapp, addr3, "5foocoin")
+}
+
+func TestSengMsgMultipleInOut(t *testing.T) {
+	bapp := newBasecoinApp()
+
+	genCoins, err := sdk.ParseCoins("42foocoin")
+	require.Nil(t, err)
+
+	acc1 := auth.BaseAccount{
+		Address: addr1,
+		Coins:   genCoins,
+	}
+
+	acc2 := auth.BaseAccount{
+		Address: addr2,
+		Coins:   genCoins,
+	}
+
+	acc4 := auth.BaseAccount{
+		Address: addr4,
+		Coins:   genCoins,
+	}
+
+	err = setGenesisAccounts(bapp, acc1, acc2, acc4)
+	assert.Nil(t, err)
+
+	// CheckDeliver
+	SignCheckDeliver(t, bapp, sendMsg3, []int64{0, 0}, true, priv1, priv4)
+
+	// Check balances
+	CheckBalance(t, bapp, addr1, "32foocoin")
+	CheckBalance(t, bapp, addr4, "32foocoin")
+	CheckBalance(t, bapp, addr2, "52foocoin")
+	CheckBalance(t, bapp, addr3, "10foocoin")
+}
+
+func TestSendMsgDependent(t *testing.T) {
+	bapp := newBasecoinApp()
+
+	genCoins, err := sdk.ParseCoins("42foocoin")
+	require.Nil(t, err)
+
+	acc1 := auth.BaseAccount{
+		Address: addr1,
+		Coins:   genCoins,
+	}
+
+	err = setGenesisAccounts(bapp, acc1)
+	assert.Nil(t, err)
+
+	// CheckDeliver
+	SignCheckDeliver(t, bapp, sendMsg1, []int64{0}, true, priv1)
+
+	// Check balances
+	CheckBalance(t, bapp, addr1, "32foocoin")
+	CheckBalance(t, bapp, addr2, "10foocoin")
+
+	// Simulate a Block
+	SignCheckDeliver(t, bapp, sendMsg4, []int64{0}, true, priv2)
+
+	// Check balances
+	CheckBalance(t, bapp, addr1, "42foocoin")
 }
 
 func TestQuizMsg(t *testing.T) {
@@ -237,28 +325,20 @@ func TestQuizMsg(t *testing.T) {
 
 }
 
-func TestHandler(t *testing.T) {
+func TestIBCMsgs(t *testing.T) {
 	bapp := newBasecoinApp()
 
 	sourceChain := "source-chain"
 	destChain := "dest-chain"
 
-	vals := []abci.Validator{}
 	baseAcc := auth.BaseAccount{
 		Address: addr1,
 		Coins:   coins,
 	}
 	acc1 := &types.AppAccount{baseAcc, "foobart"}
-	genesisState := map[string]interface{}{
-		"accounts": []*types.GenesisAccount{
-			types.NewGenesisAccount(acc1),
-		},
-	}
-	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
-	require.Nil(t, err)
-	bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
-	bapp.Commit()
 
+	err := setGenesisAccounts(bapp, baseAcc)
+	assert.Nil(t, err)
 	// A checkTx context (true)
 	ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
@@ -282,24 +362,32 @@ func TestHandler(t *testing.T) {
 		Sequence:  0,
 	}
 
-	SignCheckDeliver(t, bapp, transferMsg, 0, true)
-	CheckBalance(t, bapp, "")
-	SignCheckDeliver(t, bapp, transferMsg, 1, false)
-	SignCheckDeliver(t, bapp, receiveMsg, 2, true)
-	CheckBalance(t, bapp, "10foocoin")
-	SignCheckDeliver(t, bapp, receiveMsg, 3, false)
+	SignCheckDeliver(t, bapp, transferMsg, []int64{0}, true, priv1)
+	CheckBalance(t, bapp, addr1, "")
+	SignCheckDeliver(t, bapp, transferMsg, []int64{1}, false, priv1)
+	SignCheckDeliver(t, bapp, receiveMsg, []int64{2}, true, priv1)
+	CheckBalance(t, bapp, addr1, "10foocoin")
+	SignCheckDeliver(t, bapp, receiveMsg, []int64{3}, false, priv1)
 }
 
-// TODO describe the use of this function
-func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, expPass bool) {
+func genTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.StdTx {
+	sigs := make([]sdk.StdSignature, len(priv))
+	for i, p := range priv {
+		sigs[i] = sdk.StdSignature{
+			PubKey:    p.PubKey(),
+			Signature: p.Sign(sdk.StdSignBytes(chainID, seq, fee, msg)),
+			Sequence:  seq[i],
+		}
+	}
+
+	return sdk.NewStdTx(msg, fee, sigs)
+
+}
+
+func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
 
 	// Sign the tx
-	tx := sdk.NewStdTx(msg, fee, []sdk.StdSignature{{
-		PubKey:    priv1.PubKey(),
-		Signature: priv1.Sign(sdk.StdSignBytes(chainID, []int64{seq}, fee, msg)),
-		Sequence:  seq,
-	}})
-
+	tx := genTx(msg, seq, priv...)
 	// Run a Check
 	res := bapp.Check(tx)
 	if expPass {
@@ -320,8 +408,8 @@ func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq int64, e
 	//bapp.Commit()
 }
 
-func CheckBalance(t *testing.T, bapp *BasecoinApp, balExpected string) {
+func CheckBalance(t *testing.T, bapp *BasecoinApp, addr sdk.Address, balExpected string) {
 	ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
-	res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr1)
+	res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr)
 	assert.Equal(t, balExpected, fmt.Sprintf("%v", res2.GetCoins()))
 }

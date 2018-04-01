@@ -111,6 +111,14 @@ type KVStore interface {
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	ReverseIterator(start, end []byte) Iterator
 
+	// Iterator over all the keys with a certain prefix in ascending order.
+	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+	Subspace(prefix []byte) Iterator
+
+	// Iterator over all the keys with a certain prefix in descending order.
+	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+	ReverseSubspace(prefix []byte) Iterator
+
 	// TODO Not yet implemented.
 	// CreateSubKVStore(key *storeKey) (KVStore, error)
 
@@ -221,4 +229,29 @@ func (key *KVStoreKey) Name() string {
 
 func (key *KVStoreKey) String() string {
 	return fmt.Sprintf("KVStoreKey{%p, %s}", key, key.name)
+}
+
+// TODO: Move to TmLibs
+func PrefixEndBytes(prefix []byte) []byte {
+	if prefix == nil {
+		return nil
+	}
+
+	end := make([]byte, len(prefix))
+	copy(end, prefix)
+	finished := false
+
+	for !finished {
+		if end[len(end)-1] != byte(255) {
+			end[len(end)-1]++
+			finished = true
+		} else {
+			end = end[:len(end)-1]
+			if len(end) == 0 {
+				end = nil
+				finished = true
+			}
+		}
+	}
+	return end
 }

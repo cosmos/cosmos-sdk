@@ -198,6 +198,65 @@ func TestIAVLSubspace(t *testing.T) {
 	assert.Equal(t, len(expected), i)
 }
 
+func TestIAVLReverseSubspace(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree, _ := newTree(t, db)
+	iavlStore := newIAVLStore(tree, numHistory)
+
+	iavlStore.Set([]byte("test1"), []byte("test1"))
+	iavlStore.Set([]byte("test2"), []byte("test2"))
+	iavlStore.Set([]byte("test3"), []byte("test3"))
+	iavlStore.Set([]byte{byte(55), byte(255), byte(255), byte(0)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(55), byte(255), byte(255), byte(1)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(55), byte(255), byte(255), byte(255)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(255), byte(255), byte(0)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(255), byte(255), byte(1)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(255), byte(255), byte(255)}, []byte("test4"))
+
+	i := 0
+
+	iter := iavlStore.ReverseSubspace([]byte("test"))
+	expected := []string{"test3", "test2", "test1"}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, expectedKey)
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
+
+	iter = iavlStore.ReverseSubspace([]byte{byte(55), byte(255), byte(255)})
+	expected2 := [][]byte{
+		[]byte{byte(55), byte(255), byte(255), byte(255)},
+		[]byte{byte(55), byte(255), byte(255), byte(1)},
+		[]byte{byte(55), byte(255), byte(255), byte(0)},
+	}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected2[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, []byte("test4"))
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
+
+	iter = iavlStore.ReverseSubspace([]byte{byte(255), byte(255)})
+	expected2 = [][]byte{
+		[]byte{byte(255), byte(255), byte(255)},
+		[]byte{byte(255), byte(255), byte(1)},
+		[]byte{byte(255), byte(255), byte(0)},
+	}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected2[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, []byte("test4"))
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
+}
+
 func TestIAVLStoreQuery(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree := iavl.NewVersionedTree(db, cacheSize)

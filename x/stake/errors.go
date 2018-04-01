@@ -5,113 +5,141 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	cmn "github.com/tendermint/tmlibs/common"
 )
-
-type CodeType = sdk.CodeType
-
-const (
-	// Gaia errors reserve 200 ~ 299.
-	CodeInvalidValidator CodeType = 201
-	CodeInvalidCandidate CodeType = 202
-	CodeInvalidBond      CodeType = 203
-	CodeInvalidInput     CodeType = 204
-	CodeUnauthorized     CodeType = sdk.CodeUnauthorized
-	CodeInternal         CodeType = sdk.CodeInternal
-	CodeUnknownRequest   CodeType = sdk.CodeUnknownRequest
-)
-
-// NOTE: Don't stringer this, we'll put better messages in later.
-func codeToDefaultMsg(code CodeType) string {
-	switch code {
-	case CodeInvalidValidator:
-		return "Invalid Validator"
-	case CodeInvalidCandidate:
-		return "Invalid Candidate"
-	case CodeInvalidBond:
-		return "Invalid Bond"
-	case CodeInvalidInput:
-		return "Invalid Input"
-	case CodeUnauthorized:
-		return "Unauthorized"
-	case CodeInternal:
-		return "Internal Error"
-	case CodeUnknownRequest:
-		return "Unknown request"
-	default:
-		return sdk.CodeToDefaultMsg(code)
-	}
-}
 
 //----------------------------------------
 // Error constructors
 
+func ErrNoDescription() sdk.Error {
+	return sdk.ErrGeneric("description must be included", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_INPUT")},
+	})
+}
+
 func ErrNotEnoughBondShares(shares string) sdk.Error {
-	return newError(CodeInvalidBond, fmt.Sprintf("not enough shares only have %v", shares))
+	return sdk.ErrGeneric(fmt.Sprintf("not enough shares only have %v", shares), []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_BOND")},
+	})
 }
+
 func ErrCandidateEmpty() sdk.Error {
-	return newError(CodeInvalidValidator, "Cannot bond to an empty candidate")
+	return sdk.ErrGeneric("Cannot bond to an empty candidate", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_VALIDATOR")},
+	})
 }
+
 func ErrBadBondingDenom() sdk.Error {
-	return newError(CodeInvalidBond, "Invalid coin denomination")
+	return sdk.ErrGeneric("Invalid coin denomination", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_BOND")},
+	})
 }
+
 func ErrBadBondingAmount() sdk.Error {
-	return newError(CodeInvalidBond, "Amount must be > 0")
+	return sdk.ErrGeneric("Amount must be > 0", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_BOND")},
+	})
 }
+
 func ErrNoBondingAcct() sdk.Error {
-	return newError(CodeInvalidValidator, "No bond account for this (address, validator) pair")
+	return sdk.ErrGeneric("No bond account for this (address, validator) pair", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_VALIDATOR")},
+	})
 }
+
 func ErrCommissionNegative() sdk.Error {
-	return newError(CodeInvalidValidator, "Commission must be positive")
+	return sdk.ErrGeneric("Commission must be positive", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_VALIDATOR")},
+	})
 }
+
 func ErrCommissionHuge() sdk.Error {
-	return newError(CodeInvalidValidator, "Commission cannot be more than 100%")
+	return sdk.ErrGeneric("Commission cannot be more than 100%", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_VALIDATOR")},
+	})
 }
+
 func ErrBadValidatorAddr() sdk.Error {
-	return newError(CodeInvalidValidator, "Validator does not exist for that address")
+	return sdk.ErrGeneric("Validator does not exist for that address", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_VALIDATOR")},
+	})
 }
+
 func ErrBadCandidateAddr() sdk.Error {
-	return newError(CodeInvalidValidator, "Candidate does not exist for that address")
+	return sdk.ErrGeneric("Candidate does not exist for that address", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_VALIDATOR")},
+	})
 }
+
 func ErrBadDelegatorAddr() sdk.Error {
-	return newError(CodeInvalidValidator, "Delegator does not exist for that address")
+	return sdk.ErrGeneric("Delegator does not exist for that address", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_VALIDATOR")},
+	})
 }
+
 func ErrCandidateExistsAddr() sdk.Error {
-	return newError(CodeInvalidValidator, "Candidate already exist, cannot re-declare candidacy")
+	return sdk.ErrGeneric("Candidate already exists, cannot re-declare candidacy", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_VALIDATOR")},
+	})
 }
+
 func ErrMissingSignature() sdk.Error {
-	return newError(CodeInvalidValidator, "Missing signature")
+	return sdk.ErrGeneric("Missing signature", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_VALIDATOR")},
+	})
 }
+
 func ErrBondNotNominated() sdk.Error {
-	return newError(CodeInvalidValidator, "Cannot bond to non-nominated account")
+	return sdk.ErrGeneric("Cannot bond to non-nominated account", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_VALIDATOR")},
+	})
 }
+
 func ErrNoCandidateForAddress() sdk.Error {
-	return newError(CodeInvalidValidator, "Validator does not exist for that address")
+	return sdk.ErrGeneric("Validator does not exist for that address", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_VALIDATOR")},
+	})
 }
+
 func ErrNoDelegatorForAddress() sdk.Error {
-	return newError(CodeInvalidValidator, "Delegator does not contain validator bond")
+	return sdk.ErrGeneric("Delegator does not contain validator bond", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_VALIDATOR")},
+	})
 }
+
 func ErrInsufficientFunds() sdk.Error {
-	return newError(CodeInvalidInput, "Insufficient bond shares")
+	return sdk.ErrGeneric("Insufficient bond shares", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_INPUT")},
+	})
 }
+
 func ErrBadShares() sdk.Error {
-	return newError(CodeInvalidInput, "bad shares provided as input, must be MAX or decimal")
+	return sdk.ErrGeneric("bad shares provided as input, must be MAX or decimal", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_INPUT")},
+	})
 }
+
 func ErrBadRemoveValidator() sdk.Error {
-	return newError(CodeInvalidValidator, "Error removing validator")
-}
-
-//----------------------------------------
-
-// TODO group with code from x/bank/errors.go
-
-func msgOrDefaultMsg(msg string, code CodeType) string {
-	if msg != "" {
-		return msg
-	}
-	return codeToDefaultMsg(code)
-}
-
-func newError(code CodeType, msg string) sdk.Error {
-	msg = msgOrDefaultMsg(msg, code)
-	return sdk.NewError(code, msg)
+	return sdk.ErrGeneric("Error removing validator", []cmn.KVPair{
+		cmn.KVPair{[]byte("module"), []byte("stake")},
+		cmn.KVPair{[]byte("cause"), []byte("INVALID_VALIDATOR")},
+	})
 }

@@ -27,7 +27,7 @@ var (
 
 // This function tests GetCandidate, GetCandidates, setCandidate, removeCandidate
 func TestCandidate(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 
 	//construct the candidates
 	var candidates [3]Candidate
@@ -97,7 +97,7 @@ func TestCandidate(t *testing.T) {
 
 // tests GetDelegatorBond, GetDelegatorBonds, SetDelegatorBond, removeDelegatorBond
 func TestBond(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 
 	//construct the candidates
 	amts := []int64{9, 8, 7}
@@ -196,7 +196,7 @@ func TestBond(t *testing.T) {
 // TODO integrate in testing for equal validators, whichever one was a validator
 // first remains the validator https://github.com/cosmos/cosmos-sdk/issues/582
 func TestGetValidators(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 
 	// initialize some candidates into the state
 	amts := []int64{0, 100, 1, 400, 200}
@@ -269,7 +269,7 @@ func TestGetValidators(t *testing.T) {
 
 // clear the tracked changes to the validator set
 func TestClearAccUpdateValidators(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 
 	amts := []int64{100, 400, 200}
 	candidates := make([]Candidate, len(amts))
@@ -294,7 +294,7 @@ func TestClearAccUpdateValidators(t *testing.T) {
 
 // test the mechanism which keeps track of a validator set change
 func TestGetAccUpdateValidators(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 	params := defaultParams()
 	params.MaxValidators = 4
 	keeper.setParams(ctx, params)
@@ -506,7 +506,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 
 // test if is a validator from the last update
 func TestIsRecentValidator(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 
 	amts := []int64{9, 8, 7, 10, 6}
 	var candidatesIn [5]Candidate
@@ -546,7 +546,7 @@ func TestIsRecentValidator(t *testing.T) {
 }
 
 func TestParams(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 	expParams := defaultParams()
 
 	//check that the empty keeper loads the default
@@ -561,7 +561,7 @@ func TestParams(t *testing.T) {
 }
 
 func TestPool(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 	expPool := initialPool()
 
 	//check that the empty keeper loads the default

@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
@@ -15,10 +14,6 @@ import (
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/p2p"
 	tmtypes "github.com/tendermint/tendermint/types"
-)
-
-const (
-	flagTestnet = "testnet"
 )
 
 type testnetInformation struct {
@@ -43,11 +38,10 @@ func InitCmd(gen GenAppState, logger log.Logger) *cobra.Command {
 		Short: "Initialize genesis files",
 		RunE:  cmd.run,
 	}
-	cobraCmd.Flags().Bool(flagTestnet, false, "Output testnet information in JSON")
 	return &cobraCmd
 }
 
-// GenAppState can parse command-line and flag to
+// GenAppState can parse command-line to
 // generate default app_state for the genesis file.
 // Also must return generated seed and address
 // This is application-specific
@@ -61,10 +55,6 @@ type initCmd struct {
 func (c initCmd) run(cmd *cobra.Command, args []string) error {
 	// Store testnet information as we go
 	var testnetInfo testnetInformation
-
-	if viper.GetBool(flagTestnet) {
-		c.logger = log.NewFilter(c.logger, log.AllowError())
-	}
 
 	// Run the basic tendermint initialization,
 	// set up a default genesis with no app_options
@@ -97,18 +87,16 @@ func (c initCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if viper.GetBool(flagTestnet) {
-		nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
-		if err != nil {
-			return err
-		}
-		testnetInfo.NodeID = nodeKey.ID()
-		out, err := json.MarshalIndent(testnetInfo, "", "  ")
-		if err != nil {
-			return err
-		}
-		fmt.Println(string(out))
+	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+	if err != nil {
+		return err
 	}
+	testnetInfo.NodeID = nodeKey.ID()
+	out, err := json.MarshalIndent(testnetInfo, "", "  ")
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(out))
 	return nil
 }
 

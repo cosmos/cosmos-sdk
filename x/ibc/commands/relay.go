@@ -86,22 +86,21 @@ func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode 
 	}
 
 	ingressKey := ibc.IngressSequenceKey(fromChainID)
-
-	processedbz, err := query(toChainNode, ingressKey, c.ibcStore)
-	if err != nil {
-		panic(err)
-	}
-
-	var processed int64
-	if processedbz == nil {
-		processed = 0
-	} else if err = c.cdc.UnmarshalBinary(processedbz, &processed); err != nil {
-		panic(err)
-	}
-
 OUTER:
 	for {
-		time.Sleep(time.Second)
+		time.Sleep(5 * time.Second)
+
+		processedbz, err := query(toChainNode, ingressKey, c.ibcStore)
+		if err != nil {
+			panic(err)
+		}
+
+		var processed int64
+		if processedbz == nil {
+			processed = 0
+		} else if err = c.cdc.UnmarshalBinary(processedbz, &processed); err != nil {
+			panic(err)
+		}
 
 		lengthKey := ibc.EgressLengthKey(toChainID)
 		egressLengthbz, err := query(fromChainNode, lengthKey, c.ibcStore)
@@ -115,7 +114,9 @@ OUTER:
 		} else if err = c.cdc.UnmarshalBinary(egressLengthbz, &egressLength); err != nil {
 			panic(err)
 		}
-		fmt.Printf("egressLength queried: %d\n", egressLength)
+		if egressLength > processed {
+			fmt.Printf("IBC packet #%d detected\n", egressLength-1)
+		}
 
 		for i := processed; i < egressLength; i++ {
 			egressbz, err := query(fromChainNode, ibc.EgressKey(toChainID, i), c.ibcStore)
@@ -130,7 +131,7 @@ OUTER:
 				continue OUTER
 			}
 
-			fmt.Printf("Relayed packet: %d\n", i)
+			fmt.Printf("Relayed IBC packet #%d\n", i)
 		}
 
 		processed = egressLength
@@ -148,7 +149,7 @@ func query(node string, key []byte, storeName string) (res []byte, err error) {
 func (c relayCommander) broadcastTx(node string, tx []byte) error {
 	orig := viper.GetString(client.FlagNode)
 	viper.Set(client.FlagNode, node)
-	seq := c.getSequence(node) + 1
+	seq := c.getSequence(node)
 	viper.Set(client.FlagSequence, seq)
 	_, err := builder.BroadcastTx(tx)
 	viper.Set(client.FlagNode, orig)
@@ -160,6 +161,7 @@ func (c relayCommander) getSequence(node string) int64 {
 	if err != nil {
 		panic(err)
 	}
+
 	account, err := c.decoder(res)
 	if err != nil {
 		panic(err)

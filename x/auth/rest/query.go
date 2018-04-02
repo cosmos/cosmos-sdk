@@ -16,7 +16,7 @@ import (
 type commander struct {
 	storeName string
 	cdc       *wire.Codec
-	decoder    sdk.AccountDecoder
+	decoder   sdk.AccountDecoder
 }
 
 func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, decoder sdk.AccountDecoder) func(http.ResponseWriter, *http.Request) {

@@ -73,6 +73,28 @@ func GetCheckPassword(prompt, prompt2 string, buf *bufio.Reader) (string, error)
 	return pass, nil
 }
 
+// GetConfirmation will request user give the confirmation from stdin.
+// "y", "Y", "yes", "YES", and "Yes" all count as confirmations.
+// If the input is not recognized, it will ask again.
+func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
+	for {
+		if inputIsTty() {
+			fmt.Print(fmt.Sprintf("%s [y/n]:", prompt))
+		}
+		response, err := readLineFromBuf(buf)
+		if err != nil {
+			return false, err
+		}
+
+		response = strings.ToLower(strings.TrimSpace(response))
+		if response == "y" || response == "yes" {
+			return true, nil
+		} else if response == "n" || response == "no" {
+			return false, nil
+		}
+	}
+}
+
 // inputIsTty returns true iff we have an interactive prompt,
 // where we can disable echo and request to repeat the password.
 // If false, we can optimize for piped input from another command

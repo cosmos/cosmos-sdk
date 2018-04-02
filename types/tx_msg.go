@@ -91,6 +91,7 @@ func NewStdFee(gas int64, amount ...Coin) StdFee {
 	}
 }
 
+// fee bytes for signing later
 func (fee StdFee) Bytes() []byte {
 	// normalize. XXX
 	// this is a sign of something ugly
@@ -147,6 +148,7 @@ type StdSignMsg struct {
 	// XXX: Alt
 }
 
+// get message bytes
 func (msg StdSignMsg) Bytes() []byte {
 	return StdSignBytes(msg.ChainID, msg.Sequences, msg.Fee, msg.Msg)
 }
@@ -171,6 +173,7 @@ func NewTestMsg(addrs ...Address) *TestMsg {
 	}
 }
 
+//nolint
 func (msg *TestMsg) Type() string                            { return "TestMsg" }
 func (msg *TestMsg) Get(key interface{}) (value interface{}) { return nil }
 func (msg *TestMsg) GetSignBytes() []byte {

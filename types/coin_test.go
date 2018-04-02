@@ -6,6 +6,144 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestIsPositiveCoin(t *testing.T) {
+	assert := assert.New(t)
+
+	cases := []struct {
+		inputOne Coin
+		expected bool
+	}{
+		{Coin{"A", 1}, true},
+		{Coin{"A", 0}, false},
+		{Coin{"a", -1}, false},
+	}
+
+	for _, tc := range cases {
+		res := tc.inputOne.IsPositive()
+		assert.Equal(tc.expected, res)
+	}
+}
+
+func TestIsNotNegativeCoin(t *testing.T) {
+	assert := assert.New(t)
+
+	cases := []struct {
+		inputOne Coin
+		expected bool
+	}{
+		{Coin{"A", 1}, true},
+		{Coin{"A", 0}, true},
+		{Coin{"a", -1}, false},
+	}
+
+	for _, tc := range cases {
+		res := tc.inputOne.IsNotNegative()
+		assert.Equal(tc.expected, res)
+	}
+}
+
+func TestSameDenomAsCoin(t *testing.T) {
+	assert := assert.New(t)
+
+	cases := []struct {
+		inputOne Coin
+		inputTwo Coin
+		expected bool
+	}{
+		{Coin{"A", 1}, Coin{"A", 1}, true},
+		{Coin{"A", 1}, Coin{"a", 1}, false},
+		{Coin{"a", 1}, Coin{"b", 1}, false},
+		{Coin{"steak", 1}, Coin{"steak", 10}, true},
+		{Coin{"steak", -11}, Coin{"steak", 10}, true},
+	}
+
+	for _, tc := range cases {
+		res := tc.inputOne.SameDenomAs(tc.inputTwo)
+		assert.Equal(tc.expected, res)
+	}
+}
+
+func TestIsGTECoin(t *testing.T) {
+	assert := assert.New(t)
+
+	cases := []struct {
+		inputOne Coin
+		inputTwo Coin
+		expected bool
+	}{
+		{Coin{"A", 1}, Coin{"A", 1}, true},
+		{Coin{"A", 2}, Coin{"A", 1}, true},
+		{Coin{"A", -1}, Coin{"A", 5}, false},
+		{Coin{"a", 1}, Coin{"b", 1}, false},
+	}
+
+	for _, tc := range cases {
+		res := tc.inputOne.IsGTE(tc.inputTwo)
+		assert.Equal(tc.expected, res)
+	}
+}
+
+func TestIsEqualCoin(t *testing.T) {
+	assert := assert.New(t)
+
+	cases := []struct {
+		inputOne Coin
+		inputTwo Coin
+		expected bool
+	}{
+		{Coin{"A", 1}, Coin{"A", 1}, true},
+		{Coin{"A", 1}, Coin{"a", 1}, false},
+		{Coin{"a", 1}, Coin{"b", 1}, false},
+		{Coin{"steak", 1}, Coin{"steak", 10}, false},
+		{Coin{"steak", -11}, Coin{"steak", 10}, false},
+	}
+
+	for _, tc := range cases {
+		res := tc.inputOne.IsEqual(tc.inputTwo)
+		assert.Equal(tc.expected, res)
+	}
+}
+
+func TestPlusCoin(t *testing.T) {
+	assert := assert.New(t)
+
+	cases := []struct {
+		inputOne Coin
+		inputTwo Coin
+		expected Coin
+	}{
+		{Coin{"A", 1}, Coin{"A", 1}, Coin{"A", 2}},
+		{Coin{"A", 1}, Coin{"B", 1}, Coin{"A", 1}},
+		{Coin{"asdf", -4}, Coin{"asdf", 5}, Coin{"asdf", 1}},
+		{Coin{"asdf", -1}, Coin{"asdf", 1}, Coin{"asdf", 0}},
+	}
+
+	for _, tc := range cases {
+		res := tc.inputOne.Plus(tc.inputTwo)
+		assert.Equal(tc.expected, res)
+	}
+}
+
+func TestMinusCoin(t *testing.T) {
+	assert := assert.New(t)
+
+	cases := []struct {
+		inputOne Coin
+		inputTwo Coin
+		expected Coin
+	}{
+		{Coin{"A", 1}, Coin{"A", 1}, Coin{"A", 0}},
+		{Coin{"A", 1}, Coin{"B", 1}, Coin{"A", 1}},
+		{Coin{"asdf", -4}, Coin{"asdf", 5}, Coin{"asdf", -9}},
+		{Coin{"asdf", 10}, Coin{"asdf", 1}, Coin{"asdf", 9}},
+	}
+
+	for _, tc := range cases {
+		res := tc.inputOne.Minus(tc.inputTwo)
+		assert.Equal(tc.expected, res)
+	}
+}
+
 func TestCoins(t *testing.T) {
 
 	//Define the coins to be used in tests

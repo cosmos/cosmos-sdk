@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.13.0 (April 2, 2018)
+
+BREAKING CHANGES
+
+* [basecoin] Remove cool/sketchy modules -> moved to new `democoin`
+* [basecoin] NewBasecoinApp takes a `map[string]dbm.DB` as temporary measure
+  to allow mounting multiple stores with their own DB until they can share one
+* [staking] Renamed to `simplestake`
+* [builder] Functions don't take `passphrase` as argument
+* [server] GenAppState returns generated seed and address
+* [basecoind] `init` command outputs JSON of everything necessary for testnet
+* [basecoind] `basecoin.db -> data/basecoin.db`
+* [basecli] `data/keys.db -> keys/keys.db`
+
+FEATURES
+
+* [types] `Coin` supports direct arithmetic operations
+* [basecoind] Add `show_validator` and `show_node_id` commands
+* [staking] Initial merge of full staking module!
+* [democoin] New example application to demo custom modules
+
+IMPROVEMENTS
+
+* [makefile] `make install`
+* [testing] Use `/tmp` for directories so they don't get left in the repo
+
+BUG FIXES
+
+* [basecoin] Allow app to be restarted
+* [makefile] Fix build on Windows
+* [basecli] Get confirmation before overriding key with same name
+
 ## 0.12.0 (March 27 2018)
 
 BREAKING CHANGES
@@ -26,7 +58,7 @@ FEATURES
 * [types] StdFee, and StdTx takes the StdFee
 * [specs] Progression of MVPs for IBC
 * [x/ibc] Initial shell of IBC functionality (no proofs)
-* [x/staking] Simple staking module with bonding/unbonding
+* [x/simplestake] Simple staking module with bonding/unbonding
 
 IMPROVEMENTS
 

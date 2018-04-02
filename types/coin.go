@@ -19,6 +19,11 @@ func (coin Coin) String() string {
 	return fmt.Sprintf("%v%v", coin.Amount, coin.Denom)
 }
 
+// SameDenomAs returns true if the two coins are the same denom
+func (coin Coin) SameDenomAs(other Coin) bool {
+	return (coin.Denom == other.Denom)
+}
+
 // IsZero returns if this represents no money
 func (coin Coin) IsZero() bool {
 	return coin.Amount == 0
@@ -27,8 +32,38 @@ func (coin Coin) IsZero() bool {
 // IsGTE returns true if they are the same type and the receiver is
 // an equal or greater value
 func (coin Coin) IsGTE(other Coin) bool {
-	return (coin.Denom == other.Denom) &&
-		(coin.Amount >= other.Amount)
+	return coin.SameDenomAs(other) && (coin.Amount >= other.Amount)
+}
+
+// IsEqual returns true if the two sets of Coins have the same value
+func (coin Coin) IsEqual(other Coin) bool {
+	return coin.SameDenomAs(other) && (coin.Amount == other.Amount)
+}
+
+// IsPositive returns true if coin amount is positive
+func (coin Coin) IsPositive() bool {
+	return (coin.Amount > 0)
+}
+
+// IsNotNegative returns true if coin amount is not negative
+func (coin Coin) IsNotNegative() bool {
+	return (coin.Amount >= 0)
+}
+
+// Adds amounts of two coins with same denom
+func (coin Coin) Plus(coinB Coin) Coin {
+	if !coin.SameDenomAs(coinB) {
+		return coin
+	}
+	return Coin{coin.Denom, coin.Amount + coinB.Amount}
+}
+
+// Subtracts amounts of two coins with same denom
+func (coin Coin) Minus(coinB Coin) Coin {
+	if !coin.SameDenomAs(coinB) {
+		return coin
+	}
+	return Coin{coin.Denom, coin.Amount - coinB.Amount}
 }
 
 //----------------------------------------
@@ -55,14 +90,14 @@ func (coins Coins) IsValid() bool {
 	case 0:
 		return true
 	case 1:
-		return coins[0].Amount != 0
+		return !coins[0].IsZero()
 	default:
 		lowDenom := coins[0].Denom
 		for _, coin := range coins[1:] {
 			if coin.Denom <= lowDenom {
 				return false
 			}
-			if coin.Amount == 0 {
+			if coin.IsZero() {
 				return false
 			}
 			// we compare each coin against the last denom
@@ -96,10 +131,7 @@ func (coins Coins) Plus(coinsB Coins) Coins {
 			if coinA.Amount+coinB.Amount == 0 {
 				// ignore 0 sum coin type
 			} else {
-				sum = append(sum, Coin{
-					Denom:  coinA.Denom,
-					Amount: coinA.Amount + coinB.Amount,
-				})
+				sum = append(sum, coinA.Plus(coinB))
 			}
 			indexA++
 			indexB++
@@ -168,8 +200,8 @@ func (coins Coins) IsPositive() bool {
 	if len(coins) == 0 {
 		return false
 	}
-	for _, coinAmount := range coins {
-		if coinAmount.Amount <= 0 {
+	for _, coin := range coins {
+		if !coin.IsPositive() {
 			return false
 		}
 	}
@@ -182,8 +214,8 @@ func (coins Coins) IsNotNegative() bool {
 	if len(coins) == 0 {
 		return true
 	}
-	for _, coinAmount := range coins {
-		if coinAmount.Amount < 0 {
+	for _, coin := range coins {
+		if !coin.IsNotNegative() {
 			return false
 		}
 	}

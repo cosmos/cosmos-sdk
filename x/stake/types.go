@@ -16,19 +16,6 @@ type Params struct {
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
 }
 
-// XXX do we want to allow for default params even or do we want to enforce that you
-// need to be explicit about defining all params in genesis?
-func defaultParams() Params {
-	return Params{
-		InflationRateChange: sdk.NewRat(13, 100),
-		InflationMax:        sdk.NewRat(20, 100),
-		InflationMin:        sdk.NewRat(7, 100),
-		GoalBonded:          sdk.NewRat(67, 100),
-		MaxValidators:       100,
-		BondDenom:           "fermion",
-	}
-}
-
 //_________________________________________________________________________
 
 // Pool - dynamic parameters of the current state
@@ -42,16 +29,11 @@ type Pool struct {
 	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
 }
 
-func initialPool() Pool {
-	return Pool{
-		TotalSupply:       0,
-		BondedShares:      sdk.ZeroRat,
-		UnbondedShares:    sdk.ZeroRat,
-		BondedPool:        0,
-		UnbondedPool:      0,
-		InflationLastTime: 0,
-		Inflation:         sdk.NewRat(7, 100),
-	}
+// GenesisState - all staking state that must be provided at genesis
+
+type GenesisState struct {
+	Pool   Pool   `json:"pool"`
+	Params Params `json:"params"`
 }
 
 //_______________________________________________________________________________________________________

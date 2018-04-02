@@ -444,7 +444,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	assert.Equal(t, 4, len(keeper.GetValidators(ctx)))
 	require.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx))) // max validator number is 4
 
-	// test candidate change its power and become a validator(pushing out an existing)
+	// test candidate change its power and become a validator (pushing out an existing)
 	//  candidate set: {c0, c1, c2, c3, c4} -> {c0, c1, c2, c3, c4}
 	//  validator set: {c0, c1, c2, c3}     -> {c1, c2, c3, c4}
 	//  accUpdate set: {}     -> {c0, c4}
@@ -460,37 +460,47 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	require.Equal(t, 5, len(candidates))
 	vals = keeper.GetValidators(ctx)
 	require.Equal(t, 4, len(vals))
+	assert.Equal(t, candidatesIn[1].Address, vals[1].Address)
+	assert.Equal(t, candidatesIn[2].Address, vals[3].Address)
+	assert.Equal(t, candidatesIn[3].Address, vals[2].Address)
+	assert.Equal(t, candidatesIn[4].Address, vals[0].Address)
+
 	acc = keeper.getAccUpdateValidators(ctx)
 	require.Equal(t, 2, len(acc), "%v", acc)
 
 	assert.Equal(t, candidatesIn[0].Address, acc[0].Address)
-	assert.True(t, acc[0].VotingPower.Equal(sdk.ZeroRat))
+	assert.Equal(t, int64(0), acc[0].VotingPower.Evaluate())
 	assert.Equal(t, vals[0], acc[1])
 
 	// test from something to nothing
-	// candidate set: {c0, c1, c2, c3, c4} -> {}
-	// validator set: {c0, c1, c3, c4}     -> {}
-	// accUpdate set: {} -> {c0, c1, c2, c3, c4}
+	//  candidate set: {c0, c1, c2, c3, c4} -> {}
+	//  validator set: {c1, c2, c3, c4}  -> {}
+	//  accUpdate set: {} -> {c1, c2, c3, c4}
 	keeper.clearAccUpdateValidators(ctx)
-	keeper.removeCandidate(ctx, candidates[0].Address)
-	keeper.removeCandidate(ctx, candidates[1].Address)
-	keeper.removeCandidate(ctx, candidates[2].Address)
-	keeper.removeCandidate(ctx, candidates[3].Address)
-	keeper.removeCandidate(ctx, candidates[4].Address)
-	acc = keeper.getAccUpdateValidators(ctx)
-	require.Equal(t, 5, len(acc))
+	assert.Equal(t, 5, len(keeper.GetCandidates(ctx, 5)))
+	assert.Equal(t, 4, len(keeper.GetValidators(ctx)))
+	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
+
+	keeper.removeCandidate(ctx, candidatesIn[0].Address)
+	keeper.removeCandidate(ctx, candidatesIn[1].Address)
+	keeper.removeCandidate(ctx, candidatesIn[2].Address)
+	keeper.removeCandidate(ctx, candidatesIn[3].Address)
+	keeper.removeCandidate(ctx, candidatesIn[4].Address)
+
+	vals = keeper.GetValidators(ctx)
+	assert.Equal(t, 0, len(vals), "%v", vals)
 	candidates = keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 0, len(candidates))
-	assert.Equal(t, candidatesIn[0].Address, acc[0].Address)
+	acc = keeper.getAccUpdateValidators(ctx)
+	require.Equal(t, 4, len(acc))
+	assert.Equal(t, candidatesIn[1].Address, acc[0].Address)
+	assert.Equal(t, candidatesIn[2].Address, acc[1].Address)
+	assert.Equal(t, candidatesIn[3].Address, acc[2].Address)
+	assert.Equal(t, candidatesIn[4].Address, acc[3].Address)
 	assert.Equal(t, int64(0), acc[0].VotingPower.Evaluate())
-	assert.Equal(t, candidatesIn[1].Address, acc[1].Address)
 	assert.Equal(t, int64(0), acc[1].VotingPower.Evaluate())
-	assert.Equal(t, candidatesIn[2].Address, acc[2].Address)
 	assert.Equal(t, int64(0), acc[2].VotingPower.Evaluate())
-	assert.Equal(t, candidatesIn[3].Address, acc[3].Address)
 	assert.Equal(t, int64(0), acc[3].VotingPower.Evaluate())
-	assert.Equal(t, candidatesIn[4].Address, acc[4].Address)
-	assert.Equal(t, int64(0), acc[4].VotingPower.Evaluate())
 }
 
 // test if is a validator from the last update

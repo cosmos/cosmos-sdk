@@ -4,8 +4,6 @@
 
 BREAKING CHANGES
 
-* [baseapp] `AddRoute` takes an `InitGenesis` function for per-module
-  initialization
 * [basecoin] Remove cool/sketchy modules -> moved to new `democoin`
 * [basecoin] NewBasecoinApp takes a `map[string]dbm.DB` as temporary measure
   to allow mounting multiple stores with their own DB until they can share one
@@ -15,7 +13,6 @@ BREAKING CHANGES
 * [basecoind] `init` command outputs JSON of everything necessary for testnet
 * [basecoind] `basecoin.db -> data/basecoin.db`
 * [basecli] `data/keys.db -> keys/keys.db`
-* [cool] Mapper -> Keeper
 
 FEATURES
 

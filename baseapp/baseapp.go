@@ -248,11 +248,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		// TODO Return something intelligent
 		panic(err)
 	}
-	err = app.Router().InitGenesis(app.deliverState.ctx, *genesisState)
-	if err != nil {
-		// TODO Return something intelligent
-		panic(err)
-	}
 
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState

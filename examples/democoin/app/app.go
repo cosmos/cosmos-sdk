@@ -64,15 +64,15 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
 	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper)
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper), nil).
-		AddRoute("cool", cool.NewHandler(coolKeeper), coolKeeper.InitGenesis).
-		AddRoute("sketchy", sketchy.NewHandler(), nil).
-		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper), nil).
-		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper), nil)
+		AddRoute("bank", bank.NewHandler(coinKeeper)).
+		AddRoute("cool", cool.NewHandler(coolKeeper)).
+		AddRoute("sketchy", sketchy.NewHandler()).
+		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
+		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
 	// initialize BaseApp
 	app.SetTxDecoder(app.txDecoder)
-	app.SetInitChainer(app.initChainer)
+	app.SetInitChainer(app.initChainerFn(coolKeeper))
 	app.MountStoreWithDB(app.capKeyMainStore, sdk.StoreTypeIAVL, dbs["main"])
 	app.MountStoreWithDB(app.capKeyAccountStore, sdk.StoreTypeIAVL, dbs["acc"])
 	app.MountStoreWithDB(app.capKeyIBCStore, sdk.StoreTypeIAVL, dbs["ibc"])
@@ -143,23 +143,33 @@ func (app *DemocoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 }
 
 // custom logic for democoin initialization
-func (app *DemocoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	stateJSON := req.AppStateBytes
+func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper) sdk.InitChainer {
+	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+		stateJSON := req.AppStateBytes
 
-	genesisState := new(types.GenesisState)
-	err := json.Unmarshal(stateJSON, genesisState)
-	if err != nil {
-		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
-		// return sdk.ErrGenesisParse("").TraceCause(err, "")
-	}
+		genesisState := new(types.GenesisState)
+		err := json.Unmarshal(stateJSON, genesisState)
+		if err != nil {
+			panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
+			// return sdk.ErrGenesisParse("").TraceCause(err, "")
+		}
 
-	for _, gacc := range genesisState.Accounts {
-		acc, err := gacc.ToAppAccount()
+		for _, gacc := range genesisState.Accounts {
+			acc, err := gacc.ToAppAccount()
+			if err != nil {
+				panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
+				//	return sdk.ErrGenesisParse("").TraceCause(err, "")
+			}
+			app.accountMapper.SetAccount(ctx, acc)
+		}
+
+		// Application specific genesis handling
+		err = coolKeeper.InitGenesis(ctx, stateJSON)
 		if err != nil {
 			panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 			//	return sdk.ErrGenesisParse("").TraceCause(err, "")
 		}
-		app.accountMapper.SetAccount(ctx, acc)
+
+		return abci.ResponseInitChain{}
 	}
-	return abci.ResponseInitChain{}
 }

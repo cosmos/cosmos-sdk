@@ -25,9 +25,9 @@ func TestStartStandAlone(t *testing.T) {
 	viper.Set(flagAddress, "localhost:11122")
 	startCmd := StartCmd(mock.NewApp, logger)
 	startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
-	timeout := time.Duration(3) * time.Second
+	timeout := time.Duration(10) * time.Second
 
-	RunOrTimeout(startCmd, timeout, t)
+	close(RunOrTimeout(startCmd, timeout, t))
 }
 
 func TestStartWithTendermint(t *testing.T) {
@@ -35,7 +35,6 @@ func TestStartWithTendermint(t *testing.T) {
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
 		With("module", "mock-cmd")
-		// logger := log.NewNopLogger()
 	initCmd := InitCmd(mock.GenInitOptions, logger)
 	err := initCmd.RunE(nil, nil)
 	require.NoError(t, err)
@@ -44,10 +43,7 @@ func TestStartWithTendermint(t *testing.T) {
 	viper.Set(flagWithTendermint, true)
 	startCmd := StartCmd(mock.NewApp, logger)
 	startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
-	timeout := time.Duration(3) * time.Second
+	timeout := time.Duration(10) * time.Second
 
-	//a, _ := startCmd.Flags().GetString(flagAddress)
-	//panic(a)
-
-	RunOrTimeout(startCmd, timeout, t)
+	close(RunOrTimeout(startCmd, timeout, t))
 }

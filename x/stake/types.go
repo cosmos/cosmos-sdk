@@ -42,8 +42,6 @@ type Pool struct {
 	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
 }
 
-// XXX define globalstate interface?
-
 func initialPool() Pool {
 	return Pool{
 		TotalSupply:       0,
@@ -54,30 +52,6 @@ func initialPool() Pool {
 		InflationLastTime: 0,
 		Inflation:         sdk.NewRat(7, 100),
 	}
-}
-
-// get the bond ratio of the global state
-func (p Pool) bondedRatio() sdk.Rat {
-	if p.TotalSupply > 0 {
-		return sdk.NewRat(p.BondedPool, p.TotalSupply)
-	}
-	return sdk.ZeroRat
-}
-
-// get the exchange rate of bonded token per issued share
-func (p Pool) bondedShareExRate() sdk.Rat {
-	if p.BondedShares.IsZero() {
-		return sdk.OneRat
-	}
-	return sdk.NewRat(p.BondedPool).Quo(p.BondedShares)
-}
-
-// get the exchange rate of unbonded tokens held in candidates per issued share
-func (p Pool) unbondedShareExRate() sdk.Rat {
-	if p.UnbondedShares.IsZero() {
-		return sdk.OneRat
-	}
-	return sdk.NewRat(p.UnbondedPool).Quo(p.UnbondedShares)
 }
 
 //_______________________________________________________________________________________________________

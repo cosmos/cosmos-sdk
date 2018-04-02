@@ -558,3 +558,18 @@ func TestParams(t *testing.T) {
 	resParams = keeper.GetParams(ctx)
 	assert.Equal(t, expParams, resParams)
 }
+
+func TestPool(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	expPool := initialPool()
+
+	//check that the empty keeper loads the default
+	resPool := keeper.GetPool(ctx)
+	assert.Equal(t, expPool, resPool)
+
+	//modify a params, save, and retrieve
+	expPool.TotalSupply = 777
+	keeper.setPool(ctx, expPool)
+	resPool = keeper.GetPool(ctx)
+	assert.Equal(t, expPool, resPool)
+}

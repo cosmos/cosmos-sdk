@@ -362,3 +362,33 @@ func (k Keeper) setParams(ctx sdk.Context, params Params) {
 	store.Set(ParamKey, b)
 	k.params = Params{} // clear the cache
 }
+
+//_______________________________________________________________________
+
+// load/save the pool
+func (k Keeper) GetPool(ctx sdk.Context) (gs Pool) {
+	// check if cached before anything
+	if k.gs != (Pool{}) {
+		return k.gs
+	}
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(PoolKey)
+	if b == nil {
+		return initialPool()
+	}
+	err := k.cdc.UnmarshalBinary(b, &gs)
+	if err != nil {
+		panic(err) // This error should never occur big problem if does
+	}
+	return
+}
+
+func (k Keeper) setPool(ctx sdk.Context, p Pool) {
+	store := ctx.KVStore(k.storeKey)
+	b, err := k.cdc.MarshalBinary(p)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(PoolKey, b)
+	k.gs = Pool{} // clear the cache
+}

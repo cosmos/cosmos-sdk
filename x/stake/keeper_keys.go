@@ -16,6 +16,7 @@ var (
 	ValidatorsKey          = []byte{0x03} // prefix for each key to a validator
 	AccUpdateValidatorsKey = []byte{0x04} // prefix for each key to a validator which is being updated
 	RecentValidatorsKey    = []byte{0x05} // prefix for each key to the last updated validator group
+
 	ToKickOutValidatorsKey = []byte{0x06} // prefix for each key to the last updated validator group
 
 	DelegatorBondKeyPrefix = []byte{0x07} // prefix for each key to a delegator's bond

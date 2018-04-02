@@ -21,6 +21,7 @@ type testnetInformation struct {
 	Account   string                   `json:"account"`
 	Validator tmtypes.GenesisValidator `json:"validator"`
 	NodeID    p2p.ID                   `json:"node_id"`
+	ChainID   string                   `json:"chain_id"`
 }
 
 // InitCmd will initialize all files for tendermint,
@@ -144,6 +145,7 @@ func (c initCmd) initTendermintFiles(config *cfg.Config, info *testnetInformatio
 			info.Validator = validator
 		}
 	}
+	info.ChainID = loadedDoc.ChainID
 
 	return nil
 }

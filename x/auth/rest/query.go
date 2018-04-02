@@ -8,7 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/core"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
@@ -33,7 +33,7 @@ func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, decoder sdk.A
 		}
 		key := sdk.Address(bz)
 
-		res, err := core.NewCoreContextFromViper().Query(key, c.storeName)
+		res, err := context.NewCoreContextFromViper().Query(key, c.storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("Could't query account. Error: %s", err.Error())))

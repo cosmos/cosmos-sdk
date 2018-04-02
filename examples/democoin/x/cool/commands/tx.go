@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/core"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/wire"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
@@ -24,7 +24,7 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 				return errors.New("You must provide an answer")
 			}
 
-			ctx := core.NewCoreContextFromViper()
+			ctx := context.NewCoreContextFromViper()
 
 			// get the from address from the name flag
 			from, err := ctx.GetFromAddress()
@@ -60,7 +60,7 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 				return errors.New("You must provide an answer")
 			}
 
-			ctx := core.NewCoreContextFromViper()
+			ctx := context.NewCoreContextFromViper()
 
 			// get the from address from the name flag
 			from, err := ctx.GetFromAddress()

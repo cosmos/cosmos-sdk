@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/core"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -38,7 +38,7 @@ type Commander struct {
 }
 
 func (c Commander) sendTxCmd(cmd *cobra.Command, args []string) error {
-	ctx := core.NewCoreContextFromViper()
+	ctx := context.NewCoreContextFromViper()
 
 	// get the from address
 	from, err := ctx.GetFromAddress()

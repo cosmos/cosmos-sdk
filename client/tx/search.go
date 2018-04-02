@@ -12,7 +12,7 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/core"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
@@ -44,7 +44,7 @@ func (c commander) searchTx(tags []string) ([]byte, error) {
 	query := strings.Join(tags, " AND ")
 
 	// get the node
-	node, err := core.NewCoreContextFromViper().GetNode()
+	node, err := context.NewCoreContextFromViper().GetNode()
 	if err != nil {
 		return nil, err
 	}

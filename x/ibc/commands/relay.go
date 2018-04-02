@@ -9,7 +9,7 @@ import (
 
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/cosmos/cosmos-sdk/client/core"
+	"github.com/cosmos/cosmos-sdk/client/context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -73,7 +73,7 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	fromChainNode := viper.GetString(FlagFromChainNode)
 	toChainID := viper.GetString(FlagToChainID)
 	toChainNode := viper.GetString(FlagToChainNode)
-	address, err := core.NewCoreContextFromViper().GetFromAddress()
+	address, err := context.NewCoreContextFromViper().GetFromAddress()
 	if err != nil {
 		panic(err)
 	}
@@ -83,7 +83,7 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 }
 
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
-	ctx := core.NewCoreContextFromViper()
+	ctx := context.NewCoreContextFromViper()
 	// get password
 	passphrase, err := ctx.GetPassphraseFromStdin(ctx.FromAddressName)
 	if err != nil {
@@ -147,11 +147,11 @@ OUTER:
 }
 
 func query(node string, key []byte, storeName string) (res []byte, err error) {
-	return core.NewCoreContextFromViper().WithNodeURI(node).Query(key, storeName)
+	return context.NewCoreContextFromViper().WithNodeURI(node).Query(key, storeName)
 }
 
 func (c relayCommander) broadcastTx(node string, tx []byte) error {
-	_, err := core.NewCoreContextFromViper().WithNodeURI(node).WithSequence(c.getSequence(node) + 1).BroadcastTx(tx)
+	_, err := context.NewCoreContextFromViper().WithNodeURI(node).WithSequence(c.getSequence(node) + 1).BroadcastTx(tx)
 	return err
 }
 
@@ -185,7 +185,7 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 		Sequence:  sequence,
 	}
 
-	ctx := core.NewCoreContextFromViper()
+	ctx := context.NewCoreContextFromViper()
 	res, err := ctx.SignAndBuild(ctx.FromAddressName, passphrase, msg, c.cdc)
 	if err != nil {
 		panic(err)

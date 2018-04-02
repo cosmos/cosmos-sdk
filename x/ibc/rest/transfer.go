@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/tendermint/go-crypto/keys"
 
-	"github.com/cosmos/cosmos-sdk/client/core"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank/commands"
@@ -70,7 +70,7 @@ func TransferRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.Response
 
 		// sign
 		// XXX: OMG
-		ctx := core.NewCoreContextFromViper()
+		ctx := context.NewCoreContextFromViper()
 		ctx.Sequence = m.Sequence
 		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, c.Cdc)
 		if err != nil {

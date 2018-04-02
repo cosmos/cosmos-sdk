@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/core"
+	"github.com/cosmos/cosmos-sdk/client/context"
 )
 
 func validatorCommand() *cobra.Command {
@@ -27,7 +27,7 @@ func validatorCommand() *cobra.Command {
 
 func GetValidators(height *int64) ([]byte, error) {
 	// get the node
-	node, err := core.NewCoreContextFromViper().GetNode()
+	node, err := context.NewCoreContextFromViper().GetNode()
 	if err != nil {
 		return nil, err
 	}

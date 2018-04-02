@@ -312,11 +312,11 @@ func assertInvariants(t *testing.T, msg string,
 
 	// nonnegative shares
 	require.False(t, pMod.BondedShares.LT(sdk.ZeroRat),
-		"msg: %v\n, pOrig: %v\n, pMod: %v\n, cOrig: %v\n, cMod %v, tokens: %v\n",
-		msg, pOrig, pMod, cOrig, cMods, tokens)
+		"msg: %v\n, pOrig: %v\n, pMod: %v\n, tokens: %v\n",
+		msg, pOrig, pMod, tokens)
 	require.False(t, pMod.UnbondedShares.LT(sdk.ZeroRat),
-		"msg: %v\n, pOrig: %v\n, pMod: %v\n, cOrig: %v\n, cMod %v, tokens: %v\n",
-		msg, pOrig, pMod, cOrig, cMods, tokens)
+		"msg: %v\n, pOrig: %v\n, pMod: %v\n, tokens: %v\n",
+		msg, pOrig, pMod, tokens)
 
 	// nonnegative ex rates
 	require.False(t, pMod.bondedShareExRate().LT(sdk.ZeroRat),
@@ -331,27 +331,29 @@ func assertInvariants(t *testing.T, msg string,
 
 		// nonnegative ex rate
 		require.False(t, cMod.delegatorShareExRate().LT(sdk.ZeroRat),
-			"Applying operation \"%s\" resulted in negative candidate.delegatorShareExRate(): %v (candidate.PubKey: %s)",
+			"Applying operation \"%s\" resulted in negative candidate.delegatorShareExRate(): %v (candidate.Address: %s)",
 			msg,
 			cMod.delegatorShareExRate(),
-			cMod.PubKey,
+			cMod.Address,
 		)
 
 		// nonnegative assets / liabilities
 		require.False(t, cMod.Assets.LT(sdk.ZeroRat),
-			"Applying operation \"%s\" resulted in negative candidate.Assets: %d (candidate.Liabilities: %d, candidate.PubKey: %s)",
+			"Applying operation \"%s\" resulted in negative candidate.Assets: %d (candidate.Liabilities: %d, candidate.delegatorShareExRate: %d, candidate.Address: %s)",
 			msg,
 			cMod.Assets.Evaluate(),
 			cMod.Liabilities.Evaluate(),
-			cMod.PubKey,
+			cMod.delegatorShareExRate().Evaluate(),
+			cMod.Address,
 		)
 
 		require.False(t, cMod.Liabilities.LT(sdk.ZeroRat),
-			"Applying operation \"%s\" resulted in negative candidate.Liabilities: %d (candidate.Assets: %d, candidate.PubKey: %s)",
+			"Applying operation \"%s\" resulted in negative candidate.Liabilities: %d (candidate.Assets: %d, candidate.delegatorShareExRate: %d, candidate.Address: %s)",
 			msg,
 			cMod.Liabilities.Evaluate(),
 			cMod.Assets.Evaluate(),
-			cMod.PubKey,
+			cMod.delegatorShareExRate().Evaluate(),
+			cMod.Address,
 		)
 	}
 }
@@ -378,6 +380,7 @@ func TestIntegrationInvariants(t *testing.T) {
 			assertInvariants(t, msg,
 				initialPool, initialCandidates,
 				pool, candidates, tokens)
+
 		}
 	}
 }

@@ -54,9 +54,7 @@ func (c sendCommander) sendIBCTransfer(cmd *cobra.Command, args []string) error 
 	}
 
 	// get password
-	name := viper.GetString(client.FlagName)
-
-	res, err := ctx.SignBuildBroadcast(name, msg, c.cdc)
+	res, err := ctx.SignBuildBroadcast(ctx.FromAddressName, msg, c.cdc)
 	if err != nil {
 		return err
 	}

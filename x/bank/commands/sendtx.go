@@ -61,14 +61,11 @@ func (c Commander) sendTxCmd(cmd *cobra.Command, args []string) error {
 	}
 	to := sdk.Address(bz)
 
-	// get account name
-	name := viper.GetString(client.FlagName)
-
 	// build message
 	msg := BuildMsg(from, to, coins)
 
 	// build and sign the transaction, then broadcast to Tendermint
-	res, err := ctx.SignBuildBroadcast(name, msg, c.Cdc)
+	res, err := ctx.SignBuildBroadcast(ctx.FromAddressName, msg, c.Cdc)
 	if err != nil {
 		return err
 	}

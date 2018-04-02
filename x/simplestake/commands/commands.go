@@ -9,7 +9,6 @@ import (
 
 	crypto "github.com/tendermint/go-crypto"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -95,8 +94,8 @@ func (co commander) unbondTxCmd(cmd *cobra.Command, args []string) error {
 }
 
 func (co commander) sendMsg(msg sdk.Msg) error {
-	name := viper.GetString(client.FlagName)
-	res, err := context.NewCoreContextFromViper().SignBuildBroadcast(name, msg, co.cdc)
+	ctx := context.NewCoreContextFromViper()
+	res, err := ctx.SignBuildBroadcast(ctx.FromAddressName, msg, co.cdc)
 	if err != nil {
 		return err
 	}

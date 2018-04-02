@@ -89,6 +89,11 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 		panic(err)
 	}
 
+	// if the voting power is the same no need to update any of the other indexes
+	if oldFound && oldCandidate.Assets.Equal(candidate.Assets) {
+		return
+	}
+
 	// update the list ordered by voting power
 	if oldFound {
 		store.Delete(GetValidatorKey(address, oldCandidate.Assets, k.cdc))
@@ -96,7 +101,16 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	store.Set(GetValidatorKey(address, validator.VotingPower, k.cdc), bz)
 
 	// add to the validators to update list if is already a validator
-	if store.Get(GetRecentValidatorKey(address)) != nil || k.isNewValidator(ctx, store, address) {
+	// or is a new validator
+	setAcc := false
+	if store.Get(GetRecentValidatorKey(address)) != nil {
+		setAcc = true
+
+		// want to check in the else statement because inefficient
+	} else if k.isNewValidator(ctx, store, address) {
+		setAcc = true
+	}
+	if setAcc {
 		store.Set(GetAccUpdateValidatorKey(validator.Address), bz)
 	}
 	return
@@ -138,12 +152,18 @@ func (k Keeper) removeCandidate(ctx sdk.Context, address sdk.Address) {
 func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 	store := ctx.KVStore(k.storeKey)
 
-	// clear the recent validators store
-	k.deleteSubSpace(store, RecentValidatorsKey)
+	// clear the recent validators store, add to the ToKickOut Temp store
+	iterator := store.Iterator(subspace(RecentValidatorsKey))
+	for ; iterator.Valid(); iterator.Next() {
+		addr := AddrFromKey(iterator.Key())
+		store.Set(GetToKickOutValidatorKey(addr), []byte{})
+		store.Delete(iterator.Key())
+	}
+	iterator.Close()
 
 	// add the actual validator power sorted store
 	maxVal := k.GetParams(ctx).MaxValidators
-	iterator := store.ReverseIterator(subspace(ValidatorsKey)) // largest to smallest
+	iterator = store.ReverseIterator(subspace(ValidatorsKey)) // largest to smallest
 	validators = make([]Validator, maxVal)
 	i := 0
 	for ; ; i++ {
@@ -159,11 +179,27 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 		}
 		validators[i] = val
 
+		// remove from ToKickOut group
+		store.Delete(GetToKickOutValidatorKey(val.Address))
+
 		// also add to the recent validators group
-		store.Set(GetRecentValidatorKey(val.Address), bz)
+		store.Set(GetRecentValidatorKey(val.Address), bz) // XXX should store nothing
 
 		iterator.Next()
 	}
+
+	// add any kicked out validators to the acc change
+	iterator = store.Iterator(subspace(ToKickOutValidatorsKey))
+	for ; iterator.Valid(); iterator.Next() {
+		addr := AddrFromKey(iterator.Key())
+		bz, err := k.cdc.MarshalBinary(Validator{addr, sdk.ZeroRat})
+		if err != nil {
+			panic(err)
+		}
+		store.Set(GetAccUpdateValidatorKey(addr), bz)
+		store.Delete(iterator.Key())
+	}
+	iterator.Close()
 
 	return validators[:i] // trim
 }

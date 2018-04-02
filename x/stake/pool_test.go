@@ -295,55 +295,57 @@ func randomOperation(r *rand.Rand) Operation {
 
 // ensure invariants that should always be true are true
 func assertInvariants(t *testing.T, msg string,
-	pA Pool, cA Candidate, pB Pool, cB Candidate, tokens int64) {
+	pOrig Pool, cOrig Candidate, pMod Pool, cMod Candidate, tokens int64) {
 
 	// total tokens conserved
 	require.Equal(t,
-		pA.UnbondedPool+pA.BondedPool,
-		pB.UnbondedPool+pB.BondedPool+tokens,
-		"msg: %v\n, pA.UnbondedPool: %v, pA.BondedPool: %v, pB.UnbondedPool: %v, pB.BondedPool: %v, tokens: %v\n",
+		pOrig.UnbondedPool+pOrig.BondedPool,
+		pMod.UnbondedPool+pMod.BondedPool+tokens,
+		"msg: %v\n, pOrig.UnbondedPool: %v, pOrig.BondedPool: %v, pMod.UnbondedPool: %v, pMod.BondedPool: %v, tokens: %v\n",
 		msg,
-		pA.UnbondedPool, pA.BondedPool,
-		pB.UnbondedPool, pB.BondedPool, tokens)
+		pOrig.UnbondedPool, pOrig.BondedPool,
+		pMod.UnbondedPool, pMod.BondedPool, tokens)
 
 	// nonnegative shares
-	require.False(t, pB.BondedShares.LT(sdk.ZeroRat), "msg: %v\n, pA: %v\n, pB: %v\n, cA: %v\n, cB %v, tokens: %v\n",
-		msg, pA, pB, cA, cB, tokens)
-	require.False(t, pB.UnbondedShares.LT(sdk.ZeroRat), "msg: %v\n, pA: %v\n, pB: %v\n, cA: %v\n, cB %v, tokens: %v\n",
-		msg, pA, pB, cA, cB, tokens)
+	require.False(t, pMod.BondedShares.LT(sdk.ZeroRat),
+		"msg: %v\n, pOrig: %v\n, pMod: %v\n, cOrig: %v\n, cMod %v, tokens: %v\n",
+		msg, pOrig, pMod, cOrig, cMod, tokens)
+	require.False(t, pMod.UnbondedShares.LT(sdk.ZeroRat),
+		"msg: %v\n, pOrig: %v\n, pMod: %v\n, cOrig: %v\n, cMod %v, tokens: %v\n",
+		msg, pOrig, pMod, cOrig, cMod, tokens)
 
 	// nonnegative ex rates
-	require.False(t, pB.bondedShareExRate().LT(sdk.ZeroRat),
+	require.False(t, pMod.bondedShareExRate().LT(sdk.ZeroRat),
 		"Applying operation \"%s\" resulted in negative bondedShareExRate: %d",
-		msg, pB.bondedShareExRate().Evaluate())
+		msg, pMod.bondedShareExRate().Evaluate())
 
-	require.False(t, pB.unbondedShareExRate().LT(sdk.ZeroRat),
+	require.False(t, pMod.unbondedShareExRate().LT(sdk.ZeroRat),
 		"Applying operation \"%s\" resulted in negative unbondedShareExRate: %d",
-		msg, pB.unbondedShareExRate().Evaluate())
+		msg, pMod.unbondedShareExRate().Evaluate())
 
 	// nonnegative ex rate
-	require.False(t, cA.delegatorShareExRate().LT(sdk.ZeroRat),
+	require.False(t, cMod.delegatorShareExRate().LT(sdk.ZeroRat),
 		"Applying operation \"%s\" resulted in negative candidate.delegatorShareExRate(): %v (candidate.PubKey: %s)",
 		msg,
-		cA.delegatorShareExRate(),
-		cA.PubKey,
+		cMod.delegatorShareExRate(),
+		cMod.PubKey,
 	)
 
 	// nonnegative assets / liabilities
-	require.False(t, cA.Assets.LT(sdk.ZeroRat),
+	require.False(t, cMod.Assets.LT(sdk.ZeroRat),
 		"Applying operation \"%s\" resulted in negative candidate.Assets: %d (candidate.Liabilities: %d, candidate.PubKey: %s)",
 		msg,
-		cA.Assets.Evaluate(),
-		cA.Liabilities.Evaluate(),
-		cA.PubKey,
+		cMod.Assets.Evaluate(),
+		cMod.Liabilities.Evaluate(),
+		cMod.PubKey,
 	)
 
-	require.False(t, cA.Liabilities.LT(sdk.ZeroRat),
+	require.False(t, cMod.Liabilities.LT(sdk.ZeroRat),
 		"Applying operation \"%s\" resulted in negative candidate.Liabilities: %d (candidate.Assets: %d, candidate.PubKey: %s)",
 		msg,
-		cA.Liabilities.Evaluate(),
-		cA.Assets.Evaluate(),
-		cA.PubKey,
+		cMod.Liabilities.Evaluate(),
+		cMod.Assets.Evaluate(),
+		cMod.PubKey,
 	)
 }
 

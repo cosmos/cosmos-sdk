@@ -46,7 +46,10 @@ func defaultOptions(args []string) (json.RawMessage, string, cmn.HexBytes, error
             "amount": 9007199254740992
           }
         ]
-      }]
+      }],
+      "cool": {
+        "trend": "ice-cold"
+      }
     }`, addr)
 	return json.RawMessage(opts), "", nil, nil
 }

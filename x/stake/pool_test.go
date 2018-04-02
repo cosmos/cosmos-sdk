@@ -206,7 +206,7 @@ func randomCandidate(r *rand.Rand) Candidate {
 }
 
 // generate a random staking state
-func randomSetup(r *rand.Rand) (Pool, Candidate) {
+func randomSetup(r *rand.Rand) (Pool, Candidates) {
 	pool := Pool{
 		TotalSupply:       0,
 		BondedShares:      sdk.ZeroRat,
@@ -217,15 +217,19 @@ func randomSetup(r *rand.Rand) (Pool, Candidate) {
 		Inflation:         sdk.NewRat(7, 100),
 	}
 
-	candidate := randomCandidate(r)
-	if candidate.Status == Bonded {
-		pool.BondedShares = pool.BondedShares.Add(candidate.Assets)
-		pool.BondedPool += candidate.Assets.Evaluate()
-	} else {
-		pool.UnbondedShares = pool.UnbondedShares.Add(candidate.Assets)
-		pool.UnbondedPool += candidate.Assets.Evaluate()
+	candidates := make([]Candidate, 100)
+	for i := 0; i < 100; i++ {
+		candidate := randomCandidate(r)
+		if candidate.Status == Bonded {
+			pool.BondedShares = pool.BondedShares.Add(candidate.Assets)
+			pool.BondedPool += candidate.Assets.Evaluate()
+		} else {
+			pool.UnbondedShares = pool.UnbondedShares.Add(candidate.Assets)
+			pool.UnbondedPool += candidate.Assets.Evaluate()
+		}
+		candidates[i] = candidate
 	}
-	return pool, candidate
+	return pool, candidates
 }
 
 func randomTokens(r *rand.Rand) int64 {
@@ -295,7 +299,7 @@ func randomOperation(r *rand.Rand) Operation {
 
 // ensure invariants that should always be true are true
 func assertInvariants(t *testing.T, msg string,
-	pOrig Pool, cOrig Candidate, pMod Pool, cMod Candidate, tokens int64) {
+	pOrig Pool, cOrig Candidates, pMod Pool, cMods Candidates, tokens int64) {
 
 	// total tokens conserved
 	require.Equal(t,
@@ -309,10 +313,10 @@ func assertInvariants(t *testing.T, msg string,
 	// nonnegative shares
 	require.False(t, pMod.BondedShares.LT(sdk.ZeroRat),
 		"msg: %v\n, pOrig: %v\n, pMod: %v\n, cOrig: %v\n, cMod %v, tokens: %v\n",
-		msg, pOrig, pMod, cOrig, cMod, tokens)
+		msg, pOrig, pMod, cOrig, cMods, tokens)
 	require.False(t, pMod.UnbondedShares.LT(sdk.ZeroRat),
 		"msg: %v\n, pOrig: %v\n, pMod: %v\n, cOrig: %v\n, cMod %v, tokens: %v\n",
-		msg, pOrig, pMod, cOrig, cMod, tokens)
+		msg, pOrig, pMod, cOrig, cMods, tokens)
 
 	// nonnegative ex rates
 	require.False(t, pMod.bondedShareExRate().LT(sdk.ZeroRat),
@@ -323,30 +327,33 @@ func assertInvariants(t *testing.T, msg string,
 		"Applying operation \"%s\" resulted in negative unbondedShareExRate: %d",
 		msg, pMod.unbondedShareExRate().Evaluate())
 
-	// nonnegative ex rate
-	require.False(t, cMod.delegatorShareExRate().LT(sdk.ZeroRat),
-		"Applying operation \"%s\" resulted in negative candidate.delegatorShareExRate(): %v (candidate.PubKey: %s)",
-		msg,
-		cMod.delegatorShareExRate(),
-		cMod.PubKey,
-	)
+	for _, cMod := range cMods {
 
-	// nonnegative assets / liabilities
-	require.False(t, cMod.Assets.LT(sdk.ZeroRat),
-		"Applying operation \"%s\" resulted in negative candidate.Assets: %d (candidate.Liabilities: %d, candidate.PubKey: %s)",
-		msg,
-		cMod.Assets.Evaluate(),
-		cMod.Liabilities.Evaluate(),
-		cMod.PubKey,
-	)
+		// nonnegative ex rate
+		require.False(t, cMod.delegatorShareExRate().LT(sdk.ZeroRat),
+			"Applying operation \"%s\" resulted in negative candidate.delegatorShareExRate(): %v (candidate.PubKey: %s)",
+			msg,
+			cMod.delegatorShareExRate(),
+			cMod.PubKey,
+		)
 
-	require.False(t, cMod.Liabilities.LT(sdk.ZeroRat),
-		"Applying operation \"%s\" resulted in negative candidate.Liabilities: %d (candidate.Assets: %d, candidate.PubKey: %s)",
-		msg,
-		cMod.Liabilities.Evaluate(),
-		cMod.Assets.Evaluate(),
-		cMod.PubKey,
-	)
+		// nonnegative assets / liabilities
+		require.False(t, cMod.Assets.LT(sdk.ZeroRat),
+			"Applying operation \"%s\" resulted in negative candidate.Assets: %d (candidate.Liabilities: %d, candidate.PubKey: %s)",
+			msg,
+			cMod.Assets.Evaluate(),
+			cMod.Liabilities.Evaluate(),
+			cMod.PubKey,
+		)
+
+		require.False(t, cMod.Liabilities.LT(sdk.ZeroRat),
+			"Applying operation \"%s\" resulted in negative candidate.Liabilities: %d (candidate.Assets: %d, candidate.PubKey: %s)",
+			msg,
+			cMod.Liabilities.Evaluate(),
+			cMod.Assets.Evaluate(),
+			cMod.PubKey,
+		)
+	}
 }
 
 // run random operations in a random order on a random state, assert invariants hold
@@ -364,7 +371,9 @@ func TestIntegrationInvariants(t *testing.T) {
 		for j := 0; j < 100; j++ {
 
 			r2 := rand.New(rand.NewSource(time.Now().UnixNano()))
-			pool, candidates, tokens, msg := randomOperation(r2)(pool, candidates)
+			index := int(r2.Int31n(int32(len(candidates))))
+			pool, candidateMod, tokens, msg := randomOperation(r2)(pool, candidates[index])
+			candidates[index] = candidateMod
 
 			assertInvariants(t, msg,
 				initialPool, initialCandidates,

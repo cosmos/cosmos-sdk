@@ -2,6 +2,7 @@ package stake
 
 import (
 	"bytes"
+	"encoding/json"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -572,4 +573,52 @@ func TestPool(t *testing.T) {
 	keeper.setPool(ctx, expPool)
 	resPool = keeper.GetPool(ctx)
 	assert.Equal(t, expPool, resPool)
+}
+
+func TestInitGenesis(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	encoded := json.RawMessage(`{
+    "params": {
+      "inflation_rate_change": {
+        "num": 13,
+        "denom": 100
+      },
+      "inflation_max": {
+        "num": 20,
+        "denom": 100
+      },
+      "inflation_min": {
+        "num": 7,
+        "denom": 100
+      },
+      "goal_bonded": {
+        "num": 67,
+        "denom": 100
+      },
+      "max_validators": 100,
+      "bond_denom": "fermion"
+    },
+    "pool": {
+      "total_supply": 0,
+      "bonded_shares": {
+        "num": 0,
+        "denom": 1
+      },
+      "unbonded_shares": {
+        "num": 0,
+        "denom": 1
+      },
+      "bonded_pool": 0,
+      "unbonded_pool": 0,
+      "inflation_last_time": 0,
+      "inflation": {
+        "num": 7,
+        "denom": 100
+      }
+    }
+  }`)
+	err := keeper.InitGenesis(ctx, encoded)
+	require.Nil(t, err)
+	require.Equal(t, keeper.GetPool(ctx), initialPool())
+	require.Equal(t, keeper.GetParams(ctx), defaultParams())
 }

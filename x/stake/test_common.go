@@ -2,7 +2,6 @@ package stake
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -149,13 +148,8 @@ func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool, initCoins
 	)
 	ck := bank.NewCoinKeeper(accountMapper)
 	keeper := NewKeeper(ctx, cdc, keyStake, ck)
-	encoded, err := json.Marshal(GenesisState{initialPool(), defaultParams()})
-	if err != nil {
-		panic(err)
-	}
-	if err = keeper.InitGenesis(ctx, encoded); err != nil {
-		panic(err)
-	}
+	keeper.setPool(ctx, initialPool())
+	keeper.setParams(ctx, defaultParams())
 
 	// fill all the addresses with some coins
 	for _, addr := range addrs {

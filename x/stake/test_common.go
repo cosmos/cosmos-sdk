@@ -11,7 +11,6 @@ import (
 	oldwire "github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"
 
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -108,7 +107,7 @@ func makeTestCodec() *wire.Codec {
 	const accTypeApp = 0x1
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Account }{},
-		oldwire.ConcreteType{&types.AppAccount{}, accTypeApp},
+		oldwire.ConcreteType{&auth.BaseAccount{}, accTypeApp},
 	)
 	cdc := wire.NewCodec()
 

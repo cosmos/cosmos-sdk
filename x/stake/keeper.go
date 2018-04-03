@@ -2,6 +2,7 @@ package stake
 
 import (
 	"bytes"
+	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -26,6 +27,17 @@ func NewKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, ck bank.CoinK
 		coinKeeper: ck,
 	}
 	return keeper
+}
+
+// InitGenesis - store genesis parameters
+func (k Keeper) InitGenesis(ctx sdk.Context, data json.RawMessage) error {
+	var state GenesisState
+	if err := json.Unmarshal(data, &state); err != nil {
+		return err
+	}
+	k.setPool(ctx, state.Pool)
+	k.setParams(ctx, state.Params)
+	return nil
 }
 
 //_________________________________________________________________________
@@ -343,8 +355,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params Params) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(ParamKey)
 	if b == nil {
-		k.params = defaultParams()
-		return k.params
+		panic("Stored params should not have been nil")
 	}
 
 	err := k.cdc.UnmarshalBinary(b, &params)
@@ -374,7 +385,7 @@ func (k Keeper) GetPool(ctx sdk.Context) (gs Pool) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(PoolKey)
 	if b == nil {
-		return initialPool()
+		panic("Stored pool should not have been nil")
 	}
 	err := k.cdc.UnmarshalBinary(b, &gs)
 	if err != nil {

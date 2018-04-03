@@ -1,11 +1,13 @@
 package commands
 
 import (
-	"fmt"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/builder"
@@ -30,6 +32,8 @@ type relayCommander struct {
 	decoder   sdk.AccountDecoder
 	mainStore string
 	ibcStore  string
+
+	logger log.Logger
 }
 
 func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
@@ -38,6 +42,8 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 		decoder:   authcmd.GetAccountDecoder(cdc),
 		ibcStore:  "ibc",
 		mainStore: "main",
+
+		logger: log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
 	}
 
 	cmd := &cobra.Command{
@@ -105,7 +111,7 @@ OUTER:
 		lengthKey := ibc.EgressLengthKey(toChainID)
 		egressLengthbz, err := query(fromChainNode, lengthKey, c.ibcStore)
 		if err != nil {
-			fmt.Printf("Error querying outgoing packet list length: '%s'\n", err)
+			c.logger.Error("Error querying outgoing packet list length", "err", err)
 			continue OUTER
 		}
 		var egressLength int64
@@ -115,26 +121,29 @@ OUTER:
 			panic(err)
 		}
 		if egressLength > processed {
-			fmt.Printf("IBC packet #%d detected\n", egressLength-1)
+			c.logger.Info("IBC packet detected", "number", egressLength-1)
 		}
+
+		seq := c.getSequence(toChainNode)
 
 		for i := processed; i < egressLength; i++ {
 			egressbz, err := query(fromChainNode, ibc.EgressKey(toChainID, i), c.ibcStore)
 			if err != nil {
-				fmt.Printf("Error querying egress packet: '%s'\n", err)
+				c.logger.Error("Error querying egress packet", "err", err)
 				continue OUTER
 			}
+
+			viper.Set(client.FlagSequence, seq)
+			seq++
 
 			err = c.broadcastTx(toChainNode, c.refine(egressbz, i, passphrase))
 			if err != nil {
-				fmt.Printf("Error broadcasting ingress packet: '%s'\n", err)
+				c.logger.Error("Error broadcasting ingress packet", "err", err)
 				continue OUTER
 			}
 
-			fmt.Printf("Relayed IBC packet #%d\n", i)
+			c.logger.Info("Relayed IBC packet", "number", i)
 		}
-
-		processed = egressLength
 	}
 }
 
@@ -149,8 +158,6 @@ func query(node string, key []byte, storeName string) (res []byte, err error) {
 func (c relayCommander) broadcastTx(node string, tx []byte) error {
 	orig := viper.GetString(client.FlagNode)
 	viper.Set(client.FlagNode, node)
-	seq := c.getSequence(node)
-	viper.Set(client.FlagSequence, seq)
 	_, err := builder.BroadcastTx(tx)
 	viper.Set(client.FlagNode, orig)
 	return err
@@ -168,6 +175,10 @@ func (c relayCommander) getSequence(node string) int64 {
 	}
 
 	return account.GetSequence()
+}
+
+func setSequence(seq int64) {
+	viper.Set(client.FlagSequence, seq)
 }
 
 func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []byte {

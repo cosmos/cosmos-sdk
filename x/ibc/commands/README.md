@@ -133,11 +133,10 @@ Committed at block 1022. Hash: E16019DCC4AA08CA70AFCFBC96028ABCC51B6AD0
 ## Relay IBC packets
 
 ```console
-> basecli relay --name key2 --from-chain-id $ID1 --from-chain-node $NODE1 --to-chain-id $ID2 --to-chain-node $ID2 --chain-id $ID2
+> basecli relay --name key2 --from-chain-id $ID1 --from-chain-node $NODE1 --to-chain-id $ID2 --to-chain-node $NODE2 --chain-id $ID2
 Password to sign with 'key2':
-IBC packet #0 detected
-Relayed IBC packet #0
-
+I[04-03|16:18:59.984] IBC packet detected                          number=0
+I[04-03|16:19:00.869] Relayed IBC packet                           number=0
 > basecli account $ADDR2 --node $NODE2
 {
   "address": "DC26002735D3AA9573707CFA6D77C12349E49868",

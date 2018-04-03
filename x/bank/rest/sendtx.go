@@ -28,6 +28,7 @@ type sendBody struct {
 // SendRequestHandler - http request handler to send coins to a address
 func SendRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWriter, *http.Request) {
 	c := commands.Commander{cdc}
+	ctx := context.NewCoreContextFromViper()
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
 		vars := mux.Vars(r)
@@ -71,8 +72,7 @@ func SendRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWrit
 		}
 
 		// sign
-		ctx := context.NewCoreContextFromViper()
-		ctx.Sequence = m.Sequence
+		ctx = ctx.WithSequence(m.Sequence)
 		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, c.Cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)

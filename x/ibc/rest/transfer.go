@@ -29,6 +29,7 @@ type transferBody struct {
 // on a different chain via IBC
 func TransferRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWriter, *http.Request) {
 	c := commands.Commander{cdc}
+	ctx := context.NewCoreContextFromViper()
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
 		vars := mux.Vars(r)
@@ -69,9 +70,7 @@ func TransferRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.Response
 		msg := ibc.IBCTransferMsg{packet}
 
 		// sign
-		// XXX: OMG
-		ctx := context.NewCoreContextFromViper()
-		ctx.Sequence = m.Sequence
+		ctx = ctx.WithSequence(m.Sequence)
 		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, c.Cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)

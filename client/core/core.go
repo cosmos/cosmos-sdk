@@ -146,8 +146,8 @@ func (ctx CoreContext) GetPassphraseFromStdin(name string) (pass string, err err
 
 // GetNode prepares a simple rpc.Client
 func (ctx CoreContext) GetNode() (rpcclient.Client, error) {
-	if ctx.NodeURI == "" {
+	if ctx.Client == nil {
 		return nil, errors.New("Must define node URI")
 	}
-	return rpcclient.NewHTTP(ctx.NodeURI, "/websocket"), nil
+	return ctx.Client, nil
 }

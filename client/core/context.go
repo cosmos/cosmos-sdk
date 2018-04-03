@@ -1,5 +1,9 @@
 package core
 
+import (
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
+)
+
 type CoreContext struct {
 	ChainID         string
 	Height          int64
@@ -7,6 +11,7 @@ type CoreContext struct {
 	NodeURI         string
 	FromAddressName string
 	Sequence        int64
+	Client          rpcclient.Client
 }
 
 func (c CoreContext) WithChainID(chainID string) CoreContext {
@@ -36,5 +41,10 @@ func (c CoreContext) WithFromAddressName(fromAddressName string) CoreContext {
 
 func (c CoreContext) WithSequence(sequence int64) CoreContext {
 	c.Sequence = sequence
+	return c
+}
+
+func (c CoreContext) WithClient(client rpcclient.Client) CoreContext {
+	c.Client = client
 	return c
 }

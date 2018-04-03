@@ -150,7 +150,8 @@ func TestInitChainer(t *testing.T) {
 	app := NewBaseApp(name, logger, db)
 	// make cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
-	app.MountStoresIAVL(capKey)
+	capKey2 := sdk.NewKVStoreKey("key2")
+	app.MountStoresIAVL(capKey, capKey2)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
 
@@ -182,7 +183,9 @@ func TestInitChainer(t *testing.T) {
 
 	// reload app
 	app = NewBaseApp(name, logger, db)
-	app.MountStoresIAVL(capKey)
+	capKey = sdk.NewKVStoreKey("main")
+	capKey2 = sdk.NewKVStoreKey("key2")
+	app.MountStoresIAVL(capKey, capKey2)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
 	app.SetInitChainer(initChainer)

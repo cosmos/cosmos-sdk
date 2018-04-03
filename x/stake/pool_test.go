@@ -231,11 +231,9 @@ func randomSetup(r *rand.Rand, numCandidates int) (Pool, Candidates) {
 	return pool, candidates
 }
 
-func randomTokens(r *rand.Rand) int64 {
-	return int64(r.Int31n(10000))
-}
-
 // any operation that transforms staking state
+// takes in RNG instance, pool, candidate
+// returns updated pool, updated candidate, delta tokens, descriptive message
 type Operation func(r *rand.Rand, p Pool, c Candidate) (Pool, Candidate, int64, string)
 
 // operation: bond or unbond a candidate depending on current status
@@ -302,34 +300,27 @@ func assertInvariants(t *testing.T, msg string,
 		pOrig.UnbondedPool, pOrig.BondedPool,
 		pMod.UnbondedPool, pMod.BondedPool, tokens)
 
-	// nonnegative shares
+	// nonnegative bonded shares
 	require.False(t, pMod.BondedShares.LT(sdk.ZeroRat),
 		"Negative bonded shares - msg: %v\n, pOrig: %v\n, pMod: %v\n, tokens: %v\n",
 		msg, pOrig, pMod, tokens)
+
+	// nonnegative unbonded shares
 	require.False(t, pMod.UnbondedShares.LT(sdk.ZeroRat),
 		"Negative unbonded shares - msg: %v\n, pOrig: %v\n, pMod: %v\n, tokens: %v\n",
 		msg, pOrig, pMod, tokens)
 
-	// nonnegative ex rates
+	// nonnegative bonded ex rate
 	require.False(t, pMod.bondedShareExRate().LT(sdk.ZeroRat),
 		"Applying operation \"%s\" resulted in negative bondedShareExRate: %d",
 		msg, pMod.bondedShareExRate().Evaluate())
 
+	// nonnegative unbonded ex rate
 	require.False(t, pMod.unbondedShareExRate().LT(sdk.ZeroRat),
 		"Applying operation \"%s\" resulted in negative unbondedShareExRate: %d",
 		msg, pMod.unbondedShareExRate().Evaluate())
 
-	// bonded/unbonded pool correct
-	bondedPool := sdk.ZeroRat
-	unbondedPool := sdk.ZeroRat
-
 	for _, cMod := range cMods {
-
-		if cMod.Status == Bonded {
-			bondedPool = bondedPool.Add(cMod.Assets)
-		} else {
-			unbondedPool = unbondedPool.Add(cMod.Assets)
-		}
 
 		// nonnegative ex rate
 		require.False(t, cMod.delegatorShareExRate().LT(sdk.ZeroRat),
@@ -339,7 +330,7 @@ func assertInvariants(t *testing.T, msg string,
 			cMod.Address,
 		)
 
-		// nonnegative assets / liabilities
+		// nonnegative assets
 		require.False(t, cMod.Assets.LT(sdk.ZeroRat),
 			"Applying operation \"%s\" resulted in negative candidate.Assets: %v (candidate.Liabilities: %v, candidate.delegatorShareExRate: %v, candidate.Address: %s)",
 			msg,
@@ -349,6 +340,7 @@ func assertInvariants(t *testing.T, msg string,
 			cMod.Address,
 		)
 
+		// nonnegative liabilities
 		require.False(t, cMod.Liabilities.LT(sdk.ZeroRat),
 			"Applying operation \"%s\" resulted in negative candidate.Liabilities: %v (candidate.Assets: %v, candidate.delegatorShareExRate: %v, candidate.Address: %s)",
 			msg,
@@ -357,10 +349,9 @@ func assertInvariants(t *testing.T, msg string,
 			cMod.delegatorShareExRate(),
 			cMod.Address,
 		)
+
 	}
 
-	//require.Equal(t, pMod.BondedPool, bondedPool.Evaluate(), "Applying operation \"%s\" resulted in unequal bondedPool", msg)
-	//require.Equal(t, pMod.UnbondedPool, unbondedPool.Evaluate(), "Applying operation \"%s\" resulted in unequal unbondedPool", msg)
 }
 
 func TestPossibleOverflow(t *testing.T) {

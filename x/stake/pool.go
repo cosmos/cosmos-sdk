@@ -4,132 +4,115 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// load/save the global staking state
-func (k Keeper) GetPool(ctx sdk.Context) (gs Pool) {
-	// check if cached before anything
-	if k.gs != (Pool{}) {
-		return k.gs
+// get the bond ratio of the global state
+func (p Pool) bondedRatio() sdk.Rat {
+	if p.TotalSupply > 0 {
+		return sdk.NewRat(p.BondedPool, p.TotalSupply)
 	}
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(PoolKey)
-	if b == nil {
-		return initialPool()
-	}
-	err := k.cdc.UnmarshalBinary(b, &gs)
-	if err != nil {
-		panic(err) // This error should never occur big problem if does
-	}
-	return
+	return sdk.ZeroRat
 }
 
-func (k Keeper) setPool(ctx sdk.Context, p Pool) {
-	store := ctx.KVStore(k.storeKey)
-	b, err := k.cdc.MarshalBinary(p)
-	if err != nil {
-		panic(err)
+// get the exchange rate of bonded token per issued share
+func (p Pool) bondedShareExRate() sdk.Rat {
+	if p.BondedShares.IsZero() {
+		return sdk.OneRat
 	}
-	store.Set(PoolKey, b)
-	k.gs = Pool{} // clear the cache
+	return sdk.NewRat(p.BondedPool).Quo(p.BondedShares)
 }
 
-//_______________________________________________________________________
-
-//TODO make these next two functions more efficient should be reading and writting to state ye know
+// get the exchange rate of unbonded tokens held in candidates per issued share
+func (p Pool) unbondedShareExRate() sdk.Rat {
+	if p.UnbondedShares.IsZero() {
+		return sdk.OneRat
+	}
+	return sdk.NewRat(p.UnbondedPool).Quo(p.UnbondedShares)
+}
 
 // move a candidates asset pool from bonded to unbonded pool
-func (k Keeper) bondedToUnbondedPool(ctx sdk.Context, candidate Candidate) {
+func (p Pool) bondedToUnbondedPool(candidate Candidate) (Pool, Candidate) {
 
 	// replace bonded shares with unbonded shares
-	tokens := k.removeSharesBonded(ctx, candidate.Assets)
-	candidate.Assets = k.addTokensUnbonded(ctx, tokens)
+	p, tokens := p.removeSharesBonded(candidate.Assets)
+	p, candidate.Assets = p.addTokensUnbonded(tokens)
 	candidate.Status = Unbonded
-	k.setCandidate(ctx, candidate)
+	return p, candidate
 }
 
 // move a candidates asset pool from unbonded to bonded pool
-func (k Keeper) unbondedToBondedPool(ctx sdk.Context, candidate Candidate) {
+func (p Pool) unbondedToBondedPool(candidate Candidate) (Pool, Candidate) {
 
 	// replace unbonded shares with bonded shares
-	tokens := k.removeSharesUnbonded(ctx, candidate.Assets)
-	candidate.Assets = k.addTokensBonded(ctx, tokens)
+	p, tokens := p.removeSharesUnbonded(candidate.Assets)
+	p, candidate.Assets = p.addTokensBonded(tokens)
 	candidate.Status = Bonded
-	k.setCandidate(ctx, candidate)
+	return p, candidate
 }
 
 //_______________________________________________________________________
 
-func (k Keeper) addTokensBonded(ctx sdk.Context, amount int64) (issuedShares sdk.Rat) {
-	p := k.GetPool(ctx)
-	issuedShares = p.bondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
+func (p Pool) addTokensBonded(amount int64) (p2 Pool, issuedShares sdk.Rat) {
+	issuedShares = sdk.NewRat(amount).Quo(p.bondedShareExRate()) // (tokens/shares)^-1 * tokens
 	p.BondedPool += amount
 	p.BondedShares = p.BondedShares.Add(issuedShares)
-	k.setPool(ctx, p)
-	return
+	return p, issuedShares
 }
 
-func (k Keeper) removeSharesBonded(ctx sdk.Context, shares sdk.Rat) (removedTokens int64) {
-	p := k.GetPool(ctx)
+func (p Pool) removeSharesBonded(shares sdk.Rat) (p2 Pool, removedTokens int64) {
 	removedTokens = p.bondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	p.BondedShares = p.BondedShares.Sub(shares)
 	p.BondedPool -= removedTokens
-	k.setPool(ctx, p)
-	return
+	return p, removedTokens
 }
 
-func (k Keeper) addTokensUnbonded(ctx sdk.Context, amount int64) (issuedShares sdk.Rat) {
-	p := k.GetPool(ctx)
+func (p Pool) addTokensUnbonded(amount int64) (p2 Pool, issuedShares sdk.Rat) {
 	issuedShares = p.unbondedShareExRate().Inv().Mul(sdk.NewRat(amount)) // (tokens/shares)^-1 * tokens
 	p.UnbondedShares = p.UnbondedShares.Add(issuedShares)
 	p.UnbondedPool += amount
-	k.setPool(ctx, p)
-	return
+	return p, issuedShares
 }
 
-func (k Keeper) removeSharesUnbonded(ctx sdk.Context, shares sdk.Rat) (removedTokens int64) {
-	p := k.GetPool(ctx)
+func (p Pool) removeSharesUnbonded(shares sdk.Rat) (p2 Pool, removedTokens int64) {
 	removedTokens = p.unbondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	p.UnbondedShares = p.UnbondedShares.Sub(shares)
 	p.UnbondedPool -= removedTokens
-	k.setPool(ctx, p)
-	return
+	return p, removedTokens
 }
 
 //_______________________________________________________________________
 
 // add tokens to a candidate
-func (k Keeper) candidateAddTokens(ctx sdk.Context, candidate Candidate, amount int64) (issuedDelegatorShares sdk.Rat) {
+func (p Pool) candidateAddTokens(candidate Candidate,
+	amount int64) (p2 Pool, candidate2 Candidate, issuedDelegatorShares sdk.Rat) {
 
-	p := k.GetPool(ctx)
 	exRate := candidate.delegatorShareExRate()
 
 	var receivedGlobalShares sdk.Rat
 	if candidate.Status == Bonded {
-		receivedGlobalShares = k.addTokensBonded(ctx, amount)
+		p, receivedGlobalShares = p.addTokensBonded(amount)
 	} else {
-		receivedGlobalShares = k.addTokensUnbonded(ctx, amount)
+		p, receivedGlobalShares = p.addTokensUnbonded(amount)
 	}
 	candidate.Assets = candidate.Assets.Add(receivedGlobalShares)
 
 	issuedDelegatorShares = exRate.Mul(receivedGlobalShares)
 	candidate.Liabilities = candidate.Liabilities.Add(issuedDelegatorShares)
-	k.setPool(ctx, p) // TODO cache Pool?
-	return
+
+	return p, candidate, issuedDelegatorShares
 }
 
 // remove shares from a candidate
-func (k Keeper) candidateRemoveShares(ctx sdk.Context, candidate Candidate, shares sdk.Rat) (createdCoins int64) {
+func (p Pool) candidateRemoveShares(candidate Candidate,
+	shares sdk.Rat) (p2 Pool, candidate2 Candidate, createdCoins int64) {
 
-	p := k.GetPool(ctx)
 	//exRate := candidate.delegatorShareExRate() //XXX make sure not used
 
 	globalPoolSharesToRemove := candidate.delegatorShareExRate().Mul(shares)
 	if candidate.Status == Bonded {
-		createdCoins = k.removeSharesBonded(ctx, globalPoolSharesToRemove)
+		p, createdCoins = p.removeSharesBonded(globalPoolSharesToRemove)
 	} else {
-		createdCoins = k.removeSharesUnbonded(ctx, globalPoolSharesToRemove)
+		p, createdCoins = p.removeSharesUnbonded(globalPoolSharesToRemove)
 	}
 	candidate.Assets = candidate.Assets.Sub(globalPoolSharesToRemove)
 	candidate.Liabilities = candidate.Liabilities.Sub(shares)
-	k.setPool(ctx, p) // TODO cache Pool?
-	return
+	return p, candidate, createdCoins
 }

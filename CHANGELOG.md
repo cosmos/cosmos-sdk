@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.13.1 (April 3, 2018)
+
+BUG FIXES
+
+* [x/ibc] Fix CLI and relay for IBC txs
+* [x/stake] Various fixes/improvements
+
 ## 0.13.0 (April 2, 2018)
 
 BREAKING CHANGES
@@ -7,7 +14,7 @@ BREAKING CHANGES
 * [basecoin] Remove cool/sketchy modules -> moved to new `democoin`
 * [basecoin] NewBasecoinApp takes a `map[string]dbm.DB` as temporary measure
   to allow mounting multiple stores with their own DB until they can share one
-* [staking] Renamed to `simplestake`
+* [x/staking] Renamed to `simplestake`
 * [builder] Functions don't take `passphrase` as argument
 * [server] GenAppState returns generated seed and address
 * [basecoind] `init` command outputs JSON of everything necessary for testnet
@@ -18,7 +25,7 @@ FEATURES
 
 * [types] `Coin` supports direct arithmetic operations
 * [basecoind] Add `show_validator` and `show_node_id` commands
-* [staking] Initial merge of full staking module!
+* [x/stake] Initial merge of full staking module!
 * [democoin] New example application to demo custom modules
 
 IMPROVEMENTS
@@ -42,9 +49,9 @@ BREAKING CHANGES
 * [types] Replace tx.GetFeePayer with FeePayer(tx) - returns the first signer
 * [types] NewStdTx takes the Fee
 * [types] ParseAccount -> AccountDecoder; ErrTxParse -> ErrTxDecoder
-* [auth] AnteHandler deducts fees
-* [bank] Move some errors to `types`
-* [bank] Remove sequence and signature from Input
+* [x/auth] AnteHandler deducts fees
+* [x/bank] Move some errors to `types`
+* [x/bank] Remove sequence and signature from Input
 
 FEATURES
 
@@ -68,8 +75,8 @@ IMPROVEMENTS
 * [specs] Staking
 
 BUG FIXES
-* [auth] Fix setting pubkey on new account
-* [auth] Require signatures to include the sequences
+* [x/auth] Fix setting pubkey on new account
+* [x/auth] Require signatures to include the sequences
 * [baseapp] Dont panic on nil handler
 * [basecoin] Check for empty bytes in account and tx
 

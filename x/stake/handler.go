@@ -71,17 +71,6 @@ func NewHandler(k Keeper, ck bank.CoinKeeper) sdk.Handler {
 
 //_____________________________________________________________________
 
-// XXX should be send in the msg (init in CLI)
-//func getSender() sdk.Address {
-//signers := msg.GetSigners()
-//if len(signers) != 1 {
-//return sdk.ErrUnauthorized("there can only be one signer for staking transaction").Result()
-//}
-//sender := signers[0]
-//}
-
-//_____________________________________________________________________
-
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
@@ -187,8 +176,11 @@ func BondCoins(ctx sdk.Context, k Keeper, bond DelegatorBond, candidate Candidat
 	if err != nil {
 		return err
 	}
-	newShares := k.candidateAddTokens(ctx, candidate, amount.Amount)
+	p := k.GetPool(ctx)
+	p, candidate, newShares := p.candidateAddTokens(candidate, amount.Amount)
 	bond.Shares = bond.Shares.Add(newShares)
+	k.setPool(ctx, p)
+	k.setCandidate(ctx, candidate)
 	k.setDelegatorBond(ctx, bond)
 	return nil
 }
@@ -258,7 +250,9 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	}
 
 	// Add the coins
-	returnAmount := k.candidateRemoveShares(ctx, candidate, shares)
+	p := k.GetPool(ctx)
+	var returnAmount int64
+	p, candidate, returnAmount = p.candidateRemoveShares(candidate, shares)
 	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
 	k.coinKeeper.AddCoins(ctx, bond.DelegatorAddr, returnCoins)
 
@@ -267,7 +261,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 		// change the share types to unbonded if they were not already
 		if candidate.Status == Bonded {
-			k.bondedToUnbondedPool(ctx, candidate)
+			p, candidate = p.bondedToUnbondedPool(candidate)
 		}
 
 		// lastly update the status
@@ -280,6 +274,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	} else {
 		k.setCandidate(ctx, candidate)
 	}
+	k.setPool(ctx, p)
 	return sdk.Result{}
 }
 
@@ -293,12 +288,16 @@ func UnbondCoins(ctx sdk.Context, k Keeper, bond DelegatorBond, candidate Candid
 	}
 	bond.Shares = bond.Shares.Sub(shares)
 
-	returnAmount := k.candidateRemoveShares(ctx, candidate, shares)
+	p := k.GetPool(ctx)
+	var returnAmount int64
+	p, candidate, returnAmount = p.candidateRemoveShares(candidate, shares)
 	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
 
 	_, err := k.coinKeeper.AddCoins(ctx, candidate.Address, returnCoins)
 	if err != nil {
 		return err
 	}
+	k.setPool(ctx, p)
+	k.setCandidate(ctx, candidate)
 	return nil
 }

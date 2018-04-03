@@ -77,7 +77,7 @@ func buildMsg(from sdk.Address) (sdk.Msg, error) {
 	}
 	to := sdk.Address(bz)
 
-	packet := ibc.NewIBCPacket(from, to, coins, client.FlagChainID,
+	packet := ibc.NewIBCPacket(from, to, coins, viper.GetString(client.FlagChainID),
 		viper.GetString(flagChain))
 
 	msg := ibc.IBCTransferMsg{

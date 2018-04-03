@@ -363,6 +363,35 @@ func assertInvariants(t *testing.T, msg string,
 	//require.Equal(t, pMod.UnbondedPool, unbondedPool.Evaluate(), "Applying operation \"%s\" resulted in unequal unbondedPool", msg)
 }
 
+func TestPossibleOverflow(t *testing.T) {
+	assets := sdk.NewRat(2159)
+	liabilities := sdk.NewRat(391432570689183511).Quo(sdk.NewRat(40113011844664))
+	cand := Candidate{
+		Status:      Bonded,
+		Address:     addrs[0],
+		PubKey:      pks[0],
+		Assets:      assets,
+		Liabilities: liabilities,
+	}
+	pool := Pool{
+		TotalSupply:       0,
+		BondedShares:      assets,
+		UnbondedShares:    sdk.ZeroRat,
+		BondedPool:        assets.Evaluate(),
+		UnbondedPool:      0,
+		InflationLastTime: 0,
+		Inflation:         sdk.NewRat(7, 100),
+	}
+	tokens := int64(71)
+	msg := fmt.Sprintf("candidate %s (status: %d, assets: %v, liabilities: %v, delegatorShareExRate: %v)",
+		cand.Address, cand.Status, cand.Assets, cand.Liabilities, cand.delegatorShareExRate())
+	_, newCandidate, _ := pool.candidateAddTokens(cand, tokens)
+	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)
+	require.False(t, newCandidate.delegatorShareExRate().LT(sdk.ZeroRat),
+		"Applying operation \"%s\" resulted in negative delegatorShareExRate(): %v",
+		msg, newCandidate.delegatorShareExRate())
+}
+
 // run random operations in a random order on a random single-candidate state, assert invariants hold
 func TestSingleCandidateIntegrationInvariants(t *testing.T) {
 	r := rand.New(rand.NewSource(41))

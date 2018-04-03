@@ -132,10 +132,8 @@ OUTER:
 				continue OUTER
 			}
 
-			viper.Set(client.FlagSequence, seq)
+			err = c.broadcastTx(seq, toChainNode, c.refine(egressbz, i, passphrase))
 			seq++
-
-			err = c.broadcastTx(toChainNode, c.refine(egressbz, i, passphrase))
 			if err != nil {
 				c.logger.Error("Error broadcasting ingress packet", "err", err)
 				continue OUTER
@@ -150,8 +148,8 @@ func query(node string, key []byte, storeName string) (res []byte, err error) {
 	return context.NewCoreContextFromViper().WithNodeURI(node).Query(key, storeName)
 }
 
-func (c relayCommander) broadcastTx(node string, tx []byte) error {
-	_, err := context.NewCoreContextFromViper().WithNodeURI(node).WithSequence(c.getSequence(node) + 1).BroadcastTx(tx)
+func (c relayCommander) broadcastTx(seq int64, node string, tx []byte) error {
+	_, err := context.NewCoreContextFromViper().WithNodeURI(node).WithSequence(seq + 1).BroadcastTx(tx)
 	return err
 }
 
@@ -167,10 +165,6 @@ func (c relayCommander) getSequence(node string) int64 {
 	}
 
 	return account.GetSequence()
-}
-
-func setSequence(seq int64) {
-	viper.Set(client.FlagSequence, seq)
 }
 
 func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []byte {

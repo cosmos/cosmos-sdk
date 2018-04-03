@@ -95,7 +95,11 @@ func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keepe
 
 	// move coins from the msg.Address account to a (self-bond) delegator account
 	// the candidate account and global shares are updated within here
-	return delegate(ctx, k, msg.CandidateAddr, msg.Bond, candidate).Result()
+	err := delegate(ctx, k, msg.CandidateAddr, msg.Bond, candidate)
+	if err != nil {
+		return err.Result()
+	}
+	return sdk.Result{}
 }
 
 func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk.Result {
@@ -139,7 +143,11 @@ func handleMsgDelegate(ctx sdk.Context, msg MsgDelegate, k Keeper) sdk.Result {
 			GasUsed: GasDelegate,
 		}
 	}
-	return delegate(ctx, k, msg.DelegatorAddr, msg.Bond, candidate).Result()
+	err := delegate(ctx, k, msg.DelegatorAddr, msg.Bond, candidate)
+	if err != nil {
+		return err.Result()
+	}
+	return sdk.Result{}
 }
 
 func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,

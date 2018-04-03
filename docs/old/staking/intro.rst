@@ -65,8 +65,6 @@ You can see all available keys with:
 
     basecli keys list
 
-See the `key management tutorial <../key-management.html>`__ for more information on managing keys.
-
 Setup Testnet
 -------------
 
@@ -158,9 +156,9 @@ We'll have ``alice`` send some ``mycoin`` to ``bob``, who has now joined the net
 
 ::
 
-    basecli send --amount=1000fermion --seq=0 --name=alice --to=5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
+    basecli send --amount=1000mycoin --seq=0 --name=alice --to=5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
 
-where the ``--seq`` flag is to be incremented for each transaction, the ``--name`` flag names the sender, and the ``--to`` flag takes ``bob``'s address. You'll see something like:
+where the ``--seq`` flag is to be incremented for each transaction, the ``--name`` flag is the sender (alice), and the ``--to`` flag takes ``bob``'s address. You'll see something like:
 
 ::
 
@@ -192,11 +190,15 @@ where the ``--seq`` flag is to be incremented for each transaction, the ``--name
 
 TODO: check the above with current actual output.
 
-Check out ``bob``'s account, which should now have 992 fermions:
+Check out ``bob``'s account, which should now have 1000 mycoin:
 
 ::
 
     basecli account 5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
+
+
+
+
 
 Adding a Second Validator
 -------------------------
@@ -205,7 +207,7 @@ Next, let's add the second node as a validator.
 
 First, we need the pub_key data:
 
-** need to make bob a priv_Val above!
+** need to make bob a priv_Val above?
 
 ::
 
@@ -240,11 +242,11 @@ with an output like:
     }
 
 
-We should see ``bob``'s account balance decrease by 10 fermions:
+We should see ``bob``'s account balance decrease by 10 mycoin:
 
 ::
 
-    gaia client query account 5D93A6059B6592833CBC8FA3DA90EE0382198985 
+    basecli account 5D93A6059B6592833CBC8FA3DA90EE0382198985 
 
 To confirm for certain the new validator is active, ask the tendermint node:
 
@@ -256,7 +258,7 @@ If you now kill either node, blocks will stop streaming in, because
 there aren't enough validators online. Turn it back on and they will
 start streaming again.
 
-Now that ``bob`` has declared candidacy, which essentially bonded 10 fermions and made him a validator, we're going to get ``charlie`` to delegate some coins to ``bob``.
+Now that ``bob`` has declared candidacy, which essentially bonded 10 mycoin and made him a validator, we're going to get ``charlie`` to delegate some coins to ``bob``.
 
 Delegating
 ----------
@@ -265,13 +267,13 @@ First let's have ``alice`` send some coins to ``charlie``:
 
 ::
 
-    gaia client tx send --amount=1000fermion --sequence=2 --name=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
+    basecli tx --amount=1000mycoin --sequence=2 --name=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
 
-Then ``charlie`` will delegate some fermions to ``bob``:
+Then ``charlie`` will delegate some mycoin to ``bob``:
 
 ::
 
-    gaia client tx delegate --amount=10fermion --name=charlie --pubkey=<pub_key data>
+    basecli tx delegate --amount=10mycoin --name=charlie --pubkey=<pub_key data>
 
 You'll see output like:
 
@@ -287,13 +289,13 @@ You'll see output like:
       "height": 51585
     }
 
-And that's it. You can query ``charlie``'s account to see the decrease in fermions.
+And that's it. You can query ``charlie``'s account to see the decrease in mycoin.
 
 To get more information about the candidate, try:
 
 ::
 
-    gaia client query candidate --pubkey=<pub_key data>
+    basecli query candidate --pubkey=<pub_key data>
 
 and you'll see output similar to:
 
@@ -326,7 +328,7 @@ It's also possible the query the delegator's bond like so:
 
 ::
 
-    gaia client query delegator-bond --delegator-address 48F74F48281C89E5E4BE9092F735EA519768E8EF --pubkey 52D6FCD8C92A97F7CCB01205ADF310A18411EA8FDCC10E65BF2FCDB05AD1689B
+    basecli query delegator-bond --delegator-address 48F74F48281C89E5E4BE9092F735EA519768E8EF --pubkey 52D6FCD8C92A97F7CCB01205ADF310A18411EA8FDCC10E65BF2FCDB05AD1689B
 
 with an output similar to:
 
@@ -355,9 +357,7 @@ your VotingPower reduce and your account balance increase.
 
 ::
 
-    gaia client tx unbond --amount=5fermion --name=charlie --pubkey=<pub_key data>
-    gaia client query account 48F74F48281C89E5E4BE9092F735EA519768E8EF
+    basecli unbond --amount=5mycoin --name=charlie --pubkey=<pub_key data>
+    basecli account 48F74F48281C89E5E4BE9092F735EA519768E8EF
 
-See the bond decrease with ``gaia client query delegator-bond`` like above.
-
-That concludes an overview of the ``gaia`` tooling for local testing.
+See the bond decrease with ``basecli query delegator-bond`` like above.

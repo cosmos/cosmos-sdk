@@ -35,15 +35,12 @@ func TestMountStores(t *testing.T) {
 
 	// make some cap keys
 	capKey1 := sdk.NewKVStoreKey("key1")
-	db1 := dbm.NewMemDB()
 	capKey2 := sdk.NewKVStoreKey("key2")
-	db2 := dbm.NewMemDB()
 
 	// no stores are mounted
 	assert.Panics(t, func() { app.LoadLatestVersion(capKey1) })
 
-	app.MountStoreWithDB(capKey1, sdk.StoreTypeIAVL, db1)
-	app.MountStoreWithDB(capKey2, sdk.StoreTypeIAVL, db2)
+	app.MountStoresIAVL(capKey1, capKey2)
 
 	// stores are mounted
 	err := app.LoadLatestVersion(capKey1)
@@ -151,15 +148,9 @@ func TestInitChainer(t *testing.T) {
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
 	app := NewBaseApp(name, logger, db)
-	// make cap keys and mount the stores
-	// NOTE/TODO: mounting multiple stores is broken
-	// see https://github.com/cosmos/cosmos-sdk/issues/532
+	// make cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
-	db1 := dbm.NewMemDB()
-	capKey2 := sdk.NewKVStoreKey("key2")
-	db2 := dbm.NewMemDB()
-	app.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db1)
-	app.MountStoreWithDB(capKey2, sdk.StoreTypeIAVL, db2)
+	app.MountStoresIAVL(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
 
@@ -191,8 +182,7 @@ func TestInitChainer(t *testing.T) {
 
 	// reload app
 	app = NewBaseApp(name, logger, db)
-	app.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db1)
-	app.MountStoreWithDB(capKey2, sdk.StoreTypeIAVL, db2)
+	app.MountStoresIAVL(capKey)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
 	app.SetInitChainer(initChainer)

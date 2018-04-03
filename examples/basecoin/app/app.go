@@ -39,10 +39,10 @@ type BasecoinApp struct {
 	accountMapper sdk.AccountMapper
 }
 
-func NewBasecoinApp(logger log.Logger, dbs map[string]dbm.DB) *BasecoinApp {
+func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	// create your application object
 	var app = &BasecoinApp{
-		BaseApp:            bam.NewBaseApp(appName, logger, dbs["main"]),
+		BaseApp:            bam.NewBaseApp(appName, logger, db),
 		cdc:                MakeCodec(),
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
 		capKeyAccountStore: sdk.NewKVStoreKey("acc"),

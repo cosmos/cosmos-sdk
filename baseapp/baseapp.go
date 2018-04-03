@@ -72,7 +72,6 @@ func (app *BaseApp) Name() string {
 }
 
 // Mount a store to the provided key in the BaseApp multistore
-// Broken until #532 is implemented.
 func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
 		app.MountStore(key, sdk.StoreTypeIAVL)

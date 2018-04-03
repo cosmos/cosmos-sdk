@@ -121,7 +121,7 @@ OUTER:
 			panic(err)
 		}
 		if egressLength > processed {
-			c.logger.Info("IBC packet detected", "number", egressLength-1)
+			c.logger.Info("Detected IBC packet", "number", egressLength-1)
 		}
 
 		seq := c.getSequence(toChainNode)

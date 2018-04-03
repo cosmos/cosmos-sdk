@@ -576,7 +576,7 @@ func TestPool(t *testing.T) {
 }
 
 func TestInitGenesis(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 	jsonStr := `{
   "params": {
     "inflation_rate_change": {"num": 13, "denom": 100},

@@ -78,6 +78,9 @@ func ErrBadDelegatorAddr() sdk.Error {
 func ErrCandidateExistsAddr() sdk.Error {
 	return newError(CodeInvalidValidator, "Candidate already exist, cannot re-declare candidacy")
 }
+func ErrCandidateRevoked() sdk.Error {
+	return newError(CodeInvalidValidator, "Candidacy for this address is currently revoked")
+}
 func ErrMissingSignature() sdk.Error {
 	return newError(CodeInvalidValidator, "Missing signature")
 }

@@ -16,9 +16,11 @@ func TestBondedRatio(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 	pool.TotalSupply = 3
 	pool.BondedPool = 2
+
 	// bonded pool / total supply
 	require.Equal(t, pool.bondedRatio(), sdk.NewRat(2).Quo(sdk.NewRat(3)))
 	pool.TotalSupply = 0
+
 	// avoids divide-by-zero
 	require.Equal(t, pool.bondedRatio(), sdk.ZeroRat)
 }
@@ -28,9 +30,11 @@ func TestBondedShareExRate(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 	pool.BondedPool = 3
 	pool.BondedShares = sdk.NewRat(10)
+
 	// bonded pool / bonded shares
 	require.Equal(t, pool.bondedShareExRate(), sdk.NewRat(3).Quo(sdk.NewRat(10)))
 	pool.BondedShares = sdk.ZeroRat
+
 	// avoids divide-by-zero
 	require.Equal(t, pool.bondedShareExRate(), sdk.OneRat)
 }
@@ -40,9 +44,11 @@ func TestUnbondedShareExRate(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 	pool.UnbondedPool = 3
 	pool.UnbondedShares = sdk.NewRat(10)
+
 	// unbonded pool / unbonded shares
 	require.Equal(t, pool.unbondedShareExRate(), sdk.NewRat(3).Quo(sdk.NewRat(10)))
 	pool.UnbondedShares = sdk.ZeroRat
+
 	// avoids divide-by-zero
 	require.Equal(t, pool.unbondedShareExRate(), sdk.OneRat)
 }
@@ -303,7 +309,7 @@ func randomSetup(r *rand.Rand, numCandidates int) (Pool, Candidates) {
 type Operation func(r *rand.Rand, p Pool, c Candidate) (Pool, Candidate, int64, string)
 
 // operation: bond or unbond a candidate depending on current status
-func BondOrUnbond(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int64, string) {
+func OpBondOrUnbond(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int64, string) {
 	var msg string
 	if cand.Status == Bonded {
 		msg = fmt.Sprintf("Unbonded previously bonded candidate %s (assets: %v, liabilities: %v, delegatorShareExRate: %v)",
@@ -319,7 +325,7 @@ func BondOrUnbond(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int64,
 }
 
 // operation: add a random number of tokens to a candidate
-func AddTokens(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int64, string) {
+func OpAddTokens(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int64, string) {
 	tokens := int64(r.Int31n(1000))
 	msg := fmt.Sprintf("candidate %s (status: %d, assets: %v, liabilities: %v, delegatorShareExRate: %v)",
 		cand.Address, cand.Status, cand.Assets, cand.Liabilities, cand.delegatorShareExRate())
@@ -329,8 +335,7 @@ func AddTokens(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int64, st
 }
 
 // operation: remove a random number of shares from a candidate
-func RemoveShares(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int64, string) {
-
+func OpRemoveShares(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int64, string) {
 	var shares sdk.Rat
 	for {
 		shares = sdk.NewRat(int64(r.Int31n(1000)))
@@ -349,9 +354,9 @@ func RemoveShares(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int64,
 // pick a random staking operation
 func randomOperation(r *rand.Rand) Operation {
 	operations := []Operation{
-		BondOrUnbond,
-		AddTokens,
-		RemoveShares,
+		OpBondOrUnbond,
+		OpAddTokens,
+		OpRemoveShares,
 	}
 	r.Shuffle(len(operations), func(i, j int) {
 		operations[i], operations[j] = operations[j], operations[i]

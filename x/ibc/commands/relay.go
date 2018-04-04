@@ -144,15 +144,15 @@ OUTER:
 					continue OUTER
 				}
 				fmt.Printf("Commit: %+v\nHeight: %+v\n", commit.Header.AppHash.Bytes(), commit.Header.Height)
-				msg := ibcm.UpdateChannelMsg{
+				_ := ibcm.UpdateChannelMsg{
 					SrcChain: fromChainID,
 					Commit:   commit,
 					Signer:   c.address,
 				}
-				name := viper.GetString(client.FlagName)
+				//name := viper.GetString(client.FlagName)
 				viper.Set(client.FlagSequence, seq)
 				seq++
-				_, err = builder.SignBuildBroadcast(name, passphrase, msg, c.cdc)
+				//_, err = builder.SignBuildBroadcast(name, passphrase, msg, c.cdc)
 				if err != nil {
 					fmt.Printf("Error broadcasting update: '%s'\n", err)
 					continue OUTER

@@ -61,11 +61,11 @@ func main() {
 	basecliCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
+			bankcmd.IBCSendCmd(cdc),
 		)...)
 	basecliCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.IBCSendCmd(cdc),
-			ibccmd.IBCTransferCmd(cdc),
 		)...)
 
 	basecliCmd.AddCommand(

@@ -14,8 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/builder"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/commands"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
 type transferBody struct {
@@ -67,8 +67,16 @@ func TransferRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.Response
 		to := sdk.Address(bz)
 
 		// build message
-		packet := ibc.NewIBCPacket(info.PubKey.Address(), to, m.Amount, m.SrcChainID, destChainID)
-		msg := ibc.IBCTransferMsg{packet}
+		payload := bank.SendPayload{
+			SrcAddr:  info.PubKey.Address(),
+			DestAddr: to,
+			Coins:    m.Amount,
+		}
+
+		msg := bank.IBCSendMsg{
+			DestChain:   destChainID,
+			SendPayload: payload,
+		}
 
 		// sign
 		// XXX: OMG

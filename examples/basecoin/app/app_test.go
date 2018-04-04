@@ -329,11 +329,6 @@ func TestQuizMsg(t *testing.T) {
 func TestIBCMsgs(t *testing.T) {
 	bapp := newBasecoinApp()
 
-	vals := []abci.Validator{}
-
-	sourceChain := "source-chain"
-	destChain := "dest-chain"
-
 	baseAcc := auth.BaseAccount{
 		Address: addr1,
 		Coins:   coins,

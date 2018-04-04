@@ -8,6 +8,7 @@ import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-crypto"
 
+	oldwire "github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"
 
 	"github.com/cosmos/cosmos-sdk/store"
@@ -81,16 +82,14 @@ func makeCodec() *wire.Codec {
 
 	const msgTypeSend = 0x1
 	const msgTypeIssue = 0x2
-	const msgTypeQuiz = 0x3
-	const msgTypeSetTrend = 0x4
-	const msgTypeIBCTransferMsg = 0x5
-	const msgTypeIBCReceiveMsg = 0x6
+	const msgTypeRemoteSave = 0x3
+	const msgTypeReceive = 0x4
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Msg }{},
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
 		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
-		oldwire.ConcreteType{IBCTransferMsg{}, msgTypeIBCTransferMsg},
-		oldwire.ConcreteType{IBCReceiveMsg{}, msgTypeIBCReceiveMsg},
+		oldwire.ConcreteType{remoteSaveMsg{}, msgTypeRemoteSave},
+		oldwire.ConcreteType{ReceiveMsg{}, msgTypeReceive},
 	)
 
 	const accTypeApp = 0x1
@@ -99,6 +98,7 @@ func makeCodec() *wire.Codec {
 		oldwire.ConcreteType{&auth.BaseAccount{}, accTypeApp},
 	)
 	cdc := wire.NewCodec()
+	return cdc
 }
 
 func remoteSaveHandler(sender ibc.Sender) sdk.Handler {

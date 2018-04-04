@@ -61,10 +61,7 @@ func main() {
 	democliCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
-		)...)
-	democliCmd.AddCommand(
-		client.PostCommands(
-			ibccmd.IBCTransferCmd(cdc),
+			bankcmd.IBCSendCmd(cdc),
 		)...)
 	democliCmd.AddCommand(
 		client.PostCommands(

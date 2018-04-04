@@ -1,5 +1,6 @@
 PACKAGES=$(shell go list ./... | grep -v '/vendor/')
-BUILD_FLAGS = -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=`git rev-parse --short HEAD`"
+COMMIT_HASH := $(shell git rev-parse --short HEAD)
+BUILD_FLAGS = -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
 
 all: check_tools get_vendor_deps build test
 
@@ -17,9 +18,25 @@ gaia:
 	go build $(BUILD_FLAGS) -o build/gaiacli ./examples/gaia/gaiacli
 
 build:
-	@rm -rf examples/basecoin/vendor/
+	@rm -rf $(shell pwd)/examples/basecoin/vendor/
+	@rm -rf $(shell pwd)/examples/democoin/vendor/
+ifeq ($(OS),Windows_NT)
+	go build $(BUILD_FLAGS) -o build/basecoind.exe ./examples/basecoin/cmd/basecoind
+	go build $(BUILD_FLAGS) -o build/basecli.exe ./examples/basecoin/cmd/basecli
+	go build $(BUILD_FLAGS) -o build/democoind.exe ./examples/democoin/cmd/democoind
+	go build $(BUILD_FLAGS) -o build/democli.exe ./examples/democoin/cmd/democli
+else
 	go build $(BUILD_FLAGS) -o build/basecoind ./examples/basecoin/cmd/basecoind
 	go build $(BUILD_FLAGS) -o build/basecli ./examples/basecoin/cmd/basecli
+	go build $(BUILD_FLAGS) -o build/democoind ./examples/democoin/cmd/democoind
+	go build $(BUILD_FLAGS) -o build/democli ./examples/democoin/cmd/democli
+endif
+
+install: 
+	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecoind
+	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecli
+	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democoind
+	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democli
 
 dist:
 	@bash publish/dist.sh
@@ -68,13 +85,12 @@ test: test_unit # test_cli
 
 test_unit:
 	@rm -rf examples/basecoin/vendor/
+	@rm -rf examples/democoin/vendor/
 	@go test $(PACKAGES)
 
 test_cover:
 	@rm -rf examples/basecoin/vendor/
-	@rm -rf client/lcd/keys.db ~/.tendermint_test
 	@bash tests/test_cover.sh
-	@rm -rf client/lcd/keys.db ~/.tendermint_test
 
 benchmark:
 	@go test -bench=. $(PACKAGES)

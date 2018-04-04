@@ -51,14 +51,8 @@ func (c ibcSendCommander) ibcSend(cmd *cobra.Command, args []string) error {
 
 	// get password
 	name := viper.GetString(client.FlagName)
-	buf := client.BufferStdin()
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-	passphrase, err := client.GetPassword(prompt, buf)
-	if err != nil {
-		return err
-	}
 
-	res, err := builder.SignBuildBroadcast(name, passphrase, msg, c.cdc)
+	res, err := builder.SignBuildBroadcast(name, msg, c.cdc)
 	if err != nil {
 		return err
 	}
@@ -81,11 +75,16 @@ func buildMsg(from sdk.Address) (sdk.Msg, error) {
 	}
 	to := sdk.Address(bz)
 
+<<<<<<< HEAD:x/bank/commands/ibctx.go
 	payload := bank.SendPayload{
 		SrcAddr:  from,
 		DestAddr: to,
 		Coins:    coins,
 	}
+=======
+	packet := ibc.NewIBCPacket(from, to, coins, viper.GetString(client.FlagChainID),
+		viper.GetString(flagChain))
+>>>>>>> 9fc9db00fbc16f7e1ead85cc114318462cd59e82:x/ibc/commands/ibctx.go
 
 	msg := bank.IBCSendMsg{
 		DestChain:   viper.GetString(flagChain),

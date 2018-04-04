@@ -1,12 +1,27 @@
 package types
 
 import (
+	"encoding/hex"
+	"errors"
+
 	crypto "github.com/tendermint/go-crypto"
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
 // Address in go-crypto style
 type Address = cmn.HexBytes
+
+// create an Address from a string
+func GetAddress(address string) (addr Address, err error) {
+	if len(address) == 0 {
+		return addr, errors.New("must use provide address")
+	}
+	bz, err := hex.DecodeString(address)
+	if err != nil {
+		return nil, err
+	}
+	return Address(bz), nil
+}
 
 // Account is a standard account using a sequence number for replay protection
 // and a pubkey for authentication.
@@ -35,5 +50,5 @@ type AccountMapper interface {
 	SetAccount(ctx Context, acc Account)
 }
 
-// Application function variable used to unmarshal account
-type ParseAccount func([]byte) (Account, error)
+// AccountDecoder unmarshals account bytes
+type AccountDecoder func(accountBytes []byte) (Account, error)

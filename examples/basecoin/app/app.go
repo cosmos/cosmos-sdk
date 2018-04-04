@@ -17,11 +17,9 @@ import (
 
 	ibcm "github.com/cosmos/cosmos-sdk/x/ibc"
 	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/simplestake"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/x/sketchy"
 )
 
 const (
@@ -35,6 +33,7 @@ type BasecoinApp struct {
 
 	// keys to access the substores
 	capKeyMainStore    *sdk.KVStoreKey
+	capKeyAccountStore *sdk.KVStoreKey
 	capKeyIBCStore     *sdk.KVStoreKey
 	capKeyStakingStore *sdk.KVStoreKey
 
@@ -42,14 +41,15 @@ type BasecoinApp struct {
 	accountMapper sdk.AccountMapper
 }
 
-func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
+func NewBasecoinApp(logger log.Logger, dbs map[string]dbm.DB) *BasecoinApp {
 	// create your application object
 	var app = &BasecoinApp{
-		BaseApp:            bam.NewBaseApp(appName, logger, db),
+		BaseApp:            bam.NewBaseApp(appName, logger, dbs["main"]),
 		cdc:                MakeCodec(),
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
+		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
 		capKeyIBCStore:     sdk.NewKVStoreKey("ibc"),
-		capKeyStakingStore: sdk.NewKVStoreKey("staking"),
+		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
 	}
 
 	// define the accountMapper
@@ -60,25 +60,26 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// add handlers
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
-	coolMapper := cool.NewMapper(app.capKeyMainStore)
 
 	ibcKeeper := ibc.NewKeeper(app.cdc, app.capKeyIBCStore)
 	ibcKeeper.Dispatcher().
 		AddDispatch("bank", bank.NewIBCHandler(coinKeeper))
 
-	stakingMapper := staking.NewMapper(app.capKeyStakingStore)
-
+	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper)
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper, ibcKeeper.Sender())).
-		AddRoute("cool", cool.NewHandler(coinKeeper, coolMapper)).
-		AddRoute("sketchy", sketchy.NewHandler()).
-		AddRoute("ibc", ibcm.NewHandler(ibcKeeper)).
-		AddRoute("staking", staking.NewHandler(stakingMapper, coinKeeper))
+		AddRoute("bank", bank.NewHandler(coinKeeper)).
+		AddRoute("ibc", ibc.NewHandler(ibcMapper)).
+		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
 	// initialize BaseApp
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
-	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore, app.capKeyStakingStore)
+	app.MountStoreWithDB(app.capKeyMainStore, sdk.StoreTypeIAVL, dbs["main"])
+	app.MountStoreWithDB(app.capKeyAccountStore, sdk.StoreTypeIAVL, dbs["acc"])
+	app.MountStoreWithDB(app.capKeyIBCStore, sdk.StoreTypeIAVL, dbs["ibc"])
+	app.MountStoreWithDB(app.capKeyStakingStore, sdk.StoreTypeIAVL, dbs["staking"])
+	// NOTE: Broken until #532 lands
+	//app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore, app.capKeyStakingStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
@@ -104,11 +105,9 @@ func MakeCodec() *wire.Codec {
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
 		oldwire.ConcreteType{bank.IBCSendMsg{}, msgTypeIBCSend},
 		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
-		oldwire.ConcreteType{cool.QuizMsg{}, msgTypeQuiz},
-		oldwire.ConcreteType{cool.SetTrendMsg{}, msgTypeSetTrend},
 		oldwire.ConcreteType{ibcm.ReceiveMsg{}, msgTypeReceive},
-		oldwire.ConcreteType{staking.BondMsg{}, msgTypeBondMsg},
-		oldwire.ConcreteType{staking.UnbondMsg{}, msgTypeUnbondMsg},
+		oldwire.ConcreteType{simplestake.BondMsg{}, msgTypeBondMsg},
+		oldwire.ConcreteType{simplestake.UnbondMsg{}, msgTypeUnbondMsg},
 	)
 
 	const accTypeApp = 0x1
@@ -136,11 +135,15 @@ func MakeCodec() *wire.Codec {
 func (app *BasecoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 	var tx = sdk.StdTx{}
 
+	if len(txBytes) == 0 {
+		return nil, sdk.ErrTxDecode("txBytes are empty")
+	}
+
 	// StdTx.Msg is an interface. The concrete types
 	// are registered by MakeTxCodec in bank.RegisterWire.
 	err := app.cdc.UnmarshalBinary(txBytes, &tx)
 	if err != nil {
-		return nil, sdk.ErrTxParse("").TraceCause(err, "")
+		return nil, sdk.ErrTxDecode("").TraceCause(err, "")
 	}
 	return tx, nil
 }

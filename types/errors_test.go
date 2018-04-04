@@ -9,7 +9,7 @@ import (
 
 var codeTypes = []CodeType{
 	CodeInternal,
-	CodeTxParse,
+	CodeTxDecode,
 	CodeInvalidSequence,
 	CodeUnauthorized,
 	CodeInsufficientFunds,
@@ -23,7 +23,7 @@ type errFn func(msg string) Error
 
 var errFns = []errFn{
 	ErrInternal,
-	ErrTxParse,
+	ErrTxDecode,
 	ErrInvalidSequence,
 	ErrUnauthorized,
 	ErrInsufficientFunds,

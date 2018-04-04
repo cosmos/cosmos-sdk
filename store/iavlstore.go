@@ -19,7 +19,7 @@ const (
 
 func LoadIAVLStore(db dbm.DB, id CommitID) (CommitStore, error) {
 	tree := iavl.NewVersionedTree(db, defaultIAVLCacheSize)
-	err := tree.LoadVersion(id.Version)
+	_, err := tree.LoadVersion(id.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if len(req.Data) == 0 {
 		msg := "Query cannot be zero length"
-		return sdk.ErrTxParse(msg).Result().ToQuery()
+		return sdk.ErrTxDecode(msg).Result().ToQuery()
 	}
 
 	tree := st.tree

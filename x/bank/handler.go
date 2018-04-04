@@ -39,18 +39,9 @@ func handleIBCSendMsg(ctx sdk.Context, ibcs ibc.Sender, ck CoinKeeper, msg IBCSe
 func handleSendMsg(ctx sdk.Context, ck CoinKeeper, msg SendMsg) sdk.Result {
 	// NOTE: totalIn == totalOut should already have been checked
 
-	for _, in := range msg.Inputs {
-		_, err := ck.SubtractCoins(ctx, in.Address, in.Coins)
-		if err != nil {
-			return err.Result()
-		}
-	}
-
-	for _, out := range msg.Outputs {
-		_, err := ck.AddCoins(ctx, out.Address, out.Coins)
-		if err != nil {
-			return err.Result()
-		}
+	err := ck.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
+	if err != nil {
+		return err.Result()
 	}
 
 	// TODO: add some tags so we can search it!

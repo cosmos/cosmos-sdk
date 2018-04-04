@@ -12,7 +12,7 @@ type Router interface {
 	Route(path string) (h sdk.Handler)
 }
 
-// map a transaction type to a handler
+// map a transaction type to a handler and an initgenesis function
 type route struct {
 	r string
 	h sdk.Handler

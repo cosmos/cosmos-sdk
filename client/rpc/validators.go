@@ -24,7 +24,7 @@ func validatorCommand() *cobra.Command {
 	return cmd
 }
 
-func getValidators(height *int64) ([]byte, error) {
+func GetValidators(height *int64) ([]byte, error) {
 	// get the node
 	node, err := client.GetNode()
 	if err != nil {
@@ -59,7 +59,7 @@ func printValidators(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output, err := getValidators(height)
+	output, err := GetValidators(height)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func ValidatorsetRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ERROR: Requested block height is bigger then the chain length."))
 		return
 	}
-	output, err := getValidators(&height)
+	output, err := GetValidators(&height)
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
@@ -100,7 +100,7 @@ func LatestValidatorsetRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	output, err := getValidators(&height)
+	output, err := GetValidators(&height)
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))

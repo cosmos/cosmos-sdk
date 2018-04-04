@@ -60,6 +60,16 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+
+		_, err := kb.Get(name)
+		if err == nil {
+			// account exists, ask for user confirmation
+			if response, err := client.GetConfirmation(
+				fmt.Sprintf("override the existing name %s", name), buf); err != nil || !response {
+				return err
+			}
+		}
+
 		pass, err = client.GetCheckPassword(
 			"Enter a passphrase for your key:",
 			"Repeat the passphrase:", buf)

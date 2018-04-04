@@ -1,18 +1,84 @@
 # Changelog
 
-## unrealease 
+## 0.13.1 (April 3, 2018)
+
+BUG FIXES
+
+* [x/ibc] Fix CLI and relay for IBC txs
+* [x/stake] Various fixes/improvements
+
+## 0.13.0 (April 2, 2018)
 
 BREAKING CHANGES
 
+* [basecoin] Remove cool/sketchy modules -> moved to new `democoin`
+* [basecoin] NewBasecoinApp takes a `map[string]dbm.DB` as temporary measure
+  to allow mounting multiple stores with their own DB until they can share one
+* [x/staking] Renamed to `simplestake`
+* [builder] Functions don't take `passphrase` as argument
+* [server] GenAppState returns generated seed and address
+* [basecoind] `init` command outputs JSON of everything necessary for testnet
+* [basecoind] `basecoin.db -> data/basecoin.db`
+* [basecli] `data/keys.db -> keys/keys.db`
+
 FEATURES
 
-* [examples/basecoin] new cool module to demonstrate use of state and custom transactions
+* [types] `Coin` supports direct arithmetic operations
+* [basecoind] Add `show_validator` and `show_node_id` commands
+* [x/stake] Initial merge of full staking module!
+* [democoin] New example application to demo custom modules
 
 IMPROVEMENTS
 
-* [client] refactor to now include more standard code
+* [makefile] `make install`
+* [testing] Use `/tmp` for directories so they don't get left in the repo
 
 BUG FIXES
+
+* [basecoin] Allow app to be restarted
+* [makefile] Fix build on Windows
+* [basecli] Get confirmation before overriding key with same name
+
+## 0.12.0 (March 27 2018)
+
+BREAKING CHANGES
+
+* Revert to old go-wire for now
+* glide -> godep
+* [types] ErrBadNonce -> ErrInvalidSequence
+* [types] Replace tx.GetFeePayer with FeePayer(tx) - returns the first signer
+* [types] NewStdTx takes the Fee
+* [types] ParseAccount -> AccountDecoder; ErrTxParse -> ErrTxDecoder
+* [x/auth] AnteHandler deducts fees
+* [x/bank] Move some errors to `types`
+* [x/bank] Remove sequence and signature from Input
+
+FEATURES
+
+* [examples/basecoin] New cool module to demonstrate use of state and custom transactions
+* [basecoind] `show_node_id` command
+* [lcd] Implement the Light Client Daemon and endpoints
+* [types/stdlib] Queue functionality
+* [store] Subspace iterator on IAVLTree
+* [types] StdSignDoc is the document that gets signed (chainid, msg, sequence, fee)
+* [types] CodeInvalidPubKey
+* [types] StdFee, and StdTx takes the StdFee
+* [specs] Progression of MVPs for IBC
+* [x/ibc] Initial shell of IBC functionality (no proofs)
+* [x/simplestake] Simple staking module with bonding/unbonding
+
+IMPROVEMENTS
+
+* Lots more tests!
+* [client/builder] Helpers for forming and signing transactions 
+* [types] sdk.Address
+* [specs] Staking
+
+BUG FIXES
+* [x/auth] Fix setting pubkey on new account
+* [x/auth] Require signatures to include the sequences
+* [baseapp] Dont panic on nil handler
+* [basecoin] Check for empty bytes in account and tx
 
 ## 0.11.0 (March 1, 2017)
 

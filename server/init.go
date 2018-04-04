@@ -7,13 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	cmn "github.com/tendermint/tmlibs/common"
-	"github.com/tendermint/tmlibs/log"
-
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/p2p"
 	tmtypes "github.com/tendermint/tendermint/types"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 type testnetInformation struct {
@@ -29,10 +26,10 @@ type testnetInformation struct {
 // The application can pass in a function to generate
 // proper state. And may want to use GenerateCoinKey
 // to create default account(s).
-func InitCmd(gen GenAppState, logger log.Logger) *cobra.Command {
+func InitCmd(gen GenAppState, ctx *Context) *cobra.Command {
 	cmd := initCmd{
 		genAppState: gen,
-		logger:      logger,
+		context:     ctx,
 	}
 	cobraCmd := cobra.Command{
 		Use:   "init",
@@ -50,7 +47,7 @@ type GenAppState func(args []string) (json.RawMessage, string, cmn.HexBytes, err
 
 type initCmd struct {
 	genAppState GenAppState
-	logger      log.Logger
+	context     *Context
 }
 
 func (c initCmd) run(cmd *cobra.Command, args []string) error {
@@ -59,11 +56,8 @@ func (c initCmd) run(cmd *cobra.Command, args []string) error {
 
 	// Run the basic tendermint initialization,
 	// set up a default genesis with no app_options
-	config, err := tcmd.ParseConfig()
-	if err != nil {
-		return err
-	}
-	err = c.initTendermintFiles(config, &testnetInfo)
+	config := c.context.Config
+	err := c.initTendermintFiles(config, &testnetInfo)
 	if err != nil {
 		return err
 	}
@@ -109,17 +103,17 @@ func (c initCmd) initTendermintFiles(config *cfg.Config, info *testnetInformatio
 	var privValidator *tmtypes.PrivValidatorFS
 	if cmn.FileExists(privValFile) {
 		privValidator = tmtypes.LoadPrivValidatorFS(privValFile)
-		c.logger.Info("Found private validator", "path", privValFile)
+		c.context.Logger.Info("Found private validator", "path", privValFile)
 	} else {
 		privValidator = tmtypes.GenPrivValidatorFS(privValFile)
 		privValidator.Save()
-		c.logger.Info("Generated private validator", "path", privValFile)
+		c.context.Logger.Info("Generated private validator", "path", privValFile)
 	}
 
 	// genesis file
 	genFile := config.GenesisFile()
 	if cmn.FileExists(genFile) {
-		c.logger.Info("Found genesis file", "path", genFile)
+		c.context.Logger.Info("Found genesis file", "path", genFile)
 	} else {
 		genDoc := tmtypes.GenesisDoc{
 			ChainID: cmn.Fmt("test-chain-%v", cmn.RandStr(6)),
@@ -132,7 +126,7 @@ func (c initCmd) initTendermintFiles(config *cfg.Config, info *testnetInformatio
 		if err := genDoc.SaveAs(genFile); err != nil {
 			return err
 		}
-		c.logger.Info("Generated genesis file", "path", genFile)
+		c.context.Logger.Info("Generated genesis file", "path", genFile)
 	}
 
 	// reload the config file and find our validator info

@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/mock"
 	"github.com/tendermint/abci/server"
+	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tmlibs/log"
 )
 
@@ -21,7 +22,10 @@ func TestStartStandAlone(t *testing.T) {
 	}()
 
 	logger := log.NewNopLogger()
-	initCmd := InitCmd(mock.GenInitOptions, logger)
+	cfg, err := tcmd.ParseConfig()
+	require.Nil(t, err)
+	ctx := NewContext(cfg, logger)
+	initCmd := InitCmd(mock.GenInitOptions, ctx)
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
@@ -37,7 +41,6 @@ func TestStartStandAlone(t *testing.T) {
 	case <-timer.C:
 		svr.Stop()
 	}
-
 }
 
 func TestStartWithTendermint(t *testing.T) {

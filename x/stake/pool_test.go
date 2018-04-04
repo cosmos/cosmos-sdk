@@ -11,6 +11,42 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func TestBondedRatio(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	pool := keeper.GetPool(ctx)
+	pool.TotalSupply = 3
+	pool.BondedPool = 2
+	// bonded pool / total supply
+	require.Equal(t, pool.bondedRatio(), sdk.NewRat(2).Quo(sdk.NewRat(3)))
+	pool.TotalSupply = 0
+	// avoids divide-by-zero
+	require.Equal(t, pool.bondedRatio(), sdk.ZeroRat)
+}
+
+func TestBondedShareExRate(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	pool := keeper.GetPool(ctx)
+	pool.BondedPool = 3
+	pool.BondedShares = sdk.NewRat(10)
+	// bonded pool / bonded shares
+	require.Equal(t, pool.bondedShareExRate(), sdk.NewRat(3).Quo(sdk.NewRat(10)))
+	pool.BondedShares = sdk.ZeroRat
+	// avoids divide-by-zero
+	require.Equal(t, pool.bondedShareExRate(), sdk.OneRat)
+}
+
+func TestUnbondedShareExRate(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	pool := keeper.GetPool(ctx)
+	pool.UnbondedPool = 3
+	pool.UnbondedShares = sdk.NewRat(10)
+	// unbonded pool / unbonded shares
+	require.Equal(t, pool.unbondedShareExRate(), sdk.NewRat(3).Quo(sdk.NewRat(10)))
+	pool.UnbondedShares = sdk.ZeroRat
+	// avoids divide-by-zero
+	require.Equal(t, pool.unbondedShareExRate(), sdk.OneRat)
+}
+
 func TestBondedToUnbondedPool(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, nil, false, 0)
 

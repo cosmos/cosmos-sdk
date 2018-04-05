@@ -55,6 +55,10 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	if err != nil {
 		return nil, err
 	}
+	dbPow, err := dbm.NewGoLevelDB("democoin-pow", filepath.Join(rootDir, "data"))
+	if err != nil {
+		return nil, err
+	}
 	dbIBC, err := dbm.NewGoLevelDB("democoin-ibc", filepath.Join(rootDir, "data"))
 	if err != nil {
 		return nil, err
@@ -66,6 +70,7 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	dbs := map[string]dbm.DB{
 		"main":    dbMain,
 		"acc":     dbAcc,
+		"pow":     dbPow,
 		"ibc":     dbIBC,
 		"staking": dbStaking,
 	}

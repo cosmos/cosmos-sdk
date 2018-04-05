@@ -8,8 +8,8 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 )
 
-// ShowNodeIdCmd - ported from Tendermint, dump node ID to stdout
-func ShowNodeIdCmd(ctx *Context) *cobra.Command {
+// ShowNodeIDCmd - ported from Tendermint, dump node ID to stdout
+func ShowNodeIDCmd(ctx *Context) *cobra.Command {
 	cmd := showNodeId{ctx}
 	return &cobra.Command{
 		Use:   "show_node_id",

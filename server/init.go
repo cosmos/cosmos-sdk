@@ -13,12 +13,15 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
+// testnetInformation contains the info necessary
+// to setup a testnet including this account and validator.
 type testnetInformation struct {
-	Secret    string                   `json:"secret"`
+	Secret string `json:"secret"`
+
+	ChainID   string                   `json:"chain_id"`
 	Account   string                   `json:"account"`
 	Validator tmtypes.GenesisValidator `json:"validator"`
 	NodeID    p2p.ID                   `json:"node_id"`
-	ChainID   string                   `json:"chain_id"`
 }
 
 // InitCmd will initialize all files for tendermint,
@@ -39,11 +42,11 @@ func InitCmd(gen GenAppState, ctx *Context) *cobra.Command {
 	return &cobraCmd
 }
 
-// GenAppState can parse command-line to
-// generate default app_state for the genesis file.
-// Also must return generated seed and address
+// GenAppState takes a list of arguments and
+// returns a default app_state to be included in
+// in the genesis file.
 // This is application-specific
-type GenAppState func(args []string) (json.RawMessage, string, cmn.HexBytes, error)
+type GenAppState func(args ...string) (json.RawMessage, error)
 
 type initCmd struct {
 	genAppState GenAppState
@@ -67,14 +70,22 @@ func (c initCmd) run(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	// generate secrete and address
+	addr, secret, err := GenerateCoinKey()
+	if err != nil {
+		return err
+	}
+
+	var DEFAULT_DENOM = "mycoin"
+
 	// Now, we want to add the custom app_state
-	appState, secret, address, err := c.genAppState(args)
+	appState, err := c.genAppState(addr.String(), DEFAULT_DENOM)
 	if err != nil {
 		return err
 	}
 
 	testnetInfo.Secret = secret
-	testnetInfo.Account = address.String()
+	testnetInfo.Account = addr.String()
 
 	// And add them to the genesis file
 	genFile := config.GenesisFile()

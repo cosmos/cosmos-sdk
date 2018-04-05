@@ -36,6 +36,7 @@ var (
 	addr4     = priv4.PubKey().Address()
 	coins     = sdk.Coins{{"foocoin", 10}}
 	halfCoins = sdk.Coins{{"foocoin", 5}}
+	manyCoins = sdk.Coins{{"foocoin", 1}, {"barcoin", 1}}
 	fee       = sdk.StdFee{
 		sdk.Coins{{"foocoin", 0}},
 		0,
@@ -71,6 +72,15 @@ var (
 		},
 		Outputs: []bank.Output{
 			bank.NewOutput(addr1, coins),
+		},
+	}
+
+	sendMsg5 = bank.SendMsg{
+		Inputs: []bank.Input{
+			bank.NewInput(addr1, manyCoins),
+		},
+		Outputs: []bank.Output{
+			bank.NewOutput(addr2, manyCoins),
 		},
 	}
 )
@@ -129,6 +139,48 @@ func TestMsgs(t *testing.T) {
 		// Run a CheckDeliver
 		SignCheckDeliver(t, bapp, m.msg, []int64{int64(i)}, false, priv1)
 	}
+}
+
+func TestSortGenesis(t *testing.T) {
+	logger, dbs := loggerAndDBs()
+	bapp := NewBasecoinApp(logger, dbs)
+
+	// Note the order: the coins are unsorted!
+	coinDenom1, coinDenom2 := "foocoin", "barcoin"
+
+	genState := fmt.Sprintf(`{
+      "accounts": [{
+        "address": "%s",
+        "coins": [
+          {
+            "denom": "%s",
+            "amount": 10
+          },
+          {
+            "denom": "%s",
+            "amount": 20
+          }
+        ]
+      }]
+    }`, addr1.String(), coinDenom1, coinDenom2)
+
+	// Initialize the chain
+	vals := []abci.Validator{}
+	bapp.InitChain(abci.RequestInitChain{vals, []byte(genState)})
+	bapp.Commit()
+
+	// Unsorted coins means invalid
+	err := sendMsg5.ValidateBasic()
+	require.Equal(t, sdk.CodeInvalidCoins, err.ABCICode(), err.ABCILog())
+
+	// Sort coins, should be valid
+	sendMsg5.Inputs[0].Coins.Sort()
+	sendMsg5.Outputs[0].Coins.Sort()
+	err = sendMsg5.ValidateBasic()
+	require.Nil(t, err)
+
+	// Ensure we can send
+	SignCheckDeliver(t, bapp, sendMsg5, []int64{0}, true, priv1)
 }
 
 func TestGenesis(t *testing.T) {

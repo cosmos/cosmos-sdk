@@ -55,6 +55,7 @@ type BaseApp struct {
 var _ abci.Application = (*BaseApp)(nil)
 
 // Create and name new BaseApp
+// NOTE: The db is used to store the version number for now.
 func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
 	return &BaseApp{
 		Logger: logger,
@@ -71,10 +72,16 @@ func (app *BaseApp) Name() string {
 }
 
 // Mount a store to the provided key in the BaseApp multistore
+// Broken until #532 is implemented.
 func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
 		app.MountStore(key, sdk.StoreTypeIAVL)
 	}
+}
+
+// Mount a store to the provided key in the BaseApp multistore
+func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, typ sdk.StoreType, db dbm.DB) {
+	app.cms.MountStoreWithDB(key, typ, db)
 }
 
 // Mount a store to the provided key in the BaseApp multistore
@@ -241,11 +248,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		// TODO Return something intelligent
 		panic(err)
 	}
-	err = app.Router().InitGenesis(app.deliverState.ctx, *genesisState)
-	if err != nil {
-		// TODO Return something intelligent
-		panic(err)
-	}
 
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState
@@ -259,7 +261,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	queryable, ok := app.cms.(sdk.Queryable)
 	if !ok {
 		msg := "application doesn't support queries"
-		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
 	return queryable.Query(req)
 }

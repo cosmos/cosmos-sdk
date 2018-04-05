@@ -2,6 +2,7 @@ package keys
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 
@@ -32,7 +33,7 @@ type KeyOutput struct {
 func GetKeyBase() (keys.Keybase, error) {
 	if keybase == nil {
 		rootDir := viper.GetString(cli.HomeFlag)
-		db, err := dbm.NewGoLevelDB(KeyDBName, rootDir)
+		db, err := dbm.NewGoLevelDB(KeyDBName, filepath.Join(rootDir, "keys"))
 		if err != nil {
 			return nil, err
 		}

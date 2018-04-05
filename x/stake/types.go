@@ -16,19 +16,6 @@ type Params struct {
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
 }
 
-// XXX do we want to allow for default params even or do we want to enforce that you
-// need to be explicit about defining all params in genesis?
-func defaultParams() Params {
-	return Params{
-		InflationRateChange: sdk.NewRat(13, 100),
-		InflationMax:        sdk.NewRat(20, 100),
-		InflationMin:        sdk.NewRat(7, 100),
-		GoalBonded:          sdk.NewRat(67, 100),
-		MaxValidators:       100,
-		BondDenom:           "fermion",
-	}
-}
-
 //_________________________________________________________________________
 
 // Pool - dynamic parameters of the current state
@@ -42,42 +29,10 @@ type Pool struct {
 	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
 }
 
-// XXX define globalstate interface?
-
-func initialPool() Pool {
-	return Pool{
-		TotalSupply:       0,
-		BondedShares:      sdk.ZeroRat,
-		UnbondedShares:    sdk.ZeroRat,
-		BondedPool:        0,
-		UnbondedPool:      0,
-		InflationLastTime: 0,
-		Inflation:         sdk.NewRat(7, 100),
-	}
-}
-
-// get the bond ratio of the global state
-func (p Pool) bondedRatio() sdk.Rat {
-	if p.TotalSupply > 0 {
-		return sdk.NewRat(p.BondedPool, p.TotalSupply)
-	}
-	return sdk.ZeroRat
-}
-
-// get the exchange rate of bonded token per issued share
-func (p Pool) bondedShareExRate() sdk.Rat {
-	if p.BondedShares.IsZero() {
-		return sdk.OneRat
-	}
-	return sdk.NewRat(p.BondedPool).Quo(p.BondedShares)
-}
-
-// get the exchange rate of unbonded tokens held in candidates per issued share
-func (p Pool) unbondedShareExRate() sdk.Rat {
-	if p.UnbondedShares.IsZero() {
-		return sdk.OneRat
-	}
-	return sdk.NewRat(p.UnbondedPool).Quo(p.UnbondedShares)
+// GenesisState - all staking state that must be provided at genesis
+type GenesisState struct {
+	Pool   Pool   `json:"pool"`
+	Params Params `json:"params"`
 }
 
 //_______________________________________________________________________________________________________
@@ -149,7 +104,7 @@ func (c Candidate) delegatorShareExRate() sdk.Rat {
 // Should only be called when the Candidate qualifies as a validator.
 func (c Candidate) validator() Validator {
 	return Validator{
-		Address:     c.Address, // XXX !!!
+		Address:     c.Address,
 		VotingPower: c.Assets,
 	}
 }

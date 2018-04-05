@@ -15,9 +15,11 @@ var (
 	CandidatesKey          = []byte{0x02} // prefix for each key to a candidate
 	ValidatorsKey          = []byte{0x03} // prefix for each key to a validator
 	AccUpdateValidatorsKey = []byte{0x04} // prefix for each key to a validator which is being updated
-	RecentValidatorsKey    = []byte{0x04} // prefix for each key to the last updated validator group
+	RecentValidatorsKey    = []byte{0x05} // prefix for each key to the last updated validator group
 
-	DelegatorBondKeyPrefix = []byte{0x05} // prefix for each key to a delegator's bond
+	ToKickOutValidatorsKey = []byte{0x06} // prefix for each key to the last updated validator group
+
+	DelegatorBondKeyPrefix = []byte{0x07} // prefix for each key to a delegator's bond
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -41,6 +43,16 @@ func GetAccUpdateValidatorKey(addr sdk.Address) []byte {
 // get the key for the accumulated update validators
 func GetRecentValidatorKey(addr sdk.Address) []byte {
 	return append(RecentValidatorsKey, addr.Bytes()...)
+}
+
+// reverse operation of GetRecentValidatorKey
+func AddrFromKey(key []byte) sdk.Address {
+	return key[1:]
+}
+
+// get the key for the accumulated update validators
+func GetToKickOutValidatorKey(addr sdk.Address) []byte {
+	return append(ToKickOutValidatorsKey, addr.Bytes()...)
 }
 
 // get the key for delegator bond with candidate

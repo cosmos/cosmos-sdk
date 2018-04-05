@@ -1,248 +1,308 @@
 package stake
 
-//import (
-//"strconv"
-//"testing"
+import (
+	"strconv"
+	"testing"
 
-//"github.com/stretchr/testify/assert"
-//"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-//crypto "github.com/tendermint/go-crypto"
+	crypto "github.com/tendermint/go-crypto"
 
-//sdk "github.com/cosmos/cosmos-sdk/types"
-//)
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
-////______________________________________________________________________
+//______________________________________________________________________
 
-//func newTestMsgDeclareCandidacy(address sdk.Address, pubKey crypto.PubKey, amt int64) MsgDeclareCandidacy {
-//return MsgDeclareCandidacy{
-//Description:   Description{},
-//CandidateAddr: address,
-//Bond:          sdk.Coin{"fermion", amt},
-//PubKey:        pubKey,
-//}
-//}
+func newTestMsgDeclareCandidacy(address sdk.Address, pubKey crypto.PubKey, amt int64) MsgDeclareCandidacy {
+	return MsgDeclareCandidacy{
+		Description:   Description{},
+		CandidateAddr: address,
+		Bond:          sdk.Coin{"fermion", amt},
+		PubKey:        pubKey,
+	}
+}
 
-//func newTestMsgDelegate(amt int64, delegatorAddr, candidateAddr sdk.Address) MsgDelegate {
-//return MsgDelegate{
-//DelegatorAddr: delegatorAddr,
-//CandidateAddr: candidateAddr,
-//Bond:          sdk.Coin{"fermion", amt},
-//}
-//}
+func newTestMsgDelegate(delegatorAddr, candidateAddr sdk.Address, amt int64) MsgDelegate {
+	return MsgDelegate{
+		DelegatorAddr: delegatorAddr,
+		CandidateAddr: candidateAddr,
+		Bond:          sdk.Coin{"fermion", amt},
+	}
+}
 
-//func TestDuplicatesMsgDeclareCandidacy(t *testing.T) {
-//ctxDeliver, _, keeper := createTestInput(t, addrs[0], false, 1000)
-//ctxCheck, _, keeper := createTestInput(t, addrs[0], true, 1000)
+//______________________________________________________________________
 
-//msgDeclareCandidacy := newTestMsgDeclareCandidacy(addrs[0], pks[0], 10)
-//got := deliverer.declareCandidacy(msgDeclareCandidacy)
-//assert.NoError(t, got, "expected no error on runMsgDeclareCandidacy")
+func TestDuplicatesMsgDeclareCandidacy(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, false, 1000)
 
-//// one sender can bond to two different addresses
-//msgDeclareCandidacy.Address = addrs[1]
-//err := checker.declareCandidacy(msgDeclareCandidacy)
-//assert.Nil(t, err, "didn't expected error on checkTx")
+	candidateAddr := addrs[0]
+	pk := pks[0]
+	msgDeclareCandidacy := newTestMsgDeclareCandidacy(candidateAddr, pk, 10)
+	got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+	assert.True(t, got.IsOK(), "%v", got)
+	candidate, found := keeper.GetCandidate(ctx, candidateAddr)
+	require.True(t, found)
+	assert.Equal(t, Unbonded, candidate.Status)
+	assert.Equal(t, candidateAddr, candidate.Address)
+	assert.Equal(t, pk, candidate.PubKey)
+	assert.Equal(t, sdk.NewRat(10), candidate.Assets)
+	assert.Equal(t, sdk.NewRat(10), candidate.Liabilities)
+	assert.Equal(t, Description{}, candidate.Description)
 
-//// two addrs cant bond to the same pubkey
-//checker.sender = addrs[1]
-//msgDeclareCandidacy.Address = addrs[0]
-//err = checker.declareCandidacy(msgDeclareCandidacy)
-//assert.NotNil(t, err, "expected error on checkTx")
-//}
+	// one candidate cannot bond twice
+	msgDeclareCandidacy.PubKey = pks[1]
+	got = handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+	assert.False(t, got.IsOK(), "%v", got)
+}
 
-//func TestIncrementsMsgDelegate(t *testing.T) {
-//_, _, mapper, deliverer := createTestInput(t, addrs[0], false, 1000)
+func TestIncrementsMsgDelegate(t *testing.T) {
+	initBond := int64(1000)
+	ctx, accMapper, keeper := createTestInput(t, false, initBond)
+	params := keeper.GetParams(ctx)
 
-//// first declare candidacy
-//bondAmount := int64(10)
-//msgDeclareCandidacy := newTestMsgDeclareCandidacy(addrs[0], pks[0], bondAmount)
-//got := deliverer.declareCandidacy(msgDeclareCandidacy)
-//assert.NoError(t, got, "expected declare candidacy msg to be ok, got %v", got)
-//expectedBond := bondAmount // 1 since we send 1 at the start of loop,
+	bondAmount := int64(10)
+	candidateAddr, delegatorAddr := addrs[0], addrs[1]
 
-//// just send the same msgbond multiple times
-//msgDelegate := newTestMsgDelegate(bondAmount, addrs[0])
-//for i := 0; i < 5; i++ {
-//got := deliverer.delegate(msgDelegate)
-//assert.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
+	// first declare candidacy
+	msgDeclareCandidacy := newTestMsgDeclareCandidacy(candidateAddr, pks[0], bondAmount)
+	got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+	assert.True(t, got.IsOK(), "expected declare candidacy msg to be ok, got %v", got)
 
-////Check that the accounts and the bond account have the appropriate values
-//candidates := mapper.GetCandidates()
-//expectedBond += bondAmount
-////expectedSender := initSender - expectedBond
-//gotBonded := candidates[0].Liabilities.Evaluate()
-////gotSender := accStore[string(deliverer.sender)] //XXX use StoreMapper
-//assert.Equal(t, expectedBond, gotBonded, "i: %v, %v, %v", i, expectedBond, gotBonded)
-////assert.Equal(t, expectedSender, gotSender, "i: %v, %v, %v", i, expectedSender, gotSender) // XXX fix
-//}
-//}
+	candidate, found := keeper.GetCandidate(ctx, candidateAddr)
+	require.True(t, found)
+	assert.Equal(t, bondAmount, candidate.Liabilities.Evaluate())
+	assert.Equal(t, bondAmount, candidate.Assets.Evaluate())
 
-//func TestIncrementsMsgUnbond(t *testing.T) {
-//_, _, mapper, deliverer := createTestInput(t, addrs[0], false, 0)
+	// just send the same msgbond multiple times
+	msgDelegate := newTestMsgDelegate(delegatorAddr, candidateAddr, bondAmount)
+	for i := 0; i < 5; i++ {
+		got := handleMsgDelegate(ctx, msgDelegate, keeper)
+		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
-//// set initial bond
-//initBond := int64(1000)
-////accStore[string(deliverer.sender)] = initBond //XXX use StoreMapper
-//got := deliverer.declareCandidacy(newTestMsgDeclareCandidacy(addrs[0], pks[0], initBond))
-//assert.NoError(t, got, "expected initial bond msg to be ok, got %v", got)
+		//Check that the accounts and the bond account have the appropriate values
+		candidate, found := keeper.GetCandidate(ctx, candidateAddr)
+		require.True(t, found)
+		bond, found := keeper.getDelegatorBond(ctx, delegatorAddr, candidateAddr)
+		require.True(t, found)
 
-//// just send the same msgunbond multiple times
-//// XXX use decimals here
-//unbondShares, unbondSharesStr := int64(10), "10"
-//msgUndelegate := NewMsgUnbond(addrs[0], unbondSharesStr)
-//nUnbonds := 5
-//for i := 0; i < nUnbonds; i++ {
-//got := deliverer.unbond(msgUndelegate)
-//assert.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
+		expBond := int64(i+1) * bondAmount
+		expLiabilities := int64(i+2) * bondAmount // (1 self delegation)
+		expDelegatorAcc := initBond - expBond
 
-////Check that the accounts and the bond account have the appropriate values
-//candidates := mapper.GetCandidates()
-//expectedBond := initBond - int64(i+1)*unbondShares // +1 since we send 1 at the start of loop
-////expectedSender := initSender + (initBond - expectedBond)
-//gotBonded := candidates[0].Liabilities.Evaluate()
-////gotSender := accStore[string(deliverer.sender)] // XXX use storemapper
+		gotBond := bond.Shares.Evaluate()
+		gotLiabilities := candidate.Liabilities.Evaluate()
+		gotDelegatorAcc := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(params.BondDenom)
 
-//assert.Equal(t, expectedBond, gotBonded, "%v, %v", expectedBond, gotBonded)
-////assert.Equal(t, expectedSender, gotSender, "%v, %v", expectedSender, gotSender) //XXX fix
-//}
+		require.Equal(t, expBond, gotBond,
+			"i: %v\nexpBond: %v\ngotBond: %v\ncandidate: %v\nbond: %v\n",
+			i, expBond, gotBond, candidate, bond)
+		require.Equal(t, expLiabilities, gotLiabilities,
+			"i: %v\nexpLiabilities: %v\ngotLiabilities: %v\ncandidate: %v\nbond: %v\n",
+			i, expLiabilities, gotLiabilities, candidate, bond)
+		require.Equal(t, expDelegatorAcc, gotDelegatorAcc,
+			"i: %v\nexpDelegatorAcc: %v\ngotDelegatorAcc: %v\ncandidate: %v\nbond: %v\n",
+			i, expDelegatorAcc, gotDelegatorAcc, candidate, bond)
+	}
+}
 
-//// these are more than we have bonded now
-//errorCases := []int64{
-////1<<64 - 1, // more than int64
-////1<<63 + 1, // more than int64
-//1<<63 - 1,
-//1 << 31,
-//initBond,
-//}
-//for _, c := range errorCases {
-//unbondShares := strconv.Itoa(int(c))
-//msgUndelegate := NewMsgUnbond(addrs[0], unbondShares)
-//got = deliverer.unbond(msgUndelegate)
-//assert.Error(t, got, "expected unbond msg to fail")
-//}
+func TestIncrementsMsgUnbond(t *testing.T) {
+	initBond := int64(1000)
+	ctx, accMapper, keeper := createTestInput(t, false, initBond)
+	params := keeper.GetParams(ctx)
 
-//leftBonded := initBond - unbondShares*int64(nUnbonds)
+	// declare candidacy, delegate
+	candidateAddr, delegatorAddr := addrs[0], addrs[1]
 
-//// should be unable to unbond one more than we have
-//msgUndelegate = NewMsgUnbond(addrs[0], strconv.Itoa(int(leftBonded)+1))
-//got = deliverer.unbond(msgUndelegate)
-//assert.Error(t, got, "expected unbond msg to fail")
+	msgDeclareCandidacy := newTestMsgDeclareCandidacy(candidateAddr, pks[0], initBond)
+	got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+	assert.True(t, got.IsOK(), "expected declare-candidacy to be ok, got %v", got)
 
-//// should be able to unbond just what we have
-//msgUndelegate = NewMsgUnbond(addrs[0], strconv.Itoa(int(leftBonded)))
-//got = deliverer.unbond(msgUndelegate)
-//assert.NoError(t, got, "expected unbond msg to pass")
-//}
+	msgDelegate := newTestMsgDelegate(delegatorAddr, candidateAddr, initBond)
+	got = handleMsgDelegate(ctx, msgDelegate, keeper)
+	assert.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)
 
-//func TestMultipleMsgDeclareCandidacy(t *testing.T) {
-//initSender := int64(1000)
-//ctx, accStore, mapper, deliverer := createTestInput(t, addrs[0], false, initSender)
-//addrs := []sdk.Address{addrs[0], addrs[1], addrs[2]}
+	candidate, found := keeper.GetCandidate(ctx, candidateAddr)
+	require.True(t, found)
+	assert.Equal(t, initBond*2, candidate.Liabilities.Evaluate())
+	assert.Equal(t, initBond*2, candidate.Assets.Evaluate())
 
-//// bond them all
-//for i, addr := range addrs {
-//msgDeclareCandidacy := newTestMsgDeclareCandidacy(addrs[i], pks[i], 10)
-//deliverer.sender = addr
-//got := deliverer.declareCandidacy(msgDeclareCandidacy)
-//assert.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
+	// just send the same msgUnbond multiple times
+	// TODO use decimals here
+	unbondShares, unbondSharesStr := int64(10), "10"
+	msgUnbond := NewMsgUnbond(delegatorAddr, candidateAddr, unbondSharesStr)
+	numUnbonds := 5
+	for i := 0; i < numUnbonds; i++ {
+		got := handleMsgUnbond(ctx, msgUnbond, keeper)
+		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
-////Check that the account is bonded
-//candidates := mapper.GetCandidates()
-//require.Equal(t, i, len(candidates))
-//val := candidates[i]
-//balanceExpd := initSender - 10
-//balanceGot := accStore.GetAccount(ctx, val.Address).GetCoins()
-//assert.Equal(t, i+1, len(candidates), "expected %d candidates got %d, candidates: %v", i+1, len(candidates), candidates)
-//assert.Equal(t, 10, int(val.Liabilities.Evaluate()), "expected %d shares, got %d", 10, val.Liabilities)
-//assert.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
-//}
+		//Check that the accounts and the bond account have the appropriate values
+		candidate, found = keeper.GetCandidate(ctx, candidateAddr)
+		require.True(t, found)
+		bond, found := keeper.getDelegatorBond(ctx, delegatorAddr, candidateAddr)
+		require.True(t, found)
 
-//// unbond them all
-//for i, addr := range addrs {
-//candidatePre := mapper.GetCandidate(addrs[i])
-//msgUndelegate := NewMsgUnbond(addrs[i], "10")
-//deliverer.sender = addr
-//got := deliverer.unbond(msgUndelegate)
-//assert.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
+		expBond := initBond - int64(i+1)*unbondShares
+		expLiabilities := 2*initBond - int64(i+1)*unbondShares
+		expDelegatorAcc := initBond - expBond
 
-////Check that the account is unbonded
-//candidates := mapper.GetCandidates()
-//assert.Equal(t, len(addrs)-(i+1), len(candidates), "expected %d candidates got %d", len(addrs)-(i+1), len(candidates))
+		gotBond := bond.Shares.Evaluate()
+		gotLiabilities := candidate.Liabilities.Evaluate()
+		gotDelegatorAcc := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(params.BondDenom)
 
-//candidatePost := mapper.GetCandidate(addrs[i])
-//balanceExpd := initSender
-//balanceGot := accStore.GetAccount(ctx, candidatePre.Address).GetCoins()
-//assert.Nil(t, candidatePost, "expected nil candidate retrieve, got %d", 0, candidatePost)
-//assert.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
-//}
-//}
+		require.Equal(t, expBond, gotBond,
+			"i: %v\nexpBond: %v\ngotBond: %v\ncandidate: %v\nbond: %v\n",
+			i, expBond, gotBond, candidate, bond)
+		require.Equal(t, expLiabilities, gotLiabilities,
+			"i: %v\nexpLiabilities: %v\ngotLiabilities: %v\ncandidate: %v\nbond: %v\n",
+			i, expLiabilities, gotLiabilities, candidate, bond)
+		require.Equal(t, expDelegatorAcc, gotDelegatorAcc,
+			"i: %v\nexpDelegatorAcc: %v\ngotDelegatorAcc: %v\ncandidate: %v\nbond: %v\n",
+			i, expDelegatorAcc, gotDelegatorAcc, candidate, bond)
+	}
 
-//func TestMultipleMsgDelegate(t *testing.T) {
-//sender, delegators := addrs[0], addrs[1:]
-//_, _, mapper, deliverer := createTestInput(t, addrs[0], false, 1000)
+	// these are more than we have bonded now
+	errorCases := []int64{
+		//1<<64 - 1, // more than int64
+		//1<<63 + 1, // more than int64
+		1<<63 - 1,
+		1 << 31,
+		initBond,
+	}
+	for _, c := range errorCases {
+		unbondShares := strconv.Itoa(int(c))
+		msgUnbond := NewMsgUnbond(delegatorAddr, candidateAddr, unbondShares)
+		got = handleMsgUnbond(ctx, msgUnbond, keeper)
+		require.False(t, got.IsOK(), "expected unbond msg to fail")
+	}
 
-////first make a candidate
-//msgDeclareCandidacy := newTestMsgDeclareCandidacy(sender, pks[0], 10)
-//got := deliverer.declareCandidacy(msgDeclareCandidacy)
-//require.NoError(t, got, "expected msg to be ok, got %v", got)
+	leftBonded := initBond - unbondShares*int64(numUnbonds)
 
-//// delegate multiple parties
-//for i, delegator := range delegators {
-//msgDelegate := newTestMsgDelegate(10, sender)
-//deliverer.sender = delegator
-//got := deliverer.delegate(msgDelegate)
-//require.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
+	// should be unable to unbond one more than we have
+	unbondSharesStr = strconv.Itoa(int(leftBonded) + 1)
+	msgUnbond = NewMsgUnbond(delegatorAddr, candidateAddr, unbondSharesStr)
+	got = handleMsgUnbond(ctx, msgUnbond, keeper)
+	assert.False(t, got.IsOK(),
+		"got: %v\nmsgUnbond: %v\nshares: %v\nleftBonded: %v\n", got, msgUnbond, unbondSharesStr, leftBonded)
 
-////Check that the account is bonded
-//bond := mapper.getDelegatorBond(delegator, sender)
-//assert.NotNil(t, bond, "expected delegatee bond %d to exist", bond)
-//}
+	// should be able to unbond just what we have
+	unbondSharesStr = strconv.Itoa(int(leftBonded))
+	msgUnbond = NewMsgUnbond(delegatorAddr, candidateAddr, unbondSharesStr)
+	got = handleMsgUnbond(ctx, msgUnbond, keeper)
+	assert.True(t, got.IsOK(),
+		"got: %v\nmsgUnbond: %v\nshares: %v\nleftBonded: %v\n", got, msgUnbond, unbondSharesStr, leftBonded)
+}
 
-//// unbond them all
-//for i, delegator := range delegators {
-//msgUndelegate := NewMsgUnbond(sender, "10")
-//deliverer.sender = delegator
-//got := deliverer.unbond(msgUndelegate)
-//require.NoError(t, got, "expected msg %d to be ok, got %v", i, got)
+func TestMultipleMsgDeclareCandidacy(t *testing.T) {
+	initBond := int64(1000)
+	ctx, accMapper, keeper := createTestInput(t, false, initBond)
+	params := keeper.GetParams(ctx)
+	candidateAddrs := []sdk.Address{addrs[0], addrs[1], addrs[2]}
 
-////Check that the account is unbonded
-//bond := mapper.getDelegatorBond(delegator, sender)
-//assert.Nil(t, bond, "expected delegatee bond %d to be nil", bond)
-//}
-//}
+	// bond them all
+	for i, candidateAddr := range candidateAddrs {
+		msgDeclareCandidacy := newTestMsgDeclareCandidacy(candidateAddr, pks[i], 10)
+		got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
-//func TestVoidCandidacy(t *testing.T) {
-//sender, delegator := addrs[0], addrs[1]
-//_, _, _, deliverer := createTestInput(t, addrs[0], false, 1000)
+		//Check that the account is bonded
+		candidates := keeper.GetCandidates(ctx, 100)
+		require.Equal(t, (i + 1), len(candidates))
+		val := candidates[i]
+		balanceExpd := initBond - 10
+		balanceGot := accMapper.GetAccount(ctx, val.Address).GetCoins().AmountOf(params.BondDenom)
+		require.Equal(t, i+1, len(candidates), "expected %d candidates got %d, candidates: %v", i+1, len(candidates), candidates)
+		require.Equal(t, 10, int(val.Liabilities.Evaluate()), "expected %d shares, got %d", 10, val.Liabilities)
+		require.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
+	}
 
-//// create the candidate
-//msgDeclareCandidacy := newTestMsgDeclareCandidacy(addrs[0], pks[0], 10)
-//got := deliverer.declareCandidacy(msgDeclareCandidacy)
-//require.NoError(t, got, "expected no error on runMsgDeclareCandidacy")
+	// unbond them all
+	for i, candidateAddr := range candidateAddrs {
+		candidatePre, found := keeper.GetCandidate(ctx, candidateAddr)
+		require.True(t, found)
+		msgUnbond := NewMsgUnbond(candidateAddr, candidateAddr, "10") // self-delegation
+		got := handleMsgUnbond(ctx, msgUnbond, keeper)
+		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
-//// bond a delegator
-//msgDelegate := newTestMsgDelegate(10, addrs[0])
-//deliverer.sender = delegator
-//got = deliverer.delegate(msgDelegate)
-//require.NoError(t, got, "expected ok, got %v", got)
+		//Check that the account is unbonded
+		candidates := keeper.GetCandidates(ctx, 100)
+		require.Equal(t, len(candidateAddrs)-(i+1), len(candidates),
+			"expected %d candidates got %d", len(candidateAddrs)-(i+1), len(candidates))
 
-//// unbond the candidates bond portion
-//msgUndelegate := NewMsgUnbond(addrs[0], "10")
-//deliverer.sender = sender
-//got = deliverer.unbond(msgUndelegate)
-//require.NoError(t, got, "expected no error on runMsgDeclareCandidacy")
+		_, found = keeper.GetCandidate(ctx, candidateAddr)
+		require.False(t, found)
 
-//// test that this pubkey cannot yet be bonded too
-//deliverer.sender = delegator
-//got = deliverer.delegate(msgDelegate)
-//assert.Error(t, got, "expected error, got %v", got)
+		expBalance := initBond
+		gotBalance := accMapper.GetAccount(ctx, candidatePre.Address).GetCoins().AmountOf(params.BondDenom)
+		require.Equal(t, expBalance, gotBalance, "expected account to have %d, got %d", expBalance, gotBalance)
+	}
+}
 
-//// test that the delegator can still withdraw their bonds
-//got = deliverer.unbond(msgUndelegate)
-//require.NoError(t, got, "expected no error on runMsgDeclareCandidacy")
+func TestMultipleMsgDelegate(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, false, 1000)
+	candidateAddr, delegatorAddrs := addrs[0], addrs[1:]
 
-//// verify that the pubkey can now be reused
-//got = deliverer.declareCandidacy(msgDeclareCandidacy)
-//assert.NoError(t, got, "expected ok, got %v", got)
-//}
+	//first make a candidate
+	msgDeclareCandidacy := newTestMsgDeclareCandidacy(candidateAddr, pks[0], 10)
+	got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
+
+	// delegate multiple parties
+	for i, delegatorAddr := range delegatorAddrs {
+		msgDelegate := newTestMsgDelegate(delegatorAddr, candidateAddr, 10)
+		got := handleMsgDelegate(ctx, msgDelegate, keeper)
+		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
+
+		//Check that the account is bonded
+		bond, found := keeper.getDelegatorBond(ctx, delegatorAddr, candidateAddr)
+		require.True(t, found)
+		require.NotNil(t, bond, "expected delegatee bond %d to exist", bond)
+	}
+
+	// unbond them all
+	for i, delegatorAddr := range delegatorAddrs {
+		msgUnbond := NewMsgUnbond(delegatorAddr, candidateAddr, "10")
+		got := handleMsgUnbond(ctx, msgUnbond, keeper)
+		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
+
+		//Check that the account is unbonded
+		_, found := keeper.getDelegatorBond(ctx, delegatorAddr, candidateAddr)
+		require.False(t, found)
+	}
+}
+
+func TestVoidCandidacy(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, false, 1000)
+	candidateAddr, delegatorAddr := addrs[0], addrs[1]
+
+	// create the candidate
+	msgDeclareCandidacy := newTestMsgDeclareCandidacy(candidateAddr, pks[0], 10)
+	got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgDeclareCandidacy")
+
+	// bond a delegator
+	msgDelegate := newTestMsgDelegate(delegatorAddr, candidateAddr, 10)
+	got = handleMsgDelegate(ctx, msgDelegate, keeper)
+	require.True(t, got.IsOK(), "expected ok, got %v", got)
+
+	// unbond the candidates bond portion
+	msgUnbondCandidate := NewMsgUnbond(candidateAddr, candidateAddr, "10")
+	got = handleMsgUnbond(ctx, msgUnbondCandidate, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgDeclareCandidacy")
+	candidate, found := keeper.GetCandidate(ctx, candidateAddr)
+	require.True(t, found)
+	require.Equal(t, Revoked, candidate.Status)
+
+	// test that this address cannot yet be bonded too because is revoked
+	got = handleMsgDelegate(ctx, msgDelegate, keeper)
+	assert.False(t, got.IsOK(), "expected error, got %v", got)
+
+	// test that the delegator can still withdraw their bonds
+	msgUnbondDelegator := NewMsgUnbond(delegatorAddr, candidateAddr, "10")
+	got = handleMsgUnbond(ctx, msgUnbondDelegator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgDeclareCandidacy")
+
+	// verify that the pubkey can now be reused
+	got = handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+	assert.True(t, got.IsOK(), "expected ok, got %v", got)
+}

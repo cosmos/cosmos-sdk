@@ -11,7 +11,6 @@ import (
 	oldwire "github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"
 
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -52,6 +51,31 @@ var (
 	emptyPubkey crypto.PubKey
 )
 
+// default params for testing
+func defaultParams() Params {
+	return Params{
+		InflationRateChange: sdk.NewRat(13, 100),
+		InflationMax:        sdk.NewRat(20, 100),
+		InflationMin:        sdk.NewRat(7, 100),
+		GoalBonded:          sdk.NewRat(67, 100),
+		MaxValidators:       100,
+		BondDenom:           "fermion",
+	}
+}
+
+// initial pool for testing
+func initialPool() Pool {
+	return Pool{
+		TotalSupply:       0,
+		BondedShares:      sdk.ZeroRat,
+		UnbondedShares:    sdk.ZeroRat,
+		BondedPool:        0,
+		UnbondedPool:      0,
+		InflationLastTime: 0,
+		Inflation:         sdk.NewRat(7, 100),
+	}
+}
+
 // XXX reference the common declaration of this function
 func subspace(prefix []byte) (start, end []byte) {
 	end = make([]byte, len(prefix))
@@ -83,7 +107,7 @@ func makeTestCodec() *wire.Codec {
 	const accTypeApp = 0x1
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Account }{},
-		oldwire.ConcreteType{&types.AppAccount{}, accTypeApp},
+		oldwire.ConcreteType{&auth.BaseAccount{}, accTypeApp},
 	)
 	cdc := wire.NewCodec()
 
@@ -105,7 +129,7 @@ func paramsNoInflation() Params {
 }
 
 // hogpodge of all sorts of input required for testing
-func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool, initCoins int64) (sdk.Context, sdk.AccountMapper, Keeper) {
+func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, sdk.AccountMapper, Keeper) {
 	db := dbm.NewMemDB()
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyMain := keyStake //sdk.NewKVStoreKey("main") //TODO fix multistore
@@ -123,13 +147,14 @@ func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool, initCoins
 	)
 	ck := bank.NewCoinKeeper(accountMapper)
 	keeper := NewKeeper(ctx, cdc, keyStake, ck)
-
-	//params := paramsNoInflation()
-	params := keeper.GetParams(ctx)
+	keeper.setPool(ctx, initialPool())
+	keeper.setParams(ctx, defaultParams())
 
 	// fill all the addresses with some coins
 	for _, addr := range addrs {
-		ck.AddCoins(ctx, addr, sdk.Coins{{params.BondDenom, initCoins}})
+		ck.AddCoins(ctx, addr, sdk.Coins{
+			{keeper.GetParams(ctx).BondDenom, initCoins},
+		})
 	}
 
 	return ctx, accountMapper, keeper

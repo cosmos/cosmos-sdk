@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
 	cfg "github.com/tendermint/tendermint/config"
@@ -42,11 +43,29 @@ func InitCmd(gen GenAppState, ctx *Context) *cobra.Command {
 	return &cobraCmd
 }
 
-// GenAppState takes a list of arguments and
-// returns a default app_state to be included in
+// GenAppState takes the command line args, as well
+// as an address and coin denomination.
+// It returns a default app_state to be included in
 // in the genesis file.
 // This is application-specific
-type GenAppState func(args ...string) (json.RawMessage, error)
+type GenAppState func(args []string, addr sdk.Address, coinDenom string) (json.RawMessage, error)
+
+// DefaultGenAppState expects two args: an account address
+// and a coin denomination, and gives lots of coins to that address.
+func DefaultGenAppState(args []string, addr sdk.Address, coinDenom string) (json.RawMessage, error) {
+	opts := fmt.Sprintf(`{
+      "accounts": [{
+        "address": "%s",
+        "coins": [
+          {
+            "denom": "%s",
+            "amount": 9007199254740992
+          }
+        ]
+      }]
+    }`, addr.String(), coinDenom)
+	return json.RawMessage(opts), nil
+}
 
 type initCmd struct {
 	genAppState GenAppState
@@ -79,7 +98,7 @@ func (c initCmd) run(cmd *cobra.Command, args []string) error {
 	var DEFAULT_DENOM = "mycoin"
 
 	// Now, we want to add the custom app_state
-	appState, err := c.genAppState(addr.String(), DEFAULT_DENOM)
+	appState, err := c.genAppState(args, addr, DEFAULT_DENOM)
 	if err != nil {
 		return err
 	}

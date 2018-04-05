@@ -21,13 +21,13 @@ const (
 	flagAddress        = "address"
 )
 
-// appGenerator lets us lazily initialize app, using home dir
+// AppCreator lets us lazily initialize app, using home dir
 // and other flags (?) to start
-type appCreator func(string, log.Logger) (abci.Application, error)
+type AppCreator func(string, log.Logger) (abci.Application, error)
 
 // StartCmd runs the service passed in, either
 // stand-alone, or in-process with tendermint
-func StartCmd(app appCreator, ctx *Context) *cobra.Command {
+func StartCmd(app AppCreator, ctx *Context) *cobra.Command {
 	start := startCmd{
 		appCreator: app,
 		context:    ctx,
@@ -48,7 +48,7 @@ func StartCmd(app appCreator, ctx *Context) *cobra.Command {
 }
 
 type startCmd struct {
-	appCreator appCreator
+	appCreator AppCreator
 	context    *Context
 }
 

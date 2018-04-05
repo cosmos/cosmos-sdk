@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -15,7 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // basecoindCmd is the entry point for this binary
@@ -27,27 +24,6 @@ var (
 		PersistentPreRunE: server.PersistentPreRunEFn(context),
 	}
 )
-
-// defaultOptions sets up the app_state for the
-// default genesis file. It is a server.GenAppState
-// used for `basecoind init`.
-func defaultOptions(args ...string) (json.RawMessage, error) {
-	if len(args) != 2 {
-		return nil, fmt.Errorf("Expected 2 args: address and coin denom")
-	}
-	opts := fmt.Sprintf(`{
-      "accounts": [{
-        "address": "%s",
-        "coins": [
-          {
-            "denom": "mycoin",
-            "amount": 9007199254740992
-          }
-        ]
-      }]
-    }`, args)
-	return json.RawMessage(opts), nil
-}
 
 func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	dataDir := filepath.Join(rootDir, "data")
@@ -78,14 +54,7 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 }
 
 func main() {
-	rootCmd.AddCommand(
-		server.InitCmd(defaultOptions, context),
-		server.StartCmd(generateApp, context),
-		server.UnsafeResetAllCmd(context),
-		server.ShowNodeIDCmd(context),
-		server.ShowValidatorCmd(context),
-		version.VersionCmd,
-	)
+	server.AddCommands(rootCmd, server.DefaultGenAppState, generateApp, context)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.basecoind")

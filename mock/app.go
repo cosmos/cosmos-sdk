@@ -106,7 +106,7 @@ func InitChainer(key sdk.StoreKey) func(sdk.Context, abci.RequestInitChain) abci
 // GenInitOptions can be passed into InitCmd,
 // returns a static string of a few key-values that can be parsed
 // by InitChainer
-func GenInitOptions(args ...string) (json.RawMessage, error) {
+func GenInitOptions(args []string, addr sdk.Address, coinDenom string) (json.RawMessage, error) {
 	opts := []byte(`{
   "values": [
     {

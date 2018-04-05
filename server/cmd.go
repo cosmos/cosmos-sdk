@@ -40,3 +40,18 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 		return nil
 	}
 }
+
+func AddCommands(
+	rootCmd *cobra.Command,
+	appState GenAppState, appCreator AppCreator,
+	context *Context) {
+
+	rootCmd.AddCommand(
+		InitCmd(appState, context),
+		StartCmd(appCreator, context),
+		UnsafeResetAllCmd(context),
+		ShowNodeIDCmd(context),
+		ShowValidatorCmd(context),
+		version.VersionCmd,
+	)
+}

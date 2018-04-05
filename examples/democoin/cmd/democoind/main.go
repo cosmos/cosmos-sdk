@@ -47,6 +47,11 @@ func defaultAppState(args []string, addr sdk.Address, coinDenom string) (json.Ra
 }
 
 func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
+	dataDir := filepath.Join(rootDir, "data")
+	db, err := dbm.NewGoLevelDB("democoin", dataDir)
+	if err != nil {
+		return nil, err
+	}
 	bapp := app.NewDemocoinApp(logger, db)
 	return bapp, nil
 }

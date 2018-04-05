@@ -74,13 +74,10 @@
   name = "github.com/tendermint/tendermint"
 
 [[override]]
-<<<<<<< HEAD
   version = "~0.8.1"
-=======
-  revision = "d289c9286e816a37336289a75752752a751bc918"
->>>>>>> Rebase PR #623, update testsuite
   name = "github.com/tendermint/tmlibs"
 
 [prune]
   go-tests = true
   unused-packages = true
+

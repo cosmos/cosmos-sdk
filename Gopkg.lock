@@ -85,10 +85,6 @@
   revision = "553a641470496b2327abcac10b36396bd98e45c9"
 
 [[projects]]
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> Rebase PR #623, update testsuite
   name = "github.com/gorilla/context"
   packages = ["."]
   revision = "1ea25387ff6f684839d82767c1733ff4d4d15d0a"
@@ -121,7 +117,7 @@
     "json/scanner",
     "json/token"
   ]
-  revision = "23c074d0eceb2b8a5bfdbb271ab780cde70f05a8"
+  revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
   branch = "master"
@@ -197,9 +193,6 @@
   ]
   revision = "63644898a8da0bc22138abf860edaf5277b6102e"
   version = "v1.1.0"
-  revision = "bb8f1927f2a9d3ab41c9340aa034f6b803f4359c"
-  version = "v1.0.2"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
 
 [[projects]]
   name = "github.com/spf13/cast"
@@ -210,13 +203,8 @@
 [[projects]]
   name = "github.com/spf13/cobra"
   packages = ["."]
-<<<<<<< HEAD
   revision = "a1f051bc3eba734da4772d60e2d677f47cf93ef4"
   version = "v0.0.2"
-=======
-  revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
-  version = "v0.0.1"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
 
 [[projects]]
   branch = "master"
@@ -233,13 +221,8 @@
 [[projects]]
   name = "github.com/spf13/viper"
   packages = ["."]
-<<<<<<< HEAD
   revision = "b5e8006cbee93ec955a89ab31e0e3ce3204f3736"
   version = "v1.0.2"
-=======
-  revision = "25b30aa063fc18e48662b86996252eabdcf2f0c7"
-  version = "v1.0.0"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -267,19 +250,9 @@
     "leveldb/table",
     "leveldb/util"
   ]
-<<<<<<< HEAD
   revision = "714f901b98fdb3aa954b4193d8cbd64a28d80cad"
 
 [[projects]]
-=======
-  revision = "169b1b37be738edb2813dab48c97a549bcf99bb5"
-
-[[projects]]
-<<<<<<< HEAD
-  branch = "develop"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
-=======
->>>>>>> Rebase PR #623, update testsuite
   name = "github.com/tendermint/abci"
   packages = [
     "client",
@@ -288,17 +261,8 @@
     "server",
     "types"
   ]
-<<<<<<< HEAD
-<<<<<<< HEAD
   revision = "46686763ba8ea595ede16530ed4a40fb38f49f94"
   version = "v0.10.2"
-=======
-  revision = "d5361de3001184de7cd3a0ccbae12eccde3d724e"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
-=======
-  revision = "46686763ba8ea595ede16530ed4a40fb38f49f94"
-  version = "v0.10.2"
->>>>>>> Rebase PR #623, update testsuite
 
 [[projects]]
   branch = "master"
@@ -323,54 +287,22 @@
   version = "v0.5.0"
 
 [[projects]]
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-  branch = "master"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
-=======
->>>>>>> Rebase PR #623, update testsuite
   name = "github.com/tendermint/go-wire"
   packages = [
     ".",
     "data"
   ]
-<<<<<<< HEAD
-<<<<<<< HEAD
   revision = "fa721242b042ecd4c6ed1a934ee740db4f74e45c"
   source = "github.com/tendermint/go-amino"
   version = "v0.7.3"
-=======
-  revision = "26b0b2772d913790a42d2cfac4f4a055764dbfaa"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
-=======
-  revision = "fa721242b042ecd4c6ed1a934ee740db4f74e45c"
-  source = "github.com/tendermint/go-amino"
-  version = "v0.7.3"
->>>>>>> Rebase PR #623, update testsuite
 
 [[projects]]
   name = "github.com/tendermint/iavl"
   packages = ["."]
-<<<<<<< HEAD
-<<<<<<< HEAD
   revision = "fd37a0fa3a7454423233bc3d5ea828f38e0af787"
   version = "v0.7.0"
 
 [[projects]]
-=======
-  revision = "669ff61054a14c4542dbd657ab438800d5630e45"
-  version = "v0.6.1"
-
-[[projects]]
-  branch = "develop"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
-=======
-  revision = "fd37a0fa3a7454423233bc3d5ea828f38e0af787"
-  version = "v0.7.0"
-
-[[projects]]
->>>>>>> Rebase PR #623, update testsuite
   name = "github.com/tendermint/tendermint"
   packages = [
     "blockchain",
@@ -409,24 +341,10 @@
     "version",
     "wire"
   ]
-<<<<<<< HEAD
-<<<<<<< HEAD
   revision = "a1dd329d72e78d4770e602359bad5b7b1e8b72a3"
   version = "v0.18.0-rc1"
 
 [[projects]]
-=======
-  revision = "cd2ba4aa7f95e16fe99570260ad58415e7ad4660"
-
-[[projects]]
-  branch = "develop"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
-=======
-  revision = "6f9956990c444d53f62f2a3905ed410cfe9afe77"
-  version = "v0.17.1"
-
-[[projects]]
->>>>>>> Rebase PR #623, update testsuite
   name = "github.com/tendermint/tmlibs"
   packages = [
     "autofile",
@@ -441,12 +359,8 @@
     "pubsub",
     "pubsub/query"
   ]
-<<<<<<< HEAD
   revision = "2e24b64fc121dcdf1cabceab8dc2f7257675483c"
   version = "0.8.1"
-=======
-  revision = "d289c9286e816a37336289a75752752a751bc918"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
 
 [[projects]]
   branch = "master"
@@ -462,11 +376,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-<<<<<<< HEAD
   revision = "b2aa35443fbc700ab74c586ae79b81c171851023"
-=======
-  revision = "c7dcf104e3a7a1417abc0230cb0d5240d764159d"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
 
 [[projects]]
   branch = "master"
@@ -478,29 +388,15 @@
     "idna",
     "internal/timeseries",
     "lex/httplex",
-<<<<<<< HEAD
-<<<<<<< HEAD
     "trace"
   ]
   revision = "b3c676e531a6dc479fa1b35ac961c13f5e2b4d2e"
-=======
-    "netutil",
-=======
->>>>>>> Rebase PR #623, update testsuite
-    "trace"
-  ]
-  revision = "ae89d30ce0c63142b652837da33d782e2b0a9b25"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-<<<<<<< HEAD
   revision = "1d206c9fa8975fb4cf00df1dc8bf3283dc24ba0e"
-=======
-  revision = "c28acc882ebcbfbe8ce9f0f14b9ac26ee138dd51"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
 
 [[projects]]
   name = "golang.org/x/text"
@@ -527,36 +423,16 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-<<<<<<< HEAD
   revision = "35de2414665fc36f56b72d982c5af480d86de5ab"
-=======
-  revision = "df60624c1e9b9d2973e889c7a1cff73155da81c4"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
 
 [[projects]]
   name = "google.golang.org/grpc"
   packages = [
     ".",
     "balancer",
-<<<<<<< HEAD
-<<<<<<< HEAD
     "codes",
     "connectivity",
     "credentials",
-=======
-    "balancer/base",
-    "balancer/roundrobin",
-    "codes",
-    "connectivity",
-    "credentials",
-    "encoding",
-    "encoding/proto",
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
-=======
-    "codes",
-    "connectivity",
-    "credentials",
->>>>>>> Rebase PR #623, update testsuite
     "grpclb/grpc_lb_v1/messages",
     "grpclog",
     "internal",
@@ -565,54 +441,23 @@
     "naming",
     "peer",
     "resolver",
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    "resolver/dns",
-    "resolver/passthrough",
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
-=======
->>>>>>> Rebase PR #623, update testsuite
     "stats",
     "status",
     "tap",
     "transport"
   ]
-<<<<<<< HEAD
-<<<<<<< HEAD
   revision = "5b3c4e850e90a4cf6a20ebd46c8b32a0a3afcb9e"
   version = "v1.7.5"
-=======
-  revision = "8e4536a86ab602859c20df5ebfd0bd4228d08655"
-  version = "v1.10.0"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
-=======
-  revision = "5b3c4e850e90a4cf6a20ebd46c8b32a0a3afcb9e"
-  version = "v1.7.5"
->>>>>>> Rebase PR #623, update testsuite
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-<<<<<<< HEAD
   revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
   version = "v2.2.1"
-=======
-  revision = "7f97868eec74b32b0982dd158a51a446d1da7eb5"
-  version = "v2.1.1"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-<<<<<<< HEAD
-<<<<<<< HEAD
   inputs-digest = "67298e1f8058b85f082dbd32123f2779b11bda282616e595141dba41a8675c39"
-=======
-  inputs-digest = "3d1aebf798b51882ed5281b0ca0a3766c32cdb08592de57dd3d574a4b3e67987"
->>>>>>> Fixes https://github.com/cosmos/cosmos-sdk/issues/532
-=======
-  inputs-digest = "1aa7b8478ecc788709fdbafc4b1dc67a7933b94d3bfb0fedcd3057d10675f2a1"
->>>>>>> Rebase PR #623, update testsuite
   solver-name = "gps-cdcl"
   solver-version = 1

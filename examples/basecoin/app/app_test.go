@@ -137,8 +137,8 @@ func TestMsgs(t *testing.T) {
 }
 
 func TestSortGenesis(t *testing.T) {
-	logger, dbs := loggerAndDBs()
-	bapp := NewBasecoinApp(logger, dbs)
+	logger, db := loggerAndDB()
+	bapp := NewBasecoinApp(logger, db)
 
 	// Note the order: the coins are unsorted!
 	coinDenom1, coinDenom2 := "foocoin", "barcoin"

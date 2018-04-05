@@ -13,13 +13,16 @@ ci: get_tools get_vendor_deps build test_cover
 ### Build
 
 # This can be unified later, here for easy demos
-gaia:
-	go build $(BUILD_FLAGS) -o build/gaiad ./examples/gaia/gaiad
-	go build $(BUILD_FLAGS) -o build/gaiacli ./examples/gaia/gaiacli
-
 build:
-	@rm -rf $(shell pwd)/examples/basecoin/vendor/
-	@rm -rf $(shell pwd)/examples/democoin/vendor/
+ifeq ($(OS),Windows_NT)
+	go build $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaiad
+	go build $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaiacli
+else
+	go build $(BUILD_FLAGS) -o build/gaiad ./cmd/gaiad
+	go build $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaiacli
+endif
+
+build_examples:
 ifeq ($(OS),Windows_NT)
 	go build $(BUILD_FLAGS) -o build/basecoind.exe ./examples/basecoin/cmd/basecoind
 	go build $(BUILD_FLAGS) -o build/basecli.exe ./examples/basecoin/cmd/basecli
@@ -33,6 +36,10 @@ else
 endif
 
 install: 
+	go install $(BUILD_FLAGS) ./cmd/gaiad
+	go install $(BUILD_FLAGS) ./cmd/gaiacli
+
+install_examples: 
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecoind
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecli
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democoind
@@ -84,12 +91,9 @@ test: test_unit # test_cli
 #	 go test -coverprofile=c.out && go tool cover -html=c.out
 
 test_unit:
-	@rm -rf examples/basecoin/vendor/
-	@rm -rf examples/democoin/vendor/
 	@go test $(PACKAGES)
 
 test_cover:
-	@rm -rf examples/basecoin/vendor/
 	@bash tests/test_cover.sh
 
 benchmark:
@@ -123,4 +127,4 @@ devdoc_update:
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build dist check_tools get_tools get_vendor_deps draw_deps test test_unit test_tutorial benchmark devdoc_init devdoc devdoc_save devdoc_update
+.PHONY: build build_examples install install_examples dist check_tools get_tools get_vendor_deps draw_deps test test_unit test_tutorial benchmark devdoc_init devdoc devdoc_save devdoc_update

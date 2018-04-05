@@ -106,9 +106,9 @@ func (c Candidate) delegatorShareExRate() sdk.Rat {
 // Should only be called when the Candidate qualifies as a validator.
 func (c Candidate) validator() Validator {
 	return Validator{
-		Address:     c.Address,
-		PubKey:      c.PubKey,
-		VotingPower: c.Assets,
+		Address: c.Address,
+		PubKey:  c.PubKey,
+		Power:   c.Assets,
 	}
 }
 
@@ -119,9 +119,9 @@ func (c Candidate) validator() Validator {
 
 // Validator is one of the top Candidates
 type Validator struct {
-	Address     sdk.Address   `json:"address"`
-	PubKey      crypto.PubKey `json:"PubKey"`
-	VotingPower sdk.Rat       `json:"voting_power"`
+	Address sdk.Address   `json:"address"`
+	PubKey  crypto.PubKey `json:"pub_key"`
+	Power   sdk.Rat       `json:"voting_power"`
 }
 
 // abci validator from stake validator type
@@ -132,7 +132,7 @@ func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
 	}
 	return abci.Validator{
 		PubKey: pkBytes,
-		Power:  v.VotingPower.Evaluate(),
+		Power:  v.Power.Evaluate(),
 	}
 }
 

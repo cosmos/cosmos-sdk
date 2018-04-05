@@ -111,7 +111,7 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	if oldFound {
 		store.Delete(GetValidatorKey(address, oldCandidate.Assets, k.cdc))
 	}
-	store.Set(GetValidatorKey(address, validator.VotingPower, k.cdc), bz)
+	store.Set(GetValidatorKey(address, validator.Power, k.cdc), bz)
 
 	// add to the validators to update list if is already a validator
 	// or is a new validator
@@ -161,10 +161,12 @@ func (k Keeper) removeCandidate(ctx sdk.Context, address sdk.Address) {
 
 //___________________________________________________________________________
 
-// get the most recent updated validator set from the Candidates. These bonds
-// are already sorted by Assets from the UpdateVotingPower function which
-// is the only function which is to modify the Assets
-// this function also updaates the most recent validators saved in store
+// Get the validator set from the candidates. The correct subset is retrieved
+// by iterating through an index of the candidates sorted by power, stored
+// using the ValidatorsKey. Simultaniously the most recent the validator
+// records are updated in store with the RecentValidatorsKey. This store is
+// used to determine if a candidate is a validator without needing to iterate
+// over the subspace as we do in GetValidators
 func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 	store := ctx.KVStore(k.storeKey)
 

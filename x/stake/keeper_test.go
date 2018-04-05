@@ -218,11 +218,11 @@ func TestGetValidators(t *testing.T) {
 	// first make sure everything as normal is ordered
 	validators := keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n)
-	assert.Equal(t, sdk.NewRat(400), validators[0].VotingPower, "%v", validators)
-	assert.Equal(t, sdk.NewRat(200), validators[1].VotingPower, "%v", validators)
-	assert.Equal(t, sdk.NewRat(100), validators[2].VotingPower, "%v", validators)
-	assert.Equal(t, sdk.NewRat(1), validators[3].VotingPower, "%v", validators)
-	assert.Equal(t, sdk.NewRat(0), validators[4].VotingPower, "%v", validators)
+	assert.Equal(t, sdk.NewRat(400), validators[0].Power, "%v", validators)
+	assert.Equal(t, sdk.NewRat(200), validators[1].Power, "%v", validators)
+	assert.Equal(t, sdk.NewRat(100), validators[2].Power, "%v", validators)
+	assert.Equal(t, sdk.NewRat(1), validators[3].Power, "%v", validators)
+	assert.Equal(t, sdk.NewRat(0), validators[4].Power, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
 	assert.Equal(t, candidates[4].Address, validators[1].Address, "%v", validators)
 	assert.Equal(t, candidates[1].Address, validators[2].Address, "%v", validators)
@@ -234,7 +234,7 @@ func TestGetValidators(t *testing.T) {
 	keeper.setCandidate(ctx, candidates[3])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n)
-	assert.Equal(t, sdk.NewRat(500), validators[0].VotingPower, "%v", validators)
+	assert.Equal(t, sdk.NewRat(500), validators[0].Power, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
 
 	// test a decrease in voting power
@@ -242,7 +242,7 @@ func TestGetValidators(t *testing.T) {
 	keeper.setCandidate(ctx, candidates[3])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n)
-	assert.Equal(t, sdk.NewRat(300), validators[0].VotingPower, "%v", validators)
+	assert.Equal(t, sdk.NewRat(300), validators[0].Power, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
 
 	// test a swap in voting power
@@ -250,9 +250,9 @@ func TestGetValidators(t *testing.T) {
 	keeper.setCandidate(ctx, candidates[0])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n)
-	assert.Equal(t, sdk.NewRat(600), validators[0].VotingPower, "%v", validators)
+	assert.Equal(t, sdk.NewRat(600), validators[0].Power, "%v", validators)
 	assert.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
-	assert.Equal(t, sdk.NewRat(300), validators[1].VotingPower, "%v", validators)
+	assert.Equal(t, sdk.NewRat(300), validators[1].Power, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
 
 	// test the max validators term
@@ -262,9 +262,9 @@ func TestGetValidators(t *testing.T) {
 	keeper.setParams(ctx, params)
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n)
-	assert.Equal(t, sdk.NewRat(600), validators[0].VotingPower, "%v", validators)
+	assert.Equal(t, sdk.NewRat(600), validators[0].Power, "%v", validators)
 	assert.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
-	assert.Equal(t, sdk.NewRat(300), validators[1].VotingPower, "%v", validators)
+	assert.Equal(t, sdk.NewRat(300), validators[1].Power, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
 }
 

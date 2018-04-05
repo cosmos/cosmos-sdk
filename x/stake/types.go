@@ -119,20 +119,33 @@ func (c Candidate) validator() Validator {
 
 // Validator is one of the top Candidates
 type Validator struct {
-	Address     sdk.Address `json:"address"`
-	PubKey      sdk.PubKey  `json:"PubKey"`
-	VotingPower sdk.Rat     `json:"voting_power"`
+	Address     sdk.Address   `json:"address"`
+	PubKey      crypto.PubKey `json:"PubKey"`
+	VotingPower sdk.Rat       `json:"voting_power"`
 }
 
-// ABCIValidator - Get the validator from a bond value
-func (v Validator) ABCIValidator() abci.Validator {
-	pkBytes, err := wire.MarshalBinary(v.PubKey)
+// abci validator from stake validator type
+func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
+	pkBytes, err := cdc.MarshalBinary(v.PubKey)
 	if err != nil {
 		panic(err)
 	}
 	return abci.Validator{
 		PubKey: pkBytes,
 		Power:  v.VotingPower.Evaluate(),
+	}
+}
+
+// abci validator from stake validator type
+// with zero power used for validator updates
+func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
+	pkBytes, err := cdc.MarshalBinary(v.PubKey)
+	if err != nil {
+		panic(err)
+	}
+	return abci.Validator{
+		PubKey: pkBytes,
+		Power:  0,
 	}
 }
 

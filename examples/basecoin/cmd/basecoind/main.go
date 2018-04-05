@@ -15,9 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
-// basecoindCmd is the entry point for this binary
+// rootCmd is the entry point for this binary
 var (
-	context = server.NewContext(nil, nil)
+	context = server.NewDefaultContext()
 	rootCmd = &cobra.Command{
 		Use:               "basecoind",
 		Short:             "Basecoin Daemon (server)",

@@ -19,6 +19,13 @@ type Context struct {
 	Logger log.Logger
 }
 
+func NewDefaultContext() *Context {
+	return NewContext(
+		cfg.DefaultConfig(),
+		log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+	)
+}
+
 func NewContext(config *cfg.Config, logger log.Logger) *Context {
 	return &Context{config, logger}
 }
@@ -56,6 +63,8 @@ func AddCommands(
 	rootCmd *cobra.Command,
 	appState GenAppState, appCreator AppCreator,
 	context *Context) {
+
+	rootCmd.PersistentFlags().String("log_level", context.Config.LogLevel, "Log level")
 
 	rootCmd.AddCommand(
 		InitCmd(appState, context),

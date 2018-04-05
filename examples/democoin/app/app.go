@@ -19,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
+	"github.com/cosmos/cosmos-sdk/examples/democoin/x/pow"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/sketchy"
 )
 
@@ -34,6 +35,7 @@ type DemocoinApp struct {
 	// keys to access the substores
 	capKeyMainStore    *sdk.KVStoreKey
 	capKeyAccountStore *sdk.KVStoreKey
+	capKeyPowStore     *sdk.KVStoreKey
 	capKeyIBCStore     *sdk.KVStoreKey
 	capKeyStakingStore *sdk.KVStoreKey
 
@@ -48,6 +50,7 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 		cdc:                MakeCodec(),
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
 		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
+		capKeyPowStore:     sdk.NewKVStoreKey("pow"),
 		capKeyIBCStore:     sdk.NewKVStoreKey("ibc"),
 		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
 	}
@@ -61,11 +64,13 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 	// add handlers
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper)
+	powKeeper := pow.NewKeeper(app.capKeyPowStore, pow.NewPowConfig("pow", int64(1)), coinKeeper)
 	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
 	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper)
 	app.Router().
 		AddRoute("bank", bank.NewHandler(coinKeeper)).
 		AddRoute("cool", cool.NewHandler(coolKeeper)).
+		AddRoute("pow", powKeeper.Handler).
 		AddRoute("sketchy", sketchy.NewHandler()).
 		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))

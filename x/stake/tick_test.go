@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetInflation(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 	params := keeper.GetParams(ctx)
 	hrsPerYrRat := sdk.NewRat(hrsPerYr)
@@ -60,7 +60,7 @@ func TestGetInflation(t *testing.T) {
 }
 
 func TestProcessProvisions(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 	params := defaultParams()
 	keeper.setParams(ctx, params)
 	pool := keeper.GetPool(ctx)

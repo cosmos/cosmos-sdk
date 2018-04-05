@@ -12,7 +12,7 @@ import (
 )
 
 func TestBondedRatio(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 	pool.TotalSupply = 3
 	pool.BondedPool = 2
@@ -26,7 +26,7 @@ func TestBondedRatio(t *testing.T) {
 }
 
 func TestBondedShareExRate(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 	pool.BondedPool = 3
 	pool.BondedShares = sdk.NewRat(10)
@@ -40,7 +40,7 @@ func TestBondedShareExRate(t *testing.T) {
 }
 
 func TestUnbondedShareExRate(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 	pool.UnbondedPool = 3
 	pool.UnbondedShares = sdk.NewRat(10)
@@ -54,7 +54,7 @@ func TestUnbondedShareExRate(t *testing.T) {
 }
 
 func TestBondedToUnbondedPool(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat)
@@ -81,7 +81,7 @@ func TestBondedToUnbondedPool(t *testing.T) {
 }
 
 func TestUnbonbedtoBondedPool(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat)
@@ -109,7 +109,7 @@ func TestUnbonbedtoBondedPool(t *testing.T) {
 }
 
 func TestAddTokensBonded(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat)
@@ -125,7 +125,7 @@ func TestAddTokensBonded(t *testing.T) {
 }
 
 func TestRemoveSharesBonded(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat)
@@ -142,7 +142,7 @@ func TestRemoveSharesBonded(t *testing.T) {
 }
 
 func TestAddTokensUnbonded(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat)
@@ -158,7 +158,7 @@ func TestAddTokensUnbonded(t *testing.T) {
 }
 
 func TestRemoveSharesUnbonded(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat)
@@ -174,7 +174,7 @@ func TestRemoveSharesUnbonded(t *testing.T) {
 }
 
 func TestCandidateAddTokens(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
 	candA := Candidate{
@@ -200,7 +200,7 @@ func TestCandidateAddTokens(t *testing.T) {
 }
 
 func TestCandidateRemoveShares(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
 	candA := Candidate{

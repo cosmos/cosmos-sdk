@@ -11,7 +11,6 @@ import (
 	oldwire "github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"
 
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -108,7 +107,7 @@ func makeTestCodec() *wire.Codec {
 	const accTypeApp = 0x1
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Account }{},
-		oldwire.ConcreteType{&types.AppAccount{}, accTypeApp},
+		oldwire.ConcreteType{&auth.BaseAccount{}, accTypeApp},
 	)
 	cdc := wire.NewCodec()
 
@@ -130,7 +129,7 @@ func paramsNoInflation() Params {
 }
 
 // hogpodge of all sorts of input required for testing
-func createTestInput(t *testing.T, sender sdk.Address, isCheckTx bool, initCoins int64) (sdk.Context, sdk.AccountMapper, Keeper) {
+func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, sdk.AccountMapper, Keeper) {
 	db := dbm.NewMemDB()
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyMain := keyStake //sdk.NewKVStoreKey("main") //TODO fix multistore

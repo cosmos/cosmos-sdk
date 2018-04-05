@@ -15,40 +15,6 @@ const (
 	GasUnbond           int64 = 20
 )
 
-//XXX fix initstater
-// separated for testing
-//func InitState(ctx sdk.Context, k Keeper, key, value string) sdk.Error {
-
-//params := k.GetParams(ctx)
-//switch key {
-//case "allowed_bond_denom":
-//params.BondDenom = value
-//case "max_vals", "gas_bond", "gas_unbond":
-
-//i, err := strconv.Atoi(value)
-//if err != nil {
-//return sdk.ErrUnknownRequest(fmt.Sprintf("input must be integer, Error: %v", err.Error()))
-//}
-
-//switch key {
-//case "max_vals":
-//if i < 0 {
-//return sdk.ErrUnknownRequest("cannot designate negative max validators")
-//}
-//params.MaxValidators = uint16(i)
-//case "gas_bond":
-//GasDelegate = int64(i)
-//case "gas_unbound":
-//GasUnbond = int64(i)
-//}
-//default:
-//return sdk.ErrUnknownRequest(key)
-//}
-
-//k.setParams(params)
-//return nil
-//}
-
 //_______________________________________________________________________
 
 func NewHandler(k Keeper, ck bank.CoinKeeper) sdk.Handler {
@@ -95,7 +61,11 @@ func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keepe
 
 	// move coins from the msg.Address account to a (self-bond) delegator account
 	// the candidate account and global shares are updated within here
-	return delegateWithCandidate(ctx, k, msg.CandidateAddr, msg.Bond, candidate).Result()
+	err := delegate(ctx, k, msg.CandidateAddr, msg.Bond, candidate)
+	if err != nil {
+		return err.Result()
+	}
+	return sdk.Result{}
 }
 
 func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk.Result {
@@ -134,25 +104,29 @@ func handleMsgDelegate(ctx sdk.Context, msg MsgDelegate, k Keeper) sdk.Result {
 	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadBondingDenom().Result()
 	}
+	if candidate.Status == Revoked {
+		return ErrCandidateRevoked().Result()
+	}
 	if ctx.IsCheckTx() {
 		return sdk.Result{
 			GasUsed: GasDelegate,
 		}
 	}
-	return delegateWithCandidate(ctx, k, msg.DelegatorAddr, msg.Bond, candidate).Result()
+	err := delegate(ctx, k, msg.DelegatorAddr, msg.Bond, candidate)
+	if err != nil {
+		return err.Result()
+	}
+	return sdk.Result{}
 }
 
-func delegateWithCandidate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
+// common functionality between handlers
+func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	bondAmt sdk.Coin, candidate Candidate) sdk.Error {
 
-	if candidate.Status == Revoked { //candidate has been withdrawn
-		return ErrBondNotNominated()
-	}
-
 	// Get or create the delegator bond
-	existingBond, found := k.getDelegatorBond(ctx, delegatorAddr, candidate.Address)
+	bond, found := k.getDelegatorBond(ctx, delegatorAddr, candidate.Address)
 	if !found {
-		existingBond = DelegatorBond{
+		bond = DelegatorBond{
 			DelegatorAddr: delegatorAddr,
 			CandidateAddr: candidate.Address,
 			Shares:        sdk.ZeroRat,
@@ -160,28 +134,17 @@ func delegateWithCandidate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	}
 
 	// Account new shares, save
-	err := BondCoins(ctx, k, existingBond, candidate, bondAmt)
+	pool := k.GetPool(ctx)
+	_, err := k.coinKeeper.SubtractCoins(ctx, bond.DelegatorAddr, sdk.Coins{bondAmt})
 	if err != nil {
 		return err
 	}
-	k.setDelegatorBond(ctx, existingBond)
-	k.setCandidate(ctx, candidate)
-	return nil
-}
-
-// Perform all the actions required to bond tokens to a delegator bond from their account
-func BondCoins(ctx sdk.Context, k Keeper, bond DelegatorBond, candidate Candidate, amount sdk.Coin) sdk.Error {
-
-	_, err := k.coinKeeper.SubtractCoins(ctx, bond.DelegatorAddr, sdk.Coins{amount})
-	if err != nil {
-		return err
-	}
-	p := k.GetPool(ctx)
-	p, candidate, newShares := p.candidateAddTokens(candidate, amount.Amount)
+	pool, candidate, newShares := pool.candidateAddTokens(candidate, bondAmt.Amount)
 	bond.Shares = bond.Shares.Add(newShares)
-	k.setPool(ctx, p)
-	k.setCandidate(ctx, candidate)
+
 	k.setDelegatorBond(ctx, bond)
+	k.setCandidate(ctx, candidate)
+	k.setPool(ctx, pool)
 	return nil
 }
 
@@ -208,7 +171,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 			return ErrNotEnoughBondShares(msg.Shares).Result()
 		}
 	} else {
-		if !bond.Shares.GT(shares) {
+		if bond.Shares.LT(shares) {
 			return ErrNotEnoughBondShares(msg.Shares).Result()
 		}
 	}
@@ -251,10 +214,11 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 	// Add the coins
 	p := k.GetPool(ctx)
-	var returnAmount int64
-	p, candidate, returnAmount = p.candidateRemoveShares(candidate, shares)
+	p, candidate, returnAmount := p.candidateRemoveShares(candidate, shares)
 	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
 	k.coinKeeper.AddCoins(ctx, bond.DelegatorAddr, returnCoins)
+
+	/////////////////////////////////////
 
 	// revoke candidate if necessary
 	if revokeCandidacy {
@@ -278,26 +242,39 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	return sdk.Result{}
 }
 
-// XXX where this used
-// Perform all the actions required to bond tokens to a delegator bond from their account
-func UnbondCoins(ctx sdk.Context, k Keeper, bond DelegatorBond, candidate Candidate, shares sdk.Rat) sdk.Error {
+// TODO use or remove
+//// Perform all the actions required to bond tokens to a delegator bond from their account
+//func BondCoins(ctx sdk.Context, k Keeper, bond DelegatorBond,
+//candidate Candidate, amount sdk.Coin) (DelegatorBond, Candidate, Pool, sdk.Error) {
 
-	// subtract bond tokens from delegator bond
-	if bond.Shares.LT(shares) {
-		return sdk.ErrInsufficientFunds("") //XXX variables inside
-	}
-	bond.Shares = bond.Shares.Sub(shares)
+//pool := k.GetPool(ctx)
+//_, err := k.coinKeeper.SubtractCoins(ctx, bond.DelegatorAddr, sdk.Coins{amount})
+//if err != nil {
+//return bond, candidate, pool, err
+//}
+//pool, candidate, newShares := pool.candidateAddTokens(candidate, amount.Amount)
+//bond.Shares = bond.Shares.Add(newShares)
+//return bond, candidate, pool, nil
+//}
+//// Perform all the actions required to bond tokens to a delegator bond from their account
+//func UnbondCoins(ctx sdk.Context, k Keeper, bond DelegatorBond,
+//candidate Candidate, shares sdk.Rat) (DelegatorBond, Candidate, Pool, sdk.Error) {
 
-	p := k.GetPool(ctx)
-	var returnAmount int64
-	p, candidate, returnAmount = p.candidateRemoveShares(candidate, shares)
-	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
+//pool := k.GetPool(ctx)
 
-	_, err := k.coinKeeper.AddCoins(ctx, candidate.Address, returnCoins)
-	if err != nil {
-		return err
-	}
-	k.setPool(ctx, p)
-	k.setCandidate(ctx, candidate)
-	return nil
-}
+//// subtract bond tokens from delegator bond
+//if bond.Shares.LT(shares) {
+//errMsg := fmt.Sprintf("cannot unbond %v shares, only have %v shares available", shares, bond.Shares)
+//return bond, candidate, pool, sdk.ErrInsufficientFunds(errMsg)
+//}
+//bond.Shares = bond.Shares.Sub(shares)
+
+//pool, candidate, returnAmount := p.candidateRemoveShares(candidate, shares)
+//returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
+
+//_, err := k.coinKeeper.AddCoins(ctx, candidate.Address, returnCoins)
+//if err != nil {
+//return err
+//}
+//return bond, candidate, pool, nil
+//}

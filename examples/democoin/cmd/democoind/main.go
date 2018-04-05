@@ -2,82 +2,48 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	abci "github.com/tendermint/abci/types"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tmlibs/cli"
-	tmflags "github.com/tendermint/tmlibs/cli/flags"
-	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/version"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // democoindCmd is the entry point for this binary
 var (
-	context      = server.NewContext(nil, nil)
-	democoindCmd = &cobra.Command{
-		Use:   "democoind",
-		Short: "Gaia Daemon (server)",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if cmd.Name() == version.VersionCmd.Name() {
-				return nil
-			}
-			config, err := tcmd.ParseConfig()
-			if err != nil {
-				return err
-			}
-			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-			logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, cfg.DefaultLogLevel())
-			if err != nil {
-				return err
-			}
-			if viper.GetBool(cli.TraceFlag) {
-				logger = log.NewTracingLogger(logger)
-			}
-			logger = logger.With("module", "main")
-			context.Config = config
-			context.Logger = logger
-			return nil
-		},
+	context = server.NewContext(nil, nil)
+	rootCmd = &cobra.Command{
+		Use:               "democoind",
+		Short:             "Democoin Daemon (server)",
+		PersistentPreRunE: server.PersistentPreRunEFn(context),
 	}
 )
 
-// defaultOptions sets up the app_options for the
+// defaultAppState sets up the app_state for the
 // default genesis file
-func defaultOptions(args []string) (json.RawMessage, string, cmn.HexBytes, error) {
-	addr, secret, err := server.GenerateCoinKey()
+func defaultAppState(args []string, addr sdk.Address, coinDenom string) (json.RawMessage, error) {
+	baseJSON, err := server.DefaultGenAppState(args, addr, coinDenom)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, err
 	}
-	fmt.Println("Secret phrase to access coins:")
-	fmt.Println(secret)
-
-	opts := fmt.Sprintf(`{
-      "accounts": [{
-        "address": "%s",
-        "coins": [
-          {
-            "denom": "mycoin",
-            "amount": 9007199254740992
-          }
-        ]
-      }],
-      "cool": {
+	var jsonMap map[string]json.RawMessage
+	err = json.Unmarshal(baseJSON, &jsonMap)
+	if err != nil {
+		return nil, err
+	}
+	jsonMap["cool"] = json.RawMessage(`{
         "trend": "ice-cold"
-      }
-    }`, addr)
-	return json.RawMessage(opts), "", nil, nil
+      }`)
+	bz, err := json.Marshal(jsonMap)
+	return json.RawMessage(bz), err
 }
 
 func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
@@ -108,17 +74,10 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 }
 
 func main() {
-	democoindCmd.AddCommand(
-		server.InitCmd(defaultOptions, context),
-		server.StartCmd(generateApp, context),
-		server.UnsafeResetAllCmd(context),
-		server.ShowNodeIdCmd(context),
-		server.ShowValidatorCmd(context),
-		version.VersionCmd,
-	)
+	server.AddCommands(rootCmd, defaultAppState, generateApp, context)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.democoind")
-	executor := cli.PrepareBaseCmd(democoindCmd, "BC", rootDir)
+	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
 	executor.Execute()
 }

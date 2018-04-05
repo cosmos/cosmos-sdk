@@ -15,31 +15,32 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
-// basecoindCmd is the entry point for this binary
+// rootCmd is the entry point for this binary
 var (
 	context = server.NewContext(nil, nil)
 	rootCmd = &cobra.Command{
-		Use:               "basecoind",
-		Short:             "Basecoin Daemon (server)",
+		Use:               "gaiad",
+		Short:             "Gaia Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(context),
 	}
 )
 
+// TODO: distinguish from basecoin
 func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	dataDir := filepath.Join(rootDir, "data")
-	dbMain, err := dbm.NewGoLevelDB("basecoin", dataDir)
+	dbMain, err := dbm.NewGoLevelDB("gaia", dataDir)
 	if err != nil {
 		return nil, err
 	}
-	dbAcc, err := dbm.NewGoLevelDB("basecoin-acc", dataDir)
+	dbAcc, err := dbm.NewGoLevelDB("gaia-acc", dataDir)
 	if err != nil {
 		return nil, err
 	}
-	dbIBC, err := dbm.NewGoLevelDB("basecoin-ibc", dataDir)
+	dbIBC, err := dbm.NewGoLevelDB("gaia-ibc", dataDir)
 	if err != nil {
 		return nil, err
 	}
-	dbStaking, err := dbm.NewGoLevelDB("basecoin-staking", dataDir)
+	dbStaking, err := dbm.NewGoLevelDB("gaia-staking", dataDir)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +58,6 @@ func main() {
 	server.AddCommands(rootCmd, server.DefaultGenAppState, generateApp, context)
 
 	// prepare and add flags
-	rootDir := os.ExpandEnv("$HOME/.basecoind")
-	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
+	executor := cli.PrepareBaseCmd(rootCmd, "GA", os.ExpandEnv("$HOME/.gaiad"))
 	executor.Execute()
 }

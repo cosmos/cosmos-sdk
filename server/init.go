@@ -5,20 +5,32 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
+	"github.com/tendermint/go-crypto/keys"
+	"github.com/tendermint/go-crypto/keys/words"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/p2p"
 	tmtypes "github.com/tendermint/tendermint/types"
 	cmn "github.com/tendermint/tmlibs/common"
+	dbm "github.com/tendermint/tmlibs/db"
 )
 
+// testnetInformation contains the info necessary
+// to setup a testnet including this account and validator.
 type testnetInformation struct {
-	Secret    string                   `json:"secret"`
+	Secret string `json:"secret"`
+
+	ChainID   string                   `json:"chain_id"`
 	Account   string                   `json:"account"`
 	Validator tmtypes.GenesisValidator `json:"validator"`
 	NodeID    p2p.ID                   `json:"node_id"`
-	ChainID   string                   `json:"chain_id"`
+}
+
+type initCmd struct {
+	genAppState GenAppState
+	context     *Context
 }
 
 // InitCmd will initialize all files for tendermint,
@@ -39,17 +51,6 @@ func InitCmd(gen GenAppState, ctx *Context) *cobra.Command {
 	return &cobraCmd
 }
 
-// GenAppState can parse command-line to
-// generate default app_state for the genesis file.
-// Also must return generated seed and address
-// This is application-specific
-type GenAppState func(args []string) (json.RawMessage, string, cmn.HexBytes, error)
-
-type initCmd struct {
-	genAppState GenAppState
-	context     *Context
-}
-
 func (c initCmd) run(cmd *cobra.Command, args []string) error {
 	// Store testnet information as we go
 	var testnetInfo testnetInformation
@@ -67,14 +68,22 @@ func (c initCmd) run(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	// generate secrete and address
+	addr, secret, err := GenerateCoinKey()
+	if err != nil {
+		return err
+	}
+
+	var DEFAULT_DENOM = "mycoin"
+
 	// Now, we want to add the custom app_state
-	appState, secret, address, err := c.genAppState(args)
+	appState, err := c.genAppState(args, addr, DEFAULT_DENOM)
 	if err != nil {
 		return err
 	}
 
 	testnetInfo.Secret = secret
-	testnetInfo.Account = address.String()
+	testnetInfo.Account = addr.String()
 
 	// And add them to the genesis file
 	genFile := config.GenesisFile()
@@ -144,6 +153,34 @@ func (c initCmd) initTendermintFiles(config *cfg.Config, info *testnetInformatio
 	return nil
 }
 
+//-------------------------------------------------------------------
+
+// GenAppState takes the command line args, as well
+// as an address and coin denomination.
+// It returns a default app_state to be included in
+// in the genesis file.
+// This is application-specific
+type GenAppState func(args []string, addr sdk.Address, coinDenom string) (json.RawMessage, error)
+
+// DefaultGenAppState expects two args: an account address
+// and a coin denomination, and gives lots of coins to that address.
+func DefaultGenAppState(args []string, addr sdk.Address, coinDenom string) (json.RawMessage, error) {
+	opts := fmt.Sprintf(`{
+      "accounts": [{
+        "address": "%s",
+        "coins": [
+          {
+            "denom": "%s",
+            "amount": 9007199254740992
+          }
+        ]
+      }]
+    }`, addr.String(), coinDenom)
+	return json.RawMessage(opts), nil
+}
+
+//-------------------------------------------------------------------
+
 // GenesisDoc involves some tendermint-specific structures we don't
 // want to parse, so we just grab it into a raw object format,
 // so we can add one line.
@@ -168,4 +205,31 @@ func addGenesisState(filename string, appState json.RawMessage) error {
 	}
 
 	return ioutil.WriteFile(filename, out, 0600)
+}
+
+//-------------------------------------------------------------------
+
+// GenerateCoinKey returns the address of a public key,
+// along with the secret phrase to recover the private key.
+// You can give coins to this address and return the recovery
+// phrase to the user to access them.
+func GenerateCoinKey() (sdk.Address, string, error) {
+	// construct an in-memory key store
+	codec, err := words.LoadCodec("english")
+	if err != nil {
+		return nil, "", err
+	}
+	keybase := keys.New(
+		dbm.NewMemDB(),
+		codec,
+	)
+
+	// generate a private key, with recovery phrase
+	info, secret, err := keybase.Create("name", "pass", keys.AlgoEd25519)
+	if err != nil {
+		return nil, "", err
+	}
+
+	addr := info.PubKey.Address()
+	return addr, secret, nil
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -24,17 +23,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 )
 
-// gaiacliCmd is the entry point for this binary
+// rootCmd is the entry point for this binary
 var (
-	basecliCmd = &cobra.Command{
+	rootCmd = &cobra.Command{
 		Use:   "basecli",
 		Short: "Basecoin light-client",
 	}
 )
-
-func todoNotImplemented(_ *cobra.Command, _ []string) error {
-	return errors.New("TODO: Command not yet implemented")
-}
 
 func main() {
 	// disable sorting
@@ -48,38 +43,37 @@ func main() {
 	// with the cdc
 
 	// add standard rpc, and tx commands
-	rpc.AddCommands(basecliCmd)
-	basecliCmd.AddCommand(client.LineBreak)
-	tx.AddCommands(basecliCmd, cdc)
-	basecliCmd.AddCommand(client.LineBreak)
+	rpc.AddCommands(rootCmd)
+	rootCmd.AddCommand(client.LineBreak)
+	tx.AddCommands(rootCmd, cdc)
+	rootCmd.AddCommand(client.LineBreak)
 
 	// add query/post commands (custom to binary)
-	basecliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.GetCommands(
 			authcmd.GetAccountCmd("main", cdc, types.GetAccountDecoder(cdc)),
 		)...)
-	basecliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
 			bankcmd.IBCSendCmd(cdc),
 		)...)
-	basecliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.IBCSendCmd(cdc),
 		)...)
-
-	basecliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.PostCommands(
 			ibccmd.IBCRelayCmd(cdc),
 			simplestakingcmd.BondTxCmd(cdc),
 		)...)
-	basecliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.PostCommands(
 			simplestakingcmd.UnbondTxCmd(cdc),
 		)...)
 
 	// add proxy, version and key info
-	basecliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.LineBreak,
 		lcd.ServeCommand(cdc),
 		keys.Commands(),
@@ -88,6 +82,6 @@ func main() {
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareMainCmd(basecliCmd, "BC", os.ExpandEnv("$HOME/.basecli"))
+	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/.basecli"))
 	executor.Execute()
 }

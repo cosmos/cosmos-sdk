@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	abci "github.com/tendermint/abci/types"
 )
 
 // keeper of the staking store
@@ -146,7 +147,7 @@ func (k Keeper) removeCandidate(ctx sdk.Context, address sdk.Address) {
 	if store.Get(GetRecentValidatorKey(address)) == nil {
 		return
 	}
-	bz, err := k.cdc.MarshalBinary(Validator{address, sdk.ZeroRat})
+	bz, err := k.cdc.MarshalBinary(abci.Validator{address, 0})
 	if err != nil {
 		panic(err)
 	}
@@ -167,7 +168,7 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 	iterator := store.Iterator(subspace(RecentValidatorsKey))
 	for ; iterator.Valid(); iterator.Next() {
 		addr := AddrFromKey(iterator.Key())
-		store.Set(GetToKickOutValidatorKey(addr), []byte{})
+		store.Set(GetToKickOutValidatorKey(addr), iterator.Value()) // iterator.Value is the validator pubkey
 		store.Delete(iterator.Key())
 	}
 	iterator.Close()
@@ -194,7 +195,7 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 		store.Delete(GetToKickOutValidatorKey(val.Address))
 
 		// also add to the recent validators group
-		store.Set(GetRecentValidatorKey(val.Address), bz) // XXX should store nothing
+		store.Set(GetRecentValidatorKey(val.Address), bz)
 
 		iterator.Next()
 	}
@@ -203,7 +204,8 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 	iterator = store.Iterator(subspace(ToKickOutValidatorsKey))
 	for ; iterator.Valid(); iterator.Next() {
 		addr := AddrFromKey(iterator.Key())
-		bz, err := k.cdc.MarshalBinary(Validator{addr, sdk.ZeroRat})
+		validator = iterator.Key()
+		bz, err := k.cdc.MarshalBinary(abci.Validator{addr, 0})
 		if err != nil {
 			panic(err)
 		}
@@ -255,7 +257,7 @@ func (k Keeper) IsRecentValidator(ctx sdk.Context, address sdk.Address) bool {
 // Accumulated updates to the validator set
 
 // get the most recently updated validators
-func (k Keeper) getAccUpdateValidators(ctx sdk.Context) (updates []Validator) {
+func (k Keeper) getAccUpdateValidators(ctx sdk.Context) (updates []abci.Validator) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := store.Iterator(subspace(AccUpdateValidatorsKey)) //smallest to largest
@@ -275,12 +277,9 @@ func (k Keeper) getAccUpdateValidators(ctx sdk.Context) (updates []Validator) {
 // remove all validator update entries
 func (k Keeper) clearAccUpdateValidators(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	k.deleteSubSpace(store, AccUpdateValidatorsKey)
-}
 
-// TODO move to common functionality somewhere
-func (k Keeper) deleteSubSpace(store sdk.KVStore, key []byte) {
-	iterator := store.Iterator(subspace(key))
+	// delete subspace
+	iterator := store.Iterator(subspace(AccUpdateValidatorsKey))
 	for ; iterator.Valid(); iterator.Next() {
 		store.Delete(iterator.Key())
 	}

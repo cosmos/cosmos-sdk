@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	abci "github.com/tendermint/abci/types"
 )
 
 //nolint
@@ -32,6 +33,17 @@ func NewHandler(k Keeper, ck bank.CoinKeeper) sdk.Handler {
 		default:
 			return sdk.ErrTxDecode("invalid message parse in staking module").Result()
 		}
+	}
+}
+
+//_______________________________________________
+
+// NewEndBlocker generates sdk.EndBlocker
+// Performs tick functionality
+func NewEndBlocker(k Keeper) sdk.EndBlocker {
+	return func(ctx sdk.Context, req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
+		res.ValidatorUpdates = k.Tick(ctx)
+		return
 	}
 }
 

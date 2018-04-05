@@ -2,6 +2,8 @@ package stake
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
+	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -105,6 +107,7 @@ func (c Candidate) delegatorShareExRate() sdk.Rat {
 func (c Candidate) validator() Validator {
 	return Validator{
 		Address:     c.Address,
+		PubKey:      c.PubKey,
 		VotingPower: c.Assets,
 	}
 }
@@ -116,23 +119,22 @@ func (c Candidate) validator() Validator {
 
 // Validator is one of the top Candidates
 type Validator struct {
-	Address     sdk.Address `json:"address"`      // Address of validator
-	VotingPower sdk.Rat     `json:"voting_power"` // Voting power if considered a validator
+	Address     sdk.Address `json:"address"`
+	PubKey      sdk.PubKey  `json:"PubKey"`
+	VotingPower sdk.Rat     `json:"voting_power"`
 }
 
 // ABCIValidator - Get the validator from a bond value
-/* TODO
-func (v Validator) ABCIValidator() (*abci.Validator, error) {
+func (v Validator) ABCIValidator() abci.Validator {
 	pkBytes, err := wire.MarshalBinary(v.PubKey)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return &abci.Validator{
+	return abci.Validator{
 		PubKey: pkBytes,
 		Power:  v.VotingPower.Evaluate(),
-	}, nil
+	}
 }
-*/
 
 //_________________________________________________________________________
 

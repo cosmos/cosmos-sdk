@@ -1,9 +1,9 @@
 package main
 
 import (
-	"errors"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 
 	"github.com/tendermint/tmlibs/cli"
 
@@ -13,28 +13,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
-	coolcmd "github.com/cosmos/cosmos-sdk/examples/basecoin/x/cool/commands"
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/commands"
-	stakingcmd "github.com/cosmos/cosmos-sdk/x/staking/commands"
+	simplestakingcmd "github.com/cosmos/cosmos-sdk/x/simplestake/commands"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 )
 
-// gaiacliCmd is the entry point for this binary
+// rootCmd is the entry point for this binary
 var (
-	basecliCmd = &cobra.Command{
+	rootCmd = &cobra.Command{
 		Use:   "basecli",
 		Short: "Basecoin light-client",
 	}
 )
-
-func todoNotImplemented(_ *cobra.Command, _ []string) error {
-	return errors.New("TODO: Command not yet implemented")
-}
 
 func main() {
 	// disable sorting
@@ -48,46 +43,34 @@ func main() {
 	// with the cdc
 
 	// add standard rpc, and tx commands
-	rpc.AddCommands(basecliCmd)
-	basecliCmd.AddCommand(client.LineBreak)
-	tx.AddCommands(basecliCmd, cdc)
-	basecliCmd.AddCommand(client.LineBreak)
+	rpc.AddCommands(rootCmd)
+	rootCmd.AddCommand(client.LineBreak)
+	tx.AddCommands(rootCmd, cdc)
+	rootCmd.AddCommand(client.LineBreak)
 
 	// add query/post commands (custom to binary)
-	basecliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("main", cdc, types.GetParseAccount(cdc)),
+			authcmd.GetAccountCmd("main", cdc, types.GetAccountDecoder(cdc)),
 		)...)
-	basecliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
-		)...)
-	basecliCmd.AddCommand(
-		client.PostCommands(
 			bankcmd.IBCSendCmd(cdc),
 		)...)
-	basecliCmd.AddCommand(
-		client.PostCommands(
-			coolcmd.QuizTxCmd(cdc),
-		)...)
-	basecliCmd.AddCommand(
-		client.PostCommands(
-			coolcmd.SetTrendTxCmd(cdc),
-		)...)
-
-	basecliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.PostCommands(
 			ibccmd.IBCRelayCmd(cdc),
 			ibccmd.IBCOpenCmd(cdc),
-			stakingcmd.BondTxCmd(cdc),
+			simplestakingcmd.BondTxCmd(cdc),
 		)...)
-	basecliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.PostCommands(
-			stakingcmd.UnbondTxCmd(cdc),
+			simplestakingcmd.UnbondTxCmd(cdc),
 		)...)
 
 	// add proxy, version and key info
-	basecliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.LineBreak,
 		lcd.ServeCommand(cdc),
 		keys.Commands(),
@@ -96,6 +79,6 @@ func main() {
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareMainCmd(basecliCmd, "BC", os.ExpandEnv("$HOME/.basecli"))
+	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/.basecli"))
 	executor.Execute()
 }

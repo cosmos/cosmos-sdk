@@ -7,8 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/builder"
+	"github.com/cosmos/cosmos-sdk/client/context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -37,8 +36,10 @@ type ibcSendCommander struct {
 }
 
 func (c ibcSendCommander) ibcSend(cmd *cobra.Command, args []string) error {
+	ctx := context.NewCoreContextFromViper()
+
 	// get the from address
-	from, err := builder.GetFromAddress()
+	from, err := ctx.GetFromAddress()
 	if err != nil {
 		return err
 	}
@@ -50,15 +51,7 @@ func (c ibcSendCommander) ibcSend(cmd *cobra.Command, args []string) error {
 	}
 
 	// get password
-	name := viper.GetString(client.FlagName)
-	buf := client.BufferStdin()
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-	passphrase, err := client.GetPassword(prompt, buf)
-	if err != nil {
-		return err
-	}
-
-	res, err := builder.SignBuildBroadcast(name, passphrase, msg, c.cdc)
+	res, err := ctx.SignBuildBroadcast(ctx.FromAddressName, msg, c.cdc)
 	if err != nil {
 		return err
 	}

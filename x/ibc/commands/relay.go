@@ -2,20 +2,22 @@ package commands
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
+	"os"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/tendermint/iavl"
 	"github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
-
-	"github.com/tendermint/iavl"
+	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/builder"
+	"github.com/cosmos/cosmos-sdk/client/context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -28,17 +30,21 @@ import (
 type relayCommander struct {
 	cdc       *wire.Codec
 	address   sdk.Address
-	parser    sdk.ParseAccount
+	decoder   sdk.AccountDecoder
 	mainStore string
 	ibcStore  string
+
+	logger log.Logger
 }
 
 func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 	cmdr := relayCommander{
 		cdc:       cdc,
-		parser:    authcmd.GetParseAccount(cdc),
+		decoder:   authcmd.GetAccountDecoder(cdc),
 		ibcStore:  "ibc",
 		mainStore: "main",
+
+		logger: log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
 	}
 
 	cmd := &cobra.Command{
@@ -70,7 +76,7 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	fromChainNode := viper.GetString(FlagFromChainNode)
 	toChainID := viper.GetString(FlagToChainID)
 	toChainNode := viper.GetString(FlagToChainNode)
-	address, err := builder.GetFromAddress()
+	address, err := context.NewCoreContextFromViper().GetFromAddress()
 	if err != nil {
 		panic(err)
 	}
@@ -80,37 +86,34 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 }
 
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
+	ctx := context.NewCoreContextFromViper()
 	// get password
-	name := viper.GetString(client.FlagName)
-	buf := client.BufferStdin()
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-	passphrase, err := client.GetPassword(prompt, buf)
+	passphrase, err := ctx.GetPassphraseFromStdin(ctx.FromAddressName)
 	if err != nil {
 		panic(err)
 	}
 
 	ingressKey := ibcm.IngressSequenceKey(fromChainID)
-
-	processedbz, _, _, err := query(toChainNode, ingressKey, c.ibcStore)
-	if err != nil {
-		panic(err)
-	}
-
-	var processed int64
-	if processedbz == nil {
-		processed = 0
-	} else if err = c.cdc.UnmarshalBinary(processedbz, &processed); err != nil {
-		panic(err)
-	}
-
 OUTER:
 	for {
-		time.Sleep(time.Second / 2)
+		time.Sleep(5 * time.Second)
+
+		processedbz, err := query(toChainNode, ingressKey, c.ibcStore)
+		if err != nil {
+			panic(err)
+		}
+
+		var processed int64
+		if processedbz == nil {
+			processed = 0
+		} else if err = c.cdc.UnmarshalBinary(processedbz, &processed); err != nil {
+			panic(err)
+		}
 
 		lengthKey := ibcm.EgressLengthKey(toChainID)
-		egressLengthbz, _, _, err := query(fromChainNode, lengthKey, c.ibcStore)
+		egressLengthbz, err := query(fromChainNode, lengthKey, c.ibcStore)
 		if err != nil {
-			fmt.Printf("Error querying outgoing packet list length: '%s'\n", err)
+			c.logger.Error("Error querying outgoing packet list length", "err", err)
 			continue OUTER
 		}
 		var egressLength int64
@@ -119,75 +122,84 @@ OUTER:
 		} else if err = c.cdc.UnmarshalBinary(egressLengthbz, &egressLength); err != nil {
 			panic(err)
 		}
-		fmt.Printf("egressLength queried: %d\n", egressLength)
+		if egressLength > processed {
+			c.logger.Info("Detected IBC packet", "number", egressLength-1)
+		}
 
 		seq := c.getSequence(toChainNode)
 
 		for i := processed; i < egressLength; i++ {
-			egressbz, proofbz, height, err := query(fromChainNode, ibcm.EgressKey(toChainID, i), c.ibcStore)
-			if err != nil {
-				fmt.Printf("Error querying egress packet: '%s'\n", err)
-				continue OUTER
-			}
 
-			fmt.Printf("Got packet from height %d\n", height)
-			commitKey := ibcm.CommitByHeightKey(fromChainID, height+1)
-			exists, _, _, err := query(toChainNode, commitKey, c.ibcStore)
+			egressbz, proofbz, height, err := queryWithProof(fromChainNode, ibcm.EgressKey(toChainID, i), c.ibcStore)
 			if err != nil {
-				fmt.Printf("Error querying commit: '%s'\n", err)
+				c.logger.Error("Error querying egress packet", "err", err)
 				continue OUTER
 			}
-			if exists == nil {
-				commit, err := getCommit(fromChainNode, height+1)
+			fmt.Printf("Got packet from height %d\n", height)
+			/*
+				commitKey := ibcm.CommitByHeightKey(fromChainID, height+1)
+				exists, err := query(toChainNode, commitKey, c.ibcStore)
 				if err != nil {
 					fmt.Printf("Error querying commit: '%s'\n", err)
 					continue OUTER
 				}
-				fmt.Printf("Commit: %+v\nHeight: %+v\n", commit.Header.AppHash.Bytes(), commit.Header.Height)
-				_ := ibcm.UpdateChannelMsg{
-					SrcChain: fromChainID,
-					Commit:   commit,
-					Signer:   c.address,
+				if exists == nil {
+					err = update()
+					if err != nil {
+						fmt.Printf("Error broadcasting update: '%s'\n", err)
+						continue OUTER
+					}
 				}
-				//name := viper.GetString(client.FlagName)
-				viper.Set(client.FlagSequence, seq)
-				seq++
-				//_, err = builder.SignBuildBroadcast(name, passphrase, msg, c.cdc)
-				if err != nil {
-					fmt.Printf("Error broadcasting update: '%s'\n", err)
-					continue OUTER
-				}
-			}
-
-			viper.Set(client.FlagSequence, seq)
+			*/
+			err = c.broadcastTx(toChainNode, c.refine(egressbz, proofbz, height, i, seq, passphrase))
 			seq++
-			err = c.broadcastTx(toChainNode, c.refine(egressbz, proofbz, height+1, i, passphrase))
+
 			if err != nil {
-				fmt.Printf("Error broadcasting ingress packet: '%s'\n", err)
+				c.logger.Error("Error broadcasting ingress packet", "err", err)
 				continue OUTER
 			}
 
-			fmt.Printf("Relayed packet: %d\n", i)
+			c.logger.Info("Relayed IBC packet", "number", i)
 		}
-
-		processed = egressLength
 	}
 }
 
-func query(nodeAddr string, key []byte, storeName string) (res []byte, proof []byte, height int64, err error) {
-	orig := viper.GetString(client.FlagNode)
-	viper.Set(client.FlagNode, nodeAddr)
+func update() error {
+	commit, err := getCommit(fromChainNode, height+1)
+	if err != nil {
+		fmt.Printf("Error querying commit: '%s'\n", err)
+		continue OUTER
+	}
+	fmt.Printf("Commit: %+v\nHeight: %+v\n", commit.Header.AppHash.Bytes(), commit.Header.Height)
+	_ = ibcm.UpdateChannelMsg{
+		SrcChain: fromChainID,
+		Commit:   commit,
+		Signer:   c.address,
+	}
+	//name := viper.GetString(client.FlagName)
+	viper.Set(client.FlagSequence, seq)
+	seq++
+	//_, err = builder.SignBuildBroadcast(name, passphrase, msg, c.cdc)
 
-	// copied from sdk/client/builder/builder.go to access to proof
-	path := fmt.Sprintf("/%s/key", storeName)
-	node, err := client.GetNode()
+}
+
+func query(node string, key []byte, storeName string) (res []byte, err error) {
+	return context.NewCoreContextFromViper().WithNodeURI(node).Query(key, storeName)
+}
+
+func queryWithProof(nodeAddr string, key []byte, storeName string) (res []byte, proof []byte, height int64, err error) {
+	ctx := context.NewCoreContextFromViper().WithNodeURI(nodeAddr)
+	node, err := ctx.GetNode()
 	if err != nil {
 		return
 	}
+
 	opts := rpcclient.ABCIQueryOptions{
-		Height:  viper.GetInt64(client.FlagHeight),
-		Trusted: viper.GetBool(client.FlagTrustNode),
+		Height:  ctx.Height,
+		Trusted: ctx.TrustNode,
 	}
+
+	path := fmt.Sprintf("/%s/key", storeName)
 	result, err := node.ABCIQueryWithOptions(path, key, opts)
 	if err != nil {
 		return
@@ -197,33 +209,28 @@ func query(nodeAddr string, key []byte, storeName string) (res []byte, proof []b
 		err = errors.Errorf("Query failed: (%d) %s", resp.Code, resp.Log)
 		return
 	}
-
-	viper.Set(client.FlagNode, orig)
-	return resp.Value, resp.Proof, resp.Height, err
+	return resp.Value, resp.Proof, resp.Height, nil
 }
 
 func (c relayCommander) broadcastTx(node string, tx []byte) error {
-	orig := viper.GetString(client.FlagNode)
-	viper.Set(client.FlagNode, node)
-	_, err := builder.BroadcastTx(tx)
-	viper.Set(client.FlagNode, orig)
+	_, err := context.NewCoreContextFromViper().WithNodeURI(node).BroadcastTx(tx)
 	return err
 }
 
 func (c relayCommander) getSequence(node string) int64 {
-	res, _, _, err := query(node, c.address, c.mainStore)
+	res, err := query(node, c.address, c.mainStore)
 	if err != nil {
 		panic(err)
 	}
-	account, err := c.parser(res)
+
+	account, err := c.decoder(res)
 	if err != nil {
 		panic(err)
 	}
 
 	return account.GetSequence()
 }
-
-func (c relayCommander) refine(bz []byte, pbz []byte, height int64, sequence int64, passphrase string) []byte {
+func (c relayCommander) refine(bz []byte, pbz []byte, height int64, packetSeq int64, txSeq int64, passphrase string) []byte {
 	var packet ibc.Packet
 	if err := c.cdc.UnmarshalBinary(bz, &packet); err != nil {
 		panic(err)
@@ -239,18 +246,19 @@ func (c relayCommander) refine(bz []byte, pbz []byte, height int64, sequence int
 		panic("Expected KeyExistsProof for non-empty value")
 	}
 
-	fmt.Printf("Proof: %+v\nHeight: %+v\n", eproof.Root(), height)
+	fmt.Printf("Proof: %+v\n", eproof)
+	fmt.Printf("ProofRoot: %+v\nHeight: %+v\n", eproof.Root(), height)
 
 	msg := ibcm.ReceiveMsg{
 		Packet:   packet,
 		Proof:    eproof,
 		Height:   height,
 		Relayer:  c.address,
-		Sequence: sequence,
+		Sequence: packetSeq,
 	}
 
-	name := viper.GetString(client.FlagName)
-	res, err := builder.SignAndBuild(name, passphrase, msg, c.cdc)
+	ctx := context.NewCoreContextFromViper().WithSequence(txSeq)
+	res, err := ctx.SignAndBuild(ctx.FromAddressName, passphrase, msg, c.cdc)
 	if err != nil {
 		panic(err)
 	}
@@ -258,7 +266,10 @@ func (c relayCommander) refine(bz []byte, pbz []byte, height int64, sequence int
 }
 
 func getCommit(nodeAddr string, height int64) (res lite.FullCommit, err error) {
-	node := rpcclient.NewHTTP(nodeAddr, "/websocket")
+	node, err := context.NewCoreContextFromViper().WithNodeURI(nodeAddr).GetNode()
+	if err != nil {
+		return
+	}
 
 	commit, err := node.Commit(&height)
 	if err != nil {

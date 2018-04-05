@@ -8,14 +8,17 @@ import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-crypto"
 
+	oldwire "github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	wire "github.com/cosmos/cosmos-sdk/wire"
-
 	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
+
+	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 // AccountMapper(/CoinKeeper) and IBCMapper should use different StoreKey later
@@ -71,6 +74,31 @@ func (msg remoteSaveMsg) Type() string {
 
 func (msg remoteSaveMsg) ValidateBasic() sdk.Error {
 	return nil
+}
+
+// custom tx codec
+// TODO: use new go-wire
+func makeCodec() *wire.Codec {
+
+	const msgTypeSend = 0x1
+	const msgTypeIssue = 0x2
+	const msgTypeRemoteSave = 0x3
+	const msgTypeReceive = 0x4
+	var _ = oldwire.RegisterInterface(
+		struct{ sdk.Msg }{},
+		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
+		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
+		oldwire.ConcreteType{remoteSaveMsg{}, msgTypeRemoteSave},
+		oldwire.ConcreteType{ReceiveMsg{}, msgTypeReceive},
+	)
+
+	const accTypeApp = 0x1
+	var _ = oldwire.RegisterInterface(
+		struct{ sdk.Account }{},
+		oldwire.ConcreteType{&auth.BaseAccount{}, accTypeApp},
+	)
+	cdc := wire.NewCodec()
+	return cdc
 }
 
 func remoteSaveHandler(sender ibc.Sender) sdk.Handler {

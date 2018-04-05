@@ -3,6 +3,8 @@ package types
 import (
 	"fmt"
 	"runtime"
+
+	abci "github.com/tendermint/abci/types"
 )
 
 // ABCI Response Code
@@ -21,7 +23,7 @@ func (code CodeType) IsOK() bool {
 const (
 	CodeOK                CodeType = 0
 	CodeInternal          CodeType = 1
-	CodeTxParse           CodeType = 2
+	CodeTxDecode          CodeType = 2
 	CodeInvalidSequence   CodeType = 3
 	CodeUnauthorized      CodeType = 4
 	CodeInsufficientFunds CodeType = 5
@@ -32,7 +34,7 @@ const (
 	CodeInsufficientCoins CodeType = 10
 	CodeInvalidCoins      CodeType = 11
 
-	CodeGenesisParse CodeType = 0xdead // TODO: remove ?
+	CodeGenesisParse CodeType = 0xdead // TODO: remove ? // why remove?
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
@@ -40,7 +42,7 @@ func CodeToDefaultMsg(code CodeType) string {
 	switch code {
 	case CodeInternal:
 		return "Internal error"
-	case CodeTxParse:
+	case CodeTxDecode:
 		return "Tx parse error"
 	case CodeGenesisParse:
 		return "Genesis parse error"
@@ -75,8 +77,8 @@ func CodeToDefaultMsg(code CodeType) string {
 func ErrInternal(msg string) Error {
 	return newError(CodeInternal, msg)
 }
-func ErrTxParse(msg string) Error {
-	return newError(CodeTxParse, msg)
+func ErrTxDecode(msg string) Error {
+	return newError(CodeTxDecode, msg)
 }
 func ErrGenesisParse(msg string) Error {
 	return newError(CodeGenesisParse, msg)
@@ -121,6 +123,7 @@ type Error interface {
 	TraceCause(cause error, msg string) Error
 	Cause() error
 	Result() Result
+	QueryResult() abci.ResponseQuery
 }
 
 func NewError(code CodeType, msg string) Error {
@@ -217,6 +220,14 @@ func (err *sdkError) Cause() error {
 func (err *sdkError) Result() Result {
 	return Result{
 		Code: err.ABCICode(),
+		Log:  err.ABCILog(),
+	}
+}
+
+// QueryResult allows us to return sdk.Error.QueryResult() in query responses
+func (err *sdkError) QueryResult() abci.ResponseQuery {
+	return abci.ResponseQuery{
+		Code: uint32(err.ABCICode()),
 		Log:  err.ABCILog(),
 	}
 }

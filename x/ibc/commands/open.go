@@ -7,11 +7,10 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/tendermint/lite"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/builder"
+	"github.com/cosmos/cosmos-sdk/client/context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -22,7 +21,7 @@ import (
 
 type openCommander struct {
 	cdc       *wire.Codec
-	parser    sdk.ParseAccount
+	parser    sdk.AccountDecoder
 	mainStore string
 	ibcStore  string
 }
@@ -30,7 +29,7 @@ type openCommander struct {
 func IBCOpenCmd(cdc *wire.Codec) *cobra.Command {
 	cmdr := openCommander{
 		cdc:       cdc,
-		parser:    authcmd.GetParseAccount(cdc),
+		parser:    authcmd.GetAccountDecoder(cdc),
 		ibcStore:  "ibc",
 		mainStore: "main",
 	}
@@ -55,13 +54,17 @@ func IBCOpenCmd(cdc *wire.Codec) *cobra.Command {
 func (c openCommander) runIBCOpen(cmd *cobra.Command, args []string) {
 	fromChainID := viper.GetString(FlagFromChainID)
 
-	address, err := builder.GetFromAddress()
+	fromCtx := context.NewCoreContextFromViper().WithNodeURI(viper.GetString(FlagFromChainNode))
+	toCtx := context.NewCoreContextFromViper().WithNodeURI(viper.GetString(client.FlagChainID))
+	address, err := toCtx.GetFromAddress()
 	if err != nil {
 		panic(err)
 	}
 
-	fromChainNode := viper.GetString(FlagFromChainNode)
-	node := rpcclient.NewHTTP(fromChainNode, "/websocket")
+	node, err := fromCtx.GetNode()
+	if err != nil {
+		panic(err)
+	}
 	gen := int64(1)
 	commit, err := node.Commit(&gen)
 	if err != nil {
@@ -89,7 +92,11 @@ func (c openCommander) runIBCOpen(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	res, err := builder.SignBuildBroadcast(name, passphrase, msg, c.cdc)
+	tx, err := toCtx.SignAndBuild(name, passphrase, msg, c.cdc)
+	if err != nil {
+		panic(err)
+	}
+	res, err := toCtx.BroadcastTx(tx)
 	if err != nil {
 		panic(err)
 	}

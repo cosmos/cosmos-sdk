@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 
 	"github.com/tendermint/iavl"
-
 	"github.com/tendermint/tendermint/lite"
+	"github.com/tendermint/tmlibs/merkle"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -87,9 +87,16 @@ func (msg OpenChannelMsg) GetSigners() []sdk.Address {
 //------------------------------------
 // UpdateChannelMsg
 
+type SubProof struct {
+	merkle.SimpleProof
+	index int
+	total int
+}
+
 type UpdateChannelMsg struct {
 	SrcChain string
 	Commit   lite.FullCommit
+	SubProof SubProof
 	Signer   sdk.Address
 }
 

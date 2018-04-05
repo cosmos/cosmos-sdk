@@ -3,6 +3,7 @@ package mock
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 
 	abci "github.com/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -17,7 +18,7 @@ import (
 // Make sure rootDir is empty before running the test,
 // in order to guarantee consistent results
 func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	db, err := dbm.NewGoLevelDB("mock", rootDir)
+	db, err := dbm.NewGoLevelDB("mock", filepath.Join(rootDir, "data"))
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +106,7 @@ func InitChainer(key sdk.StoreKey) func(sdk.Context, abci.RequestInitChain) abci
 // GenInitOptions can be passed into InitCmd,
 // returns a static string of a few key-values that can be parsed
 // by InitChainer
-func GenInitOptions(args []string) (json.RawMessage, error) {
+func GenInitOptions(args []string, addr sdk.Address, coinDenom string) (json.RawMessage, error) {
 	opts := []byte(`{
   "values": [
     {

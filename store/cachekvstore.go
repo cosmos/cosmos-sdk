@@ -136,12 +136,12 @@ func (ci *cacheKVStore) ReverseIterator(start, end []byte) Iterator {
 }
 
 // Implements KVStore.
-func (ci *cacheKVStore) Subspace(prefix []byte) Iterator {
+func (ci *cacheKVStore) SubspaceIterator(prefix []byte) Iterator {
 	return ci.iterator(prefix, sdk.PrefixEndBytes(prefix), true)
 }
 
 // Implements KVStore.
-func (ci *cacheKVStore) ReverseSubspace(prefix []byte) Iterator {
+func (ci *cacheKVStore) ReverseSubspaceIterator(prefix []byte) Iterator {
 	return ci.iterator(prefix, sdk.PrefixEndBytes(prefix), false)
 }
 

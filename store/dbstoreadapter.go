@@ -19,11 +19,11 @@ func (dsa dbStoreAdapter) CacheWrap() CacheWrap {
 	return NewCacheKVStore(dsa)
 }
 
-func (dsa dbStoreAdapter) Subspace(prefix []byte) Iterator {
+func (dsa dbStoreAdapter) SubspaceIterator(prefix []byte) Iterator {
 	return dsa.Iterator(prefix, sdk.PrefixEndBytes(prefix))
 }
 
-func (dsa dbStoreAdapter) ReverseSubspace(prefix []byte) Iterator {
+func (dsa dbStoreAdapter) ReverseSubspaceIterator(prefix []byte) Iterator {
 	return dsa.ReverseIterator(prefix, sdk.PrefixEndBytes(prefix))
 }
 

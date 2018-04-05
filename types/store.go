@@ -113,11 +113,11 @@ type KVStore interface {
 
 	// Iterator over all the keys with a certain prefix in ascending order.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	Subspace(prefix []byte) Iterator
+	SubspaceIterator(prefix []byte) Iterator
 
 	// Iterator over all the keys with a certain prefix in descending order.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	ReverseSubspace(prefix []byte) Iterator
+	ReverseSubspaceIterator(prefix []byte) Iterator
 
 	// TODO Not yet implemented.
 	// CreateSubKVStore(key *storeKey) (KVStore, error)

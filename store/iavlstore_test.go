@@ -73,7 +73,8 @@ func TestIAVLIterator(t *testing.T) {
 	iavlStore := newIAVLStore(tree, numHistory)
 	iter := iavlStore.Iterator([]byte("aloha"), []byte("hellz"))
 	expected := []string{"aloha", "hello"}
-	i := 0
+	var i int
+
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
 		key, value := iter.Key(), iter.Value()
@@ -139,7 +140,7 @@ func TestIAVLIterator(t *testing.T) {
 	assert.Equal(t, len(expected), i)
 }
 
-func TestIAVLSubspace(t *testing.T) {
+func TestIAVLSubspaceIterator(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newTree(t, db)
 	iavlStore := newIAVLStore(tree, numHistory)
@@ -156,7 +157,7 @@ func TestIAVLSubspace(t *testing.T) {
 
 	i := 0
 
-	iter := iavlStore.Subspace([]byte("test"))
+	iter := iavlStore.SubspaceIterator([]byte("test"))
 	expected := []string{"test1", "test2", "test3"}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
@@ -167,7 +168,7 @@ func TestIAVLSubspace(t *testing.T) {
 	}
 	assert.Equal(t, len(expected), i)
 
-	iter = iavlStore.Subspace([]byte{byte(55), byte(255), byte(255)})
+	iter = iavlStore.SubspaceIterator([]byte{byte(55), byte(255), byte(255)})
 	expected2 := [][]byte{
 		[]byte{byte(55), byte(255), byte(255), byte(0)},
 		[]byte{byte(55), byte(255), byte(255), byte(1)},
@@ -182,7 +183,7 @@ func TestIAVLSubspace(t *testing.T) {
 	}
 	assert.Equal(t, len(expected), i)
 
-	iter = iavlStore.Subspace([]byte{byte(255), byte(255)})
+	iter = iavlStore.SubspaceIterator([]byte{byte(255), byte(255)})
 	expected2 = [][]byte{
 		[]byte{byte(255), byte(255), byte(0)},
 		[]byte{byte(255), byte(255), byte(1)},
@@ -198,7 +199,7 @@ func TestIAVLSubspace(t *testing.T) {
 	assert.Equal(t, len(expected), i)
 }
 
-func TestIAVLReverseSubspace(t *testing.T) {
+func TestIAVLReverseSubspaceIterator(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newTree(t, db)
 	iavlStore := newIAVLStore(tree, numHistory)
@@ -215,7 +216,7 @@ func TestIAVLReverseSubspace(t *testing.T) {
 
 	i := 0
 
-	iter := iavlStore.ReverseSubspace([]byte("test"))
+	iter := iavlStore.ReverseSubspaceIterator([]byte("test"))
 	expected := []string{"test3", "test2", "test1"}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
@@ -226,7 +227,7 @@ func TestIAVLReverseSubspace(t *testing.T) {
 	}
 	assert.Equal(t, len(expected), i)
 
-	iter = iavlStore.ReverseSubspace([]byte{byte(55), byte(255), byte(255)})
+	iter = iavlStore.ReverseSubspaceIterator([]byte{byte(55), byte(255), byte(255)})
 	expected2 := [][]byte{
 		[]byte{byte(55), byte(255), byte(255), byte(255)},
 		[]byte{byte(55), byte(255), byte(255), byte(1)},
@@ -241,7 +242,7 @@ func TestIAVLReverseSubspace(t *testing.T) {
 	}
 	assert.Equal(t, len(expected), i)
 
-	iter = iavlStore.ReverseSubspace([]byte{byte(255), byte(255)})
+	iter = iavlStore.ReverseSubspaceIterator([]byte{byte(255), byte(255)})
 	expected2 = [][]byte{
 		[]byte{byte(255), byte(255), byte(255)},
 		[]byte{byte(255), byte(255), byte(1)},

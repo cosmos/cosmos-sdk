@@ -125,12 +125,12 @@ func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 }
 
 // Implements KVStore.
-func (st *iavlStore) Subspace(prefix []byte) Iterator {
+func (st *iavlStore) SubspaceIterator(prefix []byte) Iterator {
 	return st.Iterator(prefix, sdk.PrefixEndBytes(prefix))
 }
 
 // Implements KVStore.
-func (st *iavlStore) ReverseSubspace(prefix []byte) Iterator {
+func (st *iavlStore) ReverseSubspaceIterator(prefix []byte) Iterator {
 	return st.ReverseIterator(prefix, sdk.PrefixEndBytes(prefix))
 }
 

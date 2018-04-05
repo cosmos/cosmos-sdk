@@ -6,14 +6,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/go-wire/data"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tmlibs/log"
 )
 
 // ShowValidator - ported from Tendermint, show this node's validator info
-func ShowValidatorCmd(logger log.Logger) *cobra.Command {
-	cmd := showValidator{logger}
+func ShowValidatorCmd(ctx *Context) *cobra.Command {
+	cmd := showValidator{ctx}
 	return &cobra.Command{
 		Use:   "show_validator",
 		Short: "Show this node's validator info",
@@ -22,14 +20,11 @@ func ShowValidatorCmd(logger log.Logger) *cobra.Command {
 }
 
 type showValidator struct {
-	logger log.Logger
+	context *Context
 }
 
 func (s showValidator) run(cmd *cobra.Command, args []string) error {
-	cfg, err := tcmd.ParseConfig()
-	if err != nil {
-		return err
-	}
+	cfg := s.context.Config
 	privValidator := types.LoadOrGenPrivValidatorFS(cfg.PrivValidatorFile())
 	pubKeyJSONBytes, err := data.ToJSON(privValidator.PubKey)
 	if err != nil {

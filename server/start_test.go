@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/mock"
 	"github.com/tendermint/abci/server"
+	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tmlibs/log"
 )
 
@@ -21,7 +22,10 @@ func TestStartStandAlone(t *testing.T) {
 	}()
 
 	logger := log.NewNopLogger()
-	initCmd := InitCmd(mock.GenInitOptions, logger)
+	cfg, err := tcmd.ParseConfig()
+	require.Nil(t, err)
+	ctx := NewContext(cfg, logger)
+	initCmd := InitCmd(mock.GenInitOptions, ctx)
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
@@ -37,7 +41,6 @@ func TestStartStandAlone(t *testing.T) {
 	case <-timer.C:
 		svr.Stop()
 	}
-
 }
 
 func TestStartWithTendermint(t *testing.T) {
@@ -45,13 +48,16 @@ func TestStartWithTendermint(t *testing.T) {
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
 		With("module", "mock-cmd")
-	initCmd := InitCmd(mock.GenInitOptions, logger)
-	err := initCmd.RunE(nil, nil)
+	cfg, err := tcmd.ParseConfig()
+	require.Nil(t, err)
+	ctx := NewContext(cfg, logger)
+	initCmd := InitCmd(mock.GenInitOptions, ctx)
+	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
 	// set up app and start up
 	viper.Set(flagWithTendermint, true)
-	startCmd := StartCmd(mock.NewApp, logger)
+	startCmd := StartCmd(mock.NewApp, ctx)
 	startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
 	timeout := time.Duration(5) * time.Second
 

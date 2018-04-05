@@ -6,9 +6,13 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	abci "github.com/tendermint/abci/types"
+	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tmlibs/cli"
+	tmflags "github.com/tendermint/tmlibs/cli/flags"
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 
@@ -19,9 +23,31 @@ import (
 
 // gaiadCmd is the entry point for this binary
 var (
+	context  = server.NewContext(nil, nil)
 	gaiadCmd = &cobra.Command{
 		Use:   "gaiad",
 		Short: "Gaia Daemon (server)",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Name() == version.VersionCmd.Name() {
+				return nil
+			}
+			config, err := tcmd.ParseConfig()
+			if err != nil {
+				return err
+			}
+			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+			logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, cfg.DefaultLogLevel())
+			if err != nil {
+				return err
+			}
+			if viper.GetBool(cli.TraceFlag) {
+				logger = log.NewTracingLogger(logger)
+			}
+			logger = logger.With("module", "main")
+			context.Config = config
+			context.Logger = logger
+			return nil
+		},
 	}
 )
 
@@ -56,13 +82,10 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 }
 
 func main() {
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
-		With("module", "main")
-
 	gaiadCmd.AddCommand(
-		server.InitCmd(defaultOptions, logger),
-		server.StartCmd(generateApp, logger),
-		server.UnsafeResetAllCmd(logger),
+		server.InitCmd(defaultOptions, context),
+		server.StartCmd(generateApp, context),
+		server.UnsafeResetAllCmd(context),
 		version.VersionCmd,
 	)
 

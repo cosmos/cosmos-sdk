@@ -80,6 +80,7 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 	app.SetInitChainer(app.initChainerFn(coolKeeper))
 	app.MountStoreWithDB(app.capKeyMainStore, sdk.StoreTypeIAVL, dbs["main"])
 	app.MountStoreWithDB(app.capKeyAccountStore, sdk.StoreTypeIAVL, dbs["acc"])
+	app.MountStoreWithDB(app.capKeyPowStore, sdk.StoreTypeIAVL, dbs["pow"])
 	app.MountStoreWithDB(app.capKeyIBCStore, sdk.StoreTypeIAVL, dbs["ibc"])
 	app.MountStoreWithDB(app.capKeyStakingStore, sdk.StoreTypeIAVL, dbs["staking"])
 	// NOTE: Broken until #532 lands
@@ -100,16 +101,18 @@ func MakeCodec() *wire.Codec {
 	const msgTypeIssue = 0x2
 	const msgTypeQuiz = 0x3
 	const msgTypeSetTrend = 0x4
-	const msgTypeIBCTransferMsg = 0x5
-	const msgTypeIBCReceiveMsg = 0x6
-	const msgTypeBondMsg = 0x7
-	const msgTypeUnbondMsg = 0x8
+	const msgTypeMine = 0x5
+	const msgTypeIBCTransferMsg = 0x6
+	const msgTypeIBCReceiveMsg = 0x7
+	const msgTypeBondMsg = 0x8
+	const msgTypeUnbondMsg = 0x9
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Msg }{},
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
 		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
 		oldwire.ConcreteType{cool.QuizMsg{}, msgTypeQuiz},
 		oldwire.ConcreteType{cool.SetTrendMsg{}, msgTypeSetTrend},
+		oldwire.ConcreteType{pow.MineMsg{}, msgTypeMine},
 		oldwire.ConcreteType{ibc.IBCTransferMsg{}, msgTypeIBCTransferMsg},
 		oldwire.ConcreteType{ibc.IBCReceiveMsg{}, msgTypeIBCReceiveMsg},
 		oldwire.ConcreteType{simplestake.BondMsg{}, msgTypeBondMsg},

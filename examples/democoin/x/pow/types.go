@@ -22,12 +22,15 @@ type MineMsg struct {
 	Proof      []byte      `json:"proof"`
 }
 
+// enforce the msg type at compile time
+var _ sdk.Msg = MineMsg{}
+
 // NewMineMsg - construct mine message
 func NewMineMsg(sender sdk.Address, difficulty uint64, count uint64, nonce uint64, proof []byte) MineMsg {
 	return MineMsg{sender, difficulty, count, nonce, proof}
 }
 
-func (msg MineMsg) Type() string                            { return "mine" }
+func (msg MineMsg) Type() string                            { return "pow" }
 func (msg MineMsg) Get(key interface{}) (value interface{}) { return nil }
 func (msg MineMsg) GetSigners() []sdk.Address               { return []sdk.Address{msg.Sender} }
 func (msg MineMsg) String() string {

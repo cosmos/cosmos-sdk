@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -24,17 +23,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
 )
 
-// gaiacliCmd is the entry point for this binary
+// rootCmd is the entry point for this binary
 var (
-	democliCmd = &cobra.Command{
+	rootCmd = &cobra.Command{
 		Use:   "democli",
 		Short: "Democoin light-client",
 	}
 )
-
-func todoNotImplemented(_ *cobra.Command, _ []string) error {
-	return errors.New("TODO: Command not yet implemented")
-}
 
 func main() {
 	// disable sorting
@@ -48,36 +43,36 @@ func main() {
 	// with the cdc
 
 	// add standard rpc, and tx commands
-	rpc.AddCommands(democliCmd)
-	democliCmd.AddCommand(client.LineBreak)
-	tx.AddCommands(democliCmd, cdc)
-	democliCmd.AddCommand(client.LineBreak)
+	rpc.AddCommands(rootCmd)
+	rootCmd.AddCommand(client.LineBreak)
+	tx.AddCommands(rootCmd, cdc)
+	rootCmd.AddCommand(client.LineBreak)
 
 	// add query/post commands (custom to binary)
-	democliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.GetCommands(
 			authcmd.GetAccountCmd("main", cdc, types.GetAccountDecoder(cdc)),
 		)...)
-	democliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
 		)...)
-	democliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.PostCommands(
 			ibccmd.IBCTransferCmd(cdc),
 		)...)
-	democliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.PostCommands(
 			ibccmd.IBCRelayCmd(cdc),
 			simplestakingcmd.BondTxCmd(cdc),
 		)...)
-	democliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.PostCommands(
 			simplestakingcmd.UnbondTxCmd(cdc),
 		)...)
 
 	// add proxy, version and key info
-	democliCmd.AddCommand(
+	rootCmd.AddCommand(
 		client.LineBreak,
 		lcd.ServeCommand(cdc),
 		keys.Commands(),
@@ -86,6 +81,6 @@ func main() {
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareMainCmd(democliCmd, "BC", os.ExpandEnv("$HOME/.democli"))
+	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/.democli"))
 	executor.Execute()
 }

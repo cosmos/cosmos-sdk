@@ -22,7 +22,7 @@ var (
 	context = server.NewContext(nil, nil)
 	rootCmd = &cobra.Command{
 		Use:               "democoind",
-		Short:             "Gaia Daemon (server)",
+		Short:             "Democoin Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(context),
 	}
 )
@@ -35,7 +35,7 @@ func defaultAppState(args []string, addr sdk.Address, coinDenom string) (json.Ra
 		return nil, err
 	}
 	var jsonMap map[string]json.RawMessage
-	err = json.Unmarshal(baseJSON, jsonMap)
+	err = json.Unmarshal(baseJSON, &jsonMap)
 	if err != nil {
 		return nil, err
 	}

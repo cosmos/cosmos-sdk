@@ -251,9 +251,8 @@ func (rs *rootMultiStore) loadCommitStoreFromParams(id CommitID, params storePar
 	db := rs.db
 	if params.db != nil {
 		db = params.db
-	} else {
-		db = dbm.NewPrefixDB(db, storeKeyDBPrefix(params.key))
 	}
+	db = dbm.NewPrefixDB(db, storeKeyDBPrefix(params.key))
 	switch params.typ {
 	case sdk.StoreTypeMulti:
 		panic("recursive MultiStores not yet supported")

@@ -1,6 +1,5 @@
 package commands
 
-<<<<<<< HEAD
 // import (
 // 	"fmt"
 

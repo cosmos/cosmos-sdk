@@ -7,15 +7,15 @@ import (
 )
 
 // Handle all "gov" type messages.
-func NewHandler(gm governanceMapper) sdk.Handler {
+func NewHandler(keeper Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
-		case DepositMsg:
-			return handleDepositMsg(ctx, gm, msg)
-		case SubmitProposalMsg:
-			return handleSubmitProposalMsg(ctx, gm, msg)
-		case VoteMsg:
-			return handleVoteMsg(ctx, gm, msg)
+		case MsgDeposit:
+			return handleMsgDeposit(ctx, keeper, msg)
+		case MsgSubmitProposal:
+			return handleMsgSubmitProposal(ctx, keeper, msg)
+		case MsgVote:
+			return handleMsgVote(ctx, keeper, msg)
 		default:
 			errMsg := "Unrecognized gov Msg type: " + reflect.TypeOf(msg).Name()
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -23,15 +23,30 @@ func NewHandler(gm governanceMapper) sdk.Handler {
 	}
 }
 
-// Handle SubmitProposalMsg.
-func handleSubmitProposalMsg(ctx sdk.Context, gm governanceMapper, msg SubmitProposalMsg) sdk.Result {
+// Handle MsgSubmitProposal.
+func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
 
-	_, err := gm.ck.SubtractCoins(ctx, msg.Proposer, msg.InitialDeposit)
+	_, err := keeper.ck.SubtractCoins(ctx, msg.Proposer, msg.InitialDeposit)
 	if err != nil {
 		return err.Result()
 	}
 
-	if !gm.GetActiveProcedure().validProposalType(msg.ProposalType) {
+	if ctx.IsCheckTx() {
+		if !keeper.GetActiveProcedure().validProposalType(msg.ProposalType) {
+			return ErrInvalidProposalType(msg.ProposalType).Result()
+		}
+
+		return sdk.Result{}
+	}
+
+	initDeposit := Deposit{
+		Depositer: msg.Proposer,
+		Amount:    msg.InitialDeposit,
+	}
+
+	keeper.NewProposal(ctx, msg.Title, msg.Description, msg.ProposalType, initDeposit)
+
+	if !keeper.GetActiveProcedure().validProposalType(msg.ProposalType) {
 		return ErrInvalidProposalType(msg.ProposalType).Result()
 	}
 
@@ -45,7 +60,7 @@ func handleSubmitProposalMsg(ctx sdk.Context, gm governanceMapper, msg SubmitPro
 	}
 
 	proposal := Proposal{
-		ProposalID:       gm.getNewProposalID(ctx),
+		ProposalID:       keeper.getNewProposalID(ctx),
 		Title:            msg.Title,
 		Description:      msg.Description,
 		ProposalType:     msg.ProposalType,
@@ -54,7 +69,7 @@ func handleSubmitProposalMsg(ctx sdk.Context, gm governanceMapper, msg SubmitPro
 		SubmitBlock:      ctx.BlockHeight(),
 		VotingStartBlock: -1, // TODO: Make Time
 		TotalVotingPower: 0,
-		Procedure:        *(gm.GetActiveProcedure()), // TODO: Get cloned active Procedure from params kvstore
+		Procedure:        *(keeper.GetActiveProcedure()), // TODO: Get cloned active Procedure from params kvstore
 		YesVotes:         0,
 		NoVotes:          0,
 		NoWithVetoVotes:  0,
@@ -62,23 +77,23 @@ func handleSubmitProposalMsg(ctx sdk.Context, gm governanceMapper, msg SubmitPro
 	}
 
 	if proposal.TotalDeposit.IsGTE(proposal.Procedure.MinDeposit) {
-		activateVotingPeriod(ctx, gm, &proposal)
+		keeper.activateVotingPeriod(ctx, &proposal)
 	}
 
-	gm.SetProposal(ctx, proposal)
+	keeper.SetProposal(ctx, proposal)
 
 	return sdk.Result{} // TODO
 }
 
-// Handle DepositMsg.
-func handleDepositMsg(ctx sdk.Context, gm governanceMapper, msg DepositMsg) sdk.Result {
+// Handle MsgDeposit.
+func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
 
-	_, err := gm.ck.SubtractCoins(ctx, msg.Depositer, msg.Amount)
+	_, err := keeper.ck.SubtractCoins(ctx, msg.Depositer, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
 
-	proposal := gm.GetProposal(ctx, msg.ProposalID)
+	proposal := keeper.GetProposal(ctx, msg.ProposalID)
 
 	if proposal == nil {
 		return ErrUnknownProposal(msg.ProposalID).Result()
@@ -101,18 +116,18 @@ func handleDepositMsg(ctx sdk.Context, gm governanceMapper, msg DepositMsg) sdk.
 	proposal.Deposits = append(proposal.Deposits, deposit)
 
 	if proposal.TotalDeposit.IsGTE(proposal.Procedure.MinDeposit) {
-		activateVotingPeriod(ctx, gm, proposal)
+		keeper.activateVotingPeriod(ctx, proposal)
 	}
 
-	gm.SetProposal(ctx, *proposal)
+	keeper.SetProposal(ctx, *proposal)
 
 	return sdk.Result{} // TODO
 }
 
 // Handle SendMsg.
-func handleVoteMsg(ctx sdk.Context, gm governanceMapper, msg VoteMsg) sdk.Result {
+func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 
-	proposal := gm.GetProposal(ctx, msg.ProposalID)
+	proposal := keeper.GetProposal(ctx, msg.ProposalID)
 	if proposal == nil {
 		return ErrUnknownProposal(msg.ProposalID).Result()
 	}
@@ -124,13 +139,13 @@ func handleVoteMsg(ctx sdk.Context, gm governanceMapper, msg VoteMsg) sdk.Result
 	validatorGovInfo := proposal.getValidatorGovInfo(msg.Voter)
 
 	// Need to finalize interface to staking mapper for delegatedTo. Makes assumption from here on out.
-	delegatedTo := gm.sm.LoadDelegatorCandidates(ctx, msg.Voter) // TODO: Finalize with staking store
+	delegatedTo := keeper.sm.LoadDelegatorCandidates(ctx, msg.Voter) // TODO: Finalize with staking store
 
 	if validatorGovInfo == nil && len(delegatedTo) == 0 {
 		return ErrAddressNotStaked(msg.Voter).Result() // TODO: Return proper Error
 	}
 
-	if proposal.VotingStartBlock <= gm.sm.getLastDelationChangeBlock(msg.Voter) { // TODO: Get last block in which voter bonded or unbonded
+	if proposal.VotingStartBlock <= keeper.sm.getLastDelationChangeBlock(msg.Voter) { // TODO: Get last block in which voter bonded or unbonded
 		return ErrAddressChangedDelegation(msg.Voter).Result() // TODO: Return proper Error
 	}
 
@@ -177,33 +192,7 @@ func handleVoteMsg(ctx sdk.Context, gm governanceMapper, msg VoteMsg) sdk.Result
 		existingVote.Option = msg.Option
 	}
 
-	gm.SetProposal(ctx, *proposal)
+	keeper.SetProposal(ctx, *proposal)
 
 	return sdk.Result{} // TODO
-}
-
-func activateVotingPeriod(ctx sdk.Context, gm governanceMapper, proposal *Proposal) {
-	proposal.VotingStartBlock = ctx.BlockHeight()
-
-	// TODO: Can we get this directly from stakeState
-	// stakeState := gm.sm.loadGlobalState()
-	// proposal.TotalVotingPower = stakeState.TotalSupply
-
-	proposal.TotalVotingPower = 0
-
-	validatorList := gm.sm.GetValidators(100) // TODO: Finalize with staking module
-
-	for index, validator := range validatorList {
-		validatorGovInfo := ValidatorGovInfo{
-			ProposalID:      proposal.ProposalID,
-			ValidatorAddr:   validator.Address,     // TODO: Finalize with staking module
-			InitVotingPower: validator.VotingPower, // TODO: Finalize with staking module
-			Minus:           0,
-			LastVoteWeight:  -1,
-		}
-
-		proposal.ValidatorGovInfos = append(proposal.ValidatorGovInfos, validatorGovInfo)
-	}
-
-	gm.ProposalQueuePush(ctx, *proposal)
 }

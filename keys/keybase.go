@@ -132,6 +132,8 @@ func (kb dbKeybase) Export(name string) (armor string, err error) {
 }
 
 // ExportPubKey returns public keys in ASCII armored format.
+// Retrieve a Info object by its name and return the public key in
+// a portable format.
 func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 	bz := kb.db.Get(infoKey(name))
 	if bz == nil {
@@ -144,9 +146,6 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 	return armorPubKeyBytes(info.PubKey.Bytes()), nil
 }
 
-// ExportPubKey imports ASCII-armored public keys.
-// Store a new Info object holding a public key only, i.e. it will
-// not be possible to sign with it as it lacks the secret key.
 func (kb dbKeybase) Import(name string, armor string) (err error) {
 	bz := kb.db.Get(infoKey(name))
 	if len(bz) > 0 {
@@ -160,6 +159,9 @@ func (kb dbKeybase) Import(name string, armor string) (err error) {
 	return nil
 }
 
+// ExportPubKey imports ASCII-armored public keys.
+// Store a new Info object holding a public key only, i.e. it will
+// not be possible to sign with it as it lacks the secret key.
 func (kb dbKeybase) ImportPubKey(name string, armor string) (err error) {
 	bz := kb.db.Get(infoKey(name))
 	if len(bz) > 0 {

@@ -75,13 +75,13 @@ func (proposal Proposal) updateTally(option string, amount int64) {
 
 // Procedure
 type Procedure struct {
-	VotingPeriod      int64        `json:"voting_period"`      //  Length of the voting period. Initial value: 2 weeks
-	MinDeposit        sdk.Coins    `json:"min_deposit"`        //  Minimum deposit for a proposal to enter voting period.
-	ProposalTypes     []string     `json:"proposal_type"`      //  Types available to submitters. {PlainTextProposal, SoftwareUpgradeProposal}
-	Threshold         sdk.Rational `json:"threshold"`          //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
-	Veto              sdk.Rational `json:"veto"`               //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
-	MaxDepositPeriod  int64        `json:"max_deposit_period"` //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
-	GovernancePenalty sdk.Rational `json:"governance_penalty"` //  Penalty if validator does not vote
+	VotingPeriod      int64     `json:"voting_period"`      //  Length of the voting period. Initial value: 2 weeks
+	MinDeposit        sdk.Coins `json:"min_deposit"`        //  Minimum deposit for a proposal to enter voting period.
+	ProposalTypes     []string  `json:"proposal_type"`      //  Types available to submitters. {PlainTextProposal, SoftwareUpgradeProposal}
+	Threshold         sdk.Rat   `json:"threshold"`          //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
+	Veto              sdk.Rat   `json:"veto"`               //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
+	MaxDepositPeriod  int64     `json:"max_deposit_period"` //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
+	GovernancePenalty sdk.Rat   `json:"governance_penalty"` //  Penalty if validator does not vote
 }
 
 func (procedure Procedure) validProposalType(proposalType string) bool {

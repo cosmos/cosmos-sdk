@@ -261,7 +261,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	queryable, ok := app.cms.(sdk.Queryable)
 	if !ok {
 		msg := "application doesn't support queries"
-		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
 	return queryable.Query(req)
 }

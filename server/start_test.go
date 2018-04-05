@@ -1,7 +1,8 @@
 package server
 
 import (
-	//	"os"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -9,34 +10,41 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/mock"
+	"github.com/tendermint/abci/server"
 	"github.com/tendermint/tmlibs/log"
 )
 
 func TestStartStandAlone(t *testing.T) {
-	defer setupViper(t)()
+	home, err := ioutil.TempDir("", "mock-sdk-cmd")
+	defer func() {
+		os.RemoveAll(home)
+	}()
 
 	logger := log.NewNopLogger()
 	initCmd := InitCmd(mock.GenInitOptions, logger)
-	err := initCmd.RunE(nil, nil)
+	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
-	// set up app and start up
-	viper.Set(flagWithTendermint, false)
-	viper.Set(flagAddress, "localhost:11122")
-	startCmd := StartCmd(mock.NewApp, logger)
-	startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
-	timeout := time.Duration(3) * time.Second
+	app, err := mock.NewApp(home, logger)
+	require.Nil(t, err)
+	svr, err := server.NewServer(FreeTCPAddr(t), "socket", app)
+	require.Nil(t, err, "Error creating listener")
+	svr.SetLogger(logger.With("module", "abci-server"))
+	svr.Start()
 
-	RunOrTimeout(startCmd, timeout, t)
+	timer := time.NewTimer(time.Duration(5) * time.Second)
+	select {
+	case <-timer.C:
+		svr.Stop()
+	}
+
 }
 
-/*
 func TestStartWithTendermint(t *testing.T) {
 	defer setupViper(t)()
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
 		With("module", "mock-cmd")
-		// logger := log.NewNopLogger()
 	initCmd := InitCmd(mock.GenInitOptions, logger)
 	err := initCmd.RunE(nil, nil)
 	require.NoError(t, err)
@@ -45,11 +53,7 @@ func TestStartWithTendermint(t *testing.T) {
 	viper.Set(flagWithTendermint, true)
 	startCmd := StartCmd(mock.NewApp, logger)
 	startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
-	timeout := time.Duration(3) * time.Second
+	timeout := time.Duration(5) * time.Second
 
-	//a, _ := startCmd.Flags().GetString(flagAddress)
-	//panic(a)
-
-	RunOrTimeout(startCmd, timeout, t)
+	close(RunOrTimeout(startCmd, timeout, t))
 }
-*/

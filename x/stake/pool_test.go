@@ -12,7 +12,7 @@ import (
 )
 
 func TestBondedRatio(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 	pool.TotalSupply = 3
 	pool.BondedPool = 2
@@ -26,7 +26,7 @@ func TestBondedRatio(t *testing.T) {
 }
 
 func TestBondedShareExRate(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 	pool.BondedPool = 3
 	pool.BondedShares = sdk.NewRat(10)
@@ -40,7 +40,7 @@ func TestBondedShareExRate(t *testing.T) {
 }
 
 func TestUnbondedShareExRate(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, nil, false, 0)
+	ctx, _, keeper := createTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 	pool.UnbondedPool = 3
 	pool.UnbondedShares = sdk.NewRat(10)

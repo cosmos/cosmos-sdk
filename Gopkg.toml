@@ -70,11 +70,11 @@
   name = "github.com/tendermint/iavl"
 
 [[constraint]]
-  version = "~0.17.1"
+  version = "~0.18.0-rc1"
   name = "github.com/tendermint/tendermint"
 
-[[constraint]]
-  version = "~0.7.1"
+[[override]]
+  version = "~0.8.1"
   name = "github.com/tendermint/tmlibs"
 
 [prune]

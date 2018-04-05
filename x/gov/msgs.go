@@ -87,7 +87,6 @@ type MsgDeposit struct {
 }
 
 func NewMsgDeposit(proposalID int64, depositer sdk.Address, amount sdk.Coins) MsgDeposit {
-	return MsgDeposit{
 		ProposalID: proposalID,
 		Depositer:  depositer,
 		Amount:     amount,

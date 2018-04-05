@@ -8,9 +8,15 @@ import (
 )
 
 //-----------------------------------------------------------
+<<<<<<< HEAD
 // MsgSubmitProposal
 
 type MsgSubmitProposal struct {
+=======
+// SubmitProposalMsg
+
+type SubmitProposalMsg struct {
+>>>>>>> governance
 	Title          string      //  Title of the proposal
 	Description    string      //  Description of the proposal
 	ProposalType   string      //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
@@ -18,8 +24,13 @@ type MsgSubmitProposal struct {
 	InitialDeposit sdk.Coins   //  Initial deposit paid by sender. Must be strictly positive.
 }
 
+<<<<<<< HEAD
 func NewMsgSubmitProposal(title string, description string, proposalType string, proposer sdk.Address, initialDeposit sdk.Coins) MsgSubmitProposal {
 	return MsgSubmitProposal{
+=======
+func NewSubmitProposalMsg(title string, description string, proposalType string, proposer sdk.Address, initialDeposit sdk.Coins) SubmitProposalMsg {
+	return SubmitProposalMsg{
+>>>>>>> governance
 		Title:          title,
 		Description:    description,
 		ProposalType:   proposalType,
@@ -29,10 +40,18 @@ func NewMsgSubmitProposal(title string, description string, proposalType string,
 }
 
 // Implements Msg.
+<<<<<<< HEAD
 func (msg MsgSubmitProposal) Type() string { return "gov" }
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
+=======
+func (msg SubmitProposalMsg) Type() string { return "gov" }
+
+// Implements Msg.
+func (msg SubmitProposalMsg) ValidateBasic() sdk.Error {
+
+>>>>>>> governance
 	if len(msg.Title) == 0 {
 		return ErrInvalidTitle(msg.Title) // TODO: Proper Error
 	}

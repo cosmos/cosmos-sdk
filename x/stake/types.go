@@ -104,7 +104,7 @@ func (c Candidate) delegatorShareExRate() sdk.Rat {
 // Should only be called when the Candidate qualifies as a validator.
 func (c Candidate) validator() Validator {
 	return Validator{
-		Address:     c.Address, // XXX !!!
+		Address:     c.Address,
 		VotingPower: c.Assets,
 	}
 }

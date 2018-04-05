@@ -14,8 +14,10 @@ type PowConfig struct {
 	Reward       int64
 }
 
-func NewPowConfig(denomination string, reward int64) PowConfig {
-	return PowConfig{denomination, reward}
+// genesis info must specify starting difficulty and starting count
+type PowGenesis struct {
+	Difficulty uint64 `json:"difficulty"`
+	Count      uint64 `json:"count"`
 }
 
 type Keeper struct {
@@ -24,8 +26,18 @@ type Keeper struct {
 	ck     bank.CoinKeeper
 }
 
+func NewPowConfig(denomination string, reward int64) PowConfig {
+	return PowConfig{denomination, reward}
+}
+
 func NewKeeper(key sdk.StoreKey, config PowConfig, ck bank.CoinKeeper) Keeper {
 	return Keeper{key, config, ck}
+}
+
+func (pk Keeper) InitGenesis(ctx sdk.Context, genesis PowGenesis) error {
+	pk.SetLastDifficulty(ctx, genesis.Difficulty)
+	pk.SetLastCount(ctx, genesis.Count)
+	return nil
 }
 
 var lastDifficultyKey = []byte("lastDifficultyKey")
@@ -34,9 +46,7 @@ func (pk Keeper) GetLastDifficulty(ctx sdk.Context) (uint64, error) {
 	store := ctx.KVStore(pk.key)
 	stored := store.Get(lastDifficultyKey)
 	if stored == nil {
-		// return the default difficulty of 1 if not set
-		// this works OK for this module, but a way to initalize the store (a "genesis block" for the module) might be better in general
-		return uint64(1), nil
+		panic("no stored difficulty")
 	} else {
 		return strconv.ParseUint(string(stored), 0, 64)
 	}
@@ -53,7 +63,7 @@ func (pk Keeper) GetLastCount(ctx sdk.Context) (uint64, error) {
 	store := ctx.KVStore(pk.key)
 	stored := store.Get(countKey)
 	if stored == nil {
-		return uint64(0), nil
+		panic("no stored count")
 	} else {
 		return strconv.ParseUint(string(stored), 0, 64)
 	}

@@ -34,6 +34,9 @@ func TestPowKeeperGetSet(t *testing.T) {
 	ck := bank.NewCoinKeeper(am)
 	keeper := NewKeeper(capKey, config, ck)
 
+	err := keeper.InitGenesis(ctx, PowGenesis{uint64(1), uint64(0)})
+	assert.Nil(t, err)
+
 	res, err := keeper.GetLastDifficulty(ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, res, uint64(1))

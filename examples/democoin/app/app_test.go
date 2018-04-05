@@ -260,6 +260,10 @@ func TestMineMsg(t *testing.T) {
 		"cool": map[string]string{
 			"trend": "ice-cold",
 		},
+		"pow": map[string]uint64{
+			"difficulty": 1,
+			"count":      0,
+		},
 	}
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
 	require.Nil(t, err)
@@ -279,11 +283,12 @@ func TestMineMsg(t *testing.T) {
 	SignCheckDeliver(t, bapp, mineMsg1, 0, true)
 	CheckBalance(t, bapp, "1pow")
 	// Mine again and check for reward
-	/*
-		mineMsg2 := pow.GenerateMineMsg(addr1, 2, 2)
-		SignCheckDeliver(t, bapp, mineMsg2, 1, true)
-		CheckBalance(t, bapp, "2pow")
-	*/
+	mineMsg2 := pow.GenerateMineMsg(addr1, 2, 3)
+	SignCheckDeliver(t, bapp, mineMsg2, 1, true)
+	CheckBalance(t, bapp, "2pow")
+	// Mine again - should be invalid
+	SignCheckDeliver(t, bapp, mineMsg2, 1, false)
+	CheckBalance(t, bapp, "2pow")
 
 }
 

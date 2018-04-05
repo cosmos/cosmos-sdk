@@ -26,6 +26,10 @@ func TestPowHandler(t *testing.T) {
 	addr := sdk.Address([]byte("sender"))
 	count := uint64(1)
 	difficulty := uint64(2)
+
+	err := keeper.InitGenesis(ctx, PowGenesis{uint64(1), uint64(0)})
+	assert.Nil(t, err)
+
 	nonce, proof := mine(addr, count, difficulty)
 	msg := NewMineMsg(addr, difficulty, count, nonce, proof)
 

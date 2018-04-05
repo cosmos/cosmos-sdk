@@ -31,6 +31,18 @@ func hasCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.C
 	return getCoins(ctx, am, addr).IsGTE(amt)
 }
 
+// GetCoins returns the coins at the addr.
+func (ck CoinKeeper) SetCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) sdk.Coins {
+	acc := ck.am.GetAccount(ctx, addr)
+	acc.SetCoins(amt)
+}
+
+// HasCoins returns whether or not an account has at least amt coins.
+func (ck CoinKeeper) HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) bool {
+	acc := ck.am.GetAccount(ctx, addr)
+	return acc.GetCoins().IsGTE(amt)
+}
+
 // SubtractCoins subtracts amt from the coins at the addr.
 func subtractCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) (sdk.Coins, sdk.Error) {
 	oldCoins := getCoins(ctx, am, addr)

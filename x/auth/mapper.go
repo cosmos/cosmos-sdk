@@ -95,6 +95,15 @@ func (am accountMapper) SetAccount(ctx sdk.Context, acc sdk.Account) {
 	store.Set(addr, bz)
 }
 
+func (am accountMapper) GetCoins(ctx sdk.Context, addr sdk.Address) {
+	acc := am.GetAccount(ctx, addr)
+	return acc.GetCoins()
+}
+
+func (am accountMapper) SetCoins() {
+
+}
+
 //----------------------------------------
 // sealedAccountMapper
 

@@ -8,8 +8,13 @@ import (
 
 const moduleName = "bank"
 
+func(am sdk.AccountMapper) AccountMapper {
+
+}
+
+
 // CoinKeeper manages transfers between accounts
-type CoinKeeper struct {
+type Keeper struct {
 	am sdk.AccountMapper
 }
 
@@ -22,6 +27,18 @@ func NewCoinKeeper(am sdk.AccountMapper) CoinKeeper {
 func (ck CoinKeeper) GetCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) sdk.Coins {
 	acc := ck.am.GetAccount(ctx, addr)
 	return acc.GetCoins()
+}
+
+// GetCoins returns the coins at the addr.
+func (ck CoinKeeper) SetCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) sdk.Coins {
+	acc := ck.am.GetAccount(ctx, addr)
+	acc.SetCoins(amt)
+}
+
+// HasCoins returns whether or not an account has at least amt coins.
+func (ck CoinKeeper) HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) bool {
+	acc := ck.am.GetAccount(ctx, addr)
+	return acc.GetCoins().IsGTE(amt)
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
@@ -89,4 +106,48 @@ func (ck CoinKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outputs [
 	}
 
 	return nil
+}
+
+// --------------------------------------------------
+
+// SendKeeper only allows transfers between accounts, without the possibility of creating coins
+type SendKeeper struct {
+	am CoinKeeper
+}
+
+// SendCoins moves coins from one account to another
+func (sk SendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.Address, toAddr sdk.Address, amt sdk.Coins) sdk.Error {
+	return sk.ck.SendCoins(ctx, fromAddr, toAddr, amt)
+}
+
+// GetCoins returns the coins at the addr.
+func (sk SendKeeper) GetCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) sdk.Coins {
+	return sk.ck.GetCoins(ctx, addr, amt)
+}
+
+// HasCoins returns whether or not an account has at least amt coins.
+func (sk SendKeeper) HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) bool {
+	return sk.ck.HasCoins(ctx, addr, amt)
+}
+
+// --------------------------------------------------
+
+// SendKeeper only allows transfers between accounts, without the possibility of creating coins
+type ViewKeeper struct {
+	ck CoinKeeper
+}
+
+// SendCoins moves coins from one account to another
+func (sk SendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.Address, toAddr sdk.Address, amt sdk.Coins) sdk.Error {
+	return sk.ck.SendCoins(ctx, fromAddr, toAddr, amt)
+}
+
+// GetCoins returns the coins at the addr.
+func (sk SendKeeper) GetCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) sdk.Coins {
+	return sk.ck.GetCoins(ctx, addr, amt)
+}
+
+// HasCoins returns whether or not an account has at least amt coins.
+func (sk SendKeeper) HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) bool {
+	return sk.ck.HasCoins(ctx, addr, amt)
 }

@@ -19,7 +19,7 @@ func MineCmd(cdc *wire.Codec) *cobra.Command {
 		Short: "Mine some coins with proof-of-work!",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 4 {
-				return errors.New("You must provide a difficulty, a solution, and a nonce (in that order)")
+				return errors.New("You must provide a difficulty, a count, a solution, and a nonce (in that order)")
 			}
 
 			// get from address and parse arguments

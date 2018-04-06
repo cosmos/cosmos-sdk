@@ -95,20 +95,6 @@ func (am accountMapper) SetAccount(ctx sdk.Context, acc sdk.Account) {
 	store.Set(addr, bz)
 }
 
-func (am accountMapper) GetCoins(ctx sdk.Context, addr sdk.Address) {
-	acc := am.GetAccount(ctx, addr)
-	return acc.GetCoins()
-}
-
-func (am accountMapper) SetCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) sdk.Error {
-	acc := ck.am.GetAccount(ctx, addr)
-	if acc == nil {
-		return sdk.ErrUnknownAddress(addr.String())
-	}
-	acc.SetCoins(amt)
-	return nil
-}
-
 //----------------------------------------
 // sealedAccountMapper
 

@@ -1,12 +1,15 @@
 package store
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/merkle"
+
+	"github.com/cosmos/cosmos-sdk/wire"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -93,10 +96,13 @@ func TestParsePath(t *testing.T) {
 }
 
 func TestMultiStoreQuery(t *testing.T) {
+	fmt.Printf("start\n")
 	db := dbm.NewMemDB()
 	multi := newMultiStoreWithMounts(db)
 	err := multi.LoadLatestVersion()
 	assert.Nil(t, err)
+
+	cdc := wire.NewCodec()
 
 	k, v := []byte("wind"), []byte("blows")
 	k2, v2 := []byte("water"), []byte("flows")
@@ -119,39 +125,60 @@ func TestMultiStoreQuery(t *testing.T) {
 	// commit the multistore
 	cid = multi.Commit()
 	ver := cid.Version
+	root := cid.Hash
+
+	var proof RootMultiStoreProof
 
 	// bad path
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
 	qres := multi.Query(query)
 	assert.Equal(t, uint32(sdk.CodeUnknownRequest), qres.Code)
+	err = cdc.UnmarshalBinary(qres.Proof, &proof)
+	assert.NotNil(t, err)
 
 	query.Path = "h897fy32890rf63296r92"
 	qres = multi.Query(query)
 	assert.Equal(t, uint32(sdk.CodeUnknownRequest), qres.Code)
+	err = cdc.UnmarshalBinary(qres.Proof, &proof)
+	assert.NotNil(t, err)
 
 	// invalid store name
 	query.Path = "/garbage/key"
 	qres = multi.Query(query)
 	assert.Equal(t, uint32(sdk.CodeUnknownRequest), qres.Code)
+	err = cdc.UnmarshalBinary(qres.Proof, &proof)
+	assert.NotNil(t, err)
 
 	// valid query with data
 	query.Path = "/store1/key"
-	qres = multi.Query(query)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, v, qres.Value)
-
-	// valid but empty
-	query.Path = "/store2/key"
 	query.Prove = true
 	qres = multi.Query(query)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
+	assert.Equal(t, v, qres.Value)
+	err = cdc.UnmarshalBinary(qres.Proof, &proof)
+	assert.Nil(t, err)
+	fmt.Printf("161: root: %+v\nproof: %+v\n", root, proof)
+	assert.Nil(t, proof.Verify(k, v, []byte("store1"), root))
+
+	// valid but empty
+	query.Path = "/store2/key"
+	qres = multi.Query(query)
+	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	assert.Nil(t, qres.Value)
+	err = cdc.UnmarshalBinary(qres.Proof, &proof)
+	assert.Nil(t, err)
+	fmt.Printf("171: root: %+v\nproof: %+v\n", root, proof)
+	assert.Nil(t, proof.Verify(k2, nil, []byte("store2"), root))
 
 	// store2 data
 	query.Data = k2
 	qres = multi.Query(query)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	assert.Equal(t, v2, qres.Value)
+	err = cdc.UnmarshalBinary(qres.Proof, &proof)
+	assert.Nil(t, err)
+	fmt.Printf("181: root: %+v\nproof: %+v\n", root, proof)
+	assert.Nil(t, proof.Verify(k2, v2, []byte("store2"), root))
 }
 
 //-----------------------------------------------------------------------

@@ -28,6 +28,10 @@ type rootMultiStore struct {
 	storesParams map[StoreKey]storeParams
 	stores       map[StoreKey]CommitStore
 	keysByName   map[string]StoreKey
+	indexByName  map[string]int
+
+	// cache proofs
+	proofs []*merkle.SimpleProof
 }
 
 var _ CommitMultiStore = (*rootMultiStore)(nil)
@@ -155,6 +159,11 @@ func (rs *rootMultiStore) Commit() CommitID {
 		Hash:    commitInfo.Hash(),
 	}
 	rs.lastCommitID = commitID
+
+	// cache substore proofs
+	rs.cacheSubstoreProofs(commitInfo.StoreInfos)
+	rs.setIndexByName(commitInfo.StoreInfos)
+
 	return commitID
 }
 
@@ -222,6 +231,19 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	// trim the path and make the query
 	req.Path = subpath
 	res := queryable.Query(req)
+
+	// extract the proof and combine it with substore proof
+	kproof := res.Proof
+	fmt.Printf("okproof: %+v\n", kproof)
+	index := rs.indexByName[storeName]
+	res.Proof = RootMultiStoreProof{
+		KeyProof:      kproof,
+		SubstoreProof: *rs.proofs[index],
+		Index:         index,
+		Total:         len(rs.stores),
+		RootHash:      rs.lastCommitID.Hash,
+	}.Bytes()
+
 	return res
 }
 
@@ -270,6 +292,46 @@ func (rs *rootMultiStore) nameToKey(name string) StoreKey {
 		}
 	}
 	panic("Unknown name " + name)
+}
+
+func makeInfoMap(infos []storeInfo) map[string]merkle.Hasher {
+	m := make(map[string]merkle.Hasher, len(infos))
+	for _, info := range infos {
+		m[info.Name] = info
+	}
+	return m
+}
+
+func (rs *rootMultiStore) setIndexByName(infos []storeInfo) {
+	rs.indexByName = make(map[string]int)
+	m := makeInfoMap(infos)
+	sm := merkle.NewSimpleMap()
+	for k, v := range m {
+		sm.Set(k, v)
+	}
+
+	kvs := sm.KVPairs()
+
+	var key [20]byte
+	kvm := make(map[[20]byte]int)
+
+	for i, kvp := range kvs {
+		copy(key[:], kvp.Key[:20]) // Size of a RIPEMD160 hash is 20
+		kvm[key] = i
+	}
+
+	for _, info := range infos {
+		hash := merkle.SimpleHashFromBytes([]byte(info.Name))
+		copy(key[:], hash[:20])
+		rs.indexByName[info.Name] = kvm[key]
+	}
+
+}
+
+func (rs *rootMultiStore) cacheSubstoreProofs(infos []storeInfo) {
+	m := makeInfoMap(infos)
+	_, proofs := merkle.SimpleProofsFromMap(m)
+	rs.proofs = proofs
 }
 
 //----------------------------------------
@@ -379,6 +441,23 @@ func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
 		Version:    version,
 		StoreInfos: storeInfos,
 	}
+}
+
+// same with commitStores but use LastCommitID instead of Commit
+func getCommitIDStores(storeMap map[StoreKey]CommitStore) []storeInfo {
+	storeInfos := make([]storeInfo, 0, len(storeMap))
+
+	for key, store := range storeMap {
+		commitID := store.LastCommitID()
+
+		si := storeInfo{}
+		si.Name = key.Name()
+		si.Core.CommitID = commitID
+
+		storeInfos = append(storeInfos, si)
+	}
+
+	return storeInfos
 }
 
 // Gets commitInfo from disk.

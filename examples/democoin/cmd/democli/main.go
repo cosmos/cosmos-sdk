@@ -68,7 +68,7 @@ func main() {
 		)...)
 	democliCmd.AddCommand(
 		client.PostCommands(
-			ibccmd.IBCRelayCmd(cdc),
+			ibccmd.IBCRelayCmd("main", "ibc", cdc, types.GetAccountDecoder(cdc)),
 			simplestakingcmd.BondTxCmd(cdc),
 		)...)
 	democliCmd.AddCommand(

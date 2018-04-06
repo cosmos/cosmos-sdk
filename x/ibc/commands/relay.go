@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
@@ -36,12 +35,12 @@ type relayCommander struct {
 	logger log.Logger
 }
 
-func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
+func IBCRelayCmd(mainStore, ibcStore string, cdc *wire.Codec, dec sdk.AccountDecoder) *cobra.Command {
 	cmdr := relayCommander{
 		cdc:       cdc,
-		decoder:   authcmd.GetAccountDecoder(cdc),
-		ibcStore:  "ibc",
-		mainStore: "main",
+		decoder:   dec,
+		ibcStore:  ibcStore,
+		mainStore: mainStore,
 
 		logger: log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
 	}

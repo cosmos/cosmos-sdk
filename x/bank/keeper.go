@@ -31,16 +31,19 @@ func hasCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.C
 	return getCoins(ctx, am, addr).IsGTE(amt)
 }
 
-// GetCoins returns the coins at the addr.
-func (ck CoinKeeper) SetCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) sdk.Coins {
-	acc := ck.am.GetAccount(ctx, addr)
+func setCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) sdk.Error {
+	acc := am.GetAccount(ctx, addr)
+	if acc == nil {
+		acc = am.NewAccountWithAddress(ctx, addr)
+	}
 	acc.SetCoins(amt)
+	am.SetAccount(ctx, acc)
+	return nil
 }
 
 // HasCoins returns whether or not an account has at least amt coins.
-func (ck CoinKeeper) HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) bool {
-	acc := ck.am.GetAccount(ctx, addr)
-	return acc.GetCoins().IsGTE(amt)
+func hasCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) bool {
+	return getCoins(ctx, am, addr).IsGTE(amt)
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
@@ -152,8 +155,13 @@ type SendKeeper struct {
 }
 
 // NewSendKeeper returns a new CoinKeeper
+<<<<<<< HEAD
 func NewSendKeeper(am sdk.AccountMapper) SendKeeper {
 	return SendKeeper{am: am}
+=======
+func NewSendKeeper(am sdk.AccountMapper) CoinKeeper {
+	return CoinKeeper{am: am}
+>>>>>>> need to write tests
 }
 
 // GetCoins returns the coins at the addr.
@@ -184,8 +192,13 @@ type ViewKeeper struct {
 }
 
 // NewViewKeeper returns a new CoinKeeper
+<<<<<<< HEAD
 func NewViewKeeper(am sdk.AccountMapper) ViewKeeper {
 	return ViewKeeper{am: am}
+=======
+func NewViewKeeper(am sdk.AccountMapper) CoinKeeper {
+	return CoinKeeper{am: am}
+>>>>>>> need to write tests
 }
 
 // GetCoins returns the coins at the addr.

@@ -8,13 +8,12 @@ import (
 
 const moduleName = "bank"
 
-func(am sdk.AccountMapper) AccountMapper {
+// func(am sdk.AccountMapper) AccountMapper {
 
-}
-
+// }
 
 // CoinKeeper manages transfers between accounts
-type Keeper struct {
+type CoinKeeper struct {
 	am sdk.AccountMapper
 }
 

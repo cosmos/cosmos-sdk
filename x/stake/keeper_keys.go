@@ -1,6 +1,8 @@
 package stake
 
 import (
+	"encoding/binary"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
@@ -30,9 +32,11 @@ func GetCandidateKey(addr sdk.Address) []byte {
 }
 
 // get the key for the validator used in the power-store
-func GetValidatorKey(addr sdk.Address, power sdk.Rat, cdc *wire.Codec) []byte {
-	powerBytes := []byte(power.ToLeftPadded(maxDigitsForAccount))
-	return append(ValidatorsKey, append(powerBytes, addr.Bytes()...)...)
+func GetValidatorKey(addr sdk.Address, power sdk.Rat, height uint64, cdc *wire.Codec) []byte {
+	powerBytes := []byte(power.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
+	heightBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(heightBytes, height) // height little-endian (older validators first)
+	return append(ValidatorsKey, append(powerBytes, append(heightBytes, addr.Bytes()...)...)...)
 }
 
 // get the key for the accumulated update validators

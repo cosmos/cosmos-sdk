@@ -126,6 +126,7 @@ type Error interface {
 	Codespace() CodespaceType
 	ABCILog() string
 	ABCICode() ABCICodeType
+	WithCodespace(codespace CodespaceType) Error
 	Trace(msg string) Error
 	Cause() interface{}
 	Result() Result
@@ -190,6 +191,15 @@ func (err *sdkError) Trace(msg string) Error {
 		codespace: err.codespace,
 		code:      err.code,
 		err:       err.err.Trace(msg),
+	}
+}
+
+// Implements Error.
+func (err *sdkError) WithCodespace(codespace CodespaceType) Error {
+	return &sdkError{
+		codespace: codespace,
+		code:      err.code,
+		err:       err.err,
 	}
 }
 

@@ -91,6 +91,9 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 
 	// build the Sign Messsage from the Standard Message
 	chainID := ctx.ChainID
+	if chainID == "" {
+		return nil, errors.Errorf("Chain ID required but not specified")
+	}
 	sequence := ctx.Sequence
 	signMsg := sdk.StdSignMsg{
 		ChainID:   chainID,

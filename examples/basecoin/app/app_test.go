@@ -143,7 +143,7 @@ func TestSortGenesis(t *testing.T) {
 	// Note the order: the coins are unsorted!
 	coinDenom1, coinDenom2 := "foocoin", "barcoin"
 
-	genState := fmt.Sprintf(`{
+	str := `{
       "accounts": [{
         "address": "%s",
         "coins": [
@@ -157,7 +157,8 @@ func TestSortGenesis(t *testing.T) {
           }
         ]
       }]
-    }`, addr1.String(), coinDenom1, coinDenom2)
+    }`
+	genState := fmt.Sprintf(str, addr1.String(), coinDenom1, coinDenom2)
 
 	// Initialize the chain
 	vals := []abci.Validator{}

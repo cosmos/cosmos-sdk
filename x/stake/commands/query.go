@@ -38,7 +38,7 @@ func init() {
 }
 
 // create command to query for all candidates
-func GetCmdQueryCandidates(cdc *wire.Codec, storeName string) *cobra.Command {
+func GetCmdQueryCandidates(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "candidates",
 		Short: "Query for the set of validator-candidates pubkeys",
@@ -74,7 +74,7 @@ func GetCmdQueryCandidates(cdc *wire.Codec, storeName string) *cobra.Command {
 }
 
 // get the command to query a candidate
-func GetCmdQueryCandidate(cdc *wire.Codec, storeName string) *cobra.Command {
+func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "candidate",
 		Short: "Query a validator-candidate account",
@@ -116,7 +116,7 @@ func GetCmdQueryCandidate(cdc *wire.Codec, storeName string) *cobra.Command {
 }
 
 // get the command to query a single delegator bond
-func GetCmdQueryDelegatorBond(cdc *wire.Codec, storeName string) *cobra.Command {
+func GetCmdQueryDelegatorBond(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegator-bond",
 		Short: "Query a delegators bond based on address and candidate pubkey",
@@ -165,7 +165,7 @@ func GetCmdQueryDelegatorBond(cdc *wire.Codec, storeName string) *cobra.Command 
 }
 
 // get the command to query all the candidates bonded to a delegator
-func GetCmdQueryDelegatorBonds(cdc *wire.Codec, storeName string) *cobra.Command {
+func GetCmdQueryDelegatorBonds(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegator-candidates",
 		Short: "Query all delegators candidates' pubkeys based on address",

@@ -17,7 +17,7 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/commands"
-	simplestakingcmd "github.com/cosmos/cosmos-sdk/x/simplestake/commands"
+	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/commands"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
@@ -52,23 +52,20 @@ func main() {
 	rootCmd.AddCommand(
 		client.GetCommands(
 			authcmd.GetAccountCmd("main", cdc, types.GetAccountDecoder(cdc)),
+			stakecmd.GetCmdQueryCandidates("stake", cdc),
+			stakecmd.GetCmdQueryCandidate("stake", cdc),
+			stakecmd.GetCmdQueryDelegatorBond("stake", cdc),
+			stakecmd.GetCmdQueryDelegatorBonds("stake", cdc),
 		)...)
 	rootCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
 			ibccmd.IBCTransferCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
 			ibccmd.IBCRelayCmd(cdc),
-			simplestakingcmd.BondTxCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
-			simplestakingcmd.UnbondTxCmd(cdc),
+			stakecmd.GetCmdDeclareCandidacy(cdc),
+			stakecmd.GetCmdEditCandidacy(cdc),
+			stakecmd.GetCmdDelegate(cdc),
+			stakecmd.GetCmdUnbond(cdc),
 		)...)
 
 	// add proxy, version and key info

@@ -4,7 +4,6 @@ import (
 	"bytes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	abci "github.com/tendermint/abci/types"
 )
 
@@ -18,7 +17,7 @@ const (
 
 //_______________________________________________________________________
 
-func NewHandler(k Keeper, ck bank.CoinKeeper) sdk.Handler {
+func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		// NOTE msg already has validate basic run
 		switch msg := msg.(type) {

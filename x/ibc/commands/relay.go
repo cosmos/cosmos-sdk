@@ -135,7 +135,7 @@ OUTER:
 			viper.Set(client.FlagSequence, seq)
 			seq++
 
-			err = c.broadcastTx(toChainNode, c.refine(egressbz, i, passphrase))
+			err = c.broadcastTx(toChainNode, c.refine(egressbz, i, toChainID, passphrase))
 			if err != nil {
 				c.logger.Error("Error broadcasting ingress packet", "err", err)
 				continue OUTER
@@ -180,7 +180,7 @@ func setSequence(seq int64) {
 	viper.Set(client.FlagSequence, seq)
 }
 
-func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []byte {
+func (c relayCommander) refine(bz []byte, sequence int64, toChainID, passphrase string) []byte {
 	var packet ibc.IBCPacket
 	if err := c.cdc.UnmarshalBinary(bz, &packet); err != nil {
 		panic(err)
@@ -193,9 +193,14 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 	}
 
 	name := viper.GetString(client.FlagName)
+
+	orig := viper.GetString(client.FlagChainID)
+	viper.Set(client.FlagChainID, toChainID)
 	res, err := builder.SignAndBuild(name, passphrase, msg, c.cdc)
 	if err != nil {
 		panic(err)
 	}
+	viper.Set(client.FlagChainID, orig)
+
 	return res
 }

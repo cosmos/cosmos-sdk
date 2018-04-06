@@ -9,7 +9,7 @@ import (
 type Result struct {
 
 	// Code is the response code, is stored back on the chain.
-	Code CodeType
+	Code ABCICodeType
 
 	// Data is any data returned from the app.
 	Data []byte

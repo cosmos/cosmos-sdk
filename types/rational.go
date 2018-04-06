@@ -97,23 +97,23 @@ func NewRatFromDecimal(decimalStr string) (f Rat, err Error) {
 	switch len(str) {
 	case 1:
 		if len(str[0]) == 0 {
-			return f, NewError(CodeUnknownRequest, "not a decimal string")
+			return f, ErrUnknownRequest("not a decimal string")
 		}
 		numStr = str[0]
 	case 2:
 		if len(str[0]) == 0 || len(str[1]) == 0 {
-			return f, NewError(CodeUnknownRequest, "not a decimal string")
+			return f, ErrUnknownRequest("not a decimal string")
 		}
 		numStr = str[0] + str[1]
 		len := int64(len(str[1]))
 		denom = new(big.Int).Exp(big.NewInt(10), big.NewInt(len), nil).Int64()
 	default:
-		return f, NewError(CodeUnknownRequest, "not a decimal string")
+		return f, ErrUnknownRequest("not a decimal string")
 	}
 
 	num, errConv := strconv.Atoi(numStr)
 	if errConv != nil {
-		return f, NewError(CodeUnknownRequest, errConv.Error())
+		return f, ErrUnknownRequest(errConv.Error())
 	}
 
 	if neg {

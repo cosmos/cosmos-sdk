@@ -78,24 +78,24 @@ func (pk Keeper) CheckValid(ctx sdk.Context, difficulty uint64, count uint64) (u
 
 	lastDifficulty, err := pk.GetLastDifficulty(ctx)
 	if err != nil {
-		return 0, 0, ErrNonexistentDifficulty()
+		return 0, 0, ErrNonexistentDifficulty(ctx.Codespace())
 	}
 
 	newDifficulty := lastDifficulty + 1
 
 	lastCount, err := pk.GetLastCount(ctx)
 	if err != nil {
-		return 0, 0, ErrNonexistentCount()
+		return 0, 0, ErrNonexistentCount(ctx.Codespace())
 	}
 
 	newCount := lastCount + 1
 
 	if count != newCount {
-		return 0, 0, ErrInvalidCount(fmt.Sprintf("invalid count: was %d, should have been %d", count, newCount))
+		return 0, 0, ErrInvalidCount(ctx.Codespace(), fmt.Sprintf("invalid count: was %d, should have been %d", count, newCount))
 	}
 
 	if difficulty != newDifficulty {
-		return 0, 0, ErrInvalidDifficulty(fmt.Sprintf("invalid difficulty: was %d, should have been %d", difficulty, newDifficulty))
+		return 0, 0, ErrInvalidDifficulty(ctx.Codespace(), fmt.Sprintf("invalid difficulty: was %d, should have been %d", difficulty, newDifficulty))
 	}
 
 	return newDifficulty, newCount, nil

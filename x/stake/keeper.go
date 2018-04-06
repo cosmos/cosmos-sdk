@@ -96,24 +96,6 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	if oldFound {
 		store.Delete(GetValidatorKey(address, oldCandidate.Assets, oldCandidate.ValidatorHeight, k.cdc))
 	}
-
-	// update the validator block height
-	candidate.ValidatorHeight = ctx.BlockHeight()
-
-	// update the candidate record
-	bz, err = k.cdc.MarshalBinary(candidate)
-	if err != nil {
-		panic(err)
-	}
-	store.Set(GetCandidateKey(candidate.Address), bz)
-
-	// marshal the new validator record
-	validator := candidate.validator()
-	bz, err = k.cdc.MarshalBinary(validator)
-	if err != nil {
-		panic(err)
-	}
-
 	store.Set(GetValidatorKey(address, validator.Power, validator.Height, k.cdc), bz)
 
 	// add to the validators to update list if is already a validator

@@ -178,9 +178,9 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, nil)
+		return sdk.NewContext(app.checkState.ms, header, true, nil, sdk.CodespaceRoot)
 	}
-	return sdk.NewContext(app.deliverState.ms, header, false, nil)
+	return sdk.NewContext(app.deliverState.ms, header, false, nil, sdk.CodespaceRoot)
 }
 
 type state struct {
@@ -196,7 +196,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, nil),
+		ctx: sdk.NewContext(ms, header, true, nil, sdk.CodespaceRoot),
 	}
 }
 
@@ -204,7 +204,7 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, nil),
+		ctx: sdk.NewContext(ms, header, false, nil, sdk.CodespaceRoot),
 	}
 }
 
@@ -353,13 +353,22 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 		return sdk.ErrInternal("Tx.GetMsg() returned nil").Result()
 	}
 
+	// Match route. We must do this before ValidateBasic because we need the codespace
+	msgType := msg.Type()
+	handler := app.router.Route(msgType)
+	if handler == nil {
+		return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
+	}
+
 	// Validate the Msg.
+	// TODO Get codespace from route, set codespace
 	err := msg.ValidateBasic()
 	if err != nil {
 		return err.Result()
 	}
 
 	// Get the context
+	// TODO Set codespace
 	var ctx sdk.Context
 	if isCheckTx {
 		ctx = app.checkState.ctx.WithTxBytes(txBytes)
@@ -376,13 +385,6 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 		if !newCtx.IsZero() {
 			ctx = newCtx
 		}
-	}
-
-	// Match route.
-	msgType := msg.Type()
-	handler := app.router.Route(msgType)
-	if handler == nil {
-		return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
 	}
 
 	// Get the correct cache

@@ -136,7 +136,7 @@ func (app *DemocoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 	// are registered by MakeTxCodec in bank.RegisterWire.
 	err := app.cdc.UnmarshalBinary(txBytes, &tx)
 	if err != nil {
-		return nil, sdk.ErrTxDecode("").TraceCause(err, "")
+		return nil, sdk.ErrTxDecode("").Trace("")
 	}
 	return tx, nil
 }

@@ -32,7 +32,7 @@ func handleBondMsg(ctx sdk.Context, k Keeper, msg BondMsg) sdk.Result {
 	}
 
 	return sdk.Result{
-		Code:             sdk.CodeOK,
+		Code:             sdk.ABCICodeOK,
 		ValidatorUpdates: abci.Validators{valSet},
 	}
 }
@@ -49,7 +49,7 @@ func handleUnbondMsg(ctx sdk.Context, k Keeper, msg UnbondMsg) sdk.Result {
 	}
 
 	return sdk.Result{
-		Code:             sdk.CodeOK,
+		Code:             sdk.ABCICodeOK,
 		ValidatorUpdates: abci.Validators{valSet},
 	}
 }

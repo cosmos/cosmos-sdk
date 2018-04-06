@@ -12,25 +12,25 @@ const (
 	CodeIncorrectStakingToken sdk.CodeType = 303
 )
 
-func ErrIncorrectStakingToken() sdk.Error {
-	return newError(CodeIncorrectStakingToken, "")
+func ErrIncorrectStakingToken(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeIncorrectStakingToken, "")
 }
 
-func ErrEmptyValidator() sdk.Error {
-	return newError(CodeEmptyValidator, "")
+func ErrEmptyValidator(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeEmptyValidator, "")
 }
 
-func ErrInvalidUnbond() sdk.Error {
-	return newError(CodeInvalidUnbond, "")
+func ErrInvalidUnbond(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeInvalidUnbond, "")
 }
 
-func ErrEmptyStake() sdk.Error {
-	return newError(CodeEmptyStake, "")
+func ErrEmptyStake(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeEmptyStake, "")
 }
 
 // -----------------------------
 // Helpers
 
-func newError(code sdk.CodeType, msg string) sdk.Error {
-	return sdk.NewError(code, msg)
+func newError(codespace sdk.CodespaceType, code sdk.CodeType, msg string) sdk.Error {
+	return sdk.NewError(codespace, code, msg)
 }

@@ -44,7 +44,7 @@ func handleIBCReceiveMsg(ctx sdk.Context, ibcm IBCMapper, ck bank.CoinKeeper, ms
 
 	seq := ibcm.GetIngressSequence(ctx, packet.SrcChain)
 	if msg.Sequence != seq {
-		return ErrInvalidSequence().Result()
+		return ErrInvalidSequence(ctx.Codespace()).Result()
 	}
 
 	_, err := ck.AddCoins(ctx, packet.DestAddr, packet.Coins)

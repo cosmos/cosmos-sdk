@@ -8,7 +8,6 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
-	oldwire "github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"
 
 	"github.com/cosmos/cosmos-sdk/store"
@@ -84,36 +83,21 @@ func subspace(prefix []byte) (start, end []byte) {
 	return prefix, end
 }
 
-// custom tx codec
-// TODO: use new go-wire
-func makeTestCodec() *wire.Codec {
+func MakeCodec() *wire.Codec {
+	var cdc = wire.NewCodec()
 
-	const msgTypeSend = 0x1
-	const msgTypeIssue = 0x2
-	const msgTypeDeclareCandidacy = 0x3
-	const msgTypeEditCandidacy = 0x4
-	const msgTypeDelegate = 0x5
-	const msgTypeUnbond = 0x6
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Msg }{},
-		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
-		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
-		oldwire.ConcreteType{MsgDeclareCandidacy{}, msgTypeDeclareCandidacy},
-		oldwire.ConcreteType{MsgEditCandidacy{}, msgTypeEditCandidacy},
-		oldwire.ConcreteType{MsgDelegate{}, msgTypeDelegate},
-		oldwire.ConcreteType{MsgUnbond{}, msgTypeUnbond},
-	)
+	// Register Msgs
+	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
+	cdc.RegisterConcrete(bank.SendMsg{}, "test/stake/Send", nil)
+	cdc.RegisterConcrete(bank.IssueMsg{}, "test/stake/Issue", nil)
+	cdc.RegisterConcrete(MsgDeclareCandidacy{}, "test/stake/DeclareCandidacy", nil)
+	cdc.RegisterConcrete(MsgEditCandidacy{}, "test/stake/EditCandidacy", nil)
+	cdc.RegisterConcrete(MsgUnbond{}, "test/stake/Unbond", nil)
 
-	const accTypeApp = 0x1
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Account }{},
-		oldwire.ConcreteType{&auth.BaseAccount{}, accTypeApp},
-	)
-	cdc := wire.NewCodec()
+	// Register AppAccount
+	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/stake/Account", nil)
 
-	// cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	// bank.RegisterWire(cdc)   // Register bank.[SendMsg,IssueMsg] types.
-	// crypto.RegisterWire(cdc) // Register crypto.[PubKey,PrivKey,Signature] types.
 	return cdc
 }
 

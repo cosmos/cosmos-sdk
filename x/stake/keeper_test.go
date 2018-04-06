@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	crypto "github.com/tendermint/go-crypto"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -217,11 +218,11 @@ func TestGetValidators(t *testing.T) {
 	// first make sure everything as normal is ordered
 	validators := keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n)
-	assert.Equal(t, sdk.NewRat(400), validators[0].VotingPower, "%v", validators)
-	assert.Equal(t, sdk.NewRat(200), validators[1].VotingPower, "%v", validators)
-	assert.Equal(t, sdk.NewRat(100), validators[2].VotingPower, "%v", validators)
-	assert.Equal(t, sdk.NewRat(1), validators[3].VotingPower, "%v", validators)
-	assert.Equal(t, sdk.NewRat(0), validators[4].VotingPower, "%v", validators)
+	assert.Equal(t, sdk.NewRat(400), validators[0].Power, "%v", validators)
+	assert.Equal(t, sdk.NewRat(200), validators[1].Power, "%v", validators)
+	assert.Equal(t, sdk.NewRat(100), validators[2].Power, "%v", validators)
+	assert.Equal(t, sdk.NewRat(1), validators[3].Power, "%v", validators)
+	assert.Equal(t, sdk.NewRat(0), validators[4].Power, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
 	assert.Equal(t, candidates[4].Address, validators[1].Address, "%v", validators)
 	assert.Equal(t, candidates[1].Address, validators[2].Address, "%v", validators)
@@ -233,7 +234,7 @@ func TestGetValidators(t *testing.T) {
 	keeper.setCandidate(ctx, candidates[3])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n)
-	assert.Equal(t, sdk.NewRat(500), validators[0].VotingPower, "%v", validators)
+	assert.Equal(t, sdk.NewRat(500), validators[0].Power, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
 
 	// test a decrease in voting power
@@ -241,7 +242,7 @@ func TestGetValidators(t *testing.T) {
 	keeper.setCandidate(ctx, candidates[3])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n)
-	assert.Equal(t, sdk.NewRat(300), validators[0].VotingPower, "%v", validators)
+	assert.Equal(t, sdk.NewRat(300), validators[0].Power, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
 
 	// test a swap in voting power
@@ -249,9 +250,9 @@ func TestGetValidators(t *testing.T) {
 	keeper.setCandidate(ctx, candidates[0])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n)
-	assert.Equal(t, sdk.NewRat(600), validators[0].VotingPower, "%v", validators)
+	assert.Equal(t, sdk.NewRat(600), validators[0].Power, "%v", validators)
 	assert.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
-	assert.Equal(t, sdk.NewRat(300), validators[1].VotingPower, "%v", validators)
+	assert.Equal(t, sdk.NewRat(300), validators[1].Power, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
 
 	// test the max validators term
@@ -261,9 +262,9 @@ func TestGetValidators(t *testing.T) {
 	keeper.setParams(ctx, params)
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n)
-	assert.Equal(t, sdk.NewRat(600), validators[0].VotingPower, "%v", validators)
+	assert.Equal(t, sdk.NewRat(600), validators[0].Power, "%v", validators)
 	assert.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
-	assert.Equal(t, sdk.NewRat(300), validators[1].VotingPower, "%v", validators)
+	assert.Equal(t, sdk.NewRat(300), validators[1].Power, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
 }
 
@@ -315,6 +316,15 @@ func TestGetAccUpdateValidators(t *testing.T) {
 		}
 	}
 
+	// to compare pubkeys between abci pubkey and crypto.PubKey
+	wirePK := func(pk crypto.PubKey) []byte {
+		pkBytes, err := keeper.cdc.MarshalBinary(pk)
+		if err != nil {
+			panic(err)
+		}
+		return pkBytes
+	}
+
 	// test from nothing to something
 	//  candidate set: {} -> {c1, c3}
 	//  validator set: {} -> {c1, c3}
@@ -332,8 +342,8 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	require.Equal(t, 2, len(acc))
 	candidates := keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 2, len(candidates))
-	assert.Equal(t, candidates[0].validator(), acc[0])
-	assert.Equal(t, candidates[1].validator(), acc[1])
+	assert.Equal(t, candidates[0].validator().abciValidator(keeper.cdc), acc[0])
+	assert.Equal(t, candidates[1].validator().abciValidator(keeper.cdc), acc[1])
 	assert.Equal(t, candidates[0].validator(), vals[1])
 	assert.Equal(t, candidates[1].validator(), vals[0])
 
@@ -365,7 +375,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	assert.True(t, candidates[0].Assets.Equal(sdk.NewRat(600)))
 	acc = keeper.getAccUpdateValidators(ctx)
 	require.Equal(t, 1, len(acc))
-	assert.Equal(t, candidates[0].validator(), acc[0])
+	assert.Equal(t, candidates[0].validator().abciValidator(keeper.cdc), acc[0])
 
 	// test multiple value change
 	//  candidate set: {c1, c3} -> {c1', c3'}
@@ -383,8 +393,8 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	require.Equal(t, 2, len(acc))
 	candidates = keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 2, len(candidates))
-	require.Equal(t, candidates[0].validator(), acc[0])
-	require.Equal(t, candidates[1].validator(), acc[1])
+	require.Equal(t, candidates[0].validator().abciValidator(keeper.cdc), acc[0])
+	require.Equal(t, candidates[1].validator().abciValidator(keeper.cdc), acc[1])
 
 	// test validtor added at the beginning
 	//  candidate set: {c1, c3} -> {c0, c1, c3}
@@ -398,7 +408,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	require.Equal(t, 1, len(acc))
 	candidates = keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 3, len(candidates))
-	assert.Equal(t, candidates[0].validator(), acc[0])
+	assert.Equal(t, candidates[0].validator().abciValidator(keeper.cdc), acc[0])
 
 	// test validator added at the middle
 	//  candidate set: {c0, c1, c3} -> {c0, c1, c2, c3]
@@ -412,7 +422,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	require.Equal(t, 1, len(acc))
 	candidates = keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 4, len(candidates))
-	assert.Equal(t, candidates[2].validator(), acc[0])
+	assert.Equal(t, candidates[2].validator().abciValidator(keeper.cdc), acc[0])
 
 	// test candidate added at the end but not inserted in the valset
 	//  candidate set: {c0, c1, c2, c3} -> {c0, c1, c2, c3, c4}
@@ -469,9 +479,9 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	acc = keeper.getAccUpdateValidators(ctx)
 	require.Equal(t, 2, len(acc), "%v", acc)
 
-	assert.Equal(t, candidatesIn[0].Address, acc[0].Address)
-	assert.Equal(t, int64(0), acc[0].VotingPower.Evaluate())
-	assert.Equal(t, vals[0], acc[1])
+	assert.Equal(t, wirePK(candidatesIn[0].PubKey), acc[0].PubKey)
+	assert.Equal(t, int64(0), acc[0].Power)
+	assert.Equal(t, vals[0].abciValidator(keeper.cdc), acc[1])
 
 	// test from something to nothing
 	//  candidate set: {c0, c1, c2, c3, c4} -> {}
@@ -494,14 +504,14 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	require.Equal(t, 0, len(candidates))
 	acc = keeper.getAccUpdateValidators(ctx)
 	require.Equal(t, 4, len(acc))
-	assert.Equal(t, candidatesIn[1].Address, acc[0].Address)
-	assert.Equal(t, candidatesIn[2].Address, acc[1].Address)
-	assert.Equal(t, candidatesIn[3].Address, acc[2].Address)
-	assert.Equal(t, candidatesIn[4].Address, acc[3].Address)
-	assert.Equal(t, int64(0), acc[0].VotingPower.Evaluate())
-	assert.Equal(t, int64(0), acc[1].VotingPower.Evaluate())
-	assert.Equal(t, int64(0), acc[2].VotingPower.Evaluate())
-	assert.Equal(t, int64(0), acc[3].VotingPower.Evaluate())
+	assert.Equal(t, wirePK(candidatesIn[1].PubKey), acc[0].PubKey)
+	assert.Equal(t, wirePK(candidatesIn[2].PubKey), acc[1].PubKey)
+	assert.Equal(t, wirePK(candidatesIn[3].PubKey), acc[2].PubKey)
+	assert.Equal(t, wirePK(candidatesIn[4].PubKey), acc[3].PubKey)
+	assert.Equal(t, int64(0), acc[0].Power)
+	assert.Equal(t, int64(0), acc[1].Power)
+	assert.Equal(t, int64(0), acc[2].Power)
+	assert.Equal(t, int64(0), acc[3].Power)
 }
 
 // test if is a validator from the last update

@@ -355,25 +355,24 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// Match route. We must do this before ValidateBasic because we need the codespace
 	msgType := msg.Type()
-	handler := app.router.Route(msgType)
+	handler, codespace := app.router.Route(msgType)
 	if handler == nil {
 		return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
 	}
 
 	// Validate the Msg.
-	// TODO Get codespace from route, set codespace
 	err := msg.ValidateBasic()
 	if err != nil {
+		err = err.WithCodespace(codespace)
 		return err.Result()
 	}
 
 	// Get the context
-	// TODO Set codespace
 	var ctx sdk.Context
 	if isCheckTx {
-		ctx = app.checkState.ctx.WithTxBytes(txBytes)
+		ctx = app.checkState.ctx.WithTxBytes(txBytes).WithCodespace(codespace)
 	} else {
-		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
+		ctx = app.deliverState.ctx.WithTxBytes(txBytes).WithCodespace(codespace)
 	}
 
 	// Run the ante handler.

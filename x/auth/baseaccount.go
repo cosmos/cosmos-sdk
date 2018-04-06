@@ -74,9 +74,8 @@ func (acc *BaseAccount) GetCoins() sdk.Coins {
 }
 
 // Implements sdk.Account.
-func (acc *BaseAccount) SetCoins(coins sdk.Coins) error {
+func (acc *BaseAccount) SetCoins(coins sdk.Coins) {
 	acc.Coins = coins
-	return nil
 }
 
 // Implements sdk.Account.
@@ -85,9 +84,8 @@ func (acc *BaseAccount) GetSequence() int64 {
 }
 
 // Implements sdk.Account.
-func (acc *BaseAccount) SetSequence(seq int64) error {
+func (acc *BaseAccount) SetSequence(seq int64) {
 	acc.Sequence = seq
-	return nil
 }
 
 //----------------------------------------

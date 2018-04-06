@@ -231,7 +231,9 @@ func (key *KVStoreKey) String() string {
 	return fmt.Sprintf("KVStoreKey{%p, %s}", key, key.name)
 }
 
-// TODO: Move to TmLibs
+// PrefixEndBytes returns the []byte that would end a
+// range query for all []byte with a certain prefix
+// Deals with last byte of prefix being FF without overflowing
 func PrefixEndBytes(prefix []byte) []byte {
 	if prefix == nil {
 		return nil
@@ -239,17 +241,16 @@ func PrefixEndBytes(prefix []byte) []byte {
 
 	end := make([]byte, len(prefix))
 	copy(end, prefix)
-	finished := false
 
-	for !finished {
+	for {
 		if end[len(end)-1] != byte(255) {
 			end[len(end)-1]++
-			finished = true
+			break
 		} else {
 			end = end[:len(end)-1]
 			if len(end) == 0 {
 				end = nil
-				finished = true
+				break
 			}
 		}
 	}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
@@ -18,24 +19,17 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
-
-	/* XXX
-	// wire registration while we're at it ... TODO
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Account }{},
-		oldwire.ConcreteType{&BaseAccount{}, 0x1},
-	)
-	*/
-
 	return ms, capKey
 }
 
 func TestAccountMapperGetSet(t *testing.T) {
 	ms, capKey := setupMultiStore()
+	cdc := wire.NewCodec()
+	RegisterBaseAccount(cdc)
 
 	// make context and mapper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	mapper := NewAccountMapper(capKey, &BaseAccount{})
+	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 
 	addr := sdk.Address([]byte("some-address"))
 
@@ -66,16 +60,14 @@ func TestAccountMapperGetSet(t *testing.T) {
 
 func TestAccountMapperSealed(t *testing.T) {
 	_, capKey := setupMultiStore()
+	cdc := wire.NewCodec()
+	RegisterBaseAccount(cdc)
 
 	// normal mapper exposes the wire codec
-	mapper := NewAccountMapper(capKey, &BaseAccount{})
+	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	assert.NotNil(t, mapper.WireCodec())
 
 	// seal mapper, should panic when we try to get the codec
 	mapperSealed := mapper.Seal()
-	assert.Panics(t, func() { mapperSealed.WireCodec() })
-
-	// another way to get a sealed mapper
-	mapperSealed = NewAccountMapperSealed(capKey, &BaseAccount{})
 	assert.Panics(t, func() { mapperSealed.WireCodec() })
 }

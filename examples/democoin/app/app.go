@@ -44,10 +44,13 @@ type DemocoinApp struct {
 
 func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 
+	// Create app-level codec for txs and accounts.
+	var cdc = MakeCodec()
+
 	// Create your application object.
 	var app = &DemocoinApp{
 		BaseApp:            bam.NewBaseApp(appName, logger, dbs["main"]),
-		cdc:                MakeCodec(),
+		cdc:                cdc,
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
 		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
 		capKeyPowStore:     sdk.NewKVStoreKey("pow"),
@@ -56,10 +59,11 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 	}
 
 	// Define the accountMapper.
-	app.accountMapper = auth.NewAccountMapperSealed(
+	app.accountMapper = auth.NewAccountMapper(
+		cdc,
 		app.capKeyMainStore, // target store
 		&types.AppAccount{}, // prototype
-	)
+	).Seal()
 
 	// Add handlers.
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
@@ -113,6 +117,9 @@ func MakeCodec() *wire.Codec {
 	// Register AppAccount
 	cdc.RegisterInterface((*sdk.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "democoin/Account", nil)
+
+	// Register crypto.
+	wire.RegisterCrypto(cdc)
 
 	return cdc
 }

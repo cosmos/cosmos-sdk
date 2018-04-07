@@ -3,11 +3,13 @@ package auth
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 func newTestMsg(addrs ...sdk.Address) *sdk.TestMsg {
@@ -67,7 +69,9 @@ func newTestTxWithSignBytes(msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, f
 func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup
 	ms, capKey := setupMultiStore()
-	mapper := NewAccountMapper(capKey, &BaseAccount{})
+	cdc := wire.NewCodec()
+	RegisterBaseAccount(cdc)
+	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
@@ -106,7 +110,9 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 func TestAnteHandlerSequences(t *testing.T) {
 	// setup
 	ms, capKey := setupMultiStore()
-	mapper := NewAccountMapper(capKey, &BaseAccount{})
+	cdc := wire.NewCodec()
+	RegisterBaseAccount(cdc)
+	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
@@ -170,7 +176,9 @@ func TestAnteHandlerSequences(t *testing.T) {
 func TestAnteHandlerFees(t *testing.T) {
 	// setup
 	ms, capKey := setupMultiStore()
-	mapper := NewAccountMapper(capKey, &BaseAccount{})
+	cdc := wire.NewCodec()
+	RegisterBaseAccount(cdc)
+	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
@@ -205,7 +213,9 @@ func TestAnteHandlerFees(t *testing.T) {
 func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// setup
 	ms, capKey := setupMultiStore()
-	mapper := NewAccountMapper(capKey, &BaseAccount{})
+	cdc := wire.NewCodec()
+	RegisterBaseAccount(cdc)
+	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
@@ -278,7 +288,9 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 func TestAnteHandlerSetPubKey(t *testing.T) {
 	// setup
 	ms, capKey := setupMultiStore()
-	mapper := NewAccountMapper(capKey, &BaseAccount{})
+	cdc := wire.NewCodec()
+	RegisterBaseAccount(cdc)
+	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 

@@ -201,8 +201,8 @@ func TestPlusCoins(t *testing.T) {
 	}{
 		{Coins{{"A", 1}, {"B", 1}}, Coins{{"A", 1}, {"B", 1}}, Coins{{"A", 2}, {"B", 2}}},
 		{Coins{{"A", 0}, {"B", 1}}, Coins{{"A", 0}, {"B", 0}}, Coins{{"B", 1}}},
-		{Coins{{"A", 0}, {"B", 0}}, Coins{{"A", 0}, {"B", 0}}, Coins{}},
-		{Coins{{"A", 1}, {"B", 0}}, Coins{{"A", -1}, {"B", 0}}, Coins{}},
+		{Coins{{"A", 0}, {"B", 0}}, Coins{{"A", 0}, {"B", 0}}, Coins(nil)},
+		{Coins{{"A", 1}, {"B", 0}}, Coins{{"A", -1}, {"B", 0}}, Coins(nil)},
 		{Coins{{"A", -1}, {"B", 0}}, Coins{{"A", 0}, {"B", 0}}, Coins{{"A", -1}}},
 	}
 

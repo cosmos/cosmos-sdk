@@ -28,27 +28,12 @@ type accountMapper struct {
 
 // NewAccountMapper returns a new sdk.AccountMapper that
 // uses go-amino to (binary) encode and decode concrete sdk.Accounts.
-func NewAccountMapper(key sdk.StoreKey, proto sdk.Account) accountMapper {
-	cdc := wire.NewCodec()
+func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto sdk.Account) accountMapper {
 	return accountMapper{
 		key:   key,
 		proto: proto,
 		cdc:   cdc,
 	}
-}
-
-// Create and return a sealed account mapper
-func NewAccountMapperSealed(key sdk.StoreKey, proto sdk.Account) sealedAccountMapper {
-	cdc := wire.NewCodec()
-	am := accountMapper{
-		key:   key,
-		proto: proto,
-		cdc:   cdc,
-	}
-	RegisterWireBaseAccount(cdc)
-
-	// make accountMapper's WireCodec() inaccessible, return
-	return am.Seal()
 }
 
 // Returns the go-amino codec.  You may need to register interfaces
@@ -107,22 +92,6 @@ func (sam sealedAccountMapper) WireCodec() *wire.Codec {
 
 //----------------------------------------
 // misc.
-
-// NOTE: currently unused
-func (am accountMapper) clonePrototypePtr() interface{} {
-	protoRt := reflect.TypeOf(am.proto)
-	if protoRt.Kind() == reflect.Ptr {
-		protoErt := protoRt.Elem()
-		if protoErt.Kind() != reflect.Struct {
-			panic("accountMapper requires a struct proto sdk.Account, or a pointer to one")
-		}
-		protoRv := reflect.New(protoErt)
-		return protoRv.Interface()
-	} else {
-		protoRv := reflect.New(protoRt)
-		return protoRv.Interface()
-	}
-}
 
 // Creates a new struct (or pointer to struct) from am.proto.
 func (am accountMapper) clonePrototype() sdk.Account {

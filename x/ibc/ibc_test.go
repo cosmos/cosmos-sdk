@@ -32,7 +32,7 @@ func newAddress() crypto.Address {
 }
 
 func getCoins(ck bank.CoinKeeper, ctx sdk.Context, addr crypto.Address) (sdk.Coins, sdk.Error) {
-	zero := sdk.Coins{}
+	zero := sdk.Coins(nil)
 	return ck.AddCoins(ctx, addr, zero)
 }
 
@@ -49,6 +49,7 @@ func makeCodec() *wire.Codec {
 	// Register AppAccount
 	cdc.RegisterInterface((*sdk.Account)(nil), nil)
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/ibc/Account", nil)
+	wire.RegisterCrypto(cdc)
 
 	return cdc
 }
@@ -59,13 +60,13 @@ func TestIBC(t *testing.T) {
 	key := sdk.NewKVStoreKey("ibc")
 	ctx := defaultContext(key)
 
-	am := auth.NewAccountMapper(key, &auth.BaseAccount{})
+	am := auth.NewAccountMapper(cdc, key, &auth.BaseAccount{})
 	ck := bank.NewCoinKeeper(am)
 
 	src := newAddress()
 	dest := newAddress()
 	chainid := "ibcchain"
-	zero := sdk.Coins{}
+	zero := sdk.Coins(nil)
 	mycoins := sdk.Coins{sdk.Coin{"mycoin", 10}}
 
 	coins, err := ck.AddCoins(ctx, src, mycoins)

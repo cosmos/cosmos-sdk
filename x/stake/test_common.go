@@ -97,6 +97,7 @@ func makeTestCodec() *wire.Codec {
 	// Register AppAccount
 	cdc.RegisterInterface((*sdk.Account)(nil), nil)
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/stake/Account", nil)
+	wire.RegisterCrypto(cdc)
 
 	return cdc
 }
@@ -125,10 +126,11 @@ func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil)
 	cdc := makeTestCodec()
-	accountMapper := auth.NewAccountMapperSealed(
+	accountMapper := auth.NewAccountMapper(
+		cdc,                 // amino codec
 		keyMain,             // target store
 		&auth.BaseAccount{}, // prototype
-	)
+	).Seal()
 	ck := bank.NewCoinKeeper(accountMapper)
 	keeper := NewKeeper(ctx, cdc, keyStake, ck)
 	keeper.setPool(ctx, initialPool())

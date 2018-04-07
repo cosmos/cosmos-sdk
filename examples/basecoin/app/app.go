@@ -39,23 +39,28 @@ type BasecoinApp struct {
 }
 
 func NewBasecoinApp(logger log.Logger, dbs map[string]dbm.DB) *BasecoinApp {
-	// create your application object
+
+	// Create app-level codec for txs and accounts.
+	var cdc = MakeCodec()
+
+	// Create your application object.
 	var app = &BasecoinApp{
 		BaseApp:            bam.NewBaseApp(appName, logger, dbs["main"]),
-		cdc:                MakeCodec(),
+		cdc:                cdc,
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
 		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
 		capKeyIBCStore:     sdk.NewKVStoreKey("ibc"),
 		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
 	}
 
-	// define the accountMapper
-	app.accountMapper = auth.NewAccountMapperSealed(
+	// Define the accountMapper.
+	app.accountMapper = auth.NewAccountMapper(
+		cdc,
 		app.capKeyMainStore, // target store
 		&types.AppAccount{}, // prototype
-	)
+	).Seal()
 
-	// add handlers
+	// Add handlers.
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
 	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper)
@@ -64,7 +69,7 @@ func NewBasecoinApp(logger log.Logger, dbs map[string]dbm.DB) *BasecoinApp {
 		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
-	// initialize BaseApp
+	// Initialize BaseApp.
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
 	app.MountStoreWithDB(app.capKeyMainStore, sdk.StoreTypeIAVL, dbs["main"])
@@ -82,7 +87,7 @@ func NewBasecoinApp(logger log.Logger, dbs map[string]dbm.DB) *BasecoinApp {
 	return app
 }
 
-// custom tx codec
+// Custom tx codec
 func MakeCodec() *wire.Codec {
 	var cdc = wire.NewCodec()
 
@@ -99,10 +104,13 @@ func MakeCodec() *wire.Codec {
 	cdc.RegisterInterface((*sdk.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "basecoin/Account", nil)
 
+	// Register crypto.
+	wire.RegisterCrypto(cdc)
+
 	return cdc
 }
 
-// custom logic for transaction decoding
+// Custom logic for transaction decoding
 func (app *BasecoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 	var tx = sdk.StdTx{}
 
@@ -119,7 +127,7 @@ func (app *BasecoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 	return tx, nil
 }
 
-// custom logic for basecoin initialization
+// Custom logic for basecoin initialization
 func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	stateJSON := req.AppStateBytes
 

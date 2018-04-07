@@ -21,6 +21,7 @@ type Keeper struct {
 
 func NewKeeper(key sdk.StoreKey, coinKeeper bank.CoinKeeper) Keeper {
 	cdc := wire.NewCodec()
+	wire.RegisterCrypto(cdc)
 	return Keeper{
 		key: key,
 		cdc: cdc,

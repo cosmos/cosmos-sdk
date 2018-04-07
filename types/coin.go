@@ -110,7 +110,7 @@ func (coins Coins) IsValid() bool {
 // Plus combines two sets of coins
 // CONTRACT: Plus will never return Coins where one Coin has a 0 amount.
 func (coins Coins) Plus(coinsB Coins) Coins {
-	sum := []Coin{}
+	sum := ([]Coin)(nil)
 	indexA, indexB := 0, 0
 	lenA, lenB := len(coins), len(coinsB)
 	for {

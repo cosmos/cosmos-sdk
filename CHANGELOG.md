@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.14.0 (April 7, 2018)
+
+BREAKING CHANGES
+
+* Remove go-wire, use go-amino
+
 ## 0.13.1 (April 3, 2018)
 
 BUG FIXES

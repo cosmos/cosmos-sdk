@@ -1,4 +1,4 @@
-PACKAGES=$(shell go list ./... | grep -v '/vendor/' | grep -v 'client/lcd') # XXX
+PACKAGES=$(shell go list ./... | grep -v '/vendor/')
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
 BUILD_FLAGS = -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
 

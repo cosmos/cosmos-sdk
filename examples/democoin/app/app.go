@@ -43,7 +43,8 @@ type DemocoinApp struct {
 }
 
 func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
-	// create your application object
+
+	// Create your application object.
 	var app = &DemocoinApp{
 		BaseApp:            bam.NewBaseApp(appName, logger, dbs["main"]),
 		cdc:                MakeCodec(),
@@ -54,13 +55,13 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
 	}
 
-	// define the accountMapper
+	// Define the accountMapper.
 	app.accountMapper = auth.NewAccountMapperSealed(
 		app.capKeyMainStore, // target store
 		&types.AppAccount{}, // prototype
 	)
 
-	// add handlers
+	// Add handlers.
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper)
 	powKeeper := pow.NewKeeper(app.capKeyPowStore, pow.NewPowConfig("pow", int64(1)), coinKeeper)
@@ -74,7 +75,7 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
-	// initialize BaseApp
+	// Initialize BaseApp.
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainerFn(coolKeeper, powKeeper))
 	app.MountStoreWithDB(app.capKeyMainStore, sdk.StoreTypeIAVL, dbs["main"])

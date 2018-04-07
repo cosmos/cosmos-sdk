@@ -340,7 +340,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	config.Consensus.SkipTimeoutCommit = false
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	logger = log.NewFilter(logger, log.AllowError())
+	// logger = log.NewFilter(logger, log.AllowError())
 	privValidatorFile := config.PrivValidatorFile()
 	privVal := pvm.LoadOrGenFilePV(privValidatorFile)
 	dbs := map[string]dbm.DB{
@@ -374,6 +374,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	genDoc.AppState = stateBytes
 
 	cdc := wire.NewCodec()
+	wire.RegisterCrypto(cdc)
 
 	// LCD listen address
 	port = fmt.Sprintf("%d", 17377)                       // XXX
@@ -392,7 +393,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 		return nil, nil, err
 	}
 
-	waitForStart()
+	waitForStart(cdc)
 
 	return node, lcd, nil
 }
@@ -533,7 +534,7 @@ func waitForHeight(height int64) {
 }
 
 // wait for 2 blocks
-func waitForStart() {
+func waitForStart(cdc *wire.Codec) {
 	waitHeight := int64(2)
 	for {
 		time.Sleep(time.Second)
@@ -558,7 +559,7 @@ func waitForStart() {
 		}
 		res.Body.Close()
 
-		err = json.Unmarshal([]byte(body), &resultBlock)
+		err = cdc.UnmarshalJSON([]byte(body), &resultBlock)
 		if err != nil {
 			fmt.Println("RES", res)
 			fmt.Println("BODY", string(body))

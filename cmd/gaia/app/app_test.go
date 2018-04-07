@@ -129,7 +129,7 @@ func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 
 func TestMsgs(t *testing.T) {
 	gapp := newGaiaApp()
-	assert.Nil(t, setGenesis(gapp))
+	require.Nil(t, setGenesis(gapp))
 
 	msgs := []struct {
 		msg sdk.Msg
@@ -183,7 +183,7 @@ func TestSortGenesis(t *testing.T) {
 	require.Nil(t, err)
 
 	// Ensure we can send
-	assert.Nil(t, setGenesis(gapp)) // initialize the pool
+	require.Nil(t, setGenesis(gapp)) // initialize the pool
 	SignCheckDeliver(t, gapp, sendMsg5, []int64{0}, true, priv1)
 }
 
@@ -230,7 +230,8 @@ func TestSendMsgWithAccounts(t *testing.T) {
 
 	// Construct genesis state
 	err = setGenesis(gapp, baseAcc)
-	assert.Nil(t, err)
+	require.Nil(t, err)
+
 	// A checkTx context (true)
 	ctxCheck := gapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := gapp.accountMapper.GetAccount(ctxCheck, addr1)
@@ -274,7 +275,7 @@ func TestSendMsgMultipleOut(t *testing.T) {
 	}
 
 	err = setGenesis(gapp, acc1, acc2)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// Simulate a Block
 	SignCheckDeliver(t, gapp, sendMsg2, []int64{0}, true, priv1)
@@ -295,12 +296,10 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 		Address: addr1,
 		Coins:   genCoins,
 	}
-
 	acc2 := &auth.BaseAccount{
 		Address: addr2,
 		Coins:   genCoins,
 	}
-
 	acc4 := &auth.BaseAccount{
 		Address: addr4,
 		Coins:   genCoins,
@@ -331,7 +330,7 @@ func TestSendMsgDependent(t *testing.T) {
 	}
 
 	err = setGenesis(gapp, acc1)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// CheckDeliver
 	SignCheckDeliver(t, gapp, sendMsg1, []int64{0}, true, priv1)
@@ -359,7 +358,8 @@ func TestIBCMsgs(t *testing.T) {
 	}
 
 	err := setGenesis(gapp, baseAcc)
-	assert.Nil(t, err)
+	require.Nil(t, err)
+
 	// A checkTx context (true)
 	ctxCheck := gapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := gapp.accountMapper.GetAccount(ctxCheck, addr1)
@@ -389,6 +389,49 @@ func TestIBCMsgs(t *testing.T) {
 	SignCheckDeliver(t, gapp, receiveMsg, []int64{2}, true, priv1)
 	CheckBalance(t, gapp, addr1, "10foocoin")
 	SignCheckDeliver(t, gapp, receiveMsg, []int64{3}, false, priv1)
+}
+
+func TestStakeMsgs(t *testing.T) {
+	gapp := newGaiaApp()
+
+	genCoins, err := sdk.ParseCoins("42fermion")
+	require.Nil(t, err)
+	bondCoin, err := sdk.ParseCoin("10fermion")
+	require.Nil(t, err)
+
+	acc1 := &auth.BaseAccount{
+		Address: addr1,
+		Coins:   genCoins,
+	}
+	acc2 := &auth.BaseAccount{
+		Address: addr2,
+		Coins:   genCoins,
+	}
+
+	err = setGenesis(gapp, acc1, acc2)
+	require.Nil(t, err)
+
+	// A checkTx context (true)
+	ctxCheck := gapp.BaseApp.NewContext(true, abci.Header{})
+	res1 := gapp.accountMapper.GetAccount(ctxCheck, addr1)
+	res2 := gapp.accountMapper.GetAccount(ctxCheck, addr2)
+	require.Equal(t, acc1, res1)
+	require.Equal(t, acc2, res2)
+
+	description := stake.NewDescription("foo_moniker", "", "", "")
+	declareCandidacyMsg := stake.NewMsgDeclareCandidacy(
+		addr1, priv1.PubKey(), bondCoin, description,
+	)
+
+	SignCheckDeliver(t, gapp, declareCandidacyMsg, []int64{0}, true, priv1)
+}
+
+//____________________________________________________________________________________
+
+func CheckBalance(t *testing.T, gapp *GaiaApp, addr sdk.Address, balExpected string) {
+	ctxDeliver := gapp.BaseApp.NewContext(false, abci.Header{})
+	res2 := gapp.accountMapper.GetAccount(ctxDeliver, addr)
+	assert.Equal(t, balExpected, fmt.Sprintf("%v", res2.GetCoins()))
 }
 
 func genTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.StdTx {
@@ -427,10 +470,4 @@ func SignCheckDeliver(t *testing.T, gapp *GaiaApp, msg sdk.Msg, seq []int64, exp
 	}
 	gapp.EndBlock(abci.RequestEndBlock{})
 	//gapp.Commit()
-}
-
-func CheckBalance(t *testing.T, gapp *GaiaApp, addr sdk.Address, balExpected string) {
-	ctxDeliver := gapp.BaseApp.NewContext(false, abci.Header{})
-	res2 := gapp.accountMapper.GetAccount(ctxDeliver, addr)
-	assert.Equal(t, balExpected, fmt.Sprintf("%v", res2.GetCoins()))
 }

@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/simplestake"
-	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 )
@@ -33,7 +32,7 @@ type BasecoinApp struct {
 	capKeyMainStore    *sdk.KVStoreKey
 	capKeyAccountStore *sdk.KVStoreKey
 	capKeyIBCStore     *sdk.KVStoreKey
-	capKeyStakeStore   *sdk.KVStoreKey
+	capKeyStakingStore *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
@@ -54,7 +53,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
 		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
 		capKeyIBCStore:     sdk.NewKVStoreKey("ibc"),
-		capKeyStakeStore:   sdk.NewKVStoreKey("stake"),
+		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
 	}
 
 	// Define the accountMapper.
@@ -71,7 +70,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	app.Router().
 		AddRoute("bank", bank.NewHandler(coinKeeper)).
 		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
-		AddRoute("stake", stake.NewHandler(stakeKeeper))
+		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
 	// Define the feeHandler.
 	app.feeHandler = auth.BurnFeeHandler

@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -85,24 +84,29 @@ var (
 	}
 )
 
-func loggerAndDB() (log.Logger, dbm.DB) {
+func loggerAndDBs() (log.Logger, map[string]dbm.DB) {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-	db := dbm.NewMemDB()
-	return logger, db
+	dbs := map[string]dbm.DB{
+		"main":    dbm.NewMemDB(),
+		"acc":     dbm.NewMemDB(),
+		"ibc":     dbm.NewMemDB(),
+		"staking": dbm.NewMemDB(),
+	}
+	return logger, dbs
 }
 
-func newBasecoinApp() *BasecoinApp {
-	logger, db := loggerAndDB()
-	return NewBasecoinApp(logger, db)
+func newGaiaApp() *GaiaApp {
+	logger, dbs := loggerAndDBs()
+	return NewGaiaApp(logger, dbs)
 }
 
-func setGenesisAccounts(bapp *BasecoinApp, accs ...auth.BaseAccount) error {
-	genaccs := make([]*types.GenesisAccount, len(accs))
+func setGenesisAccounts(gapp *GaiaApp, accs ...auth.BaseAccount) error {
+	genaccs := make([]GenesisAccount, len(accs))
 	for i, acc := range accs {
-		genaccs[i] = types.NewGenesisAccount(&types.AppAccount{acc, accName})
+		genaccs[i] = NewGenesisAccount(acc)
 	}
 
-	genesisState := types.GenesisState{
+	genesisState := GenesisState{
 		Accounts: genaccs,
 	}
 
@@ -113,8 +117,8 @@ func setGenesisAccounts(bapp *BasecoinApp, accs ...auth.BaseAccount) error {
 
 	// Initialize the chain
 	vals := []abci.Validator{}
-	bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
-	bapp.Commit()
+	gapp.InitChain(abci.RequestInitChain{vals, stateBytes})
+	gapp.Commit()
 
 	return nil
 }
@@ -122,7 +126,7 @@ func setGenesisAccounts(bapp *BasecoinApp, accs ...auth.BaseAccount) error {
 //_______________________________________________________________________
 
 func TestMsgs(t *testing.T) {
-	bapp := newBasecoinApp()
+	gapp := newGaiaApp()
 
 	msgs := []struct {
 		msg sdk.Msg
@@ -132,18 +136,18 @@ func TestMsgs(t *testing.T) {
 
 	for i, m := range msgs {
 		// Run a CheckDeliver
-		SignCheckDeliver(t, bapp, m.msg, []int64{int64(i)}, false, priv1)
+		SignCheckDeliver(t, gapp, m.msg, []int64{int64(i)}, false, priv1)
 	}
 }
 
 func TestSortGenesis(t *testing.T) {
-	logger, db := loggerAndDB()
-	bapp := NewBasecoinApp(logger, db)
+	logger, dbs := loggerAndDBs()
+	gapp := NewGaiaApp(logger, dbs)
 
 	// Note the order: the coins are unsorted!
 	coinDenom1, coinDenom2 := "foocoin", "barcoin"
 
-	genState := fmt.Sprintf(`{
+	str := `{
       "accounts": [{
         "address": "%s",
         "coins": [
@@ -157,16 +161,17 @@ func TestSortGenesis(t *testing.T) {
           }
         ]
       }]
-    }`, addr1.String(), coinDenom1, coinDenom2)
+    }`
+	genState := fmt.Sprintf(str, addr1.String(), coinDenom1, coinDenom2)
 
 	// Initialize the chain
 	vals := []abci.Validator{}
-	bapp.InitChain(abci.RequestInitChain{vals, []byte(genState)})
-	bapp.Commit()
+	gapp.InitChain(abci.RequestInitChain{vals, []byte(genState)})
+	gapp.Commit()
 
 	// Unsorted coins means invalid
 	err := sendMsg5.ValidateBasic()
-	require.Equal(t, sdk.CodeInvalidCoins, err.Code(), err.ABCILog())
+	require.Equal(t, sdk.CodeInvalidCoins, err.ABCICode(), err.ABCILog())
 
 	// Sort coins, should be valid
 	sendMsg5.Inputs[0].Coins.Sort()
@@ -175,14 +180,14 @@ func TestSortGenesis(t *testing.T) {
 	require.Nil(t, err)
 
 	// Ensure we can send
-	SignCheckDeliver(t, bapp, sendMsg5, []int64{0}, true, priv1)
+	SignCheckDeliver(t, gapp, sendMsg5, []int64{0}, true, priv1)
 }
 
 func TestGenesis(t *testing.T) {
-	logger, db := loggerAndDB()
-	bapp := NewBasecoinApp(logger, db)
+	logger, dbs := loggerAndDBs()
+	gapp := NewGaiaApp(logger, dbs)
 
-	// Construct some genesis bytes to reflect basecoin/types/AppAccount
+	// Construct some genesis bytes to reflect GaiaAccount
 	pk := crypto.GenPrivKeyEd25519().PubKey()
 	addr := pk.Address()
 	coins, err := sdk.ParseCoins("77foocoin,99barcoin")
@@ -191,27 +196,26 @@ func TestGenesis(t *testing.T) {
 		Address: addr,
 		Coins:   coins,
 	}
-	acc := &types.AppAccount{baseAcc, "foobart"}
 
-	err = setGenesisAccounts(bapp, baseAcc)
+	err = setGenesisAccounts(gapp, baseAcc)
 	assert.Nil(t, err)
 
 	// A checkTx context
-	ctx := bapp.BaseApp.NewContext(true, abci.Header{})
-	res1 := bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
-	assert.Equal(t, acc, res1)
+	ctx := gapp.BaseApp.NewContext(true, abci.Header{})
+	res1 := gapp.accountMapper.GetAccount(ctx, baseAcc.Address)
+	assert.Equal(t, baseAcc, res1)
 
 	// reload app and ensure the account is still there
-	bapp = NewBasecoinApp(logger, db)
-	ctx = bapp.BaseApp.NewContext(true, abci.Header{})
-	res1 = bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
-	assert.Equal(t, acc, res1)
+	gapp = NewGaiaApp(logger, dbs)
+	ctx = gapp.BaseApp.NewContext(true, abci.Header{})
+	res1 = gapp.accountMapper.GetAccount(ctx, baseAcc.Address)
+	assert.Equal(t, baseAcc, res1)
 }
 
 func TestSendMsgWithAccounts(t *testing.T) {
-	bapp := newBasecoinApp()
+	gapp := newGaiaApp()
 
-	// Construct some genesis bytes to reflect basecoin/types/AppAccount
+	// Construct some genesis bytes to reflect GaiaAccount
 	// Give 77 foocoin to the first key
 	coins, err := sdk.ParseCoins("77foocoin")
 	require.Nil(t, err)
@@ -221,36 +225,36 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	}
 
 	// Construct genesis state
-	err = setGenesisAccounts(bapp, baseAcc)
+	err = setGenesisAccounts(gapp, baseAcc)
 	assert.Nil(t, err)
 	// A checkTx context (true)
-	ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
-	res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
-	assert.Equal(t, baseAcc, res1.(*types.AppAccount).BaseAccount)
+	ctxCheck := gapp.BaseApp.NewContext(true, abci.Header{})
+	res1 := gapp.accountMapper.GetAccount(ctxCheck, addr1)
+	assert.Equal(t, baseAcc, res1.(*auth.BaseAccount))
 
 	// Run a CheckDeliver
-	SignCheckDeliver(t, bapp, sendMsg1, []int64{0}, true, priv1)
+	SignCheckDeliver(t, gapp, sendMsg1, []int64{0}, true, priv1)
 
 	// Check balances
-	CheckBalance(t, bapp, addr1, "67foocoin")
-	CheckBalance(t, bapp, addr2, "10foocoin")
+	CheckBalance(t, gapp, addr1, "67foocoin")
+	CheckBalance(t, gapp, addr2, "10foocoin")
 
 	// Delivering again should cause replay error
-	SignCheckDeliver(t, bapp, sendMsg1, []int64{0}, false, priv1)
+	SignCheckDeliver(t, gapp, sendMsg1, []int64{0}, false, priv1)
 
 	// bumping the txnonce number without resigning should be an auth error
 	tx := genTx(sendMsg1, []int64{0}, priv1)
 	tx.Signatures[0].Sequence = 1
-	res := bapp.Deliver(tx)
+	res := gapp.Deliver(tx)
 
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
+	assert.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
 
 	// resigning the tx with the bumped sequence should work
-	SignCheckDeliver(t, bapp, sendMsg1, []int64{1}, true, priv1)
+	SignCheckDeliver(t, gapp, sendMsg1, []int64{1}, true, priv1)
 }
 
 func TestSendMsgMultipleOut(t *testing.T) {
-	bapp := newBasecoinApp()
+	gapp := newGaiaApp()
 
 	genCoins, err := sdk.ParseCoins("42foocoin")
 	require.Nil(t, err)
@@ -265,20 +269,20 @@ func TestSendMsgMultipleOut(t *testing.T) {
 		Coins:   genCoins,
 	}
 
-	err = setGenesisAccounts(bapp, acc1, acc2)
+	err = setGenesisAccounts(gapp, acc1, acc2)
 	assert.Nil(t, err)
 
 	// Simulate a Block
-	SignCheckDeliver(t, bapp, sendMsg2, []int64{0}, true, priv1)
+	SignCheckDeliver(t, gapp, sendMsg2, []int64{0}, true, priv1)
 
 	// Check balances
-	CheckBalance(t, bapp, addr1, "32foocoin")
-	CheckBalance(t, bapp, addr2, "47foocoin")
-	CheckBalance(t, bapp, addr3, "5foocoin")
+	CheckBalance(t, gapp, addr1, "32foocoin")
+	CheckBalance(t, gapp, addr2, "47foocoin")
+	CheckBalance(t, gapp, addr3, "5foocoin")
 }
 
 func TestSengMsgMultipleInOut(t *testing.T) {
-	bapp := newBasecoinApp()
+	gapp := newGaiaApp()
 
 	genCoins, err := sdk.ParseCoins("42foocoin")
 	require.Nil(t, err)
@@ -298,21 +302,21 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 		Coins:   genCoins,
 	}
 
-	err = setGenesisAccounts(bapp, acc1, acc2, acc4)
+	err = setGenesisAccounts(gapp, acc1, acc2, acc4)
 	assert.Nil(t, err)
 
 	// CheckDeliver
-	SignCheckDeliver(t, bapp, sendMsg3, []int64{0, 0}, true, priv1, priv4)
+	SignCheckDeliver(t, gapp, sendMsg3, []int64{0, 0}, true, priv1, priv4)
 
 	// Check balances
-	CheckBalance(t, bapp, addr1, "32foocoin")
-	CheckBalance(t, bapp, addr4, "32foocoin")
-	CheckBalance(t, bapp, addr2, "52foocoin")
-	CheckBalance(t, bapp, addr3, "10foocoin")
+	CheckBalance(t, gapp, addr1, "32foocoin")
+	CheckBalance(t, gapp, addr4, "32foocoin")
+	CheckBalance(t, gapp, addr2, "52foocoin")
+	CheckBalance(t, gapp, addr3, "10foocoin")
 }
 
 func TestSendMsgDependent(t *testing.T) {
-	bapp := newBasecoinApp()
+	gapp := newGaiaApp()
 
 	genCoins, err := sdk.ParseCoins("42foocoin")
 	require.Nil(t, err)
@@ -322,58 +326,25 @@ func TestSendMsgDependent(t *testing.T) {
 		Coins:   genCoins,
 	}
 
-	err = setGenesisAccounts(bapp, acc1)
+	err = setGenesisAccounts(gapp, acc1)
 	assert.Nil(t, err)
 
 	// CheckDeliver
-	SignCheckDeliver(t, bapp, sendMsg1, []int64{0}, true, priv1)
+	SignCheckDeliver(t, gapp, sendMsg1, []int64{0}, true, priv1)
 
 	// Check balances
-	CheckBalance(t, bapp, addr1, "32foocoin")
-	CheckBalance(t, bapp, addr2, "10foocoin")
+	CheckBalance(t, gapp, addr1, "32foocoin")
+	CheckBalance(t, gapp, addr2, "10foocoin")
 
 	// Simulate a Block
-	SignCheckDeliver(t, bapp, sendMsg4, []int64{0}, true, priv2)
+	SignCheckDeliver(t, gapp, sendMsg4, []int64{0}, true, priv2)
 
 	// Check balances
-	CheckBalance(t, bapp, addr1, "42foocoin")
-}
-
-func TestQuizMsg(t *testing.T) {
-	bapp := newBasecoinApp()
-
-	// Construct genesis state
-	// Construct some genesis bytes to reflect basecoin/types/AppAccount
-	coins := sdk.Coins{}
-	baseAcc := auth.BaseAccount{
-		Address: addr1,
-		Coins:   coins,
-	}
-	acc1 := &types.AppAccount{baseAcc, "foobart"}
-
-	// Construct genesis state
-	genesisState := map[string]interface{}{
-		"accounts": []*types.GenesisAccount{
-			types.NewGenesisAccount(acc1),
-		},
-	}
-	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
-	require.Nil(t, err)
-
-	// Initialize the chain (nil)
-	vals := []abci.Validator{}
-	bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
-	bapp.Commit()
-
-	// A checkTx context (true)
-	ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
-	res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
-	assert.Equal(t, acc1, res1)
-
+	CheckBalance(t, gapp, addr1, "42foocoin")
 }
 
 func TestIBCMsgs(t *testing.T) {
-	bapp := newBasecoinApp()
+	gapp := newGaiaApp()
 
 	sourceChain := "source-chain"
 	destChain := "dest-chain"
@@ -382,14 +353,13 @@ func TestIBCMsgs(t *testing.T) {
 		Address: addr1,
 		Coins:   coins,
 	}
-	acc1 := &types.AppAccount{baseAcc, "foobart"}
 
-	err := setGenesisAccounts(bapp, baseAcc)
+	err := setGenesisAccounts(gapp, baseAcc)
 	assert.Nil(t, err)
 	// A checkTx context (true)
-	ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
-	res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
-	assert.Equal(t, acc1, res1)
+	ctxCheck := gapp.BaseApp.NewContext(true, abci.Header{})
+	res1 := gapp.accountMapper.GetAccount(ctxCheck, addr1)
+	assert.Equal(t, baseAcc, res1)
 
 	packet := ibc.IBCPacket{
 		SrcAddr:   addr1,
@@ -409,12 +379,12 @@ func TestIBCMsgs(t *testing.T) {
 		Sequence:  0,
 	}
 
-	SignCheckDeliver(t, bapp, transferMsg, []int64{0}, true, priv1)
-	CheckBalance(t, bapp, addr1, "")
-	SignCheckDeliver(t, bapp, transferMsg, []int64{1}, false, priv1)
-	SignCheckDeliver(t, bapp, receiveMsg, []int64{2}, true, priv1)
-	CheckBalance(t, bapp, addr1, "10foocoin")
-	SignCheckDeliver(t, bapp, receiveMsg, []int64{3}, false, priv1)
+	SignCheckDeliver(t, gapp, transferMsg, []int64{0}, true, priv1)
+	CheckBalance(t, gapp, addr1, "")
+	SignCheckDeliver(t, gapp, transferMsg, []int64{1}, false, priv1)
+	SignCheckDeliver(t, gapp, receiveMsg, []int64{2}, true, priv1)
+	CheckBalance(t, gapp, addr1, "10foocoin")
+	SignCheckDeliver(t, gapp, receiveMsg, []int64{3}, false, priv1)
 }
 
 func genTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.StdTx {
@@ -431,32 +401,32 @@ func genTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.StdTx {
 
 }
 
-func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
+func SignCheckDeliver(t *testing.T, gapp *GaiaApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
 
 	// Sign the tx
 	tx := genTx(msg, seq, priv...)
 	// Run a Check
-	res := bapp.Check(tx)
+	res := gapp.Check(tx)
 	if expPass {
-		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
+		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
 	} else {
-		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
+		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
 	}
 
 	// Simulate a Block
-	bapp.BeginBlock(abci.RequestBeginBlock{})
-	res = bapp.Deliver(tx)
+	gapp.BeginBlock(abci.RequestBeginBlock{})
+	res = gapp.Deliver(tx)
 	if expPass {
-		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
+		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
 	} else {
-		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
+		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
 	}
-	bapp.EndBlock(abci.RequestEndBlock{})
-	//bapp.Commit()
+	gapp.EndBlock(abci.RequestEndBlock{})
+	//gapp.Commit()
 }
 
-func CheckBalance(t *testing.T, bapp *BasecoinApp, addr sdk.Address, balExpected string) {
-	ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
-	res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr)
+func CheckBalance(t *testing.T, gapp *GaiaApp, addr sdk.Address, balExpected string) {
+	ctxDeliver := gapp.BaseApp.NewContext(false, abci.Header{})
+	res2 := gapp.accountMapper.GetAccount(ctxDeliver, addr)
 	assert.Equal(t, balExpected, fmt.Sprintf("%v", res2.GetCoins()))
 }

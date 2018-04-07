@@ -36,8 +36,8 @@ else
 endif
 
 install: 
-	go install $(BUILD_FLAGS) ./cmd/gaiad
-	go install $(BUILD_FLAGS) ./cmd/gaiacli
+	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
+	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 
 install_examples: 
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecoind

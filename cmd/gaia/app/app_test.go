@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
@@ -100,14 +101,15 @@ func newGaiaApp() *GaiaApp {
 	return NewGaiaApp(logger, dbs)
 }
 
-func setGenesisAccounts(gapp *GaiaApp, accs ...auth.BaseAccount) error {
+func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 	genaccs := make([]GenesisAccount, len(accs))
 	for i, acc := range accs {
 		genaccs[i] = NewGenesisAccount(acc)
 	}
 
 	genesisState := GenesisState{
-		Accounts: genaccs,
+		Accounts:  genaccs,
+		StakeData: stake.GetGenesisJSON(),
 	}
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
@@ -127,6 +129,7 @@ func setGenesisAccounts(gapp *GaiaApp, accs ...auth.BaseAccount) error {
 
 func TestMsgs(t *testing.T) {
 	gapp := newGaiaApp()
+	assert.Nil(t, setGenesis(gapp))
 
 	msgs := []struct {
 		msg sdk.Msg
@@ -180,6 +183,7 @@ func TestSortGenesis(t *testing.T) {
 	require.Nil(t, err)
 
 	// Ensure we can send
+	assert.Nil(t, setGenesis(gapp)) // initialize the pool
 	SignCheckDeliver(t, gapp, sendMsg5, []int64{0}, true, priv1)
 }
 
@@ -192,12 +196,12 @@ func TestGenesis(t *testing.T) {
 	addr := pk.Address()
 	coins, err := sdk.ParseCoins("77foocoin,99barcoin")
 	require.Nil(t, err)
-	baseAcc := auth.BaseAccount{
+	baseAcc := &auth.BaseAccount{
 		Address: addr,
 		Coins:   coins,
 	}
 
-	err = setGenesisAccounts(gapp, baseAcc)
+	err = setGenesis(gapp, baseAcc)
 	assert.Nil(t, err)
 
 	// A checkTx context
@@ -219,13 +223,13 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	// Give 77 foocoin to the first key
 	coins, err := sdk.ParseCoins("77foocoin")
 	require.Nil(t, err)
-	baseAcc := auth.BaseAccount{
+	baseAcc := &auth.BaseAccount{
 		Address: addr1,
 		Coins:   coins,
 	}
 
 	// Construct genesis state
-	err = setGenesisAccounts(gapp, baseAcc)
+	err = setGenesis(gapp, baseAcc)
 	assert.Nil(t, err)
 	// A checkTx context (true)
 	ctxCheck := gapp.BaseApp.NewContext(true, abci.Header{})
@@ -259,17 +263,17 @@ func TestSendMsgMultipleOut(t *testing.T) {
 	genCoins, err := sdk.ParseCoins("42foocoin")
 	require.Nil(t, err)
 
-	acc1 := auth.BaseAccount{
+	acc1 := &auth.BaseAccount{
 		Address: addr1,
 		Coins:   genCoins,
 	}
 
-	acc2 := auth.BaseAccount{
+	acc2 := &auth.BaseAccount{
 		Address: addr2,
 		Coins:   genCoins,
 	}
 
-	err = setGenesisAccounts(gapp, acc1, acc2)
+	err = setGenesis(gapp, acc1, acc2)
 	assert.Nil(t, err)
 
 	// Simulate a Block
@@ -287,22 +291,22 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 	genCoins, err := sdk.ParseCoins("42foocoin")
 	require.Nil(t, err)
 
-	acc1 := auth.BaseAccount{
+	acc1 := &auth.BaseAccount{
 		Address: addr1,
 		Coins:   genCoins,
 	}
 
-	acc2 := auth.BaseAccount{
+	acc2 := &auth.BaseAccount{
 		Address: addr2,
 		Coins:   genCoins,
 	}
 
-	acc4 := auth.BaseAccount{
+	acc4 := &auth.BaseAccount{
 		Address: addr4,
 		Coins:   genCoins,
 	}
 
-	err = setGenesisAccounts(gapp, acc1, acc2, acc4)
+	err = setGenesis(gapp, acc1, acc2, acc4)
 	assert.Nil(t, err)
 
 	// CheckDeliver
@@ -321,12 +325,12 @@ func TestSendMsgDependent(t *testing.T) {
 	genCoins, err := sdk.ParseCoins("42foocoin")
 	require.Nil(t, err)
 
-	acc1 := auth.BaseAccount{
+	acc1 := &auth.BaseAccount{
 		Address: addr1,
 		Coins:   genCoins,
 	}
 
-	err = setGenesisAccounts(gapp, acc1)
+	err = setGenesis(gapp, acc1)
 	assert.Nil(t, err)
 
 	// CheckDeliver
@@ -349,12 +353,12 @@ func TestIBCMsgs(t *testing.T) {
 	sourceChain := "source-chain"
 	destChain := "dest-chain"
 
-	baseAcc := auth.BaseAccount{
+	baseAcc := &auth.BaseAccount{
 		Address: addr1,
 		Coins:   coins,
 	}
 
-	err := setGenesisAccounts(gapp, baseAcc)
+	err := setGenesis(gapp, baseAcc)
 	assert.Nil(t, err)
 	// A checkTx context (true)
 	ctxCheck := gapp.BaseApp.NewContext(true, abci.Header{})

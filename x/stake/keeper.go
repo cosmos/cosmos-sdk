@@ -2,7 +2,6 @@ package stake
 
 import (
 	"bytes"
-	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -32,17 +31,6 @@ func NewKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, ck bank.CoinK
 		codespace:  codespace,
 	}
 	return keeper
-}
-
-// InitGenesis - store genesis parameters
-func (k Keeper) InitGenesis(ctx sdk.Context, data json.RawMessage) error {
-	var state GenesisState
-	if err := json.Unmarshal(data, &state); err != nil {
-		return err
-	}
-	k.setPool(ctx, state.Pool)
-	k.setParams(ctx, state.Params)
-	return nil
 }
 
 //_________________________________________________________________________

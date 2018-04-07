@@ -35,6 +35,9 @@ type GaiaApp struct {
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
+	coinKeeper    bank.CoinKeeper
+	ibcMapper     ibc.IBCMapper
+	stakeKeeper   stake.Keeper
 }
 
 func NewGaiaApp(logger log.Logger, dbs map[string]dbm.DB) *GaiaApp {
@@ -55,18 +58,18 @@ func NewGaiaApp(logger log.Logger, dbs map[string]dbm.DB) *GaiaApp {
 	)
 
 	// add handlers
-	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
-	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
-	stakeKeeper := stake.NewKeeper(app.cdc, app.capKeyStakeStore, coinKeeper)
+	app.coinKeeper = bank.NewCoinKeeper(app.accountMapper)
+	app.ibcMapper = ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
+	app.stakeKeeper = stake.NewKeeper(app.cdc, app.capKeyStakeStore, app.coinKeeper)
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
-		AddRoute("stake", stake.NewHandler(stakeKeeper))
+		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
+		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
 
 	// initialize BaseApp
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
-	app.SetEndBlocker(stake.NewEndBlocker(stakeKeeper))
+	app.SetEndBlocker(stake.NewEndBlocker(app.stakeKeeper))
 	app.MountStoreWithDB(app.capKeyMainStore, sdk.StoreTypeIAVL, dbs["main"])
 	app.MountStoreWithDB(app.capKeyAccountStore, sdk.StoreTypeIAVL, dbs["acc"])
 	app.MountStoreWithDB(app.capKeyIBCStore, sdk.StoreTypeIAVL, dbs["ibc"])
@@ -150,9 +153,43 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		// return sdk.ErrGenesisParse("").TraceCause(err, "")
 	}
 
+	// load the accounts
 	for _, gacc := range genesisState.Accounts {
 		acc := gacc.ToAccount()
-		app.accountMapper.SetAccount(ctx, &acc)
+		app.accountMapper.SetAccount(ctx, acc)
 	}
+
+	// load the initial stake information
+	stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
+
 	return abci.ResponseInitChain{}
+}
+
+//__________________________________________________________
+
+// State to Unmarshal
+type GenesisState struct {
+	Accounts  []GenesisAccount `json:"accounts"`
+	StakeData json.RawMessage  `json:"stake"`
+}
+
+// GenesisAccount doesn't need pubkey or sequence
+type GenesisAccount struct {
+	Address sdk.Address `json:"address"`
+	Coins   sdk.Coins   `json:"coins"`
+}
+
+func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
+	return GenesisAccount{
+		Address: acc.Address,
+		Coins:   acc.Coins,
+	}
+}
+
+// convert GenesisAccount to GaiaAccount
+func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
+	return &auth.BaseAccount{
+		Address: ga.Address,
+		Coins:   ga.Coins.Sort(),
+	}
 }

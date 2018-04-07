@@ -7,6 +7,14 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
+// GenesisState - all staking state that must be provided at genesis
+type GenesisState struct {
+	Pool   Pool   `json:"pool"`
+	Params Params `json:"params"`
+}
+
+//_________________________________________________________________________
+
 // Params defines the high level settings for staking
 type Params struct {
 	InflationRateChange sdk.Rat `json:"inflation_rate_change"` // maximum annual change in inflation rate
@@ -31,13 +39,7 @@ type Pool struct {
 	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
 }
 
-// GenesisState - all staking state that must be provided at genesis
-type GenesisState struct {
-	Pool   Pool   `json:"pool"`
-	Params Params `json:"params"`
-}
-
-//_______________________________________________________________________________________________________
+//_________________________________________________________________________
 
 // CandidateStatus - status of a validator-candidate
 type CandidateStatus byte
@@ -64,6 +66,9 @@ type Candidate struct {
 	Liabilities sdk.Rat         `json:"liabilities"` // total shares issued to a candidate's delegators
 	Description Description     `json:"description"` // Description terms for the candidate
 }
+
+// Candidates - list of Candidates
+type Candidates []Candidate
 
 // NewCandidate - initialize a new candidate
 func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Description) Candidate {
@@ -148,11 +153,6 @@ func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
 		Power:  0,
 	}
 }
-
-//_________________________________________________________________________
-
-// Candidates - list of Candidates
-type Candidates []Candidate
 
 //_________________________________________________________________________
 

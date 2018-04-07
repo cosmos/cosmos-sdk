@@ -12,6 +12,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func TestInitGenesis(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, false, 0)
+	encoded := GetGenesisJSON()
+	err := InitGenesis(ctx, keeper, encoded)
+	require.Nil(t, err)
+	require.Equal(t, keeper.GetPool(ctx), initialPool())
+	require.Equal(t, keeper.GetParams(ctx), defaultParams())
+}
+
 //______________________________________________________________________
 
 func newTestMsgDeclareCandidacy(address sdk.Address, pubKey crypto.PubKey, amt int64) MsgDeclareCandidacy {

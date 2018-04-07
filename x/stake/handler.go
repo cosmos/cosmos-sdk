@@ -2,6 +2,7 @@ package stake
 
 import (
 	"bytes"
+	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/abci/types"
@@ -35,7 +36,7 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-//_______________________________________________
+//_____________________________________________________________________
 
 // NewEndBlocker generates sdk.EndBlocker
 // Performs tick functionality
@@ -44,6 +45,19 @@ func NewEndBlocker(k Keeper) sdk.EndBlocker {
 		res.ValidatorUpdates = k.Tick(ctx)
 		return
 	}
+}
+
+//_____________________________________________________________________
+
+// InitGenesis - store genesis parameters
+func InitGenesis(ctx sdk.Context, k Keeper, data json.RawMessage) error {
+	var state GenesisState
+	if err := json.Unmarshal(data, &state); err != nil {
+		return err
+	}
+	k.setPool(ctx, state.Pool)
+	k.setParams(ctx, state.Params)
+	return nil
 }
 
 //_____________________________________________________________________

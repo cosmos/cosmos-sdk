@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	abci "github.com/tendermint/abci/types"
-	oldwire "github.com/tendermint/go-wire"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -95,41 +94,25 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 }
 
 // custom tx codec
-// TODO: use new go-wire
 func MakeCodec() *wire.Codec {
-	const msgTypeSend = 0x1
-	const msgTypeIssue = 0x2
-	const msgTypeQuiz = 0x3
-	const msgTypeSetTrend = 0x4
-	const msgTypeMine = 0x5
-	const msgTypeIBCTransferMsg = 0x6
-	const msgTypeIBCReceiveMsg = 0x7
-	const msgTypeBondMsg = 0x8
-	const msgTypeUnbondMsg = 0x9
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Msg }{},
-		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
-		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
-		oldwire.ConcreteType{cool.QuizMsg{}, msgTypeQuiz},
-		oldwire.ConcreteType{cool.SetTrendMsg{}, msgTypeSetTrend},
-		oldwire.ConcreteType{pow.MineMsg{}, msgTypeMine},
-		oldwire.ConcreteType{ibc.IBCTransferMsg{}, msgTypeIBCTransferMsg},
-		oldwire.ConcreteType{ibc.IBCReceiveMsg{}, msgTypeIBCReceiveMsg},
-		oldwire.ConcreteType{simplestake.BondMsg{}, msgTypeBondMsg},
-		oldwire.ConcreteType{simplestake.UnbondMsg{}, msgTypeUnbondMsg},
-	)
+	var cdc = wire.NewCodec()
 
-	const accTypeApp = 0x1
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Account }{},
-		oldwire.ConcreteType{&types.AppAccount{}, accTypeApp},
-	)
-	cdc := wire.NewCodec()
+	// Register Msgs
+	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
+	cdc.RegisterConcrete(bank.SendMsg{}, "democoin/Send", nil)
+	cdc.RegisterConcrete(bank.IssueMsg{}, "democoin/Issue", nil)
+	cdc.RegisterConcrete(cool.QuizMsg{}, "democoin/Quiz", nil)
+	cdc.RegisterConcrete(cool.SetTrendMsg{}, "democoin/SetTrend", nil)
+	cdc.RegisterConcrete(pow.MineMsg{}, "democoin/Mine", nil)
+	cdc.RegisterConcrete(ibc.IBCTransferMsg{}, "democoin/IBCTransferMsg", nil)
+	cdc.RegisterConcrete(ibc.IBCReceiveMsg{}, "democoin/IBCReceiveMsg", nil)
+	cdc.RegisterConcrete(simplestake.BondMsg{}, "democoin/BondMsg", nil)
+	cdc.RegisterConcrete(simplestake.UnbondMsg{}, "democoin/UnbondMsg", nil)
 
-	// cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	// bank.RegisterWire(cdc)   // Register bank.[SendMsg,IssueMsg] types.
-	// crypto.RegisterWire(cdc) // Register crypto.[PubKey,PrivKey,Signature] types.
-	// ibc.RegisterWire(cdc) // Register ibc.[IBCTransferMsg, IBCReceiveMsg] types.
+	// Register AppAccount
+	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterConcrete(&types.AppAccount{}, "democoin/Account", nil)
+
 	return cdc
 }
 

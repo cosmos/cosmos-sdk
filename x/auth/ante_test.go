@@ -31,7 +31,7 @@ func newCoins() sdk.Coins {
 func privAndAddr() (crypto.PrivKey, sdk.Address) {
 	priv := crypto.GenPrivKeyEd25519()
 	addr := priv.PubKey().Address()
-	return priv.Wrap(), addr
+	return priv, addr
 }
 
 // run the tx through the anteHandler and ensure its valid
@@ -310,16 +310,16 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	msg = newTestMsg(addr2)
 	tx = newTestTx(ctx, msg, privs, seqs, fee)
 	sigs := tx.GetSignatures()
-	sigs[0].PubKey = crypto.PubKey{}
+	sigs[0].PubKey = nil
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInvalidPubKey)
 
 	acc2 = mapper.GetAccount(ctx, addr2)
-	assert.True(t, acc2.GetPubKey().Empty())
+	assert.Nil(t, acc2.GetPubKey())
 
 	// test invalid signature and public key
 	tx = newTestTx(ctx, msg, privs, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInvalidPubKey)
 
 	acc2 = mapper.GetAccount(ctx, addr2)
-	assert.True(t, acc2.GetPubKey().Empty())
+	assert.Nil(t, acc2.GetPubKey())
 }

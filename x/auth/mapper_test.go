@@ -6,8 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
-	oldwire "github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"
 
 	"github.com/cosmos/cosmos-sdk/store"
@@ -21,11 +19,13 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
 
+	/* XXX
 	// wire registration while we're at it ... TODO
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Account }{},
 		oldwire.ConcreteType{&BaseAccount{}, 0x1},
 	)
+	*/
 
 	return ms, capKey
 }
@@ -47,7 +47,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 	acc = mapper.NewAccountWithAddress(ctx, addr)
 	assert.NotNil(t, acc)
 	assert.Equal(t, addr, acc.GetAddress())
-	assert.EqualValues(t, crypto.PubKey{}, acc.GetPubKey())
+	assert.EqualValues(t, nil, acc.GetPubKey())
 	assert.EqualValues(t, 0, acc.GetSequence())
 
 	// NewAccount doesn't call Set, so it's still nil

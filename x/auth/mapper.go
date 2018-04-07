@@ -1,11 +1,8 @@
 package auth
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
-
-	oldwire "github.com/tendermint/go-wire"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -16,7 +13,7 @@ var _ sdk.AccountMapper = (*sealedAccountMapper)(nil)
 
 // Implements sdk.AccountMapper.
 // This AccountMapper encodes/decodes accounts using the
-// go-wire (binary) encoding/decoding library.
+// go-amino (binary) encoding/decoding library.
 type accountMapper struct {
 
 	// The (unexposed) key used to access the store from the Context.
@@ -30,7 +27,7 @@ type accountMapper struct {
 }
 
 // NewAccountMapper returns a new sdk.AccountMapper that
-// uses go-wire to (binary) encode and decode concrete sdk.Accounts.
+// uses go-amino to (binary) encode and decode concrete sdk.Accounts.
 func NewAccountMapper(key sdk.StoreKey, proto sdk.Account) accountMapper {
 	cdc := wire.NewCodec()
 	return accountMapper{
@@ -54,7 +51,7 @@ func NewAccountMapperSealed(key sdk.StoreKey, proto sdk.Account) sealedAccountMa
 	return am.Seal()
 }
 
-// Returns the go-wire codec.  You may need to register interfaces
+// Returns the go-amino codec.  You may need to register interfaces
 // and concrete types here, if your app's sdk.Account
 // implementation includes interface fields.
 // NOTE: It is not secure to expose the codec, so check out
@@ -103,7 +100,7 @@ type sealedAccountMapper struct {
 }
 
 // There's no way for external modules to mutate the
-// sam.accountMapper.ctx from here, even with reflection.
+// sam.accountMapper.cdc from here, even with reflection.
 func (sam sealedAccountMapper) WireCodec() *wire.Codec {
 	panic("accountMapper is sealed")
 }
@@ -152,34 +149,17 @@ func (am accountMapper) clonePrototype() sdk.Account {
 }
 
 func (am accountMapper) encodeAccount(acc sdk.Account) []byte {
-	bz, err := am.cdc.MarshalBinary(acc)
+	bz, err := am.cdc.MarshalBinaryBare(acc)
 	if err != nil {
 		panic(err)
 	}
 	return bz
 }
 
-func (am accountMapper) decodeAccount(bz []byte) sdk.Account {
-	// ... old go-wire ...
-	r, n, err := bytes.NewBuffer(bz), new(int), new(error)
-	accI := oldwire.ReadBinary(struct{ sdk.Account }{}, r, len(bz), n, err)
-	if *err != nil {
-		panic(*err)
+func (am accountMapper) decodeAccount(bz []byte) (acc sdk.Account) {
+	err := am.cdc.UnmarshalBinaryBare(bz, &acc)
+	if err != nil {
+		panic(err)
 	}
-
-	acc := accI.(struct{ sdk.Account }).Account
-	return acc
-
-	/*
-		accPtr := am.clonePrototypePtr()
-			err := am.cdc.UnmarshalBinary(bz, accPtr)
-			if err != nil {
-				panic(err)
-			}
-			if reflect.ValueOf(am.proto).Kind() == reflect.Ptr {
-				return reflect.ValueOf(accPtr).Interface().(sdk.Account)
-			} else {
-				return reflect.ValueOf(accPtr).Elem().Interface().(sdk.Account)
-			}
-	*/
+	return
 }

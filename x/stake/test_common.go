@@ -83,7 +83,7 @@ func subspace(prefix []byte) (start, end []byte) {
 	return prefix, end
 }
 
-func MakeCodec() *wire.Codec {
+func makeTestCodec() *wire.Codec {
 	var cdc = wire.NewCodec()
 
 	// Register Msgs
@@ -152,7 +152,7 @@ func newPubKey(pk string) (res crypto.PubKey) {
 	//res, err = crypto.PubKeyFromBytes(pkBytes)
 	var pkEd crypto.PubKeyEd25519
 	copy(pkEd[:], pkBytes[:])
-	return pkEd.Wrap()
+	return pkEd
 }
 
 // for incode address generation

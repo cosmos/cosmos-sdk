@@ -25,6 +25,7 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
+	pvm "github.com/tendermint/tendermint/types/priv_validator"
 	"github.com/tendermint/tmlibs/cli"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -341,7 +342,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	logger = log.NewFilter(logger, log.AllowError())
 	privValidatorFile := config.PrivValidatorFile()
-	privVal := tmtypes.LoadOrGenPrivValidatorFS(privValidatorFile)
+	privVal := pvm.LoadOrGenFilePV(privValidatorFile)
 	dbs := map[string]dbm.DB{
 		"main":    dbm.NewMemDB(),
 		"acc":     dbm.NewMemDB(),
@@ -370,7 +371,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	genDoc.AppStateJSON = stateBytes
+	genDoc.AppState = stateBytes
 
 	cdc := wire.NewCodec()
 

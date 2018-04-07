@@ -7,7 +7,6 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-crypto"
-	oldwire "github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"
 
 	"github.com/cosmos/cosmos-sdk/store"
@@ -37,35 +36,20 @@ func getCoins(ck bank.CoinKeeper, ctx sdk.Context, addr crypto.Address) (sdk.Coi
 	return ck.AddCoins(ctx, addr, zero)
 }
 
-// custom tx codec
-// TODO: use new go-wire
 func makeCodec() *wire.Codec {
+	var cdc = wire.NewCodec()
 
-	const msgTypeSend = 0x1
-	const msgTypeIssue = 0x2
-	const msgTypeQuiz = 0x3
-	const msgTypeSetTrend = 0x4
-	const msgTypeIBCTransferMsg = 0x5
-	const msgTypeIBCReceiveMsg = 0x6
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Msg }{},
-		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
-		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
-		oldwire.ConcreteType{IBCTransferMsg{}, msgTypeIBCTransferMsg},
-		oldwire.ConcreteType{IBCReceiveMsg{}, msgTypeIBCReceiveMsg},
-	)
+	// Register Msgs
+	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
+	cdc.RegisterConcrete(bank.SendMsg{}, "test/ibc/Send", nil)
+	cdc.RegisterConcrete(bank.IssueMsg{}, "test/ibc/Issue", nil)
+	cdc.RegisterConcrete(IBCTransferMsg{}, "test/ibc/IBCTransferMsg", nil)
+	cdc.RegisterConcrete(IBCReceiveMsg{}, "test/ibc/IBCReceiveMsg", nil)
 
-	const accTypeApp = 0x1
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Account }{},
-		oldwire.ConcreteType{&auth.BaseAccount{}, accTypeApp},
-	)
-	cdc := wire.NewCodec()
+	// Register AppAccount
+	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/ibc/Account", nil)
 
-	// cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	// bank.RegisterWire(cdc)   // Register bank.[SendMsg,IssueMsg] types.
-	// crypto.RegisterWire(cdc) // Register crypto.[PubKey,PrivKey,Signature] types.
-	// ibc.RegisterWire(cdc) // Register ibc.[IBCTransferMsg, IBCReceiveMsg] types.
 	return cdc
 }
 

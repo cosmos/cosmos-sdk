@@ -1,16 +1,17 @@
 package wire
 
 import (
-	"bytes"
-	"reflect"
-
 	"github.com/tendermint/go-amino"
+	"github.com/tendermint/go-crypto"
 )
 
 type Codec = amino.Codec
 
 func NewCodec() *Codec {
 	cdc := amino.NewCodec()
-	RegisterAmino(cdc)
 	return cdc
+}
+
+func RegisterCrypto(cdc *Codec) {
+	crypto.RegisterAmino(cdc)
 }

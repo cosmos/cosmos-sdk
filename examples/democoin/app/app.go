@@ -14,7 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
+	ibcm "github.com/cosmos/cosmos-sdk/x/ibc"
+	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	"github.com/cosmos/cosmos-sdk/x/simplestake"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
@@ -64,15 +65,17 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 	// add handlers
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper)
+	ibcKeeper := ibc.NewKeeper(app.cdc, app.capKeyIBCStore)
+	ibcKeeper.Dispatcher().
+		AddDispatch("bank", bank.NewIBCHandler(coinKeeper))
 	powKeeper := pow.NewKeeper(app.capKeyPowStore, pow.NewPowConfig("pow", int64(1)), coinKeeper)
-	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
 	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper)
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper)).
+		AddRoute("bank", bank.NewHandler(coinKeeper, ibcKeeper.Sender())).
 		AddRoute("cool", cool.NewHandler(coolKeeper)).
 		AddRoute("pow", powKeeper.Handler).
 		AddRoute("sketchy", sketchy.NewHandler()).
-		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
+		AddRoute("ibc", ibcm.NewHandler(ibcKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
 	// initialize BaseApp
@@ -98,23 +101,24 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 // TODO: use new go-wire
 func MakeCodec() *wire.Codec {
 	const msgTypeSend = 0x1
-	const msgTypeIssue = 0x2
-	const msgTypeQuiz = 0x3
-	const msgTypeSetTrend = 0x4
-	const msgTypeMine = 0x5
-	const msgTypeIBCTransferMsg = 0x6
-	const msgTypeIBCReceiveMsg = 0x7
-	const msgTypeBondMsg = 0x8
-	const msgTypeUnbondMsg = 0x9
+	const msgTypeIBCSend = 0x2
+	const msgTypeIssue = 0x3
+	const msgTypeQuiz = 0x4
+	const msgTypeSetTrend = 0x5
+	const msgTypeIBCReceiveMsg = 0x6
+	const msgTypeBondMsg = 0x7
+	const msgTypeUnbondMsg = 0x8
+	const msgTypeMine = 0x9
+	
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Msg }{},
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
+		oldwire.ConcreteType{bank.IBCSendMsg{}, msgTypeIBCSend},
 		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
 		oldwire.ConcreteType{cool.QuizMsg{}, msgTypeQuiz},
 		oldwire.ConcreteType{cool.SetTrendMsg{}, msgTypeSetTrend},
+		oldwire.ConcreteType{ibcm.ReceiveMsg{}, msgTypeIBCReceiveMsg},
 		oldwire.ConcreteType{pow.MineMsg{}, msgTypeMine},
-		oldwire.ConcreteType{ibc.IBCTransferMsg{}, msgTypeIBCTransferMsg},
-		oldwire.ConcreteType{ibc.IBCReceiveMsg{}, msgTypeIBCReceiveMsg},
 		oldwire.ConcreteType{simplestake.BondMsg{}, msgTypeBondMsg},
 		oldwire.ConcreteType{simplestake.UnbondMsg{}, msgTypeUnbondMsg},
 	)

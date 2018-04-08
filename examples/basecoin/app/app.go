@@ -14,7 +14,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
+
+	ibcm "github.com/cosmos/cosmos-sdk/x/ibc"
+	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	"github.com/cosmos/cosmos-sdk/x/simplestake"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
@@ -58,11 +60,15 @@ func NewBasecoinApp(logger log.Logger, dbs map[string]dbm.DB) *BasecoinApp {
 
 	// add handlers
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
-	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
+
+	ibcKeeper := ibc.NewKeeper(app.cdc, app.capKeyIBCStore)
+	ibcKeeper.Dispatcher().
+		AddDispatch("bank", bank.NewIBCHandler(coinKeeper))
+
 	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper)
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
+		AddRoute("bank", bank.NewHandler(coinKeeper, ibcKeeper.Sender())).
+		AddRoute("ibc", ibcm.NewHandler(ibcKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
 	// initialize BaseApp
@@ -87,19 +93,19 @@ func NewBasecoinApp(logger log.Logger, dbs map[string]dbm.DB) *BasecoinApp {
 // TODO: use new go-wire
 func MakeCodec() *wire.Codec {
 	const msgTypeSend = 0x1
-	const msgTypeIssue = 0x2
-	const msgTypeQuiz = 0x3
-	const msgTypeSetTrend = 0x4
-	const msgTypeIBCTransferMsg = 0x5
-	const msgTypeIBCReceiveMsg = 0x6
+	const msgTypeIBCSend = 0x2
+	const msgTypeIssue = 0x3
+	const msgTypeQuiz = 0x4
+	const msgTypeSetTrend = 0x5
+	const msgTypeReceive = 0x6
 	const msgTypeBondMsg = 0x7
 	const msgTypeUnbondMsg = 0x8
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Msg }{},
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
+		oldwire.ConcreteType{bank.IBCSendMsg{}, msgTypeIBCSend},
 		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
-		oldwire.ConcreteType{ibc.IBCTransferMsg{}, msgTypeIBCTransferMsg},
-		oldwire.ConcreteType{ibc.IBCReceiveMsg{}, msgTypeIBCReceiveMsg},
+		oldwire.ConcreteType{ibcm.ReceiveMsg{}, msgTypeReceive},
 		oldwire.ConcreteType{simplestake.BondMsg{}, msgTypeBondMsg},
 		oldwire.ConcreteType{simplestake.UnbondMsg{}, msgTypeUnbondMsg},
 	)
@@ -109,6 +115,13 @@ func MakeCodec() *wire.Codec {
 		struct{ sdk.Account }{},
 		oldwire.ConcreteType{&types.AppAccount{}, accTypeApp},
 	)
+
+	const payTypeSend = 0x1
+	var _ = oldwire.RegisterInterface(
+		struct{ ibc.Payload }{},
+		oldwire.ConcreteType{bank.SendPayload{}, payTypeSend},
+	)
+
 	cdc := wire.NewCodec()
 
 	// cdc.RegisterInterface((*sdk.Msg)(nil), nil)

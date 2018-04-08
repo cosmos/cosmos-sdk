@@ -6,69 +6,12 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-// --------------------------------
-// IBCPacket Tests
-
-func TestIBCPacketValidation(t *testing.T) {
-	cases := []struct {
-		valid  bool
-		packet IBCPacket
-	}{
-		{true, constructIBCPacket(true)},
-		{false, constructIBCPacket(false)},
-	}
-
-	for i, tc := range cases {
-		err := tc.packet.ValidateBasic()
-		if tc.valid {
-			assert.Nil(t, err, "%d: %+v", i, err)
-		} else {
-			assert.NotNil(t, err, "%d", i)
-		}
-	}
-}
-
-// -------------------------------
-// IBCTransferMsg Tests
-
-func TestIBCTransferMsg(t *testing.T) {
+func TestIBCReceiveMsgType(t *testing.T) {
 	packet := constructIBCPacket(true)
-	msg := IBCTransferMsg{packet}
-
-	assert.Equal(t, msg.Type(), "ibc")
-}
-
-func TestIBCTransferMsgValidation(t *testing.T) {
-	validPacket := constructIBCPacket(true)
-	invalidPacket := constructIBCPacket(false)
-
-	cases := []struct {
-		valid bool
-		msg   IBCTransferMsg
-	}{
-		{true, IBCTransferMsg{validPacket}},
-		{false, IBCTransferMsg{invalidPacket}},
-	}
-
-	for i, tc := range cases {
-		err := tc.msg.ValidateBasic()
-		if tc.valid {
-			assert.Nil(t, err, "%d: %+v", i, err)
-		} else {
-			assert.NotNil(t, err, "%d", i)
-		}
-	}
-}
-
-// -------------------------------
-// IBCReceiveMsg Tests
-
-func TestIBCReceiveMsg(t *testing.T) {
-	packet := constructIBCPacket(true)
-	msg := IBCReceiveMsg{packet, sdk.Address([]byte("relayer")), 0}
-
+	msg := constructReceiveMsg(packet)
 	assert.Equal(t, msg.Type(), "ibc")
 }
 
@@ -78,10 +21,10 @@ func TestIBCReceiveMsgValidation(t *testing.T) {
 
 	cases := []struct {
 		valid bool
-		msg   IBCReceiveMsg
+		msg   ReceiveMsg
 	}{
-		{true, IBCReceiveMsg{validPacket, sdk.Address([]byte("relayer")), 0}},
-		{false, IBCReceiveMsg{invalidPacket, sdk.Address([]byte("relayer")), 0}},
+		{true, constructReceiveMsg(validPacket)},
+		{false, constructReceiveMsg(invalidPacket)},
 	}
 
 	for i, tc := range cases {
@@ -94,19 +37,55 @@ func TestIBCReceiveMsgValidation(t *testing.T) {
 	}
 }
 
+func TestIBCReceiveMsgSigners(t *testing.T) {
+	packet := constructIBCPacket(true)
+	relayer := sdk.Address([]byte("relayer"))
+	msg := ReceiveMsg{
+		Packet:   packet,
+		Relayer:  relayer,
+		Sequence: 0,
+	}
+	assert.Equal(t, []sdk.Address{relayer}, msg.GetSigners())
+}
+
 // -------------------------------
 // Helpers
 
-func constructIBCPacket(valid bool) IBCPacket {
-	srcAddr := sdk.Address([]byte("source"))
-	destAddr := sdk.Address([]byte("destination"))
-	coins := sdk.Coins{{"atom", 10}}
+type myPayload struct {
+	valid bool
+}
+
+func (p myPayload) Type() string {
+	return "my"
+}
+
+func (p myPayload) ValidateBasic() sdk.Error {
+	if p.valid {
+		return nil
+	}
+	return sdk.NewError(42, "")
+}
+
+func (p myPayload) GetSigners() []sdk.Address {
+	return []sdk.Address{}
+}
+
+func constructIBCPacket(valid bool) ibc.Packet {
 	srcChain := "source-chain"
 	destChain := "dest-chain"
 
-	if valid {
-		return NewIBCPacket(srcAddr, destAddr, coins, srcChain, destChain)
-	} else {
-		return NewIBCPacket(srcAddr, destAddr, coins, srcChain, srcChain)
+	return ibc.Packet{
+		Payload:   myPayload{valid},
+		SrcChain:  srcChain,
+		DestChain: destChain,
 	}
+}
+
+func constructReceiveMsg(packet ibc.Packet) ReceiveMsg {
+	return ReceiveMsg{
+		Packet:   packet,
+		Relayer:  sdk.Address([]byte("relayer")),
+		Sequence: 0,
+	}
+
 }

@@ -15,11 +15,6 @@ import (
 	cryptokeys "github.com/tendermint/go-crypto/keys"
 )
 
-const (
-	flagTo     = "to"
-	flagAmount = "amount"
-)
-
 // SendTxCommand will create a send tx and sign it with the given key
 func SendTxCmd(Cdc *wire.Codec) *cobra.Command {
 	cmdr := Commander{Cdc}

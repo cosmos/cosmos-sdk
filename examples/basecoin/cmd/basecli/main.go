@@ -56,10 +56,7 @@ func main() {
 	rootCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
-			ibccmd.IBCTransferCmd(cdc),
+			bankcmd.IBCSendCmd(cdc),
 		)...)
 	rootCmd.AddCommand(
 		client.PostCommands(

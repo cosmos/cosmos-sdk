@@ -1,113 +1,45 @@
 package ibc
 
 import (
+	"encoding/json"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	wire "github.com/cosmos/cosmos-sdk/wire"
+	types "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
-
-// ------------------------------
-// IBCPacket
-
-// IBCPacket defines a piece of data that can be send between two separate
-// blockchains.
-type IBCPacket struct {
-	SrcAddr   sdk.Address
-	DestAddr  sdk.Address
-	Coins     sdk.Coins
-	SrcChain  string
-	DestChain string
-}
-
-func NewIBCPacket(srcAddr sdk.Address, destAddr sdk.Address, coins sdk.Coins,
-	srcChain string, destChain string) IBCPacket {
-
-	return IBCPacket{
-		SrcAddr:   srcAddr,
-		DestAddr:  destAddr,
-		Coins:     coins,
-		SrcChain:  srcChain,
-		DestChain: destChain,
-	}
-}
-
-func (ibcp IBCPacket) ValidateBasic() sdk.Error {
-	if ibcp.SrcChain == ibcp.DestChain {
-		return ErrIdenticalChains().Trace("")
-	}
-	if !ibcp.Coins.IsValid() {
-		return sdk.ErrInvalidCoins("")
-	}
-	return nil
-}
-
-// ----------------------------------
-// IBCTransferMsg
-
-// IBCTransferMsg defines how another module can send an IBCPacket.
-type IBCTransferMsg struct {
-	IBCPacket
-}
-
-func (msg IBCTransferMsg) Type() string {
-	return "ibc"
-}
-
-func (msg IBCTransferMsg) Get(key interface{}) interface{} {
-	return nil
-}
-
-func (msg IBCTransferMsg) GetSignBytes() []byte {
-	cdc := wire.NewCodec()
-	bz, err := cdc.MarshalBinary(msg)
-	if err != nil {
-		panic(err)
-	}
-	return bz
-}
-
-func (msg IBCTransferMsg) ValidateBasic() sdk.Error {
-	return msg.IBCPacket.ValidateBasic()
-}
-
-// x/bank/tx.go SendMsg.GetSigners()
-func (msg IBCTransferMsg) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.SrcAddr}
-}
 
 // ----------------------------------
 // IBCReceiveMsg
 
 // IBCReceiveMsg defines the message that a relayer uses to post an IBCPacket
 // to the destination chain.
-type IBCReceiveMsg struct {
-	IBCPacket
+type ReceiveMsg struct {
+	types.Packet
 	Relayer  sdk.Address
 	Sequence int64
 }
 
-func (msg IBCReceiveMsg) Type() string {
+func (msg ReceiveMsg) Type() string {
 	return "ibc"
 }
 
-func (msg IBCReceiveMsg) Get(key interface{}) interface{} {
+func (msg ReceiveMsg) Get(key interface{}) interface{} {
 	return nil
 }
 
-func (msg IBCReceiveMsg) GetSignBytes() []byte {
-	cdc := wire.NewCodec()
-	bz, err := cdc.MarshalBinary(msg)
+func (msg ReceiveMsg) GetSignBytes() []byte {
+	bz, err := json.Marshal(msg)
 	if err != nil {
 		panic(err)
 	}
 	return bz
 }
 
-func (msg IBCReceiveMsg) ValidateBasic() sdk.Error {
-	return msg.IBCPacket.ValidateBasic()
+func (msg ReceiveMsg) ValidateBasic() sdk.Error {
+	return msg.Packet.ValidateBasic()
 }
 
 // x/bank/tx.go SendMsg.GetSigners()
-func (msg IBCReceiveMsg) GetSigners() []sdk.Address {
+func (msg ReceiveMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Relayer}
 }

@@ -13,7 +13,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
+	ibcm "github.com/cosmos/cosmos-sdk/x/ibc"
+	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
 
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
@@ -380,9 +381,6 @@ func TestQuizMsg(t *testing.T) {
 func TestIBCMsgs(t *testing.T) {
 	bapp := newBasecoinApp()
 
-	sourceChain := "source-chain"
-	destChain := "dest-chain"
-
 	baseAcc := auth.BaseAccount{
 		Address: addr1,
 		Coins:   coins,
@@ -395,23 +393,29 @@ func TestIBCMsgs(t *testing.T) {
 	ctxCheck := bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 := bapp.accountMapper.GetAccount(ctxCheck, addr1)
 	assert.Equal(t, acc1, res1)
+	chainid := ctxCheck.ChainID()
 
-	packet := ibc.IBCPacket{
-		SrcAddr:   addr1,
-		DestAddr:  addr1,
-		Coins:     coins,
-		SrcChain:  sourceChain,
-		DestChain: destChain,
+	payload := bank.SendPayload{
+		SrcAddr:  addr1,
+		DestAddr: addr1,
+		Coins:    coins,
 	}
 
-	transferMsg := ibc.IBCTransferMsg{
-		IBCPacket: packet,
+	transferMsg := bank.IBCSendMsg{
+		DestChain:   chainid,
+		SendPayload: payload,
 	}
 
-	receiveMsg := ibc.IBCReceiveMsg{
-		IBCPacket: packet,
-		Relayer:   addr1,
-		Sequence:  0,
+	packet := ibc.Packet{
+		Payload:   payload,
+		SrcChain:  chainid,
+		DestChain: chainid,
+	}
+
+	receiveMsg := ibcm.ReceiveMsg{
+		Packet:   packet,
+		Relayer:  addr1,
+		Sequence: 0,
 	}
 
 	SignCheckDeliver(t, bapp, transferMsg, []int64{0}, true, priv1)

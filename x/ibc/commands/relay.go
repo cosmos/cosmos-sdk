@@ -9,13 +9,15 @@ import (
 
 	"github.com/tendermint/tmlibs/log"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
+	ibcm "github.com/cosmos/cosmos-sdk/x/ibc"
+	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -59,6 +61,7 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 	cmd.MarkFlagRequired(FlagFromChainNode)
 	cmd.MarkFlagRequired(FlagToChainID)
 	cmd.MarkFlagRequired(FlagToChainNode)
+	cmd.MarkFlagRequired(client.FlagChainID)
 
 	viper.BindPFlag(FlagFromChainID, cmd.Flags().Lookup(FlagFromChainID))
 	viper.BindPFlag(FlagFromChainNode, cmd.Flags().Lookup(FlagFromChainNode))
@@ -132,7 +135,7 @@ OUTER:
 				continue OUTER
 			}
 
-			err = c.broadcastTx(seq, toChainNode, c.refine(egressbz, i, passphrase))
+			err = c.broadcastTx(toChainNode, c.refine(egressbz, i, seq, passphrase))
 			seq++
 			if err != nil {
 				c.logger.Error("Error broadcasting ingress packet", "err", err)
@@ -148,8 +151,8 @@ func query(node string, key []byte, storeName string) (res []byte, err error) {
 	return context.NewCoreContextFromViper().WithNodeURI(node).Query(key, storeName)
 }
 
-func (c relayCommander) broadcastTx(seq int64, node string, tx []byte) error {
-	_, err := context.NewCoreContextFromViper().WithNodeURI(node).WithSequence(seq + 1).BroadcastTx(tx)
+func (c relayCommander) broadcastTx(node string, tx []byte) error {
+	_, err := context.NewCoreContextFromViper().WithNodeURI(node).BroadcastTx(tx)
 	return err
 }
 
@@ -167,19 +170,19 @@ func (c relayCommander) getSequence(node string) int64 {
 	return account.GetSequence()
 }
 
-func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []byte {
-	var packet ibc.IBCPacket
+func (c relayCommander) refine(bz []byte, packetSeq int64, txSeq int64, passphrase string) []byte {
+	var packet ibc.Packet
 	if err := c.cdc.UnmarshalBinary(bz, &packet); err != nil {
 		panic(err)
 	}
 
-	msg := ibc.IBCReceiveMsg{
-		IBCPacket: packet,
-		Relayer:   c.address,
-		Sequence:  sequence,
+	msg := ibcm.ReceiveMsg{
+		Packet:   packet,
+		Relayer:  c.address,
+		Sequence: packetSeq,
 	}
 
-	ctx := context.NewCoreContextFromViper()
+	ctx := context.NewCoreContextFromViper().WithSequence(txSeq)
 	res, err := ctx.SignAndBuild(ctx.FromAddressName, passphrase, msg, c.cdc)
 	if err != nil {
 		panic(err)

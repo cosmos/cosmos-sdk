@@ -22,7 +22,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	ibcm "github.com/cosmos/cosmos-sdk/x/ibc"
 	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -34,15 +33,20 @@ type relayCommander struct {
 	mainStore string
 	ibcStore  string
 
+	fromChainID   string
+	fromChainNode string
+	toChainID     string
+	toChainNode   string
+
 	logger log.Logger
 }
 
-func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
+func IBCRelayCmd(mainStore, ibcStore string, cdc *wire.Codec, dec sdk.AccountDecoder) *cobra.Command {
 	cmdr := relayCommander{
 		cdc:       cdc,
-		decoder:   authcmd.GetAccountDecoder(cdc),
-		ibcStore:  "ibc",
-		mainStore: "main",
+		decoder:   dec,
+		ibcStore:  ibcStore,
+		mainStore: mainStore,
 
 		logger: log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
 	}
@@ -72,20 +76,20 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 }
 
 func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
-	fromChainID := viper.GetString(FlagFromChainID)
-	fromChainNode := viper.GetString(FlagFromChainNode)
-	toChainID := viper.GetString(FlagToChainID)
-	toChainNode := viper.GetString(FlagToChainNode)
+	c.fromChainID = viper.GetString(FlagFromChainID)
+	c.fromChainNode = viper.GetString(FlagFromChainNode)
+	c.toChainID = viper.GetString(FlagToChainID)
+	c.toChainNode = viper.GetString(FlagToChainNode)
 	address, err := context.NewCoreContextFromViper().GetFromAddress()
 	if err != nil {
 		panic(err)
 	}
 	c.address = address
 
-	c.loop(fromChainID, fromChainNode, toChainID, toChainNode)
+	c.loop()
 }
 
-func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
+func (c relayCommander) loop() {
 	ctx := context.NewCoreContextFromViper()
 	// get password
 	passphrase, err := ctx.GetPassphraseFromStdin(ctx.FromAddressName)
@@ -93,12 +97,12 @@ func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode 
 		panic(err)
 	}
 
-	ingressKey := ibcm.IngressSequenceKey(fromChainID)
+	ingressKey := ibcm.IngressSequenceKey(c.fromChainID)
 OUTER:
 	for {
 		time.Sleep(5 * time.Second)
 
-		processedbz, err := query(toChainNode, ingressKey, c.ibcStore)
+		processedbz, err := query(c.toChainNode, ingressKey, c.ibcStore)
 		if err != nil {
 			panic(err)
 		}
@@ -110,8 +114,8 @@ OUTER:
 			panic(err)
 		}
 
-		lengthKey := ibcm.EgressLengthKey(toChainID)
-		egressLengthbz, err := query(fromChainNode, lengthKey, c.ibcStore)
+		lengthKey := ibcm.EgressLengthKey(c.toChainID)
+		egressLengthbz, err := query(c.fromChainNode, lengthKey, c.ibcStore)
 		if err != nil {
 			c.logger.Error("Error querying outgoing packet list length", "err", err)
 			continue OUTER
@@ -126,11 +130,11 @@ OUTER:
 			c.logger.Info("Detected IBC packet", "number", egressLength-1)
 		}
 
-		seq := c.getSequence(toChainNode)
+		seq := c.getSequence(c.toChainNode)
 
 		for i := processed; i < egressLength; i++ {
 
-			egressbz, proofbz, height, err := queryWithProof(fromChainNode, ibcm.EgressKey(toChainID, i), c.ibcStore)
+			egressbz, proofbz, height, err := queryWithProof(c.fromChainNode, ibcm.EgressKey(c.toChainID, i), c.ibcStore)
 			if err != nil {
 				c.logger.Error("Error querying egress packet", "err", err)
 				continue OUTER
@@ -151,9 +155,10 @@ OUTER:
 					}
 				}
 			*/
-			err = c.broadcastTx(toChainNode, c.refine(egressbz, proofbz, height, i, seq, passphrase))
+			viper.Set(client.FlagSequence, seq)
 			seq++
 
+			err = c.broadcastTx(c.toChainNode, c.refine(egressbz, proofbz, height+1, i, passphrase))
 			if err != nil {
 				c.logger.Error("Error broadcasting ingress packet", "err", err)
 				continue OUTER
@@ -164,23 +169,22 @@ OUTER:
 	}
 }
 
-func update() error {
-	commit, err := getCommit(fromChainNode, height+1)
+func (c relayCommander) update(height int64) error {
+	commit, err := getCommit(c.fromChainNode, height+1)
 	if err != nil {
-		fmt.Printf("Error querying commit: '%s'\n", err)
-		continue OUTER
+		return fmt.Errorf("Error querying commit: '%s'\n", err)
 	}
 	fmt.Printf("Commit: %+v\nHeight: %+v\n", commit.Header.AppHash.Bytes(), commit.Header.Height)
 	_ = ibcm.UpdateChannelMsg{
-		SrcChain: fromChainID,
+		SrcChain: c.fromChainID,
 		Commit:   commit,
 		Signer:   c.address,
 	}
 	//name := viper.GetString(client.FlagName)
-	viper.Set(client.FlagSequence, seq)
-	seq++
+
 	//_, err = builder.SignBuildBroadcast(name, passphrase, msg, c.cdc)
 
+	return nil
 }
 
 func query(node string, key []byte, storeName string) (res []byte, err error) {
@@ -230,8 +234,14 @@ func (c relayCommander) getSequence(node string) int64 {
 
 	return account.GetSequence()
 }
-func (c relayCommander) refine(bz []byte, pbz []byte, height int64, packetSeq int64, txSeq int64, passphrase string) []byte {
+
+func setSequence(seq int64) {
+	viper.Set(client.FlagSequence, seq)
+}
+
+func (c relayCommander) refine(bz []byte, pbz []byte, sequence int64, height int64, passphrase string) []byte {
 	var packet ibc.Packet
+
 	if err := c.cdc.UnmarshalBinary(bz, &packet); err != nil {
 		panic(err)
 	}
@@ -254,14 +264,20 @@ func (c relayCommander) refine(bz []byte, pbz []byte, height int64, packetSeq in
 		Proof:    eproof,
 		Height:   height,
 		Relayer:  c.address,
-		Sequence: packetSeq,
+		Sequence: sequence,
 	}
 
-	ctx := context.NewCoreContextFromViper().WithSequence(txSeq)
-	res, err := ctx.SignAndBuild(ctx.FromAddressName, passphrase, msg, c.cdc)
+	name := viper.GetString(client.FlagName)
+
+	orig := viper.GetString(client.FlagChainID)
+	viper.Set(client.FlagChainID, c.toChainID)
+	res, err := context.NewCoreContextFromViper().WithChainID(c.toChainID).SignAndBuild(name, passphrase, msg, c.cdc)
+
 	if err != nil {
 		panic(err)
 	}
+	viper.Set(client.FlagChainID, orig)
+
 	return res
 }
 

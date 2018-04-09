@@ -197,7 +197,7 @@ func addGenesisState(filename string, appState json.RawMessage) error {
 	}
 
 	var doc GenesisDoc
-	err = json.Unmarshal(bz, &doc)
+	err = cdc.UnmarshalJSON(bz, &doc)
 	if err != nil {
 		return err
 	}

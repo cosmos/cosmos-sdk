@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/pow"
 	"github.com/cosmos/cosmos-sdk/wire"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 )
 
 func MineCmd(cdc *wire.Codec) *cobra.Command {
@@ -24,7 +25,7 @@ func MineCmd(cdc *wire.Codec) *cobra.Command {
 
 			// get from address and parse arguments
 
-			ctx := context.NewCoreContextFromViper()
+			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			from, err := ctx.GetFromAddress()
 			if err != nil {
@@ -52,6 +53,12 @@ func MineCmd(cdc *wire.Codec) *cobra.Command {
 
 			// get account name
 			name := ctx.FromAddressName
+
+			// default to next sequence number if none provided
+			ctx, err = context.AutoSequence(ctx)
+			if err != nil {
+				return err
+			}
 
 			// build and sign the transaction, then broadcast to Tendermint
 			res, err := ctx.SignBuildBroadcast(name, msg, cdc)

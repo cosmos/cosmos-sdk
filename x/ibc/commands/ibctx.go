@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
@@ -39,7 +40,7 @@ type sendCommander struct {
 }
 
 func (c sendCommander) sendIBCTransfer(cmd *cobra.Command, args []string) error {
-	ctx := context.NewCoreContextFromViper()
+	ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(c.cdc))
 
 	// get the from address
 	from, err := ctx.GetFromAddress()
@@ -49,6 +50,12 @@ func (c sendCommander) sendIBCTransfer(cmd *cobra.Command, args []string) error 
 
 	// build the message
 	msg, err := buildMsg(from)
+	if err != nil {
+		return err
+	}
+
+	// default to next sequence number if none provided
+	ctx, err = context.AutoSequence(ctx)
 	if err != nil {
 		return err
 	}

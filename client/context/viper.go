@@ -51,15 +51,17 @@ func NewCoreContextFromViper() core.CoreContext {
 
 // Automatically set sequence number
 func AutoSequence(ctx core.CoreContext) (core.CoreContext, error) {
-	from, err := ctx.GetFromAddress()
-	if err != nil {
-		return ctx, err
+	if !viper.IsSet(client.FlagSequence) {
+		from, err := ctx.GetFromAddress()
+		if err != nil {
+			return ctx, err
+		}
+		seq, err := ctx.NextSequence(from)
+		if err != nil {
+			return ctx, err
+		}
+		fmt.Printf("Defaulting to next sequence number: %d\n", seq)
+		ctx = ctx.WithSequence(seq)
 	}
-	seq, err := ctx.NextSequence(from)
-	if err != nil {
-		return ctx, err
-	}
-	fmt.Printf("Defaulting to next sequence number: %d\n", seq)
-	ctx = ctx.WithSequence(seq)
 	return ctx, nil
 }

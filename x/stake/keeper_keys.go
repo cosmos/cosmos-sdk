@@ -34,8 +34,8 @@ func GetCandidateKey(addr sdk.Address) []byte {
 // get the key for the validator used in the power-store
 func GetValidatorKey(addr sdk.Address, power sdk.Rat, height int64, cdc *wire.Codec) []byte {
 	powerBytes := []byte(power.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
-	heightBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(heightBytes, uint64(height)) // height little-endian (older validators first)
+	heightBytes := make([]byte, binary.MaxVarintLen64)
+	binary.BigEndian.PutUint64(heightBytes, ^uint64(height)) // invert height (older validators first)
 	return append(ValidatorsKey, append(powerBytes, append(heightBytes, addr.Bytes()...)...)...)
 }
 

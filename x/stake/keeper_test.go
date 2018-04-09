@@ -243,6 +243,47 @@ func TestGetValidators(t *testing.T) {
 	assert.Equal(t, sdk.NewRat(300), validators[0].Power, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
 
+	// test equal voting power, different age
+	candidates[3].Assets = sdk.NewRat(200)
+	ctx = ctx.WithBlockHeight(10)
+	keeper.setCandidate(ctx, candidates[3])
+	validators = keeper.GetValidators(ctx)
+	require.Equal(t, len(validators), n)
+	assert.Equal(t, sdk.NewRat(200), validators[0].Power, "%v", validators)
+	assert.Equal(t, sdk.NewRat(200), validators[1].Power, "%v", validators)
+	assert.Equal(t, candidates[4].Address, validators[0].Address, "%v", validators)
+	assert.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
+	assert.Equal(t, int64(0), validators[0].Height, "%v", validators)
+	assert.Equal(t, int64(10), validators[1].Height, "%v", validators)
+
+	// no change in voting power - no change in sort
+	ctx = ctx.WithBlockHeight(20)
+	keeper.setCandidate(ctx, candidates[4])
+	validators = keeper.GetValidators(ctx)
+	require.Equal(t, len(validators), n)
+	assert.Equal(t, candidates[4].Address, validators[0].Address, "%v", validators)
+	assert.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
+
+	// change in voting power of both candidates, ages swapped
+	candidates[3].Assets = sdk.NewRat(300)
+	candidates[4].Assets = sdk.NewRat(300)
+	keeper.setCandidate(ctx, candidates[3])
+	validators = keeper.GetValidators(ctx)
+	require.Equal(t, len(validators), n)
+	ctx = ctx.WithBlockHeight(30)
+	keeper.setCandidate(ctx, candidates[4])
+	validators = keeper.GetValidators(ctx)
+	require.Equal(t, len(validators), n, "%v", validators)
+	assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
+	assert.Equal(t, candidates[4].Address, validators[1].Address, "%v", validators)
+
+	// reset assets / heights
+	candidates[3].Assets = sdk.NewRat(300)
+	candidates[4].Assets = sdk.NewRat(200)
+	ctx = ctx.WithBlockHeight(0)
+	keeper.setCandidate(ctx, candidates[3])
+	keeper.setCandidate(ctx, candidates[4])
+
 	// test a swap in voting power
 	candidates[0].Assets = sdk.NewRat(600)
 	keeper.setCandidate(ctx, candidates[0])

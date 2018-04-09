@@ -80,11 +80,28 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	// retreive the old candidate record
 	oldCandidate, oldFound := k.GetCandidate(ctx, address)
 
-	// update the validator block height (will only get written if stake has changed)
-	candidate.ValidatorHeight = ctx.BlockHeight()
-
 	// marshal the candidate record and add to the state
 	bz, err := k.cdc.MarshalBinary(candidate)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(GetCandidateKey(candidate.Address), bz)
+
+	// if the voting power is the same no need to update any of the other indexes
+	if oldFound && oldCandidate.Assets.Equal(candidate.Assets) {
+		return
+	}
+
+	// update the list ordered by voting power
+	if oldFound {
+		store.Delete(GetValidatorKey(address, oldCandidate.Assets, oldCandidate.ValidatorHeight, k.cdc))
+	}
+
+	// update the validator block height
+	candidate.ValidatorHeight = ctx.BlockHeight()
+
+	// update the candidate record
+	bz, err = k.cdc.MarshalBinary(candidate)
 	if err != nil {
 		panic(err)
 	}
@@ -97,15 +114,6 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 		panic(err)
 	}
 
-	// if the voting power is the same no need to update any of the other indexes
-	if oldFound && oldCandidate.Assets.Equal(candidate.Assets) {
-		return
-	}
-
-	// update the list ordered by voting power
-	if oldFound {
-		store.Delete(GetValidatorKey(address, oldCandidate.Assets, oldCandidate.ValidatorHeight, k.cdc))
-	}
 	store.Set(GetValidatorKey(address, validator.Power, validator.Height, k.cdc), bz)
 
 	// add to the validators to update list if is already a validator

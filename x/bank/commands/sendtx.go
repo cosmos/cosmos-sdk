@@ -7,12 +7,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	cryptokeys "github.com/tendermint/go-crypto/keys"
 )
 
 const (
@@ -79,30 +77,4 @@ func BuildMsg(from sdk.Address, to sdk.Address, coins sdk.Coins) sdk.Msg {
 	output := bank.NewOutput(to, coins)
 	msg := bank.NewSendMsg([]bank.Input{input}, []bank.Output{output})
 	return msg
-}
-
-func (c Commander) SignMessage(msg sdk.Msg, kb cryptokeys.Keybase, accountName string, password string) ([]byte, error) {
-	// sign and build
-	bz := msg.GetSignBytes()
-	sig, pubkey, err := kb.Sign(accountName, password, bz)
-	if err != nil {
-		return nil, err
-	}
-	sigs := []sdk.StdSignature{{
-		PubKey:    pubkey,
-		Signature: sig,
-		Sequence:  viper.GetInt64(client.FlagName),
-	}}
-
-	// TODO: fees
-	var fee sdk.StdFee
-
-	// marshal bytes
-	tx := sdk.NewStdTx(msg, fee, sigs)
-
-	txBytes, err := c.Cdc.MarshalBinary(tx)
-	if err != nil {
-		return nil, err
-	}
-	return txBytes, nil
 }

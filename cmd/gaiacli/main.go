@@ -17,9 +17,9 @@ const (
 	flagFee    = "fee"
 )
 
-// gaiacliCmd is the entry point for this binary
+// rootCmd is the entry point for this binary
 var (
-	gaiacliCmd = &cobra.Command{
+	rootCmd = &cobra.Command{
 		Use:   "gaiacli",
 		Short: "Gaia light-client",
 	}
@@ -54,16 +54,16 @@ func main() {
 	cobra.EnableCommandSorting = false
 
 	// generic client commands
-	AddClientCommands(gaiacliCmd)
+	AddClientCommands(rootCmd)
 	// query commands (custom to binary)
-	gaiacliCmd.AddCommand(
+	rootCmd.AddCommand(
 		GetCommands(getAccountCmd)...)
 	// post tx commands (custom to binary)
-	gaiacliCmd.AddCommand(
+	rootCmd.AddCommand(
 		PostCommands(postSendCommand())...)
 
 	// add proxy, version and key info
-	gaiacliCmd.AddCommand(
+	rootCmd.AddCommand(
 		lineBreak,
 		serveCommand(),
 		KeyCommands(),
@@ -72,6 +72,6 @@ func main() {
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareBaseCmd(gaiacliCmd, "GA", os.ExpandEnv("$HOME/.gaiacli"))
+	executor := cli.PrepareBaseCmd(rootCmd, "GA", os.ExpandEnv("$HOME/.gaiacli"))
 	executor.Execute()
 }

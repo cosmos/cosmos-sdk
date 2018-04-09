@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/builder"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -38,8 +38,10 @@ type Commander struct {
 }
 
 func (c Commander) sendTxCmd(cmd *cobra.Command, args []string) error {
+	ctx := context.NewCoreContextFromViper()
+
 	// get the from address
-	from, err := builder.GetFromAddress()
+	from, err := ctx.GetFromAddress()
 	if err != nil {
 		return err
 	}
@@ -59,14 +61,11 @@ func (c Commander) sendTxCmd(cmd *cobra.Command, args []string) error {
 	}
 	to := sdk.Address(bz)
 
-	// get account name
-	name := viper.GetString(client.FlagName)
-
 	// build message
 	msg := BuildMsg(from, to, coins)
 
 	// build and sign the transaction, then broadcast to Tendermint
-	res, err := builder.SignBuildBroadcast(name, msg, c.Cdc)
+	res, err := ctx.SignBuildBroadcast(ctx.FromAddressName, msg, c.Cdc)
 	if err != nil {
 		return err
 	}

@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	abci "github.com/tendermint/abci/types"
-	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
@@ -39,7 +38,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 
 	// Set a handler Route.
-	baseApp.Router().AddRoute("kvstore", KVStoreHandler(capKeyMainStore), nil)
+	baseApp.Router().AddRoute("kvstore", KVStoreHandler(capKeyMainStore))
 
 	// Load latest version.
 	if err := baseApp.LoadLatestVersion(capKeyMainStore); err != nil {
@@ -107,7 +106,7 @@ func InitChainer(key sdk.StoreKey) func(sdk.Context, abci.RequestInitChain) abci
 // GenInitOptions can be passed into InitCmd,
 // returns a static string of a few key-values that can be parsed
 // by InitChainer
-func GenInitOptions(args []string) (json.RawMessage, string, cmn.HexBytes, error) {
+func GenInitOptions(args []string, addr sdk.Address, coinDenom string) (json.RawMessage, error) {
 	opts := []byte(`{
   "values": [
     {
@@ -120,5 +119,5 @@ func GenInitOptions(args []string) (json.RawMessage, string, cmn.HexBytes, error
     }
   ]
 }`)
-	return opts, "", nil, nil
+	return opts, nil
 }

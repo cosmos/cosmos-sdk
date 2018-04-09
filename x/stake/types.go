@@ -2,6 +2,8 @@ package stake
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
+	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -14,19 +16,6 @@ type Params struct {
 
 	MaxValidators uint16 `json:"max_validators"` // maximum number of validators
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
-}
-
-// XXX do we want to allow for default params even or do we want to enforce that you
-// need to be explicit about defining all params in genesis?
-func defaultParams() Params {
-	return Params{
-		InflationRateChange: sdk.NewRat(13, 100),
-		InflationMax:        sdk.NewRat(20, 100),
-		InflationMin:        sdk.NewRat(7, 100),
-		GoalBonded:          sdk.NewRat(67, 100),
-		MaxValidators:       100,
-		BondDenom:           "fermion",
-	}
 }
 
 //_________________________________________________________________________
@@ -42,42 +31,10 @@ type Pool struct {
 	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
 }
 
-// XXX define globalstate interface?
-
-func initialPool() Pool {
-	return Pool{
-		TotalSupply:       0,
-		BondedShares:      sdk.ZeroRat,
-		UnbondedShares:    sdk.ZeroRat,
-		BondedPool:        0,
-		UnbondedPool:      0,
-		InflationLastTime: 0,
-		Inflation:         sdk.NewRat(7, 100),
-	}
-}
-
-// get the bond ratio of the global state
-func (p Pool) bondedRatio() sdk.Rat {
-	if p.TotalSupply > 0 {
-		return sdk.NewRat(p.BondedPool, p.TotalSupply)
-	}
-	return sdk.ZeroRat
-}
-
-// get the exchange rate of bonded token per issued share
-func (p Pool) bondedShareExRate() sdk.Rat {
-	if p.BondedShares.IsZero() {
-		return sdk.OneRat
-	}
-	return sdk.NewRat(p.BondedPool).Quo(p.BondedShares)
-}
-
-// get the exchange rate of unbonded tokens held in candidates per issued share
-func (p Pool) unbondedShareExRate() sdk.Rat {
-	if p.UnbondedShares.IsZero() {
-		return sdk.OneRat
-	}
-	return sdk.NewRat(p.UnbondedPool).Quo(p.UnbondedShares)
+// GenesisState - all staking state that must be provided at genesis
+type GenesisState struct {
+	Pool   Pool   `json:"pool"`
+	Params Params `json:"params"`
 }
 
 //_______________________________________________________________________________________________________
@@ -149,8 +106,9 @@ func (c Candidate) delegatorShareExRate() sdk.Rat {
 // Should only be called when the Candidate qualifies as a validator.
 func (c Candidate) validator() Validator {
 	return Validator{
-		Address:     c.Address, // XXX !!!
-		VotingPower: c.Assets,
+		Address: c.Address,
+		PubKey:  c.PubKey,
+		Power:   c.Assets,
 	}
 }
 
@@ -161,23 +119,35 @@ func (c Candidate) validator() Validator {
 
 // Validator is one of the top Candidates
 type Validator struct {
-	Address     sdk.Address `json:"address"`      // Address of validator
-	VotingPower sdk.Rat     `json:"voting_power"` // Voting power if considered a validator
+	Address sdk.Address   `json:"address"`
+	PubKey  crypto.PubKey `json:"pub_key"`
+	Power   sdk.Rat       `json:"voting_power"`
 }
 
-// ABCIValidator - Get the validator from a bond value
-/* TODO
-func (v Validator) ABCIValidator() (*abci.Validator, error) {
-	pkBytes, err := wire.MarshalBinary(v.PubKey)
+// abci validator from stake validator type
+func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
+	pkBytes, err := cdc.MarshalBinary(v.PubKey)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return &abci.Validator{
+	return abci.Validator{
 		PubKey: pkBytes,
-		Power:  v.VotingPower.Evaluate(),
-	}, nil
+		Power:  v.Power.Evaluate(),
+	}
 }
-*/
+
+// abci validator from stake validator type
+// with zero power used for validator updates
+func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
+	pkBytes, err := cdc.MarshalBinary(v.PubKey)
+	if err != nil {
+		panic(err)
+	}
+	return abci.Validator{
+		PubKey: pkBytes,
+		Power:  0,
+	}
+}
 
 //_________________________________________________________________________
 

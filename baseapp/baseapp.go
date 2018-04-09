@@ -248,11 +248,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		// TODO Return something intelligent
 		panic(err)
 	}
-	err = app.Router().InitGenesis(app.deliverState.ctx, *genesisState)
-	if err != nil {
-		// TODO Return something intelligent
-		panic(err)
-	}
 
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState
@@ -266,7 +261,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	queryable, ok := app.cms.(sdk.Queryable)
 	if !ok {
 		msg := "application doesn't support queries"
-		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
 	return queryable.Query(req)
 }

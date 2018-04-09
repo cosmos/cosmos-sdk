@@ -65,7 +65,7 @@ type Candidate struct {
 	Assets          sdk.Rat         `json:"assets"`           // total shares of a global hold pools
 	Liabilities     sdk.Rat         `json:"liabilities"`      // total shares issued to a candidate's delegators
 	Description     Description     `json:"description"`      // Description terms for the candidate
-	ValidatorHeight uint64          `json:"validator_height"` // If considered a validator, height when first considered a validator, else 0
+	ValidatorHeight int64           `json:"validator_height"` // Earliest height at current voting power
 }
 
 // Candidates - list of Candidates
@@ -80,7 +80,7 @@ func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Descrip
 		Assets:          sdk.ZeroRat,
 		Liabilities:     sdk.ZeroRat,
 		Description:     description,
-		ValidatorHeight: uint64(0),
+		ValidatorHeight: int64(0),
 	}
 }
 
@@ -130,7 +130,7 @@ type Validator struct {
 	Address sdk.Address   `json:"address"`
 	PubKey  crypto.PubKey `json:"pub_key"`
 	Power   sdk.Rat       `json:"voting_power"`
-	Height  uint64        `json:"height"` // If considered a validator, height when first considered a validator, else 0
+	Height  int64         `json:"height"` // Earliest height at current voting power
 }
 
 // abci validator from stake validator type

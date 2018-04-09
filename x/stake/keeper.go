@@ -80,6 +80,9 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	// retreive the old candidate record
 	oldCandidate, oldFound := k.GetCandidate(ctx, address)
 
+	// update the validator block height (will only get written if stake has changed)
+	candidate.ValidatorHeight = ctx.BlockHeight()
+
 	// marshal the candidate record and add to the state
 	bz, err := k.cdc.MarshalBinary(candidate)
 	if err != nil {
@@ -87,7 +90,7 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	}
 	store.Set(GetCandidateKey(candidate.Address), bz)
 
-	// mashal the new validator record
+	// marshal the new validator record
 	validator := candidate.validator()
 	bz, err = k.cdc.MarshalBinary(validator)
 	if err != nil {
@@ -121,7 +124,9 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 			panic(err)
 		}
 		store.Set(GetAccUpdateValidatorKey(validator.Address), bz)
+
 	}
+
 	return
 }
 

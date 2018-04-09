@@ -183,7 +183,7 @@
   branch = "master"
   name = "github.com/rcrowley/go-metrics"
   packages = ["."]
-  revision = "8732c616f52954686704c8645fe1a9d59e9df7c1"
+  revision = "d932a24a8ccb8fcadc993e5c6c58f93dac168294"
 
 [[projects]]
   name = "github.com/spf13/afero"
@@ -261,8 +261,8 @@
     "server",
     "types"
   ]
-  revision = "46686763ba8ea595ede16530ed4a40fb38f49f94"
-  version = "v0.10.2"
+  revision = "78a8905690ef54f9d57e3b2b0ee7ad3a04ef3f1f"
+  version = "v0.10.3"
 
 [[projects]]
   branch = "master"
@@ -341,8 +341,8 @@
     "version",
     "wire"
   ]
-  revision = "a1dd329d72e78d4770e602359bad5b7b1e8b72a3"
-  version = "v0.18.0-rc1"
+  revision = "4930b61a381b9fb9bc530eb5deb56ea6429a1c3a"
+  version = "v0.18.0"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -360,7 +360,7 @@
     "pubsub/query"
   ]
   revision = "2e24b64fc121dcdf1cabceab8dc2f7257675483c"
-  version = "0.8.1"
+  version = "v0.8.1"
 
 [[projects]]
   branch = "master"
@@ -390,13 +390,13 @@
     "lex/httplex",
     "trace"
   ]
-  revision = "b3c676e531a6dc479fa1b35ac961c13f5e2b4d2e"
+  revision = "61147c48b25b599e5b561d2e9c4f3e1ef489ca41"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "1d206c9fa8975fb4cf00df1dc8bf3283dc24ba0e"
+  revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -423,7 +423,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "35de2414665fc36f56b72d982c5af480d86de5ab"
+  revision = "ce84044298496ef4b54b4a0a0909ba593cc60e30"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -458,6 +458,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "67298e1f8058b85f082dbd32123f2779b11bda282616e595141dba41a8675c39"
+  inputs-digest = "669e58d0c4eb48e506f1abc66119c2f21b6600d4e08e8875ac83567b5c721565"
   solver-name = "gps-cdcl"
   solver-version = 1

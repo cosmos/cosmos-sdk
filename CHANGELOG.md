@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.14.0 (TBD)
+
+BREAKING CHANGES:
+
+* [client/builder] Renamed to `client/core` and refactored to use a CoreContext
+  struct
+* [server] Refactor to improve useability and de-duplicate code
+* [types] `Result.ToQuery -> Error.QueryResult`
+* [makefile] `make build` and `make install` only build/install `gaiacli` and
+  `gaiad`. Use `make build_examples` and `make install_examples` for
+  `basecoind/basecli` and `democoind/democli`
+* [staking] Various fixes/improvements
+
+BUG FIXES
+
+* [client] Reuse Tendermint RPC client to avoid excessive open files
+* [client] Fix setting log level 
+* [basecoin] Sort coins in genesis
+
 ## 0.13.1 (April 3, 2018)
 
 BUG FIXES

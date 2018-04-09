@@ -8,13 +8,17 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/mock"
+	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 )
 
 func TestInit(t *testing.T) {
 	defer setupViper(t)()
 
 	logger := log.NewNopLogger()
-	cmd := InitCmd(mock.GenInitOptions, logger)
-	err := cmd.RunE(nil, nil)
+	cfg, err := tcmd.ParseConfig()
+	require.Nil(t, err)
+	ctx := NewContext(cfg, logger)
+	cmd := InitCmd(mock.GenInitOptions, ctx)
+	err = cmd.RunE(nil, nil)
 	require.NoError(t, err)
 }

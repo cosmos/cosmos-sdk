@@ -5,7 +5,7 @@
 [![version](https://img.shields.io/github/tag/cosmos/cosmos-sdk.svg)](https://github.com/cosmos/cosmos-sdk/releases/latest)
 [![API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk?status.svg
 )](https://godoc.org/github.com/cosmos/cosmos-sdk)
-[![Rocket.Chat](https://demo.rocket.chat/images/join-chat.svg)](https://cosmos.rocket.chat/)
+[![Matrix/Riot](https://demo.rocket.chat/images/join-chat.svg)](https://riot.im/app/#/room/#cosmos-sdk:matrix.org)
 [![license](https://img.shields.io/github/license/cosmos/cosmos-sdk.svg)](https://github.com/cosmos/cosmos-sdk/blob/master/LICENSE)
 [![LoC](https://tokei.rs/b1/github/cosmos/cosmos-sdk)](https://github.com/cosmos/cosmos-sdk)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk)](https://goreportcard.com/report/github.com/cosmos/cosmos-sdk)

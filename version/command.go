@@ -19,7 +19,7 @@ var (
 func getVersion() string {
 	v := Version
 	if GitCommit != "" {
-		v = v + " " + GitCommit
+		v = v + "-" + GitCommit
 	}
 	return v
 }

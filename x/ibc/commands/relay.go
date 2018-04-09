@@ -9,8 +9,7 @@ import (
 
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/builder"
+	"github.com/cosmos/cosmos-sdk/client/context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -74,7 +73,7 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	fromChainNode := viper.GetString(FlagFromChainNode)
 	toChainID := viper.GetString(FlagToChainID)
 	toChainNode := viper.GetString(FlagToChainNode)
-	address, err := builder.GetFromAddress()
+	address, err := context.NewCoreContextFromViper().GetFromAddress()
 	if err != nil {
 		panic(err)
 	}
@@ -84,9 +83,9 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 }
 
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
+	ctx := context.NewCoreContextFromViper()
 	// get password
-	name := viper.GetString(client.FlagName)
-	passphrase, err := builder.GetPassphraseFromStdin(name)
+	passphrase, err := ctx.GetPassphraseFromStdin(ctx.FromAddressName)
 	if err != nil {
 		panic(err)
 	}
@@ -133,10 +132,8 @@ OUTER:
 				continue OUTER
 			}
 
-			viper.Set(client.FlagSequence, seq)
+			err = c.broadcastTx(seq, toChainNode, c.refine(egressbz, i, passphrase))
 			seq++
-
-			err = c.broadcastTx(toChainNode, c.refine(egressbz, i, passphrase))
 			if err != nil {
 				c.logger.Error("Error broadcasting ingress packet", "err", err)
 				continue OUTER
@@ -148,18 +145,11 @@ OUTER:
 }
 
 func query(node string, key []byte, storeName string) (res []byte, err error) {
-	orig := viper.GetString(client.FlagNode)
-	viper.Set(client.FlagNode, node)
-	res, err = builder.Query(key, storeName)
-	viper.Set(client.FlagNode, orig)
-	return res, err
+	return context.NewCoreContextFromViper().WithNodeURI(node).Query(key, storeName)
 }
 
-func (c relayCommander) broadcastTx(node string, tx []byte) error {
-	orig := viper.GetString(client.FlagNode)
-	viper.Set(client.FlagNode, node)
-	_, err := builder.BroadcastTx(tx)
-	viper.Set(client.FlagNode, orig)
+func (c relayCommander) broadcastTx(seq int64, node string, tx []byte) error {
+	_, err := context.NewCoreContextFromViper().WithNodeURI(node).WithSequence(seq + 1).BroadcastTx(tx)
 	return err
 }
 
@@ -177,10 +167,6 @@ func (c relayCommander) getSequence(node string) int64 {
 	return account.GetSequence()
 }
 
-func setSequence(seq int64) {
-	viper.Set(client.FlagSequence, seq)
-}
-
 func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []byte {
 	var packet ibc.IBCPacket
 	if err := c.cdc.UnmarshalBinary(bz, &packet); err != nil {
@@ -193,8 +179,8 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 		Sequence:  sequence,
 	}
 
-	name := viper.GetString(client.FlagName)
-	res, err := builder.SignAndBuild(name, passphrase, msg, c.cdc)
+	ctx := context.NewCoreContextFromViper()
+	res, err := ctx.SignAndBuild(ctx.FromAddressName, passphrase, msg, c.cdc)
 	if err != nil {
 		panic(err)
 	}

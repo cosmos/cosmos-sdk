@@ -10,6 +10,7 @@ import (
 	wire "github.com/tendermint/go-wire"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -25,7 +26,7 @@ func statusCommand() *cobra.Command {
 
 func getNodeStatus() (*ctypes.ResultStatus, error) {
 	// get the node
-	node, err := client.GetNode()
+	node, err := context.NewCoreContextFromViper().GetNode()
 	if err != nil {
 		return &ctypes.ResultStatus{}, err
 	}

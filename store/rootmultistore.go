@@ -205,18 +205,18 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	path := req.Path
 	storeName, subpath, err := parsePath(path)
 	if err != nil {
-		return err.Result().ToQuery()
+		return err.QueryResult()
 	}
 
 	store := rs.getStoreByName(storeName)
 	if store == nil {
 		msg := fmt.Sprintf("no such store: %s", storeName)
-		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
 	queryable, ok := store.(Queryable)
 	if !ok {
 		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
-		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
 
 	// trim the path and make the query

@@ -179,8 +179,10 @@ func TestSendMsgValidation(t *testing.T) {
 
 func TestSendMsgString(t *testing.T) {
 	// Construct a SendMsg
-	addr1 := sdk.Address([]byte("input"))
-	addr2 := sdk.Address([]byte("output"))
+	addr1String := "input"
+	addr2String := "output"
+	addr1 := sdk.Address([]byte(addr1String))
+	addr2 := sdk.Address([]byte(addr2String))
 	coins := sdk.Coins{{"atom", 10}}
 	var msg = SendMsg{
 		Inputs:  []Input{NewInput(addr1, coins)},
@@ -188,8 +190,9 @@ func TestSendMsgString(t *testing.T) {
 	}
 
 	res := msg.String()
+	expected := fmt.Sprintf("SendMsg{[Input{%X,10atom}]->[Output{%X,10atom}]}", addr1String, addr2String)
 	// TODO some failures for bad results
-	assert.Equal(t, res, "SendMsg{[Input{696E707574,10atom}]->[Output{364637353734373037353734,10atom}]}")
+	assert.Equal(t, expected, res)
 }
 
 func TestSendMsgGet(t *testing.T) {
@@ -275,16 +278,18 @@ func TestIssueMsgValidation(t *testing.T) {
 }
 
 func TestIssueMsgString(t *testing.T) {
+	addrString := "loan-from-bank"
+	bankerString := "input"
 	// Construct a IssueMsg
-	addr := sdk.Address([]byte("loan-from-bank"))
+	addr := sdk.Address([]byte(addrString))
 	coins := sdk.Coins{{"atom", 10}}
 	var msg = IssueMsg{
-		Banker:  sdk.Address([]byte("input")),
+		Banker:  sdk.Address([]byte(bankerString)),
 		Outputs: []Output{NewOutput(addr, coins)},
 	}
 	res := msg.String()
-	// TODO: FIX THIS OUTPUT!
-	assert.Equal(t, res, "IssueMsg{696E707574#[Output{36433646363136453244363637323646364432443632363136453642,10atom}]}")
+	expected := fmt.Sprintf("IssueMsg{%X#[Output{%X,10atom}]}", bankerString, addrString)
+	assert.Equal(t, expected, res)
 }
 
 func TestIssueMsgGet(t *testing.T) {

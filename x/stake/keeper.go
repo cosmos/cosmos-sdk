@@ -80,12 +80,22 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	// retreive the old candidate record
 	oldCandidate, oldFound := k.GetCandidate(ctx, address)
 
+	// update the validator block height (will only get written if stake has changed)
+	candidate.ValidatorHeight = ctx.BlockHeight()
+
 	// marshal the candidate record and add to the state
 	bz, err := k.cdc.MarshalBinary(candidate)
 	if err != nil {
 		panic(err)
 	}
 	store.Set(GetCandidateKey(candidate.Address), bz)
+
+	// marshal the new validator record
+	validator := candidate.validator()
+	bz, err = k.cdc.MarshalBinary(validator)
+	if err != nil {
+		panic(err)
+	}
 
 	// if the voting power is the same no need to update any of the other indexes
 	if oldFound && oldCandidate.Assets.Equal(candidate.Assets) {

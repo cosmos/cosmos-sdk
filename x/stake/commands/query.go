@@ -2,7 +2,6 @@ package commands
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -59,7 +58,7 @@ func GetCmdQueryCandidates(cdc *wire.Codec, storeName string) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			output, err := json.MarshalIndent(candidates, "", "  ")
+			output, err := wire.MarshalJSONIndent(cdc, candidates)
 			if err != nil {
 				return err
 			}
@@ -101,7 +100,7 @@ func GetCmdQueryCandidate(cdc *wire.Codec, storeName string) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			output, err := json.MarshalIndent(candidate, "", "  ")
+			output, err := wire.MarshalJSONIndent(cdc, candidate)
 			if err != nil {
 				return err
 			}
@@ -149,7 +148,7 @@ func GetCmdQueryDelegatorBond(cdc *wire.Codec, storeName string) *cobra.Command 
 			if err != nil {
 				return err
 			}
-			output, err := json.MarshalIndent(bond, "", "  ")
+			output, err := wire.MarshalJSONIndent(cdc, bond)
 			if err != nil {
 				return err
 			}
@@ -193,7 +192,7 @@ func GetCmdQueryDelegatorBonds(cdc *wire.Codec, storeName string) *cobra.Command
 			if err != nil {
 				return err
 			}
-			output, err := json.MarshalIndent(candidates, "", "  ")
+			output, err := wire.MarshalJSONIndent(cdc, candidates)
 			if err != nil {
 				return err
 			}

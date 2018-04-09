@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"encoding/json"
 	"fmt"
 	"runtime/debug"
 
@@ -240,14 +239,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// Initialize the deliver state and run initChain
 	app.setDeliverState(abci.Header{})
 	app.initChainer(app.deliverState.ctx, req) // no error
-
-	// Initialize module genesis state
-	genesisState := new(map[string]json.RawMessage)
-	err := json.Unmarshal(req.AppStateBytes, genesisState)
-	if err != nil {
-		// TODO Return something intelligent
-		panic(err)
-	}
 
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState

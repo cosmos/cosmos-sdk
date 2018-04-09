@@ -2,7 +2,6 @@ package commands
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -77,7 +76,7 @@ func (c commander) getAccountCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// print out whole account
-	output, err := json.MarshalIndent(account, "", "  ")
+	output, err := wire.MarshalJSONIndent(c.cdc, account)
 	if err != nil {
 		return err
 	}

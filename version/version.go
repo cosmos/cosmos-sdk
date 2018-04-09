@@ -9,7 +9,7 @@ const Maj = "0"
 const Min = "14"
 const Fix = "0"
 
-const Version = "0.14.0-dev"
+const Version = "0.14.0"
 
 // GitCommit set by build flags
 var GitCommit = ""

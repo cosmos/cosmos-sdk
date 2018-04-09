@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.14.0 (TBD)
+## 0.14.0 (April 9, 2018)
 
 BREAKING CHANGES:
 
@@ -12,6 +12,10 @@ BREAKING CHANGES:
   `gaiad`. Use `make build_examples` and `make install_examples` for
   `basecoind/basecli` and `democoind/democli`
 * [staking] Various fixes/improvements
+
+FEATURES:
+
+* [democoin] Added Proof-of-Work module
 
 BUG FIXES
 

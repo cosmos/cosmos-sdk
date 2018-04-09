@@ -113,7 +113,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "169b1b37be738edb2813dab48c97a549bcf99bb5"
+  revision = "714f901b98fdb3aa954b4193d8cbd64a28d80cad"
 
 [[projects]]
   branch = "master"
@@ -128,8 +128,8 @@
 [[projects]]
   name = "github.com/tendermint/go-amino"
   packages = ["."]
-  revision = "f55c3351f30e5987500020631f00e87a035ed415"
-  version = "0.9.3"
+  revision = "42246108ff925a457fb709475070a03dfd3e2b5c"
+  version = "0.9.6"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -138,8 +138,8 @@
     "db",
     "log"
   ]
-  revision = "e9cf47606cfcbdc28a7c16671b4a70b459e9d4cc"
-  version = "v0.8.0-dev"
+  revision = "2e24b64fc121dcdf1cabceab8dc2f7257675483c"
+  version = "v0.8.1"
 
 [[projects]]
   branch = "master"
@@ -161,11 +161,11 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "b4956d363a8b14623cc81db401707679605930a3"
+  revision = "b2aa35443fbc700ab74c586ae79b81c171851023"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9748e96106582387ac49df1db8e4456bd51c8e9362c86992d6ce7011c1783f55"
+  inputs-digest = "f9ccfa2cadfcbfb43bf729b871a0ad2f8d4f4acb118cd859e6faf9b24842b840"
   solver-name = "gps-cdcl"
   solver-version = 1

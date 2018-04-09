@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.2 (April 9, 2018)
+
+IMPROVEMENTS
+
+- Update for latest go-amino
+
 ## 0.6.1 (March 26, 2018)
 
 BREAKING CHANGES

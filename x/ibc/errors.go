@@ -1,4 +1,4 @@
-package types
+package ibc
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +15,7 @@ const (
 	CodeUpdateCommitFailed   sdk.CodeType = 205
 	CodeInvalidPacket        sdk.CodeType = 206
 	CodeNoCommitFound        sdk.CodeType = 207
+	CodeUnauthorizedSend     sdk.CodeType = 208
 )
 
 func codeToDefaultMsg(code sdk.CodeType) string {
@@ -60,6 +61,10 @@ func ErrInvalidPacket(err error) sdk.Error {
 
 func ErrNoCommitFound() sdk.Error {
 	return newError(CodeNoCommitFound, "")
+}
+
+func ErrUnauthorizedSend() sdk.Error {
+	return newError(CodeUnauthorizedSend, "")
 }
 
 // -------------------------

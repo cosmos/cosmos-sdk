@@ -5,10 +5,8 @@ import (
 
 	"github.com/tendermint/iavl"
 	"github.com/tendermint/tendermint/lite"
-	"github.com/tendermint/tmlibs/merkle"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // ----------------------------------
@@ -17,7 +15,7 @@ import (
 // ReceiveMsg defines the message that a relayer uses to post an IBCPacket
 // to the destination chain.
 type ReceiveMsg struct {
-	types.Packet
+	Packet
 	Proof    *iavl.KeyExistsProof
 	Height   int64
 	Relayer  sdk.Address
@@ -87,17 +85,11 @@ func (msg OpenChannelMsg) GetSigners() []sdk.Address {
 //------------------------------------
 // UpdateChannelMsg
 
-type SubProof struct {
-	merkle.SimpleProof
-	index int
-	total int
-}
-
 type UpdateChannelMsg struct {
 	SrcChain string
 	Commit   lite.FullCommit
-	SubProof SubProof
-	Signer   sdk.Address
+	//Proof
+	Signer sdk.Address
 }
 
 func (msg UpdateChannelMsg) Type() string {
@@ -122,4 +114,35 @@ func (msg UpdateChannelMsg) ValidateBasic() sdk.Error {
 
 func (msg UpdateChannelMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Signer}
+}
+
+// ------------------------------
+// Payload
+// Payload defines inter-blockchain message
+// that can be proved by light-client protocol
+
+type Payload interface {
+	Type() string
+	ValidateBasic() sdk.Error
+}
+
+// ------------------------------
+// Packet
+
+// Packet defines a piece of data that can be send between two separate
+// blockchains.
+type Packet struct {
+	Payload   Payload
+	SrcChain  string
+	DestChain string
+}
+
+func (packet Packet) ValidateBasic() sdk.Error {
+	/*
+		// commented for testing
+		if packet.SrcChain == packet.DestChain {
+			return ErrIdenticalChains()
+		}
+	*/
+	return packet.Payload.ValidateBasic()
 }

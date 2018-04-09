@@ -8,76 +8,79 @@ import (
 	"github.com/tendermint/tendermint/lite"
 
 	"github.com/cosmos/cosmos-sdk/wire"
-
-	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-type keeper struct {
-	key        sdk.StoreKey
-	cdc        *wire.Codec
-	dispatcher types.Dispatcher
+type keeperFactory struct {
+	key sdk.StoreKey
+	cdc *wire.Codec
 }
 
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey) keeper {
-	return keeper{
-		key:        key,
-		cdc:        cdc,
-		dispatcher: types.NewDispatcher(),
+func NewKeeperFactory(cdc *wire.Codec, key sdk.StoreKey) keeperFactory {
+	return keeperFactory{
+		key: key,
+		cdc: cdc,
+	}
+}
+
+func (kf keeperFactory) Port(port string) Keeper {
+	return Keeper{
+		key:  kf.key,
+		cdc:  kf.cdc,
+		port: port,
+	}
+}
+
+type Keeper struct {
+	key  sdk.StoreKey
+	cdc  *wire.Codec
+	port string
+}
+
+func NewKeeper(cdc *wire.Codec, key sdk.StoreKey) Keeper {
+	return Keeper{
+		key: key,
+		cdc: cdc,
 	}
 }
 
 // TODO: Handle invalid IBC packets and return errors.
-func (sender keeper) Push(ctx sdk.Context, payload types.Payload, dest string) {
+func (keeper Keeper) Send(ctx sdk.Context, payload Payload, dest string) sdk.Error {
+	if payload.Type() != keeper.port {
+		return ErrUnauthorizedSend()
+	}
+
 	// write everything into the state
-	store := ctx.KVStore(sender.key)
-	packet := types.Packet{
+	store := ctx.KVStore(keeper.key)
+	packet := Packet{
 		Payload:   payload,
 		SrcChain:  ctx.ChainID(),
 		DestChain: dest,
 	}
-	index := sender.getEgressLength(ctx, dest)
-	bz, err := sender.cdc.MarshalBinary(packet)
+	index := keeper.getEgressLength(ctx, dest)
+	bz, err := keeper.cdc.MarshalBinary(packet)
 	if err != nil {
 		panic(err)
 	}
 
 	store.Set(EgressKey(dest, index), bz)
-	bz, err = sender.cdc.MarshalBinary(int64(index + 1))
+	bz, err = keeper.cdc.MarshalBinary(int64(index + 1))
 	if err != nil {
 		panic(err)
 	}
 	store.Set(EgressLengthKey(dest), bz)
-}
 
-func (keeper keeper) Dispatcher() types.Dispatcher {
-	return keeper.dispatcher
-}
-
-func (keeper keeper) Sender() types.Sender {
-	return keeper
-}
-
-func (keeper keeper) Receive(ctx sdk.Context, packet types.Packet) sdk.Error {
-	if packet.DestChain != ctx.ChainID() {
-		// TODO: route?
-		return types.ErrChainMismatch()
-	}
-
-	payload := packet.Payload
-	res := keeper.dispatcher.Dispatch(payload.Type())(ctx, payload)
-
-	return res
+	return nil
 }
 
 /*
-func (keeper keeper) getChannelCommit(ctx sdk.Context, srcChain string) (*types.ValidatorSet, bool) {
+func (keeper Keeper) getChannelCommit(ctx sdk.Context, srcChain string) (*ValidatorSet, bool) {
 	store := ctx.KVStore(keeper.key)
 	bz := store.Get(ChannelCommitKey(srcChain))
 	if bz == nil {
-		return *types.ValidatorSet{}, false
+		return *ValidatorSet{}, false
 	}
 
-	var commit *types.ValidatorSet
+	var commit *ValidatorSet
 	err := keeper.cdc.UnmarshalBinary(bz, &commit)
 	if err != nil {
 		panic(err)
@@ -87,7 +90,7 @@ func (keeper keeper) getChannelCommit(ctx sdk.Context, srcChain string) (*types.
 }
 */
 /*
-func (keeper keeper) setChannelCommit(ctx sdk.Context, srcChain string, commit *types.ValidatorSet) {
+func (keeper Keeper) setChannelCommit(ctx sdk.Context, srcChain string, commit *ValidatorSet) {
 	store := ctx.KVStore(keeper.key)
 	bz, err := keeper.cdc.MarshalBinary(commit)
 	if err != nil {
@@ -97,7 +100,7 @@ func (keeper keeper) setChannelCommit(ctx sdk.Context, srcChain string, commit *
 }
 */
 /*
-func (keeper keeper) getCertifier(ctx sdk.Context, srcChain string, height int64) (*lite.Inquiring, bool) {
+func (keeper Keeper) getCertifier(ctx sdk.Context, srcChain string, height int64) (*lite.Inquiring, bool) {
 	if height <= 0 {
 		height = keeper.getChannelHeight(ctx, srcChain)
 	}
@@ -111,12 +114,12 @@ func (keeper keeper) getCertifier(ctx sdk.Context, srcChain string, height int64
 }
 */
 
-func (keeper keeper) hasChannelCommit(ctx sdk.Context, srcChain string, height int64) bool {
+func (keeper Keeper) hasChannelCommit(ctx sdk.Context, srcChain string, height int64) bool {
 	store := ctx.KVStore(keeper.key)
 	return store.Has(CommitByHeightKey(srcChain, height))
 }
 
-func (keeper keeper) setChannelCommit(ctx sdk.Context, srcChain string, height int64, commit lite.FullCommit) {
+func (keeper Keeper) setChannelCommit(ctx sdk.Context, srcChain string, height int64, commit lite.FullCommit) {
 	store := ctx.KVStore(keeper.key)
 
 	bz, err := keeper.cdc.MarshalBinary(commit)
@@ -134,7 +137,7 @@ func (keeper keeper) setChannelCommit(ctx sdk.Context, srcChain string, height i
 	store.Set(CommitHeightKey(srcChain), bz)
 }
 
-func (keeper keeper) getChannelCommit(ctx sdk.Context, srcChain string, height int64) (commit lite.FullCommit, ok bool) {
+func (keeper Keeper) getChannelCommit(ctx sdk.Context, srcChain string, height int64) (commit lite.FullCommit, ok bool) {
 	store := ctx.KVStore(keeper.key)
 
 	bz := store.Get(CommitByHeightKey(srcChain, height))
@@ -149,12 +152,12 @@ func (keeper keeper) getChannelCommit(ctx sdk.Context, srcChain string, height i
 	return commit, true
 }
 
-func (keeper keeper) getChannelCommitHeight(ctx sdk.Context, srcChain string) (res int64, err sdk.Error) {
+func (keeper Keeper) getChannelCommitHeight(ctx sdk.Context, srcChain string) (res int64, err sdk.Error) {
 	store := ctx.KVStore(keeper.key)
 	bz := store.Get(CommitHeightKey(srcChain))
 
 	if bz == nil {
-		return -1, types.ErrNoChannelOpened(srcChain)
+		return -1, ErrNoChannelOpened(srcChain)
 	}
 
 	if err := keeper.cdc.UnmarshalBinary(bz, &res); err != nil {
@@ -182,7 +185,7 @@ func unmarshalBinaryPanic(cdc *wire.Codec, bz []byte, ptr interface{}) {
 	}
 }
 
-func (keeper keeper) getIngressSequence(ctx sdk.Context, srcChain string) int64 {
+func (keeper Keeper) getIngressSequence(ctx sdk.Context, srcChain string) int64 {
 	store := ctx.KVStore(keeper.key)
 	key := IngressSequenceKey(srcChain)
 
@@ -198,7 +201,7 @@ func (keeper keeper) getIngressSequence(ctx sdk.Context, srcChain string) int64 
 	return res
 }
 
-func (keeper keeper) setIngressSequence(ctx sdk.Context, srcChain string, sequence int64) {
+func (keeper Keeper) setIngressSequence(ctx sdk.Context, srcChain string, sequence int64) {
 	store := ctx.KVStore(keeper.key)
 	key := IngressSequenceKey(srcChain)
 
@@ -207,7 +210,7 @@ func (keeper keeper) setIngressSequence(ctx sdk.Context, srcChain string, sequen
 }
 
 // Retrieves the index of the currently stored outgoing IBC packets.
-func (keeper keeper) getEgressLength(ctx sdk.Context, destChain string) int64 {
+func (keeper Keeper) getEgressLength(ctx sdk.Context, destChain string) int64 {
 	store := ctx.KVStore(keeper.key)
 	bz := store.Get(EgressLengthKey(destChain))
 	if bz == nil {

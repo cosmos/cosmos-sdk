@@ -15,8 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 
-	ibcm "github.com/cosmos/cosmos-sdk/x/ibc"
-	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/simplestake"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"

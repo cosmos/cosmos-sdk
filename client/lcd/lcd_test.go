@@ -35,8 +35,6 @@ import (
 	bapp "github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	btypes "github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 var (
@@ -90,7 +88,7 @@ func TestKeys(t *testing.T) {
 	res, body = request(t, port, "GET", "/keys", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var m [2]keys.KeyOutput
-	err = json.Unmarshal([]byte(body), &m)
+	err = cdc.UnmarshalJSON([]byte(body), &m)
 	require.Nil(t, err)
 
 	assert.Equal(t, m[0].Name, name, "Did not serve keys name correctly")
@@ -103,7 +101,7 @@ func TestKeys(t *testing.T) {
 	res, body = request(t, port, "GET", keyEndpoint, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var m2 keys.KeyOutput
-	err = json.Unmarshal([]byte(body), &m2)
+	err = cdc.UnmarshalJSON([]byte(body), &m2)
 	require.Nil(t, err)
 
 	assert.Equal(t, newName, m2.Name, "Did not serve keys name correctly")
@@ -143,7 +141,7 @@ func TestNodeStatus(t *testing.T) {
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var nodeInfo p2p.NodeInfo
-	err := json.Unmarshal([]byte(body), &nodeInfo)
+	err := cdc.UnmarshalJSON([]byte(body), &nodeInfo)
 	require.Nil(t, err, "Couldn't parse node info")
 
 	assert.NotEqual(t, p2p.NodeInfo{}, nodeInfo, "res: %v", res)
@@ -166,7 +164,7 @@ func TestBlock(t *testing.T) {
 	res, body := request(t, port, "GET", "/blocks/latest", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	err := json.Unmarshal([]byte(body), &resultBlock)
+	err := cdc.UnmarshalJSON([]byte(body), &resultBlock)
 	require.Nil(t, err, "Couldn't parse block")
 
 	assert.NotEqual(t, ctypes.ResultBlock{}, resultBlock)
@@ -194,7 +192,7 @@ func TestValidators(t *testing.T) {
 	res, body := request(t, port, "GET", "/validatorsets/latest", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	err := json.Unmarshal([]byte(body), &resultVals)
+	err := cdc.UnmarshalJSON([]byte(body), &resultVals)
 	require.Nil(t, err, "Couldn't parse validatorset")
 
 	assert.NotEqual(t, ctypes.ResultValidators{}, resultVals)
@@ -204,7 +202,7 @@ func TestValidators(t *testing.T) {
 	res, body = request(t, port, "GET", "/validatorsets/1", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	err = json.Unmarshal([]byte(body), &resultVals)
+	err = cdc.UnmarshalJSON([]byte(body), &resultVals)
 	require.Nil(t, err, "Couldn't parse validatorset")
 
 	assert.NotEqual(t, ctypes.ResultValidators{}, resultVals)
@@ -221,6 +219,9 @@ func TestCoinSend(t *testing.T) {
 	res, body := request(t, port, "GET", "/accounts/8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6", nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
+	acc := getAccount(t, sendAddr)
+	initialBalance := acc.GetCoins()
+
 	// create TX
 	receiveAddr, resultTx := doSend(t, port, seed)
 	waitForHeight(resultTx.Height + 1)
@@ -230,30 +231,24 @@ func TestCoinSend(t *testing.T) {
 	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	// query sender
-	res, body = request(t, port, "GET", "/accounts/"+sendAddr, nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	var m auth.BaseAccount
-	err := json.Unmarshal([]byte(body), &m)
-	require.Nil(t, err)
-	coins := m.Coins
+	acc = getAccount(t, sendAddr)
+	coins := acc.GetCoins()
 	mycoins := coins[0]
 	assert.Equal(t, coinDenom, mycoins.Denom)
-	assert.Equal(t, coinAmount-1, mycoins.Amount)
+	assert.Equal(t, initialBalance[0].Amount-1, mycoins.Amount)
 
 	// query receiver
-	res, body = request(t, port, "GET", "/accounts/"+receiveAddr, nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	err = json.Unmarshal([]byte(body), &m)
-	require.Nil(t, err)
-	coins = m.Coins
+	acc = getAccount(t, receiveAddr)
+	coins = acc.GetCoins()
 	mycoins = coins[0]
 	assert.Equal(t, coinDenom, mycoins.Denom)
 	assert.Equal(t, int64(1), mycoins.Amount)
 }
 
 func TestIBCTransfer(t *testing.T) {
+
+	acc := getAccount(t, sendAddr)
+	initialBalance := acc.GetCoins()
 
 	// create TX
 	resultTx := doIBCTransfer(t, port, seed)
@@ -265,16 +260,11 @@ func TestIBCTransfer(t *testing.T) {
 	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	// query sender
-	res, body := request(t, port, "GET", "/accounts/"+sendAddr, nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	var m auth.BaseAccount
-	err := json.Unmarshal([]byte(body), &m)
-	require.Nil(t, err)
-	coins := m.Coins
+	acc = getAccount(t, sendAddr)
+	coins := acc.GetCoins()
 	mycoins := coins[0]
 	assert.Equal(t, coinDenom, mycoins.Denom)
-	assert.Equal(t, coinAmount-2, mycoins.Amount)
+	assert.Equal(t, initialBalance[0].Amount-1, mycoins.Amount)
 
 	// TODO: query ibc egress packet state
 }
@@ -350,6 +340,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 		"staking": dbm.NewMemDB(),
 	}
 	app := bapp.NewBasecoinApp(logger, dbs)
+	cdc = bapp.MakeCodec() // XXX
 
 	genesisFile := config.GenesisFile()
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
@@ -371,10 +362,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	genDoc.AppState = stateBytes
-
-	cdc := wire.NewCodec()
-	wire.RegisterCrypto(cdc)
+	genDoc.AppStateJSON = stateBytes
 
 	// LCD listen address
 	port = fmt.Sprintf("%d", 17377)                       // XXX
@@ -388,12 +376,12 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	lcd, err := startLCD(cdc, logger, listenAddr)
+	lcd, err := startLCD(logger, listenAddr)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	waitForStart(cdc)
+	waitForStart()
 
 	return node, lcd, nil
 }
@@ -427,7 +415,7 @@ func startTM(cfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc, p
 }
 
 // start the LCD. note this blocks!
-func startLCD(cdc *wire.Codec, logger log.Logger, listenAddr string) (net.Listener, error) {
+func startLCD(logger log.Logger, listenAddr string) (net.Listener, error) {
 	handler := createHandler(cdc)
 	return tmrpc.StartHTTPServer(listenAddr, handler, logger)
 }
@@ -449,6 +437,16 @@ func request(t *testing.T, port, method, path string, payload []byte) (*http.Res
 	return res, string(output)
 }
 
+func getAccount(t *testing.T, sendAddr string) sdk.Account {
+	// get the account to get the sequence
+	res, body := request(t, port, "GET", "/accounts/"+sendAddr, nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var acc sdk.Account
+	err := cdc.UnmarshalJSON([]byte(body), &acc)
+	require.Nil(t, err)
+	return acc
+}
+
 func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctypes.ResultBroadcastTxCommit) {
 
 	// create receive address
@@ -457,20 +455,15 @@ func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctype
 	require.Nil(t, err)
 	receiveAddr = receiveInfo.PubKey.Address().String()
 
-	// get the account to get the sequence
-	res, body := request(t, port, "GET", "/accounts/"+sendAddr, nil)
-	// require.Equal(t, http.StatusOK, res.StatusCode, body)
-	acc := auth.BaseAccount{}
-	err = json.Unmarshal([]byte(body), &acc)
-	require.Nil(t, err)
-	sequence := acc.Sequence
+	acc := getAccount(t, sendAddr)
+	sequence := acc.GetSequence()
 
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{ "name":"%s", "password":"%s", "sequence":%d, "amount":[{ "denom": "%s", "amount": 1 }] }`, name, password, sequence, coinDenom))
-	res, body = request(t, port, "POST", "/accounts/"+receiveAddr+"/send", jsonStr)
+	res, body := request(t, port, "POST", "/accounts/"+receiveAddr+"/send", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	err = json.Unmarshal([]byte(body), &resultTx)
+	err = cdc.UnmarshalJSON([]byte(body), &resultTx)
 	require.Nil(t, err)
 
 	return receiveAddr, resultTx
@@ -485,19 +478,15 @@ func doIBCTransfer(t *testing.T, port, seed string) (resultTx ctypes.ResultBroad
 	receiveAddr := receiveInfo.PubKey.Address().String()
 
 	// get the account to get the sequence
-	res, body := request(t, port, "GET", "/accounts/"+sendAddr, nil)
-	// require.Equal(t, http.StatusOK, res.StatusCode, body)
-	acc := auth.BaseAccount{}
-	err = json.Unmarshal([]byte(body), &acc)
-	require.Nil(t, err)
-	sequence := acc.Sequence
+	acc := getAccount(t, sendAddr)
+	sequence := acc.GetSequence()
 
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{ "name":"%s", "password":"%s", "sequence":%d, "amount":[{ "denom": "%s", "amount": 1 }] }`, name, password, sequence, coinDenom))
-	res, body = request(t, port, "POST", "/ibc/testchain/"+receiveAddr+"/send", jsonStr)
+	res, body := request(t, port, "POST", "/ibc/testchain/"+receiveAddr+"/send", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	err = json.Unmarshal([]byte(body), &resultTx)
+	err = cdc.UnmarshalJSON([]byte(body), &resultTx)
 	require.Nil(t, err)
 
 	return resultTx
@@ -519,7 +508,7 @@ func waitForHeight(height int64) {
 		}
 		res.Body.Close()
 
-		err = json.Unmarshal([]byte(body), &resultBlock)
+		err = cdc.UnmarshalJSON([]byte(body), &resultBlock)
 		if err != nil {
 			fmt.Println("RES", res)
 			fmt.Println("BODY", string(body))
@@ -534,12 +523,10 @@ func waitForHeight(height int64) {
 }
 
 // wait for 2 blocks
-func waitForStart(cdc *wire.Codec) {
+func waitForStart() {
 	waitHeight := int64(2)
 	for {
 		time.Sleep(time.Second)
-
-		var resultBlock ctypes.ResultBlock
 
 		url := fmt.Sprintf("http://localhost:%v%v", port, "/blocks/latest")
 		res, err := http.Get(url)
@@ -559,6 +546,7 @@ func waitForStart(cdc *wire.Codec) {
 		}
 		res.Body.Close()
 
+		resultBlock := new(ctypes.ResultBlock)
 		err = cdc.UnmarshalJSON([]byte(body), &resultBlock)
 		if err != nil {
 			fmt.Println("RES", res)

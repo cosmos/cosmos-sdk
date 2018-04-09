@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -61,7 +60,7 @@ func NodeInfoRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nodeInfo := status.NodeInfo
-	output, err := json.MarshalIndent(nodeInfo, "", "  ")
+	output, err := cdc.MarshalJSON(nodeInfo)
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))

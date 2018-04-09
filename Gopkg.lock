@@ -305,6 +305,7 @@
   version = "v0.7.0"
 
 [[projects]]
+  branch = "bucky/aminoify"
   name = "github.com/tendermint/tendermint"
   packages = [
     "blockchain",
@@ -342,8 +343,7 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "7afe74a963b5222bbc063545f4a9261d27b188de"
-  version = "0.19.0-rc2"
+  revision = "466c3ab1c79c1e9856aeea80c9e11c31219d11f0"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -448,6 +448,7 @@
     "transport"
   ]
   revision = "5b3c4e850e90a4cf6a20ebd46c8b32a0a3afcb9e"
+  source = "github.com/grpc/grpc-go"
   version = "v1.7.5"
 
 [[projects]]
@@ -459,6 +460,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ad719da6da7632d7fd405a696e66e36d5616142a499358189d88312dc1946d34"
+  inputs-digest = "d81bbe5d23b9bc1e1829c207a57857c40957c4c0dac6c70f5af04e0930cbd652"
   solver-name = "gps-cdcl"
   solver-version = 1

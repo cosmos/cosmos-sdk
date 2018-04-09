@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -37,7 +36,7 @@ func GetValidators(height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	output, err := json.MarshalIndent(res, "", "  ")
+	output, err := cdc.MarshalJSON(res)
 	if err != nil {
 		return nil, err
 	}

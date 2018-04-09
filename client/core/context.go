@@ -2,6 +2,8 @@ package core
 
 import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type CoreContext struct {
@@ -12,6 +14,8 @@ type CoreContext struct {
 	FromAddressName string
 	Sequence        int64
 	Client          rpcclient.Client
+	Decoder         sdk.AccountDecoder
+	AccountStore    string
 }
 
 func (c CoreContext) WithChainID(chainID string) CoreContext {
@@ -46,5 +50,15 @@ func (c CoreContext) WithSequence(sequence int64) CoreContext {
 
 func (c CoreContext) WithClient(client rpcclient.Client) CoreContext {
 	c.Client = client
+	return c
+}
+
+func (c CoreContext) WithDecoder(decoder sdk.AccountDecoder) CoreContext {
+	c.Decoder = decoder
+	return c
+}
+
+func (c CoreContext) WithAccountStore(accountStore string) CoreContext {
+	c.AccountStore = accountStore
 	return c
 }

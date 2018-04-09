@@ -43,5 +43,7 @@ func NewCoreContextFromViper() core.CoreContext {
 		NodeURI:         nodeURI,
 		Sequence:        viper.GetInt64(client.FlagSequence),
 		Client:          rpc,
+		Decoder:         nil,
+		AccountStore:    "main",
 	}
 }

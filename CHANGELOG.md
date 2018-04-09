@@ -13,6 +13,10 @@ BREAKING CHANGES:
   `basecoind/basecli` and `democoind/democli`
 * [staking] Various fixes/improvements
 
+FEATURES:
+
+* [democoin] Added Proof-of-Work module
+
 BUG FIXES
 
 * [client] Reuse Tendermint RPC client to avoid excessive open files

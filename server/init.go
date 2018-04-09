@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/go-crypto/keys"
@@ -97,7 +98,7 @@ func (c initCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	testnetInfo.NodeID = nodeKey.ID()
-	out, err := json.MarshalIndent(testnetInfo, "", "  ")
+	out, err := wire.MarshalJSONIndent(cdc, testnetInfo)
 	if err != nil {
 		return err
 	}
@@ -194,13 +195,13 @@ func addGenesisState(filename string, appState json.RawMessage) error {
 	}
 
 	var doc GenesisDoc
-	err = json.Unmarshal(bz, &doc)
+	err = cdc.UnmarshalJSON(bz, &doc)
 	if err != nil {
 		return err
 	}
 
 	doc["app_state"] = appState
-	out, err := json.MarshalIndent(doc, "", "  ")
+	out, err := wire.MarshalJSONIndent(cdc, doc)
 	if err != nil {
 		return err
 	}

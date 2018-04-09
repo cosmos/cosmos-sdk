@@ -59,15 +59,11 @@ func NewBasecoinApp(logger log.Logger, dbs map[string]dbm.DB) *BasecoinApp {
 
 	// add handlers
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
-
-	ibcKeeper := ibcm.NewKeeper(app.cdc, app.capKeyIBCStore)
-	ibcKeeper.Dispatcher().
-		AddDispatch("bank", bank.NewIBCHandler(coinKeeper))
-
+	ibcKeeper := ibc.NewKeeper(app.cdc, app.capKeyIBCStore)
 	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper)
+
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper, ibcKeeper.Sender())).
-		AddRoute("ibc", ibcm.NewHandler(ibcKeeper)).
+		AddRoute("bank", bank.NewHandler(coinKeeper, ibcKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
 	// initialize BaseApp
@@ -106,9 +102,9 @@ func MakeCodec() *wire.Codec {
 		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
 		oldwire.ConcreteType{bank.IBCSendMsg{}, msgTypeIBCSend},
 		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
-		oldwire.ConcreteType{ibcm.OpenChannelMsg{}, msgTypeOpenChannel},
-		oldwire.ConcreteType{ibcm.UpdateChannelMsg{}, msgTypeUpdateChannel},
-		oldwire.ConcreteType{ibcm.ReceiveMsg{}, msgTypeReceive},
+		oldwire.ConcreteType{ibc.OpenChannelMsg{}, msgTypeOpenChannel},
+		oldwire.ConcreteType{ibc.UpdateChannelMsg{}, msgTypeUpdateChannel},
+		oldwire.ConcreteType{ibc.ReceiveMsg{}, msgTypeReceive},
 		oldwire.ConcreteType{simplestake.BondMsg{}, msgTypeBondMsg},
 		oldwire.ConcreteType{simplestake.UnbondMsg{}, msgTypeUnbondMsg},
 	)

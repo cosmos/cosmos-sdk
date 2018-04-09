@@ -14,11 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
-
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 // AccountMapper(/CoinKeeper) and IBCMapper should use different StoreKey later
@@ -79,15 +76,10 @@ func (msg remoteSaveMsg) ValidateBasic() sdk.Error {
 // custom tx codec
 // TODO: use new go-wire
 func makeCodec() *wire.Codec {
-
-	const msgTypeSend = 0x1
-	const msgTypeIssue = 0x2
-	const msgTypeRemoteSave = 0x3
-	const msgTypeReceive = 0x4
+	const msgTypeRemoteSave = 0x1
+	const msgTypeReceive = 0x2
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Msg }{},
-		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
-		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
 		oldwire.ConcreteType{remoteSaveMsg{}, msgTypeRemoteSave},
 		oldwire.ConcreteType{ReceiveMsg{}, msgTypeReceive},
 	)
@@ -101,21 +93,35 @@ func makeCodec() *wire.Codec {
 	return cdc
 }
 
-func remoteSaveHandler(sender ibc.Sender) sdk.Handler {
+func remoteSaveHandler(ibck Keeper, key sdk.StoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		rsmsg := msg.(remoteSaveMsg)
-		sender.Push(ctx, rsmsg.payload, rsmsg.destChain)
-		return sdk.Result{}
+		switch msg := msg.(type) {
+		case remoteSaveMsg:
+			return handleRemoteSaveMsg(ctx, ibck, msg)
+		case ReceiveMsg:
+			return ibck.Handle(func(ctx sdk.Context, p Payload) sdk.Error {
+				switch p := p.(type) {
+				case remoteSavePayload:
+					return handleRemoteSavePayload(ctx, key, p)
+				default:
+					return sdk.ErrUnknownRequest("")
+				}
+			}, ctx, msg)
+		default:
+			return sdk.ErrUnknownRequest("").Result()
+		}
 	}
 }
 
-func remoteSaveIBCHandler(key sdk.StoreKey) ibc.Handler {
-	return func(ctx sdk.Context, p ibc.Payload) sdk.Error {
-		rsp := p.(remoteSavePayload)
-		store := ctx.KVStore(key)
-		store.Set(rsp.key, rsp.value)
-		return nil
-	}
+func handleRemoteSaveMsg(ctx sdk.Context, ibck Keeper, msg remoteSaveMsg) sdk.Result {
+	ibck.Send(ctx, msg.payload, msg.destChain)
+	return sdk.Result{}
+}
+
+func handleRemoteSavePayload(ctx sdk.Context, key sdk.StoreKey, p remoteSavePayload) sdk.Error {
+	store := ctx.KVStore(key)
+	store.Set(p.key, p.value)
+	return nil
 }
 
 func TestIBC(t *testing.T) {
@@ -126,12 +132,8 @@ func TestIBC(t *testing.T) {
 	ctx := defaultContext(key, rskey)
 	chainid := ctx.ChainID()
 
-	keeper := NewKeeper(cdc, key)
-	keeper.Dispatcher().
-		AddDispatch("remote", remoteSaveIBCHandler(rskey))
-
-	rsh := remoteSaveHandler(keeper.Sender())
-	//	ibch := NewHandler(keeper)
+	factory := NewKeeperFactory(cdc, key)
+	rsh := remoteSaveHandler(factory.Port("remote"), key)
 
 	payload := remoteSavePayload{
 		key:   []byte("hello"),
@@ -143,7 +145,7 @@ func TestIBC(t *testing.T) {
 		destChain: chainid,
 	}
 	/*
-		packet := ibc.Packet{
+		packet := Packet{
 			Payload:   payload,
 			SrcChain:  chainid,
 			DestChain: chainid,

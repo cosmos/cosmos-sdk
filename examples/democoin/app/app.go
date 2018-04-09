@@ -66,14 +66,12 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper)
 
 	ibcKeeper := ibcm.NewKeeper(app.cdc, app.capKeyIBCStore)
-	ibcKeeper.Dispatcher().
-		AddDispatch("bank", bank.NewIBCHandler(coinKeeper))
 
 	powKeeper := pow.NewKeeper(app.capKeyPowStore, pow.NewPowConfig("pow", int64(1)), coinKeeper)
 
 	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper)
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper, ibcKeeper.Sender())).
+		AddRoute("bank", bank.NewHandler(coinKeeper, ibcKeeper)).
 		AddRoute("cool", cool.NewHandler(coolKeeper)).
 		AddRoute("pow", powKeeper.Handler).
 		AddRoute("sketchy", sketchy.NewHandler()).
@@ -121,7 +119,6 @@ func MakeCodec() *wire.Codec {
 		oldwire.ConcreteType{cool.SetTrendMsg{}, msgTypeSetTrend},
 		oldwire.ConcreteType{ibcm.ReceiveMsg{}, msgTypeReceive},
 		oldwire.ConcreteType{pow.MineMsg{}, msgTypeMine},
-		oldwire.ConcreteType{ibc.IBCTransferMsg{}, msgTypeIBCTransferMsg},
 		oldwire.ConcreteType{simplestake.BondMsg{}, msgTypeBondMsg},
 		oldwire.ConcreteType{simplestake.UnbondMsg{}, msgTypeUnbondMsg},
 	)

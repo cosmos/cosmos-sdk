@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 func TestIBCReceiveMsgType(t *testing.T) {
@@ -70,18 +69,18 @@ func (p myPayload) GetSigners() []sdk.Address {
 	return []sdk.Address{}
 }
 
-func constructIBCPacket(valid bool) ibc.Packet {
+func constructIBCPacket(valid bool) Packet {
 	srcChain := "source-chain"
 	destChain := "dest-chain"
 
-	return ibc.Packet{
+	return Packet{
 		Payload:   myPayload{valid},
 		SrcChain:  srcChain,
 		DestChain: destChain,
 	}
 }
 
-func constructReceiveMsg(packet ibc.Packet) ReceiveMsg {
+func constructReceiveMsg(packet Packet) ReceiveMsg {
 	return ReceiveMsg{
 		Packet:   packet,
 		Relayer:  sdk.Address([]byte("relayer")),

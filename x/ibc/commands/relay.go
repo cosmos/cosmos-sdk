@@ -22,8 +22,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 
-	ibcm "github.com/cosmos/cosmos-sdk/x/ibc"
-	ibc "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
 type relayCommander struct {
@@ -97,7 +96,7 @@ func (c relayCommander) loop() {
 		panic(err)
 	}
 
-	ingressKey := ibcm.IngressSequenceKey(c.fromChainID)
+	ingressKey := ibc.IngressSequenceKey(c.fromChainID)
 OUTER:
 	for {
 		time.Sleep(5 * time.Second)
@@ -114,7 +113,7 @@ OUTER:
 			panic(err)
 		}
 
-		lengthKey := ibcm.EgressLengthKey(c.toChainID)
+		lengthKey := ibc.EgressLengthKey(c.toChainID)
 		egressLengthbz, err := query(c.fromChainNode, lengthKey, c.ibcStore)
 		if err != nil {
 			c.logger.Error("Error querying outgoing packet list length", "err", err)
@@ -134,14 +133,14 @@ OUTER:
 
 		for i := processed; i < egressLength; i++ {
 
-			egressbz, proofbz, height, err := queryWithProof(c.fromChainNode, ibcm.EgressKey(c.toChainID, i), c.ibcStore)
+			egressbz, proofbz, height, err := queryWithProof(c.fromChainNode, ibc.EgressKey(c.toChainID, i), c.ibcStore)
 			if err != nil {
 				c.logger.Error("Error querying egress packet", "err", err)
 				continue OUTER
 			}
 			fmt.Printf("Got packet from height %d\n", height)
 			/*
-				commitKey := ibcm.CommitByHeightKey(fromChainID, height+1)
+				commitKey := ibc.CommitByHeightKey(fromChainID, height+1)
 				exists, err := query(toChainNode, commitKey, c.ibcStore)
 				if err != nil {
 					fmt.Printf("Error querying commit: '%s'\n", err)
@@ -175,7 +174,7 @@ func (c relayCommander) update(height int64) error {
 		return fmt.Errorf("Error querying commit: '%s'\n", err)
 	}
 	fmt.Printf("Commit: %+v\nHeight: %+v\n", commit.Header.AppHash.Bytes(), commit.Header.Height)
-	_ = ibcm.UpdateChannelMsg{
+	_ = ibc.UpdateChannelMsg{
 		SrcChain: c.fromChainID,
 		Commit:   commit,
 		Signer:   c.address,
@@ -259,7 +258,7 @@ func (c relayCommander) refine(bz []byte, pbz []byte, sequence int64, height int
 	fmt.Printf("Proof: %+v\n", eproof)
 	fmt.Printf("ProofRoot: %+v\nHeight: %+v\n", eproof.Root(), height)
 
-	msg := ibcm.ReceiveMsg{
+	msg := ibc.ReceiveMsg{
 		Packet:   packet,
 		Proof:    eproof,
 		Height:   height,

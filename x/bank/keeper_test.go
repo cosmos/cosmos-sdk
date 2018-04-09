@@ -216,9 +216,33 @@ func TestViewKeeper(t *testing.T) {
 	assert.False(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{{"barcoin", 5}}))
 }
 
-func GenerateKeys() (crypto.PrivKey, crypto.PubKey, sdk.Address) {
-	privKey := crypto.GenPrivKeyEd25519()
-	pubKey := privKey.PubKey()
-	addr := pubKey.Address()
-	return (privKey, pubKey, addr)
+func TestViewKeeper(t *testing.T) {
+	ms, authKey := setupMultiStore()
+
+	// wire registration while we're at it ... TODO
+	var _ = oldwire.RegisterInterface(
+		struct{ sdk.Account }{},
+		oldwire.ConcreteType{&auth.BaseAccount{}, 0x1},
+	)
+
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
+	accountMapper := auth.NewAccountMapperSealed(authKey, &auth.BaseAccount{})
+	coinKeeper := NewCoinKeeper(accountMapper)
+	viewKeeper := NewViewKeeper(accountMapper)
+
+	addr := sdk.Address([]byte("addr1"))
+	acc := accountMapper.NewAccountWithAddress(ctx, addr)
+
+	// Test GetCoins/SetCoins
+	accountMapper.SetAccount(ctx, acc)
+	assert.True(t, viewKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{}))
+
+	coinKeeper.SetCoins(ctx, addr, sdk.Coins{{"foocoin", 10}})
+	assert.True(t, viewKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{{"foocoin", 10}}))
+
+	// Test HasCoins
+	assert.True(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{{"foocoin", 10}}))
+	assert.True(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{{"foocoin", 5}}))
+	assert.False(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{{"foocoin", 15}}))
+	assert.False(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{{"barcoin", 5}}))
 }

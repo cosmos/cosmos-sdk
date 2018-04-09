@@ -58,6 +58,7 @@ func (rs *rootMultiStore) MountStoreWithDB(key StoreKey, typ StoreType, db dbm.D
 	rs.storesParams[key] = storeParams{
 		db:  db,
 		typ: typ,
+		key: key,
 	}
 	rs.keysByName[key.Name()] = key
 }
@@ -243,11 +244,15 @@ func parsePath(path string) (storeName string, subpath string, err sdk.Error) {
 
 //----------------------------------------
 
+// If the DB is provided params, then use that.
+// Otherwise, the DB is provided by rs.db, and all DB writes are namespaced by
+// the `<StoreKey.name>/` key prefix.
 func (rs *rootMultiStore) loadCommitStoreFromParams(id CommitID, params storeParams) (store CommitStore, err error) {
 	db := rs.db
 	if params.db != nil {
 		db = params.db
 	}
+	db = dbm.NewPrefixDB(db, storeKeyDBPrefix(params.key))
 	switch params.typ {
 	case sdk.StoreTypeMulti:
 		panic("recursive MultiStores not yet supported")
@@ -278,6 +283,7 @@ func (rs *rootMultiStore) nameToKey(name string) StoreKey {
 type storeParams struct {
 	db  dbm.DB
 	typ StoreType
+	key StoreKey
 }
 
 //----------------------------------------
@@ -408,4 +414,8 @@ func setCommitInfo(batch dbm.Batch, version int64, cInfo commitInfo) {
 	}
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, version)
 	batch.Set([]byte(cInfoKey), cInfoBytes)
+}
+
+func storeKeyDBPrefix(key StoreKey) []byte {
+	return []byte(fmt.Sprintf("/%v/", key.Name()))
 }

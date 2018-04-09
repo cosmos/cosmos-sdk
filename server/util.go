@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/wire"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tmlibs/cli"
@@ -62,12 +63,12 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 func AddCommands(
 	rootCmd *cobra.Command,
 	appState GenAppState, appCreator AppCreator,
-	context *Context) {
+	cdc *wire.Codec, context *Context) {
 
 	rootCmd.PersistentFlags().String("log_level", context.Config.LogLevel, "Log level")
 
 	rootCmd.AddCommand(
-		InitCmd(appState, context),
+		InitCmd(cdc, appState, context),
 		StartCmd(appCreator, context),
 		UnsafeResetAllCmd(context),
 		ShowNodeIDCmd(context),

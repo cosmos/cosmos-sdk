@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/go-crypto/keys/words"
 	cfg "github.com/tendermint/tendermint/config"
@@ -30,6 +31,7 @@ type testnetInformation struct {
 }
 
 type initCmd struct {
+	cdc         *wire.Codec
 	genAppState GenAppState
 	context     *Context
 }
@@ -39,8 +41,9 @@ type initCmd struct {
 // The application can pass in a function to generate
 // proper state. And may want to use GenerateCoinKey
 // to create default account(s).
-func InitCmd(gen GenAppState, ctx *Context) *cobra.Command {
+func InitCmd(cdc *wire.Codec, gen GenAppState, ctx *Context) *cobra.Command {
 	cmd := initCmd{
+		cdc:         cdc,
 		genAppState: gen,
 		context:     ctx,
 	}
@@ -97,7 +100,7 @@ func (c initCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	testnetInfo.NodeID = nodeKey.ID()
-	out, err := json.MarshalIndent(testnetInfo, "", "  ")
+	out, err := c.cdc.MarshalJSON(testnetInfo)
 	if err != nil {
 		return err
 	}
@@ -194,13 +197,13 @@ func addGenesisState(filename string, appState json.RawMessage) error {
 	}
 
 	var doc GenesisDoc
-	err = json.Unmarshal(bz, &doc)
+	err = cdc.UnmarshalJSON(bz, &doc)
 	if err != nil {
 		return err
 	}
 
 	doc["app_state"] = appState
-	out, err := json.MarshalIndent(doc, "", "  ")
+	out, err := cdc.MarshalJSON(doc)
 	if err != nil {
 		return err
 	}

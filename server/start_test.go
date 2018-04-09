@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/mock"
 	"github.com/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -25,7 +26,8 @@ func TestStartStandAlone(t *testing.T) {
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	ctx := NewContext(cfg, logger)
-	initCmd := InitCmd(mock.GenInitOptions, ctx)
+	cdc := app.MakeCodec()
+	initCmd := InitCmd(cdc, mock.GenInitOptions, ctx)
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
@@ -51,7 +53,8 @@ func TestStartWithTendermint(t *testing.T) {
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	ctx := NewContext(cfg, logger)
-	initCmd := InitCmd(mock.GenInitOptions, ctx)
+	cdc := app.MakeCodec()
+	initCmd := InitCmd(cdc, mock.GenInitOptions, ctx)
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 

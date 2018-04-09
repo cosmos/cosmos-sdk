@@ -140,8 +140,8 @@ type SendKeeper struct {
 }
 
 // NewSendKeeper returns a new CoinKeeper
-func NewSendKeeper(am sdk.AccountMapper) CoinKeeper {
-	return CoinKeeper{am: am}
+func NewSendKeeper(am sdk.AccountMapper) SendKeeper {
+	return SendKeeper{am: am}
 }
 
 // GetCoins returns the coins at the addr.
@@ -172,8 +172,8 @@ type ViewKeeper struct {
 }
 
 // NewViewKeeper returns a new CoinKeeper
-func NewViewKeeper(am sdk.AccountMapper) CoinKeeper {
-	return CoinKeeper{am: am}
+func NewViewKeeper(am sdk.AccountMapper) ViewKeeper {
+	return ViewKeeper{am: am}
 }
 
 // GetCoins returns the coins at the addr.

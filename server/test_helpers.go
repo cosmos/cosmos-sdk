@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/mock"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -50,7 +51,8 @@ func StartServer(t *testing.T) chan error {
 
 	// init server
 	ctx := NewContext(cfg, log.NewNopLogger())
-	initCmd := InitCmd(mock.GenInitOptions, ctx)
+	// TODO get rid of basecoin dependency
+	initCmd := InitCmd(app.MakeCodec(), mock.GenInitOptions, ctx)
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 

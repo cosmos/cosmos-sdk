@@ -55,7 +55,8 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 }
 
 func main() {
-	server.AddCommands(rootCmd, server.DefaultGenAppState, generateApp, context)
+	cdc := app.MakeCodec()
+	server.AddCommands(rootCmd, server.DefaultGenAppState, generateApp, cdc, context)
 
 	// prepare and add flags
 	executor := cli.PrepareBaseCmd(rootCmd, "GA", os.ExpandEnv("$HOME/.gaiad"))

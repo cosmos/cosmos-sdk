@@ -79,7 +79,8 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 }
 
 func main() {
-	server.AddCommands(rootCmd, defaultAppState, generateApp, context)
+	cdc := app.MakeCodec()
+	server.AddCommands(rootCmd, defaultAppState, generateApp, cdc, context)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.democoind")

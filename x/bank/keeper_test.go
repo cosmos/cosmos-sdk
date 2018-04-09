@@ -13,7 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
@@ -29,7 +28,13 @@ func TestCoinKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	stakeKeeper := NewKeeper(capKey, bank.NewCoinKeeper(nil))
+	accountMapper := auth.NewMapper(authKey, &auth.BaseAccount{})
+	coinKeeper := NewCoinKeeper(accountMapper)
+	accountMapper.SetAccount(accountMapper.NewAccountWithAddress())
+
+	assert.Equal(t, sdk.Coins{}, coinKeeper, ...)
+
+
 	addr := sdk.Address([]byte("some-address"))
 
 	bi := stakeKeeper.getBondInfo(ctx, addr)
@@ -48,4 +53,11 @@ func TestCoinKeeper(t *testing.T) {
 	assert.NotNil(t, savedBi)
 	fmt.Printf("Bond Info: %v\n", savedBi)
 	assert.Equal(t, int64(10), savedBi.Power)
+}
+
+func GenerateKeys() (crypto.PrivKey, crypto.PubKey, sdk.Address) {
+	privKey := crypto.GenPrivKeyEd25519()
+	pubKey := privKey.PubKey()
+	addr := pubKey.Address()
+	return (privKey, pubKey, addr)
 }

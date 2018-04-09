@@ -195,7 +195,7 @@ func (out Output) ValidateBasic() sdk.Error {
 }
 
 func (out Output) String() string {
-	return fmt.Sprintf("Output{%X,%v}", out.Address, out.Coins)
+	return fmt.Sprintf("Output{%v,%v}", out.Address, out.Coins)
 }
 
 // NewOutput - create a transaction output, used with SendMsg

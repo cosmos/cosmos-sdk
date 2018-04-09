@@ -117,7 +117,7 @@
     "json/scanner",
     "json/token"
   ]
-  revision = "f40e974e75af4e271d97ce0fc917af5898ae7bda"
+  revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
   branch = "master"
@@ -183,7 +183,7 @@
   branch = "master"
   name = "github.com/rcrowley/go-metrics"
   packages = ["."]
-  revision = "8732c616f52954686704c8645fe1a9d59e9df7c1"
+  revision = "d932a24a8ccb8fcadc993e5c6c58f93dac168294"
 
 [[projects]]
   name = "github.com/spf13/afero"
@@ -191,8 +191,8 @@
     ".",
     "mem"
   ]
-  revision = "bb8f1927f2a9d3ab41c9340aa034f6b803f4359c"
-  version = "v1.0.2"
+  revision = "63644898a8da0bc22138abf860edaf5277b6102e"
+  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/spf13/cast"
@@ -203,8 +203,8 @@
 [[projects]]
   name = "github.com/spf13/cobra"
   packages = ["."]
-  revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
-  version = "v0.0.1"
+  revision = "a1f051bc3eba734da4772d60e2d677f47cf93ef4"
+  version = "v0.0.2"
 
 [[projects]]
   branch = "master"
@@ -250,7 +250,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "169b1b37be738edb2813dab48c97a549bcf99bb5"
+  revision = "714f901b98fdb3aa954b4193d8cbd64a28d80cad"
 
 [[projects]]
   name = "github.com/tendermint/abci"
@@ -261,8 +261,8 @@
     "server",
     "types"
   ]
-  revision = "46686763ba8ea595ede16530ed4a40fb38f49f94"
-  version = "v0.10.2"
+  revision = "78a8905690ef54f9d57e3b2b0ee7ad3a04ef3f1f"
+  version = "v0.10.3"
 
 [[projects]]
   branch = "master"
@@ -341,8 +341,8 @@
     "version",
     "wire"
   ]
-  revision = "6f9956990c444d53f62f2a3905ed410cfe9afe77"
-  version = "v0.17.1"
+  revision = "4930b61a381b9fb9bc530eb5deb56ea6429a1c3a"
+  version = "v0.18.0"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -359,8 +359,8 @@
     "pubsub",
     "pubsub/query"
   ]
-  revision = "24da7009c3d8c019b40ba4287495749e3160caca"
-  version = "v0.7.1"
+  revision = "2e24b64fc121dcdf1cabceab8dc2f7257675483c"
+  version = "v0.8.1"
 
 [[projects]]
   branch = "master"
@@ -376,7 +376,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "88942b9c40a4c9d203b82b3731787b672d6e809b"
+  revision = "b2aa35443fbc700ab74c586ae79b81c171851023"
 
 [[projects]]
   branch = "master"
@@ -390,13 +390,13 @@
     "lex/httplex",
     "trace"
   ]
-  revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
+  revision = "61147c48b25b599e5b561d2e9c4f3e1ef489ca41"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "13d03a9a82fba647c21a0ef8fba44a795d0f0835"
+  revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -423,7 +423,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "ab0870e398d5dd054b868c0db1481ab029b9a9f2"
+  revision = "ce84044298496ef4b54b4a0a0909ba593cc60e30"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -452,12 +452,12 @@
 [[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "86f5ed62f8a0ee96bd888d2efdfd6d4fb100a4eb"
-  version = "v2.2.0"
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ed1f3f7f1728cd02945f90ca780e9bdc982573a36a5cc8d7e9f19fb40ba2ca19"
+  inputs-digest = "669e58d0c4eb48e506f1abc66119c2f21b6600d4e08e8875ac83567b5c721565"
   solver-name = "gps-cdcl"
   solver-version = 1

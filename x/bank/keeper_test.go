@@ -1,18 +1,34 @@
+<<<<<<< HEAD
 package bank
 
 import (
+=======
+package simplestake
+
+import (
+	"fmt"
+
+>>>>>>> asdf
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	abci "github.com/tendermint/abci/types"
+<<<<<<< HEAD
+=======
+	crypto "github.com/tendermint/go-crypto"
+>>>>>>> asdf
 	dbm "github.com/tendermint/tmlibs/db"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+<<<<<<< HEAD
 	oldwire "github.com/tendermint/go-wire"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
+=======
+	"github.com/cosmos/cosmos-sdk/x/bank"
+>>>>>>> asdf
 )
 
 func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
@@ -27,6 +43,7 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 func TestCoinKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
+<<<<<<< HEAD
 	// wire registration while we're at it ... TODO
 	var _ = oldwire.RegisterInterface(
 		struct{ sdk.Account }{},
@@ -214,4 +231,26 @@ func TestViewKeeper(t *testing.T) {
 	assert.True(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{{"foocoin", 5}}))
 	assert.False(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{{"foocoin", 15}}))
 	assert.False(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{{"barcoin", 5}}))
+=======
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
+	stakeKeeper := NewKeeper(capKey, bank.NewCoinKeeper(nil))
+	addr := sdk.Address([]byte("some-address"))
+
+	bi := stakeKeeper.getBondInfo(ctx, addr)
+	assert.Equal(t, bi, bondInfo{})
+
+	privKey := crypto.GenPrivKeyEd25519()
+
+	bi = bondInfo{
+		PubKey: privKey.PubKey(),
+		Power:  int64(10),
+	}
+	fmt.Printf("Pubkey: %v\n", privKey.PubKey())
+	stakeKeeper.setBondInfo(ctx, addr, bi)
+
+	savedBi := stakeKeeper.getBondInfo(ctx, addr)
+	assert.NotNil(t, savedBi)
+	fmt.Printf("Bond Info: %v\n", savedBi)
+	assert.Equal(t, int64(10), savedBi.Power)
+>>>>>>> asdf
 }

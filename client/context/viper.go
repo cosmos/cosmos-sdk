@@ -2,6 +2,7 @@ package context
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/spf13/viper"
 	"io/ioutil"
 
@@ -46,4 +47,19 @@ func NewCoreContextFromViper() core.CoreContext {
 		Decoder:         nil,
 		AccountStore:    "main",
 	}
+}
+
+// Automatically set sequence number
+func AutoSequence(ctx core.CoreContext) (core.CoreContext, error) {
+	from, err := ctx.GetFromAddress()
+	if err != nil {
+		return ctx, err
+	}
+	seq, err := ctx.NextSequence(from)
+	if err != nil {
+		return ctx, err
+	}
+	fmt.Printf("Defaulting to next sequence number: %d\n", seq)
+	ctx = ctx.WithSequence(seq)
+	return ctx, nil
 }

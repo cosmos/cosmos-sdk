@@ -64,17 +64,9 @@ func (c Commander) sendTxCmd(cmd *cobra.Command, args []string) error {
 	msg := BuildMsg(from, to, coins)
 
 	// default to next sequence number if none provided
-	if viper.GetInt64(client.FlagSequence) == 0 {
-		from, err := ctx.GetFromAddress()
-		if err != nil {
-			return err
-		}
-		seq, err := ctx.NextSequence(from)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Defaulting to next sequence number: %d\n", seq)
-		ctx = ctx.WithSequence(seq)
+	ctx, err = context.AutoSequence(ctx)
+	if err != nil {
+		return err
 	}
 
 	// build and sign the transaction, then broadcast to Tendermint

@@ -168,8 +168,8 @@ into a `Tx`:
 type TxDecoder func(txBytes []byte) (Tx, error)
 ```
 
-In `Basecoin`, we use the Tendermint wire format and the `go-wire` library for
-encoding and decoding all message types.  The `go-wire` library has the nice
+In `Basecoin`, we use the Tendermint wire format and the `go-amino` library for
+encoding and decoding all message types.  The `go-amino` library has the nice
 property that it can unmarshal into interface types, but it requires the
 relevant types to be registered ahead of type. Registration happens on a
 `Codec` object, so as not to taint the global name space.
@@ -186,7 +186,7 @@ cdc.RegisterConcrete(bank.IssueMsg{}, "cosmos-sdk/IssueMsg", nil)
 Note how each concrete type is given a name - these name determine the type's
 unique "prefix bytes" during encoding.  A registered type will always use the
 same prefix-bytes, regardless of what interface it is satisfying.  For more
-details, see the [go-wire documentation](https://github.com/tendermint/go-wire/blob/develop).
+details, see the [go-amino documentation](https://github.com/tendermint/go-amino/blob/develop).
 
 
 ## MultiStore

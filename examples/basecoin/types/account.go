@@ -12,7 +12,7 @@ var _ sdk.Account = (*AppAccount)(nil)
 // extending auth.BaseAccount with custom fields.
 //
 // This is compatible with the stock auth.AccountStore, since
-// auth.AccountStore uses the flexible go-wire library.
+// auth.AccountStore uses the flexible go-amino library.
 type AppAccount struct {
 	auth.BaseAccount
 	Name string `json:"name"`

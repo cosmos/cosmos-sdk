@@ -11,7 +11,7 @@ import (
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/proxy"
-	"github.com/tendermint/tendermint/types"
+	pvm "github.com/tendermint/tendermint/types/priv_validator"
 	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/tmlibs/log"
 )
@@ -95,7 +95,7 @@ func (s startCmd) startInProcess() error {
 
 	// Create & start tendermint node
 	n, err := node.NewNode(cfg,
-		types.LoadOrGenPrivValidatorFS(cfg.PrivValidatorFile()),
+		pvm.LoadOrGenFilePV(cfg.PrivValidatorFile()),
 		proxy.NewLocalClientCreator(app),
 		node.DefaultGenesisDocProviderFunc(cfg),
 		node.DefaultDBProvider,

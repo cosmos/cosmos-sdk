@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.0 (TBD)
+
+BREAKING CHANGES
+
+* Remove go-wire, use go-amino
+
 ## 0.14.0 (April 9, 2018)
 
 BREAKING CHANGES:

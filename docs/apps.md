@@ -40,7 +40,7 @@ Basecoin implements a `BaseApp` state machine using the `x/auth` and `x/bank` ex
 which define how transaction signers are authenticated and how coins are transferred.
 It should also use `x/ibc` and probably a simple staking extension.
 
-Basecoin and the native `x` extensions use go-wire for all serialization needs,
+Basecoin and the native `x` extensions use go-amino for all serialization needs,
 including for transactions and accounts.
 
 ## Your Cosmos App
@@ -62,7 +62,7 @@ Ethermint is a new implementation of `BaseApp` that does not depend on Basecoin.
 Instead of `cosmos-sdk/x/` it has its own `ethermint/x` based on `go-ethereum`.
 
 Ethermint uses a Patricia store for its accounts, and an IAVL store for IBC.
-It has `x/ante`, which is quite similar to Basecoin's but uses RLP instead of go-wire.
+It has `x/ante`, which is quite similar to Basecoin's but uses RLP instead of go-amino.
 Instead of `x/bank`, it has `x/eth`, which defines the single Ethereum transaction type
 and all the semantics of the Ethereum state machine.
 

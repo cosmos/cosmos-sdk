@@ -118,9 +118,9 @@ func processSig(
 	// If pubkey is not known for account,
 	// set it from the StdSignature.
 	pubKey := acc.GetPubKey()
-	if pubKey.Empty() {
+	if pubKey == nil {
 		pubKey = sig.PubKey
-		if pubKey.Empty() {
+		if pubKey == nil {
 			return nil, sdk.ErrInvalidPubKey("PubKey not found").Result()
 		}
 		if !bytes.Equal(pubKey.Address(), addr) {

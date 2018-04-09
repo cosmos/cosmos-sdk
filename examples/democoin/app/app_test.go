@@ -106,8 +106,7 @@ func TestMsgs(t *testing.T) {
 		}})
 
 		// just marshal/unmarshal!
-		cdc := MakeCodec()
-		txBytes, err := cdc.MarshalBinary(tx)
+		txBytes, err := bapp.cdc.MarshalBinary(tx)
 		require.NoError(t, err, "i: %v", i)
 
 		// Run a Check
@@ -245,10 +244,9 @@ func TestMineMsg(t *testing.T) {
 
 	// Construct genesis state
 	// Construct some genesis bytes to reflect democoin/types/AppAccount
-	coins := sdk.Coins{}
 	baseAcc := auth.BaseAccount{
 		Address: addr1,
-		Coins:   coins,
+		Coins:   nil,
 	}
 	acc1 := &types.AppAccount{baseAcc, "foobart"}
 
@@ -297,10 +295,9 @@ func TestQuizMsg(t *testing.T) {
 
 	// Construct genesis state
 	// Construct some genesis bytes to reflect democoin/types/AppAccount
-	coins := sdk.Coins{}
 	baseAcc := auth.BaseAccount{
 		Address: addr1,
-		Coins:   coins,
+		Coins:   nil,
 	}
 	acc1 := &types.AppAccount{baseAcc, "foobart"}
 

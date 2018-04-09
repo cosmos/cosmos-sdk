@@ -275,6 +275,12 @@
   revision = "d8387025d2b9d158cf4efb07e7ebf814bcce2057"
 
 [[projects]]
+  name = "github.com/tendermint/go-amino"
+  packages = ["."]
+  revision = "42246108ff925a457fb709475070a03dfd3e2b5c"
+  version = "0.9.6"
+
+[[projects]]
   name = "github.com/tendermint/go-crypto"
   packages = [
     ".",
@@ -283,17 +289,13 @@
     "keys/words",
     "keys/words/wordlist"
   ]
-  revision = "c3e19f3ea26f5c3357e0bcbb799b0761ef923755"
-  version = "v0.5.0"
+  revision = "915416979bf70efa4bcbf1c6cd5d64c5fff9fc19"
+  version = "v0.6.2"
 
 [[projects]]
   name = "github.com/tendermint/go-wire"
-  packages = [
-    ".",
-    "data"
-  ]
+  packages = ["."]
   revision = "fa721242b042ecd4c6ed1a934ee740db4f74e45c"
-  source = "github.com/tendermint/go-amino"
   version = "v0.7.3"
 
 [[projects]]
@@ -338,11 +340,10 @@
     "state/txindex/null",
     "types",
     "types/priv_validator",
-    "version",
-    "wire"
+    "version"
   ]
-  revision = "4930b61a381b9fb9bc530eb5deb56ea6429a1c3a"
-  version = "v0.18.0"
+  revision = "dcd00b0e688f133b9634aee513f8bf856e659356"
+  version = "v0.19.0-rc4"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -458,6 +459,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "669e58d0c4eb48e506f1abc66119c2f21b6600d4e08e8875ac83567b5c721565"
+  inputs-digest = "ad499422ee60cf89fd9d61e232e33d0a17f7b43e0ff7aff0c0a22949901096e8"
   solver-name = "gps-cdcl"
   solver-version = 1

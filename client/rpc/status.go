@@ -1,13 +1,11 @@
 package rpc
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/spf13/cobra"
-	wire "github.com/tendermint/go-wire"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -41,8 +39,8 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output, err := wire.MarshalJSON(status)
-	// output, err := json.MarshalIndent(res, "  ", "")
+	output, err := cdc.MarshalJSON(status)
+	// output, err := cdc.MarshalJSONIndent(res, "  ", "")
 	if err != nil {
 		return err
 	}
@@ -62,7 +60,7 @@ func NodeInfoRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nodeInfo := status.NodeInfo
-	output, err := json.MarshalIndent(nodeInfo, "", "  ")
+	output, err := cdc.MarshalJSON(nodeInfo)
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))

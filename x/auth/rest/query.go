@@ -2,7 +2,6 @@ package rest
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -56,7 +55,7 @@ func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, decoder sdk.A
 		}
 
 		// print out whole account
-		output, err := json.MarshalIndent(account, "", "  ")
+		output, err := cdc.MarshalJSON(account)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("Could't marshall query result. Error: %s", err.Error())))

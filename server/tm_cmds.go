@@ -5,10 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/tendermint/go-wire/data"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/p2p"
-	"github.com/tendermint/tendermint/types"
+	pvm "github.com/tendermint/tendermint/types/priv_validator"
 )
 
 // ShowNodeIDCmd - ported from Tendermint, dump node ID to stdout
@@ -53,8 +52,8 @@ type showValidator struct {
 
 func (s showValidator) run(cmd *cobra.Command, args []string) error {
 	cfg := s.context.Config
-	privValidator := types.LoadOrGenPrivValidatorFS(cfg.PrivValidatorFile())
-	pubKeyJSONBytes, err := data.ToJSON(privValidator.PubKey)
+	privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorFile())
+	pubKeyJSONBytes, err := cdc.MarshalJSON(privValidator.PubKey)
 	if err != nil {
 		return err
 	}

@@ -18,8 +18,7 @@ store), and it must have a deterministic action. The transaction is the
 main piece of one request.
 
 We currently make heavy use of
-`go-wire <https://github.com/tendermint/go-wire>`__ and
-`data <https://github.com/tendermint/go-wire/tree/master/data>`__ to
+`go-amino <https://github.com/tendermint/go-amino>`__ to
 provide binary and json encodings and decodings for ``struct`` or
 interface\ ``objects. Here, encoding and decoding operations are designed to operate with interfaces nested any amount times (like an onion!). There is one public``\ TxMapper\`
 in the basecoin root package, and all modules can register their own
@@ -162,13 +161,13 @@ also implements the ``Handler`` interface. We then register a list of
 modules with the dispatcher. Every module has a unique ``Name()``, which
 is used for isolating its state space. We use this same name for routing
 transactions. Each transaction implementation must be registed with
-go-wire via ``TxMapper``, so we just look at the registered name of this
+go-amino via ``TxMapper``, so we just look at the registered name of this
 transaction, which should be of the form ``<module name>/xxx``. The
 dispatcher grabs the appropriate module name from the tx name and routes
 it if the module is present.
 
 This all seems like a bit of magic, but really we're just making use of
-go-wire magic that we are already using, rather than add another layer.
+go-amino magic that we are already using, rather than add another layer.
 For all the transactions to be properly routed, the only thing you need
 to remember is to use the following pattern:
 

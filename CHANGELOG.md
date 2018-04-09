@@ -6,6 +6,12 @@ BREAKING CHANGES
 
 * Remove go-wire, use go-amino
 
+## 0.14.1 (April 9, 2018)
+
+BUG FIXES
+
+* [gaiacli] Fix all commands (just a duplicate of basecli for now)
+
 ## 0.14.0 (April 9, 2018)
 
 BREAKING CHANGES:

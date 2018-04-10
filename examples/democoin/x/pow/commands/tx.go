@@ -55,7 +55,7 @@ func MineCmd(cdc *wire.Codec) *cobra.Command {
 			name := ctx.FromAddressName
 
 			// default to next sequence number if none provided
-			ctx, err = context.AutoSequence(ctx)
+			ctx, err = context.EnsureSequence(ctx)
 			if err != nil {
 				return err
 			}

@@ -96,7 +96,7 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			// default to next sequence number if none provided
-			ctx, err = context.AutoSequence(ctx)
+			ctx, err = context.EnsureSequence(ctx)
 			if err != nil {
 				return err
 			}
@@ -140,7 +140,7 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			// default to next sequence number if none provided
-			ctx, err = context.AutoSequence(ctx)
+			ctx, err = context.EnsureSequence(ctx)
 			if err != nil {
 				return err
 			}
@@ -183,7 +183,7 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			// default to next sequence number if none provided
-			ctx, err = context.AutoSequence(ctx)
+			ctx, err = context.EnsureSequence(ctx)
 			if err != nil {
 				return err
 			}
@@ -237,7 +237,7 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			// default to next sequence number if none provided
-			ctx, err = context.AutoSequence(ctx)
+			ctx, err = context.EnsureSequence(ctx)
 			if err != nil {
 				return err
 			}

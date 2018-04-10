@@ -40,7 +40,7 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 			name := viper.GetString(client.FlagName)
 
 			// default to next sequence number if none provided
-			ctx, err = context.AutoSequence(ctx)
+			ctx, err = context.EnsureSequence(ctx)
 			if err != nil {
 				return err
 			}
@@ -79,7 +79,7 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 			name := viper.GetString(client.FlagName)
 
 			// default to next sequence number if none provided
-			ctx, err = context.AutoSequence(ctx)
+			ctx, err = context.EnsureSequence(ctx)
 			if err != nil {
 				return err
 			}

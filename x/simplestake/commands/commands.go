@@ -98,7 +98,7 @@ func (co commander) sendMsg(msg sdk.Msg) error {
 	ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(co.cdc))
 
 	// default to next sequence number if none provided
-	ctx, err := context.AutoSequence(ctx)
+	ctx, err := context.EnsureSequence(ctx)
 	if err != nil {
 		return err
 	}

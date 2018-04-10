@@ -55,7 +55,7 @@ func (c sendCommander) sendIBCTransfer(cmd *cobra.Command, args []string) error 
 	}
 
 	// default to next sequence number if none provided
-	ctx, err = context.AutoSequence(ctx)
+	ctx, err = context.EnsureSequence(ctx)
 	if err != nil {
 		return err
 	}

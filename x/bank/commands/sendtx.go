@@ -64,7 +64,7 @@ func (c Commander) sendTxCmd(cmd *cobra.Command, args []string) error {
 	msg := BuildMsg(from, to, coins)
 
 	// default to next sequence number if none provided
-	ctx, err = context.AutoSequence(ctx)
+	ctx, err = context.EnsureSequence(ctx)
 	if err != nil {
 		return err
 	}

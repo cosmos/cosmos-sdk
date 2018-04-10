@@ -16,9 +16,9 @@ The intent of Context is for it to be an immutable object that can be
 cloned and updated cheaply with WithValue() and passed forward to the
 next decorator or handler. For example,
 
- func MsgHandler(context Context, tx Tx) Result {
+ func MsgHandler(ctx Context, tx Tx) Result {
  	...
- 	context = context.WithValue(key, value)
+ 	ctx = context.WithValue(key, value)
  	...
  }
 */

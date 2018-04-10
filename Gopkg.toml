@@ -53,29 +53,28 @@
   version = "~1.2.1"
 
 [[constraint]]
-  version = "~0.10.2"
   name = "github.com/tendermint/abci"
+  version = "~0.10.3"
 
 [[constraint]]
-  version = "~0.5.0"
   name = "github.com/tendermint/go-crypto"
+  version = "~0.6.2"
 
 [[constraint]]
-  version = "~0.7.3"
-  source = "github.com/tendermint/go-amino"
-  name = "github.com/tendermint/go-wire"
+  name = "github.com/tendermint/go-amino"
+  version = "~0.9.6"
 
 [[constraint]]
-  version = "~0.7.0"
   name = "github.com/tendermint/iavl"
+  version = "~0.7.0"
 
 [[constraint]]
-  version = "~0.18.0"
   name = "github.com/tendermint/tendermint"
+  version = "0.19.0-rc4"
 
-[[override]]
-  version = "~0.8.1"
+[[constraint]]
   name = "github.com/tendermint/tmlibs"
+  version = "~0.8.1"
 
 [prune]
   go-tests = true

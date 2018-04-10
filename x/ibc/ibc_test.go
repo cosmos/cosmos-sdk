@@ -7,8 +7,6 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-crypto"
-
-	oldwire "github.com/tendermint/go-wire"
 	dbm "github.com/tendermint/tmlibs/db"
 
 	"github.com/cosmos/cosmos-sdk/store"
@@ -73,24 +71,25 @@ func (msg remoteSaveMsg) ValidateBasic() sdk.Error {
 	return nil
 }
 
-// custom tx codec
-// TODO: use new go-wire
 func makeCodec() *wire.Codec {
-	const msgTypeRemoteSave = 0x1
-	const msgTypeReceive = 0x2
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Msg }{},
-		oldwire.ConcreteType{remoteSaveMsg{}, msgTypeRemoteSave},
-		oldwire.ConcreteType{ReceiveMsg{}, msgTypeReceive},
-	)
+	var cdc = wire.NewCodec()
 
-	const accTypeApp = 0x1
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Account }{},
-		oldwire.ConcreteType{&auth.BaseAccount{}, accTypeApp},
-	)
-	cdc := wire.NewCodec()
+	// Register Msgs
+	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
+	cdc.RegisterConcrete(remoteSaveMsg{}, "test/remoteSave", nil)
+	cdc.RegisterConcrete(ReceiveMsg{}, "test/Receive", nil)
+
+	// Register AppAccount
+	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/Account", nil)
+	wire.RegisterCrypto(cdc)
+
+	// Register Payloads
+	cdc.RegisterInterface((*Payload)(nil), nil)
+	cdc.RegisterConcrete(remoteSavePayload{}, "test/payload/remoteSave", nil)
+
 	return cdc
+
 }
 
 func remoteSaveHandler(ibck Keeper, key sdk.StoreKey) sdk.Handler {
@@ -125,7 +124,7 @@ func handleRemoteSavePayload(ctx sdk.Context, key sdk.StoreKey, p remoteSavePayl
 }
 
 func TestIBC(t *testing.T) {
-	cdc := wire.NewCodec()
+	cdc := makeCodec()
 
 	key := sdk.NewKVStoreKey("ibc")
 	rskey := sdk.NewKVStoreKey("remote")

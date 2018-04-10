@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	abci "github.com/tendermint/abci/types"
-	oldwire "github.com/tendermint/go-wire"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -14,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	ibcm "github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/simplestake"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
@@ -44,10 +43,14 @@ type DemocoinApp struct {
 }
 
 func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
-	// create your application object
+
+	// Create app-level codec for txs and accounts.
+	var cdc = MakeCodec()
+
+	// Create your application object.
 	var app = &DemocoinApp{
 		BaseApp:            bam.NewBaseApp(appName, logger, dbs["main"]),
-		cdc:                MakeCodec(),
+		cdc:                cdc,
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
 		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
 		capKeyPowStore:     sdk.NewKVStoreKey("pow"),
@@ -55,17 +58,18 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
 	}
 
-	// define the accountMapper
-	app.accountMapper = auth.NewAccountMapperSealed(
+	// Define the accountMapper.
+	app.accountMapper = auth.NewAccountMapper(
+		cdc,
 		app.capKeyMainStore, // target store
 		&types.AppAccount{}, // prototype
-	)
+	).Seal()
 
-	// add handlers
+	// Add handlers.
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper)
 
-	ibcKeeper := ibcm.NewKeeper(app.cdc, app.capKeyIBCStore)
+	ibcKeeper := ibc.NewKeeper(app.cdc, app.capKeyIBCStore)
 
 	powKeeper := pow.NewKeeper(app.capKeyPowStore, pow.NewPowConfig("pow", int64(1)), coinKeeper)
 
@@ -75,10 +79,10 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 		AddRoute("cool", cool.NewHandler(coolKeeper)).
 		AddRoute("pow", powKeeper.Handler).
 		AddRoute("sketchy", sketchy.NewHandler()).
-		AddRoute("ibc", ibcm.NewHandler(ibcKeeper)).
+		AddRoute("ibc", ibc.NewHandler(ibcKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
-	// initialize BaseApp
+	// Initialize BaseApp.
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainerFn(coolKeeper, powKeeper))
 	app.MountStoreWithDB(app.capKeyMainStore, sdk.StoreTypeIAVL, dbs["main"])
@@ -98,42 +102,34 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 }
 
 // custom tx codec
-// TODO: use new go-wire
 func MakeCodec() *wire.Codec {
-	const msgTypeSend = 0x1
-	const msgTypeIBCSend = 0x2
-	const msgTypeIssue = 0x3
-	const msgTypeQuiz = 0x4
-	const msgTypeSetTrend = 0x5
-	const msgTypeMine = 0x6
-	const msgTypeReceive = 0x7
-	const msgTypeBondMsg = 0x8
-	const msgTypeUnbondMsg = 0x9
+	var cdc = wire.NewCodec()
 
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Msg }{},
-		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
-		oldwire.ConcreteType{bank.IBCSendMsg{}, msgTypeIBCSend},
-		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
-		oldwire.ConcreteType{cool.QuizMsg{}, msgTypeQuiz},
-		oldwire.ConcreteType{cool.SetTrendMsg{}, msgTypeSetTrend},
-		oldwire.ConcreteType{ibcm.ReceiveMsg{}, msgTypeReceive},
-		oldwire.ConcreteType{pow.MineMsg{}, msgTypeMine},
-		oldwire.ConcreteType{simplestake.BondMsg{}, msgTypeBondMsg},
-		oldwire.ConcreteType{simplestake.UnbondMsg{}, msgTypeUnbondMsg},
-	)
+	// Register Msgs
+	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
+	cdc.RegisterConcrete(bank.SendMsg{}, "democoin/Send", nil)
+	cdc.RegisterConcrete(bank.IBCSendMsg{}, "democoin/IBCSend", nil)
+	cdc.RegisterConcrete(bank.IssueMsg{}, "democoin/Issue", nil)
+	cdc.RegisterConcrete(cool.QuizMsg{}, "democoin/Quiz", nil)
+	cdc.RegisterConcrete(cool.SetTrendMsg{}, "democoin/SetTrend", nil)
+	cdc.RegisterConcrete(pow.MineMsg{}, "democoin/Mine", nil)
+	cdc.RegisterConcrete(ibc.OpenChannelMsg{}, "democoin/OpenChannel", nil)
+	cdc.RegisterConcrete(ibc.UpdateChannelMsg{}, "democoin/UpdateChannel", nil)
+	cdc.RegisterConcrete(ibc.ReceiveMsg{}, "democoin/Receive", nil)
+	cdc.RegisterConcrete(simplestake.BondMsg{}, "democoin/BondMsg", nil)
+	cdc.RegisterConcrete(simplestake.UnbondMsg{}, "democoin/UnbondMsg", nil)
 
-	const accTypeApp = 0x1
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Account }{},
-		oldwire.ConcreteType{&types.AppAccount{}, accTypeApp},
-	)
-	cdc := wire.NewCodec()
+	// Register AppAccount
+	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterConcrete(&types.AppAccount{}, "democoin/Account", nil)
 
-	// cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	// bank.RegisterWire(cdc)   // Register bank.[SendMsg,IssueMsg] types.
-	// crypto.RegisterWire(cdc) // Register crypto.[PubKey,PrivKey,Signature] types.
-	// ibc.RegisterWire(cdc) // Register ibc.[IBCTransferMsg, IBCReceiveMsg] types.
+	// Register Payload
+	cdc.RegisterInterface((*ibc.Payload)(nil), nil)
+	cdc.RegisterConcrete(bank.SendPayload{}, "basecoin/payload/Send", nil)
+
+	// Register crypto.
+	wire.RegisterCrypto(cdc)
+
 	return cdc
 }
 

@@ -73,16 +73,74 @@ func TestIAVLIterator(t *testing.T) {
 	iavlStore := newIAVLStore(tree, numHistory)
 	iter := iavlStore.Iterator([]byte("aloha"), []byte("hellz"))
 	expected := []string{"aloha", "hello"}
-	for i := 0; iter.Valid(); iter.Next() {
+	var i int
+
+	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
 		key, value := iter.Key(), iter.Value()
 		assert.EqualValues(t, key, expectedKey)
 		assert.EqualValues(t, value, treeData[expectedKey])
 		i += 1
 	}
+	assert.Equal(t, len(expected), i)
+
+	iter = iavlStore.Iterator([]byte("golang"), []byte("rocks"))
+	expected = []string{"hello"}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, treeData[expectedKey])
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
+
+	iter = iavlStore.Iterator(nil, []byte("golang"))
+	expected = []string{"aloha"}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, treeData[expectedKey])
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
+
+	iter = iavlStore.Iterator(nil, []byte("shalom"))
+	expected = []string{"aloha", "hello"}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, treeData[expectedKey])
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
+
+	iter = iavlStore.Iterator(nil, nil)
+	expected = []string{"aloha", "hello"}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, treeData[expectedKey])
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
+
+	iter = iavlStore.Iterator([]byte("golang"), nil)
+	expected = []string{"hello"}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, treeData[expectedKey])
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
 }
 
-func TestIAVLSubspace(t *testing.T) {
+func TestIAVLSubspaceIterator(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newTree(t, db)
 	iavlStore := newIAVLStore(tree, numHistory)
@@ -90,16 +148,114 @@ func TestIAVLSubspace(t *testing.T) {
 	iavlStore.Set([]byte("test1"), []byte("test1"))
 	iavlStore.Set([]byte("test2"), []byte("test2"))
 	iavlStore.Set([]byte("test3"), []byte("test3"))
+	iavlStore.Set([]byte{byte(55), byte(255), byte(255), byte(0)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(55), byte(255), byte(255), byte(1)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(55), byte(255), byte(255), byte(255)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(255), byte(255), byte(0)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(255), byte(255), byte(1)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(255), byte(255), byte(255)}, []byte("test4"))
 
-	iter := iavlStore.Subspace([]byte("test"))
+	i := 0
+
+	iter := iavlStore.SubspaceIterator([]byte("test"))
 	expected := []string{"test1", "test2", "test3"}
-	for i := 0; iter.Valid(); iter.Next() {
+	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
 		key, value := iter.Key(), iter.Value()
 		assert.EqualValues(t, key, expectedKey)
 		assert.EqualValues(t, value, expectedKey)
 		i += 1
 	}
+	assert.Equal(t, len(expected), i)
+
+	iter = iavlStore.SubspaceIterator([]byte{byte(55), byte(255), byte(255)})
+	expected2 := [][]byte{
+		[]byte{byte(55), byte(255), byte(255), byte(0)},
+		[]byte{byte(55), byte(255), byte(255), byte(1)},
+		[]byte{byte(55), byte(255), byte(255), byte(255)},
+	}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected2[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, []byte("test4"))
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
+
+	iter = iavlStore.SubspaceIterator([]byte{byte(255), byte(255)})
+	expected2 = [][]byte{
+		[]byte{byte(255), byte(255), byte(0)},
+		[]byte{byte(255), byte(255), byte(1)},
+		[]byte{byte(255), byte(255), byte(255)},
+	}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected2[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, []byte("test4"))
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
+}
+
+func TestIAVLReverseSubspaceIterator(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree, _ := newTree(t, db)
+	iavlStore := newIAVLStore(tree, numHistory)
+
+	iavlStore.Set([]byte("test1"), []byte("test1"))
+	iavlStore.Set([]byte("test2"), []byte("test2"))
+	iavlStore.Set([]byte("test3"), []byte("test3"))
+	iavlStore.Set([]byte{byte(55), byte(255), byte(255), byte(0)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(55), byte(255), byte(255), byte(1)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(55), byte(255), byte(255), byte(255)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(255), byte(255), byte(0)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(255), byte(255), byte(1)}, []byte("test4"))
+	iavlStore.Set([]byte{byte(255), byte(255), byte(255)}, []byte("test4"))
+
+	i := 0
+
+	iter := iavlStore.ReverseSubspaceIterator([]byte("test"))
+	expected := []string{"test3", "test2", "test1"}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, expectedKey)
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
+
+	iter = iavlStore.ReverseSubspaceIterator([]byte{byte(55), byte(255), byte(255)})
+	expected2 := [][]byte{
+		[]byte{byte(55), byte(255), byte(255), byte(255)},
+		[]byte{byte(55), byte(255), byte(255), byte(1)},
+		[]byte{byte(55), byte(255), byte(255), byte(0)},
+	}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected2[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, []byte("test4"))
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
+
+	iter = iavlStore.ReverseSubspaceIterator([]byte{byte(255), byte(255)})
+	expected2 = [][]byte{
+		[]byte{byte(255), byte(255), byte(255)},
+		[]byte{byte(255), byte(255), byte(1)},
+		[]byte{byte(255), byte(255), byte(0)},
+	}
+	for i = 0; iter.Valid(); iter.Next() {
+		expectedKey := expected2[i]
+		key, value := iter.Key(), iter.Value()
+		assert.EqualValues(t, key, expectedKey)
+		assert.EqualValues(t, value, []byte("test4"))
+		i += 1
+	}
+	assert.Equal(t, len(expected), i)
 }
 
 func TestIAVLStoreQuery(t *testing.T) {

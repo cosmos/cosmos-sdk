@@ -87,7 +87,7 @@ func (keeper Keeper) Handle(h Handler, ctx sdk.Context, msg ReceiveMsg) sdk.Resu
 		return ErrChainMismatch().Result()
 	}
 
-	cctx := ctx //.CacheContext()
+	cctx, write := ctx.CacheContext()
 	err := h(cctx, packet.Payload)
 	if err != nil {
 		return sdk.Result{
@@ -95,6 +95,6 @@ func (keeper Keeper) Handle(h Handler, ctx sdk.Context, msg ReceiveMsg) sdk.Resu
 			Log:  err.ABCILog(),
 		}
 	}
-	//cctx.Write()
+	write()
 	return sdk.Result{}
 }

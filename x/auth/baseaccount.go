@@ -61,7 +61,7 @@ func (acc BaseAccount) GetPubKey() crypto.PubKey {
 
 // Implements sdk.Account.
 func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
-	if !acc.PubKey.Empty() {
+	if acc.PubKey != nil {
 		return errors.New("cannot override BaseAccount pubkey")
 	}
 	acc.PubKey = pubKey
@@ -93,7 +93,9 @@ func (acc *BaseAccount) SetSequence(seq int64) error {
 //----------------------------------------
 // Wire
 
-func RegisterWireBaseAccount(cdc *wire.Codec) {
-	// Register crypto.[PubKey,PrivKey,Signature] types.
+// Most users shouldn't use this, but this comes handy for tests.
+func RegisterBaseAccount(cdc *wire.Codec) {
+	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	wire.RegisterCrypto(cdc)
 }

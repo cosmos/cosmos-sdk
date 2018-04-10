@@ -432,7 +432,7 @@ func makePubKey(secret string) crypto.PubKey {
 
 func makePrivKey(secret string) crypto.PrivKey {
 	privKey := crypto.GenPrivKeyEd25519FromSecret([]byte(secret))
-	return privKey.Wrap()
+	return privKey
 }
 
 func secret(index int) string {

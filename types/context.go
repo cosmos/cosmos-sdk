@@ -18,10 +18,11 @@ next decorator or handler. For example,
 
  func MsgHandler(ctx Context, tx Tx) Result {
  	...
- 	ctx = ctx.WithValue(key, value)
+ 	ctx = context.WithValue(key, value)
  	...
  }
 */
+
 type Context struct {
 	context.Context
 	pst *thePast
@@ -169,6 +170,12 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 }
 func (c Context) WithTxBytes(txBytes []byte) Context {
 	return c.withValue(contextKeyTxBytes, txBytes)
+}
+
+func (c Context) CacheContext() (Context, func()) {
+	cms := c.multiStore().CacheMultiStore()
+	cc := c.WithMultiStore(cms)
+	return cc, cms.Write
 }
 
 //----------------------------------------

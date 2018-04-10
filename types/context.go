@@ -16,12 +16,13 @@ The intent of Context is for it to be an immutable object that can be
 cloned and updated cheaply with WithValue() and passed forward to the
 next decorator or handler. For example,
 
- func MsgHandler(ctx Context, tx Tx) Result {
+ func MsgHandler(context Context, tx Tx) Result {
  	...
- 	ctx = ctx.WithValue(key, value)
+ 	context = context.WithValue(key, value)
  	...
  }
 */
+
 type Context struct {
 	context.Context
 	pst *thePast
@@ -169,6 +170,12 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 }
 func (c Context) WithTxBytes(txBytes []byte) Context {
 	return c.withValue(contextKeyTxBytes, txBytes)
+}
+
+func (c Context) CacheContext() (Context, func()) {
+	cms := c.multiStore().CacheMultiStore()
+	cc := c.WithMultiStore(cms)
+	return cc, cms.Write
 }
 
 //----------------------------------------

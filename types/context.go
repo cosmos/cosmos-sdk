@@ -18,7 +18,7 @@ next decorator or handler. For example,
 
  func MsgHandler(ctx Context, tx Tx) Result {
  	...
- 	ctx = context.WithValue(key, value)
+ 	ctx = ctx.WithValue(key, value)
  	...
  }
 */

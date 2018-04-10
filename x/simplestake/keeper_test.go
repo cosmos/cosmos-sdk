@@ -33,7 +33,7 @@ func TestKeeperGetSet(t *testing.T) {
 	ms, _, capKey := setupMultiStore()
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, sdk.CodespaceRoot)
-	stakeKeeper := NewKeeper(capKey, bank.NewCoinKeeper(nil))
+	stakeKeeper := NewKeeper(capKey, bank.NewCoinKeeper(nil), sdk.CodespaceRoot)
 	addr := sdk.Address([]byte("some-address"))
 
 	bi := stakeKeeper.getBondInfo(ctx, addr)
@@ -63,7 +63,7 @@ func TestBonding(t *testing.T) {
 
 	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	coinKeeper := bank.NewCoinKeeper(accountMapper)
-	stakeKeeper := NewKeeper(capKey, coinKeeper)
+	stakeKeeper := NewKeeper(capKey, coinKeeper, sdk.CodespaceRoot)
 	addr := sdk.Address([]byte("some-address"))
 	privKey := crypto.GenPrivKeyEd25519()
 	pubKey := privKey.PubKey()

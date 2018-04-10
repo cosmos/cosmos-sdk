@@ -19,13 +19,17 @@ type Keeper struct {
 	// caches
 	gs     Pool
 	params Params
+
+	// codespace
+	codespace sdk.CodespaceType
 }
 
-func NewKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, ck bank.CoinKeeper) Keeper {
+func NewKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, ck bank.CoinKeeper, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:   key,
 		cdc:        cdc,
 		coinKeeper: ck,
+		codespace:  codespace,
 	}
 	return keeper
 }

@@ -5,6 +5,7 @@
 BREAKING CHANGES
 
 * Remove go-wire, use go-amino
+* [store] Add `SubspaceIterator` and `ReverseSubspaceIterator` to `KVStore` interface
 
 ## 0.14.1 (April 9, 2018)
 

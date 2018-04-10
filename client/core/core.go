@@ -140,6 +140,7 @@ func (ctx CoreContext) SignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Co
 	return ctx.BroadcastTx(txBytes)
 }
 
+// get the next sequence for the account address
 func (c CoreContext) NextSequence(address []byte) (int64, error) {
 	if c.Decoder == nil {
 		return 0, errors.New("AccountDecoder required but not provided")

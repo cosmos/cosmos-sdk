@@ -6,6 +6,10 @@ BREAKING CHANGES
 
 * Remove go-wire, use go-amino
 
+FEATURES:
+
+* Add auto sequencing to client
+
 ## 0.14.1 (April 9, 2018)
 
 BUG FIXES

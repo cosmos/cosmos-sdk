@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	abci "github.com/tendermint/abci/types"
-	oldwire "github.com/tendermint/go-wire"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -52,10 +51,11 @@ func NewGaiaApp(logger log.Logger, dbs map[string]dbm.DB) *GaiaApp {
 	}
 
 	// define the accountMapper
-	app.accountMapper = auth.NewAccountMapperSealed(
+	app.accountMapper = auth.NewAccountMapper(
+		app.cdc,
 		app.capKeyMainStore, // target store
 		&auth.BaseAccount{}, // prototype
-	)
+	).Seal()
 
 	// add handlers
 	app.coinKeeper = bank.NewCoinKeeper(app.accountMapper)
@@ -87,41 +87,27 @@ func NewGaiaApp(logger log.Logger, dbs map[string]dbm.DB) *GaiaApp {
 }
 
 // custom tx codec
-// TODO: use new go-wire
 func MakeCodec() *wire.Codec {
-	const (
-		msgTypeSend           = 0x1
-		msgTypeIssue          = 0x2
-		msgTypeIBCTransferMsg = 0x3
-		msgTypeIBCReceiveMsg  = 0x4
-		msgDeclareCandidacy   = 0x5
-		msgEditCandidacy      = 0x6
-		msgDelegate           = 0x7
-		msgUnbond             = 0x8
-	)
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Msg }{},
-		oldwire.ConcreteType{bank.SendMsg{}, msgTypeSend},
-		oldwire.ConcreteType{bank.IssueMsg{}, msgTypeIssue},
-		oldwire.ConcreteType{ibc.IBCTransferMsg{}, msgTypeIBCTransferMsg},
-		oldwire.ConcreteType{ibc.IBCReceiveMsg{}, msgTypeIBCReceiveMsg},
-		oldwire.ConcreteType{stake.MsgDeclareCandidacy{}, msgDeclareCandidacy},
-		oldwire.ConcreteType{stake.MsgEditCandidacy{}, msgEditCandidacy},
-		oldwire.ConcreteType{stake.MsgDelegate{}, msgDelegate},
-		oldwire.ConcreteType{stake.MsgUnbond{}, msgUnbond},
-	)
+	var cdc = wire.NewCodec()
 
-	const accTypeApp = 0x1
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Account }{},
-		oldwire.ConcreteType{&auth.BaseAccount{}, accTypeApp},
-	)
-	cdc := wire.NewCodec()
+	// Register Msgs
+	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
+	cdc.RegisterConcrete(bank.SendMsg{}, "gaia/Send", nil)
+	cdc.RegisterConcrete(bank.IssueMsg{}, "gaia/Issue", nil)
+	cdc.RegisterConcrete(ibc.IBCTransferMsg{}, "gaia/IBCTransferMsg", nil)
+	cdc.RegisterConcrete(ibc.IBCReceiveMsg{}, "gaia/IBCReceiveMsg", nil)
+	cdc.RegisterConcrete(stake.MsgDeclareCandidacy{}, "gaia/MsgDeclareCandidacy", nil)
+	cdc.RegisterConcrete(stake.MsgEditCandidacy{}, "gaia/MsgEditCandidacy", nil)
+	cdc.RegisterConcrete(stake.MsgDelegate{}, "gaia/MsgDelegate", nil)
+	cdc.RegisterConcrete(stake.MsgUnbond{}, "gaia/MsgUnbond", nil)
 
-	// cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	// bank.RegisterWire(cdc)   // Register bank.[SendMsg,IssueMsg]
-	// crypto.RegisterWire(cdc) // Register crypto.[PubKey,PrivKey,Signature]
-	// ibc.RegisterWire(cdc) // Register ibc.[IBCTransferMsg, IBCReceiveMsg]
+	// Register AppAccount
+	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterConcrete(&auth.BaseAccount{}, "gaia/Account", nil)
+
+	// Register crypto.
+	wire.RegisterCrypto(cdc)
+
 	return cdc
 }
 

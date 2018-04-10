@@ -5,10 +5,8 @@
 
 FROM alpine:edge
 
-# Install minimum necessary dependencies
-
+# Set up dependencies
 ENV PACKAGES go glide make git libc-dev bash
-RUN apk add --no-cache $PACKAGES
 
 # Set up GOPATH & PATH
 
@@ -20,20 +18,17 @@ ENV PATH         $GOPATH/bin:$PATH
 
 # Link expected Go repo path
 
-RUN mkdir -p $WORKDIR $GOPATH/pkg $ $GOPATH/bin $BASE_PATH && ln -sf $WORKDIR $REPO_PATH
+RUN mkdir -p $WORKDIR $GOPATH/pkg $ $GOPATH/bin $BASE_PATH
 
 # Add source files
 
-ADD . $WORKDIR
+ADD . $REPO_PATH
 
-# Build cosmos-sdk
-
-RUN cd $REPO_PATH && make get_tools && make get_vendor_deps && make all && make install
-
-# Remove packages
-
-RUN apk del $PACKAGES
+# Install minimum necessary dependencies, build Cosmos SDK, remove packages
+RUN apk add --no-cache $PACKAGES && \
+    cd $REPO_PATH && make get_tools && make get_vendor_deps && make all && make install && \
+    apk del $PACKAGES
 
 # Set entrypoint
 
-ENTRYPOINT ["/root/go/bin/gaiad"]
+ENTRYPOINT ["gaiad"]

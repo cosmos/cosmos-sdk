@@ -10,11 +10,13 @@ type Keeper struct {
 	ck bank.CoinKeeper
 
 	storeKey sdk.StoreKey // The (unexposed) key used to access the store from the Context.
+
+	codespace sdk.CodespaceType
 }
 
 // NewKeeper - Returns the Keeper
-func NewKeeper(key sdk.StoreKey, bankKeeper bank.CoinKeeper) Keeper {
-	return Keeper{bankKeeper, key}
+func NewKeeper(key sdk.StoreKey, bankKeeper bank.CoinKeeper, codespace sdk.CodespaceType) Keeper {
+	return Keeper{bankKeeper, key, codespace}
 }
 
 // Key to knowing the trend on the streets!

@@ -8,17 +8,19 @@ import (
 )
 
 type IBCMapper struct {
-	key sdk.StoreKey
-	cdc *wire.Codec
+	key       sdk.StoreKey
+	cdc       *wire.Codec
+	codespace sdk.CodespaceType
 }
 
 // XXX: The IBCMapper should not take a CoinKeeper. Rather have the CoinKeeper
 // take an IBCMapper.
-func NewIBCMapper(cdc *wire.Codec, key sdk.StoreKey) IBCMapper {
+func NewIBCMapper(cdc *wire.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) IBCMapper {
 	// XXX: How are these codecs supposed to work?
 	return IBCMapper{
-		key: key,
-		cdc: cdc,
+		key:       key,
+		cdc:       cdc,
+		codespace: codespace,
 	}
 }
 

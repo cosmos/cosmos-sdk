@@ -76,7 +76,7 @@ func NewGaiaApp(logger log.Logger, dbs map[string]dbm.DB) *GaiaApp {
 	app.MountStoreWithDB(app.capKeyStakeStore, sdk.StoreTypeIAVL, dbs["stake"])
 
 	// NOTE: Broken until #532 lands
-	//app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore, app.capKeyStakingStore)
+	//app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore, app.capKeyStakeStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {

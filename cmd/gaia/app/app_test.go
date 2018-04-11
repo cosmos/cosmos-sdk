@@ -88,10 +88,10 @@ var (
 func loggerAndDBs() (log.Logger, map[string]dbm.DB) {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 	dbs := map[string]dbm.DB{
-		"main":    dbm.NewMemDB(),
-		"acc":     dbm.NewMemDB(),
-		"ibc":     dbm.NewMemDB(),
-		"staking": dbm.NewMemDB(),
+		"main":  dbm.NewMemDB(),
+		"acc":   dbm.NewMemDB(),
+		"ibc":   dbm.NewMemDB(),
+		"stake": dbm.NewMemDB(),
 	}
 	return logger, dbs
 }
@@ -418,12 +418,59 @@ func TestStakeMsgs(t *testing.T) {
 	require.Equal(t, acc1, res1)
 	require.Equal(t, acc2, res2)
 
+	// Declare Candidacy
+
 	description := stake.NewDescription("foo_moniker", "", "", "")
 	declareCandidacyMsg := stake.NewMsgDeclareCandidacy(
 		addr1, priv1.PubKey(), bondCoin, description,
 	)
-
 	SignCheckDeliver(t, gapp, declareCandidacyMsg, []int64{0}, true, priv1)
+
+	ctxDeliver := gapp.BaseApp.NewContext(false, abci.Header{})
+	res1 = gapp.accountMapper.GetAccount(ctxDeliver, addr1)
+	require.Equal(t, genCoins.Minus(sdk.Coins{bondCoin}), res1.GetCoins())
+	candidate, found := gapp.stakeKeeper.GetCandidate(ctxDeliver, addr1)
+	require.True(t, found)
+	require.Equal(t, candidate.Address, addr1)
+
+	// Edit Candidacy
+
+	description = stake.NewDescription("bar_moniker", "", "", "")
+	editCandidacyMsg := stake.NewMsgEditCandidacy(
+		addr1, description,
+	)
+	SignDeliver(t, gapp, editCandidacyMsg, []int64{1}, true, priv1)
+
+	candidate, found = gapp.stakeKeeper.GetCandidate(ctxDeliver, addr1)
+	require.True(t, found)
+	require.Equal(t, candidate.Description, description)
+
+	// Delegate
+
+	delegateMsg := stake.NewMsgDelegate(
+		addr2, addr1, bondCoin,
+	)
+	SignDeliver(t, gapp, delegateMsg, []int64{0}, true, priv2)
+
+	ctxDeliver = gapp.BaseApp.NewContext(false, abci.Header{})
+	res2 = gapp.accountMapper.GetAccount(ctxDeliver, addr2)
+	require.Equal(t, genCoins.Minus(sdk.Coins{bondCoin}), res2.GetCoins())
+	bond, found := gapp.stakeKeeper.GetDelegatorBond(ctxDeliver, addr2, addr1)
+	require.True(t, found)
+	require.Equal(t, bond.DelegatorAddr, addr2)
+
+	// Unbond
+
+	unbondMsg := stake.NewMsgUnbond(
+		addr2, addr1, "MAX",
+	)
+	SignDeliver(t, gapp, unbondMsg, []int64{1}, true, priv2)
+
+	ctxDeliver = gapp.BaseApp.NewContext(false, abci.Header{})
+	res2 = gapp.accountMapper.GetAccount(ctxDeliver, addr2)
+	require.Equal(t, genCoins, res2.GetCoins())
+	_, found = gapp.stakeKeeper.GetDelegatorBond(ctxDeliver, addr2, addr1)
+	require.False(t, found)
 }
 
 //____________________________________________________________________________________
@@ -452,6 +499,7 @@ func SignCheckDeliver(t *testing.T, gapp *GaiaApp, msg sdk.Msg, seq []int64, exp
 
 	// Sign the tx
 	tx := genTx(msg, seq, priv...)
+
 	// Run a Check
 	res := gapp.Check(tx)
 	if expPass {
@@ -469,5 +517,27 @@ func SignCheckDeliver(t *testing.T, gapp *GaiaApp, msg sdk.Msg, seq []int64, exp
 		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
 	}
 	gapp.EndBlock(abci.RequestEndBlock{})
+
+	// XXX fix code or add explaination as to why using commit breaks a bunch of these tests
 	//gapp.Commit()
+}
+
+// XXX the only reason we are using Sign Deliver here is because the tests
+// break on check tx the second time you use SignCheckDeliver in a test because
+// the checktx state has not been updated likely because commit is not being
+// called!
+func SignDeliver(t *testing.T, gapp *GaiaApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) {
+
+	// Sign the tx
+	tx := genTx(msg, seq, priv...)
+
+	// Simulate a Block
+	gapp.BeginBlock(abci.RequestBeginBlock{})
+	res := gapp.Deliver(tx)
+	if expPass {
+		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	} else {
+		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
+	}
+	gapp.EndBlock(abci.RequestEndBlock{})
 }

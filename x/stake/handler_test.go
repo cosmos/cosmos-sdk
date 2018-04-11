@@ -92,7 +92,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 		//Check that the accounts and the bond account have the appropriate values
 		candidate, found := keeper.GetCandidate(ctx, candidateAddr)
 		require.True(t, found)
-		bond, found := keeper.getDelegatorBond(ctx, delegatorAddr, candidateAddr)
+		bond, found := keeper.GetDelegatorBond(ctx, delegatorAddr, candidateAddr)
 		require.True(t, found)
 
 		expBond := int64(i+1) * bondAmount
@@ -148,7 +148,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		//Check that the accounts and the bond account have the appropriate values
 		candidate, found = keeper.GetCandidate(ctx, candidateAddr)
 		require.True(t, found)
-		bond, found := keeper.getDelegatorBond(ctx, delegatorAddr, candidateAddr)
+		bond, found := keeper.GetDelegatorBond(ctx, delegatorAddr, candidateAddr)
 		require.True(t, found)
 
 		expBond := initBond - int64(i+1)*unbondShares
@@ -263,7 +263,7 @@ func TestMultipleMsgDelegate(t *testing.T) {
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the account is bonded
-		bond, found := keeper.getDelegatorBond(ctx, delegatorAddr, candidateAddr)
+		bond, found := keeper.GetDelegatorBond(ctx, delegatorAddr, candidateAddr)
 		require.True(t, found)
 		require.NotNil(t, bond, "expected delegatee bond %d to exist", bond)
 	}
@@ -275,7 +275,7 @@ func TestMultipleMsgDelegate(t *testing.T) {
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the account is unbonded
-		_, found := keeper.getDelegatorBond(ctx, delegatorAddr, candidateAddr)
+		_, found := keeper.GetDelegatorBond(ctx, delegatorAddr, candidateAddr)
 		require.False(t, found)
 	}
 }

@@ -297,7 +297,8 @@ func (k Keeper) clearAccUpdateValidators(ctx sdk.Context) {
 
 //_____________________________________________________________________
 
-func (k Keeper) getDelegatorBond(ctx sdk.Context,
+// load a delegator bong
+func (k Keeper) GetDelegatorBond(ctx sdk.Context,
 	delegatorAddr, candidateAddr sdk.Address) (bond DelegatorBond, found bool) {
 
 	store := ctx.KVStore(k.storeKey)
@@ -314,7 +315,7 @@ func (k Keeper) getDelegatorBond(ctx sdk.Context,
 }
 
 // load all bonds of a delegator
-func (k Keeper) getDelegatorBonds(ctx sdk.Context, delegator sdk.Address, maxRetrieve int16) (bonds []DelegatorBond) {
+func (k Keeper) GetDelegatorBonds(ctx sdk.Context, delegator sdk.Address, maxRetrieve int16) (bonds []DelegatorBond) {
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegatorBondsKey(delegator, k.cdc)
 	iterator := store.Iterator(subspace(delegatorPrefixKey)) //smallest to largest

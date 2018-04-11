@@ -322,9 +322,8 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	if result.IsOK() {
 		app.valUpdates = append(app.valUpdates, result.ValidatorUpdates...)
 	} else {
-		// Even though the Code is not OK, there will be some side
-		// effects, like those caused by fee deductions or sequence
-		// incrementations.
+		// Even though the Result.Code is not OK, there are still effects,
+		// namely fee deductions and sequence incrementing.
 	}
 
 	// Tell the blockchain engine (i.e. Tendermint).
@@ -453,7 +452,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// Use the header from this latest block.
 	app.setCheckState(header)
 
-	// Emtpy the Deliver state
+	// Empty the Deliver state
 	app.deliverState = nil
 
 	return abci.ResponseCommit{

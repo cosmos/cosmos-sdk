@@ -127,19 +127,19 @@ func TestBond(t *testing.T) {
 	}
 
 	// check the empty keeper first
-	_, found := keeper.getDelegatorBond(ctx, addrDels[0], addrVals[0])
+	_, found := keeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
 	assert.False(t, found)
 
 	// set and retrieve a record
 	keeper.setDelegatorBond(ctx, bond1to1)
-	resBond, found := keeper.getDelegatorBond(ctx, addrDels[0], addrVals[0])
+	resBond, found := keeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
 	assert.True(t, found)
 	assert.True(t, bondsEqual(bond1to1, resBond))
 
 	// modify a records, save, and retrieve
 	bond1to1.Shares = sdk.NewRat(99)
 	keeper.setDelegatorBond(ctx, bond1to1)
-	resBond, found = keeper.getDelegatorBond(ctx, addrDels[0], addrVals[0])
+	resBond, found = keeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
 	assert.True(t, found)
 	assert.True(t, bondsEqual(bond1to1, resBond))
 
@@ -158,16 +158,16 @@ func TestBond(t *testing.T) {
 	keeper.setDelegatorBond(ctx, bond2to3)
 
 	// test all bond retrieve capabilities
-	resBonds := keeper.getDelegatorBonds(ctx, addrDels[0], 5)
+	resBonds := keeper.GetDelegatorBonds(ctx, addrDels[0], 5)
 	require.Equal(t, 3, len(resBonds))
 	assert.True(t, bondsEqual(bond1to1, resBonds[0]))
 	assert.True(t, bondsEqual(bond1to2, resBonds[1]))
 	assert.True(t, bondsEqual(bond1to3, resBonds[2]))
-	resBonds = keeper.getDelegatorBonds(ctx, addrDels[0], 3)
+	resBonds = keeper.GetDelegatorBonds(ctx, addrDels[0], 3)
 	require.Equal(t, 3, len(resBonds))
-	resBonds = keeper.getDelegatorBonds(ctx, addrDels[0], 2)
+	resBonds = keeper.GetDelegatorBonds(ctx, addrDels[0], 2)
 	require.Equal(t, 2, len(resBonds))
-	resBonds = keeper.getDelegatorBonds(ctx, addrDels[1], 5)
+	resBonds = keeper.GetDelegatorBonds(ctx, addrDels[1], 5)
 	require.Equal(t, 3, len(resBonds))
 	assert.True(t, bondsEqual(bond2to1, resBonds[0]))
 	assert.True(t, bondsEqual(bond2to2, resBonds[1]))
@@ -175,9 +175,9 @@ func TestBond(t *testing.T) {
 
 	// delete a record
 	keeper.removeDelegatorBond(ctx, bond2to3)
-	_, found = keeper.getDelegatorBond(ctx, addrDels[1], addrVals[2])
+	_, found = keeper.GetDelegatorBond(ctx, addrDels[1], addrVals[2])
 	assert.False(t, found)
-	resBonds = keeper.getDelegatorBonds(ctx, addrDels[1], 5)
+	resBonds = keeper.GetDelegatorBonds(ctx, addrDels[1], 5)
 	require.Equal(t, 2, len(resBonds))
 	assert.True(t, bondsEqual(bond2to1, resBonds[0]))
 	assert.True(t, bondsEqual(bond2to2, resBonds[1]))
@@ -185,11 +185,11 @@ func TestBond(t *testing.T) {
 	// delete all the records from delegator 2
 	keeper.removeDelegatorBond(ctx, bond2to1)
 	keeper.removeDelegatorBond(ctx, bond2to2)
-	_, found = keeper.getDelegatorBond(ctx, addrDels[1], addrVals[0])
+	_, found = keeper.GetDelegatorBond(ctx, addrDels[1], addrVals[0])
 	assert.False(t, found)
-	_, found = keeper.getDelegatorBond(ctx, addrDels[1], addrVals[1])
+	_, found = keeper.GetDelegatorBond(ctx, addrDels[1], addrVals[1])
 	assert.False(t, found)
-	resBonds = keeper.getDelegatorBonds(ctx, addrDels[1], 5)
+	resBonds = keeper.GetDelegatorBonds(ctx, addrDels[1], 5)
 	require.Equal(t, 0, len(resBonds))
 }
 

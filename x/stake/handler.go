@@ -105,9 +105,6 @@ func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk
 			GasUsed: GasEditCandidacy,
 		}
 	}
-	if candidate.Status == Unbonded { //candidate has been withdrawn
-		return ErrBondNotNominated(k.codespace).Result()
-	}
 
 	// XXX move to types
 	// replace all editable fields (clients should autofill existing values)
@@ -149,7 +146,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	bondAmt sdk.Coin, candidate Candidate) sdk.Error {
 
 	// Get or create the delegator bond
-	bond, found := k.getDelegatorBond(ctx, delegatorAddr, candidate.Address)
+	bond, found := k.GetDelegatorBond(ctx, delegatorAddr, candidate.Address)
 	if !found {
 		bond = DelegatorBond{
 			DelegatorAddr: delegatorAddr,
@@ -176,7 +173,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 	// check if bond has any shares in it unbond
-	bond, found := k.getDelegatorBond(ctx, msg.DelegatorAddr, msg.CandidateAddr)
+	bond, found := k.GetDelegatorBond(ctx, msg.DelegatorAddr, msg.CandidateAddr)
 	if !found {
 		return ErrNoDelegatorForAddress(k.codespace).Result()
 	}
@@ -184,11 +181,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 		return ErrInsufficientFunds(k.codespace).Result()
 	}
 
-	// test getting rational number from decimal provided
-	shares, err := sdk.NewRatFromDecimal(msg.Shares)
-	if err != nil {
-		return err.Result()
-	}
+	var shares sdk.Rat
 
 	// test that there are enough shares to unbond
 	if msg.Shares == "MAX" {
@@ -196,6 +189,11 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 			return ErrNotEnoughBondShares(k.codespace, msg.Shares).Result()
 		}
 	} else {
+		var err sdk.Error
+		shares, err = sdk.NewRatFromDecimal(msg.Shares)
+		if err != nil {
+			return err.Result()
+		}
 		if bond.Shares.LT(shares) {
 			return ErrNotEnoughBondShares(k.codespace, msg.Shares).Result()
 		}

@@ -18,13 +18,20 @@ func NewHandler(ck CoinKeeper, ibck ibc.Keeper) sdk.Handler {
 		case IssueMsg:
 			return handleIssueMsg(ctx, ck, msg)
 		case ibc.ReceiveMsg:
-			return ibck.Handle(func(ctx sdk.Context, p ibc.Payload) sdk.Error {
+			return ibck.Receive(func(ctx sdk.Context, p ibc.Payload) sdk.Error {
 				switch p := p.(type) {
 				case SendPayload:
 					return handleSendPayload(ctx, ck, p)
 				default:
 					errMsg := "Unrecognized ibc Payload type: " + reflect.TypeOf(p).Name()
 					return sdk.ErrUnknownRequest(errMsg)
+				}
+			}, ctx, msg)
+		case ibc.ReceiptMsg:
+			return ibck.Receipt(func(ctx sdk.Context, r ibc.Receipt) sdk.Error {
+				switch r := r.(type) {
+				case SendFailReceipt:
+					return handleSendFailReceipt(ctx, ck, r)
 				}
 			}, ctx, msg)
 		default:
@@ -67,4 +74,9 @@ func handleSendPayload(ctx sdk.Context, ck CoinKeeper, p SendPayload) sdk.Error 
 	_, err := ck.AddCoins(ctx, p.DestAddr, p.Coins)
 	return err
 
+}
+
+func handleSendFailReceipt(ctx sdk.Context, ck CoinKeeper, r SendFailReceipt) sdk.Error {
+	_, err := ck.AddCoins(ctx, r.SrcAddr, r.Coins)
+	return err
 }

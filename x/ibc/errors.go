@@ -6,16 +6,17 @@ import (
 
 const (
 	// IBC errors reserve 200 - 299.
-	CodeInvalidSequence      sdk.CodeType = 200
-	CodeIdenticalChains      sdk.CodeType = 201
-	CodeChainMismatch        sdk.CodeType = 202
-	CodeUnknownRequest       sdk.CodeType = sdk.CodeUnknownRequest
-	CodeNoChannelOpened      sdk.CodeType = 203
-	CodeChannelAlreadyOpened sdk.CodeType = 204
-	CodeUpdateCommitFailed   sdk.CodeType = 205
-	CodeInvalidPacket        sdk.CodeType = 206
-	CodeNoCommitFound        sdk.CodeType = 207
-	CodeUnauthorizedSend     sdk.CodeType = 208
+	CodeInvalidSequence         sdk.CodeType = 200
+	CodeIdenticalChains         sdk.CodeType = 201
+	CodeChainMismatch           sdk.CodeType = 202
+	CodeUnknownRequest          sdk.CodeType = sdk.CodeUnknownRequest
+	CodeNoChannelOpened         sdk.CodeType = 203
+	CodeChannelAlreadyOpened    sdk.CodeType = 204
+	CodeUpdateCommitFailed      sdk.CodeType = 205
+	CodeInvalidPacket           sdk.CodeType = 206
+	CodeNoCommitFound           sdk.CodeType = 207
+	CodeUnauthorizedSend        sdk.CodeType = 208
+	CodeUnauthorizedSendReceipt sdk.CodeType = 209
 )
 
 func codeToDefaultMsg(code sdk.CodeType) string {
@@ -65,6 +66,10 @@ func ErrNoCommitFound() sdk.Error {
 
 func ErrUnauthorizedSend() sdk.Error {
 	return newError(CodeUnauthorizedSend, "")
+}
+
+func ErrUnauthorizedSendReceipt() sdk.Error {
+	return newError(CodeUnauthorizedSendReceipt, "")
 }
 
 // -------------------------

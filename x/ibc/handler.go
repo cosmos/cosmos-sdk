@@ -1,8 +1,6 @@
 package ibc
 
 import (
-	"fmt"
-
 	"reflect"
 
 	"github.com/tendermint/tendermint/lite"
@@ -56,31 +54,10 @@ func handleUpdateChannelMsg(ctx sdk.Context, keeper Keeper, msg UpdateChannelMsg
 	return sdk.Result{}
 }
 
-type Handler func(sdk.Context, Payload) sdk.Error
+type ReceiveHandler func(sdk.Context, Payload) (Payload, sdk.Error)
 
-func (keeper Keeper) Handle(h Handler, ctx sdk.Context, msg ReceiveMsg) sdk.Result {
-	expected := keeper.getIngressSequence(ctx, msg.SrcChain)
-	seq := msg.Sequence
-	if seq != expected {
-		return ErrInvalidSequence().Result()
-	}
-
-	keeper.setIngressSequence(ctx, msg.SrcChain, seq+1)
-
-	commit, ok := keeper.getChannelCommit(ctx, msg.SrcChain, msg.Height)
-	if !ok {
-		return ErrNoCommitFound().Result()
-	}
-
-	key := []byte(fmt.Sprintf("ibc/%s", EgressKey(ctx.ChainID(), msg.Sequence)))
-	value, rawerr := keeper.cdc.MarshalBinary(msg.Packet) // better way to do this?
-	if rawerr != nil {
-		return ErrInvalidPacket(rawerr).Result()
-	}
-
-	if rawerr = msg.Proof.Verify(key, value, commit.Commit.Header.AppHash); rawerr != nil {
-		return ErrInvalidPacket(rawerr).Result()
-	}
+func (keeper Keeper) Receive(h ReceiveHandler, ctx sdk.Context, msg ReceiveMsg) sdk.Result {
+	msg.Verify(ctx, keeper)
 
 	packet := msg.Packet
 	if packet.DestChain != ctx.ChainID() {
@@ -88,7 +65,10 @@ func (keeper Keeper) Handle(h Handler, ctx sdk.Context, msg ReceiveMsg) sdk.Resu
 	}
 
 	cctx, write := ctx.CacheContext()
-	err := h(cctx, packet.Payload)
+	rec, err := h(cctx, packet.Payload)
+	if rec != nil {
+		keeper.sendReceipt(ctx, rec, packet.SrcChain)
+	}
 	if err != nil {
 		return sdk.Result{
 			Code: sdk.CodeOK,
@@ -96,5 +76,16 @@ func (keeper Keeper) Handle(h Handler, ctx sdk.Context, msg ReceiveMsg) sdk.Resu
 		}
 	}
 	write()
+
+	return sdk.Result{}
+}
+
+type ReceiptHandler func(sdk.Context, Payload)
+
+func (keeper Keeper) Receipt(h ReceiptHandler, ctx sdk.Context, msg ReceiptMsg) sdk.Result {
+	msg.Verify(ctx, keeper)
+
+	h(ctx, msg.Payload)
+
 	return sdk.Result{}
 }

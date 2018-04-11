@@ -72,6 +72,15 @@ func (keeper Keeper) Send(ctx sdk.Context, payload Payload, dest string) sdk.Err
 	return nil
 }
 
+func (keeper Keeper) sendReceipt(ctx sdk.Context, payload Payload, src string) sdk.Error {
+	if payload.Type() != keeper.port {
+		return ErrUnauthorizedSendReceipt()
+	}
+
+	store := ctx.KVStore(keeper.key)
+
+}
+
 /*
 func (keeper Keeper) getChannelCommit(ctx sdk.Context, srcChain string) (*ValidatorSet, bool) {
 	store := ctx.KVStore(keeper.key)

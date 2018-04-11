@@ -261,3 +261,11 @@ func (p SendPayload) ValidateBasic() sdk.Error {
 	}
 	return nil
 }
+
+//-------------------------------
+// SendFailReceipt
+
+// implements ibc.Receipt
+type SendFailReceipt struct {
+	SendPayload
+}

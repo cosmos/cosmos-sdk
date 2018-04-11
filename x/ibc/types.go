@@ -1,6 +1,8 @@
 package ibc
 
 import (
+	"fmt"
+
 	"encoding/json"
 
 	"github.com/tendermint/iavl"
@@ -14,16 +16,47 @@ import (
 
 // ReceiveMsg defines the message that a relayer uses to post an IBCPacket
 // to the destination chain.
-type ReceiveMsg struct {
-	Packet
+type PacketProof struct {
 	Proof    *iavl.KeyExistsProof
 	Height   int64
-	Relayer  sdk.Address
 	Sequence int64
 }
 
-func (msg ReceiveMsg) Type() string {
-	return "ibc"
+func (proof PacketProof) Verify(ctx sdk.Context, keeper Keeper, packet Packet) sdk.Error {
+	chainID := packet.SrcChain
+
+	expected := keeper.getIngressSequence(ctx, chainID)
+	if proof.Sequence != expected {
+		return ErrInvalidSequence()
+	}
+
+	keeper.setIngressSequence(ctx, chainID, proof.Sequence+1)
+
+	commit, ok := keeper.getChannelCommit(ctx, chainID, proof.Height)
+	if !ok {
+		return ErrNoCommitFound()
+	}
+
+	key := []byte(fmt.Sprintf("ibc/%s", EgressKey(ctx.ChainID(), proof.Sequence)))
+	value, rawerr := keeper.cdc.MarshalBinary(packet) // better way to do this?
+	if rawerr != nil {
+		return ErrInvalidPacket(rawerr)
+	}
+
+	if rawerr = proof.Proof.Verify(key, value, commit.Commit.Header.AppHash); rawerr != nil {
+		return ErrInvalidPacket(rawerr)
+	}
+
+	return nil
+}
+
+// ---------------------------------
+// ReceiveMsg
+
+type ReceiveMsg struct {
+	Packet
+	PacketProof
+	Relayer sdk.Address
 }
 
 func (msg ReceiveMsg) Get(key interface{}) interface{} {
@@ -38,13 +71,41 @@ func (msg ReceiveMsg) GetSignBytes() []byte {
 	return bz
 }
 
-func (msg ReceiveMsg) ValidateBasic() sdk.Error {
-	return msg.Packet.ValidateBasic()
-}
-
-// x/bank/tx.go SendMsg.GetSigners()
 func (msg ReceiveMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Relayer}
+}
+
+func (msg ReceiveMsg) Verify(ctx sdk.Context, keeper Keeper) sdk.Error {
+	return msg.PacketProof.Verify(ctx, keeper, msg.Packet)
+}
+
+// --------------------------------
+// ReceiptMsg
+
+type ReceiptMsg struct {
+	Packet
+	PacketProof
+	Relayer sdk.Address
+}
+
+func (msg ReceiptMsg) Get(key interface{}) interface{} {
+	return nil
+}
+
+func (msg ReceiptMsg) GetSignBytes() []byte {
+	bz, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
+
+func (msg ReceiptMsg) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.Relayer}
+}
+
+func (msg ReceiptMsg) Verify(ctx sdk.Context, keeper Keeper) sdk.Error {
+	return msg.PacketProof.Verify(ctx, keeper, msg.Packet)
 }
 
 //-------------------------------------
@@ -132,17 +193,7 @@ type Payload interface {
 // Packet defines a piece of data that can be send between two separate
 // blockchains.
 type Packet struct {
-	Payload   Payload
+	Payload
 	SrcChain  string
 	DestChain string
-}
-
-func (packet Packet) ValidateBasic() sdk.Error {
-	/*
-		// commented for testing
-		if packet.SrcChain == packet.DestChain {
-			return ErrIdenticalChains()
-		}
-	*/
-	return packet.Payload.ValidateBasic()
 }

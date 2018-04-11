@@ -47,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Cosmos-SDK'
-copyright = u'2017, The Authors'
+copyright = u'2018, The Authors'
 author = u'The Authors'
 
 # The version info for the project you're documenting, acts as replacement for

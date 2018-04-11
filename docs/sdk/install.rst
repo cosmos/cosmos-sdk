@@ -1,17 +1,12 @@
 Install
 =======
 
-If you aren't used to compile go programs and just want the released
-version of the code, please head to our
-`downloads <https://tendermint.com/download>`__ page to get a
-pre-compiled binary for your platform.
-
-Usually, Cosmos SDK can be installed to
+Cosmos SDK can be installed to
 `$GOPATH/src/github.com/cosmos/cosmos-sdk` like a normal Go program:
 
 ::
 
-    go get -u github.com/cosmos/cosmos-sdk
+    go get github.com/cosmos/cosmos-sdk
 
 If the dependencies have been updated with breaking changes, or if
 another branch is required, ``dep`` is used for dependency management.
@@ -21,10 +16,9 @@ repo, the correct way to install is:
 ::
 
     cd $GOPATH/src/github.com/cosmos/cosmos-sdk
-    git pull origin master
-    make all
+    make get_vendor_deps
+    make install
+    make install_examples
 
-This will create the ``basecoind`` and ``basecli`` binaries locally in
-``./build/bin``. ``make all`` implies ``make get_vendor_deps`` and uses
-``glide`` to install the correct version of all dependencies. It also tests the
-code, including some cli tests to make sure your binary behaves properly.
+This will install ``gaiad`` and ``gaiacli`` and four example binaries:
+``basecoind``, ``basecli``, ``democoind``, and ``democli``.

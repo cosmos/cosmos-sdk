@@ -21,7 +21,7 @@ SDK
    
    sdk/overview.rst
    sdk/install.rst
-   sdk/glossary.rst
+.. old/glossary.rst # not completely up to date  but has good content
 
 .. Basecoin
 .. --------
@@ -29,19 +29,17 @@ SDK
 .. .. toctree::
    :maxdepth: 2
 
-.. basecoin/basics.rst
-.. basecoin/extensions.rst
+.. old/basecoin/basics.rst # has a decent getting-start tutorial that's relatively up to date, should be consolidated with the other getting started doc
 
 Extensions
 ----------
 
-Replay Protection
-~~~~~~~~~~~~~~~~~
+.. old/basecoin/extensions.rst # probably not worth salvaging
 
-.. toctree::
-   :maxdepth: 1
+.. Replay Protection
+.. ~~~~~~~~~~~~~~~~~
 
-   x/replay-protection.rst
+..   old/replay-protection.rst # not sure if worth salvaging
 
 
 Staking
@@ -55,12 +53,7 @@ Staking
    staking/local-testnet.rst
    staking/public-testnet.rst
 
-Extras
-------
+.. IBC
+.. ---
 
-.. One maxdepth for now
-
-.. toctree::
-   :maxdepth: 1
-
-   ibc.rst
+.. old/ibc.rst # needs to be updated

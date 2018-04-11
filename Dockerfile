@@ -1,28 +1,34 @@
-FROM alpine:3.5
+# Simple usage with a mounted data directory:
+# > docker build -t gaia .
+# > docker run -v $HOME/.gaiad:/root/.gaiad gaia init
+# > docker run -v $HOME/.gaiad:/root/.gaiad gaia start
 
-# BCHOME is where your genesis.json, key.json and other files including state are stored.
-ENV BCHOME /basecoin
+FROM alpine:edge
 
-# Create a basecoin user and group first so the IDs get set the same way, even
-# as the rest of this may change over time.
-RUN addgroup basecoin && \
-    adduser -S -G basecoin basecoin
+# Set up dependencies
+ENV PACKAGES go glide make git libc-dev bash
 
-RUN mkdir -p $BCHOME && \
-    chown -R basecoin:basecoin $BCHOME
-WORKDIR $BCHOME
+# Set up GOPATH & PATH
 
-# Expose the basecoin home directory as a volume since there's mutable state in there.
-VOLUME $BCHOME
+ENV GOPATH       /root/go
+ENV BASE_PATH    $GOPATH/src/github.com/cosmos
+ENV REPO_PATH    $BASE_PATH/cosmos-sdk
+ENV WORKDIR      /cosmos/
+ENV PATH         $GOPATH/bin:$PATH
 
-# jq and curl used for extracting `pub_key` from private validator while
-# deploying tendermint with Kubernetes. It is nice to have bash so the users
-# could execute bash commands.
-RUN apk add --no-cache bash curl jq
+# Link expected Go repo path
 
-COPY basecoin /usr/bin/basecoin
+RUN mkdir -p $WORKDIR $GOPATH/pkg $ $GOPATH/bin $BASE_PATH
 
-ENTRYPOINT ["basecoin"]
+# Add source files
 
-# By default you will get the basecoin with local MerkleEyes and in-proc Tendermint.
-CMD ["start", "--dir=${BCHOME}"]
+ADD . $REPO_PATH
+
+# Install minimum necessary dependencies, build Cosmos SDK, remove packages
+RUN apk add --no-cache $PACKAGES && \
+    cd $REPO_PATH && make get_tools && make get_vendor_deps && make all && make install && \
+    apk del $PACKAGES
+
+# Set entrypoint
+
+ENTRYPOINT ["gaiad"]

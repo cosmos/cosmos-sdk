@@ -31,6 +31,7 @@ func (c CoreContext) WithTrustNode(trustNode bool) CoreContext {
 
 func (c CoreContext) WithNodeURI(nodeURI string) CoreContext {
 	c.NodeURI = nodeURI
+	c.Client = rpcclient.NewHTTP(nodeURI, "/websocket")
 	return c
 }
 

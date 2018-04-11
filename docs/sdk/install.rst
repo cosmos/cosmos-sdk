@@ -22,3 +22,27 @@ repo, the correct way to install is:
 
 This will install ``gaiad`` and ``gaiacli`` and four example binaries:
 ``basecoind``, ``basecli``, ``democoind``, and ``democli``.
+
+Verify that everything is OK by running:
+
+::
+
+    gaiad version
+
+you should see:
+
+::
+
+    0.15.0-rc1-9d90c6b
+
+then with:
+
+::
+
+    basecli version
+
+you should see:
+
+::
+
+    0.15.0-rc1-9d90c6b

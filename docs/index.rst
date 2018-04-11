@@ -49,9 +49,10 @@ Staking
    :maxdepth: 1
 
    staking/intro.rst
-   staking/key-management.rst
-   staking/local-testnet.rst
-   staking/public-testnet.rst
+   staking/testnet.rst
+.. staking/key-management.rst
+.. staking/local-testnet.rst
+.. staking/public-testnet.rst
 
 .. IBC
 .. ---

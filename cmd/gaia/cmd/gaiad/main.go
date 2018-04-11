@@ -40,22 +40,22 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	//if err != nil {
 	//return nil, err
 	//}
-	//dbStaking, err := dbm.NewGoLevelDB("gaia-staking", dataDir)
+	//dbStake, err := dbm.NewGoLevelDB("gaia-stake", dataDir)
 	//if err != nil {
 	//return nil, err
 	//}
 	//dbs := map[string]dbm.DB{
-	//"main":    dbMain,
-	//"acc":     dbAcc,
-	//"ibc":     dbIBC,
-	//"staking": dbStaking,
+	//"main":  dbMain,
+	//"acc":   dbAcc,
+	//"ibc":   dbIBC,
+	//"stake": dbStake,
 	//}
 	//bapp := app.NewGaiaApp(logger, dbs)
 	return bapp, nil
 }
 
 func main() {
-	server.AddCommands(rootCmd, server.DefaultGenAppState, generateApp, context)
+	server.AddCommands(rootCmd, app.DefaultGenAppState, generateApp, context)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.gaiad")

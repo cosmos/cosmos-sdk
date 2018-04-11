@@ -179,3 +179,25 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 		Coins:   ga.Coins.Sort(),
 	}
 }
+
+// DefaultGenAppState expects two args: an account address
+// and a coin denomination, and gives lots of coins to that address.
+func DefaultGenAppState(args []string, addr sdk.Address, coinDenom string) (json.RawMessage, error) {
+
+	accAuth := auth.NewBaseAccountWithAddress(addr)
+	accAuth.Coins = sdk.Coins{{"fermion", 100000}}
+	acc := NewGenesisAccount(&accAuth)
+	genaccs := []GenesisAccount{acc}
+
+	genesisState := GenesisState{
+		Accounts:  genaccs,
+		StakeData: stake.GetGenesisJSON(),
+	}
+
+	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
+	if err != nil {
+		return nil, err
+	}
+
+	return stateBytes, nil
+}

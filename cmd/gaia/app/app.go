@@ -92,14 +92,10 @@ func MakeCodec() *wire.Codec {
 
 	// Register Msgs
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	cdc.RegisterConcrete(bank.SendMsg{}, "gaia/Send", nil)
-	cdc.RegisterConcrete(bank.IssueMsg{}, "gaia/Issue", nil)
-	cdc.RegisterConcrete(ibc.IBCTransferMsg{}, "gaia/IBCTransferMsg", nil)
-	cdc.RegisterConcrete(ibc.IBCReceiveMsg{}, "gaia/IBCReceiveMsg", nil)
-	cdc.RegisterConcrete(stake.MsgDeclareCandidacy{}, "gaia/MsgDeclareCandidacy", nil)
-	cdc.RegisterConcrete(stake.MsgEditCandidacy{}, "gaia/MsgEditCandidacy", nil)
-	cdc.RegisterConcrete(stake.MsgDelegate{}, "gaia/MsgDelegate", nil)
-	cdc.RegisterConcrete(stake.MsgUnbond{}, "gaia/MsgUnbond", nil)
+
+	ibc.RegisterWire(cdc)
+	bank.RegisterWire(cdc)
+	stake.RegisterWire(cdc)
 
 	// Register AppAccount
 	cdc.RegisterInterface((*sdk.Account)(nil), nil)
@@ -155,8 +151,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 
 // State to Unmarshal
 type GenesisState struct {
-	Accounts  []GenesisAccount `json:"accounts"`
-	StakeData json.RawMessage  `json:"stake"`
+	Accounts  []GenesisAccount   `json:"accounts"`
+	StakeData stake.GenesisState `json:"stake"`
 }
 
 // GenesisAccount doesn't need pubkey or sequence
@@ -191,7 +187,7 @@ func DefaultGenAppState(args []string, addr sdk.Address, coinDenom string) (json
 
 	genesisState := GenesisState{
 		Accounts:  genaccs,
-		StakeData: stake.GetGenesisJSON(),
+		StakeData: stake.GetDefaultGenesisState(),
 	}
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")

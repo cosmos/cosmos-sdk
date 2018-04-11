@@ -109,7 +109,7 @@ func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 
 	genesisState := GenesisState{
 		Accounts:  genaccs,
-		StakeData: stake.GetGenesisJSON(),
+		StakeData: stake.GetDefaultGenesisState(),
 	}
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")

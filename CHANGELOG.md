@@ -16,7 +16,12 @@ BREAKING CHANGES
 * All module keepers now require a codespace, see basecoin or democoin for usage
 
 BUG FIXES
+* Gaia now uses stake, ported from github.com/cosmos/gaia
 
+FEATURES:
+
+* Add CacheContext
+* Gaia stake commands include, DeclareCandidacy, EditCandidacy, Delegate, Unbond
 * MountStoreWithDB without providing a custom store works.
 
 ## 0.14.1 (April 9, 2018)

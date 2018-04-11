@@ -2,7 +2,6 @@ package stake
 
 import (
 	"bytes"
-	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/abci/types"
@@ -50,14 +49,9 @@ func NewEndBlocker(k Keeper) sdk.EndBlocker {
 //_____________________________________________________________________
 
 // InitGenesis - store genesis parameters
-func InitGenesis(ctx sdk.Context, k Keeper, data json.RawMessage) error {
-	var state GenesisState
-	if err := json.Unmarshal(data, &state); err != nil {
-		return err
-	}
-	k.setPool(ctx, state.Pool)
-	k.setParams(ctx, state.Params)
-	return nil
+func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
+	k.setPool(ctx, data.Pool)
+	k.setParams(ctx, data.Params)
 }
 
 //_____________________________________________________________________

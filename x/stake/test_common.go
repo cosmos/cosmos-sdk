@@ -2,7 +2,6 @@ package stake
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -77,27 +76,11 @@ func initialPool() Pool {
 }
 
 // get raw genesis raw message for testing
-func GetGenesisJSON() json.RawMessage {
-	jsonStr := `{
-  "params": {
-    "inflation_rate_change": {"num": 13, "denom": 100},
-    "inflation_max": {"num": 20, "denom": 100}, 
-    "inflation_min": {"num": 7, "denom": 100}, 
-    "goal_bonded": {"num": 67, "denom": 100}, 
-    "max_validators": 100,
-    "bond_denom": "fermion"
-  },
-  "pool": {
-    "total_supply": 0,
-    "bonded_shares": {"num": 0, "denom": 1}, 
-    "unbonded_shares": {"num": 0, "denom": 1}, 
-    "bonded_pool": 0,
-    "unbonded_pool": 0,
-    "inflation_last_time": 0,
-    "inflation": {"num": 7, "denom": 100}
-  }
-}`
-	return json.RawMessage(jsonStr)
+func GetDefaultGenesisState() GenesisState {
+	return GenesisState{
+		Pool:   initialPool(),
+		Params: defaultParams(),
+	}
 }
 
 // XXX reference the common declaration of this function

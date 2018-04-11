@@ -1,10 +1,8 @@
 package context
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/spf13/viper"
-	"io/ioutil"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -48,13 +46,7 @@ func defaultChainID() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	genesisFile := cfg.GenesisFile()
-	bz, err := ioutil.ReadFile(genesisFile)
-	if err != nil {
-		return "", err
-	}
-	var doc tmtypes.GenesisDoc
-	err = json.Unmarshal(bz, &doc)
+	doc, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
 	if err != nil {
 		return "", err
 	}

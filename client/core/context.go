@@ -24,7 +24,7 @@ func (c CoreContext) WithChainID(chainID string) CoreContext {
 	return c
 }
 
-// WithHeight - eturn a copy of the context with an updated height
+// WithHeight - return a copy of the context with an updated height
 func (c CoreContext) WithHeight(height int64) CoreContext {
 	c.Height = height
 	return c

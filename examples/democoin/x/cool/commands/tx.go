@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/wire"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
 )
@@ -24,7 +25,7 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 				return errors.New("You must provide an answer")
 			}
 
-			ctx := context.NewCoreContextFromViper()
+			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			// get the from address from the name flag
 			from, err := ctx.GetFromAddress()
@@ -37,6 +38,12 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			// get account name
 			name := viper.GetString(client.FlagName)
+
+			// default to next sequence number if none provided
+			ctx, err = context.EnsureSequence(ctx)
+			if err != nil {
+				return err
+			}
 
 			// build and sign the transaction, then broadcast to Tendermint
 			res, err := ctx.SignBuildBroadcast(name, msg, cdc)
@@ -60,7 +67,7 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 				return errors.New("You must provide an answer")
 			}
 
-			ctx := context.NewCoreContextFromViper()
+			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			// get the from address from the name flag
 			from, err := ctx.GetFromAddress()
@@ -70,6 +77,12 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			// get account name
 			name := viper.GetString(client.FlagName)
+
+			// default to next sequence number if none provided
+			ctx, err = context.EnsureSequence(ctx)
+			if err != nil {
+				return err
+			}
 
 			// create the message
 			msg := cool.NewSetTrendMsg(from, args[0])

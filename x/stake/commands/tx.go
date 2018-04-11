@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
@@ -92,7 +93,14 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 			msg := stake.NewMsgDeclareCandidacy(candidateAddr, pk, amount, description)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			ctx := context.NewCoreContextFromViper()
+			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
+
+			// default to next sequence number if none provided
+			ctx, err = context.EnsureSequence(ctx)
+			if err != nil {
+				return err
+			}
+
 			res, err := ctx.SignBuildBroadcast(ctx.FromAddressName, msg, cdc)
 			if err != nil {
 				return err
@@ -129,7 +137,14 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 			msg := stake.NewMsgEditCandidacy(candidateAddr, description)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			ctx := context.NewCoreContextFromViper()
+			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
+
+			// default to next sequence number if none provided
+			ctx, err = context.EnsureSequence(ctx)
+			if err != nil {
+				return err
+			}
+
 			res, err := ctx.SignBuildBroadcast(ctx.FromAddressName, msg, cdc)
 			if err != nil {
 				return err
@@ -165,7 +180,14 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 			msg := stake.NewMsgDelegate(delegatorAddr, candidateAddr, amount)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			ctx := context.NewCoreContextFromViper()
+			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
+
+			// default to next sequence number if none provided
+			ctx, err = context.EnsureSequence(ctx)
+			if err != nil {
+				return err
+			}
+
 			res, err := ctx.SignBuildBroadcast(ctx.FromAddressName, msg, cdc)
 			if err != nil {
 				return err
@@ -212,7 +234,14 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 			msg := stake.NewMsgUnbond(delegatorAddr, candidateAddr, sharesStr)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			ctx := context.NewCoreContextFromViper()
+			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
+
+			// default to next sequence number if none provided
+			ctx, err = context.EnsureSequence(ctx)
+			if err != nil {
+				return err
+			}
+
 			res, err := ctx.SignBuildBroadcast(ctx.FromAddressName, msg, cdc)
 			if err != nil {
 				return err

@@ -91,6 +91,9 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 
 	// build the Sign Messsage from the Standard Message
 	chainID := ctx.ChainID
+	if chainID == "" {
+		return nil, errors.Errorf("Chain ID required but not specified")
+	}
 	sequence := ctx.Sequence
 	signMsg := sdk.StdSignMsg{
 		ChainID:   chainID,
@@ -135,6 +138,25 @@ func (ctx CoreContext) SignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Co
 	}
 
 	return ctx.BroadcastTx(txBytes)
+}
+
+// get the next sequence for the account address
+func (c CoreContext) NextSequence(address []byte) (int64, error) {
+	if c.Decoder == nil {
+		return 0, errors.New("AccountDecoder required but not provided")
+	}
+
+	res, err := c.Query(address, c.AccountStore)
+	if err != nil {
+		return 0, err
+	}
+
+	account, err := c.Decoder(res)
+	if err != nil {
+		panic(err)
+	}
+
+	return account.GetSequence(), nil
 }
 
 // get passphrase from std input

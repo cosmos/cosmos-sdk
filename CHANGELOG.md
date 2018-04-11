@@ -11,6 +11,10 @@ FEATURES:
 
 * Add CacheContext
 
+FEATURES:
+
+* Add auto sequencing to client
+
 ## 0.14.1 (April 9, 2018)
 
 BUG FIXES

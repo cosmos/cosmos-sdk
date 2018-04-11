@@ -13,7 +13,7 @@ This example covers initial setup of a two-node testnet between a server in the 
 Install
 -------
 
-The ``basecoind`` and ``basecli`` binaries:
+The ``gaiad`` and ``gaiacli`` binaries:
 
 ::
 
@@ -26,24 +26,24 @@ Let's jump right into it. First, we initialize some default files:
 
 ::
 
-    basecoind init
+    gaiad init
 
 which will output:
 
 ::
 
-    I[03-30|11:20:13.365] Found private validator                      module=main path=/root/.basecoind/config/priv_validator.json
-    I[03-30|11:20:13.365] Found genesis file                           module=main path=/root/.basecoind/config/genesis.json
+    I[03-30|11:20:13.365] Found private validator                      module=main path=/root/.gaiad/config/priv_validator.json
+    I[03-30|11:20:13.365] Found genesis file                           module=main path=/root/.gaiad/config/genesis.json
     Secret phrase to access coins:
     citizen hungry tennis noise park hire glory exercise link glow dolphin labor design grit apple abandon
 
-This tell us we have a ``priv_validator.json`` and ``genesis.json`` in the ``~/.basecoind/config`` directory. A ``config.toml`` was also created in the same directory. It is a good idea to get familiar with those files. Write down the seed.
+This tell us we have a ``priv_validator.json`` and ``genesis.json`` in the ``~/.gaiad/config`` directory. A ``config.toml`` was also created in the same directory. It is a good idea to get familiar with those files. Write down the seed.
 
-The next thing we'll need to is add the key from ``priv_validator.json`` to the ``basecli`` key manager. For this we need a seed and a password:
+The next thing we'll need to is add the key from ``priv_validator.json`` to the ``gaiacli`` key manager. For this we need a seed and a password:
 
 ::
 
-    basecli keys add alice --recover
+    gaiacli keys add alice --recover
 
 which will give you three prompts:
 
@@ -63,7 +63,7 @@ You can see all available keys with:
 
 ::
 
-    basecli keys list
+    gaiacli keys list
 
 Setup Testnet
 -------------
@@ -72,7 +72,7 @@ Next, we start the daemon (do this in another window):
 
 ::
 
-    basecoind start
+    gaiad start
 
 and you'll see blocks start streaming through.
 
@@ -91,8 +91,8 @@ Remember that ``alice`` was already created. On your second machine, install the
 
 ::
 
-    basecli keys add bob
-    basecli keys add charlie
+    gaiacli keys add bob
+    gaiacli keys add charlie
 
 both of which will prompt you for a password. Now we need to copy the ``genesis.json`` and ``config.toml`` from the first machine (with ``alice``) to the second machine. This is a good time to look at both these files.
 
@@ -145,7 +145,7 @@ Now that your files are all setup, it's time to join the network. On your local 
 
 ::
 
-    basecoind start
+    gaiad start
 
 and your new node will connect to the running validator (``alice``).
 
@@ -156,7 +156,7 @@ We'll have ``alice`` send some ``mycoin`` to ``bob``, who has now joined the net
 
 ::
 
-    basecli send --amount=1000mycoin --seq=0 --name=alice --to=5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
+    gaiacli send --amount=1000mycoin --seq=0 --name=alice --to=5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
 
 where the ``--seq`` flag is to be incremented for each transaction, the ``--name`` flag is the sender (alice), and the ``--to`` flag takes ``bob``'s address. You'll see something like:
 
@@ -194,14 +194,12 @@ Check out ``bob``'s account, which should now have 1000 mycoin:
 
 ::
 
-    basecli account 5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
-
-
-
-
+    gaiacli account 5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
 
 Adding a Second Validator
 -------------------------
+
+**This section is wrong/needs to be updated**
 
 Next, let's add the second node as a validator.
 
@@ -225,7 +223,7 @@ Now ``bob`` can declare candidacy to that pubkey:
 
 ::
 
-    basecli declare-candidacy --amount=10mycoin --name=bob --pubkey=<pub_key data> --moniker=bobby
+    gaiacli declare-candidacy --amount=10mycoin --name=bob --pubkey=<pub_key data> --moniker=bobby
 
 with an output like:
 
@@ -246,7 +244,7 @@ We should see ``bob``'s account balance decrease by 10 mycoin:
 
 ::
 
-    basecli account 5D93A6059B6592833CBC8FA3DA90EE0382198985 
+    gaiacli account 5D93A6059B6592833CBC8FA3DA90EE0382198985 
 
 To confirm for certain the new validator is active, ask the tendermint node:
 
@@ -267,13 +265,13 @@ First let's have ``alice`` send some coins to ``charlie``:
 
 ::
 
-    basecli tx --amount=1000mycoin --sequence=2 --name=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
+    gaiacli tx --amount=1000mycoin --sequence=2 --name=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
 
 Then ``charlie`` will delegate some mycoin to ``bob``:
 
 ::
 
-    basecli tx delegate --amount=10mycoin --name=charlie --pubkey=<pub_key data>
+    gaiacli tx delegate --amount=10mycoin --name=charlie --pubkey=<pub_key data>
 
 You'll see output like:
 
@@ -295,7 +293,7 @@ To get more information about the candidate, try:
 
 ::
 
-    basecli query candidate --pubkey=<pub_key data>
+    gaiacli query candidate --pubkey=<pub_key data>
 
 and you'll see output similar to:
 
@@ -328,7 +326,7 @@ It's also possible the query the delegator's bond like so:
 
 ::
 
-    basecli query delegator-bond --delegator-address 48F74F48281C89E5E4BE9092F735EA519768E8EF --pubkey 52D6FCD8C92A97F7CCB01205ADF310A18411EA8FDCC10E65BF2FCDB05AD1689B
+    gaiacli query delegator-bond --delegator-address 48F74F48281C89E5E4BE9092F735EA519768E8EF --pubkey 52D6FCD8C92A97F7CCB01205ADF310A18411EA8FDCC10E65BF2FCDB05AD1689B
 
 with an output similar to:
 
@@ -357,7 +355,7 @@ your VotingPower reduce and your account balance increase.
 
 ::
 
-    basecli unbond --amount=5mycoin --name=charlie --pubkey=<pub_key data>
-    basecli account 48F74F48281C89E5E4BE9092F735EA519768E8EF
+    gaiacli unbond --amount=5mycoin --name=charlie --pubkey=<pub_key data>
+    gaiacli account 48F74F48281C89E5E4BE9092F735EA519768E8EF
 
-See the bond decrease with ``basecli query delegator-bond`` like above.
+See the bond decrease with ``gaiacli query delegator-bond`` like above.

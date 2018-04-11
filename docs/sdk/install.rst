@@ -2,7 +2,7 @@ Install
 =======
 
 Cosmos SDK can be installed to
-`$GOPATH/src/github.com/cosmos/cosmos-sdk` like a normal Go program:
+``$GOPATH/src/github.com/cosmos/cosmos-sdk`` like a normal Go program:
 
 ::
 

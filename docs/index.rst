@@ -14,13 +14,11 @@ Welcome to the Cosmos SDK!
 SDK
 ---
 
-.. One maxdepth for now
-
 .. toctree::
    :maxdepth: 1
    
-   sdk/overview.rst
    sdk/install.rst
+.. sdk/overview.rst # needs to be updated
 .. old/glossary.rst # not completely up to date  but has good content
 
 .. Basecoin
@@ -31,8 +29,8 @@ SDK
 
 .. old/basecoin/basics.rst # has a decent getting-start tutorial that's relatively up to date, should be consolidated with the other getting started doc
 
-Extensions
-----------
+.. Extensions
+.. ----------
 
 .. old/basecoin/extensions.rst # probably not worth salvaging
 
@@ -48,8 +46,8 @@ Staking
 .. toctree::
    :maxdepth: 1
 
-   staking/intro.rst
    staking/testnet.rst
+.. staking/intro.rst
 .. staking/key-management.rst
 .. staking/local-testnet.rst
 .. staking/public-testnet.rst

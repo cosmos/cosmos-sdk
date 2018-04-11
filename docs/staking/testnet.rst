@@ -1,13 +1,7 @@
 Testnet Setup
 =============
 
-Install
--------
-
 See the `installation guide <../sdk/install.html>`__ for details on installation.
-
-
-### Local-Test Example
 
 Here is a quick example to get you off your feet:
 
@@ -24,6 +18,7 @@ First, generate a new key with a name, and save the address:
 Now initialize a gaia chain:
 
 ::
+
     gaiad init --home=$HOME/.gaiad1
 
 you should see seed phrase for genesis account in the output & config & data folder in the home directory.
@@ -63,8 +58,7 @@ The genesis file should look like this:
       }
     }
 
-
-**Note:** We need to change the denomination of token from default to ``steak`` in genesis file.
+**Note:** We need to change the denomination of token from default to ``steak`` in the genesis file.
 
 Then, recover the genesis account with ``basecli``:
 
@@ -80,7 +74,7 @@ We can add a second node on our local machine by initiating a node in a new dire
 
     gaiad init --home=$HOME/.gaiad2
 
-and replace the ``genesis.json`` and ``config.toml`` file:
+and replace the ``genesis.json`` and ``config.toml`` files:
 
 ::
 
@@ -139,6 +133,7 @@ First, we need to create a new account:
 Check that we now have two accounts:
 
 ::
+
     basecli keys list 
 
 Then, we try to transfer some ``steak`` to another account:
@@ -147,7 +142,7 @@ Then, we try to transfer some ``steak`` to another account:
 
     basecli send --amount=1000steak --to=$MYADDR2 --name=$NAME --chain-id=<CHAIN-ID> --node=tcp://localhost:46657 --sequence=0
 
-**Note** We need to be careful with the ``chain-id`` and ``sequence``
+**Note:** We need to be careful with the ``chain-id`` and ``sequence``
 
 Check the balance & sequence with:
 
@@ -163,7 +158,7 @@ Finally, let's bond the validator in ``$HOME/gaiad2``. Get the pubkey first:
 
     cat $HOME/.gaiad2/config/priv_validator.json | jq .pub_key.value
 
-Go to [this website](http://tomeko.net/online_tools/base64.php?lang=en) to change pubkey from base64 to Hex. 
+Go to `this website <http://tomeko.net/online_tools/base64.php?lang=en>`__ to change pubkey from base64 to Hex. 
 
 Ok, now we can bond some coins to that pubkey:
 
@@ -180,6 +175,7 @@ Nice. We can see there are now two validators:
 Check the balance of ``$MYADDR2`` to see the difference: it has 1 less ``steak``!
 
 ::
+
     basecli account $MYADDR2
 
 To confirm for certain the new validator is active, check tendermint:

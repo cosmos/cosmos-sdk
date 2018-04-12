@@ -1,6 +1,6 @@
 ## 2 Proofs
 
-([Back to table of contents](specification.md#contents))
+([Back to table of contents](README.md#contents))
 
 The basis of IBC is the ability to perform efficient proofs of a message packet on-chain and deterministically. All transactions must be attributable and provable without depending on any information outside of the blockchain. We define the following variables: _H<sub>h</sub>_ is the signed header at height _h_, _C<sub>h</sub>_ are the consensus rules at height _h_, and _P_ is the unbonding period of this blockchain. _V<sub>k,h</sub>_ is the value stored under key _k_ at height _h_. Note that of all these, only _H<sub>h</sub>_ defines a signature and is thus attributable.
 

@@ -1,6 +1,6 @@
 # Appendices
 
-([Back to table of contents](specification.md#contents))
+([Back to table of contents](README.md#contents))
 
 ## Appendix A: Encoding Libraries
 

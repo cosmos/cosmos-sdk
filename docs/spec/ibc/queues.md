@@ -1,6 +1,6 @@
 ## 3 Messaging Queue
 
-([Back to table of contents](specification.md#contents))
+([Back to table of contents](README.md#contents))
 
 Messaging in distributed systems is a deeply researched field and a primitive upon which many other systems are built. We can model asynchronous message passing, and make no timing assumptions on the communication channels. By doing this, we allow each zone to move at its own speed, unblocked by any other zone, but able to communicate as fast as the network allows at that moment.
 

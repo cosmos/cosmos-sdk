@@ -1,6 +1,6 @@
 ## 1 Overview
 
-([Back to table of contents](specification.md#contents))
+([Back to table of contents](README.md#contents))
 
 The IBC protocol creates a mechanism by which multiple sovereign replicated fault tolerant state machines my pass messages to each other. These messages provide a base layer for the creation of communicating blockchain architecture that overcomes challenges in the scalability and extensibility of computing blockchain environments.
 

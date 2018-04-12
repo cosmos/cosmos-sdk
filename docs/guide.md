@@ -22,7 +22,7 @@ The SDK distinguishes between transactions (Tx) and messages
 Users can create messages containing arbitrary information by
 implementing the `Msg` interface:
 
-```golang
+```go
 type Msg interface {
 
 	// Return the message type.
@@ -68,7 +68,7 @@ but this is mostly for convenience and not type-safe.
 
 For instance, the `Basecoin` message types are defined in `x/bank/tx.go`: 
 
-```golang
+```go
 type SendMsg struct {
 	Inputs  []Input  `json:"inputs"`
 	Outputs []Output `json:"outputs"`
@@ -82,7 +82,7 @@ type IssueMsg struct {
 
 Each specifies the addresses that must sign the message:
 
-```golang
+```go
 func (msg SendMsg) GetSigners() []sdk.Address {
 	addrs := make([]sdk.Address, len(msg.Inputs))
 	for i, in := range msg.Inputs {
@@ -100,7 +100,7 @@ func (msg IssueMsg) GetSigners() []sdk.Address {
 
 A transaction is a message with additional information for authentication:
 
-```golang
+```go
 type Tx interface {
 
 	GetMsg() Msg
@@ -120,7 +120,7 @@ The `tx.GetSignatures()` method returns a list of signatures, which must match
 the list of addresses returned by `tx.Msg.GetSigners()`. The signatures come in
 a standard form:
 
-```golang
+```go
 type StdSignature struct {
 	crypto.PubKey // optional
 	crypto.Signature
@@ -146,7 +146,7 @@ to return this.
 
 The standard way to create a transaction from a message is to use the `StdTx`: 
 
-```golang
+```go
 type StdTx struct {
 	Msg
 	Signatures []StdSignature
@@ -164,7 +164,7 @@ When initializing an application, a developer must specify a `TxDecoder`
 function which determines how an arbitrary byte array should be unmarshalled
 into a `Tx`: 
 
-```golang
+```go
 type TxDecoder func(txBytes []byte) (Tx, error)
 ```
 
@@ -177,7 +177,7 @@ relevant types to be registered ahead of type. Registration happens on a
 For instance, in `Basecoin`, we wish to register the `SendMsg` and `IssueMsg`
 types:
 
-```golang
+```go
 cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 cdc.RegisterConcrete(bank.SendMsg{}, "cosmos-sdk/SendMsg", nil)
 cdc.RegisterConcrete(bank.IssueMsg{}, "cosmos-sdk/IssueMsg", nil)
@@ -189,21 +189,58 @@ same prefix-bytes, regardless of what interface it is satisfying.  For more
 details, see the [go-amino documentation](https://github.com/tendermint/go-amino/blob/develop).
 
 
-## MultiStore
+## Storage
 
-### MultiStore is like a filesystem
-### Mounting an IAVLStore
+### MultiStore
 
+MultiStore is like a root filesystem of an operating system, except
+all the entries are fully Merkleized.  You mount onto a MultiStore
+any number of Stores.  Currently only KVStores are supported, but in
+the future we may support more kinds of stores, such as a HeapStore
+or a NDStore for multidimensional storage.
+
+The MultiStore as well as all mounted stores provide caching (aka
+cache-wrapping) for intermediate state (aka software transactional
+memory) during the execution of transactions.  In the case of the
+KVStore, this also works for iterators.  For example, after running
+the app's AnteHandler, the MultiStore is cache-wrapped (and each
+store is also cache-wrapped) so that should processing of the
+transaction fail, at least the transaction fees are paid and
+sequence incremented.
+
+The MultiStore as well as all stores support (or will support)
+historical state pruning and snapshotting and various kinds of
+queries with proofs.
+
+### KVStore
+
+Here we'll focus on the IAVLStore, which is a kind of KVStore.
+
+IAVLStore is a fast balanced dynamic Merkle store that also supports
+iteration, and of course cache-wrapping, state pruning, and various
+queries with proofs, such as proofs of existence, absence, range,
+and so on.
+
+Here's how you mount them to a MultiStore.
+
+```go
+mainDB, catDB := dbm.NewMemDB(), dbm.NewMemDB()
+fooKey := sdk.NewKVStoreKey("foo")
+barKey := sdk.NewKVStoreKey("bar")
+catKey := sdk.NewKVStoreKey("cat")
+ms := NewCommitMultiStore(mainDB)
+ms.MountStoreWithDB(fooKey, sdk.StoreTypeIAVL, nil)
+ms.MountStoreWithDB(barKey, sdk.StoreTypeIAVL, nil)
+ms.MountStoreWithDB(catKey, sdk.StoreTypeIAVL, catDB)
 ```
-TODO:
-- IAVLStore: Fast balanced dynamic Merkle store.
-  - supports iteration.
-- MultiStore: multiple Merkle tree backends in a single store 
-  - allows using Ethereum Patricia Trie and Tendermint IAVL in same app
-- Provide caching for intermediate state during execution of blocks and transactions (including for iteration)
-- Historical state pruning and snapshotting.
-- Query proofs (existence, absence, range, etc.) on current and retained historical state.
-```
+
+In the example above, all IAVL nodes (inner and leaf) will be stored
+in mainDB with the prefix of "s/k:foo/" and "s/k:bar/" respectively,
+thus sharing the mainDB.  All IAVL nodes (inner and leaf) for the
+cat KVStore are stored separately in catDB with the prefix of
+"s/\_/".  The "s/k:KEY/" and "s/\_/" prefixes are there to
+disambiguate store items from other items of non-storage concern.
+
 
 ## Context
 
@@ -223,7 +260,7 @@ Many methods on SDK objects receive a context as the first argument.
 
 Transaction processing in the SDK is defined through `Handler` functions:
 
-```golang
+```go
 type Handler func(ctx Context, tx Tx) Result
 ```
 
@@ -237,7 +274,7 @@ to a particular store (or two or more). Access to stores is managed using
 capabilities keys and mappers.  When a handler is initialized, it is passed a
 key or mapper that gives it access to the relevant stores.
 
-```golang
+```go
 // File: cosmos-sdk/examples/basecoin/app/init_stores.go
 app.BaseApp.MountStore(app.capKeyMainStore, sdk.StoreTypeIAVL)
 app.accountMapper = auth.NewAccountMapper(

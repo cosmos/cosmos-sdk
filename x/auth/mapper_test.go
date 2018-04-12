@@ -71,3 +71,19 @@ func TestAccountMapperSealed(t *testing.T) {
 	mapperSealed := mapper.Seal()
 	assert.Panics(t, func() { mapperSealed.WireCodec() })
 }
+
+func TestAccountMapperFeePool(t *testing.T) {
+	ms, capKey := setupMultiStore()
+	cdc := wire.NewCodec()
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
+	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
+
+	// default empty
+	pool := mapper.GetFeePool(ctx)
+	assert.Equal(t, pool, sdk.Coins{})
+
+	// get after set
+	mapper.SetFeePool(ctx, sdk.Coins{sdk.Coin{"doge", 1}})
+	pool = mapper.GetFeePool(ctx)
+	assert.Equal(t, pool, sdk.Coins{sdk.Coin{"doge", 1}})
+}

@@ -74,6 +74,9 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 				// TODO: min fee
 				if !fee.Amount.IsZero() {
 					signerAcc, res = deductFees(signerAcc, fee)
+					pool := accountMapper.GetFeePool(ctx)
+					pool = pool.Plus(fee.Amount)
+					accountMapper.SetFeePool(ctx, pool)
 					if !res.IsOK() {
 						return ctx, res, true
 					}

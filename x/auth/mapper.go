@@ -51,6 +51,33 @@ func (am accountMapper) Seal() sealedAccountMapper {
 	return sealedAccountMapper{am}
 }
 
+var feePoolKey = []byte("feePool")
+
+// Implements sdk.AccountMapper.
+func (am accountMapper) GetFeePool(ctx sdk.Context) sdk.Coins {
+	store := ctx.KVStore(am.key)
+	bz := store.Get(feePoolKey)
+	if bz == nil {
+		return sdk.Coins{}
+	}
+	var coins sdk.Coins
+	err := am.cdc.UnmarshalBinaryBare(bz, &coins)
+	if err != nil {
+		panic(err)
+	}
+	return coins
+}
+
+// Implements sdk.AccountMapper.
+func (am accountMapper) SetFeePool(ctx sdk.Context, coins sdk.Coins) {
+	store := ctx.KVStore(am.key)
+	bz, err := am.cdc.MarshalBinaryBare(coins)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(feePoolKey, bz)
+}
+
 // Implements sdk.AccountMapper.
 func (am accountMapper) NewAccountWithAddress(ctx sdk.Context, addr sdk.Address) sdk.Account {
 	acc := am.clonePrototype()

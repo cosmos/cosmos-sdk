@@ -6,10 +6,10 @@ package version
 // TODO improve
 
 const Maj = "0"
-const Min = "11"
-const Fix = "1"
+const Min = "15"
+const Fix = "0"
 
-const Version = "0.11.1-dev"
+const Version = "0.15.0-rc1"
 
 // GitCommit set by build flags
 var GitCommit = ""

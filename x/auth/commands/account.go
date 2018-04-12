@@ -2,27 +2,25 @@ package commands
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/builder"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // GetAccountCmd for the auth.BaseAccount type
 func GetAccountCmdDefault(storeName string, cdc *wire.Codec) *cobra.Command {
-	return GetAccountCmd(storeName, cdc, getParseAccount(cdc))
+	return GetAccountCmd(storeName, cdc, GetAccountDecoder(cdc))
 }
 
-func getParseAccount(cdc *wire.Codec) sdk.ParseAccount {
-	return func(accBytes []byte) (sdk.Account, error) {
-		acct := new(auth.BaseAccount)
-		err := cdc.UnmarshalBinary(accBytes, &acct)
+func GetAccountDecoder(cdc *wire.Codec) sdk.AccountDecoder {
+	return func(accBytes []byte) (acct sdk.Account, err error) {
+		// acct := new(auth.BaseAccount)
+		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
 		if err != nil {
 			panic(err)
 		}
@@ -32,11 +30,11 @@ func getParseAccount(cdc *wire.Codec) sdk.ParseAccount {
 
 // GetAccountCmd returns a query account that will display the
 // state of the account at a given address
-func GetAccountCmd(storeName string, cdc *wire.Codec, parser sdk.ParseAccount) *cobra.Command {
+func GetAccountCmd(storeName string, cdc *wire.Codec, decoder sdk.AccountDecoder) *cobra.Command {
 	cmdr := commander{
 		storeName,
 		cdc,
-		parser,
+		decoder,
 	}
 	return &cobra.Command{
 		Use:   "account <address>",
@@ -48,7 +46,7 @@ func GetAccountCmd(storeName string, cdc *wire.Codec, parser sdk.ParseAccount) *
 type commander struct {
 	storeName string
 	cdc       *wire.Codec
-	parser    sdk.ParseAccount
+	decoder   sdk.AccountDecoder
 }
 
 func (c commander) getAccountCmd(cmd *cobra.Command, args []string) error {
@@ -64,16 +62,21 @@ func (c commander) getAccountCmd(cmd *cobra.Command, args []string) error {
 	}
 	key := sdk.Address(bz)
 
-	res, err := builder.Query(key, c.storeName)
+	ctx := context.NewCoreContextFromViper()
 
-	// parse out the value
-	account, err := c.parser(res)
+	res, err := ctx.Query(key, c.storeName)
+	if err != nil {
+		return err
+	}
+
+	// decode the value
+	account, err := c.decoder(res)
 	if err != nil {
 		return err
 	}
 
 	// print out whole account
-	output, err := json.MarshalIndent(account, "", "  ")
+	output, err := wire.MarshalJSONIndent(c.cdc, account)
 	if err != nil {
 		return err
 	}

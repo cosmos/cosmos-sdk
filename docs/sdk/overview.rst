@@ -219,14 +219,6 @@ A transaction is a message with additional information for authentication:
     
     	GetMsg() Msg
     
-    	// The address that pays the base fee for this message.  The fee is
-    	// deducted before the Msg is processed.
-    	GetFeePayer() Address
-    
-    	// Get the canonical byte representation of the Tx.
-    	// Includes any signatures (or empty slots).
-    	GetTxBytes() []byte
-    
     	// Signatures returns the signature of signers who signed the Msg.
     	// CONTRACT: Length returned is same as length of
     	// pubkeys returned from MsgKeySigners, and the order
@@ -261,9 +253,6 @@ case of Basecoin, the public key only needs to be included in the first
 transaction send by a given account - after that, the public key is forever
 stored by the application and can be left out of transactions.
 
-Transactions can also specify the address responsible for paying the
-transaction's fees using the ``tx.GetFeePayer()`` method.
-
 The standard way to create a transaction from a message is to use the ``StdTx``: 
 
 ::
@@ -289,8 +278,8 @@ into a ``Tx``:
 
     type TxDecoder func(txBytes []byte) (Tx, error)
 
-In ``Basecoin``, we use the Tendermint wire format and the ``go-wire`` library for
-encoding and decoding all message types.  The ``go-wire`` library has the nice
+In ``Basecoin``, we use the Tendermint wire format and the ``go-amino`` library for
+encoding and decoding all message types.  The ``go-amino`` library has the nice
 property that it can unmarshal into interface types, but it requires the
 relevant types to be registered ahead of type. Registration happens on a
 ``Codec`` object, so as not to taint the global name space.
@@ -307,7 +296,7 @@ types:
 Note how each concrete type is given a name - these name determine the type's
 unique "prefix bytes" during encoding.  A registered type will always use the
 same prefix-bytes, regardless of what interface it is satisfying.  For more
-details, see the `go-wire documentation <https://github.com/tendermint/go-wire/tree/develop>`__.
+details, see the `go-amino documentation <https://github.com/tendermint/go-amino/tree/develop>`__.
 
 
 MultiStore

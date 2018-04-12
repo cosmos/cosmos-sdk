@@ -12,7 +12,7 @@ var _ sdk.Account = (*AppAccount)(nil)
 // extending auth.BaseAccount with custom fields.
 //
 // This is compatible with the stock auth.AccountStore, since
-// auth.AccountStore uses the flexible go-wire library.
+// auth.AccountStore uses the flexible go-amino library.
 type AppAccount struct {
 	auth.BaseAccount
 	Name string `json:"name"`
@@ -22,11 +22,14 @@ type AppAccount struct {
 func (acc AppAccount) GetName() string      { return acc.Name }
 func (acc *AppAccount) SetName(name string) { acc.Name = name }
 
-// Get the ParseAccount function for the custom AppAccount
-func GetParseAccount(cdc *wire.Codec) sdk.ParseAccount {
+// Get the AccountDecoder function for the custom AppAccount
+func GetAccountDecoder(cdc *wire.Codec) sdk.AccountDecoder {
 	return func(accBytes []byte) (res sdk.Account, err error) {
+		if len(accBytes) == 0 {
+			return nil, sdk.ErrTxDecode("accBytes are empty")
+		}
 		acct := new(AppAccount)
-		err = cdc.UnmarshalBinary(accBytes, &acct)
+		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
 		if err != nil {
 			panic(err)
 		}
@@ -52,7 +55,7 @@ func NewGenesisAccount(aa *AppAccount) *GenesisAccount {
 	return &GenesisAccount{
 		Name:    aa.Name,
 		Address: aa.Address,
-		Coins:   aa.Coins,
+		Coins:   aa.Coins.Sort(),
 	}
 }
 
@@ -60,7 +63,7 @@ func NewGenesisAccount(aa *AppAccount) *GenesisAccount {
 func (ga *GenesisAccount) ToAppAccount() (acc *AppAccount, err error) {
 	baseAcc := auth.BaseAccount{
 		Address: ga.Address,
-		Coins:   ga.Coins,
+		Coins:   ga.Coins.Sort(),
 	}
 	return &AppAccount{
 		BaseAccount: baseAcc,

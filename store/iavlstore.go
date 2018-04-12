@@ -19,7 +19,7 @@ const (
 
 func LoadIAVLStore(db dbm.DB, id CommitID) (CommitStore, error) {
 	tree := iavl.NewVersionedTree(db, defaultIAVLCacheSize)
-	err := tree.LoadVersion(id.Version)
+	_, err := tree.LoadVersion(id.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +119,19 @@ func (st *iavlStore) Iterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, true)
 }
 
-// Implements IterKVStore.
+// Implements KVStore.
 func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, false)
+}
+
+// Implements KVStore.
+func (st *iavlStore) SubspaceIterator(prefix []byte) Iterator {
+	return st.Iterator(prefix, sdk.PrefixEndBytes(prefix))
+}
+
+// Implements KVStore.
+func (st *iavlStore) ReverseSubspaceIterator(prefix []byte) Iterator {
+	return st.ReverseIterator(prefix, sdk.PrefixEndBytes(prefix))
 }
 
 // Query implements ABCI interface, allows queries
@@ -134,7 +144,7 @@ func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if len(req.Data) == 0 {
 		msg := "Query cannot be zero length"
-		return sdk.ErrTxParse(msg).Result().ToQuery()
+		return sdk.ErrTxDecode(msg).QueryResult()
 	}
 
 	tree := st.tree
@@ -168,7 +178,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	default:
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
-		return sdk.ErrUnknownRequest(msg).Result().ToQuery()
+		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
 	return
 }
@@ -332,6 +342,9 @@ func (iter *iavlIterator) assertIsValid() {
 //----------------------------------------
 
 func cp(bz []byte) (ret []byte) {
+	if bz == nil {
+		return nil
+	}
 	ret = make([]byte, len(bz))
 	copy(ret, bz)
 	return ret

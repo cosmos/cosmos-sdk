@@ -24,66 +24,57 @@
 #   go-tests = true
 #   unused-packages = true
 
-
 [[constraint]]
   name = "github.com/bgentry/speakeasy"
-  version = "0.1.0"
+  version = "~0.1.0"
 
 [[constraint]]
   name = "github.com/golang/protobuf"
-  version = "1.0.0"
+  version = "~1.0.0"
 
 [[constraint]]
   name = "github.com/mattn/go-isatty"
-  version = "0.0.3"
+  version = "~0.0.3"
 
 [[constraint]]
   name = "github.com/pkg/errors"
-  version = "0.8.0"
-
-# [[constraint]]
-#   branch = "master"
-#   name = "github.com/rigelrozanski/common"
+  version = "~0.8.0"
 
 [[constraint]]
   name = "github.com/spf13/cobra"
-  version = "0.0.1"
+  version = "~0.0.1"
 
 [[constraint]]
   name = "github.com/spf13/viper"
-  version = "1.0.0"
+  version = "~1.0.0"
 
 [[constraint]]
   name = "github.com/stretchr/testify"
-  version = "1.2.1"
+  version = "~1.2.1"
 
 [[constraint]]
-  branch = "develop"
   name = "github.com/tendermint/abci"
+  version = "~0.10.3"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/tendermint/go-crypto"
+  version = "~0.6.2"
 
-[[override]]
-  branch = "master"
-  name = "github.com/tendermint/go-wire"
-
-[[override]]
-  branch = "develop"
+[[constraint]]
   name = "github.com/tendermint/go-amino"
+  version = "~0.9.6"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/tendermint/iavl"
+  version = "~0.7.0"
 
 [[constraint]]
-  branch = "develop"
   name = "github.com/tendermint/tendermint"
+  version = "0.19.0-rc4"
 
-[[override]]
-  branch = "develop"
+[[constraint]]
   name = "github.com/tendermint/tmlibs"
+  version = "~0.8.1"
 
 [prune]
   go-tests = true

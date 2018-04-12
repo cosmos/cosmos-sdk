@@ -1,0 +1,103 @@
+version: 2
+
+defaults: &defaults
+  working_directory: /go/src/github.com/cosmos/cosmos-sdk
+  docker:
+    - image: circleci/golang:1.10.0
+  environment:
+    GOBIN: /tmp/workspace/bin
+
+jobs:
+  setup_dependencies:
+    <<: *defaults
+    steps:
+      - run: mkdir -p /tmp/workspace/bin
+      - run: mkdir -p /tmp/workspace/profiles
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-pkg-cache
+      - run:
+          name: tools
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_tools
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
+      - run:
+          name: binaries
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make build
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - bin
+            - profiles
+      - save_cache:
+          key: v1-pkg-cache
+          paths:
+            - /go/pkg
+      - save_cache:
+          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - /go/src/github.com/cosmos/cosmos-sdk
+
+  test_cover:
+    <<: *defaults
+    parallelism: 4
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - restore_cache:
+          key: v1-pkg-cache
+      - restore_cache:
+          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Run tests
+          command: |
+            for pkg in $(go list github.com/cosmos/cosmos-sdk/... | grep -v /vendor/ | circleci tests split --split-by=timings); do
+              id=$(basename "$pkg")
+
+              go test -timeout 5m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic "$pkg"
+            done
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - "profiles/*"
+
+  upload_coverage:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - restore_cache:
+          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: gather
+          command: |
+            set -ex
+
+            echo "mode: atomic" > coverage.txt
+            for prof in $(ls /tmp/workspace/profiles/); do
+              tail -n +2 /tmp/workspace/profiles/"$prof" >> coverage.txt
+            done
+      - run:
+          name: upload
+          command: bash <(curl -s https://codecov.io/bash) -f coverage.txt
+
+workflows:
+  version: 2
+  test-suite:
+    jobs:
+      - setup_dependencies
+      - test_cover:
+          requires:
+            - setup_dependencies
+      - upload_coverage:
+          requires:
+            - test_cover
+

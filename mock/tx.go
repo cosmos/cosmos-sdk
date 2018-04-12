@@ -64,10 +64,6 @@ func (tx kvstoreTx) GetSignatures() []sdk.StdSignature {
 	return nil
 }
 
-func (tx kvstoreTx) GetFeePayer() sdk.Address {
-	return nil
-}
-
 // takes raw transaction bytes and decodes them into an sdk.Tx. An sdk.Tx has
 // all the signatures and can be used to authenticate.
 func decodeTx(txBytes []byte) (sdk.Tx, sdk.Error) {
@@ -81,7 +77,7 @@ func decodeTx(txBytes []byte) (sdk.Tx, sdk.Error) {
 		k, v := split[0], split[1]
 		tx = kvstoreTx{k, v, txBytes}
 	} else {
-		return nil, sdk.ErrTxParse("too many =")
+		return nil, sdk.ErrTxDecode("too many =")
 	}
 
 	return tx, nil

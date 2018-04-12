@@ -1,4 +1,4 @@
-package stdlib
+package lib
 
 import (
 	"testing"
@@ -84,6 +84,8 @@ func TestQueueMapper(t *testing.T) {
 	})
 
 	assert.False(t, qm.IsEmpty(ctx))
+	assert.Equal(t, QueueInfo{3, 4}, qm.Info(ctx))
+
 	qm.Pop(ctx)
 	assert.True(t, qm.IsEmpty(ctx))
 }

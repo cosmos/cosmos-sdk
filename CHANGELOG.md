@@ -7,6 +7,10 @@ BREAKING CHANGES
 * Remove go-wire, use go-amino
 * [store] Add `SubspaceIterator` and `ReverseSubspaceIterator` to `KVStore` interface
 
+BUG FIXES
+
+* MountStoreWithDB without providing a custom store works.
+
 ## 0.14.1 (April 9, 2018)
 
 BUG FIXES

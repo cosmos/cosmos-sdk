@@ -1,4 +1,4 @@
-package stdlib
+package lib
 
 import (
 	"fmt"
@@ -129,6 +129,7 @@ type QueueMapper interface {
 	IsEmpty(sdk.Context) bool
 	// Iterate() removes elements it processed; return true in the continuation to break
 	Iterate(sdk.Context, interface{}, func(sdk.Context) bool)
+	Info(sdk.Context) QueueInfo
 }
 
 type queueMapper struct {
@@ -153,30 +154,30 @@ func NewQueueMapper(cdc *wire.Codec, key sdk.StoreKey, prefix string) QueueMappe
 	}
 }
 
-type queueInfo struct {
+type QueueInfo struct {
 	// begin <= elems < end
 	Begin int64
 	End   int64
 }
 
-func (info queueInfo) validateBasic() error {
+func (info QueueInfo) validateBasic() error {
 	if info.End < info.Begin || info.Begin < 0 || info.End < 0 {
 		return fmt.Errorf("Invalid queue information: {Begin: %d, End: %d}", info.Begin, info.End)
 	}
 	return nil
 }
 
-func (info queueInfo) isEmpty() bool {
+func (info QueueInfo) isEmpty() bool {
 	return info.Begin == info.End
 }
 
-func (qm queueMapper) getQueueInfo(store sdk.KVStore) queueInfo {
+func (qm queueMapper) getQueueInfo(store sdk.KVStore) QueueInfo {
 	bz := store.Get(qm.InfoKey())
 	if bz == nil {
-		store.Set(qm.InfoKey(), marshalQueueInfo(qm.cdc, queueInfo{0, 0}))
-		return queueInfo{0, 0}
+		store.Set(qm.InfoKey(), marshalQueueInfo(qm.cdc, QueueInfo{0, 0}))
+		return QueueInfo{0, 0}
 	}
-	var info queueInfo
+	var info QueueInfo
 	if err := qm.cdc.UnmarshalBinary(bz, &info); err != nil {
 		panic(err)
 	}
@@ -186,7 +187,7 @@ func (qm queueMapper) getQueueInfo(store sdk.KVStore) queueInfo {
 	return info
 }
 
-func (qm queueMapper) setQueueInfo(store sdk.KVStore, info queueInfo) {
+func (qm queueMapper) setQueueInfo(store sdk.KVStore, info QueueInfo) {
 	bz, err := qm.cdc.MarshalBinary(info)
 	if err != nil {
 		panic(err)
@@ -231,8 +232,7 @@ func (qm queueMapper) Iterate(ctx sdk.Context, ptr interface{}, fn func(sdk.Cont
 	var i int64
 	for i = info.Begin; i < info.End; i++ {
 		qm.lm.Get(ctx, i, ptr)
-		key := marshalInt64(qm.cdc, i)
-		store.Delete(key)
+		qm.lm.Delete(ctx, i)
 		if fn(ctx) {
 			break
 		}
@@ -242,11 +242,17 @@ func (qm queueMapper) Iterate(ctx sdk.Context, ptr interface{}, fn func(sdk.Cont
 	qm.setQueueInfo(store, info)
 }
 
+func (qm queueMapper) Info(ctx sdk.Context) QueueInfo {
+	store := ctx.KVStore(qm.key)
+
+	return qm.getQueueInfo(store)
+}
+
 func (qm queueMapper) InfoKey() []byte {
 	return []byte(fmt.Sprintf("%s/%s", qm.prefix, qm.ik))
 }
 
-func marshalQueueInfo(cdc *wire.Codec, info queueInfo) []byte {
+func marshalQueueInfo(cdc *wire.Codec, info QueueInfo) []byte {
 	bz, err := cdc.MarshalBinary(info)
 	if err != nil {
 		panic(err)

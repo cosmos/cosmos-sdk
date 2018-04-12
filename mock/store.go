@@ -99,6 +99,14 @@ func (kv kvStore) ReverseIterator(start, end []byte) sdk.Iterator {
 	panic("not implemented")
 }
 
+func (kv kvStore) SubspaceIterator(prefix []byte) sdk.Iterator {
+	panic("not implemented")
+}
+
+func (kv kvStore) ReverseSubspaceIterator(prefix []byte) sdk.Iterator {
+	panic("not implemented")
+}
+
 func NewCommitMultiStore(db dbm.DB) sdk.CommitMultiStore {
 	return multiStore{kv: make(map[sdk.StoreKey]kvStore)}
 }

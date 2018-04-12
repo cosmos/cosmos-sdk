@@ -17,37 +17,40 @@ type ListMapper interface {
 	Get(sdk.Context, int64, interface{})
 	// Setting element out of range is harmful; use Push() when adding new elements
 	Set(sdk.Context, int64, interface{})
+	Delete(sdk.Context, int64)
 	Push(sdk.Context, interface{})
-	Iterate(sdk.Context, interface{}, func(sdk.Context, int64))
+	Iterate(sdk.Context, interface{}, func(sdk.Context, int64) bool)
 }
 
 type listMapper struct {
-	key sdk.StoreKey
-	cdc *wire.Codec
-	lk  []byte
+	key    sdk.StoreKey
+	cdc    *wire.Codec
+	prefix string
+	lk     []byte
 }
 
-func NewListMapper(cdc *wire.Codec, key sdk.StoreKey) ListMapper {
+func NewListMapper(cdc *wire.Codec, key sdk.StoreKey, prefix string) ListMapper {
 	lk, err := cdc.MarshalBinary(int64(-1))
 	if err != nil {
 		panic(err)
 	}
 	return listMapper{
-		key: key,
-		cdc: cdc,
-		lk:  lk,
+		key:    key,
+		cdc:    cdc,
+		prefix: prefix,
+		lk:     lk,
 	}
 }
 
 func (lm listMapper) Len(ctx sdk.Context) int64 {
 	store := ctx.KVStore(lm.key)
-	bz := store.Get(lm.lk)
+	bz := store.Get(lm.LengthKey())
 	if bz == nil {
 		zero, err := lm.cdc.MarshalBinary(0)
 		if err != nil {
 			panic(err)
 		}
-		store.Set(lm.lk, zero)
+		store.Set(lm.LengthKey(), zero)
 		return 0
 	}
 	var res int64
@@ -62,7 +65,7 @@ func (lm listMapper) Get(ctx sdk.Context, index int64, ptr interface{}) {
 		panic(fmt.Errorf("Invalid index in ListMapper.Get(ctx, %d, ptr)", index))
 	}
 	store := ctx.KVStore(lm.key)
-	bz := store.Get(marshalInt64(lm.cdc, index))
+	bz := store.Get(lm.ElemKey(index))
 	if err := lm.cdc.UnmarshalBinary(bz, ptr); err != nil {
 		panic(err)
 	}
@@ -77,7 +80,15 @@ func (lm listMapper) Set(ctx sdk.Context, index int64, value interface{}) {
 	if err != nil {
 		panic(err)
 	}
-	store.Set(marshalInt64(lm.cdc, index), bz)
+	store.Set(lm.ElemKey(index), bz)
+}
+
+func (lm listMapper) Delete(ctx sdk.Context, index int64) {
+	if index < 0 {
+		panic(fmt.Errorf("Invalid index in ListMapper.Delete(ctx, %d)", index))
+	}
+	store := ctx.KVStore(lm.key)
+	store.Delete(lm.ElemKey(index))
 }
 
 func (lm listMapper) Push(ctx sdk.Context, value interface{}) {
@@ -85,15 +96,25 @@ func (lm listMapper) Push(ctx sdk.Context, value interface{}) {
 	lm.Set(ctx, length, value)
 
 	store := ctx.KVStore(lm.key)
-	store.Set(lm.lk, marshalInt64(lm.cdc, length+1))
+	store.Set(lm.LengthKey(), marshalInt64(lm.cdc, length+1))
 }
 
-func (lm listMapper) Iterate(ctx sdk.Context, ptr interface{}, fn func(sdk.Context, int64)) {
+func (lm listMapper) Iterate(ctx sdk.Context, ptr interface{}, fn func(sdk.Context, int64) bool) {
 	length := lm.Len(ctx)
 	for i := int64(0); i < length; i++ {
 		lm.Get(ctx, i, ptr)
-		fn(ctx, i)
+		if fn(ctx, i) {
+			break
+		}
 	}
+}
+
+func (lm listMapper) LengthKey() []byte {
+	return []byte(fmt.Sprintf("%s/%d", lm.prefix, lm.lk))
+}
+
+func (lm listMapper) ElemKey(i int64) []byte {
+	return []byte(fmt.Sprintf("%s/%d", lm.prefix, i))
 }
 
 // QueueMapper is a Mapper interface that provides queue-like functions
@@ -111,20 +132,24 @@ type QueueMapper interface {
 }
 
 type queueMapper struct {
-	key sdk.StoreKey
-	cdc *wire.Codec
-	ik  []byte
+	key    sdk.StoreKey
+	cdc    *wire.Codec
+	prefix string
+	lm     ListMapper
+	lk     []byte
+	ik     []byte
 }
 
-func NewQueueMapper(cdc *wire.Codec, key sdk.StoreKey) QueueMapper {
-	ik, err := cdc.MarshalBinary(int64(-1))
-	if err != nil {
-		panic(err)
-	}
+func NewQueueMapper(cdc *wire.Codec, key sdk.StoreKey, prefix string) QueueMapper {
+	lk := []byte("list")
+	ik := []byte("info")
 	return queueMapper{
-		key: key,
-		cdc: cdc,
-		ik:  ik,
+		key:    key,
+		cdc:    cdc,
+		prefix: prefix,
+		lm:     NewListMapper(cdc, key, prefix+string(lk)),
+		lk:     lk,
+		ik:     ik,
 	}
 }
 
@@ -146,9 +171,9 @@ func (info queueInfo) isEmpty() bool {
 }
 
 func (qm queueMapper) getQueueInfo(store sdk.KVStore) queueInfo {
-	bz := store.Get(qm.ik)
+	bz := store.Get(qm.InfoKey())
 	if bz == nil {
-		store.Set(qm.ik, marshalQueueInfo(qm.cdc, queueInfo{0, 0}))
+		store.Set(qm.InfoKey(), marshalQueueInfo(qm.cdc, queueInfo{0, 0}))
 		return queueInfo{0, 0}
 	}
 	var info queueInfo
@@ -166,18 +191,14 @@ func (qm queueMapper) setQueueInfo(store sdk.KVStore, info queueInfo) {
 	if err != nil {
 		panic(err)
 	}
-	store.Set(qm.ik, bz)
+	store.Set(qm.InfoKey(), bz)
 }
 
 func (qm queueMapper) Push(ctx sdk.Context, value interface{}) {
 	store := ctx.KVStore(qm.key)
 	info := qm.getQueueInfo(store)
 
-	bz, err := qm.cdc.MarshalBinary(value)
-	if err != nil {
-		panic(err)
-	}
-	store.Set(marshalInt64(qm.cdc, info.End), bz)
+	qm.lm.Set(ctx, info.End, value)
 
 	info.End++
 	qm.setQueueInfo(store, info)
@@ -186,16 +207,13 @@ func (qm queueMapper) Push(ctx sdk.Context, value interface{}) {
 func (qm queueMapper) Peek(ctx sdk.Context, ptr interface{}) {
 	store := ctx.KVStore(qm.key)
 	info := qm.getQueueInfo(store)
-	bz := store.Get(marshalInt64(qm.cdc, info.Begin))
-	if err := qm.cdc.UnmarshalBinary(bz, ptr); err != nil {
-		panic(err)
-	}
+	qm.lm.Get(ctx, info.Begin, ptr)
 }
 
 func (qm queueMapper) Pop(ctx sdk.Context) {
 	store := ctx.KVStore(qm.key)
 	info := qm.getQueueInfo(store)
-	store.Delete(marshalInt64(qm.cdc, info.Begin))
+	qm.lm.Delete(ctx, info.Begin)
 	info.Begin++
 	qm.setQueueInfo(store, info)
 }
@@ -212,11 +230,8 @@ func (qm queueMapper) Iterate(ctx sdk.Context, ptr interface{}, fn func(sdk.Cont
 
 	var i int64
 	for i = info.Begin; i < info.End; i++ {
+		qm.lm.Get(ctx, i, ptr)
 		key := marshalInt64(qm.cdc, i)
-		bz := store.Get(key)
-		if err := qm.cdc.UnmarshalBinary(bz, ptr); err != nil {
-			panic(err)
-		}
 		store.Delete(key)
 		if fn(ctx) {
 			break
@@ -225,6 +240,10 @@ func (qm queueMapper) Iterate(ctx sdk.Context, ptr interface{}, fn func(sdk.Cont
 
 	info.Begin = i
 	qm.setQueueInfo(store, info)
+}
+
+func (qm queueMapper) InfoKey() []byte {
+	return []byte(fmt.Sprintf("%s/%s", qm.prefix, qm.ik))
 }
 
 func marshalQueueInfo(cdc *wire.Codec, info queueInfo) []byte {

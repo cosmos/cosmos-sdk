@@ -5,7 +5,6 @@ the Cosmos Hub.
 
 NOTE: the specifications are not yet complete and very much a work in progress.
 
-<<<<<<< HEAD
 - [Basecoin](basecoin) - Cosmos SDK related specifications and transactions for
   sending tokens.
 - [Staking](staking) - Proof of Stake related specifications including bonding 

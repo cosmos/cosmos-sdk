@@ -15,6 +15,10 @@ func NewHandler(keeper Keeper) sdk.Handler {
 			return handleOpenChannelMsg(ctx, keeper, msg)
 		case UpdateChannelMsg:
 			return handleUpdateChannelMsg(ctx, keeper, msg)
+		case ReceiveCleanupMsg:
+			return handleReceiveCleanupMsg(ctx, keeper, msg)
+		case ReceiptCleanupMsg:
+			return handleReceiptCleanupMsg(ctx, keeper, msg)
 		default:
 			errMsg := "Unrecognized IBC Msg type: " + reflect.TypeOf(msg).Name()
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -86,6 +90,32 @@ func (keeper Keeper) Receipt(h ReceiptHandler, ctx sdk.Context, msg ReceiptMsg) 
 	msg.Verify(ctx, keeper)
 
 	h(ctx, msg.Payload)
+
+	return sdk.Result{}
+}
+
+func handleReceiveCleanupMsg(ctx sdk.Context, keeper Keeper, msg ReceiveCleanupMsg) sdk.Result {
+	msg.Verify(ctx, keeper)
+
+	queue := keeper.receiveQueue
+
+	info := queue.Info(ctx)
+	for i := info.Begin; i < msg.Sequence; i++ {
+		queue.Pop(ctx)
+	}
+
+	return sdk.Result{}
+}
+
+func handleReceiptCleanupMsg(ctx sdk.Context, keeper Keeper, msg ReceiptCleanupMsg) sdk.Result {
+	msg.Verify(ctx, keeper)
+
+	queue := keeper.receiptQueue
+
+	info := queue.Info(ctx)
+	for i := info.Begin; i < msg.Sequence; i++ {
+		queue.Pop(ctx)
+	}
 
 	return sdk.Result{}
 }

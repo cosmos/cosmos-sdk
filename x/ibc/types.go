@@ -60,10 +60,16 @@ type CleanupProof struct {
 func (proof CleanupProof) Verify(ctx sdk.Context, q lib.QueueMapper, seq uint) sdk.Error {
 	chainID := packet.SrcChain
 
+	info := q.Info(ctx)
+	if info.End <= seq || seq < info.Begin {
+		return ErrInvalidSequence()
+	}
+
 	/*
 
 	 */
 
+	return nil
 }
 
 // ---------------------------------
@@ -99,11 +105,28 @@ func (msg ReceiveMsg) Verify(ctx sdk.Context, keeper Keeper) sdk.Error {
 }
 
 // --------------------------------
-// ReceiveCleanMsg
+// ReceiveCleanupMsg
 
-type ReceiveCleanMsg struct {
-	Height int64
-	PacketProof
+type ReceiveCleanupMsg struct {
+	Sequence int64
+	CleanupProof
+	Cleaner sdk.Address
+}
+
+func (msg ReceiveCleanupMsg) Get(key interface{}) interface{} {
+	return nil
+}
+
+func (msg ReceiveCleanupMsg) GetSignBytes() []byte {
+	bz, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
+
+func (msg ReceiveCleanupMsg) GetSigners() []byte {
+	return sdk.Address
 }
 
 // --------------------------------
@@ -133,12 +156,6 @@ func (msg ReceiptMsg) GetSigners() []sdk.Address {
 
 func (msg ReceiptMsg) Verify(ctx sdk.Context, keeper Keeper) sdk.Error {
 	return msg.PacketProof.Verify(ctx, keeper, msg.Packet)
-}
-
-// ---------------------------------
-// CleanProof
-
-type CleanProof struct {
 }
 
 //-------------------------------------

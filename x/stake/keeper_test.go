@@ -254,7 +254,7 @@ func TestGetValidators(t *testing.T) {
 	assert.Equal(t, candidates[4].Address, validators[0].Address, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
 	assert.Equal(t, int64(0), validators[0].Height, "%v", validators)
-	assert.Equal(t, int64(10), validators[1].Height, "%v", validators)
+	assert.Equal(t, int64(0), validators[1].Height, "%v", validators)
 
 	// no change in voting power - no change in sort
 	ctx = ctx.WithBlockHeight(20)
@@ -274,8 +274,8 @@ func TestGetValidators(t *testing.T) {
 	keeper.setCandidate(ctx, candidates[4])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n, "%v", validators)
-	assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
-	assert.Equal(t, candidates[4].Address, validators[1].Address, "%v", validators)
+	assert.Equal(t, candidates[4].Address, validators[0].Address, "%v", validators)
+	assert.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
 
 	// reset assets / heights
 	candidates[3].Assets = sdk.NewRat(300)

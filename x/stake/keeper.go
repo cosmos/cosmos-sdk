@@ -94,11 +94,13 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 
 	// update the list ordered by voting power
 	if oldFound {
+		// retain the old validator height, even though stake has changed
+		candidate.ValidatorHeight = oldCandidate.ValidatorHeight
 		store.Delete(GetValidatorKey(address, oldCandidate.Assets, oldCandidate.ValidatorHeight, k.cdc))
+	} else {
+		// update the validator block height
+		candidate.ValidatorHeight = ctx.BlockHeight()
 	}
-
-	// update the validator block height
-	candidate.ValidatorHeight = ctx.BlockHeight()
 
 	// update the candidate record
 	bz, err = k.cdc.MarshalBinary(candidate)

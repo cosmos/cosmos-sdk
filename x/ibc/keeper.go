@@ -7,40 +7,40 @@ import (
 
 	"github.com/tendermint/tendermint/lite"
 
+	"github.com/cosmos/cosmos-sdk/types/lib"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 type keeperFactory struct {
 	key sdk.StoreKey
 	cdc *wire.Codec
+
+	receive lib.QueueMapper
+	receipt lib.QueueMapper
 }
 
 func NewKeeperFactory(cdc *wire.Codec, key sdk.StoreKey) keeperFactory {
+	receive := lib.NewQueueMapper(cdc, key, "receive")
+	receipt := lib.NewQueueMapper(cdc, key, "receipt")
+
 	return keeperFactory{
-		key: key,
-		cdc: cdc,
+		key:     key,
+		cdc:     cdc,
+		receive: receive,
+		receipt: receipt,
 	}
 }
 
 func (kf keeperFactory) Port(port string) Keeper {
 	return Keeper{
-		key:  kf.key,
-		cdc:  kf.cdc,
-		port: port,
+		keeperFactory: kf,
+		port:          port,
 	}
 }
 
 type Keeper struct {
-	key  sdk.StoreKey
-	cdc  *wire.Codec
+	keeperFactory
 	port string
-}
-
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey) Keeper {
-	return Keeper{
-		key: key,
-		cdc: cdc,
-	}
 }
 
 // TODO: Handle invalid IBC packets and return errors.
@@ -50,24 +50,13 @@ func (keeper Keeper) Send(ctx sdk.Context, payload Payload, dest string) sdk.Err
 	}
 
 	// write everything into the state
-	store := ctx.KVStore(keeper.key)
 	packet := Packet{
 		Payload:   payload,
 		SrcChain:  ctx.ChainID(),
 		DestChain: dest,
 	}
-	index := keeper.getEgressLength(ctx, dest)
-	bz, err := keeper.cdc.MarshalBinary(packet)
-	if err != nil {
-		panic(err)
-	}
 
-	store.Set(EgressKey(dest, index), bz)
-	bz, err = keeper.cdc.MarshalBinary(int64(index + 1))
-	if err != nil {
-		panic(err)
-	}
-	store.Set(EgressLengthKey(dest), bz)
+	keeper.receive.Push(packet)
 
 	return nil
 }
@@ -77,8 +66,15 @@ func (keeper Keeper) sendReceipt(ctx sdk.Context, payload Payload, src string) s
 		return ErrUnauthorizedSendReceipt()
 	}
 
-	store := ctx.KVStore(keeper.key)
+	packet := Packet{
+		Payload:   payload,
+		SrcChain:  ctx.ChainID(),
+		DestChain: dest,
+	}
 
+	keeper.receipt.Push(packet)
+
+	return nil
 }
 
 /*

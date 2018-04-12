@@ -9,20 +9,19 @@ import (
 	"github.com/tendermint/tendermint/lite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/lib"
 )
 
 // ----------------------------------
-// ReceiveMsg
+// PacketProof
 
-// ReceiveMsg defines the message that a relayer uses to post an IBCPacket
-// to the destination chain.
 type PacketProof struct {
 	Proof    *iavl.KeyExistsProof
 	Height   int64
 	Sequence int64
 }
 
-func (proof PacketProof) Verify(ctx sdk.Context, keeper Keeper, packet Packet) sdk.Error {
+func (proof PacketProof) Verify(ctx sdk.Context, keeper Keeper, space string, packet Packet) sdk.Error {
 	chainID := packet.SrcChain
 
 	expected := keeper.getIngressSequence(ctx, chainID)
@@ -31,27 +30,47 @@ func (proof PacketProof) Verify(ctx sdk.Context, keeper Keeper, packet Packet) s
 	}
 
 	keeper.setIngressSequence(ctx, chainID, proof.Sequence+1)
+	/*
+		commit, ok := keeper.getChannelCommit(ctx, chainID, proof.Height)
+		if !ok {
+			return ErrNoCommitFound()
+		}
 
-	commit, ok := keeper.getChannelCommit(ctx, chainID, proof.Height)
-	if !ok {
-		return ErrNoCommitFound()
-	}
+		key := []byte(fmt.Sprintf("ibc/%s", EgressKey(ctx.ChainID(), proof.Sequence)))
+		value, rawerr := keeper.cdc.MarshalBinary(packet) // better way to do this?
+		if rawerr != nil {
+			return ErrInvalidPacket(rawerr)
+		}
 
-	key := []byte(fmt.Sprintf("ibc/%s", EgressKey(ctx.ChainID(), proof.Sequence)))
-	value, rawerr := keeper.cdc.MarshalBinary(packet) // better way to do this?
-	if rawerr != nil {
-		return ErrInvalidPacket(rawerr)
-	}
-
-	if rawerr = proof.Proof.Verify(key, value, commit.Commit.Header.AppHash); rawerr != nil {
-		return ErrInvalidPacket(rawerr)
-	}
-
+		if rawerr = proof.Proof.Verify(key, value, commit.Commit.Header.AppHash); rawerr != nil {
+			return ErrInvalidPacket(rawerr)
+		}
+	*/
 	return nil
 }
 
 // ---------------------------------
+// CleanupProof
+
+type CleanupProof struct {
+	Proof  *iavl.KeyExistsProof
+	Height int64
+}
+
+func (proof CleanupProof) Verify(ctx sdk.Context, q lib.QueueMapper, seq uint) sdk.Error {
+	chainID := packet.SrcChain
+
+	/*
+
+	 */
+
+}
+
+// ---------------------------------
 // ReceiveMsg
+
+// ReceiveMsg defines the message that a relayer uses to post an IBCPacket
+// to the destination chain.
 
 type ReceiveMsg struct {
 	Packet
@@ -77,6 +96,14 @@ func (msg ReceiveMsg) GetSigners() []sdk.Address {
 
 func (msg ReceiveMsg) Verify(ctx sdk.Context, keeper Keeper) sdk.Error {
 	return msg.PacketProof.Verify(ctx, keeper, msg.Packet)
+}
+
+// --------------------------------
+// ReceiveCleanMsg
+
+type ReceiveCleanMsg struct {
+	Height int64
+	PacketProof
 }
 
 // --------------------------------
@@ -106,6 +133,12 @@ func (msg ReceiptMsg) GetSigners() []sdk.Address {
 
 func (msg ReceiptMsg) Verify(ctx sdk.Context, keeper Keeper) sdk.Error {
 	return msg.PacketProof.Verify(ctx, keeper, msg.Packet)
+}
+
+// ---------------------------------
+// CleanProof
+
+type CleanProof struct {
 }
 
 //-------------------------------------
@@ -149,7 +182,7 @@ func (msg OpenChannelMsg) GetSigners() []sdk.Address {
 type UpdateChannelMsg struct {
 	SrcChain string
 	Commit   lite.FullCommit
-	//Proof
+	//PacketProof
 	Signer sdk.Address
 }
 

@@ -46,6 +46,18 @@ func (p remoteSavePayload) ValidateBasic() sdk.Error {
 	return nil
 }
 
+type remoteSaveFailPayload struct {
+	remoteSavePayload
+}
+
+func (p removeSaveFailPayload) Type() string {
+	return "remote"
+}
+
+func (p remoteSaveFailPayload) ValidateBasic() sdk.Error {
+	return nil
+}
+
 type remoteSaveMsg struct {
 	payload   remoteSavePayload
 	destChain string
@@ -87,6 +99,7 @@ func makeCodec() *wire.Codec {
 	// Register Payloads
 	cdc.RegisterInterface((*Payload)(nil), nil)
 	cdc.RegisterConcrete(remoteSavePayload{}, "test/payload/remoteSave", nil)
+	cdc.RegisterConcrete(remoteSaveFailPayload{}, "test/payload/remoteSaveFail", nil)
 
 	return cdc
 
@@ -98,7 +111,7 @@ func remoteSaveHandler(ibck Keeper, key sdk.StoreKey) sdk.Handler {
 		case remoteSaveMsg:
 			return handleRemoteSaveMsg(ctx, ibck, msg)
 		case ReceiveMsg:
-			return ibck.Handle(func(ctx sdk.Context, p Payload) sdk.Error {
+			return ibck.Receive(func(ctx sdk.Context, p Payload) sdk.Error {
 				switch p := p.(type) {
 				case remoteSavePayload:
 					return handleRemoteSavePayload(ctx, key, p)
@@ -106,6 +119,15 @@ func remoteSaveHandler(ibck Keeper, key sdk.StoreKey) sdk.Handler {
 					return sdk.ErrUnknownRequest("")
 				}
 			}, ctx, msg)
+		case ReceiptMsg:
+			return ibck.Receipt(func(ctx sdk.Context, p Payload) {
+				switch p := p.(type) {
+				case remoteSaveFailPayload:
+					return handleRemoteSaveFailPayload(ctx, key, p)
+				default:
+					return sdk.ErrUnknownRequest("")
+				}
+			})
 		default:
 			return sdk.ErrUnknownRequest("").Result()
 		}

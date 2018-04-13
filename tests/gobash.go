@@ -2,6 +2,7 @@ package tests
 
 import (
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 	"testing"
@@ -25,25 +26,27 @@ func getCmd(t *testing.T, command string) *exec.Cmd {
 }
 
 // Execute the command, return standard output and error
-func ExecuteT(t *testing.T, command string) (pipe io.WriteCloser, out string) {
+func ExecuteT(t *testing.T, command string) (out string) {
 	cmd := getCmd(t, command)
-	pipe, err := cmd.StdinPipe()
-	require.NoError(t, err)
 	bz, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(bz))
 	out = strings.Trim(string(bz), "\n") //trim any new lines
-	return pipe, out
+	return out
 }
 
 // Asynchronously execute the command, return standard output and error
-func GoExecuteT(t *testing.T, command string) (pipe io.WriteCloser, outChan chan string) {
+func GoExecuteT(t *testing.T, command string) (proc *os.Process, pipeIn io.WriteCloser, pipeOut io.ReadCloser) {
 	cmd := getCmd(t, command)
-	pipe, err := cmd.StdinPipe()
+	pipeIn, err := cmd.StdinPipe()
 	require.NoError(t, err)
+	pipeOut, err = cmd.StdoutPipe()
+	require.NoError(t, err)
+
 	go func() {
-		bz, err := cmd.CombinedOutput()
-		require.NoError(t, err)
-		outChan <- strings.Trim(string(bz), "\n") //trim any new lines
+		cmd.Start()
+		//bz, _ := cmd.CombinedOutput()
+		//require.NoError(t, err, string(bz))
+		//outChan <- strings.Trim(string(bz), "\n") //trim any new lines
 	}()
-	return pipe, outChan
+	return nil, pipeIn, pipeOut
 }

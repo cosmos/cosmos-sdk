@@ -71,3 +71,7 @@ The key directories of the SDK are:
 ## Getting Started
 
 See the [documentation](https://cosmos-sdk.readthedocs.io).
+
+## Disambiguation
+
+This Cosmos-SDK project is not related to the [React-Cosmos](https://github.com/react-cosmos/react-cosmos) project (yet). Many thanks to Evan Coury and Ovidiu (@skidding) for this Github organization name. As per our agreement, this disambiguation notice will stay here.

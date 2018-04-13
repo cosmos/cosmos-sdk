@@ -1,18 +1,14 @@
-## 3 Messaging Queue
+## 3 Packet Queue
 
 ([Back to table of contents](README.md#contents))
 
-Messaging in distributed systems is a deeply researched field and a primitive upon which many other systems are built. We can model asynchronous message passing, and make no timing assumptions on the communication channels. By doing this, we allow each zone to move at its own speed, unblocked by any other zone, but able to communicate as fast as the network allows at that moment.
+IBC uses an asynchronous message passing model that makes no assumptions about network synchrony. Chain _A_ and chain _B_ confirm new blocks independently, and IBC packets from one chain to the other may be delayed or censored arbitrarily. The speed of the IBC packet queue is limited only by the speed of the underlying chains.
 
-Another benefit of using message passing as our primitive, is that the receiver decides how to act upon the incoming message. Just because one zone sends a message and we have an IBC connection with this zone, doesn't mean we have to execute the requested action. Each zone can add its own business logic upon receiving the message to decide whether to accept or reject the message. To maintain consistency, both sides must only agree on the proper state transitions associated with accepting or rejecting.
+The IBC packet receiver on chain _B_ decides how to act upon the incoming message, and may add its own application logic to determine which state transactions to apply (or not). Both chains must only agree that the packet has been received and either accepted or rejected, which is determined independently of any application logic.
 
-This encapsulation is very difficult to impossible to achieve in a shared-state scenario. Message passing allows each zone to ensure its security and autonomy, while simultaneously allowing the different systems to work as one whole. This can be seen as an analogue to a microservices architecture, but across organizational boundaries.
+To facilitate building useful application logic, we introduce a reliable messaging queue (hereafter just referred to as a queue) to allow us to guarantee a cross-chain causal ordering[[5](./footnotes.md#5)] of IBC packets. Causal ordering means that if packet _x_ is processed before packet _y_ on chain _A_, packet _x_ must also be processed before packet _y_ on chain _B_. Every transaction on the same chain already has a well-defined causality relation (order in history). The IBC protocol provides an ordering guarantee across two chains.
 
-To build useful algorithms upon a provable asynchronous messaging primitive, we introduce a reliable messaging queue (hereafter just referred to as a queue), typical in asynchronous message passing, to allow us to guarantee a causal ordering[[5](./footnotes.md#5)], and avoid blocking.
-
-Causal ordering means that if _x_ is causally before _y_ on chain A, it must also be on chain B. Many events may happen concurrently (unrelated tx on two different blockchains) with no causality relation, but every transaction on the same chain has a clear causality relation (same as the order in the blockchain).
-
-Message passing implies a causal ordering over multiple chains and these can be important for reasoning on the system. Given _x_ &#8594; _y_ means _x_ is causally before _y_, and chains A and B, and _a_ &#8658; _b_ means _a_ implies _b_:
+A causal ordering over multiple chains can be used to reason about the combined state of both chains as a whole. Given _x_ &#8594; _y_ means _x_ is causally before _y_, and chains A and B, and _a_ &#8658; _b_ means _a_ implies _b_:
 
 _A:send(msg<sub>i </sub>)_ &#8594; _B:receive(msg<sub>i </sub>)_
 
@@ -30,7 +26,7 @@ _y_ &#8594; _A:receipt(msg<sub>i </sub>)_
 ![Vector Clock image](https://upload.wikimedia.org/wikipedia/commons/5/55/Vector_Clock.svg)
 ([https://en.wikipedia.org/wiki/Vector_clock](https://en.wikipedia.org/wiki/Vector_clock))
 
-In this section, we define an efficient implementation of a secure, reliable messaging queue.
+In this section, we define an efficient implementation of a reliable ordered messaging queue.
 
 ### 3.1   Merkle Proofs for Queues
 

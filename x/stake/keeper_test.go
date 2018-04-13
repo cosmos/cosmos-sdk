@@ -264,7 +264,7 @@ func TestGetValidators(t *testing.T) {
 	assert.Equal(t, candidates[4].Address, validators[0].Address, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
 
-	// change in voting power of both candidates, ages swapped
+	// change in voting power of both candidates, both still in v-set, no age change
 	candidates[3].Assets = sdk.NewRat(300)
 	candidates[4].Assets = sdk.NewRat(300)
 	keeper.setCandidate(ctx, candidates[3])
@@ -277,10 +277,68 @@ func TestGetValidators(t *testing.T) {
 	assert.Equal(t, candidates[4].Address, validators[0].Address, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
 
+	// now 2 max validators
+	params := keeper.GetParams(ctx)
+	params.MaxValidators = 2
+	keeper.setParams(ctx, params)
+	candidates[0].Assets = sdk.NewRat(500)
+	keeper.setCandidate(ctx, candidates[0])
+	validators = keeper.GetValidators(ctx)
+	require.Equal(t, uint16(len(validators)), params.MaxValidators)
+	require.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
+	// candidate 4 was set before candidate 3
+	require.Equal(t, candidates[4].Address, validators[1].Address, "%v", validators)
+
+	// simulate scenario from https://github.com/cosmos/cosmos-sdk/issues/582#issuecomment-380757108
+	ctx = ctx.WithBlockHeight(40)
+	// candidate 4 kicked out temporarily
+	candidates[4].Assets = sdk.NewRat(200)
+	keeper.setCandidate(ctx, candidates[4])
+	validators = keeper.GetValidators(ctx)
+	require.Equal(t, uint16(len(validators)), params.MaxValidators)
+	require.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
+	require.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
+	// candidate 4 does not get spot back
+	candidates[4].Assets = sdk.NewRat(300)
+	keeper.setCandidate(ctx, candidates[4])
+	validators = keeper.GetValidators(ctx)
+	require.Equal(t, uint16(len(validators)), params.MaxValidators)
+	require.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
+	require.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
+	candidate, exists := keeper.GetCandidate(ctx, candidates[4].Address)
+	require.Equal(t, exists, true)
+	require.Equal(t, candidate.ValidatorHeight, int64(40))
+
+	// first transaction wins
+	candidates[1].Assets = sdk.NewRat(1000)
+	candidates[2].Assets = sdk.NewRat(1000)
+	keeper.setCandidate(ctx, candidates[1])
+	keeper.setCandidate(ctx, candidates[2])
+	validators = keeper.GetValidators(ctx)
+	require.Equal(t, uint16(len(validators)), params.MaxValidators)
+	require.Equal(t, candidates[1].Address, validators[0].Address, "%v", validators)
+	require.Equal(t, candidates[2].Address, validators[1].Address, "%v", validators)
+	candidates[1].Assets = sdk.NewRat(1100)
+	candidates[2].Assets = sdk.NewRat(1100)
+	keeper.setCandidate(ctx, candidates[2])
+	keeper.setCandidate(ctx, candidates[1])
+	validators = keeper.GetValidators(ctx)
+	require.Equal(t, uint16(len(validators)), params.MaxValidators)
+	require.Equal(t, candidates[2].Address, validators[0].Address, "%v", validators)
+	require.Equal(t, candidates[1].Address, validators[1].Address, "%v", validators)
+
 	// reset assets / heights
+	params.MaxValidators = 100
+	keeper.setParams(ctx, params)
+	candidates[0].Assets = sdk.NewRat(0)
+	candidates[1].Assets = sdk.NewRat(100)
+	candidates[2].Assets = sdk.NewRat(1)
 	candidates[3].Assets = sdk.NewRat(300)
 	candidates[4].Assets = sdk.NewRat(200)
 	ctx = ctx.WithBlockHeight(0)
+	keeper.setCandidate(ctx, candidates[0])
+	keeper.setCandidate(ctx, candidates[1])
+	keeper.setCandidate(ctx, candidates[2])
 	keeper.setCandidate(ctx, candidates[3])
 	keeper.setCandidate(ctx, candidates[4])
 
@@ -295,7 +353,7 @@ func TestGetValidators(t *testing.T) {
 	assert.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
 
 	// test the max validators term
-	params := keeper.GetParams(ctx)
+	params = keeper.GetParams(ctx)
 	n = 2
 	params.MaxValidators = uint16(n)
 	keeper.setParams(ctx, params)

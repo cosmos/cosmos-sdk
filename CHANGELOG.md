@@ -2,6 +2,11 @@
 
 ## 0.15.0 (TBD)
 
+FEATURES:
+
+* Add CacheContext
+* Add auto sequencing to client
+
 BREAKING CHANGES
 
 * Remove go-wire, use go-amino

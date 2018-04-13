@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	"github.com/cosmos/cosmos-sdk/x/simplestake"
 )
 
@@ -94,7 +95,14 @@ func (co commander) unbondTxCmd(cmd *cobra.Command, args []string) error {
 }
 
 func (co commander) sendMsg(msg sdk.Msg) error {
-	ctx := context.NewCoreContextFromViper()
+	ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(co.cdc))
+
+	// default to next sequence number if none provided
+	ctx, err := context.EnsureSequence(ctx)
+	if err != nil {
+		return err
+	}
+
 	res, err := ctx.SignBuildBroadcast(ctx.FromAddressName, msg, co.cdc)
 	if err != nil {
 		return err

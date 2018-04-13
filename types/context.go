@@ -171,6 +171,14 @@ func (c Context) WithTxBytes(txBytes []byte) Context {
 	return c.withValue(contextKeyTxBytes, txBytes)
 }
 
+// Cache the multistore and return a new cached context. The cached context is
+// written to the context when writeCache is called.
+func (c Context) CacheContext() (cc Context, writeCache func()) {
+	cms := c.multiStore().CacheMultiStore()
+	cc = c.WithMultiStore(cms)
+	return cc, cms.Write
+}
+
 //----------------------------------------
 // thePast
 

@@ -141,10 +141,11 @@ func (st *iavlStore) ReverseSubspaceIterator(prefix []byte) Iterator {
 // If latest-1 is not present, use latest (which must be present)
 // if you care to have the latest data to see a tx results, you must
 // explicitly set the height you want to see
-func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
+func (st *iavlStore) Query(req abci.RequestQuery) (value []byte, proof sdk.MerkleProof, err sdk.Error) {
 	if len(req.Data) == 0 {
 		msg := "Query cannot be zero length"
-		return sdk.ErrTxDecode(msg).QueryResult()
+		err = sdk.ErrTxDecode(msg)
+		return
 	}
 
 	tree := st.tree
@@ -157,30 +158,59 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			height = latest
 		}
 	}
-	// store the height we chose in the response
-	res.Height = height
 
+	var data sdk.Data
+
+	/*
+		// store the height we chose in the response
+		res.Height = height
+	*/
 	switch req.Path {
 	case "/store", "/key": // Get by key
 		key := req.Data // Data holds the key bytes
-		res.Key = key
+		data.Key = key
 		if req.Prove {
-			value, proof, err := tree.GetVersionedWithProof(key, height)
+			value, iavlp, err := tree.GetVersionedWithProof(key, height)
 			if err != nil {
-				res.Log = err.Error()
 				break
 			}
-			res.Value = value
-			res.Proof = proof.Bytes()
+			proof = iavlProofToMerkleProof(key, value, iavlp)
 		} else {
-			_, res.Value = tree.GetVersioned(key, height)
+			_, value = tree.GetVersioned(key, height)
 		}
-
 	default:
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		err = sdk.ErrUnknownRequest(msg)
 	}
 	return
+}
+
+func iavlProofToMerkleProof(key []byte, value []byte, proof iavl.KeyProof) sdk.MerkleProof {
+	data := &sdk.Data{
+		Key:      key,
+		Value:    value,
+		Op:       sdk.HashOp_RIPEMD160,
+		DataType: sdk.Data_KeyValue,
+	}
+
+	// TODO: support KeyAbsentProof
+	eproof := proof.(*iavl.KeyExistsProof)
+
+	path := eproof.PathToKey.InnerNodes
+
+	nodes := make([]*sdk.Node, len(path))
+	for i, inner := range path {
+		prefix := new(bytes.Buffer)
+		suffix := new(bytes.Buffer)
+
+		// https://github.com/tendermint/iavl/blob/develop/proof.go
+
+		nodes[i] = &sdk.Node{
+			Prefix: prefix,
+			Suffix: suffix,
+			HashOp: sdk.HashOp_RIPEMD160,
+		}
+	}
 }
 
 //----------------------------------------

@@ -200,29 +200,35 @@ func (rs *rootMultiStore) getStoreByName(name string) Store {
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
 // TODO: add proof for `multistore -> substore`.
-func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
+func (rs *rootMultiStore) Query(req abci.RequestQuery) (res sdk.MerkleProof, err sdk.Error) {
 	// Query just routes this to a substore.
 	path := req.Path
 	storeName, subpath, err := parsePath(path)
 	if err != nil {
-		return err.QueryResult()
+		return
 	}
 
 	store := rs.getStoreByName(storeName)
 	if store == nil {
 		msg := fmt.Sprintf("no such store: %s", storeName)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		err = sdk.ErrUnknownRequest(msg)
+		return
 	}
 	queryable, ok := store.(Queryable)
 	if !ok {
 		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		err = sdk.ErrUnknownRequest(msg)
+		return
 	}
 
 	// trim the path and make the query
 	req.Path = subpath
-	res := queryable.Query(req)
-	return res
+	res, err = queryable.Query(req)
+	if err != nil {
+		return
+	}
+
+	return res, nil
 }
 
 // parsePath expects a format like /<storeName>[/<subpath>]

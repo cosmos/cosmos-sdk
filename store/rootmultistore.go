@@ -200,7 +200,7 @@ func (rs *rootMultiStore) getStoreByName(name string) Store {
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
 // TODO: add proof for `multistore -> substore`.
-func (rs *rootMultiStore) Query(req abci.RequestQuery) (res sdk.MerkleProof, err sdk.Error) {
+func (rs *rootMultiStore) Query(req abci.RequestQuery) (value []byte, proof *sdk.MerkleProof, err sdk.Error) {
 	// Query just routes this to a substore.
 	path := req.Path
 	storeName, subpath, err := parsePath(path)
@@ -223,12 +223,32 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) (res sdk.MerkleProof, err
 
 	// trim the path and make the query
 	req.Path = subpath
-	res, err = queryable.Query(req)
+	value, proof, err = queryable.Query(req)
 	if err != nil {
 		return
 	}
 
-	return res, nil
+	data := &sdk.Data{}
+
+	nodes, err := simpleToMerkleProof()
+	if err != nil {
+		return
+	}
+
+	branch := &sdk.Branch{
+		Data:  data,
+		Nodes: nodes,
+	}
+
+	proof.Branches = append(proof.Branches, branch)
+
+	return
+}
+
+func simpleToMerkleProof(proof merkle.SimpleProof) ([]*sdk.Node, error) {
+	for _, aunt := range proof.Aunts {
+
+	}
 }
 
 // parsePath expects a format like /<storeName>[/<subpath>]

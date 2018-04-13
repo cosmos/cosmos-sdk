@@ -1,10 +1,12 @@
 package store
 
 import (
+	"bytes"
 	"fmt"
 	"sync"
 
 	abci "github.com/tendermint/abci/types"
+	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/iavl"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -141,7 +143,7 @@ func (st *iavlStore) ReverseSubspaceIterator(prefix []byte) Iterator {
 // If latest-1 is not present, use latest (which must be present)
 // if you care to have the latest data to see a tx results, you must
 // explicitly set the height you want to see
-func (st *iavlStore) Query(req abci.RequestQuery) (value []byte, proof sdk.MerkleProof, err sdk.Error) {
+func (st *iavlStore) Query(req abci.RequestQuery) (value []byte, proof *sdk.MerkleProof, err sdk.Error) {
 	if len(req.Data) == 0 {
 		msg := "Query cannot be zero length"
 		err = sdk.ErrTxDecode(msg)
@@ -174,7 +176,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (value []byte, proof sdk.Merkl
 			if err != nil {
 				break
 			}
-			proof = iavlProofToMerkleProof(key, value, iavlp)
+			proof, err = iavlToMerkleProof(key, value, iavlp)
 		} else {
 			_, value = tree.GetVersioned(key, height)
 		}
@@ -185,17 +187,31 @@ func (st *iavlStore) Query(req abci.RequestQuery) (value []byte, proof sdk.Merkl
 	return
 }
 
-func iavlProofToMerkleProof(key []byte, value []byte, proof iavl.KeyProof) sdk.MerkleProof {
+// https://github.com/tendermint/iavl/blob/develop/proof.go
+
+func iavlToMerkleProof(key []byte, value []byte, proof iavl.KeyProof) (*sdk.MerkleProof, error) {
+	// TODO: support KeyAbsentProof
+	eproof := proof.(*iavl.KeyExistsProof)
+
+	prefix := new(bytes.Buffer)
+	err := amino.EncodeInt8(prefix, 0)
+	if err == nil {
+		err = amino.EncodeInt64(prefix, 1)
+	}
+	if err == nil {
+		err = amino.EncodeInt64(prefix, eproof.Version)
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	data := &sdk.Data{
+		Prefix:   prefix.Bytes(),
 		Key:      key,
 		Value:    value,
 		Op:       sdk.HashOp_RIPEMD160,
 		DataType: sdk.Data_KeyValue,
 	}
-
-	// TODO: support KeyAbsentProof
-	eproof := proof.(*iavl.KeyExistsProof)
-
 	path := eproof.PathToKey.InnerNodes
 
 	nodes := make([]*sdk.Node, len(path))
@@ -203,14 +219,42 @@ func iavlProofToMerkleProof(key []byte, value []byte, proof iavl.KeyProof) sdk.M
 		prefix := new(bytes.Buffer)
 		suffix := new(bytes.Buffer)
 
-		// https://github.com/tendermint/iavl/blob/develop/proof.go
+		err := amino.EncodeInt8(prefix, inner.Height)
+		if err == nil {
+			err = amino.EncodeInt64(prefix, inner.Size)
+		}
+		if err == nil {
+			err = amino.EncodeInt64(prefix, inner.Version)
+		}
+		if len(inner.Left) == 0 {
+			if err == nil {
+				err = amino.EncodeByteSlice(suffix, inner.Right)
+			}
+		} else {
+			if err == nil {
+				err = amino.EncodeByteSlice(prefix, inner.Left)
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
 
 		nodes[i] = &sdk.Node{
-			Prefix: prefix,
-			Suffix: suffix,
-			HashOp: sdk.HashOp_RIPEMD160,
+			Prefix: prefix.Bytes(),
+			Suffix: suffix.Bytes(),
+			Op:     sdk.HashOp_RIPEMD160,
 		}
 	}
+
+	branch := &sdk.Branch{
+		Data:  data,
+		Nodes: nodes,
+	}
+
+	return &sdk.MerkleProof{
+		Branches: []*sdk.Branch{branch},
+	}, nil
 }
 
 //----------------------------------------

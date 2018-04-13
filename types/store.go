@@ -31,7 +31,7 @@ type CommitStore interface {
 //
 // This is an optional, but useful extension to any CommitStore
 type Queryable interface {
-	Query(abci.RequestQuery) ([]byte, MerkleProof, Error)
+	Query(abci.RequestQuery) ([]byte, *MerkleProof, Error)
 }
 
 //----------------------------------------

@@ -2,10 +2,10 @@ package tests
 
 import (
 	"io"
-	"os"
 	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -31,12 +31,13 @@ func ExecuteT(t *testing.T, command string) (out string) {
 	bz, err := cmd.CombinedOutput()
 	require.NoError(t, err, string(bz))
 	out = strings.Trim(string(bz), "\n") //trim any new lines
+	time.Sleep(time.Second)
 	return out
 }
 
 // Asynchronously execute the command, return standard output and error
-func GoExecuteT(t *testing.T, command string) (proc *os.Process, pipeIn io.WriteCloser, pipeOut io.ReadCloser) {
-	cmd := getCmd(t, command)
+func GoExecuteT(t *testing.T, command string) (cmd *exec.Cmd, pipeIn io.WriteCloser, pipeOut io.ReadCloser) {
+	cmd = getCmd(t, command)
 	pipeIn, err := cmd.StdinPipe()
 	require.NoError(t, err)
 	pipeOut, err = cmd.StdoutPipe()
@@ -48,5 +49,6 @@ func GoExecuteT(t *testing.T, command string) (proc *os.Process, pipeIn io.Write
 		//require.NoError(t, err, string(bz))
 		//outChan <- strings.Trim(string(bz), "\n") //trim any new lines
 	}()
-	return nil, pipeIn, pipeOut
+	time.Sleep(time.Second)
+	return cmd, pipeIn, pipeOut
 }

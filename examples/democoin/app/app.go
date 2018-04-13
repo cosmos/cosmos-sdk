@@ -42,14 +42,14 @@ type DemocoinApp struct {
 	accountMapper sdk.AccountMapper
 }
 
-func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
+func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 
 	// Create app-level codec for txs and accounts.
 	var cdc = MakeCodec()
 
 	// Create your application object.
 	var app = &DemocoinApp{
-		BaseApp:            bam.NewBaseApp(appName, logger, dbs["main"]),
+		BaseApp:            bam.NewBaseApp(appName, logger, db),
 		cdc:                cdc,
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
 		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
@@ -82,13 +82,7 @@ func NewDemocoinApp(logger log.Logger, dbs map[string]dbm.DB) *DemocoinApp {
 	// Initialize BaseApp.
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainerFn(coolKeeper, powKeeper))
-	app.MountStoreWithDB(app.capKeyMainStore, sdk.StoreTypeIAVL, dbs["main"])
-	app.MountStoreWithDB(app.capKeyAccountStore, sdk.StoreTypeIAVL, dbs["acc"])
-	app.MountStoreWithDB(app.capKeyPowStore, sdk.StoreTypeIAVL, dbs["pow"])
-	app.MountStoreWithDB(app.capKeyIBCStore, sdk.StoreTypeIAVL, dbs["ibc"])
-	app.MountStoreWithDB(app.capKeyStakingStore, sdk.StoreTypeIAVL, dbs["staking"])
-	// NOTE: Broken until #532 lands
-	//app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore, app.capKeyStakingStore)
+	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyPowStore, app.capKeyIBCStore, app.capKeyStakingStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {

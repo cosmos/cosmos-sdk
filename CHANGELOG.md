@@ -11,6 +11,7 @@ BREAKING CHANGES
 
 * Remove go-wire, use go-amino
 * [store] Add `SubspaceIterator` and `ReverseSubspaceIterator` to `KVStore` interface
+* [basecoin] NewBasecoinApp takes a `dbm.DB` and uses namespaced DBs for substores
 
 BUG FIXES
 

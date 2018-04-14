@@ -30,21 +30,11 @@ func TestGaiaCLI(t *testing.T) {
 	// start gaiad server
 	cmd, _, _ := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
 	defer cmd.Process.Kill()
-	time.Sleep(time.Second) // waiting for some blocks to pass
 
-	//executeWrite(t, "gaiacli keys add foo --recover", pass, masterKey)
-	cmd, wc3, _ := tests.GoExecuteT(t, "gaiacli keys add foo --recover")
-	time.Sleep(time.Second) // waiting for some blocks to pass
-	_, err := wc3.Write([]byte("1234567890\n"))
-	require.NoError(t, err)
-	_, err = wc3.Write([]byte(masterKey + "\n"))
-	require.NoError(t, err)
-	cmd.Wait()
-	time.Sleep(time.Second * 5) // waiting for some blocks to pass
-	fooAddr := executeGetAddr(t, "gaiacli keys show foo")
-	panic(fmt.Sprintf("debug fooAddr: %v\n", fooAddr))
-
+	executeWrite(t, "gaiacli keys add foo --recover", pass, masterKey)
 	executeWrite(t, "gaiacli keys add bar", pass)
+
+	fooAddr := executeGetAddr(t, "gaiacli keys show foo")
 	barAddr := executeGetAddr(t, "gaiacli keys show bar")
 	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10fermion --to=%v --name=foo", flags, barAddr), pass)
 	time.Sleep(time.Second * 3) // waiting for some blocks to pass
@@ -68,15 +58,16 @@ func executeWrite(t *testing.T, cmdStr string, writes ...string) {
 }
 
 func executeInit(t *testing.T, cmdStr string) (masterKey, chainID string) {
-	tests.GoExecuteT(t, cmdStr)
 	out := tests.ExecuteT(t, cmdStr)
 	outCut := "{" + strings.SplitN(out, "{", 2)[1] // weird I'm sorry
 
 	var initRes map[string]json.RawMessage
 	err := json.Unmarshal([]byte(outCut), &initRes)
-	require.NoError(t, err, "out %v outCut %v err %v", out, outCut, err)
-	masterKey = string(initRes["secret"])
-	chainID = string(initRes["chain_id"])
+	require.NoError(t, err)
+	err = json.Unmarshal(initRes["secret"], &masterKey)
+	require.NoError(t, err)
+	err = json.Unmarshal(initRes["chain_id"], &chainID)
+	require.NoError(t, err)
 	return
 }
 

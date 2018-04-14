@@ -42,13 +42,7 @@ func GoExecuteT(t *testing.T, command string) (cmd *exec.Cmd, pipeIn io.WriteClo
 	require.NoError(t, err)
 	pipeOut, err = cmd.StdoutPipe()
 	require.NoError(t, err)
-
-	go func() {
-		cmd.Start()
-		//bz, _ := cmd.CombinedOutput()
-		//require.NoError(t, err, string(bz))
-		//outChan <- strings.Trim(string(bz), "\n") //trim any new lines
-	}()
+	go cmd.Start()
 	time.Sleep(time.Second)
 	return cmd, pipeIn, pipeOut
 }

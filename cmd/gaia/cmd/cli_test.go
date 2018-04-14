@@ -3,7 +3,6 @@ package common
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"strings"
 	"testing"
 	"time"
@@ -16,77 +15,82 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-func password(t *testing.T, wc io.WriteCloser) {
-	_, err := wc.Write([]byte("1234567890\n"))
-	require.NoError(t, err)
-}
-
 func TestGaiaCLI(t *testing.T) {
 
-	// clear genesis/keys
 	tests.ExecuteT(t, "gaiad unsafe_reset_all")
-	cmd, wc0, _ := tests.GoExecuteT(t, "gaiacli keys delete foo")
-	password(t, wc0)
-	cmd.Wait()
-	cmd, wc1, _ := tests.GoExecuteT(t, "gaiacli keys delete bar")
-	password(t, wc1)
-	cmd.Wait()
+	pass := "1234567890"
+	executeWrite(t, "gaiacli keys delete foo", pass)
+	executeWrite(t, "gaiacli keys delete bar", pass)
+	masterKey, chainID := executeInit(t, "gaiad init")
 
-	// init genesis get master key
-	out := tests.ExecuteT(t, "gaiad init")
-	var initRes map[string]interface{}
-	outCut := "{" + strings.SplitN(out, "{", 2)[1] // weird I'm sorry
-	err := json.Unmarshal([]byte(outCut), &initRes)
-	require.NoError(t, err, "out %v outCut %v err %v", out, outCut, err)
-	masterKey := (initRes["secret"]).(string)
-	chainID := (initRes["chain_id"]).(string)
-
+	// get a free port, also setup some common flags
 	servAddr := server.FreeTCPAddr(t)
-	gaiacliFlags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
+	flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
 
 	// start gaiad server
-	cmd, _, _ = tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
+	cmd, _, _ := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
 	defer cmd.Process.Kill()
+	time.Sleep(time.Second) // waiting for some blocks to pass
 
-	// add the master key
+	//executeWrite(t, "gaiacli keys add foo --recover", pass, masterKey)
 	cmd, wc3, _ := tests.GoExecuteT(t, "gaiacli keys add foo --recover")
-	password(t, wc3)
+	time.Sleep(time.Second) // waiting for some blocks to pass
+	_, err := wc3.Write([]byte("1234567890\n"))
+	require.NoError(t, err)
 	_, err = wc3.Write([]byte(masterKey + "\n"))
 	require.NoError(t, err)
 	cmd.Wait()
+	time.Sleep(time.Second * 5) // waiting for some blocks to pass
+	fooAddr := executeGetAddr(t, "gaiacli keys show foo")
+	panic(fmt.Sprintf("debug fooAddr: %v\n", fooAddr))
 
-	// add a secondary key
-	cmd, wc4, _ := tests.GoExecuteT(t, "gaiacli keys add bar")
-	password(t, wc4)
-	cmd.Wait()
-
-	// get addresses
-	out = tests.ExecuteT(t, "gaiacli keys show foo")
-	fooAddr := strings.TrimLeft(out, "foo\t")
-	out = tests.ExecuteT(t, "gaiacli keys show bar")
-	barAddr := strings.TrimLeft(out, "bar\t")
-
-	// send money from foo to bar
-	cmdStr := fmt.Sprintf("gaiacli send %v --sequence=0 --amount=10fermion --to=%v --name=foo", gaiacliFlags, barAddr)
-	cmd, wc5, _ := tests.GoExecuteT(t, cmdStr)
-	password(t, wc5)
-	cmd.Wait()
+	executeWrite(t, "gaiacli keys add bar", pass)
+	barAddr := executeGetAddr(t, "gaiacli keys show bar")
+	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10fermion --to=%v --name=foo", flags, barAddr), pass)
 	time.Sleep(time.Second * 3) // waiting for some blocks to pass
 
-	// verify money sent to bar
-	out = tests.ExecuteT(t, fmt.Sprintf("gaiacli account %v %v", barAddr, gaiacliFlags))
-	barAcc := unmarshalBaseAccount(t, out)
+	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barAddr, flags))
 	assert.Equal(t, int64(10), barAcc.GetCoins().AmountOf("fermion"))
-
-	out = tests.ExecuteT(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, gaiacliFlags))
-	fooAcc := unmarshalBaseAccount(t, out)
+	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
 	assert.Equal(t, int64(99990), fooAcc.GetCoins().AmountOf("fermion"))
+
+	// declare candidacy
+	//executeWrite(t, "gaiacli declare-candidacy -", pass)
 }
 
-func unmarshalBaseAccount(t *testing.T, raw string) auth.BaseAccount {
+func executeWrite(t *testing.T, cmdStr string, writes ...string) {
+	cmd, wc, _ := tests.GoExecuteT(t, cmdStr)
+	for _, write := range writes {
+		_, err := wc.Write([]byte(write + "\n"))
+		require.NoError(t, err)
+	}
+	cmd.Wait()
+}
+
+func executeInit(t *testing.T, cmdStr string) (masterKey, chainID string) {
+	tests.GoExecuteT(t, cmdStr)
+	out := tests.ExecuteT(t, cmdStr)
+	outCut := "{" + strings.SplitN(out, "{", 2)[1] // weird I'm sorry
+
 	var initRes map[string]json.RawMessage
-	err := json.Unmarshal([]byte(raw), &initRes)
-	require.NoError(t, err, "raw %v, err %v", raw, err)
+	err := json.Unmarshal([]byte(outCut), &initRes)
+	require.NoError(t, err, "out %v outCut %v err %v", out, outCut, err)
+	masterKey = string(initRes["secret"])
+	chainID = string(initRes["chain_id"])
+	return
+}
+
+func executeGetAddr(t *testing.T, cmdStr string) (addr string) {
+	out := tests.ExecuteT(t, cmdStr)
+	name := strings.SplitN(cmdStr, " show ", 2)[1]
+	return strings.TrimLeft(out, name+"\t")
+}
+
+func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
+	out := tests.ExecuteT(t, cmdStr)
+	var initRes map[string]json.RawMessage
+	err := json.Unmarshal([]byte(out), &initRes)
+	require.NoError(t, err, "out %v, err %v", out, err)
 	value := initRes["value"]
 	var acc auth.BaseAccount
 	_ = json.Unmarshal(value, &acc) //XXX pubkey can't be decoded go amino issue

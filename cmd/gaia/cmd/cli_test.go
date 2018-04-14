@@ -1,6 +1,7 @@
 package common
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -10,17 +11,20 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	crypto "github.com/tendermint/go-crypto"
+	crkeys "github.com/tendermint/go-crypto/keys"
 )
 
 func TestGaiaCLI(t *testing.T) {
 
 	tests.ExecuteT(t, "gaiad unsafe_reset_all")
 	pass := "1234567890"
-	executeWrite(t, "gaiacli keys delete foo", pass)
-	executeWrite(t, "gaiacli keys delete bar", pass)
+	executeWrite(t, false, "gaiacli keys delete foo", pass)
+	executeWrite(t, false, "gaiacli keys delete bar", pass)
 	masterKey, chainID := executeInit(t, "gaiad init")
 
 	// get a free port, also setup some common flags
@@ -31,25 +35,55 @@ func TestGaiaCLI(t *testing.T) {
 	cmd, _, _ := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
 	defer cmd.Process.Kill()
 
-	executeWrite(t, "gaiacli keys add foo --recover", pass, masterKey)
-	executeWrite(t, "gaiacli keys add bar", pass)
+	executeWrite(t, false, "gaiacli keys add foo --recover", pass, masterKey)
+	executeWrite(t, false, "gaiacli keys add bar", pass)
 
-	fooAddr := executeGetAddr(t, "gaiacli keys show foo")
-	barAddr := executeGetAddr(t, "gaiacli keys show bar")
-	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10fermion --to=%v --name=foo", flags, barAddr), pass)
+	fooAddr, fooPubKey := executeGetAddr(t, "gaiacli keys show foo --output=json")
+	barAddr, _ := executeGetAddr(t, "gaiacli keys show bar --output=json")
+
+	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
+	assert.Equal(t, int64(100000), fooAcc.GetCoins().AmountOf("fermion"))
+
+	executeWrite(t, false, fmt.Sprintf("gaiacli send %v --amount=10fermion --to=%v --name=foo", flags, barAddr), pass)
 	time.Sleep(time.Second * 3) // waiting for some blocks to pass
 
 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barAddr, flags))
 	assert.Equal(t, int64(10), barAcc.GetCoins().AmountOf("fermion"))
-	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
 	assert.Equal(t, int64(99990), fooAcc.GetCoins().AmountOf("fermion"))
 
 	// declare candidacy
-	//executeWrite(t, "gaiacli declare-candidacy -", pass)
+	//--address-candidate string   hex address of the validator/candidate
+	//--amount string              Amount of coins to bond (default "1fermion")
+	//--chain-id string            Chain ID of tendermint node
+	//--fee string                 Fee to pay along with transaction
+	//--keybase-sig string         optional keybase signature
+	//--moniker string             validator-candidate name
+	//--name string                Name of private key with which to sign
+	//--node string                <host>:<port> to tendermint rpc interface for this chain (default "tcp://localhost:46657")
+	//--pubkey string              PubKey of the validator-candidate
+	//--sequence int               Sequence number to sign the tx
+	//--website string             optional website
+	_ = fooPubKey
+	//declStr := fmt.Sprintf("gaiacli declare-candidacy %v", flags)
+	//declStr += fmt.Sprintf(" --name=%v", "foo")
+	//declStr += fmt.Sprintf(" --address-candidate=%v", fooAddr)
+	//declStr += fmt.Sprintf(" --pubkey=%v", fooPubKey)
+	//declStr += fmt.Sprintf(" --amount=%v", "3fermion")
+	//declStr += fmt.Sprintf(" --moniker=%v", "foo-vally")
+	//fmt.Printf("debug declStr: %v\n", declStr)
+	//executeWrite(t, true, declStr, pass)
 }
 
-func executeWrite(t *testing.T, cmdStr string, writes ...string) {
-	cmd, wc, _ := tests.GoExecuteT(t, cmdStr)
+func executeWrite(t *testing.T, print bool, cmdStr string, writes ...string) {
+	cmd, wc, rc := tests.GoExecuteT(t, cmdStr)
+
+	if print {
+		bz := make([]byte, 100000)
+		rc.Read(bz)
+		fmt.Printf("debug read: %v\n", string(bz))
+	}
+
 	for _, write := range writes {
 		_, err := wc.Write([]byte(write + "\n"))
 		require.NoError(t, err)
@@ -71,10 +105,16 @@ func executeInit(t *testing.T, cmdStr string) (masterKey, chainID string) {
 	return
 }
 
-func executeGetAddr(t *testing.T, cmdStr string) (addr string) {
+func executeGetAddr(t *testing.T, cmdStr string) (addr, pubKey string) {
 	out := tests.ExecuteT(t, cmdStr)
-	name := strings.SplitN(cmdStr, " show ", 2)[1]
-	return strings.TrimLeft(out, name+"\t")
+	var info crkeys.Info
+	keys.UnmarshalJSON([]byte(out), &info)
+	pubKey = hex.EncodeToString(info.PubKey.(crypto.PubKeyEd25519).Bytes())
+	pubKey = strings.TrimLeft(pubKey, "1624de6220")
+	fmt.Printf("debug pubKey: %v\n", pubKey)
+	addr = info.PubKey.Address().String()
+	fmt.Printf("debug addr: %v\n", addr)
+	return
 }
 
 func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {

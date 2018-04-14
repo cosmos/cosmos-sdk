@@ -7,7 +7,7 @@ all: check_tools get_vendor_deps build build_examples test
 ########################################
 ### CI
 
-ci: get_tools get_vendor_deps build test_cover
+ci: get_tools get_vendor_deps install test_cover
 
 ########################################
 ### Build

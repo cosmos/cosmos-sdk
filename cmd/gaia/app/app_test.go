@@ -85,20 +85,15 @@ var (
 	}
 )
 
-func loggerAndDBs() (log.Logger, map[string]dbm.DB) {
+func loggerAndDB() (log.Logger, dbm.DB) {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-	dbs := map[string]dbm.DB{
-		"main":  dbm.NewMemDB(),
-		"acc":   dbm.NewMemDB(),
-		"ibc":   dbm.NewMemDB(),
-		"stake": dbm.NewMemDB(),
-	}
-	return logger, dbs
+	db := dbm.NewMemDB()
+	return logger, db
 }
 
 func newGaiaApp() *GaiaApp {
-	logger, dbs := loggerAndDBs()
-	return NewGaiaApp(logger, dbs)
+	logger, db := loggerAndDB()
+	return NewGaiaApp(logger, db)
 }
 
 func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
@@ -144,7 +139,7 @@ func TestMsgs(t *testing.T) {
 }
 
 func TestSortGenesis(t *testing.T) {
-	logger, dbs := loggerAndDBs()
+	logger, dbs := loggerAndDB()
 	gapp := NewGaiaApp(logger, dbs)
 
 	// Note the order: the coins are unsorted!
@@ -188,7 +183,7 @@ func TestSortGenesis(t *testing.T) {
 }
 
 func TestGenesis(t *testing.T) {
-	logger, dbs := loggerAndDBs()
+	logger, dbs := loggerAndDB()
 	gapp := NewGaiaApp(logger, dbs)
 
 	// Construct some genesis bytes to reflect GaiaAccount

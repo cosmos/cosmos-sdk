@@ -31,7 +31,7 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	if err != nil {
 		return nil, err
 	}
-	bapp := app.NewBasecoinApp(logger, db)
+	bapp := app.NewGaiaApp(logger, db)
 	//dbAcc, err := dbm.NewGoLevelDB("gaia-acc", dataDir)
 	//if err != nil {
 	//return nil, err

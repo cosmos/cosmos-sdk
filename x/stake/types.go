@@ -1,6 +1,8 @@
 package stake
 
 import (
+	"encoding/hex"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	abci "github.com/tendermint/abci/types"
@@ -131,12 +133,20 @@ type Validator struct {
 
 // abci validator from stake validator type
 func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
-	pkBytes, err := cdc.MarshalBinary(v.PubKey)
+	//pkBytes, err := cdc.MarshalBinary(v.PubKey)
+	//if err != nil {
+	//panic(err)
+	//}
+	//return abci.Validator{
+	//PubKey: pkBytes,
+	//Power:  v.Power.Evaluate(),
+	//}
+	TypeDistinguisher, err := hex.DecodeString("1624de6220")
 	if err != nil {
 		panic(err)
 	}
 	return abci.Validator{
-		PubKey: pkBytes,
+		PubKey: append(TypeDistinguisher, v.PubKey.Bytes()...),
 		Power:  v.Power.Evaluate(),
 	}
 }
@@ -144,12 +154,20 @@ func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
 // abci validator from stake validator type
 // with zero power used for validator updates
 func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
-	pkBytes, err := cdc.MarshalBinary(v.PubKey)
+	//pkBytes, err := cdc.MarshalBinary(v.PubKey)
+	//if err != nil {
+	//panic(err)
+	//}
+	//return abci.Validator{
+	//PubKey: pkBytes,
+	//Power:  0,
+	//}
+	TypeDistinguisher, err := hex.DecodeString("1624de6220")
 	if err != nil {
 		panic(err)
 	}
 	return abci.Validator{
-		PubKey: pkBytes,
+		PubKey: append(TypeDistinguisher, v.PubKey.Bytes()...),
 		Power:  0,
 	}
 }

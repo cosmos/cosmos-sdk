@@ -248,7 +248,7 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	tx.Signatures[0].Sequence = 1
 	res := bapp.Deliver(tx)
 
-	assert.Equal(t, sdk.ABCICodeType(sdk.CodeUnauthorized), res.Code, res.Log)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
 	// resigning the tx with the bumped sequence should work
 	SignCheckDeliver(t, bapp, sendMsg1, []int64{1}, true, priv1)

@@ -9,7 +9,7 @@ import (
 
 func TestContextGetOpShouldNeverPanic(t *testing.T) {
 	var ms types.MultiStore
-	ctx := types.NewContext(ms, abci.Header{}, false, nil, types.CodespaceRoot)
+	ctx := types.NewContext(ms, abci.Header{}, false, nil)
 	indices := []int64{
 		-10, 1, 0, 10, 20,
 	}

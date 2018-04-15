@@ -31,7 +31,7 @@ type Context struct {
 }
 
 // create a new context
-func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byte, codespace CodespaceType) Context {
+func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byte) Context {
 	c := Context{
 		Context: context.Background(),
 		pst:     newThePast(),
@@ -43,7 +43,6 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byt
 	c = c.WithChainID(header.ChainID)
 	c = c.WithIsCheckTx(isCheckTx)
 	c = c.WithTxBytes(txBytes)
-	c = c.WithCodespace(codespace)
 	return c
 }
 
@@ -127,7 +126,6 @@ const (
 	contextKeyChainID
 	contextKeyIsCheckTx
 	contextKeyTxBytes
-	contextKeyCodespace
 )
 
 // NOTE: Do not expose MultiStore.
@@ -153,9 +151,6 @@ func (c Context) IsCheckTx() bool {
 func (c Context) TxBytes() []byte {
 	return c.Value(contextKeyTxBytes).([]byte)
 }
-func (c Context) Codespace() CodespaceType {
-	return c.Value(contextKeyCodespace).(CodespaceType)
-}
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	return c.withValue(contextKeyMultiStore, ms)
 }
@@ -174,9 +169,6 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 }
 func (c Context) WithTxBytes(txBytes []byte) Context {
 	return c.withValue(contextKeyTxBytes, txBytes)
-}
-func (c Context) WithCodespace(codespace CodespaceType) Context {
-	return c.withValue(contextKeyCodespace, codespace)
 }
 
 //----------------------------------------

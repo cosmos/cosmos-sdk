@@ -48,7 +48,7 @@ func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx
 func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, code sdk.CodeType) {
 	_, result, abort := anteHandler(ctx, tx)
 	assert.True(t, abort)
-	assert.Equal(t, sdk.ABCICodeType(code), result.Code)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), result.Code)
 }
 
 func newTestTx(ctx sdk.Context, msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, fee sdk.StdFee) sdk.Tx {
@@ -73,7 +73,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, sdk.CodespaceRoot)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -114,7 +114,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, sdk.CodespaceRoot)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -180,7 +180,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, sdk.CodespaceRoot)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -217,7 +217,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, sdk.CodespaceRoot)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -292,7 +292,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, sdk.CodespaceRoot)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()

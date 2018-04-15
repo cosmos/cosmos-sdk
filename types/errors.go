@@ -25,6 +25,14 @@ func (code ABCICodeType) IsOK() bool {
 	return false
 }
 
+func ToABCICode(space CodespaceType, code CodeType) ABCICodeType {
+	// TODO: Make Tendermint more aware of codespaces.
+	if space == CodespaceRoot && code == CodeOK {
+		return ABCICodeOK
+	}
+	return ABCICodeType((uint32(space) << 16) | uint32(code))
+}
+
 const (
 	// ABCI error codes
 	ABCICodeOK ABCICodeType = 0
@@ -43,8 +51,11 @@ const (
 	CodeInsufficientCoins CodeType = 10
 	CodeInvalidCoins      CodeType = 11
 
-	// Root codespace for error codes in this file only
-	CodespaceRoot CodespaceType = 0
+	// CodespaceRoot is a codespace for error codes in this file only.
+	// Notice that 0 is an "unset" codespace, which can be overridden with
+	// Error.WithDefaultCodespace().
+	CodespaceUndefined CodespaceType = 0
+	CodespaceRoot      CodespaceType = 1
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
@@ -126,7 +137,7 @@ type Error interface {
 	Codespace() CodespaceType
 	ABCILog() string
 	ABCICode() ABCICodeType
-	WithCodespace(codespace CodespaceType) Error
+	WithDefaultCodespace(codespace CodespaceType) Error
 	Trace(msg string) Error
 	Cause() interface{}
 	Result() Result
@@ -166,7 +177,7 @@ func (err *sdkError) Error() string {
 
 // Implements ABCIError.
 func (err *sdkError) ABCICode() ABCICodeType {
-	return ABCICodeType((uint32(err.codespace) << 16) | uint32(err.code))
+	return ToABCICode(err.codespace, err.code)
 }
 
 // Implements Error.
@@ -195,7 +206,11 @@ func (err *sdkError) Trace(msg string) Error {
 }
 
 // Implements Error.
-func (err *sdkError) WithCodespace(codespace CodespaceType) Error {
+func (err *sdkError) WithDefaultCodespace(cs CodespaceType) Error {
+	codespace := err.codespace
+	if codespace == CodespaceUndefined {
+		codespace = cs
+	}
 	return &sdkError{
 		codespace: codespace,
 		code:      err.code,

@@ -45,6 +45,6 @@ func TestErrFn(t *testing.T) {
 		err := errFn("")
 		codeType := codeTypes[i]
 		assert.Equal(t, err.Code(), codeType)
-		assert.Equal(t, err.Result().Code, ABCICodeType(codeType))
+		assert.Equal(t, err.Result().Code, ToABCICode(CodespaceRoot, codeType))
 	}
 }

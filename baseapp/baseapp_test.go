@@ -242,7 +242,7 @@ func TestDeliverTx(t *testing.T) {
 
 		counter += 1
 		return sdk.Result{}
-	}, sdk.CodespaceRoot)
+	})
 
 	tx := testUpdatePowerTx{} // doesn't matter
 	header := abci.Header{AppHash: []byte("apphash")}
@@ -277,7 +277,7 @@ func TestQuery(t *testing.T) {
 		store := ctx.KVStore(capKey)
 		store.Set(key, value)
 		return sdk.Result{}
-	}, sdk.CodespaceRoot)
+	})
 
 	query := abci.RequestQuery{
 		Path: "/main/key",
@@ -342,7 +342,7 @@ func TestValidatorChange(t *testing.T) {
 	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		// TODO
 		return sdk.Result{}
-	}, sdk.CodespaceRoot)
+	})
 
 	// Load latest state, which should be empty.
 	err := app.LoadLatestVersion(capKey)

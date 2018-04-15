@@ -23,7 +23,7 @@ func defaultContext(key sdk.StoreKey) sdk.Context {
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	cms.LoadLatestVersion()
-	ctx := sdk.NewContext(cms, abci.Header{}, false, nil, sdk.CodespaceRoot)
+	ctx := sdk.NewContext(cms, abci.Header{}, false, nil)
 	return ctx
 }
 

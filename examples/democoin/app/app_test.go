@@ -218,12 +218,12 @@ func TestSendMsgWithAccounts(t *testing.T) {
 
 	// Delivering again should cause replay error
 	res = bapp.Deliver(tx)
-	assert.Equal(t, sdk.ABCICodeType(sdk.CodeInvalidSequence), res.Code, res.Log)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeInvalidSequence), sdk.ABCICodeType(res.Code), res.Log)
 
 	// bumping the txnonce number without resigning should be an auth error
 	tx.Signatures[0].Sequence = 1
 	res = bapp.Deliver(tx)
-	assert.Equal(t, sdk.ABCICodeType(sdk.CodeUnauthorized), res.Code, res.Log)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), sdk.ABCICodeType(res.Code), res.Log)
 
 	// resigning the tx with the bumped sequence should work
 	sequences = []int64{1}

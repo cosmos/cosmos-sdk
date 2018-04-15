@@ -177,9 +177,9 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, nil, sdk.CodespaceRoot)
+		return sdk.NewContext(app.checkState.ms, header, true, nil)
 	}
-	return sdk.NewContext(app.deliverState.ms, header, false, nil, sdk.CodespaceRoot)
+	return sdk.NewContext(app.deliverState.ms, header, false, nil)
 }
 
 type state struct {
@@ -195,7 +195,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, nil, sdk.CodespaceRoot),
+		ctx: sdk.NewContext(ms, header, true, nil),
 	}
 }
 
@@ -203,7 +203,7 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, nil, sdk.CodespaceRoot),
+		ctx: sdk.NewContext(ms, header, false, nil),
 	}
 }
 
@@ -354,7 +354,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// Match route. We must do this before ValidateBasic because we need the codespace
 	msgType := msg.Type()
-	handler, codespace := app.router.Route(msgType)
+	handler := app.router.Route(msgType)
 	if handler == nil {
 		return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
 	}
@@ -362,16 +362,16 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	// Validate the Msg.
 	err := msg.ValidateBasic()
 	if err != nil {
-		err = err.WithCodespace(codespace)
+		err = err.WithDefaultCodespace(sdk.CodespaceRoot)
 		return err.Result()
 	}
 
 	// Get the context
 	var ctx sdk.Context
 	if isCheckTx {
-		ctx = app.checkState.ctx.WithTxBytes(txBytes).WithCodespace(codespace)
+		ctx = app.checkState.ctx.WithTxBytes(txBytes)
 	} else {
-		ctx = app.deliverState.ctx.WithTxBytes(txBytes).WithCodespace(codespace)
+		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
 	}
 
 	// Run the ante handler.

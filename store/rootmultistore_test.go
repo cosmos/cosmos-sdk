@@ -11,17 +11,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const useDebugDB = false
+
 func TestMultistoreCommitLoad(t *testing.T) {
-	db := dbm.NewMemDB()
+	var db dbm.DB = dbm.NewMemDB()
+	if useDebugDB {
+		db = dbm.NewDebugDB("CMS", db)
+	}
 	store := newMultiStoreWithMounts(db)
 	err := store.LoadLatestVersion()
 	assert.Nil(t, err)
 
-	// new store has empty last commit
+	// New store has empty last commit.
 	commitID := CommitID{}
 	checkStore(t, store, commitID, commitID)
 
-	// make sure we can get stores by name
+	// Make sure we can get stores by name.
 	s1 := store.getStoreByName("store1")
 	assert.NotNil(t, s1)
 	s3 := store.getStoreByName("store3")
@@ -29,7 +34,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	s77 := store.getStoreByName("store77")
 	assert.Nil(t, s77)
 
-	// make a few commits and check them
+	// Make a few commits and check them.
 	nCommits := int64(3)
 	for i := int64(0); i < nCommits; i++ {
 		commitID = store.Commit()
@@ -37,19 +42,19 @@ func TestMultistoreCommitLoad(t *testing.T) {
 		checkStore(t, store, expectedCommitID, commitID)
 	}
 
-	// Load the latest multistore again and check version
+	// Load the latest multistore again and check version.
 	store = newMultiStoreWithMounts(db)
 	err = store.LoadLatestVersion()
 	assert.Nil(t, err)
 	commitID = getExpectedCommitID(store, nCommits)
 	checkStore(t, store, commitID, commitID)
 
-	// commit and check version
+	// Commit and check version.
 	commitID = store.Commit()
 	expectedCommitID := getExpectedCommitID(store, nCommits+1)
 	checkStore(t, store, expectedCommitID, commitID)
 
-	// Load an older multistore and check version
+	// Load an older multistore and check version.
 	ver := nCommits - 1
 	store = newMultiStoreWithMounts(db)
 	err = store.LoadVersion(ver)
@@ -62,8 +67,8 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	expectedCommitID = getExpectedCommitID(store, ver+1)
 	checkStore(t, store, expectedCommitID, commitID)
 
-	// XXX: confirm old commit is overwritten and
-	// we have rolled back LatestVersion
+	// XXX: confirm old commit is overwritten and we have rolled back
+	// LatestVersion
 	store = newMultiStoreWithMounts(db)
 	err = store.LoadLatestVersion()
 	assert.Nil(t, err)
@@ -104,23 +109,23 @@ func TestMultiStoreQuery(t *testing.T) {
 
 	cid := multi.Commit()
 
-	// make sure we can get by name
+	// Make sure we can get by name.
 	garbage := multi.getStoreByName("bad-name")
 	assert.Nil(t, garbage)
 
-	// set and commit data in one store
+	// Set and commit data in one store.
 	store1 := multi.getStoreByName("store1").(KVStore)
 	store1.Set(k, v)
 
-	// and another
+	// ... and another.
 	store2 := multi.getStoreByName("store2").(KVStore)
 	store2.Set(k2, v2)
 
-	// commit the multistore
+	// Commit the multistore.
 	cid = multi.Commit()
 	ver := cid.Version
 
-	// bad path
+	// Test bad path.
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
 	qres := multi.Query(query)
 	assert.Equal(t, uint32(sdk.CodeUnknownRequest), qres.Code)
@@ -129,25 +134,25 @@ func TestMultiStoreQuery(t *testing.T) {
 	qres = multi.Query(query)
 	assert.Equal(t, uint32(sdk.CodeUnknownRequest), qres.Code)
 
-	// invalid store name
+	// Test invalid store name.
 	query.Path = "/garbage/key"
 	qres = multi.Query(query)
 	assert.Equal(t, uint32(sdk.CodeUnknownRequest), qres.Code)
 
-	// valid query with data
+	// Test valid query with data.
 	query.Path = "/store1/key"
 	qres = multi.Query(query)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	assert.Equal(t, v, qres.Value)
 
-	// valid but empty
+	// Test valid but empty query.
 	query.Path = "/store2/key"
 	query.Prove = true
 	qres = multi.Query(query)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	assert.Nil(t, qres.Value)
 
-	// store2 data
+	// Test store2 data.
 	query.Data = k2
 	qres = multi.Query(query)
 	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)

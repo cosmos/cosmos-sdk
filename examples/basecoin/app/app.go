@@ -36,6 +36,9 @@ type BasecoinApp struct {
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
+
+	// Handle fees
+	feeHandler sdk.FeeHandler
 }
 
 func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
@@ -69,11 +72,14 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
+	// Define the feeHandler.
+	app.feeHandler = auth.BurnFeeHandler
+
 	// Initialize BaseApp.
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyIBCStore, app.capKeyStakingStore)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeHandler))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())

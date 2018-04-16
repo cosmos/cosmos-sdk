@@ -40,6 +40,9 @@ type DemocoinApp struct {
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
+
+	// Handle fees
+	feeHandler sdk.FeeHandler
 }
 
 func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
@@ -79,11 +82,14 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
+	// Define the feeHandler.
+	app.feeHandler = auth.BurnFeeHandler
+
 	// Initialize BaseApp.
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainerFn(coolKeeper, powKeeper))
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyPowStore, app.capKeyIBCStore, app.capKeyStakingStore)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeHandler))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())

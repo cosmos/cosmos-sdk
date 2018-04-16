@@ -6,6 +6,7 @@ FEATURES:
 
 * Add CacheContext
 * Add auto sequencing to client
+* Add FeeHandler to ante handler
 
 BREAKING CHANGES
 

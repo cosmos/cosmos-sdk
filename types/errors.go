@@ -142,7 +142,7 @@ type Error interface {
 	ABCICode() ABCICodeType
 	WithDefaultCodespace(codespace CodespaceType) Error
 	Trace(msg string) Error
-	Cause() interface{}
+	T() interface{}
 	Result() Result
 	QueryResult() abci.ResponseQuery
 }
@@ -175,7 +175,7 @@ type sdkError struct {
 
 // Implements ABCIError.
 func (err *sdkError) Error() string {
-	return err.err.Error()
+	return fmt.Sprintf("Error{%d:%d,%#v}", err.codespace, err.code, err.err)
 }
 
 // Implements ABCIError.
@@ -195,8 +195,7 @@ func (err *sdkError) Code() CodeType {
 
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
-	// TODO what should be returned here
-	return err.err.Message()
+	return err.Error()
 }
 
 // Add tracing information with msg.
@@ -221,8 +220,8 @@ func (err *sdkError) WithDefaultCodespace(cs CodespaceType) Error {
 	}
 }
 
-func (err *sdkError) Cause() interface{} {
-	return err.err.Cause()
+func (err *sdkError) T() interface{} {
+	return err.err.T()
 }
 
 func (err *sdkError) Result() Result {

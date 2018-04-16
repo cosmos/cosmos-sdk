@@ -17,4 +17,18 @@ func TestRegisterNext(t *testing.T) {
 	// pick next
 	code3 := codespacer.RegisterNext(CodespaceType(2))
 	require.Equal(t, code3, CodespaceType(4))
+	// skip 1
+	code4 := codespacer.RegisterNext(CodespaceType(6))
+	require.Equal(t, code4, CodespaceType(6))
+	code5 := codespacer.RegisterNext(CodespaceType(2))
+	require.Equal(t, code5, CodespaceType(5))
+	code6 := codespacer.RegisterNext(CodespaceType(2))
+	require.Equal(t, code6, CodespaceType(7))
+	// panic on maximum
+	defer func() {
+		r := recover()
+		require.NotNil(t, r, "Did not panic on maximum codespace")
+	}()
+	codespacer.RegisterNext(MaximumCodespace - 1)
+	codespacer.RegisterNext(MaximumCodespace - 1)
 }

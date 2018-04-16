@@ -65,15 +65,12 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 		&types.AppAccount{}, // prototype
 	).Seal()
 
-	// Generate codespacer
-	codespacer := sdk.NewCodespacer()
-
 	// Add handlers.
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
-	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper, codespacer.Register(cool.DefaultCodespace))
-	powKeeper := pow.NewKeeper(app.capKeyPowStore, pow.NewPowConfig("pow", int64(1)), coinKeeper, codespacer.Register(pow.DefaultCodespace))
-	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore, codespacer.Register(ibc.DefaultCodespace))
-	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper, codespacer.Register(simplestake.DefaultCodespace))
+	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper, app.RegisterCodespace(cool.DefaultCodespace))
+	powKeeper := pow.NewKeeper(app.capKeyPowStore, pow.NewPowConfig("pow", int64(1)), coinKeeper, app.RegisterCodespace(pow.DefaultCodespace))
+	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
+	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper, app.RegisterCodespace(simplestake.DefaultCodespace))
 	app.Router().
 		AddRoute("bank", bank.NewHandler(coinKeeper)).
 		AddRoute("cool", cool.NewHandler(coolKeeper)).
@@ -133,7 +130,7 @@ func (app *DemocoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 	// are registered by MakeTxCodec in bank.RegisterWire.
 	err := app.cdc.UnmarshalBinary(txBytes, &tx)
 	if err != nil {
-		return nil, sdk.ErrTxDecode("").Trace("")
+		return nil, sdk.ErrTxDecode("").Trace(err.Error())
 	}
 	return tx, nil
 }

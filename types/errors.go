@@ -56,6 +56,9 @@ const (
 	// Error.WithDefaultCodespace().
 	CodespaceUndefined CodespaceType = 0
 	CodespaceRoot      CodespaceType = 1
+
+	// Maximum reservable codespace (2^16 - 1)
+	MaximumCodespace CodespaceType = 65535
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.

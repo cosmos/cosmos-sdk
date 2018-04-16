@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	DefaultCodespace sdk.CodespaceType = 300
+	DefaultCodespace sdk.CodespaceType = 4
 
 	// simplestake errors reserve 300 - 399.
 	CodeEmptyValidator        sdk.CodeType = 300

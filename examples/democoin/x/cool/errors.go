@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	DefaultCodespace sdk.CodespaceType = 2000
+	DefaultCodespace sdk.CodespaceType = 6
 
 	// Cool module reserves error 400-499 lawl
 	CodeIncorrectCoolAnswer sdk.CodeType = 400

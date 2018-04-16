@@ -68,9 +68,6 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 		&types.AppAccount{}, // prototype
 	).Seal()
 
-	// Define the feeHandler.
-	app.feeHandler = func(ctx sdk.Context, fee sdk.Coins) {}
-
 	// Add handlers.
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper)
@@ -84,6 +81,9 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 		AddRoute("sketchy", sketchy.NewHandler()).
 		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
+
+	// Define the feeHandler.
+	app.feeHandler = func(ctx sdk.Context, tx sdk.Tx, fee sdk.Coins) {}
 
 	// Initialize BaseApp.
 	app.SetTxDecoder(app.txDecoder)

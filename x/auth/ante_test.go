@@ -12,7 +12,7 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
-func nopFeeHandler(ctx sdk.Context, fee sdk.Coins) {
+func nopFeeHandler(ctx sdk.Context, tx sdk.Tx, fee sdk.Coins) {
 }
 
 func newTestMsg(addrs ...sdk.Address) *sdk.TestMsg {

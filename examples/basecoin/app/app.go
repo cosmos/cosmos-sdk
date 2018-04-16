@@ -63,9 +63,6 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 		&types.AppAccount{}, // prototype
 	).Seal()
 
-	// Define the feeHandler.
-	app.feeHandler = func(ctx sdk.Context, fees sdk.Coins) {}
-
 	// Add handlers.
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
@@ -74,6 +71,9 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 		AddRoute("bank", bank.NewHandler(coinKeeper)).
 		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
+
+	// Define the feeHandler.
+	app.feeHandler = func(ctx sdk.Context, tx sdk.Tx, fees sdk.Coins) {}
 
 	// Initialize BaseApp.
 	app.SetTxDecoder(app.txDecoder)

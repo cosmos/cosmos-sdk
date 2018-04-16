@@ -23,8 +23,8 @@ func TestGaiaCLI(t *testing.T) {
 
 	tests.ExecuteT(t, "gaiad unsafe_reset_all")
 	pass := "1234567890"
-	executeWrite(t, false, "gaiacli keys delete foo", pass)
-	executeWrite(t, false, "gaiacli keys delete bar", pass)
+	executeWrite(t, "gaiacli keys delete foo", pass)
+	executeWrite(t, "gaiacli keys delete bar", pass)
 	masterKey, chainID := executeInit(t, "gaiad init")
 
 	// get a free port, also setup some common flags
@@ -35,8 +35,8 @@ func TestGaiaCLI(t *testing.T) {
 	cmd, _, _ := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
 	defer cmd.Process.Kill()
 
-	executeWrite(t, false, "gaiacli keys add foo --recover", pass, masterKey)
-	executeWrite(t, false, "gaiacli keys add bar", pass)
+	executeWrite(t, "gaiacli keys add foo --recover", pass, masterKey)
+	executeWrite(t, "gaiacli keys add bar", pass)
 
 	fooAddr, fooPubKey := executeGetAddr(t, "gaiacli keys show foo --output=json")
 	barAddr, _ := executeGetAddr(t, "gaiacli keys show bar --output=json")
@@ -44,7 +44,7 @@ func TestGaiaCLI(t *testing.T) {
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
 	assert.Equal(t, int64(100000), fooAcc.GetCoins().AmountOf("fermion"))
 
-	executeWrite(t, false, fmt.Sprintf("gaiacli send %v --amount=10fermion --to=%v --name=foo", flags, barAddr), pass)
+	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10fermion --to=%v --name=foo", flags, barAddr), pass)
 	time.Sleep(time.Second * 3) // waiting for some blocks to pass
 
 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barAddr, flags))
@@ -64,25 +64,25 @@ func TestGaiaCLI(t *testing.T) {
 	//--pubkey string              PubKey of the validator-candidate
 	//--sequence int               Sequence number to sign the tx
 	//--website string             optional website
-	_ = fooPubKey
-	//declStr := fmt.Sprintf("gaiacli declare-candidacy %v", flags)
-	//declStr += fmt.Sprintf(" --name=%v", "foo")
-	//declStr += fmt.Sprintf(" --address-candidate=%v", fooAddr)
-	//declStr += fmt.Sprintf(" --pubkey=%v", fooPubKey)
-	//declStr += fmt.Sprintf(" --amount=%v", "3fermion")
-	//declStr += fmt.Sprintf(" --moniker=%v", "foo-vally")
-	//fmt.Printf("debug declStr: %v\n", declStr)
-	//executeWrite(t, true, declStr, pass)
+	//_ = fooPubKey
+	declStr := fmt.Sprintf("gaiacli declare-candidacy %v", flags)
+	declStr += fmt.Sprintf(" --name=%v", "foo")
+	declStr += fmt.Sprintf(" --address-candidate=%v", fooAddr)
+	declStr += fmt.Sprintf(" --pubkey=%v", fooPubKey)
+	declStr += fmt.Sprintf(" --amount=%v", "3fermion")
+	declStr += fmt.Sprintf(" --moniker=%v", "foo-vally")
+	fmt.Printf("debug declStr: %v\n", declStr)
+	executeWrite(t, declStr, pass)
 }
 
-func executeWrite(t *testing.T, print bool, cmdStr string, writes ...string) {
-	cmd, wc, rc := tests.GoExecuteT(t, cmdStr)
+func executeWrite(t *testing.T, cmdStr string, writes ...string) {
+	cmd, wc, _ := tests.GoExecuteT(t, cmdStr)
 
-	if print {
-		bz := make([]byte, 100000)
-		rc.Read(bz)
-		fmt.Printf("debug read: %v\n", string(bz))
-	}
+	//if print {
+	//bz := make([]byte, 100000)
+	//rc.Read(bz)
+	//fmt.Printf("debug read: %v\n", string(bz))
+	//}
 
 	for _, write := range writes {
 		_, err := wc.Write([]byte(write + "\n"))

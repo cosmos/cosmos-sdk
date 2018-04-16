@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	crypto "github.com/tendermint/go-crypto"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -315,15 +314,6 @@ func TestGetAccUpdateValidators(t *testing.T) {
 		}
 	}
 
-	// to compare pubkeys between abci pubkey and crypto.PubKey
-	wirePK := func(pk crypto.PubKey) []byte {
-		pkBytes, err := keeper.cdc.MarshalBinary(pk)
-		if err != nil {
-			panic(err)
-		}
-		return pkBytes
-	}
-
 	// test from nothing to something
 	//  candidate set: {} -> {c1, c3}
 	//  validator set: {} -> {c1, c3}
@@ -478,7 +468,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	acc = keeper.getAccUpdateValidators(ctx)
 	require.Equal(t, 2, len(acc), "%v", acc)
 
-	assert.Equal(t, wirePK(candidatesIn[0].PubKey), acc[0].PubKey)
+	assert.Equal(t, candidatesIn[0].PubKey.Bytes(), acc[0].PubKey)
 	assert.Equal(t, int64(0), acc[0].Power)
 	assert.Equal(t, vals[0].abciValidator(keeper.cdc), acc[1])
 
@@ -503,10 +493,10 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	require.Equal(t, 0, len(candidates))
 	acc = keeper.getAccUpdateValidators(ctx)
 	require.Equal(t, 4, len(acc))
-	assert.Equal(t, wirePK(candidatesIn[1].PubKey), acc[0].PubKey)
-	assert.Equal(t, wirePK(candidatesIn[2].PubKey), acc[1].PubKey)
-	assert.Equal(t, wirePK(candidatesIn[3].PubKey), acc[2].PubKey)
-	assert.Equal(t, wirePK(candidatesIn[4].PubKey), acc[3].PubKey)
+	assert.Equal(t, candidatesIn[1].PubKey.Bytes(), acc[0].PubKey)
+	assert.Equal(t, candidatesIn[2].PubKey.Bytes(), acc[1].PubKey)
+	assert.Equal(t, candidatesIn[3].PubKey.Bytes(), acc[2].PubKey)
+	assert.Equal(t, candidatesIn[4].PubKey.Bytes(), acc[3].PubKey)
 	assert.Equal(t, int64(0), acc[0].Power)
 	assert.Equal(t, int64(0), acc[1].Power)
 	assert.Equal(t, int64(0), acc[2].Power)

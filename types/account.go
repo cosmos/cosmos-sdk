@@ -48,8 +48,6 @@ type AccountMapper interface {
 	NewAccountWithAddress(ctx Context, addr Address) Account
 	GetAccount(ctx Context, addr Address) Account
 	SetAccount(ctx Context, acc Account)
-	GetFeePool(ctx Context) Coins
-	SetFeePool(ctx Context, coins Coins)
 }
 
 // AccountDecoder unmarshals account bytes

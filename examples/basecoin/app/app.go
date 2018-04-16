@@ -36,6 +36,9 @@ type BasecoinApp struct {
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
+
+	// Handle fees
+	feeHandler sdk.FeeHandler
 }
 
 func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
@@ -60,6 +63,9 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 		&types.AppAccount{}, // prototype
 	).Seal()
 
+	// Define the feeHandler.
+	app.feeHandler = func(ctx sdk.Context, fees sdk.Coins) {}
+
 	// Add handlers.
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
@@ -73,7 +79,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyIBCStore, app.capKeyStakingStore)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeHandler))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())

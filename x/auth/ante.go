@@ -11,7 +11,7 @@ import (
 // NewAnteHandler returns an AnteHandler that checks
 // and increments sequence numbers, checks signatures,
 // and deducts fees from the first signer.
-func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
+func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx,
 	) (_ sdk.Context, _ sdk.Result, abort bool) {
@@ -74,9 +74,7 @@ func NewAnteHandler(accountMapper sdk.AccountMapper) sdk.AnteHandler {
 				// TODO: min fee
 				if !fee.Amount.IsZero() {
 					signerAcc, res = deductFees(signerAcc, fee)
-					pool := accountMapper.GetFeePool(ctx)
-					pool = pool.Plus(fee.Amount)
-					accountMapper.SetFeePool(ctx, pool)
+					feeHandler(ctx, fee.Amount)
 					if !res.IsOK() {
 						return ctx, res, true
 					}

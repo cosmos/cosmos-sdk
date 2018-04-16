@@ -40,6 +40,9 @@ type DemocoinApp struct {
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
+
+	// Handle fees
+	feeHandler sdk.FeeHandler
 }
 
 func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
@@ -65,6 +68,9 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 		&types.AppAccount{}, // prototype
 	).Seal()
 
+	// Define the feeHandler.
+	app.feeHandler = func(ctx sdk.Context, fee sdk.Coins) {}
+
 	// Add handlers.
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper)
@@ -83,7 +89,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainerFn(coolKeeper, powKeeper))
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyPowStore, app.capKeyIBCStore, app.capKeyStakingStore)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeHandler))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())

@@ -117,7 +117,7 @@ func (app *BasecoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 	// are registered by MakeTxCodec in bank.RegisterAmino.
 	err := app.cdc.UnmarshalBinary(txBytes, &tx)
 	if err != nil {
-		return nil, sdk.ErrTxDecode("").Trace("")
+		return nil, sdk.ErrTxDecode("").Trace(err.Error())
 	}
 	return tx, nil
 }

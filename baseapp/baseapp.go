@@ -66,8 +66,8 @@ func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
 		codespacer: sdk.NewCodespacer(),
 	}
 	// Register the undefined & root codespaces, which should not be used by any modules
-	app.codespacer.RegisterNext(sdk.CodespaceUndefined)
-	app.codespacer.RegisterNext(sdk.CodespaceRoot)
+	app.codespacer.RegisterOrPanic(sdk.CodespaceUndefined)
+	app.codespacer.RegisterOrPanic(sdk.CodespaceRoot)
 	return app
 }
 

@@ -25,3 +25,11 @@ func (c *Codespacer) RegisterNext(codespace CodespaceType) CodespaceType {
 		}
 	}
 }
+
+// RegisterOrPanic reserved a codespace or panics if it is unavailable
+func (c *Codespacer) RegisterOrPanic(codespace CodespaceType) {
+	if c.reserved[codespace] {
+		panic("Cannot register codespace, already reserved")
+	}
+	c.reserved[codespace] = true
+}

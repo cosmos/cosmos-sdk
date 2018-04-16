@@ -73,7 +73,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
 	// Define the feeHandler.
-	app.feeHandler = func(ctx sdk.Context, tx sdk.Tx, fees sdk.Coins) {}
+	app.feeHandler = auth.BurnFeeHandler
 
 	// Initialize BaseApp.
 	app.SetTxDecoder(app.txDecoder)

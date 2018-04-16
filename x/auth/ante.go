@@ -157,3 +157,7 @@ func deductFees(acc sdk.Account, fee sdk.StdFee) (sdk.Account, sdk.Result) {
 	acc.SetCoins(newCoins)
 	return acc, sdk.Result{}
 }
+
+// BurnFeeHandler burns all fees (decreasing total supply)
+func BurnFeeHandler(ctx sdk.Context, tx sdk.Tx, fee sdk.Coins) {
+}

@@ -12,9 +12,6 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
-func nopFeeHandler(ctx sdk.Context, tx sdk.Tx, fee sdk.Coins) {
-}
-
 func newTestMsg(addrs ...sdk.Address) *sdk.TestMsg {
 	return sdk.NewTestMsg(addrs...)
 }
@@ -75,7 +72,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper, nopFeeHandler)
+	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses
@@ -116,7 +113,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper, nopFeeHandler)
+	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses
@@ -182,7 +179,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper, nopFeeHandler)
+	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses
@@ -219,7 +216,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper, nopFeeHandler)
+	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses
@@ -294,7 +291,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper, nopFeeHandler)
+	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses

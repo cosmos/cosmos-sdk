@@ -19,12 +19,45 @@ import (
 	crkeys "github.com/tendermint/go-crypto/keys"
 )
 
-func TestGaiaCLI(t *testing.T) {
+//func TestGaiaCLISend(t *testing.T) {
+
+//tests.ExecuteT(t, "gaiad unsafe_reset_all")
+//pass := "1234567890"
+//executeWrite(t, "gaiacli keys delete foo", pass)
+//executeWrite(t, "gaiacli keys delete bar", pass)
+//masterKey, chainID := executeInit(t, "gaiad init")
+
+//// get a free port, also setup some common flags
+//servAddr := server.FreeTCPAddr(t)
+//flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
+
+//// start gaiad server
+//cmd, _, _ := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
+//defer cmd.Process.Kill()
+
+//executeWrite(t, "gaiacli keys add foo --recover", pass, masterKey)
+//executeWrite(t, "gaiacli keys add bar", pass)
+
+//fooAddr, _ := executeGetAddr(t, "gaiacli keys show foo --output=json")
+//barAddr, _ := executeGetAddr(t, "gaiacli keys show bar --output=json")
+
+//fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
+//assert.Equal(t, int64(100000), fooAcc.GetCoins().AmountOf("fermion"))
+
+//executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10fermion --to=%v --name=foo", flags, barAddr), pass)
+//time.Sleep(time.Second * 3) // waiting for some blocks to pass
+
+//barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barAddr, flags))
+//assert.Equal(t, int64(10), barAcc.GetCoins().AmountOf("fermion"))
+//fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
+//assert.Equal(t, int64(99990), fooAcc.GetCoins().AmountOf("fermion"))
+//}
+
+func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 
 	tests.ExecuteT(t, "gaiad unsafe_reset_all")
 	pass := "1234567890"
 	executeWrite(t, "gaiacli keys delete foo", pass)
-	executeWrite(t, "gaiacli keys delete bar", pass)
 	masterKey, chainID := executeInit(t, "gaiad init")
 
 	// get a free port, also setup some common flags
@@ -36,21 +69,9 @@ func TestGaiaCLI(t *testing.T) {
 	defer cmd.Process.Kill()
 
 	executeWrite(t, "gaiacli keys add foo --recover", pass, masterKey)
-	executeWrite(t, "gaiacli keys add bar", pass)
-
 	fooAddr, fooPubKey := executeGetAddr(t, "gaiacli keys show foo --output=json")
-	barAddr, _ := executeGetAddr(t, "gaiacli keys show bar --output=json")
-
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
 	assert.Equal(t, int64(100000), fooAcc.GetCoins().AmountOf("fermion"))
-
-	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10fermion --to=%v --name=foo", flags, barAddr), pass)
-	time.Sleep(time.Second * 3) // waiting for some blocks to pass
-
-	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barAddr, flags))
-	assert.Equal(t, int64(10), barAcc.GetCoins().AmountOf("fermion"))
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
-	assert.Equal(t, int64(99990), fooAcc.GetCoins().AmountOf("fermion"))
 
 	// declare candidacy
 	//--address-candidate string   hex address of the validator/candidate
@@ -73,22 +94,33 @@ func TestGaiaCLI(t *testing.T) {
 	declStr += fmt.Sprintf(" --moniker=%v", "foo-vally")
 	fmt.Printf("debug declStr: %v\n", declStr)
 	executeWrite(t, declStr, pass)
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
+	time.Sleep(time.Second * 3) // waiting for some blocks to pass
+	assert.Equal(t, int64(99997), fooAcc.GetCoins().AmountOf("fermion"))
 }
 
 func executeWrite(t *testing.T, cmdStr string, writes ...string) {
 	cmd, wc, _ := tests.GoExecuteT(t, cmdStr)
-
-	//if print {
-	//bz := make([]byte, 100000)
-	//rc.Read(bz)
-	//fmt.Printf("debug read: %v\n", string(bz))
-	//}
 
 	for _, write := range writes {
 		_, err := wc.Write([]byte(write + "\n"))
 		require.NoError(t, err)
 	}
 	cmd.Wait()
+}
+
+func executeWritePrint(t *testing.T, cmdStr string, writes ...string) {
+	cmd, wc, rc := tests.GoExecuteT(t, cmdStr)
+
+	for _, write := range writes {
+		_, err := wc.Write([]byte(write + "\n"))
+		require.NoError(t, err)
+	}
+	cmd.Wait()
+
+	bz := make([]byte, 100000)
+	rc.Read(bz)
+	fmt.Printf("debug read: %v\n", string(bz))
 }
 
 func executeInit(t *testing.T, cmdStr string) (masterKey, chainID string) {

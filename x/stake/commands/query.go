@@ -16,12 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-// XXX remove dependancy
-func PrefixedKey(app string, key []byte) []byte {
-	prefix := append([]byte(app), byte(0))
-	return append(prefix, key...)
-}
-
 //nolint
 var (
 	fsValAddr         = flag.NewFlagSet("", flag.ContinueOnError)
@@ -44,7 +38,7 @@ func GetCmdQueryCandidates(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "Query for the set of validator-candidates pubkeys",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			key := PrefixedKey(stake.MsgType, stake.CandidatesKey)
+			key := stake.CandidatesKey
 
 			ctx := context.NewCoreContextFromViper()
 			res, err := ctx.Query(key, storeName)
@@ -54,7 +48,7 @@ func GetCmdQueryCandidates(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			// parse out the candidates
 			candidates := new(stake.Candidates)
-			err = cdc.UnmarshalJSON(res, candidates)
+			err = cdc.UnmarshalBinary(res, candidates)
 			if err != nil {
 				return err
 			}
@@ -85,7 +79,7 @@ func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			key := PrefixedKey(stake.MsgType, stake.GetCandidateKey(addr))
+			key := stake.GetCandidateKey(addr)
 
 			ctx := context.NewCoreContextFromViper()
 
@@ -133,7 +127,7 @@ func GetCmdQueryDelegatorBond(storeName string, cdc *wire.Codec) *cobra.Command 
 			}
 			delegator := crypto.Address(bz)
 
-			key := PrefixedKey(stake.MsgType, stake.GetDelegatorBondKey(delegator, addr, cdc))
+			key := stake.GetDelegatorBondKey(delegator, addr, cdc)
 
 			ctx := context.NewCoreContextFromViper()
 
@@ -177,7 +171,7 @@ func GetCmdQueryDelegatorBonds(storeName string, cdc *wire.Codec) *cobra.Command
 			}
 			delegator := crypto.Address(bz)
 
-			key := PrefixedKey(stake.MsgType, stake.GetDelegatorBondsKey(delegator, cdc))
+			key := stake.GetDelegatorBondsKey(delegator, cdc)
 
 			ctx := context.NewCoreContextFromViper()
 

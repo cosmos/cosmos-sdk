@@ -268,10 +268,10 @@ func GetPubKey(pubKeyStr string) (pk crypto.PubKey, err error) {
 		err = fmt.Errorf("must use --pubkey flag")
 		return
 	}
-	if len(pubKeyStr) != 64 { //if len(pkBytes) != 32 {
-		err = fmt.Errorf("pubkey must be Ed25519 hex encoded string which is 64 characters, this pubkey is %v characters", len(pubKeyStr))
-		return
-	}
+	//if len(pubKeyStr) != 64 { //if len(pkBytes) != 32 {
+	//err = fmt.Errorf("pubkey must be Ed25519 hex encoded string which is 64 characters, this pubkey is %v characters", len(pubKeyStr))
+	//return
+	//}
 
 	// TODO: bech32 ...
 	var pkBytes []byte

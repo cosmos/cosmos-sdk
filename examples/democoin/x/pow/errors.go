@@ -7,6 +7,8 @@ import (
 type CodeType = sdk.CodeType
 
 const (
+	DefaultCodespace sdk.CodespaceType = 1000
+
 	CodeInvalidDifficulty     CodeType = 201
 	CodeNonexistentDifficulty CodeType = 202
 	CodeNonexistentReward     CodeType = 203

@@ -5,6 +5,8 @@ import (
 )
 
 const (
+	DefaultCodespace sdk.CodespaceType = 200
+
 	// IBC errors reserve 200 - 299.
 	CodeInvalidSequence sdk.CodeType = 200
 	CodeIdenticalChains sdk.CodeType = 201

@@ -7,6 +7,8 @@ import (
 
 // Coin errors reserve 100 ~ 199.
 const (
+	DefaultCodespace sdk.CodespaceType = 100
+
 	CodeInvalidInput  sdk.CodeType = 101
 	CodeInvalidOutput sdk.CodeType = 102
 )

@@ -10,6 +10,8 @@ import (
 type CodeType = sdk.CodeType
 
 const (
+	DefaultCodespace sdk.CodespaceType = 300
+
 	// Gaia errors reserve 200 ~ 299.
 	CodeInvalidValidator CodeType = 201
 	CodeInvalidCandidate CodeType = 202

@@ -70,10 +70,10 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 
 	// Add handlers.
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
-	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper, codespacer.RegisterDefault())
-	powKeeper := pow.NewKeeper(app.capKeyPowStore, pow.NewPowConfig("pow", int64(1)), coinKeeper, codespacer.RegisterDefault())
-	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore, codespacer.RegisterDefault())
-	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper, codespacer.RegisterDefault())
+	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper, codespacer.Register(cool.DefaultCodespace))
+	powKeeper := pow.NewKeeper(app.capKeyPowStore, pow.NewPowConfig("pow", int64(1)), coinKeeper, codespacer.Register(pow.DefaultCodespace))
+	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore, codespacer.Register(ibc.DefaultCodespace))
+	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper, codespacer.Register(simplestake.DefaultCodespace))
 	app.Router().
 		AddRoute("bank", bank.NewHandler(coinKeeper)).
 		AddRoute("cool", cool.NewHandler(coolKeeper)).

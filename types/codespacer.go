@@ -1,7 +1,6 @@
 package types
 
-import ()
-
+// Codespacer is a simple struct to track reserved codespaces
 type Codespacer struct {
 	next     CodespaceType
 	reserved map[CodespaceType]bool
@@ -15,7 +14,7 @@ func NewCodespacer() *Codespacer {
 	}
 }
 
-// Reserve reserves a specified codespace
+// reserve reserves a specified codespace
 func (c *Codespacer) reserve(codespace CodespaceType) {
 	if codespace == c.next {
 		c.next++
@@ -26,9 +25,10 @@ func (c *Codespacer) reserve(codespace CodespaceType) {
 	}
 }
 
-// Register registers a provided codespace
-func (c *Codespacer) Register(codespace CodespaceType) {
+// Register registers a provided codespace and returns it
+func (c *Codespacer) Register(codespace CodespaceType) CodespaceType {
 	c.reserve(codespace)
+	return codespace
 }
 
 // RegisterDefault registers and returns the next available codespace

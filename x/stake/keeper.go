@@ -474,10 +474,6 @@ func (k Keeper) setPool(ctx sdk.Context, p Pool) {
 
 // Implements sdk.ValidatorSetKeeper
 
-func (k Keeper) Hash() []byte {
-	return nil
-}
-
 func (k Keeper) Size(ctx sdk.Context) int {
 	return len(k.GetValidators(ctx))
 }
@@ -512,6 +508,14 @@ func (k Keeper) GetByIndex(ctx sdk.Context, index int) *sdk.Validator {
 	return &val
 }
 
-func (k Keeper) TotalPower() sdk.Rat {
-	return sdk.ZeroRat
+func (k Keeper) TotalPower(ctx sdk.Context) sdk.Rat {
+	valset := k.GetValidators(ctx)
+
+	res := sdk.ZeroRat
+
+	for _, v := range valset {
+		res = res.Add(v.Power)
+	}
+
+	return res
 }

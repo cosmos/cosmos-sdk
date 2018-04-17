@@ -72,7 +72,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper)
+	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses
@@ -113,7 +113,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper)
+	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses
@@ -179,7 +179,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper)
+	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses
@@ -216,7 +216,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper)
+	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses
@@ -291,7 +291,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper)
+	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
 	// keys and addresses

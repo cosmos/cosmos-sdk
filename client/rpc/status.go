@@ -77,7 +77,7 @@ func NodeSyncingRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	syncing := status.Syncing
+	syncing := status.SyncInfo.Syncing
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))

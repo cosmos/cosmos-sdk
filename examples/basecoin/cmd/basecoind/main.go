@@ -27,29 +27,11 @@ var (
 
 func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	dataDir := filepath.Join(rootDir, "data")
-	dbMain, err := dbm.NewGoLevelDB("basecoin", dataDir)
+	db, err := dbm.NewGoLevelDB("basecoin", dataDir)
 	if err != nil {
 		return nil, err
 	}
-	dbAcc, err := dbm.NewGoLevelDB("basecoin-acc", dataDir)
-	if err != nil {
-		return nil, err
-	}
-	dbIBC, err := dbm.NewGoLevelDB("basecoin-ibc", dataDir)
-	if err != nil {
-		return nil, err
-	}
-	dbStaking, err := dbm.NewGoLevelDB("basecoin-staking", dataDir)
-	if err != nil {
-		return nil, err
-	}
-	dbs := map[string]dbm.DB{
-		"main":    dbMain,
-		"acc":     dbAcc,
-		"ibc":     dbIBC,
-		"staking": dbStaking,
-	}
-	bapp := app.NewBasecoinApp(logger, dbs)
+	bapp := app.NewBasecoinApp(logger, db)
 	return bapp, nil
 }
 

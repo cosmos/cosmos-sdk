@@ -37,16 +37,19 @@ type BasecoinApp struct {
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
+
+	// Handle fees
+	feeHandler sdk.FeeHandler
 }
 
-func NewBasecoinApp(logger log.Logger, dbs map[string]dbm.DB) *BasecoinApp {
+func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// Create app-level codec for txs and accounts.
 	var cdc = MakeCodec()
 
 	// Create your application object.
 	var app = &BasecoinApp{
-		BaseApp:            bam.NewBaseApp(appName, logger, dbs["main"]),
+		BaseApp:            bam.NewBaseApp(appName, logger, db),
 		cdc:                cdc,
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
 		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
@@ -70,16 +73,14 @@ func NewBasecoinApp(logger log.Logger, dbs map[string]dbm.DB) *BasecoinApp {
 		AddRoute("bank", bank.NewHandler(coinKeeper, ibcKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
+	// Define the feeHandler.
+	app.feeHandler = auth.BurnFeeHandler
+
 	// Initialize BaseApp.
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
-	app.MountStoreWithDB(app.capKeyMainStore, sdk.StoreTypeIAVL, dbs["main"])
-	app.MountStoreWithDB(app.capKeyAccountStore, sdk.StoreTypeIAVL, dbs["acc"])
-	app.MountStoreWithDB(app.capKeyIBCStore, sdk.StoreTypeIAVL, dbs["ibc"])
-	app.MountStoreWithDB(app.capKeyStakingStore, sdk.StoreTypeIAVL, dbs["staking"])
-	// NOTE: Broken until #532 lands
-	//app.MountStoresIAVL(app.capKeyMainStore, app.capKeyIBCStore, app.capKeyStakingStore)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
+	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyIBCStore, app.capKeyStakingStore)
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeHandler))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())

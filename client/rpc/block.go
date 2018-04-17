@@ -64,7 +64,7 @@ func GetChainHeight() (int64, error) {
 	if err != nil {
 		return -1, err
 	}
-	height := status.LatestBlockHeight
+	height := status.SyncInfo.LatestBlockHeight
 	return height, nil
 }
 

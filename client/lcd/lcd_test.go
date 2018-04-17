@@ -333,13 +333,8 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	// logger = log.NewFilter(logger, log.AllowError())
 	privValidatorFile := config.PrivValidatorFile()
 	privVal := pvm.LoadOrGenFilePV(privValidatorFile)
-	dbs := map[string]dbm.DB{
-		"main":    dbm.NewMemDB(),
-		"acc":     dbm.NewMemDB(),
-		"ibc":     dbm.NewMemDB(),
-		"staking": dbm.NewMemDB(),
-	}
-	app := bapp.NewBasecoinApp(logger, dbs)
+	db := dbm.NewMemDB()
+	app := bapp.NewBasecoinApp(logger, db)
 	cdc = bapp.MakeCodec() // XXX
 
 	genesisFile := config.GenesisFile()

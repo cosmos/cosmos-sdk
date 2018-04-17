@@ -474,7 +474,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	assert.True(t, candidates[0].Assets.Equal(sdk.NewRat(600)))
 	acc = keeper.getAccUpdateValidators(ctx)
 	require.Equal(t, 1, len(acc))
-	assert.Equal(t, candidates[0].validator().abciValidator(keeper.cdc), acc[0])
+	assert.Equal(t, candidates[0].validator().ABCIValidator(keeper.cdc), acc[0])
 
 	// test multiple value change
 	//  candidate set: {c1, c3} -> {c1', c3'}
@@ -492,8 +492,8 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	require.Equal(t, 2, len(acc))
 	candidates = keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 2, len(candidates))
-	require.Equal(t, candidates[0].validator().abciValidator(keeper.cdc), acc[0])
-	require.Equal(t, candidates[1].validator().abciValidator(keeper.cdc), acc[1])
+	require.Equal(t, candidates[0].validator().ABCIValidator(keeper.cdc), acc[0])
+	require.Equal(t, candidates[1].validator().ABCIValidator(keeper.cdc), acc[1])
 
 	// test validtor added at the beginning
 	//  candidate set: {c1, c3} -> {c0, c1, c3}
@@ -507,7 +507,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	require.Equal(t, 1, len(acc))
 	candidates = keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 3, len(candidates))
-	assert.Equal(t, candidates[0].validator().abciValidator(keeper.cdc), acc[0])
+	assert.Equal(t, candidates[0].validator().ABCIValidator(keeper.cdc), acc[0])
 
 	// test validator added at the middle
 	//  candidate set: {c0, c1, c3} -> {c0, c1, c2, c3]
@@ -521,7 +521,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	require.Equal(t, 1, len(acc))
 	candidates = keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 4, len(candidates))
-	assert.Equal(t, candidates[2].validator().abciValidator(keeper.cdc), acc[0])
+	assert.Equal(t, candidates[2].validator().ABCIValidator(keeper.cdc), acc[0])
 
 	// test candidate added at the end but not inserted in the valset
 	//  candidate set: {c0, c1, c2, c3} -> {c0, c1, c2, c3, c4}
@@ -580,7 +580,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 
 	assert.Equal(t, candidatesIn[0].PubKey.Bytes(), acc[0].PubKey)
 	assert.Equal(t, int64(0), acc[0].Power)
-	assert.Equal(t, vals[0].abciValidator(keeper.cdc), acc[1])
+	assert.Equal(t, vals[0].ABCIValidator(keeper.cdc), acc[1])
 
 	// test from something to nothing
 	//  candidate set: {c0, c1, c2, c3, c4} -> {}

@@ -1,4 +1,4 @@
-## 2 Proofs
+## 2 Connections
 
 ([Back to table of contents](README.md#contents))
 
@@ -16,7 +16,7 @@ The basis of IBC is the ability to verify in the on-chain consensus ruleset of c
 
 Note that of all these, only _H<sub>h</sub>_ defines a signature and is thus attributable.
 
-### 2.2 Basics
+### 2.2 Requirements
 
 To facilitate an IBC connection, the two blockchains must provide the following proofs:
 
@@ -32,15 +32,17 @@ The merkle proof _M<sub>k,v,h</sub>_ is a well-defined concept in the blockchain
 
 _valid(H<sub>h </sub>,M<sub>k,v,h </sub>)_ &#8658; _[true | false]_
 
-### 2.3 Establishing a Root of Trust
+### 2.3 Connection Lifecycle
+
+#### 2.3.1 Opening a Connection
 
 All proofs require an initial _H<sub>h</sub>_ and _C<sub>h</sub>_ for some _h_, where &#916;_(now, H<sub>h</sub>) < P_.
 
 Any header may be from a malicious chain (e.g. shadowing a real chain state with a fake validator set), so a subjective decision is required before establishing a connection. This can be performed by on-chain governance or a similar decentralized mechanism if desired. Establishing a bidirectional initial root-of-trust between the two blockchains (_A_ to _B_ and _B_ to _A_) is necessary before any IBC packets can be sent.
 
-### 2.4 Following Block Headers
+#### 2.3.2 Following Block Headers
 
-We define two messages _U<sub>h</sub>_ and _X<sub>h</sub>_, which together allow us to securely advance our trust from some known _H<sub>n</sub>_ to some future _H<sub>h</sub>_ where _h > n_. Some implementations may require that _h = n + 1_ (all headers must be processed in order). IBC implemented on top of Tendermint or similar BFT algorithms requires only that &#916;_<sub>vals</sub>(C<sub>n</sub>, C<sub>h</sub> ) < ⅓_ (each step must have a change of less than one-third of the validator set)[[4](./footnotes.md#4)].
+We define two messages _U<sub>h</sub>_ and _X<sub>h</sub>_, which together allow us to securely advance our trust from some known _H<sub>n</sub>_ to some future _H<sub>h</sub>_ where _h > n_. Some implementations may require that _h = n + 1_ (all headers must be processed in order). IBC implemented on top of Tendermint or similar BFT algorithms requires only that &#916;_<sub>vals</sub>(C<sub>n</sub>, C<sub>h</sub> ) < ⅓_ (each step must have a change of less than one-third of the validator set)[[4](./references.md#4)].
 
 Either requirement is compatible with IBC. However, by supporting proofs where  _h_-_n > 1_, we can follow the block headers much more efficiently in situations where the majority of blocks do not include an IBC packet between chains _A_ and _B_, and enable low-bandwidth connections to be implemented at very low cost. If there are packets to relay every block, these two requirements collapse to the same case (every header must be relayed).
 
@@ -68,3 +70,7 @@ Define _max(T)_ as _max(h, where H<sub>h</sub>_ &#8712; _T)_. For any _T_ with _
 By induction, there must exist a set of proofs, such that _max(update…(T,...)) = h+n_ for any n.
 
 Bisection can be used to discover this set of proofs. That is, given _max(T) = n_ and _valid(T, X<sub>h </sub>|<sub> </sub>U<sub>h </sub>) = unknown_, we then try _update(T, X<sub>b </sub>|<sub> </sub>U<sub>b </sub>)_, where _b = (h+n)/2_. The base case is where _valid(T, X<sub>h </sub>|<sub> </sub>U<sub>h </sub>) = true_ and is guaranteed to exist if _h=max(T)+1_.
+
+#### 2.3.3 Closing a Connection
+
+{ todo }

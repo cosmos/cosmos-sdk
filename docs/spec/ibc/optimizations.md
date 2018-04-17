@@ -4,7 +4,7 @@
 
 The above sections describe a secure messaging protocol that can handle all normal situations between two blockchains. It guarantees that all messages are processed exactly once and in order, and provides a mechanism for non-blocking atomic transactions spanning two blockchains. However, to increase efficiency over millions of messages with many possible failure modes on both sides of the connection, we can extend the protocol. These extensions allow us to clean up the receipt queue to avoid state bloat, as well as more gracefully recover from cases where large numbers of messages are not being relayed, or other failure modes in the remote chain.
 
-### 4.1   Timeouts
+### 4.1 Timeouts
 
 Sometimes it is desirable to have some timeout, an upper limit to how long you will wait for a transaction to be processed before considering it an error. At the same time, this is an obvious attack vector for a double spend, just delaying the relay of the receipt or waiting to send the message in the first place and then relaying it right after the cutoff to take advantage of different local clocks on the two chains.
 
@@ -58,7 +58,7 @@ Now chain A can rollback all transactions that were blocked by this flood of unr
 
 Note that in order to avoid any possible "double-spend" attacks, the timeout algorithm requires that the destination chain is running and reachable. One can prove nothing in a complete network partition, and must wait to connect; the timeout must be proven on the recipient chain, not simply the absence of a response on the sending chain.
 
-### 4.2   Clean up
+### 4.2 Cleanup
 
 While we clean up the _send queue_ upon getting a receipt, if left to run indefinitely, the _receipt queues_ could grow without limit and create a major storage requirement for the chains.  However, we must not delete receipts until they have been proven to be processed by the sending chain, or we lose important information and sacrifice reliability.
 
@@ -89,8 +89,7 @@ This allows us to invoke the _IBCcleanup _function to resolve all outstanding me
 
 ![Cleaning up Packets](images/CleanUp.png)
 
-
-### 4.3   Handling Byzantine Failures
+### 4.3 Handling Byzantine failures
 
 While every message is guaranteed reliable in the face of malicious nodes or relays, all guarantees break down when the entire blockchain on the other end of the connection exhibits byzantine faults. These can be in two forms: failures of the consensus mechanism (reversing "final" blocks), or failure at the application level (not performing the action defined by the message).
 

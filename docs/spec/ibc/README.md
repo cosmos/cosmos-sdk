@@ -4,7 +4,7 @@
 
 This paper specifies the Cosmos Inter-Blockchain Communication (IBC) protocol. The IBC protocol defines a set of semantics for authenticated, strictly-ordered message passing between two blockchains with independent consensus algorithms.  
 
-IBC requires two blockchains with cheaply verifiable rapid finality. The protocol makes no assumptions of block confirmation times or maximum network latency of packet transmissions, and the two consensus algorithms remain completely independent. Each chain maintains a local partial order and inter-chain message sequencing ensures cross-chain linearity. Once the two chains have registered a trust relationship, cryptographically provable packets can be sent between the chains.
+IBC requires two blockchains with cheaply verifiable rapid finality and Merkle tree substate proofs. The protocol makes no assumptions of block confirmation times or maximum network latency of packet transmissions, and the two consensus algorithms remain completely independent. Each chain maintains a local partial order and inter-chain message sequencing ensures cross-chain linearity. Once the two chains have registered a trust relationship, cryptographically provable packets can be sent between the chains.
 
 The core IBC protocol is payload-agnostic. On top of IBC, developers can implement the semantics of a particular application, enabling users to transfer valuable assets between different blockchains while preserving, under particular security assumptions of the underlying blockchains, the contractual guarantees of the asset in question - such as scarcity and fungibility for a currency or global uniqueness for a digital kitty-cat. 
 
@@ -13,23 +13,28 @@ IBC was first outlined in the [Cosmos Whitepaper](https://github.com/cosmos/cosm
 ## Contents
 
 1.  **[Overview](overview.md)**
-    1.  Definitions
-    1.  Threat Models
-1.  **[Proofs](proofs.md)**
-    1.  Establishing a Root of Trust
-    1.  Following Block Headers
-1.  **[Messaging Queue](queues.md)**
-    1.  Merkle Proofs for Queues
-    1.  Naming Queues
-    1.  Message Contents
-    1.  Sending a Packet
-    1.  Receipts
-    1.  Relay Process
+    1.  [Summary](overview.md#11-summary)
+    1.  [Requirements](overview.md#12-requirements)
+    1.  [Threat Models](overview.md#13-threat-models)
+1.  **[Connections](connections.md)**
+    1.  [Definitions](connections.md#21-definitions)
+    1.  [Requirements](connections.md#22-requirements)
+    1.  [Connection lifecycle](connections.md#23-connection-lifecycle)
+        1.  [Opening a connection](connections.md#231-opening-a-connection)
+        1.  [Following block headers](connections.md#232-following-block-headers)
+        1.  [Closing a connection](connections.md#233-closing-a-connection)
+1.  **[Packets](packets.md)**
+    1.  [Definitions](packets.md#31-definitions)
+    1.  [Requirements](packets.md#32-requirements)
+    1.  [Sending a packet](packets.md#33-sending-a-packet)
+    1.  [Receiving a packet](packets.md#34-receiving-a-packet)
+    1.  [Packet relayer](packets.md#35-packet-relayer)
 1.  **[Optimizations](optimizations.md)**
-    1.  Cleanup
-    1.  Timeout
-    1.  Handling Byzantine Failures
+    1.  [Timeouts](optimizations.md#41-timeouts)
+    1.  [Cleanup](optimizations.md#42-cleanup)
+    1.  [Handling Byzantine failures](optimizations.md#43-handling-byzantine-failures)
 1.  **[Conclusion](conclusion.md)**
+1.  **[References](references.md)**
 1.  **[Appendices](appendices.md)**
     1. [Appendix A: Encoding Libraries](appendices.md#appendix-a-encoding-libraries)
     1. [Appendix B: IBC Queue Format](appendices.md#appendix-b-ibc-queue-format)

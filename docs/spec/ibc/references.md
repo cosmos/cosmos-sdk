@@ -1,4 +1,6 @@
-## Footnotes
+## References
+
+([Back to table of contents](README.md#contents))
 
 ##### 1:
 [https://github.com/cosmos/cosmos/blob/master/WHITEPAPER.md#inter-blockchain-communication-ibc](https://github.com/cosmos/cosmos/blob/master/WHITEPAPER.md#inter-blockchain-communication-ibc)

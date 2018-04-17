@@ -4,17 +4,17 @@
 
 This paper specifies the Cosmos Inter-Blockchain Communication (IBC) protocol. The IBC protocol defines a set of semantics for authenticated, strictly-ordered message passing between two blockchains with independent consensus algorithms.  
 
-IBC requires two blockchains with cheaply verifiable rapid finality and Merkle tree substate proofs. The protocol makes no assumptions of block confirmation times or maximum network latency of packet transmissions, and the two consensus algorithms remain completely independent. Each chain maintains a local partial order and inter-chain message sequencing ensures cross-chain linearity. Once the two chains have registered a trust relationship, cryptographically provable packets can be sent between the chains.
-
 The core IBC protocol is payload-agnostic. On top of IBC, developers can implement the semantics of a particular application, enabling users to transfer valuable assets between different blockchains while preserving, under particular security assumptions of the underlying blockchains, the contractual guarantees of the asset in question - such as scarcity and fungibility for a currency or global uniqueness for a digital kitty-cat. 
 
-IBC was first outlined in the [Cosmos Whitepaper](https://github.com/cosmos/cosmos/blob/master/WHITEPAPER.md#inter-blockchain-communication-ibc), and later described in more detail by the [IBC specification paper](https://github.com/cosmos/ibc/raw/master/CosmosIBCSpecification.pdf). This documentation replaces and supersedes both. It explains the requirements and structure of the protocol and provides sufficient detail for both analysis and implementation, including example pseudocode.
+IBC requires two blockchains with cheaply verifiable rapid finality and Merkle tree substate proofs. The protocol makes no assumptions of block confirmation times or maximum network latency of packet transmissions, and the two consensus algorithms remain completely independent. Each chain maintains a local partial order and inter-chain message sequencing ensures cross-chain linearity. Once the two chains have registered a trust relationship, cryptographically verifiable packets can be sent between the chains.
+
+IBC was first outlined in the [Cosmos Whitepaper](https://github.com/cosmos/cosmos/blob/master/WHITEPAPER.md#inter-blockchain-communication-ibc), and later described in more detail by the [IBC specification paper](https://github.com/cosmos/ibc/raw/master/CosmosIBCSpecification.pdf). This document replaces and supersedes both. It explains the requirements and structure of the protocol and provides sufficient detail for both analysis and implementation, including example pseudocode.
 
 ## Contents
 
 1.  **[Overview](overview.md)**
     1.  [Summary](overview.md#11-summary)
-    1.  [Requirements](overview.md#12-requirements)
+    1.  [Definitions](overview.md#12-definitions)
     1.  [Threat Models](overview.md#13-threat-models)
 1.  **[Connections](connections.md)**
     1.  [Definitions](connections.md#21-definitions)

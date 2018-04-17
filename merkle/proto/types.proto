@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package types;
 
-
 // HashOp is the hashing algorithm we use at each level
 enum HashOp {
     RIPEMD160 = 0;
@@ -35,12 +34,10 @@ message Node {
 
 // Data is the end value stored,
 // used to generate the initial hash store
-message Data {
+message ExistsData {
     // optional prefix allows second preimage resistance
     bytes prefix = 1;
-    bytes key = 2;
-    bytes value = 3;
-    HashOp op = 4;
+    HashOp op = 2;
     // If it is KeyValue, this is the data we want
     // If it is SubTree, key is name of the tree,
     //   value is root hash
@@ -48,7 +45,6 @@ message Data {
         KeyValue = 0;
         SubTree = 1;
     }
-    DataType dataType = 5;
 }
 
 // Branch will hash data and then pass it through operations
@@ -56,15 +52,32 @@ message Data {
 //
 // Visualize Branch as representing the data closest to
 // root as the first item, and the leaf as the last item.
-message Branch {
+message ExistsProof {
     // if either are non-empty, enforce this prefix on all
     // leaf/inner nodes to provide second preimage resistence
     bytes prefixLeaf = 1;
     bytes prefixInner = 2;
     // this is the data to get the original hash,
     // and a set of operations to calculate the root hash
-    Data data = 3;
+    ExistsData data = 3;
     repeated Node nodes = 4;
+}
+
+message AbsentProof {
+    
+}
+
+message RangeProof {
+
+}
+
+message Proof {
+    bytes root = 1;
+    oneof proof {
+        ExistsProof exists = 2;
+        AbsentProof absent = 3;
+        RangeProof  range  = 4;
+    }    
 }
 
 message MerkleProof {
@@ -75,5 +88,5 @@ message MerkleProof {
     //
     // The first branch must have dataType KeyValue
     // Following branches must have dataType SubTree
-    repeated Branch branches = 1;
+    repeated Proof proofs = 1;
 }

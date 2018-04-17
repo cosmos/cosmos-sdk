@@ -4,6 +4,8 @@
 
 ## Appendix A: Encoding Libraries
 
+{ figure out what encoding IBC actually uses }
+
 The specification has focused on semantics and functionality of the IBC protocol. However in order to facilitate the communication between multiple implementations of the protocol, we seek to define a standard syntax, or binary encoding, of the data structures defined above. Many structures are universal and for these, we provide one standard syntax. Other structures, such as _H<sub>h </sub>, U<sub>h </sub>, _and _X<sub>h</sub>_ are tied to the consensus engine and we can define the standard encoding for tendermint, but support for additional consensus engines must be added separately. Finally, there are some aspects of the messaging, such as the envelope to post this data (fees, nonce, signatures, etc.), which is different for every chain, and must be known to the relay, but are not important to the IBC algorithm itself and left undefined.
 
 In defining a standard binary encoding for all the "universal" components, we wish to make use of a standardized library, with efficient serialization and support in multiple languages. We considered two main formats: ethereum's rlp[[6](./footnotes.md#6)] and google's protobuf[[7](./footnotes.md#7)]. We decided for protobuf, as it is more widely supported, is more expressive for different data types, and supports code generation for very efficient (de)serialization codecs. It does have a learning curve and more setup to generate the code from the type specifications, but the ibc data types should not change often and this code generation setup only needs to happen once per language (and can be exposed in a common repo), so this is not a strong counter-argument. Efficiency, expressiveness, and wider support rule in its favor. It is also widely used in gRPC and in many microservice architectures.
@@ -13,6 +15,8 @@ The tendermint-specific data structures are encoded with go-wire[[8](./footnotes
 For the following appendixes, the data structure specifications will be in proto3[[9](./footnotes.md#9)] format.
 
 ## Appendix B: IBC Queue Format
+
+{ include queue details here instead of in the other section }
 
 The foundational data structure of the IBC protocol are the message queues stored inside each chain. We start with a well-defined binary representation of the keys and values used in these queues. The encodings mirror the semantics defined above:
 
@@ -27,6 +31,8 @@ Keys and values are binary encoded and stored as bytes in the merkle tree in ord
 See [binary format as protobuf specification](./protobuf/queue.proto)
 
 ## Appendix C: Merkle Proof Formats
+
+{ link to the implementation }
 
 A merkle tree (or a trie) generates one hash that can prove every element of the tree. Generating this hash starts with hashing the leaf nodes. Then hashing multiple leaf nodes together to get the hash of an inner node (two or more, based on degree k of the k-ary tree). And continue hashing together the inner nodes at each level of the tree, until it reaches a root hash. Once you have a known root hash, you can prove key/value belongs to this tree by tracing the path to the value and revealing the (k-1) hashes for all the paths we did not take on each level. If this is new to you, you can read a basic introduction[[10](./footnotes.md#10)].
 
@@ -44,11 +50,15 @@ See [binary format as protobuf specification](./protobuf/merkle.proto)
 
 ## Appendix D: Universal IBC Packets
 
+{ what is this }
+
 The structures above can be used to define standard encodings for the basic IBC transactions that must be exposed by a blockchain: _IBCreceive_, _IBCreceipt_,_ IBCtimeout_, and _IBCcleanup_. As mentioned above, these are not complete transactions to be posted as is to a blockchain, but rather the "data" content of a transaction, which must also contain fees, nonce, and signatures. The other IBC transaction types _IBCregisterChain_, _IBCupdateHeader_, and _IBCchangeValidators_ are specific to the consensus engine and use unique encodings. We define the tendermint-specific format in the next section.
 
 See [binary format as protobuf specification](./protobuf/messages.proto)
 
 ## Appendix E: Tendermint Header Proofs
+
+{ is this finalized? }
 
 **TODO: clean this all up**
 

@@ -30,13 +30,9 @@ IBC was first outlined in the [Cosmos Whitepaper](https://github.com/cosmos/cosm
     1.  Timeout
     1.  Handling Byzantine Failures
 1.  **[Conclusion](conclusion.md)**
-
-**[Appendix A: Encoding Libraries](appendix.md#appendix-a-encoding-libraries)**
-
-**[Appendix B: IBC Queue Format](appendix.md#appendix-b-ibc-queue-format)**
-
-**[Appendix C: Merkle Proof Format](appendix.md#appendix-c-merkle-proof-formats)**
-
-**[Appendix D: Universal IBC Packets](appendix.md#appendix-d-universal-ibc-packets)**
-
-**[Appendix E: Tendermint Header Proofs](appendix.md#appendix-e-tendermint-header-proofs)**
+1.  **[Appendices](appendices.md)**
+    1. [Appendix A: Encoding Libraries](appendices.md#appendix-a-encoding-libraries)
+    1. [Appendix B: IBC Queue Format](appendices.md#appendix-b-ibc-queue-format)
+    1. [Appendix C: Merkle Proof Format](appendices.md#appendix-c-merkle-proof-formats)
+    1. [Appendix D: Universal IBC Packets](appendices.md#appendix-d-universal-ibc-packets)
+    1. [Appendix E: Tendermint Header Proofs](appendices.md#appendix-e-tendermint-header-proofs)

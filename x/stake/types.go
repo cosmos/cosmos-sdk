@@ -113,8 +113,8 @@ func (c Candidate) delegatorShareExRate() sdk.Rat {
 
 // Validator returns a copy of the Candidate as a Validator.
 // Should only be called when the Candidate qualifies as a validator.
-func (c Candidate) validator() Validator {
-	return Validator{
+func (c Candidate) validator() sdk.Validator {
+	return sdk.Validator{
 		Address: c.Address,
 		PubKey:  c.PubKey,
 		Power:   c.Assets,

@@ -49,6 +49,7 @@ func init() {
 	fsCandidate.String(FlagIdentity, "", "optional keybase signature")
 	fsCandidate.String(FlagWebsite, "", "optional website")
 	fsCandidate.String(FlagAddressCandidate, "", "hex address of the validator/candidate")
+	fsDelegator.String(FlagAddressCandidate, "", "hex address of the delegator")
 	fsDelegator.String(FlagAddressDelegator, "", "hex address of the delegator")
 }
 
@@ -155,7 +156,6 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsPk)
 	cmd.Flags().AddFlagSet(fsCandidate)
 	return cmd
 }
@@ -198,7 +198,6 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsPk)
 	cmd.Flags().AddFlagSet(fsAmount)
 	cmd.Flags().AddFlagSet(fsDelegator)
 	return cmd
@@ -252,7 +251,6 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsPk)
 	cmd.Flags().AddFlagSet(fsShares)
 	cmd.Flags().AddFlagSet(fsDelegator)
 	return cmd
@@ -268,10 +266,10 @@ func GetPubKey(pubKeyStr string) (pk crypto.PubKey, err error) {
 		err = fmt.Errorf("must use --pubkey flag")
 		return
 	}
-	//if len(pubKeyStr) != 64 { //if len(pkBytes) != 32 {
-	//err = fmt.Errorf("pubkey must be Ed25519 hex encoded string which is 64 characters, this pubkey is %v characters", len(pubKeyStr))
-	//return
-	//}
+	if len(pubKeyStr) != 64 { //if len(pkBytes) != 32 {
+		err = fmt.Errorf("pubkey must be Ed25519 hex encoded string which is 64 characters, this pubkey is %v characters", len(pubKeyStr))
+		return
+	}
 
 	// TODO: bech32 ...
 	var pkBytes []byte

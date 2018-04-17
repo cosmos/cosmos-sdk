@@ -71,15 +71,18 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	// Add handlers.
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
 	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper)
+
+	ibcKeeper := ibc.NewKeeper(app.cdc, app.capKeyIBCStore)
+
 	powKeeper := pow.NewKeeper(app.capKeyPowStore, pow.NewPowConfig("pow", int64(1)), coinKeeper)
-	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
+
 	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper)
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper)).
+		AddRoute("bank", bank.NewHandler(coinKeeper, ibcKeeper)).
 		AddRoute("cool", cool.NewHandler(coolKeeper)).
 		AddRoute("pow", powKeeper.Handler).
 		AddRoute("sketchy", sketchy.NewHandler()).
-		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
+		AddRoute("ibc", ibc.NewHandler(ibcKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
 	// Define the feeHandler.
@@ -105,18 +108,24 @@ func MakeCodec() *wire.Codec {
 	// Register Msgs
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(bank.SendMsg{}, "democoin/Send", nil)
+	cdc.RegisterConcrete(bank.IBCSendMsg{}, "democoin/IBCSend", nil)
 	cdc.RegisterConcrete(bank.IssueMsg{}, "democoin/Issue", nil)
 	cdc.RegisterConcrete(cool.QuizMsg{}, "democoin/Quiz", nil)
 	cdc.RegisterConcrete(cool.SetTrendMsg{}, "democoin/SetTrend", nil)
 	cdc.RegisterConcrete(pow.MineMsg{}, "democoin/Mine", nil)
-	cdc.RegisterConcrete(ibc.IBCTransferMsg{}, "democoin/IBCTransferMsg", nil)
-	cdc.RegisterConcrete(ibc.IBCReceiveMsg{}, "democoin/IBCReceiveMsg", nil)
+	cdc.RegisterConcrete(ibc.OpenChannelMsg{}, "democoin/OpenChannel", nil)
+	cdc.RegisterConcrete(ibc.UpdateChannelMsg{}, "democoin/UpdateChannel", nil)
+	cdc.RegisterConcrete(ibc.ReceiveMsg{}, "democoin/Receive", nil)
 	cdc.RegisterConcrete(simplestake.BondMsg{}, "democoin/BondMsg", nil)
 	cdc.RegisterConcrete(simplestake.UnbondMsg{}, "democoin/UnbondMsg", nil)
 
 	// Register AppAccount
 	cdc.RegisterInterface((*sdk.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "democoin/Account", nil)
+
+	// Register Payload
+	cdc.RegisterInterface((*ibc.Payload)(nil), nil)
+	cdc.RegisterConcrete(bank.SendPayload{}, "basecoin/payload/Send", nil)
 
 	// Register crypto.
 	wire.RegisterCrypto(cdc)

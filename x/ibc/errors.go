@@ -6,9 +6,17 @@ import (
 
 const (
 	// IBC errors reserve 200 - 299.
-	CodeInvalidSequence sdk.CodeType = 200
-	CodeIdenticalChains sdk.CodeType = 201
-	CodeUnknownRequest  sdk.CodeType = sdk.CodeUnknownRequest
+	CodeInvalidSequence         sdk.CodeType = 200
+	CodeIdenticalChains         sdk.CodeType = 201
+	CodeChainMismatch           sdk.CodeType = 202
+	CodeUnknownRequest          sdk.CodeType = sdk.CodeUnknownRequest
+	CodeNoChannelOpened         sdk.CodeType = 203
+	CodeChannelAlreadyOpened    sdk.CodeType = 204
+	CodeUpdateCommitFailed      sdk.CodeType = 205
+	CodeInvalidPacket           sdk.CodeType = 206
+	CodeNoCommitFound           sdk.CodeType = 207
+	CodeUnauthorizedSend        sdk.CodeType = 208
+	CodeUnauthorizedSendReceipt sdk.CodeType = 209
 )
 
 func codeToDefaultMsg(code sdk.CodeType) string {
@@ -17,6 +25,8 @@ func codeToDefaultMsg(code sdk.CodeType) string {
 		return "Invalid IBC packet sequence"
 	case CodeIdenticalChains:
 		return "Source and destination chain cannot be identical"
+	case CodeChainMismatch:
+		return "Destination chain is not current chain"
 	default:
 		return sdk.CodeToDefaultMsg(code)
 	}
@@ -28,6 +38,38 @@ func ErrInvalidSequence() sdk.Error {
 
 func ErrIdenticalChains() sdk.Error {
 	return newError(CodeIdenticalChains, "")
+}
+
+func ErrChainMismatch() sdk.Error {
+	return newError(CodeChainMismatch, "")
+}
+
+func ErrNoChannelOpened(srcChain string) sdk.Error {
+	return newError(CodeNoChannelOpened, srcChain)
+}
+
+func ErrChannelAlreadyOpened(srcChain string) sdk.Error {
+	return newError(CodeChannelAlreadyOpened, srcChain)
+}
+
+func ErrUpdateCommitFailed(err error) sdk.Error {
+	return newError(CodeUpdateCommitFailed, err.Error())
+}
+
+func ErrInvalidPacket(err error) sdk.Error {
+	return newError(CodeInvalidPacket, err.Error())
+}
+
+func ErrNoCommitFound() sdk.Error {
+	return newError(CodeNoCommitFound, "")
+}
+
+func ErrUnauthorizedSend() sdk.Error {
+	return newError(CodeUnauthorizedSend, "")
+}
+
+func ErrUnauthorizedSendReceipt() sdk.Error {
+	return newError(CodeUnauthorizedSendReceipt, "")
 }
 
 // -------------------------

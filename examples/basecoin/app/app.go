@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/simplestake"
 
@@ -65,11 +66,11 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// Add handlers.
 	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
-	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
+	ibcKeeper := ibc.NewKeeper(app.cdc, app.capKeyIBCStore)
 	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper)
+
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
+		AddRoute("bank", bank.NewHandler(coinKeeper, ibcKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
 	// Define the feeHandler.
@@ -95,9 +96,11 @@ func MakeCodec() *wire.Codec {
 	// Register Msgs
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(bank.SendMsg{}, "basecoin/Send", nil)
+	cdc.RegisterConcrete(bank.IBCSendMsg{}, "basecoin/IBCSend", nil)
 	cdc.RegisterConcrete(bank.IssueMsg{}, "basecoin/Issue", nil)
-	cdc.RegisterConcrete(ibc.IBCTransferMsg{}, "basecoin/IBCTransferMsg", nil)
-	cdc.RegisterConcrete(ibc.IBCReceiveMsg{}, "basecoin/IBCReceiveMsg", nil)
+	cdc.RegisterConcrete(ibc.OpenChannelMsg{}, "basecoin/OpenChannel", nil)
+	cdc.RegisterConcrete(ibc.UpdateChannelMsg{}, "basecoin/UpdateChannel", nil)
+	cdc.RegisterConcrete(ibc.ReceiveMsg{}, "basecoin/Receive", nil)
 	cdc.RegisterConcrete(simplestake.BondMsg{}, "basecoin/BondMsg", nil)
 	cdc.RegisterConcrete(simplestake.UnbondMsg{}, "basecoin/UnbondMsg", nil)
 
@@ -105,7 +108,11 @@ func MakeCodec() *wire.Codec {
 	cdc.RegisterInterface((*sdk.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "basecoin/Account", nil)
 
-	// Register crypto.
+	// Register Payload
+	cdc.RegisterInterface((*ibc.Payload)(nil), nil)
+	cdc.RegisterConcrete(bank.SendPayload{}, "basecoin/payload/Send", nil)
+
+	// Register crypto
 	wire.RegisterCrypto(cdc)
 
 	return cdc

@@ -58,14 +58,11 @@ func main() {
 	rootCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
+			bankcmd.IBCSendCmd(cdc),
 		)...)
 	rootCmd.AddCommand(
 		client.PostCommands(
-			ibccmd.IBCTransferCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
-			ibccmd.IBCRelayCmd(cdc),
+			ibccmd.IBCRelayCmd("main", "ibc", cdc, types.GetAccountDecoder(cdc)),
 			simplestakingcmd.BondTxCmd(cdc),
 		)...)
 	rootCmd.AddCommand(

@@ -14,11 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-const (
-	flagTo     = "to"
-	flagAmount = "amount"
-)
-
 // SendTxCommand will create a send tx and sign it with the given key
 func SendTxCmd(Cdc *wire.Codec) *cobra.Command {
 	cmdr := Commander{Cdc}

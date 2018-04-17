@@ -9,10 +9,11 @@ IBC module will store its own router for handling custom incoming msgs. `IBCPush
 ### IBC Module
 
 ```golang
-// User facing API
+// -------------------
+// x/ibc/types
 
 type Packet struct {
-    Data      Payload
+    Payload   Payload
     SrcChain  string
     DestChain string
 }
@@ -22,42 +23,47 @@ type Payload interface {
     ValidateBasic() sdk.Error
 }
 
-type TransferPayload struct {
+type Handler func(sdk.Context, Payload) sdk.Result
+
+type Keeper interface {
+    Sender(...Payload) Sender
+    RegisterHandler(string, Handler)
+    Receive(sdk.Context, Packet, int64) sdk.Result
+}
+
+type Sender interface {
+    Push(sdk.Context, Payload, string)
+}
+
+// ------------------
+// x/ibc
+
+// Implements sdk.Msg
+type ReceiveMsg struct {
+    Packet
+    Relayer  sdk.Address
+    Sequence int64
+}
+
+func NewHandler(keeper types.Keeper) sdk.Handler
+
+// ------------------
+// x/bank
+
+// Implements ibc.Payload
+type SendPayload struct {
     SrcAddr  sdk.Address
     DestAddr sdk.Address
     Coins    sdk.Coins
 }
 
 // Implements sdk.Msg
-type IBCTransferMsg struct {
-    Packet
-}
-
-// Implements sdk.Msg
-type IBCReceiveMsg struct {
-    Packet
-    Relayer  sdk.Address
-    Sequence int64
+type IBCSendMsg struct {
+    DestChain string
+    TransferPayload
 }
 
 // Internal API
-
-type rule struct {
-    r string
-    f func(sdk.Context, IBCPacket) sdk.Result
-}
-
-type Dispatcher struct {
-    rules []rule
-}
-
-func NewHandler(dispatcher Dispatcher, ibcm IBCMapper) sdk.Handler
-
-type IBCMapper struct {
-    ibcKey sdk.StoreKey // IngressKey / EgressKey             => Value
-                        // Ingress: Source Chain ID           => last income msg's sequence
-                        // Egress: (Dest chain ID, Msg index) => length / indexed msg
-}
 
 type IngressKey struct {
     SrcChain string
@@ -67,9 +73,6 @@ type EgressKey struct {
     DestChain   string
     Index       int64
 }
-
-// Used by other modules
-func (ibcm IBCMapper) PushPacket(ctx sdk.Context, dest string, payload Payload)
 ```
 
 `egressKey` stores the outgoing `IBCTransfer`s as a list. Its getter takes an `EgressKey` and returns the length if `egressKey.Index == -1`, an element if `egressKey.Index > 0`.

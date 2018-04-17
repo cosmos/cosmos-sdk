@@ -26,6 +26,7 @@ Every transaction on the same chain already has a well-defined causality relatio
 
 For example, an application may wish to allow a single fungible asset to be transferred between and held on multiple blockchains while preserving conservation of supply. The application can mint asset vouchers on chain _B_ when a particular IBC packet is committed to chain _B_, and require outgoing sends of that packet on chain _A_ to escrow an equal amount of the asset on chain _A_ until the vouchers are later redeemed back to chain _A_ with an IBC packet in the reverse direction. This ordering guarantee along with correct application logic can ensure that total supply is preserved across both chains and that any vouchers minted on chain _B_ can later be redeemed back to chain _A_.
 
+This section provides a high-level specification of the queue interface and a list of the necessary proofs. To implement wire-compatible IBC, chain _A_ and chain _B_ must also use a common encoding format. An example binary encoding format can be found in Appendix C.
 
 ### 3.1 Queue Specification
 
@@ -64,48 +65,48 @@ Each IBC-supporting blockchain must implement a reliable ordered packet queue wi
 **tail** &#8658; **i**
 > return _q<sub>tail</sub>_
 
-{ two queues, one send, one receive }
+### 3.2 Connection Abstraction
 
-### 3.2 Merkle Proofs for Queues
+We introduce the abstraction of an IBC **connection**: a set of the required components to facilitate bidirectional communication between two blockchains _A_ and _B_.
 
-In order to provide the ordering guarantees specified above, each blockchain utilizing the IBC protocol must provide proofs that IBC packets have been stored at particular indices in the incoming and outgoing packet queues.
+An IBC connection consists of four distinct queues, two on each chain:
 
-We make use of the previously-defined Merkle proof _M<sub>k,v,h</sub>_ to provide the requisite proofs. To do so, we must define a unique, deterministic key in the Merkle store for each message in the queue. Packet types and proofs are conceptually explained here. An example binary encoding format can be found in Appendix C.
+_Outgoing<sub>A</sub>_: Outgoing IBC packets from chain _A_ to chain _B_, stored on chain _A_
 
-Based upon this needed functionality, we define a set of keys to be stored in the merkle tree, which allows us to efficiently implement and prove any of the above queries.
+_Incoming<sub>A</sub>_: Execution logs for incoming IBC packets from chain _B_, stored on chain _A_
 
-{ todo: rewrite the rest of this section }
+_Outgoing<sub>B</sub>_: Outgoing IBC packets from chain _B_ to chain _A_, stored on chain _B_
 
-**Key:** _(queue name, [head|tail|index])_
+_Incoming<sub>B</sub>_: Execution logs for incoming IBC packets from chain _A_, stored on chain _B_
 
-The index is stored as a fixed-length unsigned integer in big endian format, so that the lexicographical order of the byte representation of the key is consistent with their sequence number. This allows us to quickly iterate over the queue, as well as prove the content of a packet (or lack of packet) at a given sequence. _head_ and _tail_ are two special constants that store an integer index, and are chosen such that their serialization cannot collide with any possible index.
+### 3.3 Merkle Proofs for Queues
 
-A message queue is simply a set of serialized packets stored at predefined keys in a merkle store, which can produce proofs for any key. Once a packet is written it must be immutable (except for deleting when popped from the queue). That is, if a value _v_ is written to a queue, then every valid proof _M<sub>k,v,h </sub>_ must refer to the same _v_. This property is essential to safely process asynchronous messages.
+In order to provide the ordering guarantees specified above, each blockchain utilizing the IBC protocol must provide proofs that particular IBC packets have been stored at particular indices in the outgoing packet queue, and particular IBC packet execution results have been stored at particular indices in the incoming packet queue.
 
-Every IBC implementation must provide a protected subspace of the merkle store for use by each queue that cannot be affected by other modules.
+We use the previously-defined Merkle proof _M<sub>k,v,h</sub>_ to provide the requisite proofs. In order to do so, we must define a unique, deterministic key in the Merkle store for each message in the queue:
 
-As mentioned above, in order for the receiver to unambiguously interpret the merkle proofs, we need a unique, deterministic, and predictable key in the merkle store for each message in the queue. We explained how the indexes are generated to provide each message in a queue a unique key, and mentioned the need for a unique name for each queue.
+**key**: _(queue name, [head|tail|index])_
+
+The index is stored as a fixed-length unsigned integer in big endian format, so that the lexicographical order of the byte representation of the key is consistent with their sequence number. This allows us to quickly iterate over the queue, as well as prove the content of a packet (or lack of packet) at a given sequence. _head_ and _tail_ are two special constants that store an integer index, and are chosen such that their serializated representation cannot collide with that of any possible index.
+
+Once written to the queue, a packet must be immutable (except for deletion when popped from the queue). That is, if a value _v_ is written to a queue, then every valid proof _M<sub>k,v,h </sub>_ must refer to the same _v_. In practice, this means that an IBC implementation must ensure that only the IBC module can write to the IBC subspace of the blockchain's Merkle store. This property is essential to safely process asynchronous messages.
 
 The queue name must be unambiguously associated with a given connection to another chain, so an observer can prove if a message was intended for chain A or chain B. In order to do so, upon registration of a connection with a remote chain, we create two queues with different names (prefixes).
 
-* _ibc:<chain id of A>:send_ - all outgoing packets destined to chain A
-* _ibc:<chain id of A>:receipt_ - the results of executing the packets received from chain A
+* _ibc:<chain id of A>:send_ - all outgoing packets destined to chain _A_
+* _ibc:<chain id of A>:receipt_ - the results of executing the packets received from chain _A_
 
-These two queues have different purposes and store messages of different types. By parsing the key of a merkle proof, a recipient can uniquely identify which queue, if any, this message belongs to. We now define _k =_ _(remote id, [send|receipt], index)_. This tuple is used to route and verify every message, before the contents of the packet are processed by the appropriate application logic.
+These two queues have different purposes and store elements of different types. By parsing the key of a merkle proof, a recipient can uniquely identify which queue, if any, this message belongs to. We now define _k =_ _(remote id, [send|receipt], index)_. This tuple is used to route and verify every message, before the contents of the packet are processed by the appropriate application logic.
 
-### 3.3   Message Contents
+### 3.4 Message Contents
 
-{ todo: clarify about payload-agnostic }
-
-Up to this point, we have focused on the semantics of the message key, and how we can produce a unique identifier for every possible message in every possible connection. The actual data written at the location has been left as an opaque blob, put by providing some structure to the messages, we can enable more functionality.
-
-We define every message in a _send queue_ to consist of a well-known type and opaque data. The IBC protocol relies on the type for routing, and lets the appropriate module process the data as it sees fit. The _receipt queue_ stores if it was an error, an optional error code, and an optional return value. We use the same index as the received message, so that the results of _A:q<sub>B.send</sub>[i]_ are stored at _B:q<sub>A.receipt</sub>[i]_. (read: the message at index _i_ in the _send_ queue for chain B as stored on chain A)
+We define every message in a _send queue_ to consist of two fields: an enumerable _type_, and an opaque _payload_. The IBC protocol relies on the type for routing, and lets the appropriate module process the data as it sees fit. The _receipt queue_ stores if it was an error, an optional error code, and an optional return value. We use the same index as the received message, so that the results of _A:q<sub>B.send</sub>[i]_ are stored at _B:q<sub>A.receipt</sub>[i]_. (read: the message at index _i_ in the _send_ queue for chain B as stored on chain A)
 
 _V<sub>send</sub> = (type, data)_
 
 _V<sub>receipt</sub> = (result, [success|error code])_
 
-### 3.4   Sending a Message
+### 3.5 Sending a Message
 
 { todo: cleanup wording }
 
@@ -131,7 +132,7 @@ _A:IBCreceive(S, M<sub>k,v,h</sub>)_ &#8658; _match_
 
 Note that this requires not only an valid proof, but also that the proper header as well as all prior messages were previously submitted. This returns success upon accepting a proper message, even if the message execution returned an error (which must then be relayed to the sender).
 
-### 3.5   Receipts
+### 3.6 Receipts
 
 { todo: cleanup logic }
 
@@ -156,7 +157,7 @@ This enforces that the receipts are processed in order, to allow some the applic
 
 ![Rejected Transaction](images/ReceiptError.png)
 
-### 3.6   Relay Process
+### 3.7 Relay Process
 
 { todo: cleanup wording }
 

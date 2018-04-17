@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	oldwire "github.com/tendermint/go-wire"
+	wire "github.com/cosmos/cosmos-sdk/wire"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
@@ -27,14 +27,11 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 func TestCoinKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
-	// wire registration while we're at it ... TODO
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Account }{},
-		oldwire.ConcreteType{&auth.BaseAccount{}, 0x1},
-	)
+	cdc := wire.NewCodec()
+	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	accountMapper := auth.NewAccountMapper(authKey, &auth.BaseAccount{})
+	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	coinKeeper := NewCoinKeeper(accountMapper)
 
 	addr := sdk.Address([]byte("addr1"))
@@ -116,14 +113,11 @@ func TestCoinKeeper(t *testing.T) {
 func TestSendKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
-	// wire registration while we're at it ... TODO
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Account }{},
-		oldwire.ConcreteType{&auth.BaseAccount{}, 0x1},
-	)
+	cdc := wire.NewCodec()
+	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	accountMapper := auth.NewAccountMapper(authKey, &auth.BaseAccount{})
+	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	coinKeeper := NewCoinKeeper(accountMapper)
 	sendKeeper := NewSendKeeper(accountMapper)
 
@@ -188,14 +182,11 @@ func TestSendKeeper(t *testing.T) {
 func TestViewKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
-	// wire registration while we're at it ... TODO
-	var _ = oldwire.RegisterInterface(
-		struct{ sdk.Account }{},
-		oldwire.ConcreteType{&auth.BaseAccount{}, 0x1},
-	)
+	cdc := wire.NewCodec()
+	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	accountMapper := auth.NewAccountMapper(authKey, &auth.BaseAccount{})
+	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	coinKeeper := NewCoinKeeper(accountMapper)
 	viewKeeper := NewViewKeeper(accountMapper)
 

@@ -54,6 +54,7 @@ func addCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.C
 }
 
 // SendCoins moves coins from one account to another
+// NOTE: Make sure to revert state changes from tx on error
 func sendCoins(ctx sdk.Context, am sdk.AccountMapper, fromAddr sdk.Address, toAddr sdk.Address, amt sdk.Coins) sdk.Error {
 	_, err := subtractCoins(ctx, am, fromAddr, amt)
 	if err != nil {
@@ -69,6 +70,7 @@ func sendCoins(ctx sdk.Context, am sdk.AccountMapper, fromAddr sdk.Address, toAd
 }
 
 // InputOutputCoins handles a list of inputs and outputs
+// NOTE: Make sure to revert state changes from tx on error
 func inputOutputCoins(ctx sdk.Context, am sdk.AccountMapper, inputs []Input, outputs []Output) sdk.Error {
 	for _, in := range inputs {
 		_, err := subtractCoins(ctx, am, in.Address, in.Coins)

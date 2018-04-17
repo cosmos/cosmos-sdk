@@ -1,8 +1,6 @@
 package ibc
 
 import (
-	"fmt"
-
 	"encoding/json"
 
 	"github.com/tendermint/iavl"
@@ -57,7 +55,7 @@ type CleanupProof struct {
 	Height int64
 }
 
-func (proof CleanupProof) Verify(ctx sdk.Context, q lib.QueueMapper, seq uint) sdk.Error {
+func (proof CleanupProof) Verify(ctx sdk.Context, list lib.ListMapper, seq int64) sdk.Error {
 	chainID := packet.SrcChain
 
 	info := q.Info(ctx)
@@ -125,8 +123,16 @@ func (msg ReceiveCleanupMsg) GetSignBytes() []byte {
 	return bz
 }
 
-func (msg ReceiveCleanupMsg) GetSigners() []byte {
-	return sdk.Address
+func (msg ReceiveCleanupMsg) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.Cleaner}
+}
+
+func (msg ReceiveCleanupMsg) Type() string {
+	return "ibc"
+}
+
+func (msg ReceiveCleanupMsg) ValidateBasic() sdk.Error {
+	return nil
 }
 
 // --------------------------------
@@ -156,6 +162,39 @@ func (msg ReceiptMsg) GetSigners() []sdk.Address {
 
 func (msg ReceiptMsg) Verify(ctx sdk.Context, keeper Keeper) sdk.Error {
 	return msg.PacketProof.Verify(ctx, keeper, msg.Packet)
+}
+
+// --------------------------------
+// ReceiptCleanupMsg
+
+type ReceiptCleanupMsg struct {
+	Sequence int64
+	CleanupProof
+	Cleaner sdk.Address
+}
+
+func (msg ReceiptCleanupMsg) Get(key interface{}) interface{} {
+	return nil
+}
+
+func (msg ReceiptCleanupMsg) GetSignBytes() []byte {
+	bz, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
+
+func (msg ReceiptCleanupMsg) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.Cleaner}
+}
+
+func (msg ReceiptCleanupMsg) Type() string {
+	return "ibc"
+}
+
+func (msg ReceiptCleanupMsg) ValidateBasic() sdk.Error {
+	return nil
 }
 
 //-------------------------------------

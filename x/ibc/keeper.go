@@ -15,13 +15,13 @@ type keeperFactory struct {
 	key sdk.StoreKey
 	cdc *wire.Codec
 
-	receive lib.QueueMapper
-	receipt lib.QueueMapper
+	receive lib.ListMapper
+	receipt lib.ListMapper
 }
 
 func NewKeeperFactory(cdc *wire.Codec, key sdk.StoreKey) keeperFactory {
-	receive := lib.NewQueueMapper(cdc, key, "receive")
-	receipt := lib.NewQueueMapper(cdc, key, "receipt")
+	receive := lib.NewListMapper(cdc, key, "receive")
+	receipt := lib.NewListMapper(cdc, key, "receipt")
 
 	return keeperFactory{
 		key:     key,

@@ -95,11 +95,10 @@ func (keeper Keeper) Receipt(h ReceiptHandler, ctx sdk.Context, msg ReceiptMsg) 
 }
 
 func handleReceiveCleanupMsg(ctx sdk.Context, keeper Keeper, msg ReceiveCleanupMsg) sdk.Result {
-	msg.Verify(ctx, keeper)
+	receive := keeper.receive
 
-	queue := keeper.receiveQueue
+	msg.Verify(ctx, receive, msg.Sequence)
 
-	info := queue.Info(ctx)
 	for i := info.Begin; i < msg.Sequence; i++ {
 		queue.Pop(ctx)
 	}

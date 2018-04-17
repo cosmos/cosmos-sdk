@@ -4,11 +4,11 @@
 
 IBC uses an asynchronous message passing model that makes no assumptions about network synchrony. Chain _A_ and chain _B_ confirm new blocks independently, and IBC packets from one chain to the other may be delayed or censored arbitrarily. The speed of the IBC packet queue is limited only by the speed of the underlying chains.
 
-The IBC packet receiver on chain _B_ decides how to act upon the incoming message, and may add its own application logic to determine which state transactions to apply (or not). Both chains must only agree that the packet has been received and either accepted or rejected, which is determined independently of any application logic.
+The IBC protocol as defined here is payload-agnostic. The packet receiver on chain _B_ decides how to act upon the incoming message, and may add its own application logic to determine which state transactions to apply (or not). Both chains must only agree that the packet has been received and either accepted or rejected, which is determined independently of any application logic.
 
-To facilitate building useful application logic, we introduce a reliable messaging queue (hereafter just referred to as a queue) to allow us to guarantee a cross-chain causal ordering[[5](./footnotes.md#5)] of IBC packets. Causal ordering means that if packet _x_ is processed before packet _y_ on chain _A_, packet _x_ must also be processed before packet _y_ on chain _B_. Every transaction on the same chain already has a well-defined causality relation (order in history). The IBC protocol provides an ordering guarantee across two chains.
+To facilitate building useful application logic, we introduce a reliable messaging queue (hereafter just referred to as a queue) to allow us to guarantee a cross-chain causal ordering[[5](./footnotes.md#5)] of IBC packets. Causal ordering means that if packet _x_ is processed before packet _y_ on chain _A_, packet _x_ must also be processed before packet _y_ on chain _B_. IBC implements a [vector clock](https://en.wikipedia.org/wiki/Vector_clock) for the restricted case of two processes (in our case, blockchains). 
 
-A causal ordering over multiple chains can be used to reason about the combined state of both chains as a whole. Given _x_ &#8594; _y_ means _x_ is causally before _y_, and chains A and B, and _a_ &#8658; _b_ means _a_ implies _b_:
+Formally, given _x_ &#8594; _y_ means _x_ is causally before _y_, and chains A and B, and _a_ &#8658; _b_ means _a_ implies _b_:
 
 _A:send(msg<sub>i </sub>)_ &#8594; _B:receive(msg<sub>i </sub>)_
 
@@ -22,33 +22,59 @@ _x_ &#8594; _B:receive(msg<sub>i </sub>)_
 _y_ &#8594; _B:receive(msg<sub>i </sub>)_ &#8658;
 _y_ &#8594; _A:receipt(msg<sub>i </sub>)_
 
+Every transaction on the same chain already has a well-defined causality relation (order in history). IBC provides an ordering guarantee across two chains which can be used to reason about the combined state of both chains as a whole.
 
-![Vector Clock image](https://upload.wikimedia.org/wikipedia/commons/5/55/Vector_Clock.svg)
-([https://en.wikipedia.org/wiki/Vector_clock](https://en.wikipedia.org/wiki/Vector_clock))
+For example, an application may wish to allow a single fungible asset to be transferred between and held on multiple blockchains while preserving conservation of supply. The application can mint asset vouchers on chain _B_ when a particular IBC packet is committed to chain _B_, and require outgoing sends of that packet on chain _A_ to escrow an equal amount of the asset on chain _A_ until the vouchers are later redeemed back to chain _A_ with an IBC packet in the reverse direction. This ordering guarantee along with correct application logic can ensure that total supply is preserved across both chains and that any vouchers minted on chain _B_ can later be redeemed back to chain _A_.
 
-In this section, we define an efficient implementation of a reliable ordered messaging queue.
 
-### 3.1   Merkle Proofs for Queues
+### 3.1 Queue Specification
 
-Given the three proofs we have available, we make use of the most flexible one, _M<sub>k,v,h</sub>_, to provide proofs for a message queue. To do so, we must define a unique, deterministic, and predictable key in the merkle store for each message in the queue. We also define a clearly defined format for the content of each message in the queue, which can be parsed by all chains participating in IBC. The key format and queue ordering are conceptually explained here. The binary encoding format can be found in Appendix C.
+A queue can be conceptualized as a slice of an infinite array. Two numerical indices - _q<sub>head</sub>_ and _q<sub>tail</sub>_ - bound the slice, such that for every _index_ where _head <= index < tail_, there is a queue element _q[q<sub>index</sub>]_. Elements can be appended to the tail (end) and removed from the head (beginning). We introduce one further method, _advance_, to facilitate efficient queue cleanup.
 
-We can visualize a queue as a slice pointing into an infinite sized array. It maintains a head and a tail pointing to two indexes, such that there is data for every index where _head <= index < tail_. Data is pushed to the tail and popped from the head. Another method, _advance_, is introduced to pop all messages until _i_, and is useful for cleanup:
+Each IBC-supporting blockchain must implement a reliable ordered packet queue with the following interface specification:
 
-**init**: _q<sub>head</sub> = q<sub>tail</sub> = 0_
+**init**  
+> set _q<sub>head</sub>_ = _0_  
+> set _q<sub>tail</sub>_ = _0_
 
-**peek** &#8658; **m**: _if q<sub>head</sub> = q<sub>tail</sub> { return None } else { return q[q<sub>head</sub>] }_
+**peek** &#8658; **e** 
+> match _q<sub>head</sub> == q<sub>tail</sub>_ with  
+>    _true_ &#8658; return _nil_  
+>   _false_ &#8658;  return _q[q<sub>head</sub>]_
 
-**pop** &#8658; **m**: _if q<sub>head</sub> = q<sub>tail</sub> { return None } else { q<sub>head</sub>++; return q[q<sub>head</sub>-1] }_
+**pop** &#8658; **e** 
+> match _q<sub>head</sub> == q<sub>tail</sub>_ with   
+>   _true_ &#8658; return _nil_  
+>   _false_ &#8658; set _q<sub>head</sub>_ = _q<sub>head</sub> + 1_; return _q[q<sub>head</sub>-1]_
 
-**push(m)**: _q[q<sub>tail</sub>] = m; q<sub>tail</sub>++_
+**retrieve(i)** &#8658; **e**
+> match _q<sub>head</sub> <= i < q<sub>tail</sub>_ with   
+>   _true_  &#8658; return _q<sub>i</sub>_  
+>   _false_  &#8658; return _nil_
 
-**advance(i)**:  _q<sub>head</sub> = i; q<sub>tail</sub> = max(q<sub>tail </sub>, i)_
+**push(e)**
+> set _q[q<sub>tail</sub>]_ = _e_; set _q<sub>tail</sub>_ = _q<sub>tail</sub> + 1_
 
-**head** &#8658; **i**: _q<sub>head</sub>_
+**advance(i)**
+> set _q<sub>head</sub>_ = _i_; set _q<sub>tail</sub>_ = _max(q<sub>tail</sub>, i)_
 
-**tail** &#8658; **i**: _q<sub>tail</sub>_
+**head** &#8658; **i**
+> return _q<sub>head</sub>_
+
+**tail** &#8658; **i**
+> return _q<sub>tail</sub>_
+
+{ two queues, one send, one receive }
+
+### 3.2 Merkle Proofs for Queues
+
+In order to provide the ordering guarantees specified above, each blockchain utilizing the IBC protocol must provide proofs that IBC packets have been stored at particular indices in the incoming and outgoing packet queues.
+
+We make use of the previously-defined Merkle proof _M<sub>k,v,h</sub>_ to provide the requisite proofs. To do so, we must define a unique, deterministic key in the Merkle store for each message in the queue. Packet types and proofs are conceptually explained here. An example binary encoding format can be found in Appendix C.
 
 Based upon this needed functionality, we define a set of keys to be stored in the merkle tree, which allows us to efficiently implement and prove any of the above queries.
+
+{ todo: rewrite the rest of this section }
 
 **Key:** _(queue name, [head|tail|index])_
 
@@ -57,8 +83,6 @@ The index is stored as a fixed-length unsigned integer in big endian format, so 
 A message queue is simply a set of serialized packets stored at predefined keys in a merkle store, which can produce proofs for any key. Once a packet is written it must be immutable (except for deleting when popped from the queue). That is, if a value _v_ is written to a queue, then every valid proof _M<sub>k,v,h </sub>_ must refer to the same _v_. This property is essential to safely process asynchronous messages.
 
 Every IBC implementation must provide a protected subspace of the merkle store for use by each queue that cannot be affected by other modules.
-
-### 3.2   Naming Queues
 
 As mentioned above, in order for the receiver to unambiguously interpret the merkle proofs, we need a unique, deterministic, and predictable key in the merkle store for each message in the queue. We explained how the indexes are generated to provide each message in a queue a unique key, and mentioned the need for a unique name for each queue.
 
@@ -71,6 +95,8 @@ These two queues have different purposes and store messages of different types. 
 
 ### 3.3   Message Contents
 
+{ todo: clarify about payload-agnostic }
+
 Up to this point, we have focused on the semantics of the message key, and how we can produce a unique identifier for every possible message in every possible connection. The actual data written at the location has been left as an opaque blob, put by providing some structure to the messages, we can enable more functionality.
 
 We define every message in a _send queue_ to consist of a well-known type and opaque data. The IBC protocol relies on the type for routing, and lets the appropriate module process the data as it sees fit. The _receipt queue_ stores if it was an error, an optional error code, and an optional return value. We use the same index as the received message, so that the results of _A:q<sub>B.send</sub>[i]_ are stored at _B:q<sub>A.receipt</sub>[i]_. (read: the message at index _i_ in the _send_ queue for chain B as stored on chain A)
@@ -80,6 +106,8 @@ _V<sub>send</sub> = (type, data)_
 _V<sub>receipt</sub> = (result, [success|error code])_
 
 ### 3.4   Sending a Message
+
+{ todo: cleanup wording }
 
 A proper implementation of IBC requires all relevant state to be encapsulated, so that other modules can only interact with it via a fixed API (to be defined in the next sections) rather than directly mutating internal state. This allows the IBC module to provide security guarantees.
 
@@ -105,6 +133,8 @@ Note that this requires not only an valid proof, but also that the proper header
 
 ### 3.5   Receipts
 
+{ todo: cleanup logic }
+
 When we wish to create a transaction that atomically commits or rolls back across two chains, we must look at the receipts from sending the original message. For example, if I want to send tokens from Alice on chain A to Bob on chain B, chain A must decrement Alice's account _if and only if_ Bob's account was incremented on chain B. We can achieve that by storing a protected intermediate state on chain A, which is then committed or rolled back based on the result of executing the transaction on chain B.
 
 To do this requires that we not only provable send a message from chain A to chain B, but provably return the result of that message (the receipt) from chain B to chain A. As one noticed above in the implementation of _IBCreceive_, if the valid IBC message was sent from A to B, then the result of executing it, even if it was an error, is stored in _B:q<sub>A.receipt</sub>_. Since the receipts are stored in a queue with the same key construction as the sending queue, we can generate the same set of proofs for them, and perform a similar sequence of steps to handle a receipt coming back to _S_ for a message previously sent to _A_:
@@ -126,8 +156,9 @@ This enforces that the receipts are processed in order, to allow some the applic
 
 ![Rejected Transaction](images/ReceiptError.png)
 
-
 ### 3.6   Relay Process
+
+{ todo: cleanup wording }
 
 The blockchain itself only records the _intention_ to send the given message to the recipient chain, it doesn't make any network connections as that would add unbounded delays and non-determinism into the state machine. We define the concept of a _relay_ process that connects two chain by querying one for all proofs needed to prove outgoing messages and submit these proofs to the recipient chain.
 

@@ -23,7 +23,7 @@ import (
 
 func TestGaiaCLISend(t *testing.T) {
 
-	tests.ExecuteT(t, "gaiad unsafe_reset_all")
+	tests.ExecuteT(t, "gaiad unsafe_reset_all", 1)
 	pass := "1234567890"
 	executeWrite(t, "gaiacli keys delete foo", pass)
 	executeWrite(t, "gaiacli keys delete bar", pass)
@@ -57,7 +57,7 @@ func TestGaiaCLISend(t *testing.T) {
 
 func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 
-	tests.ExecuteT(t, "gaiad unsafe_reset_all")
+	tests.ExecuteT(t, "gaiad unsafe_reset_all", 1)
 	pass := "1234567890"
 	executeWrite(t, "gaiacli keys delete foo", pass)
 	masterKey, chainID := executeInit(t, "gaiad init")
@@ -76,18 +76,6 @@ func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 	assert.Equal(t, int64(100000), fooAcc.GetCoins().AmountOf("fermion"))
 
 	// declare candidacy
-	//--address-candidate string   hex address of the validator/candidate
-	//--amount string              Amount of coins to bond (default "1fermion")
-	//--chain-id string            Chain ID of tendermint node
-	//--fee string                 Fee to pay along with transaction
-	//--keybase-sig string         optional keybase signature
-	//--moniker string             validator-candidate name
-	//--name string                Name of private key with which to sign
-	//--node string                <host>:<port> to tendermint rpc interface for this chain (default "tcp://localhost:46657")
-	//--pubkey string              PubKey of the validator-candidate
-	//--sequence int               Sequence number to sign the tx
-	//--website string             optional website
-	//_ = fooPubKey
 	declStr := fmt.Sprintf("gaiacli declare-candidacy %v", flags)
 	declStr += fmt.Sprintf(" --name=%v", "foo")
 	declStr += fmt.Sprintf(" --address-candidate=%v", fooAddr)
@@ -99,8 +87,25 @@ func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 	time.Sleep(time.Second * 3) // waiting for some blocks to pass
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
 	assert.Equal(t, int64(99997), fooAcc.GetCoins().AmountOf("fermion"))
-	candidate := executeGetCandidate(t, fmt.Sprintf("gaiacli candidate %v --address=%v", flags, fooAddr))
+	candidate := executeGetCandidate(t, fmt.Sprintf("gaiacli candidate %v --address-candidate=%v", flags, fooAddr))
 	assert.Equal(t, candidate.Address.String(), fooAddr)
+	assert.Equal(t, int64(3), candidate.Assets.Evaluate())
+
+	// TODO figure out why this times out with connection refused errors in go-bash
+	// unbond a single share
+	//unbondStr := fmt.Sprintf("gaiacli unbond %v", flags)
+	//unbondStr += fmt.Sprintf(" --name=%v", "foo")
+	//unbondStr += fmt.Sprintf(" --address-candidate=%v", fooAddr)
+	//unbondStr += fmt.Sprintf(" --address-delegator=%v", fooAddr)
+	//unbondStr += fmt.Sprintf(" --shares=%v", "1")
+	//unbondStr += fmt.Sprintf(" --sequence=%v", "1")
+	//fmt.Printf("debug unbondStr: %v\n", unbondStr)
+	//executeWrite(t, unbondStr, pass)
+	//time.Sleep(time.Second * 3) // waiting for some blocks to pass
+	//fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
+	//assert.Equal(t, int64(99998), fooAcc.GetCoins().AmountOf("fermion"))
+	//candidate = executeGetCandidate(t, fmt.Sprintf("gaiacli candidate %v --address-candidate=%v", flags, fooAddr))
+	//assert.Equal(t, int64(2), candidate.Assets.Evaluate())
 }
 
 func executeWrite(t *testing.T, cmdStr string, writes ...string) {
@@ -128,7 +133,7 @@ func executeWritePrint(t *testing.T, cmdStr string, writes ...string) {
 }
 
 func executeInit(t *testing.T, cmdStr string) (masterKey, chainID string) {
-	out := tests.ExecuteT(t, cmdStr)
+	out := tests.ExecuteT(t, cmdStr, 1)
 	outCut := "{" + strings.SplitN(out, "{", 2)[1] // weird I'm sorry
 
 	var initRes map[string]json.RawMessage
@@ -142,7 +147,7 @@ func executeInit(t *testing.T, cmdStr string) (masterKey, chainID string) {
 }
 
 func executeGetAddr(t *testing.T, cmdStr string) (addr, pubKey string) {
-	out := tests.ExecuteT(t, cmdStr)
+	out := tests.ExecuteT(t, cmdStr, 2)
 	var info crkeys.Info
 	keys.UnmarshalJSON([]byte(out), &info)
 	pubKey = hex.EncodeToString(info.PubKey.(crypto.PubKeyEd25519).Bytes())
@@ -158,7 +163,7 @@ func executeGetAddr(t *testing.T, cmdStr string) (addr, pubKey string) {
 }
 
 func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
-	out := tests.ExecuteT(t, cmdStr)
+	out := tests.ExecuteT(t, cmdStr, 2)
 	var initRes map[string]json.RawMessage
 	err := json.Unmarshal([]byte(out), &initRes)
 	require.NoError(t, err, "out %v, err %v", out, err)
@@ -170,7 +175,7 @@ func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
 }
 
 func executeGetCandidate(t *testing.T, cmdStr string) stake.Candidate {
-	out := tests.ExecuteT(t, cmdStr)
+	out := tests.ExecuteT(t, cmdStr, 2)
 	var candidate stake.Candidate
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &candidate)

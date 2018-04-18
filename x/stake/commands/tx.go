@@ -5,64 +5,16 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	crypto "github.com/tendermint/go-crypto"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
-
-// nolint
-const (
-	FlagAddressDelegator = "address-delegator"
-	FlagAddressCandidate = "address-candidate"
-	FlagPubKey           = "pubkey"
-	FlagAmount           = "amount"
-	FlagShares           = "shares"
-
-	FlagMoniker  = "moniker"
-	FlagIdentity = "keybase-sig"
-	FlagWebsite  = "website"
-	FlagDetails  = "details"
-)
-
-// common flagsets to add to various functions
-var (
-	fsPk        = flag.NewFlagSet("", flag.ContinueOnError)
-	fsAmount    = flag.NewFlagSet("", flag.ContinueOnError)
-	fsShares    = flag.NewFlagSet("", flag.ContinueOnError)
-	fsCandidate = flag.NewFlagSet("", flag.ContinueOnError)
-	fsDelegator = flag.NewFlagSet("", flag.ContinueOnError)
-)
-
-func init() {
-	fsPk.String(FlagPubKey, "", "PubKey of the validator-candidate")
-	fsAmount.String(FlagAmount, "1fermion", "Amount of coins to bond")
-	fsShares.String(FlagShares, "", "Amount of shares to unbond, either in decimal or keyword MAX (ex. 1.23456789, 99, MAX)")
-	fsCandidate.String(FlagMoniker, "", "validator-candidate name")
-	fsCandidate.String(FlagIdentity, "", "optional keybase signature")
-	fsCandidate.String(FlagWebsite, "", "optional website")
-	fsCandidate.String(FlagAddressCandidate, "", "hex address of the validator/candidate")
-	fsDelegator.String(FlagAddressCandidate, "", "hex address of the delegator")
-	fsDelegator.String(FlagAddressDelegator, "", "hex address of the delegator")
-}
-
-//TODO refactor to common functionality
-func getNamePassword() (name, passphrase string, err error) {
-	name = viper.GetString(client.FlagName)
-	buf := client.BufferStdin()
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-	passphrase, err = client.GetPassword(prompt, buf)
-	return
-}
-
-//_________________________________________________________________________________________
 
 // create declare candidacy command
 func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
@@ -114,6 +66,7 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 
 	cmd.Flags().AddFlagSet(fsPk)
 	cmd.Flags().AddFlagSet(fsAmount)
+	cmd.Flags().AddFlagSet(fsDescription)
 	cmd.Flags().AddFlagSet(fsCandidate)
 	return cmd
 }
@@ -156,6 +109,7 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
+	cmd.Flags().AddFlagSet(fsDescription)
 	cmd.Flags().AddFlagSet(fsCandidate)
 	return cmd
 }
@@ -200,6 +154,7 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 
 	cmd.Flags().AddFlagSet(fsAmount)
 	cmd.Flags().AddFlagSet(fsDelegator)
+	cmd.Flags().AddFlagSet(fsCandidate)
 	return cmd
 }
 
@@ -253,6 +208,7 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 
 	cmd.Flags().AddFlagSet(fsShares)
 	cmd.Flags().AddFlagSet(fsDelegator)
+	cmd.Flags().AddFlagSet(fsCandidate)
 	return cmd
 }
 

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	crypto "github.com/tendermint/go-crypto"
@@ -16,56 +15,41 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-//nolint
-var (
-	fsValAddr         = flag.NewFlagSet("", flag.ContinueOnError)
-	fsDelAddr         = flag.NewFlagSet("", flag.ContinueOnError)
-	FlagValidatorAddr = "address"
-	FlagDelegatorAddr = "delegator-address"
-)
+//// create command to query for all candidates
+//func GetCmdQueryCandidates(storeName string, cdc *wire.Codec) *cobra.Command {
+//cmd := &cobra.Command{
+//Use:   "candidates",
+//Short: "Query for the set of validator-candidates pubkeys",
+//RunE: func(cmd *cobra.Command, args []string) error {
 
-func init() {
-	//Add Flags
-	fsValAddr.String(FlagValidatorAddr, "", "Address of the validator/candidate")
-	fsDelAddr.String(FlagDelegatorAddr, "", "Delegator hex address")
+//key := stake.CandidatesKey
 
-}
+//ctx := context.NewCoreContextFromViper()
+//res, err := ctx.Query(key, storeName)
+//if err != nil {
+//return err
+//}
 
-// create command to query for all candidates
-func GetCmdQueryCandidates(storeName string, cdc *wire.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "candidates",
-		Short: "Query for the set of validator-candidates pubkeys",
-		RunE: func(cmd *cobra.Command, args []string) error {
+//// parse out the candidates
+//candidates := new(stake.Candidates)
+//err = cdc.UnmarshalBinary(res, candidates)
+//if err != nil {
+//return err
+//}
+//output, err := wire.MarshalJSONIndent(cdc, candidates)
+//if err != nil {
+//return err
+//}
+//fmt.Println(string(output))
+//return nil
 
-			key := stake.CandidatesKey
+//// TODO output with proofs / machine parseable etc.
+//},
+//}
 
-			ctx := context.NewCoreContextFromViper()
-			res, err := ctx.Query(key, storeName)
-			if err != nil {
-				return err
-			}
-
-			// parse out the candidates
-			candidates := new(stake.Candidates)
-			err = cdc.UnmarshalBinary(res, candidates)
-			if err != nil {
-				return err
-			}
-			output, err := wire.MarshalJSONIndent(cdc, candidates)
-			if err != nil {
-				return err
-			}
-			fmt.Println(string(output))
-			return nil
-
-			// TODO output with proofs / machine parseable etc.
-		},
-	}
-
-	cmd.Flags().AddFlagSet(fsDelAddr)
-	return cmd
-}
+//cmd.Flags().AddFlagSet(fsDelegator)
+//return cmd
+//}
 
 // get the command to query a candidate
 func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
@@ -74,7 +58,7 @@ func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "Query a validator-candidate account",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			addr, err := sdk.GetAddress(viper.GetString(FlagValidatorAddr))
+			addr, err := sdk.GetAddress(viper.GetString(FlagAddressCandidate))
 			if err != nil {
 				return err
 			}
@@ -105,7 +89,7 @@ func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsValAddr)
+	cmd.Flags().AddFlagSet(fsCandidate)
 	return cmd
 }
 
@@ -116,12 +100,12 @@ func GetCmdQueryDelegatorBond(storeName string, cdc *wire.Codec) *cobra.Command 
 		Short: "Query a delegators bond based on address and candidate pubkey",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			addr, err := sdk.GetAddress(viper.GetString(FlagValidatorAddr))
+			addr, err := sdk.GetAddress(viper.GetString(FlagAddressCandidate))
 			if err != nil {
 				return err
 			}
 
-			bz, err := hex.DecodeString(viper.GetString(FlagDelegatorAddr))
+			bz, err := hex.DecodeString(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
@@ -137,7 +121,7 @@ func GetCmdQueryDelegatorBond(storeName string, cdc *wire.Codec) *cobra.Command 
 			}
 
 			// parse out the bond
-			var bond stake.DelegatorBond
+			bond := new(stake.DelegatorBond)
 			err = cdc.UnmarshalBinary(res, bond)
 			if err != nil {
 				return err
@@ -153,49 +137,49 @@ func GetCmdQueryDelegatorBond(storeName string, cdc *wire.Codec) *cobra.Command 
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsValAddr)
-	cmd.Flags().AddFlagSet(fsDelAddr)
+	cmd.Flags().AddFlagSet(fsCandidate)
+	cmd.Flags().AddFlagSet(fsDelegator)
 	return cmd
 }
 
-// get the command to query all the candidates bonded to a delegator
-func GetCmdQueryDelegatorBonds(storeName string, cdc *wire.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "delegator-candidates",
-		Short: "Query all delegators candidates' pubkeys based on address",
-		RunE: func(cmd *cobra.Command, args []string) error {
+//// get the command to query all the candidates bonded to a delegator
+//func GetCmdQueryDelegatorBonds(storeName string, cdc *wire.Codec) *cobra.Command {
+//cmd := &cobra.Command{
+//Use:   "delegator-candidates",
+//Short: "Query all delegators bond's candidate-addresses based on delegator-address",
+//RunE: func(cmd *cobra.Command, args []string) error {
 
-			bz, err := hex.DecodeString(viper.GetString(FlagDelegatorAddr))
-			if err != nil {
-				return err
-			}
-			delegator := crypto.Address(bz)
+//bz, err := hex.DecodeString(viper.GetString(FlagAddressDelegator))
+//if err != nil {
+//return err
+//}
+//delegator := crypto.Address(bz)
 
-			key := stake.GetDelegatorBondsKey(delegator, cdc)
+//key := stake.GetDelegatorBondsKey(delegator, cdc)
 
-			ctx := context.NewCoreContextFromViper()
+//ctx := context.NewCoreContextFromViper()
 
-			res, err := ctx.Query(key, storeName)
-			if err != nil {
-				return err
-			}
+//res, err := ctx.Query(key, storeName)
+//if err != nil {
+//return err
+//}
 
-			// parse out the candidates list
-			var candidates []crypto.PubKey
-			err = cdc.UnmarshalBinary(res, candidates)
-			if err != nil {
-				return err
-			}
-			output, err := wire.MarshalJSONIndent(cdc, candidates)
-			if err != nil {
-				return err
-			}
-			fmt.Println(string(output))
-			return nil
+//// parse out the candidates list
+//var candidates []crypto.PubKey
+//err = cdc.UnmarshalBinary(res, candidates)
+//if err != nil {
+//return err
+//}
+//output, err := wire.MarshalJSONIndent(cdc, candidates)
+//if err != nil {
+//return err
+//}
+//fmt.Println(string(output))
+//return nil
 
-			// TODO output with proofs / machine parseable etc.
-		},
-	}
-	cmd.Flags().AddFlagSet(fsDelAddr)
-	return cmd
-}
+//// TODO output with proofs / machine parseable etc.
+//},
+//}
+//cmd.Flags().AddFlagSet(fsDelegator)
+//return cmd
+//}

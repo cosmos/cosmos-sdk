@@ -9,6 +9,12 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
+type GenericMapper struct {
+	key    sdk.StoreKey
+	cdc    *wire.Codec
+	prefix string
+}
+
 // ListMapper is a Mapper interface that provides list-like functions
 // It panics when the element type cannot be (un/)marshalled by the codec
 
@@ -39,23 +45,26 @@ type ListMapper interface {
 
 	// IterateWrite() is safe to write over the domain
 	IterateWrite(sdk.Context, interface{}, func(sdk.Context, uint64) bool)
-}
 
-type listMapper struct {
-	key    sdk.StoreKey
-	cdc    *wire.Codec
-	prefix string
+	// Key for the length of the list
+	LengthKey() []byte
+
+	// Key for getting elements
+	ElemKey(uint64) []byte
+
+	// Key for additional meta information of the list
+	MetaKey() []byte
 }
 
 func NewListMapper(cdc *wire.Codec, key sdk.StoreKey, prefix string) ListMapper {
-	return listMapper{
+	return GenericMapper{
 		key:    key,
 		cdc:    cdc,
 		prefix: prefix,
 	}
 }
 
-func (lm listMapper) Len(ctx sdk.Context) uint64 {
+func (lm GenericMapper) Len(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(lm.key)
 	bz := store.Get(lm.LengthKey())
 	if bz == nil {
@@ -73,13 +82,13 @@ func (lm listMapper) Len(ctx sdk.Context) uint64 {
 	return res
 }
 
-func (lm listMapper) Get(ctx sdk.Context, index uint64, ptr interface{}) error {
+func (lm GenericMapper) Get(ctx sdk.Context, index uint64, ptr interface{}) error {
 	store := ctx.KVStore(lm.key)
 	bz := store.Get(lm.ElemKey(index))
 	return lm.cdc.UnmarshalBinary(bz, ptr)
 }
 
-func (lm listMapper) Set(ctx sdk.Context, index uint64, value interface{}) {
+func (lm GenericMapper) Set(ctx sdk.Context, index uint64, value interface{}) {
 	store := ctx.KVStore(lm.key)
 	bz, err := lm.cdc.MarshalBinary(value)
 	if err != nil {
@@ -88,12 +97,12 @@ func (lm listMapper) Set(ctx sdk.Context, index uint64, value interface{}) {
 	store.Set(lm.ElemKey(index), bz)
 }
 
-func (lm listMapper) Delete(ctx sdk.Context, index uint64) {
+func (lm GenericMapper) Delete(ctx sdk.Context, index uint64) {
 	store := ctx.KVStore(lm.key)
 	store.Delete(lm.ElemKey(index))
 }
 
-func (lm listMapper) Push(ctx sdk.Context, value interface{}) {
+func (lm GenericMapper) Push(ctx sdk.Context, value interface{}) {
 	length := lm.Len(ctx)
 	lm.Set(ctx, length, value)
 
@@ -101,13 +110,13 @@ func (lm listMapper) Push(ctx sdk.Context, value interface{}) {
 	store.Set(lm.LengthKey(), marshalUint64(lm.cdc, length+1))
 }
 
-func (lm listMapper) GetMeta(ctx sdk.Context, ptr interface{}) error {
+func (lm GenericMapper) GetMeta(ctx sdk.Context, ptr interface{}) error {
 	store := ctx.KVStore(lm.key)
 	bz := store.Get(lm.MetaKey())
 	return lm.cdc.UnmarshalBinary(bz, ptr)
 }
 
-func (lm listMapper) SetMeta(ctx sdk.Context, value interface{}) {
+func (lm GenericMapper) SetMeta(ctx sdk.Context, value interface{}) {
 	store := ctx.KVStore(lm.key)
 	bz, err := lm.cdc.MarshalBinary(value)
 	if err != nil {
@@ -116,7 +125,7 @@ func (lm listMapper) SetMeta(ctx sdk.Context, value interface{}) {
 	store.Set(lm.MetaKey(), bz)
 }
 
-func (lm listMapper) IterateRead(ctx sdk.Context, ptr interface{}, fn func(sdk.Context, uint64) bool) {
+func (lm GenericMapper) IterateRead(ctx sdk.Context, ptr interface{}, fn func(sdk.Context, uint64) bool) {
 	store := ctx.KVStore(lm.key)
 	start, end := subspace([]byte(fmt.Sprintf("%s/elem/", lm.prefix)))
 	iter := store.Iterator(start, end)
@@ -138,7 +147,7 @@ func (lm listMapper) IterateRead(ctx sdk.Context, ptr interface{}, fn func(sdk.C
 	iter.Close()
 }
 
-func (lm listMapper) IterateWrite(ctx sdk.Context, ptr interface{}, fn func(sdk.Context, uint64) bool) {
+func (lm GenericMapper) IterateWrite(ctx sdk.Context, ptr interface{}, fn func(sdk.Context, uint64) bool) {
 	length := lm.Len(ctx)
 
 	for i := uint64(0); i < length; i++ {
@@ -151,15 +160,17 @@ func (lm listMapper) IterateWrite(ctx sdk.Context, ptr interface{}, fn func(sdk.
 	}
 }
 
-func (lm listMapper) LengthKey() []byte {
+func (lm GenericMapper) LengthKey() []byte {
 	return []byte(fmt.Sprintf("%s/length", lm.prefix))
 }
 
-func (lm listMapper) ElemKey(i uint64) []byte {
+func (lm GenericMapper) ElemKey(i uint64) []byte {
 	return []byte(fmt.Sprintf("%s/elem/%020d", lm.prefix, i))
 }
 
-func (lm listMapper)
+func (lm GenericMapper) MetaKey() []byte {
+	return []byte(fmt.Sprintf("%s/meta", lm.prefix))
+}
 
 // QueueMapper is a Mapper interface that provides queue-like functions
 // It panics when the element type cannot be (un/)marshalled by the codec
@@ -176,25 +187,20 @@ type QueueMapper interface {
 	// The interface{} is unmarshalled before the continuation is called
 	// Starts from the top(head) of the queue
 	Flush(sdk.Context, interface{}, func(sdk.Context) bool)
-}
 
-type queueMapper struct {
-	key    sdk.StoreKey
-	cdc    *wire.Codec
-	prefix string
-	lm     ListMapper
+	// Key for the index of top element
+	TopKey() []byte
 }
 
 func NewQueueMapper(cdc *wire.Codec, key sdk.StoreKey, prefix string) QueueMapper {
-	return queueMapper{
+	return GenericMapper{
 		key:    key,
 		cdc:    cdc,
 		prefix: prefix,
-		lm:     NewListMapper(cdc, key, prefix+"list"),
 	}
 }
 
-func (qm queueMapper) getTop(store sdk.KVStore) (res uint64) {
+func (qm GenericMapper) getTop(store sdk.KVStore) (res uint64) {
 	bz := store.Get(qm.TopKey())
 	if bz == nil {
 		store.Set(qm.TopKey(), marshalUint64(qm.cdc, 0))
@@ -208,44 +214,40 @@ func (qm queueMapper) getTop(store sdk.KVStore) (res uint64) {
 	return
 }
 
-func (qm queueMapper) setTop(store sdk.KVStore, top uint64) {
+func (qm GenericMapper) setTop(store sdk.KVStore, top uint64) {
 	bz := marshalUint64(qm.cdc, top)
 	store.Set(qm.TopKey(), bz)
 }
 
-func (qm queueMapper) Push(ctx sdk.Context, value interface{}) {
-	qm.lm.Push(ctx, value)
-}
-
-func (qm queueMapper) Peek(ctx sdk.Context, ptr interface{}) error {
+func (qm GenericMapper) Peek(ctx sdk.Context, ptr interface{}) error {
 	store := ctx.KVStore(qm.key)
 	top := qm.getTop(store)
-	return qm.lm.Get(ctx, top, ptr)
+	return qm.Get(ctx, top, ptr)
 }
 
-func (qm queueMapper) Pop(ctx sdk.Context) {
+func (qm GenericMapper) Pop(ctx sdk.Context) {
 	store := ctx.KVStore(qm.key)
 	top := qm.getTop(store)
-	qm.lm.Delete(ctx, top)
+	qm.Delete(ctx, top)
 	qm.setTop(store, top+1)
 }
 
-func (qm queueMapper) IsEmpty(ctx sdk.Context) bool {
+func (qm GenericMapper) IsEmpty(ctx sdk.Context) bool {
 	store := ctx.KVStore(qm.key)
 	top := qm.getTop(store)
-	length := qm.lm.Len(ctx)
+	length := qm.Len(ctx)
 	return top >= length
 }
 
-func (qm queueMapper) Flush(ctx sdk.Context, ptr interface{}, fn func(sdk.Context) bool) {
+func (qm GenericMapper) Flush(ctx sdk.Context, ptr interface{}, fn func(sdk.Context) bool) {
 	store := ctx.KVStore(qm.key)
 	top := qm.getTop(store)
-	length := qm.lm.Len(ctx)
+	length := qm.Len(ctx)
 
 	var i uint64
 	for i = top; i < length; i++ {
-		qm.lm.Get(ctx, i, ptr)
-		qm.lm.Delete(ctx, i)
+		qm.Get(ctx, i, ptr)
+		qm.Delete(ctx, i)
 		if fn(ctx) {
 			break
 		}
@@ -254,7 +256,7 @@ func (qm queueMapper) Flush(ctx sdk.Context, ptr interface{}, fn func(sdk.Contex
 	qm.setTop(store, i)
 }
 
-func (qm queueMapper) TopKey() []byte {
+func (qm GenericMapper) TopKey() []byte {
 	return []byte(fmt.Sprintf("%s/top", qm.prefix))
 }
 

@@ -93,19 +93,19 @@ func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 
 	// TODO figure out why this times out with connection refused errors in go-bash
 	// unbond a single share
-	//unbondStr := fmt.Sprintf("gaiacli unbond %v", flags)
-	//unbondStr += fmt.Sprintf(" --name=%v", "foo")
-	//unbondStr += fmt.Sprintf(" --address-candidate=%v", fooAddr)
-	//unbondStr += fmt.Sprintf(" --address-delegator=%v", fooAddr)
-	//unbondStr += fmt.Sprintf(" --shares=%v", "1")
-	//unbondStr += fmt.Sprintf(" --sequence=%v", "1")
-	//fmt.Printf("debug unbondStr: %v\n", unbondStr)
-	//executeWrite(t, unbondStr, pass)
-	//time.Sleep(time.Second * 3) // waiting for some blocks to pass
-	//fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
-	//assert.Equal(t, int64(99998), fooAcc.GetCoins().AmountOf("fermion"))
-	//candidate = executeGetCandidate(t, fmt.Sprintf("gaiacli candidate %v --address-candidate=%v", flags, fooAddr))
-	//assert.Equal(t, int64(2), candidate.Assets.Evaluate())
+	unbondStr := fmt.Sprintf("gaiacli unbond %v", flags)
+	unbondStr += fmt.Sprintf(" --name=%v", "foo")
+	unbondStr += fmt.Sprintf(" --address-candidate=%v", fooAddr)
+	unbondStr += fmt.Sprintf(" --address-delegator=%v", fooAddr)
+	unbondStr += fmt.Sprintf(" --shares=%v", "1")
+	unbondStr += fmt.Sprintf(" --sequence=%v", "1")
+	fmt.Printf("debug unbondStr: %v\n", unbondStr)
+	executeWrite(t, unbondStr, pass)
+	time.Sleep(time.Second * 3) // waiting for some blocks to pass
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
+	assert.Equal(t, int64(99998), fooAcc.GetCoins().AmountOf("fermion"))
+	candidate = executeGetCandidate(t, fmt.Sprintf("gaiacli candidate %v --address-candidate=%v", flags, fooAddr))
+	assert.Equal(t, int64(2), candidate.Assets.Evaluate())
 }
 
 func executeWrite(t *testing.T, cmdStr string, writes ...string) {

@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -138,48 +139,27 @@ func TestMsgs(t *testing.T) {
 	}
 }
 
-func TestSortGenesis(t *testing.T) {
-	logger, dbs := loggerAndDB()
-	gapp := NewGaiaApp(logger, dbs)
+func setGenesisAccounts(gapp *GaiaApp, accs ...auth.BaseAccount) error {
+	genaccs := make([]*types.GenesisAccount, len(accs))
+	for i, acc := range accs {
+		genaccs[i] = types.NewGenesisAccount(&types.AppAccount{acc, accName})
+	}
 
-	// Note the order: the coins are unsorted!
-	coinDenom1, coinDenom2 := "foocoin", "barcoin"
+	genesisState := types.GenesisState{
+		Accounts: genaccs,
+	}
 
-	str := `{
-      "accounts": [{
-        "address": "%s",
-        "coins": [
-          {
-            "denom": "%s",
-            "amount": 10
-          },
-          {
-            "denom": "%s",
-            "amount": 20
-          }
-        ]
-      }]
-    }`
-	genState := fmt.Sprintf(str, addr1.String(), coinDenom1, coinDenom2)
+	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
+	if err != nil {
+		return err
+	}
 
 	// Initialize the chain
 	vals := []abci.Validator{}
-	gapp.InitChain(abci.RequestInitChain{vals, []byte(genState)})
+	gapp.InitChain(abci.RequestInitChain{vals, stateBytes})
 	gapp.Commit()
 
-	// Unsorted coins means invalid
-	err := sendMsg5.ValidateBasic()
-	require.Equal(t, sdk.CodeInvalidCoins, err.ABCICode(), err.ABCILog())
-
-	// Sort coins, should be valid
-	sendMsg5.Inputs[0].Coins.Sort()
-	sendMsg5.Outputs[0].Coins.Sort()
-	err = sendMsg5.ValidateBasic()
-	require.Nil(t, err)
-
-	// Ensure we can send
-	require.Nil(t, setGenesis(gapp)) // initialize the pool
-	SignCheckDeliver(t, gapp, sendMsg5, []int64{0}, true, priv1)
+	return nil
 }
 
 func TestGenesis(t *testing.T) {
@@ -247,7 +227,7 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	tx.Signatures[0].Sequence = 1
 	res := gapp.Deliver(tx)
 
-	assert.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
 	// resigning the tx with the bumped sequence should work
 	SignCheckDeliver(t, gapp, sendMsg1, []int64{1}, true, priv1)
@@ -498,18 +478,18 @@ func SignCheckDeliver(t *testing.T, gapp *GaiaApp, msg sdk.Msg, seq []int64, exp
 	// Run a Check
 	res := gapp.Check(tx)
 	if expPass {
-		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
+		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 	} else {
-		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
+		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
 	}
 
 	// Simulate a Block
 	gapp.BeginBlock(abci.RequestBeginBlock{})
 	res = gapp.Deliver(tx)
 	if expPass {
-		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
+		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 	} else {
-		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
+		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
 	}
 	gapp.EndBlock(abci.RequestEndBlock{})
 
@@ -530,9 +510,9 @@ func SignDeliver(t *testing.T, gapp *GaiaApp, msg sdk.Msg, seq []int64, expPass 
 	gapp.BeginBlock(abci.RequestBeginBlock{})
 	res := gapp.Deliver(tx)
 	if expPass {
-		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
+		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 	} else {
-		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
+		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
 	}
 	gapp.EndBlock(abci.RequestEndBlock{})
 }

@@ -37,6 +37,9 @@ type GaiaApp struct {
 	coinKeeper    bank.CoinKeeper
 	ibcMapper     ibc.IBCMapper
 	stakeKeeper   stake.Keeper
+
+	// Handle fees
+	feeHandler sdk.FeeHandler
 }
 
 func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
@@ -59,19 +62,23 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 
 	// add handlers
 	app.coinKeeper = bank.NewCoinKeeper(app.accountMapper)
-	app.ibcMapper = ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
-	app.stakeKeeper = stake.NewKeeper(app.cdc, app.capKeyStakeStore, app.coinKeeper)
+	app.ibcMapper = ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
+	app.stakeKeeper = stake.NewKeeper(app.cdc, app.capKeyStakeStore, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
+
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
+
+	// Define the feeHandler.
+	app.feeHandler = auth.BurnFeeHandler
 
 	// initialize BaseApp
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
 	app.SetEndBlocker(stake.NewEndBlocker(app.stakeKeeper))
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyIBCStore, app.capKeyStakeStore)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeHandler))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -113,7 +120,7 @@ func (app *GaiaApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
 	// are registered by MakeTxCodec
 	err := app.cdc.UnmarshalBinary(txBytes, &tx)
 	if err != nil {
-		return nil, sdk.ErrTxDecode("").TraceCause(err, "")
+		return nil, sdk.ErrTxDecode("").Trace(err.Error())
 	}
 	return tx, nil
 }

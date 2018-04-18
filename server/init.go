@@ -70,7 +70,7 @@ func (c initCmd) run(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// generate secrete and address
+	// generate secret and address
 	addr, secret, err := GenerateCoinKey()
 	if err != nil {
 		return err

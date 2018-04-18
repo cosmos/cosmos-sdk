@@ -75,6 +75,14 @@ func initialPool() Pool {
 	}
 }
 
+// get raw genesis raw message for testing
+func GetDefaultGenesisState() GenesisState {
+	return GenesisState{
+		Pool:   initialPool(),
+		Params: defaultParams(),
+	}
+}
+
 // XXX reference the common declaration of this function
 func subspace(prefix []byte) (start, end []byte) {
 	end = make([]byte, len(prefix))
@@ -132,7 +140,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 		&auth.BaseAccount{}, // prototype
 	).Seal()
 	ck := bank.NewCoinKeeper(accountMapper)
-	keeper := NewKeeper(ctx, cdc, keyStake, ck, DefaultCodespace)
+	keeper := NewKeeper(cdc, keyStake, ck, DefaultCodespace)
 	keeper.setPool(ctx, initialPool())
 	keeper.setParams(ctx, defaultParams())
 

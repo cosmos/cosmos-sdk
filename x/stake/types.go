@@ -7,6 +7,14 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
+// GenesisState - all staking state that must be provided at genesis
+type GenesisState struct {
+	Pool   Pool   `json:"pool"`
+	Params Params `json:"params"`
+}
+
+//_________________________________________________________________________
+
 // Params defines the high level settings for staking
 type Params struct {
 	InflationRateChange sdk.Rat `json:"inflation_rate_change"` // maximum annual change in inflation rate
@@ -31,13 +39,7 @@ type Pool struct {
 	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
 }
 
-// GenesisState - all staking state that must be provided at genesis
-type GenesisState struct {
-	Pool   Pool   `json:"pool"`
-	Params Params `json:"params"`
-}
-
-//_______________________________________________________________________________________________________
+//_________________________________________________________________________
 
 // CandidateStatus - status of a validator-candidate
 type CandidateStatus byte
@@ -64,6 +66,9 @@ type Candidate struct {
 	Liabilities sdk.Rat         `json:"liabilities"` // total shares issued to a candidate's delegators
 	Description Description     `json:"description"` // Description terms for the candidate
 }
+
+// Candidates - list of Candidates
+type Candidates []Candidate
 
 // NewCandidate - initialize a new candidate
 func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Description) Candidate {
@@ -126,12 +131,8 @@ type Validator struct {
 
 // abci validator from stake validator type
 func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
-	pkBytes, err := cdc.MarshalBinary(v.PubKey)
-	if err != nil {
-		panic(err)
-	}
 	return abci.Validator{
-		PubKey: pkBytes,
+		PubKey: v.PubKey.Bytes(),
 		Power:  v.Power.Evaluate(),
 	}
 }
@@ -139,20 +140,11 @@ func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
 // abci validator from stake validator type
 // with zero power used for validator updates
 func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
-	pkBytes, err := cdc.MarshalBinary(v.PubKey)
-	if err != nil {
-		panic(err)
-	}
 	return abci.Validator{
-		PubKey: pkBytes,
+		PubKey: v.PubKey.Bytes(),
 		Power:  0,
 	}
 }
-
-//_________________________________________________________________________
-
-// Candidates - list of Candidates
-type Candidates []Candidate
 
 //_________________________________________________________________________
 
@@ -161,7 +153,7 @@ type Candidates []Candidate
 // pubKey.
 // TODO better way of managing space
 type DelegatorBond struct {
-	DelegatorAddr sdk.Address `json:"delegatoraddr"`
+	DelegatorAddr sdk.Address `json:"delegator_addr"`
 	CandidateAddr sdk.Address `json:"candidate_addr"`
 	Shares        sdk.Rat     `json:"shares"`
 }

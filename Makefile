@@ -7,7 +7,7 @@ all: check_tools get_vendor_deps build build_examples test
 ########################################
 ### CI
 
-ci: get_tools get_vendor_deps build test_cover
+ci: get_tools get_vendor_deps install test_cover
 
 ########################################
 ### Build
@@ -15,11 +15,11 @@ ci: get_tools get_vendor_deps build test_cover
 # This can be unified later, here for easy demos
 build:
 ifeq ($(OS),Windows_NT)
-	go build $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaiad
-	go build $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaiacli
+	go build $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
+	go build $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli
 else
-	go build $(BUILD_FLAGS) -o build/gaiad ./cmd/gaiad
-	go build $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaiacli
+	go build $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
+	go build $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
 endif
 
 build_examples:
@@ -36,8 +36,8 @@ else
 endif
 
 install: 
-	go install $(BUILD_FLAGS) ./cmd/gaiad
-	go install $(BUILD_FLAGS) ./cmd/gaiacli
+	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
+	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 
 install_examples: 
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecoind

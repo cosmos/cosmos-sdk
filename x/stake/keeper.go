@@ -2,7 +2,6 @@ package stake
 
 import (
 	"bytes"
-	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -24,7 +23,7 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, ck bank.CoinKeeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.CoinKeeper, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:   key,
 		cdc:        cdc,
@@ -32,17 +31,6 @@ func NewKeeper(ctx sdk.Context, cdc *wire.Codec, key sdk.StoreKey, ck bank.CoinK
 		codespace:  codespace,
 	}
 	return keeper
-}
-
-// InitGenesis - store genesis parameters
-func (k Keeper) InitGenesis(ctx sdk.Context, data json.RawMessage) error {
-	var state GenesisState
-	if err := json.Unmarshal(data, &state); err != nil {
-		return err
-	}
-	k.setPool(ctx, state.Pool)
-	k.setParams(ctx, state.Params)
-	return nil
 }
 
 //_________________________________________________________________________
@@ -309,7 +297,8 @@ func (k Keeper) clearAccUpdateValidators(ctx sdk.Context) {
 
 //_____________________________________________________________________
 
-func (k Keeper) getDelegatorBond(ctx sdk.Context,
+// load a delegator bong
+func (k Keeper) GetDelegatorBond(ctx sdk.Context,
 	delegatorAddr, candidateAddr sdk.Address) (bond DelegatorBond, found bool) {
 
 	store := ctx.KVStore(k.storeKey)
@@ -326,7 +315,7 @@ func (k Keeper) getDelegatorBond(ctx sdk.Context,
 }
 
 // load all bonds of a delegator
-func (k Keeper) getDelegatorBonds(ctx sdk.Context, delegator sdk.Address, maxRetrieve int16) (bonds []DelegatorBond) {
+func (k Keeper) GetDelegatorBonds(ctx sdk.Context, delegator sdk.Address, maxRetrieve int16) (bonds []DelegatorBond) {
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegatorBondsKey(delegator, k.cdc)
 	iterator := store.Iterator(subspace(delegatorPrefixKey)) //smallest to largest

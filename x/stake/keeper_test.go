@@ -2,11 +2,9 @@ package stake
 
 import (
 	"bytes"
-	"encoding/json"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	crypto "github.com/tendermint/go-crypto"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -128,19 +126,19 @@ func TestBond(t *testing.T) {
 	}
 
 	// check the empty keeper first
-	_, found := keeper.getDelegatorBond(ctx, addrDels[0], addrVals[0])
+	_, found := keeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
 	assert.False(t, found)
 
 	// set and retrieve a record
 	keeper.setDelegatorBond(ctx, bond1to1)
-	resBond, found := keeper.getDelegatorBond(ctx, addrDels[0], addrVals[0])
+	resBond, found := keeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
 	assert.True(t, found)
 	assert.True(t, bondsEqual(bond1to1, resBond))
 
 	// modify a records, save, and retrieve
 	bond1to1.Shares = sdk.NewRat(99)
 	keeper.setDelegatorBond(ctx, bond1to1)
-	resBond, found = keeper.getDelegatorBond(ctx, addrDels[0], addrVals[0])
+	resBond, found = keeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
 	assert.True(t, found)
 	assert.True(t, bondsEqual(bond1to1, resBond))
 
@@ -159,16 +157,16 @@ func TestBond(t *testing.T) {
 	keeper.setDelegatorBond(ctx, bond2to3)
 
 	// test all bond retrieve capabilities
-	resBonds := keeper.getDelegatorBonds(ctx, addrDels[0], 5)
+	resBonds := keeper.GetDelegatorBonds(ctx, addrDels[0], 5)
 	require.Equal(t, 3, len(resBonds))
 	assert.True(t, bondsEqual(bond1to1, resBonds[0]))
 	assert.True(t, bondsEqual(bond1to2, resBonds[1]))
 	assert.True(t, bondsEqual(bond1to3, resBonds[2]))
-	resBonds = keeper.getDelegatorBonds(ctx, addrDels[0], 3)
+	resBonds = keeper.GetDelegatorBonds(ctx, addrDels[0], 3)
 	require.Equal(t, 3, len(resBonds))
-	resBonds = keeper.getDelegatorBonds(ctx, addrDels[0], 2)
+	resBonds = keeper.GetDelegatorBonds(ctx, addrDels[0], 2)
 	require.Equal(t, 2, len(resBonds))
-	resBonds = keeper.getDelegatorBonds(ctx, addrDels[1], 5)
+	resBonds = keeper.GetDelegatorBonds(ctx, addrDels[1], 5)
 	require.Equal(t, 3, len(resBonds))
 	assert.True(t, bondsEqual(bond2to1, resBonds[0]))
 	assert.True(t, bondsEqual(bond2to2, resBonds[1]))
@@ -176,9 +174,9 @@ func TestBond(t *testing.T) {
 
 	// delete a record
 	keeper.removeDelegatorBond(ctx, bond2to3)
-	_, found = keeper.getDelegatorBond(ctx, addrDels[1], addrVals[2])
+	_, found = keeper.GetDelegatorBond(ctx, addrDels[1], addrVals[2])
 	assert.False(t, found)
-	resBonds = keeper.getDelegatorBonds(ctx, addrDels[1], 5)
+	resBonds = keeper.GetDelegatorBonds(ctx, addrDels[1], 5)
 	require.Equal(t, 2, len(resBonds))
 	assert.True(t, bondsEqual(bond2to1, resBonds[0]))
 	assert.True(t, bondsEqual(bond2to2, resBonds[1]))
@@ -186,11 +184,11 @@ func TestBond(t *testing.T) {
 	// delete all the records from delegator 2
 	keeper.removeDelegatorBond(ctx, bond2to1)
 	keeper.removeDelegatorBond(ctx, bond2to2)
-	_, found = keeper.getDelegatorBond(ctx, addrDels[1], addrVals[0])
+	_, found = keeper.GetDelegatorBond(ctx, addrDels[1], addrVals[0])
 	assert.False(t, found)
-	_, found = keeper.getDelegatorBond(ctx, addrDels[1], addrVals[1])
+	_, found = keeper.GetDelegatorBond(ctx, addrDels[1], addrVals[1])
 	assert.False(t, found)
-	resBonds = keeper.getDelegatorBonds(ctx, addrDels[1], 5)
+	resBonds = keeper.GetDelegatorBonds(ctx, addrDels[1], 5)
 	require.Equal(t, 0, len(resBonds))
 }
 
@@ -314,15 +312,6 @@ func TestGetAccUpdateValidators(t *testing.T) {
 			Assets:      sdk.NewRat(amt),
 			Liabilities: sdk.NewRat(amt),
 		}
-	}
-
-	// to compare pubkeys between abci pubkey and crypto.PubKey
-	wirePK := func(pk crypto.PubKey) []byte {
-		pkBytes, err := keeper.cdc.MarshalBinary(pk)
-		if err != nil {
-			panic(err)
-		}
-		return pkBytes
 	}
 
 	// test from nothing to something
@@ -479,7 +468,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	acc = keeper.getAccUpdateValidators(ctx)
 	require.Equal(t, 2, len(acc), "%v", acc)
 
-	assert.Equal(t, wirePK(candidatesIn[0].PubKey), acc[0].PubKey)
+	assert.Equal(t, candidatesIn[0].PubKey.Bytes(), acc[0].PubKey)
 	assert.Equal(t, int64(0), acc[0].Power)
 	assert.Equal(t, vals[0].abciValidator(keeper.cdc), acc[1])
 
@@ -504,10 +493,10 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	require.Equal(t, 0, len(candidates))
 	acc = keeper.getAccUpdateValidators(ctx)
 	require.Equal(t, 4, len(acc))
-	assert.Equal(t, wirePK(candidatesIn[1].PubKey), acc[0].PubKey)
-	assert.Equal(t, wirePK(candidatesIn[2].PubKey), acc[1].PubKey)
-	assert.Equal(t, wirePK(candidatesIn[3].PubKey), acc[2].PubKey)
-	assert.Equal(t, wirePK(candidatesIn[4].PubKey), acc[3].PubKey)
+	assert.Equal(t, candidatesIn[1].PubKey.Bytes(), acc[0].PubKey)
+	assert.Equal(t, candidatesIn[2].PubKey.Bytes(), acc[1].PubKey)
+	assert.Equal(t, candidatesIn[3].PubKey.Bytes(), acc[2].PubKey)
+	assert.Equal(t, candidatesIn[4].PubKey.Bytes(), acc[3].PubKey)
 	assert.Equal(t, int64(0), acc[0].Power)
 	assert.Equal(t, int64(0), acc[1].Power)
 	assert.Equal(t, int64(0), acc[2].Power)
@@ -583,32 +572,4 @@ func TestPool(t *testing.T) {
 	keeper.setPool(ctx, expPool)
 	resPool = keeper.GetPool(ctx)
 	assert.Equal(t, expPool, resPool)
-}
-
-func TestInitGenesis(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
-	jsonStr := `{
-  "params": {
-    "inflation_rate_change": {"num": 13, "denom": 100},
-    "inflation_max": {"num": 20, "denom": 100}, 
-    "inflation_min": {"num": 7, "denom": 100}, 
-    "goal_bonded": {"num": 67, "denom": 100}, 
-    "max_validators": 100,
-    "bond_denom": "fermion"
-  },
-  "pool": {
-    "total_supply": 0,
-    "bonded_shares": {"num": 0, "denom": 1}, 
-    "unbonded_shares": {"num": 0, "denom": 1}, 
-    "bonded_pool": 0,
-    "unbonded_pool": 0,
-    "inflation_last_time": 0,
-    "inflation": {"num": 7, "denom": 100}
-  }
-}`
-	encoded := json.RawMessage(jsonStr)
-	err := keeper.InitGenesis(ctx, encoded)
-	require.Nil(t, err)
-	require.Equal(t, keeper.GetPool(ctx), initialPool())
-	require.Equal(t, keeper.GetParams(ctx), defaultParams())
 }

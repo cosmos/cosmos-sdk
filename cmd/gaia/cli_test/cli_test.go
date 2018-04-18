@@ -1,4 +1,4 @@
-package common
+package clitest
 
 import (
 	"encoding/hex"

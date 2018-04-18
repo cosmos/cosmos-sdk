@@ -27,6 +27,10 @@ type ListMapper interface {
 
 	Push(sdk.Context, interface{})
 
+	// Getter/Setter for meta information - can be customized
+	GetMeta(sdk.Context, interface{}) error
+	SetMeta(sdk.Context, interface{})
+
 	// Iterate*() is used to iterate over all existing elements in the list
 	// Return true in the continuation to break
 
@@ -97,6 +101,21 @@ func (lm listMapper) Push(ctx sdk.Context, value interface{}) {
 	store.Set(lm.LengthKey(), marshalUint64(lm.cdc, length+1))
 }
 
+func (lm listMapper) GetMeta(ctx sdk.Context, ptr interface{}) error {
+	store := ctx.KVStore(lm.key)
+	bz := store.Get(lm.MetaKey())
+	return lm.cdc.UnmarshalBinary(bz, ptr)
+}
+
+func (lm listMapper) SetMeta(ctx sdk.Context, value interface{}) {
+	store := ctx.KVStore(lm.key)
+	bz, err := lm.cdc.MarshalBinary(value)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(lm.MetaKey(), bz)
+}
+
 func (lm listMapper) IterateRead(ctx sdk.Context, ptr interface{}, fn func(sdk.Context, uint64) bool) {
 	store := ctx.KVStore(lm.key)
 	start, end := subspace([]byte(fmt.Sprintf("%s/elem/", lm.prefix)))
@@ -139,6 +158,8 @@ func (lm listMapper) LengthKey() []byte {
 func (lm listMapper) ElemKey(i uint64) []byte {
 	return []byte(fmt.Sprintf("%s/elem/%020d", lm.prefix, i))
 }
+
+func (lm listMapper)
 
 // QueueMapper is a Mapper interface that provides queue-like functions
 // It panics when the element type cannot be (un/)marshalled by the codec

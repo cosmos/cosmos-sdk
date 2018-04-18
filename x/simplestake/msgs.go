@@ -31,7 +31,7 @@ func (msg BondMsg) Type() string {
 
 func (msg BondMsg) ValidateBasic() sdk.Error {
 	if msg.Stake.IsZero() {
-		return ErrEmptyStake()
+		return ErrEmptyStake(DefaultCodespace)
 	}
 
 	if msg.PubKey == nil {

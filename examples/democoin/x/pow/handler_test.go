@@ -22,7 +22,7 @@ func TestPowHandler(t *testing.T) {
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
 	config := NewPowConfig("pow", int64(1))
 	ck := bank.NewCoinKeeper(am)
-	keeper := NewKeeper(capKey, config, ck)
+	keeper := NewKeeper(capKey, config, ck, DefaultCodespace)
 
 	handler := keeper.Handler
 

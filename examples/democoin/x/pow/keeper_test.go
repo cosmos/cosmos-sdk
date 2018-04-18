@@ -35,7 +35,7 @@ func TestPowKeeperGetSet(t *testing.T) {
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
 	config := NewPowConfig("pow", int64(1))
 	ck := bank.NewCoinKeeper(am)
-	keeper := NewKeeper(capKey, config, ck)
+	keeper := NewKeeper(capKey, config, ck, DefaultCodespace)
 
 	err := keeper.InitGenesis(ctx, PowGenesis{uint64(1), uint64(0)})
 	assert.Nil(t, err)

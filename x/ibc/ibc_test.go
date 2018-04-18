@@ -73,7 +73,7 @@ func TestIBC(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, mycoins, coins)
 
-	ibcm := NewIBCMapper(cdc, key)
+	ibcm := NewIBCMapper(cdc, key, DefaultCodespace)
 	h := NewHandler(ibcm, ck)
 	packet := IBCPacket{
 		SrcAddr:   src,

@@ -2,25 +2,42 @@ package types
 
 import (
 	"fmt"
-	"runtime"
+
+	cmn "github.com/tendermint/tmlibs/common"
 
 	abci "github.com/tendermint/abci/types"
 )
 
-// ABCI Response Code
-type CodeType uint32
+// ABCICodeType - combined codetype / codespace
+type ABCICodeType uint32
 
-// is everything okay?
-func (code CodeType) IsOK() bool {
-	if code == CodeOK {
+// CodeType - code identifier within codespace
+type CodeType uint16
+
+// CodespaceType - codespace identifier
+type CodespaceType uint16
+
+// IsOK - is everything okay?
+func (code ABCICodeType) IsOK() bool {
+	if code == ABCICodeOK {
 		return true
 	}
 	return false
 }
 
-// ABCI Response Codes
-// Base SDK reserves 0 - 99.
+func ToABCICode(space CodespaceType, code CodeType) ABCICodeType {
+	// TODO: Make Tendermint more aware of codespaces.
+	if space == CodespaceRoot && code == CodeOK {
+		return ABCICodeOK
+	}
+	return ABCICodeType((uint32(space) << 16) | uint32(code))
+}
+
 const (
+	// ABCI error codes
+	ABCICodeOK ABCICodeType = 0
+
+	// Base error codes
 	CodeOK                CodeType = 0
 	CodeInternal          CodeType = 1
 	CodeTxDecode          CodeType = 2
@@ -34,7 +51,14 @@ const (
 	CodeInsufficientCoins CodeType = 10
 	CodeInvalidCoins      CodeType = 11
 
-	CodeGenesisParse CodeType = 0xdead // TODO: remove ? // why remove?
+	// CodespaceRoot is a codespace for error codes in this file only.
+	// Notice that 0 is an "unset" codespace, which can be overridden with
+	// Error.WithDefaultCodespace().
+	CodespaceUndefined CodespaceType = 0
+	CodespaceRoot      CodespaceType = 1
+
+	// Maximum reservable codespace (2^16 - 1)
+	MaximumCodespace CodespaceType = 65535
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
@@ -44,8 +68,6 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "Internal error"
 	case CodeTxDecode:
 		return "Tx parse error"
-	case CodeGenesisParse:
-		return "Genesis parse error"
 	case CodeInvalidSequence:
 		return "Invalid sequence"
 	case CodeUnauthorized:
@@ -75,40 +97,37 @@ func CodeToDefaultMsg(code CodeType) string {
 
 // nolint
 func ErrInternal(msg string) Error {
-	return newError(CodeInternal, msg)
+	return newErrorWithRootCodespace(CodeInternal, msg)
 }
 func ErrTxDecode(msg string) Error {
-	return newError(CodeTxDecode, msg)
-}
-func ErrGenesisParse(msg string) Error {
-	return newError(CodeGenesisParse, msg)
+	return newErrorWithRootCodespace(CodeTxDecode, msg)
 }
 func ErrInvalidSequence(msg string) Error {
-	return newError(CodeInvalidSequence, msg)
+	return newErrorWithRootCodespace(CodeInvalidSequence, msg)
 }
 func ErrUnauthorized(msg string) Error {
-	return newError(CodeUnauthorized, msg)
+	return newErrorWithRootCodespace(CodeUnauthorized, msg)
 }
 func ErrInsufficientFunds(msg string) Error {
-	return newError(CodeInsufficientFunds, msg)
+	return newErrorWithRootCodespace(CodeInsufficientFunds, msg)
 }
 func ErrUnknownRequest(msg string) Error {
-	return newError(CodeUnknownRequest, msg)
+	return newErrorWithRootCodespace(CodeUnknownRequest, msg)
 }
 func ErrInvalidAddress(msg string) Error {
-	return newError(CodeInvalidAddress, msg)
+	return newErrorWithRootCodespace(CodeInvalidAddress, msg)
 }
 func ErrUnknownAddress(msg string) Error {
-	return newError(CodeUnknownAddress, msg)
+	return newErrorWithRootCodespace(CodeUnknownAddress, msg)
 }
 func ErrInvalidPubKey(msg string) Error {
-	return newError(CodeInvalidPubKey, msg)
+	return newErrorWithRootCodespace(CodeInvalidPubKey, msg)
 }
 func ErrInsufficientCoins(msg string) Error {
-	return newError(CodeInsufficientCoins, msg)
+	return newErrorWithRootCodespace(CodeInsufficientCoins, msg)
 }
 func ErrInvalidCoins(msg string) Error {
-	return newError(CodeInvalidCoins, msg)
+	return newErrorWithRootCodespace(CodeInvalidCoins, msg)
 }
 
 //----------------------------------------
@@ -117,104 +136,98 @@ func ErrInvalidCoins(msg string) Error {
 // sdk Error type
 type Error interface {
 	Error() string
-	ABCICode() CodeType
+	Code() CodeType
+	Codespace() CodespaceType
 	ABCILog() string
+	ABCICode() ABCICodeType
+	WithDefaultCodespace(codespace CodespaceType) Error
 	Trace(msg string) Error
-	TraceCause(cause error, msg string) Error
-	Cause() error
+	T() interface{}
 	Result() Result
 	QueryResult() abci.ResponseQuery
 }
 
-func NewError(code CodeType, msg string) Error {
-	return newError(code, msg)
+// NewError - create an error
+func NewError(codespace CodespaceType, code CodeType, msg string) Error {
+	return newError(codespace, code, msg)
 }
 
-type traceItem struct {
-	msg      string
-	filename string
-	lineno   int
+func newErrorWithRootCodespace(code CodeType, msg string) *sdkError {
+	return newError(CodespaceRoot, code, msg)
 }
 
-func (ti traceItem) String() string {
-	return fmt.Sprintf("%v:%v %v", ti.filename, ti.lineno, ti.msg)
-}
-
-type sdkError struct {
-	code   CodeType
-	msg    string
-	cause  error
-	traces []traceItem
-}
-
-func newError(code CodeType, msg string) *sdkError {
-	// TODO capture stacktrace if ENV is set.
+func newError(codespace CodespaceType, code CodeType, msg string) *sdkError {
 	if msg == "" {
 		msg = CodeToDefaultMsg(code)
 	}
 	return &sdkError{
-		code:   code,
-		msg:    msg,
-		cause:  nil,
-		traces: nil,
+		codespace: codespace,
+		code:      code,
+		err:       cmn.NewErrorWithT(code, msg),
 	}
+}
+
+type sdkError struct {
+	codespace CodespaceType
+	code      CodeType
+	err       cmn.Error
 }
 
 // Implements ABCIError.
 func (err *sdkError) Error() string {
-	return fmt.Sprintf("Error{%d:%s,%v,%v}", err.code, err.msg, err.cause, len(err.traces))
+	return fmt.Sprintf("Error{%d:%d,%#v}", err.codespace, err.code, err.err)
 }
 
 // Implements ABCIError.
-func (err *sdkError) ABCICode() CodeType {
+func (err *sdkError) ABCICode() ABCICodeType {
+	return ToABCICode(err.codespace, err.code)
+}
+
+// Implements Error.
+func (err *sdkError) Codespace() CodespaceType {
+	return err.codespace
+}
+
+// Implements Error.
+func (err *sdkError) Code() CodeType {
 	return err.code
 }
 
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
-	traceLog := ""
-	for _, ti := range err.traces {
-		traceLog += ti.String() + "\n"
-	}
-	return fmt.Sprintf("msg: %v\ntrace:\n%v",
-		err.msg,
-		traceLog,
-	)
+	return fmt.Sprintf(`=== ABCI Log ===
+Codespace: %v
+Code:      %v
+ABCICode:  %v
+Error:     %#v
+=== /ABCI Log ===
+`, err.codespace, err.code, err.ABCICode(), err.err)
 }
 
 // Add tracing information with msg.
 func (err *sdkError) Trace(msg string) Error {
-	return err.doTrace(msg, 2)
-}
-
-// Add tracing information with cause and msg.
-func (err *sdkError) TraceCause(cause error, msg string) Error {
-	err.cause = cause
-	return err.doTrace(msg, 2)
-}
-
-func (err *sdkError) doTrace(msg string, n int) Error {
-	_, fn, line, ok := runtime.Caller(n)
-	if !ok {
-		if fn == "" {
-			fn = "<unknown>"
-		}
-		if line <= 0 {
-			line = -1
-		}
+	return &sdkError{
+		codespace: err.codespace,
+		code:      err.code,
+		err:       err.err.Trace(msg),
 	}
-	// Include file & line number & msg.
-	// Do not include the whole stack trace.
-	err.traces = append(err.traces, traceItem{
-		filename: fn,
-		lineno:   line,
-		msg:      msg,
-	})
-	return err
 }
 
-func (err *sdkError) Cause() error {
-	return err.cause
+// Implements Error.
+func (err *sdkError) WithDefaultCodespace(cs CodespaceType) Error {
+	codespace := err.codespace
+	if codespace == CodespaceUndefined {
+		codespace = cs
+	}
+	return &sdkError{
+		codespace: codespace,
+		code:      err.code,
+		err:       err.err,
+	}
+}
+
+func (err *sdkError) T() interface{} {
+	return err.err.T()
 }
 
 func (err *sdkError) Result() Result {

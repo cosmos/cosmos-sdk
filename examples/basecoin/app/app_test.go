@@ -166,7 +166,7 @@ func TestSortGenesis(t *testing.T) {
 
 	// Unsorted coins means invalid
 	err := sendMsg5.ValidateBasic()
-	require.Equal(t, sdk.CodeInvalidCoins, err.ABCICode(), err.ABCILog())
+	require.Equal(t, sdk.CodeInvalidCoins, err.Code(), err.ABCILog())
 
 	// Sort coins, should be valid
 	sendMsg5.Inputs[0].Coins.Sort()
@@ -243,7 +243,7 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	tx.Signatures[0].Sequence = 1
 	res := bapp.Deliver(tx)
 
-	assert.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
 
 	// resigning the tx with the bumped sequence should work
 	SignCheckDeliver(t, bapp, sendMsg1, []int64{1}, true, priv1)
@@ -437,18 +437,18 @@ func SignCheckDeliver(t *testing.T, bapp *BasecoinApp, msg sdk.Msg, seq []int64,
 	// Run a Check
 	res := bapp.Check(tx)
 	if expPass {
-		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
+		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 	} else {
-		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
+		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
 	}
 
 	// Simulate a Block
 	bapp.BeginBlock(abci.RequestBeginBlock{})
 	res = bapp.Deliver(tx)
 	if expPass {
-		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
+		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 	} else {
-		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
+		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
 	}
 	bapp.EndBlock(abci.RequestEndBlock{})
 	//bapp.Commit()

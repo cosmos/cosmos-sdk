@@ -57,10 +57,10 @@ func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keepe
 	// check to see if the pubkey or sender has been registered before
 	_, found := k.GetCandidate(ctx, msg.CandidateAddr)
 	if found {
-		return ErrCandidateExistsAddr().Result()
+		return ErrCandidateExistsAddr(k.codespace).Result()
 	}
 	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
-		return ErrBadBondingDenom().Result()
+		return ErrBadBondingDenom(k.codespace).Result()
 	}
 	if ctx.IsCheckTx() {
 		return sdk.Result{
@@ -85,7 +85,7 @@ func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk
 	// candidate must already be registered
 	candidate, found := k.GetCandidate(ctx, msg.CandidateAddr)
 	if !found {
-		return ErrBadCandidateAddr().Result()
+		return ErrBadCandidateAddr(k.codespace).Result()
 	}
 	if ctx.IsCheckTx() {
 		return sdk.Result{
@@ -93,7 +93,7 @@ func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk
 		}
 	}
 	if candidate.Status == Unbonded { //candidate has been withdrawn
-		return ErrBondNotNominated().Result()
+		return ErrBondNotNominated(k.codespace).Result()
 	}
 
 	// XXX move to types
@@ -111,13 +111,13 @@ func handleMsgDelegate(ctx sdk.Context, msg MsgDelegate, k Keeper) sdk.Result {
 
 	candidate, found := k.GetCandidate(ctx, msg.CandidateAddr)
 	if !found {
-		return ErrBadCandidateAddr().Result()
+		return ErrBadCandidateAddr(k.codespace).Result()
 	}
 	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
-		return ErrBadBondingDenom().Result()
+		return ErrBadBondingDenom(k.codespace).Result()
 	}
 	if candidate.Status == Revoked {
-		return ErrCandidateRevoked().Result()
+		return ErrCandidateRevoked(k.codespace).Result()
 	}
 	if ctx.IsCheckTx() {
 		return sdk.Result{
@@ -165,10 +165,10 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	// check if bond has any shares in it unbond
 	bond, found := k.getDelegatorBond(ctx, msg.DelegatorAddr, msg.CandidateAddr)
 	if !found {
-		return ErrNoDelegatorForAddress().Result()
+		return ErrNoDelegatorForAddress(k.codespace).Result()
 	}
 	if !bond.Shares.GT(sdk.ZeroRat) { // bond shares < msg shares
-		return ErrInsufficientFunds().Result()
+		return ErrInsufficientFunds(k.codespace).Result()
 	}
 
 	// test getting rational number from decimal provided
@@ -180,18 +180,18 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	// test that there are enough shares to unbond
 	if msg.Shares == "MAX" {
 		if !bond.Shares.GT(sdk.ZeroRat) {
-			return ErrNotEnoughBondShares(msg.Shares).Result()
+			return ErrNotEnoughBondShares(k.codespace, msg.Shares).Result()
 		}
 	} else {
 		if bond.Shares.LT(shares) {
-			return ErrNotEnoughBondShares(msg.Shares).Result()
+			return ErrNotEnoughBondShares(k.codespace, msg.Shares).Result()
 		}
 	}
 
 	// get candidate
 	candidate, found := k.GetCandidate(ctx, msg.CandidateAddr)
 	if !found {
-		return ErrNoCandidateForAddress().Result()
+		return ErrNoCandidateForAddress(k.codespace).Result()
 	}
 
 	if ctx.IsCheckTx() {

@@ -80,7 +80,7 @@ func TestKeys(t *testing.T) {
 	jsonStr = []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed": "%s"}`, newName, newPassword, newSeed))
 	res, body = request(t, port, "POST", "/keys", jsonStr)
 
-	assert.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	addr := body
 	assert.Len(t, addr, 40, "Returned address has wrong format", addr)
 
@@ -311,7 +311,11 @@ func TestTxs(t *testing.T) {
 // strt TM and the LCD in process, listening on their respective sockets
 func startTMAndLCD() (*nm.Node, net.Listener, error) {
 
-	viper.Set(cli.HomeFlag, os.TempDir())
+	dir, err := ioutil.TempDir("", "lcd_test")
+	if err != nil {
+		return nil, nil, err
+	}
+	viper.Set(cli.HomeFlag, dir)
 	kb, err := keys.GetKeyBase() // dbm.NewMemDB()) // :(
 	if err != nil {
 		return nil, nil, err

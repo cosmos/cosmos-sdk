@@ -44,7 +44,7 @@ func handleQuizMsg(ctx sdk.Context, k Keeper, msg QuizMsg) sdk.Result {
 	correct := k.CheckTrend(ctx, msg.CoolAnswer)
 
 	if !correct {
-		return ErrIncorrectCoolAnswer(msg.CoolAnswer).Result()
+		return ErrIncorrectCoolAnswer(k.codespace, msg.CoolAnswer).Result()
 	}
 
 	if ctx.IsCheckTx() {

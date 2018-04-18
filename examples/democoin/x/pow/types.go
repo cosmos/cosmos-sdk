@@ -52,7 +52,7 @@ func (msg MineMsg) ValidateBasic() sdk.Error {
 	hex.Encode(hashHex, hash)
 	hashHex = hashHex[:16]
 	if !bytes.Equal(hashHex, msg.Proof) {
-		return ErrInvalidProof(fmt.Sprintf("hashHex: %s, proof: %s", hashHex, msg.Proof))
+		return ErrInvalidProof(DefaultCodespace, fmt.Sprintf("hashHex: %s, proof: %s", hashHex, msg.Proof))
 	}
 
 	// check proof below difficulty
@@ -60,10 +60,10 @@ func (msg MineMsg) ValidateBasic() sdk.Error {
 	target := math.MaxUint64 / msg.Difficulty
 	hashUint, err := strconv.ParseUint(string(msg.Proof), 16, 64)
 	if err != nil {
-		return ErrInvalidProof(fmt.Sprintf("proof: %s", msg.Proof))
+		return ErrInvalidProof(DefaultCodespace, fmt.Sprintf("proof: %s", msg.Proof))
 	}
 	if hashUint >= target {
-		return ErrNotBelowTarget(fmt.Sprintf("hashuint: %d, target: %d", hashUint, target))
+		return ErrNotBelowTarget(DefaultCodespace, fmt.Sprintf("hashuint: %d, target: %d", hashUint, target))
 	}
 
 	return nil

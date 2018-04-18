@@ -21,17 +21,18 @@ type PowGenesis struct {
 }
 
 type Keeper struct {
-	key    sdk.StoreKey
-	config PowConfig
-	ck     bank.CoinKeeper
+	key       sdk.StoreKey
+	config    PowConfig
+	ck        bank.CoinKeeper
+	codespace sdk.CodespaceType
 }
 
 func NewPowConfig(denomination string, reward int64) PowConfig {
 	return PowConfig{denomination, reward}
 }
 
-func NewKeeper(key sdk.StoreKey, config PowConfig, ck bank.CoinKeeper) Keeper {
-	return Keeper{key, config, ck}
+func NewKeeper(key sdk.StoreKey, config PowConfig, ck bank.CoinKeeper, codespace sdk.CodespaceType) Keeper {
+	return Keeper{key, config, ck, codespace}
 }
 
 func (pk Keeper) InitGenesis(ctx sdk.Context, genesis PowGenesis) error {
@@ -78,24 +79,24 @@ func (pk Keeper) CheckValid(ctx sdk.Context, difficulty uint64, count uint64) (u
 
 	lastDifficulty, err := pk.GetLastDifficulty(ctx)
 	if err != nil {
-		return 0, 0, ErrNonexistentDifficulty()
+		return 0, 0, ErrNonexistentDifficulty(pk.codespace)
 	}
 
 	newDifficulty := lastDifficulty + 1
 
 	lastCount, err := pk.GetLastCount(ctx)
 	if err != nil {
-		return 0, 0, ErrNonexistentCount()
+		return 0, 0, ErrNonexistentCount(pk.codespace)
 	}
 
 	newCount := lastCount + 1
 
 	if count != newCount {
-		return 0, 0, ErrInvalidCount(fmt.Sprintf("invalid count: was %d, should have been %d", count, newCount))
+		return 0, 0, ErrInvalidCount(pk.codespace, fmt.Sprintf("invalid count: was %d, should have been %d", count, newCount))
 	}
 
 	if difficulty != newDifficulty {
-		return 0, 0, ErrInvalidDifficulty(fmt.Sprintf("invalid difficulty: was %d, should have been %d", difficulty, newDifficulty))
+		return 0, 0, ErrInvalidDifficulty(pk.codespace, fmt.Sprintf("invalid difficulty: was %d, should have been %d", difficulty, newDifficulty))
 	}
 
 	return newDifficulty, newCount, nil

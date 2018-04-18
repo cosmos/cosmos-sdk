@@ -202,12 +202,12 @@ func TestSendMsgWithAccounts(t *testing.T) {
 
 	// Run a Check
 	res := bapp.Check(tx)
-	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	assert.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 
 	// Simulate a Block
 	bapp.BeginBlock(abci.RequestBeginBlock{})
 	res = bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	assert.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 
 	// Check balances
 	ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
@@ -218,19 +218,19 @@ func TestSendMsgWithAccounts(t *testing.T) {
 
 	// Delivering again should cause replay error
 	res = bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeInvalidSequence, res.Code, res.Log)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeInvalidSequence), sdk.ABCICodeType(res.Code), res.Log)
 
 	// bumping the txnonce number without resigning should be an auth error
 	tx.Signatures[0].Sequence = 1
 	res = bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), sdk.ABCICodeType(res.Code), res.Log)
 
 	// resigning the tx with the bumped sequence should work
 	sequences = []int64{1}
 	sig = priv1.Sign(sdk.StdSignBytes(chainID, sequences, fee, tx.Msg))
 	tx.Signatures[0].Signature = sig
 	res = bapp.Deliver(tx)
-	assert.Equal(t, sdk.CodeOK, res.Code, res.Log)
+	assert.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 }
 
 func TestMineMsg(t *testing.T) {
@@ -403,18 +403,18 @@ func SignCheckDeliver(t *testing.T, bapp *DemocoinApp, msg sdk.Msg, seq int64, e
 	// Run a Check
 	res := bapp.Check(tx)
 	if expPass {
-		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
+		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 	} else {
-		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
+		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
 	}
 
 	// Simulate a Block
 	bapp.BeginBlock(abci.RequestBeginBlock{})
 	res = bapp.Deliver(tx)
 	if expPass {
-		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
+		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 	} else {
-		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
+		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
 	}
 	bapp.EndBlock(abci.RequestEndBlock{})
 	//bapp.Commit()

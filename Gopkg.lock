@@ -342,7 +342,7 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "d0beaba7e8a5652506a34b5fab299cc2dc274c02"
+  revision = "a2930cd7233f04f5a651020669289296545e70dc"
   version = "v0.19.0"
 
 [[projects]]
@@ -384,6 +384,7 @@
   name = "golang.org/x/net"
   packages = [
     "context",
+    "http/httpguts",
     "http2",
     "http2/hpack",
     "idna",
@@ -391,13 +392,13 @@
     "lex/httplex",
     "trace"
   ]
-  revision = "61147c48b25b599e5b561d2e9c4f3e1ef489ca41"
+  revision = "8d16fa6dc9a85c1cd3ed24ad08ff21cf94f10888"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
+  revision = "b126b21c05a91c856b027c16779c12e3bf236954"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -424,7 +425,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "51d0944304c3cbce4afe9e5247e21100037bff78"
+  revision = "7fd901a49ba6a7f87732eb344f6e3c5b19d1b200"
 
 [[projects]]
   name = "google.golang.org/grpc"

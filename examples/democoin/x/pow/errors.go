@@ -7,6 +7,8 @@ import (
 type CodeType = sdk.CodeType
 
 const (
+	DefaultCodespace sdk.CodespaceType = 5
+
 	CodeInvalidDifficulty     CodeType = 201
 	CodeNonexistentDifficulty CodeType = 202
 	CodeNonexistentReward     CodeType = 203
@@ -40,32 +42,32 @@ func codeToDefaultMsg(code CodeType) string {
 	}
 }
 
-func ErrInvalidDifficulty(msg string) sdk.Error {
-	return newError(CodeInvalidDifficulty, msg)
+func ErrInvalidDifficulty(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return newError(codespace, CodeInvalidDifficulty, msg)
 }
 
-func ErrNonexistentDifficulty() sdk.Error {
-	return newError(CodeNonexistentDifficulty, "")
+func ErrNonexistentDifficulty(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeNonexistentDifficulty, "")
 }
 
-func ErrNonexistentReward() sdk.Error {
-	return newError(CodeNonexistentReward, "")
+func ErrNonexistentReward(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeNonexistentReward, "")
 }
 
-func ErrNonexistentCount() sdk.Error {
-	return newError(CodeNonexistentCount, "")
+func ErrNonexistentCount(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeNonexistentCount, "")
 }
 
-func ErrInvalidProof(msg string) sdk.Error {
-	return newError(CodeInvalidProof, msg)
+func ErrInvalidProof(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return newError(codespace, CodeInvalidProof, msg)
 }
 
-func ErrNotBelowTarget(msg string) sdk.Error {
-	return newError(CodeNotBelowTarget, msg)
+func ErrNotBelowTarget(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return newError(codespace, CodeNotBelowTarget, msg)
 }
 
-func ErrInvalidCount(msg string) sdk.Error {
-	return newError(CodeInvalidCount, msg)
+func ErrInvalidCount(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return newError(codespace, CodeInvalidCount, msg)
 }
 
 func msgOrDefaultMsg(msg string, code CodeType) string {
@@ -76,7 +78,7 @@ func msgOrDefaultMsg(msg string, code CodeType) string {
 	}
 }
 
-func newError(code CodeType, msg string) sdk.Error {
+func newError(codespace sdk.CodespaceType, code CodeType, msg string) sdk.Error {
 	msg = msgOrDefaultMsg(msg, code)
-	return sdk.NewError(code, msg)
+	return sdk.NewError(codespace, code, msg)
 }

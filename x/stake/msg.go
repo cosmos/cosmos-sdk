@@ -60,18 +60,18 @@ func (msg MsgDeclareCandidacy) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgDeclareCandidacy) ValidateBasic() sdk.Error {
 	if msg.CandidateAddr == nil {
-		return ErrCandidateEmpty()
+		return ErrCandidateEmpty(DefaultCodespace)
 	}
 	if msg.Bond.Denom != StakingToken {
-		return ErrBadBondingDenom()
+		return ErrBadBondingDenom(DefaultCodespace)
 	}
 	if msg.Bond.Amount <= 0 {
-		return ErrBadBondingAmount()
+		return ErrBadBondingAmount(DefaultCodespace)
 		// return sdk.ErrInvalidCoins(sdk.Coins{msg.Bond}.String())
 	}
 	empty := Description{}
 	if msg.Description == empty {
-		return newError(CodeInvalidInput, "description must be included")
+		return newError(DefaultCodespace, CodeInvalidInput, "description must be included")
 	}
 	return nil
 }
@@ -111,11 +111,11 @@ func (msg MsgEditCandidacy) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgEditCandidacy) ValidateBasic() sdk.Error {
 	if msg.CandidateAddr == nil {
-		return ErrCandidateEmpty()
+		return ErrCandidateEmpty(DefaultCodespace)
 	}
 	empty := Description{}
 	if msg.Description == empty {
-		return newError(CodeInvalidInput, "Transaction must include some information to modify")
+		return newError(DefaultCodespace, CodeInvalidInput, "Transaction must include some information to modify")
 	}
 	return nil
 }
@@ -157,16 +157,16 @@ func (msg MsgDelegate) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.DelegatorAddr == nil {
-		return ErrBadDelegatorAddr()
+		return ErrBadDelegatorAddr(DefaultCodespace)
 	}
 	if msg.CandidateAddr == nil {
-		return ErrBadCandidateAddr()
+		return ErrBadCandidateAddr(DefaultCodespace)
 	}
 	if msg.Bond.Denom != StakingToken {
-		return ErrBadBondingDenom()
+		return ErrBadBondingDenom(DefaultCodespace)
 	}
 	if msg.Bond.Amount <= 0 {
-		return ErrBadBondingAmount()
+		return ErrBadBondingAmount(DefaultCodespace)
 		// return sdk.ErrInvalidCoins(sdk.Coins{msg.Bond}.String())
 	}
 	return nil
@@ -209,18 +209,18 @@ func (msg MsgUnbond) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgUnbond) ValidateBasic() sdk.Error {
 	if msg.DelegatorAddr == nil {
-		return ErrBadDelegatorAddr()
+		return ErrBadDelegatorAddr(DefaultCodespace)
 	}
 	if msg.CandidateAddr == nil {
-		return ErrBadCandidateAddr()
+		return ErrBadCandidateAddr(DefaultCodespace)
 	}
 	if msg.Shares != "MAX" {
 		rat, err := sdk.NewRatFromDecimal(msg.Shares)
 		if err != nil {
-			return ErrBadShares()
+			return ErrBadShares(DefaultCodespace)
 		}
 		if rat.IsZero() || rat.LT(sdk.ZeroRat) {
-			return ErrBadShares()
+			return ErrBadShares(DefaultCodespace)
 		}
 	}
 	return nil

@@ -33,7 +33,7 @@ func NewIBCPacket(srcAddr sdk.Address, destAddr sdk.Address, coins sdk.Coins,
 
 func (ibcp IBCPacket) ValidateBasic() sdk.Error {
 	if ibcp.SrcChain == ibcp.DestChain {
-		return ErrIdenticalChains().Trace("")
+		return ErrIdenticalChains(DefaultCodespace).Trace("")
 	}
 	if !ibcp.Coins.IsValid() {
 		return sdk.ErrInvalidCoins("")

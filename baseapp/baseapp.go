@@ -24,11 +24,12 @@ var dbHeaderKey = []byte("header")
 // The ABCI application
 type BaseApp struct {
 	// initialized on creation
-	Logger log.Logger
-	name   string               // application name from abci.Info
-	db     dbm.DB               // common DB backend
-	cms    sdk.CommitMultiStore // Main (uncached) state
-	router Router               // handle any kind of message
+	Logger     log.Logger
+	name       string               // application name from abci.Info
+	db         dbm.DB               // common DB backend
+	cms        sdk.CommitMultiStore // Main (uncached) state
+	router     Router               // handle any kind of message
+	codespacer *sdk.Codespacer      // handle module codespacing
 
 	// must be set
 	txDecoder   sdk.TxDecoder   // unmarshal []byte into sdk.Tx
@@ -56,18 +57,28 @@ var _ abci.Application = (*BaseApp)(nil)
 // Create and name new BaseApp
 // NOTE: The db is used to store the version number for now.
 func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
-	return &BaseApp{
-		Logger: logger,
-		name:   name,
-		db:     db,
-		cms:    store.NewCommitMultiStore(db),
-		router: NewRouter(),
+	app := &BaseApp{
+		Logger:     logger,
+		name:       name,
+		db:         db,
+		cms:        store.NewCommitMultiStore(db),
+		router:     NewRouter(),
+		codespacer: sdk.NewCodespacer(),
 	}
+	// Register the undefined & root codespaces, which should not be used by any modules
+	app.codespacer.RegisterOrPanic(sdk.CodespaceUndefined)
+	app.codespacer.RegisterOrPanic(sdk.CodespaceRoot)
+	return app
 }
 
 // BaseApp Name
 func (app *BaseApp) Name() string {
 	return app.name
+}
+
+// Register the next available codespace through the baseapp's codespacer, starting from a default
+func (app *BaseApp) RegisterCodespace(codespace sdk.CodespaceType) sdk.CodespaceType {
+	return app.codespacer.RegisterNext(codespace)
 }
 
 // Mount a store to the provided key in the BaseApp multistore
@@ -355,6 +366,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	// Validate the Msg.
 	err := msg.ValidateBasic()
 	if err != nil {
+		err = err.WithDefaultCodespace(sdk.CodespaceRoot)
 		return err.Result()
 	}
 

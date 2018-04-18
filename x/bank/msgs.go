@@ -28,10 +28,10 @@ func (msg SendMsg) ValidateBasic() sdk.Error {
 	// this just makes sure all the inputs and outputs are properly formatted,
 	// not that they actually have the money inside
 	if len(msg.Inputs) == 0 {
-		return ErrNoInputs().Trace("")
+		return ErrNoInputs(DefaultCodespace).Trace("")
 	}
 	if len(msg.Outputs) == 0 {
-		return ErrNoOutputs().Trace("")
+		return ErrNoOutputs(DefaultCodespace).Trace("")
 	}
 	// make sure all inputs and outputs are individually valid
 	var totalIn, totalOut sdk.Coins
@@ -102,7 +102,7 @@ func (msg IssueMsg) Type() string { return "bank" } // TODO: "bank/issue"
 func (msg IssueMsg) ValidateBasic() sdk.Error {
 	// XXX
 	if len(msg.Outputs) == 0 {
-		return ErrNoOutputs().Trace("")
+		return ErrNoOutputs(DefaultCodespace).Trace("")
 	}
 	for _, out := range msg.Outputs {
 		if err := out.ValidateBasic(); err != nil {

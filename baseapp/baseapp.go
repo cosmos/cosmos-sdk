@@ -353,13 +353,6 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 		return sdk.ErrInternal("Tx.GetMsg() returned nil").Result()
 	}
 
-	// Match route. We must do this before ValidateBasic because we need the codespace
-	msgType := msg.Type()
-	handler := app.router.Route(msgType)
-	if handler == nil {
-		return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
-	}
-
 	// Validate the Msg.
 	err := msg.ValidateBasic()
 	if err != nil {
@@ -384,6 +377,13 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 		if !newCtx.IsZero() {
 			ctx = newCtx
 		}
+	}
+
+	// Match route.
+	msgType := msg.Type()
+	handler := app.router.Route(msgType)
+	if handler == nil {
+		return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
 	}
 
 	// Get the correct cache

@@ -31,7 +31,7 @@ jobs:
           name: binaries
           command: |
             export PATH="$GOBIN:$PATH"
-            make build
+            make install
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
@@ -59,6 +59,8 @@ jobs:
       - run:
           name: Run tests
           command: |
+            export PATH="$GOBIN:$PATH"
+            make install
             for pkg in $(go list github.com/cosmos/cosmos-sdk/... | grep -v /vendor/ | circleci tests split --split-by=timings); do
               id=$(basename "$pkg")
 

@@ -1,14 +1,16 @@
-## 3 Packets
+## 3 Channels & Packets
 
 ([Back to table of contents](README.md#contents))
 
-IBC uses an asynchronous message passing model that makes no assumptions about network synchrony. Chain _A_ and chain _B_ confirm new blocks independently, and IBC packets from one chain to the other may be delayed or censored arbitrarily. The speed of the IBC packet queue is limited only by the speed of the underlying chains.
+### 3.1 Background
 
-The IBC protocol as defined here is payload-agnostic. The packet receiver on chain _B_ decides how to act upon the incoming message, and may add its own application logic to determine which state transactions to apply (or not). Both chains must only agree that the packet has been received and either accepted or rejected, which is determined independently of any application logic.
+IBC uses an asynchronous message passing model that makes no assumptions about network synchrony. IBC *data packets* (hereafter just *packets*) are relayed from one blockchain to the other by external infrastructure. Chain _A_ and chain _B_ confirm new blocks independently, and packets from one chain to the other may be delayed or censored arbitrarily. The speed of packet transmission and confirmation is limited only by the speed of the underlying chains.
 
-To facilitate building useful application logic, we introduce a reliable messaging queue (hereafter just referred to as a queue) to allow us to guarantee a cross-chain causal ordering[[5](./references.md#5)] of IBC packets. Causal ordering means that if packet _x_ is processed before packet _y_ on chain _A_, packet _x_ must also be processed before packet _y_ on chain _B_. IBC implements a [vector clock](https://en.wikipedia.org/wiki/Vector_clock) for the restricted case of two processes (in our case, blockchains). 
+The IBC protocol as defined here is payload-agnostic. The packet receiver on chain _B_ decides how to act upon the incoming message, and may add its own application logic to determine which state transactions to apply according to what data the packet contains. Both chains must only agree that the packet has been received and either accepted or rejected.
 
-Formally, given _x_ &#8594; _y_ means _x_ is causally before _y_, and chains A and B, and _a_ &#8658; _b_ means _a_ implies _b_:
+To facilitate useful application logic, we introduce an IBC *channel*: a set of reliable messaging queues that allows us to guarantee a cross-chain causal ordering[[5](./references.md#5)] of IBC packets. Causal ordering means that if packet _x_ is processed before packet _y_ on chain _A_, packet _x_ must also be processed before packet _y_ on chain _B_.
+
+IBC channels implement a [vector clock](https://en.wikipedia.org/wiki/Vector_clock) for the restricted case of two processes (in our case, blockchains). Given _x_ &#8594; _y_ means _x_ is causally before _y_, and chains A and B, and _a_ &#8658; _b_ means _a_ implies _b_:
 
 _A:send(msg<sub>i </sub>)_ &#8594; _B:receive(msg<sub>i </sub>)_
 
@@ -24,29 +26,31 @@ _y_ &#8594; _A:receipt(msg<sub>i </sub>)_
 
 Every transaction on the same chain already has a well-defined causality relation (order in history). IBC provides an ordering guarantee across two chains which can be used to reason about the combined state of both chains as a whole.
 
-For example, an application may wish to allow a single fungible asset to be transferred between and held on multiple blockchains while preserving conservation of supply. The application can mint asset vouchers on chain _B_ when a particular IBC packet is committed to chain _B_, and require outgoing sends of that packet on chain _A_ to escrow an equal amount of the asset on chain _A_ until the vouchers are later redeemed back to chain _A_ with an IBC packet in the reverse direction. This ordering guarantee along with correct application logic can ensure that total supply is preserved across both chains and that any vouchers minted on chain _B_ can later be redeemed back to chain _A_.
+For example, an application may wish to allow a single tokenized asset to be transferred between and held on multiple blockchains while preserving fungibility and conservation of supply. The application can mint asset vouchers on chain _B_ when a particular IBC packet is committed to chain _B_, and require outgoing sends of that packet on chain _A_ to escrow an equal amount of the asset on chain _A_ until the vouchers are later redeemed back to chain _A_ with an IBC packet in the reverse direction. This ordering guarantee along with correct application logic can ensure that total supply is preserved across both chains and that any vouchers minted on chain _B_ can later be redeemed back to chain _A_.
 
-This section provides a high-level specification of the queue interface and a list of the necessary proofs. To implement wire-compatible IBC, chain _A_ and chain _B_ must also use a common encoding format. An example binary encoding format can be found in Appendix C.
+This section provides definitions for packets and channels, a high-level specification of the queue interface, and a list of the necessary proofs. To implement wire-compatible IBC, chain _A_ and chain _B_ must also use a common encoding format. An example binary encoding format can be found in Appendix C.
 
-### 3.1 Definitions
+### 3.2 Definitions
 
-We introduce the abstraction of an IBC _connection_: a set of the required components to facilitate bidirectional communication between two blockchains _A_ and _B_.
+#### 3.1.1 Packet
 
-An IBC connection consists of four distinct queues, two on each chain:
+We define an IBC *packet* as the five-tuple *(type, sequence, source, destination, data|receipt)*, where:
 
-_Outgoing<sub>A</sub>_: Outgoing IBC packets from chain _A_ to chain _B_, stored on chain _A_
+**type** is one of *data* or *receipt*
 
-_Incoming<sub>A</sub>_: Execution logs for incoming IBC packets from chain _B_, stored on chain _A_
+**sequence** is an unsigned integer
 
-_Outgoing<sub>B</sub>_: Outgoing IBC packets from chain _B_ to chain _A_, stored on chain _B_
+**source** is a string uniquely identifying the chain from which this packet was sent
 
-_Incoming<sub>B</sub>_: Execution logs for incoming IBC packets from chain _A_, stored on chain _B_
+**destination** is a string uniquely identifying the chain which should receive this packet
 
-### 3.2 Requirements
+**data|receipt**, if *type* is *data*, is an opaque application payload, or if *type* is *receipt* is a code of either *success* or *failure*
 
-A queue can be conceptualized as a slice of an infinite array. Two numerical indices - _q<sub>head</sub>_ and _q<sub>tail</sub>_ - bound the slice, such that for every _index_ where _head <= index < tail_, there is a queue element _q[q<sub>index</sub>]_. Elements can be appended to the tail (end) and removed from the head (beginning). We introduce one further method, _advance_, to facilitate efficient queue cleanup.
+#### 3.1.2 Queue
 
-Each IBC-supporting blockchain must implement a reliable ordered packet queue with the following interface specification:
+To implement strict message ordering, we introduce an ordered *queue*. A queue can be conceptualized as a slice of an infinite array. Two numerical indices - _q<sub>head</sub>_ and _q<sub>tail</sub>_ - bound the slice, such that for every _index_ where _head <= index < tail_, there is a queue element _q[q<sub>index</sub>]_. Elements can be appended to the tail (end) and removed from the head (beginning). We introduce one further method, _advance_, to facilitate efficient queue cleanup.
+
+Each IBC-supporting blockchain must provide a queue abstraction with the following functionality:
 
 **init**  
 > set _q<sub>head</sub>_ = _0_  
@@ -79,6 +83,22 @@ Each IBC-supporting blockchain must implement a reliable ordered packet queue wi
 **tail** &#8658; **i**
 > return _q<sub>tail</sub>_
 
+#### 3.1.3 Channel
+
+We introduce the abstraction of an IBC _channel_: a set of the required packet queues to facilitate ordered bidirectional communication between two blockchains _A_ and _B_. An IBC connection, as defined earlier, can have any number of associated channels. IBC connections handle header initialization & updates. All IBC channels use the same connection, but implement independent queues, so have independent ordering guarantees.
+
+An IBC channel consists of four distinct queues, two on each chain:
+
+_Outgoing<sub>A</sub>_: Outgoing IBC packets from chain _A_ to chain _B_, stored on chain _A_
+
+_Incoming<sub>A</sub>_: Execution logs for incoming IBC packets from chain _B_, stored on chain _A_
+
+_Outgoing<sub>B</sub>_: Outgoing IBC packets from chain _B_ to chain _A_, stored on chain _B_
+
+_Incoming<sub>B</sub>_: Execution logs for incoming IBC packets from chain _A_, stored on chain _B_
+
+### 3.3 Requirements
+
 In order to provide the ordering guarantees specified above, each blockchain utilizing the IBC protocol must provide proofs that particular IBC packets have been stored at particular indices in the outgoing packet queue, and particular IBC packet execution results have been stored at particular indices in the incoming packet queue.
 
 We use the previously-defined Merkle proof _M<sub>k,v,h</sub>_ to provide the requisite proofs. In order to do so, we must define a unique, deterministic key in the Merkle store for each message in the queue:
@@ -99,7 +119,7 @@ _V<sub>send</sub> = (type, data)_
 
 _V<sub>receipt</sub> = (result, [success|error code])_
 
-### 3.3 Sending a packet
+### 3.4 Sending a packet
 
 { todo: cleanup wording }
 
@@ -125,7 +145,7 @@ _A:IBCreceive(S, M<sub>k,v,h</sub>)_ &#8658; _match_
 
 Note that this requires not only an valid proof, but also that the proper header as well as all prior messages were previously submitted. This returns success upon accepting a proper message, even if the message execution returned an error (which must then be relayed to the sender).
 
-### 3.4 Receiving a packet
+### 3.5 Receiving a packet
 
 { todo: cleanup logic }
 
@@ -150,7 +170,7 @@ This enforces that the receipts are processed in order, to allow some the applic
 
 ![Rejected Transaction](images/ReceiptError.png)
 
-### 3.5 Packet relayer
+### 3.6 Packet relayer
 
 { todo: cleanup wording }
 

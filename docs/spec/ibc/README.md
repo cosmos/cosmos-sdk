@@ -24,9 +24,9 @@ IBC was first outlined in the [Cosmos Whitepaper](https://github.com/cosmos/cosm
         1.  [Following block headers](connections.md#232-following-block-headers)
         1.  [Closing a connection](connections.md#233-closing-a-connection)
 1.  **[Channels & Packets](channels-and-packets.md)**
-    1.  [Definitions](channels-and-packets.md#31-definitions)
-    1.  [Requirements](channels-and-packets.md#32-requirements)
-    1.  [Channels](channels-and-packets.md#33-channels)
+    1.  [Background](channels-and-packets.md#31-background)
+    1.  [Definitions](channels-and-packets.md#32-definitions)
+    1.  [Requirements](channels-and-packets.md#33-requirements)
     1.  [Sending a packet](channels-and-packets.md#34-sending-a-packet)
     1.  [Receiving a packet](channels-and-packets.md#35-receiving-a-packet)
     1.  [Packet relayer](channels-and-packets.md#36-packet-relayer)

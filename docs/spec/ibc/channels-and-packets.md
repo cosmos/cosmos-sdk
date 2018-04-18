@@ -4,7 +4,7 @@
 
 ### 3.1 Background
 
-IBC uses an asynchronous message passing model that makes no assumptions about network synchrony. IBC *data packets* (hereafter just *packets*) are relayed from one blockchain to the other by external infrastructure. Chain _A_ and chain _B_ confirm new blocks independently, and packets from one chain to the other may be delayed or censored arbitrarily. The speed of packet transmission and confirmation is limited only by the speed of the underlying chains.
+IBC uses a cross-chain message passing model that makes no assumptions about network synchrony. IBC *data packets* (hereafter just *packets*) are relayed from one blockchain to the other by external infrastructure. Chain _A_ and chain _B_ confirm new blocks independently, and packets from one chain to the other may be delayed or censored arbitrarily. The speed of packet transmission and confirmation is limited only by the speed of the underlying chains.
 
 The IBC protocol as defined here is payload-agnostic. The packet receiver on chain _B_ decides how to act upon the incoming message, and may add its own application logic to determine which state transactions to apply according to what data the packet contains. Both chains must only agree that the packet has been received and either accepted or rejected.
 
@@ -32,21 +32,33 @@ This section provides definitions for packets and channels, a high-level specifi
 
 ### 3.2 Definitions
 
-#### 3.1.1 Packet
+#### 3.2.1 Packet
 
-We define an IBC *packet* as the five-tuple *(type, sequence, source, destination, data|receipt)*, where:
+We define an IBC *packet* _P_ as the five-tuple *(type, sequence, source, destination, data)*, where:
 
-**type** is one of *data* or *receipt*
+**type** is an opaque routing field (an integer or string)
 
-**sequence** is an unsigned integer
+**sequence** is an unsigned, arbitrary-precision integer
 
-**source** is a string uniquely identifying the chain from which this packet was sent
+**source** is a string uniquely identifying the chain, connection, and channel from which this packet was sent
 
-**destination** is a string uniquely identifying the chain which should receive this packet
+**destination** is a string uniquely identifying the chain, connection, and channel which should receive this packet
 
-**data|receipt**, if *type* is *data*, is an opaque application payload, or if *type* is *receipt* is a code of either *success* or *failure*
+**data** is an opaque application payload
 
-#### 3.1.2 Queue
+#### 3.2.2 Receipt
+
+We define an IBC *receipt* _R_ as the four-tuple *(sequence, source, destination, result)*, where
+
+**sequence** is an unsigned, arbitrary-precision integer
+
+**source** is a string uniquely identifying the chain, connection, and channel from which this packet was sent
+
+**destination** is a string uniquely identifying the chain, connection, and channel which should receive this packet
+
+**result** is a code of either *success* or *failure*
+
+#### 3.2.3 Queue
 
 To implement strict message ordering, we introduce an ordered *queue*. A queue can be conceptualized as a slice of an infinite array. Two numerical indices - _q<sub>head</sub>_ and _q<sub>tail</sub>_ - bound the slice, such that for every _index_ where _head <= index < tail_, there is a queue element _q[q<sub>index</sub>]_. Elements can be appended to the tail (end) and removed from the head (beginning). We introduce one further method, _advance_, to facilitate efficient queue cleanup.
 
@@ -83,9 +95,9 @@ Each IBC-supporting blockchain must provide a queue abstraction with the followi
 **tail** &#8658; **i**
 > return _q<sub>tail</sub>_
 
-#### 3.1.3 Channel
+#### 3.2.4 Channel
 
-We introduce the abstraction of an IBC _channel_: a set of the required packet queues to facilitate ordered bidirectional communication between two blockchains _A_ and _B_. An IBC connection, as defined earlier, can have any number of associated channels. IBC connections handle header initialization & updates. All IBC channels use the same connection, but implement independent queues, so have independent ordering guarantees.
+We introduce the abstraction of an IBC _channel_: a set of the required packet queues to facilitate ordered bidirectional communication between two blockchains _A_ and _B_. An IBC connection, as defined earlier, can have any number of associated channels. IBC connections handle header initialization & updates. All IBC channels use the same connection, but implement independent queues and thus independent ordering guarantees.
 
 An IBC channel consists of four distinct queues, two on each chain:
 
@@ -109,28 +121,18 @@ The index is stored as a fixed-length unsigned integer in big endian format, so 
 
 Once written to the queue, a packet must be immutable (except for deletion when popped from the queue). That is, if a value _v_ is written to a queue, then every valid proof _M<sub>k,v,h </sub>_ must refer to the same _v_. In practice, this means that an IBC implementation must ensure that only the IBC module can write to the IBC subspace of the blockchain's Merkle store. This property is essential to safely process asynchronous messages.
 
-Each incoming & outgoing queue must be provably associated with another uniquely identified chain, so that an observer can prove that a message was intended for that chain and only that chain. This can easily be done by prefixing the queue keys in the Merkle store with a string unique to the other chain, such as the chain identifier or the hash of the genesis block.
-
-These two queues have different purposes and store elements of different types. By parsing the key of a Merkle proof, a recipient can uniquely identify which queue, if any, this message belongs to. We now define _k =_ _(remote id, [send|receipt], index)_. This tuple is used to route and verify every message, before the contents of the packet are processed by the appropriate application logic.
-
-We define every message in a _send queue_ to consist of two fields: an enumerable _type_, and an opaque _payload_. The IBC protocol relies on the type for routing, and lets the appropriate module process the data as it sees fit. The _receipt queue_ stores if it was an error, an optional error code, and an optional return value. We use the same index as the received message, so that the results of _A:q<sub>B.send</sub>[i]_ are stored at _B:q<sub>A.receipt</sub>[i]_. (read: the message at index _i_ in the _send_ queue for chain B as stored on chain A)
-
-_V<sub>send</sub> = (type, data)_
-
-_V<sub>receipt</sub> = (result, [success|error code])_
+Each incoming & outgoing queue for each connection must be provably associated with another uniquely identified chain, so that an observer can prove that a message was intended for that chain and only that chain. This can easily be done by prefixing the queue keys in the Merkle store with a string unique to the other chain, such as the chain identifier or the hash of the genesis block.
 
 ### 3.4 Sending a packet
 
-{ todo: cleanup wording }
+To send an IBC packet, an application module on the source chain must call the send method of the IBC module, providing a packet as defined above. The IBC module must ensure that the destination chain was already properly registered and that the calling module has permission to write this packet. If all is in order, the IBC module simply pushes the packet to the tail of _Outgoing<sub>A</sub>_, which enables all the proofs described above.
 
-A proper implementation of IBC requires all relevant state to be encapsulated, so that other modules can only interact with it via a fixed API (to be defined in the next sections) rather than directly mutating internal state. This allows the IBC module to provide security guarantees.
-
-Sending an IBC packet involves an application module calling the send method of the IBC module with a packet and a destination chain id.  The IBC module must ensure that the destination chain was already properly registered, and that the calling module has permission to write this packet. If so, the IBC module simply pushes the packet to the tail of the _send queue_, which enables all the proofs described above.
-
-The permissioning of which module can write which packet can be defined per type, so this module can maintain any application-level invariants related to this area. Thus, the "coin" module can maintain the constant supply of tokens, while another module can maintain its own invariants, without IBC messages providing a means to escape their encapsulations. The IBC module must associate every supported message type with a particular handler (_f<sub>type</sub>_) and return an error for unsupported types.
+If desired, the packet payload can contain additional module routing information in the form of a _kind_, so that different modules can write different kinds of packets and maintain any application-level invariants related to this area. For example, a "coin" module can ensure a fixed supply, or a "NFT" module can ensure token uniqueness. The IBC module must associate every supported message with a particular handler (_f<sub>kind</sub>_) and return an error for unsupported types.
 
 _(IBCsend(D, type, data)_ &#8658; _Success)_
   &#8658; _push(q<sub>D.send</sub> ,V<sub>send</sub>{type, data})_
+
+### 3.5 Receiving a packet
 
 We also consider how a given blockchain _A_ is expected to receive the packet from a source chain _S_ with a merkle proof, given the current set of trusted headers for that chain, _T<sub>S</sub>_:
 
@@ -145,7 +147,7 @@ _A:IBCreceive(S, M<sub>k,v,h</sub>)_ &#8658; _match_
 
 Note that this requires not only an valid proof, but also that the proper header as well as all prior messages were previously submitted. This returns success upon accepting a proper message, even if the message execution returned an error (which must then be relayed to the sender).
 
-### 3.5 Receiving a packet
+### 3.6 Handling a receipt
 
 { todo: cleanup logic }
 
@@ -170,7 +172,7 @@ This enforces that the receipts are processed in order, to allow some the applic
 
 ![Rejected Transaction](images/ReceiptError.png)
 
-### 3.6 Packet relayer
+### 3.7 Packet relayer
 
 { todo: cleanup wording }
 

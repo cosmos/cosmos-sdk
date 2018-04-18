@@ -26,6 +26,10 @@ IBC was first outlined in the [Cosmos Whitepaper](https://github.com/cosmos/cosm
 1.  **[Channels & Packets](channels-and-packets.md)**
     1.  [Background](channels-and-packets.md#31-background)
     1.  [Definitions](channels-and-packets.md#32-definitions)
+        1. [Packet](channels-and-packets.md#321-packet)
+        1. [Receipt](channels-and-packets.md#322-receipt)
+        1. [Queue](channels-and-packets.md#323-queue)
+        1. [Channel](channels-and-packets.md#324-channel)
     1.  [Requirements](channels-and-packets.md#33-requirements)
     1.  [Sending a packet](channels-and-packets.md#34-sending-a-packet)
     1.  [Receiving a packet](channels-and-packets.md#35-receiving-a-packet)

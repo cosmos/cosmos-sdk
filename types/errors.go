@@ -195,7 +195,13 @@ func (err *sdkError) Code() CodeType {
 
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
-	return err.Error()
+	return fmt.Sprintf(`=== ABCI Log ===
+Codespace: %v
+Code:      %v
+ABCICode:  %v
+Error:     %#v
+=== /ABCI Log ===
+`, err.codespace, err.code, err.ABCICode(), err.err)
 }
 
 // Add tracing information with msg.

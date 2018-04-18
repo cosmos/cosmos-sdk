@@ -1,4 +1,4 @@
-package core
+package context
 
 import (
 	"fmt"
@@ -141,17 +141,17 @@ func (ctx CoreContext) SignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Co
 }
 
 // get the next sequence for the account address
-func (c CoreContext) NextSequence(address []byte) (int64, error) {
-	if c.Decoder == nil {
+func (ctx CoreContext) NextSequence(address []byte) (int64, error) {
+	if ctx.Decoder == nil {
 		return 0, errors.New("AccountDecoder required but not provided")
 	}
 
-	res, err := c.Query(address, c.AccountStore)
+	res, err := ctx.Query(address, ctx.AccountStore)
 	if err != nil {
 		return 0, err
 	}
 
-	account, err := c.Decoder(res)
+	account, err := ctx.Decoder(res)
 	if err != nil {
 		panic(err)
 	}

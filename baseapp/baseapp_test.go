@@ -240,7 +240,7 @@ func TestDeliverTx(t *testing.T) {
 		height := int64((counter / txPerHeight) + 1)
 		assert.Equal(t, height, thisHeader.Height)
 
-		counter += 1
+		counter++
 		return sdk.Result{}
 	})
 

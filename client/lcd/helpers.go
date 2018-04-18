@@ -28,10 +28,9 @@ func waitForRPC() {
 		_, err := client.Call("status", map[string]interface{}{}, result)
 		if err == nil {
 			return
-		} else {
-			fmt.Println("error", err)
-			time.Sleep(time.Millisecond)
 		}
+		fmt.Println("error", err)
+		time.Sleep(time.Millisecond)
 	}
 }
 

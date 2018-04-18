@@ -1,4 +1,4 @@
-package core
+package context
 
 import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// typical context created in sdk modules for transactions/queries
 type CoreContext struct {
 	ChainID         string
 	Height          int64

@@ -42,9 +42,9 @@ var (
 	coinAmount = int64(10000000)
 
 	// XXX bad globals
+	name     = "test"
+	password = "0123456789"
 	port     string // XXX: but it's the int ...
-	name     string = "test"
-	password string = "0123456789"
 	seed     string
 	sendAddr string
 )

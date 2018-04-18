@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -139,14 +138,15 @@ func TestMsgs(t *testing.T) {
 	}
 }
 
-func setGenesisAccounts(gapp *GaiaApp, accs ...auth.BaseAccount) error {
-	genaccs := make([]*types.GenesisAccount, len(accs))
+func setGenesisAccounts(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
+	genaccs := make([]GenesisAccount, len(accs))
 	for i, acc := range accs {
-		genaccs[i] = types.NewGenesisAccount(&types.AppAccount{acc, accName})
+		genaccs[i] = NewGenesisAccount(acc)
 	}
 
-	genesisState := types.GenesisState{
-		Accounts: genaccs,
+	genesisState := GenesisState{
+		Accounts:  genaccs,
+		StakeData: stake.GetDefaultGenesisState(),
 	}
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")

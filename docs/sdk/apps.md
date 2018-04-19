@@ -15,7 +15,7 @@ while defining as little about that state machine as possible (staying true to t
 BaseApp requires stores to be mounted via capabilities keys - handlers can only access
 stores they're given the key for. The BaseApp ensures all stores are properly loaded, cached, and committed.
 One mounted store is considered the "main" - it holds the latest block header, from which we can find and load the 
-most recent state.
+most recent state ([TODO](https://github.com/cosmos/cosmos-sdk/issues/522)).
 
 BaseApp distinguishes between two handler types - the `AnteHandler` and the `MsgHandler`.
 The former is a global validity check (checking nonces, sigs and sufficient balances to pay fees, 

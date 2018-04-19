@@ -19,7 +19,7 @@ type PacketProof struct {
 	Sequence int64
 }
 
-func (proof PacketProof) Verify(ctx sdk.Context, keeper Keeper, space string, packet Packet) sdk.Error {
+func (proof PacketProof) Verify(ctx sdk.Context, keeper keeper, packet Packet) sdk.Error {
 	chainID := packet.SrcChain
 
 	expected := keeper.getIngressSequence(ctx, chainID)
@@ -55,14 +55,13 @@ type CleanupProof struct {
 	Height int64
 }
 
-func (proof CleanupProof) Verify(ctx sdk.Context, list lib.ListMapper, seq int64) sdk.Error {
-	chainID := packet.SrcChain
+func (proof CleanupProof) Verify(ctx sdk.Context, q lib.ListMapper, id string, seq int64) sdk.Error {
+	/*
 
-	info := q.Info(ctx)
-	if info.End <= seq || seq < info.Begin {
-		return ErrInvalidSequence()
-	}
-
+		if info.End <= seq || seq < info.Begin {
+			return ErrInvalidSequence()
+		}
+	*/
 	/*
 
 	 */
@@ -98,7 +97,7 @@ func (msg ReceiveMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Relayer}
 }
 
-func (msg ReceiveMsg) Verify(ctx sdk.Context, keeper Keeper) sdk.Error {
+func (msg ReceiveMsg) Verify(ctx sdk.Context, keeper keeper) sdk.Error {
 	return msg.PacketProof.Verify(ctx, keeper, msg.Packet)
 }
 
@@ -107,6 +106,7 @@ func (msg ReceiveMsg) Verify(ctx sdk.Context, keeper Keeper) sdk.Error {
 
 type ReceiveCleanupMsg struct {
 	Sequence int64
+	SrcChain string
 	CleanupProof
 	Cleaner sdk.Address
 }
@@ -160,7 +160,7 @@ func (msg ReceiptMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Relayer}
 }
 
-func (msg ReceiptMsg) Verify(ctx sdk.Context, keeper Keeper) sdk.Error {
+func (msg ReceiptMsg) Verify(ctx sdk.Context, keeper keeper) sdk.Error {
 	return msg.PacketProof.Verify(ctx, keeper, msg.Packet)
 }
 
@@ -169,6 +169,7 @@ func (msg ReceiptMsg) Verify(ctx sdk.Context, keeper Keeper) sdk.Error {
 
 type ReceiptCleanupMsg struct {
 	Sequence int64
+	SrcChain string
 	CleanupProof
 	Cleaner sdk.Address
 }

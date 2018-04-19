@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewHandler(keeper Keeper) sdk.Handler {
+func NewHandler(keeper keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
 		case OpenChannelMsg:
@@ -26,24 +26,24 @@ func NewHandler(keeper Keeper) sdk.Handler {
 	}
 }
 
-func handleOpenChannelMsg(ctx sdk.Context, keeper Keeper, msg OpenChannelMsg) sdk.Result {
-	_, err := keeper.getChannelCommitHeight(ctx, msg.SrcChain)
+func handleOpenChannelMsg(ctx sdk.Context, keeper keeper, msg OpenChannelMsg) sdk.Result {
+	_, err := keeper.getCommitHeight(ctx, msg.SrcChain)
 	if err == nil {
 		return ErrChannelAlreadyOpened(msg.SrcChain).Result()
 	}
 
-	keeper.setChannelCommit(ctx, msg.SrcChain, msg.ROT.Height(), msg.ROT)
+	keeper.setCommit(ctx, msg.SrcChain, msg.ROT.Height(), msg.ROT)
 
 	return sdk.Result{}
 }
 
-func handleUpdateChannelMsg(ctx sdk.Context, keeper Keeper, msg UpdateChannelMsg) sdk.Result {
-	height, err := keeper.getChannelCommitHeight(ctx, msg.SrcChain)
+func handleUpdateChannelMsg(ctx sdk.Context, keeper keeper, msg UpdateChannelMsg) sdk.Result {
+	height, err := keeper.getCommitHeight(ctx, msg.SrcChain)
 	if err != nil {
 		return err.Result()
 	}
 
-	commit, ok := keeper.getChannelCommit(ctx, msg.SrcChain, height)
+	commit, ok := keeper.getCommit(ctx, msg.SrcChain, height)
 	if !ok {
 		panic("Should not be happened")
 	}
@@ -53,14 +53,16 @@ func handleUpdateChannelMsg(ctx sdk.Context, keeper Keeper, msg UpdateChannelMsg
 		return ErrUpdateCommitFailed(err).Result()
 	}
 
-	keeper.setChannelCommit(ctx, msg.SrcChain, msg.Commit.Height(), msg.Commit)
+	keeper.setCommit(ctx, msg.SrcChain, msg.Commit.Height(), msg.Commit)
 
 	return sdk.Result{}
 }
 
 type ReceiveHandler func(sdk.Context, Payload) (Payload, sdk.Error)
 
-func (keeper Keeper) Receive(h ReceiveHandler, ctx sdk.Context, msg ReceiveMsg) sdk.Result {
+func (channel Channel) Receive(h ReceiveHandler, ctx sdk.Context, msg ReceiveMsg) sdk.Result {
+	keeper := channel.keeper
+
 	msg.Verify(ctx, keeper)
 
 	packet := msg.Packet
@@ -71,7 +73,17 @@ func (keeper Keeper) Receive(h ReceiveHandler, ctx sdk.Context, msg ReceiveMsg) 
 	cctx, write := ctx.CacheContext()
 	rec, err := h(cctx, packet.Payload)
 	if rec != nil {
-		keeper.sendReceipt(ctx, rec, packet.SrcChain)
+		if rec.Type() != channel.name {
+			return ErrUnauthorizedSendReceipt().Result()
+		}
+
+		recPacket := Packet{
+			Payload:   rec,
+			SrcChain:  ctx.ChainID(),
+			DestChain: packet.SrcChain,
+		}
+
+		keeper.receipt.Push(ctx, recPacket)
 	}
 	if err != nil {
 		return sdk.Result{
@@ -86,7 +98,7 @@ func (keeper Keeper) Receive(h ReceiveHandler, ctx sdk.Context, msg ReceiveMsg) 
 
 type ReceiptHandler func(sdk.Context, Payload)
 
-func (keeper Keeper) Receipt(h ReceiptHandler, ctx sdk.Context, msg ReceiptMsg) sdk.Result {
+func (keeper keeper) Receipt(h ReceiptHandler, ctx sdk.Context, msg ReceiptMsg) sdk.Result {
 	msg.Verify(ctx, keeper)
 
 	h(ctx, msg.Payload)
@@ -94,27 +106,22 @@ func (keeper Keeper) Receipt(h ReceiptHandler, ctx sdk.Context, msg ReceiptMsg) 
 	return sdk.Result{}
 }
 
-func handleReceiveCleanupMsg(ctx sdk.Context, keeper Keeper, msg ReceiveCleanupMsg) sdk.Result {
+func handleReceiveCleanupMsg(ctx sdk.Context, keeper keeper, msg ReceiveCleanupMsg) sdk.Result {
 	receive := keeper.receive
 
-	msg.Verify(ctx, receive, msg.Sequence)
+	msg.Verify(ctx, receive, msg.SrcChain, msg.Sequence)
 
-	for i := info.Begin; i < msg.Sequence; i++ {
-		queue.Pop(ctx)
-	}
+	// TODO: cleanup
 
 	return sdk.Result{}
 }
 
-func handleReceiptCleanupMsg(ctx sdk.Context, keeper Keeper, msg ReceiptCleanupMsg) sdk.Result {
-	msg.Verify(ctx, keeper)
+func handleReceiptCleanupMsg(ctx sdk.Context, keeper keeper, msg ReceiptCleanupMsg) sdk.Result {
+	receipt := keeper.receipt
 
-	queue := keeper.receiptQueue
+	msg.Verify(ctx, receipt, msg.SrcChain, msg.Sequence)
 
-	info := queue.Info(ctx)
-	for i := info.Begin; i < msg.Sequence; i++ {
-		queue.Pop(ctx)
-	}
+	// TODO: cleanup
 
 	return sdk.Result{}
 }

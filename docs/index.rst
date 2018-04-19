@@ -18,8 +18,9 @@ SDK
    :maxdepth: 1
    
    sdk/install.rst
+   sdk/key-management.rst
 .. sdk/overview.rst # needs to be updated
-.. old/glossary.rst # not completely up to date  but has good content
+.. old/glossary.rst # not completely up to date but has good content
 
 .. Basecoin
 .. --------

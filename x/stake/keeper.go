@@ -33,17 +33,6 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.CoinKeeper, codespace 
 	return keeper
 }
 
-// InitGenesis - store genesis parameters
-func (k Keeper) InitGenesis(ctx sdk.Context, data json.RawMessage) error {
-	var state GenesisState
-	if err := json.Unmarshal(data, &state); err != nil {
-		return err
-	}
-	k.setPool(ctx, state.Pool)
-	k.setParams(ctx, state.Params)
-	return nil
-}
-
 // get the current counter
 func (k Keeper) getCounter(ctx sdk.Context) int64 {
 	store := ctx.KVStore(k.storeKey)

@@ -59,14 +59,14 @@ const (
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
 type Candidate struct {
-	Status           CandidateStatus `json:"status"`            // Bonded status
-	Address          sdk.Address     `json:"owner"`             // Sender of BondTx - UnbondTx returns here
-	PubKey           crypto.PubKey   `json:"pub_key"`           // Pubkey of candidate
-	Assets           sdk.Rat         `json:"assets"`            // total shares of a global hold pools
-	Liabilities      sdk.Rat         `json:"liabilities"`       // total shares issued to a candidate's delegators
-	Description      Description     `json:"description"`       // Description terms for the candidate
-	ValidatorHeight  int64           `json:"validator_height"`  // Earliest height at current voting power
-	ValidatorCounter int64           `json:"validator_counter"` // Block-local tx index of validator change
+	Status               CandidateStatus `json:"status"`                 // Bonded status
+	Address              sdk.Address     `json:"owner"`                  // Sender of BondTx - UnbondTx returns here
+	PubKey               crypto.PubKey   `json:"pub_key"`                // Pubkey of candidate
+	Assets               sdk.Rat         `json:"assets"`                 // total shares of a global hold pools
+	Liabilities          sdk.Rat         `json:"liabilities"`            // total shares issued to a candidate's delegators
+	Description          Description     `json:"description"`            // Description terms for the candidate
+	ValidatorBondHeight  int64           `json:"validator_bond_height"`  // Earliest height as a bonded validator
+	ValidatorBondCounter int16           `json:"validator_bond_counter"` // Block-local tx index of validator change
 }
 
 // Candidates - list of Candidates
@@ -75,14 +75,14 @@ type Candidates []Candidate
 // NewCandidate - initialize a new candidate
 func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Description) Candidate {
 	return Candidate{
-		Status:           Unbonded,
-		Address:          address,
-		PubKey:           pubKey,
-		Assets:           sdk.ZeroRat,
-		Liabilities:      sdk.ZeroRat,
-		Description:      description,
-		ValidatorHeight:  int64(0),
-		ValidatorCounter: int64(0),
+		Status:               Unbonded,
+		Address:              address,
+		PubKey:               pubKey,
+		Assets:               sdk.ZeroRat,
+		Liabilities:          sdk.ZeroRat,
+		Description:          description,
+		ValidatorBondHeight:  int64(0),
+		ValidatorBondCounter: int16(0),
 	}
 }
 
@@ -118,8 +118,8 @@ func (c Candidate) validator() Validator {
 		Address: c.Address,
 		PubKey:  c.PubKey,
 		Power:   c.Assets,
-		Height:  c.ValidatorHeight,
-		Counter: c.ValidatorCounter,
+		Height:  c.ValidatorBondHeight,
+		Counter: c.ValidatorBondCounter,
 	}
 }
 
@@ -133,8 +133,8 @@ type Validator struct {
 	Address sdk.Address   `json:"address"`
 	PubKey  crypto.PubKey `json:"pub_key"`
 	Power   sdk.Rat       `json:"voting_power"`
-	Height  int64         `json:"height"`  // Earliest height at current voting power
-	Counter int64         `json:"counter"` // Block-local tx index for resolving equal voting power & height
+	Height  int64         `json:"height"`  // Earliest height as a validator
+	Counter int16         `json:"counter"` // Block-local tx index for resolving equal voting power & height
 }
 
 // abci validator from stake validator type

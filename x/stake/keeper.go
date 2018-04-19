@@ -33,14 +33,14 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.CoinKeeper, codespace 
 	return keeper
 }
 
-// get the current counter
-func (k Keeper) getCounter(ctx sdk.Context) int64 {
+// get the current in-block validator operation counter
+func (k Keeper) getCounter(ctx sdk.Context) int16 {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(CounterKey)
 	if b == nil {
 		return 0
 	}
-	var counter int64
+	var counter int16
 	err := k.cdc.UnmarshalBinary(b, &counter)
 	if err != nil {
 		panic(err)
@@ -48,8 +48,8 @@ func (k Keeper) getCounter(ctx sdk.Context) int64 {
 	return counter
 }
 
-// set the current counter
-func (k Keeper) setCounter(ctx sdk.Context, counter int64) {
+// set the current in-block validator operation counter
+func (k Keeper) setCounter(ctx sdk.Context, counter int16) {
 	store := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.MarshalBinary(counter)
 	if err != nil {
@@ -107,8 +107,8 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 
 	// if found, copy the old block height and counter
 	if oldFound {
-		candidate.ValidatorHeight = oldCandidate.ValidatorHeight
-		candidate.ValidatorCounter = oldCandidate.ValidatorCounter
+		candidate.ValidatorBondHeight = oldCandidate.ValidatorBondHeight
+		candidate.ValidatorBondCounter = oldCandidate.ValidatorBondCounter
 	}
 
 	// marshal the candidate record and add to the state
@@ -131,16 +131,16 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 			updateHeight = true
 		}
 		// else already in the validator set - retain the old validator height and counter
-		store.Delete(GetValidatorKey(address, oldCandidate.Assets, oldCandidate.ValidatorHeight, oldCandidate.ValidatorCounter, k.cdc))
+		store.Delete(GetValidatorKey(address, oldCandidate.Assets, oldCandidate.ValidatorBondHeight, oldCandidate.ValidatorBondCounter, k.cdc))
 	} else {
 		updateHeight = true
 	}
 
 	if updateHeight {
 		// wasn't a candidate or wasn't in the validator set, update the validator block height and counter
-		candidate.ValidatorHeight = ctx.BlockHeight()
+		candidate.ValidatorBondHeight = ctx.BlockHeight()
 		counter := k.getCounter(ctx)
-		candidate.ValidatorCounter = counter
+		candidate.ValidatorBondCounter = counter
 		k.setCounter(ctx, counter+1)
 	}
 
@@ -193,7 +193,7 @@ func (k Keeper) removeCandidate(ctx sdk.Context, address sdk.Address) {
 	// delete the old candidate record
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetCandidateKey(address))
-	store.Delete(GetValidatorKey(address, candidate.Assets, candidate.ValidatorHeight, candidate.ValidatorCounter, k.cdc))
+	store.Delete(GetValidatorKey(address, candidate.Assets, candidate.ValidatorBondHeight, candidate.ValidatorBondCounter, k.cdc))
 
 	// delete from recent and power weighted validator groups if the validator
 	// exists and add validator with zero power to the validator updates

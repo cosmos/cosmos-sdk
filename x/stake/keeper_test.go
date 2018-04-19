@@ -289,7 +289,19 @@ func TestGetValidators(t *testing.T) {
 	// candidate 3 was set before candidate 4
 	require.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
 
-	// simulate scenario from https://github.com/cosmos/cosmos-sdk/issues/582#issuecomment-380757108
+	/*
+	   A candidate which leaves the validator set due to a decrease in voting power,
+	   then increases to the original voting power, does not get its spot back in the
+	   case of a tie.
+
+	   ref https://github.com/cosmos/cosmos-sdk/issues/582#issuecomment-380757108
+	*/
+	candidates[4].Assets = sdk.NewRat(301)
+	keeper.setCandidate(ctx, candidates[4])
+	validators = keeper.GetValidators(ctx)
+	require.Equal(t, uint16(len(validators)), params.MaxValidators)
+	require.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
+	require.Equal(t, candidates[4].Address, validators[1].Address, "%v", validators)
 	ctx = ctx.WithBlockHeight(40)
 	// candidate 4 kicked out temporarily
 	candidates[4].Assets = sdk.NewRat(200)
@@ -307,9 +319,14 @@ func TestGetValidators(t *testing.T) {
 	require.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
 	candidate, exists := keeper.GetCandidate(ctx, candidates[4].Address)
 	require.Equal(t, exists, true)
-	require.Equal(t, candidate.ValidatorHeight, int64(40))
+	require.Equal(t, candidate.ValidatorBondHeight, int64(40))
 
-	// first transaction wins, https://github.com/cosmos/cosmos-sdk/issues/582#issuecomment-381250392
+	/*
+	   If two candidates both increase to the same voting power in the same block,
+	   the one with the first transaction should take precedence (become a validator).
+
+	   ref https://github.com/cosmos/cosmos-sdk/issues/582#issuecomment-381250392
+	*/
 	candidates[0].Assets = sdk.NewRat(2000)
 	keeper.setCandidate(ctx, candidates[0])
 	candidates[1].Assets = sdk.NewRat(1000)
@@ -630,7 +647,7 @@ func TestIsRecentValidator(t *testing.T) {
 	require.Equal(t, 2, len(validators))
 	assert.Equal(t, candidatesIn[0].validator(), validators[0])
 	c1ValWithCounter := candidatesIn[1].validator()
-	c1ValWithCounter.Counter = int64(1)
+	c1ValWithCounter.Counter = int16(1)
 	assert.Equal(t, c1ValWithCounter, validators[1])
 
 	// test a basic retrieve of something that should be a recent validator

@@ -23,51 +23,40 @@ const (
 	flagChain  = "chain"
 )
 
+// IBC transfer command
 func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
-	cmdr := sendCommander{cdc}
 	cmd := &cobra.Command{
-		Use:  "transfer",
-		RunE: cmdr.sendIBCTransfer,
+		Use: "transfer",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
+
+			// get the from address
+			from, err := ctx.GetFromAddress()
+			if err != nil {
+				return err
+			}
+
+			// build the message
+			msg, err := buildMsg(from)
+			if err != nil {
+				return err
+			}
+
+			// get password
+			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
+			return nil
+		},
 	}
+
 	cmd.Flags().String(flagTo, "", "Address to send coins")
 	cmd.Flags().String(flagAmount, "", "Amount of coins to send")
 	cmd.Flags().String(flagChain, "", "Destination chain to send coins")
 	return cmd
-}
-
-type sendCommander struct {
-	cdc *wire.Codec
-}
-
-func (c sendCommander) sendIBCTransfer(cmd *cobra.Command, args []string) error {
-	ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(c.cdc))
-
-	// get the from address
-	from, err := ctx.GetFromAddress()
-	if err != nil {
-		return err
-	}
-
-	// build the message
-	msg, err := buildMsg(from)
-	if err != nil {
-		return err
-	}
-
-	// default to next sequence number if none provided
-	ctx, err = context.EnsureSequence(ctx)
-	if err != nil {
-		return err
-	}
-
-	// get password
-	res, err := ctx.SignBuildBroadcast(ctx.FromAddressName, msg, c.cdc)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
-	return nil
 }
 
 func buildMsg(from sdk.Address) (sdk.Msg, error) {

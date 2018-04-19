@@ -25,6 +25,7 @@ func (code ABCICodeType) IsOK() bool {
 	return false
 }
 
+// get the abci code from the local code and codespace
 func ToABCICode(space CodespaceType, code CodeType) ABCICodeType {
 	// TODO: Make Tendermint more aware of codespaces.
 	if space == CodespaceRoot && code == CodeOK {
@@ -33,6 +34,7 @@ func ToABCICode(space CodespaceType, code CodeType) ABCICodeType {
 	return ABCICodeType((uint32(space) << 16) | uint32(code))
 }
 
+// SDK error codes
 const (
 	// ABCI error codes
 	ABCICodeOK ABCICodeType = 0

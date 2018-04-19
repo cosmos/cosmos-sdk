@@ -13,7 +13,7 @@ import (
 type Keeper struct {
 	storeKey   sdk.StoreKey
 	cdc        *wire.Codec
-	coinKeeper bank.CoinKeeper
+	coinKeeper bank.Keeper
 
 	// caches
 	gs     Pool
@@ -23,7 +23,7 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.CoinKeeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:   key,
 		cdc:        cdc,

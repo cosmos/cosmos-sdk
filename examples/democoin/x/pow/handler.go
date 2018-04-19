@@ -6,17 +6,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// POW handler
 func (pk Keeper) Handler(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 	switch msg := msg.(type) {
-	case MineMsg:
-		return handleMineMsg(ctx, pk, msg)
+	case MsgMine:
+		return handleMsgMine(ctx, pk, msg)
 	default:
 		errMsg := "Unrecognized pow Msg type: " + reflect.TypeOf(msg).Name()
 		return sdk.ErrUnknownRequest(errMsg).Result()
 	}
 }
 
-func handleMineMsg(ctx sdk.Context, pk Keeper, msg MineMsg) sdk.Result {
+func handleMsgMine(ctx sdk.Context, pk Keeper, msg MsgMine) sdk.Result {
 
 	// precondition: msg has passed ValidateBasic
 

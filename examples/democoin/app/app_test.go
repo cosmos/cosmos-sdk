@@ -36,32 +36,32 @@ var (
 		0,
 	}
 
-	sendMsg = bank.SendMsg{
+	sendMsg = bank.MsgSend{
 		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
 		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
 	}
 
-	quizMsg1 = cool.QuizMsg{
+	quizMsg1 = cool.MsgQuiz{
 		Sender:     addr1,
 		CoolAnswer: "icecold",
 	}
 
-	quizMsg2 = cool.QuizMsg{
+	quizMsg2 = cool.MsgQuiz{
 		Sender:     addr1,
 		CoolAnswer: "badvibesonly",
 	}
 
-	setTrendMsg1 = cool.SetTrendMsg{
+	setTrendMsg1 = cool.MsgSetTrend{
 		Sender: addr1,
 		Cool:   "icecold",
 	}
 
-	setTrendMsg2 = cool.SetTrendMsg{
+	setTrendMsg2 = cool.MsgSetTrend{
 		Sender: addr1,
 		Cool:   "badvibesonly",
 	}
 
-	setTrendMsg3 = cool.SetTrendMsg{
+	setTrendMsg3 = cool.MsgSetTrend{
 		Sender: addr1,
 		Cool:   "warmandkind",
 	}
@@ -157,7 +157,7 @@ func TestGenesis(t *testing.T) {
 	assert.Equal(t, acc, res1)
 }
 
-func TestSendMsgWithAccounts(t *testing.T) {
+func TestMsgSendWithAccounts(t *testing.T) {
 	bapp := newDemocoinApp()
 
 	// Construct some genesis bytes to reflect democoin/types/AppAccount
@@ -233,7 +233,7 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	assert.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
 }
 
-func TestMineMsg(t *testing.T) {
+func TestMsgMine(t *testing.T) {
 	bapp := newDemocoinApp()
 
 	// Construct genesis state
@@ -271,11 +271,11 @@ func TestMineMsg(t *testing.T) {
 	assert.Equal(t, acc1, res1)
 
 	// Mine and check for reward
-	mineMsg1 := pow.GenerateMineMsg(addr1, 1, 2)
+	mineMsg1 := pow.GenerateMsgMine(addr1, 1, 2)
 	SignCheckDeliver(t, bapp, mineMsg1, 0, true)
 	CheckBalance(t, bapp, "1pow")
 	// Mine again and check for reward
-	mineMsg2 := pow.GenerateMineMsg(addr1, 2, 3)
+	mineMsg2 := pow.GenerateMsgMine(addr1, 2, 3)
 	SignCheckDeliver(t, bapp, mineMsg2, 1, true)
 	CheckBalance(t, bapp, "2pow")
 	// Mine again - should be invalid
@@ -284,7 +284,7 @@ func TestMineMsg(t *testing.T) {
 
 }
 
-func TestQuizMsg(t *testing.T) {
+func TestMsgQuiz(t *testing.T) {
 	bapp := newDemocoinApp()
 
 	// Construct genesis state

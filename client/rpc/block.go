@@ -55,6 +55,7 @@ func getBlock(height *int64) ([]byte, error) {
 	return output, nil
 }
 
+// get the current blockchain height
 func GetChainHeight() (int64, error) {
 	node, err := context.NewCoreContextFromViper().GetNode()
 	if err != nil {
@@ -94,6 +95,7 @@ func printBlock(cmd *cobra.Command, args []string) error {
 
 // REST
 
+// REST handler to get a block
 func BlockRequestHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	height, err := strconv.ParseInt(vars["height"], 10, 64)
@@ -117,6 +119,7 @@ func BlockRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(output)
 }
 
+// REST handler to get the latest block
 func LatestBlockRequestHandler(w http.ResponseWriter, r *http.Request) {
 	height, err := GetChainHeight()
 	if err != nil {

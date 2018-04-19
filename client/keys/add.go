@@ -135,14 +135,17 @@ func printCreate(info keys.Info, seed string) {
 	}
 }
 
+/////////////////////////////
 // REST
 
+// new key request REST body
 type NewKeyBody struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
 	Seed     string `json:"seed"`
 }
 
+// add new key REST handler
 func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	var kb keys.Keybase
 	var m NewKeyBody
@@ -208,6 +211,7 @@ func getSeed(algo keys.CryptoAlgo) string {
 	return seed
 }
 
+// Seed REST request handler
 func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	algoType := vars["type"]

@@ -28,6 +28,12 @@ jobs:
             export PATH="$GOBIN:$PATH"
             make get_vendor_deps
       - run:
+          name: linter
+          command: |
+            export PATH="$GOBIN:$PATH"
+            go get -u github.com/tendermint/lint/golint
+            go get -u github.com/alecthomas/gometalinter
+      - run:
           name: binaries
           command: |
             export PATH="$GOBIN:$PATH"
@@ -45,6 +51,22 @@ jobs:
           key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - /go/src/github.com/cosmos/cosmos-sdk
+
+  lint:
+    <<: *defaults
+    parallelism: 4
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - restore_cache:
+          key: v1-pkg-cache
+      - restore_cache:
+          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Lint source
+          command: |
+            export PATH="$GOBIN:$PATH"
+            gometalinter --disable-all --enable='golint' --vendor ./...
 
   test_cover:
     <<: *defaults
@@ -96,10 +118,12 @@ workflows:
   test-suite:
     jobs:
       - setup_dependencies
+      - lint:
+          requires:
+            - setup_dependencies
       - test_cover:
           requires:
             - setup_dependencies
       - upload_coverage:
           requires:
             - test_cover
-

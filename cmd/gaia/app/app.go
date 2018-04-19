@@ -27,15 +27,15 @@ type GaiaApp struct {
 	cdc *wire.Codec
 
 	// keys to access the substores
-	capKeyMainStore    *sdk.KVStoreKey
-	capKeyAccountStore *sdk.KVStoreKey
-	capKeyIBCStore     *sdk.KVStoreKey
-	capKeyStakeStore   *sdk.KVStoreKey
+	keyMain    *sdk.KVStoreKey
+	keyAccount *sdk.KVStoreKey
+	keyIBC     *sdk.KVStoreKey
+	keyStake   *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
-	coinKeeper    bank.CoinKeeper
-	ibcMapper     ibc.IBCMapper
+	coinKeeper    bank.Keeper
+	ibcMapper     ibc.Mapper
 	stakeKeeper   stake.Keeper
 
 	// Handle fees
@@ -45,25 +45,25 @@ type GaiaApp struct {
 func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	// create your application object
 	var app = &GaiaApp{
-		BaseApp:            bam.NewBaseApp(appName, logger, db),
-		cdc:                MakeCodec(),
-		capKeyMainStore:    sdk.NewKVStoreKey("main"),
-		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
-		capKeyIBCStore:     sdk.NewKVStoreKey("ibc"),
-		capKeyStakeStore:   sdk.NewKVStoreKey("stake"),
+		BaseApp:    bam.NewBaseApp(appName, logger, db),
+		cdc:        MakeCodec(),
+		keyMain:    sdk.NewKVStoreKey("main"),
+		keyAccount: sdk.NewKVStoreKey("acc"),
+		keyIBC:     sdk.NewKVStoreKey("ibc"),
+		keyStake:   sdk.NewKVStoreKey("stake"),
 	}
 
 	// define the accountMapper
 	app.accountMapper = auth.NewAccountMapper(
 		app.cdc,
-		app.capKeyMainStore, // target store
+		app.keyMain,         // target store
 		&auth.BaseAccount{}, // prototype
 	).Seal()
 
 	// add handlers
-	app.coinKeeper = bank.NewCoinKeeper(app.accountMapper)
-	app.ibcMapper = ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
-	app.stakeKeeper = stake.NewKeeper(app.cdc, app.capKeyStakeStore, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
+	app.coinKeeper = bank.NewKeeper(app.accountMapper)
+	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
+	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
@@ -77,9 +77,9 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
 	app.SetEndBlocker(stake.NewEndBlocker(app.stakeKeeper))
-	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyIBCStore, app.capKeyStakeStore)
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeHandler))
-	err := app.LoadLatestVersion(app.capKeyMainStore)
+	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())
 	}

@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// IBC errors reserve 200 ~ 299.
 const (
 	DefaultCodespace sdk.CodespaceType = 3
 
@@ -24,10 +25,10 @@ func codeToDefaultMsg(code sdk.CodeType) string {
 	}
 }
 
+// nolint
 func ErrInvalidSequence(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeInvalidSequence, "")
 }
-
 func ErrIdenticalChains(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeIdenticalChains, "")
 }
@@ -43,7 +44,6 @@ func newError(codespace sdk.CodespaceType, code sdk.CodeType, msg string) sdk.Er
 func msgOrDefaultMsg(msg string, code sdk.CodeType) string {
 	if msg != "" {
 		return msg
-	} else {
-		return codeToDefaultMsg(code)
 	}
+	return codeToDefaultMsg(code)
 }

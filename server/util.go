@@ -14,6 +14,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 )
 
+// server context
 type Context struct {
 	Config *cfg.Config
 	Logger log.Logger
@@ -59,6 +60,7 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 	}
 }
 
+// add server commands
 func AddCommands(
 	rootCmd *cobra.Command,
 	appState GenAppState, appCreator AppCreator,

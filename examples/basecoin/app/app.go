@@ -64,8 +64,8 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	).Seal()
 
 	// Add handlers.
-	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
-	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
+	coinKeeper := bank.NewKeeper(app.accountMapper)
+	ibcMapper := ibc.NewMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
 	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper, app.RegisterCodespace(simplestake.DefaultCodespace))
 	app.Router().
 		AddRoute("bank", bank.NewHandler(coinKeeper)).
@@ -94,12 +94,12 @@ func MakeCodec() *wire.Codec {
 
 	// Register Msgs
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	cdc.RegisterConcrete(bank.SendMsg{}, "basecoin/Send", nil)
-	cdc.RegisterConcrete(bank.IssueMsg{}, "basecoin/Issue", nil)
+	cdc.RegisterConcrete(bank.MsgSend{}, "basecoin/Send", nil)
+	cdc.RegisterConcrete(bank.MsgIssue{}, "basecoin/Issue", nil)
 	cdc.RegisterConcrete(ibc.IBCTransferMsg{}, "basecoin/IBCTransferMsg", nil)
 	cdc.RegisterConcrete(ibc.IBCReceiveMsg{}, "basecoin/IBCReceiveMsg", nil)
-	cdc.RegisterConcrete(simplestake.BondMsg{}, "basecoin/BondMsg", nil)
-	cdc.RegisterConcrete(simplestake.UnbondMsg{}, "basecoin/UnbondMsg", nil)
+	cdc.RegisterConcrete(simplestake.MsgBond{}, "basecoin/BondMsg", nil)
+	cdc.RegisterConcrete(simplestake.MsgUnbond{}, "basecoin/UnbondMsg", nil)
 
 	// Register AppAccount
 	cdc.RegisterInterface((*sdk.Account)(nil), nil)

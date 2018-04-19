@@ -34,19 +34,13 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// create the message
-			msg := cool.NewQuizMsg(from, args[0])
+			msg := cool.NewMsgQuiz(from, args[0])
 
 			// get account name
 			name := viper.GetString(client.FlagName)
 
-			// default to next sequence number if none provided
-			ctx, err = context.EnsureSequence(ctx)
-			if err != nil {
-				return err
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := ctx.SignBuildBroadcast(name, msg, cdc)
+			res, err := ctx.EnsureSignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}
@@ -78,17 +72,11 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 			// get account name
 			name := viper.GetString(client.FlagName)
 
-			// default to next sequence number if none provided
-			ctx, err = context.EnsureSequence(ctx)
-			if err != nil {
-				return err
-			}
-
 			// create the message
-			msg := cool.NewSetTrendMsg(from, args[0])
+			msg := cool.NewMsgSetTrend(from, args[0])
 
 			// build and sign the transaction, then broadcast to Tendermint
-			res, err := ctx.SignBuildBroadcast(name, msg, cdc)
+			res, err := ctx.EnsureSignBuildBroadcast(name, msg, cdc)
 			if err != nil {
 				return err
 			}

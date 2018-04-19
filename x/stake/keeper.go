@@ -33,6 +33,31 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.CoinKeeper, codespace 
 	return keeper
 }
 
+// get the current in-block validator operation counter
+func (k Keeper) getCounter(ctx sdk.Context) int16 {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(CounterKey)
+	if b == nil {
+		return 0
+	}
+	var counter int16
+	err := k.cdc.UnmarshalBinary(b, &counter)
+	if err != nil {
+		panic(err)
+	}
+	return counter
+}
+
+// set the current in-block validator operation counter
+func (k Keeper) setCounter(ctx sdk.Context, counter int16) {
+	store := ctx.KVStore(k.storeKey)
+	bz, err := k.cdc.MarshalBinary(counter)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(CounterKey, bz)
+}
+
 //_________________________________________________________________________
 
 // get a single candidate
@@ -80,6 +105,12 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	// retreive the old candidate record
 	oldCandidate, oldFound := k.GetCandidate(ctx, address)
 
+	// if found, copy the old block height and counter
+	if oldFound {
+		candidate.ValidatorBondHeight = oldCandidate.ValidatorBondHeight
+		candidate.ValidatorBondCounter = oldCandidate.ValidatorBondCounter
+	}
+
 	// marshal the candidate record and add to the state
 	bz, err := k.cdc.MarshalBinary(candidate)
 	if err != nil {
@@ -87,23 +118,47 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	}
 	store.Set(GetCandidateKey(candidate.Address), bz)
 
-	// mashal the new validator record
+	// if the voting power is the same no need to update any of the other indexes
+	if oldFound && oldCandidate.Assets.Equal(candidate.Assets) {
+		return
+	}
+
+	updateHeight := false
+
+	// update the list ordered by voting power
+	if oldFound {
+		if !k.isNewValidator(ctx, store, candidate.Address) {
+			updateHeight = true
+		}
+		// else already in the validator set - retain the old validator height and counter
+		store.Delete(GetValidatorKey(address, oldCandidate.Assets, oldCandidate.ValidatorBondHeight, oldCandidate.ValidatorBondCounter, k.cdc))
+	} else {
+		updateHeight = true
+	}
+
+	if updateHeight {
+		// wasn't a candidate or wasn't in the validator set, update the validator block height and counter
+		candidate.ValidatorBondHeight = ctx.BlockHeight()
+		counter := k.getCounter(ctx)
+		candidate.ValidatorBondCounter = counter
+		k.setCounter(ctx, counter+1)
+	}
+
+	// update the candidate record
+	bz, err = k.cdc.MarshalBinary(candidate)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(GetCandidateKey(candidate.Address), bz)
+
+	// marshal the new validator record
 	validator := candidate.validator()
 	bz, err = k.cdc.MarshalBinary(validator)
 	if err != nil {
 		panic(err)
 	}
 
-	// if the voting power is the same no need to update any of the other indexes
-	if oldFound && oldCandidate.Assets.Equal(candidate.Assets) {
-		return
-	}
-
-	// update the list ordered by voting power
-	if oldFound {
-		store.Delete(GetValidatorKey(address, oldCandidate.Assets, k.cdc))
-	}
-	store.Set(GetValidatorKey(address, validator.Power, k.cdc), bz)
+	store.Set(GetValidatorKey(address, validator.Power, validator.Height, validator.Counter, k.cdc), bz)
 
 	// add to the validators to update list if is already a validator
 	// or is a new validator
@@ -121,7 +176,9 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 			panic(err)
 		}
 		store.Set(GetAccUpdateValidatorKey(validator.Address), bz)
+
 	}
+
 	return
 }
 
@@ -136,7 +193,7 @@ func (k Keeper) removeCandidate(ctx sdk.Context, address sdk.Address) {
 	// delete the old candidate record
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetCandidateKey(address))
-	store.Delete(GetValidatorKey(address, candidate.Assets, k.cdc))
+	store.Delete(GetValidatorKey(address, candidate.Assets, candidate.ValidatorBondHeight, candidate.ValidatorBondCounter, k.cdc))
 
 	// delete from recent and power weighted validator groups if the validator
 	// exists and add validator with zero power to the validator updates

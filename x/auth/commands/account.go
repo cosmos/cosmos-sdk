@@ -17,6 +17,7 @@ func GetAccountCmdDefault(storeName string, cdc *wire.Codec) *cobra.Command {
 	return GetAccountCmd(storeName, cdc, GetAccountDecoder(cdc))
 }
 
+// Get account decoder for auth.DefaultAccount
 func GetAccountDecoder(cdc *wire.Codec) sdk.AccountDecoder {
 	return func(accBytes []byte) (acct sdk.Account, err error) {
 		// acct := new(auth.BaseAccount)

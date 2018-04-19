@@ -28,6 +28,7 @@ type accountMapper struct {
 
 // NewAccountMapper returns a new sdk.AccountMapper that
 // uses go-amino to (binary) encode and decode concrete sdk.Accounts.
+// nolint
 func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto sdk.Account) accountMapper {
 	return accountMapper{
 		key:   key,
@@ -107,14 +108,14 @@ func (am accountMapper) clonePrototype() sdk.Account {
 			panic(fmt.Sprintf("accountMapper requires a proto sdk.Account, but %v doesn't implement sdk.Account", protoRt))
 		}
 		return clone
-	} else {
-		protoRv := reflect.New(protoRt).Elem()
-		clone, ok := protoRv.Interface().(sdk.Account)
-		if !ok {
-			panic(fmt.Sprintf("accountMapper requires a proto sdk.Account, but %v doesn't implement sdk.Account", protoRt))
-		}
-		return clone
 	}
+
+	protoRv := reflect.New(protoRt).Elem()
+	clone, ok := protoRv.Interface().(sdk.Account)
+	if !ok {
+		panic(fmt.Sprintf("accountMapper requires a proto sdk.Account, but %v doesn't implement sdk.Account", protoRt))
+	}
+	return clone
 }
 
 func (am accountMapper) encodeAccount(acc sdk.Account) []byte {

@@ -33,10 +33,12 @@ const (
 	contextKeySigners contextKey = iota
 )
 
+// add the signers to the context
 func WithSigners(ctx types.Context, accounts []types.Account) types.Context {
 	return ctx.WithValue(contextKeySigners, accounts)
 }
 
+// get the signers from the context
 func GetSigners(ctx types.Context) []types.Account {
 	v := ctx.Value(contextKeySigners)
 	if v == nil {

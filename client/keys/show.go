@@ -42,8 +42,10 @@ func runShowCmd(cmd *cobra.Command, args []string) error {
 	return err
 }
 
+///////////////////////////
 // REST
 
+// get key REST handler
 func GetKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]

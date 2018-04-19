@@ -126,7 +126,14 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 }
 
 // sign and build the transaction from the msg
-func (ctx CoreContext) SignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Codec) (*ctypes.ResultBroadcastTxCommit, error) {
+func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
+
+	// default to next sequence number if none provided
+	ctx, err = EnsureSequence(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	passphrase, err := ctx.GetPassphraseFromStdin(name)
 	if err != nil {
 		return nil, err

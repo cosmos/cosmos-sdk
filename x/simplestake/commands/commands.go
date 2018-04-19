@@ -21,89 +21,72 @@ const (
 	flagValidator = "validator"
 )
 
+// simple bond tx
 func BondTxCmd(cdc *wire.Codec) *cobra.Command {
-	cmdr := commander{cdc}
 	cmd := &cobra.Command{
 		Use:   "bond",
 		Short: "Bond to a validator",
-		RunE:  cmdr.bondTxCmd,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := context.NewCoreContextFromViper()
+
+			from, err := ctx.GetFromAddress()
+			if err != nil {
+				return err
+			}
+
+			stakeString := viper.GetString(flagStake)
+			if len(stakeString) == 0 {
+				return fmt.Errorf("specify coins to bond with --stake")
+			}
+
+			valString := viper.GetString(flagValidator)
+			if len(valString) == 0 {
+				return fmt.Errorf("specify pubkey to bond to with --validator")
+			}
+
+			stake, err := sdk.ParseCoin(stakeString)
+			if err != nil {
+				return err
+			}
+
+			// TODO: bech32 ...
+			rawPubKey, err := hex.DecodeString(valString)
+			if err != nil {
+				return err
+			}
+			var pubKeyEd crypto.PubKeyEd25519
+			copy(pubKeyEd[:], rawPubKey)
+
+			msg := simplestake.NewMsgBond(from, stake, pubKeyEd)
+
+			return sendMsg(cdc, msg)
+		},
 	}
 	cmd.Flags().String(flagStake, "", "Amount of coins to stake")
 	cmd.Flags().String(flagValidator, "", "Validator address to stake")
 	return cmd
 }
 
+// simple unbond tx
 func UnbondTxCmd(cdc *wire.Codec) *cobra.Command {
-	cmdr := commander{cdc}
 	cmd := &cobra.Command{
 		Use:   "unbond",
 		Short: "Unbond from a validator",
-		RunE:  cmdr.unbondTxCmd,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			from, err := context.NewCoreContextFromViper().GetFromAddress()
+			if err != nil {
+				return err
+			}
+			msg := simplestake.NewMsgUnbond(from)
+			return sendMsg(cdc, msg)
+		},
 	}
 	return cmd
 }
 
-type commander struct {
-	cdc *wire.Codec
-}
-
-func (co commander) bondTxCmd(cmd *cobra.Command, args []string) error {
-	ctx := context.NewCoreContextFromViper()
-
-	from, err := ctx.GetFromAddress()
-	if err != nil {
-		return err
-	}
-
-	stakeString := viper.GetString(flagStake)
-	if len(stakeString) == 0 {
-		return fmt.Errorf("specify coins to bond with --stake")
-	}
-
-	valString := viper.GetString(flagValidator)
-	if len(valString) == 0 {
-		return fmt.Errorf("specify pubkey to bond to with --validator")
-	}
-
-	stake, err := sdk.ParseCoin(stakeString)
-	if err != nil {
-		return err
-	}
-
-	// TODO: bech32 ...
-	rawPubKey, err := hex.DecodeString(valString)
-	if err != nil {
-		return err
-	}
-	var pubKeyEd crypto.PubKeyEd25519
-	copy(pubKeyEd[:], rawPubKey)
-
-	msg := simplestake.NewBondMsg(from, stake, pubKeyEd)
-
-	return co.sendMsg(msg)
-}
-
-func (co commander) unbondTxCmd(cmd *cobra.Command, args []string) error {
-	from, err := context.NewCoreContextFromViper().GetFromAddress()
-	if err != nil {
-		return err
-	}
-
-	msg := simplestake.NewUnbondMsg(from)
-
-	return co.sendMsg(msg)
-}
-
-func (co commander) sendMsg(msg sdk.Msg) error {
-	ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(co.cdc))
-
-	// default to next sequence number if none provided
-	ctx, err := context.EnsureSequence(ctx)
-	if err != nil {
-		return err
-	}
-
-	res, err := ctx.SignBuildBroadcast(ctx.FromAddressName, msg, co.cdc)
+func sendMsg(cdc *wire.Codec, msg sdk.Msg) error {
+	ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
+	res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
 	if err != nil {
 		return err
 	}

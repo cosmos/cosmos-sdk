@@ -7,17 +7,18 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
-type IBCMapper struct {
+// IBC Mapper
+type Mapper struct {
 	key       sdk.StoreKey
 	cdc       *wire.Codec
 	codespace sdk.CodespaceType
 }
 
-// XXX: The IBCMapper should not take a CoinKeeper. Rather have the CoinKeeper
-// take an IBCMapper.
-func NewIBCMapper(cdc *wire.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) IBCMapper {
+// XXX: The Mapper should not take a CoinKeeper. Rather have the CoinKeeper
+// take an Mapper.
+func NewMapper(cdc *wire.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) Mapper {
 	// XXX: How are these codecs supposed to work?
-	return IBCMapper{
+	return Mapper{
 		key:       key,
 		cdc:       cdc,
 		codespace: codespace,
@@ -28,7 +29,7 @@ func NewIBCMapper(cdc *wire.Codec, key sdk.StoreKey, codespace sdk.CodespaceType
 // only be invoked from another module directly and not through a user
 // transaction.
 // TODO: Handle invalid IBC packets and return errors.
-func (ibcm IBCMapper) PostIBCPacket(ctx sdk.Context, packet IBCPacket) sdk.Error {
+func (ibcm Mapper) PostIBCPacket(ctx sdk.Context, packet IBCPacket) sdk.Error {
 	// write everything into the state
 	store := ctx.KVStore(ibcm.key)
 	index := ibcm.getEgressLength(store, packet.DestChain)
@@ -52,7 +53,7 @@ func (ibcm IBCMapper) PostIBCPacket(ctx sdk.Context, packet IBCPacket) sdk.Error
 // to the appropriate callbacks.
 // XXX: For now this handles all interactions with the CoinKeeper.
 // XXX: This needs to do some authentication checking.
-func (ibcm IBCMapper) ReceiveIBCPacket(ctx sdk.Context, packet IBCPacket) sdk.Error {
+func (ibcm Mapper) ReceiveIBCPacket(ctx sdk.Context, packet IBCPacket) sdk.Error {
 	return nil
 }
 
@@ -74,7 +75,8 @@ func unmarshalBinaryPanic(cdc *wire.Codec, bz []byte, ptr interface{}) {
 	}
 }
 
-func (ibcm IBCMapper) GetIngressSequence(ctx sdk.Context, srcChain string) int64 {
+// TODO add description
+func (ibcm Mapper) GetIngressSequence(ctx sdk.Context, srcChain string) int64 {
 	store := ctx.KVStore(ibcm.key)
 	key := IngressSequenceKey(srcChain)
 
@@ -90,7 +92,8 @@ func (ibcm IBCMapper) GetIngressSequence(ctx sdk.Context, srcChain string) int64
 	return res
 }
 
-func (ibcm IBCMapper) SetIngressSequence(ctx sdk.Context, srcChain string, sequence int64) {
+// TODO add description
+func (ibcm Mapper) SetIngressSequence(ctx sdk.Context, srcChain string, sequence int64) {
 	store := ctx.KVStore(ibcm.key)
 	key := IngressSequenceKey(srcChain)
 
@@ -99,7 +102,7 @@ func (ibcm IBCMapper) SetIngressSequence(ctx sdk.Context, srcChain string, seque
 }
 
 // Retrieves the index of the currently stored outgoing IBC packets.
-func (ibcm IBCMapper) getEgressLength(store sdk.KVStore, destChain string) int64 {
+func (ibcm Mapper) getEgressLength(store sdk.KVStore, destChain string) int64 {
 	bz := store.Get(EgressLengthKey(destChain))
 	if bz == nil {
 		zero := marshalBinaryPanic(ibcm.cdc, int64(0))

@@ -6,6 +6,6 @@ import (
 
 // Register concrete types on wire codec
 func RegisterWire(cdc *wire.Codec) {
-	cdc.RegisterConcrete(SendMsg{}, "cosmos-sdk/Send", nil)
-	cdc.RegisterConcrete(IssueMsg{}, "cosmos-sdk/Issue", nil)
+	cdc.RegisterConcrete(MsgSend{}, "cosmos-sdk/Send", nil)
+	cdc.RegisterConcrete(MsgIssue{}, "cosmos-sdk/Issue", nil)
 }

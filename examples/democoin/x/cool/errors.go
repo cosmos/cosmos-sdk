@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Cool errors reserve 400 ~ 499.
 const (
 	DefaultCodespace sdk.CodespaceType = 6
 

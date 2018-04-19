@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// simple stake errors reserve 300 ~ 399.
 const (
 	DefaultCodespace sdk.CodespaceType = 4
 
@@ -14,18 +15,16 @@ const (
 	CodeIncorrectStakingToken sdk.CodeType = 303
 )
 
+// nolint
 func ErrIncorrectStakingToken(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeIncorrectStakingToken, "")
 }
-
 func ErrEmptyValidator(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeEmptyValidator, "")
 }
-
 func ErrInvalidUnbond(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeInvalidUnbond, "")
 }
-
 func ErrEmptyStake(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeEmptyStake, "")
 }

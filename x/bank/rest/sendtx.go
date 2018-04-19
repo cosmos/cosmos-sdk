@@ -15,6 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/commands"
 )
 
+// RegisterRoutes - Central function to define routes that get registered by the main application
+func RegisterRoutes(r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+	r.HandleFunc("/accounts/{address}/send", SendRequestHandler(cdc, kb)).Methods("POST")
+}
+
 type sendBody struct {
 	// fees is not used currently
 	// Fees             sdk.Coin  `json="fees"`
@@ -27,7 +32,6 @@ type sendBody struct {
 
 // SendRequestHandler - http request handler to send coins to a address
 func SendRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWriter, *http.Request) {
-	c := commands.Commander{cdc}
 	ctx := context.NewCoreContextFromViper()
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
@@ -73,7 +77,7 @@ func SendRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWrit
 
 		// sign
 		ctx = ctx.WithSequence(m.Sequence)
-		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, c.Cdc)
+		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))

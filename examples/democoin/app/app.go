@@ -69,10 +69,10 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	).Seal()
 
 	// Add handlers.
-	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
+	coinKeeper := bank.NewKeeper(app.accountMapper)
 	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper, app.RegisterCodespace(cool.DefaultCodespace))
-	powKeeper := pow.NewKeeper(app.capKeyPowStore, pow.NewPowConfig("pow", int64(1)), coinKeeper, app.RegisterCodespace(pow.DefaultCodespace))
-	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
+	powKeeper := pow.NewKeeper(app.capKeyPowStore, pow.NewConfig("pow", int64(1)), coinKeeper, app.RegisterCodespace(pow.DefaultCodespace))
+	ibcMapper := ibc.NewMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
 	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper, app.RegisterCodespace(simplestake.DefaultCodespace))
 	app.Router().
 		AddRoute("bank", bank.NewHandler(coinKeeper)).
@@ -104,15 +104,15 @@ func MakeCodec() *wire.Codec {
 
 	// Register Msgs
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	cdc.RegisterConcrete(bank.SendMsg{}, "democoin/Send", nil)
-	cdc.RegisterConcrete(bank.IssueMsg{}, "democoin/Issue", nil)
-	cdc.RegisterConcrete(cool.QuizMsg{}, "democoin/Quiz", nil)
-	cdc.RegisterConcrete(cool.SetTrendMsg{}, "democoin/SetTrend", nil)
-	cdc.RegisterConcrete(pow.MineMsg{}, "democoin/Mine", nil)
+	cdc.RegisterConcrete(bank.MsgSend{}, "democoin/Send", nil)
+	cdc.RegisterConcrete(bank.MsgIssue{}, "democoin/Issue", nil)
+	cdc.RegisterConcrete(cool.MsgQuiz{}, "democoin/Quiz", nil)
+	cdc.RegisterConcrete(cool.MsgSetTrend{}, "democoin/SetTrend", nil)
+	cdc.RegisterConcrete(pow.MsgMine{}, "democoin/Mine", nil)
 	cdc.RegisterConcrete(ibc.IBCTransferMsg{}, "democoin/IBCTransferMsg", nil)
 	cdc.RegisterConcrete(ibc.IBCReceiveMsg{}, "democoin/IBCReceiveMsg", nil)
-	cdc.RegisterConcrete(simplestake.BondMsg{}, "democoin/BondMsg", nil)
-	cdc.RegisterConcrete(simplestake.UnbondMsg{}, "democoin/UnbondMsg", nil)
+	cdc.RegisterConcrete(simplestake.MsgBond{}, "democoin/BondMsg", nil)
+	cdc.RegisterConcrete(simplestake.MsgUnbond{}, "democoin/UnbondMsg", nil)
 
 	// Register AppAccount
 	cdc.RegisterInterface((*sdk.Account)(nil), nil)
@@ -169,7 +169,7 @@ func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper, powKeeper pow.Keep
 			//	return sdk.ErrGenesisParse("").TraceCause(err, "")
 		}
 
-		err = powKeeper.InitGenesis(ctx, genesisState.PowGenesis)
+		err = powKeeper.InitGenesis(ctx, genesisState.POWGenesis)
 		if err != nil {
 			panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 			//	return sdk.ErrGenesisParse("").TraceCause(err, "")

@@ -7,7 +7,7 @@ import (
 
 // Keeper - handlers sets/gets of custom variables for your module
 type Keeper struct {
-	ck bank.CoinKeeper
+	ck bank.Keeper
 
 	storeKey sdk.StoreKey // The (unexposed) key used to access the store from the Context.
 
@@ -15,7 +15,7 @@ type Keeper struct {
 }
 
 // NewKeeper - Returns the Keeper
-func NewKeeper(key sdk.StoreKey, bankKeeper bank.CoinKeeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(key sdk.StoreKey, bankKeeper bank.Keeper, codespace sdk.CodespaceType) Keeper {
 	return Keeper{bankKeeper, key, codespace}
 }
 
@@ -44,7 +44,7 @@ func (k Keeper) CheckTrend(ctx sdk.Context, guessedTrend string) bool {
 }
 
 // InitGenesis - store the genesis trend
-func (k Keeper) InitGenesis(ctx sdk.Context, data CoolGenesis) error {
+func (k Keeper) InitGenesis(ctx sdk.Context, data Genesis) error {
 	k.setTrend(ctx, data.Trend)
 	return nil
 }

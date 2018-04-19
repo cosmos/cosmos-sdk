@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Coin errors reserve 100 ~ 199.
+// Bank errors reserve 100 ~ 199.
 const (
 	DefaultCodespace sdk.CodespaceType = 2
 

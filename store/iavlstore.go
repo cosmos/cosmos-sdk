@@ -17,6 +17,7 @@ const (
 	defaultIAVLNumHistory = 1<<53 - 1 // DEPRECATED
 )
 
+// load the iavl store
 func LoadIAVLStore(db dbm.DB, id CommitID) (CommitStore, error) {
 	tree := iavl.NewVersionedTree(db, defaultIAVLCacheSize)
 	_, err := tree.LoadVersion(id.Version)

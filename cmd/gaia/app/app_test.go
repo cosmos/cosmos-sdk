@@ -42,12 +42,12 @@ var (
 		0,
 	}
 
-	sendMsg1 = bank.SendMsg{
+	sendMsg1 = bank.MsgSend{
 		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
 		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
 	}
 
-	sendMsg2 = bank.SendMsg{
+	sendMsg2 = bank.MsgSend{
 		Inputs: []bank.Input{bank.NewInput(addr1, coins)},
 		Outputs: []bank.Output{
 			bank.NewOutput(addr2, halfCoins),
@@ -55,7 +55,7 @@ var (
 		},
 	}
 
-	sendMsg3 = bank.SendMsg{
+	sendMsg3 = bank.MsgSend{
 		Inputs: []bank.Input{
 			bank.NewInput(addr1, coins),
 			bank.NewInput(addr4, coins),
@@ -66,7 +66,7 @@ var (
 		},
 	}
 
-	sendMsg4 = bank.SendMsg{
+	sendMsg4 = bank.MsgSend{
 		Inputs: []bank.Input{
 			bank.NewInput(addr2, coins),
 		},
@@ -75,7 +75,7 @@ var (
 		},
 	}
 
-	sendMsg5 = bank.SendMsg{
+	sendMsg5 = bank.MsgSend{
 		Inputs: []bank.Input{
 			bank.NewInput(addr1, manyCoins),
 		},
@@ -191,7 +191,7 @@ func TestGenesis(t *testing.T) {
 	assert.Equal(t, baseAcc, res1)
 }
 
-func TestSendMsgWithAccounts(t *testing.T) {
+func TestMsgSendWithAccounts(t *testing.T) {
 	gapp := newGaiaApp()
 
 	// Construct some genesis bytes to reflect GaiaAccount
@@ -233,7 +233,7 @@ func TestSendMsgWithAccounts(t *testing.T) {
 	SignCheckDeliver(t, gapp, sendMsg1, []int64{1}, true, priv1)
 }
 
-func TestSendMsgMultipleOut(t *testing.T) {
+func TestMsgSendMultipleOut(t *testing.T) {
 	gapp := newGaiaApp()
 
 	genCoins, err := sdk.ParseCoins("42foocoin")
@@ -293,7 +293,7 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 	CheckBalance(t, gapp, addr3, "10foocoin")
 }
 
-func TestSendMsgDependent(t *testing.T) {
+func TestMsgSendDependent(t *testing.T) {
 	gapp := newGaiaApp()
 
 	genCoins, err := sdk.ParseCoins("42foocoin")

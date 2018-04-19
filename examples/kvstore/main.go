@@ -41,7 +41,7 @@ func main() {
 	baseApp.SetTxDecoder(decodeTx)
 
 	// Set a handler Route.
-	baseApp.Router().AddRoute("kvstore", KVStoreHandler(capKeyMainStore))
+	baseApp.Router().AddRoute("kvstore", Handler(capKeyMainStore))
 
 	// Load latest version.
 	if err := baseApp.LoadLatestVersion(capKeyMainStore); err != nil {
@@ -65,11 +65,12 @@ func main() {
 	return
 }
 
-func KVStoreHandler(storeKey sdk.StoreKey) sdk.Handler {
+// KVStore Handler
+func Handler(storeKey sdk.StoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		dTx, ok := msg.(kvstoreTx)
 		if !ok {
-			panic("KVStoreHandler should only receive kvstoreTx")
+			panic("Handler should only receive kvstoreTx")
 		}
 
 		// tx is already unmarshalled

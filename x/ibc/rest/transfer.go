@@ -11,9 +11,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/bank/commands"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
+
+// RegisterRoutes - Central function to define routes that get registered by the main application
+func RegisterRoutes(r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+	r.HandleFunc("/ibc/{destchain}/{address}/send", TransferRequestHandler(cdc, kb)).Methods("POST")
+}
 
 type transferBody struct {
 	// Fees             sdk.Coin  `json="fees"`
@@ -27,7 +31,6 @@ type transferBody struct {
 // TransferRequestHandler - http request handler to transfer coins to a address
 // on a different chain via IBC
 func TransferRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWriter, *http.Request) {
-	c := commands.Commander{cdc}
 	ctx := context.NewCoreContextFromViper()
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
@@ -70,7 +73,7 @@ func TransferRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.Response
 
 		// sign
 		ctx = ctx.WithSequence(m.Sequence)
-		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, c.Cdc)
+		txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, cdc)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))

@@ -30,10 +30,20 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			pk, err := GetPubKey(viper.GetString(FlagPubKey))
+
+			pkStr := viper.GetString(FlagPubKey)
+			if len(pkStr) == 0 {
+				return fmt.Errorf("must use --pubkey flag")
+			}
+			pkBytes, err := hex.DecodeString(pkStr)
 			if err != nil {
 				return err
 			}
+			pk, err := crypto.PubKeyFromBytes(pkBytes)
+			if err != nil {
+				return err
+			}
+
 			if viper.GetString(FlagMoniker) == "" {
 				return fmt.Errorf("please enter a moniker for the validator-candidate using --moniker")
 			}
@@ -186,31 +196,4 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().AddFlagSet(fsDelegator)
 	cmd.Flags().AddFlagSet(fsCandidate)
 	return cmd
-}
-
-//______________________________________________________________________________________
-
-// create the pubkey from a pubkey string
-// TODO move to a better reusable place
-func GetPubKey(pubKeyStr string) (pk crypto.PubKey, err error) {
-
-	if len(pubKeyStr) == 0 {
-		err = fmt.Errorf("must use --pubkey flag")
-		return
-	}
-	if len(pubKeyStr) != 64 { //if len(pkBytes) != 32 {
-		err = fmt.Errorf("pubkey must be Ed25519 hex encoded string which is 64 characters, this pubkey is %v characters", len(pubKeyStr))
-		return
-	}
-
-	// TODO: bech32 ...
-	var pkBytes []byte
-	pkBytes, err = hex.DecodeString(pubKeyStr)
-	if err != nil {
-		return
-	}
-	var pkEd crypto.PubKeyEd25519
-	copy(pkEd[:], pkBytes[:])
-	pk = pkEd
-	return
 }

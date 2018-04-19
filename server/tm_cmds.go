@@ -1,9 +1,11 @@
 package server
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/p2p"
@@ -12,73 +14,63 @@ import (
 
 // ShowNodeIDCmd - ported from Tendermint, dump node ID to stdout
 func ShowNodeIDCmd(ctx *Context) *cobra.Command {
-	cmd := showNodeID{ctx}
 	return &cobra.Command{
 		Use:   "show_node_id",
 		Short: "Show this node's ID",
-		RunE:  cmd.run,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg := ctx.Config
+			nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
+			if err != nil {
+				return err
+			}
+			fmt.Println(nodeKey.ID())
+			return nil
+		},
 	}
 }
 
-type showNodeID struct {
-	context *Context
-}
-
-func (s showNodeID) run(cmd *cobra.Command, args []string) error {
-	cfg := s.context.Config
-	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
-	if err != nil {
-		return err
-	}
-	fmt.Println(nodeKey.ID())
-	return nil
-}
-
-//--------------------------------------------------------------------------------
+//________________________________________________________________________________
 
 // ShowValidator - ported from Tendermint, show this node's validator info
 func ShowValidatorCmd(ctx *Context) *cobra.Command {
-	cmd := showValidator{ctx}
-	return &cobra.Command{
+	flagJSON := "json"
+	cmd := cobra.Command{
 		Use:   "show_validator",
 		Short: "Show this node's validator info",
-		RunE:  cmd.run,
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			cfg := ctx.Config
+			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorFile())
+			pubKey := privValidator.PubKey
+
+			if viper.GetBool(flagJSON) {
+				pubKeyJSONBytes, err := cdc.MarshalJSON(pubKey)
+				if err != nil {
+					return err
+				}
+				fmt.Println(string(pubKeyJSONBytes))
+				return nil
+			}
+			pubKeyHex := hex.EncodeToString(pubKey.Bytes())
+			fmt.Println(pubKeyHex)
+			return nil
+		},
 	}
+	cmd.Flags().Bool(flagJSON, false, "get machine parseable output")
+	return &cmd
 }
 
-type showValidator struct {
-	context *Context
-}
-
-func (s showValidator) run(cmd *cobra.Command, args []string) error {
-	cfg := s.context.Config
-	privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorFile())
-	pubKeyJSONBytes, err := cdc.MarshalJSON(privValidator.PubKey)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(pubKeyJSONBytes))
-	return nil
-}
-
-//------------------------------------------------------------------------------
+//________________________________________________________________________________
 
 // UnsafeResetAllCmd - extension of the tendermint command, resets initialization
 func UnsafeResetAllCmd(ctx *Context) *cobra.Command {
-	cmd := resetAll{ctx}
 	return &cobra.Command{
 		Use:   "unsafe_reset_all",
 		Short: "Reset all blockchain data",
-		RunE:  cmd.run,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg := ctx.Config
+			tcmd.ResetAll(cfg.DBDir(), cfg.PrivValidatorFile(), ctx.Logger)
+			return nil
+		},
 	}
-}
-
-type resetAll struct {
-	context *Context
-}
-
-func (r resetAll) run(cmd *cobra.Command, args []string) error {
-	cfg := r.context.Config
-	tcmd.ResetAll(cfg.DBDir(), cfg.PrivValidatorFile(), r.context.Logger)
-	return nil
 }

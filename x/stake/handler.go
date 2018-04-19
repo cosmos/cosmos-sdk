@@ -48,6 +48,9 @@ func NewEndBlocker(k Keeper) sdk.EndBlocker {
 
 //_____________________________________________________________________
 
+func Bloop() {
+}
+
 // InitGenesis - store genesis parameters
 func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	k.setPool(ctx, data.Pool)

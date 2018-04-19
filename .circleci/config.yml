@@ -32,6 +32,7 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             go get -u github.com/tendermint/lint/golint
+            go get -u github.com/alecthomas/gometalinter
       - run:
           name: binaries
           command: |
@@ -65,9 +66,7 @@ jobs:
           name: Lint source
           command: |
             export PATH="$GOBIN:$PATH"
-            for pkg in $(go list github.com/cosmos/cosmos-sdk/... | grep -v /vendor/); do
-              test -z "$(golint $pkg | tee /dev/stderr)" 
-            done
+            gometalinter --disable-all --enable='golint' --vendor ./...
 
   test_cover:
     <<: *defaults

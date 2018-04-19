@@ -10,8 +10,8 @@ First, generate a new key with a name, and save the address:
 ::
 
     MYNAME=<your name>
-    basecli keys new $MYNAME
-    basecli keys list
+    gaiacli keys new $MYNAME
+    gaiacli keys list
     MYADDR=<your newly generated address>
 
 
@@ -60,11 +60,11 @@ The genesis file should look like this:
 
 **Note:** We need to change the denomination of token from default to ``steak`` in the genesis file.
 
-Then, recover the genesis account with ``basecli``:
+Then, recover the genesis account with ``gaiacli``:
 
 ::
 
-    basecli keys add <name> --recover
+    gaiacli keys add <name> --recover
 
 By now, you have set up the first node. This is great!
 
@@ -120,7 +120,7 @@ Nice. We can also lookup the validator set:
 
 ::
 
-    basecli validatorset
+    gaiacli validatorset
 
 There is only **one** validator now. Let's add another one!
 
@@ -128,19 +128,19 @@ First, we need to create a new account:
 
 ::
 
-    basecli keys new <NAME>
+    gaiacli keys new <NAME>
 
 Check that we now have two accounts:
 
 ::
 
-    basecli keys list 
+    gaiacli keys list 
 
 Then, we try to transfer some ``steak`` to another account:
 
 ::
 
-    basecli send --amount=1000steak --to=$MYADDR2 --name=$NAME --chain-id=<CHAIN-ID> --node=tcp://localhost:46657 --sequence=0
+    gaiacli send --amount=1000steak --to=$MYADDR2 --name=$NAME --chain-id=<CHAIN-ID> --node=tcp://localhost:46657 --sequence=0
 
 **Note:** We need to be careful with the ``chain-id`` and ``sequence``
 
@@ -148,7 +148,7 @@ Check the balance & sequence with:
 
 ::
 
-    basecli account $MYADDR
+    gaiacli account $MYADDR
 
 We can see the balance of ``$MYADDR2`` is 1000 now. 
 
@@ -164,19 +164,19 @@ Ok, now we can bond some coins to that pubkey:
 
 ::
 
-    basecli bond --stake=1steak --validator=<validator-pubkey-hex> --sequence=0 --chain-id=<chain-id> --name=test
+    gaiacli bond --stake=1steak --validator=<validator-pubkey-hex> --sequence=0 --chain-id=<chain-id> --name=test
 
 Nice. We can see there are now two validators:
 
 ::
 
-    basecli validatorset
+    gaiacli validatorset
 
 Check the balance of ``$MYADDR2`` to see the difference: it has 1 less ``steak``!
 
 ::
 
-    basecli account $MYADDR2
+    gaiacli account $MYADDR2
 
 To confirm for certain the new validator is active, check tendermint:
 
@@ -188,6 +188,6 @@ Finally, to relinquish all your power, unbond some coins. You should see your Vo
 
 ::
 
-    basecli unbond  --sequence=# --chain-id=<chain-id> --name=test
+    gaiacli unbond  --sequence=# --chain-id=<chain-id> --name=test
 
 That's it!

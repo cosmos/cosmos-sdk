@@ -39,7 +39,7 @@ then with:
 
 ::
 
-    basecli version
+    gaiacli version
 
 you should see:
 

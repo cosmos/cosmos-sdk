@@ -101,33 +101,74 @@ The ``genesis.json`` should look something like:
 ::
 
     {
-      "app_hash": "",
       "app_state": {
         "accounts": [
           {
-            "address": "1FEADCDC8CCB22244769B9CC93C1F6D7489FC5AF",
+            "address": "1D9B2356CAADF46D3EE3488E3CCE3028B4283DEE",
             "coins": [
               {
-                "denom": "mycoin",
-                "amount": 9007199254740992
+                "denom": "fermion",
+                "amount": 100000
               }
             ]
           }
-        ]
+        ],
+        "stake": {
+          "pool": {
+            "total_supply": 0,
+            "bonded_shares": {
+              "num": 0,
+              "denom": 1
+            },
+            "unbonded_shares": {
+              "num": 0,
+              "denom": 1
+            },
+            "bonded_pool": 0,
+            "unbonded_pool": 0,
+            "inflation_last_time": 0,
+            "inflation": {
+              "num": 7,
+              "denom": 100
+            }
+          },
+          "params": {
+            "inflation_rate_change": {
+              "num": 13,
+              "denom": 100
+            },
+            "inflation_max": {
+              "num": 20,
+              "denom": 100
+            },
+            "inflation_min": {
+              "num": 7,
+              "denom": 100
+            },
+            "goal_bonded": {
+              "num": 67,
+              "denom": 100
+            },
+            "max_validators": 100,
+            "bond_denom": "fermion"
+          }
+        }
       },
-      "chain_id": "test-chain-EsYka3",
-      "genesis_time": "0001-01-01T00:00:00Z",
       "validators": [
         {
           "pub_key": {
-            "type": "ed25519",
-            "data": "57B89D41F18FE3FE69250B44693A7D68DE4E03EC563F54C27F9A86CE8B81A4B7"
+            "type": "AC26791624DE60",
+            "value": "rgpc/ctVld6RpSfwN5yxGBF17R1PwMTdhQ9gKVUZp5g="
           },
           "power": 10,
           "name": ""
         }
-      ]
+      ],
+      "app_hash": "",
+      "genesis_time": "0001-01-01T00:00:00Z",
+      "chain_id": "test-chain-Uv1EVU"
     }
+
 
 To notice is that the ``accounts`` field has a an address and a whole bunch of "mycoin". This is ``alice``'s address (todo: dbl check). Under ``validators`` we see the ``pub_key.data`` field, which will match the same field in the ``priv_validator.json`` file.
 
@@ -156,9 +197,9 @@ We'll have ``alice`` send some ``mycoin`` to ``bob``, who has now joined the net
 
 ::
 
-    gaiacli send --amount=1000mycoin --seq=0 --name=alice --to=5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
+    gaiacli send --amount=1000mycoin --sequence=0 --name=alice --to=5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6 --chain-id=test-chain-Uv1EVU
 
-where the ``--seq`` flag is to be incremented for each transaction, the ``--name`` flag is the sender (alice), and the ``--to`` flag takes ``bob``'s address. You'll see something like:
+where the ``--sequence`` flag is to be incremented for each transaction, the ``--name`` flag is the sender (alice), and the ``--to`` flag takes ``bob``'s address. You'll see something like:
 
 ::
 

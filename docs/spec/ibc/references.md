@@ -5,6 +5,9 @@
 ##### 1:
 [https://github.com/cosmos/cosmos/blob/master/WHITEPAPER.md#inter-blockchain-communication-ibc](https://github.com/cosmos/cosmos/blob/master/WHITEPAPER.md#inter-blockchain-communication-ibc)
 
+##### 2:
+{ vector clock }
+
 ##### 3:
 [https://blog.cosmos.network/consensus-compare-casper-vs-tendermint-6df154ad56ae#215d](https://blog.cosmos.network/consensus-compare-casper-vs-tendermint-6df154ad56ae#215d)
 

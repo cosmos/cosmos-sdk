@@ -38,7 +38,9 @@ _valid(H<sub>h </sub>,M<sub>k,v,h </sub>)_ &#8658; _[true | false]_
 
 All proofs require an initial _H<sub>h</sub>_ and _C<sub>h</sub>_ for some _h_, where &#916;_(now, H<sub>h</sub>) < P_.
 
-Any header may be from a malicious chain (e.g. shadowing a real chain state with a fake validator set), so a subjective decision is required before establishing a connection. This can be performed by on-chain governance or a similar decentralized mechanism if desired. Establishing a bidirectional initial root-of-trust between the two blockchains (_A_ to _B_ and _B_ to _A_) is necessary before any IBC packets can be sent.
+Establishing a bidirectional initial root-of-trust between the two blockchains (_A_ to _B_ and _B_ to _A_) — _HA<sub>h</sub>_ and _CA<sub>h</sub>_ stored on chain _B_, and _HB<sub>h</sub>_ and _CB<sub>h</sub_ stored on chain _A_ — is necessary before any IBC packets can be sent. 
+
+Any header may be from a malicious chain (e.g. shadowing a real chain state with a fake validator set), so a subjective decision is required before establishing a connection. This can be performed permissionlessly, in which case users later utilizing the IBC channel must check the root-of-trust themselves, or authorized by on-chain governance.
 
 #### 2.3.2 Following Block Headers
 
@@ -73,4 +75,8 @@ Bisection can be used to discover this set of proofs. That is, given _max(T) = n
 
 #### 2.3.3 Closing a Connection
 
-{ todo }
+IBC implementations may optionally include the ability to close an IBC connection and prevent further header updates, simply causing _update(T, X<sub>h </sub>|<sub> </sub>U<sub>h </sub>)_ as defined above to always return _false_.
+
+Closing a connection may break application invariants (such as fungiblity - token vouchers on chain _B_ will no longer be redeemable for tokens on chain _A_) and should only be undertaken in extreme circumstances such as Byzantine behavior of the connected chain.
+
+Closure may be permissioned to an on-chain governance system, an identifiable party on the other chain (such as a signer quorum, although this will not work in some Byzantine cases), or any user who submits a connection-specific fraud proof of Byzantine behavior. When a connection is closed, application-specific measures may be undertaken to recover assets held on a Byzantine chain. We defer further discussion to { an appendix }.

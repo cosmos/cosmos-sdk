@@ -29,8 +29,6 @@ func ShowNodeIDCmd(ctx *Context) *cobra.Command {
 	}
 }
 
-//________________________________________________________________________________
-
 // ShowValidator - ported from Tendermint, show this node's validator info
 func ShowValidatorCmd(ctx *Context) *cobra.Command {
 	flagJSON := "json"
@@ -59,8 +57,6 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 	cmd.Flags().Bool(flagJSON, false, "get machine parseable output")
 	return &cmd
 }
-
-//________________________________________________________________________________
 
 // UnsafeResetAllCmd - extension of the tendermint command, resets initialization
 func UnsafeResetAllCmd(ctx *Context) *cobra.Command {

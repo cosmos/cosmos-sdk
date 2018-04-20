@@ -3,7 +3,6 @@ package lib
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -25,24 +24,27 @@ type ListMapper interface {
 
 	Get(sdk.Context, uint64, interface{}) error
 
-	// Setting element out of range is harmful
+	// Setting element out of range will break length counting
 	// Use Push() instead of Set() to append a new element
 	Set(sdk.Context, uint64, interface{})
 
+	// Other elements' indices are preserved after deletion
 	Delete(sdk.Context, uint64)
 
 	Push(sdk.Context, interface{})
 
 	// Getter/Setter for meta information - can be customized
+	// Use this space for storing relevant information about the list
 	GetMeta(sdk.Context, interface{}) error
 	SetMeta(sdk.Context, interface{})
 
 	// Iterate*() is used to iterate over all existing elements in the list
 	// Return true in the continuation to break
 
-	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+	// CONTRACT: No writes may happen within a domain while iterating over it.
 	IterateRead(sdk.Context, interface{}, func(sdk.Context, uint64) bool)
 
+	// CONTRACT: No deletion may happend whihin a domain while iterating over it.
 	// IterateWrite() is safe to write over the domain
 	IterateWrite(sdk.Context, interface{}, func(sdk.Context, uint64) bool)
 
@@ -134,8 +136,8 @@ func (lm GenericMapper) IterateRead(ctx sdk.Context, ptr interface{}, fn func(sd
 		if err := lm.cdc.UnmarshalBinary(v, ptr); err != nil {
 			panic(err)
 		}
-		s := strings.Split(string(iter.Key()), "/")
-		index, err := strconv.ParseUint(s[len(s)-1], 10, 64)
+		s := string(iter.Key()[len(lm.prefix)+6:])
+		index, err := strconv.ParseUint(s, 10, 64)
 		if err != nil {
 			panic(err)
 		}
@@ -182,10 +184,12 @@ type QueueMapper interface {
 	Peek(sdk.Context, interface{}) error
 	Pop(sdk.Context)
 	IsEmpty(sdk.Context) bool
-	// Iterate() removes elements it processed
+
+	// Flush() removes elements it processed
 	// Return true in the continuation to break
 	// The interface{} is unmarshalled before the continuation is called
 	// Starts from the top(head) of the queue
+	// CONTRACT: Pop() or Push() should not be performed while flushing
 	Flush(sdk.Context, interface{}, func(sdk.Context) bool)
 
 	// Key for the index of top element

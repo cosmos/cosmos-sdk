@@ -50,7 +50,7 @@ func StartServer(t *testing.T) chan error {
 
 	// init server
 	ctx := NewContext(cfg, log.NewNopLogger())
-	initCmd := InitCmd(mock.GenInitOptions, ctx)
+	initCmd := InitCmd(mock.GenAppState, ctx)
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 

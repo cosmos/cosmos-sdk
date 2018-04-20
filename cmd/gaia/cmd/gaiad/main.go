@@ -36,7 +36,7 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 }
 
 func main() {
-	server.AddCommands(rootCmd, app.DefaultGenAppState, generateApp, context)
+	server.AddCommands(rootCmd, app.GaiaGenAppState, generateApp, context)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.gaiad")

@@ -31,7 +31,7 @@ func TestPowKeeperGetSet(t *testing.T) {
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
-	am := auth.NewAccountMapper(cdc, capKey, &auth.BaseAccount{})
+	am := sdk.NewAccountMapper(cdc, capKey, &auth.BaseAccount{})
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
 	config := NewConfig("pow", int64(1))
 	ck := bank.NewKeeper(am)

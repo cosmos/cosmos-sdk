@@ -61,7 +61,7 @@ func TestBonding(t *testing.T) {
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
 
-	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
+	accountMapper := sdk.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	coinKeeper := bank.NewKeeper(accountMapper)
 	stakeKeeper := NewKeeper(capKey, coinKeeper, DefaultCodespace)
 	addr := sdk.Address([]byte("some-address"))

@@ -10,6 +10,7 @@ FEATURES:
 * Gaia stake commands include, DeclareCandidacy, EditCandidacy, Delegate, Unbond
 * MountStoreWithDB without providing a custom store works.
 * Repo is now lint compliant / GoMetaLinter with tendermint-lint integrated into CI
+* Better key output, pubkey go-amino hex bytes now output by default
 
 BREAKING CHANGES
 

@@ -1,4 +1,4 @@
-package auth
+package types_test
 
 import (
 	"testing"
@@ -29,7 +29,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 
 	// make context and mapper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
+	mapper := sdk.NewAccountMapper(cdc, capKey, &BaseAccount{})
 
 	addr := sdk.Address([]byte("some-address"))
 
@@ -56,18 +56,4 @@ func TestAccountMapperGetSet(t *testing.T) {
 	acc = mapper.GetAccount(ctx, addr)
 	assert.NotNil(t, acc)
 	assert.Equal(t, newSequence, acc.GetSequence())
-}
-
-func TestAccountMapperSealed(t *testing.T) {
-	_, capKey := setupMultiStore()
-	cdc := wire.NewCodec()
-	RegisterBaseAccount(cdc)
-
-	// normal mapper exposes the wire codec
-	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	assert.NotNil(t, mapper.WireCodec())
-
-	// seal mapper, should panic when we try to get the codec
-	mapperSealed := mapper.Seal()
-	assert.Panics(t, func() { mapperSealed.WireCodec() })
 }

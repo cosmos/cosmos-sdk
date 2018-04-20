@@ -62,11 +62,11 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	}
 
 	// Define the accountMapper.
-	app.accountMapper = auth.NewAccountMapper(
+	app.accountMapper = sdk.NewAccountMapper(
 		cdc,
 		app.capKeyMainStore, // target store
 		&types.AppAccount{}, // prototype
-	).Seal()
+	)
 
 	// Add handlers.
 	coinKeeper := bank.NewKeeper(app.accountMapper)

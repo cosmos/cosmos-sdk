@@ -54,11 +54,11 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	}
 
 	// define the accountMapper
-	app.accountMapper = auth.NewAccountMapper(
+	app.accountMapper = sdk.NewAccountMapper(
 		app.cdc,
 		app.keyMain,         // target store
 		&auth.BaseAccount{}, // prototype
-	).Seal()
+	)
 
 	// add handlers
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)

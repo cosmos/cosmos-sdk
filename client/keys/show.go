@@ -2,13 +2,17 @@ package keys
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
-	keys "github.com/tendermint/go-crypto/keys"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	keys "github.com/tendermint/go-crypto/keys"
+)
+
+const (
+	flagExportPubKey = "export-pubkey"
 )
 
 var showKeysCmd = &cobra.Command{
@@ -16,6 +20,11 @@ var showKeysCmd = &cobra.Command{
 	Short: "Show key info for the given name",
 	Long:  `Return public details of one local key.`,
 	RunE:  runShowCmd,
+	Args:  cobra.ExactArgs(1),
+}
+
+func init() {
+	showKeysCmd.Flags().Bool(flagExportPubKey, false, "Export public key.")
 }
 
 func getKey(name string) (keys.Info, error) {
@@ -30,16 +39,20 @@ func getKey(name string) (keys.Info, error) {
 // CMD
 
 func runShowCmd(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 || len(args[0]) == 0 {
-		return errors.New("You must provide a name for the key")
+	info, err := getKey(args[0])
+	if err != nil {
+		return err
 	}
-	name := args[0]
-
-	info, err := getKey(name)
-	if err == nil {
-		printInfo(info)
+	if viper.GetBool(flagExportPubKey) {
+		out, err := info.PubKey.MarshalJSON()
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(out))
+		return nil
 	}
-	return err
+	printInfo(info)
+	return nil
 }
 
 ///////////////////////////

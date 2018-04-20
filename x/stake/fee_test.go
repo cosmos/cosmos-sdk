@@ -15,6 +15,42 @@ const (
 	FeeOperationCount = 1000
 )
 
+// Test paying transaction fee
+func TestTransactionFeePayment(t *testing.T) {
+}
+
+// Test delegator withdrawing fees
+func TestDelegatorWithdrawal(t *testing.T) {
+}
+
+// Test validator withdrawing fees
+func TestValidatorWithdrawal(t *testing.T) {
+}
+
+// Test delegator redelegating
+func TestRedelegation(t *testing.T) {
+}
+
+// Test delegator unbonding
+func TestDelegatorUnbonding(t *testing.T) {
+}
+
+// Test validator unbonding
+func TestValidatorUnbonding(t *testing.T) {
+}
+
+// Test delegator bonding
+func TestDelegatorBonding(t *testing.T) {
+}
+
+// Test validator bonding
+func TestValidatorBonding(t *testing.T) {
+}
+
+// Test validator changing commission rate
+func TestCommissionChange(t *testing.T) {
+}
+
 // Run the full random testsuite
 func TestAll(t *testing.T) {
 	ops := []FeeOperation{OpTransactionFeePaid, OpDelegatorWithdrawal, OpValidatorWithdrawal, OpRedelegation, OpDelegatorUnbond,

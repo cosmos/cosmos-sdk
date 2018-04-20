@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -49,7 +50,7 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 				fmt.Println(string(pubKeyJSONBytes))
 				return nil
 			}
-			pubKeyHex := hex.EncodeToString(pubKey.Bytes())
+			pubKeyHex := strings.ToUpper(hex.EncodeToString(pubKey.Bytes()))
 			fmt.Println(pubKeyHex)
 			return nil
 		},

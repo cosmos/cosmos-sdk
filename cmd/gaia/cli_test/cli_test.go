@@ -1,7 +1,6 @@
 package clitest
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -17,8 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	crypto "github.com/tendermint/go-crypto"
-	crkeys "github.com/tendermint/go-crypto/keys"
 )
 
 func TestGaiaCLISend(t *testing.T) {
@@ -148,11 +145,9 @@ func executeInit(t *testing.T, cmdStr string) (masterKey, chainID string) {
 
 func executeGetAddrPK(t *testing.T, cmdStr string) (addr, pubKey string) {
 	out := tests.ExecuteT(t, cmdStr, 2)
-	var info crkeys.Info
-	keys.UnmarshalJSON([]byte(out), &info)
-	pubKey = hex.EncodeToString(info.PubKey.(crypto.PubKeyEd25519).Bytes())
-	addr = info.PubKey.Address().String()
-	return
+	var ko keys.KeyOutput
+	keys.UnmarshalJSON([]byte(out), &ko)
+	return ko.Address, ko.PubKey
 }
 
 func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {

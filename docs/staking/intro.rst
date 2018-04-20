@@ -56,8 +56,8 @@ which will give you three prompts:
 create a password and copy in your seed phrase. The name and address of the key will be output:
 
 ::
-
-    alice           67997DD03D527EB439B7193F2B813B05B219CC02
+    NAME:   ADDRESS:                                    PUBKEY:
+    alice	67997DD03D527EB439B7193F2B813B05B219CC02	1624DE6220BB89786C1D597050438C728202436552C6226AB67453CDB2A4D2703402FB52B6
 
 You can see all available keys with:
 

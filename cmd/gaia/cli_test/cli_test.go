@@ -40,8 +40,8 @@ func TestGaiaCLISend(t *testing.T) {
 	executeWrite(t, "gaiacli keys add foo --recover", pass, masterKey)
 	executeWrite(t, "gaiacli keys add bar", pass)
 
-	fooAddr, _ := executeGetAddr(t, "gaiacli keys show foo --output=json")
-	barAddr, _ := executeGetAddr(t, "gaiacli keys show bar --output=json")
+	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
+	barAddr, _ := executeGetAddrPK(t, "gaiacli keys show bar --output=json")
 
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
 	assert.Equal(t, int64(100000), fooAcc.GetCoins().AmountOf("fermion"))
@@ -71,7 +71,7 @@ func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 	defer cmd.Process.Kill()
 
 	executeWrite(t, "gaiacli keys add foo --recover", pass, masterKey)
-	fooAddr, fooPubKey := executeGetAddr(t, "gaiacli keys show foo --output=json")
+	fooAddr, fooPubKey := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
 	assert.Equal(t, int64(100000), fooAcc.GetCoins().AmountOf("fermion"))
 
@@ -91,7 +91,7 @@ func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 	assert.Equal(t, candidate.Address.String(), fooAddr)
 	assert.Equal(t, int64(3), candidate.Assets.Evaluate())
 
-	// TODO figure out why this times out with connection refused errors in go-bash
+	// TODO timeout issues if not connected to the internet
 	// unbond a single share
 	unbondStr := fmt.Sprintf("gaiacli unbond %v", flags)
 	unbondStr += fmt.Sprintf(" --name=%v", "foo")
@@ -146,19 +146,12 @@ func executeInit(t *testing.T, cmdStr string) (masterKey, chainID string) {
 	return
 }
 
-func executeGetAddr(t *testing.T, cmdStr string) (addr, pubKey string) {
+func executeGetAddrPK(t *testing.T, cmdStr string) (addr, pubKey string) {
 	out := tests.ExecuteT(t, cmdStr, 2)
 	var info crkeys.Info
 	keys.UnmarshalJSON([]byte(out), &info)
 	pubKey = hex.EncodeToString(info.PubKey.(crypto.PubKeyEd25519).Bytes())
-
-	// TODO this is really wierd, also error that not 64 characters!
-	pubKey = strings.TrimLeft(pubKey, "1624de6220")
-	pubKey = fmt.Sprintf("%064v", pubKey)
-
-	fmt.Printf("debug pubKey: %v\n", pubKey)
 	addr = info.PubKey.Address().String()
-	fmt.Printf("debug addr: %v\n", addr)
 	return
 }
 

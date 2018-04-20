@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 
+	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/go-crypto/keys/words"
 	cfg "github.com/tendermint/tendermint/config"
@@ -20,183 +20,91 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
-type initCmd struct {
-	genAppState GenAppState
-	context     *Context
-}
-
-// InitCmd will initialize all files for tendermint, along with proper
-// app_state.  The application can pass in a function to generate proper state.
-// And may want to use GenerateCoinKey to create default account(s).
-func InitCmd(gen GenAppState, fs pflag.FlagSet, ctx *Context) *cobra.Command {
-	cmd := initCmd{
-		genAppState: gen,
-		context:     ctx,
-	}
+// get cmd to initialize all files for tendermint and application
+func InitCmd(gen GenAppParams, ctx *Context) *cobra.Command {
 	cobraCmd := cobra.Command{
 		Use:   "init",
 		Short: "Initialize genesis files",
-		RunE:  cmd.run,
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			config := ctx.Config
+			pubkey := ReadOrCreatePrivValidator(config)
+
+			chainID, validators, appState, err := gen(pubkey)
+			if err != nil {
+				return err
+			}
+
+			err = CreateGenesisFile(config, chainID, validators, appState)
+			if err != nil {
+				return err
+			}
+
+			nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+			if err != nil {
+				return err
+			}
+
+			// print out some key information
+			toPrint := struct {
+				ChainID string `json:"chain_id"`
+				NodeID  string `json:"node_id"`
+			}{
+				chainID,
+				string(nodeKey.ID()),
+			}
+			out, err := wire.MarshalJSONIndent(cdc, toPrint)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(out))
+			return nil
+		},
 	}
-	cobraCmd.Flags().AddFlagSet(fs)
 	return &cobraCmd
 }
 
-// defaultPrint contains the info necessary
-// to setup a testnet including this account and validator.
-type defaultPrint struct {
-	Secret    string                   `json:"secret"`
-	ChainID   string                   `json:"chain_id"`
-	Account   string                   `json:"account"`
-	Validator tmtypes.GenesisValidator `json:"validator"`
-	NodeID    string                   `json:"node_id"`
-}
-
-func (c initCmd) run(cmd *cobra.Command, args []string) error {
-	// Store testnet information as we go
-	var testnetInfo defaultPrint
-
-	// Run the basic tendermint initialization,
-	// set up a default genesis with no app_options
-	config := c.context.Config
-	err := c.initTendermintFiles(config, &testnetInfo)
-	if err != nil {
-		return err
-	}
-
-	// no app_options, leave like tendermint
-	if c.genAppState == nil {
-		return nil
-	}
-
-	// generate secret and address
-	//addr, secret, err := GenerateCoinKey()
-	//if err != nil {
-	//return err
-	//}
-
-	// Now, we want to add the custom app_state
-	appState, err := c.genAppState()
-	if err != nil {
-		return err
-	}
-
-	testnetInfo.Secret = secret
-	testnetInfo.Account = addr.String()
-
-	// And add them to the genesis file
-	genFile := config.GenesisFile()
-	if err := addGenesisState(genFile, appState); err != nil {
-		return err
-	}
-
-	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
-	if err != nil {
-		return err
-	}
-	testnetInfo.NodeID = nodeKey.ID()
-
-	// print the output
-	out, err := wire.MarshalJSONIndent(cdc, testnetInfo)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(out))
-	return nil
-}
-
-// This was copied from tendermint/cmd/tendermint/commands/init.go
-// so we could pass in the config and the logger.
-func (c initCmd) initTendermintFiles(config *cfg.Config, info *defaultPrint) error {
+// read of create the private key file for this config
+func ReadOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
 	// private validator
-	privValFile := config.PrivValidatorFile()
+	privValFile := tmConfig.PrivValidatorFile()
 	var privValidator *pvm.FilePV
 	if cmn.FileExists(privValFile) {
 		privValidator = pvm.LoadFilePV(privValFile)
-		c.context.Logger.Info("Found private validator", "path", privValFile)
 	} else {
 		privValidator = pvm.GenFilePV(privValFile)
 		privValidator.Save()
-		c.context.Logger.Info("Generated private validator", "path", privValFile)
 	}
+	return privValidator.GetPubKey()
+}
 
-	// genesis file
-	genFile := config.GenesisFile()
+// create the genesis file
+func CreateGenesisFile(tmConfig *cfg.Config, chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage) error {
+	genFile := tmConfig.GenesisFile()
 	if cmn.FileExists(genFile) {
-		c.context.Logger.Info("Found genesis file", "path", genFile)
-	} else {
-		genDoc := tmtypes.GenesisDoc{
-			ChainID: cmn.Fmt("test-chain-%v", cmn.RandStr(6)),
-		}
-		genDoc.Validators = []tmtypes.GenesisValidator{{
-			PubKey: privValidator.GetPubKey(),
-			Power:  10,
-		}}
-
-		if err := genDoc.SaveAs(genFile); err != nil {
-			return err
-		}
-		c.context.Logger.Info("Generated genesis file", "path", genFile)
+		return fmt.Errorf("genesis config file already exists: %v", genFile)
 	}
-
-	// reload the config file and find our validator info
-	loadedDoc, err := tmtypes.GenesisDocFromFile(genFile)
-	if err != nil {
+	genDoc := tmtypes.GenesisDoc{
+		ChainID:    chainID,
+		Validators: validators,
+	}
+	if err := genDoc.ValidateAndComplete(); err != nil {
 		return err
 	}
-	for _, validator := range loadedDoc.Validators {
-		if validator.PubKey == privValidator.GetPubKey() {
-			info.Validator = validator
-		}
+	if err := genDoc.SaveAs(genFile); err != nil {
+		return err
 	}
-	info.ChainID = loadedDoc.ChainID
-
-	return nil
+	return addAppStateToGenesis(genFile, appState)
 }
 
-//-------------------------------------------------------------------
-
-// GenAppState takes the command line args, as well as an address and coin
-// denomination. It returns a default app_state to be included in in the
-// genesis file. This is application-specific
-type GenAppState func() (json.RawMessage, error)
-
-// Create one account with a whole bunch of mycoin in it
-func DefaultGenAppState(args []string) (json.RawMessage, error) {
-
-	addr, secret, err := GenerateCoinKey()
+// Add one line to the genesis file
+func addAppStateToGenesis(genesisConfigPath string, appState json.RawMessage) error {
+	bz, err := ioutil.ReadFile(genesisConfigPath)
 	if err != nil {
 		return err
 	}
 
-	genesisState := fmt.Sprintf(`{
-      "accounts": [{
-        "address": "%s",
-        "coins": [
-          {
-            "denom": "mycoin",
-            "amount": 9007199254740992
-          }
-        ]
-      }]
-    }`, addr.String())
-	return json.RawMessage(genesisState), nil
-}
-
-//-------------------------------------------------------------------
-
-// GenesisDoc involves some tendermint-specific structures we don't
-// want to parse, so we just grab it into a raw object format,
-// so we can add one line.
-type GenesisDoc map[string]json.RawMessage
-
-func addGenesisState(filename string, appState json.RawMessage) error {
-	bz, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-
-	var doc GenesisDoc
+	var doc map[string]json.RawMessage
 	err = cdc.UnmarshalJSON(bz, &doc)
 	if err != nil {
 		return err
@@ -207,15 +115,51 @@ func addGenesisState(filename string, appState json.RawMessage) error {
 	if err != nil {
 		return err
 	}
-
-	return ioutil.WriteFile(filename, out, 0600)
+	return ioutil.WriteFile(genesisConfigPath, out, 0600)
 }
 
 //_____________________________________________________________________
 
+// GenAppParams creates the core parameters initialization. It takes in a
+// pubkey meant to represent the pubkey of the validator of this machine.
+type GenAppParams func(crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage, err error)
+
+// Create one account with a whole bunch of mycoin in it
+func SimpleGenAppState(pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage, err error) {
+
+	var addr sdk.Address
+	var secret string
+	addr, secret, err = GenerateCoinKey()
+	if err != nil {
+		return
+	}
+	fmt.Printf("secret recovery key:\n%s\n", secret)
+
+	chainID = cmn.Fmt("test-chain-%v", cmn.RandStr(6))
+
+	validators = []tmtypes.GenesisValidator{{
+		PubKey: pubKey,
+		Power:  10,
+	}}
+
+	appState = json.RawMessage(fmt.Sprintf(`{
+  "accounts": [{
+    "address": "%s",
+    "coins": [
+      {
+        "denom": "mycoin",
+        "amount": 9007199254740992
+      }
+    ]
+  }]
+}`, addr.String()))
+	return
+}
+
 // GenerateCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
 func GenerateCoinKey() (sdk.Address, string, error) {
+
 	// construct an in-memory key store
 	codec, err := words.LoadCodec("english")
 	if err != nil {
@@ -231,7 +175,6 @@ func GenerateCoinKey() (sdk.Address, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-
 	addr := info.PubKey.Address()
 	return addr, secret, nil
 }

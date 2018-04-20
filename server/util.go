@@ -63,7 +63,7 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 // add server commands
 func AddCommands(
 	rootCmd *cobra.Command,
-	appState GenAppState, appCreator AppCreator,
+	appState GenAppParams, appCreator AppCreator,
 	context *Context) {
 
 	rootCmd.PersistentFlags().String("log_level", context.Config.LogLevel, "Log level")

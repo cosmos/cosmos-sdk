@@ -2,7 +2,9 @@
 
 ([Back to table of contents](README.md#contents))
 
-The basis of IBC is the ability to verify in the on-chain consensus ruleset of chain _B_ that a message packet received on chain _B_ was correctly generated on chain _A_. This establishes a cross-chain linearity guarantee: upon validation of that packet on chain _B_ we know that the packet has been executed on chain _A_ and any associated logic resolved (such as assets being escrowed), and we can safely perform application logic on chain _B_ (such as generating vouchers on chain _B_ for the chain _A_ assets which can later be redeemed with a packet in the opposite direction).
+The basis of IBC is the ability to verify in the on-chain consensus ruleset of chain _B_ that a data packet received on chain _B_ was correctly generated on chain _A_. This establishes a cross-chain linearity guarantee: upon validation of that packet on chain _B_ we know that the packet has been executed on chain _A_ and any associated logic resolved (such as assets being escrowed), and we can safely perform application logic on chain _B_ (such as generating vouchers on chain _B_ for the chain _A_ assets which can later be redeemed with a packet in the opposite direction).
+
+This section outlines the abstraction of an IBC _connection_: the state and consensus ruleset necessary to perform IBC packet verification. 
 
 ### 2.1 Definitions
 
@@ -38,9 +40,9 @@ _valid(H<sub>h </sub>,M<sub>k,v,h </sub>)_ &#8658; _[true | false]_
 
 All proofs require an initial _H<sub>h</sub>_ and _C<sub>h</sub>_ for some _h_, where &#916;_(now, H<sub>h</sub>) < P_.
 
-Establishing a bidirectional initial root-of-trust between the two blockchains (_A_ to _B_ and _B_ to _A_) — _HA<sub>h</sub>_ and _CA<sub>h</sub>_ stored on chain _B_, and _HB<sub>h</sub>_ and _CB<sub>h</sub_ stored on chain _A_ — is necessary before any IBC packets can be sent. 
+Establishing a bidirectional initial root-of-trust between the two blockchains (_A_ to _B_ and _B_ to _A_) — _HA<sub>h</sub>_ and _CA<sub>h</sub>_ stored on chain _B_, and _HB<sub>h</sub>_ and _CB<sub>h</sub>_ stored on chain _A_ — is necessary before any IBC packets can be sent. 
 
-Any header may be from a malicious chain (e.g. shadowing a real chain state with a fake validator set), so a subjective decision is required before establishing a connection. This can be performed permissionlessly, in which case users later utilizing the IBC channel must check the root-of-trust themselves, or authorized by on-chain governance.
+Any header may be from a malicious chain (e.g. shadowing a real chain state with a fake validator set), so a subjective decision is required before establishing a connection. This can be performed permissionlessly, in which case users later utilizing the IBC channel must check the root-of-trust themselves, or authorized by on-chain governance for additional assurance.
 
 #### 2.3.2 Following Block Headers
 
@@ -79,4 +81,4 @@ IBC implementations may optionally include the ability to close an IBC connectio
 
 Closing a connection may break application invariants (such as fungiblity - token vouchers on chain _B_ will no longer be redeemable for tokens on chain _A_) and should only be undertaken in extreme circumstances such as Byzantine behavior of the connected chain.
 
-Closure may be permissioned to an on-chain governance system, an identifiable party on the other chain (such as a signer quorum, although this will not work in some Byzantine cases), or any user who submits a connection-specific fraud proof of Byzantine behavior. When a connection is closed, application-specific measures may be undertaken to recover assets held on a Byzantine chain. We defer further discussion to { an appendix }.
+Closure may be permissioned to an on-chain governance system, an identifiable party on the other chain (such as a signer quorum, although this will not work in some Byzantine cases), or any user who submits an application-specific fraud proof. When a connection is closed, application-specific measures may be undertaken to recover assets held on a Byzantine chain. We defer further discussion to [Appendix D](appendices.md#appendix-d-byzantine-recovery-strategies).

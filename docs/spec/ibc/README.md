@@ -6,9 +6,9 @@ This paper specifies the Cosmos Inter-Blockchain Communication (IBC) protocol. T
 
 The core IBC protocol is payload-agnostic. On top of IBC, developers can implement the semantics of a particular application, enabling users to transfer valuable assets between different blockchains while preserving, under particular security assumptions of the underlying blockchains, the contractual guarantees of the asset in question - such as scarcity and fungibility for a currency or global uniqueness for a digital kitty-cat. 
 
-IBC requires two blockchains with cheaply verifiable rapid finality and Merkle tree substate proofs. The protocol makes no assumptions of block confirmation times or maximum network latency of packet transmissions, and the two consensus algorithms remain completely independent. Each chain maintains a local partial order and inter-chain message sequencing ensures cross-chain linearity. Once the two chains have registered a trust relationship, cryptographically verifiable packets can be sent between the chains.
+IBC requires two blockchains with cheaply verifiable rapid finality and Merkle tree substate proofs. The protocol makes no assumptions of block confirmation times or maximum network latency of packet transmissions, and the two consensus algorithms remain completely independent. Each chain maintains a local partial order and inter-chain message sequencing ensures cross-chain linearity. Once the two chains have registered a trust relationship, cryptographically verifiable packets can be sent between them.
 
-IBC was first outlined in the [Cosmos Whitepaper](https://github.com/cosmos/cosmos/blob/master/WHITEPAPER.md#inter-blockchain-communication-ibc), and later described in more detail by the [IBC specification paper](https://github.com/cosmos/ibc/raw/master/CosmosIBCSpecification.pdf). This document replaces and supersedes both. It explains the requirements and structure of the protocol and provides sufficient detail for both analysis and implementation, including example pseudocode.
+IBC was first outlined in the [Cosmos Whitepaper](https://github.com/cosmos/cosmos/blob/master/WHITEPAPER.md#inter-blockchain-communication-ibc), and later described in more detail by the [IBC specification paper](https://github.com/cosmos/ibc/raw/master/CosmosIBCSpecification.pdf). This document supersedes both. It explains the requirements and structure of the protocol and provides sufficient detail for both analysis and implementation.
 
 ## Contents
 
@@ -44,5 +44,6 @@ IBC was first outlined in the [Cosmos Whitepaper](https://github.com/cosmos/cosm
     1. [Appendix A: Encoding Libraries](appendices.md#appendix-a-encoding-libraries)
     1. [Appendix B: IBC Queue Format](appendices.md#appendix-b-ibc-queue-format)
     1. [Appendix C: Merkle Proof Format](appendices.md#appendix-c-merkle-proof-formats)
-    1. [Appendix D: Universal IBC Packets](appendices.md#appendix-d-universal-ibc-packets)
-    1. [Appendix E: Tendermint Header Proofs](appendices.md#appendix-e-tendermint-header-proofs)
+    1. [Appendix D: Byzantine Recovery Strategies](appendices.md#appendix-d-byzantine-recovery-strategies)
+    1. [Appendix E: Universal IBC Packets](appendices.md#appendix-e-universal-ibc-packets)
+    1. [Appendix F: Tendermint Header Proofs](appendices.md#appendix-f-tendermint-header-proofs)

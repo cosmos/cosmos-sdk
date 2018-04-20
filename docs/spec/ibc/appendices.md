@@ -48,7 +48,13 @@ For those who wish to minimize the size of their merkle proofs, we recommend usi
 
 See [binary format as protobuf specification](./protobuf/merkle.proto)
 
-## Appendix D: Universal IBC Packets
+## Appendix D: Byzantine Recovery Strategies
+
+- Goal: keep application invariants
+- Plasma-like fraud proofs
+- Trusted entity - governance
+
+## Appendix E: Universal IBC Packets
 
 { what is this }
 
@@ -56,7 +62,7 @@ The structures above can be used to define standard encodings for the basic IBC 
 
 See [binary format as protobuf specification](./protobuf/messages.proto)
 
-## Appendix E: Tendermint Header Proofs
+## Appendix F: Tendermint Header Proofs
 
 { is this finalized? }
 

@@ -10,7 +10,7 @@ The IBC protocol as defined here is payload-agnostic. The packet receiver on cha
 
 To facilitate useful application logic, we introduce an IBC *channel*: a set of reliable messaging queues that allows us to guarantee a cross-chain causal ordering[[5](./references.md#5)] of IBC packets. Causal ordering means that if packet _x_ is processed before packet _y_ on chain _A_, packet _x_ must also be processed before packet _y_ on chain _B_.
 
-IBC channels implement a [vector clock](https://en.wikipedia.org/wiki/Vector_clock) for the restricted case of two processes (in our case, blockchains). Given _x_ &#8594; _y_ means _x_ is causally before _y_, and chains A and B, and _a_ &#8658; _b_ means _a_ implies _b_:
+IBC channels implement a vector clock [2](references.md#2) for the restricted case of two processes (in our case, blockchains). Given _x_ &#8594; _y_ means _x_ is causally before _y_, and chains A and B, and _a_ &#8658; _b_ means _a_ implies _b_:
 
 _A:send(msg<sub>i </sub>)_ &#8594; _B:receive(msg<sub>i </sub>)_
 
@@ -125,6 +125,8 @@ Each incoming & outgoing queue for each connection must be provably associated w
 
 ### 3.4 Sending a packet
 
+{ todo: unify terms, clarify }
+
 To send an IBC packet, an application module on the source chain must call the send method of the IBC module, providing a packet as defined above. The IBC module must ensure that the destination chain was already properly registered and that the calling module has permission to write this packet. If all is in order, the IBC module simply pushes the packet to the tail of _Outgoing<sub>A</sub>_, which enables all the proofs described above.
 
 If desired, the packet payload can contain additional module routing information in the form of a _kind_, so that different modules can write different kinds of packets and maintain any application-level invariants related to this area. For example, a "coin" module can ensure a fixed supply, or a "NFT" module can ensure token uniqueness. The IBC module must associate every supported message with a particular handler (_f<sub>kind</sub>_) and return an error for unsupported types.
@@ -133,6 +135,8 @@ _(IBCsend(D, type, data)_ &#8658; _Success)_
   &#8658; _push(q<sub>D.send</sub> ,V<sub>send</sub>{type, data})_
 
 ### 3.5 Receiving a packet
+
+{ todo: unify terms }
 
 We also consider how a given blockchain _A_ is expected to receive the packet from a source chain _S_ with a merkle proof, given the current set of trusted headers for that chain, _T<sub>S</sub>_:
 
@@ -174,7 +178,7 @@ This enforces that the receipts are processed in order, to allow some the applic
 
 ### 3.7 Packet relayer
 
-{ todo: cleanup wording }
+{ todo: cleanup wording & terms }
 
 The blockchain itself only records the _intention_ to send the given message to the recipient chain, it doesn't make any network connections as that would add unbounded delays and non-determinism into the state machine. We define the concept of a _relay_ process that connects two chain by querying one for all proofs needed to prove outgoing messages and submit these proofs to the recipient chain.
 

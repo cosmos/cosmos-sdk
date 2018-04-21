@@ -7,7 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
+	dbm "github.com/tendermint/tmlibs/db"
 
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
@@ -71,7 +73,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	ms, capKey := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
-	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
+	mapper := sdk.NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
@@ -112,7 +114,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	ms, capKey := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
-	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
+	mapper := sdk.NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
@@ -178,7 +180,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	ms, capKey := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
-	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
+	mapper := sdk.NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
@@ -215,7 +217,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	ms, capKey := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
-	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
+	mapper := sdk.NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
@@ -290,7 +292,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	ms, capKey := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
-	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
+	mapper := sdk.NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
 
@@ -334,4 +336,13 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 	acc2 = mapper.GetAccount(ctx, addr2)
 	assert.Nil(t, acc2.GetPubKey())
+}
+
+func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
+	db := dbm.NewMemDB()
+	capKey := sdk.NewKVStoreKey("capkey")
+	ms := store.NewCommitMultiStore(db)
+	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
+	ms.LoadLatestVersion()
+	return ms, capKey
 }

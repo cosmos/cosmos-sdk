@@ -186,7 +186,7 @@ func TestViewKeeper(t *testing.T) {
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
+	accountMapper := sdk.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	coinKeeper := NewKeeper(accountMapper)
 	viewKeeper := NewViewKeeper(accountMapper)
 

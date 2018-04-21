@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
@@ -25,11 +26,11 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 func TestAccountMapperGetSet(t *testing.T) {
 	ms, capKey := setupMultiStore()
 	cdc := wire.NewCodec()
-	RegisterBaseAccount(cdc)
+	auth.RegisterBaseAccount(cdc)
 
 	// make context and mapper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	mapper := sdk.NewAccountMapper(cdc, capKey, &BaseAccount{})
+	mapper := sdk.NewAccountMapper(cdc, capKey, &auth.BaseAccount{})
 
 	addr := sdk.Address([]byte("some-address"))
 

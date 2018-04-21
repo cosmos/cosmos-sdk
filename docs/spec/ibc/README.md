@@ -37,7 +37,6 @@ IBC was first outlined in the [Cosmos Whitepaper](https://github.com/cosmos/cosm
 1.  **[Optimizations](optimizations.md)**
     1.  [Timeouts](optimizations.md#41-timeouts)
     1.  [Cleanup](optimizations.md#42-cleanup)
-    1.  [Handling Byzantine failures](optimizations.md#43-handling-byzantine-failures)
 1.  **[Conclusion](conclusion.md)**
 1.  **[References](references.md)**
 1.  **[Appendices](appendices.md)**

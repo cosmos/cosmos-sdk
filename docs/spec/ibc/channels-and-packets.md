@@ -196,8 +196,6 @@ case
 
 ### 3.6 Handling a receipt
 
-{ todo: cleanup logic }
-
 When we wish to create a transaction that atomically commits or rolls back across two chains, we must look at the execution result returned in the IBC receipt. For example, if I want to send tokens from Alice on chain `A` to Bob on chain `B`, chain `A` must decrement Alice's account *if and only if* Bob's account was incremented on chain `B`. We can achieve that by storing a protected intermediate state on chain `A` (escrowing the assets in question), which is then committed or rolled back based on the result of executing the transaction on chain `B`.
 
 To do this requires that we not only provably send a packet from chain `A` to chain `B`, but provably return the result of executing that packet (the receipt `data`) from chain `B` to chain `A`. If a valid IBC packet was sent from `A` to `B`, then the result of executing it is stored in `incoming_B`. Since the receipts are stored in a queue with the same key construction as the sending queue, we can generate the same set of proofs for them, and perform a similar sequence of steps to handle a receipt coming back to `A` for a message previously sent to `B`. Receipts, like packets, are processed in order.
@@ -226,10 +224,6 @@ This allows applications to reason about ordering and enforce application-level 
 ![Rejected Transaction](images/ReceiptError.png)
 
 ### 3.7 Packet relayer
-
-{ todo: cleanup wording & terms }
-
-{ todo: one relay process can relay all the things }
 
 The blockchain itself only records the *intention* to send the given message to the recipient chain - it does not open any actual network connections. We define the concept of a *relay* process that connects two chains by querying one for all outgoing packets & proofs, then committing those packets & proofs to the recipient chain.
 

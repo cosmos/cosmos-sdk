@@ -74,7 +74,7 @@ In order to prove a merkle root, we must fully define the headers, signatures, a
 
 Building Blocks: Header, PubKey, Signature, Commit, ValidatorSet
 
--> needs input/support from Tendermint Core team (and go-crypto)
+→ needs input/support from Tendermint Core team (and go-crypto)
 
 Registering Chain
 

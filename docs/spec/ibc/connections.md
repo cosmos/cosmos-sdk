@@ -28,17 +28,19 @@ To facilitate an IBC connection, the two blockchains must provide the following 
    it is possible to prove `H_h'` where `C_h' /= C_h` and `dt(now, H_h) < P`
 3. Given a trusted `H_h` and a Merkle proof `M_kvh` it is possible to prove `V_kh`
 
-It is possible to make use of the structure of BFT consensus to construct extremely lightweight and provable messages `U_h'` and `X_h'`. The implementation of these requirements with Tendermint consensus is defined in [Appendix E](). Another algorithm able to provide equally strong guarantees (such as Casper) is also compatible with IBC but must define its own set of update and change messages.
+It is possible to make use of the structure of BFT consensus to construct extremely lightweight and provable messages `U_h'` and `X_h'`. The implementation of these requirements with Tendermint consensus is defined in [Appendix F](appendices.md#appendix-f-tendermint-header-proofs). Another algorithm able to provide equally strong guarantees (such as Casper) is also compatible with IBC but must define its own set of update and change messages.
 
 The Merkle proof `M_kvh` is a well-defined concept in the blockchain space, and provides a compact proof that the key value pair `(k, v)` is consistent with a Merkle root stored in `H_h`. Handling the case where `k` is not in the store requires a separate proof of non-existence, which is not supported by all Merkle stores. Thus, we define the proof only as a proof of existence. There is no valid proof for missing keys, and we design the algorithm to work without it.
 
-`valid(H_h, M_kvh) => true | false`
+Blockchains supporting IBC must implement Merkle proof verification:
+
+`valid(H_h, M_kvh) ⇒ true | false`
 
 ### 2.3 Connection Lifecycle
 
 #### 2.3.1 Opening a connection
 
-All proofs require an initial `H_h` and `C_h` for some `h`, where &#916;_(now, H<sub>h</sub>) < P_.
+All proofs require an initial `H_h` and `C_h` for some `h`, where `dt(now, H_h) < P`.
 
 Establishing a bidirectional initial root-of-trust between the two blockchains (`A` to `B` and `B` to `A`) — `H_ah` and `C_ah` stored on chain `B`, and `H_bh` and `C_bh` stored on chain `A` — is necessary before any IBC packets can be sent. 
 
@@ -46,38 +48,38 @@ Any header may be from a malicious chain (e.g. shadowing a real chain state with
 
 #### 2.3.2 Following block headers
 
-We define two messages `U_h` and `X_h`, which together allow us to securely advance our trust from some known `H_n` to some future `H_h` where `h > n`. Some implementations may require that `h == n + 1` (all headers must be processed in order). IBC implemented on top of Tendermint or similar BFT algorithms requires only that `delta vals(C_n, C_h) < ⅓` (each step must have a change of less than one-third of the validator set)[[4](./references.md#4)].
+We define two messages `U_h` and `X_h`, which together allow us to securely advance our trust from some known `H_n` to some future `H_h` where `h > n`. Some implementations may require that `h == n + 1` (all headers must be processed in order). IBC implemented on top of Tendermint or similar BFT algorithms requires only that `delta-vals(C_n, C_h) < ⅓` (each step must have a change of less than one-third of the validator set)[[4](./references.md#4)].
 
-Either requirement is compatible with IBC. However, by supporting proofs where  `h_-_n > 1`, we can follow the block headers much more efficiently in situations where the majority of blocks do not include an IBC packet between chains `A` and `B`, and enable low-bandwidth connections to be implemented at very low cost. If there are packets to relay every block, these two requirements collapse to the same case (every header must be relayed).
+Either requirement is compatible with IBC. However, by supporting proofs where  `h - n > 1`, we can follow the block headers much more efficiently in situations where the majority of blocks do not include an IBC packet between chains `A` and `B`, and enable low-bandwidth connections to be implemented at very low cost. If there are packets to relay every block, these two requirements collapse to the same case (every header must be relayed).
 
 Since these messages `U_h` and `X_h` provide all knowledge of the remote blockchain, we require that they not just be provable, but also attributable. As such, any attempt to violate the finality guarantees in headers posted to chain `B` can be submitted back to chain `A` for punishment, in the same manner that chain `A` would independently punish (slash) identified Byzantine actors.
 
 More formally, given existing set of trust `T` =  `{(H_i, C_i), (H_j, C_j), …}`, we must provide:
 
-`valid(T, X_h | U_h) => true | false | unknown`
+`valid(T, X_h | U_h) ⇒ true | false | unknown`
 
 `valid` must fulfill the following properties:
 
 ```
 if H_h-1 ∈ T then
-  valid(T, X_h | U_h) => true | false
-  ∃ (U_h | X_h) => valid(T, X_h | U_h)
+  valid(T, X_h | U_h) ⇒ true | false
+  ∃ (U_h | X_h) ⇒ valid(T, X_h | U_h)
 ```
 
 ```
 if C_h ∉ T then
-  valid(T, U_h) => false
+  valid(T, U_h) ⇒ false
 ```
 
 We can then process update transactions as follows:
 
-`update(T, X_h | U_h) => success | failure`
+`update(T, X_h | U_h) ⇒ success | failure`
 
 ```
 update(T, X_h | U_h) = match valid(T, X_h | U_h) with
-  false => fail with "invalid proof"
-  unknown => fail with "need a proof between current and h"
-  true => 
+  false ⇒ fail with "invalid proof"
+  unknown ⇒ fail with "need a proof between current and h"
+  true ⇒ 
     set T = T ∪ (H_h, C_h)
 ```
 

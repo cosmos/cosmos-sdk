@@ -212,7 +212,7 @@ case
   H_h not in T_B ⇒ fail with "must submit header for height h"
   valid(H_h, M_kvh) == false ⇒ fail with "invalid Merkle proof"
   otherwise ⇒
-    set P{type, _, _, _, _} = outgoing_A[sequence]
+    set P{type, _, _, _, _} = pop(outgoing_A)
     f_type(result)
     success
 ```

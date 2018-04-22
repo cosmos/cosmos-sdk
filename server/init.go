@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path"
+	"path/filepath"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -21,14 +24,14 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
+// TODO flag to retrieve genesis file / config file from a URL?
 // get cmd to initialize all files for tendermint and application
-func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams) *cobra.Command {
-	flagOverwrite := "overwrite"
-
-	cobraCmd := cobra.Command{
+func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams, appendState AppendAppState) *cobra.Command {
+	flagOverwrite, flagAppendFile := "overwrite", "piece-file"
+	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Initialize genesis files",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Short: "Initialize genesis config, priv-validator file, and p2p-node file",
+		RunE: func(_ *cobra.Command, _ []string) error {
 
 			config := ctx.Config
 			pubkey := ReadOrCreatePrivValidator(config)
@@ -72,9 +75,99 @@ func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams) *cobra.Command {
 		},
 	}
 
-	cobraCmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the config file")
-	return &cobraCmd
+	cmd.AddCommand(FromPiecesCmd(ctx, cdc, appendState))
+	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the config file")
+	cmd.Flags().BoolP(flagAppendFile, "a", false, "create an append file for others to import")
+	return cmd
 }
+
+// genesis piece structure for creating combined genesis
+type GenesisPiece struct {
+	ChainID    string                     `json:"chain_id"`
+	NodeID     string                     `json:"node_id"`
+	AppState   json.RawMessage            `json:"app_state"`
+	Validators []tmtypes.GenesisValidator `json:"validators"`
+}
+
+// get cmd to initialize all files for tendermint and application
+func FromPiecesCmd(ctx *Context, cdc *wire.Codec, appendState AppendAppState) *cobra.Command {
+	return &cobra.Command{
+		Use:   "from-pieces [directory]",
+		Short: "Create genesis from directory of genesis pieces",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(_ *cobra.Command, args []string) error {
+			pieceDir := args[0]
+
+			// ensure that the privVal and nodeKey file already exist
+			config := ctx.Config
+			privValFile := config.PrivValidatorFile()
+			nodeKeyFile := config.NodeKeyFile()
+			genFile := config.GenesisFile()
+			if !cmn.FileExists(privValFile) {
+				return fmt.Errorf("privVal file must already exist, please initialize with init cmd: %v", privValFile)
+			}
+			if !cmn.FileExists(nodeKeyFile) {
+				return fmt.Errorf("nodeKey file must already exist, please initialize with init cmd: %v", nodeKeyFile)
+			}
+			cmn.FileExists(genFile)
+
+			// XXX remove the existing gen config file
+
+			// deterministically walk the directory for genesis-piece files to import
+			filepath.Walk(pieceDir, appendPiece(cdc, appendState, nodeKeyFile, genFile))
+
+			return nil
+		},
+	}
+}
+
+// append a genesis-piece
+func appendPiece(cdc *wire.Codec, appendState AppendAppState, nodeKeyFile, genFile string) filepath.WalkFunc {
+	return func(filePath string, _ os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if path.Ext(filePath) != "json" {
+			return nil
+		}
+
+		// XXX get the file bytes
+		var bz []byte
+
+		// get the piece
+		var piece GenesisPiece
+		err = cdc.UnmarshalJSON(bz, &piece)
+		if err != nil {
+			return err
+		}
+
+		// if the first file, create the genesis from scratch with piece inputs
+		if !cmn.FileExists(genFile) {
+			return WriteGenesisFile(cdc, genFile, piece.chainID, piece.validators, piece.appState)
+		}
+
+		// XXX read in the genFile
+
+		// XXX verify chain-ids are the same
+		// XXX combine the validator set
+		var validators []tmtypes.GenesisValidator
+
+		// combine the app state
+		appState, err := appendState(appState, piece.AppState)
+		if err != nil {
+			return err
+		}
+
+		// write the appended genesis file
+		return WriteGenesisFile(cdc, genFile, piece.chainID, validators, appState)
+
+		// XXX read in nodeKey and combine new nodeID file
+
+		return nil
+	}
+}
+
+//________________________________________________________________________________________
 
 // read of create the private key file for this config
 func ReadOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
@@ -123,6 +216,9 @@ func addAppStateToGenesis(cdc *wire.Codec, genesisConfigPath string, appState js
 // GenAppParams creates the core parameters initialization. It takes in a
 // pubkey meant to represent the pubkey of the validator of this machine.
 type GenAppParams func(*wire.Codec, crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error)
+
+// append appState1 with appState2
+type AppendAppState func(cdc *wire.Codec, appState1, appState2 json.RawMesssage) (appState json.RawMessage, err error)
 
 // Create one account with a whole bunch of mycoin in it
 func SimpleGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error) {

@@ -14,11 +14,11 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
-// NewApp creates a simple mock kvstore app for testing.
-// It should work similar to a real app.
-// Make sure rootDir is empty before running the test,
+// NewApp creates a simple mock kvstore app for testing. It should work
+// similar to a real app. Make sure rootDir is empty before running the test,
 // in order to guarantee consistent results
 func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	db, err := dbm.NewGoLevelDB("mock", filepath.Join(rootDir, "data"))
@@ -108,16 +108,16 @@ func InitChainer(key sdk.StoreKey) func(sdk.Context, abci.RequestInitChain) abci
 
 // GenAppState can be passed into InitCmd, returns a static string of a few
 // key-values that can be parsed by InitChainer
-func GenAppState(pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage, err error) {
+func GenAppState(_ *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, message json.RawMessage, err error) {
 
-	chainID = cmn.Fmt("test-chain-%v", cmn.RandStr(6))
+	chainID = fmt.Sprintf("test-chain-%v", cmn.RandStr(6))
 
 	validators = []tmtypes.GenesisValidator{{
 		PubKey: pubKey,
 		Power:  10,
 	}}
 
-	appState = json.RawMessage(fmt.Sprintf(`{
+	appState = json.RawMessage(`{
   "values": [
     {
         "key": "hello",
@@ -128,6 +128,6 @@ func GenAppState(pubKey crypto.PubKey) (chainID string, validators []tmtypes.Gen
         "value": "bar"
     }
   ]
-}`))
+}`)
 	return
 }

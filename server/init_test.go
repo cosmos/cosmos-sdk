@@ -18,7 +18,7 @@ func TestInit(t *testing.T) {
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	ctx := NewContext(cfg, logger)
-	cmd := InitCmd(mock.GenInitOptions, ctx)
+	cmd := InitCmd(ctx, cdc, mock.GenAppState)
 	err = cmd.RunE(nil, nil)
 	require.NoError(t, err)
 }

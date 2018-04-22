@@ -15,15 +15,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
-// rootCmd is the entry point for this binary
-var (
-	context = server.NewDefaultContext()
-	rootCmd = &cobra.Command{
+func main() {
+	cdc := app.MakeCodec()
+	ctx := server.NewDefaultContext()
+
+	rootCmd := &cobra.Command{
 		Use:               "basecoind",
 		Short:             "Basecoin Daemon (server)",
-		PersistentPreRunE: server.PersistentPreRunEFn(context),
+		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
-)
+
+	server.AddCommands(ctx, cdc, rootCmd, server.SimpleGenAppState, generateApp)
+
+	// prepare and add flags
+	rootDir := os.ExpandEnv("$HOME/.basecoind")
+	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
+	executor.Execute()
+}
 
 func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	dataDir := filepath.Join(rootDir, "data")
@@ -33,13 +41,4 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	}
 	bapp := app.NewBasecoinApp(logger, db)
 	return bapp, nil
-}
-
-func main() {
-	server.AddCommands(rootCmd, server.DefaultGenAppState, generateApp, context)
-
-	// prepare and add flags
-	rootDir := os.ExpandEnv("$HOME/.basecoind")
-	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
-	executor.Execute()
 }

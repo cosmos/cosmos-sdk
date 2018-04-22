@@ -50,7 +50,7 @@ type remoteSaveFailPayload struct {
 	remoteSavePayload
 }
 
-func (p removeSaveFailPayload) Type() string {
+func (p remoteSaveFailPayload) Type() string {
 	return "remote"
 }
 
@@ -105,56 +105,65 @@ func makeCodec() *wire.Codec {
 
 }
 
-func remoteSaveHandler(ibck Keeper, key sdk.StoreKey) sdk.Handler {
+func remoteSaveHandler(ibcc Channel, key sdk.StoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
 		case remoteSaveMsg:
-			return handleRemoteSaveMsg(ctx, ibck, msg)
+			return handleRemoteSaveMsg(ctx, ibcc, msg)
 		case ReceiveMsg:
-			return ibck.Receive(func(ctx sdk.Context, p Payload) sdk.Error {
+			return ibcc.Receive(func(ctx sdk.Context, p Payload) (Payload, sdk.Error) {
 				switch p := p.(type) {
 				case remoteSavePayload:
 					return handleRemoteSavePayload(ctx, key, p)
 				default:
-					return sdk.ErrUnknownRequest("")
+					return nil, sdk.ErrUnknownRequest("")
 				}
 			}, ctx, msg)
 		case ReceiptMsg:
-			return ibck.Receipt(func(ctx sdk.Context, p Payload) {
+			return ibcc.Receipt(func(ctx sdk.Context, p Payload) {
 				switch p := p.(type) {
 				case remoteSaveFailPayload:
-					return handleRemoteSaveFailPayload(ctx, key, p)
+					handleRemoteSaveFailPayload(ctx, key, p)
 				default:
-					return sdk.ErrUnknownRequest("")
+					sdk.ErrUnknownRequest("")
 				}
-			})
+			}, ctx, msg)
+
 		default:
 			return sdk.ErrUnknownRequest("").Result()
 		}
 	}
 }
 
-func handleRemoteSaveMsg(ctx sdk.Context, ibck Keeper, msg remoteSaveMsg) sdk.Result {
-	ibck.Send(ctx, msg.payload, msg.destChain)
+func handleRemoteSaveMsg(ctx sdk.Context, ibcc Channel, msg remoteSaveMsg) sdk.Result {
+	ibcc.Send(ctx, msg.payload, msg.destChain)
 	return sdk.Result{}
 }
 
-func handleRemoteSavePayload(ctx sdk.Context, key sdk.StoreKey, p remoteSavePayload) sdk.Error {
+func handleRemoteSavePayload(ctx sdk.Context, key sdk.StoreKey, p remoteSavePayload) (Payload, sdk.Error) {
 	store := ctx.KVStore(key)
+	if store.Has(p.key) {
+		return remoteSaveFailPayload{p}, sdk.NewError(1000, "Key already exists")
+	}
 	store.Set(p.key, p.value)
-	return nil
+	return nil, nil
+}
+
+func handleRemoteSaveFailPayload(ctx sdk.Context, key sdk.StoreKey, p remoteSaveFailPayload) {
+	return
 }
 
 func TestIBC(t *testing.T) {
 	cdc := makeCodec()
 
-	key := sdk.NewKVStoreKey("ibc")
-	rskey := sdk.NewKVStoreKey("remote")
-	ctx := defaultContext(key, rskey)
+	ibckey := sdk.NewKVStoreKey("ibc")
+	key := sdk.NewKVStoreKey("remote")
+	ctx := defaultContext(ibckey, key)
 	chainid := ctx.ChainID()
 
-	factory := NewKeeperFactory(cdc, key)
-	rsh := remoteSaveHandler(factory.Port("remote"), key)
+	keeper := NewKeeper(cdc, key)
+	ibch := NewHandler(keeper)
+	h := remoteSaveHandler(keeper.Channel("remote"), key)
 
 	payload := remoteSavePayload{
 		key:   []byte("hello"),
@@ -165,36 +174,84 @@ func TestIBC(t *testing.T) {
 		payload:   payload,
 		destChain: chainid,
 	}
-	/*
-		packet := Packet{
-			Payload:   payload,
-			SrcChain:  chainid,
-			DestChain: chainid,
-		}
 
-			receiveMsg := ReceiveMsg{
-				Packet:   packet,
-				Relayer:  newAddress(),
-				Sequence: 0,
-			}
-	*/
 	var res sdk.Result
 
-	res = rsh(ctx, saveMsg)
+	res = h(ctx, saveMsg)
 	assert.True(t, res.IsOK())
+
+	packet := Packet{
+		Payload:   payload,
+		SrcChain:  chainid,
+		DestChain: chainid,
+	}
+
+	receiveMsg := ReceiveMsg{
+		Packet: packet,
+		PacketProof: PacketProof{
+			Sequence: 0,
+		},
+		Relayer: newAddress(),
+	}
+
+	res = h(ctx, receiveMsg)
+	assert.True(t, res.IsOK())
+
+	store := ctx.KVStore(key)
+	val := store.Get(payload.key)
+	assert.Equal(t, payload.value, val)
+
+	res = h(ctx, receiveMsg)
+	assert.False(t, res.IsOK())
+
+	res = h(ctx, saveMsg)
+	assert.True(t, res.IsOK())
+
+	receiveMsg = ReceiveMsg{
+		Packet: packet,
+		PacketProof: PacketProof{
+			Sequence: 1,
+		},
+		Relayer: newAddress(),
+	}
+
+	res = h(ctx, receiveMsg)
+	assert.True(t, res.IsOK())
+
+	packet.Payload = remoteSaveFailPayload{payload}
+
+	receiptMsg := ReceiptMsg{
+		Packet: packet,
+		PacketProof: PacketProof{
+			Sequence: 0,
+		},
+		Relayer: newAddress(),
+	}
+
+	res = h(ctx, receiptMsg)
+	assert.True(t, res.IsOK())
+
+	receiveCleanupMsg := ReceiveCleanupMsg{
+		Sequence:     2,
+		SrcChain:     chainid,
+		CleanupProof: CleanupProof{},
+		Cleaner:      newAddress(),
+	}
+
+	res = ibch(ctx, receiveCleanupMsg)
+	assert.True(t, res.IsOK())
+
+	receiptCleanupMsg := ReceiptCleanupMsg{
+		Sequence:     1,
+		SrcChain:     chainid,
+		CleanupProof: CleanupProof{},
+		Cleaner:      newAddress(),
+	}
+
+	res = ibch(ctx, receiptCleanupMsg)
+	assert.True(t, res.IsOK())
+
 	/*
-		res = ibch(ctx, receiveMsg)
-		assert.True(t, res.IsOK())
-
-
-
-		store := ctx.KVStore(rskey)
-		val := store.Get(payload.key)
-		assert.Equal(t, payload.value, val)
-
-		res = ibch(ctx, receiveMsg)
-		assert.False(t, res.IsOK())
-
 		unknownMsg := sdk.NewTestMsg(newAddress())
 		res = ibch(ctx, unknownMsg)
 		assert.False(t, res.IsOK())

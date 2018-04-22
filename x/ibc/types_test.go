@@ -11,7 +11,7 @@ import (
 func TestIBCReceiveMsgType(t *testing.T) {
 	packet := constructIBCPacket(true)
 	msg := constructReceiveMsg(packet)
-	assert.Equal(t, msg.Type(), "ibc")
+	assert.Equal(t, "my", msg.Type())
 }
 
 func TestIBCReceiveMsgValidation(t *testing.T) {
@@ -40,9 +40,12 @@ func TestIBCReceiveMsgSigners(t *testing.T) {
 	packet := constructIBCPacket(true)
 	relayer := sdk.Address([]byte("relayer"))
 	msg := ReceiveMsg{
-		Packet:   packet,
-		Relayer:  relayer,
-		Sequence: 0,
+		Packet: packet,
+		PacketProof: PacketProof{
+			// TODO: add actual proof
+			Sequence: 0,
+		},
+		Relayer: relayer,
 	}
 	assert.Equal(t, []sdk.Address{relayer}, msg.GetSigners())
 }
@@ -82,9 +85,12 @@ func constructIBCPacket(valid bool) Packet {
 
 func constructReceiveMsg(packet Packet) ReceiveMsg {
 	return ReceiveMsg{
-		Packet:   packet,
-		Relayer:  sdk.Address([]byte("relayer")),
-		Sequence: 0,
+		Packet: packet,
+		PacketProof: PacketProof{
+			// TODO: add actual proof
+			Sequence: 0,
+		},
+		Relayer: sdk.Address([]byte("relayer")),
 	}
 
 }

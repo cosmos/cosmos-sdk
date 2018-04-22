@@ -102,6 +102,35 @@ func (msg ReceiveMsg) Verify(ctx sdk.Context, keeper keeper) sdk.Error {
 }
 
 // --------------------------------
+// ReceiptMsg
+
+type ReceiptMsg struct {
+	Packet
+	PacketProof
+	Relayer sdk.Address
+}
+
+func (msg ReceiptMsg) Get(key interface{}) interface{} {
+	return nil
+}
+
+func (msg ReceiptMsg) GetSignBytes() []byte {
+	bz, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
+
+func (msg ReceiptMsg) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.Relayer}
+}
+
+func (msg ReceiptMsg) Verify(ctx sdk.Context, keeper keeper) sdk.Error {
+	return msg.PacketProof.Verify(ctx, keeper, msg.Packet)
+}
+
+// --------------------------------
 // ReceiveCleanupMsg
 
 type ReceiveCleanupMsg struct {
@@ -133,35 +162,6 @@ func (msg ReceiveCleanupMsg) Type() string {
 
 func (msg ReceiveCleanupMsg) ValidateBasic() sdk.Error {
 	return nil
-}
-
-// --------------------------------
-// ReceiptMsg
-
-type ReceiptMsg struct {
-	Packet
-	PacketProof
-	Relayer sdk.Address
-}
-
-func (msg ReceiptMsg) Get(key interface{}) interface{} {
-	return nil
-}
-
-func (msg ReceiptMsg) GetSignBytes() []byte {
-	bz, err := json.Marshal(msg)
-	if err != nil {
-		panic(err)
-	}
-	return bz
-}
-
-func (msg ReceiptMsg) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.Relayer}
-}
-
-func (msg ReceiptMsg) Verify(ctx sdk.Context, keeper keeper) sdk.Error {
-	return msg.PacketProof.Verify(ctx, keeper, msg.Packet)
 }
 
 // --------------------------------

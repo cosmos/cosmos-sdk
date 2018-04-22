@@ -63,7 +63,9 @@ type ReceiveHandler func(sdk.Context, Payload) (Payload, sdk.Error)
 func (channel Channel) Receive(h ReceiveHandler, ctx sdk.Context, msg ReceiveMsg) sdk.Result {
 	keeper := channel.keeper
 
-	msg.Verify(ctx, keeper)
+	if err := msg.Verify(ctx, keeper); err != nil {
+		return err.Result()
+	}
 
 	packet := msg.Packet
 	if packet.DestChain != ctx.ChainID() {
@@ -98,8 +100,8 @@ func (channel Channel) Receive(h ReceiveHandler, ctx sdk.Context, msg ReceiveMsg
 
 type ReceiptHandler func(sdk.Context, Payload)
 
-func (keeper keeper) Receipt(h ReceiptHandler, ctx sdk.Context, msg ReceiptMsg) sdk.Result {
-	msg.Verify(ctx, keeper)
+func (channel Channel) Receipt(h ReceiptHandler, ctx sdk.Context, msg ReceiptMsg) sdk.Result {
+	msg.Verify(ctx, channel.keeper)
 
 	h(ctx, msg.Payload)
 

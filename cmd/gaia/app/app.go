@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
@@ -183,7 +182,7 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 
 // GaiaGenAppState expects two args: an account address
 // and a coin denomination, and gives lots of coins to that address.
-func GaiaGenAppState(pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage, err error) {
+func GaiaGenAppState(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, message json.RawMessage, err error) {
 
 	var addr sdk.Address
 	var secret string
@@ -191,7 +190,10 @@ func GaiaGenAppState(pubKey crypto.PubKey) (chainID string, validators []tmtypes
 	if err != nil {
 		return
 	}
-	fmt.Printf("secret recovery key:\n%s\n", secret)
+
+	mm := map[string]string{"secret": secret}
+	bz, err := cdc.MarshalJSON(mm)
+	message = json.RawMessage(bz)
 
 	chainID = cmn.Fmt("test-chain-%v", cmn.RandStr(6))
 

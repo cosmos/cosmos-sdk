@@ -25,7 +25,7 @@ func TestStartStandAlone(t *testing.T) {
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	ctx := NewContext(cfg, logger)
-	initCmd := InitCmd(mock.GenInitOptions, ctx)
+	initCmd := InitCmd(ctx, cdc, mock.GenAppState)
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
@@ -51,13 +51,13 @@ func TestStartWithTendermint(t *testing.T) {
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	ctx := NewContext(cfg, logger)
-	initCmd := InitCmd(mock.GenInitOptions, ctx)
+	initCmd := InitCmd(ctx, cdc, mock.GenAppState)
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
 	// set up app and start up
 	viper.Set(flagWithTendermint, true)
-	startCmd := StartCmd(mock.NewApp, ctx)
+	startCmd := StartCmd(ctx, mock.NewApp)
 	startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
 	timeout := time.Duration(5) * time.Second
 

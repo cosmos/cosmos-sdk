@@ -1,12 +1,14 @@
 package server
 
 import (
+	"encoding/json"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/wire"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tmlibs/cli"
@@ -31,7 +33,7 @@ func NewContext(config *cfg.Config, logger log.Logger) *Context {
 	return &Context{config, logger}
 }
 
-//--------------------------------------------------------------------
+//___________________________________________________________________________________
 
 // PersistentPreRunEFn returns a PersistentPreRunE function for cobra
 // that initailizes the passed in context with a properly configured
@@ -62,18 +64,32 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 
 // add server commands
 func AddCommands(
+	ctx *Context, cdc *wire.Codec,
 	rootCmd *cobra.Command,
-	appState GenAppParams, appCreator AppCreator,
-	context *Context) {
+	appState GenAppParams, appCreator AppCreator) {
 
-	rootCmd.PersistentFlags().String("log_level", context.Config.LogLevel, "Log level")
+	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
 
 	rootCmd.AddCommand(
-		InitCmd(appState, context),
-		StartCmd(appCreator, context),
-		UnsafeResetAllCmd(context),
-		ShowNodeIDCmd(context),
-		ShowValidatorCmd(context),
+		InitCmd(ctx, cdc, appState),
+		StartCmd(ctx, appCreator),
+		UnsafeResetAllCmd(ctx),
+		ShowNodeIDCmd(ctx),
+		ShowValidatorCmd(ctx),
 		version.VersionCmd,
 	)
+}
+
+//___________________________________________________________________________________
+
+// append a new json field to existing json message
+func AppendJSON(cdc *wire.Codec, baseJSON []byte, key string, value json.RawMessage) (appended []byte, err error) {
+	var jsonMap map[string]json.RawMessage
+	err = cdc.UnmarshalJSON(baseJSON, &jsonMap)
+	if err != nil {
+		return nil, err
+	}
+	jsonMap[key] = value
+	bz, err := wire.MarshalJSONIndent(cdc, jsonMap)
+	return json.RawMessage(bz), err
 }

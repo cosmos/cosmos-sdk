@@ -36,6 +36,7 @@ BREAKING CHANGES
   * Removed redundancy in names (ex. stake.StakeKeeper -> stake.Keeper)
 * Removed SealedAccountMapper
 * gaiad init now requires use of `--name` flag 
+* Removed Get from Msg interface
 
 BUG FIXES
 * Gaia now uses stake, ported from github.com/cosmos/gaia

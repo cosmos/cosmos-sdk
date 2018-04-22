@@ -180,7 +180,6 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 	}
 }
 
-// XXX func GeneratePiece
 // XXX func AddPiece
 
 // Create the core parameters for genesis initialization for gaia

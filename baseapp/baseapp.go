@@ -254,7 +254,22 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		msg := "application doesn't support queries"
 		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
-	return queryable.Query(req)
+
+	value, proof, err := queryable.Query(req)
+	if err != nil {
+		res.Log = err.Error()
+		return
+	}
+
+	res.Proof, err = proof.Bytes()
+	if err != nil {
+		res.Log = err.Error()
+		return
+	}
+
+	res.Value = value
+
+	return
 }
 
 // Implements ABCI

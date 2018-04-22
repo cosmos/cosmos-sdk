@@ -1,5 +1,9 @@
 package merkle
 
+import (
+	"github.com/cosmos/cosmos-sdk/wire"
+)
+
 type HashOp uint8
 
 const (
@@ -54,4 +58,10 @@ type SubTreeProof struct {
 type MultiProof struct {
 	KeyProof  KeyProof
 	SubProofs []ExistsProof
+}
+
+func (p MultiProof) Bytes() ([]byte, error) {
+	cdc := wire.NewCodec()
+	RegisterCodec(cdc)
+	return cdc.MarshalBinary(p)
 }

@@ -30,6 +30,7 @@ func NewBaseAccountWithAddress(addr sdk.Address) BaseAccount {
 	}
 }
 
+// Implements sdk.Account.
 func (acc BaseAccount) Get(key interface{}) (value interface{}, err error) {
 	panic("not implemented yet")
 }

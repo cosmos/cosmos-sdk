@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	crypto "github.com/tendermint/go-crypto"
 	"github.com/tendermint/go-crypto/keys"
@@ -22,6 +23,8 @@ import (
 
 // get cmd to initialize all files for tendermint and application
 func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams) *cobra.Command {
+	flagOverwrite := "overwrite"
+
 	cobraCmd := cobra.Command{
 		Use:   "init",
 		Short: "Initialize genesis files",
@@ -30,12 +33,17 @@ func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams) *cobra.Command {
 			config := ctx.Config
 			pubkey := ReadOrCreatePrivValidator(config)
 
-			chainID, validators, appState, message, err := gen(cdc, pubkey)
+			chainID, validators, appState, cliPrint, err := gen(cdc, pubkey)
 			if err != nil {
 				return err
 			}
 
-			err = CreateGenesisFile(config, cdc, chainID, validators, appState)
+			genFile := config.GenesisFile()
+			if !viper.GetBool(flagOverwrite) && cmn.FileExists(genFile) {
+				return fmt.Errorf("genesis config file already exists: %v", genFile)
+			}
+
+			err = WriteGenesisFile(cdc, genFile, chainID, validators, appState)
 			if err != nil {
 				return err
 			}
@@ -47,13 +55,13 @@ func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams) *cobra.Command {
 
 			// print out some key information
 			toPrint := struct {
-				ChainID string          `json:"chain_id"`
-				NodeID  string          `json:"node_id"`
-				Message json.RawMessage `json:"message"`
+				ChainID    string          `json:"chain_id"`
+				NodeID     string          `json:"node_id"`
+				AppMessage json.RawMessage `json:"app_message"`
 			}{
 				chainID,
 				string(nodeKey.ID()),
-				message,
+				cliPrint,
 			}
 			out, err := wire.MarshalJSONIndent(cdc, toPrint)
 			if err != nil {
@@ -63,6 +71,8 @@ func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams) *cobra.Command {
 			return nil
 		},
 	}
+
+	cobraCmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the config file")
 	return &cobraCmd
 }
 
@@ -81,11 +91,7 @@ func ReadOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
 }
 
 // create the genesis file
-func CreateGenesisFile(tmConfig *cfg.Config, cdc *wire.Codec, chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage) error {
-	genFile := tmConfig.GenesisFile()
-	if cmn.FileExists(genFile) {
-		return fmt.Errorf("genesis config file already exists: %v", genFile)
-	}
+func WriteGenesisFile(cdc *wire.Codec, genesisFile, chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage) error {
 	genDoc := tmtypes.GenesisDoc{
 		ChainID:    chainID,
 		Validators: validators,
@@ -93,10 +99,10 @@ func CreateGenesisFile(tmConfig *cfg.Config, cdc *wire.Codec, chainID string, va
 	if err := genDoc.ValidateAndComplete(); err != nil {
 		return err
 	}
-	if err := genDoc.SaveAs(genFile); err != nil {
+	if err := genDoc.SaveAs(genesisFile); err != nil {
 		return err
 	}
-	return addAppStateToGenesis(cdc, genFile, appState)
+	return addAppStateToGenesis(cdc, genesisFile, appState)
 }
 
 // Add one line to the genesis file
@@ -119,7 +125,7 @@ func addAppStateToGenesis(cdc *wire.Codec, genesisConfigPath string, appState js
 type GenAppParams func(*wire.Codec, crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, message json.RawMessage, err error)
 
 // Create one account with a whole bunch of mycoin in it
-func SimpleGenAppState(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, message json.RawMessage, err error) {
+func SimpleGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error) {
 
 	var addr sdk.Address
 	var secret string
@@ -130,7 +136,7 @@ func SimpleGenAppState(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, v
 
 	mm := map[string]string{"secret": secret}
 	bz, err := cdc.MarshalJSON(mm)
-	message = json.RawMessage(bz)
+	cliPrint = json.RawMessage(bz)
 
 	chainID = cmn.Fmt("test-chain-%v", cmn.RandStr(6))
 

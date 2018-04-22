@@ -21,7 +21,7 @@ import (
 
 // coolGenAppState sets up the app_state and appends the cool app state
 func CoolGenAppState(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, message json.RawMessage, err error) {
-	chainID, validators, appState, message, err = server.SimpleGenAppState(cdc, pubKey)
+	chainID, validators, appState, message, err = server.SimpleGenAppParams(cdc, pubKey)
 	if err != nil {
 		return
 	}

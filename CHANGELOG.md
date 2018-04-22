@@ -74,7 +74,7 @@ BREAKING CHANGES
   to allow mounting multiple stores with their own DB until they can share one
 * [x/staking] Renamed to `simplestake`
 * [builder] Functions don't take `passphrase` as argument
-* [server] GenAppState returns generated seed and address
+* [server] GenAppParams returns generated seed and address
 * [basecoind] `init` command outputs JSON of everything necessary for testnet
 * [basecoind] `basecoin.db -> data/basecoin.db`
 * [basecli] `data/keys.db -> keys/keys.db`

@@ -122,7 +122,7 @@ func addAppStateToGenesis(cdc *wire.Codec, genesisConfigPath string, appState js
 
 // GenAppParams creates the core parameters initialization. It takes in a
 // pubkey meant to represent the pubkey of the validator of this machine.
-type GenAppParams func(*wire.Codec, crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, message json.RawMessage, err error)
+type GenAppParams func(*wire.Codec, crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error)
 
 // Create one account with a whole bunch of mycoin in it
 func SimpleGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error) {

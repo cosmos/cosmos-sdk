@@ -11,9 +11,6 @@ type Msg interface {
 	// Must be alphanumeric or empty.
 	Type() string
 
-	// Get some property of the Msg.
-	Get(key interface{}) (value interface{})
-
 	// Get the canonical byte representation of the Msg.
 	GetSignBytes() []byte
 

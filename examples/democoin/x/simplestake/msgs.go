@@ -66,10 +66,9 @@ func NewMsgUnbond(addr sdk.Address) MsgUnbond {
 }
 
 //nolint
-func (msg MsgUnbond) Type() string                            { return moduleName } //TODO update "stake/declarecandidacy"
-func (msg MsgUnbond) Get(key interface{}) (value interface{}) { return nil }
-func (msg MsgUnbond) GetSigners() []sdk.Address               { return []sdk.Address{msg.Address} }
-func (msg MsgUnbond) ValidateBasic() sdk.Error                { return nil }
+func (msg MsgUnbond) Type() string              { return moduleName } //TODO update "stake/declarecandidacy"
+func (msg MsgUnbond) GetSigners() []sdk.Address { return []sdk.Address{msg.Address} }
+func (msg MsgUnbond) ValidateBasic() sdk.Error  { return nil }
 
 // get unbond message sign bytes
 func (msg MsgUnbond) GetSignBytes() []byte {

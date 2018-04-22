@@ -25,7 +25,7 @@ func TestStartStandAlone(t *testing.T) {
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	ctx := NewContext(cfg, logger)
-	initCmd := InitCmd(ctx, cdc, mock.GenAppState)
+	initCmd := InitCmd(ctx, cdc, mock.GenAppParams)
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
@@ -51,7 +51,7 @@ func TestStartWithTendermint(t *testing.T) {
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	ctx := NewContext(cfg, logger)
-	initCmd := InitCmd(ctx, cdc, mock.GenAppState)
+	initCmd := InitCmd(ctx, cdc, mock.GenAppParams)
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 

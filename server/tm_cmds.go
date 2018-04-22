@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -43,6 +44,9 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 			pubKey := privValidator.PubKey
 
 			if viper.GetBool(flagJSON) {
+
+				cdc := wire.NewCodec()
+				wire.RegisterCrypto(cdc)
 				pubKeyJSONBytes, err := cdc.MarshalJSON(pubKey)
 				if err != nil {
 					return err

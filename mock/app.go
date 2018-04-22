@@ -106,9 +106,9 @@ func InitChainer(key sdk.StoreKey) func(sdk.Context, abci.RequestInitChain) abci
 	}
 }
 
-// GenAppState can be passed into InitCmd, returns a static string of a few
+// GenAppParams can be passed into InitCmd, returns a static string of a few
 // key-values that can be parsed by InitChainer
-func GenAppState(_ *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, message json.RawMessage, err error) {
+func GenAppParams(_ *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error) {
 
 	chainID = fmt.Sprintf("test-chain-%v", cmn.RandStr(6))
 

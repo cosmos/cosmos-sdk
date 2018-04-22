@@ -23,7 +23,7 @@ func TestInitApp(t *testing.T) {
 
 	// initialize it future-way
 	pubKey := crypto.GenPrivKeyEd25519().PubKey()
-	_, _, appState, _, err := GenAppState(nil, pubKey)
+	_, _, appState, _, err := GenAppParams(nil, pubKey)
 	require.NoError(t, err)
 	//TODO test validators in the init chain?
 	req := abci.RequestInitChain{

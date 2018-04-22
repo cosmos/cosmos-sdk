@@ -47,7 +47,7 @@ func setupViper(t *testing.T) func() {
 
 //// init server
 //ctx := NewContext(cfg, log.NewNopLogger())
-//initCmd := InitCmd(ctx, cdc, mock.GenAppState)
+//initCmd := InitCmd(ctx, cdc, mock.GenAppParams)
 //err = initCmd.RunE(nil, nil)
 //require.NoError(t, err)
 

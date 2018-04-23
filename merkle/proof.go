@@ -18,7 +18,11 @@ func (p ExistsProof) Verify(leaf []byte) error {
 		leaf = append(leaf, data.Suffix...)
 	}
 
+	fmt.Printf("hashed': %+v\n", leaf)
+
 	leaf = data.Op.Hash(leaf)
+
+	fmt.Printf("OneHash: %+v\n", leaf)
 
 	for _, node := range p.Nodes {
 		if node.Prefix != nil {
@@ -27,7 +31,10 @@ func (p ExistsProof) Verify(leaf []byte) error {
 		if node.Suffix != nil {
 			leaf = append(leaf, node.Suffix...)
 		}
+		fmt.Printf("hashed': %+v\n", leaf)
 		leaf = node.Op.Hash(leaf)
+
+		fmt.Printf("AftHash: %+v\n", leaf)
 	}
 
 	if !bytes.Equal(leaf, p.RootHash) {
@@ -41,10 +48,6 @@ func (p ExistsProof) Root() []byte {
 	return p.RootHash
 }
 
-func (p ExistsProof) SubVerify(leaf, root []byte) error {
-	return nil
-}
-
 func (p AbsentProof) Verify(key, value, root []byte) error {
 	panic("not implemented")
 }
@@ -53,7 +56,17 @@ func (p AbsentProof) Root() []byte {
 	panic("not implemented")
 }
 
-func (p MultiProof) Verify(leaf []byte, root []byte) (err error) {
+func (p MultiProof) Root() []byte {
+	if p.SubProofs == nil {
+		return p.KeyProof.Root()
+	} else {
+		return p.SubProofs[len(p.SubProofs)-1].Root()
+	}
+}
+
+func (p MultiProof) Verify(leaf []byte, root []byte, inners ...[]byte) (err error) {
+	fmt.Printf("Proof: %+v\n", p)
+
 	kp := p.KeyProof
 	subroot := kp.Root()
 	err = kp.Verify(leaf)
@@ -61,12 +74,19 @@ func (p MultiProof) Verify(leaf []byte, root []byte) (err error) {
 		return
 	}
 
-	for _, p := range p.SubProofs {
-		err = p.SubVerify(subroot, p.RootHash)
+	if len(p.SubProofs) != len(inners) {
+		return fmt.Errorf("Subproof roots length not match")
+	}
+
+	for i, p := range p.SubProofs {
+		err = p.Verify(subroot)
 		if err != nil {
 			return
 		}
 		subroot = p.Root()
+		if !bytes.Equal(subroot, inners[i]) {
+			return fmt.Errorf("Subproof root #%d not match", i)
+		}
 	}
 
 	if !bytes.Equal(subroot, root) {
@@ -87,6 +107,5 @@ func (op HashOp) Hash(bz []byte) (res []byte) {
 	}
 
 	hasher.Write(bz)
-	hasher.Sum(res)
-	return
+	return hasher.Sum(nil)
 }

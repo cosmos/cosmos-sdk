@@ -3,14 +3,15 @@ package merkle
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 
-	"github.com/tendermint/go-amino"
+	"github.com/tendermint/go-wire"
 	"github.com/tendermint/iavl"
 	"github.com/tendermint/tmlibs/merkle"
 )
 
-func FromSimpleProof(p *merkle.SimpleProof, index int, total int) (res ExistsProof, err error) {
+func FromSimpleProof(p *merkle.SimpleProof, index int, total int, root []byte) (res ExistsProof, err error) {
 	data := ExistsData{
 		Op: RIPEMD160,
 	}
@@ -42,8 +43,9 @@ func FromSimpleProof(p *merkle.SimpleProof, index int, total int) (res ExistsPro
 	}
 
 	return ExistsProof{
-		Data:  data,
-		Nodes: nodes,
+		Data:     data,
+		Nodes:    nodes,
+		RootHash: root,
 	}, nil
 }
 
@@ -64,25 +66,34 @@ func encodeUvarint(w io.Writer, i uint64) (err error) {
 }
 
 func FromKeyProof(p iavl.KeyProof) (KeyProof, error) {
+	if p == nil {
+		return nil, fmt.Errorf("Proof is empty")
+	}
 	switch p := p.(type) {
 	case *iavl.KeyExistsProof:
 		return FromKeyExistsProof(p)
 	case *iavl.KeyAbsentProof:
 		return FromKeyAbsentProof(p)
 	default:
-		return nil, nil
+		return nil, fmt.Errorf("Invalid proof")
 	}
 }
 
 func FromKeyExistsProof(p *iavl.KeyExistsProof) (KeyProof, error) {
 	prefix := new(bytes.Buffer)
-	err := amino.EncodeInt8(prefix, 0)
+	/*err := amino.EncodeInt8(prefix, 0)
 	if err == nil {
 		err = amino.EncodeInt64(prefix, 1)
 	}
 	if err == nil {
 		err = amino.EncodeInt64(prefix, p.Version)
-	}
+	}*/
+	n, err := int(0), error(nil)
+
+	wire.WriteInt8(0, prefix, &n, &err)
+	wire.WriteInt64(1, prefix, &n, &err)
+	wire.WriteInt64(p.Version, prefix, &n, &err)
+
 	if err != nil {
 		return nil, err
 	}
@@ -97,22 +108,34 @@ func FromKeyExistsProof(p *iavl.KeyExistsProof) (KeyProof, error) {
 	for i, inner := range path {
 		prefix := new(bytes.Buffer)
 		suffix := new(bytes.Buffer)
+		/*
+			err := amino.EncodeInt8(prefix, inner.Height)
+			if err == nil {
+				err = amino.EncodeInt64(prefix, inner.Size)
+			}
+			if err == nil {
+				err = amino.EncodeInt64(prefix, inner.Version)
+			}
+			if len(inner.Left) == 0 {
+				if err == nil {
+					err = amino.EncodeByteSlice(suffix, inner.Right)
+				}
+			} else {
+				if err == nil {
+					err = amino.EncodeByteSlice(prefix, inner.Left)
+				}
+			}
+		*/
 
-		err := amino.EncodeInt8(prefix, inner.Height)
-		if err == nil {
-			err = amino.EncodeInt64(prefix, inner.Size)
-		}
-		if err == nil {
-			err = amino.EncodeInt64(prefix, inner.Version)
-		}
+		n, err := int(0), error(nil)
+		wire.WriteInt8(inner.Height, prefix, &n, &err)
+		wire.WriteInt64(inner.Size, prefix, &n, &err)
+		wire.WriteInt64(inner.Version, prefix, &n, &err)
 		if len(inner.Left) == 0 {
-			if err == nil {
-				err = amino.EncodeByteSlice(suffix, inner.Right)
-			}
+			n = 0
+			wire.WriteByteSlice(inner.Right, suffix, &n, &err)
 		} else {
-			if err == nil {
-				err = amino.EncodeByteSlice(prefix, inner.Left)
-			}
+			wire.WriteByteSlice(inner.Left, prefix, &n, &err)
 		}
 
 		if err != nil {
@@ -127,11 +150,42 @@ func FromKeyExistsProof(p *iavl.KeyExistsProof) (KeyProof, error) {
 	}
 
 	return ExistsProof{
-		Data:  data,
-		Nodes: nodes,
+		Data:     data,
+		Nodes:    nodes,
+		RootHash: p.Root(),
 	}, nil
 }
 
 func FromKeyAbsentProof(p *iavl.KeyAbsentProof) (KeyProof, error) {
 	return nil, nil
+}
+
+func Leaf(key []byte, value []byte) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	n, err := int(0), error(nil)
+
+	wire.WriteByteSlice(key, buf, &n, &err)
+	wire.WriteByteSlice(value, buf, &n, &err)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func SimpleLeaf(key []byte, value merkle.Hasher) ([]byte, error) {
+	buf := new(bytes.Buffer)
+
+	err := encodeByteSlice(buf, merkle.SimpleHashFromBytes(key))
+	if err != nil {
+		return nil, err
+	}
+
+	err = encodeByteSlice(buf, value.Hash())
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }

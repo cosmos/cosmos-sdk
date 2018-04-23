@@ -211,7 +211,7 @@ func (rs *rootMultiStore) getStoreByName(name string) Store {
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
 // TODO: add proof for `multistore -> substore`.
-func (rs *rootMultiStore) Query(req abci.RequestQuery) (value []byte, proof merkle.MultiProof, err error) {
+func (rs *rootMultiStore) Query(req abci.RequestQuery) (value []byte, proof *merkle.MultiProof, err error) {
 	// Query just routes this to a substore.
 	path := req.Path
 	storeName, subpath, err := parsePath(path)
@@ -238,8 +238,8 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) (value []byte, proof merk
 	if err != nil {
 		return
 	}
-
 	subproof := rs.proofs[rs.indexByName[storeName]]
+
 	proof.SubProofs = append(proof.SubProofs, subproof)
 
 	return
@@ -331,10 +331,22 @@ func (rs *rootMultiStore) cacheSubstoreProofs(infos []storeInfo) {
 
 	rs.proofs = make([]merkle.ExistsProof, len(proofs))
 	for i, p := range proofs {
-		proof, err := merkle.FromSimpleProof(p, i, len(proofs))
+		// begin debug
+
+		leaf, err := merkle.SimpleLeaf([]byte(infos[i].Name), infos[i])
 		if err != nil {
 			panic(err)
 		}
+
+		fmt.Printf("subv: %+v\n", p.Verify(i, len(proofs), leaf, rs.LastCommitID().Hash))
+
+		// end debug
+
+		proof, err := merkle.FromSimpleProof(p, i, len(proofs), rs.LastCommitID().Hash)
+		if err != nil {
+			panic(err)
+		}
+
 		rs.proofs[i] = proof
 	}
 }

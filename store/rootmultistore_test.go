@@ -7,10 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/merkle"
+	libmerkle "github.com/tendermint/tmlibs/merkle"
 
-	"github.com/cosmos/cosmos-sdk/wire"
-
+	"github.com/cosmos/cosmos-sdk/merkle"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -102,8 +101,6 @@ func TestMultiStoreQuery(t *testing.T) {
 	err := multi.LoadLatestVersion()
 	assert.Nil(t, err)
 
-	cdc := wire.NewCodec()
-
 	k, v := []byte("wind"), []byte("blows")
 	k2, v2 := []byte("water"), []byte("flows")
 	// v3 := []byte("is cold")
@@ -127,58 +124,54 @@ func TestMultiStoreQuery(t *testing.T) {
 	ver := cid.Version
 	root := cid.Hash
 
-	var proof RootMultiStoreProof
-
 	// bad path
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
-	qres := multi.Query(query)
-	assert.Equal(t, uint32(sdk.CodeUnknownRequest), qres.Code)
-	err = cdc.UnmarshalBinary(qres.Proof, &proof)
-	assert.NotNil(t, err)
+	qval, qprf, qerr := multi.Query(query)
+	assert.NotNil(t, qerr)
+	assert.Nil(t, qval)
+	assert.Nil(t, qprf)
 
 	query.Path = "h897fy32890rf63296r92"
-	qres = multi.Query(query)
-	assert.Equal(t, uint32(sdk.CodeUnknownRequest), qres.Code)
-	err = cdc.UnmarshalBinary(qres.Proof, &proof)
-	assert.NotNil(t, err)
+	qval, qprf, qerr = multi.Query(query)
+	assert.NotNil(t, qerr)
+	assert.Nil(t, qval)
+	assert.Nil(t, qprf)
 
 	// invalid store name
 	query.Path = "/garbage/key"
-	qres = multi.Query(query)
-	assert.Equal(t, uint32(sdk.CodeUnknownRequest), qres.Code)
-	err = cdc.UnmarshalBinary(qres.Proof, &proof)
-	assert.NotNil(t, err)
+	qval, qprf, qerr = multi.Query(query)
+	assert.NotNil(t, qerr)
+	assert.Nil(t, qval)
+	assert.Nil(t, qprf)
 
 	// valid query with data
+	fmt.Printf("Proving %s/%s\n", string(k), string(v))
 	query.Path = "/store1/key"
 	query.Prove = true
-	qres = multi.Query(query)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, v, qres.Value)
-	err = cdc.UnmarshalBinary(qres.Proof, &proof)
+	qval, qprf, qerr = multi.Query(query)
+	assert.Nil(t, qerr)
+	assert.Equal(t, v, qval)
+	leaf, err := merkle.Leaf(k, v)
 	assert.Nil(t, err)
-	fmt.Printf("161: root: %+v\nproof: %+v\n", root, proof)
-	assert.Nil(t, proof.Verify(k, v, []byte("store1"), root))
+	assert.Nil(t, qprf.Verify(leaf, root, []byte("store1")))
 
 	// valid but empty
 	query.Path = "/store2/key"
-	qres = multi.Query(query)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Nil(t, qres.Value)
-	err = cdc.UnmarshalBinary(qres.Proof, &proof)
-	assert.Nil(t, err)
-	fmt.Printf("171: root: %+v\nproof: %+v\n", root, proof)
-	assert.Nil(t, proof.Verify(k2, nil, []byte("store2"), root))
+	qval, qprf, qerr = multi.Query(query)
+	assert.Nil(t, qerr)
+	assert.Nil(t, qval)
+	// Absent proof not implemented
+	//	assert.Nil(t, qprf.Verify(k2, root, []byte("store2")))
 
 	// store2 data
+	fmt.Printf("Proving %s/%s\n", string(k2), string(v2))
 	query.Data = k2
-	qres = multi.Query(query)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, v2, qres.Value)
-	err = cdc.UnmarshalBinary(qres.Proof, &proof)
+	qval, qprf, qerr = multi.Query(query)
+	assert.Nil(t, qerr)
+	assert.Equal(t, v2, qval)
+	leaf, err = merkle.Leaf(k2, v2)
 	assert.Nil(t, err)
-	fmt.Printf("181: root: %+v\nproof: %+v\n", root, proof)
-	assert.Nil(t, proof.Verify(k2, v2, []byte("store2"), root))
+	assert.Nil(t, qprf.Verify(leaf, root, []byte("store2")))
 }
 
 //-----------------------------------------------------------------------
@@ -209,7 +202,7 @@ func getExpectedCommitID(store *rootMultiStore, ver int64) CommitID {
 }
 
 func hashStores(stores map[StoreKey]CommitStore) []byte {
-	m := make(map[string]merkle.Hasher, len(stores))
+	m := make(map[string]libmerkle.Hasher, len(stores))
 	for key, store := range stores {
 		name := key.Name()
 		m[name] = storeInfo{
@@ -220,5 +213,5 @@ func hashStores(stores map[StoreKey]CommitStore) []byte {
 			},
 		}
 	}
-	return merkle.SimpleHashFromMap(m)
+	return libmerkle.SimpleHashFromMap(m)
 }

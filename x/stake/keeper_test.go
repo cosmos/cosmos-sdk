@@ -690,8 +690,8 @@ func TestValidatorsetKeeper(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
 	total := int64(0)
-	amts := []int64{9, 8, 7, 6, 5}
-	var candidates [5]Candidate
+	amts := []int64{9, 8, 7}
+	var candidates [3]Candidate
 	for i, amt := range amts {
 		candidates[i] = Candidate{
 			Address:     addrVals[i],
@@ -705,19 +705,25 @@ func TestValidatorsetKeeper(t *testing.T) {
 		total += amt
 	}
 
-	assert.Equal(t, 5, keeper.Size(ctx))
+	assert.Equal(t, 3, keeper.Size(ctx))
 
-	for _, addr := range addrVals[:5] {
+	for _, addr := range addrVals[:3] {
 		assert.True(t, keeper.IsValidator(ctx, addr))
 	}
-	for _, addr := range addrVals[5:] {
+	for _, addr := range addrVals[3:] {
 		assert.False(t, keeper.IsValidator(ctx, addr))
 	}
 
-	for i, can := range candidates {
-		index, val := keeper.GetByAddress(ctx, can.Address)
+	for i, addr := range addrVals[:3] {
+		index, val := keeper.GetByAddress(ctx, addr)
 		assert.Equal(t, i, index)
-		assert.Equal(t, can.validator().abciValidator(keeper.cdc), *val)
+		assert.Equal(t, candidates[i].validator().abciValidator(keeper.cdc), *val)
+	}
+
+	for _, addr := range addrVals[3:] {
+		index, val := keeper.GetByAddress(ctx, addr)
+		assert.Equal(t, -1, index)
+		assert.Nil(t, val)
 	}
 
 	for i, can := range candidates {

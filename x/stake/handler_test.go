@@ -76,7 +76,10 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 
 	// just send the same msgbond multiple times
 	msgDelegate := newTestMsgDelegate(delegatorAddr, candidateAddr, bondAmount)
+
 	for i := 0; i < 5; i++ {
+		ctx = ctx.WithBlockHeight(int64(i))
+
 		got := handleMsgDelegate(ctx, msgDelegate, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
@@ -89,6 +92,8 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 		expBond := int64(i+1) * bondAmount
 		expLiabilities := int64(i+2) * bondAmount // (1 self delegation)
 		expDelegatorAcc := initBond - expBond
+
+		require.Equal(t, bond.Height, int64(i), "Incorrect bond height")
 
 		gotBond := bond.Shares.Evaluate()
 		gotLiabilities := candidate.Liabilities.Evaluate()

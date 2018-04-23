@@ -16,6 +16,7 @@ BREAKING CHANGES
 
 * Remove go-wire, use go-amino
 * Gaia simple-staking bond and unbond functions replaced 
+* [stake] Delegator bonds now store the height at which they were updated
 * [store] Add `SubspaceIterator` and `ReverseSubspaceIterator` to `KVStore` interface
 * [basecoin] NewBasecoinApp takes a `dbm.DB` and uses namespaced DBs for substores
 * All module keepers now require a codespace, see basecoin or democoin for usage

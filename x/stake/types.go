@@ -164,4 +164,5 @@ type DelegatorBond struct {
 	DelegatorAddr sdk.Address `json:"delegator_addr"`
 	CandidateAddr sdk.Address `json:"candidate_addr"`
 	Shares        sdk.Rat     `json:"shares"`
+	Height        int64       `json:"height"` // Last height bond updated
 }

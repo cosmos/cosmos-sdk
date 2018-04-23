@@ -158,6 +158,9 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	pool, candidate, newShares := pool.candidateAddTokens(candidate, bondAmt.Amount)
 	bond.Shares = bond.Shares.Add(newShares)
 
+	// Update bond height
+	bond.Height = ctx.BlockHeight()
+
 	k.setDelegatorBond(ctx, bond)
 	k.setCandidate(ctx, candidate)
 	k.setPool(ctx, pool)
@@ -226,6 +229,8 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 		k.removeDelegatorBond(ctx, bond)
 	} else {
+		// Update bond height
+		bond.Height = ctx.BlockHeight()
 		k.setDelegatorBond(ctx, bond)
 	}
 

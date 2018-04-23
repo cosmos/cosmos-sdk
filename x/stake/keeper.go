@@ -354,7 +354,7 @@ func (k Keeper) clearAccUpdateValidators(ctx sdk.Context) {
 
 //_____________________________________________________________________
 
-// load a delegator bong
+// load a delegator bond
 func (k Keeper) GetDelegatorBond(ctx sdk.Context,
 	delegatorAddr, candidateAddr sdk.Address) (bond DelegatorBond, found bool) {
 

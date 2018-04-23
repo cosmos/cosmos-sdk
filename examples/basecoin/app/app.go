@@ -61,7 +61,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 		cdc,
 		app.capKeyMainStore, // target store
 		&types.AppAccount{}, // prototype
-	).Seal()
+	)
 
 	// Add handlers.
 	coinKeeper := bank.NewKeeper(app.accountMapper)

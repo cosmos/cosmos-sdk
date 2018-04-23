@@ -58,7 +58,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 		app.cdc,
 		app.keyMain,         // target store
 		&auth.BaseAccount{}, // prototype
-	).Seal()
+	)
 
 	// add handlers
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)

@@ -138,7 +138,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 		cdc,                 // amino codec
 		keyMain,             // target store
 		&auth.BaseAccount{}, // prototype
-	).Seal()
+	)
 	ck := bank.NewKeeper(accountMapper)
 	keeper := NewKeeper(cdc, keyStake, ck, DefaultCodespace)
 	keeper.setPool(ctx, initialPool())

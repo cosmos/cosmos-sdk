@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/mock"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tmlibs/log"
@@ -25,7 +26,8 @@ func TestStartStandAlone(t *testing.T) {
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	ctx := NewContext(cfg, logger)
-	initCmd := InitCmd(ctx, cdc, mock.GenAppParams)
+	cdc := wire.NewCodec()
+	initCmd := InitCmd(ctx, cdc, mock.GenAppParams, nil)
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 
@@ -51,7 +53,8 @@ func TestStartWithTendermint(t *testing.T) {
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	ctx := NewContext(cfg, logger)
-	initCmd := InitCmd(ctx, cdc, mock.GenAppParams)
+	cdc := wire.NewCodec()
+	initCmd := InitCmd(ctx, cdc, mock.GenAppParams, nil)
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 

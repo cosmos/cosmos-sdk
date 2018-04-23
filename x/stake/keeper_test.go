@@ -143,15 +143,6 @@ func TestBond(t *testing.T) {
 	assert.True(t, found)
 	assert.True(t, bondsEqual(bond1to1, resBond))
 
-	// test height
-	ctx = ctx.WithBlockHeight(10)
-	keeper.setDelegatorBond(ctx, bond1to1)
-	resBond, found = keeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
-	assert.True(t, found)
-	assert.Equal(t, resBond.Height, 10)
-	ctx = ctx.WithBlockHeight(0)
-	keeper.setDelegatorBond(ctx, bond1to1)
-
 	// add some more records
 	keeper.setCandidate(ctx, candidates[1])
 	keeper.setCandidate(ctx, candidates[2])

@@ -395,7 +395,7 @@ sdk.Account
 auth.BaseAccount
 ~~~~~~~~~~~~~~~~
 
-auth.AccountMapper
+sdk.AccountMapper
 ~~~~~~~~~~~~~~~~~~
 
 Wire codec

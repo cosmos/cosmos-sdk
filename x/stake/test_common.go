@@ -134,11 +134,11 @@ func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil)
 	cdc := makeTestCodec()
-	accountMapper := auth.NewAccountMapper(
+	accountMapper := sdk.NewAccountMapper(
 		cdc,                 // amino codec
 		keyMain,             // target store
 		&auth.BaseAccount{}, // prototype
-	).Seal()
+	)
 	ck := bank.NewKeeper(accountMapper)
 	keeper := NewKeeper(cdc, keyStake, ck, DefaultCodespace)
 	keeper.setPool(ctx, initialPool())

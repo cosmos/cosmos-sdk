@@ -22,6 +22,8 @@ BREAKING CHANGES
 * Many changes to names throughout 
   * Type as a prefix naming convention applied (ex. BondMsg -> MsgBond) 
   * Removed redundancy in names (ex. stake.StakeKeeper -> stake.Keeper)
+* Moved Accountmapper from auth module to types
+* sdk.Accountmapper is an struct not an interface
 
 BUG FIXES
 * Gaia now uses stake, ported from github.com/cosmos/gaia

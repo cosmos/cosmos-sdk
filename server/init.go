@@ -31,6 +31,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams, appendState Append
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize genesis config, priv-validator file, and p2p-node file",
+		Args:  cobra.NoArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
 
 			config := ctx.Config
@@ -74,10 +75,11 @@ func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams, appendState Append
 			return nil
 		},
 	}
-
-	cmd.AddCommand(FromPiecesCmd(ctx, cdc, appendState))
+	if appendState != nil {
+		cmd.AddCommand(FromPiecesCmd(ctx, cdc, appendState))
+		cmd.Flags().BoolP(flagAppendFile, "a", false, "create an append file for others to import")
+	}
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the config file")
-	cmd.Flags().BoolP(flagAppendFile, "a", false, "create an append file for others to import")
 	return cmd
 }
 
@@ -102,16 +104,16 @@ func FromPiecesCmd(ctx *Context, cdc *wire.Codec, appendState AppendAppState) *c
 			config := ctx.Config
 			privValFile := config.PrivValidatorFile()
 			nodeKeyFile := config.NodeKeyFile()
-			genFile := config.GenesisFile()
 			if !cmn.FileExists(privValFile) {
 				return fmt.Errorf("privVal file must already exist, please initialize with init cmd: %v", privValFile)
 			}
 			if !cmn.FileExists(nodeKeyFile) {
 				return fmt.Errorf("nodeKey file must already exist, please initialize with init cmd: %v", nodeKeyFile)
 			}
-			cmn.FileExists(genFile)
 
-			// XXX remove the existing gen config file
+			// remove genFile for creation
+			genFile := config.GenesisFile()
+			os.Remove(genFile)
 
 			// deterministically walk the directory for genesis-piece files to import
 			filepath.Walk(pieceDir, appendPiece(cdc, appendState, nodeKeyFile, genFile))
@@ -123,16 +125,19 @@ func FromPiecesCmd(ctx *Context, cdc *wire.Codec, appendState AppendAppState) *c
 
 // append a genesis-piece
 func appendPiece(cdc *wire.Codec, appendState AppendAppState, nodeKeyFile, genFile string) filepath.WalkFunc {
-	return func(filePath string, _ os.FileInfo, err error) error {
+	return func(pieceFile string, _ os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if path.Ext(filePath) != "json" {
+		if path.Ext(pieceFile) != "json" {
 			return nil
 		}
 
-		// XXX get the file bytes
-		var bz []byte
+		// get the piece file bytes
+		bz, err := ioutil.ReadFile(pieceFile)
+		if err != nil {
+			return err
+		}
 
 		// get the piece
 		var piece GenesisPiece
@@ -143,25 +148,44 @@ func appendPiece(cdc *wire.Codec, appendState AppendAppState, nodeKeyFile, genFi
 
 		// if the first file, create the genesis from scratch with piece inputs
 		if !cmn.FileExists(genFile) {
-			return WriteGenesisFile(cdc, genFile, piece.chainID, piece.validators, piece.appState)
+			return WriteGenesisFile(cdc, genFile, piece.ChainID, piece.Validators, piece.AppState)
 		}
 
-		// XXX read in the genFile
+		// read in the genFile
+		bz, err = ioutil.ReadFile(genFile)
+		if err != nil {
+			return err
+		}
+		var genMap map[string]json.RawMessage
+		err = cdc.UnmarshalJSON(bz, &genMap)
+		if err != nil {
+			return err
+		}
+		appState := genMap["app_state"]
 
-		// XXX verify chain-ids are the same
-		// XXX combine the validator set
+		// verify chain-ids are the same
+		if piece.ChainID != string(genMap["chain_id"]) {
+			return fmt.Errorf("piece chain id's are mismatched, %s != %s", piece.ChainID, genMap["chain_id"])
+		}
+
+		// combine the validator set
 		var validators []tmtypes.GenesisValidator
+		err = cdc.UnmarshalJSON(genMap["validators"], &validators)
+		if err != nil {
+			return err
+		}
+		validators = append(validators, piece.Validators...)
 
 		// combine the app state
-		appState, err := appendState(appState, piece.AppState)
+		appState, err = appendState(cdc, appState, piece.AppState)
 		if err != nil {
 			return err
 		}
 
 		// write the appended genesis file
-		return WriteGenesisFile(cdc, genFile, piece.chainID, validators, appState)
+		return WriteGenesisFile(cdc, genFile, piece.ChainID, validators, appState)
 
-		// XXX read in nodeKey and combine new nodeID file
+		// XXX XXX XXX read in configTOMBL and combine new nodeID file
 
 		return nil
 	}
@@ -218,7 +242,7 @@ func addAppStateToGenesis(cdc *wire.Codec, genesisConfigPath string, appState js
 type GenAppParams func(*wire.Codec, crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error)
 
 // append appState1 with appState2
-type AppendAppState func(cdc *wire.Codec, appState1, appState2 json.RawMesssage) (appState json.RawMessage, err error)
+type AppendAppState func(cdc *wire.Codec, appState1, appState2 json.RawMessage) (appState json.RawMessage, err error)
 
 // Create one account with a whole bunch of mycoin in it
 func SimpleGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error) {

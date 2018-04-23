@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -32,56 +31,40 @@ func GetAccountDecoder(cdc *wire.Codec) sdk.AccountDecoder {
 // GetAccountCmd returns a query account that will display the
 // state of the account at a given address
 func GetAccountCmd(storeName string, cdc *wire.Codec, decoder sdk.AccountDecoder) *cobra.Command {
-	cmdr := commander{
-		storeName,
-		cdc,
-		decoder,
-	}
 	return &cobra.Command{
-		Use:   "account <address>",
+		Use:   "account [address]",
 		Short: "Query account balance",
-		RunE:  cmdr.getAccountCmd,
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			// find the key to look up the account
+			addr := args[0]
+			bz, err := hex.DecodeString(addr)
+			if err != nil {
+				return err
+			}
+			key := sdk.Address(bz)
+
+			// perform query
+			ctx := context.NewCoreContextFromViper()
+			res, err := ctx.Query(key, storeName)
+			if err != nil {
+				return err
+			}
+
+			// decode the value
+			account, err := decoder(res)
+			if err != nil {
+				return err
+			}
+
+			// print out whole account
+			output, err := wire.MarshalJSONIndent(cdc, account)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(output))
+			return nil
+		},
 	}
-}
-
-type commander struct {
-	storeName string
-	cdc       *wire.Codec
-	decoder   sdk.AccountDecoder
-}
-
-func (c commander) getAccountCmd(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 || len(args[0]) == 0 {
-		return errors.New("You must provide an account name")
-	}
-
-	// find the key to look up the account
-	addr := args[0]
-	bz, err := hex.DecodeString(addr)
-	if err != nil {
-		return err
-	}
-	key := sdk.Address(bz)
-
-	ctx := context.NewCoreContextFromViper()
-
-	res, err := ctx.Query(key, c.storeName)
-	if err != nil {
-		return err
-	}
-
-	// decode the value
-	account, err := c.decoder(res)
-	if err != nil {
-		return err
-	}
-
-	// print out whole account
-	output, err := wire.MarshalJSONIndent(c.cdc, account)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(output))
-
-	return nil
 }

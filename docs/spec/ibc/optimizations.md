@@ -2,7 +2,7 @@
 
 ([Back to table of contents](README.md#contents))
 
-The above sections describe a secure messaging protocol that can handle all normal situations between two blockchains. All messages are processed exactly once and in order, and applications can guarantee invariants over their combined state on both chains. IBC can be further extended and optimized to provide additional guarantees and minimize costs on the underlying blockchains. We detail two extensions: packet timeouts, and packet cleanup.
+The above sections describe a secure messaging protocol that can handle all normal situations between two blockchains. All messages are processed exactly once and in order, and applications can guarantee invariants over their combined state on both chains. IBC can be further extended and optimized to provide additional guarantees and minimize costs on the underlying blockchains. We detail two extensions: packet timeouts and packet cleanup.
 
 ### 4.1 Timeouts
 
@@ -24,7 +24,7 @@ For a sending chain `A` and a receiving chain `B`, with an IBC packet `P={_, i, 
 
 We can make a few modifications of the above protocol to allow us to prove timeouts, by adding some fields to the messages in the send queue and defining an expired function that returns true iff `h > maxHeight` or `timestamp(H_h) > maxTime`.
 
-`P = {type, sequence, source, destination, data, maxHeight, maxTime}`
+`P = (type, sequence, source, destination, data, maxHeight, maxTime)`
 
 `expired(H_h, P) ⇒ true | false`
 
@@ -78,21 +78,18 @@ Additionally, with the above timeout implementation, when we perform the timeout
 
 Consider a connection where many messages have been sent, and their receipts processed on the sending chain, either explicitly or through a timeout. We wish to quickly advance over all the processed messages, either for a normal cleanup, or to prepare the queue for normal use again after timeouts.
 
-Through the definition of the send queue, we know that all packets `i < head` have been fully processed and all packets `head <= i < tail` are awaiting processing. By proving a much advanced `head` of `outgoing_A`, we can demonstrate that the sending chain already handled all messages. Thus, we can safely advance `incoming_B` to the new head of `outgoing_A`.
+Through the definition of the send queue, we know that all packets `i < head` have been fully processed and all packets `head <= i < tail` are awaiting processing. By proving a much advanced `head` of `outgoing_B`, we can demonstrate that the sending chain already handled all messages. Thus, we can safely advance `incoming_A` to the new head of `outgoing_B`.
 
-_S:IBCcleanup(A, M<sub>k,v,h</sub>)_ &#8658; _match_
-  * _q<sub>A.receipt</sub> =_ &#8709; &#8658; _Error("unknown sender"),_
-  * _k = (\_, send, \_)_ &#8658; _Error("must be for the send queue"),_
-  * _k = (d, \_, \_) and d_ &#8800; _S_ &#8658; _Error("sent to a different chain"),_
-  * _k_ &#8800; _(\_, \_, head)_ &#8658; _Error("Need a proof of the head of the queue"),_
-  * _H<sub>h</sub>_ &#8713; _T<sub>A</sub>_ &#8658; _Error("must submit header for height h"),_
-  * _not valid(H<sub>h</sub> ,M<sub>k,v,h </sub>)_ &#8658; _Error("invalid merkle proof"),_
-  * _head := v_ &#8658; _match_
-    * _head <= head(q<sub>A.receipt</sub>)_ &#8658; _Error("cleanup must go forward"),_
-    * _default_ &#8658; _advance(q<sub>A.receipt  </sub>, head); Success_
+```
+cleanup(A, M_kvh, head) = case
+  incoming_A == ∅ => fail with "unknown sender"
+  H_h ∉ T_B => fail with "must submit header for height h"
+  not valid(H_h, M_kvh, head) => fail with "invalid Merkle proof of outgoing_B queue height"
+  head >= head(incoming_A) => fail with "cleanup must go forward"
+  otherwise =>
+    advance(incoming_A, head)
+```
 
-`cleanup` can be invoked to resolve all outstanding packets up to and including `head` with one Merkle proof. This handles both recovering from timeouts and routine cleanup to recover storage.
-
-This allows us to invoke the _IBCcleanup _function to resolve all outstanding messages up to and including _head_ with one merkle proof. Note that if this handles both recovering from a blocked queue after timeouts, as well as a routine cleanup method to recover space. In the cleanup scenario, we assume that there may also be a number of packets that have been processed by the receiving chain, but not yet posted to the sending chain, `tail(incoming_B) > head(outgoing_A)`. As such, `advance` must not modify any packets between the head and the tail.
+This allows us to invoke the `cleanup` function to resolve all outstanding messages up to and including `index` with one Merkle proof. Note that if this handles both recovering from a blocked queue after timeouts, as well as a routine cleanup method to recover space. In the cleanup scenario, we assume that there may also be a number of packets that have been processed by the receiving chain, but not yet posted to the sending chain, `tail(incoming_B) > head(outgoing_A)`. As such, `advance` must not modify any packets between the head and the tail.
 
 ![Cleaning up Packets](images/CleanUp.png)

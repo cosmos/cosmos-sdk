@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	dbm "github.com/tendermint/tmlibs/db"
+	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +15,7 @@ import (
 
 func TestContextGetOpShouldNeverPanic(t *testing.T) {
 	var ms types.MultiStore
-	ctx := types.NewContext(ms, abci.Header{}, false, nil)
+	ctx := types.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
 	indices := []int64{
 		-10, 1, 0, 10, 20,
 	}
@@ -29,7 +30,7 @@ func defaultContext(key types.StoreKey) types.Context {
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, types.StoreTypeIAVL, db)
 	cms.LoadLatestVersion()
-	ctx := types.NewContext(cms, abci.Header{}, false, nil)
+	ctx := types.NewContext(cms, abci.Header{}, false, nil, log.NewNopLogger())
 	return ctx
 }
 

@@ -122,6 +122,7 @@ func TestBond(t *testing.T) {
 	bondsEqual := func(b1, b2 DelegatorBond) bool {
 		return bytes.Equal(b1.DelegatorAddr, b2.DelegatorAddr) &&
 			bytes.Equal(b1.CandidateAddr, b2.CandidateAddr) &&
+			b1.Height == b2.Height &&
 			b1.Shares == b2.Shares
 	}
 
@@ -142,14 +143,23 @@ func TestBond(t *testing.T) {
 	assert.True(t, found)
 	assert.True(t, bondsEqual(bond1to1, resBond))
 
+	// test height
+	ctx = ctx.WithBlockHeight(10)
+	keeper.setDelegatorBond(ctx, bond1to1)
+	resBond, found = keeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
+	assert.True(t, found)
+	assert.Equal(t, resBond.Height, 10)
+	ctx = ctx.WithBlockHeight(0)
+	keeper.setDelegatorBond(ctx, bond1to1)
+
 	// add some more records
 	keeper.setCandidate(ctx, candidates[1])
 	keeper.setCandidate(ctx, candidates[2])
-	bond1to2 := DelegatorBond{addrDels[0], addrVals[1], sdk.NewRat(9)}
-	bond1to3 := DelegatorBond{addrDels[0], addrVals[2], sdk.NewRat(9)}
-	bond2to1 := DelegatorBond{addrDels[1], addrVals[0], sdk.NewRat(9)}
-	bond2to2 := DelegatorBond{addrDels[1], addrVals[1], sdk.NewRat(9)}
-	bond2to3 := DelegatorBond{addrDels[1], addrVals[2], sdk.NewRat(9)}
+	bond1to2 := DelegatorBond{addrDels[0], addrVals[1], sdk.NewRat(9), 0}
+	bond1to3 := DelegatorBond{addrDels[0], addrVals[2], sdk.NewRat(9), 1}
+	bond2to1 := DelegatorBond{addrDels[1], addrVals[0], sdk.NewRat(9), 2}
+	bond2to2 := DelegatorBond{addrDels[1], addrVals[1], sdk.NewRat(9), 3}
+	bond2to3 := DelegatorBond{addrDels[1], addrVals[2], sdk.NewRat(9), 4}
 	keeper.setDelegatorBond(ctx, bond1to2)
 	keeper.setDelegatorBond(ctx, bond1to3)
 	keeper.setDelegatorBond(ctx, bond2to1)

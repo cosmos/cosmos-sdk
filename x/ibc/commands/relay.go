@@ -10,10 +10,8 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
-
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
@@ -84,7 +82,9 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	c.loop(fromChainID, fromChainNode, toChainID, toChainNode)
 }
 
-func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
+func (c relayCommander) loop(fromChainID, fromChainNode, toChainID,
+	toChainNode string) {
+
 	ctx := context.NewCoreContextFromViper()
 	// get password
 	passphrase, err := ctx.GetPassphraseFromStdin(ctx.FromAddressName)

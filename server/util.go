@@ -71,7 +71,7 @@ func AddCommands(
 	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
 
 	rootCmd.AddCommand(
-		InitCmd(ctx, cdc, appState),
+		InitCmd(ctx, cdc, appState, nil),
 		StartCmd(ctx, appCreator),
 		UnsafeResetAllCmd(ctx),
 		ShowNodeIDCmd(ctx),

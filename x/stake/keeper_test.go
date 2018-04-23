@@ -732,3 +732,44 @@ func TestValidatorsetKeeper(t *testing.T) {
 
 	assert.Equal(t, total, keeper.TotalPower(ctx).Evaluate())
 }
+
+func TestValidatorsetKeeper(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, false, 0)
+
+	total := int64(0)
+	amts := []int64{9, 8, 7, 6, 5}
+	var candidates [5]Candidate
+	for i, amt := range amts {
+		candidates[i] = Candidate{
+			Address:     addrVals[i],
+			PubKey:      pks[i],
+			Assets:      sdk.NewRat(amt),
+			Liabilities: sdk.NewRat(amt),
+		}
+
+		keeper.setCandidate(ctx, candidates[i])
+
+		total += amt
+	}
+
+	assert.Equal(t, 5, keeper.Size(ctx))
+
+	for _, addr := range addrVals[:5] {
+		assert.True(t, keeper.IsValidator(ctx, addr))
+	}
+	for _, addr := range addrVals[5:] {
+		assert.False(t, keeper.IsValidator(ctx, addr))
+	}
+
+	for i, can := range candidates {
+		index, val := keeper.GetByAddress(ctx, can.Address)
+		assert.Equal(t, i, index)
+		assert.Equal(t, can.validator(), *val)
+	}
+
+	for i, can := range candidates {
+		assert.Equal(t, can.validator(), *keeper.GetByIndex(ctx, i))
+	}
+
+	assert.Equal(t, total, keeper.TotalPower(ctx).Evaluate())
+}

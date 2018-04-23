@@ -101,7 +101,9 @@ func (channel Channel) Receive(h ReceiveHandler, ctx sdk.Context, msg ReceiveMsg
 type ReceiptHandler func(sdk.Context, Payload)
 
 func (channel Channel) Receipt(h ReceiptHandler, ctx sdk.Context, msg ReceiptMsg) sdk.Result {
-	msg.Verify(ctx, channel.keeper)
+	if err := msg.Verify(ctx, channel.keeper); err != nil {
+		return err.Result()
+	}
 
 	h(ctx, msg.Payload)
 
@@ -111,7 +113,9 @@ func (channel Channel) Receipt(h ReceiptHandler, ctx sdk.Context, msg ReceiptMsg
 func handleReceiveCleanupMsg(ctx sdk.Context, keeper keeper, msg ReceiveCleanupMsg) sdk.Result {
 	receive := keeper.receive
 
-	msg.Verify(ctx, receive, msg.SrcChain, msg.Sequence)
+	if err := msg.Verify(ctx, receive, msg.SrcChain, msg.Sequence); err != nil {
+		return err.Result()
+	}
 
 	// TODO: cleanup
 
@@ -121,7 +125,9 @@ func handleReceiveCleanupMsg(ctx sdk.Context, keeper keeper, msg ReceiveCleanupM
 func handleReceiptCleanupMsg(ctx sdk.Context, keeper keeper, msg ReceiptCleanupMsg) sdk.Result {
 	receipt := keeper.receipt
 
-	msg.Verify(ctx, receipt, msg.SrcChain, msg.Sequence)
+	if err := msg.Verify(ctx, receipt, msg.SrcChain, msg.Sequence); err != nil {
+		return err.Result()
+	}
 
 	// TODO: cleanup
 

@@ -27,7 +27,7 @@ import (
 // TODO flag to retrieve genesis file / config file from a URL?
 // get cmd to initialize all files for tendermint and application
 func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams, appendState AppendAppState) *cobra.Command {
-	flagOverwrite, flagAppendFile := "overwrite", "piece-file"
+	flagOverwrite, flagPieceFile := "overwrite", "piece-file"
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize genesis config, priv-validator file, and p2p-node file",
@@ -56,15 +56,17 @@ func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams, appendState Append
 			if err != nil {
 				return err
 			}
+			nodeID := string(nodeKey.ID())
 
 			// print out some key information
+
 			toPrint := struct {
 				ChainID    string          `json:"chain_id"`
 				NodeID     string          `json:"node_id"`
 				AppMessage json.RawMessage `json:"app_message"`
 			}{
 				chainID,
-				string(nodeKey.ID()),
+				nodeID,
 				cliPrint,
 			}
 			out, err := wire.MarshalJSONIndent(cdc, toPrint)
@@ -72,12 +74,35 @@ func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams, appendState Append
 				return err
 			}
 			fmt.Println(string(out))
+
+			// write the piece file is path specified
+			pieceFile := viper.GetString(flagPieceFile)
+			if len(pieceFile) > 0 {
+				//create the piece
+				ip, err := externalIP()
+				if err != nil {
+					return err
+				}
+				piece := GenesisPiece{
+					ChainID:    chainID,
+					NodeID:     nodeID,
+					IP:         ip,
+					AppState:   appState,
+					Validators: validators,
+				}
+				bz, err := cdc.MarshalJSON(piece)
+				if err != nil {
+					return err
+				}
+				return cmn.WriteFile(pieceFile, bz, 0644)
+			}
+
 			return nil
 		},
 	}
 	if appendState != nil {
 		cmd.AddCommand(FromPiecesCmd(ctx, cdc, appendState))
-		cmd.Flags().BoolP(flagAppendFile, "a", false, "create an append file for others to import")
+		cmd.Flags().StringP(flagPieceFile, "a", "", "create an append file for others to import")
 	}
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the config file")
 	return cmd
@@ -87,6 +112,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams, appendState Append
 type GenesisPiece struct {
 	ChainID    string                     `json:"chain_id"`
 	NodeID     string                     `json:"node_id"`
+	IP         string                     `json:"ip"`
 	AppState   json.RawMessage            `json:"app_state"`
 	Validators []tmtypes.GenesisValidator `json:"validators"`
 }
@@ -116,7 +142,7 @@ func FromPiecesCmd(ctx *Context, cdc *wire.Codec, appendState AppendAppState) *c
 			os.Remove(genFile)
 
 			// deterministically walk the directory for genesis-piece files to import
-			filepath.Walk(pieceDir, appendPiece(cdc, appendState, nodeKeyFile, genFile))
+			filepath.Walk(pieceDir, appendPiece(ctx, cdc, appendState, nodeKeyFile, genFile))
 
 			return nil
 		},
@@ -124,7 +150,7 @@ func FromPiecesCmd(ctx *Context, cdc *wire.Codec, appendState AppendAppState) *c
 }
 
 // append a genesis-piece
-func appendPiece(cdc *wire.Codec, appendState AppendAppState, nodeKeyFile, genFile string) filepath.WalkFunc {
+func appendPiece(ctx *Context, cdc *wire.Codec, appendState AppendAppState, nodeKeyFile, genFile string) filepath.WalkFunc {
 	return func(pieceFile string, _ os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -185,7 +211,17 @@ func appendPiece(cdc *wire.Codec, appendState AppendAppState, nodeKeyFile, genFi
 		// write the appended genesis file
 		return WriteGenesisFile(cdc, genFile, piece.ChainID, validators, appState)
 
-		// XXX XXX XXX read in configTOMBL and combine new nodeID file
+		// Add a persistent peer if the config (if it's not me)
+		myIP, err := externalIP()
+		if err != nil {
+			return err
+		}
+		if myIP == piece.IP {
+			return nil
+		}
+		ctx.Config.P2P.PersistentPeers += fmt.Sprintf(",%s@%s", piece.NodeID, piece.IP)
+		configFilePath := filepath.Join(viper.GetString("home"), "config", "config.toml") //TODO this is annoying should be easier to get
+		cfg.WriteConfigFile(configFilePath, ctx.Config)
 
 		return nil
 	}

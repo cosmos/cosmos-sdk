@@ -12,6 +12,7 @@ import (
 //func AppendJSON(cdc *wire.Codec, baseJSON []byte, key string, value json.RawMessage) (appended []byte, err error) {
 
 func TestAppendJSON(t *testing.T) {
+	cdc := wire.NewCodec()
 
 	foo := map[string]string{"foo": "foofoo"}
 	bar := map[string]string{"barInner": "barbar"}
@@ -26,7 +27,6 @@ func TestAppendJSON(t *testing.T) {
 	barRaw := json.RawMessage(bz)
 
 	// make the append
-	cdc := wire.NewCodec()
 	appBz, err := AppendJSON(cdc, fooRaw, "barOuter", barRaw)
 	require.NoError(t, err)
 

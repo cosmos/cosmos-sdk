@@ -19,6 +19,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
+// init parameters
+var CoolAppInit = server.AppInit{
+	GenAppParams: CoolGenAppParams,
+}
+
 // coolGenAppParams sets up the app_state and appends the cool app state
 func CoolGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error) {
 	chainID, validators, appState, cliPrint, err = server.SimpleGenAppParams(cdc, pubKey)
@@ -52,7 +57,7 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, CoolGenAppParams, generateApp)
+	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit, generateApp)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.democoind")

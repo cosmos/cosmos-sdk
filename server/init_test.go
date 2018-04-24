@@ -20,7 +20,10 @@ func TestInit(t *testing.T) {
 	require.Nil(t, err)
 	ctx := NewContext(cfg, logger)
 	cdc := wire.NewCodec()
-	cmd := InitCmd(ctx, cdc, mock.GenAppParams, nil)
+	appInit := AppInit{
+		GenAppParams: mock.GenAppParams,
+	}
+	cmd := InitCmd(ctx, cdc, appInit)
 	err = cmd.RunE(nil, nil)
 	require.NoError(t, err)
 }

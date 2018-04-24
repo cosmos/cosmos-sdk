@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	crypto "github.com/tendermint/go-crypto"
@@ -26,7 +27,7 @@ import (
 
 // TODO flag to retrieve genesis file / config file from a URL?
 // get cmd to initialize all files for tendermint and application
-func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams, appendState AppendAppState) *cobra.Command {
+func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	flagOverwrite, flagPieceFile := "overwrite", "piece-file"
 	cmd := &cobra.Command{
 		Use:   "init",
@@ -37,7 +38,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams, appendState Append
 			config := ctx.Config
 			pubkey := ReadOrCreatePrivValidator(config)
 
-			chainID, validators, appState, cliPrint, err := gen(cdc, pubkey)
+			chainID, validators, appState, cliPrint, err := appInit.GenAppParams(cdc, pubkey)
 			if err != nil {
 				return err
 			}
@@ -100,11 +101,12 @@ func InitCmd(ctx *Context, cdc *wire.Codec, gen GenAppParams, appendState Append
 			return nil
 		},
 	}
-	if appendState != nil {
-		cmd.AddCommand(FromPiecesCmd(ctx, cdc, appendState))
+	if appInit.AppendAppState != nil {
+		cmd.AddCommand(FromPiecesCmd(ctx, cdc, appInit))
 		cmd.Flags().StringP(flagPieceFile, "a", "", "create an append file for others to import")
 	}
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the config file")
+	cmd.Flags().AddFlagSet(appInit.Flags)
 	return cmd
 }
 
@@ -118,7 +120,7 @@ type GenesisPiece struct {
 }
 
 // get cmd to initialize all files for tendermint and application
-func FromPiecesCmd(ctx *Context, cdc *wire.Codec, appendState AppendAppState) *cobra.Command {
+func FromPiecesCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	return &cobra.Command{
 		Use:   "from-pieces [directory]",
 		Short: "Create genesis from directory of genesis pieces",
@@ -142,7 +144,7 @@ func FromPiecesCmd(ctx *Context, cdc *wire.Codec, appendState AppendAppState) *c
 			os.Remove(genFile)
 
 			// deterministically walk the directory for genesis-piece files to import
-			filepath.Walk(pieceDir, appendPiece(ctx, cdc, appendState, nodeKeyFile, genFile))
+			filepath.Walk(pieceDir, appendPiece(ctx, cdc, appInit, nodeKeyFile, genFile))
 
 			return nil
 		},
@@ -150,7 +152,7 @@ func FromPiecesCmd(ctx *Context, cdc *wire.Codec, appendState AppendAppState) *c
 }
 
 // append a genesis-piece
-func appendPiece(ctx *Context, cdc *wire.Codec, appendState AppendAppState, nodeKeyFile, genFile string) filepath.WalkFunc {
+func appendPiece(ctx *Context, cdc *wire.Codec, appInit AppInit, nodeKeyFile, genFile string) filepath.WalkFunc {
 	return func(pieceFile string, _ os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -203,7 +205,7 @@ func appendPiece(ctx *Context, cdc *wire.Codec, appendState AppendAppState, node
 		validators = append(validators, piece.Validators...)
 
 		// combine the app state
-		appState, err = appendState(cdc, appState, piece.AppState)
+		appState, err = appInit.AppendAppState(cdc, appState, piece.AppState)
 		if err != nil {
 			return err
 		}
@@ -273,17 +275,30 @@ func addAppStateToGenesis(cdc *wire.Codec, genesisConfigPath string, appState js
 
 //_____________________________________________________________________
 
-// GenAppParams creates the core parameters initialization. It takes in a
-// pubkey meant to represent the pubkey of the validator of this machine.
-type GenAppParams func(*wire.Codec, crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error)
+// Core functionality passed from the application to the server init command
+type AppInit struct {
 
-// append appState1 with appState2
-type AppendAppState func(cdc *wire.Codec, appState1, appState2 json.RawMessage) (appState json.RawMessage, err error)
+	// flags required for GenAppParams
+	Flags *pflag.FlagSet
+
+	// GenAppParams creates the core parameters initialization. It takes in a
+	// pubkey meant to represent the pubkey of the validator of this machine.
+	GenAppParams func(*wire.Codec, crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error)
+
+	// append appState1 with appState2
+	AppendAppState func(cdc *wire.Codec, appState1, appState2 json.RawMessage) (appState json.RawMessage, err error)
+}
+
+// simple default application init
+var DefaultAppInit = AppInit{
+	GenAppParams: SimpleGenAppParams,
+}
 
 // Create one account with a whole bunch of mycoin in it
 func SimpleGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error) {
 
 	var addr sdk.Address
+
 	var secret string
 	addr, secret, err = GenerateCoinKey()
 	if err != nil {

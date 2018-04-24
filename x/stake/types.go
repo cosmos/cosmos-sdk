@@ -9,9 +9,10 @@ import (
 
 // GenesisState - all staking state that must be provided at genesis
 type GenesisState struct {
-	Pool       Pool        `json:"pool"`
-	Params     Params      `json:"params"`
-	Candidates []Candidate `json:"candidates"`
+	Pool       Pool            `json:"pool"`
+	Params     Params          `json:"params"`
+	Candidates []Candidate     `json:"candidates"`
+	Bonds      []DelegatorBond `json:"bonds"`
 }
 
 //_________________________________________________________________________

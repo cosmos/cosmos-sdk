@@ -55,13 +55,23 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data GenesisState) {
 	for _, candidate := range data.Candidates {
 		k.setCandidate(ctx, candidate)
 	}
+	for _, bond := range data.Bonds {
+		k.setDelegatorBond(ctx, bond)
+	}
 }
 
 // WriteGenesis - output genesis parameters
 func (k Keeper) WriteGenesis(ctx sdk.Context) GenesisState {
 	pool := k.GetPool(ctx)
 	params := k.GetParams(ctx)
-	return GenesisState{pool, params}
+	candidates := k.GetCandidates(ctx, -1)
+	bonds := k.GetBonds(ctx, -1)
+	return GenesisState{
+		pool,
+		params,
+		candidates,
+		bonds,
+	}
 }
 
 //_____________________________________________________________________

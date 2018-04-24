@@ -37,30 +37,6 @@ func setupViper(t *testing.T) func() {
 	}
 }
 
-// Begin the server pass up the channel to close
-// NOTE pass up the channel so it can be closed at the end of the process
-//func StartServer(t *testing.T, cdc *wire.Codec) chan error {
-//defer setupViper(t)()
-
-//cfg, err := tcmd.ParseConfig()
-//require.Nil(t, err)
-
-//// init server
-//ctx := NewContext(cfg, log.NewNopLogger())
-//initCmd := InitCmd(ctx, cdc, mock.GenAppParams)
-//err = initCmd.RunE(nil, nil)
-//require.NoError(t, err)
-
-//// start server
-//viper.Set(flagWithTendermint, true)
-//startCmd := StartCmd(mock.NewApp, ctx)
-//startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
-//startCmd.Flags().Set("rpc.laddr", FreeTCPAddr(t)) // set to a new free address
-//timeout := time.Duration(3) * time.Second
-
-//return RunOrTimeout(startCmd, timeout, t)
-//}
-
 // Run or Timout RunE of command passed in
 func RunOrTimeout(cmd *cobra.Command, timeout time.Duration, t *testing.T) chan error {
 	done := make(chan error)

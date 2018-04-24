@@ -9,8 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//func AppendJSON(cdc *wire.Codec, baseJSON []byte, key string, value json.RawMessage) (appended []byte, err error) {
-
 func TestAppendJSON(t *testing.T) {
 	cdc := wire.NewCodec()
 

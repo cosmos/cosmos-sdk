@@ -192,7 +192,7 @@ var (
 // get app init parameters for server init command
 func GaiaAppInit() server.AppInit {
 	fs := pflag.NewFlagSet("", pflag.ContinueOnError)
-	fs.String(flagAccounts, "foobar-10fermion,10baz-true", "genesis accounts in form: name1-coins-isval;name2-coins-isval;...")
+	fs.String(flagAccounts, "foobar-10fermion,10baz-true", "genesis accounts in form: name1-coins-isval:name2-coins-isval:...")
 	fs.BoolP(flagOWK, "k", false, "overwrite the for the accounts created, if false and key exists init will fail")
 	return server.AppInit{
 		Flags:          fs,
@@ -212,7 +212,7 @@ func GaiaGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, va
 
 	// get genesis flag account information
 	accountsStr := viper.GetString(flagAccounts)
-	accounts := strings.Split(accountsStr, ";")
+	accounts := strings.Split(accountsStr, ":")
 	genaccs := make([]GenesisAccount, len(accounts))
 	for i, account := range accounts {
 		p := strings.Split(account, "-")

@@ -149,6 +149,9 @@ func (rs *rootMultiStore) Commit() CommitID {
 	version := rs.lastCommitID.Version + 1
 	commitInfo := commitStores(version, rs.stores)
 
+	// debug
+	fmt.Printf("commitid: %+v\n", commitInfo.Hash())
+
 	// Need to update atomically.
 	batch := rs.db.NewBatch()
 	setCommitInfo(batch, version, commitInfo)
@@ -333,16 +336,22 @@ func (rs *rootMultiStore) cacheSubstoreProofs(infos []storeInfo) {
 	for i, p := range proofs {
 		// begin debug
 
-		leaf, err := merkle.SimpleLeaf([]byte(infos[i].Name), infos[i])
+		name := infos[i].Name
+		fmt.Printf("name: %s\n", name)
+
+		index := rs.indexByName[name]
+		fmt.Printf("index: %d\n", index)
+
+		leaf, err := merkle.SimpleLeaf([]byte(name), infos[i])
 		if err != nil {
 			panic(err)
 		}
 
-		fmt.Printf("subv: %+v\n", p.Verify(i, len(proofs), leaf, rs.LastCommitID().Hash))
+		fmt.Printf("subv: %+v\n", p.Verify(index, len(proofs), leaf, rs.LastCommitID().Hash))
 
 		// end debug
 
-		proof, err := merkle.FromSimpleProof(p, i, len(proofs), rs.LastCommitID().Hash)
+		proof, err := merkle.FromSimpleProof(p, index, len(proofs), rs.LastCommitID().Hash)
 		if err != nil {
 			panic(err)
 		}

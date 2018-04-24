@@ -77,8 +77,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 			fmt.Println(string(out))
 
 			// write the piece file is path specified
-			pieceFile := viper.GetString(flagPieceFile)
-			if len(pieceFile) > 0 {
+			if viper.GetBool(flagPieceFile) {
 				//create the piece
 				ip, err := externalIP()
 				if err != nil {
@@ -95,7 +94,9 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				return cmn.WriteFile(pieceFile, bz, 0644)
+				name := fmt.Sprintf("piece%v.json", nodeID)
+				file := filepath.Join(viper.GetString("home"), name)
+				return cmn.WriteFile(file, bz, 0644)
 			}
 
 			return nil
@@ -103,7 +104,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	}
 	if appInit.AppendAppState != nil {
 		cmd.AddCommand(FromPiecesCmd(ctx, cdc, appInit))
-		cmd.Flags().StringP(flagPieceFile, "a", "", "create an append file for others to import")
+		cmd.Flags().BoolP(flagPieceFile, "a", false, "create an append file (under [--home]/[nodeID]piece.json) for others to import")
 	}
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the config file")
 	cmd.Flags().AddFlagSet(appInit.Flags)
@@ -144,7 +145,10 @@ func FromPiecesCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Comman
 			os.Remove(genFile)
 
 			// deterministically walk the directory for genesis-piece files to import
-			filepath.Walk(pieceDir, appendPiece(ctx, cdc, appInit, nodeKeyFile, genFile))
+			err := filepath.Walk(pieceDir, appendPiece(ctx, cdc, appInit, nodeKeyFile, genFile))
+			if err != nil {
+				return err
+			}
 
 			return nil
 		},
@@ -157,7 +161,7 @@ func appendPiece(ctx *Context, cdc *wire.Codec, appInit AppInit, nodeKeyFile, ge
 		if err != nil {
 			return err
 		}
-		if path.Ext(pieceFile) != "json" {
+		if path.Ext(pieceFile) != ".json" {
 			return nil
 		}
 
@@ -192,7 +196,12 @@ func appendPiece(ctx *Context, cdc *wire.Codec, appInit AppInit, nodeKeyFile, ge
 		appState := genMap["app_state"]
 
 		// verify chain-ids are the same
-		if piece.ChainID != string(genMap["chain_id"]) {
+		var genChainID string
+		err = cdc.UnmarshalJSON(genMap["chain_id"], &genChainID)
+		if err != nil {
+			return err
+		}
+		if piece.ChainID != genChainID {
 			return fmt.Errorf("piece chain id's are mismatched, %s != %s", piece.ChainID, genMap["chain_id"])
 		}
 
@@ -211,7 +220,10 @@ func appendPiece(ctx *Context, cdc *wire.Codec, appInit AppInit, nodeKeyFile, ge
 		}
 
 		// write the appended genesis file
-		return WriteGenesisFile(cdc, genFile, piece.ChainID, validators, appState)
+		err = WriteGenesisFile(cdc, genFile, piece.ChainID, validators, appState)
+		if err != nil {
+			return err
+		}
 
 		// Add a persistent peer if the config (if it's not me)
 		myIP, err := externalIP()
@@ -221,7 +233,11 @@ func appendPiece(ctx *Context, cdc *wire.Codec, appInit AppInit, nodeKeyFile, ge
 		if myIP == piece.IP {
 			return nil
 		}
-		ctx.Config.P2P.PersistentPeers += fmt.Sprintf(",%s@%s", piece.NodeID, piece.IP)
+		comma := ","
+		if len(ctx.Config.P2P.PersistentPeers) == 0 {
+			comma = ""
+		}
+		ctx.Config.P2P.PersistentPeers += fmt.Sprintf("%s%s@%s", comma, piece.NodeID, piece.IP)
 		configFilePath := filepath.Join(viper.GetString("home"), "config", "config.toml") //TODO this is annoying should be easier to get
 		cfg.WriteConfigFile(configFilePath, ctx.Config)
 

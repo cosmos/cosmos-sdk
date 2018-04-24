@@ -57,7 +57,7 @@ func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 	tests.ExecuteT(t, "gaiad unsafe_reset_all", 1)
 	pass := "1234567890"
 	executeWrite(t, "gaiacli keys delete foo", pass)
-	keys, chainID := executeInit(t, "gaiad init -o --accounts=bar-100000fermion-true;foo-100000fermion-true", "bar", "foo")
+	keys, chainID := executeInit(t, "gaiad init -o --accounts=bar-100000fermion-true:foo-100000fermion-false", "bar", "foo")
 	require.Equal(t, 2, len(keys))
 
 	// get a free port, also setup some common flags

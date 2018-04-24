@@ -12,6 +12,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/server"
+	stake "github.com/cosmos/cosmos-sdk/x/stake"
+	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/commands"
 )
 
 func main() {

@@ -64,8 +64,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data GenesisState) {
 func (k Keeper) WriteGenesis(ctx sdk.Context) GenesisState {
 	pool := k.GetPool(ctx)
 	params := k.GetParams(ctx)
-	candidates := k.GetCandidates(ctx, -1)
-	bonds := k.GetBonds(ctx, -1)
+	candidates := k.GetCandidates(ctx, 32767)
+	bonds := k.GetBonds(ctx, 32767)
 	return GenesisState{
 		pool,
 		params,

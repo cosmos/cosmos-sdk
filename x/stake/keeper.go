@@ -74,7 +74,7 @@ func (k Keeper) GetCandidate(ctx sdk.Context, addr sdk.Address) (candidate Candi
 	return candidate, true
 }
 
-// Get the set of all candidates, retrieve a maxRetrieve number of records, -1 maxRetrieve = no limit
+// Get the set of all candidates, retrieve a maxRetrieve number of records
 func (k Keeper) GetCandidates(ctx sdk.Context, maxRetrieve int16) (candidates Candidates) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := store.Iterator(subspace(CandidatesKey))
@@ -82,7 +82,7 @@ func (k Keeper) GetCandidates(ctx sdk.Context, maxRetrieve int16) (candidates Ca
 	candidates = make([]Candidate, maxRetrieve)
 	i := 0
 	for ; ; i++ {
-		if !iterator.Valid() || (maxRetrieve >= 0 && i > int(maxRetrieve-1)) {
+		if !iterator.Valid() || i > int(maxRetrieve-1) {
 			iterator.Close()
 			break
 		}
@@ -371,7 +371,7 @@ func (k Keeper) GetDelegatorBond(ctx sdk.Context,
 	return bond, true
 }
 
-// load all bonds, -1 maxRetrieve = no limit
+// load all bonds
 func (k Keeper) GetBonds(ctx sdk.Context, maxRetrieve int16) (bonds []DelegatorBond) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := store.Iterator(subspace(DelegatorBondKeyPrefix))
@@ -379,7 +379,7 @@ func (k Keeper) GetBonds(ctx sdk.Context, maxRetrieve int16) (bonds []DelegatorB
 	bonds = make([]DelegatorBond, maxRetrieve)
 	i := 0
 	for ; ; i++ {
-		if !iterator.Valid() || (maxRetrieve >= 0 && i > int(maxRetrieve-1)) {
+		if !iterator.Valid() || i > int(maxRetrieve-1) {
 			iterator.Close()
 			break
 		}

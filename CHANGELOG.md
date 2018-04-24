@@ -23,6 +23,7 @@ BREAKING CHANGES
 * Many changes to names throughout 
   * Type as a prefix naming convention applied (ex. BondMsg -> MsgBond) 
   * Removed redundancy in names (ex. stake.StakeKeeper -> stake.Keeper)
+* Removed SealedAccountMapper
 
 BUG FIXES
 * Gaia now uses stake, ported from github.com/cosmos/gaia

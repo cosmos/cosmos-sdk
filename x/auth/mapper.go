@@ -9,7 +9,6 @@ import (
 )
 
 var _ sdk.AccountMapper = (*accountMapper)(nil)
-var _ sdk.AccountMapper = (*sealedAccountMapper)(nil)
 
 // Implements sdk.AccountMapper.
 // This AccountMapper encodes/decodes accounts using the
@@ -37,21 +36,6 @@ func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto sdk.Account) acco
 	}
 }
 
-// Returns the go-amino codec.  You may need to register interfaces
-// and concrete types here, if your app's sdk.Account
-// implementation includes interface fields.
-// NOTE: It is not secure to expose the codec, so check out
-// .Seal().
-func (am accountMapper) WireCodec() *wire.Codec {
-	return am.cdc
-}
-
-// Returns a "sealed" accountMapper.
-// The codec is not accessible from a sealedAccountMapper.
-func (am accountMapper) Seal() sealedAccountMapper {
-	return sealedAccountMapper{am}
-}
-
 // Implements sdk.AccountMapper.
 func (am accountMapper) NewAccountWithAddress(ctx sdk.Context, addr sdk.Address) sdk.Account {
 	acc := am.clonePrototype()
@@ -76,19 +60,6 @@ func (am accountMapper) SetAccount(ctx sdk.Context, acc sdk.Account) {
 	store := ctx.KVStore(am.key)
 	bz := am.encodeAccount(acc)
 	store.Set(addr, bz)
-}
-
-//----------------------------------------
-// sealedAccountMapper
-
-type sealedAccountMapper struct {
-	accountMapper
-}
-
-// There's no way for external modules to mutate the
-// sam.accountMapper.cdc from here, even with reflection.
-func (sam sealedAccountMapper) WireCodec() *wire.Codec {
-	panic("accountMapper is sealed")
 }
 
 //----------------------------------------

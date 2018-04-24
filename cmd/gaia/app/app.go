@@ -186,6 +186,7 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 
 var (
 	flagAccounts = "accounts"
+	flagChainID  = "chain-id"
 	flagOWK      = "overwrite-keys"
 )
 
@@ -193,6 +194,7 @@ var (
 func GaiaAppInit() server.AppInit {
 	fs := pflag.NewFlagSet("", pflag.ContinueOnError)
 	fs.String(flagAccounts, "foobar-10fermion,10baz-true", "genesis accounts in form: name1-coins-isval:name2-coins-isval:...")
+	fs.String(flagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	fs.BoolP(flagOWK, "k", false, "overwrite the for the accounts created, if false and key exists init will fail")
 	return server.AppInit{
 		Flags:          fs,
@@ -208,7 +210,11 @@ func GaiaGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, va
 	printMap := make(map[string]string)
 	var candidates []stake.Candidate
 	poolAssets := int64(0)
-	chainID = cmn.Fmt("test-chain-%v", cmn.RandStr(6))
+
+	chainID = viper.GetString(flagChainID)
+	if len(chainID) == 0 {
+		chainID = cmn.Fmt("test-chain-%v", cmn.RandStr(6))
+	}
 
 	// get genesis flag account information
 	accountsStr := viper.GetString(flagAccounts)
@@ -280,6 +286,7 @@ func GaiaGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, va
 
 	// assume everything is bonded from the get-go
 	stakeData.Pool.TotalSupply = poolAssets
+	stakeData.Pool.BondedPool = poolAssets
 	stakeData.Pool.BondedShares = sdk.NewRat(poolAssets)
 
 	genesisState := GenesisState{
@@ -304,6 +311,15 @@ func GaiaAppendAppState(cdc *wire.Codec, appState1, appState2 json.RawMessage) (
 		panic(err)
 	}
 	genState1.Accounts = append(genState1.Accounts, genState2.Accounts...)
+	genState1.StakeData.Candidates = append(genState1.StakeData.Candidates, genState2.StakeData.Candidates...)
+
+	// pool logic
+	CombinedSupply := genState1.StakeData.Pool.TotalSupply + genState2.StakeData.Pool.TotalSupply
+	CombinedBondedPool := genState1.StakeData.Pool.BondedPool + genState2.StakeData.Pool.BondedPool
+	CombinedBondedShares := genState1.StakeData.Pool.BondedShares.Add(genState2.StakeData.Pool.BondedShares)
+	genState1.StakeData.Pool.TotalSupply = CombinedSupply
+	genState1.StakeData.Pool.BondedPool = CombinedBondedPool
+	genState1.StakeData.Pool.BondedShares = CombinedBondedShares
 
 	return cdc.MarshalJSON(genState1)
 }

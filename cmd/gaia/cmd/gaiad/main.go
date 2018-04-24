@@ -24,7 +24,7 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, app.GaiaGenAppParams, generateApp)
+	server.AddCommands(ctx, cdc, rootCmd, app.GaiaAppInit(), generateApp)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.gaiad")

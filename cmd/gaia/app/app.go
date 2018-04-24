@@ -2,7 +2,11 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
+	"strings"
 
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -133,7 +137,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	stateJSON := req.AppStateBytes
 
 	genesisState := new(GenesisState)
-	err := json.Unmarshal(stateJSON, genesisState)
+	err := app.cdc.UnmarshalJSON(stateJSON, genesisState)
 	if err != nil {
 		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 		// return sdk.ErrGenesisParse("").TraceCause(err, "")
@@ -151,7 +155,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	return abci.ResponseInitChain{}
 }
 
-//__________________________________________________________
+//________________________________________________________________________________________
 
 // State to Unmarshal
 type GenesisState struct {
@@ -172,7 +176,7 @@ func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 	}
 }
 
-// convert GenesisAccount to GaiaAccount
+// convert GenesisAccount to auth.BaseAccount
 func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 	return &auth.BaseAccount{
 		Address: ga.Address,
@@ -180,44 +184,126 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 	}
 }
 
-// XXX func AddPiece
+var (
+	flagAccounts = "accounts"
+	flagOWK      = "overwrite-keys"
+)
+
+// get app init parameters for server init command
+func GaiaAppInit() server.AppInit {
+	fs := pflag.NewFlagSet("", pflag.ContinueOnError)
+	fs.String(flagAccounts, "foobar-10fermion,10baz-true", "genesis accounts in form: name1-coins-isval;name2-coins-isval;...")
+	fs.BoolP(flagOWK, "k", false, "overwrite the for the accounts created, if false and key exists init will fail")
+	return server.AppInit{
+		Flags:          fs,
+		GenAppParams:   GaiaGenAppParams,
+		AppendAppState: GaiaAppendAppState,
+	}
+}
 
 // Create the core parameters for genesis initialization for gaia
+// note that the pubkey input is this machines pubkey
 func GaiaGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error) {
 
-	// XXX what's the best way to pass around this information? have special flagset defined here?
-	// add keys to accounts (flag)
-	// generate X accounts each with X money
-	// generate X number of validators each bonded with X amount of token
-
-	var addr sdk.Address
-	var secret string
-	addr, secret, err = server.GenerateCoinKey()
-	if err != nil {
-		return
-	}
-
-	mm := map[string]string{"secret": secret}
-	bz, err := cdc.MarshalJSON(mm)
-	cliPrint = json.RawMessage(bz)
-
+	printMap := make(map[string]string)
+	var candidates []stake.Candidate
+	poolAssets := int64(0)
 	chainID = cmn.Fmt("test-chain-%v", cmn.RandStr(6))
 
-	validators = []tmtypes.GenesisValidator{{
-		PubKey: pubKey,
-		Power:  10,
-	}}
+	// get genesis flag account information
+	accountsStr := viper.GetString(flagAccounts)
+	accounts := strings.Split(accountsStr, ";")
+	genaccs := make([]GenesisAccount, len(accounts))
+	for i, account := range accounts {
+		p := strings.Split(account, "-")
+		if len(p) != 3 {
+			err = errors.New("input account has bad form, each account must be in form name-coins-isval, for example: foobar-10fermion,10baz-true")
+			return
+		}
+		name := p[0]
+		var coins sdk.Coins
+		coins, err = sdk.ParseCoins(p[1])
+		if err != nil {
+			return
+		}
+		isValidator := false
+		if p[2] == "true" {
+			isValidator = true
+		}
 
-	accAuth := auth.NewBaseAccountWithAddress(addr)
-	accAuth.Coins = sdk.Coins{{"fermion", 100000}}
-	acc := NewGenesisAccount(&accAuth)
-	genaccs := []GenesisAccount{acc}
+		var addr sdk.Address
+		var secret string
+		addr, secret, err = server.GenerateCoinKey()
+		if err != nil {
+			return
+		}
+
+		printMap["secret-"+name] = secret
+
+		// create the genesis account
+		accAuth := auth.NewBaseAccountWithAddress(addr)
+		accAuth.Coins = coins
+		acc := NewGenesisAccount(&accAuth)
+		genaccs[i] = acc
+
+		// add the validator
+		if isValidator {
+
+			// only use this machines pubkey the first time, all others are dummies
+			var pk crypto.PubKey
+			if i == 0 {
+				pk = pubKey
+			} else {
+				pk = crypto.GenPrivKeyEd25519().PubKey()
+			}
+
+			freePower := int64(100)
+			validator := tmtypes.GenesisValidator{
+				PubKey: pk,
+				Power:  freePower,
+			}
+			desc := stake.NewDescription(name, "", "", "")
+			candidate := stake.NewCandidate(addr, pk, desc)
+			candidate.Assets = sdk.NewRat(freePower)
+			poolAssets += freePower
+			validators = append(validators, validator)
+			candidates = append(candidates, candidate)
+		}
+	}
+
+	// create the print message
+	bz, err := cdc.MarshalJSON(printMap)
+	cliPrint = json.RawMessage(bz)
+
+	stakeData := stake.GetDefaultGenesisState()
+	stakeData.Candidates = candidates
+
+	// assume everything is bonded from the get-go
+	stakeData.Pool.TotalSupply = poolAssets
+	stakeData.Pool.BondedShares = sdk.NewRat(poolAssets)
 
 	genesisState := GenesisState{
 		Accounts:  genaccs,
-		StakeData: stake.GetDefaultGenesisState(),
+		StakeData: stakeData,
 	}
 
-	appState, err = json.MarshalIndent(genesisState, "", "\t")
+	appState, err = wire.MarshalJSONIndent(cdc, genesisState)
 	return
+}
+
+// append gaia app_state together, stitch the accounts together take the
+// staking parameters from the first appState
+func GaiaAppendAppState(cdc *wire.Codec, appState1, appState2 json.RawMessage) (appState json.RawMessage, err error) {
+	var genState1, genState2 GenesisState
+	err = cdc.UnmarshalJSON(appState1, &genState1)
+	if err != nil {
+		panic(err)
+	}
+	err = cdc.UnmarshalJSON(appState2, &genState2)
+	if err != nil {
+		panic(err)
+	}
+	genState1.Accounts = append(genState1.Accounts, genState2.Accounts...)
+
+	return cdc.MarshalJSON(genState1)
 }

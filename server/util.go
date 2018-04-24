@@ -67,13 +67,13 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 // add server commands
 func AddCommands(
 	ctx *Context, cdc *wire.Codec,
-	rootCmd *cobra.Command,
-	appState GenAppParams, appCreator AppCreator) {
+	rootCmd *cobra.Command, appInit AppInit,
+	appCreator AppCreator) {
 
 	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
 
 	rootCmd.AddCommand(
-		InitCmd(ctx, cdc, appState, nil),
+		InitCmd(ctx, cdc, appInit),
 		StartCmd(ctx, appCreator),
 		UnsafeResetAllCmd(ctx),
 		ShowNodeIDCmd(ctx),

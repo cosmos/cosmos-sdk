@@ -52,6 +52,9 @@ func NewEndBlocker(k Keeper) sdk.EndBlocker {
 func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	k.setPool(ctx, data.Pool)
 	k.setParams(ctx, data.Params)
+	for _, candidate := range data.Candidates {
+		k.setCandidate(ctx, candidate)
+	}
 }
 
 //_____________________________________________________________________

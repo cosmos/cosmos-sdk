@@ -1,8 +1,6 @@
 package app
 
 import (
-	"encoding/json"
-
 	abci "github.com/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -133,7 +131,7 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 	stateJSON := req.AppStateBytes
 
 	genesisState := new(types.GenesisState)
-	err := json.Unmarshal(stateJSON, genesisState)
+	err := app.cdc.UnmarshalJSON(stateJSON, genesisState)
 	if err != nil {
 		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 		// return sdk.ErrGenesisParse("").TraceCause(err, "")

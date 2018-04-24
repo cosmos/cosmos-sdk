@@ -25,10 +25,9 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
-// TODO flag to retrieve genesis file / config file from a URL?
 // get cmd to initialize all files for tendermint and application
 func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
-	flagOverwrite, flagPieceFile := "overwrite", "piece-file"
+	flagOverwrite, flagPieceFile, flagIP := "overwrite", "piece-file", "ip"
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize genesis config, priv-validator file, and p2p-node file",
@@ -79,9 +78,12 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 			// write the piece file is path specified
 			if viper.GetBool(flagPieceFile) {
 				//create the piece
-				ip, err := externalIP()
-				if err != nil {
-					return err
+				ip := viper.GetString(flagIP)
+				if len(ip) == 0 {
+					ip, err = externalIP()
+					if err != nil {
+						return err
+					}
 				}
 				piece := GenesisPiece{
 					ChainID:    chainID,
@@ -90,7 +92,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 					AppState:   appState,
 					Validators: validators,
 				}
-				bz, err := cdc.MarshalJSON(piece)
+				bz, err := wire.MarshalJSONIndent(cdc, piece)
 				if err != nil {
 					return err
 				}
@@ -107,6 +109,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 		cmd.Flags().BoolP(flagPieceFile, "a", false, "create an append file (under [--home]/[nodeID]piece.json) for others to import")
 	}
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the config file")
+	cmd.Flags().String(flagIP, "", "external facing IP to use if left blank IP will be retrieved from this machine")
 	cmd.Flags().AddFlagSet(appInit.Flags)
 	return cmd
 }
@@ -158,6 +161,7 @@ func FromPiecesCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Comman
 // append a genesis-piece
 func appendPiece(ctx *Context, cdc *wire.Codec, appInit AppInit, nodeKeyFile, genFile string) filepath.WalkFunc {
 	return func(pieceFile string, _ os.FileInfo, err error) error {
+		fmt.Printf("debug pieceFile: %v\n", pieceFile)
 		if err != nil {
 			return err
 		}
@@ -202,7 +206,7 @@ func appendPiece(ctx *Context, cdc *wire.Codec, appInit AppInit, nodeKeyFile, ge
 			return err
 		}
 		if piece.ChainID != genChainID {
-			return fmt.Errorf("piece chain id's are mismatched, %s != %s", piece.ChainID, genMap["chain_id"])
+			return fmt.Errorf("piece chain id's are mismatched, %s != %s", piece.ChainID, genChainID)
 		}
 
 		// combine the validator set
@@ -237,7 +241,8 @@ func appendPiece(ctx *Context, cdc *wire.Codec, appInit AppInit, nodeKeyFile, ge
 		if len(ctx.Config.P2P.PersistentPeers) == 0 {
 			comma = ""
 		}
-		ctx.Config.P2P.PersistentPeers += fmt.Sprintf("%s%s@%s", comma, piece.NodeID, piece.IP)
+		//newPeer := fmt.Sprintf("%s%s@%s:46656", comma, piece.NodeID, piece.IP)
+		ctx.Config.P2P.PersistentPeers += fmt.Sprintf("%s%s@%s:46656", comma, piece.NodeID, piece.IP)
 		configFilePath := filepath.Join(viper.GetString("home"), "config", "config.toml") //TODO this is annoying should be easier to get
 		cfg.WriteConfigFile(configFilePath, ctx.Config)
 

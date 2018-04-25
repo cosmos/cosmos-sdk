@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path"
 	"path/filepath"
 
@@ -25,9 +24,82 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
+// genesis piece structure for creating combined genesis
+type GenesisTx struct {
+	NodeID    string                   `json:"node_id"`
+	IP        string                   `json:"ip"`
+	Validator tmtypes.GenesisValidator `json:"validator"`
+	AppGenTx  json.RawMessage          `json:"app_gen_tx"`
+}
+
+var (
+	flagOverwrite = "overwrite"
+	flagGenTxs    = "gen-txs"
+	flagIP        = "ip"
+	flagChainID   = "ip"
+)
+
+// get cmd to initialize all files for tendermint and application
+func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "gen-tx",
+		Short: "Create genesis transaction file (under [--home]/gentx-[nodeID].json)",
+		Args:  cobra.NoArgs,
+		RunE: func(_ *cobra.Command, args []string) error {
+
+			config := ctx.Config
+			nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+			if err != nil {
+				return err
+			}
+			nodeID := string(nodeKey.ID())
+			pubKey := ReadOrCreatePrivValidator(config)
+
+			appGenTx, toPrint, validator, err := appInit.GenAppTx(cdc, pubKey)
+			if err != nil {
+				return err
+			}
+
+			ip := viper.GetString(flagIP)
+			if len(ip) == 0 {
+				ip, err = externalIP()
+				if err != nil {
+					return err
+				}
+			}
+
+			tx := GenesisTx{
+				NodeID:    nodeID,
+				IP:        ip,
+				Validator: validator,
+				AppGenTx:  appGenTx,
+			}
+			bz, err := wire.MarshalJSONIndent(cdc, tx)
+			if err != nil {
+				return err
+			}
+			name := fmt.Sprintf("gentx-%v.json", nodeID)
+			file := filepath.Join(viper.GetString("home"), name)
+			if err != nil {
+				return err
+				err = cmn.WriteFile(file, bz, 0644)
+			}
+
+			out, err := wire.MarshalJSONIndent(cdc, toPrint)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(out))
+			return nil
+		},
+	}
+	cmd.Flags().String(flagIP, "", "external facing IP to use if left blank IP will be retrieved from this machine")
+	cmd.Flags().AddFlagSet(appInit.FlagsAppTx)
+	return cmd
+}
+
 // get cmd to initialize all files for tendermint and application
 func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
-	flagOverwrite, flagPieceFile, flagIP := "overwrite", "piece-file", "ip"
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize genesis config, priv-validator file, and p2p-node file",
@@ -35,16 +107,46 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 		RunE: func(_ *cobra.Command, _ []string) error {
 
 			config := ctx.Config
-			pubkey := ReadOrCreatePrivValidator(config)
-
-			chainID, validators, appState, cliPrint, err := appInit.GenAppParams(cdc, pubkey)
+			nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 			if err != nil {
 				return err
+			}
+			nodeID := string(nodeKey.ID())
+			pubKey := ReadOrCreatePrivValidator(config)
+
+			chainID := viper.GetString(flagChainID)
+			if chainID == "" {
+				chainID = cmn.Fmt("test-chain-%v", cmn.RandStr(6))
 			}
 
 			genFile := config.GenesisFile()
 			if !viper.GetBool(flagOverwrite) && cmn.FileExists(genFile) {
-				return fmt.Errorf("genesis config file already exists: %v", genFile)
+				return fmt.Errorf("genesis.json file already exists: %v", genFile)
+			}
+
+			// process genesis transactions, or otherwise create one for defaults
+			var appGenTxs, cliPrints []json.RawMessage
+			var validators []tmtypes.GenesisValidator
+			var persistentPeers string
+			genTxsDir := viper.GetString(flagGenTxs)
+			if genTxsDir != "" {
+				validators, persistentPeers, appGenTxs, cliPrints = processGenTxs(genTxsDir, cdc, appInit)
+				config.P2P.PersistentPeers = persistentPeers
+				configFilePath := filepath.Join(viper.GetString("home"), "config", "config.toml") //TODO this is annoying should be easier to get
+				cfg.WriteConfigFile(configFilePath, config)
+			} else {
+				appTx, cliPrint, validator, err := appInit.GenAppTx(cdc, pubKey)
+				if err != nil {
+					return err
+				}
+				validators = []tmtypes.GenesisValidator{validator}
+				appGenTxs = []json.RawMessage{appTx}
+				cliPrints = []json.RawMessage{cliPrint}
+			}
+
+			appState, err := appInit.GenAppParams(cdc, appGenTxs)
+			if err != nil {
+				return err
 			}
 
 			err = WriteGenesisFile(cdc, genFile, chainID, validators, appState)
@@ -52,22 +154,15 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				return err
 			}
 
-			nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
-			if err != nil {
-				return err
-			}
-			nodeID := string(nodeKey.ID())
-
 			// print out some key information
-
 			toPrint := struct {
-				ChainID    string          `json:"chain_id"`
-				NodeID     string          `json:"node_id"`
-				AppMessage json.RawMessage `json:"app_message"`
+				ChainID    string            `json:"chain_id"`
+				NodeID     string            `json:"node_id"`
+				AppMessage []json.RawMessage `json:"app_messages"`
 			}{
 				chainID,
 				nodeID,
-				cliPrint,
+				cliPrints,
 			}
 			out, err := wire.MarshalJSONIndent(cdc, toPrint)
 			if err != nil {
@@ -75,179 +170,51 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 			}
 			fmt.Println(string(out))
 
-			// write the piece file is path specified
-			if viper.GetBool(flagPieceFile) {
-				//create the piece
-				ip := viper.GetString(flagIP)
-				if len(ip) == 0 {
-					ip, err = externalIP()
-					if err != nil {
-						return err
-					}
-				}
-				piece := GenesisPiece{
-					ChainID:    chainID,
-					NodeID:     nodeID,
-					IP:         ip,
-					AppState:   appState,
-					Validators: validators,
-				}
-				bz, err := wire.MarshalJSONIndent(cdc, piece)
-				if err != nil {
-					return err
-				}
-				name := fmt.Sprintf("piece%v.json", nodeID)
-				file := filepath.Join(viper.GetString("home"), name)
-				return cmn.WriteFile(file, bz, 0644)
-			}
-
 			return nil
 		},
 	}
-	if appInit.AppendAppState != nil {
-		cmd.AddCommand(FromPiecesCmd(ctx, cdc, appInit))
-		cmd.Flags().BoolP(flagPieceFile, "a", false, "create an append file (under [--home]/[nodeID]piece.json) for others to import")
-	}
-	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the config file")
-	cmd.Flags().String(flagIP, "", "external facing IP to use if left blank IP will be retrieved from this machine")
-	cmd.Flags().AddFlagSet(appInit.Flags)
+	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the genesis.json file")
+	cmd.Flags().String(flagChainID, "", "designated chain-id for the genesis")
+	cmd.Flags().AddFlagSet(appInit.FlagsAppParams)
 	return cmd
 }
 
-// genesis piece structure for creating combined genesis
-type GenesisPiece struct {
-	ChainID    string                     `json:"chain_id"`
-	NodeID     string                     `json:"node_id"`
-	IP         string                     `json:"ip"`
-	AppState   json.RawMessage            `json:"app_state"`
-	Validators []tmtypes.GenesisValidator `json:"validators"`
-}
-
-// get cmd to initialize all files for tendermint and application
-func FromPiecesCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
-	return &cobra.Command{
-		Use:   "from-pieces [directory]",
-		Short: "Create genesis from directory of genesis pieces",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(_ *cobra.Command, args []string) error {
-			pieceDir := args[0]
-
-			// ensure that the privVal and nodeKey file already exist
-			config := ctx.Config
-			privValFile := config.PrivValidatorFile()
-			nodeKeyFile := config.NodeKeyFile()
-			if !cmn.FileExists(privValFile) {
-				return fmt.Errorf("privVal file must already exist, please initialize with init cmd: %v", privValFile)
-			}
-			if !cmn.FileExists(nodeKeyFile) {
-				return fmt.Errorf("nodeKey file must already exist, please initialize with init cmd: %v", nodeKeyFile)
-			}
-
-			// remove genFile for creation
-			genFile := config.GenesisFile()
-			os.Remove(genFile)
-
-			// deterministically walk the directory for genesis-piece files to import
-			err := filepath.Walk(pieceDir, appendPiece(ctx, cdc, appInit, nodeKeyFile, genFile))
-			if err != nil {
-				return err
-			}
-
-			return nil
-		},
-	}
-}
-
 // append a genesis-piece
-func appendPiece(ctx *Context, cdc *wire.Codec, appInit AppInit, nodeKeyFile, genFile string) filepath.WalkFunc {
-	return func(pieceFile string, _ os.FileInfo, err error) error {
-		fmt.Printf("debug pieceFile: %v\n", pieceFile)
-		if err != nil {
-			return err
-		}
-		if path.Ext(pieceFile) != ".json" {
+func processGenTxs(genTxsDir string, cdc *wire.Codec, appInit AppInit) (
+	validators []tmtypes.GenesisValidator, appGenTxs, cliPrints []json.RawMessage, persistentPeers string, err error) {
+
+	fos, err := ioutil.ReadDir(genTxsDir)
+	for _, fo := range fos {
+		filename := fo.Name()
+		if !fo.IsDir() && (path.Ext(filename) != ".json") {
 			return nil
 		}
 
-		// get the piece file bytes
-		bz, err := ioutil.ReadFile(pieceFile)
+		// get the genTx
+		bz, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return err
+		}
+		var genTx GenesisTx
+		err = cdc.UnmarshalJSON(bz, &genTx)
 		if err != nil {
 			return err
 		}
 
-		// get the piece
-		var piece GenesisPiece
-		err = cdc.UnmarshalJSON(bz, &piece)
-		if err != nil {
-			return err
-		}
+		// combine some stuff
+		validators = append(validators, genTx.Validator)
+		appGenTxs = append(appGenTxs, genTx.AppGenTxs)
+		cliPrints = append(cliPrints, genTx.CliPrints)
 
-		// if the first file, create the genesis from scratch with piece inputs
-		if !cmn.FileExists(genFile) {
-			return WriteGenesisFile(cdc, genFile, piece.ChainID, piece.Validators, piece.AppState)
-		}
-
-		// read in the genFile
-		bz, err = ioutil.ReadFile(genFile)
-		if err != nil {
-			return err
-		}
-		var genMap map[string]json.RawMessage
-		err = cdc.UnmarshalJSON(bz, &genMap)
-		if err != nil {
-			return err
-		}
-		appState := genMap["app_state"]
-
-		// verify chain-ids are the same
-		var genChainID string
-		err = cdc.UnmarshalJSON(genMap["chain_id"], &genChainID)
-		if err != nil {
-			return err
-		}
-		if piece.ChainID != genChainID {
-			return fmt.Errorf("piece chain id's are mismatched, %s != %s", piece.ChainID, genChainID)
-		}
-
-		// combine the validator set
-		var validators []tmtypes.GenesisValidator
-		err = cdc.UnmarshalJSON(genMap["validators"], &validators)
-		if err != nil {
-			return err
-		}
-		validators = append(validators, piece.Validators...)
-
-		// combine the app state
-		appState, err = appInit.AppendAppState(cdc, appState, piece.AppState)
-		if err != nil {
-			return err
-		}
-
-		// write the appended genesis file
-		err = WriteGenesisFile(cdc, genFile, piece.ChainID, validators, appState)
-		if err != nil {
-			return err
-		}
-
-		// Add a persistent peer if the config (if it's not me)
-		myIP, err := externalIP()
-		if err != nil {
-			return err
-		}
-		if myIP == piece.IP {
-			return nil
-		}
+		// Add a persistent peer
 		comma := ","
-		if len(ctx.Config.P2P.PersistentPeers) == 0 {
+		if len(persistentPeers) == 0 {
 			comma = ""
 		}
-		//newPeer := fmt.Sprintf("%s%s@%s:46656", comma, piece.NodeID, piece.IP)
-		ctx.Config.P2P.PersistentPeers += fmt.Sprintf("%s%s@%s:46656", comma, piece.NodeID, piece.IP)
-		configFilePath := filepath.Join(viper.GetString("home"), "config", "config.toml") //TODO this is annoying should be easier to get
-		cfg.WriteConfigFile(configFilePath, ctx.Config)
-
-		return nil
+		persistentPeers += fmt.Sprintf("%s%s@%s:46656", comma, piece.NodeID, piece.IP)
 	}
+
+	return nil
 }
 
 //________________________________________________________________________________________
@@ -299,15 +266,17 @@ func addAppStateToGenesis(cdc *wire.Codec, genesisConfigPath string, appState js
 // Core functionality passed from the application to the server init command
 type AppInit struct {
 
-	// flags required for GenAppParams
-	Flags *pflag.FlagSet
+	// flags required for application init functions
+	FlagsAppParams *pflag.FlagSet
+	FlagsAppTx     *pflag.FlagSet
 
 	// GenAppParams creates the core parameters initialization. It takes in a
 	// pubkey meant to represent the pubkey of the validator of this machine.
-	GenAppParams func(*wire.Codec, crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error)
+	GenAppParams func(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error)
 
-	// append appState1 with appState2
-	AppendAppState func(cdc *wire.Codec, appState1, appState2 json.RawMessage) (appState json.RawMessage, err error)
+	// create the application genesis tx
+	GenAppTx func(cdc *wire.Codec, pk crypto.PubKey) (
+		appTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error)
 }
 
 // simple default application init
@@ -316,7 +285,8 @@ var DefaultAppInit = AppInit{
 }
 
 // Create one account with a whole bunch of mycoin in it
-func SimpleGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error) {
+func SimpleGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey, _ json.RawMessage) (
+	validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error) {
 
 	var addr sdk.Address
 
@@ -329,8 +299,6 @@ func SimpleGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, 
 	mm := map[string]string{"secret": secret}
 	bz, err := cdc.MarshalJSON(mm)
 	cliPrint = json.RawMessage(bz)
-
-	chainID = cmn.Fmt("test-chain-%v", cmn.RandStr(6))
 
 	validators = []tmtypes.GenesisValidator{{
 		PubKey: pubKey,

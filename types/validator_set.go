@@ -16,7 +16,7 @@ func init() {
 type Validator = abci.Validator
 
 type ValidatorSetKeeper interface {
-	GetValidators(Context) []*Validator
+	Validators(Context) []*Validator
 	Size(Context) int
 	IsValidator(Context, Address) bool
 	GetByAddress(Context, Address) (int, *Validator)

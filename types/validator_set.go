@@ -2,16 +2,7 @@ package types
 
 import (
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/go-crypto"
-
-	"github.com/cosmos/cosmos-sdk/wire"
 )
-
-var cdc = wire.NewCodec()
-
-func init() {
-	crypto.RegisterAmino(cdc)
-}
 
 type Validator = abci.Validator
 

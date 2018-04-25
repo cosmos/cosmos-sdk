@@ -95,7 +95,7 @@ func printBlock(cmd *cobra.Command, args []string) error {
 // REST
 
 // REST handler to get a block
-func BlockRequestHandler(ctx context.CoreContext) func(http.ResponseWriter, *http.Request) {
+func BlockRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		height, err := strconv.ParseInt(vars["height"], 10, 64)
@@ -121,7 +121,7 @@ func BlockRequestHandler(ctx context.CoreContext) func(http.ResponseWriter, *htt
 }
 
 // REST handler to get the latest block
-func LatestBlockRequestHandler(ctx context.CoreContext) func(http.ResponseWriter, *http.Request) {
+func LatestBlockRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		height, err := GetChainHeight(ctx)
 		if err != nil {

@@ -73,7 +73,7 @@ func printValidators(cmd *cobra.Command, args []string) error {
 // REST
 
 // Validator Set at a height REST handler
-func ValidatorSetRequestHandler(ctx context.CoreContext) func(http.ResponseWriter, *http.Request) {
+func ValidatorSetRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		height, err := strconv.ParseInt(vars["height"], 10, 64)
@@ -99,7 +99,7 @@ func ValidatorSetRequestHandler(ctx context.CoreContext) func(http.ResponseWrite
 }
 
 // Latest Validator Set REST handler
-func LatestValidatorSetRequestHandler(ctx context.CoreContext) func(http.ResponseWriter, *http.Request) {
+func LatestValidatorSetRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		height, err := GetChainHeight(ctx)
 		if err != nil {

@@ -17,7 +17,7 @@ import (
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/accounts/{address}/send", SendRequestHandler(cdc, kb, ctx)).Methods("POST")
+	r.HandleFunc("/accounts/{address}/send", SendRequestHandlerFn(cdc, kb, ctx)).Methods("POST")
 }
 
 type sendBody struct {
@@ -30,8 +30,8 @@ type sendBody struct {
 	Sequence         int64     `json:"sequence"`
 }
 
-// SendRequestHandler - http request handler to send coins to a address
-func SendRequestHandler(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) func(http.ResponseWriter, *http.Request) {
+// SendRequestHandlerFn - http request handler to send coins to a address
+func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
 		vars := mux.Vars(r)

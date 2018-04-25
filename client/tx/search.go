@@ -94,7 +94,7 @@ func formatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]txInfo, error) 
 // REST
 
 // Search Tx REST Handler
-func SearchTxRequestHandler(ctx context.CoreContext, cdc *wire.Codec) func(http.ResponseWriter, *http.Request) {
+func SearchTxRequestHandlerFn(ctx context.CoreContext, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tag := r.FormValue("tag")
 		if tag == "" {

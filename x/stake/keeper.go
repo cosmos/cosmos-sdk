@@ -493,3 +493,49 @@ func (k Keeper) setPool(ctx sdk.Context, p Pool) {
 	store.Set(PoolKey, b)
 	k.pool = Pool{} //clear the cache
 }
+
+//__________________________________________________________________________
+
+// Implements sdk.ValidatorSetKeeper
+
+func (k Keeper) Hash() []byte {
+	return nil
+}
+
+func (k Keeper) Size(ctx sdk.Context) int {
+	return len(k.GetValidators(ctx))
+}
+
+func (k Keeper) IsValidator(ctx sdk.Context, addr sdk.Address) bool {
+	for _, v := range k.GetValidators(ctx) {
+		if bytes.Equal(v.Address, addr) {
+			return true
+		}
+	}
+	return false
+}
+
+func (k Keeper) GetByAddress(ctx sdk.Context, addr sdk.Address) (int, *sdk.Validator) {
+	for i, v := range k.GetValidators(ctx) {
+		if bytes.Equal(v.Address, addr) {
+			val := v.abciValidator(k.cdc)
+			return i, &val
+		}
+	}
+	return -1, nil
+}
+
+func (k Keeper) GetByIndex(ctx sdk.Context, index int) *sdk.Validator {
+	valset := k.GetValidators(ctx)
+
+	if index < 0 || index >= len(valset) {
+		return nil
+	}
+
+	val := valset[index].abciValidator(k.cdc)
+	return &val
+}
+
+func (k Keeper) TotalPower() sdk.Rat {
+	return sdk.ZeroRat
+}

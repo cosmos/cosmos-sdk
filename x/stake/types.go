@@ -2,9 +2,9 @@ package stake
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
-	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
+
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // GenesisState - all staking state that must be provided at genesis
@@ -159,8 +159,8 @@ type Validator struct {
 }
 
 // abci validator from stake validator type
-func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
-	return abci.Validator{
+func (v Validator) abciValidator(cdc *wire.Codec) sdk.Validator {
+	return sdk.Validator{
 		PubKey: v.PubKey.Bytes(),
 		Power:  v.Power.Evaluate(),
 	}
@@ -168,8 +168,8 @@ func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
 
 // abci validator from stake validator type
 // with zero power used for validator updates
-func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
-	return abci.Validator{
+func (v Validator) abciValidatorZero(cdc *wire.Codec) sdk.Validator {
+	return sdk.Validator{
 		PubKey: v.PubKey.Bytes(),
 		Power:  0,
 	}

@@ -8,7 +8,6 @@ import (
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
-	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
@@ -106,17 +105,9 @@ func InitChainer(key sdk.StoreKey) func(sdk.Context, abci.RequestInitChain) abci
 	}
 }
 
-// GenAppParams can be passed into InitCmd, returns a static string of a few
+// AppGenState can be passed into InitCmd, returns a static string of a few
 // key-values that can be parsed by InitChainer
-func GenAppParams(_ *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error) {
-
-	chainID = fmt.Sprintf("test-chain-%v", cmn.RandStr(6))
-
-	validators = []tmtypes.GenesisValidator{{
-		PubKey: pubKey,
-		Power:  10,
-	}}
-
+func AppGenState(_ *wire.Codec, _ []json.RawMessage) (appState json.RawMessage, err error) {
 	appState = json.RawMessage(`{
   "values": [
     {
@@ -129,5 +120,16 @@ func GenAppParams(_ *wire.Codec, pubKey crypto.PubKey) (chainID string, validato
     }
   ]
 }`)
+	return
+}
+
+// Return a validator, not much else
+func AppGenTx(_ *wire.Codec, pk crypto.PubKey) (
+	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
+
+	validator = tmtypes.GenesisValidator{
+		PubKey: pk,
+		Power:  10,
+	}
 	return
 }

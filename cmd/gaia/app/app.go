@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 	"errors"
-	"strings"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -185,141 +184,123 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 }
 
 var (
-	flagAccounts = "accounts"
-	flagChainID  = "chain-id"
-	flagOWK      = "overwrite-keys"
+	flagName = "name"
+	//flagOWK      = "overwrite-keys"
 )
 
 // get app init parameters for server init command
 func GaiaAppInit() server.AppInit {
-	fs := pflag.NewFlagSet("", pflag.ContinueOnError)
-	fs.String(flagAccounts, "foobar-10fermion,10baz-true", "genesis accounts in form: name1-coins-isval:name2-coins-isval:...")
-	fs.String(flagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	fs.BoolP(flagOWK, "k", false, "overwrite the for the accounts created, if false and key exists init will fail")
+	fsAppGenState := pflag.NewFlagSet("", pflag.ContinueOnError)
+	//fsAppGenState.BoolP(flagOWK, "k", false, "overwrite the for the accounts created, if false and key exists init will fail")
+
+	fsAppGenTx := pflag.NewFlagSet("", pflag.ContinueOnError)
+	fsAppGenTx.String(flagName, "", "validator moniker, if left blank, do not add validator")
+
 	return server.AppInit{
-		Flags:          fs,
-		GenAppParams:   GaiaGenAppParams,
-		AppendAppState: GaiaAppendAppState,
+		FlagsAppGenState: fsAppGenState,
+		FlagsAppGenTx:    fsAppGenTx,
+		AppGenState:      GaiaAppGenState,
+		AppGenTx:         GaiaAppGenTx,
 	}
 }
 
+// simple genesis tx
+type GaiaGenTx struct {
+	Name    string        `json:"name"`
+	Address sdk.Address   `json:"address"`
+	PubKey  crypto.PubKey `json:"pub_key"`
+}
+
+// power given to validators in gaia init functions
+var FreePower = int64(100)
+
 // Create the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey
-func GaiaGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey) (chainID string, validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error) {
+func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
 
-	printMap := make(map[string]string)
-	var candidates []stake.Candidate
-	poolAssets := int64(0)
-
-	chainID = viper.GetString(flagChainID)
-	if len(chainID) == 0 {
-		chainID = cmn.Fmt("test-chain-%v", cmn.RandStr(6))
+	if len(appGenTxs) == 0 {
+		err = errors.New("must provide at least genesis transaction")
+		return
 	}
 
+	// start with the default staking genesis state
+	stakeData := stake.GetDefaultGenesisState()
+
 	// get genesis flag account information
-	accountsStr := viper.GetString(flagAccounts)
-	accounts := strings.Split(accountsStr, ":")
-	genaccs := make([]GenesisAccount, len(accounts))
-	for i, account := range accounts {
-		p := strings.Split(account, "-")
-		if len(p) != 3 {
-			err = errors.New("input account has bad form, each account must be in form name-coins-isval, for example: foobar-10fermion,10baz-true")
-			return
-		}
-		name := p[0]
-		var coins sdk.Coins
-		coins, err = sdk.ParseCoins(p[1])
-		if err != nil {
-			return
-		}
-		isValidator := false
-		if p[2] == "true" {
-			isValidator = true
-		}
+	genaccs := make([]GenesisAccount, len(appGenTxs))
+	for i, appGenTx := range appGenTxs {
 
-		var addr sdk.Address
-		var secret string
-		addr, secret, err = server.GenerateCoinKey()
+		var genTx GaiaGenTx
+		err = cdc.UnmarshalJSON(appGenTx, &genTx)
 		if err != nil {
 			return
 		}
 
-		printMap["secret-"+name] = secret
-
-		// create the genesis account
-		accAuth := auth.NewBaseAccountWithAddress(addr)
-		accAuth.Coins = coins
+		// create the genesis account, give'm few fermions and a buncha token with there name
+		accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
+		accAuth.Coins = sdk.Coins{
+			{genTx.Name + "Token", 1000},
+			{"fermion", 50},
+		}
 		acc := NewGenesisAccount(&accAuth)
 		genaccs[i] = acc
 
 		// add the validator
-		if isValidator {
+		if len(genTx.Name) > 0 {
+			desc := stake.NewDescription(genTx.Name, "", "", "")
+			candidate := stake.NewCandidate(genTx.Address, genTx.PubKey, desc)
+			candidate.Assets = sdk.NewRat(FreePower)
+			stakeData.Candidates = append(stakeData.Candidates, candidate)
 
-			// only use this machines pubkey the first time, all others are dummies
-			var pk crypto.PubKey
-			if i == 0 {
-				pk = pubKey
-			} else {
-				pk = crypto.GenPrivKeyEd25519().PubKey()
-			}
-
-			freePower := int64(100)
-			validator := tmtypes.GenesisValidator{
-				PubKey: pk,
-				Power:  freePower,
-			}
-			desc := stake.NewDescription(name, "", "", "")
-			candidate := stake.NewCandidate(addr, pk, desc)
-			candidate.Assets = sdk.NewRat(freePower)
-			poolAssets += freePower
-			validators = append(validators, validator)
-			candidates = append(candidates, candidate)
+			// pool logic
+			stakeData.Pool.TotalSupply += FreePower
+			stakeData.Pool.BondedPool += FreePower
+			stakeData.Pool.BondedShares = sdk.NewRat(stakeData.Pool.BondedPool)
 		}
 	}
 
-	// create the print message
-	bz, err := cdc.MarshalJSON(printMap)
-	cliPrint = json.RawMessage(bz)
-
-	stakeData := stake.GetDefaultGenesisState()
-	stakeData.Candidates = candidates
-
-	// assume everything is bonded from the get-go
-	stakeData.Pool.TotalSupply = poolAssets
-	stakeData.Pool.BondedPool = poolAssets
-	stakeData.Pool.BondedShares = sdk.NewRat(poolAssets)
-
+	// create the final app state
 	genesisState := GenesisState{
 		Accounts:  genaccs,
 		StakeData: stakeData,
 	}
-
 	appState, err = wire.MarshalJSONIndent(cdc, genesisState)
 	return
 }
 
-// append gaia app_state together, stitch the accounts together take the
-// staking parameters from the first appState
-func GaiaAppendAppState(cdc *wire.Codec, appState1, appState2 json.RawMessage) (appState json.RawMessage, err error) {
-	var genState1, genState2 GenesisState
-	err = cdc.UnmarshalJSON(appState1, &genState1)
-	if err != nil {
-		panic(err)
-	}
-	err = cdc.UnmarshalJSON(appState2, &genState2)
-	if err != nil {
-		panic(err)
-	}
-	genState1.Accounts = append(genState1.Accounts, genState2.Accounts...)
-	genState1.StakeData.Candidates = append(genState1.StakeData.Candidates, genState2.StakeData.Candidates...)
+// Generate a gaia genesis transaction
+func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
+	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
-	// pool logic
-	CombinedSupply := genState1.StakeData.Pool.TotalSupply + genState2.StakeData.Pool.TotalSupply
-	CombinedBondedPool := genState1.StakeData.Pool.BondedPool + genState2.StakeData.Pool.BondedPool
-	CombinedBondedShares := genState1.StakeData.Pool.BondedShares.Add(genState2.StakeData.Pool.BondedShares)
-	genState1.StakeData.Pool.TotalSupply = CombinedSupply
-	genState1.StakeData.Pool.BondedPool = CombinedBondedPool
-	genState1.StakeData.Pool.BondedShares = CombinedBondedShares
+	var addr sdk.Address
+	var secret string
+	addr, secret, err = server.GenerateCoinKey()
+	if err != nil {
+		return
+	}
 
-	return cdc.MarshalJSON(genState1)
+	var bz []byte
+	gaiaGenTx := GaiaGenTx{
+		Name:    viper.GetString(flagName),
+		Address: addr,
+		PubKey:  pk,
+	}
+	bz, err = wire.MarshalJSONIndent(cdc, gaiaGenTx)
+	if err != nil {
+		return
+	}
+	appGenTx = json.RawMessage(bz)
+
+	mm := map[string]string{"secret": secret}
+	bz, err = cdc.MarshalJSON(mm)
+	if err != nil {
+		return
+	}
+	cliPrint = json.RawMessage(bz)
+
+	validator = tmtypes.GenesisValidator{
+		PubKey: pk,
+		Power:  FreePower,
+	}
+	return
 }

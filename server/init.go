@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -30,13 +32,14 @@ type GenesisTx struct {
 	IP        string                   `json:"ip"`
 	Validator tmtypes.GenesisValidator `json:"validator"`
 	AppGenTx  json.RawMessage          `json:"app_gen_tx"`
+	CLIPrint  json.RawMessage          `json:"cli_print"`
 }
 
 var (
 	flagOverwrite = "overwrite"
 	flagGenTxs    = "gen-txs"
 	flagIP        = "ip"
-	flagChainID   = "ip"
+	flagChainID   = "chain-id"
 )
 
 // get cmd to initialize all files for tendermint and application
@@ -55,7 +58,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 			nodeID := string(nodeKey.ID())
 			pubKey := ReadOrCreatePrivValidator(config)
 
-			appGenTx, toPrint, validator, err := appInit.GenAppTx(cdc, pubKey)
+			appGenTx, cliPrint, validator, err := appInit.AppGenTx(cdc, pubKey)
 			if err != nil {
 				return err
 			}
@@ -73,6 +76,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				IP:        ip,
 				Validator: validator,
 				AppGenTx:  appGenTx,
+				CLIPrint:  cliPrint,
 			}
 			bz, err := wire.MarshalJSONIndent(cdc, tx)
 			if err != nil {
@@ -85,7 +89,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				err = cmn.WriteFile(file, bz, 0644)
 			}
 
-			out, err := wire.MarshalJSONIndent(cdc, toPrint)
+			out, err := wire.MarshalJSONIndent(cdc, cliPrint)
 			if err != nil {
 				return err
 			}
@@ -94,7 +98,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 		},
 	}
 	cmd.Flags().String(flagIP, "", "external facing IP to use if left blank IP will be retrieved from this machine")
-	cmd.Flags().AddFlagSet(appInit.FlagsAppTx)
+	cmd.Flags().AddFlagSet(appInit.FlagsAppGenTx)
 	return cmd
 }
 
@@ -125,26 +129,31 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 			}
 
 			// process genesis transactions, or otherwise create one for defaults
-			var appGenTxs, cliPrints []json.RawMessage
+			var appMessage json.RawMessage
+			var appGenTxs []json.RawMessage
 			var validators []tmtypes.GenesisValidator
 			var persistentPeers string
+
 			genTxsDir := viper.GetString(flagGenTxs)
 			if genTxsDir != "" {
-				validators, persistentPeers, appGenTxs, cliPrints = processGenTxs(genTxsDir, cdc, appInit)
+				validators, appGenTxs, persistentPeers, err = processGenTxs(genTxsDir, cdc, appInit)
+				if err != nil {
+					return err
+				}
 				config.P2P.PersistentPeers = persistentPeers
 				configFilePath := filepath.Join(viper.GetString("home"), "config", "config.toml") //TODO this is annoying should be easier to get
 				cfg.WriteConfigFile(configFilePath, config)
 			} else {
-				appTx, cliPrint, validator, err := appInit.GenAppTx(cdc, pubKey)
+				appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey)
+				appMessage = am
 				if err != nil {
 					return err
 				}
 				validators = []tmtypes.GenesisValidator{validator}
-				appGenTxs = []json.RawMessage{appTx}
-				cliPrints = []json.RawMessage{cliPrint}
+				appGenTxs = []json.RawMessage{appGenTx}
 			}
 
-			appState, err := appInit.GenAppParams(cdc, appGenTxs)
+			appState, err := appInit.AppGenState(cdc, appGenTxs)
 			if err != nil {
 				return err
 			}
@@ -156,13 +165,13 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 
 			// print out some key information
 			toPrint := struct {
-				ChainID    string            `json:"chain_id"`
-				NodeID     string            `json:"node_id"`
-				AppMessage []json.RawMessage `json:"app_messages"`
+				ChainID    string          `json:"chain_id"`
+				NodeID     string          `json:"node_id"`
+				AppMessage json.RawMessage `json:"app_message"`
 			}{
 				chainID,
 				nodeID,
-				cliPrints,
+				appMessage,
 			}
 			out, err := wire.MarshalJSONIndent(cdc, toPrint)
 			if err != nil {
@@ -174,47 +183,55 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the genesis.json file")
-	cmd.Flags().String(flagChainID, "", "designated chain-id for the genesis")
-	cmd.Flags().AddFlagSet(appInit.FlagsAppParams)
+	cmd.Flags().String(flagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().String(flagGenTxs, "", "directory containing the genesis transactions")
+	cmd.Flags().AddFlagSet(appInit.FlagsAppGenState)
+	cmd.Flags().AddFlagSet(appInit.FlagsAppGenTx) // need to add this flagset for when no GenTx's provided
+	cmd.AddCommand(GenTxCmd(ctx, cdc, appInit))
 	return cmd
 }
 
 // append a genesis-piece
 func processGenTxs(genTxsDir string, cdc *wire.Codec, appInit AppInit) (
-	validators []tmtypes.GenesisValidator, appGenTxs, cliPrints []json.RawMessage, persistentPeers string, err error) {
+	validators []tmtypes.GenesisValidator, appGenTxs []json.RawMessage, persistentPeers string, err error) {
 
-	fos, err := ioutil.ReadDir(genTxsDir)
+	// XXX sort the files by contents just incase people renamed their files
+	var fos []os.FileInfo
+	fos, err = ioutil.ReadDir(genTxsDir)
+	if err != nil {
+		return
+	}
 	for _, fo := range fos {
 		filename := fo.Name()
 		if !fo.IsDir() && (path.Ext(filename) != ".json") {
-			return nil
+			return
 		}
 
 		// get the genTx
-		bz, err := ioutil.ReadFile(filename)
+		var bz []byte
+		bz, err = ioutil.ReadFile(filename)
 		if err != nil {
-			return err
+			return
 		}
 		var genTx GenesisTx
 		err = cdc.UnmarshalJSON(bz, &genTx)
 		if err != nil {
-			return err
+			return
 		}
 
 		// combine some stuff
 		validators = append(validators, genTx.Validator)
-		appGenTxs = append(appGenTxs, genTx.AppGenTxs)
-		cliPrints = append(cliPrints, genTx.CliPrints)
+		appGenTxs = append(appGenTxs, genTx.AppGenTx)
 
 		// Add a persistent peer
 		comma := ","
 		if len(persistentPeers) == 0 {
 			comma = ""
 		}
-		persistentPeers += fmt.Sprintf("%s%s@%s:46656", comma, piece.NodeID, piece.IP)
+		persistentPeers += fmt.Sprintf("%s%s@%s:46656", comma, genTx.NodeID, genTx.IP)
 	}
 
-	return nil
+	return
 }
 
 //________________________________________________________________________________________
@@ -267,43 +284,44 @@ func addAppStateToGenesis(cdc *wire.Codec, genesisConfigPath string, appState js
 type AppInit struct {
 
 	// flags required for application init functions
-	FlagsAppParams *pflag.FlagSet
-	FlagsAppTx     *pflag.FlagSet
+	FlagsAppGenState *pflag.FlagSet
+	FlagsAppGenTx    *pflag.FlagSet
 
-	// GenAppParams creates the core parameters initialization. It takes in a
+	// AppGenState creates the core parameters initialization. It takes in a
 	// pubkey meant to represent the pubkey of the validator of this machine.
-	GenAppParams func(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error)
+	AppGenState func(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error)
 
 	// create the application genesis tx
-	GenAppTx func(cdc *wire.Codec, pk crypto.PubKey) (
-		appTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error)
+	AppGenTx func(cdc *wire.Codec, pk crypto.PubKey) (
+		appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error)
 }
+
+//_____________________________________________________________________
 
 // simple default application init
 var DefaultAppInit = AppInit{
-	GenAppParams: SimpleGenAppParams,
+	AppGenState: SimpleAppGenState,
+	AppGenTx:    SimpleAppGenTx,
 }
 
-// Create one account with a whole bunch of mycoin in it
-func SimpleGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey, _ json.RawMessage) (
-	validators []tmtypes.GenesisValidator, appState, cliPrint json.RawMessage, err error) {
+// simple genesis tx
+type SimpleGenTx struct {
+	Addr sdk.Address `json:"addr"`
+}
 
-	var addr sdk.Address
+// create the genesis app state
+func SimpleAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
 
-	var secret string
-	addr, secret, err = GenerateCoinKey()
-	if err != nil {
+	if len(appGenTxs) != 1 {
+		err = errors.New("must provide a single genesis transaction")
 		return
 	}
 
-	mm := map[string]string{"secret": secret}
-	bz, err := cdc.MarshalJSON(mm)
-	cliPrint = json.RawMessage(bz)
-
-	validators = []tmtypes.GenesisValidator{{
-		PubKey: pubKey,
-		Power:  10,
-	}}
+	var genTx SimpleGenTx
+	err = cdc.UnmarshalJSON(appGenTxs[0], &genTx)
+	if err != nil {
+		return
+	}
 
 	appState = json.RawMessage(fmt.Sprintf(`{
   "accounts": [{
@@ -315,7 +333,40 @@ func SimpleGenAppParams(cdc *wire.Codec, pubKey crypto.PubKey, _ json.RawMessage
       }
     ]
   }]
-}`, addr.String()))
+}`, genTx.Addr.String()))
+	return
+}
+
+// Generate a genesis transaction
+func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
+	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
+
+	var addr sdk.Address
+	var secret string
+	addr, secret, err = GenerateCoinKey()
+	if err != nil {
+		return
+	}
+
+	var bz []byte
+	simpleGenTx := SimpleGenTx{addr}
+	bz, err = cdc.MarshalJSON(simpleGenTx)
+	if err != nil {
+		return
+	}
+	appGenTx = json.RawMessage(bz)
+
+	mm := map[string]string{"secret": secret}
+	bz, err = cdc.MarshalJSON(mm)
+	if err != nil {
+		return
+	}
+	cliPrint = json.RawMessage(bz)
+
+	validator = tmtypes.GenesisValidator{
+		PubKey: pk,
+		Power:  10,
+	}
 	return
 }
 

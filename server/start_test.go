@@ -28,7 +28,8 @@ func TestStartStandAlone(t *testing.T) {
 	ctx := NewContext(cfg, logger)
 	cdc := wire.NewCodec()
 	appInit := AppInit{
-		GenAppParams: mock.GenAppParams,
+		AppGenState: mock.AppGenState,
+		AppGenTx:    mock.AppGenTx,
 	}
 	initCmd := InitCmd(ctx, cdc, appInit)
 	err = initCmd.RunE(nil, nil)
@@ -58,7 +59,8 @@ func TestStartWithTendermint(t *testing.T) {
 	ctx := NewContext(cfg, logger)
 	cdc := wire.NewCodec()
 	appInit := AppInit{
-		GenAppParams: mock.GenAppParams,
+		AppGenState: mock.AppGenState,
+		AppGenTx:    mock.AppGenTx,
 	}
 	initCmd := InitCmd(ctx, cdc, appInit)
 	err = initCmd.RunE(nil, nil)

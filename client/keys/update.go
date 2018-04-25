@@ -53,13 +53,16 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+///////////////////////
 // REST
 
+// update key request REST body
 type UpdateKeyBody struct {
 	NewPassword string `json:"new_password"`
 	OldPassword string `json:"old_password"`
 }
 
+// update key REST handler
 func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]

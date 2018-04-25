@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/go-crypto"
 )
 
+// amino codec to marshal/unmarshal
 type Codec = amino.Codec
 
 func NewCodec() *Codec {
@@ -15,10 +16,12 @@ func NewCodec() *Codec {
 	return cdc
 }
 
+// Register the go-crypto to the codec
 func RegisterCrypto(cdc *Codec) {
 	crypto.RegisterAmino(cdc)
 }
 
+// attempt to make some pretty json
 func MarshalJSONIndent(cdc *Codec, obj interface{}) ([]byte, error) {
 	bz, err := cdc.MarshalJSON(obj)
 	if err != nil {

@@ -70,16 +70,16 @@ func (c initCmd) run(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// generate secrete and address
+	// generate secret and address
 	addr, secret, err := GenerateCoinKey()
 	if err != nil {
 		return err
 	}
 
-	var DEFAULT_DENOM = "mycoin"
+	var defaultDenom = "mycoin"
 
 	// Now, we want to add the custom app_state
-	appState, err := c.genAppState(args, addr, DEFAULT_DENOM)
+	appState, err := c.genAppState(args, addr, defaultDenom)
 	if err != nil {
 		return err
 	}

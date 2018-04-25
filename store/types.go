@@ -5,6 +5,7 @@ import (
 )
 
 // Import cosmos-sdk/types/store.go for convenience.
+// nolint
 type Store = types.Store
 type Committer = types.Committer
 type CommitStore = types.CommitStore

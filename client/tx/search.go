@@ -22,13 +22,24 @@ const (
 )
 
 // default client command to search through tagged transactions
-func SearchTxCmd(cmdr commander) *cobra.Command {
+func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "txs",
 		Short: "Search for all transactions that match the given tags",
-		RunE:  cmdr.searchAndPrintTx,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			tags := viper.GetStringSlice(flagTags)
+
+			output, err := searchTx(cdc, tags)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(output))
+			return nil
+		},
 	}
+
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")
+
 	// TODO: change this to false once proofs built in
 	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
 	cmd.Flags().StringSlice(flagTags, nil, "Tags that must match (may provide multiple)")
@@ -36,7 +47,7 @@ func SearchTxCmd(cmdr commander) *cobra.Command {
 	return cmd
 }
 
-func (c commander) searchTx(tags []string) ([]byte, error) {
+func searchTx(cdc *wire.Codec, tags []string) ([]byte, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("Must declare at least one tag to search")
 	}
@@ -55,12 +66,12 @@ func (c commander) searchTx(tags []string) ([]byte, error) {
 		return nil, err
 	}
 
-	info, err := formatTxResults(c.cdc, res)
+	info, err := formatTxResults(cdc, res)
 	if err != nil {
 		return nil, err
 	}
 
-	output, err := c.cdc.MarshalJSON(info)
+	output, err := cdc.MarshalJSON(info)
 	if err != nil {
 		return nil, err
 	}
@@ -79,24 +90,11 @@ func formatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]txInfo, error) 
 	return out, nil
 }
 
-// CMD
-
-func (c commander) searchAndPrintTx(cmd *cobra.Command, args []string) error {
-	tags := viper.GetStringSlice(flagTags)
-
-	output, err := c.searchTx(tags)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(output))
-	return nil
-}
-
+/////////////////////////////////////////
 // REST
 
+// Search Tx REST Handler
 func SearchTxRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Request) {
-	c := commander{cdc}
 	return func(w http.ResponseWriter, r *http.Request) {
 		tag := r.FormValue("tag")
 		if tag == "" {
@@ -106,7 +104,7 @@ func SearchTxRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Req
 		}
 
 		tags := []string{tag}
-		output, err := c.searchTx(tags)
+		output, err := searchTx(cdc, tags)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

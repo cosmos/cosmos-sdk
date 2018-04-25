@@ -12,6 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 )
 
+// TODO these next two functions feel kinda hacky based on their placement
+
 func validatorCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validatorset <height>",
@@ -24,7 +26,7 @@ func validatorCommand() *cobra.Command {
 	return cmd
 }
 
-func GetValidators(height *int64) ([]byte, error) {
+func getValidators(height *int64) ([]byte, error) {
 	// get the node
 	node, err := context.NewCoreContextFromViper().GetNode()
 	if err != nil {
@@ -59,7 +61,7 @@ func printValidators(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output, err := GetValidators(height)
+	output, err := getValidators(height)
 	if err != nil {
 		return err
 	}
@@ -70,7 +72,8 @@ func printValidators(cmd *cobra.Command, args []string) error {
 
 // REST
 
-func ValidatorsetRequestHandler(w http.ResponseWriter, r *http.Request) {
+// Validator Set at a height REST handler
+func ValidatorSetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	height, err := strconv.ParseInt(vars["height"], 10, 64)
 	if err != nil {
@@ -84,7 +87,7 @@ func ValidatorsetRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ERROR: Requested block height is bigger then the chain length."))
 		return
 	}
-	output, err := GetValidators(&height)
+	output, err := getValidators(&height)
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
@@ -93,14 +96,15 @@ func ValidatorsetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(output)
 }
 
-func LatestValidatorsetRequestHandler(w http.ResponseWriter, r *http.Request) {
+// Latest Validator Set REST handler
+func LatestValidatorSetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	height, err := GetChainHeight()
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
 	}
-	output, err := GetValidators(&height)
+	output, err := getValidators(&height)
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))

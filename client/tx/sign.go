@@ -8,12 +8,15 @@ import (
 	keys "github.com/tendermint/go-crypto/keys"
 )
 
+// REST request body
+// TODO does this need to be exposed?
 type SignTxBody struct {
 	Name     string `json="name"`
 	Password string `json="password"`
 	TxBytes  string `json="tx"`
 }
 
+// sign transaction REST Handler
 func SignTxRequstHandler(w http.ResponseWriter, r *http.Request) {
 	var kb keys.Keybase
 	var m SignTxBody

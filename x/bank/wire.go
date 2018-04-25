@@ -6,7 +6,6 @@ import (
 
 // Register concrete types on wire codec
 func RegisterWire(cdc *wire.Codec) {
-	// TODO include option to always include prefix bytes.
-	//cdc.RegisterConcrete(SendMsg{}, "github.com/cosmos/cosmos-sdk/bank/SendMsg", nil)
-	//cdc.RegisterConcrete(IssueMsg{}, "github.com/cosmos/cosmos-sdk/bank/IssueMsg", nil)
+	cdc.RegisterConcrete(MsgSend{}, "cosmos-sdk/Send", nil)
+	cdc.RegisterConcrete(MsgIssue{}, "cosmos-sdk/Issue", nil)
 }

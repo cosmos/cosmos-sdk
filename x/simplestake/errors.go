@@ -4,7 +4,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// simple stake errors reserve 300 ~ 399.
 const (
+	DefaultCodespace sdk.CodespaceType = 4
+
 	// simplestake errors reserve 300 - 399.
 	CodeEmptyValidator        sdk.CodeType = 300
 	CodeInvalidUnbond         sdk.CodeType = 301
@@ -12,25 +15,23 @@ const (
 	CodeIncorrectStakingToken sdk.CodeType = 303
 )
 
-func ErrIncorrectStakingToken() sdk.Error {
-	return newError(CodeIncorrectStakingToken, "")
+// nolint
+func ErrIncorrectStakingToken(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeIncorrectStakingToken, "")
 }
-
-func ErrEmptyValidator() sdk.Error {
-	return newError(CodeEmptyValidator, "")
+func ErrEmptyValidator(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeEmptyValidator, "")
 }
-
-func ErrInvalidUnbond() sdk.Error {
-	return newError(CodeInvalidUnbond, "")
+func ErrInvalidUnbond(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeInvalidUnbond, "")
 }
-
-func ErrEmptyStake() sdk.Error {
-	return newError(CodeEmptyStake, "")
+func ErrEmptyStake(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeEmptyStake, "")
 }
 
 // -----------------------------
 // Helpers
 
-func newError(code sdk.CodeType, msg string) sdk.Error {
-	return sdk.NewError(code, msg)
+func newError(codespace sdk.CodespaceType, code sdk.CodeType, msg string) sdk.Error {
+	return sdk.NewError(codespace, code, msg)
 }

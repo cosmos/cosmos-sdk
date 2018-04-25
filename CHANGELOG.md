@@ -7,16 +7,26 @@ FEATURES:
 * Add CacheContext
 * Add auto sequencing to client
 * Add FeeHandler to ante handler
+* Gaia stake commands include, DeclareCandidacy, EditCandidacy, Delegate, Unbond
+* MountStoreWithDB without providing a custom store works.
+* Repo is now lint compliant / GoMetaLinter with tendermint-lint integrated into CI
+* Better key output, pubkey go-amino hex bytes now output by default
 
 BREAKING CHANGES
 
 * Remove go-wire, use go-amino
+* Gaia simple-staking bond and unbond functions replaced 
+* [stake] Delegator bonds now store the height at which they were updated
 * [store] Add `SubspaceIterator` and `ReverseSubspaceIterator` to `KVStore` interface
 * [basecoin] NewBasecoinApp takes a `dbm.DB` and uses namespaced DBs for substores
+* All module keepers now require a codespace, see basecoin or democoin for usage
+* Many changes to names throughout 
+  * Type as a prefix naming convention applied (ex. BondMsg -> MsgBond) 
+  * Removed redundancy in names (ex. stake.StakeKeeper -> stake.Keeper)
+* Removed SealedAccountMapper
 
 BUG FIXES
-
-* MountStoreWithDB without providing a custom store works.
+* Gaia now uses stake, ported from github.com/cosmos/gaia
 
 ## 0.14.1 (April 9, 2018)
 

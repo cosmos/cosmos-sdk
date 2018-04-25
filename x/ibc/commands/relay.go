@@ -10,14 +10,13 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
-
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
+// flags
 const (
 	FlagFromChainID   = "from-chain-id"
 	FlagFromChainNode = "from-chain-node"
@@ -35,6 +34,7 @@ type relayCommander struct {
 	logger log.Logger
 }
 
+// IBC relay command
 func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 	cmdr := relayCommander{
 		cdc:       cdc,
@@ -82,7 +82,9 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	c.loop(fromChainID, fromChainNode, toChainID, toChainNode)
 }
 
-func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
+func (c relayCommander) loop(fromChainID, fromChainNode, toChainID,
+	toChainNode string) {
+
 	ctx := context.NewCoreContextFromViper()
 	// get password
 	passphrase, err := ctx.GetPassphraseFromStdin(ctx.FromAddressName)
@@ -91,6 +93,7 @@ func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode 
 	}
 
 	ingressKey := ibc.IngressSequenceKey(fromChainID)
+
 OUTER:
 	for {
 		time.Sleep(5 * time.Second)
@@ -111,7 +114,7 @@ OUTER:
 		egressLengthbz, err := query(fromChainNode, lengthKey, c.ibcStore)
 		if err != nil {
 			c.logger.Error("Error querying outgoing packet list length", "err", err)
-			continue OUTER
+			continue OUTER //TODO replace with continue (I think it should just to the correct place where OUTER is now)
 		}
 		var egressLength int64
 		if egressLengthbz == nil {
@@ -129,14 +132,14 @@ OUTER:
 			egressbz, err := query(fromChainNode, ibc.EgressKey(toChainID, i), c.ibcStore)
 			if err != nil {
 				c.logger.Error("Error querying egress packet", "err", err)
-				continue OUTER
+				continue OUTER // TODO replace to break, will break first loop then send back to the beginning (aka OUTER)
 			}
 
 			err = c.broadcastTx(seq, toChainNode, c.refine(egressbz, i, passphrase))
 			seq++
 			if err != nil {
 				c.logger.Error("Error broadcasting ingress packet", "err", err)
-				continue OUTER
+				continue OUTER // TODO replace to break, will break first loop then send back to the beginning (aka OUTER)
 			}
 
 			c.logger.Info("Relayed IBC packet", "number", i)

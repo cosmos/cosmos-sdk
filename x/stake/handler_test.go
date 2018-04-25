@@ -76,19 +76,24 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 
 	// just send the same msgbond multiple times
 	msgDelegate := newTestMsgDelegate(delegatorAddr, candidateAddr, bondAmount)
+
 	for i := 0; i < 5; i++ {
+		ctx = ctx.WithBlockHeight(int64(i))
+
 		got := handleMsgDelegate(ctx, msgDelegate, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the accounts and the bond account have the appropriate values
 		candidate, found := keeper.GetCandidate(ctx, candidateAddr)
 		require.True(t, found)
-		bond, found := keeper.getDelegatorBond(ctx, delegatorAddr, candidateAddr)
+		bond, found := keeper.GetDelegatorBond(ctx, delegatorAddr, candidateAddr)
 		require.True(t, found)
 
 		expBond := int64(i+1) * bondAmount
 		expLiabilities := int64(i+2) * bondAmount // (1 self delegation)
 		expDelegatorAcc := initBond - expBond
+
+		require.Equal(t, bond.Height, int64(i), "Incorrect bond height")
 
 		gotBond := bond.Shares.Evaluate()
 		gotLiabilities := candidate.Liabilities.Evaluate()
@@ -139,7 +144,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		//Check that the accounts and the bond account have the appropriate values
 		candidate, found = keeper.GetCandidate(ctx, candidateAddr)
 		require.True(t, found)
-		bond, found := keeper.getDelegatorBond(ctx, delegatorAddr, candidateAddr)
+		bond, found := keeper.GetDelegatorBond(ctx, delegatorAddr, candidateAddr)
 		require.True(t, found)
 
 		expBond := initBond - int64(i+1)*unbondShares
@@ -254,7 +259,7 @@ func TestMultipleMsgDelegate(t *testing.T) {
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the account is bonded
-		bond, found := keeper.getDelegatorBond(ctx, delegatorAddr, candidateAddr)
+		bond, found := keeper.GetDelegatorBond(ctx, delegatorAddr, candidateAddr)
 		require.True(t, found)
 		require.NotNil(t, bond, "expected delegatee bond %d to exist", bond)
 	}
@@ -266,7 +271,7 @@ func TestMultipleMsgDelegate(t *testing.T) {
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the account is unbonded
-		_, found := keeper.getDelegatorBond(ctx, delegatorAddr, candidateAddr)
+		_, found := keeper.GetDelegatorBond(ctx, delegatorAddr, candidateAddr)
 		require.False(t, found)
 	}
 }

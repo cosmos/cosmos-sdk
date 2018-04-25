@@ -11,7 +11,7 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
@@ -25,21 +25,21 @@ var (
 	}
 )
 
-// TODO: distinguish from basecoin
 func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	dataDir := filepath.Join(rootDir, "data")
 	db, err := dbm.NewGoLevelDB("gaia", dataDir)
 	if err != nil {
 		return nil, err
 	}
-	bapp := app.NewBasecoinApp(logger, db)
+	bapp := app.NewGaiaApp(logger, db)
 	return bapp, nil
 }
 
 func main() {
-	server.AddCommands(rootCmd, server.DefaultGenAppState, generateApp, context)
+	server.AddCommands(rootCmd, app.DefaultGenAppState, generateApp, context)
 
 	// prepare and add flags
-	executor := cli.PrepareBaseCmd(rootCmd, "GA", os.ExpandEnv("$HOME/.gaiad"))
+	rootDir := os.ExpandEnv("$HOME/.gaiad")
+	executor := cli.PrepareBaseCmd(rootCmd, "GA", rootDir)
 	executor.Execute()
 }

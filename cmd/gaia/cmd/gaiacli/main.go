@@ -12,18 +12,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/commands"
-	simplestakingcmd "github.com/cosmos/cosmos-sdk/x/simplestake/commands"
+	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/commands"
 
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 )
-
-// TODO: distinguish from basecli
 
 // rootCmd is the entry point for this binary
 var (
@@ -34,10 +30,7 @@ var (
 )
 
 func main() {
-	// disable sorting
 	cobra.EnableCommandSorting = false
-
-	// get the codec
 	cdc := app.MakeCodec()
 
 	// TODO: setup keybase, viper object, etc. to be passed into
@@ -53,24 +46,21 @@ func main() {
 	// add query/post commands (custom to binary)
 	rootCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("main", cdc, types.GetAccountDecoder(cdc)),
+			authcmd.GetAccountCmd("main", cdc, authcmd.GetAccountDecoder(cdc)),
+			stakecmd.GetCmdQueryCandidate("stake", cdc),
+			//stakecmd.GetCmdQueryCandidates("stake", cdc),
+			stakecmd.GetCmdQueryDelegatorBond("stake", cdc),
+			//stakecmd.GetCmdQueryDelegatorBonds("stake", cdc),
 		)...)
 	rootCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
 			ibccmd.IBCTransferCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
 			ibccmd.IBCRelayCmd(cdc),
-			simplestakingcmd.BondTxCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
-			simplestakingcmd.UnbondTxCmd(cdc),
+			stakecmd.GetCmdDeclareCandidacy(cdc),
+			stakecmd.GetCmdEditCandidacy(cdc),
+			stakecmd.GetCmdDelegate(cdc),
+			stakecmd.GetCmdUnbond(cdc),
 		)...)
 
 	// add proxy, version and key info
@@ -83,6 +73,6 @@ func main() {
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/.gaiacli"))
+	executor := cli.PrepareMainCmd(rootCmd, "GA", os.ExpandEnv("$HOME/.gaiacli"))
 	executor.Execute()
 }

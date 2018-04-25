@@ -9,9 +9,10 @@ import (
 	crypto "github.com/tendermint/go-crypto"
 )
 
-func GenerateMineMsg(sender sdk.Address, count uint64, difficulty uint64) MineMsg {
+// generate the mine message
+func GenerateMsgMine(sender sdk.Address, count uint64, difficulty uint64) MsgMine {
 	nonce, hash := mine(sender, count, difficulty)
-	return NewMineMsg(sender, difficulty, count, nonce, hash)
+	return NewMsgMine(sender, difficulty, count, nonce, hash)
 }
 
 func hash(sender sdk.Address, count uint64, nonce uint64) []byte {

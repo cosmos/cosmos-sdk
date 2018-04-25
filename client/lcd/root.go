@@ -66,7 +66,7 @@ func startRESTServerFn(cdc *wire.Codec) func(cmd *cobra.Command, args []string) 
 
 func createHandler(cdc *wire.Codec) http.Handler {
 	r := mux.NewRouter()
-	r.HandleFunc("/version", version.VersionRequestHandler).Methods("GET")
+	r.HandleFunc("/version", version.RequestHandler).Methods("GET")
 
 	kb, err := keys.GetKeyBase() //XXX
 	if err != nil {

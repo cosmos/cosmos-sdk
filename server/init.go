@@ -32,7 +32,6 @@ type GenesisTx struct {
 	IP        string                   `json:"ip"`
 	Validator tmtypes.GenesisValidator `json:"validator"`
 	AppGenTx  json.RawMessage          `json:"app_gen_tx"`
-	CLIPrint  json.RawMessage          `json:"cli_print"`
 }
 
 var (
@@ -76,20 +75,28 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				IP:        ip,
 				Validator: validator,
 				AppGenTx:  appGenTx,
-				CLIPrint:  cliPrint,
 			}
 			bz, err := wire.MarshalJSONIndent(cdc, tx)
 			if err != nil {
 				return err
 			}
+			genTxFile := json.RawMessage(bz)
 			name := fmt.Sprintf("gentx-%v.json", nodeID)
 			file := filepath.Join(viper.GetString("home"), name)
+			err = cmn.WriteFile(file, bz, 0644)
 			if err != nil {
 				return err
-				err = cmn.WriteFile(file, bz, 0644)
 			}
 
-			out, err := wire.MarshalJSONIndent(cdc, cliPrint)
+			// print out some key information
+			toPrint := struct {
+				AppMessage json.RawMessage `json:"app_message"`
+				GenTxFile  json.RawMessage `json:"gen_tx_file"`
+			}{
+				cliPrint,
+				genTxFile,
+			}
+			out, err := wire.MarshalJSONIndent(cdc, toPrint)
 			if err != nil {
 				return err
 			}
@@ -202,7 +209,7 @@ func processGenTxs(genTxsDir string, cdc *wire.Codec, appInit AppInit) (
 		return
 	}
 	for _, fo := range fos {
-		filename := fo.Name()
+		filename := path.Join(genTxsDir, fo.Name())
 		if !fo.IsDir() && (path.Ext(filename) != ".json") {
 			return
 		}

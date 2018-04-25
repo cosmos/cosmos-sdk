@@ -10,20 +10,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/commands"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
 
 // register REST routes
 func RegisterRoutes(r *mux.Router, cdc *wire.Codec, storeName string) {
+	ctx := context.NewCoreContextFromViper()
+
 	r.HandleFunc(
 		"/accounts/{address}",
-		QueryAccountRequestHandler(storeName, cdc, auth.GetAccountDecoder(cdc)),
+		QueryAccountRequestHandler(storeName, cdc, auth.GetAccountDecoder(cdc), ctx),
 	).Methods("GET")
 }
 
 // query accountREST Handler
-func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, decoder sdk.AccountDecoder) func(http.ResponseWriter, *http.Request) {
-	ctx := context.NewCoreContextFromViper()
+func QueryAccountRequestHandler(storeName string, cdc *wire.Codec, decoder sdk.AccountDecoder, ctx context.CoreContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		addr := vars["address"]

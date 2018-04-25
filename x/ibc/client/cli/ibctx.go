@@ -1,4 +1,4 @@
-package commands
+package cli
 
 import (
 	"encoding/hex"
@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 

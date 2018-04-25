@@ -2,7 +2,6 @@ package rest
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
@@ -12,40 +11,42 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/bank/commands"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/accounts/{address}/send", SendRequestHandler(cdc, kb)).Methods("POST")
+	ctx := context.NewCoreContextFromViper()
+
+	r.HandleFunc("/ibc/{destchain}/{address}/send", TransferRequestHandler(cdc, kb, ctx)).Methods("POST")
 }
 
-type sendBody struct {
-	// fees is not used currently
+type transferBody struct {
 	// Fees             sdk.Coin  `json="fees"`
 	Amount           sdk.Coins `json:"amount"`
 	LocalAccountName string    `json:"name"`
 	Password         string    `json:"password"`
-	ChainID          string    `json:"chain_id"`
+	SrcChainID       string    `json:"src_chain_id"`
 	Sequence         int64     `json:"sequence"`
 }
 
-// SendRequestHandler - http request handler to send coins to a address
-func SendRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWriter, *http.Request) {
-	ctx := context.NewCoreContextFromViper()
+// TransferRequestHandler - http request handler to transfer coins to a address
+// on a different chain via IBC
+func TransferRequestHandler(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
 		vars := mux.Vars(r)
+		destChainID := vars["destchain"]
 		address := vars["address"]
 
-		var m sendBody
+		var m transferBody
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		err = json.Unmarshal(body, &m)
+		err = cdc.UnmarshalJSON(body, &m)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -68,12 +69,8 @@ func SendRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWrit
 		to := sdk.Address(bz)
 
 		// build message
-		msg := commands.BuildMsg(info.PubKey.Address(), to, m.Amount)
-		if err != nil { // XXX rechecking same error ?
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
-		}
+		packet := ibc.NewIBCPacket(info.PubKey.Address(), to, m.Amount, m.SrcChainID, destChainID)
+		msg := ibc.IBCTransferMsg{packet}
 
 		// sign
 		ctx = ctx.WithSequence(m.Sequence)
@@ -92,7 +89,7 @@ func SendRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWrit
 			return
 		}
 
-		output, err := json.MarshalIndent(res, "", "  ")
+		output, err := cdc.MarshalJSON(res)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

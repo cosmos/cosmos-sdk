@@ -1,4 +1,4 @@
-package commands
+package cli
 
 import (
 	flag "github.com/spf13/pflag"

@@ -16,12 +16,13 @@ import (
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/stake/{delegator}/bonding_status/{candidate}", BondingStatusHandler("stake", cdc, kb)).Methods("GET")
+	ctx := context.NewCoreContextFromViper()
+
+	r.HandleFunc("/stake/{delegator}/bonding_status/{candidate}", BondingStatusHandler("stake", cdc, kb, ctx)).Methods("GET")
 }
 
 // BondingStatusHandler - http request handler to query delegator bonding status
-func BondingStatusHandler(storeName string, cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWriter, *http.Request) {
-	ctx := context.NewCoreContextFromViper()
+func BondingStatusHandler(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// read parameters
 		vars := mux.Vars(r)

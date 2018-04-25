@@ -29,7 +29,7 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tags := viper.GetStringSlice(flagTags)
 
-			output, err := searchTx(cdc, tags)
+			output, err := searchTx(context.NewCoreContextFromViper(), cdc, tags)
 			if err != nil {
 				return err
 			}
@@ -47,7 +47,7 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func searchTx(cdc *wire.Codec, tags []string) ([]byte, error) {
+func searchTx(ctx context.CoreContext, cdc *wire.Codec, tags []string) ([]byte, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("Must declare at least one tag to search")
 	}
@@ -55,7 +55,7 @@ func searchTx(cdc *wire.Codec, tags []string) ([]byte, error) {
 	query := strings.Join(tags, " AND ")
 
 	// get the node
-	node, err := context.NewCoreContextFromViper().GetNode()
+	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func formatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]txInfo, error) 
 // REST
 
 // Search Tx REST Handler
-func SearchTxRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Request) {
+func SearchTxRequestHandler(ctx context.CoreContext, cdc *wire.Codec) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tag := r.FormValue("tag")
 		if tag == "" {
@@ -104,7 +104,7 @@ func SearchTxRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Req
 		}
 
 		tags := []string{tag}
-		output, err := searchTx(cdc, tags)
+		output, err := searchTx(ctx, cdc, tags)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

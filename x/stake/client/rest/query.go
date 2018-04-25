@@ -15,9 +15,7 @@ import (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	ctx := context.NewCoreContextFromViper()
-
+func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
 	r.HandleFunc("/stake/{delegator}/bonding_status/{candidate}", BondingStatusHandler("stake", cdc, kb, ctx)).Methods("GET")
 }
 

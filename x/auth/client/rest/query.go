@@ -14,9 +14,7 @@ import (
 )
 
 // register REST routes
-func RegisterRoutes(r *mux.Router, cdc *wire.Codec, storeName string) {
-	ctx := context.NewCoreContextFromViper()
-
+func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, storeName string) {
 	r.HandleFunc(
 		"/accounts/{address}",
 		QueryAccountRequestHandler(storeName, cdc, auth.GetAccountDecoder(cdc), ctx),

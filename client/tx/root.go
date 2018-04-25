@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
@@ -16,8 +17,8 @@ func AddCommands(cmd *cobra.Command, cdc *wire.Codec) {
 }
 
 // register REST routes
-func RegisterRoutes(r *mux.Router, cdc *wire.Codec) {
-	r.HandleFunc("/txs/{hash}", QueryTxRequestHandler(cdc)).Methods("GET")
+func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
+	r.HandleFunc("/txs/{hash}", QueryTxRequestHandler(cdc, ctx)).Methods("GET")
 	// r.HandleFunc("/txs", SearchTxRequestHandler(cdc)).Methods("GET")
 	// r.HandleFunc("/txs/sign", SignTxRequstHandler).Methods("POST")
 	// r.HandleFunc("/txs/broadcast", BroadcastTxRequestHandler).Methods("POST")

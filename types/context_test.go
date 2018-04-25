@@ -60,3 +60,11 @@ func TestCacheContext(t *testing.T) {
 
 	assert.Equal(t, v2, store.Get(k2))
 }
+
+func TestLogContext(t *testing.T) {
+	key := types.NewKVStoreKey(t.Name())
+	ctx := defaultContext(key)
+	ctx.Logger().Debug("debug")
+	ctx.Logger().Info("info")
+	ctx.Logger().Error("error")
+}

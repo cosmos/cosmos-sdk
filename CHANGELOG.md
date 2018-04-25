@@ -27,7 +27,7 @@ FEATURES:
   * Create genesis transactions with `gaiad init gen-tx` 
   * New genesis account keys are automatically added to the client keybase (introduce `--client-home` flag)
   * Initialize with genesis txs using `--gen-txs` flag
-* Context now has access to the applicaiton logger
+* Context now has access to the application-configured logger
 
 BREAKING CHANGES
 

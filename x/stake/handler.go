@@ -171,7 +171,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 
 	// Account new shares, save
 	pool := k.GetPool(ctx)
-	_, err := k.coinKeeper.SubtractCoins(ctx, bond.DelegatorAddr, sdk.Coins{bondAmt})
+	_, _, err := k.coinKeeper.SubtractCoins(ctx, bond.DelegatorAddr, sdk.Coins{bondAmt})
 	if err != nil {
 		return err
 	}

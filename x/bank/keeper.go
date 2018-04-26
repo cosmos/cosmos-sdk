@@ -32,22 +32,22 @@ func (keeper Keeper) HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) 
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
-func (keeper Keeper) SubtractCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) (sdk.Coins, sdk.Error) {
+func (keeper Keeper) SubtractCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
 	return subtractCoins(ctx, keeper.am, addr, amt)
 }
 
 // AddCoins adds amt to the coins at the addr.
-func (keeper Keeper) AddCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) (sdk.Coins, sdk.Error) {
+func (keeper Keeper) AddCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
 	return addCoins(ctx, keeper.am, addr, amt)
 }
 
 // SendCoins moves coins from one account to another
-func (keeper Keeper) SendCoins(ctx sdk.Context, fromAddr sdk.Address, toAddr sdk.Address, amt sdk.Coins) sdk.Error {
+func (keeper Keeper) SendCoins(ctx sdk.Context, fromAddr sdk.Address, toAddr sdk.Address, amt sdk.Coins) (sdk.Tags, sdk.Error) {
 	return sendCoins(ctx, keeper.am, fromAddr, toAddr, amt)
 }
 
 // InputOutputCoins handles a list of inputs and outputs
-func (keeper Keeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) sdk.Error {
+func (keeper Keeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
 	return inputOutputCoins(ctx, keeper.am, inputs, outputs)
 }
 
@@ -74,12 +74,12 @@ func (keeper SendKeeper) HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coi
 }
 
 // SendCoins moves coins from one account to another
-func (keeper SendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.Address, toAddr sdk.Address, amt sdk.Coins) sdk.Error {
+func (keeper SendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.Address, toAddr sdk.Address, amt sdk.Coins) (sdk.Tags, sdk.Error) {
 	return sendCoins(ctx, keeper.am, fromAddr, toAddr, amt)
 }
 
 // InputOutputCoins handles a list of inputs and outputs
-func (keeper SendKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) sdk.Error {
+func (keeper SendKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
 	return inputOutputCoins(ctx, keeper.am, inputs, outputs)
 }
 
@@ -131,59 +131,65 @@ func hasCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.C
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
-func subtractCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) (sdk.Coins, sdk.Error) {
+func subtractCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
 	oldCoins := getCoins(ctx, am, addr)
 	newCoins := oldCoins.Minus(amt)
 	if !newCoins.IsNotNegative() {
-		return amt, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
+		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
 	}
 	err := setCoins(ctx, am, addr, newCoins)
-	return newCoins, err
+	tags := sdk.SingleTag(sdk.MakeTag("sender", addr.Bytes()))
+	return newCoins, tags, err
 }
 
 // AddCoins adds amt to the coins at the addr.
-func addCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) (sdk.Coins, sdk.Error) {
+func addCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
 	oldCoins := getCoins(ctx, am, addr)
 	newCoins := oldCoins.Plus(amt)
 	if !newCoins.IsNotNegative() {
-		return amt, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
+		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
 	}
 	err := setCoins(ctx, am, addr, newCoins)
-	return newCoins, err
+	tags := sdk.SingleTag(sdk.MakeTag("recipient", addr.Bytes()))
+	return newCoins, tags, err
 }
 
 // SendCoins moves coins from one account to another
 // NOTE: Make sure to revert state changes from tx on error
-func sendCoins(ctx sdk.Context, am sdk.AccountMapper, fromAddr sdk.Address, toAddr sdk.Address, amt sdk.Coins) sdk.Error {
-	_, err := subtractCoins(ctx, am, fromAddr, amt)
+func sendCoins(ctx sdk.Context, am sdk.AccountMapper, fromAddr sdk.Address, toAddr sdk.Address, amt sdk.Coins) (sdk.Tags, sdk.Error) {
+	_, subTags, err := subtractCoins(ctx, am, fromAddr, amt)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = addCoins(ctx, am, toAddr, amt)
+	_, addTags, err := addCoins(ctx, am, toAddr, amt)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return sdk.AppendTags(subTags, addTags), nil
 }
 
 // InputOutputCoins handles a list of inputs and outputs
 // NOTE: Make sure to revert state changes from tx on error
-func inputOutputCoins(ctx sdk.Context, am sdk.AccountMapper, inputs []Input, outputs []Output) sdk.Error {
+func inputOutputCoins(ctx sdk.Context, am sdk.AccountMapper, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
+	allTags := sdk.EmptyTags()
+
 	for _, in := range inputs {
-		_, err := subtractCoins(ctx, am, in.Address, in.Coins)
+		_, tags, err := subtractCoins(ctx, am, in.Address, in.Coins)
 		if err != nil {
-			return err
+			return nil, err
 		}
+		allTags = sdk.AppendTags(allTags, tags)
 	}
 
 	for _, out := range outputs {
-		_, err := addCoins(ctx, am, out.Address, out.Coins)
+		_, tags, err := addCoins(ctx, am, out.Address, out.Coins)
 		if err != nil {
-			return err
+			return nil, err
 		}
+		allTags = sdk.AppendTags(allTags, tags)
 	}
 
-	return nil
+	return allTags, nil
 }

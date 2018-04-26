@@ -8,8 +8,6 @@ import (
 	"path"
 	"path/filepath"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -22,8 +20,13 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	tmtypes "github.com/tendermint/tendermint/types"
 	pvm "github.com/tendermint/tendermint/types/priv_validator"
+	tmcli "github.com/tendermint/tmlibs/cli"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
+
+	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // genesis piece structure for creating combined genesis
@@ -82,7 +85,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 			}
 			genTxFile := json.RawMessage(bz)
 			name := fmt.Sprintf("gentx-%v.json", nodeID)
-			file := filepath.Join(viper.GetString("home"), name)
+			file := filepath.Join(viper.GetString(tmcli.HomeFlag), name)
 			err = cmn.WriteFile(file, bz, 0644)
 			if err != nil {
 				return err
@@ -148,7 +151,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 					return err
 				}
 				config.P2P.PersistentPeers = persistentPeers
-				configFilePath := filepath.Join(viper.GetString("home"), "config", "config.toml") //TODO this is annoying should be easier to get
+				configFilePath := filepath.Join(viper.GetString(tmcli.HomeFlag), "config", "config.toml") //TODO this is annoying should be easier to get
 				cfg.WriteConfigFile(configFilePath, config)
 			} else {
 				appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey)
@@ -165,7 +168,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				return err
 			}
 
-			err = WriteGenesisFile(cdc, genFile, chainID, validators, appState)
+			err = writeGenesisFile(cdc, genFile, chainID, validators, appState)
 			if err != nil {
 				return err
 			}
@@ -258,7 +261,7 @@ func ReadOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
 }
 
 // create the genesis file
-func WriteGenesisFile(cdc *wire.Codec, genesisFile, chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage) error {
+func writeGenesisFile(cdc *wire.Codec, genesisFile, chainID string, validators []tmtypes.GenesisValidator, appState json.RawMessage) error {
 	genDoc := tmtypes.GenesisDoc{
 		ChainID:    chainID,
 		Validators: validators,
@@ -393,6 +396,33 @@ func GenerateCoinKey() (sdk.Address, string, error) {
 
 	// generate a private key, with recovery phrase
 	info, secret, err := keybase.Create("name", "pass", keys.AlgoEd25519)
+	if err != nil {
+		return nil, "", err
+	}
+	addr := info.PubKey.Address()
+	return addr, secret, nil
+}
+
+// GenerateSaveCoinKey returns the address of a public key, along with the secret
+// phrase to recover the private key.
+func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (sdk.Address, string, error) {
+
+	// get the keystore from the client
+	keybase, err := clkeys.GetKeyBaseFromDir(clientRoot)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// ensure no overwrite
+	if !overwrite {
+		_, err := keybase.Get(keyName)
+		if err == nil {
+			return nil, "", errors.New("key already exists, overwrite is disabled")
+		}
+	}
+
+	// generate a private key, with recovery phrase
+	info, secret, err := keybase.Create(keyName, keyPass, keys.AlgoEd25519)
 	if err != nil {
 		return nil, "", err
 	}

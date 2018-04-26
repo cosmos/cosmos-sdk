@@ -24,7 +24,8 @@ func TestGaiaCLISend(t *testing.T) {
 	pass := "1234567890"
 	executeWrite(t, "gaiacli keys delete foo", pass)
 	executeWrite(t, "gaiacli keys delete bar", pass)
-	key, chainID := executeInit(t, "gaiad init -o --name=foo")
+	chainID := executeInit(t, "gaiad init -o --name=foo")
+	executeWrite(t, "gaiacli keys add bar", pass)
 
 	// get a free port, also setup some common flags
 	servAddr := server.FreeTCPAddr(t)
@@ -33,9 +34,6 @@ func TestGaiaCLISend(t *testing.T) {
 	// start gaiad server
 	cmd, _, _ := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
 	defer cmd.Process.Kill()
-
-	executeWrite(t, "gaiacli keys add foo --recover", pass, key)
-	executeWrite(t, "gaiacli keys add bar", pass)
 
 	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
 	barAddr, _ := executeGetAddrPK(t, "gaiacli keys show bar --output=json")
@@ -58,7 +56,8 @@ func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 	pass := "1234567890"
 	executeWrite(t, "gaiacli keys delete foo", pass)
 	executeWrite(t, "gaiacli keys delete bar", pass)
-	key, chainID := executeInit(t, "gaiad init -o --name=foo")
+	chainID := executeInit(t, "gaiad init -o --name=foo")
+	executeWrite(t, "gaiacli keys add bar", pass)
 
 	// get a free port, also setup some common flags
 	servAddr := server.FreeTCPAddr(t)
@@ -68,8 +67,6 @@ func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 	cmd, _, _ := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
 	defer cmd.Process.Kill()
 
-	executeWrite(t, "gaiacli keys add foo --recover", pass, key)
-	executeWrite(t, "gaiacli keys add bar", pass)
 	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
 	barAddr, barPubKey := executeGetAddrPK(t, "gaiacli keys show bar --output=json")
 
@@ -140,7 +137,7 @@ func executeWritePrint(t *testing.T, cmdStr string, writes ...string) {
 	fmt.Printf("debug read: %v\n", string(bz))
 }
 
-func executeInit(t *testing.T, cmdStr string) (key, chainID string) {
+func executeInit(t *testing.T, cmdStr string) (chainID string) {
 	out := tests.ExecuteT(t, cmdStr)
 
 	var initRes map[string]json.RawMessage
@@ -148,13 +145,6 @@ func executeInit(t *testing.T, cmdStr string) (key, chainID string) {
 	require.NoError(t, err)
 
 	err = json.Unmarshal(initRes["chain_id"], &chainID)
-	require.NoError(t, err)
-
-	var appMessageRes map[string]json.RawMessage
-	err = json.Unmarshal(initRes["app_message"], &appMessageRes)
-	require.NoError(t, err)
-
-	err = json.Unmarshal(appMessageRes["secret"], &key)
 	require.NoError(t, err)
 
 	return

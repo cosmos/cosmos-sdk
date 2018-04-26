@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -27,8 +26,7 @@ func main() {
 	server.AddCommands(ctx, cdc, rootCmd, app.GaiaAppInit(), generateApp)
 
 	// prepare and add flags
-	rootDir := os.ExpandEnv("$HOME/.gaiad")
-	executor := cli.PrepareBaseCmd(rootCmd, "GA", rootDir)
+	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)
 	executor.Execute()
 }
 

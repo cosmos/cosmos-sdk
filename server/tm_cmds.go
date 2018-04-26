@@ -36,7 +36,7 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 	flagJSON := "json"
 	cmd := cobra.Command{
 		Use:   "show_validator",
-		Short: "Show this node's validator info",
+		Short: "Show this node's tendermint validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cfg := ctx.Config
@@ -67,7 +67,7 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 func UnsafeResetAllCmd(ctx *Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "unsafe_reset_all",
-		Short: "Reset all blockchain data",
+		Short: "Reset blockchain database, priv_validator.json file, and the logger",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := ctx.Config
 			tcmd.ResetAll(cfg.DBDir(), cfg.PrivValidatorFile(), ctx.Logger)

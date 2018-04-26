@@ -11,6 +11,10 @@ FEATURES:
 * MountStoreWithDB without providing a custom store works.
 * Repo is now lint compliant / GoMetaLinter with tendermint-lint integrated into CI
 * Better key output, pubkey go-amino hex bytes now output by default
+* gaiad init overhaul
+  * Create genesis transactions with `gaiad init gen-tx` 
+  * New genesis account keys are automatically added to the client keybase (introduce `--client-home` flag)
+  * Initialize with genesis txs using `--gen-txs` flag
 
 BREAKING CHANGES
 
@@ -25,6 +29,7 @@ BREAKING CHANGES
   * Type as a prefix naming convention applied (ex. BondMsg -> MsgBond) 
   * Removed redundancy in names (ex. stake.StakeKeeper -> stake.Keeper)
 * Removed SealedAccountMapper
+* gaiad init now requires use of `--name` flag 
 
 BUG FIXES
 * Gaia now uses stake, ported from github.com/cosmos/gaia

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -15,15 +14,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
-// rootCmd is the entry point for this binary
-var (
-	context = server.NewDefaultContext()
-	rootCmd = &cobra.Command{
+func main() {
+	cdc := app.MakeCodec()
+	ctx := server.NewDefaultContext()
+	rootCmd := &cobra.Command{
 		Use:               "gaiad",
 		Short:             "Gaia Daemon (server)",
-		PersistentPreRunE: server.PersistentPreRunEFn(context),
+		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
-)
+
+	server.AddCommands(ctx, cdc, rootCmd, app.GaiaAppInit(), generateApp)
+
+	// prepare and add flags
+	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)
+	executor.Execute()
+}
 
 func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	dataDir := filepath.Join(rootDir, "data")
@@ -33,13 +38,4 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	}
 	bapp := app.NewGaiaApp(logger, db)
 	return bapp, nil
-}
-
-func main() {
-	server.AddCommands(rootCmd, app.DefaultGenAppState, generateApp, context)
-
-	// prepare and add flags
-	rootDir := os.ExpandEnv("$HOME/.gaiad")
-	executor := cli.PrepareBaseCmd(rootCmd, "GA", rootDir)
-	executor.Execute()
 }

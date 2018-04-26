@@ -1,7 +1,7 @@
 package app
 
 import (
-	"encoding/json"
+	"os"
 
 	abci "github.com/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
@@ -19,6 +19,12 @@ import (
 
 const (
 	appName = "GaiaApp"
+)
+
+// default home directories for expected binaries
+var (
+	DefaultCLIHome  = os.ExpandEnv("$HOME/.gaiacli")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.gaiad")
 )
 
 // Extended ABCI application
@@ -130,7 +136,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	stateJSON := req.AppStateBytes
 
 	genesisState := new(GenesisState)
-	err := json.Unmarshal(stateJSON, genesisState)
+	err := app.cdc.UnmarshalJSON(stateJSON, genesisState)
 	if err != nil {
 		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 		// return sdk.ErrGenesisParse("").TraceCause(err, "")
@@ -146,55 +152,4 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
 
 	return abci.ResponseInitChain{}
-}
-
-//__________________________________________________________
-
-// State to Unmarshal
-type GenesisState struct {
-	Accounts  []GenesisAccount   `json:"accounts"`
-	StakeData stake.GenesisState `json:"stake"`
-}
-
-// GenesisAccount doesn't need pubkey or sequence
-type GenesisAccount struct {
-	Address sdk.Address `json:"address"`
-	Coins   sdk.Coins   `json:"coins"`
-}
-
-func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
-	return GenesisAccount{
-		Address: acc.Address,
-		Coins:   acc.Coins,
-	}
-}
-
-// convert GenesisAccount to GaiaAccount
-func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
-	return &auth.BaseAccount{
-		Address: ga.Address,
-		Coins:   ga.Coins.Sort(),
-	}
-}
-
-// DefaultGenAppState expects two args: an account address
-// and a coin denomination, and gives lots of coins to that address.
-func DefaultGenAppState(args []string, addr sdk.Address, coinDenom string) (json.RawMessage, error) {
-
-	accAuth := auth.NewBaseAccountWithAddress(addr)
-	accAuth.Coins = sdk.Coins{{"fermion", 100000}}
-	acc := NewGenesisAccount(&accAuth)
-	genaccs := []GenesisAccount{acc}
-
-	genesisState := GenesisState{
-		Accounts:  genaccs,
-		StakeData: stake.GetDefaultGenesisState(),
-	}
-
-	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
-	if err != nil {
-		return nil, err
-	}
-
-	return stateBytes, nil
 }

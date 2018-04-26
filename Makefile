@@ -85,6 +85,9 @@ godocs:
 
 test: test_unit # test_cli
 
+test_nocli: 
+	go test `go list ./... | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test`
+
 # Must  be run in each package seperately for the visualization
 # Added here for easy reference
 # coverage:

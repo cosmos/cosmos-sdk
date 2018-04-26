@@ -37,14 +37,14 @@ func NewKeeper(key sdk.StoreKey, config Config, ck bank.Keeper, codespace sdk.Co
 }
 
 // InitGenesis for the POW module
-func (k Keeper) InitGenesis(ctx sdk.Context, genesis Genesis) error {
+func InitGenesis(k Keeper, ctx sdk.Context, genesis Genesis) error {
 	k.SetLastDifficulty(ctx, genesis.Difficulty)
 	k.SetLastCount(ctx, genesis.Count)
 	return nil
 }
 
 // WriteGenesis for the PoW module
-func (k Keeper) WriteGenesis(ctx sdk.Context) Genesis {
+func WriteGenesis(k Keeper, ctx sdk.Context) Genesis {
 	difficulty, err := k.GetLastDifficulty(ctx)
 	if err != nil {
 		panic(err)

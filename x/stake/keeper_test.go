@@ -172,7 +172,7 @@ func TestBond(t *testing.T) {
 	assert.True(t, bondsEqual(bond2to1, resBonds[0]))
 	assert.True(t, bondsEqual(bond2to2, resBonds[1]))
 	assert.True(t, bondsEqual(bond2to3, resBonds[2]))
-	allBonds := keeper.GetBonds(ctx, 1000)
+	allBonds := keeper.getBonds(ctx, 1000)
 	require.Equal(t, 6, len(allBonds))
 	assert.True(t, bondsEqual(bond1to1, allBonds[0]))
 	assert.True(t, bondsEqual(bond1to2, allBonds[1]))

@@ -372,7 +372,7 @@ func (k Keeper) GetDelegatorBond(ctx sdk.Context,
 }
 
 // load all bonds
-func (k Keeper) GetBonds(ctx sdk.Context, maxRetrieve int16) (bonds []DelegatorBond) {
+func (k Keeper) getBonds(ctx sdk.Context, maxRetrieve int16) (bonds []DelegatorBond) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := store.Iterator(subspace(DelegatorBondKeyPrefix))
 

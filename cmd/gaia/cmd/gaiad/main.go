@@ -24,7 +24,6 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, app.GaiaAppInit(), generateApp)
 	server.AddCommands(ctx, cdc, rootCmd, app.GaiaAppInit(), generateApp, exportApp)
 
 	// prepare and add flags

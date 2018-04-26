@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	"github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake"
 )
 
 const (
@@ -31,6 +32,11 @@ type BasecoinApp struct {
 	keyAccount *sdk.KVStoreKey
 	keyIBC     *sdk.KVStoreKey
 	keyStake   *sdk.KVStoreKey
+
+	// keepers
+	coinKeeper  bank.Keeper
+	ibcMapper   ibc.Mapper
+	stakeKeeper simplestake.Keeper
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
@@ -122,5 +128,7 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 
 // Custom logic for state export
 func (app *BasecoinApp) ExportGenesis() types.GenesisState {
-	return types.GenesisState{}
+	return types.GenesisState{
+		Accounts: []*types.GenesisAccount{},
+	}
 }

@@ -119,3 +119,8 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 	}
 	return abci.ResponseInitChain{}
 }
+
+// Custom logic for state export
+func (app *BasecoinApp) ExportGenesis() types.GenesisState {
+	return types.GenesisState{}
+}

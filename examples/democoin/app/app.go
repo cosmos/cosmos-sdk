@@ -36,6 +36,9 @@ type DemocoinApp struct {
 	capKeyIBCStore     *sdk.KVStoreKey
 	capKeyStakingStore *sdk.KVStoreKey
 
+	// keepers
+	powKeeper pow.Keeper
+
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
 }
@@ -66,19 +69,19 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	// Add handlers.
 	coinKeeper := bank.NewKeeper(app.accountMapper)
 	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper, app.RegisterCodespace(cool.DefaultCodespace))
-	powKeeper := pow.NewKeeper(app.capKeyPowStore, pow.NewConfig("pow", int64(1)), coinKeeper, app.RegisterCodespace(pow.DefaultCodespace))
+	app.powKeeper = pow.NewKeeper(app.capKeyPowStore, pow.NewConfig("pow", int64(1)), coinKeeper, app.RegisterCodespace(pow.DefaultCodespace))
 	ibcMapper := ibc.NewMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
 	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper, app.RegisterCodespace(simplestake.DefaultCodespace))
 	app.Router().
 		AddRoute("bank", bank.NewHandler(coinKeeper)).
 		AddRoute("cool", cool.NewHandler(coolKeeper)).
-		AddRoute("pow", powKeeper.Handler).
+		AddRoute("pow", app.powKeeper.Handler).
 		AddRoute("sketchy", sketchy.NewHandler()).
 		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
 	// Initialize BaseApp.
-	app.SetInitChainer(app.initChainerFn(coolKeeper, powKeeper))
+	app.SetInitChainer(app.initChainerFn(coolKeeper, app.powKeeper))
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyPowStore, app.capKeyIBCStore, app.capKeyStakingStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.BurnFeeHandler))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
@@ -140,5 +143,15 @@ func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper, powKeeper pow.Keep
 		}
 
 		return abci.ResponseInitChain{}
+	}
+}
+
+// Custom logic for state export
+func (app *DemocoinApp) ExportGenesis() types.GenesisState {
+	ctx := app.NewContext(true, abci.Header{})
+	return types.GenesisState{
+		Accounts:    []*types.GenesisAccount{},
+		POWGenesis:  app.powKeeper.WriteGenesis(ctx),
+		CoolGenesis: cool.Genesis{},
 	}
 }

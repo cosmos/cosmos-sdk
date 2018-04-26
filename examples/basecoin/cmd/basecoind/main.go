@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 func main() {
@@ -25,7 +26,7 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, server.DefaultAppInit, generateApp)
+	server.AddCommands(ctx, cdc, rootCmd, server.DefaultAppInit, generateApp, exportApp)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.basecoind")
@@ -41,4 +42,14 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	}
 	bapp := app.NewBasecoinApp(logger, db)
 	return bapp, nil
+}
+
+func exportApp(rootDir string, logger log.Logger) (interface{}, *wire.Codec, error) {
+	dataDir := filepath.Join(rootDir, "data")
+	db, err := dbm.NewGoLevelDB("basecoin", dataDir)
+	if err != nil {
+		return nil, nil, err
+	}
+	bapp := app.NewBasecoinApp(logger, db)
+	return bapp.ExportGenesis(), nil, nil
 }

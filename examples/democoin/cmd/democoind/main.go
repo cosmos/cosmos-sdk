@@ -34,6 +34,12 @@ func CoolAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
         "trend": "ice-cold"
       }`)
 	appState, err = server.AppendJSON(cdc, appState, key, value)
+	key = "pow"
+	value = json.RawMessage(`{
+        "difficulty": 1,
+        "count": 0
+      }`)
+	appState, err = server.AppendJSON(cdc, appState, key, value)
 	return
 }
 
@@ -46,6 +52,16 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	return bapp, nil
 }
 
+func exportApp(rootDir string, logger log.Logger) (interface{}, *wire.Codec, error) {
+	dataDir := filepath.Join(rootDir, "data")
+	db, err := dbm.NewGoLevelDB("democoin", dataDir)
+	if err != nil {
+		return nil, nil, err
+	}
+	bapp := app.NewDemocoinApp(logger, db)
+	return bapp.ExportGenesis(), nil, nil
+}
+
 func main() {
 	cdc := app.MakeCodec()
 	ctx := server.NewDefaultContext()
@@ -56,7 +72,7 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit, generateApp)
+	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit, generateApp, exportApp)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.democoind")

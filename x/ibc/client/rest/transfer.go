@@ -15,8 +15,8 @@ import (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/ibc/{destchain}/{address}/send", TransferRequestHandler(cdc, kb)).Methods("POST")
+func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+	r.HandleFunc("/ibc/{destchain}/{address}/send", TransferRequestHandlerFn(cdc, kb, ctx)).Methods("POST")
 }
 
 type transferBody struct {
@@ -30,8 +30,7 @@ type transferBody struct {
 
 // TransferRequestHandler - http request handler to transfer coins to a address
 // on a different chain via IBC
-func TransferRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWriter, *http.Request) {
-	ctx := context.NewCoreContextFromViper()
+func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
 		vars := mux.Vars(r)

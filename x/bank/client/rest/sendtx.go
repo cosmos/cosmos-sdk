@@ -12,12 +12,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/bank/commands"
+	"github.com/cosmos/cosmos-sdk/x/bank/client"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/accounts/{address}/send", SendRequestHandler(cdc, kb)).Methods("POST")
+func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+	r.HandleFunc("/accounts/{address}/send", SendRequestHandlerFn(cdc, kb, ctx)).Methods("POST")
 }
 
 type sendBody struct {
@@ -30,9 +30,8 @@ type sendBody struct {
 	Sequence         int64     `json:"sequence"`
 }
 
-// SendRequestHandler - http request handler to send coins to a address
-func SendRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWriter, *http.Request) {
-	ctx := context.NewCoreContextFromViper()
+// SendRequestHandlerFn - http request handler to send coins to a address
+func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data
 		vars := mux.Vars(r)
@@ -68,7 +67,7 @@ func SendRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.ResponseWrit
 		to := sdk.Address(bz)
 
 		// build message
-		msg := commands.BuildMsg(info.PubKey.Address(), to, m.Amount)
+		msg := client.BuildMsg(info.PubKey.Address(), to, m.Amount)
 		if err != nil { // XXX rechecking same error ?
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

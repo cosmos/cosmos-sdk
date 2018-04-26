@@ -15,6 +15,7 @@ FEATURES:
 BREAKING CHANGES
 
 * Remove go-wire, use go-amino
+* Move module REST/CLI packages to x/[module]/client/rest and x/[module]/client/cli
 * Gaia simple-staking bond and unbond functions replaced 
 * [stake] Delegator bonds now store the height at which they were updated
 * [store] Add `SubspaceIterator` and `ReverseSubspaceIterator` to `KVStore` interface

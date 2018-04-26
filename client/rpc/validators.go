@@ -26,9 +26,9 @@ func validatorCommand() *cobra.Command {
 	return cmd
 }
 
-func getValidators(height *int64) ([]byte, error) {
+func getValidators(ctx context.CoreContext, height *int64) ([]byte, error) {
 	// get the node
-	node, err := context.NewCoreContextFromViper().GetNode()
+	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func printValidators(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output, err := getValidators(height)
+	output, err := getValidators(context.NewCoreContextFromViper(), height)
 	if err != nil {
 		return err
 	}
@@ -73,42 +73,46 @@ func printValidators(cmd *cobra.Command, args []string) error {
 // REST
 
 // Validator Set at a height REST handler
-func ValidatorSetRequestHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	height, err := strconv.ParseInt(vars["height"], 10, 64)
-	if err != nil {
-		w.WriteHeader(400)
-		w.Write([]byte("ERROR: Couldn't parse block height. Assumed format is '/validatorsets/{height}'."))
-		return
+func ValidatorSetRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		height, err := strconv.ParseInt(vars["height"], 10, 64)
+		if err != nil {
+			w.WriteHeader(400)
+			w.Write([]byte("ERROR: Couldn't parse block height. Assumed format is '/validatorsets/{height}'."))
+			return
+		}
+		chainHeight, err := GetChainHeight(ctx)
+		if height > chainHeight {
+			w.WriteHeader(404)
+			w.Write([]byte("ERROR: Requested block height is bigger then the chain length."))
+			return
+		}
+		output, err := getValidators(ctx, &height)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(output)
 	}
-	chainHeight, err := GetChainHeight()
-	if height > chainHeight {
-		w.WriteHeader(404)
-		w.Write([]byte("ERROR: Requested block height is bigger then the chain length."))
-		return
-	}
-	output, err := getValidators(&height)
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
-	}
-	w.Write(output)
 }
 
 // Latest Validator Set REST handler
-func LatestValidatorSetRequestHandler(w http.ResponseWriter, r *http.Request) {
-	height, err := GetChainHeight()
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
+func LatestValidatorSetRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		height, err := GetChainHeight(ctx)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		output, err := getValidators(ctx, &height)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(output)
 	}
-	output, err := getValidators(&height)
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
-	}
-	w.Write(output)
 }

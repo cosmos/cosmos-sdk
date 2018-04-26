@@ -13,10 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
-	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
-	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/commands"
-	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/commands"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
+	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 )

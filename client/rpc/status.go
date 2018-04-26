@@ -22,9 +22,9 @@ func statusCommand() *cobra.Command {
 	return cmd
 }
 
-func getNodeStatus() (*ctypes.ResultStatus, error) {
+func getNodeStatus(ctx context.CoreContext) (*ctypes.ResultStatus, error) {
 	// get the node
-	node, err := context.NewCoreContextFromViper().GetNode()
+	node, err := ctx.GetNode()
 	if err != nil {
 		return &ctypes.ResultStatus{}, err
 	}
@@ -34,7 +34,7 @@ func getNodeStatus() (*ctypes.ResultStatus, error) {
 // CMD
 
 func printNodeStatus(cmd *cobra.Command, args []string) error {
-	status, err := getNodeStatus()
+	status, err := getNodeStatus(context.NewCoreContextFromViper())
 	if err != nil {
 		return err
 	}
@@ -52,38 +52,42 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 // REST
 
 // REST handler for node info
-func NodeInfoRequestHandler(w http.ResponseWriter, r *http.Request) {
-	status, err := getNodeStatus()
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
-	}
+func NodeInfoRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		status, err := getNodeStatus(ctx)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
-	nodeInfo := status.NodeInfo
-	output, err := cdc.MarshalJSON(nodeInfo)
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
+		nodeInfo := status.NodeInfo
+		output, err := cdc.MarshalJSON(nodeInfo)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write(output)
 	}
-	w.Write(output)
 }
 
 // REST handler for node syncing
-func NodeSyncingRequestHandler(w http.ResponseWriter, r *http.Request) {
-	status, err := getNodeStatus()
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
-	}
+func NodeSyncingRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		status, err := getNodeStatus(ctx)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
 
-	syncing := status.SyncInfo.Syncing
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
+		syncing := status.SyncInfo.Syncing
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write([]byte(strconv.FormatBool(syncing)))
 	}
-	w.Write([]byte(strconv.FormatBool(syncing)))
 }

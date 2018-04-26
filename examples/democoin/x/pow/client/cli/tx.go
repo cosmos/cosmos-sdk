@@ -1,4 +1,4 @@
-package commands
+package cli
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/pow"
 	"github.com/cosmos/cosmos-sdk/wire"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
 
 // command to mine some pow!

@@ -1,4 +1,4 @@
-package commands
+package cli
 
 import (
 	"encoding/hex"
@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/bank/client"
 )
 
 const (
@@ -48,7 +48,7 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := BuildMsg(from, to, coins)
+			msg := client.BuildMsg(from, to, coins)
 			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
 			if err != nil {
 				return err
@@ -61,12 +61,4 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 	cmd.Flags().String(flagTo, "", "Address to send coins")
 	cmd.Flags().String(flagAmount, "", "Amount of coins to send")
 	return cmd
-}
-
-// build the sendTx msg
-func BuildMsg(from sdk.Address, to sdk.Address, coins sdk.Coins) sdk.Msg {
-	input := bank.NewInput(from, coins)
-	output := bank.NewOutput(to, coins)
-	msg := bank.NewMsgSend([]bank.Input{input}, []bank.Output{output})
-	return msg
 }

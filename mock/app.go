@@ -52,14 +52,14 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 // them to the db
 func KVStoreHandler(storeKey sdk.StoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		dTx, ok := msg.(kvstoreTx)
+		dMsg, ok := msg.(KvstoreMsg)
 		if !ok {
 			panic("KVStoreHandler should only receive kvstoreTx")
 		}
 
 		// tx is already unmarshalled
-		key := dTx.key
-		value := dTx.value
+		key := dMsg.Key
+		value := dMsg.Value
 
 		store := ctx.KVStore(storeKey)
 		store.Set(key, value)

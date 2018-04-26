@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,6 +15,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -68,14 +70,14 @@ func main() {
 // KVStore Handler
 func Handler(storeKey sdk.StoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		dTx, ok := msg.(kvstoreTx)
+		dTx, ok := msg.(mock.KvstoreMsg)
 		if !ok {
 			panic("Handler should only receive kvstoreTx")
 		}
 
 		// tx is already unmarshalled
-		key := dTx.key
-		value := dTx.value
+		key := dTx.Key
+		value := dTx.Value
 
 		store := ctx.KVStore(storeKey)
 		store.Set(key, value)
@@ -85,4 +87,25 @@ func Handler(storeKey sdk.StoreKey) sdk.Handler {
 			Log:  fmt.Sprintf("set %s=%s", key, value),
 		}
 	}
+}
+
+// takes raw transaction bytes and decodes them into an sdk.Tx. An sdk.Tx has
+// all the signatures and can be used to authenticate.
+func decodeTx(txBytes []byte) (sdk.Tx, sdk.Error) {
+	var msg sdk.Msg
+
+	split := bytes.Split(txBytes, []byte("="))
+	if len(split) == 1 {
+		k := split[0]
+		msg = mock.KvstoreMsg{k, k}
+	} else if len(split) == 2 {
+		k, v := split[0], split[1]
+		msg = mock.KvstoreMsg{k, v}
+	} else {
+		return sdk.Tx{}, sdk.ErrTxDecode("too many =")
+	}
+
+	tx := sdk.NewTx(msg, sdk.StdFee{}, nil)
+
+	return tx, nil
 }

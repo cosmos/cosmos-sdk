@@ -113,18 +113,25 @@ func MakeCodec() *wire.Codec {
 
 // Custom logic for transaction decoding
 func (app *BasecoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
-	var tx = sdk.StdTx{}
+	var msg sdk.Msg
 
 	if len(txBytes) == 0 {
-		return nil, sdk.ErrTxDecode("txBytes are empty")
+		return sdk.Tx{}, sdk.ErrTxDecode("txBytes are empty")
 	}
 
 	// StdTx.Msg is an interface. The concrete types
 	// are registered by MakeTxCodec in bank.RegisterAmino.
-	err := app.cdc.UnmarshalBinary(txBytes, &tx)
+	err := app.cdc.UnmarshalBinary(txBytes, &msg)
 	if err != nil {
-		return nil, sdk.ErrTxDecode("").Trace(err.Error())
+		return sdk.Tx{}, sdk.ErrTxDecode("").Trace(err.Error())
 	}
+
+	tx := sdk.Tx{
+		Msg:        msg,
+		Fee:        sdk.StdFee{},
+		Signatures: nil,
+	}
+
 	return tx, nil
 }
 

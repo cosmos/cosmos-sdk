@@ -51,5 +51,5 @@ func exportApp(rootDir string, logger log.Logger) (interface{}, *wire.Codec, err
 		return nil, nil, err
 	}
 	bapp := app.NewBasecoinApp(logger, db)
-	return bapp.ExportGenesis(), nil, nil
+	return bapp.ExportGenesis(), app.MakeCodec(), nil
 }

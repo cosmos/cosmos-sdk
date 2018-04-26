@@ -65,8 +65,8 @@ func GaiaAppInit() server.AppInit {
 	return server.AppInit{
 		FlagsAppGenState: fsAppGenState,
 		FlagsAppGenTx:    fsAppGenTx,
-		AppGenState:      GaiaAppGenState,
 		AppGenTx:         GaiaAppGenTx,
+		AppGenState:      GaiaAppGenState,
 	}
 }
 
@@ -77,7 +77,45 @@ type GaiaGenTx struct {
 	PubKey  crypto.PubKey `json:"pub_key"`
 }
 
-// power given to validators in gaia init functions
+// Generate a gaia genesis transaction
+func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
+	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
+
+	var addr sdk.Address
+	var secret string
+	clientRoot := viper.GetString(flagClientHome)
+	overwrite := viper.GetBool(flagOWK)
+	name := viper.GetString(flagName)
+	addr, secret, err = server.GenerateSaveCoinKey(clientRoot, name, "1234567890", overwrite)
+	if err != nil {
+		return
+	}
+
+	var bz []byte
+	gaiaGenTx := GaiaGenTx{
+		Name:    name,
+		Address: addr,
+		PubKey:  pk,
+	}
+	bz, err = wire.MarshalJSONIndent(cdc, gaiaGenTx)
+	if err != nil {
+		return
+	}
+	appGenTx = json.RawMessage(bz)
+
+	mm := map[string]string{"secret": secret}
+	bz, err = cdc.MarshalJSON(mm)
+	if err != nil {
+		return
+	}
+	cliPrint = json.RawMessage(bz)
+
+	validator = tmtypes.GenesisValidator{
+		PubKey: pk,
+		Power:  freeFermionVal,
+	}
+	return
+}
 
 // Create the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey
@@ -131,45 +169,5 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
 		StakeData: stakeData,
 	}
 	appState, err = wire.MarshalJSONIndent(cdc, genesisState)
-	return
-}
-
-// Generate a gaia genesis transaction
-func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
-	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
-
-	var addr sdk.Address
-	var secret string
-	clientRoot := viper.GetString(flagClientHome)
-	overwrite := viper.GetBool(flagOWK)
-	name := viper.GetString(flagName)
-	addr, secret, err = server.GenerateSaveCoinKey(clientRoot, name, "1234567890", overwrite)
-	if err != nil {
-		return
-	}
-
-	var bz []byte
-	gaiaGenTx := GaiaGenTx{
-		Name:    name,
-		Address: addr,
-		PubKey:  pk,
-	}
-	bz, err = wire.MarshalJSONIndent(cdc, gaiaGenTx)
-	if err != nil {
-		return
-	}
-	appGenTx = json.RawMessage(bz)
-
-	mm := map[string]string{"secret": secret}
-	bz, err = cdc.MarshalJSON(mm)
-	if err != nil {
-		return
-	}
-	cliPrint = json.RawMessage(bz)
-
-	validator = tmtypes.GenesisValidator{
-		PubKey: pk,
-		Power:  freeFermionVal,
-	}
 	return
 }

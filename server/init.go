@@ -58,7 +58,7 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				return err
 			}
 			nodeID := string(nodeKey.ID())
-			pubKey := ReadOrCreatePrivValidator(config)
+			pubKey := readOrCreatePrivValidator(config)
 
 			appGenTx, cliPrint, validator, err := appInit.AppGenTx(cdc, pubKey)
 			if err != nil {
@@ -126,7 +126,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 				return err
 			}
 			nodeID := string(nodeKey.ID())
-			pubKey := ReadOrCreatePrivValidator(config)
+			pubKey := readOrCreatePrivValidator(config)
 
 			chainID := viper.GetString(flagChainID)
 			if chainID == "" {
@@ -247,7 +247,7 @@ func processGenTxs(genTxsDir string, cdc *wire.Codec, appInit AppInit) (
 //________________________________________________________________________________________
 
 // read of create the private key file for this config
-func ReadOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
+func readOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
 	// private validator
 	privValFile := tmConfig.PrivValidatorFile()
 	var privValidator *pvm.FilePV
@@ -297,54 +297,26 @@ type AppInit struct {
 	FlagsAppGenState *pflag.FlagSet
 	FlagsAppGenTx    *pflag.FlagSet
 
-	// AppGenState creates the core parameters initialization. It takes in a
-	// pubkey meant to represent the pubkey of the validator of this machine.
-	AppGenState func(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error)
-
 	// create the application genesis tx
 	AppGenTx func(cdc *wire.Codec, pk crypto.PubKey) (
 		appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error)
+
+	// AppGenState creates the core parameters initialization. It takes in a
+	// pubkey meant to represent the pubkey of the validator of this machine.
+	AppGenState func(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error)
 }
 
 //_____________________________________________________________________
 
 // simple default application init
 var DefaultAppInit = AppInit{
-	AppGenState: SimpleAppGenState,
 	AppGenTx:    SimpleAppGenTx,
+	AppGenState: SimpleAppGenState,
 }
 
 // simple genesis tx
 type SimpleGenTx struct {
 	Addr sdk.Address `json:"addr"`
-}
-
-// create the genesis app state
-func SimpleAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
-
-	if len(appGenTxs) != 1 {
-		err = errors.New("must provide a single genesis transaction")
-		return
-	}
-
-	var genTx SimpleGenTx
-	err = cdc.UnmarshalJSON(appGenTxs[0], &genTx)
-	if err != nil {
-		return
-	}
-
-	appState = json.RawMessage(fmt.Sprintf(`{
-  "accounts": [{
-    "address": "%s",
-    "coins": [
-      {
-        "denom": "mycoin",
-        "amount": 9007199254740992
-      }
-    ]
-  }]
-}`, genTx.Addr.String()))
-	return
 }
 
 // Generate a genesis transaction
@@ -379,6 +351,36 @@ func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
 	}
 	return
 }
+
+// create the genesis app state
+func SimpleAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+
+	if len(appGenTxs) != 1 {
+		err = errors.New("must provide a single genesis transaction")
+		return
+	}
+
+	var genTx SimpleGenTx
+	err = cdc.UnmarshalJSON(appGenTxs[0], &genTx)
+	if err != nil {
+		return
+	}
+
+	appState = json.RawMessage(fmt.Sprintf(`{
+  "accounts": [{
+    "address": "%s",
+    "coins": [
+      {
+        "denom": "mycoin",
+        "amount": 9007199254740992
+      }
+    ]
+  }]
+}`, genTx.Addr.String()))
+	return
+}
+
+//___________________________________________________________________________________________
 
 // GenerateCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.

@@ -12,7 +12,8 @@ import (
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 )
 
-func TestInit(t *testing.T) {
+// TODO update
+func TestInitCmd(t *testing.T) {
 	defer setupViper(t)()
 
 	logger := log.NewNopLogger()
@@ -27,4 +28,16 @@ func TestInit(t *testing.T) {
 	cmd := InitCmd(ctx, cdc, appInit)
 	err = cmd.RunE(nil, nil)
 	require.NoError(t, err)
+}
+
+func TestGenTxCmd(t *testing.T) {
+	// TODO
+}
+
+func TestSimpleAppGenTx(t *testing.T) {
+	// TODO
+}
+
+func TestSimpleAppGenState(t *testing.T) {
+	// TODO
 }

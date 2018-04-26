@@ -7,7 +7,8 @@ import (
 type HashOp uint8
 
 const (
-	RIPEMD160 = HashOp(iota)
+	NOP = HashOp(iota)
+	RIPEMD160
 	SHA224
 	SHA256
 	SHA284
@@ -52,12 +53,14 @@ type KeyProof interface {
 	Root() []byte
 }
 
-type SubTreeProof struct {
+type SubProof struct {
+	Proof KeyProof
+	Infos [][]byte
 }
 
 type MultiProof struct {
 	KeyProof  KeyProof
-	SubProofs []ExistsProof
+	SubProofs []SubProof
 }
 
 func (p MultiProof) Bytes() ([]byte, error) {

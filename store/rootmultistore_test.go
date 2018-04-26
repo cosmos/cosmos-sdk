@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/go-amino"
 	dbm "github.com/tendermint/tmlibs/db"
 	libmerkle "github.com/tendermint/tmlibs/merkle"
 
@@ -95,7 +96,6 @@ func TestParsePath(t *testing.T) {
 }
 
 func TestMultiStoreQuery(t *testing.T) {
-	fmt.Printf("start\n")
 	db := dbm.NewMemDB()
 	multi := newMultiStoreWithMounts(db)
 	err := multi.LoadLatestVersion()
@@ -145,7 +145,6 @@ func TestMultiStoreQuery(t *testing.T) {
 	assert.Nil(t, qprf)
 
 	// valid query with data
-	fmt.Printf("Proving %s/%s\n", string(k), string(v))
 	query.Path = "/store1/key"
 	query.Prove = true
 	qval, qprf, qerr = multi.Query(query)
@@ -153,7 +152,7 @@ func TestMultiStoreQuery(t *testing.T) {
 	assert.Equal(t, v, qval)
 	leaf, err := merkle.Leaf(k, v)
 	assert.Nil(t, err)
-	assert.Nil(t, qprf.Verify(leaf, root, []byte("store1")))
+	assert.Nil(t, qprf.Verify(leaf, inner("store1"), root))
 
 	// valid but empty
 	query.Path = "/store2/key"
@@ -164,18 +163,45 @@ func TestMultiStoreQuery(t *testing.T) {
 	//	assert.Nil(t, qprf.Verify(k2, root, []byte("store2")))
 
 	// store2 data
-	fmt.Printf("Proving %s/%s\n", string(k2), string(v2))
 	query.Data = k2
 	qval, qprf, qerr = multi.Query(query)
 	assert.Nil(t, qerr)
 	assert.Equal(t, v2, qval)
 	leaf, err = merkle.Leaf(k2, v2)
 	assert.Nil(t, err)
-	assert.Nil(t, qprf.Verify(leaf, root, []byte("store2")))
+	assert.Nil(t, qprf.Verify(leaf, inner("store2"), root))
 }
 
 //-----------------------------------------------------------------------
 // utils
+
+// infos = [][]byte{keyname, version}
+func inner(key string) merkle.Inner {
+	return func(index int, infos [][]byte, root []byte) ([]byte, error) {
+		if index >= 1 {
+			return nil, fmt.Errorf("Recursive multistore not supported")
+		}
+		name := string(infos[0])
+		if name != key {
+			return nil, fmt.Errorf("Store name not match")
+		}
+		version, _, err := amino.DecodeInt64(infos[1])
+		if err != nil {
+			return nil, err
+		}
+		si := storeInfo{
+			Name: key,
+			Core: storeCore{
+				CommitID{
+					Version: version,
+					Hash:    root,
+				},
+			},
+		}
+
+		return merkle.SimpleLeaf([]byte(key), si)
+	}
+}
 
 func newMultiStoreWithMounts(db dbm.DB) *rootMultiStore {
 	store := NewCommitMultiStore(db)

@@ -18,11 +18,7 @@ func (p ExistsProof) Verify(leaf []byte) error {
 		leaf = append(leaf, data.Suffix...)
 	}
 
-	fmt.Printf("hashed': %+v\n", leaf)
-
 	leaf = data.Op.Hash(leaf)
-
-	fmt.Printf("OneHash: %+v\n", leaf)
 
 	for _, node := range p.Nodes {
 		if node.Prefix != nil {
@@ -31,10 +27,7 @@ func (p ExistsProof) Verify(leaf []byte) error {
 		if node.Suffix != nil {
 			leaf = append(leaf, node.Suffix...)
 		}
-		fmt.Printf("hashed': %+v\n", leaf)
 		leaf = node.Op.Hash(leaf)
-
-		fmt.Printf("AftHash: %+v\n", leaf)
 	}
 
 	if !bytes.Equal(leaf, p.RootHash) {
@@ -60,39 +53,38 @@ func (p MultiProof) Root() []byte {
 	if p.SubProofs == nil {
 		return p.KeyProof.Root()
 	} else {
-		return p.SubProofs[len(p.SubProofs)-1].Root()
+		return p.SubProofs[len(p.SubProofs)-1].Proof.Root()
 	}
 }
 
-func (p MultiProof) Verify(leaf []byte, root []byte, inners ...[]byte) (err error) {
-	fmt.Printf("Proof: %+v\n", p)
+type Inner func(int, [][]byte, []byte) ([]byte, error)
 
+func (p MultiProof) Verify(leaf []byte, iv Inner, root []byte) (err error) {
 	kp := p.KeyProof
-	subroot := kp.Root()
+	//	subroot := kp.Root()
 	err = kp.Verify(leaf)
 	if err != nil {
 		return
 	}
+	/*
+		for i, p := range p.SubProofs {
+			var leaf []byte
+			leaf, err = iv(i, p.Infos, subroot)
+			if err != nil {
+				return
+			}
 
-	if len(p.SubProofs) != len(inners) {
-		return fmt.Errorf("Subproof roots length not match")
-	}
-
-	for i, p := range p.SubProofs {
-		err = p.Verify(subroot)
-		if err != nil {
-			return
+			err = p.Proof.Verify(leaf)
+			if err != nil {
+				return
+			}
+			subroot = p.Proof.Root()
 		}
-		subroot = p.Root()
-		if !bytes.Equal(subroot, inners[i]) {
-			return fmt.Errorf("Subproof root #%d not match", i)
+
+		if !bytes.Equal(subroot, root) {
+			return fmt.Errorf("Root not match")
 		}
-	}
-
-	if !bytes.Equal(subroot, root) {
-		return fmt.Errorf("Root not match")
-	}
-
+	*/
 	return nil
 
 }
@@ -100,6 +92,8 @@ func (p MultiProof) Verify(leaf []byte, root []byte, inners ...[]byte) (err erro
 func (op HashOp) Hash(bz []byte) (res []byte) {
 	var hasher hash.Hash
 	switch op {
+	case NOP:
+		return bz
 	case RIPEMD160:
 		hasher = ripemd160.New()
 	default:

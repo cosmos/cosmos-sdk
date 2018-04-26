@@ -13,7 +13,7 @@ import (
 
 func FromSimpleProof(p *merkle.SimpleProof, index int, total int, root []byte) (res ExistsProof, err error) {
 	data := ExistsData{
-		Op: RIPEMD160,
+		Op: NOP,
 	}
 
 	nodes := make([]Node, len(p.Aunts))
@@ -188,4 +188,20 @@ func SimpleLeaf(key []byte, value merkle.Hasher) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func Plain(kv merkle.KVPair) []byte {
+	buf := new(bytes.Buffer)
+
+	err := encodeByteSlice(buf, kv.Key)
+	if err != nil {
+		panic(err)
+	}
+
+	err = encodeByteSlice(buf, kv.Value)
+	if err != nil {
+		panic(err)
+	}
+
+	return buf.Bytes()
 }

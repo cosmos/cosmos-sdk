@@ -1,12 +1,14 @@
 package store
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
 	"golang.org/x/crypto/ripemd160"
 
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/go-amino"
 	dbm "github.com/tendermint/tmlibs/db"
 	libmerkle "github.com/tendermint/tmlibs/merkle"
 
@@ -29,10 +31,9 @@ type rootMultiStore struct {
 	storesParams map[StoreKey]storeParams
 	stores       map[StoreKey]CommitStore
 	keysByName   map[string]StoreKey
-	indexByName  map[string]int
 
 	// cached proofs
-	proofs []merkle.ExistsProof
+	proofByName map[string]merkle.SubProof
 }
 
 var _ CommitMultiStore = (*rootMultiStore)(nil)
@@ -44,7 +45,6 @@ func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 		storesParams: make(map[StoreKey]storeParams),
 		stores:       make(map[StoreKey]CommitStore),
 		keysByName:   make(map[string]StoreKey),
-		indexByName:  make(map[string]int),
 	}
 }
 
@@ -149,9 +149,6 @@ func (rs *rootMultiStore) Commit() CommitID {
 	version := rs.lastCommitID.Version + 1
 	commitInfo := commitStores(version, rs.stores)
 
-	// debug
-	fmt.Printf("commitid: %+v\n", commitInfo.Hash())
-
 	// Need to update atomically.
 	batch := rs.db.NewBatch()
 	setCommitInfo(batch, version, commitInfo)
@@ -167,7 +164,6 @@ func (rs *rootMultiStore) Commit() CommitID {
 
 	// cache substore proofs
 	rs.cacheSubstoreProofs(commitInfo.StoreInfos)
-	rs.setIndexByName(commitInfo.StoreInfos)
 
 	return commitID
 }
@@ -241,10 +237,10 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) (value []byte, proof *mer
 	if err != nil {
 		return
 	}
-	subproof := rs.proofs[rs.indexByName[storeName]]
+
+	subproof := rs.proofByName[storeName]
 
 	proof.SubProofs = append(proof.SubProofs, subproof)
-
 	return
 }
 
@@ -303,8 +299,8 @@ func makeInfoMap(infos []storeInfo) map[string]libmerkle.Hasher {
 	return m
 }
 
-func (rs *rootMultiStore) setIndexByName(infos []storeInfo) {
-	rs.indexByName = make(map[string]int)
+func (rs *rootMultiStore) indexByName(infos []storeInfo) (res map[string]int) {
+	res = make(map[string]int)
 	m := makeInfoMap(infos)
 	sm := libmerkle.NewSimpleMap()
 	for k, v := range m {
@@ -324,39 +320,38 @@ func (rs *rootMultiStore) setIndexByName(infos []storeInfo) {
 	for _, info := range infos {
 		hash := libmerkle.SimpleHashFromBytes([]byte(info.Name))
 		copy(key[:], hash[:20])
-		rs.indexByName[info.Name] = kvm[key]
+		res[info.Name] = kvm[key]
 	}
+
+	return
 }
 
 func (rs *rootMultiStore) cacheSubstoreProofs(infos []storeInfo) {
 	m := makeInfoMap(infos)
 	_, proofs := libmerkle.SimpleProofsFromMap(m)
 
-	rs.proofs = make([]merkle.ExistsProof, len(proofs))
-	for i, p := range proofs {
-		// begin debug
+	cid := rs.LastCommitID()
+	rs.proofByName = make(map[string]merkle.SubProof)
 
-		name := infos[i].Name
-		fmt.Printf("name: %s\n", name)
+	ibn := rs.indexByName(infos)
 
-		index := rs.indexByName[name]
-		fmt.Printf("index: %d\n", index)
-
-		leaf, err := merkle.SimpleLeaf([]byte(name), infos[i])
+	for name, index := range ibn {
+		proof, err := merkle.FromSimpleProof(proofs[index], index, len(proofs), cid.Hash)
 		if err != nil {
 			panic(err)
 		}
 
-		fmt.Printf("subv: %+v\n", p.Verify(index, len(proofs), leaf, rs.LastCommitID().Hash))
-
-		// end debug
-
-		proof, err := merkle.FromSimpleProof(p, index, len(proofs), rs.LastCommitID().Hash)
-		if err != nil {
+		version := new(bytes.Buffer)
+		if err = amino.EncodeInt64(version, cid.Version); err != nil {
 			panic(err)
 		}
 
-		rs.proofs[i] = proof
+		infos := [][]byte{[]byte(name), version.Bytes()}
+
+		rs.proofByName[name] = merkle.SubProof{
+			Proof: proof,
+			Infos: infos,
+		}
 	}
 }
 

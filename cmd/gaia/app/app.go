@@ -113,7 +113,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	}
 
 	// load the initial stake information
-	stake.InitGenesis(app.stakeKeeper, ctx, genesisState.StakeData)
+	stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
 
 	return abci.ResponseInitChain{}
 }
@@ -122,6 +122,6 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 func (app *GaiaApp) ExportGenesis() GenesisState {
 	return GenesisState{
 		Accounts:  []GenesisAccount{},
-		StakeData: stake.WriteGenesis(app.stakeKeeper, app.NewContext(true, abci.Header{})),
+		StakeData: stake.WriteGenesis(app.NewContext(true, abci.Header{}), app.stakeKeeper),
 	}
 }

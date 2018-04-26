@@ -134,13 +134,13 @@ func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper, powKeeper pow.Keep
 		}
 
 		// Application specific genesis handling
-		err = cool.InitGenesis(app.coolKeeper, ctx, genesisState.CoolGenesis)
+		err = cool.InitGenesis(ctx, app.coolKeeper, genesisState.CoolGenesis)
 		if err != nil {
 			panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 			//	return sdk.ErrGenesisParse("").TraceCause(err, "")
 		}
 
-		err = pow.InitGenesis(app.powKeeper, ctx, genesisState.POWGenesis)
+		err = pow.InitGenesis(ctx, app.powKeeper, genesisState.POWGenesis)
 		if err != nil {
 			panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 			//	return sdk.ErrGenesisParse("").TraceCause(err, "")
@@ -155,7 +155,7 @@ func (app *DemocoinApp) ExportGenesis() types.GenesisState {
 	ctx := app.NewContext(true, abci.Header{})
 	return types.GenesisState{
 		Accounts:    []*types.GenesisAccount{},
-		POWGenesis:  pow.WriteGenesis(app.powKeeper, ctx),
-		CoolGenesis: cool.WriteGenesis(app.coolKeeper, ctx),
+		POWGenesis:  pow.WriteGenesis(ctx, app.powKeeper),
+		CoolGenesis: cool.WriteGenesis(ctx, app.coolKeeper),
 	}
 }

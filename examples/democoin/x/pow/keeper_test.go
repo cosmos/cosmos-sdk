@@ -37,10 +37,10 @@ func TestPowKeeperGetSet(t *testing.T) {
 	ck := bank.NewKeeper(am)
 	keeper := NewKeeper(capKey, config, ck, DefaultCodespace)
 
-	err := InitGenesis(keeper, ctx, Genesis{uint64(1), uint64(0)})
+	err := InitGenesis(ctx, keeper, Genesis{uint64(1), uint64(0)})
 	assert.Nil(t, err)
 
-	genesis := WriteGenesis(keeper, ctx)
+	genesis := WriteGenesis(ctx, keeper)
 	assert.Nil(t, err)
 	assert.Equal(t, genesis, Genesis{uint64(1), uint64(0)})
 

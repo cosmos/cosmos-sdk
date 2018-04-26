@@ -34,10 +34,10 @@ func TestCoolKeeper(t *testing.T) {
 	ck := bank.NewKeeper(am)
 	keeper := NewKeeper(capKey, ck, DefaultCodespace)
 
-	err := InitGenesis(keeper, ctx, Genesis{"icy"})
+	err := InitGenesis(ctx, keeper, Genesis{"icy"})
 	assert.Nil(t, err)
 
-	genesis := WriteGenesis(keeper, ctx)
+	genesis := WriteGenesis(ctx, keeper)
 	assert.Nil(t, err)
 	assert.Equal(t, genesis, Genesis{"icy"})
 

@@ -37,8 +37,8 @@ func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	if err != nil {
 		return nil, err
 	}
-	bapp := app.NewGaiaApp(logger, db)
-	return bapp, nil
+	gapp := app.NewGaiaApp(logger, db)
+	return gapp, nil
 }
 
 func exportApp(rootDir string, logger log.Logger) (interface{}, *wire.Codec, error) {
@@ -47,9 +47,6 @@ func exportApp(rootDir string, logger log.Logger) (interface{}, *wire.Codec, err
 	if err != nil {
 		return nil, nil, err
 	}
-	bapp := app.NewGaiaApp(log.NewNopLogger(), db)
-	if err != nil {
-		return nil, nil, err
-	}
-	return bapp.ExportGenesis(), app.MakeCodec(), nil
+	gapp := app.NewGaiaApp(log.NewNopLogger(), db)
+	return gapp.ExportGenesis(), app.MakeCodec(), nil
 }

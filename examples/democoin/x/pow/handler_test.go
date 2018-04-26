@@ -30,7 +30,7 @@ func TestPowHandler(t *testing.T) {
 	count := uint64(1)
 	difficulty := uint64(2)
 
-	err := InitGenesis(keeper, ctx, Genesis{uint64(1), uint64(0)})
+	err := InitGenesis(ctx, keeper, Genesis{uint64(1), uint64(0)})
 	assert.Nil(t, err)
 
 	nonce, proof := mine(addr, count, difficulty)

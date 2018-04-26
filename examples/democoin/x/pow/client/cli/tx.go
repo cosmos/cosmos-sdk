@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -19,13 +18,8 @@ func MineCmd(cdc *wire.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "mine [difficulty] [count] [nonce] [solution]",
 		Short: "Mine some coins with proof-of-work!",
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 4 {
-				return errors.New("You must provide a difficulty, a count, a solution, and a nonce (in that order)")
-			}
-
-			// get from address and parse arguments
-
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			from, err := ctx.GetFromAddress()

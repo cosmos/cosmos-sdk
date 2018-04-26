@@ -4,8 +4,10 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
+// Type synonym for convenience
 type Tag = cmn.KVPair
 
+// Type synonym for convenience
 type Tags = cmn.KVPairs
 
 // Append two lists of tags

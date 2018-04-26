@@ -48,7 +48,7 @@ var (
 func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gen-tx",
-		Short: "Create genesis transaction file (under [--home]/gentx-[nodeID].json)",
+		Short: "Create genesis transaction file (under [--home]/config/gentx/gentx-[nodeID].json)",
 		Args:  cobra.NoArgs,
 		RunE: func(_ *cobra.Command, args []string) error {
 
@@ -85,7 +85,12 @@ func GenTxCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 			}
 			genTxFile := json.RawMessage(bz)
 			name := fmt.Sprintf("gentx-%v.json", nodeID)
-			file := filepath.Join(viper.GetString(tmcli.HomeFlag), name)
+			writePath := filepath.Join(viper.GetString(tmcli.HomeFlag), "config", "gentx")
+			file := filepath.Join(writePath, name)
+			err = cmn.EnsureDir(writePath, 0700)
+			if err != nil {
+				return err
+			}
 			err = cmn.WriteFile(file, bz, 0644)
 			if err != nil {
 				return err
@@ -144,14 +149,14 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 			var validators []tmtypes.GenesisValidator
 			var persistentPeers string
 
-			genTxsDir := viper.GetString(flagGenTxs)
-			if genTxsDir != "" {
+			if viper.GetBool(flagGenTxs) {
+				genTxsDir := filepath.Join(viper.GetString(tmcli.HomeFlag), "config", "gentx")
 				validators, appGenTxs, persistentPeers, err = processGenTxs(genTxsDir, cdc, appInit)
 				if err != nil {
 					return err
 				}
 				config.P2P.PersistentPeers = persistentPeers
-				configFilePath := filepath.Join(viper.GetString(tmcli.HomeFlag), "config", "config.toml") //TODO this is annoying should be easier to get
+				configFilePath := filepath.Join(viper.GetString(tmcli.HomeFlag), "config", "config.toml")
 				cfg.WriteConfigFile(configFilePath, config)
 			} else {
 				appGenTx, am, validator, err := appInit.AppGenTx(cdc, pubKey)
@@ -194,7 +199,7 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 	}
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().String(flagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(flagGenTxs, "", "directory containing the genesis transactions")
+	cmd.Flags().Bool(flagGenTxs, false, "apply genesis transactions from [--home]/config/gentx/")
 	cmd.Flags().AddFlagSet(appInit.FlagsAppGenState)
 	cmd.Flags().AddFlagSet(appInit.FlagsAppGenTx) // need to add this flagset for when no GenTx's provided
 	cmd.AddCommand(GenTxCmd(ctx, cdc, appInit))

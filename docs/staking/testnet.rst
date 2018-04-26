@@ -1,109 +1,33 @@
 Testnet Setup
 =============
 
+**Note:** This document is incomplete and may not be up-to-date with the state of the code.
+
 See the `installation guide <../sdk/install.html>`__ for details on installation.
 
 Here is a quick example to get you off your feet:
 
-First, generate a new key with a name, and save the address:
+First, generate a couple of genesis transactions to be incorparated into the genesis file, this will create two keys with the password ``1234567890``
 
 ::
 
-    MYNAME=<your name>
-    gaiacli keys new $MYNAME
+    gaiad init gen-tx --name=foo --home=$HOME/.gaiad1
+    gaiad init gen-tx --name=bar --home=$HOME/.gaiad2
     gaiacli keys list
-    MYADDR=<your newly generated address>
 
-
-Now initialize a gaia chain:
-
-::
-
-    gaiad init --home=$HOME/.gaiad1
-
-you should see seed phrase for genesis account in the output & config & data folder in the home directory.
-
-In the config folder, there will be the following files: ``config.toml``, ``genesis.json``, ``node_key.json``, and ``priv_validator.json``.
-
-The genesis file should look like this:
+**Note:** If you've already run these tests you may need to overwrite keys using the ``--OWK`` flag
+When you list the keys you should see two addresses, we'll need these later so take note. 
+Now let's actually create the genesis files for both nodes:
 
 ::
 
-    {
-      "genesis_time": "0001-01-01T00:00:00Z",
-      "chain_id": "test-chain-0TRiTa",
-      "validators": [
-        {
-          "pub_key": {
-            "type": "AC26791624DE60",
-            "value": "<value>"
-          },
-          "power": 10,
-          "name": ""
-        }
-      ],
-      "app_hash": "",
-      "app_state": {
-        "accounts": [
-          {
-            "address": "<ADDR>",
-            "coins": [
-              {
-                "denom": "steak",
-                "amount": 9007199254740992
-              }
-            ]
-          }
-        ]
-      }
-    }
+    cp -a ~/.gaiad2/config/gentx/. ~/.gaiad1/config/gentx/
+    cp -a ~/.gaiad1/config/gentx/. ~/.gaiad2/config/gentx/
+    gaiad init --gen-txs --home=$HOME/.gaiad1 --chain-id=test-chain
+    gaiad init --gen-txs --home=$HOME/.gaiad2 --chain-id=test-chain
 
-**Note:** We need to change the denomination of token from default to ``steak`` in the genesis file.
-
-Then, recover the genesis account with ``gaiacli``:
-
-::
-
-    gaiacli keys add <name> --recover
-
-By now, you have set up the first node. This is great!
-
-We can add a second node on our local machine by initiating a node in a new directory, and copying in the ``genesis.json``:
-
-::
-
-    gaiad init --home=$HOME/.gaiad2
-
-and replace the ``genesis.json`` and ``config.toml`` files:
-
-::
-
-    cp $HOME/.gaiad/config/genesis.json $HOME/.gaiad2/config
-    cp $HOME/.gaiad/config/config.toml $HOME/.gaiad2/config
-
-then, get the node id of first node:
-
-::
-
-    gaiad show_node_id --home=$HOME/.gaiad1
-
-We need to also modify $HOME/.gaiad2/config.toml to set new seeds and ports. It should look like:
-
-::
-
-    proxy_app = "tcp://127.0.0.1:46668"
-    moniker = "anonymous"
-    fast_sync = true
-    db_backend = "leveldb"
-    log_level = "state:info,*:error"
-    
-    [rpc]
-    laddr = "tcp://0.0.0.0:46667"
-    
-    [p2p]
-    laddr = "tcp://0.0.0.0:46666"
-    persistent_peers = "<node1-ID>@0.0.0.0:46656"
-
+**Note:** If you've already run these tests you may need to overwrite genesis using the ``-o`` flag
+What we just did is copy the genesis transactions between each of the nodes so there is a common genesis transaction set; then we created both genesis files independently from each home directory. Importantly both nodes have independently created their ``genesis.json`` and ``config.toml`` files, which should be identical between nodes.
 
 Great, now that we've initialized the chains, we can start both nodes in the background:
 
@@ -122,25 +46,13 @@ Nice. We can also lookup the validator set:
 
     gaiacli validatorset
 
-There is only **one** validator now. Let's add another one!
-
-First, we need to create a new account:
+Then, we try to transfer some ``fermion`` to another account:
 
 ::
 
-    gaiacli keys new <NAME>
-
-Check that we now have two accounts:
-
-::
-
-    gaiacli keys list 
-
-Then, we try to transfer some ``steak`` to another account:
-
-::
-
-    gaiacli send --amount=1000steak --to=$MYADDR2 --name=$NAME --chain-id=<CHAIN-ID> --node=tcp://localhost:46657 --sequence=0
+    gaiacli account <FOO-ADDR>
+    gaiacli account <BAR-ADDR>
+    gaiacli send --amount=10fermion --to=<BAR-ADDR> --name=foo --chain-id=test-chain
 
 **Note:** We need to be careful with the ``chain-id`` and ``sequence``
 
@@ -148,35 +60,7 @@ Check the balance & sequence with:
 
 ::
 
-    gaiacli account $MYADDR
-
-We can see the balance of ``$MYADDR2`` is 1000 now. 
-
-Finally, let's bond the validator in ``$HOME/gaiad2``. Get the pubkey first:
-
-::
-
-    cat $HOME/.gaiad2/config/priv_validator.json | jq .pub_key.value
-
-Go to `this website <http://tomeko.net/online_tools/base64.php?lang=en>`__ to change pubkey from base64 to Hex. 
-
-Ok, now we can bond some coins to that pubkey:
-
-::
-
-    gaiacli bond --stake=1steak --validator=<validator-pubkey-hex> --sequence=0 --chain-id=<chain-id> --name=test
-
-Nice. We can see there are now two validators:
-
-::
-
-    gaiacli validatorset
-
-Check the balance of ``$MYADDR2`` to see the difference: it has 1 less ``steak``!
-
-::
-
-    gaiacli account $MYADDR2
+    gaiacli account <BAR-ADDR>
 
 To confirm for certain the new validator is active, check tendermint:
 
@@ -188,6 +72,11 @@ Finally, to relinquish all your power, unbond some coins. You should see your Vo
 
 ::
 
-    gaiacli unbond  --sequence=# --chain-id=<chain-id> --name=test
+    gaiacli unbond --chain-id=<chain-id> --name=test
 
 That's it!
+
+**Note:** TODO demonstrate edit-candidacy
+**Note:** TODO demonstrate delegation
+**Note:** TODO demonstrate unbond of delegation
+**Note:** TODO demonstrate unbond candidate

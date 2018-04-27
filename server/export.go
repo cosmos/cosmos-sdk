@@ -6,16 +6,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/tmlibs/log"
-
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
-// AppExporter dumps all app state to JSON-serializable structure
-type AppExporter func(home string, log log.Logger) (interface{}, *wire.Codec, error)
-
 // ExportCmd dumps app state to JSON
-func ExportCmd(app AppExporter, ctx *Context) *cobra.Command {
+func ExportCmd(app baseapp.AppExporter, ctx *Context) *cobra.Command {
 	export := exportCmd{
 		appExporter: app,
 		context:     ctx,
@@ -29,7 +25,7 @@ func ExportCmd(app AppExporter, ctx *Context) *cobra.Command {
 }
 
 type exportCmd struct {
-	appExporter AppExporter
+	appExporter baseapp.AppExporter
 	context     *Context
 }
 

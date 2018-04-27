@@ -1,8 +1,6 @@
 package main
 
 import (
-	"path/filepath"
-
 	"github.com/spf13/cobra"
 
 	abci "github.com/tendermint/abci/types"
@@ -10,6 +8,7 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -24,29 +23,20 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, app.GaiaAppInit(), generateApp, exportApp)
+	server.AddCommands(ctx, cdc, rootCmd, app.GaiaAppInit(),
+		baseapp.GenerateFn(newApp, "gaia"),
+		baseapp.ExportFn(exportApp, "gaia"))
 
 	// prepare and add flags
 	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)
 	executor.Execute()
 }
 
-func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	dataDir := filepath.Join(rootDir, "data")
-	db, err := dbm.NewGoLevelDB("gaia", dataDir)
-	if err != nil {
-		return nil, err
-	}
-	gapp := app.NewGaiaApp(logger, db)
-	return gapp, nil
+func newApp(logger log.Logger, db dbm.DB) abci.Application {
+	return app.NewGaiaApp(logger, db)
 }
 
-func exportApp(rootDir string, logger log.Logger) (interface{}, *wire.Codec, error) {
-	dataDir := filepath.Join(rootDir, "data")
-	db, err := dbm.NewGoLevelDB("gaia", dataDir)
-	if err != nil {
-		return nil, nil, err
-	}
-	gapp := app.NewGaiaApp(log.NewNopLogger(), db)
-	return gapp.ExportGenesis(), app.MakeCodec(), nil
+func exportApp(logger log.Logger, db dbm.DB) (interface{}, *wire.Codec) {
+	gapp := app.NewGaiaApp(logger, db)
+	return gapp.ExportGenesis(), app.MakeCodec()
 }

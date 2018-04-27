@@ -119,7 +119,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 }
 
 // custom logic for export
-func (app *GaiaApp) ExportGenesis() GenesisState {
+func (app *GaiaApp) ExportGenesis() interface{} {
 	return GenesisState{
 		Accounts:  []GenesisAccount{},
 		StakeData: stake.WriteGenesis(app.NewContext(true, abci.Header{}), app.stakeKeeper),

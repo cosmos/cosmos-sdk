@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -11,6 +10,7 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -26,7 +26,9 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, server.DefaultAppInit, generateApp, exportApp)
+	server.AddCommands(ctx, cdc, rootCmd, server.DefaultAppInit,
+		baseapp.GenerateFn(newApp, "basecoin"),
+		baseapp.ExportFn(exportApp, "basecoin"))
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.basecoind")
@@ -34,22 +36,11 @@ func main() {
 	executor.Execute()
 }
 
-func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	dataDir := filepath.Join(rootDir, "data")
-	db, err := dbm.NewGoLevelDB("basecoin", dataDir)
-	if err != nil {
-		return nil, err
-	}
-	bapp := app.NewBasecoinApp(logger, db)
-	return bapp, nil
+func newApp(logger log.Logger, db dbm.DB) abci.Application {
+	return app.NewBasecoinApp(logger, db)
 }
 
-func exportApp(rootDir string, logger log.Logger) (interface{}, *wire.Codec, error) {
-	dataDir := filepath.Join(rootDir, "data")
-	db, err := dbm.NewGoLevelDB("basecoin", dataDir)
-	if err != nil {
-		return nil, nil, err
-	}
+func exportApp(logger log.Logger, db dbm.DB) (interface{}, *wire.Codec) {
 	bapp := app.NewBasecoinApp(logger, db)
-	return bapp.ExportGenesis(), app.MakeCodec(), nil
+	return bapp.ExportGenesis(), app.MakeCodec()
 }

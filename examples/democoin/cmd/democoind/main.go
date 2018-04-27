@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -12,6 +11,7 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -43,23 +43,13 @@ func CoolAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
 	return
 }
 
-func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	db, err := dbm.NewGoLevelDB("democoin", filepath.Join(rootDir, "data"))
-	if err != nil {
-		return nil, err
-	}
-	bapp := app.NewDemocoinApp(logger, db)
-	return bapp, nil
+func newApp(logger log.Logger, db dbm.DB) abci.Application {
+	return app.NewDemocoinApp(logger, db)
 }
 
-func exportApp(rootDir string, logger log.Logger) (interface{}, *wire.Codec, error) {
-	dataDir := filepath.Join(rootDir, "data")
-	db, err := dbm.NewGoLevelDB("democoin", dataDir)
-	if err != nil {
-		return nil, nil, err
-	}
-	bapp := app.NewDemocoinApp(logger, db)
-	return bapp.ExportGenesis(), app.MakeCodec(), nil
+func exportApp(logger log.Logger, db dbm.DB) (interface{}, *wire.Codec) {
+	dapp := app.NewDemocoinApp(logger, db)
+	return dapp.ExportGenesis(), app.MakeCodec()
 }
 
 func main() {
@@ -72,7 +62,9 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit, generateApp, exportApp)
+	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit,
+		baseapp.GenerateFn(newApp, "democoin"),
+		baseapp.ExportFn(exportApp, "democoin"))
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.democoind")

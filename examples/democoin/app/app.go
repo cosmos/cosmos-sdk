@@ -151,7 +151,7 @@ func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper, powKeeper pow.Keep
 }
 
 // Custom logic for state export
-func (app *DemocoinApp) ExportGenesis() types.GenesisState {
+func (app *DemocoinApp) ExportGenesis() interface{} {
 	ctx := app.NewContext(true, abci.Header{})
 	return types.GenesisState{
 		Accounts:    []*types.GenesisAccount{},

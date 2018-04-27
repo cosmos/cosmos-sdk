@@ -120,7 +120,7 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 	}}
 
 	// marshal bytes
-	tx := sdk.NewStdTx(signMsg.Msg, signMsg.Fee, sigs)
+	tx := sdk.NewTx(signMsg.Msg, signMsg.Fee, sigs)
 
 	return cdc.MarshalBinary(tx)
 }

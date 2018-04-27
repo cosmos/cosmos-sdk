@@ -244,7 +244,13 @@ func TestDeliverTx(t *testing.T) {
 		return sdk.Result{}
 	})
 
-	tx := testUpdatePowerTx{} // doesn't matter
+	msg := testUpdatePowerMsg{} // doesn't matter
+	tx := sdk.Tx{
+		Msg:        msg,
+		Fee:        sdk.StdFee{},
+		Signatures: nil,
+	}
+
 	header := abci.Header{AppHash: []byte("apphash")}
 
 	nBlocks := 3
@@ -288,7 +294,12 @@ func TestQuery(t *testing.T) {
 	res := app.Query(query)
 	assert.Equal(t, 0, len(res.Value))
 
-	tx := testUpdatePowerTx{} // doesn't matter
+	msg := testUpdatePowerMsg{} // doesn't matter
+	tx := sdk.Tx{
+		Msg:        msg,
+		Fee:        sdk.StdFee{},
+		Signatures: nil,
+	}
 
 	// query is still empty after a CheckTx
 	app.Check(tx)
@@ -311,20 +322,18 @@ func TestQuery(t *testing.T) {
 // TODO: clean this up
 
 // A mock transaction to update a validator's voting power.
-type testUpdatePowerTx struct {
+type testUpdatePowerMsg struct {
 	Addr     []byte
 	NewPower int64
 }
 
-const msgType = "testUpdatePowerTx"
+const msgType = "testUpdatePowerMsg"
 
-func (tx testUpdatePowerTx) Type() string                            { return msgType }
-func (tx testUpdatePowerTx) Get(key interface{}) (value interface{}) { return nil }
-func (tx testUpdatePowerTx) GetMsg() sdk.Msg                         { return tx }
-func (tx testUpdatePowerTx) GetSignBytes() []byte                    { return nil }
-func (tx testUpdatePowerTx) ValidateBasic() sdk.Error                { return nil }
-func (tx testUpdatePowerTx) GetSigners() []sdk.Address               { return nil }
-func (tx testUpdatePowerTx) GetSignatures() []sdk.StdSignature       { return nil }
+func (msg testUpdatePowerMsg) Type() string                            { return msgType }
+func (msg testUpdatePowerMsg) Get(key interface{}) (value interface{}) { return nil }
+func (msg testUpdatePowerMsg) GetSignBytes() []byte                    { return nil }
+func (msg testUpdatePowerMsg) ValidateBasic() sdk.Error                { return nil }
+func (msg testUpdatePowerMsg) GetSigners() []sdk.Address               { return nil }
 
 func TestValidatorChange(t *testing.T) {
 
@@ -333,9 +342,16 @@ func TestValidatorChange(t *testing.T) {
 	capKey := sdk.NewKVStoreKey("key")
 	app.MountStoresIAVL(capKey)
 	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
-		var ttx testUpdatePowerTx
-		fromJSON(txBytes, &ttx)
-		return ttx, nil
+		var msg testUpdatePowerMsg
+		fromJSON(txBytes, &msg)
+
+		tx := sdk.Tx{
+			Msg:        msg,
+			Fee:        sdk.StdFee{},
+			Signatures: nil,
+		}
+
+		return tx, nil
 	})
 
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
@@ -366,7 +382,7 @@ func TestValidatorChange(t *testing.T) {
 
 	// Add 1 to each validator's voting power.
 	for i, val := range valSet {
-		tx := testUpdatePowerTx{
+		tx := testUpdatePowerMsg{
 			Addr:     makePubKey(secret(i)).Address(),
 			NewPower: val.Power + 1,
 		}
@@ -448,7 +464,6 @@ func toJSON(o interface{}) []byte {
 }
 
 func fromJSON(bz []byte, ptr interface{}) {
-	// fmt.Println(">> fromJSON:", string(bz))
 	err := json.Unmarshal(bz, ptr)
 	if err != nil {
 		panic(err)

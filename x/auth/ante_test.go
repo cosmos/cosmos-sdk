@@ -61,7 +61,7 @@ func newTestTxWithSignBytes(msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, f
 	for i, priv := range privs {
 		sigs[i] = sdk.StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), Sequence: seqs[i]}
 	}
-	tx := sdk.NewStdTx(msg, fee, sigs)
+	tx := sdk.NewTx(msg, fee, sigs)
 	return tx
 }
 

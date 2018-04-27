@@ -456,7 +456,7 @@ func CheckBalance(t *testing.T, gapp *GaiaApp, addr sdk.Address, balExpected str
 	assert.Equal(t, balExpected, fmt.Sprintf("%v", res2.GetCoins()))
 }
 
-func genTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.StdTx {
+func genTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.Tx {
 	sigs := make([]sdk.StdSignature, len(priv))
 	for i, p := range priv {
 		sigs[i] = sdk.StdSignature{
@@ -466,7 +466,7 @@ func genTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.StdTx {
 		}
 	}
 
-	return sdk.NewStdTx(msg, fee, sigs)
+	return sdk.NewTx(msg, fee, sigs)
 
 }
 

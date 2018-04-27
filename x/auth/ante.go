@@ -27,12 +27,6 @@ func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) 
 		// TODO: can tx just implement message?
 		msg := tx.GetMsg()
 
-		// TODO: will this always be a stdtx? should that be used in the function signature?
-		stdTx, ok := tx.(sdk.StdTx)
-		if !ok {
-			return ctx, sdk.ErrInternal("tx must be sdk.StdTx").Result(), true
-		}
-
 		// Assert that number of signatures is correct.
 		var signerAddrs = msg.GetSigners()
 		if len(sigs) != len(signerAddrs) {
@@ -46,7 +40,7 @@ func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) 
 		for i := 0; i < len(signerAddrs); i++ {
 			sequences[i] = sigs[i].Sequence
 		}
-		fee := stdTx.Fee
+		fee := tx.Fee
 		chainID := ctx.ChainID()
 		// XXX: major hack; need to get ChainID
 		// into the app right away (#565)

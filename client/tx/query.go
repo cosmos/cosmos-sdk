@@ -95,11 +95,18 @@ type txInfo struct {
 }
 
 func parseTx(cdc *wire.Codec, txBytes []byte) (sdk.Tx, error) {
-	var tx sdk.StdTx
-	err := cdc.UnmarshalBinary(txBytes, &tx)
+	var msg sdk.Msg
+	err := cdc.UnmarshalBinary(txBytes, &msg)
 	if err != nil {
-		return nil, err
+		return sdk.Tx{}, err
 	}
+
+	tx := sdk.Tx{
+		Msg:        msg,
+		Fee:        sdk.StdFee{},
+		Signatures: nil,
+	}
+
 	return tx, nil
 }
 

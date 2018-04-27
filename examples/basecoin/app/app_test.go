@@ -416,7 +416,7 @@ func TestIBCMsgs(t *testing.T) {
 	SignCheckDeliver(t, bapp, receiveMsg, []int64{3}, false, priv1)
 }
 
-func genTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.StdTx {
+func genTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.Tx {
 	sigs := make([]sdk.StdSignature, len(priv))
 	for i, p := range priv {
 		sigs[i] = sdk.StdSignature{
@@ -426,7 +426,7 @@ func genTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.StdTx {
 		}
 	}
 
-	return sdk.NewStdTx(msg, fee, sigs)
+	return sdk.NewTx(msg, fee, sigs)
 
 }
 

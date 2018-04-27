@@ -94,7 +94,7 @@ func TestMsgs(t *testing.T) {
 	sequences := []int64{0}
 	for i, m := range msgs {
 		sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, fee, m.msg))
-		tx := sdk.NewStdTx(m.msg, fee, []sdk.StdSignature{{
+		tx := sdk.NewTx(m.msg, fee, []sdk.StdSignature{{
 			PubKey:    priv1.PubKey(),
 			Signature: sig,
 		}})
@@ -195,7 +195,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 	// Sign the tx
 	sequences := []int64{0}
 	sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, fee, sendMsg))
-	tx := sdk.NewStdTx(sendMsg, fee, []sdk.StdSignature{{
+	tx := sdk.NewTx(sendMsg, fee, []sdk.StdSignature{{
 		PubKey:    priv1.PubKey(),
 		Signature: sig,
 	}})
@@ -394,7 +394,7 @@ func TestHandler(t *testing.T) {
 func SignCheckDeliver(t *testing.T, bapp *DemocoinApp, msg sdk.Msg, seq int64, expPass bool) {
 
 	// Sign the tx
-	tx := sdk.NewStdTx(msg, fee, []sdk.StdSignature{{
+	tx := sdk.NewTx(msg, fee, []sdk.StdSignature{{
 		PubKey:    priv1.PubKey(),
 		Signature: priv1.Sign(sdk.StdSignBytes(chainID, []int64{seq}, fee, msg)),
 		Sequence:  seq,

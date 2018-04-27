@@ -29,34 +29,16 @@ type Msg interface {
 
 //__________________________________________________________
 
-// Transactions objects must fulfill the Tx
-type Tx interface {
-
-	// Gets the Msg.
-	GetMsg() Msg
-
-	// Signatures returns the signature of signers who signed the Msg.
-	// CONTRACT: Length returned is same as length of
-	// pubkeys returned from MsgKeySigners, and the order
-	// matches.
-	// CONTRACT: If the signature is missing (ie the Msg is
-	// invalid), then the corresponding signature is
-	// .Empty().
-	GetSignatures() []StdSignature
-}
-
-var _ Tx = (*StdTx)(nil)
-
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the FeePayer (Signatures must not be nil).
-type StdTx struct {
+type Tx struct {
 	Msg        `json:"msg"`
 	Fee        StdFee         `json:"fee"`
 	Signatures []StdSignature `json:"signatures"`
 }
 
-func NewStdTx(msg Msg, fee StdFee, sigs []StdSignature) StdTx {
-	return StdTx{
+func NewTx(msg Msg, fee StdFee, sigs []StdSignature) Tx {
+	return Tx{
 		Msg:        msg,
 		Fee:        fee,
 		Signatures: sigs,
@@ -64,13 +46,13 @@ func NewStdTx(msg Msg, fee StdFee, sigs []StdSignature) StdTx {
 }
 
 //nolint
-func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
-func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
+func (tx Tx) GetMsg() Msg                   { return tx.Msg }
+func (tx Tx) GetSignatures() []StdSignature { return tx.Signatures }
 
 // FeePayer returns the address responsible for paying the fees
 // for the transactions. It's the first address returned by msg.GetSigners().
 // If GetSigners() is empty, this panics.
-func FeePayer(tx Tx) Address {
+func (tx Tx) FeePayer() Address {
 	return tx.GetMsg().GetSigners()[0]
 }
 

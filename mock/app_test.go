@@ -52,10 +52,10 @@ func TestDeliverTx(t *testing.T) {
 	}
 	require.NoError(t, err)
 
-	key := "my-special-key"
-	value := "top-secret-data!!"
-	tx := NewTx(key, value)
-	txBytes := tx.GetSignBytes()
+	key := []byte("my-special-key")
+	value := []byte("top-secret-data!!")
+	msg := NewKvstoreMsg(key, value)
+	txBytes := msg.GetSignBytes()
 
 	header := abci.Header{
 		AppHash: []byte("apphash"),

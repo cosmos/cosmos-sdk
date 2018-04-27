@@ -1,17 +1,46 @@
 Glossary
 ========
 
-This glossary defines many terms used throughout documentation of Quark.
-If there is every a concept that seems unclear, check here. This is
-mainly to provide a background and general understanding of the
+This glossary defines many terms used throughout documentation of the Cosmos-SDK.
+This is mainly to provide a background and general understanding of the
 different words and concepts that are used. Other documents will explain
 in more detail how to combine these concepts to build a particular
 application.
 
+If you are unfamiliar with other Cosmos and Tendermint terminology, please refer
+to the Cosmos Academy docs.
+
+Can't find the term that you're looking for? Please submit a PR or fill this form
+and we'll add it to this glossary.
+
+Composability
+-------------
+
+
+Capabilities
+------------
+
+
+Keys
+----
+
+Signatures
+----------
+
+
+Accounts
+--------
+
+
+Messages
+--------
+
+(``Msg``)
+
 Transaction
 -----------
 
-A transaction is a packet of binary data that contains all information
+A transaction (``Tx``) is a packet of binary data that contains all information
 to validate and perform an action on the blockchain. The only other data
 that it interacts with is the current state of the chain (key-value
 store), and it must have a deterministic action. The transaction is the
@@ -134,18 +163,39 @@ that execute transactions, and this can provide a large degree of code
 interoperability, much like ``http.Handler`` does in golang web
 development.
 
+Keepers
+-------
+
+
+Codec
+-----
+
+
 Modules
 -------
 
-TODO: update (s/Modules/handlers+mappers+stores/g) & add Msg + Tx (a signed message)
+The Cosmos-SDK has all the necessary pre-built modules to add functionality on top of a ``BaseApp``,
+which is the template to build a blockchain dApp in Cosmos.
+In this context, a module is a fundamental unit in the Cosmos-SDK.
 
-A module is a set of functionality which should be typically designed as
-self-sufficient. Common elements of a module are:
+Each module is an extension of the ``BaseApp`` functionalities that defines transactions,
+handles application state and the state transition logic.
 
--  transaction types (either end transactions, or transaction wrappers)
--  custom error codes
--  data models (to persist in the kv-store)
--  handler (to handle any end transactions)
+Common elements of a module are:
+
+-  Transaction types (either end transactions, or transaction wrappers)
+-  Custom error codes
+-  Data models (to persist in the ``KV-store``)
+-  Handlers: for messages and transactions
+-  REST and CLI for secure user interactions
+
+SDK modules are stored inside the ``x`` folder. The current prebuilt-modules for the SDK are:
+Auth, Bank, Governance, Staking and IBC.
+
+Apps
+----
+
+
 
 Dispatcher
 ----------
@@ -228,3 +278,10 @@ signing, one could also specify the scope(s) that this signature
 authorizes. The `oauth
 protocol <https://api.slack.com/docs/oauth-scopes>`__ also has to deal
 with a similar problem, and maybe could provide some inspiration.
+
+Testnet
+-------
+
+
+Middleware
+----------

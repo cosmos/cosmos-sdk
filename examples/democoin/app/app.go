@@ -153,8 +153,16 @@ func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper, powKeeper pow.Keep
 // Custom logic for state export
 func (app *DemocoinApp) ExportGenesis() interface{} {
 	ctx := app.NewContext(true, abci.Header{})
+	accounts := []*types.GenesisAccount{}
+	app.accountMapper.IterateAccounts(ctx, func(a sdk.Account) bool {
+		accounts = append(accounts, &types.GenesisAccount{
+			Address: a.GetAddress(),
+			Coins:   a.GetCoins(),
+		})
+		return false
+	})
 	return types.GenesisState{
-		Accounts:    []*types.GenesisAccount{},
+		Accounts:    accounts,
 		POWGenesis:  pow.WriteGenesis(ctx, app.powKeeper),
 		CoolGenesis: cool.WriteGenesis(ctx, app.coolKeeper),
 	}

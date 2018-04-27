@@ -20,6 +20,7 @@ func blockCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block [height]",
 		Short: "Get verified data for a the block at given height",
+		Args:  cobra.MaximumNArgs(1),
 		RunE:  printBlock,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")

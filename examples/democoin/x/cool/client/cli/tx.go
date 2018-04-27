@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -20,11 +19,8 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "cool [answer]",
 		Short: "What's cooler than being cool?",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 || len(args[0]) == 0 {
-				return errors.New("You must provide an answer")
-			}
-
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			// get the from address from the name flag
@@ -56,11 +52,8 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "setcool [answer]",
 		Short: "You're so cool, tell us what is cool!",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 || len(args[0]) == 0 {
-				return errors.New("You must provide an answer")
-			}
-
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
 			// get the from address from the name flag

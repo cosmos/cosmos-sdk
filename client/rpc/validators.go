@@ -16,8 +16,9 @@ import (
 
 func validatorCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validatorset <height>",
+		Use:   "validatorset [height]",
 		Short: "Get the full validator set at given height",
+		Args:  cobra.MaximumNArgs(1),
 		RunE:  printValidators,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:46657", "Node to connect to")

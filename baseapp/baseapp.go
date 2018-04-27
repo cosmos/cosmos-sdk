@@ -266,16 +266,16 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	value, proof, err := queryable.Query(req)
 	if err != nil {
-		res.Log = err.Error()
-		return
+		return err.QueryResult()
 	}
 
-	res.Proof, err = proof.Bytes()
-	if err != nil {
-		res.Log = err.Error()
-		return
+	if req.Prove {
+		var rawerr error
+		res.Proof, rawerr = proof.Bytes()
+		if rawerr != nil {
+			return sdk.ErrInternal(rawerr.Error()).QueryResult()
+		}
 	}
-
 	res.Value = value
 
 	return

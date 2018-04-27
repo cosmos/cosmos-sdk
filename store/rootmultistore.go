@@ -240,9 +240,11 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) (value []byte, proof *mer
 		return
 	}
 
-	subproof := rs.proofByName[storeName]
+	if req.Prove {
+		subproof := rs.proofByName[storeName]
+		proof.SubProofs = append(proof.SubProofs, subproof)
+	}
 
-	proof.SubProofs = append(proof.SubProofs, subproof)
 	return
 }
 

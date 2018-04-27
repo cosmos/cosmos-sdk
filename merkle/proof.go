@@ -41,7 +41,7 @@ func (p ExistsProof) Root() []byte {
 	return p.RootHash
 }
 
-func (p AbsentProof) Verify(key, value, root []byte) error {
+func (p AbsentProof) Verify(leaf []byte) error {
 	panic("not implemented")
 }
 

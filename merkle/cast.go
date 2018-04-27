@@ -209,7 +209,7 @@ func FromKeyExistsProof(p *iavl.KeyExistsProof) (KeyProof, error) {
 }
 
 func FromKeyAbsentProof(p *iavl.KeyAbsentProof) (KeyProof, error) {
-	return nil, nil
+	return AbsentProof{}, nil // not implemented
 }
 
 func Leaf(key []byte, value []byte) ([]byte, error) {

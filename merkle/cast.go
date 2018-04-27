@@ -11,35 +11,87 @@ import (
 	"github.com/tendermint/tmlibs/merkle"
 )
 
-func FromSimpleProof(p *merkle.SimpleProof, index int, total int, root []byte) (res ExistsProof, err error) {
-	data := ExistsData{
-		Op: NOP,
+func computeProofFromAunts(index int, total int, inners [][]byte) (res []Node, err error) {
+	if index >= total || index < 0 || total <= 0 {
+		err = fmt.Errorf("Invalid SimpleProof")
+		return
 	}
 
-	nodes := make([]Node, len(p.Aunts))
-
-	for i, a := range p.Aunts {
-		isLeft := index%2 == 0
-		index /= 2
-		if isLeft {
-			suffix := new(bytes.Buffer)
-			if err = encodeByteSlice(suffix, a); err != nil {
-				return
-			}
-			nodes[i] = Node{
-				Suffix: suffix.Bytes(),
-				Op:     RIPEMD160,
-			}
-		} else {
-			prefix := new(bytes.Buffer)
-			if err = encodeByteSlice(prefix, a); err != nil {
-				return
-			}
-			nodes[i] = Node{
-				Prefix: prefix.Bytes(),
-				Op:     RIPEMD160,
-			}
+	switch total {
+	case 0:
+		err = fmt.Errorf("Cannot call computeHashFromAunts() with 0 total")
+		return
+	case 1:
+		if len(inners) != 0 {
+			err = fmt.Errorf("Inner hashes length not match")
+			return
 		}
+		return nil, nil
+	default:
+		if len(inners) == 0 {
+			err = fmt.Errorf("Inner hashes length not match")
+			return
+		}
+		numLeft := (total + 1) / 2
+		if index < numLeft {
+			prefix := new(bytes.Buffer)
+			suffix := new(bytes.Buffer)
+
+			err = encodeUvarint(prefix, 20)
+			if err != nil {
+				return
+			}
+
+			err = encodeByteSlice(suffix, inners[len(inners)-1])
+			if err != nil {
+				return
+			}
+
+			res, err = computeProofFromAunts(index, numLeft, inners[:len(inners)-1])
+			if err != nil {
+				return
+			}
+			res = append(res, Node{Prefix: prefix.Bytes(), Suffix: suffix.Bytes(), Op: RIPEMD160})
+			return
+
+		} else {
+			prefix := new(bytes.Buffer) /*
+				err = amino.EncodeByteSlice(prefix, inners[len(inners)-1])
+				if err != nil {
+					return
+				}
+				err = amino.EncodeUvarint(prefix, 20) // length of RIPEMD160
+				if err != nil {
+					return
+				}*/
+			err = encodeByteSlice(prefix, inners[len(inners)-1])
+			if err != nil {
+				return
+			}
+			err = encodeUvarint(prefix, 20) // length of ripemd160
+			if err != nil {
+				return
+			}
+
+			res, err = computeProofFromAunts(index-numLeft, total-numLeft, inners[:len(inners)-1])
+			if err != nil {
+				return
+			}
+			res = append(res, Node{Prefix: prefix.Bytes(), Op: RIPEMD160})
+			return
+
+		}
+	}
+}
+
+func FromSimpleProof(p *merkle.SimpleProof, index int, total int, root []byte) (res ExistsProof, err error) {
+	data := ExistsData{
+		Op: RIPEMD160,
+	}
+
+	nodes, err := computeProofFromAunts(index, total, p.Aunts)
+	if err != nil {
+		return
 	}
 
 	return ExistsProof{

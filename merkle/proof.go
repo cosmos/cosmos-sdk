@@ -61,30 +61,31 @@ type Inner func(int, [][]byte, []byte) ([]byte, error)
 
 func (p MultiProof) Verify(leaf []byte, iv Inner, root []byte) (err error) {
 	kp := p.KeyProof
-	//	subroot := kp.Root()
+	subroot := kp.Root()
 	err = kp.Verify(leaf)
 	if err != nil {
 		return
 	}
-	/*
-		for i, p := range p.SubProofs {
-			var leaf []byte
-			leaf, err = iv(i, p.Infos, subroot)
-			if err != nil {
-				return
-			}
 
-			err = p.Proof.Verify(leaf)
-			if err != nil {
-				return
-			}
-			subroot = p.Proof.Root()
+	for i, p := range p.SubProofs {
+		var leaf []byte
+		leaf, err = iv(i, p.Infos, subroot)
+
+		if err != nil {
+			return
 		}
 
-		if !bytes.Equal(subroot, root) {
-			return fmt.Errorf("Root not match")
+		err = p.Proof.Verify(leaf)
+		if err != nil {
+			return
 		}
-	*/
+		subroot = p.Proof.Root()
+	}
+
+	if !bytes.Equal(subroot, root) {
+		return fmt.Errorf("Root not match")
+	}
+
 	return nil
 
 }

@@ -328,6 +328,7 @@ func (rs *rootMultiStore) indexByName(infos []storeInfo) (res map[string]int) {
 
 func (rs *rootMultiStore) cacheSubstoreProofs(infos []storeInfo) {
 	m := makeInfoMap(infos)
+
 	_, proofs := libmerkle.SimpleProofsFromMap(m)
 
 	cid := rs.LastCommitID()

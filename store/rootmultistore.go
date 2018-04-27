@@ -210,7 +210,7 @@ func (rs *rootMultiStore) getStoreByName(name string) Store {
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
 // TODO: add proof for `multistore -> substore`.
-func (rs *rootMultiStore) Query(req abci.RequestQuery) (value []byte, proof *merkle.MultiProof, err error) {
+func (rs *rootMultiStore) Query(req abci.RequestQuery) (value []byte, proof *merkle.MultiProof, err sdk.Error) {
 	// Query just routes this to a substore.
 	path := req.Path
 	storeName, subpath, err := parsePath(path)

@@ -142,7 +142,7 @@ func (st *iavlStore) ReverseSubspaceIterator(prefix []byte) Iterator {
 // If latest-1 is not present, use latest (which must be present)
 // if you care to have the latest data to see a tx results, you must
 // explicitly set the height you want to see
-func (st *iavlStore) Query(req abci.RequestQuery) (value []byte, proof *merkle.MultiProof, err error) {
+func (st *iavlStore) Query(req abci.RequestQuery) (value []byte, proof *merkle.MultiProof, err sdk.Error) {
 	if len(req.Data) == 0 {
 		msg := "Query cannot be zero length"
 		err = sdk.ErrTxDecode(msg)
@@ -172,14 +172,17 @@ func (st *iavlStore) Query(req abci.RequestQuery) (value []byte, proof *merkle.M
 		data.Key = key
 		if req.Prove {
 			var iavlp iavl.KeyProof
-			value, iavlp, err = tree.GetVersionedWithProof(key, height)
-			if err != nil {
+			var rawerr error
+			value, iavlp, rawerr = tree.GetVersionedWithProof(key, height)
+			if rawerr != nil {
+				err = sdk.ErrInternal(rawerr.Error())
 				break
 			}
 
 			var kproof merkle.KeyProof
-			kproof, err = merkle.FromKeyProof(iavlp)
-			if err != nil {
+			kproof, rawerr = merkle.FromKeyProof(iavlp)
+			if rawerr != nil {
+				err = sdk.ErrInternal(rawerr.Error())
 				break
 			}
 			proof = &merkle.MultiProof{

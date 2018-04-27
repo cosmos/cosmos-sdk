@@ -14,15 +14,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
 	"github.com/cosmos/cosmos-sdk/version"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
-	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
-	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/commands"
-	simplestakingcmd "github.com/cosmos/cosmos-sdk/x/simplestake/commands"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
+	simplestakingcmd "github.com/cosmos/cosmos-sdk/x/simplestake/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
-	coolcmd "github.com/cosmos/cosmos-sdk/examples/democoin/x/cool/commands"
-	powcmd "github.com/cosmos/cosmos-sdk/examples/democoin/x/pow/commands"
+	coolcmd "github.com/cosmos/cosmos-sdk/examples/democoin/x/cool/client/cli"
+	powcmd "github.com/cosmos/cosmos-sdk/examples/democoin/x/pow/client/cli"
 )
 
 // rootCmd is the entry point for this binary

@@ -14,14 +14,14 @@ func TestBondMsgValidation(t *testing.T) {
 	privKey := crypto.GenPrivKeyEd25519()
 	cases := []struct {
 		valid   bool
-		bondMsg BondMsg
+		msgBond MsgBond
 	}{
-		{true, NewBondMsg(sdk.Address{}, sdk.Coin{"mycoin", 5}, privKey.PubKey())},
-		{false, NewBondMsg(sdk.Address{}, sdk.Coin{"mycoin", 0}, privKey.PubKey())},
+		{true, NewMsgBond(sdk.Address{}, sdk.Coin{"mycoin", 5}, privKey.PubKey())},
+		{false, NewMsgBond(sdk.Address{}, sdk.Coin{"mycoin", 0}, privKey.PubKey())},
 	}
 
 	for i, tc := range cases {
-		err := tc.bondMsg.ValidateBasic()
+		err := tc.msgBond.ValidateBasic()
 		if tc.valid {
 			assert.Nil(t, err, "%d: %+v", i, err)
 		} else {

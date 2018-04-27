@@ -8,13 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/mock"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tmlibs/cli"
-	"github.com/tendermint/tmlibs/log"
 )
 
 // Get a free address for a test tendermint server
@@ -38,30 +35,6 @@ func setupViper(t *testing.T) func() {
 	return func() {
 		os.RemoveAll(rootDir)
 	}
-}
-
-// Begin the server pass up the channel to close
-// NOTE pass up the channel so it can be closed at the end of the process
-func StartServer(t *testing.T) chan error {
-	defer setupViper(t)()
-
-	cfg, err := tcmd.ParseConfig()
-	require.Nil(t, err)
-
-	// init server
-	ctx := NewContext(cfg, log.NewNopLogger())
-	initCmd := InitCmd(mock.GenInitOptions, ctx)
-	err = initCmd.RunE(nil, nil)
-	require.NoError(t, err)
-
-	// start server
-	viper.Set(flagWithTendermint, true)
-	startCmd := StartCmd(mock.NewApp, ctx)
-	startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
-	startCmd.Flags().Set("rpc.laddr", FreeTCPAddr(t)) // set to a new free address
-	timeout := time.Duration(3) * time.Second
-
-	return RunOrTimeout(startCmd, timeout, t)
 }
 
 // Run or Timout RunE of command passed in

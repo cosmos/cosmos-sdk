@@ -9,7 +9,6 @@ import (
 )
 
 var _ sdk.AccountMapper = (*accountMapper)(nil)
-var _ sdk.AccountMapper = (*sealedAccountMapper)(nil)
 
 // Implements sdk.AccountMapper.
 // This AccountMapper encodes/decodes accounts using the
@@ -28,27 +27,13 @@ type accountMapper struct {
 
 // NewAccountMapper returns a new sdk.AccountMapper that
 // uses go-amino to (binary) encode and decode concrete sdk.Accounts.
+// nolint
 func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto sdk.Account) accountMapper {
 	return accountMapper{
 		key:   key,
 		proto: proto,
 		cdc:   cdc,
 	}
-}
-
-// Returns the go-amino codec.  You may need to register interfaces
-// and concrete types here, if your app's sdk.Account
-// implementation includes interface fields.
-// NOTE: It is not secure to expose the codec, so check out
-// .Seal().
-func (am accountMapper) WireCodec() *wire.Codec {
-	return am.cdc
-}
-
-// Returns a "sealed" accountMapper.
-// The codec is not accessible from a sealedAccountMapper.
-func (am accountMapper) Seal() sealedAccountMapper {
-	return sealedAccountMapper{am}
 }
 
 // Implements sdk.AccountMapper.
@@ -78,19 +63,6 @@ func (am accountMapper) SetAccount(ctx sdk.Context, acc sdk.Account) {
 }
 
 //----------------------------------------
-// sealedAccountMapper
-
-type sealedAccountMapper struct {
-	accountMapper
-}
-
-// There's no way for external modules to mutate the
-// sam.accountMapper.cdc from here, even with reflection.
-func (sam sealedAccountMapper) WireCodec() *wire.Codec {
-	panic("accountMapper is sealed")
-}
-
-//----------------------------------------
 // misc.
 
 // Creates a new struct (or pointer to struct) from am.proto.
@@ -107,14 +79,14 @@ func (am accountMapper) clonePrototype() sdk.Account {
 			panic(fmt.Sprintf("accountMapper requires a proto sdk.Account, but %v doesn't implement sdk.Account", protoRt))
 		}
 		return clone
-	} else {
-		protoRv := reflect.New(protoRt).Elem()
-		clone, ok := protoRv.Interface().(sdk.Account)
-		if !ok {
-			panic(fmt.Sprintf("accountMapper requires a proto sdk.Account, but %v doesn't implement sdk.Account", protoRt))
-		}
-		return clone
 	}
+
+	protoRv := reflect.New(protoRt).Elem()
+	clone, ok := protoRv.Interface().(sdk.Account)
+	if !ok {
+		panic(fmt.Sprintf("accountMapper requires a proto sdk.Account, but %v doesn't implement sdk.Account", protoRt))
+	}
+	return clone
 }
 
 func (am accountMapper) encodeAccount(acc sdk.Account) []byte {

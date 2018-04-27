@@ -1,77 +1,205 @@
-Using Gaia
-==========
+Using The Staking Module
+========================
 
-This project is a demonstration of the Cosmos Hub with staking functionality; it is
-designed to get validator acquianted with staking concepts and procedure.
+This project is a demonstration of the Cosmos Hub staking functionality; it is
+designed to get validator acquianted with staking concepts and procedures.
 
 Potential validators will be declaring their candidacy, after which users can
 delegate and, if they so wish, unbond. This can be practiced using a local or
 public testnet.
 
+This example covers initial setup of a two-node testnet between a server in the cloud and a local machine. Begin this tutorial from a cloud machine that you've ``ssh``'d into.
+
 Install
 -------
 
-The ``gaia`` tooling is an extension of the Cosmos-SDK; to install:
+The ``gaiad`` and ``gaiacli`` binaries:
 
 ::
 
-    go get github.com/cosmos/gaia
-    cd $GOPATH/src/github.com/cosmos/gaia
+    go get github.com/cosmos/cosmos-sdk
+    cd $GOPATH/src/github.com/cosmos/cosmos-sdk
     make get_vendor_deps
     make install
 
-It has three primary commands:
+Let's jump right into it. First, we initialize some default files:
 
 ::
 
-    Available Commands:
-      node        The Cosmos Network delegation-game blockchain test
-      rest-server REST client for gaia commands
-      client      Gaia light client
-                        
-      version     Show version info
-      help        Help about any command
+    gaiad init
 
-and a handful of flags that are highlighted only as necessary.
+which will output:
 
-The ``gaia node`` command is a proxt for running a tendermint node. You'll be using
-this command to either initialize a new node, or - using existing files - joining
-the testnet. 
+::
 
-The ``gaia rest-server`` command is used by the `cosmos UI <https://github.com/cosmos/cosmos-ui>`__.
+    I[03-30|11:20:13.365] Found private validator                      module=main path=/root/.gaiad/config/priv_validator.json
+    I[03-30|11:20:13.365] Found genesis file                           module=main path=/root/.gaiad/config/genesis.json
+    Secret phrase to access coins:
+    citizen hungry tennis noise park hire glory exercise link glow dolphin labor design grit apple abandon
 
-Lastly, the ``gaia client`` command is the workhorse of the staking module. It allows
-for sending various transactions and other types of interaction with a running chain.
-that you've setup or joined a testnet.
+This tell us we have a ``priv_validator.json`` and ``genesis.json`` in the ``~/.gaiad/config`` directory. A ``config.toml`` was also created in the same directory. It is a good idea to get familiar with those files. Write down the seed.
 
-Generating Keys
----------------
+The next thing we'll need to is add the key from ``priv_validator.json`` to the ``gaiacli`` key manager. For this we need a seed and a password:
 
-Review the `key management tutorial <../key-management.html>`__ and create one key
-if you'll be joining the public testnet, and three keys if you'll be trying out a local
-testnet.
+::
+
+    gaiacli keys add alice --recover
+
+which will give you three prompts:
+
+::
+
+    Enter a passphrase for your key:
+    Repeat the passphrase:
+    Enter your recovery seed phrase:
+
+create a password and copy in your seed phrase. The name and address of the key will be output:
+
+::
+    NAME:   ADDRESS:                                    PUBKEY:
+    alice	67997DD03D527EB439B7193F2B813B05B219CC02	1624DE6220BB89786C1D597050438C728202436552C6226AB67453CDB2A4D2703402FB52B6
+
+You can see all available keys with:
+
+::
+
+    gaiacli keys list
 
 Setup Testnet
 -------------
 
-The first thing you'll want to do is either `create a local testnet <./local-testnet.html>`__ or
-join a `public testnet <./public-testnet.html>`__. Either step is required before proceeding.
+Next, we start the daemon (do this in another window):
 
-The rest of this tutorial will assume a local testnet with three participants: ``alice`` will be
-the initial validator, ``bob`` will first receives tokens from ``alice`` then declare candidacy
-as a validator, and ``charlie`` will bond then unbond to ``bob``. If you're joining the public
-testnet, the token amounts will need to be adjusted.
+::
+
+    gaiad start
+
+and you'll see blocks start streaming through.
+
+For this example, we're doing the above on a cloud machine. The next steps should be done on your local machine or another server in the cloud, which will join the running testnet then bond/unbond.
+
+Accounts
+--------
+
+We have:
+
+- ``alice`` the initial validator (in the cloud)
+- ``bob``  receives tokens from ``alice`` then declares candidacy (from local machine)
+- ``charlie`` will bond and unbond to ``bob`` (from local machine)
+
+Remember that ``alice`` was already created. On your second machine, install the binaries and create two new keys:
+
+::
+
+    gaiacli keys add bob
+    gaiacli keys add charlie
+
+both of which will prompt you for a password. Now we need to copy the ``genesis.json`` and ``config.toml`` from the first machine (with ``alice``) to the second machine. This is a good time to look at both these files.
+
+The ``genesis.json`` should look something like:
+
+::
+
+    {
+      "app_state": {
+        "accounts": [
+          {
+            "address": "1D9B2356CAADF46D3EE3488E3CCE3028B4283DEE",
+            "coins": [
+              {
+                "denom": "fermion",
+                "amount": 100000
+              }
+            ]
+          }
+        ],
+        "stake": {
+          "pool": {
+            "total_supply": 0,
+            "bonded_shares": {
+              "num": 0,
+              "denom": 1
+            },
+            "unbonded_shares": {
+              "num": 0,
+              "denom": 1
+            },
+            "bonded_pool": 0,
+            "unbonded_pool": 0,
+            "inflation_last_time": 0,
+            "inflation": {
+              "num": 7,
+              "denom": 100
+            }
+          },
+          "params": {
+            "inflation_rate_change": {
+              "num": 13,
+              "denom": 100
+            },
+            "inflation_max": {
+              "num": 20,
+              "denom": 100
+            },
+            "inflation_min": {
+              "num": 7,
+              "denom": 100
+            },
+            "goal_bonded": {
+              "num": 67,
+              "denom": 100
+            },
+            "max_validators": 100,
+            "bond_denom": "fermion"
+          }
+        }
+      },
+      "validators": [
+        {
+          "pub_key": {
+            "type": "AC26791624DE60",
+            "value": "rgpc/ctVld6RpSfwN5yxGBF17R1PwMTdhQ9gKVUZp5g="
+          },
+          "power": 10,
+          "name": ""
+        }
+      ],
+      "app_hash": "",
+      "genesis_time": "0001-01-01T00:00:00Z",
+      "chain_id": "test-chain-Uv1EVU"
+    }
+
+
+To notice is that the ``accounts`` field has a an address and a whole bunch of "mycoin". This is ``alice``'s address (todo: dbl check). Under ``validators`` we see the ``pub_key.data`` field, which will match the same field in the ``priv_validator.json`` file.
+
+The ``config.toml`` is long so let's focus on one field:
+
+::
+
+    # Comma separated list of seed nodes to connect to
+    seeds = ""
+
+On the ``alice`` cloud machine, we don't need to do anything here. Instead, we need its IP address. After copying this file (and the ``genesis.json`` to your local machine, you'll want to put the IP in the ``seeds =  "138.197.161.74"`` field, in this case, we have a made-up IP. For joining testnets with many nodes, you can add more comma-seperated IPs to the list.
+
+
+Now that your files are all setup, it's time to join the network. On your local machine, run:
+
+::
+
+    gaiad start
+
+and your new node will connect to the running validator (``alice``).
 
 Sending Tokens
 --------------
 
-We'll have ``alice`` who is currently quite rich, send some ``fermions`` to ``bob``:
+We'll have ``alice`` send some ``mycoin`` to ``bob``, who has now joined the network:
 
 ::
 
-    gaia client tx send --amount=1000fermion --sequence=1 --name=alice --to=5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
+    gaiacli send --amount=1000mycoin --sequence=0 --name=alice --to=5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6 --chain-id=test-chain-Uv1EVU
 
-where the ``--sequence`` flag is to be incremented for each transaction, the ``--name`` flag names the sender, and the ``--to`` flag takes ``bob``'s address. You'll see something like:
+where the ``--sequence`` flag is to be incremented for each transaction, the ``--name`` flag is the sender (alice), and the ``--to`` flag takes ``bob``'s address. You'll see something like:
 
 ::
 
@@ -101,18 +229,24 @@ where the ``--sequence`` flag is to be incremented for each transaction, the ``-
       "height": 2963
     }
 
-Check out ``bob``'s account, which should now have 992 fermions:
+TODO: check the above with current actual output.
+
+Check out ``bob``'s account, which should now have 1000 mycoin:
 
 ::
 
-    gaia client query account 5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
+    gaiacli account 5A35E4CC7B7DC0A5CB49CEA91763213A9AE92AD6
 
 Adding a Second Validator
 -------------------------
 
+**This section is wrong/needs to be updated**
+
 Next, let's add the second node as a validator.
 
 First, we need the pub_key data:
+
+** need to make bob a priv_Val above?
 
 ::
 
@@ -130,7 +264,7 @@ Now ``bob`` can declare candidacy to that pubkey:
 
 ::
 
-    gaia client tx declare-candidacy --amount=10fermion --name=bob --pubkey=<pub_key data> --moniker=bobby
+    gaiacli declare-candidacy --amount=10mycoin --name=bob --pubkey=<pub_key data> --moniker=bobby
 
 with an output like:
 
@@ -147,11 +281,11 @@ with an output like:
     }
 
 
-We should see ``bob``'s account balance decrease by 10 fermions:
+We should see ``bob``'s account balance decrease by 10 mycoin:
 
 ::
 
-    gaia client query account 5D93A6059B6592833CBC8FA3DA90EE0382198985 
+    gaiacli account 5D93A6059B6592833CBC8FA3DA90EE0382198985 
 
 To confirm for certain the new validator is active, ask the tendermint node:
 
@@ -163,7 +297,7 @@ If you now kill either node, blocks will stop streaming in, because
 there aren't enough validators online. Turn it back on and they will
 start streaming again.
 
-Now that ``bob`` has declared candidacy, which essentially bonded 10 fermions and made him a validator, we're going to get ``charlie`` to delegate some coins to ``bob``.
+Now that ``bob`` has declared candidacy, which essentially bonded 10 mycoin and made him a validator, we're going to get ``charlie`` to delegate some coins to ``bob``.
 
 Delegating
 ----------
@@ -172,13 +306,13 @@ First let's have ``alice`` send some coins to ``charlie``:
 
 ::
 
-    gaia client tx send --amount=1000fermion --sequence=2 --name=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
+    gaiacli tx --amount=1000mycoin --sequence=2 --name=alice --to=48F74F48281C89E5E4BE9092F735EA519768E8EF
 
-Then ``charlie`` will delegate some fermions to ``bob``:
+Then ``charlie`` will delegate some mycoin to ``bob``:
 
 ::
 
-    gaia client tx delegate --amount=10fermion --name=charlie --pubkey=<pub_key data>
+    gaiacli tx delegate --amount=10mycoin --name=charlie --pubkey=<pub_key data>
 
 You'll see output like:
 
@@ -194,13 +328,13 @@ You'll see output like:
       "height": 51585
     }
 
-And that's it. You can query ``charlie``'s account to see the decrease in fermions.
+And that's it. You can query ``charlie``'s account to see the decrease in mycoin.
 
 To get more information about the candidate, try:
 
 ::
 
-    gaia client query candidate --pubkey=<pub_key data>
+    gaiacli query candidate --pubkey=<pub_key data>
 
 and you'll see output similar to:
 
@@ -233,7 +367,7 @@ It's also possible the query the delegator's bond like so:
 
 ::
 
-    gaia client query delegator-bond --delegator-address 48F74F48281C89E5E4BE9092F735EA519768E8EF --pubkey 52D6FCD8C92A97F7CCB01205ADF310A18411EA8FDCC10E65BF2FCDB05AD1689B
+    gaiacli query delegator-bond --delegator-address 48F74F48281C89E5E4BE9092F735EA519768E8EF --pubkey 52D6FCD8C92A97F7CCB01205ADF310A18411EA8FDCC10E65BF2FCDB05AD1689B
 
 with an output similar to:
 
@@ -262,9 +396,7 @@ your VotingPower reduce and your account balance increase.
 
 ::
 
-    gaia client tx unbond --amount=5fermion --name=charlie --pubkey=<pub_key data>
-    gaia client query account 48F74F48281C89E5E4BE9092F735EA519768E8EF
+    gaiacli unbond --amount=5mycoin --name=charlie --pubkey=<pub_key data>
+    gaiacli account 48F74F48281C89E5E4BE9092F735EA519768E8EF
 
-See the bond decrease with ``gaia client query delegator-bond`` like above.
-
-That concludes an overview of the ``gaia`` tooling for local testing.
+See the bond decrease with ``gaiacli query delegator-bond`` like above.

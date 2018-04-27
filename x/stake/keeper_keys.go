@@ -1,6 +1,8 @@
 package stake
 
 import (
+	"encoding/binary"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
@@ -20,6 +22,8 @@ var (
 	ToKickOutValidatorsKey = []byte{0x06} // prefix for each key to the last updated validator group
 
 	DelegatorBondKeyPrefix = []byte{0x07} // prefix for each key to a delegator's bond
+
+	CounterKey = []byte{0x08} // key for block-local tx index
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -30,9 +34,13 @@ func GetCandidateKey(addr sdk.Address) []byte {
 }
 
 // get the key for the validator used in the power-store
-func GetValidatorKey(addr sdk.Address, power sdk.Rat, cdc *wire.Codec) []byte {
-	powerBytes := []byte(power.ToLeftPadded(maxDigitsForAccount))
-	return append(ValidatorsKey, append(powerBytes, addr.Bytes()...)...)
+func GetValidatorKey(addr sdk.Address, power sdk.Rat, height int64, counter int16, cdc *wire.Codec) []byte {
+	powerBytes := []byte(power.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
+	heightBytes := make([]byte, binary.MaxVarintLen64)
+	binary.BigEndian.PutUint64(heightBytes, ^uint64(height)) // invert height (older validators first)
+	counterBytes := make([]byte, 2)
+	binary.BigEndian.PutUint16(counterBytes, ^uint16(counter)) // invert counter (first txns have priority)
+	return append(ValidatorsKey, append(powerBytes, append(heightBytes, append(counterBytes, addr.Bytes()...)...)...)...)
 }
 
 // get the key for the accumulated update validators

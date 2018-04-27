@@ -9,7 +9,7 @@ import (
 type Result struct {
 
 	// Code is the response code, is stored back on the chain.
-	Code CodeType
+	Code ABCICodeType
 
 	// Data is any data returned from the app.
 	Data []byte
@@ -20,7 +20,7 @@ type Result struct {
 	// GasWanted is the maximum units of work we allow this tx to perform.
 	GasWanted int64
 
-	// GasUsed is the amount of gas actually consumed. NOTE: not used.
+	// GasUsed is the amount of gas actually consumed. NOTE: unimplemented
 	GasUsed int64
 
 	// Tx fee amount and denom.

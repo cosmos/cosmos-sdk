@@ -70,11 +70,11 @@
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
-  version = "0.19.0-rc4"
+  version = "0.19.0"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/tmlibs"
-  version = "~0.8.1"
+  version = "~0.8.2-rc1"
 
 [prune]
   go-tests = true

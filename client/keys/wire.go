@@ -11,6 +11,12 @@ func init() {
 	wire.RegisterCrypto(cdc)
 }
 
+// marshal keys
 func MarshalJSON(o interface{}) ([]byte, error) {
 	return cdc.MarshalJSON(o)
+}
+
+// unmarshal json
+func UnmarshalJSON(bz []byte, ptr interface{}) error {
+	return cdc.UnmarshalJSON(bz, ptr)
 }

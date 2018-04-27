@@ -14,17 +14,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const useDebugDB = false
+
 func TestMultistoreCommitLoad(t *testing.T) {
-	db := dbm.NewMemDB()
+	var db dbm.DB = dbm.NewMemDB()
+	if useDebugDB {
+		db = dbm.NewDebugDB("CMS", db)
+	}
 	store := newMultiStoreWithMounts(db)
 	err := store.LoadLatestVersion()
 	assert.Nil(t, err)
 
-	// new store has empty last commit
+	// New store has empty last commit.
 	commitID := CommitID{}
 	checkStore(t, store, commitID, commitID)
 
-	// make sure we can get stores by name
+	// Make sure we can get stores by name.
 	s1 := store.getStoreByName("store1")
 	assert.NotNil(t, s1)
 	s3 := store.getStoreByName("store3")
@@ -32,7 +37,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	s77 := store.getStoreByName("store77")
 	assert.Nil(t, s77)
 
-	// make a few commits and check them
+	// Make a few commits and check them.
 	nCommits := int64(3)
 	for i := int64(0); i < nCommits; i++ {
 		commitID = store.Commit()
@@ -40,19 +45,19 @@ func TestMultistoreCommitLoad(t *testing.T) {
 		checkStore(t, store, expectedCommitID, commitID)
 	}
 
-	// Load the latest multistore again and check version
+	// Load the latest multistore again and check version.
 	store = newMultiStoreWithMounts(db)
 	err = store.LoadLatestVersion()
 	assert.Nil(t, err)
 	commitID = getExpectedCommitID(store, nCommits)
 	checkStore(t, store, commitID, commitID)
 
-	// commit and check version
+	// Commit and check version.
 	commitID = store.Commit()
 	expectedCommitID := getExpectedCommitID(store, nCommits+1)
 	checkStore(t, store, expectedCommitID, commitID)
 
-	// Load an older multistore and check version
+	// Load an older multistore and check version.
 	ver := nCommits - 1
 	store = newMultiStoreWithMounts(db)
 	err = store.LoadVersion(ver)
@@ -65,8 +70,8 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	expectedCommitID = getExpectedCommitID(store, ver+1)
 	checkStore(t, store, expectedCommitID, commitID)
 
-	// XXX: confirm old commit is overwritten and
-	// we have rolled back LatestVersion
+	// XXX: confirm old commit is overwritten and we have rolled back
+	// LatestVersion
 	store = newMultiStoreWithMounts(db)
 	err = store.LoadLatestVersion()
 	assert.Nil(t, err)
@@ -107,44 +112,42 @@ func TestMultiStoreQuery(t *testing.T) {
 
 	cid := multi.Commit()
 
-	// make sure we can get by name
+	// Make sure we can get by name.
 	garbage := multi.getStoreByName("bad-name")
 	assert.Nil(t, garbage)
 
-	// set and commit data in one store
+	// Set and commit data in one store.
 	store1 := multi.getStoreByName("store1").(KVStore)
 	store1.Set(k, v)
 
-	// and another
+	// ... and another.
 	store2 := multi.getStoreByName("store2").(KVStore)
 	store2.Set(k2, v2)
 
-	// commit the multistore
+	// Commit the multistore.
 	cid = multi.Commit()
 	ver := cid.Version
 	root := cid.Hash
 
-	// bad path
+	// Test bad path.
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
 	qval, qprf, qerr := multi.Query(query)
-	assert.NotNil(t, qerr)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), qerr.ABCICode())
 	assert.Nil(t, qval)
 	assert.Nil(t, qprf)
 
 	query.Path = "h897fy32890rf63296r92"
 	qval, qprf, qerr = multi.Query(query)
-	assert.NotNil(t, qerr)
-	assert.Nil(t, qval)
-	assert.Nil(t, qprf)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), qerr.ABCICode())
 
-	// invalid store name
+	// Test invalid store name.
 	query.Path = "/garbage/key"
 	qval, qprf, qerr = multi.Query(query)
-	assert.NotNil(t, qerr)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), qerr.ABCICode())
 	assert.Nil(t, qval)
 	assert.Nil(t, qprf)
 
-	// valid query with data
+	// Test valid query with data.
 	query.Path = "/store1/key"
 	query.Prove = true
 	qval, qprf, qerr = multi.Query(query)
@@ -154,15 +157,16 @@ func TestMultiStoreQuery(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, qprf.Verify(leaf, inner("store1"), root))
 
-	// valid but empty
+	// Test valid but empty query.
 	query.Path = "/store2/key"
+	query.Prove = true
 	qval, qprf, qerr = multi.Query(query)
 	assert.Nil(t, qerr)
 	assert.Nil(t, qval)
 	// Absent proof not implemented
 	//	assert.Nil(t, qprf.Verify(k2, root, []byte("store2")))
 
-	// store2 data
+	// Test store2 data.
 	query.Data = k2
 	qval, qprf, qerr = multi.Query(query)
 	assert.Nil(t, qerr)

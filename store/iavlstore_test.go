@@ -78,7 +78,7 @@ func TestIAVLIterator(t *testing.T) {
 		key, value := iter.Key(), iter.Value()
 		assert.EqualValues(t, key, expectedKey)
 		assert.EqualValues(t, value, treeData[expectedKey])
-		i += 1
+		i++
 	}
 	assert.Equal(t, len(expected), i)
 
@@ -89,7 +89,7 @@ func TestIAVLIterator(t *testing.T) {
 		key, value := iter.Key(), iter.Value()
 		assert.EqualValues(t, key, expectedKey)
 		assert.EqualValues(t, value, treeData[expectedKey])
-		i += 1
+		i++
 	}
 	assert.Equal(t, len(expected), i)
 
@@ -100,7 +100,7 @@ func TestIAVLIterator(t *testing.T) {
 		key, value := iter.Key(), iter.Value()
 		assert.EqualValues(t, key, expectedKey)
 		assert.EqualValues(t, value, treeData[expectedKey])
-		i += 1
+		i++
 	}
 	assert.Equal(t, len(expected), i)
 
@@ -111,7 +111,7 @@ func TestIAVLIterator(t *testing.T) {
 		key, value := iter.Key(), iter.Value()
 		assert.EqualValues(t, key, expectedKey)
 		assert.EqualValues(t, value, treeData[expectedKey])
-		i += 1
+		i++
 	}
 	assert.Equal(t, len(expected), i)
 
@@ -122,7 +122,7 @@ func TestIAVLIterator(t *testing.T) {
 		key, value := iter.Key(), iter.Value()
 		assert.EqualValues(t, key, expectedKey)
 		assert.EqualValues(t, value, treeData[expectedKey])
-		i += 1
+		i++
 	}
 	assert.Equal(t, len(expected), i)
 
@@ -133,7 +133,7 @@ func TestIAVLIterator(t *testing.T) {
 		key, value := iter.Key(), iter.Value()
 		assert.EqualValues(t, key, expectedKey)
 		assert.EqualValues(t, value, treeData[expectedKey])
-		i += 1
+		i++
 	}
 	assert.Equal(t, len(expected), i)
 }
@@ -162,7 +162,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 		key, value := iter.Key(), iter.Value()
 		assert.EqualValues(t, key, expectedKey)
 		assert.EqualValues(t, value, expectedKey)
-		i += 1
+		i++
 	}
 	assert.Equal(t, len(expected), i)
 
@@ -177,7 +177,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 		key, value := iter.Key(), iter.Value()
 		assert.EqualValues(t, key, expectedKey)
 		assert.EqualValues(t, value, []byte("test4"))
-		i += 1
+		i++
 	}
 	assert.Equal(t, len(expected), i)
 
@@ -192,7 +192,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 		key, value := iter.Key(), iter.Value()
 		assert.EqualValues(t, key, expectedKey)
 		assert.EqualValues(t, value, []byte("test4"))
-		i += 1
+		i++
 	}
 	assert.Equal(t, len(expected), i)
 }
@@ -221,7 +221,7 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 		key, value := iter.Key(), iter.Value()
 		assert.EqualValues(t, key, expectedKey)
 		assert.EqualValues(t, value, expectedKey)
-		i += 1
+		i++
 	}
 	assert.Equal(t, len(expected), i)
 
@@ -236,7 +236,7 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 		key, value := iter.Key(), iter.Value()
 		assert.EqualValues(t, key, expectedKey)
 		assert.EqualValues(t, value, []byte("test4"))
-		i += 1
+		i++
 	}
 	assert.Equal(t, len(expected), i)
 
@@ -251,7 +251,7 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 		key, value := iter.Key(), iter.Value()
 		assert.EqualValues(t, key, expectedKey)
 		assert.EqualValues(t, value, []byte("test4"))
-		i += 1
+		i++
 	}
 	assert.Equal(t, len(expected), i)
 }

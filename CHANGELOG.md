@@ -2,18 +2,37 @@
 
 ## 0.15.0 (TBD)
 
-BREAKING CHANGES
-
-* Remove go-wire, use go-amino
-* [store] Add `SubspaceIterator` and `ReverseSubspaceIterator` to `KVStore` interface
-
 FEATURES:
 
 * Add CacheContext
-
-FEATURES:
-
 * Add auto sequencing to client
+* Add FeeHandler to ante handler
+* Gaia stake commands include, DeclareCandidacy, EditCandidacy, Delegate, Unbond
+* MountStoreWithDB without providing a custom store works.
+* Repo is now lint compliant / GoMetaLinter with tendermint-lint integrated into CI
+* Better key output, pubkey go-amino hex bytes now output by default
+* gaiad init overhaul
+  * Create genesis transactions with `gaiad init gen-tx` 
+  * New genesis account keys are automatically added to the client keybase (introduce `--client-home` flag)
+  * Initialize with genesis txs using `--gen-txs` flag
+
+BREAKING CHANGES
+
+* Remove go-wire, use go-amino
+* Move module REST/CLI packages to x/[module]/client/rest and x/[module]/client/cli
+* Gaia simple-staking bond and unbond functions replaced 
+* [stake] Delegator bonds now store the height at which they were updated
+* [store] Add `SubspaceIterator` and `ReverseSubspaceIterator` to `KVStore` interface
+* [basecoin] NewBasecoinApp takes a `dbm.DB` and uses namespaced DBs for substores
+* All module keepers now require a codespace, see basecoin or democoin for usage
+* Many changes to names throughout 
+  * Type as a prefix naming convention applied (ex. BondMsg -> MsgBond) 
+  * Removed redundancy in names (ex. stake.StakeKeeper -> stake.Keeper)
+* Removed SealedAccountMapper
+* gaiad init now requires use of `--name` flag 
+
+BUG FIXES
+* Gaia now uses stake, ported from github.com/cosmos/gaia
 
 ## 0.14.1 (April 9, 2018)
 
@@ -60,7 +79,7 @@ BREAKING CHANGES
   to allow mounting multiple stores with their own DB until they can share one
 * [x/staking] Renamed to `simplestake`
 * [builder] Functions don't take `passphrase` as argument
-* [server] GenAppState returns generated seed and address
+* [server] GenAppParams returns generated seed and address
 * [basecoind] `init` command outputs JSON of everything necessary for testnet
 * [basecoind] `basecoin.db -> data/basecoin.db`
 * [basecli] `data/keys.db -> keys/keys.db`

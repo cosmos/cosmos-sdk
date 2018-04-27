@@ -21,10 +21,10 @@ import (
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
-		case SetTrendMsg:
-			return handleSetTrendMsg(ctx, k, msg)
-		case QuizMsg:
-			return handleQuizMsg(ctx, k, msg)
+		case MsgSetTrend:
+			return handleMsgSetTrend(ctx, k, msg)
+		case MsgQuiz:
+			return handleMsgQuiz(ctx, k, msg)
 		default:
 			errMsg := fmt.Sprintf("Unrecognized cool Msg type: %v", reflect.TypeOf(msg).Name())
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -32,19 +32,19 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-// Handle QuizMsg This is the engine of your module
-func handleSetTrendMsg(ctx sdk.Context, k Keeper, msg SetTrendMsg) sdk.Result {
+// Handle MsgQuiz This is the engine of your module
+func handleMsgSetTrend(ctx sdk.Context, k Keeper, msg MsgSetTrend) sdk.Result {
 	k.setTrend(ctx, msg.Cool)
 	return sdk.Result{}
 }
 
-// Handle QuizMsg This is the engine of your module
-func handleQuizMsg(ctx sdk.Context, k Keeper, msg QuizMsg) sdk.Result {
+// Handle MsgQuiz This is the engine of your module
+func handleMsgQuiz(ctx sdk.Context, k Keeper, msg MsgQuiz) sdk.Result {
 
 	correct := k.CheckTrend(ctx, msg.CoolAnswer)
 
 	if !correct {
-		return ErrIncorrectCoolAnswer(msg.CoolAnswer).Result()
+		return ErrIncorrectCoolAnswer(k.codespace, msg.CoolAnswer).Result()
 	}
 
 	if ctx.IsCheckTx() {

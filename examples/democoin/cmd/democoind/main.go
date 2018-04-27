@@ -14,72 +14,49 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
-// rootCmd is the entry point for this binary
-var (
-	context = server.NewDefaultContext()
-	rootCmd = &cobra.Command{
-		Use:               "democoind",
-		Short:             "Democoin Daemon (server)",
-		PersistentPreRunE: server.PersistentPreRunEFn(context),
-	}
-)
+// init parameters
+var CoolAppInit = server.AppInit{
+	AppGenState: CoolAppGenState,
+	AppGenTx:    server.SimpleAppGenTx,
+}
 
-// defaultAppState sets up the app_state for the
-// default genesis file
-func defaultAppState(args []string, addr sdk.Address, coinDenom string) (json.RawMessage, error) {
-	baseJSON, err := server.DefaultGenAppState(args, addr, coinDenom)
+// coolGenAppParams sets up the app_state and appends the cool app state
+func CoolAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+	appState, err = server.SimpleAppGenState(cdc, appGenTxs)
 	if err != nil {
-		return nil, err
+		return
 	}
-	var jsonMap map[string]json.RawMessage
-	err = json.Unmarshal(baseJSON, &jsonMap)
-	if err != nil {
-		return nil, err
-	}
-	jsonMap["cool"] = json.RawMessage(`{
+	key := "cool"
+	value := json.RawMessage(`{
         "trend": "ice-cold"
       }`)
-	bz, err := json.Marshal(jsonMap)
-	return json.RawMessage(bz), err
+	appState, err = server.AppendJSON(cdc, appState, key, value)
+	return
 }
 
 func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	dbMain, err := dbm.NewGoLevelDB("democoin", filepath.Join(rootDir, "data"))
+	db, err := dbm.NewGoLevelDB("democoin", filepath.Join(rootDir, "data"))
 	if err != nil {
 		return nil, err
 	}
-	dbAcc, err := dbm.NewGoLevelDB("democoin-acc", filepath.Join(rootDir, "data"))
-	if err != nil {
-		return nil, err
-	}
-	dbPow, err := dbm.NewGoLevelDB("democoin-pow", filepath.Join(rootDir, "data"))
-	if err != nil {
-		return nil, err
-	}
-	dbIBC, err := dbm.NewGoLevelDB("democoin-ibc", filepath.Join(rootDir, "data"))
-	if err != nil {
-		return nil, err
-	}
-	dbStaking, err := dbm.NewGoLevelDB("democoin-staking", filepath.Join(rootDir, "data"))
-	if err != nil {
-		return nil, err
-	}
-	dbs := map[string]dbm.DB{
-		"main":    dbMain,
-		"acc":     dbAcc,
-		"pow":     dbPow,
-		"ibc":     dbIBC,
-		"staking": dbStaking,
-	}
-	bapp := app.NewDemocoinApp(logger, dbs)
+	bapp := app.NewDemocoinApp(logger, db)
 	return bapp, nil
 }
 
 func main() {
-	server.AddCommands(rootCmd, defaultAppState, generateApp, context)
+	cdc := app.MakeCodec()
+	ctx := server.NewDefaultContext()
+
+	rootCmd := &cobra.Command{
+		Use:               "democoind",
+		Short:             "Democoin Daemon (server)",
+		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
+	}
+
+	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit, generateApp)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.democoind")

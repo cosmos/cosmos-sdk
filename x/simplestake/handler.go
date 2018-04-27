@@ -10,17 +10,17 @@ import (
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
-		case BondMsg:
-			return handleBondMsg(ctx, k, msg)
-		case UnbondMsg:
-			return handleUnbondMsg(ctx, k, msg)
+		case MsgBond:
+			return handleMsgBond(ctx, k, msg)
+		case MsgUnbond:
+			return handleMsgUnbond(ctx, k, msg)
 		default:
 			return sdk.ErrUnknownRequest("No match for message type.").Result()
 		}
 	}
 }
 
-func handleBondMsg(ctx sdk.Context, k Keeper, msg BondMsg) sdk.Result {
+func handleMsgBond(ctx sdk.Context, k Keeper, msg MsgBond) sdk.Result {
 	power, err := k.Bond(ctx, msg.Address, msg.PubKey, msg.Stake)
 	if err != nil {
 		return err.Result()
@@ -32,12 +32,12 @@ func handleBondMsg(ctx sdk.Context, k Keeper, msg BondMsg) sdk.Result {
 	}
 
 	return sdk.Result{
-		Code:             sdk.CodeOK,
+		Code:             sdk.ABCICodeOK,
 		ValidatorUpdates: abci.Validators{valSet},
 	}
 }
 
-func handleUnbondMsg(ctx sdk.Context, k Keeper, msg UnbondMsg) sdk.Result {
+func handleMsgUnbond(ctx sdk.Context, k Keeper, msg MsgUnbond) sdk.Result {
 	pubKey, _, err := k.Unbond(ctx, msg.Address)
 	if err != nil {
 		return err.Result()
@@ -49,7 +49,7 @@ func handleUnbondMsg(ctx sdk.Context, k Keeper, msg UnbondMsg) sdk.Result {
 	}
 
 	return sdk.Result{
-		Code:             sdk.CodeOK,
+		Code:             sdk.ABCICodeOK,
 		ValidatorUpdates: abci.Validators{valSet},
 	}
 }

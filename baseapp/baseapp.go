@@ -24,11 +24,12 @@ var dbHeaderKey = []byte("header")
 // The ABCI application
 type BaseApp struct {
 	// initialized on creation
-	Logger log.Logger
-	name   string               // application name from abci.Info
-	db     dbm.DB               // common DB backend
-	cms    sdk.CommitMultiStore // Main (uncached) state
-	router Router               // handle any kind of message
+	Logger     log.Logger
+	name       string               // application name from abci.Info
+	db         dbm.DB               // common DB backend
+	cms        sdk.CommitMultiStore // Main (uncached) state
+	router     Router               // handle any kind of message
+	codespacer *sdk.Codespacer      // handle module codespacing
 
 	// must be set
 	txDecoder   sdk.TxDecoder   // unmarshal []byte into sdk.Tx
@@ -56,13 +57,18 @@ var _ abci.Application = (*BaseApp)(nil)
 // Create and name new BaseApp
 // NOTE: The db is used to store the version number for now.
 func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
-	return &BaseApp{
-		Logger: logger,
-		name:   name,
-		db:     db,
-		cms:    store.NewCommitMultiStore(db),
-		router: NewRouter(),
+	app := &BaseApp{
+		Logger:     logger,
+		name:       name,
+		db:         db,
+		cms:        store.NewCommitMultiStore(db),
+		router:     NewRouter(),
+		codespacer: sdk.NewCodespacer(),
 	}
+	// Register the undefined & root codespaces, which should not be used by any modules
+	app.codespacer.RegisterOrPanic(sdk.CodespaceUndefined)
+	app.codespacer.RegisterOrPanic(sdk.CodespaceRoot)
+	return app
 }
 
 // BaseApp Name
@@ -70,22 +76,26 @@ func (app *BaseApp) Name() string {
 	return app.name
 }
 
+// Register the next available codespace through the baseapp's codespacer, starting from a default
+func (app *BaseApp) RegisterCodespace(codespace sdk.CodespaceType) sdk.CodespaceType {
+	return app.codespacer.RegisterNext(codespace)
+}
+
 // Mount a store to the provided key in the BaseApp multistore
-// Broken until #532 is implemented.
 func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
 		app.MountStore(key, sdk.StoreTypeIAVL)
 	}
 }
 
-// Mount a store to the provided key in the BaseApp multistore
+// Mount a store to the provided key in the BaseApp multistore, using a specified DB
 func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, typ sdk.StoreType, db dbm.DB) {
 	app.cms.MountStoreWithDB(key, typ, db)
 }
 
-// Mount a store to the provided key in the BaseApp multistore
+// Mount a store to the provided key in the BaseApp multistore, using the default DB
 func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
-	app.cms.MountStoreWithDB(key, typ, app.db)
+	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
 // nolint - Set functions
@@ -104,7 +114,6 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	app.anteHandler = ah
 }
-
 func (app *BaseApp) Router() Router { return app.router }
 
 // load latest application version
@@ -327,9 +336,8 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	if result.IsOK() {
 		app.valUpdates = append(app.valUpdates, result.ValidatorUpdates...)
 	} else {
-		// Even though the Code is not OK, there will be some side
-		// effects, like those caused by fee deductions or sequence
-		// incrementations.
+		// Even though the Result.Code is not OK, there are still effects,
+		// namely fee deductions and sequence incrementing.
 	}
 
 	// Tell the blockchain engine (i.e. Tendermint).
@@ -343,7 +351,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	}
 }
 
-// Mostly for testing
+// nolint- Mostly for testing
 func (app *BaseApp) Check(tx sdk.Tx) (result sdk.Result) {
 	return app.runTx(true, nil, tx)
 }
@@ -371,6 +379,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	// Validate the Msg.
 	err := msg.ValidateBasic()
 	if err != nil {
+		err = err.WithDefaultCodespace(sdk.CodespaceRoot)
 		return err.Result()
 	}
 
@@ -457,7 +466,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// Use the header from this latest block.
 	app.setCheckState(header)
 
-	// Emtpy the Deliver state
+	// Empty the Deliver state
 	app.deliverState = nil
 
 	return abci.ResponseCommit{

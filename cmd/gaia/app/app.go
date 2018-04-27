@@ -43,48 +43,38 @@ type GaiaApp struct {
 	coinKeeper    bank.Keeper
 	ibcMapper     ibc.Mapper
 	stakeKeeper   stake.Keeper
-
-	// Handle fees
-	feeHandler sdk.FeeHandler
 }
 
 func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
+	cdc := MakeCodec()
+
 	// create your application object
 	var app = &GaiaApp{
-		BaseApp:    bam.NewBaseApp(appName, logger, db),
-		cdc:        MakeCodec(),
+		BaseApp:    bam.NewBaseApp(appName, cdc, logger, db),
+		cdc:        cdc,
 		keyMain:    sdk.NewKVStoreKey("main"),
 		keyAccount: sdk.NewKVStoreKey("acc"),
 		keyIBC:     sdk.NewKVStoreKey("ibc"),
 		keyStake:   sdk.NewKVStoreKey("stake"),
 	}
 
-	// define the accountMapper
-	app.accountMapper = auth.NewAccountMapper(
-		app.cdc,
-		app.keyMain,         // target store
-		&auth.BaseAccount{}, // prototype
-	)
-
-	// add handlers
+	// add accountMapper/handlers
+	app.accountMapper = auth.NewAccountMapper(app.cdc, app.keyMain, &auth.BaseAccount{})
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 
+	// register message routes
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
 
-	// Define the feeHandler.
-	app.feeHandler = auth.BurnFeeHandler
-
 	// initialize BaseApp
-	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
 	app.SetEndBlocker(stake.NewEndBlocker(app.stakeKeeper))
 	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeHandler))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, stake.FeeHandler))
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -96,39 +86,13 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 // custom tx codec
 func MakeCodec() *wire.Codec {
 	var cdc = wire.NewCodec()
-
-	// Register Msgs
-	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-
 	ibc.RegisterWire(cdc)
 	bank.RegisterWire(cdc)
 	stake.RegisterWire(cdc)
-
-	// Register AppAccount
-	cdc.RegisterInterface((*sdk.Account)(nil), nil)
-	cdc.RegisterConcrete(&auth.BaseAccount{}, "gaia/Account", nil)
-
-	// Register crypto.
+	auth.RegisterWire(cdc)
+	sdk.RegisterWire(cdc)
 	wire.RegisterCrypto(cdc)
-
 	return cdc
-}
-
-// custom logic for transaction decoding
-func (app *GaiaApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
-	var tx = sdk.StdTx{}
-
-	if len(txBytes) == 0 {
-		return nil, sdk.ErrTxDecode("txBytes are empty")
-	}
-
-	// StdTx.Msg is an interface. The concrete types
-	// are registered by MakeTxCodec
-	err := app.cdc.UnmarshalBinary(txBytes, &tx)
-	if err != nil {
-		return nil, sdk.ErrTxDecode("").Trace(err.Error())
-	}
-	return tx, nil
 }
 
 // custom logic for gaia initialization

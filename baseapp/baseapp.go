@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Key to store the header in the DB itself.
@@ -56,7 +57,7 @@ var _ abci.Application = (*BaseApp)(nil)
 
 // Create and name new BaseApp
 // NOTE: The db is used to store the version number for now.
-func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
+func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *BaseApp {
 	app := &BaseApp{
 		Logger:     logger,
 		name:       name,
@@ -64,6 +65,7 @@ func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
 		cms:        store.NewCommitMultiStore(db),
 		router:     NewRouter(),
 		codespacer: sdk.NewCodespacer(),
+		txDecoder:  defaultTxDecoder(cdc),
 	}
 	// Register the undefined & root codespaces, which should not be used by any modules
 	app.codespacer.RegisterOrPanic(sdk.CodespaceUndefined)
@@ -98,10 +100,31 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
-// nolint - Set functions
+// Set the txDecoder function
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
+
+// default custom logic for transaction decoding
+func defaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
+	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var tx = sdk.StdTx{}
+
+		if len(txBytes) == 0 {
+			return nil, sdk.ErrTxDecode("txBytes are empty")
+		}
+
+		// StdTx.Msg is an interface. The concrete types
+		// are registered by MakeTxCodec
+		err := cdc.UnmarshalBinary(txBytes, &tx)
+		if err != nil {
+			return nil, sdk.ErrTxDecode("").Trace(err.Error())
+		}
+		return tx, nil
+	}
+}
+
+// nolint - Set functions
 func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
 	app.initChainer = initChainer
 }
@@ -217,7 +240,7 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	}
 }
 
-//----------------------------------------
+//______________________________________________________________________________
 // ABCI
 
 // Implements ABCI

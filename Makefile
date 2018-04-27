@@ -99,6 +99,9 @@ test_unit:
 test_cover:
 	@bash tests/test_cover.sh
 
+test_lint:
+	gometalinter --disable-all --enable='golint' --vendor ./...
+
 benchmark:
 	@go test -bench=. $(PACKAGES)
 
@@ -130,4 +133,4 @@ devdoc_update:
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build build_examples install install_examples dist check_tools get_tools get_vendor_deps draw_deps test test_unit test_tutorial benchmark devdoc_init devdoc devdoc_save devdoc_update
+.PHONY: build build_examples install install_examples dist check_tools get_tools get_vendor_deps draw_deps test test_nocli test_unit test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update

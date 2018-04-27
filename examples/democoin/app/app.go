@@ -12,11 +12,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
-	"github.com/cosmos/cosmos-sdk/x/simplestake"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/pow"
+	"github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/sketchy"
 )
 
@@ -38,9 +38,6 @@ type DemocoinApp struct {
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
-
-	// Handle fees
-	feeHandler sdk.FeeHandler
 }
 
 func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
@@ -50,7 +47,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 
 	// Create your application object.
 	var app = &DemocoinApp{
-		BaseApp:            bam.NewBaseApp(appName, logger, db),
+		BaseApp:            bam.NewBaseApp(appName, cdc, logger, db),
 		cdc:                cdc,
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
 		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
@@ -80,63 +77,32 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
 
-	// Define the feeHandler.
-	app.feeHandler = auth.BurnFeeHandler
-
 	// Initialize BaseApp.
-	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainerFn(coolKeeper, powKeeper))
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyPowStore, app.capKeyIBCStore, app.capKeyStakingStore)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeHandler))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.BurnFeeHandler))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())
 	}
-
 	return app
 }
 
 // custom tx codec
 func MakeCodec() *wire.Codec {
 	var cdc = wire.NewCodec()
-
-	// Register Msgs
-	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	cdc.RegisterConcrete(bank.MsgSend{}, "democoin/Send", nil)
-	cdc.RegisterConcrete(bank.MsgIssue{}, "democoin/Issue", nil)
-	cdc.RegisterConcrete(cool.MsgQuiz{}, "democoin/Quiz", nil)
-	cdc.RegisterConcrete(cool.MsgSetTrend{}, "democoin/SetTrend", nil)
-	cdc.RegisterConcrete(pow.MsgMine{}, "democoin/Mine", nil)
-	cdc.RegisterConcrete(ibc.IBCTransferMsg{}, "democoin/IBCTransferMsg", nil)
-	cdc.RegisterConcrete(ibc.IBCReceiveMsg{}, "democoin/IBCReceiveMsg", nil)
-	cdc.RegisterConcrete(simplestake.MsgBond{}, "democoin/BondMsg", nil)
-	cdc.RegisterConcrete(simplestake.MsgUnbond{}, "democoin/UnbondMsg", nil)
+	wire.RegisterCrypto(cdc) // Register crypto.
+	sdk.RegisterWire(cdc)    // Register Msgs
+	cool.RegisterWire(cdc)
+	pow.RegisterWire(cdc)
+	bank.RegisterWire(cdc)
+	ibc.RegisterWire(cdc)
+	simplestake.RegisterWire(cdc)
 
 	// Register AppAccount
 	cdc.RegisterInterface((*sdk.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "democoin/Account", nil)
-
-	// Register crypto.
-	wire.RegisterCrypto(cdc)
-
 	return cdc
-}
-
-// custom logic for transaction decoding
-func (app *DemocoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
-	var tx = sdk.StdTx{}
-
-	if len(txBytes) == 0 {
-		return nil, sdk.ErrTxDecode("txBytes are empty")
-	}
-
-	// StdTx.Msg is an interface. The concrete types
-	// are registered by MakeTxCodec in bank.RegisterWire.
-	err := app.cdc.UnmarshalBinary(txBytes, &tx)
-	if err != nil {
-		return nil, sdk.ErrTxDecode("").Trace(err.Error())
-	}
-	return tx, nil
 }
 
 // custom logic for democoin initialization

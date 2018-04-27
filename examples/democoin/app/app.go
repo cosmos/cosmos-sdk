@@ -66,8 +66,8 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	// Define the accountMapper.
 	app.accountMapper = auth.NewAccountMapper(
 		cdc,
-		app.capKeyMainStore, // target store
-		&types.AppAccount{}, // prototype
+		app.capKeyAccountStore, // target store
+		&types.AppAccount{},    // prototype
 	)
 
 	// Add handlers.

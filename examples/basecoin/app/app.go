@@ -125,14 +125,19 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 // Custom logic for state export
 func (app *BasecoinApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
 	ctx := app.NewContext(true, abci.Header{})
+
+	// iterate to get the accounts
 	accounts := []*types.GenesisAccount{}
-	app.accountMapper.IterateAccounts(ctx, func(a sdk.Account) bool {
-		accounts = append(accounts, &types.GenesisAccount{
-			Address: a.GetAddress(),
-			Coins:   a.GetCoins(),
-		})
+	appendAccount := func(acc sdk.Account) (stop bool) {
+		account := &types.GenesisAccount{
+			Address: acc.GetAddress(),
+			Coins:   acc.GetCoins(),
+		}
+		accounts = append(accounts, account)
 		return false
-	})
+	}
+	app.accountMapper.IterateAccounts(ctx, appendAccount)
+
 	genState := types.GenesisState{
 		Accounts: accounts,
 	}

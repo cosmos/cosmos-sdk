@@ -241,6 +241,7 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 }
 
 //______________________________________________________________________________
+
 // ABCI
 
 // Implements ABCI

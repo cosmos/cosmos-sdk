@@ -35,6 +35,13 @@ func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 	}
 }
 
+func NewGenesisAccountI(acc sdk.Account) GenesisAccount {
+	return GenesisAccount{
+		Address: acc.GetAddress(),
+		Coins:   acc.GetCoins(),
+	}
+}
+
 // convert GenesisAccount to auth.BaseAccount
 func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 	return &auth.BaseAccount{

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"path/filepath"
+	"encoding/json"
 
 	"github.com/spf13/cobra"
 
@@ -23,19 +23,20 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, app.GaiaAppInit(), generateApp)
+	server.AddCommands(ctx, cdc, rootCmd, app.GaiaAppInit(),
+		server.ConstructAppCreator(newApp, "gaia"),
+		server.ConstructAppExporter(exportAppState, "gaia"))
 
 	// prepare and add flags
 	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)
 	executor.Execute()
 }
 
-func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	dataDir := filepath.Join(rootDir, "data")
-	db, err := dbm.NewGoLevelDB("gaia", dataDir)
-	if err != nil {
-		return nil, err
-	}
-	bapp := app.NewGaiaApp(logger, db)
-	return bapp, nil
+func newApp(logger log.Logger, db dbm.DB) abci.Application {
+	return app.NewGaiaApp(logger, db)
+}
+
+func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
+	gapp := app.NewGaiaApp(logger, db)
+	return gapp.ExportAppStateJSON()
 }

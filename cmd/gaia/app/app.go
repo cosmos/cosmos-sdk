@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"os"
 
 	abci "github.com/tendermint/abci/types"
@@ -58,8 +59,14 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 		keyStake:   sdk.NewKVStoreKey("stake"),
 	}
 
-	// add accountMapper/handlers
-	app.accountMapper = auth.NewAccountMapper(app.cdc, app.keyMain, &auth.BaseAccount{})
+	// define the accountMapper
+	app.accountMapper = auth.NewAccountMapper(
+		app.cdc,
+		app.keyAccount,      // target store
+		&auth.BaseAccount{}, // prototype
+	)
+
+	// add handlers
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
@@ -116,4 +123,24 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
 
 	return abci.ResponseInitChain{}
+}
+
+// export the state of gaia for a genesis f
+func (app *GaiaApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
+	ctx := app.NewContext(true, abci.Header{})
+
+	// iterate to get the accounts
+	accounts := []GenesisAccount{}
+	appendAccount := func(acc sdk.Account) (stop bool) {
+		account := NewGenesisAccountI(acc)
+		accounts = append(accounts, account)
+		return false
+	}
+	app.accountMapper.IterateAccounts(ctx, appendAccount)
+
+	genState := GenesisState{
+		Accounts:  accounts,
+		StakeData: stake.WriteGenesis(ctx, app.stakeKeeper),
+	}
+	return wire.MarshalJSONIndent(app.cdc, genState)
 }

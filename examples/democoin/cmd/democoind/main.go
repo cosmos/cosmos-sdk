@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -34,16 +33,22 @@ func CoolAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
         "trend": "ice-cold"
       }`)
 	appState, err = server.AppendJSON(cdc, appState, key, value)
+	key = "pow"
+	value = json.RawMessage(`{
+        "difficulty": 1,
+        "count": 0
+      }`)
+	appState, err = server.AppendJSON(cdc, appState, key, value)
 	return
 }
 
-func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	db, err := dbm.NewGoLevelDB("democoin", filepath.Join(rootDir, "data"))
-	if err != nil {
-		return nil, err
-	}
-	bapp := app.NewDemocoinApp(logger, db)
-	return bapp, nil
+func newApp(logger log.Logger, db dbm.DB) abci.Application {
+	return app.NewDemocoinApp(logger, db)
+}
+
+func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
+	dapp := app.NewDemocoinApp(logger, db)
+	return dapp.ExportAppStateJSON()
 }
 
 func main() {
@@ -56,7 +61,9 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit, generateApp)
+	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit,
+		server.ConstructAppCreator(newApp, "democoin"),
+		server.ConstructAppExporter(exportAppState, "democoin"))
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.democoind")

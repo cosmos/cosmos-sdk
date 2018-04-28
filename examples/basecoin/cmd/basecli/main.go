@@ -14,11 +14,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
 	"github.com/cosmos/cosmos-sdk/version"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 )
 
 // rootCmd is the entry point for this binary
@@ -47,6 +49,11 @@ func main() {
 	rootCmd.AddCommand(client.LineBreak)
 
 	// add query/post commands (custom to binary)
+	rootCmd.AddCommand(
+		client.GetCommands(
+			authcmd.GetAccountCmd("acc", cdc, types.GetAccountDecoder(cdc)),
+		)...)
+
 	rootCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),

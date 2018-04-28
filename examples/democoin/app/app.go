@@ -1,6 +1,8 @@
 package app
 
 import (
+	"encoding/json"
+
 	abci "github.com/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -36,6 +38,13 @@ type DemocoinApp struct {
 	capKeyIBCStore     *sdk.KVStoreKey
 	capKeyStakingStore *sdk.KVStoreKey
 
+	// keepers
+	coinKeeper  bank.Keeper
+	coolKeeper  cool.Keeper
+	powKeeper   pow.Keeper
+	ibcMapper   ibc.Mapper
+	stakeKeeper simplestake.Keeper
+
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
 }
@@ -59,26 +68,26 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	// Define the accountMapper.
 	app.accountMapper = auth.NewAccountMapper(
 		cdc,
-		app.capKeyMainStore, // target store
-		&types.AppAccount{}, // prototype
+		app.capKeyAccountStore, // target store
+		&types.AppAccount{},    // prototype
 	)
 
 	// Add handlers.
-	coinKeeper := bank.NewKeeper(app.accountMapper)
-	coolKeeper := cool.NewKeeper(app.capKeyMainStore, coinKeeper, app.RegisterCodespace(cool.DefaultCodespace))
-	powKeeper := pow.NewKeeper(app.capKeyPowStore, pow.NewConfig("pow", int64(1)), coinKeeper, app.RegisterCodespace(pow.DefaultCodespace))
-	ibcMapper := ibc.NewMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
-	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper, app.RegisterCodespace(simplestake.DefaultCodespace))
+	app.coinKeeper = bank.NewKeeper(app.accountMapper)
+	app.coolKeeper = cool.NewKeeper(app.capKeyMainStore, app.coinKeeper, app.RegisterCodespace(cool.DefaultCodespace))
+	app.powKeeper = pow.NewKeeper(app.capKeyPowStore, pow.NewConfig("pow", int64(1)), app.coinKeeper, app.RegisterCodespace(pow.DefaultCodespace))
+	app.ibcMapper = ibc.NewMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
+	app.stakeKeeper = simplestake.NewKeeper(app.capKeyStakingStore, app.coinKeeper, app.RegisterCodespace(simplestake.DefaultCodespace))
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper)).
-		AddRoute("cool", cool.NewHandler(coolKeeper)).
-		AddRoute("pow", powKeeper.Handler).
+		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
+		AddRoute("cool", cool.NewHandler(app.coolKeeper)).
+		AddRoute("pow", app.powKeeper.Handler).
 		AddRoute("sketchy", sketchy.NewHandler()).
-		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
-		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
+		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+		AddRoute("simplestake", simplestake.NewHandler(app.stakeKeeper))
 
 	// Initialize BaseApp.
-	app.SetInitChainer(app.initChainerFn(coolKeeper, powKeeper))
+	app.SetInitChainer(app.initChainerFn(app.coolKeeper, app.powKeeper))
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyPowStore, app.capKeyIBCStore, app.capKeyStakingStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.BurnFeeHandler))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
@@ -127,13 +136,13 @@ func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper, powKeeper pow.Keep
 		}
 
 		// Application specific genesis handling
-		err = coolKeeper.InitGenesis(ctx, genesisState.CoolGenesis)
+		err = cool.InitGenesis(ctx, app.coolKeeper, genesisState.CoolGenesis)
 		if err != nil {
 			panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 			//	return sdk.ErrGenesisParse("").TraceCause(err, "")
 		}
 
-		err = powKeeper.InitGenesis(ctx, genesisState.POWGenesis)
+		err = pow.InitGenesis(ctx, app.powKeeper, genesisState.POWGenesis)
 		if err != nil {
 			panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 			//	return sdk.ErrGenesisParse("").TraceCause(err, "")
@@ -141,4 +150,28 @@ func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper, powKeeper pow.Keep
 
 		return abci.ResponseInitChain{}
 	}
+}
+
+// Custom logic for state export
+func (app *DemocoinApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
+	ctx := app.NewContext(true, abci.Header{})
+
+	// iterate to get the accounts
+	accounts := []*types.GenesisAccount{}
+	appendAccount := func(acc sdk.Account) (stop bool) {
+		account := &types.GenesisAccount{
+			Address: acc.GetAddress(),
+			Coins:   acc.GetCoins(),
+		}
+		accounts = append(accounts, account)
+		return false
+	}
+	app.accountMapper.IterateAccounts(ctx, appendAccount)
+
+	genState := types.GenesisState{
+		Accounts:    accounts,
+		POWGenesis:  pow.WriteGenesis(ctx, app.powKeeper),
+		CoolGenesis: cool.WriteGenesis(ctx, app.coolKeeper),
+	}
+	return wire.MarshalJSONIndent(app.cdc, genState)
 }

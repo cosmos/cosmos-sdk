@@ -371,6 +371,30 @@ func (k Keeper) GetDelegatorBond(ctx sdk.Context,
 	return bond, true
 }
 
+// load all bonds
+func (k Keeper) getBonds(ctx sdk.Context, maxRetrieve int16) (bonds []DelegatorBond) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := store.Iterator(subspace(DelegatorBondKeyPrefix))
+
+	bonds = make([]DelegatorBond, maxRetrieve)
+	i := 0
+	for ; ; i++ {
+		if !iterator.Valid() || i > int(maxRetrieve-1) {
+			iterator.Close()
+			break
+		}
+		bondBytes := iterator.Value()
+		var bond DelegatorBond
+		err := k.cdc.UnmarshalBinary(bondBytes, &bond)
+		if err != nil {
+			panic(err)
+		}
+		bonds[i] = bond
+		iterator.Next()
+	}
+	return bonds[:i] // trim
+}
+
 // load all bonds of a delegator
 func (k Keeper) GetDelegatorBonds(ctx sdk.Context, delegator sdk.Address, maxRetrieve int16) (bonds []DelegatorBond) {
 	store := ctx.KVStore(k.storeKey)

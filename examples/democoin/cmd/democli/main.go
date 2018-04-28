@@ -54,7 +54,7 @@ func main() {
 	// start with commands common to basecoin
 	rootCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("main", cdc, types.GetAccountDecoder(cdc)),
+			authcmd.GetAccountCmd("acc", cdc, types.GetAccountDecoder(cdc)),
 		)...)
 	rootCmd.AddCommand(
 		client.PostCommands(

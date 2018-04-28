@@ -1,6 +1,8 @@
 package app
 
 import (
+	"encoding/json"
+
 	abci "github.com/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -57,7 +59,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	// Define the accountMapper.
 	app.accountMapper = auth.NewAccountMapper(
 		cdc,
-		app.keyMain,         // target store
+		app.keyAccount,      // target store
 		&types.AppAccount{}, // prototype
 	)
 
@@ -118,4 +120,26 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 		app.accountMapper.SetAccount(ctx, acc)
 	}
 	return abci.ResponseInitChain{}
+}
+
+// Custom logic for state export
+func (app *BasecoinApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
+	ctx := app.NewContext(true, abci.Header{})
+
+	// iterate to get the accounts
+	accounts := []*types.GenesisAccount{}
+	appendAccount := func(acc sdk.Account) (stop bool) {
+		account := &types.GenesisAccount{
+			Address: acc.GetAddress(),
+			Coins:   acc.GetCoins(),
+		}
+		accounts = append(accounts, account)
+		return false
+	}
+	app.accountMapper.IterateAccounts(ctx, appendAccount)
+
+	genState := types.GenesisState{
+		Accounts: accounts,
+	}
+	return wire.MarshalJSONIndent(app.cdc, genState)
 }

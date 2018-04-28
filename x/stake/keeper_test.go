@@ -94,7 +94,7 @@ func TestCandidate(t *testing.T) {
 	assert.False(t, found)
 }
 
-// tests GetDelegatorBond, GetDelegatorBonds, SetDelegatorBond, removeDelegatorBond
+// tests GetDelegatorBond, GetDelegatorBonds, SetDelegatorBond, removeDelegatorBond, GetBonds
 func TestBond(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
@@ -172,6 +172,14 @@ func TestBond(t *testing.T) {
 	assert.True(t, bondsEqual(bond2to1, resBonds[0]))
 	assert.True(t, bondsEqual(bond2to2, resBonds[1]))
 	assert.True(t, bondsEqual(bond2to3, resBonds[2]))
+	allBonds := keeper.getBonds(ctx, 1000)
+	require.Equal(t, 6, len(allBonds))
+	assert.True(t, bondsEqual(bond1to1, allBonds[0]))
+	assert.True(t, bondsEqual(bond1to2, allBonds[1]))
+	assert.True(t, bondsEqual(bond1to3, allBonds[2]))
+	assert.True(t, bondsEqual(bond2to1, allBonds[3]))
+	assert.True(t, bondsEqual(bond2to2, allBonds[4]))
+	assert.True(t, bondsEqual(bond2to3, allBonds[5]))
 
 	// delete a record
 	keeper.removeDelegatorBond(ctx, bond2to3)

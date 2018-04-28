@@ -48,7 +48,7 @@ type AccountMapper interface {
 	NewAccountWithAddress(ctx Context, addr Address) Account
 	GetAccount(ctx Context, addr Address) Account
 	SetAccount(ctx Context, acc Account)
-	IterateAccounts(ctx Context, cont func(Account) bool)
+	IterateAccounts(ctx Context, process func(sdk.Account) (stop bool))
 }
 
 // AccountDecoder unmarshals account bytes

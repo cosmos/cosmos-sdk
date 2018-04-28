@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"encoding/json"
 	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -49,14 +50,14 @@ func GenerateFn(appFn func(log.Logger, dbm.DB) abci.Application, name string) Ap
 }
 
 // ExportFn returns an application export function
-func ExportFn(appFn func(log.Logger, dbm.DB) (interface{}, *wire.Codec), name string) AppExporter {
-	return func(rootDir string, logger log.Logger) (interface{}, *wire.Codec, error) {
+func ExportFn(appFn func(log.Logger, dbm.DB) json.RawMessage, name string) AppExporter {
+	return func(rootDir string, logger log.Logger) (interface{}, error) {
 		dataDir := filepath.Join(rootDir, "data")
 		db, err := dbm.NewGoLevelDB(name, dataDir)
 		if err != nil {
 			return nil, nil, err
 		}
-		genesis, codec := appFn(logger, db)
+		genesis := appFn(logger, db)
 		return genesis, codec, nil
 	}
 }

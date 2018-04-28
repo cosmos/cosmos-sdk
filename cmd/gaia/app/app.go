@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"os"
 
 	abci "github.com/tendermint/abci/types"
@@ -124,19 +125,22 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	return abci.ResponseInitChain{}
 }
 
-// custom logic for export
-func (app *GaiaApp) ExportGenesis() interface{} {
+// export the state of gaia for a genesis f
+func (app *GaiaApp) ExportAppStateJSON() (appState json.RawGenesis, err error) {
 	ctx := app.NewContext(true, abci.Header{})
+
+	// iterate to get the accounts
 	accounts := []GenesisAccount{}
-	app.accountMapper.IterateAccounts(ctx, func(a sdk.Account) bool {
-		accounts = append(accounts, GenesisAccount{
-			Address: a.GetAddress(),
-			Coins:   a.GetCoins(),
-		})
+	appendAccount := func(acc sdk.Account) (stop bool) {
+		account := NewGenesisAccountI(acc)
+		accounts = append(accounts, account)
 		return false
-	})
-	return GenesisState{
+	}
+	app.accountMapper.IterateAccounts(ctx, appendAccount)
+
+	genState := GenesisState{
 		Accounts:  accounts,
 		StakeData: stake.WriteGenesis(ctx, app.stakeKeeper),
 	}
+	return wire.MarshalJSONIndent(cdc, genState)
 }

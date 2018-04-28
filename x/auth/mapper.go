@@ -63,7 +63,7 @@ func (am accountMapper) SetAccount(ctx sdk.Context, acc sdk.Account) {
 }
 
 // Implements sdk.AccountMapper.
-func (am accountMapper) IterateAccounts(ctx sdk.Context, cont func(sdk.Account) bool) {
+func (am accountMapper) IterateAccounts(ctx sdk.Context, process func(sdk.Account) (stop bool)) {
 	store := ctx.KVStore(am.key)
 	iter := store.Iterator(nil, nil)
 	for {
@@ -72,7 +72,7 @@ func (am accountMapper) IterateAccounts(ctx sdk.Context, cont func(sdk.Account) 
 		}
 		val := iter.Value()
 		acc := am.decodeAccount(val)
-		if cont(acc) {
+		if process(acc) {
 			return
 		}
 		iter.Next()

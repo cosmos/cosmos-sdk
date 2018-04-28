@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -11,34 +12,18 @@ import (
 )
 
 // ExportCmd dumps app state to JSON
-func ExportCmd(app baseapp.AppExporter, ctx *Context) *cobra.Command {
-	export := exportCmd{
-		appExporter: app,
-		context:     ctx,
-	}
-	cmd := &cobra.Command{
+func ExportCmd(ctx *Context, cdc *wire.Codec, appExporter baseapp.AppExporter) *cobra.Command {
+	return &cobra.Command{
 		Use:   "export",
 		Short: "Export state to JSON",
-		RunE:  export.run,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			home := viper.GetString("home")
+			appState, err := appExporter(home, ctx.Logger)
+			if err != nil {
+				return errors.Errorf("Error exporting state: %v\n", err)
+			}
+			fmt.Println(string(output))
+			return nil
+		},
 	}
-	return cmd
-}
-
-type exportCmd struct {
-	appExporter baseapp.AppExporter
-	context     *Context
-}
-
-func (e exportCmd) run(cmd *cobra.Command, args []string) error {
-	home := viper.GetString("home")
-	genesis, cdc, err := e.appExporter(home, e.context.Logger)
-	if err != nil {
-		return errors.Errorf("Error exporting state: %v\n", err)
-	}
-	output, err := wire.MarshalJSONIndent(cdc, genesis)
-	if err != nil {
-		return errors.Errorf("Error marshalling state: %v\n", err)
-	}
-	fmt.Println(string(output))
-	return nil
 }

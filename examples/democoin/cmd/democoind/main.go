@@ -11,7 +11,6 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -47,9 +46,9 @@ func newApp(logger log.Logger, db dbm.DB) abci.Application {
 	return app.NewDemocoinApp(logger, db)
 }
 
-func exportApp(logger log.Logger, db dbm.DB) (interface{}, *wire.Codec) {
+func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
 	dapp := app.NewDemocoinApp(logger, db)
-	return dapp.ExportGenesis(), app.MakeCodec()
+	return dapp.ExportAppStateJSON()
 }
 
 func main() {
@@ -63,8 +62,8 @@ func main() {
 	}
 
 	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit,
-		baseapp.GenerateFn(newApp, "democoin"),
-		baseapp.ExportFn(exportApp, "democoin"))
+		server.ConstructAppCreator(newApp, "democoin"),
+		server.ConstructAppExporter(exportAppState, "democoin"))
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.democoind")

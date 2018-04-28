@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -10,10 +11,8 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 func main() {
@@ -27,8 +26,8 @@ func main() {
 	}
 
 	server.AddCommands(ctx, cdc, rootCmd, server.DefaultAppInit,
-		baseapp.GenerateFn(newApp, "basecoin"),
-		baseapp.ExportFn(exportApp, "basecoin"))
+		server.ConstructAppCreator(newApp, "basecoin"),
+		server.ConstructAppExporter(exportAppState, "basecoin"))
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.basecoind")
@@ -40,7 +39,7 @@ func newApp(logger log.Logger, db dbm.DB) abci.Application {
 	return app.NewBasecoinApp(logger, db)
 }
 
-func exportApp(logger log.Logger, db dbm.DB) (interface{}, *wire.Codec) {
+func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
 	bapp := app.NewBasecoinApp(logger, db)
-	return bapp.ExportGenesis(), app.MakeCodec()
+	return bapp.ExportAppStateJSON()
 }

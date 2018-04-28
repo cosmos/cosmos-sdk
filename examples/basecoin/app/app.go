@@ -1,6 +1,8 @@
 package app
 
 import (
+	"encoding/json"
+
 	abci "github.com/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
@@ -15,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
-	"github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake"
 )
 
 const (
@@ -32,11 +33,6 @@ type BasecoinApp struct {
 	keyAccount *sdk.KVStoreKey
 	keyIBC     *sdk.KVStoreKey
 	keyStake   *sdk.KVStoreKey
-
-	// keepers
-	coinKeeper  bank.Keeper
-	ibcMapper   ibc.Mapper
-	stakeKeeper simplestake.Keeper
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
@@ -127,7 +123,7 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 }
 
 // Custom logic for state export
-func (app *BasecoinApp) ExportGenesis() interface{} {
+func (app *BasecoinApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
 	ctx := app.NewContext(true, abci.Header{})
 	accounts := []*types.GenesisAccount{}
 	app.accountMapper.IterateAccounts(ctx, func(a sdk.Account) bool {
@@ -137,7 +133,8 @@ func (app *BasecoinApp) ExportGenesis() interface{} {
 		})
 		return false
 	})
-	return types.GenesisState{
+	genState := types.GenesisState{
 		Accounts: accounts,
 	}
+	return wire.MarshalJSONIndent(app.cdc, genState)
 }

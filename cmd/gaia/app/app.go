@@ -126,7 +126,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 }
 
 // export the state of gaia for a genesis f
-func (app *GaiaApp) ExportAppStateJSON() (appState json.RawGenesis, err error) {
+func (app *GaiaApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
 	ctx := app.NewContext(true, abci.Header{})
 
 	// iterate to get the accounts
@@ -142,5 +142,5 @@ func (app *GaiaApp) ExportAppStateJSON() (appState json.RawGenesis, err error) {
 		Accounts:  accounts,
 		StakeData: stake.WriteGenesis(ctx, app.stakeKeeper),
 	}
-	return wire.MarshalJSONIndent(cdc, genState)
+	return wire.MarshalJSONIndent(app.cdc, genState)
 }

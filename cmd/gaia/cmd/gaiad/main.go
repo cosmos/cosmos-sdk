@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+
 	"github.com/spf13/cobra"
 
 	abci "github.com/tendermint/abci/types"
@@ -8,10 +10,8 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 func main() {
@@ -24,8 +24,8 @@ func main() {
 	}
 
 	server.AddCommands(ctx, cdc, rootCmd, app.GaiaAppInit(),
-		baseapp.GenerateFn(newApp, "gaia"),
-		baseapp.ExportFn(exportApp, "gaia"))
+		server.ConstructAppCreator(newApp, "gaia"),
+		server.ConstructAppExporter(exportAppState, "gaia"))
 
 	// prepare and add flags
 	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)
@@ -36,7 +36,7 @@ func newApp(logger log.Logger, db dbm.DB) abci.Application {
 	return app.NewGaiaApp(logger, db)
 }
 
-func exportApp(logger log.Logger, db dbm.DB) (interface{}, *wire.Codec) {
+func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
 	gapp := app.NewGaiaApp(logger, db)
-	return gapp.ExportGenesis(), app.MakeCodec()
+	return gapp.ExportAppStateJSON()
 }

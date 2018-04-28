@@ -68,7 +68,7 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 func AddCommands(
 	ctx *Context, cdc *wire.Codec,
 	rootCmd *cobra.Command, appInit AppInit,
-	appCreator AppCreator) {
+	appCreator AppCreator, appExport AppExporter) {
 
 	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
 
@@ -78,7 +78,7 @@ func AddCommands(
 		UnsafeResetAllCmd(ctx),
 		ShowNodeIDCmd(ctx),
 		ShowValidatorCmd(ctx),
-		ExportCmd(cts, cdc, appCreator),
+		ExportCmd(ctx, cdc, appExport),
 		UnsafeResetAllCmd(ctx),
 		version.VersionCmd,
 	)

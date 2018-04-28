@@ -7,7 +7,6 @@ import (
 
 	"github.com/tendermint/abci/server"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/proxy"
@@ -22,7 +21,7 @@ const (
 
 // StartCmd runs the service passed in, either
 // stand-alone, or in-process with tendermint
-func StartCmd(ctx *Context, appCreator baseapp.AppCreator) *cobra.Command {
+func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
@@ -45,7 +44,7 @@ func StartCmd(ctx *Context, appCreator baseapp.AppCreator) *cobra.Command {
 	return cmd
 }
 
-func startStandAlone(ctx *Context, appCreator baseapp.AppCreator) error {
+func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	// Generate the app in the proper dir
 	addr := viper.GetString(flagAddress)
 	home := viper.GetString("home")
@@ -69,7 +68,7 @@ func startStandAlone(ctx *Context, appCreator baseapp.AppCreator) error {
 	return nil
 }
 
-func startInProcess(ctx *Context, appCreator baseapp.AppCreator) error {
+func startInProcess(ctx *Context, appCreator AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 	app, err := appCreator(home, ctx.Logger)

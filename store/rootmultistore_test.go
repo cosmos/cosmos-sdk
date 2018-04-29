@@ -155,7 +155,7 @@ func TestMultiStoreQuery(t *testing.T) {
 	assert.Equal(t, v, qval)
 	leaf, err := merkle.Leaf(k, v)
 	assert.Nil(t, err)
-	assert.Nil(t, qprf.Verify(leaf, inner("store1"), root))
+	assert.Nil(t, qprf.Verify(leaf, lifter("store1"), root))
 
 	// Test valid but empty query.
 	query.Path = "/store2/key"
@@ -173,14 +173,14 @@ func TestMultiStoreQuery(t *testing.T) {
 	assert.Equal(t, v2, qval)
 	leaf, err = merkle.Leaf(k2, v2)
 	assert.Nil(t, err)
-	assert.Nil(t, qprf.Verify(leaf, inner("store2"), root))
+	assert.Nil(t, qprf.Verify(leaf, lifter("store2"), root))
 }
 
 //-----------------------------------------------------------------------
 // utils
 
 // infos = [][]byte{keyname, version}
-func inner(key string) merkle.Inner {
+func lifter(key string) merkle.Lifter {
 	return func(index int, infos [][]byte, root []byte) ([]byte, error) {
 		if index >= 1 {
 			return nil, fmt.Errorf("Recursive multistore not supported")

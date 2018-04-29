@@ -1,9 +1,9 @@
 package merkle
 
 import (
-	//	"github.com/golang/protobuf/proto"
+//	"github.com/golang/protobuf/proto"
 
-	_ "github.com/cosmos/cosmos-sdk/merkle/proto"
+// _ "github.com/cosmos/cosmos-sdk/merkle/proto"
 )
 
 /*

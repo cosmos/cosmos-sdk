@@ -51,42 +51,40 @@ func computeProofFromAunts(index int, total int, inners [][]byte) (res []Node, e
 			if err != nil {
 				return
 			}
-			res = append(res, Node{Prefix: prefix.Bytes(), Suffix: suffix.Bytes(), Op: RIPEMD160})
+			res = append(res, Node{Prefix: prefix.Bytes(), Suffix: suffix.Bytes(), Op: Ripemd160})
 			return
-
-		} else {
-			prefix := new(bytes.Buffer) /*
-				err = amino.EncodeByteSlice(prefix, inners[len(inners)-1])
-				if err != nil {
-					return
-				}
-				err = amino.EncodeUvarint(prefix, 20) // length of RIPEMD160
-				if err != nil {
-					return
-				}*/
-			err = encodeByteSlice(prefix, inners[len(inners)-1])
-			if err != nil {
-				return
-			}
-			err = encodeUvarint(prefix, 20) // length of ripemd160
-			if err != nil {
-				return
-			}
-
-			res, err = computeProofFromAunts(index-numLeft, total-numLeft, inners[:len(inners)-1])
-			if err != nil {
-				return
-			}
-			res = append(res, Node{Prefix: prefix.Bytes(), Op: RIPEMD160})
-			return
-
 		}
+		prefix := new(bytes.Buffer) /*
+			err = amino.EncodeByteSlice(prefix, inners[len(inners)-1])
+			if err != nil {
+				return
+			}
+			err = amino.EncodeUvarint(prefix, 20) // length of Ripemd160
+			if err != nil {
+				return
+			}*/
+		err = encodeByteSlice(prefix, inners[len(inners)-1])
+		if err != nil {
+			return
+		}
+		err = encodeUvarint(prefix, 20) // length of ripemd160
+		if err != nil {
+			return
+		}
+
+		res, err = computeProofFromAunts(index-numLeft, total-numLeft, inners[:len(inners)-1])
+		if err != nil {
+			return
+		}
+		res = append(res, Node{Prefix: prefix.Bytes(), Op: Ripemd160})
+		return
 	}
 }
 
+// FromSimpleProof casts merkle.SimpleProof to ExistsProof
 func FromSimpleProof(p *merkle.SimpleProof, index int, total int, root []byte) (res ExistsProof, err error) {
 	data := ExistsData{
-		Op: RIPEMD160,
+		Op: Ripemd160,
 	}
 
 	nodes, err := computeProofFromAunts(index, total, p.Aunts)
@@ -117,6 +115,7 @@ func encodeUvarint(w io.Writer, i uint64) (err error) {
 	return
 }
 
+// FromKeyProof casts iavl.KeyProof to KeyProof
 func FromKeyProof(p iavl.KeyProof) (KeyProof, error) {
 	if p == nil {
 		return nil, fmt.Errorf("Proof is empty")
@@ -131,6 +130,7 @@ func FromKeyProof(p iavl.KeyProof) (KeyProof, error) {
 	}
 }
 
+// FromKeyExistsProof casts iavl.KeyExistsProof to ExistsProof
 func FromKeyExistsProof(p *iavl.KeyExistsProof) (KeyProof, error) {
 	prefix := new(bytes.Buffer)
 	/*err := amino.EncodeInt8(prefix, 0)
@@ -152,7 +152,7 @@ func FromKeyExistsProof(p *iavl.KeyExistsProof) (KeyProof, error) {
 
 	data := ExistsData{
 		Prefix: prefix.Bytes(),
-		Op:     RIPEMD160,
+		Op:     Ripemd160,
 	}
 	path := p.PathToKey.InnerNodes
 
@@ -197,7 +197,7 @@ func FromKeyExistsProof(p *iavl.KeyExistsProof) (KeyProof, error) {
 		nodes[i] = Node{
 			Prefix: prefix.Bytes(),
 			Suffix: suffix.Bytes(),
-			Op:     RIPEMD160,
+			Op:     Ripemd160,
 		}
 	}
 
@@ -208,10 +208,12 @@ func FromKeyExistsProof(p *iavl.KeyExistsProof) (KeyProof, error) {
 	}, nil
 }
 
+// FromKeyAbsentProof casts iavl.KeyAbsentProof to AbsentProof
 func FromKeyAbsentProof(p *iavl.KeyAbsentProof) (KeyProof, error) {
 	return AbsentProof{}, nil // not implemented
 }
 
+// Leaf generates the leaf byte slice from key and value
 func Leaf(key []byte, value []byte) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	n, err := int(0), error(nil)
@@ -226,6 +228,7 @@ func Leaf(key []byte, value []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// SimpleLeaf generates SimpleTree leaf byte slice from key and value
 func SimpleLeaf(key []byte, value merkle.Hasher) ([]byte, error) {
 	buf := new(bytes.Buffer)
 
@@ -240,20 +243,4 @@ func SimpleLeaf(key []byte, value merkle.Hasher) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
-}
-
-func Plain(kv merkle.KVPair) []byte {
-	buf := new(bytes.Buffer)
-
-	err := encodeByteSlice(buf, kv.Key)
-	if err != nil {
-		panic(err)
-	}
-
-	err = encodeByteSlice(buf, kv.Value)
-	if err != nil {
-		panic(err)
-	}
-
-	return buf.Bytes()
 }

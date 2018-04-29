@@ -11,7 +11,7 @@
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "2be2f12b358dc57d70b8f501b00be450192efbc3"
+  revision = "675abc5df3c5531bc741b56a765e35623459da6d"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -277,8 +277,8 @@
 [[projects]]
   name = "github.com/tendermint/go-amino"
   packages = ["."]
-  revision = "42246108ff925a457fb709475070a03dfd3e2b5c"
-  version = "0.9.6"
+  revision = "3668c02a8feace009f80754a5e5a8541e5d7b996"
+  version = "0.9.8"
 
 [[projects]]
   name = "github.com/tendermint/go-crypto"
@@ -342,8 +342,8 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "d0beaba7e8a5652506a34b5fab299cc2dc274c02"
-  version = "v0.19.0"
+  revision = "26f633ed48441f72895b710f0e87b7b6c6791066"
+  version = "v0.19.1"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -360,8 +360,8 @@
     "pubsub",
     "pubsub/query"
   ]
-  revision = "737154202faf75c70437f59ba5303f2eb09f5636"
-  version = "0.8.2-rc1"
+  revision = "d94e312673e16a11ea55d742cefb3e331228f898"
+  version = "v0.8.2"
 
 [[projects]]
   branch = "master"
@@ -377,13 +377,14 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "d6449816ce06963d9d136eee5a56fca5b0616e7e"
+  revision = "b49d69b5da943f7ef3c9cf91c8777c1f78a0cc3c"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = [
     "context",
+    "http/httpguts",
     "http2",
     "http2/hpack",
     "idna",
@@ -391,13 +392,13 @@
     "lex/httplex",
     "trace"
   ]
-  revision = "61147c48b25b599e5b561d2e9c4f3e1ef489ca41"
+  revision = "5f9ae10d9af5b1c89ae6904293b14b064d4ada23"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
+  revision = "cbbc999da32df943dac6cd71eb3ee39e1d7838b9"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -424,7 +425,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "51d0944304c3cbce4afe9e5247e21100037bff78"
+  revision = "86e600f69ee4704c6efbf6a2a40a5c10700e76c2"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -459,6 +460,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b6b2d696a242e715ddb8b25c93b3c8f7e7cabc9292eab29dffe935eddbd35fb8"
+  inputs-digest = "48f831a7ccc2c0fd3b790c16ca99ec864b89253d087ff4190d821c01c13e635a"
   solver-name = "gps-cdcl"
   solver-version = 1

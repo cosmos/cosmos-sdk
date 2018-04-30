@@ -106,8 +106,8 @@ func MakeCodec() *wire.Codec {
 func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	stateJSON := req.AppStateBytes
 
-	genesisState := new(GenesisState)
-	err := app.cdc.UnmarshalJSON(stateJSON, genesisState)
+	var genesisState GenesisState
+	err := app.cdc.UnmarshalJSON(stateJSON, &genesisState)
 	if err != nil {
 		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 		// return sdk.ErrGenesisParse("").TraceCause(err, "")

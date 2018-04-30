@@ -265,7 +265,6 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // InitChain runs the initialization logic directly on the CommitMultiStore and commits it.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	if app.initChainer == nil {
-		// TODO: should we have some default handling of validators?
 		return
 	}
 
@@ -275,7 +274,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState
-
 	return
 }
 

@@ -166,7 +166,7 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				if !shares.GT(sdk.ZeroRat) {
+				if !shares.GT(sdk.ZeroRat()) {
 					return fmt.Errorf("shares must be positive integer or decimal (ex. 123, 1.23456789)")
 				}
 			}

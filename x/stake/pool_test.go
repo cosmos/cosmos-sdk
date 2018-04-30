@@ -22,7 +22,7 @@ func TestBondedRatio(t *testing.T) {
 	pool.TotalSupply = 0
 
 	// avoids divide-by-zero
-	require.Equal(t, pool.bondedRatio(), sdk.ZeroRat)
+	require.Equal(t, pool.bondedRatio(), sdk.ZeroRat())
 }
 
 func TestBondedShareExRate(t *testing.T) {
@@ -33,10 +33,10 @@ func TestBondedShareExRate(t *testing.T) {
 
 	// bonded pool / bonded shares
 	require.Equal(t, pool.bondedShareExRate(), sdk.NewRat(3).Quo(sdk.NewRat(10)))
-	pool.BondedShares = sdk.ZeroRat
+	pool.BondedShares = sdk.ZeroRat()
 
 	// avoids divide-by-zero
-	require.Equal(t, pool.bondedShareExRate(), sdk.OneRat)
+	require.Equal(t, pool.bondedShareExRate(), sdk.OneRat())
 }
 
 func TestUnbondedShareExRate(t *testing.T) {
@@ -47,24 +47,24 @@ func TestUnbondedShareExRate(t *testing.T) {
 
 	// unbonded pool / unbonded shares
 	require.Equal(t, pool.unbondedShareExRate(), sdk.NewRat(3).Quo(sdk.NewRat(10)))
-	pool.UnbondedShares = sdk.ZeroRat
+	pool.UnbondedShares = sdk.ZeroRat()
 
 	// avoids divide-by-zero
-	require.Equal(t, pool.unbondedShareExRate(), sdk.OneRat)
+	require.Equal(t, pool.unbondedShareExRate(), sdk.OneRat())
 }
 
 func TestBondedToUnbondedPool(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
-	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat)
-	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat)
+	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
+	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
 	candA := Candidate{
 		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
-		Assets:      sdk.OneRat,
-		Liabilities: sdk.OneRat,
+		Assets:      sdk.OneRat(),
+		Liabilities: sdk.OneRat(),
 	}
 	poolB, candB := poolA.bondedToUnbondedPool(candA)
 
@@ -84,14 +84,14 @@ func TestUnbonbedtoBondedPool(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
-	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat)
-	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat)
+	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
+	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
 	candA := Candidate{
 		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
-		Assets:      sdk.OneRat,
-		Liabilities: sdk.OneRat,
+		Assets:      sdk.OneRat(),
+		Liabilities: sdk.OneRat(),
 	}
 	candA.Status = Unbonded
 	poolB, candB := poolA.unbondedToBondedPool(candA)
@@ -112,65 +112,64 @@ func TestAddTokensBonded(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
-	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat)
+	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
 	poolB, sharesB := poolA.addTokensBonded(10)
-	assert.Equal(t, poolB.bondedShareExRate(), sdk.OneRat)
+	assert.Equal(t, poolB.bondedShareExRate(), sdk.OneRat())
 
 	// correct changes to bonded shares and bonded pool
 	assert.Equal(t, poolB.BondedShares, poolA.BondedShares.Add(sharesB))
 	assert.Equal(t, poolB.BondedPool, poolA.BondedPool+10)
 
 	// same number of bonded shares / tokens when exchange rate is one
-	assert.Equal(t, poolB.BondedShares, sdk.NewRat(poolB.BondedPool))
+	assert.True(t, poolB.BondedShares.Equal(sdk.NewRat(poolB.BondedPool)))
 }
 
 func TestRemoveSharesBonded(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
-	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat)
+	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
 	poolB, tokensB := poolA.removeSharesBonded(sdk.NewRat(10))
-	assert.Equal(t, poolB.bondedShareExRate(), sdk.OneRat)
+	assert.Equal(t, poolB.bondedShareExRate(), sdk.OneRat())
 
 	// correct changes to bonded shares and bonded pool
 	assert.Equal(t, poolB.BondedShares, poolA.BondedShares.Sub(sdk.NewRat(10)))
 	assert.Equal(t, poolB.BondedPool, poolA.BondedPool-tokensB)
 
 	// same number of bonded shares / tokens when exchange rate is one
-	assert.Equal(t, poolB.BondedShares, sdk.NewRat(poolB.BondedPool))
-
+	assert.True(t, poolB.BondedShares.Equal(sdk.NewRat(poolB.BondedPool)))
 }
 
 func TestAddTokensUnbonded(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
-	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat)
+	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
 	poolB, sharesB := poolA.addTokensUnbonded(10)
-	assert.Equal(t, poolB.unbondedShareExRate(), sdk.OneRat)
+	assert.Equal(t, poolB.unbondedShareExRate(), sdk.OneRat())
 
 	// correct changes to unbonded shares and unbonded pool
 	assert.Equal(t, poolB.UnbondedShares, poolA.UnbondedShares.Add(sharesB))
 	assert.Equal(t, poolB.UnbondedPool, poolA.UnbondedPool+10)
 
 	// same number of unbonded shares / tokens when exchange rate is one
-	assert.Equal(t, poolB.UnbondedShares, sdk.NewRat(poolB.UnbondedPool))
+	assert.True(t, poolB.UnbondedShares.Equal(sdk.NewRat(poolB.UnbondedPool)))
 }
 
 func TestRemoveSharesUnbonded(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
-	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat)
+	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
 	poolB, tokensB := poolA.removeSharesUnbonded(sdk.NewRat(10))
-	assert.Equal(t, poolB.unbondedShareExRate(), sdk.OneRat)
+	assert.Equal(t, poolB.unbondedShareExRate(), sdk.OneRat())
 
 	// correct changes to unbonded shares and bonded pool
 	assert.Equal(t, poolB.UnbondedShares, poolA.UnbondedShares.Sub(sdk.NewRat(10)))
 	assert.Equal(t, poolB.UnbondedPool, poolA.UnbondedPool-tokensB)
 
 	// same number of unbonded shares / tokens when exchange rate is one
-	assert.Equal(t, poolB.UnbondedShares, sdk.NewRat(poolB.UnbondedPool))
+	assert.True(t, poolB.UnbondedShares.Equal(sdk.NewRat(poolB.UnbondedPool)))
 }
 
 func TestCandidateAddTokens(t *testing.T) {
@@ -186,9 +185,9 @@ func TestCandidateAddTokens(t *testing.T) {
 	}
 	poolA.BondedPool = candA.Assets.Evaluate()
 	poolA.BondedShares = candA.Assets
-	assert.Equal(t, candA.delegatorShareExRate(), sdk.OneRat)
-	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat)
-	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat)
+	assert.Equal(t, candA.delegatorShareExRate(), sdk.OneRat())
+	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
+	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
 	poolB, candB, sharesB := poolA.candidateAddTokens(candA, 10)
 
 	// shares were issued
@@ -212,9 +211,9 @@ func TestCandidateRemoveShares(t *testing.T) {
 	}
 	poolA.BondedPool = candA.Assets.Evaluate()
 	poolA.BondedShares = candA.Assets
-	assert.Equal(t, candA.delegatorShareExRate(), sdk.OneRat)
-	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat)
-	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat)
+	assert.Equal(t, candA.delegatorShareExRate(), sdk.OneRat())
+	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
+	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
 	poolB, candB, coinsB := poolA.candidateRemoveShares(candA, sdk.NewRat(10))
 
 	// coins were created
@@ -280,8 +279,8 @@ func randomCandidate(r *rand.Rand) Candidate {
 func randomSetup(r *rand.Rand, numCandidates int) (Pool, Candidates) {
 	pool := Pool{
 		TotalSupply:       0,
-		BondedShares:      sdk.ZeroRat,
-		UnbondedShares:    sdk.ZeroRat,
+		BondedShares:      sdk.ZeroRat(),
+		UnbondedShares:    sdk.ZeroRat(),
 		BondedPool:        0,
 		UnbondedPool:      0,
 		InflationLastTime: 0,
@@ -380,29 +379,29 @@ func assertInvariants(t *testing.T, msg string,
 		pMod.UnbondedPool, pMod.BondedPool, tokens)
 
 	// nonnegative bonded shares
-	require.False(t, pMod.BondedShares.LT(sdk.ZeroRat),
+	require.False(t, pMod.BondedShares.LT(sdk.ZeroRat()),
 		"Negative bonded shares - msg: %v\npOrig: %#v\npMod: %#v\ntokens: %v\n",
 		msg, pOrig, pMod, tokens)
 
 	// nonnegative unbonded shares
-	require.False(t, pMod.UnbondedShares.LT(sdk.ZeroRat),
+	require.False(t, pMod.UnbondedShares.LT(sdk.ZeroRat()),
 		"Negative unbonded shares - msg: %v\npOrig: %#v\npMod: %#v\ntokens: %v\n",
 		msg, pOrig, pMod, tokens)
 
 	// nonnegative bonded ex rate
-	require.False(t, pMod.bondedShareExRate().LT(sdk.ZeroRat),
+	require.False(t, pMod.bondedShareExRate().LT(sdk.ZeroRat()),
 		"Applying operation \"%s\" resulted in negative bondedShareExRate: %d",
 		msg, pMod.bondedShareExRate().Evaluate())
 
 	// nonnegative unbonded ex rate
-	require.False(t, pMod.unbondedShareExRate().LT(sdk.ZeroRat),
+	require.False(t, pMod.unbondedShareExRate().LT(sdk.ZeroRat()),
 		"Applying operation \"%s\" resulted in negative unbondedShareExRate: %d",
 		msg, pMod.unbondedShareExRate().Evaluate())
 
 	for _, cMod := range cMods {
 
 		// nonnegative ex rate
-		require.False(t, cMod.delegatorShareExRate().LT(sdk.ZeroRat),
+		require.False(t, cMod.delegatorShareExRate().LT(sdk.ZeroRat()),
 			"Applying operation \"%s\" resulted in negative candidate.delegatorShareExRate(): %v (candidate.Address: %s)",
 			msg,
 			cMod.delegatorShareExRate(),
@@ -410,7 +409,7 @@ func assertInvariants(t *testing.T, msg string,
 		)
 
 		// nonnegative assets
-		require.False(t, cMod.Assets.LT(sdk.ZeroRat),
+		require.False(t, cMod.Assets.LT(sdk.ZeroRat()),
 			"Applying operation \"%s\" resulted in negative candidate.Assets: %v (candidate.Liabilities: %v, candidate.delegatorShareExRate: %v, candidate.Address: %s)",
 			msg,
 			cMod.Assets,
@@ -420,7 +419,7 @@ func assertInvariants(t *testing.T, msg string,
 		)
 
 		// nonnegative liabilities
-		require.False(t, cMod.Liabilities.LT(sdk.ZeroRat),
+		require.False(t, cMod.Liabilities.LT(sdk.ZeroRat()),
 			"Applying operation \"%s\" resulted in negative candidate.Liabilities: %v (candidate.Assets: %v, candidate.delegatorShareExRate: %v, candidate.Address: %s)",
 			msg,
 			cMod.Liabilities,
@@ -449,7 +448,7 @@ func TestPossibleOverflow(t *testing.T) {
 	pool := Pool{
 		TotalSupply:       0,
 		BondedShares:      assets,
-		UnbondedShares:    sdk.ZeroRat,
+		UnbondedShares:    sdk.ZeroRat(),
 		BondedPool:        assets.Evaluate(),
 		UnbondedPool:      0,
 		InflationLastTime: 0,
@@ -461,7 +460,7 @@ func TestPossibleOverflow(t *testing.T) {
 	_, newCandidate, _ := pool.candidateAddTokens(cand, tokens)
 
 	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)
-	require.False(t, newCandidate.delegatorShareExRate().LT(sdk.ZeroRat),
+	require.False(t, newCandidate.delegatorShareExRate().LT(sdk.ZeroRat()),
 		"Applying operation \"%s\" resulted in negative delegatorShareExRate(): %v",
 		msg, newCandidate.delegatorShareExRate())
 }

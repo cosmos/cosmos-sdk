@@ -165,7 +165,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 		bond = DelegatorBond{
 			DelegatorAddr: delegatorAddr,
 			CandidateAddr: candidate.Address,
-			Shares:        sdk.ZeroRat,
+			Shares:        sdk.ZeroRat(),
 		}
 	}
 
@@ -194,7 +194,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	if !found {
 		return ErrNoDelegatorForAddress(k.codespace).Result()
 	}
-	if !bond.Shares.GT(sdk.ZeroRat) { // bond shares < msg shares
+	if !bond.Shares.GT(sdk.ZeroRat()) { // bond shares < msg shares
 		return ErrInsufficientFunds(k.codespace).Result()
 	}
 
@@ -202,7 +202,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 	// test that there are enough shares to unbond
 	if msg.Shares == "MAX" {
-		if !bond.Shares.GT(sdk.ZeroRat) {
+		if !bond.Shares.GT(sdk.ZeroRat()) {
 			return ErrNotEnoughBondShares(k.codespace, msg.Shares).Result()
 		}
 	} else {

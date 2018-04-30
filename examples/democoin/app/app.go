@@ -126,23 +126,17 @@ func MakeCodec() *wire.Codec {
 
 // custom logic for transaction decoding
 func (app *DemocoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
-	var msg sdk.Msg
-
 	if len(txBytes) == 0 {
 		return sdk.Tx{}, sdk.ErrTxDecode("txBytes are empty")
 	}
 
+	var tx sdk.Tx
+
 	// StdTx.Msg is an interface. The concrete types
 	// are registered by MakeTxCodec in bank.RegisterWire.
-	err := app.cdc.UnmarshalBinary(txBytes, &msg)
+	err := app.cdc.UnmarshalBinary(txBytes, &tx)
 	if err != nil {
 		return sdk.Tx{}, sdk.ErrTxDecode("").Trace(err.Error())
-	}
-
-	tx := sdk.Tx{
-		Msg:        msg,
-		Fee:        sdk.StdFee{},
-		Signatures: nil,
 	}
 
 	return tx, nil

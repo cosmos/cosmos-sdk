@@ -66,7 +66,7 @@ func TestKeys(t *testing.T) {
 	reg, err := regexp.Compile(`([a-z]+ ){12}`)
 	require.Nil(t, err)
 	match := reg.MatchString(seed)
-	assert.True(t, match, "Returned seed has wrong foramt", seed)
+	assert.True(t, match, "Returned seed has wrong format", seed)
 
 	newName := "test_newname"
 	newPassword := "0987654321"
@@ -422,11 +422,11 @@ func startLCD(logger log.Logger, listenAddr string) (net.Listener, error) {
 func request(t *testing.T, port, method, path string, payload []byte) (*http.Response, string) {
 	var res *http.Response
 	var err error
+
 	url := fmt.Sprintf("http://localhost:%v%v", port, path)
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(payload))
 	require.Nil(t, err)
 	res, err = http.DefaultClient.Do(req)
-	//	res, err = http.Post(url, "application/json", bytes.NewBuffer(payload))
 	require.Nil(t, err)
 
 	output, err := ioutil.ReadAll(res.Body)

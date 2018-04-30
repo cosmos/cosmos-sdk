@@ -32,7 +32,7 @@ type Msg interface {
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the FeePayer (Signatures must not be nil).
 type Tx struct {
-	Msg        `json:"msg"`
+	Msg        Msg            `json:"msg"`
 	Fee        StdFee         `json:"fee"`
 	Signatures []StdSignature `json:"signatures"`
 }
@@ -62,8 +62,8 @@ func (tx Tx) FeePayer() Address {
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
 // which must be above some miminum to be accepted into the mempool.
 type StdFee struct {
-	Amount Coins `json"amount"`
-	Gas    int64 `json"gas"`
+	Amount Coins `json:"amount"`
+	Gas    int64 `json:"gas"`
 }
 
 func NewStdFee(gas int64, amount ...Coin) StdFee {

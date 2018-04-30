@@ -171,8 +171,7 @@ func NewTestMsg(addrs ...Address) *TestMsg {
 }
 
 //nolint
-func (msg *TestMsg) Type() string                            { return "TestMsg" }
-func (msg *TestMsg) Get(key interface{}) (value interface{}) { return nil }
+func (msg *TestMsg) Type() string { return "TestMsg" }
 func (msg *TestMsg) GetSignBytes() []byte {
 	bz, err := json.Marshal(msg.signers)
 	if err != nil {

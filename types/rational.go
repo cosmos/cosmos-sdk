@@ -153,13 +153,6 @@ func (r Rat) ToLeftPadded(totalDigits int8) string {
 
 //___________________________________________________________________________________
 
-// Hack to just use json.Marshal for everything until
-// we update for amino
-//type JSONCodec struct{}
-//nolint
-//func (jc JSONCodec) MarshalJSON(o interface{}) ([]byte, error)    { return json.Marshal(o) }
-//func (jc JSONCodec) UnmarshalJSON(bz []byte, o interface{}) error { return json.Unmarshal(bz, o) }
-
 //Wraps r.MarshalText() in quotes to make it a valid JSON string.
 func (r Rat) MarshalJSON() ([]byte, error) {
 	bz, err := (&(r.Rat)).MarshalText()

@@ -209,15 +209,17 @@ func TestToLeftPadded(t *testing.T) {
 	}
 }
 
+var cdc = wire.NewCodec() //var jsonCdc JSONCodec // TODO wire.Codec
+
 func TestZeroSerializationJSON(t *testing.T) {
 	r := NewRat(0, 1)
-	err := r.UnmarshalJSON([]byte(`"0/1"`))
+	err := cdc.UnmarshalJSON([]byte(`"0/1"`), &r)
 	assert.Nil(t, err)
-	err = r.UnmarshalJSON([]byte(`"0/0"`))
+	err = cdc.UnmarshalJSON([]byte(`"0/0"`), &r)
 	assert.NotNil(t, err)
-	err = r.UnmarshalJSON([]byte(`"1/0"`))
+	err = cdc.UnmarshalJSON([]byte(`"1/0"`), &r)
 	assert.NotNil(t, err)
-	err = r.UnmarshalJSON([]byte(`"{}"`))
+	err = cdc.UnmarshalJSON([]byte(`"{}"`), &r)
 	assert.NotNil(t, err)
 }
 
@@ -232,8 +234,6 @@ func TestSerializationText(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
 }
-
-var cdc = wire.NewCodec() //var jsonCdc JSONCodec // TODO wire.Codec
 
 func TestSerializationGoWire(t *testing.T) {
 	r := NewRat(1, 3)

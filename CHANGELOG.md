@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.1 (April 29, 2018)
+
+IMPROVEMENTS:
+
+* Update Tendermint to v0.19.1 (includes many rpc fixes)
+
 ## 0.15.0 (April 29, 2018)
 
 FEATURES:

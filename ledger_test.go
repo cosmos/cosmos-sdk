@@ -55,18 +55,4 @@ func TestRealLedgerErrorHandling(t *testing.T) {
 	// (no panic)
 	_, err := NewPrivKeyLedgerSecp256k1()
 	require.Error(t, err)
-
-	led := PrivKeyLedgerSecp256k1{} // empty
-	// or with some pub key
-	ed := GenPrivKeySecp256k1()
-	led2 := PrivKeyLedgerSecp256k1{CachedPubKey: ed.PubKey()}
-
-	// loading these should return errors
-	bs := led.Bytes()
-	_, err = PrivKeyFromBytes(bs)
-	require.Error(t, err)
-
-	bs = led2.Bytes()
-	_, err = PrivKeyFromBytes(bs)
-	require.Error(t, err)
 }

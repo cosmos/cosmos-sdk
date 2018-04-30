@@ -3,6 +3,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/brejski/hid"
+  packages = ["."]
+  revision = "06112dcfcc50a7e0e4fd06e17f9791e788fdaafc"
+
+[[projects]]
+  branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   revision = "2be2f12b358dc57d70b8f501b00be450192efbc3"
@@ -149,6 +155,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/zondax/ledger-goclient"
+  packages = ["."]
+  revision = "0eb48e14b06efd0354c2e0e18f15db121c64b9b8"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
@@ -166,6 +178,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f9ccfa2cadfcbfb43bf729b871a0ad2f8d4f4acb118cd859e6faf9b24842b840"
+  inputs-digest = "f3cfb54414cb9d59bab79226c7778673e7ac5b7a464baf9b2ea76c1f2563631e"
   solver-name = "gps-cdcl"
   solver-version = 1

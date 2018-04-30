@@ -79,3 +79,9 @@ func (sig SignatureSecp256k1) Equals(other Signature) bool {
 		return false
 	}
 }
+
+func SignatureSecp256k1FromBytes(data []byte) Signature {
+	var sig SignatureSecp256k1
+	copy(sig[:], data)
+	return sig
+}

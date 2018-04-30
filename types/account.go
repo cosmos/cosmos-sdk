@@ -37,9 +37,6 @@ type Account interface {
 
 	GetCoins() Coins
 	SetCoins(Coins) error
-
-	Get(key interface{}) (value interface{}, err error)
-	Set(key interface{}, value interface{}) error
 }
 
 // AccountMapper stores and retrieves accounts from stores

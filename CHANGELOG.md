@@ -1,5 +1,11 @@
 # Changelog
 
+## UNRELEASED
+
+BREAKING CHANGES
+
+* types/rational now extends big.Rat
+
 ## 0.15.1 (April 29, 2018)
 
 IMPROVEMENTS:

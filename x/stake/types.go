@@ -28,6 +28,15 @@ type Params struct {
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
 }
 
+func (p Params) equal(p2 Params) bool {
+	return p.InflationRateChange.Equal(p2.InflationRateChange) &&
+		p.InflationMax.Equal(p2.InflationMax) &&
+		p.InflationMin.Equal(p2.InflationMin) &&
+		p.GoalBonded.Equal(p2.GoalBonded) &&
+		p.MaxValidators == p2.MaxValidators &&
+		p.BondDenom == p2.BondDenom
+}
+
 //_________________________________________________________________________
 
 // Pool - dynamic parameters of the current state
@@ -39,6 +48,16 @@ type Pool struct {
 	UnbondedPool      int64   `json:"unbonded_pool"`       // reserve of unbonded tokens held with candidates
 	InflationLastTime int64   `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
 	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
+}
+
+func (p Pool) equal(p2 Pool) bool {
+	return p.BondedShares.Equal(p2.BondedShares) &&
+		p.UnbondedShares.Equal(p2.UnbondedShares) &&
+		p.Inflation.Equal(p2.Inflation) &&
+		p.TotalSupply == p2.TotalSupply &&
+		p.BondedPool == p2.BondedPool &&
+		p.UnbondedPool == p2.UnbondedPool &&
+		p.InflationLastTime == p2.InflationLastTime
 }
 
 //_________________________________________________________________________
@@ -80,8 +99,8 @@ func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Descrip
 		Status:               Unbonded,
 		Address:              address,
 		PubKey:               pubKey,
-		Assets:               sdk.ZeroRat,
-		Liabilities:          sdk.ZeroRat,
+		Assets:               sdk.ZeroRat(),
+		Liabilities:          sdk.ZeroRat(),
 		Description:          description,
 		ValidatorBondHeight:  int64(0),
 		ValidatorBondCounter: int16(0),
@@ -108,7 +127,7 @@ func NewDescription(moniker, identity, website, details string) Description {
 // get the exchange rate of global pool shares over delegator shares
 func (c Candidate) delegatorShareExRate() sdk.Rat {
 	if c.Liabilities.IsZero() {
-		return sdk.OneRat
+		return sdk.OneRat()
 	}
 	return c.Assets.Quo(c.Liabilities)
 }

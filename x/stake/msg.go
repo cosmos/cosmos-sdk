@@ -204,7 +204,7 @@ func (msg MsgUnbond) ValidateBasic() sdk.Error {
 		if err != nil {
 			return ErrBadShares(DefaultCodespace)
 		}
-		if rat.IsZero() || rat.LT(sdk.ZeroRat) {
+		if rat.IsZero() || rat.LT(sdk.ZeroRat()) {
 			return ErrBadShares(DefaultCodespace)
 		}
 	}

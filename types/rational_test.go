@@ -129,14 +129,14 @@ func TestArithmatic(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		assert.True(t, tc.resMul.Equal(tc.r1.Mul(tc.r2)), "r1 %v, r2 %v", tc.r1.GetRat(), tc.r2.GetRat())
-		assert.True(t, tc.resAdd.Equal(tc.r1.Add(tc.r2)), "r1 %v, r2 %v", tc.r1.GetRat(), tc.r2.GetRat())
-		assert.True(t, tc.resSub.Equal(tc.r1.Sub(tc.r2)), "r1 %v, r2 %v", tc.r1.GetRat(), tc.r2.GetRat())
+		assert.True(t, tc.resMul.Equal(tc.r1.Mul(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
+		assert.True(t, tc.resAdd.Equal(tc.r1.Add(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
+		assert.True(t, tc.resSub.Equal(tc.r1.Sub(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
 
-		if tc.r2.Num == 0 { // panic for divide by zero
+		if tc.r2.Num() == 0 { // panic for divide by zero
 			assert.Panics(t, func() { tc.r1.Quo(tc.r2) })
 		} else {
-			assert.True(t, tc.resDiv.Equal(tc.r1.Quo(tc.r2)), "r1 %v, r2 %v", tc.r1.GetRat(), tc.r2.GetRat())
+			assert.True(t, tc.resDiv.Equal(tc.r1.Quo(tc.r2)), "r1 %v, r2 %v", tc.r1.Rat, tc.r2.Rat)
 		}
 	}
 }
@@ -180,8 +180,8 @@ func TestRound(t *testing.T) {
 		precFactor int64
 	}{
 		{NewRat(333, 777), NewRat(429, 1000), 1000},
-		{ToRat(new(big.Rat).SetFrac(big3, big7)), NewRat(429, 1000), 1000},
-		{ToRat(new(big.Rat).SetFrac(big3, big7)), ToRat(big.NewRat(4285714286, 10000000000)), 10000000000},
+		{Rat{*new(big.Rat).SetFrac(big3, big7)}, NewRat(429, 1000), 1000},
+		{Rat{*new(big.Rat).SetFrac(big3, big7)}, Rat{*big.NewRat(4285714286, 10000000000)}, 10000000000},
 		{NewRat(1, 2), NewRat(1, 2), 1000},
 	}
 
@@ -209,47 +209,40 @@ func TestToLeftPadded(t *testing.T) {
 	}
 }
 
-//func TestZeroSerializationJSON(t *testing.T) {
-//r := NewRat(0, 1)
-//err := r.UnmarshalJSON([]byte(`"0/1"`))
-//assert.Nil(t, err)
-//err = r.UnmarshalJSON([]byte(`"0/0"`))
-//assert.NotNil(t, err)
-//err = r.UnmarshalJSON([]byte(`"1/0"`))
-//assert.NotNil(t, err)
-//err = r.UnmarshalJSON([]byte(`"{}"`))
-//assert.NotNil(t, err)
-//}
-
-//func TestSerializationJSON(t *testing.T) {
-//r := NewRat(1, 3)
-
-//bz, err := r.MarshalText()
-//require.Nil(t, err)
-
-//r2 := NewRat(0, 1)
-//err = r2.UnmarshalText(bz)
-//require.Nil(t, err)
-
-//assert.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
-//}
-
 var cdc = wire.NewCodec() //var jsonCdc JSONCodec // TODO wire.Codec
+
+func TestZeroSerializationJSON(t *testing.T) {
+	r := NewRat(0, 1)
+	err := cdc.UnmarshalJSON([]byte(`"0/1"`), &r)
+	assert.Nil(t, err)
+	err = cdc.UnmarshalJSON([]byte(`"0/0"`), &r)
+	assert.NotNil(t, err)
+	err = cdc.UnmarshalJSON([]byte(`"1/0"`), &r)
+	assert.NotNil(t, err)
+	err = cdc.UnmarshalJSON([]byte(`"{}"`), &r)
+	assert.NotNil(t, err)
+}
+
+func TestSerializationText(t *testing.T) {
+	r := NewRat(1, 3)
+
+	bz, err := r.MarshalText()
+	require.NoError(t, err)
+
+	r2 := NewRat(0, 1)
+	err = r2.UnmarshalText(bz)
+	require.NoError(t, err)
+	assert.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
+}
 
 func TestSerializationGoWire(t *testing.T) {
 	r := NewRat(1, 3)
-
-	bz, err := cdc.MarshalBinary(r)
-	require.Nil(t, err)
-
-	//str, err := r.MarshalJSON()
-	//require.Nil(t, err)
+	bz, err := cdc.MarshalJSON(r)
+	require.NoError(t, err)
 
 	r2 := NewRat(0, 1)
-	err = cdc.UnmarshalBinary([]byte(bz), &r2)
-	//panic(fmt.Sprintf("debug bz: %v\n", string(bz)))
-	require.Nil(t, err)
-
+	err = cdc.UnmarshalJSON(bz, &r2)
+	require.NoError(t, err)
 	assert.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
 }
 
@@ -261,17 +254,14 @@ type testEmbedStruct struct {
 
 func TestEmbeddedStructSerializationGoWire(t *testing.T) {
 	obj := testEmbedStruct{"foo", 10, NewRat(1, 3)}
-
-	bz, err := cdc.MarshalBinary(obj)
+	bz, err := cdc.MarshalJSON(obj)
 	require.Nil(t, err)
 
 	var obj2 testEmbedStruct
-	obj2.Field3 = NewRat(0, 1) // ... needs to be initialized
-	err = cdc.UnmarshalBinary(bz, &obj2)
+	err = cdc.UnmarshalJSON(bz, &obj2)
 	require.Nil(t, err)
 
 	assert.Equal(t, obj.Field1, obj2.Field1)
 	assert.Equal(t, obj.Field2, obj2.Field2)
 	assert.True(t, obj.Field3.Equal(obj2.Field3), "original: %v, unmarshalled: %v", obj, obj2)
-
 }

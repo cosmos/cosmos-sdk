@@ -1,7 +1,6 @@
 package stake
 
 import (
-	"bytes"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,13 +35,6 @@ func TestViewSlashBond(t *testing.T) {
 	}
 
 	viewSlashKeeper := NewViewSlashKeeper(keeper)
-
-	bondsEqual := func(b1, b2 DelegatorBond) bool {
-		return bytes.Equal(b1.DelegatorAddr, b2.DelegatorAddr) &&
-			bytes.Equal(b1.CandidateAddr, b2.CandidateAddr) &&
-			b1.Height == b2.Height &&
-			b1.Shares == b2.Shares
-	}
 
 	// check the empty keeper first
 	_, found := viewSlashKeeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])

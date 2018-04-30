@@ -1,7 +1,6 @@
 package stake
 
 import (
-	"bytes"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,15 +37,6 @@ func TestCandidate(t *testing.T) {
 			Assets:      sdk.NewRat(amt),
 			Liabilities: sdk.NewRat(amt),
 		}
-	}
-
-	candidatesEqual := func(c1, c2 Candidate) bool {
-		return c1.Status == c2.Status &&
-			c1.PubKey.Equals(c2.PubKey) &&
-			bytes.Equal(c1.Address, c2.Address) &&
-			c1.Assets.Equal(c2.Assets) &&
-			c1.Liabilities.Equal(c2.Liabilities) &&
-			c1.Description == c2.Description
 	}
 
 	// check the empty keeper first
@@ -117,13 +107,6 @@ func TestBond(t *testing.T) {
 		DelegatorAddr: addrDels[0],
 		CandidateAddr: addrVals[0],
 		Shares:        sdk.NewRat(9),
-	}
-
-	bondsEqual := func(b1, b2 DelegatorBond) bool {
-		return bytes.Equal(b1.DelegatorAddr, b2.DelegatorAddr) &&
-			bytes.Equal(b1.CandidateAddr, b2.CandidateAddr) &&
-			b1.Height == b2.Height &&
-			b1.Shares == b2.Shares
 	}
 
 	// check the empty keeper first
@@ -460,8 +443,8 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	require.Equal(t, 2, len(candidates))
 	assert.Equal(t, candidates[0].validator().abciValidator(keeper.cdc), acc[0])
 	assert.Equal(t, candidates[1].validator().abciValidator(keeper.cdc), acc[1])
-	assert.Equal(t, candidates[0].validator(), vals[1])
-	assert.Equal(t, candidates[1].validator(), vals[0])
+	assert.True(t, validatorsEqual(candidates[0].validator(), vals[1]))
+	assert.True(t, validatorsEqual(candidates[1].validator(), vals[0]))
 
 	// test identical,
 	//  candidate set: {c1, c3} -> {c1, c3}
@@ -654,10 +637,10 @@ func TestIsRecentValidator(t *testing.T) {
 	keeper.setCandidate(ctx, candidatesIn[1])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, 2, len(validators))
-	assert.Equal(t, candidatesIn[0].validator(), validators[0])
+	assert.True(t, validatorsEqual(candidatesIn[0].validator(), validators[0]))
 	c1ValWithCounter := candidatesIn[1].validator()
 	c1ValWithCounter.Counter = int16(1)
-	assert.Equal(t, c1ValWithCounter, validators[1])
+	assert.True(t, validatorsEqual(c1ValWithCounter, validators[1]))
 
 	// test a basic retrieve of something that should be a recent validator
 	assert.True(t, keeper.IsRecentValidator(ctx, candidatesIn[0].Address))

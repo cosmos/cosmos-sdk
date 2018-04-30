@@ -475,9 +475,7 @@ func TestSingleCandidateIntegrationInvariants(t *testing.T) {
 			poolOrig, candidatesOrig,
 			poolOrig, candidatesOrig, 0)
 
-		// TODO Increase iteration count once overflow bug is fixed
-		// ref https://github.com/cosmos/cosmos-sdk/issues/753
-		for j := 0; j < 4; j++ {
+		for j := 0; j < 5; j++ {
 			poolMod, candidateMod, tokens, msg := randomOperation(r)(r, poolOrig, candidatesOrig[0])
 
 			candidatesMod := make([]Candidate, len(candidatesOrig))
@@ -507,9 +505,7 @@ func TestMultiCandidateIntegrationInvariants(t *testing.T) {
 			poolOrig, candidatesOrig,
 			poolOrig, candidatesOrig, 0)
 
-		// TODO Increase iteration count once overflow bug is fixed
-		// ref https://github.com/cosmos/cosmos-sdk/issues/753
-		for j := 0; j < 3; j++ {
+		for j := 0; j < 5; j++ {
 			index := int(r.Int31n(int32(len(candidatesOrig))))
 			poolMod, candidateMod, tokens, msg := randomOperation(r)(r, poolOrig, candidatesOrig[index])
 			candidatesMod := make([]Candidate, len(candidatesOrig))

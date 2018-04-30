@@ -9,6 +9,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/brejski/hid"
+  packages = ["."]
+  revision = "06112dcfcc50a7e0e4fd06e17f9791e788fdaafc"
+
+[[projects]]
+  branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   revision = "675abc5df3c5531bc741b56a765e35623459da6d"
@@ -364,6 +370,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/zondax/ledger-goclient"
+  packages = ["."]
+  revision = "0eb48e14b06efd0354c2e0e18f15db121c64b9b8"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/crypto"
   packages = [
     "blowfish",
@@ -457,6 +469,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "30cd9c49b9e87f62f40a02fd0ba35a2d67a519ef781e06316246b307e6be638d"
+  inputs-digest = "db39180d69441a36e4bfdd7e666d551bbb101abeed34da077051162547e0de56"
   solver-name = "gps-cdcl"
   solver-version = 1

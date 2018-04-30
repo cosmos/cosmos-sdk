@@ -81,7 +81,7 @@ func (sig SignatureSecp256k1) Equals(other Signature) bool {
 }
 
 func SignatureSecp256k1FromBytes(data []byte) Signature {
-	var sig SignatureSecp256k1
+	sig := make(SignatureSecp256k1, len(data))
 	copy(sig[:], data)
 	return sig
 }

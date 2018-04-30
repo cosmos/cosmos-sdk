@@ -3,7 +3,7 @@ package crypto
 import (
 	"github.com/pkg/errors"
 
-	// secp256k1 "github.com/btcsuite/btcd/btcec"
+	secp256k1 "github.com/btcsuite/btcd/btcec"
 	ledger "github.com/zondax/ledger-goclient"
 )
 
@@ -23,13 +23,16 @@ func signLedger(device *ledger.Ledger, msg []byte) (pub PubKey, sig Signature, e
 	if err != nil {
 		return pub, sig, err
 	}
+	sig = SignatureSecp256k1FromBytes(bsig)
 	key, err := device.GetPublicKey()
 	if err != nil {
 		return pub, sig, err
 	}
 	var p PubKeySecp256k1
-	copy(p[:], key)
-	return p, SignatureSecp256k1FromBytes(bsig), nil
+	// Reserialize in the 33-byte compressed format
+	cmp, err := secp256k1.ParsePubKey(key[:], secp256k1.S256())
+	copy(p[:], cmp.SerializeCompressed())
+	return p, sig, nil
 }
 
 // PrivKeyLedgerSecp256k1 implements PrivKey, calling the ledger nano

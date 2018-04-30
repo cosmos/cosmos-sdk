@@ -432,9 +432,6 @@ func assertInvariants(t *testing.T, msg string,
 
 }
 
-// TODO Re-enable once the overflow bug is fixed!
-// ref https://github.com/cosmos/cosmos-sdk/issues/753
-/*
 func TestPossibleOverflow(t *testing.T) {
 	assets := sdk.NewRat(2159)
 	liabilities := sdk.NewRat(391432570689183511).Quo(sdk.NewRat(40113011844664))
@@ -464,7 +461,6 @@ func TestPossibleOverflow(t *testing.T) {
 		"Applying operation \"%s\" resulted in negative delegatorShareExRate(): %v",
 		msg, newCandidate.delegatorShareExRate())
 }
-*/
 
 // run random operations in a random order on a random single-candidate state, assert invariants hold
 func TestSingleCandidateIntegrationInvariants(t *testing.T) {

@@ -46,13 +46,13 @@ Nice. We can also lookup the validator set:
 
     gaiacli validatorset
 
-Then, we try to transfer some ``fermion`` to another account:
+Then, we try to transfer some ``steak`` to another account:
 
 ::
 
     gaiacli account <FOO-ADDR>
     gaiacli account <BAR-ADDR>
-    gaiacli send --amount=10fermion --to=<BAR-ADDR> --name=foo --chain-id=test-chain
+    gaiacli send --amount=10steak --to=<BAR-ADDR> --name=foo --chain-id=test-chain
 
 **Note:** We need to be careful with the ``chain-id`` and ``sequence``
 

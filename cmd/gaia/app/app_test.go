@@ -369,9 +369,9 @@ func TestIBCMsgs(t *testing.T) {
 func TestStakeMsgs(t *testing.T) {
 	gapp := newGaiaApp()
 
-	genCoins, err := sdk.ParseCoins("42fermion")
+	genCoins, err := sdk.ParseCoins("42steak")
 	require.Nil(t, err)
-	bondCoin, err := sdk.ParseCoin("10fermion")
+	bondCoin, err := sdk.ParseCoin("10steak")
 	require.Nil(t, err)
 
 	acc1 := &auth.BaseAccount{

@@ -39,15 +39,15 @@ func TestGaiaCLISend(t *testing.T) {
 	barAddr, _ := executeGetAddrPK(t, "gaiacli keys show bar --output=json")
 
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
-	assert.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("fermion"))
+	assert.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak"))
 
-	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10fermion --to=%v --name=foo", flags, barAddr), pass)
+	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barAddr), pass)
 	time.Sleep(time.Second * 3) // waiting for some blocks to pass
 
 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barAddr, flags))
-	assert.Equal(t, int64(10), barAcc.GetCoins().AmountOf("fermion"))
+	assert.Equal(t, int64(10), barAcc.GetCoins().AmountOf("steak"))
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
-	assert.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("fermion"))
+	assert.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak"))
 }
 
 func TestGaiaCLIDeclareCandidacy(t *testing.T) {
@@ -70,26 +70,26 @@ func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
 	barAddr, barPubKey := executeGetAddrPK(t, "gaiacli keys show bar --output=json")
 
-	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10fermion --to=%v --name=foo", flags, barAddr), pass)
+	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barAddr), pass)
 	time.Sleep(time.Second * 3) // waiting for some blocks to pass
 
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
-	assert.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("fermion"))
+	assert.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak"))
 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barAddr, flags))
-	assert.Equal(t, int64(10), barAcc.GetCoins().AmountOf("fermion"))
+	assert.Equal(t, int64(10), barAcc.GetCoins().AmountOf("steak"))
 
 	// declare candidacy
 	declStr := fmt.Sprintf("gaiacli declare-candidacy %v", flags)
 	declStr += fmt.Sprintf(" --name=%v", "bar")
 	declStr += fmt.Sprintf(" --address-candidate=%v", barAddr)
 	declStr += fmt.Sprintf(" --pubkey=%v", barPubKey)
-	declStr += fmt.Sprintf(" --amount=%v", "3fermion")
+	declStr += fmt.Sprintf(" --amount=%v", "3steak")
 	declStr += fmt.Sprintf(" --moniker=%v", "bar-vally")
 	fmt.Printf("debug declStr: %v\n", declStr)
 	executeWrite(t, declStr, pass)
 	time.Sleep(time.Second) // waiting for some blocks to pass
 	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barAddr, flags))
-	assert.Equal(t, int64(7), barAcc.GetCoins().AmountOf("fermion"))
+	assert.Equal(t, int64(7), barAcc.GetCoins().AmountOf("steak"))
 	candidate := executeGetCandidate(t, fmt.Sprintf("gaiacli candidate %v --address-candidate=%v", flags, barAddr))
 	assert.Equal(t, candidate.Address.String(), barAddr)
 	assert.Equal(t, int64(3), candidate.Assets.Evaluate())
@@ -106,7 +106,7 @@ func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 	//executeWrite(t, unbondStr, pass)
 	//time.Sleep(time.Second * 3) // waiting for some blocks to pass
 	//barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barAddr, flags))
-	//assert.Equal(t, int64(99998), barAcc.GetCoins().AmountOf("fermion"))
+	//assert.Equal(t, int64(99998), barAcc.GetCoins().AmountOf("steak"))
 	//candidate = executeGetCandidate(t, fmt.Sprintf("gaiacli candidate %v --address-candidate=%v", flags, barAddr))
 	//assert.Equal(t, int64(2), candidate.Assets.Evaluate())
 }

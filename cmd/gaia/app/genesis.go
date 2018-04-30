@@ -146,11 +146,11 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
 			return
 		}
 
-		// create the genesis account, give'm few fermions and a buncha token with there name
+		// create the genesis account, give'm few steaks and a buncha token with there name
 		accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
 		accAuth.Coins = sdk.Coins{
 			{genTx.Name + "Token", 1000},
-			{"fermion", freeFermionsAcc},
+			{"steak", freeFermionsAcc},
 		}
 		acc := NewGenesisAccount(&accAuth)
 		genaccs[i] = acc

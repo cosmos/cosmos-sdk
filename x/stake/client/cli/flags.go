@@ -30,7 +30,7 @@ var (
 
 func init() {
 	fsPk.String(FlagPubKey, "", "Go-Amino encoded hex PubKey of the validator-candidate. For Ed25519 the go-amino prepend hex is 1624de6220")
-	fsAmount.String(FlagAmount, "1fermion", "Amount of coins to bond")
+	fsAmount.String(FlagAmount, "1steak", "Amount of coins to bond")
 	fsShares.String(FlagShares, "", "Amount of shares to unbond, either in decimal or keyword MAX (ex. 1.23456789, 99, MAX)")
 	fsDescription.String(FlagMoniker, "", "validator-candidate name")
 	fsDescription.String(FlagIdentity, "", "optional keybase signature")

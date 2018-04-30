@@ -107,7 +107,7 @@ The ``genesis.json`` should look something like:
             "address": "1D9B2356CAADF46D3EE3488E3CCE3028B4283DEE",
             "coins": [
               {
-                "denom": "fermion",
+                "denom": "steak",
                 "amount": 100000
               }
             ]
@@ -150,7 +150,7 @@ The ``genesis.json`` should look something like:
               "denom": 100
             },
             "max_validators": 100,
-            "bond_denom": "fermion"
+            "bond_denom": "steak"
           }
         }
       },

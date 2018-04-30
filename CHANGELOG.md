@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.15.0 (April 29, 2018)
+
+FEATURES:
+
+* Add CacheContext
+* Add auto sequencing to client
+* Add FeeHandler to ante handler
+
+BREAKING CHANGES
+
+* Remove go-wire, use go-amino
+* [store] Add `SubspaceIterator` and `ReverseSubspaceIterator` to `KVStore` interface
+* [basecoin] NewBasecoinApp takes a `dbm.DB` and uses namespaced DBs for substores
+
+BUG FIXES
+
+* MountStoreWithDB without providing a custom store works.
+
 ## 0.14.1 (April 9, 2018)
 
 BUG FIXES

@@ -2,7 +2,6 @@ package rest
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
@@ -43,7 +42,7 @@ func TransferRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.Response
 			w.Write([]byte(err.Error()))
 			return
 		}
-		err = json.Unmarshal(body, &m)
+		err = cdc.UnmarshalJSON(body, &m)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -86,7 +85,7 @@ func TransferRequestHandler(cdc *wire.Codec, kb keys.Keybase) func(http.Response
 			return
 		}
 
-		output, err := json.MarshalIndent(res, "", "  ")
+		output, err := cdc.MarshalJSON(res)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

@@ -2,7 +2,6 @@ package commands
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -11,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // GetAccountCmd for the auth.BaseAccount type
@@ -20,9 +18,9 @@ func GetAccountCmdDefault(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 func GetAccountDecoder(cdc *wire.Codec) sdk.AccountDecoder {
-	return func(accBytes []byte) (sdk.Account, error) {
-		acct := new(auth.BaseAccount)
-		err := cdc.UnmarshalBinary(accBytes, &acct)
+	return func(accBytes []byte) (acct sdk.Account, err error) {
+		// acct := new(auth.BaseAccount)
+		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
 		if err != nil {
 			panic(err)
 		}
@@ -78,7 +76,7 @@ func (c commander) getAccountCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// print out whole account
-	output, err := json.MarshalIndent(account, "", "  ")
+	output, err := wire.MarshalJSONIndent(c.cdc, account)
 	if err != nil {
 		return err
 	}

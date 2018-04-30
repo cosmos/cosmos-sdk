@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
@@ -55,10 +56,12 @@ func TestKeeperGetSet(t *testing.T) {
 
 func TestBonding(t *testing.T) {
 	ms, authKey, capKey := setupMultiStore()
+	cdc := wire.NewCodec()
+	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
 
-	accountMapper := auth.NewAccountMapper(authKey, &auth.BaseAccount{})
+	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	coinKeeper := bank.NewCoinKeeper(accountMapper)
 	stakeKeeper := NewKeeper(capKey, coinKeeper)
 	addr := sdk.Address([]byte("some-address"))

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/go-crypto/keys"
@@ -13,6 +14,7 @@ import (
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/p2p"
 	tmtypes "github.com/tendermint/tendermint/types"
+	pvm "github.com/tendermint/tendermint/types/priv_validator"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 )
@@ -96,7 +98,7 @@ func (c initCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	testnetInfo.NodeID = nodeKey.ID()
-	out, err := json.MarshalIndent(testnetInfo, "", "  ")
+	out, err := wire.MarshalJSONIndent(cdc, testnetInfo)
 	if err != nil {
 		return err
 	}
@@ -109,12 +111,12 @@ func (c initCmd) run(cmd *cobra.Command, args []string) error {
 func (c initCmd) initTendermintFiles(config *cfg.Config, info *testnetInformation) error {
 	// private validator
 	privValFile := config.PrivValidatorFile()
-	var privValidator *tmtypes.PrivValidatorFS
+	var privValidator *pvm.FilePV
 	if cmn.FileExists(privValFile) {
-		privValidator = tmtypes.LoadPrivValidatorFS(privValFile)
+		privValidator = pvm.LoadFilePV(privValFile)
 		c.context.Logger.Info("Found private validator", "path", privValFile)
 	} else {
-		privValidator = tmtypes.GenPrivValidatorFS(privValFile)
+		privValidator = pvm.GenFilePV(privValFile)
 		privValidator.Save()
 		c.context.Logger.Info("Generated private validator", "path", privValFile)
 	}
@@ -193,13 +195,13 @@ func addGenesisState(filename string, appState json.RawMessage) error {
 	}
 
 	var doc GenesisDoc
-	err = json.Unmarshal(bz, &doc)
+	err = cdc.UnmarshalJSON(bz, &doc)
 	if err != nil {
 		return err
 	}
 
 	doc["app_state"] = appState
-	out, err := json.MarshalIndent(doc, "", "  ")
+	out, err := wire.MarshalJSONIndent(cdc, doc)
 	if err != nil {
 		return err
 	}

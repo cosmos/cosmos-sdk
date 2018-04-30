@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	cmn "github.com/tendermint/tmlibs/common"
 
@@ -21,11 +22,15 @@ func waitForRPC() {
 	laddr := GetConfig().RPC.ListenAddress
 	fmt.Println("LADDR", laddr)
 	client := rpcclient.NewJSONRPCClient(laddr)
+	ctypes.RegisterAmino(client.Codec())
 	result := new(ctypes.ResultStatus)
 	for {
 		_, err := client.Call("status", map[string]interface{}{}, result)
 		if err == nil {
 			return
+		} else {
+			fmt.Println("error", err)
+			time.Sleep(time.Millisecond)
 		}
 	}
 }

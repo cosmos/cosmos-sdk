@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"encoding/json"
 	"fmt"
 	"runtime/debug"
 
@@ -72,21 +71,20 @@ func (app *BaseApp) Name() string {
 }
 
 // Mount a store to the provided key in the BaseApp multistore
-// Broken until #532 is implemented.
 func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
 		app.MountStore(key, sdk.StoreTypeIAVL)
 	}
 }
 
-// Mount a store to the provided key in the BaseApp multistore
+// Mount a store to the provided key in the BaseApp multistore, using a specified DB
 func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, typ sdk.StoreType, db dbm.DB) {
 	app.cms.MountStoreWithDB(key, typ, db)
 }
 
-// Mount a store to the provided key in the BaseApp multistore
+// Mount a store to the provided key in the BaseApp multistore, using the default DB
 func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
-	app.cms.MountStoreWithDB(key, typ, app.db)
+	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
 // nolint - Set functions
@@ -240,14 +238,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// Initialize the deliver state and run initChain
 	app.setDeliverState(abci.Header{})
 	app.initChainer(app.deliverState.ctx, req) // no error
-
-	// Initialize module genesis state
-	genesisState := new(map[string]json.RawMessage)
-	err := json.Unmarshal(req.AppStateBytes, genesisState)
-	if err != nil {
-		// TODO Return something intelligent
-		panic(err)
-	}
 
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState

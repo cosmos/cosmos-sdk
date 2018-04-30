@@ -85,20 +85,15 @@ var (
 	}
 )
 
-func loggerAndDBs() (log.Logger, map[string]dbm.DB) {
+func loggerAndDB() (log.Logger, dbm.DB) {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-	dbs := map[string]dbm.DB{
-		"main":    dbm.NewMemDB(),
-		"acc":     dbm.NewMemDB(),
-		"ibc":     dbm.NewMemDB(),
-		"staking": dbm.NewMemDB(),
-	}
-	return logger, dbs
+	db := dbm.NewMemDB()
+	return logger, db
 }
 
 func newBasecoinApp() *BasecoinApp {
-	logger, dbs := loggerAndDBs()
-	return NewBasecoinApp(logger, dbs)
+	logger, db := loggerAndDB()
+	return NewBasecoinApp(logger, db)
 }
 
 func setGenesisAccounts(bapp *BasecoinApp, accs ...auth.BaseAccount) error {
@@ -142,8 +137,8 @@ func TestMsgs(t *testing.T) {
 }
 
 func TestSortGenesis(t *testing.T) {
-	logger, dbs := loggerAndDBs()
-	bapp := NewBasecoinApp(logger, dbs)
+	logger, db := loggerAndDB()
+	bapp := NewBasecoinApp(logger, db)
 
 	// Note the order: the coins are unsorted!
 	coinDenom1, coinDenom2 := "foocoin", "barcoin"
@@ -184,8 +179,8 @@ func TestSortGenesis(t *testing.T) {
 }
 
 func TestGenesis(t *testing.T) {
-	logger, dbs := loggerAndDBs()
-	bapp := NewBasecoinApp(logger, dbs)
+	logger, db := loggerAndDB()
+	bapp := NewBasecoinApp(logger, db)
 
 	// Construct some genesis bytes to reflect basecoin/types/AppAccount
 	pk := crypto.GenPrivKeyEd25519().PubKey()
@@ -207,7 +202,7 @@ func TestGenesis(t *testing.T) {
 	assert.Equal(t, acc, res1)
 
 	// reload app and ensure the account is still there
-	bapp = NewBasecoinApp(logger, dbs)
+	bapp = NewBasecoinApp(logger, db)
 	ctx = bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 = bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
 	assert.Equal(t, acc, res1)
@@ -349,10 +344,9 @@ func TestQuizMsg(t *testing.T) {
 
 	// Construct genesis state
 	// Construct some genesis bytes to reflect basecoin/types/AppAccount
-	coins := sdk.Coins{}
 	baseAcc := auth.BaseAccount{
 		Address: addr1,
-		Coins:   coins,
+		Coins:   nil,
 	}
 	acc1 := &types.AppAccount{baseAcc, "foobart"}
 

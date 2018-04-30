@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -49,7 +48,7 @@ func getBlock(height *int64) ([]byte, error) {
 
 	// TODO move maarshalling into cmd/rest functions
 	// output, err := tmwire.MarshalJSON(res)
-	output, err := json.MarshalIndent(res, "", "  ")
+	output, err := cdc.MarshalJSON(res)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +64,7 @@ func GetChainHeight() (int64, error) {
 	if err != nil {
 		return -1, err
 	}
-	height := status.LatestBlockHeight
+	height := status.SyncInfo.LatestBlockHeight
 	return height, nil
 }
 

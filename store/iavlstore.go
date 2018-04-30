@@ -119,16 +119,19 @@ func (st *iavlStore) Iterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, true)
 }
 
-func (st *iavlStore) Subspace(prefix []byte) Iterator {
-	end := make([]byte, len(prefix))
-	copy(end, prefix)
-	end[len(end)-1]++
-	return st.Iterator(prefix, end)
-}
-
-// Implements IterKVStore.
+// Implements KVStore.
 func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, false)
+}
+
+// Implements KVStore.
+func (st *iavlStore) SubspaceIterator(prefix []byte) Iterator {
+	return st.Iterator(prefix, sdk.PrefixEndBytes(prefix))
+}
+
+// Implements KVStore.
+func (st *iavlStore) ReverseSubspaceIterator(prefix []byte) Iterator {
+	return st.ReverseIterator(prefix, sdk.PrefixEndBytes(prefix))
 }
 
 // Query implements ABCI interface, allows queries
@@ -339,6 +342,9 @@ func (iter *iavlIterator) assertIsValid() {
 //----------------------------------------
 
 func cp(bz []byte) (ret []byte) {
+	if bz == nil {
+		return nil
+	}
 	ret = make([]byte, len(bz))
 	copy(ret, bz)
 	return ret

@@ -67,21 +67,15 @@ var (
 	}
 )
 
-func loggerAndDBs() (log.Logger, map[string]dbm.DB) {
+func loggerAndDB() (log.Logger, dbm.DB) {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-	dbs := map[string]dbm.DB{
-		"main":    dbm.NewMemDB(),
-		"acc":     dbm.NewMemDB(),
-		"pow":     dbm.NewMemDB(),
-		"ibc":     dbm.NewMemDB(),
-		"staking": dbm.NewMemDB(),
-	}
-	return logger, dbs
+	db := dbm.NewMemDB()
+	return logger, db
 }
 
 func newDemocoinApp() *DemocoinApp {
-	logger, dbs := loggerAndDBs()
-	return NewDemocoinApp(logger, dbs)
+	logger, db := loggerAndDB()
+	return NewDemocoinApp(logger, db)
 }
 
 //_______________________________________________________________________
@@ -106,8 +100,7 @@ func TestMsgs(t *testing.T) {
 		}})
 
 		// just marshal/unmarshal!
-		cdc := MakeCodec()
-		txBytes, err := cdc.MarshalBinary(tx)
+		txBytes, err := bapp.cdc.MarshalBinary(tx)
 		require.NoError(t, err, "i: %v", i)
 
 		// Run a Check
@@ -124,8 +117,8 @@ func TestMsgs(t *testing.T) {
 }
 
 func TestGenesis(t *testing.T) {
-	logger, dbs := loggerAndDBs()
-	bapp := NewDemocoinApp(logger, dbs)
+	logger, db := loggerAndDB()
+	bapp := NewDemocoinApp(logger, db)
 
 	// Construct some genesis bytes to reflect democoin/types/AppAccount
 	pk := crypto.GenPrivKeyEd25519().PubKey()
@@ -158,7 +151,7 @@ func TestGenesis(t *testing.T) {
 	assert.Equal(t, acc, res1)
 
 	// reload app and ensure the account is still there
-	bapp = NewDemocoinApp(logger, dbs)
+	bapp = NewDemocoinApp(logger, db)
 	ctx = bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 = bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
 	assert.Equal(t, acc, res1)
@@ -245,10 +238,9 @@ func TestMineMsg(t *testing.T) {
 
 	// Construct genesis state
 	// Construct some genesis bytes to reflect democoin/types/AppAccount
-	coins := sdk.Coins{}
 	baseAcc := auth.BaseAccount{
 		Address: addr1,
-		Coins:   coins,
+		Coins:   nil,
 	}
 	acc1 := &types.AppAccount{baseAcc, "foobart"}
 
@@ -297,10 +289,9 @@ func TestQuizMsg(t *testing.T) {
 
 	// Construct genesis state
 	// Construct some genesis bytes to reflect democoin/types/AppAccount
-	coins := sdk.Coins{}
 	baseAcc := auth.BaseAccount{
 		Address: addr1,
-		Coins:   coins,
+		Coins:   nil,
 	}
 	acc1 := &types.AppAccount{baseAcc, "foobart"}
 

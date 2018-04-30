@@ -547,7 +547,7 @@ components:
       properties:
         denom:
           type: string
-          example: fermion
+          example: steak
         amount:
           type: number
           example: 50

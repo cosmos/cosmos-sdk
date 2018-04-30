@@ -18,7 +18,7 @@ func newTestMsgDeclareCandidacy(address sdk.Address, pubKey crypto.PubKey, amt i
 	return MsgDeclareCandidacy{
 		Description:   Description{},
 		CandidateAddr: address,
-		Bond:          sdk.Coin{"fermion", amt},
+		Bond:          sdk.Coin{"steak", amt},
 		PubKey:        pubKey,
 	}
 }
@@ -27,7 +27,7 @@ func newTestMsgDelegate(delegatorAddr, candidateAddr sdk.Address, amt int64) Msg
 	return MsgDelegate{
 		DelegatorAddr: delegatorAddr,
 		CandidateAddr: candidateAddr,
-		Bond:          sdk.Coin{"fermion", amt},
+		Bond:          sdk.Coin{"steak", amt},
 	}
 }
 

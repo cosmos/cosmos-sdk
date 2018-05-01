@@ -74,7 +74,7 @@ func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			// parse out the candidate
 			candidate := new(stake.Candidate)
-			err = cdc.UnmarshalJSON(res, candidate)
+			err = cdc.UnmarshalBinary(res, candidate)
 			if err != nil {
 				return err
 			}
@@ -122,7 +122,7 @@ func GetCmdQueryDelegatorBond(storeName string, cdc *wire.Codec) *cobra.Command 
 
 			// parse out the bond
 			bond := new(stake.DelegatorBond)
-			err = cdc.UnmarshalJSON(res, bond)
+			err = cdc.UnmarshalBinary(res, bond)
 			if err != nil {
 				return err
 			}

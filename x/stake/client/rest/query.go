@@ -59,7 +59,7 @@ func BondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 		}
 
 		var bond stake.DelegatorBond
-		err = cdc.UnmarshalJSON(res, &bond)
+		err = cdc.UnmarshalBinary(res, &bond)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("Couldn't decode bond. Error: %s", err.Error())))

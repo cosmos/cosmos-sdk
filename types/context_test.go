@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -12,6 +13,33 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/abci/types"
 )
+
+type MockLogger struct {
+	logs *[]string
+}
+
+func NewMockLogger() MockLogger {
+	logs := make([]string, 0)
+	return MockLogger{
+		&logs,
+	}
+}
+
+func (l MockLogger) Debug(msg string, kvs ...interface{}) {
+	*l.logs = append(*l.logs, msg)
+}
+
+func (l MockLogger) Info(msg string, kvs ...interface{}) {
+	*l.logs = append(*l.logs, msg)
+}
+
+func (l MockLogger) Error(msg string, kvs ...interface{}) {
+	*l.logs = append(*l.logs, msg)
+}
+
+func (l MockLogger) With(kvs ...interface{}) log.Logger {
+	panic("not implemented")
+}
 
 func TestContextGetOpShouldNeverPanic(t *testing.T) {
 	var ms types.MultiStore
@@ -64,7 +92,10 @@ func TestCacheContext(t *testing.T) {
 func TestLogContext(t *testing.T) {
 	key := types.NewKVStoreKey(t.Name())
 	ctx := defaultContext(key)
+	logger := NewMockLogger()
+	ctx = ctx.WithLogger(logger)
 	ctx.Logger().Debug("debug")
 	ctx.Logger().Info("info")
 	ctx.Logger().Error("error")
+	require.Equal(t, *logger.logs, []string{"debug", "info", "error"})
 }

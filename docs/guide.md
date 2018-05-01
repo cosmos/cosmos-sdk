@@ -29,9 +29,6 @@ type Msg interface {
 	// Must be alphanumeric or empty.
 	Type() string
 
-	// Get some property of the Msg.
-	Get(key interface{}) (value interface{})
-
 	// Get the canonical byte representation of the Msg.
 	GetSignBytes() []byte
 
@@ -62,9 +59,6 @@ displayed as a string or rendered in JSON.
 Messages can specify basic self-consistency checks using the `ValidateBasic()`
 method to enforce that message contents are well formed before any actual logic
 begins.
-
-Finally, messages can provide generic access to their contents via `Get(key)`,
-but this is mostly for convenience and not type-safe.
 
 For instance, the `Basecoin` message types are defined in `x/bank/tx.go`: 
 

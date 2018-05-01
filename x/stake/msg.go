@@ -40,9 +40,8 @@ func NewMsgDeclareCandidacy(candidateAddr sdk.Address, pubkey crypto.PubKey,
 }
 
 //nolint
-func (msg MsgDeclareCandidacy) Type() string                            { return MsgType } //TODO update "stake/declarecandidacy"
-func (msg MsgDeclareCandidacy) Get(key interface{}) (value interface{}) { return nil }
-func (msg MsgDeclareCandidacy) GetSigners() []sdk.Address               { return []sdk.Address{msg.CandidateAddr} }
+func (msg MsgDeclareCandidacy) Type() string              { return MsgType } //TODO update "stake/declarecandidacy"
+func (msg MsgDeclareCandidacy) GetSigners() []sdk.Address { return []sdk.Address{msg.CandidateAddr} }
 
 // get the bytes for the message signer to sign on
 func (msg MsgDeclareCandidacy) GetSignBytes() []byte {
@@ -87,9 +86,8 @@ func NewMsgEditCandidacy(candidateAddr sdk.Address, description Description) Msg
 }
 
 //nolint
-func (msg MsgEditCandidacy) Type() string                            { return MsgType } //TODO update "stake/msgeditcandidacy"
-func (msg MsgEditCandidacy) Get(key interface{}) (value interface{}) { return nil }
-func (msg MsgEditCandidacy) GetSigners() []sdk.Address               { return []sdk.Address{msg.CandidateAddr} }
+func (msg MsgEditCandidacy) Type() string              { return MsgType } //TODO update "stake/msgeditcandidacy"
+func (msg MsgEditCandidacy) GetSigners() []sdk.Address { return []sdk.Address{msg.CandidateAddr} }
 
 // get the bytes for the message signer to sign on
 func (msg MsgEditCandidacy) GetSignBytes() []byte {
@@ -130,9 +128,8 @@ func NewMsgDelegate(delegatorAddr, candidateAddr sdk.Address, bond sdk.Coin) Msg
 }
 
 //nolint
-func (msg MsgDelegate) Type() string                            { return MsgType } //TODO update "stake/msgeditcandidacy"
-func (msg MsgDelegate) Get(key interface{}) (value interface{}) { return nil }
-func (msg MsgDelegate) GetSigners() []sdk.Address               { return []sdk.Address{msg.DelegatorAddr} }
+func (msg MsgDelegate) Type() string              { return MsgType } //TODO update "stake/msgeditcandidacy"
+func (msg MsgDelegate) GetSigners() []sdk.Address { return []sdk.Address{msg.DelegatorAddr} }
 
 // get the bytes for the message signer to sign on
 func (msg MsgDelegate) GetSignBytes() []byte {
@@ -178,9 +175,8 @@ func NewMsgUnbond(delegatorAddr, candidateAddr sdk.Address, shares string) MsgUn
 }
 
 //nolint
-func (msg MsgUnbond) Type() string                            { return MsgType } //TODO update "stake/msgeditcandidacy"
-func (msg MsgUnbond) Get(key interface{}) (value interface{}) { return nil }
-func (msg MsgUnbond) GetSigners() []sdk.Address               { return []sdk.Address{msg.DelegatorAddr} }
+func (msg MsgUnbond) Type() string              { return MsgType } //TODO update "stake/msgeditcandidacy"
+func (msg MsgUnbond) GetSigners() []sdk.Address { return []sdk.Address{msg.DelegatorAddr} }
 
 // get the bytes for the message signer to sign on
 func (msg MsgUnbond) GetSignBytes() []byte {

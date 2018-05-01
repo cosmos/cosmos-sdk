@@ -13,19 +13,6 @@ type kvstoreTx struct {
 	bytes []byte
 }
 
-func (tx kvstoreTx) Get(key interface{}) (value interface{}) {
-	switch k := key.(type) {
-	case string:
-		switch k {
-		case "key":
-			return tx.key
-		case "value":
-			return tx.value
-		}
-	}
-	return nil
-}
-
 func (tx kvstoreTx) Type() string {
 	return "kvstore"
 }

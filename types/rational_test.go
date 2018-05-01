@@ -235,13 +235,24 @@ func TestSerializationText(t *testing.T) {
 	assert.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
 }
 
-func TestSerializationGoWire(t *testing.T) {
+func TestSerializationGoWireJSON(t *testing.T) {
 	r := NewRat(1, 3)
 	bz, err := cdc.MarshalJSON(r)
 	require.NoError(t, err)
 
 	r2 := NewRat(0, 1)
 	err = cdc.UnmarshalJSON(bz, &r2)
+	require.NoError(t, err)
+	assert.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
+}
+
+func TestSerializationGoWireBinary(t *testing.T) {
+	r := NewRat(1, 3)
+	bz, err := cdc.MarshalBinary(r)
+	require.NoError(t, err)
+
+	r2 := NewRat(0, 1)
+	err = cdc.UnmarshalBinary(bz, &r2)
 	require.NoError(t, err)
 	assert.True(t, r.Equal(r2), "original: %v, unmarshalled: %v", r, r2)
 }

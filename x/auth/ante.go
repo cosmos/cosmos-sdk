@@ -77,7 +77,7 @@ func NewAnteHandler(am sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHan
 				// TODO: min fee
 				if !fee.Amount.IsZero() {
 					signerAcc, res = deductFees(signerAcc, fee)
-					feeHandler(ctx, tx, fee.Amount)
+					feeHandler(ctx, fee.Amount)
 					if !res.IsOK() {
 						return ctx, res, true
 					}
@@ -166,5 +166,5 @@ func deductFees(acc sdk.Account, fee sdk.StdFee) (sdk.Account, sdk.Result) {
 }
 
 // BurnFeeHandler burns all fees (decreasing total supply)
-func BurnFeeHandler(ctx sdk.Context, tx sdk.Tx, fee sdk.Coins) {
+func BurnFeeHandler(ctx sdk.Context, fee sdk.Coins) {
 }

@@ -77,7 +77,7 @@ func (k Keeper) GetCandidate(ctx sdk.Context, addr sdk.Address) (candidate Candi
 // Get the set of all candidates, retrieve a maxRetrieve number of records
 func (k Keeper) GetCandidates(ctx sdk.Context, maxRetrieve int16) (candidates Candidates) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := store.Iterator(subspace(CandidatesKey))
+	iterator := store.SubspaceIterator(CandidatesKey)
 
 	candidates = make([]Candidate, maxRetrieve)
 	i := 0
@@ -220,7 +220,7 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 	store := ctx.KVStore(k.storeKey)
 
 	// clear the recent validators store, add to the ToKickOut Temp store
-	iterator := store.Iterator(subspace(RecentValidatorsKey))
+	iterator := store.SubspaceIterator(RecentValidatorsKey)
 	for ; iterator.Valid(); iterator.Next() {
 		addr := AddrFromKey(iterator.Key())
 
@@ -232,7 +232,7 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 
 	// add the actual validator power sorted store
 	maxValidators := k.GetParams(ctx).MaxValidators
-	iterator = store.ReverseIterator(subspace(ValidatorsKey)) // largest to smallest
+	iterator = store.ReverseSubspaceIterator(ValidatorsKey) // largest to smallest
 	validators = make([]Validator, maxValidators)
 	i := 0
 	for ; ; i++ {
@@ -258,7 +258,7 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 	}
 
 	// add any kicked out validators to the acc change
-	iterator = store.Iterator(subspace(ToKickOutValidatorsKey))
+	iterator = store.SubspaceIterator(ToKickOutValidatorsKey)
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()
 		addr := AddrFromKey(key)
@@ -289,7 +289,7 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 func (k Keeper) isNewValidator(ctx sdk.Context, store sdk.KVStore, address sdk.Address) bool {
 	// add the actual validator power sorted store
 	maxVal := k.GetParams(ctx).MaxValidators
-	iterator := store.ReverseIterator(subspace(ValidatorsKey)) // largest to smallest
+	iterator := store.ReverseSubspaceIterator(ValidatorsKey) // largest to smallest
 	for i := 0; ; i++ {
 		if !iterator.Valid() || i > int(maxVal-1) {
 			iterator.Close()
@@ -326,7 +326,7 @@ func (k Keeper) IsRecentValidator(ctx sdk.Context, address sdk.Address) bool {
 func (k Keeper) getAccUpdateValidators(ctx sdk.Context) (updates []abci.Validator) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := store.Iterator(subspace(AccUpdateValidatorsKey)) //smallest to largest
+	iterator := store.SubspaceIterator(AccUpdateValidatorsKey) //smallest to largest
 	for ; iterator.Valid(); iterator.Next() {
 		valBytes := iterator.Value()
 		var val abci.Validator
@@ -345,7 +345,7 @@ func (k Keeper) clearAccUpdateValidators(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 
 	// delete subspace
-	iterator := store.Iterator(subspace(AccUpdateValidatorsKey))
+	iterator := store.SubspaceIterator(AccUpdateValidatorsKey)
 	for ; iterator.Valid(); iterator.Next() {
 		store.Delete(iterator.Key())
 	}
@@ -374,7 +374,7 @@ func (k Keeper) GetDelegatorBond(ctx sdk.Context,
 // load all bonds
 func (k Keeper) getBonds(ctx sdk.Context, maxRetrieve int16) (bonds []DelegatorBond) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := store.Iterator(subspace(DelegatorBondKeyPrefix))
+	iterator := store.SubspaceIterator(DelegatorBondKeyPrefix)
 
 	bonds = make([]DelegatorBond, maxRetrieve)
 	i := 0
@@ -399,7 +399,7 @@ func (k Keeper) getBonds(ctx sdk.Context, maxRetrieve int16) (bonds []DelegatorB
 func (k Keeper) GetDelegatorBonds(ctx sdk.Context, delegator sdk.Address, maxRetrieve int16) (bonds []DelegatorBond) {
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegatorBondsKey(delegator, k.cdc)
-	iterator := store.Iterator(subspace(delegatorPrefixKey)) //smallest to largest
+	iterator := store.SubspaceIterator(delegatorPrefixKey) //smallest to largest
 
 	bonds = make([]DelegatorBond, maxRetrieve)
 	i := 0

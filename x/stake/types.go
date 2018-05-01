@@ -1,6 +1,8 @@
 package stake
 
 import (
+	"bytes"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
 
@@ -15,6 +17,14 @@ type GenesisState struct {
 	Bonds      []DelegatorBond `json:"bonds"`
 }
 
+// get raw genesis raw message for testing
+func DefaultGenesisState() GenesisState {
+	return GenesisState{
+		Pool:   initialPool(),
+		Params: defaultParams(),
+	}
+}
+
 //_________________________________________________________________________
 
 // Params defines the high level settings for staking
@@ -26,6 +36,8 @@ type Params struct {
 
 	MaxValidators uint16 `json:"max_validators"` // maximum number of validators
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
+
+	ReservePoolFee sdk.Rat `json:"reserve_pool_fee"` // percent of fees which go to reserve pool
 }
 
 func (p Params) equal(p2 Params) bool {
@@ -34,7 +46,20 @@ func (p Params) equal(p2 Params) bool {
 		p.InflationMin.Equal(p2.InflationMin) &&
 		p.GoalBonded.Equal(p2.GoalBonded) &&
 		p.MaxValidators == p2.MaxValidators &&
-		p.BondDenom == p2.BondDenom
+		p.BondDenom == p2.BondDenom &&
+		p.ReservePoolFee.Equal(p2.ReservePoolFee)
+}
+
+func defaultParams() Params {
+	return Params{
+		InflationRateChange: sdk.NewRat(13, 100),
+		InflationMax:        sdk.NewRat(20, 100),
+		InflationMin:        sdk.NewRat(7, 100),
+		GoalBonded:          sdk.NewRat(67, 100),
+		MaxValidators:       100,
+		BondDenom:           "steak",
+		ReservePoolFee:      sdk.NewRat(5, 100),
+	}
 }
 
 //_________________________________________________________________________
@@ -48,16 +73,50 @@ type Pool struct {
 	UnbondedPool      int64   `json:"unbonded_pool"`       // reserve of unbonded tokens held with candidates
 	InflationLastTime int64   `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
 	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
+
+	DateLastCommissionReset int64 `json:"date_last_commission_reset"` // unix timestamp for last commission accounting reset (daily)
+
+	// XXX need to use special sdk.Rat amounts in coins here because added at small increments
+	ReservePool     sdk.Coins `json:"reserve_pool"`      // XXX reserve pool of collected fees for use by governance
+	FeePool         sdk.Coins `json:"fee_pool"`          // XXX fee pool for all the fee shares which have already been distributed
+	SumFeesReceived sdk.Coins `json:"sum_fees_received"` // XXX sum of all fees received
+	RecentFee       sdk.Coins `json:"recent_fee"`        // XXX most recent fee collected
+	Adjustment      sdk.Rat   `json:"adjustment"`        // XXX Adjustment factor for calculating global fee accum
 }
 
 func (p Pool) equal(p2 Pool) bool {
-	return p.BondedShares.Equal(p2.BondedShares) &&
+	return p.TotalSupply == p2.TotalSupply &&
+		p.BondedShares.Equal(p2.BondedShares) &&
 		p.UnbondedShares.Equal(p2.UnbondedShares) &&
-		p.Inflation.Equal(p2.Inflation) &&
-		p.TotalSupply == p2.TotalSupply &&
 		p.BondedPool == p2.BondedPool &&
 		p.UnbondedPool == p2.UnbondedPool &&
-		p.InflationLastTime == p2.InflationLastTime
+		p.InflationLastTime == p2.InflationLastTime &&
+		p.Inflation.Equal(p2.Inflation) &&
+		p.DateLastCommissionReset == p2.DateLastCommissionReset &&
+		p.ReservePool.IsEqual(p2.ReservePool) &&
+		p.FeePool.IsEqual(p2.FeePool) &&
+		p.SumFeesReceived.IsEqual(p2.SumFeesReceived) &&
+		p.RecentFee.IsEqual(p2.RecentFee) &&
+		p.Adjustment.Equal(p2.Adjustment)
+}
+
+// initial pool for testing
+func initialPool() Pool {
+	return Pool{
+		TotalSupply:             0,
+		BondedShares:            sdk.ZeroRat(),
+		UnbondedShares:          sdk.ZeroRat(),
+		BondedPool:              0,
+		UnbondedPool:            0,
+		InflationLastTime:       0,
+		Inflation:               sdk.NewRat(7, 100),
+		DateLastCommissionReset: 0,
+		ReservePool:             sdk.Coins{},
+		FeePool:                 sdk.Coins{},
+		SumFeesReceived:         sdk.Coins{},
+		RecentFee:               sdk.Coins{},
+		Adjustment:              sdk.ZeroRat(),
+	}
 }
 
 //_________________________________________________________________________
@@ -80,14 +139,19 @@ const (
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
 type Candidate struct {
-	Status               CandidateStatus `json:"status"`                 // Bonded status
-	Address              sdk.Address     `json:"owner"`                  // Sender of BondTx - UnbondTx returns here
-	PubKey               crypto.PubKey   `json:"pub_key"`                // Pubkey of candidate
-	Assets               sdk.Rat         `json:"assets"`                 // total shares of a global hold pools
-	Liabilities          sdk.Rat         `json:"liabilities"`            // total shares issued to a candidate's delegators
-	Description          Description     `json:"description"`            // Description terms for the candidate
-	ValidatorBondHeight  int64           `json:"validator_bond_height"`  // Earliest height as a bonded validator
-	ValidatorBondCounter int16           `json:"validator_bond_counter"` // Block-local tx index of validator change
+	Status                CandidateStatus `json:"status"`                  // Bonded status
+	Address               sdk.Address     `json:"owner"`                   // Sender of BondTx - UnbondTx returns here
+	PubKey                crypto.PubKey   `json:"pub_key"`                 // Pubkey of candidate
+	Assets                sdk.Rat         `json:"assets"`                  // total shares of a global hold pools
+	Liabilities           sdk.Rat         `json:"liabilities"`             // total shares issued to a candidate's delegators
+	Description           Description     `json:"description"`             // Description terms for the candidate
+	ValidatorBondHeight   int64           `json:"validator_bond_height"`   // Earliest height as a bonded validator
+	ValidatorBondCounter  int16           `json:"validator_bond_counter"`  // Block-local tx index of validator change
+	ProposerRewardPool    sdk.Coins       `json:"proposer_reward_pool"`    // XXX reward pool collected from being the proposer
+	Commission            sdk.Rat         `json:"commission"`              // XXX the commission rate of fees charged to any delegators
+	CommissionMax         sdk.Rat         `json:"commission_max"`          // XXX maximum commission rate which this candidate can ever charge
+	CommissionChangeRate  sdk.Rat         `json:"commission_change_rate"`  // XXX maximum daily increase of the candidate commission
+	CommissionChangeToday sdk.Rat         `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
 }
 
 // Candidates - list of Candidates
@@ -96,15 +160,36 @@ type Candidates []Candidate
 // NewCandidate - initialize a new candidate
 func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Description) Candidate {
 	return Candidate{
-		Status:               Unbonded,
-		Address:              address,
-		PubKey:               pubKey,
-		Assets:               sdk.ZeroRat(),
-		Liabilities:          sdk.ZeroRat(),
-		Description:          description,
-		ValidatorBondHeight:  int64(0),
-		ValidatorBondCounter: int16(0),
+		Status:                Unbonded,
+		Address:               address,
+		PubKey:                pubKey,
+		Assets:                sdk.ZeroRat(),
+		Liabilities:           sdk.ZeroRat(),
+		Description:           description,
+		ValidatorBondHeight:   int64(0),
+		ValidatorBondCounter:  int16(0),
+		ProposerRewardPool:    sdk.Coins{},
+		Commission:            sdk.ZeroRat(),
+		CommissionMax:         sdk.ZeroRat(),
+		CommissionChangeRate:  sdk.ZeroRat(),
+		CommissionChangeToday: sdk.ZeroRat(),
 	}
+}
+
+func (c Candidate) equal(c2 Candidate) bool {
+	return c.Status == c2.Status &&
+		c.PubKey.Equals(c2.PubKey) &&
+		bytes.Equal(c.Address, c2.Address) &&
+		c.Assets.Equal(c2.Assets) &&
+		c.Liabilities.Equal(c2.Liabilities) &&
+		c.Description == c2.Description &&
+		c.ValidatorBondHeight == c2.ValidatorBondHeight &&
+		c.ValidatorBondCounter == c2.ValidatorBondCounter &&
+		c.ProposerRewardPool.IsEqual(c2.ProposerRewardPool) &&
+		c.Commission.Equal(c2.Commission) &&
+		c.CommissionMax.Equal(c2.CommissionMax) &&
+		c.CommissionChangeRate.Equal(c2.CommissionChangeRate) &&
+		c.CommissionChangeToday.Equal(c2.CommissionChangeToday)
 }
 
 // Description - description fields for a candidate
@@ -158,6 +243,14 @@ type Validator struct {
 	Counter int16         `json:"counter"` // Block-local tx index for resolving equal voting power & height
 }
 
+func (v Validator) equal(v2 Validator) bool {
+	return bytes.Equal(v.Address, v2.Address) &&
+		v.PubKey.Equals(v2.PubKey) &&
+		v.Power.Equal(v2.Power) &&
+		v.Height == v2.Height &&
+		v.Counter == v2.Counter
+}
+
 // abci validator from stake validator type
 func (v Validator) abciValidator(cdc *wire.Codec) sdk.Validator {
 	return sdk.Validator{
@@ -186,4 +279,11 @@ type DelegatorBond struct {
 	CandidateAddr sdk.Address `json:"candidate_addr"`
 	Shares        sdk.Rat     `json:"shares"`
 	Height        int64       `json:"height"` // Last height bond updated
+}
+
+func (b DelegatorBond) equal(b2 DelegatorBond) bool {
+	return bytes.Equal(b.DelegatorAddr, b2.DelegatorAddr) &&
+		bytes.Equal(b.CandidateAddr, b2.CandidateAddr) &&
+		b.Height == b2.Height &&
+		b.Shares.Equal(b2.Shares)
 }

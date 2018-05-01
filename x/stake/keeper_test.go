@@ -49,14 +49,14 @@ func TestCandidate(t *testing.T) {
 	keeper.setCandidate(ctx, candidates[0])
 	resCand, found := keeper.GetCandidate(ctx, addrVals[0])
 	require.True(t, found)
-	assert.True(t, candidatesEqual(candidates[0], resCand), "%v \n %v", resCand, candidates[0])
+	assert.True(t, candidates[0].equal(resCand), "%v \n %v", resCand, candidates[0])
 
 	// modify a records, save, and retrieve
 	candidates[0].Liabilities = sdk.NewRat(99)
 	keeper.setCandidate(ctx, candidates[0])
 	resCand, found = keeper.GetCandidate(ctx, addrVals[0])
 	require.True(t, found)
-	assert.True(t, candidatesEqual(candidates[0], resCand))
+	assert.True(t, candidates[0].equal(resCand))
 
 	// also test that the address has been added to address list
 	resCands = keeper.GetCandidates(ctx, 100)
@@ -68,15 +68,15 @@ func TestCandidate(t *testing.T) {
 	keeper.setCandidate(ctx, candidates[2])
 	resCand, found = keeper.GetCandidate(ctx, addrVals[1])
 	require.True(t, found)
-	assert.True(t, candidatesEqual(candidates[1], resCand), "%v \n %v", resCand, candidates[1])
+	assert.True(t, candidates[1].equal(resCand), "%v \n %v", resCand, candidates[1])
 	resCand, found = keeper.GetCandidate(ctx, addrVals[2])
 	require.True(t, found)
-	assert.True(t, candidatesEqual(candidates[2], resCand), "%v \n %v", resCand, candidates[2])
+	assert.True(t, candidates[2].equal(resCand), "%v \n %v", resCand, candidates[2])
 	resCands = keeper.GetCandidates(ctx, 100)
 	require.Equal(t, 3, len(resCands))
-	assert.True(t, candidatesEqual(candidates[0], resCands[0]), "%v \n %v", resCands[0], candidates[0])
-	assert.True(t, candidatesEqual(candidates[1], resCands[1]), "%v \n %v", resCands[1], candidates[1])
-	assert.True(t, candidatesEqual(candidates[2], resCands[2]), "%v \n %v", resCands[2], candidates[2])
+	assert.True(t, candidates[0].equal(resCands[0]), "%v \n %v", resCands[0], candidates[0])
+	assert.True(t, candidates[1].equal(resCands[1]), "%v \n %v", resCands[1], candidates[1])
+	assert.True(t, candidates[2].equal(resCands[2]), "%v \n %v", resCands[2], candidates[2])
 
 	// remove a record
 	keeper.removeCandidate(ctx, candidates[1].Address)
@@ -117,14 +117,14 @@ func TestBond(t *testing.T) {
 	keeper.setDelegatorBond(ctx, bond1to1)
 	resBond, found := keeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
 	assert.True(t, found)
-	assert.True(t, bondsEqual(bond1to1, resBond))
+	assert.True(t, bond1to1.equal(resBond))
 
 	// modify a records, save, and retrieve
 	bond1to1.Shares = sdk.NewRat(99)
 	keeper.setDelegatorBond(ctx, bond1to1)
 	resBond, found = keeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
 	assert.True(t, found)
-	assert.True(t, bondsEqual(bond1to1, resBond))
+	assert.True(t, bond1to1.equal(resBond))
 
 	// add some more records
 	keeper.setCandidate(ctx, candidates[1])
@@ -143,26 +143,26 @@ func TestBond(t *testing.T) {
 	// test all bond retrieve capabilities
 	resBonds := keeper.GetDelegatorBonds(ctx, addrDels[0], 5)
 	require.Equal(t, 3, len(resBonds))
-	assert.True(t, bondsEqual(bond1to1, resBonds[0]))
-	assert.True(t, bondsEqual(bond1to2, resBonds[1]))
-	assert.True(t, bondsEqual(bond1to3, resBonds[2]))
+	assert.True(t, bond1to1.equal(resBonds[0]))
+	assert.True(t, bond1to2.equal(resBonds[1]))
+	assert.True(t, bond1to3.equal(resBonds[2]))
 	resBonds = keeper.GetDelegatorBonds(ctx, addrDels[0], 3)
 	require.Equal(t, 3, len(resBonds))
 	resBonds = keeper.GetDelegatorBonds(ctx, addrDels[0], 2)
 	require.Equal(t, 2, len(resBonds))
 	resBonds = keeper.GetDelegatorBonds(ctx, addrDels[1], 5)
 	require.Equal(t, 3, len(resBonds))
-	assert.True(t, bondsEqual(bond2to1, resBonds[0]))
-	assert.True(t, bondsEqual(bond2to2, resBonds[1]))
-	assert.True(t, bondsEqual(bond2to3, resBonds[2]))
+	assert.True(t, bond2to1.equal(resBonds[0]))
+	assert.True(t, bond2to2.equal(resBonds[1]))
+	assert.True(t, bond2to3.equal(resBonds[2]))
 	allBonds := keeper.getBonds(ctx, 1000)
 	require.Equal(t, 6, len(allBonds))
-	assert.True(t, bondsEqual(bond1to1, allBonds[0]))
-	assert.True(t, bondsEqual(bond1to2, allBonds[1]))
-	assert.True(t, bondsEqual(bond1to3, allBonds[2]))
-	assert.True(t, bondsEqual(bond2to1, allBonds[3]))
-	assert.True(t, bondsEqual(bond2to2, allBonds[4]))
-	assert.True(t, bondsEqual(bond2to3, allBonds[5]))
+	assert.True(t, bond1to1.equal(allBonds[0]))
+	assert.True(t, bond1to2.equal(allBonds[1]))
+	assert.True(t, bond1to3.equal(allBonds[2]))
+	assert.True(t, bond2to1.equal(allBonds[3]))
+	assert.True(t, bond2to2.equal(allBonds[4]))
+	assert.True(t, bond2to3.equal(allBonds[5]))
 
 	// delete a record
 	keeper.removeDelegatorBond(ctx, bond2to3)
@@ -170,8 +170,8 @@ func TestBond(t *testing.T) {
 	assert.False(t, found)
 	resBonds = keeper.GetDelegatorBonds(ctx, addrDels[1], 5)
 	require.Equal(t, 2, len(resBonds))
-	assert.True(t, bondsEqual(bond2to1, resBonds[0]))
-	assert.True(t, bondsEqual(bond2to2, resBonds[1]))
+	assert.True(t, bond2to1.equal(resBonds[0]))
+	assert.True(t, bond2to2.equal(resBonds[1]))
 
 	// delete all the records from delegator 2
 	keeper.removeDelegatorBond(ctx, bond2to1)
@@ -443,8 +443,8 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	require.Equal(t, 2, len(candidates))
 	assert.Equal(t, candidates[0].validator().abciValidator(keeper.cdc), acc[0])
 	assert.Equal(t, candidates[1].validator().abciValidator(keeper.cdc), acc[1])
-	assert.True(t, validatorsEqual(candidates[0].validator(), vals[1]))
-	assert.True(t, validatorsEqual(candidates[1].validator(), vals[0]))
+	assert.True(t, candidates[0].validator().equal(vals[1]))
+	assert.True(t, candidates[1].validator().equal(vals[0]))
 
 	// test identical,
 	//  candidate set: {c1, c3} -> {c1, c3}
@@ -637,10 +637,10 @@ func TestIsRecentValidator(t *testing.T) {
 	keeper.setCandidate(ctx, candidatesIn[1])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, 2, len(validators))
-	assert.True(t, validatorsEqual(candidatesIn[0].validator(), validators[0]))
+	assert.True(t, candidatesIn[0].validator().equal(validators[0]))
 	c1ValWithCounter := candidatesIn[1].validator()
 	c1ValWithCounter.Counter = int16(1)
-	assert.True(t, validatorsEqual(c1ValWithCounter, validators[1]))
+	assert.True(t, c1ValWithCounter.equal(validators[1]))
 
 	// test a basic retrieve of something that should be a recent validator
 	assert.True(t, keeper.IsRecentValidator(ctx, candidatesIn[0].Address))

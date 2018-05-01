@@ -1,14 +1,35 @@
 # Changelog
 
-## UNRELEASED
-
-FEATURES
-
-* Context now has access to the application-configured logger
+## 0.16.0 (TBD)
 
 BREAKING CHANGES
 
+* Move module REST/CLI packages to x/[module]/client/rest and x/[module]/client/cli
+* Gaia simple-staking bond and unbond functions replaced 
+* [stake] Delegator bonds now store the height at which they were updated
+* All module keepers now require a codespace, see basecoin or democoin for usage
+* Many changes to names throughout 
+  * Type as a prefix naming convention applied (ex. BondMsg -> MsgBond) 
+  * Removed redundancy in names (ex. stake.StakeKeeper -> stake.Keeper)
+* Removed SealedAccountMapper
+* gaiad init now requires use of `--name` flag 
+* Removed Get from Msg interface
 * types/rational now extends big.Rat
+
+FEATURES:
+
+* Gaia stake commands include, DeclareCandidacy, EditCandidacy, Delegate, Unbond
+* MountStoreWithDB without providing a custom store works.
+* Repo is now lint compliant / GoMetaLinter with tendermint-lint integrated into CI
+* Better key output, pubkey go-amino hex bytes now output by default
+* gaiad init overhaul
+  * Create genesis transactions with `gaiad init gen-tx` 
+  * New genesis account keys are automatically added to the client keybase (introduce `--client-home` flag)
+  * Initialize with genesis txs using `--gen-txs` flag
+* Context now has access to the application-configured logger
+
+BUG FIXES
+* Gaia now uses stake, ported from github.com/cosmos/gaia
 
 ## 0.15.1 (April 29, 2018)
 
@@ -18,38 +39,26 @@ IMPROVEMENTS:
 
 ## 0.15.0 (April 29, 2018)
 
+NOTE: v0.15.0 is a large breaking change that updates the encoding scheme to use
+[Amino](github.com/tendermint/go-amino). 
+
+For details on how this changes encoding for public keys and addresses,
+see the [docs](https://github.com/tendermint/tendermint/blob/v0.19.1/docs/specification/new-spec/encoding.md#public-key-cryptography).
+
+BREAKING CHANGES
+
+* Remove go-wire, use go-amino
+* [store] Add `SubspaceIterator` and `ReverseSubspaceIterator` to `KVStore` interface
+* [basecoin] NewBasecoinApp takes a `dbm.DB` and uses namespaced DBs for substores
+
 FEATURES:
 
 * Add CacheContext
 * Add auto sequencing to client
 * Add FeeHandler to ante handler
-* Gaia stake commands include, DeclareCandidacy, EditCandidacy, Delegate, Unbond
-* MountStoreWithDB without providing a custom store works.
-* Repo is now lint compliant / GoMetaLinter with tendermint-lint integrated into CI
-* Better key output, pubkey go-amino hex bytes now output by default
-* gaiad init overhaul
-  * Create genesis transactions with `gaiad init gen-tx` 
-  * New genesis account keys are automatically added to the client keybase (introduce `--client-home` flag)
-  * Initialize with genesis txs using `--gen-txs` flag
-
-BREAKING CHANGES
-
-* Remove go-wire, use go-amino
-* Move module REST/CLI packages to x/[module]/client/rest and x/[module]/client/cli
-* Gaia simple-staking bond and unbond functions replaced 
-* [stake] Delegator bonds now store the height at which they were updated
-* [store] Add `SubspaceIterator` and `ReverseSubspaceIterator` to `KVStore` interface
-* [basecoin] NewBasecoinApp takes a `dbm.DB` and uses namespaced DBs for substores
-* All module keepers now require a codespace, see basecoin or democoin for usage
-* Many changes to names throughout 
-  * Type as a prefix naming convention applied (ex. BondMsg -> MsgBond) 
-  * Removed redundancy in names (ex. stake.StakeKeeper -> stake.Keeper)
-* Removed SealedAccountMapper
-* gaiad init now requires use of `--name` flag 
-* Removed Get from Msg interface
 
 BUG FIXES
-* Gaia now uses stake, ported from github.com/cosmos/gaia
+* MountStoreWithDB without providing a custom store works.
 
 ## 0.14.1 (April 9, 2018)
 

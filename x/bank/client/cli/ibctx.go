@@ -7,24 +7,21 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 const (
-	flagTo     = "to"
-	flagAmount = "amount"
-	flagChain  = "chain"
+	flagChain = "chain"
 )
 
-// IBC transfer command
-func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
+// IBC send command
+func IBCSendCmd(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "transfer",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -73,11 +70,15 @@ func buildMsg(from sdk.Address) (sdk.Msg, error) {
 	}
 	to := sdk.Address(bz)
 
-	packet := ibc.NewIBCPacket(from, to, coins, viper.GetString(client.FlagChainID),
-		viper.GetString(flagChain))
+	payload := bank.SendPayload{
+		SrcAddr:  from,
+		DestAddr: to,
+		Coins:    coins,
+	}
 
-	msg := ibc.IBCTransferMsg{
-		IBCPacket: packet,
+	msg := bank.IBCSendMsg{
+		DestChain:   viper.GetString(flagChain),
+		SendPayload: payload,
 	}
 
 	return msg, nil

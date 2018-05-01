@@ -12,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	abci "github.com/tendermint/abci/types"
@@ -321,6 +320,7 @@ func TestMsgSendDependent(t *testing.T) {
 	CheckBalance(t, gapp, addr1, "42foocoin")
 }
 
+/*
 func TestIBCMsgs(t *testing.T) {
 	gapp := newGaiaApp()
 
@@ -365,7 +365,7 @@ func TestIBCMsgs(t *testing.T) {
 	CheckBalance(t, gapp, addr1, "10foocoin")
 	SignCheckDeliver(t, gapp, receiveMsg, []int64{3}, false, priv1)
 }
-
+*/
 func TestStakeMsgs(t *testing.T) {
 	gapp := newGaiaApp()
 

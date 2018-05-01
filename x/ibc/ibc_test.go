@@ -12,17 +12,18 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 // AccountMapper(/Keeper) and IBCMapper should use different StoreKey later
 
-func defaultContext(key sdk.StoreKey) sdk.Context {
+func defaultContext(keys ...sdk.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
+	for _, key := range keys {
+		cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
+	}
 	cms.LoadLatestVersion()
 	ctx := sdk.NewContext(cms, abci.Header{}, false, nil, log.NewNopLogger())
 	return ctx
@@ -32,9 +33,54 @@ func newAddress() crypto.Address {
 	return crypto.GenPrivKeyEd25519().PubKey().Address()
 }
 
-func getCoins(ck bank.Keeper, ctx sdk.Context, addr crypto.Address) (sdk.Coins, sdk.Error) {
-	zero := sdk.Coins(nil)
-	return ck.AddCoins(ctx, addr, zero)
+type remoteSavePayload struct {
+	key   []byte
+	value []byte
+}
+
+func (p remoteSavePayload) Type() string {
+	return "remote"
+}
+
+func (p remoteSavePayload) ValidateBasic() sdk.Error {
+	return nil
+}
+
+type remoteSaveFailPayload struct {
+	remoteSavePayload
+}
+
+func (p remoteSaveFailPayload) Type() string {
+	return "remote"
+}
+
+func (p remoteSaveFailPayload) ValidateBasic() sdk.Error {
+	return nil
+}
+
+type remoteSaveMsg struct {
+	payload   remoteSavePayload
+	destChain string
+}
+
+func (msg remoteSaveMsg) Get(key interface{}) interface{} {
+	return nil
+}
+
+func (msg remoteSaveMsg) GetSignBytes() []byte {
+	return nil
+}
+
+func (msg remoteSaveMsg) GetSigners() []sdk.Address {
+	return []sdk.Address{}
+}
+
+func (msg remoteSaveMsg) Type() string {
+	return "remote"
+}
+
+func (msg remoteSaveMsg) ValidateBasic() sdk.Error {
+	return nil
 }
 
 func makeCodec() *wire.Codec {
@@ -42,92 +88,167 @@ func makeCodec() *wire.Codec {
 
 	// Register Msgs
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	cdc.RegisterConcrete(bank.MsgSend{}, "test/ibc/Send", nil)
-	cdc.RegisterConcrete(bank.MsgIssue{}, "test/ibc/Issue", nil)
-	cdc.RegisterConcrete(IBCTransferMsg{}, "test/ibc/IBCTransferMsg", nil)
-	cdc.RegisterConcrete(IBCReceiveMsg{}, "test/ibc/IBCReceiveMsg", nil)
+	cdc.RegisterConcrete(remoteSaveMsg{}, "test/remote/remoteSave", nil)
+	cdc.RegisterConcrete(ReceiveMsg{}, "test/ibc/Receive", nil)
 
-	// Register AppAccount
-	cdc.RegisterInterface((*sdk.Account)(nil), nil)
-	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/ibc/Account", nil)
-	wire.RegisterCrypto(cdc)
+	// Register Payloads
+	cdc.RegisterInterface((*Payload)(nil), nil)
+	cdc.RegisterConcrete(remoteSavePayload{}, "test/payload/remoteSave", nil)
+	cdc.RegisterConcrete(remoteSaveFailPayload{}, "test/payload/remoteSaveFail", nil)
 
 	return cdc
+
+}
+
+func remoteSaveHandler(ibcc Channel, key sdk.StoreKey) sdk.Handler {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		switch msg := msg.(type) {
+		case remoteSaveMsg:
+			return handleRemoteSaveMsg(ctx, ibcc, msg)
+		case ReceiveMsg:
+			return ibcc.Receive(func(ctx sdk.Context, p Payload) (Payload, sdk.Error) {
+				switch p := p.(type) {
+				case remoteSavePayload:
+					return handleRemoteSavePayload(ctx, key, p)
+				default:
+					return nil, sdk.ErrUnknownRequest("")
+				}
+			}, ctx, msg)
+		case ReceiptMsg:
+			return ibcc.Receipt(func(ctx sdk.Context, p Payload) {
+				switch p := p.(type) {
+				case remoteSaveFailPayload:
+					handleRemoteSaveFailPayload(ctx, key, p)
+				default:
+					sdk.ErrUnknownRequest("")
+				}
+			}, ctx, msg)
+
+		default:
+			return sdk.ErrUnknownRequest("").Result()
+		}
+	}
+}
+
+func handleRemoteSaveMsg(ctx sdk.Context, ibcc Channel, msg remoteSaveMsg) sdk.Result {
+	ibcc.Send(ctx, msg.payload, msg.destChain)
+	return sdk.Result{}
+}
+
+func handleRemoteSavePayload(ctx sdk.Context, key sdk.StoreKey, p remoteSavePayload) (Payload, sdk.Error) {
+	store := ctx.KVStore(key)
+	if store.Has(p.key) {
+		return remoteSaveFailPayload{p}, sdk.NewError(testCodespace, 1000, "Key already exists")
+	}
+	store.Set(p.key, p.value)
+	return nil, nil
+}
+
+func handleRemoteSaveFailPayload(ctx sdk.Context, key sdk.StoreKey, p remoteSaveFailPayload) {
+	return
 }
 
 func TestIBC(t *testing.T) {
 	cdc := makeCodec()
 
-	key := sdk.NewKVStoreKey("ibc")
-	ctx := defaultContext(key)
+	ibckey := sdk.NewKVStoreKey("ibc")
+	key := sdk.NewKVStoreKey("remote")
+	ctx := defaultContext(ibckey, key)
+	chainid := ctx.ChainID()
 
-	am := auth.NewAccountMapper(cdc, key, &auth.BaseAccount{})
-	ck := bank.NewKeeper(am)
+	keeper := NewKeeper(cdc, key, DefaultCodespace)
+	ibch := NewHandler(keeper)
+	h := remoteSaveHandler(keeper.Channel("remote"), key)
 
-	src := newAddress()
-	dest := newAddress()
-	chainid := "ibcchain"
-	zero := sdk.Coins(nil)
-	mycoins := sdk.Coins{sdk.Coin{"mycoin", 10}}
+	payload := remoteSavePayload{
+		key:   []byte("hello"),
+		value: []byte("world"),
+	}
 
-	coins, err := ck.AddCoins(ctx, src, mycoins)
-	assert.Nil(t, err)
-	assert.Equal(t, mycoins, coins)
+	saveMsg := remoteSaveMsg{
+		payload:   payload,
+		destChain: chainid,
+	}
 
-	ibcm := NewMapper(cdc, key, DefaultCodespace)
-	h := NewHandler(ibcm, ck)
-	packet := IBCPacket{
-		SrcAddr:   src,
-		DestAddr:  dest,
-		Coins:     mycoins,
+	var res sdk.Result
+
+	res = h(ctx, saveMsg)
+	assert.True(t, res.IsOK())
+
+	packet := Packet{
+		Payload:   payload,
 		SrcChain:  chainid,
 		DestChain: chainid,
 	}
 
+	receiveMsg := ReceiveMsg{
+		Packet: packet,
+		PacketProof: PacketProof{
+			Sequence: 0,
+		},
+		Relayer: newAddress(),
+	}
+
+	res = h(ctx, receiveMsg)
+	assert.True(t, res.IsOK())
+
 	store := ctx.KVStore(key)
+	val := store.Get(payload.key)
+	assert.Equal(t, payload.value, val)
 
-	var msg sdk.Msg
-	var res sdk.Result
-	var egl int64
-	var igs int64
-
-	egl = ibcm.getEgressLength(store, chainid)
-	assert.Equal(t, egl, int64(0))
-
-	msg = IBCTransferMsg{
-		IBCPacket: packet,
-	}
-	res = h(ctx, msg)
-	assert.True(t, res.IsOK())
-
-	coins, err = getCoins(ck, ctx, src)
-	assert.Nil(t, err)
-	assert.Equal(t, zero, coins)
-
-	egl = ibcm.getEgressLength(store, chainid)
-	assert.Equal(t, egl, int64(1))
-
-	igs = ibcm.GetIngressSequence(ctx, chainid)
-	assert.Equal(t, igs, int64(0))
-
-	msg = IBCReceiveMsg{
-		IBCPacket: packet,
-		Relayer:   src,
-		Sequence:  0,
-	}
-	res = h(ctx, msg)
-	assert.True(t, res.IsOK())
-
-	coins, err = getCoins(ck, ctx, dest)
-	assert.Nil(t, err)
-	assert.Equal(t, mycoins, coins)
-
-	igs = ibcm.GetIngressSequence(ctx, chainid)
-	assert.Equal(t, igs, int64(1))
-
-	res = h(ctx, msg)
+	res = h(ctx, receiveMsg)
 	assert.False(t, res.IsOK())
 
-	igs = ibcm.GetIngressSequence(ctx, chainid)
-	assert.Equal(t, igs, int64(1))
+	res = h(ctx, saveMsg)
+	assert.True(t, res.IsOK())
+
+	receiveMsg = ReceiveMsg{
+		Packet: packet,
+		PacketProof: PacketProof{
+			Sequence: 1,
+		},
+		Relayer: newAddress(),
+	}
+
+	res = h(ctx, receiveMsg)
+	assert.True(t, res.IsOK())
+
+	packet.Payload = remoteSaveFailPayload{payload}
+
+	receiptMsg := ReceiptMsg{
+		Packet: packet,
+		PacketProof: PacketProof{
+			Sequence: 0,
+		},
+		Relayer: newAddress(),
+	}
+
+	res = h(ctx, receiptMsg)
+	assert.True(t, res.IsOK())
+
+	receiveCleanupMsg := ReceiveCleanupMsg{
+		Sequence:     2,
+		SrcChain:     chainid,
+		CleanupProof: CleanupProof{},
+		Cleaner:      newAddress(),
+	}
+
+	res = ibch(ctx, receiveCleanupMsg)
+	assert.True(t, res.IsOK())
+
+	receiptCleanupMsg := ReceiptCleanupMsg{
+		Sequence:     1,
+		SrcChain:     chainid,
+		CleanupProof: CleanupProof{},
+		Cleaner:      newAddress(),
+	}
+
+	res = ibch(ctx, receiptCleanupMsg)
+	assert.True(t, res.IsOK())
+
+	/*
+		unknownMsg := sdk.NewTestMsg(newAddress())
+		res = ibch(ctx, unknownMsg)
+		assert.False(t, res.IsOK())
+	*/
 }

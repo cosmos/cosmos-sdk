@@ -40,9 +40,9 @@ type DemocoinApp struct {
 
 	// keepers
 	coinKeeper  bank.Keeper
+	bankChannel ibc.Channel
 	coolKeeper  cool.Keeper
 	powKeeper   pow.Keeper
-	ibcMapper   ibc.Mapper
 	stakeKeeper simplestake.Keeper
 
 	// Manage getting and setting accounts
@@ -73,17 +73,19 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	)
 
 	// Add handlers.
+
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.coolKeeper = cool.NewKeeper(app.capKeyMainStore, app.coinKeeper, app.RegisterCodespace(cool.DefaultCodespace))
 	app.powKeeper = pow.NewKeeper(app.capKeyPowStore, pow.NewConfig("pow", int64(1)), app.coinKeeper, app.RegisterCodespace(pow.DefaultCodespace))
-	app.ibcMapper = ibc.NewMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
+	keeper := ibc.NewKeeper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
+	app.bankChannel = keeper.Channel("bank")
 	app.stakeKeeper = simplestake.NewKeeper(app.capKeyStakingStore, app.coinKeeper, app.RegisterCodespace(simplestake.DefaultCodespace))
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
+		AddRoute("bank", bank.NewHandler(app.coinKeeper, app.bankChannel)).
 		AddRoute("cool", cool.NewHandler(app.coolKeeper)).
 		AddRoute("pow", app.powKeeper.Handler).
 		AddRoute("sketchy", sketchy.NewHandler()).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+		AddRoute("ibc", ibc.NewHandler(keeper)).
 		AddRoute("simplestake", simplestake.NewHandler(app.stakeKeeper))
 
 	// Initialize BaseApp.
@@ -100,6 +102,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 // custom tx codec
 func MakeCodec() *wire.Codec {
 	var cdc = wire.NewCodec()
+
 	wire.RegisterCrypto(cdc) // Register crypto.
 	sdk.RegisterWire(cdc)    // Register Msgs
 	cool.RegisterWire(cdc)

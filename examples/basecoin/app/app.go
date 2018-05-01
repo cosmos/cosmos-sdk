@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
@@ -37,7 +38,7 @@ type BasecoinApp struct {
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
 	coinKeeper    bank.Keeper
-	ibcMapper     ibc.Mapper
+	bankChannel   ibc.Channel
 	stakeKeeper   stake.Keeper
 }
 
@@ -65,13 +66,14 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// add accountMapper/handlers
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
-	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
+	keeper := ibc.NewKeeper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
+	app.bankChannel = keeper.Channel("bank")
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 
 	// register message routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+		AddRoute("bank", bank.NewHandler(app.coinKeeper, app.bankChannel)).
+		AddRoute("ibc", ibc.NewHandler(keeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
 
 	// Initialize BaseApp.

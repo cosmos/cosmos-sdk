@@ -127,6 +127,7 @@ const (
 	contextKeyIsCheckTx
 	contextKeyTxBytes
 	contextKeyLogger
+	contextKeyAbsentValidators
 )
 
 // NOTE: Do not expose MultiStore.
@@ -155,6 +156,9 @@ func (c Context) TxBytes() []byte {
 func (c Context) Logger() log.Logger {
 	return c.Value(contextKeyLogger).(log.Logger)
 }
+func (c Context) AbsentValidators() []int32 {
+	return c.Value(contextKeyAbsentValidators).([]int32)
+}
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	return c.withValue(contextKeyMultiStore, ms)
 }
@@ -176,6 +180,9 @@ func (c Context) WithTxBytes(txBytes []byte) Context {
 }
 func (c Context) WithLogger(logger log.Logger) Context {
 	return c.withValue(contextKeyLogger, logger)
+}
+func (c Context) WithAbsentValidators(AbsentValidators []int32) Context {
+	return c.withValue(contextKeyAbsentValidators, AbsentValidators)
 }
 
 // Cache the multistore and return a new cached context. The cached context is

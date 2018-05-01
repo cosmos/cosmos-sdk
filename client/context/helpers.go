@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
-	ledger "github.com/zondax/ledger-goclient"
 )
 
 // Broadcast the transaction bytes to Tendermint
@@ -84,39 +83,23 @@ func (ctx CoreContext) query(key cmn.HexBytes, storeName, endPath string) (res [
 // Get the from address from the name flag
 func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 
-	// TODO testing only!
-	if ctx.FromAddressName == "ledger" {
-		device, err := ledger.FindLedger()
-
-		if err != nil {
-			return nil, err
-		}
-
-		pubkeyBytes, err := device.GetPublicKey()
-		if err != nil {
-			return nil, err
-		}
-
-		return pubkeyBytes, nil
-
-	} else {
-		keybase, err := keys.GetKeyBase()
-		if err != nil {
-			return nil, err
-		}
-
-		name := ctx.FromAddressName
-		if name == "" {
-			return nil, errors.Errorf("must provide a from address name")
-		}
-
-		info, err := keybase.Get(name)
-		if err != nil {
-			return nil, errors.Errorf("No key for: %s", name)
-		}
-
-		return info.PubKey.Address(), nil
+	keybase, err := keys.GetKeyBase()
+	if err != nil {
+		return nil, err
 	}
+
+	name := ctx.FromAddressName
+	if name == "" {
+		return nil, errors.Errorf("must provide a from address name")
+	}
+
+	info, err := keybase.Get(name)
+	if err != nil {
+		return nil, errors.Errorf("No key for: %s", name)
+	}
+
+	return info.PubKey.Address(), nil
+
 }
 
 // sign and build the transaction from the msg
@@ -159,58 +142,6 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 	return cdc.MarshalBinary(tx)
 }
 
-// sign and build the transaction from the msg, using ledger
-func (ctx CoreContext) SignAndBuildLedger(msg sdk.Msg, cdc *wire.Codec) ([]byte, error) {
-	// build the Sign Messsage from the Standard Message
-	chainID := ctx.ChainID
-	if chainID == "" {
-		return nil, errors.Errorf("Chain ID required but not specified")
-	}
-	sequence := ctx.Sequence
-	signMsg := sdk.StdSignMsg{
-		ChainID:   chainID,
-		Sequences: []int64{sequence},
-		Msg:       msg,
-	}
-
-	device, err := ledger.FindLedger()
-	if err != nil {
-		return nil, err
-	}
-
-	// sign and build
-	bz := signMsg.Bytes()
-
-	fmt.Printf("Bytes: %s\n", bz)
-
-	sigBytes, err := device.Sign(bz)
-	if err != nil {
-		return nil, err
-	}
-	pubkeyBytes, err := device.GetPublicKey()
-	if err != nil {
-		return nil, err
-	}
-
-	var pk crypto.PubKeySecp256k1
-	copy(pk[:], pubkeyBytes)
-
-	var sg crypto.SignatureSecp256k1
-	copy(sg[:], sigBytes)
-
-	sigs := []sdk.StdSignature{{
-		PubKey:    pk,
-		Signature: sg,
-		Sequence:  sequence,
-	}}
-
-	// marshal bytes
-	tx := sdk.NewStdTx(signMsg.Msg, signMsg.Fee, sigs)
-
-	return cdc.MarshalBinary(tx)
-
-}
-
 // sign and build the transaction from the msg
 func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
 
@@ -222,22 +153,14 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *w
 
 	var txBytes []byte
 
-	// TODO testing only!
-	if name == "ledger" {
-		txBytes, err = ctx.SignAndBuildLedger(msg, cdc)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		passphrase, err := ctx.GetPassphraseFromStdin(name)
-		if err != nil {
-			return nil, err
-		}
+	passphrase, err := ctx.GetPassphraseFromStdin(name)
+	if err != nil {
+		return nil, err
+	}
 
-		txBytes, err = ctx.SignAndBuild(name, passphrase, msg, cdc)
-		if err != nil {
-			return nil, err
-		}
+	txBytes, err = ctx.SignAndBuild(name, passphrase, msg, cdc)
+	if err != nil {
+		return nil, err
 	}
 
 	return ctx.BroadcastTx(txBytes)

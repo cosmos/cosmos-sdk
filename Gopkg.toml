@@ -56,9 +56,9 @@
   name = "github.com/tendermint/abci"
   version = "~0.10.3"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/go-crypto"
-  version = "~0.6.2"
+  revision = "0dedde18c9ea52e72a155e921b368fcbed9cadfb"
 
 [[constraint]]
   name = "github.com/tendermint/go-amino"
@@ -80,10 +80,6 @@
 [[override]]
   name = "google.golang.org/genproto"
   revision = "7fd901a49ba6a7f87732eb344f6e3c5b19d1b200"
-
-[[constraint]]
-  name = "github.com/zondax/ledger-goclient"
-  branch = "master"
 
 [prune]
   go-tests = true

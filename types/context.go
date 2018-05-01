@@ -129,6 +129,7 @@ const (
 	contextKeyTxBytes
 	contextKeyLogger
 	contextKeyGasMeter
+	contextKeyAbsentValidators
 )
 
 // NOTE: Do not expose MultiStore.
@@ -160,6 +161,9 @@ func (c Context) Logger() log.Logger {
 func (c Context) GasMeter() GasMeter {
 	return c.Value(contextKeyGasMeter).(GasMeter)
 }
+func (c Context) AbsentValidators() []int32 {
+	return c.Value(contextKeyAbsentValidators).([]int32)
+}
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	return c.withValue(contextKeyMultiStore, ms)
 }
@@ -184,6 +188,9 @@ func (c Context) WithLogger(logger log.Logger) Context {
 }
 func (c Context) WithGasMeter(meter GasMeter) Context {
 	return c.withValue(contextKeyGasMeter, meter)
+}
+func (c Context) WithAbsentValidators(AbsentValidators []int32) Context {
+	return c.withValue(contextKeyAbsentValidators, AbsentValidators)
 }
 
 // Cache the multistore and return a new cached context. The cached context is

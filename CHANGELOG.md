@@ -2,6 +2,10 @@
 
 ## UNRELEASED
 
+FEATURES
+
+* Context now has access to the application-configured logger
+
 BREAKING CHANGES
 
 * types/rational now extends big.Rat

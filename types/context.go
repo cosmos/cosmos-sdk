@@ -7,9 +7,8 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/tmlibs/log"
 )
-
-// TODO: Add a default logger.
 
 /*
 The intent of Context is for it to be an immutable object that can be
@@ -31,7 +30,7 @@ type Context struct {
 }
 
 // create a new context
-func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byte) Context {
+func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byte, logger log.Logger) Context {
 	c := Context{
 		Context: context.Background(),
 		pst:     newThePast(),
@@ -43,6 +42,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byt
 	c = c.WithChainID(header.ChainID)
 	c = c.WithIsCheckTx(isCheckTx)
 	c = c.WithTxBytes(txBytes)
+	c = c.WithLogger(logger)
 	return c
 }
 
@@ -126,6 +126,7 @@ const (
 	contextKeyChainID
 	contextKeyIsCheckTx
 	contextKeyTxBytes
+	contextKeyLogger
 )
 
 // NOTE: Do not expose MultiStore.
@@ -151,6 +152,9 @@ func (c Context) IsCheckTx() bool {
 func (c Context) TxBytes() []byte {
 	return c.Value(contextKeyTxBytes).([]byte)
 }
+func (c Context) Logger() log.Logger {
+	return c.Value(contextKeyLogger).(log.Logger)
+}
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	return c.withValue(contextKeyMultiStore, ms)
 }
@@ -169,6 +173,9 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 }
 func (c Context) WithTxBytes(txBytes []byte) Context {
 	return c.withValue(contextKeyTxBytes, txBytes)
+}
+func (c Context) WithLogger(logger log.Logger) Context {
+	return c.withValue(contextKeyLogger, logger)
 }
 
 // Cache the multistore and return a new cached context. The cached context is

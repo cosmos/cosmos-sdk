@@ -44,5 +44,4 @@ IBC was first outlined in the [Cosmos Whitepaper](https://github.com/cosmos/cosm
     1. [Appendix B: IBC Queue Format](appendices.md#appendix-b-ibc-queue-format)
     1. [Appendix C: Merkle Proof Format](appendices.md#appendix-c-merkle-proof-formats)
     1. [Appendix D: Byzantine Recovery Strategies](appendices.md#appendix-d-byzantine-recovery-strategies)
-    1. [Appendix E: Universal IBC Packets](appendices.md#appendix-e-universal-ibc-packets)
-    1. [Appendix F: Tendermint Header Proofs](appendices.md#appendix-f-tendermint-header-proofs)
+    1. [Appendix E: Tendermint Header Proofs](appendices.md#appendix-e-tendermint-header-proofs)

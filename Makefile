@@ -2,7 +2,7 @@ PACKAGES=$(shell go list ./... | grep -v '/vendor/')
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
 BUILD_FLAGS = -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
 
-all: check_tools get_vendor_deps build build_examples install install_examples test
+all: check_tools get_vendor_deps build build_examples install install_examples test_nocli
 
 ########################################
 ### CI

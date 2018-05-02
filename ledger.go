@@ -18,21 +18,25 @@ func getLedger() (*ledger.Ledger, error) {
 	return device, err
 }
 
-func signLedger(device *ledger.Ledger, msg []byte) (pub PubKey, sig Signature, err error) {
-	bsig, err := device.Sign(msg)
-	if err != nil {
-		return pub, sig, err
-	}
-	sig = SignatureSecp256k1FromBytes(bsig)
+func pubkeyLedger(device *ledger.Ledger) (pub PubKey, err error) {
 	key, err := device.GetPublicKey()
 	if err != nil {
-		return pub, sig, err
+		return pub, err
 	}
 	var p PubKeySecp256k1
 	// Reserialize in the 33-byte compressed format
 	cmp, err := secp256k1.ParsePubKey(key[:], secp256k1.S256())
 	copy(p[:], cmp.SerializeCompressed())
-	return p, sig, nil
+	return pub, err
+}
+
+func signLedger(device *ledger.Ledger, msg []byte) (sig Signature, err error) {
+	bsig, err := device.Sign(msg)
+	if err != nil {
+		return sig, err
+	}
+	sig = SignatureSecp256k1FromBytes(bsig)
+	return sig, nil
 }
 
 // PrivKeyLedgerSecp256k1 implements PrivKey, calling the ledger nano
@@ -66,7 +70,7 @@ func (pk PrivKeyLedgerSecp256k1) ValidateKey() error {
 	}
 	// verify this matches cached address
 	if !pub.Equals(pk.CachedPubKey) {
-		return errors.New("ledger doesn't match cached key")
+		return errors.New("Cached key does not match retrieved key")
 	}
 	return nil
 }
@@ -98,7 +102,12 @@ func (pk PrivKeyLedgerSecp256k1) Sign(msg []byte) Signature {
 		panic(err)
 	}
 
-	pub, sig, err := signLedger(dev, msg)
+	sig, err := signLedger(dev, msg)
+	if err != nil {
+		panic(err)
+	}
+
+	pub, err := pubkeyLedger(dev)
 	if err != nil {
 		panic(err)
 	}
@@ -107,7 +116,7 @@ func (pk PrivKeyLedgerSecp256k1) Sign(msg []byte) Signature {
 	if pk.CachedPubKey == nil {
 		pk.CachedPubKey = pub
 	} else if !pk.CachedPubKey.Equals(pub) {
-		panic("signed with a different key than stored")
+		panic("Stored key does not match signing key")
 	}
 	return sig
 }
@@ -138,11 +147,11 @@ func (pk PrivKeyLedgerSecp256k1) getPubKey() (key PubKey, err error) {
 func (pk PrivKeyLedgerSecp256k1) forceGetPubKey() (key PubKey, err error) {
 	dev, err := getLedger()
 	if err != nil {
-		return key, errors.New("Can't connect to ledger device")
+		return key, errors.New("Cannot connect to Ledger device")
 	}
-	key, _, err = signLedger(dev, []byte{0})
+	key, err = pubkeyLedger(dev)
 	if err != nil {
-		return key, errors.New("Please open cosmos app on the ledger")
+		return key, errors.New("Please open Cosmos app on the Ledger device")
 	}
 	return key, err
 }

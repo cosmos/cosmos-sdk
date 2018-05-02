@@ -547,13 +547,6 @@ func (k Keeper) GetByIndex(ctx sdk.Context, index int) *sdk.Validator {
 }
 
 func (k Keeper) TotalPower(ctx sdk.Context) sdk.Rat {
-	valset := k.GetValidators(ctx)
-
-	res := sdk.ZeroRat
-
-	for _, v := range valset {
-		res = res.Add(v.Power)
-	}
-
-	return res
+	pool := k.GetPool(ctx)
+	return pool.BondedShares
 }

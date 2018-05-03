@@ -2,6 +2,11 @@
 
 ## 0.18.0 (TBD)
 
+BREAKING CHANGES
+
+* Queries against the store must be prefixed with the path "/store"
+* RecentValidator store now take pubkey instead of address, is sorted like Tendermint by pk's address
+
 FEATURES
 
 * [x/auth] Added ability to change pubkey to auth module
@@ -53,7 +58,6 @@ BREAKING CHANGES
 * gaiad init now requires use of `--name` flag 
 * Removed Get from Msg interface
 * types/rational now extends big.Rat
-* Queries against the store must be prefixed with the path "/store"
 
 FEATURES:
 

@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	abci "github.com/tendermint/abci/types"
+	crypto "github.com/tendermint/go-crypto"
 )
 
 // keeper of the staking store
@@ -41,20 +42,14 @@ func (k Keeper) getCounter(ctx sdk.Context) int16 {
 		return 0
 	}
 	var counter int16
-	err := k.cdc.UnmarshalBinary(b, &counter)
-	if err != nil {
-		panic(err)
-	}
+	k.cdc.MustUnmarshalBinary(b, &counter)
 	return counter
 }
 
 // set the current in-block validator operation counter
 func (k Keeper) setCounter(ctx sdk.Context, counter int16) {
 	store := ctx.KVStore(k.storeKey)
-	bz, err := k.cdc.MarshalBinary(counter)
-	if err != nil {
-		panic(err)
-	}
+	bz := k.cdc.MustMarshalBinary(counter)
 	store.Set(CounterKey, bz)
 }
 
@@ -67,10 +62,7 @@ func (k Keeper) GetCandidate(ctx sdk.Context, addr sdk.Address) (candidate Candi
 	if b == nil {
 		return candidate, false
 	}
-	err := k.cdc.UnmarshalBinary(b, &candidate)
-	if err != nil {
-		panic(err)
-	}
+	k.cdc.MustUnmarshalBinary(b, &candidate)
 	return candidate, true
 }
 
@@ -88,10 +80,7 @@ func (k Keeper) GetCandidates(ctx sdk.Context, maxRetrieve int16) (candidates Ca
 		}
 		bz := iterator.Value()
 		var candidate Candidate
-		err := k.cdc.UnmarshalBinary(bz, &candidate)
-		if err != nil {
-			panic(err)
-		}
+		k.cdc.MustUnmarshalBinary(bz, &candidate)
 		candidates[i] = candidate
 		iterator.Next()
 	}
@@ -112,11 +101,8 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	}
 
 	// marshal the candidate record and add to the state
-	bz, err := k.cdc.MarshalBinary(candidate)
-	if err != nil {
-		panic(err)
-	}
-	store.Set(GetCandidateKey(candidate.Address), bz)
+	bz := k.cdc.MustMarshalBinary(candidate)
+	store.Set(GetCandidateKey(address), bz)
 
 	// if the voting power is the same no need to update any of the other indexes
 	if oldFound && oldCandidate.Assets.Equal(candidate.Assets) {
@@ -127,7 +113,7 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 
 	// update the list ordered by voting power
 	if oldFound {
-		if !k.isNewValidator(ctx, store, candidate.Address) {
+		if !k.isNewValidator(ctx, store, address) {
 			updateHeight = true
 		}
 		// else already in the validator set - retain the old validator height and counter
@@ -145,37 +131,28 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	}
 
 	// update the candidate record
-	bz, err = k.cdc.MarshalBinary(candidate)
-	if err != nil {
-		panic(err)
-	}
-	store.Set(GetCandidateKey(candidate.Address), bz)
+	bz = k.cdc.MustMarshalBinary(candidate)
+	store.Set(GetCandidateKey(address), bz)
 
 	// marshal the new validator record
 	validator := candidate.validator()
-	bz, err = k.cdc.MarshalBinary(validator)
-	if err != nil {
-		panic(err)
-	}
-
+	bz = k.cdc.MustMarshalBinary(validator)
 	store.Set(GetValidatorKey(address, validator.Power, validator.Height, validator.Counter, k.cdc), bz)
 
 	// add to the validators to update list if is already a validator
 	// or is a new validator
 	setAcc := false
-	if store.Get(GetRecentValidatorKey(address)) != nil {
+	if store.Get(GetRecentValidatorKey(candidate.PubKey)) != nil {
 		setAcc = true
 
 		// want to check in the else statement because inefficient
 	} else if k.isNewValidator(ctx, store, address) {
 		setAcc = true
 	}
+
 	if setAcc {
-		bz, err = k.cdc.MarshalBinary(validator.abciValidator(k.cdc))
-		if err != nil {
-			panic(err)
-		}
-		store.Set(GetAccUpdateValidatorKey(validator.Address), bz)
+		bz = k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
+		store.Set(GetAccUpdateValidatorKey(address), bz)
 
 	}
 
@@ -197,15 +174,12 @@ func (k Keeper) removeCandidate(ctx sdk.Context, address sdk.Address) {
 
 	// delete from recent and power weighted validator groups if the validator
 	// exists and add validator with zero power to the validator updates
-	if store.Get(GetRecentValidatorKey(address)) == nil {
+	if store.Get(GetRecentValidatorKey(candidate.PubKey)) == nil {
 		return
 	}
-	bz, err := k.cdc.MarshalBinary(candidate.validator().abciValidatorZero(k.cdc))
-	if err != nil {
-		panic(err)
-	}
+	bz := k.cdc.MustMarshalBinary(candidate.validator().abciValidatorZero(k.cdc))
 	store.Set(GetAccUpdateValidatorKey(address), bz)
-	store.Delete(GetRecentValidatorKey(address))
+	store.Delete(GetRecentValidatorKey(candidate.PubKey))
 }
 
 //___________________________________________________________________________
@@ -222,7 +196,11 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 	// clear the recent validators store, add to the ToKickOut Temp store
 	iterator := store.SubspaceIterator(RecentValidatorsKey)
 	for ; iterator.Valid(); iterator.Next() {
-		addr := AddrFromKey(iterator.Key())
+
+		bz := iterator.Value()
+		var validator Validator
+		k.cdc.MustUnmarshalBinary(bz, &validator)
+		addr := validator.Address
 
 		// iterator.Value is the validator object
 		store.Set(GetToKickOutValidatorKey(addr), iterator.Value())
@@ -242,17 +220,14 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 		}
 		bz := iterator.Value()
 		var validator Validator
-		err := k.cdc.UnmarshalBinary(bz, &validator)
-		if err != nil {
-			panic(err)
-		}
+		k.cdc.MustUnmarshalBinary(bz, &validator)
 		validators[i] = validator
 
 		// remove from ToKickOut group
 		store.Delete(GetToKickOutValidatorKey(validator.Address))
 
 		// also add to the recent validators group
-		store.Set(GetRecentValidatorKey(validator.Address), bz)
+		store.Set(GetRecentValidatorKey(validator.PubKey), bz)
 
 		iterator.Next()
 	}
@@ -266,14 +241,8 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 		// get the zero abci validator from the ToKickOut iterator value
 		bz := iterator.Value()
 		var validator Validator
-		err := k.cdc.UnmarshalBinary(bz, &validator)
-		if err != nil {
-			panic(err)
-		}
-		bz, err = k.cdc.MarshalBinary(validator.abciValidatorZero(k.cdc))
-		if err != nil {
-			panic(err)
-		}
+		k.cdc.MustUnmarshalBinary(bz, &validator)
+		bz = k.cdc.MustMarshalBinary(validator.abciValidatorZero(k.cdc))
 
 		store.Set(GetAccUpdateValidatorKey(addr), bz)
 		store.Delete(key)
@@ -297,10 +266,7 @@ func (k Keeper) isNewValidator(ctx sdk.Context, store sdk.KVStore, address sdk.A
 		}
 		bz := iterator.Value()
 		var val Validator
-		err := k.cdc.UnmarshalBinary(bz, &val)
-		if err != nil {
-			panic(err)
-		}
+		k.cdc.MustUnmarshalBinary(bz, &val)
 		if bytes.Equal(val.Address, address) {
 			return true
 		}
@@ -311,12 +277,51 @@ func (k Keeper) isNewValidator(ctx sdk.Context, store sdk.KVStore, address sdk.A
 }
 
 // Is the address provided a part of the most recently saved validator group?
-func (k Keeper) IsRecentValidator(ctx sdk.Context, address sdk.Address) bool {
+func (k Keeper) IsRecentValidator(ctx sdk.Context, pk crypto.PubKey) bool {
 	store := ctx.KVStore(k.storeKey)
-	if store.Get(GetRecentValidatorKey(address)) == nil {
+	if store.Get(GetRecentValidatorKey(pk)) == nil {
 		return false
 	}
 	return true
+}
+
+// Is the power of non-absent prevotes
+func (k Keeper) GetTotalPrecommitVotingPower(ctx sdk.Context) sdk.Rat {
+	store := ctx.KVStore(k.storeKey)
+
+	// get absent prevote indexes
+	absents := ctx.AbsentValidators()
+
+	TotalPower := sdk.ZeroRat()
+	i := int32(0)
+	iterator := store.SubspaceIterator(RecentValidatorsKey)
+	for ; iterator.Valid(); iterator.Next() {
+
+		skip := false
+		for j, absentIndex := range absents {
+			if absentIndex > i {
+				break
+			}
+
+			// if non-voting validator found, skip adding its power
+			if absentIndex == i {
+				absents = append(absents[:j], absents[j+1:]...) // won't need again
+				skip = true
+				break
+			}
+		}
+		if skip {
+			break
+		}
+
+		bz := iterator.Value()
+		var validator Validator
+		k.cdc.MustUnmarshalBinary(bz, &validator)
+		TotalPower = TotalPower.Add(validator.Power)
+		i++
+	}
+	iterator.Close()
+	return TotalPower
 }
 
 //_________________________________________________________________________
@@ -330,10 +335,7 @@ func (k Keeper) getAccUpdateValidators(ctx sdk.Context) (updates []abci.Validato
 	for ; iterator.Valid(); iterator.Next() {
 		valBytes := iterator.Value()
 		var val abci.Validator
-		err := k.cdc.UnmarshalBinary(valBytes, &val)
-		if err != nil {
-			panic(err)
-		}
+		k.cdc.MustUnmarshalBinary(valBytes, &val)
 		updates = append(updates, val)
 	}
 	iterator.Close()
@@ -364,10 +366,7 @@ func (k Keeper) GetDelegatorBond(ctx sdk.Context,
 		return bond, false
 	}
 
-	err := k.cdc.UnmarshalBinary(delegatorBytes, &bond)
-	if err != nil {
-		panic(err)
-	}
+	k.cdc.MustUnmarshalBinary(delegatorBytes, &bond)
 	return bond, true
 }
 
@@ -385,10 +384,7 @@ func (k Keeper) getBonds(ctx sdk.Context, maxRetrieve int16) (bonds []DelegatorB
 		}
 		bondBytes := iterator.Value()
 		var bond DelegatorBond
-		err := k.cdc.UnmarshalBinary(bondBytes, &bond)
-		if err != nil {
-			panic(err)
-		}
+		k.cdc.MustUnmarshalBinary(bondBytes, &bond)
 		bonds[i] = bond
 		iterator.Next()
 	}
@@ -410,10 +406,7 @@ func (k Keeper) GetDelegatorBonds(ctx sdk.Context, delegator sdk.Address, maxRet
 		}
 		bondBytes := iterator.Value()
 		var bond DelegatorBond
-		err := k.cdc.UnmarshalBinary(bondBytes, &bond)
-		if err != nil {
-			panic(err)
-		}
+		k.cdc.MustUnmarshalBinary(bondBytes, &bond)
 		bonds[i] = bond
 		iterator.Next()
 	}
@@ -422,10 +415,7 @@ func (k Keeper) GetDelegatorBonds(ctx sdk.Context, delegator sdk.Address, maxRet
 
 func (k Keeper) setDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
 	store := ctx.KVStore(k.storeKey)
-	b, err := k.cdc.MarshalBinary(bond)
-	if err != nil {
-		panic(err)
-	}
+	b := k.cdc.MustMarshalBinary(bond)
 	store.Set(GetDelegatorBondKey(bond.DelegatorAddr, bond.CandidateAddr, k.cdc), b)
 }
 
@@ -448,18 +438,12 @@ func (k Keeper) GetParams(ctx sdk.Context) (params Params) {
 		panic("Stored params should not have been nil")
 	}
 
-	err := k.cdc.UnmarshalBinary(b, &params)
-	if err != nil {
-		panic(err)
-	}
+	k.cdc.MustUnmarshalBinary(b, &params)
 	return
 }
 func (k Keeper) setParams(ctx sdk.Context, params Params) {
 	store := ctx.KVStore(k.storeKey)
-	b, err := k.cdc.MarshalBinary(params)
-	if err != nil {
-		panic(err)
-	}
+	b := k.cdc.MustMarshalBinary(params)
 	store.Set(ParamKey, b)
 	k.params = Params{} // clear the cache
 }
@@ -477,19 +461,13 @@ func (k Keeper) GetPool(ctx sdk.Context) (pool Pool) {
 	if b == nil {
 		panic("Stored pool should not have been nil")
 	}
-	err := k.cdc.UnmarshalBinary(b, &pool)
-	if err != nil {
-		panic(err) // This error should never occur big problem if does
-	}
+	k.cdc.MustUnmarshalBinary(b, &pool)
 	return
 }
 
 func (k Keeper) setPool(ctx sdk.Context, p Pool) {
 	store := ctx.KVStore(k.storeKey)
-	b, err := k.cdc.MarshalBinary(p)
-	if err != nil {
-		panic(err)
-	}
+	b := k.cdc.MustMarshalBinary(p)
 	store.Set(PoolKey, b)
 	k.pool = Pool{} //clear the cache
 }

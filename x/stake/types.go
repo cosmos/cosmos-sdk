@@ -111,10 +111,10 @@ func initialPool() Pool {
 		InflationLastTime:       0,
 		Inflation:               sdk.NewRat(7, 100),
 		DateLastCommissionReset: 0,
-		ReservePool:             sdk.Coins{},
-		FeePool:                 sdk.Coins{},
-		SumFeesReceived:         sdk.Coins{},
-		RecentFee:               sdk.Coins{},
+		ReservePool:             sdk.Coins(nil),
+		FeePool:                 sdk.Coins(nil),
+		SumFeesReceived:         sdk.Coins(nil),
+		RecentFee:               sdk.Coins(nil),
 		Adjustment:              sdk.ZeroRat(),
 	}
 }
@@ -184,7 +184,7 @@ func (c Candidate) equal(c2 Candidate) bool {
 		c.Liabilities.Equal(c2.Liabilities) &&
 		c.Description == c2.Description &&
 		c.ValidatorBondHeight == c2.ValidatorBondHeight &&
-		c.ValidatorBondCounter == c2.ValidatorBondCounter &&
+		//c.ValidatorBondCounter == c2.ValidatorBondCounter && // counter is always changing
 		c.ProposerRewardPool.IsEqual(c2.ProposerRewardPool) &&
 		c.Commission.Equal(c2.Commission) &&
 		c.CommissionMax.Equal(c2.CommissionMax) &&

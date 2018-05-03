@@ -158,6 +158,11 @@ func (ctx CoreContext) NextSequence(address []byte) (int64, error) {
 		return 0, err
 	}
 
+	if len(res) == 0 {
+		fmt.Printf("No account found, defaulting to sequence 0\n")
+		return 0, err
+	}
+
 	account, err := ctx.Decoder(res)
 	if err != nil {
 		panic(err)

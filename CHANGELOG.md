@@ -30,6 +30,7 @@ FEATURES:
 
 BUG FIXES
 * Gaia now uses stake, ported from github.com/cosmos/gaia
+* Auto-sequencing now works correctly
 
 ## 0.15.1 (April 29, 2018)
 

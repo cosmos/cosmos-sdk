@@ -31,12 +31,9 @@ func TestCandidate(t *testing.T) {
 	var candidates [3]Candidate
 	amts := []int64{9, 8, 7}
 	for i, amt := range amts {
-		candidates[i] = Candidate{
-			Address:     addrVals[i],
-			PubKey:      pks[i],
-			Assets:      sdk.NewRat(amt),
-			Liabilities: sdk.NewRat(amt),
-		}
+		candidates[i] = NewCandidate(addrVals[i], pks[i], Description{})
+		candidates[i].Assets = sdk.NewRat(amt)
+		candidates[i].Liabilities = sdk.NewRat(amt)
 	}
 
 	// check the empty keeper first
@@ -92,12 +89,9 @@ func TestBond(t *testing.T) {
 	amts := []int64{9, 8, 7}
 	var candidates [3]Candidate
 	for i, amt := range amts {
-		candidates[i] = Candidate{
-			Address:     addrVals[i],
-			PubKey:      pks[i],
-			Assets:      sdk.NewRat(amt),
-			Liabilities: sdk.NewRat(amt),
-		}
+		candidates[i] = NewCandidate(addrVals[i], pks[i], Description{})
+		candidates[i].Assets = sdk.NewRat(amt)
+		candidates[i].Liabilities = sdk.NewRat(amt)
 	}
 
 	// first add a candidates[0] to delegate too
@@ -194,15 +188,10 @@ func TestGetValidators(t *testing.T) {
 	n := len(amts)
 	var candidates [5]Candidate
 	for i, amt := range amts {
-		c := Candidate{
-			Status:      Unbonded,
-			PubKey:      pks[i],
-			Address:     addrs[i],
-			Assets:      sdk.NewRat(amt),
-			Liabilities: sdk.NewRat(amt),
-		}
-		keeper.setCandidate(ctx, c)
-		candidates[i] = c
+		candidates[i] = NewCandidate(addrs[i], pks[i], Description{})
+		candidates[i].Assets = sdk.NewRat(amt)
+		candidates[i].Liabilities = sdk.NewRat(amt)
+		keeper.setCandidate(ctx, candidates[i])
 	}
 
 	// first make sure everything as normal is ordered
@@ -383,15 +372,10 @@ func TestClearAccUpdateValidators(t *testing.T) {
 	amts := []int64{100, 400, 200}
 	candidates := make([]Candidate, len(amts))
 	for i, amt := range amts {
-		c := Candidate{
-			Status:      Unbonded,
-			PubKey:      pks[i],
-			Address:     addrs[i],
-			Assets:      sdk.NewRat(amt),
-			Liabilities: sdk.NewRat(amt),
-		}
-		candidates[i] = c
-		keeper.setCandidate(ctx, c)
+		candidates[i] = NewCandidate(addrs[i], pks[i], Description{})
+		candidates[i].Assets = sdk.NewRat(amt)
+		candidates[i].Liabilities = sdk.NewRat(amt)
+		keeper.setCandidate(ctx, candidates[i])
 	}
 
 	acc := keeper.getAccUpdateValidators(ctx)
@@ -416,12 +400,9 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	amts := []int64{10, 11, 12, 13, 1}
 	var candidatesIn [5]Candidate
 	for i, amt := range amts {
-		candidatesIn[i] = Candidate{
-			Address:     addrs[i],
-			PubKey:      pks[i],
-			Assets:      sdk.NewRat(amt),
-			Liabilities: sdk.NewRat(amt),
-		}
+		candidatesIn[i] = NewCandidate(addrs[i], pks[i], Description{})
+		candidatesIn[i].Assets = sdk.NewRat(amt)
+		candidatesIn[i].Liabilities = sdk.NewRat(amt)
 	}
 
 	// test from nothing to something
@@ -620,12 +601,9 @@ func TestIsRecentValidator(t *testing.T) {
 	amts := []int64{9, 8, 7, 10, 6}
 	var candidatesIn [5]Candidate
 	for i, amt := range amts {
-		candidatesIn[i] = Candidate{
-			Address:     addrVals[i],
-			PubKey:      pks[i],
-			Assets:      sdk.NewRat(amt),
-			Liabilities: sdk.NewRat(amt),
-		}
+		candidatesIn[i] = NewCandidate(addrVals[i], pks[i], Description{})
+		candidatesIn[i].Assets = sdk.NewRat(amt)
+		candidatesIn[i].Liabilities = sdk.NewRat(amt)
 	}
 
 	// test that an empty validator set doesn't have any validators
@@ -643,17 +621,38 @@ func TestIsRecentValidator(t *testing.T) {
 	assert.True(t, c1ValWithCounter.equal(validators[1]))
 
 	// test a basic retrieve of something that should be a recent validator
-	assert.True(t, keeper.IsRecentValidator(ctx, candidatesIn[0].Address))
-	assert.True(t, keeper.IsRecentValidator(ctx, candidatesIn[1].Address))
+	assert.True(t, keeper.IsRecentValidator(ctx, candidatesIn[0].PubKey))
+	assert.True(t, keeper.IsRecentValidator(ctx, candidatesIn[1].PubKey))
 
 	// test a basic retrieve of something that should not be a recent validator
-	assert.False(t, keeper.IsRecentValidator(ctx, candidatesIn[2].Address))
+	assert.False(t, keeper.IsRecentValidator(ctx, candidatesIn[2].PubKey))
 
 	// remove that validator, but don't retrieve the recent validator group
 	keeper.removeCandidate(ctx, candidatesIn[0].Address)
 
 	// test that removed validator is not considered a recent validator
-	assert.False(t, keeper.IsRecentValidator(ctx, candidatesIn[0].Address))
+	assert.False(t, keeper.IsRecentValidator(ctx, candidatesIn[0].PubKey))
+}
+
+// test if is a validator from the last update
+func TestGetTotalPrecommitVotingPower(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, false, 0)
+
+	// set absent validators to be the 1st and 3rd record sorted by pubKey address
+	ctx = ctx.WithAbsentValidators([]int32{1, 3})
+
+	amts := []int64{9, 8, 7, 10, 6}
+	var candidatesIn [5]Candidate
+	for i, amt := range amts {
+		candidatesIn[i] = NewCandidate(addrVals[i], pks[i], Description{})
+		candidatesIn[i].Assets = sdk.NewRat(amt)
+		candidatesIn[i].Liabilities = sdk.NewRat(amt)
+		keeper.setCandidate(ctx, candidatesIn[i])
+	}
+
+	// test that an empty validator set doesn't have any validators
+	validators := keeper.GetValidators(ctx)
+	assert.Equal(t, 5, len(validators))
 }
 
 func TestParams(t *testing.T) {

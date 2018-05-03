@@ -15,6 +15,7 @@ BREAKING CHANGES
 * gaiad init now requires use of `--name` flag 
 * Removed Get from Msg interface
 * types/rational now extends big.Rat
+* RecentValidator store now take pubkey instead of address, is sorted like Tendermint by pk's address
 
 FEATURES:
 

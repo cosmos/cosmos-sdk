@@ -27,7 +27,7 @@ func pubkeyLedger(device *ledger.Ledger) (pub PubKey, err error) {
 	// Reserialize in the 33-byte compressed format
 	cmp, err := secp256k1.ParsePubKey(key[:], secp256k1.S256())
 	copy(p[:], cmp.SerializeCompressed())
-	return pub, err
+	return p, err
 }
 
 func signLedger(device *ledger.Ledger, msg []byte) (sig Signature, err error) {

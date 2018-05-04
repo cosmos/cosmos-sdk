@@ -9,11 +9,12 @@ func (k Keeper) FeeHandler(ctx sdk.Context, collectedFees sdk.Coins) {
 	pool := k.GetPool(ctx)
 	params := k.GetParams(ctx)
 
-	// XXX calculate
-	sumOfVotingPowerOfPrecommitValidators := sdk.NewRat(67, 100)
+	// XXX determine
 	candidate := NewCandidate(addrs[0], pks[0], Description{})
 
-	toProposer := coinsMulRat(collectedFees, (sdk.NewRat(1, 100).Add(sdk.NewRat(4, 100).Mul(sumOfVotingPowerOfPrecommitValidators).Quo(pool.BondedShares))))
+	// calculate the proposer reward
+	precommitPower := k.GetTotalPrecommitVotingPower(ctx)
+	toProposer := coinsMulRat(collectedFees, (sdk.NewRat(1, 100).Add(sdk.NewRat(4, 100).Mul(precommitPower).Quo(pool.BondedShares))))
 	candidate.ProposerRewardPool = candidate.ProposerRewardPool.Plus(toProposer)
 
 	toReservePool := coinsMulRat(collectedFees, params.ReservePoolFee)

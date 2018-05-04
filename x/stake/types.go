@@ -46,7 +46,7 @@ type Params struct {
 	MaxValidators uint16 `json:"max_validators"` // maximum number of validators
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
 
-	FeeDenoms      []string `json:"reserve_pool_fee"` // accepted fee denoms
+	FeeDenoms      []string `json:"fee_denoms"`       // accepted fee denoms
 	ReservePoolFee sdk.Rat  `json:"reserve_pool_fee"` // percent of fees which go to reserve pool
 }
 
@@ -82,7 +82,7 @@ type Pool struct {
 	UnbondingShares   sdk.Rat `json:"unbonding_shares"`    // shares moving from Bonded to Unbonded Pool
 	UnbondedShares    sdk.Rat `json:"unbonded_shares"`     // sum of all shares distributed for the Unbonded Pool
 	BondedPool        int64   `json:"bonded_pool"`         // reserve of bonded tokens
-	UnbondingPool     int64   `json:"unbonded_pool"`       // tokens moving from bonded to unbonded pool
+	UnbondingPool     int64   `json:"unbonding_pool"`      // tokens moving from bonded to unbonded pool
 	UnbondedPool      int64   `json:"unbonded_pool"`       // reserve of unbonded tokens held with candidates
 	InflationLastTime int64   `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
 	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
@@ -90,12 +90,12 @@ type Pool struct {
 	DateLastCommissionReset int64 `json:"date_last_commission_reset"` // unix timestamp for last commission accounting reset (daily)
 
 	// Fee Related
-	FeeReservePool   sdk.Coins `json:"reserve_pool"`      // XXX reserve pool of collected fees for use by governance
-	FeePool          sdk.Coins `json:"fee_pool"`          // XXX fee pool for all the fee shares which have already been distributed
-	FeeSumReceived   sdk.Coins `json:"sum_fees_received"` // XXX sum of all fees received, post reserve pool
-	FeeRecent        sdk.Coins `json:"recent_fee"`        // XXX most recent fee collected
-	FeeAdjustments   []sdk.Rat `json:"adjustment"`        // XXX Adjustment factors for lazy fee accounting, couples with Params.BondDenoms
-	PrevBondedShares sdk.Rat   `json:"adjustment"`        // XXX last recorded bonded shares
+	FeeReservePool   sdk.Coins `json:"fee_reserve_pool"`   // XXX reserve pool of collected fees for use by governance
+	FeePool          sdk.Coins `json:"fee_pool"`           // XXX fee pool for all the fee shares which have already been distributed
+	FeeSumReceived   sdk.Coins `json:"fee_sum_received"`   // XXX sum of all fees received, post reserve pool `json:"fee_sum_received"`
+	FeeRecent        sdk.Coins `json:"fee_recent"`         // XXX most recent fee collected
+	FeeAdjustments   []sdk.Rat `json:"fee_adjustments"`    // XXX Adjustment factors for lazy fee accounting, couples with Params.BondDenoms
+	PrevBondedShares sdk.Rat   `json:"prev_bonded_shares"` // XXX last recorded bonded shares
 }
 
 func (p Pool) equal(p2 Pool) bool {
@@ -132,7 +132,7 @@ func initialPool() Pool {
 		FeePool:                 sdk.Coins(nil),
 		FeeSumReceived:          sdk.Coins(nil),
 		FeeRecent:               sdk.Coins(nil),
-		FeeAdjustments:          []sdk.Rat{},
+		FeeAdjustments:          []sdk.Rat{sdk.ZeroRat()},
 		PrevBondedShares:        sdk.ZeroRat(),
 	}
 }
@@ -168,13 +168,13 @@ const (
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
 type Candidate struct {
-	Status          CandidateStatus `json:"status"`      // Bonded status
-	Address         sdk.Address     `json:"owner"`       // Sender of BondTx - UnbondTx returns here
-	PubKey          crypto.PubKey   `json:"pub_key"`     // Pubkey of candidate
-	BondedShares    sdk.Rat         `json:"assets"`      // total shares of a global hold pools
-	UnbondingShares sdk.Rat         `json:"assets"`      // total shares of a global hold pools
-	UnbondedShares  sdk.Rat         `json:"assets"`      // total shares of a global hold pools
-	DelegatorShares sdk.Rat         `json:"liabilities"` // total shares issued to a candidate's delegators
+	Status          CandidateStatus `json:"status"`           // Bonded status
+	Address         sdk.Address     `json:"owner"`            // Sender of BondTx - UnbondTx returns here
+	PubKey          crypto.PubKey   `json:"pub_key"`          // Pubkey of candidate
+	BondedShares    sdk.Rat         `json:"bonded_shares"`    // total shares of a global hold pools
+	UnbondingShares sdk.Rat         `json:"unbonding_shares"` // total shares of a global hold pools
+	UnbondedShares  sdk.Rat         `json:"unbonded_shares"`  // total shares of a global hold pools
+	DelegatorShares sdk.Rat         `json:"liabilities"`      // total shares issued to a candidate's delegators
 
 	Description          Description `json:"description"`            // Description terms for the candidate
 	ValidatorBondHeight  int64       `json:"validator_bond_height"`  // Earliest height as a bonded validator
@@ -187,8 +187,8 @@ type Candidate struct {
 	CommissionChangeToday sdk.Rat `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
 
 	// fee related
-	FeeAdjustments   []sdk.Rat `json:"adjustment"` // XXX Adjustment factors for lazy fee accounting, couples with Params.BondDenoms
-	PrevBondedShares sdk.Rat   `json:"adjustment"` // total shares of a global hold pools
+	FeeAdjustments   []sdk.Rat `json:"fee_adjustments"`    // XXX Adjustment factors for lazy fee accounting, couples with Params.BondDenoms
+	PrevBondedShares sdk.Rat   `json:"prev_bonded_shares"` // total shares of a global hold pools
 }
 
 // Candidates - list of Candidates
@@ -279,7 +279,7 @@ func (c Candidate) validator() Validator {
 type Validator struct {
 	Address sdk.Address   `json:"address"`
 	PubKey  crypto.PubKey `json:"pub_key"`
-	Power   sdk.Rat       `json:"voting_power"`
+	Power   sdk.Rat       `json:"power"`
 	Height  int64         `json:"height"`  // Earliest height as a validator
 	Counter int16         `json:"counter"` // Block-local tx index for resolving equal voting power & height
 }

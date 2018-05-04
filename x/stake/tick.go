@@ -35,6 +35,7 @@ func (k Keeper) Tick(ctx sdk.Context) (change []abci.Validator) {
 
 	// XXX get the total validator of the previous validator set
 	// XXX get the total validator of the current validator set
+	// XXX update pool PrevBondedShares
 	// Calculate the PowerChange term
 
 	return change

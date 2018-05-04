@@ -46,8 +46,8 @@ func TestDuplicatesMsgDeclareCandidacy(t *testing.T) {
 	assert.Equal(t, Unbonded, candidate.Status)
 	assert.Equal(t, candidateAddr, candidate.Address)
 	assert.Equal(t, pk, candidate.PubKey)
-	assert.Equal(t, sdk.NewRat(10), candidate.Assets)
-	assert.Equal(t, sdk.NewRat(10), candidate.Liabilities)
+	assert.Equal(t, sdk.NewRat(10), candidate.BondedShares)
+	assert.Equal(t, sdk.NewRat(10), candidate.DelegatorShares)
 	assert.Equal(t, Description{}, candidate.Description)
 
 	// one candidate cannot bond twice
@@ -71,8 +71,8 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 
 	candidate, found := keeper.GetCandidate(ctx, candidateAddr)
 	require.True(t, found)
-	assert.Equal(t, bondAmount, candidate.Liabilities.Evaluate())
-	assert.Equal(t, bondAmount, candidate.Assets.Evaluate())
+	assert.Equal(t, bondAmount, candidate.DelegatorShares.Evaluate())
+	assert.Equal(t, bondAmount, candidate.BondedShares.Evaluate())
 
 	// just send the same msgbond multiple times
 	msgDelegate := newTestMsgDelegate(delegatorAddr, candidateAddr, bondAmount)
@@ -90,21 +90,21 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 		require.True(t, found)
 
 		expBond := int64(i+1) * bondAmount
-		expLiabilities := int64(i+2) * bondAmount // (1 self delegation)
+		expDelegatorShares := int64(i+2) * bondAmount // (1 self delegation)
 		expDelegatorAcc := initBond - expBond
 
 		require.Equal(t, bond.Height, int64(i), "Incorrect bond height")
 
 		gotBond := bond.Shares.Evaluate()
-		gotLiabilities := candidate.Liabilities.Evaluate()
+		gotDelegatorShares := candidate.DelegatorShares.Evaluate()
 		gotDelegatorAcc := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(params.BondDenom)
 
 		require.Equal(t, expBond, gotBond,
 			"i: %v\nexpBond: %v\ngotBond: %v\ncandidate: %v\nbond: %v\n",
 			i, expBond, gotBond, candidate, bond)
-		require.Equal(t, expLiabilities, gotLiabilities,
-			"i: %v\nexpLiabilities: %v\ngotLiabilities: %v\ncandidate: %v\nbond: %v\n",
-			i, expLiabilities, gotLiabilities, candidate, bond)
+		require.Equal(t, expDelegatorShares, gotDelegatorShares,
+			"i: %v\nexpDelegatorShares: %v\ngotDelegatorShares: %v\ncandidate: %v\nbond: %v\n",
+			i, expDelegatorShares, gotDelegatorShares, candidate, bond)
 		require.Equal(t, expDelegatorAcc, gotDelegatorAcc,
 			"i: %v\nexpDelegatorAcc: %v\ngotDelegatorAcc: %v\ncandidate: %v\nbond: %v\n",
 			i, expDelegatorAcc, gotDelegatorAcc, candidate, bond)
@@ -129,8 +129,8 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 
 	candidate, found := keeper.GetCandidate(ctx, candidateAddr)
 	require.True(t, found)
-	assert.Equal(t, initBond*2, candidate.Liabilities.Evaluate())
-	assert.Equal(t, initBond*2, candidate.Assets.Evaluate())
+	assert.Equal(t, initBond*2, candidate.DelegatorShares.Evaluate())
+	assert.Equal(t, initBond*2, candidate.BondedShares.Evaluate())
 
 	// just send the same msgUnbond multiple times
 	// TODO use decimals here
@@ -148,19 +148,19 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		require.True(t, found)
 
 		expBond := initBond - int64(i+1)*unbondShares
-		expLiabilities := 2*initBond - int64(i+1)*unbondShares
+		expDelegatorShares := 2*initBond - int64(i+1)*unbondShares
 		expDelegatorAcc := initBond - expBond
 
 		gotBond := bond.Shares.Evaluate()
-		gotLiabilities := candidate.Liabilities.Evaluate()
+		gotDelegatorShares := candidate.DelegatorShares.Evaluate()
 		gotDelegatorAcc := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(params.BondDenom)
 
 		require.Equal(t, expBond, gotBond,
 			"i: %v\nexpBond: %v\ngotBond: %v\ncandidate: %v\nbond: %v\n",
 			i, expBond, gotBond, candidate, bond)
-		require.Equal(t, expLiabilities, gotLiabilities,
-			"i: %v\nexpLiabilities: %v\ngotLiabilities: %v\ncandidate: %v\nbond: %v\n",
-			i, expLiabilities, gotLiabilities, candidate, bond)
+		require.Equal(t, expDelegatorShares, gotDelegatorShares,
+			"i: %v\nexpDelegatorShares: %v\ngotDelegatorShares: %v\ncandidate: %v\nbond: %v\n",
+			i, expDelegatorShares, gotDelegatorShares, candidate, bond)
 		require.Equal(t, expDelegatorAcc, gotDelegatorAcc,
 			"i: %v\nexpDelegatorAcc: %v\ngotDelegatorAcc: %v\ncandidate: %v\nbond: %v\n",
 			i, expDelegatorAcc, gotDelegatorAcc, candidate, bond)
@@ -217,7 +217,7 @@ func TestMultipleMsgDeclareCandidacy(t *testing.T) {
 		balanceExpd := initBond - 10
 		balanceGot := accMapper.GetAccount(ctx, val.Address).GetCoins().AmountOf(params.BondDenom)
 		require.Equal(t, i+1, len(candidates), "expected %d candidates got %d, candidates: %v", i+1, len(candidates), candidates)
-		require.Equal(t, 10, int(val.Liabilities.Evaluate()), "expected %d shares, got %d", 10, val.Liabilities)
+		require.Equal(t, 10, int(val.DelegatorShares.Evaluate()), "expected %d shares, got %d", 10, val.DelegatorShares)
 		require.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
 	}
 

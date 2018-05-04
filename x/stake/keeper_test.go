@@ -32,8 +32,8 @@ func TestCandidate(t *testing.T) {
 	amts := []int64{9, 8, 7}
 	for i, amt := range amts {
 		candidates[i] = NewCandidate(addrVals[i], pks[i], Description{})
-		candidates[i].Assets = sdk.NewRat(amt)
-		candidates[i].Liabilities = sdk.NewRat(amt)
+		candidates[i].BondedShares = sdk.NewRat(amt)
+		candidates[i].DelegatorShares = sdk.NewRat(amt)
 	}
 
 	// check the empty keeper first
@@ -49,7 +49,7 @@ func TestCandidate(t *testing.T) {
 	assert.True(t, candidates[0].equal(resCand), "%v \n %v", resCand, candidates[0])
 
 	// modify a records, save, and retrieve
-	candidates[0].Liabilities = sdk.NewRat(99)
+	candidates[0].DelegatorShares = sdk.NewRat(99)
 	keeper.setCandidate(ctx, candidates[0])
 	resCand, found = keeper.GetCandidate(ctx, addrVals[0])
 	require.True(t, found)
@@ -90,8 +90,8 @@ func TestBond(t *testing.T) {
 	var candidates [3]Candidate
 	for i, amt := range amts {
 		candidates[i] = NewCandidate(addrVals[i], pks[i], Description{})
-		candidates[i].Assets = sdk.NewRat(amt)
-		candidates[i].Liabilities = sdk.NewRat(amt)
+		candidates[i].BondedShares = sdk.NewRat(amt)
+		candidates[i].DelegatorShares = sdk.NewRat(amt)
 	}
 
 	// first add a candidates[0] to delegate too
@@ -189,8 +189,8 @@ func TestGetValidators(t *testing.T) {
 	var candidates [5]Candidate
 	for i, amt := range amts {
 		candidates[i] = NewCandidate(addrs[i], pks[i], Description{})
-		candidates[i].Assets = sdk.NewRat(amt)
-		candidates[i].Liabilities = sdk.NewRat(amt)
+		candidates[i].BondedShares = sdk.NewRat(amt)
+		candidates[i].DelegatorShares = sdk.NewRat(amt)
 		keeper.setCandidate(ctx, candidates[i])
 	}
 
@@ -209,7 +209,7 @@ func TestGetValidators(t *testing.T) {
 	assert.Equal(t, candidates[0].Address, validators[4].Address, "%v", validators)
 
 	// test a basic increase in voting power
-	candidates[3].Assets = sdk.NewRat(500)
+	candidates[3].BondedShares = sdk.NewRat(500)
 	keeper.setCandidate(ctx, candidates[3])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n)
@@ -217,7 +217,7 @@ func TestGetValidators(t *testing.T) {
 	assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
 
 	// test a decrease in voting power
-	candidates[3].Assets = sdk.NewRat(300)
+	candidates[3].BondedShares = sdk.NewRat(300)
 	keeper.setCandidate(ctx, candidates[3])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n)
@@ -225,7 +225,7 @@ func TestGetValidators(t *testing.T) {
 	assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
 
 	// test equal voting power, different age
-	candidates[3].Assets = sdk.NewRat(200)
+	candidates[3].BondedShares = sdk.NewRat(200)
 	ctx = ctx.WithBlockHeight(10)
 	keeper.setCandidate(ctx, candidates[3])
 	validators = keeper.GetValidators(ctx)
@@ -246,8 +246,8 @@ func TestGetValidators(t *testing.T) {
 	assert.Equal(t, candidates[4].Address, validators[1].Address, "%v", validators)
 
 	// change in voting power of both candidates, both still in v-set, no age change
-	candidates[3].Assets = sdk.NewRat(300)
-	candidates[4].Assets = sdk.NewRat(300)
+	candidates[3].BondedShares = sdk.NewRat(300)
+	candidates[4].BondedShares = sdk.NewRat(300)
 	keeper.setCandidate(ctx, candidates[3])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n)
@@ -262,7 +262,7 @@ func TestGetValidators(t *testing.T) {
 	params := keeper.GetParams(ctx)
 	params.MaxValidators = 2
 	keeper.setParams(ctx, params)
-	candidates[0].Assets = sdk.NewRat(500)
+	candidates[0].BondedShares = sdk.NewRat(500)
 	keeper.setCandidate(ctx, candidates[0])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, uint16(len(validators)), params.MaxValidators)
@@ -277,7 +277,7 @@ func TestGetValidators(t *testing.T) {
 
 	   ref https://github.com/cosmos/cosmos-sdk/issues/582#issuecomment-380757108
 	*/
-	candidates[4].Assets = sdk.NewRat(301)
+	candidates[4].BondedShares = sdk.NewRat(301)
 	keeper.setCandidate(ctx, candidates[4])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, uint16(len(validators)), params.MaxValidators)
@@ -285,14 +285,14 @@ func TestGetValidators(t *testing.T) {
 	require.Equal(t, candidates[4].Address, validators[1].Address, "%v", validators)
 	ctx = ctx.WithBlockHeight(40)
 	// candidate 4 kicked out temporarily
-	candidates[4].Assets = sdk.NewRat(200)
+	candidates[4].BondedShares = sdk.NewRat(200)
 	keeper.setCandidate(ctx, candidates[4])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, uint16(len(validators)), params.MaxValidators)
 	require.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
 	require.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
 	// candidate 4 does not get spot back
-	candidates[4].Assets = sdk.NewRat(300)
+	candidates[4].BondedShares = sdk.NewRat(300)
 	keeper.setCandidate(ctx, candidates[4])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, uint16(len(validators)), params.MaxValidators)
@@ -308,18 +308,18 @@ func TestGetValidators(t *testing.T) {
 
 	   ref https://github.com/cosmos/cosmos-sdk/issues/582#issuecomment-381250392
 	*/
-	candidates[0].Assets = sdk.NewRat(2000)
+	candidates[0].BondedShares = sdk.NewRat(2000)
 	keeper.setCandidate(ctx, candidates[0])
-	candidates[1].Assets = sdk.NewRat(1000)
-	candidates[2].Assets = sdk.NewRat(1000)
+	candidates[1].BondedShares = sdk.NewRat(1000)
+	candidates[2].BondedShares = sdk.NewRat(1000)
 	keeper.setCandidate(ctx, candidates[1])
 	keeper.setCandidate(ctx, candidates[2])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, uint16(len(validators)), params.MaxValidators)
 	require.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
 	require.Equal(t, candidates[1].Address, validators[1].Address, "%v", validators)
-	candidates[1].Assets = sdk.NewRat(1100)
-	candidates[2].Assets = sdk.NewRat(1100)
+	candidates[1].BondedShares = sdk.NewRat(1100)
+	candidates[2].BondedShares = sdk.NewRat(1100)
 	keeper.setCandidate(ctx, candidates[2])
 	keeper.setCandidate(ctx, candidates[1])
 	validators = keeper.GetValidators(ctx)
@@ -330,11 +330,11 @@ func TestGetValidators(t *testing.T) {
 	// reset assets / heights
 	params.MaxValidators = 100
 	keeper.setParams(ctx, params)
-	candidates[0].Assets = sdk.NewRat(0)
-	candidates[1].Assets = sdk.NewRat(100)
-	candidates[2].Assets = sdk.NewRat(1)
-	candidates[3].Assets = sdk.NewRat(300)
-	candidates[4].Assets = sdk.NewRat(200)
+	candidates[0].BondedShares = sdk.NewRat(0)
+	candidates[1].BondedShares = sdk.NewRat(100)
+	candidates[2].BondedShares = sdk.NewRat(1)
+	candidates[3].BondedShares = sdk.NewRat(300)
+	candidates[4].BondedShares = sdk.NewRat(200)
 	ctx = ctx.WithBlockHeight(0)
 	keeper.setCandidate(ctx, candidates[0])
 	keeper.setCandidate(ctx, candidates[1])
@@ -343,7 +343,7 @@ func TestGetValidators(t *testing.T) {
 	keeper.setCandidate(ctx, candidates[4])
 
 	// test a swap in voting power
-	candidates[0].Assets = sdk.NewRat(600)
+	candidates[0].BondedShares = sdk.NewRat(600)
 	keeper.setCandidate(ctx, candidates[0])
 	validators = keeper.GetValidators(ctx)
 	require.Equal(t, len(validators), n)
@@ -373,8 +373,8 @@ func TestClearAccUpdateValidators(t *testing.T) {
 	candidates := make([]Candidate, len(amts))
 	for i, amt := range amts {
 		candidates[i] = NewCandidate(addrs[i], pks[i], Description{})
-		candidates[i].Assets = sdk.NewRat(amt)
-		candidates[i].Liabilities = sdk.NewRat(amt)
+		candidates[i].BondedShares = sdk.NewRat(amt)
+		candidates[i].DelegatorShares = sdk.NewRat(amt)
 		keeper.setCandidate(ctx, candidates[i])
 	}
 
@@ -401,8 +401,8 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	var candidatesIn [5]Candidate
 	for i, amt := range amts {
 		candidatesIn[i] = NewCandidate(addrs[i], pks[i], Description{})
-		candidatesIn[i].Assets = sdk.NewRat(amt)
-		candidatesIn[i].Liabilities = sdk.NewRat(amt)
+		candidatesIn[i].BondedShares = sdk.NewRat(amt)
+		candidatesIn[i].DelegatorShares = sdk.NewRat(amt)
 	}
 
 	// test from nothing to something
@@ -447,12 +447,12 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	assert.Equal(t, 2, len(keeper.GetCandidates(ctx, 5)))
 	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
 
-	candidates[0].Assets = sdk.NewRat(600)
+	candidates[0].BondedShares = sdk.NewRat(600)
 	keeper.setCandidate(ctx, candidates[0])
 
 	candidates = keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 2, len(candidates))
-	assert.True(t, candidates[0].Assets.Equal(sdk.NewRat(600)))
+	assert.True(t, candidates[0].BondedShares.Equal(sdk.NewRat(600)))
 	acc = keeper.getAccUpdateValidators(ctx)
 	require.Equal(t, 1, len(acc))
 	assert.Equal(t, candidates[0].validator().abciValidator(keeper.cdc), acc[0])
@@ -464,8 +464,8 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	assert.Equal(t, 2, len(keeper.GetCandidates(ctx, 5)))
 	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
 
-	candidates[0].Assets = sdk.NewRat(200)
-	candidates[1].Assets = sdk.NewRat(100)
+	candidates[0].BondedShares = sdk.NewRat(200)
+	candidates[1].BondedShares = sdk.NewRat(100)
 	keeper.setCandidate(ctx, candidates[0])
 	keeper.setCandidate(ctx, candidates[1])
 
@@ -528,7 +528,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	assert.Equal(t, 4, len(keeper.GetValidators(ctx)))
 	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
 
-	candidatesIn[4].Assets = sdk.NewRat(1)
+	candidatesIn[4].BondedShares = sdk.NewRat(1)
 	keeper.setCandidate(ctx, candidatesIn[4])
 
 	assert.Equal(t, 5, len(keeper.GetCandidates(ctx, 5)))
@@ -544,7 +544,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	assert.Equal(t, 4, len(keeper.GetValidators(ctx)))
 	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
 
-	candidatesIn[4].Assets = sdk.NewRat(1000)
+	candidatesIn[4].BondedShares = sdk.NewRat(1000)
 	keeper.setCandidate(ctx, candidatesIn[4])
 
 	candidates = keeper.GetCandidates(ctx, 5)
@@ -602,8 +602,8 @@ func TestIsRecentValidator(t *testing.T) {
 	var candidatesIn [5]Candidate
 	for i, amt := range amts {
 		candidatesIn[i] = NewCandidate(addrVals[i], pks[i], Description{})
-		candidatesIn[i].Assets = sdk.NewRat(amt)
-		candidatesIn[i].Liabilities = sdk.NewRat(amt)
+		candidatesIn[i].BondedShares = sdk.NewRat(amt)
+		candidatesIn[i].DelegatorShares = sdk.NewRat(amt)
 	}
 
 	// test that an empty validator set doesn't have any validators
@@ -642,8 +642,8 @@ func TestGetTotalPrecommitVotingPower(t *testing.T) {
 	var candidatesIn [5]Candidate
 	for i, amt := range amts {
 		candidatesIn[i] = NewCandidate(addrVals[i], pks[i], Description{})
-		candidatesIn[i].Assets = sdk.NewRat(amt)
-		candidatesIn[i].Liabilities = sdk.NewRat(amt)
+		candidatesIn[i].BondedShares = sdk.NewRat(amt)
+		candidatesIn[i].DelegatorShares = sdk.NewRat(amt)
 		keeper.setCandidate(ctx, candidatesIn[i])
 	}
 
@@ -669,13 +669,13 @@ func TestParams(t *testing.T) {
 
 	//check that the empty keeper loads the default
 	resParams := keeper.GetParams(ctx)
-	assert.Equal(t, expParams, resParams)
+	assert.True(t, expParams.equal(resParams))
 
 	//modify a params, save, and retrieve
 	expParams.MaxValidators = 777
 	keeper.setParams(ctx, expParams)
 	resParams = keeper.GetParams(ctx)
-	assert.Equal(t, expParams, resParams)
+	assert.True(t, expParams.equal(resParams))
 }
 
 func TestPool(t *testing.T) {
@@ -684,13 +684,13 @@ func TestPool(t *testing.T) {
 
 	//check that the empty keeper loads the default
 	resPool := keeper.GetPool(ctx)
-	assert.Equal(t, expPool, resPool)
+	assert.True(t, expPool.equal(resPool))
 
 	//modify a params, save, and retrieve
 	expPool.TotalSupply = 777
 	keeper.setPool(ctx, expPool)
 	resPool = keeper.GetPool(ctx)
-	assert.Equal(t, expPool, resPool)
+	assert.True(t, expPool.equal(resPool))
 }
 
 func TestValidatorsetKeeper(t *testing.T) {

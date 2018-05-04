@@ -285,7 +285,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	}
 
 	// deduct shares from the candidate
-	if candidate.Liabilities.IsZero() {
+	if candidate.DelegatorShares.IsZero() {
 		k.removeCandidate(ctx, candidate.Address)
 	} else {
 		k.setCandidate(ctx, candidate)

@@ -161,7 +161,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
 		if len(genTx.Name) > 0 {
 			desc := stake.NewDescription(genTx.Name, "", "", "")
 			candidate := stake.NewCandidate(genTx.Address, genTx.PubKey, desc)
-			candidate.Assets = sdk.NewRat(freeFermionVal)
+			candidate.BondedShares = sdk.NewRat(freeFermionVal)
 			stakeData.Candidates = append(stakeData.Candidates, candidate)
 
 			// pool logic

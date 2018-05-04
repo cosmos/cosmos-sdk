@@ -109,56 +109,47 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 		return
 	}
 
-	updateHeight := false
-
 	// update the list ordered by voting power
+
 	if oldFound {
-		if !k.isNewValidator(ctx, store, address) {
-			updateHeight = true
+		// if this candidate wasn't just bonded then update the height and counter
+		if oldCandidate.Status != CandidateStatus.Bonded {
+			candidate.ValidatorBondHeight = ctx.BlockHeight()
+			counter := k.getIntraTxCounter(ctx)
+			candidate.ValidatorBondCounter = counter
+			k.setIntraTxCounter(ctx, counter+1)
 		}
-		// else already in the validator set - retain the old validator height and counter
-		store.Delete(GetValidatorKey(address, oldCandidate.BondedShares, oldCandidate.ValidatorBondHeight, oldCandidate.ValidatorBondCounter, k.cdc))
-	} else {
-		updateHeight = true
+
+		// delete the old record in the power ordered list
+		store.Delete(GetValidatorKey(oldCandidate.validator()))
 	}
 
-	if updateHeight {
-		// wasn't a candidate or wasn't in the validator set, update the validator block height and counter
-		candidate.ValidatorBondHeight = ctx.BlockHeight()
-		counter := k.getIntraTxCounter(ctx)
-		candidate.ValidatorBondCounter = counter
-		k.setIntraTxCounter(ctx, counter+1)
-	}
-
-	// update the candidate record
+	// set the new candidate record
 	bz = k.cdc.MustMarshalBinary(candidate)
 	store.Set(GetCandidateKey(address), bz)
 
 	// marshal the new validator record
 	validator := candidate.validator()
 	bz = k.cdc.MustMarshalBinary(validator)
-	store.Set(GetValidatorKey(address, validator.Power, validator.Height, validator.Counter, k.cdc), bz)
+	store.Set(GetValidatorKey(validator), bz)
 
 	// add to the validators to update list if is already a validator
 	// or is a new validator
-	//setAcc := false
+	setAcc := false
 	if store.Get(GetRecentValidatorKey(candidate.PubKey)) != nil {
-		//setAcc = true
+		setAcc = true
 
-		bz = k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
-		store.Set(GetAccUpdateValidatorKey(address), bz)
 		// want to check in the else statement because inefficient
 	} else if k.isNewValidator(ctx, store, address) {
-		//setAcc = true
+		setAcc = true
 
-		// need to calculate the whole validator set because somebody's gettin' kicked
-		k.GetValidators(ctx)
+		// XXX determine if somebody needs to be kicked off simultaniously
 	}
 
-	//if setAcc {
-	//bz = k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
-	//store.Set(GetAccUpdateValidatorKey(address), bz)
-	//}
+	if setAcc {
+		bz = k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
+		store.Set(GetAccUpdateValidatorKey(address), bz)
+	}
 
 	return
 }
@@ -174,7 +165,7 @@ func (k Keeper) removeCandidate(ctx sdk.Context, address sdk.Address) {
 	// delete the old candidate record
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetCandidateKey(address))
-	store.Delete(GetValidatorKey(address, candidate.BondedShares, candidate.ValidatorBondHeight, candidate.ValidatorBondCounter, k.cdc))
+	store.Delete(GetValidatorKey(candidate.validator()))
 
 	// delete from recent and power weighted validator groups if the validator
 	// exists and add validator with zero power to the validator updates

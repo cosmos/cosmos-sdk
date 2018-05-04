@@ -36,7 +36,7 @@ func NewCoreContextFromViper() CoreContext {
 		Sequence:        viper.GetInt64(client.FlagSequence),
 		Client:          rpc,
 		Decoder:         nil,
-		AccountStore:    "main",
+		AccountStore:    "acc",
 	}
 }
 
@@ -55,7 +55,8 @@ func defaultChainID() (string, error) {
 
 // EnsureSequence - automatically set sequence number if none provided
 func EnsureSequence(ctx CoreContext) (CoreContext, error) {
-	if viper.IsSet(client.FlagSequence) {
+	// Should be viper.IsSet, but this does not work - https://github.com/spf13/viper/pull/331
+	if viper.GetInt64(client.FlagSequence) != 0 {
 		return ctx, nil
 	}
 	from, err := ctx.GetFromAddress()

@@ -63,19 +63,19 @@ func TestBondedToUnbondedPool(t *testing.T) {
 		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
-		Assets:      sdk.OneRat(),
-		Liabilities: sdk.OneRat(),
+		BondedShares:      sdk.OneRat(),
+		DelegatorShares: sdk.OneRat(),
 	}
 	poolB, candB := poolA.bondedToUnbondedPool(candA)
 
 	// status unbonded
 	assert.Equal(t, candB.Status, Unbonded)
 	// same exchange rate, assets unchanged
-	assert.Equal(t, candB.Assets, candA.Assets)
+	assert.Equal(t, candB.BondedShares, candA.BondedShares)
 	// bonded pool decreased
-	assert.Equal(t, poolB.BondedPool, poolA.BondedPool-candA.Assets.Evaluate())
+	assert.Equal(t, poolB.BondedPool, poolA.BondedPool-candA.BondedShares.Evaluate())
 	// unbonded pool increased
-	assert.Equal(t, poolB.UnbondedPool, poolA.UnbondedPool+candA.Assets.Evaluate())
+	assert.Equal(t, poolB.UnbondedPool, poolA.UnbondedPool+candA.BondedShares.Evaluate())
 	// conservation of tokens
 	assert.Equal(t, poolB.UnbondedPool+poolB.BondedPool, poolA.BondedPool+poolA.UnbondedPool)
 }
@@ -90,8 +90,8 @@ func TestUnbonbedtoBondedPool(t *testing.T) {
 		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
-		Assets:      sdk.OneRat(),
-		Liabilities: sdk.OneRat(),
+		BondedShares:      sdk.OneRat(),
+		DelegatorShares: sdk.OneRat(),
 	}
 	candA.Status = Unbonded
 	poolB, candB := poolA.unbondedToBondedPool(candA)
@@ -99,11 +99,11 @@ func TestUnbonbedtoBondedPool(t *testing.T) {
 	// status bonded
 	assert.Equal(t, candB.Status, Bonded)
 	// same exchange rate, assets unchanged
-	assert.Equal(t, candB.Assets, candA.Assets)
+	assert.Equal(t, candB.BondedShares, candA.BondedShares)
 	// bonded pool increased
-	assert.Equal(t, poolB.BondedPool, poolA.BondedPool+candA.Assets.Evaluate())
+	assert.Equal(t, poolB.BondedPool, poolA.BondedPool+candA.BondedShares.Evaluate())
 	// unbonded pool decreased
-	assert.Equal(t, poolB.UnbondedPool, poolA.UnbondedPool-candA.Assets.Evaluate())
+	assert.Equal(t, poolB.UnbondedPool, poolA.UnbondedPool-candA.BondedShares.Evaluate())
 	// conservation of tokens
 	assert.Equal(t, poolB.UnbondedPool+poolB.BondedPool, poolA.BondedPool+poolA.UnbondedPool)
 }
@@ -180,11 +180,11 @@ func TestCandidateAddTokens(t *testing.T) {
 		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
-		Assets:      sdk.NewRat(9),
-		Liabilities: sdk.NewRat(9),
+		BondedShares:      sdk.NewRat(9),
+		DelegatorShares: sdk.NewRat(9),
 	}
-	poolA.BondedPool = candA.Assets.Evaluate()
-	poolA.BondedShares = candA.Assets
+	poolA.BondedPool = candA.BondedShares.Evaluate()
+	poolA.BondedShares = candA.BondedShares
 	assert.Equal(t, candA.delegatorShareExRate(), sdk.OneRat())
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
@@ -193,7 +193,7 @@ func TestCandidateAddTokens(t *testing.T) {
 	// shares were issued
 	assert.Equal(t, sdk.NewRat(10).Mul(candA.delegatorShareExRate()), sharesB)
 	// pool shares were added
-	assert.Equal(t, candB.Assets, candA.Assets.Add(sdk.NewRat(10)))
+	assert.Equal(t, candB.BondedShares, candA.BondedShares.Add(sdk.NewRat(10)))
 	// conservation of tokens
 	assert.Equal(t, poolB.BondedPool, 10+poolA.BondedPool)
 }
@@ -206,11 +206,11 @@ func TestCandidateRemoveShares(t *testing.T) {
 		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
-		Assets:      sdk.NewRat(9),
-		Liabilities: sdk.NewRat(9),
+		BondedShares:      sdk.NewRat(9),
+		DelegatorShares: sdk.NewRat(9),
 	}
-	poolA.BondedPool = candA.Assets.Evaluate()
-	poolA.BondedShares = candA.Assets
+	poolA.BondedPool = candA.BondedShares.Evaluate()
+	poolA.BondedShares = candA.BondedShares
 	assert.Equal(t, candA.delegatorShareExRate(), sdk.OneRat())
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
@@ -219,7 +219,7 @@ func TestCandidateRemoveShares(t *testing.T) {
 	// coins were created
 	assert.Equal(t, coinsB, int64(10))
 	// pool shares were removed
-	assert.Equal(t, candB.Assets, candA.Assets.Sub(sdk.NewRat(10).Mul(candA.delegatorShareExRate())))
+	assert.Equal(t, candB.BondedShares, candA.BondedShares.Sub(sdk.NewRat(10).Mul(candA.delegatorShareExRate())))
 	// conservation of tokens
 	assert.Equal(t, poolB.UnbondedPool+poolB.BondedPool+coinsB, poolA.UnbondedPool+poolA.BondedPool)
 
@@ -230,8 +230,8 @@ func TestCandidateRemoveShares(t *testing.T) {
 		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
-		Assets:      assets,
-		Liabilities: liabilities,
+		BondedShares:      assets,
+		DelegatorShares: liabilities,
 	}
 	pool := Pool{
 		TotalSupply:       0,
@@ -244,7 +244,7 @@ func TestCandidateRemoveShares(t *testing.T) {
 	}
 	shares := sdk.NewRat(29)
 	msg := fmt.Sprintf("candidate %s (status: %d, assets: %v, liabilities: %v, delegatorShareExRate: %v)",
-		cand.Address, cand.Status, cand.Assets, cand.Liabilities, cand.delegatorShareExRate())
+		cand.Address, cand.Status, cand.BondedShares, cand.DelegatorShares, cand.delegatorShareExRate())
 	msg = fmt.Sprintf("Removed %v shares from %s", shares, msg)
 	newPool, _, tokens := pool.candidateRemoveShares(cand, shares)
 	require.Equal(t,
@@ -270,8 +270,8 @@ func randomCandidate(r *rand.Rand) Candidate {
 		Status:      status,
 		Address:     addrs[0],
 		PubKey:      pks[0],
-		Assets:      assets,
-		Liabilities: liabilities,
+		BondedShares:      assets,
+		DelegatorShares: liabilities,
 	}
 }
 
@@ -291,11 +291,11 @@ func randomSetup(r *rand.Rand, numCandidates int) (Pool, Candidates) {
 	for i := 0; i < numCandidates; i++ {
 		candidate := randomCandidate(r)
 		if candidate.Status == Bonded {
-			pool.BondedShares = pool.BondedShares.Add(candidate.Assets)
-			pool.BondedPool += candidate.Assets.Evaluate()
+			pool.BondedShares = pool.BondedShares.Add(candidate.BondedShares)
+			pool.BondedPool += candidate.BondedShares.Evaluate()
 		} else if candidate.Status == Unbonded {
-			pool.UnbondedShares = pool.UnbondedShares.Add(candidate.Assets)
-			pool.UnbondedPool += candidate.Assets.Evaluate()
+			pool.UnbondedShares = pool.UnbondedShares.Add(candidate.BondedShares)
+			pool.UnbondedPool += candidate.BondedShares.Evaluate()
 		}
 		candidates[i] = candidate
 	}
@@ -312,12 +312,12 @@ func OpBondOrUnbond(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int6
 	var msg string
 	if cand.Status == Bonded {
 		msg = fmt.Sprintf("Unbonded previously bonded candidate %s (assets: %v, liabilities: %v, delegatorShareExRate: %v)",
-			cand.Address, cand.Assets, cand.Liabilities, cand.delegatorShareExRate())
+			cand.Address, cand.BondedShares, cand.DelegatorShares, cand.delegatorShareExRate())
 		p, cand = p.bondedToUnbondedPool(cand)
 
 	} else if cand.Status == Unbonded {
 		msg = fmt.Sprintf("Bonded previously unbonded candidate %s (assets: %v, liabilities: %v, delegatorShareExRate: %v)",
-			cand.Address, cand.Assets, cand.Liabilities, cand.delegatorShareExRate())
+			cand.Address, cand.BondedShares, cand.DelegatorShares, cand.delegatorShareExRate())
 		p, cand = p.unbondedToBondedPool(cand)
 	}
 	return p, cand, 0, msg
@@ -327,7 +327,7 @@ func OpBondOrUnbond(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int6
 func OpAddTokens(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int64, string) {
 	tokens := int64(r.Int31n(1000))
 	msg := fmt.Sprintf("candidate %s (status: %d, assets: %v, liabilities: %v, delegatorShareExRate: %v)",
-		cand.Address, cand.Status, cand.Assets, cand.Liabilities, cand.delegatorShareExRate())
+		cand.Address, cand.Status, cand.BondedShares, cand.DelegatorShares, cand.delegatorShareExRate())
 	p, cand, _ = p.candidateAddTokens(cand, tokens)
 	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)
 	return p, cand, -1 * tokens, msg // tokens are removed so for accounting must be negative
@@ -338,13 +338,13 @@ func OpRemoveShares(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int6
 	var shares sdk.Rat
 	for {
 		shares = sdk.NewRat(int64(r.Int31n(1000)))
-		if shares.LT(cand.Liabilities) {
+		if shares.LT(cand.DelegatorShares) {
 			break
 		}
 	}
 
 	msg := fmt.Sprintf("Removed %v shares from candidate %s (status: %d, assets: %v, liabilities: %v, delegatorShareExRate: %v)",
-		shares, cand.Address, cand.Status, cand.Assets, cand.Liabilities, cand.delegatorShareExRate())
+		shares, cand.Address, cand.Status, cand.BondedShares, cand.DelegatorShares, cand.delegatorShareExRate())
 
 	p, cand, tokens := p.candidateRemoveShares(cand, shares)
 	return p, cand, tokens, msg
@@ -409,21 +409,21 @@ func assertInvariants(t *testing.T, msg string,
 		)
 
 		// nonnegative assets
-		require.False(t, cMod.Assets.LT(sdk.ZeroRat()),
-			"Applying operation \"%s\" resulted in negative candidate.Assets: %v (candidate.Liabilities: %v, candidate.delegatorShareExRate: %v, candidate.Address: %s)",
+		require.False(t, cMod.BondedShares.LT(sdk.ZeroRat()),
+			"Applying operation \"%s\" resulted in negative candidate.BondedShares: %v (candidate.DelegatorShares: %v, candidate.delegatorShareExRate: %v, candidate.Address: %s)",
 			msg,
-			cMod.Assets,
-			cMod.Liabilities,
+			cMod.BondedShares,
+			cMod.DelegatorShares,
 			cMod.delegatorShareExRate(),
 			cMod.Address,
 		)
 
 		// nonnegative liabilities
-		require.False(t, cMod.Liabilities.LT(sdk.ZeroRat()),
-			"Applying operation \"%s\" resulted in negative candidate.Liabilities: %v (candidate.Assets: %v, candidate.delegatorShareExRate: %v, candidate.Address: %s)",
+		require.False(t, cMod.DelegatorShares.LT(sdk.ZeroRat()),
+			"Applying operation \"%s\" resulted in negative candidate.DelegatorShares: %v (candidate.BondedShares: %v, candidate.delegatorShareExRate: %v, candidate.Address: %s)",
 			msg,
-			cMod.Liabilities,
-			cMod.Assets,
+			cMod.DelegatorShares,
+			cMod.BondedShares,
 			cMod.delegatorShareExRate(),
 			cMod.Address,
 		)
@@ -439,8 +439,8 @@ func TestPossibleOverflow(t *testing.T) {
 		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
-		Assets:      assets,
-		Liabilities: liabilities,
+		BondedShares:      assets,
+		DelegatorShares: liabilities,
 	}
 	pool := Pool{
 		TotalSupply:       0,
@@ -453,7 +453,7 @@ func TestPossibleOverflow(t *testing.T) {
 	}
 	tokens := int64(71)
 	msg := fmt.Sprintf("candidate %s (status: %d, assets: %v, liabilities: %v, delegatorShareExRate: %v)",
-		cand.Address, cand.Status, cand.Assets, cand.Liabilities, cand.delegatorShareExRate())
+		cand.Address, cand.Status, cand.BondedShares, cand.DelegatorShares, cand.delegatorShareExRate())
 	_, newCandidate, _ := pool.candidateAddTokens(cand, tokens)
 
 	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)

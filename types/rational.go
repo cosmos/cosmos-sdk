@@ -168,3 +168,19 @@ func (r *Rat) UnmarshalAmino(text string) (err error) {
 	r.Rat = *tempRat
 	return nil
 }
+
+//___________________________________________________________________________________
+
+// test if two rat arrays are the equal
+func RatsEqual(r1s, r2s []Rat) bool {
+	if len(r1s) != len(r2s) {
+		return false
+	}
+
+	for i, r1 := range r1s {
+		if !r1.Equal(r2s[i]) {
+			return false
+		}
+	}
+	return true
+}

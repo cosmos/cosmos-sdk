@@ -18,12 +18,15 @@ func (k Keeper) FeeHandler(ctx sdk.Context, collectedFees sdk.Coins) {
 	candidate.ProposerRewardPool = candidate.ProposerRewardPool.Plus(toProposer)
 
 	toReservePool := coinsMulRat(collectedFees, params.ReservePoolFee)
-	pool.ReservePool = pool.ReservePool.Plus(toReservePool)
+	pool.FeeReservePool = pool.FeeReservePool.Plus(toReservePool)
 
 	distributedReward := (collectedFees.Minus(toProposer)).Minus(toReservePool)
 	pool.FeePool = pool.FeePool.Plus(distributedReward)
-	pool.SumFeesReceived = pool.SumFeesReceived.Plus(distributedReward)
-	pool.RecentFee = distributedReward
+	pool.FeeSumReceived = pool.FeeSumReceived.Plus(distributedReward)
+	pool.FeeRecent = distributedReward
+
+	// lastly update the FeeRecent term
+	pool.FeeRecent = collectedFees
 
 	k.setPool(ctx, pool)
 }
@@ -41,21 +44,26 @@ func coinsMulRat(coins sdk.Coins, rat sdk.Rat) sdk.Coins {
 //____________________________________________________________________________-
 
 // calculate adjustment changes for a candidate at a height
-func CalculateAdjustmentChange(candidate Candidate, pool Pool, height int64) (candidate, pool) {
+func CalculateAdjustmentChange(candidate Candidate, pool Pool, denoms []string, height int64) (Candidate, Pool) {
 
 	heightRat := sdk.NewRat(height)
 	lastHeightRat := sdk.NewRat(height - 1)
-	candidateFeeCount := candidate.VotingPower.Mul(heightRat)
+	candidateFeeCount := candidate.BondedShares.Mul(heightRat)
 	poolFeeCount := pool.BondedShares.Mul(heightRat)
 
-	// calculate simple and projected pools
-	simplePool := candidateFeeCount.Quo(poolFeeCount).Mul(pool.SumFeesReceived)
-	calc1 := candidate.PrevPower.Mul(lastHeightRat).Div(pool.PrevPower.Mul(lastHeightRat)).Mul(pool.PrevFeesReceived)
-	calc2 := candidate.Power.Div(pool.Power).Mul(pool.RecentFee)
-	projectedPool := calc1 + calc2
+	for i, denom := range denoms {
+		poolFeeSumReceived := sdk.NewRat(pool.FeeSumReceived.AmountOf(denom))
+		poolFeeRecent := sdk.NewRat(pool.FeeRecent.AmountOf(denom))
+		// calculate simple and projected pools
+		simplePool := candidateFeeCount.Quo(poolFeeCount).Mul(poolFeeSumReceived)
+		calc1 := candidate.PrevBondedShares.Mul(lastHeightRat).Quo(pool.PrevBondedShares.Mul(lastHeightRat)).Mul(poolFeeRecent)
+		calc2 := candidate.BondedShares.Quo(pool.BondedShares).Mul(poolFeeRecent)
+		projectedPool := calc1.Add(calc2)
 
-	AdjustmentChange := simplePool.Sub(projectedPool)
-	candidate.Adjustment += AdjustmentChange
-	pool.Adjustment += AdjustmentChange
+		AdjustmentChange := simplePool.Sub(projectedPool)
+		candidate.FeeAdjustments[i] = candidate.FeeAdjustments[i].Add(AdjustmentChange)
+		pool.FeeAdjustments[i] = pool.FeeAdjustments[i].Add(AdjustmentChange)
+	}
+
 	return candidate, pool
 }

@@ -17,6 +17,15 @@ type GenesisState struct {
 	Bonds      []DelegatorBond `json:"bonds"`
 }
 
+func NewGenesisState(pool Pool, params Params, candidates []Candidate, bonds []DelegatorBond) GenesisState {
+	return GenesisState{
+		Pool:       pool,
+		Params:     params,
+		Candidates: candidates,
+		Bonds:      bonds,
+	}
+}
+
 // get raw genesis raw message for testing
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
@@ -37,7 +46,8 @@ type Params struct {
 	MaxValidators uint16 `json:"max_validators"` // maximum number of validators
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
 
-	ReservePoolFee sdk.Rat `json:"reserve_pool_fee"` // percent of fees which go to reserve pool
+	FeeDenoms      []string `json:"reserve_pool_fee"` // accepted fee denoms
+	ReservePoolFee sdk.Rat  `json:"reserve_pool_fee"` // percent of fees which go to reserve pool
 }
 
 func (p Params) equal(p2 Params) bool {
@@ -58,6 +68,7 @@ func defaultParams() Params {
 		GoalBonded:          sdk.NewRat(67, 100),
 		MaxValidators:       100,
 		BondDenom:           "steak",
+		FeeDenoms:           []string{"steak"},
 		ReservePoolFee:      sdk.NewRat(5, 100),
 	}
 }
@@ -68,20 +79,23 @@ func defaultParams() Params {
 type Pool struct {
 	TotalSupply       int64   `json:"total_supply"`        // total supply of all tokens
 	BondedShares      sdk.Rat `json:"bonded_shares"`       // sum of all shares distributed for the Bonded Pool
+	UnbondingShares   sdk.Rat `json:"unbonding_shares"`    // shares moving from Bonded to Unbonded Pool
 	UnbondedShares    sdk.Rat `json:"unbonded_shares"`     // sum of all shares distributed for the Unbonded Pool
 	BondedPool        int64   `json:"bonded_pool"`         // reserve of bonded tokens
+	UnbondingPool     int64   `json:"unbonded_pool"`       // tokens moving from bonded to unbonded pool
 	UnbondedPool      int64   `json:"unbonded_pool"`       // reserve of unbonded tokens held with candidates
 	InflationLastTime int64   `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
 	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
 
 	DateLastCommissionReset int64 `json:"date_last_commission_reset"` // unix timestamp for last commission accounting reset (daily)
 
-	// XXX need to use special sdk.Rat amounts in coins here because added at small increments
-	ReservePool     sdk.RatCoin `json:"reserve_pool"`      // XXX reserve pool of collected fees for use by governance
-	FeePool         sdk.RatCoin `json:"fee_pool"`          // XXX fee pool for all the fee shares which have already been distributed
-	SumFeesReceived sdk.Coins   `json:"sum_fees_received"` // XXX sum of all fees received, post reserve pool
-	RecentFee       sdk.Coins   `json:"recent_fee"`        // XXX most recent fee collected
-	Adjustment      sdk.Rat     `json:"adjustment"`        // XXX Adjustment factor for calculating global fee accum
+	// Fee Related
+	FeeReservePool   sdk.Coins `json:"reserve_pool"`      // XXX reserve pool of collected fees for use by governance
+	FeePool          sdk.Coins `json:"fee_pool"`          // XXX fee pool for all the fee shares which have already been distributed
+	FeeSumReceived   sdk.Coins `json:"sum_fees_received"` // XXX sum of all fees received, post reserve pool
+	FeeRecent        sdk.Coins `json:"recent_fee"`        // XXX most recent fee collected
+	FeeAdjustments   []sdk.Rat `json:"adjustment"`        // XXX Adjustment factors for lazy fee accounting, couples with Params.BondDenoms
+	PrevBondedShares sdk.Rat   `json:"adjustment"`        // XXX last recorded bonded shares
 }
 
 func (p Pool) equal(p2 Pool) bool {
@@ -93,11 +107,12 @@ func (p Pool) equal(p2 Pool) bool {
 		p.InflationLastTime == p2.InflationLastTime &&
 		p.Inflation.Equal(p2.Inflation) &&
 		p.DateLastCommissionReset == p2.DateLastCommissionReset &&
-		p.ReservePool.IsEqual(p2.ReservePool) &&
+		p.FeeReservePool.IsEqual(p2.FeeReservePool) &&
 		p.FeePool.IsEqual(p2.FeePool) &&
-		p.SumFeesReceived.IsEqual(p2.SumFeesReceived) &&
-		p.RecentFee.IsEqual(p2.RecentFee) &&
-		p.Adjustment.Equal(p2.Adjustment)
+		p.FeeSumReceived.IsEqual(p2.FeeSumReceived) &&
+		p.FeeRecent.IsEqual(p2.FeeRecent) &&
+		sdk.RatsEqual(p.FeeAdjustments, p2.FeeAdjustments) &&
+		p.PrevBondedShares.Equal(p2.PrevBondedShares)
 }
 
 // initial pool for testing
@@ -105,17 +120,20 @@ func initialPool() Pool {
 	return Pool{
 		TotalSupply:             0,
 		BondedShares:            sdk.ZeroRat(),
+		UnbondingShares:         sdk.ZeroRat(),
 		UnbondedShares:          sdk.ZeroRat(),
 		BondedPool:              0,
+		UnbondingPool:           0,
 		UnbondedPool:            0,
 		InflationLastTime:       0,
 		Inflation:               sdk.NewRat(7, 100),
 		DateLastCommissionReset: 0,
-		ReservePool:             sdk.Coins(nil),
+		FeeReservePool:          sdk.Coins(nil),
 		FeePool:                 sdk.Coins(nil),
-		SumFeesReceived:         sdk.Coins(nil),
-		RecentFee:               sdk.Coins(nil),
-		Adjustment:              sdk.ZeroRat(),
+		FeeSumReceived:          sdk.Coins(nil),
+		FeeRecent:               sdk.Coins(nil),
+		FeeAdjustments:          []sdk.Rat{},
+		PrevBondedShares:        sdk.ZeroRat(),
 	}
 }
 
@@ -150,19 +168,27 @@ const (
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
 type Candidate struct {
-	Status                CandidateStatus `json:"status"`                  // Bonded status
-	Address               sdk.Address     `json:"owner"`                   // Sender of BondTx - UnbondTx returns here
-	PubKey                crypto.PubKey   `json:"pub_key"`                 // Pubkey of candidate
-	Assets                sdk.Rat         `json:"assets"`                  // total shares of a global hold pools
-	Liabilities           sdk.Rat         `json:"liabilities"`             // total shares issued to a candidate's delegators
-	Description           Description     `json:"description"`             // Description terms for the candidate
-	ValidatorBondHeight   int64           `json:"validator_bond_height"`   // Earliest height as a bonded validator
-	ValidatorBondCounter  int16           `json:"validator_bond_counter"`  // Block-local tx index of validator change
-	ProposerRewardPool    sdk.Coins       `json:"proposer_reward_pool"`    // XXX reward pool collected from being the proposer
-	Commission            sdk.Rat         `json:"commission"`              // XXX the commission rate of fees charged to any delegators
-	CommissionMax         sdk.Rat         `json:"commission_max"`          // XXX maximum commission rate which this candidate can ever charge
-	CommissionChangeRate  sdk.Rat         `json:"commission_change_rate"`  // XXX maximum daily increase of the candidate commission
-	CommissionChangeToday sdk.Rat         `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
+	Status          CandidateStatus `json:"status"`      // Bonded status
+	Address         sdk.Address     `json:"owner"`       // Sender of BondTx - UnbondTx returns here
+	PubKey          crypto.PubKey   `json:"pub_key"`     // Pubkey of candidate
+	BondedShares    sdk.Rat         `json:"assets"`      // total shares of a global hold pools
+	UnbondingShares sdk.Rat         `json:"assets"`      // total shares of a global hold pools
+	UnbondedShares  sdk.Rat         `json:"assets"`      // total shares of a global hold pools
+	DelegatorShares sdk.Rat         `json:"liabilities"` // total shares issued to a candidate's delegators
+
+	Description          Description `json:"description"`            // Description terms for the candidate
+	ValidatorBondHeight  int64       `json:"validator_bond_height"`  // Earliest height as a bonded validator
+	ValidatorBondCounter int16       `json:"validator_bond_counter"` // Block-local tx index of validator change
+	ProposerRewardPool   sdk.Coins   `json:"proposer_reward_pool"`   // XXX reward pool collected from being the proposer
+
+	Commission            sdk.Rat `json:"commission"`              // XXX the commission rate of fees charged to any delegators
+	CommissionMax         sdk.Rat `json:"commission_max"`          // XXX maximum commission rate which this candidate can ever charge
+	CommissionChangeRate  sdk.Rat `json:"commission_change_rate"`  // XXX maximum daily increase of the candidate commission
+	CommissionChangeToday sdk.Rat `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
+
+	// fee related
+	FeeAdjustments   []sdk.Rat `json:"adjustment"` // XXX Adjustment factors for lazy fee accounting, couples with Params.BondDenoms
+	PrevBondedShares sdk.Rat   `json:"adjustment"` // total shares of a global hold pools
 }
 
 // Candidates - list of Candidates
@@ -174,8 +200,8 @@ func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Descrip
 		Status:                Unbonded,
 		Address:               address,
 		PubKey:                pubKey,
-		Assets:                sdk.ZeroRat(),
-		Liabilities:           sdk.ZeroRat(),
+		BondedShares:          sdk.ZeroRat(),
+		DelegatorShares:       sdk.ZeroRat(),
 		Description:           description,
 		ValidatorBondHeight:   int64(0),
 		ValidatorBondCounter:  int16(0),
@@ -184,6 +210,8 @@ func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Descrip
 		CommissionMax:         sdk.ZeroRat(),
 		CommissionChangeRate:  sdk.ZeroRat(),
 		CommissionChangeToday: sdk.ZeroRat(),
+		FeeAdjustments:        []sdk.Rat(nil),
+		PrevBondedShares:      sdk.ZeroRat(),
 	}
 }
 
@@ -191,8 +219,8 @@ func (c Candidate) equal(c2 Candidate) bool {
 	return c.Status == c2.Status &&
 		c.PubKey.Equals(c2.PubKey) &&
 		bytes.Equal(c.Address, c2.Address) &&
-		c.Assets.Equal(c2.Assets) &&
-		c.Liabilities.Equal(c2.Liabilities) &&
+		c.BondedShares.Equal(c2.BondedShares) &&
+		c.DelegatorShares.Equal(c2.DelegatorShares) &&
 		c.Description == c2.Description &&
 		c.ValidatorBondHeight == c2.ValidatorBondHeight &&
 		//c.ValidatorBondCounter == c2.ValidatorBondCounter && // counter is always changing
@@ -200,7 +228,9 @@ func (c Candidate) equal(c2 Candidate) bool {
 		c.Commission.Equal(c2.Commission) &&
 		c.CommissionMax.Equal(c2.CommissionMax) &&
 		c.CommissionChangeRate.Equal(c2.CommissionChangeRate) &&
-		c.CommissionChangeToday.Equal(c2.CommissionChangeToday)
+		c.CommissionChangeToday.Equal(c2.CommissionChangeToday) &&
+		sdk.RatsEqual(c.FeeAdjustments, c2.FeeAdjustments) &&
+		c.PrevBondedShares.Equal(c2.PrevBondedShares)
 }
 
 // Description - description fields for a candidate
@@ -222,10 +252,10 @@ func NewDescription(moniker, identity, website, details string) Description {
 
 // get the exchange rate of global pool shares over delegator shares
 func (c Candidate) delegatorShareExRate() sdk.Rat {
-	if c.Liabilities.IsZero() {
+	if c.DelegatorShares.IsZero() {
 		return sdk.OneRat()
 	}
-	return c.Assets.Quo(c.Liabilities)
+	return c.BondedShares.Quo(c.DelegatorShares)
 }
 
 // Validator returns a copy of the Candidate as a Validator.
@@ -234,7 +264,7 @@ func (c Candidate) validator() Validator {
 	return Validator{
 		Address: c.Address,
 		PubKey:  c.PubKey,
-		Power:   c.Assets,
+		Power:   c.BondedShares,
 		Height:  c.ValidatorBondHeight,
 		Counter: c.ValidatorBondCounter,
 	}

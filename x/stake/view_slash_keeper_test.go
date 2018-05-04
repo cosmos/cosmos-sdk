@@ -20,8 +20,8 @@ func TestViewSlashBond(t *testing.T) {
 		candidates[i] = Candidate{
 			Address:     addrVals[i],
 			PubKey:      pks[i],
-			Assets:      sdk.NewRat(amt),
-			Liabilities: sdk.NewRat(amt),
+			BondedShares:      sdk.NewRat(amt),
+			DelegatorShares: sdk.NewRat(amt),
 		}
 	}
 

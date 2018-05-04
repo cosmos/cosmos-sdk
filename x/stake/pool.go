@@ -32,8 +32,8 @@ func (p Pool) unbondedShareExRate() sdk.Rat {
 func (p Pool) bondedToUnbondedPool(candidate Candidate) (Pool, Candidate) {
 
 	// replace bonded shares with unbonded shares
-	p, tokens := p.removeSharesBonded(candidate.Assets)
-	p, candidate.Assets = p.addTokensUnbonded(tokens)
+	p, tokens := p.removeSharesBonded(candidate.BondedShares)
+	p, candidate.BondedShares = p.addTokensUnbonded(tokens)
 	candidate.Status = Unbonded
 	return p, candidate
 }
@@ -42,8 +42,8 @@ func (p Pool) bondedToUnbondedPool(candidate Candidate) (Pool, Candidate) {
 func (p Pool) unbondedToBondedPool(candidate Candidate) (Pool, Candidate) {
 
 	// replace unbonded shares with bonded shares
-	p, tokens := p.removeSharesUnbonded(candidate.Assets)
-	p, candidate.Assets = p.addTokensBonded(tokens)
+	p, tokens := p.removeSharesUnbonded(candidate.BondedShares)
+	p, candidate.BondedShares = p.addTokensBonded(tokens)
 	candidate.Status = Bonded
 	return p, candidate
 }
@@ -92,10 +92,10 @@ func (p Pool) candidateAddTokens(candidate Candidate,
 	} else {
 		p, receivedGlobalShares = p.addTokensUnbonded(amount)
 	}
-	candidate.Assets = candidate.Assets.Add(receivedGlobalShares)
+	candidate.BondedShares = candidate.BondedShares.Add(receivedGlobalShares)
 
 	issuedDelegatorShares = exRate.Mul(receivedGlobalShares)
-	candidate.Liabilities = candidate.Liabilities.Add(issuedDelegatorShares)
+	candidate.DelegatorShares = candidate.DelegatorShares.Add(issuedDelegatorShares)
 
 	return p, candidate, issuedDelegatorShares
 }
@@ -112,7 +112,7 @@ func (p Pool) candidateRemoveShares(candidate Candidate,
 	} else {
 		p, createdCoins = p.removeSharesUnbonded(globalPoolSharesToRemove)
 	}
-	candidate.Assets = candidate.Assets.Sub(globalPoolSharesToRemove)
-	candidate.Liabilities = candidate.Liabilities.Sub(shares)
+	candidate.BondedShares = candidate.BondedShares.Sub(globalPoolSharesToRemove)
+	candidate.DelegatorShares = candidate.DelegatorShares.Sub(shares)
 	return p, candidate, createdCoins
 }

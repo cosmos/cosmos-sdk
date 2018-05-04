@@ -72,8 +72,8 @@ func TestProcessProvisions(t *testing.T) {
 			Status:      Unbonded,
 			PubKey:      pks[i],
 			Address:     addrs[i],
-			Assets:      sdk.NewRat(0),
-			Liabilities: sdk.NewRat(0),
+			BondedShares:      sdk.NewRat(0),
+			DelegatorShares: sdk.NewRat(0),
 		}
 		if i < 5 {
 			c.Status = Bonded

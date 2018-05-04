@@ -285,7 +285,7 @@ func (k Keeper) IsRecentValidator(ctx sdk.Context, pk crypto.PubKey) bool {
 	return true
 }
 
-// Is the power of non-absent prevotes
+// cummulative power of the non-absent prevotes
 func (k Keeper) GetTotalPrecommitVotingPower(ctx sdk.Context) sdk.Rat {
 	store := ctx.KVStore(k.storeKey)
 
@@ -311,7 +311,7 @@ func (k Keeper) GetTotalPrecommitVotingPower(ctx sdk.Context) sdk.Rat {
 			}
 		}
 		if skip {
-			break
+			continue
 		}
 
 		bz := iterator.Value()

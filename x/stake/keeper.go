@@ -35,9 +35,9 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.
 }
 
 // get the current in-block validator operation counter
-func (k Keeper) getCounter(ctx sdk.Context) int16 {
+func (k Keeper) getIntraTxCounter(ctx sdk.Context) int16 {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(CounterKey)
+	b := store.Get(IntraTxCounterKey)
 	if b == nil {
 		return 0
 	}
@@ -47,10 +47,10 @@ func (k Keeper) getCounter(ctx sdk.Context) int16 {
 }
 
 // set the current in-block validator operation counter
-func (k Keeper) setCounter(ctx sdk.Context, counter int16) {
+func (k Keeper) setIntraTxCounter(ctx sdk.Context, counter int16) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(counter)
-	store.Set(CounterKey, bz)
+	store.Set(IntraTxCounterKey, bz)
 }
 
 //_________________________________________________________________________
@@ -143,18 +143,22 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	// or is a new validator
 	setAcc := false
 	if store.Get(GetRecentValidatorKey(candidate.PubKey)) != nil {
-		setAcc = true
+		//setAcc = true
 
-		// want to check in the else statement because inefficient
-	} else if k.isNewValidator(ctx, store, address) {
-		setAcc = true
-	}
-
-	if setAcc {
 		bz = k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
 		store.Set(GetAccUpdateValidatorKey(address), bz)
+		// want to check in the else statement because inefficient
+	} else if k.isNewValidator(ctx, store, address) {
+		//setAcc = true
 
+		// need to calculate the whole validator set because somebody's gettin' kicked
+		k.GetValidators(ctx)
 	}
+
+	//if setAcc {
+	//bz = k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
+	//store.Set(GetAccUpdateValidatorKey(address), bz)
+	//}
 
 	return
 }
@@ -184,6 +188,7 @@ func (k Keeper) removeCandidate(ctx sdk.Context, address sdk.Address) {
 
 //___________________________________________________________________________
 
+// XXX NEVER ACTUALLY CALLED ANYWHERE = DETERMINE PLACEMENT
 // Get the validator set from the candidates. The correct subset is retrieved
 // by iterating through an index of the candidates sorted by power, stored
 // using the ValidatorsKey. Simultaniously the most recent the validator
@@ -422,6 +427,37 @@ func (k Keeper) setDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
 func (k Keeper) removeDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetDelegatorBondKey(bond.DelegatorAddr, bond.CandidateAddr, k.cdc))
+}
+
+//_______________________________________________________________________
+
+// XXX TODO trim functionality
+
+// retrieve all the power changes which occur after a height
+func (k Keeper) GetPowerChangesAfterHeight(ctx sdk.Context, earliestHeight int64) (pcs []PowerChange) {
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := store.SubspaceIterator(PowerChangeKey) //smallest to largest
+	for ; iterator.Valid(); iterator.Next() {
+		pcBytes := iterator.Value()
+		var pc PowerChange
+		k.cdc.MustUnmarshalBinary(pcBytes, &pc)
+		if pc.Height < earliestHeight {
+			break
+		}
+		pcs = append(pcs, pc)
+	}
+	iterator.Close()
+
+	k.cdc.MustUnmarshalBinary(b, &params)
+	return
+}
+
+// set a power change
+func (k Keeper) setPowerChange(ctx sdk.Context, pc PowerChange) {
+	store := ctx.KVStore(k.storeKey)
+	b := k.cdc.MustMarshalBinary(pc)
+	store.Set(GetPowerChangeKey(pc.Height), b)
 }
 
 //_______________________________________________________________________

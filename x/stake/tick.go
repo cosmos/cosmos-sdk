@@ -26,12 +26,18 @@ func (k Keeper) Tick(ctx sdk.Context) (change []abci.Validator) {
 	// save the params
 	k.setPool(ctx, p)
 
-	// reset the counter
-	k.setCounter(ctx, 0)
+	// reset the intra-transaction counter
+	k.setIntraTxCounter(ctx, 0)
 
+	// calculate validator set changes
 	change = k.getAccUpdateValidators(ctx)
+	k.clearAccUpdateValidators(ctx)
 
-	return
+	// XXX get the total validator of the previous validator set
+	// XXX get the total validator of the current validator set
+	// Calculate the PowerChange term
+
+	return change
 }
 
 // process provisions for an hour period

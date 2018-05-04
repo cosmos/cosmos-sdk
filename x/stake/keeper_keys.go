@@ -21,7 +21,8 @@ var (
 	RecentValidatorsKey    = []byte{0x05} // prefix for each key to the last updated validator group
 	ToKickOutValidatorsKey = []byte{0x06} // prefix for each key to the last updated validator group
 	DelegatorBondKeyPrefix = []byte{0x07} // prefix for each key to a delegator's bond
-	CounterKey             = []byte{0x08} // key for block-local tx index
+	IntraTxCounterKey      = []byte{0x08} // key for block-local tx index
+	PowerChangeKey         = []byte{0x09} // prefix for power change object
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -74,4 +75,11 @@ func GetDelegatorBondsKey(delegatorAddr sdk.Address, cdc *wire.Codec) []byte {
 		panic(err)
 	}
 	return append(DelegatorBondKeyPrefix, res...)
+}
+
+// get the key for the accumulated update validators
+func GetPowerChangeKey(height int64) []byte {
+	heightBytes := make([]byte, binary.MaxVarintLen64)
+	binary.BigEndian.PutUint64(heightBytes, ^uint64(height)) // invert height (older validators first)
+	return append(PowerChangeKey, heightBytes...)
 }

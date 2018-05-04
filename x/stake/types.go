@@ -77,11 +77,11 @@ type Pool struct {
 	DateLastCommissionReset int64 `json:"date_last_commission_reset"` // unix timestamp for last commission accounting reset (daily)
 
 	// XXX need to use special sdk.Rat amounts in coins here because added at small increments
-	ReservePool     sdk.Coins `json:"reserve_pool"`      // XXX reserve pool of collected fees for use by governance
-	FeePool         sdk.Coins `json:"fee_pool"`          // XXX fee pool for all the fee shares which have already been distributed
-	SumFeesReceived sdk.Coins `json:"sum_fees_received"` // XXX sum of all fees received
-	RecentFee       sdk.Coins `json:"recent_fee"`        // XXX most recent fee collected
-	Adjustment      sdk.Rat   `json:"adjustment"`        // XXX Adjustment factor for calculating global fee accum
+	ReservePool     sdk.RatCoin `json:"reserve_pool"`      // XXX reserve pool of collected fees for use by governance
+	FeePool         sdk.RatCoin `json:"fee_pool"`          // XXX fee pool for all the fee shares which have already been distributed
+	SumFeesReceived sdk.Coins   `json:"sum_fees_received"` // XXX sum of all fees received, post reserve pool
+	RecentFee       sdk.Coins   `json:"recent_fee"`        // XXX most recent fee collected
+	Adjustment      sdk.Rat     `json:"adjustment"`        // XXX Adjustment factor for calculating global fee accum
 }
 
 func (p Pool) equal(p2 Pool) bool {
@@ -117,6 +117,17 @@ func initialPool() Pool {
 		RecentFee:               sdk.Coins(nil),
 		Adjustment:              sdk.ZeroRat(),
 	}
+}
+
+//_________________________________________________________________________
+
+// Used in calculation of fee shares, added to a queue for each block where a power change occures
+type PowerChange struct {
+	Height      int64     `json:"height"`        // block height at change
+	Power       sdk.Rat   `json:"power"`         // total power at change
+	PrevPower   sdk.Rat   `json:"prev_power"`    // total power at previous height-1
+	FeesIn      sdk.Coins `json:"fees_in"`       // fees in at block height
+	PrevFeePool sdk.Coins `json:"prev_fee_pool"` // total fees in at previous block height
 }
 
 //_________________________________________________________________________

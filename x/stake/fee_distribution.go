@@ -28,7 +28,6 @@ func (k Keeper) FeeHandler(ctx sdk.Context, collectedFees sdk.Coins) {
 	k.setPool(ctx, pool)
 }
 
-// XXX need to introduce rat amount based coins for the pool :(
 func coinsMulRat(coins sdk.Coins, rat sdk.Rat) sdk.Coins {
 	var res sdk.Coins
 	for _, coin := range coins {
@@ -37,4 +36,26 @@ func coinsMulRat(coins sdk.Coins, rat sdk.Rat) sdk.Coins {
 		res = res.Plus(coinMul)
 	}
 	return res
+}
+
+//____________________________________________________________________________-
+
+// calculate adjustment changes for a candidate at a height
+func CalculateAdjustmentChange(candidate Candidate, pool Pool, height int64) (candidate, pool) {
+
+	heightRat := sdk.NewRat(height)
+	lastHeightRat := sdk.NewRat(height - 1)
+	candidateFeeCount := candidate.VotingPower.Mul(heightRat)
+	poolFeeCount := pool.BondedShares.Mul(heightRat)
+
+	// calculate simple and projected pools
+	simplePool := candidateFeeCount.Quo(poolFeeCount).Mul(pool.SumFeesReceived)
+	calc1 := candidate.PrevPower.Mul(lastHeightRat).Div(pool.PrevPower.Mul(lastHeightRat)).Mul(pool.PrevFeesReceived)
+	calc2 := candidate.Power.Div(pool.Power).Mul(pool.RecentFee)
+	projectedPool := calc1 + calc2
+
+	AdjustmentChange := simplePool.Sub(projectedPool)
+	candidate.Adjustment += AdjustmentChange
+	pool.Adjustment += AdjustmentChange
+	return candidate, pool
 }

@@ -179,3 +179,66 @@ func NewOutput(addr sdk.Address, coins sdk.Coins) Output {
 	}
 	return output
 }
+
+//------------------------------
+// IBCSendMsg - IBC transaction of the coin module
+
+// implements sdk.Msg
+type IBCSendMsg struct {
+	DestChain string
+	SendPayload
+}
+
+func (msg IBCSendMsg) Type() string { return "bank" }
+
+func (msg IBCSendMsg) ValidateBasic() sdk.Error {
+	return msg.SendPayload.ValidateBasic()
+}
+
+func (msg IBCSendMsg) Get(key interface{}) interface{} {
+	return nil
+}
+
+func (msg IBCSendMsg) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.SendPayload.SrcAddr}
+}
+
+func (msg IBCSendMsg) GetSignBytes() []byte {
+	b, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+//--------------------------------
+// SendPayload - payload for IBC sending
+
+// implements ibc.Payload
+type SendPayload struct {
+	SrcAddr  sdk.Address
+	DestAddr sdk.Address
+	Coins    sdk.Coins
+}
+
+func (p SendPayload) Type() string {
+	return "bank"
+}
+
+func (p SendPayload) ValidateBasic() sdk.Error {
+	if !p.Coins.IsValid() {
+		return sdk.ErrInvalidCoins(p.Coins.String())
+	}
+	if !p.Coins.IsPositive() {
+		return sdk.ErrInvalidCoins(p.Coins.String())
+	}
+	return nil
+}
+
+//-------------------------------
+// SendFailReceipt
+
+// implements ibc.Receipt
+type SendFailReceipt struct {
+	SendPayload
+}

@@ -42,7 +42,7 @@ type GaiaApp struct {
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
 	coinKeeper    bank.Keeper
-	ibcMapper     ibc.Mapper
+	bankChannel   ibc.Channel
 	stakeKeeper   stake.Keeper
 }
 
@@ -68,13 +68,14 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 
 	// add handlers
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
-	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
+	keeper := ibc.NewKeeper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
+	app.bankChannel = keeper.Channel("bank")
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 
 	// register message routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+		AddRoute("bank", bank.NewHandler(app.coinKeeper, app.bankChannel)).
+		AddRoute("ibc", ibc.NewHandler(keeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
 
 	// initialize BaseApp

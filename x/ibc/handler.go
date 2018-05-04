@@ -16,9 +16,9 @@ func NewHandler(keeper keeper) sdk.Handler {
 		case UpdateChannelMsg:
 			return handleUpdateChannelMsg(ctx, keeper, msg)
 		case ReceiveCleanupMsg:
-			return handleReceiveCleanupMsg(ctx, keeper, msg)
+			return handleReceiveCleanupMsg(ctx, keeper.Channel(msg.ChannelName), msg)
 		case ReceiptCleanupMsg:
-			return handleReceiptCleanupMsg(ctx, keeper, msg)
+			return handleReceiptCleanupMsg(ctx, keeper.Channel(msg.ChannelName), msg)
 		default:
 			errMsg := "Unrecognized IBC Msg type: " + reflect.TypeOf(msg).Name()
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -61,9 +61,7 @@ func handleUpdateChannelMsg(ctx sdk.Context, keeper keeper, msg UpdateChannelMsg
 type ReceiveHandler func(sdk.Context, Payload) (Payload, sdk.Error)
 
 func (channel Channel) Receive(h ReceiveHandler, ctx sdk.Context, msg ReceiveMsg) sdk.Result {
-	keeper := channel.keeper
-
-	if err := msg.Verify(ctx, keeper); err != nil {
+	if err := msg.Verify(ctx, channel); err != nil {
 		return err.Result()
 	}
 
@@ -85,7 +83,10 @@ func (channel Channel) Receive(h ReceiveHandler, ctx sdk.Context, msg ReceiveMsg
 			DestChain: packet.SrcChain,
 		}
 
-		keeper.receipt.Push(ctx, recPacket)
+		queue := channel.receiptQueue(ctx, packet.SrcChain)
+		if queue != nil {
+			queue.Push(ctx, recPacket)
+		}
 	}
 	if err != nil {
 		return sdk.Result{
@@ -101,7 +102,7 @@ func (channel Channel) Receive(h ReceiveHandler, ctx sdk.Context, msg ReceiveMsg
 type ReceiptHandler func(sdk.Context, Payload)
 
 func (channel Channel) Receipt(h ReceiptHandler, ctx sdk.Context, msg ReceiptMsg) sdk.Result {
-	if err := msg.Verify(ctx, channel.keeper); err != nil {
+	if err := msg.Verify(ctx, channel); err != nil {
 		return err.Result()
 	}
 
@@ -110,8 +111,8 @@ func (channel Channel) Receipt(h ReceiptHandler, ctx sdk.Context, msg ReceiptMsg
 	return sdk.Result{}
 }
 
-func handleReceiveCleanupMsg(ctx sdk.Context, keeper keeper, msg ReceiveCleanupMsg) sdk.Result {
-	receive := keeper.receive
+func handleReceiveCleanupMsg(ctx sdk.Context, channel Channel, msg ReceiveCleanupMsg) sdk.Result {
+	receive := channel.receiveQueue(ctx, msg.SrcChain)
 
 	if err := msg.Verify(ctx, receive, msg.SrcChain, msg.Sequence); err != nil {
 		return err.Result()
@@ -122,8 +123,8 @@ func handleReceiveCleanupMsg(ctx sdk.Context, keeper keeper, msg ReceiveCleanupM
 	return sdk.Result{}
 }
 
-func handleReceiptCleanupMsg(ctx sdk.Context, keeper keeper, msg ReceiptCleanupMsg) sdk.Result {
-	receipt := keeper.receipt
+func handleReceiptCleanupMsg(ctx sdk.Context, channel Channel, msg ReceiptCleanupMsg) sdk.Result {
+	receipt := channel.receiptQueue(ctx, msg.SrcChain)
 
 	if err := msg.Verify(ctx, receipt, msg.SrcChain, msg.Sequence); err != nil {
 		return err.Result()

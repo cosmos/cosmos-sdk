@@ -19,15 +19,8 @@ type PacketProof struct {
 	Sequence int64
 }
 
-func (proof PacketProof) Verify(ctx sdk.Context, keeper keeper, packet Packet) sdk.Error {
-	chainID := packet.SrcChain
+func (proof PacketProof) Verify(ctx sdk.Context, channel Channel, packet Packet) sdk.Error {
 
-	expected := keeper.getIngressSequence(ctx, chainID)
-	if proof.Sequence != expected {
-		return ErrInvalidSequence(keeper.codespace)
-	}
-
-	keeper.setIngressSequence(ctx, chainID, proof.Sequence+1)
 	/*
 		commit, ok := keeper.getChannelCommit(ctx, chainID, proof.Height)
 		if !ok {
@@ -97,8 +90,17 @@ func (msg ReceiveMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Relayer}
 }
 
-func (msg ReceiveMsg) Verify(ctx sdk.Context, keeper keeper) sdk.Error {
-	return msg.PacketProof.Verify(ctx, keeper, msg.Packet)
+func (msg ReceiveMsg) Verify(ctx sdk.Context, channel Channel) sdk.Error {
+	chainID := msg.Packet.SrcChain
+	proof := msg.PacketProof
+
+	expected := channel.getReceiveSequence(ctx, chainID)
+	if proof.Sequence != expected {
+		return ErrInvalidSequence(channel.keeper.codespace)
+	}
+	channel.setReceiveSequence(ctx, chainID, proof.Sequence+1)
+
+	return proof.Verify(ctx, channel, msg.Packet)
 }
 
 // --------------------------------
@@ -126,16 +128,26 @@ func (msg ReceiptMsg) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Relayer}
 }
 
-func (msg ReceiptMsg) Verify(ctx sdk.Context, keeper keeper) sdk.Error {
-	return msg.PacketProof.Verify(ctx, keeper, msg.Packet)
+func (msg ReceiptMsg) Verify(ctx sdk.Context, channel Channel) sdk.Error {
+	chainID := msg.Packet.SrcChain
+	proof := msg.PacketProof
+
+	expected := channel.getReceiptSequence(ctx, chainID)
+	if proof.Sequence != expected {
+		return ErrInvalidSequence(channel.keeper.codespace)
+	}
+	channel.setReceiptSequence(ctx, chainID, proof.Sequence+1)
+
+	return proof.Verify(ctx, channel, msg.Packet)
 }
 
 // --------------------------------
 // ReceiveCleanupMsg
 
 type ReceiveCleanupMsg struct {
-	Sequence int64
-	SrcChain string
+	ChannelName string
+	Sequence    int64
+	SrcChain    string
 	CleanupProof
 	Cleaner sdk.Address
 }
@@ -168,8 +180,9 @@ func (msg ReceiveCleanupMsg) ValidateBasic() sdk.Error {
 // ReceiptCleanupMsg
 
 type ReceiptCleanupMsg struct {
-	Sequence int64
-	SrcChain string
+	ChannelName string
+	Sequence    int64
+	SrcChain    string
 	CleanupProof
 	Cleaner sdk.Address
 }

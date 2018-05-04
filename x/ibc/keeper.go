@@ -15,22 +15,13 @@ type keeper struct {
 	key       sdk.StoreKey
 	cdc       *wire.Codec
 	codespace sdk.CodespaceType
-
-	receive lib.ListMapper
-	receipt lib.ListMapper
 }
 
 func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) keeper {
-	receive := lib.NewListMapper(cdc, key, "receive")
-	receipt := lib.NewListMapper(cdc, key, "receipt")
-
 	return keeper{
 		key:       key,
 		cdc:       cdc,
 		codespace: codespace,
-
-		receive: receive,
-		receipt: receipt,
 	}
 }
 
@@ -46,6 +37,16 @@ type Channel struct {
 	name   string
 }
 
+func (channel Channel) receiveQueue(ctx sdk.Context, chainID string) lib.ListMapper {
+	// TODO: check whether the channel is opened or not to the chain
+	return lib.NewListMapper(channel.keeper.cdc, channel.keeper.key, "receive/"+chainID)
+}
+
+func (channel Channel) receiptQueue(ctx sdk.Context, chainID string) lib.ListMapper {
+	// TODO: check whether the channel is opened or not to the chain
+	return lib.NewListMapper(channel.keeper.cdc, channel.keeper.key, "receipt/"+chainID)
+}
+
 // TODO: Handle invalid IBC packets and return errors.
 func (channel Channel) Send(ctx sdk.Context, payload Payload, dest string) sdk.Error {
 	if payload.Type() != channel.name {
@@ -59,11 +60,70 @@ func (channel Channel) Send(ctx sdk.Context, payload Payload, dest string) sdk.E
 		DestChain: dest,
 	}
 
-	channel.keeper.receive.Push(ctx, packet)
+	queue := channel.receiveQueue(ctx, dest)
+	if queue == nil {
+		return ErrNoChannelOpened(channel.keeper.codespace, dest)
+	}
+	queue.Push(ctx, packet)
 
 	return nil
 }
 
+func (channel Channel) getSequence(ctx sdk.Context, srcChain string, key []byte) (res int64) {
+	keeper := channel.keeper
+	store := ctx.KVStore(keeper.key)
+
+	bz := store.Get(key)
+	if bz == nil {
+		return 0
+	}
+	unmarshalBinaryPanic(channel.keeper.cdc, bz, &res)
+	return
+}
+
+func (channel Channel) setSequence(ctx sdk.Context, srcChain string, key []byte, seq int64) {
+	keeper := channel.keeper
+	store := ctx.KVStore(keeper.key)
+
+	bz := marshalBinaryPanic(keeper.cdc, seq)
+	store.Set(key, bz)
+}
+
+func (channel Channel) getReceiveSequence(ctx sdk.Context, srcChain string) int64 {
+	key := ReceiveSequenceKey(srcChain)
+	return channel.getSequence(ctx, srcChain, key)
+}
+
+func (channel Channel) setReceiveSequence(ctx sdk.Context, srcChain string, seq int64) {
+	key := ReceiveSequenceKey(srcChain)
+	channel.setSequence(ctx, srcChain, key, seq)
+}
+
+func (channel Channel) getReceiptSequence(ctx sdk.Context, srcChain string) int64 {
+	key := ReceiptSequenceKey(srcChain)
+	return channel.getSequence(ctx, srcChain, key)
+}
+
+func (channel Channel) setReceiptSequence(ctx sdk.Context, srcChain string, seq int64) {
+	key := ReceiptSequenceKey(srcChain)
+	channel.setSequence(ctx, srcChain, key, seq)
+}
+
+/*
+// Retrieves the index of the currently stored outgoing IBC packets.
+func (keeper keeper) getEgressLength(ctx sdk.Context, destChain string) int64 {
+	store := ctx.KVStore(keeper.key)
+	bz := store.Get(EgressLengthKey(destChain))
+	if bz == nil {
+		zero := marshalBinaryPanic(keeper.cdc, int64(0))
+		store.Set(EgressLengthKey(destChain), zero)
+		return 0
+	}
+	var res int64
+	unmarshalBinaryPanic(keeper.cdc, bz, &res)
+	return res
+}
+*/
 /*
 func (keeper keeper) getChannelCommit(ctx sdk.Context, srcChain string) (*ValidatorSet, bool) {
 	store := ctx.KVStore(keeper.key)
@@ -177,54 +237,12 @@ func unmarshalBinaryPanic(cdc *wire.Codec, bz []byte, ptr interface{}) {
 	}
 }
 
-func (keeper keeper) getIngressSequence(ctx sdk.Context, srcChain string) int64 {
-	store := ctx.KVStore(keeper.key)
-	key := IngressSequenceKey(srcChain)
-
-	bz := store.Get(key)
-	if bz == nil {
-		zero := marshalBinaryPanic(keeper.cdc, int64(0))
-		store.Set(key, zero)
-		return 0
-	}
-
-	var res int64
-	unmarshalBinaryPanic(keeper.cdc, bz, &res)
-	return res
+func ReceiveSequenceKey(srcChain string) []byte {
+	return []byte(fmt.Sprintf("sequence/receive/%s", srcChain))
 }
 
-func (keeper keeper) setIngressSequence(ctx sdk.Context, srcChain string, sequence int64) {
-	store := ctx.KVStore(keeper.key)
-	key := IngressSequenceKey(srcChain)
-
-	bz := marshalBinaryPanic(keeper.cdc, sequence)
-	store.Set(key, bz)
-}
-
-// Retrieves the index of the currently stored outgoing IBC packets.
-func (keeper keeper) getEgressLength(ctx sdk.Context, destChain string) int64 {
-	store := ctx.KVStore(keeper.key)
-	bz := store.Get(EgressLengthKey(destChain))
-	if bz == nil {
-		zero := marshalBinaryPanic(keeper.cdc, int64(0))
-		store.Set(EgressLengthKey(destChain), zero)
-		return 0
-	}
-	var res int64
-	unmarshalBinaryPanic(keeper.cdc, bz, &res)
-	return res
-}
-
-func EgressKey(destChain string, index int64) []byte {
-	return []byte(fmt.Sprintf("egress/%s/%d", destChain, index))
-}
-
-func EgressLengthKey(destChain string) []byte {
-	return []byte(fmt.Sprintf("egress/%s", destChain))
-}
-
-func IngressSequenceKey(srcChain string) []byte {
-	return []byte(fmt.Sprintf("ingress/%s", srcChain))
+func ReceiptSequenceKey(srcChain string) []byte {
+	return []byte(fmt.Sprintf("sequence/receipt/%s", srcChain))
 }
 
 func CommitByHeightKey(srcChain string, height int64) []byte {

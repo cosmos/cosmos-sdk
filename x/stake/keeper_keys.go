@@ -33,13 +33,19 @@ func GetCandidateKey(addr sdk.Address) []byte {
 }
 
 // get the key for the validator used in the power-store
-func GetValidatorKey(addr sdk.Address, power sdk.Rat, height int64, counter int16, cdc *wire.Codec) []byte {
-	powerBytes := []byte(power.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
+func GetValidatorKey(validator Validator) []byte {
+	powerBytes := []byte(validator.Power.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
+
+	// TODO ensure that the key will be a readable string.. probably should add seperators and have
+	// heightBytes and counterBytes represent strings like powerBytes does
 	heightBytes := make([]byte, binary.MaxVarintLen64)
-	binary.BigEndian.PutUint64(heightBytes, ^uint64(height)) // invert height (older validators first)
+	binary.BigEndian.PutUint64(heightBytes, ^uint64(validator.Height)) // invert height (older validators first)
 	counterBytes := make([]byte, 2)
-	binary.BigEndian.PutUint16(counterBytes, ^uint16(counter)) // invert counter (first txns have priority)
-	return append(ValidatorsKey, append(powerBytes, append(heightBytes, append(counterBytes, addr.Bytes()...)...)...)...)
+	binary.BigEndian.PutUint16(counterBytes, ^uint16(validator.Counter)) // invert counter (first txns have priority)
+	return append(ValidatorsKey,
+		append(powerBytes,
+			append(heightBytes,
+				append(counterBytes, validator.Address.Bytes()...)...)...)...)
 }
 
 // get the key for the accumulated update validators

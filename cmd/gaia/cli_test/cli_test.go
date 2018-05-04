@@ -48,6 +48,15 @@ func TestGaiaCLISend(t *testing.T) {
 	assert.Equal(t, int64(10), barAcc.GetCoins().AmountOf("steak"))
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
 	assert.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak"))
+
+	// test autosequencing
+	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barAddr), pass)
+	time.Sleep(time.Second * 3) // waiting for some blocks to pass
+
+	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barAddr, flags))
+	assert.Equal(t, int64(20), barAcc.GetCoins().AmountOf("steak"))
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooAddr, flags))
+	assert.Equal(t, int64(30), fooAcc.GetCoins().AmountOf("steak"))
 }
 
 func TestGaiaCLIDeclareCandidacy(t *testing.T) {

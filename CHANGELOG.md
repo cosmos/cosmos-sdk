@@ -16,6 +16,7 @@ BREAKING CHANGES
 * Removed Get from Msg interface
 * types/rational now extends big.Rat
 * RecentValidator store now take pubkey instead of address, is sorted like Tendermint by pk's address
+* `gaiacli query candidate` takes and argument instead of using the `--address-candidate` flag
 
 FEATURES:
 

@@ -18,8 +18,8 @@ func newTestMsgDeclareCandidacy(address sdk.Address, pubKey crypto.PubKey, amt i
 	return MsgDeclareCandidacy{
 		Description:   Description{},
 		CandidateAddr: address,
-		Bond:          sdk.Coin{"steak", amt},
 		PubKey:        pubKey,
+		Bond:          sdk.Coin{"steak", amt},
 	}
 }
 

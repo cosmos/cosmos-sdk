@@ -284,12 +284,11 @@ type Validator struct {
 	Counter int16         `json:"counter"` // Block-local tx index for resolving equal voting power & height
 }
 
+// verify equal not including height or counter
 func (v Validator) equal(v2 Validator) bool {
 	return bytes.Equal(v.Address, v2.Address) &&
 		v.PubKey.Equals(v2.PubKey) &&
-		v.Power.Equal(v2.Power) &&
-		v.Height == v2.Height &&
-		v.Counter == v2.Counter
+		v.Power.Equal(v2.Power)
 }
 
 // abci validator from stake validator type
@@ -308,6 +307,13 @@ func (v Validator) abciValidatorZero(cdc *wire.Codec) sdk.Validator {
 		Power:  0,
 	}
 }
+
+// sortable validator list for testing
+type validators []Validator
+
+func (v validators) Len() int           { return len(v) }
+func (v validators) Swap(i, j int)      { v[i], v[j] = v[j], v[i] }
+func (v validators) Less(i, j int) bool { return v[i].Power.LT(v[j].Power) }
 
 //_________________________________________________________________________
 

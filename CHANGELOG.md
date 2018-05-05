@@ -6,6 +6,8 @@ BREAKING CHANGES
 
 * Queries against the store must be prefixed with the path "/store"
 * RecentValidator store now take pubkey instead of address, is sorted like Tendermint by pk's address
+* RecentValidator store now take pubkey instead of address, is sorted like Tendermint by pk's address
+* `gaiacli query candidate` takes and argument instead of using the `--address-candidate` flag
 
 FEATURES
 

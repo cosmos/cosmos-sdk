@@ -18,15 +18,15 @@ import (
 // get the command to query a candidate
 func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "candidate",
+		Use:   "candidate [candidate-addr]",
 		Short: "Query a validator-candidate account",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			addr, err := sdk.GetAddress(viper.GetString(FlagAddressCandidate))
+			addr, err := sdk.GetAddress(args[0])
 			if err != nil {
 				return err
 			}
-
 			key := stake.GetCandidateKey(addr)
 			ctx := context.NewCoreContextFromViper()
 			res, err := ctx.Query(key, storeName)
@@ -48,7 +48,6 @@ func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsCandidate)
 	return cmd
 }
 

@@ -85,10 +85,11 @@ func paramsNoInflation() Params {
 func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, sdk.AccountMapper, Keeper) {
 	db := dbm.NewMemDB()
 	keyStake := sdk.NewKVStoreKey("stake")
-	keyMain := keyStake //sdk.NewKVStoreKey("main") //TODO fix multistore
+	keyAcc := sdk.NewKVStoreKey("acc")
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -96,7 +97,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	cdc := makeTestCodec()
 	accountMapper := auth.NewAccountMapper(
 		cdc,                 // amino codec
-		keyMain,             // target store
+		keyAcc,              // target store
 		&auth.BaseAccount{}, // prototype
 	)
 	ck := bank.NewKeeper(accountMapper)

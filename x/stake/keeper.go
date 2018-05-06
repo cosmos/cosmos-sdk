@@ -95,10 +95,15 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	// retreive the old candidate record
 	oldCandidate, oldFound := k.GetCandidate(ctx, address)
 
-	// if found, copy the old block height and counter
-	if oldFound {
+	// if found and already a validator, copy the old block height and counter, else set them
+	if oldFound && k.IsValidator(ctx, oldCandidate.PubKey) {
 		candidate.ValidatorBondHeight = oldCandidate.ValidatorBondHeight
 		candidate.ValidatorBondCounter = oldCandidate.ValidatorBondCounter
+	} else {
+		candidate.ValidatorBondHeight = ctx.BlockHeight()
+		counter := k.getIntraTxCounter(ctx)
+		candidate.ValidatorBondCounter = counter
+		k.setIntraTxCounter(ctx, counter+1)
 	}
 
 	// marshal the candidate record and add to the state
@@ -111,21 +116,9 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 			return
 		}
 
-		// if this candidate wasn't just bonded then update the height and counter
-		if oldCandidate.Status != Bonded {
-			candidate.ValidatorBondHeight = ctx.BlockHeight()
-			counter := k.getIntraTxCounter(ctx)
-			candidate.ValidatorBondCounter = counter
-			k.setIntraTxCounter(ctx, counter+1)
-		}
-
 		// delete the old record in the power ordered list
 		store.Delete(GetValidatorKey(oldCandidate.validator()))
 	}
-
-	// set the new candidate record
-	bz = k.cdc.MustMarshalBinary(candidate)
-	store.Set(GetCandidateKey(address), bz)
 
 	// update the list ordered by voting power
 	validator := candidate.validator()
@@ -139,7 +132,6 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 
 		// also update the recent validator store
 		store.Set(GetRecentValidatorKey(validator.PubKey), bzVal)
-		return
 	}
 
 	// maybe add to the validator list and kick somebody off
@@ -472,7 +464,11 @@ func (k Keeper) setParams(ctx sdk.Context, params Params) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(params)
 	store.Set(ParamKey, b)
-	k.params = Params{} // clear the cache
+	// if max validator count changes, must recalculate validator set
+	if k.params.MaxValidators != params.MaxValidators {
+		k.addNewValidatorOrNot(ctx, store, sdk.Address{})
+	}
+	k.params = params // update the cache
 }
 
 //_______________________________________________________________________

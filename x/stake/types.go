@@ -311,9 +311,23 @@ func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
 // sortable validator list for testing
 type validators []Validator
 
-func (v validators) Len() int           { return len(v) }
-func (v validators) Swap(i, j int)      { v[i], v[j] = v[j], v[i] }
-func (v validators) Less(i, j int) bool { return v[i].Power.LT(v[j].Power) }
+func (v validators) Len() int      { return len(v) }
+func (v validators) Swap(i, j int) { v[i], v[j] = v[j], v[i] }
+func (v validators) Less(i, j int) bool {
+	if v[i].Power.LT(v[j].Power) {
+		return true
+	}
+	if v[i].Power.GT(v[j].Power) {
+		return false
+	}
+	if v[i].Height > v[j].Height {
+		return true
+	}
+	if v[i].Height < v[j].Height {
+		return false
+	}
+	return v[i].Counter > v[j].Counter
+}
 
 //_________________________________________________________________________
 

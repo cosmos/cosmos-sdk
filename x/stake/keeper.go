@@ -505,50 +505,20 @@ func (k Keeper) setPool(ctx sdk.Context, p Pool) {
 
 var _ sdk.ValidatorSetKeeper = Keeper{}
 
-func (k Keeper) Validators(ctx sdk.Context) []*sdk.Validator {
+func (k Keeper) ValidatorSet(ctx sdk.Context) sdk.ValidatorSet {
 	vals := k.GetValidators(ctx)
-	res := make([]*sdk.Validator, len(vals))
-
-	for i, val := range vals {
-		abcival := val.abciValidator(k.cdc)
-		res[i] = &abcival
-	}
-
-	return res
+	return ValidatorSet(vals)
 }
 
-func (k Keeper) Size(ctx sdk.Context) int {
-	return len(k.GetValidators(ctx))
-}
-
-func (k Keeper) IsValidator(ctx sdk.Context, addr sdk.Address) bool {
-	for _, v := range k.GetValidators(ctx) {
-		if bytes.Equal(v.Address, addr) {
-			return true
-		}
-	}
-	return false
-}
-
-func (k Keeper) GetByAddress(ctx sdk.Context, addr sdk.Address) (int, *sdk.Validator) {
-	for i, v := range k.GetValidators(ctx) {
-		if bytes.Equal(v.Address, addr) {
-			val := v.abciValidator(k.cdc)
-			return i, &val
-		}
-	}
-	return -1, nil
-}
-
-func (k Keeper) GetByIndex(ctx sdk.Context, index int) *sdk.Validator {
-	valset := k.GetValidators(ctx)
-
-	if index < 0 || index >= len(valset) {
+func (k Keeper) GetByAddress(ctx sdk.Context, addr sdk.Address) sdk.Validator {
+	can, ok := k.GetCandidate(ctx, addr)
+	if !ok {
 		return nil
 	}
-
-	val := valset[index].abciValidator(k.cdc)
-	return &val
+	if can.Status != Bonded {
+		return nil
+	}
+	return can.validator()
 }
 
 func (k Keeper) TotalPower(ctx sdk.Context) sdk.Rat {

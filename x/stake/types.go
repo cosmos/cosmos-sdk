@@ -4,9 +4,9 @@ import (
 	"bytes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	crypto "github.com/tendermint/go-crypto"
-
 	"github.com/cosmos/cosmos-sdk/wire"
+	abci "github.com/tendermint/abci/types"
+	crypto "github.com/tendermint/go-crypto"
 )
 
 // GenesisState - all staking state that must be provided at genesis
@@ -292,8 +292,8 @@ func (v Validator) equal(v2 Validator) bool {
 }
 
 // abci validator from stake validator type
-func (v Validator) abciValidator(cdc *wire.Codec) sdk.Validator {
-	return sdk.Validator{
+func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
+	return abci.Validator{
 		PubKey: v.PubKey.Bytes(),
 		Power:  v.Power.Evaluate(),
 	}
@@ -301,19 +301,40 @@ func (v Validator) abciValidator(cdc *wire.Codec) sdk.Validator {
 
 // abci validator from stake validator type
 // with zero power used for validator updates
-func (v Validator) abciValidatorZero(cdc *wire.Codec) sdk.Validator {
-	return sdk.Validator{
+func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
+	return abci.Validator{
 		PubKey: v.PubKey.Bytes(),
 		Power:  0,
 	}
 }
 
-// sortable validator list for testing
-type validators []Validator
+var _ sdk.Validator = Validator{}
 
-func (v validators) Len() int           { return len(v) }
-func (v validators) Swap(i, j int)      { v[i], v[j] = v[j], v[i] }
-func (v validators) Less(i, j int) bool { return v[i].Power.LT(v[j].Power) }
+func (v Validator) GetAddress() sdk.Address {
+	return v.Address
+}
+
+func (v Validator) GetPubKey() crypto.PubKey {
+	return v.PubKey
+}
+
+func (v Validator) GetPower() sdk.Rat {
+	return v.Power
+}
+
+type ValidatorSet []Validator
+
+var _ sdk.ValidatorSet = ValidatorSet{}
+
+func (vs ValidatorSet) Iterate(fn func(int, sdk.Validator)) {
+	for i, v := range vs {
+		fn(i, v)
+	}
+}
+
+func (vs ValidatorSet) Size() int {
+	return len(vs)
+}
 
 //_________________________________________________________________________
 

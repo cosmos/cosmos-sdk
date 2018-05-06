@@ -52,7 +52,7 @@ func GetValidatorsTendermintUpdatesKey(addr sdk.Address) []byte {
 }
 
 // get the key for the current validator group, ordered like tendermint
-func GetValidatorsBondedBondedKey(pk crypto.PubKey) []byte {
+func GetValidatorsBondedKey(pk crypto.PubKey) []byte {
 	addr := pk.Address()
 	return append(ValidatorsBondedKey, addr.Bytes()...)
 }

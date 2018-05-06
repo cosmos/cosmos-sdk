@@ -25,6 +25,19 @@ type ValidatorSet interface {
 
 type ValidatorSetKeeper interface {
 	ValidatorSet(Context) ValidatorSet
-	GetByAddress(Context, Address) Validator
+	Validator(Context, Address) Validator
 	TotalPower(Context) Rat
+	DelegationSet(Context, Address) DelegationSet
+	Delegation(Context, Address, Address) Delegation
+}
+
+type Delegation interface {
+	GetDelegator() Address
+	GetValidator() Address
+	GetDelegated() Rat
+}
+
+type DelegationSet interface {
+	Iterate(func(int, Delegation))
+	Size() int
 }

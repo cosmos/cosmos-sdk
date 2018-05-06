@@ -510,7 +510,7 @@ func (k Keeper) ValidatorSet(ctx sdk.Context) sdk.ValidatorSet {
 	return ValidatorSet(vals)
 }
 
-func (k Keeper) GetByAddress(ctx sdk.Context, addr sdk.Address) sdk.Validator {
+func (k Keeper) Validator(ctx sdk.Context, addr sdk.Address) sdk.Validator {
 	can, ok := k.GetCandidate(ctx, addr)
 	if !ok {
 		return nil
@@ -524,4 +524,17 @@ func (k Keeper) GetByAddress(ctx sdk.Context, addr sdk.Address) sdk.Validator {
 func (k Keeper) TotalPower(ctx sdk.Context) sdk.Rat {
 	pool := k.GetPool(ctx)
 	return pool.BondedShares
+}
+
+func (k Keeper) Delegation(ctx sdk.Context, del sdk.Address, val sdk.Address) sdk.Delegation {
+	bond, ok := k.GetDelegatorBond(ctx, del, val)
+	if !ok {
+		return nil
+	}
+	return bond
+}
+
+func (k Keeper) DelegationSet(ctx sdk.Context, del sdk.Address) sdk.DelegationSet {
+	bs := k.GetDelegatorBonds(ctx, del, 32767)
+	return DelegationSet(bs)
 }

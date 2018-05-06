@@ -355,3 +355,27 @@ func (b DelegatorBond) equal(b2 DelegatorBond) bool {
 		b.Height == b2.Height &&
 		b.Shares.Equal(b2.Shares)
 }
+
+func (b DelegatorBond) GetDelegator() sdk.Address {
+	return b.DelegatorAddr
+}
+
+func (b DelegatorBond) GetValidator() sdk.Address {
+	return b.CandidateAddr
+}
+
+func (b DelegatorBond) GetDelegated() sdk.Rat {
+	return b.Shares
+}
+
+type DelegationSet []DelegatorBond
+
+func (ds DelegationSet) Iterate(fn func(int, sdk.Delegation)) {
+	for i, d := range ds {
+		fn(i, d)
+	}
+}
+
+func (ds DelegationSet) Size() int {
+	return len(ds)
+}

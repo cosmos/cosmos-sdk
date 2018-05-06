@@ -616,7 +616,7 @@ synced past the height of the oldest `powerChange`.  This trim procedure will
 occur on an epoch basis.  
 
 ```golang
-type powerChange struct {
+type powerChange struct
     height      int64        // block height at change
     power       rational.Rat // total power at change
     prevpower   rational.Rat // total power at previous height-1 

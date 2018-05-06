@@ -1,8 +1,8 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -15,31 +15,31 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
-// rootCmd is the entry point for this binary
-var (
-	context = server.NewDefaultContext()
-	rootCmd = &cobra.Command{
+func main() {
+	cdc := app.MakeCodec()
+	ctx := server.NewDefaultContext()
+
+	rootCmd := &cobra.Command{
 		Use:               "basecoind",
 		Short:             "Basecoin Daemon (server)",
-		PersistentPreRunE: server.PersistentPreRunEFn(context),
+		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
-)
 
-func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	dataDir := filepath.Join(rootDir, "data")
-	db, err := dbm.NewGoLevelDB("basecoin", dataDir)
-	if err != nil {
-		return nil, err
-	}
-	bapp := app.NewBasecoinApp(logger, db)
-	return bapp, nil
-}
-
-func main() {
-	server.AddCommands(rootCmd, server.DefaultGenAppState, generateApp, context)
+	server.AddCommands(ctx, cdc, rootCmd, server.DefaultAppInit,
+		server.ConstructAppCreator(newApp, "basecoin"),
+		server.ConstructAppExporter(exportAppState, "basecoin"))
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.basecoind")
 	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
 	executor.Execute()
+}
+
+func newApp(logger log.Logger, db dbm.DB) abci.Application {
+	return app.NewBasecoinApp(logger, db)
+}
+
+func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
+	bapp := app.NewBasecoinApp(logger, db)
+	return bapp.ExportAppStateJSON()
 }

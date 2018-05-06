@@ -177,18 +177,6 @@ func TestMsgSendValidation(t *testing.T) {
 	}
 }
 
-func TestMsgSendGet(t *testing.T) {
-	addr1 := sdk.Address([]byte("input"))
-	addr2 := sdk.Address([]byte("output"))
-	coins := sdk.Coins{{"atom", 10}}
-	var msg = MsgSend{
-		Inputs:  []Input{NewInput(addr1, coins)},
-		Outputs: []Output{NewOutput(addr2, coins)},
-	}
-	res := msg.Get(nil)
-	assert.Nil(t, res)
-}
-
 func TestMsgSendGetSignBytes(t *testing.T) {
 	addr1 := sdk.Address([]byte("input"))
 	addr2 := sdk.Address([]byte("output"))
@@ -257,17 +245,6 @@ func TestMsgIssueType(t *testing.T) {
 
 func TestMsgIssueValidation(t *testing.T) {
 	// TODO
-}
-
-func TestMsgIssueGet(t *testing.T) {
-	addr := sdk.Address([]byte("loan-from-bank"))
-	coins := sdk.Coins{{"atom", 10}}
-	var msg = MsgIssue{
-		Banker:  sdk.Address([]byte("input")),
-		Outputs: []Output{NewOutput(addr, coins)},
-	}
-	res := msg.Get(nil)
-	assert.Nil(t, res)
 }
 
 func TestMsgIssueGetSignBytes(t *testing.T) {

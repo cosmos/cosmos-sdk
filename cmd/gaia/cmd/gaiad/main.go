@@ -1,8 +1,7 @@
 package main
 
 import (
-	"os"
-	"path/filepath"
+	"encoding/json"
 
 	"github.com/spf13/cobra"
 
@@ -15,31 +14,29 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
-// rootCmd is the entry point for this binary
-var (
-	context = server.NewDefaultContext()
-	rootCmd = &cobra.Command{
+func main() {
+	cdc := app.MakeCodec()
+	ctx := server.NewDefaultContext()
+	rootCmd := &cobra.Command{
 		Use:               "gaiad",
 		Short:             "Gaia Daemon (server)",
-		PersistentPreRunE: server.PersistentPreRunEFn(context),
+		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
-)
 
-func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	dataDir := filepath.Join(rootDir, "data")
-	db, err := dbm.NewGoLevelDB("gaia", dataDir)
-	if err != nil {
-		return nil, err
-	}
-	bapp := app.NewGaiaApp(logger, db)
-	return bapp, nil
-}
-
-func main() {
-	server.AddCommands(rootCmd, app.DefaultGenAppState, generateApp, context)
+	server.AddCommands(ctx, cdc, rootCmd, app.GaiaAppInit(),
+		server.ConstructAppCreator(newApp, "gaia"),
+		server.ConstructAppExporter(exportAppState, "gaia"))
 
 	// prepare and add flags
-	rootDir := os.ExpandEnv("$HOME/.gaiad")
-	executor := cli.PrepareBaseCmd(rootCmd, "GA", rootDir)
+	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)
 	executor.Execute()
+}
+
+func newApp(logger log.Logger, db dbm.DB) abci.Application {
+	return app.NewGaiaApp(logger, db)
+}
+
+func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
+	gapp := app.NewGaiaApp(logger, db)
+	return gapp.ExportAppStateJSON()
 }

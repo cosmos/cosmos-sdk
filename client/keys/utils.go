@@ -24,8 +24,13 @@ var keybase keys.Keybase
 
 // initialize a keybase based on the configuration
 func GetKeyBase() (keys.Keybase, error) {
+	rootDir := viper.GetString(cli.HomeFlag)
+	return GetKeyBaseFromDir(rootDir)
+}
+
+// initialize a keybase based on the configuration
+func GetKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	if keybase == nil {
-		rootDir := viper.GetString(cli.HomeFlag)
 		db, err := dbm.NewGoLevelDB(KeyDBName, filepath.Join(rootDir, "keys"))
 		if err != nil {
 			return nil, err

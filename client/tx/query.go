@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	abci "github.com/tendermint/abci/types"
@@ -25,16 +24,14 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tx [hash]",
 		Short: "Matches this txhash over all committed blocks",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 || len(args[0]) == 0 {
-				return errors.New("You must provide a tx hash")
-			}
 
 			// find the key to look up the account
 			hashHexStr := args[0]
 			trustNode := viper.GetBool(client.FlagTrustNode)
 
-			output, err := queryTx(cdc, hashHexStr, trustNode)
+			output, err := queryTx(cdc, context.NewCoreContextFromViper(), hashHexStr, trustNode)
 			if err != nil {
 				return err
 			}
@@ -51,14 +48,14 @@ func QueryTxCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func queryTx(cdc *wire.Codec, hashHexStr string, trustNode bool) ([]byte, error) {
+func queryTx(cdc *wire.Codec, ctx context.CoreContext, hashHexStr string, trustNode bool) ([]byte, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return nil, err
 	}
 
 	// get the node
-	node, err := context.NewCoreContextFromViper().GetNode()
+	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +106,7 @@ func parseTx(cdc *wire.Codec, txBytes []byte) (sdk.Tx, error) {
 // REST
 
 // transaction query REST handler
-func QueryTxRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Request) {
+func QueryTxRequestHandlerFn(cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]
@@ -119,7 +116,7 @@ func QueryTxRequestHandler(cdc *wire.Codec) func(http.ResponseWriter, *http.Requ
 			trustNode = true
 		}
 
-		output, err := queryTx(cdc, hashHexStr, trustNode)
+		output, err := queryTx(cdc, ctx, hashHexStr, trustNode)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

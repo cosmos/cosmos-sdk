@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"os"
 
 	abci "github.com/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
@@ -21,6 +22,12 @@ const (
 	appName = "GaiaApp"
 )
 
+// default home directories for expected binaries
+var (
+	DefaultCLIHome  = os.ExpandEnv("$HOME/.gaiacli")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.gaiad")
+)
+
 // Extended ABCI application
 type GaiaApp struct {
 	*bam.BaseApp
@@ -37,16 +44,15 @@ type GaiaApp struct {
 	coinKeeper    bank.Keeper
 	ibcMapper     ibc.Mapper
 	stakeKeeper   stake.Keeper
-
-	// Handle fees
-	feeHandler sdk.FeeHandler
 }
 
 func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
+	cdc := MakeCodec()
+
 	// create your application object
 	var app = &GaiaApp{
-		BaseApp:    bam.NewBaseApp(appName, logger, db),
-		cdc:        MakeCodec(),
+		BaseApp:    bam.NewBaseApp(appName, cdc, logger, db),
+		cdc:        cdc,
 		keyMain:    sdk.NewKVStoreKey("main"),
 		keyAccount: sdk.NewKVStoreKey("acc"),
 		keyIBC:     sdk.NewKVStoreKey("ibc"),
@@ -56,7 +62,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	// define the accountMapper
 	app.accountMapper = auth.NewAccountMapper(
 		app.cdc,
-		app.keyMain,         // target store
+		app.keyAccount,      // target store
 		&auth.BaseAccount{}, // prototype
 	)
 
@@ -65,20 +71,17 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 
+	// register message routes
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
 
-	// Define the feeHandler.
-	app.feeHandler = auth.BurnFeeHandler
-
 	// initialize BaseApp
-	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
 	app.SetEndBlocker(stake.NewEndBlocker(app.stakeKeeper))
 	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeHandler))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.stakeKeeper.FeeHandler))
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -90,47 +93,21 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 // custom tx codec
 func MakeCodec() *wire.Codec {
 	var cdc = wire.NewCodec()
-
-	// Register Msgs
-	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-
 	ibc.RegisterWire(cdc)
 	bank.RegisterWire(cdc)
 	stake.RegisterWire(cdc)
-
-	// Register AppAccount
-	cdc.RegisterInterface((*sdk.Account)(nil), nil)
-	cdc.RegisterConcrete(&auth.BaseAccount{}, "gaia/Account", nil)
-
-	// Register crypto.
+	auth.RegisterWire(cdc)
+	sdk.RegisterWire(cdc)
 	wire.RegisterCrypto(cdc)
-
 	return cdc
-}
-
-// custom logic for transaction decoding
-func (app *GaiaApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
-	var tx = sdk.StdTx{}
-
-	if len(txBytes) == 0 {
-		return nil, sdk.ErrTxDecode("txBytes are empty")
-	}
-
-	// StdTx.Msg is an interface. The concrete types
-	// are registered by MakeTxCodec
-	err := app.cdc.UnmarshalBinary(txBytes, &tx)
-	if err != nil {
-		return nil, sdk.ErrTxDecode("").Trace(err.Error())
-	}
-	return tx, nil
 }
 
 // custom logic for gaia initialization
 func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	stateJSON := req.AppStateBytes
 
-	genesisState := new(GenesisState)
-	err := json.Unmarshal(stateJSON, genesisState)
+	var genesisState GenesisState
+	err := app.cdc.UnmarshalJSON(stateJSON, &genesisState)
 	if err != nil {
 		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 		// return sdk.ErrGenesisParse("").TraceCause(err, "")
@@ -148,53 +125,22 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	return abci.ResponseInitChain{}
 }
 
-//__________________________________________________________
+// export the state of gaia for a genesis f
+func (app *GaiaApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
+	ctx := app.NewContext(true, abci.Header{})
 
-// State to Unmarshal
-type GenesisState struct {
-	Accounts  []GenesisAccount   `json:"accounts"`
-	StakeData stake.GenesisState `json:"stake"`
-}
-
-// GenesisAccount doesn't need pubkey or sequence
-type GenesisAccount struct {
-	Address sdk.Address `json:"address"`
-	Coins   sdk.Coins   `json:"coins"`
-}
-
-func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
-	return GenesisAccount{
-		Address: acc.Address,
-		Coins:   acc.Coins,
+	// iterate to get the accounts
+	accounts := []GenesisAccount{}
+	appendAccount := func(acc sdk.Account) (stop bool) {
+		account := NewGenesisAccountI(acc)
+		accounts = append(accounts, account)
+		return false
 	}
-}
+	app.accountMapper.IterateAccounts(ctx, appendAccount)
 
-// convert GenesisAccount to GaiaAccount
-func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
-	return &auth.BaseAccount{
-		Address: ga.Address,
-		Coins:   ga.Coins.Sort(),
+	genState := GenesisState{
+		Accounts:  accounts,
+		StakeData: stake.WriteGenesis(ctx, app.stakeKeeper),
 	}
-}
-
-// DefaultGenAppState expects two args: an account address
-// and a coin denomination, and gives lots of coins to that address.
-func DefaultGenAppState(args []string, addr sdk.Address, coinDenom string) (json.RawMessage, error) {
-
-	accAuth := auth.NewBaseAccountWithAddress(addr)
-	accAuth.Coins = sdk.Coins{{"fermion", 100000}}
-	acc := NewGenesisAccount(&accAuth)
-	genaccs := []GenesisAccount{acc}
-
-	genesisState := GenesisState{
-		Accounts:  genaccs,
-		StakeData: stake.GetDefaultGenesisState(),
-	}
-
-	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
-	if err != nil {
-		return nil, err
-	}
-
-	return stateBytes, nil
+	return wire.MarshalJSONIndent(app.cdc, genState)
 }

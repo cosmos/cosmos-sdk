@@ -9,6 +9,7 @@ import (
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 	dbm "github.com/tendermint/tmlibs/db"
+	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,47 +51,6 @@ var (
 	emptyPubkey crypto.PubKey
 )
 
-// default params for testing
-func defaultParams() Params {
-	return Params{
-		InflationRateChange: sdk.NewRat(13, 100),
-		InflationMax:        sdk.NewRat(20, 100),
-		InflationMin:        sdk.NewRat(7, 100),
-		GoalBonded:          sdk.NewRat(67, 100),
-		MaxValidators:       100,
-		BondDenom:           "fermion",
-	}
-}
-
-// initial pool for testing
-func initialPool() Pool {
-	return Pool{
-		TotalSupply:       0,
-		BondedShares:      sdk.ZeroRat,
-		UnbondedShares:    sdk.ZeroRat,
-		BondedPool:        0,
-		UnbondedPool:      0,
-		InflationLastTime: 0,
-		Inflation:         sdk.NewRat(7, 100),
-	}
-}
-
-// get raw genesis raw message for testing
-func GetDefaultGenesisState() GenesisState {
-	return GenesisState{
-		Pool:   initialPool(),
-		Params: defaultParams(),
-	}
-}
-
-// XXX reference the common declaration of this function
-func subspace(prefix []byte) (start, end []byte) {
-	end = make([]byte, len(prefix))
-	copy(end, prefix)
-	end[len(end)-1]++
-	return prefix, end
-}
-
 func makeTestCodec() *wire.Codec {
 	var cdc = wire.NewCodec()
 
@@ -112,12 +72,12 @@ func makeTestCodec() *wire.Codec {
 
 func paramsNoInflation() Params {
 	return Params{
-		InflationRateChange: sdk.ZeroRat,
-		InflationMax:        sdk.ZeroRat,
-		InflationMin:        sdk.ZeroRat,
+		InflationRateChange: sdk.ZeroRat(),
+		InflationMax:        sdk.ZeroRat(),
+		InflationMin:        sdk.ZeroRat(),
 		GoalBonded:          sdk.NewRat(67, 100),
 		MaxValidators:       100,
-		BondDenom:           "fermion",
+		BondDenom:           "steak",
 	}
 }
 
@@ -125,18 +85,19 @@ func paramsNoInflation() Params {
 func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, sdk.AccountMapper, Keeper) {
 	db := dbm.NewMemDB()
 	keyStake := sdk.NewKVStoreKey("stake")
-	keyMain := keyStake //sdk.NewKVStoreKey("main") //TODO fix multistore
+	keyAcc := sdk.NewKVStoreKey("acc")
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil, log.NewNopLogger(), nil)
 	cdc := makeTestCodec()
 	accountMapper := auth.NewAccountMapper(
 		cdc,                 // amino codec
-		keyMain,             // target store
+		keyAcc,              // target store
 		&auth.BaseAccount{}, // prototype
 	)
 	ck := bank.NewKeeper(accountMapper)

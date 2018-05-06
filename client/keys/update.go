@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	keys "github.com/tendermint/go-crypto/keys"
 
 	"github.com/spf13/cobra"
@@ -18,14 +17,12 @@ func updateKeyCommand() *cobra.Command {
 		Use:   "update <name>",
 		Short: "Change the password used to protect private key",
 		RunE:  runUpdateCmd,
+		Args:  cobra.ExactArgs(1),
 	}
 	return cmd
 }
 
 func runUpdateCmd(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 || len(args[0]) == 0 {
-		return errors.New("You must provide a name for the key")
-	}
 	name := args[0]
 
 	buf := client.BufferStdin()

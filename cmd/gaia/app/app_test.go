@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
@@ -104,10 +105,10 @@ func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 
 	genesisState := GenesisState{
 		Accounts:  genaccs,
-		StakeData: stake.GetDefaultGenesisState(),
+		StakeData: stake.DefaultGenesisState(),
 	}
 
-	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
+	stateBytes, err := wire.MarshalJSONIndent(gapp.cdc, genesisState)
 	if err != nil {
 		return err
 	}
@@ -146,7 +147,7 @@ func setGenesisAccounts(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 
 	genesisState := GenesisState{
 		Accounts:  genaccs,
-		StakeData: stake.GetDefaultGenesisState(),
+		StakeData: stake.DefaultGenesisState(),
 	}
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
@@ -369,9 +370,9 @@ func TestIBCMsgs(t *testing.T) {
 func TestStakeMsgs(t *testing.T) {
 	gapp := newGaiaApp()
 
-	genCoins, err := sdk.ParseCoins("42fermion")
+	genCoins, err := sdk.ParseCoins("42steak")
 	require.Nil(t, err)
-	bondCoin, err := sdk.ParseCoin("10fermion")
+	bondCoin, err := sdk.ParseCoin("10steak")
 	require.Nil(t, err)
 
 	acc1 := &auth.BaseAccount{

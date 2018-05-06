@@ -1,7 +1,6 @@
 package stake
 
 import (
-	"bytes"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,8 +20,8 @@ func TestViewSlashBond(t *testing.T) {
 		candidates[i] = Candidate{
 			Address:     addrVals[i],
 			PubKey:      pks[i],
-			Assets:      sdk.NewRat(amt),
-			Liabilities: sdk.NewRat(amt),
+			BondedShares:      sdk.NewRat(amt),
+			DelegatorShares: sdk.NewRat(amt),
 		}
 	}
 
@@ -37,13 +36,6 @@ func TestViewSlashBond(t *testing.T) {
 
 	viewSlashKeeper := NewViewSlashKeeper(keeper)
 
-	bondsEqual := func(b1, b2 DelegatorBond) bool {
-		return bytes.Equal(b1.DelegatorAddr, b2.DelegatorAddr) &&
-			bytes.Equal(b1.CandidateAddr, b2.CandidateAddr) &&
-			b1.Height == b2.Height &&
-			b1.Shares == b2.Shares
-	}
-
 	// check the empty keeper first
 	_, found := viewSlashKeeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
 	assert.False(t, found)
@@ -52,14 +44,14 @@ func TestViewSlashBond(t *testing.T) {
 	keeper.setDelegatorBond(ctx, bond1to1)
 	resBond, found := viewSlashKeeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
 	assert.True(t, found)
-	assert.True(t, bondsEqual(bond1to1, resBond))
+	assert.True(t, bond1to1.equal(resBond))
 
 	// modify a records, save, and retrieve
 	bond1to1.Shares = sdk.NewRat(99)
 	keeper.setDelegatorBond(ctx, bond1to1)
 	resBond, found = viewSlashKeeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
 	assert.True(t, found)
-	assert.True(t, bondsEqual(bond1to1, resBond))
+	assert.True(t, bond1to1.equal(resBond))
 
 	// add some more records
 	keeper.setCandidate(ctx, candidates[1])
@@ -78,17 +70,17 @@ func TestViewSlashBond(t *testing.T) {
 	// test all bond retrieve capabilities
 	resBonds := viewSlashKeeper.GetDelegatorBonds(ctx, addrDels[0], 5)
 	require.Equal(t, 3, len(resBonds))
-	assert.True(t, bondsEqual(bond1to1, resBonds[0]))
-	assert.True(t, bondsEqual(bond1to2, resBonds[1]))
-	assert.True(t, bondsEqual(bond1to3, resBonds[2]))
+	assert.True(t, bond1to1.equal(resBonds[0]))
+	assert.True(t, bond1to2.equal(resBonds[1]))
+	assert.True(t, bond1to3.equal(resBonds[2]))
 	resBonds = viewSlashKeeper.GetDelegatorBonds(ctx, addrDels[0], 3)
 	require.Equal(t, 3, len(resBonds))
 	resBonds = viewSlashKeeper.GetDelegatorBonds(ctx, addrDels[0], 2)
 	require.Equal(t, 2, len(resBonds))
 	resBonds = viewSlashKeeper.GetDelegatorBonds(ctx, addrDels[1], 5)
 	require.Equal(t, 3, len(resBonds))
-	assert.True(t, bondsEqual(bond2to1, resBonds[0]))
-	assert.True(t, bondsEqual(bond2to2, resBonds[1]))
-	assert.True(t, bondsEqual(bond2to3, resBonds[2]))
+	assert.True(t, bond2to1.equal(resBonds[0]))
+	assert.True(t, bond2to2.equal(resBonds[1]))
+	assert.True(t, bond2to3.equal(resBonds[2]))
 
 }

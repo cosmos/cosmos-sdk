@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
 	"github.com/tendermint/tmlibs/cli"
@@ -13,10 +11,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
-	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
-	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/commands"
-	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/commands"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
+	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 )
@@ -46,7 +44,7 @@ func main() {
 	// add query/post commands (custom to binary)
 	rootCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("main", cdc, authcmd.GetAccountDecoder(cdc)),
+			authcmd.GetAccountCmd("acc", cdc, authcmd.GetAccountDecoder(cdc)),
 			stakecmd.GetCmdQueryCandidate("stake", cdc),
 			//stakecmd.GetCmdQueryCandidates("stake", cdc),
 			stakecmd.GetCmdQueryDelegatorBond("stake", cdc),
@@ -73,6 +71,6 @@ func main() {
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareMainCmd(rootCmd, "GA", os.ExpandEnv("$HOME/.gaiacli"))
+	executor := cli.PrepareMainCmd(rootCmd, "GA", app.DefaultCLIHome)
 	executor.Execute()
 }

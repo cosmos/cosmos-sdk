@@ -52,6 +52,26 @@ func NewEndBlocker(k Keeper) sdk.EndBlocker {
 func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	k.setPool(ctx, data.Pool)
 	k.setParams(ctx, data.Params)
+	for _, candidate := range data.Candidates {
+		k.setCandidate(ctx, candidate)
+	}
+	for _, bond := range data.Bonds {
+		k.setDelegatorBond(ctx, bond)
+	}
+}
+
+// WriteGenesis - output genesis parameters
+func WriteGenesis(ctx sdk.Context, k Keeper) GenesisState {
+	pool := k.GetPool(ctx)
+	params := k.GetParams(ctx)
+	candidates := k.GetCandidates(ctx, 32767)
+	bonds := k.getBonds(ctx, 32767)
+	return GenesisState{
+		pool,
+		params,
+		candidates,
+		bonds,
+	}
 }
 
 //_____________________________________________________________________
@@ -145,7 +165,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 		bond = DelegatorBond{
 			DelegatorAddr: delegatorAddr,
 			CandidateAddr: candidate.Address,
-			Shares:        sdk.ZeroRat,
+			Shares:        sdk.ZeroRat(),
 		}
 	}
 
@@ -174,7 +194,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	if !found {
 		return ErrNoDelegatorForAddress(k.codespace).Result()
 	}
-	if !bond.Shares.GT(sdk.ZeroRat) { // bond shares < msg shares
+	if !bond.Shares.GT(sdk.ZeroRat()) { // bond shares < msg shares
 		return ErrInsufficientFunds(k.codespace).Result()
 	}
 
@@ -182,7 +202,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 	// test that there are enough shares to unbond
 	if msg.Shares == "MAX" {
-		if !bond.Shares.GT(sdk.ZeroRat) {
+		if !bond.Shares.GT(sdk.ZeroRat()) {
 			return ErrNotEnoughBondShares(k.codespace, msg.Shares).Result()
 		}
 	} else {
@@ -255,7 +275,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	}
 
 	// deduct shares from the candidate
-	if candidate.Liabilities.IsZero() {
+	if candidate.DelegatorShares.IsZero() {
 		k.removeCandidate(ctx, candidate.Address)
 	} else {
 		k.setCandidate(ctx, candidate)

@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
 )
 
 const (
@@ -45,11 +46,11 @@ func initClientCommand() *cobra.Command {
 }
 
 // Register REST endpoints
-func RegisterRoutes(r *mux.Router) {
-	r.HandleFunc("/node_info", NodeInfoRequestHandler).Methods("GET")
-	r.HandleFunc("/syncing", NodeSyncingRequestHandler).Methods("GET")
-	r.HandleFunc("/blocks/latest", LatestBlockRequestHandler).Methods("GET")
-	r.HandleFunc("/blocks/{height}", BlockRequestHandler).Methods("GET")
-	r.HandleFunc("/validatorsets/latest", LatestValidatorSetRequestHandler).Methods("GET")
-	r.HandleFunc("/validatorsets/{height}", ValidatorSetRequestHandler).Methods("GET")
+func RegisterRoutes(ctx context.CoreContext, r *mux.Router) {
+	r.HandleFunc("/node_info", NodeInfoRequestHandlerFn(ctx)).Methods("GET")
+	r.HandleFunc("/syncing", NodeSyncingRequestHandlerFn(ctx)).Methods("GET")
+	r.HandleFunc("/blocks/latest", LatestBlockRequestHandlerFn(ctx)).Methods("GET")
+	r.HandleFunc("/blocks/{height}", BlockRequestHandlerFn(ctx)).Methods("GET")
+	r.HandleFunc("/validatorsets/latest", LatestValidatorSetRequestHandlerFn(ctx)).Methods("GET")
+	r.HandleFunc("/validatorsets/{height}", ValidatorSetRequestHandlerFn(ctx)).Methods("GET")
 }

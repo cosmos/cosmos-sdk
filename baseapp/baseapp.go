@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Key to store the header in the DB itself.
@@ -47,16 +48,17 @@ type BaseApp struct {
 	// See methods setCheckState and setDeliverState.
 	// .valUpdates accumulate in DeliverTx and are reset in BeginBlock.
 	// QUESTION: should we put valUpdates in the deliverState.ctx?
-	checkState   *state           // for CheckTx
-	deliverState *state           // for DeliverTx
-	valUpdates   []abci.Validator // cached validator changes from DeliverTx
+	checkState       *state           // for CheckTx
+	deliverState     *state           // for DeliverTx
+	valUpdates       []abci.Validator // cached validator changes from DeliverTx
+	absentValidators []int32          // absent validators from begin block
 }
 
 var _ abci.Application = (*BaseApp)(nil)
 
 // Create and name new BaseApp
 // NOTE: The db is used to store the version number for now.
-func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
+func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *BaseApp {
 	app := &BaseApp{
 		Logger:     logger,
 		name:       name,
@@ -64,6 +66,7 @@ func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
 		cms:        store.NewCommitMultiStore(db),
 		router:     NewRouter(),
 		codespacer: sdk.NewCodespacer(),
+		txDecoder:  defaultTxDecoder(cdc),
 	}
 	// Register the undefined & root codespaces, which should not be used by any modules
 	app.codespacer.RegisterOrPanic(sdk.CodespaceUndefined)
@@ -98,10 +101,31 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
-// nolint - Set functions
+// Set the txDecoder function
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
+
+// default custom logic for transaction decoding
+func defaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
+	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var tx = sdk.StdTx{}
+
+		if len(txBytes) == 0 {
+			return nil, sdk.ErrTxDecode("txBytes are empty")
+		}
+
+		// StdTx.Msg is an interface. The concrete types
+		// are registered by MakeTxCodec
+		err := cdc.UnmarshalBinary(txBytes, &tx)
+		if err != nil {
+			return nil, sdk.ErrTxDecode("").Trace(err.Error())
+		}
+		return tx, nil
+	}
+}
+
+// nolint - Set functions
 func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
 	app.initChainer = initChainer
 }
@@ -187,9 +211,9 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, nil)
+		return sdk.NewContext(app.checkState.ms, header, true, nil, app.Logger, nil)
 	}
-	return sdk.NewContext(app.deliverState.ms, header, false, nil)
+	return sdk.NewContext(app.deliverState.ms, header, false, nil, app.Logger, nil)
 }
 
 type state struct {
@@ -205,7 +229,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, nil),
+		ctx: sdk.NewContext(ms, header, true, nil, app.Logger, nil),
 	}
 }
 
@@ -213,11 +237,12 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, nil),
+		ctx: sdk.NewContext(ms, header, false, nil, app.Logger, nil),
 	}
 }
 
-//----------------------------------------
+//______________________________________________________________________________
+
 // ABCI
 
 // Implements ABCI
@@ -241,7 +266,6 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // InitChain runs the initialization logic directly on the CommitMultiStore and commits it.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	if app.initChainer == nil {
-		// TODO: should we have some default handling of validators?
 		return
 	}
 
@@ -251,7 +275,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState
-
 	return
 }
 
@@ -279,6 +302,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
 	}
+	// set the absent validators for addition to context in deliverTx
+	app.absentValidators = req.AbsentValidators
 	return
 }
 
@@ -374,6 +399,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 		ctx = app.checkState.ctx.WithTxBytes(txBytes)
 	} else {
 		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
+		ctx = ctx.WithAbsentValidators(app.absentValidators)
 	}
 
 	// Run the ante handler.

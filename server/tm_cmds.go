@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -35,7 +36,7 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 	flagJSON := "json"
 	cmd := cobra.Command{
 		Use:   "show_validator",
-		Short: "Show this node's validator info",
+		Short: "Show this node's tendermint validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cfg := ctx.Config
@@ -43,6 +44,9 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 			pubKey := privValidator.PubKey
 
 			if viper.GetBool(flagJSON) {
+
+				cdc := wire.NewCodec()
+				wire.RegisterCrypto(cdc)
 				pubKeyJSONBytes, err := cdc.MarshalJSON(pubKey)
 				if err != nil {
 					return err
@@ -63,7 +67,7 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 func UnsafeResetAllCmd(ctx *Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "unsafe_reset_all",
-		Short: "Reset all blockchain data",
+		Short: "Reset blockchain database, priv_validator.json file, and the logger",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := ctx.Config
 			tcmd.ResetAll(cfg.DBDir(), cfg.PrivValidatorFile(), ctx.Logger)

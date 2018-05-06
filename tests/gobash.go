@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"fmt"
 	"io"
 	"os/exec"
 	"strings"
@@ -27,13 +26,11 @@ func getCmd(t *testing.T, command string) *exec.Cmd {
 }
 
 // Execute the command, return standard output and error, try a few times if requested
-func ExecuteT(t *testing.T, command string, trials int) (out string) {
+func ExecuteT(t *testing.T, command string) (out string) {
 	cmd := getCmd(t, command)
 	bz, err := cmd.CombinedOutput()
-	if err != nil && trials > 1 {
-		fmt.Printf("trial %v, retrying: %v\n", trials, command)
-		time.Sleep(time.Second * 10)
-		return ExecuteT(t, command, trials-1)
+	if err != nil {
+		panic(err)
 	}
 	require.NoError(t, err, string(bz))
 	out = strings.Trim(string(bz), "\n") //trim any new lines
@@ -48,7 +45,7 @@ func GoExecuteT(t *testing.T, command string) (cmd *exec.Cmd, pipeIn io.WriteClo
 	require.NoError(t, err)
 	pipeOut, err = cmd.StdoutPipe()
 	require.NoError(t, err)
-	go cmd.Start()
+	cmd.Start()
 	time.Sleep(time.Second)
 	return cmd, pipeIn, pipeOut
 }

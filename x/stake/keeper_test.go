@@ -738,7 +738,7 @@ func TestValidatorsetKeeper(t *testing.T) {
 	assert.Equal(t, 3, valset.Size())
 
 	for i, addr := range addrVals[:3] {
-		val := keeper.GetByAddress(ctx, addr)
+		val := keeper.Validator(ctx, addr)
 		canval := candidates[i].validator()
 		assert.Equal(t, canval, val)
 		assert.Equal(t, canval.Address, val.GetAddress())
@@ -747,7 +747,7 @@ func TestValidatorsetKeeper(t *testing.T) {
 	}
 
 	for _, addr := range addrVals[3:] {
-		val := keeper.GetByAddress(ctx, addr)
+		val := keeper.Validator(ctx, addr)
 		assert.Nil(t, val)
 	}
 

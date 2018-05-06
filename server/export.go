@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/wire"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // ExportCmd dumps app state to JSON
@@ -21,7 +22,16 @@ func ExportCmd(ctx *Context, cdc *wire.Codec, appExporter AppExporter) *cobra.Co
 			if err != nil {
 				return errors.Errorf("Error exporting state: %v\n", err)
 			}
-			fmt.Println(string(appState))
+			doc, err := tmtypes.GenesisDocFromFile(ctx.Config.GenesisFile())
+			if err != nil {
+				return err
+			}
+			doc.AppStateJSON = appState
+			encoded, err := wire.MarshalJSONIndent(cdc, doc)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(encoded))
 			return nil
 		},
 	}

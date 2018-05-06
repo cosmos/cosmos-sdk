@@ -52,15 +52,15 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), result.Code)
 }
 
-func newTestTx(ctx sdk.Context, msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, fee sdk.StdFee) sdk.Tx {
-	signBytes := sdk.StdSignBytes(ctx.ChainID(), seqs, fee, msg)
-	return newTestTxWithSignBytes(msg, privs, seqs, fee, signBytes)
+func newTestTx(ctx sdk.Context, msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, accNumbers []int64, fee sdk.StdFee) sdk.Tx {
+	signBytes := sdk.StdSignBytes(ctx.ChainID(), seqs, accNumbers, fee, msg)
+	return newTestTxWithSignBytes(msg, privs, seqs, accNumbers, fee, signBytes)
 }
 
-func newTestTxWithSignBytes(msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, fee sdk.StdFee, signBytes []byte) sdk.Tx {
+func newTestTxWithSignBytes(msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, accNumbers []int64, fee sdk.StdFee, signBytes []byte) sdk.Tx {
 	sigs := make([]sdk.StdSignature, len(privs))
 	for i, priv := range privs {
-		sigs[i] = sdk.StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), Sequence: seqs[i]}
+		sigs[i] = sdk.StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), AccountNumber: accNumbers[i], Sequence: seqs[i]}
 	}
 	tx := sdk.NewStdTx(msg, fee, sigs)
 	return tx
@@ -86,18 +86,18 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	fee := newStdFee()
 
 	// test no signatures
-	privs, seqs := []crypto.PrivKey{}, []int64{}
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	privs, seqs, accNumbers := []crypto.PrivKey{}, []int64{}, []int64{}
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnauthorized)
 
 	// test num sigs dont match GetSigners
-	privs, seqs = []crypto.PrivKey{priv1}, []int64{0}
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	privs, seqs, accNumbers = []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnauthorized)
 
 	// test an unrecognized account
-	privs, seqs = []crypto.PrivKey{priv1, priv2}, []int64{0, 0}
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	privs, seqs, accNumbers = []crypto.PrivKey{priv1, priv2}, []int64{0, 0}, []int64{0, 0}
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnknownAddress)
 
 	// save the first account, but second is still unrecognized
@@ -135,8 +135,8 @@ func TestAnteHandlerSequences(t *testing.T) {
 	fee := newStdFee()
 
 	// test good tx from one signer
-	privs, seqs := []crypto.PrivKey{priv1}, []int64{0}
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	privs, seqs, accNumbers := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	checkValidTx(t, anteHandler, ctx, tx)
 
 	// test sending it again fails (replay protection)
@@ -144,13 +144,13 @@ func TestAnteHandlerSequences(t *testing.T) {
 
 	// fix sequence, should pass
 	seqs = []int64{1}
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	checkValidTx(t, anteHandler, ctx, tx)
 
 	// new tx with another signer and correct sequences
 	msg = newTestMsg(addr1, addr2)
-	privs, seqs = []crypto.PrivKey{priv1, priv2}, []int64{2, 0}
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	privs, seqs, accNumbers = []crypto.PrivKey{priv1, priv2}, []int64{2, 0}, []int64{0, 0}
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	checkValidTx(t, anteHandler, ctx, tx)
 
 	// replay fails
@@ -158,18 +158,18 @@ func TestAnteHandlerSequences(t *testing.T) {
 
 	// tx from just second signer with incorrect sequence fails
 	msg = newTestMsg(addr2)
-	privs, seqs = []crypto.PrivKey{priv2}, []int64{0}
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	privs, seqs, accNumbers = []crypto.PrivKey{priv2}, []int64{0}, []int64{0}
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInvalidSequence)
 
 	// fix the sequence and it passes
-	tx = newTestTx(ctx, msg, []crypto.PrivKey{priv2}, []int64{1}, fee)
+	tx = newTestTx(ctx, msg, []crypto.PrivKey{priv2}, []int64{1}, accNumbers, fee)
 	checkValidTx(t, anteHandler, ctx, tx)
 
 	// another tx from both of them that passes
 	msg = newTestMsg(addr1, addr2)
-	privs, seqs = []crypto.PrivKey{priv1, priv2}, []int64{3, 2}
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	privs, seqs, accNumbers = []crypto.PrivKey{priv1, priv2}, []int64{3, 2}, []int64{0, 0}
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	checkValidTx(t, anteHandler, ctx, tx)
 }
 
@@ -193,13 +193,13 @@ func TestAnteHandlerFees(t *testing.T) {
 	// msg and signatures
 	var tx sdk.Tx
 	msg := newTestMsg(addr1)
-	privs, seqs := []crypto.PrivKey{priv1}, []int64{0}
+	privs, seqs, accNumbers := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
 	fee := sdk.NewStdFee(100,
 		sdk.Coin{"atom", 150},
 	)
 
 	// signer does not have enough funds to pay the fee
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInsufficientFunds)
 
 	acc1.SetCoins(sdk.Coins{{"atom", 149}})
@@ -241,8 +241,8 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	fee3.Amount[0].Amount += 100
 
 	// test good tx and signBytes
-	privs, seqs := []crypto.PrivKey{priv1}, []int64{0}
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	privs, seqs, accNumbers := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	checkValidTx(t, anteHandler, ctx, tx)
 
 	chainID := ctx.ChainID()
@@ -250,38 +250,39 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	codeUnauth := sdk.CodeUnauthorized
 
 	cases := []struct {
-		chainID string
-		seqs    []int64
-		fee     sdk.StdFee
-		msg     sdk.Msg
-		code    sdk.CodeType
+		chainID    string
+		seqs       []int64
+		accNumbers []int64
+		fee        sdk.StdFee
+		msg        sdk.Msg
+		code       sdk.CodeType
 	}{
-		{chainID2, []int64{1}, fee, msg, codeUnauth},               // test wrong chain_id
-		{chainID, []int64{2}, fee, msg, codeUnauth},                // test wrong seqs
-		{chainID, []int64{1, 2}, fee, msg, codeUnauth},             // test wrong seqs
-		{chainID, []int64{1}, fee, newTestMsg(addr2), codeUnauth},  // test wrong msg
-		{chainID, []int64{1}, fee2, newTestMsg(addr2), codeUnauth}, // test wrong fee
-		{chainID, []int64{1}, fee3, newTestMsg(addr2), codeUnauth}, // test wrong fee
+		{chainID2, []int64{1}, []int64{0}, fee, msg, codeUnauth},               // test wrong chain_id
+		{chainID, []int64{2}, []int64{0}, fee, msg, codeUnauth},                // test wrong seqs
+		{chainID, []int64{1, 2}, []int64{0}, fee, msg, codeUnauth},             // test wrong seqs
+		{chainID, []int64{1}, []int64{0}, fee, newTestMsg(addr2), codeUnauth},  // test wrong msg
+		{chainID, []int64{1}, []int64{0}, fee2, newTestMsg(addr2), codeUnauth}, // test wrong fee
+		{chainID, []int64{1}, []int64{0}, fee3, newTestMsg(addr2), codeUnauth}, // test wrong fee
 	}
 
-	privs, seqs = []crypto.PrivKey{priv1}, []int64{1}
+	privs, seqs, accNumbers = []crypto.PrivKey{priv1}, []int64{1}, []int64{0}
 	for _, cs := range cases {
 		tx := newTestTxWithSignBytes(
-			msg, privs, seqs, fee,
-			sdk.StdSignBytes(cs.chainID, cs.seqs, cs.fee, cs.msg),
+			msg, privs, seqs, accNumbers, fee,
+			sdk.StdSignBytes(cs.chainID, cs.seqs, cs.accNumbers, cs.fee, cs.msg),
 		)
 		checkInvalidTx(t, anteHandler, ctx, tx, cs.code)
 	}
 
 	// test wrong signer if public key exist
 	privs, seqs = []crypto.PrivKey{priv2}, []int64{1}
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnauthorized)
 
 	// test wrong signer if public doesn't exist
 	msg = newTestMsg(addr2)
 	privs, seqs = []crypto.PrivKey{priv1}, []int64{0}
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInvalidPubKey)
 
 }
@@ -311,9 +312,9 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 	// test good tx and set public key
 	msg := newTestMsg(addr1)
-	privs, seqs := []crypto.PrivKey{priv1}, []int64{0}
+	privs, seqs, accNumbers := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
 	fee := newStdFee()
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	checkValidTx(t, anteHandler, ctx, tx)
 
 	acc1 = mapper.GetAccount(ctx, addr1)
@@ -321,7 +322,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 	// test public key not found
 	msg = newTestMsg(addr2)
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	sigs := tx.GetSignatures()
 	sigs[0].PubKey = nil
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInvalidPubKey)
@@ -330,7 +331,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	assert.Nil(t, acc2.GetPubKey())
 
 	// test invalid signature and public key
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	tx = newTestTx(ctx, msg, privs, seqs, accNumbers, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInvalidPubKey)
 
 	acc2 = mapper.GetAccount(ctx, addr2)

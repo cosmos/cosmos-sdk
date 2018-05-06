@@ -8,6 +8,8 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
+var globalAccountNumberKey = []byte("globalAccountNumber")
+
 var _ sdk.AccountMapper = (*accountMapper)(nil)
 
 // Implements sdk.AccountMapper.
@@ -40,6 +42,8 @@ func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto sdk.Account) acco
 func (am accountMapper) NewAccountWithAddress(ctx sdk.Context, addr sdk.Address) sdk.Account {
 	acc := am.clonePrototype()
 	acc.SetAddress(addr)
+	acc.SetAccountNumber(am.getAccountNumber(ctx))
+	acc.SetSequence(0)
 	return acc
 }
 
@@ -77,6 +81,27 @@ func (am accountMapper) IterateAccounts(ctx sdk.Context, process func(sdk.Accoun
 		}
 		iter.Next()
 	}
+}
+
+func (am accountMapper) getAccountNumber(ctx sdk.Context) int64 {
+	var accNumber int64
+	store := ctx.KVStore(am.key)
+	bz := store.Get(globalAccountNumberKey)
+	if bz == nil {
+		bz = am.cdc.MustMarshalBinary(accNumber)
+		store.Set(globalAccountNumberKey, bz)
+		return 0
+	}
+
+	err := am.cdc.UnmarshalBinary(bz, &accNumber)
+	if err != nil {
+		panic(err)
+	}
+
+	bz = am.cdc.MustMarshalBinary(accNumber + 1)
+	store.Set(globalAccountNumberKey, bz)
+
+	return accNumber
 }
 
 //----------------------------------------

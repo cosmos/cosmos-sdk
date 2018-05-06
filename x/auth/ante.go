@@ -41,19 +41,23 @@ func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) 
 				true
 		}
 
-		// Get the sign bytes (requires all sequence numbers and the fee)
+		// Get the sign bytes (requires all account numbers, sequence numbers and the fee)
 		sequences := make([]int64, len(signerAddrs))
 		for i := 0; i < len(signerAddrs); i++ {
 			sequences[i] = sigs[i].Sequence
 		}
+		accNumbers := make([]int64, len(signerAddrs))
+		for i := 0; i < len(signerAddrs); i++ {
+			accNumbers[i] = sigs[i].AccountNumber
+		}
 		fee := stdTx.Fee
 		chainID := ctx.ChainID()
-		// XXX: major hack; need to get ChainID
+		// TODO: major hack; need to get ChainID
 		// into the app right away (#565)
 		if chainID == "" {
 			chainID = viper.GetString("chain-id")
 		}
-		signBytes := sdk.StdSignBytes(ctx.ChainID(), sequences, fee, msg)
+		signBytes := sdk.StdSignBytes(ctx.ChainID(), sequences, accNumbers, fee, msg)
 
 		// Check sig and nonce and collect signer accounts.
 		var signerAccs = make([]sdk.Account, len(signerAddrs))

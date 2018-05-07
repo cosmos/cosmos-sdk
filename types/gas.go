@@ -2,8 +2,10 @@ package types
 
 import ()
 
+// Gas measured by the SDK
 type Gas = int64
 
+// GasMeter interface to track gas consumption
 type GasMeter interface {
 	GasExceeded() bool
 	GasConsumed() Gas

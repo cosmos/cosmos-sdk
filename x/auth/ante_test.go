@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -73,7 +74,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -114,7 +115,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -180,7 +181,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -217,7 +218,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
@@ -292,7 +293,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()

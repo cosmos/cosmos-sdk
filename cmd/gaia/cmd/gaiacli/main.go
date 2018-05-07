@@ -44,7 +44,7 @@ func main() {
 	// add query/post commands (custom to binary)
 	rootCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("main", cdc, authcmd.GetAccountDecoder(cdc)),
+			authcmd.GetAccountCmd("acc", cdc, authcmd.GetAccountDecoder(cdc)),
 			stakecmd.GetCmdQueryCandidate("stake", cdc),
 			//stakecmd.GetCmdQueryCandidates("stake", cdc),
 			stakecmd.GetCmdQueryDelegatorBond("stake", cdc),

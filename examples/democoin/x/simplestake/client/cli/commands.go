@@ -13,7 +13,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/simplestake"
+
+	"github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake"
 )
 
 const (

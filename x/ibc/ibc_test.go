@@ -8,6 +8,7 @@ import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-crypto"
 	dbm "github.com/tendermint/tmlibs/db"
+	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +24,7 @@ func defaultContext(key sdk.StoreKey) sdk.Context {
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	cms.LoadLatestVersion()
-	ctx := sdk.NewContext(cms, abci.Header{}, false, nil)
+	ctx := sdk.NewContext(cms, abci.Header{}, false, nil, log.NewNopLogger())
 	return ctx
 }
 

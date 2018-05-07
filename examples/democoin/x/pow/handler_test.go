@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -19,7 +20,7 @@ func TestPowHandler(t *testing.T) {
 	auth.RegisterBaseAccount(cdc)
 
 	am := auth.NewAccountMapper(cdc, capKey, &auth.BaseAccount{})
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
 	config := NewConfig("pow", int64(1))
 	ck := bank.NewKeeper(am)
 	keeper := NewKeeper(capKey, config, ck, DefaultCodespace)
@@ -30,7 +31,7 @@ func TestPowHandler(t *testing.T) {
 	count := uint64(1)
 	difficulty := uint64(2)
 
-	err := keeper.InitGenesis(ctx, Genesis{uint64(1), uint64(0)})
+	err := InitGenesis(ctx, keeper, Genesis{uint64(1), uint64(0)})
 	assert.Nil(t, err)
 
 	nonce, proof := mine(addr, count, difficulty)

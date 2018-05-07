@@ -6,24 +6,18 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/abci/server"
-	abci "github.com/tendermint/abci/types"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/proxy"
 	pvm "github.com/tendermint/tendermint/types/priv_validator"
 	cmn "github.com/tendermint/tmlibs/common"
-	"github.com/tendermint/tmlibs/log"
 )
 
 const (
 	flagWithTendermint = "with-tendermint"
 	flagAddress        = "address"
 )
-
-// AppCreator lets us lazily initialize app, using home dir
-// and other flags (?) to start
-type AppCreator func(string, log.Logger) (abci.Application, error)
 
 // StartCmd runs the service passed in, either
 // stand-alone, or in-process with tendermint

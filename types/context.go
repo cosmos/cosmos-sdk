@@ -43,6 +43,8 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byt
 	c = c.WithIsCheckTx(isCheckTx)
 	c = c.WithTxBytes(txBytes)
 	c = c.WithLogger(logger)
+	c = c.WithGasLimit(0)
+	c = c.WithGasConsumed(0)
 	return c
 }
 
@@ -127,6 +129,8 @@ const (
 	contextKeyIsCheckTx
 	contextKeyTxBytes
 	contextKeyLogger
+	contextKeyGasLimit
+	contextKeyGasConsumed
 )
 
 // NOTE: Do not expose MultiStore.
@@ -155,6 +159,12 @@ func (c Context) TxBytes() []byte {
 func (c Context) Logger() log.Logger {
 	return c.Value(contextKeyLogger).(log.Logger)
 }
+func (c Context) GasLimit() uint64 {
+	return c.Value(contextKeyGasLimit).(uint64)
+}
+func (c Context) GasConsumed() uint64 {
+	return c.Value(contextKeyGasConsumed).(uint64)
+}
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	return c.withValue(contextKeyMultiStore, ms)
 }
@@ -176,6 +186,12 @@ func (c Context) WithTxBytes(txBytes []byte) Context {
 }
 func (c Context) WithLogger(logger log.Logger) Context {
 	return c.withValue(contextKeyLogger, logger)
+}
+func (c Context) WithGasLimit(limit uint64) Context {
+	return c.withValue(contextKeyGasLimit, limit)
+}
+func (c Context) WithGasConsumed(consumed uint64) Context {
+	return c.withValue(contextKeyGasConsumed, consumed)
 }
 
 // Cache the multistore and return a new cached context. The cached context is

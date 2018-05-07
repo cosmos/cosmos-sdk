@@ -2,10 +2,11 @@ package types
 
 import ()
 
-type Gas uint64
+type Gas = int64
 
 type GasMeter interface {
 	GasExceeded() bool
+	GasConsumed() Gas
 	ConsumeGas(amount Gas)
 	ConsumeGasOrFail(amount Gas) bool
 }
@@ -24,6 +25,10 @@ func NewGasMeter(limit Gas) GasMeter {
 
 func (g *basicGasMeter) GasExceeded() bool {
 	return g.consumed > g.limit
+}
+
+func (g *basicGasMeter) GasConsumed() Gas {
+	return g.consumed
 }
 
 func (g *basicGasMeter) ConsumeGas(amount Gas) {

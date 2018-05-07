@@ -322,6 +322,7 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 		Data:      result.Data,
 		Log:       result.Log,
 		GasWanted: result.GasWanted,
+		GasUsed:   result.GasUsed,
 		Fee: cmn.KI64Pair{
 			[]byte(result.FeeDenom),
 			result.FeeAmount,
@@ -432,6 +433,9 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	result = handler(ctx, msg)
+
+	// Set gas utilized
+	result.GasUsed = ctx.GasMeter().GasConsumed()
 
 	// If result was successful, write to app.checkState.ms or app.deliverState.ms
 	if result.IsOK() {

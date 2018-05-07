@@ -17,7 +17,7 @@ func NewKeeper(am sdk.AccountMapper) Keeper {
 }
 
 // GetCoins returns the coins at the addr.
-func (keeper Keeper) GetCoins(ctx sdk.Context, addr sdk.Address) sdk.Coins {
+func (keeper Keeper) GetCoins(ctx sdk.Context, addr sdk.Address) (sdk.Coins, sdk.Error) {
 	return getCoins(ctx, keeper.am, addr)
 }
 
@@ -27,7 +27,7 @@ func (keeper Keeper) SetCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) 
 }
 
 // HasCoins returns whether or not an account has at least amt coins.
-func (keeper Keeper) HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) bool {
+func (keeper Keeper) HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) (bool, sdk.Error) {
 	return hasCoins(ctx, keeper.am, addr, amt)
 }
 
@@ -64,12 +64,12 @@ func NewSendKeeper(am sdk.AccountMapper) SendKeeper {
 }
 
 // GetCoins returns the coins at the addr.
-func (keeper SendKeeper) GetCoins(ctx sdk.Context, addr sdk.Address) sdk.Coins {
+func (keeper SendKeeper) GetCoins(ctx sdk.Context, addr sdk.Address) (sdk.Coins, sdk.Error) {
 	return getCoins(ctx, keeper.am, addr)
 }
 
 // HasCoins returns whether or not an account has at least amt coins.
-func (keeper SendKeeper) HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) bool {
+func (keeper SendKeeper) HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) (bool, sdk.Error) {
 	return hasCoins(ctx, keeper.am, addr, amt)
 }
 
@@ -96,23 +96,26 @@ func NewViewKeeper(am sdk.AccountMapper) ViewKeeper {
 }
 
 // GetCoins returns the coins at the addr.
-func (keeper ViewKeeper) GetCoins(ctx sdk.Context, addr sdk.Address) sdk.Coins {
+func (keeper ViewKeeper) GetCoins(ctx sdk.Context, addr sdk.Address) (sdk.Coins, sdk.Error) {
 	return getCoins(ctx, keeper.am, addr)
 }
 
 // HasCoins returns whether or not an account has at least amt coins.
-func (keeper ViewKeeper) HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) bool {
+func (keeper ViewKeeper) HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins) (bool, sdk.Error) {
 	return hasCoins(ctx, keeper.am, addr, amt)
 }
 
 //______________________________________________________________________________________________
 
-func getCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address) sdk.Coins {
+func getCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address) (sdk.Coins, sdk.Error) {
+	if ctx.GasMeter().ConsumeGasOrFail(10) {
+		return sdk.Coins{}, sdk.ErrOutOfGas("out of gas in getCoins")
+	}
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
-		return sdk.Coins{}
+		return sdk.Coins{}, nil
 	}
-	return acc.GetCoins()
+	return acc.GetCoins(), nil
 }
 
 func setCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) sdk.Error {
@@ -126,8 +129,15 @@ func setCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.C
 }
 
 // HasCoins returns whether or not an account has at least amt coins.
-func hasCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) bool {
-	return getCoins(ctx, am, addr).IsGTE(amt)
+func hasCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) (bool, sdk.Error) {
+	if ctx.GasMeter().ConsumeGasOrFail(10) {
+		return false, sdk.ErrOutOfGas("out of gas in hasCoins")
+	}
+	coins, err := getCoins(ctx, am, addr)
+	if err != nil {
+		return false, err
+	}
+	return coins.IsGTE(amt), nil
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.

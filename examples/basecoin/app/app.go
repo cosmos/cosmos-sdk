@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
-	"github.com/cosmos/cosmos-sdk/x/simplestake"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 )
@@ -29,16 +29,16 @@ type BasecoinApp struct {
 	cdc *wire.Codec
 
 	// keys to access the substores
-	capKeyMainStore    *sdk.KVStoreKey
-	capKeyAccountStore *sdk.KVStoreKey
-	capKeyIBCStore     *sdk.KVStoreKey
-	capKeyStakingStore *sdk.KVStoreKey
+	keyMain    *sdk.KVStoreKey
+	keyAccount *sdk.KVStoreKey
+	keyIBC     *sdk.KVStoreKey
+	keyStake   *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
-
-	// Handle fees
-	feeHandler sdk.FeeHandler
+	coinKeeper    bank.Keeper
+	ibcMapper     ibc.Mapper
+	stakeKeeper   stake.Keeper
 }
 
 func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
@@ -48,84 +48,56 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// Create your application object.
 	var app = &BasecoinApp{
-		BaseApp:            bam.NewBaseApp(appName, logger, db),
-		cdc:                cdc,
-		capKeyMainStore:    sdk.NewKVStoreKey("main"),
-		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
-		capKeyIBCStore:     sdk.NewKVStoreKey("ibc"),
-		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
+		BaseApp:    bam.NewBaseApp(appName, cdc, logger, db),
+		cdc:        cdc,
+		keyMain:    sdk.NewKVStoreKey("main"),
+		keyAccount: sdk.NewKVStoreKey("acc"),
+		keyIBC:     sdk.NewKVStoreKey("ibc"),
+		keyStake:   sdk.NewKVStoreKey("stake"),
 	}
 
 	// Define the accountMapper.
 	app.accountMapper = auth.NewAccountMapper(
 		cdc,
-		app.capKeyMainStore, // target store
+		app.keyAccount,      // target store
 		&types.AppAccount{}, // prototype
-	).Seal()
+	)
 
-	// Add handlers.
-	coinKeeper := bank.NewCoinKeeper(app.accountMapper)
-	ibcMapper := ibc.NewIBCMapper(app.cdc, app.capKeyIBCStore)
-	stakeKeeper := simplestake.NewKeeper(app.capKeyStakingStore, coinKeeper)
+	// add accountMapper/handlers
+	app.coinKeeper = bank.NewKeeper(app.accountMapper)
+	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
+	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
+
+	// register message routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(ibcMapper, coinKeeper)).
-		AddRoute("simplestake", simplestake.NewHandler(stakeKeeper))
-
-	// Define the feeHandler.
-	app.feeHandler = auth.BurnFeeHandler
+		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
+		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
 
 	// Initialize BaseApp.
-	app.SetTxDecoder(app.txDecoder)
 	app.SetInitChainer(app.initChainer)
-	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyIBCStore, app.capKeyStakingStore)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeHandler))
-	err := app.LoadLatestVersion(app.capKeyMainStore)
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake)
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.BurnFeeHandler))
+	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())
 	}
-
 	return app
 }
 
 // Custom tx codec
 func MakeCodec() *wire.Codec {
 	var cdc = wire.NewCodec()
+	wire.RegisterCrypto(cdc) // Register crypto.
+	sdk.RegisterWire(cdc)    // Register Msgs
+	bank.RegisterWire(cdc)
+	stake.RegisterWire(cdc)
+	ibc.RegisterWire(cdc)
 
-	// Register Msgs
-	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	cdc.RegisterConcrete(bank.SendMsg{}, "basecoin/Send", nil)
-	cdc.RegisterConcrete(bank.IssueMsg{}, "basecoin/Issue", nil)
-	cdc.RegisterConcrete(ibc.IBCTransferMsg{}, "basecoin/IBCTransferMsg", nil)
-	cdc.RegisterConcrete(ibc.IBCReceiveMsg{}, "basecoin/IBCReceiveMsg", nil)
-	cdc.RegisterConcrete(simplestake.BondMsg{}, "basecoin/BondMsg", nil)
-	cdc.RegisterConcrete(simplestake.UnbondMsg{}, "basecoin/UnbondMsg", nil)
-
-	// Register AppAccount
+	// register custom AppAccount
 	cdc.RegisterInterface((*sdk.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "basecoin/Account", nil)
-
-	// Register crypto.
-	wire.RegisterCrypto(cdc)
-
 	return cdc
-}
-
-// Custom logic for transaction decoding
-func (app *BasecoinApp) txDecoder(txBytes []byte) (sdk.Tx, sdk.Error) {
-	var tx = sdk.StdTx{}
-
-	if len(txBytes) == 0 {
-		return nil, sdk.ErrTxDecode("txBytes are empty")
-	}
-
-	// StdTx.Msg is an interface. The concrete types
-	// are registered by MakeTxCodec in bank.RegisterAmino.
-	err := app.cdc.UnmarshalBinary(txBytes, &tx)
-	if err != nil {
-		return nil, sdk.ErrTxDecode("").TraceCause(err, "")
-	}
-	return tx, nil
 }
 
 // Custom logic for basecoin initialization
@@ -133,7 +105,7 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 	stateJSON := req.AppStateBytes
 
 	genesisState := new(types.GenesisState)
-	err := json.Unmarshal(stateJSON, genesisState)
+	err := app.cdc.UnmarshalJSON(stateJSON, genesisState)
 	if err != nil {
 		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 		// return sdk.ErrGenesisParse("").TraceCause(err, "")
@@ -148,4 +120,26 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 		app.accountMapper.SetAccount(ctx, acc)
 	}
 	return abci.ResponseInitChain{}
+}
+
+// Custom logic for state export
+func (app *BasecoinApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
+	ctx := app.NewContext(true, abci.Header{})
+
+	// iterate to get the accounts
+	accounts := []*types.GenesisAccount{}
+	appendAccount := func(acc sdk.Account) (stop bool) {
+		account := &types.GenesisAccount{
+			Address: acc.GetAddress(),
+			Coins:   acc.GetCoins(),
+		}
+		accounts = append(accounts, account)
+		return false
+	}
+	app.accountMapper.IterateAccounts(ctx, appendAccount)
+
+	genState := types.GenesisState{
+		Accounts: accounts,
+	}
+	return wire.MarshalJSONIndent(app.cdc, genState)
 }

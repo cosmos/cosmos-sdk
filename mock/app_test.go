@@ -21,9 +21,13 @@ func TestInitApp(t *testing.T) {
 	require.NoError(t, err)
 
 	// initialize it future-way
-	opts, err := GenInitOptions(nil, nil, "")
+	appState, err := AppGenState(nil, nil)
 	require.NoError(t, err)
-	req := abci.RequestInitChain{AppStateBytes: opts}
+
+	//TODO test validators in the init chain?
+	req := abci.RequestInitChain{
+		AppStateBytes: appState,
+	}
 	app.InitChain(req)
 	app.Commit()
 

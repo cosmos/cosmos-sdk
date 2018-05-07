@@ -25,7 +25,7 @@ func defaultLogger() log.Logger {
 func newBaseApp(name string) *BaseApp {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	return NewBaseApp(name, logger, db)
+	return NewBaseApp(name, nil, logger, db)
 }
 
 func TestMountStores(t *testing.T) {
@@ -59,7 +59,7 @@ func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db)
+	app := NewBaseApp(name, nil, logger, db)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
@@ -81,7 +81,7 @@ func TestLoadVersion(t *testing.T) {
 	commitID := sdk.CommitID{1, res.Data}
 
 	// reload
-	app = NewBaseApp(name, logger, db)
+	app = NewBaseApp(name, nil, logger, db)
 	app.MountStoresIAVL(capKey)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
@@ -147,7 +147,7 @@ func TestInitChainer(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, logger, db)
+	app := NewBaseApp(name, nil, logger, db)
 	// make cap keys and mount the stores
 	// NOTE/TODO: mounting multiple stores is broken
 	// see https://github.com/cosmos/cosmos-sdk/issues/532
@@ -184,7 +184,7 @@ func TestInitChainer(t *testing.T) {
 	assert.Equal(t, value, res.Value)
 
 	// reload app
-	app = NewBaseApp(name, logger, db)
+	app = NewBaseApp(name, nil, logger, db)
 	app.MountStoresIAVL(capKey, capKey2)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
@@ -240,7 +240,7 @@ func TestDeliverTx(t *testing.T) {
 		height := int64((counter / txPerHeight) + 1)
 		assert.Equal(t, height, thisHeader.Height)
 
-		counter += 1
+		counter++
 		return sdk.Result{}
 	})
 
@@ -318,13 +318,12 @@ type testUpdatePowerTx struct {
 
 const msgType = "testUpdatePowerTx"
 
-func (tx testUpdatePowerTx) Type() string                            { return msgType }
-func (tx testUpdatePowerTx) Get(key interface{}) (value interface{}) { return nil }
-func (tx testUpdatePowerTx) GetMsg() sdk.Msg                         { return tx }
-func (tx testUpdatePowerTx) GetSignBytes() []byte                    { return nil }
-func (tx testUpdatePowerTx) ValidateBasic() sdk.Error                { return nil }
-func (tx testUpdatePowerTx) GetSigners() []sdk.Address               { return nil }
-func (tx testUpdatePowerTx) GetSignatures() []sdk.StdSignature       { return nil }
+func (tx testUpdatePowerTx) Type() string                      { return msgType }
+func (tx testUpdatePowerTx) GetMsg() sdk.Msg                   { return tx }
+func (tx testUpdatePowerTx) GetSignBytes() []byte              { return nil }
+func (tx testUpdatePowerTx) ValidateBasic() sdk.Error          { return nil }
+func (tx testUpdatePowerTx) GetSigners() []sdk.Address         { return nil }
+func (tx testUpdatePowerTx) GetSignatures() []sdk.StdSignature { return nil }
 
 func TestValidatorChange(t *testing.T) {
 

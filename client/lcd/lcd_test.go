@@ -10,7 +10,6 @@ import (
 	"os"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -34,6 +33,7 @@ import (
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	bapp "github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	btypes "github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -42,9 +42,9 @@ var (
 	coinAmount = int64(10000000)
 
 	// XXX bad globals
+	name     = "test"
+	password = "0123456789"
 	port     string // XXX: but it's the int ...
-	name     string = "test"
-	password string = "0123456789"
 	seed     string
 	sendAddr string
 )
@@ -80,7 +80,7 @@ func TestKeys(t *testing.T) {
 	jsonStr = []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed": "%s"}`, newName, newPassword, newSeed))
 	res, body = request(t, port, "POST", "/keys", jsonStr)
 
-	assert.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	addr := body
 	assert.Len(t, addr, 40, "Returned address has wrong format", addr)
 
@@ -157,7 +157,7 @@ func TestNodeStatus(t *testing.T) {
 
 func TestBlock(t *testing.T) {
 
-	waitForHeight(2)
+	tests.WaitForHeight(2, port)
 
 	var resultBlock ctypes.ResultBlock
 
@@ -224,7 +224,7 @@ func TestCoinSend(t *testing.T) {
 
 	// create TX
 	receiveAddr, resultTx := doSend(t, port, seed)
-	waitForHeight(resultTx.Height + 1)
+	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was commited
 	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -253,7 +253,7 @@ func TestIBCTransfer(t *testing.T) {
 	// create TX
 	resultTx := doIBCTransfer(t, port, seed)
 
-	waitForHeight(resultTx.Height + 1)
+	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was commited
 	assert.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -286,7 +286,7 @@ func TestTxs(t *testing.T) {
 	// create TX
 	_, resultTx := doSend(t, port, seed)
 
-	waitForHeight(resultTx.Height + 1)
+	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx is findable
 	res, body := request(t, port, "GET", fmt.Sprintf("/txs/%s", resultTx.Hash), nil)
@@ -311,7 +311,11 @@ func TestTxs(t *testing.T) {
 // strt TM and the LCD in process, listening on their respective sockets
 func startTMAndLCD() (*nm.Node, net.Listener, error) {
 
-	viper.Set(cli.HomeFlag, os.TempDir())
+	dir, err := ioutil.TempDir("", "lcd_test")
+	if err != nil {
+		return nil, nil, err
+	}
+	viper.Set(cli.HomeFlag, dir)
 	kb, err := keys.GetKeyBase() // dbm.NewMemDB()) // :(
 	if err != nil {
 		return nil, nil, err
@@ -376,7 +380,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 		return nil, nil, err
 	}
 
-	waitForStart()
+	tests.WaitForStart(port)
 
 	return node, lcd, nil
 }
@@ -403,7 +407,7 @@ func startTM(cfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc, p
 	}
 
 	// wait for rpc
-	waitForRPC()
+	tests.WaitForRPC(GetConfig().RPC.ListenAddress)
 
 	logger.Info("Tendermint running!")
 	return n, err
@@ -485,72 +489,4 @@ func doIBCTransfer(t *testing.T, port, seed string) (resultTx ctypes.ResultBroad
 	require.Nil(t, err)
 
 	return resultTx
-}
-
-func waitForHeight(height int64) {
-	for {
-		var resultBlock ctypes.ResultBlock
-
-		url := fmt.Sprintf("http://localhost:%v%v", port, "/blocks/latest")
-		res, err := http.Get(url)
-		if err != nil {
-			panic(err)
-		}
-
-		body, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			panic(err)
-		}
-		res.Body.Close()
-
-		err = cdc.UnmarshalJSON([]byte(body), &resultBlock)
-		if err != nil {
-			fmt.Println("RES", res)
-			fmt.Println("BODY", string(body))
-			panic(err)
-		}
-
-		if resultBlock.Block.Height >= height {
-			return
-		}
-		time.Sleep(time.Millisecond * 100)
-	}
-}
-
-// wait for 2 blocks
-func waitForStart() {
-	waitHeight := int64(2)
-	for {
-		time.Sleep(time.Second)
-
-		url := fmt.Sprintf("http://localhost:%v%v", port, "/blocks/latest")
-		res, err := http.Get(url)
-		if err != nil {
-			panic(err)
-		}
-
-		// waiting for server to start ...
-		if res.StatusCode != http.StatusOK {
-			res.Body.Close()
-			continue
-		}
-
-		body, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			panic(err)
-		}
-		res.Body.Close()
-
-		resultBlock := new(ctypes.ResultBlock)
-		err = cdc.UnmarshalJSON([]byte(body), &resultBlock)
-		if err != nil {
-			fmt.Println("RES", res)
-			fmt.Println("BODY", string(body))
-			panic(err)
-		}
-
-		if resultBlock.Block.Height >= waitHeight {
-			return
-		}
-	}
 }

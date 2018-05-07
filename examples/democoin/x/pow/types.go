@@ -13,8 +13,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// MineMsg - mine some coins with PoW
-type MineMsg struct {
+// MsgMine - mine some coins with PoW
+type MsgMine struct {
 	Sender     sdk.Address `json:"sender"`
 	Difficulty uint64      `json:"difficulty"`
 	Count      uint64      `json:"count"`
@@ -23,21 +23,22 @@ type MineMsg struct {
 }
 
 // enforce the msg type at compile time
-var _ sdk.Msg = MineMsg{}
+var _ sdk.Msg = MsgMine{}
 
-// NewMineMsg - construct mine message
-func NewMineMsg(sender sdk.Address, difficulty uint64, count uint64, nonce uint64, proof []byte) MineMsg {
-	return MineMsg{sender, difficulty, count, nonce, proof}
+// NewMsgMine - construct mine message
+func NewMsgMine(sender sdk.Address, difficulty uint64, count uint64, nonce uint64, proof []byte) MsgMine {
+	return MsgMine{sender, difficulty, count, nonce, proof}
 }
 
-func (msg MineMsg) Type() string                            { return "pow" }
-func (msg MineMsg) Get(key interface{}) (value interface{}) { return nil }
-func (msg MineMsg) GetSigners() []sdk.Address               { return []sdk.Address{msg.Sender} }
-func (msg MineMsg) String() string {
-	return fmt.Sprintf("MineMsg{Sender: %v, Difficulty: %d, Count: %d, Nonce: %d, Proof: %s}", msg.Sender, msg.Difficulty, msg.Count, msg.Nonce, msg.Proof)
+// nolint
+func (msg MsgMine) Type() string              { return "pow" }
+func (msg MsgMine) GetSigners() []sdk.Address { return []sdk.Address{msg.Sender} }
+func (msg MsgMine) String() string {
+	return fmt.Sprintf("MsgMine{Sender: %v, Difficulty: %d, Count: %d, Nonce: %d, Proof: %s}", msg.Sender, msg.Difficulty, msg.Count, msg.Nonce, msg.Proof)
 }
 
-func (msg MineMsg) ValidateBasic() sdk.Error {
+// validate the mine message
+func (msg MsgMine) ValidateBasic() sdk.Error {
 	// check hash
 	var data []byte
 	// hash must include sender, so no other users can race the tx
@@ -52,7 +53,7 @@ func (msg MineMsg) ValidateBasic() sdk.Error {
 	hex.Encode(hashHex, hash)
 	hashHex = hashHex[:16]
 	if !bytes.Equal(hashHex, msg.Proof) {
-		return ErrInvalidProof(fmt.Sprintf("hashHex: %s, proof: %s", hashHex, msg.Proof))
+		return ErrInvalidProof(DefaultCodespace, fmt.Sprintf("hashHex: %s, proof: %s", hashHex, msg.Proof))
 	}
 
 	// check proof below difficulty
@@ -60,16 +61,17 @@ func (msg MineMsg) ValidateBasic() sdk.Error {
 	target := math.MaxUint64 / msg.Difficulty
 	hashUint, err := strconv.ParseUint(string(msg.Proof), 16, 64)
 	if err != nil {
-		return ErrInvalidProof(fmt.Sprintf("proof: %s", msg.Proof))
+		return ErrInvalidProof(DefaultCodespace, fmt.Sprintf("proof: %s", msg.Proof))
 	}
 	if hashUint >= target {
-		return ErrNotBelowTarget(fmt.Sprintf("hashuint: %d, target: %d", hashUint, target))
+		return ErrNotBelowTarget(DefaultCodespace, fmt.Sprintf("hashuint: %d, target: %d", hashUint, target))
 	}
 
 	return nil
 }
 
-func (msg MineMsg) GetSignBytes() []byte {
+// get the mine message sign bytes
+func (msg MsgMine) GetSignBytes() []byte {
 	b, err := json.Marshal(msg)
 	if err != nil {
 		panic(err)

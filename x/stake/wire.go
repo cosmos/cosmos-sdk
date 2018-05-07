@@ -4,9 +4,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
-// XXX complete
+// Register concrete types on wire codec
 func RegisterWire(cdc *wire.Codec) {
-	// TODO include option to always include prefix bytes.
-	//cdc.RegisterConcrete(SendMsg{}, "cosmos-sdk/SendMsg", nil)
-	//cdc.RegisterConcrete(IssueMsg{}, "cosmos-sdk/IssueMsg", nil)
+	cdc.RegisterConcrete(MsgDeclareCandidacy{}, "cosmos-sdk/MsgDeclareCandidacy", nil)
+	cdc.RegisterConcrete(MsgEditCandidacy{}, "cosmos-sdk/MsgEditCandidacy", nil)
+	cdc.RegisterConcrete(MsgDelegate{}, "cosmos-sdk/MsgDelegate", nil)
+	cdc.RegisterConcrete(MsgUnbond{}, "cosmos-sdk/MsgUnbond", nil)
 }

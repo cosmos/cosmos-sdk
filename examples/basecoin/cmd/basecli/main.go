@@ -14,10 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
 	"github.com/cosmos/cosmos-sdk/version"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/commands"
-	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/commands"
-	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/commands"
-	simplestakingcmd "github.com/cosmos/cosmos-sdk/x/simplestake/commands"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
+	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
@@ -51,24 +51,18 @@ func main() {
 	// add query/post commands (custom to binary)
 	rootCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("main", cdc, types.GetAccountDecoder(cdc)),
+			authcmd.GetAccountCmd("acc", cdc, types.GetAccountDecoder(cdc)),
 		)...)
+
 	rootCmd.AddCommand(
 		client.PostCommands(
 			bankcmd.SendTxCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
 			ibccmd.IBCTransferCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
 			ibccmd.IBCRelayCmd(cdc),
-			simplestakingcmd.BondTxCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
-			simplestakingcmd.UnbondTxCmd(cdc),
+			stakecmd.GetCmdDeclareCandidacy(cdc),
+			stakecmd.GetCmdEditCandidacy(cdc),
+			stakecmd.GetCmdDelegate(cdc),
+			stakecmd.GetCmdUnbond(cdc),
 		)...)
 
 	// add proxy, version and key info

@@ -13,14 +13,15 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 
 	client "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	tx "github.com/cosmos/cosmos-sdk/client/tx"
 	version "github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/wire"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/rest"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/rest"
-	ibc "github.com/cosmos/cosmos-sdk/x/ibc/rest"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
+	ibc "github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
 )
 
 const (
@@ -66,19 +67,21 @@ func startRESTServerFn(cdc *wire.Codec) func(cmd *cobra.Command, args []string) 
 
 func createHandler(cdc *wire.Codec) http.Handler {
 	r := mux.NewRouter()
-	r.HandleFunc("/version", version.VersionRequestHandler).Methods("GET")
+	r.HandleFunc("/version", version.RequestHandler).Methods("GET")
 
 	kb, err := keys.GetKeyBase() //XXX
 	if err != nil {
 		panic(err)
 	}
 
+	ctx := context.NewCoreContextFromViper()
+
 	// TODO make more functional? aka r = keys.RegisterRoutes(r)
 	keys.RegisterRoutes(r)
-	rpc.RegisterRoutes(r)
-	tx.RegisterRoutes(r, cdc)
-	auth.RegisterRoutes(r, cdc, "main")
-	bank.RegisterRoutes(r, cdc, kb)
-	ibc.RegisterRoutes(r, cdc, kb)
+	rpc.RegisterRoutes(ctx, r)
+	tx.RegisterRoutes(ctx, r, cdc)
+	auth.RegisterRoutes(ctx, r, cdc, "acc")
+	bank.RegisterRoutes(ctx, r, cdc, kb)
+	ibc.RegisterRoutes(ctx, r, cdc, kb)
 	return r
 }

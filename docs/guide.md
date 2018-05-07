@@ -29,9 +29,6 @@ type Msg interface {
 	// Must be alphanumeric or empty.
 	Type() string
 
-	// Get some property of the Msg.
-	Get(key interface{}) (value interface{})
-
 	// Get the canonical byte representation of the Msg.
 	GetSignBytes() []byte
 
@@ -63,18 +60,15 @@ Messages can specify basic self-consistency checks using the `ValidateBasic()`
 method to enforce that message contents are well formed before any actual logic
 begins.
 
-Finally, messages can provide generic access to their contents via `Get(key)`,
-but this is mostly for convenience and not type-safe.
-
 For instance, the `Basecoin` message types are defined in `x/bank/tx.go`: 
 
 ```go
-type SendMsg struct {
+type MsgSend struct {
 	Inputs  []Input  `json:"inputs"`
 	Outputs []Output `json:"outputs"`
 }
 
-type IssueMsg struct {
+type MsgIssue struct {
 	Banker  sdk.Address `json:"banker"`
 	Outputs []Output       `json:"outputs"`
 }
@@ -83,7 +77,7 @@ type IssueMsg struct {
 Each specifies the addresses that must sign the message:
 
 ```go
-func (msg SendMsg) GetSigners() []sdk.Address {
+func (msg MsgSend) GetSigners() []sdk.Address {
 	addrs := make([]sdk.Address, len(msg.Inputs))
 	for i, in := range msg.Inputs {
 		addrs[i] = in.Address
@@ -91,7 +85,7 @@ func (msg SendMsg) GetSigners() []sdk.Address {
 	return addrs
 }
 
-func (msg IssueMsg) GetSigners() []sdk.Address {
+func (msg MsgIssue) GetSigners() []sdk.Address {
 	return []sdk.Address{msg.Banker}
 }
 ```
@@ -174,13 +168,13 @@ property that it can unmarshal into interface types, but it requires the
 relevant types to be registered ahead of type. Registration happens on a
 `Codec` object, so as not to taint the global name space.
 
-For instance, in `Basecoin`, we wish to register the `SendMsg` and `IssueMsg`
+For instance, in `Basecoin`, we wish to register the `MsgSend` and `MsgIssue`
 types:
 
 ```go
 cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-cdc.RegisterConcrete(bank.SendMsg{}, "cosmos-sdk/SendMsg", nil)
-cdc.RegisterConcrete(bank.IssueMsg{}, "cosmos-sdk/IssueMsg", nil)
+cdc.RegisterConcrete(bank.MsgSend{}, "cosmos-sdk/MsgSend", nil)
+cdc.RegisterConcrete(bank.MsgIssue{}, "cosmos-sdk/MsgIssue", nil)
 ```
 
 Note how each concrete type is given a name - these name determine the type's
@@ -319,8 +313,8 @@ func NewHandler(am sdk.AccountMapper) sdk.Handler {
 The quintessential SDK application is Basecoin - a simple
 multi-asset cryptocurrency.  Basecoin consists of a set of
 accounts stored in a Merkle tree, where each account may have
-many coins. There are two message types: SendMsg and IssueMsg.
-SendMsg allows coins to be sent around, while IssueMsg allows a
+many coins. There are two message types: MsgSend and MsgIssue.
+MsgSend allows coins to be sent around, while MsgIssue allows a
 set of predefined users to issue new coins.
 
 ## Conclusion

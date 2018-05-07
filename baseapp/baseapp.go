@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Key to store the header in the DB itself.
@@ -24,11 +25,12 @@ var dbHeaderKey = []byte("header")
 // The ABCI application
 type BaseApp struct {
 	// initialized on creation
-	Logger log.Logger
-	name   string               // application name from abci.Info
-	db     dbm.DB               // common DB backend
-	cms    sdk.CommitMultiStore // Main (uncached) state
-	router Router               // handle any kind of message
+	Logger     log.Logger
+	name       string               // application name from abci.Info
+	db         dbm.DB               // common DB backend
+	cms        sdk.CommitMultiStore // Main (uncached) state
+	router     Router               // handle any kind of message
+	codespacer *sdk.Codespacer      // handle module codespacing
 
 	// must be set
 	txDecoder   sdk.TxDecoder   // unmarshal []byte into sdk.Tx
@@ -55,19 +57,30 @@ var _ abci.Application = (*BaseApp)(nil)
 
 // Create and name new BaseApp
 // NOTE: The db is used to store the version number for now.
-func NewBaseApp(name string, logger log.Logger, db dbm.DB) *BaseApp {
-	return &BaseApp{
-		Logger: logger,
-		name:   name,
-		db:     db,
-		cms:    store.NewCommitMultiStore(db),
-		router: NewRouter(),
+func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *BaseApp {
+	app := &BaseApp{
+		Logger:     logger,
+		name:       name,
+		db:         db,
+		cms:        store.NewCommitMultiStore(db),
+		router:     NewRouter(),
+		codespacer: sdk.NewCodespacer(),
+		txDecoder:  defaultTxDecoder(cdc),
 	}
+	// Register the undefined & root codespaces, which should not be used by any modules
+	app.codespacer.RegisterOrPanic(sdk.CodespaceUndefined)
+	app.codespacer.RegisterOrPanic(sdk.CodespaceRoot)
+	return app
 }
 
 // BaseApp Name
 func (app *BaseApp) Name() string {
 	return app.name
+}
+
+// Register the next available codespace through the baseapp's codespacer, starting from a default
+func (app *BaseApp) RegisterCodespace(codespace sdk.CodespaceType) sdk.CodespaceType {
+	return app.codespacer.RegisterNext(codespace)
 }
 
 // Mount a store to the provided key in the BaseApp multistore
@@ -87,10 +100,31 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
-// nolint - Set functions
+// Set the txDecoder function
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
 }
+
+// default custom logic for transaction decoding
+func defaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
+	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var tx = sdk.StdTx{}
+
+		if len(txBytes) == 0 {
+			return nil, sdk.ErrTxDecode("txBytes are empty")
+		}
+
+		// StdTx.Msg is an interface. The concrete types
+		// are registered by MakeTxCodec
+		err := cdc.UnmarshalBinary(txBytes, &tx)
+		if err != nil {
+			return nil, sdk.ErrTxDecode("").Trace(err.Error())
+		}
+		return tx, nil
+	}
+}
+
+// nolint - Set functions
 func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
 	app.initChainer = initChainer
 }
@@ -103,7 +137,6 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	app.anteHandler = ah
 }
-
 func (app *BaseApp) Router() Router { return app.router }
 
 // load latest application version
@@ -177,9 +210,9 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, nil)
+		return sdk.NewContext(app.checkState.ms, header, true, nil, app.Logger)
 	}
-	return sdk.NewContext(app.deliverState.ms, header, false, nil)
+	return sdk.NewContext(app.deliverState.ms, header, false, nil, app.Logger)
 }
 
 type state struct {
@@ -195,7 +228,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, nil),
+		ctx: sdk.NewContext(ms, header, true, nil, app.Logger),
 	}
 }
 
@@ -203,11 +236,12 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, nil),
+		ctx: sdk.NewContext(ms, header, false, nil, app.Logger),
 	}
 }
 
-//----------------------------------------
+//______________________________________________________________________________
+
 // ABCI
 
 // Implements ABCI
@@ -231,7 +265,6 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // InitChain runs the initialization logic directly on the CommitMultiStore and commits it.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	if app.initChainer == nil {
-		// TODO: should we have some default handling of validators?
 		return
 	}
 
@@ -241,7 +274,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState
-
 	return
 }
 
@@ -311,9 +343,8 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	if result.IsOK() {
 		app.valUpdates = append(app.valUpdates, result.ValidatorUpdates...)
 	} else {
-		// Even though the Code is not OK, there will be some side
-		// effects, like those caused by fee deductions or sequence
-		// incrementations.
+		// Even though the Result.Code is not OK, there are still effects,
+		// namely fee deductions and sequence incrementing.
 	}
 
 	// Tell the blockchain engine (i.e. Tendermint).
@@ -327,7 +358,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	}
 }
 
-// Mostly for testing
+// nolint- Mostly for testing
 func (app *BaseApp) Check(tx sdk.Tx) (result sdk.Result) {
 	return app.runTx(true, nil, tx)
 }
@@ -355,6 +386,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	// Validate the Msg.
 	err := msg.ValidateBasic()
 	if err != nil {
+		err = err.WithDefaultCodespace(sdk.CodespaceRoot)
 		return err.Result()
 	}
 
@@ -441,7 +473,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// Use the header from this latest block.
 	app.setCheckState(header)
 
-	// Emtpy the Deliver state
+	// Empty the Deliver state
 	app.deliverState = nil
 
 	return abci.ResponseCommit{

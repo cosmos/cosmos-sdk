@@ -2,6 +2,7 @@ package context
 
 import (
 	"fmt"
+
 	"github.com/spf13/viper"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -9,11 +10,10 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/core"
 )
 
 // NewCoreContextFromViper - return a new context with parameters from the command line
-func NewCoreContextFromViper() core.CoreContext {
+func NewCoreContextFromViper() CoreContext {
 	nodeURI := viper.GetString(client.FlagNode)
 	var rpc rpcclient.Client
 	if nodeURI != "" {
@@ -27,7 +27,7 @@ func NewCoreContextFromViper() core.CoreContext {
 			chainID = def
 		}
 	}
-	return core.CoreContext{
+	return CoreContext{
 		ChainID:         chainID,
 		Height:          viper.GetInt64(client.FlagHeight),
 		TrustNode:       viper.GetBool(client.FlagTrustNode),
@@ -36,7 +36,7 @@ func NewCoreContextFromViper() core.CoreContext {
 		Sequence:        viper.GetInt64(client.FlagSequence),
 		Client:          rpc,
 		Decoder:         nil,
-		AccountStore:    "main",
+		AccountStore:    "acc",
 	}
 }
 
@@ -54,8 +54,9 @@ func defaultChainID() (string, error) {
 }
 
 // EnsureSequence - automatically set sequence number if none provided
-func EnsureSequence(ctx core.CoreContext) (core.CoreContext, error) {
-	if viper.IsSet(client.FlagSequence) {
+func EnsureSequence(ctx CoreContext) (CoreContext, error) {
+	// Should be viper.IsSet, but this does not work - https://github.com/spf13/viper/pull/331
+	if viper.GetInt64(client.FlagSequence) != 0 {
 		return ctx, nil
 	}
 	from, err := ctx.GetFromAddress()

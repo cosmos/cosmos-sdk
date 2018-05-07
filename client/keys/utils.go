@@ -1,8 +1,11 @@
 package keys
 
 import (
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/viper"
 
@@ -16,23 +19,18 @@ import (
 // KeyDBName is the directory under root where we store the keys
 const KeyDBName = "keys"
 
-var (
-	// keybase is used to make GetKeyBase a singleton
-	keybase keys.Keybase
-)
+// keybase is used to make GetKeyBase a singleton
+var keybase keys.Keybase
 
-// used for outputting keys.Info over REST
-type KeyOutput struct {
-	Name    string `json:"name"`
-	Address string `json:"address"`
-	// TODO add pubkey?
-	// Pubkey  string `json:"pubkey"`
+// initialize a keybase based on the configuration
+func GetKeyBase() (keys.Keybase, error) {
+	rootDir := viper.GetString(cli.HomeFlag)
+	return GetKeyBaseFromDir(rootDir)
 }
 
-// GetKeyBase initializes a keybase based on the configuration
-func GetKeyBase() (keys.Keybase, error) {
+// initialize a keybase based on the configuration
+func GetKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	if keybase == nil {
-		rootDir := viper.GetString(cli.HomeFlag)
 		db, err := dbm.NewGoLevelDB(KeyDBName, filepath.Join(rootDir, "keys"))
 		if err != nil {
 			return nil, err
@@ -47,36 +45,57 @@ func SetKeyBase(kb keys.Keybase) {
 	keybase = kb
 }
 
+// used for outputting keys.Info over REST
+type KeyOutput struct {
+	Name    string `json:"name"`
+	Address string `json:"address"`
+	PubKey  string `json:"pub_key"`
+}
+
+func NewKeyOutput(info keys.Info) KeyOutput {
+	return KeyOutput{
+		Name:    info.Name,
+		Address: info.PubKey.Address().String(),
+		PubKey:  strings.ToUpper(hex.EncodeToString(info.PubKey.Bytes())),
+	}
+}
+
+func NewKeyOutputs(infos []keys.Info) []KeyOutput {
+	kos := make([]KeyOutput, len(infos))
+	for i, info := range infos {
+		kos[i] = NewKeyOutput(info)
+	}
+	return kos
+}
+
 func printInfo(info keys.Info) {
+	ko := NewKeyOutput(info)
 	switch viper.Get(cli.OutputFlag) {
 	case "text":
-		addr := info.PubKey.Address().String()
-		sep := "\t\t"
-		if len(info.Name) > 7 {
-			sep = "\t"
-		}
-		fmt.Printf("%s%s%s\n", info.Name, sep, addr)
+		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
+		fmt.Printf("%s\t%s\t%s\n", ko.Name, ko.Address, ko.PubKey)
 	case "json":
-		json, err := MarshalJSON(info)
+		out, err := json.MarshalIndent(ko, "", "\t")
 		if err != nil {
-			panic(err) // really shouldn't happen...
+			panic(err)
 		}
-		fmt.Println(string(json))
+		fmt.Println(string(out))
 	}
 }
 
 func printInfos(infos []keys.Info) {
+	kos := NewKeyOutputs(infos)
 	switch viper.Get(cli.OutputFlag) {
 	case "text":
-		fmt.Println("All keys:")
-		for _, i := range infos {
-			printInfo(i)
+		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
+		for _, ko := range kos {
+			fmt.Printf("%s\t%s\t%s\n", ko.Name, ko.Address, ko.PubKey)
 		}
 	case "json":
-		json, err := MarshalJSON(infos)
+		out, err := json.MarshalIndent(kos, "", "\t")
 		if err != nil {
-			panic(err) // really shouldn't happen...
+			panic(err)
 		}
-		fmt.Println(string(json))
+		fmt.Println(string(out))
 	}
 }

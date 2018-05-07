@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
@@ -19,10 +20,10 @@ func TestPowHandler(t *testing.T) {
 	auth.RegisterBaseAccount(cdc)
 
 	am := auth.NewAccountMapper(cdc, capKey, &auth.BaseAccount{})
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	config := NewPowConfig("pow", int64(1))
-	ck := bank.NewCoinKeeper(am)
-	keeper := NewKeeper(capKey, config, ck)
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
+	config := NewConfig("pow", int64(1))
+	ck := bank.NewKeeper(am)
+	keeper := NewKeeper(capKey, config, ck, DefaultCodespace)
 
 	handler := keeper.Handler
 
@@ -30,11 +31,11 @@ func TestPowHandler(t *testing.T) {
 	count := uint64(1)
 	difficulty := uint64(2)
 
-	err := keeper.InitGenesis(ctx, PowGenesis{uint64(1), uint64(0)})
+	err := InitGenesis(ctx, keeper, Genesis{uint64(1), uint64(0)})
 	assert.Nil(t, err)
 
 	nonce, proof := mine(addr, count, difficulty)
-	msg := NewMineMsg(addr, difficulty, count, nonce, proof)
+	msg := NewMsgMine(addr, difficulty, count, nonce, proof)
 
 	result := handler(ctx, msg)
 	assert.Equal(t, result, sdk.Result{})
@@ -51,7 +52,7 @@ func TestPowHandler(t *testing.T) {
 
 	difficulty = uint64(4)
 	nonce, proof = mine(addr, count, difficulty)
-	msg = NewMineMsg(addr, difficulty, count, nonce, proof)
+	msg = NewMsgMine(addr, difficulty, count, nonce, proof)
 
 	result = handler(ctx, msg)
 	assert.NotEqual(t, result, sdk.Result{})

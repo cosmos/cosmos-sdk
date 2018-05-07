@@ -8,6 +8,7 @@ import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-crypto"
 	dbm "github.com/tendermint/tmlibs/db"
+	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,14 +17,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-// AccountMapper(/CoinKeeper) and IBCMapper should use different StoreKey later
+// AccountMapper(/Keeper) and IBCMapper should use different StoreKey later
 
 func defaultContext(key sdk.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	cms.LoadLatestVersion()
-	ctx := sdk.NewContext(cms, abci.Header{}, false, nil)
+	ctx := sdk.NewContext(cms, abci.Header{}, false, nil, log.NewNopLogger())
 	return ctx
 }
 
@@ -31,7 +32,7 @@ func newAddress() crypto.Address {
 	return crypto.GenPrivKeyEd25519().PubKey().Address()
 }
 
-func getCoins(ck bank.CoinKeeper, ctx sdk.Context, addr crypto.Address) (sdk.Coins, sdk.Error) {
+func getCoins(ck bank.Keeper, ctx sdk.Context, addr crypto.Address) (sdk.Coins, sdk.Error) {
 	zero := sdk.Coins(nil)
 	return ck.AddCoins(ctx, addr, zero)
 }
@@ -41,8 +42,8 @@ func makeCodec() *wire.Codec {
 
 	// Register Msgs
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	cdc.RegisterConcrete(bank.SendMsg{}, "test/ibc/Send", nil)
-	cdc.RegisterConcrete(bank.IssueMsg{}, "test/ibc/Issue", nil)
+	cdc.RegisterConcrete(bank.MsgSend{}, "test/ibc/Send", nil)
+	cdc.RegisterConcrete(bank.MsgIssue{}, "test/ibc/Issue", nil)
 	cdc.RegisterConcrete(IBCTransferMsg{}, "test/ibc/IBCTransferMsg", nil)
 	cdc.RegisterConcrete(IBCReceiveMsg{}, "test/ibc/IBCReceiveMsg", nil)
 
@@ -61,7 +62,7 @@ func TestIBC(t *testing.T) {
 	ctx := defaultContext(key)
 
 	am := auth.NewAccountMapper(cdc, key, &auth.BaseAccount{})
-	ck := bank.NewCoinKeeper(am)
+	ck := bank.NewKeeper(am)
 
 	src := newAddress()
 	dest := newAddress()
@@ -73,7 +74,7 @@ func TestIBC(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, mycoins, coins)
 
-	ibcm := NewIBCMapper(cdc, key)
+	ibcm := NewMapper(cdc, key, DefaultCodespace)
 	h := NewHandler(ibcm, ck)
 	packet := IBCPacket{
 		SrcAddr:   src,

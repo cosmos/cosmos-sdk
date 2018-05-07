@@ -84,7 +84,7 @@ godocs:
 ########################################
 ### Testing
 
-test: test_unit test_cli
+test: test_unit
 
 test_cli: 
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test`

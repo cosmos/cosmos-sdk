@@ -23,10 +23,24 @@ Capabilities
 
 Keys
 ----
+To sign a message, you'll need a public and private key pair. These are cryptographic schemes that are generated from an elliptic curve.
+Cosmos uses ``ed25519`` elliptic curve by default for key generation.
+
+To recover a lost key yo'll have to use the 24 word seed phrase you were given when you generated.
 
 Signatures
 ----------
+A Signature in the SDK is a bytes message that you attest with your private key.
 
+We define a standard SDK signature as the following:
+
+::
+
+    type StdSignature struct {
+    crypto.PubKey    `json:"pub_key"` // optional
+    crypto.Signature `json:"signature"`
+    Sequence         int64 `json:"sequence"`
+    }
 
 Accounts
 --------
@@ -82,7 +96,7 @@ Data Store
 ----------
 
 In order to provide proofs to Tendermint, we keep all data in one
-key-value (kv) store which is indexed with a merkle tree. This allows
+key-value (KV) store which is indexed with a merkle tree. This allows
 for the easy generation of a root hash and proofs for queries without
 requiring complex logic inside each module. Standardization of this
 process also allows powerful light-client tooling as any store data may
@@ -137,6 +151,7 @@ their local section of the database and trust the permissions associated
 with the context, without concern of interference from other modules.
 (Okay, if you see a bunch of C-code in the module traversing through all
 the memory space of the application, then get worried....)
+
 
 Handler
 -------
@@ -194,6 +209,93 @@ Auth, Bank, Governance, Staking and IBC.
 
 Apps
 ----
+
+
+BaseApp
+-------
+``BaseApp`` is the basic application of the Cosmos-SDK. When you create a new SDK app, ypu must define its name, logger and database
+``BaseApp`` provides data structures that provide basic data storage
+functionality and act as a bridge between the ABCI interface and the SDK
+abstractions.
+
+``BaseApp`` has no state except the CommitMultiStore you provide upon init.
+
+
+Router
+------
+a Router is a struct that provides handlers for each transaction type
+
+
+Coin
+-----
+
+A Coin is a struct in the SDK that holds some amount of a currency. It also contains methods to do same math operations.
+
+::
+
+    type Coin struct {
+    	Denom  string `json:"denom"`
+    	Amount int64  `json:"amount"`
+    }
+
+Methods
+^^^^^^^
+
+::
+
+      coin.String()
+
+Returns a human-readable representation of a coin.
+
+::
+
+      coin.SameDenomAs(ctx Context, store state.KVStore, tx Tx)
+
+Returns true if the two coins are the same ``Denom``.
+
+::
+
+      coin.IsZero()
+
+Returns true if coin represents no money.
+
+::
+
+      coin.IsGTE(other Coin)
+
+Returns a human-readable representation of a coin.
+
+::
+
+      coin.IsEqual(other Coin)
+
+Returns true if the two sets of Coins have the same value.
+
+::
+
+      coin.IsPositive()
+
+Returns if coin amount is positive.
+
+::
+
+      coin.IsNotNegative()
+
+Returns true if coin amount is not negative.
+
+::
+
+      coin.Plus(coinB Coin)
+
+Adds amounts of two coins with same ``Denom``.
+
+::
+
+      coin.Minus(coinB Coin)
+
+Subtracts amounts of two coins with same ``Denom``.
+
+
 
 
 

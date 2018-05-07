@@ -135,6 +135,31 @@ func TestKeeper(t *testing.T) {
 
 }
 
+func TestKeeperGas(t *testing.T) {
+	ms, authKey := setupMultiStore()
+
+	cdc := wire.NewCodec()
+	auth.RegisterBaseAccount(cdc)
+
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger(), 10)
+	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
+	coinKeeper := NewKeeper(accountMapper)
+
+	addr := sdk.Address([]byte("addr1"))
+	acc := accountMapper.NewAccountWithAddress(ctx, addr)
+
+	// Test GetCoins/SetCoins
+	accountMapper.SetAccount(ctx, acc)
+	coins, err := coinKeeper.GetCoins(ctx, addr)
+	assert.Nil(t, err)
+	assert.True(t, coins.IsEqual(sdk.Coins{}))
+
+	coinKeeper.SetCoins(ctx, addr, sdk.Coins{{"foocoin", 10}})
+	coins, err = coinKeeper.GetCoins(ctx, addr)
+	assert.NotNil(t, err)
+	assert.True(t, coins.IsEqual(sdk.Coins{}))
+}
+
 func TestSendKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 

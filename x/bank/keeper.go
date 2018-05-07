@@ -119,6 +119,9 @@ func getCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address) (sdk.Coin
 }
 
 func setCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) sdk.Error {
+	if ctx.GasMeter().ConsumeGasOrFail(100) {
+		return sdk.ErrOutOfGas("out of gas in setCoins")
+	}
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		acc = am.NewAccountWithAddress(ctx, addr)

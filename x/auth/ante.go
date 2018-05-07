@@ -11,7 +11,7 @@ import (
 // NewAnteHandler returns an AnteHandler that checks
 // and increments sequence numbers, checks signatures,
 // and deducts fees from the first signer.
-func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHandler {
+func NewAnteHandler(am sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx,
 	) (_ sdk.Context, _ sdk.Result, abort bool) {
@@ -24,7 +24,6 @@ func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) 
 				true
 		}
 
-		// TODO: can tx just implement message?
 		msg := tx.GetMsg()
 
 		// TODO: will this always be a stdtx? should that be used in the function signature?
@@ -62,7 +61,7 @@ func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) 
 
 			// check signature, return account with incremented nonce
 			signerAcc, res := processSig(
-				ctx, accountMapper,
+				ctx, am,
 				signerAddr, sig, signBytes,
 			)
 			if !res.IsOK() {
@@ -82,7 +81,7 @@ func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) 
 			}
 
 			// Save the account.
-			accountMapper.SetAccount(ctx, signerAcc)
+			am.SetAccount(ctx, signerAcc)
 			signerAccs[i] = signerAcc
 		}
 

@@ -42,6 +42,7 @@ BREAKING CHANGES
 * gaiad init now requires use of `--name` flag 
 * Removed Get from Msg interface
 * types/rational now extends big.Rat
+* added ability to change pubkey to auth module
 
 FEATURES:
 

@@ -257,7 +257,6 @@ func TestGetValidatorsBonded(t *testing.T) {
 	require.Equal(t, len(validators), n, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
 	assert.Equal(t, candidates[4].Address, validators[1].Address, "%v", validators)
-
 }
 
 // TODO seperate out into multiple tests

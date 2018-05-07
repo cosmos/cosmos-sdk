@@ -30,7 +30,7 @@ type Context struct {
 }
 
 // create a new context
-func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byte, logger log.Logger) Context {
+func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byte, logger log.Logger, gasLimit Gas) Context {
 	c := Context{
 		Context: context.Background(),
 		pst:     newThePast(),
@@ -43,8 +43,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byt
 	c = c.WithIsCheckTx(isCheckTx)
 	c = c.WithTxBytes(txBytes)
 	c = c.WithLogger(logger)
-	c = c.WithGasLimit(0)
-	c = c.WithGasConsumed(0)
+	c = c.WithGasMeter(NewGasMeter(gasLimit))
 	return c
 }
 
@@ -129,8 +128,7 @@ const (
 	contextKeyIsCheckTx
 	contextKeyTxBytes
 	contextKeyLogger
-	contextKeyGasLimit
-	contextKeyGasConsumed
+	contextKeyGasMeter
 )
 
 // NOTE: Do not expose MultiStore.
@@ -159,11 +157,8 @@ func (c Context) TxBytes() []byte {
 func (c Context) Logger() log.Logger {
 	return c.Value(contextKeyLogger).(log.Logger)
 }
-func (c Context) GasLimit() uint64 {
-	return c.Value(contextKeyGasLimit).(uint64)
-}
-func (c Context) GasConsumed() uint64 {
-	return c.Value(contextKeyGasConsumed).(uint64)
+func (c Context) GasMeter() GasMeter {
+	return c.Value(contextKeyGasMeter).(GasMeter)
 }
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	return c.withValue(contextKeyMultiStore, ms)
@@ -187,11 +182,8 @@ func (c Context) WithTxBytes(txBytes []byte) Context {
 func (c Context) WithLogger(logger log.Logger) Context {
 	return c.withValue(contextKeyLogger, logger)
 }
-func (c Context) WithGasLimit(limit uint64) Context {
-	return c.withValue(contextKeyGasLimit, limit)
-}
-func (c Context) WithGasConsumed(consumed uint64) Context {
-	return c.withValue(contextKeyGasConsumed, consumed)
+func (c Context) WithGasMeter(meter GasMeter) Context {
+	return c.withValue(contextKeyGasMeter, meter)
 }
 
 // Cache the multistore and return a new cached context. The cached context is

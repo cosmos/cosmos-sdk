@@ -1,14 +1,20 @@
-package crypto
-
-/*
+package crypto_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	crypto "github.com/tendermint/go-crypto"
 )
+
+func TestGeneratePrivKey(t *testing.T) {
+	testPriv := crypto.GenPrivKeyEd25519()
+	testGenerate := testPriv.Generate(1)
+	signBytes := []byte("something to sign")
+	assert.True(t, testGenerate.PubKey().VerifyBytes(signBytes, testGenerate.Sign(signBytes)))
+}
+
+/*
 
 type BadKey struct {
 	PrivKeyEd25519

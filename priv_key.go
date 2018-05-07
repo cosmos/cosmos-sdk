@@ -83,9 +83,10 @@ func (privKey PrivKeyEd25519) Generate(index int) PrivKeyEd25519 {
 		panic(err)
 	}
 	newBytes := Sha256(bz)
-	var newKey [64]byte
-	copy(newKey[:], newBytes)
-	return PrivKeyEd25519(newKey)
+	newKey := new([64]byte)
+	copy(newKey[:32], newBytes)
+	ed25519.MakePublicKey(newKey)
+	return PrivKeyEd25519(*newKey)
 }
 
 func GenPrivKeyEd25519() PrivKeyEd25519 {

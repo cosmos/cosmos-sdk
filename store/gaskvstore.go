@@ -4,12 +4,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// nolint
 const (
 	HasCost          = 10
 	ReadCostFlat     = 10
 	ReadCostPerByte  = 1
 	WriteCostFlat    = 10
 	WriteCostPerByte = 10
+	KeyCostFlat      = 5
+	ValueCostFlat    = 10
+	ValueCostPerByte = 1
 )
 
 // gasKVStore applies gas tracking to an underlying kvstore
@@ -118,13 +122,6 @@ func (g *gasIterator) Valid() bool {
 	return g.parent.Valid()
 }
 
-/*
-  TODO
-
-  Not quite sure what to charge for here. Depends on underlying retrieval model.
-  Could charge for Next(), and Key()/Value() are free, but want to have value-size-proportional gas.
-*/
-
 // Implements Iterator.
 func (g *gasIterator) Next() {
 	g.parent.Next()
@@ -132,14 +129,16 @@ func (g *gasIterator) Next() {
 
 // Implements Iterator.
 func (g *gasIterator) Key() (key []byte) {
-	return g.parent.Key()
+	g.gasMeter.ConsumeGas(KeyCostFlat, "KeyFlat")
+	key = g.parent.Key()
+	return key
 }
 
 // Implements Iterator.
 func (g *gasIterator) Value() (value []byte) {
 	value = g.parent.Value()
-	g.gasMeter.ConsumeGas(ReadCostFlat, "ValueFlat")
-	g.gasMeter.ConsumeGas(ReadCostPerByte*sdk.Gas(len(value)), "ValuePerByte")
+	g.gasMeter.ConsumeGas(ValueCostFlat, "ValueFlat")
+	g.gasMeter.ConsumeGas(ValueCostPerByte*sdk.Gas(len(value)), "ValuePerByte")
 	return value
 }
 

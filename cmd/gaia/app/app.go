@@ -51,7 +51,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 
 	// create your application object
 	var app = &GaiaApp{
-		BaseApp:    bam.NewBaseApp(appName, cdc, logger, db),
+		BaseApp:    bam.NewBaseApp(appName, cdc, logger, db, 10000),
 		cdc:        cdc,
 		keyMain:    sdk.NewKVStoreKey("main"),
 		keyAccount: sdk.NewKVStoreKey("acc"),

@@ -260,6 +260,34 @@ func TestDeliverTx(t *testing.T) {
 	}
 }
 
+// Test that transactions exceeding gas limits fail
+func TestTxGasLimits(t *testing.T) {
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	app := NewBaseApp(t.Name(), nil, logger, db, 0)
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		ctx.GasMeter().ConsumeGas(10, "counter")
+		return sdk.Result{}
+	})
+
+	tx := testUpdatePowerTx{} // doesn't matter
+	header := abci.Header{AppHash: []byte("apphash")}
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res := app.Deliver(tx)
+	assert.Equal(t, res.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), "Expected transaction to run out of gas")
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+}
+
 // Test that we can only query from the latest committed state.
 func TestQuery(t *testing.T) {
 	app := newBaseApp(t.Name())

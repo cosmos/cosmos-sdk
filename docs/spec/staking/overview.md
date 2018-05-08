@@ -1,5 +1,38 @@
 # Staking Module
 
+## Overview
+
+The Cosmos Hub is a Tendermint-based Proof of Stake blockchain system that 
+serves as a backbone of the Cosmos ecosystem. It is operated and secured by an 
+open and globally decentralized set of validators. Tendermint consensus is a 
+Byzantine fault-tolerant distributed protocol that involves all validators in 
+the process of exchanging protocol messages in the production of each block. To
+avoid Nothing-at-Stake problem, a validator in Tendermint needs to lock up 
+coins in a bond deposit. Tendermint protocol messages are signed by the 
+validator's private key, and this is a basis for Tendermint strict 
+accountability that allows punishing misbehaving validators by slashing 
+(burning) their bonded Atoms. On the other hand, validators are rewarded for 
+their service of securing blockchain network by the inflationary provisions and
+transactions fees. This incentives correct behavior of the validators and 
+provides the economic security of the network.
+
+The native token of the Cosmos Hub is called Atom; becoming a validator of the 
+Cosmos Hub requires holding Atoms. However, not all Atom holders are validators
+of the Cosmos Hub. More precisely, there is a selection process that determines
+the validator set as a subset of all validator candidates (Atom holders that 
+wants to become a validator). The other option for Atom holder is to delegate 
+their atoms to validators, i.e., being a delegator. A delegator is an Atom 
+holder that has bonded its Atoms by delegating it to a validator (or validator 
+candidate). By bonding Atoms to secure the network (and taking a risk of being 
+slashed in case of misbehaviour), a user is rewarded with inflationary 
+provisions and transaction fees proportional to the amount of its bonded Atoms.
+The Cosmos Hub is designed to efficiently facilitate a small numbers of 
+validators (hundreds), and large numbers of delegators (tens of thousands). 
+More precisely, it is the role of the Staking module of the Cosmos Hub to
+support various staking functionality including validator set selection, 
+delegating, bonding and withdrawing Atoms, and the distribution of inflationary
+provisions and transaction fees.
+
 ## Basic Terms and Definitions
 
 * Cosmsos Hub - a Tendermint-based Proof of Stake blockchain system
@@ -179,7 +212,3 @@ provisions cycle:
 ```go
 GlobalState.BondedPool += provisionTokensHourly
 ```
-
-
-
-

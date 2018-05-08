@@ -5,12 +5,15 @@ import ()
 // Gas measured by the SDK
 type Gas = int64
 
+// Error thrown when out of gas
+type ErrorOutOfGas struct {
+	Descriptor string
+}
+
 // GasMeter interface to track gas consumption
 type GasMeter interface {
-	GasExceeded() bool
 	GasConsumed() Gas
-	ConsumeGas(amount Gas)
-	ConsumeGasOrFail(amount Gas) bool
+	ConsumeGas(amount Gas, descriptor string)
 }
 
 type basicGasMeter struct {
@@ -25,19 +28,13 @@ func NewGasMeter(limit Gas) GasMeter {
 	}
 }
 
-func (g *basicGasMeter) GasExceeded() bool {
-	return g.consumed > g.limit
-}
-
 func (g *basicGasMeter) GasConsumed() Gas {
 	return g.consumed
 }
 
-func (g *basicGasMeter) ConsumeGas(amount Gas) {
+func (g *basicGasMeter) ConsumeGas(amount Gas, descriptor string) {
 	g.consumed += amount
-}
-
-func (g *basicGasMeter) ConsumeGasOrFail(amount Gas) bool {
-	g.ConsumeGas(amount)
-	return g.GasExceeded()
+	if g.consumed > g.limit {
+		panic(ErrorOutOfGas{descriptor})
+	}
 }

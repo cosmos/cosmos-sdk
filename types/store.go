@@ -256,3 +256,10 @@ func PrefixEndBytes(prefix []byte) []byte {
 	}
 	return end
 }
+
+//----------------------------------------
+
+// key-value result for iterator queries
+type KV struct {
+	Key, Value []byte
+}

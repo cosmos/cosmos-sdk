@@ -15,42 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-//// create command to query for all candidates
-//func GetCmdQueryCandidates(storeName string, cdc *wire.Codec) *cobra.Command {
-//cmd := &cobra.Command{
-//Use:   "candidates",
-//Short: "Query for the set of validator-candidates pubkeys",
-//RunE: func(cmd *cobra.Command, args []string) error {
-
-//key := stake.CandidatesKey
-
-//ctx := context.NewCoreContextFromViper()
-//res, err := ctx.Query(key, storeName)
-//if err != nil {
-//return err
-//}
-
-//// parse out the candidates
-//candidates := new(stake.Candidates)
-//err = cdc.UnmarshalBinary(res, candidates)
-//if err != nil {
-//return err
-//}
-//output, err := wire.MarshalJSONIndent(cdc, candidates)
-//if err != nil {
-//return err
-//}
-//fmt.Println(string(output))
-//return nil
-
-//// TODO output with proofs / machine parseable etc.
-//},
-//}
-
-//cmd.Flags().AddFlagSet(fsDelegator)
-//return cmd
-//}
-
 // get the command to query a candidate
 func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
@@ -64,9 +28,7 @@ func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			key := stake.GetCandidateKey(addr)
-
 			ctx := context.NewCoreContextFromViper()
-
 			res, err := ctx.Query(key, storeName)
 			if err != nil {
 				return err
@@ -74,10 +36,7 @@ func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			// parse out the candidate
 			candidate := new(stake.Candidate)
-			err = cdc.UnmarshalBinary(res, candidate)
-			if err != nil {
-				return err
-			}
+			cdc.MustUnmarshalBinary(res, candidate)
 			output, err := wire.MarshalJSONIndent(cdc, candidate)
 			if err != nil {
 				return err
@@ -90,6 +49,41 @@ func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(fsCandidate)
+	return cmd
+}
+
+// get the command to query a candidate
+func GetCmdQueryCandidates(storeName string, cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "candidates",
+		Short: "Query for all validator-candidate accounts",
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			key := stake.CandidatesKey
+			ctx := context.NewCoreContextFromViper()
+			resKVs, err := ctx.QuerySubspace(cdc, key, storeName)
+			if err != nil {
+				return err
+			}
+
+			// parse out the candidates
+			var candidates []stake.Candidate
+			for _, KV := range resKVs {
+				var candidate stake.Candidate
+				cdc.MustUnmarshalBinary(KV.Value, &candidate)
+				candidates = append(candidates, candidate)
+			}
+
+			output, err := wire.MarshalJSONIndent(cdc, candidates)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(output))
+			return nil
+
+			// TODO output with proofs / machine parseable etc.
+		},
+	}
 	return cmd
 }
 
@@ -122,10 +116,7 @@ func GetCmdQueryDelegatorBond(storeName string, cdc *wire.Codec) *cobra.Command 
 
 			// parse out the bond
 			bond := new(stake.DelegatorBond)
-			err = cdc.UnmarshalBinary(res, bond)
-			if err != nil {
-				return err
-			}
+			cdc.MustUnmarshalBinary(res, bond)
 			output, err := wire.MarshalJSONIndent(cdc, bond)
 			if err != nil {
 				return err

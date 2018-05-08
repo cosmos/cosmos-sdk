@@ -22,6 +22,8 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 		Use:   "declare-candidacy",
 		Short: "create new validator-candidate account and delegate some coins to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
+
 			amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
 			if err != nil {
 				return err
@@ -56,8 +58,6 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 			msg := stake.NewMsgDeclareCandidacy(candidateAddr, pk, amount, description)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
-
 			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
 			if err != nil {
 				return err

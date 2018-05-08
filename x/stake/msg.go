@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -45,11 +46,9 @@ func (msg MsgDeclareCandidacy) GetSigners() []sdk.Address { return []sdk.Address
 
 // get the bytes for the message signer to sign on
 func (msg MsgDeclareCandidacy) GetSignBytes() []byte {
-	b, err := json.Marshal(msg)
-	if err != nil {
-		panic(err)
-	}
-	return b
+	cdc := wire.NewCodec()
+	wire.RegisterCrypto(cdc)
+	return cdc.MustMarshalBinary(msg)
 }
 
 // quick validity check

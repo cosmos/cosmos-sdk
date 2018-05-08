@@ -1,8 +1,4 @@
-package store
-
-import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
+package types
 
 // nolint
 const (
@@ -18,12 +14,12 @@ const (
 
 // gasKVStore applies gas tracking to an underlying kvstore
 type gasKVStore struct {
-	gasMeter sdk.GasMeter
+	gasMeter GasMeter
 	parent   KVStore
 }
 
 // nolint
-func NewGasKVStore(gasMeter sdk.GasMeter, parent KVStore) *gasKVStore {
+func NewGasKVStore(gasMeter GasMeter, parent KVStore) *gasKVStore {
 	kvs := &gasKVStore{
 		gasMeter: gasMeter,
 		parent:   parent,
@@ -41,7 +37,7 @@ func (gi *gasKVStore) Get(key []byte) (value []byte) {
 	gi.gasMeter.ConsumeGas(ReadCostFlat, "GetFlat")
 	value = gi.parent.Get(key)
 	// TODO overflow-safe math?
-	gi.gasMeter.ConsumeGas(ReadCostPerByte*sdk.Gas(len(value)), "ReadPerByte")
+	gi.gasMeter.ConsumeGas(ReadCostPerByte*Gas(len(value)), "ReadPerByte")
 	return value
 }
 
@@ -49,7 +45,7 @@ func (gi *gasKVStore) Get(key []byte) (value []byte) {
 func (gi *gasKVStore) Set(key []byte, value []byte) {
 	gi.gasMeter.ConsumeGas(WriteCostFlat, "SetFlat")
 	// TODO overflow-safe math?
-	gi.gasMeter.ConsumeGas(WriteCostPerByte*sdk.Gas(len(value)), "SetPerByte")
+	gi.gasMeter.ConsumeGas(WriteCostPerByte*Gas(len(value)), "SetPerByte")
 	gi.parent.Set(key, value)
 }
 
@@ -77,12 +73,12 @@ func (gi *gasKVStore) ReverseIterator(start, end []byte) Iterator {
 
 // Implements KVStore.
 func (gi *gasKVStore) SubspaceIterator(prefix []byte) Iterator {
-	return gi.iterator(prefix, sdk.PrefixEndBytes(prefix), true)
+	return gi.iterator(prefix, PrefixEndBytes(prefix), true)
 }
 
 // Implements KVStore.
 func (gi *gasKVStore) ReverseSubspaceIterator(prefix []byte) Iterator {
-	return gi.iterator(prefix, sdk.PrefixEndBytes(prefix), false)
+	return gi.iterator(prefix, PrefixEndBytes(prefix), false)
 }
 
 // Implements KVStore.
@@ -101,11 +97,11 @@ func (gi *gasKVStore) iterator(start, end []byte, ascending bool) Iterator {
 }
 
 type gasIterator struct {
-	gasMeter sdk.GasMeter
+	gasMeter GasMeter
 	parent   Iterator
 }
 
-func newGasIterator(gasMeter sdk.GasMeter, parent Iterator) Iterator {
+func newGasIterator(gasMeter GasMeter, parent Iterator) Iterator {
 	return &gasIterator{
 		gasMeter: gasMeter,
 		parent:   parent,
@@ -138,7 +134,7 @@ func (g *gasIterator) Key() (key []byte) {
 func (g *gasIterator) Value() (value []byte) {
 	value = g.parent.Value()
 	g.gasMeter.ConsumeGas(ValueCostFlat, "ValueFlat")
-	g.gasMeter.ConsumeGas(ValueCostPerByte*sdk.Gas(len(value)), "ValuePerByte")
+	g.gasMeter.ConsumeGas(ValueCostPerByte*Gas(len(value)), "ValuePerByte")
 	return value
 }
 

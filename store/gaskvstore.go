@@ -4,6 +4,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	HasCost          = 10
+	ReadCostFlat     = 10
+	ReadCostPerByte  = 1
+	WriteCostFlat    = 10
+	WriteCostPerByte = 10
+)
+
 // gasKVStore applies gas tracking to an underlying kvstore
 type gasKVStore struct {
 	gasMeter sdk.GasMeter
@@ -26,21 +34,30 @@ func (gi *gasKVStore) GetStoreType() StoreType {
 
 // Implements KVStore.
 func (gi *gasKVStore) Get(key []byte) (value []byte) {
-	return gi.parent.Get(key)
+	gi.gasMeter.ConsumeGas(ReadCostFlat, "GetFlat")
+	value = gi.parent.Get(key)
+	// TODO overflow-safe math?
+	gi.gasMeter.ConsumeGas(ReadCostPerByte*sdk.Gas(len(value)), "ReadPerByte")
+	return value
 }
 
 // Implements KVStore.
 func (gi *gasKVStore) Set(key []byte, value []byte) {
+	gi.gasMeter.ConsumeGas(WriteCostFlat, "SetFlat")
+	// TODO overflow-safe math?
+	gi.gasMeter.ConsumeGas(WriteCostPerByte*sdk.Gas(len(value)), "SetPerByte")
 	gi.parent.Set(key, value)
 }
 
 // Implements KVStore.
 func (gi *gasKVStore) Has(key []byte) bool {
+	gi.gasMeter.ConsumeGas(HasCost, "Has")
 	return gi.parent.Has(key)
 }
 
 // Implements KVStore.
 func (gi *gasKVStore) Delete(key []byte) {
+	// No gas costs for deletion
 	gi.parent.Delete(key)
 }
 
@@ -66,7 +83,7 @@ func (gi *gasKVStore) ReverseSubspaceIterator(prefix []byte) Iterator {
 
 // Implements KVStore.
 func (gi *gasKVStore) CacheWrap() CacheWrap {
-	return gi.parent.CacheWrap() // TODO
+	panic("you cannot CacheWrap a GasKVStore")
 }
 
 func (gi *gasKVStore) iterator(start, end []byte, ascending bool) Iterator {
@@ -76,5 +93,57 @@ func (gi *gasKVStore) iterator(start, end []byte, ascending bool) Iterator {
 	} else {
 		parent = gi.parent.ReverseIterator(start, end)
 	}
-	return parent // TODO
+	return newGasIterator(gi.gasMeter, parent)
+}
+
+type gasIterator struct {
+	gasMeter sdk.GasMeter
+	parent   Iterator
+}
+
+func newGasIterator(gasMeter sdk.GasMeter, parent Iterator) Iterator {
+	return &gasIterator{
+		gasMeter: gasMeter,
+		parent:   parent,
+	}
+}
+
+// Implements Iterator.
+func (g *gasIterator) Domain() (start []byte, end []byte) {
+	return g.parent.Domain()
+}
+
+// Implements Iterator.
+func (g *gasIterator) Valid() bool {
+	return g.parent.Valid()
+}
+
+/*
+  TODO
+
+  Not quite sure what to charge for here. Depends on underlying retrieval model.
+  Could charge for Next(), and Key()/Value() are free, but want to have value-size-proportional gas.
+*/
+
+// Implements Iterator.
+func (g *gasIterator) Next() {
+	g.parent.Next()
+}
+
+// Implements Iterator.
+func (g *gasIterator) Key() (key []byte) {
+	return g.parent.Key()
+}
+
+// Implements Iterator.
+func (g *gasIterator) Value() (value []byte) {
+	value = g.parent.Value()
+	g.gasMeter.ConsumeGas(ReadCostFlat, "ValueFlat")
+	g.gasMeter.ConsumeGas(ReadCostPerByte*sdk.Gas(len(value)), "ValuePerByte")
+	return value
+}
+
+// Implements Iterator.
+func (g *gasIterator) Close() {
+	g.parent.Close()
 }

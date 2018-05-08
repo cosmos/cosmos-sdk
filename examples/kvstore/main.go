@@ -32,7 +32,7 @@ func main() {
 	var capKeyMainStore = sdk.NewKVStoreKey("main")
 
 	// Create BaseApp.
-	var baseApp = bam.NewBaseApp("kvstore", nil, logger, db)
+	var baseApp = bam.NewBaseApp("kvstore", nil, logger, db, 10000)
 
 	// Set mounts for BaseApp's MultiStore.
 	baseApp.MountStoresIAVL(capKeyMainStore)

@@ -58,7 +58,7 @@ var _ abci.Application = (*BaseApp)(nil)
 
 // Create and name new BaseApp
 // NOTE: The db is used to store the version number for now.
-func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *BaseApp {
+func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB, txGasLimit sdk.Gas) *BaseApp {
 	app := &BaseApp{
 		Logger:     logger,
 		name:       name,
@@ -67,7 +67,7 @@ func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *Bas
 		router:     NewRouter(),
 		codespacer: sdk.NewCodespacer(),
 		txDecoder:  defaultTxDecoder(cdc),
-		txGasLimit: sdk.Gas(10000),
+		txGasLimit: txGasLimit,
 	}
 	// Register the undefined & root codespaces, which should not be used by any modules
 	app.codespacer.RegisterOrPanic(sdk.CodespaceUndefined)
@@ -375,8 +375,14 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 	// Handle any panics.
 	defer func() {
 		if r := recover(); r != nil {
-			log := fmt.Sprintf("Recovered: %v\nstack:\n%v", r, string(debug.Stack()))
-			result = sdk.ErrInternal(log).Result()
+			switch r.(type) {
+			case sdk.ErrorOutOfGas:
+				log := fmt.Sprintf("Out of gas in location: %v", r.(sdk.ErrorOutOfGas).Descriptor)
+				result = sdk.ErrOutOfGas(log).Result()
+			default:
+				log := fmt.Sprintf("Recovered: %v\nstack:\n%v", r, string(debug.Stack()))
+				result = sdk.ErrInternal(log).Result()
+			}
 		}
 	}()
 

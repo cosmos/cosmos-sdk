@@ -89,6 +89,7 @@ func TestProcessProvisions(t *testing.T) {
 	var totalSupply int64 = 550000000
 	var bondedShares int64 = 150000000
 	var unbondedShares int64 = 400000000
+	var provisionTallied int64 = 0
 	assert.Equal(t, totalSupply, pool.TotalSupply)
 	assert.Equal(t, bondedShares, pool.BondedPool)
 	assert.Equal(t, unbondedShares, pool.UnbondedPool)
@@ -109,6 +110,7 @@ func TestProcessProvisions(t *testing.T) {
 		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
 		startBondedPool := pool.BondedPool
 		startTotalSupply := pool.TotalSupply
+		provisionTallied = provisionTallied + expProvisions
 		pool = keeper.processProvisions(ctx)
 		keeper.setPool(ctx, pool)
 		//fmt.Printf("hr %v, startBondedPool %v, expProvisions %v, pool.BondedPool %v\n", hr, startBondedPool, expProvisions, pool.BondedPool)
@@ -120,14 +122,16 @@ func TestProcessProvisions(t *testing.T) {
 	assert.Equal(t, initialUnbonded, pool.UnbondedPool)
 	//panic(fmt.Sprintf("debug total %v, bonded  %v, diff %v\n", p.TotalSupply, p.BondedPool, pool.TotalSupply-pool.BondedPool))
 
+	calculatedTotalSupply := totalSupply + provisionTallied
+	calculatedBondedSupply := bondedShares + provisionTallied
 	// initial bonded ratio ~ from 27% to 40% increase for bonded holders ownership of total supply
-	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(211813022, 611813022)), "%v", pool.bondedRatio())
+	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(calculatedBondedSupply, calculatedTotalSupply)), "%v", pool.bondedRatio())
 
 	// global supply
-	assert.Equal(t, int64(611813022), pool.TotalSupply)
-	assert.Equal(t, int64(211813022), pool.BondedPool)
+	assert.Equal(t, calculatedTotalSupply, pool.TotalSupply)
+	assert.Equal(t, calculatedBondedSupply, pool.BondedPool)
 	assert.Equal(t, unbondedShares, pool.UnbondedPool)
 
 	// test the value of candidate shares
-	assert.True(t, pool.bondedShareExRate().Mul(sdk.NewRat(bondedShares)).Equal(sdk.NewRat(211813022)), "%v", pool.bondedShareExRate())
+	assert.True(t, pool.bondedShareExRate().Mul(sdk.NewRat(bondedShares)).Equal(sdk.NewRat(calculatedBondedSupply)), "%v", pool.bondedShareExRate())
 }

@@ -36,24 +36,22 @@ provisions and transaction fees.
 ## State
 
 The staking module persists the following information to the store:
-* `GlobalState`, describing the global pools and the inflation related fields
-* validator candidates (including current validators), indexed by public key and shares in the global pool
-(bonded or unbonded depending on candidate status) 
-* delegator bonds (for each delegation to a candidate by a delegator), indexed by the delegator address and the candidate 
+* `GlobalState`, a struct describing the global pools, inflation, and
+  fees
+* `ValidatorCandidates: <pubkey | shares> => <candidate>`, a map of all candidates (including current validators) in the store,
+indexed by their public key and shares in the global pool.
+* `DelegatorBonds: < delegator-address | candidate-pubkey > => <delegator-bond>`. a map of all delegations by a delegator to a candidate,
+indexed by delegator address and candidate pubkey.
   public key
-* the queue of unbonding delegations
-* the queue of re-delegations
+* `UnbondQueue`, the queue of unbonding delegations
+* `RedelegateQueue`, the queue of re-delegations
 
 ### Global State
 
-The GlobalState data structure contains total Atom supply, amount of Atoms in 
-the bonded pool, sum of all shares distributed for the bonded pool, amount of 
-Atoms in the unbonded pool, sum of all shares distributed for the unbonded 
-pool, a timestamp of the last processing of inflation, the current annual 
-inflation rate, a timestamp for the last comission accounting reset, the global
-fee pool, a pool of reserve taxes collected for the governance use and an 
-adjustment factor for calculating global fee accum. `Params` is global data 
-structure that stores system parameters and defines overall functioning of the 
+The GlobalState contains information about the total amount of Atoms, the
+global bonded/unbonded position, the Atom inflation rate, and the fees.
+
+`Params` is global data structure that stores system parameters and defines overall functioning of the 
 module.
 
 ``` go
@@ -95,7 +93,7 @@ type Params struct {
 
 ### Candidate
 
-The `Candidate` data structure holds the current state and some historical 
+The `Candidate` holds the current state and some historical 
 actions of validators or candidate-validators. 
 
 ``` go

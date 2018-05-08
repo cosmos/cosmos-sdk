@@ -18,6 +18,7 @@ BREAKING CHANGES
 
 FEATURES:
 
+* Added `gaiad export` command, which exports genesis information & current state
 * Gaia stake commands include, DeclareCandidacy, EditCandidacy, Delegate, Unbond
 * MountStoreWithDB without providing a custom store works.
 * Repo is now lint compliant / GoMetaLinter with tendermint-lint integrated into CI

@@ -99,6 +99,7 @@ func TestProcessProvisions(t *testing.T) {
 	assert.Equal(t, tokenSupply, pool.TokenSupply())
 	assert.Equal(t, bondedShares, pool.BondedTokens)
 	assert.Equal(t, unbondedShares, pool.UnbondedTokens)
+	var provisionTallied int64 = 0
 
 	// initial bonded ratio ~ 27%
 	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(bondedShares, tokenSupply)), "%v", pool.bondedRatio())
@@ -114,8 +115,9 @@ func TestProcessProvisions(t *testing.T) {
 		pool := keeper.GetPool(ctx)
 		expInflation := keeper.nextInflation(ctx).Round(1000000000)
 		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat)).Evaluate()
-		startBondedTokens := pool.BondedTokens
+		startBondedPool := pool.BondedShares
 		startTotalSupply := pool.TokenSupply()
+		provisionTallied = provisionTallied + expProvisions
 		pool = keeper.processProvisions(ctx)
 		keeper.setPool(ctx, pool)
 		//fmt.Printf("hr %v, startBondedTokens %v, expProvisions %v, pool.BondedTokens %v\n", hr, startBondedTokens, expProvisions, pool.BondedTokens)
@@ -127,14 +129,16 @@ func TestProcessProvisions(t *testing.T) {
 	assert.Equal(t, initialUnbonded, pool.UnbondedTokens)
 	//panic(fmt.Sprintf("debug total %v, bonded  %v, diff %v\n", p.TotalSupply, p.BondedTokens, pool.TokenSupply()-pool.BondedTokens))
 
+	calculatedTotalSupply := totalSupply + provisionTallied
+	calculatedBondedSupply := bondedShares + provisionTallied
 	// initial bonded ratio ~ from 27% to 40% increase for bonded holders ownership of total supply
-	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(211813022, 611813022)), "%v", pool.bondedRatio())
+	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(calculatedBondedSupply, calculatedTotalSupply)), "%v", pool.bondedRatio())
 
 	// global supply
-	assert.Equal(t, int64(611813022), pool.TokenSupply())
-	assert.Equal(t, int64(211813022), pool.BondedTokens)
-	assert.Equal(t, unbondedShares, pool.UnbondedTokens)
+	assert.Equal(t, calculatedTotalSupply, pool.TokenSupply())
+	assert.Equal(t, calculatedBondedSupply, pool.BondedShares)
+	assert.Equal(t, unbondedShares, pool.UnbondedShares)
 
-	// test the value of validator shares
-	assert.True(t, pool.bondedShareExRate().Mul(sdk.NewRat(bondedShares)).Equal(sdk.NewRat(211813022)), "%v", pool.bondedShareExRate())
+	// test the value of candidate shares
+	assert.True(t, pool.bondedShareExRate().Mul(sdk.NewRat(bondedShares)).Equal(sdk.NewRat(calculatedBondedSupply)), "%v", pool.bondedShareExRate())
 }

@@ -7,7 +7,6 @@ Available Transactions:
 * TxDelegate
 * TxUnbond 
 * TxRedelegate
-* TxLivelinessCheck
 * TxProveLive
 
 ## Transaction processing
@@ -264,37 +263,10 @@ redelegate(tx TxRedelegate):
     return     
 ```
 
-### TxLivelinessCheck
-
-Liveliness issues are calculated by keeping track of the block precommits in
-the block header. A queue is persisted which contains the block headers from
-all recent blocks for the duration of the unbonding period. A validator is
-defined as having livliness issues if they have not been included in more than
-33% of the blocks over: 
-* The most recent 24 Hours if they have >= 20% of global stake
-* The most recent week if they have = 0% of global stake
-* Linear interpolation of the above two scenarios
-
-Liveliness kicks are only checked when a `TxLivelinessCheck` transaction is
-submitted. 
-
-```golang
-type TxLivelinessCheck struct { 
-    PubKey        crypto.PubKey
-    RewardAccount Addresss
-}
-```
-
-If the `TxLivelinessCheck` is successful in kicking a validator, 5% of the
-liveliness punishment is provided as a reward to `RewardAccount`.
-
 ### TxProveLive
 
-If the validator was kicked for liveliness issues and is able to regain
-liveliness then all delegators in the temporary unbonding pool which have not
-transacted to move will be bonded back to the now-live validator and begin to
-once again collect provisions and rewards. Regaining liveliness is demonstrated
-by sending in a `TxProveLive` transaction:
+If a validator was automatically unbonded due to liveness issues and wishes to
+assert it is still online, it can send `TxProveLive`:
 
 ```golang
 type TxProveLive struct {
@@ -302,3 +274,10 @@ type TxProveLive struct {
 }
 ```
 
+All delegators in the temporary unbonding pool which have not
+transacted to move will be bonded back to the now-live validator and begin to
+once again collect provisions and rewards. 
+
+```
+TODO: pseudo-code
+```

@@ -34,4 +34,8 @@ The following specification uses *Atom* as the native staking token. The module 
         4.  Unbond
         5.  Redelegate
         6.  ProveLive
+    3. **[Validator Set Changes](valset-changes.md)**
+        1.  Validator set updates
+        2.  Slashing
+        3.  Automatic Unbonding
 3.  **[Future improvements](future_improvements.md)**

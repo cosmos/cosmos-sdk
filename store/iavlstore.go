@@ -176,11 +176,11 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		} else {
 			_, res.Value = tree.GetVersioned(key, height)
 		}
-	case "/iter": // Get by key
-		key := req.Data // Data holds the key bytes
-		res.Key = key
+	case "/subspace":
+		subspace := req.Data
+		res.Key = subspace
 		var KVs []KV
-		iterator := st.SubspaceIterator(key)
+		iterator := st.SubspaceIterator(subspace)
 		for ; iterator.Valid(); iterator.Next() {
 			KVs = append(KVs, KV{iterator.Key(), iterator.Value()})
 		}

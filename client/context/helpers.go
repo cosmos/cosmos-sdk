@@ -48,7 +48,7 @@ func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, er
 
 // Query from Tendermint with the provided storename and subspace
 func (ctx CoreContext) QuerySubspace(cdc *wire.Codec, subspace []byte, storeName string) (res []sdk.KV, err error) {
-	resRaw, err := ctx.query(subspace, storeName, "iter")
+	resRaw, err := ctx.query(subspace, storeName, "subspace")
 	if err != nil {
 		return res, err
 	}

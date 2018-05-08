@@ -106,9 +106,7 @@ func GetCmdQueryDelegatorBond(storeName string, cdc *wire.Codec) *cobra.Command 
 			delegator := crypto.Address(bz)
 
 			key := stake.GetDelegatorBondKey(delegator, addr, cdc)
-
 			ctx := context.NewCoreContextFromViper()
-
 			res, err := ctx.Query(key, storeName)
 			if err != nil {
 				return err
@@ -133,44 +131,42 @@ func GetCmdQueryDelegatorBond(storeName string, cdc *wire.Codec) *cobra.Command 
 	return cmd
 }
 
-//// get the command to query all the candidates bonded to a delegator
-//func GetCmdQueryDelegatorBonds(storeName string, cdc *wire.Codec) *cobra.Command {
-//cmd := &cobra.Command{
-//Use:   "delegator-candidates",
-//Short: "Query all delegators bond's candidate-addresses based on delegator-address",
-//RunE: func(cmd *cobra.Command, args []string) error {
+// get the command to query all the candidates bonded to a delegator
+func GetCmdQueryDelegatorBonds(storeName string, cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delegator-candidates",
+		Short: "Query all delegators bonds based on delegator-address",
+		RunE: func(cmd *cobra.Command, args []string) error {
 
-//bz, err := hex.DecodeString(viper.GetString(FlagAddressDelegator))
-//if err != nil {
-//return err
-//}
-//delegator := crypto.Address(bz)
+			delegatorAddr, err := sdk.GetAddress(viper.GetString(FlagAddressDelegator))
+			if err != nil {
+				return err
+			}
+			key := stake.GetDelegatorBondsKey(delegatorAddr, cdc)
+			ctx := context.NewCoreContextFromViper()
+			resKVs, err := ctx.QuerySubspace(cdc, key, storeName)
+			if err != nil {
+				return err
+			}
 
-//key := stake.GetDelegatorBondsKey(delegator, cdc)
+			// parse out the candidates
+			var delegators []stake.DelegatorBond
+			for _, KV := range resKVs {
+				var delegator stake.DelegatorBond
+				cdc.MustUnmarshalBinary(KV.Value, &delegator)
+				delegators = append(delegators, delegator)
+			}
 
-//ctx := context.NewCoreContextFromViper()
+			output, err := wire.MarshalJSONIndent(cdc, delegators)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(output))
+			return nil
 
-//res, err := ctx.Query(key, storeName)
-//if err != nil {
-//return err
-//}
-
-//// parse out the candidates list
-//var candidates []crypto.PubKey
-//err = cdc.UnmarshalBinary(res, candidates)
-//if err != nil {
-//return err
-//}
-//output, err := wire.MarshalJSONIndent(cdc, candidates)
-//if err != nil {
-//return err
-//}
-//fmt.Println(string(output))
-//return nil
-
-//// TODO output with proofs / machine parseable etc.
-//},
-//}
-//cmd.Flags().AddFlagSet(fsDelegator)
-//return cmd
-//}
+			// TODO output with proofs / machine parseable etc.
+		},
+	}
+	cmd.Flags().AddFlagSet(fsDelegator)
+	return cmd
+}

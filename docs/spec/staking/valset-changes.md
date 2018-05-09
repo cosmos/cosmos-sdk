@@ -1,89 +1,17 @@
-# Slashing
+# Validator Set Changes
 
-A validator bond is an economic commitment made by a validator signing key to both the safety and liveness of
-the consensus. Validator keys must not sign invalid messages which could
-violate consensus safety, and their signed precommit messages must be regularly included in
-block commits. 
+The validator set may be updated by state transitions that run at the beginning and
+end of every block. This can happen one of three ways:
 
-The incentivization of these two goals are treated separately.
+- voting power of a validator changes due to bonding and unbonding
+- voting power of validator is "slashed" due to conflicting signed messages
+- validator is automatically unbonded due to inactivity
 
-## Safety
+## Voting Power Changes
 
-Messges which may compromise the safety of the underlying consensus protocol ("equivocations")
-result in some amount of the offending validator's shares being removed ("slashed").
+At the end of every block, we run the following:
 
-Currently, such messages include only the following:
-
-- prevotes by the same validator for more than one BlockID at the same
-  Height and Round 
-- precommits by the same validator for more than one BlockID at the same
-  Height and Round 
-
-We call any such pair of conflicting votes `Evidence`. Full nodes in the network prioritize the 
-detection and gossipping of `Evidence` so that it may be rapidly included in blocks and the offending
-validators punished.
-
-For some `evidence` to be valid, it must satisfy: 
-
-`evidence.Height >= block.Height - MAX_EVIDENCE_AGE`
-
-If valid evidence is included in a block, the offending validator loses
-a constant `SLASH_PROPORTION` of their current stake:
-
-```
-oldShares = validator.shares
-validator.shares = oldShares * (1 - SLASH_PROPORTION)
-```
-
-This ensures that offending validators are punished the same amount whether they
-act as a single validator with X stake or as N validators with collectively X
-stake.
-
-
-
-## Liveness
-
-Every block includes a set of precommits by the validators for the previous block, 
-known as the LastCommit. A LastCommit is valid so long as it contains precommits from +2/3 of voting power.
-
-Proposers are incentivized to include precommits from all
-validators in the LastCommit by receiving additional fees
-proportional to the difference between the voting power included in the
-LastCommit and +2/3 (see [TODO](https://github.com/cosmos/cosmos-sdk/issues/967)).
-
-Validators are penalized for failing to be included in the LastCommit for some
-number of blocks by being automatically unbonded.
-
-
-TODO: do we do this by trying to track absence directly in the state, using
-something like the below, or do we let users notify the app when a validator has
-been absent using the
-[TxLivenessCheck](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/spec/staking/spec-technical.md#txlivelinesscheck).
-
-
-A list, `ValidatorAbsenceInfos`, is stored in the state and used to track how often
-validators were included in a LastCommit.
-
-```go
-// Ordered by ValidatorAddress.
-// One entry for each validator.
-type ValidatorAbsenceInfos []ValidatorAbsenceInfo
-
-type ValidatorAbsenceInfo struct {
-    ValidatorAddress    []byte  // address of the validator 
-    FirstHeight         int64   // first height the validator was absent
-    Count               int64   // number of heights validator was absent since (and including) first
-}
-```
-
-
-### BeginBlock Handling
-
-
-
-### EndBlock Handling
-
-This is where we inflate the Atoms and deal with validator set changes.
+(TODO remove inflation from here)
 
 ```golang
 tick(ctx Context):
@@ -171,4 +99,92 @@ unbondedToBondedPool(candidate Candidate):
     candidate.Status = Bonded
 
     return transfer(address of the unbonded pool, address of the bonded pool, removedTokens)
+```
+
+
+## Slashing
+
+Messges which may compromise the safety of the underlying consensus protocol ("equivocations")
+result in some amount of the offending validator's shares being removed ("slashed").
+
+Currently, such messages include only the following:
+
+- prevotes by the same validator for more than one BlockID at the same
+  Height and Round 
+- precommits by the same validator for more than one BlockID at the same
+  Height and Round 
+
+We call any such pair of conflicting votes `Evidence`. Full nodes in the network prioritize the 
+detection and gossipping of `Evidence` so that it may be rapidly included in blocks and the offending
+validators punished.
+
+For some `evidence` to be valid, it must satisfy: 
+
+`evidence.Timestamp >= block.Timestamp - MAX_EVIDENCE_AGE`
+
+where `evidence.Timestamp` is the timestamp in the block at height
+`evidence.Height` and `block.Timestamp` is the current block timestamp.
+
+If valid evidence is included in a block, the offending validator loses
+a constant `SLASH_PROPORTION` of their current stake at the beginning of the block:
+
+```
+oldShares = validator.shares
+validator.shares = oldShares * (1 - SLASH_PROPORTION)
+```
+
+This ensures that offending validators are punished the same amount whether they
+act as a single validator with X stake or as N validators with collectively X
+stake.
+
+
+## Automatic Unbonding
+
+Every block includes a set of precommits by the validators for the previous block, 
+known as the LastCommit. A LastCommit is valid so long as it contains precommits from +2/3 of voting power.
+
+Proposers are incentivized to include precommits from all
+validators in the LastCommit by receiving additional fees
+proportional to the difference between the voting power included in the
+LastCommit and +2/3 (see [TODO](https://github.com/cosmos/cosmos-sdk/issues/967)).
+
+Validators are penalized for failing to be included in the LastCommit for some
+number of blocks by being automatically unbonded.
+
+The following information is stored with each validator candidate, and is only non-zero if the candidate becomes an active validator:
+
+```go
+type ValidatorSigningInfo struct {
+	StartHeight				int64
+	SignedBlocksBitArray	BitArray
+}
+```
+
+Where:
+* `StartHeight` is set to the height that the candidate became an active validator (with non-zero voting power).
+* `SignedBlocksBitArray` is a bit-array of size `SIGNED_BLOCKS_WINDOW` that records, for each of the last `SIGNED_BLOCKS_WINDOW` blocks,
+whether or not this validator was included in the LastCommit. It uses a `0` if the validator was included, and a `1` if it was not.
+Note it is initialized with all 0s. 
+
+At the beginning of each block, we update the signing info for each validator and check if they should be automatically unbonded:
+
+```
+h = block.Height
+index = h % SIGNED_BLOCKS_WINDOW
+
+for val in block.Validators:
+	signInfo = val.SignInfo
+	if val in block.LastCommit:
+		signInfo.SignedBlocksBitArray.Set(index, 0)
+	else 
+		signInfo.SignedBlocksBitArray.Set(index, 1)
+
+	// validator must be active for at least SIGNED_BLOCKS_WINDOW
+	// before they can be automatically unbonded for failing to be 
+	// included in 50% of the recent LastCommits
+	minHeight = signInfo.StartHeight + SIGNED_BLOCKS_WINDOW
+	minSigned = SIGNED_BLOCKS_WINDOW / 2
+	blocksSigned = signInfo.SignedBlocksBitArray.Sum() 
+	if h > minHeight AND blocksSigned < minSigned:
+		unbond the validator
 ```

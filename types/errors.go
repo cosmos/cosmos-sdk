@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
@@ -22,78 +24,75 @@ const (
 	CodeUnknownAddress    baseapp.CodeType = 9
 	CodeInsufficientCoins baseapp.CodeType = 10
 	CodeInvalidCoins      baseapp.CodeType = 11
+
+	CodespaceSDK baseapp.CodespaceType = 2
 )
 
-// Wrapper around baseapp.Error
-type Error = struct {
-	*baseapp.SdkError
+// NOTE: Don't stringer this, we'll put better messages in later.
+func CodeToDefaultMsg(code baseapp.CodeType) string {
+	switch code {
+	case CodeInternal:
+		return "Internal error"
+	case CodeTxDecode:
+		return "Tx parse error"
+	case CodeInvalidSequence:
+		return "Invalid sequence"
+	case CodeUnauthorized:
+		return "Unauthorized"
+	case CodeInsufficientFunds:
+		return "Insufficent funds"
+	case CodeUnknownRequest:
+		return "Unknown request"
+	case CodeInvalidAddress:
+		return "Invalid address"
+	case CodeInvalidPubKey:
+		return "Invalid pubkey"
+	case CodeUnknownAddress:
+		return "Unknown address"
+	case CodeInsufficientCoins:
+		return "Insufficient coins"
+	case CodeInvalidCoins:
+		return "Invalid coins"
+	default:
+		return fmt.Sprintf("Unknown code %d", code)
+	}
 }
-
-// // NOTE: Don't stringer this, we'll put better messages in later.
-// func CodeToDefaultMsg(code baseapp.CodeType) string {
-// 	switch code {
-// 	case CodeInternal:
-// 		return "Internal error"
-// 	case CodeTxDecode:
-// 		return "Tx parse error"
-// 	case CodeInvalidSequence:
-// 		return "Invalid sequence"
-// 	case CodeUnauthorized:
-// 		return "Unauthorized"
-// 	case CodeInsufficientFunds:
-// 		return "Insufficent funds"
-// 	case CodeUnknownRequest:
-// 		return "Unknown request"
-// 	case CodeInvalidAddress:
-// 		return "Invalid address"
-// 	case CodeInvalidPubKey:
-// 		return "Invalid pubkey"
-// 	case CodeUnknownAddress:
-// 		return "Unknown address"
-// 	case CodeInsufficientCoins:
-// 		return "Insufficient coins"
-// 	case CodeInvalidCoins:
-// 		return "Invalid coins"
-// 	default:
-// 		return fmt.Sprintf("Unknown code %d", code)
-// 	}
-// }
 
 //--------------------------------------------------------------------------------
 // All errors are created via constructors so as to enable us to hijack them
 // and inject stack traces if we really want to.
 
 // nolint
-func ErrInternal(msg string) Error {
-	return newErrorWithRootCodespace(CodeInternal, msg)
+func ErrInternal(msg string) baseapp.Error {
+	return baseapp.NewError(CodespaceSDK, CodeInternal, msg)
 }
-func ErrTxDecode(msg string) Error {
-	return newErrorWithRootCodespace(CodeTxDecode, msg)
+func ErrTxDecode(msg string) baseapp.Error {
+	return baseapp.NewError(CodespaceSDK, CodeTxDecode, msg)
 }
-func ErrInvalidSequence(msg string) Error {
-	return newErrorWithRootCodespace(CodeInvalidSequence, msg)
+func ErrInvalidSequence(msg string) baseapp.Error {
+	return baseapp.NewError(CodespaceSDK, CodeInvalidSequence, msg)
 }
-func ErrUnauthorized(msg string) Error {
-	return newErrorWithRootCodespace(CodeUnauthorized, msg)
+func ErrUnauthorized(msg string) baseapp.Error {
+	return baseapp.NewError(CodespaceSDK, CodeUnauthorized, msg)
 }
-func ErrInsufficientFunds(msg string) Error {
-	return newErrorWithRootCodespace(CodeInsufficientFunds, msg)
+func ErrInsufficientFunds(msg string) baseapp.Error {
+	return baseapp.NewError(CodespaceSDK, CodeInsufficientFunds, msg)
 }
-func ErrUnknownRequest(msg string) Error {
-	return newErrorWithRootCodespace(CodeUnknownRequest, msg)
+func ErrUnknownRequest(msg string) baseapp.Error {
+	return baseapp.NewError(CodespaceSDK, CodeUnknownRequest, msg)
 }
-func ErrInvalidAddress(msg string) Error {
-	return newErrorWithRootCodespace(CodeInvalidAddress, msg)
+func ErrInvalidAddress(msg string) baseapp.Error {
+	return baseapp.NewError(CodespaceSDK, CodeInvalidAddress, msg)
 }
-func ErrUnknownAddress(msg string) Error {
-	return newErrorWithRootCodespace(CodeUnknownAddress, msg)
+func ErrUnknownAddress(msg string) baseapp.Error {
+	return baseapp.NewError(CodespaceSDK, CodeUnknownAddress, msg)
 }
-func ErrInvalidPubKey(msg string) Error {
-	return newErrorWithRootCodespace(CodeInvalidPubKey, msg)
+func ErrInvalidPubKey(msg string) baseapp.Error {
+	return baseapp.NewError(CodespaceSDK, CodeInvalidPubKey, msg)
 }
-func ErrInsufficientCoins(msg string) Error {
-	return newErrorWithRootCodespace(CodeInsufficientCoins, msg)
+func ErrInsufficientCoins(msg string) baseapp.Error {
+	return baseapp.NewError(CodespaceSDK, CodeInsufficientCoins, msg)
 }
-func ErrInvalidCoins(msg string) Error {
-	return newErrorWithRootCodespace(CodeInvalidCoins, msg)
+func ErrInvalidCoins(msg string) baseapp.Error {
+	return baseapp.NewError(CodespaceSDK, CodeInvalidCoins, msg)
 }

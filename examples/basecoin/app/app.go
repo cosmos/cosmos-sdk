@@ -8,6 +8,7 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
+	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -24,17 +25,17 @@ const (
 
 // Extended ABCI application
 type BasecoinApp struct {
-	SdkApp *sdk.App
-	cdc    *wire.Codec
+	*sdk.App
+	cdc *wire.Codec
 
 	// keys to access the substores
-	keyMain    *sdk.KVStoreKey
-	keyAccount *sdk.KVStoreKey
-	keyIBC     *sdk.KVStoreKey
-	keyStake   *sdk.KVStoreKey
+	keyMain    *bapp.KVStoreKey
+	keyAccount *bapp.KVStoreKey
+	keyIBC     *bapp.KVStoreKey
+	keyStake   *bapp.KVStoreKey
 
 	// Manage getting and setting accounts
-	accountMapper sdk.AccountMapper
+	accountMapper auth.AccountMapper
 	coinKeeper    bank.Keeper
 	ibcMapper     ibc.Mapper
 	stakeKeeper   stake.Keeper
@@ -47,12 +48,12 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// Create your application object.
 	var app = &BasecoinApp{
-		SdkApp:     sdk.NewApp(appName, cdc, logger, db),
+		App:        sdk.NewApp(appName, cdc, logger, db),
 		cdc:        cdc,
-		keyMain:    sdk.NewKVStoreKey("main"),
-		keyAccount: sdk.NewKVStoreKey("acc"),
-		keyIBC:     sdk.NewKVStoreKey("ibc"),
-		keyStake:   sdk.NewKVStoreKey("stake"),
+		keyMain:    bapp.NewKVStoreKey("main"),
+		keyAccount: bapp.NewKVStoreKey("acc"),
+		keyIBC:     bapp.NewKVStoreKey("ibc"),
+		keyStake:   bapp.NewKVStoreKey("stake"),
 	}
 
 	// Define the accountMapper.

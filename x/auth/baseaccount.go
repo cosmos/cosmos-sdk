@@ -12,7 +12,7 @@ import (
 //-----------------------------------------------------------
 // BaseAccount
 
-var _ sdk.Account = (*BaseAccount)(nil)
+var _ Account = (*BaseAccount)(nil)
 
 // BaseAccount - base account structure.
 // Extend this by embedding this in your AppAccount.
@@ -30,12 +30,12 @@ func NewBaseAccountWithAddress(addr sdk.Address) BaseAccount {
 	}
 }
 
-// Implements sdk.Account.
-func (acc BaseAccount) GetAddress() sdk.Address {
+// Implements Account.
+func (acc *BaseAccount) GetAddress() sdk.Address {
 	return acc.Address
 }
 
-// Implements sdk.Account.
+// Implements Account.
 func (acc *BaseAccount) SetAddress(addr sdk.Address) error {
 	if len(acc.Address) != 0 {
 		return errors.New("cannot override BaseAccount address")
@@ -44,12 +44,12 @@ func (acc *BaseAccount) SetAddress(addr sdk.Address) error {
 	return nil
 }
 
-// Implements sdk.Account.
-func (acc BaseAccount) GetPubKey() crypto.PubKey {
+// Implements Account.
+func (acc *BaseAccount) GetPubKey() crypto.PubKey {
 	return acc.PubKey
 }
 
-// Implements sdk.Account.
+// Implements Account.
 func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
 	if acc.PubKey != nil {
 		return errors.New("cannot override BaseAccount pubkey")
@@ -58,23 +58,23 @@ func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
 	return nil
 }
 
-// Implements sdk.Account.
+// Implements Account.
 func (acc *BaseAccount) GetCoins() sdk.Coins {
 	return acc.Coins
 }
 
-// Implements sdk.Account.
+// Implements Account.
 func (acc *BaseAccount) SetCoins(coins sdk.Coins) error {
 	acc.Coins = coins
 	return nil
 }
 
-// Implements sdk.Account.
+// Implements Account.
 func (acc *BaseAccount) GetSequence() int64 {
 	return acc.Sequence
 }
 
-// Implements sdk.Account.
+// Implements Account.
 func (acc *BaseAccount) SetSequence(seq int64) error {
 	acc.Sequence = seq
 	return nil
@@ -85,7 +85,7 @@ func (acc *BaseAccount) SetSequence(seq int64) error {
 
 // Most users shouldn't use this, but this comes handy for tests.
 func RegisterBaseAccount(cdc *wire.Codec) {
-	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterInterface((*Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	wire.RegisterCrypto(cdc)
 }

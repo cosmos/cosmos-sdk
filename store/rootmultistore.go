@@ -45,7 +45,7 @@ func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 
 // Implements Store.
 func (rs *rootMultiStore) GetStoreType() StoreType {
-	return StoreTypeMulti
+	return baseapp.StoreTypeMulti
 }
 
 // Implements CommitMultiStore.
@@ -253,14 +253,14 @@ func (rs *rootMultiStore) loadCommitStoreFromParams(id CommitID, params storePar
 		db = dbm.NewPrefixDB(rs.db, []byte("s/k:"+params.key.Name()+"/"))
 	}
 	switch params.typ {
-	case StoreTypeMulti:
+	case baseapp.StoreTypeMulti:
 		panic("recursive MultiStores not yet supported")
 		// TODO: id?
 		// return NewCommitMultiStore(db, id)
-	case StoreTypeIAVL:
+	case baseapp.StoreTypeIAVL:
 		store, err = LoadIAVLStore(db, id)
 		return
-	case StoreTypeDB:
+	case baseapp.StoreTypeDB:
 		panic("dbm.DB is not a CommitStore")
 	default:
 		panic(fmt.Sprintf("unrecognized store type %v", params.typ))

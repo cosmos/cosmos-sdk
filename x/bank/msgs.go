@@ -3,6 +3,7 @@ package bank
 import (
 	"encoding/json"
 
+	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,7 +24,7 @@ func NewMsgSend(in []Input, out []Output) MsgSend {
 func (msg MsgSend) Type() string { return "bank" } // TODO: "bank/send"
 
 // Implements Msg.
-func (msg MsgSend) ValidateBasic() sdk.Error {
+func (msg MsgSend) ValidateBasic() bapp.Error {
 	// this just makes sure all the inputs and outputs are properly formatted,
 	// not that they actually have the money inside
 	if len(msg.Inputs) == 0 {
@@ -89,7 +90,7 @@ func NewMsgIssue(banker sdk.Address, out []Output) MsgIssue {
 func (msg MsgIssue) Type() string { return "bank" } // TODO: "bank/issue"
 
 // Implements Msg.
-func (msg MsgIssue) ValidateBasic() sdk.Error {
+func (msg MsgIssue) ValidateBasic() bapp.Error {
 	// XXX
 	if len(msg.Outputs) == 0 {
 		return ErrNoOutputs(DefaultCodespace).Trace("")
@@ -126,7 +127,7 @@ type Input struct {
 }
 
 // ValidateBasic - validate transaction input
-func (in Input) ValidateBasic() sdk.Error {
+func (in Input) ValidateBasic() bapp.Error {
 	if len(in.Address) == 0 {
 		return sdk.ErrInvalidAddress(in.Address.String())
 	}
@@ -158,7 +159,7 @@ type Output struct {
 }
 
 // ValidateBasic - validate transaction output
-func (out Output) ValidateBasic() sdk.Error {
+func (out Output) ValidateBasic() bapp.Error {
 	if len(out.Address) == 0 {
 		return sdk.ErrInvalidAddress(out.Address.String())
 	}

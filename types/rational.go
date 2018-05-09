@@ -5,6 +5,8 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
 //   "that's one big rat!"
@@ -37,7 +39,7 @@ func NewRat(Numerator int64, Denominator ...int64) Rat {
 }
 
 // create a rational from decimal string or integer string
-func NewRatFromDecimal(decimalStr string) (f Rat, err Error) {
+func NewRatFromDecimal(decimalStr string) (f Rat, err baseapp.Error) {
 
 	// first extract any negative symbol
 	neg := false

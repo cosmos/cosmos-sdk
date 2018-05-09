@@ -11,7 +11,7 @@ type dbStoreAdapter struct {
 
 // Implements Store.
 func (dbStoreAdapter) GetStoreType() StoreType {
-	return sdk.StoreTypeDB
+	return baseapp.StoreTypeDB
 }
 
 // Implements KVStore.

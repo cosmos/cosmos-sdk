@@ -2,19 +2,19 @@
 package bank
 
 import (
+	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Bank errors reserve 100 ~ 199.
 const (
-	DefaultCodespace sdk.CodespaceType = 2
+	DefaultCodespace bapp.CodespaceType = 2
 
-	CodeInvalidInput  sdk.CodeType = 101
-	CodeInvalidOutput sdk.CodeType = 102
+	CodeInvalidInput  bapp.CodeType = 101
+	CodeInvalidOutput bapp.CodeType = 102
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
-func codeToDefaultMsg(code sdk.CodeType) string {
+func codeToDefaultMsg(code bapp.CodeType) string {
 	switch code {
 	case CodeInvalidInput:
 		return "Invalid input coins"
@@ -28,32 +28,32 @@ func codeToDefaultMsg(code sdk.CodeType) string {
 //----------------------------------------
 // Error constructors
 
-func ErrInvalidInput(codespace sdk.CodespaceType, msg string) sdk.Error {
+func ErrInvalidInput(codespace bapp.CodespaceType, msg string) bapp.Error {
 	return newError(codespace, CodeInvalidInput, msg)
 }
 
-func ErrNoInputs(codespace sdk.CodespaceType) sdk.Error {
+func ErrNoInputs(codespace bapp.CodespaceType) bapp.Error {
 	return newError(codespace, CodeInvalidInput, "")
 }
 
-func ErrInvalidOutput(codespace sdk.CodespaceType, msg string) sdk.Error {
+func ErrInvalidOutput(codespace bapp.CodespaceType, msg string) bapp.Error {
 	return newError(codespace, CodeInvalidOutput, msg)
 }
 
-func ErrNoOutputs(codespace sdk.CodespaceType) sdk.Error {
+func ErrNoOutputs(codespace bapp.CodespaceType) bapp.Error {
 	return newError(codespace, CodeInvalidOutput, "")
 }
 
 //----------------------------------------
 
-func msgOrDefaultMsg(msg string, code sdk.CodeType) string {
+func msgOrDefaultMsg(msg string, code bapp.CodeType) string {
 	if msg != "" {
 		return msg
 	}
 	return codeToDefaultMsg(code)
 }
 
-func newError(codespace sdk.CodespaceType, code sdk.CodeType, msg string) sdk.Error {
+func newError(codespace bapp.CodespaceType, code bapp.CodeType, msg string) bapp.Error {
 	msg = msgOrDefaultMsg(msg, code)
-	return sdk.NewError(codespace, code, msg)
+	return bapp.NewError(codespace, code, msg)
 }

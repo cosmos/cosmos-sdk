@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/viper"
 )
@@ -11,27 +12,25 @@ import (
 // NewAnteHandler returns an AnteHandler that checks
 // and increments sequence numbers, checks signatures,
 // and deducts fees from the first signer.
-func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHandler {
+func NewAnteHandler(accountMapper AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHandler {
 	return func(
-		ctx sdk.Context, tx sdk.Tx,
-	) (_ sdk.Context, _ sdk.Result, abort bool) {
+		ctx bapp.Context, tx sdk.Tx,
+	) (_ bapp.Context, _ bapp.Result, abort bool) {
+
+		stdTx, ok := tx.(StdTx)
+		if !ok {
+			return ctx, sdk.ErrInternal("tx must be sdk.StdTx").Result(), true
+		}
 
 		// Assert that there are signatures.
-		var sigs = tx.GetSignatures()
+		var sigs = stdTx.GetSignatures()
 		if len(sigs) == 0 {
 			return ctx,
 				sdk.ErrUnauthorized("no signers").Result(),
 				true
 		}
 
-		// TODO: can tx just implement message?
-		msg := tx.GetMsg()
-
-		// TODO: will this always be a stdtx? should that be used in the function signature?
-		stdTx, ok := tx.(sdk.StdTx)
-		if !ok {
-			return ctx, sdk.ErrInternal("tx must be sdk.StdTx").Result(), true
-		}
+		msg := stdTx.GetMsg()
 
 		// Assert that number of signatures is correct.
 		var signerAddrs = msg.GetSigners()
@@ -53,10 +52,10 @@ func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) 
 		if chainID == "" {
 			chainID = viper.GetString("chain-id")
 		}
-		signBytes := sdk.StdSignBytes(ctx.ChainID(), sequences, fee, msg)
+		signBytes := StdSignBytes(ctx.ChainID(), sequences, fee, msg)
 
 		// Check sig and nonce and collect signer accounts.
-		var signerAccs = make([]sdk.Account, len(signerAddrs))
+		var signerAccs = make([]Account, len(signerAddrs))
 		for i := 0; i < len(sigs); i++ {
 			signerAddr, sig := signerAddrs[i], sigs[i]
 
@@ -91,16 +90,16 @@ func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) 
 
 		// TODO: tx tags (?)
 
-		return ctx, sdk.Result{}, false // continue...
+		return ctx, bapp.Result{}, false // continue...
 	}
 }
 
 // verify the signature and increment the sequence.
 // if the account doesn't have a pubkey, set it.
 func processSig(
-	ctx sdk.Context, am sdk.AccountMapper,
-	addr sdk.Address, sig sdk.StdSignature, signBytes []byte) (
-	acc sdk.Account, res sdk.Result) {
+	ctx bapp.Context, am AccountMapper,
+	addr sdk.Address, sig StdSignature, signBytes []byte) (
+	acc Account, res bapp.Result) {
 
 	// Get the account.
 	acc = am.GetAccount(ctx, addr)
@@ -145,7 +144,7 @@ func processSig(
 // Deduct the fee from the account.
 // We could use the CoinKeeper (in addition to the AccountMapper,
 // because the CoinKeeper doesn't give us accounts), but it seems easier to do this.
-func deductFees(acc sdk.Account, fee sdk.StdFee) (sdk.Account, sdk.Result) {
+func deductFees(acc Account, fee StdFee) (Account, bapp.Result) {
 	coins := acc.GetCoins()
 	feeAmount := fee.Amount
 
@@ -155,9 +154,9 @@ func deductFees(acc sdk.Account, fee sdk.StdFee) (sdk.Account, sdk.Result) {
 		return nil, sdk.ErrInsufficientFunds(errMsg).Result()
 	}
 	acc.SetCoins(newCoins)
-	return acc, sdk.Result{}
+	return acc, bapp.Result{}
 }
 
 // BurnFeeHandler burns all fees (decreasing total supply)
-func BurnFeeHandler(ctx sdk.Context, tx sdk.Tx, fee sdk.Coins) {
+func BurnFeeHandler(ctx bapp.Context, tx sdk.Tx, fee sdk.Coins) {
 }

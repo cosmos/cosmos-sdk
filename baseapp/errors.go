@@ -16,7 +16,7 @@ type CodeType uint16
 // CodespaceType - codespace identifier
 type CodespaceType uint16
 
-// SDK error codes
+// root error codes
 const (
 
 	// ABCI error codes
@@ -26,6 +26,7 @@ const (
 	CodeOK             CodeType = 0
 	CodeInternal       CodeType = 1
 	CodeUnknownRequest CodeType = 2
+	CodeTxDecode       CodeType = 3
 
 	// CodespaceRoot is a codespace for error codes in this file only.
 	// Notice that 0 is an "unset" codespace, which can be overridden with
@@ -77,9 +78,19 @@ func NewError(codespace CodespaceType, code CodeType, msg string) Error {
 	}
 }
 
+// Internal Error on Root Codespace
+func ErrInternal(msg string) Error {
+	return NewError(CodespaceRoot, CodeInternal, msg)
+}
+
 // Unknown Request Error on Root Codespace
 func ErrUnknownRequest(msg string) Error {
 	return NewError(CodespaceRoot, CodeUnknownRequest, msg)
+}
+
+// Unknown TxDecode Error on Root Codespace
+func ErrTxDecode(msg string) Error {
+	return NewError(CodespaceRoot, CodeTxDecode, msg)
 }
 
 // StdError -- implements Error interface

@@ -4,7 +4,6 @@ import (
 	"github.com/pkg/errors"
 
 	abci "github.com/tendermint/abci/types"
-	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 )
@@ -88,23 +87,6 @@ func (app *BaseApp) MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB) {
 // Mount a store to the provided key in the BaseApp multistore, using the default DB
 func (app *BaseApp) MountStore(key StoreKey, typ StoreType) {
 	app.cms.MountStoreWithDB(key, typ, nil)
-}
-
-// nolint - Set functions
-func (app *BaseApp) SetInitChainer(initChainer InitChainer) {
-	app.initChainer = initChainer
-}
-func (app *BaseApp) SetBeginBlocker(beginBlocker BeginBlocker) {
-	app.beginBlocker = beginBlocker
-}
-func (app *BaseApp) SetEndBlocker(endBlocker EndBlocker) {
-	app.endBlocker = endBlocker
-}
-func (app *BaseApp) SetCheckTxer(checkTxer CheckTxer) {
-	app.checkTxer = checkTxer
-}
-func (app *BaseApp) SetDeliverTxer(deliverTxer DeliverTxer) {
-	app.deliverTxer = deliverTxer
 }
 
 // load latest application version
@@ -208,6 +190,26 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	}
 }
 
+// GetCheckContext returns the Context in the current CheckTx state
+func (app *BaseApp) GetCheckContext() Context {
+	return app.checkState.ctx
+}
+
+// GetDeliverContext returns the Context in the current CheckTx state
+func (app *BaseApp) GetDeliverContext() Context {
+	return app.deliverState.ctx
+}
+
+// CacheCheckMultiStore returns the Context in the current CheckTx state
+func (app *BaseApp) CacheCheckMultiStore() CacheMultiStore {
+	return app.checkState.CacheMultiStore()
+}
+
+// CacheDeliverMultiStore returns the Context in the current CheckTx state
+func (app *BaseApp) CacheDeliverMultiStore() CacheMultiStore {
+	return app.deliverState.CacheMultiStore()
+}
+
 //______________________________________________________________________________
 
 // ABCI
@@ -232,13 +234,8 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 // Implements ABCI
 // InitChain runs the initialization logic directly on the CommitMultiStore and commits it.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
-	if app.initChainer == nil {
-		return
-	}
-
 	// Initialize the deliver state and run initChain
 	app.setDeliverState(abci.Header{})
-	app.initChainer(app.deliverState.ctx, req) // no error
 
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState
@@ -266,69 +263,23 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		app.setDeliverState(req.Header)
 	}
 	app.valUpdates = nil
-	if app.beginBlocker != nil {
-		res = app.beginBlocker(app.deliverState.ctx, req)
-	}
+
 	return
 }
 
 // Implements ABCI
-func (app *BaseApp) CheckTx(txBytes []byte) abci.ResponseCheckTx {
-	var result Result
-	if app.checkTxer != nil {
-		result = app.checkTxer(app.checkState.ctx.WithTxBytes(txBytes), txBytes)
-	} else {
-		panic("set checkTxer")
-	}
-
-	return abci.ResponseCheckTx{
-		Code:      uint32(result.Code),
-		Data:      result.Data,
-		Log:       result.Log,
-		GasWanted: result.GasWanted,
-		Fee: cmn.KI64Pair{
-			[]byte(result.FeeDenom),
-			result.FeeAmount,
-		},
-		Tags: result.Tags,
-	}
+func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
+	panic("Extend BaseApp and implement CheckTx")
 }
 
 // Implements ABCI
-func (app *BaseApp) DeliverTx(txBytes []byte) abci.ResponseDeliverTx {
-	var result Result
-	if app.deliverTxer != nil {
-		result = app.deliverTxer(app.deliverState.ctx.WithTxBytes(txBytes), txBytes)
-	} else {
-		panic("set deliverTxer")
-	}
-
-	// After-handler hooks.
-	if result.IsOK() {
-		app.valUpdates = append(app.valUpdates, result.ValidatorUpdates...)
-	} else {
-		// Even though the Result.Code is not OK, there are still effects,
-		// for example fee deductions and sequence incrementing.
-	}
-
-	// Tell the blockchain engine (i.e. Tendermint).
-	return abci.ResponseDeliverTx{
-		Code:      uint32(result.Code),
-		Data:      result.Data,
-		Log:       result.Log,
-		GasWanted: result.GasWanted,
-		GasUsed:   result.GasUsed,
-		Tags:      result.Tags,
-	}
+func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
+	panic("Extend BaseApp and implement DeliverTx")
 }
 
 // Implements ABCI
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-	if app.endBlocker != nil {
-		res = app.endBlocker(app.deliverState.ctx, req)
-	} else {
-		res.ValidatorUpdates = app.valUpdates
-	}
+	res.ValidatorUpdates = app.valUpdates
 	return
 }
 
@@ -362,4 +313,9 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	return abci.ResponseCommit{
 		Data: commitID.Hash,
 	}
+}
+
+// Implements ABCI
+func (app *BaseApp) AppendValUpdates(updates []abci.Validator) {
+	app.valUpdates = append(app.valUpdates, updates...)
 }

@@ -38,7 +38,7 @@ func privAndAddr() (crypto.PrivKey, sdk.Address) {
 }
 
 // run the tx through the anteHandler and ensure its valid
-func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx) {
+func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx bapp.Context, tx sdk.Tx) {
 	_, result, abort := anteHandler(ctx, tx)
 	assert.False(t, abort)
 	assert.Equal(t, sdk.ABCICodeOK, result.Code)
@@ -46,13 +46,13 @@ func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx
 }
 
 // run the tx through the anteHandler and ensure it fails with the given code
-func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, code sdk.CodeType) {
+func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx bapp.Context, tx sdk.Tx, code sdk.CodeType) {
 	_, result, abort := anteHandler(ctx, tx)
 	assert.True(t, abort)
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), result.Code)
 }
 
-func newTestTx(ctx sdk.Context, msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, fee sdk.StdFee) sdk.Tx {
+func newTestTx(ctx bapp.Context, msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, fee sdk.StdFee) sdk.Tx {
 	signBytes := sdk.StdSignBytes(ctx.ChainID(), seqs, fee, msg)
 	return newTestTxWithSignBytes(msg, privs, seqs, fee, signBytes)
 }

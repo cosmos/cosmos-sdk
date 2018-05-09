@@ -5,6 +5,7 @@ import (
 	"runtime/debug"
 
 	abci "github.com/tendermint/abci/types"
+	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
@@ -23,7 +24,7 @@ var dbHeaderKey = []byte("header")
 // The ABCI application
 type App struct {
 	// initialized on creation
-	baseapp *baseapp.BaseApp
+	*baseapp.BaseApp
 
 	router Router // handle any kind of message
 
@@ -41,61 +42,101 @@ func NewApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *App {
 	cms := store.NewCommitMultiStore(db)
 
 	baseapp := baseapp.NewBaseApp(name, logger, db, cms)
-
 	app := &App{
-		baseapp:   baseapp,
-		router:    NewRouter(),
-		txDecoder: defaultTxDecoder(cdc),
+		BaseApp:     baseapp,
+		router:      NewRouter(),
+		txDecoder:   defaultTxDecoder(cdc),
+		anteHandler: nil,
 	}
-
-	store.NewCommitMultiStore(db)
-
-	baseapp.SetCheckTxer(checkTxer)
-	baseapp.SetDeliverTxer(deliverTxer)
 
 	return app
 }
 
-var _ baseapp.CheckTxer = checkTxer
-
-func checkTxer(ctx baseapp.Context, txBytes []byte) (result baseapp.Result) {
+// Implements ABCI
+func (app *App) CheckTx(txBytes []byte) abci.ResponseCheckTx {
+	// Decode the Tx.
+	var result baseapp.Result
 	var tx, err = app.txDecoder(txBytes)
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = runTx(ctx, true, txBytes, tx)
+		result = app.runTx(app.GetCheckContext(), true, txBytes, tx)
 	}
+
+	return abci.ResponseCheckTx{
+		Code:      uint32(result.Code),
+		Data:      result.Data,
+		Log:       result.Log,
+		GasWanted: result.GasWanted,
+		Fee: cmn.KI64Pair{
+			[]byte(result.FeeDenom),
+			result.FeeAmount,
+		},
+		Tags: result.Tags,
+	}
+}
+
+// Implements ABCI
+func (app *App) DeliverTx(txBytes []byte) abci.ResponseDeliverTx {
+
+	// Decode the Tx.
+	var result baseapp.Result
+	var tx, err = app.txDecoder(txBytes)
+	if err != nil {
+		result = err.Result()
+	} else {
+		result = app.runTx(app.GetCheckContext(), false, txBytes, tx)
+	}
+
+	// After-handler hooks.
+	if result.IsOK() {
+		app.AppendValUpdates(result.ValidatorUpdates)
+	} else {
+		// Even though the Code is not OK, there will be some side
+		// effects, like those caused by fee deductions or sequence
+		// incrementations.
+	}
+
+	// Tell the blockchain engine (i.e. Tendermint).
+	return abci.ResponseDeliverTx{
+		Code:      uint32(result.Code),
+		Data:      result.Data,
+		Log:       result.Log,
+		GasWanted: result.GasWanted,
+		GasUsed:   result.GasUsed,
+		Tags:      result.Tags,
+	}
+}
+
+// Implements ABCI
+func (app *App) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+	res = app.BaseApp.BeginBlock(req)
+	// TODO
 	return
 }
 
-var _ baseapp.DeliverTxer = deliverTxer
-
-func deliverTxer(ctx baseapp.Context, txBytes []byte) (result baseapp.Result) {
-	// Decode the Tx.
-	var tx, err = app.txDecoder(txBytes)
-	if err != nil {
-		result = err.Result()
-	} else {
-		result = runTx(ctx, false, txBytes, tx)
-	}
+// Implements ABCI
+func (app *App) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
+	res = app.BaseApp.EndBlock(req)
+	// TODO
 	return
 }
 
 // txBytes may be nil in some cases, eg. in tests.
 // Also, in the future we may support "internal" transactions.
-func runTx(ctx baseapp.Context, isCheckTx bool, txBytes []byte, tx Tx) (result baseapp.Result) {
+func (app *App) runTx(ctx baseapp.Context, isCheckTx bool, txBytes []byte, tx Tx) (result baseapp.Result) {
 	// Handle any panics.
 	defer func() {
 		if r := recover(); r != nil {
 			log := fmt.Sprintf("Recovered: %v\nstack:\n%v", r, string(debug.Stack()))
-			result = sdk.ErrInternal(log).Result()
+			result = ErrInternal(log).Result()
 		}
 	}()
 
 	// Get the Msg.
 	var msg = tx.GetMsg()
 	if msg == nil {
-		return baseapp.ErrInternal("Tx.GetMsg() returned nil").Result()
+		return ErrInternal("Tx.GetMsg() returned nil").Result()
 	}
 
 	// Validate the Msg.
@@ -127,11 +168,11 @@ func runTx(ctx baseapp.Context, isCheckTx bool, txBytes []byte, tx Tx) (result b
 	var msCache baseapp.CacheMultiStore
 	if isCheckTx == true {
 		// CacheWrap app.checkState.ms in case it fails.
-		msCache = app.checkState.CacheMultiStore()
+		msCache = app.CacheCheckMultiStore()
 		ctx = ctx.WithMultiStore(msCache)
 	} else {
 		// CacheWrap app.deliverState.ms in case it fails.
-		msCache = app.deliverState.CacheMultiStore()
+		msCache = app.CacheDeliverMultiStore()
 		ctx = ctx.WithMultiStore(msCache)
 
 	}
@@ -161,7 +202,7 @@ func (app *App) Router() Router { return app.router }
 
 // default custom logic for transaction decoding
 func defaultTxDecoder(cdc *wire.Codec) TxDecoder {
-	return func(txBytes []byte) (Tx, Error) {
+	return func(txBytes []byte) (Tx, baseapp.Error) {
 		var tx Tx
 
 		if len(txBytes) == 0 {
@@ -174,6 +215,6 @@ func defaultTxDecoder(cdc *wire.Codec) TxDecoder {
 		if err != nil {
 			return nil, ErrTxDecode("") // TODO: FIX WITH ERRORS:   .Trace(err.Error())
 		}
-		return tx, Error{} // TODO: Was  nil
+		return tx, nil
 	}
 }

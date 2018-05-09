@@ -8,7 +8,7 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/merkle"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
 const useDebugDB = false
@@ -128,34 +128,34 @@ func TestMultiStoreQuery(t *testing.T) {
 	// Test bad path.
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
 	qres := multi.Query(query)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	assert.Equal(t, baseapp.ToABCICode(baseapp.CodespaceRoot, baseapp.CodeUnknownRequest), baseapp.ABCICodeType(qres.Code))
 
 	query.Path = "h897fy32890rf63296r92"
 	qres = multi.Query(query)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	assert.Equal(t, baseapp.ToABCICode(baseapp.CodespaceRoot, baseapp.CodeUnknownRequest), baseapp.ABCICodeType(qres.Code))
 
 	// Test invalid store name.
 	query.Path = "/garbage/key"
 	qres = multi.Query(query)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	assert.Equal(t, baseapp.ToABCICode(baseapp.CodespaceRoot, baseapp.CodeUnknownRequest), baseapp.ABCICodeType(qres.Code))
 
 	// Test valid query with data.
 	query.Path = "/store1/key"
 	qres = multi.Query(query)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
+	assert.Equal(t, baseapp.ToABCICode(baseapp.CodespaceRoot, baseapp.CodeOK), baseapp.ABCICodeType(qres.Code))
 	assert.Equal(t, v, qres.Value)
 
 	// Test valid but empty query.
 	query.Path = "/store2/key"
 	query.Prove = true
 	qres = multi.Query(query)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
+	assert.Equal(t, baseapp.ToABCICode(baseapp.CodespaceRoot, baseapp.CodeOK), baseapp.ABCICodeType(qres.Code))
 	assert.Nil(t, qres.Value)
 
 	// Test store2 data.
 	query.Data = k2
 	qres = multi.Query(query)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
+	assert.Equal(t, baseapp.ToABCICode(baseapp.CodespaceRoot, baseapp.CodeOK), baseapp.ABCICodeType(qres.Code))
 	assert.Equal(t, v2, qres.Value)
 }
 
@@ -165,11 +165,11 @@ func TestMultiStoreQuery(t *testing.T) {
 func newMultiStoreWithMounts(db dbm.DB) *rootMultiStore {
 	store := NewCommitMultiStore(db)
 	store.MountStoreWithDB(
-		sdk.NewKVStoreKey("store1"), sdk.StoreTypeIAVL, db)
+		NewKVStoreKey("store1"), StoreTypeIAVL, db)
 	store.MountStoreWithDB(
-		sdk.NewKVStoreKey("store2"), sdk.StoreTypeIAVL, db)
+		NewKVStoreKey("store2"), StoreTypeIAVL, db)
 	store.MountStoreWithDB(
-		sdk.NewKVStoreKey("store3"), sdk.StoreTypeIAVL, db)
+		NewKVStoreKey("store3"), StoreTypeIAVL, db)
 	return store
 }
 

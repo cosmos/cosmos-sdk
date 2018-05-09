@@ -1,4 +1,4 @@
-package types_test
+package baseapp
 
 import (
 	"testing"
@@ -10,7 +10,6 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/abci/types"
 )
 
@@ -42,8 +41,8 @@ func (l MockLogger) With(kvs ...interface{}) log.Logger {
 }
 
 func TestContextGetOpShouldNeverPanic(t *testing.T) {
-	var ms types.MultiStore
-	ctx := types.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
+	var ms MultiStore
+	ctx := NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
 	indices := []int64{
 		-10, 1, 0, 10, 20,
 	}
@@ -53,17 +52,17 @@ func TestContextGetOpShouldNeverPanic(t *testing.T) {
 	}
 }
 
-func defaultContext(key types.StoreKey) types.Context {
+func defaultContext(key StoreKey) Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(key, types.StoreTypeIAVL, db)
+	cms.MountStoreWithDB(key, StoreTypeIAVL, db)
 	cms.LoadLatestVersion()
-	ctx := types.NewContext(cms, abci.Header{}, false, nil, log.NewNopLogger())
+	ctx := NewContext(cms, abci.Header{}, false, nil, log.NewNopLogger())
 	return ctx
 }
 
 func TestCacheContext(t *testing.T) {
-	key := types.NewKVStoreKey(t.Name())
+	key := NewKVStoreKey(t.Name())
 	k1 := []byte("hello")
 	v1 := []byte("world")
 	k2 := []byte("key")
@@ -90,7 +89,7 @@ func TestCacheContext(t *testing.T) {
 }
 
 func TestLogContext(t *testing.T) {
-	key := types.NewKVStoreKey(t.Name())
+	key := NewKVStoreKey(t.Name())
 	ctx := defaultContext(key)
 	logger := NewMockLogger()
 	ctx = ctx.WithLogger(logger)

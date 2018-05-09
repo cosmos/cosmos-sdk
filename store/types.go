@@ -1,24 +1,24 @@
 package store
 
 import (
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
 // Import cosmos-sdk/types/store.go for convenience.
 // nolint
-type Store = types.Store
-type Committer = types.Committer
-type CommitStore = types.CommitStore
-type MultiStore = types.MultiStore
-type CacheMultiStore = types.CacheMultiStore
-type CommitMultiStore = types.CommitMultiStore
-type KVStore = types.KVStore
-type Iterator = types.Iterator
-type CacheKVStore = types.CacheKVStore
-type CommitKVStore = types.CommitKVStore
-type CacheWrapper = types.CacheWrapper
-type CacheWrap = types.CacheWrap
-type CommitID = types.CommitID
-type StoreKey = types.StoreKey
-type StoreType = types.StoreType
-type Queryable = types.Queryable
+type Store = baseapp.Store
+type Committer = baseapp.Committer
+type CommitStore = baseapp.CommitStore
+type MultiStore = baseapp.MultiStore
+type CacheMultiStore = baseapp.CacheMultiStore
+type CommitMultiStore = baseapp.CommitMultiStore
+type KVStore = baseapp.KVStore
+type Iterator = baseapp.Iterator
+type CacheKVStore = baseapp.CacheKVStore
+type CommitKVStore = baseapp.CommitKVStore
+type CacheWrapper = baseapp.CacheWrapper
+type CacheWrap = baseapp.CacheWrap
+type CommitID = baseapp.CommitID
+type StoreKey = baseapp.StoreKey
+type StoreType = baseapp.StoreType
+type Queryable = baseapp.Queryable

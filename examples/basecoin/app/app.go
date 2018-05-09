@@ -8,7 +8,6 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
-	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -25,8 +24,8 @@ const (
 
 // Extended ABCI application
 type BasecoinApp struct {
-	*bam.BaseApp
-	cdc *wire.Codec
+	SdkApp *sdk.App
+	cdc    *wire.Codec
 
 	// keys to access the substores
 	keyMain    *sdk.KVStoreKey
@@ -48,7 +47,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// Create your application object.
 	var app = &BasecoinApp{
-		BaseApp:    bam.NewBaseApp(appName, cdc, logger, db),
+		SdkApp:     sdk.NewApp(appName, cdc, logger, db),
 		cdc:        cdc,
 		keyMain:    sdk.NewKVStoreKey("main"),
 		keyAccount: sdk.NewKVStoreKey("acc"),

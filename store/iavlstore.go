@@ -9,7 +9,7 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
 const (
@@ -86,7 +86,7 @@ func (st *iavlStore) LastCommitID() CommitID {
 
 // Implements Store.
 func (st *iavlStore) GetStoreType() StoreType {
-	return sdk.StoreTypeIAVL
+	return baseapp.StoreTypeIAVL
 }
 
 // Implements Store.
@@ -127,12 +127,12 @@ func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 
 // Implements KVStore.
 func (st *iavlStore) SubspaceIterator(prefix []byte) Iterator {
-	return st.Iterator(prefix, sdk.PrefixEndBytes(prefix))
+	return st.Iterator(prefix, baseapp.PrefixEndBytes(prefix))
 }
 
 // Implements KVStore.
 func (st *iavlStore) ReverseSubspaceIterator(prefix []byte) Iterator {
-	return st.ReverseIterator(prefix, sdk.PrefixEndBytes(prefix))
+	return st.ReverseIterator(prefix, baseapp.PrefixEndBytes(prefix))
 }
 
 // Query implements ABCI interface, allows queries

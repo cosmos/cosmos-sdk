@@ -1,19 +1,12 @@
 package baseapp
 
 import (
-	"fmt"
-	"runtime/debug"
-
 	"github.com/pkg/errors"
 
 	abci "github.com/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
-
-	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Key to store the header in the DB itself.
@@ -26,20 +19,19 @@ var dbHeaderKey = []byte("header")
 type BaseApp struct {
 	// initialized on creation
 	Logger     log.Logger
-	name       string               // application name from abci.Info
-	db         dbm.DB               // common DB backend
-	cms        sdk.CommitMultiStore // Main (uncached) state
-	router     Router               // handle any kind of message
-	codespacer *sdk.Codespacer      // handle module codespacing
+	name       string           // application name from abci.Info
+	db         dbm.DB           // common DB backend
+	cms        CommitMultiStore // Main (uncached) state
+	codespacer *Codespacer      // handle module codespacing
 
 	// must be set
-	txDecoder   sdk.TxDecoder   // unmarshal []byte into sdk.Tx
-	anteHandler sdk.AnteHandler // ante handler for fee and auth
+	checkTxer   CheckTxer   // initialize state with validators and state blob
+	deliverTxer DeliverTxer // logic to run before any txs
 
 	// may be nil
-	initChainer  sdk.InitChainer  // initialize state with validators and state blob
-	beginBlocker sdk.BeginBlocker // logic to run before any txs
-	endBlocker   sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
+	initChainer  InitChainer  // initialize state with validators and state blob
+	beginBlocker BeginBlocker // logic to run before any txs
+	endBlocker   EndBlocker   // logic to run after all txs, and to determine valset changes
 
 	//--------------------
 	// Volatile
@@ -57,19 +49,17 @@ var _ abci.Application = (*BaseApp)(nil)
 
 // Create and name new BaseApp
 // NOTE: The db is used to store the version number for now.
-func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *BaseApp {
+func NewBaseApp(name string, logger log.Logger, db dbm.DB, cms CommitMultiStore) *BaseApp {
 	app := &BaseApp{
 		Logger:     logger,
 		name:       name,
 		db:         db,
-		cms:        store.NewCommitMultiStore(db),
-		router:     NewRouter(),
-		codespacer: sdk.NewCodespacer(),
-		txDecoder:  defaultTxDecoder(cdc),
+		cms:        cms,
+		codespacer: NewCodespacer(),
 	}
-	// Register the undefined & root codespaces, which should not be used by any modules
-	app.codespacer.RegisterOrPanic(sdk.CodespaceUndefined)
-	app.codespacer.RegisterOrPanic(sdk.CodespaceRoot)
+	app.codespacer.RegisterOrPanic(CodespaceRoot)
+	app.codespacer.RegisterOrPanic(CodespaceUndefined)
+
 	return app
 }
 
@@ -79,80 +69,58 @@ func (app *BaseApp) Name() string {
 }
 
 // Register the next available codespace through the baseapp's codespacer, starting from a default
-func (app *BaseApp) RegisterCodespace(codespace sdk.CodespaceType) sdk.CodespaceType {
+func (app *BaseApp) RegisterCodespace(codespace CodespaceType) CodespaceType {
 	return app.codespacer.RegisterNext(codespace)
 }
 
 // Mount a store to the provided key in the BaseApp multistore
-func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
+func (app *BaseApp) MountStoresIAVL(keys ...*KVStoreKey) {
 	for _, key := range keys {
-		app.MountStore(key, sdk.StoreTypeIAVL)
+		app.MountStore(key, StoreTypeIAVL)
 	}
 }
 
 // Mount a store to the provided key in the BaseApp multistore, using a specified DB
-func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, typ sdk.StoreType, db dbm.DB) {
+func (app *BaseApp) MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB) {
 	app.cms.MountStoreWithDB(key, typ, db)
 }
 
 // Mount a store to the provided key in the BaseApp multistore, using the default DB
-func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
+func (app *BaseApp) MountStore(key StoreKey, typ StoreType) {
 	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
-// Set the txDecoder function
-func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
-	app.txDecoder = txDecoder
-}
-
-// default custom logic for transaction decoding
-func defaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
-	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
-		var tx = sdk.StdTx{}
-
-		if len(txBytes) == 0 {
-			return nil, sdk.ErrTxDecode("txBytes are empty")
-		}
-
-		// StdTx.Msg is an interface. The concrete types
-		// are registered by MakeTxCodec
-		err := cdc.UnmarshalBinary(txBytes, &tx)
-		if err != nil {
-			return nil, sdk.ErrTxDecode("").Trace(err.Error())
-		}
-		return tx, nil
-	}
-}
-
 // nolint - Set functions
-func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
+func (app *BaseApp) SetInitChainer(initChainer InitChainer) {
 	app.initChainer = initChainer
 }
-func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
+func (app *BaseApp) SetBeginBlocker(beginBlocker BeginBlocker) {
 	app.beginBlocker = beginBlocker
 }
-func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
+func (app *BaseApp) SetEndBlocker(endBlocker EndBlocker) {
 	app.endBlocker = endBlocker
 }
-func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
-	app.anteHandler = ah
+func (app *BaseApp) SetCheckTxer(checkTxer CheckTxer) {
+	app.checkTxer = checkTxer
 }
-func (app *BaseApp) Router() Router { return app.router }
+func (app *BaseApp) SetDeliverTxer(deliverTxer DeliverTxer) {
+	app.deliverTxer = deliverTxer
+}
 
 // load latest application version
-func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
+func (app *BaseApp) LoadLatestVersion(mainKey StoreKey) error {
 	app.cms.LoadLatestVersion()
 	return app.initFromStore(mainKey)
 }
 
 // load application version
-func (app *BaseApp) LoadVersion(version int64, mainKey sdk.StoreKey) error {
+func (app *BaseApp) LoadVersion(version int64, mainKey StoreKey) error {
 	app.cms.LoadVersion(version)
 	return app.initFromStore(mainKey)
 }
 
 // the last CommitID of the multistore
-func (app *BaseApp) LastCommitID() sdk.CommitID {
+func (app *BaseApp) LastCommitID() CommitID {
 	return app.cms.LastCommitID()
 }
 
@@ -162,7 +130,7 @@ func (app *BaseApp) LastBlockHeight() int64 {
 }
 
 // initializes the remaining logic from app.cms
-func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
+func (app *BaseApp) initFromStore(mainKey StoreKey) error {
 
 	// main store should exist.
 	// TODO: we don't actually need the main store here
@@ -208,19 +176,19 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 }
 
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
-func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
+func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, nil, app.Logger)
+		return NewContext(app.checkState.ms, header, true, nil, app.Logger)
 	}
-	return sdk.NewContext(app.deliverState.ms, header, false, nil, app.Logger)
+	return NewContext(app.deliverState.ms, header, false, nil, app.Logger)
 }
 
 type state struct {
-	ms  sdk.CacheMultiStore
-	ctx sdk.Context
+	ms  CacheMultiStore
+	ctx Context
 }
 
-func (st *state) CacheMultiStore() sdk.CacheMultiStore {
+func (st *state) CacheMultiStore() CacheMultiStore {
 	return st.ms.CacheMultiStore()
 }
 
@@ -228,7 +196,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, nil, app.Logger),
+		ctx: NewContext(ms, header, true, nil, app.Logger),
 	}
 }
 
@@ -236,7 +204,7 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, nil, app.Logger),
+		ctx: NewContext(ms, header, false, nil, app.Logger),
 	}
 }
 
@@ -280,10 +248,10 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 // Implements ABCI.
 // Delegates to CommitMultiStore if it implements Queryable
 func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-	queryable, ok := app.cms.(sdk.Queryable)
+	queryable, ok := app.cms.(Queryable)
 	if !ok {
 		msg := "application doesn't support queries"
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		return ErrUnknownRequest(msg).QueryResult()
 	}
 	return queryable.Query(req)
 }
@@ -305,14 +273,12 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 }
 
 // Implements ABCI
-func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
-	// Decode the Tx.
-	var result sdk.Result
-	var tx, err = app.txDecoder(txBytes)
-	if err != nil {
-		result = err.Result()
+func (app *BaseApp) CheckTx(txBytes []byte) abci.ResponseCheckTx {
+	var result Result
+	if app.checkTxer != nil {
+		result = app.checkTxer(app.checkState.ctx.WithTxBytes(txBytes), txBytes)
 	} else {
-		result = app.runTx(true, txBytes, tx)
+		panic("set checkTxer")
 	}
 
 	return abci.ResponseCheckTx{
@@ -329,14 +295,12 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 }
 
 // Implements ABCI
-func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
-	// Decode the Tx.
-	var result sdk.Result
-	var tx, err = app.txDecoder(txBytes)
-	if err != nil {
-		result = err.Result()
+func (app *BaseApp) DeliverTx(txBytes []byte) abci.ResponseDeliverTx {
+	var result Result
+	if app.deliverTxer != nil {
+		result = app.deliverTxer(app.deliverState.ctx.WithTxBytes(txBytes), txBytes)
 	} else {
-		result = app.runTx(false, txBytes, tx)
+		panic("set deliverTxer")
 	}
 
 	// After-handler hooks.
@@ -344,7 +308,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 		app.valUpdates = append(app.valUpdates, result.ValidatorUpdates...)
 	} else {
 		// Even though the Result.Code is not OK, there are still effects,
-		// namely fee deductions and sequence incrementing.
+		// for example fee deductions and sequence incrementing.
 	}
 
 	// Tell the blockchain engine (i.e. Tendermint).
@@ -356,87 +320,6 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 		GasUsed:   result.GasUsed,
 		Tags:      result.Tags,
 	}
-}
-
-// nolint- Mostly for testing
-func (app *BaseApp) Check(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(true, nil, tx)
-}
-func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(false, nil, tx)
-}
-
-// txBytes may be nil in some cases, eg. in tests.
-// Also, in the future we may support "internal" transactions.
-func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
-	// Handle any panics.
-	defer func() {
-		if r := recover(); r != nil {
-			log := fmt.Sprintf("Recovered: %v\nstack:\n%v", r, string(debug.Stack()))
-			result = sdk.ErrInternal(log).Result()
-		}
-	}()
-
-	// Get the Msg.
-	var msg = tx.GetMsg()
-	if msg == nil {
-		return sdk.ErrInternal("Tx.GetMsg() returned nil").Result()
-	}
-
-	// Validate the Msg.
-	err := msg.ValidateBasic()
-	if err != nil {
-		err = err.WithDefaultCodespace(sdk.CodespaceRoot)
-		return err.Result()
-	}
-
-	// Get the context
-	var ctx sdk.Context
-	if isCheckTx {
-		ctx = app.checkState.ctx.WithTxBytes(txBytes)
-	} else {
-		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
-	}
-
-	// Run the ante handler.
-	if app.anteHandler != nil {
-		newCtx, result, abort := app.anteHandler(ctx, tx)
-		if abort {
-			return result
-		}
-		if !newCtx.IsZero() {
-			ctx = newCtx
-		}
-	}
-
-	// Match route.
-	msgType := msg.Type()
-	handler := app.router.Route(msgType)
-	if handler == nil {
-		return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
-	}
-
-	// Get the correct cache
-	var msCache sdk.CacheMultiStore
-	if isCheckTx == true {
-		// CacheWrap app.checkState.ms in case it fails.
-		msCache = app.checkState.CacheMultiStore()
-		ctx = ctx.WithMultiStore(msCache)
-	} else {
-		// CacheWrap app.deliverState.ms in case it fails.
-		msCache = app.deliverState.CacheMultiStore()
-		ctx = ctx.WithMultiStore(msCache)
-
-	}
-
-	result = handler(ctx, msg)
-
-	// If result was successful, write to app.checkState.ms or app.deliverState.ms
-	if result.IsOK() {
-		msCache.Write()
-	}
-
-	return result
 }
 
 // Implements ABCI

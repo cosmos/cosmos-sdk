@@ -1,7 +1,7 @@
 package store
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
@@ -20,11 +20,11 @@ func (dsa dbStoreAdapter) CacheWrap() CacheWrap {
 }
 
 func (dsa dbStoreAdapter) SubspaceIterator(prefix []byte) Iterator {
-	return dsa.Iterator(prefix, sdk.PrefixEndBytes(prefix))
+	return dsa.Iterator(prefix, baseapp.PrefixEndBytes(prefix))
 }
 
 func (dsa dbStoreAdapter) ReverseSubspaceIterator(prefix []byte) Iterator {
-	return dsa.ReverseIterator(prefix, sdk.PrefixEndBytes(prefix))
+	return dsa.ReverseIterator(prefix, baseapp.PrefixEndBytes(prefix))
 }
 
 // dbm.DB implements KVStore so we can CacheKVStore it.

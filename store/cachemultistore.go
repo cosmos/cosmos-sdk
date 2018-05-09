@@ -1,8 +1,6 @@
 package store
 
-import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
+import "github.com/cosmos/cosmos-sdk/baseapp"
 
 //----------------------------------------
 // cacheMultiStore
@@ -42,7 +40,7 @@ func newCacheMultiStoreFromCMS(cms cacheMultiStore) cacheMultiStore {
 
 // Implements Store.
 func (cms cacheMultiStore) GetStoreType() StoreType {
-	return sdk.StoreTypeMulti
+	return baseapp.StoreTypeMulti
 }
 
 // Implements CacheMultiStore.

@@ -34,7 +34,7 @@ type ValidatorSetKeeper interface {
 type Delegation interface {
 	GetDelegator() Address
 	GetValidator() Address
-	GetDelegated() Rat
+	GetBondAmount() Rat
 }
 
 type DelegationSet interface {

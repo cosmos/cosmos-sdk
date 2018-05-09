@@ -364,7 +364,7 @@ func (b DelegatorBond) GetValidator() sdk.Address {
 	return b.CandidateAddr
 }
 
-func (b DelegatorBond) GetDelegated() sdk.Rat {
+func (b DelegatorBond) GetBondAmount() sdk.Rat {
 	return b.Shares
 }
 

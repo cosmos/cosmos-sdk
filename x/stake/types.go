@@ -308,12 +308,38 @@ func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
 	}
 }
 
-// sortable validator list for testing
-type validators []Validator
+var _ sdk.Validator = Validator{}
 
-func (v validators) Len() int           { return len(v) }
-func (v validators) Swap(i, j int)      { v[i], v[j] = v[j], v[i] }
-func (v validators) Less(i, j int) bool { return v[i].Power.LT(v[j].Power) }
+func (v Validator) GetAddress() sdk.Address {
+	return v.Address
+}
+
+func (v Validator) GetPubKey() crypto.PubKey {
+	return v.PubKey
+}
+
+func (v Validator) GetPower() sdk.Rat {
+	return v.Power
+}
+
+type ValidatorSet []Validator
+
+var _ sdk.ValidatorSet = ValidatorSet{}
+
+func (vs ValidatorSet) Iterate(fn func(int, sdk.Validator)) {
+	for i, v := range vs {
+		fn(i, v)
+	}
+}
+
+func (vs ValidatorSet) Size() int {
+	return len(vs)
+}
+
+// sortable validator list for testing
+func (vs ValidatorSet) Len() int           { return len(vs) }
+func (vs ValidatorSet) Swap(i, j int)      { vs[i], vs[j] = vs[j], vs[i] }
+func (vs ValidatorSet) Less(i, j int) bool { return vs[i].Power.LT(vs[j].Power) }
 
 //_________________________________________________________________________
 
@@ -333,4 +359,28 @@ func (b DelegatorBond) equal(b2 DelegatorBond) bool {
 		bytes.Equal(b.CandidateAddr, b2.CandidateAddr) &&
 		b.Height == b2.Height &&
 		b.Shares.Equal(b2.Shares)
+}
+
+func (b DelegatorBond) GetDelegator() sdk.Address {
+	return b.DelegatorAddr
+}
+
+func (b DelegatorBond) GetValidator() sdk.Address {
+	return b.CandidateAddr
+}
+
+func (b DelegatorBond) GetBondAmount() sdk.Rat {
+	return b.Shares
+}
+
+type DelegationSet []DelegatorBond
+
+func (ds DelegationSet) Iterate(fn func(int, sdk.Delegation)) {
+	for i, d := range ds {
+		fn(i, d)
+	}
+}
+
+func (ds DelegationSet) Size() int {
+	return len(ds)
 }

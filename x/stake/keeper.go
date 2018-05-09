@@ -197,7 +197,7 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 // get the group of the most recent validators
 func (k Keeper) getValidatorsOrdered(ctx sdk.Context) []Validator {
 	vals := k.GetValidators(ctx)
-	sort.Sort(sort.Reverse(validators(vals)))
+	sort.Sort(sort.Reverse(ValidatorSet(vals)))
 	return vals
 }
 
@@ -497,4 +497,44 @@ func (k Keeper) setPool(ctx sdk.Context, p Pool) {
 	b := k.cdc.MustMarshalBinary(p)
 	store.Set(PoolKey, b)
 	k.pool = Pool{} //clear the cache
+}
+
+//__________________________________________________________________________
+
+// Implements ValidatorSetKeeper
+
+var _ sdk.ValidatorSetKeeper = Keeper{}
+
+func (k Keeper) ValidatorSet(ctx sdk.Context) sdk.ValidatorSet {
+	vals := k.GetValidators(ctx)
+	return ValidatorSet(vals)
+}
+
+func (k Keeper) Validator(ctx sdk.Context, addr sdk.Address) sdk.Validator {
+	can, ok := k.GetCandidate(ctx, addr)
+	if !ok {
+		return nil
+	}
+	if can.Status != Bonded {
+		return nil
+	}
+	return can.validator()
+}
+
+func (k Keeper) TotalPower(ctx sdk.Context) sdk.Rat {
+	pool := k.GetPool(ctx)
+	return pool.BondedShares
+}
+
+func (k Keeper) Delegation(ctx sdk.Context, del sdk.Address, val sdk.Address) sdk.Delegation {
+	bond, ok := k.GetDelegatorBond(ctx, del, val)
+	if !ok {
+		return nil
+	}
+	return bond
+}
+
+func (k Keeper) DelegationSet(ctx sdk.Context, del sdk.Address) sdk.DelegationSet {
+	bs := k.GetDelegatorBonds(ctx, del, 32767)
+	return DelegationSet(bs)
 }

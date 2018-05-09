@@ -508,7 +508,7 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	assert.Equal(t, candidates[0].validator().abciValidator(keeper.cdc), acc[0])
 
 	// test validator added at the middle
-	//  candidate set: {c0, c1, c3} -> {c0, c1, c2, c3]
+	//  candidate set: {c0, c1, c3} -> {c0, c1, c2, c3}
 	//  accUpdate set: {} -> {c2}
 	keeper.clearAccUpdateValidators(ctx)
 	assert.Equal(t, 3, len(keeper.GetCandidates(ctx, 5)))
@@ -709,4 +709,47 @@ func TestPool(t *testing.T) {
 	keeper.setPool(ctx, expPool)
 	resPool = keeper.GetPool(ctx)
 	assert.True(t, expPool.equal(resPool))
+}
+
+func TestValidatorsetKeeper(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, false, 0)
+
+	pool := keeper.GetPool(ctx)
+	total := int64(0)
+	amts := []int64{9, 8, 7}
+	var candidates [3]Candidate
+	for i, amt := range amts {
+		candidates[i] = Candidate{
+			Address:      addrVals[i],
+			PubKey:       pks[i],
+			BondedShares: sdk.NewRat(amt),
+		}
+
+		keeper.setCandidate(ctx, candidates[i])
+
+		pool, _ = pool.addTokensBonded(amt)
+
+		total += amt
+	}
+
+	keeper.setPool(ctx, pool)
+
+	valset := keeper.ValidatorSet(ctx)
+	assert.Equal(t, 3, valset.Size())
+
+	for i, addr := range addrVals[:3] {
+		val := keeper.Validator(ctx, addr)
+		canval := candidates[i].validator()
+		assert.Equal(t, canval, val)
+		assert.Equal(t, canval.Address, val.GetAddress())
+		assert.Equal(t, canval.PubKey, val.GetPubKey())
+		assert.Equal(t, canval.Power, val.GetPower())
+	}
+
+	for _, addr := range addrVals[3:] {
+		val := keeper.Validator(ctx, addr)
+		assert.Nil(t, val)
+	}
+
+	assert.Equal(t, total, keeper.TotalPower(ctx).Evaluate())
 }

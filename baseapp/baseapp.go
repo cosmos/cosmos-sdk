@@ -3,6 +3,7 @@ package baseapp
 import (
 	"fmt"
 	"runtime/debug"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -27,6 +28,7 @@ type BaseApp struct {
 	// initialized on creation
 	Logger     log.Logger
 	name       string               // application name from abci.Info
+	codec      *wire.Codec          // Amino codec
 	db         dbm.DB               // common DB backend
 	cms        sdk.CommitMultiStore // Main (uncached) state
 	router     Router               // handle any kind of message
@@ -62,6 +64,7 @@ func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB, txGa
 	app := &BaseApp{
 		Logger:     logger,
 		name:       name,
+		codec:      cdc,
 		db:         db,
 		cms:        store.NewCommitMultiStore(db),
 		router:     NewRouter(),
@@ -286,6 +289,28 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if !ok {
 		msg := "application doesn't support queries"
 		return sdk.ErrUnknownRequest(msg).QueryResult()
+	}
+	// Special prefix backslash for special queries
+	path := req.Path
+	if strings.HasPrefix(path, "\\") {
+		query := path[1:]
+		var result sdk.Result
+		switch query {
+		case "simulate":
+			txBytes := req.Data
+			tx, err := app.txDecoder(txBytes)
+			if err != nil {
+				result = err.Result()
+			}
+			result = app.runTx(true, true, txBytes, tx)
+		default:
+			result = sdk.ErrUnknownRequest(fmt.Sprintf("Unknown query: %s", path)).Result()
+		}
+		value := app.codec.MustMarshalBinary(result)
+		return abci.ResponseQuery{
+			Code:  uint32(sdk.ABCICodeOK),
+			Value: value,
+		}
 	}
 	return queryable.Query(req)
 }

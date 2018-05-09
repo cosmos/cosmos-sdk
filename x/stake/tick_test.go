@@ -121,6 +121,7 @@ func TestProcessProvisions(t *testing.T) {
 		require.Equal(t, startTotalSupply+expProvisions, pool.TotalSupply)
 	}
 	pool = keeper.GetPool(ctx)
+	//fmt.Printf("hr %v, startBondedPool %v, expProvisions %v, pool.BondedPool %v\n", hr, startBondedPool, expProvisions, pool.BondedPool)
 	assert.NotEqual(t, initialSupply, pool.TotalSupply)
 	assert.Equal(t, initialUnbonded, pool.UnbondedPool)
 	//panic(fmt.Sprintf("debug total %v, bonded  %v, diff %v\n", p.TotalSupply, p.BondedPool, pool.TotalSupply-pool.BondedPool))

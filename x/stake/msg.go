@@ -20,6 +20,12 @@ const StakingToken = "steak"
 //Verify interface at compile time
 var _, _, _, _ sdk.Msg = &MsgDeclareCandidacy{}, &MsgEditCandidacy{}, &MsgDelegate{}, &MsgUnbond{}
 
+var msgCdc = wire.NewCodec()
+
+func init() {
+	wire.RegisterCrypto(msgCdc)
+}
+
 //______________________________________________________________________
 
 // MsgDeclareCandidacy - struct for unbonding transactions
@@ -46,9 +52,7 @@ func (msg MsgDeclareCandidacy) GetSigners() []sdk.Address { return []sdk.Address
 
 // get the bytes for the message signer to sign on
 func (msg MsgDeclareCandidacy) GetSignBytes() []byte {
-	cdc := wire.NewCodec()
-	wire.RegisterCrypto(cdc)
-	return cdc.MustMarshalBinary(msg)
+	return msgCdc.MustMarshalBinary(msg)
 }
 
 // quick validity check

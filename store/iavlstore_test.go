@@ -268,12 +268,12 @@ func TestIAVLStoreQuery(t *testing.T) {
 	v3 := []byte("val3")
 
 	ksub := []byte("key")
-	KVs0 := []KV{}
-	KVs1 := []KV{
+	KVs0 := []KVPair{}
+	KVs1 := []KVPair{
 		{k1, v1},
 		{k2, v2},
 	}
-	KVs2 := []KV{
+	KVs2 := []KVPair{
 		{k1, v3},
 		{k2, v2},
 	}

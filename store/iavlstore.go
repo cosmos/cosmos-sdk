@@ -179,10 +179,10 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	case "/subspace":
 		subspace := req.Data
 		res.Key = subspace
-		var KVs []KV
+		var KVs []KVPair
 		iterator := st.SubspaceIterator(subspace)
 		for ; iterator.Valid(); iterator.Next() {
-			KVs = append(KVs, KV{iterator.Key(), iterator.Value()})
+			KVs = append(KVs, KVPair{iterator.Key(), iterator.Value()})
 		}
 		iterator.Close()
 		res.Value = cdc.MustMarshalBinary(KVs)

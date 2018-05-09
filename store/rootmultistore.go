@@ -6,11 +6,10 @@ import (
 
 	"golang.org/x/crypto/ripemd160"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/merkle"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
 const (
@@ -45,7 +44,7 @@ func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 
 // Implements Store.
 func (rs *rootMultiStore) GetStoreType() StoreType {
-	return baseapp.StoreTypeMulti
+	return sdk.StoreTypeMulti
 }
 
 // Implements CommitMultiStore.
@@ -213,12 +212,12 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	store := rs.getStoreByName(storeName)
 	if store == nil {
 		msg := fmt.Sprintf("no such store: %s", storeName)
-		return baseapp.ErrUnknownRequest(msg).QueryResult()
+		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
 	queryable, ok := store.(Queryable)
 	if !ok {
 		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
-		return baseapp.ErrUnknownRequest(msg).QueryResult()
+		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
 
 	// trim the path and make the query
@@ -230,9 +229,9 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 // parsePath expects a format like /<storeName>[/<subpath>]
 // Must start with /, subpath may be empty
 // Returns error if it doesn't start with /
-func parsePath(path string) (storeName string, subpath string, err baseapp.Error) {
+func parsePath(path string) (storeName string, subpath string, err sdk.Error) {
 	if !strings.HasPrefix(path, "/") {
-		err = baseapp.ErrUnknownRequest(fmt.Sprintf("invalid path: %s", path))
+		err = sdk.ErrUnknownRequest(fmt.Sprintf("invalid path: %s", path))
 		return
 	}
 	paths := strings.SplitN(path[1:], "/", 2)
@@ -253,14 +252,14 @@ func (rs *rootMultiStore) loadCommitStoreFromParams(id CommitID, params storePar
 		db = dbm.NewPrefixDB(rs.db, []byte("s/k:"+params.key.Name()+"/"))
 	}
 	switch params.typ {
-	case baseapp.StoreTypeMulti:
+	case sdk.StoreTypeMulti:
 		panic("recursive MultiStores not yet supported")
 		// TODO: id?
 		// return NewCommitMultiStore(db, id)
-	case baseapp.StoreTypeIAVL:
+	case sdk.StoreTypeIAVL:
 		store, err = LoadIAVLStore(db, id)
 		return
-	case baseapp.StoreTypeDB:
+	case sdk.StoreTypeDB:
 		panic("dbm.DB is not a CommitStore")
 	default:
 		panic(fmt.Sprintf("unrecognized store type %v", params.typ))

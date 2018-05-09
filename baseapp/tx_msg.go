@@ -1,6 +1,8 @@
-package types
+package baseapp
 
-import "github.com/cosmos/cosmos-sdk/baseapp"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // Transactions messages must fulfill the Msg
 type Msg interface {
@@ -14,7 +16,7 @@ type Msg interface {
 
 	// ValidateBasic does a simple validation check that
 	// doesn't require access to any other information.
-	ValidateBasic() baseapp.Error
+	ValidateBasic() sdk.Error
 
 	// Signers returns the addrs of signers that must sign.
 	// CONTRACT: All signatures must be present to be valid.
@@ -34,4 +36,4 @@ type Tx interface {
 //__________________________________________________________
 
 // TxDeocder unmarshals transaction bytes
-type TxDecoder func(txBytes []byte) (Tx, baseapp.Error)
+type TxDecoder func(txBytes []byte) (Tx, sdk.Error)

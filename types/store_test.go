@@ -1,4 +1,4 @@
-package baseapp
+package sdk
 
 import (
 	"testing"

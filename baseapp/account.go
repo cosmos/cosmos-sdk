@@ -1,4 +1,4 @@
-package types
+package baseapp
 
 import (
 	cmn "github.com/tendermint/tmlibs/common"

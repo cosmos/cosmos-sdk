@@ -1,4 +1,4 @@
-package types
+package baseapp
 
 import wire "github.com/cosmos/cosmos-sdk/wire"
 

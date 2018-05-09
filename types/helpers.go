@@ -1,4 +1,4 @@
-package baseapp
+package sdk
 
 import (
 	"github.com/tendermint/abci/server"

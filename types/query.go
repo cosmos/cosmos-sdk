@@ -1,4 +1,4 @@
-package baseapp
+package sdk
 
 /*
 	XXX Make this work with MultiStore.

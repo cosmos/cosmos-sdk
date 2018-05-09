@@ -1,4 +1,4 @@
-package baseapp
+package sdk
 
 import (
 	abci "github.com/tendermint/abci/types"

@@ -138,7 +138,7 @@ func subtractCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt 
 		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
 	}
 	err := setCoins(ctx, am, addr, newCoins)
-	tags := sdk.SingleTag(sdk.MakeTag("sender", addr.Bytes()))
+	tags := sdk.NewTags("sender", addr.Bytes())
 	return newCoins, tags, err
 }
 
@@ -150,7 +150,7 @@ func addCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.C
 		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
 	}
 	err := setCoins(ctx, am, addr, newCoins)
-	tags := sdk.SingleTag(sdk.MakeTag("recipient", addr.Bytes()))
+	tags := sdk.NewTags("recipient", addr.Bytes())
 	return newCoins, tags, err
 }
 

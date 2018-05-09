@@ -84,8 +84,8 @@ func (r Rat) Num() int64        { return r.Rat.Num().Int64() }                  
 func (r Rat) Denom() int64      { return r.Rat.Denom().Int64() }                       // Denom  - return the denominator
 func (r Rat) IsZero() bool      { return r.Num() == 0 }                                // IsZero - Is the Rat equal to zero
 func (r Rat) Equal(r2 Rat) bool { return (&(r.Rat)).Cmp(&(r2.Rat)) == 0 }              // Equal - rationals are equal
-func (r Rat) GT(r2 Rat) bool    { return (&(r.Rat)).Cmp(&(r2.Rat)) == 1 }              // Equal - rationals are equal
-func (r Rat) LT(r2 Rat) bool    { return (&(r.Rat)).Cmp(&(r2.Rat)) == -1 }             // Equal - rationals are equal
+func (r Rat) GT(r2 Rat) bool    { return (&(r.Rat)).Cmp(&(r2.Rat)) == 1 }              // GT - Rational is greater than the one it is compared to
+func (r Rat) LT(r2 Rat) bool    { return (&(r.Rat)).Cmp(&(r2.Rat)) == -1 }             // LT - Rational is less than the one it is compared to
 func (r Rat) Mul(r2 Rat) Rat    { return Rat{*new(big.Rat).Mul(&(r.Rat), &(r2.Rat))} } // Mul - multiplication
 func (r Rat) Quo(r2 Rat) Rat    { return Rat{*new(big.Rat).Quo(&(r.Rat), &(r2.Rat))} } // Quo - quotient
 func (r Rat) Add(r2 Rat) Rat    { return Rat{*new(big.Rat).Add(&(r.Rat), &(r2.Rat))} } // Add - addition

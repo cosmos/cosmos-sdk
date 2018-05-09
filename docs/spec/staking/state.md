@@ -63,6 +63,14 @@ The `Candidate` holds the current state and some historical
 actions of validators or candidate-validators. 
 
 ``` go
+type CandidateStatus byte
+
+const (
+    Bonded   CandidateStatus = 0x01
+    Unbonded CandidateStatus = 0x02
+    Revoked  CandidateStatus = 0x03
+)
+
 type Candidate struct {
     Status                 CandidateStatus       
     ConsensusPubKey        crypto.PubKey

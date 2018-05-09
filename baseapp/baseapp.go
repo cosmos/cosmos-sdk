@@ -378,7 +378,7 @@ func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
 
 // txBytes may be nil in some cases, eg. in tests.
 // Also, in the future we may support "internal" transactions.
-func (app *BaseApp) runTx(isCheckTx bool, fullRun bool, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
+func (app *BaseApp) runTx(isCheckTx bool, simulateDeliver bool, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
 	// Handle any panics.
 	defer func() {
 		if r := recover(); r != nil {
@@ -418,7 +418,7 @@ func (app *BaseApp) runTx(isCheckTx bool, fullRun bool, txBytes []byte, tx sdk.T
 	ctx = ctx.WithGasMeter(sdk.NewGasMeter(app.txGasLimit))
 
 	// Simulate a DeliverTx for gas calculation
-	if isCheckTx && fullRun {
+	if isCheckTx && simulateDeliver {
 		ctx = ctx.WithIsCheckTx(false)
 	}
 
@@ -457,8 +457,8 @@ func (app *BaseApp) runTx(isCheckTx bool, fullRun bool, txBytes []byte, tx sdk.T
 	// Set gas utilized
 	result.GasUsed = ctx.GasMeter().GasConsumed()
 
-	// If result was successful, write to app.checkState.ms or app.deliverState.ms
-	if result.IsOK() {
+	// If not a simulated run and result was successful, write to app.checkState.ms or app.deliverState.ms
+	if !simulateDeliver && result.IsOK() {
 		msCache.Write()
 	}
 

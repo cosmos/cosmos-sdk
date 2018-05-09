@@ -1,7 +1,6 @@
 package stake
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -96,15 +95,8 @@ func TestProcessProvisions(t *testing.T) {
 	assert.Equal(t, bondedShares, pool.BondedPool)
 	assert.Equal(t, unbondedShares, pool.UnbondedPool)
 
-	// fmt.Printf("pool bonded ratio: %v\n", pool)
-	bondedRatioTest := pool.bondedRatio()
-	fmt.Println("pool bonded ratio: ", bondedRatioTest) // is 150 mil / 550 mil, or 15/55, divisor 5 is 3/11
-
 	// initial bonded ratio ~ 27%
 	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(bondedShares, totalSupply)), "%v", pool.bondedRatio())
-
-	bondedShareExRateTest := pool.bondedShareExRate()
-	fmt.Println("pool bondedSharExTRate: ", bondedShareExRateTest)
 
 	// test the value of candidate shares
 	assert.True(t, pool.bondedShareExRate().Equal(sdk.OneRat()), "%v", pool.bondedShareExRate())
@@ -115,30 +107,23 @@ func TestProcessProvisions(t *testing.T) {
 	// process the provisions a year
 	for hr := 0; hr < 8766; hr++ {
 		pool := keeper.GetPool(ctx)
-		expInflation := keeper.nextInflation(ctx).Round(1000000000) //so expInflation is the previous inflation in the previous hour, plus or minus the small change
-		// fmt.Printf("Inflation Rate For each hour %v\n", expInflation)
-		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate() // this is %inflation (7-14%) * 550,000,000 / 8766 . provisions are handed out atoms
-		// fmt.Printf("Provisons For each hour %v\n", expProvisions)
+		expInflation := keeper.nextInflation(ctx).Round(1000000000)
+		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
 
-		//so here we are getting the previous amoutns we want to keep, then we run processProvisions which actually adds atoms
-		//then we set the pool, so now its updated
-		//now we compare the old values to the new values plus the inlfation and provisions we got at expInlfation and expProvisions
 		startBondedPool := pool.BondedPool
 		startTotalSupply := pool.TotalSupply
 		provisionTallied = provisionTallied + expProvisions
-		// fmt.Printf("Provisons For this hour: %v NewProvisionTotal : %v\n", expProvisions, provisionTally)
+
 		pool = keeper.processProvisions(ctx)
 		keeper.setPool(ctx, pool)
-		//fmt.Printf("hr %v, startBondedPool %v, expProvisions %v, pool.BondedPool %v\n", hr, startBondedPool, expProvisions, pool.BondedPool)
+
 		require.Equal(t, startBondedPool+expProvisions, pool.BondedPool, "hr %v", hr)
 		require.Equal(t, startTotalSupply+expProvisions, pool.TotalSupply)
 	}
 	pool = keeper.GetPool(ctx)
-	assert.NotEqual(t, initialSupply, pool.TotalSupply) //TODO: this is lazy
+	assert.NotEqual(t, initialSupply, pool.TotalSupply)
 	assert.Equal(t, initialUnbonded, pool.UnbondedPool)
 	//panic(fmt.Sprintf("debug total %v, bonded  %v, diff %v\n", p.TotalSupply, p.BondedPool, pool.TotalSupply-pool.BondedPool))
-	fmt.Printf("debug total %v, \nbonded  %v, \ndiff %v\n", pool.TotalSupply, pool.BondedPool, pool.TotalSupply-pool.BondedPool)
-	// fmt.Println("provisionTally: ", provisionTally)
 
 	calculatedTotalSupply := totalSupply + provisionTallied
 	calculatedBondedSupply := bondedShares + provisionTallied
@@ -151,7 +136,6 @@ func TestProcessProvisions(t *testing.T) {
 	assert.Equal(t, unbondedShares, pool.UnbondedPool)
 
 	// test the value of candidate shares
-	fmt.Printf("what is the new ex rate?: %v ", pool.bondedShareExRate())
 	assert.True(t, pool.bondedShareExRate().Mul(sdk.NewRat(bondedShares)).Equal(sdk.NewRat(calculatedBondedSupply)), "%v", pool.bondedShareExRate())
 }
 
@@ -191,16 +175,8 @@ func TestHourlyRateOfChange(t *testing.T) {
 	assert.Equal(t, bondedShares, pool.BondedPool)
 	assert.Equal(t, unbondedShares, pool.UnbondedPool)
 
-	// // fmt.Printf("pool bonded ratio: %v\n", pool)
-	// bondedRatioTest := pool.bondedRatio()
-	// fmt.Println("pool bonded ratio: ", bondedRatioTest) // is 150 mil / 550 mil, or 15/55, divisor 5 is 3/11
-
 	// initial bonded ratio ~ 27%
 	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(bondedShares, totalSupply)), "%v", pool.bondedRatio())
-
-	// bondedShareExRateTest := pool.bondedShareExRate()
-	// fmt.Println("pool bondedSharExTRate: ", bondedShareExRateTest)
-
 	// test the value of candidate shares
 	assert.True(t, pool.bondedShareExRate().Equal(sdk.OneRat()), "%v", pool.bondedShareExRate())
 
@@ -211,45 +187,32 @@ func TestHourlyRateOfChange(t *testing.T) {
 	for hr := 0; hr < 100000; hr++ {
 		pool := keeper.GetPool(ctx)
 		expInflation := keeper.nextInflation(ctx).Round(1000000000)
-		// expInflationFloat, _ := expInflation.Float64()
-		// fmt.Println("")
-		// fmt.Printf("Yearly Inflation Rate + hour adjusted: %v\n", expInflationFloat*100)
 		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
-		// fmt.Printf("Provisons For each hour %v\n", expProvisions)
-
-		// pbr := pool.bondedRatio()
-		// poolBondedRatio, _ := pbr.Float64()
-		// fmt.Println("Pool bonded Ratio: ", poolBondedRatio*100)
-		// fmt.Println("HOUR: ", hr)
 
 		startBondedPool := pool.BondedPool
 		startTotalSupply := pool.TotalSupply
 		provisionTallied = provisionTallied + expProvisions
 		previousInflation := pool.Inflation
-		// fmt.Printf("Provisons For this hour: %v NewProvisionTotal : %v\n", expProvisions, provisionTally)
+
 		pool = keeper.processProvisions(ctx)
 		keeper.setPool(ctx, pool)
-		//fmt.Printf("hr %v, startBondedPool %v, expProvisions %v, pool.BondedPool %v\n", hr, startBondedPool, expProvisions, pool.BondedPool)
+
 		require.Equal(t, startBondedPool+expProvisions, pool.BondedPool, "hr %v", hr)
 		require.Equal(t, startTotalSupply+expProvisions, pool.TotalSupply)
+
 		updatedInflation := pool.Inflation
 		inflationChange := updatedInflation.Sub(previousInflation)
-		// fmt.Println("Inflation change: ", inflationChange)
-		// pbr2 := pool.bondedRatio()
 
 		//Rate of change positive and increasing, while we are between 7% and 20% inflation
 		if pool.bondedRatio().LT(sdk.NewRat(67, 100)) && expInflation.LT(sdk.NewRat(20, 100)) {
-			// fmt.Println("ROCROC 1: ", inflationChange)
 			assert.Equal(t, true, inflationChange.GT(sdk.ZeroRat()), strconv.Itoa(hr))
 		}
 
 		//Rate of change should be 0 while it holds at 20% a year, until we reach 67%
 		if pool.bondedRatio().LT(sdk.NewRat(67, 100)) && expInflation.Equal(sdk.NewRat(20, 100)) {
-			// fmt.Println("ROCROC 2: ", inflationChange)
-
 			if previousInflation.Equal(sdk.NewRat(20, 100)) {
 				assert.Equal(t, true, inflationChange.IsZero(), strconv.Itoa(hr))
-				//This covers the one off case where we first hit 20%, but we still needed a positive ROC to get there
+				//This else covers the one off case where we first hit 20%, but we still needed a positive ROC to get there
 			} else {
 				assert.Equal(t, true, inflationChange.GT(sdk.ZeroRat()), strconv.Itoa(hr))
 			}
@@ -257,30 +220,23 @@ func TestHourlyRateOfChange(t *testing.T) {
 
 		//Rate of change should be negative while the bond is above 67, and should stay negative until we reach inflation of 7%
 		if pool.bondedRatio().GT(sdk.NewRat(67, 100)) && expInflation.LT(sdk.NewRat(20, 100)) && expInflation.GT(sdk.NewRat(7, 100)) {
-			// fmt.Println("ROCROC 3: ", inflationChange)
 			assert.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), strconv.Itoa(hr))
 		}
 
 		//Rate of change should be 0 while we hold at 7%.
 		if pool.bondedRatio().GT(sdk.NewRat(67, 100)) && expInflation.Equal(sdk.NewRat(7, 100)) {
-
 			if previousInflation.Equal(sdk.NewRat(7, 100)) {
 				assert.Equal(t, true, inflationChange.IsZero(), strconv.Itoa(hr))
-				//This covers the one off case where we first hit 7%, but we still needed a negative ROC to get there
+				//This else covers the one off case where we first hit 7%, but we still needed a negative ROC to get there
 			} else {
 				assert.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), strconv.Itoa(hr))
-
 			}
-			// fmt.Println("ROCROC 4: ", inflationChange)
-
 		}
 	}
+
 	pool = keeper.GetPool(ctx)
 	assert.NotEqual(t, initialSupply, pool.TotalSupply)
 	assert.Equal(t, initialUnbonded, pool.UnbondedPool)
-	//panic(fmt.Sprintf("debug total %v, bonded  %v, diff %v\n", p.TotalSupply, p.BondedPool, pool.TotalSupply-pool.BondedPool))
-	fmt.Printf("debug total %v, \nbonded  %v, \ndiff %v\n", pool.TotalSupply, pool.BondedPool, pool.TotalSupply-pool.BondedPool)
-	// fmt.Println("provisionTally: ", provisionTally)
 
 	calculatedTotalSupply := totalSupply + provisionTallied
 	calculatedBondedSupply := bondedShares + provisionTallied
@@ -293,6 +249,5 @@ func TestHourlyRateOfChange(t *testing.T) {
 	assert.Equal(t, unbondedShares, pool.UnbondedPool)
 
 	// test the value of candidate shares
-	// fmt.Printf("what is the new ex rate?: %v ", pool.bondedShareExRate())
 	assert.True(t, pool.bondedShareExRate().Mul(sdk.NewRat(bondedShares)).Equal(sdk.NewRat(calculatedBondedSupply)), "%v", pool.bondedShareExRate())
 }

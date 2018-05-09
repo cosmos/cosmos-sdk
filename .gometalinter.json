@@ -1,0 +1,5 @@
+{
+    "Linters": {
+        "vet": "go tool vet -composites=false :PATH:LINE:MESSAGE"
+    }
+}

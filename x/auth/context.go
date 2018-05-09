@@ -1,8 +1,6 @@
 package auth
 
-import (
-	bapp "github.com/cosmos/cosmos-sdk/baseapp"
-)
+import sdk "github.com/cosmos/cosmos-sdk/types"
 
 /*
 
@@ -34,12 +32,12 @@ const (
 )
 
 // add the signers to the context
-func WithSigners(ctx bapp.Context, accounts []Account) bapp.Context {
+func WithSigners(ctx sdk.Context, accounts []Account) sdk.Context {
 	return ctx.WithValue(contextKeySigners, accounts)
 }
 
 // get the signers from the context
-func GetSigners(ctx bapp.Context) []Account {
+func GetSigners(ctx sdk.Context) []Account {
 	v := ctx.Value(contextKeySigners)
 	if v == nil {
 		return []Account{}

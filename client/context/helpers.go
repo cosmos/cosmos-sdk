@@ -6,13 +6,14 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	cmn "github.com/tendermint/tmlibs/common"
 
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Broadcast the transaction bytes to Tendermint
@@ -66,7 +67,7 @@ func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, er
 }
 
 // Get the from address from the name flag
-func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
+func (ctx CoreContext) GetFromAddress() (from bam.Address, err error) {
 
 	keybase, err := keys.GetKeyBase()
 	if err != nil {
@@ -87,7 +88,7 @@ func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 }
 
 // sign and build the transaction from the msg
-func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *wire.Codec) ([]byte, error) {
+func (ctx CoreContext) SignAndBuild(name, passphrase string, msg bam.Msg, cdc *wire.Codec) ([]byte, error) {
 
 	// build the Sign Messsage from the Standard Message
 	chainID := ctx.ChainID
@@ -95,7 +96,7 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 		return nil, errors.Errorf("Chain ID required but not specified")
 	}
 	sequence := ctx.Sequence
-	signMsg := sdk.StdSignMsg{
+	signMsg := auth.StdSignMsg{
 		ChainID:   chainID,
 		Sequences: []int64{sequence},
 		Msg:       msg,
@@ -113,20 +114,20 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 	if err != nil {
 		return nil, err
 	}
-	sigs := []sdk.StdSignature{{
+	sigs := []auth.StdSignature{{
 		PubKey:    pubkey,
 		Signature: sig,
 		Sequence:  sequence,
 	}}
 
 	// marshal bytes
-	tx := sdk.NewStdTx(signMsg.Msg, signMsg.Fee, sigs)
+	tx := auth.NewStdTx(signMsg.Msg, signMsg.Fee, sigs)
 
 	return cdc.MarshalBinary(tx)
 }
 
 // sign and build the transaction from the msg
-func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
+func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg bam.Msg, cdc *wire.Codec) (res *ctypes.ResultBroadcastTxCommit, err error) {
 
 	// default to next sequence number if none provided
 	ctx, err = EnsureSequence(ctx)

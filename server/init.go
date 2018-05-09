@@ -24,8 +24,8 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
@@ -321,14 +321,14 @@ var DefaultAppInit = AppInit{
 
 // simple genesis tx
 type SimpleGenTx struct {
-	Addr sdk.Address `json:"addr"`
+	Addr bam.Address `json:"addr"`
 }
 
 // Generate a genesis transaction
 func SimpleAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
-	var addr sdk.Address
+	var addr bam.Address
 	var secret string
 	addr, secret, err = GenerateCoinKey()
 	if err != nil {
@@ -389,7 +389,7 @@ func SimpleAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState j
 
 // GenerateCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateCoinKey() (sdk.Address, string, error) {
+func GenerateCoinKey() (bam.Address, string, error) {
 
 	// construct an in-memory key store
 	codec, err := words.LoadCodec("english")
@@ -412,7 +412,7 @@ func GenerateCoinKey() (sdk.Address, string, error) {
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (sdk.Address, string, error) {
+func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (bam.Address, string, error) {
 
 	// get the keystore from the client
 	keybase, err := clkeys.GetKeyBaseFromDir(clientRoot)

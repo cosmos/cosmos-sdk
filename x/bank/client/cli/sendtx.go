@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/client"
@@ -38,11 +38,11 @@ func SendTxCmd(cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			to := sdk.Address(bz)
+			to := bam.Address(bz)
 
 			// parse coins
 			amount := viper.GetString(flagAmount)
-			coins, err := sdk.ParseCoins(amount)
+			coins, err := bam.ParseCoins(amount)
 			if err != nil {
 				return err
 			}

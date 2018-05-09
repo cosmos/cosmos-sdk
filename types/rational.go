@@ -1,12 +1,10 @@
-package baseapp
+package sdk
 
 import (
 	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 //   "that's one big rat!"
@@ -39,7 +37,7 @@ func NewRat(Numerator int64, Denominator ...int64) Rat {
 }
 
 // create a rational from decimal string or integer string
-func NewRatFromDecimal(decimalStr string) (f Rat, err sdk.Error) {
+func NewRatFromDecimal(decimalStr string) (f Rat, err Error) {
 
 	// first extract any negative symbol
 	neg := false

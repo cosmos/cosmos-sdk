@@ -6,16 +6,16 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 )
 
 func TestNewMsgSend(t *testing.T) {}
 
 func TestMsgSendType(t *testing.T) {
 	// Construct a MsgSend
-	addr1 := sdk.Address([]byte("input"))
-	addr2 := sdk.Address([]byte("output"))
-	coins := sdk.Coins{{"atom", 10}}
+	addr1 := bam.Address([]byte("input"))
+	addr2 := bam.Address([]byte("output"))
+	coins := bam.Coins{{"atom", 10}}
 	var msg = MsgSend{
 		Inputs:  []Input{NewInput(addr1, coins)},
 		Outputs: []Output{NewOutput(addr2, coins)},
@@ -26,18 +26,18 @@ func TestMsgSendType(t *testing.T) {
 }
 
 func TestInputValidation(t *testing.T) {
-	addr1 := sdk.Address([]byte{1, 2})
-	addr2 := sdk.Address([]byte{7, 8})
-	someCoins := sdk.Coins{{"atom", 123}}
-	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
+	addr1 := bam.Address([]byte{1, 2})
+	addr2 := bam.Address([]byte{7, 8})
+	someCoins := bam.Coins{{"atom", 123}}
+	multiCoins := bam.Coins{{"atom", 123}, {"eth", 20}}
 
-	var emptyAddr sdk.Address
-	emptyCoins := sdk.Coins{}
-	emptyCoins2 := sdk.Coins{{"eth", 0}}
-	someEmptyCoins := sdk.Coins{{"eth", 10}, {"atom", 0}}
-	minusCoins := sdk.Coins{{"eth", -34}}
-	someMinusCoins := sdk.Coins{{"atom", 20}, {"eth", -34}}
-	unsortedCoins := sdk.Coins{{"eth", 1}, {"atom", 1}}
+	var emptyAddr bam.Address
+	emptyCoins := bam.Coins{}
+	emptyCoins2 := bam.Coins{{"eth", 0}}
+	someEmptyCoins := bam.Coins{{"eth", 10}, {"atom", 0}}
+	minusCoins := bam.Coins{{"eth", -34}}
+	someMinusCoins := bam.Coins{{"atom", 20}, {"eth", -34}}
+	unsortedCoins := bam.Coins{{"eth", 1}, {"atom", 1}}
 
 	cases := []struct {
 		valid bool
@@ -68,18 +68,18 @@ func TestInputValidation(t *testing.T) {
 }
 
 func TestOutputValidation(t *testing.T) {
-	addr1 := sdk.Address([]byte{1, 2})
-	addr2 := sdk.Address([]byte{7, 8})
-	someCoins := sdk.Coins{{"atom", 123}}
-	multiCoins := sdk.Coins{{"atom", 123}, {"eth", 20}}
+	addr1 := bam.Address([]byte{1, 2})
+	addr2 := bam.Address([]byte{7, 8})
+	someCoins := bam.Coins{{"atom", 123}}
+	multiCoins := bam.Coins{{"atom", 123}, {"eth", 20}}
 
-	var emptyAddr sdk.Address
-	emptyCoins := sdk.Coins{}
-	emptyCoins2 := sdk.Coins{{"eth", 0}}
-	someEmptyCoins := sdk.Coins{{"eth", 10}, {"atom", 0}}
-	minusCoins := sdk.Coins{{"eth", -34}}
-	someMinusCoins := sdk.Coins{{"atom", 20}, {"eth", -34}}
-	unsortedCoins := sdk.Coins{{"eth", 1}, {"atom", 1}}
+	var emptyAddr bam.Address
+	emptyCoins := bam.Coins{}
+	emptyCoins2 := bam.Coins{{"eth", 0}}
+	someEmptyCoins := bam.Coins{{"eth", 10}, {"atom", 0}}
+	minusCoins := bam.Coins{{"eth", -34}}
+	someMinusCoins := bam.Coins{{"atom", 20}, {"eth", -34}}
+	unsortedCoins := bam.Coins{{"eth", 1}, {"atom", 1}}
 
 	cases := []struct {
 		valid bool
@@ -110,12 +110,12 @@ func TestOutputValidation(t *testing.T) {
 }
 
 func TestMsgSendValidation(t *testing.T) {
-	addr1 := sdk.Address([]byte{1, 2})
-	addr2 := sdk.Address([]byte{7, 8})
-	atom123 := sdk.Coins{{"atom", 123}}
-	atom124 := sdk.Coins{{"atom", 124}}
-	eth123 := sdk.Coins{{"eth", 123}}
-	atom123eth123 := sdk.Coins{{"atom", 123}, {"eth", 123}}
+	addr1 := bam.Address([]byte{1, 2})
+	addr2 := bam.Address([]byte{7, 8})
+	atom123 := bam.Coins{{"atom", 123}}
+	atom124 := bam.Coins{{"atom", 124}}
+	eth123 := bam.Coins{{"eth", 123}}
+	atom123eth123 := bam.Coins{{"atom", 123}, {"eth", 123}}
 
 	input1 := NewInput(addr1, atom123)
 	input2 := NewInput(addr1, eth123)
@@ -124,7 +124,7 @@ func TestMsgSendValidation(t *testing.T) {
 	output3 := NewOutput(addr2, eth123)
 	outputMulti := NewOutput(addr2, atom123eth123)
 
-	var emptyAddr sdk.Address
+	var emptyAddr bam.Address
 
 	cases := []struct {
 		valid bool
@@ -178,9 +178,9 @@ func TestMsgSendValidation(t *testing.T) {
 }
 
 func TestMsgSendGetSignBytes(t *testing.T) {
-	addr1 := sdk.Address([]byte("input"))
-	addr2 := sdk.Address([]byte("output"))
-	coins := sdk.Coins{{"atom", 10}}
+	addr1 := bam.Address([]byte("input"))
+	addr2 := bam.Address([]byte("output"))
+	coins := bam.Coins{{"atom", 10}}
 	var msg = MsgSend{
 		Inputs:  []Input{NewInput(addr1, coins)},
 		Outputs: []Output{NewOutput(addr2, coins)},
@@ -193,9 +193,9 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 func TestMsgSendGetSigners(t *testing.T) {
 	var msg = MsgSend{
 		Inputs: []Input{
-			NewInput(sdk.Address([]byte("input1")), nil),
-			NewInput(sdk.Address([]byte("input2")), nil),
-			NewInput(sdk.Address([]byte("input3")), nil),
+			NewInput(bam.Address([]byte("input1")), nil),
+			NewInput(bam.Address([]byte("input2")), nil),
+			NewInput(bam.Address([]byte("input3")), nil),
 		},
 	}
 	res := msg.GetSigners()
@@ -206,13 +206,13 @@ func TestMsgSendGetSigners(t *testing.T) {
 /*
 // what to do w/ this test?
 func TestMsgSendSigners(t *testing.T) {
-	signers := []sdk.Address{
+	signers := []bam.Address{
 		{1, 2, 3},
 		{4, 5, 6},
 		{7, 8, 9},
 	}
 
-	someCoins := sdk.Coins{{"atom", 123}}
+	someCoins := bam.Coins{{"atom", 123}}
 	inputs := make([]Input, len(signers))
 	for i, signer := range signers {
 		inputs[i] = NewInput(signer, someCoins)
@@ -232,10 +232,10 @@ func TestNewMsgIssue(t *testing.T) {
 
 func TestMsgIssueType(t *testing.T) {
 	// Construct an MsgIssue
-	addr := sdk.Address([]byte("loan-from-bank"))
-	coins := sdk.Coins{{"atom", 10}}
+	addr := bam.Address([]byte("loan-from-bank"))
+	coins := bam.Coins{{"atom", 10}}
 	var msg = MsgIssue{
-		Banker:  sdk.Address([]byte("input")),
+		Banker:  bam.Address([]byte("input")),
 		Outputs: []Output{NewOutput(addr, coins)},
 	}
 
@@ -248,10 +248,10 @@ func TestMsgIssueValidation(t *testing.T) {
 }
 
 func TestMsgIssueGetSignBytes(t *testing.T) {
-	addr := sdk.Address([]byte("loan-from-bank"))
-	coins := sdk.Coins{{"atom", 10}}
+	addr := bam.Address([]byte("loan-from-bank"))
+	coins := bam.Coins{{"atom", 10}}
 	var msg = MsgIssue{
-		Banker:  sdk.Address([]byte("input")),
+		Banker:  bam.Address([]byte("input")),
 		Outputs: []Output{NewOutput(addr, coins)},
 	}
 	res := msg.GetSignBytes()
@@ -261,7 +261,7 @@ func TestMsgIssueGetSignBytes(t *testing.T) {
 
 func TestMsgIssueGetSigners(t *testing.T) {
 	var msg = MsgIssue{
-		Banker: sdk.Address([]byte("onlyone")),
+		Banker: bam.Address([]byte("onlyone")),
 	}
 	res := msg.GetSigners()
 	assert.Equal(t, fmt.Sprintf("%v", res), "[6F6E6C796F6E65]")

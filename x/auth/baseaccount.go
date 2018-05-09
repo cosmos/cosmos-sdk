@@ -5,7 +5,8 @@ import (
 
 	"github.com/tendermint/go-crypto"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
+
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
@@ -18,25 +19,25 @@ var _ Account = (*BaseAccount)(nil)
 // Extend this by embedding this in your AppAccount.
 // See the examples/basecoin/types/account.go for an example.
 type BaseAccount struct {
-	Address  sdk.Address   `json:"address"`
-	Coins    sdk.Coins     `json:"coins"`
+	Address  bam.Address   `json:"address"`
+	Coins    bam.Coins     `json:"coins"`
 	PubKey   crypto.PubKey `json:"public_key"`
 	Sequence int64         `json:"sequence"`
 }
 
-func NewBaseAccountWithAddress(addr sdk.Address) BaseAccount {
+func NewBaseAccountWithAddress(addr bam.Address) BaseAccount {
 	return BaseAccount{
 		Address: addr,
 	}
 }
 
 // Implements Account.
-func (acc *BaseAccount) GetAddress() sdk.Address {
+func (acc *BaseAccount) GetAddress() bam.Address {
 	return acc.Address
 }
 
 // Implements Account.
-func (acc *BaseAccount) SetAddress(addr sdk.Address) error {
+func (acc *BaseAccount) SetAddress(addr bam.Address) error {
 	if len(acc.Address) != 0 {
 		return errors.New("cannot override BaseAccount address")
 	}
@@ -59,12 +60,12 @@ func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
 }
 
 // Implements Account.
-func (acc *BaseAccount) GetCoins() sdk.Coins {
+func (acc *BaseAccount) GetCoins() bam.Coins {
 	return acc.Coins
 }
 
 // Implements Account.
-func (acc *BaseAccount) SetCoins(coins sdk.Coins) error {
+func (acc *BaseAccount) SetCoins(coins bam.Coins) error {
 	acc.Coins = coins
 	return nil
 }

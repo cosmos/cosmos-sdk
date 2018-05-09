@@ -3,12 +3,13 @@ package ibc
 import (
 	"reflect"
 
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-func NewHandler(ibcm Mapper, ck bank.Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+func NewHandler(ibcm Mapper, ck bank.Keeper) bam.Handler {
+	return func(ctx sdk.Context, msg bam.Msg) sdk.Result {
 		switch msg := msg.(type) {
 		case IBCTransferMsg:
 			return handleIBCTransferMsg(ctx, ibcm, ck, msg)

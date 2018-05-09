@@ -1,12 +1,12 @@
 package client
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	bank "github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 // build the sendTx msg
-func BuildMsg(from sdk.Address, to sdk.Address, coins sdk.Coins) sdk.Msg {
+func BuildMsg(from bam.Address, to bam.Address, coins bam.Coins) bam.Msg {
 	input := bank.NewInput(from, coins)
 	output := bank.NewOutput(to, coins)
 	msg := bank.NewMsgSend([]bank.Input{input}, []bank.Output{output})

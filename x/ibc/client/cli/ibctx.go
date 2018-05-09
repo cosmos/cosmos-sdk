@@ -59,7 +59,7 @@ func IBCTransferCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-func buildMsg(from sdk.Address) (sdk.Msg, error) {
+func buildMsg(from bam.Address) (sdk.Msg, error) {
 	amount := viper.GetString(flagAmount)
 	coins, err := sdk.ParseCoins(amount)
 	if err != nil {
@@ -71,7 +71,7 @@ func buildMsg(from sdk.Address) (sdk.Msg, error) {
 	if err != nil {
 		return nil, err
 	}
-	to := sdk.Address(bz)
+	to := bam.Address(bz)
 
 	packet := ibc.NewIBCPacket(from, to, coins, viper.GetString(client.FlagChainID),
 		viper.GetString(flagChain))

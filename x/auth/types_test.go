@@ -6,18 +6,16 @@ import (
 
 	"github.com/magiconair/properties/assert"
 	crypto "github.com/tendermint/go-crypto"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ sdk.Msg = (*TestMsg)(nil)
+var _ bam.Msg = (*TestMsg)(nil)
 
 // msg type for testing
 type TestMsg struct {
-	signers []sdk.Address
+	signers []bam.Address
 }
 
-func NewTestMsg(addrs ...sdk.Address) *TestMsg {
+func NewTestMsg(addrs ...bam.Address) *TestMsg {
 	return &TestMsg{
 		signers: addrs,
 	}
@@ -32,14 +30,14 @@ func (msg *TestMsg) GetSignBytes() []byte {
 	}
 	return bz
 }
-func (msg *TestMsg) ValidateBasic() sdk.Error { return nil }
-func (msg *TestMsg) GetSigners() []sdk.Address {
+func (msg *TestMsg) ValidateBasic() bam.Error { return nil }
+func (msg *TestMsg) GetSigners() []bam.Address {
 	return msg.signers
 }
 
 func newStdFee() StdFee {
 	return NewStdFee(100,
-		sdk.Coin{"atom", 150},
+		bam.Coin{"atom", 150},
 	)
 }
 

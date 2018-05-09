@@ -3,7 +3,7 @@ package bank
 import (
 	"encoding/json"
 
-	bapp "github.com/cosmos/cosmos-sdk/baseapp"
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,7 +13,7 @@ type MsgSend struct {
 	Outputs []Output `json:"outputs"`
 }
 
-var _ sdk.Msg = MsgSend{}
+var _ bam.Msg = MsgSend{}
 
 // NewMsgSend - construct arbitrary multi-in, multi-out send msg.
 func NewMsgSend(in []Input, out []Output) MsgSend {
@@ -24,7 +24,7 @@ func NewMsgSend(in []Input, out []Output) MsgSend {
 func (msg MsgSend) Type() string { return "bank" } // TODO: "bank/send"
 
 // Implements Msg.
-func (msg MsgSend) ValidateBasic() bapp.Error {
+func (msg MsgSend) ValidateBasic() sdk.Error {
 	// this just makes sure all the inputs and outputs are properly formatted,
 	// not that they actually have the money inside
 	if len(msg.Inputs) == 0 {
@@ -34,7 +34,7 @@ func (msg MsgSend) ValidateBasic() bapp.Error {
 		return ErrNoOutputs(DefaultCodespace).Trace("")
 	}
 	// make sure all inputs and outputs are individually valid
-	var totalIn, totalOut sdk.Coins
+	var totalIn, totalOut bam.Coins
 	for _, in := range msg.Inputs {
 		if err := in.ValidateBasic(); err != nil {
 			return err.Trace("")
@@ -49,7 +49,7 @@ func (msg MsgSend) ValidateBasic() bapp.Error {
 	}
 	// make sure inputs and outputs match
 	if !totalIn.IsEqual(totalOut) {
-		return sdk.ErrInvalidCoins(totalIn.String()).Trace("inputs and outputs don't match")
+		return bam.ErrInvalidCoins(totalIn.String()).Trace("inputs and outputs don't match")
 	}
 	return nil
 }
@@ -64,8 +64,8 @@ func (msg MsgSend) GetSignBytes() []byte {
 }
 
 // Implements Msg.
-func (msg MsgSend) GetSigners() []sdk.Address {
-	addrs := make([]sdk.Address, len(msg.Inputs))
+func (msg MsgSend) GetSigners() []bam.Address {
+	addrs := make([]bam.Address, len(msg.Inputs))
 	for i, in := range msg.Inputs {
 		addrs[i] = in.Address
 	}
@@ -77,12 +77,12 @@ func (msg MsgSend) GetSigners() []sdk.Address {
 
 // MsgIssue - high level transaction of the coin module
 type MsgIssue struct {
-	Banker  sdk.Address `json:"banker"`
+	Banker  bam.Address `json:"banker"`
 	Outputs []Output    `json:"outputs"`
 }
 
 // NewMsgIssue - construct arbitrary multi-in, multi-out send msg.
-func NewMsgIssue(banker sdk.Address, out []Output) MsgIssue {
+func NewMsgIssue(banker bam.Address, out []Output) MsgIssue {
 	return MsgIssue{Banker: banker, Outputs: out}
 }
 
@@ -90,7 +90,7 @@ func NewMsgIssue(banker sdk.Address, out []Output) MsgIssue {
 func (msg MsgIssue) Type() string { return "bank" } // TODO: "bank/issue"
 
 // Implements Msg.
-func (msg MsgIssue) ValidateBasic() bapp.Error {
+func (msg MsgIssue) ValidateBasic() sdk.Error {
 	// XXX
 	if len(msg.Outputs) == 0 {
 		return ErrNoOutputs(DefaultCodespace).Trace("")
@@ -113,8 +113,8 @@ func (msg MsgIssue) GetSignBytes() []byte {
 }
 
 // Implements Msg.
-func (msg MsgIssue) GetSigners() []sdk.Address {
-	return []sdk.Address{msg.Banker}
+func (msg MsgIssue) GetSigners() []bam.Address {
+	return []bam.Address{msg.Banker}
 }
 
 //----------------------------------------
@@ -122,26 +122,26 @@ func (msg MsgIssue) GetSigners() []sdk.Address {
 
 // Transaction Output
 type Input struct {
-	Address sdk.Address `json:"address"`
-	Coins   sdk.Coins   `json:"coins"`
+	Address bam.Address `json:"address"`
+	Coins   bam.Coins   `json:"coins"`
 }
 
 // ValidateBasic - validate transaction input
-func (in Input) ValidateBasic() bapp.Error {
+func (in Input) ValidateBasic() sdk.Error {
 	if len(in.Address) == 0 {
-		return sdk.ErrInvalidAddress(in.Address.String())
+		return bam.ErrInvalidAddress(in.Address.String())
 	}
 	if !in.Coins.IsValid() {
-		return sdk.ErrInvalidCoins(in.Coins.String())
+		return bam.ErrInvalidCoins(in.Coins.String())
 	}
 	if !in.Coins.IsPositive() {
-		return sdk.ErrInvalidCoins(in.Coins.String())
+		return bam.ErrInvalidCoins(in.Coins.String())
 	}
 	return nil
 }
 
 // NewInput - create a transaction input, used with MsgSend
-func NewInput(addr sdk.Address, coins sdk.Coins) Input {
+func NewInput(addr bam.Address, coins bam.Coins) Input {
 	input := Input{
 		Address: addr,
 		Coins:   coins,
@@ -154,26 +154,26 @@ func NewInput(addr sdk.Address, coins sdk.Coins) Input {
 
 // Transaction Output
 type Output struct {
-	Address sdk.Address `json:"address"`
-	Coins   sdk.Coins   `json:"coins"`
+	Address bam.Address `json:"address"`
+	Coins   bam.Coins   `json:"coins"`
 }
 
 // ValidateBasic - validate transaction output
-func (out Output) ValidateBasic() bapp.Error {
+func (out Output) ValidateBasic() sdk.Error {
 	if len(out.Address) == 0 {
-		return sdk.ErrInvalidAddress(out.Address.String())
+		return bam.ErrInvalidAddress(out.Address.String())
 	}
 	if !out.Coins.IsValid() {
-		return sdk.ErrInvalidCoins(out.Coins.String())
+		return bam.ErrInvalidCoins(out.Coins.String())
 	}
 	if !out.Coins.IsPositive() {
-		return sdk.ErrInvalidCoins(out.Coins.String())
+		return bam.ErrInvalidCoins(out.Coins.String())
 	}
 	return nil
 }
 
 // NewOutput - create a transaction output, used with MsgSend
-func NewOutput(addr sdk.Address, coins sdk.Coins) Output {
+func NewOutput(addr bam.Address, coins bam.Coins) Output {
 	output := Output{
 		Address: addr,
 		Coins:   coins,

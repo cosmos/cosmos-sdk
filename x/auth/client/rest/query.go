@@ -8,7 +8,6 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
@@ -22,7 +21,7 @@ func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, sto
 }
 
 // query accountREST Handler
-func QueryAccountRequestHandlerFn(storeName string, cdc *wire.Codec, decoder sdk.AccountDecoder, ctx context.CoreContext) http.HandlerFunc {
+func QueryAccountRequestHandlerFn(storeName string, cdc *wire.Codec, decoder auth.AccountDecoder, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		addr := vars["address"]
@@ -33,7 +32,7 @@ func QueryAccountRequestHandlerFn(storeName string, cdc *wire.Codec, decoder sdk
 			w.Write([]byte(err.Error()))
 			return
 		}
-		key := sdk.Address(bz)
+		key := auth.Address(bz)
 
 		res, err := ctx.Query(key, storeName)
 		if err != nil {

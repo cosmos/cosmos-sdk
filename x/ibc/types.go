@@ -1,8 +1,8 @@
 package ibc
 
 import (
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
@@ -13,14 +13,14 @@ import (
 // IBCPacket defines a piece of data that can be send between two separate
 // blockchains.
 type IBCPacket struct {
-	SrcAddr   sdk.Address
-	DestAddr  sdk.Address
-	Coins     sdk.Coins
+	SrcAddr   bam.Address
+	DestAddr  bam.Address
+	Coins     bam.Coins
 	SrcChain  string
 	DestChain string
 }
 
-func NewIBCPacket(srcAddr sdk.Address, destAddr sdk.Address, coins sdk.Coins,
+func NewIBCPacket(srcAddr bam.Address, destAddr bam.Address, coins bam.Coins,
 	srcChain string, destChain string) IBCPacket {
 
 	return IBCPacket{
@@ -38,7 +38,7 @@ func (ibcp IBCPacket) ValidateBasic() sdk.Error {
 		return ErrIdenticalChains(DefaultCodespace).Trace("")
 	}
 	if !ibcp.Coins.IsValid() {
-		return sdk.ErrInvalidCoins("")
+		return bam.ErrInvalidCoins("")
 	}
 	return nil
 }
@@ -56,7 +56,7 @@ type IBCTransferMsg struct {
 func (msg IBCTransferMsg) Type() string { return "ibc" }
 
 // x/bank/tx.go MsgSend.GetSigners()
-func (msg IBCTransferMsg) GetSigners() []sdk.Address { return []sdk.Address{msg.SrcAddr} }
+func (msg IBCTransferMsg) GetSigners() []bam.Address { return []bam.Address{msg.SrcAddr} }
 
 // get the sign bytes for ibc transfer message
 func (msg IBCTransferMsg) GetSignBytes() []byte {
@@ -81,7 +81,7 @@ func (msg IBCTransferMsg) ValidateBasic() sdk.Error {
 // to the destination chain.
 type IBCReceiveMsg struct {
 	IBCPacket
-	Relayer  sdk.Address
+	Relayer  bam.Address
 	Sequence int64
 }
 
@@ -90,7 +90,7 @@ func (msg IBCReceiveMsg) Type() string             { return "ibc" }
 func (msg IBCReceiveMsg) ValidateBasic() sdk.Error { return msg.IBCPacket.ValidateBasic() }
 
 // x/bank/tx.go MsgSend.GetSigners()
-func (msg IBCReceiveMsg) GetSigners() []sdk.Address { return []sdk.Address{msg.Relayer} }
+func (msg IBCReceiveMsg) GetSigners() []bam.Address { return []bam.Address{msg.Relayer} }
 
 // get the sign bytes for ibc receive message
 func (msg IBCReceiveMsg) GetSignBytes() []byte {

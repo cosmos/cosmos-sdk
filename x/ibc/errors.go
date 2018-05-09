@@ -1,6 +1,7 @@
 package ibc
 
 import (
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,7 +22,7 @@ func codeToDefaultMsg(code sdk.CodeType) string {
 	case CodeIdenticalChains:
 		return "Source and destination chain cannot be identical"
 	default:
-		return sdk.CodeToDefaultMsg(code)
+		return bam.CodeToDefaultMsg(code)
 	}
 }
 

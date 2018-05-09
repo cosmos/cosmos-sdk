@@ -41,9 +41,9 @@ func NewApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *BaseApp
 
 	cms := store.NewCommitMultiStore(db)
 
-	baseapp := sdk.NewBaseApp(name, logger, db, cms)
+	sdkapp := sdk.NewApp(name, logger, db, cms)
 	app := &BaseApp{
-		BaseApp:     baseapp,
+		App:         sdkapp,
 		router:      NewRouter(),
 		txDecoder:   defaultTxDecoder(cdc),
 		anteHandler: nil,
@@ -110,14 +110,14 @@ func (app *BaseApp) DeliverTx(txBytes []byte) abci.ResponseDeliverTx {
 
 // Implements ABCI
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	res = app.sdk.BeginBlock(req)
+	res = app.App.BeginBlock(req)
 	// TODO
 	return
 }
 
 // Implements ABCI
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-	res = app.sdk.EndBlock(req)
+	res = app.App.EndBlock(req)
 	// TODO
 	return
 }

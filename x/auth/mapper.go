@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"reflect"
 
-	bapp "github.com/cosmos/cosmos-sdk/baseapp"
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
-// Implements sdk.AccountMapper.
+// Implements bam.AccountMapper.
 // This AccountMapper encodes/decodes accounts using the
 // go-amino (binary) encoding/decoding library.
 type AccountMapper struct {
 
 	// The (unexposed) key used to access the store from the Context.
-	key bapp.StoreKey
+	key sdk.StoreKey
 
-	// The prototypical sdk.Account concrete type.
+	// The prototypical bam.Account concrete type.
 	proto Account
 
 	// The wire codec for binary encoding/decoding of accounts.
@@ -25,9 +25,9 @@ type AccountMapper struct {
 }
 
 // NewAccountMapper returns a new AccountMapper that
-// uses go-amino to (binary) encode and decode concrete sdk.Accounts.
+// uses go-amino to (binary) encode and decode concrete bam.Accounts.
 // nolint
-func NewAccountMapper(cdc *wire.Codec, key bapp.StoreKey, proto Account) AccountMapper {
+func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto Account) AccountMapper {
 	return AccountMapper{
 		key:   key,
 		proto: proto,
@@ -36,14 +36,14 @@ func NewAccountMapper(cdc *wire.Codec, key bapp.StoreKey, proto Account) Account
 }
 
 // Creates a new account using the address
-func (am AccountMapper) NewAccountWithAddress(ctx bapp.Context, addr sdk.Address) Account {
+func (am AccountMapper) NewAccountWithAddress(ctx sdk.Context, addr bam.Address) Account {
 	acc := am.clonePrototype()
 	acc.SetAddress(addr)
 	return acc
 }
 
 // Gets an Account by Address
-func (am AccountMapper) GetAccount(ctx bapp.Context, addr sdk.Address) Account {
+func (am AccountMapper) GetAccount(ctx sdk.Context, addr bam.Address) Account {
 	store := ctx.KVStore(am.key)
 	bz := store.Get(addr)
 	if bz == nil {
@@ -54,7 +54,7 @@ func (am AccountMapper) GetAccount(ctx bapp.Context, addr sdk.Address) Account {
 }
 
 // Sets an Account
-func (am AccountMapper) SetAccount(ctx bapp.Context, acc Account) {
+func (am AccountMapper) SetAccount(ctx sdk.Context, acc Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(am.key)
 	bz := am.encodeAccount(acc)
@@ -62,7 +62,7 @@ func (am AccountMapper) SetAccount(ctx bapp.Context, acc Account) {
 }
 
 // Iterates over all accounts and filters by process
-func (am AccountMapper) IterateAccounts(ctx bapp.Context, process func(Account) (stop bool)) {
+func (am AccountMapper) IterateAccounts(ctx sdk.Context, process func(Account) (stop bool)) {
 	store := ctx.KVStore(am.key)
 	iter := store.Iterator(nil, nil)
 	for {
@@ -87,12 +87,12 @@ func (am AccountMapper) clonePrototype() Account {
 	if protoRt.Kind() == reflect.Ptr {
 		protoCrt := protoRt.Elem()
 		if protoCrt.Kind() != reflect.Struct {
-			panic("accountMapper requires a struct proto sdk.Account, or a pointer to one")
+			panic("accountMapper requires a struct proto bam.Account, or a pointer to one")
 		}
 		protoRv := reflect.New(protoCrt)
 		clone, ok := protoRv.Interface().(Account)
 		if !ok {
-			panic(fmt.Sprintf("accountMapper requires a proto sdk.Account, but %v doesn't implement sdk.Account", protoRt))
+			panic(fmt.Sprintf("accountMapper requires a proto bam.Account, but %v doesn't implement bam.Account", protoRt))
 		}
 		return clone
 	}
@@ -100,7 +100,7 @@ func (am AccountMapper) clonePrototype() Account {
 	protoRv := reflect.New(protoRt).Elem()
 	clone, ok := protoRv.Interface().(Account)
 	if !ok {
-		panic(fmt.Sprintf("accountMapper requires a proto sdk.Account, but %v doesn't implement sdk.Account", protoRt))
+		panic(fmt.Sprintf("accountMapper requires a proto bam.Account, but %v doesn't implement bam.Account", protoRt))
 	}
 	return clone
 }

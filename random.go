@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	crand "crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"io"
 	"sync"
@@ -72,8 +73,12 @@ type randInfo struct {
 func (ri *randInfo) MixEntropy(seedBytes []byte) {
 	ri.mtx.Lock()
 	defer ri.mtx.Unlock()
-	// Make new ri.seedBytes
-	hashBytes := Sha256(seedBytes)
+	// Make new ri.seedBytes using passed seedBytes and current ri.seedBytes:
+	// ri.seedBytes = sha256( seedBytes || ri.seedBytes )
+	h := sha256.New()
+	h.Write(seedBytes)
+	h.Write(ri.seedBytes[:])
+	hashBytes := h.Sum(nil)
 	hashBytes32 := [32]byte{}
 	copy(hashBytes32[:], hashBytes)
 	ri.seedBytes = xorBytes32(ri.seedBytes, hashBytes32)

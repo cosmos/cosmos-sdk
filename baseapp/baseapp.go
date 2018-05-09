@@ -314,7 +314,7 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(true, txBytes, tx)
+		result = app.runTx(true, false, txBytes, tx)
 	}
 
 	return abci.ResponseCheckTx{
@@ -339,7 +339,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(false, txBytes, tx)
+		result = app.runTx(false, false, txBytes, tx)
 	}
 
 	// After-handler hooks.
@@ -361,17 +361,24 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	}
 }
 
-// nolint- Mostly for testing
+// nolint - Mostly for testing
 func (app *BaseApp) Check(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(true, nil, tx)
+	return app.runTx(true, false, nil, tx)
 }
+
+// nolint - full tx execution
+func (app *BaseApp) CheckFull(tx sdk.Tx) (result sdk.Result) {
+	return app.runTx(true, true, nil, tx)
+}
+
+// nolint
 func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(false, nil, tx)
+	return app.runTx(false, false, nil, tx)
 }
 
 // txBytes may be nil in some cases, eg. in tests.
 // Also, in the future we may support "internal" transactions.
-func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
+func (app *BaseApp) runTx(isCheckTx bool, fullRun bool, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
 	// Handle any panics.
 	defer func() {
 		if r := recover(); r != nil {
@@ -407,6 +414,14 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
 	}
 
+	// Create a new zeroed gas meter
+	ctx = ctx.WithGasMeter(sdk.NewGasMeter(app.txGasLimit))
+
+	// Simulate a DeliverTx for gas calculation
+	if isCheckTx && fullRun {
+		ctx = ctx.WithIsCheckTx(false)
+	}
+
 	// Run the ante handler.
 	if app.anteHandler != nil {
 		newCtx, result, abort := app.anteHandler(ctx, tx)
@@ -427,7 +442,7 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// Get the correct cache
 	var msCache sdk.CacheMultiStore
-	if isCheckTx == true {
+	if isCheckTx {
 		// CacheWrap app.checkState.ms in case it fails.
 		msCache = app.checkState.CacheMultiStore()
 		ctx = ctx.WithMultiStore(msCache)
@@ -435,7 +450,6 @@ func (app *BaseApp) runTx(isCheckTx bool, txBytes []byte, tx sdk.Tx) (result sdk
 		// CacheWrap app.deliverState.ms in case it fails.
 		msCache = app.deliverState.CacheMultiStore()
 		ctx = ctx.WithMultiStore(msCache)
-
 	}
 
 	result = handler(ctx, msg)

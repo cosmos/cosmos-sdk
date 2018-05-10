@@ -188,7 +188,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	k.setDelegatorBond(ctx, bond)
 	k.setCandidate(ctx, candidate)
 	k.setPool(ctx, pool)
-	tags := sdk.NewTags("delegator", delegatorAddr.Bytes(), "candidate", candidate.Address.Bytes())
+	tags := sdk.NewTags("action", []byte("delegate"), "delegator", delegatorAddr.Bytes(), "candidate", candidate.Address.Bytes())
 	return tags, nil
 }
 
@@ -286,5 +286,8 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 		k.setCandidate(ctx, candidate)
 	}
 	k.setPool(ctx, p)
-	return sdk.Result{}
+	tags := sdk.NewTags("action", []byte("unbond"), "delegator", msg.DelegatorAddr.Bytes(), "candidate", msg.CandidateAddr.Bytes())
+	return sdk.Result{
+		Tags: tags,
+	}
 }

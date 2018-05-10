@@ -15,11 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-// get the command to query a candidate
-func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
+// get the command to query a validator
+func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "candidate [candidate-addr]",
-		Short: "Query a validator-candidate account",
+		Use:   "validator [validator-addr]",
+		Short: "Query a validator-validator account",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -27,22 +27,22 @@ func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			key := stake.GetCandidateKey(addr)
+			key := stake.GetValidatorKey(addr)
 			ctx := context.NewCoreContextFromViper()
 			res, err := ctx.Query(key, storeName)
 			if err != nil {
 				return err
 			}
 
-			// parse out the candidate
-			candidate := new(stake.Candidate)
-			cdc.MustUnmarshalBinary(res, candidate)
-			output, err := wire.MarshalJSONIndent(cdc, candidate)
+			// parse out the validator
+			validator := new(stake.Validator)
+			cdc.MustUnmarshalBinary(res, validator)
+			err = cdc.UnmarshalBinary(res, validator)
 			if err != nil {
 				return err
 			}
+			output, err := wire.MarshalJSONIndent(cdc, validator)
 			fmt.Println(string(output))
-			return nil
 
 			// TODO output with proofs / machine parseable etc.
 		},
@@ -86,14 +86,14 @@ func GetCmdQueryCandidates(storeName string, cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-// get the command to query a single delegator bond
+// get the command to query a single delegation bond
 func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delegator-bond",
-		Short: "Query a delegators bond based on address and candidate pubkey",
+		Use:   "delegation-bond",
+		Short: "Query a delegations bond based on address and validator pubkey",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			addr, err := sdk.GetAddress(viper.GetString(FlagAddressCandidate))
+			addr, err := sdk.GetAddress(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -102,9 +102,9 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			delegator := crypto.Address(bz)
+			delegation := crypto.Address(bz)
 
-			key := stake.GetDelegationKey(delegator, addr, cdc)
+			key := stake.GetDelegationKey(delegation, addr, cdc)
 			ctx := context.NewCoreContextFromViper()
 			res, err := ctx.Query(key, storeName)
 			if err != nil {
@@ -125,16 +125,16 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsCandidate)
+	cmd.Flags().AddFlagSet(fsValidator)
 	cmd.Flags().AddFlagSet(fsDelegator)
 	return cmd
 }
 
-// get the command to query all the candidates bonded to a delegator
-func GetCmdQueryDelegatorBonds(storeName string, cdc *wire.Codec) *cobra.Command {
+// get the command to query all the candidates bonded to a delegation
+func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delegator-candidates",
-		Short: "Query all delegators bonds based on delegator-address",
+		Use:   "delegation-candidates",
+		Short: "Query all delegations bonds based on delegation-address",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			delegatorAddr, err := sdk.GetAddress(viper.GetString(FlagAddressDelegator))
@@ -149,14 +149,14 @@ func GetCmdQueryDelegatorBonds(storeName string, cdc *wire.Codec) *cobra.Command
 			}
 
 			// parse out the candidates
-			var delegators []stake.DelegatorBond
+			var delegations []stake.Delegation
 			for _, KV := range resKVs {
-				var delegator stake.DelegatorBond
-				cdc.MustUnmarshalBinary(KV.Value, &delegator)
-				delegators = append(delegators, delegator)
+				var delegation stake.Delegation
+				cdc.MustUnmarshalBinary(KV.Value, &delegation)
+				delegations = append(delegations, delegation)
 			}
 
-			output, err := wire.MarshalJSONIndent(cdc, delegators)
+			output, err := wire.MarshalJSONIndent(cdc, delegations)
 			if err != nil {
 				return err
 			}

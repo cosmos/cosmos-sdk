@@ -52,8 +52,8 @@ func NewEndBlocker(k Keeper) sdk.EndBlocker {
 func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	k.setPool(ctx, data.Pool)
 	k.setParams(ctx, data.Params)
-	for _, candidate := range data.Candidates {
-		k.setCandidate(ctx, candidate)
+	for _, validator := range data.Validators {
+		k.setValidator(ctx, validator)
 	}
 	for _, bond := range data.Bonds {
 		k.setDelegation(ctx, bond)
@@ -64,12 +64,12 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 func WriteGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	pool := k.GetPool(ctx)
 	params := k.GetParams(ctx)
-	candidates := k.GetCandidates(ctx, 32767)
+	validators := k.GetValidators(ctx, 32767)
 	bonds := k.getBonds(ctx, 32767)
 	return GenesisState{
 		pool,
 		params,
-		candidates,
+		validators,
 		bonds,
 	}
 }
@@ -82,9 +82,9 @@ func WriteGenesis(ctx sdk.Context, k Keeper) GenesisState {
 func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keeper) sdk.Result {
 
 	// check to see if the pubkey or sender has been registered before
-	_, found := k.GetCandidate(ctx, msg.CandidateAddr)
+	_, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if found {
-		return ErrCandidateExistsAddr(k.codespace).Result()
+		return ErrValidatorExistsAddr(k.codespace).Result()
 	}
 	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadBondingDenom(k.codespace).Result()
@@ -95,12 +95,17 @@ func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keepe
 		}
 	}
 
-	candidate := NewCandidate(msg.CandidateAddr, msg.PubKey, msg.Description)
-	k.setCandidate(ctx, candidate)
-	tags := sdk.NewTags("action", []byte("declareCandidacy"), "candidate", msg.CandidateAddr.Bytes(), "moniker", []byte(msg.Description.Moniker), "identity", []byte(msg.Description.Identity))
+	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
+	k.setValidator(ctx, validator)
+	tags := sdk.NewTags(
+		"action", []byte("declareCandidacy"),
+		"candidate", msg.CandidateAddr.Bytes(),
+		"moniker", []byte(msg.Description.Moniker),
+		"identity", []byte(msg.Description.Identity),
+	)
 
 	// move coins from the msg.Address account to a (self-bond) delegator account
-	// the candidate account and global shares are updated within here
+	// the validator account and global shares are updated within here
 	delegateTags, err := delegate(ctx, k, msg.CandidateAddr, msg.Bond, candidate)
 	if err != nil {
 		return err.Result()
@@ -113,10 +118,10 @@ func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keepe
 
 func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk.Result {
 
-	// candidate must already be registered
-	candidate, found := k.GetCandidate(ctx, msg.CandidateAddr)
+	// validator must already be registered
+	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
-		return ErrBadCandidateAddr(k.codespace).Result()
+		return ErrBadValidatorAddr(k.codespace).Result()
 	}
 	if ctx.IsCheckTx() {
 		return sdk.Result{
@@ -126,13 +131,18 @@ func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk
 
 	// XXX move to types
 	// replace all editable fields (clients should autofill existing values)
-	candidate.Description.Moniker = msg.Description.Moniker
-	candidate.Description.Identity = msg.Description.Identity
-	candidate.Description.Website = msg.Description.Website
-	candidate.Description.Details = msg.Description.Details
+	validator.Description.Moniker = msg.Description.Moniker
+	validator.Description.Identity = msg.Description.Identity
+	validator.Description.Website = msg.Description.Website
+	validator.Description.Details = msg.Description.Details
 
-	k.setCandidate(ctx, candidate)
-	tags := sdk.NewTags("action", []byte("editCandidacy"), "candidate", msg.CandidateAddr.Bytes(), "moniker", []byte(msg.Description.Moniker), "identity", []byte(msg.Description.Identity))
+	k.setValidator(ctx, validator)
+	tags := sdk.NewTags(
+		"action", []byte("editCandidacy"),
+		"candidate", msg.CandidateAddr.Bytes(),
+		"moniker", []byte(msg.Description.Moniker),
+		"identity", []byte(msg.Description.Identity),
+	)
 	return sdk.Result{
 		Tags: tags,
 	}
@@ -140,22 +150,22 @@ func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk
 
 func handleMsgDelegate(ctx sdk.Context, msg MsgDelegate, k Keeper) sdk.Result {
 
-	candidate, found := k.GetCandidate(ctx, msg.CandidateAddr)
+	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
-		return ErrBadCandidateAddr(k.codespace).Result()
+		return ErrBadValidatorAddr(k.codespace).Result()
 	}
 	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadBondingDenom(k.codespace).Result()
 	}
-	if candidate.Status == Revoked {
-		return ErrCandidateRevoked(k.codespace).Result()
+	if validator.Status == sdk.Revoked {
+		return ErrValidatorRevoked(k.codespace).Result()
 	}
 	if ctx.IsCheckTx() {
 		return sdk.Result{
 			GasUsed: GasDelegate,
 		}
 	}
-	tags, err := delegate(ctx, k, msg.DelegatorAddr, msg.Bond, candidate)
+	tags, err := delegate(ctx, k, msg.DelegatorAddr, msg.Bond, validator)
 	if err != nil {
 		return err.Result()
 	}
@@ -166,14 +176,14 @@ func handleMsgDelegate(ctx sdk.Context, msg MsgDelegate, k Keeper) sdk.Result {
 
 // common functionality between handlers
 func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
-	bondAmt sdk.Coin, candidate Candidate) (sdk.Tags, sdk.Error) {
+	bondAmt sdk.Coin, validator Validator) (sdk.Tags, sdk.Error) {
 
 	// Get or create the delegator bond
-	bond, found := k.GetDelegation(ctx, delegatorAddr, candidate.Address)
+	bond, found := k.GetDelegation(ctx, delegatorAddr, validator.Address)
 	if !found {
 		bond = Delegation{
 			DelegatorAddr: delegatorAddr,
-			CandidateAddr: candidate.Address,
+			ValidatorAddr: validator.Address,
 			Shares:        sdk.ZeroRat(),
 		}
 	}
@@ -184,14 +194,14 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	if err != nil {
 		return nil, err
 	}
-	pool, candidate, newShares := pool.candidateAddTokens(candidate, bondAmt.Amount)
+	pool, validator, newShares := pool.validatorAddTokens(validator, bondAmt.Amount)
 	bond.Shares = bond.Shares.Add(newShares)
 
 	// Update bond height
 	bond.Height = ctx.BlockHeight()
 
 	k.setDelegation(ctx, bond)
-	k.setCandidate(ctx, candidate)
+	k.setValidator(ctx, validator)
 	k.setPool(ctx, pool)
 	tags := sdk.NewTags("action", []byte("delegate"), "delegator", delegatorAddr.Bytes(), "candidate", candidate.Address.Bytes())
 	return tags, nil
@@ -200,7 +210,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 	// check if bond has any shares in it unbond
-	bond, found := k.GetDelegation(ctx, msg.DelegatorAddr, msg.CandidateAddr)
+	bond, found := k.GetDelegation(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
 	if !found {
 		return ErrNoDelegatorForAddress(k.codespace).Result()
 	}
@@ -226,10 +236,10 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 		}
 	}
 
-	// get candidate
-	candidate, found := k.GetCandidate(ctx, msg.CandidateAddr)
+	// get validator
+	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
-		return ErrNoCandidateForAddress(k.codespace).Result()
+		return ErrNoValidatorForAddress(k.codespace).Result()
 	}
 
 	if ctx.IsCheckTx() {
@@ -250,10 +260,10 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	revokeCandidacy := false
 	if bond.Shares.IsZero() {
 
-		// if the bond is the owner of the candidate then
+		// if the bond is the owner of the validator then
 		// trigger a revoke candidacy
-		if bytes.Equal(bond.DelegatorAddr, candidate.Address) &&
-			candidate.Status != Revoked {
+		if bytes.Equal(bond.DelegatorAddr, validator.Address) &&
+			validator.Status != sdk.Revoked {
 			revokeCandidacy = true
 		}
 
@@ -266,29 +276,29 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 	// Add the coins
 	p := k.GetPool(ctx)
-	p, candidate, returnAmount := p.candidateRemoveShares(candidate, shares)
+	p, validator, returnAmount := p.validatorRemoveShares(validator, shares)
 	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
 	k.coinKeeper.AddCoins(ctx, bond.DelegatorAddr, returnCoins)
 
 	/////////////////////////////////////
 
-	// revoke candidate if necessary
+	// revoke validator if necessary
 	if revokeCandidacy {
 
 		// change the share types to unbonded if they were not already
-		if candidate.Status == Bonded {
-			p, candidate = p.bondedToUnbondedPool(candidate)
+		if validator.Status == sdk.Bonded {
+			p, validator = p.bondedToUnbondedPool(validator)
 		}
 
 		// lastly update the status
-		candidate.Status = Revoked
+		validator.Status = sdk.Revoked
 	}
 
-	// deduct shares from the candidate
-	if candidate.DelegatorShares.IsZero() {
-		k.removeCandidate(ctx, candidate.Address)
+	// deduct shares from the validator
+	if validator.DelegatorShares.IsZero() {
+		k.removeValidator(ctx, validator.Address)
 	} else {
-		k.setCandidate(ctx, candidate)
+		k.setValidator(ctx, validator)
 	}
 	k.setPool(ctx, p)
 	tags := sdk.NewTags("action", []byte("unbond"), "delegator", msg.DelegatorAddr.Bytes(), "candidate", msg.CandidateAddr.Bytes())

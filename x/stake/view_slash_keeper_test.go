@@ -13,11 +13,11 @@ import (
 func TestViewSlashBond(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
-	//construct the candidates
+	//construct the validators
 	amts := []int64{9, 8, 7}
-	var candidates [3]Candidate
+	var validators [3]Validator
 	for i, amt := range amts {
-		candidates[i] = Candidate{
+		validators[i] = Validator{
 			Address:     addrVals[i],
 			PubKey:      pks[i],
 			BondedShares:      sdk.NewRat(amt),
@@ -25,12 +25,12 @@ func TestViewSlashBond(t *testing.T) {
 		}
 	}
 
-	// first add a candidates[0] to delegate too
-	keeper.setCandidate(ctx, candidates[0])
+	// first add a validators[0] to delegate too
+	keeper.setValidator(ctx, validators[0])
 
 	bond1to1 := Delegation{
 		DelegatorAddr: addrDels[0],
-		CandidateAddr: addrVals[0],
+		ValidatorAddr: addrVals[0],
 		Shares:        sdk.NewRat(9),
 	}
 
@@ -54,8 +54,8 @@ func TestViewSlashBond(t *testing.T) {
 	assert.True(t, bond1to1.equal(resBond))
 
 	// add some more records
-	keeper.setCandidate(ctx, candidates[1])
-	keeper.setCandidate(ctx, candidates[2])
+	keeper.setValidator(ctx, validators[1])
+	keeper.setValidator(ctx, validators[2])
 	bond1to2 := Delegation{addrDels[0], addrVals[1], sdk.NewRat(9), 0}
 	bond1to3 := Delegation{addrDels[0], addrVals[2], sdk.NewRat(9), 1}
 	bond2to1 := Delegation{addrDels[1], addrVals[0], sdk.NewRat(9), 2}

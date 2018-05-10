@@ -59,7 +59,7 @@ func TestBondedToUnbondedPool(t *testing.T) {
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
-	candA := Candidate{
+	candA := Validator{
 		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
@@ -86,7 +86,7 @@ func TestUnbonbedtoBondedPool(t *testing.T) {
 	poolA := keeper.GetPool(ctx)
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
-	candA := Candidate{
+	candA := Validator{
 		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
@@ -172,11 +172,11 @@ func TestRemoveSharesUnbonded(t *testing.T) {
 	assert.True(t, poolB.UnbondedShares.Equal(sdk.NewRat(poolB.UnbondedPool)))
 }
 
-func TestCandidateAddTokens(t *testing.T) {
+func TestValidatorAddTokens(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
-	candA := Candidate{
+	candA := Validator{
 		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
@@ -188,7 +188,7 @@ func TestCandidateAddTokens(t *testing.T) {
 	assert.Equal(t, candA.delegatorShareExRate(), sdk.OneRat())
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
-	poolB, candB, sharesB := poolA.candidateAddTokens(candA, 10)
+	poolB, candB, sharesB := poolA.validatorAddTokens(candA, 10)
 
 	// shares were issued
 	assert.Equal(t, sdk.NewRat(10).Mul(candA.delegatorShareExRate()), sharesB)
@@ -198,11 +198,11 @@ func TestCandidateAddTokens(t *testing.T) {
 	assert.Equal(t, poolB.BondedPool, 10+poolA.BondedPool)
 }
 
-func TestCandidateRemoveShares(t *testing.T) {
+func TestValidatorRemoveShares(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
 	poolA := keeper.GetPool(ctx)
-	candA := Candidate{
+	candA := Validator{
 		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
@@ -214,7 +214,7 @@ func TestCandidateRemoveShares(t *testing.T) {
 	assert.Equal(t, candA.delegatorShareExRate(), sdk.OneRat())
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
-	poolB, candB, coinsB := poolA.candidateRemoveShares(candA, sdk.NewRat(10))
+	poolB, candB, coinsB := poolA.validatorRemoveShares(candA, sdk.NewRat(10))
 
 	// coins were created
 	assert.Equal(t, coinsB, int64(10))
@@ -226,7 +226,7 @@ func TestCandidateRemoveShares(t *testing.T) {
 	// specific case from random tests
 	assets := sdk.NewRat(5102)
 	liabilities := sdk.NewRat(115)
-	cand := Candidate{
+	cand := Validator{
 		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
@@ -243,10 +243,10 @@ func TestCandidateRemoveShares(t *testing.T) {
 		Inflation:         sdk.NewRat(7, 100),
 	}
 	shares := sdk.NewRat(29)
-	msg := fmt.Sprintf("candidate %s (status: %d, assets: %v, liabilities: %v, delegatorShareExRate: %v)",
+	msg := fmt.Sprintf("validator %s (status: %d, assets: %v, liabilities: %v, delegatorShareExRate: %v)",
 		cand.Address, cand.Status, cand.BondedShares, cand.DelegatorShares, cand.delegatorShareExRate())
 	msg = fmt.Sprintf("Removed %v shares from %s", shares, msg)
-	newPool, _, tokens := pool.candidateRemoveShares(cand, shares)
+	newPool, _, tokens := pool.validatorRemoveShares(cand, shares)
 	require.Equal(t,
 		tokens+newPool.UnbondedPool+newPool.BondedPool,
 		pool.BondedPool+pool.UnbondedPool,
@@ -256,9 +256,9 @@ func TestCandidateRemoveShares(t *testing.T) {
 /////////////////////////////////////
 // TODO Make all random tests less obfuscated!
 
-// generate a random candidate
-func randomCandidate(r *rand.Rand) Candidate {
-	var status CandidateStatus
+// generate a random validator
+func randomValidator(r *rand.Rand) Validator {
+	var status ValidatorStatus
 	if r.Float64() < float64(0.5) {
 		status = Bonded
 	} else {
@@ -266,7 +266,7 @@ func randomCandidate(r *rand.Rand) Candidate {
 	}
 	assets := sdk.NewRat(int64(r.Int31n(10000)))
 	liabilities := sdk.NewRat(int64(r.Int31n(10000)))
-	return Candidate{
+	return Validator{
 		Status:      status,
 		Address:     addrs[0],
 		PubKey:      pks[0],
@@ -276,7 +276,7 @@ func randomCandidate(r *rand.Rand) Candidate {
 }
 
 // generate a random staking state
-func randomSetup(r *rand.Rand, numCandidates int) (Pool, Candidates) {
+func randomSetup(r *rand.Rand, numValidators int) (Pool, Validators) {
 	pool := Pool{
 		TotalSupply:       0,
 		BondedShares:      sdk.ZeroRat(),
@@ -287,54 +287,54 @@ func randomSetup(r *rand.Rand, numCandidates int) (Pool, Candidates) {
 		Inflation:         sdk.NewRat(7, 100),
 	}
 
-	candidates := make([]Candidate, numCandidates)
-	for i := 0; i < numCandidates; i++ {
-		candidate := randomCandidate(r)
-		if candidate.Status == Bonded {
-			pool.BondedShares = pool.BondedShares.Add(candidate.BondedShares)
-			pool.BondedPool += candidate.BondedShares.Evaluate()
-		} else if candidate.Status == Unbonded {
-			pool.UnbondedShares = pool.UnbondedShares.Add(candidate.BondedShares)
-			pool.UnbondedPool += candidate.BondedShares.Evaluate()
+	validators := make([]Validator, numValidators)
+	for i := 0; i < numValidators; i++ {
+		validator := randomValidator(r)
+		if validator.Status == Bonded {
+			pool.BondedShares = pool.BondedShares.Add(validator.BondedShares)
+			pool.BondedPool += validator.BondedShares.Evaluate()
+		} else if validator.Status == Unbonded {
+			pool.UnbondedShares = pool.UnbondedShares.Add(validator.BondedShares)
+			pool.UnbondedPool += validator.BondedShares.Evaluate()
 		}
-		candidates[i] = candidate
+		validators[i] = validator
 	}
-	return pool, candidates
+	return pool, validators
 }
 
 // any operation that transforms staking state
-// takes in RNG instance, pool, candidate
-// returns updated pool, updated candidate, delta tokens, descriptive message
-type Operation func(r *rand.Rand, p Pool, c Candidate) (Pool, Candidate, int64, string)
+// takes in RNG instance, pool, validator
+// returns updated pool, updated validator, delta tokens, descriptive message
+type Operation func(r *rand.Rand, p Pool, c Validator) (Pool, Validator, int64, string)
 
-// operation: bond or unbond a candidate depending on current status
-func OpBondOrUnbond(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int64, string) {
+// operation: bond or unbond a validator depending on current status
+func OpBondOrUnbond(r *rand.Rand, p Pool, cand Validator) (Pool, Validator, int64, string) {
 	var msg string
 	if cand.Status == Bonded {
-		msg = fmt.Sprintf("Unbonded previously bonded candidate %s (assets: %v, liabilities: %v, delegatorShareExRate: %v)",
+		msg = fmt.Sprintf("Unbonded previously bonded validator %s (assets: %v, liabilities: %v, delegatorShareExRate: %v)",
 			cand.Address, cand.BondedShares, cand.DelegatorShares, cand.delegatorShareExRate())
 		p, cand = p.bondedToUnbondedPool(cand)
 
 	} else if cand.Status == Unbonded {
-		msg = fmt.Sprintf("Bonded previously unbonded candidate %s (assets: %v, liabilities: %v, delegatorShareExRate: %v)",
+		msg = fmt.Sprintf("Bonded previously unbonded validator %s (assets: %v, liabilities: %v, delegatorShareExRate: %v)",
 			cand.Address, cand.BondedShares, cand.DelegatorShares, cand.delegatorShareExRate())
 		p, cand = p.unbondedToBondedPool(cand)
 	}
 	return p, cand, 0, msg
 }
 
-// operation: add a random number of tokens to a candidate
-func OpAddTokens(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int64, string) {
+// operation: add a random number of tokens to a validator
+func OpAddTokens(r *rand.Rand, p Pool, cand Validator) (Pool, Validator, int64, string) {
 	tokens := int64(r.Int31n(1000))
-	msg := fmt.Sprintf("candidate %s (status: %d, assets: %v, liabilities: %v, delegatorShareExRate: %v)",
+	msg := fmt.Sprintf("validator %s (status: %d, assets: %v, liabilities: %v, delegatorShareExRate: %v)",
 		cand.Address, cand.Status, cand.BondedShares, cand.DelegatorShares, cand.delegatorShareExRate())
-	p, cand, _ = p.candidateAddTokens(cand, tokens)
+	p, cand, _ = p.validatorAddTokens(cand, tokens)
 	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)
 	return p, cand, -1 * tokens, msg // tokens are removed so for accounting must be negative
 }
 
-// operation: remove a random number of shares from a candidate
-func OpRemoveShares(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int64, string) {
+// operation: remove a random number of shares from a validator
+func OpRemoveShares(r *rand.Rand, p Pool, cand Validator) (Pool, Validator, int64, string) {
 	var shares sdk.Rat
 	for {
 		shares = sdk.NewRat(int64(r.Int31n(1000)))
@@ -343,10 +343,10 @@ func OpRemoveShares(r *rand.Rand, p Pool, cand Candidate) (Pool, Candidate, int6
 		}
 	}
 
-	msg := fmt.Sprintf("Removed %v shares from candidate %s (status: %d, assets: %v, liabilities: %v, delegatorShareExRate: %v)",
+	msg := fmt.Sprintf("Removed %v shares from validator %s (status: %d, assets: %v, liabilities: %v, delegatorShareExRate: %v)",
 		shares, cand.Address, cand.Status, cand.BondedShares, cand.DelegatorShares, cand.delegatorShareExRate())
 
-	p, cand, tokens := p.candidateRemoveShares(cand, shares)
+	p, cand, tokens := p.validatorRemoveShares(cand, shares)
 	return p, cand, tokens, msg
 }
 
@@ -365,7 +365,7 @@ func randomOperation(r *rand.Rand) Operation {
 
 // ensure invariants that should always be true are true
 func assertInvariants(t *testing.T, msg string,
-	pOrig Pool, cOrig Candidates, pMod Pool, cMods Candidates, tokens int64) {
+	pOrig Pool, cOrig Validators, pMod Pool, cMods Validators, tokens int64) {
 
 	// total tokens conserved
 	require.Equal(t,
@@ -402,7 +402,7 @@ func assertInvariants(t *testing.T, msg string,
 
 		// nonnegative ex rate
 		require.False(t, cMod.delegatorShareExRate().LT(sdk.ZeroRat()),
-			"Applying operation \"%s\" resulted in negative candidate.delegatorShareExRate(): %v (candidate.Address: %s)",
+			"Applying operation \"%s\" resulted in negative validator.delegatorShareExRate(): %v (validator.Address: %s)",
 			msg,
 			cMod.delegatorShareExRate(),
 			cMod.Address,
@@ -410,7 +410,7 @@ func assertInvariants(t *testing.T, msg string,
 
 		// nonnegative assets
 		require.False(t, cMod.BondedShares.LT(sdk.ZeroRat()),
-			"Applying operation \"%s\" resulted in negative candidate.BondedShares: %v (candidate.DelegatorShares: %v, candidate.delegatorShareExRate: %v, candidate.Address: %s)",
+			"Applying operation \"%s\" resulted in negative validator.BondedShares: %v (validator.DelegatorShares: %v, validator.delegatorShareExRate: %v, validator.Address: %s)",
 			msg,
 			cMod.BondedShares,
 			cMod.DelegatorShares,
@@ -420,7 +420,7 @@ func assertInvariants(t *testing.T, msg string,
 
 		// nonnegative liabilities
 		require.False(t, cMod.DelegatorShares.LT(sdk.ZeroRat()),
-			"Applying operation \"%s\" resulted in negative candidate.DelegatorShares: %v (candidate.BondedShares: %v, candidate.delegatorShareExRate: %v, candidate.Address: %s)",
+			"Applying operation \"%s\" resulted in negative validator.DelegatorShares: %v (validator.BondedShares: %v, validator.delegatorShareExRate: %v, validator.Address: %s)",
 			msg,
 			cMod.DelegatorShares,
 			cMod.BondedShares,
@@ -435,7 +435,7 @@ func assertInvariants(t *testing.T, msg string,
 func TestPossibleOverflow(t *testing.T) {
 	assets := sdk.NewRat(2159)
 	liabilities := sdk.NewRat(391432570689183511).Quo(sdk.NewRat(40113011844664))
-	cand := Candidate{
+	cand := Validator{
 		Status:      Bonded,
 		Address:     addrs[0],
 		PubKey:      pks[0],
@@ -452,72 +452,72 @@ func TestPossibleOverflow(t *testing.T) {
 		Inflation:         sdk.NewRat(7, 100),
 	}
 	tokens := int64(71)
-	msg := fmt.Sprintf("candidate %s (status: %d, assets: %v, liabilities: %v, delegatorShareExRate: %v)",
+	msg := fmt.Sprintf("validator %s (status: %d, assets: %v, liabilities: %v, delegatorShareExRate: %v)",
 		cand.Address, cand.Status, cand.BondedShares, cand.DelegatorShares, cand.delegatorShareExRate())
-	_, newCandidate, _ := pool.candidateAddTokens(cand, tokens)
+	_, newValidator, _ := pool.validatorAddTokens(cand, tokens)
 
 	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)
-	require.False(t, newCandidate.delegatorShareExRate().LT(sdk.ZeroRat()),
+	require.False(t, newValidator.delegatorShareExRate().LT(sdk.ZeroRat()),
 		"Applying operation \"%s\" resulted in negative delegatorShareExRate(): %v",
-		msg, newCandidate.delegatorShareExRate())
+		msg, newValidator.delegatorShareExRate())
 }
 
-// run random operations in a random order on a random single-candidate state, assert invariants hold
-func TestSingleCandidateIntegrationInvariants(t *testing.T) {
+// run random operations in a random order on a random single-validator state, assert invariants hold
+func TestSingleValidatorIntegrationInvariants(t *testing.T) {
 	r := rand.New(rand.NewSource(41))
 
 	for i := 0; i < 10; i++ {
-		poolOrig, candidatesOrig := randomSetup(r, 1)
-		require.Equal(t, 1, len(candidatesOrig))
+		poolOrig, validatorsOrig := randomSetup(r, 1)
+		require.Equal(t, 1, len(validatorsOrig))
 
 		// sanity check
 		assertInvariants(t, "no operation",
-			poolOrig, candidatesOrig,
-			poolOrig, candidatesOrig, 0)
+			poolOrig, validatorsOrig,
+			poolOrig, validatorsOrig, 0)
 
 		for j := 0; j < 5; j++ {
-			poolMod, candidateMod, tokens, msg := randomOperation(r)(r, poolOrig, candidatesOrig[0])
+			poolMod, validatorMod, tokens, msg := randomOperation(r)(r, poolOrig, validatorsOrig[0])
 
-			candidatesMod := make([]Candidate, len(candidatesOrig))
-			copy(candidatesMod[:], candidatesOrig[:])
-			require.Equal(t, 1, len(candidatesOrig), "j %v", j)
-			require.Equal(t, 1, len(candidatesMod), "j %v", j)
-			candidatesMod[0] = candidateMod
+			validatorsMod := make([]Validator, len(validatorsOrig))
+			copy(validatorsMod[:], validatorsOrig[:])
+			require.Equal(t, 1, len(validatorsOrig), "j %v", j)
+			require.Equal(t, 1, len(validatorsMod), "j %v", j)
+			validatorsMod[0] = validatorMod
 
 			assertInvariants(t, msg,
-				poolOrig, candidatesOrig,
-				poolMod, candidatesMod, tokens)
+				poolOrig, validatorsOrig,
+				poolMod, validatorsMod, tokens)
 
 			poolOrig = poolMod
-			candidatesOrig = candidatesMod
+			validatorsOrig = validatorsMod
 		}
 	}
 }
 
-// run random operations in a random order on a random multi-candidate state, assert invariants hold
-func TestMultiCandidateIntegrationInvariants(t *testing.T) {
+// run random operations in a random order on a random multi-validator state, assert invariants hold
+func TestMultiValidatorIntegrationInvariants(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
 
 	for i := 0; i < 10; i++ {
-		poolOrig, candidatesOrig := randomSetup(r, 100)
+		poolOrig, validatorsOrig := randomSetup(r, 100)
 
 		assertInvariants(t, "no operation",
-			poolOrig, candidatesOrig,
-			poolOrig, candidatesOrig, 0)
+			poolOrig, validatorsOrig,
+			poolOrig, validatorsOrig, 0)
 
 		for j := 0; j < 5; j++ {
-			index := int(r.Int31n(int32(len(candidatesOrig))))
-			poolMod, candidateMod, tokens, msg := randomOperation(r)(r, poolOrig, candidatesOrig[index])
-			candidatesMod := make([]Candidate, len(candidatesOrig))
-			copy(candidatesMod[:], candidatesOrig[:])
-			candidatesMod[index] = candidateMod
+			index := int(r.Int31n(int32(len(validatorsOrig))))
+			poolMod, validatorMod, tokens, msg := randomOperation(r)(r, poolOrig, validatorsOrig[index])
+			validatorsMod := make([]Validator, len(validatorsOrig))
+			copy(validatorsMod[:], validatorsOrig[:])
+			validatorsMod[index] = validatorMod
 
 			assertInvariants(t, msg,
-				poolOrig, candidatesOrig,
-				poolMod, candidatesMod, tokens)
+				poolOrig, validatorsOrig,
+				poolMod, validatorsMod, tokens)
 
 			poolOrig = poolMod
-			candidatesOrig = candidatesMod
+			validatorsOrig = validatorsMod
 
 		}
 	}

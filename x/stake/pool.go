@@ -20,7 +20,7 @@ func (p Pool) bondedShareExRate() sdk.Rat {
 	return sdk.NewRat(p.BondedPool).Quo(p.BondedShares)
 }
 
-// get the exchange rate of unbonded tokens held in candidates per issued share
+// get the exchange rate of unbonded tokens held in validators per issued share
 func (p Pool) unbondedShareExRate() sdk.Rat {
 	if p.UnbondedShares.IsZero() {
 		return sdk.OneRat()
@@ -28,24 +28,24 @@ func (p Pool) unbondedShareExRate() sdk.Rat {
 	return sdk.NewRat(p.UnbondedPool).Quo(p.UnbondedShares)
 }
 
-// move a candidates asset pool from bonded to unbonded pool
-func (p Pool) bondedToUnbondedPool(candidate Candidate) (Pool, Candidate) {
+// move a validators asset pool from bonded to unbonded pool
+func (p Pool) bondedToUnbondedPool(validator Validator) (Pool, Validator) {
 
 	// replace bonded shares with unbonded shares
-	p, tokens := p.removeSharesBonded(candidate.BondedShares)
-	p, candidate.BondedShares = p.addTokensUnbonded(tokens)
-	candidate.Status = Unbonded
-	return p, candidate
+	p, tokens := p.removeSharesBonded(validator.BondedShares)
+	p, validator.BondedShares = p.addTokensUnbonded(tokens)
+	validator.Status = Unbonded
+	return p, validator
 }
 
-// move a candidates asset pool from unbonded to bonded pool
-func (p Pool) unbondedToBondedPool(candidate Candidate) (Pool, Candidate) {
+// move a validators asset pool from unbonded to bonded pool
+func (p Pool) unbondedToBondedPool(validator Validator) (Pool, Validator) {
 
 	// replace unbonded shares with bonded shares
-	p, tokens := p.removeSharesUnbonded(candidate.BondedShares)
-	p, candidate.BondedShares = p.addTokensBonded(tokens)
-	candidate.Status = Bonded
-	return p, candidate
+	p, tokens := p.removeSharesUnbonded(validator.BondedShares)
+	p, validator.BondedShares = p.addTokensBonded(tokens)
+	validator.Status = Bonded
+	return p, validator
 }
 
 //_______________________________________________________________________
@@ -80,39 +80,39 @@ func (p Pool) removeSharesUnbonded(shares sdk.Rat) (p2 Pool, removedTokens int64
 
 //_______________________________________________________________________
 
-// add tokens to a candidate
-func (p Pool) candidateAddTokens(candidate Candidate,
-	amount int64) (p2 Pool, candidate2 Candidate, issuedDelegatorShares sdk.Rat) {
+// add tokens to a validator
+func (p Pool) validatorAddTokens(validator Validator,
+	amount int64) (p2 Pool, validator2 Validator, issuedDelegatorShares sdk.Rat) {
 
-	exRate := candidate.delegatorShareExRate()
+	exRate := validator.delegatorShareExRate()
 
 	var receivedGlobalShares sdk.Rat
-	if candidate.Status == Bonded {
+	if validator.Status == Bonded {
 		p, receivedGlobalShares = p.addTokensBonded(amount)
 	} else {
 		p, receivedGlobalShares = p.addTokensUnbonded(amount)
 	}
-	candidate.BondedShares = candidate.BondedShares.Add(receivedGlobalShares)
+	validator.BondedShares = validator.BondedShares.Add(receivedGlobalShares)
 
 	issuedDelegatorShares = exRate.Mul(receivedGlobalShares)
-	candidate.DelegatorShares = candidate.DelegatorShares.Add(issuedDelegatorShares)
+	validator.DelegatorShares = validator.DelegatorShares.Add(issuedDelegatorShares)
 
-	return p, candidate, issuedDelegatorShares
+	return p, validator, issuedDelegatorShares
 }
 
-// remove shares from a candidate
-func (p Pool) candidateRemoveShares(candidate Candidate,
-	shares sdk.Rat) (p2 Pool, candidate2 Candidate, createdCoins int64) {
+// remove shares from a validator
+func (p Pool) validatorRemoveShares(validator Validator,
+	shares sdk.Rat) (p2 Pool, validator2 Validator, createdCoins int64) {
 
-	//exRate := candidate.delegatorShareExRate() //XXX make sure not used
+	//exRate := validator.delegatorShareExRate() //XXX make sure not used
 
-	globalPoolSharesToRemove := candidate.delegatorShareExRate().Mul(shares)
-	if candidate.Status == Bonded {
+	globalPoolSharesToRemove := validator.delegatorShareExRate().Mul(shares)
+	if validator.Status == Bonded {
 		p, createdCoins = p.removeSharesBonded(globalPoolSharesToRemove)
 	} else {
 		p, createdCoins = p.removeSharesUnbonded(globalPoolSharesToRemove)
 	}
-	candidate.BondedShares = candidate.BondedShares.Sub(globalPoolSharesToRemove)
-	candidate.DelegatorShares = candidate.DelegatorShares.Sub(shares)
-	return p, candidate, createdCoins
+	validator.BondedShares = validator.BondedShares.Sub(globalPoolSharesToRemove)
+	validator.DelegatorShares = validator.DelegatorShares.Sub(shares)
+	return p, validator, createdCoins
 }

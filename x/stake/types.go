@@ -13,15 +13,15 @@ import (
 type GenesisState struct {
 	Pool       Pool         `json:"pool"`
 	Params     Params       `json:"params"`
-	Candidates []Candidate  `json:"candidates"`
+	Validators []Validator  `json:"validators"`
 	Bonds      []Delegation `json:"bonds"`
 }
 
-func NewGenesisState(pool Pool, params Params, candidates []Candidate, bonds []Delegation) GenesisState {
+func NewGenesisState(pool Pool, params Params, validators []Validator, bonds []Delegation) GenesisState {
 	return GenesisState{
 		Pool:       pool,
 		Params:     params,
-		Candidates: candidates,
+		Validators: validators,
 		Bonds:      bonds,
 	}
 }
@@ -77,7 +77,7 @@ type Pool struct {
 	UnbondedShares    sdk.Rat `json:"unbonded_shares"`     // sum of all shares distributed for the Unbonded Pool
 	BondedPool        int64   `json:"bonded_pool"`         // reserve of bonded tokens
 	UnbondingPool     int64   `json:"unbonding_pool"`      // tokens moving from bonded to unbonded pool
-	UnbondedPool      int64   `json:"unbonded_pool"`       // reserve of unbonded tokens held with candidates
+	UnbondedPool      int64   `json:"unbonded_pool"`       // reserve of unbonded tokens held with validators
 	InflationLastTime int64   `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
 	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
 
@@ -118,42 +118,42 @@ func initialPool() Pool {
 
 //_________________________________________________________________________
 
-// Candidate defines the total amount of bond shares and their exchange rate to
+// Validator defines the total amount of bond shares and their exchange rate to
 // coins. Accumulation of interest is modelled as an in increase in the
 // exchange rate, and slashing as a decrease.  When coins are delegated to this
-// candidate, the candidate is credited with a Delegation whose number of
+// validator, the validator is credited with a Delegation whose number of
 // bond shares is based on the amount of coins delegated divided by the current
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
-type Candidate struct {
-	Status          CandidateStatus `json:"status"`           // Bonded status
-	Address         sdk.Address     `json:"owner"`            // Sender of BondTx - UnbondTx returns here
-	PubKey          crypto.PubKey   `json:"pub_key"`          // Pubkey of candidate
-	BondedShares    sdk.Rat         `json:"bonded_shares"`    // total shares of a global hold pools
-	UnbondingShares sdk.Rat         `json:"unbonding_shares"` // total shares of a global hold pools
-	UnbondedShares  sdk.Rat         `json:"unbonded_shares"`  // total shares of a global hold pools
-	DelegatorShares sdk.Rat         `json:"liabilities"`      // total shares issued to a candidate's delegators
+type Validator struct {
+	Status          sdk.ValidatorStatus `json:"status"`           // Bonded status
+	Address         sdk.Address         `json:"owner"`            // Sender of BondTx - UnbondTx returns here
+	PubKey          crypto.PubKey       `json:"pub_key"`          // Pubkey of validator
+	BondedShares    sdk.Rat             `json:"bonded_shares"`    // total shares of a global hold pools
+	UnbondingShares sdk.Rat             `json:"unbonding_shares"` // total shares of a global hold pools
+	UnbondedShares  sdk.Rat             `json:"unbonded_shares"`  // total shares of a global hold pools
+	DelegatorShares sdk.Rat             `json:"liabilities"`      // total shares issued to a validator's delegators
 
-	Description          Description `json:"description"`            // Description terms for the candidate
+	Description          Description `json:"description"`            // Description terms for the validator
 	ValidatorBondHeight  int64       `json:"validator_bond_height"`  // Earliest height as a bonded validator
 	ValidatorBondCounter int16       `json:"validator_bond_counter"` // Block-local tx index of validator change
 	ProposerRewardPool   sdk.Coins   `json:"proposer_reward_pool"`   // XXX reward pool collected from being the proposer
 
 	Commission            sdk.Rat `json:"commission"`              // XXX the commission rate of fees charged to any delegators
-	CommissionMax         sdk.Rat `json:"commission_max"`          // XXX maximum commission rate which this candidate can ever charge
-	CommissionChangeRate  sdk.Rat `json:"commission_change_rate"`  // XXX maximum daily increase of the candidate commission
+	CommissionMax         sdk.Rat `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
+	CommissionChangeRate  sdk.Rat `json:"commission_change_rate"`  // XXX maximum daily increase of the validator commission
 	CommissionChangeToday sdk.Rat `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
 
 	// fee related
 	PrevBondedShares sdk.Rat `json:"prev_bonded_shares"` // total shares of a global hold pools
 }
 
-// Candidates - list of Candidates
-type Candidates []Candidate
+// Validators - list of Validators
+type Validators []Validator
 
-// NewCandidate - initialize a new candidate
-func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Description) Candidate {
-	return Candidate{
+// NewValidator - initialize a new validator
+func NewValidator(address sdk.Address, pubKey crypto.PubKey, description Description) Validator {
+	return Validator{
 		Status:                      Unbonded,
 		Address:                     address,
 		PubKey:                      pubKey,
@@ -172,25 +172,25 @@ func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Descrip
 	}
 }
 
-func (c Candidate) equal(c2 Candidate) bool {
-	return c.Status == c2.Status &&
-		c.PubKey.Equals(c2.PubKey) &&
-		bytes.Equal(c.Address, c2.Address) &&
-		c.BondedShares.Equal(c2.BondedShares) &&
-		c.DelegatorShares.Equal(c2.DelegatorShares) &&
-		c.Description == c2.Description &&
-		c.ValidatorBondHeight == c2.ValidatorBondHeight &&
-		//c.ValidatorBondCounter == c2.ValidatorBondCounter && // counter is always changing
-		c.ProposerRewardPool.IsEqual(c2.ProposerRewardPool) &&
-		c.Commission.Equal(c2.Commission) &&
-		c.CommissionMax.Equal(c2.CommissionMax) &&
-		c.CommissionChangeRate.Equal(c2.CommissionChangeRate) &&
-		c.CommissionChangeToday.Equal(c2.CommissionChangeToday) &&
-		sdk.RatsEqual(c.FeeAdjustments, c2.FeeAdjustments) &&
-		c.PrevBondedShares.Equal(c2.PrevBondedShares)
+func (v Validator) equal(c2 Validator) bool {
+	return v.Status == c2.Status &&
+		v.PubKey.Equals(c2.PubKey) &&
+		bytes.Equal(v.Address, c2.Address) &&
+		v.BondedShares.Equal(c2.BondedShares) &&
+		v.DelegatorShares.Equal(c2.DelegatorShares) &&
+		v.Description == c2.Description &&
+		v.ValidatorBondHeight == c2.ValidatorBondHeight &&
+		//v.ValidatorBondCounter == c2.ValidatorBondCounter && // counter is always changing
+		v.ProposerRewardPool.IsEqual(c2.ProposerRewardPool) &&
+		v.Commission.Equal(c2.Commission) &&
+		v.CommissionMax.Equal(c2.CommissionMax) &&
+		v.CommissionChangeRate.Equal(c2.CommissionChangeRate) &&
+		v.CommissionChangeToday.Equal(c2.CommissionChangeToday) &&
+		sdk.RatsEqual(v.FeeAdjustments, c2.FeeAdjustments) &&
+		v.PrevBondedShares.Equal(c2.PrevBondedShares)
 }
 
-// Description - description fields for a candidate
+// Description - description fields for a validator
 type Description struct {
 	Moniker  string `json:"moniker"`
 	Identity string `json:"identity"`
@@ -208,11 +208,11 @@ func NewDescription(moniker, identity, website, details string) Description {
 }
 
 // get the exchange rate of global pool shares over delegator shares
-func (c Candidate) delegatorShareExRate() sdk.Rat {
-	if c.DelegatorShares.IsZero() {
+func (v Validator) delegatorShareExRate() sdk.Rat {
+	if v.DelegatorShares.IsZero() {
 		return sdk.OneRat()
 	}
-	return c.BondedShares.Quo(c.DelegatorShares)
+	return v.BondedShares.Quo(v.DelegatorShares)
 }
 
 // abci validator from stake validator type
@@ -253,14 +253,14 @@ func (v Validator) GetPower() sdk.Rat        { return v.Power }
 // TODO better way of managing space
 type Delegation struct {
 	DelegatorAddr sdk.Address `json:"delegator_addr"`
-	CandidateAddr sdk.Address `json:"candidate_addr"`
+	ValidatorAddr sdk.Address `json:"validator_addr"`
 	Shares        sdk.Rat     `json:"shares"`
 	Height        int64       `json:"height"` // Last height bond updated
 }
 
 func (b Delegation) equal(b2 Delegation) bool {
 	return bytes.Equal(b.DelegatorAddr, b2.DelegatorAddr) &&
-		bytes.Equal(b.CandidateAddr, b2.CandidateAddr) &&
+		bytes.Equal(b.ValidatorAddr, b2.ValidatorAddr) &&
 		b.Height == b2.Height &&
 		b.Shares.Equal(b2.Shares)
 }
@@ -270,5 +270,5 @@ var _ sdk.Delegation = Delegation{}
 
 // nolint - for sdk.Delegation
 func (b Delegation) GetDelegator() sdk.Address { return b.DelegatorAddr }
-func (b Delegation) GetValidator() sdk.Address { return b.CandidateAddr }
+func (b Delegation) GetValidator() sdk.Address { return b.ValidatorAddr }
 func (b Delegation) GetBondAmount() sdk.Rat    { return b.Shares }

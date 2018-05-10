@@ -18,8 +18,8 @@ func NewViewSlashKeeper(k Keeper) ViewSlashKeeper {
 
 // load a delegator bond
 func (v ViewSlashKeeper) GetDelegation(ctx sdk.Context,
-	delegatorAddr, candidateAddr sdk.Address) (bond Delegation, found bool) {
-	return v.keeper.GetDelegation(ctx, delegatorAddr, candidateAddr)
+	delegatorAddr, validatorAddr sdk.Address) (bond Delegation, found bool) {
+	return v.keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
 }
 
 // load n delegator bonds

@@ -29,16 +29,16 @@ type BasecoinApp struct {
 	cdc *wire.Codec
 
 	// keys to access the substores
-	keyMain    *sdk.KVStoreKey
-	keyAccount *sdk.KVStoreKey
-	keyIBC     *sdk.KVStoreKey
-	keyStake   *sdk.KVStoreKey
+	keyMain    *bam.KVStoreKey
+	keyAccount *bam.KVStoreKey
+	// keyIBC     *bam.KVStoreKey
+	// keyStake   *bam.KVStoreKey
 
 	// Manage getting and setting accounts
-	accountMapper sdk.AccountMapper
+	accountMapper auth.AccountMapper
 	coinKeeper    bank.Keeper
-	ibcMapper     ibc.Mapper
-	stakeKeeper   stake.Keeper
+	// ibcMapper     ibc.Mapper
+	// stakeKeeper   stake.Keeper
 }
 
 func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
@@ -48,12 +48,12 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// Create your application object.
 	var app = &BasecoinApp{
-		BaseApp:    bam.NewBaseApp(appName, cdc, logger, db),
+		App:        bam.NewApp(appName, cdc, logger, db),
 		cdc:        cdc,
 		keyMain:    sdk.NewKVStoreKey("main"),
 		keyAccount: sdk.NewKVStoreKey("acc"),
-		keyIBC:     sdk.NewKVStoreKey("ibc"),
-		keyStake:   sdk.NewKVStoreKey("stake"),
+		// keyIBC:     sdk.NewKVStoreKey("ibc"),
+		// keyStake:   sdk.NewKVStoreKey("stake"),
 	}
 
 	// Define the accountMapper.
@@ -65,14 +65,14 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// add accountMapper/handlers
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
-	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
-	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
+	// app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
+	// app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 
 	// register message routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
+		AddRoute("bank", bank.NewHandler(app.coinKeeper)) //.
+	// AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+	// AddRoute("stake", stake.NewHandler(app.stakeKeeper))
 
 	// Initialize BaseApp.
 	app.SetInitChainer(app.initChainer)
@@ -89,33 +89,33 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 func MakeCodec() *wire.Codec {
 	var cdc = wire.NewCodec()
 	wire.RegisterCrypto(cdc) // Register crypto.
-	sdk.RegisterWire(cdc)    // Register Msgs
+	bam.RegisterWire(cdc)    // Register Msgs
 	bank.RegisterWire(cdc)
 	stake.RegisterWire(cdc)
 	ibc.RegisterWire(cdc)
 
 	// register custom AppAccount
-	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterInterface((*bam.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "basecoin/Account", nil)
 	return cdc
 }
 
 // Custom logic for basecoin initialization
-func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *BasecoinApp) initChainer(ctx bam.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	stateJSON := req.AppStateBytes
 
 	genesisState := new(types.GenesisState)
 	err := app.cdc.UnmarshalJSON(stateJSON, genesisState)
 	if err != nil {
 		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
-		// return sdk.ErrGenesisParse("").TraceCause(err, "")
+		// return bam.ErrGenesisParse("").TraceCause(err, "")
 	}
 
 	for _, gacc := range genesisState.Accounts {
 		acc, err := gacc.ToAppAccount()
 		if err != nil {
 			panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
-			//	return sdk.ErrGenesisParse("").TraceCause(err, "")
+			//	return bam.ErrGenesisParse("").TraceCause(err, "")
 		}
 		app.accountMapper.SetAccount(ctx, acc)
 	}
@@ -128,7 +128,7 @@ func (app *BasecoinApp) ExportAppStateJSON() (appState json.RawMessage, err erro
 
 	// iterate to get the accounts
 	accounts := []*types.GenesisAccount{}
-	appendAccount := func(acc sdk.Account) (stop bool) {
+	appendAccount := func(acc bam.Account) (stop bool) {
 		account := &types.GenesisAccount{
 			Address: acc.GetAddress(),
 			Coins:   acc.GetCoins(),

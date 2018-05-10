@@ -6,11 +6,10 @@ import (
 
 	"golang.org/x/crypto/ripemd160"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/merkle"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (

@@ -64,7 +64,7 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Core
 			w.Write([]byte(err.Error()))
 			return
 		}
-		to := sdk.Address(bz)
+		to := bam.Address(bz)
 
 		// build message
 		packet := ibc.NewIBCPacket(info.PubKey.Address(), to, m.Amount, m.SrcChainID, destChainID)

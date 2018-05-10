@@ -1,4 +1,4 @@
-package baseapp
+package sdk
 
 import (
 	"bytes"
@@ -22,15 +22,15 @@ func defaultLogger() log.Logger {
 	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 }
 
-func newBaseApp(name string) *BaseApp {
+func newApp(name string) *App {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	return NewBaseApp(name, nil, logger, db)
+	return NewApp(name, nil, logger, db)
 }
 
 func TestMountStores(t *testing.T) {
 	name := t.Name()
-	app := newBaseApp(name)
+	app := newApp(name)
 	assert.Equal(t, name, app.Name())
 
 	// make some cap keys
@@ -59,7 +59,7 @@ func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, nil, logger, db)
+	app := NewApp(name, nil, logger, db)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
@@ -81,7 +81,7 @@ func TestLoadVersion(t *testing.T) {
 	commitID := sdk.CommitID{1, res.Data}
 
 	// reload
-	app = NewBaseApp(name, nil, logger, db)
+	app = NewApp(name, nil, logger, db)
 	app.MountStoresIAVL(capKey)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
@@ -95,7 +95,7 @@ func TestLoadVersion(t *testing.T) {
 // Test that the app hash is static
 // TODO: https://github.com/cosmos/cosmos-sdk/issues/520
 /*func TestStaticAppHash(t *testing.T) {
-	app := newBaseApp(t.Name())
+	app := newApp(t.Name())
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
@@ -126,7 +126,7 @@ func TestTxDecoder(t *testing.T) {
 
 // Test that Info returns the latest committed state.
 func TestInfo(t *testing.T) {
-	app := newBaseApp(t.Name())
+	app := newApp(t.Name())
 
 	// ----- test an empty response -------
 	reqInfo := abci.RequestInfo{}
@@ -147,7 +147,7 @@ func TestInitChainer(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, nil, logger, db)
+	app := NewApp(name, nil, logger, db)
 	// make cap keys and mount the stores
 	// NOTE/TODO: mounting multiple stores is broken
 	// see https://github.com/cosmos/cosmos-sdk/issues/532
@@ -184,7 +184,7 @@ func TestInitChainer(t *testing.T) {
 	assert.Equal(t, value, res.Value)
 
 	// reload app
-	app = NewBaseApp(name, nil, logger, db)
+	app = NewApp(name, nil, logger, db)
 	app.MountStoresIAVL(capKey, capKey2)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
@@ -211,7 +211,7 @@ func TestCheckTx(t *testing.T) {
 // Test that successive DeliverTx can see each others' effects
 // on the store, both within and across blocks.
 func TestDeliverTx(t *testing.T) {
-	app := newBaseApp(t.Name())
+	app := newApp(t.Name())
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
@@ -262,7 +262,7 @@ func TestDeliverTx(t *testing.T) {
 
 // Test that we can only query from the latest committed state.
 func TestQuery(t *testing.T) {
-	app := newBaseApp(t.Name())
+	app := newApp(t.Name())
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
@@ -328,7 +328,7 @@ func (tx testUpdatePowerTx) GetSignatures() []sdk.StdSignature { return nil }
 func TestValidatorChange(t *testing.T) {
 
 	// Create app.
-	app := newBaseApp(t.Name())
+	app := newApp(t.Name())
 	capKey := sdk.NewKVStoreKey("key")
 	app.MountStoresIAVL(capKey)
 	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {

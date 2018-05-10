@@ -3,12 +3,13 @@ package bank
 import (
 	"reflect"
 
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewHandler returns a handler for "bank" type messages.
-func NewHandler(k Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+func NewHandler(k Keeper) bam.Handler {
+	return func(ctx sdk.Context, msg bam.Msg) sdk.Result {
 		switch msg := msg.(type) {
 		case MsgSend:
 			return handleMsgSend(ctx, k, msg)
@@ -16,7 +17,7 @@ func NewHandler(k Keeper) sdk.Handler {
 			return handleMsgIssue(ctx, k, msg)
 		default:
 			errMsg := "Unrecognized bank Msg type: " + reflect.TypeOf(msg).Name()
-			return sdk.ErrUnknownRequest(errMsg).Result()
+			return bam.ErrUnknownRequest(errMsg).Result()
 		}
 	}
 }

@@ -7,4 +7,4 @@ BaseApp has no state except the CommitMultiStore you provide upon init.
 
 See examples/basecoin/app/* for usage.
 */
-package baseapp
+package sdk

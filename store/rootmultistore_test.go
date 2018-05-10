@@ -3,12 +3,11 @@ package store
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/merkle"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const useDebugDB = false
@@ -165,11 +164,11 @@ func TestMultiStoreQuery(t *testing.T) {
 func newMultiStoreWithMounts(db dbm.DB) *rootMultiStore {
 	store := NewCommitMultiStore(db)
 	store.MountStoreWithDB(
-		sdk.NewKVStoreKey("store1"), sdk.StoreTypeIAVL, db)
+		NewKVStoreKey("store1"), StoreTypeIAVL, db)
 	store.MountStoreWithDB(
-		sdk.NewKVStoreKey("store2"), sdk.StoreTypeIAVL, db)
+		NewKVStoreKey("store2"), StoreTypeIAVL, db)
 	store.MountStoreWithDB(
-		sdk.NewKVStoreKey("store3"), sdk.StoreTypeIAVL, db)
+		NewKVStoreKey("store3"), StoreTypeIAVL, db)
 	return store
 }
 

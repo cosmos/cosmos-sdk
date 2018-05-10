@@ -9,8 +9,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/tendermint/go-crypto/keys"
 
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank/client"
 )
@@ -22,8 +22,8 @@ func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb 
 
 type sendBody struct {
 	// fees is not used currently
-	// Fees             sdk.Coin  `json="fees"`
-	Amount           sdk.Coins `json:"amount"`
+	// Fees             bam.Coin  `json="fees"`
+	Amount           bam.Coins `json:"amount"`
 	LocalAccountName string    `json:"name"`
 	Password         string    `json:"password"`
 	ChainID          string    `json:"chain_id"`
@@ -64,7 +64,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 			w.Write([]byte(err.Error()))
 			return
 		}
-		to := sdk.Address(bz)
+		to := bam.Address(bz)
 
 		// build message
 		msg := client.BuildMsg(info.PubKey.Address(), to, m.Amount)

@@ -10,15 +10,14 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
-func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
+func setupMultiStore() (bam.MultiStore, *bam.KVStoreKey) {
 	db := dbm.NewMemDB()
-	capKey := sdk.NewKVStoreKey("capkey")
+	capKey := bam.NewKVStoreKey("capkey")
 	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(capKey, bam.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
 	return ms, capKey
 }
@@ -29,10 +28,10 @@ func TestAccountMapperGetSet(t *testing.T) {
 	RegisterBaseAccount(cdc)
 
 	// make context and mapper
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
+	ctx := bam.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
 
-	addr := sdk.Address([]byte("some-address"))
+	addr := bam.Address([]byte("some-address"))
 
 	// no account before its created
 	acc := mapper.GetAccount(ctx, addr)

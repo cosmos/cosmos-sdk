@@ -2,10 +2,10 @@
 package bank
 
 import (
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Bank errors reserve 100 ~ 199.
 const (
 	DefaultCodespace sdk.CodespaceType = 2
 
@@ -21,7 +21,7 @@ func codeToDefaultMsg(code sdk.CodeType) string {
 	case CodeInvalidOutput:
 		return "Invalid output coins"
 	default:
-		return sdk.CodeToDefaultMsg(code)
+		return bam.CodeToDefaultMsg(code)
 	}
 }
 

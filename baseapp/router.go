@@ -2,20 +2,18 @@ package baseapp
 
 import (
 	"regexp"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Router provides handlers for each transaction type.
 type Router interface {
-	AddRoute(r string, h sdk.Handler) (rtr Router)
-	Route(path string) (h sdk.Handler)
+	AddRoute(r string, h Handler) (rtr Router)
+	Route(path string) (h Handler)
 }
 
 // map a transaction type to a handler and an initgenesis function
 type route struct {
 	r string
-	h sdk.Handler
+	h Handler
 }
 
 type router struct {
@@ -34,7 +32,7 @@ func NewRouter() *router {
 var isAlpha = regexp.MustCompile(`^[a-zA-Z]+$`).MatchString
 
 // AddRoute - TODO add description
-func (rtr *router) AddRoute(r string, h sdk.Handler) Router {
+func (rtr *router) AddRoute(r string, h Handler) Router {
 	if !isAlpha(r) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
@@ -45,7 +43,7 @@ func (rtr *router) AddRoute(r string, h sdk.Handler) Router {
 
 // Route - TODO add description
 // TODO handle expressive matches.
-func (rtr *router) Route(path string) (h sdk.Handler) {
+func (rtr *router) Route(path string) (h Handler) {
 	for _, route := range rtr.routes {
 		if route.r == path {
 			return route.h

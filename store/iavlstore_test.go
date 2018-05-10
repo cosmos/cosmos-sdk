@@ -3,14 +3,13 @@ package store
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/iavl"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (

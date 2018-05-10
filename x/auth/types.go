@@ -1,36 +1,63 @@
-package types
+package auth
 
 import (
+	"encoding/hex"
 	"encoding/json"
+	"errors"
+
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	crypto "github.com/tendermint/go-crypto"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
-// Transactions messages must fulfill the Msg
-type Msg interface {
+// Address in go-crypto style
+type Address = cmn.HexBytes
 
-	// Return the message type.
-	// Must be alphanumeric or empty.
-	Type() string
-
-	// Get the canonical byte representation of the Msg.
-	GetSignBytes() []byte
-
-	// ValidateBasic does a simple validation check that
-	// doesn't require access to any other information.
-	ValidateBasic() Error
-
-	// Signers returns the addrs of signers that must sign.
-	// CONTRACT: All signatures must be present to be valid.
-	// CONTRACT: Returns addrs in some deterministic order.
-	GetSigners() []Address
+// create an Address from a string
+func GetAddress(address string) (addr Address, err error) {
+	if len(address) == 0 {
+		return addr, errors.New("must use provide address")
+	}
+	bz, err := hex.DecodeString(address)
+	if err != nil {
+		return nil, err
+	}
+	return Address(bz), nil
 }
 
-//__________________________________________________________
+// Account is a standard account using a sequence number for replay protection
+// and a pubkey for authentication.
+type Account interface {
+	GetAddress() Address
+	SetAddress(Address) error // errors if already set.
 
-// Transactions objects must fulfill the Tx
-type Tx interface {
+	GetPubKey() crypto.PubKey // can return nil.
+	SetPubKey(crypto.PubKey) error
 
-	// Gets the Msg.
-	GetMsg() Msg
+	GetSequence() int64
+	SetSequence(int64) error
+
+	GetCoins() bam.Coins
+	SetCoins(bam.Coins) error
+}
+
+// AccountDecoder unmarshals account bytes
+type AccountDecoder func(accountBytes []byte) (Account, error)
+
+// Standard Signature
+type StdSignature struct {
+	crypto.PubKey    `json:"pub_key"` // optional
+	crypto.Signature `json:"signature"`
+	Sequence         int64 `json:"sequence"`
+}
+
+var _ bam.Tx = (*StdTx)(nil)
+
+// StdTx is a standard way to wrap a Msg with Fee and Signatures.
+// NOTE: the first signature is the FeePayer (Signatures must not be nil).
+type StdTx struct {
+	Msg bam.Msg `json:"msg"`
+	Fee StdFee  `json:"fee"`
 
 	// Signatures returns the signature of signers who signed the Msg.
 	// CONTRACT: Length returned is same as length of
@@ -39,20 +66,10 @@ type Tx interface {
 	// CONTRACT: If the signature is missing (ie the Msg is
 	// invalid), then the corresponding signature is
 	// .Empty().
-	GetSignatures() []StdSignature
-}
-
-var _ Tx = (*StdTx)(nil)
-
-// StdTx is a standard way to wrap a Msg with Fee and Signatures.
-// NOTE: the first signature is the FeePayer (Signatures must not be nil).
-type StdTx struct {
-	Msg        `json:"msg"`
-	Fee        StdFee         `json:"fee"`
 	Signatures []StdSignature `json:"signatures"`
 }
 
-func NewStdTx(msg Msg, fee StdFee, sigs []StdSignature) StdTx {
+func NewStdTx(msg bam.Msg, fee StdFee, sigs []StdSignature) StdTx {
 	return StdTx{
 		Msg:        msg,
 		Fee:        fee,
@@ -60,14 +77,14 @@ func NewStdTx(msg Msg, fee StdFee, sigs []StdSignature) StdTx {
 	}
 }
 
-//nolint
-func (tx StdTx) GetMsg() Msg                   { return tx.Msg }
+//nolintx
+func (tx StdTx) GetMsg() bam.Msg               { return tx.Msg }
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 
 // FeePayer returns the address responsible for paying the fees
 // for the transactions. It's the first address returned by msg.GetSigners().
 // If GetSigners() is empty, this panics.
-func FeePayer(tx Tx) Address {
+func FeePayer(tx StdTx) bam.Address {
 	return tx.GetMsg().GetSigners()[0]
 }
 
@@ -77,11 +94,11 @@ func FeePayer(tx Tx) Address {
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
 // which must be above some miminum to be accepted into the mempool.
 type StdFee struct {
-	Amount Coins `json"amount"`
-	Gas    int64 `json"gas"`
+	Amount bam.Coins `json:"amount"`
+	Gas    int64     `json:"gas"`
 }
 
-func NewStdFee(gas int64, amount ...Coin) StdFee {
+func NewStdFee(gas int64, amount ...bam.Coin) StdFee {
 	return StdFee{
 		Amount: amount,
 		Gas:    gas,
@@ -94,8 +111,8 @@ func (fee StdFee) Bytes() []byte {
 	// this is a sign of something ugly
 	// (in the lcd_test, client side its null,
 	// server side its [])
-	if len(fee.Amount) == 0 {
-		fee.Amount = Coins{}
+	if fee.Amount.Len() == 0 {
+		fee.Amount = bam.Coins{}
 	}
 	bz, err := json.Marshal(fee) // TODO
 	if err != nil {
@@ -121,7 +138,7 @@ type StdSignDoc struct {
 
 // StdSignBytes returns the bytes to sign for a transaction.
 // TODO: change the API to just take a chainID and StdTx ?
-func StdSignBytes(chainID string, sequences []int64, fee StdFee, msg Msg) []byte {
+func StdSignBytes(chainID string, sequences []int64, fee StdFee, msg bam.Msg) []byte {
 	bz, err := json.Marshal(StdSignDoc{
 		ChainID:   chainID,
 		Sequences: sequences,
@@ -141,45 +158,11 @@ type StdSignMsg struct {
 	ChainID   string
 	Sequences []int64
 	Fee       StdFee
-	Msg       Msg
+	Msg       bam.Msg
 	// XXX: Alt
 }
 
 // get message bytes
 func (msg StdSignMsg) Bytes() []byte {
 	return StdSignBytes(msg.ChainID, msg.Sequences, msg.Fee, msg.Msg)
-}
-
-//__________________________________________________________
-
-// TxDeocder unmarshals transaction bytes
-type TxDecoder func(txBytes []byte) (Tx, Error)
-
-//__________________________________________________________
-
-var _ Msg = (*TestMsg)(nil)
-
-// msg type for testing
-type TestMsg struct {
-	signers []Address
-}
-
-func NewTestMsg(addrs ...Address) *TestMsg {
-	return &TestMsg{
-		signers: addrs,
-	}
-}
-
-//nolint
-func (msg *TestMsg) Type() string { return "TestMsg" }
-func (msg *TestMsg) GetSignBytes() []byte {
-	bz, err := json.Marshal(msg.signers)
-	if err != nil {
-		panic(err)
-	}
-	return bz
-}
-func (msg *TestMsg) ValidateBasic() Error { return nil }
-func (msg *TestMsg) GetSigners() []Address {
-	return msg.signers
 }

@@ -7,11 +7,10 @@ import (
 
 	crypto "github.com/tendermint/go-crypto"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.Address) {
+func keyPubAddr() (crypto.PrivKey, crypto.PubKey, bam.Address) {
 	key := crypto.GenPrivKeyEd25519()
 	pub := key.PubKey()
 	addr := pub.Address()
@@ -55,7 +54,7 @@ func TestBaseAccountCoins(t *testing.T) {
 	_, _, addr := keyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
-	someCoins := sdk.Coins{{"atom", 123}, {"eth", 246}}
+	someCoins := bam.Coins{{"atom", 123}, {"eth", 246}}
 
 	err := acc.SetCoins(someCoins)
 	assert.Nil(t, err)
@@ -77,7 +76,7 @@ func TestBaseAccountMarshal(t *testing.T) {
 	_, pub, addr := keyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
-	someCoins := sdk.Coins{{"atom", 123}, {"eth", 246}}
+	someCoins := bam.Coins{{"atom", 123}, {"eth", 246}}
 	seq := int64(7)
 
 	// set everything on the account

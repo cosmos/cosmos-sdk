@@ -1,4 +1,4 @@
-package sdk
+package errors
 
 import (
 	"fmt"
@@ -16,7 +16,7 @@ type CodeType uint16
 // CodespaceType - codespace identifier
 type CodespaceType uint16
 
-// root error codes
+// SDK error codes
 const (
 
 	// ABCI error codes
@@ -26,7 +26,6 @@ const (
 	CodeOK             CodeType = 0
 	CodeInternal       CodeType = 1
 	CodeUnknownRequest CodeType = 2
-	CodeTxDecode       CodeType = 3
 
 	// CodespaceRoot is a codespace for error codes in this file only.
 	// Notice that 0 is an "unset" codespace, which can be overridden with
@@ -71,16 +70,11 @@ func (code ABCICodeType) IsOK() bool {
 
 // NewError - create an error
 func NewError(codespace CodespaceType, code CodeType, msg string) Error {
-	return &StdError{
+	return &sdkError{
 		codespace: codespace,
 		code:      code,
 		err:       cmn.NewErrorWithT(code, msg),
 	}
-}
-
-// Internal Error on Root Codespace
-func ErrInternal(msg string) Error {
-	return NewError(CodespaceRoot, CodeInternal, msg)
 }
 
 // Unknown Request Error on Root Codespace
@@ -88,12 +82,6 @@ func ErrUnknownRequest(msg string) Error {
 	return NewError(CodespaceRoot, CodeUnknownRequest, msg)
 }
 
-// Unknown TxDecode Error on Root Codespace
-func ErrTxDecode(msg string) Error {
-	return NewError(CodespaceRoot, CodeTxDecode, msg)
-}
-
-// StdError -- implements Error interface
 type StdError struct {
 	codespace CodespaceType
 	code      CodeType
@@ -101,22 +89,22 @@ type StdError struct {
 }
 
 // Implements ABCIError.
-func (err *StdError) Error() string {
+func (err *SdkError) Error() string {
 	return fmt.Sprintf("Error{%d:%d,%#v}", err.codespace, err.code, err.err)
 }
 
 // Implements ABCIError.
-func (err *StdError) ABCICode() ABCICodeType {
+func (err *SdkError) ABCICode() ABCICodeType {
 	return ToABCICode(err.codespace, err.code)
 }
 
 // Implements Error.
-func (err *StdError) Codespace() CodespaceType {
+func (err *SdkError) Codespace() CodespaceType {
 	return err.codespace
 }
 
 // Implements Error.
-func (err *StdError) Code() CodeType {
+func (err *SdkError) Code() CodeType {
 	return err.code
 }
 
@@ -133,7 +121,7 @@ Error:     %#v
 
 // Add tracing information with msg.
 func (err *StdError) Trace(msg string) Error {
-	return &StdError{
+	return &SdkError{
 		codespace: err.codespace,
 		code:      err.code,
 		err:       err.err.Trace(msg),
@@ -141,23 +129,23 @@ func (err *StdError) Trace(msg string) Error {
 }
 
 // Implements Error.
-func (err *StdError) WithDefaultCodespace(cs CodespaceType) Error {
+func (err *SdkError) WithDefaultCodespace(cs CodespaceType) Error {
 	codespace := err.codespace
 	if codespace == CodespaceUndefined {
 		codespace = cs
 	}
-	return &StdError{
+	return &SdkError{
 		codespace: codespace,
 		code:      err.code,
 		err:       err.err,
 	}
 }
 
-func (err *StdError) T() interface{} {
+func (err *baseError) T() interface{} {
 	return err.err.T()
 }
 
-func (err *StdError) Result() Result {
+func (err *SdkError) Result() Result {
 	return Result{
 		Code: err.ABCICode(),
 		Log:  err.ABCILog(),
@@ -165,7 +153,7 @@ func (err *StdError) Result() Result {
 }
 
 // QueryResult allows us to return sdk.Error.QueryResult() in query responses
-func (err *StdError) QueryResult() abci.ResponseQuery {
+func (err *SdkError) QueryResult() abci.ResponseQuery {
 	return abci.ResponseQuery{
 		Code: uint32(err.ABCICode()),
 		Log:  err.ABCILog(),

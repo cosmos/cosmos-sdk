@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/viper"
 )
@@ -11,33 +12,31 @@ import (
 // NewAnteHandler returns an AnteHandler that checks
 // and increments sequence numbers, checks signatures,
 // and deducts fees from the first signer.
-func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHandler {
+func NewAnteHandler(accountMapper AccountMapper, feeHandler bam.FeeHandler) bam.AnteHandler {
 	return func(
-		ctx sdk.Context, tx sdk.Tx,
+		ctx sdk.Context, tx bam.Tx,
 	) (_ sdk.Context, _ sdk.Result, abort bool) {
 
+		stdTx, ok := tx.(StdTx)
+		if !ok {
+			return ctx, bam.ErrInternal("tx must be bam.StdTx").Result(), true
+		}
+
 		// Assert that there are signatures.
-		var sigs = tx.GetSignatures()
+		var sigs = stdTx.GetSignatures()
 		if len(sigs) == 0 {
 			return ctx,
-				sdk.ErrUnauthorized("no signers").Result(),
+				bam.ErrUnauthorized("no signers").Result(),
 				true
 		}
 
-		// TODO: can tx just implement message?
-		msg := tx.GetMsg()
-
-		// TODO: will this always be a stdtx? should that be used in the function signature?
-		stdTx, ok := tx.(sdk.StdTx)
-		if !ok {
-			return ctx, sdk.ErrInternal("tx must be sdk.StdTx").Result(), true
-		}
+		msg := stdTx.GetMsg()
 
 		// Assert that number of signatures is correct.
 		var signerAddrs = msg.GetSigners()
 		if len(sigs) != len(signerAddrs) {
 			return ctx,
-				sdk.ErrUnauthorized("wrong number of signers").Result(),
+				bam.ErrUnauthorized("wrong number of signers").Result(),
 				true
 		}
 
@@ -53,10 +52,10 @@ func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) 
 		if chainID == "" {
 			chainID = viper.GetString("chain-id")
 		}
-		signBytes := sdk.StdSignBytes(ctx.ChainID(), sequences, fee, msg)
+		signBytes := StdSignBytes(ctx.ChainID(), sequences, fee, msg)
 
 		// Check sig and nonce and collect signer accounts.
-		var signerAccs = make([]sdk.Account, len(signerAddrs))
+		var signerAccs = make([]Account, len(signerAddrs))
 		for i := 0; i < len(sigs); i++ {
 			signerAddr, sig := signerAddrs[i], sigs[i]
 
@@ -98,20 +97,20 @@ func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) 
 // verify the signature and increment the sequence.
 // if the account doesn't have a pubkey, set it.
 func processSig(
-	ctx sdk.Context, am sdk.AccountMapper,
-	addr sdk.Address, sig sdk.StdSignature, signBytes []byte) (
-	acc sdk.Account, res sdk.Result) {
+	ctx sdk.Context, am AccountMapper,
+	addr bam.Address, sig StdSignature, signBytes []byte) (
+	acc Account, res sdk.Result) {
 
 	// Get the account.
 	acc = am.GetAccount(ctx, addr)
 	if acc == nil {
-		return nil, sdk.ErrUnknownAddress(addr.String()).Result()
+		return nil, bam.ErrUnknownAddress(addr.String()).Result()
 	}
 
 	// Check and increment sequence number.
 	seq := acc.GetSequence()
 	if seq != sig.Sequence {
-		return nil, sdk.ErrInvalidSequence(
+		return nil, bam.ErrInvalidSequence(
 			fmt.Sprintf("Invalid sequence. Got %d, expected %d", sig.Sequence, seq)).Result()
 	}
 	acc.SetSequence(seq + 1)
@@ -122,21 +121,21 @@ func processSig(
 	if pubKey == nil {
 		pubKey = sig.PubKey
 		if pubKey == nil {
-			return nil, sdk.ErrInvalidPubKey("PubKey not found").Result()
+			return nil, bam.ErrInvalidPubKey("PubKey not found").Result()
 		}
 		if !bytes.Equal(pubKey.Address(), addr) {
-			return nil, sdk.ErrInvalidPubKey(
+			return nil, bam.ErrInvalidPubKey(
 				fmt.Sprintf("PubKey does not match Signer address %v", addr)).Result()
 		}
 		err := acc.SetPubKey(pubKey)
 		if err != nil {
-			return nil, sdk.ErrInternal("setting PubKey on signer's account").Result()
+			return nil, bam.ErrInternal("setting PubKey on signer's account").Result()
 		}
 	}
 
 	// Check sig.
 	if !pubKey.VerifyBytes(signBytes, sig.Signature) {
-		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
+		return nil, bam.ErrUnauthorized("signature verification failed").Result()
 	}
 
 	return
@@ -145,19 +144,19 @@ func processSig(
 // Deduct the fee from the account.
 // We could use the CoinKeeper (in addition to the AccountMapper,
 // because the CoinKeeper doesn't give us accounts), but it seems easier to do this.
-func deductFees(acc sdk.Account, fee sdk.StdFee) (sdk.Account, sdk.Result) {
+func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 	coins := acc.GetCoins()
 	feeAmount := fee.Amount
 
 	newCoins := coins.Minus(feeAmount)
 	if !newCoins.IsNotNegative() {
 		errMsg := fmt.Sprintf("%s < %s", coins, feeAmount)
-		return nil, sdk.ErrInsufficientFunds(errMsg).Result()
+		return nil, bam.ErrInsufficientFunds(errMsg).Result()
 	}
 	acc.SetCoins(newCoins)
 	return acc, sdk.Result{}
 }
 
 // BurnFeeHandler burns all fees (decreasing total supply)
-func BurnFeeHandler(ctx sdk.Context, tx sdk.Tx, fee sdk.Coins) {
+func BurnFeeHandler(ctx sdk.Context, tx bam.Tx, fee bam.Coins) {
 }

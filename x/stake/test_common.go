@@ -1,6 +1,7 @@
 package stake
 
 import (
+	"bytes"
 	"encoding/hex"
 	"testing"
 
@@ -9,6 +10,7 @@ import (
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
 	dbm "github.com/tendermint/tmlibs/db"
+	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,6 +52,30 @@ var (
 	emptyPubkey crypto.PubKey
 )
 
+func validatorsEqual(b1, b2 Validator) bool {
+	return bytes.Equal(b1.Address, b2.Address) &&
+		b1.PubKey.Equals(b2.PubKey) &&
+		b1.Power.Equal(b2.Power) &&
+		b1.Height == b2.Height &&
+		b1.Counter == b2.Counter
+}
+
+func candidatesEqual(c1, c2 Candidate) bool {
+	return c1.Status == c2.Status &&
+		c1.PubKey.Equals(c2.PubKey) &&
+		bytes.Equal(c1.Address, c2.Address) &&
+		c1.Assets.Equal(c2.Assets) &&
+		c1.Liabilities.Equal(c2.Liabilities) &&
+		c1.Description == c2.Description
+}
+
+func bondsEqual(b1, b2 DelegatorBond) bool {
+	return bytes.Equal(b1.DelegatorAddr, b2.DelegatorAddr) &&
+		bytes.Equal(b1.CandidateAddr, b2.CandidateAddr) &&
+		b1.Height == b2.Height &&
+		b1.Shares.Equal(b2.Shares)
+}
+
 // default params for testing
 func defaultParams() Params {
 	return Params{
@@ -58,7 +84,7 @@ func defaultParams() Params {
 		InflationMin:        sdk.NewRat(7, 100),
 		GoalBonded:          sdk.NewRat(67, 100),
 		MaxValidators:       100,
-		BondDenom:           "fermion",
+		BondDenom:           "steak",
 	}
 }
 
@@ -66,8 +92,8 @@ func defaultParams() Params {
 func initialPool() Pool {
 	return Pool{
 		TotalSupply:       0,
-		BondedShares:      sdk.ZeroRat,
-		UnbondedShares:    sdk.ZeroRat,
+		BondedShares:      sdk.ZeroRat(),
+		UnbondedShares:    sdk.ZeroRat(),
 		BondedPool:        0,
 		UnbondedPool:      0,
 		InflationLastTime: 0,
@@ -112,12 +138,12 @@ func makeTestCodec() *wire.Codec {
 
 func paramsNoInflation() Params {
 	return Params{
-		InflationRateChange: sdk.ZeroRat,
-		InflationMax:        sdk.ZeroRat,
-		InflationMin:        sdk.ZeroRat,
+		InflationRateChange: sdk.ZeroRat(),
+		InflationMax:        sdk.ZeroRat(),
+		InflationMin:        sdk.ZeroRat(),
 		GoalBonded:          sdk.NewRat(67, 100),
 		MaxValidators:       100,
-		BondDenom:           "fermion",
+		BondDenom:           "steak",
 	}
 }
 
@@ -132,7 +158,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil, log.NewNopLogger())
 	cdc := makeTestCodec()
 	accountMapper := auth.NewAccountMapper(
 		cdc,                 // amino codec

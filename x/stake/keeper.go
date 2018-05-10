@@ -16,7 +16,7 @@ type Keeper struct {
 	coinKeeper bank.Keeper
 
 	// caches
-	gs     Pool
+	pool   Pool
 	params Params
 
 	// codespace
@@ -371,6 +371,30 @@ func (k Keeper) GetDelegatorBond(ctx sdk.Context,
 	return bond, true
 }
 
+// load all bonds
+func (k Keeper) getBonds(ctx sdk.Context, maxRetrieve int16) (bonds []DelegatorBond) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := store.Iterator(subspace(DelegatorBondKeyPrefix))
+
+	bonds = make([]DelegatorBond, maxRetrieve)
+	i := 0
+	for ; ; i++ {
+		if !iterator.Valid() || i > int(maxRetrieve-1) {
+			iterator.Close()
+			break
+		}
+		bondBytes := iterator.Value()
+		var bond DelegatorBond
+		err := k.cdc.UnmarshalBinary(bondBytes, &bond)
+		if err != nil {
+			panic(err)
+		}
+		bonds[i] = bond
+		iterator.Next()
+	}
+	return bonds[:i] // trim
+}
+
 // load all bonds of a delegator
 func (k Keeper) GetDelegatorBonds(ctx sdk.Context, delegator sdk.Address, maxRetrieve int16) (bonds []DelegatorBond) {
 	store := ctx.KVStore(k.storeKey)
@@ -415,7 +439,7 @@ func (k Keeper) removeDelegatorBond(ctx sdk.Context, bond DelegatorBond) {
 // load/save the global staking params
 func (k Keeper) GetParams(ctx sdk.Context) (params Params) {
 	// check if cached before anything
-	if k.params != (Params{}) {
+	if !k.params.equal(Params{}) {
 		return k.params
 	}
 	store := ctx.KVStore(k.storeKey)
@@ -443,17 +467,17 @@ func (k Keeper) setParams(ctx sdk.Context, params Params) {
 //_______________________________________________________________________
 
 // load/save the pool
-func (k Keeper) GetPool(ctx sdk.Context) (gs Pool) {
+func (k Keeper) GetPool(ctx sdk.Context) (pool Pool) {
 	// check if cached before anything
-	if k.gs != (Pool{}) {
-		return k.gs
+	if !k.pool.equal(Pool{}) {
+		return k.pool
 	}
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(PoolKey)
 	if b == nil {
 		panic("Stored pool should not have been nil")
 	}
-	err := k.cdc.UnmarshalBinary(b, &gs)
+	err := k.cdc.UnmarshalBinary(b, &pool)
 	if err != nil {
 		panic(err) // This error should never occur big problem if does
 	}
@@ -467,5 +491,5 @@ func (k Keeper) setPool(ctx sdk.Context, p Pool) {
 		panic(err)
 	}
 	store.Set(PoolKey, b)
-	k.gs = Pool{} // clear the cache
+	k.pool = Pool{} //clear the cache
 }

@@ -106,12 +106,3 @@ func TestBaseAccountMarshal(t *testing.T) {
 	assert.NotNil(t, err)
 
 }
-
-func TestBaseAccountGetSet(t *testing.T) {
-	_, _, addr := keyPubAddr()
-	acc := NewBaseAccountWithAddress(addr)
-
-	// Get/Set are not yet defined - all values cause a panic.
-	assert.Panics(t, func() { acc.Get("key") })
-	assert.Panics(t, func() { acc.Set("key", "value") })
-}

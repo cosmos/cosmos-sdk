@@ -58,13 +58,6 @@ func TestMsgMineString(t *testing.T) {
 	assert.Equal(t, res, "MsgMine{Sender: 73656E646572, Difficulty: 0, Count: 0, Nonce: 0, Proof: abc}")
 }
 
-func TestMsgMineGet(t *testing.T) {
-	addr := sdk.Address([]byte("sender"))
-	msg := MsgMine{addr, 0, 0, 0, []byte("")}
-	res := msg.Get(nil)
-	assert.Nil(t, res)
-}
-
 func TestMsgMineGetSignBytes(t *testing.T) {
 	addr := sdk.Address([]byte("sender"))
 	msg := MsgMine{addr, 1, 1, 1, []byte("abc")}

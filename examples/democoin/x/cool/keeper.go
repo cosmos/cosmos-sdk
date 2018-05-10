@@ -44,7 +44,13 @@ func (k Keeper) CheckTrend(ctx sdk.Context, guessedTrend string) bool {
 }
 
 // InitGenesis - store the genesis trend
-func (k Keeper) InitGenesis(ctx sdk.Context, data Genesis) error {
+func InitGenesis(ctx sdk.Context, k Keeper, data Genesis) error {
 	k.setTrend(ctx, data.Trend)
 	return nil
+}
+
+// WriteGenesis - output the genesis trend
+func WriteGenesis(ctx sdk.Context, k Keeper) Genesis {
+	trend := k.GetTrend(ctx)
+	return Genesis{trend}
 }

@@ -17,12 +17,12 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
-	simplestakingcmd "github.com/cosmos/cosmos-sdk/x/simplestake/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
 	coolcmd "github.com/cosmos/cosmos-sdk/examples/democoin/x/cool/client/cli"
 	powcmd "github.com/cosmos/cosmos-sdk/examples/democoin/x/pow/client/cli"
+	simplestakingcmd "github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake/client/cli"
 )
 
 // rootCmd is the entry point for this binary
@@ -54,7 +54,7 @@ func main() {
 	// start with commands common to basecoin
 	rootCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("main", cdc, types.GetAccountDecoder(cdc)),
+			authcmd.GetAccountCmd("acc", cdc, types.GetAccountDecoder(cdc)),
 		)...)
 	rootCmd.AddCommand(
 		client.PostCommands(

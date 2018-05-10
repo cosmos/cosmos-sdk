@@ -7,6 +7,7 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
+	"github.com/tendermint/tmlibs/log"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,7 +31,7 @@ func TestKeeper(t *testing.T) {
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	coinKeeper := NewKeeper(accountMapper)
 
@@ -116,7 +117,7 @@ func TestSendKeeper(t *testing.T) {
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	coinKeeper := NewKeeper(accountMapper)
 	sendKeeper := NewSendKeeper(accountMapper)
@@ -185,7 +186,7 @@ func TestViewKeeper(t *testing.T) {
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	coinKeeper := NewKeeper(accountMapper)
 	viewKeeper := NewViewKeeper(accountMapper)

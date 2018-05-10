@@ -37,9 +37,6 @@ type Account interface {
 
 	GetCoins() Coins
 	SetCoins(Coins) error
-
-	Get(key interface{}) (value interface{}, err error)
-	Set(key interface{}, value interface{}) error
 }
 
 // AccountMapper stores and retrieves accounts from stores
@@ -48,6 +45,7 @@ type AccountMapper interface {
 	NewAccountWithAddress(ctx Context, addr Address) Account
 	GetAccount(ctx Context, addr Address) Account
 	SetAccount(ctx Context, acc Account)
+	IterateAccounts(ctx Context, process func(Account) (stop bool))
 }
 
 // AccountDecoder unmarshals account bytes

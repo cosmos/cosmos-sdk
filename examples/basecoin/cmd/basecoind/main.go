@@ -1,8 +1,8 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -25,7 +25,9 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, server.DefaultAppInit, generateApp)
+	server.AddCommands(ctx, cdc, rootCmd, server.DefaultAppInit,
+		server.ConstructAppCreator(newApp, "basecoin"),
+		server.ConstructAppExporter(exportAppState, "basecoin"))
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.basecoind")
@@ -33,12 +35,11 @@ func main() {
 	executor.Execute()
 }
 
-func generateApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	dataDir := filepath.Join(rootDir, "data")
-	db, err := dbm.NewGoLevelDB("basecoin", dataDir)
-	if err != nil {
-		return nil, err
-	}
+func newApp(logger log.Logger, db dbm.DB) abci.Application {
+	return app.NewBasecoinApp(logger, db)
+}
+
+func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
 	bapp := app.NewBasecoinApp(logger, db)
-	return bapp, nil
+	return bapp.ExportAppStateJSON()
 }

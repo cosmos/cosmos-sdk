@@ -62,7 +62,7 @@ func (k Keeper) nextInflation(ctx sdk.Context) (inflation sdk.Rat) {
 	// 7% and 20%.
 
 	// (1 - bondedRatio/GoalBonded) * InflationRateChange
-	inflationRateChangePerYear := sdk.OneRat.Sub(pool.bondedRatio().Quo(params.GoalBonded)).Mul(params.InflationRateChange)
+	inflationRateChangePerYear := sdk.OneRat().Sub(pool.bondedRatio().Quo(params.GoalBonded)).Mul(params.InflationRateChange)
 	inflationRateChange := inflationRateChangePerYear.Quo(hrsPerYrRat)
 
 	// increase the new annual inflation for this next cycle

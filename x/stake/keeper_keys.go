@@ -18,11 +18,10 @@ var (
 	CandidatesKey          = []byte{0x02} // prefix for each key to a candidate
 	ValidatorsKey          = []byte{0x03} // prefix for each key to a validator
 	AccUpdateValidatorsKey = []byte{0x04} // prefix for each key to a validator which is being updated
-	RecentValidatorsKey    = []byte{0x05} // prefix for each key to the last updated validator group
+	CurrentValidatorsKey   = []byte{0x05} // prefix for each key to the last updated validator group
 	ToKickOutValidatorsKey = []byte{0x06} // prefix for each key to the last updated validator group
-	DelegatorBondKeyPrefix = []byte{0x07} // prefix for each key to a delegator's bond
+	DelegationKeyPrefix    = []byte{0x07} // prefix for each key to a delegator's bond
 	IntraTxCounterKey      = []byte{0x08} // key for block-local tx index
-	PowerChangeKey         = []byte{0x09} // prefix for power change object
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -53,15 +52,10 @@ func GetAccUpdateValidatorKey(addr sdk.Address) []byte {
 	return append(AccUpdateValidatorsKey, addr.Bytes()...)
 }
 
-// get the key for the recent validator group, ordered like tendermint
-func GetRecentValidatorKey(pk crypto.PubKey) []byte {
+// get the key for the current validator group, ordered like tendermint
+func GetCurrentValidatorsKey(pk crypto.PubKey) []byte {
 	addr := pk.Address()
-	return append(RecentValidatorsKey, addr.Bytes()...)
-}
-
-// remove the prefix byte from a key
-func AddrFromKey(key []byte) sdk.Address {
-	return key[1:]
+	return append(CurrentValidatorsKey, addr.Bytes()...)
 }
 
 // get the key for the accumulated update validators
@@ -70,22 +64,22 @@ func GetToKickOutValidatorKey(addr sdk.Address) []byte {
 }
 
 // get the key for delegator bond with candidate
-func GetDelegatorBondKey(delegatorAddr, candidateAddr sdk.Address, cdc *wire.Codec) []byte {
-	return append(GetDelegatorBondsKey(delegatorAddr, cdc), candidateAddr.Bytes()...)
+func GetDelegationKey(delegatorAddr, candidateAddr sdk.Address, cdc *wire.Codec) []byte {
+	return append(GetDelegationsKey(delegatorAddr, cdc), candidateAddr.Bytes()...)
 }
 
 // get the prefix for a delegator for all candidates
-func GetDelegatorBondsKey(delegatorAddr sdk.Address, cdc *wire.Codec) []byte {
+func GetDelegationsKey(delegatorAddr sdk.Address, cdc *wire.Codec) []byte {
 	res, err := cdc.MarshalBinary(&delegatorAddr)
 	if err != nil {
 		panic(err)
 	}
-	return append(DelegatorBondKeyPrefix, res...)
+	return append(DelegationKeyPrefix, res...)
 }
 
-// get the key for the accumulated update validators
-func GetPowerChangeKey(height int64) []byte {
-	heightBytes := make([]byte, binary.MaxVarintLen64)
-	binary.BigEndian.PutUint64(heightBytes, ^uint64(height)) // invert height (older validators first)
-	return append(PowerChangeKey, heightBytes...)
+//______________________________________________________________
+
+// remove the prefix byte from a key, possibly revealing and address
+func AddrFromKey(key []byte) sdk.Address {
+	return key[1:]
 }

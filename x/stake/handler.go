@@ -56,7 +56,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		k.setCandidate(ctx, candidate)
 	}
 	for _, bond := range data.Bonds {
-		k.setDelegatorBond(ctx, bond)
+		k.setDelegation(ctx, bond)
 	}
 }
 
@@ -169,9 +169,9 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	bondAmt sdk.Coin, candidate Candidate) (sdk.Tags, sdk.Error) {
 
 	// Get or create the delegator bond
-	bond, found := k.GetDelegatorBond(ctx, delegatorAddr, candidate.Address)
+	bond, found := k.GetDelegation(ctx, delegatorAddr, candidate.Address)
 	if !found {
-		bond = DelegatorBond{
+		bond = Delegation{
 			DelegatorAddr: delegatorAddr,
 			CandidateAddr: candidate.Address,
 			Shares:        sdk.ZeroRat(),
@@ -190,7 +190,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	// Update bond height
 	bond.Height = ctx.BlockHeight()
 
-	k.setDelegatorBond(ctx, bond)
+	k.setDelegation(ctx, bond)
 	k.setCandidate(ctx, candidate)
 	k.setPool(ctx, pool)
 	tags := sdk.NewTags("action", []byte("delegate"), "delegator", delegatorAddr.Bytes(), "candidate", candidate.Address.Bytes())
@@ -200,7 +200,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 	// check if bond has any shares in it unbond
-	bond, found := k.GetDelegatorBond(ctx, msg.DelegatorAddr, msg.CandidateAddr)
+	bond, found := k.GetDelegation(ctx, msg.DelegatorAddr, msg.CandidateAddr)
 	if !found {
 		return ErrNoDelegatorForAddress(k.codespace).Result()
 	}
@@ -257,11 +257,11 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 			revokeCandidacy = true
 		}
 
-		k.removeDelegatorBond(ctx, bond)
+		k.removeDelegation(ctx, bond)
 	} else {
 		// Update bond height
 		bond.Height = ctx.BlockHeight()
-		k.setDelegatorBond(ctx, bond)
+		k.setDelegation(ctx, bond)
 	}
 
 	// Add the coins

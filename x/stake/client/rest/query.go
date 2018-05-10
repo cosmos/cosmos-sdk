@@ -43,7 +43,7 @@ func BondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 		}
 		candidateAddr := sdk.Address(bz)
 
-		key := stake.GetDelegatorBondKey(delegatorAddr, candidateAddr, cdc)
+		key := stake.GetDelegationKey(delegatorAddr, candidateAddr, cdc)
 
 		res, err := ctx.Query(key, storeName)
 		if err != nil {
@@ -58,7 +58,7 @@ func BondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 			return
 		}
 
-		var bond stake.DelegatorBond
+		var bond stake.Delegation
 		err = cdc.UnmarshalBinary(res, &bond)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

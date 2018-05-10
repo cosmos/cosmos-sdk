@@ -11,13 +11,13 @@ import (
 
 // GenesisState - all staking state that must be provided at genesis
 type GenesisState struct {
-	Pool       Pool            `json:"pool"`
-	Params     Params          `json:"params"`
-	Candidates []Candidate     `json:"candidates"`
-	Bonds      []DelegatorBond `json:"bonds"`
+	Pool       Pool         `json:"pool"`
+	Params     Params       `json:"params"`
+	Candidates []Candidate  `json:"candidates"`
+	Bonds      []Delegation `json:"bonds"`
 }
 
-func NewGenesisState(pool Pool, params Params, candidates []Candidate, bonds []DelegatorBond) GenesisState {
+func NewGenesisState(pool Pool, params Params, candidates []Candidate, bonds []Delegation) GenesisState {
 	return GenesisState{
 		Pool:       pool,
 		Params:     params,
@@ -45,9 +45,6 @@ type Params struct {
 
 	MaxValidators uint16 `json:"max_validators"` // maximum number of validators
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
-
-	FeeDenoms      []string `json:"fee_denoms"`       // accepted fee denoms
-	ReservePoolFee sdk.Rat  `json:"reserve_pool_fee"` // percent of fees which go to reserve pool
 }
 
 func (p Params) equal(p2 Params) bool {
@@ -56,8 +53,7 @@ func (p Params) equal(p2 Params) bool {
 		p.InflationMin.Equal(p2.InflationMin) &&
 		p.GoalBonded.Equal(p2.GoalBonded) &&
 		p.MaxValidators == p2.MaxValidators &&
-		p.BondDenom == p2.BondDenom &&
-		p.ReservePoolFee.Equal(p2.ReservePoolFee)
+		p.BondDenom == p2.BondDenom
 }
 
 func defaultParams() Params {
@@ -68,8 +64,6 @@ func defaultParams() Params {
 		GoalBonded:          sdk.NewRat(67, 100),
 		MaxValidators:       100,
 		BondDenom:           "steak",
-		FeeDenoms:           []string{"steak"},
-		ReservePoolFee:      sdk.NewRat(5, 100),
 	}
 }
 
@@ -90,12 +84,7 @@ type Pool struct {
 	DateLastCommissionReset int64 `json:"date_last_commission_reset"` // unix timestamp for last commission accounting reset (daily)
 
 	// Fee Related
-	FeeReservePool   sdk.Coins `json:"fee_reserve_pool"`   // XXX reserve pool of collected fees for use by governance
-	FeePool          sdk.Coins `json:"fee_pool"`           // XXX fee pool for all the fee shares which have already been distributed
-	FeeSumReceived   sdk.Coins `json:"fee_sum_received"`   // XXX sum of all fees received, post reserve pool `json:"fee_sum_received"`
-	FeeRecent        sdk.Coins `json:"fee_recent"`         // XXX most recent fee collected
-	FeeAdjustments   []sdk.Rat `json:"fee_adjustments"`    // XXX Adjustment factors for lazy fee accounting, couples with Params.BondDenoms
-	PrevBondedShares sdk.Rat   `json:"prev_bonded_shares"` // XXX last recorded bonded shares
+	PrevBondedShares sdk.Rat `json:"prev_bonded_shares"` // last recorded bonded shares - for fee calcualtions
 }
 
 func (p Pool) equal(p2 Pool) bool {
@@ -107,11 +96,6 @@ func (p Pool) equal(p2 Pool) bool {
 		p.InflationLastTime == p2.InflationLastTime &&
 		p.Inflation.Equal(p2.Inflation) &&
 		p.DateLastCommissionReset == p2.DateLastCommissionReset &&
-		p.FeeReservePool.IsEqual(p2.FeeReservePool) &&
-		p.FeePool.IsEqual(p2.FeePool) &&
-		p.FeeSumReceived.IsEqual(p2.FeeSumReceived) &&
-		p.FeeRecent.IsEqual(p2.FeeRecent) &&
-		sdk.RatsEqual(p.FeeAdjustments, p2.FeeAdjustments) &&
 		p.PrevBondedShares.Equal(p2.PrevBondedShares)
 }
 
@@ -128,42 +112,16 @@ func initialPool() Pool {
 		InflationLastTime:       0,
 		Inflation:               sdk.NewRat(7, 100),
 		DateLastCommissionReset: 0,
-		FeeReservePool:          sdk.Coins(nil),
-		FeePool:                 sdk.Coins(nil),
-		FeeSumReceived:          sdk.Coins(nil),
-		FeeRecent:               sdk.Coins(nil),
-		FeeAdjustments:          []sdk.Rat{sdk.ZeroRat()},
 		PrevBondedShares:        sdk.ZeroRat(),
 	}
 }
 
 //_________________________________________________________________________
 
-// Used in calculation of fee shares, added to a queue for each block where a power change occures
-type PowerChange struct {
-	Height      int64     `json:"height"`        // block height at change
-	Power       sdk.Rat   `json:"power"`         // total power at change
-	PrevPower   sdk.Rat   `json:"prev_power"`    // total power at previous height-1
-	FeesIn      sdk.Coins `json:"fees_in"`       // fees in at block height
-	PrevFeePool sdk.Coins `json:"prev_fee_pool"` // total fees in at previous block height
-}
-
-//_________________________________________________________________________
-
-// CandidateStatus - status of a validator-candidate
-type CandidateStatus byte
-
-const (
-	// nolint
-	Bonded   CandidateStatus = 0x00
-	Unbonded CandidateStatus = 0x01
-	Revoked  CandidateStatus = 0x02
-)
-
 // Candidate defines the total amount of bond shares and their exchange rate to
 // coins. Accumulation of interest is modelled as an in increase in the
 // exchange rate, and slashing as a decrease.  When coins are delegated to this
-// candidate, the candidate is credited with a DelegatorBond whose number of
+// candidate, the candidate is credited with a Delegation whose number of
 // bond shares is based on the amount of coins delegated divided by the current
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
@@ -187,8 +145,7 @@ type Candidate struct {
 	CommissionChangeToday sdk.Rat `json:"commission_change_today"` // XXX commission rate change today, reset each day (UTC time)
 
 	// fee related
-	FeeAdjustments   []sdk.Rat `json:"fee_adjustments"`    // XXX Adjustment factors for lazy fee accounting, couples with Params.BondDenoms
-	PrevBondedShares sdk.Rat   `json:"prev_bonded_shares"` // total shares of a global hold pools
+	PrevBondedShares sdk.Rat `json:"prev_bonded_shares"` // total shares of a global hold pools
 }
 
 // Candidates - list of Candidates
@@ -197,21 +154,21 @@ type Candidates []Candidate
 // NewCandidate - initialize a new candidate
 func NewCandidate(address sdk.Address, pubKey crypto.PubKey, description Description) Candidate {
 	return Candidate{
-		Status:                Unbonded,
-		Address:               address,
-		PubKey:                pubKey,
-		BondedShares:          sdk.ZeroRat(),
-		DelegatorShares:       sdk.ZeroRat(),
-		Description:           description,
-		ValidatorBondHeight:   int64(0),
-		ValidatorBondCounter:  int16(0),
-		ProposerRewardPool:    sdk.Coins{},
-		Commission:            sdk.ZeroRat(),
-		CommissionMax:         sdk.ZeroRat(),
-		CommissionChangeRate:  sdk.ZeroRat(),
-		CommissionChangeToday: sdk.ZeroRat(),
-		FeeAdjustments:        []sdk.Rat(nil),
-		PrevBondedShares:      sdk.ZeroRat(),
+		Status:                      Unbonded,
+		Address:                     address,
+		PubKey:                      pubKey,
+		BondedShares:                sdk.ZeroRat(),
+		DelegatorShares:             sdk.ZeroRat(),
+		Description:                 description,
+		ValidatorBondHeight:         int64(0),
+		ValidatorBondIntraTxCounter: int16(0),
+		ProposerRewardPool:          sdk.Coins{},
+		Commission:                  sdk.ZeroRat(),
+		CommissionMax:               sdk.ZeroRat(),
+		CommissionChangeRate:        sdk.ZeroRat(),
+		CommissionChangeToday:       sdk.ZeroRat(),
+		FeeAdjustments:              []sdk.Rat(nil),
+		PrevBondedShares:            sdk.ZeroRat(),
 	}
 }
 
@@ -258,39 +215,6 @@ func (c Candidate) delegatorShareExRate() sdk.Rat {
 	return c.BondedShares.Quo(c.DelegatorShares)
 }
 
-// Validator returns a copy of the Candidate as a Validator.
-// Should only be called when the Candidate qualifies as a validator.
-func (c Candidate) validator() Validator {
-	return Validator{
-		Address: c.Address,
-		PubKey:  c.PubKey,
-		Power:   c.BondedShares,
-		Height:  c.ValidatorBondHeight,
-		Counter: c.ValidatorBondCounter,
-	}
-}
-
-//XXX updateDescription function
-//XXX enforce limit to number of description characters
-
-//______________________________________________________________________
-
-// Validator is one of the top Candidates
-type Validator struct {
-	Address sdk.Address   `json:"address"`
-	PubKey  crypto.PubKey `json:"pub_key"`
-	Power   sdk.Rat       `json:"power"`
-	Height  int64         `json:"height"`  // Earliest height as a validator
-	Counter int16         `json:"counter"` // Block-local tx index for resolving equal voting power & height
-}
-
-// verify equal not including height or counter
-func (v Validator) equal(v2 Validator) bool {
-	return bytes.Equal(v.Address, v2.Address) &&
-		v.PubKey.Equals(v2.PubKey) &&
-		v.Power.Equal(v2.Power)
-}
-
 // abci validator from stake validator type
 func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
 	return abci.Validator{
@@ -308,74 +232,43 @@ func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
 	}
 }
 
+//XXX updateDescription function
+//XXX enforce limit to number of description characters
+
+//______________________________________________________________________
+
+// ensure fulfills the sdk validator types
 var _ sdk.Validator = Validator{}
 
-func (v Validator) GetAddress() sdk.Address {
-	return v.Address
-}
-
-func (v Validator) GetPubKey() crypto.PubKey {
-	return v.PubKey
-}
-
-func (v Validator) GetPower() sdk.Rat {
-	return v.Power
-}
-
-type ValidatorSet []Validator
-
-var _ sdk.ValidatorSet = ValidatorSet{}
-
-func (vs ValidatorSet) Iterate(fn func(int, sdk.Validator)) {
-	for i, v := range vs {
-		fn(i, v)
-	}
-}
-
-func (vs ValidatorSet) Size() int {
-	return len(vs)
-}
+// nolint - for sdk.Validator
+func (v Validator) GetAddress() sdk.Address  { return v.Address }
+func (v Validator) GetPubKey() crypto.PubKey { return v.PubKey }
+func (v Validator) GetPower() sdk.Rat        { return v.Power }
 
 //_________________________________________________________________________
 
-// DelegatorBond represents the bond with tokens held by an account.  It is
+// Delegation represents the bond with tokens held by an account.  It is
 // owned by one delegator, and is associated with the voting power of one
 // pubKey.
 // TODO better way of managing space
-type DelegatorBond struct {
+type Delegation struct {
 	DelegatorAddr sdk.Address `json:"delegator_addr"`
 	CandidateAddr sdk.Address `json:"candidate_addr"`
 	Shares        sdk.Rat     `json:"shares"`
 	Height        int64       `json:"height"` // Last height bond updated
 }
 
-func (b DelegatorBond) equal(b2 DelegatorBond) bool {
+func (b Delegation) equal(b2 Delegation) bool {
 	return bytes.Equal(b.DelegatorAddr, b2.DelegatorAddr) &&
 		bytes.Equal(b.CandidateAddr, b2.CandidateAddr) &&
 		b.Height == b2.Height &&
 		b.Shares.Equal(b2.Shares)
 }
 
-func (b DelegatorBond) GetDelegator() sdk.Address {
-	return b.DelegatorAddr
-}
+// ensure fulfills the sdk validator types
+var _ sdk.Delegation = Delegation{}
 
-func (b DelegatorBond) GetValidator() sdk.Address {
-	return b.CandidateAddr
-}
-
-func (b DelegatorBond) GetBondAmount() sdk.Rat {
-	return b.Shares
-}
-
-type DelegationSet []DelegatorBond
-
-func (ds DelegationSet) Iterate(fn func(int, sdk.Delegation)) {
-	for i, d := range ds {
-		fn(i, d)
-	}
-}
-
-func (ds DelegationSet) Size() int {
-	return len(ds)
-}
+// nolint - for sdk.Delegation
+func (b Delegation) GetDelegator() sdk.Address { return b.DelegatorAddr }
+func (b Delegation) GetValidator() sdk.Address { return b.CandidateAddr }
+func (b Delegation) GetBondAmount() sdk.Rat    { return b.Shares }

@@ -87,7 +87,7 @@ func GetCmdQueryCandidates(storeName string, cdc *wire.Codec) *cobra.Command {
 }
 
 // get the command to query a single delegator bond
-func GetCmdQueryDelegatorBond(storeName string, cdc *wire.Codec) *cobra.Command {
+func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegator-bond",
 		Short: "Query a delegators bond based on address and candidate pubkey",
@@ -104,7 +104,7 @@ func GetCmdQueryDelegatorBond(storeName string, cdc *wire.Codec) *cobra.Command 
 			}
 			delegator := crypto.Address(bz)
 
-			key := stake.GetDelegatorBondKey(delegator, addr, cdc)
+			key := stake.GetDelegationKey(delegator, addr, cdc)
 			ctx := context.NewCoreContextFromViper()
 			res, err := ctx.Query(key, storeName)
 			if err != nil {
@@ -112,7 +112,7 @@ func GetCmdQueryDelegatorBond(storeName string, cdc *wire.Codec) *cobra.Command 
 			}
 
 			// parse out the bond
-			bond := new(stake.DelegatorBond)
+			bond := new(stake.Delegation)
 			cdc.MustUnmarshalBinary(res, bond)
 			output, err := wire.MarshalJSONIndent(cdc, bond)
 			if err != nil {

@@ -431,7 +431,7 @@ func TestStakeMsgs(t *testing.T) {
 	ctxDeliver = gapp.BaseApp.NewContext(false, abci.Header{})
 	res2 = gapp.accountMapper.GetAccount(ctxDeliver, addr2)
 	require.Equal(t, genCoins.Minus(sdk.Coins{bondCoin}), res2.GetCoins())
-	bond, found := gapp.stakeKeeper.GetDelegatorBond(ctxDeliver, addr2, addr1)
+	bond, found := gapp.stakeKeeper.GetDelegation(ctxDeliver, addr2, addr1)
 	require.True(t, found)
 	require.Equal(t, bond.DelegatorAddr, addr2)
 
@@ -445,7 +445,7 @@ func TestStakeMsgs(t *testing.T) {
 	ctxDeliver = gapp.BaseApp.NewContext(false, abci.Header{})
 	res2 = gapp.accountMapper.GetAccount(ctxDeliver, addr2)
 	require.Equal(t, genCoins, res2.GetCoins())
-	_, found = gapp.stakeKeeper.GetDelegatorBond(ctxDeliver, addr2, addr1)
+	_, found = gapp.stakeKeeper.GetDelegation(ctxDeliver, addr2, addr1)
 	require.False(t, found)
 }
 

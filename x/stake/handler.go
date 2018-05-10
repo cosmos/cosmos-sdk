@@ -97,13 +97,15 @@ func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keepe
 
 	candidate := NewCandidate(msg.CandidateAddr, msg.PubKey, msg.Description)
 	k.setCandidate(ctx, candidate)
+	tags := sdk.NewTags("action", []byte("declareCandidacy"), "candidate", msg.CandidateAddr.Bytes(), "moniker", []byte(msg.Description.Moniker), "identity", []byte(msg.Description.Identity))
 
 	// move coins from the msg.Address account to a (self-bond) delegator account
 	// the candidate account and global shares are updated within here
-	tags, err := delegate(ctx, k, msg.CandidateAddr, msg.Bond, candidate)
+	delegateTags, err := delegate(ctx, k, msg.CandidateAddr, msg.Bond, candidate)
 	if err != nil {
 		return err.Result()
 	}
+	tags = tags.AppendTags(delegateTags)
 	return sdk.Result{
 		Tags: tags,
 	}
@@ -130,7 +132,10 @@ func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk
 	candidate.Description.Details = msg.Description.Details
 
 	k.setCandidate(ctx, candidate)
-	return sdk.Result{}
+	tags := sdk.NewTags("action", []byte("editCandidacy"), "candidate", msg.CandidateAddr.Bytes(), "moniker", []byte(msg.Description.Moniker), "identity", []byte(msg.Description.Identity))
+	return sdk.Result{
+		Tags: tags,
+	}
 }
 
 func handleMsgDelegate(ctx sdk.Context, msg MsgDelegate, k Keeper) sdk.Result {

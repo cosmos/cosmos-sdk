@@ -15,14 +15,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-//// create command to query for all candidates
-//func GetCmdQueryCandidates(storeName string, cdc *wire.Codec) *cobra.Command {
+//// create command to query for all validators
+//func GetCmdQueryValidators(storeName string, cdc *wire.Codec) *cobra.Command {
 //cmd := &cobra.Command{
-//Use:   "candidates",
-//Short: "Query for the set of validator-candidates pubkeys",
+//Use:   "validators",
+//Short: "Query for the set of validator-validators pubkeys",
 //RunE: func(cmd *cobra.Command, args []string) error {
 
-//key := stake.CandidatesKey
+//key := stake.ValidatorsKey
 
 //ctx := context.NewCoreContextFromViper()
 //res, err := ctx.Query(key, storeName)
@@ -30,13 +30,13 @@ import (
 //return err
 //}
 
-//// parse out the candidates
-//candidates := new(stake.Candidates)
-//err = cdc.UnmarshalBinary(res, candidates)
+//// parse out the validators
+//validators := new(stake.Validators)
+//err = cdc.UnmarshalBinary(res, validators)
 //if err != nil {
 //return err
 //}
-//output, err := wire.MarshalJSONIndent(cdc, candidates)
+//output, err := wire.MarshalJSONIndent(cdc, validators)
 //if err != nil {
 //return err
 //}
@@ -51,11 +51,11 @@ import (
 //return cmd
 //}
 
-// get the command to query a candidate
-func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
+// get the command to query a validator
+func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "candidate [candidate-addr]",
-		Short: "Query a validator-candidate account",
+		Use:   "validator [validator-addr]",
+		Short: "Query a validator-validator account",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -63,7 +63,7 @@ func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			key := stake.GetCandidateKey(addr)
+			key := stake.GetValidatorKey(addr)
 			ctx := context.NewCoreContextFromViper()
 
 			res, err := ctx.Query(key, storeName)
@@ -71,13 +71,13 @@ func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			// parse out the candidate
-			candidate := new(stake.Candidate)
-			err = cdc.UnmarshalBinary(res, candidate)
+			// parse out the validator
+			validator := new(stake.Validator)
+			err = cdc.UnmarshalBinary(res, validator)
 			if err != nil {
 				return err
 			}
-			output, err := wire.MarshalJSONIndent(cdc, candidate)
+			output, err := wire.MarshalJSONIndent(cdc, validator)
 			if err != nil {
 				return err
 			}
@@ -95,10 +95,10 @@ func GetCmdQueryCandidate(storeName string, cdc *wire.Codec) *cobra.Command {
 func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegator-bond",
-		Short: "Query a delegators bond based on address and candidate pubkey",
+		Short: "Query a delegators bond based on address and validator pubkey",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			addr, err := sdk.GetAddress(viper.GetString(FlagAddressCandidate))
+			addr, err := sdk.GetAddress(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -135,16 +135,16 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsCandidate)
+	cmd.Flags().AddFlagSet(fsValidator)
 	cmd.Flags().AddFlagSet(fsDelegator)
 	return cmd
 }
 
-//// get the command to query all the candidates bonded to a delegator
+//// get the command to query all the validators bonded to a delegator
 //func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 //cmd := &cobra.Command{
-//Use:   "delegator-candidates",
-//Short: "Query all delegators bond's candidate-addresses based on delegator-address",
+//Use:   "delegator-validators",
+//Short: "Query all delegators bond's validator-addresses based on delegator-address",
 //RunE: func(cmd *cobra.Command, args []string) error {
 
 //bz, err := hex.DecodeString(viper.GetString(FlagAddressDelegator))
@@ -162,13 +162,13 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 //return err
 //}
 
-//// parse out the candidates list
-//var candidates []crypto.PubKey
-//err = cdc.UnmarshalBinary(res, candidates)
+//// parse out the validators list
+//var validators []crypto.PubKey
+//err = cdc.UnmarshalBinary(res, validators)
 //if err != nil {
 //return err
 //}
-//output, err := wire.MarshalJSONIndent(cdc, candidates)
+//output, err := wire.MarshalJSONIndent(cdc, validators)
 //if err != nil {
 //return err
 //}

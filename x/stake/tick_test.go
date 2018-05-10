@@ -65,10 +65,10 @@ func TestProcessProvisions(t *testing.T) {
 	keeper.setParams(ctx, params)
 	pool := keeper.GetPool(ctx)
 
-	// create some candidates some bonded, some unbonded
-	candidates := make([]Candidate, 10)
+	// create some validators some bonded, some unbonded
+	validators := make([]Validator, 10)
 	for i := 0; i < 10; i++ {
-		c := Candidate{
+		c := Validator{
 			Status:      Unbonded,
 			PubKey:      pks[i],
 			Address:     addrs[i],
@@ -80,10 +80,10 @@ func TestProcessProvisions(t *testing.T) {
 		}
 		mintedTokens := int64((i + 1) * 10000000)
 		pool.TotalSupply += mintedTokens
-		pool, c, _ = pool.candidateAddTokens(c, mintedTokens)
+		pool, c, _ = pool.validatorAddTokens(c, mintedTokens)
 
-		keeper.setCandidate(ctx, c)
-		candidates[i] = c
+		keeper.setValidator(ctx, c)
+		validators[i] = c
 	}
 	keeper.setPool(ctx, pool)
 	var totalSupply int64 = 550000000
@@ -96,7 +96,7 @@ func TestProcessProvisions(t *testing.T) {
 	// initial bonded ratio ~ 27%
 	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(bondedShares, totalSupply)), "%v", pool.bondedRatio())
 
-	// test the value of candidate shares
+	// test the value of validator shares
 	assert.True(t, pool.bondedShareExRate().Equal(sdk.OneRat()), "%v", pool.bondedShareExRate())
 
 	initialSupply := pool.TotalSupply
@@ -128,6 +128,6 @@ func TestProcessProvisions(t *testing.T) {
 	assert.Equal(t, int64(211813022), pool.BondedPool)
 	assert.Equal(t, unbondedShares, pool.UnbondedPool)
 
-	// test the value of candidate shares
+	// test the value of validator shares
 	assert.True(t, pool.bondedShareExRate().Mul(sdk.NewRat(bondedShares)).Equal(sdk.NewRat(211813022)), "%v", pool.bondedShareExRate())
 }

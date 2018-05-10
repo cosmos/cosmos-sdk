@@ -15,7 +15,7 @@ var (
 	// Keys for store prefixes
 	ParamKey                       = []byte{0x00} // key for global parameters relating to staking
 	PoolKey                        = []byte{0x01} // key for global parameters relating to staking
-	CandidatesKey                  = []byte{0x02} // prefix for each key to a candidate
+	ValidatorsKey                  = []byte{0x02} // prefix for each key to a validator
 	ValidatorsByPowerKey           = []byte{0x03} // prefix for each key to a validator
 	ValidatorsTendermintUpdatesKey = []byte{0x04} // prefix for each key to a validator which is being updated
 	ValidatorsBondedKey            = []byte{0x05} // prefix for each key to bonded/actively validating validators
@@ -25,9 +25,9 @@ var (
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
 
-// get the key for the candidate with address
-func GetCandidateKey(addr sdk.Address) []byte {
-	return append(CandidatesKey, addr.Bytes()...)
+// get the key for the validator with address
+func GetValidatorKey(addr sdk.Address) []byte {
+	return append(ValidatorsKey, addr.Bytes()...)
 }
 
 // get the key for the validator used in the power-store
@@ -47,7 +47,7 @@ func GetValidatorsBondedByPowerKey(validator Validator) []byte {
 }
 
 // get the key for the accumulated update validators
-func GetValidatorsBondedTendermintUpdatesKey(addr sdk.Address) []byte {
+func GetValidatorsTendermintUpdatesKey(addr sdk.Address) []byte {
 	return append(ValidatorsTendermintUpdatesKey, addr.Bytes()...)
 }
 
@@ -57,12 +57,12 @@ func GetValidatorsBondedBondedKey(pk crypto.PubKey) []byte {
 	return append(ValidatorsBondedKey, addr.Bytes()...)
 }
 
-// get the key for delegator bond with candidate
-func GetDelegationKey(delegatorAddr, candidateAddr sdk.Address, cdc *wire.Codec) []byte {
-	return append(GetDelegationsKey(delegatorAddr, cdc), candidateAddr.Bytes()...)
+// get the key for delegator bond with validator
+func GetDelegationKey(delegatorAddr, validatorAddr sdk.Address, cdc *wire.Codec) []byte {
+	return append(GetDelegationsKey(delegatorAddr, cdc), validatorAddr.Bytes()...)
 }
 
-// get the prefix for a delegator for all candidates
+// get the prefix for a delegator for all validators
 func GetDelegationsKey(delegatorAddr sdk.Address, cdc *wire.Codec) []byte {
 	res, err := cdc.MarshalBinary(&delegatorAddr)
 	if err != nil {

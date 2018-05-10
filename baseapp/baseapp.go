@@ -285,15 +285,10 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 // Implements ABCI.
 // Delegates to CommitMultiStore if it implements Queryable
 func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-	queryable, ok := app.cms.(sdk.Queryable)
-	if !ok {
-		msg := "application doesn't support queries"
-		return sdk.ErrUnknownRequest(msg).QueryResult()
-	}
-	// Special prefix backslash for special queries
 	path := req.Path
-	if strings.HasPrefix(path, "\\") {
-		query := path[1:]
+	// "/app" prefix for special application queries
+	if strings.HasPrefix(path, "/app") {
+		query := path[4:]
 		var result sdk.Result
 		switch query {
 		case "simulate":
@@ -312,7 +307,18 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			Value: value,
 		}
 	}
-	return queryable.Query(req)
+	// "/store" prefix for store queries
+	if strings.HasPrefix(path, "/store") {
+		queryable, ok := app.cms.(sdk.Queryable)
+		if !ok {
+			msg := "multistore doesn't support queries"
+			return sdk.ErrUnknownRequest(msg).QueryResult()
+		}
+		req.Path = req.Path[6:] // slice off "/store"
+		return queryable.Query(req)
+	}
+	msg := "unknown query path"
+	return sdk.ErrUnknownRequest(msg).QueryResult()
 }
 
 // Implements ABCI

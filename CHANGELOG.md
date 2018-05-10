@@ -23,6 +23,12 @@ IMPROVEMENTS
   auto-unbonding
 * [spec/governance] Fixup some names and pseudocode
 * NOTE: specs are still a work-in-progress ...
+* Gas consumption is now measured as transactions are executed
+  * Transactions which run out of gas stop execution and revert state changes
+  * A "simulate" query has been added to determine how much gas a transaction will need
+  * Modules can include their own gas costs for execution of particular message types
+* Bank module now tags transactions with sender/recipient for indexing & later retrieval
+* Stake module now tags transactions with delegator/candidate for delegation & unbonding, and candidate info for declare candidate / edit candidacy
 
 BUG FIXES
 
@@ -43,6 +49,7 @@ BREAKING CHANGES
 * gaiad init now requires use of `--name` flag 
 * Removed Get from Msg interface
 * types/rational now extends big.Rat
+* Queries against the store must be prefixed with the path "/store"
 
 FEATURES:
 
@@ -55,7 +62,8 @@ FEATURES:
   * New genesis account keys are automatically added to the client keybase (introduce `--client-home` flag)
   * Initialize with genesis txs using `--gen-txs` flag
 * Context now has access to the application-configured logger
-
+* Add (non-proof) subspace query helper functions 
+* Add more staking query functions: candidates, delegator-bonds
 
 BUG FIXES
 * Gaia now uses stake, ported from github.com/cosmos/gaia

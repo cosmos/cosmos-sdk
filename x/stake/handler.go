@@ -100,11 +100,13 @@ func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keepe
 
 	// move coins from the msg.Address account to a (self-bond) delegator account
 	// the candidate account and global shares are updated within here
-	err := delegate(ctx, k, msg.CandidateAddr, msg.Bond, candidate)
+	tags, err := delegate(ctx, k, msg.CandidateAddr, msg.Bond, candidate)
 	if err != nil {
 		return err.Result()
 	}
-	return sdk.Result{}
+	return sdk.Result{
+		Tags: tags,
+	}
 }
 
 func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk.Result {
@@ -148,16 +150,18 @@ func handleMsgDelegate(ctx sdk.Context, msg MsgDelegate, k Keeper) sdk.Result {
 			GasUsed: GasDelegate,
 		}
 	}
-	err := delegate(ctx, k, msg.DelegatorAddr, msg.Bond, candidate)
+	tags, err := delegate(ctx, k, msg.DelegatorAddr, msg.Bond, candidate)
 	if err != nil {
 		return err.Result()
 	}
-	return sdk.Result{}
+	return sdk.Result{
+		Tags: tags,
+	}
 }
 
 // common functionality between handlers
 func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
-	bondAmt sdk.Coin, candidate Candidate) sdk.Error {
+	bondAmt sdk.Coin, candidate Candidate) (sdk.Tags, sdk.Error) {
 
 	// Get or create the delegator bond
 	bond, found := k.GetDelegatorBond(ctx, delegatorAddr, candidate.Address)
@@ -173,7 +177,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	pool := k.GetPool(ctx)
 	_, _, err := k.coinKeeper.SubtractCoins(ctx, bond.DelegatorAddr, sdk.Coins{bondAmt})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	pool, candidate, newShares := pool.candidateAddTokens(candidate, bondAmt.Amount)
 	bond.Shares = bond.Shares.Add(newShares)
@@ -184,7 +188,8 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	k.setDelegatorBond(ctx, bond)
 	k.setCandidate(ctx, candidate)
 	k.setPool(ctx, pool)
-	return nil
+	tags := sdk.NewTags("delegator", delegatorAddr.Bytes(), "candidate", candidate.Address.Bytes())
+	return tags, nil
 }
 
 func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {

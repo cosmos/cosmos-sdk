@@ -31,6 +31,7 @@ FEATURES:
 * Add (non-proof) subspace query helper functions 
 * Add more staking query functions: candidates, delegator-bonds
 * Bank module now tags transactions with sender/recipient for indexing & later retrieval
+* Stake module now tags transactions with delegator/candidate for delegation & unbonding
 
 BUG FIXES
 * Gaia now uses stake, ported from github.com/cosmos/gaia

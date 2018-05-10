@@ -53,7 +53,7 @@ func handleMsgQuiz(ctx sdk.Context, k Keeper, msg MsgQuiz) sdk.Result {
 
 	bonusCoins := sdk.Coins{{msg.CoolAnswer, 69}}
 
-	_, err := k.ck.AddCoins(ctx, msg.Sender, bonusCoins)
+	_, _, err := k.ck.AddCoins(ctx, msg.Sender, bonusCoins)
 	if err != nil {
 		return err.Result()
 	}

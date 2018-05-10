@@ -22,7 +22,7 @@ import (
 // and to avoid affecting the Merkle root.
 var dbHeaderKey = []byte("header")
 
-// The ABCI application
+// BaseApp is an ABCI application.
 type BaseApp struct {
 	// initialized on creation
 	Logger     log.Logger
@@ -43,11 +43,10 @@ type BaseApp struct {
 
 	//--------------------
 	// Volatile
-	// checkState is set on initialization and reset on Commit.
-	// deliverState is set in InitChain and BeginBlock and cleared on Commit.
+	// checkState is reset on Commit with the committed state.
+	// deliverState is set in BeginBlock and cleared on Commit.
 	// See methods setCheckState and setDeliverState.
 	// .valUpdates accumulate in DeliverTx and are reset in BeginBlock.
-	// QUESTION: should we put valUpdates in the deliverState.ctx?
 	checkState   *state           // for CheckTx
 	deliverState *state           // for DeliverTx
 	valUpdates   []abci.Validator // cached validator changes from DeliverTx
@@ -55,8 +54,8 @@ type BaseApp struct {
 
 var _ abci.Application = (*BaseApp)(nil)
 
-// Create and name new BaseApp
-// NOTE: The db is used to store the version number for now.
+// NewBaseApp creates and names a new BaseApp instance.
+// NOTE: The db is used to store the version number.
 func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB) *BaseApp {
 	app := &BaseApp{
 		Logger:     logger,
@@ -297,7 +296,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	if app.deliverState == nil {
 		app.setDeliverState(req.Header)
 	}
-	app.valUpdates = nil
+
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
 	}
@@ -475,6 +474,9 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 	// Empty the Deliver state
 	app.deliverState = nil
+
+	// Empty the accumulated validator set updates
+	app.valUpdates = nil
 
 	return abci.ResponseCommit{
 		Data: commitID.Hash,

@@ -3,7 +3,6 @@ package stake
 import (
 	"bytes"
 
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -77,8 +76,8 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 
 	// if found, copy the old block height and counter
 	if oldFound {
-		validator.ValidatorBondHeight = oldValidator.ValidatorBondHeight
-		validator.ValidatorBondCounter = oldValidator.ValidatorBondCounter
+		validator.BondHeight = oldValidator.BondHeight
+		validator.BondIntraTxCounter = oldValidator.BondIntraTxCounter
 	}
 
 	// marshal the validator record and add to the state
@@ -93,9 +92,9 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 
 		// if this validator wasn't just bonded then update the height and counter
 		if oldValidator.Status != sdk.Bonded {
-			validator.ValidatorBondHeight = ctx.BlockHeight()
+			validator.BondHeight = ctx.BlockHeight()
 			counter := k.getIntraTxCounter(ctx)
-			validator.ValidatorBondCounter = counter
+			validator.BondIntraTxCounter = counter
 			k.setIntraTxCounter(ctx, counter+1)
 		}
 
@@ -205,7 +204,7 @@ func (k Keeper) GetValidatorsBondedByPower(ctx sdk.Context) []Validator {
 func (k Keeper) addNewValidatorOrNot(ctx sdk.Context, store sdk.KVStore, address sdk.Address) {
 
 	// clear the current validators store, add to the ToKickOut temp store
-	toKickOut := make(map[[]byte][]byte) // map[key]value
+	toKickOut := make(map[string][]byte) // map[key]value
 	iterator := store.SubspaceIterator(ValidatorsBondedKey)
 	for ; iterator.Valid(); iterator.Next() {
 
@@ -216,7 +215,7 @@ func (k Keeper) addNewValidatorOrNot(ctx sdk.Context, store sdk.KVStore, address
 		addr := validator.Address
 
 		// iterator.Value is the validator object
-		toKickOut[addr] = iterator.Value()
+		toKickOut[string(addr)] = iterator.Value()
 		store.Delete(iterator.Key())
 	}
 	iterator.Close()
@@ -235,7 +234,7 @@ func (k Keeper) addNewValidatorOrNot(ctx sdk.Context, store sdk.KVStore, address
 		k.cdc.MustUnmarshalBinary(bz, &validator)
 
 		// remove from ToKickOut group
-		toKickOut[validator.Address] = nil
+		toKickOut[string(validator.Address)] = nil
 
 		// also add to the current validators group
 		store.Set(GetValidatorsBondedBondedKey(validator.PubKey), bz)
@@ -251,7 +250,7 @@ func (k Keeper) addNewValidatorOrNot(ctx sdk.Context, store sdk.KVStore, address
 
 	// add any kicked out validators to the accumulated changes for tendermint
 	for key, value := range toKickOut {
-		addr := AddrFromKey(key)
+		addr := AddrFromKey([]byte(key))
 
 		var validator Validator
 		k.cdc.MustUnmarshalBinary(value, &validator)
@@ -259,45 +258,6 @@ func (k Keeper) addNewValidatorOrNot(ctx sdk.Context, store sdk.KVStore, address
 		store.Set(GetValidatorsTendermintUpdatesKey(addr), bz)
 	}
 }
-
-// cummulative power of the non-absent prevotes
-//func (k Keeper) GetTotalPrecommitVotingPower(ctx sdk.Context) sdk.Rat {
-//store := ctx.KVStore(k.storeKey)
-
-//// get absent prevote indexes
-//absents := ctx.AbsentValidators()
-
-//TotalPower := sdk.ZeroRat()
-//i := int32(0)
-//iterator := store.SubspaceIterator(ValidatorsBondedKey)
-//for ; iterator.Valid(); iterator.Next() {
-
-//skip := false
-//for j, absentIndex := range absents {
-//if absentIndex > i {
-//break
-//}
-
-//// if non-voting validator found, skip adding its power
-//if absentIndex == i {
-//absents = append(absents[:j], absents[j+1:]...) // won't need again
-//skip = true
-//break
-//}
-//}
-//if skip {
-//continue
-//}
-
-//bz := iterator.Value()
-//var validator Validator
-//k.cdc.MustUnmarshalBinary(bz, &validator)
-//TotalPower = TotalPower.Add(validator.Power)
-//i++
-//}
-//iterator.Close()
-//return TotalPower
-//}
 
 //_________________________________________________________________________
 // Accumulated updates to the active/bonded validator set for tendermint
@@ -401,35 +361,6 @@ func (k Keeper) removeDelegation(ctx sdk.Context, bond Delegation) {
 
 //_______________________________________________________________________
 
-// XXX TODO trim functionality
-
-// retrieve all the power changes which occur after a height
-func (k Keeper) GetPowerChangesAfterHeight(ctx sdk.Context, earliestHeight int64) (pcs []PowerChange) {
-	store := ctx.KVStore(k.storeKey)
-
-	iterator := store.SubspaceIterator(PowerChangeKey) //smallest to largest
-	for ; iterator.Valid(); iterator.Next() {
-		pcBytes := iterator.Value()
-		var pc PowerChange
-		k.cdc.MustUnmarshalBinary(pcBytes, &pc)
-		if pc.Height < earliestHeight {
-			break
-		}
-		pcs = append(pcs, pc)
-	}
-	iterator.Close()
-	return
-}
-
-// set a power change
-func (k Keeper) setPowerChange(ctx sdk.Context, pc PowerChange) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(pc)
-	store.Set(GetPowerChangeKey(pc.Height), b)
-}
-
-//_______________________________________________________________________
-
 // load/save the global staking params
 func (k Keeper) GetParams(ctx sdk.Context) (params Params) {
 	// check if cached before anything
@@ -483,10 +414,10 @@ func (k Keeper) setPool(ctx sdk.Context, p Pool) {
 var _ sdk.ValidatorSet = Keeper{}
 
 // iterate through the active validator set and perform the provided function
-func (k Keeper) IterateValidatorsBonded(fn func(index int64, validator sdk.Validator)) {
+func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, validator sdk.Validator)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := store.SubspaceIterator(ValidatorsBondedKey)
-	i := 0
+	i := int64(0)
 	for ; iterator.Valid(); iterator.Next() {
 		bz := iterator.Value()
 		var validator Validator
@@ -528,15 +459,16 @@ func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.Address, addrVal sdk.Add
 }
 
 // iterate through the active validator set and perform the provided function
-func (k Keeper) IterateDelegators(delAddr sdk.Address, fn func(index int64, delegator sdk.Delegator)) {
+func (k Keeper) IterateDelegators(ctx sdk.Context, delAddr sdk.Address, fn func(index int64, delegation sdk.Delegation)) {
+	store := ctx.KVStore(k.storeKey)
 	key := GetDelegationsKey(delAddr, k.cdc)
-	iterator := store.SubspaceIterator(ValidatorsBondedKey)
-	i := 0
+	iterator := store.SubspaceIterator(key)
+	i := int64(0)
 	for ; iterator.Valid(); iterator.Next() {
 		bz := iterator.Value()
 		var delegation Delegation
 		k.cdc.MustUnmarshalBinary(bz, &delegation)
-		fn(i, delegator) // XXX is this safe will the fields be able to get written to?
+		fn(i, delegation) // XXX is this safe will the fields be able to get written to?
 		i++
 	}
 	iterator.Close()

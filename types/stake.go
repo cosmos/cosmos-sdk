@@ -18,11 +18,11 @@ const (
 
 // validator for a delegated proof of stake system
 type Validator interface {
-	Status() ValidatorStatus  // status of the validator
-	GetOwner() Address        // owner address to receive/return validators coins
-	GetPubKey() crypto.PubKey // validation pubkey
-	GetPower() Rat            // validation power
-	GetBondHeight() int64     // height in which the validator became active
+	GetStatus() ValidatorStatus // status of the validator
+	GetAddress() Address        // owner address to receive/return validators coins
+	GetPubKey() crypto.PubKey   // validation pubkey
+	GetPower() Rat              // validation power
+	GetBondHeight() int64       // height in which the validator became active
 }
 
 // validator which fulfills abci validator interface for use in Tendermint
@@ -35,9 +35,9 @@ func ABCIValidator(v Validator) abci.Validator {
 
 // properties for the set of all validators
 type ValidatorSet interface {
-	IterateValidatorsBonded(func(index int64, validator Validator)) // execute arbitrary logic for each validator
-	Validator(Context, Address) Validator                           // get a particular validator by owner address
-	TotalPower(Context) Rat                                         // total power of the validator set
+	IterateValidatorsBonded(Context, func(index int64, validator Validator)) // execute arbitrary logic for each validator
+	Validator(Context, Address) Validator                                    // get a particular validator by owner address
+	TotalPower(Context) Rat                                                  // total power of the validator set
 }
 
 //_______________________________________________________________________________
@@ -53,5 +53,5 @@ type Delegation interface {
 type DelegationSet interface {
 
 	// execute arbitrary logic for each validator which a delegator has a delegation for
-	IterateDelegators(delegator Address, fn func(index int64, delegation Delegation))
+	IterateDelegators(Context, delegator Address, fn func(index int64, delegation Delegation))
 }

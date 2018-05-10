@@ -17,6 +17,12 @@ BREAKING CHANGES
 * types/rational now extends big.Rat
 * RecentValidator store now take pubkey instead of address, is sorted like Tendermint by pk's address
 * `gaiacli query candidate` takes and argument instead of using the `--address-candidate` flag
+* Staking refactor
+  * store names more understandable
+  * removed temporary ToKick store 
+  * removed distinction between candidates and validators
+    * everything is now a validator
+    * only validators with a status == bonded are actively validating/receiving rewards
 
 FEATURES:
 
@@ -29,6 +35,8 @@ FEATURES:
   * New genesis account keys are automatically added to the client keybase (introduce `--client-home` flag)
   * Initialize with genesis txs using `--gen-txs` flag
 * Context now has access to the application-configured logger
+* Seperation of fee distribution to a new module
+* Creation of a validator/delegation generics in `/types`
 
 BUG FIXES
 * Gaia now uses stake, ported from github.com/cosmos/gaia

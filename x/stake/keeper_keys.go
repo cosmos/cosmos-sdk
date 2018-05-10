@@ -32,14 +32,14 @@ func GetValidatorKey(addr sdk.Address) []byte {
 
 // get the key for the validator used in the power-store
 func GetValidatorsBondedByPowerKey(validator Validator) []byte {
-	powerBytes := []byte(validator.Power.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
+	powerBytes := []byte(validator.BondedShares.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
 
 	// TODO ensure that the key will be a readable string.. probably should add seperators and have
 	// heightBytes and counterBytes represent strings like powerBytes does
 	heightBytes := make([]byte, binary.MaxVarintLen64)
-	binary.BigEndian.PutUint64(heightBytes, ^uint64(validator.Height)) // invert height (older validators first)
+	binary.BigEndian.PutUint64(heightBytes, ^uint64(validator.BondHeight)) // invert height (older validators first)
 	counterBytes := make([]byte, 2)
-	binary.BigEndian.PutUint16(counterBytes, ^uint16(validator.Counter)) // invert counter (first txns have priority)
+	binary.BigEndian.PutUint16(counterBytes, ^uint16(validator.BondIntraTxCounter)) // invert counter (first txns have priority)
 	return append(ValidatorsByPowerKey,
 		append(powerBytes,
 			append(heightBytes,

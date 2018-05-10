@@ -319,7 +319,7 @@ func TestGetValidatorsBondedEdgeCases(t *testing.T) {
 	require.Equal(t, validators[3].Address, validators[1].Address, "%v", validators)
 	validator, exists := keeper.GetValidator(ctx, validators[4].Address)
 	require.Equal(t, exists, true)
-	require.Equal(t, validator.ValidatorBondHeight, int64(40))
+	require.Equal(t, validator.BondHeight, int64(40))
 
 	   //If two validators both increase to the same voting power in the same block,
 	   //the one with the first transaction should take precedence (become a validator).

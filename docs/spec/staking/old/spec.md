@@ -297,12 +297,12 @@ type TxProveLive struct {
 ## Delegator bond
 
 Atom holders may delegate coins to validators, under this circumstance their
-funds are held in a `DelegatorBond`. It is owned by one delegator, and is
+funds are held in a `Delegation`. It is owned by one delegator, and is
 associated with the shares for one validator. The sender of the transaction is
 considered to be the owner of the bond,  
 
 ``` golang
-type DelegatorBond struct {
+type Delegation struct {
 	Candidate            crypto.PubKey
 	Shares               rational.Rat
     AdjustmentFeePool    coin.Coins  
@@ -318,11 +318,11 @@ Description:
  - AdjustmentRewardPool: Adjustment factor used to passively calculate each
    bonds entitled fees from `Candidate.ProposerRewardPool``
 
-Each `DelegatorBond` is individually indexed within the store by delegator
+Each `Delegation` is individually indexed within the store by delegator
 address and candidate pubkey.
 
  - key: Delegator and Candidate-Pubkey
- - value: DelegatorBond 
+ - value: Delegation 
 
 
 ### Delegating
@@ -330,7 +330,7 @@ address and candidate pubkey.
 Delegator bonds are created using the TxDelegate transaction. Within this
 transaction the validator candidate queried with an amount of coins, whereby
 given the current exchange rate of candidate's delegator-shares-to-atoms the
-candidate will return shares which are assigned in `DelegatorBond.Shares`.
+candidate will return shares which are assigned in `Delegation.Shares`.
 
 ``` golang 
 type TxDelegate struct { 
@@ -671,5 +671,5 @@ rate, all commission on fees must be simultaneously withdrawn.
   `candidate.Adjustment` must be set to the value of `canidate.Count` for the
   height which the candidate is added on the validator set.
 - The feePool of a new delegator bond will be 0 for the height at which the bond
-  was added. This is achieved by setting `DelegatorBond.FeeWithdrawalHeight` to
+  was added. This is achieved by setting `Delegation.FeeWithdrawalHeight` to
   the height which the bond was added. 

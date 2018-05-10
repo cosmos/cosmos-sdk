@@ -161,15 +161,15 @@ Candidate parameters are described:
   * Website: optional website link
   * Details: optional details
 
-### DelegatorBond
+### Delegation
 
 Atom holders may delegate coins to candidates; under this circumstance their
-funds are held in a `DelegatorBond` data structure. It is owned by one 
+funds are held in a `Delegation` data structure. It is owned by one 
 delegator, and is associated with the shares for one candidate. The sender of 
 the transaction is the owner of the bond.
 
 ``` go
-type DelegatorBond struct {
+type Delegation struct {
     Candidate            crypto.PubKey
     Shares               rational.Rat
     AdjustmentFeePool    coin.Coins  
@@ -252,10 +252,10 @@ reference to a transaction that is being processed, and `sender` to denote the
 address of the sender of the transaction. We use function 
 `loadCandidate(store, PubKey)` to obtain a Candidate structure from the store, 
 and `saveCandidate(store, candidate)` to save it. Similarly, we use 
-`loadDelegatorBond(store, sender, PubKey)` to load a delegator bond with the 
+`loadDelegation(store, sender, PubKey)` to load a delegator bond with the 
 key (sender and PubKey) from the store, and 
-`saveDelegatorBond(store, sender, bond)` to save it. 
-`removeDelegatorBond(store, sender, bond)` is used to remove the bond from the 
+`saveDelegation(store, sender, bond)` to save it. 
+`removeDelegation(store, sender, bond)` is used to remove the bond from the 
 store.
  
 ### TxDeclareCandidacy
@@ -323,7 +323,7 @@ editCandidacy(tx TxEditCandidacy):
 Delegator bonds are created using the `TxDelegate` transaction. Within this 
 transaction the delegator provides an amount of coins, and in return receives 
 some amount of candidate's delegator shares that are assigned to 
-`DelegatorBond.Shares`. 
+`Delegation.Shares`. 
 
 ```golang
 type TxDelegate struct {
@@ -347,14 +347,14 @@ delegateWithCandidate(tx TxDelegate, candidate Candidate):
     err = transfer(sender, poolAccount, tx.Amount)
     if err != nil return 
 
-    bond = loadDelegatorBond(store, sender, tx.PubKey)
-    if bond == nil then bond = DelegatorBond(tx.PubKey, rational.Zero, Coin(0), Coin(0))
+    bond = loadDelegation(store, sender, tx.PubKey)
+    if bond == nil then bond = Delegation(tx.PubKey, rational.Zero, Coin(0), Coin(0))
 	
     issuedDelegatorShares = addTokens(tx.Amount, candidate)
     bond.Shares += issuedDelegatorShares
 	
     saveCandidate(store, candidate)
-    saveDelegatorBond(store, sender, bond)
+    saveDelegation(store, sender, bond)
     saveGlobalState(store, gs)
     return 
 
@@ -396,7 +396,7 @@ type TxUnbond struct {
 }
 
 unbond(tx TxUnbond):    
-    bond = loadDelegatorBond(store, sender, tx.PubKey)
+    bond = loadDelegation(store, sender, tx.PubKey)
     if bond == nil return 
     if bond.Shares < tx.Shares return 
 	
@@ -406,9 +406,9 @@ unbond(tx TxUnbond):
 	
     revokeCandidacy = false
     if bond.Shares.IsZero() 
-	    if sender == candidate.Owner and candidate.Status != Revoked then revokeCandidacy = true then removeDelegatorBond(store, sender, bond)
+	    if sender == candidate.Owner and candidate.Status != Revoked then revokeCandidacy = true then removeDelegation(store, sender, bond)
     else 
-	    saveDelegatorBond(store, sender, bond)
+	    saveDelegation(store, sender, bond)
 
     if candidate.Status == Bonded 
         poolAccount = params.HoldBonded
@@ -482,7 +482,7 @@ type TxRedelegate struct {
 }
 
 redelegate(tx TxRedelegate):
-    bond = loadDelegatorBond(store, sender, tx.PubKey)
+    bond = loadDelegation(store, sender, tx.PubKey)
     if bond == nil then return 
     
     if bond.Shares < tx.Shares return 

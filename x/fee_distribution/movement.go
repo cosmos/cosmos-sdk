@@ -4,6 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// burn burn burn
+func BurnFeeHandler(ctx sdk.Context, collectedFees sdk.Coins) {}
+
 // Handle fee distribution to the validators and delegators
 func (k Keeper) FeeHandler(ctx sdk.Context, collectedFees sdk.Coins) {
 	pool := k.GetPool(ctx)

@@ -160,9 +160,9 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
 		// add the validator
 		if len(genTx.Name) > 0 {
 			desc := stake.NewDescription(genTx.Name, "", "", "")
-			candidate := stake.NewCandidate(genTx.Address, genTx.PubKey, desc)
-			candidate.BondedShares = sdk.NewRat(freeFermionVal)
-			stakeData.Candidates = append(stakeData.Candidates, candidate)
+			validator := stake.NewValidator(genTx.Address, genTx.PubKey, desc)
+			validator.BondedShares = sdk.NewRat(freeFermionVal)
+			stakeData.Validators = append(stakeData.Validators, validator)
 
 			// pool logic
 			stakeData.Pool.TotalSupply += freeFermionVal

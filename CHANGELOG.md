@@ -6,8 +6,13 @@ BREAKING CHANGES
 
 * Queries against the store must be prefixed with the path "/store"
 * RecentValidator store now take pubkey instead of address, is sorted like Tendermint by pk's address
-* RecentValidator store now take pubkey instead of address, is sorted like Tendermint by pk's address
 * `gaiacli query candidate` takes and argument instead of using the `--address-candidate` flag
+* Staking refactor
+  * store names more understandable
+  * removed temporary ToKick store 
+  * removed distinction between candidates and validators
+    * everything is now a validator
+    * only validators with a status == bonded are actively validating/receiving rewards
 
 FEATURES
 
@@ -17,6 +22,8 @@ FEATURES
   * Transactions which run out of gas stop execution and revert state changes
   * A "simulate" query has been added to determine how much gas a transaction will need
   * Modules can include their own gas costs for execution of particular message types
+* Seperation of fee distribution to a new module
+* Creation of a validator/delegation generics in `/types`
 
 ## 0.17.0 (May 15, 2018)
 

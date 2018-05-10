@@ -45,8 +45,8 @@ func main() {
 	rootCmd.AddCommand(
 		client.GetCommands(
 			authcmd.GetAccountCmd("acc", cdc, authcmd.GetAccountDecoder(cdc)),
-			stakecmd.GetCmdQueryCandidate("stake", cdc),
-			stakecmd.GetCmdQueryCandidates("stake", cdc),
+			stakecmd.GetCmdQueryValidator("stake", cdc),
+			stakecmd.GetCmdQueryValidators("stake", cdc),
 			stakecmd.GetCmdQueryDelegation("stake", cdc),
 			stakecmd.GetCmdQueryDelegations("stake", cdc),
 		)...)

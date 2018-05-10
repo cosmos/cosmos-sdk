@@ -127,17 +127,17 @@ func initialPool() Pool {
 // exchange rate.
 type Validator struct {
 	Status          sdk.ValidatorStatus `json:"status"`           // Bonded status
-	Address         sdk.Address         `json:"owner"`            // Sender of BondTx - UnbondTx returns here
+	Address         sdk.Address         `json:"address"`          // Sender of BondTx - UnbondTx returns here
 	PubKey          crypto.PubKey       `json:"pub_key"`          // Pubkey of validator
-	BondedShares    sdk.Rat             `json:"bonded_shares"`    // total shares of a global hold pools
-	UnbondingShares sdk.Rat             `json:"unbonding_shares"` // total shares of a global hold pools
-	UnbondedShares  sdk.Rat             `json:"unbonded_shares"`  // total shares of a global hold pools
+	BondedShares    sdk.Rat             `json:"bonded_shares"`    // total shares of bonded global hold pool
+	UnbondingShares sdk.Rat             `json:"unbonding_shares"` // total shares of unbonding global hold pool
+	UnbondedShares  sdk.Rat             `json:"unbonded_shares"`  // total shares of unbonded global hold pool
 	DelegatorShares sdk.Rat             `json:"liabilities"`      // total shares issued to a validator's delegators
 
-	Description          Description `json:"description"`            // Description terms for the validator
-	ValidatorBondHeight  int64       `json:"validator_bond_height"`  // Earliest height as a bonded validator
-	ValidatorBondCounter int16       `json:"validator_bond_counter"` // Block-local tx index of validator change
-	ProposerRewardPool   sdk.Coins   `json:"proposer_reward_pool"`   // XXX reward pool collected from being the proposer
+	Description        Description `json:"description"`            // Description terms for the validator
+	BondHeight         int64       `json:"validator_bond_height"`  // Earliest height as a bonded validator
+	BondIntraTxCounter int16       `json:"validator_bond_counter"` // Block-local tx index of validator change
+	ProposerRewardPool sdk.Coins   `json:"proposer_reward_pool"`   // XXX reward pool collected from being the proposer
 
 	Commission            sdk.Rat `json:"commission"`              // XXX the commission rate of fees charged to any delegators
 	CommissionMax         sdk.Rat `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
@@ -154,21 +154,20 @@ type Validators []Validator
 // NewValidator - initialize a new validator
 func NewValidator(address sdk.Address, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
-		Status:                      Unbonded,
-		Address:                     address,
-		PubKey:                      pubKey,
-		BondedShares:                sdk.ZeroRat(),
-		DelegatorShares:             sdk.ZeroRat(),
-		Description:                 description,
-		ValidatorBondHeight:         int64(0),
-		ValidatorBondIntraTxCounter: int16(0),
-		ProposerRewardPool:          sdk.Coins{},
-		Commission:                  sdk.ZeroRat(),
-		CommissionMax:               sdk.ZeroRat(),
-		CommissionChangeRate:        sdk.ZeroRat(),
-		CommissionChangeToday:       sdk.ZeroRat(),
-		FeeAdjustments:              []sdk.Rat(nil),
-		PrevBondedShares:            sdk.ZeroRat(),
+		Status:                sdk.Unbonded,
+		Address:               address,
+		PubKey:                pubKey,
+		BondedShares:          sdk.ZeroRat(),
+		DelegatorShares:       sdk.ZeroRat(),
+		Description:           description,
+		BondHeight:            int64(0),
+		BondIntraTxCounter:    int16(0),
+		ProposerRewardPool:    sdk.Coins{},
+		Commission:            sdk.ZeroRat(),
+		CommissionMax:         sdk.ZeroRat(),
+		CommissionChangeRate:  sdk.ZeroRat(),
+		CommissionChangeToday: sdk.ZeroRat(),
+		PrevBondedShares:      sdk.ZeroRat(),
 	}
 }
 
@@ -179,14 +178,13 @@ func (v Validator) equal(c2 Validator) bool {
 		v.BondedShares.Equal(c2.BondedShares) &&
 		v.DelegatorShares.Equal(c2.DelegatorShares) &&
 		v.Description == c2.Description &&
-		v.ValidatorBondHeight == c2.ValidatorBondHeight &&
-		//v.ValidatorBondCounter == c2.ValidatorBondCounter && // counter is always changing
+		v.BondHeight == c2.BondHeight &&
+		//v.BondIntraTxCounter == c2.BondIntraTxCounter && // counter is always changing
 		v.ProposerRewardPool.IsEqual(c2.ProposerRewardPool) &&
 		v.Commission.Equal(c2.Commission) &&
 		v.CommissionMax.Equal(c2.CommissionMax) &&
 		v.CommissionChangeRate.Equal(c2.CommissionChangeRate) &&
 		v.CommissionChangeToday.Equal(c2.CommissionChangeToday) &&
-		sdk.RatsEqual(v.FeeAdjustments, c2.FeeAdjustments) &&
 		v.PrevBondedShares.Equal(c2.PrevBondedShares)
 }
 
@@ -212,14 +210,21 @@ func (v Validator) delegatorShareExRate() sdk.Rat {
 	if v.DelegatorShares.IsZero() {
 		return sdk.OneRat()
 	}
-	return v.BondedShares.Quo(v.DelegatorShares)
+	switch v.Status {
+	case sdk.Bonded:
+		return v.BondedShares.Quo(v.DelegatorShares)
+	case sdk.Unbonding:
+		return v.UnbondingShares.Quo(v.DelegatorShares)
+	default: //sdk.Unbonded, sdk.Revoked:
+		return v.UnbondedShares.Quo(v.DelegatorShares)
+	}
 }
 
 // abci validator from stake validator type
 func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
 	return abci.Validator{
 		PubKey: v.PubKey.Bytes(),
-		Power:  v.Power.Evaluate(),
+		Power:  v.BondedShares.Evaluate(),
 	}
 }
 
@@ -241,9 +246,11 @@ func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
 var _ sdk.Validator = Validator{}
 
 // nolint - for sdk.Validator
-func (v Validator) GetAddress() sdk.Address  { return v.Address }
-func (v Validator) GetPubKey() crypto.PubKey { return v.PubKey }
-func (v Validator) GetPower() sdk.Rat        { return v.Power }
+func (v Validator) GetStatus() sdk.ValidatorStatus { return v.Status }
+func (v Validator) GetAddress() sdk.Address        { return v.Address }
+func (v Validator) GetPubKey() crypto.PubKey       { return v.PubKey }
+func (v Validator) GetPower() sdk.Rat              { return v.BondedShares }
+func (v Validator) GetBondHeight() int64           { return v.BondHeight }
 
 //_________________________________________________________________________
 
@@ -271,4 +278,4 @@ var _ sdk.Delegation = Delegation{}
 // nolint - for sdk.Delegation
 func (b Delegation) GetDelegator() sdk.Address { return b.DelegatorAddr }
 func (b Delegation) GetValidator() sdk.Address { return b.ValidatorAddr }
-func (b Delegation) GetBondAmount() sdk.Rat    { return b.Shares }
+func (b Delegation) GetBondShares() sdk.Rat    { return b.Shares }

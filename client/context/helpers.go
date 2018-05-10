@@ -84,7 +84,8 @@ func (ctx CoreContext) query(key cmn.HexBytes, storeName, endPath string) (res [
 func (ctx CoreContext) GetFromAddress() (from sdk.Address, err error) {
 
 	if ctx.UseLedger {
-		priv, err := crypto.NewPrivKeyLedgerSecp256k1()
+		path := []uint32{44, 60, 0, 0, 0} // TODO
+		priv, err := crypto.NewPrivKeyLedgerSecp256k1(path)
 		if err != nil {
 			return nil, err
 		}
@@ -166,7 +167,8 @@ func (ctx CoreContext) SignAndBuildLedger(msg sdk.Msg, cdc *wire.Codec) ([]byte,
 	}
 	// sign and build
 	bz := signMsg.Bytes()
-	priv, err := crypto.NewPrivKeyLedgerSecp256k1()
+	path := []uint32{44, 60, 0, 0, 0} // TODO
+	priv, err := crypto.NewPrivKeyLedgerSecp256k1(path)
 	if err != nil {
 		return nil, err
 	}

@@ -58,7 +58,7 @@
 
 [[override]]
   name = "github.com/tendermint/go-crypto"
-  revision = "62ec28088a194e83257fc38028683eff065ab556"
+  revision = "6dd92f745396a124892a2d2b6edb93fadc01a7bc"
 
 [[constraint]]
   name = "github.com/tendermint/go-amino"

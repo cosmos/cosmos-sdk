@@ -26,7 +26,8 @@ func pseudoListing(kb keys.Keybase) (infos []keys.Info, err error) {
 		return nil, err
 	}
 	// Pseudo-item for Ledger
-	ledger, lerr := crypto.NewPrivKeyLedgerSecp256k1()
+	path := []uint32{44, 60, 0, 0, 0} // TODO
+	ledger, lerr := crypto.NewPrivKeyLedgerSecp256k1(path)
 	if lerr == nil {
 		ledgerInfo := keys.Info{
 			Name:         "ledger",

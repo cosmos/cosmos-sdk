@@ -256,7 +256,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "9637fa0b2f0db13c99d899b91007edb7df4610b7"
+  revision = "ae970a0732be3a1f5311da86118d37b9f4bd2a5a"
 
 [[projects]]
   name = "github.com/tendermint/abci"
@@ -295,7 +295,7 @@
     "keys/words",
     "keys/words/wordlist"
   ]
-  revision = "62ec28088a194e83257fc38028683eff065ab556"
+  revision = "6dd92f745396a124892a2d2b6edb93fadc01a7bc"
 
 [[projects]]
   name = "github.com/tendermint/go-wire"
@@ -371,7 +371,7 @@
   branch = "master"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
-  revision = "0eb48e14b06efd0354c2e0e18f15db121c64b9b8"
+  revision = "a242cfad962597a588288f99fa3425a01a820295"
 
 [[projects]]
   branch = "master"
@@ -407,7 +407,11 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
+<<<<<<< HEAD
   revision = "7c87d13f8e835d2fb3a70a2912c811ed0c1d241b"
+=======
+  revision = "64746a42f36bf0832f86b76004f1699dbeb33e4f"
+>>>>>>> Update dependency versions, quick paths
 
 [[projects]]
   name = "golang.org/x/text"
@@ -468,6 +472,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5be4f236e701433b66a220adbe45a4da75aea1f3a55dca3cea6b3fdd49760fbb"
+  inputs-digest = "e7ccb3ed10650c20f5407bbc61385c74d608eba3d7c21b80b7949bbd922aa90d"
   solver-name = "gps-cdcl"
   solver-version = 1

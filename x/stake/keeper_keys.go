@@ -31,7 +31,7 @@ func GetCandidateKey(addr sdk.Address) []byte {
 }
 
 // get the key for the validator used in the power-store
-func GetValidatorsByPowerKey(validator Validator) []byte {
+func GetValidatorsBondedByPowerKey(validator Validator) []byte {
 	powerBytes := []byte(validator.Power.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
 
 	// TODO ensure that the key will be a readable string.. probably should add seperators and have
@@ -47,12 +47,12 @@ func GetValidatorsByPowerKey(validator Validator) []byte {
 }
 
 // get the key for the accumulated update validators
-func GetValidatorsTendermintUpdatesKey(addr sdk.Address) []byte {
+func GetValidatorsBondedTendermintUpdatesKey(addr sdk.Address) []byte {
 	return append(ValidatorsTendermintUpdatesKey, addr.Bytes()...)
 }
 
 // get the key for the current validator group, ordered like tendermint
-func GetValidatorsBondedKey(pk crypto.PubKey) []byte {
+func GetValidatorsBondedBondedKey(pk crypto.PubKey) []byte {
 	addr := pk.Address()
 	return append(ValidatorsBondedKey, addr.Bytes()...)
 }

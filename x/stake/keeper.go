@@ -2,14 +2,12 @@ package stake
 
 import (
 	"bytes"
-	"sort"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
 )
 
 // keeper of the staking store
@@ -34,25 +32,6 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.
 		codespace:  codespace,
 	}
 	return keeper
-}
-
-// get the current in-block validator operation counter
-func (k Keeper) getIntraTxCounter(ctx sdk.Context) int16 {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(IntraTxCounterKey)
-	if b == nil {
-		return 0
-	}
-	var counter int16
-	k.cdc.MustUnmarshalBinary(b, &counter)
-	return counter
-}
-
-// set the current in-block validator operation counter
-func (k Keeper) setIntraTxCounter(ctx sdk.Context, counter int16) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinary(counter)
-	store.Set(IntraTxCounterKey, bz)
 }
 
 //_________________________________________________________________________
@@ -121,7 +100,7 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 		}
 
 		// delete the old record in the power ordered list
-		store.Delete(GetValidatorsByPowerKey(oldCandidate.validator()))
+		store.Delete(GetValidatorsBondedByPowerKey(oldCandidate.validator()))
 	}
 
 	// set the new candidate record
@@ -131,15 +110,15 @@ func (k Keeper) setCandidate(ctx sdk.Context, candidate Candidate) {
 	// update the list ordered by voting power
 	validator := candidate.validator()
 	bzVal := k.cdc.MustMarshalBinary(validator)
-	store.Set(GetValidatorsByPowerKey(validator), bzVal)
+	store.Set(GetValidatorsBondedByPowerKey(validator), bzVal)
 
 	// add to the validators to update list if is already a validator
-	if store.Get(GetValidatorsBondedKey(candidate.PubKey)) != nil {
+	if store.Get(GetValidatorsBondedBondedKey(candidate.PubKey)) != nil {
 		bzAbci := k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
 		store.Set(GetAccUpdateValidatorKey(address), bzAbci)
 
 		// also update the current validator store
-		store.Set(GetValidatorsBondedKey(validator.PubKey), bzVal)
+		store.Set(GetValidatorsBondedBondedKey(validator.PubKey), bzVal)
 		return
 	}
 
@@ -159,22 +138,22 @@ func (k Keeper) removeCandidate(ctx sdk.Context, address sdk.Address) {
 	// delete the old candidate record
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetCandidateKey(address))
-	store.Delete(GetValidatorsByPowerKey(candidate.validator()))
+	store.Delete(GetValidatorsBondedByPowerKey(candidate.validator()))
 
 	// delete from current and power weighted validator groups if the validator
 	// exists and add validator with zero power to the validator updates
-	if store.Get(GetValidatorsBondedKey(candidate.PubKey)) == nil {
+	if store.Get(GetValidatorsBondedBondedKey(candidate.PubKey)) == nil {
 		return
 	}
 	bz := k.cdc.MustMarshalBinary(candidate.validator().abciValidatorZero(k.cdc))
 	store.Set(GetAccUpdateValidatorKey(address), bz)
-	store.Delete(GetValidatorsBondedKey(candidate.PubKey))
+	store.Delete(GetValidatorsBondedBondedKey(candidate.PubKey))
 }
 
 //___________________________________________________________________________
 
-// get the group of the most current validators
-func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
+// get the group of the bonded validators
+func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []Validator) {
 	store := ctx.KVStore(k.storeKey)
 
 	// add the actual validator power sorted store
@@ -194,21 +173,23 @@ func (k Keeper) GetValidators(ctx sdk.Context) (validators []Validator) {
 	return validators[:i] // trim
 }
 
-// Only used for testing
-// get the group of the most current validators
-func (k Keeper) getValidatorsOrdered(ctx sdk.Context) []Validator {
-	vals := k.GetValidators(ctx)
-	sort.Sort(sort.Reverse(validators(vals)))
-	return vals
-}
-
-// Is the address provided a part of the current validator set?
-func (k Keeper) IsValidator(ctx sdk.Context, pk crypto.PubKey) bool {
-	store := ctx.KVStore(k.storeKey)
-	if store.Get(GetValidatorsBondedKey(pk)) == nil {
-		return false
+// get the group of bonded validators sorted by power-rank
+func (k Keeper) GetValidatorsBondedByPower(ctx sdk.Context) []Validator {
+	maxValidators := k.GetParams(ctx).MaxValidators
+	validators = make([]Validator, maxValidators)
+	iterator = store.ReverseSubspaceIterator(ValidatorsByPowerKey) // largest to smallest
+	i := 0
+	for ; ; i++ {
+		if !iterator.Valid() || i > int(maxValidators-1) {
+			iterator.Close()
+			break
+		}
+		bz := iterator.Value()
+		var validator Validator
+		k.cdc.MustUnmarshalBinary(bz, &validator)
+		validators[i] = validator
+		iterator.Next()
 	}
-	return true
 }
 
 // This function add's (or doesn't add) a candidate record to the validator group
@@ -219,7 +200,7 @@ func (k Keeper) IsValidator(ctx sdk.Context, pk crypto.PubKey) bool {
 // the current validator records are updated in store with the
 // ValidatorsBondedKey. This store is used to determine if a candidate is a
 // validator without needing to iterate over the subspace as we do in
-// GetValidators
+// GetValidatorsBonded
 func (k Keeper) addNewValidatorOrNot(ctx sdk.Context, store sdk.KVStore, address sdk.Address) {
 
 	// clear the current validators store, add to the ToKickOut temp store
@@ -256,7 +237,7 @@ func (k Keeper) addNewValidatorOrNot(ctx sdk.Context, store sdk.KVStore, address
 		toKickOut[GetToKickOutValidatorKey(validator.Address)] = nil
 
 		// also add to the current validators group
-		store.Set(GetValidatorsBondedKey(validator.PubKey), bz)
+		store.Set(GetValidatorsBondedBondedKey(validator.PubKey), bz)
 
 		// MOST IMPORTANTLY, add to the accumulated changes if this is the modified candidate
 		if bytes.Equal(address, validator.Address) {
@@ -318,10 +299,10 @@ func (k Keeper) GetTotalPrecommitVotingPower(ctx sdk.Context) sdk.Rat {
 }
 
 //_________________________________________________________________________
-// Accumulated updates to the validator set
+// Accumulated updates to the active/bonded validator set for tendermint
 
 // get the most recently updated validators
-func (k Keeper) getAccUpdateValidators(ctx sdk.Context) (updates []abci.Validator) {
+func (k Keeper) getValidatorsTendermintUpdates(ctx sdk.Context) (updates []abci.Validator) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := store.SubspaceIterator(ValidatorsTendermintUpdatesKey) //smallest to largest
@@ -336,7 +317,7 @@ func (k Keeper) getAccUpdateValidators(ctx sdk.Context) (updates []abci.Validato
 }
 
 // remove all validator update entries after applied to Tendermint
-func (k Keeper) clearAccUpdateValidators(ctx sdk.Context) {
+func (k Keeper) clearValidatorsTendermintUpdates(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 
 	// delete subspace
@@ -560,4 +541,25 @@ func (k Keeper) Iterate(delAddr sdk.Address, fn func(index int64, delegator sdk.
 		i++
 	}
 	iterator.Close()
+}
+
+//__________________________________________________________________________
+
+// get the current in-block validator operation counter
+func (k Keeper) getIntraTxCounter(ctx sdk.Context) int16 {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(IntraTxCounterKey)
+	if b == nil {
+		return 0
+	}
+	var counter int16
+	k.cdc.MustUnmarshalBinary(b, &counter)
+	return counter
+}
+
+// set the current in-block validator operation counter
+func (k Keeper) setIntraTxCounter(ctx sdk.Context, counter int16) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshalBinary(counter)
+	store.Set(IntraTxCounterKey, bz)
 }

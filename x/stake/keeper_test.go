@@ -179,7 +179,7 @@ func TestBond(t *testing.T) {
 }
 
 // TODO seperate out into multiple tests
-func TestGetValidators(t *testing.T) {
+func TestGetValidatorsBonded(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
 	// initialize some candidates into the state
@@ -194,7 +194,7 @@ func TestGetValidators(t *testing.T) {
 	}
 
 	// first make sure everything made it in to the validator group
-	validators := keeper.getValidatorsOrdered(ctx)
+	validators := keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, len(validators), n)
 	assert.Equal(t, sdk.NewRat(400), validators[0].Power, "%v", validators)
 	assert.Equal(t, sdk.NewRat(200), validators[1].Power, "%v", validators)
@@ -210,7 +210,7 @@ func TestGetValidators(t *testing.T) {
 	// test a basic increase in voting power
 	candidates[3].BondedShares = sdk.NewRat(500)
 	keeper.setCandidate(ctx, candidates[3])
-	validators = keeper.getValidatorsOrdered(ctx)
+	validators = keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, len(validators), n)
 	assert.Equal(t, sdk.NewRat(500), validators[0].Power, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
@@ -218,7 +218,7 @@ func TestGetValidators(t *testing.T) {
 	// test a decrease in voting power
 	candidates[3].BondedShares = sdk.NewRat(300)
 	keeper.setCandidate(ctx, candidates[3])
-	validators = keeper.getValidatorsOrdered(ctx)
+	validators = keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, len(validators), n)
 	assert.Equal(t, sdk.NewRat(300), validators[0].Power, "%v", validators)
 	assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
@@ -228,7 +228,7 @@ func TestGetValidators(t *testing.T) {
 	candidates[3].BondedShares = sdk.NewRat(200)
 	ctx = ctx.WithBlockHeight(10)
 	keeper.setCandidate(ctx, candidates[3])
-	validators = keeper.getValidatorsOrdered(ctx)
+	validators = keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, len(validators), n)
 	//assert.Equal(t, sdk.NewRat(200), validators[0].Power, "%v", validators)
 	//assert.Equal(t, sdk.NewRat(200), validators[1].Power, "%v", validators)
@@ -241,7 +241,7 @@ func TestGetValidators(t *testing.T) {
 	// no change in voting power - no change in sort
 	ctx = ctx.WithBlockHeight(20)
 	keeper.setCandidate(ctx, candidates[4])
-	validators = keeper.getValidatorsOrdered(ctx)
+	validators = keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, len(validators), n)
 	//assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
 	//assert.Equal(t, candidates[4].Address, validators[1].Address, "%v", validators)
@@ -251,11 +251,11 @@ func TestGetValidators(t *testing.T) {
 	candidates[3].BondedShares = sdk.NewRat(300)
 	candidates[4].BondedShares = sdk.NewRat(300)
 	keeper.setCandidate(ctx, candidates[3])
-	validators = keeper.getValidatorsOrdered(ctx)
+	validators = keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, len(validators), n)
 	ctx = ctx.WithBlockHeight(30)
 	keeper.setCandidate(ctx, candidates[4])
-	validators = keeper.getValidatorsOrdered(ctx)
+	validators = keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, len(validators), n, "%v", validators)
 	//assert.Equal(t, candidates[3].Address, validators[0].Address, "%v", validators)
 	//assert.Equal(t, candidates[4].Address, validators[1].Address, "%v", validators)
@@ -264,7 +264,7 @@ func TestGetValidators(t *testing.T) {
 
 // TODO seperate out into multiple tests
 /* XXX FIX THESE TESTS
-func TestGetValidatorsEdgeCases(t *testing.T) {
+func TestGetValidatorsBondedEdgeCases(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
 	// now 2 max validators
@@ -285,7 +285,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	candidates[0].BondedShares = sdk.NewRat(500)
 	keeper.setCandidate(ctx, candidates[0])
-	validators := keeper.getValidatorsOrdered(ctx)
+	validators := keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, uint16(len(validators)), params.MaxValidators)
 	require.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
 	// candidate 3 was set before candidate 4
@@ -298,7 +298,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	   //ref https://github.com/cosmos/cosmos-sdk/issues/582#issuecomment-380757108
 	candidates[4].BondedShares = sdk.NewRat(301)
 	keeper.setCandidate(ctx, candidates[4])
-	validators = keeper.getValidatorsOrdered(ctx)
+	validators = keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, uint16(len(validators)), params.MaxValidators)
 	require.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
 	require.Equal(t, candidates[4].Address, validators[1].Address, "%v", validators)
@@ -306,14 +306,14 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	// candidate 4 kicked out temporarily
 	candidates[4].BondedShares = sdk.NewRat(200)
 	keeper.setCandidate(ctx, candidates[4])
-	validators = keeper.getValidatorsOrdered(ctx)
+	validators = keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, uint16(len(validators)), params.MaxValidators)
 	require.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
 	require.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
 	// candidate 4 does not get spot back
 	candidates[4].BondedShares = sdk.NewRat(300)
 	keeper.setCandidate(ctx, candidates[4])
-	validators = keeper.getValidatorsOrdered(ctx)
+	validators = keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, uint16(len(validators)), params.MaxValidators)
 	require.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
 	require.Equal(t, candidates[3].Address, validators[1].Address, "%v", validators)
@@ -330,7 +330,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	candidates[2].BondedShares = sdk.NewRat(1000)
 	keeper.setCandidate(ctx, candidates[1])
 	keeper.setCandidate(ctx, candidates[2])
-	validators = keeper.getValidatorsOrdered(ctx)
+	validators = keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, uint16(len(validators)), params.MaxValidators)
 	require.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
 	require.Equal(t, candidates[1].Address, validators[1].Address, "%v", validators)
@@ -338,7 +338,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	candidates[2].BondedShares = sdk.NewRat(1100)
 	keeper.setCandidate(ctx, candidates[2])
 	keeper.setCandidate(ctx, candidates[1])
-	validators = keeper.getValidatorsOrdered(ctx)
+	validators = keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, uint16(len(validators)), params.MaxValidators)
 	require.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
 	require.Equal(t, candidates[2].Address, validators[1].Address, "%v", validators)
@@ -361,7 +361,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	// test a swap in voting power
 	candidates[0].BondedShares = sdk.NewRat(600)
 	keeper.setCandidate(ctx, candidates[0])
-	validators = keeper.getValidatorsOrdered(ctx)
+	validators = keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, len(validators), n)
 	assert.Equal(t, sdk.NewRat(600), validators[0].Power, "%v", validators)
 	assert.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
@@ -373,7 +373,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	n = 2
 	params.MaxValidators = uint16(n)
 	keeper.setParams(ctx, params)
-	validators = keeper.getValidatorsOrdered(ctx)
+	validators = keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, len(validators), n)
 	assert.Equal(t, sdk.NewRat(600), validators[0].Power, "%v", validators)
 	assert.Equal(t, candidates[0].Address, validators[0].Address, "%v", validators)
@@ -383,7 +383,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 */
 
 // clear the tracked changes to the validator set
-func TestClearAccUpdateValidators(t *testing.T) {
+func TestClearValidatorsTendermintUpdates(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
 	amts := []int64{100, 400, 200}
@@ -395,15 +395,15 @@ func TestClearAccUpdateValidators(t *testing.T) {
 		keeper.setCandidate(ctx, candidates[i])
 	}
 
-	acc := keeper.getAccUpdateValidators(ctx)
+	acc := keeper.getValidatorsTendermintUpdates(ctx)
 	assert.Equal(t, len(amts), len(acc))
-	keeper.clearAccUpdateValidators(ctx)
-	acc = keeper.getAccUpdateValidators(ctx)
+	keeper.clearValidatorsTendermintUpdates(ctx)
+	acc = keeper.getValidatorsTendermintUpdates(ctx)
 	assert.Equal(t, 0, len(acc))
 }
 
 // test the mechanism which keeps track of a validator set change
-func TestGetAccUpdateValidators(t *testing.T) {
+func TestGetValidatorsTendermintUpdates(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 	params := defaultParams()
 	params.MaxValidators = 4
@@ -427,15 +427,15 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	//  validator set: {} -> {c1, c3}
 	//  accUpdate set: {} -> {c1, c3}
 	assert.Equal(t, 0, len(keeper.GetCandidates(ctx, 5)))
-	assert.Equal(t, 0, len(keeper.GetValidators(ctx)))
-	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
+	assert.Equal(t, 0, len(keeper.GetValidatorsBonded(ctx)))
+	assert.Equal(t, 0, len(keeper.getValidatorsTendermintUpdates(ctx)))
 
 	keeper.setCandidate(ctx, candidatesIn[1])
 	keeper.setCandidate(ctx, candidatesIn[3])
 
-	vals := keeper.getValidatorsOrdered(ctx) // to init recent validator set
+	vals := keeper.GetValidatorsBondedByPower(ctx) // to init recent validator set
 	require.Equal(t, 2, len(vals))
-	acc := keeper.getAccUpdateValidators(ctx)
+	acc := keeper.getValidatorsTendermintUpdates(ctx)
 	require.Equal(t, 2, len(acc))
 	candidates := keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 2, len(candidates))
@@ -447,22 +447,22 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	// test identical,
 	//  candidate set: {c1, c3} -> {c1, c3}
 	//  accUpdate set: {} -> {}
-	keeper.clearAccUpdateValidators(ctx)
+	keeper.clearValidatorsTendermintUpdates(ctx)
 	assert.Equal(t, 2, len(keeper.GetCandidates(ctx, 5)))
-	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
+	assert.Equal(t, 0, len(keeper.getValidatorsTendermintUpdates(ctx)))
 
 	keeper.setCandidate(ctx, candidates[0])
 	keeper.setCandidate(ctx, candidates[1])
 
 	require.Equal(t, 2, len(keeper.GetCandidates(ctx, 5)))
-	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
+	assert.Equal(t, 0, len(keeper.getValidatorsTendermintUpdates(ctx)))
 
 	// test single value change
 	//  candidate set: {c1, c3} -> {c1', c3}
 	//  accUpdate set: {} -> {c1'}
-	keeper.clearAccUpdateValidators(ctx)
+	keeper.clearValidatorsTendermintUpdates(ctx)
 	assert.Equal(t, 2, len(keeper.GetCandidates(ctx, 5)))
-	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
+	assert.Equal(t, 0, len(keeper.getValidatorsTendermintUpdates(ctx)))
 
 	candidates[0].BondedShares = sdk.NewRat(600)
 	keeper.setCandidate(ctx, candidates[0])
@@ -470,23 +470,23 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	candidates = keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 2, len(candidates))
 	assert.True(t, candidates[0].BondedShares.Equal(sdk.NewRat(600)))
-	acc = keeper.getAccUpdateValidators(ctx)
+	acc = keeper.getValidatorsTendermintUpdates(ctx)
 	require.Equal(t, 1, len(acc))
 	assert.Equal(t, candidates[0].validator().abciValidator(keeper.cdc), acc[0])
 
 	// test multiple value change
 	//  candidate set: {c1, c3} -> {c1', c3'}
 	//  accUpdate set: {c1, c3} -> {c1', c3'}
-	keeper.clearAccUpdateValidators(ctx)
+	keeper.clearValidatorsTendermintUpdates(ctx)
 	assert.Equal(t, 2, len(keeper.GetCandidates(ctx, 5)))
-	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
+	assert.Equal(t, 0, len(keeper.getValidatorsTendermintUpdates(ctx)))
 
 	candidates[0].BondedShares = sdk.NewRat(200)
 	candidates[1].BondedShares = sdk.NewRat(100)
 	keeper.setCandidate(ctx, candidates[0])
 	keeper.setCandidate(ctx, candidates[1])
 
-	acc = keeper.getAccUpdateValidators(ctx)
+	acc = keeper.getValidatorsTendermintUpdates(ctx)
 	require.Equal(t, 2, len(acc))
 	candidates = keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 2, len(candidates))
@@ -496,12 +496,12 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	// test validtor added at the beginning
 	//  candidate set: {c1, c3} -> {c0, c1, c3}
 	//  accUpdate set: {} -> {c0}
-	keeper.clearAccUpdateValidators(ctx)
+	keeper.clearValidatorsTendermintUpdates(ctx)
 	assert.Equal(t, 2, len(keeper.GetCandidates(ctx, 5)))
-	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
+	assert.Equal(t, 0, len(keeper.getValidatorsTendermintUpdates(ctx)))
 
 	keeper.setCandidate(ctx, candidatesIn[0])
-	acc = keeper.getAccUpdateValidators(ctx)
+	acc = keeper.getValidatorsTendermintUpdates(ctx)
 	require.Equal(t, 1, len(acc))
 	candidates = keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 3, len(candidates))
@@ -510,12 +510,12 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	// test validator added at the middle
 	//  candidate set: {c0, c1, c3} -> {c0, c1, c2, c3]
 	//  accUpdate set: {} -> {c2}
-	keeper.clearAccUpdateValidators(ctx)
+	keeper.clearValidatorsTendermintUpdates(ctx)
 	assert.Equal(t, 3, len(keeper.GetCandidates(ctx, 5)))
-	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
+	assert.Equal(t, 0, len(keeper.getValidatorsTendermintUpdates(ctx)))
 
 	keeper.setCandidate(ctx, candidatesIn[2])
-	acc = keeper.getAccUpdateValidators(ctx)
+	acc = keeper.getValidatorsTendermintUpdates(ctx)
 	require.Equal(t, 1, len(acc))
 	candidates = keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 4, len(candidates))
@@ -525,55 +525,55 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	//  candidate set: {c0, c1, c2, c3} -> {c0, c1, c2, c3, c4}
 	//  validator set: {c0, c1, c2, c3} -> {c0, c1, c2, c3}
 	//  accUpdate set: {} -> {}
-	keeper.clearAccUpdateValidators(ctx)
+	keeper.clearValidatorsTendermintUpdates(ctx)
 	assert.Equal(t, 4, len(keeper.GetCandidates(ctx, 5)))
-	assert.Equal(t, 4, len(keeper.GetValidators(ctx)))
-	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
+	assert.Equal(t, 4, len(keeper.GetValidatorsBonded(ctx)))
+	assert.Equal(t, 0, len(keeper.getValidatorsTendermintUpdates(ctx)))
 
 	keeper.setCandidate(ctx, candidatesIn[4])
 
 	assert.Equal(t, 5, len(keeper.GetCandidates(ctx, 5)))
-	assert.Equal(t, 4, len(keeper.GetValidators(ctx)))
-	require.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx))) // max validator number is 4
+	assert.Equal(t, 4, len(keeper.GetValidatorsBonded(ctx)))
+	require.Equal(t, 0, len(keeper.getValidatorsTendermintUpdates(ctx))) // max validator number is 4
 
 	// test candidate change its power but still not in the valset
 	//  candidate set: {c0, c1, c2, c3, c4} -> {c0, c1, c2, c3, c4}
 	//  validator set: {c0, c1, c2, c3}     -> {c0, c1, c2, c3}
 	//  accUpdate set: {}     -> {}
-	keeper.clearAccUpdateValidators(ctx)
+	keeper.clearValidatorsTendermintUpdates(ctx)
 	assert.Equal(t, 5, len(keeper.GetCandidates(ctx, 5)))
-	assert.Equal(t, 4, len(keeper.GetValidators(ctx)))
-	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
+	assert.Equal(t, 4, len(keeper.GetValidatorsBonded(ctx)))
+	assert.Equal(t, 0, len(keeper.getValidatorsTendermintUpdates(ctx)))
 
 	candidatesIn[4].BondedShares = sdk.NewRat(1)
 	keeper.setCandidate(ctx, candidatesIn[4])
 
 	assert.Equal(t, 5, len(keeper.GetCandidates(ctx, 5)))
-	assert.Equal(t, 4, len(keeper.GetValidators(ctx)))
-	require.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx))) // max validator number is 4
+	assert.Equal(t, 4, len(keeper.GetValidatorsBonded(ctx)))
+	require.Equal(t, 0, len(keeper.getValidatorsTendermintUpdates(ctx))) // max validator number is 4
 
 	// test candidate change its power and become a validator (pushing out an existing)
 	//  candidate set: {c0, c1, c2, c3, c4} -> {c0, c1, c2, c3, c4}
 	//  validator set: {c0, c1, c2, c3}     -> {c1, c2, c3, c4}
 	//  accUpdate set: {}     -> {c0, c4}
-	keeper.clearAccUpdateValidators(ctx)
+	keeper.clearValidatorsTendermintUpdates(ctx)
 	assert.Equal(t, 5, len(keeper.GetCandidates(ctx, 5)))
-	assert.Equal(t, 4, len(keeper.GetValidators(ctx)))
-	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
+	assert.Equal(t, 4, len(keeper.GetValidatorsBonded(ctx)))
+	assert.Equal(t, 0, len(keeper.getValidatorsTendermintUpdates(ctx)))
 
 	candidatesIn[4].BondedShares = sdk.NewRat(1000)
 	keeper.setCandidate(ctx, candidatesIn[4])
 
 	candidates = keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 5, len(candidates))
-	vals = keeper.getValidatorsOrdered(ctx)
+	vals = keeper.GetValidatorsBondedByPower(ctx)
 	require.Equal(t, 4, len(vals))
 	assert.Equal(t, candidatesIn[1].Address, vals[1].Address)
 	assert.Equal(t, candidatesIn[2].Address, vals[3].Address)
 	assert.Equal(t, candidatesIn[3].Address, vals[2].Address)
 	assert.Equal(t, candidatesIn[4].Address, vals[0].Address)
 
-	acc = keeper.getAccUpdateValidators(ctx)
+	acc = keeper.getValidatorsTendermintUpdates(ctx)
 	require.Equal(t, 2, len(acc), "%v", acc)
 
 	assert.Equal(t, candidatesIn[0].PubKey.Bytes(), acc[0].PubKey)
@@ -584,10 +584,10 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	//  candidate set: {c0, c1, c2, c3, c4} -> {}
 	//  validator set: {c1, c2, c3, c4}  -> {}
 	//  accUpdate set: {} -> {c1, c2, c3, c4}
-	keeper.clearAccUpdateValidators(ctx)
+	keeper.clearValidatorsTendermintUpdates(ctx)
 	assert.Equal(t, 5, len(keeper.GetCandidates(ctx, 5)))
-	assert.Equal(t, 4, len(keeper.GetValidators(ctx)))
-	assert.Equal(t, 0, len(keeper.getAccUpdateValidators(ctx)))
+	assert.Equal(t, 4, len(keeper.GetValidatorsBonded(ctx)))
+	assert.Equal(t, 0, len(keeper.getValidatorsTendermintUpdates(ctx)))
 
 	keeper.removeCandidate(ctx, candidatesIn[0].Address)
 	keeper.removeCandidate(ctx, candidatesIn[1].Address)
@@ -595,11 +595,11 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	keeper.removeCandidate(ctx, candidatesIn[3].Address)
 	keeper.removeCandidate(ctx, candidatesIn[4].Address)
 
-	vals = keeper.getValidatorsOrdered(ctx)
+	vals = keeper.GetValidatorsBondedByPower(ctx)
 	assert.Equal(t, 0, len(vals), "%v", vals)
 	candidates = keeper.GetCandidates(ctx, 5)
 	require.Equal(t, 0, len(candidates))
-	acc = keeper.getAccUpdateValidators(ctx)
+	acc = keeper.getValidatorsTendermintUpdates(ctx)
 	require.Equal(t, 4, len(acc))
 	assert.Equal(t, candidatesIn[1].PubKey.Bytes(), acc[0].PubKey)
 	assert.Equal(t, candidatesIn[2].PubKey.Bytes(), acc[1].PubKey)
@@ -609,46 +609,6 @@ func TestGetAccUpdateValidators(t *testing.T) {
 	assert.Equal(t, int64(0), acc[1].Power)
 	assert.Equal(t, int64(0), acc[2].Power)
 	assert.Equal(t, int64(0), acc[3].Power)
-}
-
-// test if is a validator from the last update
-func TestIsValidator(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
-
-	amts := []int64{9, 8, 7, 10, 6}
-	var candidatesIn [5]Candidate
-	for i, amt := range amts {
-		candidatesIn[i] = NewCandidate(addrVals[i], pks[i], Description{})
-		candidatesIn[i].BondedShares = sdk.NewRat(amt)
-		candidatesIn[i].DelegatorShares = sdk.NewRat(amt)
-	}
-
-	// test that an empty validator set doesn't have any validators
-	validators := keeper.getValidatorsOrdered(ctx)
-	assert.Equal(t, 0, len(validators))
-
-	// get the validators for the first time
-	keeper.setCandidate(ctx, candidatesIn[0])
-	keeper.setCandidate(ctx, candidatesIn[1])
-	validators = keeper.getValidatorsOrdered(ctx)
-	require.Equal(t, 2, len(validators))
-	assert.True(t, candidatesIn[0].validator().equal(validators[0]))
-	c1ValWithCounter := candidatesIn[1].validator()
-	c1ValWithCounter.Counter = int16(1)
-	assert.True(t, c1ValWithCounter.equal(validators[1]))
-
-	// test a basic retrieve of something that should be a recent validator
-	assert.True(t, keeper.IsValidator(ctx, candidatesIn[0].PubKey))
-	assert.True(t, keeper.IsValidator(ctx, candidatesIn[1].PubKey))
-
-	// test a basic retrieve of something that should not be a recent validator
-	assert.False(t, keeper.IsValidator(ctx, candidatesIn[2].PubKey))
-
-	// remove that validator, but don't retrieve the recent validator group
-	keeper.removeCandidate(ctx, candidatesIn[0].Address)
-
-	// test that removed validator is not considered a recent validator
-	assert.False(t, keeper.IsValidator(ctx, candidatesIn[0].PubKey))
 }
 
 // test if is a validator from the last update
@@ -665,7 +625,7 @@ func TestGetTotalPrecommitVotingPower(t *testing.T) {
 	}
 
 	// test that an empty validator set doesn't have any validators
-	validators := keeper.GetValidators(ctx)
+	validators := keeper.GetValidatorsBonded(ctx)
 	assert.Equal(t, 5, len(validators))
 
 	totPow := keeper.GetTotalPrecommitVotingPower(ctx)

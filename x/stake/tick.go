@@ -30,8 +30,8 @@ func (k Keeper) Tick(ctx sdk.Context) (change []abci.Validator) {
 	k.setIntraTxCounter(ctx, 0)
 
 	// calculate validator set changes
-	change = k.getAccUpdateValidators(ctx)
-	k.clearAccUpdateValidators(ctx)
+	change = k.getValidatorsTendermintUpdates(ctx)
+	k.clearValidatorsTendermintUpdates(ctx)
 
 	// XXX get the total validator of the previous validator set
 	// XXX get the total validator of the current validator set

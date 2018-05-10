@@ -9,6 +9,8 @@ import (
 
 var device *ledger.Ledger
 
+type DerivationPath = []uint32
+
 // getLedger gets a copy of the device, and caches it
 func getLedger() (*ledger.Ledger, error) {
 	var err error
@@ -18,8 +20,8 @@ func getLedger() (*ledger.Ledger, error) {
 	return device, err
 }
 
-func pubkeyLedger(device *ledger.Ledger) (pub PubKey, err error) {
-	key, err := device.GetPublicKey()
+func pubkeyLedger(device *ledger.Ledger, path DerivationPath) (pub PubKey, err error) {
+	key, err := device.GetPublicKeySECP256K1(path)
 	if err != nil {
 		return pub, err
 	}
@@ -30,8 +32,8 @@ func pubkeyLedger(device *ledger.Ledger) (pub PubKey, err error) {
 	return p, err
 }
 
-func signLedger(device *ledger.Ledger, msg []byte) (sig Signature, err error) {
-	bsig, err := device.Sign(msg)
+func signLedger(device *ledger.Ledger, path DerivationPath, msg []byte) (sig Signature, err error) {
+	bsig, err := device.SignSECP256K1(path, msg)
 	if err != nil {
 		return sig, err
 	}
@@ -46,11 +48,12 @@ type PrivKeyLedgerSecp256k1 struct {
 	// so we can view the address later, even without having the ledger
 	// attached
 	CachedPubKey PubKey
+	Path         DerivationPath
 }
 
 // NewPrivKeyLedgerSecp256k1 will generate a new key and store the
 // public key for later use.
-func NewPrivKeyLedgerSecp256k1() (PrivKey, error) {
+func NewPrivKeyLedgerSecp256k1(path DerivationPath) (PrivKey, error) {
 	var pk PrivKeyLedgerSecp256k1
 	// getPubKey will cache the pubkey for later use,
 	// this allows us to return an error early if the ledger
@@ -102,12 +105,12 @@ func (pk PrivKeyLedgerSecp256k1) Sign(msg []byte) Signature {
 		panic(err)
 	}
 
-	sig, err := signLedger(dev, msg)
+	sig, err := signLedger(dev, pk.Path, msg)
 	if err != nil {
 		panic(err)
 	}
 
-	pub, err := pubkeyLedger(dev)
+	pub, err := pubkeyLedger(dev, pk.Path)
 	if err != nil {
 		panic(err)
 	}
@@ -149,7 +152,7 @@ func (pk PrivKeyLedgerSecp256k1) forceGetPubKey() (key PubKey, err error) {
 	if err != nil {
 		return key, errors.New("Cannot connect to Ledger device")
 	}
-	key, err = pubkeyLedger(dev)
+	key, err = pubkeyLedger(dev, pk.Path)
 	if err != nil {
 		return key, errors.New("Please open Cosmos app on the Ledger device")
 	}

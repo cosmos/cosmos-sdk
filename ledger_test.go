@@ -15,7 +15,9 @@ func TestRealLedger(t *testing.T) {
 	}
 	msg := []byte("kuhehfeohg")
 
-	priv, err := NewPrivKeyLedgerSecp256k1()
+	path := DerivationPath{44, 60, 0, 0, 0}
+
+	priv, err := NewPrivKeyLedgerSecp256k1(path)
 	require.Nil(t, err, "%+v", err)
 	pub := priv.PubKey()
 	sig := priv.Sign(msg)
@@ -53,6 +55,7 @@ func TestRealLedgerErrorHandling(t *testing.T) {
 
 	// first, try to generate a key, must return an error
 	// (no panic)
-	_, err := NewPrivKeyLedgerSecp256k1()
+	path := DerivationPath{44, 60, 0, 0, 0}
+	_, err := NewPrivKeyLedgerSecp256k1(path)
 	require.Error(t, err)
 }

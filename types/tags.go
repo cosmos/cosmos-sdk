@@ -21,8 +21,8 @@ func (t Tags) AppendTag(k string, v []byte) Tags {
 }
 
 // Append two lists of tags
-func AppendTags(a, b Tags) Tags {
-	return append(a, b...)
+func (t Tags) AppendTags(a Tags) Tags {
+	return append(t, a...)
 }
 
 // New variadic tags, must be k string, v []byte repeating

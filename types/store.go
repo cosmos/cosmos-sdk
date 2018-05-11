@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/abci/types"
+	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 )
 
@@ -256,3 +257,8 @@ func PrefixEndBytes(prefix []byte) []byte {
 	}
 	return end
 }
+
+//----------------------------------------
+
+// key-value result for iterator queries
+type KVPair cmn.KVPair

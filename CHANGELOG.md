@@ -28,6 +28,10 @@ FEATURES:
   * New genesis account keys are automatically added to the client keybase (introduce `--client-home` flag)
   * Initialize with genesis txs using `--gen-txs` flag
 * Context now has access to the application-configured logger
+* Add (non-proof) subspace query helper functions 
+* Add more staking query functions: candidates, delegator-bonds
+* Bank module now tags transactions with sender/recipient for indexing & later retrieval
+* Stake module now tags transactions with delegator/candidate for delegation & unbonding, and candidate info for declare candidate / edit candidacy
 
 BUG FIXES
 * Gaia now uses stake, ported from github.com/cosmos/gaia

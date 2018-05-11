@@ -65,7 +65,7 @@ func TestKeeper(t *testing.T) {
 	coinKeeper.SubtractCoins(ctx, addr, sdk.Coins{{"barcoin", 5}})
 	assert.True(t, coinKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{{"barcoin", 10}, {"foocoin", 15}}))
 
-	_, err := coinKeeper.SubtractCoins(ctx, addr, sdk.Coins{{"barcoin", 11}})
+	_, _, err := coinKeeper.SubtractCoins(ctx, addr, sdk.Coins{{"barcoin", 11}})
 	assert.Implements(t, (*sdk.Error)(nil), err)
 	assert.True(t, coinKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{{"barcoin", 10}, {"foocoin", 15}}))
 
@@ -78,7 +78,7 @@ func TestKeeper(t *testing.T) {
 	assert.True(t, coinKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{{"foocoin", 10}}))
 	assert.True(t, coinKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{{"foocoin", 5}}))
 
-	err2 := coinKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{{"foocoin", 50}})
+	_, err2 := coinKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{{"foocoin", 50}})
 	assert.Implements(t, (*sdk.Error)(nil), err2)
 	assert.True(t, coinKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{{"foocoin", 10}}))
 	assert.True(t, coinKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{{"foocoin", 5}}))
@@ -147,7 +147,7 @@ func TestSendKeeper(t *testing.T) {
 	assert.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{{"foocoin", 10}}))
 	assert.True(t, sendKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{{"foocoin", 5}}))
 
-	err2 := sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{{"foocoin", 50}})
+	_, err2 := sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{{"foocoin", 50}})
 	assert.Implements(t, (*sdk.Error)(nil), err2)
 	assert.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{{"foocoin", 10}}))
 	assert.True(t, sendKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{{"foocoin", 5}}))

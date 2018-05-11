@@ -1,4 +1,8 @@
-package types
+package store
+
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // nolint
 const (
@@ -14,12 +18,12 @@ const (
 
 // gasKVStore applies gas tracking to an underlying kvstore
 type gasKVStore struct {
-	gasMeter GasMeter
-	parent   KVStore
+	gasMeter sdk.GasMeter
+	parent   sdk.KVStore
 }
 
 // nolint
-func NewGasKVStore(gasMeter GasMeter, parent KVStore) *gasKVStore {
+func NewGasKVStore(gasMeter sdk.GasMeter, parent sdk.KVStore) *gasKVStore {
 	kvs := &gasKVStore{
 		gasMeter: gasMeter,
 		parent:   parent,
@@ -28,7 +32,7 @@ func NewGasKVStore(gasMeter GasMeter, parent KVStore) *gasKVStore {
 }
 
 // Implements Store.
-func (gi *gasKVStore) GetStoreType() StoreType {
+func (gi *gasKVStore) GetStoreType() sdk.StoreType {
 	return gi.parent.GetStoreType()
 }
 
@@ -37,7 +41,7 @@ func (gi *gasKVStore) Get(key []byte) (value []byte) {
 	gi.gasMeter.ConsumeGas(ReadCostFlat, "GetFlat")
 	value = gi.parent.Get(key)
 	// TODO overflow-safe math?
-	gi.gasMeter.ConsumeGas(ReadCostPerByte*Gas(len(value)), "ReadPerByte")
+	gi.gasMeter.ConsumeGas(ReadCostPerByte*sdk.Gas(len(value)), "ReadPerByte")
 	return value
 }
 
@@ -45,7 +49,7 @@ func (gi *gasKVStore) Get(key []byte) (value []byte) {
 func (gi *gasKVStore) Set(key []byte, value []byte) {
 	gi.gasMeter.ConsumeGas(WriteCostFlat, "SetFlat")
 	// TODO overflow-safe math?
-	gi.gasMeter.ConsumeGas(WriteCostPerByte*Gas(len(value)), "SetPerByte")
+	gi.gasMeter.ConsumeGas(WriteCostPerByte*sdk.Gas(len(value)), "SetPerByte")
 	gi.parent.Set(key, value)
 }
 
@@ -62,32 +66,32 @@ func (gi *gasKVStore) Delete(key []byte) {
 }
 
 // Implements KVStore.
-func (gi *gasKVStore) Iterator(start, end []byte) Iterator {
+func (gi *gasKVStore) Iterator(start, end []byte) sdk.Iterator {
 	return gi.iterator(start, end, true)
 }
 
 // Implements KVStore.
-func (gi *gasKVStore) ReverseIterator(start, end []byte) Iterator {
+func (gi *gasKVStore) ReverseIterator(start, end []byte) sdk.Iterator {
 	return gi.iterator(start, end, false)
 }
 
 // Implements KVStore.
-func (gi *gasKVStore) SubspaceIterator(prefix []byte) Iterator {
-	return gi.iterator(prefix, PrefixEndBytes(prefix), true)
+func (gi *gasKVStore) SubspaceIterator(prefix []byte) sdk.Iterator {
+	return gi.iterator(prefix, sdk.PrefixEndBytes(prefix), true)
 }
 
 // Implements KVStore.
-func (gi *gasKVStore) ReverseSubspaceIterator(prefix []byte) Iterator {
-	return gi.iterator(prefix, PrefixEndBytes(prefix), false)
+func (gi *gasKVStore) ReverseSubspaceIterator(prefix []byte) sdk.Iterator {
+	return gi.iterator(prefix, sdk.PrefixEndBytes(prefix), false)
 }
 
 // Implements KVStore.
-func (gi *gasKVStore) CacheWrap() CacheWrap {
+func (gi *gasKVStore) CacheWrap() sdk.CacheWrap {
 	panic("you cannot CacheWrap a GasKVStore")
 }
 
-func (gi *gasKVStore) iterator(start, end []byte, ascending bool) Iterator {
-	var parent Iterator
+func (gi *gasKVStore) iterator(start, end []byte, ascending bool) sdk.Iterator {
+	var parent sdk.Iterator
 	if ascending {
 		parent = gi.parent.Iterator(start, end)
 	} else {
@@ -97,11 +101,11 @@ func (gi *gasKVStore) iterator(start, end []byte, ascending bool) Iterator {
 }
 
 type gasIterator struct {
-	gasMeter GasMeter
-	parent   Iterator
+	gasMeter sdk.GasMeter
+	parent   sdk.Iterator
 }
 
-func newGasIterator(gasMeter GasMeter, parent Iterator) Iterator {
+func newGasIterator(gasMeter sdk.GasMeter, parent sdk.Iterator) sdk.Iterator {
 	return &gasIterator{
 		gasMeter: gasMeter,
 		parent:   parent,
@@ -134,7 +138,7 @@ func (g *gasIterator) Key() (key []byte) {
 func (g *gasIterator) Value() (value []byte) {
 	value = g.parent.Value()
 	g.gasMeter.ConsumeGas(ValueCostFlat, "ValueFlat")
-	g.gasMeter.ConsumeGas(ValueCostPerByte*Gas(len(value)), "ValuePerByte")
+	g.gasMeter.ConsumeGas(ValueCostPerByte*sdk.Gas(len(value)), "ValuePerByte")
 	return value
 }
 

@@ -28,7 +28,7 @@ type BaseApp struct {
 	// initialized on creation
 	Logger     log.Logger
 	name       string               // application name from abci.Info
-	codec      *wire.Codec          // Amino codec
+	cdc        *wire.Codec          // Amino codec
 	db         dbm.DB               // common DB backend
 	cms        sdk.CommitMultiStore // Main (uncached) state
 	router     Router               // handle any kind of message
@@ -64,7 +64,7 @@ func NewBaseApp(name string, cdc *wire.Codec, logger log.Logger, db dbm.DB, txGa
 	app := &BaseApp{
 		Logger:     logger,
 		name:       name,
-		codec:      cdc,
+		cdc:        cdc,
 		db:         db,
 		cms:        store.NewCommitMultiStore(db),
 		router:     NewRouter(),
@@ -302,7 +302,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		default:
 			result = sdk.ErrUnknownRequest(fmt.Sprintf("Unknown query: %s", path)).Result()
 		}
-		value := app.codec.MustMarshalBinary(result)
+		value := app.cdc.MustMarshalBinary(result)
 		return abci.ResponseQuery{
 			Code:  uint32(sdk.ABCICodeOK),
 			Value: value,

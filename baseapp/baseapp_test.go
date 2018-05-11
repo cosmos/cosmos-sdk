@@ -316,7 +316,7 @@ func TestSimulateTx(t *testing.T) {
 		queryResult := app.Query(query)
 		require.Equal(t, queryResult.Code, uint32(sdk.ABCICodeOK))
 		var res sdk.Result
-		app.codec.MustUnmarshalBinary(queryResult.Value, &res)
+		app.cdc.MustUnmarshalBinary(queryResult.Value, &res)
 		require.Equal(t, res.Code, sdk.ABCICodeOK)
 		require.Equal(t, res.GasUsed, int64(80))
 		app.EndBlock(abci.RequestEndBlock{})

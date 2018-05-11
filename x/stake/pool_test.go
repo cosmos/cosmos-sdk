@@ -258,7 +258,7 @@ func TestValidatorRemoveShares(t *testing.T) {
 
 // generate a random validator
 func randomValidator(r *rand.Rand) Validator {
-	var status sdk.ValidatorStatus
+	var status sdk.BondStatus
 	if r.Float64() < float64(0.5) {
 		status = sdk.Bonded
 	} else {

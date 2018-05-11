@@ -6,23 +6,23 @@ import (
 )
 
 // status of a validator
-type ValidatorStatus byte
+type BondStatus byte
 
 // nolint
 const (
-	Bonded    ValidatorStatus = 0x00
-	Unbonding ValidatorStatus = 0x01
-	Unbonded  ValidatorStatus = 0x02
-	Revoked   ValidatorStatus = 0x03
+	Bonded    BondStatus = 0x00
+	Unbonding BondStatus = 0x01
+	Unbonded  BondStatus = 0x02
+	Revoked   BondStatus = 0x03
 )
 
 // validator for a delegated proof of stake system
 type Validator interface {
-	GetStatus() ValidatorStatus // status of the validator
-	GetAddress() Address        // owner address to receive/return validators coins
-	GetPubKey() crypto.PubKey   // validation pubkey
-	GetPower() Rat              // validation power
-	GetBondHeight() int64       // height in which the validator became active
+	GetStatus() BondStatus    // status of the validator
+	GetAddress() Address      // owner address to receive/return validators coins
+	GetPubKey() crypto.PubKey // validation pubkey
+	GetPower() Rat            // validation power
+	GetBondHeight() int64     // height in which the validator became active
 }
 
 // validator which fulfills abci validator interface for use in Tendermint

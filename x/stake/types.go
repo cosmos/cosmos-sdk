@@ -126,17 +126,21 @@ func initialPool() Pool {
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
 type Validator struct {
-	Status          sdk.ValidatorStatus `json:"status"`           // Bonded status
-	Address         sdk.Address         `json:"address"`          // Sender of BondTx - UnbondTx returns here
-	PubKey          crypto.PubKey       `json:"pub_key"`          // Pubkey of validator
-	BondedShares    sdk.Rat             `json:"bonded_shares"`    // total shares of bonded global hold pool
-	UnbondingShares sdk.Rat             `json:"unbonding_shares"` // total shares of unbonding global hold pool
-	UnbondedShares  sdk.Rat             `json:"unbonded_shares"`  // total shares of unbonded global hold pool
-	DelegatorShares sdk.Rat             `json:"liabilities"`      // total shares issued to a validator's delegators
+	Status  sdk.BondStatus `json:"status"`  // bonded status
+	Address sdk.Address         `json:"address"` // sender of BondTx - UnbondTx returns here
+	PubKey  crypto.PubKey       `json:"pub_key"` // pubkey of validator
 
-	Description        Description `json:"description"`            // Description terms for the validator
-	BondHeight         int64       `json:"validator_bond_height"`  // Earliest height as a bonded validator
-	BondIntraTxCounter int16       `json:"validator_bond_counter"` // Block-local tx index of validator change
+	// note: There should only be one of the following 3 shares ever active in a delegator
+	//       multiple terms are only added here for clarity.
+	BondedShares    sdk.Rat `json:"bonded_shares"`    // total shares of bonded global hold pool
+	UnbondingShares sdk.Rat `json:"unbonding_shares"` // total shares of unbonding global hold pool
+	UnbondedShares  sdk.Rat `json:"unbonded_shares"`  // total shares of unbonded global hold pool
+
+	DelegatorShares sdk.Rat `json:"liabilities"` // total shares issued to a validator's delegators
+
+	Description        Description `json:"description"`            // description terms for the validator
+	BondHeight         int64       `json:"validator_bond_height"`  // earliest height as a bonded validator
+	BondIntraTxCounter int16       `json:"validator_bond_counter"` // block-local tx index of validator change
 	ProposerRewardPool sdk.Coins   `json:"proposer_reward_pool"`   // XXX reward pool collected from being the proposer
 
 	Commission            sdk.Rat `json:"commission"`              // XXX the commission rate of fees charged to any delegators
@@ -246,7 +250,7 @@ func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
 var _ sdk.Validator = Validator{}
 
 // nolint - for sdk.Validator
-func (v Validator) GetStatus() sdk.ValidatorStatus { return v.Status }
+func (v Validator) GetStatus() sdk.BondStatus { return v.Status }
 func (v Validator) GetAddress() sdk.Address        { return v.Address }
 func (v Validator) GetPubKey() crypto.PubKey       { return v.PubKey }
 func (v Validator) GetPower() sdk.Rat              { return v.BondedShares }

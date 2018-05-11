@@ -69,19 +69,23 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve int16) (validators Va
 
 func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 	store := ctx.KVStore(k.storeKey)
+	pool := k.getPool(store)
 	address := validator.Address
+
+	// update the main list ordered by address before exiting
+	defer func() {
+		bz := k.cdc.MustMarshalBinary(validator)
+		store.Set(GetValidatorKey(address), bz)
+	}()
 
 	// retreive the old validator record
 	oldValidator, oldFound := k.GetValidator(ctx, address)
 
-	// marshal the validator record and add to the state
-	bz := k.cdc.MustMarshalBinary(validator)
-	store.Set(GetValidatorKey(address), bz)
-
 	powerIncreasing := false
 	if oldFound {
 		// if the voting power is the same no need to update any of the other indexes
-		if oldValidator.BondedShares.Equal(validator.BondedShares) {
+		if oldValidator.Status == sdk.Bonded &&
+			oldValidator.BondedShares.Equal(validator.BondedShares) {
 			return
 		} else if oldValidator.BondedShares.LT(validator.BondedShares) {
 			powerIncreasing = true
@@ -116,7 +120,14 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 	}
 
 	// update the validator set for this validator
-	k.updateValidators(ctx, store, validator.Address)
+	valIsNowBonded := k.updateValidators(ctx, store, validator.Address)
+
+	if oldValidator.Status != sdk.Bonded && valIsNowBonded {
+		validator.Status = sdk.Bonded
+		pool, validator = pool.UpdateSharesLocation(validator)
+		k.setPool(ctx, pool)
+	}
+
 	return
 }
 
@@ -187,6 +198,8 @@ func (k Keeper) GetValidatorsBondedByPower(ctx sdk.Context) []Validator {
 	return validators
 }
 
+// XXX TODO build in consideration for revoked
+//
 // Update the validator group and kick out any old validators. In addition this
 // function adds (or doesn't add) a validator which has updated its bonded
 // tokens to the validator group. -> this validator is specified through the
@@ -198,7 +211,8 @@ func (k Keeper) GetValidatorsBondedByPower(ctx sdk.Context) []Validator {
 // ValidatorsBondedKey. This store is used to determine if a validator is a
 // validator without needing to iterate over the subspace as we do in
 // GetValidators.
-func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedValidatorAddr sdk.Address) {
+func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedValidatorAddr sdk.Address) (updatedIsBonded bool) {
+	updatedIsBonded = false
 
 	// clear the current validators store, add to the ToKickOut temp store
 	toKickOut := make(map[string][]byte) // map[key]value
@@ -240,6 +254,7 @@ func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedVali
 		if bytes.Equal(updatedValidatorAddr, validator.Address) {
 			bz = k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
 			store.Set(GetTendermintUpdatesKey(updatedValidatorAddr), bz)
+			updatedIsBonded = true // the updatedValidatorAddr is for a bonded validator
 		}
 
 		iterator.Next()
@@ -257,6 +272,7 @@ func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedVali
 		bz := k.cdc.MustMarshalBinary(validator.abciValidatorZero(k.cdc))
 		store.Set(GetTendermintUpdatesKey(addr), bz)
 	}
+	return
 }
 
 //_________________________________________________________________________
@@ -392,11 +408,14 @@ func (k Keeper) setParams(ctx sdk.Context, params Params) {
 
 // load/save the pool
 func (k Keeper) GetPool(ctx sdk.Context) (pool Pool) {
+	store := ctx.KVStore(k.storeKey)
+	return k.getPool(store)
+}
+func (k Keeper) getPool(store sdk.KVStore) (pool Pool) {
 	// check if cached before anything
 	if !k.pool.equal(Pool{}) {
 		return k.pool
 	}
-	store := ctx.KVStore(k.storeKey)
 	b := store.Get(PoolKey)
 	if b == nil {
 		panic("Stored pool should not have been nil")

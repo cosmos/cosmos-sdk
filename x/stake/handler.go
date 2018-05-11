@@ -287,7 +287,8 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 		// change the share types to unbonded if they were not already
 		if validator.Status == sdk.Bonded {
-			p, validator = p.bondedToUnbondedPool(validator)
+			validator.Status = sdk.Unbonded
+			p, validator = p.UpdateSharesLocation(validator)
 		}
 
 		// lastly update the status

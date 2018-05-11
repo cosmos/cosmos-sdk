@@ -25,13 +25,14 @@ func NewHandler(k Keeper) sdk.Handler {
 func handleMsgSend(ctx sdk.Context, k Keeper, msg MsgSend) sdk.Result {
 	// NOTE: totalIn == totalOut should already have been checked
 
-	err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
+	tags, err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
 	if err != nil {
 		return err.Result()
 	}
 
-	// TODO: add some tags so we can search it!
-	return sdk.Result{} // TODO
+	return sdk.Result{
+		Tags: tags,
+	}
 }
 
 // Handle MsgIssue.

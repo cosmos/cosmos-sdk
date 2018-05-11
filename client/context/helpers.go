@@ -43,8 +43,23 @@ func (ctx CoreContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, 
 
 // Query from Tendermint with the provided key and storename
 func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, err error) {
+	return ctx.query(key, storeName, "key")
+}
 
-	path := fmt.Sprintf("/%s/key", storeName)
+// Query from Tendermint with the provided storename and subspace
+func (ctx CoreContext) QuerySubspace(cdc *wire.Codec, subspace []byte, storeName string) (res []sdk.KVPair, err error) {
+	resRaw, err := ctx.query(subspace, storeName, "subspace")
+	if err != nil {
+		return res, err
+	}
+	cdc.MustUnmarshalBinary(resRaw, &res)
+	return
+}
+
+// Query from Tendermint with the provided storename and path
+func (ctx CoreContext) query(key cmn.HexBytes, storeName, endPath string) (res []byte, err error) {
+
+	path := fmt.Sprintf("/%s/%s", storeName, endPath)
 	node, err := ctx.GetNode()
 	if err != nil {
 		return res, err

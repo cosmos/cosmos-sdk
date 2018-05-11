@@ -17,7 +17,7 @@ var (
 	PoolKey                        = []byte{0x01} // key for global parameters relating to staking
 	ValidatorsKey                  = []byte{0x02} // prefix for each key to a validator
 	ValidatorsByPowerKey           = []byte{0x03} // prefix for each key to a validator
-	ValidatorsTendermintUpdatesKey = []byte{0x04} // prefix for each key to a validator which is being updated
+	TendermintUpdatesKey = []byte{0x04} // prefix for each key to a validator which is being updated
 	ValidatorsBondedKey            = []byte{0x05} // prefix for each key to bonded/actively validating validators
 	DelegationKey                  = []byte{0x06} // prefix for each key to a delegator's bond
 	IntraTxCounterKey              = []byte{0x07} // key for block-local tx index
@@ -47,8 +47,8 @@ func GetValidatorsBondedByPowerKey(validator Validator) []byte {
 }
 
 // get the key for the accumulated update validators
-func GetValidatorsTendermintUpdatesKey(addr sdk.Address) []byte {
-	return append(ValidatorsTendermintUpdatesKey, addr.Bytes()...)
+func GetTendermintUpdatesKey(addr sdk.Address) []byte {
+	return append(TendermintUpdatesKey, addr.Bytes()...)
 }
 
 // get the key for the current validator group, ordered like tendermint

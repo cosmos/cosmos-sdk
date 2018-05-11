@@ -43,7 +43,7 @@ func TestDuplicatesMsgDeclareCandidacy(t *testing.T) {
 	assert.True(t, got.IsOK(), "%v", got)
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	assert.Equal(t, Unbonded, validator.Status)
+	assert.Equal(t, sdk.Unbonded, validator.Status)
 	assert.Equal(t, validatorAddr, validator.Address)
 	assert.Equal(t, pk, validator.PubKey)
 	assert.Equal(t, sdk.NewRat(10), validator.BondedShares)
@@ -296,7 +296,7 @@ func TestVoidCandidacy(t *testing.T) {
 	require.True(t, got.IsOK(), "expected no error on runMsgDeclareCandidacy")
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, Revoked, validator.Status)
+	require.Equal(t, sdk.Revoked, validator.Status)
 
 	// test that this address cannot yet be bonded too because is revoked
 	got = handleMsgDelegate(ctx, msgDelegate, keeper)

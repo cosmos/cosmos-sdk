@@ -405,7 +405,7 @@ func TestStakeMsgs(t *testing.T) {
 	ctxDeliver := gapp.BaseApp.NewContext(false, abci.Header{})
 	res1 = gapp.accountMapper.GetAccount(ctxDeliver, addr1)
 	require.Equal(t, genCoins.Minus(sdk.Coins{bondCoin}), res1.GetCoins())
-	candidate, found := gapp.stakeKeeper.GetCandidate(ctxDeliver, addr1)
+	candidate, found := gapp.stakeKeeper.GetValidator(ctxDeliver, addr1)
 	require.True(t, found)
 	require.Equal(t, candidate.Address, addr1)
 
@@ -417,7 +417,7 @@ func TestStakeMsgs(t *testing.T) {
 	)
 	SignDeliver(t, gapp, editCandidacyMsg, []int64{1}, true, priv1)
 
-	candidate, found = gapp.stakeKeeper.GetCandidate(ctxDeliver, addr1)
+	candidate, found = gapp.stakeKeeper.GetValidator(ctxDeliver, addr1)
 	require.True(t, found)
 	require.Equal(t, candidate.Description, description)
 

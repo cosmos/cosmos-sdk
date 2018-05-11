@@ -60,16 +60,16 @@ func TestBondedToUnbondedPool(t *testing.T) {
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
 	candA := Validator{
-		Status:      Bonded,
-		Address:     addrs[0],
-		PubKey:      pks[0],
-		BondedShares:      sdk.OneRat(),
+		Status:          sdk.Bonded,
+		Address:         addrs[0],
+		PubKey:          pks[0],
+		BondedShares:    sdk.OneRat(),
 		DelegatorShares: sdk.OneRat(),
 	}
 	poolB, candB := poolA.bondedToUnbondedPool(candA)
 
 	// status unbonded
-	assert.Equal(t, candB.Status, Unbonded)
+	assert.Equal(t, candB.Status, sdk.Unbonded)
 	// same exchange rate, assets unchanged
 	assert.Equal(t, candB.BondedShares, candA.BondedShares)
 	// bonded pool decreased
@@ -87,17 +87,17 @@ func TestUnbonbedtoBondedPool(t *testing.T) {
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
 	candA := Validator{
-		Status:      Bonded,
-		Address:     addrs[0],
-		PubKey:      pks[0],
-		BondedShares:      sdk.OneRat(),
+		Status:          sdk.Bonded,
+		Address:         addrs[0],
+		PubKey:          pks[0],
+		BondedShares:    sdk.OneRat(),
 		DelegatorShares: sdk.OneRat(),
 	}
-	candA.Status = Unbonded
+	candA.Status = sdk.Unbonded
 	poolB, candB := poolA.unbondedToBondedPool(candA)
 
 	// status bonded
-	assert.Equal(t, candB.Status, Bonded)
+	assert.Equal(t, candB.Status, sdk.Bonded)
 	// same exchange rate, assets unchanged
 	assert.Equal(t, candB.BondedShares, candA.BondedShares)
 	// bonded pool increased
@@ -177,10 +177,10 @@ func TestValidatorAddTokens(t *testing.T) {
 
 	poolA := keeper.GetPool(ctx)
 	candA := Validator{
-		Status:      Bonded,
-		Address:     addrs[0],
-		PubKey:      pks[0],
-		BondedShares:      sdk.NewRat(9),
+		Status:          sdk.Bonded,
+		Address:         addrs[0],
+		PubKey:          pks[0],
+		BondedShares:    sdk.NewRat(9),
 		DelegatorShares: sdk.NewRat(9),
 	}
 	poolA.BondedPool = candA.BondedShares.Evaluate()
@@ -203,10 +203,10 @@ func TestValidatorRemoveShares(t *testing.T) {
 
 	poolA := keeper.GetPool(ctx)
 	candA := Validator{
-		Status:      Bonded,
-		Address:     addrs[0],
-		PubKey:      pks[0],
-		BondedShares:      sdk.NewRat(9),
+		Status:          sdk.Bonded,
+		Address:         addrs[0],
+		PubKey:          pks[0],
+		BondedShares:    sdk.NewRat(9),
 		DelegatorShares: sdk.NewRat(9),
 	}
 	poolA.BondedPool = candA.BondedShares.Evaluate()
@@ -227,10 +227,10 @@ func TestValidatorRemoveShares(t *testing.T) {
 	assets := sdk.NewRat(5102)
 	liabilities := sdk.NewRat(115)
 	cand := Validator{
-		Status:      Bonded,
-		Address:     addrs[0],
-		PubKey:      pks[0],
-		BondedShares:      assets,
+		Status:          sdk.Bonded,
+		Address:         addrs[0],
+		PubKey:          pks[0],
+		BondedShares:    assets,
 		DelegatorShares: liabilities,
 	}
 	pool := Pool{
@@ -258,19 +258,19 @@ func TestValidatorRemoveShares(t *testing.T) {
 
 // generate a random validator
 func randomValidator(r *rand.Rand) Validator {
-	var status ValidatorStatus
+	var status sdk.ValidatorStatus
 	if r.Float64() < float64(0.5) {
-		status = Bonded
+		status = sdk.Bonded
 	} else {
-		status = Unbonded
+		status = sdk.Unbonded
 	}
 	assets := sdk.NewRat(int64(r.Int31n(10000)))
 	liabilities := sdk.NewRat(int64(r.Int31n(10000)))
 	return Validator{
-		Status:      status,
-		Address:     addrs[0],
-		PubKey:      pks[0],
-		BondedShares:      assets,
+		Status:          status,
+		Address:         addrs[0],
+		PubKey:          pks[0],
+		BondedShares:    assets,
 		DelegatorShares: liabilities,
 	}
 }
@@ -290,10 +290,10 @@ func randomSetup(r *rand.Rand, numValidators int) (Pool, Validators) {
 	validators := make([]Validator, numValidators)
 	for i := 0; i < numValidators; i++ {
 		validator := randomValidator(r)
-		if validator.Status == Bonded {
+		if validator.Status == sdk.Bonded {
 			pool.BondedShares = pool.BondedShares.Add(validator.BondedShares)
 			pool.BondedPool += validator.BondedShares.Evaluate()
-		} else if validator.Status == Unbonded {
+		} else if validator.Status == sdk.Unbonded {
 			pool.UnbondedShares = pool.UnbondedShares.Add(validator.BondedShares)
 			pool.UnbondedPool += validator.BondedShares.Evaluate()
 		}
@@ -310,13 +310,13 @@ type Operation func(r *rand.Rand, p Pool, c Validator) (Pool, Validator, int64, 
 // operation: bond or unbond a validator depending on current status
 func OpBondOrUnbond(r *rand.Rand, p Pool, cand Validator) (Pool, Validator, int64, string) {
 	var msg string
-	if cand.Status == Bonded {
-		msg = fmt.Sprintf("Unbonded previously bonded validator %s (assets: %v, liabilities: %v, delegatorShareExRate: %v)",
+	if cand.Status == sdk.Bonded {
+		msg = fmt.Sprintf("sdk.Unbonded previously bonded validator %s (assets: %v, liabilities: %v, delegatorShareExRate: %v)",
 			cand.Address, cand.BondedShares, cand.DelegatorShares, cand.delegatorShareExRate())
 		p, cand = p.bondedToUnbondedPool(cand)
 
-	} else if cand.Status == Unbonded {
-		msg = fmt.Sprintf("Bonded previously unbonded validator %s (assets: %v, liabilities: %v, delegatorShareExRate: %v)",
+	} else if cand.Status == sdk.Unbonded {
+		msg = fmt.Sprintf("sdk.Bonded previously unbonded validator %s (assets: %v, liabilities: %v, delegatorShareExRate: %v)",
 			cand.Address, cand.BondedShares, cand.DelegatorShares, cand.delegatorShareExRate())
 		p, cand = p.unbondedToBondedPool(cand)
 	}
@@ -436,10 +436,10 @@ func TestPossibleOverflow(t *testing.T) {
 	assets := sdk.NewRat(2159)
 	liabilities := sdk.NewRat(391432570689183511).Quo(sdk.NewRat(40113011844664))
 	cand := Validator{
-		Status:      Bonded,
-		Address:     addrs[0],
-		PubKey:      pks[0],
-		BondedShares:      assets,
+		Status:          sdk.Bonded,
+		Address:         addrs[0],
+		PubKey:          pks[0],
+		BondedShares:    assets,
 		DelegatorShares: liabilities,
 	}
 	pool := Pool{

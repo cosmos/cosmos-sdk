@@ -99,14 +99,14 @@ func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keepe
 	k.setValidator(ctx, validator)
 	tags := sdk.NewTags(
 		"action", []byte("declareCandidacy"),
-		"candidate", msg.CandidateAddr.Bytes(),
+		"validator", msg.ValidatorAddr.Bytes(),
 		"moniker", []byte(msg.Description.Moniker),
 		"identity", []byte(msg.Description.Identity),
 	)
 
 	// move coins from the msg.Address account to a (self-bond) delegator account
 	// the validator account and global shares are updated within here
-	delegateTags, err := delegate(ctx, k, msg.CandidateAddr, msg.Bond, candidate)
+	delegateTags, err := delegate(ctx, k, msg.ValidatorAddr, msg.Bond, validator)
 	if err != nil {
 		return err.Result()
 	}
@@ -139,7 +139,7 @@ func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk
 	k.setValidator(ctx, validator)
 	tags := sdk.NewTags(
 		"action", []byte("editCandidacy"),
-		"candidate", msg.CandidateAddr.Bytes(),
+		"validator", msg.ValidatorAddr.Bytes(),
 		"moniker", []byte(msg.Description.Moniker),
 		"identity", []byte(msg.Description.Identity),
 	)
@@ -203,7 +203,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	k.setDelegation(ctx, bond)
 	k.setValidator(ctx, validator)
 	k.setPool(ctx, pool)
-	tags := sdk.NewTags("action", []byte("delegate"), "delegator", delegatorAddr.Bytes(), "candidate", candidate.Address.Bytes())
+	tags := sdk.NewTags("action", []byte("delegate"), "delegator", delegatorAddr.Bytes(), "validator", validator.Address.Bytes())
 	return tags, nil
 }
 
@@ -301,7 +301,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 		k.setValidator(ctx, validator)
 	}
 	k.setPool(ctx, p)
-	tags := sdk.NewTags("action", []byte("unbond"), "delegator", msg.DelegatorAddr.Bytes(), "candidate", msg.CandidateAddr.Bytes())
+	tags := sdk.NewTags("action", []byte("unbond"), "delegator", msg.DelegatorAddr.Bytes(), "validator", msg.ValidatorAddr.Bytes())
 	return sdk.Result{
 		Tags: tags,
 	}

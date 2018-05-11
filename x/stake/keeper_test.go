@@ -704,7 +704,6 @@ func TestPool(t *testing.T) {
 	resPool = keeper.GetPool(ctx)
 	assert.True(t, expPool.equal(resPool))
 }
-<<<<<<< HEAD
 
 func TestValidatorsetKeeper(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)

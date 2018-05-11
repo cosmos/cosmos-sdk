@@ -45,20 +45,21 @@ func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 			fmt.Println(string(output))
 
 			// TODO output with proofs / machine parseable etc.
+			return nil
 		},
 	}
 
 	return cmd
 }
 
-// get the command to query a candidate
-func GetCmdQueryCandidates(storeName string, cdc *wire.Codec) *cobra.Command {
+// get the command to query a validator
+func GetCmdQueryValidators(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "candidates",
-		Short: "Query for all validator-candidate accounts",
+		Short: "Query for all validator-validator accounts",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			key := stake.CandidatesKey
+			key := stake.ValidatorsKey
 			ctx := context.NewCoreContextFromViper()
 			resKVs, err := ctx.QuerySubspace(cdc, key, storeName)
 			if err != nil {
@@ -66,11 +67,11 @@ func GetCmdQueryCandidates(storeName string, cdc *wire.Codec) *cobra.Command {
 			}
 
 			// parse out the candidates
-			var candidates []stake.Candidate
+			var candidates []stake.Validator
 			for _, KV := range resKVs {
-				var candidate stake.Candidate
-				cdc.MustUnmarshalBinary(KV.Value, &candidate)
-				candidates = append(candidates, candidate)
+				var validator stake.Validator
+				cdc.MustUnmarshalBinary(KV.Value, &validator)
+				candidates = append(candidates, validator)
 			}
 
 			output, err := wire.MarshalJSONIndent(cdc, candidates)
@@ -141,7 +142,7 @@ func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			key := stake.GetDelegatorBondsKey(delegatorAddr, cdc)
+			key := stake.GetDelegationsKey(delegatorAddr, cdc)
 			ctx := context.NewCoreContextFromViper()
 			resKVs, err := ctx.QuerySubspace(cdc, key, storeName)
 			if err != nil {

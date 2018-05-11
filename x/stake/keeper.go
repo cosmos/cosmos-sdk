@@ -74,17 +74,6 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 	// retreive the old validator record
 	oldValidator, oldFound := k.GetValidator(ctx, address)
 
-	// if found and already a bonded, copy the old block height and counter, else set them
-	if oldFound && k.IsValidator(ctx, oldValidator.PubKey) {
-		validator.BondHeight = oldValidator.BondHeight
-		validator.BondIntraTxCounter = oldValidator.BondIntraTxCounter
-	} else {
-		validator.ValidatorBondHeight = ctx.BlockHeight()
-		counter := k.getIntraTxCounter(ctx)
-		validator.ValidatorBondCounter = counter
-		k.setIntraTxCounter(ctx, counter+1)
-	}
-
 	// marshal the validator record and add to the state
 	bz := k.cdc.MustMarshalBinary(validator)
 	store.Set(GetValidatorKey(address), bz)
@@ -94,7 +83,7 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 		// if the voting power is the same no need to update any of the other indexes
 		if oldValidator.BondedShares.Equal(validator.BondedShares) {
 			return
-		} else if oldCandidate.BondedShares.LT(candidate.BondedShares) {
+		} else if oldValidator.BondedShares.LT(validator.BondedShares) {
 			powerIncreasing = true
 		}
 		// delete the old record in the power ordered list
@@ -102,13 +91,13 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 	}
 
 	// if already a validator, copy the old block height and counter, else set them
-	if oldFound && isValidator(store, oldCandidate.PubKey) {
-		candidate.ValidatorBondHeight = oldCandidate.ValidatorBondHeight
-		candidate.ValidatorBondCounter = oldCandidate.ValidatorBondCounter
+	if oldFound && oldValidator.Status == sdk.Bonded {
+		validator.BondHeight = oldValidator.BondHeight
+		validator.BondIntraTxCounter = oldValidator.BondIntraTxCounter
 	} else {
-		candidate.ValidatorBondHeight = ctx.BlockHeight()
+		validator.BondHeight = ctx.BlockHeight()
 		counter := k.getIntraTxCounter(ctx)
-		candidate.ValidatorBondCounter = counter
+		validator.BondIntraTxCounter = counter
 		k.setIntraTxCounter(ctx, counter+1)
 	}
 
@@ -117,17 +106,17 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 	store.Set(GetValidatorsBondedByPowerKey(validator), bzVal)
 
 	// add to the validators and return to update list if is already a validator and power is increasing
-	if powerIncreasing && isValidator(store, oldCandidate.PubKey) {
+	if powerIncreasing && oldValidator.Status == sdk.Bonded {
 		bzABCI := k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
-		store.Set(GetAccUpdateValidatorKey(address), bzABCI)
+		store.Set(GetValidatorsTendermintUpdatesKey(address), bzABCI)
 
 		// also update the recent validator store
-		store.Set(GetRecentValidatorKey(validator.PubKey), bzVal)
+		store.Set(GetValidatorsBondedKey(validator.PubKey), bzVal)
 		return
 	}
 
-	// update the validator set for this candidate
-	k.updateValidators(ctx, store, candidate.Address)
+	// update the validator set for this validator
+	k.updateValidators(ctx, store, validator.Address)
 	return
 }
 
@@ -199,9 +188,9 @@ func (k Keeper) GetValidatorsBondedByPower(ctx sdk.Context) []Validator {
 }
 
 // Update the validator group and kick out any old validators. In addition this
-// function adds (or doesn't add) a candidate which has updated its bonded
-// tokens to the validator group. -> this candidate is specified through the
-// updatedCandidateAddr term.
+// function adds (or doesn't add) a validator which has updated its bonded
+// tokens to the validator group. -> this validator is specified through the
+// updatedValidatorAddr term.
 //
 // The correct subset is retrieved by iterating through an index of the
 // validators sorted by power, stored using the ValidatorsByPowerKey. Simultaniously
@@ -209,7 +198,7 @@ func (k Keeper) GetValidatorsBondedByPower(ctx sdk.Context) []Validator {
 // ValidatorsBondedKey. This store is used to determine if a validator is a
 // validator without needing to iterate over the subspace as we do in
 // GetValidators.
-func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedCandidateAddr sdk.Address) {
+func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedValidatorAddr sdk.Address) {
 
 	// clear the current validators store, add to the ToKickOut temp store
 	toKickOut := make(map[string][]byte) // map[key]value
@@ -247,10 +236,10 @@ func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedCand
 		// also add to the current validators group
 		store.Set(GetValidatorsBondedKey(validator.PubKey), bz)
 
-		// MOST IMPORTANTLY, add to the accumulated changes if this is the modified candidate
-		if bytes.Equal(updatedCandidateAddr, validator.Address) {
+		// MOST IMPORTANTLY, add to the accumulated changes if this is the modified validator
+		if bytes.Equal(updatedValidatorAddr, validator.Address) {
 			bz = k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
-			store.Set(GetAccUpdateValidatorKey(updatedCandidateAddr), bz)
+			store.Set(GetValidatorsTendermintUpdatesKey(updatedValidatorAddr), bz)
 		}
 
 		iterator.Next()

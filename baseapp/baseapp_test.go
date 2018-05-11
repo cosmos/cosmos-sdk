@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-crypto"
@@ -16,6 +17,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 func defaultLogger() log.Logger {
@@ -25,7 +27,9 @@ func defaultLogger() log.Logger {
 func newBaseApp(name string) *BaseApp {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	return NewBaseApp(name, nil, logger, db, 10000)
+	codec := wire.NewCodec()
+	wire.RegisterCrypto(codec)
+	return NewBaseApp(name, codec, logger, db, 10000)
 }
 
 func TestMountStores(t *testing.T) {
@@ -255,6 +259,66 @@ func TestDeliverTx(t *testing.T) {
 		for i := 0; i < txPerHeight; i++ {
 			app.Deliver(tx)
 		}
+		app.EndBlock(abci.RequestEndBlock{})
+		app.Commit()
+	}
+}
+
+func TestSimulateTx(t *testing.T) {
+	app := newBaseApp(t.Name())
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+
+	counter := 0
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		ctx.GasMeter().ConsumeGas(10, "test")
+		store := ctx.KVStore(capKey)
+		// ensure store is never written
+		require.Nil(t, store.Get([]byte("key")))
+		store.Set([]byte("key"), []byte("value"))
+		// check we can see the current header
+		thisHeader := ctx.BlockHeader()
+		height := int64(counter)
+		assert.Equal(t, height, thisHeader.Height)
+		counter++
+		return sdk.Result{}
+	})
+
+	tx := testUpdatePowerTx{} // doesn't matter
+	header := abci.Header{AppHash: []byte("apphash")}
+
+	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var ttx testUpdatePowerTx
+		fromJSON(txBytes, &ttx)
+		return ttx, nil
+	})
+
+	nBlocks := 3
+	for blockN := 0; blockN < nBlocks; blockN++ {
+		// block1
+		header.Height = int64(blockN + 1)
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
+		result := app.Simulate(tx)
+		require.Equal(t, result.Code, sdk.ABCICodeOK)
+		require.Equal(t, result.GasUsed, int64(80))
+		counter--
+		encoded, err := json.Marshal(tx)
+		require.Nil(t, err)
+		query := abci.RequestQuery{
+			Path: "/app/simulate",
+			Data: encoded,
+		}
+		queryResult := app.Query(query)
+		require.Equal(t, queryResult.Code, uint32(sdk.ABCICodeOK))
+		var res sdk.Result
+		app.codec.MustUnmarshalBinary(queryResult.Value, &res)
+		require.Equal(t, res.Code, sdk.ABCICodeOK)
+		require.Equal(t, res.GasUsed, int64(80))
 		app.EndBlock(abci.RequestEndBlock{})
 		app.Commit()
 	}

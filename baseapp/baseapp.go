@@ -291,13 +291,14 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		query := path[4:]
 		var result sdk.Result
 		switch query {
-		case "simulate":
+		case "/simulate":
 			txBytes := req.Data
 			tx, err := app.txDecoder(txBytes)
 			if err != nil {
 				result = err.Result()
+			} else {
+				result = app.Simulate(tx)
 			}
-			result = app.runTx(true, true, txBytes, tx)
 		default:
 			result = sdk.ErrUnknownRequest(fmt.Sprintf("Unknown query: %s", path)).Result()
 		}
@@ -398,7 +399,7 @@ func (app *BaseApp) Check(tx sdk.Tx) (result sdk.Result) {
 }
 
 // nolint - full tx execution
-func (app *BaseApp) CheckFull(tx sdk.Tx) (result sdk.Result) {
+func (app *BaseApp) Simulate(tx sdk.Tx) (result sdk.Result) {
 	return app.runTx(true, true, nil, tx)
 }
 

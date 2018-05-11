@@ -247,6 +247,9 @@ func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedVali
 
 	// add any kicked out validators to the accumulated changes for tendermint
 	for key, value := range toKickOut {
+		if value == nil {
+			continue
+		}
 		addr := AddrFromKey([]byte(key))
 
 		var validator Validator

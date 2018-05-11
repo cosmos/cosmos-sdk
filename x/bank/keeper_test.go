@@ -65,8 +65,7 @@ func TestKeeper(t *testing.T) {
 	coinKeeper.SubtractCoins(ctx, addr, sdk.Coins{{"barcoin", 5}})
 	assert.True(t, coinKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{{"barcoin", 10}, {"foocoin", 15}}))
 
-	_, err := coinKeeper.SubtractCoins(ctx, addr, sdk.Coins{{"barcoin", 11}})
-	assert.Implements(t, (*sdk.Error)(nil), err)
+	coinKeeper.SubtractCoins(ctx, addr, sdk.Coins{{"barcoin", 11}})
 	assert.True(t, coinKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{{"barcoin", 10}, {"foocoin", 15}}))
 
 	coinKeeper.SubtractCoins(ctx, addr, sdk.Coins{{"barcoin", 10}})

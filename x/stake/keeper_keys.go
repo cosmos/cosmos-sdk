@@ -33,7 +33,7 @@ func GetValidatorKey(addr sdk.Address) []byte {
 // get the key for the validator used in the power-store
 func GetValidatorsBondedByPowerKey(validator Validator, pool Pool) []byte {
 
-	power := pool.EquivalentBondedShares(validator)
+	power := validator.EquivalentBondedShares(pool)
 	powerBytes := []byte(power.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
 
 	// TODO ensure that the key will be a readable string.. probably should add seperators and have

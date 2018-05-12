@@ -126,7 +126,7 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 
 	if oldValidator.Status != sdk.Bonded && valIsNowBonded {
 		validator.Status = sdk.Bonded
-		pool, validator = pool.UpdateSharesLocation(validator)
+		validator, pool = validator.UpdateSharesLocation(pool)
 		k.setPool(ctx, pool)
 	}
 

@@ -109,13 +109,16 @@ func NewDescription(moniker, identity, website, details string) Description {
 	}
 }
 
+//XXX updateDescription function
+//XXX enforce limit to number of description characters
+
 // get the exchange rate of tokens over delegator shares
 // UNITS: eq-val-bonded-shares/delegator-shares
 func (v Validator) DelegatorShareExRate(p Pool) sdk.Rat {
 	if v.DelegatorShares.IsZero() {
 		return sdk.OneRat()
 	}
-	tokens := p.EquivalentBondedShares(v)
+	tokens := v.EquivalentBondedShares(p)
 	return tokens.Quo(v.DelegatorShares)
 }
 
@@ -136,8 +139,116 @@ func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
 	}
 }
 
-//XXX updateDescription function
-//XXX enforce limit to number of description characters
+// XXX write test
+// update the location of the shares within a validator if its bond status has changed
+func (v Validator) UpdateSharesLocation(p Pool) (Validator, Pool) {
+	var tokens int64
+
+	switch {
+	case !v.BondedShares.IsZero():
+		if v.Status == sdk.Bonded { // return if nothing needs switching
+			return v, p
+		}
+		p, tokens = p.removeSharesBonded(v.BondedShares)
+	case !v.UnbondingShares.IsZero():
+		if v.Status == sdk.Unbonding {
+			return v, p
+		}
+		p, tokens = p.removeSharesUnbonding(v.BondedShares)
+	case !v.UnbondedShares.IsZero():
+		if v.Status == sdk.Unbonding {
+			return v, p
+		}
+		p, tokens = p.removeSharesUnbonded(v.BondedShares)
+	}
+
+	switch v.Status {
+	case sdk.Bonded:
+		p, v.BondedShares = p.addTokensBonded(tokens)
+	case sdk.Unbonding:
+		p, v.UnbondingShares = p.addTokensUnbonding(tokens)
+	case sdk.Unbonded, sdk.Revoked:
+		p, v.UnbondedShares = p.addTokensUnbonded(tokens)
+	}
+
+	return v, p
+}
+
+// XXX TEST
+// get the power or potential power for a validator
+// if bonded, the power is the BondedShares
+// if not bonded, the power is the amount of bonded shares which the
+//    the validator would have it was bonded
+func (v Validator) EquivalentBondedShares(p Pool) (power sdk.Rat) {
+	switch v.Status {
+	case sdk.Bonded:
+		power = v.BondedShares
+	case sdk.Unbonding:
+		shares := v.UnbondingShares                                   // ubShr
+		exRate := p.unbondingShareExRate().Quo(p.bondedShareExRate()) // (tok/ubshr)/(tok/bshr) = bshr/ubshr
+		power = shares.Mul(exRate)                                    // ubshr*bshr/ubshr = bshr
+	case sdk.Unbonded, sdk.Revoked:
+		shares := v.UnbondedShares                                   // ubShr
+		exRate := p.unbondedShareExRate().Quo(p.bondedShareExRate()) // (tok/ubshr)/(tok/bshr) = bshr/ubshr
+		power = shares.Mul(exRate)                                   // ubshr*bshr/ubshr = bshr
+	}
+	return
+}
+
+// TODO Implement Use in query functionality
+// get the equivalent amount of tokens contained by a validator
+func (v Validator) Tokens(p Pool) sdk.Rat {
+	switch v.Status {
+	case sdk.Bonded:
+		return p.unbondedShareExRate().Mul(v.BondedShares) // (tokens/shares) * shares
+	case sdk.Unbonding:
+		return p.unbondedShareExRate().Mul(v.UnbondingShares)
+	case sdk.Unbonded, sdk.Revoked:
+		return p.unbondedShareExRate().Mul(v.UnbondedShares)
+	}
+	return sdk.ZeroRat()
+}
+
+// XXX Audit this function further to make sure it's correct
+// add tokens to a validator
+func (v Validator) addTokens(p Pool,
+	amount int64) (validator2 Validator, p2 Pool, issuedDelegatorShares sdk.Rat) {
+
+	var poolShares sdk.Rat
+	switch v.Status {
+	case sdk.Bonded:
+		p, poolShares = p.addTokensBonded(amount)
+		v.BondedShares = v.BondedShares.Add(poolShares)
+	case sdk.Unbonding:
+		p, poolShares = p.addTokensUnbonding(amount)
+		v.UnbondingShares = v.UnbondingShares.Add(poolShares)
+	case sdk.Unbonded, sdk.Revoked:
+		p, poolShares = p.addTokensUnbonded(amount)
+		v.UnbondedShares = v.UnbondedShares.Add(poolShares)
+	}
+
+	equivalentBondedShares := v.EquivalentBondedShares(p)
+	exRate := v.DelegatorShareExRate(p) // eq-val-bonded-shares/delegator-shares
+	issuedDelegatorShares = equivalentBondedShares.Quo(exRate)
+	v.DelegatorShares = v.DelegatorShares.Add(issuedDelegatorShares)
+
+	return v, p, issuedDelegatorShares
+}
+
+// remove shares from a validator
+func (v Validator) removeShares(p Pool,
+	delShares sdk.Rat) (validator2 Validator, p2 Pool, createdCoins int64) {
+
+	globalPoolSharesToRemove := v.DelegatorShareExRate(p).Mul(delShares)
+	if v.Status == sdk.Bonded {
+		p, createdCoins = p.removeSharesBonded(globalPoolSharesToRemove)
+	} else {
+		p, createdCoins = p.removeSharesUnbonded(globalPoolSharesToRemove)
+	}
+	v.BondedShares = v.BondedShares.Sub(globalPoolSharesToRemove)
+	v.DelegatorShares = v.DelegatorShares.Sub(delShares)
+	return v, p, createdCoins
+}
 
 //______________________________________________________________________
 

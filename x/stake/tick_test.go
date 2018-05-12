@@ -68,7 +68,7 @@ func TestProcessProvisions(t *testing.T) {
 	// create some validators some bonded, some unbonded
 	validators := make([]Validator, 10)
 	for i := 0; i < 10; i++ {
-		c := Validator{
+		v := Validator{
 			Status:          sdk.Unbonded,
 			PubKey:          pks[i],
 			Address:         addrs[i],
@@ -76,14 +76,14 @@ func TestProcessProvisions(t *testing.T) {
 			DelegatorShares: sdk.NewRat(0),
 		}
 		if i < 5 {
-			c.Status = sdk.Bonded
+			v.Status = sdk.Bonded
 		}
 		mintedTokens := int64((i + 1) * 10000000)
 		pool.TotalSupply += mintedTokens
-		pool, c, _ = pool.validatorAddTokens(c, mintedTokens)
+		v, pool, _ = v.addTokens(pool, mintedTokens)
 
-		keeper.setValidator(ctx, c)
-		validators[i] = c
+		keeper.setValidator(ctx, v)
+		validators[i] = v
 	}
 	keeper.setPool(ctx, pool)
 	var totalSupply int64 = 550000000

@@ -2,6 +2,7 @@ package stake
 
 import (
 	"bytes"
+	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -127,8 +128,8 @@ func initialPool() Pool {
 // exchange rate.
 type Validator struct {
 	Status  sdk.BondStatus `json:"status"`  // bonded status
-	Address sdk.Address         `json:"address"` // sender of BondTx - UnbondTx returns here
-	PubKey  crypto.PubKey       `json:"pub_key"` // pubkey of validator
+	Address sdk.Address    `json:"address"` // sender of BondTx - UnbondTx returns here
+	PubKey  crypto.PubKey  `json:"pub_key"` // pubkey of validator
 
 	// note: There should only be one of the following 3 shares ever active in a delegator
 	//       multiple terms are only added here for clarity.
@@ -192,6 +193,11 @@ func (v Validator) equal(c2 Validator) bool {
 		v.PrevBondedShares.Equal(c2.PrevBondedShares)
 }
 
+// intended to be used with require/assert:  require.True(ValEq(...))
+func ValEq(t *testing.T, exp, got Validator) (*testing.T, bool, string, Validator, Validator) {
+	return t, exp.equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
+}
+
 // Description - description fields for a validator
 type Description struct {
 	Moniker  string `json:"moniker"`
@@ -251,10 +257,10 @@ var _ sdk.Validator = Validator{}
 
 // nolint - for sdk.Validator
 func (v Validator) GetStatus() sdk.BondStatus { return v.Status }
-func (v Validator) GetAddress() sdk.Address        { return v.Address }
-func (v Validator) GetPubKey() crypto.PubKey       { return v.PubKey }
-func (v Validator) GetPower() sdk.Rat              { return v.BondedShares }
-func (v Validator) GetBondHeight() int64           { return v.BondHeight }
+func (v Validator) GetAddress() sdk.Address   { return v.Address }
+func (v Validator) GetPubKey() crypto.PubKey  { return v.PubKey }
+func (v Validator) GetPower() sdk.Rat         { return v.BondedShares }
+func (v Validator) GetBondHeight() int64      { return v.BondHeight }
 
 //_________________________________________________________________________
 

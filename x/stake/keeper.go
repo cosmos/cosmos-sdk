@@ -106,16 +106,18 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 	}
 
 	// update the list ordered by voting power
-	bzVal := k.cdc.MustMarshalBinary(validator)
-	store.Set(GetValidatorsBondedByPowerKey(validator), bzVal)
+	bz := k.cdc.MustMarshalBinary(validator)
+	store.Set(GetValidatorsBondedByPowerKey(validator), bz)
 
 	// add to the validators and return to update list if is already a validator and power is increasing
 	if powerIncreasing && oldValidator.Status == sdk.Bonded {
-		bzABCI := k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
-		store.Set(GetTendermintUpdatesKey(address), bzABCI)
 
-		// also update the recent validator store
-		store.Set(GetValidatorsBondedKey(validator.PubKey), bzVal)
+		// update the recent validator store
+		store.Set(GetValidatorsBondedKey(validator.PubKey), bz)
+
+		// and the Tendermint updates
+		bz := k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
+		store.Set(GetTendermintUpdatesKey(address), bz)
 		return
 	}
 
@@ -195,7 +197,7 @@ func (k Keeper) GetValidatorsBondedByPower(ctx sdk.Context) []Validator {
 		validators[i] = validator
 		iterator.Next()
 	}
-	return validators
+	return validators[:i] // trim
 }
 
 // XXX TODO build in consideration for revoked

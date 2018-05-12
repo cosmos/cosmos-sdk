@@ -43,7 +43,7 @@ func TestDuplicatesMsgDeclareCandidacy(t *testing.T) {
 	assert.True(t, got.IsOK(), "%v", got)
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	assert.Equal(t, sdk.Unbonded, validator.Status)
+	assert.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, validatorAddr, validator.Address)
 	assert.Equal(t, pk, validator.PubKey)
 	assert.Equal(t, sdk.NewRat(10), validator.BondedShares)

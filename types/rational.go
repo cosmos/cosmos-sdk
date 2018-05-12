@@ -189,5 +189,5 @@ func RatsEqual(r1s, r2s []Rat) bool {
 
 // intended to be used with require/assert:  require.True(RatEq(...))
 func RatEq(t *testing.T, exp, got Rat) (*testing.T, bool, string, Rat, Rat) {
-	return t, exp.Equal(got), "expected:\t%v\ngot:\t%v", exp, got
+	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
 }

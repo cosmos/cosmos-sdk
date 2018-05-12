@@ -29,16 +29,16 @@ type BasecoinApp struct {
 	cdc *wire.Codec
 
 	// keys to access the substores
-	keyMain    *bam.KVStoreKey
-	keyAccount *bam.KVStoreKey
-	// keyIBC     *bam.KVStoreKey
-	// keyStake   *bam.KVStoreKey
+	keyMain    *sdk.KVStoreKey
+	keyAccount *sdk.KVStoreKey
+	keyIBC     *sdk.KVStoreKey
+	keyStake   *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
 	accountMapper auth.AccountMapper
 	coinKeeper    bank.Keeper
-	// ibcMapper     ibc.Mapper
-	// stakeKeeper   stake.Keeper
+	ibcMapper     ibc.Mapper
+	stakeKeeper   stake.Keeper
 }
 
 func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
@@ -48,7 +48,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 
 	// Create your application object.
 	var app = &BasecoinApp{
-		App:        bam.NewApp(appName, cdc, logger, db),
+		BaseApp:    bam.NewApp(appName, cdc, logger, db),
 		cdc:        cdc,
 		keyMain:    sdk.NewKVStoreKey("main"),
 		keyAccount: sdk.NewKVStoreKey("acc"),

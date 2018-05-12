@@ -111,14 +111,14 @@ func (app *BaseApp) DeliverTx(txBytes []byte) abci.ResponseDeliverTx {
 // Implements ABCI
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	res = app.App.BeginBlock(req)
-	// TODO
+	// TODO: Chain multiple beginblockers together (from different modules)
 	return
 }
 
 // Implements ABCI
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	res = app.App.EndBlock(req)
-	// TODO
+	// TODO: Chain multiple endblockers together (from different modules)
 	return
 }
 

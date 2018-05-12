@@ -166,8 +166,8 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
 
 			// pool logic
 			stakeData.Pool.TotalSupply += freeFermionVal
-			stakeData.Pool.BondedPool += freeFermionVal
-			stakeData.Pool.BondedShares = sdk.NewRat(stakeData.Pool.BondedPool)
+			stakeData.Pool.BondedTokens += freeFermionVal
+			stakeData.Pool.BondedShares = sdk.NewRat(stakeData.Pool.BondedTokens)
 		}
 	}
 

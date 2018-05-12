@@ -15,8 +15,6 @@ const (
 	GasUnbond           int64 = 20
 )
 
-//_______________________________________________________________________
-
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		// NOTE msg already has validate basic run
@@ -35,42 +33,12 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-//_____________________________________________________________________
-
 // NewEndBlocker generates sdk.EndBlocker
 // Performs tick functionality
 func NewEndBlocker(k Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 		res.ValidatorUpdates = k.Tick(ctx)
 		return
-	}
-}
-
-//_____________________________________________________________________
-
-// InitGenesis - store genesis parameters
-func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
-	k.setPool(ctx, data.Pool)
-	k.setParams(ctx, data.Params)
-	for _, validator := range data.Validators {
-		k.setValidator(ctx, validator)
-	}
-	for _, bond := range data.Bonds {
-		k.setDelegation(ctx, bond)
-	}
-}
-
-// WriteGenesis - output genesis parameters
-func WriteGenesis(ctx sdk.Context, k Keeper) GenesisState {
-	pool := k.GetPool(ctx)
-	params := k.GetParams(ctx)
-	validators := k.GetValidators(ctx, 32767)
-	bonds := k.getBonds(ctx, 32767)
-	return GenesisState{
-		pool,
-		params,
-		validators,
-		bonds,
 	}
 }
 

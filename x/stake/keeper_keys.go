@@ -13,14 +13,14 @@ import (
 //nolint
 var (
 	// Keys for store prefixes
-	ParamKey                       = []byte{0x00} // key for global parameters relating to staking
-	PoolKey                        = []byte{0x01} // key for global parameters relating to staking
-	ValidatorsKey                  = []byte{0x02} // prefix for each key to a validator
-	ValidatorsByPowerKey           = []byte{0x03} // prefix for each key to a validator
+	ParamKey             = []byte{0x00} // key for global parameters relating to staking
+	PoolKey              = []byte{0x01} // key for global parameters relating to staking
+	ValidatorsKey        = []byte{0x02} // prefix for each key to a validator
+	ValidatorsByPowerKey = []byte{0x03} // prefix for each key to a validator
 	TendermintUpdatesKey = []byte{0x04} // prefix for each key to a validator which is being updated
-	ValidatorsBondedKey            = []byte{0x05} // prefix for each key to bonded/actively validating validators
-	DelegationKey                  = []byte{0x06} // prefix for each key to a delegator's bond
-	IntraTxCounterKey              = []byte{0x07} // key for block-local tx index
+	ValidatorsBondedKey  = []byte{0x05} // prefix for each key to bonded/actively validating validators
+	DelegationKey        = []byte{0x06} // prefix for each key to a delegator's bond
+	IntraTxCounterKey    = []byte{0x07} // key for block-local tx index
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -31,8 +31,10 @@ func GetValidatorKey(addr sdk.Address) []byte {
 }
 
 // get the key for the validator used in the power-store
-func GetValidatorsBondedByPowerKey(validator Validator) []byte {
-	powerBytes := []byte(validator.BondedShares.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
+func GetValidatorsBondedByPowerKey(validator Validator, pool Pool) []byte {
+
+	power := pool.EquivalentBondedShares(validator)
+	powerBytes := []byte(power.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
 
 	// TODO ensure that the key will be a readable string.. probably should add seperators and have
 	// heightBytes and counterBytes represent strings like powerBytes does

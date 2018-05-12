@@ -25,6 +25,12 @@ FEATURES
 * Seperation of fee distribution to a new module
 * Creation of a validator/delegation generics in `/types`
 
+BUG FIXES 
+
+* Auto-sequencing now works correctly
+* staking delegator shares exchange rate now relative to equivalent-bonded-tokens the validator has instead of bonded tokens
+
+
 ## 0.17.0 (May 15, 2018)
 
 BREAKING CHANGES

@@ -91,7 +91,7 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 			powerIncreasing = true
 		}
 		// delete the old record in the power ordered list
-		store.Delete(GetValidatorsBondedByPowerKey(oldValidator))
+		store.Delete(GetValidatorsBondedByPowerKey(oldValidator, pool))
 	}
 
 	// if already a validator, copy the old block height and counter, else set them
@@ -107,7 +107,7 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 
 	// update the list ordered by voting power
 	bz := k.cdc.MustMarshalBinary(validator)
-	store.Set(GetValidatorsBondedByPowerKey(validator), bz)
+	store.Set(GetValidatorsBondedByPowerKey(validator, pool), bz)
 
 	// add to the validators and return to update list if is already a validator and power is increasing
 	if powerIncreasing && oldValidator.Status == sdk.Bonded {
@@ -143,8 +143,9 @@ func (k Keeper) removeValidator(ctx sdk.Context, address sdk.Address) {
 
 	// delete the old validator record
 	store := ctx.KVStore(k.storeKey)
+	pool := k.getPool(store)
 	store.Delete(GetValidatorKey(address))
-	store.Delete(GetValidatorsBondedByPowerKey(validator))
+	store.Delete(GetValidatorsBondedByPowerKey(validator, pool))
 
 	// delete from current and power weighted validator groups if the validator
 	// exists and add validator with zero power to the validator updates

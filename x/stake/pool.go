@@ -121,7 +121,7 @@ func (p Pool) removeSharesUnbonded(shares sdk.Rat) (p2 Pool, removedTokens int64
 func (p Pool) validatorAddTokens(validator Validator,
 	amount int64) (p2 Pool, validator2 Validator, issuedDelegatorShares sdk.Rat) {
 
-	exRate := validator.delegatorShareExRate()
+	exRate := validator.DelegatorShareExRate()
 
 	var receivedGlobalShares sdk.Rat
 	if validator.Status == sdk.Bonded {
@@ -141,9 +141,9 @@ func (p Pool) validatorAddTokens(validator Validator,
 func (p Pool) validatorRemoveShares(validator Validator,
 	shares sdk.Rat) (p2 Pool, validator2 Validator, createdCoins int64) {
 
-	//exRate := validator.delegatorShareExRate() //XXX make sure not used
+	//exRate := validator.DelegatorShareExRate() //XXX make sure not used
 
-	globalPoolSharesToRemove := validator.delegatorShareExRate().Mul(shares)
+	globalPoolSharesToRemove := validator.DelegatorShareExRate().Mul(shares)
 	if validator.Status == sdk.Bonded {
 		p, createdCoins = p.removeSharesBonded(globalPoolSharesToRemove)
 	} else {

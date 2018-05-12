@@ -210,7 +210,7 @@ func NewDescription(moniker, identity, website, details string) Description {
 }
 
 // get the exchange rate of global pool shares over delegator shares
-func (v Validator) delegatorShareExRate() sdk.Rat {
+func (v Validator) DelegatorShareExRate() sdk.Rat {
 	if v.DelegatorShares.IsZero() {
 		return sdk.OneRat()
 	}

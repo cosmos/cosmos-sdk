@@ -409,6 +409,12 @@ func TestStakeMsgs(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, addr1, validator.Address)
 	require.Equal(t, sdk.Bonded, validator.Status)
+	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.BondedShares))
+	require.True(sdk.RatEq(t, sdk.NewRat(1), validator.DelegatorShareExRate()))
+
+	// check the bond that should have been created as well
+	bond, found := gapp.stakeKeeper.GetDelegation(ctxDeliver, addr1, addr1)
+	require.True(sdk.RatEq(t, sdk.NewRat(10), bond.Shares))
 
 	// Edit Candidacy
 
@@ -429,24 +435,21 @@ func TestStakeMsgs(t *testing.T) {
 	)
 	SignDeliver(t, gapp, delegateMsg, []int64{0}, true, priv2)
 
-	ctxDeliver = gapp.BaseApp.NewContext(false, abci.Header{})
 	res2 = gapp.accountMapper.GetAccount(ctxDeliver, addr2)
 	require.Equal(t, genCoins.Minus(sdk.Coins{bondCoin}), res2.GetCoins())
-	bond, found := gapp.stakeKeeper.GetDelegation(ctxDeliver, addr2, addr1)
+	bond, found = gapp.stakeKeeper.GetDelegation(ctxDeliver, addr2, addr1)
 	require.True(t, found)
 	require.Equal(t, addr2, bond.DelegatorAddr)
 	require.Equal(t, addr1, bond.ValidatorAddr)
-	require.Equal(t, bondCoin, bond.Shares)
+	require.True(sdk.RatEq(t, sdk.NewRat(10), bond.Shares))
 
 	// Unbond
 
-	panic(fmt.Sprintf("debug bond: %v\n", bond))
 	unbondMsg := stake.NewMsgUnbond(
 		addr2, addr1, "MAX",
 	)
 	SignDeliver(t, gapp, unbondMsg, []int64{1}, true, priv2)
 
-	ctxDeliver = gapp.BaseApp.NewContext(false, abci.Header{})
 	res2 = gapp.accountMapper.GetAccount(ctxDeliver, addr2)
 	require.Equal(t, genCoins, res2.GetCoins())
 	_, found = gapp.stakeKeeper.GetDelegation(ctxDeliver, addr2, addr1)

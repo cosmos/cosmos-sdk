@@ -435,7 +435,7 @@ unbond(tx TxUnbond):
     return 
 
 removeShares(candidate Candidate, shares rational.Rat):
-    globalPoolSharesToRemove = delegatorShareExRate(candidate) * shares
+    globalPoolSharesToRemove = DelegatorShareExRate(candidate) * shares
 
     if candidate.Status == Bonded 
 	    gs.BondedShares -= globalPoolSharesToRemove
@@ -450,7 +450,7 @@ removeShares(candidate Candidate, shares rational.Rat):
     candidate.IssuedDelegatorShares -= shares
     return returnedCoins
 
-delegatorShareExRate(candidate Candidate):
+DelegatorShareExRate(candidate Candidate):
     if candidate.IssuedDelegatorShares.IsZero() then return rational.One
     return candidate.GlobalStakeShares / candidate.IssuedDelegatorShares
 	
@@ -593,7 +593,7 @@ UpdateValidatorSet():
 
 updateVotingPower(candidates Candidates):
     foreach candidate in candidates do
-	    candidate.VotingPower = (candidate.IssuedDelegatorShares - candidate.RedelegatingShares) * delegatorShareExRate(candidate)	
+	    candidate.VotingPower = (candidate.IssuedDelegatorShares - candidate.RedelegatingShares) * DelegatorShareExRate(candidate)	
 	    
     candidates.Sort()
 	

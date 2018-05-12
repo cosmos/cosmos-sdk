@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"testing"
 )
 
 //   "that's one big rat!"
@@ -80,17 +81,17 @@ func NewRatFromDecimal(decimalStr string) (f Rat, err Error) {
 }
 
 //nolint
-func (r Rat) Num() int64        { return r.Rat.Num().Int64() }                         // Num - return the numerator
-func (r Rat) Denom() int64      { return r.Rat.Denom().Int64() }                       // Denom  - return the denominator
-func (r Rat) IsZero() bool      { return r.Num() == 0 }                                // IsZero - Is the Rat equal to zero
-func (r Rat) Equal(r2 Rat) bool { return (&(r.Rat)).Cmp(&(r2.Rat)) == 0 }              // Equal - rationals are equal
-func (r Rat) GT(r2 Rat) bool    { return (&(r.Rat)).Cmp(&(r2.Rat)) == 1 }              // Equal - rationals are equal
-func (r Rat) LT(r2 Rat) bool    { return (&(r.Rat)).Cmp(&(r2.Rat)) == -1 }             // Equal - rationals are equal
+func (r Rat) Num() int64        { return r.Rat.Num().Int64() }   // Num - return the numerator
+func (r Rat) Denom() int64      { return r.Rat.Denom().Int64() } // Denom  - return the denominator
+func (r Rat) IsZero() bool      { return r.Num() == 0 }          // IsZero - Is the Rat equal to zero
+func (r Rat) Equal(r2 Rat) bool { return (&(r.Rat)).Cmp(&(r2.Rat)) == 0 }
+func (r Rat) GT(r2 Rat) bool    { return (&(r.Rat)).Cmp(&(r2.Rat)) == 1 }              // greater than
+func (r Rat) LT(r2 Rat) bool    { return (&(r.Rat)).Cmp(&(r2.Rat)) == -1 }             // less than
 func (r Rat) Mul(r2 Rat) Rat    { return Rat{*new(big.Rat).Mul(&(r.Rat), &(r2.Rat))} } // Mul - multiplication
 func (r Rat) Quo(r2 Rat) Rat    { return Rat{*new(big.Rat).Quo(&(r.Rat), &(r2.Rat))} } // Quo - quotient
 func (r Rat) Add(r2 Rat) Rat    { return Rat{*new(big.Rat).Add(&(r.Rat), &(r2.Rat))} } // Add - addition
 func (r Rat) Sub(r2 Rat) Rat    { return Rat{*new(big.Rat).Sub(&(r.Rat), &(r2.Rat))} } // Sub - subtraction
-func (r Rat) String() string    { return fmt.Sprintf("%v/%v", r.Num(), r.Denom()) }    // Sub - subtraction
+func (r Rat) String() string    { return fmt.Sprintf("%v/%v", r.Num(), r.Denom()) }
 
 var (
 	zero  = big.NewInt(0)
@@ -170,6 +171,7 @@ func (r *Rat) UnmarshalAmino(text string) (err error) {
 }
 
 //___________________________________________________________________________________
+// helpers
 
 // test if two rat arrays are the equal
 func RatsEqual(r1s, r2s []Rat) bool {
@@ -183,4 +185,9 @@ func RatsEqual(r1s, r2s []Rat) bool {
 		}
 	}
 	return true
+}
+
+// intended to be used with require/assert:  require.True(RatEq(...))
+func RatEq(t *testing.T, exp, got Rat) (*testing.T, bool, string, Rat, Rat) {
+	return t, exp.Equal(got), "expected:\t%v\ngot:\t%v", exp, got
 }

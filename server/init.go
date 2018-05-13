@@ -222,7 +222,7 @@ func processGenTxs(genTxsDir string, cdc *wire.Codec, appInit AppInit) (
 	for _, fo := range fos {
 		filename := path.Join(genTxsDir, fo.Name())
 		if !fo.IsDir() && (path.Ext(filename) != ".json") {
-			return
+			continue
 		}
 
 		// get the genTx

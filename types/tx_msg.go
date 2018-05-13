@@ -80,8 +80,8 @@ func FeePayer(tx Tx) Address {
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
 // which must be above some miminum to be accepted into the mempool.
 type StdFee struct {
-	Amount Coins `json"amount"`
-	Gas    int64 `json"gas"`
+	Amount Coins `json:"amount"`
+	Gas    int64 `json:"gas"`
 }
 
 func NewStdFee(gas int64, amount ...Coin) StdFee {

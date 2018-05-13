@@ -138,7 +138,7 @@ func (msg IssueMsg) GetSigners() []sdk.Address {
 //----------------------------------------
 // Input
 
-// Transaction Output
+// Transaction Input
 type Input struct {
 	Address sdk.Address `json:"address"`
 	Coins   sdk.Coins   `json:"coins"`

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -210,12 +211,14 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 func processGenTxs(genTxsDir string, cdc *wire.Codec, appInit AppInit) (
 	validators []tmtypes.GenesisValidator, appGenTxs []json.RawMessage, persistentPeers string, err error) {
 
-	// XXX sort the files by contents just incase people renamed their files
 	var fos []os.FileInfo
 	fos, err = ioutil.ReadDir(genTxsDir)
 	if err != nil {
 		return
 	}
+
+	genTxs := make(map[string]GenesisTx)
+	var nodeIDs []string
 	for _, fo := range fos {
 		filename := path.Join(genTxsDir, fo.Name())
 		if !fo.IsDir() && (path.Ext(filename) != ".json") {
@@ -234,16 +237,24 @@ func processGenTxs(genTxsDir string, cdc *wire.Codec, appInit AppInit) (
 			return
 		}
 
+		genTxs[genTx.NodeID] = genTx
+		nodeIDs = append(nodeIDs, genTx.NodeID)
+	}
+
+	sort.Strings(nodeIDs)
+
+	for _, nodeID := range nodeIDs {
 		// combine some stuff
-		validators = append(validators, genTx.Validator)
-		appGenTxs = append(appGenTxs, genTx.AppGenTx)
+		validators = append(validators, genTxs[nodeID].Validator)
+		appGenTxs = append(appGenTxs, genTxs[nodeID].AppGenTx)
 
 		// Add a persistent peer
 		comma := ","
 		if len(persistentPeers) == 0 {
 			comma = ""
 		}
-		persistentPeers += fmt.Sprintf("%s%s@%s:46656", comma, genTx.NodeID, genTx.IP)
+		persistentPeers += fmt.Sprintf("%s%s@%s:46656", comma, genTxs[nodeID].NodeID,
+			genTxs[nodeID].IP)
 	}
 
 	return

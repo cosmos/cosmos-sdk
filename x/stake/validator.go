@@ -139,7 +139,6 @@ func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
 	}
 }
 
-// XXX write test
 // update the location of the shares within a validator if its bond status has changed
 func (v Validator) UpdateSharesLocation(p Pool) (Validator, Pool) {
 	var tokens int64

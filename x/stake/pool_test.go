@@ -13,7 +13,7 @@ func TestBondedRatio(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 	pool.TotalSupply = 3
-	pool.BondedPool = 2
+	pool.BondedTokens = 2
 
 	// bonded pool / total supply
 	require.Equal(t, pool.bondedRatio(), sdk.NewRat(2).Quo(sdk.NewRat(3)))
@@ -26,7 +26,7 @@ func TestBondedRatio(t *testing.T) {
 func TestBondedShareExRate(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.BondedPool = 3
+	pool.BondedTokens = 3
 	pool.BondedShares = sdk.NewRat(10)
 
 	// bonded pool / bonded shares
@@ -40,7 +40,7 @@ func TestBondedShareExRate(t *testing.T) {
 func TestUnbondingShareExRate(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.UnbondingPool = 3
+	pool.UnbondingTokens = 3
 	pool.UnbondingShares = sdk.NewRat(10)
 
 	// unbonding pool / unbonding shares
@@ -54,7 +54,7 @@ func TestUnbondingShareExRate(t *testing.T) {
 func TestUnbondedShareExRate(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.UnbondedPool = 3
+	pool.UnbondedTokens = 3
 	pool.UnbondedShares = sdk.NewRat(10)
 
 	// unbonded pool / unbonded shares
@@ -75,10 +75,10 @@ func TestAddTokensBonded(t *testing.T) {
 
 	// correct changes to bonded shares and bonded pool
 	assert.Equal(t, poolB.BondedShares, poolA.BondedShares.Add(sharesB))
-	assert.Equal(t, poolB.BondedPool, poolA.BondedPool+10)
+	assert.Equal(t, poolB.BondedTokens, poolA.BondedTokens+10)
 
 	// same number of bonded shares / tokens when exchange rate is one
-	assert.True(t, poolB.BondedShares.Equal(sdk.NewRat(poolB.BondedPool)))
+	assert.True(t, poolB.BondedShares.Equal(sdk.NewRat(poolB.BondedTokens)))
 }
 
 func TestRemoveSharesBonded(t *testing.T) {
@@ -91,10 +91,10 @@ func TestRemoveSharesBonded(t *testing.T) {
 
 	// correct changes to bonded shares and bonded pool
 	assert.Equal(t, poolB.BondedShares, poolA.BondedShares.Sub(sdk.NewRat(10)))
-	assert.Equal(t, poolB.BondedPool, poolA.BondedPool-tokensB)
+	assert.Equal(t, poolB.BondedTokens, poolA.BondedTokens-tokensB)
 
 	// same number of bonded shares / tokens when exchange rate is one
-	assert.True(t, poolB.BondedShares.Equal(sdk.NewRat(poolB.BondedPool)))
+	assert.True(t, poolB.BondedShares.Equal(sdk.NewRat(poolB.BondedTokens)))
 }
 
 func TestAddTokensUnbonded(t *testing.T) {
@@ -107,10 +107,10 @@ func TestAddTokensUnbonded(t *testing.T) {
 
 	// correct changes to unbonded shares and unbonded pool
 	assert.Equal(t, poolB.UnbondedShares, poolA.UnbondedShares.Add(sharesB))
-	assert.Equal(t, poolB.UnbondedPool, poolA.UnbondedPool+10)
+	assert.Equal(t, poolB.UnbondedTokens, poolA.UnbondedTokens+10)
 
 	// same number of unbonded shares / tokens when exchange rate is one
-	assert.True(t, poolB.UnbondedShares.Equal(sdk.NewRat(poolB.UnbondedPool)))
+	assert.True(t, poolB.UnbondedShares.Equal(sdk.NewRat(poolB.UnbondedTokens)))
 }
 
 func TestRemoveSharesUnbonded(t *testing.T) {
@@ -123,8 +123,8 @@ func TestRemoveSharesUnbonded(t *testing.T) {
 
 	// correct changes to unbonded shares and bonded pool
 	assert.Equal(t, poolB.UnbondedShares, poolA.UnbondedShares.Sub(sdk.NewRat(10)))
-	assert.Equal(t, poolB.UnbondedPool, poolA.UnbondedPool-tokensB)
+	assert.Equal(t, poolB.UnbondedTokens, poolA.UnbondedTokens-tokensB)
 
 	// same number of unbonded shares / tokens when exchange rate is one
-	assert.True(t, poolB.UnbondedShares.Equal(sdk.NewRat(poolB.UnbondedPool)))
+	assert.True(t, poolB.UnbondedShares.Equal(sdk.NewRat(poolB.UnbondedTokens)))
 }

@@ -72,7 +72,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	assert.Equal(t, bondAmount, validator.DelegatorShares.Evaluate())
-	assert.Equal(t, bondAmount, validator.BondedShares.Evaluate())
+	assert.Equal(t, bondAmount, validator.BondedShares.Evaluate(), "validator: %v", validator)
 
 	// just send the same msgbond multiple times
 	msgDelegate := newTestMsgDelegate(delegatorAddr, validatorAddr, bondAmount)

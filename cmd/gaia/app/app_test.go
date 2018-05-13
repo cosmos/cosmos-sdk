@@ -410,7 +410,6 @@ func TestStakeMsgs(t *testing.T) {
 	require.Equal(t, addr1, validator.Address)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.BondedShares))
-	require.True(sdk.RatEq(t, sdk.NewRat(1), validator.DelegatorShareExRate()))
 
 	// check the bond that should have been created as well
 	bond, found := gapp.stakeKeeper.GetDelegation(ctxDeliver, addr1, addr1)

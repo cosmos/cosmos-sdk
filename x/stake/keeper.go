@@ -2,6 +2,7 @@ package stake
 
 import (
 	"bytes"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -123,12 +124,15 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 
 	// update the validator set for this validator
 	valIsNowBonded := k.updateValidators(ctx, store, validator.Address)
+	fmt.Printf("debug valIsNowBonded: %v\n", valIsNowBonded)
+	fmt.Printf("debug validator0: %v\n", validator)
 
 	if oldValidator.Status != sdk.Bonded && valIsNowBonded {
 		validator.Status = sdk.Bonded
 		validator, pool = validator.UpdateSharesLocation(pool)
 		k.setPool(ctx, pool)
 	}
+	fmt.Printf("debug validator1: %v\n", validator)
 
 	return
 }

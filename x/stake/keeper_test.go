@@ -26,6 +26,7 @@ var (
 // This function tests setValidator, GetValidator, GetValidatorsBonded, removeValidator
 func TestValidatorBasics(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
+	pool := keeper.GetPool(ctx)
 
 	//construct the validators
 	var validators [3]Validator
@@ -33,13 +34,12 @@ func TestValidatorBasics(t *testing.T) {
 	for i, amt := range amts {
 		validators[i] = NewValidator(addrVals[i], pks[i], Description{})
 		validators[i].Status = sdk.Bonded
-		validators[i].BondedShares = sdk.NewRat(amt)
-		validators[i].DelegatorShares = sdk.NewRat(amt)
+		validators[i].addTokens(pool, amt)
 	}
 
 	// check the empty keeper first
 	_, found := keeper.GetValidator(ctx, addrVals[0])
-	UnbondedSharesassert.False(t, found)
+	assert.False(t, found)
 	resVals := keeper.GetValidatorsBonded(ctx)
 	assert.Zero(t, len(resVals))
 
@@ -172,8 +172,6 @@ func GetValidatorSortingMixed(t *testing.T) {
 	params.MaxValidators = 2
 	keeper.setParams(ctx, params)
 
-	pool := keeper.GetPool(ctx)
-
 	// initialize some validators into the state
 	amts := []int64{0, 100, 1, 400, 200}
 
@@ -191,11 +189,21 @@ func GetValidatorSortingMixed(t *testing.T) {
 	for i := range amts {
 		keeper.setValidator(ctx, validators[i])
 	}
-	assert.Equal(t, sdk.Unbonded, keeper.GetValidator(ctx, addr[0]).Status)
-	assert.Equal(t, sdk.Unbonded, keeper.GetValidator(ctx, addr[1]).Status)
-	assert.Equal(t, sdk.Unbonded, keeper.GetValidator(ctx, addr[2]).Status)
-	assert.Equal(t, sdk.Bonded, keeper.GetValidator(ctx, addr[3]).Status)
-	assert.Equal(t, sdk.Bonded, keeper.GetValidator(ctx, addr[4]).Status)
+	val0, found := keeper.GetValidator(ctx, addrs[0])
+	require.True(t, found)
+	val1, found := keeper.GetValidator(ctx, addrs[1])
+	require.True(t, found)
+	val2, found := keeper.GetValidator(ctx, addrs[2])
+	require.True(t, found)
+	val3, found := keeper.GetValidator(ctx, addrs[3])
+	require.True(t, found)
+	val4, found := keeper.GetValidator(ctx, addrs[4])
+	require.True(t, found)
+	assert.Equal(t, sdk.Unbonded, val0.Status)
+	assert.Equal(t, sdk.Unbonded, val1.Status)
+	assert.Equal(t, sdk.Unbonded, val2.Status)
+	assert.Equal(t, sdk.Bonded, val3.Status)
+	assert.Equal(t, sdk.Bonded, val4.Status)
 
 	// first make sure everything made it in to the gotValidator group
 	gotValidators := keeper.GetValidatorsBondedByPower(ctx)

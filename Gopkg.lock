@@ -295,7 +295,7 @@
     "keys/words",
     "keys/words/wordlist"
   ]
-  revision = "6dd92f745396a124892a2d2b6edb93fadc01a7bc"
+  revision = "e6d0ade0e1a8315613e026fe64b006f24f58beab"
 
 [[projects]]
   name = "github.com/tendermint/go-wire"
@@ -472,6 +472,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e7ccb3ed10650c20f5407bbc61385c74d608eba3d7c21b80b7949bbd922aa90d"
+  inputs-digest = "3a9ff08049322b5c915fbdb710695cbd69259d90146a5bfc1b814a040e39b1e8"
   solver-name = "gps-cdcl"
   solver-version = 1

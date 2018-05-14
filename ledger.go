@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
@@ -23,7 +24,7 @@ func getLedger() (*ledger.Ledger, error) {
 func pubkeyLedger(device *ledger.Ledger, path DerivationPath) (pub PubKey, err error) {
 	key, err := device.GetPublicKeySECP256K1(path)
 	if err != nil {
-		return pub, err
+		return pub, fmt.Errorf("Error fetching public key: %v", err)
 	}
 	var p PubKeySecp256k1
 	// Reserialize in the 33-byte compressed format
@@ -55,6 +56,7 @@ type PrivKeyLedgerSecp256k1 struct {
 // public key for later use.
 func NewPrivKeyLedgerSecp256k1(path DerivationPath) (PrivKey, error) {
 	var pk PrivKeyLedgerSecp256k1
+	pk.Path = path
 	// getPubKey will cache the pubkey for later use,
 	// this allows us to return an error early if the ledger
 	// is not plugged in
@@ -150,11 +152,11 @@ func (pk PrivKeyLedgerSecp256k1) getPubKey() (key PubKey, err error) {
 func (pk PrivKeyLedgerSecp256k1) forceGetPubKey() (key PubKey, err error) {
 	dev, err := getLedger()
 	if err != nil {
-		return key, errors.New("Cannot connect to Ledger device")
+		return key, errors.New(fmt.Sprintf("Cannot connect to Ledger device - error: %v", err))
 	}
 	key, err = pubkeyLedger(dev, pk.Path)
 	if err != nil {
-		return key, errors.New("Please open Cosmos app on the Ledger device")
+		return key, errors.New(fmt.Sprintf("Please open Cosmos app on the Ledger device - error: %v", err))
 	}
 	return key, err
 }

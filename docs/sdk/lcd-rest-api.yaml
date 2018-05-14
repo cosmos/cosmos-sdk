@@ -2,7 +2,7 @@ openapi: 3.0.0
 servers:
   - url: 'http://localhost:8998'
 info:
-  version: "1.0.0-oas3"
+  version: "1.1.0"
   title: Light client daemon to interface with Cosmos baseserver via REST
   description: Specification for the LCD provided by `gaia rest-server`
   
@@ -13,7 +13,7 @@ paths:
       description: Get the version of the LCD running locally to compare against expected
       responses:
         200:
-          description: Plaintext version i.e. "v0.5.0"
+          description: Plaintext version i.e. "0.16.0-dev-26440095"
   /node_info:
     description: Only the node info. Block information can be queried via /block/latest
     get:
@@ -26,25 +26,31 @@ paths:
               schema:
                 type: object
                 properties:
+                  id:
+                    description: ???
+                    type: string
+                  listen_addr:
+                    type: string
+                    example: 192.168.56.1:46656
+                  network:
+                    type: string
+                    example: gaia-5000
+                  version:
+                    description: Tendermint version
+                    type: string
+                    example: 0.19.1
+                  channels:
+                    description: ???
+                    type: string
                   pub_key:
                     $ref: '#/components/schemas/PubKey'
                   moniker:
                     type: string
                     example: 159.89.198.221
-                  network:
-                    type: string
-                    example: gaia-2
                   remote_addr:
                     type: string
-                  listen_addr:
-                    type: string
-                    example: 192.168.56.1:46656
-                  version:
-                    description: Tendermint version
-                    type: string
-                    example: 0.15.0
                   other:
-                    description: more information on versions
+                    description: more information on versions and options for the node
                     type: array
   /syncing:
     get:
@@ -204,7 +210,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Balance"
+                type:
+                  description: "???"
+                  type: string
+                value:
+                  $ref: "#/components/schemas/Balance"
         204:
           description: There is no data for the requested account. This is not a 404 as the account might exist, just does not hold data.
   /accounts/{address}/send:
@@ -226,6 +236,7 @@ paths:
               type: object
               properties:
                 name:
+                  description: Name of locally stored key
                   type: string
                 password:
                   type: string
@@ -234,6 +245,9 @@ paths:
                   items:
                     $ref: "#/components/schemas/Coins"
                 chain_id:
+                  description: Target chain
+                  type: string
+                src_chain_id:
                   type: string
                 squence:
                   type: number
@@ -242,19 +256,6 @@ paths:
           description: Tx was send and will probably be added to the next block
         400:
           description: The Tx was malformated
-  /accounts/{address}/nonce:
-    parameters:
-      - in: path
-        name: address
-        description: Account address
-        required: true
-        schema:
-          $ref: "#/components/schemas/Address"
-    get:
-      summary: Get the nonce for a certain account
-      responses:
-        200:
-          description: Plaintext nonce i.e. "4" defaults to "0"
   /blocks/latest:
     get:
       summary: Get the latest block
@@ -667,15 +668,16 @@ components:
     Balance:
       type: object
       properties:
-        height:
-          type: number
-          example: 123456
+        address:
+          type: string
         coins:
           type: array
           items:
             $ref: "#/components/schemas/Coins"
-        credit:
-          type: array
+        public_key:
+          $ref: "#/components/schemas/PubKey"
+        sequence:
+          type: number
     BlockID:
       type: object
       properties:

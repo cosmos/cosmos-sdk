@@ -244,17 +244,18 @@ func processGenTxs(genTxsDir string, cdc *wire.Codec, appInit AppInit) (
 	sort.Strings(nodeIDs)
 
 	for _, nodeID := range nodeIDs {
+		genTx := genTxs[nodeID]
+
 		// combine some stuff
-		validators = append(validators, genTxs[nodeID].Validator)
-		appGenTxs = append(appGenTxs, genTxs[nodeID].AppGenTx)
+		validators = append(validators, genTx.Validator)
+		appGenTxs = append(appGenTxs, genTx.AppGenTx)
 
 		// Add a persistent peer
 		comma := ","
 		if len(persistentPeers) == 0 {
 			comma = ""
 		}
-		persistentPeers += fmt.Sprintf("%s%s@%s:46656", comma, genTxs[nodeID].NodeID,
-			genTxs[nodeID].IP)
+		persistentPeers += fmt.Sprintf("%s%s@%s:46656", comma, genTx.NodeID, genTx.IP)
 	}
 
 	return

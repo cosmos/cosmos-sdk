@@ -66,8 +66,9 @@ func GaiaAppInit() server.AppInit {
 
 	fsAppGenTx := pflag.NewFlagSet("", pflag.ContinueOnError)
 	fsAppGenTx.String(flagName, "", "validator moniker, if left blank, do not add validator")
-	fsAppGenTx.String(flagClientHome, DefaultCLIHome, "home directory for the client, used for key generation")
-	fsAppGenTx.Bool(flagOWK, false, "overwrite the for the accounts created")
+	fsAppGenTx.String(flagClientHome, DefaultCLIHome,
+		"home directory for the client, used for key generation")
+	fsAppGenTx.Bool(flagOWK, false, "overwrite the accounts created")
 
 	return server.AppInit{
 		FlagsAppGenState: fsAppGenState,

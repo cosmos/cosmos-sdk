@@ -14,13 +14,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-// RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/stake/{delegator}/bonding_status/{validator}", BondingStatusHandlerFn("stake", cdc, kb, ctx)).Methods("GET")
+func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
+	r.HandleFunc("/stake/{delegator}/bonding_status/{candidate}", bondingStatusHandlerFn("stake", cdc, kb, ctx)).Methods("GET")
 }
 
 // BondingStatusHandlerFn - http request handler to query delegator bonding status
-func BondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+func bondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// read parameters
 		vars := mux.Vars(r)

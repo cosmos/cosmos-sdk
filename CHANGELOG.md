@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.16.0 (TBD)
+## 0.16.0 (May 14th, 2018)
 
 BREAKING CHANGES
 

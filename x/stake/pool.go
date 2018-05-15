@@ -97,7 +97,7 @@ func (p Pool) addTokensBonded(amount int64) (p2 Pool, issuedShares sdk.Rat) {
 func (p Pool) removeSharesBonded(shares sdk.Rat) (p2 Pool, removedTokens int64) {
 	removedTokens = p.bondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	p.BondedShares = p.BondedShares.Sub(shares)
-	p.BondedTokens = p.BondedTokens - removedTokens
+	p.BondedTokens -= removedTokens
 	return p, removedTokens
 }
 

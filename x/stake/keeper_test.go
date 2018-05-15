@@ -34,7 +34,7 @@ func TestValidatorBasics(t *testing.T) {
 	for i, amt := range amts {
 		validators[i] = NewValidator(addrVals[i], pks[i], Description{})
 		validators[i].Status = sdk.Bonded
-		validators[i].addTokens(pool, amt)
+		validators[i].addTokensFromDel(pool, amt)
 	}
 
 	// check the empty keeper first

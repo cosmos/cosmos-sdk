@@ -80,7 +80,7 @@ func TestProcessProvisions(t *testing.T) {
 		}
 		mintedTokens := int64((i + 1) * 10000000)
 		pool.TotalSupply += mintedTokens
-		v, pool, _ = v.addTokens(pool, mintedTokens)
+		v, pool, _ = v.addTokensFromDel(pool, mintedTokens)
 
 		keeper.setValidator(ctx, v)
 		validators[i] = v

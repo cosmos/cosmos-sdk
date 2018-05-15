@@ -162,7 +162,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	if err != nil {
 		return nil, err
 	}
-	validator, pool, newShares := validator.addTokens(pool, bondAmt.Amount)
+	validator, pool, newShares := validator.addTokensFromDel(pool, bondAmt.Amount)
 	bond.Shares = bond.Shares.Add(newShares)
 
 	// Update bond height
@@ -186,7 +186,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 		return ErrInsufficientFunds(k.codespace).Result()
 	}
 
-	var shares sdk.Rat
+	var delShares sdk.Rat
 
 	// test that there are enough shares to unbond
 	if msg.Shares == "MAX" {
@@ -195,11 +195,11 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 		}
 	} else {
 		var err sdk.Error
-		shares, err = sdk.NewRatFromDecimal(msg.Shares)
+		delShares, err = sdk.NewRatFromDecimal(msg.Shares)
 		if err != nil {
 			return err.Result()
 		}
-		if bond.Shares.LT(shares) {
+		if bond.Shares.LT(delShares) {
 			return ErrNotEnoughBondShares(k.codespace, msg.Shares).Result()
 		}
 	}
@@ -218,11 +218,11 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 	// retrieve the amount of bonds to remove (TODO remove redundancy already serialized)
 	if msg.Shares == "MAX" {
-		shares = bond.Shares
+		delShares = bond.Shares
 	}
 
 	// subtract bond tokens from delegator bond
-	bond.Shares = bond.Shares.Sub(shares)
+	bond.Shares = bond.Shares.Sub(delShares)
 
 	// remove the bond
 	revokeCandidacy := false
@@ -244,7 +244,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 	// Add the coins
 	p := k.GetPool(ctx)
-	validator, p, returnAmount := validator.removeShares(p, shares)
+	validator, p, returnAmount := validator.removeDelShares(p, delShares)
 	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
 	k.coinKeeper.AddCoins(ctx, bond.DelegatorAddr, returnCoins)
 

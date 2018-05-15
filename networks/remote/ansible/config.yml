@@ -1,0 +1,18 @@
+---
+
+#Requires BINARY and CONFIGDIR variables set.
+#N=4 hosts by default.
+
+- hosts: all
+  user: root
+  any_errors_fatal: true
+  gather_facts: yes
+  vars:
+    - service: gaiad
+    - N: 4
+  roles:
+    - stop
+    - config
+    - unsafe_reset
+    - start
+

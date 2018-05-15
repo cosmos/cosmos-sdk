@@ -1,0 +1,10 @@
+---
+
+- name: application service status
+  command: "service {{service}} status"
+  changed_when: false
+  register: status
+
+- name: Result
+  debug: var=status.stdout_lines
+

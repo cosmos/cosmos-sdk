@@ -1,0 +1,15 @@
+---
+
+- name: Create service group
+  group: "name={{service}}"
+
+- name: Create service user
+  user: "name={{service}} group={{service}} home=/home/{{service}}"
+
+- name: Change user folder to more permissive
+  file: "path=/home/{{service}} mode=0755"
+
+- name: Create service
+  template: "src=systemd.service.j2 dest=/etc/systemd/system/{{service}}.service"
+  notify: reload services
+

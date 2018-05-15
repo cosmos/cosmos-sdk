@@ -1,0 +1,14 @@
+---
+
+- hosts: all
+  user: root
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+    - service: gaiad
+  roles:
+    - stop
+    - unsafe_reset
+    - start
+
+

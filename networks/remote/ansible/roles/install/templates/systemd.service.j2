@@ -1,0 +1,17 @@
+[Unit]
+Description={{service}}
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Restart=on-failure
+User={{service}}
+Group={{service}}
+PermissionsStartOnly=true
+ExecStart=/usr/bin/gaiad start
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
+

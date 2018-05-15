@@ -13,12 +13,12 @@ check: check_tools
 ###  Build
 
 # Command to generate the workd list (kept here for documentation purposes only):
-# wordlist:
-	# Generating wordlist.go ...
+wordlist:
+	# To re-generate wordlist.go run:
 	# go-bindata -ignore ".*\.go" -o keys/words/wordlist/wordlist.go -pkg "wordlist" keys/words/wordlist/...
 
-#build: wordlist
-#	# Nothing else to build!
+build: wordlist
+	# Nothing else to build!
 
 install:
 	# Nothing to install!

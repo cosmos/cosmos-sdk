@@ -4,6 +4,7 @@
 
 FEATURES
 
+* baseapp now has settable functions for filtering peers by address/port & public key
 * Gas consumption is now measured as transactions are executed
   * Transactions which run out of gas stop execution and revert state changes
   * A "simulate" query has been added to determine how much gas a transaction will need

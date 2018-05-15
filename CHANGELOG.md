@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.17.0 (TBD)
+
+FEATURES
+
+* Gas consumption is now measured as transactions are executed
+  * Transactions which run out of gas stop execution and revert state changes
+  * A "simulate" query has been added to determine how much gas a transaction will need
+  * Modules can include their own gas costs for execution of particular message types
+
 ## 0.16.0 (May 14th, 2018)
 
 BREAKING CHANGES
@@ -33,10 +42,6 @@ FEATURES:
 * Add more staking query functions: candidates, delegator-bonds
 * Bank module now tags transactions with sender/recipient for indexing & later retrieval
 * Stake module now tags transactions with delegator/candidate for delegation & unbonding, and candidate info for declare candidate / edit candidacy
-* Gas consumption is now measured as transactions are executed
-  * Transactions which run out of gas stop execution and revert state changes
-  * A "simulate" query has been added to determine how much gas a transaction will need
-  * Modules can include their own gas costs for execution of particular message types
 
 BUG FIXES
 * Gaia now uses stake, ported from github.com/cosmos/gaia

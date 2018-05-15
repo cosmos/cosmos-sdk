@@ -257,21 +257,19 @@ func TestCandidateRemoveShares(t *testing.T) {
 // TODO Make all random tests less obfuscated!
 
 // generate a random candidate
-func randomCandidate(r *rand.Rand) Candidate {
+func randomCandidate(r *rand.Rand, i int) Candidate {
 	var status CandidateStatus
 	if r.Float64() < float64(0.5) {
 		status = Bonded
 	} else {
 		status = Unbonded
 	}
-	assets := sdk.NewRat(int64(r.Int31n(10000)))
-	liabilities := sdk.NewRat(int64(r.Int31n(10000)))
 	return Candidate{
 		Status:      status,
-		Address:     addrs[0],
-		PubKey:      pks[0],
-		Assets:      assets,
-		Liabilities: liabilities,
+		Address:     addrs[i], //max 40 right now, as addrs only goes up to addrs[39]
+		PubKey:      pks[i],
+		Assets:      sdk.NewRat(0),
+		Liabilities: sdk.NewRat(0),
 	}
 }
 
@@ -289,15 +287,24 @@ func randomSetup(r *rand.Rand, numCandidates int) (Pool, Candidates) {
 
 	candidates := make([]Candidate, numCandidates)
 	for i := 0; i < numCandidates; i++ {
-		candidate := randomCandidate(r)
-		if candidate.Status == Bonded {
-			pool.BondedShares = pool.BondedShares.Add(candidate.Assets)
-			pool.BondedPool += candidate.Assets.Evaluate()
-		} else if candidate.Status == Unbonded {
-			pool.UnbondedShares = pool.UnbondedShares.Add(candidate.Assets)
-			pool.UnbondedPool += candidate.Assets.Evaluate()
-		}
+		candidate := randomCandidate(r, i)
+		tokens := int64(r.Int31n(1000000))
+		fmt.Println("HDRSERRGHGFDTRTWE: ", tokens)
+		pool.TotalSupply += tokens
+		pool, candidate, _ = pool.candidateAddTokens(candidate, tokens)
+
 		candidates[i] = candidate
+
+		// if candidate.Status == Bonded {
+		// 	pool.BondedShares = pool.BondedShares.Add(candidate.Assets)
+		// 	pool.BondedPool += candidate.Assets.Evaluate()
+		// } else if candidate.Status == Unbonded {
+		// 	pool.UnbondedShares = pool.UnbondedShares.Add(candidate.Assets)
+		// 	pool.UnbondedPool += candidate.Assets.Evaluate()
+		// }
+
+		//really need to keeper.setCandidate here. or we could loop through it in ticktest.go and do it
+		//need to add to total supply
 	}
 	return pool, candidates
 }

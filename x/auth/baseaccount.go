@@ -51,9 +51,6 @@ func (acc BaseAccount) GetPubKey() crypto.PubKey {
 
 // Implements sdk.Account.
 func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
-	if acc.PubKey != nil {
-		return errors.New("cannot override BaseAccount pubkey")
-	}
 	acc.PubKey = pubKey
 	return nil
 }

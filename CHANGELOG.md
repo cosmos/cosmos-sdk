@@ -13,6 +13,12 @@ FEATURES
 * [x/bank] Tx tags with sender/recipient for indexing & later retrieval
 * [x/stake] Tx tags with delegator/candidate for delegation & unbonding, and candidate info for declare candidate / edit candidacy
 * [x/auth] Added ability to change pubkey to auth module
+* Gas consumption is now measured as transactions are executed
+  * Transactions which run out of gas stop execution and revert state changes
+  * A "simulate" query has been added to determine how much gas a transaction will need
+  * Modules can include their own gas costs for execution of particular message types
+* Bank module now tags transactions with sender/recipient for indexing & later retrieval
+* Stake module now tags transactions with delegator/candidate for delegation & unbonding, and candidate info for declare candidate / edit candidacy
 
 IMPROVEMENTS
 
@@ -23,12 +29,6 @@ IMPROVEMENTS
   auto-unbonding
 * [spec/governance] Fixup some names and pseudocode
 * NOTE: specs are still a work-in-progress ...
-* Gas consumption is now measured as transactions are executed
-  * Transactions which run out of gas stop execution and revert state changes
-  * A "simulate" query has been added to determine how much gas a transaction will need
-  * Modules can include their own gas costs for execution of particular message types
-* Bank module now tags transactions with sender/recipient for indexing & later retrieval
-* Stake module now tags transactions with delegator/candidate for delegation & unbonding, and candidate info for declare candidate / edit candidacy
 
 BUG FIXES
 

@@ -399,6 +399,39 @@ func TestQuery(t *testing.T) {
 	assert.Equal(t, value, res.Value)
 }
 
+// Test p2p filter queries
+func TestP2PQuery(t *testing.T) {
+	app := newBaseApp(t.Name())
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+
+	app.SetAddrPeerFilter(func(addrport string) abci.ResponseQuery {
+		require.Equal(t, "1.1.1.1:8000", addrport)
+		return abci.ResponseQuery{Code: uint32(3)}
+	})
+
+	app.SetPubKeyPeerFilter(func(pubkey string) abci.ResponseQuery {
+		require.Equal(t, "testpubkey", pubkey)
+		return abci.ResponseQuery{Code: uint32(4)}
+	})
+
+	addrQuery := abci.RequestQuery{
+		Path: "/p2p/filter/addr/1.1.1.1:8000",
+	}
+	res := app.Query(addrQuery)
+	require.Equal(t, uint32(3), res.Code)
+
+	pubkeyQuery := abci.RequestQuery{
+		Path: "/p2p/filter/pubkey/testpubkey",
+	}
+	res = app.Query(pubkeyQuery)
+	require.Equal(t, uint32(4), res.Code)
+}
+
 //----------------------
 // TODO: clean this up
 

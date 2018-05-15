@@ -40,9 +40,11 @@ type BaseApp struct {
 	txGasLimit  sdk.Gas         // per-transaction gas limit
 
 	// may be nil
-	initChainer  sdk.InitChainer  // initialize state with validators and state blob
-	beginBlocker sdk.BeginBlocker // logic to run before any txs
-	endBlocker   sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
+	initChainer      sdk.InitChainer  // initialize state with validators and state blob
+	beginBlocker     sdk.BeginBlocker // logic to run before any txs
+	endBlocker       sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
+	addrPeerFilter   sdk.PeerFilter   // filter peers by address and port
+	pubkeyPeerFilter sdk.PeerFilter   // filter peers by public key
 
 	//--------------------
 	// Volatile
@@ -141,6 +143,12 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 }
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	app.anteHandler = ah
+}
+func (app *BaseApp) SetAddrPeerFilter(pf sdk.PeerFilter) {
+	app.addrPeerFilter = pf
+}
+func (app *BaseApp) SetPubKeyPeerFilter(pf sdk.PeerFilter) {
+	app.pubkeyPeerFilter = pf
 }
 func (app *BaseApp) Router() Router { return app.router }
 
@@ -282,6 +290,22 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	return
 }
 
+// Filter peers by address / port
+func (app *BaseApp) FilterPeerByAddrPort(info string) abci.ResponseQuery {
+	if app.addrPeerFilter != nil {
+		return app.addrPeerFilter(info)
+	}
+	return abci.ResponseQuery{}
+}
+
+// Filter peers by public key
+func (app *BaseApp) FilterPeerByPubKey(info string) abci.ResponseQuery {
+	if app.pubkeyPeerFilter != nil {
+		return app.pubkeyPeerFilter(info)
+	}
+	return abci.ResponseQuery{}
+}
+
 // Implements ABCI.
 // Delegates to CommitMultiStore if it implements Queryable
 func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
@@ -317,6 +341,21 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		}
 		req.Path = req.Path[6:] // slice off "/store"
 		return queryable.Query(req)
+	}
+	// "/p2p" prefix for p2p queries
+	if strings.HasPrefix(path, "/p2p") {
+		path = path[4:]
+		if strings.HasPrefix(path, "/filter") {
+			path = path[7:]
+			if strings.HasPrefix(path, "/addr") {
+				path = path[6:]
+				return app.FilterPeerByAddrPort(path)
+			}
+			if strings.HasPrefix(path, "/pubkey") {
+				path = path[8:]
+				return app.FilterPeerByPubKey(path)
+			}
+		}
 	}
 	msg := "unknown query path"
 	return sdk.ErrUnknownRequest(msg).QueryResult()

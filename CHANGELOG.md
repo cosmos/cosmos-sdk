@@ -13,6 +13,7 @@ FEATURES
 * [x/bank] Tx tags with sender/recipient for indexing & later retrieval
 * [x/stake] Tx tags with delegator/candidate for delegation & unbonding, and candidate info for declare candidate / edit candidacy
 * [x/auth] Added ability to change pubkey to auth module
+* baseapp now has settable functions for filtering peers by address/port & public key
 * Gas consumption is now measured as transactions are executed
   * Transactions which run out of gas stop execution and revert state changes
   * A "simulate" query has been added to determine how much gas a transaction will need

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	VerifyCost = 100
+	verifyCost = 100
 )
 
 // NewAnteHandler returns an AnteHandler that checks
@@ -138,7 +138,7 @@ func processSig(
 	}
 
 	// Check sig.
-	ctx.GasMeter().ConsumeGas(VerifyCost, "ante verify")
+	ctx.GasMeter().ConsumeGas(verifyCost, "ante verify")
 	if !pubKey.VerifyBytes(signBytes, sig.Signature) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}

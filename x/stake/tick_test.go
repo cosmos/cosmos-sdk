@@ -2,6 +2,7 @@ package stake
 
 import (
 	"fmt"
+	"math/rand"
 	"strconv"
 	"testing"
 
@@ -558,4 +559,99 @@ func TestLargeBond(t *testing.T) {
 	// test the value of candidate shares. bonded ex rate should be greater than 1, unbonded should still be 1
 	assert.True(t, pool.bondedShareExRate().Mul(bondedShares).Equal(sdk.NewRat(calculatedBondedTokens)), "%v", pool.bondedShareExRate())
 	assert.True(t, pool.unbondedShareExRate().Mul(unbondedShares).Equal(sdk.NewRat(calculatedUnbondedTokens)), "%v", pool.unbondedShareExRate())
+}
+
+//Test that provisions and inflation hold correct when we get a randomly updating sample of candidates
+func TestAddingRandomCandidates(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, false, 0)
+	params := defaultParams()
+	keeper.setParams(ctx, params)
+	// pool := keeper.GetPool(ctx)
+
+	// cumulative count of provisions, so we can check at the end of the year that the bonded pool has increased by this amount
+	var cumulativeExpProvs int64
+	r := rand.New(rand.NewSource(33))
+	numCandidates := 20 //max 40 right now since var addrs only goes up to addrs[39]
+
+	//start off by randomly creating 20 candidates
+	pool, candidates := randomSetup(r, numCandidates)
+	require.Equal(t, numCandidates, len(candidates))
+
+	// mintedTokens := int64((i + 1) * 10000000)
+	// pool.TotalSupply += mintedTokens
+	// pool, c, _ = pool.candidateAddTokens(c, mintedTokens)
+	// keeper.setCandidate(ctx, c)
+	// candidates[i] = c
+
+	for i := 0; i < len(candidates); i++ {
+		keeper.setCandidate(ctx, candidates[i])
+	}
+
+	keeper.setPool(ctx, pool)
+
+	fmt.Println("POOL: \n", pool)
+	fmt.Println("candidates: \n", candidates)
+
+	//randomly bond, unbond, remove shares or add tokens to the candidates
+	//also inject a few more new candidates
+	for j := 0; j < len(candidates); j++ {
+		poolMod, candidateMod, tokens, msg := randomOperation(r)(r, pool, candidates[j])
+		candidatesMod := make([]Candidate, len(candidates))
+		copy(candidatesMod[:], candidates[:])
+		require.Equal(t, numCandidates, len(candidates), "i %v", j)
+		require.Equal(t, numCandidates, len(candidatesMod), "i %v", j)
+		candidatesMod[j] = candidateMod
+
+		assertInvariants(t, msg,
+			pool, candidates,
+			poolMod, candidatesMod, tokens)
+		// do all the checks on provisions, inflation, and pool
+		// assert.Equal(t, totalSupply, pool.TotalSupply)
+		// assert.Equal(t, bondedTokens, pool.BondedPool)
+		// assert.Equal(t, unbondedTokens, pool.UnbondedPool)
+
+		// initial bonded ratio ~ 54%
+		// assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(bondedTokens, totalSupply)), "%v", pool.bondedRatio())
+
+		// test the value of candidate shares. should start off 1:1
+		// assert.True(t, pool.bondedShareExRate().Equal(sdk.OneRat()), "%v", pool.bondedShareExRate())
+
+		// pool := keeper.GetPool(ctx)
+		expInflation := keeper.nextInflation(ctx).Round(1000000000)
+		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
+
+		fmt.Println("MSGGGGG: ", msg)
+		fmt.Println("pool: ", pool)
+		fmt.Println("expInflation: ", expInflation)
+		fmt.Println("expProvisions: ", expProvisions)
+
+		startBondedPool := pool.BondedPool
+		startTotalSupply := pool.TotalSupply
+		cumulativeExpProvs = cumulativeExpProvs + expProvisions
+
+		fmt.Println("start bonded pool: ", startBondedPool)
+		fmt.Println("startTotalSupple: ", startTotalSupply)
+		fmt.Println("cumulativeExpProvs: ", cumulativeExpProvs)
+
+		pool = keeper.processProvisions(ctx)
+		keeper.setPool(ctx, pool)
+
+		pool = poolMod
+		candidates = candidatesMod
+		fmt.Println(" POOL MODED: ", pool)
+
+		// if i%5 == 0 {
+		// 	numCandidates++
+		// 	newCand := randomCandidate(r, numCandidates)
+		// 	candidates = append(candidates, newCand)
+
+		// 	//do unique cehcks for making sure you add a new user and it works.
+		// 	//but basically just check provisions, infaltion and ppool!
+
+		// }
+
+		//do final cehcks on provisions, inflation and pool
+
+	}
+
 }

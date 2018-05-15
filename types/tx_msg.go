@@ -112,21 +112,23 @@ func (fee StdFee) Bytes() []byte {
 // and the Sequence numbers for each signature (prevent
 // inchain replay and enforce tx ordering per account).
 type StdSignDoc struct {
-	ChainID   string  `json:"chain_id"`
-	Sequences []int64 `json:"sequences"`
-	FeeBytes  []byte  `json:"fee_bytes"`
-	MsgBytes  []byte  `json:"msg_bytes"`
-	AltBytes  []byte  `json:"alt_bytes"`
+	ChainID        string  `json:"chain_id"`
+	Sequences      []int64 `json:"sequences"`
+	AccountNumbers []int64 `json:"acc_numbers"`
+	FeeBytes       []byte  `json:"fee_bytes"`
+	MsgBytes       []byte  `json:"msg_bytes"`
+	AltBytes       []byte  `json:"alt_bytes"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
 // TODO: change the API to just take a chainID and StdTx ?
-func StdSignBytes(chainID string, sequences []int64, fee StdFee, msg Msg) []byte {
+func StdSignBytes(chainID string, sequences []int64, accNumbers []int64, fee StdFee, msg Msg) []byte {
 	bz, err := json.Marshal(StdSignDoc{
-		ChainID:   chainID,
-		Sequences: sequences,
-		FeeBytes:  fee.Bytes(),
-		MsgBytes:  msg.GetSignBytes(),
+		ChainID:        chainID,
+		Sequences:      sequences,
+		AccountNumbers: accNumbers,
+		FeeBytes:       fee.Bytes(),
+		MsgBytes:       msg.GetSignBytes(),
 	})
 	if err != nil {
 		panic(err)
@@ -138,16 +140,17 @@ func StdSignBytes(chainID string, sequences []int64, fee StdFee, msg Msg) []byte
 // a Msg with the other requirements for a StdSignDoc before
 // it is signed. For use in the CLI.
 type StdSignMsg struct {
-	ChainID   string
-	Sequences []int64
-	Fee       StdFee
-	Msg       Msg
+	ChainID        string
+	Sequences      []int64
+	AccountNumbers []int64
+	Fee            StdFee
+	Msg            Msg
 	// XXX: Alt
 }
 
 // get message bytes
 func (msg StdSignMsg) Bytes() []byte {
-	return StdSignBytes(msg.ChainID, msg.Sequences, msg.Fee, msg.Msg)
+	return StdSignBytes(msg.ChainID, msg.Sequences, msg.AccountNumbers, msg.Fee, msg.Msg)
 }
 
 //__________________________________________________________

@@ -11,6 +11,9 @@ import (
 // Address in go-crypto style
 type Address = cmn.HexBytes
 
+// type PubKey = cmn.HexBytes
+// type PrivKey = cmn.HexBytes
+
 // create an Address from a string
 func GetAddress(address string) (addr Address, err error) {
 	if len(address) == 0 {

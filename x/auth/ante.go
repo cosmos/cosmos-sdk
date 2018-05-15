@@ -24,7 +24,6 @@ func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) 
 				true
 		}
 
-		// TODO: can tx just implement message?
 		msg := tx.GetMsg()
 
 		// TODO: will this always be a stdtx? should that be used in the function signature?

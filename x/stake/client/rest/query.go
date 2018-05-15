@@ -24,7 +24,7 @@ func bondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 		// read parameters
 		vars := mux.Vars(r)
 		delegator := vars["delegator"]
-		validator := vars["validator"]
+		candidate := vars["candidate"]
 
 		bz, err := hex.DecodeString(delegator)
 		if err != nil {
@@ -34,7 +34,7 @@ func bondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 		}
 		delegatorAddr := sdk.Address(bz)
 
-		bz, err = hex.DecodeString(validator)
+		bz, err = hex.DecodeString(candidate)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))

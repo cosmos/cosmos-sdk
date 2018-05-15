@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.17.0 (TBD)
+
+BREAKING CHANGES
+
+* [stake] MarshalJSON -> MarshalBinary
+
+FEATURES
+
+* [gaiacli] Support queries for candidates, delegator-bonds
+* [gaiad] Added `gaiad export` command to export current state to JSON
+* [x/bank] Tx tags with sender/recipient for indexing & later retrieval
+* [x/stake] Tx tags with delegator/candidate for delegation & unbonding, and candidate info for declare candidate / edit candidacy
+
+IMPROVEMENTS
+
+* [gaiad] Update for Tendermint v0.19.3 (improve `/dump_consensus_state` and add
+  `/consensus_state`)
+* [spec/ibc] Added spec!
+* [spec/stake] Cleanup structure, include details about slashing and
+  auto-unbonding
+* [spec/governance] Fixup some names and pseudocode
+* NOTE: specs are still a work-in-progress ...
+
+BUG FIXES
+
+* Auto-sequencing now works correctly
+
 ## 0.16.0 (May 14th, 2018)
 
 BREAKING CHANGES
@@ -18,7 +45,6 @@ BREAKING CHANGES
 
 FEATURES:
 
-* Added `gaiad export` command, which exports genesis information & current state
 * Gaia stake commands include, DeclareCandidacy, EditCandidacy, Delegate, Unbond
 * MountStoreWithDB without providing a custom store works.
 * Repo is now lint compliant / GoMetaLinter with tendermint-lint integrated into CI
@@ -28,14 +54,10 @@ FEATURES:
   * New genesis account keys are automatically added to the client keybase (introduce `--client-home` flag)
   * Initialize with genesis txs using `--gen-txs` flag
 * Context now has access to the application-configured logger
-* Add (non-proof) subspace query helper functions 
-* Add more staking query functions: candidates, delegator-bonds
-* Bank module now tags transactions with sender/recipient for indexing & later retrieval
-* Stake module now tags transactions with delegator/candidate for delegation & unbonding, and candidate info for declare candidate / edit candidacy
+
 
 BUG FIXES
 * Gaia now uses stake, ported from github.com/cosmos/gaia
-* Auto-sequencing now works correctly
 
 ## 0.15.1 (April 29, 2018)
 

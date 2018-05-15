@@ -67,7 +67,23 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             gometalinter --disable-all --enable='golint' --vendor ./...
-
+  
+  test_unit:
+    <<: *defaults
+    parallelism: 4
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - restore_cache:
+          key: v1-pkg-cache
+      - restore_cache:
+          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: Test unit
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make test_unit
+  
   test_cover:
     <<: *defaults
     parallelism: 4
@@ -83,7 +99,7 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make install
-            for pkg in $(go list github.com/cosmos/cosmos-sdk/... | grep -v /vendor/ | circleci tests split --split-by=timings); do
+            for pkg in $(go list github.com/cosmos/cosmos-sdk/... | grep -v /vendor/ | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | circleci tests split --split-by=timings); do
               id=$(basename "$pkg")
 
               go test -timeout 5m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic "$pkg"
@@ -119,6 +135,9 @@ workflows:
     jobs:
       - setup_dependencies
       - lint:
+          requires:
+            - setup_dependencies
+      - test_unit:
           requires:
             - setup_dependencies
       - test_cover:

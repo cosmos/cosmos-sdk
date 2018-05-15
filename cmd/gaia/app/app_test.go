@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
@@ -107,7 +108,7 @@ func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 		StakeData: stake.GetDefaultGenesisState(),
 	}
 
-	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
+	stateBytes, err := wire.MarshalJSONIndent(gapp.cdc, genesisState)
 	if err != nil {
 		return err
 	}

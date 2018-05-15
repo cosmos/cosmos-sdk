@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.17.0 (May 15, 2018)
+
+BREAKING CHANGES
+
+* [stake] MarshalJSON -> MarshalBinary
+
+FEATURES
+
+* [gaiacli] Support queries for candidates, delegator-bonds
+* [gaiad] Added `gaiad export` command to export current state to JSON
+* [x/bank] Tx tags with sender/recipient for indexing & later retrieval
+* [x/stake] Tx tags with delegator/candidate for delegation & unbonding, and candidate info for declare candidate / edit candidacy
+
+IMPROVEMENTS
+
+* [gaiad] Update for Tendermint v0.19.3 (improve `/dump_consensus_state` and add
+  `/consensus_state`)
+* [spec/ibc] Added spec!
+* [spec/stake] Cleanup structure, include details about slashing and
+  auto-unbonding
+* [spec/governance] Fixup some names and pseudocode
+* NOTE: specs are still a work-in-progress ...
+
+BUG FIXES
+
+* Auto-sequencing now works correctly
+
 ## 0.16.0 (May 14th, 2018)
 
 BREAKING CHANGES
@@ -27,6 +54,7 @@ FEATURES:
   * New genesis account keys are automatically added to the client keybase (introduce `--client-home` flag)
   * Initialize with genesis txs using `--gen-txs` flag
 * Context now has access to the application-configured logger
+
 
 BUG FIXES
 * Gaia now uses stake, ported from github.com/cosmos/gaia

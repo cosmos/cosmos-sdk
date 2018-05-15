@@ -2,7 +2,6 @@ package types
 
 import (
 	abci "github.com/tendermint/abci/types"
-	cmn "github.com/tendermint/tmlibs/common"
 )
 
 // Result is the union of ResponseDeliverTx and ResponseCheckTx.
@@ -31,7 +30,7 @@ type Result struct {
 	ValidatorUpdates []abci.Validator
 
 	// Tags are used for transaction indexing and pubsub.
-	Tags []cmn.KVPair
+	Tags Tags
 }
 
 // TODO: In the future, more codes may be OK.

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -18,6 +19,12 @@ const StakingToken = "steak"
 
 //Verify interface at compile time
 var _, _, _, _ sdk.Msg = &MsgDeclareCandidacy{}, &MsgEditCandidacy{}, &MsgDelegate{}, &MsgUnbond{}
+
+var msgCdc = wire.NewCodec()
+
+func init() {
+	wire.RegisterCrypto(msgCdc)
+}
 
 //______________________________________________________________________
 
@@ -45,11 +52,7 @@ func (msg MsgDeclareCandidacy) GetSigners() []sdk.Address { return []sdk.Address
 
 // get the bytes for the message signer to sign on
 func (msg MsgDeclareCandidacy) GetSignBytes() []byte {
-	b, err := json.Marshal(msg)
-	if err != nil {
-		panic(err)
-	}
-	return b
+	return msgCdc.MustMarshalBinary(msg)
 }
 
 // quick validity check

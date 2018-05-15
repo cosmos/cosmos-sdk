@@ -1,7 +1,6 @@
 package types
 
 import (
-	"bytes"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -153,26 +152,16 @@ func (r Rat) ToLeftPadded(totalDigits int8) string {
 
 //___________________________________________________________________________________
 
-//Wraps r.MarshalText() in quotes to make it a valid JSON string.
-func (r Rat) MarshalJSON() ([]byte, error) {
+//Wraps r.MarshalText().
+func (r Rat) MarshalAmino() (string, error) {
 	bz, err := (&(r.Rat)).MarshalText()
-	if err != nil {
-		return nil, err
-	}
-	return []byte(fmt.Sprintf("\"%s\"", bz)), nil
+	return string(bz), err
 }
 
 // Requires a valid JSON string - strings quotes and calls UnmarshalText
-func (r *Rat) UnmarshalJSON(data []byte) (err error) {
-	quote := []byte(`"`)
-	if len(data) < 2 ||
-		!bytes.HasPrefix(data, quote) ||
-		!bytes.HasSuffix(data, quote) {
-		return fmt.Errorf("JSON encoded Rat must be a quote-delimitted string, have %v", string(data))
-	}
-	data = bytes.Trim(data, `"`)
+func (r *Rat) UnmarshalAmino(text string) (err error) {
 	tempRat := big.NewRat(0, 1)
-	err = tempRat.UnmarshalText(data)
+	err = tempRat.UnmarshalText([]byte(text))
 	if err != nil {
 		return err
 	}

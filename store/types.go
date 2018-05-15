@@ -13,6 +13,7 @@ type MultiStore = types.MultiStore
 type CacheMultiStore = types.CacheMultiStore
 type CommitMultiStore = types.CommitMultiStore
 type KVStore = types.KVStore
+type KVPair = types.KVPair
 type Iterator = types.Iterator
 type CacheKVStore = types.CacheKVStore
 type CommitKVStore = types.CommitKVStore

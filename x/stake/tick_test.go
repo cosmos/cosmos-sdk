@@ -92,7 +92,7 @@ func TestProcessProvisions(t *testing.T) {
 	var totalSupply int64 = 550000000
 	var bondedTokens int64 = 150000000
 	var unbondedTokens int64 = 400000000
-	var cumulativeExpProvs int64 = 0
+	var cumulativeExpProvs int64
 	assert.Equal(t, totalSupply, pool.TotalSupply)
 	assert.Equal(t, bondedTokens, pool.BondedPool)
 	assert.Equal(t, unbondedTokens, pool.UnbondedPool)
@@ -172,7 +172,7 @@ func TestHourlyRateOfChange(t *testing.T) {
 	var totalSupply int64 = 550000000
 	var bondedTokens int64 = 150000000
 	var unbondedTokens int64 = 400000000
-	var cumulativeExpProvs int64 = 0
+	var cumulativeExpProvs int64
 	assert.Equal(t, totalSupply, pool.TotalSupply)
 	assert.Equal(t, bondedTokens, pool.BondedPool)
 	assert.Equal(t, unbondedTokens, pool.UnbondedPool)

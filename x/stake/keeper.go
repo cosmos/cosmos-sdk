@@ -2,7 +2,6 @@ package stake
 
 import (
 	"bytes"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -69,53 +68,42 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve int16) (validators Va
 }
 
 func (k Keeper) setValidator(ctx sdk.Context, validator Validator) Validator {
-	fmt.Println("wackydebugoutput setValidator 0")
 	store := ctx.KVStore(k.storeKey)
 	pool := k.getPool(store)
 	address := validator.Address
 
 	// update the main list ordered by address before exiting
 	defer func() {
-		fmt.Println("wackydebugoutput setValidator 1")
 		bz := k.cdc.MustMarshalBinary(validator)
 		store.Set(GetValidatorKey(address), bz)
 	}()
-	fmt.Println("wackydebugoutput setValidator 2")
 
 	// retreive the old validator record
 	oldValidator, oldFound := k.GetValidator(ctx, address)
 
 	powerIncreasing := false
 	if oldFound {
-		fmt.Println("wackydebugoutput setValidator 3")
 		// if the voting power is the same no need to update any of the other indexes
 		if oldValidator.Status == sdk.Bonded &&
 			oldValidator.PShares.Equal(validator.PShares) {
-			fmt.Println("wackydebugoutput setValidator 4")
 			return validator
 		} else if oldValidator.PShares.Bonded().LT(validator.PShares.Bonded()) {
-			fmt.Println("wackydebugoutput setValidator 5")
 			powerIncreasing = true
 		}
-		fmt.Println("wackydebugoutput setValidator 6")
 		// delete the old record in the power ordered list
 		store.Delete(GetValidatorsBondedByPowerKey(oldValidator, pool))
 	}
-	fmt.Println("wackydebugoutput setValidator 7")
 
 	// if already a validator, copy the old block height and counter, else set them
 	if oldFound && oldValidator.Status == sdk.Bonded {
-		fmt.Println("wackydebugoutput setValidator 8")
 		validator.BondHeight = oldValidator.BondHeight
 		validator.BondIntraTxCounter = oldValidator.BondIntraTxCounter
 	} else {
-		fmt.Println("wackydebugoutput setValidator 9")
 		validator.BondHeight = ctx.BlockHeight()
 		counter := k.getIntraTxCounter(ctx)
 		validator.BondIntraTxCounter = counter
 		k.setIntraTxCounter(ctx, counter+1)
 	}
-	fmt.Println("wackydebugoutput setValidator 10")
 
 	// update the list ordered by voting power
 	bz := k.cdc.MustMarshalBinary(validator)
@@ -123,7 +111,6 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) Validator {
 
 	// add to the validators and return to update list if is already a validator and power is increasing
 	if powerIncreasing && oldFound && oldValidator.Status == sdk.Bonded {
-		fmt.Println("wackydebugoutput setValidator 11")
 
 		// update the recent validator store
 		store.Set(GetValidatorsBondedKey(validator.PubKey), bz)
@@ -133,20 +120,18 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) Validator {
 		store.Set(GetTendermintUpdatesKey(address), bz)
 		return validator
 	}
-	fmt.Println("wackydebugoutput setValidator 12")
 
 	// update the validator set for this validator
 	valIsNowBonded := k.updateValidators(ctx, store, validator.Address)
 
 	if (!oldFound && valIsNowBonded) ||
 		(oldFound && oldValidator.Status != sdk.Bonded && valIsNowBonded) {
-		fmt.Println("wackydebugoutput setValidator 13")
 
 		validator.Status = sdk.Bonded
 		validator, pool = validator.UpdateSharesLocation(pool)
 		k.setPool(ctx, pool)
+		k.bondValidator(ctx, store, validator, pool)
 	}
-	fmt.Println("wackydebugoutput setValidator 14")
 	return validator
 }
 
@@ -256,11 +241,9 @@ func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedVali
 
 	// add the actual validator power sorted store
 	maxValidators := k.GetParams(ctx).MaxValidators
-	fmt.Printf("debug maxValidators: %v\n", maxValidators)
 	iterator = store.ReverseSubspaceIterator(ValidatorsByPowerKey) // largest to smallest
 	i := 0
 	for ; ; i++ {
-		fmt.Printf("debug i: %v\n", i)
 		if !iterator.Valid() || i > int(maxValidators-1) {
 			iterator.Close()
 			break
@@ -275,11 +258,9 @@ func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedVali
 		// also add to the current validators group
 		store.Set(GetValidatorsBondedKey(validator.PubKey), bz)
 
-		// MOST IMPORTANTLY, add to the accumulated changes if this is the modified validator
+		// MOST IMPORTANTLY, send back information that the current validator should be bonded
 		if bytes.Equal(updatedValidatorAddr, validator.Address) {
-			bz = k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
-			store.Set(GetTendermintUpdatesKey(updatedValidatorAddr), bz)
-			updatedIsBonded = true // the updatedValidatorAddr is for a bonded validator
+			updatedIsBonded = true
 		}
 
 		iterator.Next()
@@ -291,13 +272,12 @@ func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedVali
 		}
 		var validator Validator
 		k.cdc.MustUnmarshalBinary(value, &validator)
-		fmt.Printf("debug validator: %v\n", validator)
 		k.unbondValidator(ctx, store, validator)
 	}
 	return
 }
 
-// perform all the store operations for when a validator is moved from bonded to unbonded
+// perform all the store operations for when a validator status becomes unbonded
 func (k Keeper) unbondValidator(ctx sdk.Context, store sdk.KVStore, validator Validator) {
 	pool := k.GetPool(ctx)
 
@@ -316,6 +296,26 @@ func (k Keeper) unbondValidator(ctx sdk.Context, store sdk.KVStore, validator Va
 
 	// also remove from the Bonded Validators Store
 	store.Delete(GetValidatorsBondedKey(validator.PubKey))
+}
+
+// perform all the store operations for when a validator status becomes bonded
+func (k Keeper) bondValidator(ctx sdk.Context, store sdk.KVStore, validator Validator, pool Pool) {
+
+	// set the status
+	validator.Status = sdk.Bonded
+	validator, pool = validator.UpdateSharesLocation(pool)
+	k.setPool(ctx, pool)
+
+	// save the now bonded validator record to the three referened stores
+	bzVal := k.cdc.MustMarshalBinary(validator)
+	store.Delete(GetValidatorsBondedByPowerKey(validator, pool))
+	store.Set(GetValidatorKey(validator.Address), bzVal)
+	store.Set(GetValidatorsBondedByPowerKey(validator, pool), bzVal)
+	store.Set(GetValidatorsBondedKey(validator.PubKey), bzVal)
+
+	// add to accumulated changes for tendermint
+	bzABCI := k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
+	store.Set(GetTendermintUpdatesKey(validator.Address), bzABCI)
 }
 
 //_________________________________________________________________________

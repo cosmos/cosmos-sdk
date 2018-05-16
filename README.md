@@ -16,7 +16,7 @@ master    | [![CircleCI](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master.s
 
 **WARNING**: the libraries are still undergoing breaking changes as we get better ideas and start building out the Apps.
 
-**Note**: Requires [Go 1.9+](https://golang.org/dl/)
+**Note**: Requires [Go 1.10+](https://golang.org/dl/)
 
 
 ## Overview

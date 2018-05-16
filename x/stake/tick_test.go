@@ -546,11 +546,12 @@ func TestAddingRandomCandidates(t *testing.T) {
 		// every other hour it will just add normal provisions
 		if twoWeekCounter == hr && candidateCounter < 20 {
 
+			//Get values before randomOperation
 			expInflationBefore := keeper.nextInflation(ctx)
-			startBondedPool := pool.BondedPool
-			startUnbondedPool := pool.UnbondedPool
+			initialBondedPool := pool.BondedPool
+			initialUnbondedPool := pool.UnbondedPool
 
-			//Random operation, and updating of the candidates list
+			//Random operation, and recording how candidates are modified
 			poolMod, candidateMod, tokens, msg := randomOperation(r)(r, pool, candidates[candidateCounter])
 			candidatesMod := make([]Candidate, len(candidates))
 			copy(candidatesMod[:], candidates[:])
@@ -562,16 +563,12 @@ func TestAddingRandomCandidates(t *testing.T) {
 				pool, candidates,
 				poolMod, candidatesMod, tokens)
 
-			// fmt.Println("MSGGGGG: ", msg)
-			// fmt.Println("pool: ", pool)
-
+			//set pool and candidates after the random operation
 			pool = poolMod
 			keeper.setPool(ctx, pool)
 			candidates = candidatesMod
 
-			// fmt.Println(" POOL MODED: ", pool)
-			// fmt.Println("Inflation Before: ", expInflationBefore)
-
+			//Get values after randomOperation
 			expInflationAfter := keeper.nextInflation(ctx)
 			afterBondedPool := pool.BondedPool
 			afterUnbondedPool := pool.UnbondedPool
@@ -583,10 +580,7 @@ func TestAddingRandomCandidates(t *testing.T) {
 			inflationIncreased := expInflationAfter.GT(expInflationBefore)
 			inflationEqual := expInflationAfter.Equal(expInflationBefore)
 
-			// fmt.Println("Inflation After: ", expInflationAfter)
-			// fmt.Println("inflation Increased", inflationIncreased)
-
-			if afterBondedPool > startBondedPool {
+			if afterBondedPool > initialBondedPool {
 				//Inflation will NOT increase, because we are adding bonded tokens to the pool
 				//CASE: Happens when we randomly add tokens to a bonded candidate
 				//CASE: Happens when we randomly bond a candidate from unbonded
@@ -601,10 +595,10 @@ func TestAddingRandomCandidates(t *testing.T) {
 					assert.True(t, !inflationIncreased, msg)
 				}
 
-			} else if afterBondedPool < startBondedPool {
+			} else if afterBondedPool < initialBondedPool {
 				//Inflation WILL increase, because we are removing bonded tokens from the pool
 				//CASE: Happens when we randomly remove bonded Shares
-				//CASE: Happens when we randomly unbond a candidate from bonded
+				//CASE: Happens when we randomly unbond a candidate that was bonded
 
 				//For the off case where we are bonded so low (i.e. 15%),  and more tokens are unbonded, inflation is unchanged at 20%
 				//For the off case where we are bonded so high (i.e. 90%) and we unbond a small amount (maybe 2%), inflation  is unchanged at 7%
@@ -616,22 +610,22 @@ func TestAddingRandomCandidates(t *testing.T) {
 					assert.True(t, inflationIncreased, msg)
 				}
 
-			} else if afterUnbondedPool > startUnbondedPool {
+			} else if afterUnbondedPool > initialUnbondedPool {
 				//Inflation will STAY THE SAME.
 				//Inflation is dependant only on bondedRatio. Sure, a validator can add unbonded tokens, but it doesn't change bondedRatio (totalBondedTokens / globalTotalTokens)
 				//CASE: Happens when we randomly add unbonded tokens
 				assert.True(t, inflationEqual, msg)
 
-			} else if afterUnbondedPool < startUnbondedPool {
+			} else if afterUnbondedPool < initialUnbondedPool {
 				//Inflation will STAY THE SAME.
 				//Inflation is dependant only on bondedRatio. Sure, a validator can add unbonded tokens, but it doesn't change bondedRatio (totalBondedTokens / globalTotalTokens)
-				//CASE: Happens when we remove shares from an unbonded candidate
+				//CASE: Happens when we randomly remove shares from an unbonded candidate
 				assert.True(t, inflationEqual, msg)
 
 			} else {
 				panic(fmt.Sprintf("pool.UnbondedPool and pool.BondedPool are unchanged. All operations should change either the unbondedPool or bondedPool amounts."))
 			}
-			// fmt.Println("")
+
 			twoWeekCounter += 336
 			candidateCounter++
 

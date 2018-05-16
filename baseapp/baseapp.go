@@ -23,15 +23,16 @@ import (
 // and to avoid affecting the Merkle root.
 var dbHeaderKey = []byte("header")
 
-type RunTxMode uint8
+// Enum mode for app.runTx
+type runTxMode uint8
 
 const (
 	// Check a transaction
-	RunTxModeCheck RunTxMode = iota
+	runTxModeCheck runTxMode = iota
 	// Simulate a transaction
-	RunTxModeSimulate RunTxMode = iota
+	runTxModeSimulate runTxMode = iota
 	// Deliver a transaction
-	RunTxModeDeliver RunTxMode = iota
+	runTxModeDeliver runTxMode = iota
 )
 
 // The ABCI application
@@ -396,7 +397,7 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(RunTxModeCheck, txBytes, tx)
+		result = app.runTx(runTxModeCheck, txBytes, tx)
 	}
 
 	return abci.ResponseCheckTx{
@@ -421,7 +422,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(RunTxModeDeliver, txBytes, tx)
+		result = app.runTx(runTxModeDeliver, txBytes, tx)
 	}
 
 	// After-handler hooks.
@@ -445,22 +446,22 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 
 // nolint - Mostly for testing
 func (app *BaseApp) Check(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(RunTxModeCheck, nil, tx)
+	return app.runTx(runTxModeCheck, nil, tx)
 }
 
 // nolint - full tx execution
 func (app *BaseApp) Simulate(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(RunTxModeSimulate, nil, tx)
+	return app.runTx(runTxModeSimulate, nil, tx)
 }
 
 // nolint
 func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(RunTxModeDeliver, nil, tx)
+	return app.runTx(runTxModeDeliver, nil, tx)
 }
 
 // txBytes may be nil in some cases, eg. in tests.
 // Also, in the future we may support "internal" transactions.
-func (app *BaseApp) runTx(mode RunTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
+func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
 	// Handle any panics.
 	defer func() {
 		if r := recover(); r != nil {
@@ -490,14 +491,14 @@ func (app *BaseApp) runTx(mode RunTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// Get the context
 	var ctx sdk.Context
-	if mode == RunTxModeCheck || mode == RunTxModeSimulate {
+	if mode == runTxModeCheck || mode == runTxModeSimulate {
 		ctx = app.checkState.ctx.WithTxBytes(txBytes)
 	} else {
 		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
 	}
 
 	// Simulate a DeliverTx for gas calculation
-	if mode == RunTxModeSimulate {
+	if mode == runTxModeSimulate {
 		ctx = ctx.WithIsCheckTx(false)
 	}
 
@@ -521,7 +522,7 @@ func (app *BaseApp) runTx(mode RunTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// Get the correct cache
 	var msCache sdk.CacheMultiStore
-	if mode == RunTxModeCheck || mode == RunTxModeSimulate {
+	if mode == runTxModeCheck || mode == runTxModeSimulate {
 		// CacheWrap app.checkState.ms in case it fails.
 		msCache = app.checkState.CacheMultiStore()
 		ctx = ctx.WithMultiStore(msCache)
@@ -537,7 +538,7 @@ func (app *BaseApp) runTx(mode RunTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	result.GasUsed = ctx.GasMeter().GasConsumed()
 
 	// If not a simulated run and result was successful, write to app.checkState.ms or app.deliverState.ms
-	if mode != RunTxModeSimulate && result.IsOK() {
+	if mode != runTxModeSimulate && result.IsOK() {
 		msCache.Write()
 	}
 

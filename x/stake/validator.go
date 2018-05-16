@@ -105,16 +105,6 @@ func NewDescription(moniker, identity, website, details string) Description {
 //XXX updateDescription function
 //XXX enforce limit to number of description characters
 
-// get the exchange rate of tokens over delegator shares
-// UNITS: eq-val-bonded-shares/delegator-shares
-func (v Validator) DelegatorShareExRate(p Pool) sdk.Rat {
-	if v.DelegatorShares.IsZero() {
-		return sdk.OneRat()
-	}
-	eqBondedShares := v.PShares.ToBonded(p).Amount
-	return eqBondedShares.Quo(v.DelegatorShares)
-}
-
 // abci validator from stake validator type
 func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
 	return abci.Validator{
@@ -156,17 +146,13 @@ func (v Validator) UpdateSharesLocation(p Pool) (Validator, Pool) {
 		p, tokens = p.removeSharesBonded(v.PShares.Amount)
 	}
 
-	var shares sdk.Rat
 	switch v.Status {
 	case sdk.Unbonded, sdk.Revoked:
-		p, shares = p.addTokensUnbonded(tokens)
-		v.PShares = NewUnbondedShares(shares)
+		p, v.PShares = p.addTokensUnbonded(tokens)
 	case sdk.Unbonding:
-		p, shares = p.addTokensUnbonding(tokens)
-		v.PShares = NewUnbondingShares(shares)
+		p, v.PShares = p.addTokensUnbonding(tokens)
 	case sdk.Bonded:
-		p, shares = p.addTokensBonded(tokens)
-		v.PShares = NewBondedShares(shares)
+		p, v.PShares = p.addTokensBonded(tokens)
 	}
 	return v, p
 }
@@ -187,7 +173,10 @@ func (v Validator) EquivalentBondedShares(p Pool) (eqBondedShares sdk.Rat) {
 func (v Validator) addTokensFromDel(p Pool,
 	amount int64) (validator2 Validator, p2 Pool, issuedDelegatorShares sdk.Rat) {
 
-	var equivalentBondedShares, poolShares sdk.Rat
+	exRate := v.DelegatorShareExRate(p) // bshr/delshr
+
+	var poolShares PoolShares
+	var equivalentBondedShares sdk.Rat
 	switch v.Status {
 	case sdk.Unbonded, sdk.Revoked:
 		p, poolShares = p.addTokensUnbonded(amount)
@@ -196,10 +185,9 @@ func (v Validator) addTokensFromDel(p Pool,
 	case sdk.Bonded:
 		p, poolShares = p.addTokensBonded(amount)
 	}
-	v.PShares.Amount = v.PShares.Amount.Add(poolShares)
-	equivalentBondedShares = v.PShares.ToBonded(p).Amount
+	v.PShares.Amount = v.PShares.Amount.Add(poolShares.Amount)
+	equivalentBondedShares = poolShares.ToBonded(p).Amount
 
-	exRate := v.DelegatorShareExRate(p)                        // bshr/delshr
 	issuedDelegatorShares = equivalentBondedShares.Quo(exRate) // bshr/(bshr/delshr) = delshr
 	v.DelegatorShares = v.DelegatorShares.Add(issuedDelegatorShares)
 
@@ -229,6 +217,16 @@ func (v Validator) removeDelShares(p Pool,
 		v.PShares.Amount = v.PShares.Amount.Sub(eqBondedSharesToRemove.Amount)
 	}
 	return v, p, createdCoins
+}
+
+// get the exchange rate of tokens over delegator shares
+// UNITS: eq-val-bonded-shares/delegator-shares
+func (v Validator) DelegatorShareExRate(p Pool) sdk.Rat {
+	if v.DelegatorShares.IsZero() {
+		return sdk.OneRat()
+	}
+	eqBondedShares := v.PShares.ToBonded(p).Amount
+	return eqBondedShares.Quo(v.DelegatorShares)
 }
 
 //______________________________________________________________________

@@ -1,7 +1,6 @@
 package stake
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -106,7 +105,6 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 
 		pool := keeper.GetPool(ctx)
 		exRate := validator.DelegatorShareExRate(pool)
-		fmt.Printf("debug validator: %v\n", validator)
 		require.True(t, exRate.Equal(sdk.OneRat()), "expected exRate 1 got %v, i = %v", exRate, i)
 
 		expBond := int64(i+1) * bondAmount

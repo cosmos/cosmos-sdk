@@ -55,6 +55,7 @@ func TestValidatorBasics(t *testing.T) {
 	for i, amt := range amts {
 		validators[i] = NewValidator(addrVals[i], pks[i], Description{})
 		validators[i].Status = sdk.Bonded
+		validators[i].PShares = NewBondedShares(sdk.ZeroRat())
 		validators[i].addTokensFromDel(pool, amt)
 	}
 
@@ -307,7 +308,6 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	require.Equal(t, validator.BondHeight, int64(40))
 }
 
-// TODO seperate out into multiple tests
 func TestValidatorBondHeight(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
@@ -323,7 +323,7 @@ func TestValidatorBondHeight(t *testing.T) {
 	validators[0].DelegatorShares = sdk.NewRat(200)
 	keeper.setValidator(ctx, validators[0])
 	validators[1] = NewValidator(addrs[1], pks[1], Description{})
-	validators[1].PShares = NewBondedShares(sdk.NewRat(100))
+	validators[1].PShares = NewUnbondedShares(sdk.NewRat(100))
 	validators[1].DelegatorShares = sdk.NewRat(100)
 	validators[2] = NewValidator(addrs[2], pks[2], Description{})
 	validators[2].PShares = NewUnbondedShares(sdk.NewRat(100))
@@ -338,8 +338,8 @@ func TestValidatorBondHeight(t *testing.T) {
 	require.Equal(t, uint16(len(gotValidators)), params.MaxValidators)
 	assert.True(ValEq(t, validators[0], gotValidators[0]))
 	assert.True(ValEq(t, validators[1], gotValidators[1]))
-	validators[1].PShares = NewBondedShares(sdk.NewRat(1100))
-	validators[2].PShares = NewBondedShares(sdk.NewRat(1100))
+	validators[1].PShares = NewUnbondedShares(sdk.NewRat(150))
+	validators[2].PShares = NewUnbondedShares(sdk.NewRat(150))
 	keeper.setValidator(ctx, validators[2])
 	keeper.setValidator(ctx, validators[1])
 	gotValidators = keeper.GetValidatorsBondedByPower(ctx)
@@ -363,7 +363,7 @@ func TestGetValidatorsEdgeCases2(t *testing.T) {
 	var validators [5]Validator
 	for i, amt := range amts {
 		validators[i] = NewValidator(addrs[i], pks[i], Description{})
-		validators[i].PShares = NewBondedShares(sdk.NewRat(amt))
+		validators[i].PShares = NewUnbondedShares(sdk.NewRat(amt))
 		validators[i].DelegatorShares = sdk.NewRat(amt)
 		keeper.setValidator(ctx, validators[i])
 	}

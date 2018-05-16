@@ -514,7 +514,7 @@ func TestLargeBond(t *testing.T) {
 	assert.True(t, pool.unbondedShareExRate().Mul(unbondedShares).Equal(sdk.NewRat(calculatedUnbondedTokens)), "%v", pool.unbondedShareExRate())
 }
 
-//Tests that provisions and inflation hold correct when we get a randomly updating sample of candidates
+//Tests that inflation works as expected when we get a randomly updating sample of candidates
 func TestAddingRandomCandidates(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 	params := defaultParams()
@@ -577,6 +577,7 @@ func TestAddingRandomCandidates(t *testing.T) {
 			pool = keeper.processProvisions(ctx)
 			keeper.setPool(ctx, pool)
 
+			//Comparing expected inflation before and after the randomOperation()
 			inflationIncreased := expInflationAfter.GT(expInflationBefore)
 			inflationEqual := expInflationAfter.Equal(expInflationBefore)
 

@@ -6,6 +6,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	costGetCoins      sdk.Gas = 10
+	costHasCoins      sdk.Gas = 10
+	costSetCoins      sdk.Gas = 100
+	costSubtractCoins sdk.Gas = 10
+	costAddCoins      sdk.Gas = 10
+)
+
 // Keeper manages transfers between accounts
 type Keeper struct {
 	am sdk.AccountMapper
@@ -108,7 +116,7 @@ func (keeper ViewKeeper) HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coi
 //______________________________________________________________________________________________
 
 func getCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address) sdk.Coins {
-	ctx.GasMeter().ConsumeGas(10, "getCoins")
+	ctx.GasMeter().ConsumeGas(costGetCoins, "getCoins")
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdk.Coins{}
@@ -117,7 +125,7 @@ func getCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address) sdk.Coins
 }
 
 func setCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) sdk.Error {
-	ctx.GasMeter().ConsumeGas(100, "setCoins")
+	ctx.GasMeter().ConsumeGas(costSetCoins, "setCoins")
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		acc = am.NewAccountWithAddress(ctx, addr)
@@ -129,13 +137,13 @@ func setCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.C
 
 // HasCoins returns whether or not an account has at least amt coins.
 func hasCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) bool {
-	ctx.GasMeter().ConsumeGas(10, "hasCoins")
+	ctx.GasMeter().ConsumeGas(costHasCoins, "hasCoins")
 	return getCoins(ctx, am, addr).IsGTE(amt)
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
 func subtractCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
-	ctx.GasMeter().ConsumeGas(10, "subtractCoins")
+	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
 	oldCoins := getCoins(ctx, am, addr)
 	newCoins := oldCoins.Minus(amt)
 	if !newCoins.IsNotNegative() {
@@ -148,7 +156,7 @@ func subtractCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt 
 
 // AddCoins adds amt to the coins at the addr.
 func addCoins(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
-	ctx.GasMeter().ConsumeGas(10, "addCoins")
+	ctx.GasMeter().ConsumeGas(costAddCoins, "addCoins")
 	oldCoins := getCoins(ctx, am, addr)
 	newCoins := oldCoins.Plus(amt)
 	if !newCoins.IsNotNegative() {

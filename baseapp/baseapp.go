@@ -23,6 +23,17 @@ import (
 // and to avoid affecting the Merkle root.
 var dbHeaderKey = []byte("header")
 
+type RunTxMode uint8
+
+const (
+	// Check a transaction
+	RunTxModeCheck RunTxMode = iota
+	// Simulate a transaction
+	RunTxModeSimulate RunTxMode = iota
+	// Deliver a transaction
+	RunTxModeDeliver RunTxMode = iota
+)
+
 // The ABCI application
 type BaseApp struct {
 	// initialized on creation
@@ -309,13 +320,17 @@ func (app *BaseApp) FilterPeerByPubKey(info string) abci.ResponseQuery {
 // Implements ABCI.
 // Delegates to CommitMultiStore if it implements Queryable
 func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-	path := req.Path
+	path := strings.Split(req.Path, "/")
+	// first element is empty string
+	if len(path) > 0 && path[0] == "" {
+		path = path[1:]
+	}
+	fmt.Sprintf("Path: %v\n", path)
 	// "/app" prefix for special application queries
-	if strings.HasPrefix(path, "/app") {
-		query := path[4:]
+	if len(path) >= 2 && path[0] == "app" {
 		var result sdk.Result
-		switch query {
-		case "/simulate":
+		switch path[1] {
+		case "simulate":
 			txBytes := req.Data
 			tx, err := app.txDecoder(txBytes)
 			if err != nil {
@@ -333,27 +348,23 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		}
 	}
 	// "/store" prefix for store queries
-	if strings.HasPrefix(path, "/store") {
+	if len(path) >= 1 && path[0] == "store" {
 		queryable, ok := app.cms.(sdk.Queryable)
 		if !ok {
 			msg := "multistore doesn't support queries"
 			return sdk.ErrUnknownRequest(msg).QueryResult()
 		}
-		req.Path = req.Path[6:] // slice off "/store"
+		req.Path = "/" + strings.Join(path[1:], "/")
 		return queryable.Query(req)
 	}
 	// "/p2p" prefix for p2p queries
-	if strings.HasPrefix(path, "/p2p") {
-		path = path[4:]
-		if strings.HasPrefix(path, "/filter") {
-			path = path[7:]
-			if strings.HasPrefix(path, "/addr") {
-				path = path[6:]
-				return app.FilterPeerByAddrPort(path)
+	if len(path) >= 4 && path[0] == "p2p" {
+		if path[1] == "filter" {
+			if path[2] == "addr" {
+				return app.FilterPeerByAddrPort(path[3])
 			}
-			if strings.HasPrefix(path, "/pubkey") {
-				path = path[8:]
-				return app.FilterPeerByPubKey(path)
+			if path[2] == "pubkey" {
+				return app.FilterPeerByPubKey(path[3])
 			}
 		}
 	}
@@ -385,7 +396,7 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(true, false, txBytes, tx)
+		result = app.runTx(RunTxModeCheck, txBytes, tx)
 	}
 
 	return abci.ResponseCheckTx{
@@ -410,7 +421,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(false, false, txBytes, tx)
+		result = app.runTx(RunTxModeDeliver, txBytes, tx)
 	}
 
 	// After-handler hooks.
@@ -434,22 +445,22 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 
 // nolint - Mostly for testing
 func (app *BaseApp) Check(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(true, false, nil, tx)
+	return app.runTx(RunTxModeCheck, nil, tx)
 }
 
 // nolint - full tx execution
 func (app *BaseApp) Simulate(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(true, true, nil, tx)
+	return app.runTx(RunTxModeSimulate, nil, tx)
 }
 
 // nolint
 func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(false, false, nil, tx)
+	return app.runTx(RunTxModeDeliver, nil, tx)
 }
 
 // txBytes may be nil in some cases, eg. in tests.
 // Also, in the future we may support "internal" transactions.
-func (app *BaseApp) runTx(isCheckTx bool, simulateDeliver bool, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
+func (app *BaseApp) runTx(mode RunTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
 	// Handle any panics.
 	defer func() {
 		if r := recover(); r != nil {
@@ -479,17 +490,14 @@ func (app *BaseApp) runTx(isCheckTx bool, simulateDeliver bool, txBytes []byte, 
 
 	// Get the context
 	var ctx sdk.Context
-	if isCheckTx {
+	if mode == RunTxModeCheck || mode == RunTxModeSimulate {
 		ctx = app.checkState.ctx.WithTxBytes(txBytes)
 	} else {
 		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
 	}
 
-	// Create a new zeroed gas meter
-	ctx = ctx.WithGasMeter(sdk.NewGasMeter(app.txGasLimit))
-
 	// Simulate a DeliverTx for gas calculation
-	if isCheckTx && simulateDeliver {
+	if mode == RunTxModeSimulate {
 		ctx = ctx.WithIsCheckTx(false)
 	}
 
@@ -513,7 +521,7 @@ func (app *BaseApp) runTx(isCheckTx bool, simulateDeliver bool, txBytes []byte, 
 
 	// Get the correct cache
 	var msCache sdk.CacheMultiStore
-	if isCheckTx {
+	if mode == RunTxModeCheck || mode == RunTxModeSimulate {
 		// CacheWrap app.checkState.ms in case it fails.
 		msCache = app.checkState.CacheMultiStore()
 		ctx = ctx.WithMultiStore(msCache)
@@ -529,7 +537,7 @@ func (app *BaseApp) runTx(isCheckTx bool, simulateDeliver bool, txBytes []byte, 
 	result.GasUsed = ctx.GasMeter().GasConsumed()
 
 	// If not a simulated run and result was successful, write to app.checkState.ms or app.deliverState.ms
-	if !simulateDeliver && result.IsOK() {
+	if mode != RunTxModeSimulate && result.IsOK() {
 		msCache.Write()
 	}
 

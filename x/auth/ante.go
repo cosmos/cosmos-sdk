@@ -92,6 +92,9 @@ func NewAnteHandler(am sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHan
 		// cache the signer accounts in the context
 		ctx = WithSigners(ctx, signerAccs)
 
+		// set the gas meter
+		ctx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+
 		// TODO: tx tags (?)
 
 		return ctx, sdk.Result{}, false // continue...

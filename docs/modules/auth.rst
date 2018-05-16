@@ -12,7 +12,7 @@ Defines a standard account structure (``BaseAccount``) and how transaction signe
       Sequence int64         `json:"sequence"`
     }
 
-You can extend your ``BaseAccount`` by embedding it in your``AppAccount``:
+You can extend your ``BaseAccount`` by embedding it in your ``AppAccount``:
 
 ::
 
@@ -22,102 +22,74 @@ You can extend your ``BaseAccount`` by embedding it in your``AppAccount``:
     }
 
 Methods
+^^^^^^^
 
-::
+``NewBaseAccountWithAddress(addr sdk.Address)``
 
-    NewBaseAccountWithAddress(addr sdk.Address)
+  Returns a ``BaseAccount`` with Address ``addr``.
 
-Returns a ``BaseAccount`` with Address ``addr``.
+``baseAccount.GetAddress()``
 
-::
+  Returns the ``sdk.Address`` of the baseAccount.
 
-    baseAccount.GetAddress()
+``baseAccount.SetAddress(addr sdk.Address)``
 
-Returns the ``sdk.Address`` of the baseAccount.
+  Sets the an Address for baseAccount. Returns ``error`` if fails.
 
-::
+``baseAccount.GetPubKey()``
 
-    baseAccount.SetAddress(addr sdk.Address)
+  Returns a ``BaseAccount`` with Address ``addr``.
 
-Sets the an Address for baseAccount. Returns ``error`` if fails.
-::
+``baseAccount.SetPubKey(pubKey crypto.PubKey)``
 
-    baseAccount.GetPubKey()
+  Returns the ``sdk.Address`` of the baseAccount. Returns ``error`` if fails.
 
-Returns a ``BaseAccount`` with Address ``addr``.
+``baseAccount.GetCoins()``
 
-::
+  Sets the an Address for baseAccount.
 
-    baseAccount.SetPubKey(pubKey crypto.PubKey)
+``baseAccount.setCoins(coins sdk.Coins)``
 
-Returns the ``sdk.Address`` of the baseAccount. Returns ``error`` if fails.
+  Sets coins in the baseAccount. Returns ``error`` if fails.
 
-::
+``baseAccount.GetSequence()``
 
-    baseAccount.GetCoins()
+  Gets the corresponding sequence of baseAccount.
 
-Sets the an Address for baseAccount.
+``baseAccount.SetSequence(seq int64)``
 
-::
+  Sets a sequence for baseAccount. Returns ``error`` if fails.
 
-    baseAccount.setCoins(coins sdk.Coins)
+``RegisterBaseAccount(cdc *wire.Codec)``
 
-Sets coins in the baseAccount. Returns ``error`` if fails.
-
-::
-
-    baseAccount.GetSequence()
-
-Gets the corresponding sequence of baseAccount.
-
-::
-
-    baseAccount.SetSequence(seq int64)
-
-Sets a sequence for baseAccount. Returns ``error`` if fails.
-
-::
-
-    RegisterBaseAccount(cdc *wire.Codec)
-
-Registers BaseAcount in the codec. Useful for testing.
+  Registers BaseAcount in the codec. Useful for testing.
 
 AnteHandler
 -----------
 
-::
+``NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler)``
 
-    NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler)
+  Returns an ``AnteHandler`` that checks and increments sequence numbers, checks signatures and deducts fees from the first signer.
 
-Returns an ``AnteHandler`` that checks and increments sequence numbers, checks signatures and deducts fees from the first signer.
+``processSig(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, sig sdk.StdSignature, signBytes []byte)``
 
-::
+  Returns ``sdk.Account`` and ``sdk.Result``. ``processSig`` verifies the signature and increments the sequence. If the account doesn't have a pubkey, set it.
 
-    processSig(ctx sdk.Context, am sdk.AccountMapper, addr sdk.Address, sig sdk.StdSignature, signBytes []byte)
+``deductFees(acc sdk.Account, fee sdk.StdFee)``
 
-Returns ``sdk.Account`` and ``sdk.Result``. ``processSig`` verifies the signature and increments the sequence. If the account doesn't have a pubkey, set it.
-
-::
-
-    deductFees(acc sdk.Account, fee sdk.StdFee)
-
-Returns ``sdk.Account`` and ``sdk.Result``. Deducts the fee from the account.
+  Returns ``sdk.Account`` and ``sdk.Result``. Deducts the fee from the account.
 
 
 Context
 -------
 
-::
+``WithSigners(ctx types.Context, accounts []types.Account)``
 
-    WithSigners(ctx types.Context, accounts []types.Account)
+  Adds the signers in a list of ``Account`` s to the ``Context`` and returns it.
 
-Adds the signers in a list of ``Account``s to the ``Context`` and returns it.
+``GetSigners(ctx types.Context)``
 
-::
-
-    GetSigners(ctx types.Context)
-
-Returns ``sdk.Account`` and ``sdk.Result``. ``processSig`` verifies the signature and increments the sequence. If the account doesn't have a pubkey, set it.
+  Returns ``sdk.Account`` and ``sdk.Result``. ``processSig`` verifies the signature and increments the sequence. If the account doesn't have a pubkey, set it.
 
 Mapper
 ------
@@ -132,46 +104,31 @@ Mapper
       cdc *wire.Codec // The wire codec for binary encoding/decoding of accounts.
     }
 
-::
+``NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto sdk.Account)``
 
-    NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto sdk.Account)
-
-Returns a new ``sdk.AccountMapper``.
+  Returns a new ``sdk.AccountMapper``.
 
 
-::
+``am.NewAccountWithAddress(ctx sdk.Context, addr sdk.Address)``
 
-    am.NewAccountWithAddress(ctx sdk.Context, addr sdk.Address)
+  Returns a new ``sdk.Account`` with a given ``Address``.
 
-Returns a new ``sdk.Account`` with a given ``Address``.
+``am.GetAccount(ctx sdk.Context, addr sdk.Address)``
 
-::
+  Gets a the ``Account`` struct of a given ``Address``.
 
-    am.GetAccount(ctx sdk.Context, addr sdk.Address)
+``am.SetAccount(ctx sdk.Context, acc sdk.Account)``
 
-Gets a the ``Account`` struct of a given ``Address``.
+  Encodes and saves an ``Account`` in the context's ``KVStore``.
 
-::
+``am.clonePrototype()``
 
-    am.SetAccount(ctx sdk.Context, acc sdk.Account)
+  Creates and returns a ``Account`` struct (or pointer to struct) from ``am.proto``.
 
-Encodes and saves an ``Account`` in the context's ``KVStore``.
+``am.encodeAccount(acc sdk.Account)``
 
+  Returns the encoded bytes of an ``Account``.
 
-::
+``am.decodeAccount(bz []byte)``
 
-    am.clonePrototype()
-
-Creates and returns a ``Account`` struct (or pointer to struct) from ``am.proto``.
-
-::
-
-    am.encodeAccount(acc sdk.Account)
-
-Returns the encoded bytes of an ``Account``.
-
-::
-
-    am.decodeAccount(bz []byte)
-
-Returns a decoded ``Account`` from the enconded account's bytes.
+  Returns a decoded ``Account`` from the enconded account's bytes.

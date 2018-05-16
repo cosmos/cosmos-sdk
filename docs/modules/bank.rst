@@ -3,7 +3,6 @@ Bank
 
 Defines how coins (i.e cryptocurrencies) are transferred.
 
-
 ::
 
     type MsgSend struct {
@@ -37,40 +36,28 @@ MsgIssue
     }
 
 
-::
+``NewMsgSend(in []Input, out []Output)``
 
-    NewMsgSend(in []Input, out []Output)
+  Returns a new ``MsgSend``.
 
-Returns a new ``MsgSend``.
+``NewMsgIssue(banker sdk.Address, out []Output)``
+  Returns a new ``MsgIssue``.
 
-::
+``msg.SetAddress(addr sdk.Address)``
 
-    NewMsgIssue(banker sdk.Address, out []Output)
+  Sets the an Address for baseAccount. Returns ``error`` if fails.
 
-Returns a new ``MsgIssue``.
+``msg.ValidateBasic()``
 
-::
+  Validates the correctness of a ``MsgIssue`` attributes. Returns an ``sdk.Error`` if fails.
 
-    msg.SetAddress(addr sdk.Address)
+``msg.GetSignBytes()``
 
-Sets the an Address for baseAccount. Returns ``error`` if fails.
-::
+  Returns the signatures' ``bytes`` of the ``MsgIssue``.
 
-    msg.ValidateBasic()
+``msg.GetSigners()``
 
-Validates the correctness of a ``MsgIssue`` attributes. Returns an ``sdk.Error`` if fails.
-
-::
-
-    mag.GetSignBytes()
-
-Returns the signatures' ``bytes`` of the ``MsgIssue``.
-
-::
-
-    msg.GetSigners()
-
-Returns the addresses of the signers of the ``MsgIssue``.
+  Returns the addresses of the signers of the ``MsgIssue``.
 
 Keeper
 ------
@@ -93,49 +80,34 @@ There are 3 types of bank keepers:
 
 Methods
 
-::
+``NewKeeper(am sdk.AccountMapper)``
 
-    NewKeeper(am sdk.AccountMapper)
+  Returns a new ``Keeper``.
 
-Returns a new ``Keeper``.
+``keeper.GetCoins(ctx sdk.Context, addr sdk.Address)``
 
-::
+  Returns the ``sdk.Address`` of the keeper.
 
-    keeper.GetCoins(ctx sdk.Context, addr sdk.Address)
+``keeper.SetCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins)``
 
-Returns the ``sdk.Address`` of the keeper.
+  Sets the an Address for keeper. Returns ``error`` if fails.
 
-::
+``keeper.HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins)``
 
-    keeper.SetCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins)
+  Returns a ``BaseAccount`` with Address ``addr``.
 
-Sets the an Address for keeper. Returns ``error`` if fails.
-::
+``keeper.SubtractCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins)``
 
-    keeper.HasCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins)
+  Returns the ``sdk.Address`` of the keeper. Returns ``error`` if fails.
 
-Returns a ``BaseAccount`` with Address ``addr``.
+``keeper.AddCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins)``
 
-::
+  Sets the an Address for keeper.
 
-    keeper.SubtractCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins)
+``keeper.SendCoins(ctx sdk.Context, fromAddr sdk.Address, toAddr sdk.Address, amt sdk.Coins)``
 
-Returns the ``sdk.Address`` of the keeper. Returns ``error`` if fails.
+  Sets coins in the keeper. Returns ``error`` if fails.
 
-::
+``keeper.InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output)``
 
-    keeper.AddCoins(ctx sdk.Context, addr sdk.Address, amt sdk.Coins)
-
-Sets the an Address for keeper.
-
-::
-
-    keeper.SendCoins(ctx sdk.Context, fromAddr sdk.Address, toAddr sdk.Address, amt sdk.Coins)
-
-Sets coins in the keeper. Returns ``error`` if fails.
-
-::
-
-    keeper.InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output)
-
-Gets the corresponding sequence of keeper.
+  Gets the corresponding sequence of keeper.

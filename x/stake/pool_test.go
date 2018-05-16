@@ -465,7 +465,7 @@ func TestMultiCandidateIntegrationInvariants(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
 
 	for i := 0; i < 10; i++ {
-		poolOrig, candidatesOrig := randomSetup(r, 100)
+		poolOrig, candidatesOrig := randomSetup(r, 40)
 
 		assertInvariants(t, "no operation",
 			poolOrig, candidatesOrig,

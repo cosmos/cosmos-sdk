@@ -39,7 +39,7 @@ var (
 	manyCoins = sdk.Coins{{"foocoin", 1}, {"barcoin", 1}}
 	fee       = sdk.StdFee{
 		sdk.Coins{{"foocoin", 0}},
-		0,
+		100000,
 	}
 
 	sendMsg1 = bank.MsgSend{

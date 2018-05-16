@@ -8,6 +8,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	verifyCost = 100
+)
+
 // NewAnteHandler returns an AnteHandler that checks
 // and increments sequence numbers, checks signatures,
 // and deducts fees from the first signer.
@@ -88,6 +92,9 @@ func NewAnteHandler(am sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHan
 		// cache the signer accounts in the context
 		ctx = WithSigners(ctx, signerAccs)
 
+		// set the gas meter
+		ctx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+
 		// TODO: tx tags (?)
 
 		return ctx, sdk.Result{}, false // continue...
@@ -134,6 +141,7 @@ func processSig(
 	}
 
 	// Check sig.
+	ctx.GasMeter().ConsumeGas(verifyCost, "ante verify")
 	if !pubKey.VerifyBytes(signBytes, sig.Signature) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}

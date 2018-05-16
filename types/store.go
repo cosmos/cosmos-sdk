@@ -49,6 +49,7 @@ type MultiStore interface { //nolint
 	// Convenience for fetching substores.
 	GetStore(StoreKey) Store
 	GetKVStore(StoreKey) KVStore
+	GetKVStoreWithGas(GasMeter, StoreKey) KVStore
 }
 
 // From MultiStore.CacheMultiStore()....

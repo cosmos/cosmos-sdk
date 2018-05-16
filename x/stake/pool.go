@@ -7,12 +7,12 @@ import (
 // Pool - dynamic parameters of the current state
 type Pool struct {
 	TotalSupply       int64   `json:"total_supply"`        // total supply of all tokens
-	BondedShares      sdk.Rat `json:"bonded_shares"`       // sum of all shares distributed for the Bonded Pool
-	UnbondingShares   sdk.Rat `json:"unbonding_shares"`    // shares moving from Bonded to Unbonded Pool
 	UnbondedShares    sdk.Rat `json:"unbonded_shares"`     // sum of all shares distributed for the Unbonded Pool
-	BondedTokens      int64   `json:"bonded_pool"`         // reserve of bonded tokens
-	UnbondingTokens   int64   `json:"unbonding_pool"`      // tokens moving from bonded to unbonded pool
+	UnbondingShares   sdk.Rat `json:"unbonding_shares"`    // shares moving from Bonded to Unbonded Pool
+	BondedShares      sdk.Rat `json:"bonded_shares"`       // sum of all shares distributed for the Bonded Pool
 	UnbondedTokens    int64   `json:"unbonded_pool"`       // reserve of unbonded tokens held with validators
+	UnbondingTokens   int64   `json:"unbonding_pool"`      // tokens moving from bonded to unbonded pool
+	BondedTokens      int64   `json:"bonded_pool"`         // reserve of bonded tokens
 	InflationLastTime int64   `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
 	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
 
@@ -25,8 +25,10 @@ type Pool struct {
 func (p Pool) equal(p2 Pool) bool {
 	return p.TotalSupply == p2.TotalSupply &&
 		p.BondedShares.Equal(p2.BondedShares) &&
+		p.UnbondingShares.Equal(p2.UnbondingShares) &&
 		p.UnbondedShares.Equal(p2.UnbondedShares) &&
 		p.BondedTokens == p2.BondedTokens &&
+		p.UnbondingTokens == p2.UnbondingTokens &&
 		p.UnbondedTokens == p2.UnbondedTokens &&
 		p.InflationLastTime == p2.InflationLastTime &&
 		p.Inflation.Equal(p2.Inflation) &&

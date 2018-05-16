@@ -27,6 +27,51 @@ The Input and Output structs are define an ``Address`` and a set of ``Coins``.
 	   Coins   sdk.Coins   `json:"coins"`
   }
 
+MsgIssue
+
+::
+
+    type MsgIssue struct {
+    	Banker  sdk.Address `json:"banker"`
+    	Outputs []Output    `json:"outputs"`
+    }
+
+
+::
+
+    NewMsgSend(in []Input, out []Output)
+
+Returns a new ``MsgSend``.
+
+::
+
+    NewMsgIssue(banker sdk.Address, out []Output)
+
+Returns a new ``MsgIssue``.
+
+::
+
+    msg.SetAddress(addr sdk.Address)
+
+Sets the an Address for baseAccount. Returns ``error`` if fails.
+::
+
+    msg.ValidateBasic()
+
+Validates the correctness of a ``MsgIssue`` attributes. Returns an ``sdk.Error`` if fails.
+
+::
+
+    mag.GetSignBytes()
+
+Returns the signatures' ``bytes`` of the ``MsgIssue``.
+
+::
+
+    msg.GetSigners()
+
+Returns the addresses of the signers of the ``MsgIssue``.
+
 Keeper
 ------
 
@@ -40,7 +85,7 @@ There are 3 types of bank keepers:
 
 ::
 
-    type Keeper struct {
+    type Keeper/ViewKeeper/SendKeeper struct {
       am sdk.AccountMapper
     }
 
@@ -94,13 +139,3 @@ Sets coins in the keeper. Returns ``error`` if fails.
     keeper.InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output)
 
 Gets the corresponding sequence of keeper.
-
-
-type SendKeeper struct {
-	am sdk.AccountMapper
-}
-
-
-type ViewKeeper struct {
-	am sdk.AccountMapper
-}

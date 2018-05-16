@@ -249,7 +249,6 @@ func randomSetup(r *rand.Rand, numCandidates int) (Pool, Candidates) {
 	for i := 0; i < numCandidates; i++ {
 		candidate := randomCandidate(r, i)
 		tokens := int64(r.Int31n(1000000))
-		fmt.Println("HDRSERRGHGFDTRTWE: ", tokens)
 		pool.TotalSupply += tokens
 		pool, candidate, _ = pool.candidateAddTokens(candidate, tokens)
 

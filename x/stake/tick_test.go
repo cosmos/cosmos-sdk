@@ -214,10 +214,7 @@ func TestHourlyRateOfChange(t *testing.T) {
 	// ~11.4 years to go from 7%, up to 20%, back down to 7%
 	for hr := 0; hr < 100000; hr++ {
 		pool := keeper.GetPool(ctx)
-		expInflation := keeper.nextInflation(ctx).Round(1000000000)
-		// expInflationFloat, _ := expInflation.Float64()
-		// fmt.Println("")
-		// fmt.Printf("Yearly Inflation Rate + hour adjusted: %v\n", expInflationFloat*100)
+		expInflation := keeper.nextInflation(ctx)
 		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
 		// fmt.Printf("Provisons For each hour %v\n", expProvisions)
 
@@ -355,7 +352,7 @@ func TestLargeUnbond(t *testing.T) {
 	// process the provisions a year
 	for hr := 0; hr < 8766; hr++ {
 		pool := keeper.GetPool(ctx)
-		expInflation := keeper.nextInflation(ctx).Round(1000000000)
+		expInflation := keeper.nextInflation(ctx)
 		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
 
 		// expInflationFloat, _ := expInflation.Float64()
@@ -483,7 +480,7 @@ func TestLargeBond(t *testing.T) {
 	// process the provisions a year
 	for hr := 0; hr < 8766; hr++ {
 		pool := keeper.GetPool(ctx)
-		expInflation := keeper.nextInflation(ctx).Round(1000000000)
+		expInflation := keeper.nextInflation(ctx)
 		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
 
 		// expInflationFloat, _ := expInflation.Float64()
@@ -561,27 +558,17 @@ func TestLargeBond(t *testing.T) {
 	assert.True(t, pool.unbondedShareExRate().Mul(unbondedShares).Equal(sdk.NewRat(calculatedUnbondedTokens)), "%v", pool.unbondedShareExRate())
 }
 
-//Test that provisions and inflation hold correct when we get a randomly updating sample of candidates
+//Tests that inflation works as expected when we get a randomly updating sample of candidates
 func TestAddingRandomCandidates(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 	params := defaultParams()
 	keeper.setParams(ctx, params)
-	// pool := keeper.GetPool(ctx)
-
-	// cumulative count of provisions, so we can check at the end of the year that the bonded pool has increased by this amount
-	var cumulativeExpProvs int64
-	r := rand.New(rand.NewSource(33))
+	r := rand.New(rand.NewSource(502))
 	numCandidates := 20 //max 40 right now since var addrs only goes up to addrs[39]
 
 	//start off by randomly creating 20 candidates
 	pool, candidates := randomSetup(r, numCandidates)
 	require.Equal(t, numCandidates, len(candidates))
-
-	// mintedTokens := int64((i + 1) * 10000000)
-	// pool.TotalSupply += mintedTokens
-	// pool, c, _ = pool.candidateAddTokens(c, mintedTokens)
-	// keeper.setCandidate(ctx, c)
-	// candidates[i] = c
 
 	for i := 0; i < len(candidates); i++ {
 		keeper.setCandidate(ctx, candidates[i])
@@ -589,69 +576,117 @@ func TestAddingRandomCandidates(t *testing.T) {
 
 	keeper.setPool(ctx, pool)
 
-	fmt.Println("POOL: \n", pool)
-	fmt.Println("candidates: \n", candidates)
+	//Every two weeks (336 hours) we do a random operation on the set of 20 candidates.
+	twoWeekCounter := 336
 
-	//randomly bond, unbond, remove shares or add tokens to the candidates
-	//also inject a few more new candidates
-	for j := 0; j < len(candidates); j++ {
-		poolMod, candidateMod, tokens, msg := randomOperation(r)(r, pool, candidates[j])
-		candidatesMod := make([]Candidate, len(candidates))
-		copy(candidatesMod[:], candidates[:])
-		require.Equal(t, numCandidates, len(candidates), "i %v", j)
-		require.Equal(t, numCandidates, len(candidatesMod), "i %v", j)
-		candidatesMod[j] = candidateMod
+	//We count up to the 20 total candidates, and do a random operation on each candidate
+	candidateCounter := 0
 
-		assertInvariants(t, msg,
-			pool, candidates,
-			poolMod, candidatesMod, tokens)
-		// do all the checks on provisions, inflation, and pool
-		// assert.Equal(t, totalSupply, pool.TotalSupply)
-		// assert.Equal(t, bondedTokens, pool.BondedPool)
-		// assert.Equal(t, unbondedTokens, pool.UnbondedPool)
+	// One year of provisions, with 20 random operations from the 20 candidates setup above from randomSetup()
+	for hr := 0; hr < 8766; hr++ {
+		pool := keeper.GetPool(ctx)
 
-		// initial bonded ratio ~ 54%
-		// assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(bondedTokens, totalSupply)), "%v", pool.bondedRatio())
+		// This if statement will randomly bond, unbond, remove shares or add tokens to the candidates every two weeks, for 40 weeks
+		// every other hour it will just add normal provisions
+		if twoWeekCounter == hr && candidateCounter < 20 {
 
-		// test the value of candidate shares. should start off 1:1
-		// assert.True(t, pool.bondedShareExRate().Equal(sdk.OneRat()), "%v", pool.bondedShareExRate())
+			//Get values before randomOperation
+			expInflationBefore := keeper.nextInflation(ctx)
+			initialBondedPool := pool.BondedPool
+			initialUnbondedPool := pool.UnbondedPool
 
-		// pool := keeper.GetPool(ctx)
-		expInflation := keeper.nextInflation(ctx).Round(1000000000)
-		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
+			//Random operation, and recording how candidates are modified
+			poolMod, candidateMod, tokens, msg := randomOperation(r)(r, pool, candidates[candidateCounter])
+			candidatesMod := make([]Candidate, len(candidates))
+			copy(candidatesMod[:], candidates[:])
+			require.Equal(t, numCandidates, len(candidates), "i %v", candidateCounter)
+			require.Equal(t, numCandidates, len(candidatesMod), "i %v", candidateCounter)
+			candidatesMod[candidateCounter] = candidateMod
 
-		fmt.Println("MSGGGGG: ", msg)
-		fmt.Println("pool: ", pool)
-		fmt.Println("expInflation: ", expInflation)
-		fmt.Println("expProvisions: ", expProvisions)
+			assertInvariants(t, msg,
+				pool, candidates,
+				poolMod, candidatesMod, tokens)
 
-		startBondedPool := pool.BondedPool
-		startTotalSupply := pool.TotalSupply
-		cumulativeExpProvs = cumulativeExpProvs + expProvisions
+			//set pool and candidates after the random operation
+			pool = poolMod
+			keeper.setPool(ctx, pool)
+			candidates = candidatesMod
 
-		fmt.Println("start bonded pool: ", startBondedPool)
-		fmt.Println("startTotalSupple: ", startTotalSupply)
-		fmt.Println("cumulativeExpProvs: ", cumulativeExpProvs)
+			//Get values after randomOperation
+			expInflationAfter := keeper.nextInflation(ctx)
+			afterBondedPool := pool.BondedPool
+			afterUnbondedPool := pool.UnbondedPool
 
-		pool = keeper.processProvisions(ctx)
-		keeper.setPool(ctx, pool)
+			//Process provisions after random operation
+			pool = keeper.processProvisions(ctx)
+			keeper.setPool(ctx, pool)
 
-		pool = poolMod
-		candidates = candidatesMod
-		fmt.Println(" POOL MODED: ", pool)
+			//Comparing expected inflation before and after the randomOperation()
+			inflationIncreased := expInflationAfter.GT(expInflationBefore)
+			inflationEqual := expInflationAfter.Equal(expInflationBefore)
 
-		// if i%5 == 0 {
-		// 	numCandidates++
-		// 	newCand := randomCandidate(r, numCandidates)
-		// 	candidates = append(candidates, newCand)
+			if afterBondedPool > initialBondedPool {
+				//Inflation will NOT increase, because we are adding bonded tokens to the pool
+				//CASE: Happens when we randomly add tokens to a bonded candidate
+				//CASE: Happens when we randomly bond a candidate from unbonded
 
-		// 	//do unique cehcks for making sure you add a new user and it works.
-		// 	//but basically just check provisions, infaltion and ppool!
+				//for the off case where we are bonded so low (i.e. 15%) , that we add bonded tokens and inflation is unchanged at 20%
+				//for the off case where we are bonded so high (i.e. 90%), that we add bonded tokens and inflation is unchanged at 7%
+				if expInflationBefore.Equal(sdk.NewRat(20, 100)) {
+					assert.True(t, !inflationIncreased || inflationEqual, msg)
+				} else if expInflationBefore.Equal(sdk.NewRat(7, 100)) {
+					assert.True(t, !inflationIncreased || inflationEqual, msg)
+				} else {
+					assert.True(t, !inflationIncreased, msg)
+				}
 
-		// }
+			} else if afterBondedPool < initialBondedPool {
+				//Inflation WILL increase, because we are removing bonded tokens from the pool
+				//CASE: Happens when we randomly remove bonded Shares
+				//CASE: Happens when we randomly unbond a candidate that was bonded
 
-		//do final cehcks on provisions, inflation and pool
+				//For the off case where we are bonded so low (i.e. 15%),  and more tokens are unbonded, inflation is unchanged at 20%
+				//For the off case where we are bonded so high (i.e. 90%) and we unbond a small amount (maybe 2%), inflation  is unchanged at 7%
+				if expInflationBefore.Equal(sdk.NewRat(20, 100)) {
+					assert.True(t, inflationIncreased || inflationEqual, msg)
+				} else if expInflationBefore.Equal(sdk.NewRat(7, 100)) {
+					assert.True(t, inflationIncreased || inflationEqual, msg)
+				} else {
+					assert.True(t, inflationIncreased, msg)
+				}
 
+			} else if afterUnbondedPool > initialUnbondedPool {
+				//Inflation will STAY THE SAME.
+				//Inflation is dependant only on bondedRatio. Sure, a validator can add unbonded tokens, but it doesn't change bondedRatio (totalBondedTokens / globalTotalTokens)
+				//CASE: Happens when we randomly add unbonded tokens
+				assert.True(t, inflationEqual, msg)
+
+			} else if afterUnbondedPool < initialUnbondedPool {
+				//Inflation will STAY THE SAME.
+				//Inflation is dependant only on bondedRatio. Sure, a validator can add unbonded tokens, but it doesn't change bondedRatio (totalBondedTokens / globalTotalTokens)
+				//CASE: Happens when we randomly remove shares from an unbonded candidate
+				assert.True(t, inflationEqual, msg)
+
+			} else {
+				panic(fmt.Sprintf("pool.UnbondedPool and pool.BondedPool are unchanged. All operations should change either the unbondedPool or bondedPool amounts."))
+			}
+
+			twoWeekCounter += 336
+			candidateCounter++
+
+		} else {
+
+			//If we are not doing a random operation, just check that normal provisions are working for each hour
+			expInflation := keeper.nextInflation(ctx)
+			expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
+			startBondedPool := pool.BondedPool
+			startTotalSupply := pool.TotalSupply
+			pool = keeper.processProvisions(ctx)
+			keeper.setPool(ctx, pool)
+
+			//check provisions were added to pool
+			require.Equal(t, startBondedPool+expProvisions, pool.BondedPool, "hr %v", hr)
+			require.Equal(t, startTotalSupply+expProvisions, pool.TotalSupply)
+		}
 	}
-
 }

@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	hrsPerYr  = 8766 // as defined by a julian year of 365.25 days
-	precision = 1000000000
+	hrsPerYr  = 8766         // as defined by a julian year of 365.25 days
+	precision = 100000000000 // increased to this precision for accuracy with tests on tick_test.go
 )
 
 var hrsPerYrRat = sdk.NewRat(hrsPerYr) // as defined by a julian year of 365.25 days

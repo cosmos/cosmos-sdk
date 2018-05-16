@@ -125,71 +125,71 @@ func GetValidatorSortingUnmixed(t *testing.T) {
 	}
 
 	// first make sure everything made it in to the gotValidator group
-	gotValidators := keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, n, len(gotValidators))
-	assert.Equal(t, sdk.NewRat(400), gotValidators[0].PShares.Bonded(), "%v", gotValidators)
-	assert.Equal(t, sdk.NewRat(200), gotValidators[1].PShares.Bonded(), "%v", gotValidators)
-	assert.Equal(t, sdk.NewRat(100), gotValidators[2].PShares.Bonded(), "%v", gotValidators)
-	assert.Equal(t, sdk.NewRat(1), gotValidators[3].PShares.Bonded(), "%v", gotValidators)
-	assert.Equal(t, sdk.NewRat(0), gotValidators[4].PShares.Bonded(), "%v", gotValidators)
-	assert.Equal(t, validators[3].Address, gotValidators[0].Address, "%v", gotValidators)
-	assert.Equal(t, validators[4].Address, gotValidators[1].Address, "%v", gotValidators)
-	assert.Equal(t, validators[1].Address, gotValidators[2].Address, "%v", gotValidators)
-	assert.Equal(t, validators[2].Address, gotValidators[3].Address, "%v", gotValidators)
-	assert.Equal(t, validators[0].Address, gotValidators[4].Address, "%v", gotValidators)
+	resValidators := keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, n, len(resValidators))
+	assert.Equal(t, sdk.NewRat(400), resValidators[0].PShares.Bonded(), "%v", resValidators)
+	assert.Equal(t, sdk.NewRat(200), resValidators[1].PShares.Bonded(), "%v", resValidators)
+	assert.Equal(t, sdk.NewRat(100), resValidators[2].PShares.Bonded(), "%v", resValidators)
+	assert.Equal(t, sdk.NewRat(1), resValidators[3].PShares.Bonded(), "%v", resValidators)
+	assert.Equal(t, sdk.NewRat(0), resValidators[4].PShares.Bonded(), "%v", resValidators)
+	assert.Equal(t, validators[3].Address, resValidators[0].Address, "%v", resValidators)
+	assert.Equal(t, validators[4].Address, resValidators[1].Address, "%v", resValidators)
+	assert.Equal(t, validators[1].Address, resValidators[2].Address, "%v", resValidators)
+	assert.Equal(t, validators[2].Address, resValidators[3].Address, "%v", resValidators)
+	assert.Equal(t, validators[0].Address, resValidators[4].Address, "%v", resValidators)
 
 	// test a basic increase in voting power
 	validators[3].PShares = NewBondedShares(sdk.NewRat(500))
 	keeper.setValidator(ctx, validators[3])
-	gotValidators = keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, len(gotValidators), n)
-	assert.True(ValEq(t, validators[3], gotValidators[0]))
+	resValidators = keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, len(resValidators), n)
+	assert.True(ValEq(t, validators[3], resValidators[0]))
 
 	// test a decrease in voting power
 	validators[3].PShares = NewBondedShares(sdk.NewRat(300))
 	keeper.setValidator(ctx, validators[3])
-	gotValidators = keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, len(gotValidators), n)
-	assert.True(ValEq(t, validators[3], gotValidators[0]))
-	assert.True(ValEq(t, validators[4], gotValidators[1]))
+	resValidators = keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, len(resValidators), n)
+	assert.True(ValEq(t, validators[3], resValidators[0]))
+	assert.True(ValEq(t, validators[4], resValidators[1]))
 
 	// test equal voting power, different age
 	validators[3].PShares = NewBondedShares(sdk.NewRat(200))
 	ctx = ctx.WithBlockHeight(10)
 	keeper.setValidator(ctx, validators[3])
-	gotValidators = keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, len(gotValidators), n)
-	assert.True(ValEq(t, validators[3], gotValidators[0]))
-	assert.True(ValEq(t, validators[4], gotValidators[1]))
-	assert.Equal(t, int64(0), gotValidators[0].BondHeight, "%v", gotValidators)
-	assert.Equal(t, int64(0), gotValidators[1].BondHeight, "%v", gotValidators)
+	resValidators = keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, len(resValidators), n)
+	assert.True(ValEq(t, validators[3], resValidators[0]))
+	assert.True(ValEq(t, validators[4], resValidators[1]))
+	assert.Equal(t, int64(0), resValidators[0].BondHeight, "%v", resValidators)
+	assert.Equal(t, int64(0), resValidators[1].BondHeight, "%v", resValidators)
 
 	// no change in voting power - no change in sort
 	ctx = ctx.WithBlockHeight(20)
 	keeper.setValidator(ctx, validators[4])
-	gotValidators = keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, len(gotValidators), n)
-	assert.True(ValEq(t, validators[3], gotValidators[0]))
-	assert.True(ValEq(t, validators[4], gotValidators[1]))
+	resValidators = keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, len(resValidators), n)
+	assert.True(ValEq(t, validators[3], resValidators[0]))
+	assert.True(ValEq(t, validators[4], resValidators[1]))
 
 	// change in voting power of both validators, both still in v-set, no age change
 	validators[3].PShares = NewBondedShares(sdk.NewRat(300))
 	validators[4].PShares = NewBondedShares(sdk.NewRat(300))
 	keeper.setValidator(ctx, validators[3])
-	gotValidators = keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, len(gotValidators), n)
+	resValidators = keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, len(resValidators), n)
 	ctx = ctx.WithBlockHeight(30)
 	keeper.setValidator(ctx, validators[4])
-	gotValidators = keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, len(gotValidators), n, "%v", gotValidators)
-	assert.True(ValEq(t, validators[3], gotValidators[0]))
-	assert.True(ValEq(t, validators[4], gotValidators[1]))
+	resValidators = keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, len(resValidators), n, "%v", resValidators)
+	assert.True(ValEq(t, validators[3], resValidators[0]))
+	assert.True(ValEq(t, validators[4], resValidators[1]))
 }
 
 func GetValidatorSortingMixed(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
-	// now 2 max gotValidators
+	// now 2 max resValidators
 	params := keeper.GetParams(ctx)
 	params.MaxValidators = 2
 	keeper.setParams(ctx, params)
@@ -228,25 +228,25 @@ func GetValidatorSortingMixed(t *testing.T) {
 	assert.Equal(t, sdk.Bonded, val4.Status)
 
 	// first make sure everything made it in to the gotValidator group
-	gotValidators := keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, n, len(gotValidators))
-	assert.Equal(t, sdk.NewRat(400), gotValidators[0].PShares.Bonded(), "%v", gotValidators)
-	assert.Equal(t, sdk.NewRat(200), gotValidators[1].PShares.Bonded(), "%v", gotValidators)
-	assert.Equal(t, sdk.NewRat(100), gotValidators[2].PShares.Bonded(), "%v", gotValidators)
-	assert.Equal(t, sdk.NewRat(1), gotValidators[3].PShares.Bonded(), "%v", gotValidators)
-	assert.Equal(t, sdk.NewRat(0), gotValidators[4].PShares.Bonded(), "%v", gotValidators)
-	assert.Equal(t, validators[3].Address, gotValidators[0].Address, "%v", gotValidators)
-	assert.Equal(t, validators[4].Address, gotValidators[1].Address, "%v", gotValidators)
-	assert.Equal(t, validators[1].Address, gotValidators[2].Address, "%v", gotValidators)
-	assert.Equal(t, validators[2].Address, gotValidators[3].Address, "%v", gotValidators)
-	assert.Equal(t, validators[0].Address, gotValidators[4].Address, "%v", gotValidators)
+	resValidators := keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, n, len(resValidators))
+	assert.Equal(t, sdk.NewRat(400), resValidators[0].PShares.Bonded(), "%v", resValidators)
+	assert.Equal(t, sdk.NewRat(200), resValidators[1].PShares.Bonded(), "%v", resValidators)
+	assert.Equal(t, sdk.NewRat(100), resValidators[2].PShares.Bonded(), "%v", resValidators)
+	assert.Equal(t, sdk.NewRat(1), resValidators[3].PShares.Bonded(), "%v", resValidators)
+	assert.Equal(t, sdk.NewRat(0), resValidators[4].PShares.Bonded(), "%v", resValidators)
+	assert.Equal(t, validators[3].Address, resValidators[0].Address, "%v", resValidators)
+	assert.Equal(t, validators[4].Address, resValidators[1].Address, "%v", resValidators)
+	assert.Equal(t, validators[1].Address, resValidators[2].Address, "%v", resValidators)
+	assert.Equal(t, validators[2].Address, resValidators[3].Address, "%v", resValidators)
+	assert.Equal(t, validators[0].Address, resValidators[4].Address, "%v", resValidators)
 }
 
 // TODO seperate out into multiple tests
 func TestGetValidatorsEdgeCases(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
-	// now 2 max gotValidators
+	// now 2 max resValidators
 	params := keeper.GetParams(ctx)
 	nMax := uint16(2)
 	params.MaxValidators = nMax
@@ -269,12 +269,12 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	validators[0].PShares = NewUnbondedShares(sdk.NewRat(500))
 	keeper.setValidator(ctx, validators[0])
-	gotValidators := keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, nMax, uint16(len(gotValidators)))
-	assert.True(ValEq(t, validators[0], gotValidators[0]))
+	resValidators := keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, nMax, uint16(len(resValidators)))
+	assert.True(ValEq(t, validators[0], resValidators[0]))
 
 	// validator 3 was set before validator 4
-	assert.True(ValEq(t, validators[2], gotValidators[1]))
+	assert.True(ValEq(t, validators[2], resValidators[1]))
 
 	// A validator which leaves the gotValidator set due to a decrease in voting power,
 	// then increases to the original voting power, does not get its spot back in the
@@ -282,27 +282,27 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	// ref https://github.com/cosmos/cosmos-sdk/issues/582#issuecomment-380757108
 	validators[3].PShares = NewBondedShares(sdk.NewRat(401))
 	keeper.setValidator(ctx, validators[3])
-	gotValidators = keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, nMax, uint16(len(gotValidators)))
-	assert.True(ValEq(t, validators[0], gotValidators[0]))
-	assert.True(ValEq(t, validators[3], gotValidators[1]))
+	resValidators = keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, nMax, uint16(len(resValidators)))
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[3], resValidators[1]))
 	ctx = ctx.WithBlockHeight(40)
 
 	// validator 3 kicked out temporarily
 	validators[3].PShares = NewBondedShares(sdk.NewRat(200))
 	keeper.setValidator(ctx, validators[3])
-	gotValidators = keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, nMax, uint16(len(gotValidators)))
-	assert.True(ValEq(t, validators[0], gotValidators[0]))
-	assert.True(ValEq(t, validators[2], gotValidators[1]))
+	resValidators = keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, nMax, uint16(len(resValidators)))
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[2], resValidators[1]))
 
 	// validator 4 does not get spot back
 	validators[3].PShares = NewBondedShares(sdk.NewRat(400))
 	keeper.setValidator(ctx, validators[3])
-	gotValidators = keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, nMax, uint16(len(gotValidators)))
-	assert.True(ValEq(t, validators[0], gotValidators[0]))
-	assert.True(ValEq(t, validators[2], gotValidators[1]))
+	resValidators = keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, nMax, uint16(len(resValidators)))
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[2], resValidators[1]))
 	validator, exists := keeper.GetValidator(ctx, validators[3].Address)
 	require.Equal(t, exists, true)
 	require.Equal(t, validator.BondHeight, int64(40))
@@ -311,7 +311,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 func TestValidatorBondHeight(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
-	// now 2 max gotValidators
+	// now 2 max resValidators
 	params := keeper.GetParams(ctx)
 	params.MaxValidators = 2
 	keeper.setParams(ctx, params)
@@ -334,32 +334,29 @@ func TestValidatorBondHeight(t *testing.T) {
 	// the one with the first transaction should become bonded
 	keeper.setValidator(ctx, validators[1])
 	keeper.setValidator(ctx, validators[2])
-	gotValidators := keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, uint16(len(gotValidators)), params.MaxValidators)
-	assert.True(ValEq(t, validators[0], gotValidators[0]))
-	assert.True(ValEq(t, validators[1], gotValidators[1]))
+	resValidators := keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, uint16(len(resValidators)), params.MaxValidators)
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[1], resValidators[1]))
 	validators[1].PShares = NewUnbondedShares(sdk.NewRat(150))
 	validators[2].PShares = NewUnbondedShares(sdk.NewRat(150))
 	keeper.setValidator(ctx, validators[2])
 	keeper.setValidator(ctx, validators[1])
-	gotValidators = keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, params.MaxValidators, uint16(len(gotValidators)))
-	assert.True(ValEq(t, validators[0], gotValidators[0]))
-	assert.True(ValEq(t, validators[2], gotValidators[1]))
+	resValidators = keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, params.MaxValidators, uint16(len(resValidators)))
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[2], resValidators[1]))
 }
 
-// XXX rename test
-func TestGetValidatorsEdgeCases2(t *testing.T) {
+func TestFullValidatorSetPowerChange(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
-
-	// now 2 max gotValidators
 	params := keeper.GetParams(ctx)
-	params.MaxValidators = 2
+	max := 2
+	params.MaxValidators = uint16(2)
 	keeper.setParams(ctx, params)
 
 	// initialize some validators into the state
 	amts := []int64{0, 100, 400, 400, 200}
-	n := len(amts)
 	var validators [5]Validator
 	for i, amt := range amts {
 		validators[i] = NewValidator(addrs[i], pks[i], Description{})
@@ -367,24 +364,28 @@ func TestGetValidatorsEdgeCases2(t *testing.T) {
 		validators[i].DelegatorShares = sdk.NewRat(amt)
 		keeper.setValidator(ctx, validators[i])
 	}
+	for i := range amts {
+		var found bool
+		validators[i], found = keeper.GetValidator(ctx, validators[i].Address)
+		require.True(t, found)
+	}
+	assert.Equal(t, sdk.Unbonded, validators[0].Status)
+	assert.Equal(t, sdk.Unbonded, validators[1].Status)
+	assert.Equal(t, sdk.Bonded, validators[2].Status)
+	assert.Equal(t, sdk.Bonded, validators[3].Status)
+	assert.Equal(t, sdk.Unbonded, validators[4].Status)
+	resValidators := keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, max, len(resValidators))
+	assert.True(ValEq(t, validators[2], resValidators[0])) // in the order of txs
+	assert.True(ValEq(t, validators[3], resValidators[1]))
 
 	// test a swap in voting power
 	validators[0].PShares = NewBondedShares(sdk.NewRat(600))
 	keeper.setValidator(ctx, validators[0])
-	gotValidators := keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, len(gotValidators), n)
-	assert.True(ValEq(t, validators[0], gotValidators[0]))
-	assert.True(ValEq(t, validators[3], gotValidators[1]))
-
-	// test the max gotValidators term
-	params = keeper.GetParams(ctx)
-	n = 2
-	params.MaxValidators = uint16(n)
-	keeper.setParams(ctx, params)
-	gotValidators = keeper.GetValidatorsBondedByPower(ctx)
-	require.Equal(t, len(gotValidators), n)
-	assert.True(ValEq(t, validators[0], gotValidators[0]))
-	assert.True(ValEq(t, validators[3], gotValidators[1]))
+	resValidators = keeper.GetValidatorsBondedByPower(ctx)
+	require.Equal(t, max, len(resValidators))
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[2], resValidators[1]))
 }
 
 // clear the tracked changes to the gotValidator set

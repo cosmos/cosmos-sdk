@@ -204,7 +204,7 @@ func (k Keeper) GetValidatorsBondedByPower(ctx sdk.Context) []Validator {
 	validators := make([]Validator, maxValidators)
 	iterator := store.ReverseSubspaceIterator(ValidatorsByPowerKey) // largest to smallest
 	i := 0
-	for ; ; i++ {
+	for {
 		if !iterator.Valid() || i > int(maxValidators-1) {
 			iterator.Close()
 			break
@@ -212,7 +212,10 @@ func (k Keeper) GetValidatorsBondedByPower(ctx sdk.Context) []Validator {
 		bz := iterator.Value()
 		var validator Validator
 		k.cdc.MustUnmarshalBinary(bz, &validator)
-		validators[i] = validator
+		if validator.Status == sdk.Bonded {
+			validators[i] = validator
+			i++
+		}
 		iterator.Next()
 	}
 	return validators[:i] // trim
@@ -232,14 +235,12 @@ func (k Keeper) GetValidatorsBondedByPower(ctx sdk.Context) []Validator {
 // validator without needing to iterate over the subspace as we do in
 // GetValidators.
 func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedValidatorAddr sdk.Address) (updatedIsBonded bool) {
-	fmt.Println("wackydebugoutput updateValidators 0")
 	updatedIsBonded = false
 
 	// clear the current validators store, add to the ToKickOut temp store
 	toKickOut := make(map[string][]byte) // map[key]value
 	iterator := store.SubspaceIterator(ValidatorsBondedKey)
 	for ; iterator.Valid(); iterator.Next() {
-		fmt.Println("wackydebugoutput updateValidators 1")
 
 		bz := iterator.Value()
 		var validator Validator
@@ -251,7 +252,6 @@ func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedVali
 		toKickOut[string(addr)] = iterator.Value()
 		store.Delete(iterator.Key())
 	}
-	fmt.Println("wackydebugoutput updateValidators 2")
 	iterator.Close()
 
 	// add the actual validator power sorted store
@@ -260,14 +260,11 @@ func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedVali
 	iterator = store.ReverseSubspaceIterator(ValidatorsByPowerKey) // largest to smallest
 	i := 0
 	for ; ; i++ {
-		fmt.Println("wackydebugoutput updateValidators 3")
 		fmt.Printf("debug i: %v\n", i)
 		if !iterator.Valid() || i > int(maxValidators-1) {
-			fmt.Println("wackydebugoutput updateValidators 4")
 			iterator.Close()
 			break
 		}
-		fmt.Println("wackydebugoutput updateValidators 5")
 		bz := iterator.Value()
 		var validator Validator
 		k.cdc.MustUnmarshalBinary(bz, &validator)
@@ -280,34 +277,45 @@ func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedVali
 
 		// MOST IMPORTANTLY, add to the accumulated changes if this is the modified validator
 		if bytes.Equal(updatedValidatorAddr, validator.Address) {
-			fmt.Println("wackydebugoutput updateValidators 6")
 			bz = k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
 			store.Set(GetTendermintUpdatesKey(updatedValidatorAddr), bz)
 			updatedIsBonded = true // the updatedValidatorAddr is for a bonded validator
 		}
-		fmt.Println("wackydebugoutput updateValidators 7")
 
 		iterator.Next()
 	}
-	fmt.Println("wackydebugoutput updateValidators 8")
 
-	// add any kicked out validators to the accumulated changes for tendermint
-	for key, value := range toKickOut {
-		fmt.Println("wackydebugoutput updateValidators 9")
+	for _, value := range toKickOut {
 		if value == nil {
-			fmt.Println("wackydebugoutput updateValidators 10")
 			continue
 		}
-		fmt.Println("wackydebugoutput updateValidators 11")
-		addr := AddrFromKey([]byte(key))
-
 		var validator Validator
 		k.cdc.MustUnmarshalBinary(value, &validator)
-		bz := k.cdc.MustMarshalBinary(validator.abciValidatorZero(k.cdc))
-		store.Set(GetTendermintUpdatesKey(addr), bz)
+		fmt.Printf("debug validator: %v\n", validator)
+		k.unbondValidator(ctx, store, validator)
 	}
-	fmt.Println("wackydebugoutput updateValidators 12")
 	return
+}
+
+// perform all the store operations for when a validator is moved from bonded to unbonded
+func (k Keeper) unbondValidator(ctx sdk.Context, store sdk.KVStore, validator Validator) {
+	pool := k.GetPool(ctx)
+
+	// set the status
+	validator.Status = sdk.Unbonded
+	validator, pool = validator.UpdateSharesLocation(pool)
+	k.setPool(ctx, pool)
+
+	// save the now unbonded validator record
+	bz := k.cdc.MustMarshalBinary(validator)
+	store.Set(GetValidatorKey(validator.Address), bz)
+
+	// add to accumulated changes for tendermint
+	bz = k.cdc.MustMarshalBinary(validator.abciValidatorZero(k.cdc))
+	store.Set(GetTendermintUpdatesKey(validator.Address), bz)
+
+	// also remove from the Bonded Validators Store
+	store.Delete(GetValidatorsBondedKey(validator.PubKey))
 }
 
 //_________________________________________________________________________

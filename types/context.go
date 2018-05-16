@@ -30,7 +30,7 @@ type Context struct {
 }
 
 // create a new context
-func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byte, logger log.Logger, gasLimit Gas) Context {
+func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byte, logger log.Logger) Context {
 	c := Context{
 		Context: context.Background(),
 		pst:     newThePast(),

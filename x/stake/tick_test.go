@@ -72,11 +72,12 @@ func TestProcessProvisions(t *testing.T) {
 			Status:          sdk.Unbonded,
 			PubKey:          pks[i],
 			Address:         addrs[i],
-			BondedShares:    sdk.NewRat(0),
+			PShares:         NewUnbondedShares(sdk.NewRat(0)),
 			DelegatorShares: sdk.NewRat(0),
 		}
 		if i < 5 {
 			v.Status = sdk.Bonded
+			v.PShares.Kind = ShareBonded
 		}
 		mintedTokens := int64((i + 1) * 10000000)
 		pool.TotalSupply += mintedTokens

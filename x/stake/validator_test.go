@@ -24,7 +24,7 @@ func TestAddTokensValidatorBonded(t *testing.T) {
 	assert.Equal(t, sdk.OneRat(), pool.unbondedShareExRate())
 
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), delShares))
-	assert.True(sdk.RatEq(t, sdk.NewRat(10), val.BondedShares))
+	assert.True(sdk.RatEq(t, sdk.NewRat(10), val.PShares.Bonded()))
 }
 
 func TestAddTokensValidatorUnbonding(t *testing.T) {
@@ -41,7 +41,7 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 	assert.Equal(t, sdk.OneRat(), pool.unbondedShareExRate())
 
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), delShares))
-	assert.True(sdk.RatEq(t, sdk.NewRat(10), val.UnbondingShares))
+	assert.True(sdk.RatEq(t, sdk.NewRat(10), val.PShares.Unbonding()))
 }
 
 func TestAddTokensValidatorUnbonded(t *testing.T) {
@@ -58,7 +58,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 	assert.Equal(t, sdk.OneRat(), pool.unbondedShareExRate())
 
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), delShares))
-	assert.True(sdk.RatEq(t, sdk.NewRat(10), val.UnbondedShares))
+	assert.True(sdk.RatEq(t, sdk.NewRat(10), val.PShares.Unbonded()))
 }
 
 // TODO refactor to make simpler like the AddToken tests above
@@ -70,11 +70,11 @@ func TestRemoveShares(t *testing.T) {
 		Status:          sdk.Bonded,
 		Address:         addrs[0],
 		PubKey:          pks[0],
-		BondedShares:    sdk.NewRat(9),
+		PShares:         NewBondedShares(sdk.NewRat(9)),
 		DelegatorShares: sdk.NewRat(9),
 	}
-	poolA.BondedTokens = valA.BondedShares.Evaluate()
-	poolA.BondedShares = valA.BondedShares
+	poolA.BondedTokens = valA.PShares.Bonded().Evaluate()
+	poolA.BondedShares = valA.PShares.Bonded()
 	assert.Equal(t, valA.DelegatorShareExRate(poolA), sdk.OneRat())
 	assert.Equal(t, poolA.bondedShareExRate(), sdk.OneRat())
 	assert.Equal(t, poolA.unbondedShareExRate(), sdk.OneRat())
@@ -83,7 +83,7 @@ func TestRemoveShares(t *testing.T) {
 	// coins were created
 	assert.Equal(t, coinsB, int64(10))
 	// pool shares were removed
-	assert.Equal(t, valB.BondedShares, valA.BondedShares.Sub(sdk.NewRat(10).Mul(valA.DelegatorShareExRate(poolA))))
+	assert.Equal(t, valB.PShares.Bonded(), valA.PShares.Bonded().Sub(sdk.NewRat(10).Mul(valA.DelegatorShareExRate(poolA))))
 	// conservation of tokens
 	assert.Equal(t, poolB.UnbondedTokens+poolB.BondedTokens+coinsB, poolA.UnbondedTokens+poolA.BondedTokens)
 
@@ -94,7 +94,7 @@ func TestRemoveShares(t *testing.T) {
 		Status:          sdk.Bonded,
 		Address:         addrs[0],
 		PubKey:          pks[0],
-		BondedShares:    assets,
+		PShares:         NewBondedShares(assets),
 		DelegatorShares: liabilities,
 	}
 	pool := Pool{
@@ -108,7 +108,7 @@ func TestRemoveShares(t *testing.T) {
 	}
 	shares := sdk.NewRat(29)
 	msg := fmt.Sprintf("validator %s (status: %d, assets: %v, liabilities: %v, DelegatorShareExRate: %v)",
-		val.Address, val.Status, val.BondedShares, val.DelegatorShares, val.DelegatorShareExRate(pool))
+		val.Address, val.Status, val.PShares.Bonded(), val.DelegatorShares, val.DelegatorShareExRate(pool))
 	msg = fmt.Sprintf("Removed %v shares from %s", shares, msg)
 	_, newPool, tokens := val.removeDelShares(pool, shares)
 	require.Equal(t,
@@ -124,28 +124,28 @@ func TestUpdateSharesLocation(t *testing.T) {
 	val := NewValidator(addrs[0], pks[0], Description{})
 	val.Status = sdk.Unbonded
 	val, pool, _ = val.addTokensFromDel(pool, 100)
-	assert.Equal(t, int64(0), val.BondedShares.Evaluate())
-	assert.Equal(t, int64(0), val.UnbondingShares.Evaluate())
-	assert.Equal(t, int64(100), val.UnbondedShares.Evaluate())
+	assert.Equal(t, int64(0), val.PShares.Bonded().Evaluate())
+	assert.Equal(t, int64(0), val.PShares.Unbonding().Evaluate())
+	assert.Equal(t, int64(100), val.PShares.Unbonded().Evaluate())
 	assert.Equal(t, int64(0), pool.BondedTokens)
 	assert.Equal(t, int64(0), pool.UnbondingTokens)
 	assert.Equal(t, int64(100), pool.UnbondedTokens)
 
 	val.Status = sdk.Unbonding
 	val, pool = val.UpdateSharesLocation(pool)
-	//require.Fail(t, "", "%v", val.BondedShares.IsZero())
-	assert.Equal(t, int64(0), val.BondedShares.Evaluate())
-	assert.Equal(t, int64(100), val.UnbondingShares.Evaluate())
-	assert.Equal(t, int64(0), val.UnbondedShares.Evaluate())
+	//require.Fail(t, "", "%v", val.PShares.Bonded().IsZero())
+	assert.Equal(t, int64(0), val.PShares.Bonded().Evaluate())
+	assert.Equal(t, int64(100), val.PShares.Unbonding().Evaluate())
+	assert.Equal(t, int64(0), val.PShares.Unbonded().Evaluate())
 	assert.Equal(t, int64(0), pool.BondedTokens)
 	assert.Equal(t, int64(100), pool.UnbondingTokens)
 	assert.Equal(t, int64(0), pool.UnbondedTokens)
 
 	val.Status = sdk.Bonded
 	val, pool = val.UpdateSharesLocation(pool)
-	assert.Equal(t, int64(100), val.BondedShares.Evaluate())
-	assert.Equal(t, int64(0), val.UnbondingShares.Evaluate())
-	assert.Equal(t, int64(0), val.UnbondedShares.Evaluate())
+	assert.Equal(t, int64(100), val.PShares.Bonded().Evaluate())
+	assert.Equal(t, int64(0), val.PShares.Unbonding().Evaluate())
+	assert.Equal(t, int64(0), val.PShares.Unbonded().Evaluate())
 	assert.Equal(t, int64(100), pool.BondedTokens)
 	assert.Equal(t, int64(0), pool.UnbondingTokens)
 	assert.Equal(t, int64(0), pool.UnbondedTokens)
@@ -168,7 +168,7 @@ func randomValidator(r *rand.Rand) Validator {
 		Status:          status,
 		Address:         addrs[0],
 		PubKey:          pks[0],
-		BondedShares:    assets,
+		PShares:         NewBondedShares(assets),
 		DelegatorShares: liabilities,
 	}
 }
@@ -189,11 +189,11 @@ func randomSetup(r *rand.Rand, numValidators int) (Pool, Validators) {
 	for i := 0; i < numValidators; i++ {
 		validator := randomValidator(r)
 		if validator.Status == sdk.Bonded {
-			pool.BondedShares = pool.BondedShares.Add(validator.BondedShares)
-			pool.BondedTokens += validator.BondedShares.Evaluate()
+			pool.BondedShares = pool.BondedShares.Add(validator.PShares.Bonded())
+			pool.BondedTokens += validator.PShares.Bonded().Evaluate()
 		} else if validator.Status == sdk.Unbonded {
-			pool.UnbondedShares = pool.UnbondedShares.Add(validator.BondedShares)
-			pool.UnbondedTokens += validator.BondedShares.Evaluate()
+			pool.UnbondedShares = pool.UnbondedShares.Add(validator.PShares.Bonded())
+			pool.UnbondedTokens += validator.PShares.Bonded().Evaluate()
 		}
 		validators[i] = validator
 	}
@@ -210,11 +210,11 @@ func OpBondOrUnbond(r *rand.Rand, p Pool, val Validator) (Pool, Validator, int64
 	var msg string
 	if val.Status == sdk.Bonded {
 		msg = fmt.Sprintf("sdk.Unbonded previously bonded validator %s (assets: %v, liabilities: %v, DelegatorShareExRate: %v)",
-			val.Address, val.BondedShares, val.DelegatorShares, val.DelegatorShareExRate(p))
+			val.Address, val.PShares.Bonded(), val.DelegatorShares, val.DelegatorShareExRate(p))
 		val.Status = sdk.Unbonded
 	} else if val.Status == sdk.Unbonded {
 		msg = fmt.Sprintf("sdk.Bonded previously unbonded validator %s (assets: %v, liabilities: %v, DelegatorShareExRate: %v)",
-			val.Address, val.BondedShares, val.DelegatorShares, val.DelegatorShareExRate(p))
+			val.Address, val.PShares.Bonded(), val.DelegatorShares, val.DelegatorShareExRate(p))
 		val.Status = sdk.Bonded
 	}
 	val, p = val.UpdateSharesLocation(p)
@@ -225,7 +225,7 @@ func OpBondOrUnbond(r *rand.Rand, p Pool, val Validator) (Pool, Validator, int64
 func OpAddTokens(r *rand.Rand, p Pool, val Validator) (Pool, Validator, int64, string) {
 	tokens := int64(r.Int31n(1000))
 	msg := fmt.Sprintf("validator %s (status: %d, assets: %v, liabilities: %v, DelegatorShareExRate: %v)",
-		val.Address, val.Status, val.BondedShares, val.DelegatorShares, val.DelegatorShareExRate(p))
+		val.Address, val.Status, val.PShares.Bonded(), val.DelegatorShares, val.DelegatorShareExRate(p))
 	val, p, _ = val.addTokensFromDel(p, tokens)
 	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)
 	return p, val, -1 * tokens, msg // tokens are removed so for accounting must be negative
@@ -242,7 +242,7 @@ func OpRemoveShares(r *rand.Rand, p Pool, val Validator) (Pool, Validator, int64
 	}
 
 	msg := fmt.Sprintf("Removed %v shares from validator %s (status: %d, assets: %v, liabilities: %v, DelegatorShareExRate: %v)",
-		shares, val.Address, val.Status, val.BondedShares, val.DelegatorShares, val.DelegatorShareExRate(p))
+		shares, val.Address, val.Status, val.PShares.Bonded(), val.DelegatorShares, val.DelegatorShareExRate(p))
 
 	val, p, tokens := val.removeDelShares(p, shares)
 	return p, val, tokens, msg
@@ -263,13 +263,13 @@ func randomOperation(r *rand.Rand) Operation {
 
 // ensure invariants that should always be true are true
 func assertInvariants(t *testing.T, msg string,
-	pOrig Pool, cOrig Validators, pMod Pool, cMods Validators, tokens int64) {
+	pOrig Pool, cOrig Validators, pMod Pool, vMods Validators, tokens int64) {
 
 	// total tokens conserved
 	require.Equal(t,
 		pOrig.UnbondedTokens+pOrig.BondedTokens,
 		pMod.UnbondedTokens+pMod.BondedTokens+tokens,
-		"Tokens not conserved - msg: %v\n, pOrig.BondedShares: %v, pOrig.UnbondedShares: %v, pMod.BondedShares: %v, pMod.UnbondedShares: %v, pOrig.UnbondedTokens: %v, pOrig.BondedTokens: %v, pMod.UnbondedTokens: %v, pMod.BondedTokens: %v, tokens: %v\n",
+		"Tokens not conserved - msg: %v\n, pOrig.PShares.Bonded(): %v, pOrig.PShares.Unbonded(): %v, pMod.PShares.Bonded(): %v, pMod.PShares.Unbonded(): %v, pOrig.UnbondedTokens: %v, pOrig.BondedTokens: %v, pMod.UnbondedTokens: %v, pMod.BondedTokens: %v, tokens: %v\n",
 		msg,
 		pOrig.BondedShares, pOrig.UnbondedShares,
 		pMod.BondedShares, pMod.UnbondedShares,
@@ -296,34 +296,34 @@ func assertInvariants(t *testing.T, msg string,
 		"Applying operation \"%s\" resulted in negative unbondedShareExRate: %d",
 		msg, pMod.unbondedShareExRate().Evaluate())
 
-	for _, cMod := range cMods {
+	for _, vMod := range vMods {
 
 		// nonnegative ex rate
-		require.False(t, cMod.DelegatorShareExRate(pMod).LT(sdk.ZeroRat()),
+		require.False(t, vMod.DelegatorShareExRate(pMod).LT(sdk.ZeroRat()),
 			"Applying operation \"%s\" resulted in negative validator.DelegatorShareExRate(): %v (validator.Address: %s)",
 			msg,
-			cMod.DelegatorShareExRate(pMod),
-			cMod.Address,
+			vMod.DelegatorShareExRate(pMod),
+			vMod.Address,
 		)
 
 		// nonnegative assets
-		require.False(t, cMod.BondedShares.LT(sdk.ZeroRat()),
-			"Applying operation \"%s\" resulted in negative validator.BondedShares: %v (validator.DelegatorShares: %v, validator.DelegatorShareExRate: %v, validator.Address: %s)",
+		require.False(t, vMod.PShares.Bonded().LT(sdk.ZeroRat()),
+			"Applying operation \"%s\" resulted in negative validator.PShares.Bonded(): %v (validator.DelegatorShares: %v, validator.DelegatorShareExRate: %v, validator.Address: %s)",
 			msg,
-			cMod.BondedShares,
-			cMod.DelegatorShares,
-			cMod.DelegatorShareExRate(pMod),
-			cMod.Address,
+			vMod.PShares.Bonded(),
+			vMod.DelegatorShares,
+			vMod.DelegatorShareExRate(pMod),
+			vMod.Address,
 		)
 
 		// nonnegative liabilities
-		require.False(t, cMod.DelegatorShares.LT(sdk.ZeroRat()),
-			"Applying operation \"%s\" resulted in negative validator.DelegatorShares: %v (validator.BondedShares: %v, validator.DelegatorShareExRate: %v, validator.Address: %s)",
+		require.False(t, vMod.DelegatorShares.LT(sdk.ZeroRat()),
+			"Applying operation \"%s\" resulted in negative validator.DelegatorShares: %v (validator.PShares.Bonded(): %v, validator.DelegatorShareExRate: %v, validator.Address: %s)",
 			msg,
-			cMod.DelegatorShares,
-			cMod.BondedShares,
-			cMod.DelegatorShareExRate(pMod),
-			cMod.Address,
+			vMod.DelegatorShares,
+			vMod.PShares.Bonded(),
+			vMod.DelegatorShareExRate(pMod),
+			vMod.Address,
 		)
 
 	}
@@ -337,7 +337,7 @@ func TestPossibleOverflow(t *testing.T) {
 		Status:          sdk.Bonded,
 		Address:         addrs[0],
 		PubKey:          pks[0],
-		BondedShares:    assets,
+		PShares:         NewBondedShares(assets),
 		DelegatorShares: liabilities,
 	}
 	pool := Pool{
@@ -351,7 +351,7 @@ func TestPossibleOverflow(t *testing.T) {
 	}
 	tokens := int64(71)
 	msg := fmt.Sprintf("validator %s (status: %d, assets: %v, liabilities: %v, DelegatorShareExRate: %v)",
-		val.Address, val.Status, val.BondedShares, val.DelegatorShares, val.DelegatorShareExRate(pool))
+		val.Address, val.Status, val.PShares.Bonded(), val.DelegatorShares, val.DelegatorShareExRate(pool))
 	newValidator, _, _ := val.addTokensFromDel(pool, tokens)
 
 	msg = fmt.Sprintf("Added %d tokens to %s", tokens, msg)

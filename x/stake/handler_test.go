@@ -47,7 +47,7 @@ func TestDuplicatesMsgDeclareCandidacy(t *testing.T) {
 	assert.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, validatorAddr, validator.Address)
 	assert.Equal(t, pk, validator.PubKey)
-	assert.Equal(t, sdk.NewRat(10), validator.BondedShares)
+	assert.Equal(t, sdk.NewRat(10), validator.PShares.Bonded())
 	assert.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
 	assert.Equal(t, Description{}, validator.Description)
 
@@ -74,7 +74,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, bondAmount, validator.DelegatorShares.Evaluate())
-	assert.Equal(t, bondAmount, validator.BondedShares.Evaluate(), "validator: %v", validator)
+	assert.Equal(t, bondAmount, validator.PShares.Bonded().Evaluate(), "validator: %v", validator)
 
 	_, found = keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
 	require.False(t, found)
@@ -150,7 +150,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	assert.Equal(t, initBond*2, validator.DelegatorShares.Evaluate())
-	assert.Equal(t, initBond*2, validator.BondedShares.Evaluate())
+	assert.Equal(t, initBond*2, validator.PShares.Bonded().Evaluate())
 
 	// just send the same msgUnbond multiple times
 	// TODO use decimals here

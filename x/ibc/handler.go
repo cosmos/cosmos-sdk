@@ -25,7 +25,7 @@ func NewHandler(ibcm Mapper, ck bank.Keeper) sdk.Handler {
 func handleIBCTransferMsg(ctx sdk.Context, ibcm Mapper, ck bank.Keeper, msg IBCTransferMsg) sdk.Result {
 	packet := msg.IBCPacket
 
-	_, err := ck.SubtractCoins(ctx, packet.SrcAddr, packet.Coins)
+	_, _, err := ck.SubtractCoins(ctx, packet.SrcAddr, packet.Coins)
 	if err != nil {
 		return err.Result()
 	}
@@ -47,7 +47,7 @@ func handleIBCReceiveMsg(ctx sdk.Context, ibcm Mapper, ck bank.Keeper, msg IBCRe
 		return ErrInvalidSequence(ibcm.codespace).Result()
 	}
 
-	_, err := ck.AddCoins(ctx, packet.DestAddr, packet.Coins)
+	_, _, err := ck.AddCoins(ctx, packet.DestAddr, packet.Coins)
 	if err != nil {
 		return err.Result()
 	}

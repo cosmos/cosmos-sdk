@@ -70,11 +70,16 @@
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
-  version = "0.19.1"
+  version = "0.19.3-rc0"
 
 [[override]]
   name = "github.com/tendermint/tmlibs"
-  version = "~0.8.2-rc1"
+  version = "~0.8.3-rc0"
+  
+# this got updated and broke, so locked to an old working commit ...
+[[override]]
+  name = "google.golang.org/genproto"
+  revision = "7fd901a49ba6a7f87732eb344f6e3c5b19d1b200"
 
 [prune]
   go-tests = true

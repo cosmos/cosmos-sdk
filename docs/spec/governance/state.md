@@ -10,11 +10,29 @@ procedure, either to modify a value or add/remove a parameter, a new procedure
 has to be created and the previous one rendered inactive.
 
 ```go
+
+type VoteType byte
+
+const (
+    VoteTypeYes         = 0x1
+    VoteTypeNo          = 0x2
+    VoteTypeNoWithVeto  = 0x3
+    VoteTypeAbstain     = 0x4
+)
+
+type ProposalType  byte
+
+const (
+    ProposalTypePlainText = 0x1
+    ProposalTypeSoftwareUpgrade = 0x2
+
+)
+
 type Procedure struct {
   VotingPeriod      int64               //  Length of the voting period. Initial value: 2 weeks
   MinDeposit        int64               //  Minimum deposit for a proposal to enter voting period. 
-  OptionSet         []string            //  Options available to voters. {Yes, No, NoWithVeto, Abstain}
-  ProposalTypes     []string            //  Types available to submitters. {PlainTextProposal, SoftwareUpgradeProposal}
+  VoteTypes         []VoteType          //  Vote types available to voters. 
+  ProposalTypes     []ProposalType      //  Proposal types available to submitters. 
   Threshold         rational.Rational   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
   Veto              rational.Rational   //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
   MaxDepositPeriod  int64               //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
@@ -30,7 +48,7 @@ The current active procedure is stored in a global `params` KVStore.
 
 ```go
   type Deposit struct {
-    Amount      sdk.Coins       //  sAmount of coins deposited by depositer
+    Amount      sdk.Coins       //  Amount of coins deposited by depositer
     Depositer   crypto.address  //  Address of depositer
   }
 ```
@@ -39,27 +57,27 @@ The current active procedure is stored in a global `params` KVStore.
 
 ```go
   type Votes struct {
-    YesVotes          int64
-    NoVote            int64
-    NoWithVetoVotes   int64
-    AbstainVotes      int64
+    Yes          int64
+    No           int64
+    NoWithVeto   int64
+    Abstain      int64
   }
 ```
 
 
 ### Proposals
 
-`Proposals` are item to be voted on. 
+`Proposals` are an item to be voted on. 
 
 ```go
 type Proposal struct {
   Title                 string              //  Title of the proposal
   Description           string              //  Description of the proposal
-  Type                  string              //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+  Type                  ProposalType        //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
   TotalDeposit          sdk.Coins           //  Current deposit on this proposal. Initial value is set at InitialDeposit
   Deposits              []Deposit           //  List of deposits on the proposal
   SubmitBlock           int64               //  Height of the block where TxGovSubmitProposal was included
-  Submitter             crypto.address      //  Address of the submitter
+  Submitter             crypto.Address      //  Address of the submitter
   
   VotingStartBlock      int64               //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
   InitTotalVotingPower  int64               //  Total voting power when proposal enters voting period (default 0)
@@ -83,14 +101,12 @@ type ValidatorGovInfo struct {
 *Stores are KVStores in the multistore. The key to find the store is the first parameter in the list*
 
 
-* `Proposals`: A mapping `map[int64]Proposal` of proposals indexed by their 
+* `Proposals: int64 => Proposal` maps `proposalID` to the `Proposal`
   `proposalID`
-* `Options`: A mapping `map[[]byte]string` of options indexed by 
-  `<proposalID>:<voterAddress>:<validatorAddress>` as `[]byte`. Given a 
-  `proposalID`, an `address` and a validator's `address`, returns option chosen by this `address` for this validator (`nil` if `address` has not voted under this validator)
-* `ValidatorGovInfos`: A mapping `map[[]byte]ValidatorGovInfo` of validator's 
-  governance infos indexed by `<proposalID>:<validatorAddress>`. Returns 
-  `nil` if proposal has not entered voting period or if `address` was not the 
+* `Options: <proposalID | voterAddress | validatorAddress> => VoteType`: maps to the vote of the `voterAddress` for `proposalID` re its delegation to `validatorAddress`.
+   Returns 0x0 If `voterAddress` has not voted under this validator.
+* `ValidatorGovInfos: <proposalID | validatorAddress> => ValidatorGovInfo`: maps to the gov info for the `validatorAddress` and `proposalID`.
+  Returns `nil` if proposal has not entered voting period or if `address` was not the 
   address of a validator when proposal entered voting period.
 
 For pseudocode purposes, here are the two function we will use to read or write in stores:
@@ -121,62 +137,62 @@ And the pseudocode for the `ProposalProcessingQueue`:
     
   // Recursive function. First call in BeginBlock
   func checkProposal()  
-    if (ProposalProcessingQueue.Peek() == nil)
+    proposalID = ProposalProcessingQueue.Peek()
+    if (proposalID == nil)
       return
 
-    else
-      proposalID = ProposalProcessingQueue.Peek()
-      proposal = load(Proposals, proposalID) 
+    proposal = load(Proposals, proposalID) 
 
-      if (proposal.Votes.YesVotes/proposal.InitTotalVotingPower >= 2/3)
+    if (proposal.Votes.YesVotes/proposal.InitTotalVotingPower > 2/3)
 
-        // proposal was urgent and accepted under the special condition
-        // no punishment
-        // refund deposits
+      // proposal accepted early by super-majority
+      // no punishments; refund deposits
 
-        ProposalProcessingQueue.pop()
+      ProposalProcessingQueue.pop()
 
-        newDeposits = new []Deposits
+      var newDeposits []Deposits
 
-        for each (amount, depositer) in proposal.Deposits
-          newDeposits.append[{0, depositer}]
-          depositer.AtomBalance += amount
+      // XXX: why do we need to reset deposits? cant we just clear it ?
+      for each (amount, depositer) in proposal.Deposits
+        newDeposits.append[{0, depositer}]
+        depositer.AtomBalance += amount
 
-        proposal.Deposits = newDeposits
-        store(Proposals, <proposalID>, proposal)
+      proposal.Deposits = newDeposits
+      store(Proposals, proposalID, proposal)
 
-        checkProposal()
+      checkProposal()
 
-      else if (CurrentBlock == proposal.VotingStartBlock + proposal.Procedure.VotingPeriod)
+    else if (CurrentBlock == proposal.VotingStartBlock + proposal.Procedure.VotingPeriod)
 
-        ProposalProcessingQueue.pop()
-        activeProcedure = load(params, 'ActiveProcedure')
+      ProposalProcessingQueue.pop()
+      activeProcedure = load(params, 'ActiveProcedure')
 
-        for each validator in CurrentBondedValidators
-          validatorGovInfo = load(ValidatorGovInfos, <proposalID>:<validator.address>)
-          
-          if (validatorGovInfo.InitVotingPower != nil)
-            // validator was bonded when vote started
+      for each validator in CurrentBondedValidators
+        validatorGovInfo = load(ValidatorGovInfos, <proposalID | validator.Address>)
+        
+        if (validatorGovInfo.InitVotingPower != nil)
+          // validator was bonded when vote started
 
-            validatorOption = load(Options, <proposalID>:<validator.address><validator.address>)
-            if (validatorOption == nil)
-              // validator did not vote
-              slash validator by activeProcedure.GovernancePenalty
+          validatorOption = load(Options, <proposalID | validator.Address>)
+          if (validatorOption == nil)
+            // validator did not vote
+            slash validator by activeProcedure.GovernancePenalty
 
 
-        if((proposal.Votes.YesVotes/(proposal.Votes.YesVotes + proposal.Votes.NoVotes + proposal.Votes.NoWithVetoVotes)) > 0.5 AND (proposal.Votes.NoWithVetoVotes/(proposal.Votes.YesVotes + proposal.Votes.NoVotes + proposal.Votes.NoWithVetoVotes) < 1/3))
+      totalNonAbstain = proposal.Votes.YesVotes + proposal.Votes.NoVotes + proposal.Votes.NoWithVetoVotes
+      if( proposal.Votes.YesVotes/totalNonAbstain > 0.5 AND proposal.Votes.NoWithVetoVotes/totalNonAbstain  < 1/3)
 
         //  proposal was accepted at the end of the voting period
-        //  refund deposits
+        //  refund deposits (non-voters already punished)
 
-        newDeposits = new []Deposits
+        var newDeposits []Deposits
 
         for each (amount, depositer) in proposal.Deposits
           newDeposits.append[{0, depositer}]
           depositer.AtomBalance += amount
 
         proposal.Deposits = newDeposits
-        store(Proposals, <proposalID>, proposal)
+        store(Proposals, proposalID, proposal)
 
         checkProposal()        
 ```

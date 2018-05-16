@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -210,16 +211,18 @@ func InitCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
 func processGenTxs(genTxsDir string, cdc *wire.Codec, appInit AppInit) (
 	validators []tmtypes.GenesisValidator, appGenTxs []json.RawMessage, persistentPeers string, err error) {
 
-	// XXX sort the files by contents just incase people renamed their files
 	var fos []os.FileInfo
 	fos, err = ioutil.ReadDir(genTxsDir)
 	if err != nil {
 		return
 	}
+
+	genTxs := make(map[string]GenesisTx)
+	var nodeIDs []string
 	for _, fo := range fos {
 		filename := path.Join(genTxsDir, fo.Name())
 		if !fo.IsDir() && (path.Ext(filename) != ".json") {
-			return
+			continue
 		}
 
 		// get the genTx
@@ -233,6 +236,15 @@ func processGenTxs(genTxsDir string, cdc *wire.Codec, appInit AppInit) (
 		if err != nil {
 			return
 		}
+
+		genTxs[genTx.NodeID] = genTx
+		nodeIDs = append(nodeIDs, genTx.NodeID)
+	}
+
+	sort.Strings(nodeIDs)
+
+	for _, nodeID := range nodeIDs {
+		genTx := genTxs[nodeID]
 
 		// combine some stuff
 		validators = append(validators, genTx.Validator)

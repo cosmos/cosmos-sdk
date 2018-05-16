@@ -56,7 +56,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 
 	// Create your application object.
 	var app = &DemocoinApp{
-		BaseApp:            bam.NewBaseApp(appName, cdc, logger, db, 1000000),
+		BaseApp:            bam.NewBaseApp(appName, cdc, logger, db),
 		cdc:                cdc,
 		capKeyMainStore:    sdk.NewKVStoreKey("main"),
 		capKeyAccountStore: sdk.NewKVStoreKey("acc"),

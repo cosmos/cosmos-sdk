@@ -38,3 +38,21 @@ func (g *basicGasMeter) ConsumeGas(amount Gas, descriptor string) {
 		panic(ErrorOutOfGas{descriptor})
 	}
 }
+
+type infiniteGasMeter struct {
+	consumed Gas
+}
+
+func NewInfiniteGasMeter() GasMeter {
+	return &infiniteGasMeter{
+		consumed: 0,
+	}
+}
+
+func (g *infiniteGasMeter) GasConsumed() Gas {
+	return g.consumed
+}
+
+func (g *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
+	g.consumed += amount
+}

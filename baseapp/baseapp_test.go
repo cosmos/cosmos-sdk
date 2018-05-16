@@ -29,7 +29,7 @@ func newBaseApp(name string) *BaseApp {
 	db := dbm.NewMemDB()
 	codec := wire.NewCodec()
 	wire.RegisterCrypto(codec)
-	return NewBaseApp(name, codec, logger, db, 10000)
+	return NewBaseApp(name, codec, logger, db)
 }
 
 func TestMountStores(t *testing.T) {
@@ -63,7 +63,7 @@ func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, nil, logger, db, 10000)
+	app := NewBaseApp(name, nil, logger, db)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
@@ -85,7 +85,7 @@ func TestLoadVersion(t *testing.T) {
 	commitID := sdk.CommitID{1, res.Data}
 
 	// reload
-	app = NewBaseApp(name, nil, logger, db, 10000)
+	app = NewBaseApp(name, nil, logger, db)
 	app.MountStoresIAVL(capKey)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
@@ -151,7 +151,7 @@ func TestInitChainer(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
-	app := NewBaseApp(name, nil, logger, db, 10000)
+	app := NewBaseApp(name, nil, logger, db)
 	// make cap keys and mount the stores
 	// NOTE/TODO: mounting multiple stores is broken
 	// see https://github.com/cosmos/cosmos-sdk/issues/532
@@ -188,7 +188,7 @@ func TestInitChainer(t *testing.T) {
 	assert.Equal(t, value, res.Value)
 
 	// reload app
-	app = NewBaseApp(name, nil, logger, db, 10000)
+	app = NewBaseApp(name, nil, logger, db)
 	app.MountStoresIAVL(capKey, capKey2)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
@@ -328,7 +328,7 @@ func TestSimulateTx(t *testing.T) {
 func TestTxGasLimits(t *testing.T) {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	app := NewBaseApp(t.Name(), nil, logger, db, 0)
+	app := NewBaseApp(t.Name(), nil, logger, db)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
@@ -336,7 +336,10 @@ func TestTxGasLimits(t *testing.T) {
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
 
-	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(0))
+		return
+	})
 	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		ctx.GasMeter().ConsumeGas(10, "counter")
 		return sdk.Result{}

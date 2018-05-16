@@ -43,7 +43,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byt
 	c = c.WithIsCheckTx(isCheckTx)
 	c = c.WithTxBytes(txBytes)
 	c = c.WithLogger(logger)
-	c = c.WithGasMeter(NewGasMeter(gasLimit))
+	c = c.WithGasMeter(NewInfiniteGasMeter())
 	return c
 }
 

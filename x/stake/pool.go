@@ -89,8 +89,8 @@ func (p Pool) unbondedShareExRate() sdk.Rat {
 
 func (p Pool) addTokensBonded(amount int64) (p2 Pool, issuedShares sdk.Rat) {
 	issuedShares = sdk.NewRat(amount).Quo(p.bondedShareExRate()) // tokens * (shares/tokens)
-	p.BondedTokens += amount
 	p.BondedShares = p.BondedShares.Add(issuedShares)
+	p.BondedTokens += amount
 	return p, issuedShares
 }
 

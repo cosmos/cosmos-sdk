@@ -10,9 +10,9 @@ type BondStatus byte
 
 // nolint
 const (
-	Bonded    BondStatus = 0x00
+	Unbonded  BondStatus = 0x00
 	Unbonding BondStatus = 0x01
-	Unbonded  BondStatus = 0x02
+	Bonded    BondStatus = 0x02
 	Revoked   BondStatus = 0x03
 )
 

@@ -1,6 +1,7 @@
 package stake
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -71,8 +72,22 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
+	require.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, bondAmount, validator.DelegatorShares.Evaluate())
 	assert.Equal(t, bondAmount, validator.BondedShares.Evaluate(), "validator: %v", validator)
+
+	_, found = keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
+	require.False(t, found)
+
+	bond, found := keeper.GetDelegation(ctx, validatorAddr, validatorAddr)
+	require.True(t, found)
+	assert.Equal(t, bondAmount, bond.Shares.Evaluate())
+
+	pool := keeper.GetPool(ctx)
+	exRate := validator.DelegatorShareExRate(pool)
+	require.True(t, exRate.Equal(sdk.OneRat()), "expected exRate 1 got %v", exRate)
+	assert.Equal(t, bondAmount, pool.BondedShares.Evaluate())
+	assert.Equal(t, bondAmount, pool.BondedTokens)
 
 	// just send the same msgbond multiple times
 	msgDelegate := newTestMsgDelegate(delegatorAddr, validatorAddr, bondAmount)
@@ -88,6 +103,11 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 		require.True(t, found)
 		bond, found := keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
 		require.True(t, found)
+
+		pool := keeper.GetPool(ctx)
+		exRate := validator.DelegatorShareExRate(pool)
+		fmt.Printf("debug validator: %v\n", validator)
+		require.True(t, exRate.Equal(sdk.OneRat()), "expected exRate 1 got %v, i = %v", exRate, i)
 
 		expBond := int64(i+1) * bondAmount
 		expDelegatorShares := int64(i+2) * bondAmount // (1 self delegation)

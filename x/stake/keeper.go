@@ -2,7 +2,6 @@ package stake
 
 import (
 	"bytes"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -68,7 +67,7 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve int16) (validators Va
 	return validators[:i] // trim
 }
 
-func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
+func (k Keeper) setValidator(ctx sdk.Context, validator Validator) Validator {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.getPool(store)
 	address := validator.Address
@@ -86,9 +85,9 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 	if oldFound {
 		// if the voting power is the same no need to update any of the other indexes
 		if oldValidator.Status == sdk.Bonded &&
-			oldValidator.BondedShares.Equal(validator.BondedShares) {
-			return
-		} else if oldValidator.BondedShares.LT(validator.BondedShares) {
+			oldValidator.PShares.Equal(validator.PShares) {
+			return validator
+		} else if oldValidator.PShares.Bonded().LT(validator.PShares.Bonded()) {
 			powerIncreasing = true
 		}
 		// delete the old record in the power ordered list
@@ -111,7 +110,7 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 	store.Set(GetValidatorsBondedByPowerKey(validator, pool), bz)
 
 	// add to the validators and return to update list if is already a validator and power is increasing
-	if powerIncreasing && oldValidator.Status == sdk.Bonded {
+	if powerIncreasing && oldFound && oldValidator.Status == sdk.Bonded {
 
 		// update the recent validator store
 		store.Set(GetValidatorsBondedKey(validator.PubKey), bz)
@@ -119,22 +118,20 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 		// and the Tendermint updates
 		bz := k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
 		store.Set(GetTendermintUpdatesKey(address), bz)
-		return
+		return validator
 	}
 
 	// update the validator set for this validator
 	valIsNowBonded := k.updateValidators(ctx, store, validator.Address)
-	fmt.Printf("debug valIsNowBonded: %v\n", valIsNowBonded)
-	fmt.Printf("debug validator0: %v\n", validator)
 
-	if oldValidator.Status != sdk.Bonded && valIsNowBonded {
+	if (!oldFound && valIsNowBonded) ||
+		(oldFound && oldValidator.Status != sdk.Bonded && valIsNowBonded) {
+
 		validator.Status = sdk.Bonded
 		validator, pool = validator.UpdateSharesLocation(pool)
 		k.setPool(ctx, pool)
 	}
-	fmt.Printf("debug validator1: %v\n", validator)
-
-	return
+	return validator
 }
 
 func (k Keeper) removeValidator(ctx sdk.Context, address sdk.Address) {

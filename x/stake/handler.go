@@ -2,6 +2,7 @@ package stake
 
 import (
 	"bytes"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/abci/types"
@@ -64,7 +65,7 @@ func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keepe
 	}
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
-	k.setValidator(ctx, validator)
+	validator = k.setValidator(ctx, validator)
 	tags := sdk.NewTags(
 		"action", []byte("declareCandidacy"),
 		"validator", msg.ValidatorAddr.Bytes(),
@@ -117,26 +118,38 @@ func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk
 }
 
 func handleMsgDelegate(ctx sdk.Context, msg MsgDelegate, k Keeper) sdk.Result {
+	fmt.Println("wackydebugoutput handleMsgDelegate 0")
 
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
 	if !found {
+		fmt.Println("wackydebugoutput handleMsgDelegate 1")
 		return ErrBadValidatorAddr(k.codespace).Result()
 	}
+	fmt.Println("wackydebugoutput handleMsgDelegate 2")
 	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
+		fmt.Println("wackydebugoutput handleMsgDelegate 3")
 		return ErrBadBondingDenom(k.codespace).Result()
 	}
+	fmt.Println("wackydebugoutput handleMsgDelegate 4")
 	if validator.Status == sdk.Revoked {
+		fmt.Println("wackydebugoutput handleMsgDelegate 5")
 		return ErrValidatorRevoked(k.codespace).Result()
 	}
+	fmt.Println("wackydebugoutput handleMsgDelegate 6")
 	if ctx.IsCheckTx() {
+		fmt.Println("wackydebugoutput handleMsgDelegate 7")
 		return sdk.Result{
 			GasUsed: GasDelegate,
 		}
+		fmt.Println("wackydebugoutput handleMsgDelegate 9")
 	}
+	fmt.Println("wackydebugoutput handleMsgDelegate 10")
 	tags, err := delegate(ctx, k, msg.DelegatorAddr, msg.Bond, validator)
 	if err != nil {
+		fmt.Println("wackydebugoutput handleMsgDelegate 11")
 		return err.Result()
 	}
+	fmt.Println("wackydebugoutput handleMsgDelegate 12")
 	return sdk.Result{
 		Tags: tags,
 	}
@@ -145,24 +158,32 @@ func handleMsgDelegate(ctx sdk.Context, msg MsgDelegate, k Keeper) sdk.Result {
 // common functionality between handlers
 func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	bondAmt sdk.Coin, validator Validator) (sdk.Tags, sdk.Error) {
+	fmt.Println("wackydebugoutput delegate 0")
 
 	// Get or create the delegator bond
 	bond, found := k.GetDelegation(ctx, delegatorAddr, validator.Address)
 	if !found {
+		fmt.Println("wackydebugoutput delegate 1")
 		bond = Delegation{
 			DelegatorAddr: delegatorAddr,
 			ValidatorAddr: validator.Address,
 			Shares:        sdk.ZeroRat(),
 		}
+		fmt.Println("wackydebugoutput delegate 3")
 	}
+	fmt.Println("wackydebugoutput delegate 4")
 
 	// Account new shares, save
 	pool := k.GetPool(ctx)
 	_, _, err := k.coinKeeper.SubtractCoins(ctx, bond.DelegatorAddr, sdk.Coins{bondAmt})
+	fmt.Println("wackydebugoutput delegate 5")
 	if err != nil {
+		fmt.Println("wackydebugoutput delegate 6")
 		return nil, err
 	}
+	fmt.Println("wackydebugoutput delegate 7")
 	validator, pool, newShares := validator.addTokensFromDel(pool, bondAmt.Amount)
+	fmt.Printf("debug newShares: %v\n", newShares)
 	bond.Shares = bond.Shares.Add(newShares)
 
 	// Update bond height

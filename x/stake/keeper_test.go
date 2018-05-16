@@ -23,6 +23,27 @@ var (
 	}
 )
 
+func TestSetValidator(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, false, 0)
+	pool := keeper.GetPool(ctx)
+
+	// test how the validator is set from a purely unbonbed pool
+	validator := NewValidator(addrVals[0], pks[0], Description{})
+	validator, pool, _ = validator.addTokensFromDel(pool, 10)
+	require.Equal(t, sdk.Unbonded, validator.Status)
+	assert.True(sdk.RatEq(t, sdk.NewRat(10), validator.UnbondedShares))
+	assert.True(sdk.RatEq(t, sdk.NewRat(10), validator.DelegatorShares))
+	keeper.setPool(ctx, pool)
+	keeper.setValidator(ctx, validator)
+	// after the save the validator should be bonded
+	validator, found := keeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	require.Equal(t, sdk.Bonded, validator.Status)
+	assert.True(sdk.RatEq(t, sdk.NewRat(10), validator.BondedShares))
+	assert.True(sdk.RatEq(t, sdk.NewRat(10), validator.DelegatorShares))
+
+}
+
 // This function tests setValidator, GetValidator, GetValidatorsBonded, removeValidator
 func TestValidatorBasics(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)

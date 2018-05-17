@@ -15,7 +15,6 @@ func TestGetInflation(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 	params := keeper.GetParams(ctx)
-	hrsPerYrRat := sdk.NewRat(hrsPerYr)
 
 	// Governing Mechanism:
 	//    bondedRatio = BondedPool / TotalSupply
@@ -112,18 +111,9 @@ func TestProcessProvisions(t *testing.T) {
 	// process the provisions a year
 	for hr := 0; hr < 8766; hr++ {
 		pool := keeper.GetPool(ctx)
-		expInflation := keeper.nextInflation(ctx)
-		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
-
-		startBondedPool := pool.BondedPool
-		startTotalSupply := pool.TotalSupply
+		_, expProvisions, _ := checkHourlyProvisions(t, keeper, pool, ctx, hr)
 		cumulativeExpProvs = cumulativeExpProvs + expProvisions
 
-		pool = keeper.processProvisions(ctx)
-		keeper.setPool(ctx, pool)
-		//fmt.Printf("hr %v, startBondedPool %v, expProvisions %v, pool.BondedPool %v\n", hr, startBondedPool, expProvisions, pool.BondedPool)
-		require.Equal(t, startBondedPool+expProvisions, pool.BondedPool, "hr %v", hr)
-		require.Equal(t, startTotalSupply+expProvisions, pool.TotalSupply)
 	}
 
 	// Final check that the pool equals initial values + provisions and adjustments we recorded
@@ -184,20 +174,10 @@ func TestHourlyRateOfChange(t *testing.T) {
 	// ~11.4 years to go from 7%, up to 20%, back down to 7%
 	for hr := 0; hr < 100000; hr++ {
 		pool := keeper.GetPool(ctx)
-		expInflation := keeper.nextInflation(ctx)
-		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
 
-		startBondedPool := pool.BondedPool
-		startTotalSupply := pool.TotalSupply
-		cumulativeExpProvs = cumulativeExpProvs + expProvisions
 		previousInflation := pool.Inflation
-
-		pool = keeper.processProvisions(ctx)
-		keeper.setPool(ctx, pool)
-
-		//check provisions were added to pool
-		require.Equal(t, startBondedPool+expProvisions, pool.BondedPool, "hr %v", hr)
-		require.Equal(t, startTotalSupply+expProvisions, pool.TotalSupply)
+		expInflation, expProvisions, pool := checkHourlyProvisions(t, keeper, pool, ctx, hr)
+		cumulativeExpProvs = cumulativeExpProvs + expProvisions
 
 		updatedInflation := pool.Inflation
 		inflationChange := updatedInflation.Sub(previousInflation)
@@ -292,28 +272,8 @@ func TestLargeUnbond(t *testing.T) {
 	// process the provisions a year
 	for hr := 0; hr < 8766; hr++ {
 		pool := keeper.GetPool(ctx)
-		expInflation := keeper.nextInflation(ctx)
-		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
-
-		// expInflationFloat, _ := expInflation.Float64()
-		// fmt.Println("")
-		// fmt.Printf("Yearly Inflation Rate + hour adjusted: %v\n", expInflationFloat*100)
-		// pbr := pool.bondedRatio()
-		// poolBondedRatio, _ := pbr.Float64()
-		// fmt.Println("Pool bonded Ratio: ", poolBondedRatio*100)
-		// fmt.Printf("Provisons For each hour %v\n", expProvisions)
-		// fmt.Println("HOUR: ", hr)
-
-		startBondedPool := pool.BondedPool
-		startTotalSupply := pool.TotalSupply
+		_, expProvisions, pool := checkHourlyProvisions(t, keeper, pool, ctx, hr)
 		cumulativeExpProvs = cumulativeExpProvs + expProvisions
-
-		pool = keeper.processProvisions(ctx)
-		keeper.setPool(ctx, pool)
-
-		//check provisions were added to pool
-		require.Equal(t, startBondedPool+expProvisions, pool.BondedPool, "hr %v", hr)
-		require.Equal(t, startTotalSupply+expProvisions, pool.TotalSupply)
 
 		//hour 1600 was arbitrarily picked to unbond the largest candidate, and onwards of 1600 the pool.UnbondedPool amount will be larger
 		if hr <= 1600 {
@@ -406,29 +366,10 @@ func TestLargeBond(t *testing.T) {
 
 	// process the provisions a year
 	for hr := 0; hr < 8766; hr++ {
+
 		pool := keeper.GetPool(ctx)
-		expInflation := keeper.nextInflation(ctx)
-		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
-
-		// expInflationFloat, _ := expInflation.Float64()
-		// fmt.Println("")
-		// fmt.Printf("Yearly Inflation Rate + hour adjusted: %v\n", expInflationFloat*100)
-		// pbr := pool.bondedRatio()
-		// poolBondedRatio, _ := pbr.Float64()
-		// fmt.Println("Pool bonded Ratio: ", poolBondedRatio*100)
-		// fmt.Printf("Provisons For each hour %v\n", expProvisions)
-		// fmt.Println("HOUR: ", hr)
-
-		startBondedPool := pool.BondedPool
-		startTotalSupply := pool.TotalSupply
+		_, expProvisions, pool := checkHourlyProvisions(t, keeper, pool, ctx, hr)
 		cumulativeExpProvs = cumulativeExpProvs + expProvisions
-
-		pool = keeper.processProvisions(ctx)
-		keeper.setPool(ctx, pool)
-
-		//check provisions were added to pool
-		require.Equal(t, startBondedPool+expProvisions, pool.BondedPool, "hr %v", hr)
-		require.Equal(t, startTotalSupply+expProvisions, pool.TotalSupply)
 
 		//hour 1600 was arbitrarily picked to bond the largest candidate
 		if hr <= 1600 {
@@ -592,17 +533,9 @@ func TestAddingRandomCandidates(t *testing.T) {
 
 		} else {
 
-			//If we are not doing a random operation, just check that normal provisions are working for each hour
-			expInflation := keeper.nextInflation(ctx)
-			expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
-			startBondedPool := pool.BondedPool
-			startTotalSupply := pool.TotalSupply
-			pool = keeper.processProvisions(ctx)
-			keeper.setPool(ctx, pool)
+			// If we are not doing a random operation, just check that normal provisions are working for each hour
+			checkHourlyProvisions(t, keeper, pool, ctx, hr)
 
-			//check provisions were added to pool
-			require.Equal(t, startBondedPool+expProvisions, pool.BondedPool, "hr %v", hr)
-			require.Equal(t, startTotalSupply+expProvisions, pool.TotalSupply)
 		}
 	}
 }
@@ -610,7 +543,9 @@ func TestAddingRandomCandidates(t *testing.T) {
 // Final check on the global pool values against what each test added up hour by hour.
 // bondedAdjustment and unbondedAdjustment are the calculated changes
 // that the test calling this function accumlated (i.e. if three unbonds happened, their total value passed as unbondedAdjustment)
-func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, initialUnbondedTokens, cumulativeExpProvs, bondedAdjustment, unbondedAdjustment int64, bondedShares, unbondedShares sdk.Rat) {
+func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, initialUnbondedTokens,
+	cumulativeExpProvs, bondedAdjustment, unbondedAdjustment int64, bondedShares, unbondedShares sdk.Rat) {
+
 	initialBonded := initialTotalTokens - initialUnbondedTokens
 	calculatedTotalTokens := initialTotalTokens + cumulativeExpProvs
 	calculatedBondedTokens := initialBonded + cumulativeExpProvs + bondedAdjustment
@@ -625,11 +560,25 @@ func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, initialUn
 	assert.Equal(t, calculatedUnbondedTokens, pool.UnbondedPool)
 
 	// test the value of candidate shares
-	// assert.True(t, pool.bondedShareExRate().Mul(sdk.NewRat(initialBonded)).Equal(sdk.NewRat(calculatedBondedTokens)), "%v", pool.bondedShareExRate())
-
 	assert.True(t, pool.bondedShareExRate().Mul(bondedShares).Equal(sdk.NewRat(calculatedBondedTokens)), "%v", pool.bondedShareExRate())
 	assert.True(t, pool.unbondedShareExRate().Mul(unbondedShares).Equal(sdk.NewRat(calculatedUnbondedTokens)), "%v", pool.unbondedShareExRate())
 }
 
-//can i add candidate Unbonded tokens or canddiate bonded? these change the values
-//yes, unbondAdjustment and bondAdjustment
+// Checks provisions are added to the pool correctly every hour
+// Returns expected Provisions, expected Inflation, and pool, to help with cumulative calculations back in main Tests
+func checkHourlyProvisions(t *testing.T, keeper Keeper, pool Pool, ctx sdk.Context, hr int) (sdk.Rat, int64, Pool) {
+
+	//If we are not doing a random operation, just check that normal provisions are working for each hour
+	expInflation := keeper.nextInflation(ctx)
+	expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
+	startBondedPool := pool.BondedPool
+	startTotalSupply := pool.TotalSupply
+	pool = keeper.processProvisions(ctx)
+	keeper.setPool(ctx, pool)
+
+	//check provisions were added to pool
+	require.Equal(t, startBondedPool+expProvisions, pool.BondedPool, "hr %v", hr)
+	require.Equal(t, startTotalSupply+expProvisions, pool.TotalSupply)
+
+	return expInflation, expProvisions, pool
+}

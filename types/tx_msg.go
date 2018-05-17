@@ -112,11 +112,11 @@ func (fee StdFee) Bytes() []byte {
 // and the Sequence numbers for each signature (prevent
 // inchain replay and enforce tx ordering per account).
 type StdSignDoc struct {
-	ChainID   string  `json:"chain_id"`
-	Sequences []int64 `json:"sequences"`
-	FeeBytes  []byte  `json:"fee_bytes"`
-	MsgBytes  []byte  `json:"msg_bytes"`
-	AltBytes  []byte  `json:"alt_bytes"`
+	ChainID   string          `json:"chain_id"`
+	Sequences []int64         `json:"sequences"`
+	Fee       json.RawMessage `json:"fee"`
+	Msg       json.RawMessage `json:"msg"`
+	AltBytes  []byte          `json:"alt_bytes"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
@@ -125,8 +125,8 @@ func StdSignBytes(chainID string, sequences []int64, fee StdFee, msg Msg) []byte
 	bz, err := json.Marshal(StdSignDoc{
 		ChainID:   chainID,
 		Sequences: sequences,
-		FeeBytes:  fee.Bytes(),
-		MsgBytes:  msg.GetSignBytes(),
+		Fee:       json.RawMessage(fee.Bytes()),
+		Msg:       json.RawMessage(msg.GetSignBytes()),
 	})
 	if err != nil {
 		panic(err)

@@ -114,8 +114,8 @@ func (fee StdFee) Bytes() []byte {
 type StdSignDoc struct {
 	ChainID   string          `json:"chain_id"`
 	Sequences []int64         `json:"sequences"`
-	Fee       json.RawMessage `json:"fee"`
-	Msg       json.RawMessage `json:"msg"`
+	FeeBytes  json.RawMessage `json:"fee_bytes"`
+	MsgBytes  json.RawMessage `json:"msg_bytes"`
 	AltBytes  []byte          `json:"alt_bytes"`
 }
 
@@ -125,8 +125,8 @@ func StdSignBytes(chainID string, sequences []int64, fee StdFee, msg Msg) []byte
 	bz, err := json.Marshal(StdSignDoc{
 		ChainID:   chainID,
 		Sequences: sequences,
-		Fee:       json.RawMessage(fee.Bytes()),
-		Msg:       json.RawMessage(msg.GetSignBytes()),
+		FeeBytes:  json.RawMessage(fee.Bytes()),
+		MsgBytes:  json.RawMessage(msg.GetSignBytes()),
 	})
 	if err != nil {
 		panic(err)

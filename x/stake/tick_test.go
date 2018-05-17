@@ -97,14 +97,17 @@ func TestProcessProvisions(t *testing.T) {
 	assert.Equal(t, bondedTokens, pool.BondedPool)
 	assert.Equal(t, unbondedTokens, pool.UnbondedPool)
 
+	// 1 to 1 ratio
+	var bondedShares, unbondedShares sdk.Rat = sdk.NewRat(150000000, 1), sdk.NewRat(400000000, 1)
+
 	// initial bonded ratio ~ 27%
 	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(bondedTokens, totalSupply)), "%v", pool.bondedRatio())
 
 	// test the value of candidate shares
 	assert.True(t, pool.bondedShareExRate().Equal(sdk.OneRat()), "%v", pool.bondedShareExRate())
 
-	initialSupply := pool.TotalSupply
-	initialUnbonded := pool.TotalSupply - pool.BondedPool
+	initialTotalTokens := pool.TotalSupply
+	initialUnbondedTokens := pool.TotalSupply - pool.BondedPool
 
 	// process the provisions a year
 	for hr := 0; hr < 8766; hr++ {
@@ -122,23 +125,13 @@ func TestProcessProvisions(t *testing.T) {
 		require.Equal(t, startBondedPool+expProvisions, pool.BondedPool, "hr %v", hr)
 		require.Equal(t, startTotalSupply+expProvisions, pool.TotalSupply)
 	}
+
+	// Final check that the pool equals initial values + provisions and adjustments we recorded
 	pool = keeper.GetPool(ctx)
-	assert.NotEqual(t, initialSupply, pool.TotalSupply)
-	assert.Equal(t, initialUnbonded, pool.UnbondedPool)
-	//panic(fmt.Sprintf("debug total %v, bonded  %v, diff %v\n", p.TotalSupply, p.BondedPool, pool.TotalSupply-pool.BondedPool))
+	checkFinalPoolValues(t, pool, initialTotalTokens,
+		initialUnbondedTokens, cumulativeExpProvs,
+		0, 0, bondedShares, unbondedShares)
 
-	calculatedTotalTokens := totalSupply + cumulativeExpProvs
-	calculatedBondedTokens := bondedTokens + cumulativeExpProvs
-	// initial bonded ratio ~ from 27% to 40% increase for bonded holders ownership of total supply
-	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(calculatedBondedTokens, calculatedTotalTokens)), "%v", pool.bondedRatio())
-
-	// global supply
-	assert.Equal(t, calculatedTotalTokens, pool.TotalSupply)
-	assert.Equal(t, calculatedBondedTokens, pool.BondedPool)
-	assert.Equal(t, unbondedTokens, pool.UnbondedPool)
-
-	// test the value of candidate shares
-	assert.True(t, pool.bondedShareExRate().Mul(sdk.NewRat(bondedTokens)).Equal(sdk.NewRat(calculatedBondedTokens)), "%v", pool.bondedShareExRate())
 }
 
 //Tests that the hourly rate of change will be positve, negative, or zero, depending on bonded ratio and inflation rate
@@ -177,13 +170,16 @@ func TestHourlyRateOfChange(t *testing.T) {
 	assert.Equal(t, bondedTokens, pool.BondedPool)
 	assert.Equal(t, unbondedTokens, pool.UnbondedPool)
 
+	// 1 to 1 ratio
+	var bondedShares, unbondedShares sdk.Rat = sdk.NewRat(150000000, 1), sdk.NewRat(400000000, 1)
+
 	// initial bonded ratio ~ 27%
 	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(bondedTokens, totalSupply)), "%v", pool.bondedRatio())
 	// test the value of candidate shares
 	assert.True(t, pool.bondedShareExRate().Equal(sdk.OneRat()), "%v", pool.bondedShareExRate())
 
-	initialSupply := pool.TotalSupply
-	initialUnbonded := pool.TotalSupply - pool.BondedPool
+	initialTotalTokens := pool.TotalSupply
+	initialUnbondedTokens := pool.TotalSupply - pool.BondedPool
 
 	// ~11.4 years to go from 7%, up to 20%, back down to 7%
 	for hr := 0; hr < 100000; hr++ {
@@ -237,23 +233,11 @@ func TestHourlyRateOfChange(t *testing.T) {
 		}
 	}
 
+	// Final check that the pool equals initial values + provisions and adjustments we recorded
 	pool = keeper.GetPool(ctx)
-	assert.NotEqual(t, initialSupply, pool.TotalSupply)
-	assert.Equal(t, initialUnbonded, pool.UnbondedPool)
-
-	calculatedTotalTokens := totalSupply + cumulativeExpProvs
-	calculatedBondedTokens := bondedTokens + cumulativeExpProvs
-
-	//make sure bonded ratio is correct
-	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(calculatedBondedTokens, calculatedTotalTokens)), "%v", pool.bondedRatio())
-
-	// global supply
-	assert.Equal(t, calculatedTotalTokens, pool.TotalSupply)
-	assert.Equal(t, calculatedBondedTokens, pool.BondedPool)
-	assert.Equal(t, unbondedTokens, pool.UnbondedPool)
-
-	// test the value of candidate shares
-	assert.True(t, pool.bondedShareExRate().Mul(sdk.NewRat(bondedTokens)).Equal(sdk.NewRat(calculatedBondedTokens)), "%v", pool.bondedShareExRate())
+	checkFinalPoolValues(t, pool, initialTotalTokens,
+		initialUnbondedTokens, cumulativeExpProvs,
+		0, 0, bondedShares, unbondedShares)
 }
 
 //Test that a large unbonding will significantly lower the bonded ratio
@@ -361,24 +345,11 @@ func TestLargeUnbond(t *testing.T) {
 		}
 	}
 
-	// Final checks after 8766 hours to ensure pool has correct values
+	// Final check that the pool equals initial values + provisions and adjustments we recorded
 	pool = keeper.GetPool(ctx)
-	calculatedTotalTokens := totalSupply + cumulativeExpProvs
-	calculatedBondedTokens := bondedTokens + cumulativeExpProvs
-	calculatedUnbondedTokens := calculatedTotalTokens - calculatedBondedTokens
-	assert.NotEqual(t, initialTotalTokens, pool.TotalSupply)
-
-	//make sure bonded ratio is correct
-	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(calculatedBondedTokens, calculatedTotalTokens)), "%v", pool.bondedRatio())
-
-	// global token supply checks
-	assert.Equal(t, calculatedTotalTokens, pool.TotalSupply)
-	assert.Equal(t, calculatedBondedTokens, pool.BondedPool)
-	assert.Equal(t, unbondedTokens+cand9UnbondedTokens, pool.UnbondedPool)
-
-	// test the value of candidate shares. bonded ex rate should be greater than 1, unbonded should still be 1
-	assert.True(t, pool.bondedShareExRate().Mul(bondedShares).Equal(sdk.NewRat(calculatedBondedTokens)), "%v", pool.bondedShareExRate())
-	assert.True(t, pool.unbondedShareExRate().Mul(unbondedShares).Equal(sdk.NewRat(calculatedUnbondedTokens)), "%v", pool.unbondedShareExRate())
+	checkFinalPoolValues(t, pool, initialTotalTokens,
+		initialUnbondedTokens, cumulativeExpProvs,
+		-cand9UnbondedTokens, cand9UnbondedTokens, bondedShares, unbondedShares)
 
 }
 
@@ -494,24 +465,12 @@ func TestLargeBond(t *testing.T) {
 		}
 	}
 
-	// Final checks after 8766 hours to ensure pool has correct values
+	// Final check that the pool equals initial values + provisions and adjustments we recorded
 	pool = keeper.GetPool(ctx)
-	calculatedTotalTokens := totalSupply + cumulativeExpProvs
-	calculatedBondedTokens := bondedTokens + cumulativeExpProvs + cand9bondedTokens
-	calculatedUnbondedTokens := calculatedTotalTokens - calculatedBondedTokens
-	assert.NotEqual(t, initialTotalTokens, pool.TotalSupply)
+	checkFinalPoolValues(t, pool, initialTotalTokens,
+		initialUnbondedTokens, cumulativeExpProvs,
+		cand9bondedTokens, -cand9bondedTokens, bondedShares, unbondedShares)
 
-	//make sure bonded ratio is correct
-	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(calculatedBondedTokens, calculatedTotalTokens)), "%v", pool.bondedRatio())
-
-	// global token supply checks
-	assert.Equal(t, calculatedTotalTokens, pool.TotalSupply)
-	assert.Equal(t, calculatedBondedTokens, pool.BondedPool)
-	assert.Equal(t, unbondedTokens-cand9bondedTokens, pool.UnbondedPool)
-
-	// test the value of candidate shares. bonded ex rate should be greater than 1, unbonded should still be 1
-	assert.True(t, pool.bondedShareExRate().Mul(bondedShares).Equal(sdk.NewRat(calculatedBondedTokens)), "%v", pool.bondedShareExRate())
-	assert.True(t, pool.unbondedShareExRate().Mul(unbondedShares).Equal(sdk.NewRat(calculatedUnbondedTokens)), "%v", pool.unbondedShareExRate())
 }
 
 //Tests that inflation works as expected when we get a randomly updating sample of candidates
@@ -549,7 +508,7 @@ func TestAddingRandomCandidates(t *testing.T) {
 			//Get values before randomOperation
 			expInflationBefore := keeper.nextInflation(ctx)
 			initialBondedPool := pool.BondedPool
-			initialUnbondedPool := pool.UnbondedPool
+			initialUnbondedTokens := pool.UnbondedPool
 
 			//Random operation, and recording how candidates are modified
 			poolMod, candidateMod, tokens, msg := randomOperation(r)(r, pool, candidates[candidateCounter])
@@ -581,10 +540,11 @@ func TestAddingRandomCandidates(t *testing.T) {
 			inflationIncreased := expInflationAfter.GT(expInflationBefore)
 			inflationEqual := expInflationAfter.Equal(expInflationBefore)
 
-			if afterBondedPool > initialBondedPool {
-				//Inflation will NOT increase, because we are adding bonded tokens to the pool
-				//CASE: Happens when we randomly add tokens to a bonded candidate
-				//CASE: Happens when we randomly bond a candidate from unbonded
+			switch {
+			//Inflation will NOT increase, because we are adding bonded tokens to the pool
+			//CASE: Happens when we randomly add tokens to a bonded candidate
+			//CASE: Happens when we randomly bond a candidate from unbonded
+			case afterBondedPool > initialBondedPool:
 
 				//for the off case where we are bonded so low (i.e. 15%) , that we add bonded tokens and inflation is unchanged at 20%
 				//for the off case where we are bonded so high (i.e. 90%), that we add bonded tokens and inflation is unchanged at 7%
@@ -596,10 +556,10 @@ func TestAddingRandomCandidates(t *testing.T) {
 					assert.True(t, !inflationIncreased, msg)
 				}
 
-			} else if afterBondedPool < initialBondedPool {
-				//Inflation WILL increase, because we are removing bonded tokens from the pool
-				//CASE: Happens when we randomly remove bonded Shares
-				//CASE: Happens when we randomly unbond a candidate that was bonded
+			//Inflation WILL increase, because we are removing bonded tokens from the pool
+			//CASE: Happens when we randomly remove bonded Shares
+			//CASE: Happens when we randomly unbond a candidate that was bonded
+			case afterBondedPool < initialBondedPool:
 
 				//For the off case where we are bonded so low (i.e. 15%),  and more tokens are unbonded, inflation is unchanged at 20%
 				//For the off case where we are bonded so high (i.e. 90%) and we unbond a small amount (maybe 2%), inflation  is unchanged at 7%
@@ -611,19 +571,19 @@ func TestAddingRandomCandidates(t *testing.T) {
 					assert.True(t, inflationIncreased, msg)
 				}
 
-			} else if afterUnbondedPool > initialUnbondedPool {
-				//Inflation will STAY THE SAME.
-				//Inflation is dependant only on bondedRatio. Sure, a validator can add unbonded tokens, but it doesn't change bondedRatio (totalBondedTokens / globalTotalTokens)
-				//CASE: Happens when we randomly add unbonded tokens
+			//Inflation will STAY THE SAME.
+			//Inflation is dependant only on bondedRatio. Sure, a validator can add unbonded tokens, but it doesn't change bondedRatio (totalBondedTokens / globalTotalTokens)
+			//CASE: Happens when we randomly add unbonded tokens
+			case afterUnbondedPool > initialUnbondedTokens:
 				assert.True(t, inflationEqual, msg)
 
-			} else if afterUnbondedPool < initialUnbondedPool {
-				//Inflation will STAY THE SAME.
-				//Inflation is dependant only on bondedRatio. Sure, a validator can add unbonded tokens, but it doesn't change bondedRatio (totalBondedTokens / globalTotalTokens)
-				//CASE: Happens when we randomly remove shares from an unbonded candidate
+			//Inflation will STAY THE SAME.
+			//Inflation is dependant only on bondedRatio. Sure, a validator can add unbonded tokens, but it doesn't change bondedRatio (totalBondedTokens / globalTotalTokens)
+			//CASE: Happens when we randomly remove shares from an unbonded candidate
+			case afterUnbondedPool < initialUnbondedTokens:
 				assert.True(t, inflationEqual, msg)
 
-			} else {
+			default:
 				panic(fmt.Sprintf("pool.UnbondedPool and pool.BondedPool are unchanged. All operations should change either the unbondedPool or bondedPool amounts."))
 			}
 
@@ -646,3 +606,30 @@ func TestAddingRandomCandidates(t *testing.T) {
 		}
 	}
 }
+
+// Final check on the global pool values against what each test added up hour by hour.
+// bondedAdjustment and unbondedAdjustment are the calculated changes
+// that the test calling this function accumlated (i.e. if three unbonds happened, their total value passed as unbondedAdjustment)
+func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, initialUnbondedTokens, cumulativeExpProvs, bondedAdjustment, unbondedAdjustment int64, bondedShares, unbondedShares sdk.Rat) {
+	initialBonded := initialTotalTokens - initialUnbondedTokens
+	calculatedTotalTokens := initialTotalTokens + cumulativeExpProvs
+	calculatedBondedTokens := initialBonded + cumulativeExpProvs + bondedAdjustment
+	calculatedUnbondedTokens := initialUnbondedTokens + unbondedAdjustment
+
+	// test that the bonded ratio the pool has is equal to what we calculated for tokens
+	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(calculatedBondedTokens, calculatedTotalTokens)), "%v", pool.bondedRatio())
+
+	// test global supply
+	assert.Equal(t, calculatedTotalTokens, pool.TotalSupply)
+	assert.Equal(t, calculatedBondedTokens, pool.BondedPool)
+	assert.Equal(t, calculatedUnbondedTokens, pool.UnbondedPool)
+
+	// test the value of candidate shares
+	// assert.True(t, pool.bondedShareExRate().Mul(sdk.NewRat(initialBonded)).Equal(sdk.NewRat(calculatedBondedTokens)), "%v", pool.bondedShareExRate())
+
+	assert.True(t, pool.bondedShareExRate().Mul(bondedShares).Equal(sdk.NewRat(calculatedBondedTokens)), "%v", pool.bondedShareExRate())
+	assert.True(t, pool.unbondedShareExRate().Mul(unbondedShares).Equal(sdk.NewRat(calculatedUnbondedTokens)), "%v", pool.unbondedShareExRate())
+}
+
+//can i add candidate Unbonded tokens or canddiate bonded? these change the values
+//yes, unbondAdjustment and bondAdjustment

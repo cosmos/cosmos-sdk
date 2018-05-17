@@ -30,7 +30,7 @@ func DefaultGenesisState() GenesisState {
 // InitGenesis - store genesis parameters
 func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	k.setPool(ctx, data.Pool)
-	k.setParams(ctx, data.Params)
+	k.setNewParams(ctx, data.Params)
 	for _, validator := range data.Validators {
 		k.setValidator(ctx, validator)
 	}

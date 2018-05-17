@@ -15,10 +15,6 @@ type Keeper struct {
 	cdc        *wire.Codec
 	coinKeeper bank.Keeper
 
-	// caches
-	pool   Pool
-	params Params
-
 	// codespace
 	codespace sdk.CodespaceType
 }
@@ -461,12 +457,11 @@ func (k Keeper) removeDelegation(ctx sdk.Context, bond Delegation) {
 //_______________________________________________________________________
 
 // load/save the global staking params
-func (k Keeper) GetParams(ctx sdk.Context) (params Params) {
-	// check if cached before anything
-	if !k.params.equal(Params{}) {
-		return k.params
-	}
+func (k Keeper) GetParams(ctx sdk.Context) Params {
 	store := ctx.KVStore(k.storeKey)
+	return k.getParams(store)
+}
+func (k Keeper) getParams(store sdk.KVStore) (params Params) {
 	b := store.Get(ParamKey)
 	if b == nil {
 		panic("Stored params should not have been nil")
@@ -475,17 +470,24 @@ func (k Keeper) GetParams(ctx sdk.Context) (params Params) {
 	k.cdc.MustUnmarshalBinary(b, &params)
 	return
 }
-func (k Keeper) setParams(ctx sdk.Context, params Params) {
+
+func (k Keeper) setNewParams(ctx sdk.Context, params Params) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(params)
 	store.Set(ParamKey, b)
+}
+
+func (k Keeper) setParams(ctx sdk.Context, params Params) {
+	store := ctx.KVStore(k.storeKey)
+	exParams := k.getParams(store)
 
 	// if max validator count changes, must recalculate validator set
-	if k.params.MaxValidators != params.MaxValidators {
+	if exParams.MaxValidators != params.MaxValidators {
 		pool := k.GetPool(ctx)
 		k.updateBondedValidators(ctx, store, pool, nil)
 	}
-	k.params = params // update the cache
+	b := k.cdc.MustMarshalBinary(params)
+	store.Set(ParamKey, b)
 }
 
 //_______________________________________________________________________
@@ -496,10 +498,6 @@ func (k Keeper) GetPool(ctx sdk.Context) (pool Pool) {
 	return k.getPool(store)
 }
 func (k Keeper) getPool(store sdk.KVStore) (pool Pool) {
-	// check if cached before anything
-	if !k.pool.equal(Pool{}) {
-		return k.pool
-	}
 	b := store.Get(PoolKey)
 	if b == nil {
 		panic("Stored pool should not have been nil")
@@ -512,7 +510,6 @@ func (k Keeper) setPool(ctx sdk.Context, p Pool) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(p)
 	store.Set(PoolKey, b)
-	k.pool = Pool{} //clear the cache
 }
 
 //__________________________________________________________________________

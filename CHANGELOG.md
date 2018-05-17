@@ -31,6 +31,7 @@ FEATURES
 * [stake] Seperation of fee distribution to a new module
 * [stake] Creation of a validator/delegation generics in `/types`
 * [stake] Helper Description of the store in x/stake/store.md
+* [stake] removed use of caches in the stake keeper
 
 BUG FIXES 
 

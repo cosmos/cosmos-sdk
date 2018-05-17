@@ -103,7 +103,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	ck := bank.NewKeeper(accountMapper)
 	keeper := NewKeeper(cdc, keyStake, ck, DefaultCodespace)
 	keeper.setPool(ctx, initialPool())
-	keeper.setParams(ctx, defaultParams())
+	keeper.setNewParams(ctx, defaultParams())
 
 	// fill all the addresses with some coins
 	for _, addr := range addrs {

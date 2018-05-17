@@ -16,9 +16,9 @@ var (
 	ParamKey             = []byte{0x00} // key for global parameters relating to staking
 	PoolKey              = []byte{0x01} // key for global parameters relating to staking
 	ValidatorsKey        = []byte{0x02} // prefix for each key to a validator
-	ValidatorsByPowerKey = []byte{0x03} // prefix for each key to a validator
-	TendermintUpdatesKey = []byte{0x04} // prefix for each key to a validator which is being updated
-	ValidatorsBondedKey  = []byte{0x05} // prefix for each key to bonded/actively validating validators
+	ValidatorsByPowerKey = []byte{0x03} // prefix for each key to a validator sorted by power
+	ValidatorsBondedKey  = []byte{0x04} // prefix for each key to bonded/actively validating validators
+	TendermintUpdatesKey = []byte{0x05} // prefix for each key to a validator which is being updated
 	DelegationKey        = []byte{0x06} // prefix for each key to a delegator's bond
 	IntraTxCounterKey    = []byte{0x07} // key for block-local tx index
 )

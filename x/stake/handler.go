@@ -7,14 +7,6 @@ import (
 	abci "github.com/tendermint/abci/types"
 )
 
-//nolint
-const (
-	GasDeclareCandidacy int64 = 20
-	GasEditCandidacy    int64 = 20
-	GasDelegate         int64 = 20
-	GasUnbond           int64 = 20
-)
-
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		// NOTE msg already has validate basic run
@@ -58,9 +50,7 @@ func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keepe
 		return ErrBadBondingDenom(k.codespace).Result()
 	}
 	if ctx.IsCheckTx() {
-		return sdk.Result{
-			GasUsed: GasDeclareCandidacy,
-		}
+		return sdk.Result{}
 	}
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
@@ -92,9 +82,7 @@ func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk
 		return ErrBadValidatorAddr(k.codespace).Result()
 	}
 	if ctx.IsCheckTx() {
-		return sdk.Result{
-			GasUsed: GasEditCandidacy,
-		}
+		return sdk.Result{}
 	}
 
 	// XXX move to types
@@ -129,9 +117,7 @@ func handleMsgDelegate(ctx sdk.Context, msg MsgDelegate, k Keeper) sdk.Result {
 		return ErrValidatorRevoked(k.codespace).Result()
 	}
 	if ctx.IsCheckTx() {
-		return sdk.Result{
-			GasUsed: GasDelegate,
-		}
+		return sdk.Result{}
 	}
 	tags, err := delegate(ctx, k, msg.DelegatorAddr, msg.Bond, validator)
 	if err != nil {
@@ -211,9 +197,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	}
 
 	if ctx.IsCheckTx() {
-		return sdk.Result{
-			GasUsed: GasUnbond,
-		}
+		return sdk.Result{}
 	}
 
 	// retrieve the amount of bonds to remove (TODO remove redundancy already serialized)

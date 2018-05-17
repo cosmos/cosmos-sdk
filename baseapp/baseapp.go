@@ -64,10 +64,9 @@ type BaseApp struct {
 	// See methods setCheckState and setDeliverState.
 	// .valUpdates accumulate in DeliverTx and are reset in BeginBlock.
 	// QUESTION: should we put valUpdates in the deliverState.ctx?
-	checkState       *state           // for CheckTx
-	deliverState     *state           // for DeliverTx
-	valUpdates       []abci.Validator // cached validator changes from DeliverTx
-	absentValidators []int32          // absent validators from begin block
+	checkState   *state           // for CheckTx
+	deliverState *state           // for DeliverTx
+	valUpdates   []abci.Validator // cached validator changes from DeliverTx
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -234,9 +233,9 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, nil, app.Logger, nil)
+		return sdk.NewContext(app.checkState.ms, header, true, nil, app.Logger)
 	}
-	return sdk.NewContext(app.deliverState.ms, header, false, nil, app.Logger, nil)
+	return sdk.NewContext(app.deliverState.ms, header, false, nil, app.Logger)
 }
 
 type state struct {
@@ -252,7 +251,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, nil, app.Logger, nil),
+		ctx: sdk.NewContext(ms, header, true, nil, app.Logger),
 	}
 }
 
@@ -260,7 +259,7 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, nil, app.Logger, nil),
+		ctx: sdk.NewContext(ms, header, false, nil, app.Logger),
 	}
 }
 
@@ -384,8 +383,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
 	}
-	// set the absent validators for addition to context in deliverTx
-	app.absentValidators = req.AbsentValidators
 	return
 }
 
@@ -495,7 +492,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		ctx = app.checkState.ctx.WithTxBytes(txBytes)
 	} else {
 		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
-		ctx = ctx.WithAbsentValidators(app.absentValidators)
 	}
 
 	// Simulate a DeliverTx for gas calculation

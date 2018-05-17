@@ -43,7 +43,7 @@ func (l MockLogger) With(kvs ...interface{}) log.Logger {
 
 func TestContextGetOpShouldNeverPanic(t *testing.T) {
 	var ms types.MultiStore
-	ctx := types.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger(), nil)
+	ctx := types.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
 	indices := []int64{
 		-10, 1, 0, 10, 20,
 	}
@@ -58,7 +58,7 @@ func defaultContext(key types.StoreKey) types.Context {
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, types.StoreTypeIAVL, db)
 	cms.LoadLatestVersion()
-	ctx := types.NewContext(cms, abci.Header{}, false, nil, log.NewNopLogger(), nil)
+	ctx := types.NewContext(cms, abci.Header{}, false, nil, log.NewNopLogger())
 	return ctx
 }
 

@@ -17,7 +17,7 @@
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "675abc5df3c5531bc741b56a765e35623459da6d"
+  revision = "1432d294a5b055c297457c25434efbf13384cc46"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -152,8 +152,8 @@
 [[projects]]
   name = "github.com/magiconair/properties"
   packages = ["."]
-  revision = "c3beff4c2358b44d0493c7dda585e7db7ff28ae6"
-  version = "v1.7.6"
+  revision = "c2353362d570a7bfa228149c62842019201cfb71"
+  version = "v1.8.0"
 
 [[projects]]
   name = "github.com/mattn/go-isatty"
@@ -209,8 +209,8 @@
 [[projects]]
   name = "github.com/spf13/cobra"
   packages = ["."]
-  revision = "a1f051bc3eba734da4772d60e2d677f47cf93ef4"
-  version = "v0.0.2"
+  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
+  version = "v0.0.3"
 
 [[projects]]
   branch = "master"
@@ -256,7 +256,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "ae970a0732be3a1f5311da86118d37b9f4bd2a5a"
+  revision = "9637fa0b2f0db13c99d899b91007edb7df4610b7"
 
 [[projects]]
   name = "github.com/tendermint/abci"
@@ -300,8 +300,8 @@
 [[projects]]
   name = "github.com/tendermint/go-wire"
   packages = ["."]
-  revision = "fa721242b042ecd4c6ed1a934ee740db4f74e45c"
-  version = "v0.7.3"
+  revision = "ed62928576cfcaf887209dc96142cd79cdfff389"
+  version = "0.9.9"
 
 [[projects]]
   name = "github.com/tendermint/iavl"
@@ -346,8 +346,8 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "03f6a29a64fc4d26322a90839b892014d2cb90a5"
-  version = "v0.19.3-rc0"
+  revision = "aab98828fe4904965fb1c4eeed16dc6aae0e14b6"
+  version = "v0.19.3"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -371,7 +371,7 @@
   branch = "master"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
-  revision = "a242cfad962597a588288f99fa3425a01a820295"
+  revision = "3e2146609cdb97894c064d59e9d00accd8c2b1dd"
 
 [[projects]]
   branch = "master"
@@ -387,7 +387,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "2fc4c88bf43f0ea5ea305eae2b7af24b2cc93287"
+  revision = "1a580b3eff7814fc9b40602fd35256c63b50f491"
 
 [[projects]]
   branch = "master"
@@ -407,11 +407,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-<<<<<<< HEAD
   revision = "7c87d13f8e835d2fb3a70a2912c811ed0c1d241b"
-=======
-  revision = "64746a42f36bf0832f86b76004f1699dbeb33e4f"
->>>>>>> Update dependency versions, quick paths
 
 [[projects]]
   name = "golang.org/x/text"
@@ -472,6 +468,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3a9ff08049322b5c915fbdb710695cbd69259d90146a5bfc1b814a040e39b1e8"
+  inputs-digest = "1d2781696b8aa34ce7a2a704f0354d6effac63747c7f4bba5021f69024c6505b"
   solver-name = "gps-cdcl"
   solver-version = 1

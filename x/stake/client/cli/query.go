@@ -18,8 +18,8 @@ import (
 // get the command to query a validator
 func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validator [validator-addr]",
-		Short: "Query a validator-validator account",
+		Use:   "validator [owner-addr]",
+		Short: "Query a validator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -55,8 +55,8 @@ func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 // get the command to query a validator
 func GetCmdQueryValidators(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "candidates",
-		Short: "Query for all validator-validator accounts",
+		Use:   "validators",
+		Short: "Query for all validators",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			key := stake.ValidatorsKey
@@ -90,8 +90,8 @@ func GetCmdQueryValidators(storeName string, cdc *wire.Codec) *cobra.Command {
 // get the command to query a single delegation bond
 func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delegation-bond",
-		Short: "Query a delegations bond based on address and validator pubkey",
+		Use:   "delegation",
+		Short: "Query a delegations bond based on address and validator address",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			addr, err := sdk.GetAddress(viper.GetString(FlagAddressValidator))
@@ -134,11 +134,12 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 // get the command to query all the candidates bonded to a delegation
 func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delegation-candidates",
-		Short: "Query all delegations bonds based on delegation-address",
+		Use:   "delegations [delegator-addr]",
+		Short: "Query all delegations made from one delegator",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			delegatorAddr, err := sdk.GetAddress(viper.GetString(FlagAddressDelegator))
+			delegatorAddr, err := sdk.GetAddress(args[0])
 			if err != nil {
 				return err
 			}
@@ -167,6 +168,5 @@ func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 			// TODO output with proofs / machine parseable etc.
 		},
 	}
-	cmd.Flags().AddFlagSet(fsDelegator)
 	return cmd
 }

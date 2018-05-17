@@ -4,15 +4,21 @@
 
 BREAKING CHANGES
 
-* Queries against the store must be prefixed with the path "/store"
-* RecentValidator store now take pubkey instead of address, is sorted like Tendermint by pk's address
-* `gaiacli query candidate` takes and argument instead of using the `--address-candidate` flag
-* Staking refactor
+* [stake] candidate -> validator throughout (details in refactor comment)
+* [stake] delegate-bond -> delegation throughout
+* [stake] `gaiacli query validator` takes and argument instead of using the `--address-candidate` flag
+* [stake] introduce `gaiacli query delegations` 
+* [stake] staking refactor
+  * ValidatorsBonded store now take sorted pubKey-address instead of validator owner-address, 
+    is sorted like Tendermint by pk's address
   * store names more understandable
-  * removed temporary ToKick store 
+  * removed temporary ToKick store, just needs a local map! 
   * removed distinction between candidates and validators
     * everything is now a validator
     * only validators with a status == bonded are actively validating/receiving rewards
+  * Introduction of Unbonding fields, lowlevel logic throughout (not fully implemented with queue)
+  * Introduction of PoolShares type within validators, 
+    replaces three rational fields (BondedShares, UnbondingShares, UnbondedShares
 
 FEATURES
 
@@ -22,13 +28,15 @@ FEATURES
   * Transactions which run out of gas stop execution and revert state changes
   * A "simulate" query has been added to determine how much gas a transaction will need
   * Modules can include their own gas costs for execution of particular message types
-* Seperation of fee distribution to a new module
-* Creation of a validator/delegation generics in `/types`
+* [stake] Seperation of fee distribution to a new module
+* [stake] Creation of a validator/delegation generics in `/types`
+* [stake] Helper Description of the store in x/stake/store.md
 
 BUG FIXES 
 
 * Auto-sequencing now works correctly
-* staking delegator shares exchange rate now relative to equivalent-bonded-tokens the validator has instead of bonded tokens
+* [stake] staking delegator shares exchange rate now relative to equivalent-bonded-tokens the validator has instead of bonded tokens
+  ^ this is important for unbonded validators in the power store!
 
 
 ## 0.17.0 (May 15, 2018)
@@ -36,6 +44,7 @@ BUG FIXES
 BREAKING CHANGES
 
 * [stake] MarshalJSON -> MarshalBinary
+* Queries against the store must be prefixed with the path "/store"
 
 FEATURES
 

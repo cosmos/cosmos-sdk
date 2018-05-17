@@ -19,8 +19,8 @@ import (
 // create declare candidacy command
 func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "declare-candidacy",
-		Short: "create new validator-validator account and delegate some coins to it",
+		Use:   "create-validator",
+		Short: "create new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
@@ -47,7 +47,7 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 			}
 
 			if viper.GetString(FlagMoniker) == "" {
-				return fmt.Errorf("please enter a moniker for the validator-validator using --moniker")
+				return fmt.Errorf("please enter a moniker for the validator using --moniker")
 			}
 			description := stake.Description{
 				Moniker:  viper.GetString(FlagMoniker),
@@ -78,8 +78,8 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 // create edit candidacy command
 func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "edit-candidacy",
-		Short: "edit and existing validator-validator account",
+		Use:   "edit-validator",
+		Short: "edit and existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			validatorAddr, err := sdk.GetAddress(viper.GetString(FlagAddressValidator))
@@ -116,7 +116,7 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate",
-		Short: "delegate coins to an existing validator/validator",
+		Short: "delegate coins to an existing validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
 			if err != nil {
@@ -154,7 +154,7 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbond",
-		Short: "unbond coins from a validator/validator",
+		Short: "unbond shares from a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// check the shares before broadcasting

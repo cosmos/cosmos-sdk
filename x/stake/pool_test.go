@@ -251,19 +251,7 @@ func randomSetup(r *rand.Rand, numCandidates int) (Pool, Candidates) {
 		tokens := int64(r.Int31n(1000000))
 		pool.TotalSupply += tokens
 		pool, candidate, _ = pool.candidateAddTokens(candidate, tokens)
-
 		candidates[i] = candidate
-
-		// if candidate.Status == Bonded {
-		// 	pool.BondedShares = pool.BondedShares.Add(candidate.Assets)
-		// 	pool.BondedPool += candidate.Assets.Evaluate()
-		// } else if candidate.Status == Unbonded {
-		// 	pool.UnbondedShares = pool.UnbondedShares.Add(candidate.Assets)
-		// 	pool.UnbondedPool += candidate.Assets.Evaluate()
-		// }
-
-		//really need to keeper.setCandidate here. or we could loop through it in ticktest.go and do it
-		//need to add to total supply
 	}
 	return pool, candidates
 }

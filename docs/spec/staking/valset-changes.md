@@ -71,7 +71,7 @@ UpdateValidatorSet():
 
 updateVotingPower(candidates Candidates):
     foreach candidate in candidates do
-	    candidate.VotingPower = (candidate.IssuedDelegatorShares - candidate.RedelegatingShares) * DelegatorShareExRate(candidate)	
+	    candidate.VotingPower = (candidate.IssuedDelegatorShares - candidate.RedelegatingShares) * delegatorShareExRate(candidate)	
 	    
     candidates.Sort()
 	

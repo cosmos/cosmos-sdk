@@ -34,7 +34,7 @@ The staking module persists the following to the store:
 - `GlobalState`, describing the global pools
 - a `Candidate` for each candidate validator, indexed by public key
 - a `Candidate` for each candidate validator, indexed by shares in the global pool (ie. ordered)
-- a `Delegation` for each delegation to a candidate by a delegator, indexed by delegator and candidate
+- a `DelegatorBond` for each delegation to a candidate by a delegator, indexed by delegator and candidate
     public keys
 - a `Queue` of unbonding delegations (TODO)
 
@@ -146,15 +146,15 @@ When validators are kicked from the validator set they are removed from this
 list. 
 
 
-### Delegation
+### DelegatorBond
 
 Atom holders may delegate coins to validators, under this circumstance their
-funds are held in a `Delegation`. It is owned by one delegator, and is
+funds are held in a `DelegatorBond`. It is owned by one delegator, and is
 associated with the shares for one validator. The sender of the transaction is
 considered to be the owner of the bond,  
 
 ``` golang
-type Delegation struct {
+type DelegatorBond struct {
 	Candidate            crypto.PubKey
 	Shares               rational.Rat
     AdjustmentFeePool    coin.Coins  
@@ -170,11 +170,11 @@ Description:
  - AdjustmentRewardPool: Adjustment factor used to passively calculate each
    bonds entitled fees from `Candidate.ProposerRewardPool``
 
-Each `Delegation` is individually indexed within the store by delegator
+Each `DelegatorBond` is individually indexed within the store by delegator
 address and candidate pubkey.
 
  - key: Delegator and Candidate-Pubkey
- - value: Delegation 
+ - value: DelegatorBond 
 
 
 ### Unbonding Queue
@@ -308,7 +308,7 @@ All bonding, whether self-bonding or delegation, is done via
 Delegator bonds are created using the TxDelegate transaction. Within this
 transaction the validator candidate queried with an amount of coins, whereby
 given the current exchange rate of candidate's delegator-shares-to-atoms the
-candidate will return shares which are assigned in `Delegation.Shares`.
+candidate will return shares which are assigned in `DelegatorBond.Shares`.
 
 ``` golang 
 type TxDelegate struct { 
@@ -616,7 +616,7 @@ synced past the height of the oldest `powerChange`.  This trim procedure will
 occur on an epoch basis.  
 
 ```golang
-type powerChange struct
+type powerChange struct {
     height      int64        // block height at change
     power       rational.Rat // total power at change
     prevpower   rational.Rat // total power at previous height-1 
@@ -694,5 +694,5 @@ rate, all commission on fees must be simultaneously withdrawn.
   `candidate.Adjustment` must be set to the value of `canidate.Count` for the
   height which the candidate is added on the validator set.
 - The feePool of a new delegator bond will be 0 for the height at which the bond
-  was added. This is achieved by setting `Delegation.FeeWithdrawalHeight` to
+  was added. This is achieved by setting `DelegatorBond.FeeWithdrawalHeight` to
   the height which the bond was added. 

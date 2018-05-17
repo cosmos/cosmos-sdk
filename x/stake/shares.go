@@ -134,6 +134,7 @@ func (s PoolShares) Tokens(p Pool) sdk.Rat {
 		return p.unbondedShareExRate().Mul(s.Amount)
 	case ShareUnbonded:
 		return p.unbondedShareExRate().Mul(s.Amount)
+	default:
+		panic("unknown share kind")
 	}
-	return sdk.ZeroRat()
 }

@@ -7,14 +7,14 @@ prefixed areas of the staking store which are accessed in `x/stake/keeper.go`.
 ## Validators 
  - Prefix Key Space:    ValidatorsKey
  - Key/Sort:            Validator Owner Address
- - Contains:            All Validator records whether independent of being bonded or not
+ - Contains:            All Validator records independent of being bonded or not
  - Used For:            Retrieve validator from owner address, general validator retrieval 
 
 ## Validators By Power
  - Prefix Key Space:    ValidatorsByPowerKey
  - Key/Sort:            Validator Power (equivalent bonded shares) then Block
                         Height then Transaction Order
- - Contains:            All Validator records whether independent of being bonded or not
+ - Contains:            All Validator records independent of being bonded or not
  - Used For:            Determining who the top validators are whom should be bonded
 
 ## Validators Bonded 
@@ -30,4 +30,5 @@ prefixed areas of the staking store which are accessed in `x/stake/keeper.go`.
  - Prefix Key Space:    TendermintUpdatesKey
  - Key/Sort:            Validator Owner Address
  - Contains:            Validators are queued to affect the consensus validation set in Tendermint
- - Used For:            Informing Tendermint of the validator set updates
+ - Used For:            Informing Tendermint of the validator set updates, is used only intra-block, as the
+                        updates are applied then cleared on endblock

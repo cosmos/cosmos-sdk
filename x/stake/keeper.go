@@ -167,8 +167,8 @@ func (k Keeper) removeValidator(ctx sdk.Context, address sdk.Address) {
 	store.Delete(GetValidatorKey(address))
 	store.Delete(GetValidatorsBondedByPowerKey(validator, pool))
 
-	// delete from current and power weighted validator groups if the validator
-	// exists and add validator with zero power to the validator updates
+	// delete from the current and power weighted validator groups if the validator
+	// is bonded - and add validator with zero power to the validator updates
 	if store.Get(GetValidatorsBondedKey(validator.PubKey)) == nil {
 		return
 	}
@@ -190,6 +190,11 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []Validator) {
 	iterator := store.SubspaceIterator(ValidatorsBondedKey)
 	i := 0
 	for ; iterator.Valid(); iterator.Next() {
+
+		// sanity check
+		if i > int(maxValidators-1) {
+			panic("maxValidators is less than the number of records in ValidatorsBonded Store, store should have been updated")
+		}
 		bz := iterator.Value()
 		var validator Validator
 		k.cdc.MustUnmarshalBinary(bz, &validator)
@@ -276,7 +281,7 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore, pool 
 		if found {
 
 			// remove from ToKickOut group
-			toKickOut[string(validator.Address)] = nil
+			delete(toKickOut, string(validator.Address))
 		} else {
 
 			// if it wasn't in the toKickOut group it means
@@ -299,9 +304,6 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore, pool 
 
 	// perform the actual kicks
 	for _, value := range toKickOut {
-		if value == nil {
-			continue
-		}
 		var validator Validator
 		k.cdc.MustUnmarshalBinary(value, &validator)
 		k.unbondValidator(ctx, store, validator)
@@ -336,6 +338,9 @@ func (k Keeper) unbondValidator(ctx sdk.Context, store sdk.KVStore, validator Va
 // perform all the store operations for when a validator status becomes bonded
 func (k Keeper) bondValidator(ctx sdk.Context, store sdk.KVStore, validator Validator, pool Pool) Validator {
 
+	// first delete the old record in the pool
+	store.Delete(GetValidatorsBondedByPowerKey(validator, pool))
+
 	// set the status
 	validator.Status = sdk.Bonded
 	validator, pool = validator.UpdateSharesLocation(pool)
@@ -343,7 +348,6 @@ func (k Keeper) bondValidator(ctx sdk.Context, store sdk.KVStore, validator Vali
 
 	// save the now bonded validator record to the three referened stores
 	bzVal := k.cdc.MustMarshalBinary(validator)
-	store.Delete(GetValidatorsBondedByPowerKey(validator, pool))
 	store.Set(GetValidatorKey(validator.Address), bzVal)
 	store.Set(GetValidatorsBondedByPowerKey(validator, pool), bzVal)
 	store.Set(GetValidatorsBondedKey(validator.PubKey), bzVal)

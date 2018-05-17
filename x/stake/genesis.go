@@ -43,8 +43,8 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 func WriteGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	pool := k.GetPool(ctx)
 	params := k.GetParams(ctx)
-	validators := k.GetValidators(ctx, 32767)
-	bonds := k.getBonds(ctx, 32767)
+	validators := k.getAllValidators(ctx)
+	bonds := k.getAllDelegations(ctx)
 	return GenesisState{
 		pool,
 		params,

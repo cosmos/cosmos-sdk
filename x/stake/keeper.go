@@ -46,6 +46,26 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.Address) (validator Valid
 	return validator, true
 }
 
+// Get the set of all validators with no limits, used during genesis dump
+func (k Keeper) getAllValidators(ctx sdk.Context) (validators Validators) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := store.SubspaceIterator(ValidatorsKey)
+
+	i := 0
+	for ; ; i++ {
+		if !iterator.Valid() {
+			iterator.Close()
+			break
+		}
+		bz := iterator.Value()
+		var validator Validator
+		k.cdc.MustUnmarshalBinary(bz, &validator)
+		validators = append(validators, validator)
+		iterator.Next()
+	}
+	return validators[:i] // trim
+}
+
 // Get the set of all validators, retrieve a maxRetrieve number of records
 func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve int16) (validators Validators) {
 	store := ctx.KVStore(k.storeKey)
@@ -364,25 +384,24 @@ func (k Keeper) GetDelegation(ctx sdk.Context,
 	return bond, true
 }
 
-// load all bonds
-func (k Keeper) getBonds(ctx sdk.Context, maxRetrieve int16) (bonds []Delegation) {
+// load all delegations used during genesis dump
+func (k Keeper) getAllDelegations(ctx sdk.Context) (delegations []Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := store.SubspaceIterator(DelegationKey)
 
-	bonds = make([]Delegation, maxRetrieve)
 	i := 0
 	for ; ; i++ {
-		if !iterator.Valid() || i > int(maxRetrieve-1) {
+		if !iterator.Valid() {
 			iterator.Close()
 			break
 		}
 		bondBytes := iterator.Value()
-		var bond Delegation
-		k.cdc.MustUnmarshalBinary(bondBytes, &bond)
-		bonds[i] = bond
+		var delegation Delegation
+		k.cdc.MustUnmarshalBinary(bondBytes, &delegation)
+		delegations = append(delegations, delegation)
 		iterator.Next()
 	}
-	return bonds[:i] // trim
+	return delegations[:i] // trim
 }
 
 // load all bonds of a delegator
@@ -476,12 +495,51 @@ func (k Keeper) setPool(ctx sdk.Context, p Pool) {
 
 //__________________________________________________________________________
 
+// get the current in-block validator operation counter
+func (k Keeper) getIntraTxCounter(ctx sdk.Context) int16 {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(IntraTxCounterKey)
+	if b == nil {
+		return 0
+	}
+	var counter int16
+	k.cdc.MustUnmarshalBinary(b, &counter)
+	return counter
+}
+
+// set the current in-block validator operation counter
+func (k Keeper) setIntraTxCounter(ctx sdk.Context, counter int16) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshalBinary(counter)
+	store.Set(IntraTxCounterKey, bz)
+}
+
+//__________________________________________________________________________
+
 // Implements ValidatorSet
 
 var _ sdk.ValidatorSet = Keeper{}
 
 // iterate through the active validator set and perform the provided function
-func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, validator sdk.Validator)) {
+func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := store.SubspaceIterator(ValidatorsKey)
+	i := int64(0)
+	for ; iterator.Valid(); iterator.Next() {
+		bz := iterator.Value()
+		var validator Validator
+		k.cdc.MustUnmarshalBinary(bz, &validator)
+		stop := fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?
+		if stop {
+			break
+		}
+		i++
+	}
+	iterator.Close()
+}
+
+// iterate through the active validator set and perform the provided function
+func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := store.SubspaceIterator(ValidatorsBondedKey)
 	i := int64(0)
@@ -489,7 +547,10 @@ func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, va
 		bz := iterator.Value()
 		var validator Validator
 		k.cdc.MustUnmarshalBinary(bz, &validator)
-		fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?
+		stop := fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?
+		if stop {
+			break
+		}
 		i++
 	}
 	iterator.Close()
@@ -526,7 +587,7 @@ func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.Address, addrVal sdk.Add
 }
 
 // iterate through the active validator set and perform the provided function
-func (k Keeper) IterateDelegators(ctx sdk.Context, delAddr sdk.Address, fn func(index int64, delegation sdk.Delegation)) {
+func (k Keeper) IterateDelegators(ctx sdk.Context, delAddr sdk.Address, fn func(index int64, delegation sdk.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	key := GetDelegationsKey(delAddr, k.cdc)
 	iterator := store.SubspaceIterator(key)
@@ -535,29 +596,11 @@ func (k Keeper) IterateDelegators(ctx sdk.Context, delAddr sdk.Address, fn func(
 		bz := iterator.Value()
 		var delegation Delegation
 		k.cdc.MustUnmarshalBinary(bz, &delegation)
-		fn(i, delegation) // XXX is this safe will the fields be able to get written to?
+		stop := fn(i, delegation) // XXX is this safe will the fields be able to get written to?
+		if stop {
+			break
+		}
 		i++
 	}
 	iterator.Close()
-}
-
-//__________________________________________________________________________
-
-// get the current in-block validator operation counter
-func (k Keeper) getIntraTxCounter(ctx sdk.Context) int16 {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(IntraTxCounterKey)
-	if b == nil {
-		return 0
-	}
-	var counter int16
-	k.cdc.MustUnmarshalBinary(b, &counter)
-	return counter
-}
-
-// set the current in-block validator operation counter
-func (k Keeper) setIntraTxCounter(ctx sdk.Context, counter int16) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinary(counter)
-	store.Set(IntraTxCounterKey, bz)
 }

@@ -35,9 +35,16 @@ func ABCIValidator(v Validator) abci.Validator {
 
 // properties for the set of all validators
 type ValidatorSet interface {
-	IterateValidatorsBonded(Context, func(index int64, validator Validator)) // execute arbitrary logic for each validator
-	Validator(Context, Address) Validator                                    // get a particular validator by owner address
-	TotalPower(Context) Rat                                                  // total power of the validator set
+	// iterate through validator by owner-address, execute func for each validator
+	IterateValidators(Context,
+		func(index int64, validator Validator) (stop bool))
+
+	// iterate through bonded validator by pubkey-address, execute func for each validator
+	IterateValidatorsBonded(Context,
+		func(index int64, validator Validator) (stop bool))
+
+	Validator(Context, Address) Validator // get a particular validator by owner address
+	TotalPower(Context) Rat               // total power of the validator set
 }
 
 //_______________________________________________________________________________
@@ -52,6 +59,8 @@ type Delegation interface {
 // properties for the set of all delegations for a particular
 type DelegationSet interface {
 
-	// execute arbitrary logic for each validator which a delegator has a delegation for
-	IterateDelegators(Context, delegator Address, fn func(index int64, delegation Delegation))
+	// iterate through all delegations from one delegator by validator-address,
+	//   execute func for each validator
+	IterateDelegators(Context, delegator Address,
+		fn func(index int64, delegation Delegation) (stop bool))
 }

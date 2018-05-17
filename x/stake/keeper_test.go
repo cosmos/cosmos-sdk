@@ -673,7 +673,7 @@ func TestBond(t *testing.T) {
 	assert.True(t, bond2to1.equal(resBonds[0]))
 	assert.True(t, bond2to2.equal(resBonds[1]))
 	assert.True(t, bond2to3.equal(resBonds[2]))
-	allBonds := keeper.getBonds(ctx, 1000)
+	allBonds := keeper.getAllDelegations(ctx)
 	require.Equal(t, 6, len(allBonds))
 	assert.True(t, bond1to1.equal(allBonds[0]))
 	assert.True(t, bond1to2.equal(allBonds[1]))

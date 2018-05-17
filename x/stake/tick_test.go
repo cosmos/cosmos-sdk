@@ -153,26 +153,8 @@ func TestHourlyRateOfChange(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 
 	// create some candidates some bonded, some unbonded
-	candidates := make([]Candidate, 10)
-	for i := 0; i < 10; i++ {
-		c := Candidate{
-			Status:      Unbonded,
-			PubKey:      pks[i],
-			Address:     addrs[i],
-			Assets:      sdk.NewRat(0),
-			Liabilities: sdk.NewRat(0),
-		}
-		if i < 5 {
-			c.Status = Bonded
-		}
-		mintedTokens := int64((i + 1) * 10000000)
-		pool.TotalSupply += mintedTokens
-		pool, c, _ = pool.candidateAddTokens(c, mintedTokens)
+	pool = setupCandidates(pool, keeper, ctx, 10, 0, 5)
 
-		keeper.setCandidate(ctx, c)
-		candidates[i] = c
-	}
-	keeper.setPool(ctx, pool)
 	var totalSupply int64 = 550000000
 	var bondedTokens int64 = 150000000
 	var unbondedTokens int64 = 400000000
@@ -258,27 +240,9 @@ func TestLargeUnbond(t *testing.T) {
 	keeper.setParams(ctx, params)
 	pool := keeper.GetPool(ctx)
 
-	// create some candidates some bonded, some unbonded. the largest candidates are bonded
-	// so that we can have a big change in bonded ratio (~73% to ~55%) when cand9 unbonds
-	candidates := make([]Candidate, 10)
-	for i := 0; i < 10; i++ {
-		c := Candidate{
-			Status:      Unbonded,
-			PubKey:      pks[i],
-			Address:     addrs[i],
-			Assets:      sdk.NewRat(0),
-			Liabilities: sdk.NewRat(0),
-		}
-		if i > 4 {
-			c.Status = Bonded
-		}
-		mintedTokens := int64((i + 1) * 10000000)
-		pool.TotalSupply += mintedTokens
-		pool, c, _ = pool.candidateAddTokens(c, mintedTokens)
-		keeper.setCandidate(ctx, c)
-		candidates[i] = c
-	}
-	keeper.setPool(ctx, pool)
+	// Candidates unbonded (0-4), bonded (5-9),
+	// candidate 9 will be unbonded, bringing us from ~73% to ~55%
+	pool = setupCandidates(pool, keeper, ctx, 10, 5, 10)
 
 	//initialzing variables for candidate state. These will get updated throughout the test
 	var totalSupply, bondedTokens, unbondedTokens, cand9UnbondedTokens int64 = 550000000, 400000000, 150000000, 0
@@ -351,29 +315,9 @@ func TestLargeBond(t *testing.T) {
 	keeper.setParams(ctx, params)
 	pool := keeper.GetPool(ctx)
 
-	// create some candidates some bonded, some unbonded. the largest candidates are bonded
-	// so that we can have a big change in bonded ratio (~55 to ~73) when cand9 bonds
-	candidates := make([]Candidate, 10)
-	for i := 0; i < 10; i++ {
-		c := Candidate{
-			Status:      Unbonded,
-			PubKey:      pks[i],
-			Address:     addrs[i],
-			Assets:      sdk.NewRat(0),
-			Liabilities: sdk.NewRat(0),
-		}
-
-		//leave candidate 9 unbonded, so we can bond it later
-		if i > 4 && i < 9 {
-			c.Status = Bonded
-		}
-		mintedTokens := int64((i + 1) * 10000000)
-		pool.TotalSupply += mintedTokens
-		pool, c, _ = pool.candidateAddTokens(c, mintedTokens)
-		keeper.setCandidate(ctx, c)
-		candidates[i] = c
-	}
-	keeper.setPool(ctx, pool)
+	// Candidates unbonded (0-4), bonded (5-8), candidate 9 left unbonded, so it can be bonded later in the test
+	// bonded candidate 9 brings us from ~55% to ~73 bondedRatio
+	pool = setupCandidates(pool, keeper, ctx, 10, 5, 9)
 
 	//initialzing variables for candidate state. These will get updated throughout the test
 	var totalSupply, bondedTokens, unbondedTokens, cand9unbondedTokens, cand9bondedTokens int64 = 550000000, 300000000, 250000000, 100000000, 0
@@ -612,4 +556,33 @@ func checkHourlyProvisions(t *testing.T, keeper Keeper, pool Pool, ctx sdk.Conte
 	require.Equal(t, startTotalSupply+expProvisions, pool.TotalSupply)
 
 	return expInflation, expProvisions, pool
+}
+
+// Deterministic setup of candidates
+// Allows you to decide how many candidates to setup, and which ones you want bonded
+// Tokens allocated to each candidate increase by 10000000 for each candidate
+func setupCandidates(pool Pool, keeper Keeper, ctx sdk.Context, numCands, indexBondedGT, indexBondedLT int) Pool {
+
+	candidates := make([]Candidate, numCands)
+	for i := 0; i < numCands; i++ {
+		c := Candidate{
+			Status:      Unbonded,
+			PubKey:      pks[i],
+			Address:     addrs[i],
+			Assets:      sdk.NewRat(0),
+			Liabilities: sdk.NewRat(0),
+		}
+		if i >= indexBondedGT && i < indexBondedLT {
+			c.Status = Bonded
+		}
+		mintedTokens := int64((i + 1) * 10000000)
+		pool.TotalSupply += mintedTokens
+		pool, c, _ = pool.candidateAddTokens(c, mintedTokens)
+
+		keeper.setCandidate(ctx, c)
+		candidates[i] = c
+	}
+	keeper.setPool(ctx, pool)
+	pool = keeper.GetPool(ctx)
+	return pool
 }

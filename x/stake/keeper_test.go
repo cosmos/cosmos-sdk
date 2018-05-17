@@ -35,6 +35,7 @@ func TestSetValidator(t *testing.T) {
 	assert.True(sdk.RatEq(t, sdk.NewRat(10), validator.DelegatorShares))
 	keeper.setPool(ctx, pool)
 	keeper.setValidator(ctx, validator)
+
 	// after the save the validator should be bonded
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)

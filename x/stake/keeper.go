@@ -103,8 +103,10 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) Validator {
 
 	powerIncreasing := false
 	if oldFound {
-		// if the voting power is the same no need to update any of the other indexes
-		if oldValidator.Status == sdk.Bonded &&
+		// if the voting power/status is the same no need to update any of the other indexes
+		// TODO will need to implement this to have regard for "unrevoke" transaction however
+		//      it shouldn't return here under that transaction
+		if oldValidator.Status == validator.Status &&
 			oldValidator.PShares.Equal(validator.PShares) {
 			return validator
 		} else if oldValidator.PShares.Bonded().LT(validator.PShares.Bonded()) {
@@ -129,10 +131,11 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) Validator {
 	bz := k.cdc.MustMarshalBinary(validator)
 	store.Set(GetValidatorsBondedByPowerKey(validator, pool), bz)
 
+	// efficiency case:
 	// add to the validators and return to update list if is already a validator and power is increasing
 	if powerIncreasing && oldFound && oldValidator.Status == sdk.Bonded {
 
-		// update the recent validator store
+		// update the store for bonded validators
 		store.Set(GetValidatorsBondedKey(validator.PubKey), bz)
 
 		// and the Tendermint updates
@@ -142,16 +145,11 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) Validator {
 	}
 
 	// update the validator set for this validator
-	valIsNowBonded := k.updateValidators(ctx, store, validator.Address)
-
-	if (!oldFound && valIsNowBonded) ||
-		(oldFound && oldValidator.Status != sdk.Bonded && valIsNowBonded) {
-
-		validator.Status = sdk.Bonded
-		validator, pool = validator.UpdateSharesLocation(pool)
-		k.setPool(ctx, pool)
-		k.bondValidator(ctx, store, validator, pool)
+	nowBonded, retrieve := k.updateBondedValidators(ctx, store, pool, validator.Address)
+	if nowBonded {
+		validator = retrieve
 	}
+
 	return validator
 }
 
@@ -239,8 +237,10 @@ func (k Keeper) GetValidatorsBondedByPower(ctx sdk.Context) []Validator {
 // ValidatorsBondedKey. This store is used to determine if a validator is a
 // validator without needing to iterate over the subspace as we do in
 // GetValidators.
-func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedValidatorAddr sdk.Address) (updatedIsBonded bool) {
-	updatedIsBonded = false
+//
+// Optionally also return the validator from a retrieve address if the validator has been bonded
+func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore, pool Pool,
+	OptionalRetrieve sdk.Address) (retrieveBonded bool, retrieve Validator) {
 
 	// clear the current validators store, add to the ToKickOut temp store
 	toKickOut := make(map[string][]byte) // map[key]value
@@ -272,20 +272,32 @@ func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedVali
 		var validator Validator
 		k.cdc.MustUnmarshalBinary(bz, &validator)
 
-		// remove from ToKickOut group
-		toKickOut[string(validator.Address)] = nil
+		_, found := toKickOut[string(validator.Address)]
+		if found {
+
+			// remove from ToKickOut group
+			toKickOut[string(validator.Address)] = nil
+		} else {
+
+			// if it wasn't in the toKickOut group it means
+			// this wasn't a previously a validator, therefor
+			// update the validator/to reflect this
+			validator.Status = sdk.Bonded
+			validator, pool = validator.UpdateSharesLocation(pool)
+			validator = k.bondValidator(ctx, store, validator, pool)
+			if bytes.Equal(validator.Address, OptionalRetrieve) {
+				retrieveBonded = true
+				retrieve = validator
+			}
+		}
 
 		// also add to the current validators group
 		store.Set(GetValidatorsBondedKey(validator.PubKey), bz)
 
-		// MOST IMPORTANTLY, send back information that the current validator should be bonded
-		if bytes.Equal(updatedValidatorAddr, validator.Address) {
-			updatedIsBonded = true
-		}
-
 		iterator.Next()
 	}
 
+	// perform the actual kicks
 	for _, value := range toKickOut {
 		if value == nil {
 			continue
@@ -294,6 +306,9 @@ func (k Keeper) updateValidators(ctx sdk.Context, store sdk.KVStore, updatedVali
 		k.cdc.MustUnmarshalBinary(value, &validator)
 		k.unbondValidator(ctx, store, validator)
 	}
+
+	// save the pool as well before exiting
+	k.setPool(ctx, pool)
 	return
 }
 
@@ -319,7 +334,7 @@ func (k Keeper) unbondValidator(ctx sdk.Context, store sdk.KVStore, validator Va
 }
 
 // perform all the store operations for when a validator status becomes bonded
-func (k Keeper) bondValidator(ctx sdk.Context, store sdk.KVStore, validator Validator, pool Pool) {
+func (k Keeper) bondValidator(ctx sdk.Context, store sdk.KVStore, validator Validator, pool Pool) Validator {
 
 	// set the status
 	validator.Status = sdk.Bonded
@@ -336,6 +351,8 @@ func (k Keeper) bondValidator(ctx sdk.Context, store sdk.KVStore, validator Vali
 	// add to accumulated changes for tendermint
 	bzABCI := k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
 	store.Set(GetTendermintUpdatesKey(validator.Address), bzABCI)
+
+	return validator
 }
 
 //_________________________________________________________________________
@@ -461,7 +478,8 @@ func (k Keeper) setParams(ctx sdk.Context, params Params) {
 
 	// if max validator count changes, must recalculate validator set
 	if k.params.MaxValidators != params.MaxValidators {
-		k.updateValidators(ctx, store, sdk.Address{})
+		pool := k.GetPool(ctx)
+		k.updateBondedValidators(ctx, store, pool, nil)
 	}
 	k.params = params // update the cache
 }

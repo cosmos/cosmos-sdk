@@ -3,7 +3,7 @@ servers:
   - url: 'http://localhost:8998'
 info:
   version: "1.1.0"
-  title: Light client daemon to interface with Cosmos baseserver via REST
+  title: Light client daemon to interface with full Gaia node via REST
   description: Specification for the LCD provided by `gaia rest-server`
   
 paths:

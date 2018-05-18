@@ -36,10 +36,10 @@ tick(ctx Context):
     
     if time > reDelegationQueue.head().InitTime + UnbondingPeriod 
         for each element elem in the unbondDelegationQueue where time > elem.InitTime + UnbondingPeriod do
-            candidate = getCandidate(store, elem.PubKey)
-            returnedCoins = removeShares(candidate, elem.Shares)
-            candidate.RedelegatingShares -= elem.Shares 
-            delegateWithCandidate(TxDelegate(elem.NewCandidate, returnedCoins), candidate)
+            validator = getValidator(store, elem.PubKey)
+            returnedCoins = removeShares(validator, elem.Shares)
+            validator.RedelegatingShares -= elem.Shares 
+            delegateWithValidator(TxDelegate(elem.NewValidator, returnedCoins), validator)
             reDelegationQueue.remove(elem)
             
     return UpdateValidatorSet()
@@ -61,42 +61,42 @@ nextInflation(hrsPerYr rational.Rat):
     return inflation 
 
 UpdateValidatorSet():
-    candidates = loadCandidates(store)
+    validators = loadValidators(store)
 
-    v1 = candidates.Validators()
-    v2 = updateVotingPower(candidates).Validators()
+    v1 = validators.Validators()
+    v2 = updateVotingPower(validators).Validators()
 
     change = v1.validatorsUpdated(v2) // determine all updated validators between two validator sets
     return change
 
-updateVotingPower(candidates Candidates):
-    foreach candidate in candidates do
-	    candidate.VotingPower = (candidate.IssuedDelegatorShares - candidate.RedelegatingShares) * delegatorShareExRate(candidate)	
+updateVotingPower(validators Validators):
+    foreach validator in validators do
+	    validator.VotingPower = (validator.IssuedDelegatorShares - validator.RedelegatingShares) * delegatorShareExRate(validator)	
 	    
-    candidates.Sort()
+    validators.Sort()
 	
-    foreach candidate in candidates do
-	    if candidate is not in the first params.MaxVals  
-	        candidate.VotingPower = rational.Zero
-	        if candidate.Status == Bonded then bondedToUnbondedPool(candidate Candidate)
+    foreach validator in validators do
+	    if validator is not in the first params.MaxVals  
+	        validator.VotingPower = rational.Zero
+	        if validator.Status == Bonded then bondedToUnbondedPool(validator Validator)
 		
-	    else if candidate.Status == UnBonded then unbondedToBondedPool(candidate)
+	    else if validator.Status == UnBonded then unbondedToBondedPool(validator)
                       
-	saveCandidate(store, c)
+	saveValidator(store, c)
 	
-    return candidates
+    return validators
 
-unbondedToBondedPool(candidate Candidate):
-    removedTokens = exchangeRate(gs.UnbondedShares, gs.UnbondedPool) * candidate.GlobalStakeShares 
-    gs.UnbondedShares -= candidate.GlobalStakeShares
+unbondedToBondedPool(validator Validator):
+    removedTokens = exchangeRate(gs.UnbondedShares, gs.UnbondedPool) * validator.GlobalStakeShares 
+    gs.UnbondedShares -= validator.GlobalStakeShares
     gs.UnbondedPool -= removedTokens
 	
     gs.BondedPool += removedTokens
     issuedShares = removedTokens / exchangeRate(gs.BondedShares, gs.BondedPool)
     gs.BondedShares += issuedShares
     
-    candidate.GlobalStakeShares = issuedShares
-    candidate.Status = Bonded
+    validator.GlobalStakeShares = issuedShares
+    validator.Status = Bonded
 
     return transfer(address of the unbonded pool, address of the bonded pool, removedTokens)
 ```
@@ -151,7 +151,7 @@ LastCommit and +2/3 (see [TODO](https://github.com/cosmos/cosmos-sdk/issues/967)
 Validators are penalized for failing to be included in the LastCommit for some
 number of blocks by being automatically unbonded.
 
-The following information is stored with each validator candidate, and is only non-zero if the candidate becomes an active validator:
+The following information is stored with each validator, and is only non-zero if the validator becomes an active validator:
 
 ```go
 type ValidatorSigningInfo struct {
@@ -161,7 +161,7 @@ type ValidatorSigningInfo struct {
 ```
 
 Where:
-* `StartHeight` is set to the height that the candidate became an active validator (with non-zero voting power).
+* `StartHeight` is set to the height that the validator became an active validator (with non-zero voting power).
 * `SignedBlocksBitArray` is a bit-array of size `SIGNED_BLOCKS_WINDOW` that records, for each of the last `SIGNED_BLOCKS_WINDOW` blocks,
 whether or not this validator was included in the LastCommit. It uses a `0` if the validator was included, and a `1` if it was not.
 Note it is initialized with all 0s. 

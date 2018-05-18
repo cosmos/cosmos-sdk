@@ -2,100 +2,125 @@
 
 ## Overview
 
-The Cosmos Hub is a Tendermint-based Proof of Stake blockchain system that 
-serves as a backbone of the Cosmos ecosystem. It is operated and secured by an 
-open and globally decentralized set of validators. Tendermint consensus is a 
-Byzantine fault-tolerant distributed protocol that involves all validators in 
-the process of exchanging protocol messages in the production of each block. To
-avoid Nothing-at-Stake problem, a validator in Tendermint needs to lock up 
-coins in a bond deposit. Tendermint protocol messages are signed by the 
-validator's private key, and this is a basis for Tendermint strict 
-accountability that allows punishing misbehaving validators by slashing 
-(burning) their bonded Atoms. On the other hand, validators are rewarded for 
+The Cosmos Hub is a Tendermint-based Delegated Proof of Stake (DPos) blockchain
+system that serves as a backbone of the Cosmos ecosystem. It is operated and
+secured by an open and globally decentralized set of validators. Tendermint
+consensus is a Byzantine fault-tolerant distributed protocol that involves all
+validators in the process of exchanging protocol messages in the production of
+each block. To avoid Nothing-at-Stake problem, a validator in Tendermint needs
+to lock up coins in a bond deposit. Tendermint protocol messages are signed by
+the validator's private key, and this is a basis for Tendermint strict
+accountability that allows punishing misbehaving validators by slashing
+(burning) their bonded Atoms. On the other hand, validators are rewarded for
 their service of securing blockchain network by the inflationary provisions and
-transactions fees. This incentives correct behavior of the validators and 
+transactions fees. This incentives correct behavior of the validators and
 provides the economic security of the network.
 
-The native token of the Cosmos Hub is called Atom; becoming a validator of the 
+The native token of the Cosmos Hub is called Atom; becoming a validator of the
 Cosmos Hub requires holding Atoms. However, not all Atom holders are validators
 of the Cosmos Hub. More precisely, there is a selection process that determines
-the validator set as a subset of all validator candidates (Atom holders that 
-wants to become a validator). The other option for Atom holder is to delegate 
-their atoms to validators, i.e., being a delegator. A delegator is an Atom 
-holder that has bonded its Atoms by delegating it to a validator (or validator 
-candidate). By bonding Atoms to secure the network (and taking a risk of being 
-slashed in case of misbehaviour), a user is rewarded with inflationary 
-provisions and transaction fees proportional to the amount of its bonded Atoms.
-The Cosmos Hub is designed to efficiently facilitate a small numbers of 
-validators (hundreds), and large numbers of delegators (tens of thousands). 
-More precisely, it is the role of the Staking module of the Cosmos Hub to
-support various staking functionality including validator set selection, 
-delegating, bonding and withdrawing Atoms, and the distribution of inflationary
-provisions and transaction fees.
+the validator set as a subset of all validators (Atom holders that
+wants to become a validator). The other option for Atom holder is to delegate
+their atoms to validators, i.e., being a delegator. A delegator is an Atom
+holder that has bonded its Atoms by delegating it to a validator. By bonding
+Atoms to secure the network (and taking a risk of being slashed in case of
+misbehaviour), a user is rewarded with inflationary provisions and transaction
+fees proportional to the amount of its bonded Atoms.  The Cosmos Hub is
+designed to efficiently facilitate a small numbers of validators (hundreds),
+and large numbers of delegators (tens of thousands).  More precisely, it is the
+role of the Staking module of the Cosmos Hub to support various staking
+functionality including validator set selection, delegating, bonding and
+withdrawing Atoms, and the distribution of inflationary provisions and
+transaction fees.
 
 ## Basic Terms and Definitions
 
-* Cosmsos Hub - a Tendermint-based Proof of Stake blockchain system
+* Cosmsos Hub - a Tendermint-based Delegated Proof of Stake (DPos)
+    blockchain system
 * Atom - native token of the Cosmsos Hub
 * Atom holder - an entity that holds some amount of Atoms 
-* Candidate - an Atom holder that is actively involved in the Tendermint 
-  blockchain protocol (running Tendermint Full Node (TODO: add link to Full 
-  Node definition) and is competing with other candidates to be elected as a 
-  validator (TODO: add link to Validator definition))
-* Validator - a candidate that is currently selected among a set of candidates 
-  to be able to sign protocol messages in the Tendermint consensus protocol 
-* Delegator - an Atom holder that has bonded some of its Atoms by delegating 
-  them to a validator (or a candidate) 
-* Bonding Atoms - a process of locking Atoms in a bond deposit (putting Atoms 
-  under protocol control). Atoms are always bonded through a validator (or 
-  candidate) process. Bonded atoms can be slashed (burned) in case a validator 
-  process misbehaves (does not behave according to the protocol specification). 
-  Atom holders can regain access to their bonded Atoms if they have not been 
-  slashed by waiting an Unbonding period.
-* Unbonding period - a period of time after which Atom holder gains access to 
-  its bonded Atoms (they can be withdrawn to a user account) or they can be 
-  re-delegated.
-* Inflationary provisions - inflation is the process of increasing the Atom supply. 
-  Atoms are periodically created on the Cosmos Hub and issued to bonded Atom holders. 
-  The goal of inflation is to incentize most of the Atoms in existence to be bonded.
+* Pool - Global object within the Cosmos Hub which accounts global state
+    including the total amount of bonded, unbonding, and unbonded atoms
+* Validator Share - Share which a validator holds to represent its portion of
+    bonded, unbonding or unbonded atoms in the pool 
+* Delegation Share - Shares which a delegation bond holds to represent its
+    portion of bonded, unbonding or unbonded shares in a validator
+* Bond Atoms - a process of locking Atoms in a delegation share which holds them
+    under protocol control. 
+* Slash Atoms - the process of burning atoms in the pool and assoiated
+    validator shares of a misbehaving validator, (not behaving according to the
+    protocol specification). This process devalues the worth of delegation shares 
+    of the given validator
+* Unbond Shares - Process of retrieving atoms from shares. If the shares are
+    bonded the shares must first remain in an inbetween unbonding state for the
+    duration of the unbonding period
+* Redelegating Shares - Process of redelegating atoms from one validator to
+    another. This process is instantanious, the redelegated delegation is
+    slashible to the old validator for all blocks before the redelegation and to
+    the new validator for all new blocks.
+* Validator - entity with atoms which is either actively validating the Tendermint
+    protocol (bonded validator) or vying to validate .
+* Bonded Validator - a validator whose atoms are currently bonded and liable to
+    be slashed. These validators are to be able to sign protocol messages in the
+    Tendermint consensus protocol. There are limited number of bonded validators
+    at Cosmos Hub genesis there is a maximum of 100 bonded validators. Only Bonded
+    Validators receive atom provisions and fee rewards. 
+* Delegator - an Atom holder that has bonded Atoms to a validator
+* Unbonding period - time required in the unbonding state when unbonding
+    shares. Time slashable to old validator after a redelegation. Time for which
+    validators can be slashed after an infraction
+* Atom provisions - The process of increasing the Atom supply.  Atoms are
+    periodically created on the Cosmos Hub and issued to bonded Atom holders.
+    The goal of inflation is to incentize most of the Atoms in existence to be
+    bonded. Atoms are distributed unbonded and using the fee_distribution mechanism
 * Transaction fees - transaction fee is a fee that is included in a Cosmsos Hub
-  transaction. The fees are collected by the current validator set and 
-  distributed among validators and delegators in proportion to their bonded 
-  Atom share.
+    transaction. The fees are collected by the current validator set and 
+    distributed among validators and delegators in proportion to their bonded 
+    Atom share
 * Commission fee - a fee taken from the transaction fees by a validator for 
-  their service 
+    their service 
 
 ## The pool and the share
 
 At the core of the Staking module is the concept of a pool which denotes a
-collection of Atoms contributed by different Atom holders. There are two global
-pools in the Staking module: the bonded pool and unbonding pool. Bonded Atoms 
-are part of the global bonded pool. If a candidate or delegator wants to unbond 
-its Atoms, those Atoms are moved to the the unbonding pool for the duration of 
-the unbonding period. In the Staking module, a pool is a logical concept, i.e., 
-there is no pool data structure that would be responsible for managing pool 
-resources. Instead, it is managed in a distributed way. More precisely, at the 
-global level, for each pool, we track only the total amount of bonded or unbonded 
-Atoms and the current amount of issued shares. A share is a unit of Atom distribution 
-and the value of the share (share-to-atom exchange rate) changes during 
-system execution. The share-to-atom exchange rate can be computed as:
+collection of Atoms contributed by different Atom holders. There are three
+pools in the Staking module: the bonded, unbonding, and unbonded pool.  Bonded
+Atoms are part of the global bonded pool. If a validator or delegator wants to
+unbond its Shares, these Shares are moved to the the unbonding pool for the
+duration of the unbonding period. From here normally Atoms will be moved
+directly into the delegators wallet, however under the situation thatn an
+entire validator gets unbonded, the Atoms of the delegations will remain with
+the validator and moved to the unbonded pool.  For each pool, the total amount
+of bonded, unbonding, or unbonded Atoms are tracked as well as the current
+amount of issued pool-shares, the specific holdings of these shares by
+validators are tracked in protocol by the validator object. 
+
+A share is a unit of Atom distribution and the value of the share
+(share-to-atom exchange rate) can change during system execution. The
+share-to-atom exchange rate can be computed as:
 
 `share-to-atom-exchange-rate = size of the pool / ammount of issued shares`
 
-Then for each validator candidate (in a per candidate data structure) we keep track of
-the amount of shares the candidate owns in a pool. At any point in time, 
-the exact amount of Atoms a candidate has in the pool can be computed as the 
-number of shares it owns multiplied with the current share-to-atom exchange rate:
+Then for each validator (in a per validator data structure) the protocol keeps
+track of the amount of shares the validator owns in a pool. At any point in
+time, the exact amount of Atoms a validator has in the pool can be computed as
+the number of shares it owns multiplied with the current share-to-atom exchange
+rate:
 
-`candidate-coins = candidate.Shares * share-to-atom-exchange-rate`
+`validator-coins = validator.Shares * share-to-atom-exchange-rate`
 
-The benefit of such accounting of the pool resources is the fact that a 
-modification to the pool from bonding/unbonding/slashing/provisioning of 
-Atoms affects only global data (size of the pool and the number of shares) and 
-not the related validator/candidate data structure, i.e., the data structure of 
-other validators do not need to be modified. This has the advantage that 
-modifying global data is much cheaper computationally than modifying data of
-every validator. Let's explain this further with several small examples: 
+The benefit of such accounting of the pool resources is the fact that a
+modification to the pool from bonding/unbonding/slashing of Atoms affects only
+global data (size of the pool and the number of shares) and not the related
+validator data structure, i.e., the data structure of other validators do not
+need to be modified. This has the advantage that modifying global data is much
+cheaper computationally than modifying data of every validator. Let's explain
+this further with several small examples: 
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXX TODO make way less verbose lets use bullet points to describe the example
+XXX Also need to update to not include bonded atom provisions all atoms are
+XXX   redistributed with the fee pool now
 
 We consider initially 4 validators p1, p2, p3 and p4, and that each validator 
 has bonded 10 Atoms to the bonded pool. Furthermore, let's assume that we have 
@@ -140,33 +165,38 @@ delegators (we will explain this in section X).
 
 #### Delegator shares
 
-A candidate is, depending on it's status, contributing Atoms to either the 
-bonded or unbonding pool, and in return gets some amount of (global) pool 
-shares. Note that not all those Atoms (and respective shares) are owned by the 
-candidate as some Atoms could be delegated to a candidate. The mechanism for 
-distribution of Atoms (and shares) between a candidate and it's delegators is 
-based on a notion of delegator shares. More precisely, every candidate is 
-issuing (local) delegator shares (`Candidate.IssuedDelegatorShares`) that 
-represents some portion of global shares managed by the candidate 
-(`Candidate.GlobalStakeShares`). The principle behind managing delegator shares 
-is the same as described in [Section](#The pool and the share). We now 
+A validator is, depending on its status, contributing Atoms to either the bond,
+unbonding or unbonded pool - the validator in turn holds some amount of pool
+shares.  Not all of a validators Atoms (and respective shares) are owned by the
+validator, some may be owned by delegators to that validator. The mechanism for
+distribution of Atoms (and shares) between a validator and its delegators is
+based on a notion of delegator shares. More precisely, every validator is
+issuing (local) delegator shares (`Validator.IssuedDelegatorShares`) that
+represents some portion of global shares managed by the validator
+(`Validator.GlobalStakeShares`). The principle behind managing delegator shares
+is the same as described in [Section](#The pool and the share). We now
 illustrate it with an example.
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXX TODO make way less verbose lets use bullet points to describe the example
+XXX Also need to update to not include bonded atom provisions all atoms are
+XXX   redistributed with the fee pool now
 
 Let's consider 4 validators p1, p2, p3 and p4, and assume that each validator 
 has bonded 10 Atoms to the bonded pool. Furthermore, let's assume that we have 
 issued initially 40 global shares, i.e., that 
 `share-to-atom-exchange-rate = 1 atom per share`. So we will set 
 `GlobalState.BondedPool = 40` and `GlobalState.BondedShares = 40` and in the 
-Candidate data structure of each validator `Candidate.GlobalStakeShares = 10`. 
+Validator data structure of each validator `Validator.GlobalStakeShares = 10`. 
 Furthermore, each validator issued 10 delegator shares which are initially 
-owned by itself, i.e., `Candidate.IssuedDelegatorShares = 10`, where 
+owned by itself, i.e., `Validator.IssuedDelegatorShares = 10`, where 
 `delegator-share-to-global-share-ex-rate = 1 global share per delegator share`.
 Now lets assume that a delegator d1 delegates 5 atoms to a validator p1 and 
 consider what are the updates we need to make to the data structures. First, 
 `GlobalState.BondedPool = 45` and `GlobalState.BondedShares = 45`. Then, for 
-validator p1 we have `Candidate.GlobalStakeShares = 15`, but we also need to 
+validator p1 we have `Validator.GlobalStakeShares = 15`, but we also need to 
 issue also additional delegator shares, i.e., 
-`Candidate.IssuedDelegatorShares = 15` as the delegator d1 now owns 5 delegator
+`Validator.IssuedDelegatorShares = 15` as the delegator d1 now owns 5 delegator
 shares of validator p1, where each delegator share is worth 1 global shares, 
 i.e, 1 Atom. Lets see now what happens after 5 new Atoms are created due to 
 inflation. In that case, we only need to update `GlobalState.BondedPool` which 
@@ -177,38 +207,3 @@ Therefore, a delegator d1 now owns:
 
 `delegatorCoins = 5 (delegator shares) * 1 (delegator-share-to-global-share-ex-rate) * 50/45 (share-to-atom-ex-rate) = 5.55 Atoms`  
 
-### Inflation provisions
-
-Validator provisions are minted on an hourly basis (the first block of a new
-hour). The annual target of between 7% and 20%. The long-term target ratio of
-bonded tokens to unbonded tokens is 67%.
-
-The target annual inflation rate is recalculated for each provisions cycle. The
-inflation is also subject to a rate change (positive or negative) depending on
-the distance from the desired ratio (67%). The maximum rate change possible is
-defined to be 13% per year, however the annual inflation is capped as between
-7% and 20%.
-
-```go
-inflationRateChange(0) = 0
-GlobalState.Inflation(0) = 0.07
-    
-bondedRatio = GlobalState.BondedPool / GlobalState.TotalSupply
-AnnualInflationRateChange = (1 - bondedRatio / 0.67) * 0.13
-
-annualInflation += AnnualInflationRateChange
-
-if annualInflation > 0.20 then GlobalState.Inflation = 0.20
-if annualInflation < 0.07 then GlobalState.Inflation = 0.07
-
-provisionTokensHourly = GlobalState.TotalSupply * GlobalState.Inflation / (365.25*24)
-```
-
-Because the validators hold a relative bonded share (`GlobalStakeShares`), when
-more bonded tokens are added proportionally to all validators, the only term
-which needs to be updated is the `GlobalState.BondedPool`. So for each 
-provisions cycle:
-
-```go
-GlobalState.BondedPool += provisionTokensHourly
-```

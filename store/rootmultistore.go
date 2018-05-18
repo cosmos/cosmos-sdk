@@ -1,14 +1,12 @@
 package store
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 
 	"golang.org/x/crypto/ripemd160"
 
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/go-amino"
 	dbm "github.com/tendermint/tmlibs/db"
 	libmerkle "github.com/tendermint/tmlibs/merkle"
 
@@ -348,16 +346,13 @@ func (rs *rootMultiStore) cacheSubstoreProofs(infos []storeInfo) {
 			panic(err)
 		}
 
-		version := new(bytes.Buffer)
-		if err = amino.EncodeInt64(version, cid.Version); err != nil {
-			panic(err)
-		}
-
-		infos := [][]byte{[]byte(name), version.Bytes()}
+		wrapper := RootMultistoreWrapper{Version: cid.Version}
 
 		rs.proofByName[name] = merkle.SubProof{
-			Proof: proof,
-			Infos: infos,
+			ExistsProof:  proof,
+			Wrapper:      wrapper,
+			IsDescriptor: true,
+			Key:          name,
 		}
 	}
 }
@@ -426,6 +421,28 @@ func (si storeInfo) Hash() []byte {
 	hasher := ripemd160.New()
 	hasher.Write(bz)
 	return hasher.Sum(nil)
+}
+
+type RootMultistoreWrapper struct {
+	Version int64
+}
+
+func (w RootMultistoreWrapper) Wrap(name string, data []byte) []byte {
+	si := storeInfo{
+		Name: name,
+		Core: storeCore{
+			CommitID: CommitID{
+				Version: w.Version,
+				Hash:    data,
+			},
+		},
+	}
+
+	res, err := merkle.SimpleLeaf([]byte(name), si)
+	if err != nil {
+		panic(err)
+	}
+	return res
 }
 
 //----------------------------------------

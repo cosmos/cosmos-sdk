@@ -8,6 +8,6 @@ import (
 func RegisterCodec(cdc *wire.Codec) {
 	cdc.RegisterInterface((*KeyProof)(nil), nil)
 	cdc.RegisterConcrete(ExistsProof{}, "cosmos-sdk/ExistsProof", nil)
-	cdc.RegisterConcrete(AbsentProof{}, "cosmos-sdk/AbsentProof", nil)
-	cdc.RegisterConcrete(RangeProof{}, "cosmos-sdk/RangeProof", nil)
+
+	cdc.RegisterInterface((*Wrapper)(nil), nil)
 }

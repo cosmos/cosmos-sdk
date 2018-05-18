@@ -83,7 +83,7 @@ func computeProofFromAunts(index int, total int, inners [][]byte) (res []Node, e
 
 // FromSimpleProof casts merkle.SimpleProof to ExistsProof
 func FromSimpleProof(p *merkle.SimpleProof, index int, total int, root []byte) (res ExistsProof, err error) {
-	data := ExistsData{
+	leaf := Node{
 		Op: Ripemd160,
 	}
 
@@ -92,11 +92,7 @@ func FromSimpleProof(p *merkle.SimpleProof, index int, total int, root []byte) (
 		return
 	}
 
-	return ExistsProof{
-		Data:     data,
-		Nodes:    nodes,
-		RootHash: root,
-	}, nil
+	return ExistsProof(append([]Node{leaf}, nodes...)), nil
 }
 
 func encodeByteSlice(w io.Writer, bz []byte) (err error) {
@@ -124,7 +120,7 @@ func FromKeyProof(p iavl.KeyProof) (KeyProof, error) {
 	case *iavl.KeyExistsProof:
 		return FromKeyExistsProof(p)
 	case *iavl.KeyAbsentProof:
-		return FromKeyAbsentProof(p)
+		return nil, fmt.Errorf("Absent proof not supported")
 	default:
 		return nil, fmt.Errorf("Invalid proof")
 	}
@@ -132,14 +128,10 @@ func FromKeyProof(p iavl.KeyProof) (KeyProof, error) {
 
 // FromKeyExistsProof casts iavl.KeyExistsProof to ExistsProof
 func FromKeyExistsProof(p *iavl.KeyExistsProof) (KeyProof, error) {
+	path := p.PathToKey.InnerNodes
+	nodes := make([]Node, len(path)+1)
+
 	prefix := new(bytes.Buffer)
-	/*err := amino.EncodeInt8(prefix, 0)
-	if err == nil {
-		err = amino.EncodeInt64(prefix, 1)
-	}
-	if err == nil {
-		err = amino.EncodeInt64(prefix, p.Version)
-	}*/
 	n, err := int(0), error(nil)
 
 	wire.WriteInt8(0, prefix, &n, &err)
@@ -150,35 +142,13 @@ func FromKeyExistsProof(p *iavl.KeyExistsProof) (KeyProof, error) {
 		return nil, err
 	}
 
-	data := ExistsData{
+	nodes[0] = Node{
 		Prefix: prefix.Bytes(),
 		Op:     Ripemd160,
 	}
-	path := p.PathToKey.InnerNodes
-
-	nodes := make([]Node, len(path))
 	for i, inner := range path {
 		prefix := new(bytes.Buffer)
 		suffix := new(bytes.Buffer)
-		/*
-			err := amino.EncodeInt8(prefix, inner.Height)
-			if err == nil {
-				err = amino.EncodeInt64(prefix, inner.Size)
-			}
-			if err == nil {
-				err = amino.EncodeInt64(prefix, inner.Version)
-			}
-			if len(inner.Left) == 0 {
-				if err == nil {
-					err = amino.EncodeByteSlice(suffix, inner.Right)
-				}
-			} else {
-				if err == nil {
-					err = amino.EncodeByteSlice(prefix, inner.Left)
-				}
-			}
-		*/
-
 		n, err := int(0), error(nil)
 		wire.WriteInt8(inner.Height, prefix, &n, &err)
 		wire.WriteInt64(inner.Size, prefix, &n, &err)
@@ -201,16 +171,7 @@ func FromKeyExistsProof(p *iavl.KeyExistsProof) (KeyProof, error) {
 		}
 	}
 
-	return ExistsProof{
-		Data:     data,
-		Nodes:    nodes,
-		RootHash: p.Root(),
-	}, nil
-}
-
-// FromKeyAbsentProof casts iavl.KeyAbsentProof to AbsentProof
-func FromKeyAbsentProof(p *iavl.KeyAbsentProof) (KeyProof, error) {
-	return AbsentProof{}, nil // not implemented
+	return ExistsProof(nodes), nil
 }
 
 // Leaf generates the leaf byte slice from key and value

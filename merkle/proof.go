@@ -2,101 +2,26 @@ package merkle
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"hash"
 
 	"golang.org/x/crypto/ripemd160"
+
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
-// Verify proves the ExistsProof
-func (p ExistsProof) Verify(leaf []byte) error {
-	data := p.Data
+// HashOp - identifier for hash operations
+type HashOp uint8
 
-	if data.Prefix != nil {
-		leaf = append(data.Prefix, leaf...)
-	}
-	if data.Suffix != nil {
-		leaf = append(leaf, data.Suffix...)
-	}
-
-	leaf = data.Op.Hash(leaf)
-
-	for _, node := range p.Nodes {
-		if node.Prefix != nil {
-			leaf = append(node.Prefix, leaf...)
-		}
-		if node.Suffix != nil {
-			leaf = append(leaf, node.Suffix...)
-		}
-		leaf = node.Op.Hash(leaf)
-	}
-
-	if !bytes.Equal(leaf, p.RootHash) {
-		return fmt.Errorf("Verification failed")
-	}
-
-	return nil
-}
-
-// Root returns the root of the ExistsProof
-func (p ExistsProof) Root() []byte {
-	return p.RootHash
-}
-
-// Verify proves the AbsentProof
-func (p AbsentProof) Verify(leaf []byte) error {
-	panic("not implemented")
-}
-
-// Root returns the root of the AbsentProof
-func (p AbsentProof) Root() []byte {
-	panic("not implemented")
-}
-
-// Root returns the root of the MultiProof
-func (p MultiProof) Root() []byte {
-	if p.SubProofs == nil {
-		return p.KeyProof.Root()
-	}
-	return p.SubProofs[len(p.SubProofs)-1].Proof.Root()
-
-}
-
-// Lifter defines how does a subroot becomes the leaf element of the higher tree
-// The second argument will provide additional information
-type Lifter func(int, [][]byte, []byte) ([]byte, error)
-
-// Verify proves the MultiProof
-func (p MultiProof) Verify(leaf []byte, lift Lifter, root []byte) (err error) {
-	kp := p.KeyProof
-	subroot := kp.Root()
-	err = kp.Verify(leaf)
-	if err != nil {
-		return
-	}
-
-	for i, p := range p.SubProofs {
-		var leaf []byte
-		leaf, err = lift(i, p.Infos, subroot)
-
-		if err != nil {
-			return
-		}
-
-		err = p.Proof.Verify(leaf)
-		if err != nil {
-			return
-		}
-		subroot = p.Proof.Root()
-	}
-
-	if !bytes.Equal(subroot, root) {
-		return fmt.Errorf("Root not match")
-	}
-
-	return nil
-
-}
+// Defined HashOps
+const (
+	Nop = HashOp(iota)
+	Ripemd160
+	Sha224
+	Sha256
+	Sha284
+	Sha512
+)
 
 // Hash hashes the byte slice as defined in the HashOp
 func (op HashOp) Hash(bz []byte) (res []byte) {
@@ -112,4 +37,81 @@ func (op HashOp) Hash(bz []byte) (res []byte) {
 
 	hasher.Write(bz)
 	return hasher.Sum(nil)
+}
+
+// Node - inner node for merkle proof
+type Node struct {
+	Prefix []byte
+	Suffix []byte
+	Op     HashOp
+}
+
+// ExistsProof - merkle proof for verifying existence of an element
+type ExistsProof []Node
+
+func (p ExistsProof) Run(data []byte) ([]byte, error) {
+	for _, node := range p {
+		data = node.Op.Hash(append(append(node.Prefix, data...), node.Suffix...))
+	}
+	return data, nil
+}
+
+// KeyProof - oneof ExistsProof/AbsentProof/RangeProof
+type KeyProof interface {
+	Run([]byte) ([]byte, error)
+}
+
+type Wrapper interface {
+	Wrap(string, []byte) []byte
+}
+
+// SubProof - merkle proof for verifying subtree structure
+type SubProof struct {
+	ExistsProof
+	Wrapper
+	IsDescriptor bool
+	Key          string
+}
+
+// MultiProof - proof for verifying multi layer merkle tree
+type MultiProof struct {
+	KeyProof  KeyProof
+	SubProofs []SubProof
+}
+
+func (p MultiProof) Verify(data []byte, root []byte, keys ...string) error {
+	data, err := p.KeyProof.Run(data)
+	if err != nil {
+		return err
+	}
+
+	for _, sp := range p.SubProofs {
+		if sp.IsDescriptor {
+			if keys == nil {
+				return errors.New("Subproof length not match with given keys length")
+			}
+			if keys[0] != sp.Key {
+				return errors.New("Subproof key not match with given key")
+			}
+			keys = keys[1:]
+		}
+		data = sp.Wrap(sp.Key, data)
+		data, err = sp.Run(data)
+		if err != nil {
+			return err
+		}
+	}
+
+	if !bytes.Equal(data, root) {
+		return errors.New("Calculated root not match with given root")
+	}
+
+	return nil
+}
+
+// Bytes converts a MultiProof to a byte slice
+func (p MultiProof) Bytes() ([]byte, error) {
+	cdc := wire.NewCodec()
+	RegisterCodec(cdc)
+	return cdc.MarshalBinary(p)
 }

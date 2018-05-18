@@ -18,8 +18,8 @@ reference to the queue of unbond delegations, `reDelegationQueue` is the
 reference for the queue of redelegations. We use `tx` to denote a 
 reference to a transaction that is being processed, and `sender` to denote the 
 address of the sender of the transaction. We use function 
-`loadCandidate(store, PubKey)` to obtain a Candidate structure from the store, 
-and `saveCandidate(store, candidate)` to save it. Similarly, we use 
+`loadValidator(store, PubKey)` to obtain a Validator structure from the store, 
+and `saveValidator(store, validator)` to save it. Similarly, we use 
 `loadDelegatorBond(store, sender, PubKey)` to load a delegator bond with the 
 key (sender and PubKey) from the store, and 
 `saveDelegatorBond(store, sender, bond)` to save it. 
@@ -42,23 +42,23 @@ type TxDeclareCandidacy struct {
 }
 
 declareCandidacy(tx TxDeclareCandidacy):
-    candidate = loadCandidate(store, tx.PubKey)
-    if candidate != nil return // candidate with that public key already exists 
+    validator = loadValidator(store, tx.PubKey)
+    if validator != nil return // validator with that public key already exists 
    	
-    candidate = NewCandidate(tx.PubKey)
-    candidate.Status = Unbonded
-    candidate.Owner = sender
-    init candidate VotingPower, GlobalStakeShares, IssuedDelegatorShares, RedelegatingShares and Adjustment to rational.Zero
+    validator = NewValidator(tx.PubKey)
+    validator.Status = Unbonded
+    validator.Owner = sender
+    init validator VotingPower, GlobalStakeShares, IssuedDelegatorShares, RedelegatingShares and Adjustment to rational.Zero
     init commision related fields based on the values from tx
-    candidate.ProposerRewardPool = Coin(0)  
-    candidate.Description = tx.Description
+    validator.ProposerRewardPool = Coin(0)  
+    validator.Description = tx.Description
    	
-    saveCandidate(store, candidate)
+    saveValidator(store, validator)
    
     txDelegate = TxDelegate(tx.PubKey, tx.Amount)
-    return delegateWithCandidate(txDelegate, candidate) 
+    return delegateWithValidator(txDelegate, validator) 
 
-// see delegateWithCandidate function in [TxDelegate](TxDelegate)
+// see delegateWithValidator function in [TxDelegate](TxDelegate)
 ``` 
 
 ### TxEditCandidacy
@@ -75,14 +75,14 @@ type TxEditCandidacy struct {
 }
  
 editCandidacy(tx TxEditCandidacy):
-    candidate = loadCandidate(store, tx.PubKey)
-    if candidate == nil or candidate.Status == Revoked return 
+    validator = loadValidator(store, tx.PubKey)
+    if validator == nil or validator.Status == Revoked return 
     
-    if tx.GovernancePubKey != nil candidate.GovernancePubKey = tx.GovernancePubKey
-    if tx.Commission >= 0 candidate.Commission = tx.Commission
-    if tx.Description != nil candidate.Description = tx.Description
+    if tx.GovernancePubKey != nil validator.GovernancePubKey = tx.GovernancePubKey
+    if tx.Commission >= 0 validator.Commission = tx.Commission
+    if tx.Description != nil validator.Description = tx.Description
     
-    saveCandidate(store, candidate)
+    saveValidator(store, validator)
     return
 ```
      	
@@ -90,7 +90,7 @@ editCandidacy(tx TxEditCandidacy):
 
 Delegator bonds are created using the `TxDelegate` transaction. Within this 
 transaction the delegator provides an amount of coins, and in return receives 
-some amount of candidate's delegator shares that are assigned to 
+some amount of validator's delegator shares that are assigned to 
 `DelegatorBond.Shares`. 
 
 ```golang
@@ -100,14 +100,14 @@ type TxDelegate struct {
 }
 
 delegate(tx TxDelegate):
-    candidate = loadCandidate(store, tx.PubKey)
-    if candidate == nil return
-	return delegateWithCandidate(tx, candidate)
+    validator = loadValidator(store, tx.PubKey)
+    if validator == nil return
+	return delegateWithValidator(tx, validator)
 
-delegateWithCandidate(tx TxDelegate, candidate Candidate):
-    if candidate.Status == Revoked return
+delegateWithValidator(tx TxDelegate, validator Validator):
+    if validator.Status == Revoked return
 
-    if candidate.Status == Bonded 
+    if validator.Status == Bonded 
 	    poolAccount = params.HoldBonded
     else 
 	    poolAccount = params.HoldUnbonded
@@ -118,16 +118,16 @@ delegateWithCandidate(tx TxDelegate, candidate Candidate):
     bond = loadDelegatorBond(store, sender, tx.PubKey)
     if bond == nil then bond = DelegatorBond(tx.PubKey, rational.Zero, Coin(0), Coin(0))
 	
-    issuedDelegatorShares = addTokens(tx.Amount, candidate)
+    issuedDelegatorShares = addTokens(tx.Amount, validator)
     bond.Shares += issuedDelegatorShares
 	
-    saveCandidate(store, candidate)
+    saveValidator(store, validator)
     saveDelegatorBond(store, sender, bond)
     saveGlobalState(store, gs)
     return 
 
-addTokens(amount coin.Coin, candidate Candidate):
-    if candidate.Status == Bonded 
+addTokens(amount coin.Coin, validator Validator):
+    if validator.Status == Bonded 
 	    gs.BondedPool += amount
 	    issuedShares = amount / exchangeRate(gs.BondedShares, gs.BondedPool)
 	    gs.BondedShares += issuedShares
@@ -136,15 +136,15 @@ addTokens(amount coin.Coin, candidate Candidate):
 	    issuedShares = amount / exchangeRate(gs.UnbondedShares, gs.UnbondedPool)
 	    gs.UnbondedShares += issuedShares
 	
-    candidate.GlobalStakeShares += issuedShares
+    validator.GlobalStakeShares += issuedShares
     
-    if candidate.IssuedDelegatorShares.IsZero() 
+    if validator.IssuedDelegatorShares.IsZero() 
         exRate = rational.One
     else
-        exRate = candidate.GlobalStakeShares / candidate.IssuedDelegatorShares
+        exRate = validator.GlobalStakeShares / validator.IssuedDelegatorShares
 	
     issuedDelegatorShares = issuedShares / exRate
-    candidate.IssuedDelegatorShares += issuedDelegatorShares
+    validator.IssuedDelegatorShares += issuedDelegatorShares
     return issuedDelegatorShares
 	
 exchangeRate(shares rational.Rat, tokenAmount int64):
@@ -170,20 +170,20 @@ unbond(tx TxUnbond):
 	
     bond.Shares -= tx.Shares
 
-    candidate = loadCandidate(store, tx.PubKey)
+    validator = loadValidator(store, tx.PubKey)
 	
     revokeCandidacy = false
     if bond.Shares.IsZero() 
-	    if sender == candidate.Owner and candidate.Status != Revoked then revokeCandidacy = true then removeDelegatorBond(store, sender, bond)
+	    if sender == validator.Owner and validator.Status != Revoked then revokeCandidacy = true then removeDelegatorBond(store, sender, bond)
     else 
 	    saveDelegatorBond(store, sender, bond)
 
-    if candidate.Status == Bonded 
+    if validator.Status == Bonded 
         poolAccount = params.HoldBonded
     else 
         poolAccount = params.HoldUnbonded
 
-    returnedCoins = removeShares(candidate, shares)
+    returnedCoins = removeShares(validator, shares)
 	
     unbondDelegationElem = QueueElemUnbondDelegation(tx.PubKey, currentHeight(), sender, returnedCoins, startSlashRatio)
     unbondDelegationQueue.add(unbondDelegationElem)
@@ -191,21 +191,21 @@ unbond(tx TxUnbond):
     transfer(poolAccount, unbondingPoolAddress, returnCoins)  
     
     if revokeCandidacy 
-	    if candidate.Status == Bonded then bondedToUnbondedPool(candidate)
-	    candidate.Status = Revoked
+	    if validator.Status == Bonded then bondedToUnbondedPool(validator)
+	    validator.Status = Revoked
 
-    if candidate.IssuedDelegatorShares.IsZero() 
-	    removeCandidate(store, tx.PubKey)
+    if validator.IssuedDelegatorShares.IsZero() 
+	    removeValidator(store, tx.PubKey)
     else 
-	    saveCandidate(store, candidate)
+	    saveValidator(store, validator)
 
     saveGlobalState(store, gs)
     return 
 
-removeShares(candidate Candidate, shares rational.Rat):
-    globalPoolSharesToRemove = delegatorShareExRate(candidate) * shares
+removeShares(validator Validator, shares rational.Rat):
+    globalPoolSharesToRemove = delegatorShareExRate(validator) * shares
 
-    if candidate.Status == Bonded 
+    if validator.Status == Bonded 
 	    gs.BondedShares -= globalPoolSharesToRemove
 	    removedTokens = exchangeRate(gs.BondedShares, gs.BondedPool) * globalPoolSharesToRemove
 	    gs.BondedPool -= removedTokens
@@ -214,25 +214,25 @@ removeShares(candidate Candidate, shares rational.Rat):
 	    removedTokens = exchangeRate(gs.UnbondedShares, gs.UnbondedPool) * globalPoolSharesToRemove
 	    gs.UnbondedPool -= removedTokens
 	
-    candidate.GlobalStakeShares -= removedTokens
-    candidate.IssuedDelegatorShares -= shares
+    validator.GlobalStakeShares -= removedTokens
+    validator.IssuedDelegatorShares -= shares
     return returnedCoins
 
-delegatorShareExRate(candidate Candidate):
-    if candidate.IssuedDelegatorShares.IsZero() then return rational.One
-    return candidate.GlobalStakeShares / candidate.IssuedDelegatorShares
+delegatorShareExRate(validator Validator):
+    if validator.IssuedDelegatorShares.IsZero() then return rational.One
+    return validator.GlobalStakeShares / validator.IssuedDelegatorShares
 	
-bondedToUnbondedPool(candidate Candidate):
-    removedTokens = exchangeRate(gs.BondedShares, gs.BondedPool) * candidate.GlobalStakeShares 
-    gs.BondedShares -= candidate.GlobalStakeShares
+bondedToUnbondedPool(validator Validator):
+    removedTokens = exchangeRate(gs.BondedShares, gs.BondedPool) * validator.GlobalStakeShares 
+    gs.BondedShares -= validator.GlobalStakeShares
     gs.BondedPool -= removedTokens
 	
     gs.UnbondedPool += removedTokens
     issuedShares = removedTokens / exchangeRate(gs.UnbondedShares, gs.UnbondedPool)
     gs.UnbondedShares += issuedShares
     
-    candidate.GlobalStakeShares = issuedShares
-    candidate.Status = Unbonded
+    validator.GlobalStakeShares = issuedShares
+    validator.Status = Unbonded
 
     return transfer(address of the bonded pool, address of the unbonded pool, removedTokens)
 ```
@@ -254,10 +254,10 @@ redelegate(tx TxRedelegate):
     if bond == nil then return 
     
     if bond.Shares < tx.Shares return 
-    candidate = loadCandidate(store, tx.PubKeyFrom)
-    if candidate == nil return
+    validator = loadValidator(store, tx.PubKeyFrom)
+    if validator == nil return
     
-    candidate.RedelegatingShares += tx.Shares
+    validator.RedelegatingShares += tx.Shares
     reDelegationElem = QueueElemReDelegate(tx.PubKeyFrom, currentHeight(), sender, tx.Shares, tx.PubKeyTo)
     redelegationQueue.add(reDelegationElem)
     return     

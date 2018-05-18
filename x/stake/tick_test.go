@@ -1,7 +1,6 @@
 package stake
 
 import (
-	"fmt"
 	"math/rand"
 	"strconv"
 	"testing"
@@ -12,7 +11,7 @@ import (
 )
 
 //change the int in NewSource to generate random input for tests that use r for randomization
-var r = rand.New(rand.NewSource(513))
+var r = rand.New(rand.NewSource(505))
 
 func TestGetInflation(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
@@ -99,77 +98,6 @@ func TestProcessProvisions(t *testing.T) {
 		0, 0, bondedShares, unbondedShares)
 }
 
-//Tests that the hourly rate of change will be positve, negative, or zero, depending on bonded ratio and inflation rate
-//Cycles through the whole gambit of starting at 7% inflation, up to 20%, back down to 7% (it takes 11.4 years)
-func TestHourlyRateOfChange(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
-	params := defaultParams()
-	keeper.setParams(ctx, params)
-	pool := keeper.GetPool(ctx)
-
-	// create some candidates some bonded, some unbonded
-	pool = setupCandidates(pool, keeper, ctx, 10, 0, 5)
-
-	// test setUpCandidates returned the token values by passing these vars into checkCandidateSetup()
-	var (
-		initialTotalTokens    int64 = 550000000
-		initialBondedTokens   int64 = 150000000
-		initialUnbondedTokens int64 = 400000000
-		cumulativeExpProvs    int64
-		bondedShares          = sdk.NewRat(150000000, 1)
-		unbondedShares        = sdk.NewRat(400000000, 1)
-	)
-	checkCandidateSetup(t, pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens)
-
-	// ~11.4 years to go from 7%, up to 20%, back down to 7%
-	for hr := 0; hr < 100000; hr++ {
-		pool := keeper.GetPool(ctx)
-
-		previousInflation := pool.Inflation
-		expInflation, expProvisions, pool := checkAndProcessProvisions(t, keeper, pool, ctx, hr)
-		cumulativeExpProvs = cumulativeExpProvs + expProvisions
-
-		updatedInflation := pool.Inflation
-		inflationChange := updatedInflation.Sub(previousInflation)
-
-		//Rate of change positive and increasing, while we are between 7% and 20% inflation
-		if pool.bondedRatio().LT(sdk.NewRat(67, 100)) && expInflation.LT(sdk.NewRat(20, 100)) {
-			assert.Equal(t, true, inflationChange.GT(sdk.ZeroRat()), strconv.Itoa(hr))
-		}
-
-		//Rate of change should be 0 while it holds at 20% a year, until we reach 67%
-		if pool.bondedRatio().LT(sdk.NewRat(67, 100)) && expInflation.Equal(sdk.NewRat(20, 100)) {
-			if previousInflation.Equal(sdk.NewRat(20, 100)) {
-				assert.Equal(t, true, inflationChange.IsZero(), strconv.Itoa(hr))
-				//This else covers the one off case where we first hit 20%, but we still needed a positive ROC to get there
-			} else {
-				assert.Equal(t, true, inflationChange.GT(sdk.ZeroRat()), strconv.Itoa(hr))
-			}
-		}
-
-		//Rate of change should be negative while the bond is above 67, and should stay negative until we reach inflation of 7%
-		if pool.bondedRatio().GT(sdk.NewRat(67, 100)) && expInflation.LT(sdk.NewRat(20, 100)) && expInflation.GT(sdk.NewRat(7, 100)) {
-			assert.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), strconv.Itoa(hr))
-		}
-
-		//Rate of change should be 0 while we hold at 7%.
-		if pool.bondedRatio().GT(sdk.NewRat(67, 100)) && expInflation.Equal(sdk.NewRat(7, 100)) {
-			if previousInflation.Equal(sdk.NewRat(7, 100)) {
-				assert.Equal(t, true, inflationChange.IsZero(), strconv.Itoa(hr))
-				//This else covers the one off case where we first hit 7%, but we still needed a negative ROC to get there
-			} else {
-				assert.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), strconv.Itoa(hr))
-			}
-		}
-	}
-
-	// Final check that the pool equals initial values + provisions and adjustments we recorded
-	pool = keeper.GetPool(ctx)
-	checkFinalPoolValues(t, pool, initialTotalTokens,
-		initialUnbondedTokens, cumulativeExpProvs,
-		0, 0, bondedShares, unbondedShares)
-}
-
 //Test that a large unbonding will significantly lower the bonded ratio
 func TestLargeUnbond(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
@@ -197,27 +125,24 @@ func TestLargeUnbond(t *testing.T) {
 	candidate, found := keeper.GetCandidate(ctx, addrs[9])
 	assert.True(t, found)
 
-	// before values that we can use to compare to the new values after the unbond
-	beforeBondedRatio := pool.bondedRatio()
-	expInflationBefore := keeper.nextInflation(ctx)
+	// initialBondedRatio that we can use to compare to the new values after the unbond
+	initialBondedRatio := pool.bondedRatio()
 
 	// This func will unbond 100,000,000 tokens that were previously bonded
 	pool, candidate, _, _ = OpBondOrUnbond(r, pool, candidate)
 	keeper.setPool(ctx, pool)
 
 	// process provisions after the bonding, to compare the difference in expProvisions and expInflation
-	expInflationAfter, expProvisionsAfter, pool := checkAndProcessProvisions(t, keeper, pool, ctx, 0)
+	_, expProvisionsAfter, pool := checkAndProcessProvisions(t, keeper, pool, ctx, 0)
 
 	bondedShares = bondedShares.Sub(bondSharesCand9)
 	cand9UnbondedTokens = pool.unbondedShareExRate().Mul(candidate.Assets).Evaluate()
 	unbondedShares = unbondedShares.Add(sdk.NewRat(cand9UnbondedTokens, 1).Mul(pool.unbondedShareExRate()))
 
-	// inflation should be lower than before. Because we unbonded, we are further from 67%, and expInlfationAfter is higher
-	assert.True(t, expInflationBefore.LT(expInflationAfter))
 	// unbonded shares should increase
 	assert.True(t, unbondedShares.GT(sdk.NewRat(150000000, 1)))
 	// Ensure that new bonded ratio is less than old bonded ratio , because before they were increasing (i.e. 55 < 72)
-	assert.True(t, (pool.bondedRatio().LT(beforeBondedRatio)))
+	assert.True(t, (pool.bondedRatio().LT(initialBondedRatio)))
 
 	// Final check that the pool equals initial values + provisions and adjustments we recorded
 	pool = keeper.GetPool(ctx)
@@ -254,16 +179,15 @@ func TestLargeBond(t *testing.T) {
 	candidate, found := keeper.GetCandidate(ctx, addrs[9])
 	assert.True(t, found)
 
-	// before values that we can use to compare to the new values after the Bond
-	beforeBondedRatio := pool.bondedRatio()
-	expInflationBefore := keeper.nextInflation(ctx)
+	// initialBondedRatio that we can use to compare to the new values after the unbond
+	initialBondedRatio := pool.bondedRatio()
 
 	// This func will bond 100,000,000 tokens that were previously unbonded
 	pool, candidate, _, _ = OpBondOrUnbond(r, pool, candidate)
 	keeper.setPool(ctx, pool)
 
 	// process provisions after the bonding, to compare the difference in expProvisions and expInflation
-	expInflationAfter, expProvisionsAfter, pool := checkAndProcessProvisions(t, keeper, pool, ctx, 0)
+	_, expProvisionsAfter, pool := checkAndProcessProvisions(t, keeper, pool, ctx, 0)
 
 	unbondedShares = unbondedShares.Sub(unbondSharesCand9)
 	cand9bondedTokens = cand9unbondedTokens
@@ -271,17 +195,54 @@ func TestLargeBond(t *testing.T) {
 	bondedTokens := initialBondedTokens + cand9bondedTokens + expProvisionsAfter
 	bondedShares = sdk.NewRat(bondedTokens, 1).Quo(pool.bondedShareExRate())
 
-	// inflation should be larger before. Because we bonded, we are closer to 67%, and expInlfationAfter is lower
-	assert.True(t, expInflationBefore.GT(expInflationAfter))
 	// bonded shares should increase
 	assert.True(t, bondedShares.GT(sdk.NewRat(300000000, 1)))
 	//Ensure that new bonded ratio is greater than old bonded ratio, since we just added 100,000 bonded
-	assert.True(t, (pool.bondedRatio().GT(beforeBondedRatio)))
+	assert.True(t, (pool.bondedRatio().GT(initialBondedRatio)))
 
 	// Final check that the pool equals initial values + provisions and adjustments we recorded
 	checkFinalPoolValues(t, pool, initialTotalTokens,
 		initialUnbondedTokens, expProvisionsAfter,
 		cand9bondedTokens, -cand9bondedTokens, bondedShares, unbondedShares)
+}
+
+//Tests that the hourly rate of change will be positve, negative, or zero, depending on bonded ratio and inflation rate
+//Cycles through the whole gambit of starting at 7% inflation, up to 20%, back down to 7% (it takes ~11.4 years)
+func TestHourlyInflationRateOfChange(t *testing.T) {
+	ctx, _, keeper := createTestInput(t, false, 0)
+	params := defaultParams()
+	keeper.setParams(ctx, params)
+	pool := keeper.GetPool(ctx)
+
+	// create some candidates some bonded, some unbonded
+	pool = setupCandidates(pool, keeper, ctx, 10, 0, 5)
+
+	// test setUpCandidates returned the token values by passing these vars into checkCandidateSetup()
+	var (
+		initialTotalTokens    int64 = 550000000
+		initialBondedTokens   int64 = 150000000
+		initialUnbondedTokens int64 = 400000000
+		cumulativeExpProvs    int64
+		bondedShares          = sdk.NewRat(150000000, 1)
+		unbondedShares        = sdk.NewRat(400000000, 1)
+	)
+	checkCandidateSetup(t, pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens)
+
+	// ~11.4 years to go from 7%, up to 20%, back down to 7%
+	for hr := 0; hr < 100000; hr++ {
+		pool := keeper.GetPool(ctx)
+		previousInflation := pool.Inflation
+		updatedInflation, expProvisions, pool := checkAndProcessProvisions(t, keeper, pool, ctx, hr)
+		cumulativeExpProvs = cumulativeExpProvs + expProvisions
+		msg := strconv.Itoa(hr)
+		checkInflation(t, pool, previousInflation, updatedInflation, msg)
+	}
+
+	// Final check that the pool equals initial values + cumulative provisions and adjustments we recorded
+	pool = keeper.GetPool(ctx)
+	checkFinalPoolValues(t, pool, initialTotalTokens,
+		initialUnbondedTokens, cumulativeExpProvs,
+		0, 0, bondedShares, unbondedShares)
 }
 
 //Tests that inflation works as expected when we get do a random operation on 20 different candidates
@@ -298,7 +259,6 @@ func TestInflationWithRandomOperations(t *testing.T) {
 	for i := 0; i < len(candidates); i++ {
 		keeper.setCandidate(ctx, candidates[i])
 	}
-
 	keeper.setPool(ctx, pool)
 
 	//This counter is used to rotate through each candidate so each random operation is applied to a different candidate
@@ -308,10 +268,8 @@ func TestInflationWithRandomOperations(t *testing.T) {
 	for i := 0; i < numCandidates; i++ {
 		pool := keeper.GetPool(ctx)
 
-		//Get values before randomOperation
-		expInflationBefore := keeper.nextInflation(ctx)
-		initialBondedPool := pool.BondedPool
-		initialUnbondedTokens := pool.UnbondedPool
+		//Get inflation before randomOperation
+		previousInflation := pool.Inflation
 
 		//Random operation, and recording how candidates are modified
 		poolMod, candidateMod, tokens, msg := randomOperation(r)(r, pool, candidates[candidateCounter])
@@ -330,18 +288,17 @@ func TestInflationWithRandomOperations(t *testing.T) {
 		keeper.setPool(ctx, pool)
 		candidates = candidatesMod
 
-		//Get values after randomOperation
-		expInflationAfter := keeper.nextInflation(ctx)
-		afterBondedPool := pool.BondedPool
-		afterUnbondedPool := pool.UnbondedPool
+		//Must set inflation here, as opposed to when we have a test where we call processProvisions(), which updates pool.Inflation
+		updatedInflation := keeper.nextInflation(ctx)
+		pool.Inflation = updatedInflation
+		keeper.setPool(ctx, pool)
 
-		//Check the inflation has changed as expected, based on the difference between tokens before and after the operation
-		checkInflation(t, expInflationAfter, expInflationBefore, msg,
-			afterBondedPool, initialBondedPool, afterUnbondedPool, initialUnbondedTokens)
-
+		checkInflation(t, pool, previousInflation, updatedInflation, msg)
 		candidateCounter++
 	}
 }
+
+////////////////////////////////HELPER FUNCTIONS BELOW/////////////////////////////////////
 
 // Final check on the global pool values against what each test added up hour by hour.
 // bondedAdjustment and unbondedAdjustment are the calculated changes
@@ -430,60 +387,40 @@ func checkCandidateSetup(t *testing.T, pool Pool, initialTotalTokens, initialBon
 	assert.True(t, pool.bondedShareExRate().Equal(sdk.OneRat()), "%v", pool.bondedShareExRate())
 }
 
-// Pass this function expected inflations and bonded and unbonded token amount, both before and after an operation
-// The function verifies that the yearly inflation changes as expected, based on how the pools tokens have changed
-func checkInflation(t *testing.T, expInflationAfter, expInflationBefore sdk.Rat, msg string,
-	afterBondedPool, initialBondedPool, afterUnbondedPool, initialUnbondedTokens int64) {
+// Checks that The inflation will correctly increase or decrease after an update to the pool
+func checkInflation(t *testing.T, pool Pool, previousInflation, updatedInflation sdk.Rat, msg string) {
 
-	//Comparing expected inflation before and after the randomOperation()
-	inflationIncreased := expInflationAfter.GT(expInflationBefore)
-	inflationEqual := expInflationAfter.Equal(expInflationBefore)
+	inflationChange := updatedInflation.Sub(previousInflation)
 
 	switch {
-	//Inflation will NOT increase, because we are adding bonded tokens to the pool
-	//CASE: Happens when we randomly add tokens to a bonded candidate
-	//CASE: Happens when we randomly bond a candidate from unbonded
-	case afterBondedPool > initialBondedPool:
+	//BELOW 67% - Rate of change positive and increasing, while we are between 7% <= and < 20% inflation
+	case pool.bondedRatio().LT(sdk.NewRat(67, 100)) && updatedInflation.LT(sdk.NewRat(20, 100)):
+		assert.Equal(t, true, inflationChange.GT(sdk.ZeroRat()), msg)
 
-		//for the off case where we are bonded so low (i.e. 15%) , that we add bonded tokens and inflation is unchanged at 20%
-		//for the off case where we are bonded so high (i.e. 90%), that we add bonded tokens and inflation is unchanged at 7%
-		if expInflationBefore.Equal(sdk.NewRat(20, 100)) {
-			assert.True(t, !inflationIncreased || inflationEqual, msg)
-		} else if expInflationBefore.Equal(sdk.NewRat(7, 100)) {
-			assert.True(t, !inflationIncreased || inflationEqual, msg)
+	//BELOW 67% - Rate of change should be 0 while inflation continually stays at 20% until we reach 67% bonded ratio
+	case pool.bondedRatio().LT(sdk.NewRat(67, 100)) && updatedInflation.Equal(sdk.NewRat(20, 100)):
+		if previousInflation.Equal(sdk.NewRat(20, 100)) {
+			assert.Equal(t, true, inflationChange.IsZero(), msg)
+			//This else statement covers the one off case where we first hit 20%, but we still needed a positive ROC to get to 67% bonded ratio (i.e. we went from 19.99999% to 20%)
 		} else {
-			assert.True(t, !inflationIncreased, msg)
+			assert.Equal(t, true, inflationChange.GT(sdk.ZeroRat()), msg)
 		}
 
-	//Inflation WILL increase, because we are removing bonded tokens from the pool
-	//CASE: Happens when we randomly remove bonded Shares
-	//CASE: Happens when we randomly unbond a candidate that was bonded
-	case afterBondedPool < initialBondedPool:
+	//ABOVE 67% - Rate of change should be negative while the bond is above 67, and should stay negative until we reach inflation of 7%
+	case pool.bondedRatio().GT(sdk.NewRat(67, 100)) && updatedInflation.LT(sdk.NewRat(20, 100)) && updatedInflation.GT(sdk.NewRat(7, 100)):
+		assert.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), msg)
 
-		//For the off case where we are bonded so low (i.e. 15%),  and more tokens are unbonded, inflation is unchanged at 20%
-		//For the off case where we are bonded so high (i.e. 90%) and we unbond a small amount (maybe 2%), inflation  is unchanged at 7%
-		if expInflationBefore.Equal(sdk.NewRat(20, 100)) {
-			assert.True(t, inflationIncreased || inflationEqual, msg)
-		} else if expInflationBefore.Equal(sdk.NewRat(7, 100)) {
-			assert.True(t, inflationIncreased || inflationEqual, msg)
+	//ABOVE 67% - Rate of change should be 0 while inflation continually stays at 7%.
+	case pool.bondedRatio().GT(sdk.NewRat(67, 100)) && updatedInflation.Equal(sdk.NewRat(7, 100)):
+		if previousInflation.Equal(sdk.NewRat(7, 100)) {
+			assert.Equal(t, true, inflationChange.IsZero(), msg)
+			//This else statement covers the one off case where we first hit 7%, but we still needed a negative ROC to continue to get down to 67%. (i.e. we went from 7.00001% to 7%)
 		} else {
-			assert.True(t, inflationIncreased, msg)
+			assert.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), msg)
 		}
-
-	//Inflation will STAY THE SAME.
-	//Inflation is dependant only on bondedRatio. Sure, a validator can add unbonded tokens, but it doesn't change bondedRatio (totalBondedTokens / globalTotalTokens)
-	//CASE: Happens when we randomly add unbonded tokens
-	case afterUnbondedPool > initialUnbondedTokens:
-		assert.True(t, inflationEqual, msg)
-
-	//Inflation will STAY THE SAME.
-	//Inflation is dependant only on bondedRatio. Sure, a validator can add unbonded tokens, but it doesn't change bondedRatio (totalBondedTokens / globalTotalTokens)
-	//CASE: Happens when we randomly remove shares from an unbonded candidate
-	case afterUnbondedPool < initialUnbondedTokens:
-		assert.True(t, inflationEqual, msg)
-
-	default:
-		panic(fmt.Sprintf("pool.UnbondedPool and pool.BondedPool are unchanged. All operations calling this function should change either the unbondedPool or bondedPool amounts."))
 	}
 
 }
+
+//TODO: fix update inflation and expNext or whatever, seem to be usingit twice
+//TODO: make all of the variables named the same

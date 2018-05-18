@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/abci/types"
+	crypto "github.com/tendermint/go-crypto"
 	cryptoKeys "github.com/tendermint/go-crypto/keys"
 	tmcfg "github.com/tendermint/tendermint/config"
 	nm "github.com/tendermint/tendermint/node"
@@ -32,6 +33,7 @@ import (
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	bapp "github.com/cosmos/cosmos-sdk/examples/basecoin/app"
+	btypes "github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -387,6 +389,8 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	config.Consensus.TimeoutCommit = 1000
 	config.Consensus.SkipTimeoutCommit = false
 
+	fmt.Println("test")
+
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	// logger = log.NewFilter(logger, log.AllowError())
 	privValidatorFile := config.PrivValidatorFile()
@@ -401,74 +405,68 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 		return nil, nil, err
 	}
 
-	genDoc.AppStateJSON = []byte(`
-	{
-		"accounts": [
-			{
-				"name": "tester",
-				"address": "` + pubKey.Address().String() + `",
-				"coins": [{"denom": "` + coinDenom + `", "amount": 100000}]
-			}
-		],
-		"stake": {
-      "pool": {
-        "total_supply": 1650,
-        "bonded_shares": "1100",
-        "unbonded_shares": "0",
-        "bonded_pool": 1100,
-        "unbonded_pool": 0,
-        "inflation_last_time": 0,
-        "inflation": "7/100"
-      },
-      "params": {
-        "inflation_rate_change": "13/100",
-        "inflation_max": "1/5",
-        "inflation_min": "7/100",
-        "goal_bonded": "67/100",
-        "max_validators": 100,
-        "bond_denom": "` + stakeDenom + `"
-      },
-      "candidates": [
-        {
-          "status": 1,
-          "owner": "` + candidateAddr1 + `",
-          "pub_key": {
-            "type": "AC26791624DE60",
-            "value": "TZTQnfqOsi89SeoXVnIw+tnFJnr4X8qVC0U8AsEmFk4="
-          },
-          "assets": "100",
-          "liabilities": "0",
-          "description": {
-            "moniker": "adrian",
-            "identity": "",
-            "website": "",
-            "details": ""
-          },
-          "validator_bond_height": 0,
-          "validator_bond_counter": 0
-        },
-				{
-          "status": 1,
-          "owner": "` + candidateAddr2 + `",
-          "pub_key": {
-            "type": "AC26791624DE60",
-            "value": "RpX+xkwnCNw5DpBelscz4//TiODyC9RDiyIuD6NEwx0="
-          },
-          "assets": "100",
-          "liabilities": "0",
-          "description": {
-            "moniker": "yourname",
-            "identity": "",
-            "website": "",
-            "details": ""
-          },
-          "validator_bond_height": 0,
-          "validator_bond_counter": 0
-        }
-			]
-		}
+	genDoc.Validators = []tmtypes.GenesisValidator{
+		tmtypes.GenesisValidator{
+			PubKey: crypto.GenPrivKeyEd25519().PubKey(),
+			Power:  100,
+			Name:   "val1",
+		},
+		tmtypes.GenesisValidator{
+			PubKey: crypto.GenPrivKeyEd25519().PubKey(),
+			Power:  100,
+			Name:   "val2",
+		},
 	}
-	`)
+
+	coins := sdk.Coins{{coinDenom, coinAmount}}
+	appState := map[string]interface{}{
+		"accounts": []*btypes.GenesisAccount{
+			{
+				Name:    "tester",
+				Address: pubKey.Address(),
+				Coins:   coins,
+			},
+		},
+		"stake": stake.GenesisState{
+			Pool: stake.Pool{
+				TotalSupply:       1650,
+				BondedShares:      sdk.NewRat(200, 1),
+				UnbondedShares:    sdk.ZeroRat(),
+				BondedPool:        200,
+				UnbondedPool:      0,
+				InflationLastTime: 0,
+				Inflation:         sdk.NewRat(7, 100),
+			},
+			Params: stake.Params{
+				InflationRateChange: sdk.NewRat(13, 100),
+				InflationMax:        sdk.NewRat(1, 5),
+				InflationMin:        sdk.NewRat(7, 100),
+				GoalBonded:          sdk.NewRat(67, 100),
+				MaxValidators:       100,
+				BondDenom:           stakeDenom,
+			},
+			Candidates: []stake.Candidate{
+				{
+					Status:      1,
+					Address:     genDoc.Validators[0].PubKey.Address(),
+					PubKey:      genDoc.Validators[0].PubKey,
+					Assets:      sdk.NewRat(100, 1),
+					Liabilities: sdk.ZeroRat(),
+					Description: stake.Description{
+						Moniker: "adrian",
+					},
+					ValidatorBondHeight:  0,
+					ValidatorBondCounter: 0,
+				},
+			},
+		},
+	}
+
+	stateBytes, err := json.Marshal(appState)
+	if err != nil {
+		return nil, nil, err
+	}
+	genDoc.AppStateJSON = stateBytes
 
 	// LCD listen address
 	port = fmt.Sprintf("%d", 17377)                       // XXX
@@ -652,7 +650,7 @@ func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastT
 				"shares": "1"
 			}
 		]
-	}`, name, password, sequence, candidateAddr1, stakeDenom))
+	}`, name, password, sequence, candidateAddr1))
 	res, body := request(t, port, "POST", "/stake/bondunbond", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

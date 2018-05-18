@@ -127,7 +127,7 @@ func TestProcessProvisions(t *testing.T) {
 	// process the provisions a year
 	for hr := 0; hr < 8766; hr++ {
 		pool := keeper.GetPool(ctx)
-		_, expProvisions, _ := checkHourlyProvisions(t, keeper, pool, ctx, hr)
+		_, expProvisions, _ := checkAndProcessProvisions(t, keeper, pool, ctx, hr)
 		cumulativeExpProvs = cumulativeExpProvs + expProvisions
 	}
 	pool = keeper.GetPool(ctx)
@@ -172,7 +172,7 @@ func TestHourlyRateOfChange(t *testing.T) {
 		pool := keeper.GetPool(ctx)
 
 		previousInflation := pool.Inflation
-		expInflation, expProvisions, pool := checkHourlyProvisions(t, keeper, pool, ctx, hr)
+		expInflation, expProvisions, pool := checkAndProcessProvisions(t, keeper, pool, ctx, hr)
 		cumulativeExpProvs = cumulativeExpProvs + expProvisions
 
 		updatedInflation := pool.Inflation
@@ -243,56 +243,47 @@ func TestLargeUnbond(t *testing.T) {
 		initialBondedTokens   int64 = 400000000
 		initialUnbondedTokens int64 = 150000000
 		cand9UnbondedTokens   int64
-		cumulativeExpProvs    int64
 		bondedShares          = sdk.NewRat(400000000, 1)
 		unbondedShares        = sdk.NewRat(150000000, 1)
 		bondSharesCand9       = sdk.NewRat(100000000, 1)
 	)
 	checkCandidateSetup(t, pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens)
 
-	// process the provisions a year
-	for hr := 0; hr < 8766; hr++ {
-		pool := keeper.GetPool(ctx)
-		_, expProvisions, pool := checkHourlyProvisions(t, keeper, pool, ctx, hr)
-		cumulativeExpProvs = cumulativeExpProvs + expProvisions
+	pool = keeper.GetPool(ctx)
+	candidate, found := keeper.GetCandidate(ctx, addrs[9])
+	assert.True(t, found)
 
-		// hour 1600 was arbitrarily picked to unbond the largest candidate, and onwards of 1600 the pool.UnbondedPool amount will be larger
-		if hr <= 1600 {
-			require.Equal(t, initialUnbondedTokens, pool.UnbondedPool)
-		} else {
-			require.Equal(t, initialUnbondedTokens+cand9UnbondedTokens, pool.UnbondedPool)
-		}
+	// before values that we can use to compare to the new values after the unbond
+	beforeBondedRatio := pool.bondedRatio()
+	expInflationBefore := keeper.nextInflation(ctx)
 
-		// inside this if statement are the steps to create unbonding of a candidate at hour 1600, to drop bonded ratio from ~72% to ~55%
-		if hr == 1600 {
-			candidate, found := keeper.GetCandidate(ctx, addrs[9])
-			assert.True(t, found)
-			beforeBondedRatio := pool.bondedRatio()
+	// This func will unbond 100,000,000 tokens that were previously bonded
+	pool, candidate, _, _ = OpBondOrUnbond(r, pool, candidate)
+	keeper.setPool(ctx, pool)
 
-			// unbond 100,000,000 tokens, plus what was accumulated from provisions over 1600 hours, roughly 1,700,000
-			pool, candidate, _, _ = OpBondOrUnbond(r, pool, candidate)
-			keeper.setPool(ctx, pool)
+	// process provisions after the bonding, to compare the difference in expProvisions and expInflation
+	expInflationAfter, expProvisionsAfter, pool := checkAndProcessProvisions(t, keeper, pool, ctx, 0)
 
-			bondedShares = bondedShares.Sub(bondSharesCand9)
-			cand9UnbondedTokens = pool.unbondedShareExRate().Mul(candidate.Assets).Evaluate()
-			unbondedShares = unbondedShares.Add(sdk.NewRat(cand9UnbondedTokens, 1).Mul(pool.unbondedShareExRate()))
+	bondedShares = bondedShares.Sub(bondSharesCand9)
+	cand9UnbondedTokens = pool.unbondedShareExRate().Mul(candidate.Assets).Evaluate()
+	unbondedShares = unbondedShares.Add(sdk.NewRat(cand9UnbondedTokens, 1).Mul(pool.unbondedShareExRate()))
 
-			// unbonded shares should increase
-			assert.True(t, unbondedShares.GT(sdk.NewRat(150000000, 1)))
-			// Ensure that new bonded ratio is less than old bonded ratio , because before they were increasing (i.e. 55 < 72)
-			assert.True(t, (pool.bondedRatio().LT(beforeBondedRatio)))
-		}
-	}
+	// inflation should be lower than before. Because we unbonded, we are further from 67%, and expInlfationAfter is higher
+	assert.True(t, expInflationBefore.LT(expInflationAfter))
+	// unbonded shares should increase
+	assert.True(t, unbondedShares.GT(sdk.NewRat(150000000, 1)))
+	// Ensure that new bonded ratio is less than old bonded ratio , because before they were increasing (i.e. 55 < 72)
+	assert.True(t, (pool.bondedRatio().LT(beforeBondedRatio)))
 
 	// Final check that the pool equals initial values + provisions and adjustments we recorded
 	pool = keeper.GetPool(ctx)
 	checkFinalPoolValues(t, pool, initialTotalTokens,
-		initialUnbondedTokens, cumulativeExpProvs,
+		initialUnbondedTokens, expProvisionsAfter,
 		-cand9UnbondedTokens, cand9UnbondedTokens, bondedShares, unbondedShares)
 
 }
 
-//Test that a large bonding will significantly lower the bonded ratio
+//Test that a large bonding will cause inflation to go down, and lower the bondedRatio
 func TestLargeBond(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 	params := defaultParams()
@@ -308,57 +299,45 @@ func TestLargeBond(t *testing.T) {
 		initialTotalTokens    int64 = 550000000
 		initialBondedTokens   int64 = 300000000
 		initialUnbondedTokens int64 = 250000000
-		// cand9unbondedTokens   int64 = 100000000
-		cand9bondedTokens  int64
-		cumulativeExpProvs int64
-		bondedShares       = sdk.NewRat(300000000, 1)
-		unbondedShares     = sdk.NewRat(250000000, 1)
-		unbondSharesCand9  = sdk.NewRat(100000000, 1)
+		cand9unbondedTokens   int64 = 100000000
+		cand9bondedTokens     int64
+		bondedShares          = sdk.NewRat(300000000, 1)
+		unbondedShares        = sdk.NewRat(250000000, 1)
+		unbondSharesCand9     = sdk.NewRat(100000000, 1)
 	)
 	checkCandidateSetup(t, pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens)
 
-	// process the provisions a year
-	for hr := 0; hr < 8766; hr++ {
+	pool = keeper.GetPool(ctx)
+	candidate, found := keeper.GetCandidate(ctx, addrs[9])
+	assert.True(t, found)
 
-		pool := keeper.GetPool(ctx)
-		_, expProvisions, pool := checkHourlyProvisions(t, keeper, pool, ctx, hr)
-		cumulativeExpProvs = cumulativeExpProvs + expProvisions
+	// before values that we can use to compare to the new values after the Bond
+	beforeBondedRatio := pool.bondedRatio()
+	expInflationBefore := keeper.nextInflation(ctx)
 
-		//hour 1600 was arbitrarily picked to bond the largest candidate
-		if hr <= 1600 {
-			require.Equal(t, initialUnbondedTokens, pool.UnbondedPool)
-		} else {
-			require.Equal(t, initialUnbondedTokens-cand9bondedTokens, pool.UnbondedPool)
-		}
+	// This func will bond 100,000,000 tokens that were previously unbonded
+	pool, candidate, _, _ = OpBondOrUnbond(r, pool, candidate)
+	keeper.setPool(ctx, pool)
 
-		//steps to create unbonding of a candidate at hour 1600, to increase ratio from ~55% to ~73%
-		if hr == 1600 {
-			candidate, found := keeper.GetCandidate(ctx, addrs[9])
-			assert.True(t, found)
-			beforeBondedRatio := pool.bondedRatio()
+	// process provisions after the bonding, to compare the difference in expProvisions and expInflation
+	expInflationAfter, expProvisionsAfter, pool := checkAndProcessProvisions(t, keeper, pool, ctx, 0)
 
-			// This func will bond 100,000,000 tokens that were previously unbonded
-			pool, candidate, _, _ = OpBondOrUnbond(r, pool, candidate)
-			keeper.setPool(ctx, pool)
+	unbondedShares = unbondedShares.Sub(unbondSharesCand9)
+	cand9bondedTokens = cand9unbondedTokens
+	cand9unbondedTokens = 0
+	bondedTokens := initialBondedTokens + cand9bondedTokens + expProvisionsAfter
+	bondedShares = sdk.NewRat(bondedTokens, 1).Quo(pool.bondedShareExRate())
 
-			unbondedShares = unbondedShares.Sub(unbondSharesCand9)
-			//candidate.Assets are the shares. shares should be less than 100,000, bondedShareExRate() should be greater than 1, when multiplied they equal 100,000
-			cand9bondedTokens = pool.bondedShareExRate().Mul(candidate.Assets).Evaluate()
-			// must add cumulativeExpProvs here, to get true bonded tokens at this instance, to find new value for bondedShares
-			bondedTokens1600 := initialBondedTokens + cand9bondedTokens + cumulativeExpProvs
-			bondedShares = sdk.NewRat(bondedTokens1600, 1).Quo(pool.bondedShareExRate())
-
-			// bonded shares should increase
-			assert.True(t, bondedShares.GT(sdk.NewRat(300000000, 1)))
-			//Ensure that new bonded ratio is greater than old bonded ratio, since we just added 100,000 bonded
-			assert.True(t, (pool.bondedRatio().GT(beforeBondedRatio)))
-		}
-	}
+	// inflation should be larger before. Because we bonded, we are closer to 67%, and expInlfationAfter is lower
+	assert.True(t, expInflationBefore.GT(expInflationAfter))
+	// bonded shares should increase
+	assert.True(t, bondedShares.GT(sdk.NewRat(300000000, 1)))
+	//Ensure that new bonded ratio is greater than old bonded ratio, since we just added 100,000 bonded
+	assert.True(t, (pool.bondedRatio().GT(beforeBondedRatio)))
 
 	// Final check that the pool equals initial values + provisions and adjustments we recorded
-	pool = keeper.GetPool(ctx)
 	checkFinalPoolValues(t, pool, initialTotalTokens,
-		initialUnbondedTokens, cumulativeExpProvs,
+		initialUnbondedTokens, expProvisionsAfter,
 		cand9bondedTokens, -cand9bondedTokens, bondedShares, unbondedShares)
 
 }
@@ -435,7 +414,7 @@ func TestInflationWithRandomOperations(t *testing.T) {
 		} else {
 
 			// If we are not doing a random operation, just check that normal provisions are working for each hour
-			checkHourlyProvisions(t, keeper, pool, ctx, hr)
+			checkAndProcessProvisions(t, keeper, pool, ctx, hr)
 
 		}
 	}
@@ -467,15 +446,17 @@ func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, initialUn
 
 // Checks provisions are added to the pool correctly every hour
 // Returns expected Provisions, expected Inflation, and pool, to help with cumulative calculations back in main Tests
-func checkHourlyProvisions(t *testing.T, keeper Keeper, pool Pool, ctx sdk.Context, hr int) (sdk.Rat, int64, Pool) {
+func checkAndProcessProvisions(t *testing.T, keeper Keeper, pool Pool, ctx sdk.Context, hr int) (sdk.Rat, int64, Pool) {
 
 	//If we are not doing a random operation, just check that normal provisions are working for each hour
 	expInflation := keeper.nextInflation(ctx)
 	expProvisions := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat)).Evaluate()
+	// expPRoTemp := (expInflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat))
 	startBondedPool := pool.BondedPool
 	startTotalSupply := pool.TotalSupply
 	pool = keeper.processProvisions(ctx)
 	keeper.setPool(ctx, pool)
+	// fmt.Println("expprotemp: ", expPRoTemp)
 
 	//check provisions were added to pool
 	require.Equal(t, startBondedPool+expProvisions, pool.BondedPool, "hr %v", hr)

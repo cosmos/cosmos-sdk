@@ -2,15 +2,13 @@
 ## State
 
 The staking module persists the following information to the store:
-* `GlobalState`, a struct describing the global pools, inflation, and
-  fees
+* `Params`, a struct describing the global pools, inflation, and fees
+* `Pool`, a struct describing the global pools, inflation, and fees
 * `ValidatorValidators: <pubkey | shares> => <validator>`, a map of all validators (including current validators) in the store,
 indexed by their public key and shares in the global pool.
 * `DelegatorBonds: < delegator-address | validator-pubkey > => <delegator-bond>`. a map of all delegations by a delegator to a validator,
 indexed by delegator address and validator pubkey.
   public key
-* `UnbondQueue`, the queue of unbonding delegations
-* `RedelegateQueue`, the queue of re-delegations
 
 ### Global State
 

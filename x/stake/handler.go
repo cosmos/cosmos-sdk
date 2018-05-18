@@ -133,11 +133,11 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	bondAmt sdk.Coin, validator Validator) (sdk.Tags, sdk.Error) {
 
 	// Get or create the delegator bond
-	bond, found := k.GetDelegation(ctx, delegatorAddr, validator.Address)
+	bond, found := k.GetDelegation(ctx, delegatorAddr, validator.Owner)
 	if !found {
 		bond = Delegation{
 			DelegatorAddr: delegatorAddr,
-			ValidatorAddr: validator.Address,
+			ValidatorAddr: validator.Owner,
 			Shares:        sdk.ZeroRat(),
 		}
 	}
@@ -154,10 +154,10 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	// Update bond height
 	bond.Height = ctx.BlockHeight()
 
+	k.setPool(ctx, pool)
 	k.setDelegation(ctx, bond)
 	k.setValidator(ctx, validator)
-	k.setPool(ctx, pool)
-	tags := sdk.NewTags("action", []byte("delegate"), "delegator", delegatorAddr.Bytes(), "validator", validator.Address.Bytes())
+	tags := sdk.NewTags("action", []byte("delegate"), "delegator", delegatorAddr.Bytes(), "validator", validator.Owner.Bytes())
 	return tags, nil
 }
 
@@ -167,9 +167,6 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	bond, found := k.GetDelegation(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
 	if !found {
 		return ErrNoDelegatorForAddress(k.codespace).Result()
-	}
-	if !bond.Shares.GT(sdk.ZeroRat()) { // bond shares < msg shares
-		return ErrInsufficientFunds(k.codespace).Result()
 	}
 
 	var delShares sdk.Rat
@@ -214,7 +211,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 		// if the bond is the owner of the validator then
 		// trigger a revoke candidacy
-		if bytes.Equal(bond.DelegatorAddr, validator.Address) &&
+		if bytes.Equal(bond.DelegatorAddr, validator.Owner) &&
 			validator.Status != sdk.Revoked {
 			revokeCandidacy = true
 		}
@@ -227,8 +224,8 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	}
 
 	// Add the coins
-	p := k.GetPool(ctx)
-	validator, p, returnAmount := validator.removeDelShares(p, delShares)
+	pool := k.GetPool(ctx)
+	validator, pool, returnAmount := validator.removeDelShares(pool, delShares)
 	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
 	k.coinKeeper.AddCoins(ctx, bond.DelegatorAddr, returnCoins)
 
@@ -240,7 +237,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 		// change the share types to unbonded if they were not already
 		if validator.Status == sdk.Bonded {
 			validator.Status = sdk.Unbonded
-			validator, p = validator.UpdateSharesLocation(p)
+			validator, pool = validator.UpdateSharesLocation(pool)
 		}
 
 		// lastly update the status
@@ -249,11 +246,11 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 	// deduct shares from the validator
 	if validator.DelegatorShares.IsZero() {
-		k.removeValidator(ctx, validator.Address)
+		k.removeValidator(ctx, validator.Owner)
 	} else {
 		k.setValidator(ctx, validator)
 	}
-	k.setPool(ctx, p)
+	k.setPool(ctx, pool)
 	tags := sdk.NewTags("action", []byte("unbond"), "delegator", msg.DelegatorAddr.Bytes(), "validator", msg.ValidatorAddr.Bytes())
 	return sdk.Result{
 		Tags: tags,

@@ -45,7 +45,7 @@ func GetValidatorsBondedByPowerKey(validator Validator, pool Pool) []byte {
 	return append(ValidatorsByPowerKey,
 		append(powerBytes,
 			append(heightBytes,
-				append(counterBytes, validator.Address.Bytes()...)...)...)...)
+				append(counterBytes, validator.Owner.Bytes()...)...)...)...)
 }
 
 // get the key for the accumulated update validators

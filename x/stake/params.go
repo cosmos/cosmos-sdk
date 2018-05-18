@@ -1,6 +1,8 @@
 package stake
 
 import (
+	"bytes"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -16,12 +18,9 @@ type Params struct {
 }
 
 func (p Params) equal(p2 Params) bool {
-	return p.InflationRateChange.Equal(p2.InflationRateChange) &&
-		p.InflationMax.Equal(p2.InflationMax) &&
-		p.InflationMin.Equal(p2.InflationMin) &&
-		p.GoalBonded.Equal(p2.GoalBonded) &&
-		p.MaxValidators == p2.MaxValidators &&
-		p.BondDenom == p2.BondDenom
+	bz1 := cdcEmpty.MustMarshalBinary(&p)
+	bz2 := cdcEmpty.MustMarshalBinary(&p2)
+	return bytes.Equal(bz1, bz2)
 }
 
 func defaultParams() Params {

@@ -1,6 +1,8 @@
 package stake
 
 import (
+	"bytes"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,17 +25,9 @@ type Pool struct {
 }
 
 func (p Pool) equal(p2 Pool) bool {
-	return p.TotalSupply == p2.TotalSupply &&
-		p.BondedShares.Equal(p2.BondedShares) &&
-		p.UnbondingShares.Equal(p2.UnbondingShares) &&
-		p.UnbondedShares.Equal(p2.UnbondedShares) &&
-		p.BondedTokens == p2.BondedTokens &&
-		p.UnbondingTokens == p2.UnbondingTokens &&
-		p.UnbondedTokens == p2.UnbondedTokens &&
-		p.InflationLastTime == p2.InflationLastTime &&
-		p.Inflation.Equal(p2.Inflation) &&
-		p.DateLastCommissionReset == p2.DateLastCommissionReset &&
-		p.PrevBondedShares.Equal(p2.PrevBondedShares)
+	bz1 := cdcEmpty.MustMarshalBinary(&p)
+	bz2 := cdcEmpty.MustMarshalBinary(&p2)
+	return bytes.Equal(bz1, bz2)
 }
 
 // initial pool for testing

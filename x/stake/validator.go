@@ -2,7 +2,6 @@ package stake
 
 import (
 	"bytes"
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -18,17 +17,17 @@ import (
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
 type Validator struct {
-	Status  sdk.BondStatus `json:"status"`  // bonded status
-	Address sdk.Address    `json:"address"` // sender of BondTx - UnbondTx returns here
-	PubKey  crypto.PubKey  `json:"pub_key"` // pubkey of validator
+	Status sdk.BondStatus `json:"status"`  // bonded status
+	Owner  sdk.Address    `json:"owner"`   // sender of BondTx - UnbondTx returns here
+	PubKey crypto.PubKey  `json:"pub_key"` // pubkey of validator
 
-	PShares         PoolShares `json:"pool_shares"`      // total shares for tokens held in the pool
+	PoolShares      PoolShares `json:"pool_shares"`      // total shares for tokens held in the pool
 	DelegatorShares sdk.Rat    `json:"delegator_shares"` // total shares issued to a validator's delegators
 
-	Description        Description `json:"description"`            // description terms for the validator
-	BondHeight         int64       `json:"validator_bond_height"`  // earliest height as a bonded validator
-	BondIntraTxCounter int16       `json:"validator_bond_counter"` // block-local tx index of validator change
-	ProposerRewardPool sdk.Coins   `json:"proposer_reward_pool"`   // XXX reward pool collected from being the proposer
+	Description        Description `json:"description"`           // description terms for the validator
+	BondHeight         int64       `json:"bond_height"`           // earliest height as a bonded validator
+	BondIntraTxCounter int16       `json:"bond_intra_tx_counter"` // block-local tx index of validator change
+	ProposerRewardPool sdk.Coins   `json:"proposer_reward_pool"`  // XXX reward pool collected from being the proposer
 
 	Commission            sdk.Rat `json:"commission"`              // XXX the commission rate of fees charged to any delegators
 	CommissionMax         sdk.Rat `json:"commission_max"`          // XXX maximum commission rate which this validator can ever charge
@@ -43,12 +42,12 @@ type Validator struct {
 type Validators []Validator
 
 // NewValidator - initialize a new validator
-func NewValidator(address sdk.Address, pubKey crypto.PubKey, description Description) Validator {
+func NewValidator(owner sdk.Address, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
 		Status:                sdk.Unbonded,
-		Address:               address,
+		Owner:                 owner,
 		PubKey:                pubKey,
-		PShares:               NewUnbondedShares(sdk.ZeroRat()),
+		PoolShares:            NewUnbondedShares(sdk.ZeroRat()),
 		DelegatorShares:       sdk.ZeroRat(),
 		Description:           description,
 		BondHeight:            int64(0),
@@ -66,8 +65,8 @@ func NewValidator(address sdk.Address, pubKey crypto.PubKey, description Descrip
 func (v Validator) equal(c2 Validator) bool {
 	return v.Status == c2.Status &&
 		v.PubKey.Equals(c2.PubKey) &&
-		bytes.Equal(v.Address, c2.Address) &&
-		v.PShares.Equal(c2.PShares) &&
+		bytes.Equal(v.Owner, c2.Owner) &&
+		v.PoolShares.Equal(c2.PoolShares) &&
 		v.DelegatorShares.Equal(c2.DelegatorShares) &&
 		v.Description == c2.Description &&
 		//v.BondHeight == c2.BondHeight &&
@@ -78,11 +77,6 @@ func (v Validator) equal(c2 Validator) bool {
 		v.CommissionChangeRate.Equal(c2.CommissionChangeRate) &&
 		v.CommissionChangeToday.Equal(c2.CommissionChangeToday) &&
 		v.PrevBondedShares.Equal(c2.PrevBondedShares)
-}
-
-// intended to be used with require/assert:  require.True(ValEq(...))
-func ValEq(t *testing.T, exp, got Validator) (*testing.T, bool, string, Validator, Validator) {
-	return t, exp.equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
 }
 
 // Description - description fields for a validator
@@ -102,14 +96,13 @@ func NewDescription(moniker, identity, website, details string) Description {
 	}
 }
 
-//XXX updateDescription function
-//XXX enforce limit to number of description characters
+//XXX updateDescription function which enforce limit to number of description characters
 
 // abci validator from stake validator type
 func (v Validator) abciValidator(cdc *wire.Codec) abci.Validator {
 	return abci.Validator{
 		PubKey: v.PubKey.Bytes(),
-		Power:  v.PShares.Bonded().Evaluate(),
+		Power:  v.PoolShares.Bonded().Evaluate(),
 	}
 }
 
@@ -126,33 +119,33 @@ func (v Validator) abciValidatorZero(cdc *wire.Codec) abci.Validator {
 func (v Validator) UpdateSharesLocation(p Pool) (Validator, Pool) {
 	var tokens int64
 
-	switch {
-	case v.PShares.Kind == ShareUnbonded:
+	switch v.PoolShares.Kind {
+	case ShareUnbonded:
 		if v.Status == sdk.Unbonded {
 			return v, p
 		}
-		p, tokens = p.removeSharesUnbonded(v.PShares.Amount)
+		p, tokens = p.removeSharesUnbonded(v.PoolShares.Amount)
 
-	case v.PShares.Kind == ShareUnbonding:
+	case ShareUnbonding:
 		if v.Status == sdk.Unbonding {
 			return v, p
 		}
-		p, tokens = p.removeSharesUnbonding(v.PShares.Amount)
+		p, tokens = p.removeSharesUnbonding(v.PoolShares.Amount)
 
-	case v.PShares.Kind == ShareBonded:
+	case ShareBonded:
 		if v.Status == sdk.Bonded { // return if nothing needs switching
 			return v, p
 		}
-		p, tokens = p.removeSharesBonded(v.PShares.Amount)
+		p, tokens = p.removeSharesBonded(v.PoolShares.Amount)
 	}
 
 	switch v.Status {
 	case sdk.Unbonded, sdk.Revoked:
-		p, v.PShares = p.addTokensUnbonded(tokens)
+		p, v.PoolShares = p.addTokensUnbonded(tokens)
 	case sdk.Unbonding:
-		p, v.PShares = p.addTokensUnbonding(tokens)
+		p, v.PoolShares = p.addTokensUnbonding(tokens)
 	case sdk.Bonded:
-		p, v.PShares = p.addTokensBonded(tokens)
+		p, v.PoolShares = p.addTokensBonded(tokens)
 	}
 	return v, p
 }
@@ -163,7 +156,7 @@ func (v Validator) UpdateSharesLocation(p Pool) (Validator, Pool) {
 // if not bonded, the power is the amount of bonded shares which the
 //    the validator would have it was bonded
 func (v Validator) EquivalentBondedShares(p Pool) (eqBondedShares sdk.Rat) {
-	return v.PShares.ToBonded(p).Amount
+	return v.PoolShares.ToBonded(p).Amount
 }
 
 //_________________________________________________________________________________________________________
@@ -185,7 +178,7 @@ func (v Validator) addTokensFromDel(p Pool,
 	case sdk.Bonded:
 		p, poolShares = p.addTokensBonded(amount)
 	}
-	v.PShares.Amount = v.PShares.Amount.Add(poolShares.Amount)
+	v.PoolShares.Amount = v.PoolShares.Amount.Add(poolShares.Amount)
 	equivalentBondedShares = poolShares.ToBonded(p).Amount
 
 	issuedDelegatorShares = equivalentBondedShares.Quo(exRate) // bshr/(bshr/delshr) = delshr
@@ -207,14 +200,14 @@ func (v Validator) removeDelShares(p Pool,
 	case sdk.Unbonded, sdk.Revoked:
 		unbondedShares := eqBondedSharesToRemove.ToUnbonded(p).Amount
 		p, createdCoins = p.removeSharesUnbonded(unbondedShares)
-		v.PShares.Amount = v.PShares.Amount.Sub(unbondedShares)
+		v.PoolShares.Amount = v.PoolShares.Amount.Sub(unbondedShares)
 	case sdk.Unbonding:
 		unbondingShares := eqBondedSharesToRemove.ToUnbonding(p).Amount
 		p, createdCoins = p.removeSharesUnbonding(unbondingShares)
-		v.PShares.Amount = v.PShares.Amount.Sub(unbondingShares)
+		v.PoolShares.Amount = v.PoolShares.Amount.Sub(unbondingShares)
 	case sdk.Bonded:
 		p, createdCoins = p.removeSharesBonded(eqBondedSharesToRemove.Amount)
-		v.PShares.Amount = v.PShares.Amount.Sub(eqBondedSharesToRemove.Amount)
+		v.PoolShares.Amount = v.PoolShares.Amount.Sub(eqBondedSharesToRemove.Amount)
 	}
 	return v, p, createdCoins
 }
@@ -225,7 +218,7 @@ func (v Validator) DelegatorShareExRate(p Pool) sdk.Rat {
 	if v.DelegatorShares.IsZero() {
 		return sdk.OneRat()
 	}
-	eqBondedShares := v.PShares.ToBonded(p).Amount
+	eqBondedShares := v.PoolShares.ToBonded(p).Amount
 	return eqBondedShares.Quo(v.DelegatorShares)
 }
 
@@ -236,7 +229,7 @@ var _ sdk.Validator = Validator{}
 
 // nolint - for sdk.Validator
 func (v Validator) GetStatus() sdk.BondStatus { return v.Status }
-func (v Validator) GetAddress() sdk.Address   { return v.Address }
+func (v Validator) GetOwner() sdk.Address     { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey  { return v.PubKey }
-func (v Validator) GetPower() sdk.Rat         { return v.PShares.Bonded() }
+func (v Validator) GetPower() sdk.Rat         { return v.PoolShares.Bonded() }
 func (v Validator) GetBondHeight() int64      { return v.BondHeight }

@@ -19,7 +19,7 @@ const (
 // validator for a delegated proof of stake system
 type Validator interface {
 	GetStatus() BondStatus    // status of the validator
-	GetAddress() Address      // owner address to receive/return validators coins
+	GetOwner() Address        // owner address to receive/return validators coins
 	GetPubKey() crypto.PubKey // validation pubkey
 	GetPower() Rat            // validation power
 	GetBondHeight() int64     // height in which the validator became active

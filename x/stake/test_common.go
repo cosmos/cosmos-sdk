@@ -51,6 +51,15 @@ var (
 	emptyPubkey crypto.PubKey
 )
 
+//_______________________________________________________________________________________
+
+// intended to be used with require/assert:  require.True(ValEq(...))
+func ValEq(t *testing.T, exp, got Validator) (*testing.T, bool, string, Validator, Validator) {
+	return t, exp.equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
+}
+
+//_______________________________________________________________________________________
+
 func makeTestCodec() *wire.Codec {
 	var cdc = wire.NewCodec()
 

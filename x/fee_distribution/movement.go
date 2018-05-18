@@ -5,7 +5,7 @@ import (
 )
 
 // burn burn burn
-func BurnFeeHandler(ctx sdk.Context, collectedFees sdk.Coins) {}
+func BurnFeeHandler(ctx sdk.Context, _ sdk.Tx, collectedFees sdk.Coins) {}
 
 //// Handle fee distribution to the validators and delegators
 //func (k Keeper) FeeHandler(ctx sdk.Context, collectedFees sdk.Coins) {

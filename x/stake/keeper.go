@@ -2,6 +2,7 @@ package stake
 
 import (
 	"bytes"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -59,7 +60,7 @@ func (k Keeper) getAllValidators(ctx sdk.Context) (validators Validators) {
 		validators = append(validators, validator)
 		iterator.Next()
 	}
-	return validators[:i] // trim
+	return validators
 }
 
 // Get the set of all validators, retrieve a maxRetrieve number of records
@@ -86,7 +87,7 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve int16) (validators Va
 func (k Keeper) setValidator(ctx sdk.Context, validator Validator) Validator {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.getPool(store)
-	address := validator.Address
+	address := validator.Owner
 
 	// update the main list ordered by address before exiting
 	defer func() {
@@ -103,9 +104,9 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) Validator {
 		// TODO will need to implement this to have regard for "unrevoke" transaction however
 		//      it shouldn't return here under that transaction
 		if oldValidator.Status == validator.Status &&
-			oldValidator.PShares.Equal(validator.PShares) {
+			oldValidator.PoolShares.Equal(validator.PoolShares) {
 			return validator
-		} else if oldValidator.PShares.Bonded().LT(validator.PShares.Bonded()) {
+		} else if oldValidator.PoolShares.Bonded().LT(validator.PoolShares.Bonded()) {
 			powerIncreasing = true
 		}
 		// delete the old record in the power ordered list
@@ -141,7 +142,7 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) Validator {
 	}
 
 	// update the validator set for this validator
-	nowBonded, retrieve := k.updateBondedValidators(ctx, store, pool, validator.Address)
+	nowBonded, retrieve := k.updateBondedValidators(ctx, store, pool, validator.Owner)
 	if nowBonded {
 		validator = retrieve
 	}
@@ -252,7 +253,7 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore, pool 
 		var validator Validator
 		k.cdc.MustUnmarshalBinary(bz, &validator)
 
-		addr := validator.Address
+		addr := validator.Owner
 
 		// iterator.Value is the validator object
 		toKickOut[string(addr)] = iterator.Value()
@@ -273,27 +274,25 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore, pool 
 		var validator Validator
 		k.cdc.MustUnmarshalBinary(bz, &validator)
 
-		_, found := toKickOut[string(validator.Address)]
+		_, found := toKickOut[string(validator.Owner)]
 		if found {
 
 			// remove from ToKickOut group
-			delete(toKickOut, string(validator.Address))
+			delete(toKickOut, string(validator.Owner))
+
+			// also add to the current validators group
+			store.Set(GetValidatorsBondedKey(validator.PubKey), bz)
 		} else {
 
 			// if it wasn't in the toKickOut group it means
 			// this wasn't a previously a validator, therefor
-			// update the validator/to reflect this
-			validator.Status = sdk.Bonded
-			validator, pool = validator.UpdateSharesLocation(pool)
-			validator = k.bondValidator(ctx, store, validator, pool)
-			if bytes.Equal(validator.Address, OptionalRetrieve) {
+			// update the validator to enter the validator group
+			validator = k.bondValidator(ctx, store, validator)
+			if bytes.Equal(validator.Owner, OptionalRetrieve) {
 				retrieveBonded = true
 				retrieve = validator
 			}
 		}
-
-		// also add to the current validators group
-		store.Set(GetValidatorsBondedKey(validator.PubKey), bz)
 
 		iterator.Next()
 	}
@@ -314,25 +313,40 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore, pool 
 func (k Keeper) unbondValidator(ctx sdk.Context, store sdk.KVStore, validator Validator) {
 	pool := k.GetPool(ctx)
 
+	// sanity check
+	if validator.Status == sdk.Unbonded {
+		panic(fmt.Sprintf("should not already be be unbonded,  validator: %v\n", validator))
+	}
+
+	// first delete the old record in the pool
+	store.Delete(GetValidatorsBondedByPowerKey(validator, pool))
+
 	// set the status
 	validator.Status = sdk.Unbonded
 	validator, pool = validator.UpdateSharesLocation(pool)
 	k.setPool(ctx, pool)
 
 	// save the now unbonded validator record
-	bz := k.cdc.MustMarshalBinary(validator)
-	store.Set(GetValidatorKey(validator.Address), bz)
+	bzVal := k.cdc.MustMarshalBinary(validator)
+	store.Set(GetValidatorKey(validator.Owner), bzVal)
+	store.Set(GetValidatorsBondedByPowerKey(validator, pool), bzVal)
 
 	// add to accumulated changes for tendermint
-	bz = k.cdc.MustMarshalBinary(validator.abciValidatorZero(k.cdc))
-	store.Set(GetTendermintUpdatesKey(validator.Address), bz)
+	bzABCI := k.cdc.MustMarshalBinary(validator.abciValidatorZero(k.cdc))
+	store.Set(GetTendermintUpdatesKey(validator.Owner), bzABCI)
 
 	// also remove from the Bonded Validators Store
 	store.Delete(GetValidatorsBondedKey(validator.PubKey))
 }
 
 // perform all the store operations for when a validator status becomes bonded
-func (k Keeper) bondValidator(ctx sdk.Context, store sdk.KVStore, validator Validator, pool Pool) Validator {
+func (k Keeper) bondValidator(ctx sdk.Context, store sdk.KVStore, validator Validator) Validator {
+	pool := k.GetPool(ctx)
+
+	// sanity check
+	if validator.Status == sdk.Bonded {
+		panic(fmt.Sprintf("should not already be be bonded,  validator: %v\n", validator))
+	}
 
 	// first delete the old record in the pool
 	store.Delete(GetValidatorsBondedByPowerKey(validator, pool))
@@ -344,13 +358,13 @@ func (k Keeper) bondValidator(ctx sdk.Context, store sdk.KVStore, validator Vali
 
 	// save the now bonded validator record to the three referened stores
 	bzVal := k.cdc.MustMarshalBinary(validator)
-	store.Set(GetValidatorKey(validator.Address), bzVal)
+	store.Set(GetValidatorKey(validator.Owner), bzVal)
 	store.Set(GetValidatorsBondedByPowerKey(validator, pool), bzVal)
 	store.Set(GetValidatorsBondedKey(validator.PubKey), bzVal)
 
 	// add to accumulated changes for tendermint
 	bzABCI := k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
-	store.Set(GetTendermintUpdatesKey(validator.Address), bzABCI)
+	store.Set(GetTendermintUpdatesKey(validator.Owner), bzABCI)
 
 	return validator
 }
@@ -471,6 +485,10 @@ func (k Keeper) getParams(store sdk.KVStore) (params Params) {
 	return
 }
 
+// Need a distinct function because setParams depends on an existing previous
+// record of params to exist (to check if maxValidators has changed) - and we
+// panic on retrieval if it doesn't exist - hence if we use setParams for the very
+// first params set it will panic.
 func (k Keeper) setNewParams(ctx sdk.Context, params Params) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(params)

@@ -1,6 +1,7 @@
 package stake
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -62,34 +63,42 @@ func TestGetInflation(t *testing.T) {
 func TestProcessProvisions(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 	params := defaultParams()
+	params.MaxValidators = 2
 	keeper.setParams(ctx, params)
 	pool := keeper.GetPool(ctx)
 
-	// create some validators some bonded, some unbonded
-	validators := make([]Validator, 10)
-	for i := 0; i < 10; i++ {
-		v := Validator{
-			Status:          sdk.Unbonded,
-			PubKey:          pks[i],
-			Address:         addrs[i],
-			PShares:         NewUnbondedShares(sdk.NewRat(0)),
-			DelegatorShares: sdk.NewRat(0),
-		}
-		if i < 5 {
-			v.Status = sdk.Bonded
-			v.PShares.Kind = ShareBonded
-		}
-		mintedTokens := int64((i + 1) * 10000000)
-		pool.TotalSupply += mintedTokens
-		v, pool, _ = v.addTokensFromDel(pool, mintedTokens)
-
-		keeper.setValidator(ctx, v)
-		validators[i] = v
-	}
-	keeper.setPool(ctx, pool)
 	var totalSupply int64 = 550000000
 	var bondedShares int64 = 150000000
 	var unbondedShares int64 = 400000000
+
+	// create some validators some bonded, some unbonded
+	var validators [5]Validator
+	validators[0] = NewValidator(addrs[0], pks[0], Description{})
+	validators[0], pool, _ = validators[0].addTokensFromDel(pool, 150000000)
+	keeper.setPool(ctx, pool)
+	assert.Equal(t, bondedShares, pool.BondedTokens)
+	fmt.Printf("debug pool: %v\n", pool)
+	validators[0] = keeper.setValidator(ctx, validators[0])
+	validators[1] = NewValidator(addrs[1], pks[1], Description{})
+	validators[1], pool, _ = validators[1].addTokensFromDel(pool, 100000000)
+	keeper.setPool(ctx, pool)
+	validators[1] = keeper.setValidator(ctx, validators[1])
+	validators[2] = NewValidator(addrs[2], pks[2], Description{})
+	validators[2], pool, _ = validators[2].addTokensFromDel(pool, 100000000)
+	keeper.setPool(ctx, pool)
+	validators[2] = keeper.setValidator(ctx, validators[2])
+	validators[3] = NewValidator(addrs[3], pks[3], Description{})
+	validators[3], pool, _ = validators[3].addTokensFromDel(pool, 100000000)
+	keeper.setPool(ctx, pool)
+	validators[3] = keeper.setValidator(ctx, validators[3])
+	validators[4] = NewValidator(addrs[4], pks[4], Description{})
+	validators[4], pool, _ = validators[4].addTokensFromDel(pool, 100000000)
+	keeper.setPool(ctx, pool)
+	validators[4] = keeper.setValidator(ctx, validators[4])
+
+	validator, _ := keeper.GetValidator(ctx, addrs[0])
+	fmt.Printf("debug validators[0]: %v\n", validator)
+
 	assert.Equal(t, totalSupply, pool.TotalSupply)
 	assert.Equal(t, bondedShares, pool.BondedTokens)
 	assert.Equal(t, unbondedShares, pool.UnbondedTokens)

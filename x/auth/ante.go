@@ -77,7 +77,7 @@ func NewAnteHandler(am sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHan
 				// TODO: min fee
 				if !fee.Amount.IsZero() {
 					signerAcc, res = deductFees(signerAcc, fee)
-					feeHandler(ctx, fee.Amount)
+					feeHandler(ctx, tx, fee.Amount)
 					if !res.IsOK() {
 						return ctx, res, true
 					}

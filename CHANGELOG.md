@@ -11,6 +11,10 @@ FEATURES
   * A "simulate" query has been added to determine how much gas a transaction will need
   * Modules can include their own gas costs for execution of particular message types
 
+## 0.17.1 (May 17, 2018)
+
+Update to Tendermint v0.19.4 (fixes a consensus bug and improves logging)
+
 ## 0.17.0 (May 15, 2018)
 
 BREAKING CHANGES

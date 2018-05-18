@@ -37,8 +37,8 @@ func createTestAddrs(numAddrs int) []sdk.Address {
 	//start at 10 to avoid changing 1 to 01, 2 to 02, etc
 	for i := 10; i < numAddrs; i++ {
 		numString := strconv.Itoa(i)
-		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA61")
-		buffer.WriteString(numString)
+		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA61") //base address string
+		buffer.WriteString(numString)                                //adding on final two digits to make addresses unique
 		addresses = append(addresses, testAddr(buffer.String()))
 		buffer.Reset()
 	}
@@ -52,8 +52,8 @@ func createTestPubKeys(numPubKeys int) []crypto.PubKey {
 	//start at 10 to avoid changing 1 to 01, 2 to 02, etc
 	for i := 10; i < numPubKeys; i++ {
 		numString := strconv.Itoa(i)
-		buffer.WriteString("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB")
-		buffer.WriteString(numString)
+		buffer.WriteString("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB") //base pubkey string
+		buffer.WriteString(numString)                                                        //adding on final two digits to make pubkeys unique
 		publicKeys = append(publicKeys, newPubKey(buffer.String()))
 		buffer.Reset()
 	}

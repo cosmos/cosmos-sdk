@@ -11,7 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var r = rand.New(rand.NewSource(502))
+//change the int in NewSource to generate random input for tests that use r for randomization
+var r = rand.New(rand.NewSource(513))
 
 func TestGetInflation(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
@@ -63,6 +64,7 @@ func TestGetInflation(t *testing.T) {
 	}
 }
 
+//Tests that provisions are added to the pool as expected for 8766 hours (a year)
 func TestProcessProvisions(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 	params := defaultParams()
@@ -95,10 +97,10 @@ func TestProcessProvisions(t *testing.T) {
 	checkFinalPoolValues(t, pool, initialTotalTokens,
 		initialUnbondedTokens, cumulativeExpProvs,
 		0, 0, bondedShares, unbondedShares)
-
 }
 
 //Tests that the hourly rate of change will be positve, negative, or zero, depending on bonded ratio and inflation rate
+//Cycles through the whole gambit of starting at 7% inflation, up to 20%, back down to 7% (it takes 11.4 years)
 func TestHourlyRateOfChange(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 	params := defaultParams()
@@ -222,7 +224,6 @@ func TestLargeUnbond(t *testing.T) {
 	checkFinalPoolValues(t, pool, initialTotalTokens,
 		initialUnbondedTokens, expProvisionsAfter,
 		-cand9UnbondedTokens, cand9UnbondedTokens, bondedShares, unbondedShares)
-
 }
 
 //Test that a large bonding will cause inflation to go down, and lower the bondedRatio
@@ -281,15 +282,14 @@ func TestLargeBond(t *testing.T) {
 	checkFinalPoolValues(t, pool, initialTotalTokens,
 		initialUnbondedTokens, expProvisionsAfter,
 		cand9bondedTokens, -cand9bondedTokens, bondedShares, unbondedShares)
-
 }
 
-//Tests that inflation works as expected when we get a randomly updating sample of candidates
+//Tests that inflation works as expected when we get do a random operation on 20 different candidates
 func TestInflationWithRandomOperations(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 	params := defaultParams()
 	keeper.setParams(ctx, params)
-	numCandidates := 20 //max 40 right now since var addrs only goes up to addrs[39]
+	numCandidates := 20 //max 40 possible right now since var addrs only goes up to addrs[39]
 
 	//start off by randomly creating 20 candidates
 	pool, candidates := randomSetup(r, numCandidates)
@@ -301,64 +301,45 @@ func TestInflationWithRandomOperations(t *testing.T) {
 
 	keeper.setPool(ctx, pool)
 
-	//Every two weeks (336 hours) we do a random operation on the set of 20 candidates.
-	twoWeekCounter := 336
-
-	//We count up to the 20 total candidates, and do a random operation on each candidate
+	//This counter is used to rotate through each candidate so each random operation is applied to a different candidate
 	candidateCounter := 0
 
-	// One year of provisions, with 20 random operations from the 20 candidates setup above from randomSetup()
-	for hr := 0; hr < 8766; hr++ {
+	// looping through 20 random operations
+	for i := 0; i < numCandidates; i++ {
 		pool := keeper.GetPool(ctx)
 
-		// This if statement will randomly bond, unbond, remove shares or add tokens to the candidates every two weeks, for 40 weeks
-		// every other hour it will just add normal provisions
-		if twoWeekCounter == hr && candidateCounter < 20 {
+		//Get values before randomOperation
+		expInflationBefore := keeper.nextInflation(ctx)
+		initialBondedPool := pool.BondedPool
+		initialUnbondedTokens := pool.UnbondedPool
 
-			//Get values before randomOperation
-			expInflationBefore := keeper.nextInflation(ctx)
-			initialBondedPool := pool.BondedPool
-			initialUnbondedTokens := pool.UnbondedPool
+		//Random operation, and recording how candidates are modified
+		poolMod, candidateMod, tokens, msg := randomOperation(r)(r, pool, candidates[candidateCounter])
+		candidatesMod := make([]Candidate, len(candidates))
+		copy(candidatesMod[:], candidates[:])
+		require.Equal(t, numCandidates, len(candidates), "i %v", candidateCounter)
+		require.Equal(t, numCandidates, len(candidatesMod), "i %v", candidateCounter)
+		candidatesMod[candidateCounter] = candidateMod
 
-			//Random operation, and recording how candidates are modified
-			poolMod, candidateMod, tokens, msg := randomOperation(r)(r, pool, candidates[candidateCounter])
-			candidatesMod := make([]Candidate, len(candidates))
-			copy(candidatesMod[:], candidates[:])
-			require.Equal(t, numCandidates, len(candidates), "i %v", candidateCounter)
-			require.Equal(t, numCandidates, len(candidatesMod), "i %v", candidateCounter)
-			candidatesMod[candidateCounter] = candidateMod
+		assertInvariants(t, msg,
+			pool, candidates,
+			poolMod, candidatesMod, tokens)
 
-			assertInvariants(t, msg,
-				pool, candidates,
-				poolMod, candidatesMod, tokens)
+		//set pool and candidates after the random operation
+		pool = poolMod
+		keeper.setPool(ctx, pool)
+		candidates = candidatesMod
 
-			//set pool and candidates after the random operation
-			pool = poolMod
-			keeper.setPool(ctx, pool)
-			candidates = candidatesMod
+		//Get values after randomOperation
+		expInflationAfter := keeper.nextInflation(ctx)
+		afterBondedPool := pool.BondedPool
+		afterUnbondedPool := pool.UnbondedPool
 
-			//Get values after randomOperation
-			expInflationAfter := keeper.nextInflation(ctx)
-			afterBondedPool := pool.BondedPool
-			afterUnbondedPool := pool.UnbondedPool
+		//Check the inflation has changed as expected, based on the difference between tokens before and after the operation
+		checkInflation(t, expInflationAfter, expInflationBefore, msg,
+			afterBondedPool, initialBondedPool, afterUnbondedPool, initialUnbondedTokens)
 
-			//Process provisions after random operation
-			pool = keeper.processProvisions(ctx)
-			keeper.setPool(ctx, pool)
-
-			//Check the inflation has changed as expected, based on the difference between tokens before and after the operation
-			checkInflation(t, expInflationAfter, expInflationBefore, msg,
-				afterBondedPool, initialBondedPool, afterUnbondedPool, initialUnbondedTokens)
-
-			twoWeekCounter += 336
-			candidateCounter++
-
-		} else {
-
-			// If we are not doing a random operation, just check that normal provisions are working for each hour
-			checkAndProcessProvisions(t, keeper, pool, ctx, hr)
-
-		}
+		candidateCounter++
 	}
 }
 

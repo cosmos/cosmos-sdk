@@ -3,38 +3,28 @@ Bank
 
 Defines how coins (i.e cryptocurrencies) are transferred.
 
-::
+**MsgSend**
 
-    type MsgSend struct {
-      Inputs  []Input  `json:"inputs"`
-      Outputs []Output `json:"outputs"`
-    }
+- **Inputs** (``[]Input``) -
+- **Outputs** (``[]Output``) -
+
 
 The Input and Output structs are define an ``Address`` and a set of ``Coins``.
 
-::
+**Input**
 
-  type Input struct {
-	   Address sdk.Address `json:"address"`
-	   Coins   sdk.Coins   `json:"coins"`
-  }
+- **Address** (``sdk.Address``) -
+- **Coins** (``sdk.Coins``) -
 
-::
+**Output**
 
-  type Output struct {
-	   Address sdk.Address `json:"address"`
-	   Coins   sdk.Coins   `json:"coins"`
-  }
+- **Address** (``sdk.Address``) -
+- **Coins** (``sdk.Coins``) -
 
-MsgIssue
+**MsgIssue**
 
-::
-
-    type MsgIssue struct {
-    	Banker  sdk.Address `json:"banker"`
-    	Outputs []Output    `json:"outputs"`
-    }
-
+- **Banker** (``sdk.Address``) -
+- **Outputs** (``]Output``) -
 
 ``NewMsgSend(in []Input, out []Output)``
 
@@ -70,13 +60,9 @@ There are 3 types of bank keepers:
 - ``SendKeeper``: only allows transfers between accounts, without the possibility of creating coins
 - ``Keeper``: all the above, plus allowing the creation and deletion of coins to an ``Address``
 
-::
+**Keeper/ViewKeeper/SendKeeper**
 
-    type Keeper/ViewKeeper/SendKeeper struct {
-      am sdk.AccountMapper
-    }
-
-
+- **am** (``sdk.AccountMapper``) - Keeper account mapper
 
 Methods
 

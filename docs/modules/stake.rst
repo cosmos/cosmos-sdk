@@ -5,7 +5,6 @@ Proof of Stake related implementation including bonding and delegation transacti
 
 Types:
 
-
 **Candidate**
 
 - **Status** (``CandidateStatus``) - Bonded status
@@ -68,39 +67,73 @@ Methods
 
   Same as above, but its ``Power`` is set to 0 for validator updates.
 
+
+Pool
+
+**Pool**
+
+- **TotalSupply** (``int64``) - Total supply of all tokens
+- **BondedShares** (``sdk.Rat``) - Sum of all shares distributed for the Bonded Pool
+- **UnbondedShares** (``sdk.Rat``) - Sum of all shares distributed for the Unbonded Pool
+- **BondedPool** (``int64``) - Reserve of bonded tokens
+- **UnbondedPool** (``int64``) - Reserve of unbonded tokens held with candidates
+- **InflationLastTime** (``int64``) - Block which the last inflation was processed
+- **Inflation** (``sdk.Rat``) - Current annual inflation rate
+
+``pool.bondedRatio()``
+
+  Get the bond ratio (``sdk.Rat``) of the global state .
+
+``pool.bondedShareExRate()``
+
+  Get the exchange rate of bonded token per issued share.
+
+``pool.unbondedShareExRate()``
+
+  Get the exchange rate of unbonded tokens held in candidates per issued share.
+
+``pool.bondedToUnbondedPool(candidate Candidate)``
+
+  Move a candidates asset pool from bonded to unbonded pool.
+
+``pool.bondedToUnbondedPool(candidate Candidate)``
+
+  Move a candidate's asset pool from unbonded to bonded pool.
+
+``pool.candidateAddTokens(candidate Candidate, amount int64)``
+
+  Add tokens to a candidate
+
+``pool.candidateRemoveShares(candidate Candidate, shares sdk.Rat)``
+
+  Remove shares from a candidate
+
+
 Messages
 
-::
+**MsgDeclareCandidacy**
 
-  type MsgDeclareCandidacy struct {
-  	Description
-  	CandidateAddr sdk.Address   `json:"address"`
-  	PubKey        crypto.PubKey `json:"pubkey"`
-  	Bond          sdk.Coin      `json:"bond"`
-  }
+- **Description** (``Description``) -
+- **CandidateAddr** (``sdk.Address``) -
+- **PubKey** (``crypto.PubKey``) -
+- **Bond** (``sdk.Coin``) -
 
-::
+**MsgEditCandidacy**
 
-  type MsgEditCandidacy struct {
-    Description
-    CandidateAddr sdk.Address `json:"address"`
-  }
+- **Description** (``Description``) -
+- **CandidateAddr** (``sdk.Address``) -
 
-::
+**MsgDelegate**
 
-  type MsgDelegate struct {
-    DelegatorAddr sdk.Address `json:"address"`
-    CandidateAddr sdk.Address `json:"address"`
-    Bond          sdk.Coin    `json:"bond"`
-  }
+- **DelegatorAddr** (``sdk.Address``) -
+- **CandidateAddr** (``sdk.Address``) -
+- **Bond** (``sdk.Coin``) -
 
-::
+**MsgUnbond**
 
-  type MsgUnbond struct {
-    DelegatorAddr sdk.Address `json:"address"`
-    CandidateAddr sdk.Address `json:"address"`
-    Shares        string      `json:"shares"`
-  }
+- **DelegatorAddr** (``sdk.Address``) -
+- **CandidateAddr** (``sdk.Address``) -
+- **Shares** (``string``) -
 
 ``NewMsgDeclareCandidacy(candidateAddr sdk.Address, pubkey crypto.PubKey, bond sdk.Coin, description Description)``
 

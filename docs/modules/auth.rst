@@ -3,23 +3,12 @@ Auth
 
 Defines a standard account structure (``BaseAccount``) and how transaction signers are authenticated.
 
-::
+**BaseAccount**
 
-    type BaseAccount struct {
-      Address  sdk.Address   `json:"address"`
-      Coins    sdk.Coins     `json:"coins"`
-      PubKey   crypto.PubKey `json:"public_key"`
-      Sequence int64         `json:"sequence"`
-    }
-
-You can extend your ``BaseAccount`` by embedding it in your ``AppAccount``:
-
-::
-
-    type AppAccount struct {
-      auth.BaseAccount
-      Name string `json:"name"`
-    }
+- **Address** (``sdk.Address``) -
+- **Coins** (``sdk.Coins``) -
+- **PubKey** (``crypto.PubKey``) -
+- **Sequence** (``int64``) -
 
 Methods
 ^^^^^^^
@@ -96,13 +85,11 @@ Mapper
 
 ``AccountMapper`` encodes/decodes accounts using the ``go-amino`` (binary) encoding/decoding library.
 
-::
+**AccountMapper**
 
-    type accountMapper struct {
-      key sdk.StoreKey // The (unexposed) key used to access the store from the Context.
-      proto sdk.Account   // The prototypical sdk.Account concrete type.
-      cdc *wire.Codec // The wire codec for binary encoding/decoding of accounts.
-    }
+- **key** (``sdk.StoreKey``) - The (unexposed) key used to access the store from the Context.
+- **proto** (``sdk.Account``) - The prototypical ``sdk.Account`` concrete type.
+- **cdc** (``wire.Codec``) - The wire codec for binary encoding/decoding of accounts.
 
 ``NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto sdk.Account)``
 

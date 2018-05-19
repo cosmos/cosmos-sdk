@@ -43,6 +43,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byt
 	c = c.WithIsCheckTx(isCheckTx)
 	c = c.WithTxBytes(txBytes)
 	c = c.WithLogger(logger)
+	c = c.WithGasMeter(NewInfiniteGasMeter())
 	return c
 }
 
@@ -68,7 +69,7 @@ func (c Context) Value(key interface{}) interface{} {
 
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key StoreKey) KVStore {
-	return c.multiStore().GetKVStore(key)
+	return c.multiStore().GetKVStoreWithGas(c.GasMeter(), key)
 }
 
 //----------------------------------------
@@ -127,6 +128,7 @@ const (
 	contextKeyIsCheckTx
 	contextKeyTxBytes
 	contextKeyLogger
+	contextKeyGasMeter
 )
 
 // NOTE: Do not expose MultiStore.
@@ -155,6 +157,9 @@ func (c Context) TxBytes() []byte {
 func (c Context) Logger() log.Logger {
 	return c.Value(contextKeyLogger).(log.Logger)
 }
+func (c Context) GasMeter() GasMeter {
+	return c.Value(contextKeyGasMeter).(GasMeter)
+}
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	return c.withValue(contextKeyMultiStore, ms)
 }
@@ -176,6 +181,9 @@ func (c Context) WithTxBytes(txBytes []byte) Context {
 }
 func (c Context) WithLogger(logger log.Logger) Context {
 	return c.withValue(contextKeyLogger, logger)
+}
+func (c Context) WithGasMeter(meter GasMeter) Context {
+	return c.withValue(contextKeyGasMeter, meter)
 }
 
 // Cache the multistore and return a new cached context. The cached context is

@@ -219,6 +219,8 @@ func TestCandidateRemoveShares(t *testing.T) {
 // generate a random candidate
 func randomCandidate(r *rand.Rand, i int) Candidate {
 	var status CandidateStatus
+	// fmt.Println("ADDRS: ", addrs)
+
 	if r.Float64() < float64(0.5) {
 		status = Bonded
 	} else {
@@ -451,14 +453,12 @@ func TestSingleCandidateIntegrationInvariants(t *testing.T) {
 // run random operations in a random order on a random multi-candidate state, assert invariants hold
 func TestMultiCandidateIntegrationInvariants(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
-
 	for i := 0; i < 10; i++ {
-		poolOrig, candidatesOrig := randomSetup(r, 40)
+		poolOrig, candidatesOrig := randomSetup(r, 30)
 
 		assertInvariants(t, "no operation",
 			poolOrig, candidatesOrig,
 			poolOrig, candidatesOrig, 0)
-
 		for j := 0; j < 5; j++ {
 			index := int(r.Int31n(int32(len(candidatesOrig))))
 			poolMod, candidateMod, tokens, msg := randomOperation(r)(r, poolOrig, candidatesOrig[index])

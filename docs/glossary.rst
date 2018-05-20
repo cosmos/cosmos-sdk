@@ -1,6 +1,8 @@
 Glossary
 ========
 
+.. (s/Modules/handlers+mappers+stores/g) + add Tx (signed message) & Msg
+
 This glossary defines many terms used throughout documentation of the Cosmos-SDK.
 This is mainly to provide a background and general understanding of the
 different words and concepts that are used. Other documents will explain
@@ -16,17 +18,21 @@ and we'll add it to this glossary.
 Composability
 -------------
 
+Anyone can create a module for the Cosmos-SDK and integrating the already-built
+modules is as simple as importing them into your blockchain application.
 
 Capabilities
 ------------
 
 
+
 Keys
 ----
-To sign a message, you'll need a public and private key pair. These are cryptographic schemes that are generated from an elliptic curve.
+To sign a message, you'll need a public and private key pair.
+These are cryptographic schemes that are generated from an elliptic curve.
 Cosmos uses ``ed25519`` elliptic curve by default for key generation.
 
-To recover a lost key yo'll have to use the 24 word seed phrase you were given when you generated.
+To recover a lost key you'll have to use the 24 word seed phrase you were given when you generated.
 
 Signatures
 ----------
@@ -49,38 +55,106 @@ Accounts
 Messages
 --------
 
-(``Msg``)
+Messages are packets containing arbitrary information.
+
+::
+
+  type Msg interface {
+
+    // Return the message type.
+    // Must be alphanumeric or empty.
+    Type() string
+
+    // Get the canonical byte representation of the Msg.
+    GetSignBytes() []byte
+
+    // ValidateBasic does a simple validation check that
+    // doesn't require access to any other information.
+    ValidateBasic() error
+
+    // Signers returns the addrs of signers that must sign.
+    // CONTRACT: All signatures must be present to be valid.
+    // CONTRACT: Returns addrs in some deterministic order.
+    GetSigners() []Address
+  }
+
+Messages must specify their type via the ``Type()`` method. The type should
+correspond to the messages handler, so there can be many messages with the same
+type.
+
+Messages must also specify how they are to be authenticated. The ``GetSigners()``
+method return a list of addresses that must sign the message, while the
+``GetSignBytes()`` method returns the bytes that must be signed for a signature
+to be valid.
+
+Addresses in the SDK are arbitrary byte arrays that are hex-encoded when
+displayed as a string or rendered in JSON.
+
+Messages can specify basic self-consistency checks using the ``ValidateBasic()``
+method to enforce that message contents are well formed before any actual logic
+begins.
 
 Transaction
 -----------
 
 A transaction (``Tx``) is a packet of binary data that contains all information
-to validate and perform an action on the blockchain. The only other data
-that it interacts with is the current state of the chain (key-value
-store), and it must have a deterministic action. The transaction is the
+to validate and perform an action on the blockchain. In general, a ``Tx`` is a ``Msg``
+with additional data for authentication and fees.
+
+
+The only other data that it interacts with is the current state of the chain
+(key-value store), and it must have a deterministic action. The transaction is the
 main piece of one request.
 
-We currently make heavy use of
-`go-amino <https://github.com/tendermint/go-amino>`__ to
-provide binary and json encodings and decodings for ``struct`` or
-interface\ ``objects. Here, encoding and decoding operations are designed to operate with interfaces nested any amount times (like an onion!). There is one public``\ TxMapper\`
-in the basecoin root package, and all modules can register their own
-transaction types there. This allows us to deserialize the entire
-transaction in one location (even with types defined in other repos), to
-easily embed an arbitrary transaction inside another without specifying
-the type, and provide an automatic json representation allowing for
-users (or apps) to inspect the chain.
+All transactions must contain a ``Msg`` and a destination.
 
 Note how we can wrap any other transaction, add a fee level, and not
 worry about the encoding in our module any more?
 
 ::
 
-    type Fee struct {
-      Fee   coin.Coin      `json:"fee"`
-      Payer basecoin.Actor `json:"payer"` // the address who pays the fee
-      Tx    basecoin.Tx    `json:"tx"`
-    }
+  type Tx interface {
+
+    GetMsg() Msg
+
+    // Signatures returns the signature of signers who signed the Msg.
+    // CONTRACT: Length returned is same as length of
+    // pubkeys returned from MsgKeySigners, and the order
+    // matches.
+    // CONTRACT: If the signature is missing (ie the Msg is
+    // invalid), then the corresponding signature is
+    // .Empty().
+    GetSignatures() []StdSignature
+  }
+
+The ``tx.GetSignatures()`` method returns a list of signatures, which must match
+the list of addresses returned by ``tx.Msg.GetSigners()``. The signatures come in
+a standard form:
+
+::
+
+  type StdSignature struct {
+  	crypto.PubKey // optional
+  	crypto.Signature
+  	Sequence int64
+  }
+
+The standard way to create a transaction from a message is to use the `StdTx`:
+
+::
+
+  type StdTx struct {
+  	Msg
+  	Signatures []StdSignature
+  }
+
+
+Rational
+--------
+
+The SDK implementation of rational numbers (*a.k.a* ``Rat``) is based on the ``math/big``
+Golang library with additional methods for increased security and functionalities.
+
 
 Context (ctx)
 -------------
@@ -102,12 +176,86 @@ requiring complex logic inside each module. Standardization of this
 process also allows powerful light-client tooling as any store data may
 be verified on the fly.
 
+::
+
+  type Store interface {
+  	GetStoreType() StoreType
+  	CacheWrapper
+  }
+
+Multi Store
+^^^^^^^^^^^
+
+::
+
+  type MultiStore interface { //nolint
+  	Store
+
+  	// Cache wrap MultiStore.
+  	// NOTE: Caller should probably not call .Write() on each, but
+  	// call CacheMultiStore.Write().
+  	CacheMultiStore() CacheMultiStore
+
+  	// Convenience for fetching substores.
+  	GetStore(StoreKey) Store
+  	GetKVStore(StoreKey) KVStore
+  	GetKVStoreWithGas(GasMeter, StoreKey) KVStore
+  }
+
+Key-Value Store
+^^^^^^^^^^^^^^^
+
+``KVStore`` is a simple interface to get/set data.
+
 The largest limitation of the current implemenation of the kv-store is
 that interface that the application must use can only ``Get`` and
 ``Set`` single data points. That said, there are some data structures
 like queues and range queries that are available in ``state`` package.
 These provide higher-level functionality in a standard format, but have
 not yet been integrated into the kv-store interface.
+
+::
+
+  type KVStore interface {
+  	Store
+
+  	// Get returns nil iff key doesn't exist. Panics on nil key.
+  	Get(key []byte) []byte
+
+  	// Has checks if a key exists. Panics on nil key.
+  	Has(key []byte) bool
+
+  	// Set sets the key. Panics on nil key.
+  	Set(key, value []byte)
+
+  	// Delete deletes the key. Panics on nil key.
+  	Delete(key []byte)
+
+  	// Iterator over a domain of keys in ascending order. End is exclusive.
+  	// Start must be less than end, or the Iterator is invalid.
+  	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+  	Iterator(start, end []byte) Iterator
+
+  	// Iterator over a domain of keys in descending order. End is exclusive.
+  	// Start must be greater than end, or the Iterator is invalid.
+  	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+  	ReverseIterator(start, end []byte) Iterator
+
+  	// Iterator over all the keys with a certain prefix in ascending order.
+  	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+  	SubspaceIterator(prefix []byte) Iterator
+
+  	// Iterator over all the keys with a certain prefix in descending order.
+  	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
+  	ReverseSubspaceIterator(prefix []byte) Iterator
+
+  	// TODO Not yet implemented.
+  	// CreateSubKVStore(key *storeKey) (KVStore, error)
+
+  	// TODO Not yet implemented.
+  	// GetSubKVStore(key *storeKey) KVStore
+
+  }
 
 Isolation
 ---------
@@ -156,6 +304,22 @@ the memory space of the application, then get worried....)
 Handler
 -------
 
+Transaction processing in the SDK is defined through ``Handler`` functions:
+
+A handler takes a context and a transaction and returns a result.  All
+information necessary for processing a transaction should be available in the
+context.
+
+- **Handler**:
+- **FeeHandler**: application runs to handle fees
+- **AnteHandler**: handler that checks and increments sequence numbers, checks signatures and deducts fees from the first signer.
+
+While the context holds the entire application state (all referenced from the
+root MultiStore), a particular handler only needs a particular kind of access
+to a particular store (or two or more). Access to stores is managed using
+capabilities keys and mappers.  When a handler is initialized, it is passed a
+key or mapper that gives it access to the relevant stores.
+
 The ABCI interface is handled by ``app``, which translates these data
 structures into an internal format that is more convenient, but unable
 to travel over the wire. The basic interface for any code that modifies
@@ -173,14 +337,14 @@ information. And that Result is always success, and we have a second
 error return for errors (which is much more standard golang that
 ``res.IsErr()``)
 
-The ``Handler`` interface is designed to be the basis for all modules
-that execute transactions, and this can provide a large degree of code
-interoperability, much like ``http.Handler`` does in golang web
-development.
-
 Keepers
 -------
 
+Mappers that can be passed to other modules to grant a pre-defined set of capabilities.
+For example, if an instance of module A's ``keepers`` is passed to module B,
+the latter will be able to call a restricted set of module A's functions.
+
+A keeper is used for getting and setting values.
 
 Codec
 -----
@@ -189,10 +353,6 @@ Codec
 Modules
 -------
 
-The Cosmos-SDK has all the necessary pre-built modules to add functionality on top of a ``BaseApp``,
-which is the template to build a blockchain dApp in Cosmos.
-In this context, a module is a fundamental unit in the Cosmos-SDK.
-
 Each module is an extension of the ``BaseApp`` functionalities that defines transactions,
 handles application state and the state transition logic.
 
@@ -200,15 +360,11 @@ Common elements of a module are:
 
 -  Transaction types (either end transactions, or transaction wrappers)
 -  Custom error codes
--  Data models (to persist in the ``KV-store``)
--  Handlers: for messages and transactions
--  REST and CLI for secure user interactions
+-  Data models (*i.e.* types) to persist in the ``KV-store``
+-  Handlers: to handle the logic of messages and transactions
 
 SDK modules are stored inside the ``x`` folder. The current prebuilt-modules for the SDK are:
-Auth, Bank, Governance, Staking and IBC.
-
-Apps
-----
+*Auth*, *Bank*, *Staking* and *IBC*.
 
 
 BaseApp
@@ -220,11 +376,49 @@ abstractions.
 
 ``BaseApp`` has no state except the CommitMultiStore you provide upon init.
 
+::
+
+  type BaseApp struct {
+    // initialized on creation
+    Logger     log.Logger
+    name       string               // application name from abci.Info
+    cdc        *wire.Codec          // Amino codec
+    db         dbm.DB               // common DB backend
+    cms        sdk.CommitMultiStore // Main (uncached) state
+    router     Router               // handle any kind of message
+    codespacer *sdk.Codespacer      // handle module codespacing
+
+    // must be set
+    txDecoder   sdk.TxDecoder   // unmarshal []byte into sdk.Tx
+    anteHandler sdk.AnteHandler // ante handler for fee and auth
+
+    // may be nil
+    initChainer      sdk.InitChainer  // initialize state with validators and state blob
+    beginBlocker     sdk.BeginBlocker // logic to run before any txs
+    endBlocker       sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
+    addrPeerFilter   sdk.PeerFilter   // filter peers by address and port
+    pubkeyPeerFilter sdk.PeerFilter   // filter peers by public key
+
+    //--------------------
+    // Volatile
+    // checkState is set on initialization and reset on Commit.
+    // deliverState is set in InitChain and BeginBlock and cleared on Commit.
+    // See methods setCheckState and setDeliverState.
+    // valUpdates accumulate in DeliverTx and are reset in BeginBlock.
+    checkState   *state           // for CheckTx
+    deliverState *state           // for DeliverTx
+    valUpdates   []abci.Validator // cached validator changes from DeliverTx
+  }
+
+Apps
+----
+
+Apps on the Cosmos-SDK are built on top of the ``BaseApp`` functionalities.
 
 Router
 ------
-a Router is a struct that provides handlers for each transaction type
 
+A ``Router`` is a struct that provides handlers for each transaction type.
 
 Coin
 -----
@@ -237,66 +431,6 @@ A Coin is a struct in the SDK that holds some amount of a currency. It also cont
     	Denom  string `json:"denom"`
     	Amount int64  `json:"amount"`
     }
-
-Methods
-^^^^^^^
-
-::
-
-      coin.String()
-
-Returns a human-readable representation of a coin.
-
-::
-
-      coin.SameDenomAs(ctx Context, store state.KVStore, tx Tx)
-
-Returns true if the two coins are the same ``Denom``.
-
-::
-
-      coin.IsZero()
-
-Returns true if coin represents no money.
-
-::
-
-      coin.IsGTE(other Coin)
-
-Returns a human-readable representation of a coin.
-
-::
-
-      coin.IsEqual(other Coin)
-
-Returns true if the two sets of Coins have the same value.
-
-::
-
-      coin.IsPositive()
-
-Returns if coin amount is positive.
-
-::
-
-      coin.IsNotNegative()
-
-Returns true if coin amount is not negative.
-
-::
-
-      coin.Plus(coinB Coin)
-
-Adds amounts of two coins with same ``Denom``.
-
-::
-
-      coin.Minus(coinB Coin)
-
-Subtracts amounts of two coins with same ``Denom``.
-
-
-
 
 
 Dispatcher
@@ -333,8 +467,9 @@ to remember is to use the following pattern:
 Permissions
 -----------
 
-TODO: replaces perms with object capabilities/object capability keys
-- get rid of IPC
+.. TODO: replaces perms with object capabilities/object capability keys
+
+.. - get rid of IPC
 
 IPC requires a more complex permissioning system to allow the modules to
 have limited access to each other and also to allow more types of
@@ -383,6 +518,7 @@ with a similar problem, and maybe could provide some inspiration.
 
 Testnet
 -------
+
 
 
 Middleware

@@ -8,7 +8,7 @@ Welcome to the Cosmos SDK!
 
 .. image:: graphics/cosmos-sdk-image.png
    :height: 250px
-   :width: 500px
+   :width: 600px
    :align: center
 
 SDK
@@ -16,22 +16,33 @@ SDK
 
 .. toctree::
    :maxdepth: 1
-   
+
    sdk/install.rst
    sdk/key-management.rst
+   ./glossary.rst
 .. sdk/overview.rst # needs to be updated
-.. old/glossary.rst # not completely up to date but has good content
+
 
 .. Basecoin
 .. --------
 
 .. .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
 .. old/basecoin/basics.rst # has a decent getting-start tutorial that's relatively up to date, should be consolidated with the other getting started doc
 
-.. Extensions
-.. ----------
+Extensions
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+
+  modules/creating_modules.rst
+  modules/auth.rst
+  modules/bank.rst
+  modules/ibc.rst
+  modules/stake.rst
 
 .. old/basecoin/extensions.rst # probably not worth salvaging
 

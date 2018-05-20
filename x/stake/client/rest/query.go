@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/tendermint/go-crypto/keys"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,12 +13,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/stake/{delegator}/bonding_status/{candidate}", bondingStatusHandlerFn("stake", cdc, kb, ctx)).Methods("GET")
+func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
+	r.HandleFunc("/stake/{delegator}/bonding_status/{candidate}", bondingStatusHandlerFn("stake", cdc, ctx)).Methods("GET")
+	r.HandleFunc("/stake/candidates", candidatesHandlerFn("stake", cdc, ctx)).Methods("GET")
 }
 
-// BondingStatusHandlerFn - http request handler to query delegator bonding status
-func bondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+// bondingStatusHandlerFn - http request handler to query delegator bonding status
+func bondingStatusHandlerFn(storeName string, cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// read parameters
 		vars := mux.Vars(r)
@@ -66,6 +66,41 @@ func bondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 		}
 
 		output, err := cdc.MarshalJSON(bond)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.Write(output)
+	}
+}
+
+// candidatesHandlerFn - http request handler to query list of candidates
+func candidatesHandlerFn(storeName string, cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res, err := ctx.Query(stake.CandidatesKey, storeName)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("Couldn't query bond. Error: %s", err.Error())))
+			return
+		}
+
+		// the query will return empty if there is no data for this bond
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		var candidates []stake.Candidate
+		err = cdc.UnmarshalBinary(res, &candidates)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("Couldn't decode candidates. Error: %s", err.Error())))
+			return
+		}
+
+		output, err := cdc.MarshalJSON(candidates)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

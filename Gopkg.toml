@@ -74,7 +74,7 @@
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
-  version = "0.19.5-rc0"
+  version = "0.19.5-rc1"
 
 [[override]]
   name = "github.com/tendermint/tmlibs"

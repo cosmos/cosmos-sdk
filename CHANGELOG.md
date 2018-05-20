@@ -1,6 +1,8 @@
 # Changelog
 
-## 0.18.0 (TBD)
+## 0.18.0 
+
+*TBD*
 
 FEATURES
 
@@ -10,6 +12,12 @@ FEATURES
   * Transactions which run out of gas stop execution and revert state changes
   * A "simulate" query has been added to determine how much gas a transaction will need
   * Modules can include their own gas costs for execution of particular message types
+
+## 0.17.2
+
+*May 20, 2018*
+
+Update to Tendermint v0.19.5 (reduce WAL use, bound the mempool and some rpcs, improve logging)
 
 ## 0.17.1 (May 17, 2018)
 

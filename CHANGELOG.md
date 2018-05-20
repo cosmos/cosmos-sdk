@@ -4,7 +4,7 @@
 
 *May 20, 2018*
 
-Update to Tendermint v0.19.5 (bound the mempool and some rpcs, improve logging)
+Update to Tendermint v0.19.5 (reduce WAL use, bound the mempool and some rpcs, improve logging)
 
 ## 0.17.1 (May 17, 2018)
 

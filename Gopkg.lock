@@ -11,7 +11,7 @@
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "675abc5df3c5531bc741b56a765e35623459da6d"
+  revision = "1432d294a5b055c297457c25434efbf13384cc46"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -82,7 +82,7 @@
   branch = "master"
   name = "github.com/golang/snappy"
   packages = ["."]
-  revision = "553a641470496b2327abcac10b36396bd98e45c9"
+  revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
 
 [[projects]]
   name = "github.com/gorilla/context"
@@ -146,8 +146,8 @@
 [[projects]]
   name = "github.com/magiconair/properties"
   packages = ["."]
-  revision = "c3beff4c2358b44d0493c7dda585e7db7ff28ae6"
-  version = "v1.7.6"
+  revision = "c2353362d570a7bfa228149c62842019201cfb71"
+  version = "v1.8.0"
 
 [[projects]]
   name = "github.com/mattn/go-isatty"
@@ -203,8 +203,8 @@
 [[projects]]
   name = "github.com/spf13/cobra"
   packages = ["."]
-  revision = "a1f051bc3eba734da4772d60e2d677f47cf93ef4"
-  version = "v0.0.2"
+  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
+  version = "v0.0.3"
 
 [[projects]]
   branch = "master"
@@ -250,7 +250,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "9637fa0b2f0db13c99d899b91007edb7df4610b7"
+  revision = "e6d6b529196422703d54ff5c40e79809ec2020b3"
 
 [[projects]]
   name = "github.com/tendermint/abci"
@@ -341,8 +341,8 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "19ccd1842fe5efffcc2ff32e6cfc127ca0cd1f9b"
-  version = "v0.19.4-rc0"
+  revision = "0a9dc9f875c5ed870473be8541ea25a4451a2081"
+  version = "v0.19.5-rc0"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -376,7 +376,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "2fc4c88bf43f0ea5ea305eae2b7af24b2cc93287"
+  revision = "1a580b3eff7814fc9b40602fd35256c63b50f491"
 
 [[projects]]
   branch = "master"
@@ -390,7 +390,7 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "2491c5de3490fced2f6cff376127c667efeed857"
+  revision = "57065200b4b034a1c8ad54ff77069408c2218ae6"
 
 [[projects]]
   branch = "master"
@@ -457,6 +457,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8c37fee3e6d3034b865c68185f4796223fe53b1b0ee4a305adbee5f53c50bfce"
+  inputs-digest = "63ff18162a6af4204ffa7348af0999fbdd92b4c219562e58d19603410aa4a01a"
   solver-name = "gps-cdcl"
   solver-version = 1

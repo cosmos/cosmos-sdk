@@ -312,6 +312,13 @@ func TestTxs(t *testing.T) {
 	// assert.NotEqual(t, "[]", body)
 }
 
+func TestCandidates(t *testing.T) {
+	candidates := getCandidates(t)
+	assert.Equal(t, len(candidates), 2)
+	assert.Equal(t, hex.EncodeToString(candidates[0].Address), candidateAddr1)
+	assert.Equal(t, hex.EncodeToString(candidates[1].Address), candidateAddr2)
+}
+
 func TestBond(t *testing.T) {
 
 	acc := getAccount(t, sendAddr)
@@ -390,10 +397,8 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	config.Consensus.TimeoutCommit = 1000
 	config.Consensus.SkipTimeoutCommit = false
 
-	fmt.Println("test")
-
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	// logger = log.NewFilter(logger, log.AllowError())
+	logger = log.NewFilter(logger, log.AllowError())
 	privValidatorFile := config.PrivValidatorFile()
 	privVal := pvm.LoadOrGenFilePV(privValidatorFile)
 	db := dbm.NewMemDB()
@@ -418,8 +423,8 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 			Name:   "val2",
 		},
 	)
-	candidateAddr1 = hex.EncodeToString(genDoc.Validators[0].PubKey.Address())
-	candidateAddr2 = hex.EncodeToString(genDoc.Validators[1].PubKey.Address())
+	candidateAddr1 = hex.EncodeToString(genDoc.Validators[1].PubKey.Address())
+	candidateAddr2 = hex.EncodeToString(genDoc.Validators[2].PubKey.Address())
 
 	coins := sdk.Coins{{coinDenom, coinAmount}}
 	appState := map[string]interface{}{
@@ -451,8 +456,8 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 			Candidates: []stake.Candidate{
 				{
 					Status:      1,
-					Address:     genDoc.Validators[0].PubKey.Address(),
-					PubKey:      genDoc.Validators[0].PubKey,
+					Address:     genDoc.Validators[1].PubKey.Address(),
+					PubKey:      genDoc.Validators[1].PubKey,
 					Assets:      sdk.NewRat(100, 1),
 					Liabilities: sdk.ZeroRat(),
 					Description: stake.Description{
@@ -463,8 +468,8 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 				},
 				{
 					Status:      1,
-					Address:     genDoc.Validators[1].PubKey.Address(),
-					PubKey:      genDoc.Validators[1].PubKey,
+					Address:     genDoc.Validators[2].PubKey.Address(),
+					PubKey:      genDoc.Validators[2].PubKey,
 					Assets:      sdk.NewRat(100, 1),
 					Liabilities: sdk.ZeroRat(),
 					Description: stake.Description{
@@ -619,6 +624,16 @@ func getDelegatorBond(t *testing.T, delegatorAddr, candidateAddr string) stake.D
 	err := cdc.UnmarshalJSON([]byte(body), &bond)
 	require.Nil(t, err)
 	return bond
+}
+
+func getCandidates(t *testing.T) []stake.Candidate {
+	// get the account to get the sequence
+	res, body := request(t, port, "GET", "/stake/candidates", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var candidates []stake.Candidate
+	err := cdc.UnmarshalJSON([]byte(body), &candidates)
+	require.Nil(t, err)
+	return candidates
 }
 
 func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {

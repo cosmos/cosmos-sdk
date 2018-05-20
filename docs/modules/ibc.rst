@@ -21,14 +21,16 @@ Methods
 ``NewIBCPacket(srcAddr sdk.Address, destAddr sdk.Address, coins sdk.Coins, srcChain string, destChain string)``
 ***************************************************************************************************************
 
-  Returns a new ``IBCPacket``.
+  Returns: ``IBCPacket``
+
+  Creates an IBC packet to relay a massage to another chain.
 
 ``ibcp.ValidateBasic()``
 ************************
 
-  Returns the ``sdk.Address`` of the keeper.
+  Returns: ``sdk.Error``
 
-  Validates the IBC packet.
+  Validates the IBC packet. Returns error if fails.
 
 
 **IBCTransferMsg**
@@ -45,22 +47,30 @@ Methods
 ``msg.Type()``
 **************
 
-  Sets the an Address for keeper. Returns ``error`` if fails.
+  Returns: ``string``
+
+  Returns the type of the message.
 
 ``msg.GetSigners()``
 ********************
+
+  Returns: ``[]sdk.Address``
 
   Returns the signers' addresses of the message.
 
 ``msg.GetSignBytes()``
 **********************
 
-  Get the sign bytes for IBC transfer message.
+  Returns: ``[]byte``
+
+  Get the signature bytes of the message.
 
 ``msg.ValidateBasic()``
 ***********************
 
-  Validates IBC transfer message.
+  Returns: ``sdk.Error``
+
+  Basic validation of the message. Returns error if fails.
 
 **IBCReceiveMsg**
 ^^^^^^^^^^^^^^^^^
@@ -77,22 +87,31 @@ Methods
 ``msg.Type()``
 **************
 
-  Sets the an Address for keeper. Returns ``error`` if fails.
+  Returns: ``string``
 
-``msg.ValidateBasic()``
-***********************
-
-  Validates IBC transfer message.
+  Returns the type of the message.
 
 ``msg.GetSigners()``
 ********************
+
+  Returns: ``[]sdk.Address``
 
   Returns the signers' addresses of the message.
 
 ``msg.GetSignBytes()``
 **********************
 
-  Get the sign bytes for IBC transfer message.
+  Returns: ``[]byte``
+
+  Get the signature bytes of the message.
+
+``msg.ValidateBasic()``
+***********************
+
+  Returns: ``sdk.Error``
+
+  Basic validation of the message. Returns error if fails.
+
 
 Handlers
 --------

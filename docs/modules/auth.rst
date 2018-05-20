@@ -9,10 +9,10 @@ BaseAccount
 **BaseAccount**
 ^^^^^^^^^^^^^^^
 
-- **Address** (``sdk.Address``) -
-- **Coins** (``sdk.Coins``) -
-- **PubKey** (``crypto.PubKey``) -
-- **Sequence** (``int64``) -
+- **Address** (``sdk.Address``) - Address of the account holder
+- **Coins** (``sdk.Coins``) - Set of coins owned by the account holder
+- **PubKey** (``crypto.PubKey``) - Public Key
+- **Sequence** (``int64``) - Sequence of the of the base account
 
 Methods
 """""""
@@ -140,7 +140,7 @@ Methods
 
   Returns: ``[]types.Account``
 
-  Gets the signers from the Context
+  Gets the signers from the Context.
 
 Mapper
 ------

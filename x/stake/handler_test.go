@@ -44,7 +44,7 @@ func TestDuplicatesMsgDeclareCandidacy(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, validatorAddr, validator.Address)
+	assert.Equal(t, validatorAddr, validator.Owner)
 	assert.Equal(t, pk, validator.PubKey)
 	assert.Equal(t, sdk.NewRat(10), validator.PoolShares.Bonded())
 	assert.Equal(t, sdk.NewRat(10), validator.DelegatorShares)
@@ -233,7 +233,7 @@ func TestMultipleMsgDeclareCandidacy(t *testing.T) {
 		require.Equal(t, (i + 1), len(validators))
 		val := validators[i]
 		balanceExpd := initBond - 10
-		balanceGot := accMapper.GetAccount(ctx, val.Address).GetCoins().AmountOf(params.BondDenom)
+		balanceGot := accMapper.GetAccount(ctx, val.Owner).GetCoins().AmountOf(params.BondDenom)
 		require.Equal(t, i+1, len(validators), "expected %d validators got %d, validators: %v", i+1, len(validators), validators)
 		require.Equal(t, 10, int(val.DelegatorShares.Evaluate()), "expected %d shares, got %d", 10, val.DelegatorShares)
 		require.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
@@ -256,7 +256,7 @@ func TestMultipleMsgDeclareCandidacy(t *testing.T) {
 		require.False(t, found)
 
 		expBalance := initBond
-		gotBalance := accMapper.GetAccount(ctx, validatorPre.Address).GetCoins().AmountOf(params.BondDenom)
+		gotBalance := accMapper.GetAccount(ctx, validatorPre.Owner).GetCoins().AmountOf(params.BondDenom)
 		require.Equal(t, expBalance, gotBalance, "expected account to have %d, got %d", expBalance, gotBalance)
 	}
 }

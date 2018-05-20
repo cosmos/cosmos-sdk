@@ -13,7 +13,6 @@ const (
 	Unbonded  BondStatus = 0x00
 	Unbonding BondStatus = 0x01
 	Bonded    BondStatus = 0x02
-	Revoked   BondStatus = 0x03
 )
 
 // validator for a delegated proof of stake system

@@ -407,7 +407,7 @@ func TestStakeMsgs(t *testing.T) {
 	require.Equal(t, genCoins.Minus(sdk.Coins{bondCoin}), res1.GetCoins())
 	validator, found := gapp.stakeKeeper.GetValidator(ctxDeliver, addr1)
 	require.True(t, found)
-	require.Equal(t, addr1, validator.Address)
+	require.Equal(t, addr1, validator.Owner)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.RatEq(t, sdk.NewRat(10), validator.PoolShares.Bonded()))
 

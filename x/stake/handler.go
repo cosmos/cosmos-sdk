@@ -113,7 +113,7 @@ func handleMsgDelegate(ctx sdk.Context, msg MsgDelegate, k Keeper) sdk.Result {
 	if msg.Bond.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadBondingDenom(k.codespace).Result()
 	}
-	if validator.Status == sdk.Revoked {
+	if validator.Revoked == true {
 		return ErrValidatorRevoked(k.codespace).Result()
 	}
 	if ctx.IsCheckTx() {
@@ -212,7 +212,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 		// if the bond is the owner of the validator then
 		// trigger a revoke candidacy
 		if bytes.Equal(bond.DelegatorAddr, validator.Owner) &&
-			validator.Status != sdk.Revoked {
+			validator.Revoked == false {
 			revokeCandidacy = true
 		}
 
@@ -235,13 +235,11 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	if revokeCandidacy {
 
 		// change the share types to unbonded if they were not already
-		if validator.Status == sdk.Bonded {
-			validator.Status = sdk.Unbonded
-			validator, pool = validator.UpdateSharesLocation(pool)
+		if validator.Status() == sdk.Bonded {
+			validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
 		}
 
-		// lastly update the status
-		validator.Status = sdk.Revoked
+		validator.Revoked = true
 	}
 
 	// deduct shares from the validator

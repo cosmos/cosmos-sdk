@@ -75,10 +75,10 @@ func TestProcessProvisions(t *testing.T) {
 	var validators [5]Validator
 	validators[0] = NewValidator(addrs[0], pks[0], Description{})
 	validators[0], pool, _ = validators[0].addTokensFromDel(pool, 150000000)
-	keeper.setPool(ctx, pool)
-	assert.Equal(t, bondedShares, pool.BondedTokens)
-	fmt.Printf("debug pool: %v\n", pool)
 	validators[0] = keeper.setValidator(ctx, validators[0])
+	keeper.setPool(ctx, pool)
+	assert.Equal(t, bondedShares, pool.BondedTokens, "%v", pool)
+	fmt.Printf("debug pool: %v validator: %v\n", pool, validators[0])
 	validators[1] = NewValidator(addrs[1], pks[1], Description{})
 	validators[1], pool, _ = validators[1].addTokensFromDel(pool, 100000000)
 	keeper.setPool(ctx, pool)

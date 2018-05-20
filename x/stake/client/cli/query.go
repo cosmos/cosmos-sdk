@@ -37,10 +37,6 @@ func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 			// parse out the validator
 			validator := new(stake.Validator)
 			cdc.MustUnmarshalBinary(res, validator)
-			err = cdc.UnmarshalBinary(res, validator)
-			if err != nil {
-				return err
-			}
 			output, err := wire.MarshalJSONIndent(cdc, validator)
 			fmt.Println(string(output))
 

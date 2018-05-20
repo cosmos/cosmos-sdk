@@ -9,13 +9,28 @@ Messages
 **MsgSend**
 ^^^^^^^^^^^
 
-- **Inputs** (``[]Input``) -
-- **Outputs** (``[]Output``) -
+- **Inputs** (``[]Input``) - Transaction inputs
+- **Outputs** (``[]Output``) - Transaction outputs
 
 The ``Input`` and ``Output`` structs define an ``Address`` and a set of ``Coins``.
 
 Methods
 """""""
+
+``NewInput(addr sdk.Address, coins sdk.Coins)``
+***********************************************
+
+  Returns: ``Input``
+
+  Creates a transaction input. Used with ``MsgSend``.
+
+``NewOutput(addr sdk.Address, coins sdk.Coins)``
+************************************************
+
+  Returns: ``Output``
+
+  Creates a transaction output. Used with ``MsgSend``.
+
 
 ``NewMsgSend(in []Input, out []Output)``
 ****************************************
@@ -55,8 +70,10 @@ Methods
 **MsgIssue**
 ^^^^^^^^^^^^
 
-- **Banker** (``sdk.Address``) -
-- **Outputs** (``]Output``) -
+- **Banker** (``sdk.Address``) - Address of the banker
+- **Outputs** (``]Output``) - Transaction outputs
+
+A issue message is a high level transaction of the coin module.
 
 Methods
 """""""
@@ -66,7 +83,7 @@ Methods
 
   Returns: ``MsgIssue``
 
-  Creates a message to issue coins.
+  Constructs an arbitrary multi-in, multi-out send message.
 
 ``msg.Type()``
 **************

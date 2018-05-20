@@ -254,18 +254,17 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore, pool 
 	OptionalRetrieve sdk.Address) (retrieveBonded bool, retrieve Validator) {
 
 	// clear the current validators store, add to the ToKickOut temp store
-	toKickOut := make(map[string][]byte) // map[key]value
+	toKickOut := make(map[string]Validator) // map[key]value
 	iterator := store.SubspaceIterator(ValidatorsBondedKey)
 	for ; iterator.Valid(); iterator.Next() {
 
-		bz := iterator.Value()
-		var validator Validator
-		k.cdc.MustUnmarshalBinary(bz, &validator)
+		address := iterator.Value()
+		validator, found := k.getValidator(store, address)
+		if !found {
+			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
+		}
 
-		addr := validator.Owner
-
-		// iterator.Value is the validator object
-		toKickOut[string(addr)] = iterator.Value()
+		toKickOut[string(validator.Owner)] = validator
 		// XXX store.Delete(iterator.Key())
 	}
 	iterator.Close()
@@ -279,11 +278,14 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore, pool 
 			iterator.Close()
 			break
 		}
-		bz := iterator.Value()
-		var validator Validator
-		k.cdc.MustUnmarshalBinary(bz, &validator)
 
-		_, found := toKickOut[string(validator.Owner)]
+		address := iterator.Value()
+		validator, found := k.getValidator(store, address)
+		if !found {
+			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
+		}
+
+		_, found = toKickOut[string(validator.Owner)]
 		if found {
 
 			// remove from ToKickOut group
@@ -307,9 +309,7 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore, pool 
 	}
 
 	// perform the actual kicks
-	for _, value := range toKickOut {
-		var validator Validator
-		k.cdc.MustUnmarshalBinary(value, &validator)
+	for _, validator := range toKickOut {
 		k.unbondValidator(ctx, store, validator)
 	}
 
@@ -588,9 +588,12 @@ func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, va
 	iterator := store.SubspaceIterator(ValidatorsBondedKey)
 	i := int64(0)
 	for ; iterator.Valid(); iterator.Next() {
-		bz := iterator.Value()
-		var validator Validator
-		k.cdc.MustUnmarshalBinary(bz, &validator)
+		address := iterator.Value()
+		validator, found := k.getValidator(store, address)
+		if !found {
+			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
+		}
+
 		stop := fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?
 		if stop {
 			break

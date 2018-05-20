@@ -2,6 +2,7 @@ package lcd
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -44,8 +45,8 @@ var (
 	coinAmount = int64(10000000)
 
 	stakeDenom     = "steak"
-	candidateAddr1 = "127A12E4489FEB5A74201426B0CB538732FB4C8E"
-	candidateAddr2 = "C2893CA8EBDDD1C5F938CAB3BAEFE53A2E266698"
+	candidateAddr1 = ""
+	candidateAddr2 = ""
 
 	// XXX bad globals
 	name     = "test"
@@ -405,18 +406,20 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 		return nil, nil, err
 	}
 
-	genDoc.Validators = []tmtypes.GenesisValidator{
+	genDoc.Validators = append(genDoc.Validators,
 		tmtypes.GenesisValidator{
 			PubKey: crypto.GenPrivKeyEd25519().PubKey(),
-			Power:  100,
+			Power:  1,
 			Name:   "val1",
 		},
 		tmtypes.GenesisValidator{
 			PubKey: crypto.GenPrivKeyEd25519().PubKey(),
-			Power:  100,
+			Power:  1,
 			Name:   "val2",
 		},
-	}
+	)
+	candidateAddr1 = hex.EncodeToString(genDoc.Validators[0].PubKey.Address())
+	candidateAddr2 = hex.EncodeToString(genDoc.Validators[1].PubKey.Address())
 
 	coins := sdk.Coins{{coinDenom, coinAmount}}
 	appState := map[string]interface{}{
@@ -453,7 +456,19 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 					Assets:      sdk.NewRat(100, 1),
 					Liabilities: sdk.ZeroRat(),
 					Description: stake.Description{
-						Moniker: "adrian",
+						Moniker: "validator1",
+					},
+					ValidatorBondHeight:  0,
+					ValidatorBondCounter: 0,
+				},
+				{
+					Status:      1,
+					Address:     genDoc.Validators[1].PubKey.Address(),
+					PubKey:      genDoc.Validators[1].PubKey,
+					Assets:      sdk.NewRat(100, 1),
+					Liabilities: sdk.ZeroRat(),
+					Description: stake.Description{
+						Moniker: "validator2",
 					},
 					ValidatorBondHeight:  0,
 					ValidatorBondCounter: 0,

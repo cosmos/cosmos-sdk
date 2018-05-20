@@ -35,7 +35,7 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.
 // get a single validator
 func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.Address) (validator Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	return getValidator(store, addr)
+	return k.getValidator(store, addr)
 }
 
 // get a single validator
@@ -130,15 +130,14 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) Validator {
 	}
 
 	// update the list ordered by voting power
-	bz := k.cdc.MustMarshalBinary(validator)
-	store.Set(GetValidatorsBondedByPowerKey(validator, pool), validator.Address)
+	store.Set(GetValidatorsBondedByPowerKey(validator, pool), validator.Owner)
 
 	// efficiency case:
 	// add to the validators and return to update list if is already a validator and power is increasing
 	if powerIncreasing && oldFound && oldValidator.Status() == sdk.Bonded {
 
 		// update the store for bonded validators
-		store.Set(GetValidatorsBondedKey(validator.PubKey), validator.Address)
+		store.Set(GetValidatorsBondedKey(validator.PubKey), validator.Owner)
 
 		// and the Tendermint updates
 		bz := k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
@@ -198,7 +197,11 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []Validator) {
 			panic("maxValidators is less than the number of records in ValidatorsBonded Store, store should have been updated")
 		}
 		address := iterator.Value()
-		validator := getValidator(store, address)
+		validator, found := k.getValidator(store, address)
+		if !found {
+			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
+		}
+
 		validators[i] = validator
 		i++
 	}
@@ -219,7 +222,10 @@ func (k Keeper) GetValidatorsBondedByPower(ctx sdk.Context) []Validator {
 			break
 		}
 		address := iterator.Value()
-		validator := getValidator(store, address)
+		validator, found := k.getValidator(store, address)
+		if !found {
+			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
+		}
 		if validator.Status() == sdk.Bonded {
 			validators[i] = validator
 			i++
@@ -284,7 +290,7 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore, pool 
 			delete(toKickOut, string(validator.Owner))
 
 			// XXX also add to the current validators group
-			//store.Set(GetValidatorsBondedKey(validator.PubKey), validator.Address)
+			//store.Set(GetValidatorsBondedKey(validator.PubKey), validator.Owner)
 		} else {
 
 			// if it wasn't in the toKickOut group it means
@@ -331,7 +337,7 @@ func (k Keeper) unbondValidator(ctx sdk.Context, store sdk.KVStore, validator Va
 	// save the now unbonded validator record
 	bzVal := k.cdc.MustMarshalBinary(validator)
 	store.Set(GetValidatorKey(validator.Owner), bzVal)
-	// XXX store.Set(GetValidatorsBondedByPowerKey(validator, pool), validator.Address)
+	// XXX store.Set(GetValidatorsBondedByPowerKey(validator, pool), validator.Owner)
 
 	// add to accumulated changes for tendermint
 	bzABCI := k.cdc.MustMarshalBinary(validator.abciValidatorZero(k.cdc))
@@ -360,8 +366,8 @@ func (k Keeper) bondValidator(ctx sdk.Context, store sdk.KVStore, validator Vali
 	// save the now bonded validator record to the three referenced stores
 	bzVal := k.cdc.MustMarshalBinary(validator)
 	store.Set(GetValidatorKey(validator.Owner), bzVal)
-	// XXX store.Set(GetValidatorsBondedByPowerKey(validator, pool), validator.Address)
-	store.Set(GetValidatorsBondedKey(validator.PubKey), validator.Address)
+	// XXX store.Set(GetValidatorsBondedByPowerKey(validator, pool), validator.Owner)
+	store.Set(GetValidatorsBondedKey(validator.PubKey), validator.Owner)
 
 	// add to accumulated changes for tendermint
 	bzABCI := k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))

@@ -314,7 +314,7 @@ func TestVoidCandidacy(t *testing.T) {
 	require.True(t, got.IsOK(), "expected no error on runMsgDeclareCandidacy")
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, sdk.Revoked, validator.Status)
+	require.True(t, validator.Revoked)
 
 	// test that this address cannot yet be bonded too because is revoked
 	got = handleMsgDelegate(ctx, msgDelegate, keeper)

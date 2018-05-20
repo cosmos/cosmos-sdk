@@ -71,7 +71,6 @@ func TestValidatorBasics(t *testing.T) {
 	amts := []int64{9, 8, 7}
 	for i, amt := range amts {
 		validators[i] = NewValidator(addrVals[i], pks[i], Description{})
-		validators[i].Status = sdk.Unbonded
 		validators[i].PoolShares = NewUnbondedShares(sdk.ZeroRat())
 		validators[i].addTokensFromDel(pool, amt)
 	}

@@ -174,6 +174,7 @@ func FromKeyExistsProof(p *iavl.KeyExistsProof) (KeyProof, error) {
 	return ExistsProof(nodes), nil
 }
 
+// FromKeyAbsentProof casts iavl.KeyAbsentProof to AbsentProof
 func FromKeyAbsentProof(p *iavl.KeyAbsentProof) (KeyProof, error) {
 	// TODO: implement absent proof
 	return AbsentProof{}, nil

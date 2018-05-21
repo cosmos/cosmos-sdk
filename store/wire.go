@@ -6,6 +6,7 @@ import (
 
 var cdc = wire.NewCodec()
 
+// Register concrete types on wire codec
 func RegisterWire(cdc *wire.Codec) {
 	cdc.RegisterConcrete(RootMultistoreWrapper{}, "cosmos-sdk/RootMultistoreWrapper", nil)
 }

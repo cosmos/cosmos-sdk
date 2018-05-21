@@ -423,10 +423,12 @@ func (si storeInfo) Hash() []byte {
 	return hasher.Sum(nil)
 }
 
+// RootMultistoreWrapper - defines leaf hash wrapping method
 type RootMultistoreWrapper struct {
 	Version int64
 }
 
+// Wrap implements merkle.Wrapper
 func (w RootMultistoreWrapper) Wrap(name string, data []byte) []byte {
 	si := storeInfo{
 		Name: name,

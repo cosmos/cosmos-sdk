@@ -49,6 +49,7 @@ type Node struct {
 // ExistsProof - merkle proof for verifying existence of an element
 type ExistsProof []Node
 
+// Run implements KeyProof
 func (p ExistsProof) Run(data []byte) ([]byte, error) {
 	for _, node := range p {
 		data = node.Op.Hash(append(append(node.Prefix, data...), node.Suffix...))
@@ -56,8 +57,10 @@ func (p ExistsProof) Run(data []byte) ([]byte, error) {
 	return data, nil
 }
 
+// AbsentProof - merkle proof for verifying nonexistence of an element
 type AbsentProof struct{}
 
+// Run implements KeyProof
 func (p AbsentProof) Run(data []byte) ([]byte, error) {
 	panic("not implemented")
 }
@@ -67,6 +70,7 @@ type KeyProof interface {
 	Run([]byte) ([]byte, error)
 }
 
+// Wrapper - wraps leaf node byte slice
 type Wrapper interface {
 	Wrap(string, []byte) []byte
 }
@@ -85,6 +89,7 @@ type MultiProof struct {
 	SubProofs []SubProof
 }
 
+// Verify takes leaf data, root hash, and key names for internal roots
 func (p MultiProof) Verify(data []byte, root []byte, keys ...string) error {
 	data, err := p.KeyProof.Run(data)
 	if err != nil {

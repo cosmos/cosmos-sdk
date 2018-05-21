@@ -79,25 +79,28 @@ func bondingStatusHandlerFn(storeName string, cdc *wire.Codec, ctx context.CoreC
 // candidatesHandlerFn - http request handler to query list of candidates
 func candidatesHandlerFn(storeName string, cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res, err := ctx.Query(stake.CandidatesKey, storeName)
+		res, err := ctx.QuerySubspace(cdc, stake.CandidatesKey, storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Couldn't query bond. Error: %s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("Couldn't query candidates. Error: %s", err.Error())))
 			return
 		}
 
-		// the query will return empty if there is no data for this bond
 		if len(res) == 0 {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
-		var candidates []stake.Candidate
-		err = cdc.UnmarshalBinary(res, &candidates)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Couldn't decode candidates. Error: %s", err.Error())))
-			return
+		candidates := make(stake.Candidates, 0, len(res))
+		for _, kv := range res {
+			var candidate stake.Candidate
+			err = cdc.UnmarshalBinary(kv.Value, &candidate)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("Couldn't decode candidate. Error: %s", err.Error())))
+				return
+			}
+			candidates = append(candidates, candidate)
 		}
 
 		output, err := cdc.MarshalJSON(candidates)

@@ -33,8 +33,7 @@ import (
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
-	bapp "github.com/cosmos/cosmos-sdk/examples/basecoin/app"
-	btypes "github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -321,9 +320,6 @@ func TestCandidates(t *testing.T) {
 
 func TestBond(t *testing.T) {
 
-	acc := getAccount(t, sendAddr)
-	initialBalance := acc.GetCoins()
-
 	// create bond TX
 	resultTx := doBond(t, port, seed)
 	tests.WaitForHeight(resultTx.Height+1, port)
@@ -333,21 +329,16 @@ func TestBond(t *testing.T) {
 	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	// query sender
-	acc = getAccount(t, sendAddr)
+	acc := getAccount(t, sendAddr)
 	coins := acc.GetCoins()
-	mycoins := coins[0]
-	assert.Equal(t, coinDenom, mycoins.Denom)
-	assert.Equal(t, initialBalance[0].Amount-1, mycoins.Amount)
+	assert.Equal(t, int64(9999900), coins.AmountOf(stakeDenom))
 
 	// query candidate
 	bond := getDelegatorBond(t, sendAddr, candidateAddr1)
-	assert.Equal(t, "foo", bond.Shares.String())
+	assert.Equal(t, "100/1", bond.Shares.String())
 }
 
 func TestUnbond(t *testing.T) {
-
-	acc := getAccount(t, sendAddr)
-	initialBalance := acc.GetCoins()
 
 	// create unbond TX
 	resultTx := doUnbond(t, port, seed)
@@ -358,15 +349,13 @@ func TestUnbond(t *testing.T) {
 	assert.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	// query sender
-	acc = getAccount(t, sendAddr)
+	acc := getAccount(t, sendAddr)
 	coins := acc.GetCoins()
-	mycoins := coins[0]
-	assert.Equal(t, coinDenom, mycoins.Denom)
-	assert.Equal(t, initialBalance[0].Amount, mycoins.Amount)
+	assert.Equal(t, int64(9999911), coins.AmountOf(stakeDenom))
 
 	// query candidate
 	bond := getDelegatorBond(t, sendAddr, candidateAddr1)
-	assert.Equal(t, "foo", bond.Shares.String())
+	assert.Equal(t, "99/1", bond.Shares.String())
 }
 
 //__________________________________________________________
@@ -398,12 +387,12 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	config.Consensus.SkipTimeoutCommit = false
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	logger = log.NewFilter(logger, log.AllowError())
+	// logger = log.NewFilter(logger, log.AllowError())
 	privValidatorFile := config.PrivValidatorFile()
 	privVal := pvm.LoadOrGenFilePV(privValidatorFile)
 	db := dbm.NewMemDB()
-	app := bapp.NewBasecoinApp(logger, db)
-	cdc = bapp.MakeCodec() // XXX
+	app := gapp.NewGaiaApp(logger, db)
+	cdc = gapp.MakeCodec() // XXX
 
 	genesisFile := config.GenesisFile()
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
@@ -415,27 +404,24 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 		tmtypes.GenesisValidator{
 			PubKey: crypto.GenPrivKeyEd25519().PubKey(),
 			Power:  1,
-			Name:   "val1",
-		},
-		tmtypes.GenesisValidator{
-			PubKey: crypto.GenPrivKeyEd25519().PubKey(),
-			Power:  1,
-			Name:   "val2",
+			Name:   "val",
 		},
 	)
-	candidateAddr1 = hex.EncodeToString(genDoc.Validators[1].PubKey.Address())
-	candidateAddr2 = hex.EncodeToString(genDoc.Validators[2].PubKey.Address())
+	candidateAddr1 = hex.EncodeToString(genDoc.Validators[0].PubKey.Address())
+	candidateAddr2 = hex.EncodeToString(genDoc.Validators[1].PubKey.Address())
 
-	coins := sdk.Coins{{coinDenom, coinAmount}}
-	appState := map[string]interface{}{
-		"accounts": []*btypes.GenesisAccount{
+	coins := sdk.Coins{
+		{coinDenom, coinAmount},
+		{stakeDenom, coinAmount},
+	}
+	appState := gapp.GenesisState{
+		Accounts: []gapp.GenesisAccount{
 			{
-				Name:    "tester",
 				Address: pubKey.Address(),
 				Coins:   coins,
 			},
 		},
-		"stake": stake.GenesisState{
+		StakeData: stake.GenesisState{
 			Pool: stake.Pool{
 				TotalSupply:       1650,
 				BondedShares:      sdk.NewRat(200, 1),
@@ -456,9 +442,9 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 			Candidates: []stake.Candidate{
 				{
 					Status:      1,
-					Address:     genDoc.Validators[1].PubKey.Address(),
-					PubKey:      genDoc.Validators[1].PubKey,
-					Assets:      sdk.NewRat(100, 1),
+					Address:     genDoc.Validators[0].PubKey.Address(),
+					PubKey:      genDoc.Validators[0].PubKey,
+					Assets:      sdk.NewRat(1000, 1),
 					Liabilities: sdk.ZeroRat(),
 					Description: stake.Description{
 						Moniker: "validator1",
@@ -468,8 +454,8 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 				},
 				{
 					Status:      1,
-					Address:     genDoc.Validators[2].PubKey.Address(),
-					PubKey:      genDoc.Validators[2].PubKey,
+					Address:     genDoc.Validators[1].PubKey.Address(),
+					PubKey:      genDoc.Validators[1].PubKey,
 					Assets:      sdk.NewRat(100, 1),
 					Liabilities: sdk.ZeroRat(),
 					Description: stake.Description{
@@ -482,7 +468,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 		},
 	}
 
-	stateBytes, err := json.Marshal(appState)
+	stateBytes, err := cdc.MarshalJSONIndent(appState, "", "  ")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -618,7 +604,7 @@ func doIBCTransfer(t *testing.T, port, seed string) (resultTx ctypes.ResultBroad
 
 func getDelegatorBond(t *testing.T, delegatorAddr, candidateAddr string) stake.DelegatorBond {
 	// get the account to get the sequence
-	res, body := request(t, port, "GET", "/stake/"+delegatorAddr+"/bonding_info/"+candidateAddr, nil)
+	res, body := request(t, port, "GET", "/stake/"+delegatorAddr+"/bonding_status/"+candidateAddr, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var bond stake.DelegatorBond
 	err := cdc.UnmarshalJSON([]byte(body), &bond)
@@ -657,10 +643,11 @@ func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxC
 	res, body := request(t, port, "POST", "/stake/bondunbond", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	err := cdc.UnmarshalJSON([]byte(body), &resultTx)
+	var results []ctypes.ResultBroadcastTxCommit
+	err := cdc.UnmarshalJSON([]byte(body), &results)
 	require.Nil(t, err)
 
-	return
+	return results[0]
 }
 
 func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {
@@ -684,10 +671,11 @@ func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastT
 	res, body := request(t, port, "POST", "/stake/bondunbond", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	err := cdc.UnmarshalJSON([]byte(body), &resultTx)
+	var results []ctypes.ResultBroadcastTxCommit
+	err := cdc.UnmarshalJSON([]byte(body), &results)
 	require.Nil(t, err)
 
-	return
+	return results[0]
 }
 
 func doMultiBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {
@@ -720,8 +708,9 @@ func doMultiBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadca
 	res, body := request(t, port, "POST", "/stake/bondunbond", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	err := cdc.UnmarshalJSON([]byte(body), &resultTx)
+	var results []ctypes.ResultBroadcastTxCommit
+	err := cdc.UnmarshalJSON([]byte(body), &results)
 	require.Nil(t, err)
 
-	return
+	return results[0]
 }

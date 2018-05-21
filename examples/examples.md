@@ -79,9 +79,9 @@ Enter your recovery seed phrase:
 
 ```
 NAME:	ADDRESS:					                PUBKEY:
-alice	90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD	1624DE62201D47E63694448665F5D0217EA8458177728C91C373047A42BD3C0FB78BD0BFA7
-bob	    29D721F054537C91F618A0FDBF770DA51EF8C48D	1624DE6220F54B2A2CA9EB4EE30DE23A73D15902E087C09CC5616456DDDD3814769E2E0A16
-charlie	2E8E13EEB8E3F0411ACCBC9BE0384732C24FBD5E	1624DE6220F8C9FB8B07855FD94126F88A155BD6EB973509AE5595EFDE1AF05B4964836A53
+alice   90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD	1624DE62201D47E63694448665F5D0217EA8458177728C91C373047A42BD3C0FB78BD0BFA7
+bob   29D721F054537C91F618A0FDBF770DA51EF8C48D	1624DE6220F54B2A2CA9EB4EE30DE23A73D15902E087C09CC5616456DDDD3814769E2E0A16
+charlie 2E8E13EEB8E3F0411ACCBC9BE0384732C24FBD5E	1624DE6220F8C9FB8B07855FD94126F88A155BD6EB973509AE5595EFDE1AF05B4964836A53
 ```
 
 Creating you first locally saved key creates the ~/.basecli folder which holds the keys you are storing. Now that you have the key for alice, you can start up the blockchain by running 
@@ -120,16 +120,17 @@ Where `90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD` is alices address we got from r
 The following command will send coins from alice, to bob:
 
 ```
-basecli send --name=alice --amount=10000mycoin --to=29D721F054537C91F618A0FDBF770DA51EF8C48D --sequence=0 --chain-id=test-chain-AE4XQo
+basecli send --name=alice --amount=10000mycoin --to=29D721F054537C91F618A0FDBF770DA51EF8C48D 
+--sequence=0 --chain-id=test-chain-AE4XQo
 ```
 
-Where
+Flag Descriptions: 
 - name is the name you gave your key
 - `mycoin` is the name of the token for this basecoin demo, initialized in the genesis.json file
 - sequence is a tally of how many transactions have been made by this account. Sicne this is the first tx on this account, it is 0
 - chain-id is the unique ID that helps tendermint identify which network to connect to. You can find it in the terminal output from the gaiad daemon in the header block , or in the genesis.json file  at `~/.basecoind/config/gensis.json`
 
-Now if we check bobs account, it should have ``10000`` 'mycoin' :
+Now if we check bobs account, it should have `10000 mycoin` :
 
 ```
 basecli account 29D721F054537C91F618A0FDBF770DA51EF8C48D
@@ -138,7 +139,8 @@ basecli account 29D721F054537C91F618A0FDBF770DA51EF8C48D
 Now lets send some from bob to charlie 
 
 ```
-basecli send --name=bob --amount=5000mycoin --to=2E8E13EEB8E3F0411ACCBC9BE0384732C24FBD5E --sequence=0 --chain-id=test-chain-AE4XQo
+basecli send --name=bob --amount=5000mycoin --to=2E8E13EEB8E3F0411ACCBC9BE0384732C24FBD5E 
+--sequence=0 --chain-id=test-chain-AE4XQo
 ```
 
 Note how we use the ``--name`` flag to select a different account to send from.

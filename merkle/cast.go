@@ -120,7 +120,7 @@ func FromKeyProof(p iavl.KeyProof) (KeyProof, error) {
 	case *iavl.KeyExistsProof:
 		return FromKeyExistsProof(p)
 	case *iavl.KeyAbsentProof:
-		return nil, fmt.Errorf("Absent proof not supported")
+		return FromKeyAbsentProof(p)
 	default:
 		return nil, fmt.Errorf("Invalid proof")
 	}
@@ -172,6 +172,11 @@ func FromKeyExistsProof(p *iavl.KeyExistsProof) (KeyProof, error) {
 	}
 
 	return ExistsProof(nodes), nil
+}
+
+func FromKeyAbsentProof(p *iavl.KeyAbsentProof) (KeyProof, error) {
+	// TODO: implement absent proof
+	return AbsentProof{}, nil
 }
 
 // Leaf generates the leaf byte slice from key and value

@@ -11,6 +11,7 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
+	"github.com/cosmos/cosmos-sdk/merkle"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -291,9 +292,12 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		return err.QueryResult()
 	}
 
-	if req.Prove {
+	if req.Prove && value != nil { // TODO: implement absent proof to remove the second condition
+		cdc := wire.NewCodec()
+		merkle.RegisterWire(cdc)
+		store.RegisterWire(cdc)
 		var rawerr error
-		res.Proof, rawerr = proof.Bytes()
+		res.Proof, rawerr = proof.Bytes(cdc)
 		if rawerr != nil {
 			return sdk.ErrInternal(rawerr.Error()).QueryResult()
 		}

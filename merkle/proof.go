@@ -56,6 +56,12 @@ func (p ExistsProof) Run(data []byte) ([]byte, error) {
 	return data, nil
 }
 
+type AbsentProof struct{}
+
+func (p AbsentProof) Run(data []byte) ([]byte, error) {
+	panic("not implemented")
+}
+
 // KeyProof - oneof ExistsProof/AbsentProof/RangeProof
 type KeyProof interface {
 	Run([]byte) ([]byte, error)
@@ -110,8 +116,6 @@ func (p MultiProof) Verify(data []byte, root []byte, keys ...string) error {
 }
 
 // Bytes converts a MultiProof to a byte slice
-func (p MultiProof) Bytes() ([]byte, error) {
-	cdc := wire.NewCodec()
-	RegisterCodec(cdc)
+func (p MultiProof) Bytes(cdc *wire.Codec) ([]byte, error) {
 	return cdc.MarshalBinary(p)
 }

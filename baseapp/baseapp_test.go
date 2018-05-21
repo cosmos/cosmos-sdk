@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-crypto"
@@ -16,6 +17,7 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 func defaultLogger() log.Logger {
@@ -25,7 +27,9 @@ func defaultLogger() log.Logger {
 func newBaseApp(name string) *BaseApp {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	return NewBaseApp(name, nil, logger, db)
+	codec := wire.NewCodec()
+	wire.RegisterCrypto(codec)
+	return NewBaseApp(name, codec, logger, db)
 }
 
 func TestMountStores(t *testing.T) {
@@ -167,7 +171,7 @@ func TestInitChainer(t *testing.T) {
 	}
 
 	query := abci.RequestQuery{
-		Path: "/main/key",
+		Path: "/store/main/key",
 		Data: key,
 	}
 
@@ -260,6 +264,97 @@ func TestDeliverTx(t *testing.T) {
 	}
 }
 
+func TestSimulateTx(t *testing.T) {
+	app := newBaseApp(t.Name())
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+
+	counter := 0
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		ctx.GasMeter().ConsumeGas(10, "test")
+		store := ctx.KVStore(capKey)
+		// ensure store is never written
+		require.Nil(t, store.Get([]byte("key")))
+		store.Set([]byte("key"), []byte("value"))
+		// check we can see the current header
+		thisHeader := ctx.BlockHeader()
+		height := int64(counter)
+		assert.Equal(t, height, thisHeader.Height)
+		counter++
+		return sdk.Result{}
+	})
+
+	tx := testUpdatePowerTx{} // doesn't matter
+	header := abci.Header{AppHash: []byte("apphash")}
+
+	app.SetTxDecoder(func(txBytes []byte) (sdk.Tx, sdk.Error) {
+		var ttx testUpdatePowerTx
+		fromJSON(txBytes, &ttx)
+		return ttx, nil
+	})
+
+	nBlocks := 3
+	for blockN := 0; blockN < nBlocks; blockN++ {
+		// block1
+		header.Height = int64(blockN + 1)
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
+		result := app.Simulate(tx)
+		require.Equal(t, result.Code, sdk.ABCICodeOK)
+		require.Equal(t, int64(80), result.GasUsed)
+		counter--
+		encoded, err := json.Marshal(tx)
+		require.Nil(t, err)
+		query := abci.RequestQuery{
+			Path: "/app/simulate",
+			Data: encoded,
+		}
+		queryResult := app.Query(query)
+		require.Equal(t, queryResult.Code, uint32(sdk.ABCICodeOK))
+		var res sdk.Result
+		app.cdc.MustUnmarshalBinary(queryResult.Value, &res)
+		require.Equal(t, sdk.ABCICodeOK, res.Code)
+		require.Equal(t, int64(160), res.GasUsed)
+		app.EndBlock(abci.RequestEndBlock{})
+		app.Commit()
+	}
+}
+
+// Test that transactions exceeding gas limits fail
+func TestTxGasLimits(t *testing.T) {
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	app := NewBaseApp(t.Name(), nil, logger, db)
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(0))
+		return
+	})
+	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		ctx.GasMeter().ConsumeGas(10, "counter")
+		return sdk.Result{}
+	})
+
+	tx := testUpdatePowerTx{} // doesn't matter
+	header := abci.Header{AppHash: []byte("apphash")}
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res := app.Deliver(tx)
+	assert.Equal(t, res.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), "Expected transaction to run out of gas")
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+}
+
 // Test that we can only query from the latest committed state.
 func TestQuery(t *testing.T) {
 	app := newBaseApp(t.Name())
@@ -280,7 +375,7 @@ func TestQuery(t *testing.T) {
 	})
 
 	query := abci.RequestQuery{
-		Path: "/main/key",
+		Path: "/store/main/key",
 		Data: key,
 	}
 
@@ -305,6 +400,39 @@ func TestQuery(t *testing.T) {
 	app.Commit()
 	res = app.Query(query)
 	assert.Equal(t, value, res.Value)
+}
+
+// Test p2p filter queries
+func TestP2PQuery(t *testing.T) {
+	app := newBaseApp(t.Name())
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+
+	app.SetAddrPeerFilter(func(addrport string) abci.ResponseQuery {
+		require.Equal(t, "1.1.1.1:8000", addrport)
+		return abci.ResponseQuery{Code: uint32(3)}
+	})
+
+	app.SetPubKeyPeerFilter(func(pubkey string) abci.ResponseQuery {
+		require.Equal(t, "testpubkey", pubkey)
+		return abci.ResponseQuery{Code: uint32(4)}
+	})
+
+	addrQuery := abci.RequestQuery{
+		Path: "/p2p/filter/addr/1.1.1.1:8000",
+	}
+	res := app.Query(addrQuery)
+	require.Equal(t, uint32(3), res.Code)
+
+	pubkeyQuery := abci.RequestQuery{
+		Path: "/p2p/filter/pubkey/testpubkey",
+	}
+	res = app.Query(pubkeyQuery)
+	require.Equal(t, uint32(4), res.Code)
 }
 
 //----------------------

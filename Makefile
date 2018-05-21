@@ -1,9 +1,8 @@
 GOTOOLS = \
 	github.com/golang/dep/cmd/dep \
-	github.com/jteeuwen/go-bindata/go-bindata
 	# gopkg.in/alecthomas/gometalinter.v2 \
-		#
-GOTOOLS_CHECK = dep go-bindata #gometalinter.v2
+
+GOTOOLS_CHECK = dep #gometalinter.v2
 
 all: check get_vendor_deps build test install
 
@@ -13,9 +12,10 @@ check: check_tools
 ########################################
 ###  Build
 
+# Command to generate the workd list (kept here for documentation purposes only):
 wordlist:
-	# Generating wordlist.go...
-	go-bindata -ignore ".*\.go" -o keys/words/wordlist/wordlist.go -pkg "wordlist" keys/words/wordlist/...
+	# To re-generate wordlist.go run:
+	# go-bindata -ignore ".*\.go" -o keys/words/wordlist/wordlist.go -pkg "wordlist" keys/words/wordlist/...
 
 build: wordlist
 	# Nothing else to build!
@@ -96,4 +96,4 @@ metalinter_all:
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONEY: check wordlist build install check_tools get_tools update_tools get_vendor_deps test fmt metalinter metalinter_all
+.PHONEY: check build install check_tools get_tools update_tools get_vendor_deps test fmt metalinter metalinter_all

@@ -86,7 +86,7 @@ func keysWordsWordlistChinese_simplifiedTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "keys/words/wordlist/chinese_simplified.txt", size: 8192, mode: os.FileMode(420), modTime: time.Unix(1514928181, 0)}
+	info := bindataFileInfo{name: "keys/words/wordlist/chinese_simplified.txt", size: 8192, mode: os.FileMode(420), modTime: time.Unix(1523115814, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -106,7 +106,7 @@ func keysWordsWordlistEnglishTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "keys/words/wordlist/english.txt", size: 13116, mode: os.FileMode(420), modTime: time.Unix(1514928181, 0)}
+	info := bindataFileInfo{name: "keys/words/wordlist/english.txt", size: 13116, mode: os.FileMode(420), modTime: time.Unix(1523115814, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -126,7 +126,7 @@ func keysWordsWordlistJapaneseTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "keys/words/wordlist/japanese.txt", size: 24287, mode: os.FileMode(420), modTime: time.Unix(1514928181, 0)}
+	info := bindataFileInfo{name: "keys/words/wordlist/japanese.txt", size: 24287, mode: os.FileMode(420), modTime: time.Unix(1523115814, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -146,7 +146,7 @@ func keysWordsWordlistSpanishTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "keys/words/wordlist/spanish.txt", size: 13659, mode: os.FileMode(420), modTime: time.Unix(1514928181, 0)}
+	info := bindataFileInfo{name: "keys/words/wordlist/spanish.txt", size: 13659, mode: os.FileMode(420), modTime: time.Unix(1523115814, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

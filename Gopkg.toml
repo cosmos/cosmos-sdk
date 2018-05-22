@@ -60,6 +60,10 @@
   name = "github.com/tendermint/go-crypto"
   version = "~0.6.2"
 
+[[override]]
+  name = "github.com/tendermint/go-wire"
+  version = "0.7.3"
+
 [[constraint]]
   name = "github.com/tendermint/go-amino"
   version = "~0.9.9"
@@ -70,7 +74,7 @@
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
-  version = "0.19.4-rc0"
+  version = "0.19.5-rc1"
 
 [[override]]
   name = "github.com/tendermint/tmlibs"

@@ -41,11 +41,11 @@ func (c *xchacha20poly1305) Overhead() int {
 
 func (c *xchacha20poly1305) Seal(dst, nonce, plaintext, additionalData []byte) []byte {
 	if len(nonce) != NonceSize {
-		panic("chacha20poly1305: bad nonce length passed to Seal")
+		panic("xchacha20poly1305: bad nonce length passed to Seal")
 	}
 
 	if uint64(len(plaintext)) > (1<<38)-64 {
-		panic("chacha20poly1305: plaintext too large")
+		panic("xchacha20poly1305: plaintext too large")
 	}
 
 	var subKey [KeySize]byte
@@ -64,10 +64,10 @@ func (c *xchacha20poly1305) Seal(dst, nonce, plaintext, additionalData []byte) [
 
 func (c *xchacha20poly1305) Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error) {
 	if len(nonce) != NonceSize {
-		panic("chacha20poly1305: bad nonce length passed to Open")
+		panic("xchacha20poly1305: bad nonce length passed to Open")
 	}
 	if uint64(len(ciphertext)) > (1<<38)-48 {
-		panic("chacha20poly1305: ciphertext too large")
+		panic("xchacha20poly1305: ciphertext too large")
 	}
 	var subKey [KeySize]byte
 	var hNonce [16]byte

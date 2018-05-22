@@ -1,6 +1,7 @@
 package stake
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -43,7 +44,7 @@ func TestDuplicatesMsgDeclareCandidacy(t *testing.T) {
 	assert.True(t, got.IsOK(), "%v", got)
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	assert.Equal(t, sdk.Bonded, validator.Status)
+	assert.Equal(t, sdk.Bonded, validator.Status())
 	assert.Equal(t, validatorAddr, validator.Owner)
 	assert.Equal(t, pk, validator.PubKey)
 	assert.Equal(t, sdk.NewRat(10), validator.PoolShares.Bonded())
@@ -71,7 +72,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, sdk.Bonded, validator.Status)
+	require.Equal(t, sdk.Bonded, validator.Status())
 	assert.Equal(t, bondAmount, validator.DelegatorShares.Evaluate())
 	assert.Equal(t, bondAmount, validator.PoolShares.Bonded().Evaluate(), "validator: %v", validator)
 
@@ -224,12 +225,14 @@ func TestMultipleMsgDeclareCandidacy(t *testing.T) {
 
 	// bond them all
 	for i, validatorAddr := range validatorAddrs {
+		fmt.Printf("debug i: %v\n", i)
 		msgDeclareCandidacy := newTestMsgDeclareCandidacy(validatorAddr, pks[i], 10)
 		got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the account is bonded
 		validators := keeper.GetValidators(ctx, 100)
+		fmt.Printf("debug validators: %v\n", validators)
 		require.Equal(t, (i + 1), len(validators))
 		val := validators[i]
 		balanceExpd := initBond - 10

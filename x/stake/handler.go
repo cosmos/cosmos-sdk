@@ -54,7 +54,7 @@ func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keepe
 	}
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
-	validator = k.setValidator(ctx, validator)
+	k.setValidator(ctx, validator)
 	tags := sdk.NewTags(
 		"action", []byte("declareCandidacy"),
 		"validator", msg.ValidatorAddr.Bytes(),
@@ -92,7 +92,7 @@ func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk
 	validator.Description.Website = msg.Description.Website
 	validator.Description.Details = msg.Description.Details
 
-	k.setValidator(ctx, validator)
+	k.updateValidator(ctx, validator)
 	tags := sdk.NewTags(
 		"action", []byte("editCandidacy"),
 		"validator", msg.ValidatorAddr.Bytes(),
@@ -156,7 +156,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 
 	k.setPool(ctx, pool)
 	k.setDelegation(ctx, bond)
-	k.setValidator(ctx, validator)
+	k.updateValidator(ctx, validator)
 	tags := sdk.NewTags("action", []byte("delegate"), "delegator", delegatorAddr.Bytes(), "validator", validator.Owner.Bytes())
 	return tags, nil
 }
@@ -246,7 +246,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	if validator.DelegatorShares.IsZero() {
 		k.removeValidator(ctx, validator.Owner)
 	} else {
-		k.setValidator(ctx, validator)
+		k.updateValidator(ctx, validator)
 	}
 	k.setPool(ctx, pool)
 	tags := sdk.NewTags("action", []byte("unbond"), "delegator", msg.DelegatorAddr.Bytes(), "validator", msg.ValidatorAddr.Bytes())

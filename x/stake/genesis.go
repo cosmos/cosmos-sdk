@@ -32,7 +32,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	k.setPool(ctx, data.Pool)
 	k.setNewParams(ctx, data.Params)
 	for _, validator := range data.Validators {
-		k.setValidator(ctx, validator)
+		k.updateValidator(ctx, validator)
 	}
 	for _, bond := range data.Bonds {
 		k.setDelegation(ctx, bond)

@@ -18,9 +18,10 @@ var (
 	ValidatorsKey        = []byte{0x02} // prefix for each key to a validator
 	ValidatorsBondedKey  = []byte{0x03} // prefix for each key to bonded/actively validating validators
 	ValidatorsByPowerKey = []byte{0x04} // prefix for each key to a validator sorted by power
-	TendermintUpdatesKey = []byte{0x05} // prefix for each key to a validator which is being updated
-	DelegationKey        = []byte{0x06} // prefix for each key to a delegator's bond
-	IntraTxCounterKey    = []byte{0x07} // key for block-local tx index
+	ValidatorCliffKey    = []byte{0x05} // key for block-local tx index
+	TendermintUpdatesKey = []byte{0x06} // prefix for each key to a validator which is being updated
+	DelegationKey        = []byte{0x07} // prefix for each key to a delegator's bond
+	IntraTxCounterKey    = []byte{0x08} // key for block-local tx index
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -51,7 +52,7 @@ func GetValidatorsByPowerKey(validator Validator, pool Pool) []byte {
 	return append(ValidatorsByPowerKey,
 		append(powerBytes,
 			append(heightBytes,
-				append(counterBytes, validator.Owner.Bytes()...)...)...)...)
+				append(counterBytes, validator.Owner.Bytes()...)...)...)...) // TODO don't technically need to store owner
 }
 
 // get the key for the accumulated update validators

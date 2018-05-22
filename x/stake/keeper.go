@@ -227,7 +227,8 @@ func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) Validator 
 	if oldFound {
 		store.Delete(GetValidatorsByPowerKey(oldValidator, pool))
 	}
-	store.Set(GetValidatorsByPowerKey(validator, pool), validator.Owner)
+	valPower := GetValidatorsByPowerKey(validator, pool)
+	store.Set(valPower, validator.Owner)
 
 	// efficiency case:
 	// if already bonded and power increasing only need to update tendermint
@@ -237,8 +238,14 @@ func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) Validator 
 		return validator
 	}
 
-	// TODO efficiency case:
+	// efficiency case:
 	// if was unbonded/or is a new validator - and the new power is less than the cliff validator
+	cliffPower := k.getCliffValidatorPower(ctx)
+	if cliffPower != nil &&
+		(!oldFound || (oldFound && oldValidator.Status() == sdk.Unbonded)) &&
+		bytes.Compare(valPower, cliffPower) == -1 { //(valPower < cliffPower
+		return validator
+	}
 
 	// update the validator set for this validator
 	updatedVal := k.updateBondedValidatorsNew(ctx, store, validator)
@@ -282,8 +289,13 @@ func (k Keeper) updateBondedValidatorsNew(ctx sdk.Context, store sdk.KVStore,
 	maxValidators := k.GetParams(ctx).MaxValidators
 	iterator = store.ReverseSubspaceIterator(ValidatorsByPowerKey) // largest to smallest
 	i := 0
+	var validator Validator
 	for ; ; i++ {
 		if !iterator.Valid() || i > int(maxValidators-1) {
+
+			if i-1 == int(maxValidators-1) {
+				k.setCliffValidatorPower(ctx, validator, k.GetPool(ctx))
+			}
 			iterator.Close()
 			break
 		}
@@ -293,7 +305,6 @@ func (k Keeper) updateBondedValidatorsNew(ctx sdk.Context, store sdk.KVStore,
 		// use the validator provided because it has not yet been updated
 		// in the main validator store
 		ownerAddr := iterator.Value()
-		var validator Validator
 		if bytes.Equal(ownerAddr, newValidator.Owner) {
 			validator = newValidator
 		} else {
@@ -558,6 +569,21 @@ func (k Keeper) setIntraTxCounter(ctx sdk.Context, counter int16) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(counter)
 	store.Set(IntraTxCounterKey, bz)
+}
+
+//__________________________________________________________________________
+
+// get the current power of the validator on the cliff
+func (k Keeper) getCliffValidatorPower(ctx sdk.Context) []byte {
+	store := ctx.KVStore(k.storeKey)
+	return store.Get(ValidatorCliffKey)
+}
+
+// set the current power of the validator on the cliff
+func (k Keeper) setCliffValidatorPower(ctx sdk.Context, validator Validator, pool Pool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := GetValidatorsByPowerKey(validator, pool)
+	store.Set(ValidatorCliffKey, bz)
 }
 
 //__________________________________________________________________________

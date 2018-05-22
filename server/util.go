@@ -79,7 +79,6 @@ func AddCommands(
 		ShowNodeIDCmd(ctx),
 		ShowValidatorCmd(ctx),
 		ExportCmd(ctx, cdc, appExport),
-		UnsafeResetAllCmd(ctx),
 		version.VersionCmd,
 	)
 }

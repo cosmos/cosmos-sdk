@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/abci/types"
+	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 
 	"github.com/cosmos/cosmos-sdk/merkle"
@@ -50,6 +51,7 @@ type MultiStore interface { //nolint
 	// Convenience for fetching substores.
 	GetStore(StoreKey) Store
 	GetKVStore(StoreKey) KVStore
+	GetKVStoreWithGas(GasMeter, StoreKey) KVStore
 }
 
 // From MultiStore.CacheMultiStore()....
@@ -258,3 +260,8 @@ func PrefixEndBytes(prefix []byte) []byte {
 	}
 	return end
 }
+
+//----------------------------------------
+
+// key-value result for iterator queries
+type KVPair cmn.KVPair

@@ -192,6 +192,15 @@ func (st *iavlStore) Query(req abci.RequestQuery) (value []byte, proof *merkle.M
 		} else {
 			_, value = tree.GetVersioned(key, height)
 		}
+	case "/subspace":
+		subspace := req.Data
+		var KVs []KVPair
+		iterator := st.SubspaceIterator(subspace)
+		for ; iterator.Valid(); iterator.Next() {
+			KVs = append(KVs, KVPair{iterator.Key(), iterator.Value()})
+		}
+		iterator.Close()
+		value = cdc.MustMarshalBinary(KVs)
 	default:
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
 		err = sdk.ErrUnknownRequest(msg)

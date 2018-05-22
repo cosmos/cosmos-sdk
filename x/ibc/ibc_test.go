@@ -34,7 +34,8 @@ func newAddress() crypto.Address {
 
 func getCoins(ck bank.Keeper, ctx sdk.Context, addr crypto.Address) (sdk.Coins, sdk.Error) {
 	zero := sdk.Coins(nil)
-	return ck.AddCoins(ctx, addr, zero)
+	coins, _, err := ck.AddCoins(ctx, addr, zero)
+	return coins, err
 }
 
 func makeCodec() *wire.Codec {
@@ -70,7 +71,7 @@ func TestIBC(t *testing.T) {
 	zero := sdk.Coins(nil)
 	mycoins := sdk.Coins{sdk.Coin{"mycoin", 10}}
 
-	coins, err := ck.AddCoins(ctx, src, mycoins)
+	coins, _, err := ck.AddCoins(ctx, src, mycoins)
 	assert.Nil(t, err)
 	assert.Equal(t, mycoins, coins)
 

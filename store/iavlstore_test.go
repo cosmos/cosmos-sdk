@@ -261,19 +261,41 @@ func TestIAVLStoreQuery(t *testing.T) {
 	tree := iavl.NewVersionedTree(db, cacheSize)
 	iavlStore := newIAVLStore(tree, numHistory)
 
-	k, v := []byte("wind"), []byte("blows")
-	k2, v2 := []byte("water"), []byte("flows")
-	v3 := []byte("is cold")
-	// k3, v3 := []byte("earth"), []byte("soes")
-	// k4, v4 := []byte("fire"), []byte("woes")
+	k1, v1 := []byte("key1"), []byte("val1")
+	k2, v2 := []byte("key2"), []byte("val2")
+	v3 := []byte("val3")
+
+	ksub := []byte("key")
+	KVs0 := []KVPair{}
+	KVs1 := []KVPair{
+		{k1, v1},
+		{k2, v2},
+	}
+	KVs2 := []KVPair{
+		{k1, v3},
+		{k2, v2},
+	}
+	valExpSubEmpty := cdc.MustMarshalBinary(KVs0)
+	valExpSub1 := cdc.MustMarshalBinary(KVs1)
+	valExpSub2 := cdc.MustMarshalBinary(KVs2)
 
 	cid := iavlStore.Commit()
 	ver := cid.Version
-	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
+	query := abci.RequestQuery{Path: "/key", Data: k1, Height: ver}
+	querySub := abci.RequestQuery{Path: "/subspace", Data: ksub, Height: ver}
+
+	// query subspace before anything set
+	qval, _, qerr := iavlStore.Query(querySub)
+	assert.Nil(t, qerr)
+	assert.Equal(t, valExpSubEmpty, qval)
+
+	// set data
+	iavlStore.Set(k1, v1)
+	iavlStore.Set(k2, v2)
 
 	// set data without commit, doesn't show up
-	iavlStore.Set(k, v)
-	qval, _, qerr := iavlStore.Query(query)
+	iavlStore.Set(k1, v1)
+	qval, _, qerr = iavlStore.Query(query)
 	assert.Nil(t, qerr)
 	assert.Nil(t, qval)
 
@@ -287,17 +309,21 @@ func TestIAVLStoreQuery(t *testing.T) {
 	query.Height = cid.Version
 	qval, _, qerr = iavlStore.Query(query)
 	assert.Nil(t, qerr)
-	assert.Equal(t, v, qval)
+	assert.Equal(t, v1, qval)
+
+	// and for the subspace
+	qval, _, qerr = iavlStore.Query(querySub)
+	assert.Nil(t, qerr)
+	assert.Equal(t, valExpSub1, qval)
 
 	// modify
-	iavlStore.Set(k2, v2)
-	iavlStore.Set(k, v3)
+	iavlStore.Set(k1, v3)
 	cid = iavlStore.Commit()
 
 	// query will return old values, as height is fixed
 	qval, _, qerr = iavlStore.Query(query)
 	assert.Nil(t, qerr)
-	assert.Equal(t, v, qval)
+	assert.Equal(t, v1, qval)
 
 	// update to latest in the query and we are happy
 	query.Height = cid.Version
@@ -305,13 +331,18 @@ func TestIAVLStoreQuery(t *testing.T) {
 	assert.Nil(t, qerr)
 	assert.Equal(t, v3, qval)
 	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
+
 	qval, _, qerr = iavlStore.Query(query2)
 	assert.Nil(t, qerr)
 	assert.Equal(t, v2, qval)
+	// and for the subspace
+	qval, _, qerr = iavlStore.Query(querySub)
+	assert.Nil(t, qerr)
+	assert.Equal(t, valExpSub2, qval)
 
 	// default (height 0) will show latest -1
-	query0 := abci.RequestQuery{Path: "/store", Data: k}
+	query0 := abci.RequestQuery{Path: "/store", Data: k1}
 	qval, _, qerr = iavlStore.Query(query0)
 	assert.Nil(t, qerr)
-	assert.Equal(t, v, qval)
+	assert.Equal(t, v1, qval)
 }

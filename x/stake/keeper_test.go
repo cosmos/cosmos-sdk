@@ -283,6 +283,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 		require.True(t, found)
 	}
 	resValidators := keeper.GetValidatorsByPower(ctx)
+	require.Equal(t, nMax, uint16(len(resValidators)))
 	assert.True(ValEq(t, validators[2], resValidators[0]))
 	assert.True(ValEq(t, validators[3], resValidators[1]))
 
@@ -402,7 +403,7 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 	assert.True(ValEq(t, validators[3], resValidators[1]))
 
 	// test a swap in voting power
-	validators[0].PoolShares = NewBondedShares(sdk.NewRat(600))
+	validators[0].PoolShares = NewUnbondedShares(sdk.NewRat(600))
 	validators[0] = keeper.updateValidator(ctx, validators[0])
 	resValidators = keeper.GetValidatorsByPower(ctx)
 	require.Equal(t, max, len(resValidators))
@@ -418,7 +419,7 @@ func TestClearTendermintUpdates(t *testing.T) {
 	validators := make([]Validator, len(amts))
 	for i, amt := range amts {
 		validators[i] = NewValidator(addrs[i], pks[i], Description{})
-		validators[i].PoolShares = NewBondedShares(sdk.NewRat(amt))
+		validators[i].PoolShares = NewUnbondedShares(sdk.NewRat(amt))
 		validators[i].DelegatorShares = sdk.NewRat(amt)
 		keeper.updateValidator(ctx, validators[i])
 	}
@@ -437,7 +438,7 @@ func TestGetTendermintUpdatesAllNone(t *testing.T) {
 	var validators [2]Validator
 	for i, amt := range amts {
 		validators[i] = NewValidator(addrs[i], pks[i], Description{})
-		validators[i].PoolShares = NewBondedShares(sdk.NewRat(amt))
+		validators[i].PoolShares = NewUnbondedShares(sdk.NewRat(amt))
 		validators[i].DelegatorShares = sdk.NewRat(amt)
 	}
 
@@ -475,7 +476,7 @@ func TestGetTendermintUpdatesIdentical(t *testing.T) {
 	var validators [2]Validator
 	for i, amt := range amts {
 		validators[i] = NewValidator(addrs[i], pks[i], Description{})
-		validators[i].PoolShares = NewBondedShares(sdk.NewRat(amt))
+		validators[i].PoolShares = NewUnbondedShares(sdk.NewRat(amt))
 		validators[i].DelegatorShares = sdk.NewRat(amt)
 	}
 	validators[0] = keeper.updateValidator(ctx, validators[0])
@@ -497,7 +498,7 @@ func TestGetTendermintUpdatesSingleValueChange(t *testing.T) {
 	var validators [2]Validator
 	for i, amt := range amts {
 		validators[i] = NewValidator(addrs[i], pks[i], Description{})
-		validators[i].PoolShares = NewBondedShares(sdk.NewRat(amt))
+		validators[i].PoolShares = NewUnbondedShares(sdk.NewRat(amt))
 		validators[i].DelegatorShares = sdk.NewRat(amt)
 	}
 	validators[0] = keeper.updateValidator(ctx, validators[0])
@@ -523,7 +524,7 @@ func TestGetTendermintUpdatesMultipleValueChange(t *testing.T) {
 	var validators [2]Validator
 	for i, amt := range amts {
 		validators[i] = NewValidator(addrs[i], pks[i], Description{})
-		validators[i].PoolShares = NewBondedShares(sdk.NewRat(amt))
+		validators[i].PoolShares = NewUnbondedShares(sdk.NewRat(amt))
 		validators[i].DelegatorShares = sdk.NewRat(amt)
 	}
 	validators[0] = keeper.updateValidator(ctx, validators[0])
@@ -551,7 +552,7 @@ func TestGetTendermintUpdatesInserted(t *testing.T) {
 	var validators [5]Validator
 	for i, amt := range amts {
 		validators[i] = NewValidator(addrs[i], pks[i], Description{})
-		validators[i].PoolShares = NewBondedShares(sdk.NewRat(amt))
+		validators[i].PoolShares = NewUnbondedShares(sdk.NewRat(amt))
 		validators[i].DelegatorShares = sdk.NewRat(amt)
 	}
 	validators[0] = keeper.updateValidator(ctx, validators[0])
@@ -561,7 +562,7 @@ func TestGetTendermintUpdatesInserted(t *testing.T) {
 
 	// test validtor added at the beginning
 	//  tendermintUpdate set: {} -> {c0}
-	keeper.updateValidator(ctx, validators[2])
+	validators[2] = keeper.updateValidator(ctx, validators[2])
 	updates := keeper.getTendermintUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 	require.Equal(t, validators[2].abciValidator(keeper.cdc), updates[0])
@@ -569,7 +570,7 @@ func TestGetTendermintUpdatesInserted(t *testing.T) {
 	// test validtor added at the beginning
 	//  tendermintUpdate set: {} -> {c0}
 	keeper.clearTendermintUpdates(ctx)
-	keeper.updateValidator(ctx, validators[3])
+	validators[3] = keeper.updateValidator(ctx, validators[3])
 	updates = keeper.getTendermintUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 	require.Equal(t, validators[3].abciValidator(keeper.cdc), updates[0])
@@ -577,7 +578,7 @@ func TestGetTendermintUpdatesInserted(t *testing.T) {
 	// test validtor added at the end
 	//  tendermintUpdate set: {} -> {c0}
 	keeper.clearTendermintUpdates(ctx)
-	keeper.updateValidator(ctx, validators[4])
+	validators[4] = keeper.updateValidator(ctx, validators[4])
 	updates = keeper.getTendermintUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 	require.Equal(t, validators[4].abciValidator(keeper.cdc), updates[0])
@@ -593,7 +594,7 @@ func TestGetTendermintUpdatesNotValidatorCliff(t *testing.T) {
 	var validators [5]Validator
 	for i, amt := range amts {
 		validators[i] = NewValidator(addrs[i], pks[i], Description{})
-		validators[i].PoolShares = NewBondedShares(sdk.NewRat(amt))
+		validators[i].PoolShares = NewUnbondedShares(sdk.NewRat(amt))
 		validators[i].DelegatorShares = sdk.NewRat(amt)
 	}
 	validators[0] = keeper.updateValidator(ctx, validators[0])
@@ -612,7 +613,7 @@ func TestGetTendermintUpdatesNotValidatorCliff(t *testing.T) {
 	keeper.clearTendermintUpdates(ctx)
 	assert.Equal(t, 0, len(keeper.getTendermintUpdates(ctx)))
 
-	validators[2].PoolShares = NewBondedShares(sdk.NewRat(15))
+	validators[2].PoolShares = NewUnbondedShares(sdk.NewRat(15))
 	validators[2] = keeper.updateValidator(ctx, validators[2])
 
 	updates = keeper.getTendermintUpdates(ctx)
@@ -742,7 +743,7 @@ func TestPool(t *testing.T) {
 	assert.True(t, expPool.equal(resPool))
 
 	//modify a params, save, and retrieve
-	expPool.TotalSupply = 777
+	expPool.BondedTokens = 777
 	keeper.setPool(ctx, expPool)
 	resPool = keeper.GetPool(ctx)
 	assert.True(t, expPool.equal(resPool))

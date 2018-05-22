@@ -8,15 +8,15 @@ import (
 
 // Pool - dynamic parameters of the current state
 type Pool struct {
-	TotalSupply       int64   `json:"total_supply"`        // total supply of all tokens
-	UnbondedShares    sdk.Rat `json:"unbonded_shares"`     // sum of all shares distributed for the Unbonded Pool
-	UnbondingShares   sdk.Rat `json:"unbonding_shares"`    // shares moving from Bonded to Unbonded Pool
-	BondedShares      sdk.Rat `json:"bonded_shares"`       // sum of all shares distributed for the Bonded Pool
-	UnbondedTokens    int64   `json:"unbonded_pool"`       // reserve of unbonded tokens held with validators
-	UnbondingTokens   int64   `json:"unbonding_pool"`      // tokens moving from bonded to unbonded pool
-	BondedTokens      int64   `json:"bonded_pool"`         // reserve of bonded tokens
-	InflationLastTime int64   `json:"inflation_last_time"` // block which the last inflation was processed // TODO make time
-	Inflation         sdk.Rat `json:"inflation"`           // current annual inflation rate
+	LooseUnbondedTokens int64   `json:"loose_unbonded_tokens"` // tokens not associated with any validator
+	UnbondedTokens      int64   `json:"unbonded_tokens"`       // reserve of unbonded tokens held with validators
+	UnbondingTokens     int64   `json:"unbonding_tokens"`      // tokens moving from bonded to unbonded pool
+	BondedTokens        int64   `json:"bonded_tokens"`         // reserve of bonded tokens
+	UnbondedShares      sdk.Rat `json:"unbonded_shares"`       // sum of all shares distributed for the Unbonded Pool
+	UnbondingShares     sdk.Rat `json:"unbonding_shares"`      // shares moving from Bonded to Unbonded Pool
+	BondedShares        sdk.Rat `json:"bonded_shares"`         // sum of all shares distributed for the Bonded Pool
+	InflationLastTime   int64   `json:"inflation_last_time"`   // block which the last inflation was processed // TODO make time
+	Inflation           sdk.Rat `json:"inflation"`             // current annual inflation rate
 
 	DateLastCommissionReset int64 `json:"date_last_commission_reset"` // unix timestamp for last commission accounting reset (daily)
 
@@ -33,13 +33,13 @@ func (p Pool) equal(p2 Pool) bool {
 // initial pool for testing
 func initialPool() Pool {
 	return Pool{
-		TotalSupply:             0,
-		BondedShares:            sdk.ZeroRat(),
-		UnbondingShares:         sdk.ZeroRat(),
-		UnbondedShares:          sdk.ZeroRat(),
+		LooseUnbondedTokens:     0,
 		BondedTokens:            0,
 		UnbondingTokens:         0,
 		UnbondedTokens:          0,
+		BondedShares:            sdk.ZeroRat(),
+		UnbondingShares:         sdk.ZeroRat(),
+		UnbondedShares:          sdk.ZeroRat(),
 		InflationLastTime:       0,
 		Inflation:               sdk.NewRat(7, 100),
 		DateLastCommissionReset: 0,
@@ -49,10 +49,17 @@ func initialPool() Pool {
 
 //____________________________________________________________________
 
+// Sum total of all staking tokens in the pool
+func (p Pool) TokenSupply() int64 {
+	return p.LooseUnbondedTokens + p.UnbondedTokens + p.UnbondingTokens + p.BondedTokens
+}
+
+//____________________________________________________________________
+
 // get the bond ratio of the global state
 func (p Pool) bondedRatio() sdk.Rat {
-	if p.TotalSupply > 0 {
-		return sdk.NewRat(p.BondedTokens, p.TotalSupply)
+	if p.TokenSupply() > 0 {
+		return sdk.NewRat(p.BondedTokens, p.TokenSupply())
 	}
 	return sdk.ZeroRat()
 }

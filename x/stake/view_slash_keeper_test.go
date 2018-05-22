@@ -20,7 +20,7 @@ func TestViewSlashBond(t *testing.T) {
 		validators[i] = Validator{
 			Owner:           addrVals[i],
 			PubKey:          pks[i],
-			PoolShares:      NewBondedShares(sdk.NewRat(amt)),
+			PoolShares:      NewUnbondedShares(sdk.NewRat(amt)),
 			DelegatorShares: sdk.NewRat(amt),
 		}
 	}

@@ -1,7 +1,6 @@
 package stake
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -225,14 +224,12 @@ func TestMultipleMsgDeclareCandidacy(t *testing.T) {
 
 	// bond them all
 	for i, validatorAddr := range validatorAddrs {
-		fmt.Printf("debug i: %v\n", i)
 		msgDeclareCandidacy := newTestMsgDeclareCandidacy(validatorAddr, pks[i], 10)
 		got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the account is bonded
 		validators := keeper.GetValidators(ctx, 100)
-		fmt.Printf("debug validators: %v\n", validators)
 		require.Equal(t, (i + 1), len(validators))
 		val := validators[i]
 		balanceExpd := initBond - 10

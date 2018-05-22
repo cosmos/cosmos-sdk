@@ -155,7 +155,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
 		}
 		acc := NewGenesisAccount(&accAuth)
 		genaccs[i] = acc
-		stakeData.Pool.TotalSupply += freeFermionsAcc // increase the supply
+		stakeData.Pool.LooseUnbondedTokens += freeFermionsAcc // increase the supply
 
 		// add the validator
 		if len(genTx.Name) > 0 {
@@ -165,7 +165,6 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
 			stakeData.Validators = append(stakeData.Validators, validator)
 
 			// pool logic
-			stakeData.Pool.TotalSupply += freeFermionVal
 			stakeData.Pool.BondedTokens += freeFermionVal
 			stakeData.Pool.BondedShares = sdk.NewRat(stakeData.Pool.BondedTokens)
 		}

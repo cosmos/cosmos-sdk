@@ -12,14 +12,15 @@ import (
 func TestBondedRatio(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.TotalSupply = 3
+	pool.LooseUnbondedTokens = 1
 	pool.BondedTokens = 2
 
 	// bonded pool / total supply
 	require.Equal(t, pool.bondedRatio(), sdk.NewRat(2).Quo(sdk.NewRat(3)))
-	pool.TotalSupply = 0
 
 	// avoids divide-by-zero
+	pool.LooseUnbondedTokens = 0
+	pool.BondedTokens = 0
 	require.Equal(t, pool.bondedRatio(), sdk.ZeroRat())
 }
 

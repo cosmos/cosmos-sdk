@@ -96,7 +96,6 @@ func TestRemoveShares(t *testing.T) {
 		DelegatorShares: delShares,
 	}
 	pool := Pool{
-		TotalSupply:       0,
 		BondedShares:      sdk.NewRat(248305),
 		UnbondedShares:    sdk.NewRat(232147),
 		BondedTokens:      248305,
@@ -136,7 +135,7 @@ func TestUpdateStatus(t *testing.T) {
 	assert.Equal(t, int64(100), pool.UnbondingTokens)
 	assert.Equal(t, int64(0), pool.UnbondedTokens)
 
-	val, pool = val.UpdateStatus(pool, sdk.Unbonded)
+	val, pool = val.UpdateStatus(pool, sdk.Bonded)
 	assert.Equal(t, int64(100), val.PoolShares.Bonded().Evaluate())
 	assert.Equal(t, int64(0), val.PoolShares.Unbonding().Evaluate())
 	assert.Equal(t, int64(0), val.PoolShares.Unbonded().Evaluate())
@@ -329,7 +328,6 @@ func TestPossibleOverflow(t *testing.T) {
 		DelegatorShares: delShares,
 	}
 	pool := Pool{
-		TotalSupply:       0,
 		BondedShares:      poolShares,
 		UnbondedShares:    sdk.ZeroRat(),
 		BondedTokens:      poolShares.Evaluate(),

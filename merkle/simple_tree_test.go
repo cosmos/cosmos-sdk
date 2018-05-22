@@ -7,6 +7,7 @@ import (
 	. "github.com/tendermint/tmlibs/test"
 
 	"testing"
+	"github.com/tendermint/go-crypto/tmhash"
 )
 
 type testItem []byte
@@ -21,7 +22,7 @@ func TestSimpleProof(t *testing.T) {
 
 	items := make([]Hasher, total)
 	for i := 0; i < total; i++ {
-		items[i] = testItem(cmn.RandBytes(32))
+		items[i] = testItem(cmn.RandBytes(tmhash.Size))
 	}
 
 	rootHash := SimpleHashFromHashers(items)

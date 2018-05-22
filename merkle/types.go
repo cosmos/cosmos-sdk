@@ -5,6 +5,7 @@ import (
 	"io"
 )
 
+// Tree is a Merkle tree interface.
 type Tree interface {
 	Size() (size int)
 	Height() (height int8)
@@ -23,6 +24,7 @@ type Tree interface {
 	IterateRange(start []byte, end []byte, ascending bool, fx func(key []byte, value []byte) (stop bool)) (stopped bool)
 }
 
+// Hasher represents a hashable piece of data which can be hashed in the Tree.
 type Hasher interface {
 	Hash() []byte
 }

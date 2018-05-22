@@ -5,7 +5,7 @@ import (
 	"hash"
 )
 
-var (
+const (
 	Size      = 20
 	BlockSize = sha256.BlockSize
 )

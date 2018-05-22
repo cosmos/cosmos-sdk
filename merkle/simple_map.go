@@ -2,7 +2,7 @@ package merkle
 
 import (
 	cmn "github.com/tendermint/tmlibs/common"
-	"golang.org/x/crypto/ripemd160"
+	"github.com/tendermint/go-crypto/tmhash"
 )
 
 type SimpleMap struct {
@@ -63,7 +63,7 @@ func (sm *SimpleMap) KVPairs() cmn.KVPairs {
 type KVPair cmn.KVPair
 
 func (kv KVPair) Hash() []byte {
-	hasher := ripemd160.New()
+	hasher := tmhash.New()
 	err := encodeByteSlice(hasher, kv.Key)
 	if err != nil {
 		panic(err)

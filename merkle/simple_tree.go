@@ -25,11 +25,11 @@ For larger datasets, use IAVLTree.
 package merkle
 
 import (
-	"golang.org/x/crypto/ripemd160"
+	"github.com/tendermint/go-crypto/tmhash"
 )
 
 func SimpleHashFromTwoHashes(left []byte, right []byte) []byte {
-	var hasher = ripemd160.New()
+	var hasher = tmhash.New()
 	err := encodeByteSlice(hasher, left)
 	if err != nil {
 		panic(err)
@@ -68,7 +68,7 @@ func SimpleHashFromByteslices(bzs [][]byte) []byte {
 }
 
 func SimpleHashFromBytes(bz []byte) []byte {
-	hasher := ripemd160.New()
+	hasher := tmhash.New()
 	hasher.Write(bz)
 	return hasher.Sum(nil)
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.18.1
+
+BUG FIXES
+* auto-sequencing transactions correctly
+* query sequence via account store
+
 ## 0.18.0 
 
 *TBD*

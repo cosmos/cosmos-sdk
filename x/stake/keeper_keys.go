@@ -13,15 +13,16 @@ import (
 //nolint
 var (
 	// Keys for store prefixes
-	ParamKey             = []byte{0x00} // key for parameters relating to staking
-	PoolKey              = []byte{0x01} // key for the staking pools
-	ValidatorsKey        = []byte{0x02} // prefix for each key to a validator
-	ValidatorsBondedKey  = []byte{0x03} // prefix for each key to bonded/actively validating validators
-	ValidatorsByPowerKey = []byte{0x04} // prefix for each key to a validator sorted by power
-	ValidatorCliffKey    = []byte{0x05} // key for block-local tx index
-	TendermintUpdatesKey = []byte{0x06} // prefix for each key to a validator which is being updated
-	DelegationKey        = []byte{0x07} // prefix for each key to a delegator's bond
-	IntraTxCounterKey    = []byte{0x08} // key for block-local tx index
+	ParamKey               = []byte{0x00} // key for parameters relating to staking
+	PoolKey                = []byte{0x01} // key for the staking pools
+	ValidatorsKey          = []byte{0x02} // prefix for each key to a validator
+	ValidatorsBondedKey    = []byte{0x03} // prefix for each key to bonded/actively validating validators
+	ValidatorsByPowerKey   = []byte{0x04} // prefix for each key to a validator sorted by power
+	ValidatorCliffKey      = []byte{0x05} // key for block-local tx index
+	ValidatorPowerCliffKey = []byte{0x06} // key for block-local tx index
+	TendermintUpdatesKey   = []byte{0x07} // prefix for each key to a validator which is being updated
+	DelegationKey          = []byte{0x08} // prefix for each key to a delegator's bond
+	IntraTxCounterKey      = []byte{0x09} // key for block-local tx index
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch

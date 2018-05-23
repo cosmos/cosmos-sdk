@@ -85,7 +85,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	}
 	index := height % SignedBlocksWindow
 	address := pubkey.Address()
-	signInfo := k.getValidatorSigningInfo(ctx, address)
+	signInfo, _ := k.getValidatorSigningInfo(ctx, address)
 	previous := k.getValidatorSigningBitArray(ctx, address, index)
 	if previous && !signed {
 		k.setValidatorSigningBitArray(ctx, address, index, false)
@@ -106,10 +106,15 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	}
 }
 
-func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.Address) (info validatorSigningInfo) {
+func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.Address) (info validatorSigningInfo, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(validatorSigningInfoKey(address))
-	k.cdc.MustUnmarshalBinary(bz, &info)
+	if bz == nil {
+		found = false
+	} else {
+		k.cdc.MustUnmarshalBinary(bz, &info)
+		found = true
+	}
 	return
 }
 
@@ -122,7 +127,12 @@ func (k Keeper) setValidatorSigningInfo(ctx sdk.Context, address sdk.Address, in
 func (k Keeper) getValidatorSigningBitArray(ctx sdk.Context, address sdk.Address, index int64) (signed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(validatorSigningBitArrayKey(address, index))
-	k.cdc.MustUnmarshalBinary(bz, &signed)
+	if bz == nil {
+		// lazy: treat empty key as unsigned
+		signed = false
+	} else {
+		k.cdc.MustUnmarshalBinary(bz, &signed)
+	}
 	return
 }
 

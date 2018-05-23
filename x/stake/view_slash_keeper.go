@@ -17,13 +17,13 @@ func NewViewSlashKeeper(k Keeper) ViewSlashKeeper {
 }
 
 // load a delegator bond
-func (v ViewSlashKeeper) GetDelegatorBond(ctx sdk.Context,
-	delegatorAddr, candidateAddr sdk.Address) (bond DelegatorBond, found bool) {
-	return v.keeper.GetDelegatorBond(ctx, delegatorAddr, candidateAddr)
+func (v ViewSlashKeeper) GetDelegation(ctx sdk.Context,
+	delegatorAddr, validatorAddr sdk.Address) (bond Delegation, found bool) {
+	return v.keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
 }
 
 // load n delegator bonds
-func (v ViewSlashKeeper) GetDelegatorBonds(ctx sdk.Context,
-	delegator sdk.Address, maxRetrieve int16) (bonds []DelegatorBond) {
-	return v.keeper.GetDelegatorBonds(ctx, delegator, maxRetrieve)
+func (v ViewSlashKeeper) GetDelegations(ctx sdk.Context,
+	delegator sdk.Address, maxRetrieve int16) (bonds []Delegation) {
+	return v.keeper.GetDelegations(ctx, delegator, maxRetrieve)
 }

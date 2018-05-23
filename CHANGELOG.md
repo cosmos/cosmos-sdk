@@ -10,6 +10,24 @@ BUG FIXES
 
 *TBD*
 
+BREAKING CHANGES
+
+* [stake] candidate -> validator throughout (details in refactor comment)
+* [stake] delegate-bond -> delegation throughout
+* [stake] `gaiacli query validator` takes and argument instead of using the `--address-candidate` flag
+* [stake] introduce `gaiacli query delegations` 
+* [stake] staking refactor
+  * ValidatorsBonded store now take sorted pubKey-address instead of validator owner-address, 
+    is sorted like Tendermint by pk's address
+  * store names more understandable
+  * removed temporary ToKick store, just needs a local map! 
+  * removed distinction between candidates and validators
+    * everything is now a validator
+    * only validators with a status == bonded are actively validating/receiving rewards
+  * Introduction of Unbonding fields, lowlevel logic throughout (not fully implemented with queue)
+  * Introduction of PoolShares type within validators, 
+    replaces three rational fields (BondedShares, UnbondingShares, UnbondedShares
+
 FEATURES
 
 * [x/auth] Added ability to change pubkey to auth module
@@ -18,6 +36,17 @@ FEATURES
   * Transactions which run out of gas stop execution and revert state changes
   * A "simulate" query has been added to determine how much gas a transaction will need
   * Modules can include their own gas costs for execution of particular message types
+* [stake] Seperation of fee distribution to a new module
+* [stake] Creation of a validator/delegation generics in `/types`
+* [stake] Helper Description of the store in x/stake/store.md
+* [stake] removed use of caches in the stake keeper
+
+BUG FIXES 
+
+* Auto-sequencing now works correctly
+* [stake] staking delegator shares exchange rate now relative to equivalent-bonded-tokens the validator has instead of bonded tokens
+  ^ this is important for unbonded validators in the power store!
+
 
 ## 0.17.2
 
@@ -34,6 +63,7 @@ Update to Tendermint v0.19.4 (fixes a consensus bug and improves logging)
 BREAKING CHANGES
 
 * [stake] MarshalJSON -> MarshalBinary
+* Queries against the store must be prefixed with the path "/store"
 
 FEATURES
 
@@ -71,7 +101,6 @@ BREAKING CHANGES
 * gaiad init now requires use of `--name` flag 
 * Removed Get from Msg interface
 * types/rational now extends big.Rat
-* Queries against the store must be prefixed with the path "/store"
 
 FEATURES:
 

@@ -22,7 +22,7 @@ var (
 func TestMsgDeclareCandidacy(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, details string
-		candidateAddr                             sdk.Address
+		validatorAddr                             sdk.Address
 		pubkey                                    crypto.PubKey
 		bond                                      sdk.Coin
 		expectPass                                bool
@@ -40,7 +40,7 @@ func TestMsgDeclareCandidacy(t *testing.T) {
 
 	for _, tc := range tests {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
-		msg := NewMsgDeclareCandidacy(tc.candidateAddr, tc.pubkey, tc.bond, description)
+		msg := NewMsgDeclareCandidacy(tc.validatorAddr, tc.pubkey, tc.bond, description)
 		if tc.expectPass {
 			assert.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
@@ -53,7 +53,7 @@ func TestMsgDeclareCandidacy(t *testing.T) {
 func TestMsgEditCandidacy(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, details string
-		candidateAddr                             sdk.Address
+		validatorAddr                             sdk.Address
 		expectPass                                bool
 	}{
 		{"basic good", "a", "b", "c", "d", addrs[0], true},
@@ -64,7 +64,7 @@ func TestMsgEditCandidacy(t *testing.T) {
 
 	for _, tc := range tests {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
-		msg := NewMsgEditCandidacy(tc.candidateAddr, description)
+		msg := NewMsgEditCandidacy(tc.validatorAddr, description)
 		if tc.expectPass {
 			assert.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
@@ -78,21 +78,21 @@ func TestMsgDelegate(t *testing.T) {
 	tests := []struct {
 		name          string
 		delegatorAddr sdk.Address
-		candidateAddr sdk.Address
+		validatorAddr sdk.Address
 		bond          sdk.Coin
 		expectPass    bool
 	}{
 		{"basic good", addrs[0], addrs[1], coinPos, true},
 		{"self bond", addrs[0], addrs[0], coinPos, true},
 		{"empty delegator", emptyAddr, addrs[0], coinPos, false},
-		{"empty candidate", addrs[0], emptyAddr, coinPos, false},
+		{"empty validator", addrs[0], emptyAddr, coinPos, false},
 		{"empty bond", addrs[0], addrs[1], coinZero, false},
 		{"negative bond", addrs[0], addrs[1], coinNeg, false},
 		{"wrong staking token", addrs[0], addrs[1], coinPosNotAtoms, false},
 	}
 
 	for _, tc := range tests {
-		msg := NewMsgDelegate(tc.delegatorAddr, tc.candidateAddr, tc.bond)
+		msg := NewMsgDelegate(tc.delegatorAddr, tc.validatorAddr, tc.bond)
 		if tc.expectPass {
 			assert.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
@@ -106,7 +106,7 @@ func TestMsgUnbond(t *testing.T) {
 	tests := []struct {
 		name          string
 		delegatorAddr sdk.Address
-		candidateAddr sdk.Address
+		validatorAddr sdk.Address
 		shares        string
 		expectPass    bool
 	}{
@@ -116,11 +116,11 @@ func TestMsgUnbond(t *testing.T) {
 		{"zero unbond", addrs[0], addrs[1], "0.0", false},
 		{"invalid decimal", addrs[0], addrs[0], "sunny", false},
 		{"empty delegator", emptyAddr, addrs[0], "0.1", false},
-		{"empty candidate", addrs[0], emptyAddr, "0.1", false},
+		{"empty validator", addrs[0], emptyAddr, "0.1", false},
 	}
 
 	for _, tc := range tests {
-		msg := NewMsgUnbond(tc.delegatorAddr, tc.candidateAddr, tc.shares)
+		msg := NewMsgUnbond(tc.delegatorAddr, tc.validatorAddr, tc.shares)
 		if tc.expectPass {
 			assert.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {

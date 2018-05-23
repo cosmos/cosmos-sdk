@@ -216,7 +216,7 @@ unlike Bitcoin's use of Unspent Transaction Outputs (UTXOs).
 
 ```
 type BaseAccount struct {
-	Address  sdk.Address   `json:"address"`
+  Address  sdk.Address   `json:"address"`
   Coins    sdk.Coins     `json:"coins"`
   PubKey   crypto.PubKey `json:"public_key"`
   Sequence int64         `json:"sequence"`

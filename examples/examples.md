@@ -1,6 +1,6 @@
 # Basecoin Example
 
-Here we explain how to get started with a basic Basecoin blockchain, how
+Here we explain how to get started with a simple Basecoin blockchain, how
 to send transactions between accounts using the ``basecli`` tool, and
 what is happening under the hood.
 
@@ -38,7 +38,7 @@ basecli version
 basecoind version
 ```
 
-They should read something like `0.17.1-5d18d5f`, but the versions will be constantly updating so don't worry if your version is higher that 0.17.1.
+They should read something like `0.17.1-5d18d5f`, but the versions will be constantly updating so don't worry if your version is higher that 0.17.1. That's a good thing.
 
 Note that you can always check help in the terminal by running `basecli -h` or `basecoind -h`. It is good to check these out if you are stuck, because updates to the code base might slighty change the commands, and you might find the correct command in there. 
 
@@ -79,15 +79,15 @@ Repeat the passphrase:
 Enter your recovery seed phrase:
 ```
 
-You just created your first locally stored key, under the name alice, and this account is linked to the private key that is running the basecoind validator node. Once you do this, the  ~/.basecli folder is created, which will hold all keys you are storing. Now that you have the key for alice, you can start up the blockchain by running 
+You just created your first locally stored key, under the name alice, and this account is linked to the private key that is running the basecoind validator node. Once you do this, the  ~/.basecli folder is created, which will hold the alice key and any other keys you make. Now that you have the key for alice, you can start up the blockchain by running 
 
 ```
 basecoind start
 ```
 
-You should see blocks start getting created at a fast rate, with a lot of output in the terminal.
+You should see blocks being created at a fast rate, with a lot of output in the terminal.
 
-Next we need to make some more keys so we can send them some tokens. Open a new terminal, and run the following commands, to make two new accounts, and give each account a password you can remember:
+Next we need to make some more keys so we can use the send transaction functionality of basecoin. Open a new terminal, and run the following commands, to make two new accounts, and give each account a password you can remember:
 
 ```
 basecli keys add bob
@@ -105,7 +105,7 @@ You should now see alice, bob and charlie's account all show up.
 ```
 NAME:	ADDRESS:					                PUBKEY:
 alice   90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD	1624DE62201D47E63694448665F5D0217EA8458177728C91C373047A42BD3C0FB78BD0BFA7
-bob   29D721F054537C91F618A0FDBF770DA51EF8C48D	1624DE6220F54B2A2CA9EB4EE30DE23A73D15902E087C09CC5616456DDDD3814769E2E0A16
+bob     29D721F054537C91F618A0FDBF770DA51EF8C48D	1624DE6220F54B2A2CA9EB4EE30DE23A73D15902E087C09CC5616456DDDD3814769E2E0A16
 charlie 2E8E13EEB8E3F0411ACCBC9BE0384732C24FBD5E	1624DE6220F8C9FB8B07855FD94126F88A155BD6EB973509AE5595EFDE1AF05B4964836A53
 ```
 
@@ -128,10 +128,10 @@ basecli send --name=alice --amount=10000mycoin --to=29D721F054537C91F618A0FDBF77
 ```
 
 Flag Descriptions: 
-- name is the name you gave your key
+- `name` is the name you gave your key
 - `mycoin` is the name of the token for this basecoin demo, initialized in the genesis.json file
-- sequence is a tally of how many transactions have been made by this account. Sicne this is the first tx on this account, it is 0
-- chain-id is the unique ID that helps tendermint identify which network to connect to. You can find it in the terminal output from the gaiad daemon in the header block , or in the genesis.json file  at `~/.basecoind/config/gensis.json`
+- `sequence` is a tally of how many transactions have been made by this account. Sicne this is the first tx on this account, it is 0
+- `chain-id` is the unique ID that helps tendermint identify which network to connect to. You can find it in the terminal output from the gaiad daemon in the header block , or in the genesis.json file  at `~/.basecoind/config/gensis.json`
 
 Now if we check bobs account, it should have `10000 mycoin`. You can do so by running :
 
@@ -151,25 +151,28 @@ Note how we use the ``--name`` flag to select a different account to send from.
 Lets now try to send from bob back to alice:
 
 ```
-basecli send --name=bob --amount=3000mycoin --to=90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD --sequence=1 --chain-id=test-chain-AE4XQo
+basecli send --name=bob --amount=3000mycoin --to=90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD 
+--sequence=1 --chain-id=test-chain-AE4XQo
 ```
 
-Notice that the sequence is now 1, since we have already recorded bobs 1st transaction as sequnce 0. Also note the ``hash`` value in the response  in the terminal - this is the hash of the transaction. We can query for the transaction with this command:
+Notice that the sequence is now 1, since we have already recorded bobs 1st transaction as `sequnce 0`. Also note the ``hash`` value in the response  in the terminal - this is the hash of the transaction. We can query for the transaction with this command:
 
 ```
 basecli tx <INSERT HASH HERE>
 ```
 
-It will return the details of the transaction hash, such as how many coins were send and to which address, and on what block it occured
+It will return the details of the transaction hash, such as how many coins were send and to which address, and on what block it occured.
 
 That is the basic implementation of basecoin!
 
 
-## Clean up the basecoind and basecli data
+## Reset the basecoind blockchain and basecli data
 
 **WARNING:** Running these commands will wipe out any existing
 information in both the ``~/.basecli`` and ``~/.basecoind`` directories,
-including private keys.
+including private keys. This should be no problem considering that basecoin
+is just an example, but it is always good to pay extra attention when 
+you are removing private keys, in any scenario involving a blockchain. 
 
 To remove all the files created and refresh your environment (e.g., if
 starting this tutorial again or trying something new), the following
@@ -201,7 +204,7 @@ even a lying full node can't trick your client.
 ## Accounts and Transactions
 
 For a better understanding of how to further use the tools, it helps to
-understand the underlying data structures.
+understand the underlying data structures, so lets look at accounts and transactions.
 
 ### Accounts
 
@@ -222,7 +225,8 @@ type BaseAccount struct {
 
 You can also add more fields to accounts, and basecoin actually does so. Basecoin
 adds a Name field in order to show how easily the base account structure can be
-modified to suit any applications needs. 
+modified to suit any applications needs. It takes the `auth.BaseAccount` we see above, 
+and extends it with `Name`.
 
 ```
 type AppAccount struct {

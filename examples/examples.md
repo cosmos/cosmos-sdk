@@ -157,7 +157,7 @@ basecli send --name=bob --amount=3000mycoin --to=90B0B9BE0914ECEE0B6DB74E67B07A0
 Notice that the sequence is now 1, since we have already recorded bobs 1st transaction as sequnce 0. Also note the ``hash`` value in the response  in the terminal - this is the hash of the transaction. We can query for the transaction with this command:
 
 ```
-basecli tx <HASH>
+basecli tx <INSERT HASH HERE>
 ```
 
 It will return the details of the transaction hash, such as how many coins were send and to which address, and on what block it occured
@@ -181,7 +181,7 @@ rm -rf ~/.basecoind
 rm -rf ~/.basecli
 ```
 
-# Technical Details on how Basecoin Works
+## Technical Details on how Basecoin Works
 
 This section describes some of the more technical aspects for what is going on under the hood of Basecoin.
 
@@ -212,12 +212,12 @@ type of account was directly inspired by accounts in Ethereum, and is
 unlike Bitcoin's use of Unspent Transaction Outputs (UTXOs). 
 
 ```
-    type BaseAccount struct {
-	      Address  sdk.Address   `json:"address"`
-	      Coins    sdk.Coins     `json:"coins"`
-	      PubKey   crypto.PubKey `json:"public_key"`
-	      Sequence int64         `json:"sequence"`
-    }
+type BaseAccount struct {
+	Address  sdk.Address   `json:"address"`
+  Coins    sdk.Coins     `json:"coins"`
+  PubKey   crypto.PubKey `json:"public_key"`
+  Sequence int64         `json:"sequence"`
+}
 ```
 
 You can also add more fields to accounts, and basecoin actually does so. Basecoin
@@ -225,22 +225,22 @@ adds a Name field in order to show how easily the base account structure can be
 modified to suit any applications needs. 
 
 ```
-    type AppAccount struct {
-      auth.BaseAccount
-      Name string `json:"name"`
-    }
+type AppAccount struct {
+  auth.BaseAccount
+  Name string `json:"name"`
+}
 ```
 
 Within accounts, coin balances are stored. Basecoin is a multi-asset cryptocurrency, so each account can have many
 different kinds of tokens, which are held in an array.  
 
 ```
-    type Coins []Coin
+type Coins []Coin
 
-    type Coin struct {
-        Denom  string `json:"denom"`
-        Amount int64  `json:"amount"`
-    }
+type Coin struct {
+  Denom  string `json:"denom"`
+  Amount int64  `json:"amount"`
+}
 ```
 
 If you want to add more coins to a blockchain, you can do so manually in
@@ -264,25 +264,25 @@ a list of outputs, and transfers all the tokens listed in the inputs
 from their corresponding accounts to the accounts listed in the output.
 The `SendTx` is structured as follows:
 ```
-    type SendTx struct {
-      Gas     int64      `json:"gas"`
-      Fee     Coin       `json:"fee"`
-      Inputs  []TxInput  `json:"inputs"`
-      Outputs []TxOutput `json:"outputs"`
-    }
+type SendTx struct {
+  Gas     int64      `json:"gas"`
+  Fee     Coin       `json:"fee"`
+  Inputs  []TxInput  `json:"inputs"`
+  Outputs []TxOutput `json:"outputs"`
+}
 
-    type TxInput struct {
-      Address   []byte           `json:"address"`   // Hash of the PubKey
-      Coins     Coins            `json:"coins"`     //
-      Sequence  int              `json:"sequence"`  // Must be 1 greater than the last committed TxInput
-      Signature crypto.Signature `json:"signature"` // Depends on the PubKey type and the whole Tx
-      PubKey    crypto.PubKey    `json:"pub_key"`   // Is present iff Sequence == 0
-    }
+type TxInput struct {
+  Address   []byte           `json:"address"`   // Hash of the PubKey
+  Coins     Coins            `json:"coins"`     //
+  Sequence  int              `json:"sequence"`  // Must be 1 greater than the last committed TxInput
+  Signature crypto.Signature `json:"signature"` // Depends on the PubKey type and the whole Tx
+  PubKey    crypto.PubKey    `json:"pub_key"`   // Is present iff Sequence == 0
+}
 
-    type TxOutput struct {
-      Address []byte `json:"address"` // Hash of the PubKey
-      Coins   Coins  `json:"coins"`   //
-    }
+type TxOutput struct {
+  Address []byte `json:"address"` // Hash of the PubKey
+  Coins   Coins  `json:"coins"`   //
+}
 ```
 Note the `SendTx` includes a field for `Gas` and `Fee`. The
 `Gas` limits the total amount of computation that can be done by the

@@ -31,8 +31,8 @@ tick(ctx Context):
     
     if time > unbondDelegationQueue.head().InitTime + UnbondingPeriod 
         for each element elem in the unbondDelegationQueue where time > elem.InitTime + UnbondingPeriod do
-    	    transfer(unbondingQueueAddress, elem.Payout, elem.Tokens)
-    	    unbondDelegationQueue.remove(elem)
+          transfer(unbondingQueueAddress, elem.Payout, elem.Tokens)
+          unbondDelegationQueue.remove(elem)
     
     if time > reDelegationQueue.head().InitTime + UnbondingPeriod 
         for each element elem in the unbondDelegationQueue where time > elem.InitTime + UnbondingPeriod do
@@ -55,9 +55,9 @@ nextInflation(hrsPerYr rational.Rat):
 
     inflation = gs.Inflation + inflationRateChange
     if inflation > params.InflationMax then inflation = params.InflationMax
-	
+  
     if inflation < params.InflationMin then inflation = params.InflationMin
-	
+  
     return inflation 
 
 UpdateValidatorSet():
@@ -71,26 +71,26 @@ UpdateValidatorSet():
 
 updateVotingPower(candidates Candidates):
     foreach candidate in candidates do
-	    candidate.VotingPower = (candidate.IssuedDelegatorShares - candidate.RedelegatingShares) * delegatorShareExRate(candidate)	
-	    
+      candidate.VotingPower = (candidate.IssuedDelegatorShares - candidate.RedelegatingShares) * DelegatorShareExRate(candidate)  
+      
     candidates.Sort()
-	
+  
     foreach candidate in candidates do
-	    if candidate is not in the first params.MaxVals  
-	        candidate.VotingPower = rational.Zero
-	        if candidate.Status == Bonded then bondedToUnbondedPool(candidate Candidate)
-		
-	    else if candidate.Status == UnBonded then unbondedToBondedPool(candidate)
+      if candidate is not in the first params.MaxVals  
+          candidate.VotingPower = rational.Zero
+          if candidate.Status == Bonded then bondedToUnbondedPool(candidate Candidate)
+    
+      else if candidate.Status == UnBonded then unbondedToBondedPool(candidate)
                       
-	saveCandidate(store, c)
-	
+  saveCandidate(store, c)
+  
     return candidates
 
 unbondedToBondedPool(candidate Candidate):
     removedTokens = exchangeRate(gs.UnbondedShares, gs.UnbondedPool) * candidate.GlobalStakeShares 
     gs.UnbondedShares -= candidate.GlobalStakeShares
     gs.UnbondedPool -= removedTokens
-	
+  
     gs.BondedPool += removedTokens
     issuedShares = removedTokens / exchangeRate(gs.BondedShares, gs.BondedPool)
     gs.BondedShares += issuedShares
@@ -155,16 +155,17 @@ The following information is stored with each validator candidate, and is only n
 
 ```go
 type ValidatorSigningInfo struct {
-	StartHeight				int64
-	SignedBlocksBitArray	BitArray
+  StartHeight           int64
+  SignedBlocksBitArray  BitArray
+  SignedBlocksCounter   int64
 }
 ```
 
 Where:
 * `StartHeight` is set to the height that the candidate became an active validator (with non-zero voting power).
 * `SignedBlocksBitArray` is a bit-array of size `SIGNED_BLOCKS_WINDOW` that records, for each of the last `SIGNED_BLOCKS_WINDOW` blocks,
-whether or not this validator was included in the LastCommit. It uses a `0` if the validator was included, and a `1` if it was not.
-Note it is initialized with all 0s. 
+whether or not this validator was included in the LastCommit. It uses a `1` if the validator was included, and a `0` if it was not. Note it is initialized with all 0s. 
+* `SignedBlocksCounter` is a counter kept to avoid unnecessary array reads. `SignedBlocksBitArray.Sum() == SignedBlocksCounter` always.
 
 At the beginning of each block, we update the signing info for each validator and check if they should be automatically unbonded:
 
@@ -173,18 +174,23 @@ h = block.Height
 index = h % SIGNED_BLOCKS_WINDOW
 
 for val in block.Validators:
-	signInfo = val.SignInfo
-	if val in block.LastCommit:
-		signInfo.SignedBlocksBitArray.Set(index, 0)
-	else 
-		signInfo.SignedBlocksBitArray.Set(index, 1)
+  signInfo = val.SignInfo
+  previous = signInfo.SignedBlocksBitArray.Get(index)
 
-	// validator must be active for at least SIGNED_BLOCKS_WINDOW
-	// before they can be automatically unbonded for failing to be 
-	// included in 50% of the recent LastCommits
-	minHeight = signInfo.StartHeight + SIGNED_BLOCKS_WINDOW
-	minSigned = SIGNED_BLOCKS_WINDOW / 2
-	blocksSigned = signInfo.SignedBlocksBitArray.Sum() 
-	if h > minHeight AND blocksSigned < minSigned:
-		unbond the validator
+  // update counter if array has changed
+  if previous and val in block.AbsentValidators:
+    signInfo.SignedBlocksBitArray.Set(index, 0)
+    signInfo.SignedBlocksCounter--
+  else if !previous and val not in block.AbsentValidators:
+    signInfo.SignedBlocksBitArray.Set(index, 1)
+    signInfo.SignedBlocksCounter++
+  // else previous == val not in block.AbsentValidators, no change
+
+  // validator must be active for at least SIGNED_BLOCKS_WINDOW
+  // before they can be automatically unbonded for failing to be 
+  // included in 50% of the recent LastCommits
+  minHeight = signInfo.StartHeight + SIGNED_BLOCKS_WINDOW
+  minSigned = SIGNED_BLOCKS_WINDOW / 2
+  if h > minHeight AND signInfo.SignedBlocksCounter < minSigned:
+    unbond the validator
 ```

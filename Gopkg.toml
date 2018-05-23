@@ -52,9 +52,9 @@
   name = "github.com/stretchr/testify"
   version = "~1.2.1"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/abci"
-  version = "~0.10.3"
+  branch = "cwgoes/timestamp-in-evidence"
 
 [[constraint]]
   name = "github.com/tendermint/go-crypto"
@@ -70,11 +70,11 @@
 
 [[constraint]]
   name = "github.com/tendermint/iavl"
-  version = "~0.7.0"
+  branch = "develop"
 
 [[constraint]]
   name = "github.com/tendermint/tendermint"
-  version = "0.19.5-rc1"
+  branch = "cwgoes/update-abci"
 
 [[override]]
   name = "github.com/tendermint/tmlibs"
@@ -88,4 +88,3 @@
 [prune]
   go-tests = true
   unused-packages = true
-

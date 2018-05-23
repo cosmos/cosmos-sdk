@@ -253,6 +253,7 @@
   revision = "e6d6b529196422703d54ff5c40e79809ec2020b3"
 
 [[projects]]
+  branch = "cwgoes/timestamp-in-evidence"
   name = "github.com/tendermint/abci"
   packages = [
     "client",
@@ -261,8 +262,7 @@
     "server",
     "types"
   ]
-  revision = "78a8905690ef54f9d57e3b2b0ee7ad3a04ef3f1f"
-  version = "v0.10.3"
+  revision = "e196dacf804e3a4ab74252c27e99cb17b39bf501"
 
 [[projects]]
   branch = "master"
@@ -293,18 +293,16 @@
   version = "v0.6.2"
 
 [[projects]]
-  name = "github.com/tendermint/go-wire"
-  packages = ["."]
-  revision = "fa721242b042ecd4c6ed1a934ee740db4f74e45c"
-  version = "v0.7.3"
-
-[[projects]]
+  branch = "develop"
   name = "github.com/tendermint/iavl"
-  packages = ["."]
-  revision = "fd37a0fa3a7454423233bc3d5ea828f38e0af787"
-  version = "v0.7.0"
+  packages = [
+    ".",
+    "sha256truncated"
+  ]
+  revision = "9b6f9c3f49d599cfcf43f1a56c3c22882d1f9f21"
 
 [[projects]]
+  branch = "cwgoes/update-abci"
   name = "github.com/tendermint/tendermint"
   packages = [
     "blockchain",
@@ -313,6 +311,9 @@
     "consensus",
     "consensus/types",
     "evidence",
+    "libs/events",
+    "libs/pubsub",
+    "libs/pubsub/query",
     "lite",
     "lite/client",
     "lite/errors",
@@ -341,8 +342,7 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "018e096748bafe1d2d1e69b909e4158f3b26f6b2"
-  version = "v0.19.5-rc1"
+  revision = "d3093426f455c4b33cee818e3bbf2d2b83e4b38d"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -355,9 +355,7 @@
     "db",
     "flowrate",
     "log",
-    "merkle",
-    "pubsub",
-    "pubsub/query"
+    "merkle"
   ]
   revision = "cc5f287c4798ffe88c04d02df219ecb6932080fd"
   version = "v0.8.3-rc0"
@@ -457,6 +455,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7540d2ecdb5d7d5084ab4e6132e929bbd501bd6add3006d8f08a6b2c127e0c7d"
+  inputs-digest = "2bb789b91c383e3a861979c83e61f5f8fd71ea5661837c092353aaacf3091de1"
   solver-name = "gps-cdcl"
   solver-version = 1

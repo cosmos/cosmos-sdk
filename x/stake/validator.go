@@ -236,3 +236,9 @@ func (v Validator) GetOwner() sdk.Address     { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey  { return v.PubKey }
 func (v Validator) GetPower() sdk.Rat         { return v.PoolShares.Bonded() }
 func (v Validator) GetBondHeight() int64      { return v.BondHeight }
+func (v Validator) Slash(ctx sdk.Context, height int64, fraction sdk.Rat) {
+	panic("not implemented")
+}
+func (v Validator) ForceUnbond(ctx sdk.Context, jailDuration int64) {
+	panic("not implemented")
+}

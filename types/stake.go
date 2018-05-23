@@ -17,11 +17,14 @@ const (
 
 // validator for a delegated proof of stake system
 type Validator interface {
-	GetStatus() BondStatus    // status of the validator
-	GetOwner() Address        // owner address to receive/return validators coins
-	GetPubKey() crypto.PubKey // validation pubkey
-	GetPower() Rat            // validation power
-	GetBondHeight() int64     // height in which the validator became active
+	GetStatus() BondStatus     // status of the validator
+	GetOwner() Address         // owner address to receive/return validators coins
+	GetPubKey() crypto.PubKey  // validation pubkey
+	GetPower() Rat             // validation power
+	GetBondHeight() int64      // height in which the validator became active
+	Slash(Context, int64, Rat) // slash the validator and delegators of the validator
+	// for an offense at a specified height by a specified fraction
+	ForceUnbond(Context, int64) // force unbond the validator, including a duration which must pass before they can rebond
 }
 
 // validator which fulfills abci validator interface for use in Tendermint

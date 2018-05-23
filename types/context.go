@@ -30,7 +30,9 @@ type Context struct {
 }
 
 // create a new context
-func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byte, logger log.Logger) Context {
+func NewContext(ms MultiStore, header abci.Header, isCheckTx bool,
+	txBytes []byte, logger log.Logger, absentValidators [][]byte) Context {
+
 	c := Context{
 		Context: context.Background(),
 		pst:     newThePast(),
@@ -43,6 +45,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byt
 	c = c.WithIsCheckTx(isCheckTx)
 	c = c.WithTxBytes(txBytes)
 	c = c.WithLogger(logger)
+	c = c.WithAbsentValidators(absentValidators)
 	c = c.WithGasMeter(NewInfiniteGasMeter())
 	return c
 }
@@ -128,6 +131,7 @@ const (
 	contextKeyIsCheckTx
 	contextKeyTxBytes
 	contextKeyLogger
+	contextKeyAbsentValidators
 	contextKeyGasMeter
 )
 
@@ -157,6 +161,9 @@ func (c Context) TxBytes() []byte {
 func (c Context) Logger() log.Logger {
 	return c.Value(contextKeyLogger).(log.Logger)
 }
+func (c Context) AbsentValidators() [][]byte {
+	return c.Value(contextKeyAbsentValidators).([][]byte)
+}
 func (c Context) GasMeter() GasMeter {
 	return c.Value(contextKeyGasMeter).(GasMeter)
 }
@@ -181,6 +188,9 @@ func (c Context) WithTxBytes(txBytes []byte) Context {
 }
 func (c Context) WithLogger(logger log.Logger) Context {
 	return c.withValue(contextKeyLogger, logger)
+}
+func (c Context) WithAbsentValidators(AbsentValidators [][]byte) Context {
+	return c.withValue(contextKeyAbsentValidators, AbsentValidators)
 }
 func (c Context) WithGasMeter(meter GasMeter) Context {
 	return c.withValue(contextKeyGasMeter, meter)

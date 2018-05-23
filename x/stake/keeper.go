@@ -185,6 +185,9 @@ func (k Keeper) clearTendermintUpdates(ctx sdk.Context) {
 
 //___________________________________________________________________________
 
+// perfom all the nessisary steps for when a validator changes its power
+// updates all validator stores as well as tendermint update store
+// may kick out validators if new validator is entering the bonded validator group
 func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) Validator {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.getPool(store)
@@ -200,16 +203,8 @@ func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) Validator 
 	oldValidator, oldFound := k.GetValidator(ctx, ownerAddr)
 
 	powerIncreasing := false
-	if oldFound {
-		// if the voting power/status is the same no need to update any of the other indexes
-		// TODO will need to implement this to have regard for "unrevoke" transaction however
-		//      it shouldn't return here under that transaction
-		if oldValidator.Status() == validator.Status() &&
-			oldValidator.PoolShares.Equal(validator.PoolShares) {
-			return validator
-		} else if oldValidator.PoolShares.Bonded().LT(validator.PoolShares.Bonded()) {
-			powerIncreasing = true
-		}
+	if oldFound && oldValidator.PoolShares.Bonded().LT(validator.PoolShares.Bonded()) {
+		powerIncreasing = true
 	}
 
 	// if already a validator, copy the old block height and counter, else set them

@@ -80,6 +80,13 @@ func TestVectors(t *testing.T) {
 		if !bytes.Equal(dst, v.ciphertext) {
 			t.Errorf("Test %d: ciphertext mismatch:\n \t got:  %s\n \t want: %s", i, toHex(dst), toHex(v.ciphertext))
 		}
+		open, err := aead.Open(nil, nonce[:], dst, v.ad)
+		if err != nil {
+			t.Error(err)
+		}
+		if !bytes.Equal(open, v.plaintext) {
+			t.Errorf("Test %d: plaintext mismatch:\n \t got:  %s\n \t want: %s", i, string(open), string(v.plaintext))
+		}
 	}
 }
 

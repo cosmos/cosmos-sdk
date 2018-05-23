@@ -4,6 +4,7 @@ import (
 	"crypto/cipher"
 	"encoding/binary"
 	"errors"
+	"fmt"
 
 	"golang.org/x/crypto/chacha20poly1305"
 )
@@ -64,10 +65,10 @@ func (c *xchacha20poly1305) Seal(dst, nonce, plaintext, additionalData []byte) [
 
 func (c *xchacha20poly1305) Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error) {
 	if len(nonce) != NonceSize {
-		panic("xchacha20poly1305: bad nonce length passed to Open")
+		return nil, fmt.Errorf("xchacha20poly1305: bad nonce length passed to Open")
 	}
 	if uint64(len(ciphertext)) > (1<<38)-48 {
-		panic("xchacha20poly1305: ciphertext too large")
+		return nil, fmt.Errorf("xchacha20poly1305: ciphertext too large")
 	}
 	var subKey [KeySize]byte
 	var hNonce [16]byte

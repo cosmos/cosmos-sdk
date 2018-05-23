@@ -226,29 +226,22 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	// Add the coins
 	pool := k.GetPool(ctx)
 	validator, pool, returnAmount := validator.removeDelShares(pool, delShares)
+	k.setPool(ctx, pool)
 	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
 	k.coinKeeper.AddCoins(ctx, bond.DelegatorAddr, returnCoins)
 
 	/////////////////////////////////////
-
 	// revoke validator if necessary
 	if revokeCandidacy {
-
-		// change the share types to unbonded if they were not already
-		if validator.Status() == sdk.Bonded {
-			validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
-		}
-
 		validator.Revoked = true
 	}
 
-	// deduct shares from the validator
+	validator = k.updateValidator(ctx, validator)
+
 	if validator.DelegatorShares.IsZero() {
 		k.removeValidator(ctx, validator.Owner)
-	} else {
-		k.updateValidator(ctx, validator)
 	}
-	k.setPool(ctx, pool)
+
 	tags := sdk.NewTags("action", []byte("unbond"), "delegator", msg.DelegatorAddr.Bytes(), "validator", msg.ValidatorAddr.Bytes())
 	return sdk.Result{
 		Tags: tags,

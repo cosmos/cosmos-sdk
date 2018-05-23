@@ -202,6 +202,11 @@ func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) Validator 
 	// retreive the old validator record
 	oldValidator, oldFound := k.GetValidator(ctx, ownerAddr)
 
+	if validator.Revoked && oldValidator.Status() == sdk.Bonded {
+		validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
+		k.setPool(ctx, pool)
+	}
+
 	powerIncreasing := false
 	if oldFound && oldValidator.PoolShares.Bonded().LT(validator.PoolShares.Bonded()) {
 		powerIncreasing = true
@@ -227,7 +232,7 @@ func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) Validator 
 
 	// efficiency case:
 	// if already bonded and power increasing only need to update tendermint
-	if powerIncreasing && oldValidator.Status() == sdk.Bonded {
+	if powerIncreasing && !validator.Revoked && oldValidator.Status() == sdk.Bonded {
 		bz := k.cdc.MustMarshalBinary(validator.abciValidator(k.cdc))
 		store.Set(GetTendermintUpdatesKey(ownerAddr), bz)
 		return validator
@@ -274,13 +279,13 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore,
 	// add the actual validator power sorted store
 	maxValidators := k.GetParams(ctx).MaxValidators
 	iterator := store.ReverseSubspaceIterator(ValidatorsByPowerKey) // largest to smallest
-	i := 0
+	bondedValidatorsCount := 0
 	var validator Validator
-	for ; ; i++ {
-		if !iterator.Valid() || i > int(maxValidators-1) {
+	for {
+		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
 
 			// TODO benchmark if we should read the current power and not write if it's the same
-			if i-1 == int(maxValidators-1) {
+			if bondedValidatorsCount == int(maxValidators) { // is cliff validator
 				k.setCliffValidator(ctx, validator, k.GetPool(ctx))
 			}
 			iterator.Close()
@@ -313,6 +318,12 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore,
 			}
 		}
 
+		if validator.Revoked && validator.Status() == sdk.Bonded {
+			panic(fmt.Sprintf("revoked validator cannot be bonded, address: %v\n", ownerAddr))
+		} else {
+			bondedValidatorsCount++
+		}
+
 		iterator.Next()
 	}
 
@@ -342,12 +353,12 @@ func (k Keeper) updateBondedValidatorsFull(ctx sdk.Context, store sdk.KVStore) {
 	// add the actual validator power sorted store
 	maxValidators := k.GetParams(ctx).MaxValidators
 	iterator = store.ReverseSubspaceIterator(ValidatorsByPowerKey) // largest to smallest
-	i := 0
+	bondedValidatorsCount := 0
 	var validator Validator
-	for ; ; i++ {
-		if !iterator.Valid() || i > int(maxValidators-1) {
+	for {
+		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
 
-			if i-1 == int(maxValidators-1) {
+			if bondedValidatorsCount == int(maxValidators) { // is cliff validator
 				k.setCliffValidator(ctx, validator, k.GetPool(ctx))
 			}
 			iterator.Close()
@@ -374,6 +385,12 @@ func (k Keeper) updateBondedValidatorsFull(ctx sdk.Context, store sdk.KVStore) {
 			// this wasn't a previously a validator, therefor
 			// update the validator to enter the validator group
 			validator = k.bondValidator(ctx, store, validator)
+		}
+
+		if validator.Revoked && validator.Status() == sdk.Bonded {
+			panic(fmt.Sprintf("revoked validator cannot be bonded, address: %v\n", ownerAddr))
+		} else {
+			bondedValidatorsCount++
 		}
 
 		iterator.Next()

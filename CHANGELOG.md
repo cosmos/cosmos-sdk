@@ -40,6 +40,7 @@ FEATURES
 * [stake] Creation of a validator/delegation generics in `/types`
 * [stake] Helper Description of the store in x/stake/store.md
 * [stake] removed use of caches in the stake keeper
+* [Makefile] Added terraform/ansible playbooks to easily create remote testnets on Digital Ocean
 
 BUG FIXES 
 
@@ -57,6 +58,7 @@ Update to Tendermint v0.19.5 (reduce WAL use, bound the mempool and some rpcs, i
 ## 0.17.1 (May 17, 2018)
 
 Update to Tendermint v0.19.4 (fixes a consensus bug and improves logging)
+=======
 
 ## 0.17.0 (May 15, 2018)
 

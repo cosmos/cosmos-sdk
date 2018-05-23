@@ -1,6 +1,6 @@
 # Basecoin Example
 
-Here we explain how to get started with a simple Basecoin blockchain, how
+Here we explain how to get started with a basic Basecoin blockchain, how
 to send transactions between accounts using the ``basecli`` tool, and
 what is happening under the hood.
 
@@ -103,7 +103,7 @@ basecli keys list
 You should now see alice, bob and charlie's account all show up. 
 
 ```
-NAME:	ADDRESS:					                PUBKEY:
+NAME: 	ADDRESS:					                PUBKEY:
 alice   90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD	1624DE62201D47E63694448665F5D0217EA8458177728C91C373047A42BD3C0FB78BD0BFA7
 bob     29D721F054537C91F618A0FDBF770DA51EF8C48D	1624DE6220F54B2A2CA9EB4EE30DE23A73D15902E087C09CC5616456DDDD3814769E2E0A16
 charlie 2E8E13EEB8E3F0411ACCBC9BE0384732C24FBD5E	1624DE6220F8C9FB8B07855FD94126F88A155BD6EB973509AE5595EFDE1AF05B4964836A53
@@ -118,7 +118,7 @@ Lets send bob and charlie some tokens. First, lets query alice's account so we c
 basecli account 90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD
 ```
 
-Where `90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD` is alices address we got from running `basecli keys list`. You should see a large amount of "mycoin" there. If you search for bob's or charlie's address, the command will fail, because they haven't been added into the blockchain database yet since they have no coins. We need to send them some!
+Where `90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD` is alice's address we got from running `basecli keys list`. You should see a large amount of "mycoin" there. If you search for bob's or charlie's address, the command will fail, because they haven't been added into the blockchain database yet since they have no coins. We need to send them some!
 
 The following command will send coins from alice, to bob:
 
@@ -130,7 +130,7 @@ basecli send --name=alice --amount=10000mycoin --to=29D721F054537C91F618A0FDBF77
 Flag Descriptions: 
 - `name` is the name you gave your key
 - `mycoin` is the name of the token for this basecoin demo, initialized in the genesis.json file
-- `sequence` is a tally of how many transactions have been made by this account. Sicne this is the first tx on this account, it is 0
+- `sequence` is a tally of how many transactions have been made by this account. Since this is the first tx on this account, it is 0
 - `chain-id` is the unique ID that helps tendermint identify which network to connect to. You can find it in the terminal output from the gaiad daemon in the header block , or in the genesis.json file  at `~/.basecoind/config/gensis.json`
 
 Now if we check bobs account, it should have `10000 mycoin`. You can do so by running :
@@ -155,7 +155,7 @@ basecli send --name=bob --amount=3000mycoin --to=90B0B9BE0914ECEE0B6DB74E67B07A0
 --sequence=1 --chain-id=test-chain-AE4XQo
 ```
 
-Notice that the sequence is now 1, since we have already recorded bobs 1st transaction as `sequnce 0`. Also note the ``hash`` value in the response  in the terminal - this is the hash of the transaction. We can query for the transaction with this command:
+Notice that the sequence is now 1, since we have already recorded bobs 1st transaction as `sequence 0`. Also note the ``hash`` value in the response  in the terminal - this is the hash of the transaction. We can query for the transaction with this command:
 
 ```
 basecli tx <INSERT HASH HERE>

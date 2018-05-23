@@ -250,10 +250,10 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "e6d6b529196422703d54ff5c40e79809ec2020b3"
+  revision = "5d6fca44a948d2be89a9702de7717f0168403d3d"
 
 [[projects]]
-  branch = "cwgoes/timestamp-in-evidence"
+  branch = "develop"
   name = "github.com/tendermint/abci"
   packages = [
     "client",
@@ -262,7 +262,7 @@
     "server",
     "types"
   ]
-  revision = "e196dacf804e3a4ab74252c27e99cb17b39bf501"
+  revision = "f9dce537281ffba5d1e047e6729429f7e5fb90c9"
 
 [[projects]]
   branch = "master"
@@ -299,7 +299,7 @@
     ".",
     "sha256truncated"
   ]
-  revision = "9b6f9c3f49d599cfcf43f1a56c3c22882d1f9f21"
+  revision = "c9206995e8f948e99927f5084a88a7e94ca256da"
 
 [[projects]]
   branch = "cwgoes/update-abci"
@@ -357,8 +357,8 @@
     "log",
     "merkle"
   ]
-  revision = "cc5f287c4798ffe88c04d02df219ecb6932080fd"
-  version = "v0.8.3-rc0"
+  revision = "d970af87248a4e162590300dbb74e102183a417d"
+  version = "v0.8.3"
 
 [[projects]]
   branch = "master"
@@ -374,7 +374,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "1a580b3eff7814fc9b40602fd35256c63b50f491"
+  revision = "75e913eb8a8e3d31a97b216de09de106a7b07681"
 
 [[projects]]
   branch = "master"
@@ -388,13 +388,13 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "57065200b4b034a1c8ad54ff77069408c2218ae6"
+  revision = "9ef9f5bb98a1fdc41f8cf6c250a4404b4085e389"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "7c87d13f8e835d2fb3a70a2912c811ed0c1d241b"
+  revision = "77b0e4315053a57ed2962443614bdb28db152054"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -455,6 +455,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2bb789b91c383e3a861979c83e61f5f8fd71ea5661837c092353aaacf3091de1"
+  inputs-digest = "bbc0ee39f39cb296960a5fcb2a3916a4acc48ecbb675758ea1f61def44e994bb"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -54,29 +54,25 @@
 
 [[override]]
   name = "github.com/tendermint/abci"
-  branch = "cwgoes/timestamp-in-evidence"
+  branch = "develop"
 
 [[constraint]]
   name = "github.com/tendermint/go-crypto"
   version = "~0.6.2"
 
-[[override]]
-  name = "github.com/tendermint/go-wire"
-  version = "0.7.3"
-
 [[constraint]]
   name = "github.com/tendermint/go-amino"
   version = "~0.9.9"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/iavl"
   branch = "develop"
 
-[[constraint]]
+[[override]]
   name = "github.com/tendermint/tendermint"
   branch = "cwgoes/update-abci"
 
-[[override]]
+[[constraint]]
   name = "github.com/tendermint/tmlibs"
   version = "~0.8.3-rc0"
   
@@ -88,3 +84,4 @@
 [prune]
   go-tests = true
   unused-packages = true
+

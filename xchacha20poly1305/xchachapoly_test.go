@@ -55,6 +55,11 @@ var hChaCha20Vectors = []struct {
 		fromHex("000102030405060708090a0b0c0d0e0f1011121314151617"),
 		fromHex("51e3ff45a895675c4b33b46c64f4a9ace110d34df6a2ceab486372bacbd3eff6"),
 	},
+	{
+		fromHex("24f11cce8a1b3d61e441561a696c1c1b7e173d084fd4812425435a8896a013dc"),
+		fromHex("d9660c5900ae19ddad28d6e06e45fe5e"),
+		fromHex("5966b3eec3bff1189f831f06afe4d4e3be97fa9235ec8c20d08acfbbb4e851e3"),
+	},
 }
 
 func TestVectors(t *testing.T) {

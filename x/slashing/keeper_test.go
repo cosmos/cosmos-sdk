@@ -76,7 +76,10 @@ func TestHandleDoubleSign(t *testing.T) {
 	_ = sk.Tick(ctx)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins - amt}})
 	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
-	keeper.handleDoubleSign(ctx, 0, 0, val)
+	keeper.handleDoubleSign(ctx, 0, 0, val) // double sign less than max age
+	require.Equal(t, sdk.NewRat(amt).Mul(sdk.NewRat(19).Quo(sdk.NewRat(20))), sk.Validator(ctx, addr).GetPower())
+	ctx = ctx.WithBlockHeader(abci.Header{Time: 300})
+	keeper.handleDoubleSign(ctx, 0, 0, val) // double sign past max age
 	require.Equal(t, sdk.NewRat(amt).Mul(sdk.NewRat(19).Quo(sdk.NewRat(20))), sk.Validator(ctx, addr).GetPower())
 }
 

@@ -780,6 +780,7 @@ func (k Keeper) IterateDelegators(ctx sdk.Context, delAddr sdk.Address, fn func(
 // slash a validator
 func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, fraction sdk.Rat) {
 	// TODO height ignored for now, see https://github.com/cosmos/cosmos-sdk/pull/1011#issuecomment-390253957
+	logger := ctx.Logger().With("module", "x/stake")
 	val, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
 		panic(fmt.Errorf("Attempted to slash a nonexistent validator with pubkey %s", pubkey))
@@ -789,7 +790,7 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, fract
 	val, pool, burned := val.removePoolShares(pool, sharesToRemove)
 	k.setPool(ctx, pool)        // update the pool
 	k.updateValidator(ctx, val) // update the validator, possibly kicking it out
-	ctx.Logger().With("module", "x/stake").Info(fmt.Sprintf("Validator %v slashed by fraction %v, removed %v shares and burned %d tokens", pubkey, fraction, sharesToRemove, burned))
+	logger.Info(fmt.Sprintf("Validator %v slashed by fraction %v, removed %v shares and burned %d tokens", pubkey, fraction, sharesToRemove, burned))
 	return
 }
 

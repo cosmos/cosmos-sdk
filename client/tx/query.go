@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // Get the default command for a tx query
@@ -95,7 +96,7 @@ type txInfo struct {
 }
 
 func parseTx(cdc *wire.Codec, txBytes []byte) (sdk.Tx, error) {
-	var tx sdk.StdTx
+	var tx auth.StdTx
 	err := cdc.UnmarshalBinary(txBytes, &tx)
 	if err != nil {
 		return nil, err

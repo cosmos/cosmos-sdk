@@ -1,18 +1,19 @@
-package auth
+package baseaccount
 
 import (
 	"errors"
 
-	"github.com/tendermint/go-crypto"
+	crypto "github.com/tendermint/go-crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 //-----------------------------------------------------------
 // BaseAccount
 
-var _ sdk.Account = (*BaseAccount)(nil)
+var _ auth.Account = (*BaseAccount)(nil)
 
 // BaseAccount - base account structure.
 // Extend this by embedding this in your AppAccount.
@@ -82,7 +83,7 @@ func (acc *BaseAccount) SetSequence(seq int64) error {
 
 // Most users shouldn't use this, but this comes handy for tests.
 func RegisterBaseAccount(cdc *wire.Codec) {
-	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	wire.RegisterCrypto(cdc)
 }

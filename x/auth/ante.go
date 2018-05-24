@@ -8,10 +8,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	verifyCost = 100
+)
+
 // NewAnteHandler returns an AnteHandler that checks
 // and increments sequence numbers, checks signatures,
 // and deducts fees from the first signer.
-func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHandler {
+func NewAnteHandler(am sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx,
 	) (_ sdk.Context, _ sdk.Result, abort bool) {
@@ -24,7 +28,6 @@ func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) 
 				true
 		}
 
-		// TODO: can tx just implement message?
 		msg := tx.GetMsg()
 
 		// TODO: will this always be a stdtx? should that be used in the function signature?
@@ -62,7 +65,7 @@ func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) 
 
 			// check signature, return account with incremented nonce
 			signerAcc, res := processSig(
-				ctx, accountMapper,
+				ctx, am,
 				signerAddr, sig, signBytes,
 			)
 			if !res.IsOK() {
@@ -82,12 +85,15 @@ func NewAnteHandler(accountMapper sdk.AccountMapper, feeHandler sdk.FeeHandler) 
 			}
 
 			// Save the account.
-			accountMapper.SetAccount(ctx, signerAcc)
+			am.SetAccount(ctx, signerAcc)
 			signerAccs[i] = signerAcc
 		}
 
 		// cache the signer accounts in the context
 		ctx = WithSigners(ctx, signerAccs)
+
+		// set the gas meter
+		ctx = ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
 
 		// TODO: tx tags (?)
 
@@ -135,6 +141,7 @@ func processSig(
 	}
 
 	// Check sig.
+	ctx.GasMeter().ConsumeGas(verifyCost, "ante verify")
 	if !pubKey.VerifyBytes(signBytes, sig.Signature) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
@@ -159,5 +166,4 @@ func deductFees(acc sdk.Account, fee sdk.StdFee) (sdk.Account, sdk.Result) {
 }
 
 // BurnFeeHandler burns all fees (decreasing total supply)
-func BurnFeeHandler(ctx sdk.Context, tx sdk.Tx, fee sdk.Coins) {
-}
+func BurnFeeHandler(_ sdk.Context, _ sdk.Tx, _ sdk.Coins) {}

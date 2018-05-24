@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  version: '1.0.1'
+  version: '1.1.0'
   title: Light client daemon to interface with Cosmos baseserver via REST
   description: Specification for the LCD provided by `gaiacli rest-server`
 

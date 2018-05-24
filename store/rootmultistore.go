@@ -183,6 +183,11 @@ func (rs *rootMultiStore) GetKVStore(key StoreKey) KVStore {
 	return rs.stores[key].(KVStore)
 }
 
+// Implements MultiStore.
+func (rs *rootMultiStore) GetKVStoreWithGas(meter sdk.GasMeter, key StoreKey) KVStore {
+	return NewGasKVStore(meter, rs.GetKVStore(key))
+}
+
 // getStoreByName will first convert the original name to
 // a special key, before looking up the CommitStore.
 // This is not exposed to the extensions (which will need the

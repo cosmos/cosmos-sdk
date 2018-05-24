@@ -276,3 +276,24 @@ func TestEmbeddedStructSerializationGoWire(t *testing.T) {
 	assert.Equal(t, obj.Field2, obj2.Field2)
 	assert.True(t, obj.Field3.Equal(obj2.Field3), "original: %v, unmarshalled: %v", obj, obj2)
 }
+
+func TestRatsEqual(t *testing.T) {
+	tests := []struct {
+		r1s, r2s []Rat
+		eq       bool
+	}{
+		{[]Rat{NewRat(0)}, []Rat{NewRat(0)}, true},
+		{[]Rat{NewRat(0)}, []Rat{NewRat(1)}, false},
+		{[]Rat{NewRat(0)}, []Rat{}, false},
+		{[]Rat{NewRat(0), NewRat(1)}, []Rat{NewRat(0), NewRat(1)}, true},
+		{[]Rat{NewRat(1), NewRat(0)}, []Rat{NewRat(1), NewRat(0)}, true},
+		{[]Rat{NewRat(1), NewRat(0)}, []Rat{NewRat(0), NewRat(1)}, false},
+		{[]Rat{NewRat(1), NewRat(0)}, []Rat{NewRat(1)}, false},
+	}
+
+	for _, tc := range tests {
+		assert.Equal(t, tc.eq, RatsEqual(tc.r1s, tc.r2s))
+		assert.Equal(t, tc.eq, RatsEqual(tc.r2s, tc.r1s))
+	}
+
+}

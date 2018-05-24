@@ -31,16 +31,16 @@ func init() {
 // MsgDeclareCandidacy - struct for unbonding transactions
 type MsgDeclareCandidacy struct {
 	Description
-	CandidateAddr sdk.Address   `json:"address"`
+	ValidatorAddr sdk.Address   `json:"address"`
 	PubKey        crypto.PubKey `json:"pubkey"`
 	Bond          sdk.Coin      `json:"bond"`
 }
 
-func NewMsgDeclareCandidacy(candidateAddr sdk.Address, pubkey crypto.PubKey,
+func NewMsgDeclareCandidacy(validatorAddr sdk.Address, pubkey crypto.PubKey,
 	bond sdk.Coin, description Description) MsgDeclareCandidacy {
 	return MsgDeclareCandidacy{
 		Description:   description,
-		CandidateAddr: candidateAddr,
+		ValidatorAddr: validatorAddr,
 		PubKey:        pubkey,
 		Bond:          bond,
 	}
@@ -48,7 +48,7 @@ func NewMsgDeclareCandidacy(candidateAddr sdk.Address, pubkey crypto.PubKey,
 
 //nolint
 func (msg MsgDeclareCandidacy) Type() string              { return MsgType } //TODO update "stake/declarecandidacy"
-func (msg MsgDeclareCandidacy) GetSigners() []sdk.Address { return []sdk.Address{msg.CandidateAddr} }
+func (msg MsgDeclareCandidacy) GetSigners() []sdk.Address { return []sdk.Address{msg.ValidatorAddr} }
 
 // get the bytes for the message signer to sign on
 func (msg MsgDeclareCandidacy) GetSignBytes() []byte {
@@ -57,8 +57,8 @@ func (msg MsgDeclareCandidacy) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgDeclareCandidacy) ValidateBasic() sdk.Error {
-	if msg.CandidateAddr == nil {
-		return ErrCandidateEmpty(DefaultCodespace)
+	if msg.ValidatorAddr == nil {
+		return ErrValidatorEmpty(DefaultCodespace)
 	}
 	if msg.Bond.Denom != StakingToken {
 		return ErrBadBondingDenom(DefaultCodespace)
@@ -75,22 +75,22 @@ func (msg MsgDeclareCandidacy) ValidateBasic() sdk.Error {
 
 //______________________________________________________________________
 
-// MsgEditCandidacy - struct for editing a candidate
+// MsgEditCandidacy - struct for editing a validator
 type MsgEditCandidacy struct {
 	Description
-	CandidateAddr sdk.Address `json:"address"`
+	ValidatorAddr sdk.Address `json:"address"`
 }
 
-func NewMsgEditCandidacy(candidateAddr sdk.Address, description Description) MsgEditCandidacy {
+func NewMsgEditCandidacy(validatorAddr sdk.Address, description Description) MsgEditCandidacy {
 	return MsgEditCandidacy{
 		Description:   description,
-		CandidateAddr: candidateAddr,
+		ValidatorAddr: validatorAddr,
 	}
 }
 
 //nolint
 func (msg MsgEditCandidacy) Type() string              { return MsgType } //TODO update "stake/msgeditcandidacy"
-func (msg MsgEditCandidacy) GetSigners() []sdk.Address { return []sdk.Address{msg.CandidateAddr} }
+func (msg MsgEditCandidacy) GetSigners() []sdk.Address { return []sdk.Address{msg.ValidatorAddr} }
 
 // get the bytes for the message signer to sign on
 func (msg MsgEditCandidacy) GetSignBytes() []byte {
@@ -103,8 +103,8 @@ func (msg MsgEditCandidacy) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgEditCandidacy) ValidateBasic() sdk.Error {
-	if msg.CandidateAddr == nil {
-		return ErrCandidateEmpty(DefaultCodespace)
+	if msg.ValidatorAddr == nil {
+		return ErrValidatorEmpty(DefaultCodespace)
 	}
 	empty := Description{}
 	if msg.Description == empty {
@@ -118,14 +118,14 @@ func (msg MsgEditCandidacy) ValidateBasic() sdk.Error {
 // MsgDelegate - struct for bonding transactions
 type MsgDelegate struct {
 	DelegatorAddr sdk.Address `json:"address"`
-	CandidateAddr sdk.Address `json:"address"`
+	ValidatorAddr sdk.Address `json:"address"`
 	Bond          sdk.Coin    `json:"bond"`
 }
 
-func NewMsgDelegate(delegatorAddr, candidateAddr sdk.Address, bond sdk.Coin) MsgDelegate {
+func NewMsgDelegate(delegatorAddr, validatorAddr sdk.Address, bond sdk.Coin) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddr: delegatorAddr,
-		CandidateAddr: candidateAddr,
+		ValidatorAddr: validatorAddr,
 		Bond:          bond,
 	}
 }
@@ -148,8 +148,8 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.DelegatorAddr == nil {
 		return ErrBadDelegatorAddr(DefaultCodespace)
 	}
-	if msg.CandidateAddr == nil {
-		return ErrBadCandidateAddr(DefaultCodespace)
+	if msg.ValidatorAddr == nil {
+		return ErrBadValidatorAddr(DefaultCodespace)
 	}
 	if msg.Bond.Denom != StakingToken {
 		return ErrBadBondingDenom(DefaultCodespace)
@@ -165,14 +165,14 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 // MsgUnbond - struct for unbonding transactions
 type MsgUnbond struct {
 	DelegatorAddr sdk.Address `json:"address"`
-	CandidateAddr sdk.Address `json:"address"`
+	ValidatorAddr sdk.Address `json:"address"`
 	Shares        string      `json:"shares"`
 }
 
-func NewMsgUnbond(delegatorAddr, candidateAddr sdk.Address, shares string) MsgUnbond {
+func NewMsgUnbond(delegatorAddr, validatorAddr sdk.Address, shares string) MsgUnbond {
 	return MsgUnbond{
 		DelegatorAddr: delegatorAddr,
-		CandidateAddr: candidateAddr,
+		ValidatorAddr: validatorAddr,
 		Shares:        shares,
 	}
 }
@@ -195,8 +195,8 @@ func (msg MsgUnbond) ValidateBasic() sdk.Error {
 	if msg.DelegatorAddr == nil {
 		return ErrBadDelegatorAddr(DefaultCodespace)
 	}
-	if msg.CandidateAddr == nil {
-		return ErrBadCandidateAddr(DefaultCodespace)
+	if msg.ValidatorAddr == nil {
+		return ErrBadValidatorAddr(DefaultCodespace)
 	}
 	if msg.Shares != "MAX" {
 		rat, err := sdk.NewRatFromDecimal(msg.Shares)

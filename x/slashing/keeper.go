@@ -71,7 +71,10 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, height int64, timestamp int64,
 		return
 	}
 	logger.Info(fmt.Sprintf("Confirmed double sign from %v at height %d, age of %d less than max age of %d", pubkey.Address(), height, age, MaxEvidenceAge))
-	validator := k.stakeKeeper.Validator(ctx, pubkey.Address())
+	validator := k.stakeKeeper.ValidatorByPubKey(ctx, pubkey)
+	if validator == nil {
+		panic(fmt.Errorf("Attempted to slash nonexistent validator with address %s", pubkey.Address()))
+	}
 	validator.Slash(ctx, height, SlashFractionDoubleSign)
 	logger.Info(fmt.Sprintf("Slashed validator %s by fraction %v for double-sign at height %d", pubkey.Address(), SlashFractionDoubleSign, height))
 }
@@ -98,7 +101,10 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	}
 	minHeight := signInfo.StartHeight + SignedBlocksWindow
 	if height > minHeight && signInfo.SignedBlocksCounter < MinSignedPerWindow {
-		validator := k.stakeKeeper.Validator(ctx, address)
+		validator := k.stakeKeeper.ValidatorByPubKey(ctx, pubkey)
+		if validator == nil {
+			panic(fmt.Errorf("Attempted to slash nonexistent validator with address %s", pubkey.Address()))
+		}
 		validator.Slash(ctx, height, SlashFractionDowntime)
 		validator.ForceUnbond(ctx, DowntimeUnbondDuration)
 		logger.Info(fmt.Sprintf("Slashed validator %s by fraction %v and unbonded for downtime at height %d, cannot rebond for %ds",

@@ -28,6 +28,7 @@ func (keeper Keeper) createCovenant(ctx sdk.Context, Sender sdk.Address,
 	Amount sdk.Coins) (int64, sdk.Error) {
 
 	if keeper.bankKeeper.HasCoins(ctx, Sender, Amount) {
+		keeper.bankKeeper.SubtractCoins(ctx, Sender, Amount)
 		cov := Covenant{Settlers, Receivers, Amount}
 		covID := keeper.storeCovenant(ctx, cov)
 		return covID, nil
@@ -73,7 +74,7 @@ func (keeper Keeper) getCovenant(ctx sdk.Context, covID int64) Covenant {
 	covKey := prefixArrayKey("covenants", covID)
 	bz := store.Get(covKey)
 	var cov Covenant
-	keeper.cdc.UnmarshalBinary(bz, cov)
+	keeper.cdc.UnmarshalBinary(bz, &cov)
 	return cov
 }
 
@@ -96,7 +97,7 @@ func (keeper Keeper) getNewCovenantID(ctx sdk.Context) int64 {
 	bz := store.Get(prefixVariableKey("nextCovenantID"))
 	nextCovID := int64(0)
 	if bz != nil {
-		keeper.cdc.UnmarshalBinary(bz, nextCovID)
+		keeper.cdc.UnmarshalBinary(bz, &nextCovID)
 	}
 	bz, _ = keeper.cdc.MarshalBinary(nextCovID + 1)
 	store.Set(prefixVariableKey("nextCovenantID"), bz)

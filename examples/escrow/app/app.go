@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/cosmos/cosmos-sdk/examples/escrow/types"
+	cov "github.com/cosmos/cosmos-sdk/examples/escrow/x/covenant"
 )
 
 const (
@@ -41,7 +42,7 @@ type EscrowApp struct {
 	coinKeeper    bank.Keeper
 	ibcMapper     ibc.Mapper
 	stakeKeeper   stake.Keeper
-	escrowKeeper  types.Keeper
+	escrowKeeper  cov.Keeper
 }
 
 func NewEscrowApp(logger log.Logger, db dbm.DB) *EscrowApp {
@@ -57,7 +58,7 @@ func NewEscrowApp(logger log.Logger, db dbm.DB) *EscrowApp {
 		keyAccount: sdk.NewKVStoreKey("acc"),
 		keyIBC:     sdk.NewKVStoreKey("ibc"),
 		keyStake:   sdk.NewKVStoreKey("stake"),
-		keyEscrow:  sdk.NewKVStoreKey("escrow"),
+		keyEscrow:  sdk.NewKVStoreKey("covenant"),
 	}
 
 	// Define the accountMapper.
@@ -71,15 +72,15 @@ func NewEscrowApp(logger log.Logger, db dbm.DB) *EscrowApp {
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
-	app.escrowKeeper = types.NewKeeper(app.cdc, app.keyEscrow, app.coinKeeper)
+	app.escrowKeeper = cov.NewKeeper(app.cdc, app.keyEscrow, app.coinKeeper)
 
 	// register message routes
 	app.Router().
 		AddRoute("auth", auth.NewHandler(app.accountMapper.(auth.AccountMapper))).
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
+		AddRoute("covenant", cov.NewHandler(app.escrowKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
-		AddRoute("escrow", types.NewHandler(app.escrowKeeper))
+		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
 
 	// Initialize BaseApp.
 	app.SetInitChainer(app.initChainer)
@@ -97,6 +98,7 @@ func MakeCodec() *wire.Codec {
 	var cdc = wire.NewCodec()
 	wire.RegisterCrypto(cdc) // Register crypto.
 	sdk.RegisterWire(cdc)    // Register Msgs
+	cov.RegisterWire(cdc)
 	bank.RegisterWire(cdc)
 	stake.RegisterWire(cdc)
 	ibc.RegisterWire(cdc)

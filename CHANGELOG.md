@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.17.3
+
+*May 29, 2018*
+
+Update to Tendermint v0.19.6 (fix fast-sync halt)
+
 ## 0.17.2
 
 *May 20, 2018*

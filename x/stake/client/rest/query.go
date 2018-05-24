@@ -20,7 +20,7 @@ func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec
 	).Methods("GET")
 }
 
-// bondingStatusHandlerFn - http request handler to query delegator bonding status
+// http request handler to query delegator bonding status
 func bondingStatusHandlerFn(storeName string, cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// read parameters

@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -16,33 +17,26 @@ import (
 )
 
 func registerTxRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/stake/bondunbond", bondUnbondRequestHandlerFn(cdc, kb, ctx)).Methods("POST")
+	r.HandleFunc(
+		"/stake/delegations",
+		editDelegationsRequestHandlerFn(cdc, kb, ctx),
+	).Methods("POST")
 }
 
-type bond struct {
-	Amount    sdk.Coin    `json:"amount"`
-	Candidate sdk.Address `json:"candidate"`
-}
-
-type unbond struct {
-	Shares    string      `json:"shares"`
-	Candidate sdk.Address `json:"candidate"`
-}
-
-type bondUnbondBody struct {
+type editDelegationsBody struct {
 	// fees is not used currently
 	// Fees             sdk.Coin  `json="fees"`
-	LocalAccountName string   `json:"name"`
-	Password         string   `json:"password"`
-	ChainID          string   `json:"chain_id"`
-	Sequence         int64    `json:"sequence"`
-	Bond             []bond   `json:"bond"`
-	Unbond           []unbond `json:"unbond"`
+	LocalAccountName string              `json:"name"`
+	Password         string              `json:"password"`
+	ChainID          string              `json:"chain_id"`
+	Sequence         int64               `json:"sequence"`
+	Delegate         []stake.MsgDelegate `json:"delegate"`
+	Unbond           []stake.MsgUnbond   `json:"unbond"`
 }
 
-func bondUnbondRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
+func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var m bondUnbondBody
+		var m editDelegationsBody
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -64,13 +58,21 @@ func bondUnbondRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Co
 		}
 
 		// build messages
-		messages := make([]sdk.Msg, 0, len(m.Bond)+len(m.Unbond))
-		for _, bond := range m.Bond {
-			msg := stake.NewMsgDelegate(info.Address(), bond.Candidate, bond.Amount)
+		messages := make([]sdk.Msg, 0, len(m.Delegate)+len(m.Unbond))
+		for _, msg := range m.Delegate {
+			if !bytes.Equal(info.Address(), msg.DelegatorAddr) {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("Must use own delegator address"))
+				return
+			}
 			messages = append(messages, msg)
 		}
-		for _, unbond := range m.Unbond {
-			msg := stake.NewMsgUnbond(info.Address(), unbond.Candidate, unbond.Shares)
+		for _, msg := range m.Unbond {
+			if !bytes.Equal(info.Address(), msg.DelegatorAddr) {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("Must use own delegator address"))
+				return
+			}
 			messages = append(messages, msg)
 		}
 

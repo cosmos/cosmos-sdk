@@ -776,3 +776,11 @@ func (k Keeper) IterateDelegators(ctx sdk.Context, delAddr sdk.Address, fn func(
 	}
 	iterator.Close()
 }
+
+// slash a validator
+func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, fraction sdk.Rat) {
+}
+
+// force unbond a validator
+func (k Keeper) ForceUnbond(ctx sdk.Context, pubkey crypto.PubKey, jailDuration int64) {
+}

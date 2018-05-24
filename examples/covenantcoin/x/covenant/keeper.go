@@ -1,4 +1,4 @@
-package types
+package covenant
 
 import (
 	"bytes"

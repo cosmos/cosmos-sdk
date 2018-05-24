@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/examples/escrow/types"
-	cov "github.com/cosmos/cosmos-sdk/examples/escrow/x/covenant"
+	"github.com/cosmos/cosmos-sdk/examples/covenantcoin/types"
+	cov "github.com/cosmos/cosmos-sdk/examples/covenantcoin/x/covenant"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -92,12 +92,12 @@ func loggerAndDB() (log.Logger, dbm.DB) {
 	return logger, db
 }
 
-func newEscrowApp() *EscrowApp {
+func newBasecoinApp() *CovenantApp {
 	logger, db := loggerAndDB()
-	return NewEscrowApp(logger, db)
+	return NewCovenantApp(logger, db)
 }
 
-func setGenesisAccounts(bapp *EscrowApp, accs ...auth.BaseAccount) error {
+func setGenesisAccounts(bapp *CovenantApp, accs ...auth.BaseAccount) error {
 	genaccs := make([]*types.GenesisAccount, len(accs))
 	for i, acc := range accs {
 		genaccs[i] = types.NewGenesisAccount(&types.AppAccount{acc, accName})
@@ -123,7 +123,7 @@ func setGenesisAccounts(bapp *EscrowApp, accs ...auth.BaseAccount) error {
 //_______________________________________________________________________
 
 func TestMsgs(t *testing.T) {
-	bapp := newEscrowApp()
+	bapp := newBasecoinApp()
 
 	msgs := []struct {
 		msg sdk.Msg
@@ -138,10 +138,9 @@ func TestMsgs(t *testing.T) {
 }
 
 func TestEscrow(t *testing.T) {
-	app := newEscrowApp()
-	// Note the order: the coins are unsorted!
+	app := newBasecoinApp()
 	coinDenom := "foocoin"
-
+	// Default state
 	genState := fmt.Sprintf(`{
       "accounts": [{
         "address": "%s",
@@ -157,6 +156,7 @@ func TestEscrow(t *testing.T) {
 	vals := []abci.Validator{}
 	app.InitChain(abci.RequestInitChain{vals, []byte(genState)})
 	app.Commit()
+
 	coinsToEscrow := sdk.Coin{Denom: coinDenom, Amount: 1000}
 	createCov := cov.MsgCreateCovenant{Sender: addr1,
 		Settlers:  []sdk.Address{addr1},
@@ -188,7 +188,7 @@ func TestEscrow(t *testing.T) {
 
 func TestSortGenesis(t *testing.T) {
 	logger, db := loggerAndDB()
-	bapp := NewEscrowApp(logger, db)
+	bapp := NewCovenantApp(logger, db)
 
 	// Note the order: the coins are unsorted!
 	coinDenom1, coinDenom2 := "foocoin", "barcoin"
@@ -230,9 +230,9 @@ func TestSortGenesis(t *testing.T) {
 
 func TestGenesis(t *testing.T) {
 	logger, db := loggerAndDB()
-	bapp := NewEscrowApp(logger, db)
+	bapp := NewCovenantApp(logger, db)
 
-	// Construct some genesis bytes to reflect basecoin/escrow/AppAccount
+	// Construct some genesis bytes to reflect basecoin/types/AppAccount
 	pk := crypto.GenPrivKeyEd25519().PubKey()
 	addr := pk.Address()
 	coins, err := sdk.ParseCoins("77foocoin,99barcoin")
@@ -252,7 +252,7 @@ func TestGenesis(t *testing.T) {
 	assert.Equal(t, acc, res1)
 
 	// reload app and ensure the account is still there
-	bapp = NewEscrowApp(logger, db)
+	bapp = NewCovenantApp(logger, db)
 	ctx = bapp.BaseApp.NewContext(true, abci.Header{})
 	res1 = bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
 	assert.Equal(t, acc, res1)
@@ -260,9 +260,9 @@ func TestGenesis(t *testing.T) {
 
 func TestMsgChangePubKey(t *testing.T) {
 
-	bapp := newEscrowApp()
+	bapp := newBasecoinApp()
 
-	// Construct some genesis bytes to reflect basecoin/escrow/AppAccount
+	// Construct some genesis bytes to reflect basecoin/types/AppAccount
 	// Give 77 foocoin to the first key
 	coins, err := sdk.ParseCoins("77foocoin")
 	require.Nil(t, err)
@@ -314,9 +314,9 @@ func TestMsgChangePubKey(t *testing.T) {
 }
 
 func TestMsgSendWithAccounts(t *testing.T) {
-	bapp := newEscrowApp()
+	bapp := newBasecoinApp()
 
-	// Construct some genesis bytes to reflect basecoin/escrow/AppAccount
+	// Construct some genesis bytes to reflect basecoin/types/AppAccount
 	// Give 77 foocoin to the first key
 	coins, err := sdk.ParseCoins("77foocoin")
 	require.Nil(t, err)
@@ -355,7 +355,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 }
 
 func TestMsgSendMultipleOut(t *testing.T) {
-	bapp := newEscrowApp()
+	bapp := newBasecoinApp()
 
 	genCoins, err := sdk.ParseCoins("42foocoin")
 	require.Nil(t, err)
@@ -383,7 +383,7 @@ func TestMsgSendMultipleOut(t *testing.T) {
 }
 
 func TestSengMsgMultipleInOut(t *testing.T) {
-	bapp := newEscrowApp()
+	bapp := newBasecoinApp()
 
 	genCoins, err := sdk.ParseCoins("42foocoin")
 	require.Nil(t, err)
@@ -417,7 +417,7 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 }
 
 func TestMsgSendDependent(t *testing.T) {
-	bapp := newEscrowApp()
+	bapp := newBasecoinApp()
 
 	genCoins, err := sdk.ParseCoins("42foocoin")
 	require.Nil(t, err)
@@ -445,10 +445,10 @@ func TestMsgSendDependent(t *testing.T) {
 }
 
 func TestMsgQuiz(t *testing.T) {
-	bapp := newEscrowApp()
+	bapp := newBasecoinApp()
 
 	// Construct genesis state
-	// Construct some genesis bytes to reflect basecoin/escrow/AppAccount
+	// Construct some genesis bytes to reflect basecoin/types/AppAccount
 	baseAcc := auth.BaseAccount{
 		Address: addr1,
 		Coins:   nil,
@@ -477,7 +477,7 @@ func TestMsgQuiz(t *testing.T) {
 }
 
 func TestIBCMsgs(t *testing.T) {
-	bapp := newEscrowApp()
+	bapp := newBasecoinApp()
 
 	sourceChain := "source-chain"
 	destChain := "dest-chain"
@@ -535,7 +535,7 @@ func genTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.StdTx {
 
 }
 
-func SignCheckDeliver(t *testing.T, bapp *EscrowApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) sdk.Result {
+func SignCheckDeliver(t *testing.T, bapp *CovenantApp, msg sdk.Msg, seq []int64, expPass bool, priv ...crypto.PrivKeyEd25519) sdk.Result {
 
 	// Sign the tx
 	tx := genTx(msg, seq, priv...)
@@ -556,11 +556,11 @@ func SignCheckDeliver(t *testing.T, bapp *EscrowApp, msg sdk.Msg, seq []int64, e
 		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
 	}
 	bapp.EndBlock(abci.RequestEndBlock{})
-	return res
 	//bapp.Commit()
+	return res
 }
 
-func CheckBalance(t *testing.T, bapp *EscrowApp, addr sdk.Address, balExpected string) {
+func CheckBalance(t *testing.T, bapp *CovenantApp, addr sdk.Address, balExpected string) {
 	ctxDeliver := bapp.BaseApp.NewContext(false, abci.Header{})
 	res2 := bapp.accountMapper.GetAccount(ctxDeliver, addr)
 	assert.Equal(t, balExpected, fmt.Sprintf("%v", res2.GetCoins()))

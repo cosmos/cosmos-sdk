@@ -11,7 +11,7 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/cosmos/cosmos-sdk/examples/escrow/app"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
@@ -20,26 +20,26 @@ func main() {
 	ctx := server.NewDefaultContext()
 
 	rootCmd := &cobra.Command{
-		Use:               "escrowd",
-		Short:             "Escrow Daemon (server)",
+		Use:               "basecoind",
+		Short:             "Basecoin Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
 	server.AddCommands(ctx, cdc, rootCmd, server.DefaultAppInit,
-		server.ConstructAppCreator(newApp, "escrow"),
-		server.ConstructAppExporter(exportAppState, "escrow"))
+		server.ConstructAppCreator(newApp, "basecoin"),
+		server.ConstructAppExporter(exportAppState, "basecoin"))
 
 	// prepare and add flags
-	rootDir := os.ExpandEnv("$HOME/.escrowd")
+	rootDir := os.ExpandEnv("$HOME/.basecoind")
 	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
 	executor.Execute()
 }
 
 func newApp(logger log.Logger, db dbm.DB) abci.Application {
-	return app.NewEscrowApp(logger, db)
+	return app.NewBasecoinApp(logger, db)
 }
 
 func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
-	bapp := app.NewEscrowApp(logger, db)
+	bapp := app.NewBasecoinApp(logger, db)
 	return bapp.ExportAppStateJSON()
 }

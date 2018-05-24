@@ -1,4 +1,4 @@
-package types
+package covenant
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

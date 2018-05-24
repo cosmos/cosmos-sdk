@@ -19,15 +19,15 @@ import (
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 
-	"github.com/cosmos/cosmos-sdk/examples/escrow/app"
-	"github.com/cosmos/cosmos-sdk/examples/escrow/types"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
+	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 )
 
 // rootCmd is the entry point for this binary
 var (
 	rootCmd = &cobra.Command{
-		Use:   "escrowcli",
-		Short: "Escrow light-client",
+		Use:   "basecli",
+		Short: "Basecoin light-client",
 	}
 )
 
@@ -75,6 +75,6 @@ func main() {
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/.escrowcli"))
+	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/.basecli"))
 	executor.Execute()
 }

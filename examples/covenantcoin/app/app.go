@@ -16,16 +16,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
-	"github.com/cosmos/cosmos-sdk/examples/escrow/types"
-	cov "github.com/cosmos/cosmos-sdk/examples/escrow/x/covenant"
+	"github.com/cosmos/cosmos-sdk/examples/covenantcoin/types"
+	covenant "github.com/cosmos/cosmos-sdk/examples/covenantcoin/x/covenant"
 )
 
 const (
-	appName = "EscrowApp"
+	appName = "CovenantApp"
 )
 
 // Extended ABCI application
-type EscrowApp struct {
+type CovenantApp struct {
 	*bam.BaseApp
 	cdc *wire.Codec
 
@@ -34,31 +34,30 @@ type EscrowApp struct {
 	keyAccount *sdk.KVStoreKey
 	keyIBC     *sdk.KVStoreKey
 	keyStake   *sdk.KVStoreKey
-
-	keyEscrow *sdk.KVStoreKey
+	keyCov     *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
 	coinKeeper    bank.Keeper
 	ibcMapper     ibc.Mapper
 	stakeKeeper   stake.Keeper
-	escrowKeeper  cov.Keeper
+	covKeeper     covenant.Keeper
 }
 
-func NewEscrowApp(logger log.Logger, db dbm.DB) *EscrowApp {
+func NewCovenantApp(logger log.Logger, db dbm.DB) *CovenantApp {
 
 	// Create app-level codec for txs and accounts.
 	var cdc = MakeCodec()
 
 	// Create your application object.
-	var app = &EscrowApp{
+	var app = &CovenantApp{
 		BaseApp:    bam.NewBaseApp(appName, cdc, logger, db),
 		cdc:        cdc,
 		keyMain:    sdk.NewKVStoreKey("main"),
 		keyAccount: sdk.NewKVStoreKey("acc"),
 		keyIBC:     sdk.NewKVStoreKey("ibc"),
 		keyStake:   sdk.NewKVStoreKey("stake"),
-		keyEscrow:  sdk.NewKVStoreKey("covenant"),
+		keyCov:     sdk.NewKVStoreKey("covenant"),
 	}
 
 	// Define the accountMapper.
@@ -72,19 +71,19 @@ func NewEscrowApp(logger log.Logger, db dbm.DB) *EscrowApp {
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
-	app.escrowKeeper = cov.NewKeeper(app.cdc, app.keyEscrow, app.coinKeeper)
+	app.covKeeper = covenant.NewKeeper(app.cdc, app.keyCov, app.coinKeeper)
 
 	// register message routes
 	app.Router().
 		AddRoute("auth", auth.NewHandler(app.accountMapper.(auth.AccountMapper))).
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("covenant", cov.NewHandler(app.escrowKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
+		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
+		AddRoute("covenant", covenant.NewHandler(app.covKeeper))
 
 	// Initialize BaseApp.
 	app.SetInitChainer(app.initChainer)
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake, app.keyEscrow)
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake, app.keyCov)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.BurnFeeHandler))
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
@@ -98,19 +97,19 @@ func MakeCodec() *wire.Codec {
 	var cdc = wire.NewCodec()
 	wire.RegisterCrypto(cdc) // Register crypto.
 	sdk.RegisterWire(cdc)    // Register Msgs
-	cov.RegisterWire(cdc)
 	bank.RegisterWire(cdc)
 	stake.RegisterWire(cdc)
 	ibc.RegisterWire(cdc)
+	covenant.RegisterWire(cdc)
 
 	// register custom AppAccount
 	cdc.RegisterInterface((*sdk.Account)(nil), nil)
-	cdc.RegisterConcrete(&types.AppAccount{}, "escrow/Account", nil)
+	cdc.RegisterConcrete(&types.AppAccount{}, "covenant/Account", nil)
 	return cdc
 }
 
 // Custom logic for basecoin initialization
-func (app *EscrowApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *CovenantApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	stateJSON := req.AppStateBytes
 
 	genesisState := new(types.GenesisState)
@@ -132,7 +131,7 @@ func (app *EscrowApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) ab
 }
 
 // Custom logic for state export
-func (app *EscrowApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
+func (app *CovenantApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
 	ctx := app.NewContext(true, abci.Header{})
 
 	// iterate to get the accounts

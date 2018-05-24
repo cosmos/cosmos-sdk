@@ -1,4 +1,4 @@
-package types
+package covenant
 
 import (
 	"github.com/cosmos/cosmos-sdk/wire"

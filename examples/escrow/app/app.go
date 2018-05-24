@@ -41,7 +41,7 @@ type EscrowApp struct {
 	coinKeeper    bank.Keeper
 	ibcMapper     ibc.Mapper
 	stakeKeeper   stake.Keeper
-	escrowKeeper  escrow.Keeper
+	escrowKeeper  types.Keeper
 }
 
 func NewEscrowApp(logger log.Logger, db dbm.DB) *EscrowApp {
@@ -71,7 +71,7 @@ func NewEscrowApp(logger log.Logger, db dbm.DB) *EscrowApp {
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
-	app.escrowKeeper = escrow.NewKeeper(app.cdc, app.keyEscrow, app.coinKeeper)
+	app.escrowKeeper = types.NewKeeper(app.cdc, app.keyEscrow, app.coinKeeper)
 
 	// register message routes
 	app.Router().
@@ -79,7 +79,7 @@ func NewEscrowApp(logger log.Logger, db dbm.DB) *EscrowApp {
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
-		AddRoute("escrow", escrow.NewHandler(app.escrowKeeper))
+		AddRoute("escrow", types.NewHandler(app.escrowKeeper))
 
 	// Initialize BaseApp.
 	app.SetInitChainer(app.initChainer)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // An sdk.Tx which is its own sdk.Msg.
@@ -47,7 +48,7 @@ func (tx kvstoreTx) GetSigners() []sdk.Address {
 	return nil
 }
 
-func (tx kvstoreTx) GetSignatures() []sdk.StdSignature {
+func (tx kvstoreTx) GetSignatures() []auth.StdSignature {
 	return nil
 }
 

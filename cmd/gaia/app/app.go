@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/baseaccount"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
@@ -63,8 +62,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	// define the accountMapper
 	app.accountMapper = auth.NewAccountMapper(
 		app.cdc,
-		app.keyAccount,             // target store
-		&baseaccount.BaseAccount{}, // prototype
+		app.keyAccount,      // target store
+		&auth.BaseAccount{}, // prototype
 	)
 
 	// add handlers
@@ -97,7 +96,7 @@ func MakeCodec() *wire.Codec {
 	ibc.RegisterWire(cdc)
 	bank.RegisterWire(cdc)
 	stake.RegisterWire(cdc)
-	baseaccount.RegisterWire(cdc)
+	auth.RegisterWire(cdc)
 	sdk.RegisterWire(cdc)
 	wire.RegisterCrypto(cdc)
 	return cdc

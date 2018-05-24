@@ -1,4 +1,4 @@
-package baseaccount
+package auth
 
 import (
 	"testing"

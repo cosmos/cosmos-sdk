@@ -24,7 +24,7 @@ func NewAnteHandler(am AccountMapper) sdk.AnteHandler {
 		// This AnteHandler requires Txs to be StdTxs
 		stdTx, ok := tx.(StdTx)
 		if !ok {
-			return ctx, sdk.ErrInternal("tx must be sdk.StdTx").Result(), true
+			return ctx, sdk.ErrInternal("tx must be StdTx").Result(), true
 		}
 
 		// Assert that there are signatures.

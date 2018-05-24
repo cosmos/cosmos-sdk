@@ -17,8 +17,8 @@ func newTestMsg(addrs ...sdk.Address) *sdk.TestMsg {
 	return sdk.NewTestMsg(addrs...)
 }
 
-func newStdFee() sdk.StdFee {
-	return sdk.NewStdFee(100,
+func newStdFee() StdFee {
+	return NewStdFee(100,
 		sdk.Coin{"atom", 150},
 	)
 }
@@ -52,17 +52,17 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), result.Code)
 }
 
-func newTestTx(ctx sdk.Context, msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, fee sdk.StdFee) sdk.Tx {
-	signBytes := sdk.StdSignBytes(ctx.ChainID(), seqs, fee, msg)
+func newTestTx(ctx sdk.Context, msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, fee StdFee) sdk.Tx {
+	signBytes := StdSignBytes(ctx.ChainID(), seqs, fee, msg)
 	return newTestTxWithSignBytes(msg, privs, seqs, fee, signBytes)
 }
 
-func newTestTxWithSignBytes(msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, fee sdk.StdFee, signBytes []byte) sdk.Tx {
-	sigs := make([]sdk.StdSignature, len(privs))
+func newTestTxWithSignBytes(msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, fee StdFee, signBytes []byte) sdk.Tx {
+	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
-		sigs[i] = sdk.StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), Sequence: seqs[i]}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), Sequence: seqs[i]}
 	}
-	tx := sdk.NewStdTx(msg, fee, sigs)
+	tx := NewStdTx(msg, fee, sigs)
 	return tx
 }
 
@@ -73,7 +73,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
+	anteHandler := NewAnteHandler(mapper)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses
@@ -114,7 +114,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
+	anteHandler := NewAnteHandler(mapper)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses
@@ -180,7 +180,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
+	anteHandler := NewAnteHandler(mapper)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses
@@ -194,7 +194,7 @@ func TestAnteHandlerFees(t *testing.T) {
 	var tx sdk.Tx
 	msg := newTestMsg(addr1)
 	privs, seqs := []crypto.PrivKey{priv1}, []int64{0}
-	fee := sdk.NewStdFee(100,
+	fee := NewStdFee(100,
 		sdk.Coin{"atom", 150},
 	)
 
@@ -217,7 +217,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
+	anteHandler := NewAnteHandler(mapper)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses
@@ -252,7 +252,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	cases := []struct {
 		chainID string
 		seqs    []int64
-		fee     sdk.StdFee
+		fee     StdFee
 		msg     sdk.Msg
 		code    sdk.CodeType
 	}{
@@ -268,7 +268,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	for _, cs := range cases {
 		tx := newTestTxWithSignBytes(
 			msg, privs, seqs, fee,
-			sdk.StdSignBytes(cs.chainID, cs.seqs, cs.fee, cs.msg),
+			StdSignBytes(cs.chainID, cs.seqs, cs.fee, cs.msg),
 		)
 		checkInvalidTx(t, anteHandler, ctx, tx, cs.code)
 	}
@@ -292,7 +292,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper, BurnFeeHandler)
+	anteHandler := NewAnteHandler(mapper)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses
@@ -322,7 +322,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	// test public key not found
 	msg = newTestMsg(addr2)
 	tx = newTestTx(ctx, msg, privs, seqs, fee)
-	sigs := tx.GetSignatures()
+	sigs := tx.(StdTx).GetSignatures()
 	sigs[0].PubKey = nil
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInvalidPubKey)
 

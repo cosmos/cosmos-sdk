@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/baseaccount"
 )
 
 // dummy addresses used for testing
@@ -74,7 +73,7 @@ func makeTestCodec() *wire.Codec {
 
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
-	cdc.RegisterConcrete(&baseaccount.BaseAccount{}, "test/stake/Account", nil)
+	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/stake/Account", nil)
 	wire.RegisterCrypto(cdc)
 
 	return cdc
@@ -107,9 +106,9 @@ func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil, log.NewNopLogger())
 	cdc := makeTestCodec()
 	accountMapper := auth.NewAccountMapper(
-		cdc,    // amino codec
-		keyAcc, // target store
-		&baseaccount.BaseAccount{}, // prototype
+		cdc,                 // amino codec
+		keyAcc,              // target store
+		&auth.BaseAccount{}, // prototype
 	)
 	ck := bank.NewKeeper(accountMapper)
 	keeper := NewKeeper(cdc, keyStake, ck, DefaultCodespace)

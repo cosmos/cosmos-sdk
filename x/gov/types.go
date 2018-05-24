@@ -60,7 +60,7 @@ func (proposal Proposal) isActive() bool {
 	return proposal.VotingStartBlock >= 0
 }
 
-func (proposal Proposal) updateTally(option string, amount int64) {
+func (proposal *Proposal) updateTally(option string, amount int64) {
 	switch option {
 	case "Yes":
 		proposal.YesVotes += amount
@@ -105,6 +105,11 @@ type ValidatorGovInfo struct {
 	InitVotingPower int64       //  Voting power of validator when proposal enters voting period
 	Minus           int64       //  Minus of validator, used to compute validator's voting power
 	LastVoteWeight  int64       //  Weight of the last vote by validator at time of casting, -1 if hasn't voted yet
+}
+
+type Delegation struct {
+	Amount 			int64
+	Validator 		sdk.Address
 }
 
 type ProposalQueue []int64

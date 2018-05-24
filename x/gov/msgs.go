@@ -161,7 +161,7 @@ func (msg MsgVote) ValidateBasic() sdk.Error {
 	if len(msg.Voter) == 0 {
 		return sdk.ErrInvalidAddress(msg.Voter.String())
 	}
-	if msg.Option != "Yes" || msg.Option != "No" || msg.Option != "NoWithVeto" || msg.Option != "Abstain" {
+	if msg.Option != "Yes" && msg.Option != "No" && msg.Option != "NoWithVeto" && msg.Option != "Abstain" {
 		return ErrInvalidVote(msg.Option)
 	}
 	return nil

@@ -26,7 +26,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
 // Handle MsgSubmitProposal.
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
 
-	_, err := keeper.ck.SubtractCoins(ctx, msg.Proposer, msg.InitialDeposit)
+	_, _,err := keeper.ck.SubtractCoins(ctx, msg.Proposer, msg.InitialDeposit)
 	if err != nil {
 		return err.Result()
 	}
@@ -38,13 +38,6 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 
 		return sdk.Result{}
 	}
-
-	initDeposit := Deposit{
-		Depositer: msg.Proposer,
-		Amount:    msg.InitialDeposit,
-	}
-
-	keeper.NewProposal(ctx, msg.Title, msg.Description, msg.ProposalType, initDeposit)
 
 	if !keeper.GetActiveProcedure().validProposalType(msg.ProposalType) {
 		return ErrInvalidProposalType(msg.ProposalType).Result()
@@ -77,18 +70,21 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	}
 
 	if proposal.TotalDeposit.IsGTE(proposal.Procedure.MinDeposit) {
+		ctx.Logger().Info("proposal is activated","proposalId",proposal.ProposalID)
 		keeper.activateVotingPeriod(ctx, &proposal)
 	}
 
 	keeper.SetProposal(ctx, proposal)
 
-	return sdk.Result{} // TODO
+	tags := sdk.NewTags("proposal",[]uint8{uint8(proposal.ProposalID)})
+
+	return sdk.Result{Tags:tags} // TODO
 }
 
 // Handle MsgDeposit.
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
 
-	_, err := keeper.ck.SubtractCoins(ctx, msg.Depositer, msg.Amount)
+	_, _,err := keeper.ck.SubtractCoins(ctx, msg.Depositer, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
@@ -139,15 +135,15 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 	validatorGovInfo := proposal.getValidatorGovInfo(msg.Voter)
 
 	// Need to finalize interface to staking mapper for delegatedTo. Makes assumption from here on out.
-	delegatedTo := keeper.sm.LoadDelegatorCandidates(ctx, msg.Voter) // TODO: Finalize with staking store
+	delegatedTo := keeper.sm.LoadDelegatorCandidates(ctx,msg.Voter) // TODO: Finalize with staking store
 
 	if validatorGovInfo == nil && len(delegatedTo) == 0 {
 		return ErrAddressNotStaked(msg.Voter).Result() // TODO: Return proper Error
 	}
 
-	if proposal.VotingStartBlock <= keeper.sm.getLastDelationChangeBlock(msg.Voter) { // TODO: Get last block in which voter bonded or unbonded
-		return ErrAddressChangedDelegation(msg.Voter).Result() // TODO: Return proper Error
-	}
+	//if proposal.VotingStartBlock <= keeper.sm.getLastDelationChangeBlock(msg.Voter) { // TODO: Get last block in which voter bonded or unbonded
+	//	return ErrAddressChangedDelegation(msg.Voter).Result() // TODO: Return proper Error
+	//}
 
 	if ctx.IsCheckTx() {
 		return sdk.Result{} // TODO
@@ -164,15 +160,15 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 			validatorGovInfo.LastVoteWeight = voteWeight
 		}
 
-		for index, delegation := range delegatedTo {
-			proposal.updateTally(msg.Option, delegation.amount)
-			delegatedValidatorGovInfo := proposal.getValidatorGovInfo(delegation.validator)
-			delegatedValidatorGovInfo.Minus += delegation.amount
+		for _, delegation := range delegatedTo {
+			proposal.updateTally(msg.Option, delegation.Amount)
+			delegatedValidatorGovInfo := proposal.getValidatorGovInfo(delegation.Validator)
+			delegatedValidatorGovInfo.Minus += delegation.Amount
 
-			delegatedValidatorVote := proposal.getVote(delegation.validator)
+			delegatedValidatorVote := proposal.getVote(delegation.Validator)
 
 			if delegatedValidatorVote != nil {
-				proposal.updateTally(delegatedValidatorVote.Option, -delegation.amount)
+				proposal.updateTally(delegatedValidatorVote.Option, -delegation.Amount)
 			}
 		}
 
@@ -184,13 +180,15 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 			validatorGovInfo.LastVoteWeight = voteWeight
 		}
 
-		for index, delegation := range delegatedTo {
-			proposal.updateTally(existingVote.Option, -delegation.amount)
-			proposal.updateTally(msg.Option, delegation.amount)
+		for _, delegation := range delegatedTo {
+			proposal.updateTally(existingVote.Option, -delegation.Amount)
+			proposal.updateTally(msg.Option, delegation.Amount)
 		}
 
 		existingVote.Option = msg.Option
 	}
+
+	ctx.Logger().Info("gov","handleMsgVote",proposal)
 
 	keeper.SetProposal(ctx, *proposal)
 

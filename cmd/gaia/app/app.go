@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
 const (
@@ -38,12 +39,14 @@ type GaiaApp struct {
 	keyAccount *sdk.KVStoreKey
 	keyIBC     *sdk.KVStoreKey
 	keyStake   *sdk.KVStoreKey
+	keyGov     *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
 	accountMapper sdk.AccountMapper
 	coinKeeper    bank.Keeper
 	ibcMapper     ibc.Mapper
 	stakeKeeper   stake.Keeper
+	govKeeper     gov.Keeper
 }
 
 func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
@@ -57,6 +60,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 		keyAccount: sdk.NewKVStoreKey("acc"),
 		keyIBC:     sdk.NewKVStoreKey("ibc"),
 		keyStake:   sdk.NewKVStoreKey("stake"),
+		keyGov:		sdk.NewKVStoreKey("gov"),
 	}
 
 	// define the accountMapper
@@ -70,17 +74,20 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
+	app.govKeeper = gov.NewKeeper(app.keyGov, app.coinKeeper, app.stakeKeeper)
 
 	// register message routes
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
+		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
+		AddRoute("gov", gov.NewHandler(app.govKeeper))
 
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)
+	app.SetBeginBlocker(gov.NewBeginBlocker(app.govKeeper))
 	app.SetEndBlocker(stake.NewEndBlocker(app.stakeKeeper))
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake)
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake,app.keyGov)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, stake.FeeHandler))
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
@@ -99,6 +106,7 @@ func MakeCodec() *wire.Codec {
 	auth.RegisterWire(cdc)
 	sdk.RegisterWire(cdc)
 	wire.RegisterCrypto(cdc)
+	gov.RegisterWire(cdc)
 	return cdc
 }
 

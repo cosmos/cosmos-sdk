@@ -15,6 +15,7 @@ import (
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
+	govcmd "github.com/cosmos/cosmos-sdk/x/gov/commands"
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 )
@@ -59,6 +60,9 @@ func main() {
 			stakecmd.GetCmdEditCandidacy(cdc),
 			stakecmd.GetCmdDelegate(cdc),
 			stakecmd.GetCmdUnbond(cdc),
+			govcmd.SubmitProposalCmd(cdc),
+			govcmd.DepositCmd(cdc),
+			govcmd.VoteCmd(cdc),
 		)...)
 
 	// add proxy, version and key info

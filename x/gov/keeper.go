@@ -10,7 +10,7 @@ import (
 
 type Keeper struct {
 	// The reference to the CoinKeeper to modify balances
-	ck bank.CoinKeeper
+	ck bank.Keeper
 
 	// The reference to the StakeMapper to get information about stakers
 	sm stake.Keeper
@@ -23,12 +23,13 @@ type Keeper struct {
 }
 
 // NewGovernanceMapper returns a mapper that uses go-wire to (binary) encode and decode gov types.
-func NewKeeper(key sdk.StoreKey, ck bank.CoinKeeper, sk stake.Keeper) Keeper {
+func NewKeeper(key sdk.StoreKey, ck bank.Keeper, sk stake.Keeper) Keeper {
 	cdc := wire.NewCodec()
 	return Keeper{
 		proposalStoreKey: key,
 		ck:               ck,
 		cdc:              cdc,
+		sm:				  sk,
 	}
 }
 
@@ -150,7 +151,7 @@ func (keeper Keeper) ProposalQueuePush(ctx sdk.Context, proposal Proposal) {
 func (keeper Keeper) GetActiveProcedure() *Procedure { // TODO: move to param store and allow for updating of this
 	return &Procedure{
 		VotingPeriod:      200,
-		MinDeposit:        sdk.Coins{{"atom", 10}},
+		MinDeposit:        sdk.Coins{{"steak", 2}},
 		ProposalTypes:     []string{"TextProposal"},
 		Threshold:         sdk.NewRat(1, 2),
 		Veto:              sdk.NewRat(1, 3),
@@ -163,18 +164,18 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
 	proposal.VotingStartBlock = ctx.BlockHeight()
 
 	// TODO: Can we get this directly from stakeState
-	// stakeState := k.sm.loadGlobalState()
-	// proposal.TotalVotingPower = stakeState.TotalSupply
+	pool := keeper.sm.GetPool(ctx)
+	proposal.TotalVotingPower = pool.TotalSupply
 
-	proposal.TotalVotingPower = 0
+	//proposal.TotalVotingPower = 0
 
-	validatorList := keeper.sm.GetValidators(ctx, 100) // TODO: Finalize with staking module
+	validatorList := keeper.sm.GetValidators(ctx) // TODO: Finalize with staking module
 
-	for index, validator := range validatorList {
+	for _, validator := range validatorList {
 		validatorGovInfo := ValidatorGovInfo{
 			ProposalID:      proposal.ProposalID,
 			ValidatorAddr:   validator.Address,     // TODO: Finalize with staking module
-			InitVotingPower: validator.VotingPower, // TODO: Finalize with staking module
+			//InitVotingPower: validator.VotingPower, // TODO: Finalize with staking module
 			Minus:           0,
 			LastVoteWeight:  -1,
 		}
@@ -185,6 +186,6 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
 	keeper.ProposalQueuePush(ctx, *proposal)
 }
 
-func (keeper Keeper) NewProposal(ctx, title string, description string, proposalType string, initDeposit Deposit) (Proposal, sdk.Error) { // TODO: move to param store and allow for updating of this
-
+func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description string, proposalType string, initDeposit Deposit) (Proposal, sdk.Error) { // TODO: move to param store and allow for updating of this
+ return Proposal{},nil
 }

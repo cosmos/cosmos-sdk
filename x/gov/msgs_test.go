@@ -3,9 +3,9 @@ package gov
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tmlibs/log"
+	"os"
 )
 
 func defaultProcedure() Procedure {
@@ -16,23 +16,29 @@ func defaultProcedure() Procedure {
 		Threshold:         sdk.NewRat(1, 2),
 		Veto:              sdk.NewRat(1, 3),
 		MaxDepositPeriod:  200,
-		GovernancePenalty: 12,
+		//GovernancePenalty: 12,
 	}
 }
 
-func TestNewSubmitProposalMsg(t *testing.T) {}
-
-func TestSubmitProposaslType(t *testing.T) {
-	// Construct a SubmitProposalMsg
-
-	addr1 := sdk.Address([]byte("input"))
-	coins := sdk.Coins{{"atom", 5}}
-
-	NewSubmitProposalMsg("Test Proposal", "the purpose of this proposal is to test", "TextProposal", addr1, coins)
-
-	// TODO some failures for bad result
-	assert.Equal(t, msg.Type(), "gov")
+func TestNewSubmitProposalMsg(t *testing.T) {
+	addr,_ := sdk.GetAddress("AF816B3A3CD3739F9D3C900E352A07FD78131B6B")
+	msg := NewMsgVote(addr,1,"Yes")
+	msg.ValidateBasic()
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger.Info("msg","Proposal",msg)
 }
+
+//func TestSubmitProposaslType(t *testing.T) {
+//	// Construct a SubmitProposalMsg
+//
+//	addr1 := sdk.Address([]byte("input"))
+//	coins := sdk.Coins{{"atom", 5}}
+//
+//	NewSubmitProposalMsg("Test Proposal", "the purpose of this proposal is to test", "TextProposal", addr1, coins)
+//
+//	// TODO some failures for bad result
+//	assert.Equal(t, msg.Type(), "gov")
+//}
 
 // func TestInputValidation(t *testing.T) {
 // 	addr1 := sdk.Address([]byte{1, 2})

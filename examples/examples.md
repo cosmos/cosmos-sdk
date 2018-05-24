@@ -40,7 +40,7 @@ basecoind version
 
 They should read something like `0.17.1-5d18d5f`, but the versions will be constantly updating so don't worry if your version is higher that 0.17.1. That's a good thing.
 
-Note that you can always check help in the terminal by running `basecli -h` or `basecoind -h`. It is good to check these out if you are stuck, because updates to the code base might slighty change the commands, and you might find the correct command in there. 
+Note that you can always check help in the terminal by running `basecli -h` or `basecoind -h`. It is good to check these out if you are stuck, because updates to the code base might slightly change the commands, and you might find the correct command in there. 
 
 Let's start by initializing the basecoind daemon. Run the command
 
@@ -131,7 +131,7 @@ Flag Descriptions:
 - `name` is the name you gave your key
 - `mycoin` is the name of the token for this basecoin demo, initialized in the genesis.json file
 - `sequence` is a tally of how many transactions have been made by this account. Since this is the first tx on this account, it is 0
-- `chain-id` is the unique ID that helps tendermint identify which network to connect to. You can find it in the terminal output from the gaiad daemon in the header block , or in the genesis.json file  at `~/.basecoind/config/gensis.json`
+- `chain-id` is the unique ID that helps tendermint identify which network to connect to. You can find it in the terminal output from the gaiad daemon in the header block , or in the genesis.json file  at `~/.basecoind/config/genesis.json`
 
 Now if we check bobs account, it should have `10000 mycoin`. You can do so by running :
 
@@ -161,7 +161,7 @@ Notice that the sequence is now 1, since we have already recorded bobs 1st trans
 basecli tx <INSERT HASH HERE>
 ```
 
-It will return the details of the transaction hash, such as how many coins were send and to which address, and on what block it occured.
+It will return the details of the transaction hash, such as how many coins were send and to which address, and on what block it occurred.
 
 That is the basic implementation of basecoin!
 

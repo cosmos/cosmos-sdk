@@ -153,6 +153,21 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 	return v, pool
 }
 
+// Remove & burn pool shares, e.g. when slashing a validator
+func (v Validator) removePoolShares(pool Pool, amt sdk.Rat) (Validator, Pool, int64) {
+	var tokens int64
+	switch v.Status() {
+	case sdk.Unbonded:
+		pool, tokens = pool.removeSharesUnbonded(amt)
+	case sdk.Unbonding:
+		pool, tokens = pool.removeSharesUnbonding(amt)
+	case sdk.Bonded:
+		pool, tokens = pool.removeSharesBonded(amt)
+	}
+	v.PoolShares.Amount = v.PoolShares.Amount.Sub(amt)
+	return v, pool, tokens
+}
+
 // XXX TEST
 // get the power or potential power for a validator
 // if bonded, the power is the BondedShares

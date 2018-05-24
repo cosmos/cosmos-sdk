@@ -72,7 +72,6 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, height int64, timestamp int64,
 	}
 	logger.Info(fmt.Sprintf("Confirmed double sign from %v at height %d, age of %d less than max age of %d", pubkey.Address(), height, age, MaxEvidenceAge))
 	k.stakeKeeper.Slash(ctx, pubkey, height, SlashFractionDoubleSign)
-	logger.Info(fmt.Sprintf("Slashed validator %s by fraction %v for double-sign at height %d", pubkey.Address(), SlashFractionDoubleSign, height))
 }
 
 // handle a validator signature, must be called once per validator per block
@@ -99,8 +98,6 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	if height > minHeight && signInfo.SignedBlocksCounter < MinSignedPerWindow {
 		k.stakeKeeper.Slash(ctx, pubkey, height, SlashFractionDowntime)
 		k.stakeKeeper.ForceUnbond(ctx, pubkey, DowntimeUnbondDuration)
-		logger.Info(fmt.Sprintf("Slashed validator %s by fraction %v and unbonded for downtime at height %d, cannot rebond for %ds",
-			address, SlashFractionDowntime, height, DowntimeUnbondDuration))
 	}
 }
 

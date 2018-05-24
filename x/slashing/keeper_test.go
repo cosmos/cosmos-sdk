@@ -2,6 +2,7 @@ package slashing
 
 import (
 	"encoding/hex"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -52,7 +53,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keep
 	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger(), nil)
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewTMLogger(os.Stdout), nil)
 	cdc := createTestCodec()
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, &auth.BaseAccount{})
 	ck := bank.NewKeeper(accountMapper)
@@ -74,8 +75,9 @@ func TestHandleDoubleSign(t *testing.T) {
 	require.True(t, got.IsOK())
 	_ = sk.Tick(ctx)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins - amt}})
+	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
 	keeper.handleDoubleSign(ctx, 0, 0, val)
-	// TODO
+	require.Equal(t, sdk.NewRat(amt).Mul(sdk.NewRat(19).Quo(sdk.NewRat(20))), sk.Validator(ctx, addr).GetPower())
 }
 
 func TestHandleAbsentValidator(t *testing.T) {

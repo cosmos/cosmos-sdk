@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.17.3
+
+Update to Tendermint v0.19.6 (fix evidence issue while syncing)
+
 ## 0.17.2
 
 *May 20, 2018*

@@ -25,19 +25,19 @@ func NewKeeper(cdc *wire.Codec, covKey sdk.StoreKey, bk bank.Keeper) Keeper {
 
 func (keeper Keeper) createCovenant(ctx sdk.Context, Sender sdk.Address,
 	Settlers []sdk.Address, Receivers []sdk.Address,
-	Amount sdk.Coins) (int64, bool) {
+	Amount sdk.Coins) (int64, sdk.Error) {
 
 	if keeper.bankKeeper.HasCoins(ctx, Sender, Amount) {
 		cov := Covenant{Settlers, Receivers, Amount}
 		covID := keeper.storeCovenant(ctx, cov)
-		return covID, true
+		return covID, nil
 	}
-	return 0, false
+	return 0, sdk.ErrInsufficientFunds("no funds for covenant")
 
 }
 
 func (keeper Keeper) settleCovenant(ctx sdk.Context, covID int64,
-	Settler sdk.Address, Receiver sdk.Address) bool {
+	Settler sdk.Address, Receiver sdk.Address) sdk.Error {
 	cov := keeper.getCovenant(ctx, covID)
 	validSettler := false
 	validReceiver := false
@@ -46,18 +46,20 @@ func (keeper Keeper) settleCovenant(ctx sdk.Context, covID int64,
 			validSettler = true
 		}
 	}
+	if !validSettler {
+		return sdk.ErrInvalidAddress("Invalid Settler address")
+	}
 	for _, r := range cov.Receivers {
 		if bytes.Equal(r, Receiver) {
 			validReceiver = true
 		}
 	}
-	if validSettler && validReceiver {
-		keeper.bankKeeper.AddCoins(ctx, Receiver, cov.Amount)
-		keeper.deleteCovenant(ctx, covID)
-		return true
-	} else {
-		return false
+	if !validReceiver {
+		return sdk.ErrInvalidAddress("Invalid Receiver address")
 	}
+	keeper.bankKeeper.AddCoins(ctx, Receiver, cov.Amount)
+	keeper.deleteCovenant(ctx, covID)
+	return nil
 }
 
 func prefixArrayKey(name string, index int64) []byte {
@@ -75,11 +77,16 @@ func (keeper Keeper) getCovenant(ctx sdk.Context, covID int64) Covenant {
 	return cov
 }
 
+func (keeper Keeper) deleteCovenant(ctx sdk.Context, covID int64) {
+	store := ctx.KVStore(keeper.covStoreKey)
+	store.Delete(prefixArrayKey("covenants", covID))
+}
+
 func (keeper Keeper) storeCovenant(ctx sdk.Context, cov Covenant) int64 {
 	covID := keeper.getNewCovenantID(ctx)
 	store := ctx.KVStore(keeper.covStoreKey)
 	covKey := prefixArrayKey("covenants", covID)
-	bz, err := keeper.cdc.MarshalBinary(cov)
+	bz, _ := keeper.cdc.MarshalBinary(cov)
 	store.Set(covKey, bz)
 	return covID
 }

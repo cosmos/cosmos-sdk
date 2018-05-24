@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
@@ -27,7 +28,7 @@ const (
 type relayCommander struct {
 	cdc       *wire.Codec
 	address   sdk.Address
-	decoder   sdk.AccountDecoder
+	decoder   auth.AccountDecoder
 	mainStore string
 	ibcStore  string
 

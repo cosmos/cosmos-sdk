@@ -46,7 +46,7 @@ BUG FIXES
 * Auto-sequencing now works correctly
 * [stake] staking delegator shares exchange rate now relative to equivalent-bonded-tokens the validator has instead of bonded tokens
   ^ this is important for unbonded validators in the power store!
-
+* [docs] Downgraded Swagger to v2 for downstream compatibility
 
 ## 0.17.2
 

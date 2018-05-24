@@ -311,13 +311,6 @@ func TestTxs(t *testing.T) {
 	// assert.NotEqual(t, "[]", body)
 }
 
-func TestCandidates(t *testing.T) {
-	candidates := getCandidates(t)
-	assert.Equal(t, len(candidates), 2)
-	assert.Equal(t, hex.EncodeToString(candidates[0].Address), candidateAddr1)
-	assert.Equal(t, hex.EncodeToString(candidates[1].Address), candidateAddr2)
-}
-
 func TestBond(t *testing.T) {
 
 	// create bond TX
@@ -334,7 +327,7 @@ func TestBond(t *testing.T) {
 	assert.Equal(t, int64(9999900), coins.AmountOf(stakeDenom))
 
 	// query candidate
-	bond := getDelegatorBond(t, sendAddr, candidateAddr1)
+	bond := getDelegation(t, sendAddr, candidateAddr1)
 	assert.Equal(t, "100/1", bond.Shares.String())
 }
 
@@ -354,7 +347,7 @@ func TestUnbond(t *testing.T) {
 	assert.Equal(t, int64(9999911), coins.AmountOf(stakeDenom))
 
 	// query candidate
-	bond := getDelegatorBond(t, sendAddr, candidateAddr1)
+	bond := getDelegation(t, sendAddr, candidateAddr1)
 	assert.Equal(t, "99/1", bond.Shares.String())
 }
 
@@ -423,13 +416,10 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 		},
 		StakeData: stake.GenesisState{
 			Pool: stake.Pool{
-				TotalSupply:       1650,
-				BondedShares:      sdk.NewRat(200, 1),
-				UnbondedShares:    sdk.ZeroRat(),
-				BondedPool:        200,
-				UnbondedPool:      0,
-				InflationLastTime: 0,
-				Inflation:         sdk.NewRat(7, 100),
+				BondedShares:     sdk.NewRat(200, 1),
+				UnbondedShares:   sdk.ZeroRat(),
+				Inflation:        sdk.NewRat(7, 100),
+				PrevBondedShares: sdk.ZeroRat(),
 			},
 			Params: stake.Params{
 				InflationRateChange: sdk.NewRat(13, 100),
@@ -439,30 +429,20 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 				MaxValidators:       100,
 				BondDenom:           stakeDenom,
 			},
-			Candidates: []stake.Candidate{
+			Validators: []stake.Validator{
 				{
-					Status:      1,
-					Address:     genDoc.Validators[0].PubKey.Address(),
-					PubKey:      genDoc.Validators[0].PubKey,
-					Assets:      sdk.NewRat(1000, 1),
-					Liabilities: sdk.ZeroRat(),
+					Owner:  genDoc.Validators[0].PubKey.Address(),
+					PubKey: genDoc.Validators[0].PubKey,
 					Description: stake.Description{
 						Moniker: "validator1",
 					},
-					ValidatorBondHeight:  0,
-					ValidatorBondCounter: 0,
 				},
 				{
-					Status:      1,
-					Address:     genDoc.Validators[1].PubKey.Address(),
-					PubKey:      genDoc.Validators[1].PubKey,
-					Assets:      sdk.NewRat(100, 1),
-					Liabilities: sdk.ZeroRat(),
+					Owner:  genDoc.Validators[1].PubKey.Address(),
+					PubKey: genDoc.Validators[1].PubKey,
 					Description: stake.Description{
 						Moniker: "validator2",
 					},
-					ValidatorBondHeight:  0,
-					ValidatorBondCounter: 0,
 				},
 			},
 		},
@@ -602,24 +582,14 @@ func doIBCTransfer(t *testing.T, port, seed string) (resultTx ctypes.ResultBroad
 	return resultTx
 }
 
-func getDelegatorBond(t *testing.T, delegatorAddr, candidateAddr string) stake.DelegatorBond {
+func getDelegation(t *testing.T, delegatorAddr, candidateAddr string) stake.Delegation {
 	// get the account to get the sequence
 	res, body := request(t, port, "GET", "/stake/"+delegatorAddr+"/bonding_status/"+candidateAddr, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var bond stake.DelegatorBond
+	var bond stake.Delegation
 	err := cdc.UnmarshalJSON([]byte(body), &bond)
 	require.Nil(t, err)
 	return bond
-}
-
-func getCandidates(t *testing.T) []stake.Candidate {
-	// get the account to get the sequence
-	res, body := request(t, port, "GET", "/stake/candidates", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var candidates []stake.Candidate
-	err := cdc.UnmarshalJSON([]byte(body), &candidates)
-	require.Nil(t, err)
-	return candidates
 }
 
 func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {

@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/baseaccount"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
@@ -28,14 +29,14 @@ type GenesisAccount struct {
 	Coins   sdk.Coins   `json:"coins"`
 }
 
-func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
+func NewGenesisAccount(acc *baseaccount.BaseAccount) GenesisAccount {
 	return GenesisAccount{
 		Address: acc.Address,
 		Coins:   acc.Coins,
 	}
 }
 
-func NewGenesisAccountI(acc sdk.Account) GenesisAccount {
+func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 	return GenesisAccount{
 		Address: acc.GetAddress(),
 		Coins:   acc.GetCoins(),
@@ -43,8 +44,8 @@ func NewGenesisAccountI(acc sdk.Account) GenesisAccount {
 }
 
 // convert GenesisAccount to auth.BaseAccount
-func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
-	return &auth.BaseAccount{
+func (ga *GenesisAccount) ToAccount() (acc *baseaccount.BaseAccount) {
+	return &baseaccount.BaseAccount{
 		Address: ga.Address,
 		Coins:   ga.Coins.Sort(),
 	}
@@ -148,7 +149,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
 		}
 
 		// create the genesis account, give'm few steaks and a buncha token with there name
-		accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
+		accAuth := baseaccount.NewBaseAccountWithAddress(genTx.Address)
 		accAuth.Coins = sdk.Coins{
 			{genTx.Name + "Token", 1000},
 			{"steak", freeFermionsAcc},

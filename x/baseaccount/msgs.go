@@ -1,11 +1,10 @@
-package auth
+package baseaccount
 
 import (
 	"encoding/json"
 
-	"github.com/tendermint/go-crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	crypto "github.com/tendermint/go-crypto"
 )
 
 // MsgChangeKey - high level transaction of the auth module
@@ -22,7 +21,7 @@ func NewMsgChangeKey(addr sdk.Address, pubkey crypto.PubKey) MsgChangeKey {
 }
 
 // Implements Msg.
-func (msg MsgChangeKey) Type() string { return "auth" }
+func (msg MsgChangeKey) Type() string { return "baseaccount" }
 
 // Implements Msg.
 func (msg MsgChangeKey) ValidateBasic() sdk.Error {

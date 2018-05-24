@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/baseaccount"
 )
 
 // dummy addresses used for testing
@@ -129,8 +130,8 @@ func makeTestCodec() *wire.Codec {
 	cdc.RegisterConcrete(MsgUnbond{}, "test/stake/Unbond", nil)
 
 	// Register AppAccount
-	cdc.RegisterInterface((*sdk.Account)(nil), nil)
-	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/stake/Account", nil)
+	cdc.RegisterInterface((*auth.Account)(nil), nil)
+	cdc.RegisterConcrete(&baseaccount.BaseAccount{}, "test/stake/Account", nil)
 	wire.RegisterCrypto(cdc)
 
 	return cdc
@@ -148,7 +149,7 @@ func paramsNoInflation() Params {
 }
 
 // hogpodge of all sorts of input required for testing
-func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, sdk.AccountMapper, Keeper) {
+func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
 	db := dbm.NewMemDB()
 	keyStake := sdk.NewKVStoreKey("stake")
 	keyMain := keyStake //sdk.NewKVStoreKey("main") //TODO fix multistore
@@ -161,9 +162,9 @@ func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, nil, log.NewNopLogger())
 	cdc := makeTestCodec()
 	accountMapper := auth.NewAccountMapper(
-		cdc,                 // amino codec
-		keyMain,             // target store
-		&auth.BaseAccount{}, // prototype
+		cdc,                        // amino codec
+		keyMain,                    // target store
+		&baseaccount.BaseAccount{}, // prototype
 	)
 	ck := bank.NewKeeper(accountMapper)
 	keeper := NewKeeper(cdc, keyStake, ck, DefaultCodespace)

@@ -58,7 +58,9 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keep
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, &auth.BaseAccount{})
 	ck := bank.NewKeeper(accountMapper)
 	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
-	stake.InitGenesis(ctx, sk, stake.DefaultGenesisState())
+	genesis := stake.DefaultGenesisState()
+	genesis.Pool.BondedTokens = initCoins * int64(len(addrs))
+	stake.InitGenesis(ctx, sk, genesis)
 	for _, addr := range addrs {
 		ck.AddCoins(ctx, addr, sdk.Coins{
 			{sk.GetParams(ctx).BondDenom, initCoins},
@@ -86,7 +88,8 @@ func TestHandleDoubleSign(t *testing.T) {
 func TestHandleAbsentValidator(t *testing.T) {
 	ctx, ck, sk, keeper := createTestInput(t)
 	addr, val, amt := addrs[0], pks[0], int64(10)
-	got := stake.NewHandler(sk)(ctx, newTestMsgDeclareCandidacy(addr, val, amt))
+	sh := stake.NewHandler(sk)
+	got := sh(ctx, newTestMsgDeclareCandidacy(addr, val, amt))
 	require.True(t, got.IsOK())
 	_ = sk.Tick(ctx)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins - amt}})
@@ -114,6 +117,9 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, SignedBlocksWindow-50, info.SignedBlocksCounter)
+	// should be bonded still
+	validator := sk.ValidatorByPubKey(ctx, val)
+	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	// 51st block missed
 	ctx = ctx.WithBlockHeight(height)
 	keeper.handleValidatorSignature(ctx, val, false)
@@ -122,6 +128,16 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, SignedBlocksWindow-51, info.SignedBlocksCounter)
 	height++
+	// should have been revoked
+	validator = sk.ValidatorByPubKey(ctx, val)
+	require.Equal(t, sdk.Unbonded, validator.GetStatus())
+	got = sh(ctx, stake.NewMsgUnrevoke(addr))
+	require.False(t, got.IsOK()) // should fail prior to jail expiration
+	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(86400 * 2)})
+	got = sh(ctx, stake.NewMsgUnrevoke(addr))
+	require.True(t, got.IsOK()) // should succeed after jail expiration
+	validator = sk.ValidatorByPubKey(ctx, val)
+	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	// should have been slashed
 	require.Equal(t, sdk.NewRat(amt).Mul(sdk.NewRat(99).Quo(sdk.NewRat(100))), sk.Validator(ctx, addr).GetPower())
 }

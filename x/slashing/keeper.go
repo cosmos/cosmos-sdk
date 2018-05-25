@@ -67,10 +67,10 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, height int64, timestamp int64,
 	logger := ctx.Logger().With("module", "x/slashing")
 	age := ctx.BlockHeader().Time - timestamp
 	if age > MaxEvidenceAge {
-		logger.Info(fmt.Sprintf("Ignored double sign from %v at height %d, age of %d past max age of %d", pubkey.Address(), height, age, MaxEvidenceAge))
+		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d", pubkey.Address(), height, age, MaxEvidenceAge))
 		return
 	}
-	logger.Info(fmt.Sprintf("Confirmed double sign from %v at height %d, age of %d less than max age of %d", pubkey.Address(), height, age, MaxEvidenceAge))
+	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), height, age, MaxEvidenceAge))
 	k.stakeKeeper.Slash(ctx, pubkey, height, SlashFractionDoubleSign)
 }
 
@@ -79,7 +79,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
 	if !signed {
-		logger.Info(fmt.Sprintf("Absent validator %v at height %d", pubkey.Address(), height))
+		logger.Info(fmt.Sprintf("Absent validator %s at height %d", pubkey.Address(), height))
 	}
 	index := height % SignedBlocksWindow
 	address := pubkey.Address()
@@ -96,8 +96,9 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	}
 	minHeight := signInfo.StartHeight + SignedBlocksWindow
 	if height > minHeight && signInfo.SignedBlocksCounter < MinSignedPerWindow {
+		logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d", pubkey.Address(), minHeight, MinSignedPerWindow))
 		k.stakeKeeper.Slash(ctx, pubkey, height, SlashFractionDowntime)
-		k.stakeKeeper.ForceUnbond(ctx, pubkey, DowntimeUnbondDuration)
+		k.stakeKeeper.ForceUnbond(ctx, pubkey, DowntimeUnbondDuration) // TODO
 	}
 }
 

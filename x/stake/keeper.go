@@ -220,7 +220,9 @@ func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) Validator 
 	oldValidator, oldFound := k.GetValidator(ctx, ownerAddr)
 
 	if validator.Revoked && oldValidator.Status() == sdk.Bonded {
+		fmt.Printf("val preupdate: %v\n", validator)
 		validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
+		fmt.Printf("val postupdate: %v\n", validator)
 		k.setPool(ctx, pool)
 	}
 
@@ -783,25 +785,29 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, fract
 	logger := ctx.Logger().With("module", "x/stake")
 	val, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
-		panic(fmt.Errorf("Attempted to slash a nonexistent validator with pubkey %s", pubkey))
+		panic(fmt.Errorf("Attempted to slash a nonexistent validator with address %s", pubkey.Address()))
 	}
 	sharesToRemove := val.PoolShares.Amount.Mul(fraction)
 	pool := k.GetPool(ctx)
 	val, pool, burned := val.removePoolShares(pool, sharesToRemove)
 	k.setPool(ctx, pool)        // update the pool
 	k.updateValidator(ctx, val) // update the validator, possibly kicking it out
-	logger.Info(fmt.Sprintf("Validator %v slashed by fraction %v, removed %v shares and burned %d tokens", pubkey, fraction, sharesToRemove, burned))
+	logger.Info(fmt.Sprintf("Validator %s slashed by fraction %v, removed %v shares and burned %d tokens", pubkey.Address(), fraction, sharesToRemove, burned))
 	return
 }
 
 // force unbond a validator
 func (k Keeper) ForceUnbond(ctx sdk.Context, pubkey crypto.PubKey, jailDuration int64) {
-	// TODO Implement
-	/*
-		val, found := k.GetValidatorByPubKey(ctx, pubkey)
-		if !found {
-			ctx.Logger().Info("Validator with pubkey %s not found, cannot force unbond", pubkey)
-			return
-		}
-	*/
+	logger := ctx.Logger().With("module", "x/stake")
+	val, found := k.GetValidatorByPubKey(ctx, pubkey)
+	if !found {
+		ctx.Logger().Info("Validator with pubkey %s not found, cannot force unbond", pubkey)
+		return
+	}
+	val.Revoked = true
+	val.RevokedUntilTime = ctx.BlockHeader().Time + jailDuration
+	k.updateValidator(ctx, val) // update the validator, now revoked
+	val, _ = k.GetValidatorByPubKey(ctx, pubkey)
+	logger.Info(fmt.Sprintf("Validator %s revoked for minimum duration %d", pubkey.Address(), jailDuration))
+	return
 }

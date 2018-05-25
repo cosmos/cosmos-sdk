@@ -16,6 +16,7 @@ const (
 	CodeInvalidValidator CodeType = 201
 	CodeInvalidBond      CodeType = 202
 	CodeInvalidInput     CodeType = 203
+	CodeValidatorJailed  CodeType = 204
 	CodeUnauthorized     CodeType = sdk.CodeUnauthorized
 	CodeInternal         CodeType = sdk.CodeInternal
 	CodeUnknownRequest   CodeType = sdk.CodeUnknownRequest
@@ -30,6 +31,8 @@ func codeToDefaultMsg(code CodeType) string {
 		return "Invalid Bond"
 	case CodeInvalidInput:
 		return "Invalid Input"
+	case CodeValidatorJailed:
+		return "Validator Jailed"
 	case CodeUnauthorized:
 		return "Unauthorized"
 	case CodeInternal:
@@ -97,6 +100,9 @@ func ErrBadShares(codespace sdk.CodespaceType) sdk.Error {
 }
 func ErrBadRemoveValidator(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeInvalidValidator, "Error removing validator")
+}
+func ErrValidatorJailed(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeValidatorJailed, "Validator jailed, cannot yet be unrevoked")
 }
 
 //----------------------------------------

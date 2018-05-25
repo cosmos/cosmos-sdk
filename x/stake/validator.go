@@ -17,9 +17,10 @@ import (
 // exchange rate. Voting power can be calculated as total bonds multiplied by
 // exchange rate.
 type Validator struct {
-	Owner   sdk.Address   `json:"owner"`   // sender of BondTx - UnbondTx returns here
-	PubKey  crypto.PubKey `json:"pub_key"` // pubkey of validator
-	Revoked bool          `json:"revoked"` // has the validator been revoked from bonded status?
+	Owner            sdk.Address   `json:"owner"`              // sender of BondTx - UnbondTx returns here
+	PubKey           crypto.PubKey `json:"pub_key"`            // pubkey of validator
+	Revoked          bool          `json:"revoked"`            // has the validator been revoked from bonded status?
+	RevokedUntilTime int64         `json:"revoked_until_time"` // timestamp before which the validator cannot unrevoke
 
 	PoolShares      PoolShares `json:"pool_shares"`      // total shares for tokens held in the pool
 	DelegatorShares sdk.Rat    `json:"delegator_shares"` // total shares issued to a validator's delegators
@@ -46,6 +47,8 @@ func NewValidator(owner sdk.Address, pubKey crypto.PubKey, description Descripti
 	return Validator{
 		Owner:                 owner,
 		PubKey:                pubKey,
+		Revoked:               false,
+		RevokedUntilTime:      int64(0),
 		PoolShares:            NewUnbondedShares(sdk.ZeroRat()),
 		DelegatorShares:       sdk.ZeroRat(),
 		Description:           description,

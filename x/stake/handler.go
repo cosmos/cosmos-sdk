@@ -19,6 +19,8 @@ func NewHandler(k Keeper) sdk.Handler {
 			return handleMsgDelegate(ctx, msg, k)
 		case MsgUnbond:
 			return handleMsgUnbond(ctx, msg, k)
+		case MsgUnrevoke:
+			return handleMsgUnrevoke(ctx, msg, k)
 		default:
 			return sdk.ErrTxDecode("invalid message parse in staking module").Result()
 		}
@@ -243,6 +245,29 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	}
 
 	tags := sdk.NewTags("action", []byte("unbond"), "delegator", msg.DelegatorAddr.Bytes(), "validator", msg.ValidatorAddr.Bytes())
+	return sdk.Result{
+		Tags: tags,
+	}
+}
+
+func handleMsgUnrevoke(ctx sdk.Context, msg MsgUnrevoke, k Keeper) sdk.Result {
+	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
+	if !found {
+		return ErrNoValidatorForAddress(k.codespace).Result()
+	}
+
+	if ctx.BlockHeader().Time < validator.RevokedUntilTime {
+		return ErrValidatorJailed(k.codespace).Result()
+	}
+
+	if ctx.IsCheckTx() {
+		return sdk.Result{}
+	}
+
+	validator.Revoked = false
+	k.updateValidator(ctx, validator)
+
+	tags := sdk.NewTags("action", []byte("unrevoke"), "validator", msg.ValidatorAddr.Bytes())
 	return sdk.Result{
 		Tags: tags,
 	}

@@ -2,6 +2,7 @@ package covenant
 
 import (
 	"bytes"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 	bank "github.com/cosmos/cosmos-sdk/x/bank"
@@ -48,7 +49,8 @@ func (keeper Keeper) settleCovenant(ctx sdk.Context, covID int64,
 		}
 	}
 	if !validSettler {
-		return sdk.ErrInvalidAddress("Invalid Settler address")
+		m := fmt.Sprintf("Invalid Settler address, received: %s, needed: %s", Settler, cov.Settlers)
+		return sdk.ErrInvalidAddress(m)
 	}
 	for _, r := range cov.Receivers {
 		if bytes.Equal(r, Receiver) {
@@ -56,7 +58,8 @@ func (keeper Keeper) settleCovenant(ctx sdk.Context, covID int64,
 		}
 	}
 	if !validReceiver {
-		return sdk.ErrInvalidAddress("Invalid Receiver address")
+		m := fmt.Sprintf("Invalid Receiver address, received: %s, needed: %s", Receiver, cov.Receivers)
+		return sdk.ErrInvalidAddress(m)
 	}
 	keeper.bankKeeper.AddCoins(ctx, Receiver, cov.Amount)
 	keeper.deleteCovenant(ctx, covID)

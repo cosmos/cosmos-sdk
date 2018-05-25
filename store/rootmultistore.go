@@ -29,7 +29,7 @@ type rootMultiStore struct {
 	storesParams map[StoreKey]storeParams
 	stores       map[StoreKey]CommitStore
 	keysByName   map[string]StoreKey
-	opsByName    map[string]merkle.Op
+	opsByName    map[string][]merkle.Op
 }
 
 var _ CommitMultiStore = (*rootMultiStore)(nil)
@@ -235,9 +235,8 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) (abci.ResponseQuery, merk
 	req.Path = subpath
 	res, prf := queryable.Query(req)
 
-	fmt.Printf("prf: %+v\nreq: %+v\n", prf, req)
 	if req.Prove && prf != nil {
-		prf = append(prf, rs.opsByName[storeName])
+		prf = append(prf, rs.opsByName[storeName]...)
 	}
 
 	return res, prf
@@ -331,16 +330,20 @@ func (ci commitInfo) CommitID() CommitID {
 	}
 }
 
-func (ci commitInfo) Proofs() (res map[string]merkle.Op) {
+func (ci commitInfo) Proofs() (res map[string][]merkle.Op) {
 	m := make(map[string]libmerkle.Hasher, len(ci.StoreInfos))
 	for _, storeInfo := range ci.StoreInfos {
 		m[storeInfo.Name] = storeInfo
 	}
 	_, proofs, keys := libmerkle.SimpleProofsFromMap(m)
 
-	res = make(map[string]merkle.Op)
+	res = make(map[string][]merkle.Op)
 	for i, key := range keys {
-		res[key] = merkle.FromSimpleProof(proofs[key], i, len(keys))
+		si := m[key].(storeInfo)
+		res[key] = []merkle.Op{
+			RootMultistoreOp{si.Name, si.Core.CommitID.Version},
+			merkle.FromSimpleProof(proofs[key], i, len(keys)),
+		}
 	}
 	return
 }
@@ -370,6 +373,37 @@ func (si storeInfo) Hash() []byte {
 	hasher := ripemd160.New()
 	hasher.Write(bz)
 	return hasher.Sum(nil)
+}
+
+type RootMultistoreOp struct {
+	Name    string
+	Version int64
+}
+
+func (op RootMultistoreOp) Run(value [][]byte) ([][]byte, error) {
+	if len(value) != 1 {
+		return nil, fmt.Errorf("Value size is not 1")
+	}
+
+	si := storeInfo{
+		Name: op.Name,
+		Core: storeCore{
+			CommitID: CommitID{
+				Version: op.Version,
+				Hash:    value[0],
+			},
+		},
+	}
+	kvp := libmerkle.KVPair{[]byte(op.Name), si.Hash()}
+	return [][]byte{kvp.Hash()}, nil
+}
+
+func (op RootMultistoreOp) GetKey() string {
+	return op.Name
+}
+
+func (op RootMultistoreOp) Raw() merkle.RawOp {
+	return merkle.RawOp{} // TODO
 }
 
 //----------------------------------------

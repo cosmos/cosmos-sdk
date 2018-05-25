@@ -167,7 +167,6 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery, prf m
 		key := req.Data // Data holds the key bytes
 		if req.Prove {
 			value, proof, err := tree.GetVersionedWithProof(key, height)
-			fmt.Printf("iavl: \n%+v\n%+v\n%+v\n", value, proof, err)
 			if err != nil {
 				res.Log = err.Error()
 				break

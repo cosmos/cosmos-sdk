@@ -40,8 +40,8 @@ func DefaultLayerDecoder(ro RawOp) Op {
 }
 
 type Op interface {
-	GetKey() string
 	Run([][]byte) ([][]byte, error)
+	GetKey() string
 	Raw() RawOp
 }
 

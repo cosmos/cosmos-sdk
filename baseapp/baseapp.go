@@ -353,7 +353,9 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			return sdk.ErrUnknownRequest(msg).QueryResult()
 		}
 		req.Path = "/" + strings.Join(path[1:], "/")
-		return queryable.Query(req)
+		res, proof := queryable.Query(req)
+		res.Proof = proof.Bytes()
+		return res
 	}
 	// "/p2p" prefix for p2p queries
 	if len(path) >= 4 && path[0] == "p2p" {

@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -126,37 +127,48 @@ func TestMultiStoreQuery(t *testing.T) {
 	ver := cid.Version
 
 	// Test bad path.
-	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
-	qres := multi.Query(query)
+	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver, Prove: true}
+	qres, proof := multi.Query(query)
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	assert.Nil(t, proof)
 
 	query.Path = "h897fy32890rf63296r92"
-	qres = multi.Query(query)
+	qres, proof = multi.Query(query)
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	assert.Nil(t, proof)
 
 	// Test invalid store name.
 	query.Path = "/garbage/key"
-	qres = multi.Query(query)
+	qres, proof = multi.Query(query)
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	assert.Nil(t, proof)
 
 	// Test valid query with data.
+	fmt.Printf("b")
 	query.Path = "/store1/key"
-	qres = multi.Query(query)
+	qres, proof = multi.Query(query)
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
 	assert.Equal(t, v, qres.Value)
+	fmt.Printf("1:\n%+v\n", proof)
+	assert.Nil(t, proof.Verify(cid.Hash, [][]byte{qres.Value}, string(query.Data), "store1"))
 
 	// Test valid but empty query.
 	query.Path = "/store2/key"
 	query.Prove = true
-	qres = multi.Query(query)
+	qres, proof = multi.Query(query)
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
 	assert.Nil(t, qres.Value)
+	// Absent proof not implemented
+	// assert.Nil(t, proof.Verify(cid.Hash, [][]byte{qres.Value}, string(query.Data), "store2"))
 
 	// Test store2 data.
+	fmt.Println("a")
 	query.Data = k2
-	qres = multi.Query(query)
+	qres, proof = multi.Query(query)
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
 	assert.Equal(t, v2, qres.Value)
+	fmt.Printf("2:\n%+v\n", proof)
+	assert.Nil(t, proof.Verify(cid.Hash, [][]byte{qres.Value}, string(query.Data), "store2"))
 }
 
 //-----------------------------------------------------------------------

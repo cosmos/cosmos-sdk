@@ -6,6 +6,8 @@ import (
 	abci "github.com/tendermint/abci/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
+
+	"github.com/cosmos/cosmos-sdk/merkle"
 )
 
 // NOTE: These are implemented in cosmos-sdk/store.
@@ -32,7 +34,7 @@ type CommitStore interface {
 //
 // This is an optional, but useful extension to any CommitStore
 type Queryable interface {
-	Query(abci.RequestQuery) abci.ResponseQuery
+	Query(abci.RequestQuery) (abci.ResponseQuery, merkle.Proof)
 }
 
 //----------------------------------------

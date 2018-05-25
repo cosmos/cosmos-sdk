@@ -8,8 +8,9 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/merkle"
+	libmerkle "github.com/tendermint/tmlibs/merkle"
 
+	"github.com/cosmos/cosmos-sdk/merkle"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -28,6 +29,7 @@ type rootMultiStore struct {
 	storesParams map[StoreKey]storeParams
 	stores       map[StoreKey]CommitStore
 	keysByName   map[string]StoreKey
+	opsByName    map[string]merkle.Op
 }
 
 var _ CommitMultiStore = (*rootMultiStore)(nil)
@@ -151,6 +153,9 @@ func (rs *rootMultiStore) Commit() CommitID {
 	setLatestVersion(batch, version)
 	batch.Write()
 
+	// Cache subproof ops
+	rs.opsByName = commitInfo.Proofs()
+
 	// Prepare for next version.
 	commitID := CommitID{
 		Version: version,
@@ -207,29 +212,35 @@ func (rs *rootMultiStore) getStoreByName(name string) Store {
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
 // TODO: add proof for `multistore -> substore`.
-func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
+func (rs *rootMultiStore) Query(req abci.RequestQuery) (abci.ResponseQuery, merkle.Proof) {
 	// Query just routes this to a substore.
 	path := req.Path
 	storeName, subpath, err := parsePath(path)
 	if err != nil {
-		return err.QueryResult()
+		return err.QueryResult(), nil
 	}
 
 	store := rs.getStoreByName(storeName)
 	if store == nil {
 		msg := fmt.Sprintf("no such store: %s", storeName)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		return sdk.ErrUnknownRequest(msg).QueryResult(), nil
 	}
 	queryable, ok := store.(Queryable)
 	if !ok {
 		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		return sdk.ErrUnknownRequest(msg).QueryResult(), nil
 	}
 
 	// trim the path and make the query
 	req.Path = subpath
-	res := queryable.Query(req)
-	return res
+	res, prf := queryable.Query(req)
+
+	fmt.Printf("prf: %+v\nreq: %+v\n", prf, req)
+	if req.Prove && prf != nil {
+		prf = append(prf, rs.opsByName[storeName])
+	}
+
+	return res, prf
 }
 
 // parsePath expects a format like /<storeName>[/<subpath>]
@@ -306,11 +317,11 @@ type commitInfo struct {
 // Hash returns the simple merkle root hash of the stores sorted by name.
 func (ci commitInfo) Hash() []byte {
 	// TODO cache to ci.hash []byte
-	m := make(map[string]merkle.Hasher, len(ci.StoreInfos))
+	m := make(map[string]libmerkle.Hasher, len(ci.StoreInfos))
 	for _, storeInfo := range ci.StoreInfos {
 		m[storeInfo.Name] = storeInfo
 	}
-	return merkle.SimpleHashFromMap(m)
+	return libmerkle.SimpleHashFromMap(m)
 }
 
 func (ci commitInfo) CommitID() CommitID {
@@ -318,6 +329,20 @@ func (ci commitInfo) CommitID() CommitID {
 		Version: ci.Version,
 		Hash:    ci.Hash(),
 	}
+}
+
+func (ci commitInfo) Proofs() (res map[string]merkle.Op) {
+	m := make(map[string]libmerkle.Hasher, len(ci.StoreInfos))
+	for _, storeInfo := range ci.StoreInfos {
+		m[storeInfo.Name] = storeInfo
+	}
+	_, proofs, keys := libmerkle.SimpleProofsFromMap(m)
+
+	res = make(map[string]merkle.Op)
+	for i, key := range keys {
+		res[key] = merkle.FromSimpleProof(proofs[key], i, len(keys))
+	}
+	return
 }
 
 //----------------------------------------

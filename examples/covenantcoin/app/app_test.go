@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/examples/covenantcoin/types"
-	cov "github.com/cosmos/cosmos-sdk/examples/covenantcoin/x/covenant"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -92,7 +91,7 @@ func loggerAndDB() (log.Logger, dbm.DB) {
 	return logger, db
 }
 
-func newBasecoinApp() *CovenantApp {
+func newCovenantApp() *CovenantApp {
 	logger, db := loggerAndDB()
 	return NewCovenantApp(logger, db)
 }
@@ -123,7 +122,7 @@ func setGenesisAccounts(bapp *CovenantApp, accs ...auth.BaseAccount) error {
 //_______________________________________________________________________
 
 func TestMsgs(t *testing.T) {
-	bapp := newBasecoinApp()
+	bapp := newCovenantApp()
 
 	msgs := []struct {
 		msg sdk.Msg
@@ -135,55 +134,6 @@ func TestMsgs(t *testing.T) {
 		// Run a CheckDeliver
 		SignCheckDeliver(t, bapp, m.msg, []int64{int64(i)}, false, priv1)
 	}
-}
-
-func TestEscrow(t *testing.T) {
-	app := newBasecoinApp()
-	coinDenom := "foocoin"
-	// Default state
-	genState := fmt.Sprintf(`{
-      "accounts": [{
-        "address": "%s",
-        "coins": [
-          {
-            "denom": "%s",
-            "amount": 10000
-          }
-        ]
-      }]
-    }`, addr1.String(), coinDenom)
-
-	vals := []abci.Validator{}
-	app.InitChain(abci.RequestInitChain{vals, []byte(genState)})
-	app.Commit()
-
-	coinsToEscrow := sdk.Coin{Denom: coinDenom, Amount: 1000}
-	createCov := cov.MsgCreateCovenant{Sender: addr1,
-		Settlers:  []sdk.Address{addr1},
-		Receivers: []sdk.Address{addr2, addr3},
-		Amount:    []sdk.Coin{coinsToEscrow},
-	}
-
-	numCovenants := int64(5)
-	for i := int64(0); i < numCovenants; i++ {
-		res := SignCheckDeliver(t, app, createCov, []int64{i}, true, priv1)
-		var id int64
-		app.cdc.UnmarshalBinary(res.Data, &id)
-		require.Equal(t, i, id)
-		app.Commit()
-	}
-
-	settleCov1 := cov.MsgSettleCovenant{CovID: int64(1),
-		Settler:  addr1,
-		Receiver: addr2,
-	}
-	SignCheckDeliver(t, app, settleCov1, []int64{5}, true, priv1)
-	app.Commit()
-	SignCheckDeliver(t, app, settleCov1, []int64{6}, false, priv1)
-
-	CheckBalance(t, app, addr1, "5000foocoin")
-	CheckBalance(t, app, addr2, "1000foocoin")
-
 }
 
 func TestSortGenesis(t *testing.T) {
@@ -260,7 +210,7 @@ func TestGenesis(t *testing.T) {
 
 func TestMsgChangePubKey(t *testing.T) {
 
-	bapp := newBasecoinApp()
+	bapp := newCovenantApp()
 
 	// Construct some genesis bytes to reflect basecoin/types/AppAccount
 	// Give 77 foocoin to the first key
@@ -314,7 +264,7 @@ func TestMsgChangePubKey(t *testing.T) {
 }
 
 func TestMsgSendWithAccounts(t *testing.T) {
-	bapp := newBasecoinApp()
+	bapp := newCovenantApp()
 
 	// Construct some genesis bytes to reflect basecoin/types/AppAccount
 	// Give 77 foocoin to the first key
@@ -355,7 +305,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 }
 
 func TestMsgSendMultipleOut(t *testing.T) {
-	bapp := newBasecoinApp()
+	bapp := newCovenantApp()
 
 	genCoins, err := sdk.ParseCoins("42foocoin")
 	require.Nil(t, err)
@@ -383,7 +333,7 @@ func TestMsgSendMultipleOut(t *testing.T) {
 }
 
 func TestSengMsgMultipleInOut(t *testing.T) {
-	bapp := newBasecoinApp()
+	bapp := newCovenantApp()
 
 	genCoins, err := sdk.ParseCoins("42foocoin")
 	require.Nil(t, err)
@@ -417,7 +367,7 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 }
 
 func TestMsgSendDependent(t *testing.T) {
-	bapp := newBasecoinApp()
+	bapp := newCovenantApp()
 
 	genCoins, err := sdk.ParseCoins("42foocoin")
 	require.Nil(t, err)
@@ -445,7 +395,7 @@ func TestMsgSendDependent(t *testing.T) {
 }
 
 func TestMsgQuiz(t *testing.T) {
-	bapp := newBasecoinApp()
+	bapp := newCovenantApp()
 
 	// Construct genesis state
 	// Construct some genesis bytes to reflect basecoin/types/AppAccount
@@ -477,7 +427,7 @@ func TestMsgQuiz(t *testing.T) {
 }
 
 func TestIBCMsgs(t *testing.T) {
-	bapp := newBasecoinApp()
+	bapp := newCovenantApp()
 
 	sourceChain := "source-chain"
 	destChain := "dest-chain"

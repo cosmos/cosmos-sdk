@@ -4,7 +4,7 @@ TODO: Add CLI stuff
 
 ## Description of the application (Covenant Coin)
 
-Suppose I want to make an application to have covenants. A covenant is a thing where money is stored, and it can only be paid out to certain addresses. When a covenant is created, the people who can pay from it is specified. For simplicity, we are going to make it such that when a covenant is settled, all money just goes to one address.
+Suppose I want to make an application to have covenants. A covenant stores money, and it can only be paid out to certain addresses. When a covenant is created, you have to specify who is allowed to pay the money from the covenant. For simplicity, we are going to make it such that when a covenant is settled, all money just goes to one address.
 
 Before digging into how to build such an application, I want to first explain a bit about how SDK applications are structured.
 
@@ -33,14 +33,14 @@ democoin/
     └── other modules
 ```
 
-`app.go` handles basically taking all the funcionality specified, and making an application. (TODO: improve/fix this description) For our purposes, we're basically just going to c/p all of app.go.
+`app.go` handles basically taking all the functionality specified, and turning it into a blockchain. (TODO: improve/fix this description) For our purposes, we're basically just going to copy paste all of `app.go`.
 
-`types/account.go` messes with what is actually stored inside of an account, for our purposes we're not going to need to mess with this either. In general, put items in the account only if you need said data every single time you get the account. (Coins are in here for example, because you need them every time for fees) Everything else can be in a KVStore with the account as the key.
+`types/account.go` sets what is actually stored inside of an account. For our purposes, we're not going to need to change any of this. In general, put items in the account only if you need said data every single time you get the account. (Coins are in here for example, because you need them every time for fees) Everything else can be in a KVStore with the account as the key.
 
 
 `x/simplestake` : `simplestake` is a module. This is basically where all of the code lives that handles staking. Similarly, we are going to have to organize all of our covenant handling code in our own `covenant` module. All of the things inside the module are basically registered with `app.go` later.
 
-In the simplestake module, there are `msgs`, `keepers`, and `handlers`. Typically, one makes a separate key value store for each module. Keepers have the functionality of accessing / doing things with the key value store. For example, the bank module, which controls creation and deletion of coins, has a keeper to add/subtract coins from anyone, and a keeper to just view someones coins. Keepers from one application are often passed into other application's keepers. This will all make more sense when we walk through building the covenant application. Note, there is not an interface which keepers implement, they are just this concept of the thing that handles state access.
+In the simplestake module, there are `msgs`, `keepers`, and `handlers`. Typically, one makes a separate key value store for each module. `Keepers` have the functionality of accessing / doing things with the key value store. For example, the bank module, which controls creation and deletion of coins, has a keeper to add/subtract coins from anyone, and a keeper to just view someones coins. Keepers from one application are often passed into other application's keepers. This will all make more sense when we walk through building the covenant application. Note, there is not an interface which keepers implement, they are just this concept of the thing that handles state access.
 
 `handlers` on the other hand are given access to the minimum amount of keepers which they need, and they basically parse the message type into the relevant data, and pass that into a keeper. They then return the result.
 
@@ -77,10 +77,10 @@ type Covenant struct {
 	Amount    sdk.Coins
 }
 ```
-These are going to be stored inside of our KV Store by a global covenant ID, that gets incremented every time a covenant is created.
+These are going to be stored inside of our KVStore by a global covenant ID, that gets incremented every time a covenant is created.
 
 ### Defining the messages
-This will go in a `msgs.go` file inside of the module. There are two different types of messages we need, a message to create a covenant, and a message to settle a covenant. This is done w/ the following:
+This will go in a `msgs.go` file inside of the module. There are two different types of messages we need, a message to create a covenant, and a message to settle a covenant. This is done with the following:
 ```
 type MsgCreateCovenant struct {
 	Sender    sdk.Address   `json:"sender"`
@@ -121,7 +121,7 @@ The keeper is where we are going to have all the functionality that involves the
 
 There are two message types we can have regarding covenants, creating a covenant, and settling a covenant. So we can have one keeper to create and settle these covenants. In the future there may be an application which should be able to view covenants, but not be able to create covenants, so you could create a second keeper with this limited access just for viewing covenants. For simplicity we're just going to write one keeper for now.
 
-Our keeper will need access to the covenant KVStore, the bank keeper (to add/subtract funds from people), and to the codec to know how to encode data for the KVStore. This looks like the following:
+Our keeper will need access to the covenant KVStore, the bank keeper (to add/subtract funds from people), and to the codec to know how to encode data for the KVStore. Notice that we can reuse another keeper to handle the money transferral API. This looks like the following:
 ```
 type Keeper struct {
 	covStoreKey sdk.StoreKey
@@ -161,6 +161,17 @@ The handling of the settling covenant is straightforward. For the msg creation c
 
 Now all thats left is letting the sdk know that all of this exists.
 
-To create the keeper, add it to the `CovenantApp` struct, and then add `app.covKeeper = covenant.NewKeeper(app.cdc, app.keyCovenant, app.coinKeeper)` in NewCovenantApp.
+To create the keeper, add it to the `CovenantApp` struct, and then add `app.covKeeper = covenant.NewKeeper(app.cdc, app.keyCovenant, app.coinKeeper)` in NewCovenantApp. Note that here is basically where we are giving the covenant keeper the ability to mint / delete coins, since we pass in that keeper.
 
 To add the handler, in the app.Router code block, add the newly created handler, with `covenant` being the route. (This has to be the same as the route specified in the Msg's `Type()` function)
+
+### Writing Tests
+
+All thats left is writing some tests to show that our application works! First in both `app.go` and `app_test.go` change the import of `.../basecoin/types` to `.../covenantcoin/types`.
+
+For our test, we initialize the blockchain to give an account `x` money. We then have them create a couple of covenants, and have then settle a covenant. We check that a covenant can't be settled multiple times, and that at the end the correct amount of money is in each account. The code shows how to make and send each of our custom message types, so questions about how to make tests should hopefully be clear after looking at the testfile. (The relevant new test is in `custom_test.go`, the default helper methods are in `app_test.go`). Note that in order to check the data field for creating a covenant, SignCheckDeliver was modified to return the result.
+
+And we see that covenants work as expected.
+
+### CLI Stuff
+TODO: we need to add the code so that this all works from the command line. 

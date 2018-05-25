@@ -344,8 +344,8 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "8e1e2bd10adf21aa0afc99e17be9bad256bbcb98"
-  version = "v0.19.6-rc0"
+  revision = "667fbaee2340cf85682f3f58366a4b12ea5f04af"
+  version = "v0.19.6-rc1"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -397,7 +397,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "04b83988a018ef3ebffe1485df79d6499b76a4b4"
+  revision = "b269ba27edabbc65a34a9ccdcaca3744d43ac3c8"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -458,6 +458,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "040a93e994181534e1c1b9bd987f1d50ea68db55033ded01b3e4acf9497eb6de"
+  inputs-digest = "a4addf7b4ca07ec2cadd5eff4bcf1fb87be35afbf8b93597a8e1ff047df96a57"
   solver-name = "gps-cdcl"
   solver-version = 1

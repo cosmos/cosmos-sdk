@@ -1,16 +1,7 @@
-
 ## State
 
-The staking module persists the following information to the store:
-* `Params`, a struct describing the global pools, inflation, and fees
-* `Pool`, a struct describing the global pools, inflation, and fees
-* `ValidatorValidators: <pubkey | shares> => <validator>`, a map of all validators (including current validators) in the store,
-indexed by their public key and shares in the global pool.
-* `DelegatorBonds: < delegator-address | validator-pubkey > => <delegator-bond>`. a map of all delegations by a delegator to a validator,
-indexed by delegator address and validator pubkey.
-  public key
-
 ### Pool
+ - index: n/a single-record
 
 The pool is a space for all dynamic global state of the Cosmos Hub.  It tracks
 information about the total amounts of Atoms in all states, representative
@@ -39,6 +30,7 @@ type PoolShares struct {
 ```
 
 ### Params
+ - index: n/a single-record
 
 Params is global data structure that stores system parameters and defines
 overall functioning of the stake module. 
@@ -56,6 +48,11 @@ type Params struct {
 ```
 
 ### Validator
+ - index 1: validator owner address
+ - index 2: validator Tendermint PubKey
+ - index 3: bonded validators only
+ - index 4: voting power
+ - index 5: Tendermint updates
 
 The `Validator` holds the current state and some historical actions of the
 validator.
@@ -90,10 +87,8 @@ type Description struct {
 }
 ```
 
-* RedelegatingShares: The portion of `IssuedDelegatorShares` which are 
-  currently re-delegating to a new validator
-
 ### Delegation
+ - index: delegation address
 
 Atom holders may delegate coins to validators; under this circumstance their
 funds are held in a `Delegation` data structure. It is owned by one 
@@ -110,10 +105,12 @@ type Delegation struct {
 ```
 
 ### UnbondingDelegation
+ - index: delegation address
 
 A UnbondingDelegation object is created every time an unbonding is initiated.
-It must be completed with a second transaction provided by the delegation owner
+The unbond must be completed with a second transaction provided by the delegation owner
 after the unbonding period has passed.
+ 
 
 ```golang
 type UnbondingDelegation struct {
@@ -126,16 +123,16 @@ type UnbondingDelegation struct {
 ``` 
 
 ### Redelegation
-
-A redelegation object is created every time a redelegation occurs. It must be
-completed with a second transaction provided by the delegation owner after the
-unbonding period has passed.  The destination delegation of a redelegation may
-not itself undergo a new redelegation until the original redelegation has been
-completed.
-
- - index: delegation address
+ - index 1: delegation address
  - index 2: source validator owner address
  - index 3: destination validator owner address
+
+A redelegation object is created every time a redelegation occurs. The
+redelegation must be completed with a second transaction provided by the
+delegation owner after the unbonding period has passed.  The destination
+delegation of a redelegation may not itself undergo a new redelegation until
+the original redelegation has been completed.
+
 
 ```golang
 type Redelegation struct {

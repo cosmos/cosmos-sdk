@@ -6,8 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/merkle"
+	libmerkle "github.com/tendermint/tmlibs/merkle"
 
+	"github.com/cosmos/cosmos-sdk/merkle"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -124,39 +125,54 @@ func TestMultiStoreQuery(t *testing.T) {
 	// Commit the multistore.
 	cid = multi.Commit()
 	ver := cid.Version
+	root := cid.Hash
 
 	// Test bad path.
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
-	qres := multi.Query(query)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	qval, qprf, qerr := multi.Query(query)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), qerr.ABCICode())
+	assert.Nil(t, qval)
+	assert.Nil(t, qprf)
 
 	query.Path = "h897fy32890rf63296r92"
-	qres = multi.Query(query)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	qval, qprf, qerr = multi.Query(query)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), qerr.ABCICode())
 
 	// Test invalid store name.
 	query.Path = "/garbage/key"
-	qres = multi.Query(query)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	qval, qprf, qerr = multi.Query(query)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), qerr.ABCICode())
+	assert.Nil(t, qval)
+	assert.Nil(t, qprf)
 
 	// Test valid query with data.
 	query.Path = "/store1/key"
-	qres = multi.Query(query)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
-	assert.Equal(t, v, qres.Value)
+	query.Prove = true
+	qval, qprf, qerr = multi.Query(query)
+	assert.Nil(t, qerr)
+	assert.Equal(t, v, qval)
+	leaf, err := merkle.Leaf(k, v)
+	assert.Nil(t, err)
+	assert.Nil(t, qprf.Verify(leaf, root, "store1"))
 
 	// Test valid but empty query.
 	query.Path = "/store2/key"
 	query.Prove = true
-	qres = multi.Query(query)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
-	assert.Nil(t, qres.Value)
+	qval, qprf, qerr = multi.Query(query)
+	// Absent proof not implemented
+	// assert.Nil(t, qerr)
+	assert.Nil(t, qval)
+	// Absent proof not implemented
+	// assert.Nil(t, qprf.Verify(k2, root, []byte("store2")))
 
 	// Test store2 data.
 	query.Data = k2
-	qres = multi.Query(query)
-	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
-	assert.Equal(t, v2, qres.Value)
+	qval, qprf, qerr = multi.Query(query)
+	assert.Nil(t, qerr)
+	assert.Equal(t, v2, qval)
+	leaf, err = merkle.Leaf(k2, v2)
+	assert.Nil(t, err)
+	assert.Nil(t, qprf.Verify(leaf, root, "store2"))
 }
 
 //-----------------------------------------------------------------------
@@ -187,7 +203,7 @@ func getExpectedCommitID(store *rootMultiStore, ver int64) CommitID {
 }
 
 func hashStores(stores map[StoreKey]CommitStore) []byte {
-	m := make(map[string]merkle.Hasher, len(stores))
+	m := make(map[string]libmerkle.Hasher, len(stores))
 	for key, store := range stores {
 		name := key.Name()
 		m[name] = storeInfo{
@@ -198,5 +214,5 @@ func hashStores(stores map[StoreKey]CommitStore) []byte {
 			},
 		}
 	}
-	return merkle.SimpleHashFromMap(m)
+	return libmerkle.SimpleHashFromMap(m)
 }

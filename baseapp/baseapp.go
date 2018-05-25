@@ -12,6 +12,7 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
+	"github.com/cosmos/cosmos-sdk/merkle"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -345,6 +346,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			Value: value,
 		}
 	}
+
 	// "/store" prefix for store queries
 	if len(path) >= 1 && path[0] == "store" {
 		queryable, ok := app.cms.(sdk.Queryable)
@@ -352,8 +354,25 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			msg := "multistore doesn't support queries"
 			return sdk.ErrUnknownRequest(msg).QueryResult()
 		}
+
 		req.Path = "/" + strings.Join(path[1:], "/")
-		return queryable.Query(req)
+		value, proof, err := queryable.Query(req)
+		if err != nil {
+			return err.QueryResult()
+		}
+
+		if req.Prove && value != nil { // TODO: implement absent proof to remove the second condition
+			cdc := wire.NewCodec()
+			merkle.RegisterWire(cdc)
+			store.RegisterWire(cdc)
+			var rawerr error
+			res.Proof, rawerr = proof.Bytes(cdc)
+			if rawerr != nil {
+				return sdk.ErrInternal(rawerr.Error()).QueryResult()
+			}
+		}
+		res.Value = value
+		return
 	}
 	// "/p2p" prefix for p2p queries
 	if len(path) >= 4 && path[0] == "p2p" {
@@ -366,6 +385,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			}
 		}
 	}
+
 	msg := "unknown query path"
 	return sdk.ErrUnknownRequest(msg).QueryResult()
 }

@@ -9,6 +9,7 @@ import (
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 
+	"github.com/cosmos/cosmos-sdk/merkle"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -142,10 +143,11 @@ func (st *iavlStore) ReverseSubspaceIterator(prefix []byte) Iterator {
 // If latest-1 is not present, use latest (which must be present)
 // if you care to have the latest data to see a tx results, you must
 // explicitly set the height you want to see
-func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
+func (st *iavlStore) Query(req abci.RequestQuery) (value []byte, proof *merkle.MultiProof, err sdk.Error) {
 	if len(req.Data) == 0 {
 		msg := "Query cannot be zero length"
-		return sdk.ErrTxDecode(msg).QueryResult()
+		err = sdk.ErrTxDecode(msg)
+		return
 	}
 
 	tree := st.tree
@@ -158,37 +160,50 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			height = latest
 		}
 	}
-	// store the height we chose in the response
-	res.Height = height
 
+	var data sdk.Data
+
+	/*
+		// store the height we chose in the response
+		res.Height = height
+	*/
 	switch req.Path {
 	case "/store", "/key": // Get by key
 		key := req.Data // Data holds the key bytes
-		res.Key = key
+		data.Key = key
 		if req.Prove {
-			value, proof, err := tree.GetVersionedWithProof(key, height)
-			if err != nil {
-				res.Log = err.Error()
+			var iavlp iavl.KeyProof
+			var rawerr error
+			value, iavlp, rawerr = tree.GetVersionedWithProof(key, height)
+			if rawerr != nil {
+				err = sdk.ErrInternal(rawerr.Error())
 				break
 			}
-			res.Value = value
-			res.Proof = proof.Bytes()
+
+			var kproof merkle.KeyProof
+			kproof, rawerr = merkle.FromKeyProof(iavlp)
+			if rawerr != nil {
+				err = sdk.ErrInternal(rawerr.Error())
+				break
+			}
+			proof = &merkle.MultiProof{
+				KeyProof: kproof,
+			}
 		} else {
-			_, res.Value = tree.GetVersioned(key, height)
+			_, value = tree.GetVersioned(key, height)
 		}
 	case "/subspace":
 		subspace := req.Data
-		res.Key = subspace
 		var KVs []KVPair
 		iterator := st.SubspaceIterator(subspace)
 		for ; iterator.Valid(); iterator.Next() {
 			KVs = append(KVs, KVPair{iterator.Key(), iterator.Value()})
 		}
 		iterator.Close()
-		res.Value = cdc.MustMarshalBinary(KVs)
+		value = cdc.MustMarshalBinary(KVs)
 	default:
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		err = sdk.ErrUnknownRequest(msg)
 	}
 	return
 }

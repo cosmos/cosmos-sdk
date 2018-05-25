@@ -9,8 +9,6 @@ import (
 	"github.com/tendermint/iavl"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -287,62 +285,64 @@ func TestIAVLStoreQuery(t *testing.T) {
 	querySub := abci.RequestQuery{Path: "/subspace", Data: ksub, Height: ver}
 
 	// query subspace before anything set
-	qres := iavlStore.Query(querySub)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, valExpSubEmpty, qres.Value)
+	qval, _, qerr := iavlStore.Query(querySub)
+	assert.Nil(t, qerr)
+	assert.Equal(t, valExpSubEmpty, qval)
 
 	// set data
 	iavlStore.Set(k1, v1)
 	iavlStore.Set(k2, v2)
 
 	// set data without commit, doesn't show up
-	qres = iavlStore.Query(query)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Nil(t, qres.Value)
+	iavlStore.Set(k1, v1)
+	qval, _, qerr = iavlStore.Query(query)
+	assert.Nil(t, qerr)
+	assert.Nil(t, qval)
 
 	// commit it, but still don't see on old version
 	cid = iavlStore.Commit()
-	qres = iavlStore.Query(query)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Nil(t, qres.Value)
+	qval, _, qerr = iavlStore.Query(query)
+	assert.Nil(t, qerr)
+	assert.Nil(t, qval)
 
 	// but yes on the new version
 	query.Height = cid.Version
-	qres = iavlStore.Query(query)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, v1, qres.Value)
+	qval, _, qerr = iavlStore.Query(query)
+	assert.Nil(t, qerr)
+	assert.Equal(t, v1, qval)
 
 	// and for the subspace
-	qres = iavlStore.Query(querySub)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, valExpSub1, qres.Value)
+	qval, _, qerr = iavlStore.Query(querySub)
+	assert.Nil(t, qerr)
+	assert.Equal(t, valExpSub1, qval)
 
 	// modify
 	iavlStore.Set(k1, v3)
 	cid = iavlStore.Commit()
 
 	// query will return old values, as height is fixed
-	qres = iavlStore.Query(query)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, v1, qres.Value)
+	qval, _, qerr = iavlStore.Query(query)
+	assert.Nil(t, qerr)
+	assert.Equal(t, v1, qval)
 
 	// update to latest in the query and we are happy
 	query.Height = cid.Version
-	qres = iavlStore.Query(query)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, v3, qres.Value)
+	qval, _, qerr = iavlStore.Query(query)
+	assert.Nil(t, qerr)
+	assert.Equal(t, v3, qval)
 	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
-	qres = iavlStore.Query(query2)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, v2, qres.Value)
+
+	qval, _, qerr = iavlStore.Query(query2)
+	assert.Nil(t, qerr)
+	assert.Equal(t, v2, qval)
 	// and for the subspace
-	qres = iavlStore.Query(querySub)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, valExpSub2, qres.Value)
+	qval, _, qerr = iavlStore.Query(querySub)
+	assert.Nil(t, qerr)
+	assert.Equal(t, valExpSub2, qval)
 
 	// default (height 0) will show latest -1
 	query0 := abci.RequestQuery{Path: "/store", Data: k1}
-	qres = iavlStore.Query(query0)
-	assert.Equal(t, uint32(sdk.CodeOK), qres.Code)
-	assert.Equal(t, v1, qres.Value)
+	qval, _, qerr = iavlStore.Query(query0)
+	assert.Nil(t, qerr)
+	assert.Equal(t, v1, qval)
 }

@@ -8,8 +8,9 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/merkle"
+	libmerkle "github.com/tendermint/tmlibs/merkle"
 
+	"github.com/cosmos/cosmos-sdk/merkle"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -28,6 +29,9 @@ type rootMultiStore struct {
 	storesParams map[StoreKey]storeParams
 	stores       map[StoreKey]CommitStore
 	keysByName   map[string]StoreKey
+
+	// cached proofs
+	proofByName map[string]merkle.SubProof
 }
 
 var _ CommitMultiStore = (*rootMultiStore)(nil)
@@ -157,6 +161,10 @@ func (rs *rootMultiStore) Commit() CommitID {
 		Hash:    commitInfo.Hash(),
 	}
 	rs.lastCommitID = commitID
+
+	// cache substore proofs
+	rs.cacheSubstoreProofs(commitInfo.StoreInfos)
+
 	return commitID
 }
 
@@ -207,29 +215,40 @@ func (rs *rootMultiStore) getStoreByName(name string) Store {
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
 // TODO: add proof for `multistore -> substore`.
-func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
+func (rs *rootMultiStore) Query(req abci.RequestQuery) (value []byte, proof *merkle.MultiProof, err sdk.Error) {
 	// Query just routes this to a substore.
 	path := req.Path
 	storeName, subpath, err := parsePath(path)
 	if err != nil {
-		return err.QueryResult()
+		return
 	}
 
 	store := rs.getStoreByName(storeName)
 	if store == nil {
 		msg := fmt.Sprintf("no such store: %s", storeName)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		err = sdk.ErrUnknownRequest(msg)
+		return
 	}
 	queryable, ok := store.(Queryable)
 	if !ok {
 		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		err = sdk.ErrUnknownRequest(msg)
+		return
 	}
 
 	// trim the path and make the query
 	req.Path = subpath
-	res := queryable.Query(req)
-	return res
+	value, proof, err = queryable.Query(req)
+	if err != nil {
+		return
+	}
+
+	if req.Prove {
+		subproof := rs.proofByName[storeName]
+		proof.SubProofs = append(proof.SubProofs, subproof)
+	}
+
+	return
 }
 
 // parsePath expects a format like /<storeName>[/<subpath>]
@@ -281,6 +300,68 @@ func (rs *rootMultiStore) nameToKey(name string) StoreKey {
 	panic("Unknown name " + name)
 }
 
+func makeInfoMap(infos []storeInfo) map[string]libmerkle.Hasher {
+	m := make(map[string]libmerkle.Hasher, len(infos))
+	for _, info := range infos {
+		m[info.Name] = info
+	}
+	return m
+}
+
+func (rs *rootMultiStore) indexByName(infos []storeInfo) (res map[string]int) {
+	res = make(map[string]int)
+	m := makeInfoMap(infos)
+	sm := libmerkle.NewSimpleMap()
+	for k, v := range m {
+		sm.Set(k, v)
+	}
+
+	kvs := sm.KVPairs()
+
+	var key [20]byte
+	kvm := make(map[[20]byte]int)
+
+	for i, kvp := range kvs {
+		copy(key[:], kvp.Key[:20]) // Size of a RIPEMD160 hash is 20
+		kvm[key] = i
+	}
+
+	for _, info := range infos {
+		hash := libmerkle.SimpleHashFromBytes([]byte(info.Name))
+		copy(key[:], hash[:20])
+		res[info.Name] = kvm[key]
+	}
+
+	return
+}
+
+func (rs *rootMultiStore) cacheSubstoreProofs(infos []storeInfo) {
+	m := makeInfoMap(infos)
+
+	_, proofs := libmerkle.SimpleProofsFromMap(m)
+
+	cid := rs.LastCommitID()
+	rs.proofByName = make(map[string]merkle.SubProof)
+
+	ibn := rs.indexByName(infos)
+
+	for name, index := range ibn {
+		proof, err := merkle.FromSimpleProof(proofs[index], index, len(proofs), cid.Hash)
+		if err != nil {
+			panic(err)
+		}
+
+		wrapper := RootMultistoreWrapper{Version: cid.Version}
+
+		rs.proofByName[name] = merkle.SubProof{
+			ExistsProof:  proof,
+			Wrapper:      wrapper,
+			IsDescriptor: true,
+			Key:          name,
+		}
+	}
+}
+
 //----------------------------------------
 // storeParams
 
@@ -306,11 +387,11 @@ type commitInfo struct {
 // Hash returns the simple merkle root hash of the stores sorted by name.
 func (ci commitInfo) Hash() []byte {
 	// TODO cache to ci.hash []byte
-	m := make(map[string]merkle.Hasher, len(ci.StoreInfos))
+	m := make(map[string]libmerkle.Hasher, len(ci.StoreInfos))
 	for _, storeInfo := range ci.StoreInfos {
 		m[storeInfo.Name] = storeInfo
 	}
-	return merkle.SimpleHashFromMap(m)
+	return libmerkle.SimpleHashFromMap(m)
 }
 
 func (ci commitInfo) CommitID() CommitID {
@@ -345,6 +426,30 @@ func (si storeInfo) Hash() []byte {
 	hasher := ripemd160.New()
 	hasher.Write(bz)
 	return hasher.Sum(nil)
+}
+
+// RootMultistoreWrapper - defines leaf hash wrapping method
+type RootMultistoreWrapper struct {
+	Version int64
+}
+
+// Wrap implements merkle.Wrapper
+func (w RootMultistoreWrapper) Wrap(name string, data []byte) []byte {
+	si := storeInfo{
+		Name: name,
+		Core: storeCore{
+			CommitID: CommitID{
+				Version: w.Version,
+				Hash:    data,
+			},
+		},
+	}
+
+	res, err := merkle.SimpleLeaf([]byte(name), si)
+	if err != nil {
+		panic(err)
+	}
+	return res
 }
 
 //----------------------------------------
@@ -390,6 +495,23 @@ func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
 		StoreInfos: storeInfos,
 	}
 	return ci
+}
+
+// same with commitStores but use LastCommitID instead of Commit
+func getCommitIDStores(storeMap map[StoreKey]CommitStore) []storeInfo {
+	storeInfos := make([]storeInfo, 0, len(storeMap))
+
+	for key, store := range storeMap {
+		commitID := store.LastCommitID()
+
+		si := storeInfo{}
+		si.Name = key.Name()
+		si.Core.CommitID = commitID
+
+		storeInfos = append(storeInfos, si)
+	}
+
+	return storeInfos
 }
 
 // Gets commitInfo from disk.

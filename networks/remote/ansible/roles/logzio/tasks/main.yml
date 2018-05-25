@@ -1,0 +1,27 @@
+---
+
+- name: Copy journalbeat binary
+  copy: src="{{JOURNALBEAT_BINARY}}" dest=/usr/bin/journalbeat mode=0755
+  notify: restart journalbeat
+
+- name: Create folders
+  file: "path={{item}} state=directory recurse=yes"
+  with_items:
+  - /etc/journalbeat
+  - /etc/pki/tls/certs
+  - /usr/share/journalbeat
+  - /var/log/journalbeat
+
+- name: Copy journalbeat config
+  template: src=journalbeat.yml.j2 dest=/etc/journalbeat/journalbeat.yml mode=0600
+  notify: restart journalbeat
+
+- name: Get server certificate for Logz.io
+  get_url: "url=https://raw.githubusercontent.com/logzio/public-certificates/master/COMODORSADomainValidationSecureServerCA.crt force=yes dest=/etc/pki/tls/certs/COMODORSADomainValidationSecureServerCA.crt"
+
+- name: Copy journalbeat service config
+  copy: src=journalbeat.service dest=/etc/systemd/system/journalbeat.service
+  notify:
+  - reload daemon
+  - restart journalbeat
+  

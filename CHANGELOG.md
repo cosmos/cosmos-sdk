@@ -40,6 +40,7 @@ FEATURES
 * [stake] Creation of a validator/delegation generics in `/types`
 * [stake] Helper Description of the store in x/stake/store.md
 * [stake] removed use of caches in the stake keeper
+* [Makefile] Added terraform/ansible playbooks to easily create remote testnets on Digital Ocean
 
 BUG FIXES 
 

@@ -223,6 +223,7 @@ func NewMsgUnrevoke(validatorAddr sdk.Address) MsgUnrevoke {
 	}
 }
 
+//nolint
 func (msg MsgUnrevoke) Type() string              { return MsgType }
 func (msg MsgUnrevoke) GetSigners() []sdk.Address { return []sdk.Address{msg.ValidatorAddr} }
 

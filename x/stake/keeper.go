@@ -220,9 +220,7 @@ func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) Validator 
 	oldValidator, oldFound := k.GetValidator(ctx, ownerAddr)
 
 	if validator.Revoked && oldValidator.Status() == sdk.Bonded {
-		fmt.Printf("val preupdate: %v\n", validator)
 		validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
-		fmt.Printf("val postupdate: %v\n", validator)
 		k.setPool(ctx, pool)
 	}
 

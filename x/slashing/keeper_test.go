@@ -120,6 +120,8 @@ func TestHandleAbsentValidator(t *testing.T) {
 	// should be bonded still
 	validator := sk.ValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
+	pool := sk.GetPool(ctx)
+	require.Equal(t, int64(210), pool.BondedTokens)
 	// 51st block missed
 	ctx = ctx.WithBlockHeight(height)
 	keeper.handleValidatorSignature(ctx, val, false)
@@ -138,8 +140,9 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.True(t, got.IsOK()) // should succeed after jail expiration
 	validator = sk.ValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
+	pool = sk.GetPool(ctx)
 	// should have been slashed
-	require.Equal(t, sdk.NewRat(amt).Mul(sdk.NewRat(99).Quo(sdk.NewRat(100))), sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, int64(208), pool.BondedTokens)
 }
 
 func newPubKey(pk string) (res crypto.PubKey) {

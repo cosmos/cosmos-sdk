@@ -51,3 +51,17 @@ Delete servers
 
     make remotenet-stop
 
+Logging
+-------
+
+You can ship logs to Logz.io, an Elastic stack (Elastic search, Logstash and Kibana) service provider. You can set up your nodes to log there automatically. Create an account and get your API key from the notes on `this page <https://app.logz.io/#/dashboard/data-sources/Filebeat>`__, then:
+
+::
+
+   yum install systemd-devel || echo "This will only work on RHEL-based systems."
+   apt-get install libsystemd-dev || echo "This will only work on Debian-based systems."
+
+   go get github.com/mheese/journalbeat
+   ansible-playbook -i inventory/digital_ocean.py -l remotenet logzio.yml -e LOGZIO_TOKEN=ABCDEFGHIJKLMNOPQRSTUVWXYZ012345
+
+

@@ -31,7 +31,7 @@ func (p Pool) equal(p2 Pool) bool {
 }
 
 // initial pool for testing
-func initialPool() Pool {
+func InitialPool() Pool {
 	return Pool{
 		LooseUnbondedTokens:     0,
 		BondedTokens:            0,

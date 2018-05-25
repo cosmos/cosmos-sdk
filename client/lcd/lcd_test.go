@@ -36,16 +36,18 @@ import (
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 var (
-	coinDenom  = "mycoin"
+	coinDenom  = "steak"
 	coinAmount = int64(10000000)
 
 	stakeDenom     = "steak"
-	candidateAddr1 = ""
-	candidateAddr2 = ""
+	validatorAddr1 = ""
+	validatorAddr2 = ""
 
 	// XXX bad globals
 	name     = "test"
@@ -222,6 +224,7 @@ func TestValidators(t *testing.T) {
 func TestCoinSend(t *testing.T) {
 
 	// query empty
+	//res, body := request(t, port, "GET", "/accounts/8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6", nil)
 	res, body := request(t, port, "GET", "/accounts/8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6", nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
@@ -327,7 +330,7 @@ func TestBond(t *testing.T) {
 	assert.Equal(t, int64(9999900), coins.AmountOf(stakeDenom))
 
 	// query candidate
-	bond := getDelegation(t, sendAddr, candidateAddr1)
+	bond := getDelegation(t, sendAddr, validatorAddr1)
 	assert.Equal(t, "100/1", bond.Shares.String())
 }
 
@@ -347,7 +350,7 @@ func TestUnbond(t *testing.T) {
 	assert.Equal(t, int64(9999911), coins.AmountOf(stakeDenom))
 
 	// query candidate
-	bond := getDelegation(t, sendAddr, candidateAddr1)
+	bond := getDelegation(t, sendAddr, validatorAddr1)
 	assert.Equal(t, "99/1", bond.Shares.String())
 }
 
@@ -366,14 +369,6 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	var info cryptoKeys.Info
-	info, seed, err = kb.Create(name, password, cryptoKeys.AlgoEd25519) // XXX global seed
-	if err != nil {
-		return nil, nil, err
-	}
-
-	pubKey := info.PubKey
-	sendAddr = pubKey.Address().String() // XXX global
 
 	config := GetConfig()
 	config.Consensus.TimeoutCommit = 1000
@@ -400,59 +395,46 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 			Name:   "val",
 		},
 	)
-	candidateAddr1 = hex.EncodeToString(genDoc.Validators[0].PubKey.Address())
-	candidateAddr2 = hex.EncodeToString(genDoc.Validators[1].PubKey.Address())
 
-	coins := sdk.Coins{
-		{coinDenom, coinAmount},
-		{stakeDenom, coinAmount},
-	}
-	appState := gapp.GenesisState{
-		Accounts: []gapp.GenesisAccount{
-			{
-				Address: pubKey.Address(),
-				Coins:   coins,
-			},
-		},
-		StakeData: stake.GenesisState{
-			Pool: stake.Pool{
-				BondedShares:     sdk.NewRat(200, 1),
-				UnbondedShares:   sdk.ZeroRat(),
-				Inflation:        sdk.NewRat(7, 100),
-				PrevBondedShares: sdk.ZeroRat(),
-			},
-			Params: stake.Params{
-				InflationRateChange: sdk.NewRat(13, 100),
-				InflationMax:        sdk.NewRat(1, 5),
-				InflationMin:        sdk.NewRat(7, 100),
-				GoalBonded:          sdk.NewRat(67, 100),
-				MaxValidators:       100,
-				BondDenom:           stakeDenom,
-			},
-			Validators: []stake.Validator{
-				{
-					Owner:  genDoc.Validators[0].PubKey.Address(),
-					PubKey: genDoc.Validators[0].PubKey,
-					Description: stake.Description{
-						Moniker: "validator1",
-					},
-				},
-				{
-					Owner:  genDoc.Validators[1].PubKey.Address(),
-					PubKey: genDoc.Validators[1].PubKey,
-					Description: stake.Description{
-						Moniker: "validator2",
-					},
-				},
-			},
-		},
-	}
+	pk1 := genDoc.Validators[0].PubKey
+	pk2 := genDoc.Validators[1].PubKey
+	validatorAddr1 = hex.EncodeToString(pk1.Address())
+	validatorAddr2 = hex.EncodeToString(pk2.Address())
 
-	stateBytes, err := cdc.MarshalJSONIndent(appState, "", "  ")
+	// NOTE it's bad practice to reuse pk address for the owner address but doing in the
+	// test for simplicity
+	var appGenTxs [2]json.RawMessage
+	appGenTxs[0], _, _, err = gapp.GaiaAppGenTxNF(cdc, pk1, pk1.Address(), "test_val1", true)
 	if err != nil {
 		return nil, nil, err
 	}
-	genDoc.AppStateJSON = stateBytes
+	appGenTxs[1], _, _, err = gapp.GaiaAppGenTxNF(cdc, pk2, pk2.Address(), "test_val2", true)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	genesisState, err := gapp.GaiaAppGenState(cdc, appGenTxs[:])
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// add the sendAddr to genesis
+	var info cryptoKeys.Info
+	info, seed, err = kb.Create(name, password, cryptoKeys.AlgoEd25519) // XXX global seed
+	if err != nil {
+		return nil, nil, err
+	}
+	sendAddr = info.PubKey.Address().String() // XXX global
+	accAuth := auth.NewBaseAccountWithAddress(info.PubKey.Address())
+	accAuth.Coins = sdk.Coins{{"steak", 100}}
+	acc := gapp.NewGenesisAccount(&accAuth)
+	genesisState.Accounts = append(genesisState.Accounts, acc)
+
+	appState, err := wire.MarshalJSONIndent(cdc, genesisState)
+	if err != nil {
+		return nil, nil, err
+	}
+	genDoc.AppStateJSON = appState
 
 	// LCD listen address
 	port = fmt.Sprintf("%d", 17377)                       // XXX
@@ -609,7 +591,7 @@ func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxC
 			}
 		],
 		"unbond": []
-	}`, name, password, sequence, candidateAddr1, stakeDenom))
+	}`, name, password, sequence, validatorAddr1, stakeDenom))
 	res, body := request(t, port, "POST", "/stake/bondunbond", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -637,7 +619,7 @@ func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastT
 				"shares": "1"
 			}
 		]
-	}`, name, password, sequence, candidateAddr1))
+	}`, name, password, sequence, validatorAddr1))
 	res, body := request(t, port, "POST", "/stake/bondunbond", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -674,7 +656,7 @@ func doMultiBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadca
 				"shares": "1"
 			}
 		]
-	}`, name, password, sequence, candidateAddr1, stakeDenom, candidateAddr2, stakeDenom, candidateAddr1))
+	}`, name, password, sequence, validatorAddr1, stakeDenom, validatorAddr2, stakeDenom, validatorAddr1))
 	res, body := request(t, port, "POST", "/stake/bondunbond", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

@@ -33,7 +33,7 @@ democoin/
     └── other modules
 ```
 
-`app.go` handles basically taking all the functionality specified, and turning it into a blockchain. (TODO: improve/fix this description) For our purposes, we're basically just going to copy paste all of `app.go`.
+`app.go` handles basically taking all the functionality specified, and turning it into a blockchain. (TODO: improve/fix this description) For our purposes, we're basically just going to copy paste all of basecoin's `app.go`.
 
 `types/account.go` sets what is actually stored inside of an account. For our purposes, we're not going to need to change any of this. In general, put items in the account only if you need said data every single time you get the account. (Coins are in here for example, because you need them every time for fees) Everything else can be in a KVStore with the account as the key.
 
@@ -143,7 +143,7 @@ Since the keys and values for the kvstore are both []byte, we use the Codec pass
 
 ### Handlers
 
-The handler takes our message, and the current context, and basically uses the keeper to perform the relevant actions. We can then register the handler with the sdk in the application, and it will handle everything else. The [handler type](https://github.com/cosmos/cosmos-sdk/blob/develop/types/handler.go) is `type Handler func(ctx Context, msg Msg) Result`. Since we want our handler to have knowledge of the Keeper, we [curry](https://en.wikipedia.org/wiki/Currying) the keeper. We make this handler handle both types of messages. This ends up looking like:
+The handler takes our message, and the current context, and basically uses the keeper to perform the relevant actions. We can then register the handler with the sdk in the application, and it will handle everything else. The [handler type](https://github.com/cosmos/cosmos-sdk/blob/develop/types/handler.go) is `type Handler func(ctx Context, msg Msg) Result`. Since we want our handler to have knowledge of the Keeper, we return a [function closure](https://en.wikipedia.org/wiki/Closure_(computer_programming)) using the keeper. We make this handler handle both types of messages. This ends up looking like:
 ```
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
@@ -174,4 +174,4 @@ For our test, we initialize the blockchain to give an account `x` money. We then
 And we see that covenants work as expected.
 
 ### CLI Stuff
-TODO: we need to add the code so that this all works from the command line. 
+TODO: we need to add the code so that this all works from the command line.

@@ -11,7 +11,7 @@ import (
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
+	"github.com/cosmos/cosmos-sdk/examples/covenantcoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
@@ -20,26 +20,26 @@ func main() {
 	ctx := server.NewDefaultContext()
 
 	rootCmd := &cobra.Command{
-		Use:               "basecoind",
-		Short:             "Basecoin Daemon (server)",
+		Use:               "covenantd",
+		Short:             "Covenantcoin Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
 	server.AddCommands(ctx, cdc, rootCmd, server.DefaultAppInit,
-		server.ConstructAppCreator(newApp, "basecoin"),
-		server.ConstructAppExporter(exportAppState, "basecoin"))
+		server.ConstructAppCreator(newApp, "covenantcoin"),
+		server.ConstructAppExporter(exportAppState, "covenantcoin"))
 
 	// prepare and add flags
-	rootDir := os.ExpandEnv("$HOME/.basecoind")
+	rootDir := os.ExpandEnv("$HOME/.covenantd")
 	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
 	executor.Execute()
 }
 
 func newApp(logger log.Logger, db dbm.DB) abci.Application {
-	return app.NewBasecoinApp(logger, db)
+	return app.NewCovenantApp(logger, db)
 }
 
 func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
-	bapp := app.NewBasecoinApp(logger, db)
+	bapp := app.NewCovenantApp(logger, db)
 	return bapp.ExportAppStateJSON()
 }

@@ -13,21 +13,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
+	covenantcmd "github.com/cosmos/cosmos-sdk/examples/covenantcoin/x/covenant/cli"
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
-	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
+	"github.com/cosmos/cosmos-sdk/examples/covenantcoin/app"
+	"github.com/cosmos/cosmos-sdk/examples/covenantcoin/types"
 )
 
 // rootCmd is the entry point for this binary
 var (
 	rootCmd = &cobra.Command{
-		Use:   "basecli",
-		Short: "Basecoin light-client",
+		Use:   "covenantcli",
+		Short: "Covenantcoin light-client",
 	}
 )
 
@@ -74,7 +75,14 @@ func main() {
 		version.VersionCmd,
 	)
 
+	rootCmd.AddCommand(
+		client.PostCommands(
+			covenantcmd.CreateCovenantTxCmd(cdc),
+			covenantcmd.SettleCovenantTxCmd(cdc),
+		)...,
+	)
+
 	// prepare and add flags
-	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/.basecli"))
+	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/.covenantcli"))
 	executor.Execute()
 }

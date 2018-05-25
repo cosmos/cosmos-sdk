@@ -45,8 +45,8 @@ install_examples:
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecli
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democoind
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democli
-	go install $(BUILD_FLAGS) ./examples/escrow/cmd/escrowd
-	go install $(BUILD_FLAGS) ./examples/escrow/cmd/escrowcli
+	go install $(BUILD_FLAGS) ./examples/covenantcoin/cmd/covenantd
+	go install $(BUILD_FLAGS) ./examples/covenantcoin/cmd/covenantcli
 
 dist:
 	@bash publish/dist.sh

@@ -36,9 +36,9 @@ var (
 	// TODO Governance parameter?
 	SlashFractionDoubleSign = sdk.NewRat(1).Quo(sdk.NewRat(20))
 
-	// SlashFractionDowntime - currently 0
+	// SlashFractionDowntime - currently 1%
 	// TODO Governance parameter?
-	SlashFractionDowntime = sdk.ZeroRat()
+	SlashFractionDowntime = sdk.NewRat(1).Quo(sdk.NewRat(100))
 )
 
 // Keeper of the slashing store

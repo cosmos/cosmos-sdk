@@ -84,7 +84,46 @@ func TestHandleDoubleSign(t *testing.T) {
 }
 
 func TestHandleAbsentValidator(t *testing.T) {
-	// TODO
+	ctx, ck, sk, keeper := createTestInput(t)
+	addr, val, amt := addrs[0], pks[0], int64(10)
+	got := stake.NewHandler(sk)(ctx, newTestMsgDeclareCandidacy(addr, val, amt))
+	require.True(t, got.IsOK())
+	_ = sk.Tick(ctx)
+	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins - amt}})
+	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
+	info, found := keeper.getValidatorSigningInfo(ctx, val.Address())
+	require.False(t, found)
+	require.Equal(t, int64(0), info.StartHeight)
+	require.Equal(t, int64(0), info.SignedBlocksCounter)
+	height := int64(0)
+	// 1000 blocks OK
+	for ; height < 1000; height++ {
+		ctx = ctx.WithBlockHeight(height)
+		keeper.handleValidatorSignature(ctx, val, true)
+	}
+	info, found = keeper.getValidatorSigningInfo(ctx, val.Address())
+	require.True(t, found)
+	require.Equal(t, int64(0), info.StartHeight)
+	require.Equal(t, SignedBlocksWindow, info.SignedBlocksCounter)
+	// 50 blocks missed
+	for ; height < 1050; height++ {
+		ctx = ctx.WithBlockHeight(height)
+		keeper.handleValidatorSignature(ctx, val, false)
+	}
+	info, found = keeper.getValidatorSigningInfo(ctx, val.Address())
+	require.True(t, found)
+	require.Equal(t, int64(0), info.StartHeight)
+	require.Equal(t, SignedBlocksWindow-50, info.SignedBlocksCounter)
+	// 51st block missed
+	ctx = ctx.WithBlockHeight(height)
+	keeper.handleValidatorSignature(ctx, val, false)
+	info, found = keeper.getValidatorSigningInfo(ctx, val.Address())
+	require.True(t, found)
+	require.Equal(t, int64(0), info.StartHeight)
+	require.Equal(t, SignedBlocksWindow-51, info.SignedBlocksCounter)
+	height++
+	// should have been slashed
+	require.Equal(t, sdk.NewRat(amt).Mul(sdk.NewRat(99).Quo(sdk.NewRat(100))), sk.Validator(ctx, addr).GetPower())
 }
 
 func newPubKey(pk string) (res crypto.PubKey) {

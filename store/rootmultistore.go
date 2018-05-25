@@ -1,6 +1,7 @@
 package store
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -380,6 +381,8 @@ type RootMultistoreOp struct {
 	Version int64
 }
 
+const RootMultistoreOpType = merkle.OpType("rootmultistore")
+
 func (op RootMultistoreOp) Run(value [][]byte) ([][]byte, error) {
 	if len(value) != 1 {
 		return nil, fmt.Errorf("Value size is not 1")
@@ -402,8 +405,17 @@ func (op RootMultistoreOp) GetKey() string {
 	return op.Name
 }
 
-func (op RootMultistoreOp) Raw() merkle.RawOp {
-	return merkle.RawOp{} // TODO
+func (op RootMultistoreOp) Raw() (res merkle.RawOp, err error) {
+	bz, err := json.Marshal(op)
+	if err != nil {
+		return
+	}
+
+	return merkle.RawOp{
+		Type: RootMultistoreOpType,
+		Data: bz,
+		Key:  op.Name,
+	}, nil
 }
 
 //----------------------------------------

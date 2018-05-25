@@ -2,6 +2,7 @@ package merkle
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 
 	"golang.org/x/crypto/ripemd160"
@@ -15,7 +16,7 @@ import (
 
 type IAVLExistsOp struct {
 	*iavl.KeyExistsProof
-	Key string
+	Key string `json:"key"`
 }
 
 var _ Op = IAVLExistsOp{}
@@ -56,12 +57,17 @@ func (op IAVLExistsOp) GetKey() string {
 	return op.Key
 }
 
-func (op IAVLExistsOp) Raw() RawOp {
+func (op IAVLExistsOp) Raw() (res RawOp, err error) {
+	bz, err := json.Marshal(op)
+	if err != nil {
+		return
+	}
+
 	return RawOp{
 		Type: IAVLExistsOpType,
-		Data: nil, // TODO
+		Data: bz, // TODO
 		Key:  "",
-	}
+	}, nil
 }
 
 type IAVLAbsentOp struct{}
@@ -75,12 +81,12 @@ func (op IAVLAbsentOp) GetKey() string {
 	return ""
 }
 
-func (op IAVLAbsentOp) Raw() RawOp {
+func (op IAVLAbsentOp) Raw() (RawOp, error) {
 	return RawOp{
 		Type: IAVLAbsentOpType,
 		Data: nil, // TODO
 		Key:  "",
-	}
+	}, nil
 }
 
 type SimpleExistsOp struct {
@@ -136,10 +142,15 @@ func (op SimpleExistsOp) GetKey() string {
 	return ""
 }
 
-func (op SimpleExistsOp) Raw() RawOp {
+func (op SimpleExistsOp) Raw() (res RawOp, err error) {
+	bz, err := json.Marshal(op)
+	if err != nil {
+		return
+	}
+
 	return RawOp{
 		Type: SimpleExistsOpType,
-		Data: nil, // TODO
+		Data: bz, // TODO
 		Key:  "",
-	}
+	}, nil
 }

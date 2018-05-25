@@ -2,28 +2,29 @@ package merkle
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 )
 
 type OpType string
 
 const (
-	TMCoreOpType = OpType("tmcore_wrapper")
+	TMCoreOpType = OpType("tmcore")
 
-	IAVLExistsOpType   = OpType("iavl_exists_proof")
-	IAVLAbsentOpType   = OpType("iavl_absent_proof")
-	SimpleExistsOpType = OpType("simple_exists_proof")
+	IAVLExistsOpType   = OpType("iavl_exists")
+	IAVLAbsentOpType   = OpType("iavl_absent")
+	SimpleExistsOpType = OpType("simple_exists")
 )
 
 type RawOp struct {
 	Type OpType
-	Data [][]byte
+	Data []byte
 	Key  string
 }
 
 type OpDecoder func(RawOp) Op
 
-func DefaultLayerDecoder(ro RawOp) Op {
+func DefaultOpDecoder(ro RawOp) Op {
 	switch ro.Type {
 	/*	case TMCoreOpType:
 		return TMCoreOp{}*/
@@ -42,7 +43,7 @@ func DefaultLayerDecoder(ro RawOp) Op {
 type Op interface {
 	Run([][]byte) ([][]byte, error)
 	GetKey() string
-	Raw() RawOp
+	Raw() (RawOp, error)
 }
 
 type Proof []Op
@@ -68,6 +69,6 @@ func (p Proof) Verify(root []byte, value [][]byte, keys ...string) (err error) {
 	return nil
 }
 
-func (p Proof) Bytes() []byte {
-	return nil // TODO
+func (p Proof) Bytes() ([]byte, error) {
+	return json.Marshal(p)
 }

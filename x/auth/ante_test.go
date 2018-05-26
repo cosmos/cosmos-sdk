@@ -69,11 +69,12 @@ func newTestTxWithSignBytes(msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, f
 // Test various error cases in the AnteHandler control flow.
 func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup
-	ms, capKey := setupMultiStore()
+	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses
@@ -110,11 +111,12 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 // Test logic around sequence checking with one signer and many signers.
 func TestAnteHandlerSequences(t *testing.T) {
 	// setup
-	ms, capKey := setupMultiStore()
+	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses
@@ -176,11 +178,12 @@ func TestAnteHandlerSequences(t *testing.T) {
 // Test logic around fee deduction.
 func TestAnteHandlerFees(t *testing.T) {
 	// setup
-	ms, capKey := setupMultiStore()
+	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses
@@ -213,11 +216,12 @@ func TestAnteHandlerFees(t *testing.T) {
 
 func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// setup
-	ms, capKey := setupMultiStore()
+	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses
@@ -288,11 +292,12 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 
 func TestAnteHandlerSetPubKey(t *testing.T) {
 	// setup
-	ms, capKey := setupMultiStore()
+	ms, capKey, capKey2 := setupMultiStore()
 	cdc := wire.NewCodec()
 	RegisterBaseAccount(cdc)
 	mapper := NewAccountMapper(cdc, capKey, &BaseAccount{})
-	anteHandler := NewAnteHandler(mapper)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(mapper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	// keys and addresses

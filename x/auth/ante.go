@@ -9,13 +9,14 @@ import (
 )
 
 const (
-	verifyCost = 100
+	deductFeesCost sdk.Gas = 10
+	verifyCost             = 100
 )
 
 // NewAnteHandler returns an AnteHandler that checks
 // and increments sequence numbers, checks signatures,
 // and deducts fees from the first signer.
-func NewAnteHandler(am AccountMapper) sdk.AnteHandler {
+func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 	return func(
 		ctx sdk.Context, tx sdk.Tx,
@@ -77,7 +78,10 @@ func NewAnteHandler(am AccountMapper) sdk.AnteHandler {
 			if i == 0 {
 				// TODO: min fee
 				if !fee.Amount.IsZero() {
+					ctx.GasMeter().ConsumeGas(deductFeesCost, "deductFees")
 					signerAcc, res = deductFees(signerAcc, fee)
+					fck.addCollectedFees(ctx, fee.Amount)
+
 					if !res.IsOK() {
 						return ctx, res, true
 					}

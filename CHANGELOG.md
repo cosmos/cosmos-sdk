@@ -2,6 +2,18 @@
 
 ## 0.18.1
 
+BREAKING CHANGES
+
+* [x/auth] move stuff specific to auth anteHandler to the auth module rather than the types folder. This includes:
+  * StdTx (and its related stuff i.e. StdSignDoc, etc)
+  * StdFee
+  * StdSignature
+  * Account interface
+  * Related to this organization, I also:
+* [x/auth] got rid of AccountMapper interface (in favor of the struct already in auth module)
+* [x/auth] removed the FeeHandler function from the AnteHandler, Replaced with FeeKeeper
+* [x/auth] Removed GetSignatures() from Tx interface (as different Tx styles might use something different than StdSignature)
+
 BUG FIXES
 * auto-sequencing transactions correctly
 * query sequence via account store

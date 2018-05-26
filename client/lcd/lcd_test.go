@@ -45,7 +45,6 @@ var (
 	coinDenom  = "steak"
 	coinAmount = int64(10000000)
 
-	stakeDenom     = "steak"
 	validatorAddr1 = ""
 	validatorAddr2 = ""
 
@@ -327,11 +326,11 @@ func TestBond(t *testing.T) {
 	// query sender
 	acc := getAccount(t, sendAddr)
 	coins := acc.GetCoins()
-	assert.Equal(t, int64(9999900), coins.AmountOf(stakeDenom))
+	assert.Equal(t, int64(87), coins.AmountOf(coinDenom))
 
 	// query candidate
 	bond := getDelegation(t, sendAddr, validatorAddr1)
-	assert.Equal(t, "100/1", bond.Shares.String())
+	assert.Equal(t, "10/1", bond.Shares.String())
 }
 
 func TestUnbond(t *testing.T) {
@@ -347,11 +346,11 @@ func TestUnbond(t *testing.T) {
 	// query sender
 	acc := getAccount(t, sendAddr)
 	coins := acc.GetCoins()
-	assert.Equal(t, int64(9999911), coins.AmountOf(stakeDenom))
+	assert.Equal(t, int64(98), coins.AmountOf(coinDenom))
 
 	// query candidate
 	bond := getDelegation(t, sendAddr, validatorAddr1)
-	assert.Equal(t, "99/1", bond.Shares.String())
+	assert.Equal(t, "9/1", bond.Shares.String())
 }
 
 //__________________________________________________________
@@ -584,15 +583,16 @@ func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxC
 		"name": "%s",
 		"password": "%s",
 		"sequence": %d,
-		"bond": [
+		"delegate": [
 			{
-				"candidate": "%s",
-				"amount": { "denom": "%s", "amount": 100 }
+				"delegator_addr": "%x",
+				"validator_addr": "%s",
+				"bond": { "denom": "%s", "amount": 10 }
 			}
 		],
 		"unbond": []
-	}`, name, password, sequence, validatorAddr1, stakeDenom))
-	res, body := request(t, port, "POST", "/stake/bondunbond", jsonStr)
+	}`, name, password, sequence, acc.GetAddress(), validatorAddr1, coinDenom))
+	res, body := request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit
@@ -615,12 +615,13 @@ func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastT
 		"bond": [],
 		"unbond": [
 			{
-				"candidate": "%s",
+				"delegator_addr": "%x",
+				"validator_addr": "%s",
 				"shares": "1"
 			}
 		]
-	}`, name, password, sequence, validatorAddr1))
-	res, body := request(t, port, "POST", "/stake/bondunbond", jsonStr)
+	}`, name, password, sequence, acc.GetAddress(), validatorAddr1))
+	res, body := request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit
@@ -642,22 +643,25 @@ func doMultiBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadca
 		"sequence": %d,
 		"bond": [
 			{
-				"candidate": "%s",
-				"amount": { "denom": "%s", "amount": 1 }
+				"delegator_addr": "%x",
+				"validator_addr": "%s",
+				"bond": { "denom": "%s", "amount": 1 }
 			},
 			{
-				"candidate": "%s",
-				"amount": { "denom": "%s", "amount": 1 }
+				"delegator_addr": "%x",
+				"validator_addr": "%s",
+				"bond": { "denom": "%s", "amount": 1 }
 			},
 		],
 		"unbond": [
 			{
-				"candidate": "%s",
+				"delegator_addr": "%x",
+				"validator_addr": "%s",
 				"shares": "1"
 			}
 		]
-	}`, name, password, sequence, validatorAddr1, stakeDenom, validatorAddr2, stakeDenom, validatorAddr1))
-	res, body := request(t, port, "POST", "/stake/bondunbond", jsonStr)
+	}`, name, password, sequence, acc.GetAddress(), validatorAddr1, coinDenom, acc.GetAddress(), validatorAddr2, coinDenom, acc.GetAddress(), validatorAddr1))
+	res, body := request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit

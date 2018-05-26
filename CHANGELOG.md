@@ -19,6 +19,7 @@ BREAKING CHANGES
 FEATURES
 * [x/auth] Added AccountNumbers to BaseAccount and StdTxs to allow for replay protection with account pruning
 * [lcd] added an endpoint to query for the SDK version of the connected node
+* [tests] Remotenet commands for AWS (awsnet)
 
 IMPROVEMENTS
 * export command now writes current validator set for Tendermint
@@ -28,6 +29,7 @@ IMPROVEMENTS
 * [tests] Added testnet command to gaiad
 * [tests] Added localnet targets to Makefile
 * [x/stake] More stake tests added to test ByPower index
+* [tests] Fixes ansible scripts to work with AWS too
 
 FIXES
 * Fixes consensus fault on testnet - see postmortem [here](https://github.com/cosmos/cosmos-sdk/issues/1197#issuecomment-396823021)

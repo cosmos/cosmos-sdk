@@ -1,5 +1,11 @@
 ---
 
+- name: Ensure keys folder exists locally
+  file: path=keys state=directory
+  connection: local
+  run_once: true
+  become: no
+
 - name: Copy binary
   copy:
     src: "{{BINARY}}"
@@ -12,11 +18,25 @@
   register: nodeid
 
 - name: Create initial transaction
-  command: "/usr/bin/gaiad init gen-tx --name=node{{nodeid.stdout_lines[0]}}"
+  command: "/usr/bin/gaiad init gen-tx --name=node{{nodeid.stdout_lines[0]}} --ip={{inventory_hostname}}"
+  register: gentxresult
   become: yes
   become_user: gaiad
   args:
     creates: /home/gaiad/.gaiad/config/gentx
+
+- name: Get wallet word seed
+  when: gentxresult["changed"]
+  shell: "echo '{{gentxresult.stdout}}' | python -c 'import json,string,sys ; print json.loads(string.join(sys.stdin.readlines()))[\"app_message\"][\"secret\"]'"
+  changed_when: false
+  register: walletkey
+  connection: local
+
+- name: Write wallet word seed to file
+  when: gentxresult["changed"]
+  copy: "content={{walletkey.stdout}} dest=keys/node{{nodeid.stdout_lines[0]}}"
+  become: no
+  connection: local
 
 - name: Find gentx file
   command: "ls /home/gaiad/.gaiad/config/gentx"

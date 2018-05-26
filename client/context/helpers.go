@@ -6,12 +6,17 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/wire"
+	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/tendermint/lite"
+	liteclient "github.com/tendermint/tendermint/lite/client"
+	"github.com/tendermint/tendermint/lite/files"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	cmn "github.com/tendermint/tmlibs/common"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/merkle"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -43,21 +48,59 @@ func (ctx CoreContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, 
 
 // Query from Tendermint with the provided key and storename
 func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, err error) {
-	return ctx.query(key, storeName, "key")
+	resp, err := ctx.query(key, storeName, "key")
+	if err != nil {
+		return
+	}
+	if ctx.TrustNode {
+		return
+	}
+
+	proof, err := merkle.DecodeProof(resp.Proof)
+	if err != nil {
+		return
+	}
+
+	source := liteclient.NewHTTPProvider(ctx.NodeURI)
+	trusted := lite.NewCacheProvider(lite.NewMemStoreProvider(), files.NewProvider(ctx.ProviderPath))
+
+	node, err := ctx.GetNode()
+	if err != nil {
+		return
+	}
+
+	commit, err := node.Commit(&resp.Height)
+	if err != nil {
+		return
+	}
+	vals, err := node.Validators(&resp.Height)
+	if err != nil {
+		return
+	}
+
+	fc := lite.NewFullCommit(lite.Commit(commit.SignedHeader), vals.Validators)
+
+	cert, err := lite.NewInquiringCertifier(ctx.ChainID, fc, trusted, source)
+	if err != nil {
+		return
+	}
+
+	err = proof.Verify(header.AppHash, [][]byte{res}, string(key), storeName)
+	return
 }
 
 // Query from Tendermint with the provided storename and subspace
 func (ctx CoreContext) QuerySubspace(cdc *wire.Codec, subspace []byte, storeName string) (res []sdk.KVPair, err error) {
-	resRaw, err := ctx.query(subspace, storeName, "subspace")
+	resp, err := ctx.query(subspace, storeName, "subspace")
 	if err != nil {
 		return res, err
 	}
-	cdc.MustUnmarshalBinary(resRaw, &res)
+	cdc.MustUnmarshalBinary(resp.Value, &res)
 	return
 }
 
 // Query from Tendermint with the provided storename and path
-func (ctx CoreContext) query(key cmn.HexBytes, storeName, endPath string) (res []byte, err error) {
+func (ctx CoreContext) query(key cmn.HexBytes, storeName, endPath string) (res abci.ResponseQuery, err error) {
 	path := fmt.Sprintf("/store/%s/key", storeName)
 	node, err := ctx.GetNode()
 	if err != nil {
@@ -72,11 +115,11 @@ func (ctx CoreContext) query(key cmn.HexBytes, storeName, endPath string) (res [
 	if err != nil {
 		return res, err
 	}
-	resp := result.Response
-	if resp.Code != uint32(0) {
-		return res, errors.Errorf("Query failed: (%d) %s", resp.Code, resp.Log)
+	res = result.Response
+	if res.Code != uint32(0) {
+		return res, errors.Errorf("Query failed: (%d) %s", res.Code, res.Log)
 	}
-	return resp.Value, nil
+	return res, nil
 }
 
 // Get the from address from the name flag

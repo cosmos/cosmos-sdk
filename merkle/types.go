@@ -22,22 +22,35 @@ type RawOp struct {
 	Key  string
 }
 
-type OpDecoder func(RawOp) Op
+func (ro RawOp) Encode() []byte {
+	res, err := json.Marshal(ro)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
 
-func DefaultOpDecoder(ro RawOp) Op {
+func (ro *RawOp) Decode(bz []byte) error {
+	return json.Unmarshal(bz, ro)
+}
+
+type OpDecoder func(RawOp) (Op, error)
+
+func DefaultOpDecoder(ro RawOp) (res Op, err error) {
 	switch ro.Type {
 	/*	case TMCoreOpType:
 		return TMCoreOp{}*/
 	case IAVLExistsOpType:
-		return IAVLExistsOp{}
+		res = IAVLExistsOp{}
 	case IAVLAbsentOpType:
 		//		proof = IAVLAbsentProof{}
-		return nil
+		res = nil
 	case SimpleExistsOpType:
-		return SimpleExistsOp{}
+		res = SimpleExistsOp{}
 	default:
-		return nil
+		err = fmt.Errorf("Cannot decode RawOp typeof %s", ro.Type)
 	}
+	return
 }
 
 type Op interface {
@@ -71,4 +84,9 @@ func (p Proof) Verify(root []byte, value [][]byte, keys ...string) (err error) {
 
 func (p Proof) Bytes() ([]byte, error) {
 	return json.Marshal(p)
+}
+
+func DecodeProof(data []byte) (res Proof, err error) {
+	err = json.Unmarshal(data, &res)
+	return
 }

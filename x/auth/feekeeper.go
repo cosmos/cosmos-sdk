@@ -5,6 +5,10 @@ import (
 	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
+var (
+	collectedFeesKey = []byte("collectedFees")
+)
+
 // This FeeCollectionKeeper handles collection of fees in the anteHandler
 // and setting of MinFees for different fee tokens
 type FeeCollectionKeeper struct {
@@ -27,28 +31,21 @@ func NewFeeCollectionKeeper(cdc *wire.Codec, key sdk.StoreKey) FeeCollectionKeep
 // Adds to Collected Fee Pool
 func (fck FeeCollectionKeeper) GetCollectedFees(ctx sdk.Context) sdk.Coins {
 	store := ctx.KVStore(fck.key)
-	bz := store.Get([]byte("collectedFees"))
+	bz := store.Get(collectedFeesKey)
 	if bz == nil {
 		return sdk.Coins{}
 	}
 
 	feePool := &(sdk.Coins{})
-	err := fck.cdc.UnmarshalBinary(bz, feePool)
-	if err != nil {
-		panic("should not happen")
-	}
+	fck.cdc.MustUnmarshalBinary(bz, feePool)
 	return *feePool
 }
 
 // Sets to Collected Fee Pool
 func (fck FeeCollectionKeeper) setCollectedFees(ctx sdk.Context, coins sdk.Coins) {
-	bz, err := fck.cdc.MarshalBinary(coins)
-	if err != nil {
-		panic("should not happen")
-	}
-
+	bz := fck.cdc.MustMarshalBinary(coins)
 	store := ctx.KVStore(fck.key)
-	store.Set([]byte("collectedFees"), bz)
+	store.Set(collectedFeesKey, bz)
 }
 
 // Adds to Collected Fee Pool

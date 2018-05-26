@@ -80,11 +80,10 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 				if !fee.Amount.IsZero() {
 					ctx.GasMeter().ConsumeGas(deductFeesCost, "deductFees")
 					signerAcc, res = deductFees(signerAcc, fee)
-					fck.addCollectedFees(ctx, fee.Amount)
-
 					if !res.IsOK() {
 						return ctx, res, true
 					}
+					fck.addCollectedFees(ctx, fee.Amount)
 				}
 			}
 

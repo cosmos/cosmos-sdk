@@ -209,9 +209,13 @@ func TestAnteHandlerFees(t *testing.T) {
 	mapper.SetAccount(ctx, acc1)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeInsufficientFunds)
 
+	assert.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(emptyCoins))
+
 	acc1.SetCoins(sdk.Coins{{"atom", 150}})
 	mapper.SetAccount(ctx, acc1)
 	checkValidTx(t, anteHandler, ctx, tx)
+
+	assert.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(sdk.Coins{{"atom", 150}}))
 }
 
 func TestAnteHandlerBadSignBytes(t *testing.T) {

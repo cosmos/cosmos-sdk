@@ -81,9 +81,10 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	if !signed {
 		logger.Info(fmt.Sprintf("Absent validator %s at height %d", pubkey.Address(), height))
 	}
-	index := height % SignedBlocksWindow
 	address := pubkey.Address()
 	signInfo, _ := k.getValidatorSigningInfo(ctx, address)
+	signInfo.IndexOffset++
+	index := signInfo.IndexOffset % SignedBlocksWindow
 	previous := k.getValidatorSigningBitArray(ctx, address, index)
 	if previous && !signed {
 		k.setValidatorSigningBitArray(ctx, address, index, false)
@@ -140,6 +141,7 @@ func (k Keeper) setValidatorSigningBitArray(ctx sdk.Context, address sdk.Address
 
 type validatorSigningInfo struct {
 	StartHeight         int64 `json:"start_height"`
+	IndexOffset         int64 `json:"index_offset"`
 	SignedBlocksCounter int64 `json:"signed_blocks_counter"`
 }
 

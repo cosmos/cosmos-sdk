@@ -13,6 +13,7 @@ BREAKING CHANGES
 * [x/auth] got rid of AccountMapper interface (in favor of the struct already in auth module)
 * [x/auth] removed the FeeHandler function from the AnteHandler, Replaced with FeeKeeper
 * [x/auth] Removed GetSignatures() from Tx interface (as different Tx styles might use something different than StdSignature)
+* Switch to bech32cosmos on all human readable inputs and outputs 
 
 BUG FIXES
 

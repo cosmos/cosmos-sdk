@@ -508,11 +508,11 @@ func request(t *testing.T, port, method, path string, payload []byte) (*http.Res
 	return res, string(output)
 }
 
-func getAccount(t *testing.T, sendAddr string) sdk.Account {
+func getAccount(t *testing.T, sendAddr string) auth.Account {
 	// get the account to get the sequence
 	res, body := request(t, port, "GET", "/accounts/"+sendAddr, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var acc sdk.Account
+	var acc auth.Account
 	err := cdc.UnmarshalJSON([]byte(body), &acc)
 	require.Nil(t, err)
 	return acc

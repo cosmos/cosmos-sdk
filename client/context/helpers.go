@@ -7,11 +7,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/wire"
 	abci "github.com/tendermint/abci/types"
+	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/lite"
 	liteclient "github.com/tendermint/tendermint/lite/client"
 	"github.com/tendermint/tendermint/lite/files"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	cmn "github.com/tendermint/tmlibs/common"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -64,28 +66,48 @@ func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, er
 	source := liteclient.NewHTTPProvider(ctx.NodeURI)
 	trusted := lite.NewCacheProvider(lite.NewMemStoreProvider(), files.NewProvider(ctx.ProviderPath))
 
-	node, err := ctx.GetNode()
+	cfg, err := tcmd.ParseConfig()
 	if err != nil {
 		return
 	}
 
-	commit, err := node.Commit(&resp.Height)
-	if err != nil {
-		return
-	}
-	vals, err := node.Validators(&resp.Height)
+	genesis, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
 	if err != nil {
 		return
 	}
 
-	fc := lite.NewFullCommit(lite.Commit(commit.SignedHeader), vals.Validators)
+	vals := make([]*tmtypes.Validator, len(genesis.Validators))
+	for i, val := range genesis.Validators {
+		vals[i] = tmtypes.NewValidator(val.PubKey, val.Power)
+	}
+	valset := tmtypes.NewValidatorSet(vals)
 
-	cert, err := lite.NewInquiringCertifier(ctx.ChainID, fc, trusted, source)
+	genfc := lite.FullCommit{
+		Commit: lite.Commit{
+			Header: &tmtypes.Header{
+				Height:         0,
+				ValidatorsHash: valset.Hash(),
+			},
+		},
+		Validators: valset,
+	}
+
+	cert, err := lite.NewInquiringCertifier(ctx.ChainID, genfc, trusted, source)
 	if err != nil {
 		return
 	}
 
-	err = proof.Verify(header.AppHash, [][]byte{res}, string(key), storeName)
+	fc, err := source.GetByHeight(resp.Height)
+	if err != nil {
+		return
+	}
+
+	err = cert.Certify(fc.Commit)
+	if err != nil {
+		return
+	}
+
+	err = proof.Verify(fc.Header.AppHash, [][]byte{res}, string(key), storeName)
 	return
 }
 

@@ -18,7 +18,6 @@ type CoreContext struct {
 	Decoder         sdk.AccountDecoder
 	AccountStore    string
 	ProviderPath    string
-	GenesisPath     string
 }
 
 // WithChainID - return a copy of the context with an updated chainID
@@ -79,11 +78,5 @@ func (c CoreContext) WithAccountStore(accountStore string) CoreContext {
 // WithProviderPath - return a copy of the context with an updated ProviderPath
 func (c CoreContext) WithProviderPath(providerPath string) CoreContext {
 	c.ProviderPath = providerPath
-	return c
-}
-
-// WithGenesisPath - return a copy of the context with an updated GenesisPath
-func (c CoreContext) WithGenesisPath(genesisPath string) CoreContext {
-	c.GenesisPath = genesisPath
 	return c
 }

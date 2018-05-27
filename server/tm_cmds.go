@@ -40,20 +40,20 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 
 			cfg := ctx.Config
 			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorFile())
-			valAddr := sdk.Address(privValidator.PubKey.Address())
+			valPubKey := privValidator.PubKey
 
 			if viper.GetBool(flagJSON) {
 
 				cdc := wire.NewCodec()
 				wire.RegisterCrypto(cdc)
-				pubKeyJSONBytes, err := cdc.MarshalJSON(valAddr)
+				pubKeyJSONBytes, err := cdc.MarshalJSON(valPubKey)
 				if err != nil {
 					return err
 				}
 				fmt.Println(string(pubKeyJSONBytes))
 				return nil
 			}
-			addr, err := sdk.Bech32CosmosifyVal(valAddr)
+			addr, err := sdk.Bech32CosmosifyValPub(valPubKey)
 			if err != nil {
 				return err
 			}

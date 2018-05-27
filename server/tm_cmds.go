@@ -1,14 +1,13 @@
 package server
 
 import (
-	"encoding/hex"
 	"fmt"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/types/priv_validator"
@@ -41,21 +40,24 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 
 			cfg := ctx.Config
 			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorFile())
-			pubKey := privValidator.PubKey
+			valPubKey := privValidator.PubKey
 
 			if viper.GetBool(flagJSON) {
 
 				cdc := wire.NewCodec()
 				wire.RegisterCrypto(cdc)
-				pubKeyJSONBytes, err := cdc.MarshalJSON(pubKey)
+				pubKeyJSONBytes, err := cdc.MarshalJSON(valPubKey)
 				if err != nil {
 					return err
 				}
 				fmt.Println(string(pubKeyJSONBytes))
 				return nil
 			}
-			pubKeyHex := strings.ToUpper(hex.EncodeToString(pubKey.Bytes()))
-			fmt.Println(pubKeyHex)
+			addr, err := sdk.Bech32CosmosifyValPub(valPubKey)
+			if err != nil {
+				return err
+			}
+			fmt.Println(addr)
 			return nil
 		},
 	}

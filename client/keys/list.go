@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 )
 
@@ -55,7 +56,7 @@ func QueryKeysRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	keysOutput := make([]KeyOutput, len(infos))
 	for i, info := range infos {
-		keysOutput[i] = KeyOutput{Name: info.Name, Address: info.PubKey.Address().String()}
+		keysOutput[i] = KeyOutput{Name: info.Name, Address: sdk.Address(info.PubKey.Address().Bytes())}
 	}
 	output, err := json.MarshalIndent(keysOutput, "", "  ")
 	if err != nil {

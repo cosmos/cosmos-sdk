@@ -125,18 +125,33 @@ func (am AccountMapper) setSequence(ctx sdk.Context, addr sdk.Address, newSequen
 	return nil
 }
 
+<<<<<<< HEAD
 // Returns and increments the global account number counter
 func (am AccountMapper) GetNextAccountNumber(ctx sdk.Context) int64 {
+=======
+func (am AccountMapper) getNextAccountNumber(ctx sdk.Context) int64 {
+>>>>>>> in progress
 	var accNumber int64
 	store := ctx.KVStore(am.key)
 	bz := store.Get(globalAccountNumberKey)
 	if bz == nil {
+<<<<<<< HEAD
 		accNumber = 0
 	} else {
 		err := am.cdc.UnmarshalBinary(bz, &accNumber)
 		if err != nil {
 			panic(err)
 		}
+=======
+		bz = am.cdc.MustMarshalBinary(accNumber)
+		store.Set(globalAccountNumberKey, bz)
+		return 0
+	}
+
+	err := am.cdc.UnmarshalBinary(bz, &accNumber)
+	if err != nil {
+		panic(err)
+>>>>>>> in progress
 	}
 
 	bz = am.cdc.MustMarshalBinary(accNumber + 1)

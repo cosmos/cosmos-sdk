@@ -39,7 +39,7 @@ func (b Delegation) HumanReadableString() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	bechVal, err := sdk.Bech32CosmosifyVal(b.ValidatorAddr)
+	bechVal, err := sdk.Bech32CosmosifyAcc(b.ValidatorAddr)
 	if err != nil {
 		return "", err
 	}

@@ -52,15 +52,15 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), result.Code)
 }
 
-func newTestTx(ctx sdk.Context, msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, fee StdFee) sdk.Tx {
-	signBytes := StdSignBytes(ctx.ChainID(), seqs, fee, msg)
-	return newTestTxWithSignBytes(msg, privs, seqs, fee, signBytes)
+func newTestTx(ctx sdk.Context, msg sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee) sdk.Tx {
+	signBytes := StdSignBytes(ctx.ChainID(), accNums, seqs, fee, msg)
+	return newTestTxWithSignBytes(msg, privs, accNums, seqs, fee, signBytes)
 }
 
-func newTestTxWithSignBytes(msg sdk.Msg, privs []crypto.PrivKey, seqs []int64, fee StdFee, signBytes []byte) sdk.Tx {
+func newTestTxWithSignBytes(msg sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee, signBytes []byte) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), Sequence: seqs[i]}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: priv.Sign(signBytes), AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
 	tx := NewStdTx(msg, fee, sigs)
 	return tx
@@ -87,17 +87,17 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	fee := newStdFee()
 
 	// test no signatures
-	privs, seqs := []crypto.PrivKey{}, []int64{}
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	privs, accNums, seqs := []crypto.PrivKey{}, []int64{}, []int64{}
+	tx = newTestTx(ctx, msg, privs, accNums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnauthorized)
 
 	// test num sigs dont match GetSigners
-	privs, seqs = []crypto.PrivKey{priv1}, []int64{0}
-	tx = newTestTx(ctx, msg, privs, seqs, fee)
+	privs, accNums, seqs = []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
+	tx = newTestTx(ctx, msg, privs, accNums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnauthorized)
 
 	// test an unrecognized account
-	privs, seqs = []crypto.PrivKey{priv1, priv2}, []int64{0, 0}
+	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []int64{0, 0}
 	tx = newTestTx(ctx, msg, privs, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, sdk.CodeUnknownAddress)
 

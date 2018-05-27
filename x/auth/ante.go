@@ -14,7 +14,7 @@ const (
 )
 
 // NewAnteHandler returns an AnteHandler that checks
-// and increments sequence numbers, checks signatures,
+// and increments sequence numbers, checks signatures & account numbers,
 // and deducts fees from the first signer.
 func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
@@ -51,6 +51,10 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		for i := 0; i < len(signerAddrs); i++ {
 			sequences[i] = sigs[i].Sequence
 		}
+		accNums := make([]int64, len(signerAddrs))
+		for i := 0; i < len(signerAddrs); i++ {
+			accNums[i] = sigs[i].AccountNumber
+		}
 		fee := stdTx.Fee
 		chainID := ctx.ChainID()
 		// XXX: major hack; need to get ChainID
@@ -58,7 +62,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		if chainID == "" {
 			chainID = viper.GetString("chain-id")
 		}
-		signBytes := StdSignBytes(ctx.ChainID(), sequences, fee, msg)
+		signBytes := StdSignBytes(ctx.ChainID(), accNums, sequences, fee, msg)
 
 		// Check sig and nonce and collect signer accounts.
 		var signerAccs = make([]Account, len(signerAddrs))

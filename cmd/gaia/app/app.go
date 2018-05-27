@@ -40,10 +40,11 @@ type GaiaApp struct {
 	keyStake   *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
-	accountMapper sdk.AccountMapper
-	coinKeeper    bank.Keeper
-	ibcMapper     ibc.Mapper
-	stakeKeeper   stake.Keeper
+	accountMapper       auth.AccountMapper
+	feeCollectionKeeper auth.FeeCollectionKeeper
+	coinKeeper          bank.Keeper
+	ibcMapper           ibc.Mapper
+	stakeKeeper         stake.Keeper
 }
 
 func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
@@ -81,7 +82,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	app.SetInitChainer(app.initChainer)
 	app.SetEndBlocker(stake.NewEndBlocker(app.stakeKeeper))
 	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, stake.FeeHandler))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -131,7 +132,7 @@ func (app *GaiaApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
 
 	// iterate to get the accounts
 	accounts := []GenesisAccount{}
-	appendAccount := func(acc sdk.Account) (stop bool) {
+	appendAccount := func(acc auth.Account) (stop bool) {
 		account := NewGenesisAccountI(acc)
 		accounts = append(accounts, account)
 		return false

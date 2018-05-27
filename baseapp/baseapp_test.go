@@ -11,13 +11,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/go-crypto"
+	crypto "github.com/tendermint/go-crypto"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 func defaultLogger() log.Logger {
@@ -446,12 +447,12 @@ type testUpdatePowerTx struct {
 
 const msgType = "testUpdatePowerTx"
 
-func (tx testUpdatePowerTx) Type() string                      { return msgType }
-func (tx testUpdatePowerTx) GetMsg() sdk.Msg                   { return tx }
-func (tx testUpdatePowerTx) GetSignBytes() []byte              { return nil }
-func (tx testUpdatePowerTx) ValidateBasic() sdk.Error          { return nil }
-func (tx testUpdatePowerTx) GetSigners() []sdk.Address         { return nil }
-func (tx testUpdatePowerTx) GetSignatures() []sdk.StdSignature { return nil }
+func (tx testUpdatePowerTx) Type() string                       { return msgType }
+func (tx testUpdatePowerTx) GetMsg() sdk.Msg                    { return tx }
+func (tx testUpdatePowerTx) GetSignBytes() []byte               { return nil }
+func (tx testUpdatePowerTx) ValidateBasic() sdk.Error           { return nil }
+func (tx testUpdatePowerTx) GetSigners() []sdk.Address          { return nil }
+func (tx testUpdatePowerTx) GetSignatures() []auth.StdSignature { return nil }
 
 func TestValidatorChange(t *testing.T) {
 

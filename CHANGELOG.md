@@ -1,8 +1,46 @@
 # Changelog
 
-## 0.18.0 
+## 0.18.1
 
-*TBD*
+BREAKING CHANGES
+
+* [x/auth] move stuff specific to auth anteHandler to the auth module rather than the types folder. This includes:
+  * StdTx (and its related stuff i.e. StdSignDoc, etc)
+  * StdFee
+  * StdSignature
+  * Account interface
+  * Related to this organization, I also:
+* [x/auth] got rid of AccountMapper interface (in favor of the struct already in auth module)
+* [x/auth] removed the FeeHandler function from the AnteHandler, Replaced with FeeKeeper
+* [x/auth] Removed GetSignatures() from Tx interface (as different Tx styles might use something different than StdSignature)
+
+BUG FIXES
+
+* auto-sequencing transactions correctly
+* query sequence via account store
+* fixed duplicate pub_key in stake.Validator
+
+## 0.18.0
+
+_TBD_
+
+BREAKING CHANGES
+
+* [stake] candidate -> validator throughout (details in refactor comment)
+* [stake] delegate-bond -> delegation throughout
+* [stake] `gaiacli query validator` takes and argument instead of using the `--address-candidate` flag
+* [stake] introduce `gaiacli query delegations`
+* [stake] staking refactor
+  * ValidatorsBonded store now take sorted pubKey-address instead of validator owner-address,
+    is sorted like Tendermint by pk's address
+  * store names more understandable
+  * removed temporary ToKick store, just needs a local map!
+  * removed distinction between candidates and validators
+    * everything is now a validator
+    * only validators with a status == bonded are actively validating/receiving rewards
+  * Introduction of Unbonding fields, lowlevel logic throughout (not fully implemented with queue)
+  * Introduction of PoolShares type within validators,
+    replaces three rational fields (BondedShares, UnbondingShares, UnbondedShares
 
 FEATURES
 
@@ -12,10 +50,22 @@ FEATURES
   * Transactions which run out of gas stop execution and revert state changes
   * A "simulate" query has been added to determine how much gas a transaction will need
   * Modules can include their own gas costs for execution of particular message types
+* [stake] Seperation of fee distribution to a new module
+* [stake] Creation of a validator/delegation generics in `/types`
+* [stake] Helper Description of the store in x/stake/store.md
+* [stake] removed use of caches in the stake keeper
+* [Makefile] Added terraform/ansible playbooks to easily create remote testnets on Digital Ocean
+
+BUG FIXES
+
+* Auto-sequencing now works correctly
+* [stake] staking delegator shares exchange rate now relative to equivalent-bonded-tokens the validator has instead of bonded tokens
+  ^ this is important for unbonded validators in the power store!
+* [docs] Downgraded Swagger to v2 for downstream compatibility
 
 ## 0.17.2
 
-*May 20, 2018*
+_May 20, 2018_
 
 Update to Tendermint v0.19.5 (reduce WAL use, bound the mempool and some rpcs, improve logging)
 
@@ -28,6 +78,7 @@ Update to Tendermint v0.19.4 (fixes a consensus bug and improves logging)
 BREAKING CHANGES
 
 * [stake] MarshalJSON -> MarshalBinary
+* Queries against the store must be prefixed with the path "/store"
 
 FEATURES
 
@@ -55,17 +106,16 @@ BUG FIXES
 BREAKING CHANGES
 
 * Move module REST/CLI packages to x/[module]/client/rest and x/[module]/client/cli
-* Gaia simple-staking bond and unbond functions replaced 
+* Gaia simple-staking bond and unbond functions replaced
 * [stake] Delegator bonds now store the height at which they were updated
 * All module keepers now require a codespace, see basecoin or democoin for usage
-* Many changes to names throughout 
-  * Type as a prefix naming convention applied (ex. BondMsg -> MsgBond) 
+* Many changes to names throughout
+  * Type as a prefix naming convention applied (ex. BondMsg -> MsgBond)
   * Removed redundancy in names (ex. stake.StakeKeeper -> stake.Keeper)
 * Removed SealedAccountMapper
-* gaiad init now requires use of `--name` flag 
+* gaiad init now requires use of `--name` flag
 * Removed Get from Msg interface
 * types/rational now extends big.Rat
-* Queries against the store must be prefixed with the path "/store"
 
 FEATURES:
 
@@ -74,14 +124,15 @@ FEATURES:
 * Repo is now lint compliant / GoMetaLinter with tendermint-lint integrated into CI
 * Better key output, pubkey go-amino hex bytes now output by default
 * gaiad init overhaul
-  * Create genesis transactions with `gaiad init gen-tx` 
+  * Create genesis transactions with `gaiad init gen-tx`
   * New genesis account keys are automatically added to the client keybase (introduce `--client-home` flag)
   * Initialize with genesis txs using `--gen-txs` flag
 * Context now has access to the application-configured logger
-* Add (non-proof) subspace query helper functions 
+* Add (non-proof) subspace query helper functions
 * Add more staking query functions: candidates, delegator-bonds
 
 BUG FIXES
+
 * Gaia now uses stake, ported from github.com/cosmos/gaia
 
 ## 0.15.1 (April 29, 2018)
@@ -93,7 +144,7 @@ IMPROVEMENTS:
 ## 0.15.0 (April 29, 2018)
 
 NOTE: v0.15.0 is a large breaking change that updates the encoding scheme to use
-[Amino](github.com/tendermint/go-amino). 
+[Amino](github.com/tendermint/go-amino).
 
 For details on how this changes encoding for public keys and addresses,
 see the [docs](https://github.com/tendermint/tendermint/blob/v0.19.1/docs/specification/new-spec/encoding.md#public-key-cryptography).
@@ -111,6 +162,7 @@ FEATURES:
 * Add FeeHandler to ante handler
 
 BUG FIXES
+
 * MountStoreWithDB without providing a custom store works.
 
 ## 0.14.1 (April 9, 2018)
@@ -139,7 +191,7 @@ FEATURES:
 BUG FIXES
 
 * [client] Reuse Tendermint RPC client to avoid excessive open files
-* [client] Fix setting log level 
+* [client] Fix setting log level
 * [basecoin] Sort coins in genesis
 
 ## 0.13.1 (April 3, 2018)
@@ -212,11 +264,12 @@ FEATURES
 IMPROVEMENTS
 
 * Lots more tests!
-* [client/builder] Helpers for forming and signing transactions 
+* [client/builder] Helpers for forming and signing transactions
 * [types] sdk.Address
 * [specs] Staking
 
 BUG FIXES
+
 * [x/auth] Fix setting pubkey on new account
 * [x/auth] Require signatures to include the sequences
 * [baseapp] Dont panic on nil handler
@@ -277,7 +330,7 @@ BREAKING CHANGES
 
 * Massive refactor. Basecoin works. Still needs <3
 
-## 0.8.1 
+## 0.8.1
 
 * Updates for dependencies
 
@@ -315,29 +368,30 @@ Make lots of small cli fixes that arose when people were using the tools for
 the testnet.
 
 IMPROVEMENTS:
-- basecoin
-  - `basecoin start` supports all flags that `tendermint node` does, such as
-  `--rpc.laddr`, `--p2p.seeds`, and `--p2p.skip_upnp`
-  - fully supports `--log_level` and `--trace` for logger configuration
-  - merkleeyes no longers spams the logs... unless you want it
-    - Example: `basecoin start --log_level="merkleeyes:info,state:info,*:error"`
-    - Example: `basecoin start --log_level="merkleeyes:debug,state:info,*:error"`
-- basecli
-  - `basecli init` is more intelligent and only complains if there really was
-  a connected chain, not just random files
-  - support `localhost:46657` or `http://localhost:46657` format for nodes,
-  not just `tcp://localhost:46657`
-  - Add `--genesis` to init to specify chain-id and validator hash
-    - Example: `basecli init --node=localhost:46657 --genesis=$HOME/.basecoin/genesis.json`
-  - `basecli rpc` has a number of methods to easily accept tendermint rpc, and verifies what it can
+
+* basecoin
+  * `basecoin start` supports all flags that `tendermint node` does, such as
+    `--rpc.laddr`, `--p2p.seeds`, and `--p2p.skip_upnp`
+  * fully supports `--log_level` and `--trace` for logger configuration
+  * merkleeyes no longers spams the logs... unless you want it
+    * Example: `basecoin start --log_level="merkleeyes:info,state:info,*:error"`
+    * Example: `basecoin start --log_level="merkleeyes:debug,state:info,*:error"`
+* basecli
+  * `basecli init` is more intelligent and only complains if there really was
+    a connected chain, not just random files
+  * support `localhost:46657` or `http://localhost:46657` format for nodes,
+    not just `tcp://localhost:46657`
+  * Add `--genesis` to init to specify chain-id and validator hash
+    * Example: `basecli init --node=localhost:46657 --genesis=$HOME/.basecoin/genesis.json`
+  * `basecli rpc` has a number of methods to easily accept tendermint rpc, and verifies what it can
 
 BUG FIXES:
-- basecli
-  - `basecli query account` accepts hex account address with or without `0x`
-  prefix
-  - gives error message when running commands on an unitialized chain, rather
-  than some unintelligable panic
 
+* basecli
+  * `basecli query account` accepts hex account address with or without `0x`
+    prefix
+  * gives error message when running commands on an unitialized chain, rather
+    than some unintelligable panic
 
 ## 0.6.0 (June 22, 2017)
 
@@ -345,111 +399,118 @@ Make the basecli command the only way to use client-side, to enforce best
 security practices. Lots of enhancements to get it up to production quality.
 
 BREAKING CHANGES:
-- ./cmd/commands -> ./cmd/basecoin/commands
-- basecli
-  - `basecli proof state get` -> `basecli query key`
-  - `basecli proof tx get` -> `basecli query tx`
-  - `basecli proof state get --app=account` -> `basecli query account`
-  - use `--chain-id` not `--chainid` for consistency
-  - update to use `--trace` not `--debug` for stack traces on errors
-  - complete overhaul on how tx and query subcommands are added. (see counter or trackomatron for examples)
-  - no longer supports counter app (see new countercli)
-- basecoin
-  - `basecoin init` takes an argument, an address to allocate funds to in the genesis
-  - removed key2.json
-  - removed all client side functionality from it (use basecli now for proofs)
-    - no tx subcommand
-    - no query subcommand
-    - no account (query) subcommand
-    - a few other random ones...
-  - enhanced relay subcommand
-    - relay start did what relay used to do
-    - relay init registers both chains on one another (to set it up so relay start just works)
-- docs
-  - removed `example-plugin`, put `counter` inside `docs/guide`
-- app
-  - Implements ABCI handshake by proxying merkleeyes.Info()
+
+* ./cmd/commands -> ./cmd/basecoin/commands
+* basecli
+  * `basecli proof state get` -> `basecli query key`
+  * `basecli proof tx get` -> `basecli query tx`
+  * `basecli proof state get --app=account` -> `basecli query account`
+  * use `--chain-id` not `--chainid` for consistency
+  * update to use `--trace` not `--debug` for stack traces on errors
+  * complete overhaul on how tx and query subcommands are added. (see counter or trackomatron for examples)
+  * no longer supports counter app (see new countercli)
+* basecoin
+  * `basecoin init` takes an argument, an address to allocate funds to in the genesis
+  * removed key2.json
+  * removed all client side functionality from it (use basecli now for proofs)
+    * no tx subcommand
+    * no query subcommand
+    * no account (query) subcommand
+    * a few other random ones...
+  * enhanced relay subcommand
+    * relay start did what relay used to do
+    * relay init registers both chains on one another (to set it up so relay start just works)
+* docs
+  * removed `example-plugin`, put `counter` inside `docs/guide`
+* app
+  * Implements ABCI handshake by proxying merkleeyes.Info()
 
 IMPROVEMENTS:
-- `basecoin init` support `--chain-id`
-- intergrates tendermint 0.10.0 (not the rc-2, but the real thing)
-- commands return error code (1) on failure for easier script testing
-- add `reset_all` to basecli, and never delete keys on `init`
-- new shutil based unit tests, with better coverage of the cli actions
-- just `make fresh` when things are getting stale ;)
+
+* `basecoin init` support `--chain-id`
+* intergrates tendermint 0.10.0 (not the rc-2, but the real thing)
+* commands return error code (1) on failure for easier script testing
+* add `reset_all` to basecli, and never delete keys on `init`
+* new shutil based unit tests, with better coverage of the cli actions
+* just `make fresh` when things are getting stale ;)
 
 BUG FIXES:
-- app: no longer panics on missing app_options in genesis (thanks, anton)
-- docs: updated all docs... again
-- ibc: fix panic on getting BlockID from commit without 100% precommits (still a TODO)
+
+* app: no longer panics on missing app_options in genesis (thanks, anton)
+* docs: updated all docs... again
+* ibc: fix panic on getting BlockID from commit without 100% precommits (still a TODO)
 
 ## 0.5.2 (June 2, 2017)
 
 BUG FIXES:
-- fix parsing of the log level from Tendermint config (#97)
+
+* fix parsing of the log level from Tendermint config (#97)
 
 ## 0.5.1 (May 30, 2017)
 
 BUG FIXES:
-- fix ibc demo app to use proper tendermint flags, 0.10.0-rc2 compatibility
-- Make sure all cli uses new json.Marshal not wire.JSONBytes
+
+* fix ibc demo app to use proper tendermint flags, 0.10.0-rc2 compatibility
+* Make sure all cli uses new json.Marshal not wire.JSONBytes
 
 ## 0.5.0 (May 27, 2017)
 
 BREAKING CHANGES:
-- only those related to the tendermint 0.9 -> 0.10 upgrade
+
+* only those related to the tendermint 0.9 -> 0.10 upgrade
 
 IMPROVEMENTS:
-- basecoin cli
-  - integrates tendermint 0.10.0 and unifies cli (init, unsafe_reset_all, ...)
-  - integrate viper, all command line flags can also be defined in environmental variables or config.toml
-- genesis file
-  - you can define accounts with either address or pub_key
-  - sorts coins for you, so no silent errors if not in alphabetical order
-- [light-client](https://github.com/tendermint/light-client) integration
-  - no longer must you trust the node you connect to, prove everything!
-  - new [basecli command](./cmd/basecli/README.md)
-  - integrated [key management](https://github.com/tendermint/go-crypto/blob/master/cmd/README.md), stored encrypted locally
-  - tracks validator set changes and proves everything from one initial validator seed
-  - `basecli proof state` gets complete proofs for any abci state
-  - `basecli proof tx` gets complete proof where a tx was stored in the chain
-  - `basecli proxy` exposes tendermint rpc, but only passes through results after doing complete verification
+
+* basecoin cli
+  * integrates tendermint 0.10.0 and unifies cli (init, unsafe_reset_all, ...)
+  * integrate viper, all command line flags can also be defined in environmental variables or config.toml
+* genesis file
+  * you can define accounts with either address or pub_key
+  * sorts coins for you, so no silent errors if not in alphabetical order
+* [light-client](https://github.com/tendermint/light-client) integration
+  * no longer must you trust the node you connect to, prove everything!
+  * new [basecli command](./cmd/basecli/README.md)
+  * integrated [key management](https://github.com/tendermint/go-crypto/blob/master/cmd/README.md), stored encrypted locally
+  * tracks validator set changes and proves everything from one initial validator seed
+  * `basecli proof state` gets complete proofs for any abci state
+  * `basecli proof tx` gets complete proof where a tx was stored in the chain
+  * `basecli proxy` exposes tendermint rpc, but only passes through results after doing complete verification
 
 BUG FIXES:
-- no more silently ignored error with invalid coin names (eg. "17.22foo coin" used to parse as "17 foo", not warning/error)
 
+* no more silently ignored error with invalid coin names (eg. "17.22foo coin" used to parse as "17 foo", not warning/error)
 
 ## 0.4.1 (April 26, 2017)
 
 BUG FIXES:
 
-- Fix bug in `basecoin unsafe_reset_X` where the `priv_validator.json` was not being reset
+* Fix bug in `basecoin unsafe_reset_X` where the `priv_validator.json` was not being reset
 
 ## 0.4.0 (April 21, 2017)
 
 BREAKING CHANGES:
 
-- CLI now uses Cobra, which forced changes to some of the flag names and orderings
+* CLI now uses Cobra, which forced changes to some of the flag names and orderings
 
 IMPROVEMENTS:
 
-- `basecoin init` doesn't generate error if already initialized
-- Much more testing
+* `basecoin init` doesn't generate error if already initialized
+* Much more testing
 
 ## 0.3.1 (March 23, 2017)
 
 IMPROVEMENTS:
 
-- CLI returns exit code 1 and logs error before exiting
+* CLI returns exit code 1 and logs error before exiting
 
 ## 0.3.0 (March 23, 2017)
 
 BREAKING CHANGES:
 
-- Remove `--data` flag and use `BCHOME` to set the home directory (defaults to `~/.basecoin`)
-- Remove `--in-proc` flag and start Tendermint in-process by default (expect Tendermint files in $BCHOME/tendermint).
-To start just the ABCI app/server, use `basecoin start --without-tendermint`.
-- Consolidate genesis files so the Basecoin genesis is an object under `app_options` in Tendermint genesis. For instance:
+* Remove `--data` flag and use `BCHOME` to set the home directory (defaults to `~/.basecoin`)
+* Remove `--in-proc` flag and start Tendermint in-process by default (expect Tendermint files in $BCHOME/tendermint).
+  To start just the ABCI app/server, use `basecoin start --without-tendermint`.
+* Consolidate genesis files so the Basecoin genesis is an object under `app_options` in Tendermint genesis. For instance:
 
 ```
 {
@@ -493,48 +554,45 @@ We also changed `chainID` to `chain_id` and consolidated to have just one of the
 
 FEATURES:
 
-- Introduce `basecoin init` and `basecoin unsafe_reset_all`
+* Introduce `basecoin init` and `basecoin unsafe_reset_all`
 
 ## 0.2.0 (March 6, 2017)
 
 BREAKING CHANGES:
 
-- Update to ABCI v0.4.0 and Tendermint v0.9.0
-- Coins are specified on the CLI as `Xcoin`, eg. `5gold`
-- `Cost` is now `Fee`
+* Update to ABCI v0.4.0 and Tendermint v0.9.0
+* Coins are specified on the CLI as `Xcoin`, eg. `5gold`
+* `Cost` is now `Fee`
 
 FEATURES:
 
-- CLI for sending transactions and querying the state,
-designed to be easily extensible as plugins are implemented
-- Run Basecoin in-process with Tendermint
-- Add `/account` path in Query
-- IBC plugin for InterBlockchain Communication
-- Demo script of IBC between two chains
+* CLI for sending transactions and querying the state,
+  designed to be easily extensible as plugins are implemented
+* Run Basecoin in-process with Tendermint
+* Add `/account` path in Query
+* IBC plugin for InterBlockchain Communication
+* Demo script of IBC between two chains
 
 IMPROVEMENTS:
 
-- Use new Tendermint `/commit` endpoint for crafting IBC transactions
-- More unit tests
-- Use go-crypto S structs and go-data for more standard JSON
-- Demo uses fewer sleeps
+* Use new Tendermint `/commit` endpoint for crafting IBC transactions
+* More unit tests
+* Use go-crypto S structs and go-data for more standard JSON
+* Demo uses fewer sleeps
 
 BUG FIXES:
 
-- Various little fixes in coin arithmetic
-- More commit validation in IBC
-- Return results from transactions
+* Various little fixes in coin arithmetic
+* More commit validation in IBC
+* Return results from transactions
 
 ## PreHistory
 
 ##### January 14-18, 2017
 
-- Update to Tendermint v0.8.0
-- Cleanup a bit and release blog post
+* Update to Tendermint v0.8.0
+* Cleanup a bit and release blog post
 
 ##### September 22, 2016
 
-- Basecoin compiles again
-
-
-
+* Basecoin compiles again

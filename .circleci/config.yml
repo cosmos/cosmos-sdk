@@ -38,6 +38,7 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make install
+            make install_examples
       - persist_to_workspace:
           root: /tmp/workspace
           paths:

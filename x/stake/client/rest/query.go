@@ -16,7 +16,7 @@ import (
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, kb keys.Keybase) {
-	r.HandleFunc("/stake/{delegator}/bonding_status/{candidate}", BondingStatusHandlerFn("stake", cdc, kb, ctx)).Methods("GET")
+	r.HandleFunc("/stake/{delegator}/bonding_status/{validator}", BondingStatusHandlerFn("stake", cdc, kb, ctx)).Methods("GET")
 }
 
 // BondingStatusHandlerFn - http request handler to query delegator bonding status
@@ -41,9 +41,9 @@ func BondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 			w.Write([]byte(err.Error()))
 			return
 		}
-		candidateAddr := sdk.Address(bz)
+		validatorAddr := sdk.Address(bz)
 
-		key := stake.GetDelegatorBondKey(delegatorAddr, candidateAddr, cdc)
+		key := stake.GetDelegationKey(delegatorAddr, validatorAddr, cdc)
 
 		res, err := ctx.Query(key, storeName)
 		if err != nil {
@@ -58,7 +58,7 @@ func BondingStatusHandlerFn(storeName string, cdc *wire.Codec, kb keys.Keybase, 
 			return
 		}
 
-		var bond stake.DelegatorBond
+		var bond stake.Delegation
 		err = cdc.UnmarshalBinary(res, &bond)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

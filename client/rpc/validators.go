@@ -14,7 +14,7 @@ import (
 
 // TODO these next two functions feel kinda hacky based on their placement
 
-func validatorCommand() *cobra.Command {
+func ValidatorCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validatorset [height]",
 		Short: "Get the full validator set at given height",

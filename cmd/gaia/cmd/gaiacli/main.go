@@ -35,30 +35,72 @@ func main() {
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
 
-	// add standard rpc, and tx commands
+	// add standard rpc commands
 	rpc.AddCommands(rootCmd)
 	rootCmd.AddCommand(client.LineBreak)
-	tx.AddCommands(rootCmd, cdc)
-	rootCmd.AddCommand(client.LineBreak)
 
-	// add query/post commands (custom to binary)
+	//Add state commands
+	stateCmd := &cobra.Command{
+		Use:   "state",
+		Short: "State querying subcommands (validators, blocks, transactions)",
+	}
+	stateCmd.AddCommand(
+		rpc.BlockCommand(),
+		rpc.ValidatorCommand(),
+	)
+	tx.AddCommands(stateCmd, cdc)
 	rootCmd.AddCommand(
+		stateCmd,
+		client.LineBreak,
+	)
+
+	//Add stake commands
+	stakeCmd := &cobra.Command{
+		Use:   "stake",
+		Short: "Stake and validation subcommands",
+	}
+	stakeCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("acc", cdc, authcmd.GetAccountDecoder(cdc)),
 			stakecmd.GetCmdQueryValidator("stake", cdc),
 			stakecmd.GetCmdQueryValidators("stake", cdc),
 			stakecmd.GetCmdQueryDelegation("stake", cdc),
 			stakecmd.GetCmdQueryDelegations("stake", cdc),
 		)...)
-	rootCmd.AddCommand(
+	stakeCmd.AddCommand(
 		client.PostCommands(
-			bankcmd.SendTxCmd(cdc),
-			ibccmd.IBCTransferCmd(cdc),
-			ibccmd.IBCRelayCmd(cdc),
 			stakecmd.GetCmdCreateValidator(cdc),
 			stakecmd.GetCmdEditValidator(cdc),
 			stakecmd.GetCmdDelegate(cdc),
 			stakecmd.GetCmdUnbond(cdc),
+		)...)
+	rootCmd.AddCommand(
+		stakeCmd,
+		client.LineBreak,
+	)
+
+	//Add IBC commands
+	ibcCmd := &cobra.Command{
+		Use:   "ibc",
+		Short: "Inter-Blockchain Communication subcommands",
+	}
+	ibcCmd.AddCommand(
+		client.PostCommands(
+			ibccmd.IBCTransferCmd(cdc),
+			ibccmd.IBCRelayCmd(cdc),
+		)...)
+	rootCmd.AddCommand(
+		ibcCmd,
+		client.LineBreak,
+	)
+
+	//Add auth and bank commands
+	rootCmd.AddCommand(
+		client.GetCommands(
+			authcmd.GetAccountCmd("acc", cdc, authcmd.GetAccountDecoder(cdc)),
+		)...)
+	rootCmd.AddCommand(
+		client.PostCommands(
+			bankcmd.SendTxCmd(cdc),
 		)...)
 
 	// add proxy, version and key info

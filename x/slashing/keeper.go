@@ -51,8 +51,8 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	}
 	address := pubkey.Address()
 	signInfo, _ := k.getValidatorSigningInfo(ctx, address)
-	signInfo.IndexOffset++
 	index := signInfo.IndexOffset % SignedBlocksWindow
+	signInfo.IndexOffset++
 	previous := k.getValidatorSigningBitArray(ctx, address, index)
 	if previous && !signed {
 		k.setValidatorSigningBitArray(ctx, address, index, false)

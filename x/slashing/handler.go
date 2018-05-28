@@ -22,7 +22,9 @@ func handleMsgUnrevoke(ctx sdk.Context, msg MsgUnrevoke, k Keeper) sdk.Result {
 		return ErrNoValidatorForAddress(k.codespace).Result()
 	}
 
-	info, found := k.getValidatorSigningInfo(ctx, validator.GetPubKey().Address())
+	addr := validator.GetPubKey().Address()
+
+	info, found := k.getValidatorSigningInfo(ctx, addr)
 	if !found {
 		return ErrNoValidatorForAddress(k.codespace).Result()
 	}
@@ -35,9 +37,15 @@ func handleMsgUnrevoke(ctx sdk.Context, msg MsgUnrevoke, k Keeper) sdk.Result {
 		return sdk.Result{}
 	}
 
+	// Update the starting height (so the validator can't be immediately revoked again)
+	info.StartHeight = ctx.BlockHeight()
+	k.setValidatorSigningInfo(ctx, addr, info)
+
+	// Unrevoke the validator
 	k.stakeKeeper.Unrevoke(ctx, validator.GetPubKey())
 
 	tags := sdk.NewTags("action", []byte("unrevoke"), "validator", msg.ValidatorAddr.Bytes())
+
 	return sdk.Result{
 		Tags: tags,
 	}

@@ -71,7 +71,6 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, SignedBlocksWindow-51, info.SignedBlocksCounter)
-	height++
 	// should have been revoked
 	validator = sk.ValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Unbonded, validator.GetStatus())
@@ -85,4 +84,23 @@ func TestHandleAbsentValidator(t *testing.T) {
 	// should have been slashed
 	pool = sk.GetPool(ctx)
 	require.Equal(t, int64(99), pool.BondedTokens)
+	// start height should have been changed
+	info, found = keeper.getValidatorSigningInfo(ctx, val.Address())
+	require.True(t, found)
+	require.Equal(t, height, info.StartHeight)
+	require.Equal(t, SignedBlocksWindow-51, info.SignedBlocksCounter)
+	// should not be immediately revoked again
+	height++
+	ctx = ctx.WithBlockHeight(height)
+	keeper.handleValidatorSignature(ctx, val, false)
+	validator = sk.ValidatorByPubKey(ctx, val)
+	require.Equal(t, sdk.Bonded, validator.GetStatus())
+	// should be revoked again after 100 blocks
+	nextHeight := height + 100
+	for ; height <= nextHeight; height++ {
+		ctx = ctx.WithBlockHeight(height)
+		keeper.handleValidatorSignature(ctx, val, false)
+	}
+	validator = sk.ValidatorByPubKey(ctx, val)
+	require.Equal(t, sdk.Unbonded, validator.GetStatus())
 }

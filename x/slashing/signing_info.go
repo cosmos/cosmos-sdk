@@ -43,10 +43,10 @@ func (k Keeper) setValidatorSigningBitArray(ctx sdk.Context, address sdk.Address
 }
 
 type validatorSigningInfo struct {
-	StartHeight         int64 `json:"start_height"`
-	IndexOffset         int64 `json:"index_offset"`
-	JailedUntil         int64 `json:"jailed_until"`
-	SignedBlocksCounter int64 `json:"signed_blocks_counter"`
+	StartHeight         int64 `json:"start_height"`          // height at which validator was first a candidate OR was unrevoked
+	IndexOffset         int64 `json:"index_offset"`          // index offset into signed block bit array
+	JailedUntil         int64 `json:"jailed_until"`          // timestamp validator cannot be unrevoked until
+	SignedBlocksCounter int64 `json:"signed_blocks_counter"` // signed blocks counter (to avoid scanning the array every time)
 }
 
 func validatorSigningInfoKey(v sdk.Address) []byte {

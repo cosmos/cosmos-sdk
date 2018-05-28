@@ -34,10 +34,14 @@ func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, sk stake.Keeper, codespace sdk
 func (k Keeper) handleDoubleSign(ctx sdk.Context, height int64, timestamp int64, pubkey crypto.PubKey) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	age := ctx.BlockHeader().Time - timestamp
+
+	// Double sign too old
 	if age > MaxEvidenceAge {
 		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d", pubkey.Address(), height, age, MaxEvidenceAge))
 		return
 	}
+
+	// Double sign confirmed
 	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), height, age, MaxEvidenceAge))
 	k.stakeKeeper.Slash(ctx, pubkey, height, SlashFractionDoubleSign)
 }
@@ -50,9 +54,13 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 		logger.Info(fmt.Sprintf("Absent validator %s at height %d", pubkey.Address(), height))
 	}
 	address := pubkey.Address()
+
+	// Local index, so counts blocks validator *should* have signed
 	signInfo, _ := k.getValidatorSigningInfo(ctx, address)
 	index := signInfo.IndexOffset % SignedBlocksWindow
 	signInfo.IndexOffset++
+
+	// Update signed block bit array & counter
 	previous := k.getValidatorSigningBitArray(ctx, address, index)
 	if previous && !signed {
 		k.setValidatorSigningBitArray(ctx, address, index, false)
@@ -63,8 +71,10 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 		signInfo.SignedBlocksCounter++
 		k.setValidatorSigningInfo(ctx, address, signInfo)
 	}
+
 	minHeight := signInfo.StartHeight + SignedBlocksWindow
 	if height > minHeight && signInfo.SignedBlocksCounter < MinSignedPerWindow {
+		// Downtime confirmed, slash, revoke, and jail the validator
 		logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d", pubkey.Address(), minHeight, MinSignedPerWindow))
 		k.stakeKeeper.Slash(ctx, pubkey, height, SlashFractionDowntime)
 		k.stakeKeeper.Revoke(ctx, pubkey)

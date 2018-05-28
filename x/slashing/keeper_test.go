@@ -39,7 +39,9 @@ func TestHandleAbsentValidator(t *testing.T) {
 	info, found := keeper.getValidatorSigningInfo(ctx, val.Address())
 	require.False(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
+	require.Equal(t, int64(0), info.IndexOffset)
 	require.Equal(t, int64(0), info.SignedBlocksCounter)
+	require.Equal(t, int64(0), info.JailedUntil)
 	height := int64(0)
 	// 1000 blocks OK
 	for ; height < 1000; height++ {
@@ -59,7 +61,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, SignedBlocksWindow-50, info.SignedBlocksCounter)
-	// should be bonded still
+	// validator should be bonded still
 	validator := sk.ValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
@@ -71,31 +73,34 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, SignedBlocksWindow-51, info.SignedBlocksCounter)
-	// should have been revoked
+	// validator should have been revoked
 	validator = sk.ValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Unbonded, validator.GetStatus())
+	// unrevocation should fail prior to jail expiration
 	got = slh(ctx, NewMsgUnrevoke(addr))
-	require.False(t, got.IsOK()) // should fail prior to jail expiration
+	require.False(t, got.IsOK())
+	// unrevocation should succeed after jail expiration
 	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(86400 * 2)})
 	got = slh(ctx, NewMsgUnrevoke(addr))
-	require.True(t, got.IsOK()) // should succeed after jail expiration
+	require.True(t, got.IsOK())
+	// validator should be rebonded now
 	validator = sk.ValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
-	// should have been slashed
+	// validator should have been slashed
 	pool = sk.GetPool(ctx)
 	require.Equal(t, int64(99), pool.BondedTokens)
-	// start height should have been changed
+	// validator start height should have been changed
 	info, found = keeper.getValidatorSigningInfo(ctx, val.Address())
 	require.True(t, found)
 	require.Equal(t, height, info.StartHeight)
 	require.Equal(t, SignedBlocksWindow-51, info.SignedBlocksCounter)
-	// should not be immediately revoked again
+	// validator should not be immediately revoked again
 	height++
 	ctx = ctx.WithBlockHeight(height)
 	keeper.handleValidatorSignature(ctx, val, false)
 	validator = sk.ValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
-	// should be revoked again after 100 blocks
+	// validator should be revoked again after 100 unsigned blocks
 	nextHeight := height + 100
 	for ; height <= nextHeight; height++ {
 		ctx = ctx.WithBlockHeight(height)

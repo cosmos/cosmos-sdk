@@ -16,7 +16,11 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
+// Validators must submit a transaction to unrevoke themselves after
+// having been revoked (and thus unbonded) for downtime
 func handleMsgUnrevoke(ctx sdk.Context, msg MsgUnrevoke, k Keeper) sdk.Result {
+
+	// Validator must exist
 	validator := k.stakeKeeper.Validator(ctx, msg.ValidatorAddr)
 	if validator == nil {
 		return ErrNoValidatorForAddress(k.codespace).Result()
@@ -24,11 +28,13 @@ func handleMsgUnrevoke(ctx sdk.Context, msg MsgUnrevoke, k Keeper) sdk.Result {
 
 	addr := validator.GetPubKey().Address()
 
+	// Signing info must exist
 	info, found := k.getValidatorSigningInfo(ctx, addr)
 	if !found {
 		return ErrNoValidatorForAddress(k.codespace).Result()
 	}
 
+	// Cannot be unrevoked until out of jail
 	if ctx.BlockHeader().Time < info.JailedUntil {
 		return ErrValidatorJailed(k.codespace).Result()
 	}

@@ -17,12 +17,17 @@ const (
 	CodeValidatorJailed CodeType = 202
 )
 
+//nolint
 func ErrNoValidatorForAddress(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeInvalidValidator, "That address is not associated with any known validator")
 }
+
+//nolint
 func ErrBadValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeInvalidValidator, "Validator does not exist for that address")
 }
+
+//nolint
 func ErrValidatorJailed(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeValidatorJailed, "Validator jailed, cannot yet be unrevoked")
 }

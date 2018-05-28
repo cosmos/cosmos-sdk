@@ -26,7 +26,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
 // Handle MsgSubmitProposal.
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
 
-	_, _,err := keeper.ck.SubtractCoins(ctx, msg.Proposer, msg.InitialDeposit)
+	_, _, err := keeper.ck.SubtractCoins(ctx, msg.Proposer, msg.InitialDeposit)
 	if err != nil {
 		return err.Result()
 	}
@@ -35,8 +35,6 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		if !keeper.GetActiveProcedure().validProposalType(msg.ProposalType) {
 			return ErrInvalidProposalType(msg.ProposalType).Result()
 		}
-
-		return sdk.Result{}
 	}
 
 	if !keeper.GetActiveProcedure().validProposalType(msg.ProposalType) {
@@ -70,21 +68,23 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	}
 
 	if proposal.TotalDeposit.IsGTE(proposal.Procedure.MinDeposit) {
-		ctx.Logger().Info("proposal is activated","proposalId",proposal.ProposalID)
+		ctx.Logger().Info("proposal is activated", "proposalId", proposal.ProposalID)
 		keeper.activateVotingPeriod(ctx, &proposal)
 	}
 
+	ctx.Logger().Info("Create Proposal", "Proposal", proposal)
+
 	keeper.SetProposal(ctx, proposal)
 
-	tags := sdk.NewTags("proposal",[]uint8{uint8(proposal.ProposalID)})
-
-	return sdk.Result{Tags:tags} // TODO
+	//tags := sdk.NewTags("proposal", []uint8{uint8(proposal.ProposalID)})
+	//return sdk.Result{Tags: tags} // TODO
+	return sdk.Result{} // TODO
 }
 
 // Handle MsgDeposit.
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
 
-	_, _,err := keeper.ck.SubtractCoins(ctx, msg.Depositer, msg.Amount)
+	_, _, err := keeper.ck.SubtractCoins(ctx, msg.Depositer, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
@@ -115,6 +115,8 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 		keeper.activateVotingPeriod(ctx, proposal)
 	}
 
+	ctx.Logger().Info("Execute Deposit", "Deposit", msg,"Proposal", proposal)
+
 	keeper.SetProposal(ctx, *proposal)
 
 	return sdk.Result{} // TODO
@@ -135,7 +137,7 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 	validatorGovInfo := proposal.getValidatorGovInfo(msg.Voter)
 
 	// Need to finalize interface to staking mapper for delegatedTo. Makes assumption from here on out.
-	delegatedTo := keeper.sm.LoadDelegatorCandidates(ctx,msg.Voter) // TODO: Finalize with staking store
+	delegatedTo := keeper.sm.LoadDelegatorCandidates(ctx, msg.Voter) // TODO: Finalize with staking store
 
 	if validatorGovInfo == nil && len(delegatedTo) == 0 {
 		return ErrAddressNotStaked(msg.Voter).Result() // TODO: Return proper Error
@@ -145,50 +147,77 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 	//	return ErrAddressChangedDelegation(msg.Voter).Result() // TODO: Return proper Error
 	//}
 
+	existingVote := proposal.getVote(msg.Voter)
+
+	if existingVote != nil {
+		return ErrAlreadyVote(msg.Voter).Result()
+	}
+
 	if ctx.IsCheckTx() {
 		return sdk.Result{} // TODO
 	}
 
-	existingVote := proposal.getVote(msg.Voter)
+	proposal.VoteList = append(proposal.VoteList, Vote{Voter: msg.Voter, ProposalID: msg.ProposalID, Option: msg.Option})
 
-	if existingVote == nil {
-		proposal.VoteList = append(proposal.VoteList, Vote{Voter: msg.Voter, ProposalID: msg.ProposalID, Option: msg.Option})
-
-		if validatorGovInfo != nil {
-			voteWeight := validatorGovInfo.InitVotingPower - validatorGovInfo.Minus
-			proposal.updateTally(msg.Option, voteWeight)
-			validatorGovInfo.LastVoteWeight = voteWeight
-		}
-
-		for _, delegation := range delegatedTo {
-			proposal.updateTally(msg.Option, delegation.Amount)
-			delegatedValidatorGovInfo := proposal.getValidatorGovInfo(delegation.Validator)
-			delegatedValidatorGovInfo.Minus += delegation.Amount
-
-			delegatedValidatorVote := proposal.getVote(delegation.Validator)
-
-			if delegatedValidatorVote != nil {
-				proposal.updateTally(delegatedValidatorVote.Option, -delegation.Amount)
-			}
-		}
-
-	} else {
-		if validatorGovInfo != nil {
-			proposal.updateTally(existingVote.Option, -(validatorGovInfo.LastVoteWeight))
-			voteWeight := validatorGovInfo.InitVotingPower - validatorGovInfo.Minus
-			proposal.updateTally(msg.Option, voteWeight)
-			validatorGovInfo.LastVoteWeight = voteWeight
-		}
-
-		for _, delegation := range delegatedTo {
-			proposal.updateTally(existingVote.Option, -delegation.Amount)
-			proposal.updateTally(msg.Option, delegation.Amount)
-		}
-
-		existingVote.Option = msg.Option
+	//if voter is validator
+	if validatorGovInfo != nil {
+		ctx.Logger().Info("Voter is validator", "Vote", msg.Voter)
+		voteWeight := validatorGovInfo.InitVotingPower - validatorGovInfo.Minus
+		proposal.updateTally(msg.Option, voteWeight)
+		validatorGovInfo.LastVoteWeight = voteWeight
 	}
 
-	ctx.Logger().Info("gov","handleMsgVote",proposal)
+	//if voter is delegator
+	for _, delegation := range delegatedTo {
+		ctx.Logger().Info("Voter is delegator", "delegator", msg.Voter, "validator", delegation.Validator)
+		proposal.updateTally(msg.Option, delegation.Amount)
+		delegatedValidatorGovInfo := proposal.getValidatorGovInfo(delegation.Validator)
+		delegatedValidatorGovInfo.Minus += delegation.Amount
+
+		delegatedValidatorVote := proposal.getVote(delegation.Validator)
+		if delegatedValidatorVote != nil {
+			proposal.updateTally(delegatedValidatorVote.Option, -delegation.Amount)
+		}
+	}
+
+	//if existingVote == nil {
+	//	proposal.VoteList = append(proposal.VoteList, Vote{Voter: msg.Voter, ProposalID: msg.ProposalID, Option: msg.Option})
+	//
+	//	if validatorGovInfo != nil {
+	//		voteWeight := validatorGovInfo.InitVotingPower - validatorGovInfo.Minus
+	//		proposal.updateTally(msg.Option, voteWeight)
+	//		validatorGovInfo.LastVoteWeight = voteWeight
+	//	}
+	//
+	//	for _, delegation := range delegatedTo {
+	//		proposal.updateTally(msg.Option, delegation.Amount)
+	//		delegatedValidatorGovInfo := proposal.getValidatorGovInfo(delegation.Validator)
+	//		delegatedValidatorGovInfo.Minus += delegation.Amount
+	//
+	//		delegatedValidatorVote := proposal.getVote(delegation.Validator)
+	//
+	//		if delegatedValidatorVote != nil {
+	//			proposal.updateTally(delegatedValidatorVote.Option, -delegation.Amount)
+	//		}
+	//	}
+	//
+	//} else {
+	//	if validatorGovInfo != nil {
+	//		proposal.updateTally(existingVote.Option, -(validatorGovInfo.LastVoteWeight))
+	//		voteWeight := validatorGovInfo.InitVotingPower - validatorGovInfo.Minus
+	//		proposal.updateTally(msg.Option, voteWeight)
+	//		validatorGovInfo.LastVoteWeight = voteWeight
+	//	}
+	//
+	//	for _, delegation := range delegatedTo {
+	//		proposal.updateTally(existingVote.Option, -delegation.Amount)
+	//		proposal.updateTally(msg.Option, delegation.Amount)
+	//	}
+	//
+	//	existingVote.Option = msg.Option
+	//}
+
+	ctx.Logger().Info("Execute Proposal Vote", "Vote", msg,"Proposal",proposal)
 
 	keeper.SetProposal(ctx, *proposal)
 

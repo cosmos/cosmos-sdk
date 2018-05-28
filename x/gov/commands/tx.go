@@ -6,11 +6,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	"strconv"
 )
 
 const (
@@ -18,12 +19,7 @@ const (
 	flagDescription    = "description"
 	flagProposalType   = "type"
 	flagInitialDeposit = "deposit"
-	flagproposer = "proposer"
-	flagdepositer = "depositer"
-	flagproposalID = "proposalID"
-	flagamount = "amount"
-	flagvoter = "voter"
-	flagoption = "option"
+	flagproposer       = "proposer"
 )
 
 // submit a proposal tx
@@ -63,38 +59,40 @@ func SubmitProposalCmd(cdc *wire.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagTitle,"","")
-	cmd.Flags().String(flagDescription,"","")
-	cmd.Flags().String(flagProposalType,"","")
-	cmd.Flags().String(flagInitialDeposit,"","")
-	cmd.Flags().String(flagproposer,"","")
-
+	cmd.Flags().String(flagTitle, "", "title of proposal")
+	cmd.Flags().String(flagDescription, "", "description of proposal")
+	cmd.Flags().String(flagProposalType, "", "proposalType of proposal")
+	cmd.Flags().String(flagInitialDeposit, "", "deposit of proposal")
+	cmd.Flags().String(flagproposer, "", "proposer of proposal")
 
 	return cmd
 }
 
 // set a new cool trend transaction
 func DepositCmd(cdc *wire.Codec) *cobra.Command {
-	cmd :=  &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "deposit",
-		Short: "You're so cool, tell us what is cool!",
+		Short: "deposit your token [steak] for activing proposalI",
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// get the from address from the name flag
-			from, err := sdk.GetAddress(viper.GetString(flagdepositer))
+			depositer, err := sdk.GetAddress(args[0])
 			if err != nil {
 				return err
 			}
 
-			proposalID := viper.GetInt64(flagproposalID)
-
-			amount, err := sdk.ParseCoins(viper.GetString(flagamount))
+			proposalID, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
 
+			amount, err := sdk.ParseCoins(args[2])
+			if err != nil {
+				return err
+			}
 
 			// create the message
-			msg := gov.NewMsgDeposit(proposalID,from,amount)
+			msg := gov.NewMsgDeposit(proposalID, depositer, amount)
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
@@ -106,33 +104,32 @@ func DepositCmd(cdc *wire.Codec) *cobra.Command {
 			return nil
 		},
 	}
-
-	cmd.Flags().String(flagdepositer,"","")
-	cmd.Flags().Int64(flagproposalID,0,"")
-	cmd.Flags().String(flagamount,"","")
 	return cmd
 }
 
 // set a new cool trend transaction
 func VoteCmd(cdc *wire.Codec) *cobra.Command {
-	cmd :=  &cobra.Command{
-		Use:   "vote",
-		Short: "You're so cool, tell us what is cool!",
+	cmd := &cobra.Command{
+		Use:   "vote [voter] [proposalID] [option]",
+		Short: "vote for current actived proposal,option:Yes/NO/NoWithVeto/Abstain",
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// get the from address from the name flag
-			voter, err := sdk.GetAddress(viper.GetString(flagvoter))
+			voter, err := sdk.GetAddress(args[0])
 			if err != nil {
 				return err
 			}
 
-			proposalID := viper.GetInt64(flagproposalID)
-
-			option := viper.GetString(flagoption)
+			proposalID, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
+
+			option := args[2]
 			// create the message
-			msg := gov.NewMsgVote(voter,proposalID,option)
+			msg := gov.NewMsgVote(voter, proposalID, option)
+
+			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]", string(msg.Voter),msg.ProposalID,msg.Option)
+
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
@@ -144,10 +141,5 @@ func VoteCmd(cdc *wire.Codec) *cobra.Command {
 			return nil
 		},
 	}
-
-	cmd.Flags().String(flagvoter,"","")
-	cmd.Flags().Int64(flagproposalID,0,"")
-	cmd.Flags().String(flagoption,"","")
-
 	return cmd
 }

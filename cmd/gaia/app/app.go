@@ -14,9 +14,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
 const (
@@ -60,7 +60,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 		keyAccount: sdk.NewKVStoreKey("acc"),
 		keyIBC:     sdk.NewKVStoreKey("ibc"),
 		keyStake:   sdk.NewKVStoreKey("stake"),
-		keyGov:		sdk.NewKVStoreKey("gov"),
+		keyGov:     sdk.NewKVStoreKey("gov"),
 	}
 
 	// define the accountMapper
@@ -87,7 +87,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(gov.NewBeginBlocker(app.govKeeper))
 	app.SetEndBlocker(stake.NewEndBlocker(app.stakeKeeper))
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake,app.keyGov)
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake, app.keyGov)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, stake.FeeHandler))
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {

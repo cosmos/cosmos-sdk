@@ -8,6 +8,12 @@ import (
 	stake "github.com/cosmos/cosmos-sdk/x/stake"
 )
 
+
+var (
+	NewProposalIDKey               = []byte{0x00} //
+	ProposalQueueKey               = []byte{0x01} //
+)
+
 type Keeper struct {
 	// The reference to the CoinKeeper to modify balances
 	ck bank.Keeper
@@ -29,7 +35,7 @@ func NewKeeper(key sdk.StoreKey, ck bank.Keeper, sk stake.Keeper) Keeper {
 		proposalStoreKey: key,
 		ck:               ck,
 		cdc:              cdc,
-		sm:				  sk,
+		sm:               sk,
 	}
 }
 
@@ -71,30 +77,33 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal Proposal) {
 
 func (keeper Keeper) getNewProposalID(ctx sdk.Context) int64 {
 	store := ctx.KVStore(keeper.proposalStoreKey)
-	bz := store.Get([]byte("newProposalID"))
-	if bz == nil {
-		return 0
-	}
+	bz := store.Get(NewProposalIDKey)
 
 	proposalID := new(int64)
+	if bz == nil {
+		bz, _ = keeper.cdc.MarshalBinary(int64(0))
+	}
+
 	err := keeper.cdc.UnmarshalBinary(bz, proposalID) // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
 	if err != nil {
 		panic("should not happen")
 	}
+
+	ctx.Logger().Info("Auto increase ProposalId,current ","ProposalId",proposalID)
 
 	bz, err = keeper.cdc.MarshalBinary(*proposalID + 1) // TODO: switch to MarshalBinaryBare when new go-amino gets added
 	if err != nil {
 		panic("should not happen")
 	}
 
-	store.Set([]byte("newProposalID"), bz)
+	store.Set(NewProposalIDKey, bz)
 
 	return *proposalID
 }
 
 func (keeper Keeper) getProposalQueue(ctx sdk.Context) ProposalQueue {
 	store := ctx.KVStore(keeper.proposalStoreKey)
-	bz := store.Get([]byte("proposalQueue"))
+	bz := store.Get(ProposalQueueKey)
 	if bz == nil {
 		return nil
 	}
@@ -116,7 +125,7 @@ func (keeper Keeper) setProposalQueue(ctx sdk.Context, proposalQueue ProposalQue
 		panic(err)
 	}
 
-	store.Set([]byte("proposalQueue"), bz)
+	store.Set(ProposalQueueKey, bz)
 }
 
 func (keeper Keeper) ProposalQueuePeek(ctx sdk.Context) *Proposal {
@@ -132,6 +141,7 @@ func (keeper Keeper) ProposalQueuePop(ctx sdk.Context) *Proposal {
 	if len(proposalQueue) == 0 {
 		return nil
 	}
+	ctx.Logger().Info("Execute ProposalQueuePop","QueueSize",len(proposalQueue))
 	frontElement, proposalQueue := proposalQueue[0], proposalQueue[1:]
 	keeper.setProposalQueue(ctx, proposalQueue)
 	return keeper.GetProposal(ctx, frontElement)
@@ -145,7 +155,7 @@ func (keeper Keeper) ProposalQueuePush(ctx sdk.Context, proposal Proposal) {
 	if err != nil {
 		panic(err)
 	}
-	store.Set([]byte("proposalQueue"), bz)
+	store.Set(ProposalQueueKey, bz)
 }
 
 func (keeper Keeper) GetActiveProcedure() *Procedure { // TODO: move to param store and allow for updating of this
@@ -155,6 +165,7 @@ func (keeper Keeper) GetActiveProcedure() *Procedure { // TODO: move to param st
 		ProposalTypes:     []string{"TextProposal"},
 		Threshold:         sdk.NewRat(1, 2),
 		Veto:              sdk.NewRat(1, 3),
+		FastPass:          sdk.NewRat(2, 3),
 		MaxDepositPeriod:  200,
 		GovernancePenalty: sdk.NewRat(1, 100),
 	}
@@ -163,29 +174,26 @@ func (keeper Keeper) GetActiveProcedure() *Procedure { // TODO: move to param st
 func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
 	proposal.VotingStartBlock = ctx.BlockHeight()
 
-	// TODO: Can we get this directly from stakeState
 	pool := keeper.sm.GetPool(ctx)
-	proposal.TotalVotingPower = pool.TotalSupply
-
-	//proposal.TotalVotingPower = 0
+	proposal.TotalVotingPower = pool.BondedPool
 
 	validatorList := keeper.sm.GetValidators(ctx) // TODO: Finalize with staking module
-
 	for _, validator := range validatorList {
+
+		votingPower := validator.Power.Evaluate()
+
+		ctx.Logger().Info("validator Power","Power",votingPower)
+
 		validatorGovInfo := ValidatorGovInfo{
-			ProposalID:      proposal.ProposalID,
-			ValidatorAddr:   validator.Address,     // TODO: Finalize with staking module
-			//InitVotingPower: validator.VotingPower, // TODO: Finalize with staking module
-			Minus:           0,
-			LastVoteWeight:  -1,
+			ProposalID:    proposal.ProposalID,
+			ValidatorAddr: validator.Address, // TODO: Finalize with staking module
+			InitVotingPower: votingPower, // TODO: Finalize with staking module
+			Minus:          0,
+			LastVoteWeight: -1,
 		}
 
 		proposal.ValidatorGovInfos = append(proposal.ValidatorGovInfos, validatorGovInfo)
 	}
 
 	keeper.ProposalQueuePush(ctx, *proposal)
-}
-
-func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description string, proposalType string, initDeposit Deposit) (Proposal, sdk.Error) { // TODO: move to param store and allow for updating of this
- return Proposal{},nil
 }

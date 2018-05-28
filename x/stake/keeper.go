@@ -494,19 +494,19 @@ func (k Keeper) setPool(ctx sdk.Context, p Pool) {
 	k.pool = Pool{} //clear the cache
 }
 
-func (k Keeper) LoadDelegatorCandidates(ctx sdk.Context,delegator sdk.Address) []DelegatorCandidate{
-	delegatorBonds := k.GetDelegatorBonds(ctx,delegator,int16(k.GetParams(ctx).MaxValidators))
+func (k Keeper) LoadDelegatorCandidates(ctx sdk.Context, delegator sdk.Address) []DelegatorCandidate {
+	delegatorBonds := k.GetDelegatorBonds(ctx, delegator, int16(k.GetParams(ctx).MaxValidators))
 	delegations := make([]DelegatorCandidate, len(delegatorBonds))
 	if len(delegatorBonds) != 0 {
-		for i,bond := range delegatorBonds {
-			candidate,_ := k.GetCandidate(ctx,bond.CandidateAddr)
+		for i, bond := range delegatorBonds {
+			candidate, _ := k.GetCandidate(ctx, bond.CandidateAddr)
 			pool := k.GetPool(ctx)
 			globalPoolShares := candidate.delegatorShareExRate().Mul(bond.Shares)
 			amount := pool.bondedShareExRate().Mul(globalPoolShares).Evaluate()
 			d := DelegatorCandidate{
-				Amount:amount,
-				Validator:bond.CandidateAddr,
-				Height:bond.Height,
+				Amount:    amount,
+				Validator: bond.CandidateAddr,
+				Height:    bond.Height,
 			}
 			delegations[i] = d
 		}

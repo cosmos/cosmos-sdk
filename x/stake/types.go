@@ -189,7 +189,7 @@ type DelegatorBond struct {
 }
 
 type DelegatorCandidate struct {
-	Validator 	  sdk.Address `json:"candidate_addr"`
-	Amount        int64       `json:"height"` // Last height bond updated
-	Height        int64       `json:"height"` // Last height bond updated
+	Validator sdk.Address `json:"candidate_addr"`
+	Amount    int64       `json:"height"` // Last height bond updated
+	Height    int64       `json:"height"` // Last height bond updated
 }

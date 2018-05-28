@@ -206,11 +206,76 @@ func TestInitChainer(t *testing.T) {
 	assert.Equal(t, value, res.Value)
 }
 
+func getStateCheckingHandler(t *testing.T, capKey *sdk.KVStoreKey, txPerHeight int, checkHeader bool) func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	counter := 0
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		store := ctx.KVStore(capKey)
+		// Checking state gets updated between checkTx's / DeliverTx's
+		// on the store within a block. The msg.(testUpdatePowerTx).NewPower is just
+		// to allow for specifying whether or not to check state, this is needed for
+		// checkTx.
+		if counter > 0 && msg.(testUpdatePowerTx).NewPower == 0 {
+			// check previous value in store
+			counterBytes := []byte{byte(counter - 1)}
+			prevBytes := store.Get(counterBytes)
+			assert.Equal(t, counterBytes, prevBytes)
+		}
+
+		// set the current counter in the store
+		counterBytes := []byte{byte(counter)}
+		store.Set(counterBytes, counterBytes)
+
+		// check that we can see the current header
+		// wrapped in an if, so it can be reused between CheckTx and DeliverTx tests.
+		if checkHeader {
+			thisHeader := ctx.BlockHeader()
+			height := int64((counter / txPerHeight) + 1)
+			assert.Equal(t, height, thisHeader.Height)
+		}
+
+		counter++
+		return sdk.Result{}
+	}
+}
+
 // Test that successive CheckTx can see each others' effects
 // on the store within a block, and that the CheckTx state
 // gets reset to the latest Committed state during Commit
 func TestCheckTx(t *testing.T) {
-	// TODO
+	// Initialize an app for testing
+	app := newBaseApp(t.Name())
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+
+	txPerHeight := 3
+	app.Router().AddRoute(msgType, getStateCheckingHandler(t, capKey, txPerHeight, false))
+
+	tx := testUpdatePowerTx{} // doesn't matter
+	for i := 0; i < txPerHeight; i++ {
+		app.Check(tx)
+	}
+	// If it gets to this point, then successive CheckTx's can see the effects of
+	// other CheckTx's on the block. The following checks that if another block
+	// is committed, the CheckTx State will reset.
+	app.BeginBlock(abci.RequestBeginBlock{})
+	// make the handler not check the state at its counter. Alternatively, any other
+	// msg type oculd be used here.
+	tx.NewPower = 1
+	for i := 0; i < txPerHeight; i++ {
+		app.Deliver(tx)
+	}
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+
+	checkStateStore := app.checkState.ctx.KVStore(capKey)
+	for i := 0; i < txPerHeight; i++ {
+		storedValue := checkStateStore.Get([]byte{byte(i)})
+		assert.Nil(t, storedValue)
+	}
 }
 
 // Test that successive DeliverTx can see each others' effects
@@ -224,30 +289,9 @@ func TestDeliverTx(t *testing.T) {
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	assert.Nil(t, err)
 
-	counter := 0
 	txPerHeight := 2
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
-	app.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		store := ctx.KVStore(capKey)
-		if counter > 0 {
-			// check previous value in store
-			counterBytes := []byte{byte(counter - 1)}
-			prevBytes := store.Get(counterBytes)
-			assert.Equal(t, prevBytes, counterBytes)
-		}
-
-		// set the current counter in the store
-		counterBytes := []byte{byte(counter)}
-		store.Set(counterBytes, counterBytes)
-
-		// check we can see the current header
-		thisHeader := ctx.BlockHeader()
-		height := int64((counter / txPerHeight) + 1)
-		assert.Equal(t, height, thisHeader.Height)
-
-		counter++
-		return sdk.Result{}
-	})
+	app.Router().AddRoute(msgType, getStateCheckingHandler(t, capKey, txPerHeight, true))
 
 	tx := testUpdatePowerTx{} // doesn't matter
 	header := abci.Header{AppHash: []byte("apphash")}

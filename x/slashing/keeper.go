@@ -99,7 +99,9 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	if height > minHeight && signInfo.SignedBlocksCounter < MinSignedPerWindow {
 		logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d", pubkey.Address(), minHeight, MinSignedPerWindow))
 		k.stakeKeeper.Slash(ctx, pubkey, height, SlashFractionDowntime)
-		k.stakeKeeper.Revoke(ctx, pubkey) // , DowntimeUnbondDuration) // TODO
+		k.stakeKeeper.Revoke(ctx, pubkey)
+		signInfo.JailedUntil = ctx.BlockHeader().Time + DowntimeUnbondDuration
+		k.setValidatorSigningInfo(ctx, address, signInfo)
 	}
 }
 
@@ -142,6 +144,7 @@ func (k Keeper) setValidatorSigningBitArray(ctx sdk.Context, address sdk.Address
 type validatorSigningInfo struct {
 	StartHeight         int64 `json:"start_height"`
 	IndexOffset         int64 `json:"index_offset"`
+	JailedUntil         int64 `json:"jailed_until"`
 	SignedBlocksCounter int64 `json:"signed_blocks_counter"`
 }
 

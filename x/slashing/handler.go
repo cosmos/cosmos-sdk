@@ -22,12 +22,14 @@ func handleMsgUnrevoke(ctx sdk.Context, msg MsgUnrevoke, k Keeper) sdk.Result {
 		return ErrNoValidatorForAddress(k.codespace).Result()
 	}
 
-	// TODO
-	/*
-		if ctx.BlockHeader().Time < validator.RevokedUntilTime {
-			return ErrValidatorJailed(k.codespace).Result()
-		}
-	*/
+	info, found := k.getValidatorSigningInfo(ctx, validator.GetPubKey().Address())
+	if !found {
+		return ErrNoValidatorForAddress(k.codespace).Result()
+	}
+
+	if ctx.BlockHeader().Time < info.JailedUntil {
+		return ErrValidatorJailed(k.codespace).Result()
+	}
 
 	if ctx.IsCheckTx() {
 		return sdk.Result{}

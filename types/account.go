@@ -13,24 +13,32 @@ import (
 //Address is a go crypto-style Address
 type Address = cmn.HexBytes
 
+// Bech32 prefixes
+const (
+	Bech32PrefixAccAddr = "cosmosaccaddr"
+	Bech32PrefixAccPub  = "cosmosaccpub"
+	Bech32PrefixValAddr = "cosmosvaladdr"
+	Bech32PrefixValPub  = "cosmosvalpub"
+)
+
 // Bech32CosmosifyAcc takes Address and returns the Bech32Cosmos encoded string
 func Bech32CosmosifyAcc(addr Address) (string, error) {
-	return bech32cosmos.ConvertAndEncode("cosmosaccaddr", addr.Bytes())
+	return bech32cosmos.ConvertAndEncode(Bech32PrefixAccAddr, addr.Bytes())
 }
 
 // Bech32CosmosifyAccPub takes AccountPubKey and returns the Bech32Cosmos encoded string
 func Bech32CosmosifyAccPub(pub crypto.PubKey) (string, error) {
-	return bech32cosmos.ConvertAndEncode("cosmosaccpub", pub.Bytes())
+	return bech32cosmos.ConvertAndEncode(Bech32PrefixAccPub, pub.Bytes())
 }
 
 // Bech32CosmosifyVal returns the Bech32Cosmos encoded string for a validator address
 func Bech32CosmosifyVal(addr Address) (string, error) {
-	return bech32cosmos.ConvertAndEncode("cosmosvaladdr", addr.Bytes())
+	return bech32cosmos.ConvertAndEncode(Bech32PrefixValAddr, addr.Bytes())
 }
 
 // Bech32CosmosifyValPub returns the Bech32Cosmos encoded string for a validator pubkey
 func Bech32CosmosifyValPub(pub crypto.PubKey) (string, error) {
-	return bech32cosmos.ConvertAndEncode("cosmosvalpub", pub.Bytes())
+	return bech32cosmos.ConvertAndEncode(Bech32PrefixValPub, pub.Bytes())
 }
 
 // create an Address from a string
@@ -47,16 +55,7 @@ func GetAccAddressHex(address string) (addr Address, err error) {
 
 // create an Address from a string
 func GetAccAddressBech32Cosmos(address string) (addr Address, err error) {
-	if len(address) == 0 {
-		return addr, errors.New("must use provide address")
-	}
-
-	hrp, bz, err := bech32cosmos.DecodeAndConvert(address)
-
-	if hrp != "cosmosaccaddr" {
-		return addr, fmt.Errorf("Invalid Address Prefix. Expected cosmosaccaddr, Got %s", hrp)
-	}
-
+	bz, err := getFromBech32Cosmos(address, Bech32PrefixAccAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -77,16 +76,7 @@ func GetValAddressHex(address string) (addr Address, err error) {
 
 // create an Address from a bech32cosmos string
 func GetValAddressBech32Cosmos(address string) (addr Address, err error) {
-	if len(address) == 0 {
-		return addr, errors.New("must use provide address")
-	}
-
-	hrp, bz, err := bech32cosmos.DecodeAndConvert(address)
-
-	if hrp != "cosmosvaladdr" {
-		return addr, fmt.Errorf("Invalid Address Prefix. Expected cosmosvaladdr, Got %s", hrp)
-	}
-
+	bz, err := getFromBech32Cosmos(address, Bech32PrefixValAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -95,15 +85,7 @@ func GetValAddressBech32Cosmos(address string) (addr Address, err error) {
 
 //Decode a validator publickey into a public key
 func GetValPubKeyBech32Cosmos(pubkey string) (pk crypto.PubKey, err error) {
-	if len(pubkey) == 0 {
-		return pk, errors.New("must use provide pubkey")
-	}
-	hrp, bz, err := bech32cosmos.DecodeAndConvert(pubkey)
-
-	if hrp != "cosmosvalpub" {
-		return pk, fmt.Errorf("Invalid Validator Pubkey Prefix. Expected cosmosvalpub, Got %s", hrp)
-	}
-
+	bz, err := getFromBech32Cosmos(pubkey, Bech32PrefixValPub)
 	if err != nil {
 		return nil, err
 	}
@@ -114,4 +96,20 @@ func GetValPubKeyBech32Cosmos(pubkey string) (pk crypto.PubKey, err error) {
 	}
 
 	return pk, nil
+}
+
+func getFromBech32Cosmos(bech32, prefix string) ([]byte, error) {
+	if len(bech32) == 0 {
+		return nil, errors.New("must provide non-empty string")
+	}
+	hrp, bz, err := bech32cosmos.DecodeAndConvert(bech32)
+	if err != nil {
+		return nil, err
+	}
+
+	if hrp != prefix {
+		return nil, fmt.Errorf("Invalid bech32 prefix. Expected %s, Got %s", prefix, hrp)
+	}
+
+	return bz, nil
 }

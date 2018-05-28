@@ -74,15 +74,7 @@ func printInfo(info keys.Info) {
 	switch viper.Get(cli.OutputFlag) {
 	case "text":
 		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
-		bechAccount, err := sdk.Bech32CosmosifyAcc(ko.Address)
-		if err != nil {
-			panic(err)
-		}
-		bechPubKey, err := sdk.Bech32CosmosifyAccPub(ko.PubKey)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("%s\t%s\t%s\n", ko.Name, bechAccount, bechPubKey)
+		printKeyOutput(ko)
 	case "json":
 		out, err := json.MarshalIndent(ko, "", "\t")
 		if err != nil {
@@ -98,7 +90,7 @@ func printInfos(infos []keys.Info) {
 	case "text":
 		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
 		for _, ko := range kos {
-			fmt.Printf("%s\t%s\t%s\n", ko.Name, ko.Address, ko.PubKey)
+			printKeyOutput(ko)
 		}
 	case "json":
 		out, err := json.MarshalIndent(kos, "", "\t")
@@ -107,4 +99,16 @@ func printInfos(infos []keys.Info) {
 		}
 		fmt.Println(string(out))
 	}
+}
+
+func printKeyOutput(ko KeyOutput) {
+	bechAccount, err := sdk.Bech32CosmosifyAcc(ko.Address)
+	if err != nil {
+		panic(err)
+	}
+	bechPubKey, err := sdk.Bech32CosmosifyAccPub(ko.PubKey)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%s\t%s\t%s\n", ko.Name, bechAccount, bechPubKey)
 }

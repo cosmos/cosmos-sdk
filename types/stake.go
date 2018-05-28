@@ -19,7 +19,7 @@ const (
 func BondStatusToString(b BondStatus) string {
 	switch b {
 	case 0x00:
-		return "Ubbonded"
+		return "Unbonded"
 	case 0x01:
 		return "Unbonding"
 	case 0x02:

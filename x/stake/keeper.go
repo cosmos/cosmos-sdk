@@ -794,8 +794,8 @@ func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, fract
 	return
 }
 
-// force unbond a validator
-func (k Keeper) ForceUnbond(ctx sdk.Context, pubkey crypto.PubKey, jailDuration int64) {
+// revoke a validator
+func (k Keeper) Revoke(ctx sdk.Context, pubkey crypto.PubKey) {
 	logger := ctx.Logger().With("module", "x/stake")
 	val, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
@@ -803,9 +803,21 @@ func (k Keeper) ForceUnbond(ctx sdk.Context, pubkey crypto.PubKey, jailDuration 
 		return
 	}
 	val.Revoked = true
-	val.RevokedUntilTime = ctx.BlockHeader().Time + jailDuration
 	k.updateValidator(ctx, val) // update the validator, now revoked
-	val, _ = k.GetValidatorByPubKey(ctx, pubkey)
-	logger.Info(fmt.Sprintf("Validator %s revoked for minimum duration %d", pubkey.Address(), jailDuration))
+	logger.Info(fmt.Sprintf("Validator %s revoked", pubkey.Address()))
+	return
+}
+
+// unrevoke a validator
+func (k Keeper) Unrevoke(ctx sdk.Context, pubkey crypto.PubKey) {
+	logger := ctx.Logger().With("module", "x/stake")
+	val, found := k.GetValidatorByPubKey(ctx, pubkey)
+	if !found {
+		ctx.Logger().Info("Validator with pubkey %s not found, cannot force unbond", pubkey)
+		return
+	}
+	val.Revoked = false
+	k.updateValidator(ctx, val) // update the validator, now unrevoked
+	logger.Info(fmt.Sprintf("Validator %s unrevoked", pubkey.Address()))
 	return
 }

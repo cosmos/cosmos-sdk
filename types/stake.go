@@ -46,7 +46,8 @@ type ValidatorSet interface {
 	ValidatorByPubKey(Context, crypto.PubKey) Validator // get a particular validator by public key
 	TotalPower(Context) Rat                             // total power of the validator set
 	Slash(Context, crypto.PubKey, int64, Rat)           // slash the validator and delegators of the validator, specifying offence height & slash fraction
-	ForceUnbond(Context, crypto.PubKey, int64)          // force unbond the validator, including a duration which must pass before they can rebond
+	Revoke(Context, crypto.PubKey)                      // revoke a validator
+	Unrevoke(Context, crypto.PubKey)                    // unrevoke a validator
 }
 
 //_______________________________________________________________________________

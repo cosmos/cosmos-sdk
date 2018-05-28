@@ -89,6 +89,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	ctx, ck, sk, keeper := createTestInput(t)
 	addr, val, amt := addrs[0], pks[0], int64(100)
 	sh := stake.NewHandler(sk)
+	slh := NewHandler(keeper)
 	got := sh(ctx, newTestMsgDeclareCandidacy(addr, val, amt))
 	require.True(t, got.IsOK())
 	_ = sk.Tick(ctx)
@@ -133,10 +134,10 @@ func TestHandleAbsentValidator(t *testing.T) {
 	// should have been revoked
 	validator = sk.ValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Unbonded, validator.GetStatus())
-	got = sh(ctx, stake.NewMsgUnrevoke(addr))
+	got = slh(ctx, NewMsgUnrevoke(addr))
 	require.False(t, got.IsOK()) // should fail prior to jail expiration
 	ctx = ctx.WithBlockHeader(abci.Header{Time: int64(86400 * 2)})
-	got = sh(ctx, stake.NewMsgUnrevoke(addr))
+	got = slh(ctx, NewMsgUnrevoke(addr))
 	require.True(t, got.IsOK()) // should succeed after jail expiration
 	validator = sk.ValidatorByPubKey(ctx, val)
 	require.Equal(t, sdk.Bonded, validator.GetStatus())

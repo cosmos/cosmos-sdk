@@ -99,7 +99,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	if height > minHeight && signInfo.SignedBlocksCounter < MinSignedPerWindow {
 		logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d", pubkey.Address(), minHeight, MinSignedPerWindow))
 		k.stakeKeeper.Slash(ctx, pubkey, height, SlashFractionDowntime)
-		k.stakeKeeper.ForceUnbond(ctx, pubkey, DowntimeUnbondDuration) // TODO
+		k.stakeKeeper.Revoke(ctx, pubkey) // , DowntimeUnbondDuration) // TODO
 	}
 }
 

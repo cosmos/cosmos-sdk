@@ -6,8 +6,10 @@ corresponding updates to the state. Transactions:
  - TxCreateValidator
  - TxEditValidator
  - TxDelegation
- - TxRedelegation
- - TxUnbond 
+ - TxStartUnbonding
+ - TxCompleteUnbonding
+ - TxRedelegate
+ - TxCompleteRedelegation
 
 Other important state changes:
  - Update Validators
@@ -109,43 +111,41 @@ delegate(tx TxDelegate):
     return 
 ```
 
-### TxUnbond 
+### TxStartUnbonding
 
 Delegator unbonding is defined with the following transaction:
 
 ```golang
-type TxUnbond struct {
+type TxStartUnbonding struct {
 	DelegatorAddr sdk.Address 
 	ValidatorAddr sdk.Address 
 	Shares        string      
 }
 
-unbond(tx TxUnbond):    
+startUnbonding(tx TxStartUnbonding):    
     delegation, found = getDelegatorBond(store, sender, tx.PubKey)
     if !found == nil return 
     
-	if msg.Shares == "MAX" {
+	if tx.Shares == "MAX" {
 		if !bond.Shares.GT(sdk.ZeroRat()) {
-			return ErrNotEnoughBondShares(k.codespace, msg.Shares).Result()
+			return ErrNotEnoughBondShares
     else 
 		var err sdk.Error
-		delShares, err = sdk.NewRatFromDecimal(msg.Shares)
+		delShares, err = sdk.NewRatFromDecimal(tx.Shares)
 		if err != nil 
             return err
 		if bond.Shares.LT(delShares) 
-			return ErrNotEnoughBondShares(k.codespace, msg.Shares).Result()
+			return ErrNotEnoughBondShares
 
-	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
+	validator, found := GetValidator(tx.ValidatorAddr)
 	if !found {
 		return err 
 
-	if msg.Shares == "MAX" 
+	if tx.Shares == "MAX" 
 		delShares = bond.Shares
 
 	bond.Shares -= delShares
     
-    unbondingDelegation = NewUnbondingDelegation(sender, delShares, currentHeight/Time, startSlashRatio)
-    setUnbondingDelegation(unbondingDelegation)
 
 	revokeCandidacy := false
 	if bond.Shares.IsZero() {
@@ -153,30 +153,55 @@ unbond(tx TxUnbond):
 		if bond.DelegatorAddr == validator.Owner && validator.Revoked == false 
 			revokeCandidacy = true
 
-		k.removeDelegation(ctx, bond)
+		removeDelegation( bond)
 	else
 		bond.Height = currentBlockHeight
 		setDelegation(bond)
 
-	pool := k.GetPool(ctx)
+	pool := GetPool()
 	validator, pool, returnAmount := validator.removeDelShares(pool, delShares)
-	k.setPool(ctx, pool)
-	AddCoins(ctx, bond.DelegatorAddr, returnAmount)
+	setPool( pool)
+
+    unbondingDelegation = NewUnbondingDelegation(sender, returnAmount, currentHeight/Time, startSlashRatio)
+    setUnbondingDelegation(unbondingDelegation)
 
 	if revokeCandidacy
 		validator.Revoked = true
 
-	validator = updateValidator(ctx, validator)
+	validator = updateValidator(validator)
 
 	if validator.DelegatorShares == 0 {
-		removeValidator(ctx, validator.Owner)
+		removeValidator(validator.Owner)
 
     return
 ```
 
+### TxCompleteUnbonding
+
+Complete the unbonding and transfer the coins to the delegate. Perform any
+slashing that occured during the unbonding period.
+
+```golang
+type TxUnbondingComplete struct {
+    DelegatorAddr sdk.Address
+    ValidatorAddr sdk.Address
+}
+
+redelegationComplete(tx TxRedelegate):
+    unbonding = getUnbondingDelegation(tx.DelegatorAddr, tx.Validator)
+    if unbonding.CompleteTime >= CurrentBlockTime && unbonding.CompleteHeight >= CurrentBlockHeight
+        validator = GetValidator(tx.ValidatorAddr)
+        returnTokens = ExpectedTokens * tx.startSlashRatio/validator.SlashRatio
+	    AddCoins(unbonding.DelegatorAddr, returnTokens)
+        removeUnbondingDelegation(unbonding)
+    return     
+```
+
 ### TxRedelegation
 
-The redelegation command allows delegators to instantly switch validators. 
+The redelegation command allows delegators to instantly switch validators. Once
+the unbonding period has passed, the redelegation must be completed with
+txRedelegationComplete.
 
 ```golang
 type TxRedelegate struct {
@@ -184,20 +209,45 @@ type TxRedelegate struct {
     ValidatorFrom Validator
     ValidatorTo   Validator
     Shares        sdk.Rat 
+    CompletedTime int64 
 }
 
 redelegate(tx TxRedelegate):
+
     pool = getPool()
     delegation = getDelegatorBond(tx.DelegatorAddr, tx.ValidatorFrom.Owner)
-    if delegation == nil then return 
+    if delegation == nil
+        return 
     
-    if delegation.Shares < tx.Shares return 
+    if delegation.Shares < tx.Shares 
+        return 
     delegation.shares -= Tx.Shares
     validator, pool, createdCoins = validator.RemoveShares(pool, tx.Shares)
     setPool(pool)
     
-    redelegation = newRedelegation(validatorFrom, validatorTo, Shares, createdCoins)
+    redelegation = newRedelegation(tx.DelegatorAddr, tx.validatorFrom, 
+        tx.validatorTo, tx.Shares, createdCoins, tx.CompletedTime)
     setRedelegation(redelegation)
+    return     
+```
+
+### TxCompleteRedelegation
+
+Note that unlike TxCompleteUnbonding slashing of redelegating shares does not
+take place during completion. Slashing on redelegated shares takes place
+actively as a slashing occurs.
+
+```golang
+type TxRedelegationComplete struct {
+    DelegatorAddr Address
+    ValidatorFrom Validator
+    ValidatorTo   Validator
+}
+
+redelegationComplete(tx TxRedelegate):
+    redelegation = getRedelegation(tx.DelegatorAddr, tx.validatorFrom, tx.validatorTo)
+    if redelegation.CompleteTime >= CurrentBlockTime && redelegation.CompleteHeight >= CurrentBlockHeight
+        removeRedelegation(redelegation)
     return     
 ```
 

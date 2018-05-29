@@ -10,22 +10,22 @@ information, etc.
 
 ```golang
 type Pool struct {
-    LooseUnbondedTokens int64    // tokens not associated with any validator
-	UnbondedTokens      int64    // reserve of unbonded tokens held with validators
-	UnbondingTokens     int64    // tokens moving from bonded to unbonded pool
-	BondedTokens        int64    // reserve of bonded tokens
-	UnbondedShares      sdk.Rat  // sum of all shares distributed for the Unbonded Pool
-	UnbondingShares     sdk.Rat  // shares moving from Bonded to Unbonded Pool
-	BondedShares        sdk.Rat  // sum of all shares distributed for the Bonded Pool
-	InflationLastTime   int64    // block which the last inflation was processed // TODO make time
-	Inflation           sdk.Rat  // current annual inflation rate
+    LooseUnbondedTokens int64   // tokens not associated with any validator
+	UnbondedTokens      int64   // reserve of unbonded tokens held with validators
+	UnbondingTokens     int64   // tokens moving from bonded to unbonded pool
+	BondedTokens        int64   // reserve of bonded tokens
+	UnbondedShares      sdk.Rat // sum of all shares distributed for the Unbonded Pool
+	UnbondingShares     sdk.Rat // shares moving from Bonded to Unbonded Pool
+	BondedShares        sdk.Rat // sum of all shares distributed for the Bonded Pool
+	InflationLastTime   int64   // block which the last inflation was processed // TODO make time
+	Inflation           sdk.Rat // current annual inflation rate
 
 	DateLastCommissionReset int64  // unix timestamp for last commission accounting reset (daily)
 }
 
 type PoolShares struct {
-	Status sdk.BondStatus  // either: unbonded, unbonding, or bonded
-	Amount sdk.Rat         // total shares of type ShareKind
+	Status sdk.BondStatus // either: unbonded, unbonding, or bonded
+	Amount sdk.Rat        // total shares of type ShareKind
 }
 ```
 
@@ -37,13 +37,13 @@ overall functioning of the stake module.
 
 ```golang
 type Params struct {
-    InflationRateChange sdk.Rat  // maximum annual change in inflation rate
-	InflationMax        sdk.Rat  // maximum inflation rate
-	InflationMin        sdk.Rat  // minimum inflation rate
-	GoalBonded          sdk.Rat  // Goal of percent bonded atoms
+    InflationRateChange sdk.Rat // maximum annual change in inflation rate
+	InflationMax        sdk.Rat // maximum inflation rate
+	InflationMin        sdk.Rat // minimum inflation rate
+	GoalBonded          sdk.Rat // Goal of percent bonded atoms
 
-	MaxValidators uint16  // maximum number of validators
-	BondDenom     string  // bondable coin denomination
+	MaxValidators uint16 // maximum number of validators
+	BondDenom     string // bondable coin denomination
 }
 ```
 
@@ -65,27 +65,28 @@ type Validator struct {
 	ConsensusPubKey crypto.PubKey  // Tendermint consensus pubkey of validator
 	Revoked         bool           // has the validator been revoked?
 
-	PoolShares      PoolShares  // total shares for tokens held in the pool
-	DelegatorShares sdk.Rat     // total shares issued to a validator's delegators
+	PoolShares      PoolShares     // total shares for tokens held in the pool
+	DelegatorShares sdk.Rat        // total shares issued to a validator's delegators
+	SlashRatio      sdk.Rat        // increases each time the validator is slashed
 
-	Description        Description  // description terms for the validator
-	BondHeight         int64        // earliest height as a bonded validator
-	BondIntraTxCounter int16        // block-local tx index of validator change
-	ProposerRewardPool sdk.Coins    // reward pool collected from being the proposer
+	Description        Description // description terms for the validator
+	BondHeight         int64       // earliest height as a bonded validator
+	BondIntraTxCounter int16       // block-local tx index of validator change
+	ProposerRewardPool sdk.Coins   // reward pool collected from being the proposer
 
 	Commission            sdk.Rat  // the commission rate of fees charged to any delegators
 	CommissionMax         sdk.Rat  // maximum commission rate which this validator can ever charge
 	CommissionChangeRate  sdk.Rat  // maximum daily increase of the validator commission
 	CommissionChangeToday sdk.Rat  // commission rate change today, reset each day (UTC time)
 
-	PrevPoolShares PoolShares  // total shares of a global hold pools
+	PrevPoolShares PoolShares      // total shares of a global hold pools
 }
 
 type Description struct {
-	Moniker  string  // name
-	Identity string  // optional identity signature (ex. UPort or Keybase)
-	Website  string  // optional website link
-	Details  string  // optional details
+	Moniker  string // name
+	Identity string // optional identity signature (ex. UPort or Keybase)
+	Website  string // optional website link
+	Details  string // optional details
 }
 ```
 
@@ -99,10 +100,10 @@ the transaction is the owner of the bond.
 
 ```golang
 type Delegation struct {
-	DelegatorAddr sdk.Address  // delegation owner address
-	ValidatorAddr sdk.Address  // validator owner address
-	Shares        sdk.Rat      // delegation shares recieved 
-	Height        int64        // last height bond updated
+	DelegatorAddr sdk.Address // delegation owner address
+	ValidatorAddr sdk.Address // validator owner address
+	Shares        sdk.Rat     // delegation shares recieved 
+	Height        int64       // last height bond updated
 }
 ```
 
@@ -110,17 +111,16 @@ type Delegation struct {
  - index: delegation address
 
 A UnbondingDelegation object is created every time an unbonding is initiated.
-The unbond must be completed with a second transaction provided by the delegation owner
-after the unbonding period has passed.
- 
+The unbond must be completed with a second transaction provided by the
+delegation owner after the unbonding period has passed.
 
 ```golang
 type UnbondingDelegation struct {
-    DelegationKey    []byte     // key of the delegation
-    InitTime         int64      // unix time at unbonding initation
-    InitHeight       int64      // block height at unbonding initation
-    ExpectedTokens   sdk.Coins  // the value in Atoms of the amount of shares which are unbonding
-    StartSlashRatio  sdk.Rat    // validator slash ratio at unbonding initiation
+    DelegationKey    sdk.Address // key of the delegation
+    ExpectedTokens   sdk.Coins   // the value in Atoms of the amount of shares which are unbonding
+    StartSlashRatio  sdk.Rat     // validator slash ratio at unbonding initiation
+    CompleteTime     int64       // unix time to complete redelegation
+    CompleteHeight   int64       // block height to complete redelegation
 }
 ``` 
 
@@ -135,13 +135,14 @@ delegation owner after the unbonding period has passed.  The destination
 delegation of a redelegation may not itself undergo a new redelegation until
 the original redelegation has been completed.
 
-
 ```golang
 type Redelegation struct {
-    SourceDelegation       []byte  // source delegation key
-    DestinationDelegation  []byte  // destination delegation key
-    InitTime     int64             // unix time at redelegation
-    InitHeight   int64             // block height at redelegation
-    Shares       sdk.Rat           // amount of shares redelegating
+    SourceDelegation       sdk.Address // source delegation key
+    DestinationDelegation  sdk.Address // destination delegation key
+    SourceShares           sdk.Rat     // amount of source shares redelegating
+    DestinationShares      sdk.Rat     // amount of destination shares created at redelegation
+    SourceStartSlashRatio  sdk.Rat     // source validator slash ratio at unbonding initiation
+    CompleteTime           int64       // unix time to complete redelegation
+    CompleteHeight         int64       // block height to complete redelegation
 }
 ```

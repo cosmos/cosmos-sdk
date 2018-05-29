@@ -161,7 +161,7 @@ func (ctx CoreContext) SignAndBuildLedger(msg sdk.Msg, cdc *wire.Codec) ([]byte,
 		return nil, errors.Errorf("Chain ID required but not specified")
 	}
 	sequence := ctx.Sequence
-	signMsg := sdk.StdSignMsg{
+	signMsg := auth.StdSignMsg{
 		ChainID:   chainID,
 		Sequences: []int64{sequence},
 		Msg:       msg,
@@ -175,14 +175,14 @@ func (ctx CoreContext) SignAndBuildLedger(msg sdk.Msg, cdc *wire.Codec) ([]byte,
 	}
 	sig := priv.Sign(bz)
 	pubkey := priv.PubKey()
-	sigs := []sdk.StdSignature{{
+	sigs := []auth.StdSignature{{
 		PubKey:    pubkey,
 		Signature: sig,
 		Sequence:  sequence,
 	}}
 
 	// marshal bytes
-	tx := sdk.NewStdTx(signMsg.Msg, signMsg.Fee, sigs)
+	tx := auth.NewStdTx(signMsg.Msg, signMsg.Fee, sigs)
 
 	return cdc.MarshalBinary(tx)
 }

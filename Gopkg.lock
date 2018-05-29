@@ -293,13 +293,13 @@
   version = "v0.6.2"
 
 [[projects]]
-  branch = "develop"
   name = "github.com/tendermint/iavl"
   packages = [
     ".",
     "sha256truncated"
   ]
   revision = "c9206995e8f948e99927f5084a88a7e94ca256da"
+  version = "v0.8.0-rc0"
 
 [[projects]]
   branch = "cwgoes/update-abci"
@@ -342,7 +342,7 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "3b8c1ae119da990664f3b98bb2518032f5d837f9"
+  revision = "3bf9a7dc503b8fd39bda3d64f2d039253afa6f8c"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -455,6 +455,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ad811206ccd65d54f53041f1284d45d3645c1e89b77e1e6843af786630f0b587"
+  inputs-digest = "473825a42fdba2832156190a00251b6f06aa6f039e5931ec00219b1b7004a89e"
   solver-name = "gps-cdcl"
   solver-version = 1

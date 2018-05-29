@@ -13,7 +13,7 @@ import (
 
 func TestContextWithSigners(t *testing.T) {
 	ms, _, _ := setupMultiStore()
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger(), nil)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	_, _, addr1 := keyPubAddr()
 	_, _, addr2 := keyPubAddr()

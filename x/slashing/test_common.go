@@ -53,7 +53,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keep
 	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewTMLogger(os.Stdout), nil)
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewTMLogger(os.Stdout))
 	cdc := createTestCodec()
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, &auth.BaseAccount{})
 	ck := bank.NewKeeper(accountMapper)

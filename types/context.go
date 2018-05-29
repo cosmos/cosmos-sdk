@@ -30,8 +30,7 @@ type Context struct {
 }
 
 // create a new context
-func NewContext(ms MultiStore, header abci.Header, isCheckTx bool,
-	txBytes []byte, logger log.Logger, absentValidators [][]byte) Context {
+func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, txBytes []byte, logger log.Logger) Context {
 
 	c := Context{
 		Context: context.Background(),
@@ -45,7 +44,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool,
 	c = c.WithIsCheckTx(isCheckTx)
 	c = c.WithTxBytes(txBytes)
 	c = c.WithLogger(logger)
-	c = c.WithAbsentValidators(absentValidators)
+	c = c.WithAbsentValidators(nil)
 	c = c.WithGasMeter(NewInfiniteGasMeter())
 	return c
 }

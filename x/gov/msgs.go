@@ -7,6 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+
+// name to idetify transaction types
+const MsgType = "gov"
 //-----------------------------------------------------------
 // MsgSubmitProposal
 
@@ -29,19 +32,19 @@ func NewMsgSubmitProposal(title string, description string, proposalType string,
 }
 
 // Implements Msg.
-func (msg MsgSubmitProposal) Type() string { return "gov" }
+func (msg MsgSubmitProposal) Type() string { return MsgType }
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 
 	if len(msg.Title) == 0 {
-		return ErrInvalidTitle(msg.Title) // TODO: Proper Error
+		return ErrInvalidTitle(msg.Title)
 	}
 	if len(msg.Description) == 0 {
-		return ErrInvalidDescription(msg.Description) // TODO: Proper Error
+		return ErrInvalidDescription(msg.Description)
 	}
 	if len(msg.ProposalType) == 0 {
-		return ErrInvalidProposalType(msg.ProposalType) // TODO: Proper Error
+		return ErrInvalidProposalType(msg.ProposalType)
 	}
 	if len(msg.Proposer) == 0 {
 		return sdk.ErrInvalidAddress(msg.Proposer.String())
@@ -96,7 +99,7 @@ func NewMsgDeposit(proposalID int64, depositer sdk.Address, amount sdk.Coins) Ms
 }
 
 // Implements Msg.
-func (msg MsgDeposit) Type() string { return "gov" }
+func (msg MsgDeposit) Type() string { return MsgType }
 
 // Implements Msg.
 func (msg MsgDeposit) ValidateBasic() sdk.Error {
@@ -153,7 +156,7 @@ func NewMsgVote(voter sdk.Address, proposalID int64, option string) MsgVote {
 }
 
 // Implements Msg.
-func (msg MsgVote) Type() string { return "gov" }
+func (msg MsgVote) Type() string { return MsgType }
 
 // Implements Msg.
 func (msg MsgVote) ValidateBasic() sdk.Error {
@@ -161,7 +164,7 @@ func (msg MsgVote) ValidateBasic() sdk.Error {
 	if len(msg.Voter) == 0 {
 		return sdk.ErrInvalidAddress(msg.Voter.String())
 	}
-	if msg.Option != "Yes" && msg.Option != "No" && msg.Option != "NoWithVeto" && msg.Option != "Abstain" {
+	if msg.Option != YesOption && msg.Option != NoOption && msg.Option != NoWithVetoOption && msg.Option != AbstainOption {
 		return ErrInvalidVote(msg.Option)
 	}
 	return nil

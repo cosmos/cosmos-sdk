@@ -2,8 +2,14 @@ package gov
 
 import (
 	"bytes"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+const (
+	YesOption			=    "Yes"
+	NoOption			=    "No"
+	NoWithVetoOption	=    "NoWithVeto"
+	AbstainOption		=    "Abstain"
 )
 
 type Vote struct {
@@ -38,19 +44,19 @@ type Proposal struct {
 	AbstainVotes     int64 `json:"abstain_votes"`      //  Weight of Abstain Votes
 }
 
-func (proposal Proposal) getValidatorGovInfo(validatorAddr sdk.Address) *ValidatorGovInfo {
-	for _, validatorGovInfo := range proposal.ValidatorGovInfos {
+func (proposal *Proposal) getValidatorGovInfo(validatorAddr sdk.Address) *ValidatorGovInfo {
+	for i, validatorGovInfo := range proposal.ValidatorGovInfos {
 		if bytes.Equal(validatorGovInfo.ValidatorAddr, validatorAddr) {
-			return &validatorGovInfo
+			return &proposal.ValidatorGovInfos[i]
 		}
 	}
 	return nil
 }
 
-func (proposal Proposal) getVote(voterAddr sdk.Address) *Vote {
-	for _, vote := range proposal.VoteList {
+func (proposal *Proposal) getVote(voterAddr sdk.Address) *Vote {
+	for i, vote := range proposal.VoteList {
 		if bytes.Equal(vote.Voter, voterAddr) {
-			return &vote
+			return &proposal.VoteList[i]
 		}
 	}
 	return nil
@@ -62,13 +68,13 @@ func (proposal Proposal) isActive() bool {
 
 func (proposal *Proposal) updateTally(option string, amount int64) {
 	switch option {
-	case "Yes":
+	case YesOption:
 		proposal.YesVotes += amount
-	case "No":
+	case NoOption:
 		proposal.NoVotes += amount
-	case "NoWithVeto":
+	case NoWithVetoOption:
 		proposal.NoWithVetoVotes += amount
-	case "Abstain":
+	case AbstainOption:
 		proposal.AbstainVotes += amount
 	}
 }

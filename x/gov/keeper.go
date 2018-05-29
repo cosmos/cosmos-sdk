@@ -8,10 +8,10 @@ import (
 	stake "github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-
 var (
-	NewProposalIDKey               = []byte{0x00} //
-	ProposalQueueKey               = []byte{0x01} //
+	NewProposalIDKey = []byte{0x00} //
+	ProposalQueueKey = []byte{0x01} //
+	ProposalTypes    = []string{"TextProposal"}
 )
 
 type Keeper struct {
@@ -89,8 +89,6 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) int64 {
 		panic("should not happen")
 	}
 
-	ctx.Logger().Info("Auto increase ProposalId,current ","ProposalId",proposalID)
-
 	bz, err = keeper.cdc.MarshalBinary(*proposalID + 1) // TODO: switch to MarshalBinaryBare when new go-amino gets added
 	if err != nil {
 		panic("should not happen")
@@ -141,7 +139,6 @@ func (keeper Keeper) ProposalQueuePop(ctx sdk.Context) *Proposal {
 	if len(proposalQueue) == 0 {
 		return nil
 	}
-	ctx.Logger().Info("Execute ProposalQueuePop","QueueSize",len(proposalQueue))
 	frontElement, proposalQueue := proposalQueue[0], proposalQueue[1:]
 	keeper.setProposalQueue(ctx, proposalQueue)
 	return keeper.GetProposal(ctx, frontElement)
@@ -161,8 +158,8 @@ func (keeper Keeper) ProposalQueuePush(ctx sdk.Context, proposal Proposal) {
 func (keeper Keeper) GetActiveProcedure() *Procedure { // TODO: move to param store and allow for updating of this
 	return &Procedure{
 		VotingPeriod:      200,
-		MinDeposit:        sdk.Coins{{"steak", 2}},
-		ProposalTypes:     []string{"TextProposal"},
+		MinDeposit:        sdk.Coins{{stake.StakingToken, 2}},
+		ProposalTypes:     ProposalTypes,
 		Threshold:         sdk.NewRat(1, 2),
 		Veto:              sdk.NewRat(1, 3),
 		FastPass:          sdk.NewRat(2, 3),
@@ -177,19 +174,15 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
 	pool := keeper.sm.GetPool(ctx)
 	proposal.TotalVotingPower = pool.BondedPool
 
-	validatorList := keeper.sm.GetValidators(ctx) // TODO: Finalize with staking module
+	validatorList := keeper.sm.GetValidators(ctx)
 	for _, validator := range validatorList {
 
-		votingPower := validator.Power.Evaluate()
-
-		ctx.Logger().Info("validator Power","Power",votingPower)
-
 		validatorGovInfo := ValidatorGovInfo{
-			ProposalID:    proposal.ProposalID,
-			ValidatorAddr: validator.Address, // TODO: Finalize with staking module
-			InitVotingPower: votingPower, // TODO: Finalize with staking module
-			Minus:          0,
-			LastVoteWeight: -1,
+			ProposalID:      proposal.ProposalID,
+			ValidatorAddr:   validator.Address,
+			InitVotingPower: validator.Power.Evaluate(),
+			Minus:           0,
+			LastVoteWeight:  -1,
 		}
 
 		proposal.ValidatorGovInfos = append(proposal.ValidatorGovInfos, validatorGovInfo)

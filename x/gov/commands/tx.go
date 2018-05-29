@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"encoding/hex"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -54,7 +55,7 @@ func SubmitProposalCmd(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
+			fmt.Printf("Committed at block:%d. Hash:%s.Response:%+v \n", res.Height, res.Hash.String(), res.DeliverTx)
 			return nil
 		},
 	}
@@ -68,10 +69,10 @@ func SubmitProposalCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-// set a new cool trend transaction
+// set a new Deposit transaction
 func DepositCmd(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "deposit",
+		Use:   "deposit [depositer] [proposalID] [amount]",
 		Short: "deposit your token [steak] for activing proposalI",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -107,7 +108,7 @@ func DepositCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-// set a new cool trend transaction
+// set a new Vote transaction
 func VoteCmd(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vote [voter] [proposalID] [option]",
@@ -128,7 +129,7 @@ func VoteCmd(cdc *wire.Codec) *cobra.Command {
 			// create the message
 			msg := gov.NewMsgVote(voter, proposalID, option)
 
-			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]", string(msg.Voter),msg.ProposalID,msg.Option)
+			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]", hex.EncodeToString(msg.Voter), msg.ProposalID, msg.Option)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))

@@ -10,10 +10,8 @@ func NewBeginBlocker(gm Keeper) sdk.BeginBlocker {
 	return func(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 		proposal := gm.ProposalQueuePeek(ctx)
 		if proposal == nil {
-			return abci.ResponseBeginBlock{} // TODO
+			return abci.ResponseBeginBlock{}
 		}
-
-		ctx.Logger().Info("gov", "Proposal", proposal)
 
 		// Don't want to do urgent for now
 		passV := types.NewRat(proposal.YesVotes, proposal.TotalVotingPower)
@@ -39,7 +37,7 @@ func NewBeginBlocker(gm Keeper) sdk.BeginBlocker {
 			refund(ctx, proposal, gm)
 
 			//Slash validators if not voted
-			slash(ctx,proposal.ValidatorGovInfos)
+			slash(ctx, proposal.ValidatorGovInfos)
 
 			//Proposal was accepted
 			nonAbstainTotal := proposal.YesVotes + proposal.NoVotes + proposal.NoWithVetoVotes
@@ -54,8 +52,6 @@ func NewBeginBlocker(gm Keeper) sdk.BeginBlocker {
 				// check next proposal recursively
 				//checkProposal()
 			}
-
-			//  TODO: Prune proposal
 		}
 		return abci.ResponseBeginBlock{}
 	}
@@ -63,7 +59,7 @@ func NewBeginBlocker(gm Keeper) sdk.BeginBlocker {
 
 func refund(ctx sdk.Context, proposal *Proposal, govKeeper Keeper) {
 	for _, deposit := range proposal.Deposits {
-		ctx.Logger().Info("Execute Refund", "Depositer",deposit.Depositer,"Amount",deposit.Amount)
+		ctx.Logger().Info("Execute Refund", "Depositer", deposit.Depositer, "Amount", deposit.Amount)
 		_, _, err := govKeeper.ck.AddCoins(ctx, deposit.Depositer, deposit.Amount)
 		if err != nil {
 			panic("should not happen")
@@ -71,7 +67,7 @@ func refund(ctx sdk.Context, proposal *Proposal, govKeeper Keeper) {
 	}
 }
 
-func slash(ctx sdk.Context,validators []ValidatorGovInfo){
+func slash(ctx sdk.Context, validators []ValidatorGovInfo) {
 	ctx.Logger().Info("Begin to Execute Slash")
 	// Slash validators if not voted
 	for _, validatorGovInfo := range validators {

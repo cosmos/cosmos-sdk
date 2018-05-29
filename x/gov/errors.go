@@ -4,6 +4,7 @@ package gov
 import (
 	"strconv"
 
+	"encoding/hex"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,7 +12,7 @@ const ( // TODO TODO TODO TODO TODO TODO
 
 	DefaultCodespace sdk.CodespaceType = 4
 
-	// Gov errors reserve 200 ~ 299.
+	// Gov errors reserve 401 ~ 499.
 	CodeUnknownProposal          sdk.CodeType = 401
 	CodeInactiveProposal         sdk.CodeType = 402
 	CodeAlreadyActiveProposal    sdk.CodeType = 403
@@ -40,11 +41,11 @@ func ErrAlreadyActiveProposal(proposalID int64) sdk.Error {
 }
 
 func ErrAddressChangedDelegation(address sdk.Address) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeAddressChangedDelegation, "Address "+string(address)+" has redelegated since vote began and is thus ineligible to vote")
+	return sdk.NewError(DefaultCodespace, CodeAddressChangedDelegation, "Address "+hex.EncodeToString(address)+" has redelegated since vote began and is thus ineligible to vote")
 }
 
 func ErrAddressNotStaked(address sdk.Address) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeAddressNotStaked, "Address "+string(address)+" is not staked and is thus ineligible to vote")
+	return sdk.NewError(DefaultCodespace, CodeAddressNotStaked, "Address "+hex.EncodeToString(address)+" is not staked and is thus ineligible to vote")
 }
 
 func ErrInvalidTitle(title string) sdk.Error {
@@ -64,5 +65,5 @@ func ErrInvalidVote(voteOption string) sdk.Error {
 }
 
 func ErrAlreadyVote(address sdk.Address) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeAddressAlreadyVote, "Address "+string(address)+" has already voted")
+	return sdk.NewError(DefaultCodespace, CodeAddressAlreadyVote, "Address "+hex.EncodeToString(address)+" has already voted")
 }

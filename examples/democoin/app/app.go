@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/pow"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/sketchy"
-	simpleGov "github.com/cosmos/cosmos-sdk/examples/democoin/x/simple_governance"
 )
 
 const (
@@ -38,7 +37,6 @@ type DemocoinApp struct {
 	capKeyPowStore     		*sdk.KVStoreKey
 	capKeyIBCStore			*sdk.KVStoreKey
 	capKeyStakingStore   	*sdk.KVStoreKey
-	capKeySimpleGovStore 	*sdk.KVStoreKey
 
 	// keepers
 	feeCollectionKeeper auth.FeeCollectionKeeper
@@ -47,7 +45,6 @@ type DemocoinApp struct {
 	powKeeper           pow.Keeper
 	ibcMapper           ibc.Mapper
 	stakeKeeper         simplestake.Keeper
-	simpleGovKeeper 	simpleGov.Keeper 
 
 	// Manage getting and setting accounts
 	accountMapper auth.AccountMapper
@@ -67,7 +64,6 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 		capKeyPowStore:     	sdk.NewKVStoreKey("pow"),
 		capKeyIBCStore:     	sdk.NewKVStoreKey("ibc"),
 		capKeyStakingStore: 	sdk.NewKVStoreKey("stake"),
-		capKeySimpleGovStore:	sdk.NewKVStoreKey("simpleGov")
 	}
 
 	// Define the accountMapper.
@@ -83,16 +79,13 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	app.powKeeper = pow.NewKeeper(app.capKeyPowStore, pow.NewConfig("pow", int64(1)), app.coinKeeper, app.RegisterCodespace(pow.DefaultCodespace))
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.stakeKeeper = simplestake.NewKeeper(app.capKeyStakingStore, app.coinKeeper, app.RegisterCodespace(simplestake.DefaultCodespace))
-	app.simpleGovKeeper = simpleGov.NewKeeper(app.capKeySimpleGovStore, app.coinKeeper, app.stakeKeeper, app.RegisterCodespace(simpleGov.DefaultCodespace))
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
 		AddRoute("cool", cool.NewHandler(app.coolKeeper)).
 		AddRoute("pow", app.powKeeper.Handler).
 		AddRoute("sketchy", sketchy.NewHandler()).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
-		AddRoute("simplestake", simplestake.NewHandler(app.stakeKeeper)).
-		AddRoute("simpleGov", simpleGov.NewHandler(app.simpleGovKeeper))
-
+		AddRoute("simplestake", simplestake.NewHandler(app.stakeKeeper))
 	// Initialize BaseApp.
 	app.SetInitChainer(app.initChainerFn(app.coolKeeper, app.powKeeper))
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyPowStore, app.capKeyIBCStore, app.capKeyStakingStore)
@@ -114,7 +107,6 @@ func MakeCodec() *wire.Codec {
 	bank.RegisterWire(cdc)
 	ibc.RegisterWire(cdc)
 	simplestake.RegisterWire(cdc)
-	simpleGov.RegisterWire(cdc)
 
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)

@@ -46,7 +46,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 				true
 		}
 
-		// Get the sign bytes (requires all sequence numbers and the fee)
+		// Get the sign bytes (requires all account & sequence numbers and the fee)
 		sequences := make([]int64, len(signerAddrs))
 		for i := 0; i < len(signerAddrs); i++ {
 			sequences[i] = sigs[i].Sequence
@@ -119,6 +119,13 @@ func processSig(
 	acc = am.GetAccount(ctx, addr)
 	if acc == nil {
 		return nil, sdk.ErrUnknownAddress(addr.String()).Result()
+	}
+
+	// Check account number.
+	accnum := acc.GetAccountNumber()
+	if accnum != sig.AccountNumber {
+		return nil, sdk.ErrInvalidSequence(
+			fmt.Sprintf("Invalid account number. Got %d, expected %d", sig.AccountNumber, accnum)).Result()
 	}
 
 	// Check and increment sequence number.

@@ -131,14 +131,12 @@ func (am AccountMapper) GetNextAccountNumber(ctx sdk.Context) int64 {
 	store := ctx.KVStore(am.key)
 	bz := store.Get(globalAccountNumberKey)
 	if bz == nil {
-		bz = am.cdc.MustMarshalBinary(accNumber)
-		store.Set(globalAccountNumberKey, bz)
-		return 0
-	}
-
-	err := am.cdc.UnmarshalBinary(bz, &accNumber)
-	if err != nil {
-		panic(err)
+		accNumber = 0
+	} else {
+		err := am.cdc.UnmarshalBinary(bz, &accNumber)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	bz = am.cdc.MustMarshalBinary(accNumber + 1)

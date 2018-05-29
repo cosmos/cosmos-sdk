@@ -42,7 +42,7 @@ type BaseAccount struct {
 	Address       sdk.Address   `json:"address"`
 	Coins         sdk.Coins     `json:"coins"`
 	PubKey        crypto.PubKey `json:"public_key"`
-	AccountNumber int64         `json:"sequence"`
+	AccountNumber int64         `json:"account_number"`
 	Sequence      int64         `json:"sequence"`
 }
 

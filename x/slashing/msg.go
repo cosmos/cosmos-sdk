@@ -14,7 +14,7 @@ var _ sdk.Msg = &MsgUnrevoke{}
 
 // MsgUnrevoke - struct for unrevoking revoked validator
 type MsgUnrevoke struct {
-	ValidatorAddr sdk.Address `json:"address"`
+	ValidatorAddr sdk.Address `json:"address"` // address of the validator owner
 }
 
 func NewMsgUnrevoke(validatorAddr sdk.Address) MsgUnrevoke {

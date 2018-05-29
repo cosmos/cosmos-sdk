@@ -211,10 +211,8 @@ func getStateCheckingHandler(t *testing.T, capKey *sdk.KVStoreKey, txPerHeight i
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		store := ctx.KVStore(capKey)
 		// Checking state gets updated between checkTx's / DeliverTx's
-		// on the store within a block. The msg.(testUpdatePowerTx).NewPower is just
-		// to allow for specifying whether or not to check state, this is needed for
-		// checkTx.
-		if counter > 0 && msg.(testUpdatePowerTx).NewPower == 0 {
+		// on the store within a block.
+		if counter > 0 {
 			// check previous value in store
 			counterBytes := []byte{byte(counter - 1)}
 			prevBytes := store.Get(counterBytes)
@@ -238,6 +236,25 @@ func getStateCheckingHandler(t *testing.T, capKey *sdk.KVStoreKey, txPerHeight i
 	}
 }
 
+// A mock transaction that has a validation which can fail.
+type testTx struct {
+	positiveNum int64
+}
+
+const msgType2 = "testTx"
+
+func (tx testTx) Type() string                       { return msgType2 }
+func (tx testTx) GetMsg() sdk.Msg                    { return tx }
+func (tx testTx) GetSignBytes() []byte               { return nil }
+func (tx testTx) GetSigners() []sdk.Address          { return nil }
+func (tx testTx) GetSignatures() []auth.StdSignature { return nil }
+func (tx testTx) ValidateBasic() sdk.Error {
+	if tx.positiveNum >= 0 {
+		return nil
+	}
+	return sdk.ErrTxDecode("positiveNum should be a non-negative integer.")
+}
+
 // Test that successive CheckTx can see each others' effects
 // on the store within a block, and that the CheckTx state
 // gets reset to the latest Committed state during Commit
@@ -252,8 +269,8 @@ func TestCheckTx(t *testing.T) {
 	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
 
 	txPerHeight := 3
-	app.Router().AddRoute(msgType, getStateCheckingHandler(t, capKey, txPerHeight, false))
-
+	app.Router().AddRoute(msgType, getStateCheckingHandler(t, capKey, txPerHeight, false)).
+		AddRoute(msgType2, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
 	tx := testUpdatePowerTx{} // doesn't matter
 	for i := 0; i < txPerHeight; i++ {
 		app.Check(tx)
@@ -262,11 +279,9 @@ func TestCheckTx(t *testing.T) {
 	// other CheckTx's on the block. The following checks that if another block
 	// is committed, the CheckTx State will reset.
 	app.BeginBlock(abci.RequestBeginBlock{})
-	// make the handler not check the state at its counter. Alternatively, any other
-	// msg type oculd be used here.
-	tx.NewPower = 1
+	tx2 := testTx{}
 	for i := 0; i < txPerHeight; i++ {
-		app.Deliver(tx)
+		app.Deliver(tx2)
 	}
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
@@ -367,6 +382,27 @@ func TestSimulateTx(t *testing.T) {
 		app.EndBlock(abci.RequestEndBlock{})
 		app.Commit()
 	}
+}
+
+func TestRunInvalidTransaction(t *testing.T) {
+	// Initialize an app for testing
+	app := newBaseApp(t.Name())
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("main")
+	app.MountStoresIAVL(capKey)
+	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	assert.Nil(t, err)
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+	app.Router().AddRoute(msgType2, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+	app.BeginBlock(abci.RequestBeginBlock{})
+	// Transaction where validate fails
+	invalidTx := testTx{-1}
+	err1 := app.Deliver(invalidTx)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeTxDecode), err1.Code)
+	// Transaction with no known route
+	unknownRouteTx := testUpdatePowerTx{}
+	err2 := app.Deliver(unknownRouteTx)
+	assert.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), err2.Code)
 }
 
 // Test that transactions exceeding gas limits fail

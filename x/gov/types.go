@@ -16,32 +16,39 @@ type Vote struct {
 	Voter      sdk.Address `json:"voter"`       //  address of the voter
 	ProposalID int64       `json:"proposal_id"` //  proposalID of the proposal
 	Option     string      `json:"option"`      //  option from OptionSet chosen by the voter
+	Weight	   int64       `json:"weight"`		//  weight of the Vote
+}
+
+func NewVote(voter sdk.Address,proposalID int64,option string,weight int64) Vote{
+	return Vote{
+		voter,proposalID,option,weight,
+	}
 }
 
 //-----------------------------------------------------------
 
 // Proposal
 type Proposal struct {
-	ProposalID   int64     `json:"proposal_id"`   //  ID of the proposal
-	Title        string    `json:"title"`         //  Title of the proposal
-	Description  string    `json:"description"`   //  Description of the proposal
-	ProposalType string    `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Procedure    Procedure `json:"procedure"`     //  Governance Procedure that the proposal follows proposal
+	ProposalID   		int64     `json:"proposal_id"`   //  ID of the proposal
+	Title        		string    `json:"title"`         //  Title of the proposal
+	Description  		string    `json:"description"`   //  Description of the proposal
+	ProposalType 		string    `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	Procedure    		Procedure `json:"procedure"`     //  Governance Procedure that the proposal follows proposal
 
-	SubmitBlock  int64     `json:"submit_block"`  //  Height of the block where TxGovSubmitProposal was included
-	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
-	Deposits     []Deposit `json:"deposits"`      //  Current deposit on this proposal. Initial value is set at InitialDeposit
+	SubmitBlock  		int64     `json:"submit_block"`  //  Height of the block where TxGovSubmitProposal was included
+	TotalDeposit 		sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
+	Deposits     		[]Deposit `json:"deposits"`      //  Current deposit on this proposal. Initial value is set at InitialDeposit
 
-	VotingStartBlock int64 `json:"voting_start_block"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingStartBlock 	int64 `json:"voting_start_block"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
 
-	ValidatorGovInfos []ValidatorGovInfo `json:"validator_gov_infos"` //  Total voting power when proposal enters voting period (default 0)
-	VoteList          []Vote             `json:"vote_list"`           //  Total votes for each option
+	ValidatorGovInfos 	[]ValidatorGovInfo `json:"validator_gov_infos"` //  Total voting power when proposal enters voting period (default 0)
+	VoteList          	[]Vote             `json:"vote_list"`           //  Total votes for each option
 
-	TotalVotingPower int64 `json:"total_voting_power"` //  The Total Voting Power
-	YesVotes         int64 `json:"yes_votes"`          //  Weight of Yes Votes
-	NoVotes          int64 `json:"no_votes"`           //  Weight of No Votes
-	NoWithVetoVotes  int64 `json:"no_with_veto_votes"` //  Weight of NoWithVeto Votes
-	AbstainVotes     int64 `json:"abstain_votes"`      //  Weight of Abstain Votes
+	TotalVotingPower 	int64 `json:"total_voting_power"` //  The Total Voting Power
+	YesVotes         	int64 `json:"yes_votes"`          //  Weight of Yes Votes
+	NoVotes          	int64 `json:"no_votes"`           //  Weight of No Votes
+	NoWithVetoVotes  	int64 `json:"no_with_veto_votes"` //  Weight of NoWithVeto Votes
+	AbstainVotes     	int64 `json:"abstain_votes"`      //  Weight of Abstain Votes
 }
 
 func (proposal *Proposal) getValidatorGovInfo(validatorAddr sdk.Address) *ValidatorGovInfo {

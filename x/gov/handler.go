@@ -151,17 +151,18 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		return sdk.Result{}
 	}
 
-	proposal.VoteList = append(proposal.VoteList, Vote{Voter: msg.Voter, ProposalID: msg.ProposalID, Option: msg.Option})
+	var voteWeight int64 = 0
 
 	//if voter is validator
 	if validatorGovInfo != nil {
-		voteWeight := validatorGovInfo.InitVotingPower - validatorGovInfo.Minus
+		voteWeight = validatorGovInfo.InitVotingPower - validatorGovInfo.Minus
 		proposal.updateTally(msg.Option, voteWeight)
 		validatorGovInfo.LastVoteWeight = voteWeight
 	}
 
 	//if voter is delegator
 	for _, delegation := range delegatedTo {
+		voteWeight = delegation.Amount
 		proposal.updateTally(msg.Option, delegation.Amount)
 		delegatedValidatorGovInfo := proposal.getValidatorGovInfo(delegation.Validator)
 		delegatedValidatorGovInfo.Minus += delegation.Amount
@@ -169,8 +170,11 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		delegatedValidatorVote := proposal.getVote(delegation.Validator)
 		if delegatedValidatorVote != nil {
 			proposal.updateTally(delegatedValidatorVote.Option, -delegation.Amount)
+			delegatedValidatorVote.Weight -= voteWeight
 		}
 	}
+	//save vote record
+	proposal.VoteList = append(proposal.VoteList, NewVote(msg.Voter,msg.ProposalID,msg.Option,voteWeight))
 
 	//if existingVote == nil {
 	//	proposal.VoteList = append(proposal.VoteList, Vote{Voter: msg.Voter, ProposalID: msg.ProposalID, Option: msg.Option})

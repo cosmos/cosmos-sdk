@@ -30,17 +30,21 @@ func NewBeginBlocker(sk Keeper) sdk.BeginBlocker {
 		}
 
 		// Figure out which validators were absent
-		absent := make(map[string]bool)
+		absent := make(map[crypto.PubKey]struct{})
 		for _, pubkey := range req.AbsentValidators {
 			var pk crypto.PubKey
 			sk.cdc.MustUnmarshalBinary(pubkey, &pk)
-			absent[string(pk.Bytes())] = true
+			absent[pk] = struct{}{}
 		}
 
 		// Iterate over all the validators which *should* have signed this block
 		sk.stakeKeeper.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
 			pubkey := validator.GetPubKey()
-			sk.handleValidatorSignature(ctx, pubkey, !absent[string(pubkey.Bytes())])
+			abs := false
+			if _, ok := absent[pubkey]; ok {
+				abs = true
+			}
+			sk.handleValidatorSignature(ctx, pubkey, abs)
 			return false
 		})
 

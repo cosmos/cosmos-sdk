@@ -63,10 +63,14 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 
 	// Update signed block bit array & counter
 	previous := k.getValidatorSigningBitArray(ctx, address, index)
-	if previous && !signed {
+	if previous == signed {
+		// No need to update counter
+	} else if previous && !signed {
+		// Signed => unsigned, decrement counter
 		k.setValidatorSigningBitArray(ctx, address, index, false)
 		signInfo.SignedBlocksCounter--
 	} else if !previous && signed {
+		// Unsigned => signed, increment counter
 		k.setValidatorSigningBitArray(ctx, address, index, true)
 		signInfo.SignedBlocksCounter++
 	}

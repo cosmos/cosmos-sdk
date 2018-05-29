@@ -22,8 +22,8 @@ const (
 
 	// Downtime unbond duration
 	// TODO Governance parameter?
-	// TODO Temporarily set to 6 hours for testnets
-	DowntimeUnbondDuration int64 = 60 * 60 * 6
+	// TODO Temporarily set to 10 minutes for testnets
+	DowntimeUnbondDuration int64 = 60 * 10
 )
 
 var (

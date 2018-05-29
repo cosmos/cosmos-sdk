@@ -39,14 +39,15 @@ type DemocoinApp struct {
 	capKeyStakingStore *sdk.KVStoreKey
 
 	// keepers
-	coinKeeper  bank.Keeper
-	coolKeeper  cool.Keeper
-	powKeeper   pow.Keeper
-	ibcMapper   ibc.Mapper
-	stakeKeeper simplestake.Keeper
+	feeCollectionKeeper auth.FeeCollectionKeeper
+	coinKeeper          bank.Keeper
+	coolKeeper          cool.Keeper
+	powKeeper           pow.Keeper
+	ibcMapper           ibc.Mapper
+	stakeKeeper         simplestake.Keeper
 
 	// Manage getting and setting accounts
-	accountMapper sdk.AccountMapper
+	accountMapper auth.AccountMapper
 }
 
 func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
@@ -89,7 +90,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	// Initialize BaseApp.
 	app.SetInitChainer(app.initChainerFn(app.coolKeeper, app.powKeeper))
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyPowStore, app.capKeyIBCStore, app.capKeyStakingStore)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.BurnFeeHandler))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -109,7 +110,7 @@ func MakeCodec() *wire.Codec {
 	simplestake.RegisterWire(cdc)
 
 	// Register AppAccount
-	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "democoin/Account", nil)
 	return cdc
 }
@@ -158,7 +159,7 @@ func (app *DemocoinApp) ExportAppStateJSON() (appState json.RawMessage, err erro
 
 	// iterate to get the accounts
 	accounts := []*types.GenesisAccount{}
-	appendAccount := func(acc sdk.Account) (stop bool) {
+	appendAccount := func(acc auth.Account) (stop bool) {
 		account := &types.GenesisAccount{
 			Address: acc.GetAddress(),
 			Coins:   acc.GetCoins(),

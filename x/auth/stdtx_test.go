@@ -1,4 +1,4 @@
-package types
+package auth
 
 import (
 	"testing"
@@ -6,18 +6,20 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	crypto "github.com/tendermint/go-crypto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func newStdFee() StdFee {
-	return NewStdFee(100,
-		Coin{"atom", 150},
-	)
-}
+// func newStdFee() StdFee {
+// 	return NewStdFee(100,
+// 		Coin{"atom", 150},
+// 	)
+// }
 
 func TestStdTx(t *testing.T) {
 	priv := crypto.GenPrivKeyEd25519()
 	addr := priv.PubKey().Address()
-	msg := NewTestMsg(addr)
+	msg := sdk.NewTestMsg(addr)
 	fee := newStdFee()
 	sigs := []StdSignature{}
 

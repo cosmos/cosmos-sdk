@@ -19,7 +19,7 @@ import (
 type Validator struct {
 	Owner   sdk.Address   `json:"owner"`   // sender of BondTx - UnbondTx returns here
 	PubKey  crypto.PubKey `json:"pub_key"` // pubkey of validator
-	Revoked bool          `json:"pub_key"` // has the validator been revoked from bonded status?
+	Revoked bool          `json:"revoked"` // has the validator been revoked from bonded status?
 
 	PoolShares      PoolShares `json:"pool_shares"`      // total shares for tokens held in the pool
 	DelegatorShares sdk.Rat    `json:"delegator_shares"` // total shares issued to a validator's delegators

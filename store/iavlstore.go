@@ -125,16 +125,6 @@ func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.Tree(), start, end, false)
 }
 
-// Implements KVStore.
-func (st *iavlStore) SubspaceIterator(prefix []byte) Iterator {
-	return st.Iterator(prefix, sdk.PrefixEndBytes(prefix))
-}
-
-// Implements KVStore.
-func (st *iavlStore) ReverseSubspaceIterator(prefix []byte) Iterator {
-	return st.ReverseIterator(prefix, sdk.PrefixEndBytes(prefix))
-}
-
 // Query implements ABCI interface, allows queries
 //
 // by default we will return from (latest height -1),
@@ -180,7 +170,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		subspace := req.Data
 		res.Key = subspace
 		var KVs []KVPair
-		iterator := st.SubspaceIterator(subspace)
+		iterator := sdk.KVStorePrefixIterator(st, subspace)
 		for ; iterator.Valid(); iterator.Next() {
 			KVs = append(KVs, KVPair{iterator.Key(), iterator.Value()})
 		}

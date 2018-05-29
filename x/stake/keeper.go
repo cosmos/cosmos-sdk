@@ -58,7 +58,7 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 // Get the set of all validators with no limits, used during genesis dump
 func (k Keeper) getAllValidators(ctx sdk.Context) (validators Validators) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := store.SubspaceIterator(ValidatorsKey)
+	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
 
 	i := 0
 	for ; ; i++ {
@@ -78,7 +78,7 @@ func (k Keeper) getAllValidators(ctx sdk.Context) (validators Validators) {
 // Get the set of all validators, retrieve a maxRetrieve number of records
 func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve int16) (validators Validators) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := store.SubspaceIterator(ValidatorsKey)
+	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
 
 	validators = make([]Validator, maxRetrieve)
 	i := 0
@@ -106,7 +106,7 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []Validator) {
 	maxValidators := k.GetParams(ctx).MaxValidators
 	validators = make([]Validator, maxValidators)
 
-	iterator := store.SubspaceIterator(ValidatorsBondedKey)
+	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedKey)
 	i := 0
 	for ; iterator.Valid(); iterator.Next() {
 
@@ -132,7 +132,7 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []Validator {
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 	validators := make([]Validator, maxValidators)
-	iterator := store.ReverseSubspaceIterator(ValidatorsByPowerKey) // largest to smallest
+	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerKey) // largest to smallest
 	i := 0
 	for {
 		if !iterator.Valid() || i > int(maxValidators-1) {
@@ -160,7 +160,7 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []Validator {
 func (k Keeper) getTendermintUpdates(ctx sdk.Context) (updates []abci.Validator) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := store.SubspaceIterator(TendermintUpdatesKey) //smallest to largest
+	iterator := sdk.KVStorePrefixIterator(store, TendermintUpdatesKey) //smallest to largest
 	for ; iterator.Valid(); iterator.Next() {
 		valBytes := iterator.Value()
 		var val abci.Validator
@@ -176,7 +176,7 @@ func (k Keeper) clearTendermintUpdates(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 
 	// delete subspace
-	iterator := store.SubspaceIterator(TendermintUpdatesKey)
+	iterator := sdk.KVStorePrefixIterator(store, TendermintUpdatesKey)
 	for ; iterator.Valid(); iterator.Next() {
 		store.Delete(iterator.Key())
 	}
@@ -278,7 +278,7 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore,
 
 	// add the actual validator power sorted store
 	maxValidators := k.GetParams(ctx).MaxValidators
-	iterator := store.ReverseSubspaceIterator(ValidatorsByPowerKey) // largest to smallest
+	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerKey) // largest to smallest
 	bondedValidatorsCount := 0
 	var validator Validator
 	for {
@@ -343,7 +343,7 @@ func (k Keeper) updateBondedValidators(ctx sdk.Context, store sdk.KVStore,
 func (k Keeper) updateBondedValidatorsFull(ctx sdk.Context, store sdk.KVStore) {
 	// clear the current validators store, add to the ToKickOut temp store
 	toKickOut := make(map[string]byte)
-	iterator := store.SubspaceIterator(ValidatorsBondedKey)
+	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedKey)
 	for ; iterator.Valid(); iterator.Next() {
 		ownerAddr := iterator.Value()
 		toKickOut[string(ownerAddr)] = 0 // set anything
@@ -352,7 +352,7 @@ func (k Keeper) updateBondedValidatorsFull(ctx sdk.Context, store sdk.KVStore) {
 
 	// add the actual validator power sorted store
 	maxValidators := k.GetParams(ctx).MaxValidators
-	iterator = store.ReverseSubspaceIterator(ValidatorsByPowerKey) // largest to smallest
+	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerKey) // largest to smallest
 	bondedValidatorsCount := 0
 	var validator Validator
 	for {
@@ -502,7 +502,7 @@ func (k Keeper) GetDelegation(ctx sdk.Context,
 // load all delegations used during genesis dump
 func (k Keeper) getAllDelegations(ctx sdk.Context) (delegations []Delegation) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := store.SubspaceIterator(DelegationKey)
+	iterator := sdk.KVStorePrefixIterator(store, DelegationKey)
 
 	i := 0
 	for ; ; i++ {
@@ -523,7 +523,7 @@ func (k Keeper) getAllDelegations(ctx sdk.Context) (delegations []Delegation) {
 func (k Keeper) GetDelegations(ctx sdk.Context, delegator sdk.Address, maxRetrieve int16) (bonds []Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delegator, k.cdc)
-	iterator := store.SubspaceIterator(delegatorPrefixKey) //smallest to largest
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 
 	bonds = make([]Delegation, maxRetrieve)
 	i := 0
@@ -665,7 +665,7 @@ var _ sdk.ValidatorSet = Keeper{}
 // iterate through the active validator set and perform the provided function
 func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := store.SubspaceIterator(ValidatorsKey)
+	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
 	i := int64(0)
 	for ; iterator.Valid(); iterator.Next() {
 		bz := iterator.Value()
@@ -683,7 +683,7 @@ func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validato
 // iterate through the active validator set and perform the provided function
 func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := store.SubspaceIterator(ValidatorsBondedKey)
+	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedKey)
 	i := int64(0)
 	for ; iterator.Valid(); iterator.Next() {
 		address := iterator.Value()
@@ -735,7 +735,7 @@ func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.Address, addrVal sdk.Add
 func (k Keeper) IterateDelegators(ctx sdk.Context, delAddr sdk.Address, fn func(index int64, delegation sdk.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	key := GetDelegationsKey(delAddr, k.cdc)
-	iterator := store.SubspaceIterator(key)
+	iterator := sdk.KVStorePrefixIterator(store, key)
 	i := int64(0)
 	for ; iterator.Valid(); iterator.Next() {
 		bz := iterator.Value()

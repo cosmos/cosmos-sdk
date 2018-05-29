@@ -1,8 +1,8 @@
 package gov
 
 import (
-	"reflect"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"reflect"
 )
 
 // Handle all "gov" type messages.
@@ -131,15 +131,15 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 	validatorGovInfo := proposal.getValidatorGovInfo(msg.Voter)
 
 	// Need to finalize interface to staking mapper for delegatedTo. Makes assumption from here on out.
-	delegatedTo := keeper.sm.LoadDelegatorCandidates(ctx, msg.Voter)
+	canVote, delegatedTo := keeper.sm.LoadValidDelegatorCandidates(ctx, msg.Voter, proposal.VotingStartBlock)
 
 	if validatorGovInfo == nil && len(delegatedTo) == 0 {
 		return ErrAddressNotStaked(msg.Voter).Result()
 	}
 
-	//if proposal.VotingStartBlock <= keeper.sm.getLastDelationChangeBlock(msg.Voter) { // TODO: Get last block in which voter bonded or unbonded
-	//	return ErrAddressChangedDelegation(msg.Voter).Result() // TODO: Return proper Error
-	//}
+	if !canVote {
+		return ErrAddressChangedDelegation(msg.Voter).Result()
+	}
 
 	existingVote := proposal.getVote(msg.Voter)
 
@@ -153,6 +153,7 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 
 	var voteWeight int64 = 0
 
+	// TODO can vote repeatedly
 	//if voter is validator
 	if validatorGovInfo != nil {
 		voteWeight = validatorGovInfo.InitVotingPower - validatorGovInfo.Minus
@@ -162,60 +163,24 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 
 	//if voter is delegator
 	for _, delegation := range delegatedTo {
-		voteWeight = delegation.Amount
-		proposal.updateTally(msg.Option, delegation.Amount)
+		if delegation.ChangeAfterVote {
+			continue
+		}
+		weight := delegation.Amount
+		proposal.updateTally(msg.Option, weight)
 		delegatedValidatorGovInfo := proposal.getValidatorGovInfo(delegation.Validator)
 		delegatedValidatorGovInfo.Minus += delegation.Amount
 
 		delegatedValidatorVote := proposal.getVote(delegation.Validator)
 		if delegatedValidatorVote != nil {
 			proposal.updateTally(delegatedValidatorVote.Option, -delegation.Amount)
-			delegatedValidatorVote.Weight -= voteWeight
+			delegatedValidatorVote.Weight -= weight
 		}
+		voteWeight += weight
 	}
 	//save vote record
-	proposal.VoteList = append(proposal.VoteList, NewVote(msg.Voter,msg.ProposalID,msg.Option,voteWeight))
-
-	//if existingVote == nil {
-	//	proposal.VoteList = append(proposal.VoteList, Vote{Voter: msg.Voter, ProposalID: msg.ProposalID, Option: msg.Option})
-	//
-	//	if validatorGovInfo != nil {
-	//		voteWeight := validatorGovInfo.InitVotingPower - validatorGovInfo.Minus
-	//		proposal.updateTally(msg.Option, voteWeight)
-	//		validatorGovInfo.LastVoteWeight = voteWeight
-	//	}
-	//
-	//	for _, delegation := range delegatedTo {
-	//		proposal.updateTally(msg.Option, delegation.Amount)
-	//		delegatedValidatorGovInfo := proposal.getValidatorGovInfo(delegation.Validator)
-	//		delegatedValidatorGovInfo.Minus += delegation.Amount
-	//
-	//		delegatedValidatorVote := proposal.getVote(delegation.Validator)
-	//
-	//		if delegatedValidatorVote != nil {
-	//			proposal.updateTally(delegatedValidatorVote.Option, -delegation.Amount)
-	//		}
-	//	}
-	//
-	//} else {
-	//	if validatorGovInfo != nil {
-	//		proposal.updateTally(existingVote.Option, -(validatorGovInfo.LastVoteWeight))
-	//		voteWeight := validatorGovInfo.InitVotingPower - validatorGovInfo.Minus
-	//		proposal.updateTally(msg.Option, voteWeight)
-	//		validatorGovInfo.LastVoteWeight = voteWeight
-	//	}
-	//
-	//	for _, delegation := range delegatedTo {
-	//		proposal.updateTally(existingVote.Option, -delegation.Amount)
-	//		proposal.updateTally(msg.Option, delegation.Amount)
-	//	}
-	//
-	//	existingVote.Option = msg.Option
-	//}
-
-	ctx.Logger().Info("Execute Proposal Vote", "Vote", msg,"Proposal",proposal)
-
+	proposal.VoteList = append(proposal.VoteList, NewVote(msg.Voter, msg.ProposalID, msg.Option, voteWeight))
+	ctx.Logger().Info("Execute Proposal Vote", "Vote", msg, "Proposal", proposal)
 	keeper.SetProposal(ctx, *proposal)
-
 	return sdk.Result{} // TODO
 }

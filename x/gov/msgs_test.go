@@ -10,22 +10,22 @@ import (
 
 func defaultProcedure() Procedure {
 	return Procedure{
-		VotingPeriod:      200,
-		MinDeposit:        sdk.Coins{{"atom", 10}},
-		ProposalTypes:     []string{"TextProposal"},
-		Threshold:         sdk.NewRat(1, 2),
-		Veto:              sdk.NewRat(1, 3),
-		MaxDepositPeriod:  200,
+		VotingPeriod:     200,
+		MinDeposit:       sdk.Coins{{"atom", 10}},
+		ProposalTypes:    []string{"TextProposal"},
+		Threshold:        sdk.NewRat(1, 2),
+		Veto:             sdk.NewRat(1, 3),
+		MaxDepositPeriod: 200,
 		//GovernancePenalty: 12,
 	}
 }
 
 func TestNewSubmitProposalMsg(t *testing.T) {
-	addr,_ := sdk.GetAddress("AF816B3A3CD3739F9D3C900E352A07FD78131B6B")
-	msg := NewMsgVote(addr,1,"Yes")
+	addr, _ := sdk.GetAddress("AF816B3A3CD3739F9D3C900E352A07FD78131B6B")
+	msg := NewMsgVote(addr, 1, "Yes")
 	msg.ValidateBasic()
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	logger.Info("msg","Proposal",msg)
+	logger.Info("msg", "Proposal", msg)
 }
 
 //func TestSubmitProposaslType(t *testing.T) {

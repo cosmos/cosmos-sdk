@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-
 // name to idetify transaction types
 const MsgType = "gov"
+
 //-----------------------------------------------------------
 // MsgSubmitProposal
 

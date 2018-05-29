@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/viper"
 
 	"encoding/hex"
-	"errors"
+	"github.com/pkg/errors"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -161,8 +161,7 @@ func GetProposalCmd(storeName string, cdc *wire.Codec) *cobra.Command {
 			key, _ := cdc.MarshalBinary(proposalID)
 			res, err := ctx.Query(key, storeName)
 			if len(res) == 0 || err != nil {
-				errmsg := fmt.Sprintf("proposalID [%d] is not existed", proposalID)
-				return errors.New(errmsg)
+				return  errors.Errorf("proposalID [%d] is not existed", proposalID)
 			}
 
 			proposal := new(gov.Proposal)

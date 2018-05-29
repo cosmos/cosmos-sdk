@@ -56,6 +56,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	address := pubkey.Address()
 
 	// Local index, so counts blocks validator *should* have signed
+	// Will use the 0-value default signing info if not present
 	signInfo, _ := k.getValidatorSigningInfo(ctx, address)
 	index := signInfo.IndexOffset % SignedBlocksWindow
 	signInfo.IndexOffset++
@@ -65,11 +66,9 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	if previous && !signed {
 		k.setValidatorSigningBitArray(ctx, address, index, false)
 		signInfo.SignedBlocksCounter--
-		k.setValidatorSigningInfo(ctx, address, signInfo)
 	} else if !previous && signed {
 		k.setValidatorSigningBitArray(ctx, address, index, true)
 		signInfo.SignedBlocksCounter++
-		k.setValidatorSigningInfo(ctx, address, signInfo)
 	}
 
 	minHeight := signInfo.StartHeight + SignedBlocksWindow
@@ -79,6 +78,8 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 		k.stakeKeeper.Slash(ctx, pubkey, height, SlashFractionDowntime)
 		k.stakeKeeper.Revoke(ctx, pubkey)
 		signInfo.JailedUntil = ctx.BlockHeader().Time + DowntimeUnbondDuration
-		k.setValidatorSigningInfo(ctx, address, signInfo)
 	}
+
+	// Set the updated signing info
+	k.setValidatorSigningInfo(ctx, address, signInfo)
 }

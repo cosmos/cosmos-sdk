@@ -2,6 +2,7 @@ package stake
 
 import (
 	"bytes"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -236,3 +237,30 @@ func (v Validator) GetOwner() sdk.Address     { return v.Owner }
 func (v Validator) GetPubKey() crypto.PubKey  { return v.PubKey }
 func (v Validator) GetPower() sdk.Rat         { return v.PoolShares.Bonded() }
 func (v Validator) GetBondHeight() int64      { return v.BondHeight }
+
+//Human Friendly pretty printer
+func (v Validator) HumanReadableString() (string, error) {
+	bechOwner, err := sdk.Bech32CosmosifyAcc(v.Owner)
+	if err != nil {
+		return "", err
+	}
+	bechVal, err := sdk.Bech32CosmosifyValPub(v.PubKey)
+	if err != nil {
+		return "", err
+	}
+	resp := "Validator \n"
+	resp += fmt.Sprintf("Owner: %s\n", bechOwner)
+	resp += fmt.Sprintf("Validator: %s\n", bechVal)
+	resp += fmt.Sprintf("Shares: Status %s,  Amount: %s\n", sdk.BondStatusToString(v.PoolShares.Status), v.PoolShares.Amount.String())
+	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.String())
+	resp += fmt.Sprintf("Description: %s\n", v.Description)
+	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
+	resp += fmt.Sprintf("Proposer Reward Pool: %s\n", v.ProposerRewardPool.String())
+	resp += fmt.Sprintf("Commission: %s\n", v.Commission.String())
+	resp += fmt.Sprintf("Max Commission Rate: %s\n", v.CommissionMax.String())
+	resp += fmt.Sprintf("Comission Change Rate: %s\n", v.CommissionChangeRate.String())
+	resp += fmt.Sprintf("Commission Change Today: %s\n", v.CommissionChangeToday.String())
+	resp += fmt.Sprintf("Previously Bonded Stares: %s\n", v.PrevBondedShares.String())
+
+	return resp, nil
+}

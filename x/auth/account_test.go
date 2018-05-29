@@ -18,7 +18,7 @@ func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.Address) {
 	return key, pub, addr
 }
 
-func TestBaseAccountAddressPubKey(t *testing.T) {
+func TestBaseAddressPubKey(t *testing.T) {
 	_, pub1, addr1 := keyPubAddr()
 	_, pub2, addr2 := keyPubAddr()
 	acc := NewBaseAccountWithAddress(addr1)

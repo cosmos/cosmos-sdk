@@ -799,9 +799,7 @@ func (k Keeper) Revoke(ctx sdk.Context, pubkey crypto.PubKey) {
 	logger := ctx.Logger().With("module", "x/stake")
 	val, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
-		// TODO Should we panic?
-		ctx.Logger().Info("Validator with pubkey %s not found, cannot revoke", pubkey)
-		return
+		panic(fmt.Errorf("Validator with pubkey %s not found, cannot revoke", pubkey))
 	}
 	val.Revoked = true
 	k.updateValidator(ctx, val) // update the validator, now revoked
@@ -814,9 +812,7 @@ func (k Keeper) Unrevoke(ctx sdk.Context, pubkey crypto.PubKey) {
 	logger := ctx.Logger().With("module", "x/stake")
 	val, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
-		// TODO Should we panic?
-		ctx.Logger().Info("Validator with pubkey %s not found, cannot unrevoke", pubkey)
-		return
+		panic(fmt.Errorf("Validator with pubkey %s not found, cannot unrevoke", pubkey))
 	}
 	val.Revoked = false
 	k.updateValidator(ctx, val) // update the validator, now unrevoked

@@ -52,7 +52,9 @@ type Params struct {
  - index 2: validator Tendermint PubKey
  - index 3: bonded validators only
  - index 4: voting power
- - index 5: Tendermint updates
+
+Related Store which holds Validator.ABCIValidator()
+ - index: validator owner address
 
 The `Validator` holds the current state and some historical actions of the
 validator.

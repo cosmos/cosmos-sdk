@@ -313,6 +313,13 @@ func TestTxs(t *testing.T) {
 	// assert.NotEqual(t, "[]", body)
 }
 
+func TestValidatorsQuery(t *testing.T) {
+	validators := getValidators(t)
+	assert.Equal(t, len(validators), 2)
+	assert.Equal(t, hex.EncodeToString(validators[0].Owner), validatorAddr1)
+	assert.Equal(t, hex.EncodeToString(validators[1].Owner), validatorAddr2)
+}
+
 func TestBond(t *testing.T) {
 
 	// create bond TX
@@ -631,42 +638,12 @@ func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastT
 	return results[0]
 }
 
-func doMultiBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {
+func getValidators(t *testing.T) []stake.Validator {
 	// get the account to get the sequence
-	acc := getAccount(t, sendAddr)
-	sequence := acc.GetSequence()
-
-	// send
-	jsonStr := []byte(fmt.Sprintf(`{
-		"name": "%s",
-		"password": "%s",
-		"sequence": %d,
-		"bond": [
-			{
-				"delegator_addr": "%x",
-				"validator_addr": "%s",
-				"bond": { "denom": "%s", "amount": 1 }
-			},
-			{
-				"delegator_addr": "%x",
-				"validator_addr": "%s",
-				"bond": { "denom": "%s", "amount": 1 }
-			},
-		],
-		"unbond": [
-			{
-				"delegator_addr": "%x",
-				"validator_addr": "%s",
-				"shares": "1"
-			}
-		]
-	}`, name, password, sequence, acc.GetAddress(), validatorAddr1, coinDenom, acc.GetAddress(), validatorAddr2, coinDenom, acc.GetAddress(), validatorAddr1))
-	res, body := request(t, port, "POST", "/stake/delegations", jsonStr)
+	res, body := request(t, port, "GET", "/stake/validators", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	var results []ctypes.ResultBroadcastTxCommit
-	err := cdc.UnmarshalJSON([]byte(body), &results)
+	var validators stake.Validators
+	err := cdc.UnmarshalJSON([]byte(body), &validators)
 	require.Nil(t, err)
-
-	return results[0]
+	return validators
 }

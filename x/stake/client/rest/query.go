@@ -18,6 +18,10 @@ func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec
 		"/stake/{delegator}/bonding_status/{validator}",
 		bondingStatusHandlerFn("stake", cdc, ctx),
 	).Methods("GET")
+	r.HandleFunc(
+		"/stake/validators",
+		validatorsHandlerFn("stake", cdc, ctx),
+	).Methods("GET")
 }
 
 // http request handler to query delegator bonding status
@@ -68,6 +72,45 @@ func bondingStatusHandlerFn(storeName string, cdc *wire.Codec, ctx context.CoreC
 		}
 
 		output, err := cdc.MarshalJSON(bond)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.Write(output)
+	}
+}
+
+// http request handler to query list of validators
+func validatorsHandlerFn(storeName string, cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("Couldn't query validators. Error: %s", err.Error())))
+			return
+		}
+
+		// the query will return empty if there are no validators
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		validators := make(stake.Validators, 0, len(res))
+		for _, kv := range res {
+			var validator stake.Validator
+			err = cdc.UnmarshalBinary(kv.Value, &validator)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
+				return
+			}
+			validators = append(validators, validator)
+		}
+
+		output, err := cdc.MarshalJSON(validators)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

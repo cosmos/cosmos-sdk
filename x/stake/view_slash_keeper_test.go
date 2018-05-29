@@ -9,78 +9,78 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// tests GetDelegatorBond, GetDelegatorBonds
+// tests GetDelegation, GetDelegations
 func TestViewSlashBond(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
 
-	//construct the candidates
+	//construct the validators
 	amts := []int64{9, 8, 7}
-	var candidates [3]Candidate
+	var validators [3]Validator
 	for i, amt := range amts {
-		candidates[i] = Candidate{
-			Address:     addrVals[i],
-			PubKey:      pks[i],
-			Assets:      sdk.NewRat(amt),
-			Liabilities: sdk.NewRat(amt),
+		validators[i] = Validator{
+			Owner:           addrVals[i],
+			PubKey:          pks[i],
+			PoolShares:      NewUnbondedShares(sdk.NewRat(amt)),
+			DelegatorShares: sdk.NewRat(amt),
 		}
 	}
 
-	// first add a candidates[0] to delegate too
-	keeper.setCandidate(ctx, candidates[0])
+	// first add a validators[0] to delegate too
+	keeper.updateValidator(ctx, validators[0])
 
-	bond1to1 := DelegatorBond{
+	bond1to1 := Delegation{
 		DelegatorAddr: addrDels[0],
-		CandidateAddr: addrVals[0],
+		ValidatorAddr: addrVals[0],
 		Shares:        sdk.NewRat(9),
 	}
 
 	viewSlashKeeper := NewViewSlashKeeper(keeper)
 
 	// check the empty keeper first
-	_, found := viewSlashKeeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
+	_, found := viewSlashKeeper.GetDelegation(ctx, addrDels[0], addrVals[0])
 	assert.False(t, found)
 
 	// set and retrieve a record
-	keeper.setDelegatorBond(ctx, bond1to1)
-	resBond, found := viewSlashKeeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
+	keeper.setDelegation(ctx, bond1to1)
+	resBond, found := viewSlashKeeper.GetDelegation(ctx, addrDels[0], addrVals[0])
 	assert.True(t, found)
-	assert.True(t, bondsEqual(bond1to1, resBond))
+	assert.True(t, bond1to1.equal(resBond))
 
 	// modify a records, save, and retrieve
 	bond1to1.Shares = sdk.NewRat(99)
-	keeper.setDelegatorBond(ctx, bond1to1)
-	resBond, found = viewSlashKeeper.GetDelegatorBond(ctx, addrDels[0], addrVals[0])
+	keeper.setDelegation(ctx, bond1to1)
+	resBond, found = viewSlashKeeper.GetDelegation(ctx, addrDels[0], addrVals[0])
 	assert.True(t, found)
-	assert.True(t, bondsEqual(bond1to1, resBond))
+	assert.True(t, bond1to1.equal(resBond))
 
 	// add some more records
-	keeper.setCandidate(ctx, candidates[1])
-	keeper.setCandidate(ctx, candidates[2])
-	bond1to2 := DelegatorBond{addrDels[0], addrVals[1], sdk.NewRat(9), 0}
-	bond1to3 := DelegatorBond{addrDels[0], addrVals[2], sdk.NewRat(9), 1}
-	bond2to1 := DelegatorBond{addrDels[1], addrVals[0], sdk.NewRat(9), 2}
-	bond2to2 := DelegatorBond{addrDels[1], addrVals[1], sdk.NewRat(9), 3}
-	bond2to3 := DelegatorBond{addrDels[1], addrVals[2], sdk.NewRat(9), 4}
-	keeper.setDelegatorBond(ctx, bond1to2)
-	keeper.setDelegatorBond(ctx, bond1to3)
-	keeper.setDelegatorBond(ctx, bond2to1)
-	keeper.setDelegatorBond(ctx, bond2to2)
-	keeper.setDelegatorBond(ctx, bond2to3)
+	keeper.updateValidator(ctx, validators[1])
+	keeper.updateValidator(ctx, validators[2])
+	bond1to2 := Delegation{addrDels[0], addrVals[1], sdk.NewRat(9), 0}
+	bond1to3 := Delegation{addrDels[0], addrVals[2], sdk.NewRat(9), 1}
+	bond2to1 := Delegation{addrDels[1], addrVals[0], sdk.NewRat(9), 2}
+	bond2to2 := Delegation{addrDels[1], addrVals[1], sdk.NewRat(9), 3}
+	bond2to3 := Delegation{addrDels[1], addrVals[2], sdk.NewRat(9), 4}
+	keeper.setDelegation(ctx, bond1to2)
+	keeper.setDelegation(ctx, bond1to3)
+	keeper.setDelegation(ctx, bond2to1)
+	keeper.setDelegation(ctx, bond2to2)
+	keeper.setDelegation(ctx, bond2to3)
 
 	// test all bond retrieve capabilities
-	resBonds := viewSlashKeeper.GetDelegatorBonds(ctx, addrDels[0], 5)
+	resBonds := viewSlashKeeper.GetDelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 3, len(resBonds))
-	assert.True(t, bondsEqual(bond1to1, resBonds[0]))
-	assert.True(t, bondsEqual(bond1to2, resBonds[1]))
-	assert.True(t, bondsEqual(bond1to3, resBonds[2]))
-	resBonds = viewSlashKeeper.GetDelegatorBonds(ctx, addrDels[0], 3)
+	assert.True(t, bond1to1.equal(resBonds[0]))
+	assert.True(t, bond1to2.equal(resBonds[1]))
+	assert.True(t, bond1to3.equal(resBonds[2]))
+	resBonds = viewSlashKeeper.GetDelegations(ctx, addrDels[0], 3)
 	require.Equal(t, 3, len(resBonds))
-	resBonds = viewSlashKeeper.GetDelegatorBonds(ctx, addrDels[0], 2)
+	resBonds = viewSlashKeeper.GetDelegations(ctx, addrDels[0], 2)
 	require.Equal(t, 2, len(resBonds))
-	resBonds = viewSlashKeeper.GetDelegatorBonds(ctx, addrDels[1], 5)
+	resBonds = viewSlashKeeper.GetDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 3, len(resBonds))
-	assert.True(t, bondsEqual(bond2to1, resBonds[0]))
-	assert.True(t, bondsEqual(bond2to2, resBonds[1]))
-	assert.True(t, bondsEqual(bond2to3, resBonds[2]))
+	assert.True(t, bond2to1.equal(resBonds[0]))
+	assert.True(t, bond2to2.equal(resBonds[1]))
+	assert.True(t, bond2to3.equal(resBonds[2]))
 
 }

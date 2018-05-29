@@ -11,3 +11,5 @@ func RegisterWire(cdc *wire.Codec) {
 	cdc.RegisterConcrete(MsgDelegate{}, "cosmos-sdk/MsgDelegate", nil)
 	cdc.RegisterConcrete(MsgUnbond{}, "cosmos-sdk/MsgUnbond", nil)
 }
+
+var cdcEmpty = wire.NewCodec()

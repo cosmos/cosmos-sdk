@@ -26,12 +26,14 @@ func (k Keeper) Tick(ctx sdk.Context) (change []abci.Validator) {
 	// save the params
 	k.setPool(ctx, p)
 
-	// reset the counter
-	k.setCounter(ctx, 0)
+	// reset the intra-transaction counter
+	k.setIntraTxCounter(ctx, 0)
 
-	change = k.getAccUpdateValidators(ctx)
+	// calculate validator set changes
+	change = k.getTendermintUpdates(ctx)
+	k.clearTendermintUpdates(ctx)
 
-	return
+	return change
 }
 
 // process provisions for an hour period
@@ -44,9 +46,8 @@ func (k Keeper) processProvisions(ctx sdk.Context) Pool {
 	// more bonded tokens are added proportionally to all validators the only term
 	// which needs to be updated is the `BondedPool`. So for each previsions cycle:
 
-	provisions := pool.Inflation.Mul(sdk.NewRat(pool.TotalSupply)).Quo(hrsPerYrRat).Evaluate()
-	pool.BondedPool += provisions
-	pool.TotalSupply += provisions
+	provisions := pool.Inflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat).Evaluate()
+	pool.BondedTokens += provisions
 	return pool
 }
 

@@ -35,6 +35,7 @@ import (
 	btypes "github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 var (
@@ -91,10 +92,13 @@ func TestKeys(t *testing.T) {
 	err = cdc.UnmarshalJSON([]byte(body), &m)
 	require.Nil(t, err)
 
+	sendAddrAcc, _ := sdk.GetAccAddressHex(sendAddr)
+	addrAcc, _ := sdk.GetAccAddressHex(addr)
+
 	assert.Equal(t, m[0].Name, name, "Did not serve keys name correctly")
-	assert.Equal(t, m[0].Address, sendAddr, "Did not serve keys Address correctly")
+	assert.Equal(t, m[0].Address, sendAddrAcc, "Did not serve keys Address correctly")
 	assert.Equal(t, m[1].Name, newName, "Did not serve keys name correctly")
-	assert.Equal(t, m[1].Address, addr, "Did not serve keys Address correctly")
+	assert.Equal(t, m[1].Address, addrAcc, "Did not serve keys Address correctly")
 
 	// select key
 	keyEndpoint := fmt.Sprintf("/keys/%s", newName)
@@ -105,7 +109,7 @@ func TestKeys(t *testing.T) {
 	require.Nil(t, err)
 
 	assert.Equal(t, newName, m2.Name, "Did not serve keys name correctly")
-	assert.Equal(t, addr, m2.Address, "Did not serve keys Address correctly")
+	assert.Equal(t, addrAcc, m2.Address, "Did not serve keys Address correctly")
 
 	// update key
 	jsonStr = []byte(fmt.Sprintf(`{"old_password":"%s", "new_password":"12345678901"}`, newPassword))
@@ -436,11 +440,11 @@ func request(t *testing.T, port, method, path string, payload []byte) (*http.Res
 	return res, string(output)
 }
 
-func getAccount(t *testing.T, sendAddr string) sdk.Account {
+func getAccount(t *testing.T, sendAddr string) auth.Account {
 	// get the account to get the sequence
 	res, body := request(t, port, "GET", "/accounts/"+sendAddr, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var acc sdk.Account
+	var acc auth.Account
 	err := cdc.UnmarshalJSON([]byte(body), &acc)
 	require.Nil(t, err)
 	return acc

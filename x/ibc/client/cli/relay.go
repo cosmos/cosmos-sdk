@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
@@ -27,9 +28,10 @@ const (
 type relayCommander struct {
 	cdc       *wire.Codec
 	address   sdk.Address
-	decoder   sdk.AccountDecoder
+	decoder   auth.AccountDecoder
 	mainStore string
 	ibcStore  string
+	accStore  string
 
 	logger log.Logger
 }
@@ -41,6 +43,7 @@ func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
 		decoder:   authcmd.GetAccountDecoder(cdc),
 		ibcStore:  "ibc",
 		mainStore: "main",
+		accStore:  "acc",
 
 		logger: log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
 	}
@@ -157,17 +160,20 @@ func (c relayCommander) broadcastTx(seq int64, node string, tx []byte) error {
 }
 
 func (c relayCommander) getSequence(node string) int64 {
-	res, err := query(node, c.address, c.mainStore)
+	res, err := query(node, c.address, c.accStore)
 	if err != nil {
 		panic(err)
 	}
+	if nil != res {
+		account, err := c.decoder(res)
+		if err != nil {
+			panic(err)
+		}
 
-	account, err := c.decoder(res)
-	if err != nil {
-		panic(err)
+		return account.GetSequence()
 	}
 
-	return account.GetSequence()
+	return 0
 }
 
 func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []byte {
@@ -182,7 +188,7 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 		Sequence:  sequence,
 	}
 
-	ctx := context.NewCoreContextFromViper()
+	ctx := context.NewCoreContextFromViper().WithSequence(sequence)
 	res, err := ctx.SignAndBuild(ctx.FromAddressName, passphrase, msg, c.cdc)
 	if err != nil {
 		panic(err)

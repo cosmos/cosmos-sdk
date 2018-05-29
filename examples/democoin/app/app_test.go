@@ -31,7 +31,7 @@ var (
 	addr1 = priv1.PubKey().Address()
 	addr2 = crypto.GenPrivKeyEd25519().PubKey().Address()
 	coins = sdk.Coins{{"foocoin", 10}}
-	fee   = sdk.StdFee{
+	fee   = auth.StdFee{
 		sdk.Coins{{"foocoin", 0}},
 		1000000,
 	}
@@ -93,8 +93,8 @@ func TestMsgs(t *testing.T) {
 
 	sequences := []int64{0}
 	for i, m := range msgs {
-		sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, fee, m.msg))
-		tx := sdk.NewStdTx(m.msg, fee, []sdk.StdSignature{{
+		sig := priv1.Sign(auth.StdSignBytes(chainID, sequences, fee, m.msg))
+		tx := auth.NewStdTx(m.msg, fee, []auth.StdSignature{{
 			PubKey:    priv1.PubKey(),
 			Signature: sig,
 		}})
@@ -194,8 +194,8 @@ func TestMsgSendWithAccounts(t *testing.T) {
 
 	// Sign the tx
 	sequences := []int64{0}
-	sig := priv1.Sign(sdk.StdSignBytes(chainID, sequences, fee, sendMsg))
-	tx := sdk.NewStdTx(sendMsg, fee, []sdk.StdSignature{{
+	sig := priv1.Sign(auth.StdSignBytes(chainID, sequences, fee, sendMsg))
+	tx := auth.NewStdTx(sendMsg, fee, []auth.StdSignature{{
 		PubKey:    priv1.PubKey(),
 		Signature: sig,
 	}})
@@ -227,7 +227,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 
 	// resigning the tx with the bumped sequence should work
 	sequences = []int64{1}
-	sig = priv1.Sign(sdk.StdSignBytes(chainID, sequences, fee, tx.Msg))
+	sig = priv1.Sign(auth.StdSignBytes(chainID, sequences, fee, tx.Msg))
 	tx.Signatures[0].Signature = sig
 	res = bapp.Deliver(tx)
 	assert.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
@@ -394,9 +394,9 @@ func TestHandler(t *testing.T) {
 func SignCheckDeliver(t *testing.T, bapp *DemocoinApp, msg sdk.Msg, seq int64, expPass bool) {
 
 	// Sign the tx
-	tx := sdk.NewStdTx(msg, fee, []sdk.StdSignature{{
+	tx := auth.NewStdTx(msg, fee, []auth.StdSignature{{
 		PubKey:    priv1.PubKey(),
-		Signature: priv1.Sign(sdk.StdSignBytes(chainID, []int64{seq}, fee, msg)),
+		Signature: priv1.Sign(auth.StdSignBytes(chainID, []int64{seq}, fee, msg)),
 		Sequence:  seq,
 	}})
 

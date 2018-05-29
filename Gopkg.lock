@@ -11,13 +11,13 @@
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "675abc5df3c5531bc741b56a765e35623459da6d"
+  revision = "bc0944904505aab55e089371a892be2f87883161"
 
 [[projects]]
   branch = "master"
   name = "github.com/btcsuite/btcutil"
   packages = ["base58"]
-  revision = "501929d3d046174c3d39f0ea54ece471aa17238c"
+  revision = "d4cc87b860166d00d6b5b9e0d3b3d71d6088d4d4"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -61,7 +61,7 @@
   branch = "master"
   name = "github.com/golang/snappy"
   packages = ["."]
-  revision = "553a641470496b2327abcac10b36396bd98e45c9"
+  revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
 
 [[projects]]
   branch = "master"
@@ -119,7 +119,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "9637fa0b2f0db13c99d899b91007edb7df4610b7"
+  revision = "5d6fca44a948d2be89a9702de7717f0168403d3d"
 
 [[projects]]
   branch = "master"
@@ -134,8 +134,8 @@
 [[projects]]
   name = "github.com/tendermint/go-amino"
   packages = ["."]
-  revision = "ed62928576cfcaf887209dc96142cd79cdfff389"
-  version = "0.9.9"
+  revision = "3c22a7a539411f89a96738fcfa14c1027e24e5ec"
+  version = "0.9.10"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -144,8 +144,8 @@
     "db",
     "log"
   ]
-  revision = "d94e312673e16a11ea55d742cefb3e331228f898"
-  version = "v0.8.2"
+  revision = "d970af87248a4e162590300dbb74e102183a417d"
+  version = "v0.8.3"
 
 [[projects]]
   branch = "master"
@@ -157,7 +157,7 @@
   branch = "master"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
-  revision = "5b2fe84d3139027c29bd8f0c054ed9444f8a7622"
+  revision = "3e2146609cdb97894c064d59e9d00accd8c2b1dd"
 
 [[projects]]
   branch = "master"
@@ -173,7 +173,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "034e5325b6ab92faa14d15c30e86919e911cf8e0"
+  revision = "ab813273cd59e1333f7ae7bff5d027d4aadf528c"
 
 [solve-meta]
   analyzer-name = "dep"

@@ -562,10 +562,15 @@ func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctype
 	receiveAddr, _ = sdk.Bech32ifyAcc(receiveInfo.PubKey.Address())
 
 	acc := getAccount(t, sendAddr)
+	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 
+	fmt.Println("jello")
+	fmt.Println(accnum)
+	fmt.Println(sequence)
+
 	// send
-	jsonStr := []byte(fmt.Sprintf(`{ "name":"%s", "password":"%s", "sequence":%d, "amount":[{ "denom": "%s", "amount": 1 }] }`, name, password, sequence, coinDenom))
+	jsonStr := []byte(fmt.Sprintf(`{ "name":"%s", "password":"%s", "account_number":%d, "sequence":%d, "amount":[{ "denom": "%s", "amount": 1 }] }`, name, password, accnum, sequence, coinDenom))
 	res, body := request(t, port, "POST", "/accounts/"+receiveAddr+"/send", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -584,10 +589,15 @@ func doIBCTransfer(t *testing.T, port, seed string) (resultTx ctypes.ResultBroad
 
 	// get the account to get the sequence
 	acc := getAccount(t, sendAddr)
+	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 
+	fmt.Println("jello")
+	fmt.Println(accnum)
+	fmt.Println(sequence)
+
 	// send
-	jsonStr := []byte(fmt.Sprintf(`{ "name":"%s", "password":"%s", "sequence":%d, "amount":[{ "denom": "%s", "amount": 1 }] }`, name, password, sequence, coinDenom))
+	jsonStr := []byte(fmt.Sprintf(`{ "name":"%s", "password":"%s", "account_number":%d, "sequence":%d, "amount":[{ "denom": "%s", "amount": 1 }] }`, name, password, accnum, sequence, coinDenom))
 	res, body := request(t, port, "POST", "/ibc/testchain/"+receiveAddr+"/send", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

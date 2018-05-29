@@ -40,7 +40,13 @@ func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto Account) AccountM
 func (am AccountMapper) NewAccountWithAddress(ctx sdk.Context, addr sdk.Address) Account {
 	acc := am.clonePrototype()
 	acc.SetAddress(addr)
-	acc.SetAccountNumber(am.getNextAccountNumber(ctx))
+	acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
+	return acc
+}
+
+// New Account
+func (am AccountMapper) NewAccount(ctx sdk.Context, acc Account) Account {
+	acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
 	return acc
 }
 
@@ -119,7 +125,8 @@ func (am AccountMapper) setSequence(ctx sdk.Context, addr sdk.Address, newSequen
 	return nil
 }
 
-func (am AccountMapper) getNextAccountNumber(ctx sdk.Context) int64 {
+// Returns and increments the global account number counter
+func (am AccountMapper) GetNextAccountNumber(ctx sdk.Context) int64 {
 	var accNumber int64
 	store := ctx.KVStore(am.key)
 	bz := store.Get(globalAccountNumberKey)

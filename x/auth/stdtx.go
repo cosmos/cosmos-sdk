@@ -113,11 +113,11 @@ func StdSignBytes(chainID string, accnums []int64, sequences []int64, fee StdFee
 // a Msg with the other requirements for a StdSignDoc before
 // it is signed. For use in the CLI.
 type StdSignMsg struct {
-	ChainID string
-
-	Sequences []int64
-	Fee       StdFee
-	Msg       sdk.Msg
+	ChainID        string
+	AccountNumbers []int64
+	Sequences      []int64
+	Fee            StdFee
+	Msg            sdk.Msg
 	// XXX: Alt
 }
 
@@ -130,6 +130,6 @@ func (msg StdSignMsg) Bytes() []byte {
 type StdSignature struct {
 	crypto.PubKey    `json:"pub_key"` // optional
 	crypto.Signature `json:"signature"`
-	AccountNumber    int64 `json:"acc_number"`
+	AccountNumber    int64 `json:"account_number"`
 	Sequence         int64 `json:"sequence"`
 }

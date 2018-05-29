@@ -109,12 +109,15 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 	if chainID == "" {
 		return nil, errors.Errorf("Chain ID required but not specified")
 	}
+	accnum := ctx.AccountNumber
 	sequence := ctx.Sequence
+
 	signMsg := auth.StdSignMsg{
-		ChainID:   chainID,
-		Sequences: []int64{sequence},
-		Msg:       msg,
-		Fee:       auth.NewStdFee(ctx.Gas, sdk.Coin{}), // TODO run simulate to estimate gas?
+		ChainID:        chainID,
+		AccountNumbers: []int64{accnum},
+		Sequences:      []int64{sequence},
+		Msg:            msg,
+		Fee:            auth.NewStdFee(10000, sdk.Coin{}), // TODO run simulate to estimate gas?
 	}
 
 	keybase, err := keys.GetKeyBase()
@@ -130,9 +133,10 @@ func (ctx CoreContext) SignAndBuild(name, passphrase string, msg sdk.Msg, cdc *w
 		return nil, err
 	}
 	sigs := []auth.StdSignature{{
-		PubKey:    pubkey,
-		Signature: sig,
-		Sequence:  sequence,
+		PubKey:        pubkey,
+		Signature:     sig,
+		AccountNumber: accnum,
+		Sequence:      sequence,
 	}}
 
 	// marshal bytes

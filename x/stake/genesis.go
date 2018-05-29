@@ -34,6 +34,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	for _, validator := range data.Validators {
 		// Staking assumes bonded validators are already stored, need to force update
 		validator.PoolShares.Status = sdk.Unbonded
+		k.setValidator(ctx, validator)
 		k.updateValidator(ctx, validator)
 	}
 	for _, bond := range data.Bonds {

@@ -1,8 +1,8 @@
-package module_tutorial
+package simple_governance
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stake "github.coms/cosmos/cosmos-sdk/x/stake"
+	stake "github.coms/cosmos/cosmos-sdk/x/simplestake"
 	"reflect"
 )
 

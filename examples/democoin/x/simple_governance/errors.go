@@ -1,5 +1,4 @@
-//nolint
-package bank
+package simple_governance
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,6 +7,8 @@ import (
 type CodeType = sdk.CodeType
 
 const (
+	DefaultCodespace sdk.CodespaceType = 7
+
 	// Simple Gov errors reserve 700 ~ 799.
 	CodeInvalidOption      CodeType = 701
 	CodeInvalidProposalID  CodeType = 702
@@ -53,7 +54,7 @@ func msgOrDefaultMsg(msg string, code CodeType) string {
 	}
 }
 
-func newError(code CodeType, msg string) sdk.Error {
+func newError(codespace sdk.CodespaceType, code CodeType, msg string) sdk.Error {
 	msg = msgOrDefaultMsg(msg, code)
-	return sdk.NewError(code, msg)
+	return sdk.NewError(codespace, code, msg)
 }

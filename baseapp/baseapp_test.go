@@ -83,18 +83,36 @@ func TestLoadVersion(t *testing.T) {
 	header := abci.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res := app.Commit()
-	commitID := sdk.CommitID{1, res.Data}
+	commitID1 := sdk.CommitID{1, res.Data}
+	header = abci.Header{Height: 2}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res = app.Commit()
+	commitID2 := sdk.CommitID{2, res.Data}
 
-	// reload
+	// reload with LoadLatestVersion
 	app = NewBaseApp(name, nil, logger, db)
 	app.MountStoresIAVL(capKey)
-	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
+	err = app.LoadLatestVersion(capKey)
 	assert.Nil(t, err)
+	testLoadVersionHelper(t, app, int64(2), commitID2)
 
-	lastHeight = app.LastBlockHeight()
-	lastID = app.LastCommitID()
-	assert.Equal(t, int64(1), lastHeight)
-	assert.Equal(t, commitID, lastID)
+	// reload with LoadVersion, see if you can commit the same block and get
+	// the same result
+	app = NewBaseApp(name, nil, logger, db)
+	app.MountStoresIAVL(capKey)
+	err = app.LoadVersion(1, capKey)
+	assert.Nil(t, err)
+	testLoadVersionHelper(t, app, int64(1), commitID1)
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.Commit()
+	testLoadVersionHelper(t, app, int64(2), commitID2)
+}
+
+func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, expectedID sdk.CommitID) {
+	lastHeight := app.LastBlockHeight()
+	lastID := app.LastCommitID()
+	assert.Equal(t, expectedHeight, lastHeight)
+	assert.Equal(t, expectedID, lastID)
 }
 
 // Test that the app hash is static

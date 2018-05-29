@@ -11,7 +11,7 @@
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "1432d294a5b055c297457c25434efbf13384cc46"
+  revision = "bc0944904505aab55e089371a892be2f87883161"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -253,7 +253,6 @@
   revision = "5d6fca44a948d2be89a9702de7717f0168403d3d"
 
 [[projects]]
-  branch = "develop"
   name = "github.com/tendermint/abci"
   packages = [
     "client",
@@ -277,8 +276,8 @@
 [[projects]]
   name = "github.com/tendermint/go-amino"
   packages = ["."]
-  revision = "ed62928576cfcaf887209dc96142cd79cdfff389"
-  version = "0.9.9"
+  revision = "3c22a7a539411f89a96738fcfa14c1027e24e5ec"
+  version = "0.9.10"
 
 [[projects]]
   name = "github.com/tendermint/go-crypto"
@@ -342,7 +341,7 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "d3093426f455c4b33cee818e3bbf2d2b83e4b38d"
+  revision = "3b8c1ae119da990664f3b98bb2518032f5d837f9"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -374,7 +373,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "75e913eb8a8e3d31a97b216de09de106a7b07681"
+  revision = "ab813273cd59e1333f7ae7bff5d027d4aadf528c"
 
 [[projects]]
   branch = "master"
@@ -388,13 +387,13 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "9ef9f5bb98a1fdc41f8cf6c250a4404b4085e389"
+  revision = "dfa909b99c79129e1100513e5cd36307665e5723"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "77b0e4315053a57ed2962443614bdb28db152054"
+  revision = "c11f84a56e43e20a78cee75a7c034031ecf57d1f"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -455,6 +454,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bbc0ee39f39cb296960a5fcb2a3916a4acc48ecbb675758ea1f61def44e994bb"
+  inputs-digest = "dc095a5d071dc8e1d7c3fd1208efbbe7d3c09551ecef76fdfafcdcdd88a49f50"
   solver-name = "gps-cdcl"
   solver-version = 1

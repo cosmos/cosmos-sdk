@@ -49,5 +49,4 @@ func (b Delegation) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Height: %d", b.Height)
 
 	return resp, nil
-
 }

@@ -49,6 +49,7 @@ func main() {
 			stakecmd.GetCmdQueryCandidate("stake", cdc),
 			stakecmd.GetCmdQueryCandidates("stake", cdc),
 			stakecmd.GetCmdQueryDelegatorBond("stake", cdc),
+			govcmd.GetProposalCmd("gov", cdc),
 			//stakecmd.GetCmdQueryDelegatorBonds("stake", cdc),
 		)...)
 	rootCmd.AddCommand(

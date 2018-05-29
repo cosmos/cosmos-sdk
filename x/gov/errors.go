@@ -23,6 +23,7 @@ const ( // TODO TODO TODO TODO TODO TODO
 	CodeInvalidProposalType      sdk.CodeType = 408
 	CodeInvalidVote              sdk.CodeType = 409
 	CodeAddressAlreadyVote       sdk.CodeType = 410
+	CodeProposalIsOver       	 sdk.CodeType = 411
 )
 
 //----------------------------------------
@@ -66,4 +67,7 @@ func ErrInvalidVote(voteOption string) sdk.Error {
 
 func ErrAlreadyVote(address sdk.Address) sdk.Error {
 	return sdk.NewError(DefaultCodespace, CodeAddressAlreadyVote, "Address "+hex.EncodeToString(address)+" has already voted")
+}
+func ErrProposalIsOver(proposalID int64) sdk.Error {
+	return sdk.NewError(DefaultCodespace, CodeProposalIsOver, "Proposal "+strconv.FormatInt(proposalID, 10)+" has been expired")
 }

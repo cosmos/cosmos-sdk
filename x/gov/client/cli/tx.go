@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 
 	"encoding/hex"
+	"errors"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -139,6 +140,40 @@ func VoteCmd(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
+			return nil
+		},
+	}
+	return cmd
+}
+
+func GetProposalCmd(storeName string, cdc *wire.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "proposal [proposalID]",
+		Short: "query proposal details",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			proposalID, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			ctx := context.NewCoreContextFromViper()
+
+			key, _ := cdc.MarshalBinary(proposalID)
+			res, err := ctx.Query(key, storeName)
+			if len(res) == 0 || err != nil {
+				errmsg := fmt.Sprintf("proposalID [%d] is not existed", proposalID)
+				return errors.New(errmsg)
+			}
+
+			proposal := new(gov.Proposal)
+			cdc.MustUnmarshalBinary(res, proposal)
+			output, err := wire.MarshalJSONIndent(cdc, proposal)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(output))
+			return nil
+
 			return nil
 		},
 	}

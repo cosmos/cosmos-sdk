@@ -95,6 +95,10 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 		return ErrAlreadyActiveProposal(msg.ProposalID).Result()
 	}
 
+	if proposal.isExpired(ctx.BlockHeight()) {
+		return ErrProposalIsOver(msg.ProposalID).Result()
+	}
+
 	if ctx.IsCheckTx() {
 		return sdk.Result{}
 	}
@@ -124,8 +128,12 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		return ErrUnknownProposal(msg.ProposalID).Result()
 	}
 
-	if !proposal.isActive() || ctx.BlockHeight() > proposal.VotingStartBlock+proposal.Procedure.VotingPeriod {
+	if !proposal.isActive(){
 		return ErrInactiveProposal(msg.ProposalID).Result()
+	}
+
+	if proposal.isExpired(ctx.BlockHeight()) {
+		return ErrProposalIsOver(msg.ProposalID).Result()
 	}
 
 	validatorGovInfo := proposal.getValidatorGovInfo(msg.Voter)

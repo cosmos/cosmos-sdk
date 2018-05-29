@@ -73,6 +73,10 @@ func (proposal Proposal) isActive() bool {
 	return proposal.VotingStartBlock >= 0
 }
 
+func (proposal Proposal) isExpired(height int64) bool {
+	return height > proposal.VotingStartBlock + proposal.Procedure.VotingPeriod
+}
+
 func (proposal *Proposal) updateTally(option string, amount int64) {
 	switch option {
 	case YesOption:

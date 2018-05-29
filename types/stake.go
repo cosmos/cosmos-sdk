@@ -15,6 +15,20 @@ const (
 	Bonded    BondStatus = 0x02
 )
 
+//BondStatusToString for pretty prints of Bond Status
+func BondStatusToString(b BondStatus) string {
+	switch b {
+	case 0x00:
+		return "Unbonded"
+	case 0x01:
+		return "Unbonding"
+	case 0x02:
+		return "Bonded"
+	default:
+		return ""
+	}
+}
+
 // validator for a delegated proof of stake system
 type Validator interface {
 	GetStatus() BondStatus    // status of the validator

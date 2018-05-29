@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Stored by *validator* address (not owner address)
 func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.Address) (info validatorSigningInfo, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(validatorSigningInfoKey(address))
@@ -18,12 +19,14 @@ func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.Address) (i
 	return
 }
 
+// Stored by *validator* address (not owner address)
 func (k Keeper) setValidatorSigningInfo(ctx sdk.Context, address sdk.Address, info validatorSigningInfo) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(info)
 	store.Set(validatorSigningInfoKey(address), bz)
 }
 
+// Stored by *validator* address (not owner address)
 func (k Keeper) getValidatorSigningBitArray(ctx sdk.Context, address sdk.Address, index int64) (signed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(validatorSigningBitArrayKey(address, index))
@@ -36,6 +39,7 @@ func (k Keeper) getValidatorSigningBitArray(ctx sdk.Context, address sdk.Address
 	return
 }
 
+// Stored by *validator* address (not owner address)
 func (k Keeper) setValidatorSigningBitArray(ctx sdk.Context, address sdk.Address, index int64, signed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(signed)
@@ -49,10 +53,12 @@ type validatorSigningInfo struct {
 	SignedBlocksCounter int64 `json:"signed_blocks_counter"` // signed blocks counter (to avoid scanning the array every time)
 }
 
+// Stored by *validator* address (not owner address)
 func validatorSigningInfoKey(v sdk.Address) []byte {
 	return append([]byte{0x01}, v.Bytes()...)
 }
 
+// Stored by *validator* address (not owner address)
 func validatorSigningBitArrayKey(v sdk.Address, i int64) []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, uint64(i))

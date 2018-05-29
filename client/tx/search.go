@@ -61,12 +61,15 @@ func searchTx(ctx context.CoreContext, cdc *wire.Codec, tags []string) ([]byte, 
 	}
 
 	prove := !viper.GetBool(client.FlagTrustNode)
-	txs, err := node.TxSearch(query, prove)
+	// TODO: take these as args
+	page := 0
+	perPage := 100
+	res, err := node.TxSearch(query, prove, page, perPage)
 	if err != nil {
 		return nil, err
 	}
 
-	info, err := formatTxResults(cdc, txs)
+	info, err := formatTxResults(cdc, res.Txs)
 	if err != nil {
 		return nil, err
 	}

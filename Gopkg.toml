@@ -62,9 +62,9 @@
 
 [[constraint]]
   name = "github.com/tendermint/go-amino"
-  version = "~0.9.9"
+  version = "=0.9.9"
 
-[[override]]
+[[constraint]]
   name = "github.com/tendermint/iavl"
   branch = "develop"
 

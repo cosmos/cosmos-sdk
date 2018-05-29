@@ -118,11 +118,11 @@ type Deposit struct {
 }
 
 type ValidatorGovInfo struct {
-	ProposalID      int64       //  Id of the Proposal this validator
-	ValidatorAddr   sdk.Address //  Address of the validator
-	InitVotingPower int64       //  Voting power of validator when proposal enters voting period
-	Minus           int64       //  Minus of validator, used to compute validator's voting power
-	LastVoteWeight  int64       //  Weight of the last vote by validator at time of casting, -1 if hasn't voted yet
+	ProposalID      int64       `json:"proposal_iD"`		//  Id of the Proposal this validator
+	ValidatorAddr   sdk.Address `json:"validator_addr"`		//  Address of the validator
+	InitVotingPower int64       `json:"init_voting_power"`	//  Voting power of validator when proposal enters voting period
+	Minus           int64       `json:"minus"`				//  Minus of validator, used to compute validator's voting power
+	LastVoteWeight  int64       `json:"last_vote_weight"`	//  Weight of the last vote by validator at time of casting, -1 if hasn't voted yet
 }
 
 type Delegation struct {

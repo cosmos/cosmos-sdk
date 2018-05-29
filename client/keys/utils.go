@@ -73,7 +73,7 @@ func printInfo(info keys.Info) {
 	ko := NewKeyOutput(info)
 	switch viper.Get(cli.OutputFlag) {
 	case "text":
-		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
+		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
 		printKeyOutput(ko)
 	case "json":
 		out, err := json.MarshalIndent(ko, "", "\t")
@@ -88,7 +88,7 @@ func printInfos(infos []keys.Info) {
 	kos := NewKeyOutputs(infos)
 	switch viper.Get(cli.OutputFlag) {
 	case "text":
-		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
+		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
 		for _, ko := range kos {
 			printKeyOutput(ko)
 		}

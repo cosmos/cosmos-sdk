@@ -81,10 +81,7 @@ func newPubKey(pk string) (res crypto.PubKey) {
 }
 
 func testAddr(addr string) sdk.Address {
-	res, err := sdk.GetAddress(addr)
-	if err != nil {
-		panic(err)
-	}
+	res := []byte(addr)
 	return res
 }
 

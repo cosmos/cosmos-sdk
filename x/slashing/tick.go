@@ -40,11 +40,11 @@ func NewBeginBlocker(sk Keeper) sdk.BeginBlocker {
 		// Iterate over all the validators which *should* have signed this block
 		sk.stakeKeeper.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
 			pubkey := validator.GetPubKey()
-			abs := false
+			present := true
 			if _, ok := absent[pubkey]; ok {
-				abs = true
+				present = false
 			}
-			sk.handleValidatorSignature(ctx, pubkey, abs)
+			sk.handleValidatorSignature(ctx, pubkey, present)
 			return false
 		})
 

@@ -354,7 +354,11 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		}
 		req.Path = "/" + strings.Join(path[1:], "/")
 		res, proof := queryable.Query(req)
-		res.Proof = proof.Bytes()
+		proofbz, err := proof.Bytes()
+		if err != nil {
+			return sdk.ErrInternal(err.Error()).QueryResult()
+		}
+		res.Proof = proofbz
 		return res
 	}
 	// "/p2p" prefix for p2p queries

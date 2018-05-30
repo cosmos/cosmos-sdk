@@ -38,8 +38,6 @@ type OpDecoder func(RawOp) (Op, error)
 
 func DefaultOpDecoder(ro RawOp) (res Op, err error) {
 	switch ro.Type {
-	/*	case TMCoreOpType:
-		return TMCoreOp{}*/
 	case IAVLExistsOpType:
 		res = IAVLExistsOp{}
 	case IAVLAbsentOpType:
@@ -82,11 +80,30 @@ func (p Proof) Verify(root []byte, value [][]byte, keys ...string) (err error) {
 	return nil
 }
 
-func (p Proof) Bytes() ([]byte, error) {
-	return json.Marshal(p)
+func (p Proof) Bytes() (res []byte, err error) {
+	rawops := make([]RawOp, len(p))
+	for i, op := range p {
+		rawops[i], err = op.Raw()
+		if err != nil {
+			return
+		}
+	}
+
+	return json.Marshal(rawops)
 }
 
-func DecodeProof(data []byte) (res Proof, err error) {
-	err = json.Unmarshal(data, &res)
+func DecodeProof(data []byte, decode OpDecoder) (res Proof, err error) {
+	rawops := make([]RawOp, len(data))
+	if err = json.Unmarshal(data, &rawops); err != nil {
+		return
+	}
+
+	res = make([]Op, len(data))
+	for i, rawop := range rawops {
+		res[i], err = decode(rawop)
+		if err != nil {
+			return
+		}
+	}
 	return
 }

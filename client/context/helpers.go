@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/merkle"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -58,7 +59,7 @@ func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, er
 		return
 	}
 
-	proof, err := merkle.DecodeProof(resp.Proof)
+	proof, err := merkle.DecodeProof(resp.Proof, store.WrapOpDecoder(merkle.DefaultOpDecoder))
 	if err != nil {
 		return
 	}
@@ -71,6 +72,7 @@ func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, er
 		return
 	}
 
+	fmt.Printf("\n\n\n\n\n\n\n\n%+v\n", cfg.GenesisFile())
 	genesis, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
 	if err != nil {
 		return

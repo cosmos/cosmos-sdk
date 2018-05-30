@@ -319,8 +319,18 @@ func TestTxs(t *testing.T) {
 func TestValidatorsQuery(t *testing.T) {
 	validators := getValidators(t)
 	assert.Equal(t, len(validators), 2)
-	assert.Equal(t, hex.EncodeToString(validators[0].Owner), validatorAddr1)
-	assert.Equal(t, hex.EncodeToString(validators[1].Owner), validatorAddr2)
+
+	// make sure all the validators were found (order unknown because sorted by owner addr)
+	foundVal1, foundVal2 := false, false
+	res1, res2 := hex.EncodeToString(validators[0].Owner), hex.EncodeToString(validators[1].Owner)
+	if res1 == validatorAddr1 || res2 == validatorAddr1 {
+		foundVal1 = true
+	}
+	if res1 == validatorAddr2 || res2 == validatorAddr2 {
+		foundVal2 = true
+	}
+	assert.True(t, foundVal1, "validatorAddr1 %v, res1 %v, res2 %v", validatorAddr1, res1, res2)
+	assert.True(t, foundVal2, "validatorAddr2 %v, res1 %v, res2 %v", validatorAddr2, res1, res2)
 }
 
 func TestBond(t *testing.T) {

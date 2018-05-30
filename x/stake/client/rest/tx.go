@@ -56,14 +56,16 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 		}
 
 		// build messages
-		messages := make([]sdk.Msg, 0, len(m.Delegate)+len(m.Unbond))
+		messages := make([]sdk.Msg, len(m.Delegate)+len(m.Unbond))
+		i := 0
 		for _, msg := range m.Delegate {
 			if !bytes.Equal(info.Address(), msg.DelegatorAddr) {
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Write([]byte("Must use own delegator address"))
 				return
 			}
-			messages = append(messages, msg)
+			messages[i] = msg
+			i++
 		}
 		for _, msg := range m.Unbond {
 			if !bytes.Equal(info.Address(), msg.DelegatorAddr) {
@@ -71,12 +73,13 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 				w.Write([]byte("Must use own delegator address"))
 				return
 			}
-			messages = append(messages, msg)
+			messages[i] = msg
+			i++
 		}
 
 		// sign messages
-		signedTxs := make([][]byte, 0, len(messages))
-		for _, msg := range messages {
+		signedTxs := make([][]byte, len(messages[:]))
+		for i, msg := range messages {
 			// increment sequence for each message
 			ctx = ctx.WithSequence(m.Sequence)
 			m.Sequence++
@@ -88,24 +91,24 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 				return
 			}
 
-			signedTxs = append(signedTxs, txBytes)
+			signedTxs[i] = txBytes
 		}
 
 		// send
 		// XXX the operation might not be atomic if a tx fails
 		//     should we have a sdk.MultiMsg type to make sending atomic?
-		results := make([]*ctypes.ResultBroadcastTxCommit, 0, len(signedTxs))
-		for _, txBytes := range signedTxs {
+		results := make([]*ctypes.ResultBroadcastTxCommit, len(signedTxs[:]))
+		for i, txBytes := range signedTxs {
 			res, err := ctx.BroadcastTx(txBytes)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(err.Error()))
 				return
 			}
-			results = append(results, res)
+			results[i] = res
 		}
 
-		output, err := json.MarshalIndent(results, "", "  ")
+		output, err := json.MarshalIndent(results[:], "", "  ")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

@@ -100,8 +100,8 @@ func validatorsHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Co
 		}
 
 		// parse out the validators
-		var validators []stake.Validator
-		for _, kv := range kvs {
+		validators := make([]stake.Validator, len(kvs))
+		for i, kv := range kvs {
 			var validator stake.Validator
 			err = cdc.UnmarshalBinary(kv.Value, &validator)
 			if err != nil {
@@ -109,7 +109,7 @@ func validatorsHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Co
 				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
 				return
 			}
-			validators = append(validators, validator)
+			validators[i] = validator
 		}
 
 		output, err := cdc.MarshalJSON(validators)

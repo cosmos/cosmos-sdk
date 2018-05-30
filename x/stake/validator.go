@@ -155,18 +155,20 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 	return v, pool
 }
 
-// Remove & burn pool shares, e.g. when slashing a validator
-func (v Validator) removePoolShares(pool Pool, amt sdk.Rat) (Validator, Pool, int64) {
+// Remove pool shares
+// Returns corresponding tokens, which could be burned (e.g. when slashing
+// a validator) or redistributed elsewhere
+func (v Validator) removePoolShares(pool Pool, poolShares sdk.Rat) (Validator, Pool, int64) {
 	var tokens int64
 	switch v.Status() {
 	case sdk.Unbonded:
-		pool, tokens = pool.removeSharesUnbonded(amt)
+		pool, tokens = pool.removeSharesUnbonded(poolShares)
 	case sdk.Unbonding:
-		pool, tokens = pool.removeSharesUnbonding(amt)
+		pool, tokens = pool.removeSharesUnbonding(poolShares)
 	case sdk.Bonded:
-		pool, tokens = pool.removeSharesBonded(amt)
+		pool, tokens = pool.removeSharesBonded(poolShares)
 	}
-	v.PoolShares.Amount = v.PoolShares.Amount.Sub(amt)
+	v.PoolShares.Amount = v.PoolShares.Amount.Sub(poolShares)
 	return v, pool, tokens
 }
 

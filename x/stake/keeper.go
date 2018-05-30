@@ -42,12 +42,10 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.Address) (validator Valid
 // get a single validator by pubkey
 func (k Keeper) GetValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (validator Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(GetValidatorByPubKeyKey(pubkey))
-	if b == nil {
+	addr := store.Get(GetValidatorByPubKeyKey(pubkey))
+	if addr == nil {
 		return validator, false
 	}
-	var addr sdk.Address
-	k.cdc.MustUnmarshalBinary(b, &addr)
 	return k.getValidator(store, addr)
 }
 
@@ -68,8 +66,7 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 	bz := k.cdc.MustMarshalBinary(validator)
 	store.Set(GetValidatorKey(validator.Owner), bz)
 	// set pointer by pubkey
-	bz = k.cdc.MustMarshalBinary(validator.Owner)
-	store.Set(GetValidatorByPubKeyKey(validator.PubKey), bz)
+	store.Set(GetValidatorByPubKeyKey(validator.PubKey), validator.Owner)
 }
 
 // Get the set of all validators with no limits, used during genesis dump
@@ -734,15 +731,6 @@ func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, va
 // get the sdk.validator for a particular address
 func (k Keeper) Validator(ctx sdk.Context, addr sdk.Address) sdk.Validator {
 	val, found := k.GetValidator(ctx, addr)
-	if !found {
-		return nil
-	}
-	return val
-}
-
-// get the sdk.validator for a particular pubkey
-func (k Keeper) ValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) sdk.Validator {
-	val, found := k.GetValidatorByPubKey(ctx, pubkey)
 	if !found {
 		return nil
 	}

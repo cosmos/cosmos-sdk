@@ -16,7 +16,7 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-// Validators must submit a transaction to unrevoke themselves after
+// Validators must submit a transaction to unrevoke itself after
 // having been revoked (and thus unbonded) for downtime
 func handleMsgUnrevoke(ctx sdk.Context, msg MsgUnrevoke, k Keeper) sdk.Result {
 

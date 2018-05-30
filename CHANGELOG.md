@@ -41,9 +41,11 @@ BUG FIXES
 * query sequence via account store
 * fixed duplicate pub_key in stake.Validator
 
-## 0.18.0
+FEATURES
+* [docs] Reorganize documentation
+* [docs] Update staking spec, create WIP spec for slashing, and fees
 
-_TBD_
+## 0.18.0 
 
 BREAKING CHANGES
 

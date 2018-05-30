@@ -132,6 +132,11 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		return ErrInactiveProposal(msg.ProposalID).Result()
 	}
 
+	curProposal := keeper.ProposalQueuePeek(ctx)
+	if curProposal == nil || proposal.ProposalID != curProposal.ProposalID {
+		return ErrInactiveProposal(msg.ProposalID).Result()//TODO
+	}
+
 	if proposal.isExpired(ctx.BlockHeight()) {
 		return ErrProposalIsOver(msg.ProposalID).Result()
 	}
@@ -139,13 +144,13 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 	validatorGovInfo := proposal.getValidatorGovInfo(msg.Voter)
 
 	// Need to finalize interface to staking mapper for delegatedTo. Makes assumption from here on out.
-	canVote, delegatedTo := keeper.sm.LoadValidDelegatorCandidates(ctx, msg.Voter, proposal.VotingStartBlock)
+	cantVote, delegatedTo := keeper.sm.LoadValidDelegatorCandidates(ctx, msg.Voter, proposal.VotingStartBlock)
 
 	if validatorGovInfo == nil && len(delegatedTo) == 0 {
 		return ErrAddressNotStaked(msg.Voter).Result()
 	}
 
-	if !canVote {
+	if cantVote && validatorGovInfo == nil {
 		return ErrAddressChangedDelegation(msg.Voter).Result()
 	}
 

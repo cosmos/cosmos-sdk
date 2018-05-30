@@ -16,16 +16,16 @@ import (
 func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec) {
 	r.HandleFunc(
 		"/stake/{delegator}/bonding_status/{validator}",
-		bondingStatusHandlerFn("stake", cdc, ctx),
+		bondingStatusHandlerFn(ctx, "stake", cdc),
 	).Methods("GET")
 	r.HandleFunc(
 		"/stake/validators",
-		validatorsHandlerFn("stake", cdc, ctx),
+		validatorsHandlerFn(ctx, "stake", cdc),
 	).Methods("GET")
 }
 
 // http request handler to query delegator bonding status
-func bondingStatusHandlerFn(storeName string, cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
+func bondingStatusHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// read parameters
@@ -84,9 +84,9 @@ func bondingStatusHandlerFn(storeName string, cdc *wire.Codec, ctx context.CoreC
 }
 
 // http request handler to query list of validators
-func validatorsHandlerFn(storeName string, cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
+func validatorsHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
+		kvs, err := ctx.QuerySubspace(cdc, stake.ValidatorsKey, storeName)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("Couldn't query validators. Error: %s", err.Error())))
@@ -94,14 +94,14 @@ func validatorsHandlerFn(storeName string, cdc *wire.Codec, ctx context.CoreCont
 		}
 
 		// the query will return empty if there are no validators
-		if len(res) == 0 {
+		if len(kvs) == 0 {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
 		// parse out the validators
 		var validators []stake.Validator
-		for _, kv := range res {
+		for _, kv := range kvs {
 			var validator stake.Validator
 			err = cdc.UnmarshalBinary(kv.Value, &validator)
 			if err != nil {

@@ -42,7 +42,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.Address) (validator Valid
 // get a single validator by pubkey
 func (k Keeper) GetValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (validator Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	addr := store.Get(GetValidatorByPubKeyKey(pubkey))
+	addr := store.Get(GetValidatorByPubKeyIndexKey(pubkey))
 	if addr == nil {
 		return validator, false
 	}
@@ -66,7 +66,7 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 	bz := k.cdc.MustMarshalBinary(validator)
 	store.Set(GetValidatorKey(validator.Owner), bz)
 	// set pointer by pubkey
-	store.Set(GetValidatorByPubKeyKey(validator.PubKey), validator.Owner)
+	store.Set(GetValidatorByPubKeyIndexKey(validator.PubKey), validator.Owner)
 }
 
 // Get the set of all validators with no limits, used during genesis dump
@@ -489,7 +489,7 @@ func (k Keeper) removeValidator(ctx sdk.Context, address sdk.Address) {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.getPool(store)
 	store.Delete(GetValidatorKey(address))
-	store.Delete(GetValidatorByPubKeyKey(validator.PubKey))
+	store.Delete(GetValidatorByPubKeyIndexKey(validator.PubKey))
 	store.Delete(GetValidatorsByPowerKey(validator, pool))
 
 	// delete from the current and power weighted validator groups if the validator

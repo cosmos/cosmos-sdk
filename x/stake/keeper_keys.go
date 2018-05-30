@@ -13,17 +13,17 @@ import (
 //nolint
 var (
 	// Keys for store prefixes
-	ParamKey               = []byte{0x00} // key for parameters relating to staking
-	PoolKey                = []byte{0x01} // key for the staking pools
-	ValidatorsKey          = []byte{0x02} // prefix for each key to a validator
-	ValidatorsByPubKeyKey  = []byte{0x03} // prefix for each key to a validator by pubkey
-	ValidatorsBondedKey    = []byte{0x04} // prefix for each key to bonded/actively validating validators
-	ValidatorsByPowerKey   = []byte{0x05} // prefix for each key to a validator sorted by power
-	ValidatorCliffKey      = []byte{0x06} // key for block-local tx index
-	ValidatorPowerCliffKey = []byte{0x07} // key for block-local tx index
-	TendermintUpdatesKey   = []byte{0x08} // prefix for each key to a validator which is being updated
-	DelegationKey          = []byte{0x09} // prefix for each key to a delegator's bond
-	IntraTxCounterKey      = []byte{0x10} // key for block-local tx index
+	ParamKey                   = []byte{0x00} // key for parameters relating to staking
+	PoolKey                    = []byte{0x01} // key for the staking pools
+	ValidatorsKey              = []byte{0x02} // prefix for each key to a validator
+	ValidatorsByPubKeyIndexKey = []byte{0x03} // prefix for each key to a validator by pubkey
+	ValidatorsBondedKey        = []byte{0x04} // prefix for each key to bonded/actively validating validators
+	ValidatorsByPowerKey       = []byte{0x05} // prefix for each key to a validator sorted by power
+	ValidatorCliffKey          = []byte{0x06} // key for block-local tx index
+	ValidatorPowerCliffKey     = []byte{0x07} // key for block-local tx index
+	TendermintUpdatesKey       = []byte{0x08} // prefix for each key to a validator which is being updated
+	DelegationKey              = []byte{0x09} // prefix for each key to a delegator's bond
+	IntraTxCounterKey          = []byte{0x10} // key for block-local tx index
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -34,8 +34,8 @@ func GetValidatorKey(ownerAddr sdk.Address) []byte {
 }
 
 // get the key for the validator with pubkey
-func GetValidatorByPubKeyKey(pubkey crypto.PubKey) []byte {
-	return append(ValidatorsByPubKeyKey, pubkey.Bytes()...)
+func GetValidatorByPubKeyIndexKey(pubkey crypto.PubKey) []byte {
+	return append(ValidatorsByPubKeyIndexKey, pubkey.Bytes()...)
 }
 
 // get the key for the current validator group, ordered like tendermint

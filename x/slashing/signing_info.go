@@ -12,10 +12,10 @@ func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.Address) (i
 	bz := store.Get(validatorSigningInfoKey(address))
 	if bz == nil {
 		found = false
-	} else {
-		k.cdc.MustUnmarshalBinary(bz, &info)
-		found = true
+		return
 	}
+	k.cdc.MustUnmarshalBinary(bz, &info)
+	found = true
 	return
 }
 
@@ -33,9 +33,9 @@ func (k Keeper) getValidatorSigningBitArray(ctx sdk.Context, address sdk.Address
 	if bz == nil {
 		// lazy: treat empty key as unsigned
 		signed = false
-	} else {
-		k.cdc.MustUnmarshalBinary(bz, &signed)
+		return
 	}
+	k.cdc.MustUnmarshalBinary(bz, &signed)
 	return
 }
 

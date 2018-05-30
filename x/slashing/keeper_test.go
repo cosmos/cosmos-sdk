@@ -16,7 +16,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	addr, val, amt := addrs[0], pks[0], int64(100)
 	got := stake.NewHandler(sk)(ctx, newTestMsgDeclareCandidacy(addr, val, amt))
 	require.True(t, got.IsOK())
-	_ = sk.Tick(ctx)
+	sk.Tick(ctx)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins - amt}})
 	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
 	keeper.handleDoubleSign(ctx, 0, 0, val) // double sign less than max age
@@ -33,7 +33,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	slh := NewHandler(keeper)
 	got := sh(ctx, newTestMsgDeclareCandidacy(addr, val, amt))
 	require.True(t, got.IsOK())
-	_ = sk.Tick(ctx)
+	sk.Tick(ctx)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins - amt}})
 	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
 	info, found := keeper.getValidatorSigningInfo(ctx, val.Address())

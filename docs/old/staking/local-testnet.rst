@@ -39,17 +39,17 @@ and ports. It should look like:
 
 ::
 
-    proxy_app = "tcp://127.0.0.1:46668"
+    proxy_app = "tcp://127.0.0.1:26668"
     moniker = "anonymous"
     fast_sync = true
     db_backend = "leveldb"
     log_level = "state:info,*:error"
 
     [rpc]
-    laddr = "tcp://0.0.0.0:46667"
+    laddr = "tcp://0.0.0.0:26667"
 
     [p2p]
-    laddr = "tcp://0.0.0.0:46666"
+    laddr = "tcp://0.0.0.0:26666"
     seeds = "0.0.0.0:26656"
 
 Start Nodes

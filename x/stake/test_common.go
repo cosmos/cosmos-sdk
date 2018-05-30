@@ -3,6 +3,7 @@ package stake
 import (
 	"bytes"
 	"encoding/hex"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,9 +20,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-// dummy addresses used for testing
 var (
-	addrs = []sdk.Address{
+	// dummy addresses used for testing
+	addrsAuto = createTestAddrs(40)
+	addrs     = []sdk.Address{
 		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6160", "cosmosaccaddr:5ky9du8a2wlstz6fpx3p4mqpjyrm5ctqyxjnwh"),
 		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6161", "cosmosaccaddr:5ky9du8a2wlstz6fpx3p4mqpjyrm5ctpesxxn9"),
 		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6162", "cosmosaccaddr:5ky9du8a2wlstz6fpx3p4mqpjyrm5ctzhrnsa6"),
@@ -35,24 +37,90 @@ var (
 	}
 
 	// dummy pubkeys used for testing
-	pks = []crypto.PubKey{
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB50"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB53"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB54"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB55"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB56"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB57"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB58"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB59"),
-	}
+	pks = createTestPubKeys(40)
 
 	emptyAddr   sdk.Address
 	emptyPubkey crypto.PubKey
 )
 
-//_______________________________________________________________________________________
+func createTestAddrs(numAddrs int) []sdk.Address {
+	var addresses []sdk.Address
+	var buffer bytes.Buffer
+
+	//start at 10 to avoid changing 1 to 01, 2 to 02, etc
+	for i := 10; i < numAddrs; i++ {
+		numString := strconv.Itoa(i)
+		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA61") //base address string
+		buffer.WriteString(numString)                                //adding on final two digits to make addresses unique
+		addresses = append(addresses, testAddr(buffer.String()))
+		buffer.Reset()
+	}
+	return addresses
+}
+
+func createTestPubKeys(numPubKeys int) []crypto.PubKey {
+	var publicKeys []crypto.PubKey
+	var buffer bytes.Buffer
+
+	//start at 10 to avoid changing 1 to 01, 2 to 02, etc
+	for i := 10; i < numPubKeys; i++ {
+		numString := strconv.Itoa(i)
+		buffer.WriteString("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB") //base pubkey string
+		buffer.WriteString(numString)                                                        //adding on final two digits to make pubkeys unique
+		publicKeys = append(publicKeys, newPubKey(buffer.String()))
+		buffer.Reset()
+	}
+	return publicKeys
+}
+
+func validatorsEqual(b1, b2 Validator) bool {
+	return bytes.Equal(b1.Address, b2.Address) &&
+		b1.PubKey.Equals(b2.PubKey) &&
+		b1.Power.Equal(b2.Power) &&
+		b1.Height == b2.Height &&
+		b1.Counter == b2.Counter
+}
+
+func candidatesEqual(c1, c2 Candidate) bool {
+	return c1.Status == c2.Status &&
+		c1.PubKey.Equals(c2.PubKey) &&
+		bytes.Equal(c1.Address, c2.Address) &&
+		c1.Assets.Equal(c2.Assets) &&
+		c1.Liabilities.Equal(c2.Liabilities) &&
+		c1.Description == c2.Description
+}
+
+func bondsEqual(b1, b2 DelegatorBond) bool {
+	return bytes.Equal(b1.DelegatorAddr, b2.DelegatorAddr) &&
+		bytes.Equal(b1.CandidateAddr, b2.CandidateAddr) &&
+		b1.Height == b2.Height &&
+		b1.Shares.Equal(b2.Shares)
+}
+
+// default params for testing
+func defaultParams() Params {
+	return Params{
+		InflationRateChange: sdk.NewRat(13, 100),
+		InflationMax:        sdk.NewRat(20, 100),
+		InflationMin:        sdk.NewRat(7, 100),
+		GoalBonded:          sdk.NewRat(67, 100),
+		MaxValidators:       100,
+		BondDenom:           "steak",
+	}
+}
+
+// initial pool for testing
+func initialPool() Pool {
+	return Pool{
+		TotalSupply:       0,
+		BondedShares:      sdk.ZeroRat(),
+		UnbondedShares:    sdk.ZeroRat(),
+		BondedPool:        0,
+		UnbondedPool:      0,
+		InflationLastTime: 0,
+		Inflation:         sdk.NewRat(7, 100),
+	}
+}
 
 // intended to be used with require/assert:  require.True(ValEq(...))
 func ValEq(t *testing.T, exp, got Validator) (*testing.T, bool, string, Validator, Validator) {

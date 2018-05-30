@@ -49,40 +49,52 @@ LastCommit and +2/3 (see [TODO](https://github.com/cosmos/cosmos-sdk/issues/967)
 Validators are penalized for failing to be included in the LastCommit for some
 number of blocks by being automatically unbonded.
 
-The following information is stored with each validator, and is only non-zero if the validator becomes an active validator:
+The following information is stored with each validator candidate, and is only non-zero if the candidate becomes an active validator:
 
 ```go
 type ValidatorSigningInfo struct {
-	StartHeight				int64
-	SignedBlocksBitArray	BitArray
+  StartHeight           int64
+  IndexOffset           int64
+  JailedUntil           int64
+  SignedBlocksCounter   int64
+  SignedBlocksBitArray  BitArray
 }
 ```
 
 Where:
-* `StartHeight` is set to the height that the validator became an active validator (with non-zero voting power).
+* `StartHeight` is set to the height that the candidate became an active validator (with non-zero voting power).
+* `IndexOffset` is incremented each time the candidate was a bonded validator in a block (and may have signed a precommit or not).
+* `JailedUntil` is set whenever the candidate is revoked due to downtime
+* `SignedBlocksCounter` is a counter kept to avoid unnecessary array reads. `SignedBlocksBitArray.Sum() == SignedBlocksCounter` always.
 * `SignedBlocksBitArray` is a bit-array of size `SIGNED_BLOCKS_WINDOW` that records, for each of the last `SIGNED_BLOCKS_WINDOW` blocks,
-whether or not this validator was included in the LastCommit. It uses a `0` if the validator was included, and a `1` if it was not.
-Note it is initialized with all 0s. 
+whether or not this validator was included in the LastCommit. It uses a `1` if the validator was included, and a `0` if it was not. Note it is initialized with all 0s.
 
 At the beginning of each block, we update the signing info for each validator and check if they should be automatically unbonded:
 
 ```
-h = block.Height
-index = h % SIGNED_BLOCKS_WINDOW
+height := block.Height
 
 for val in block.Validators:
-	signInfo = val.SignInfo
-	if val in block.LastCommit:
-		signInfo.SignedBlocksBitArray.Set(index, 0)
-	else 
-		signInfo.SignedBlocksBitArray.Set(index, 1)
+  signInfo = val.SignInfo
+  index := signInfo.IndexOffset % SIGNED_BLOCKS_WINDOW
+  signInfo.IndexOffset++
+  previous = signInfo.SignedBlocksBitArray.Get(index)
 
-	// validator must be active for at least SIGNED_BLOCKS_WINDOW
-	// before they can be automatically unbonded for failing to be 
-	// included in 50% of the recent LastCommits
-	minHeight = signInfo.StartHeight + SIGNED_BLOCKS_WINDOW
-	minSigned = SIGNED_BLOCKS_WINDOW / 2
-	blocksSigned = signInfo.SignedBlocksBitArray.Sum() 
-	if h > minHeight AND blocksSigned < minSigned:
-		unbond the validator
+  // update counter if array has changed
+  if previous and val in block.AbsentValidators:
+    signInfo.SignedBlocksBitArray.Set(index, 0)
+    signInfo.SignedBlocksCounter--
+  else if !previous and val not in block.AbsentValidators:
+    signInfo.SignedBlocksBitArray.Set(index, 1)
+    signInfo.SignedBlocksCounter++
+  // else previous == val not in block.AbsentValidators, no change
+
+  // validator must be active for at least SIGNED_BLOCKS_WINDOW
+  // before they can be automatically unbonded for failing to be 
+  // included in 50% of the recent LastCommits
+  minHeight = signInfo.StartHeight + SIGNED_BLOCKS_WINDOW
+  minSigned = SIGNED_BLOCKS_WINDOW / 2
+  if height > minHeight AND signInfo.SignedBlocksCounter < minSigned:
+    signInfo.JailedUntil = block.Time + DOWNTIME_UNBOND_DURATION
+    slash & unbond the validator
 ```

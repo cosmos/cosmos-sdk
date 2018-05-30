@@ -203,7 +203,7 @@ unbond(tx TxUnbond):
     return 
 
 removeShares(candidate Candidate, shares rational.Rat):
-    globalPoolSharesToRemove = DelegatorShareExRate(candidate) * shares
+    globalPoolSharesToRemove = delegatorShareExRate(candidate) * shares
 
     if candidate.Status == Bonded 
 	    gs.BondedShares -= globalPoolSharesToRemove
@@ -218,7 +218,7 @@ removeShares(candidate Candidate, shares rational.Rat):
     candidate.IssuedDelegatorShares -= shares
     return returnedCoins
 
-DelegatorShareExRate(candidate Candidate):
+delegatorShareExRate(candidate Candidate):
     if candidate.IssuedDelegatorShares.IsZero() then return rational.One
     return candidate.GlobalStakeShares / candidate.IssuedDelegatorShares
 	

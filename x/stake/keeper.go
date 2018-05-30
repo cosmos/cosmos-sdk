@@ -220,7 +220,7 @@ func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) Validator 
 	oldValidator, oldFound := k.GetValidator(ctx, ownerAddr)
 
 	if validator.Revoked && oldValidator.Status() == sdk.Bonded {
-		k.unbondValidator(ctx, store, validator)
+		validator = k.unbondValidator(ctx, store, validator)
 
 		// need to also clear the cliff validator spot because the revoke has
 		// opened up a new spot which will be filled when
@@ -430,7 +430,7 @@ func (k Keeper) updateBondedValidatorsFull(ctx sdk.Context, store sdk.KVStore) {
 }
 
 // perform all the store operations for when a validator status becomes unbonded
-func (k Keeper) unbondValidator(ctx sdk.Context, store sdk.KVStore, validator Validator) {
+func (k Keeper) unbondValidator(ctx sdk.Context, store sdk.KVStore, validator Validator) Validator {
 	pool := k.GetPool(ctx)
 
 	// sanity check
@@ -452,6 +452,7 @@ func (k Keeper) unbondValidator(ctx sdk.Context, store sdk.KVStore, validator Va
 
 	// also remove from the Bonded Validators Store
 	store.Delete(GetValidatorsBondedKey(validator.PubKey))
+	return validator
 }
 
 // perform all the store operations for when a validator status becomes bonded

@@ -1,10 +1,11 @@
 package slashing
 
 import (
-	"encoding/json"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/wire"
 )
+
+var cdc = wire.NewCodec()
 
 // name to identify transaction types
 const MsgType = "slashing"
@@ -29,7 +30,7 @@ func (msg MsgUnrevoke) GetSigners() []sdk.Address { return []sdk.Address{msg.Val
 
 // get the bytes for the message signer to sign on
 func (msg MsgUnrevoke) GetSignBytes() []byte {
-	b, err := json.Marshal(msg)
+	b, err := cdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}

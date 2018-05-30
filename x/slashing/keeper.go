@@ -62,15 +62,17 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	signInfo.IndexOffset++
 
 	// Update signed block bit array & counter
+	// This counter just tracks the sum of the bit array
+	// That way we avoid needing to read/write the whole array each time
 	previous := k.getValidatorSigningBitArray(ctx, address, index)
 	if previous == signed {
-		// No need to update counter
+		// Array value at this index has not changed, no need to update counter
 	} else if previous && !signed {
-		// Signed => unsigned, decrement counter
+		// Array value has changed from signed to unsigned, decrement counter
 		k.setValidatorSigningBitArray(ctx, address, index, false)
 		signInfo.SignedBlocksCounter--
 	} else if !previous && signed {
-		// Unsigned => signed, increment counter
+		// Array value has changed from unsigned to signed, increment counter
 		k.setValidatorSigningBitArray(ctx, address, index, true)
 		signInfo.SignedBlocksCounter++
 	}

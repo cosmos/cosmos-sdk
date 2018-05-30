@@ -50,7 +50,7 @@ and ports. It should look like:
 
     [p2p]
     laddr = "tcp://0.0.0.0:46666"
-    seeds = "0.0.0.0:46656"
+    seeds = "0.0.0.0:26656"
 
 Start Nodes
 -----------
@@ -69,14 +69,14 @@ account:
 
 ::
 
-    gaia client init --chain-id=gaia-test --node=tcp://localhost:46657
+    gaia client init --chain-id=gaia-test --node=tcp://localhost:26657
     gaia client query account 5D93A6059B6592833CBC8FA3DA90EE0382198985 
 
 To see what tendermint considers the validator set is, use:
 
 ::
 
-    curl localhost:46657/validators
+    curl localhost:26657/validators
 
 and compare the information in this file: ``~/.gaia1/priv_validator.json``. The ``address`` and ``pub_key`` fields should match.
 

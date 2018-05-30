@@ -65,6 +65,10 @@ func (k Keeper) setValidator(ctx sdk.Context, validator Validator) {
 	// set main store
 	bz := k.cdc.MustMarshalBinary(validator)
 	store.Set(GetValidatorKey(validator.Owner), bz)
+}
+
+func (k Keeper) setValidatorByPubKeyIndex(ctx sdk.Context, validator Validator) {
+	store := ctx.KVStore(k.storeKey)
 	// set pointer by pubkey
 	store.Set(GetValidatorByPubKeyIndexKey(validator.PubKey), validator.Owner)
 }

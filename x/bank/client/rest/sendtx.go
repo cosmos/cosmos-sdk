@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -58,13 +57,12 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 			return
 		}
 
-		bz, err := hex.DecodeString(address)
+		to, err := sdk.GetAccAddressHex(address)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		to := sdk.Address(bz)
 
 		// build message
 		msg := client.BuildMsg(info.PubKey.Address(), to, m.Amount)

@@ -103,9 +103,9 @@ type ValidatorGovInfo struct {
 
 * `Proposals: int64 => Proposal` maps `proposalID` to the `Proposal`
   `proposalID`
-* `Options: <proposalID | voterAddress | validatorAddress> => VoteType`: maps to the vote of the `voterAddress` for `proposalID` re its delegation to `validatorAddress`.
+* `Options: <proposalID | voterAddress | Address> => VoteType`: maps to the vote of the `voterAddress` for `proposalID` re its delegation to `Address`.
    Returns 0x0 If `voterAddress` has not voted under this validator.
-* `ValidatorGovInfos: <proposalID | validatorAddress> => ValidatorGovInfo`: maps to the gov info for the `validatorAddress` and `proposalID`.
+* `ValidatorGovInfos: <proposalID | Address> => ValidatorGovInfo`: maps to the gov info for the `Address` and `proposalID`.
   Returns `nil` if proposal has not entered voting period or if `address` was not the 
   address of a validator when proposal entered voting period.
 

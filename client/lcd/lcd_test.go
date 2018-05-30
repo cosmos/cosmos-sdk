@@ -93,12 +93,14 @@ func TestKeys(t *testing.T) {
 	require.Nil(t, err)
 
 	sendAddrAcc, _ := sdk.GetAccAddressHex(sendAddr)
+	sendAddrBech32, _ := sdk.Bech32CosmosifyAcc(sendAddrAcc)
 	addrAcc, _ := sdk.GetAccAddressHex(addr)
+	addrBech32, _ := sdk.Bech32CosmosifyAcc(addrAcc)
 
-	assert.Equal(t, m[0].Name, name, "Did not serve keys name correctly")
-	assert.Equal(t, m[0].Address, sendAddrAcc, "Did not serve keys Address correctly")
-	assert.Equal(t, m[1].Name, newName, "Did not serve keys name correctly")
-	assert.Equal(t, m[1].Address, addrAcc, "Did not serve keys Address correctly")
+	assert.Equal(t, name, m[0].Name, "Did not serve keys name correctly")
+	assert.Equal(t, sendAddrBech32, m[0].Address, "Did not serve keys Address correctly")
+	assert.Equal(t, newName, m[1].Name, "Did not serve keys name correctly")
+	assert.Equal(t, addrBech32, m[1].Address, "Did not serve keys Address correctly")
 
 	// select key
 	keyEndpoint := fmt.Sprintf("/keys/%s", newName)
@@ -109,7 +111,7 @@ func TestKeys(t *testing.T) {
 	require.Nil(t, err)
 
 	assert.Equal(t, newName, m2.Name, "Did not serve keys name correctly")
-	assert.Equal(t, addrAcc, m2.Address, "Did not serve keys Address correctly")
+	assert.Equal(t, addrBech32, m2.Address, "Did not serve keys Address correctly")
 
 	// update key
 	jsonStr = []byte(fmt.Sprintf(`{"old_password":"%s", "new_password":"12345678901"}`, newPassword))
@@ -338,7 +340,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	config.Consensus.SkipTimeoutCommit = false
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	// logger = log.NewFilter(logger, log.AllowError())
+	logger = log.NewFilter(logger, log.AllowError())
 	privValidatorFile := config.PrivValidatorFile()
 	privVal := pvm.LoadOrGenFilePV(privValidatorFile)
 	db := dbm.NewMemDB()

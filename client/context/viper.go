@@ -19,6 +19,7 @@ func NewCoreContextFromViper() CoreContext {
 	if nodeURI != "" {
 		rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
 	}
+
 	chainID := viper.GetString(client.FlagChainID)
 	// if chain ID is not specified manually, read default chain ID
 	if chainID == "" {
@@ -37,6 +38,7 @@ func NewCoreContextFromViper() CoreContext {
 		Client:          rpc,
 		Decoder:         nil,
 		AccountStore:    "acc",
+		// TODO: add ProviderPath and GenesisFile
 	}
 }
 

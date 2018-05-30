@@ -17,6 +17,7 @@ type CoreContext struct {
 	Client          rpcclient.Client
 	Decoder         sdk.AccountDecoder
 	AccountStore    string
+	GenesisFile     string
 	ProviderPath    string
 }
 
@@ -72,6 +73,12 @@ func (c CoreContext) WithDecoder(decoder sdk.AccountDecoder) CoreContext {
 // WithAccountStore - return a copy of the context with an updated AccountStore
 func (c CoreContext) WithAccountStore(accountStore string) CoreContext {
 	c.AccountStore = accountStore
+	return c
+}
+
+// WithGenesisFile - return a copy of the context with an updated GenesisFile
+func (c CoreContext) WithGenesisFile(genesisFile string) CoreContext {
+	c.GenesisFile = genesisFile
 	return c
 }
 

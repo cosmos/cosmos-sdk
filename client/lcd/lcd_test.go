@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/go-crypto"
 	cryptoKeys "github.com/tendermint/go-crypto/keys"
 	tmcfg "github.com/tendermint/tendermint/config"
 	nm "github.com/tendermint/tendermint/node"
@@ -30,11 +31,13 @@ import (
 	"github.com/tendermint/tmlibs/log"
 
 	client "github.com/cosmos/cosmos-sdk/client"
+	context "github.com/cosmos/cosmos-sdk/client/context"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	bapp "github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	btypes "github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 var (
@@ -363,6 +366,20 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	}
 	genDoc.AppStateJSON = stateBytes
 
+	// store genesis file for testing query
+	cdc := wire.NewCodec()
+	crypto.RegisterAmino(cdc)
+	jsonBlob, err := cdc.MarshalJSON(genDoc)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err = ioutil.WriteFile(genesisFile, jsonBlob, 0777); err != nil {
+		return nil, nil, err
+	}
+
+	fmt.Printf("wrote %+v //// %+v\n\n\n\n\n\n\n\n\n", genesisFile, string(jsonBlob))
+
 	// LCD listen address
 	port = fmt.Sprintf("%d", 17377)                       // XXX
 	listenAddr := fmt.Sprintf("tcp://localhost:%s", port) // XXX
@@ -375,7 +392,9 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	lcd, err := startLCD(logger, listenAddr)
+
+	ctx := context.NewCoreContextFromViper().WithGenesisFile(genesisFile)
+	lcd, err := startLCD(ctx, logger, listenAddr)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -414,8 +433,8 @@ func startTM(cfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc, p
 }
 
 // start the LCD. note this blocks!
-func startLCD(logger log.Logger, listenAddr string) (net.Listener, error) {
-	handler := createHandler(cdc)
+func startLCD(ctx context.CoreContext, logger log.Logger, listenAddr string) (net.Listener, error) {
+	handler := createHandler(ctx, cdc)
 	return tmrpc.StartHTTPServer(listenAddr, handler, logger)
 }
 

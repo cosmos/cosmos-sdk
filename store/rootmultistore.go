@@ -422,7 +422,9 @@ func WrapOpDecoder(decode merkle.OpDecoder) merkle.OpDecoder {
 	return func(ro merkle.RawOp) (res merkle.Op, err error) {
 		switch ro.Type {
 		case RootMultistoreOpType:
-			res = RootMultistoreOp{}
+			var op RootMultistoreOp
+			err = json.Unmarshal(ro.Data, &op)
+			res = op
 		default:
 			return decode(ro)
 		}

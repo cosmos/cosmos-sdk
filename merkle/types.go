@@ -39,12 +39,17 @@ type OpDecoder func(RawOp) (Op, error)
 func DefaultOpDecoder(ro RawOp) (res Op, err error) {
 	switch ro.Type {
 	case IAVLExistsOpType:
-		res = IAVLExistsOp{}
+		var op IAVLExistsOp
+		err = json.Unmarshal(ro.Data, &op)
+		res = op
 	case IAVLAbsentOpType:
-		//		proof = IAVLAbsentProof{}
-		res = nil
+		var op IAVLAbsentOp
+		err = json.Unmarshal(ro.Data, &op)
+		res = op
 	case SimpleExistsOpType:
-		res = SimpleExistsOp{}
+		var op SimpleExistsOp
+		err = json.Unmarshal(ro.Data, &op)
+		res = op
 	default:
 		err = fmt.Errorf("Cannot decode RawOp typeof %s", ro.Type)
 	}

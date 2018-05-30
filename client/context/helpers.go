@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/wire"
 	abci "github.com/tendermint/abci/types"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/lite"
 	liteclient "github.com/tendermint/tendermint/lite/client"
 	"github.com/tendermint/tendermint/lite/files"
@@ -67,13 +66,7 @@ func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, er
 	source := liteclient.NewHTTPProvider(ctx.NodeURI)
 	trusted := lite.NewCacheProvider(lite.NewMemStoreProvider(), files.NewProvider(ctx.ProviderPath))
 
-	cfg, err := tcmd.ParseConfig()
-	if err != nil {
-		return
-	}
-
-	fmt.Printf("\n\n\n\n\n\n\n\n%+v\n", cfg.GenesisFile())
-	genesis, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
+	genesis, err := tmtypes.GenesisDocFromFile(ctx.GenesisFile)
 	if err != nil {
 		return
 	}
@@ -94,8 +87,10 @@ func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, er
 		Validators: valset,
 	}
 
+	fmt.Printf("\n\n\n\n\n\n\n\n\n%+v\n", genfc)
 	cert, err := lite.NewInquiringCertifier(ctx.ChainID, genfc, trusted, source)
 	if err != nil {
+		fmt.Printf("\n\n\n\n\n\n\n\n\n\n\n\ngenfc: %+v\nerr: %+v\n", genfc, err)
 		return
 	}
 
@@ -109,6 +104,7 @@ func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, er
 		return
 	}
 
+	fmt.Printf("\n\n\n\n\n\n\n\nproof: %+v\n", proof)
 	err = proof.Verify(fc.Header.AppHash, [][]byte{res}, string(key), storeName)
 	return
 }

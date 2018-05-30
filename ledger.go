@@ -21,7 +21,7 @@ func getLedger() (*ledger.Ledger, error) {
 	return device, err
 }
 
-func pubkeyLedger(device *ledger.Ledger, path DerivationPath) (pub PubKey, err error) {
+func pubkeyLedgerSecp256k1(device *ledger.Ledger, path DerivationPath) (pub PubKey, err error) {
 	key, err := device.GetPublicKeySECP256K1(path)
 	if err != nil {
 		return pub, fmt.Errorf("Error fetching public key: %v", err)
@@ -33,7 +33,7 @@ func pubkeyLedger(device *ledger.Ledger, path DerivationPath) (pub PubKey, err e
 	return p, err
 }
 
-func signLedger(device *ledger.Ledger, path DerivationPath, msg []byte) (sig Signature, err error) {
+func signLedgerSecp256k1(device *ledger.Ledger, path DerivationPath, msg []byte) (sig Signature, err error) {
 	bsig, err := device.SignSECP256K1(path, msg)
 	if err != nil {
 		return sig, err
@@ -107,12 +107,12 @@ func (pk PrivKeyLedgerSecp256k1) Sign(msg []byte) Signature {
 		panic(err)
 	}
 
-	sig, err := signLedger(dev, pk.Path, msg)
+	sig, err := signLedgerSecp256k1(dev, pk.Path, msg)
 	if err != nil {
 		panic(err)
 	}
 
-	pub, err := pubkeyLedger(dev, pk.Path)
+	pub, err := pubkeyLedgerSecp256k1(dev, pk.Path)
 	if err != nil {
 		panic(err)
 	}
@@ -154,7 +154,7 @@ func (pk PrivKeyLedgerSecp256k1) forceGetPubKey() (key PubKey, err error) {
 	if err != nil {
 		return key, errors.New(fmt.Sprintf("Cannot connect to Ledger device - error: %v", err))
 	}
-	key, err = pubkeyLedger(dev, pk.Path)
+	key, err = pubkeyLedgerSecp256k1(dev, pk.Path)
 	if err != nil {
 		return key, errors.New(fmt.Sprintf("Please open Cosmos app on the Ledger device - error: %v", err))
 	}

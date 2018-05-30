@@ -565,11 +565,6 @@ func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctype
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 
-	fmt.Println("jello")
-	fmt.Println(acc.GetAddress())
-	fmt.Println(accnum)
-	fmt.Println(sequence)
-
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{ "name":"%s", "password":"%s", "account_number":%d, "sequence":%d, "amount":[{ "denom": "%s", "amount": 1 }] }`, name, password, accnum, sequence, coinDenom))
 	res, body := request(t, port, "POST", "/accounts/"+receiveAddr+"/send", jsonStr)
@@ -592,11 +587,6 @@ func doIBCTransfer(t *testing.T, port, seed string) (resultTx ctypes.ResultBroad
 	acc := getAccount(t, sendAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
-
-	fmt.Println("jello")
-	fmt.Println(acc.GetAddress())
-	fmt.Println(accnum)
-	fmt.Println(sequence)
 
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{ "name":"%s", "password":"%s", "account_number":%d, "sequence":%d, "amount":[{ "denom": "%s", "amount": 1 }] }`, name, password, accnum, sequence, coinDenom))

@@ -285,7 +285,7 @@ func TestTxs(t *testing.T) {
 	assert.Equal(t, "[]", body)
 
 	// create TX
-	receiveAddr, resultTx := doSend(t, port, seed)
+	receiveAddr, resultTx := doSend(t, port)
 
 	tests.WaitForHeight(resultTx.Height+1, port)
 
@@ -447,7 +447,7 @@ func getAccount(t *testing.T, sendAddr string) auth.Account {
 	return acc
 }
 
-func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctypes.ResultBroadcastTxCommit) {
+func doSend(t *testing.T, port string) (receiveAddr string, resultTx ctypes.ResultBroadcastTxCommit) {
 
 	// create receive address
 	kb := client.MockKeyBase()

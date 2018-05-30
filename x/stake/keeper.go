@@ -682,8 +682,8 @@ func (k Keeper) setCliffValidator(ctx sdk.Context, validator Validator, pool Poo
 // clear the current validator and power of the validator on the cliff
 func (k Keeper) clearCliffValidator(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(ValidatorPowerCliffKey, nil)
-	store.Set(ValidatorCliffKey, nil)
+	store.Delete(ValidatorPowerCliffKey)
+	store.Delete(ValidatorCliffKey)
 }
 
 //__________________________________________________________________________

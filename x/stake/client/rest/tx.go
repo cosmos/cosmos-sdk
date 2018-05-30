@@ -24,8 +24,6 @@ func registerTxRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, k
 }
 
 type editDelegationsBody struct {
-	// fees is not used currently
-	// Fees             sdk.Coin  `json="fees"`
 	LocalAccountName string              `json:"name"`
 	Password         string              `json:"password"`
 	ChainID          string              `json:"chain_id"`

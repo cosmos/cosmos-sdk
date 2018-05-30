@@ -62,15 +62,15 @@ func GetCmdQueryValidators(storeName string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			// parse out the candidates
-			var candidates []stake.Validator
+			// parse out the validators
+			var validators []stake.Validator
 			for _, KV := range resKVs {
 				var validator stake.Validator
 				cdc.MustUnmarshalBinary(KV.Value, &validator)
-				candidates = append(candidates, validator)
+				validators = append(validators, validator)
 			}
 
-			output, err := wire.MarshalJSONIndent(cdc, candidates)
+			output, err := wire.MarshalJSONIndent(cdc, validators)
 			if err != nil {
 				return err
 			}
@@ -127,7 +127,7 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-// get the command to query all the candidates bonded to a delegation
+// get the command to query all the validators bonded to a delegation
 func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegations [delegator-addr]",
@@ -146,7 +146,7 @@ func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			// parse out the candidates
+			// parse out the validators
 			var delegations []stake.Delegation
 			for _, KV := range resKVs {
 				var delegation stake.Delegation

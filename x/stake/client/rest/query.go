@@ -27,6 +27,7 @@ func registerQueryRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec
 // http request handler to query delegator bonding status
 func bondingStatusHandlerFn(storeName string, cdc *wire.Codec, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		// read parameters
 		vars := mux.Vars(r)
 		delegator := vars["delegator"]
@@ -98,7 +99,8 @@ func validatorsHandlerFn(storeName string, cdc *wire.Codec, ctx context.CoreCont
 			return
 		}
 
-		validators := make(stake.Validators, 0, len(res))
+		// parse out the validators
+		var validators []stake.Validator
 		for _, kv := range res {
 			var validator stake.Validator
 			err = cdc.UnmarshalBinary(kv.Value, &validator)

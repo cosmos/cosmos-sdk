@@ -454,7 +454,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	lcd, err := startLCD(logger, listenAddr)
+	lcd, err := startLCD(logger, listenAddr, cdc)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -493,7 +493,7 @@ func startTM(cfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc, p
 }
 
 // start the LCD. note this blocks!
-func startLCD(logger log.Logger, listenAddr string) (net.Listener, error) {
+func startLCD(logger log.Logger, listenAddr string, cdc *wire.Codec) (net.Listener, error) {
 	handler := createHandler(cdc)
 	return tmrpc.StartHTTPServer(listenAddr, handler, logger)
 }

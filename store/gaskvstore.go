@@ -76,16 +76,6 @@ func (gi *gasKVStore) ReverseIterator(start, end []byte) sdk.Iterator {
 }
 
 // Implements KVStore.
-func (gi *gasKVStore) SubspaceIterator(prefix []byte) sdk.Iterator {
-	return gi.iterator(prefix, sdk.PrefixEndBytes(prefix), true)
-}
-
-// Implements KVStore.
-func (gi *gasKVStore) ReverseSubspaceIterator(prefix []byte) sdk.Iterator {
-	return gi.iterator(prefix, sdk.PrefixEndBytes(prefix), false)
-}
-
-// Implements KVStore.
 func (gi *gasKVStore) CacheWrap() sdk.CacheWrap {
 	panic("you cannot CacheWrap a GasKVStore")
 }

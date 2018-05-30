@@ -2,6 +2,7 @@ package stake
 
 import (
 	"bytes"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -31,3 +32,23 @@ var _ sdk.Delegation = Delegation{}
 func (b Delegation) GetDelegator() sdk.Address { return b.DelegatorAddr }
 func (b Delegation) GetValidator() sdk.Address { return b.ValidatorAddr }
 func (b Delegation) GetBondShares() sdk.Rat    { return b.Shares }
+
+//Human Friendly pretty printer
+func (b Delegation) HumanReadableString() (string, error) {
+	bechAcc, err := sdk.Bech32CosmosifyAcc(b.DelegatorAddr)
+	if err != nil {
+		return "", err
+	}
+	bechVal, err := sdk.Bech32CosmosifyAcc(b.ValidatorAddr)
+	if err != nil {
+		return "", err
+	}
+	resp := "Delegation \n"
+	resp += fmt.Sprintf("Delegator: %s\n", bechAcc)
+	resp += fmt.Sprintf("Validator: %s\n", bechVal)
+	resp += fmt.Sprintf("Shares: %s", b.Shares.String())
+	resp += fmt.Sprintf("Height: %d", b.Height)
+
+	return resp, nil
+
+}

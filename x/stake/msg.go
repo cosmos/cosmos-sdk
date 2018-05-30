@@ -47,8 +47,10 @@ func NewMsgDeclareCandidacy(validatorAddr sdk.Address, pubkey crypto.PubKey,
 }
 
 //nolint
-func (msg MsgDeclareCandidacy) Type() string              { return MsgType } //TODO update "stake/declarecandidacy"
-func (msg MsgDeclareCandidacy) GetSigners() []sdk.Address { return []sdk.Address{msg.ValidatorAddr} }
+func (msg MsgDeclareCandidacy) Type() string { return MsgType } //TODO update "stake/declarecandidacy"
+func (msg MsgDeclareCandidacy) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.ValidatorAddr}
+}
 
 // get the bytes for the message signer to sign on
 func (msg MsgDeclareCandidacy) GetSignBytes() []byte {
@@ -89,8 +91,10 @@ func NewMsgEditCandidacy(validatorAddr sdk.Address, description Description) Msg
 }
 
 //nolint
-func (msg MsgEditCandidacy) Type() string              { return MsgType } //TODO update "stake/msgeditcandidacy"
-func (msg MsgEditCandidacy) GetSigners() []sdk.Address { return []sdk.Address{msg.ValidatorAddr} }
+func (msg MsgEditCandidacy) Type() string { return MsgType } //TODO update "stake/msgeditcandidacy"
+func (msg MsgEditCandidacy) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.ValidatorAddr}
+}
 
 // get the bytes for the message signer to sign on
 func (msg MsgEditCandidacy) GetSignBytes() []byte {
@@ -131,8 +135,10 @@ func NewMsgDelegate(delegatorAddr, validatorAddr sdk.Address, bond sdk.Coin) Msg
 }
 
 //nolint
-func (msg MsgDelegate) Type() string              { return MsgType } //TODO update "stake/msgeditcandidacy"
-func (msg MsgDelegate) GetSigners() []sdk.Address { return []sdk.Address{msg.DelegatorAddr} }
+func (msg MsgDelegate) Type() string { return MsgType } //TODO update "stake/msgeditcandidacy"
+func (msg MsgDelegate) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.DelegatorAddr}
+}
 
 // get the bytes for the message signer to sign on
 func (msg MsgDelegate) GetSignBytes() []byte {

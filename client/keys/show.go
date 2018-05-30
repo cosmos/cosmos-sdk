@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
 	keys "github.com/tendermint/go-crypto/keys"
 
@@ -50,7 +51,7 @@ func GetKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keyOutput := KeyOutput{Name: info.Name, Address: info.PubKey.Address().String()}
+	keyOutput := KeyOutput{Name: info.Name, Address: sdk.Address(info.PubKey.Address())}
 	output, err := json.MarshalIndent(keyOutput, "", "  ")
 	if err != nil {
 		w.WriteHeader(500)

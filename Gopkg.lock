@@ -154,7 +154,6 @@
   revision = "8e7a99b3e716f36d3b080a9a70f9eb45abe4edcc"
 
 [[projects]]
-  branch = "master"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
   revision = "3e2146609cdb97894c064d59e9d00accd8c2b1dd"
@@ -178,6 +177,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f3cfb54414cb9d59bab79226c7778673e7ac5b7a464baf9b2ea76c1f2563631e"
+  inputs-digest = "365c3bca75ced49eb0ebcdc5c98fd47b534850684fcc94c16d1bc6a671116395"
   solver-name = "gps-cdcl"
   solver-version = 1

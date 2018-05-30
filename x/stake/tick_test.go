@@ -1,7 +1,10 @@
 package stake
 
 import (
+<<<<<<< HEAD
 	"fmt"
+=======
+>>>>>>> af8e5b35c0923b2eaebfbaf6dd22436e930e5d9f
 	"math/rand"
 	"strconv"
 	"testing"
@@ -169,56 +172,11 @@ func TestHourlyRateOfChange(t *testing.T) {
 	)
 	checkCandidateSetup(t, pool, initialTotalTokens, initialBondedTokens, initialUnbondedTokens)
 
-	// ~11.4 years to go from 7%, up to 20%, back down to 7%
-	for hr := 0; hr < 100000; hr++ {
+	// process the provisions a year
+	for hr := 0; hr < 8766; hr++ {
 		pool := keeper.GetPool(ctx)
-
-		previousInflation := pool.Inflation
-		expInflation, expProvisions, pool := checkAndProcessProvisions(t, keeper, pool, ctx, hr)
+		_, expProvisions, _ := checkAndProcessProvisions(t, keeper, pool, ctx, hr)
 		cumulativeExpProvs = cumulativeExpProvs + expProvisions
-
-		updatedInflation := pool.Inflation
-		inflationChange := updatedInflation.Sub(previousInflation)
-		// fmt.Println("Inflation change: ", inflationChange)
-		// pbr2 := pool.bondedRatio()
-
-		//Rate of change positive and increasing, while we are between 7% and 20% inflation
-		if pool.bondedRatio().LT(sdk.NewRat(67, 100)) && expInflation.LT(sdk.NewRat(20, 100)) {
-			// fmt.Println("ROCROC 1: ", inflationChange)
-			assert.Equal(t, true, inflationChange.GT(sdk.ZeroRat()), strconv.Itoa(hr))
-		}
-
-		//Rate of change should be 0 while it holds at 20% a year, until we reach 67%
-		if pool.bondedRatio().LT(sdk.NewRat(67, 100)) && expInflation.Equal(sdk.NewRat(20, 100)) {
-			// fmt.Println("ROCROC 2: ", inflationChange)
-
-			if previousInflation.Equal(sdk.NewRat(20, 100)) {
-				assert.Equal(t, true, inflationChange.IsZero(), strconv.Itoa(hr))
-				//This covers the one off case where we first hit 20%, but we still needed a positive ROC to get there
-			} else {
-				assert.Equal(t, true, inflationChange.GT(sdk.ZeroRat()), strconv.Itoa(hr))
-			}
-		}
-
-		//Rate of change should be negative while the bond is above 67, and should stay negative until we reach inflation of 7%
-		if pool.bondedRatio().GT(sdk.NewRat(67, 100)) && expInflation.LT(sdk.NewRat(20, 100)) && expInflation.GT(sdk.NewRat(7, 100)) {
-			// fmt.Println("ROCROC 3: ", inflationChange)
-			assert.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), strconv.Itoa(hr))
-		}
-
-		//Rate of change should be 0 while we hold at 7%.
-		if pool.bondedRatio().GT(sdk.NewRat(67, 100)) && expInflation.Equal(sdk.NewRat(7, 100)) {
-
-			if previousInflation.Equal(sdk.NewRat(7, 100)) {
-				assert.Equal(t, true, inflationChange.IsZero(), strconv.Itoa(hr))
-				//This covers the one off case where we first hit 7%, but we still needed a negative ROC to get there
-			} else {
-				assert.Equal(t, true, inflationChange.LT(sdk.ZeroRat()), strconv.Itoa(hr))
-
-			}
-			// fmt.Println("ROCROC 4: ", inflationChange)
-
-		}
 	}
 
 	// Final check that the pool equals initial values + provisions and adjustments we recorded

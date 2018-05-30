@@ -61,7 +61,7 @@ func (msg IBCTransferMsg) GetSigners() []sdk.Address { return []sdk.Address{msg.
 // get the sign bytes for ibc transfer message
 func (msg IBCTransferMsg) GetSignBytes() []byte {
 	cdc := wire.NewCodec()
-	bz, err := cdc.MarshalBinary(msg)
+	bz, err := cdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -95,7 +95,7 @@ func (msg IBCReceiveMsg) GetSigners() []sdk.Address { return []sdk.Address{msg.R
 // get the sign bytes for ibc receive message
 func (msg IBCReceiveMsg) GetSignBytes() []byte {
 	cdc := wire.NewCodec()
-	bz, err := cdc.MarshalBinary(msg)
+	bz, err := cdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}

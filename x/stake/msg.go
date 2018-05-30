@@ -54,7 +54,11 @@ func (msg MsgDeclareCandidacy) GetSigners() []sdk.Address {
 
 // get the bytes for the message signer to sign on
 func (msg MsgDeclareCandidacy) GetSignBytes() []byte {
-	return msgCdc.MustMarshalBinary(msg)
+	bin, err := msgCdc.MarshalJSON(msg)
+	if err != nil {
+		panic(err)
+	}
+	return bin
 }
 
 // quick validity check

@@ -159,7 +159,7 @@ func (kb dbKeybase) Import(name string, armor string) (err error) {
 	return nil
 }
 
-// ExportPubKey imports ASCII-armored public keys.
+// ImportPubKey imports ASCII-armored public keys.
 // Store a new Info object holding a public key only, i.e. it will
 // not be possible to sign with it as it lacks the secret key.
 func (kb dbKeybase) ImportPubKey(name string, armor string) (err error) {

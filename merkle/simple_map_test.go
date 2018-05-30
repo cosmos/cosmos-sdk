@@ -11,9 +11,7 @@ import (
 type strHasher string
 
 func (str strHasher) Hash() []byte {
-	h := tmhash.New()
-	h.Write([]byte(str))
-	return h.Sum(nil)
+	return tmhash.Sum([]byte(str))
 }
 
 func TestSimpleMap(t *testing.T) {

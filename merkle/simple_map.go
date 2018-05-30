@@ -1,8 +1,8 @@
 package merkle
 
 import (
-	cmn "github.com/tendermint/tmlibs/common"
 	"github.com/tendermint/go-crypto/tmhash"
+	cmn "github.com/tendermint/tmlibs/common"
 )
 
 // Merkle tree from a map.
@@ -65,21 +65,20 @@ func (sm *simpleMap) KVPairs() cmn.KVPairs {
 //----------------------------------------
 
 // A local extension to KVPair that can be hashed.
-// XXX: key and value do not need to already be hashed -
-// the kvpair ("abc", "def") would not give the same result
-// as ("ab", "cdef") as we're using length-prefixing.
+// Key and value are length prefixed and concatenated,
+// then hashed.
 type kvPair cmn.KVPair
 
 func (kv kvPair) Hash() []byte {
 	hasher := tmhash.New()
 	err := encodeByteSlice(hasher, kv.Key)
 	if err != nil {
-			panic(err)
-		}
+		panic(err)
+	}
 	err = encodeByteSlice(hasher, kv.Value)
 	if err != nil {
-			panic(err)
-		}
+		panic(err)
+	}
 	return hasher.Sum(nil)
 }
 

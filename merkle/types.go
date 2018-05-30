@@ -1,8 +1,9 @@
 package merkle
 
 import (
-	"encoding/binary"
 	"io"
+
+	amino "github.com/tendermint/go-amino"
 )
 
 // Tree is a Merkle tree interface.
@@ -30,20 +31,8 @@ type Hasher interface {
 }
 
 //-----------------------------------------------------------------------
-// NOTE: these are duplicated from go-amino so we dont need go-amino as a dep
 
+// Uvarint length prefixed byteslice
 func encodeByteSlice(w io.Writer, bz []byte) (err error) {
-	err = encodeUvarint(w, uint64(len(bz)))
-	if err != nil {
-		return
-	}
-	_, err = w.Write(bz)
-	return
-}
-
-func encodeUvarint(w io.Writer, i uint64) (err error) {
-	var buf [10]byte
-	n := binary.PutUvarint(buf[:], i)
-	_, err = w.Write(buf[0:n])
-	return
+	return amino.EncodeByteSlice(w, bz)
 }

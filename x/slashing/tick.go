@@ -1,7 +1,6 @@
 package slashing
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 
@@ -21,8 +20,8 @@ func NewBeginBlocker(sk Keeper) sdk.BeginBlocker {
 		for _, evidence := range req.ByzantineValidators {
 			var pk crypto.PubKey
 			sk.cdc.MustUnmarshalBinary(evidence.PubKey, &pk)
-			switch {
-			case bytes.Compare(evidence.Type, []byte("doubleSign")) == 0:
+			switch evidence.Type {
+			case abci.EvidenceType_DOUBLE_SIGN:
 				sk.handleDoubleSign(ctx, evidence.Height, evidence.Time, pk)
 			default:
 				ctx.Logger().With("module", "x/slashing").Error(fmt.Sprintf("Ignored unknown evidence type: %s", string(evidence.Type)))

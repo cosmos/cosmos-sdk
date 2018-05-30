@@ -18,7 +18,9 @@ type Keybase interface {
 	Delete(name, passphrase string) error
 
 	Import(name string, armor string) (err error)
+	ImportPubKey(name string, armor string) (err error)
 	Export(name string) (armor string, err error)
+	ExportPubKey(name string) (armor string, err error)
 }
 
 // Info is the public information about a key

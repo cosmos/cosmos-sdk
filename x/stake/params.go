@@ -23,7 +23,8 @@ func (p Params) equal(p2 Params) bool {
 	return bytes.Equal(bz1, bz2)
 }
 
-func defaultParams() Params {
+// default params
+func DefaultParams() Params {
 	return Params{
 		InflationRateChange: sdk.NewRat(13, 100),
 		InflationMax:        sdk.NewRat(20, 100),

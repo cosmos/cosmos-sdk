@@ -61,7 +61,7 @@ func TestGetInflation(t *testing.T) {
 
 func TestProcessProvisions(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
-	params := defaultParams()
+	params := DefaultParams()
 	params.MaxValidators = 2
 	keeper.setParams(ctx, params)
 	pool := keeper.GetPool(ctx)

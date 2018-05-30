@@ -586,7 +586,7 @@ func TestGetTendermintUpdatesInserted(t *testing.T) {
 
 func TestGetTendermintUpdatesNotValidatorCliff(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
-	params := defaultParams()
+	params := DefaultParams()
 	params.MaxValidators = 2
 	keeper.setParams(ctx, params)
 
@@ -721,7 +721,7 @@ func TestBond(t *testing.T) {
 
 func TestParams(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
-	expParams := defaultParams()
+	expParams := DefaultParams()
 
 	//check that the empty keeper loads the default
 	resParams := keeper.GetParams(ctx)
@@ -736,7 +736,7 @@ func TestParams(t *testing.T) {
 
 func TestPool(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
-	expPool := initialPool()
+	expPool := InitialPool()
 
 	//check that the empty keeper loads the default
 	resPool := keeper.GetPool(ctx)

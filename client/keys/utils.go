@@ -1,19 +1,20 @@
 package keys
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/spf13/viper"
 
+	crypto "github.com/tendermint/go-crypto"
 	keys "github.com/tendermint/go-crypto/keys"
 	"github.com/tendermint/tmlibs/cli"
 	dbm "github.com/tendermint/tmlibs/db"
 
 	"github.com/cosmos/cosmos-sdk/client"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // KeyDBName is the directory under root where we store the keys
@@ -47,16 +48,16 @@ func SetKeyBase(kb keys.Keybase) {
 
 // used for outputting keys.Info over REST
 type KeyOutput struct {
-	Name    string `json:"name"`
-	Address string `json:"address"`
-	PubKey  string `json:"pub_key"`
+	Name    string        `json:"name"`
+	Address sdk.Address   `json:"address"`
+	PubKey  crypto.PubKey `json:"pub_key"`
 }
 
 func NewKeyOutput(info keys.Info) KeyOutput {
 	return KeyOutput{
 		Name:    info.Name,
-		Address: info.PubKey.Address().String(),
-		PubKey:  strings.ToUpper(hex.EncodeToString(info.PubKey.Bytes())),
+		Address: sdk.Address(info.PubKey.Address().Bytes()),
+		PubKey:  info.PubKey,
 	}
 }
 
@@ -72,8 +73,8 @@ func printInfo(info keys.Info) {
 	ko := NewKeyOutput(info)
 	switch viper.Get(cli.OutputFlag) {
 	case "text":
-		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
-		fmt.Printf("%s\t%s\t%s\n", ko.Name, ko.Address, ko.PubKey)
+		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
+		printKeyOutput(ko)
 	case "json":
 		out, err := json.MarshalIndent(ko, "", "\t")
 		if err != nil {
@@ -87,9 +88,9 @@ func printInfos(infos []keys.Info) {
 	kos := NewKeyOutputs(infos)
 	switch viper.Get(cli.OutputFlag) {
 	case "text":
-		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\tPUBKEY:\n")
+		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
 		for _, ko := range kos {
-			fmt.Printf("%s\t%s\t%s\n", ko.Name, ko.Address, ko.PubKey)
+			printKeyOutput(ko)
 		}
 	case "json":
 		out, err := json.MarshalIndent(kos, "", "\t")
@@ -98,4 +99,16 @@ func printInfos(infos []keys.Info) {
 		}
 		fmt.Println(string(out))
 	}
+}
+
+func printKeyOutput(ko KeyOutput) {
+	bechAccount, err := sdk.Bech32CosmosifyAcc(ko.Address)
+	if err != nil {
+		panic(err)
+	}
+	bechPubKey, err := sdk.Bech32CosmosifyAccPub(ko.PubKey)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%s\t%s\t%s\n", ko.Name, bechAccount, bechPubKey)
 }

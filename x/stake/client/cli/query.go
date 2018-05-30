@@ -1,13 +1,11 @@
 package cli
 
 import (
-	"encoding/hex"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tmlibs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +21,7 @@ func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			addr, err := sdk.GetAddress(args[0])
+			addr, err := sdk.GetAccAddressBech32Cosmos(args[0])
 			if err != nil {
 				return err
 			}
@@ -33,13 +31,25 @@ func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			// parse out the validator
 			validator := new(stake.Validator)
 			cdc.MustUnmarshalBinary(res, validator)
-			output, err := wire.MarshalJSONIndent(cdc, validator)
-			fmt.Println(string(output))
 
+			switch viper.Get(cli.OutputFlag) {
+			case "text":
+				human, err := validator.HumanReadableString()
+				if err != nil {
+					return err
+				}
+				fmt.Println(human)
+
+			case "json":
+				// parse out the validator
+				output, err := wire.MarshalJSONIndent(cdc, validator)
+				if err != nil {
+					return err
+				}
+				fmt.Println(string(output))
+			}
 			// TODO output with proofs / machine parseable etc.
 			return nil
 		},
@@ -70,11 +80,24 @@ func GetCmdQueryValidators(storeName string, cdc *wire.Codec) *cobra.Command {
 				validators = append(validators, validator)
 			}
 
-			output, err := wire.MarshalJSONIndent(cdc, validators)
-			if err != nil {
-				return err
+
+			switch viper.Get(cli.OutputFlag) {
+			case "text":
+				for _, validator := range validators {
+					resp, err := validator.HumanReadableString()
+					if err != nil {
+						return err
+					}
+					fmt.Println(resp)
+				}
+			case "json":
+				output, err := wire.MarshalJSONIndent(cdc, validators)
+				if err != nil {
+					return err
+				}
+				fmt.Println(string(output))
+				return nil
 			}
-			fmt.Println(string(output))
 			return nil
 
 			// TODO output with proofs / machine parseable etc.
@@ -90,18 +113,17 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "Query a delegations bond based on address and validator address",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			addr, err := sdk.GetAddress(viper.GetString(FlagAddressValidator))
+			addr, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
 
-			bz, err := hex.DecodeString(viper.GetString(FlagAddressDelegator))
+			delAddr, err := sdk.GetValAddressHex(viper.GetString(FlagAddressDelegator))
 			if err != nil {
 				return err
 			}
-			delegation := crypto.Address(bz)
 
-			key := stake.GetDelegationKey(delegation, addr, cdc)
+			key := stake.GetDelegationKey(delAddr, addr, cdc)
 			ctx := context.NewCoreContextFromViper()
 			res, err := ctx.Query(key, storeName)
 			if err != nil {
@@ -110,15 +132,24 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 
 			// parse out the bond
 			bond := new(stake.Delegation)
-			cdc.MustUnmarshalBinary(res, bond)
-			output, err := wire.MarshalJSONIndent(cdc, bond)
-			if err != nil {
-				return err
-			}
-			fmt.Println(string(output))
-			return nil
 
-			// TODO output with proofs / machine parseable etc.
+			switch viper.Get(cli.OutputFlag) {
+			case "text":
+				resp, err := bond.HumanReadableString()
+				if err != nil {
+					return err
+				}
+				fmt.Println(resp)
+			case "json":
+				cdc.MustUnmarshalBinary(res, bond)
+				output, err := wire.MarshalJSONIndent(cdc, bond)
+				if err != nil {
+					return err
+				}
+				fmt.Println(string(output))
+				return nil
+			}
+			return nil
 		},
 	}
 
@@ -135,7 +166,7 @@ func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			delegatorAddr, err := sdk.GetAddress(args[0])
+			delegatorAddr, err := sdk.GetAccAddressBech32Cosmos(args[0])
 			if err != nil {
 				return err
 			}

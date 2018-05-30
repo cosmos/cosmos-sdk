@@ -199,14 +199,17 @@ func (ctx CoreContext) EnsureSignBuildBroadcast(name string, msg sdk.Msg, cdc *w
 	var txBytes []byte
 	if ctx.UseLedger {
 		txBytes, err = ctx.SignAndBuildLedger(msg, cdc)
+		if err != nil {
+			return nil, fmt.Errorf("Error signing with Ledger: %v", err)
+		}
 	} else {
 		passphrase, err := ctx.GetPassphraseFromStdin(name)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Error fetching passphrase: %v", err)
 		}
 		txBytes, err = ctx.SignAndBuild(name, passphrase, msg, cdc)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Error signing transaction: %v", err)
 		}
 	}
 

@@ -13,7 +13,7 @@ func pubkeyLedgerEd25519(device *ledger.Ledger, path DerivationPath) (pub PubKey
 	if err != nil {
 		return pub, fmt.Errorf("Error fetching public key: %v", err)
 	}
-	var p PubKeyEd25519
+	var p PubKeyLedgerEd25519
 	copy(p[:], key[0:32])
 	return p, err
 }

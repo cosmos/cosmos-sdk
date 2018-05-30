@@ -220,8 +220,12 @@ func (k Keeper) updateValidator(ctx sdk.Context, validator Validator) Validator 
 	oldValidator, oldFound := k.GetValidator(ctx, ownerAddr)
 
 	if validator.Revoked && oldValidator.Status() == sdk.Bonded {
-		validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
-		k.setPool(ctx, pool)
+		k.unbondValidator(ctx, store, validator)
+
+		// need to also clear the cliff validator spot because the revoke has
+		// opened up a new spot which will be filled when
+		// updateValidatorsBonded is called
+		k.clearCliffValidator(ctx)
 	}
 
 	powerIncreasing := false
@@ -672,6 +676,13 @@ func (k Keeper) setCliffValidator(ctx sdk.Context, validator Validator, pool Poo
 	bz := GetValidatorsByPowerKey(validator, pool)
 	store.Set(ValidatorPowerCliffKey, bz)
 	store.Set(ValidatorCliffKey, validator.Owner)
+}
+
+// clear the current validator and power of the validator on the cliff
+func (k Keeper) clearCliffValidator(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(ValidatorPowerCliffKey, nil)
+	store.Set(ValidatorCliffKey, nil)
 }
 
 //__________________________________________________________________________

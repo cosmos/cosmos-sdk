@@ -11,13 +11,13 @@
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "1432d294a5b055c297457c25434efbf13384cc46"
+  revision = "86fed781132ac890ee03e906e4ecd5d6fa180c64"
 
 [[projects]]
   branch = "master"
   name = "github.com/cosmos/bech32cosmos"
   packages = ["go"]
-  revision = "efca97cd8c0852c44d96dfdcc70565c306eddff0"
+  revision = "c12e4b6ed52acc1d35fea49acec35f980914dc95"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -256,7 +256,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "e6d6b529196422703d54ff5c40e79809ec2020b3"
+  revision = "5d6fca44a948d2be89a9702de7717f0168403d3d"
 
 [[projects]]
   name = "github.com/tendermint/abci"
@@ -267,8 +267,8 @@
     "server",
     "types"
   ]
-  revision = "78a8905690ef54f9d57e3b2b0ee7ad3a04ef3f1f"
-  version = "v0.10.3"
+  revision = "f9dce537281ffba5d1e047e6729429f7e5fb90c9"
+  version = "v0.11.0-rc0"
 
 [[projects]]
   branch = "master"
@@ -299,16 +299,13 @@
   version = "v0.6.2"
 
 [[projects]]
-  name = "github.com/tendermint/go-wire"
-  packages = ["."]
-  revision = "fa721242b042ecd4c6ed1a934ee740db4f74e45c"
-  version = "v0.7.3"
-
-[[projects]]
   name = "github.com/tendermint/iavl"
-  packages = ["."]
-  revision = "fd37a0fa3a7454423233bc3d5ea828f38e0af787"
-  version = "v0.7.0"
+  packages = [
+    ".",
+    "sha256truncated"
+  ]
+  revision = "c9206995e8f948e99927f5084a88a7e94ca256da"
+  version = "v0.8.0-rc0"
 
 [[projects]]
   name = "github.com/tendermint/tendermint"
@@ -319,6 +316,9 @@
     "consensus",
     "consensus/types",
     "evidence",
+    "libs/events",
+    "libs/pubsub",
+    "libs/pubsub/query",
     "lite",
     "lite/client",
     "lite/errors",
@@ -347,8 +347,8 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "018e096748bafe1d2d1e69b909e4158f3b26f6b2"
-  version = "v0.19.5-rc1"
+  revision = "73de99ecab464208f6ea3a96525f4e4b78425e61"
+  version = "v0.20.0-rc0"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -361,12 +361,10 @@
     "db",
     "flowrate",
     "log",
-    "merkle",
-    "pubsub",
-    "pubsub/query"
+    "merkle"
   ]
-  revision = "cc5f287c4798ffe88c04d02df219ecb6932080fd"
-  version = "v0.8.3-rc0"
+  revision = "d970af87248a4e162590300dbb74e102183a417d"
+  version = "v0.8.3"
 
 [[projects]]
   branch = "master"
@@ -382,7 +380,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "1a580b3eff7814fc9b40602fd35256c63b50f491"
+  revision = "ab813273cd59e1333f7ae7bff5d027d4aadf528c"
 
 [[projects]]
   branch = "master"
@@ -396,13 +394,13 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "57065200b4b034a1c8ad54ff77069408c2218ae6"
+  revision = "1e491301e022f8f977054da4c2d852decd59571f"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "7c87d13f8e835d2fb3a70a2912c811ed0c1d241b"
+  revision = "c11f84a56e43e20a78cee75a7c034031ecf57d1f"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -463,6 +461,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f0c6224dc5f30c1a7dea716d619665831ea0932b0eb9afc6ac897dbc459134fa"
+  inputs-digest = "a6a5d886519fa9ca97a23715faa852ee14ecb5337e03641d19ea3d3d1c392fee"
   solver-name = "gps-cdcl"
   solver-version = 1

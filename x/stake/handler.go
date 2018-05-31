@@ -55,6 +55,7 @@ func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keepe
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
 	k.setValidator(ctx, validator)
+	k.setValidatorByPubKeyIndex(ctx, validator)
 	tags := sdk.NewTags(
 		"action", []byte("declareCandidacy"),
 		"validator", msg.ValidatorAddr.Bytes(),

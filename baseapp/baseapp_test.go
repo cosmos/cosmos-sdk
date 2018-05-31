@@ -183,7 +183,7 @@ func TestInitChainer(t *testing.T) {
 
 	// set initChainer and try again - should see the value
 	app.SetInitChainer(initChainer)
-	app.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}")}) // must have valid JSON genesis file, even if empty
+	app.InitChain(abci.RequestInitChain{GenesisBytes: []byte("{}")}) // must have valid JSON genesis file, even if empty
 	app.Commit()
 	res = app.Query(query)
 	assert.Equal(t, value, res.Value)

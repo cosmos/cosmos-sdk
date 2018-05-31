@@ -1,5 +1,8 @@
 # Install
 
+The fastest and easiest way to install the Cosmos SDK binaries
+is to run [this script](https://github.com/cosmos/cosmos-sdk/blob/develop/scripts/install.sh) on a fresh Ubuntu instance. Read the comments / instructions carefully (i.e., reset your terminal after running the script).
+
 Cosmos SDK can be installed to
 `$GOPATH/src/github.com/cosmos/cosmos-sdk` like a normal Go program:
 
@@ -14,6 +17,7 @@ the correct way to install is:
 
 ```
 cd $GOPATH/src/github.com/cosmos/cosmos-sdk
+make get_tools
 make get_vendor_deps
 make install
 make install_examples
@@ -40,3 +44,16 @@ then with:
 gaiacli version
 ```
 you should see the same version (or a later one for both).
+
+## Update
+
+Get latest code (you can also `git fetch` only the version desired),
+ensure the dependencies are up to date, then recompile.
+
+```
+cd $GOPATH/src/github.com/cosmos/cosmos-sdk
+git fetch -a origin
+git checkout VERSION
+make get_vendor_deps
+make install
+```

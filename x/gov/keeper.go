@@ -138,7 +138,7 @@ func (keeper Keeper) GetActiveProcedure() *Procedure { // TODO: move to param st
 		ProposalTypes:     ProposalTypes,
 		Threshold:         sdk.NewRat(1, 2),
 		Veto:              sdk.NewRat(1, 3),
-		FastPass:          sdk.NewRat(2, 3),
+		FastPassThreshold: sdk.NewRat(2, 3),
 		MaxDepositPeriod:  200,
 		GovernancePenalty: sdk.NewRat(1, 100),
 	}

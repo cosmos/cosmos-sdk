@@ -18,7 +18,7 @@ func NewBeginBlocker(keeper Keeper) sdk.BeginBlocker {
 		// Don't want to do urgent for now
 		passV := types.NewRat(proposal.YesVotes, proposal.TotalVotingPower)
 		//Urgent proposal accepted
-		if passV.GT(proposal.Procedure.FastPass) || passV.Equal(proposal.Procedure.FastPass) {
+		if passV.GT(proposal.Procedure.FastPassThreshold) || passV.Equal(proposal.Procedure.FastPassThreshold) {
 
 			ctx.Logger().Info("execute Proposal", "Proposal", proposal.ProposalID)
 

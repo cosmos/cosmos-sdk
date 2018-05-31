@@ -11,7 +11,7 @@
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "bc0944904505aab55e089371a892be2f87883161"
+  revision = "86fed781132ac890ee03e906e4ecd5d6fa180c64"
 
 [[projects]]
   branch = "master"
@@ -267,7 +267,7 @@
     "server",
     "types"
   ]
-  revision = "c67bb414c7ee617f18d81a50f8a837318bb6d7dc"
+  revision = "f9dce537281ffba5d1e047e6729429f7e5fb90c9"
 
 [[projects]]
   branch = "master"
@@ -347,7 +347,7 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "3bf9a7dc503b8fd39bda3d64f2d039253afa6f8c"
+  revision = "9cc39a21ddbe8efd005aa5a001f54055a0d14fca"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -393,7 +393,7 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "dfa909b99c79129e1100513e5cd36307665e5723"
+  revision = "1e491301e022f8f977054da4c2d852decd59571f"
 
 [[projects]]
   branch = "master"
@@ -460,6 +460,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8f9c58893f04daef93d91512e658560cf076a766fc100c8bc4f718d7abf1ea9c"
+  inputs-digest = "da12d07a753d17b8d9b834bb6b4b61617978c3c515fb38aa5dad10a66a8e78e8"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -110,18 +110,18 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	cvStr += fmt.Sprintf(" --name=%v", "bar")
 	cvStr += fmt.Sprintf(" --address-validator=%v", barCech)
 	cvStr += fmt.Sprintf(" --pubkey=%v", barCeshPubKey)
-	cvStr += fmt.Sprintf(" --amount=%v", "3steak")
+	cvStr += fmt.Sprintf(" --amount=%v", "1steak")
 	cvStr += fmt.Sprintf(" --moniker=%v", "bar-vally")
 
 	executeWrite(t, cvStr, pass)
-	time.Sleep(time.Second * 5) // waiting for some blocks to pass
+	time.Sleep(time.Second * 3) // waiting for some blocks to pass
 
 	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
-	require.Equal(t, int64(7), barAcc.GetCoins().AmountOf("steak"), "%v", barAcc)
+	require.Equal(t, int64(9), barAcc.GetCoins().AmountOf("steak"), "%v", barAcc)
 
-	validator := executeGetValidator(t, fmt.Sprintf("gaiacli validator %v %v", barCech, flags))
-	assert.Equal(t, validator.Owner.String(), barCech)
-	assert.Equal(t, int64(3), validator.PoolShares)
+	validator := executeGetValidator(t, fmt.Sprintf("gaiacli validator --output=json %v %v", barCech, flags))
+	assert.Equal(t, validator.Owner, barAddr)
+	assert.Equal(t, "1/1", validator.PoolShares.Amount.String())
 
 	// TODO timeout issues if not connected to the internet
 	// unbond a single share
@@ -193,6 +193,6 @@ func executeGetValidator(t *testing.T, cmdStr string) stake.Validator {
 	var validator stake.Validator
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &validator)
-	require.NoError(t, err, "out %v, err %v", out, err)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return validator
 }

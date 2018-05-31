@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 func NewBeginBlocker(sk Keeper) sdk.BeginBlocker {
@@ -20,8 +21,8 @@ func NewBeginBlocker(sk Keeper) sdk.BeginBlocker {
 		for _, evidence := range req.ByzantineValidators {
 			var pk crypto.PubKey
 			sk.cdc.MustUnmarshalBinary(evidence.PubKey, &pk)
-			switch evidence.Type {
-			case abci.EvidenceType_DOUBLE_SIGN:
+			switch string(evidence.Type) {
+			case tmtypes.DUPLICATE_VOTE:
 				sk.handleDoubleSign(ctx, evidence.Height, evidence.Time, pk)
 			default:
 				ctx.Logger().With("module", "x/slashing").Error(fmt.Sprintf("Ignored unknown evidence type: %s", string(evidence.Type)))

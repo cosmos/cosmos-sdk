@@ -1,10 +1,7 @@
 package stake
 
 import (
-	"encoding/json"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	crypto "github.com/tendermint/go-crypto"
 )
 
@@ -19,12 +16,6 @@ const StakingToken = "steak"
 
 //Verify interface at compile time
 var _, _, _, _ sdk.Msg = &MsgDeclareCandidacy{}, &MsgEditCandidacy{}, &MsgDelegate{}, &MsgUnbond{}
-
-var msgCdc = wire.NewCodec()
-
-func init() {
-	wire.RegisterCrypto(msgCdc)
-}
 
 //______________________________________________________________________
 
@@ -94,7 +85,7 @@ func (msg MsgEditCandidacy) GetSigners() []sdk.Address { return []sdk.Address{ms
 
 // get the bytes for the message signer to sign on
 func (msg MsgEditCandidacy) GetSignBytes() []byte {
-	b, err := json.Marshal(msg)
+	b, err := msgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -136,7 +127,7 @@ func (msg MsgDelegate) GetSigners() []sdk.Address { return []sdk.Address{msg.Del
 
 // get the bytes for the message signer to sign on
 func (msg MsgDelegate) GetSignBytes() []byte {
-	b, err := json.Marshal(msg)
+	b, err := msgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -183,7 +174,7 @@ func (msg MsgUnbond) GetSigners() []sdk.Address { return []sdk.Address{msg.Deleg
 
 // get the bytes for the message signer to sign on
 func (msg MsgUnbond) GetSignBytes() []byte {
-	b, err := json.Marshal(msg)
+	b, err := msgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}

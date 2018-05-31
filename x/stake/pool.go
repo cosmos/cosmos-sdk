@@ -25,8 +25,8 @@ type Pool struct {
 }
 
 func (p Pool) equal(p2 Pool) bool {
-	bz1 := cdcEmpty.MustMarshalBinary(&p)
-	bz2 := cdcEmpty.MustMarshalBinary(&p2)
+	bz1 := msgCdc.MustMarshalBinary(&p)
+	bz2 := msgCdc.MustMarshalBinary(&p2)
 	return bytes.Equal(bz1, bz2)
 }
 

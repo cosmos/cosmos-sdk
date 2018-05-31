@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/client"
 )
 
@@ -30,6 +31,12 @@ type sendBody struct {
 	Sequence         int64     `json:"sequence"`
 }
 
+var msgCdc = wire.NewCodec()
+
+func init() {
+	bank.RegisterWire(msgCdc)
+}
+
 // SendRequestHandlerFn - http request handler to send coins to a address
 func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +51,7 @@ func SendRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreCont
 			w.Write([]byte(err.Error()))
 			return
 		}
-		err = json.Unmarshal(body, &m)
+		err = msgCdc.UnmarshalJSON(body, &m)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))

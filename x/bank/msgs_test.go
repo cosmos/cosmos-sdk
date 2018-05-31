@@ -187,9 +187,8 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 	}
 	res := msg.GetSignBytes()
 
-	cdc := getCodec()
 	unmarshaledMsg := &MsgSend{}
-	cdc.UnmarshalJSON(res, unmarshaledMsg)
+	msgCdc.UnmarshalJSON(res, unmarshaledMsg)
 	assert.Equal(t, &msg, unmarshaledMsg)
 
 	// TODO bad results
@@ -263,9 +262,8 @@ func TestMsgIssueGetSignBytes(t *testing.T) {
 	}
 	res := msg.GetSignBytes()
 
-	cdc := getCodec()
 	unmarshaledMsg := &MsgIssue{}
-	cdc.UnmarshalJSON(res, unmarshaledMsg)
+	msgCdc.UnmarshalJSON(res, unmarshaledMsg)
 	assert.Equal(t, &msg, unmarshaledMsg)
 
 	// TODO bad results

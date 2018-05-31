@@ -10,8 +10,8 @@ func RegisterWire(cdc *wire.Codec) {
 	cdc.RegisterConcrete(MsgIssue{}, "cosmos-sdk/Issue", nil)
 }
 
-func getCodec() *wire.Codec {
-	cdc := wire.NewCodec()
-	RegisterWire(cdc)
-	return cdc
+var msgCdc = wire.NewCodec()
+
+func init() {
+	RegisterWire(msgCdc)
 }

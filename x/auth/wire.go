@@ -10,3 +10,10 @@ func RegisterWire(cdc *wire.Codec) {
 	cdc.RegisterConcrete(&BaseAccount{}, "auth/Account", nil)
 	cdc.RegisterConcrete(MsgChangeKey{}, "auth/ChangeKey", nil)
 }
+
+var msgCdc = wire.NewCodec()
+
+func init() {
+	RegisterWire(msgCdc)
+	wire.RegisterCrypto(msgCdc)
+}

@@ -76,7 +76,6 @@ func printInfo(info keys.Info) {
 		printKeyOutput(ko)
 	case "json":
 		out, err := MarshalJSON(ko)
-		//out, err := json.MarshalIndent(kos, "", "\t")
 		if err != nil {
 			panic(err)
 		}
@@ -94,7 +93,6 @@ func printInfos(infos []keys.Info) {
 		}
 	case "json":
 		out, err := MarshalJSON(kos)
-		//out, err := json.MarshalIndent(kos, "", "\t")
 		if err != nil {
 			panic(err)
 		}

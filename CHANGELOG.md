@@ -8,6 +8,7 @@ FEATURES
 
 IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'
+* auth module uses go-wire codec instead of 'encoding/json'
 
 FIXES
 

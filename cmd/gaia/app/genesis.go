@@ -65,7 +65,7 @@ func GaiaAppInit() server.AppInit {
 	fsAppGenState := pflag.NewFlagSet("", pflag.ContinueOnError)
 
 	fsAppGenTx := pflag.NewFlagSet("", pflag.ContinueOnError)
-	fsAppGenTx.String(flagName, "", "validator moniker, if left blank, do not add validator")
+	fsAppGenTx.String(flagName, "", "validator moniker, required")
 	fsAppGenTx.String(flagClientHome, DefaultCLIHome,
 		"home directory for the client, used for key generation")
 	fsAppGenTx.Bool(flagOWK, false, "overwrite the accounts created")
@@ -91,7 +91,11 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
 	clientRoot := viper.GetString(flagClientHome)
 	overwrite := viper.GetBool(flagOWK)
 	name := viper.GetString(flagName)
-	var addr sdk.Address
+	if name == "" {
+		return nil, nil, tmtypes.GenesisValidator{}, errors.New("Must specify --name (validator moniker)")
+	}
+
+  var addr sdk.Address
 	var secret string
 	addr, secret, err = server.GenerateSaveCoinKey(clientRoot, name, "1234567890", overwrite)
 	if err != nil {

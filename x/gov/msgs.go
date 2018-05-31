@@ -11,7 +11,7 @@ import (
 const MsgType = "gov"
 
 //-----------------------------------------------------------
-// MsgSubmitProposal
+// MsgSubmitProposal.
 
 type MsgSubmitProposal struct {
 	Title          string      //  Title of the proposal

@@ -2,7 +2,6 @@ package crypto
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	ledger "github.com/zondax/ledger-goclient"
@@ -11,13 +10,14 @@ import (
 func pubkeyLedgerSecp256k1(device *ledger.Ledger, path DerivationPath) (pub PubKey, err error) {
 	key, err := device.GetPublicKeySECP256K1(path)
 	if err != nil {
-		return pub, fmt.Errorf("Error fetching public key: %v", err)
+		return nil, fmt.Errorf("error fetching public key: %v", err)
 	}
 	var p PubKeySecp256k1
 	// Reserialize in the 33-byte compressed format
 	cmp, err := secp256k1.ParsePubKey(key[:], secp256k1.S256())
 	copy(p[:], cmp.SerializeCompressed())
-	return p, err
+	pub = p
+	return
 }
 
 func signLedgerSecp256k1(device *ledger.Ledger, path DerivationPath, msg []byte) (sig Signature, err error) {
@@ -26,7 +26,7 @@ func signLedgerSecp256k1(device *ledger.Ledger, path DerivationPath, msg []byte)
 		return sig, err
 	}
 	sig = SignatureSecp256k1FromBytes(bsig)
-	return sig, nil
+	return
 }
 
 // PrivKeyLedgerSecp256k1 implements PrivKey, calling the ledger nano
@@ -62,7 +62,7 @@ func (pk PrivKeyLedgerSecp256k1) ValidateKey() error {
 	}
 	// verify this matches cached address
 	if !pub.Equals(pk.CachedPubKey) {
-		return errors.New("Cached key does not match retrieved key")
+		return fmt.Errorf("cached key does not match retrieved key")
 	}
 	return nil
 }
@@ -81,8 +81,6 @@ func (pk PrivKeyLedgerSecp256k1) Bytes() []byte {
 }
 
 // Sign calls the ledger and stores the PubKey for future use
-//
-// XXX/TODO: panics if there is an error communicating with the ledger.
 //
 // Communication is checked on NewPrivKeyLedger and PrivKeyFromBytes,
 // returning an error, so this should only trigger if the privkey is held
@@ -108,13 +106,12 @@ func (pk PrivKeyLedgerSecp256k1) Sign(msg []byte) Signature {
 	if pk.CachedPubKey == nil {
 		pk.CachedPubKey = pub
 	} else if !pk.CachedPubKey.Equals(pub) {
-		panic("Stored key does not match signing key")
+		panic("stored key does not match signing key")
 	}
 	return sig
 }
 
 // PubKey returns the stored PubKey
-// TODO: query the ledger if not there, once it is not volatile
 func (pk PrivKeyLedgerSecp256k1) PubKey() PubKey {
 	key, err := pk.getPubKey()
 	if err != nil {
@@ -139,11 +136,11 @@ func (pk PrivKeyLedgerSecp256k1) getPubKey() (key PubKey, err error) {
 func (pk PrivKeyLedgerSecp256k1) forceGetPubKey() (key PubKey, err error) {
 	dev, err := getLedger()
 	if err != nil {
-		return key, errors.New(fmt.Sprintf("Cannot connect to Ledger device - error: %v", err))
+		return key, fmt.Errorf("cannot connect to Ledger device - error: %v", err)
 	}
 	key, err = pubkeyLedgerSecp256k1(dev, pk.Path)
 	if err != nil {
-		return key, errors.New(fmt.Sprintf("Please open Cosmos app on the Ledger device - error: %v", err))
+		return key, fmt.Errorf("please open Cosmos app on the Ledger device - error: %v", err)
 	}
 	return key, err
 }

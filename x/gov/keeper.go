@@ -11,6 +11,7 @@ import (
 var (
 	NewProposalIDKey = []byte{0x00} //
 	ProposalQueueKey = []byte{0x01} //
+	DepositQueueKey  = []byte{0x02} //
 	ProposalTypes    = []string{"TextProposal"}
 )
 
@@ -22,7 +23,7 @@ type Keeper struct {
 	sm stake.Keeper
 
 	// The (unexposed) keys used to access the stores from the Context.
-	proposalStoreKey sdk.StoreKey
+	storeKey sdk.StoreKey
 
 	// The wire codec for binary encoding/decoding.
 	cdc *wire.Codec
@@ -32,10 +33,10 @@ type Keeper struct {
 func NewKeeper(key sdk.StoreKey, ck bank.Keeper, sk stake.Keeper) Keeper {
 	cdc := wire.NewCodec()
 	return Keeper{
-		proposalStoreKey: key,
-		ck:               ck,
-		cdc:              cdc,
-		sm:               sk,
+		storeKey: key,
+		ck:       ck,
+		cdc:      cdc,
+		sm:       sk,
 	}
 }
 
@@ -44,8 +45,22 @@ func (keeper Keeper) WireCodec() *wire.Codec {
 	return keeper.cdc
 }
 
+// Implements sdk.AccountMapper.
+func (keeper Keeper) SetProposal(ctx sdk.Context, proposal Proposal) {
+	store := ctx.KVStore(keeper.storeKey)
+
+	bz, err := keeper.cdc.MarshalBinary(proposal)
+	if err != nil {
+		panic(err)
+	}
+
+	key, _ := keeper.cdc.MarshalBinary(proposal.ProposalID)
+
+	store.Set(key, bz)
+}
+
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) *Proposal {
-	store := ctx.KVStore(keeper.proposalStoreKey)
+	store := ctx.KVStore(keeper.storeKey)
 	key, _ := keeper.cdc.MarshalBinary(proposalID)
 	bz := store.Get(key)
 	if bz == nil {
@@ -61,22 +76,8 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) *Proposal {
 	return proposal
 }
 
-// Implements sdk.AccountMapper.
-func (keeper Keeper) SetProposal(ctx sdk.Context, proposal Proposal) {
-	store := ctx.KVStore(keeper.proposalStoreKey)
-
-	bz, err := keeper.cdc.MarshalBinary(proposal)
-	if err != nil {
-		panic(err)
-	}
-
-	key, _ := keeper.cdc.MarshalBinary(proposal.ProposalID)
-
-	store.Set(key, bz)
-}
-
 func (keeper Keeper) getNewProposalID(ctx sdk.Context) int64 {
-	store := ctx.KVStore(keeper.proposalStoreKey)
+	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(NewProposalIDKey)
 
 	proposalID := new(int64)
@@ -99,60 +100,35 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) int64 {
 	return *proposalID
 }
 
-func (keeper Keeper) getProposalQueue(ctx sdk.Context) ProposalQueue {
-	store := ctx.KVStore(keeper.proposalStoreKey)
-	bz := store.Get(ProposalQueueKey)
-	if bz == nil {
-		return nil
-	}
-
-	proposalQueue := &ProposalQueue{}
-	err := keeper.cdc.UnmarshalBinary(bz, proposalQueue) // TODO: switch to UnmarshalBinaryBare when new go-amino gets added
-	if err != nil {
-		panic(err)
-	}
-
-	return *proposalQueue
+func (keeper Keeper) getProposalQueue(ctx sdk.Context) *Queue{
+	store := ctx.KVStore(keeper.storeKey)
+	queue := GetQueue(keeper,store,ProposalQueueKey)
+	return queue
 }
 
-func (keeper Keeper) setProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
-	store := ctx.KVStore(keeper.proposalStoreKey)
-
-	bz, err := keeper.cdc.MarshalBinary(proposalQueue) // TODO: switch to MarshalBinaryBare when new go-amino gets added
-	if err != nil {
-		panic(err)
-	}
-
-	store.Set(ProposalQueueKey, bz)
+func (keeper Keeper) getDepositQueue(ctx sdk.Context) *Queue{
+	store := ctx.KVStore(keeper.storeKey)
+	queue := GetQueue(keeper,store, DepositQueueKey)
+	return queue
 }
 
-func (keeper Keeper) ProposalQueuePeek(ctx sdk.Context) *Proposal {
-	proposalQueue := keeper.getProposalQueue(ctx)
-	if len(proposalQueue) == 0 {
-		return nil
+func (keeper Keeper) popExpiredProposal(ctx sdk.Context) (list []*Proposal){
+	depositQueue := keeper.getDepositQueue(ctx)
+	for _,proposalID := range depositQueue.value {
+		proposal := keeper.GetProposal(ctx,proposalID)
+		if proposal.isDepositPeriodOver(ctx.BlockHeight()){
+			list = append(list,proposal)
+		}else {
+			break
+		}
 	}
-	return keeper.GetProposal(ctx, proposalQueue[0])
-}
 
-func (keeper Keeper) ProposalQueuePop(ctx sdk.Context) *Proposal {
-	proposalQueue := keeper.getProposalQueue(ctx)
-	if len(proposalQueue) == 0 {
-		return nil
+	for _,proposal := range list{
+		if !depositQueue.Remove(proposal.ProposalID) {
+			panic("should not happen")
+		}
 	}
-	frontElement, proposalQueue := proposalQueue[0], proposalQueue[1:]
-	keeper.setProposalQueue(ctx, proposalQueue)
-	return keeper.GetProposal(ctx, frontElement)
-}
-
-func (keeper Keeper) ProposalQueuePush(ctx sdk.Context, proposal Proposal) {
-	store := ctx.KVStore(keeper.proposalStoreKey)
-
-	proposalQueue := append(keeper.getProposalQueue(ctx), proposal.ProposalID)
-	bz, err := keeper.cdc.MarshalBinary(proposalQueue)
-	if err != nil {
-		panic(err)
-	}
-	store.Set(ProposalQueueKey, bz)
+	return list
 }
 
 func (keeper Keeper) GetActiveProcedure() *Procedure { // TODO: move to param store and allow for updating of this
@@ -188,5 +164,6 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
 		proposal.ValidatorGovInfos = append(proposal.ValidatorGovInfos, validatorGovInfo)
 	}
 
-	keeper.ProposalQueuePush(ctx, *proposal)
+	keeper.getDepositQueue(ctx).Remove(proposal.ProposalID)
+	keeper.getProposalQueue(ctx).Push(proposal.ProposalID)
 }

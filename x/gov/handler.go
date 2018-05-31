@@ -66,6 +66,8 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		AbstainVotes:     0,
 	}
 
+	keeper.getDepositQueue(ctx).Push(proposal.ProposalID)
+
 	if proposal.TotalDeposit.IsGTE(proposal.Procedure.MinDeposit) {
 		keeper.activateVotingPeriod(ctx, &proposal)
 	}
@@ -85,7 +87,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 		return err.Result()
 	}
 
-	proposal := keeper.GetProposal(ctx, msg.ProposalID)
+	proposal := keeper.GetProposal(ctx,msg.ProposalID)
 
 	if proposal == nil {
 		return ErrUnknownProposal(msg.ProposalID).Result()
@@ -95,8 +97,8 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 		return ErrAlreadyActiveProposal(msg.ProposalID).Result()
 	}
 
-	if proposal.isExpired(ctx.BlockHeight()) {
-		return ErrProposalIsOver(msg.ProposalID).Result()
+	if  proposal.isDepositPeriodOver(ctx.BlockHeight()) {
+		return ErrDepositPeriodOver(proposal.ProposalID).Result()
 	}
 
 	if ctx.IsCheckTx() {
@@ -123,7 +125,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 // Handle SendMsg.
 func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 
-	proposal := keeper.GetProposal(ctx, msg.ProposalID)
+	proposal := keeper.GetProposal(ctx,msg.ProposalID)
 	if proposal == nil {
 		return ErrUnknownProposal(msg.ProposalID).Result()
 	}
@@ -132,13 +134,14 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		return ErrInactiveProposal(msg.ProposalID).Result()
 	}
 
-	curProposal := keeper.ProposalQueuePeek(ctx)
+	curProposal := keeper.getProposalQueue(ctx).Peek()
 	if curProposal == nil || proposal.ProposalID != curProposal.ProposalID {
 		return ErrInactiveProposal(msg.ProposalID).Result()//TODO
 	}
 
-	if proposal.isExpired(ctx.BlockHeight()) {
-		return ErrProposalIsOver(msg.ProposalID).Result()
+	err := proposal.isExpired(ctx.BlockHeight())
+	if  err != nil {
+		return err.Result()
 	}
 
 	validatorGovInfo := proposal.getValidatorGovInfo(msg.Voter)

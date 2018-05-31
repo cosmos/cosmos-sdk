@@ -73,8 +73,21 @@ func (proposal Proposal) isActive() bool {
 	return proposal.VotingStartBlock >= 0
 }
 
-func (proposal Proposal) isExpired(height int64) bool {
+func (proposal Proposal) isVotingPeriodOver(height int64) bool {
 	return height > proposal.VotingStartBlock + proposal.Procedure.VotingPeriod
+}
+
+func (proposal Proposal) isDepositPeriodOver(height int64) bool {
+	return height > proposal.SubmitBlock + proposal.Procedure.MaxDepositPeriod
+}
+
+func (proposal Proposal) isExpired(height int64) sdk.Error {
+	if height > proposal.SubmitBlock + proposal.Procedure.MaxDepositPeriod {
+		return ErrDepositPeriodOver(proposal.ProposalID)
+	} else if height > proposal.VotingStartBlock + proposal.Procedure.VotingPeriod {
+		return ErrVotingPeriodOver(proposal.ProposalID)
+	}
+	return nil
 }
 
 func (proposal *Proposal) updateTally(option string, amount int64) {
@@ -118,16 +131,9 @@ type Deposit struct {
 }
 
 type ValidatorGovInfo struct {
-	ProposalID      int64       `json:"proposal_iD"`		//  Id of the Proposal this validator
-	ValidatorAddr   sdk.Address `json:"validator_addr"`		//  Address of the validator
-	InitVotingPower int64       `json:"init_voting_power"`	//  Voting power of validator when proposal enters voting period
-	Minus           int64       `json:"minus"`				//  Minus of validator, used to compute validator's voting power
-	LastVoteWeight  int64       `json:"last_vote_weight"`	//  Weight of the last vote by validator at time of casting, -1 if hasn't voted yet
+	ProposalID      int64       `json:"proposal_iD"`       //  Id of the Proposal this validator
+	ValidatorAddr   sdk.Address `json:"validator_addr"`    //  Address of the validator
+	InitVotingPower int64       `json:"init_voting_power"` //  Voting power of validator when proposal enters voting period
+	Minus           int64       `json:"minus"`             //  Minus of validator, used to compute validator's voting power
+	LastVoteWeight  int64       `json:"last_vote_weight"`  //  Weight of the last vote by validator at time of casting, -1 if hasn't voted yet
 }
-
-type Delegation struct {
-	Amount    int64
-	Validator sdk.Address
-}
-
-type ProposalQueue []int64

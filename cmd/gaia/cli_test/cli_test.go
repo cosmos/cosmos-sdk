@@ -105,7 +105,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	//valAddr := sdk.Address((valPrivkey.PubKey().Address()))
 	//bechVal, err := sdk.Bech32CosmosifyVal(valAddr)
 
-	// declare candidacy
+	// create validator
 	cvStr := fmt.Sprintf("gaiacli create-validator %v", flags)
 	cvStr += fmt.Sprintf(" --name=%v", "bar")
 	cvStr += fmt.Sprintf(" --validator-address=%v", barCech)

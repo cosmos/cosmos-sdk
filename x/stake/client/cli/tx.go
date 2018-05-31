@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-// create declare candidacy command
+// create create validator command
 func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
@@ -47,7 +47,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 				Website:  viper.GetString(FlagWebsite),
 				Details:  viper.GetString(FlagDetails),
 			}
-			msg := stake.NewMsgDeclareCandidacy(validatorAddr, pk, amount, description)
+			msg := stake.NewMsgCreateValidator(validatorAddr, pk, amount, description)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
@@ -67,7 +67,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-// create edit candidacy command
+// create edit validator command
 func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
@@ -84,7 +84,7 @@ func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 				Website:  viper.GetString(FlagWebsite),
 				Details:  viper.GetString(FlagDetails),
 			}
-			msg := stake.NewMsgEditCandidacy(validatorAddr, description)
+			msg := stake.NewMsgEditValidator(validatorAddr, description)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
@@ -104,7 +104,7 @@ func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-// create edit candidacy command
+// create edit validator command
 func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate",
@@ -142,7 +142,7 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-// create edit candidacy command
+// create edit validator command
 func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbond",

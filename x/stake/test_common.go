@@ -68,8 +68,8 @@ func makeTestCodec() *wire.Codec {
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(bank.MsgSend{}, "test/stake/Send", nil)
 	cdc.RegisterConcrete(bank.MsgIssue{}, "test/stake/Issue", nil)
-	cdc.RegisterConcrete(MsgDeclareCandidacy{}, "test/stake/DeclareCandidacy", nil)
-	cdc.RegisterConcrete(MsgEditCandidacy{}, "test/stake/EditCandidacy", nil)
+	cdc.RegisterConcrete(MsgCreateValidator{}, "test/stake/CreateValidator", nil)
+	cdc.RegisterConcrete(MsgEditValidator{}, "test/stake/EditValidator", nil)
 	cdc.RegisterConcrete(MsgUnbond{}, "test/stake/Unbond", nil)
 
 	// Register AppAccount

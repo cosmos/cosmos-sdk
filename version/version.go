@@ -7,9 +7,9 @@ package version
 
 const Maj = "0"
 const Min = "17"
-const Fix = "3"
+const Fix = "4"
 
-const Version = "0.17.3"
+const Version = "0.17.4"
 
 // GitCommit set by build flags
 var GitCommit = ""

@@ -11,6 +11,8 @@ IMPROVEMENTS
 * auth module uses go-wire codec instead of 'encoding/json'
 
 FIXES
+* [cli] fixed cli-bash tests
+* [ci] added cli-bash tests
 
 ## 0.18.1
 

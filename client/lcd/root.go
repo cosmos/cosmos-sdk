@@ -22,6 +22,7 @@ import (
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	ibc "github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
+	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 )
 
 const (
@@ -83,5 +84,6 @@ func createHandler(cdc *wire.Codec) http.Handler {
 	auth.RegisterRoutes(ctx, r, cdc, "acc")
 	bank.RegisterRoutes(ctx, r, cdc, kb)
 	ibc.RegisterRoutes(ctx, r, cdc, kb)
+	stake.RegisterRoutes(ctx, r, cdc, kb)
 	return r
 }

@@ -17,7 +17,7 @@
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "bc0944904505aab55e089371a892be2f87883161"
+  revision = "86fed781132ac890ee03e906e4ecd5d6fa180c64"
 
 [[projects]]
   branch = "master"
@@ -273,8 +273,8 @@
     "server",
     "types"
   ]
-  revision = "78a8905690ef54f9d57e3b2b0ee7ad3a04ef3f1f"
-  version = "v0.10.3"
+  revision = "f9dce537281ffba5d1e047e6729429f7e5fb90c9"
+  version = "v0.11.0-rc0"
 
 [[projects]]
   branch = "master"
@@ -321,6 +321,9 @@
     "consensus",
     "consensus/types",
     "evidence",
+    "libs/events",
+    "libs/pubsub",
+    "libs/pubsub/query",
     "lite",
     "lite/client",
     "lite/errors",
@@ -349,8 +352,8 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "846ca5ce56b0bb6cb2d4edc47dca1482aa251e58"
-  version = "v0.19.6"
+  revision = "73de99ecab464208f6ea3a96525f4e4b78425e61"
+  version = "v0.20.0-rc0"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -363,9 +366,7 @@
     "db",
     "flowrate",
     "log",
-    "merkle",
-    "pubsub",
-    "pubsub/query"
+    "merkle"
   ]
   revision = "d970af87248a4e162590300dbb74e102183a417d"
   version = "v0.8.3"
@@ -390,7 +391,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "ab813273cd59e1333f7ae7bff5d027d4aadf528c"
+  revision = "5ba7f63082460102a45837dbd1827e10f9479ac0"
 
 [[projects]]
   branch = "master"
@@ -404,7 +405,7 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "75944861c7512f64725d687546cfbc757626151f"
+  revision = "1e491301e022f8f977054da4c2d852decd59571f"
 
 [[projects]]
   branch = "master"
@@ -471,6 +472,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "15d3a681fd57cb1c07240b22b899632186965ca15de72d0ef25fd0a9865419e8"
+  inputs-digest = "83d9efe2e1cf6dec3845a0d3fe17fc1d4817f0610d70a307ee3d810205445f54"
   solver-name = "gps-cdcl"
   solver-version = 1

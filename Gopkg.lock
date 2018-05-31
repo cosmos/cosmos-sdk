@@ -3,15 +3,21 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/brejski/hid"
+  packages = ["."]
+  revision = "06112dcfcc50a7e0e4fd06e17f9791e788fdaafc"
+
+[[projects]]
+  branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "2be2f12b358dc57d70b8f501b00be450192efbc3"
+  revision = "86fed781132ac890ee03e906e4ecd5d6fa180c64"
 
 [[projects]]
   branch = "master"
   name = "github.com/btcsuite/btcutil"
   packages = ["base58"]
-  revision = "501929d3d046174c3d39f0ea54ece471aa17238c"
+  revision = "d4cc87b860166d00d6b5b9e0d3b3d71d6088d4d4"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -55,7 +61,7 @@
   branch = "master"
   name = "github.com/golang/snappy"
   packages = ["."]
-  revision = "553a641470496b2327abcac10b36396bd98e45c9"
+  revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
 
 [[projects]]
   branch = "master"
@@ -113,7 +119,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "714f901b98fdb3aa954b4193d8cbd64a28d80cad"
+  revision = "5d6fca44a948d2be89a9702de7717f0168403d3d"
 
 [[projects]]
   branch = "master"
@@ -128,8 +134,8 @@
 [[projects]]
   name = "github.com/tendermint/go-amino"
   packages = ["."]
-  revision = "42246108ff925a457fb709475070a03dfd3e2b5c"
-  version = "0.9.6"
+  revision = "3c22a7a539411f89a96738fcfa14c1027e24e5ec"
+  version = "0.9.10"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -138,14 +144,19 @@
     "db",
     "log"
   ]
-  revision = "2e24b64fc121dcdf1cabceab8dc2f7257675483c"
-  version = "v0.8.1"
+  revision = "d970af87248a4e162590300dbb74e102183a417d"
+  version = "v0.8.3"
 
 [[projects]]
   branch = "master"
   name = "github.com/tyler-smith/go-bip39"
   packages = ["."]
   revision = "8e7a99b3e716f36d3b080a9a70f9eb45abe4edcc"
+
+[[projects]]
+  name = "github.com/zondax/ledger-goclient"
+  packages = ["."]
+  revision = "3e2146609cdb97894c064d59e9d00accd8c2b1dd"
 
 [[projects]]
   branch = "master"
@@ -161,11 +172,11 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "b2aa35443fbc700ab74c586ae79b81c171851023"
+  revision = "5ba7f63082460102a45837dbd1827e10f9479ac0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f9ccfa2cadfcbfb43bf729b871a0ad2f8d4f4acb118cd859e6faf9b24842b840"
+  inputs-digest = "365c3bca75ced49eb0ebcdc5c98fd47b534850684fcc94c16d1bc6a671116395"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -29,19 +29,20 @@ func DefaultGenesisState() GenesisState {
 
 // InitGenesis - store genesis parameters
 func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
+	store := ctx.KVStore(k.storeKey)
 	k.setPool(ctx, data.Pool)
 	k.setNewParams(ctx, data.Params)
 	for _, validator := range data.Validators {
-		// Staking assumes bonded validators are already stored, need to force update
-		validator.PoolShares.Status = sdk.Unbonded
-		k.setValidator(ctx, validator)
-		k.setValidatorByPubKeyIndex(ctx, validator)
 		k.updateValidator(ctx, validator)
+		k.setValidatorByPubKeyIndex(ctx, validator)
+		// manually set validator to bonded if necessary
+		if validator.Status() == sdk.Bonded {
+			store.Set(GetValidatorsBondedKey(validator.PubKey), validator.Owner)
+		}
 	}
 	for _, bond := range data.Bonds {
 		k.setDelegation(ctx, bond)
 	}
-	store := ctx.KVStore(k.storeKey)
 	k.updateBondedValidatorsFull(ctx, store)
 }
 

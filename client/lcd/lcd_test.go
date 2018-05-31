@@ -2,6 +2,7 @@ package lcd
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -92,13 +93,11 @@ func TestKeys(t *testing.T) {
 	err = cdc.UnmarshalJSON([]byte(body), &m)
 	require.Nil(t, err)
 
-	sendAddrAcc, _ := sdk.GetAccAddressHex(sendAddr)
-	sendAddrBech32, _ := sdk.Bech32CosmosifyAcc(sendAddrAcc)
 	addrAcc, _ := sdk.GetAccAddressHex(addr)
 	addrBech32, _ := sdk.Bech32CosmosifyAcc(addrAcc)
 
 	assert.Equal(t, name, m[0].Name, "Did not serve keys name correctly")
-	assert.Equal(t, sendAddrBech32, m[0].Address, "Did not serve keys Address correctly")
+	assert.Equal(t, sendAddr, m[0].Address, "Did not serve keys Address correctly")
 	assert.Equal(t, newName, m[1].Name, "Did not serve keys name correctly")
 	assert.Equal(t, addrBech32, m[1].Address, "Did not serve keys Address correctly")
 
@@ -220,9 +219,11 @@ func TestValidators(t *testing.T) {
 }
 
 func TestCoinSend(t *testing.T) {
+	bz, _ := hex.DecodeString("8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6")
+	someFakeAddr, _ := sdk.Bech32CosmosifyAcc(bz)
 
 	// query empty
-	res, body := request(t, port, "GET", "/accounts/8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6", nil)
+	res, body := request(t, port, "GET", "/accounts/"+someFakeAddr, nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, sendAddr)
@@ -333,7 +334,8 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	}
 
 	pubKey := info.PubKey
-	sendAddr = pubKey.Address().String() // XXX global
+	sendAddrHex, _ := sdk.GetAccAddressHex(pubKey.Address().String())
+	sendAddr, _ = sdk.Bech32CosmosifyAcc(sendAddrHex) // XXX global
 
 	config := GetConfig()
 	config.Consensus.TimeoutCommit = 1000
@@ -458,7 +460,7 @@ func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctype
 	kb := client.MockKeyBase()
 	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
 	require.Nil(t, err)
-	receiveAddr = receiveInfo.PubKey.Address().String()
+	receiveAddr, _ = sdk.Bech32CosmosifyAcc(receiveInfo.PubKey.Address())
 
 	acc := getAccount(t, sendAddr)
 	sequence := acc.GetSequence()
@@ -475,12 +477,11 @@ func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctype
 }
 
 func doIBCTransfer(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {
-
 	// create receive address
 	kb := client.MockKeyBase()
 	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
 	require.Nil(t, err)
-	receiveAddr := receiveInfo.PubKey.Address().String()
+	receiveAddr, _ := sdk.Bech32CosmosifyAcc(receiveInfo.PubKey.Address())
 
 	// get the account to get the sequence
 	acc := getAccount(t, sendAddr)

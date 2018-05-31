@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// execution process
 type Process struct {
 	ExecPath     string
 	Args         []string
@@ -94,16 +95,16 @@ func StartProcess(dir string, name string, args []string, outFile, errFile io.Wr
 	return proc, nil
 }
 
+// stop the process
 func (proc *Process) Stop(kill bool) error {
 	if kill {
 		// fmt.Printf("Killing process %v\n", proc.Cmd.Process)
 		return proc.Cmd.Process.Kill()
-	} else {
-		// fmt.Printf("Stopping process %v\n", proc.Cmd.Process)
-		return proc.Cmd.Process.Signal(os.Interrupt)
 	}
+	return proc.Cmd.Process.Signal(os.Interrupt)
 }
 
+// wait for the process
 func (proc *Process) Wait() {
 	<-proc.WaitCh
 }

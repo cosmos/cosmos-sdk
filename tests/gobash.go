@@ -5,7 +5,6 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -34,7 +33,6 @@ func ExecuteT(t *testing.T, command string) (out string) {
 	}
 	require.NoError(t, err, string(bz))
 	out = strings.Trim(string(bz), "\n") //trim any new lines
-	time.Sleep(time.Second)
 	return out
 }
 
@@ -46,6 +44,5 @@ func GoExecuteT(t *testing.T, command string) (cmd *exec.Cmd, pipeIn io.WriteClo
 	pipeOut, err = cmd.StdoutPipe()
 	require.NoError(t, err)
 	cmd.Start()
-	time.Sleep(time.Second)
 	return cmd, pipeIn, pipeOut
 }

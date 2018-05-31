@@ -1,4 +1,4 @@
-version: 2
+tersion: 2
 
 defaults: &defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
@@ -154,10 +154,10 @@ workflows:
       - lint:
           requires:
             - setup_dependencies
-      - test_unit:
+      - test_cli:
           requires:
             - setup_dependencies
-      - test_cli:
+      - test_unit:
           requires:
             - setup_dependencies
       - test_cover:

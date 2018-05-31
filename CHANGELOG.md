@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.17.4
+
+*May 31, 2018*
+
+Update to Tendermint v0.19.7 (WAL fixes and more)
+
 ## 0.17.3
 
 *May 29, 2018*

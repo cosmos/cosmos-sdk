@@ -11,7 +11,7 @@
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "bc0944904505aab55e089371a892be2f87883161"
+  revision = "86fed781132ac890ee03e906e4ecd5d6fa180c64"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -313,6 +313,9 @@
     "consensus",
     "consensus/types",
     "evidence",
+    "libs/events",
+    "libs/pubsub",
+    "libs/pubsub/query",
     "lite",
     "lite/client",
     "lite/errors",
@@ -341,8 +344,8 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "fd6021876b017cbf45cdf6dd55a0d6cdf431e826"
-  version = "v0.19.6-rc2"
+  revision = "a017f2fdd41496a81e04a2216630a405189da6e2"
+  version = "v0.19.7-rc0"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -355,9 +358,7 @@
     "db",
     "flowrate",
     "log",
-    "merkle",
-    "pubsub",
-    "pubsub/query"
+    "merkle"
   ]
   revision = "d970af87248a4e162590300dbb74e102183a417d"
   version = "v0.8.3"
@@ -390,7 +391,7 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "dfa909b99c79129e1100513e5cd36307665e5723"
+  revision = "1e491301e022f8f977054da4c2d852decd59571f"
 
 [[projects]]
   branch = "master"
@@ -457,6 +458,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2e868c5ad771cb647fd85a357375c559287602e886b7a040ddde0fac7f4f3365"
+  inputs-digest = "a3a75136fb6921c4c4d413e4c8366f203b77367762763c97b8669ea854fbd62d"
   solver-name = "gps-cdcl"
   solver-version = 1

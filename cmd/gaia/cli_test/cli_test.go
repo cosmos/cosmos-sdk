@@ -48,10 +48,11 @@ func TestGaiaCLISend(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	time.Sleep(time.Second * 5) // Wait for RPC server to start.
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooBech, flags))
 	assert.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak"))
 
-	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barAddr), pass)
+	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barBech), pass)
 	time.Sleep(time.Second * 3) // waiting for some blocks to pass
 
 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barBech, flags))
@@ -60,7 +61,7 @@ func TestGaiaCLISend(t *testing.T) {
 	assert.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak"))
 
 	// test autosequencing
-	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barAddr), pass)
+	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barBech), pass)
 	time.Sleep(time.Second * 3) // waiting for some blocks to pass
 
 	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barBech, flags))

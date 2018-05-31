@@ -76,7 +76,7 @@ func printInfo(info keys.Info) {
 		fmt.Printf("NAME:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
 		printKeyOutput(ko)
 	case "json":
-		out, err := json.MarshalIndent(ko, "", "\t")
+		out, err := MarshalJSON(ko)
 		if err != nil {
 			panic(err)
 		}

@@ -14,7 +14,7 @@ import (
 )
 
 // create declare candidacy command
-func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
+func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
 		Short: "create new validator initialized with a self-delegation to it",
@@ -68,7 +68,7 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 }
 
 // create edit candidacy command
-func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
+func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
 		Short: "edit and existing validator account",

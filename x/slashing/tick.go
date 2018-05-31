@@ -20,7 +20,7 @@ func NewBeginBlocker(sk Keeper) sdk.BeginBlocker {
 		// Deal with any equivocation evidence
 		for _, evidence := range req.ByzantineValidators {
 			var pk crypto.PubKey
-			sk.cdc.MustUnmarshalBinary(evidence.PubKey, &pk)
+			sk.cdc.MustUnmarshalBinaryBare(evidence.PubKey, &pk)
 			switch string(evidence.Type) {
 			case tmtypes.DUPLICATE_VOTE:
 				sk.handleDoubleSign(ctx, evidence.Height, evidence.Time, pk)
@@ -33,7 +33,7 @@ func NewBeginBlocker(sk Keeper) sdk.BeginBlocker {
 		absent := make(map[crypto.PubKey]struct{})
 		for _, pubkey := range req.AbsentValidators {
 			var pk crypto.PubKey
-			sk.cdc.MustUnmarshalBinary(pubkey, &pk)
+			sk.cdc.MustUnmarshalBinaryBare(pubkey, &pk)
 			absent[pk] = struct{}{}
 		}
 

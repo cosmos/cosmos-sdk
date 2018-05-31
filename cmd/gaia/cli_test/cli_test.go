@@ -34,8 +34,8 @@ func TestGaiaCLISend(t *testing.T) {
 	flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
 
 	// start gaiad server
-	cmd, _, _ := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
-	defer cmd.Process.Kill()
+	proc := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
+	defer proc.Stop(false)
 
 	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
 	barAddr, _ := executeGetAddrPK(t, "gaiacli keys show bar --output=json")
@@ -83,8 +83,8 @@ func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 	flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
 
 	// start gaiad server
-	cmd, _, _ := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
-	defer cmd.Process.Kill()
+	proc := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
+	defer proc.Stop(false)
 
 	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
 	barAddr, _ := executeGetAddrPK(t, "gaiacli keys show bar --output=json")
@@ -115,7 +115,7 @@ func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 	declStr += fmt.Sprintf(" --validator-address=%v", bechVal)
 	declStr += fmt.Sprintf(" --amount=%v", "3steak")
 	declStr += fmt.Sprintf(" --moniker=%v", "bar-vally")
-	fmt.Printf("debug declStr: %v\n", declStr)
+	t.Log(fmt.Sprintf("debug declStr: %v\n", declStr))
 	executeWrite(t, declStr, pass)
 	time.Sleep(time.Second) // waiting for some blocks to pass
 	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barAddr, flags))
@@ -132,7 +132,7 @@ func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 	//unbondStr += fmt.Sprintf(" --address-delegator=%v", barAddr)
 	//unbondStr += fmt.Sprintf(" --shares=%v", "1")
 	//unbondStr += fmt.Sprintf(" --sequence=%v", "1")
-	//fmt.Printf("debug unbondStr: %v\n", unbondStr)
+	//t.Log(fmt.Sprintf("debug unbondStr: %v\n", unbondStr))
 	//executeWrite(t, unbondStr, pass)
 	//time.Sleep(time.Second * 3) // waiting for some blocks to pass
 	//barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barAddr, flags))
@@ -142,32 +142,13 @@ func TestGaiaCLIDeclareCandidacy(t *testing.T) {
 }
 
 func executeWrite(t *testing.T, cmdStr string, writes ...string) {
-	cmd, wc, _ := tests.GoExecuteT(t, cmdStr)
+	proc := tests.GoExecuteT(t, cmdStr)
 
 	for _, write := range writes {
-		_, err := wc.Write([]byte(write + "\n"))
-		if err != nil {
-			fmt.Println(err)
-		}
+		_, err := proc.StdinPipe.Write([]byte(write + "\n"))
 		require.NoError(t, err)
 	}
-	fmt.Printf("debug waiting cmdStr: %v\n", cmdStr)
-	cmd.Wait()
-}
-
-func executeWritePrint(t *testing.T, cmdStr string, writes ...string) {
-	cmd, wc, rc := tests.GoExecuteT(t, cmdStr)
-
-	for _, write := range writes {
-		_, err := wc.Write([]byte(write + "\n"))
-		require.NoError(t, err)
-	}
-	fmt.Printf("debug waiting cmdStr: %v\n", cmdStr)
-	cmd.Wait()
-
-	bz := make([]byte, 100000)
-	rc.Read(bz)
-	fmt.Printf("debug read: %v\n", string(bz))
+	proc.Wait()
 }
 
 func executeInit(t *testing.T, cmdStr string) (chainID string) {

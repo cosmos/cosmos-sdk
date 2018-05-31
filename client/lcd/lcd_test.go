@@ -32,6 +32,7 @@ import (
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
+	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	bapp "github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	btypes "github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	tests "github.com/cosmos/cosmos-sdk/tests"
@@ -192,15 +193,16 @@ func TestBlock(t *testing.T) {
 
 func TestValidators(t *testing.T) {
 
-	var resultVals ctypes.ResultValidators
+	var resultVals rpc.ResultValidatorsOutput
 
 	res, body := request(t, port, "GET", "/validatorsets/latest", nil)
+	require.Equal(t, "", body)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err := cdc.UnmarshalJSON([]byte(body), &resultVals)
 	require.Nil(t, err, "Couldn't parse validatorset")
 
-	assert.NotEqual(t, ctypes.ResultValidators{}, resultVals)
+	assert.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
 
 	// --
 
@@ -210,7 +212,7 @@ func TestValidators(t *testing.T) {
 	err = cdc.UnmarshalJSON([]byte(body), &resultVals)
 	require.Nil(t, err, "Couldn't parse validatorset")
 
-	assert.NotEqual(t, ctypes.ResultValidators{}, resultVals)
+	assert.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
 
 	// --
 

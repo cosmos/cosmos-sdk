@@ -10,6 +10,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // TODO these next two functions feel kinda hacky based on their placement
@@ -27,6 +30,34 @@ func validatorCommand() *cobra.Command {
 	return cmd
 }
 
+type ValidatorOutput struct {
+	*tmtypes.Validator
+	Address string `json:"address"` // in bech32cosmos
+	PubKey  string `json:"pub_key"` // in bech32cosmos
+}
+
+type ResultValidatorsOutput struct {
+	*ctypes.ResultValidators
+	Validators []ValidatorOutput `json:"validators"`
+}
+
+func Bech32CosmosValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
+	bechAddress, err := sdk.Bech32CosmosifyVal(validator.Address)
+	if err != nil {
+		return ValidatorOutput{}, err
+	}
+	bechValPubkey, err := sdk.Bech32CosmosifyValPub(validator.PubKey)
+	if err != nil {
+		return ValidatorOutput{}, err
+	}
+
+	return ValidatorOutput{
+		Validator: validator,
+		Address:   bechAddress,
+		PubKey:    bechValPubkey,
+	}, nil
+}
+
 func getValidators(ctx context.CoreContext, height *int64) ([]byte, error) {
 	// get the node
 	node, err := ctx.GetNode()
@@ -34,12 +65,23 @@ func getValidators(ctx context.CoreContext, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
-	res, err := node.Validators(height)
+	validatorsRes, err := node.Validators(height)
 	if err != nil {
 		return nil, err
 	}
 
-	output, err := cdc.MarshalJSON(res)
+	outputValidatorsRes := ResultValidatorsOutput{
+		ResultValidators: validatorsRes,
+		Validators:       make([]ValidatorOutput, len(validatorsRes.Validators)),
+	}
+	for i := 0; i < len(validatorsRes.Validators); i++ {
+		outputValidatorsRes.Validators[i], err = Bech32CosmosValidatorOutput(validatorsRes.Validators[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	output, err := cdc.MarshalJSON(outputValidatorsRes)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +137,7 @@ func ValidatorSetRequestHandlerFn(ctx context.CoreContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
+
 		w.Write(output)
 	}
 }

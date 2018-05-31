@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 type OpType string
@@ -17,9 +19,9 @@ const (
 )
 
 type RawOp struct {
-	Type OpType
-	Data []byte
-	Key  string
+	Type OpType `json:"type"`
+	Data string `json:"data"`
+	Key  string `json:"key"`
 }
 
 func (ro RawOp) Encode() []byte {
@@ -40,15 +42,13 @@ func DefaultOpDecoder(ro RawOp) (res Op, err error) {
 	switch ro.Type {
 	case IAVLExistsOpType:
 		var op IAVLExistsOp
-		err = json.Unmarshal(ro.Data, &op)
+		err = json.Unmarshal([]byte(ro.Data), &op)
 		res = op
 	case IAVLAbsentOpType:
-		var op IAVLAbsentOp
-		err = json.Unmarshal(ro.Data, &op)
-		res = op
+		res = IAVLAbsentOp{ro.Key}
 	case SimpleExistsOpType:
 		var op SimpleExistsOp
-		err = json.Unmarshal(ro.Data, &op)
+		err = json.Unmarshal([]byte(ro.Data), &op)
 		res = op
 	default:
 		err = fmt.Errorf("Cannot decode RawOp typeof %s", ro.Type)
@@ -65,11 +65,12 @@ type Op interface {
 type Proof []Op
 
 func (p Proof) Verify(root []byte, value [][]byte, keys ...string) (err error) {
+	fmt.Printf("verifying %+v with %+v, %+v\n", p, value, keys)
 	for i, op := range p {
 		key := op.GetKey()
 		if key != "" {
 			if keys[0] != key {
-				return fmt.Errorf("Key mismatch on operation #%d", i)
+				return fmt.Errorf("Key mismatch on operation #%d: expected %+v but %+v", i, []byte(keys[0]), []byte(key))
 			}
 			keys = keys[1:]
 		}
@@ -85,30 +86,39 @@ func (p Proof) Verify(root []byte, value [][]byte, keys ...string) (err error) {
 	return nil
 }
 
-func (p Proof) Bytes() (res []byte, err error) {
-	rawops := make([]RawOp, len(p))
-	for i, op := range p {
-		rawops[i], err = op.Raw()
-		if err != nil {
-			return
+func (p Proof) Bytes(cdc *wire.Codec) (res []byte, err error) {
+	/*	rawops := make([]RawOp, len(p))
+		for i, op := range p {
+			rawops[i], err = op.Raw()
+			fmt.Printf("encode %+v to %+v\n", op, rawops[i])
+			if err != nil {
+				return
+			}
 		}
-	}
 
-	return json.Marshal(rawops)
+		return json.Marshal(rawops)
+	*/
+
+	return cdc.MarshalBinary(p)
 }
 
-func DecodeProof(data []byte, decode OpDecoder) (res Proof, err error) {
-	rawops := make([]RawOp, len(data))
-	if err = json.Unmarshal(data, &rawops); err != nil {
-		return
-	}
-
-	res = make([]Op, len(data))
-	for i, rawop := range rawops {
-		res[i], err = decode(rawop)
-		if err != nil {
+func DecodeProof(cdc *wire.Codec, data []byte, decode OpDecoder) (res Proof, err error) {
+	fmt.Printf("unmarshalling %s\n", string(data))
+	/*	rawops := make([]RawOp, 0)
+		if err = json.Unmarshal(data, &rawops); err != nil {
 			return
 		}
-	}
+
+		res = make([]Op, len(rawops))
+		for i, rawop := range rawops {
+			res[i], err = decode(rawop)
+			if err != nil {
+				return
+			}
+			fmt.Printf("decode %+v (key: %+v) to %+v\n", rawop, []byte(rawop.Key), res[i])
+		}
+		return*/
+
+	err = cdc.UnmarshalBinary(data, &res)
 	return
 }

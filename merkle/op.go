@@ -15,8 +15,8 @@ import (
 )
 
 type IAVLExistsOp struct {
-	*iavl.KeyExistsProof
-	Key string `json:"key"`
+	*iavl.KeyExistsProof `json:"key-exists-proof"`
+	Key                  string `json:"key"`
 }
 
 var _ Op = IAVLExistsOp{}
@@ -65,12 +65,14 @@ func (op IAVLExistsOp) Raw() (res RawOp, err error) {
 
 	return RawOp{
 		Type: IAVLExistsOpType,
-		Data: bz, // TODO
-		Key:  "",
+		Data: string(bz), // TODO
+		Key:  op.Key,
 	}, nil
 }
 
-type IAVLAbsentOp struct{}
+type IAVLAbsentOp struct {
+	Key string `json:"key"`
+}
 
 func (op IAVLAbsentOp) Run(value [][]byte) ([][]byte, error) {
 	// TODO
@@ -78,21 +80,26 @@ func (op IAVLAbsentOp) Run(value [][]byte) ([][]byte, error) {
 }
 
 func (op IAVLAbsentOp) GetKey() string {
-	return ""
+	return op.Key
 }
 
-func (op IAVLAbsentOp) Raw() (RawOp, error) {
+func (op IAVLAbsentOp) Raw() (res RawOp, err error) {
+	bz, err := json.Marshal(op)
+	if err != nil {
+		return
+	}
+
 	return RawOp{
 		Type: IAVLAbsentOpType,
-		Data: nil, // TODO
-		Key:  "",
+		Data: string(bz), // TODO
+		Key:  op.Key,
 	}, nil
 }
 
 type SimpleExistsOp struct {
-	*merkle.SimpleProof
-	Index int
-	Total int
+	*merkle.SimpleProof `json:"simple-proof"`
+	Index               int `json:"index"`
+	Total               int `json:"total"`
 }
 
 var _ Op = SimpleExistsOp{}
@@ -150,7 +157,7 @@ func (op SimpleExistsOp) Raw() (res RawOp, err error) {
 
 	return RawOp{
 		Type: SimpleExistsOpType,
-		Data: bz, // TODO
+		Data: string(bz), // TODO
 		Key:  "",
 	}, nil
 }

@@ -22,7 +22,7 @@ func FromIAVLExists(proof *iavl.KeyExistsProof, key string) Op {
 }
 
 func FromIAVLAbsent(proof *iavl.KeyAbsentProof, key string) Op {
-	return IAVLAbsentOp{} // TODO
+	return IAVLAbsentOp{key} // TODO
 }
 
 func FromSimpleProof(proof *merkle.SimpleProof, index int, total int) Op {

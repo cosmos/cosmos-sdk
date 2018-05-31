@@ -172,6 +172,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery, prf m
 				break
 			}
 			res.Value = value
+			fmt.Printf("original: %+v\n", key)
 			prf = merkle.Proof([]merkle.Op{merkle.FromIAVLKey(proof, string(key))})
 		} else {
 			_, res.Value = tree.GetVersioned(key, height)

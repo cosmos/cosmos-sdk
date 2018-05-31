@@ -5,3 +5,7 @@ import (
 )
 
 var cdc = wire.NewCodec()
+
+func RegisterWire(cdc *wire.Codec) {
+	cdc.RegisterConcrete(RootMultistoreOp{}, "cosmos-sdk/RootMultistoreOp", nil)
+}

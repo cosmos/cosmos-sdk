@@ -9,5 +9,6 @@ func RegisterWire(cdc *wire.Codec) {
 	cdc.RegisterInterface((*Op)(nil), nil)
 	//	cdc.RegisterConcrete(TMCoreOp{}, "cosmos-sdk/TMCoreOp", nil)
 	cdc.RegisterConcrete(IAVLExistsOp{}, "cosmos-sdk/IAVLExistsOp", nil)
+	cdc.RegisterConcrete(IAVLAbsentOp{}, "cosmos-sdk/IAVLAbsentOp", nil)
 	cdc.RegisterConcrete(SimpleExistsOp{}, "cosmos-sdk/SimpleExistsOp", nil)
 }

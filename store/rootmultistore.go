@@ -413,7 +413,7 @@ func (op RootMultistoreOp) Raw() (res merkle.RawOp, err error) {
 
 	return merkle.RawOp{
 		Type: RootMultistoreOpType,
-		Data: bz,
+		Data: string(bz),
 		Key:  op.Name,
 	}, nil
 }
@@ -423,7 +423,7 @@ func WrapOpDecoder(decode merkle.OpDecoder) merkle.OpDecoder {
 		switch ro.Type {
 		case RootMultistoreOpType:
 			var op RootMultistoreOp
-			err = json.Unmarshal(ro.Data, &op)
+			err = json.Unmarshal([]byte(ro.Data), &op)
 			res = op
 		default:
 			return decode(ro)

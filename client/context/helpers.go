@@ -58,7 +58,11 @@ func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, er
 		return
 	}
 
-	proof, err := merkle.DecodeProof(resp.Proof, store.WrapOpDecoder(merkle.DefaultOpDecoder))
+	cdc := wire.NewCodec()
+	merkle.RegisterWire(cdc)
+	store.RegisterWire(cdc)
+
+	proof, err := merkle.DecodeProof(cdc, resp.Proof, store.WrapOpDecoder(merkle.DefaultOpDecoder))
 	if err != nil {
 		return
 	}
@@ -87,10 +91,9 @@ func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, er
 		Validators: valset,
 	}
 
-	fmt.Printf("\n\n\n\n\n\n\n\n\n%+v\n", genfc)
 	cert, err := lite.NewInquiringCertifier(ctx.ChainID, genfc, trusted, source)
 	if err != nil {
-		fmt.Printf("\n\n\n\n\n\n\n\n\n\n\n\ngenfc: %+v\nerr: %+v\n", genfc, err)
+
 		return
 	}
 
@@ -104,7 +107,7 @@ func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, er
 		return
 	}
 
-	fmt.Printf("\n\n\n\n\n\n\n\nproof: %+v\n", proof)
+	fmt.Printf("originally %+v provided %+v\n", []byte(key))
 	err = proof.Verify(fc.Header.AppHash, [][]byte{res}, string(key), storeName)
 	return
 }

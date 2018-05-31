@@ -3,9 +3,8 @@ package auth
 import (
 	"encoding/json"
 
-	"github.com/tendermint/go-crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	crypto "github.com/tendermint/go-crypto"
 )
 
 // MsgChangeKey - high level transaction of the auth module

@@ -84,7 +84,7 @@ type CommitMultiStore interface {
 	LoadVersion(ver int64) error
 }
 
-//----------------------------------------
+//---------subsp-------------------------------
 // KVStore
 
 // KVStore is a simple interface to get/set data
@@ -113,24 +113,25 @@ type KVStore interface {
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	ReverseIterator(start, end []byte) Iterator
 
-	// Iterator over all the keys with a certain prefix in ascending order.
-	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	SubspaceIterator(prefix []byte) Iterator
-
-	// Iterator over all the keys with a certain prefix in descending order.
-	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
-	ReverseSubspaceIterator(prefix []byte) Iterator
-
 	// TODO Not yet implemented.
 	// CreateSubKVStore(key *storeKey) (KVStore, error)
 
 	// TODO Not yet implemented.
 	// GetSubKVStore(key *storeKey) KVStore
-
 }
 
 // Alias iterator to db's Iterator for convenience.
 type Iterator = dbm.Iterator
+
+// Iterator over all the keys with a certain prefix in ascending order
+func KVStorePrefixIterator(kvs KVStore, prefix []byte) Iterator {
+	return kvs.Iterator(prefix, PrefixEndBytes(prefix))
+}
+
+// Iterator over all the keys with a certain prefix in descending order.
+func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
+	return kvs.ReverseIterator(prefix, PrefixEndBytes(prefix))
+}
 
 // CacheKVStore cache-wraps a KVStore.  After calling .Write() on
 // the CacheKVStore, all previously created CacheKVStores on the

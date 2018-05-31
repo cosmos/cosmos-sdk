@@ -12,7 +12,7 @@ import (
 )
 
 func TestContextWithSigners(t *testing.T) {
-	ms, _ := setupMultiStore()
+	ms, _, _ := setupMultiStore()
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, nil, log.NewNopLogger())
 
 	_, _, addr1 := keyPubAddr()
@@ -26,7 +26,7 @@ func TestContextWithSigners(t *testing.T) {
 	signers := GetSigners(ctx)
 	assert.Equal(t, 0, len(signers))
 
-	ctx2 := WithSigners(ctx, []sdk.Account{&acc1, &acc2})
+	ctx2 := WithSigners(ctx, []Account{&acc1, &acc2})
 
 	// original context is unchanged
 	signers = GetSigners(ctx)

@@ -157,7 +157,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 
 	i := 0
 
-	iter := iavlStore.SubspaceIterator([]byte("test"))
+	iter := sdk.KVStorePrefixIterator(iavlStore, []byte("test"))
 	expected := []string{"test1", "test2", "test3"}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
@@ -168,7 +168,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 	}
 	assert.Equal(t, len(expected), i)
 
-	iter = iavlStore.SubspaceIterator([]byte{byte(55), byte(255), byte(255)})
+	iter = sdk.KVStorePrefixIterator(iavlStore, []byte{byte(55), byte(255), byte(255)})
 	expected2 := [][]byte{
 		[]byte{byte(55), byte(255), byte(255), byte(0)},
 		[]byte{byte(55), byte(255), byte(255), byte(1)},
@@ -183,7 +183,7 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 	}
 	assert.Equal(t, len(expected), i)
 
-	iter = iavlStore.SubspaceIterator([]byte{byte(255), byte(255)})
+	iter = sdk.KVStorePrefixIterator(iavlStore, []byte{byte(255), byte(255)})
 	expected2 = [][]byte{
 		[]byte{byte(255), byte(255), byte(0)},
 		[]byte{byte(255), byte(255), byte(1)},
@@ -216,7 +216,7 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 
 	i := 0
 
-	iter := iavlStore.ReverseSubspaceIterator([]byte("test"))
+	iter := sdk.KVStoreReversePrefixIterator(iavlStore, []byte("test"))
 	expected := []string{"test3", "test2", "test1"}
 	for i = 0; iter.Valid(); iter.Next() {
 		expectedKey := expected[i]
@@ -227,7 +227,7 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 	}
 	assert.Equal(t, len(expected), i)
 
-	iter = iavlStore.ReverseSubspaceIterator([]byte{byte(55), byte(255), byte(255)})
+	iter = sdk.KVStoreReversePrefixIterator(iavlStore, []byte{byte(55), byte(255), byte(255)})
 	expected2 := [][]byte{
 		[]byte{byte(55), byte(255), byte(255), byte(255)},
 		[]byte{byte(55), byte(255), byte(255), byte(1)},
@@ -242,7 +242,7 @@ func TestIAVLReverseSubspaceIterator(t *testing.T) {
 	}
 	assert.Equal(t, len(expected), i)
 
-	iter = iavlStore.ReverseSubspaceIterator([]byte{byte(255), byte(255)})
+	iter = sdk.KVStoreReversePrefixIterator(iavlStore, []byte{byte(255), byte(255)})
 	expected2 = [][]byte{
 		[]byte{byte(255), byte(255), byte(255)},
 		[]byte{byte(255), byte(255), byte(1)},

@@ -35,7 +35,7 @@ func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 	}
 }
 
-func NewGenesisAccountI(acc sdk.Account) GenesisAccount {
+func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 	return GenesisAccount{
 		Address: acc.GetAddress(),
 		Coins:   acc.GetCoins(),
@@ -74,7 +74,7 @@ func GaiaAppInit() server.AppInit {
 		FlagsAppGenState: fsAppGenState,
 		FlagsAppGenTx:    fsAppGenTx,
 		AppGenTx:         GaiaAppGenTx,
-		AppGenState:      GaiaAppGenState,
+		AppGenState:      GaiaAppGenStateJSON,
 	}
 }
 
@@ -85,22 +85,35 @@ type GaiaGenTx struct {
 	PubKey  crypto.PubKey `json:"pub_key"`
 }
 
-// Generate a gaia genesis transaction
+// Generate a gaia genesis transaction with flags
 func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
-
-	var addr sdk.Address
-	var secret string
 	clientRoot := viper.GetString(flagClientHome)
 	overwrite := viper.GetBool(flagOWK)
 	name := viper.GetString(flagName)
 	if name == "" {
 		return nil, nil, tmtypes.GenesisValidator{}, errors.New("Must specify --name (validator moniker)")
 	}
+
+  var addr sdk.Address
+	var secret string
 	addr, secret, err = server.GenerateSaveCoinKey(clientRoot, name, "1234567890", overwrite)
 	if err != nil {
 		return
 	}
+	mm := map[string]string{"secret": secret}
+	var bz []byte
+	bz, err = cdc.MarshalJSON(mm)
+	if err != nil {
+		return
+	}
+	cliPrint = json.RawMessage(bz)
+	return GaiaAppGenTxNF(cdc, pk, addr, name, overwrite)
+}
+
+// Generate a gaia genesis transaction without flags
+func GaiaAppGenTxNF(cdc *wire.Codec, pk crypto.PubKey, addr sdk.Address, name string, overwrite bool) (
+	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
 
 	var bz []byte
 	gaiaGenTx := GaiaGenTx{
@@ -114,13 +127,6 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
 	}
 	appGenTx = json.RawMessage(bz)
 
-	mm := map[string]string{"secret": secret}
-	bz, err = cdc.MarshalJSON(mm)
-	if err != nil {
-		return
-	}
-	cliPrint = json.RawMessage(bz)
-
 	validator = tmtypes.GenesisValidator{
 		PubKey: pk,
 		Power:  freeFermionVal,
@@ -130,7 +136,7 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
 
 // Create the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey
-func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState GenesisState, err error) {
 
 	if len(appGenTxs) == 0 {
 		err = errors.New("must provide at least genesis transaction")
@@ -138,7 +144,7 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
 	}
 
 	// start with the default staking genesis state
-	stakeData := stake.GetDefaultGenesisState()
+	stakeData := stake.DefaultGenesisState()
 
 	// get genesis flag account information
 	genaccs := make([]GenesisAccount, len(appGenTxs))
@@ -158,26 +164,36 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState jso
 		}
 		acc := NewGenesisAccount(&accAuth)
 		genaccs[i] = acc
-		stakeData.Pool.TotalSupply += freeFermionsAcc // increase the supply
+		stakeData.Pool.LooseUnbondedTokens += freeFermionsAcc // increase the supply
 
 		// add the validator
 		if len(genTx.Name) > 0 {
 			desc := stake.NewDescription(genTx.Name, "", "", "")
-			candidate := stake.NewCandidate(genTx.Address, genTx.PubKey, desc)
-			candidate.Assets = sdk.NewRat(freeFermionVal)
-			stakeData.Candidates = append(stakeData.Candidates, candidate)
+			validator := stake.NewValidator(genTx.Address, genTx.PubKey, desc)
+			validator.PoolShares = stake.NewBondedShares(sdk.NewRat(freeFermionVal))
+			stakeData.Validators = append(stakeData.Validators, validator)
 
 			// pool logic
-			stakeData.Pool.TotalSupply += freeFermionVal
-			stakeData.Pool.BondedPool += freeFermionVal
-			stakeData.Pool.BondedShares = sdk.NewRat(stakeData.Pool.BondedPool)
+			stakeData.Pool.BondedTokens += freeFermionVal
+			stakeData.Pool.BondedShares = sdk.NewRat(stakeData.Pool.BondedTokens)
 		}
 	}
 
 	// create the final app state
-	genesisState := GenesisState{
+	genesisState = GenesisState{
 		Accounts:  genaccs,
 		StakeData: stakeData,
+	}
+	return
+}
+
+// GaiaAppGenState but with JSON
+func GaiaAppGenStateJSON(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+
+	// create the final app state
+	genesisState, err := GaiaAppGenState(cdc, appGenTxs)
+	if err != nil {
+		return nil, err
 	}
 	appState, err = wire.MarshalJSONIndent(cdc, genesisState)
 	return

@@ -268,6 +268,7 @@
     "types"
   ]
   revision = "f9dce537281ffba5d1e047e6729429f7e5fb90c9"
+  version = "v0.11.0-rc0"
 
 [[projects]]
   branch = "master"
@@ -307,7 +308,6 @@
   version = "v0.8.0-rc0"
 
 [[projects]]
-  branch = "cwgoes/update-abci"
   name = "github.com/tendermint/tendermint"
   packages = [
     "blockchain",
@@ -347,7 +347,8 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "9cc39a21ddbe8efd005aa5a001f54055a0d14fca"
+  revision = "73de99ecab464208f6ea3a96525f4e4b78425e61"
+  version = "v0.20.0-rc0"
 
 [[projects]]
   name = "github.com/tendermint/tmlibs"
@@ -460,6 +461,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "da12d07a753d17b8d9b834bb6b4b61617978c3c515fb38aa5dad10a66a8e78e8"
+  inputs-digest = "a6a5d886519fa9ca97a23715faa852ee14ecb5337e03641d19ea3d3d1c392fee"
   solver-name = "gps-cdcl"
   solver-version = 1

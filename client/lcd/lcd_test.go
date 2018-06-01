@@ -41,14 +41,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	stakerest "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 )
 
 var (
 	coinDenom  = "steak"
 	coinAmount = int64(10000000)
 
-	validatorAddr1 = ""
-	validatorAddr2 = ""
+	validatorAddr1Hx = ""
+	validatorAddr2Hx = ""
+	validatorAddr1   = ""
+	validatorAddr2   = ""
 
 	// XXX bad globals
 	name     = "test"
@@ -328,15 +331,14 @@ func TestValidatorsQuery(t *testing.T) {
 
 	// make sure all the validators were found (order unknown because sorted by owner addr)
 	foundVal1, foundVal2 := false, false
-	res1, res2 := hex.EncodeToString(validators[0].Owner), hex.EncodeToString(validators[1].Owner)
-	if res1 == validatorAddr1 || res2 == validatorAddr1 {
+	if validators[0].Owner == validatorAddr1 || validators[1].Owner == validatorAddr1 {
 		foundVal1 = true
 	}
-	if res1 == validatorAddr2 || res2 == validatorAddr2 {
+	if validators[0].Owner == validatorAddr2 || validators[1].Owner == validatorAddr2 {
 		foundVal2 = true
 	}
-	assert.True(t, foundVal1, "validatorAddr1 %v, res1 %v, res2 %v", validatorAddr1, res1, res2)
-	assert.True(t, foundVal2, "validatorAddr2 %v, res1 %v, res2 %v", validatorAddr2, res1, res2)
+	assert.True(t, foundVal1, "validatorAddr1 %v, owner1 %v, owner2 %v", validatorAddr1, validators[0].Owner, validators[1].Owner)
+	assert.True(t, foundVal2, "validatorAddr2 %v, owner1 %v, owner2 %v", validatorAddr2, validators[0].Owner, validators[1].Owner)
 }
 
 func TestBond(t *testing.T) {
@@ -423,8 +425,10 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 
 	pk1 := genDoc.Validators[0].PubKey
 	pk2 := genDoc.Validators[1].PubKey
-	validatorAddr1 = hex.EncodeToString(pk1.Address())
-	validatorAddr2 = hex.EncodeToString(pk2.Address())
+	validatorAddr1Hx = hex.EncodeToString(pk1.Address())
+	validatorAddr2Hx = hex.EncodeToString(pk2.Address())
+	validatorAddr1, _ = sdk.Bech32CosmosifyVal(pk1.Address())
+	validatorAddr2, _ = sdk.Bech32CosmosifyVal(pk2.Address())
 
 	// NOTE it's bad practice to reuse pk address for the owner address but doing in the
 	// test for simplicity
@@ -607,6 +611,8 @@ func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxC
 	acc := getAccount(t, sendAddr)
 	sequence := acc.GetSequence()
 
+	fmt.Println("ACC", sendAddr)
+
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name": "%s",
@@ -614,13 +620,13 @@ func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxC
 		"sequence": %d,
 		"delegate": [
 			{
-				"delegator_addr": "%x",
+				"delegator_addr": "%s",
 				"validator_addr": "%s",
 				"bond": { "denom": "%s", "amount": 10 }
 			}
 		],
 		"unbond": []
-	}`, name, password, sequence, acc.GetAddress(), validatorAddr1, coinDenom))
+	}`, name, password, sequence, sendAddr, validatorAddr1, coinDenom))
 	res, body := request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -644,12 +650,12 @@ func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastT
 		"bond": [],
 		"unbond": [
 			{
-				"delegator_addr": "%x",
+				"delegator_addr": "%s",
 				"validator_addr": "%s",
 				"shares": "1"
 			}
 		]
-	}`, name, password, sequence, acc.GetAddress(), validatorAddr1))
+	}`, name, password, sequence, sendAddr, validatorAddr1))
 	res, body := request(t, port, "POST", "/stake/delegations", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -660,11 +666,11 @@ func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastT
 	return results[0]
 }
 
-func getValidators(t *testing.T) []stake.Validator {
+func getValidators(t *testing.T) []stakerest.StakeValidatorOutput {
 	// get the account to get the sequence
 	res, body := request(t, port, "GET", "/stake/validators", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var validators stake.Validators
+	var validators []stakerest.StakeValidatorOutput
 	err := cdc.UnmarshalJSON([]byte(body), &validators)
 	require.Nil(t, err)
 	return validators

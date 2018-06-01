@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	bech32cosmos "github.com/cosmos/bech32cosmos/go"
 	crypto "github.com/tendermint/go-crypto"
+	"github.com/tendermint/tmlibs/bech32"
 	cmn "github.com/tendermint/tmlibs/common"
 )
 
@@ -21,24 +21,24 @@ const (
 	Bech32PrefixValPub  = "cosmosvalpub"
 )
 
-// Bech32CosmosifyAcc takes Address and returns the Bech32Cosmos encoded string
-func Bech32CosmosifyAcc(addr Address) (string, error) {
-	return bech32cosmos.ConvertAndEncode(Bech32PrefixAccAddr, addr.Bytes())
+// Bech32ifyAcc takes Address and returns the bech32 encoded string
+func Bech32ifyAcc(addr Address) (string, error) {
+	return bech32.ConvertAndEncode(Bech32PrefixAccAddr, addr.Bytes())
 }
 
-// Bech32CosmosifyAccPub takes AccountPubKey and returns the Bech32Cosmos encoded string
-func Bech32CosmosifyAccPub(pub crypto.PubKey) (string, error) {
-	return bech32cosmos.ConvertAndEncode(Bech32PrefixAccPub, pub.Bytes())
+// Bech32ifyAccPub takes AccountPubKey and returns the bech32 encoded string
+func Bech32ifyAccPub(pub crypto.PubKey) (string, error) {
+	return bech32.ConvertAndEncode(Bech32PrefixAccPub, pub.Bytes())
 }
 
-// Bech32CosmosifyVal returns the Bech32Cosmos encoded string for a validator address
-func Bech32CosmosifyVal(addr Address) (string, error) {
-	return bech32cosmos.ConvertAndEncode(Bech32PrefixValAddr, addr.Bytes())
+// Bech32ifyVal returns the bech32 encoded string for a validator address
+func bech32ifyVal(addr Address) (string, error) {
+	return bech32.ConvertAndEncode(Bech32PrefixValAddr, addr.Bytes())
 }
 
-// Bech32CosmosifyValPub returns the Bech32Cosmos encoded string for a validator pubkey
-func Bech32CosmosifyValPub(pub crypto.PubKey) (string, error) {
-	return bech32cosmos.ConvertAndEncode(Bech32PrefixValPub, pub.Bytes())
+// Bech32ifyValPub returns the bech32 encoded string for a validator pubkey
+func Bech32ifyValPub(pub crypto.PubKey) (string, error) {
+	return bech32.ConvertAndEncode(Bech32PrefixValPub, pub.Bytes())
 }
 
 // create an Address from a string
@@ -54,8 +54,8 @@ func GetAccAddressHex(address string) (addr Address, err error) {
 }
 
 // create an Address from a string
-func GetAccAddressBech32Cosmos(address string) (addr Address, err error) {
-	bz, err := getFromBech32Cosmos(address, Bech32PrefixAccAddr)
+func GetAccAddressBech32(address string) (addr Address, err error) {
+	bz, err := getFromBech32(address, Bech32PrefixAccAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -74,9 +74,9 @@ func GetValAddressHex(address string) (addr Address, err error) {
 	return Address(bz), nil
 }
 
-// create an Address from a bech32cosmos string
-func GetValAddressBech32Cosmos(address string) (addr Address, err error) {
-	bz, err := getFromBech32Cosmos(address, Bech32PrefixValAddr)
+// create an Address from a bech32 string
+func GetValAddressBech32(address string) (addr Address, err error) {
+	bz, err := getFromBech32(address, Bech32PrefixValAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +84,8 @@ func GetValAddressBech32Cosmos(address string) (addr Address, err error) {
 }
 
 //Decode a validator publickey into a public key
-func GetValPubKeyBech32Cosmos(pubkey string) (pk crypto.PubKey, err error) {
-	bz, err := getFromBech32Cosmos(pubkey, Bech32PrefixValPub)
+func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
+	bz, err := getFromBech32(pubkey, Bech32PrefixValPub)
 	if err != nil {
 		return nil, err
 	}
@@ -98,11 +98,11 @@ func GetValPubKeyBech32Cosmos(pubkey string) (pk crypto.PubKey, err error) {
 	return pk, nil
 }
 
-func getFromBech32Cosmos(bech32, prefix string) ([]byte, error) {
-	if len(bech32) == 0 {
+func getFromBech32(bech32str, prefix string) ([]byte, error) {
+	if len(bech32str) == 0 {
 		return nil, errors.New("must provide non-empty string")
 	}
-	hrp, bz, err := bech32cosmos.DecodeAndConvert(bech32)
+	hrp, bz, err := bech32.DecodeAndConvert(bech32str)
 	if err != nil {
 		return nil, err
 	}

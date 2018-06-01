@@ -40,10 +40,10 @@ func TestGaiaCLISend(t *testing.T) {
 	tests.WaitForStart(port)
 
 	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
-	fooCech, err := sdk.Bech32CosmosifyAcc(fooAddr)
+	fooCech, err := sdk.Bech32ifyAcc(fooAddr)
 	require.NoError(t, err)
 	barAddr, _ := executeGetAddrPK(t, "gaiacli keys show bar --output=json")
-	barCech, err := sdk.Bech32CosmosifyAcc(barAddr)
+	barCech, err := sdk.Bech32ifyAcc(barAddr)
 	require.NoError(t, err)
 
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", fooCech, flags))
@@ -87,12 +87,12 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	tests.WaitForStart(port)
 
 	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
-	fooCech, err := sdk.Bech32CosmosifyAcc(fooAddr)
+	fooCech, err := sdk.Bech32ifyAcc(fooAddr)
 	require.NoError(t, err)
 	barAddr, barPubKey := executeGetAddrPK(t, "gaiacli keys show bar --output=json")
-	barCech, err := sdk.Bech32CosmosifyAcc(barAddr)
+	barCech, err := sdk.Bech32ifyAcc(barAddr)
 	require.NoError(t, err)
-	barCeshPubKey, err := sdk.Bech32CosmosifyValPub(barPubKey)
+	barCeshPubKey, err := sdk.Bech32ifyValPub(barPubKey)
 	require.NoError(t, err)
 
 	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barCech), pass)

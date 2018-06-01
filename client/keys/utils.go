@@ -101,11 +101,11 @@ func printInfos(infos []keys.Info) {
 }
 
 func printKeyOutput(ko KeyOutput) {
-	bechAccount, err := sdk.Bech32CosmosifyAcc(ko.Address)
+	bechAccount, err := sdk.Bech32ifyAcc(ko.Address)
 	if err != nil {
 		panic(err)
 	}
-	bechPubKey, err := sdk.Bech32CosmosifyAccPub(ko.PubKey)
+	bechPubKey, err := sdk.Bech32ifyAccPub(ko.PubKey)
 	if err != nil {
 		panic(err)
 	}

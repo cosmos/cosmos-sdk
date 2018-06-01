@@ -14,6 +14,7 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
+	slashingcmd "github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -59,6 +60,7 @@ func main() {
 			stakecmd.GetCmdEditValidator(cdc),
 			stakecmd.GetCmdDelegate(cdc),
 			stakecmd.GetCmdUnbond(cdc),
+			slashingcmd.GetCmdUnrevoke(cdc),
 		)...)
 
 	// add proxy, version and key info

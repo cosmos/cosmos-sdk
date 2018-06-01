@@ -51,6 +51,7 @@ type KeyOutput struct {
 	PubKey  string `json:"pub_key"`
 }
 
+// create a list of KeyOutput in bech32cosmos format
 func Bech32CosmosKeysOutput(infos []keys.Info) ([]KeyOutput, error) {
 	kos := make([]KeyOutput, len(infos))
 	for i, info := range infos {
@@ -63,6 +64,7 @@ func Bech32CosmosKeysOutput(infos []keys.Info) ([]KeyOutput, error) {
 	return kos, nil
 }
 
+// create a KeyOutput in bech32cosmos format
 func Bech32CosmosKeyOutput(info keys.Info) (KeyOutput, error) {
 	bechAccount, err := sdk.Bech32CosmosifyAcc(sdk.Address(info.PubKey.Address().Bytes()))
 	if err != nil {

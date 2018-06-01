@@ -28,7 +28,7 @@ func NewHandler(k Keeper) sdk.Handler {
 // NewEndBlocker generates sdk.EndBlocker
 // Performs tick functionality
 func NewEndBlocker(k Keeper) sdk.EndBlocker {
-	return func(ctx sdk.Context, req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
+	return func(ctx sdk.Context, req abci.RequestEndBlock, resp abci.ResponseEndBlock) (res abci.ResponseEndBlock) {
 		res.ValidatorUpdates = k.Tick(ctx)
 		return
 	}

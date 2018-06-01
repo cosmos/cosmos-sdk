@@ -5,6 +5,8 @@
 BREAKING CHANGES
 * [cli] rearranged commands under subcommands
 
+* [baseapp] EndBlock takes in a series of endblockers that are run in sequence, rather than a single endblocker
+
 FEATURES
 
 IMPROVEMENTS

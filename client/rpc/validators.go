@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -31,14 +30,15 @@ func validatorCommand() *cobra.Command {
 }
 
 type ValidatorOutput struct {
-	*tmtypes.Validator
-	Address string `json:"address"` // in bech32cosmos
-	PubKey  string `json:"pub_key"` // in bech32cosmos
+	Address     string `json:"address"` // in bech32cosmos
+	PubKey      string `json:"pub_key"` // in bech32cosmos
+	Accum       int64  `json:"accum"`
+	VotingPower int64  `json:"voting_power"`
 }
 
 type ResultValidatorsOutput struct {
-	*ctypes.ResultValidators
-	Validators []ValidatorOutput `json:"validators"`
+	BlockHeight int64             `json:"block_height"`
+	Validators  []ValidatorOutput `json:"validators"`
 }
 
 func Bech32CosmosValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
@@ -52,9 +52,10 @@ func Bech32CosmosValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput,
 	}
 
 	return ValidatorOutput{
-		Validator: validator,
-		Address:   bechAddress,
-		PubKey:    bechValPubkey,
+		Address:     bechAddress,
+		PubKey:      bechValPubkey,
+		Accum:       validator.Accum,
+		VotingPower: validator.VotingPower,
 	}, nil
 }
 
@@ -71,8 +72,8 @@ func getValidators(ctx context.CoreContext, height *int64) ([]byte, error) {
 	}
 
 	outputValidatorsRes := ResultValidatorsOutput{
-		ResultValidators: validatorsRes,
-		Validators:       make([]ValidatorOutput, len(validatorsRes.Validators)),
+		BlockHeight: validatorsRes.BlockHeight,
+		Validators:  make([]ValidatorOutput, len(validatorsRes.Validators)),
 	}
 	for i := 0; i < len(validatorsRes.Validators); i++ {
 		outputValidatorsRes.Validators[i], err = Bech32CosmosValidatorOutput(validatorsRes.Validators[i])

@@ -196,13 +196,15 @@ func TestValidators(t *testing.T) {
 	var resultVals rpc.ResultValidatorsOutput
 
 	res, body := request(t, port, "GET", "/validatorsets/latest", nil)
-	require.Equal(t, "", body)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err := cdc.UnmarshalJSON([]byte(body), &resultVals)
 	require.Nil(t, err, "Couldn't parse validatorset")
 
 	assert.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
+
+	assert.Contains(t, resultVals.Validators[0].Address, "cosmosvaladdr")
+	assert.Contains(t, resultVals.Validators[0].PubKey, "cosmosvalpub")
 
 	// --
 

@@ -40,7 +40,7 @@ func GetAccountCmd(storeName string, cdc *wire.Codec, decoder auth.AccountDecode
 			// find the key to look up the account
 			addr := args[0]
 
-			key, err := sdk.GetAccAddressBech32Cosmos(addr)
+			key, err := sdk.GetAccAddressBech32(addr)
 			if err != nil {
 				return err
 			}

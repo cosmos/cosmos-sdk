@@ -22,16 +22,16 @@ import (
 // dummy addresses used for testing
 var (
 	addrs = []sdk.Address{
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6160", "cosmosaccaddr:5ky9du8a2wlstz6fpx3p4mqpjyrm5ctqyxjnwh"),
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6161", "cosmosaccaddr:5ky9du8a2wlstz6fpx3p4mqpjyrm5ctpesxxn9"),
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6162", "cosmosaccaddr:5ky9du8a2wlstz6fpx3p4mqpjyrm5ctzhrnsa6"),
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6163", "cosmosaccaddr:5ky9du8a2wlstz6fpx3p4mqpjyrm5ctr2489qg"),
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6164", "cosmosaccaddr:5ky9du8a2wlstz6fpx3p4mqpjyrm5ctytvs4pd"),
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6165", "cosmosaccaddr:5ky9du8a2wlstz6fpx3p4mqpjyrm5ct9k6yqul"),
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6166", "cosmosaccaddr:5ky9du8a2wlstz6fpx3p4mqpjyrm5ctxcf3kjq"),
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6167", "cosmosaccaddr:5ky9du8a2wlstz6fpx3p4mqpjyrm5ct89l9r0j"),
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6168", "cosmosaccaddr:5ky9du8a2wlstz6fpx3p4mqpjyrm5ctg6jkls2"),
-		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6169", "cosmosaccaddr:5ky9du8a2wlstz6fpx3p4mqpjyrm5ctf8yz2dc"),
+		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6160", "cosmosaccaddr15ky9du8a2wlstz6fpx3p4mqpjyrm5ctqyxjnwh"),
+		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6161", "cosmosaccaddr15ky9du8a2wlstz6fpx3p4mqpjyrm5ctpesxxn9"),
+		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6162", "cosmosaccaddr15ky9du8a2wlstz6fpx3p4mqpjyrm5ctzhrnsa6"),
+		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6163", "cosmosaccaddr15ky9du8a2wlstz6fpx3p4mqpjyrm5ctr2489qg"),
+		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6164", "cosmosaccaddr15ky9du8a2wlstz6fpx3p4mqpjyrm5ctytvs4pd"),
+		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6165", "cosmosaccaddr15ky9du8a2wlstz6fpx3p4mqpjyrm5ct9k6yqul"),
+		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6166", "cosmosaccaddr15ky9du8a2wlstz6fpx3p4mqpjyrm5ctxcf3kjq"),
+		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6167", "cosmosaccaddr15ky9du8a2wlstz6fpx3p4mqpjyrm5ct89l9r0j"),
+		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6168", "cosmosaccaddr15ky9du8a2wlstz6fpx3p4mqpjyrm5ctg6jkls2"),
+		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6169", "cosmosaccaddr15ky9du8a2wlstz6fpx3p4mqpjyrm5ctf8yz2dc"),
 	}
 
 	// dummy pubkeys used for testing
@@ -144,7 +144,7 @@ func testAddr(addr string, bech string) sdk.Address {
 	if err != nil {
 		panic(err)
 	}
-	bechexpected, err := sdk.Bech32CosmosifyAcc(res)
+	bechexpected, err := sdk.Bech32ifyAcc(res)
 	if err != nil {
 		panic(err)
 	}
@@ -152,7 +152,7 @@ func testAddr(addr string, bech string) sdk.Address {
 		panic("Bech encoding doesn't match reference")
 	}
 
-	bechres, err := sdk.GetAccAddressBech32Cosmos(bech)
+	bechres, err := sdk.GetAccAddressBech32(bech)
 	if err != nil {
 		panic(err)
 	}

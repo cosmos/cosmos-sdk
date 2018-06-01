@@ -25,7 +25,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			validatorAddr, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(FlagAddressValidator))
+			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -34,7 +34,7 @@ func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 			if len(pkStr) == 0 {
 				return fmt.Errorf("must use --pubkey flag")
 			}
-			pk, err := sdk.GetValPubKeyBech32Cosmos(pkStr)
+			pk, err := sdk.GetValPubKeyBech32(pkStr)
 			if err != nil {
 				return err
 			}
@@ -74,7 +74,7 @@ func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 		Short: "edit and existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			validatorAddr, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(FlagAddressValidator))
+			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -115,8 +115,8 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			delegatorAddr, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(FlagAddressDelegator))
-			validatorAddr, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(FlagAddressValidator))
+			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -163,8 +163,8 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 				}
 			}
 
-			delegatorAddr, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(FlagAddressDelegator))
-			validatorAddr, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(FlagAddressValidator))
+			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}

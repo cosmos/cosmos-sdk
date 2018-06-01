@@ -21,6 +21,7 @@ import (
 )
 
 func TestGaiaCLISend(t *testing.T) {
+	fmt.Println("wackydebugoutput TestGaiaCLISend 0")
 
 	tests.ExecuteT(t, "gaiad unsafe_reset_all")
 	pass := "1234567890"
@@ -30,13 +31,14 @@ func TestGaiaCLISend(t *testing.T) {
 	executeWrite(t, "gaiacli keys add bar", pass)
 
 	// get a free port, also setup some common flags
-	servAddr := server.FreeTCPAddr(t)
+	servAddr, port, err := server.FreeTCPAddr()
+	require.NoError(t, err)
 	flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
 
 	// start gaiad server
 	proc := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
 	defer proc.Stop(false)
-	time.Sleep(time.Second * 5) // Wait for RPC server to start.
+	tests.WaitForStart(port)
 
 	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
 	fooCech, err := sdk.Bech32CosmosifyAcc(fooAddr)
@@ -49,6 +51,8 @@ func TestGaiaCLISend(t *testing.T) {
 	assert.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak"))
 
 	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barCech), pass)
+	fmt.Println("wackydebugoutput TestGaiaCLISend 1")
+	fmt.Println("wackydebugoutput TestGaiaCLISend 2")
 	time.Sleep(time.Second * 2) // waiting for some blocks to pass
 
 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
@@ -76,13 +80,14 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	executeWrite(t, "gaiacli keys add bar", pass)
 
 	// get a free port, also setup some common flags
-	servAddr := server.FreeTCPAddr(t)
+	servAddr, port, err := server.FreeTCPAddr()
+	require.NoError(t, err)
 	flags := fmt.Sprintf("--node=%v --chain-id=%v", servAddr, chainID)
 
 	// start gaiad server
 	proc := tests.GoExecuteT(t, fmt.Sprintf("gaiad start --rpc.laddr=%v", servAddr))
 	defer proc.Stop(false)
-	time.Sleep(time.Second * 5) // Wait for RPC server to start.
+	tests.WaitForStart(port)
 
 	fooAddr, _ := executeGetAddrPK(t, "gaiacli keys show foo --output=json")
 	fooCech, err := sdk.Bech32CosmosifyAcc(fooAddr)

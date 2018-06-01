@@ -37,7 +37,9 @@ func TestStartStandAlone(t *testing.T) {
 
 	app, err := mock.NewApp(home, logger)
 	require.Nil(t, err)
-	svr, err := server.NewServer(FreeTCPAddr(t), "socket", app)
+	svrAddr, _, err := FreeTCPAddr()
+	require.Nil(t, err)
+	svr, err := server.NewServer(svrAddr, "socket", app)
 	require.Nil(t, err, "Error creating listener")
 	svr.SetLogger(logger.With("module", "abci-server"))
 	svr.Start()
@@ -69,7 +71,9 @@ func TestStartWithTendermint(t *testing.T) {
 	// set up app and start up
 	viper.Set(flagWithTendermint, true)
 	startCmd := StartCmd(ctx, mock.NewApp)
-	startCmd.Flags().Set(flagAddress, FreeTCPAddr(t)) // set to a new free address
+	svrAddr, _, err := FreeTCPAddr()
+	require.NoError(t, err)
+	startCmd.Flags().Set(flagAddress, svrAddr) // set to a new free address
 	timeout := time.Duration(5) * time.Second
 
 	close(RunOrTimeout(startCmd, timeout, t))

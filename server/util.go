@@ -75,7 +75,6 @@ func AddCommands(
 	rootCmd.AddCommand(
 		InitCmd(ctx, cdc, appInit),
 		StartCmd(ctx, appCreator),
-		UnsafeResetAllCmd(ctx),
 		ShowNodeIDCmd(ctx),
 		ShowValidatorCmd(ctx),
 		ExportCmd(ctx, cdc, appExport),

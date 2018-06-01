@@ -86,7 +86,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(slashing.NewBeginBlocker(app.slashingKeeper))
-	app.SetEndBlocker(stake.NewEndBlocker(app.stakeKeeper))
+	app.SetEndBlockers(stake.NewEndBlocker(app.stakeKeeper))
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
 	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake, app.keySlashing)
 	err := app.LoadLatestVersion(app.keyMain)

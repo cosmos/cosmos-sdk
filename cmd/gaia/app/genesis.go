@@ -95,7 +95,7 @@ func GaiaAppGenTx(cdc *wire.Codec, pk crypto.PubKey) (
 		return nil, nil, tmtypes.GenesisValidator{}, errors.New("Must specify --name (validator moniker)")
 	}
 
-  var addr sdk.Address
+	var addr sdk.Address
 	var secret string
 	addr, secret, err = server.GenerateSaveCoinKey(clientRoot, name, "1234567890", overwrite)
 	if err != nil {

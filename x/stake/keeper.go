@@ -636,9 +636,9 @@ func (k Keeper) getPool(store sdk.KVStore) (pool Pool) {
 	return
 }
 
-func (k Keeper) setPool(ctx sdk.Context, p Pool) {
+func (k Keeper) setPool(ctx sdk.Context, pool Pool) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(p)
+	b := k.cdc.MustMarshalBinary(pool)
 	store.Set(PoolKey, b)
 }
 

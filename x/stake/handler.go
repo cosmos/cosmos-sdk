@@ -25,13 +25,27 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-// NewEndBlocker generates sdk.EndBlocker
-// Performs tick functionality
-func NewEndBlocker(k Keeper) sdk.EndBlocker {
-	return func(ctx sdk.Context, req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-		res.ValidatorUpdates = k.Tick(ctx)
-		return
+// Called every block, process inflation, update validator set
+func EndBlocker(ctx sdk.Context, k Keeper) (ValidatorUpdates []abci.Validator) {
+	pool := k.GetPool(ctx)
+
+	// Process Validator Provisions
+	blockTime := ctx.BlockHeader().Time // XXX assuming in seconds, confirm
+	if pool.InflationLastTime+blockTime >= 3600 {
+		pool.InflationLastTime = blockTime
+		pool = k.processProvisions(ctx)
 	}
+
+	// save the params
+	k.setPool(ctx, pool)
+
+	// reset the intra-transaction counter
+	k.setIntraTxCounter(ctx, 0)
+
+	// calculate validator set changes
+	ValidatorUpdates = k.getTendermintUpdates(ctx)
+	k.clearTendermintUpdates(ctx)
+	return
 }
 
 //_____________________________________________________________________

@@ -37,7 +37,7 @@ var (
 	coins     = sdk.Coins{{"foocoin", 10}}
 	halfCoins = sdk.Coins{{"foocoin", 5}}
 	manyCoins = sdk.Coins{{"foocoin", 1}, {"barcoin", 1}}
-	fee       = sdk.StdFee{
+	fee       = auth.StdFee{
 		sdk.Coins{{"foocoin", 0}},
 		100000,
 	}
@@ -471,17 +471,17 @@ func TestIBCMsgs(t *testing.T) {
 	SignCheckDeliver(t, bapp, receiveMsg, []int64{3}, false, priv1)
 }
 
-func genTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) sdk.StdTx {
-	sigs := make([]sdk.StdSignature, len(priv))
+func genTx(msg sdk.Msg, seq []int64, priv ...crypto.PrivKeyEd25519) auth.StdTx {
+	sigs := make([]auth.StdSignature, len(priv))
 	for i, p := range priv {
-		sigs[i] = sdk.StdSignature{
+		sigs[i] = auth.StdSignature{
 			PubKey:    p.PubKey(),
-			Signature: p.Sign(sdk.StdSignBytes(chainID, seq, fee, msg)),
+			Signature: p.Sign(auth.StdSignBytes(chainID, seq, fee, msg)),
 			Sequence:  seq[i],
 		}
 	}
 
-	return sdk.NewStdTx(msg, fee, sigs)
+	return auth.NewStdTx(msg, fee, sigs)
 
 }
 

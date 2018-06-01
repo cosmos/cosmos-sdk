@@ -37,11 +37,12 @@ type CovenantApp struct {
 	keyCov     *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
-	accountMapper sdk.AccountMapper
-	coinKeeper    bank.Keeper
-	ibcMapper     ibc.Mapper
-	stakeKeeper   stake.Keeper
-	covKeeper     covenant.Keeper
+	accountMapper       auth.AccountMapper
+	feeCollectionKeeper auth.FeeCollectionKeeper
+	coinKeeper          bank.Keeper
+	ibcMapper           ibc.Mapper
+	stakeKeeper         stake.Keeper
+	covKeeper           covenant.Keeper
 }
 
 func NewCovenantApp(logger log.Logger, db dbm.DB) *CovenantApp {
@@ -75,7 +76,7 @@ func NewCovenantApp(logger log.Logger, db dbm.DB) *CovenantApp {
 
 	// register message routes
 	app.Router().
-		AddRoute("auth", auth.NewHandler(app.accountMapper.(auth.AccountMapper))).
+		AddRoute("auth", auth.NewHandler(app.accountMapper)).
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
@@ -84,7 +85,7 @@ func NewCovenantApp(logger log.Logger, db dbm.DB) *CovenantApp {
 	// Initialize BaseApp.
 	app.SetInitChainer(app.initChainer)
 	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake, app.keyCov)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, auth.BurnFeeHandler))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -103,14 +104,14 @@ func MakeCodec() *wire.Codec {
 	covenant.RegisterWire(cdc)
 
 	// register custom AppAccount
-	cdc.RegisterInterface((*sdk.Account)(nil), nil)
+	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "covenant/Account", nil)
 	return cdc
 }
 
 // Custom logic for basecoin initialization
 func (app *CovenantApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	stateJSON := req.AppStateBytes
+	stateJSON := req.GenesisBytes
 
 	genesisState := new(types.GenesisState)
 	err := app.cdc.UnmarshalJSON(stateJSON, genesisState)
@@ -136,7 +137,7 @@ func (app *CovenantApp) ExportAppStateJSON() (appState json.RawMessage, err erro
 
 	// iterate to get the accounts
 	accounts := []*types.GenesisAccount{}
-	appendAccount := func(acc sdk.Account) (stop bool) {
+	appendAccount := func(acc auth.Account) (stop bool) {
 		account := &types.GenesisAccount{
 			Address: acc.GetAddress(),
 			Coins:   acc.GetCoins(),

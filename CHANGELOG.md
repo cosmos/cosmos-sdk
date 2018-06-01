@@ -3,6 +3,7 @@
 ## Pending
 
 BREAKING CHANGES
+* [cli] rearranged commands under subcommands
 
 FEATURES
 

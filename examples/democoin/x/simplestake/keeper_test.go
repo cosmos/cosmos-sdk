@@ -35,9 +35,9 @@ func TestKeeperGetSet(t *testing.T) {
 	cdc := wire.NewCodec()
 	auth.RegisterBaseAccount(cdc)
 
-	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, &auth.BaseAccount{})
 	stakeKeeper := NewKeeper(capKey, bank.NewKeeper(accountMapper), DefaultCodespace)
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil, log.NewNopLogger())
 	addr := sdk.Address([]byte("some-address"))
 
 	bi := stakeKeeper.getBondInfo(ctx, addr)

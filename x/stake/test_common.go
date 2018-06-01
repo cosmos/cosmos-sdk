@@ -68,8 +68,8 @@ func makeTestCodec() *wire.Codec {
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(bank.MsgSend{}, "test/stake/Send", nil)
 	cdc.RegisterConcrete(bank.MsgIssue{}, "test/stake/Issue", nil)
-	cdc.RegisterConcrete(MsgDeclareCandidacy{}, "test/stake/DeclareCandidacy", nil)
-	cdc.RegisterConcrete(MsgEditCandidacy{}, "test/stake/EditCandidacy", nil)
+	cdc.RegisterConcrete(MsgCreateValidator{}, "test/stake/CreateValidator", nil)
+	cdc.RegisterConcrete(MsgEditValidator{}, "test/stake/EditValidator", nil)
 	cdc.RegisterConcrete(MsgUnbond{}, "test/stake/Unbond", nil)
 
 	// Register AppAccount
@@ -113,8 +113,8 @@ func createTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	)
 	ck := bank.NewKeeper(accountMapper)
 	keeper := NewKeeper(cdc, keyStake, ck, DefaultCodespace)
-	keeper.setPool(ctx, initialPool())
-	keeper.setNewParams(ctx, defaultParams())
+	keeper.setPool(ctx, InitialPool())
+	keeper.setNewParams(ctx, DefaultParams())
 
 	// fill all the addresses with some coins
 	for _, addr := range addrs {

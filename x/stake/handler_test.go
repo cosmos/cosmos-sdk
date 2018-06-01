@@ -14,8 +14,8 @@ import (
 
 //______________________________________________________________________
 
-func newTestMsgDeclareCandidacy(address sdk.Address, pubKey crypto.PubKey, amt int64) MsgDeclareCandidacy {
-	return MsgDeclareCandidacy{
+func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt int64) MsgCreateValidator {
+	return MsgCreateValidator{
 		Description:   Description{},
 		ValidatorAddr: address,
 		PubKey:        pubKey,
@@ -33,13 +33,13 @@ func newTestMsgDelegate(delegatorAddr, validatorAddr sdk.Address, amt int64) Msg
 
 //______________________________________________________________________
 
-func TestDuplicatesMsgDeclareCandidacy(t *testing.T) {
+func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 1000)
 
 	validatorAddr := addrs[0]
 	pk := pks[0]
-	msgDeclareCandidacy := newTestMsgDeclareCandidacy(validatorAddr, pk, 10)
-	got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, pk, 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	assert.True(t, got.IsOK(), "%v", got)
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
@@ -51,8 +51,8 @@ func TestDuplicatesMsgDeclareCandidacy(t *testing.T) {
 	assert.Equal(t, Description{}, validator.Description)
 
 	// one validator cannot bond twice
-	msgDeclareCandidacy.PubKey = pks[1]
-	got = handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+	msgCreateValidator.PubKey = pks[1]
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	assert.False(t, got.IsOK(), "%v", got)
 }
 
@@ -64,10 +64,10 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	bondAmount := int64(10)
 	validatorAddr, delegatorAddr := addrs[0], addrs[1]
 
-	// first declare candidacy
-	msgDeclareCandidacy := newTestMsgDeclareCandidacy(validatorAddr, pks[0], bondAmount)
-	got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
-	assert.True(t, got.IsOK(), "expected declare candidacy msg to be ok, got %v", got)
+	// first create validator
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, pks[0], bondAmount)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	assert.True(t, got.IsOK(), "expected create validator msg to be ok, got %v", got)
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
@@ -134,12 +134,12 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	ctx, accMapper, keeper := createTestInput(t, false, initBond)
 	params := keeper.GetParams(ctx)
 
-	// declare candidacy, delegate
+	// create validator, delegate
 	validatorAddr, delegatorAddr := addrs[0], addrs[1]
 
-	msgDeclareCandidacy := newTestMsgDeclareCandidacy(validatorAddr, pks[0], initBond)
-	got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
-	assert.True(t, got.IsOK(), "expected declare-candidacy to be ok, got %v", got)
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, pks[0], initBond)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	assert.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 
 	msgDelegate := newTestMsgDelegate(delegatorAddr, validatorAddr, initBond)
 	got = handleMsgDelegate(ctx, msgDelegate, keeper)
@@ -216,7 +216,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		"got: %v\nmsgUnbond: %v\nshares: %v\nleftBonded: %v\n", got, msgUnbond, unbondSharesStr, leftBonded)
 }
 
-func TestMultipleMsgDeclareCandidacy(t *testing.T) {
+func TestMultipleMsgCreateValidator(t *testing.T) {
 	initBond := int64(1000)
 	ctx, accMapper, keeper := createTestInput(t, false, initBond)
 	params := keeper.GetParams(ctx)
@@ -224,8 +224,8 @@ func TestMultipleMsgDeclareCandidacy(t *testing.T) {
 
 	// bond them all
 	for i, validatorAddr := range validatorAddrs {
-		msgDeclareCandidacy := newTestMsgDeclareCandidacy(validatorAddr, pks[i], 10)
-		got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+		msgCreateValidator := newTestMsgCreateValidator(validatorAddr, pks[i], 10)
+		got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the account is bonded
@@ -266,8 +266,8 @@ func TestMultipleMsgDelegate(t *testing.T) {
 	validatorAddr, delegatorAddrs := addrs[0], addrs[1:]
 
 	//first make a validator
-	msgDeclareCandidacy := newTestMsgDeclareCandidacy(validatorAddr, pks[0], 10)
-	got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, pks[0], 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 
 	// delegate multiple parties
@@ -294,14 +294,14 @@ func TestMultipleMsgDelegate(t *testing.T) {
 	}
 }
 
-func TestVoidCandidacy(t *testing.T) {
+func TestRevokeValidator(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 1000)
 	validatorAddr, delegatorAddr := addrs[0], addrs[1]
 
 	// create the validator
-	msgDeclareCandidacy := newTestMsgDeclareCandidacy(validatorAddr, pks[0], 10)
-	got := handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
-	require.True(t, got.IsOK(), "expected no error on runMsgDeclareCandidacy")
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, pks[0], 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 
 	// bond a delegator
 	msgDelegate := newTestMsgDelegate(delegatorAddr, validatorAddr, 10)
@@ -311,7 +311,7 @@ func TestVoidCandidacy(t *testing.T) {
 	// unbond the validators bond portion
 	msgUnbondValidator := NewMsgUnbond(validatorAddr, validatorAddr, "10")
 	got = handleMsgUnbond(ctx, msgUnbondValidator, keeper)
-	require.True(t, got.IsOK(), "expected no error on runMsgDeclareCandidacy")
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.True(t, validator.Revoked)
@@ -323,9 +323,9 @@ func TestVoidCandidacy(t *testing.T) {
 	// test that the delegator can still withdraw their bonds
 	msgUnbondDelegator := NewMsgUnbond(delegatorAddr, validatorAddr, "10")
 	got = handleMsgUnbond(ctx, msgUnbondDelegator, keeper)
-	require.True(t, got.IsOK(), "expected no error on runMsgDeclareCandidacy")
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 
 	// verify that the pubkey can now be reused
-	got = handleMsgDeclareCandidacy(ctx, msgDeclareCandidacy, keeper)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	assert.True(t, got.IsOK(), "expected ok, got %v", got)
 }

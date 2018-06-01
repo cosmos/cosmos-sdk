@@ -394,13 +394,13 @@ func TestStakeMsgs(t *testing.T) {
 	require.Equal(t, acc1, res1)
 	require.Equal(t, acc2, res2)
 
-	// Declare Candidacy
+	// Create Validator
 
 	description := stake.NewDescription("foo_moniker", "", "", "")
-	declareCandidacyMsg := stake.NewMsgDeclareCandidacy(
+	createValidatorMsg := stake.NewMsgCreateValidator(
 		addr1, priv1.PubKey(), bondCoin, description,
 	)
-	SignCheckDeliver(t, gapp, declareCandidacyMsg, []int64{0}, true, priv1)
+	SignCheckDeliver(t, gapp, createValidatorMsg, []int64{0}, true, priv1)
 
 	ctxDeliver := gapp.BaseApp.NewContext(false, abci.Header{})
 	res1 = gapp.accountMapper.GetAccount(ctxDeliver, addr1)
@@ -415,13 +415,13 @@ func TestStakeMsgs(t *testing.T) {
 	bond, found := gapp.stakeKeeper.GetDelegation(ctxDeliver, addr1, addr1)
 	require.True(sdk.RatEq(t, sdk.NewRat(10), bond.Shares))
 
-	// Edit Candidacy
+	// Edit Validator
 
 	description = stake.NewDescription("bar_moniker", "", "", "")
-	editCandidacyMsg := stake.NewMsgEditCandidacy(
+	editValidatorMsg := stake.NewMsgEditValidator(
 		addr1, description,
 	)
-	SignDeliver(t, gapp, editCandidacyMsg, []int64{1}, true, priv1)
+	SignDeliver(t, gapp, editValidatorMsg, []int64{1}, true, priv1)
 
 	validator, found = gapp.stakeKeeper.GetValidator(ctxDeliver, addr1)
 	require.True(t, found)

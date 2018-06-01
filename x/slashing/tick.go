@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/abci/types"
-	crypto "github.com/tendermint/go-crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -19,8 +18,10 @@ func NewBeginBlocker(sk Keeper) sdk.BeginBlocker {
 
 		// Deal with any equivocation evidence
 		for _, evidence := range req.ByzantineValidators {
-			var pk crypto.PubKey
-			sk.cdc.MustUnmarshalBinaryBare(evidence.PubKey, &pk)
+			pk, err := tmtypes.PB2TM.PubKey(evidence.Validator.PubKey)
+			if err != nil {
+				panic(err)
+			}
 			switch string(evidence.Type) {
 			case tmtypes.DUPLICATE_VOTE:
 				sk.handleDoubleSign(ctx, evidence.Height, evidence.Time, pk)
@@ -29,24 +30,15 @@ func NewBeginBlocker(sk Keeper) sdk.BeginBlocker {
 			}
 		}
 
-		// Figure out which validators were absent
-		absent := make(map[crypto.PubKey]struct{})
-		for _, pubkey := range req.AbsentValidators {
-			var pk crypto.PubKey
-			sk.cdc.MustUnmarshalBinaryBare(pubkey, &pk)
-			absent[pk] = struct{}{}
-		}
-
-		// Iterate over all the validators which *should* have signed this block
-		sk.stakeKeeper.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
-			pubkey := validator.GetPubKey()
-			present := true
-			if _, ok := absent[pubkey]; ok {
-				present = false
+		// Iterate over all the validators  which *should* have signed this block
+		for _, validator := range req.Validators {
+			present := validator.SignedLastBlock
+			pubkey, err := tmtypes.PB2TM.PubKey(validator.Validator.PubKey)
+			if err != nil {
+				panic(err)
 			}
 			sk.handleValidatorSignature(ctx, pubkey, present)
-			return false
-		})
+		}
 
 		// Return the begin block response
 		// TODO Return something composable, so other modules can also have BeginBlockers

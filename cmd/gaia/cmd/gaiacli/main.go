@@ -50,6 +50,7 @@ func main() {
 			stakecmd.GetCmdQueryValidators("stake", cdc),
 			stakecmd.GetCmdQueryDelegation("stake", cdc),
 			stakecmd.GetCmdQueryDelegations("stake", cdc),
+			slashingcmd.GetCmdQuerySigningInfo("slashing", cdc),
 		)...)
 	rootCmd.AddCommand(
 		client.PostCommands(

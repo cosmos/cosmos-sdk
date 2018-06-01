@@ -1,7 +1,6 @@
 package app
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -139,30 +138,6 @@ func TestMsgs(t *testing.T) {
 	}
 }
 
-func setGenesisAccounts(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
-	genaccs := make([]GenesisAccount, len(accs))
-	for i, acc := range accs {
-		genaccs[i] = NewGenesisAccount(acc)
-	}
-
-	genesisState := GenesisState{
-		Accounts:  genaccs,
-		StakeData: stake.DefaultGenesisState(),
-	}
-
-	stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
-	if err != nil {
-		return err
-	}
-
-	// Initialize the chain
-	vals := []abci.Validator{}
-	gapp.InitChain(abci.RequestInitChain{vals, stateBytes})
-	gapp.Commit()
-
-	return nil
-}
-
 func TestGenesis(t *testing.T) {
 	logger, dbs := loggerAndDB()
 	gapp := NewGaiaApp(logger, dbs)
@@ -178,7 +153,7 @@ func TestGenesis(t *testing.T) {
 	}
 
 	err = setGenesis(gapp, baseAcc)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// A checkTx context
 	ctx := gapp.BaseApp.NewContext(true, abci.Header{})

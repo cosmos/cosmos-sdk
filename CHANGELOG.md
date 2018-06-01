@@ -4,16 +4,19 @@
 
 BREAKING CHANGES
 * [cli] rearranged commands under subcommands
+* [stake] remove Tick and add EndBlocker
 
 FEATURES
 
 IMPROVEMENTS
 * bank module uses go-wire codec instead of 'encoding/json'
 * auth module uses go-wire codec instead of 'encoding/json'
+* revised use of endblock and beginblock
 
 FIXES
 * [cli] fixed cli-bash tests
 * [ci] added cli-bash tests
+* [basecoin] updated basecoin for stake and slashing
 
 ## 0.18.1
 

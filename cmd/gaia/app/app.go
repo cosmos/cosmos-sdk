@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -40,6 +41,7 @@ type GaiaApp struct {
 	keyIBC      *sdk.KVStoreKey
 	keyStake    *sdk.KVStoreKey
 	keySlashing *sdk.KVStoreKey
+	keyGov      *sdk.KVStoreKey
 
 	// Manage getting and setting accounts
 	accountMapper       auth.AccountMapper
@@ -48,6 +50,7 @@ type GaiaApp struct {
 	ibcMapper           ibc.Mapper
 	stakeKeeper         stake.Keeper
 	slashingKeeper      slashing.Keeper
+	govKeeper           gov.Keeper
 }
 
 func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
@@ -62,6 +65,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 		keyIBC:      sdk.NewKVStoreKey("ibc"),
 		keyStake:    sdk.NewKVStoreKey("stake"),
 		keySlashing: sdk.NewKVStoreKey("slashing"),
+		keyGov:      sdk.NewKVStoreKey("gov"),
 	}
 
 	// define the accountMapper
@@ -76,12 +80,14 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.RegisterCodespace(slashing.DefaultCodespace))
+	app.govKeeper = gov.NewKeeper(app.keyGov, app.coinKeeper, app.stakeKeeper, app.RegisterCodespace(gov.DefaultCodespace))
 
 	// register message routes
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
+		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
+		AddRoute("gov", gov.NewHandler(app.govKeeper))
 
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)

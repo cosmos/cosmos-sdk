@@ -13,7 +13,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
-	covenantcmd "github.com/cosmos/cosmos-sdk/examples/covenantcoin/x/covenant/cli"
+	covenantcmd "github.com/cosmos/cosmos-sdk/examples/covenantcoin/x/covenant/client/cli"
+	covenantrest "github.com/cosmos/cosmos-sdk/examples/covenantcoin/x/covenant/client/rest"
+
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
@@ -69,7 +71,7 @@ func main() {
 	// add proxy, version and key info
 	rootCmd.AddCommand(
 		client.LineBreak,
-		lcd.ServeCommand(cdc),
+		lcd.ServeCommand(cdc, covenantrest.RegisterRoutes),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,

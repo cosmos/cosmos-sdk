@@ -73,12 +73,12 @@ func AddCommands(
 
 	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
 
-	tendCmd := &cobra.Command{
+	tendermintCmd := &cobra.Command{
 		Use:   "tendermint",
 		Short: "Tendermint subcommands",
 	}
 
-	tendCmd.AddCommand(
+	tendermintCmd.AddCommand(
 		UnsafeResetAllCmd(ctx),
 		ShowNodeIDCmd(ctx),
 		ShowValidatorCmd(ctx),
@@ -88,7 +88,7 @@ func AddCommands(
 		InitCmd(ctx, cdc, appInit),
 		StartCmd(ctx, appCreator),
 		client.LineBreak,
-		tendCmd,
+		tendermintCmd,
 		client.LineBreak,
 		ExportCmd(ctx, cdc, appExport),
 		client.LineBreak,

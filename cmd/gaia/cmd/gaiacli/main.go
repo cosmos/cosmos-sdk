@@ -37,7 +37,6 @@ func main() {
 
 	// add standard rpc commands
 	rpc.AddCommands(rootCmd)
-	rootCmd.AddCommand(client.LineBreak)
 
 	//Add state commands
 	stateCmd := &cobra.Command{
@@ -49,8 +48,30 @@ func main() {
 		rpc.ValidatorCommand(),
 	)
 	tx.AddCommands(stateCmd, cdc)
-	rootCmd.AddCommand(
+
+	//Add IBC commands
+	ibcCmd := &cobra.Command{
+		Use:   "ibc",
+		Short: "Inter-Blockchain Communication subcommands",
+	}
+	ibcCmd.AddCommand(
+		client.PostCommands(
+			ibccmd.IBCTransferCmd(cdc),
+			ibccmd.IBCRelayCmd(cdc),
+		)...)
+
+	advancedCmd := &cobra.Command{
+		Use:   "advanced",
+		Short: "Advanced subcommands",
+	}
+
+	advancedCmd.AddCommand(
 		stateCmd,
+		ibcCmd,
+		lcd.ServeCommand(cdc),
+	)
+	rootCmd.AddCommand(
+		advancedCmd,
 		client.LineBreak,
 	)
 
@@ -75,22 +96,6 @@ func main() {
 		)...)
 	rootCmd.AddCommand(
 		stakeCmd,
-		client.LineBreak,
-	)
-
-	//Add IBC commands
-	ibcCmd := &cobra.Command{
-		Use:   "ibc",
-		Short: "Inter-Blockchain Communication subcommands",
-	}
-	ibcCmd.AddCommand(
-		client.PostCommands(
-			ibccmd.IBCTransferCmd(cdc),
-			ibccmd.IBCRelayCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		ibcCmd,
-		client.LineBreak,
 	)
 
 	//Add auth and bank commands
@@ -105,8 +110,6 @@ func main() {
 
 	// add proxy, version and key info
 	rootCmd.AddCommand(
-		client.LineBreak,
-		lcd.ServeCommand(cdc),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,

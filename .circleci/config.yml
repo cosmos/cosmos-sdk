@@ -1,4 +1,4 @@
-tersion: 2
+version: 2
 
 defaults: &defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk

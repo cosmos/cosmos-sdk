@@ -62,6 +62,21 @@ func GetAccAddressBech32Cosmos(address string) (addr Address, err error) {
 	return Address(bz), nil
 }
 
+// create a Pubkey from a string
+func GetAccPubKeyBech32Cosmos(address string) (pk crypto.PubKey, err error) {
+	bz, err := getFromBech32Cosmos(address, Bech32PrefixAccPub)
+	if err != nil {
+		return nil, err
+	}
+
+	pk, err = crypto.PubKeyFromBytes(bz)
+	if err != nil {
+		return nil, err
+	}
+
+	return pk, nil
+}
+
 // create an Address from a hex string
 func GetValAddressHex(address string) (addr Address, err error) {
 	if len(address) == 0 {

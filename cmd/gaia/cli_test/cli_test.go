@@ -21,7 +21,6 @@ import (
 )
 
 func TestGaiaCLISend(t *testing.T) {
-	fmt.Println("wackydebugoutput TestGaiaCLISend 0")
 
 	tests.ExecuteT(t, "gaiad unsafe_reset_all")
 	pass := "1234567890"
@@ -51,8 +50,6 @@ func TestGaiaCLISend(t *testing.T) {
 	assert.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak"))
 
 	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barCech), pass)
-	fmt.Println("wackydebugoutput TestGaiaCLISend 1")
-	fmt.Println("wackydebugoutput TestGaiaCLISend 2")
 	time.Sleep(time.Second * 2) // waiting for some blocks to pass
 
 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))

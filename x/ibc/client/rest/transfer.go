@@ -37,7 +37,7 @@ func TransferRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.Core
 		destChainID := vars["destchain"]
 		bech32addr := vars["address"]
 
-		address, err := sdk.GetAccAddressBech32Cosmos(bech32addr)
+		address, err := sdk.GetAccAddressBech32(bech32addr)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))

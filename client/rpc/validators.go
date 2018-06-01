@@ -45,11 +45,11 @@ type ResultValidatorsOutput struct {
 }
 
 func bech32CosmosValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
-	bechAddress, err := sdk.Bech32CosmosifyVal(validator.Address)
+	bechAddress, err := sdk.Bech32ifyVal(validator.Address)
 	if err != nil {
 		return ValidatorOutput{}, err
 	}
-	bechValPubkey, err := sdk.Bech32CosmosifyValPub(validator.PubKey)
+	bechValPubkey, err := sdk.Bech32ifyValPub(validator.PubKey)
 	if err != nil {
 		return ValidatorOutput{}, err
 	}

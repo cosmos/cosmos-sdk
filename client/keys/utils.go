@@ -66,11 +66,11 @@ func Bech32CosmosKeysOutput(infos []keys.Info) ([]KeyOutput, error) {
 
 // create a KeyOutput in bech32cosmos format
 func Bech32CosmosKeyOutput(info keys.Info) (KeyOutput, error) {
-	bechAccount, err := sdk.Bech32CosmosifyAcc(sdk.Address(info.PubKey.Address().Bytes()))
+	bechAccount, err := sdk.Bech32ifyAcc(sdk.Address(info.PubKey.Address().Bytes()))
 	if err != nil {
 		return KeyOutput{}, err
 	}
-	bechPubKey, err := sdk.Bech32CosmosifyAccPub(info.PubKey)
+	bechPubKey, err := sdk.Bech32ifyAccPub(info.PubKey)
 	if err != nil {
 		return KeyOutput{}, err
 	}

@@ -71,13 +71,13 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 		messages := make([]sdk.Msg, len(m.Delegate)+len(m.Unbond))
 		i := 0
 		for _, msg := range m.Delegate {
-			delegatorAddr, err := sdk.GetAccAddressBech32Cosmos(msg.DelegatorAddr)
+			delegatorAddr, err := sdk.GetAccAddressBech32(msg.DelegatorAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error())))
 				return
 			}
-			validatorAddr, err := sdk.GetValAddressBech32Cosmos(msg.ValidatorAddr)
+			validatorAddr, err := sdk.GetValAddressBech32(msg.ValidatorAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))
@@ -96,13 +96,13 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			i++
 		}
 		for _, msg := range m.Unbond {
-			delegatorAddr, err := sdk.GetAccAddressBech32Cosmos(msg.DelegatorAddr)
+			delegatorAddr, err := sdk.GetAccAddressBech32(msg.DelegatorAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error())))
 				return
 			}
-			validatorAddr, err := sdk.GetValAddressBech32Cosmos(msg.ValidatorAddr)
+			validatorAddr, err := sdk.GetValAddressBech32(msg.ValidatorAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error())))

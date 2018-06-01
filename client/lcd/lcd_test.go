@@ -104,7 +104,7 @@ func TestKeys(t *testing.T) {
 	require.Nil(t, err)
 
 	addrAcc, _ := sdk.GetAccAddressHex(addr)
-	addrBech32, _ := sdk.Bech32CosmosifyAcc(addrAcc)
+	addrBech32, _ := sdk.Bech32ifyAcc(addrAcc)
 
 	assert.Equal(t, name, m[0].Name, "Did not serve keys name correctly")
 	assert.Equal(t, sendAddr, m[0].Address, "Did not serve keys Address correctly")
@@ -233,7 +233,7 @@ func TestValidators(t *testing.T) {
 
 func TestCoinSend(t *testing.T) {
 	bz, _ := hex.DecodeString("8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6")
-	someFakeAddr, _ := sdk.Bech32CosmosifyAcc(bz)
+	someFakeAddr, _ := sdk.Bech32ifyAcc(bz)
 
 	// query empty
 	res, body := request(t, port, "GET", "/accounts/"+someFakeAddr, nil)
@@ -427,8 +427,8 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	pk2 := genDoc.Validators[1].PubKey
 	validatorAddr1Hx = hex.EncodeToString(pk1.Address())
 	validatorAddr2Hx = hex.EncodeToString(pk2.Address())
-	validatorAddr1, _ = sdk.Bech32CosmosifyVal(pk1.Address())
-	validatorAddr2, _ = sdk.Bech32CosmosifyVal(pk2.Address())
+	validatorAddr1, _ = sdk.Bech32ifyVal(pk1.Address())
+	validatorAddr2, _ = sdk.Bech32ifyVal(pk2.Address())
 
 	// NOTE it's bad practice to reuse pk address for the owner address but doing in the
 	// test for simplicity
@@ -454,7 +454,7 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 		return nil, nil, err
 	}
 	sendAddrHex, _ := sdk.GetAccAddressHex(info.PubKey.Address().String())
-	sendAddr, _ = sdk.Bech32CosmosifyAcc(sendAddrHex) // XXX global
+	sendAddr, _ = sdk.Bech32ifyAcc(sendAddrHex) // XXX global
 	accAuth := auth.NewBaseAccountWithAddress(info.PubKey.Address())
 	accAuth.Coins = sdk.Coins{{"steak", 100}}
 	acc := gapp.NewGenesisAccount(&accAuth)
@@ -558,7 +558,7 @@ func doSend(t *testing.T, port, seed string) (receiveAddr string, resultTx ctype
 	kb := client.MockKeyBase()
 	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
 	require.Nil(t, err)
-	receiveAddr, _ = sdk.Bech32CosmosifyAcc(receiveInfo.PubKey.Address())
+	receiveAddr, _ = sdk.Bech32ifyAcc(receiveInfo.PubKey.Address())
 
 	acc := getAccount(t, sendAddr)
 	sequence := acc.GetSequence()
@@ -579,7 +579,7 @@ func doIBCTransfer(t *testing.T, port, seed string) (resultTx ctypes.ResultBroad
 	kb := client.MockKeyBase()
 	receiveInfo, _, err := kb.Create("receive_address", "1234567890", cryptoKeys.CryptoAlgo("ed25519"))
 	require.Nil(t, err)
-	receiveAddr, _ := sdk.Bech32CosmosifyAcc(receiveInfo.PubKey.Address())
+	receiveAddr, _ := sdk.Bech32ifyAcc(receiveInfo.PubKey.Address())
 
 	// get the account to get the sequence
 	acc := getAccount(t, sendAddr)

@@ -32,14 +32,14 @@ func bondingStatusHandlerFn(ctx context.CoreContext, storeName string, cdc *wire
 		bech32delegator := vars["delegator"]
 		bech32validator := vars["validator"]
 
-		delegatorAddr, err := sdk.GetAccAddressBech32Cosmos(bech32delegator)
+		delegatorAddr, err := sdk.GetAccAddressBech32(bech32delegator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		validatorAddr, err := sdk.GetValAddressBech32Cosmos(bech32validator)
+		validatorAddr, err := sdk.GetValAddressBech32(bech32validator)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -104,11 +104,11 @@ type StakeValidatorOutput struct {
 }
 
 func bech32CosmosStakeValidatorOutput(validator stake.Validator) (StakeValidatorOutput, error) {
-	bechOwner, err := sdk.Bech32CosmosifyVal(validator.Owner)
+	bechOwner, err := sdk.Bech32ifyVal(validator.Owner)
 	if err != nil {
 		return StakeValidatorOutput{}, err
 	}
-	bechValPubkey, err := sdk.Bech32CosmosifyValPub(validator.PubKey)
+	bechValPubkey, err := sdk.Bech32ifyValPub(validator.PubKey)
 	if err != nil {
 		return StakeValidatorOutput{}, err
 	}

@@ -394,15 +394,6 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	var info cryptoKeys.Info
-	info, seed, err = kb.Create(name, password, cryptoKeys.AlgoEd25519) // XXX global seed
-	if err != nil {
-		return nil, nil, err
-	}
-
-	pubKey := info.PubKey
-	sendAddrHex, _ := sdk.GetAccAddressHex(pubKey.Address().String())
-	sendAddr, _ = sdk.Bech32CosmosifyAcc(sendAddrHex) // XXX global
 
 	config := GetConfig()
 	config.Consensus.TimeoutCommit = 1000
@@ -458,7 +449,8 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	sendAddr = info.PubKey.Address().String() // XXX global
+	sendAddrHex, _ := sdk.GetAccAddressHex(info.PubKey.Address().String())
+	sendAddr, _ = sdk.Bech32CosmosifyAcc(sendAddrHex) // XXX global
 	accAuth := auth.NewBaseAccountWithAddress(info.PubKey.Address())
 	accAuth.Coins = sdk.Coins{{"steak", 100}}
 	acc := gapp.NewGenesisAccount(&accAuth)

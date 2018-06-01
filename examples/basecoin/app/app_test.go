@@ -122,30 +122,6 @@ func newBasecoinApp() *BasecoinApp {
 	return NewBasecoinApp(logger, db)
 }
 
-//func setGenesisAccounts(bapp *BasecoinApp, accs ...auth.BaseAccount) error {
-//genaccs := make([]*types.GenesisAccount, len(accs))
-//for i, acc := range accs {
-//genaccs[i] = types.NewGenesisAccount(&types.AppAccount{acc, accName})
-//}
-
-//genesisState := types.GenesisState{
-//Accounts:  genaccs,
-//StakeData: stake.DefaultGenesisState(),
-//}
-
-//stateBytes, err := json.MarshalIndent(genesisState, "", "\t")
-//if err != nil {
-//return err
-//}
-
-//// Initialize the chain
-//vals := []abci.Validator{}
-//bapp.InitChain(abci.RequestInitChain{vals, stateBytes})
-//bapp.Commit()
-
-//return nil
-//}
-
 //_______________________________________________________________________
 
 func TestMsgs(t *testing.T) {

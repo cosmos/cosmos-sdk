@@ -21,7 +21,7 @@ func GetCmdUnrevoke(cdc *wire.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
 
-			validatorAddr, err := sdk.GetAccAddressBech32Cosmos(args[0])
+			validatorAddr, err := sdk.GetAccAddressBech32(args[0])
 			if err != nil {
 				return err
 			}

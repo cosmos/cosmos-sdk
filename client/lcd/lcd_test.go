@@ -611,8 +611,6 @@ func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxC
 	acc := getAccount(t, sendAddr)
 	sequence := acc.GetSequence()
 
-	fmt.Println("ACC", sendAddr)
-
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{
 		"name": "%s",

@@ -71,7 +71,6 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 		messages := make([]sdk.Msg, len(m.Delegate)+len(m.Unbond))
 		i := 0
 		for _, msg := range m.Delegate {
-			fmt.Println("ACC INTERNAL " + msg.DelegatorAddr)
 			delegatorAddr, err := sdk.GetAccAddressBech32Cosmos(msg.DelegatorAddr)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)

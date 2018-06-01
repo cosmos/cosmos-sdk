@@ -22,7 +22,7 @@ import (
 
 func TestGaiaCLISend(t *testing.T) {
 
-	tests.ExecuteT(t, "gaiad tendermint unsafe_reset_all")
+	tests.ExecuteT(t, "gaiad unsafe_reset_all")
 	pass := "1234567890"
 	executeWrite(t, "gaiacli keys delete foo", pass)
 	executeWrite(t, "gaiacli keys delete bar", pass)
@@ -69,7 +69,7 @@ func TestGaiaCLISend(t *testing.T) {
 
 func TestGaiaCLICreateValidator(t *testing.T) {
 
-	tests.ExecuteT(t, "gaiad tendermint unsafe_reset_all")
+	tests.ExecuteT(t, "gaiad unsafe_reset_all")
 	pass := "1234567890"
 	executeWrite(t, "gaiacli keys delete foo", pass)
 	executeWrite(t, "gaiacli keys delete bar", pass)

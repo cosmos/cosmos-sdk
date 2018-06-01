@@ -65,7 +65,7 @@ type Op interface {
 type Proof []Op
 
 func (p Proof) Verify(root []byte, value [][]byte, keys ...string) (err error) {
-	fmt.Printf("verifying %+v with %+v, %+v\n", p, value, keys)
+	fmt.Printf("verifying %+v with %+v, %+v on %+v\n", p, value, keys, root)
 	for i, op := range p {
 		key := op.GetKey()
 		if key != "" {
@@ -80,7 +80,7 @@ func (p Proof) Verify(root []byte, value [][]byte, keys ...string) (err error) {
 		}
 	}
 	if !bytes.Equal(root, value[0]) {
-		return fmt.Errorf("Calculated root hash is invalid")
+		return fmt.Errorf("Calculated root hash is invalid: expected %+v but %+v\n", root, value[0])
 	}
 
 	return nil

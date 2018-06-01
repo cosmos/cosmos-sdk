@@ -172,7 +172,6 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery, prf m
 				break
 			}
 			res.Value = value
-			fmt.Printf("original: %+v\n", key)
 			prf = merkle.Proof([]merkle.Op{merkle.FromIAVLKey(proof, string(key))})
 		} else {
 			_, res.Value = tree.GetVersioned(key, height)
@@ -191,6 +190,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery, prf m
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
 		return sdk.ErrUnknownRequest(msg).QueryResult(), nil
 	}
+	fmt.Printf("returning %+v\n", res)
 	return
 }
 

@@ -355,6 +355,12 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		}
 		req.Path = "/" + strings.Join(path[1:], "/")
 		res, proof := queryable.Query(req)
+
+		// REMOVE BEFORE COMMIT
+		fmt.Printf("\n\n\n\n\n\nverifying in local\n\n\n\n\n")
+		fmt.Printf("lastcommit: %+v\n", app.LastCommitID())
+		fmt.Println(proof.Verify(app.LastCommitID().Hash, [][]byte{res.Value}, string(req.Data), path[1]))
+
 		cdc := wire.NewCodec()
 		merkle.RegisterWire(cdc)
 		store.RegisterWire(cdc)
@@ -363,6 +369,8 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			return sdk.ErrInternal(err.Error()).QueryResult()
 		}
 		res.Proof = proofbz
+		fmt.Printf("sending: %+v\n", proof)
+
 		return res
 	}
 	// "/p2p" prefix for p2p queries

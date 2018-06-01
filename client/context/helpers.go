@@ -50,6 +50,7 @@ func (ctx CoreContext) BroadcastTx(tx []byte) (*ctypes.ResultBroadcastTxCommit, 
 
 // Query from Tendermint with the provided key and storename
 func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, err error) {
+	fmt.Printf("querying from height: %d\n", ctx.Height)
 	resp, err := ctx.query(key, storeName, "key")
 	if err != nil {
 		return
@@ -57,6 +58,8 @@ func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, er
 	if ctx.TrustNode {
 		return
 	}
+
+	fmt.Printf("received: %+v\n", resp.Proof)
 
 	cdc := wire.NewCodec()
 	merkle.RegisterWire(cdc)
@@ -102,13 +105,13 @@ func (ctx CoreContext) Query(key cmn.HexBytes, storeName string) (res []byte, er
 		return
 	}
 
+	fmt.Printf("retrieved fc: %+v\n", fc.Commit.Header)
+
 	err = cert.Certify(fc.Commit)
 	if err != nil {
 		return
 	}
-
-	fmt.Printf("originally %+v provided %+v\n", []byte(key))
-	err = proof.Verify(fc.Header.AppHash, [][]byte{res}, string(key), storeName)
+	err = proof.Verify(fc.Header.AppHash, [][]byte{resp.Value}, string(key), storeName)
 	return
 }
 

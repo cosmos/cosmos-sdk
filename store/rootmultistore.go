@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	latestVersionKey = "s/latest"
-	commitInfoKeyFmt = "s/%d" // s/<version>
+	latestVersionKey      = "s/latest"
+	commitInfoKeyFmt      = "s/%d" // s/<version>
+	defaultRootNumHistory = 2
 )
 
 // rootMultiStore is composed of many CommitStores.
@@ -25,12 +26,13 @@ const (
 // other MultiStores.
 // Implements MultiStore.
 type rootMultiStore struct {
-	db           dbm.DB
-	lastCommitID CommitID
-	storesParams map[StoreKey]storeParams
-	stores       map[StoreKey]CommitStore
-	keysByName   map[string]StoreKey
-	opsByName    map[string][]merkle.Op
+	db            dbm.DB
+	lastCommitID  CommitID
+	storesParams  map[StoreKey]storeParams
+	stores        map[StoreKey]CommitStore
+	keysByName    map[string]StoreKey
+	opsNumHistory int
+	opsMaps       map[int64]map[string][]merkle.Op
 }
 
 var _ CommitMultiStore = (*rootMultiStore)(nil)
@@ -39,10 +41,12 @@ var _ Queryable = (*rootMultiStore)(nil)
 // nolint
 func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 	return &rootMultiStore{
-		db:           db,
-		storesParams: make(map[StoreKey]storeParams),
-		stores:       make(map[StoreKey]CommitStore),
-		keysByName:   make(map[string]StoreKey),
+		db:            db,
+		storesParams:  make(map[StoreKey]storeParams),
+		stores:        make(map[StoreKey]CommitStore),
+		keysByName:    make(map[string]StoreKey),
+		opsNumHistory: defaultRootNumHistory,
+		opsMaps:       make(map[int64]map[string][]merkle.Op),
 	}
 }
 
@@ -155,7 +159,12 @@ func (rs *rootMultiStore) Commit() CommitID {
 	batch.Write()
 
 	// Cache subproof ops
-	rs.opsByName = commitInfo.Proofs()
+	rs.opsMaps[version] = commitInfo.Proofs()
+	fmt.Printf("store proof for %+v at %d\n", commitInfo, version)
+	if len(rs.opsMaps) > rs.opsNumHistory {
+		delete(rs.opsMaps, version-int64(rs.opsNumHistory))
+		fmt.Printf("delete proof for %d\n", version-int64(rs.opsNumHistory))
+	}
 
 	// Prepare for next version.
 	commitID := CommitID{
@@ -237,7 +246,18 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) (abci.ResponseQuery, merk
 	res, prf := queryable.Query(req)
 
 	if req.Prove && prf != nil {
-		prf = append(prf, rs.opsByName[storeName]...)
+		opsMap, ok := rs.opsMaps[res.Height]
+		if !ok {
+			fmt.Printf("could not find opsMap from %d\n", res.Height)
+			ci, err := getCommitInfo(rs.db, res.Height)
+			if err != nil {
+				return sdk.ErrInternal(err.Error()).QueryResult(), nil
+			}
+			opsMap = ci.Proofs()
+		}
+
+		fmt.Printf("got opsMap from %d\n", res.Height)
+		prf = append(prf, opsMap[storeName]...)
 	}
 
 	return res, prf
@@ -334,6 +354,7 @@ func (ci commitInfo) CommitID() CommitID {
 func (ci commitInfo) Proofs() (res map[string][]merkle.Op) {
 	m := make(map[string]libmerkle.Hasher, len(ci.StoreInfos))
 	for _, storeInfo := range ci.StoreInfos {
+		fmt.Printf("generating proof for: %+v\n", storeInfo)
 		m[storeInfo.Name] = storeInfo
 	}
 	_, proofs, keys := libmerkle.SimpleProofsFromMap(m)
@@ -388,6 +409,7 @@ func (op RootMultistoreOp) Run(value [][]byte) ([][]byte, error) {
 		return nil, fmt.Errorf("Value size is not 1")
 	}
 
+	fmt.Printf("wrapping %+v\n", value[0])
 	si := storeInfo{
 		Name: op.Name,
 		Core: storeCore{
@@ -398,6 +420,7 @@ func (op RootMultistoreOp) Run(value [][]byte) ([][]byte, error) {
 		},
 	}
 	kvp := libmerkle.KVPair{[]byte(op.Name), si.Hash()}
+	fmt.Printf("wrapped: %+v\n", kvp.Hash())
 	return [][]byte{kvp.Hash()}, nil
 }
 

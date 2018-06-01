@@ -21,7 +21,7 @@ func GetCmdQuerySigningInfo(storeName string, cdc *wire.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			pk, err := sdk.GetValPubKeyBech32Cosmos(args[0])
+			pk, err := sdk.GetValPubKeyBech32(args[0])
 			if err != nil {
 				return err
 			}

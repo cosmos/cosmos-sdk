@@ -52,11 +52,11 @@ type BaseApp struct {
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
 
 	// may be nil
-	initChainer      sdk.InitChainer  // initialize state with validators and state blob
-	beginBlocker     sdk.BeginBlocker // logic to run before any txs
-	endBlockers      []sdk.EndBlocker // logic to run after all txs, and to determine valset changes
-	addrPeerFilter   sdk.PeerFilter   // filter peers by address and port
-	pubkeyPeerFilter sdk.PeerFilter   // filter peers by public key
+	initChainer      sdk.InitChainer    // initialize state with validators and state blob
+	beginBlockers    []sdk.BeginBlocker // logic to run before any txs
+	endBlockers      []sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
+	addrPeerFilter   sdk.PeerFilter     // filter peers by address and port
+	pubkeyPeerFilter sdk.PeerFilter     // filter peers by public key
 
 	//--------------------
 	// Volatile
@@ -147,8 +147,8 @@ func defaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
 func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
 	app.initChainer = initChainer
 }
-func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
-	app.beginBlocker = beginBlocker
+func (app *BaseApp) SetBeginBlockers(beginBlockers ...sdk.BeginBlocker) {
+	app.beginBlockers = beginBlockers
 }
 func (app *BaseApp) SetEndBlockers(endBlockers ...sdk.EndBlocker) {
 	app.endBlockers = endBlockers
@@ -381,12 +381,18 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	if app.deliverState == nil {
 		app.setDeliverState(req.Header)
 	}
+
 	app.valUpdates = nil
-	if app.beginBlocker != nil {
-		res = app.beginBlocker(app.deliverState.ctx, req)
+
+	if len(app.beginBlockers) == 0 {
+		for _, beginBlocker := range app.beginBlockers {
+			res = beginBlocker(app.deliverState.ctx, req, res)
+		}
 	}
+
 	// set the absent validators for addition to context in deliverTx
 	app.absentValidators = req.AbsentValidators
+
 	return
 }
 

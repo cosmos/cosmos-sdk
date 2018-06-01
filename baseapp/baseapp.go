@@ -54,7 +54,7 @@ type BaseApp struct {
 	// may be nil
 	initChainer      sdk.InitChainer  // initialize state with validators and state blob
 	beginBlocker     sdk.BeginBlocker // logic to run before any txs
-	endBlocker       sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
+	endBlockers      []sdk.EndBlocker // logic to run after all txs, and to determine valset changes
 	addrPeerFilter   sdk.PeerFilter   // filter peers by address and port
 	pubkeyPeerFilter sdk.PeerFilter   // filter peers by public key
 
@@ -150,8 +150,8 @@ func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
 func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
 	app.beginBlocker = beginBlocker
 }
-func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
-	app.endBlocker = endBlocker
+func (app *BaseApp) SetEndBlockers(endBlockers ...sdk.EndBlocker) {
+	app.endBlockers = endBlockers
 }
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	app.anteHandler = ah
@@ -549,10 +549,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 // Implements ABCI
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-	if app.endBlocker != nil {
-		res = app.endBlocker(app.deliverState.ctx, req)
-	} else {
+	if len(app.endBlockers) == 0 {
 		res.ValidatorUpdates = app.valUpdates
+	} else {
+		for _, endBlocker := range app.endBlockers {
+			res = endBlocker(app.deliverState.ctx, req, res)
+		}
 	}
 	return
 }

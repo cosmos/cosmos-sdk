@@ -16,7 +16,8 @@ const (
 	flagSelect = "select"
 )
 
-func blockCommand() *cobra.Command {
+//BlockCommand returns the verified block data for a given heights
+func BlockCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block [height]",
 		Short: "Get verified data for a the block at given height",

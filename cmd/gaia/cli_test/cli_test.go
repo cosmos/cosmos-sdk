@@ -96,7 +96,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	executeWrite(t, fmt.Sprintf("gaiacli send %v --amount=10steak --to=%v --name=foo", flags, barCech), pass)
-	time.Sleep(time.Second * 2) // waiting for some blocks to pass
+	time.Sleep(time.Second * 3) // waiting for some blocks to pass
 
 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
 	assert.Equal(t, int64(10), barAcc.GetCoins().AmountOf("steak"))
@@ -104,7 +104,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	assert.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak"))
 
 	// create validator
-	cvStr := fmt.Sprintf("gaiacli create-validator %v", flags)
+	cvStr := fmt.Sprintf("gaiacli stake create-validator %v", flags)
 	cvStr += fmt.Sprintf(" --name=%v", "bar")
 	cvStr += fmt.Sprintf(" --address-validator=%v", barCech)
 	cvStr += fmt.Sprintf(" --pubkey=%v", barCeshPubKey)
@@ -117,12 +117,12 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
 	require.Equal(t, int64(8), barAcc.GetCoins().AmountOf("steak"), "%v", barAcc)
 
-	validator := executeGetValidator(t, fmt.Sprintf("gaiacli validator %v --output=json %v", barCech, flags))
+	validator := executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %v --output=json %v", barCech, flags))
 	assert.Equal(t, validator.Owner, barAddr)
 	assert.Equal(t, "2/1", validator.PoolShares.Amount.String())
 
 	// unbond a single share
-	unbondStr := fmt.Sprintf("gaiacli unbond %v", flags)
+	unbondStr := fmt.Sprintf("gaiacli stake unbond %v", flags)
 	unbondStr += fmt.Sprintf(" --name=%v", "bar")
 	unbondStr += fmt.Sprintf(" --address-validator=%v", barCech)
 	unbondStr += fmt.Sprintf(" --address-delegator=%v", barCech)
@@ -135,7 +135,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %v %v", barCech, flags))
 	require.Equal(t, int64(9), barAcc.GetCoins().AmountOf("steak"), "%v", barAcc)
-	validator = executeGetValidator(t, fmt.Sprintf("gaiacli validator %v --output=json %v", barCech, flags))
+	validator = executeGetValidator(t, fmt.Sprintf("gaiacli stake validator %v --output=json %v", barCech, flags))
 	assert.Equal(t, "1/1", validator.PoolShares.Amount.String())
 }
 

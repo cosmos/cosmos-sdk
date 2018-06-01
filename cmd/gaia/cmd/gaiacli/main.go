@@ -35,36 +35,81 @@ func main() {
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
 
-	// add standard rpc, and tx commands
+	// add standard rpc commands
 	rpc.AddCommands(rootCmd)
-	rootCmd.AddCommand(client.LineBreak)
-	tx.AddCommands(rootCmd, cdc)
-	rootCmd.AddCommand(client.LineBreak)
 
-	// add query/post commands (custom to binary)
+	//Add state commands
+	tendermintCmd := &cobra.Command{
+		Use:   "tendermint",
+		Short: "Tendermint state querying subcommands",
+	}
+	tendermintCmd.AddCommand(
+		rpc.BlockCommand(),
+		rpc.ValidatorCommand(),
+	)
+	tx.AddCommands(tendermintCmd, cdc)
+
+	//Add IBC commands
+	ibcCmd := &cobra.Command{
+		Use:   "ibc",
+		Short: "Inter-Blockchain Communication subcommands",
+	}
+	ibcCmd.AddCommand(
+		client.PostCommands(
+			ibccmd.IBCTransferCmd(cdc),
+			ibccmd.IBCRelayCmd(cdc),
+		)...)
+
+	advancedCmd := &cobra.Command{
+		Use:   "advanced",
+		Short: "Advanced subcommands",
+	}
+
+	advancedCmd.AddCommand(
+		tendermintCmd,
+		ibcCmd,
+		lcd.ServeCommand(cdc),
+	)
 	rootCmd.AddCommand(
+		advancedCmd,
+		client.LineBreak,
+	)
+
+	//Add stake commands
+	stakeCmd := &cobra.Command{
+		Use:   "stake",
+		Short: "Stake and validation subcommands",
+	}
+	stakeCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("acc", cdc, authcmd.GetAccountDecoder(cdc)),
 			stakecmd.GetCmdQueryValidator("stake", cdc),
 			stakecmd.GetCmdQueryValidators("stake", cdc),
 			stakecmd.GetCmdQueryDelegation("stake", cdc),
 			stakecmd.GetCmdQueryDelegations("stake", cdc),
 		)...)
-	rootCmd.AddCommand(
+	stakeCmd.AddCommand(
 		client.PostCommands(
-			bankcmd.SendTxCmd(cdc),
-			ibccmd.IBCTransferCmd(cdc),
-			ibccmd.IBCRelayCmd(cdc),
 			stakecmd.GetCmdCreateValidator(cdc),
 			stakecmd.GetCmdEditValidator(cdc),
 			stakecmd.GetCmdDelegate(cdc),
 			stakecmd.GetCmdUnbond(cdc),
 		)...)
+	rootCmd.AddCommand(
+		stakeCmd,
+	)
+
+	//Add auth and bank commands
+	rootCmd.AddCommand(
+		client.GetCommands(
+			authcmd.GetAccountCmd("acc", cdc, authcmd.GetAccountDecoder(cdc)),
+		)...)
+	rootCmd.AddCommand(
+		client.PostCommands(
+			bankcmd.SendTxCmd(cdc),
+		)...)
 
 	// add proxy, version and key info
 	rootCmd.AddCommand(
-		client.LineBreak,
-		lcd.ServeCommand(cdc),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,

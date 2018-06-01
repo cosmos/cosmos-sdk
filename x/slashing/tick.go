@@ -41,7 +41,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) (tags 
 	}
 
 	// Iterate over all the validators which *should* have signed this block
-	sk.stakeKeeper.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
+	sk.validatorSet.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
 		pubkey := validator.GetPubKey()
 		present := true
 		if _, ok := absent[pubkey]; ok {

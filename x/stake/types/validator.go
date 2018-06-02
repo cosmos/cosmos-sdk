@@ -1,4 +1,4 @@
-package stake
+package types
 
 import (
 	"bytes"
@@ -39,9 +39,6 @@ type Validator struct {
 	// fee related
 	PrevBondedShares sdk.Rat `json:"prev_bonded_shares"` // total shares of a global hold pools
 }
-
-// Validators - list of Validators
-type Validators []Validator
 
 // NewValidator - initialize a new validator
 func NewValidator(owner sdk.Address, pubKey crypto.PubKey, description Description) Validator {

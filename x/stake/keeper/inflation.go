@@ -1,7 +1,8 @@
-package stake
+package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 const (
@@ -12,7 +13,7 @@ const (
 var hrsPerYrRat = sdk.NewRat(hrsPerYr) // as defined by a julian year of 365.25 days
 
 // process provisions for an hour period
-func (k Keeper) processProvisions(ctx sdk.Context) Pool {
+func (k Keeper) processProvisions(ctx sdk.Context) stake.Pool {
 
 	pool := k.GetPool(ctx)
 	pool.Inflation = k.nextInflation(ctx)

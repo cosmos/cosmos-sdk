@@ -1,4 +1,4 @@
-package stake
+package types
 
 import (
 	"bytes"
@@ -52,6 +52,8 @@ func (b Delegation) HumanReadableString() (string, error) {
 
 }
 
+//__________________________________________________________________
+
 // element stored to represent the passive unbonding queue
 type UnbondingDelegation struct {
 	DelegationKey   sdk.Address // key of the delegation
@@ -60,6 +62,8 @@ type UnbondingDelegation struct {
 	ExpectedTokens  sdk.Coins   // the value in Atoms of the amount of shares which are unbonding
 	StartSlashRatio sdk.Rat     // validator slash ratio at unbonding initiation
 }
+
+//__________________________________________________________________
 
 // element stored to represent the passive redelegation queue
 type Redelegation struct {

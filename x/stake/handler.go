@@ -17,8 +17,14 @@ func NewHandler(k Keeper) sdk.Handler {
 			return handleMsgEditValidator(ctx, msg, k)
 		case MsgDelegate:
 			return handleMsgDelegate(ctx, msg, k)
-		case MsgUnbond:
-			return handleMsgUnbond(ctx, msg, k)
+		case MsgBeginRedelegate:
+			return handleMsgBeginRedelegate(ctx, msg, k)
+		case MsgCompleteRedelegate:
+			return handleMsgCompleteRedelegate(ctx, msg, k)
+		case MsgBeginUnbonding:
+			return handleMsgBeginUnbonding(ctx, msg, k)
+		case MsgCompleteUnbonding:
+			return handleMsgCompleteUnbonding(ctx, msg, k)
 		default:
 			return sdk.ErrTxDecode("invalid message parse in staking module").Result()
 		}
@@ -176,7 +182,7 @@ func delegate(ctx sdk.Context, k Keeper, delegatorAddr sdk.Address,
 	return tags, nil
 }
 
-func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
+func handleMsgBeginUnbonding(ctx sdk.Context, msg MsgBeginUnbonding, k Keeper) sdk.Result {
 
 	// check if bond has any shares in it unbond
 	bond, found := k.GetDelegation(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
@@ -187,18 +193,13 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	var delShares sdk.Rat
 
 	// test that there are enough shares to unbond
-	if msg.Shares == "MAX" {
+	if !msg.SharesPercent.Equal(sdk.ZeroRat()) {
 		if !bond.Shares.GT(sdk.ZeroRat()) {
-			return ErrNotEnoughBondShares(k.codespace, msg.Shares).Result()
+			return ErrNotEnoughBondShares(k.codespace, bond.Shares.String()).Result()
 		}
 	} else {
-		var err sdk.Error
-		delShares, err = sdk.NewRatFromDecimal(msg.Shares)
-		if err != nil {
-			return err.Result()
-		}
-		if bond.Shares.LT(delShares) {
-			return ErrNotEnoughBondShares(k.codespace, msg.Shares).Result()
+		if bond.Shares.LT(msg.SharesAmount) {
+			return ErrNotEnoughBondShares(k.codespace, bond.Shares.String()).Result()
 		}
 	}
 
@@ -212,9 +213,9 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 		return sdk.Result{}
 	}
 
-	// retrieve the amount of bonds to remove (TODO remove redundancy already serialized)
-	if msg.Shares == "MAX" {
-		delShares = bond.Shares
+	// retrieve the amount of bonds to remove
+	if !msg.SharesPercent.Equal(sdk.ZeroRat()) {
+		delShares = bond.Shares.Mul(msg.SharesPercent)
 	}
 
 	// subtract bond tokens from delegator bond
@@ -261,4 +262,19 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	return sdk.Result{
 		Tags: tags,
 	}
+}
+
+func handleMsgCompleteUnbonding(ctx sdk.Context, msg MsgCompleteUnbonding, k Keeper) sdk.Result {
+	// XXX
+	return sdk.Result{}
+}
+
+func handleMsgBeginRedelegate(ctx sdk.Context, msg MsgBeginRedelegate, k Keeper) sdk.Result {
+	// XXX
+	return sdk.Result{}
+}
+
+func handleMsgCompleteRedelegate(ctx sdk.Context, msg MsgCompleteRedelegate, k Keeper) sdk.Result {
+	// XXX
+	return sdk.Result{}
 }

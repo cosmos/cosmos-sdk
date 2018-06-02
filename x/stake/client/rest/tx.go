@@ -24,12 +24,12 @@ func registerTxRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, k
 }
 
 type editDelegationsBody struct {
-	LocalAccountName string              `json:"name"`
-	Password         string              `json:"password"`
-	ChainID          string              `json:"chain_id"`
-	Sequence         int64               `json:"sequence"`
-	Delegate         []stake.MsgDelegate `json:"delegate"`
-	Unbond           []stake.MsgUnbond   `json:"unbond"`
+	LocalAccountName string                    `json:"name"`
+	Password         string                    `json:"password"`
+	ChainID          string                    `json:"chain_id"`
+	Sequence         int64                     `json:"sequence"`
+	Delegate         []stake.MsgDelegate       `json:"delegate"`
+	Unbond           []stake.MsgBeginUnbonding `json:"unbond"` // XXXXXXXXXXXXXXXXXXXXXXXXXX XXX
 }
 
 func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {

@@ -57,6 +57,12 @@ func ErrBadBondingDenom(codespace sdk.CodespaceType) sdk.Error {
 func ErrBadBondingAmount(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeInvalidBond, "Amount must be > 0")
 }
+func ErrBadSharesAmount(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeInvalidBond, "Shares must be > 0")
+}
+func ErrBadSharesPercent(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeInvalidBond, "Shares percent must be >0 and <=1")
+}
 func ErrNoBondingAcct(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeInvalidValidator, "No bond account for this (address, validator) pair")
 }
@@ -68,6 +74,12 @@ func ErrCommissionHuge(codespace sdk.CodespaceType) sdk.Error {
 }
 func ErrBadValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeInvalidValidator, "Validator does not exist for that address")
+}
+func ErrBothShareMsgsGiven(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeInvalidInput, "Both shares amount and shares percent provided")
+}
+func ErrNeitherShareMsgsGiven(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeInvalidInput, "Neither shares amount nor shares percent provided")
 }
 func ErrBadDelegatorAddr(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeInvalidValidator, "Delegator does not exist for that address")
@@ -92,9 +104,6 @@ func ErrNoDelegatorForAddress(codespace sdk.CodespaceType) sdk.Error {
 }
 func ErrInsufficientFunds(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeInvalidInput, "Insufficient bond shares")
-}
-func ErrBadShares(codespace sdk.CodespaceType) sdk.Error {
-	return newError(codespace, CodeInvalidInput, "bad shares provided as input, must be MAX or decimal")
 }
 func ErrBadRemoveValidator(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeInvalidValidator, "Error removing validator")

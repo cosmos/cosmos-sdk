@@ -232,7 +232,7 @@ func GetCmdCompleteRedelegate(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := stake.NewMsgCompleteRedelegation(delegatorAddr, validatorSrcAddr, validatorDstAddr)
+			msg := stake.NewMsgCompleteRedelegate(delegatorAddr, validatorSrcAddr, validatorDstAddr)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
@@ -305,7 +305,7 @@ func GetCmdBeginUnbonding(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := stake.NewMsgBeginUnbond(delegatorAddr, validatorAddr, sharesAmount, sharesPercent)
+			msg := stake.NewMsgBeginUnbonding(delegatorAddr, validatorAddr, sharesAmount, sharesPercent)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
@@ -339,7 +339,7 @@ func GetCmdCompleteUnbonding(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := stake.NewMsgCompleteUnbond(delegatorAddr, validatorAddr)
+			msg := stake.NewMsgCompleteUnbonding(delegatorAddr, validatorAddr)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))

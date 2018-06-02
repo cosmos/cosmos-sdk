@@ -70,7 +70,10 @@ func makeTestCodec() *wire.Codec {
 	cdc.RegisterConcrete(bank.MsgIssue{}, "test/stake/Issue", nil)
 	cdc.RegisterConcrete(MsgCreateValidator{}, "test/stake/CreateValidator", nil)
 	cdc.RegisterConcrete(MsgEditValidator{}, "test/stake/EditValidator", nil)
-	cdc.RegisterConcrete(MsgUnbond{}, "test/stake/Unbond", nil)
+	cdc.RegisterConcrete(MsgBeginUnbonding{}, "test/stake/BeginUnbonding", nil)
+	cdc.RegisterConcrete(MsgCompleteUnbonding{}, "test/stake/CompleteUnbonding", nil)
+	cdc.RegisterConcrete(MsgBeginRedelegate{}, "test/stake/BeginRedelegate", nil)
+	cdc.RegisterConcrete(MsgCompleteRedelegate{}, "test/stake/CompleteRedelegate", nil)
 
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)

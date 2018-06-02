@@ -159,6 +159,57 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 
 //______________________________________________________________________
 
+// MsgDelegate - struct for bonding transactions
+type MsgBeginRedelegate struct {
+	DelegatorAddr    sdk.Address `json:"delegator_addr"`
+	ValidatorSrcAddr sdk.Address `json:"validator_source_addr"`
+	ValidatorDstAddr sdk.Address `json:"validator_destination_addr"`
+	Shares           sdk.Rat     `json:"shares"`
+}
+
+func NewMsgBeginRedelegate(delegatorAddr, validatorSrcAddr, validatorDstAddr sdk.Address, shares sdk.Rational) MsgDelegate {
+	return MsgDelegate{
+		DelegatorAddr:    delegatorAddr,
+		ValidatorSrcAddr: validatorSrcAddr,
+		ValidatorDstAddr: validatorDstAddr,
+		Shares:           shares,
+	}
+}
+
+//nolint
+func (msg MsgBeginRedelegate) Type() string { return MsgType }
+func (msg MsgBeginRedelegate) GetSigners() []sdk.Address {
+	return []sdk.Address{msg.DelegatorAddr}
+}
+
+// get the bytes for the message signer to sign on
+func (msg MsgBeginRedelegate) GetSignBytes() []byte {
+	b, err := msgCdc.MarshalJSON(msg)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+// quick validity check
+func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
+	if msg.DelegatorAddr == nil {
+		return ErrBadDelegatorAddr(DefaultCodespace)
+	}
+	if msg.ValidatorSrcAddr == nil {
+		return ErrBadValidatorAddr(DefaultCodespace)
+	}
+	if msg.ValidatorDstAddr == nil {
+		return ErrBadValidatorAddr(DefaultCodespace)
+	}
+	if msg.Bond.Amount <= 0 {
+		return ErrBadBondingAmount(DefaultCodespace)
+	}
+	return nil
+}
+
+//______________________________________________________________________
+
 // MsgUnbond - struct for unbonding transactions
 type MsgUnbond struct {
 	DelegatorAddr sdk.Address `json:"delegator_addr"`

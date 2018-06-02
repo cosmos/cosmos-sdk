@@ -95,6 +95,7 @@ func main() {
 			stakecmd.GetCmdEditValidator(cdc),
 			stakecmd.GetCmdDelegate(cdc),
 			stakecmd.GetCmdUnbond(cdc),
+			stakecmd.GetCmdRedelegate(cdc),
 			slashingcmd.GetCmdUnrevoke(cdc),
 		)...)
 	rootCmd.AddCommand(

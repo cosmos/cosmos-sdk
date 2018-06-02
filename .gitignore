@@ -19,8 +19,11 @@ baseapp/data/*
 coverage.txt
 profile.out
 
-### Vagrant ###
+# Vagrant
 .vagrant/
 *.box
 *.log
 vagrant
+
+# Graphviz
+dependency-graph.png

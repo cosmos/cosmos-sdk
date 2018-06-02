@@ -784,6 +784,8 @@ func (k Keeper) IterateDelegators(ctx sdk.Context, delAddr sdk.Address, fn func(
 	iterator.Close()
 }
 
+//_____________________________________________________________________________________________
+
 // slash a validator
 func (k Keeper) Slash(ctx sdk.Context, pubkey crypto.PubKey, height int64, fraction sdk.Rat) {
 	// TODO height ignored for now, see https://github.com/cosmos/cosmos-sdk/pull/1011#issuecomment-390253957

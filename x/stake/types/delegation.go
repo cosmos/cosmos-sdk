@@ -51,3 +51,21 @@ func (b Delegation) HumanReadableString() (string, error) {
 	return resp, nil
 
 }
+
+// element stored to represent the passive unbonding queue
+type UnbondingDelegation struct {
+	DelegationKey   sdk.Address // key of the delegation
+	InitTime        int64       // unix time at unbonding initation
+	InitHeight      int64       // block height at unbonding initation
+	ExpectedTokens  sdk.Coins   // the value in Atoms of the amount of shares which are unbonding
+	StartSlashRatio sdk.Rat     // validator slash ratio at unbonding initiation
+}
+
+// element stored to represent the passive redelegation queue
+type Redelegation struct {
+	SourceDelegation      sdk.Address // source delegation key
+	DestinationDelegation sdk.Address // destination delegation key
+	InitTime              int64       // unix time at redelegation
+	InitHeight            int64       // block height at redelegation
+	Shares                sdk.Rat     // amount of shares redelegating
+}

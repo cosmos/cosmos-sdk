@@ -49,11 +49,8 @@ func (op IAVLExistsOp) Run(value [][]byte) ([][]byte, error) {
 		return nil, fmt.Errorf("Value size is not 1")
 	}
 
-	fmt.Printf("value: %+v\n", string(value[0]))
 	hash := op.iavlLeafNodeHash(value[0])
-	fmt.Printf("hashed: %+v\n", hash)
 	for _, branch := range op.PathToKey.InnerNodes {
-		fmt.Printf("hashing %+v with %+v\n", hash, branch)
 		hash = branch.Hash(hash)
 	}
 

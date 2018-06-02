@@ -65,7 +65,6 @@ type Op interface {
 type Proof []Op
 
 func (p Proof) Verify(root []byte, value [][]byte, keys ...string) (err error) {
-	fmt.Printf("verifying %+v with %+v, %+v on %+v\n", p, value, keys, root)
 	for i, op := range p {
 		key := op.GetKey()
 		if key != "" {
@@ -103,7 +102,6 @@ func (p Proof) Bytes(cdc *wire.Codec) (res []byte, err error) {
 }
 
 func DecodeProof(cdc *wire.Codec, data []byte, decode OpDecoder) (res Proof, err error) {
-	fmt.Printf("unmarshalling %s\n", string(data))
 	/*	rawops := make([]RawOp, 0)
 		if err = json.Unmarshal(data, &rawops); err != nil {
 			return

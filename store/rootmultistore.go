@@ -160,10 +160,8 @@ func (rs *rootMultiStore) Commit() CommitID {
 
 	// Cache subproof ops
 	rs.opsMaps[version] = commitInfo.Proofs()
-	fmt.Printf("store proof for %+v at %d\n", commitInfo, version)
 	if len(rs.opsMaps) > rs.opsNumHistory {
 		delete(rs.opsMaps, version-int64(rs.opsNumHistory))
-		fmt.Printf("delete proof for %d\n", version-int64(rs.opsNumHistory))
 	}
 
 	// Prepare for next version.
@@ -248,15 +246,12 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) (abci.ResponseQuery, merk
 	if req.Prove && prf != nil {
 		opsMap, ok := rs.opsMaps[res.Height]
 		if !ok {
-			fmt.Printf("could not find opsMap from %d\n", res.Height)
 			ci, err := getCommitInfo(rs.db, res.Height)
 			if err != nil {
 				return sdk.ErrInternal(err.Error()).QueryResult(), nil
 			}
 			opsMap = ci.Proofs()
 		}
-
-		fmt.Printf("got opsMap from %d\n", res.Height)
 		prf = append(prf, opsMap[storeName]...)
 	}
 
@@ -354,7 +349,6 @@ func (ci commitInfo) CommitID() CommitID {
 func (ci commitInfo) Proofs() (res map[string][]merkle.Op) {
 	m := make(map[string]libmerkle.Hasher, len(ci.StoreInfos))
 	for _, storeInfo := range ci.StoreInfos {
-		fmt.Printf("generating proof for: %+v\n", storeInfo)
 		m[storeInfo.Name] = storeInfo
 	}
 	_, proofs, keys := libmerkle.SimpleProofsFromMap(m)
@@ -409,7 +403,6 @@ func (op RootMultistoreOp) Run(value [][]byte) ([][]byte, error) {
 		return nil, fmt.Errorf("Value size is not 1")
 	}
 
-	fmt.Printf("wrapping %+v\n", value[0])
 	si := storeInfo{
 		Name: op.Name,
 		Core: storeCore{
@@ -420,7 +413,6 @@ func (op RootMultistoreOp) Run(value [][]byte) ([][]byte, error) {
 		},
 	}
 	kvp := libmerkle.KVPair{[]byte(op.Name), si.Hash()}
-	fmt.Printf("wrapped: %+v\n", kvp.Hash())
 	return [][]byte{kvp.Hash()}, nil
 }
 

@@ -53,9 +53,6 @@ var (
 )
 
 func TestKeys(t *testing.T) {
-
-	fmt.Printf("testKeys\n\n\n\n\n\n\n\n\n\n\n\n")
-
 	// empty keys
 	// XXX: the test comes with a key setup
 	/*
@@ -128,8 +125,6 @@ func TestKeys(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
-
-	fmt.Printf("testversion\n\n\n\n\n\n\n\n\n\n\n\n")
 	// node info
 	res, body := request(t, port, "GET", "/version", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -141,8 +136,6 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNodeStatus(t *testing.T) {
-
-	fmt.Printf("testns\n\n\n\n\n\n\n\n\n\n\n\n")
 	// node info
 	res, body := request(t, port, "GET", "/node_info", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -163,8 +156,6 @@ func TestNodeStatus(t *testing.T) {
 }
 
 func TestBlock(t *testing.T) {
-
-	fmt.Printf("testblock\n\n\n\n\n\n\n\n\n\n\n\n")
 	tests.WaitForHeight(2, port)
 
 	var resultBlock ctypes.ResultBlock
@@ -194,8 +185,6 @@ func TestBlock(t *testing.T) {
 }
 
 func TestValidators(t *testing.T) {
-
-	fmt.Printf("testvals\n\n\n\n\n\n\n\n\n\n\n\n")
 	var resultVals ctypes.ResultValidators
 
 	res, body := request(t, port, "GET", "/validatorsets/latest", nil)
@@ -223,10 +212,9 @@ func TestValidators(t *testing.T) {
 }
 
 func TestCoinSend(t *testing.T) {
-
-	fmt.Printf("testsend\n\n\n\n\n\n\n\n\n\n\n\n")
 	// query empty
 	res, body := request(t, port, "GET", "/accounts/8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6", nil)
+
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, sendAddr)
@@ -385,8 +373,6 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 		return nil, nil, err
 	}
 
-	fmt.Printf("wrote %+v //// %+v\n\n\n\n\n\n\n\n\n", genesisFile, string(jsonBlob))
-
 	// LCD listen address
 	port = fmt.Sprintf("%d", 17377)                       // XXX
 	listenAddr := fmt.Sprintf("tcp://localhost:%s", port) // XXX
@@ -463,7 +449,6 @@ func request(t *testing.T, port, method, path string, payload []byte) (*http.Res
 }
 
 func getAccount(t *testing.T, sendAddr string) sdk.Account {
-	fmt.Printf("getting account of %s\n", sendAddr)
 	// get the account to get the sequence
 	res, body := request(t, port, "GET", "/accounts/"+sendAddr, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)

@@ -190,7 +190,6 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery, prf m
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
 		return sdk.ErrUnknownRequest(msg).QueryResult(), nil
 	}
-	fmt.Printf("returning %+v\n", res)
 	return
 }
 

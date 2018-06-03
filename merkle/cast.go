@@ -3,7 +3,7 @@ package merkle
 import (
 	"github.com/tendermint/iavl"
 
-	"github.com/tendermint/tmlibs/merkle"
+	"github.com/tendermint/go-crypto/merkle"
 )
 
 func FromIAVLKey(proof iavl.KeyProof, key string) Op {

@@ -8,8 +8,8 @@ import (
 	"golang.org/x/crypto/ripemd160"
 
 	abci "github.com/tendermint/abci/types"
+	libmerkle "github.com/tendermint/go-crypto/merkle"
 	dbm "github.com/tendermint/tmlibs/db"
-	libmerkle "github.com/tendermint/tmlibs/merkle"
 
 	"github.com/cosmos/cosmos-sdk/merkle"
 	sdk "github.com/cosmos/cosmos-sdk/types"

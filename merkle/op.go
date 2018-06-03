@@ -9,7 +9,7 @@ import (
 
 	"github.com/tendermint/iavl"
 
-	"github.com/tendermint/tmlibs/merkle"
+	"github.com/tendermint/go-crypto/merkle"
 
 	"github.com/tendermint/go-wire"
 )

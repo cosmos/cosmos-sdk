@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/abci/types"
+	"github.com/tendermint/go-crypto/merkle"
 	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/merkle"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

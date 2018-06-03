@@ -1,4 +1,4 @@
-package stake
+package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -15,9 +15,13 @@ func RegisterWire(cdc *wire.Codec) {
 	cdc.RegisterConcrete(MsgCompleteRedelegate{}, "cosmos-sdk/CompleteRedelegate", nil)
 }
 
-var msgCdc = wire.NewCodec()
+// generic sealed codec to be used throughout sdk
+var msgCdc *wire.Codec
 
 func init() {
-	RegisterWire(msgCdc)
-	wire.RegisterCrypto(msgCdc)
+	cdc := wire.NewCodec()
+	RegisterWire(cdc)
+	wire.RegisterCrypto(cdc)
+	msgCdc = cdc
+	//MsgCdc = cdc.Seal() //TODO use when upgraded to go-amino 0.9.10
 }

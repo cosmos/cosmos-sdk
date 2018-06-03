@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 const (
@@ -13,10 +13,10 @@ const (
 var hrsPerYrRat = sdk.NewRat(hrsPerYr) // as defined by a julian year of 365.25 days
 
 // process provisions for an hour period
-func (k Keeper) processProvisions(ctx sdk.Context) stake.Pool {
+func (k Keeper) ProcessProvisions(ctx sdk.Context) types.Pool {
 
 	pool := k.GetPool(ctx)
-	pool.Inflation = k.nextInflation(ctx)
+	pool.Inflation = k.NextInflation(ctx)
 
 	// Because the validators hold a relative bonded share (`GlobalStakeShare`), when
 	// more bonded tokens are added proportionally to all validators the only term
@@ -28,7 +28,7 @@ func (k Keeper) processProvisions(ctx sdk.Context) stake.Pool {
 }
 
 // get the next inflation rate for the hour
-func (k Keeper) nextInflation(ctx sdk.Context) (inflation sdk.Rat) {
+func (k Keeper) NextInflation(ctx sdk.Context) (inflation sdk.Rat) {
 
 	params := k.GetParams(ctx)
 	pool := k.GetPool(ctx)
@@ -39,7 +39,7 @@ func (k Keeper) nextInflation(ctx sdk.Context) (inflation sdk.Rat) {
 	// 7% and 20%.
 
 	// (1 - bondedRatio/GoalBonded) * InflationRateChange
-	inflationRateChangePerYear := sdk.OneRat().Sub(pool.bondedRatio().Quo(params.GoalBonded)).Mul(params.InflationRateChange)
+	inflationRateChangePerYear := sdk.OneRat().Sub(pool.BondedRatio().Quo(params.GoalBonded)).Mul(params.InflationRateChange)
 	inflationRateChange := inflationRateChangePerYear.Quo(hrsPerYrRat)
 
 	// increase the new annual inflation for this next cycle

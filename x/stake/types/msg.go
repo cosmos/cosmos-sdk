@@ -1,4 +1,4 @@
-package stake
+package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,7 +63,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	}
 	empty := Description{}
 	if msg.Description == empty {
-		return newError(DefaultCodespace, CodeInvalidInput, "description must be included")
+		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "description must be included")
 	}
 	return nil
 }
@@ -105,7 +105,7 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 	}
 	empty := Description{}
 	if msg.Description == empty {
-		return newError(DefaultCodespace, CodeInvalidInput, "Transaction must include some information to modify")
+		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "Transaction must include some information to modify")
 	}
 	return nil
 }

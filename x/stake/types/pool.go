@@ -57,7 +57,7 @@ func (p Pool) TokenSupply() int64 {
 //____________________________________________________________________
 
 // get the bond ratio of the global state
-func (p Pool) bondedRatio() sdk.Rat {
+func (p Pool) BondedRatio() sdk.Rat {
 	if p.TokenSupply() > 0 {
 		return sdk.NewRat(p.BondedTokens, p.TokenSupply())
 	}

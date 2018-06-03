@@ -35,3 +35,15 @@ func MarshalJSONIndent(cdc *Codec, obj interface{}) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
+
+//__________________________________________________________________
+
+// generic sealed codec to be used throughout sdk
+var Cdc *Codec
+
+func init() {
+	cdc := NewCodec()
+	RegisterCrypto(cdc)
+	Cdc = cdc
+	//Cdc = cdc.Seal() // TODO uncomment once amino upgraded to 0.9.10
+}

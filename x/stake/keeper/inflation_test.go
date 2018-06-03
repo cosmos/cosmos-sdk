@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/types/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -62,7 +62,7 @@ func TestGetInflation(t *testing.T) {
 
 func TestProcessProvisions(t *testing.T) {
 	ctx, _, keeper := createTestInput(t, false, 0)
-	params := stake.DefaultParams()
+	params := types.DefaultParams()
 	params.MaxValidators = 2
 	keeper.setParams(ctx, params)
 	pool := keeper.GetPool(ctx)
@@ -72,7 +72,7 @@ func TestProcessProvisions(t *testing.T) {
 	var unbondedShares int64 = 400000000
 
 	// create some validators some bonded, some unbonded
-	var validators [5]stake.Validator
+	var validators [5]types.Validator
 	validators[0] = NewValidator(addrs[0], pks[0], Description{})
 	validators[0], pool, _ = validators[0].addTokensFromDel(pool, 150000000)
 	keeper.setPool(ctx, pool)

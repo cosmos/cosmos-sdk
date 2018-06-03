@@ -3,11 +3,12 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
-// keeper of the staking store
+// keeper of the stake store
 type Keeper struct {
 	storeKey   sdk.StoreKey
 	cdc        *wire.Codec
@@ -17,7 +18,7 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func New(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:   key,
 		cdc:        cdc,
@@ -28,14 +29,46 @@ func New(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.Codesp
 }
 
 //_________________________________________________________________________
+
+// full permission keeper of the stake store
+type PrivlegedKeeper struct {
+	Keeper
+
+	storeKey   sdk.StoreKey
+	cdc        *wire.Codec
+	coinKeeper bank.Keeper
+
+	// codespace
+	codespace sdk.CodespaceType
+}
+
+func NewPrivlegedKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) PrivlegedKeeper {
+	keeper := PrivlegedKeeper{
+		Keeper:     NewKeeper(cdc, key, ck, codespace),
+		storeKey:   key,
+		cdc:        cdc,
+		coinKeeper: ck,
+		codespace:  codespace,
+	}
+	return keeper
+}
+
+//_________________________________________________________________________
+
+// return the codespace
+func (k Keeper) Codespace() sdk.CodespaceType {
+	return k.codespace
+}
+
+//_________________________________________________________________________
 // some generic reads/writes that don't need their own files
 
 // load/save the global staking params
-func (k Keeper) GetParams(ctx sdk.Context) stake.Params {
+func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 	store := ctx.KVStore(k.storeKey)
 	return k.getParams(store)
 }
-func (k Keeper) getParams(store sdk.KVStore) (params stake.Params) {
+func (k Keeper) getParams(store sdk.KVStore) (params types.Params) {
 	b := store.Get(ParamKey)
 	if b == nil {
 		panic("Stored params should not have been nil")
@@ -49,19 +82,20 @@ func (k Keeper) getParams(store sdk.KVStore) (params stake.Params) {
 // record of params to exist (to check if maxValidators has changed) - and we
 // panic on retrieval if it doesn't exist - hence if we use setParams for the very
 // first params set it will panic.
-func (k Keeper) setNewParams(ctx sdk.Context, params stake.Params) {
+func (k PrivlegedKeeper) SetNewParams(ctx sdk.Context, params types.Params) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(params)
 	store.Set(ParamKey, b)
 }
 
-func (k Keeper) setParams(ctx sdk.Context, params stake.Params) {
+// set the params
+func (k PrivlegedKeeper) SetParams(ctx sdk.Context, params types.Params) {
 	store := ctx.KVStore(k.storeKey)
 	exParams := k.getParams(store)
 
 	// if max validator count changes, must recalculate validator set
 	if exParams.MaxValidators != params.MaxValidators {
-		k.updateBondedValidatorsFull(ctx, store)
+		k.UpdateBondedValidatorsFull(ctx, store)
 	}
 	b := k.cdc.MustMarshalBinary(params)
 	store.Set(ParamKey, b)
@@ -70,11 +104,11 @@ func (k Keeper) setParams(ctx sdk.Context, params stake.Params) {
 //_______________________________________________________________________
 
 // load/save the pool
-func (k Keeper) GetPool(ctx sdk.Context) (pool stake.Pool) {
+func (k Keeper) GetPool(ctx sdk.Context) (pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	return k.getPool(store)
 }
-func (k Keeper) getPool(store sdk.KVStore) (pool stake.Pool) {
+func (k Keeper) getPool(store sdk.KVStore) (pool types.Pool) {
 	b := store.Get(PoolKey)
 	if b == nil {
 		panic("Stored pool should not have been nil")
@@ -83,7 +117,8 @@ func (k Keeper) getPool(store sdk.KVStore) (pool stake.Pool) {
 	return
 }
 
-func (k Keeper) setPool(ctx sdk.Context, pool stake.Pool) {
+// set the pool
+func (k PrivlegedKeeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(pool)
 	store.Set(PoolKey, b)
@@ -92,7 +127,7 @@ func (k Keeper) setPool(ctx sdk.Context, pool stake.Pool) {
 //__________________________________________________________________________
 
 // get the current in-block validator operation counter
-func (k Keeper) getIntraTxCounter(ctx sdk.Context) int16 {
+func (k Keeper) GetIntraTxCounter(ctx sdk.Context) int16 {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(IntraTxCounterKey)
 	if b == nil {
@@ -104,7 +139,7 @@ func (k Keeper) getIntraTxCounter(ctx sdk.Context) int16 {
 }
 
 // set the current in-block validator operation counter
-func (k Keeper) setIntraTxCounter(ctx sdk.Context, counter int16) {
+func (k PrivlegedKeeper) SetIntraTxCounter(ctx sdk.Context, counter int16) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(counter)
 	store.Set(IntraTxCounterKey, bz)

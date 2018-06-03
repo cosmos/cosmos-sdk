@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // Key to store the header in the DB itself.
@@ -65,9 +66,10 @@ type BaseApp struct {
 	// See methods setCheckState and setDeliverState.
 	// .valUpdates accumulate in DeliverTx and are reset in BeginBlock.
 	// QUESTION: should we put valUpdates in the deliverState.ctx?
-	checkState   *state           // for CheckTx
-	deliverState *state           // for DeliverTx
-	valUpdates   []abci.Validator // cached validator changes from DeliverTx
+	checkState       *state           // for CheckTx
+	deliverState     *state           // for DeliverTx
+	valUpdates       []abci.Validator // cached validator changes from DeliverTx
+	absentValidators [][]byte         // absent validators from begin block
 }
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -126,7 +128,7 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 // default custom logic for transaction decoding
 func defaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
-		var tx = sdk.StdTx{}
+		var tx = auth.StdTx{}
 
 		if len(txBytes) == 0 {
 			return nil, sdk.ErrTxDecode("txBytes are empty")
@@ -394,6 +396,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
 	}
+	// set the absent validators for addition to context in deliverTx
+	app.absentValidators = req.AbsentValidators
 	return
 }
 
@@ -503,6 +507,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		ctx = app.checkState.ctx.WithTxBytes(txBytes)
 	} else {
 		ctx = app.deliverState.ctx.WithTxBytes(txBytes)
+		ctx = ctx.WithAbsentValidators(app.absentValidators)
 	}
 
 	// Simulate a DeliverTx for gas calculation

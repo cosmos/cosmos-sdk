@@ -16,14 +16,17 @@ import (
 
 // Get a free address for a test tendermint server
 // protocol is either tcp, http, etc
-func FreeTCPAddr(t *testing.T) string {
+func FreeTCPAddr() (addr, port string, err error) {
 	l, err := net.Listen("tcp", "0.0.0.0:0")
 	defer l.Close()
-	require.Nil(t, err)
+	if err != nil {
+		return "", "", err
+	}
 
-	port := l.Addr().(*net.TCPAddr).Port
-	addr := fmt.Sprintf("tcp://0.0.0.0:%d", port)
-	return addr
+	portI := l.Addr().(*net.TCPAddr).Port
+	port = fmt.Sprintf("%d", portI)
+	addr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
+	return
 }
 
 // setupViper creates a homedir to run inside,

@@ -9,19 +9,27 @@ import (
 )
 
 const (
-	verifyCost = 100
+	deductFeesCost sdk.Gas = 10
+	verifyCost             = 100
 )
 
 // NewAnteHandler returns an AnteHandler that checks
 // and increments sequence numbers, checks signatures,
 // and deducts fees from the first signer.
-func NewAnteHandler(am sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHandler {
+func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
+
 	return func(
 		ctx sdk.Context, tx sdk.Tx,
 	) (_ sdk.Context, _ sdk.Result, abort bool) {
 
+		// This AnteHandler requires Txs to be StdTxs
+		stdTx, ok := tx.(StdTx)
+		if !ok {
+			return ctx, sdk.ErrInternal("tx must be StdTx").Result(), true
+		}
+
 		// Assert that there are signatures.
-		var sigs = tx.GetSignatures()
+		var sigs = stdTx.GetSignatures()
 		if len(sigs) == 0 {
 			return ctx,
 				sdk.ErrUnauthorized("no signers").Result(),
@@ -29,12 +37,6 @@ func NewAnteHandler(am sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHan
 		}
 
 		msg := tx.GetMsg()
-
-		// TODO: will this always be a stdtx? should that be used in the function signature?
-		stdTx, ok := tx.(sdk.StdTx)
-		if !ok {
-			return ctx, sdk.ErrInternal("tx must be sdk.StdTx").Result(), true
-		}
 
 		// Assert that number of signatures is correct.
 		var signerAddrs = msg.GetSigners()
@@ -56,10 +58,10 @@ func NewAnteHandler(am sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHan
 		if chainID == "" {
 			chainID = viper.GetString("chain-id")
 		}
-		signBytes := sdk.StdSignBytes(ctx.ChainID(), sequences, fee, msg)
+		signBytes := StdSignBytes(ctx.ChainID(), sequences, fee, msg)
 
 		// Check sig and nonce and collect signer accounts.
-		var signerAccs = make([]sdk.Account, len(signerAddrs))
+		var signerAccs = make([]Account, len(signerAddrs))
 		for i := 0; i < len(sigs); i++ {
 			signerAddr, sig := signerAddrs[i], sigs[i]
 
@@ -76,11 +78,12 @@ func NewAnteHandler(am sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHan
 			if i == 0 {
 				// TODO: min fee
 				if !fee.Amount.IsZero() {
+					ctx.GasMeter().ConsumeGas(deductFeesCost, "deductFees")
 					signerAcc, res = deductFees(signerAcc, fee)
-					feeHandler(ctx, tx, fee.Amount)
 					if !res.IsOK() {
 						return ctx, res, true
 					}
+					fck.addCollectedFees(ctx, fee.Amount)
 				}
 			}
 
@@ -104,9 +107,9 @@ func NewAnteHandler(am sdk.AccountMapper, feeHandler sdk.FeeHandler) sdk.AnteHan
 // verify the signature and increment the sequence.
 // if the account doesn't have a pubkey, set it.
 func processSig(
-	ctx sdk.Context, am sdk.AccountMapper,
-	addr sdk.Address, sig sdk.StdSignature, signBytes []byte) (
-	acc sdk.Account, res sdk.Result) {
+	ctx sdk.Context, am AccountMapper,
+	addr sdk.Address, sig StdSignature, signBytes []byte) (
+	acc Account, res sdk.Result) {
 
 	// Get the account.
 	acc = am.GetAccount(ctx, addr)
@@ -152,7 +155,7 @@ func processSig(
 // Deduct the fee from the account.
 // We could use the CoinKeeper (in addition to the AccountMapper,
 // because the CoinKeeper doesn't give us accounts), but it seems easier to do this.
-func deductFees(acc sdk.Account, fee sdk.StdFee) (sdk.Account, sdk.Result) {
+func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 	coins := acc.GetCoins()
 	feeAmount := fee.Amount
 

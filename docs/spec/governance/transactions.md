@@ -184,7 +184,7 @@ vote on the proposal.
   type TxGovVote struct {
     ProposalID           int64           //  proposalID of the proposal
     Option               string          //  option from OptionSet chosen by the voter
-    ValidatorAddress      crypto.address //  Address of the validator voter wants to tie its vote to
+    Address      crypto.address //  Address of the validator voter wants to tie its vote to
   }
 ```
 
@@ -202,7 +202,7 @@ Votes need to be tied to a validator in order to compute validator's voting
 power. If a delegator is bonded to multiple validators, it will have to send 
 one transaction per validator (the UI should facilitate this so that multiple 
 transactions can be sent in one "vote flow"). If the sender is the validator 
-itself, then it will input its own address as `ValidatorAddress`
+itself, then it will input its own address as `Address`
 
 Next is a pseudocode proposal of the way `TxGovVote` transactions are 
 handled:
@@ -223,39 +223,39 @@ handled:
       // There is no proposal for this proposalID
       throw
     
-    validator = load(CurrentValidators, txGovVote.ValidatorAddress)
+    validator = load(CurrentValidators, txGovVote.Address)
     
     if  !proposal.InitProcedure.OptionSet.includes(txGovVote.Option) OR 
         (validator == nil) then 
      
       // Throws if
       // Option is not in Option Set of procedure that was active when vote opened OR if
-      // ValidatorAddress is not the address of a current validator
+      // Address is not the address of a current validator
       
       throw
       
-    option = load(Options, <txGovVote.ProposalID>:<sender>:<txGovVote.ValidatorAddress>)
+    option = load(Options, <txGovVote.ProposalID>:<sender>:<txGovVote.Address>)
 
     if (option != nil)
-     // sender has already voted with the Atoms bonded to ValidatorAddress
+     // sender has already voted with the Atoms bonded to Address
      throw
 
     if  (proposal.VotingStartBlock < 0) OR  
         (CurrentBlock > proposal.VotingStartBlock + proposal.InitProcedure.VotingPeriod) OR 
-        (proposal.VotingStartBlock < lastBondingBlock(sender, txGovVote.ValidatorAddress) OR   
+        (proposal.VotingStartBlock < lastBondingBlock(sender, txGovVote.Address) OR   
         (proposal.VotingStartBlock < lastUnbondingBlock(sender, txGovVote.Address) OR   
         (proposal.Votes.YesVotes/proposal.InitTotalVotingPower >= 2/3) then   
 
         // Throws if
         // Vote has not started OR if
         // Vote had ended OR if
-        // sender bonded Atoms to ValidatorAddress after start of vote OR if
-        // sender unbonded Atoms from ValidatorAddress after start of vote OR if
+        // sender bonded Atoms to Address after start of vote OR if
+        // sender unbonded Atoms from Address after start of vote OR if
         // special condition is met, i.e. proposal is accepted and closed
 
         throw     
 
-    validatorGovInfo = load(ValidatorGovInfos, <txGovVote.ProposalID>:<validator.ValidatorAddress>)
+    validatorGovInfo = load(ValidatorGovInfos, <txGovVote.ProposalID>:<validator.Address>)
 
     if (validatorGovInfo == nil)
       // validator became validator after proposal entered voting period 
@@ -263,39 +263,39 @@ handled:
 
     // sender can vote, check if sender == validator and store sender's option in Options
     
-    store(Options, <txGovVote.ProposalID>:<sender>:<txGovVote.ValidatorAddress>, txGovVote.Option)
+    store(Options, <txGovVote.ProposalID>:<sender>:<txGovVote.Address>, txGovVote.Option)
 
     if (sender != validator.address)
-      // Here, sender is not the Address of the validator whose Address is txGovVote.ValidatorAddress
+      // Here, sender is not the Address of the validator whose Address is txGovVote.Address
 
-      if sender does not have bonded Atoms to txGovVote.ValidatorAddress then
+      if sender does not have bonded Atoms to txGovVote.Address then
         // check in Staking module
         throw
 
-      validatorOption = load(Options, <txGovVote.ProposalID>:<sender>:<txGovVote.ValidatorAddress>)
+      validatorOption = load(Options, <txGovVote.ProposalID>:<sender>:<txGovVote.Address>)
 
       if (validatorOption == nil)
         // Validator has not voted already
 
-        validatorGovInfo.Minus += sender.bondedAmounTo(txGovVote.ValidatorAddress)
-        store(ValidatorGovInfos, <txGovVote.ProposalID>:<validator.ValidatorAddress>, validatorGovInfo)
+        validatorGovInfo.Minus += sender.bondedAmounTo(txGovVote.Address)
+        store(ValidatorGovInfos, <txGovVote.ProposalID>:<validator.Address>, validatorGovInfo)
 
       else
         // Validator has already voted
         // Reduce votes of option chosen by validator by sender's bonded Amount
 
-        proposal.Votes.validatorOption -= sender.bondedAmountTo(txGovVote.ValidatorAddress)
+        proposal.Votes.validatorOption -= sender.bondedAmountTo(txGovVote.Address)
 
       // increase votes of option chosen by sender by bonded Amount
 
       senderOption = txGovVote.Option
-      propoal.Votes.senderOption -= sender.bondedAmountTo(txGovVote.ValidatorAddress)
+      propoal.Votes.senderOption -= sender.bondedAmountTo(txGovVote.Address)
 
       store(Proposals, txGovVote.ProposalID, proposal)
         
 
     else 
-      // sender is the address of the validator whose main Address is txGovVote.ValidatorAddress
+      // sender is the address of the validator whose main Address is txGovVote.Address
       // i.e. sender == validator
 
       proposal.Votes.validatorOption += (validatorGovInfo.InitVotingPower - validatorGovInfo.Minus)

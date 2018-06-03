@@ -11,10 +11,10 @@ func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		// NOTE msg already has validate basic run
 		switch msg := msg.(type) {
-		case MsgDeclareCandidacy:
-			return handleMsgDeclareCandidacy(ctx, msg, k)
-		case MsgEditCandidacy:
-			return handleMsgEditCandidacy(ctx, msg, k)
+		case MsgCreateValidator:
+			return handleMsgCreateValidator(ctx, msg, k)
+		case MsgEditValidator:
+			return handleMsgEditValidator(ctx, msg, k)
 		case MsgDelegate:
 			return handleMsgDelegate(ctx, msg, k)
 		case MsgUnbond:
@@ -25,13 +25,27 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-// NewEndBlocker generates sdk.EndBlocker
-// Performs tick functionality
-func NewEndBlocker(k Keeper) sdk.EndBlocker {
-	return func(ctx sdk.Context, req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-		res.ValidatorUpdates = k.Tick(ctx)
-		return
+// Called every block, process inflation, update validator set
+func EndBlocker(ctx sdk.Context, k Keeper) (ValidatorUpdates []abci.Validator) {
+	pool := k.GetPool(ctx)
+
+	// Process Validator Provisions
+	blockTime := ctx.BlockHeader().Time // XXX assuming in seconds, confirm
+	if pool.InflationLastTime+blockTime >= 3600 {
+		pool.InflationLastTime = blockTime
+		pool = k.processProvisions(ctx)
 	}
+
+	// save the params
+	k.setPool(ctx, pool)
+
+	// reset the intra-transaction counter
+	k.setIntraTxCounter(ctx, 0)
+
+	// calculate validator set changes
+	ValidatorUpdates = k.getTendermintUpdates(ctx)
+	k.clearTendermintUpdates(ctx)
+	return
 }
 
 //_____________________________________________________________________
@@ -39,7 +53,7 @@ func NewEndBlocker(k Keeper) sdk.EndBlocker {
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
-func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keeper) sdk.Result {
+func handleMsgCreateValidator(ctx sdk.Context, msg MsgCreateValidator, k Keeper) sdk.Result {
 
 	// check to see if the pubkey or sender has been registered before
 	_, found := k.GetValidator(ctx, msg.ValidatorAddr)
@@ -55,8 +69,9 @@ func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keepe
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
 	k.setValidator(ctx, validator)
+	k.setValidatorByPubKeyIndex(ctx, validator)
 	tags := sdk.NewTags(
-		"action", []byte("declareCandidacy"),
+		"action", []byte("createValidator"),
 		"validator", msg.ValidatorAddr.Bytes(),
 		"moniker", []byte(msg.Description.Moniker),
 		"identity", []byte(msg.Description.Identity),
@@ -74,7 +89,7 @@ func handleMsgDeclareCandidacy(ctx sdk.Context, msg MsgDeclareCandidacy, k Keepe
 	}
 }
 
-func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk.Result {
+func handleMsgEditValidator(ctx sdk.Context, msg MsgEditValidator, k Keeper) sdk.Result {
 
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
@@ -94,7 +109,7 @@ func handleMsgEditCandidacy(ctx sdk.Context, msg MsgEditCandidacy, k Keeper) sdk
 
 	k.updateValidator(ctx, validator)
 	tags := sdk.NewTags(
-		"action", []byte("editCandidacy"),
+		"action", []byte("editValidator"),
 		"validator", msg.ValidatorAddr.Bytes(),
 		"moniker", []byte(msg.Description.Moniker),
 		"identity", []byte(msg.Description.Identity),
@@ -206,14 +221,14 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 	bond.Shares = bond.Shares.Sub(delShares)
 
 	// remove the bond
-	revokeCandidacy := false
+	revokeValidator := false
 	if bond.Shares.IsZero() {
 
 		// if the bond is the owner of the validator then
-		// trigger a revoke candidacy
+		// trigger a revoke validator
 		if bytes.Equal(bond.DelegatorAddr, validator.Owner) &&
 			validator.Revoked == false {
-			revokeCandidacy = true
+			revokeValidator = true
 		}
 
 		k.removeDelegation(ctx, bond)
@@ -232,7 +247,7 @@ func handleMsgUnbond(ctx sdk.Context, msg MsgUnbond, k Keeper) sdk.Result {
 
 	/////////////////////////////////////
 	// revoke validator if necessary
-	if revokeCandidacy {
+	if revokeValidator {
 		validator.Revoked = true
 	}
 

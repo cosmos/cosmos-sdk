@@ -13,8 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
-// create declare candidacy command
-func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
+// create create validator command
+func GetCmdCreateValidator(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
 		Short: "create new validator initialized with a self-delegation to it",
@@ -25,7 +25,7 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			validatorAddr, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(FlagAddressValidator))
+			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -34,7 +34,7 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 			if len(pkStr) == 0 {
 				return fmt.Errorf("must use --pubkey flag")
 			}
-			pk, err := sdk.GetValPubKeyBech32Cosmos(pkStr)
+			pk, err := sdk.GetValPubKeyBech32(pkStr)
 			if err != nil {
 				return err
 			}
@@ -47,7 +47,7 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 				Website:  viper.GetString(FlagWebsite),
 				Details:  viper.GetString(FlagDetails),
 			}
-			msg := stake.NewMsgDeclareCandidacy(validatorAddr, pk, amount, description)
+			msg := stake.NewMsgCreateValidator(validatorAddr, pk, amount, description)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			res, err := ctx.EnsureSignBuildBroadcast(ctx.FromAddressName, msg, cdc)
@@ -67,14 +67,14 @@ func GetCmdDeclareCandidacy(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-// create edit candidacy command
-func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
+// create edit validator command
+func GetCmdEditValidator(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
 		Short: "edit and existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			validatorAddr, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(FlagAddressValidator))
+			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -84,7 +84,7 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 				Website:  viper.GetString(FlagWebsite),
 				Details:  viper.GetString(FlagDetails),
 			}
-			msg := stake.NewMsgEditCandidacy(validatorAddr, description)
+			msg := stake.NewMsgEditValidator(validatorAddr, description)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
@@ -104,7 +104,7 @@ func GetCmdEditCandidacy(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-// create edit candidacy command
+// create edit validator command
 func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate",
@@ -115,8 +115,8 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			delegatorAddr, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(FlagAddressDelegator))
-			validatorAddr, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(FlagAddressValidator))
+			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -142,7 +142,7 @@ func GetCmdDelegate(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
-// create edit candidacy command
+// create edit validator command
 func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbond",
@@ -163,8 +163,8 @@ func GetCmdUnbond(cdc *wire.Codec) *cobra.Command {
 				}
 			}
 
-			delegatorAddr, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(FlagAddressDelegator))
-			validatorAddr, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(FlagAddressValidator))
+			delegatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressDelegator))
+			validatorAddr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}

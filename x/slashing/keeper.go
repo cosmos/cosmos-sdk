@@ -5,27 +5,26 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/stake"
 	crypto "github.com/tendermint/go-crypto"
 )
 
 // Keeper of the slashing store
 type Keeper struct {
-	storeKey    sdk.StoreKey
-	cdc         *wire.Codec
-	stakeKeeper stake.Keeper
+	storeKey     sdk.StoreKey
+	cdc          *wire.Codec
+	validatorSet sdk.ValidatorSet
 
 	// codespace
 	codespace sdk.CodespaceType
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, sk stake.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
-		storeKey:    key,
-		cdc:         cdc,
-		stakeKeeper: sk,
-		codespace:   codespace,
+		storeKey:     key,
+		cdc:          cdc,
+		validatorSet: vs,
+		codespace:    codespace,
 	}
 	return keeper
 }
@@ -43,7 +42,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, height int64, timestamp int64,
 
 	// Double sign confirmed
 	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), height, age, MaxEvidenceAge))
-	k.stakeKeeper.Slash(ctx, pubkey, height, SlashFractionDoubleSign)
+	k.validatorSet.Slash(ctx, pubkey, height, SlashFractionDoubleSign)
 }
 
 // handle a validator signature, must be called once per validator per block
@@ -81,8 +80,8 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, pubkey crypto.PubKey, 
 	if height > minHeight && signInfo.SignedBlocksCounter < MinSignedPerWindow {
 		// Downtime confirmed, slash, revoke, and jail the validator
 		logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d", pubkey.Address(), minHeight, MinSignedPerWindow))
-		k.stakeKeeper.Slash(ctx, pubkey, height, SlashFractionDowntime)
-		k.stakeKeeper.Revoke(ctx, pubkey)
+		k.validatorSet.Slash(ctx, pubkey, height, SlashFractionDowntime)
+		k.validatorSet.Revoke(ctx, pubkey)
 		signInfo.JailedUntil = ctx.BlockHeader().Time + DowntimeUnbondDuration
 	}
 

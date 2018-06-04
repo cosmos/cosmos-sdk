@@ -258,11 +258,11 @@ func (v Validator) GetBondHeight() int64      { return v.BondHeight }
 
 //Human Friendly pretty printer
 func (v Validator) HumanReadableString() (string, error) {
-	bechOwner, err := sdk.Bech32CosmosifyAcc(v.Owner)
+	bechOwner, err := sdk.Bech32ifyAcc(v.Owner)
 	if err != nil {
 		return "", err
 	}
-	bechVal, err := sdk.Bech32CosmosifyValPub(v.PubKey)
+	bechVal, err := sdk.Bech32ifyValPub(v.PubKey)
 	if err != nil {
 		return "", err
 	}

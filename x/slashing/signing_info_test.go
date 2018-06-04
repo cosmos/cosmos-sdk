@@ -10,7 +10,7 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 	ctx, _, _, keeper := createTestInput(t)
 	info, found := keeper.getValidatorSigningInfo(ctx, addrs[0])
 	require.False(t, found)
-	newInfo := validatorSigningInfo{
+	newInfo := ValidatorSigningInfo{
 		StartHeight:         int64(4),
 		IndexOffset:         int64(3),
 		JailedUntil:         int64(2),

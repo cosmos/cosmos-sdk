@@ -85,8 +85,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB) *GaiaApp {
 
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)
-	app.SetBeginBlocker(slashing.NewBeginBlocker(app.slashingKeeper))
-	app.SetEndBlocker(stake.NewEndBlocker(app.stakeKeeper))
+	app.SetBeginBlocker(app.BeginBlocker)
+	app.SetEndBlocker(app.EndBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
 	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC, app.keyStake, app.keySlashing)
 	err := app.LoadLatestVersion(app.keyMain)
@@ -108,6 +108,24 @@ func MakeCodec() *wire.Codec {
 	sdk.RegisterWire(cdc)
 	wire.RegisterCrypto(cdc)
 	return cdc
+}
+
+// application updates every end block
+func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
+
+	return abci.ResponseBeginBlock{
+		Tags: tags.ToKVPairs(),
+	}
+}
+
+// application updates every end block
+func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
+
+	return abci.ResponseEndBlock{
+		ValidatorUpdates: validatorUpdates,
+	}
 }
 
 // custom logic for gaia initialization
@@ -134,7 +152,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	return abci.ResponseInitChain{}
 }
 
-// export the state of gaia for a genesis f
+// export the state of gaia for a genesis file
 func (app *GaiaApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
 	ctx := app.NewContext(true, abci.Header{})
 

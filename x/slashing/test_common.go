@@ -85,8 +85,8 @@ func testAddr(addr string) sdk.Address {
 	return res
 }
 
-func newTestMsgDeclareCandidacy(address sdk.Address, pubKey crypto.PubKey, amt int64) stake.MsgDeclareCandidacy {
-	return stake.MsgDeclareCandidacy{
+func newTestMsgCreateValidator(address sdk.Address, pubKey crypto.PubKey, amt int64) stake.MsgCreateValidator {
+	return stake.MsgCreateValidator{
 		Description:   stake.Description{},
 		ValidatorAddr: address,
 		PubKey:        pubKey,

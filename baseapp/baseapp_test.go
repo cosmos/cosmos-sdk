@@ -511,7 +511,7 @@ func TestValidatorChange(t *testing.T) {
 	// Assert that validator updates are correct.
 	for _, val := range valSet {
 
-		pk, err := tmtypes.PB2TM.PubKey(val.PubKey)
+		pubkey, err := tmtypes.PB2TM.PubKey(val.PubKey)
 		// Sanity
 		assert.Nil(t, err)
 
@@ -519,11 +519,11 @@ func TestValidatorChange(t *testing.T) {
 		for j := 0; j < len(valUpdates); j++ {
 			valUpdate := valUpdates[j]
 
-			upk, err := tmtypes.PB2TM.PubKey(valUpdate.PubKey)
+			updatePubkey, err := tmtypes.PB2TM.PubKey(valUpdate.PubKey)
 			assert.Nil(t, err)
 
 			// Matched.
-			if upk.Equals(pk) {
+			if updatePubkey.Equals(pubkey) {
 				assert.Equal(t, valUpdate.Power, val.Power+1)
 				if j < len(valUpdates)-1 {
 					// Splice it out.

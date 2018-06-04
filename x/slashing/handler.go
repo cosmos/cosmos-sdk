@@ -21,7 +21,7 @@ func NewHandler(k Keeper) sdk.Handler {
 func handleMsgUnrevoke(ctx sdk.Context, msg MsgUnrevoke, k Keeper) sdk.Result {
 
 	// Validator must exist
-	validator := k.stakeKeeper.Validator(ctx, msg.ValidatorAddr)
+	validator := k.validatorSet.Validator(ctx, msg.ValidatorAddr)
 	if validator == nil {
 		return ErrNoValidatorForAddress(k.codespace).Result()
 	}
@@ -48,7 +48,7 @@ func handleMsgUnrevoke(ctx sdk.Context, msg MsgUnrevoke, k Keeper) sdk.Result {
 	k.setValidatorSigningInfo(ctx, addr, info)
 
 	// Unrevoke the validator
-	k.stakeKeeper.Unrevoke(ctx, validator.GetPubKey())
+	k.validatorSet.Unrevoke(ctx, validator.GetPubKey())
 
 	tags := sdk.NewTags("action", []byte("unrevoke"), "validator", msg.ValidatorAddr.Bytes())
 

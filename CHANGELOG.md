@@ -3,20 +3,21 @@
 ## Pending
 
 BREAKING CHANGES
-
-- [cli] rearranged commands under subcommands
+* [cli] rearranged commands under subcommands
+* [stake] remove Tick and add EndBlocker
+* Switch to bech32 for addresses on all human readable inputs and outputs
 
 FEATURES
 
 IMPROVEMENTS
-
-- bank module uses go-wire codec instead of 'encoding/json'
-- auth module uses go-wire codec instead of 'encoding/json'
+* bank module uses go-wire codec instead of 'encoding/json'
+* auth module uses go-wire codec instead of 'encoding/json'
+* revised use of endblock and beginblock
 
 FIXES
-
-- [cli] fixed cli-bash tests
-- [ci] added cli-bash tests
+* [cli] fixed cli-bash tests
+* [ci] added cli-bash tests
+* [basecoin] updated basecoin for stake and slashing
 
 ## 0.18.1
 
@@ -32,7 +33,6 @@ BREAKING CHANGES
 - [x/auth] removed the FeeHandler function from the AnteHandler, Replaced with FeeKeeper
 - [x/auth] Removed GetSignatures() from Tx interface (as different Tx styles might use something different than StdSignature)
 - [store] Removed SubspaceIterator and ReverseSubspaceIterator from KVStore interface and replaced them with helper functions in /types
-- Switch to bech32 on all human readable inputs and outputs
 
 BUG FIXES
 

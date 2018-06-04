@@ -49,6 +49,7 @@ type KeyOutput struct {
 	Name    string `json:"name"`
 	Address string `json:"address"`
 	PubKey  string `json:"pub_key"`
+	Seed    string `json:"seed,omitempty"`
 }
 
 // create a list of KeyOutput in bech32 format

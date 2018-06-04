@@ -14,10 +14,11 @@ import (
 
 // TODO these next two functions feel kinda hacky based on their placement
 
-func validatorCommand() *cobra.Command {
+//ValidatorCommand returns the validator set for a given height
+func ValidatorCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validatorset [height]",
-		Short: "Get the full validator set at given height",
+		Short: "Get the full tendermint validator set at given height",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  printValidators,
 	}

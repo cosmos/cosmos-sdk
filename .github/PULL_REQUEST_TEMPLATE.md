@@ -4,3 +4,4 @@
 * [ ] Updated all code comments where relevant
 * [ ] Wrote tests
 * [ ] Updated CHANGELOG.md
+* [ ] Updated Basecoin / other examples

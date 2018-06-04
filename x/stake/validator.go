@@ -47,6 +47,7 @@ func NewValidator(owner sdk.Address, pubKey crypto.PubKey, description Descripti
 	return Validator{
 		Owner:                 owner,
 		PubKey:                pubKey,
+		Revoked:               false,
 		PoolShares:            NewUnbondedShares(sdk.ZeroRat()),
 		DelegatorShares:       sdk.ZeroRat(),
 		Description:           description,
@@ -154,6 +155,23 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 	return v, pool
 }
 
+// Remove pool shares
+// Returns corresponding tokens, which could be burned (e.g. when slashing
+// a validator) or redistributed elsewhere
+func (v Validator) removePoolShares(pool Pool, poolShares sdk.Rat) (Validator, Pool, int64) {
+	var tokens int64
+	switch v.Status() {
+	case sdk.Unbonded:
+		pool, tokens = pool.removeSharesUnbonded(poolShares)
+	case sdk.Unbonding:
+		pool, tokens = pool.removeSharesUnbonding(poolShares)
+	case sdk.Bonded:
+		pool, tokens = pool.removeSharesBonded(poolShares)
+	}
+	v.PoolShares.Amount = v.PoolShares.Amount.Sub(poolShares)
+	return v, pool, tokens
+}
+
 // XXX TEST
 // get the power or potential power for a validator
 // if bonded, the power is the BondedShares
@@ -240,11 +258,11 @@ func (v Validator) GetBondHeight() int64      { return v.BondHeight }
 
 //Human Friendly pretty printer
 func (v Validator) HumanReadableString() (string, error) {
-	bechOwner, err := sdk.Bech32CosmosifyAcc(v.Owner)
+	bechOwner, err := sdk.Bech32ifyAcc(v.Owner)
 	if err != nil {
 		return "", err
 	}
-	bechVal, err := sdk.Bech32CosmosifyValPub(v.PubKey)
+	bechVal, err := sdk.Bech32ifyValPub(v.PubKey)
 	if err != nil {
 		return "", err
 	}

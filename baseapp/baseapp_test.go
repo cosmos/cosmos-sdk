@@ -1,7 +1,6 @@
 package baseapp
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -12,6 +11,7 @@ import (
 
 	abci "github.com/tendermint/abci/types"
 	crypto "github.com/tendermint/go-crypto"
+	tmtypes "github.com/tendermint/tendermint/types"
 	cmn "github.com/tendermint/tmlibs/common"
 	dbm "github.com/tendermint/tmlibs/db"
 	"github.com/tendermint/tmlibs/log"
@@ -183,7 +183,7 @@ func TestInitChainer(t *testing.T) {
 
 	// set initChainer and try again - should see the value
 	app.SetInitChainer(initChainer)
-	app.InitChain(abci.RequestInitChain{GenesisBytes: []byte("{}")}) // must have valid JSON genesis file, even if empty
+	app.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}")}) // must have valid JSON genesis file, even if empty
 	app.Commit()
 	res = app.Query(query)
 	assert.Equal(t, value, res.Value)
@@ -510,15 +510,20 @@ func TestValidatorChange(t *testing.T) {
 
 	// Assert that validator updates are correct.
 	for _, val := range valSet {
+
+		pk, err := tmtypes.PB2TM.PubKey(val.PubKey)
 		// Sanity
-		assert.NotEqual(t, len(val.PubKey), 0)
+		assert.Nil(t, err)
 
 		// Find matching update and splice it out.
 		for j := 0; j < len(valUpdates); {
 			valUpdate := valUpdates[j]
 
+			upk, err := tmtypes.PB2TM.PubKey(valUpdate.PubKey)
+			assert.Nil(t, err)
+
 			// Matched.
-			if bytes.Equal(valUpdate.PubKey, val.PubKey) {
+			if upk.Equals(pk) {
 				assert.Equal(t, valUpdate.Power, val.Power+1)
 				if j < len(valUpdates)-1 {
 					// Splice it out.
@@ -542,7 +547,7 @@ func randPower() int64 {
 
 func makeVal(secret string) abci.Validator {
 	return abci.Validator{
-		PubKey: makePubKey(secret).Bytes(),
+		PubKey: tmtypes.TM2PB.PubKey(makePubKey(secret)),
 		Power:  randPower(),
 	}
 }

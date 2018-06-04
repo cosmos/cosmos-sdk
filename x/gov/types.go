@@ -6,6 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+
+const (
+	Bech32PrefixProposalID = "cosmosPropID"
+)
+
 type Vote struct {
 	Voter      sdk.Address `json:"voter"`       //  address of the voter
 	ProposalID int64       `json:"proposal_id"` //  proposalID of the proposal

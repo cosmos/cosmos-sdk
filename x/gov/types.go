@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-
 const (
 	Bech32PrefixProposalID = "cosmosPropID"
 )

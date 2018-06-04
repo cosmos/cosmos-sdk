@@ -33,7 +33,6 @@ func (msg MsgSubmitProposal) Type() string { return "gov" }
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
-
 	if len(msg.Title) == 0 {
 		return ErrInvalidTitle(msg.Title) // TODO: Proper Error
 	}
@@ -157,7 +156,6 @@ func (msg MsgVote) Type() string { return "gov" }
 
 // Implements Msg.
 func (msg MsgVote) ValidateBasic() sdk.Error {
-
 	if len(msg.Voter) == 0 {
 		return sdk.ErrInvalidAddress(msg.Voter.String())
 	}

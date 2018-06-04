@@ -18,7 +18,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	addr, val, amt := addrs[0], pks[0], int64(100)
 	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
-	sk.Tick(ctx)
+	stake.EndBlocker(ctx, sk)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins - amt}})
 	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
 
@@ -41,7 +41,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	slh := NewHandler(keeper)
 	got := sh(ctx, newTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
-	sk.Tick(ctx)
+	stake.EndBlocker(ctx, sk)
 	require.Equal(t, ck.GetCoins(ctx, addr), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins - amt}})
 	require.Equal(t, sdk.NewRat(amt), sk.Validator(ctx, addr).GetPower())
 	info, found := keeper.getValidatorSigningInfo(ctx, val.Address())

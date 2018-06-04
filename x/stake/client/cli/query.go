@@ -21,7 +21,7 @@ func GetCmdQueryValidator(storeName string, cdc *wire.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			addr, err := sdk.GetAccAddressBech32Cosmos(args[0])
+			addr, err := sdk.GetAccAddressBech32(args[0])
 			if err != nil {
 				return err
 			}
@@ -80,7 +80,6 @@ func GetCmdQueryValidators(storeName string, cdc *wire.Codec) *cobra.Command {
 				validators = append(validators, validator)
 			}
 
-
 			switch viper.Get(cli.OutputFlag) {
 			case "text":
 				for _, validator := range validators {
@@ -113,7 +112,7 @@ func GetCmdQueryDelegation(storeName string, cdc *wire.Codec) *cobra.Command {
 		Short: "Query a delegations bond based on address and validator address",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			addr, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(FlagAddressValidator))
+			addr, err := sdk.GetAccAddressBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
@@ -166,7 +165,7 @@ func GetCmdQueryDelegations(storeName string, cdc *wire.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			delegatorAddr, err := sdk.GetAccAddressBech32Cosmos(args[0])
+			delegatorAddr, err := sdk.GetAccAddressBech32(args[0])
 			if err != nil {
 				return err
 			}

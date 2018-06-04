@@ -50,7 +50,7 @@ func GetKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keyOutput, err := Bech32CosmosKeyOutput(info)
+	keyOutput, err := Bech32KeyOutput(info)
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))

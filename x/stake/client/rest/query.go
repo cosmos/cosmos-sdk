@@ -82,8 +82,8 @@ func bondingStatusHandlerFn(ctx context.CoreContext, storeName string, cdc *wire
 
 // TODO inherit from Validator
 type StakeValidatorOutput struct {
-	Owner   string `json:"owner"`   // in bech32cosmos
-	PubKey  string `json:"pub_key"` // in bech32cosmos
+	Owner   string `json:"owner"`   // in bech32
+	PubKey  string `json:"pub_key"` // in bech32
 	Revoked bool   `json:"revoked"` // has the validator been revoked from bonded status?
 
 	PoolShares      stake.PoolShares `json:"pool_shares"`      // total shares for tokens held in the pool
@@ -103,7 +103,7 @@ type StakeValidatorOutput struct {
 	PrevBondedShares sdk.Rat `json:"prev_bonded_shares"` // total shares of a global hold pools
 }
 
-func bech32CosmosStakeValidatorOutput(validator stake.Validator) (StakeValidatorOutput, error) {
+func bech32StakeValidatorOutput(validator stake.Validator) (StakeValidatorOutput, error) {
 	bechOwner, err := sdk.Bech32ifyVal(validator.Owner)
 	if err != nil {
 		return StakeValidatorOutput{}, err
@@ -135,7 +135,7 @@ func bech32CosmosStakeValidatorOutput(validator stake.Validator) (StakeValidator
 	}, nil
 }
 
-// TODO bech32cosmos
+// TODO bech32
 // http request handler to query list of validators
 func validatorsHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -159,7 +159,7 @@ func validatorsHandlerFn(ctx context.CoreContext, storeName string, cdc *wire.Co
 			var bech32Validator StakeValidatorOutput
 			err = cdc.UnmarshalBinary(kv.Value, &validator)
 			if err == nil {
-				bech32Validator, err = bech32CosmosStakeValidatorOutput(validator)
+				bech32Validator, err = bech32StakeValidatorOutput(validator)
 			}
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)

@@ -53,7 +53,7 @@ func QueryKeysRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("[]"))
 		return
 	}
-	keysOutput, err := Bech32CosmosKeysOutput(infos)
+	keysOutput, err := Bech32KeysOutput(infos)
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))

@@ -25,13 +25,13 @@ func registerTxRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, k
 }
 
 type msgDelegateInput struct {
-	DelegatorAddr string   `json:"delegator_addr"` // in bech32cosmos
-	ValidatorAddr string   `json:"validator_addr"` // in bech32cosmos
+	DelegatorAddr string   `json:"delegator_addr"` // in bech32
+	ValidatorAddr string   `json:"validator_addr"` // in bech32
 	Bond          sdk.Coin `json:"bond"`
 }
 type msgUnbondInput struct {
-	DelegatorAddr string `json:"delegator_addr"` // in bech32cosmos
-	ValidatorAddr string `json:"validator_addr"` // in bech32cosmos
+	DelegatorAddr string `json:"delegator_addr"` // in bech32
+	ValidatorAddr string `json:"validator_addr"` // in bech32
 	Shares        string `json:"shares"`
 }
 

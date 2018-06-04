@@ -173,7 +173,7 @@ func executeGetAddrPK(t *testing.T, cmdStr string) (sdk.Address, crypto.PubKey) 
 	address, err := sdk.GetAccAddressBech32(ko.Address)
 	require.NoError(t, err)
 
-	pk, err := sdk.GetAccPubKeyBech32Cosmos(ko.PubKey)
+	pk, err := sdk.GetAccPubKeyBech32(ko.PubKey)
 	require.NoError(t, err)
 
 	return address, pk

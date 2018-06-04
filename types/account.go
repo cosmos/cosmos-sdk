@@ -63,7 +63,7 @@ func GetAccAddressBech32(address string) (addr Address, err error) {
 }
 
 // create a Pubkey from a string
-func GetAccPubKeyBech32Cosmos(address string) (pk crypto.PubKey, err error) {
+func GetAccPubKeyBech32(address string) (pk crypto.PubKey, err error) {
 	bz, err := getFromBech32(address, Bech32PrefixAccPub)
 	if err != nil {
 		return nil, err

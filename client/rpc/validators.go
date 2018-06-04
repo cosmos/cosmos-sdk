@@ -30,21 +30,21 @@ func ValidatorCommand() *cobra.Command {
 	return cmd
 }
 
-// Validator output in bech32cosmos format
+// Validator output in bech32 format
 type ValidatorOutput struct {
-	Address     string `json:"address"` // in bech32cosmos
-	PubKey      string `json:"pub_key"` // in bech32cosmos
+	Address     string `json:"address"` // in bech32
+	PubKey      string `json:"pub_key"` // in bech32
 	Accum       int64  `json:"accum"`
 	VotingPower int64  `json:"voting_power"`
 }
 
-// Validators at a certain height output in bech32cosmos format
+// Validators at a certain height output in bech32 format
 type ResultValidatorsOutput struct {
 	BlockHeight int64             `json:"block_height"`
 	Validators  []ValidatorOutput `json:"validators"`
 }
 
-func bech32CosmosValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
+func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
 	bechAddress, err := sdk.Bech32ifyVal(validator.Address)
 	if err != nil {
 		return ValidatorOutput{}, err
@@ -79,7 +79,7 @@ func getValidators(ctx context.CoreContext, height *int64) ([]byte, error) {
 		Validators:  make([]ValidatorOutput, len(validatorsRes.Validators)),
 	}
 	for i := 0; i < len(validatorsRes.Validators); i++ {
-		outputValidatorsRes.Validators[i], err = bech32CosmosValidatorOutput(validatorsRes.Validators[i])
+		outputValidatorsRes.Validators[i], err = bech32ValidatorOutput(validatorsRes.Validators[i])
 		if err != nil {
 			return nil, err
 		}

@@ -165,6 +165,7 @@ func (ctx CoreContext) SignAndBuildLedger(msg sdk.Msg, cdc *wire.Codec) ([]byte,
 		ChainID:   chainID,
 		Sequences: []int64{sequence},
 		Msg:       msg,
+		Fee:       auth.NewStdFee(10000, sdk.Coin{}), // TODO run simulate to estimate gas?
 	}
 	// sign and build
 	bz := signMsg.Bytes()

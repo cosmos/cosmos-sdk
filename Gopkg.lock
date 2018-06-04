@@ -21,9 +21,9 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/cosmos/bech32cosmos"
-  packages = ["go"]
-  revision = "c12e4b6ed52acc1d35fea49acec35f980914dc95"
+  name = "github.com/btcsuite/btcutil"
+  packages = ["bech32"]
+  revision = "d4cc87b860166d00d6b5b9e0d3b3d71d6088d4d4"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -356,9 +356,11 @@
   version = "v0.20.0-rc0"
 
 [[projects]]
+  branch = "develop"
   name = "github.com/tendermint/tmlibs"
   packages = [
     "autofile",
+    "bech32",
     "cli",
     "cli/flags",
     "clist",
@@ -366,10 +368,10 @@
     "db",
     "flowrate",
     "log",
-    "merkle"
+    "merkle",
+    "merkle/tmhash"
   ]
-  revision = "d970af87248a4e162590300dbb74e102183a417d"
-  version = "v0.8.3"
+  revision = "44f1bdb0d55cc6527e38d0a7aab406e2580f56a4"
 
 [[projects]]
   branch = "master"
@@ -472,6 +474,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "83d9efe2e1cf6dec3845a0d3fe17fc1d4817f0610d70a307ee3d810205445f54"
+  inputs-digest = "dbb8b1f4f52f7b61275566a6c978ada5bb694b38108db7c694ba956e76b12bbb"
   solver-name = "gps-cdcl"
   solver-version = 1

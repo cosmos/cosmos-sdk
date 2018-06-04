@@ -34,6 +34,7 @@ import (
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/server"
 	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -51,7 +52,7 @@ var (
 	// XXX bad globals
 	name     = "test"
 	password = "0123456789"
-	port     string // XXX: but it's the int ...
+	port     string
 	seed     string
 	sendAddr string
 )
@@ -456,8 +457,11 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 	genDoc.AppStateJSON = appState
 
 	// LCD listen address
-	port = fmt.Sprintf("%d", 17377)                       // XXX
-	listenAddr := fmt.Sprintf("tcp://localhost:%s", port) // XXX
+	var listenAddr string
+	listenAddr, port, err = server.FreeTCPAddr()
+	if err != nil {
+		return nil, nil, err
+	}
 
 	// XXX: need to set this so LCD knows the tendermint node address!
 	viper.Set(client.FlagNode, config.RPC.ListenAddress)

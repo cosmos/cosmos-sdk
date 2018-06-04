@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"encoding/json"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
 )
@@ -70,7 +68,7 @@ func (fee StdFee) Bytes() []byte {
 	if len(fee.Amount) == 0 {
 		fee.Amount = sdk.Coins{}
 	}
-	bz, err := json.Marshal(fee) // TODO
+	bz, err := msgCdc.MarshalJSON(fee) // TODO
 	if err != nil {
 		panic(err)
 	}
@@ -85,21 +83,21 @@ func (fee StdFee) Bytes() []byte {
 // and the Sequence numbers for each signature (prevent
 // inchain replay and enforce tx ordering per account).
 type StdSignDoc struct {
-	ChainID   string          `json:"chain_id"`
-	Sequences []int64         `json:"sequences"`
-	FeeBytes  json.RawMessage `json:"fee_bytes"`
-	MsgBytes  json.RawMessage `json:"msg_bytes"`
-	AltBytes  json.RawMessage `json:"alt_bytes"`
+	ChainID   string  `json:"chain_id"`
+	Sequences []int64 `json:"sequences"`
+	FeeBytes  []byte  `json:"fee_bytes"`
+	MsgBytes  []byte  `json:"msg_bytes"`
+	AltBytes  []byte  `json:"alt_bytes"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
 // TODO: change the API to just take a chainID and StdTx ?
 func StdSignBytes(chainID string, sequences []int64, fee StdFee, msg sdk.Msg) []byte {
-	bz, err := json.Marshal(StdSignDoc{
+	bz, err := msgCdc.MarshalJSON(StdSignDoc{
 		ChainID:   chainID,
 		Sequences: sequences,
-		FeeBytes:  json.RawMessage(fee.Bytes()),
-		MsgBytes:  json.RawMessage(msg.GetSignBytes()),
+		FeeBytes:  fee.Bytes(),
+		MsgBytes:  msg.GetSignBytes(),
 	})
 	if err != nil {
 		panic(err)

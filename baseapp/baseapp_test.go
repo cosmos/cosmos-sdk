@@ -516,7 +516,7 @@ func TestValidatorChange(t *testing.T) {
 		assert.Nil(t, err)
 
 		// Find matching update and splice it out.
-		for j := 0; j < len(valUpdates); {
+		for j := 0; j < len(valUpdates); j++ {
 			valUpdate := valUpdates[j]
 
 			upk, err := tmtypes.PB2TM.PubKey(valUpdate.PubKey)
@@ -533,7 +533,6 @@ func TestValidatorChange(t *testing.T) {
 			}
 
 			// Not matched.
-			j++
 		}
 	}
 	assert.Equal(t, len(valUpdates), 0, "Some validator updates were unexpected")

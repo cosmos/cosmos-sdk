@@ -273,8 +273,8 @@
     "server",
     "types"
   ]
-  revision = "f9dce537281ffba5d1e047e6729429f7e5fb90c9"
-  version = "v0.11.0-rc0"
+  revision = "9af8b7a7c87478869f8c280ed9539470b8f470b4"
+  version = "v0.11.0-rc4"
 
 [[projects]]
   branch = "master"
@@ -352,8 +352,8 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "73de99ecab464208f6ea3a96525f4e4b78425e61"
-  version = "v0.20.0-rc0"
+  revision = "cb35c6378fe28aaa67998314f0996cd6cd4f30ff"
+  version = "v0.20.0-rc2"
 
 [[projects]]
   branch = "develop"
@@ -393,7 +393,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "5ba7f63082460102a45837dbd1827e10f9479ac0"
+  revision = "df8d4716b3472e4a531c33cedbe537dae921a1a9"
 
 [[projects]]
   branch = "master"

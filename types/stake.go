@@ -3,6 +3,7 @@ package types
 import (
 	abci "github.com/tendermint/abci/types"
 	"github.com/tendermint/go-crypto"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // status of a validator
@@ -41,7 +42,7 @@ type Validator interface {
 // validator which fulfills abci validator interface for use in Tendermint
 func ABCIValidator(v Validator) abci.Validator {
 	return abci.Validator{
-		PubKey: v.GetPubKey().Bytes(),
+		PubKey: tmtypes.TM2PB.PubKey(v.GetPubKey()),
 		Power:  v.GetPower().Evaluate(),
 	}
 }

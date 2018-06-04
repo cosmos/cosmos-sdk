@@ -6,6 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	Bech32PrefixProposalID = "cosmosPropID"
+)
+
 type Vote struct {
 	Voter      sdk.Address `json:"voter"`       //  address of the voter
 	ProposalID int64       `json:"proposal_id"` //  proposalID of the proposal
@@ -38,19 +42,19 @@ type Proposal struct {
 	AbstainVotes     int64 `json:"abstain_votes"`      //  Weight of Abstain Votes
 }
 
-func (proposal Proposal) getValidatorGovInfo(validatorAddr sdk.Address) *ValidatorGovInfo {
-	for _, validatorGovInfo := range proposal.ValidatorGovInfos {
+func (proposal *Proposal) getValidatorGovInfo(validatorAddr sdk.Address) *ValidatorGovInfo {
+	for index, validatorGovInfo := range proposal.ValidatorGovInfos {
 		if bytes.Equal(validatorGovInfo.ValidatorAddr, validatorAddr) {
-			return &validatorGovInfo
+			return &proposal.ValidatorGovInfos[index]
 		}
 	}
 	return nil
 }
 
-func (proposal Proposal) getVote(voterAddr sdk.Address) *Vote {
-	for _, vote := range proposal.VoteList {
+func (proposal *Proposal) getVote(voterAddr sdk.Address) *Vote {
+	for index, vote := range proposal.VoteList {
 		if bytes.Equal(vote.Voter, voterAddr) {
-			return &vote
+			return &proposal.VoteList[index]
 		}
 	}
 	return nil

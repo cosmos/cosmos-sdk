@@ -10,7 +10,7 @@ import (
 
 type Keeper struct {
 	// The reference to the CoinKeeper to modify balances
-	ck bank.CoinKeeper
+	ck bank.Keeper
 
 	// The reference to the StakeMapper to get information about stakers
 	sm stake.Keeper
@@ -23,7 +23,7 @@ type Keeper struct {
 }
 
 // NewGovernanceMapper returns a mapper that uses go-wire to (binary) encode and decode gov types.
-func NewKeeper(key sdk.StoreKey, ck bank.CoinKeeper, sk stake.Keeper) Keeper {
+func NewKeeper(key sdk.StoreKey, ck bank.Keeper, sk stake.Keeper) Keeper {
 	cdc := wire.NewCodec()
 	return Keeper{
 		proposalStoreKey: key,
@@ -170,7 +170,7 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
 
 	validatorList := keeper.sm.GetValidators(ctx, 100) // TODO: Finalize with staking module
 
-	for index, validator := range validatorList {
+	for _, validator := range validatorList {
 		validatorGovInfo := ValidatorGovInfo{
 			ProposalID:      proposal.ProposalID,
 			ValidatorAddr:   validator.Address,     // TODO: Finalize with staking module

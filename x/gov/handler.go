@@ -4,6 +4,8 @@ import (
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bech32cosmos "github.com/cosmos/bech32cosmos/go"
+	"strconv"
 )
 
 // Handle all "gov" type messages.
@@ -26,7 +28,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
 // Handle MsgSubmitProposal.
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
 
-	_, err := keeper.ck.SubtractCoins(ctx, msg.Proposer, msg.InitialDeposit)
+	_, _, err := keeper.ck.SubtractCoins(ctx, msg.Proposer, msg.InitialDeposit)
 	if err != nil {
 		return err.Result()
 	}
@@ -82,13 +84,20 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 
 	keeper.SetProposal(ctx, proposal)
 
-	return sdk.Result{} // TODO
+	bech, _ := bech32cosmos.Encode(Bech32PrefixProposalID,[]byte(strconv.FormatInt(proposal.ProposalID,10)))
+
+	tags := sdk.NewTags("action", []byte("submitProposal"), "proposer", msg.Proposer.Bytes(), "proposalId", []byte(bech)) //TODO bech32 use https://github.com/tendermint/tmlibs/tree/develop/bech32
+
+	return sdk.Result{
+		Data: []byte{byte(proposal.ProposalID)},
+		Tags: tags,
+	}
 }
 
 // Handle MsgDeposit.
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
 
-	_, err := keeper.ck.SubtractCoins(ctx, msg.Depositer, msg.Amount)
+	_, _, err := keeper.ck.SubtractCoins(ctx, msg.Depositer, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
@@ -121,7 +130,12 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 
 	keeper.SetProposal(ctx, *proposal)
 
-	return sdk.Result{} // TODO
+	bech, _ := bech32cosmos.Encode(Bech32PrefixProposalID,[]byte(strconv.FormatInt(proposal.ProposalID,10))) //TODO bech32 use https://github.com/tendermint/tmlibs/tree/develop/bech32
+
+	tags := sdk.NewTags("action", []byte("deposit"), "depositer", msg.Depositer.Bytes(), "proposalId", []byte(bech))
+	return sdk.Result{
+		Tags: tags,
+	}
 }
 
 // Handle SendMsg.
@@ -194,5 +208,10 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 
 	keeper.SetProposal(ctx, *proposal)
 
-	return sdk.Result{} // TODO
+	bech, _ := bech32cosmos.Encode(Bech32PrefixProposalID,[]byte(strconv.FormatInt(proposal.ProposalID,10))) //TODO bech32 use https://github.com/tendermint/tmlibs/tree/develop/bech32
+
+	tags := sdk.NewTags("action", []byte("vote"), "voter", msg.Voter.Bytes(), "proposalId", []byte(bech))
+	return sdk.Result{
+		Tags: tags,
+	}
 }

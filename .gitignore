@@ -24,3 +24,7 @@ profile.out
 *.box
 *.log
 vagrant
+
+### IDE ###
+.idea/
+*.iml

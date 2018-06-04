@@ -26,7 +26,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
 // Handle MsgSubmitProposal.
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
 
-	_, err := keeper.ck.SubtractCoins(ctx, msg.Proposer, msg.InitialDeposit)
+	_, _, err := keeper.ck.SubtractCoins(ctx, msg.Proposer, msg.InitialDeposit)
 	if err != nil {
 		return err.Result()
 	}
@@ -82,13 +82,18 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 
 	keeper.SetProposal(ctx, proposal)
 
-	return sdk.Result{} // TODO
+	tags := sdk.NewTags("action", []byte("submitProposal"), "proposer", msg.Proposer.Bytes(), "proposalId", []byte{byte(proposal.ProposalID)})
+
+	return sdk.Result{
+		Data: []byte{byte(proposal.ProposalID)},
+		Tags: tags,
+	}
 }
 
 // Handle MsgDeposit.
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
 
-	_, err := keeper.ck.SubtractCoins(ctx, msg.Depositer, msg.Amount)
+	_, _, err := keeper.ck.SubtractCoins(ctx, msg.Depositer, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
@@ -121,7 +126,10 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 
 	keeper.SetProposal(ctx, *proposal)
 
-	return sdk.Result{} // TODO
+	tags := sdk.NewTags("action", []byte("deposit"), "depositer", msg.Depositer.Bytes(), "proposalId", []byte{byte(proposal.ProposalID)})
+	return sdk.Result{
+		Tags: tags,
+	}
 }
 
 // Handle SendMsg.
@@ -194,5 +202,8 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 
 	keeper.SetProposal(ctx, *proposal)
 
-	return sdk.Result{} // TODO
+	tags := sdk.NewTags("action", []byte("vote"), "voter", msg.Voter.Bytes(), "proposalId", []byte{byte(proposal.ProposalID)})
+	return sdk.Result{
+		Tags: tags,
+	}
 }

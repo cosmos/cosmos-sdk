@@ -7,12 +7,12 @@ import (
 	"github.com/spf13/viper"
 
 	"encoding/hex"
-	"github.com/pkg/errors"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/pkg/errors"
 	"strconv"
 )
 
@@ -130,7 +130,9 @@ func VoteCmd(cdc *wire.Codec) *cobra.Command {
 			// create the message
 			msg := gov.NewMsgVote(voter, proposalID, option)
 
-			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]", hex.EncodeToString(msg.Voter), msg.ProposalID, msg.Option)
+			bechAddr, _ := sdk.Bech32ifyAcc(msg.Voter)
+
+			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]", bechAddr, msg.ProposalID, msg.Option)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
@@ -161,7 +163,7 @@ func GetProposalCmd(storeName string, cdc *wire.Codec) *cobra.Command {
 			key, _ := cdc.MarshalBinary(proposalID)
 			res, err := ctx.Query(key, storeName)
 			if len(res) == 0 || err != nil {
-				return  errors.Errorf("proposalID [%d] is not existed", proposalID)
+				return errors.Errorf("proposalID [%d] is not existed", proposalID)
 			}
 
 			proposal := new(gov.Proposal)

@@ -3,8 +3,8 @@ package gov
 import (
 	"reflect"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	bech32cosmos "github.com/cosmos/bech32cosmos/go"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strconv"
 )
 
@@ -84,9 +84,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 
 	keeper.SetProposal(ctx, proposal)
 
-	bech, _ := bech32cosmos.Encode(Bech32PrefixProposalID,[]byte(strconv.FormatInt(proposal.ProposalID,10)))
-
-	tags := sdk.NewTags("action", []byte("submitProposal"), "proposer", msg.Proposer.Bytes(), "proposalId", []byte(bech)) //TODO bech32 use https://github.com/tendermint/tmlibs/tree/develop/bech32
+	tags := sdk.NewTags("action", []byte("submitProposal"), "proposer", msg.Proposer.Bytes(), "proposalId", []byte{byte(proposal.ProposalID)})
 
 	return sdk.Result{
 		Data: []byte{byte(proposal.ProposalID)},
@@ -130,9 +128,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 
 	keeper.SetProposal(ctx, *proposal)
 
-	bech, _ := bech32cosmos.Encode(Bech32PrefixProposalID,[]byte(strconv.FormatInt(proposal.ProposalID,10))) //TODO bech32 use https://github.com/tendermint/tmlibs/tree/develop/bech32
-
-	tags := sdk.NewTags("action", []byte("deposit"), "depositer", msg.Depositer.Bytes(), "proposalId", []byte(bech))
+	tags := sdk.NewTags("action", []byte("deposit"), "depositer", msg.Depositer.Bytes(), "proposalId", []byte{byte(proposal.ProposalID)})
 	return sdk.Result{
 		Tags: tags,
 	}
@@ -208,9 +204,7 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 
 	keeper.SetProposal(ctx, *proposal)
 
-	bech, _ := bech32cosmos.Encode(Bech32PrefixProposalID,[]byte(strconv.FormatInt(proposal.ProposalID,10))) //TODO bech32 use https://github.com/tendermint/tmlibs/tree/develop/bech32
-
-	tags := sdk.NewTags("action", []byte("vote"), "voter", msg.Voter.Bytes(), "proposalId", []byte(bech))
+	tags := sdk.NewTags("action", []byte("vote"), "voter", msg.Voter.Bytes(), "proposalId", []byte{byte(proposal.ProposalID)})
 	return sdk.Result{
 		Tags: tags,
 	}

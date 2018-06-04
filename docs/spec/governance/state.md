@@ -2,12 +2,30 @@
 
 ## State
 
-### Procedures
+### Procedures and base types
 
 `Procedures` define the rule according to which votes are run. There can only 
 be one active procedure at any given time. If governance wants to change a 
 procedure, either to modify a value or add/remove a parameter, a new procedure 
 has to be created and the previous one rendered inactive.
+
+
+```go
+type Procedure struct {
+  VotingPeriod      int64               //  Length of the voting period. Initial value: 2 weeks
+  MinDeposit        sdk.Coins           //  Minimum deposit for a proposal to enter voting period. 
+  Threshold         rational.Rational   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
+  Veto              rational.Rational   //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
+  MaxDepositPeriod  int64               //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
+  GovernancePenalty sdk.Rat               //  Penalty if validator does not vote
+  
+  IsActive          bool                //  If true, procedure is active. Only one procedure can have isActive true.
+}
+```
+
+The current active procedure is stored in a global `params` KVStore.
+
+And some basic types:
 
 ```go
 
@@ -35,20 +53,7 @@ const (
     ProposalStatusAccepted  = 0x3   // Proposal has been accepted
     ProposalStatusRejected  = 0x4   // Proposal has been rejected
 )
-
-type Procedure struct {
-  VotingPeriod      int64               //  Length of the voting period. Initial value: 2 weeks
-  MinDeposit        sdk.Coins           //  Minimum deposit for a proposal to enter voting period. 
-  Threshold         rational.Rational   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
-  Veto              rational.Rational   //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
-  MaxDepositPeriod  int64               //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
-  GovernancePenalty sdk.Rat               //  Penalty if validator does not vote
-  
-  IsActive          bool                //  If true, procedure is active. Only one procedure can have isActive true.
-}
 ```
-
-The current active procedure is stored in a global `params` KVStore.
 
 ### Deposit
 

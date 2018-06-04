@@ -153,17 +153,17 @@ And the pseudocode for the `ProposalProcessingQueue`:
     // End of voting period, tally
 
       ProposalProcessingQueue.pop()
-
       validators = stakeKeeper.getAllValidators()
       tmpValMap := map(sdk.Address)ValidatorGovInfo
 
       // Initiate mapping at 0. Validators that remain at 0 at the end of tally will be punished
       for each validator in validators
         tmpValMap(validator).Minus = 0
-      
-      voterIterator = rangeQuery(Governance, <proposalID|addresses>) //return all the addresses that voted on the proposal
+
+
 
       // Tally
+      voterIterator = rangeQuery(Governance, <proposalID|addresses>) //return all the addresses that voted on the proposal
       for each (voterAddress, vote) in voterIterator
         delegations = stakeKeeper.getDelegations(voterAddress) // get all delegations for current voter
 
@@ -175,12 +175,16 @@ And the pseudocode for the `ProposalProcessingQueue`:
         if (isVal)
         tmpValMap(voterAddress).Vote = vote
 
+
+
       // Slash validators that did not vote, or update tally if they voted
       for each validator in validators
         if (!tmpValMap(validator).HasVoted)
           slash validator by proposal.Procedure.GovernancePenalty
         else
           proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))
+
+
 
       // Check if proposal is accepted or rejected
       totalNonAbstain := proposal.YesVotes + proposal.NoVotes + proposal.NoWithVetoVotes

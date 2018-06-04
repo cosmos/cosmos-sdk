@@ -1,7 +1,7 @@
 # Install
 
 The fastest and easiest way to install the Cosmos SDK binaries
-is to run [this script](https://github.com/cosmos/cosmos-sdk/blob/develop/scripts/install_sdk_ubuntu.sh) on a fresh Ubuntu instance. Similarly, you can run [this script](https://github.com/cosmos/cosmos-sdk/blob/develop/scripts/install_sdk_bsd.sh) on a fresh FreeBSD instance. Read the comments / instructions carefully (i.e., reset your terminal after running the script).
+is to run [this script](https://github.com/cosmos/cosmos-sdk/blob/develop/scripts/install_sdk_ubuntu.sh) on a fresh Ubuntu instance. Similarly, you can run [this script](https://github.com/cosmos/cosmos-sdk/blob/develop/scripts/install_sdk_bsd.sh) on a fresh FreeBSD instance. Read the scripts before running them to ensure no untrusted connection is being made, for example we're making curl requests to download golang. Also read the comments / instructions carefully (i.e., reset your terminal after running the script).
 
 Cosmos SDK can be installed to
 `$GOPATH/src/github.com/cosmos/cosmos-sdk` like a normal Go program:

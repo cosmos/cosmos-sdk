@@ -267,8 +267,8 @@
     "server",
     "types"
   ]
-  revision = "f9dce537281ffba5d1e047e6729429f7e5fb90c9"
-  version = "v0.11.0-rc0"
+  revision = "9af8b7a7c87478869f8c280ed9539470b8f470b4"
+  version = "v0.11.0-rc4"
 
 [[projects]]
   branch = "master"
@@ -347,8 +347,8 @@
     "types/priv_validator",
     "version"
   ]
-  revision = "73de99ecab464208f6ea3a96525f4e4b78425e61"
-  version = "v0.20.0-rc0"
+  revision = "b5baab0238c9ec26e3b2d229b0243f9ff9220bdb"
+  version = "v0.20.0-rc3"
 
 [[projects]]
   branch = "develop"
@@ -463,6 +463,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c8d0282dfa5b2bb7a0eb54fc24f42021e63f282265332678593658119bf5023b"
+  inputs-digest = "ccb2ab7644a38c2d0326280582f758256e37fc98c3ef0403581e3b85cff42188"
   solver-name = "gps-cdcl"
   solver-version = 1

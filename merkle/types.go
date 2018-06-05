@@ -85,38 +85,32 @@ func (p Proof) Verify(root []byte, value [][]byte, keys ...string) (err error) {
 	return nil
 }
 
+// TODO: extend encoding scheme to amino and protobuf
 func (p Proof) Bytes(cdc *wire.Codec) (res []byte, err error) {
-	/*	rawops := make([]RawOp, len(p))
-		for i, op := range p {
-			rawops[i], err = op.Raw()
-			fmt.Printf("encode %+v to %+v\n", op, rawops[i])
-			if err != nil {
-				return
-			}
+	rawops := make([]RawOp, len(p))
+	for i, op := range p {
+		rawops[i], err = op.Raw()
+		if err != nil {
+			return
 		}
+	}
 
-		return json.Marshal(rawops)
-	*/
+	return json.Marshal(rawops)
 
-	return cdc.MarshalBinary(p)
 }
 
 func DecodeProof(cdc *wire.Codec, data []byte, decode OpDecoder) (res Proof, err error) {
-	/*	rawops := make([]RawOp, 0)
-		if err = json.Unmarshal(data, &rawops); err != nil {
+	rawops := make([]RawOp, 0)
+	if err = json.Unmarshal(data, &rawops); err != nil {
+		return
+	}
+
+	res = make([]Op, len(rawops))
+	for i, rawop := range rawops {
+		res[i], err = decode(rawop)
+		if err != nil {
 			return
 		}
-
-		res = make([]Op, len(rawops))
-		for i, rawop := range rawops {
-			res[i], err = decode(rawop)
-			if err != nil {
-				return
-			}
-			fmt.Printf("decode %+v (key: %+v) to %+v\n", rawop, []byte(rawop.Key), res[i])
-		}
-		return*/
-
-	err = cdc.UnmarshalBinary(data, &res)
+	}
 	return
 }

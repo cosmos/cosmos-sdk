@@ -31,17 +31,17 @@ func BondStatusToString(b BondStatus) string {
 
 // validator for a delegated proof of stake system
 type Validator interface {
-	GetStatus() BondStatus    // status of the validator
-	GetOwner() Address        // owner address to receive/return validators coins
-	GetPubKey() crypto.PubKey // validation pubkey
-	GetPower() Rat            // validation power
-	GetBondHeight() int64     // height in which the validator became active
+	GetStatus() BondStatus  // status of the validator
+	GetOwner() Address      // owner address to receive/return validators coins
+	GetPubKey() abci.PubKey // validation pubkey
+	GetPower() Rat          // validation power
+	GetBondHeight() int64   // height in which the validator became active
 }
 
 // validator which fulfills abci validator interface for use in Tendermint
 func ABCIValidator(v Validator) abci.Validator {
 	return abci.Validator{
-		PubKey: v.GetPubKey().Bytes(),
+		PubKey: v.GetPubKey(),
 		Power:  v.GetPower().Evaluate(),
 	}
 }

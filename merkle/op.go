@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"golang.org/x/crypto/ripemd160"
-
 	"github.com/tendermint/iavl"
+	"github.com/tendermint/iavl/sha256truncated"
 
 	"github.com/tendermint/go-crypto/merkle"
 
-	"github.com/tendermint/go-wire"
+	"github.com/tendermint/go-amino"
 )
 
 type IAVLExistsOp struct {
@@ -26,16 +25,22 @@ func (op IAVLExistsOp) String() string {
 var _ Op = IAVLExistsOp{}
 
 func (op IAVLExistsOp) iavlLeafNodeHash(value []byte) []byte {
-	hasher := ripemd160.New()
+	hasher := sha256truncated.New()
 	buf := new(bytes.Buffer)
-	n, err := int(0), error(nil)
 
-	wire.WriteInt8(0, buf, &n, &err)
-	wire.WriteInt64(1, buf, &n, &err)
-	wire.WriteInt64(op.Version, buf, &n, &err)
-	wire.WriteByteSlice([]byte(op.Key), buf, &n, &err)
-	wire.WriteByteSlice(value, buf, &n, &err)
-
+	err := amino.EncodeInt8(buf, 0)
+	if err == nil {
+		err = amino.EncodeInt64(buf, 1)
+	}
+	if err == nil {
+		err = amino.EncodeInt64(buf, op.Version)
+	}
+	if err == nil {
+		err = amino.EncodeByteSlice(buf, []byte(op.Key))
+	}
+	if err == nil {
+		err = amino.EncodeByteSlice(buf, value)
+	}
 	if err != nil {
 		panic(fmt.Sprintf("Failed to hash proofLeafNode: %v", err))
 	}

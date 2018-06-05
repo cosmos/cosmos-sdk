@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/wire"
 )
 
+// TODO: Delete?
 func RegisterWire(cdc *wire.Codec) {
 	// TODO: bring this back ...
 	/*

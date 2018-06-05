@@ -7,9 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// name to idetify transaction types
+const MsgType = "gov"
+
 //-----------------------------------------------------------
 // MsgSubmitProposal
-
 type MsgSubmitProposal struct {
 	Title          string      //  Title of the proposal
 	Description    string      //  Description of the proposal
@@ -29,7 +31,7 @@ func NewMsgSubmitProposal(title string, description string, proposalType string,
 }
 
 // Implements Msg.
-func (msg MsgSubmitProposal) Type() string { return "gov" }
+func (msg MsgSubmitProposal) Type() string { return MsgType }
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
@@ -39,8 +41,8 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 	if len(msg.Description) == 0 {
 		return ErrInvalidDescription(msg.Description) // TODO: Proper Error
 	}
-	if len(msg.ProposalType) == 0 {
-		return ErrInvalidProposalType(msg.ProposalType) // TODO: Proper Error
+	if !validProposalType(msg.ProposalType) {
+		return ErrInvalidProposalType(msg.ProposalType)
 	}
 	if len(msg.Proposer) == 0 {
 		return sdk.ErrInvalidAddress(msg.Proposer.String())
@@ -79,7 +81,6 @@ func (msg MsgSubmitProposal) GetSigners() []sdk.Address {
 
 //-----------------------------------------------------------
 // MsgDeposit
-
 type MsgDeposit struct {
 	ProposalID int64       `json:"proposal_id"` // ID of the proposal
 	Depositer  sdk.Address `json:"depositer"`   // Address of the depositer
@@ -95,7 +96,7 @@ func NewMsgDeposit(proposalID int64, depositer sdk.Address, amount sdk.Coins) Ms
 }
 
 // Implements Msg.
-func (msg MsgDeposit) Type() string { return "gov" }
+func (msg MsgDeposit) Type() string { return MsgType }
 
 // Implements Msg.
 func (msg MsgDeposit) ValidateBasic() sdk.Error {
@@ -136,7 +137,6 @@ func (msg MsgDeposit) GetSigners() []sdk.Address {
 
 //-----------------------------------------------------------
 // MsgVote
-
 type MsgVote struct {
 	Voter      sdk.Address //  address of the voter
 	ProposalID int64       //  proposalID of the proposal
@@ -152,14 +152,14 @@ func NewMsgVote(voter sdk.Address, proposalID int64, option string) MsgVote {
 }
 
 // Implements Msg.
-func (msg MsgVote) Type() string { return "gov" }
+func (msg MsgVote) Type() string { return MsgType }
 
 // Implements Msg.
 func (msg MsgVote) ValidateBasic() sdk.Error {
-	if len(msg.Voter) == 0 {
+	if len(msg.Voter.Bytes()) == 0 {
 		return sdk.ErrInvalidAddress(msg.Voter.String())
 	}
-	if msg.Option != "Yes" || msg.Option != "No" || msg.Option != "NoWithVeto" || msg.Option != "Abstain" {
+	if (msg.Option != "Yes") && (msg.Option != "No") && (msg.Option != "NoWithVeto") && (msg.Option != "Abstain") {
 		return ErrInvalidVote(msg.Option)
 	}
 	return nil

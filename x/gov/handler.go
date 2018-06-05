@@ -3,9 +3,7 @@ package gov
 import (
 	"reflect"
 
-	bech32cosmos "github.com/cosmos/bech32cosmos/go"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"strconv"
 )
 
 // Handle all "gov" type messages.
@@ -34,10 +32,6 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	}
 
 	if ctx.IsCheckTx() {
-		if !keeper.GetActiveProcedure().validProposalType(msg.ProposalType) {
-			return ErrInvalidProposalType(msg.ProposalType).Result()
-		}
-
 		return sdk.Result{}
 	}
 
@@ -48,20 +42,12 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 
 	keeper.NewProposal(ctx, msg.Title, msg.Description, msg.ProposalType, initDeposit)
 
-	if !keeper.GetActiveProcedure().validProposalType(msg.ProposalType) {
-		return ErrInvalidProposalType(msg.ProposalType).Result()
-	}
-
-	if ctx.IsCheckTx() {
-		return sdk.Result{} // TODO
-	}
-
 	initialDeposit := Deposit{
 		Depositer: msg.Proposer,
 		Amount:    msg.InitialDeposit,
 	}
 
-	proposal := Proposal{
+	proposal := &Proposal{
 		ProposalID:       keeper.getNewProposalID(ctx),
 		Title:            msg.Title,
 		Description:      msg.Description,
@@ -70,16 +56,10 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		Deposits:         []Deposit{initialDeposit},
 		SubmitBlock:      ctx.BlockHeight(),
 		VotingStartBlock: -1, // TODO: Make Time
-		TotalVotingPower: 0,
-		Procedure:        *(keeper.GetActiveProcedure()), // TODO: Get cloned active Procedure from params kvstore
-		YesVotes:         0,
-		NoVotes:          0,
-		NoWithVetoVotes:  0,
-		AbstainVotes:     0,
 	}
 
-	if proposal.TotalDeposit.IsGTE(proposal.Procedure.MinDeposit) {
-		keeper.activateVotingPeriod(ctx, &proposal)
+	if proposal.TotalDeposit.IsGTE(keeper.GetDepositProcedure().MinDeposit) {
+		keeper.activateVotingPeriod(ctx, proposal)
 	}
 
 	keeper.SetProposal(ctx, proposal)
@@ -122,11 +102,11 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 	proposal.TotalDeposit = proposal.TotalDeposit.Plus(deposit.Amount)
 	proposal.Deposits = append(proposal.Deposits, deposit)
 
-	if proposal.TotalDeposit.IsGTE(proposal.Procedure.MinDeposit) {
+	if proposal.TotalDeposit.IsGTE(keeper.GetDepositProcedure().MinDeposit) {
 		keeper.activateVotingPeriod(ctx, proposal)
 	}
 
-	keeper.SetProposal(ctx, *proposal)
+	keeper.SetProposal(ctx, proposal)
 
 	tags := sdk.NewTags("action", []byte("deposit"), "depositer", msg.Depositer.Bytes(), "proposalId", []byte{byte(proposal.ProposalID)})
 	return sdk.Result{
@@ -142,67 +122,21 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 		return ErrUnknownProposal(msg.ProposalID).Result()
 	}
 
-	if !proposal.isActive() || ctx.BlockHeight() > proposal.VotingStartBlock+proposal.Procedure.VotingPeriod {
+	if !proposal.isActive() || ctx.BlockHeight() > proposal.VotingStartBlock+keeper.GetVotingProcedure().VotingPeriod {
 		return ErrInactiveProposal(msg.ProposalID).Result()
-	}
-
-	validatorGovInfo := proposal.getValidatorGovInfo(msg.Voter)
-
-	// Need to finalize interface to staking mapper for delegatedTo. Makes assumption from here on out.
-	delegatedTo := keeper.sm.LoadDelegatorCandidates(ctx, msg.Voter) // TODO: Finalize with staking store
-
-	if validatorGovInfo == nil && len(delegatedTo) == 0 {
-		return ErrAddressNotStaked(msg.Voter).Result() // TODO: Return proper Error
-	}
-
-	if proposal.VotingStartBlock <= keeper.sm.getLastDelationChangeBlock(msg.Voter) { // TODO: Get last block in which voter bonded or unbonded
-		return ErrAddressChangedDelegation(msg.Voter).Result() // TODO: Return proper Error
 	}
 
 	if ctx.IsCheckTx() {
 		return sdk.Result{} // TODO
 	}
 
-	existingVote := proposal.getVote(msg.Voter)
-
-	if existingVote == nil {
-		proposal.VoteList = append(proposal.VoteList, Vote{Voter: msg.Voter, ProposalID: msg.ProposalID, Option: msg.Option})
-
-		if validatorGovInfo != nil {
-			voteWeight := validatorGovInfo.InitVotingPower - validatorGovInfo.Minus
-			proposal.updateTally(msg.Option, voteWeight)
-			validatorGovInfo.LastVoteWeight = voteWeight
-		}
-
-		for index, delegation := range delegatedTo {
-			proposal.updateTally(msg.Option, delegation.amount)
-			delegatedValidatorGovInfo := proposal.getValidatorGovInfo(delegation.validator)
-			delegatedValidatorGovInfo.Minus += delegation.amount
-
-			delegatedValidatorVote := proposal.getVote(delegation.validator)
-
-			if delegatedValidatorVote != nil {
-				proposal.updateTally(delegatedValidatorVote.Option, -delegation.amount)
-			}
-		}
-
-	} else {
-		if validatorGovInfo != nil {
-			proposal.updateTally(existingVote.Option, -(validatorGovInfo.LastVoteWeight))
-			voteWeight := validatorGovInfo.InitVotingPower - validatorGovInfo.Minus
-			proposal.updateTally(msg.Option, voteWeight)
-			validatorGovInfo.LastVoteWeight = voteWeight
-		}
-
-		for index, delegation := range delegatedTo {
-			proposal.updateTally(existingVote.Option, -delegation.amount)
-			proposal.updateTally(msg.Option, delegation.amount)
-		}
-
-		existingVote.Option = msg.Option
+	vote := Vote{
+		ProposalID: proposal.ProposalID,
+		Voter:      msg.Voter,
+		Option:     msg.Option,
 	}
 
-	keeper.SetProposal(ctx, *proposal)
+	keeper.setVote(ctx, proposal.ProposalID, msg.Voter, vote)
 
 	tags := sdk.NewTags("action", []byte("vote"), "voter", msg.Voter.Bytes(), "proposalId", []byte{byte(proposal.ProposalID)})
 	return sdk.Result{

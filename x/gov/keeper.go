@@ -1,6 +1,8 @@
 package gov
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -8,27 +10,32 @@ import (
 	stake "github.com/cosmos/cosmos-sdk/x/stake"
 )
 
+// Governance Keeper
 type Keeper struct {
 	// The reference to the CoinKeeper to modify balances
 	ck bank.Keeper
 
 	// The reference to the StakeMapper to get information about stakers
-	sm stake.Keeper
+	sk stake.Keeper
 
 	// The (unexposed) keys used to access the stores from the Context.
 	proposalStoreKey sdk.StoreKey
 
 	// The wire codec for binary encoding/decoding.
 	cdc *wire.Codec
+
+	// Reserved codespace
+	codespace sdk.CodespaceType
 }
 
 // NewGovernanceMapper returns a mapper that uses go-wire to (binary) encode and decode gov types.
-func NewKeeper(key sdk.StoreKey, ck bank.Keeper, sk stake.Keeper) Keeper {
-	cdc := wire.NewCodec()
+func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, sk stake.Keeper, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		proposalStoreKey: key,
 		ck:               ck,
+		sk:               sk,
 		cdc:              cdc,
+		codespace:        codespace,
 	}
 }
 
@@ -37,6 +44,7 @@ func (keeper Keeper) WireCodec() *wire.Codec {
 	return keeper.cdc
 }
 
+// Get Proposal from store by ProposalID
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) *Proposal {
 	store := ctx.KVStore(keeper.proposalStoreKey)
 	key, _ := keeper.cdc.MarshalBinary(proposalID)
@@ -55,7 +63,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) *Proposal {
 }
 
 // Implements sdk.AccountMapper.
-func (keeper Keeper) SetProposal(ctx sdk.Context, proposal Proposal) {
+func (keeper Keeper) SetProposal(ctx sdk.Context, proposal *Proposal) {
 	store := ctx.KVStore(keeper.proposalStoreKey)
 
 	bz, err := keeper.cdc.MarshalBinary(proposal)
@@ -91,6 +99,64 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) int64 {
 	return *proposalID
 }
 
+// Gets procedure from store. TODO: move to global param store and allow for updating of this
+func (keeper Keeper) GetDepositProcedure() *DepositProcedure {
+	return &DepositProcedure{
+		MinDeposit:       sdk.Coins{{"atom", 10}},
+		MaxDepositPeriod: 200,
+	}
+}
+
+// Gets procedure from store. TODO: move to global param store and allow for updating of this
+func (keeper Keeper) GetVotingProcedure() *VotingProcedure {
+	return &VotingProcedure{
+		VotingPeriod: 200,
+	}
+}
+
+// Gets procedure from store. TODO: move to global param store and allow for updating of this
+func (keeper Keeper) GetTallyingProcedure() *TallyingProcedure {
+	return &TallyingProcedure{
+		Threshold:         sdk.NewRat(1, 2),
+		Veto:              sdk.NewRat(1, 3),
+		GovernancePenalty: sdk.NewRat(1, 100),
+	}
+}
+
+func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
+	proposal.VotingStartBlock = ctx.BlockHeight()
+	keeper.SetProposal(ctx, proposal)
+	keeper.ProposalQueuePush(ctx, proposal)
+}
+
+// Creates a NewProposal
+func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description string, proposalType string, initDeposit Deposit) (Proposal, sdk.Error) { // TODO: move to param store and allow for updating of this
+	return Proposal{}, nil
+}
+
+// Gets the vote of a specific voter on a specific proposal
+func (keeper Keeper) GetVote(ctx sdk.Context, proposalID int64, voter sdk.Address) *Vote {
+	store := ctx.KVStore(keeper.proposalStoreKey)
+	bz := store.Get([]byte(fmt.Sprintf("%d", proposalID) + ":" + fmt.Sprintf("%s", voter)))
+	if bz == nil {
+		return nil
+	}
+	vote := &Vote{}
+	keeper.cdc.MustUnmarshalBinary(bz, vote)
+	return vote
+}
+
+// Gets the vote of a specific voter on a specific proposal
+func (keeper Keeper) setVote(ctx sdk.Context, proposalID int64, voter sdk.Address, vote Vote) {
+	store := ctx.KVStore(keeper.proposalStoreKey)
+	bz := keeper.cdc.MustMarshalBinary(vote)
+	key := []byte(fmt.Sprintf("%d", proposalID) + ":" + fmt.Sprintf("%s", voter))
+	store.Set(key, bz)
+}
+
+// =====================================================
+// ProposalQueue
+
 func (keeper Keeper) getProposalQueue(ctx sdk.Context) ProposalQueue {
 	store := ctx.KVStore(keeper.proposalStoreKey)
 	bz := store.Get([]byte("proposalQueue"))
@@ -118,6 +184,7 @@ func (keeper Keeper) setProposalQueue(ctx sdk.Context, proposalQueue ProposalQue
 	store.Set([]byte("proposalQueue"), bz)
 }
 
+// Return the Proposal at the front of the ProposalQueue
 func (keeper Keeper) ProposalQueuePeek(ctx sdk.Context) *Proposal {
 	proposalQueue := keeper.getProposalQueue(ctx)
 	if len(proposalQueue) == 0 {
@@ -126,6 +193,7 @@ func (keeper Keeper) ProposalQueuePeek(ctx sdk.Context) *Proposal {
 	return keeper.GetProposal(ctx, proposalQueue[0])
 }
 
+// Remove and return a Proposal from the front of the ProposalQueue
 func (keeper Keeper) ProposalQueuePop(ctx sdk.Context) *Proposal {
 	proposalQueue := keeper.getProposalQueue(ctx)
 	if len(proposalQueue) == 0 {
@@ -136,55 +204,10 @@ func (keeper Keeper) ProposalQueuePop(ctx sdk.Context) *Proposal {
 	return keeper.GetProposal(ctx, frontElement)
 }
 
-func (keeper Keeper) ProposalQueuePush(ctx sdk.Context, proposal Proposal) {
+// Add a proposalID to the back of the ProposalQueue
+func (keeper Keeper) ProposalQueuePush(ctx sdk.Context, proposal *Proposal) {
 	store := ctx.KVStore(keeper.proposalStoreKey)
-
 	proposalQueue := append(keeper.getProposalQueue(ctx), proposal.ProposalID)
-	bz, err := keeper.cdc.MarshalBinary(proposalQueue)
-	if err != nil {
-		panic(err)
-	}
+	bz := keeper.cdc.MustMarshalBinary(proposalQueue)
 	store.Set([]byte("proposalQueue"), bz)
-}
-
-func (keeper Keeper) GetActiveProcedure() *Procedure { // TODO: move to param store and allow for updating of this
-	return &Procedure{
-		VotingPeriod:      200,
-		MinDeposit:        sdk.Coins{{"atom", 10}},
-		ProposalTypes:     []string{"TextProposal"},
-		Threshold:         sdk.NewRat(1, 2),
-		Veto:              sdk.NewRat(1, 3),
-		MaxDepositPeriod:  200,
-		GovernancePenalty: sdk.NewRat(1, 100),
-	}
-}
-
-func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
-	proposal.VotingStartBlock = ctx.BlockHeight()
-
-	// TODO: Can we get this directly from stakeState
-	// stakeState := k.sm.loadGlobalState()
-	// proposal.TotalVotingPower = stakeState.TotalSupply
-
-	proposal.TotalVotingPower = 0
-
-	validatorList := keeper.sm.GetValidators(ctx, 100) // TODO: Finalize with staking module
-
-	for _, validator := range validatorList {
-		validatorGovInfo := ValidatorGovInfo{
-			ProposalID:      proposal.ProposalID,
-			ValidatorAddr:   validator.Address,     // TODO: Finalize with staking module
-			InitVotingPower: validator.VotingPower, // TODO: Finalize with staking module
-			Minus:           0,
-			LastVoteWeight:  -1,
-		}
-
-		proposal.ValidatorGovInfos = append(proposal.ValidatorGovInfos, validatorGovInfo)
-	}
-
-	keeper.ProposalQueuePush(ctx, *proposal)
-}
-
-func (keeper Keeper) NewProposal(ctx, title string, description string, proposalType string, initDeposit Deposit) (Proposal, sdk.Error) { // TODO: move to param store and allow for updating of this
-
 }

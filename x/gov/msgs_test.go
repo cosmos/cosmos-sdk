@@ -8,18 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func defaultProcedure() Procedure {
-	return Procedure{
-		VotingPeriod:      200,
-		MinDeposit:        sdk.Coins{{"atom", 10}},
-		ProposalTypes:     []string{"TextProposal"},
-		Threshold:         sdk.NewRat(1, 2),
-		Veto:              sdk.NewRat(1, 3),
-		MaxDepositPeriod:  200,
-		GovernancePenalty: 12,
-	}
-}
-
 func TestNewSubmitProposalMsg(t *testing.T) {}
 
 func TestSubmitProposaslType(t *testing.T) {
@@ -28,7 +16,7 @@ func TestSubmitProposaslType(t *testing.T) {
 	addr1 := sdk.Address([]byte("input"))
 	coins := sdk.Coins{{"atom", 5}}
 
-	NewSubmitProposalMsg("Test Proposal", "the purpose of this proposal is to test", "TextProposal", addr1, coins)
+	msg := NewMsgSubmitProposal("Test Proposal", "the purpose of this proposal is to test", "TextProposal", addr1, coins)
 
 	// TODO some failures for bad result
 	assert.Equal(t, msg.Type(), "gov")

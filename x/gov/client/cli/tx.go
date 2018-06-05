@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"encoding/hex"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
@@ -36,7 +35,7 @@ func SubmitProposalCmd(cdc *wire.Codec) *cobra.Command {
 			initialDeposit := viper.GetString(flagInitialDeposit)
 
 			// get the from address from the name flag
-			from, err := sdk.GetAccAddressBech32Cosmos(viper.GetString(flagproposer))
+			from, err := sdk.GetAccAddressBech32(viper.GetString(flagproposer))
 			if err != nil {
 				return err
 			}
@@ -78,7 +77,7 @@ func DepositCmd(cdc *wire.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// get the from address from the name flag
-			depositer, err := sdk.GetAccAddressBech32Cosmos(args[0])
+			depositer, err := sdk.GetAccAddressBech32(args[0])
 			if err != nil {
 				return err
 			}
@@ -116,7 +115,7 @@ func VoteCmd(cdc *wire.Codec) *cobra.Command {
 		Short: "vote for current actived proposal,option:Yes/NO/NoWithVeto/Abstain",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			voter, err := sdk.GetAccAddressBech32Cosmos(args[0])
+			voter, err := sdk.GetAccAddressBech32(args[0])
 			if err != nil {
 				return err
 			}
@@ -148,6 +147,7 @@ func VoteCmd(cdc *wire.Codec) *cobra.Command {
 	return cmd
 }
 
+// Command to Get a Proposal Information
 func GetProposalCmd(storeName string, cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "proposal [proposalID]",
@@ -173,8 +173,6 @@ func GetProposalCmd(storeName string, cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 			fmt.Println(string(output))
-			return nil
-
 			return nil
 		},
 	}

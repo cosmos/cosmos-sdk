@@ -35,37 +35,20 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		return sdk.Result{}
 	}
 
-	initDeposit := Deposit{
-		Depositer: msg.Proposer,
-		Amount:    msg.InitialDeposit,
-	}
-
-	keeper.NewProposal(ctx, msg.Title, msg.Description, msg.ProposalType, initDeposit)
-
 	initialDeposit := Deposit{
 		Depositer: msg.Proposer,
 		Amount:    msg.InitialDeposit,
 	}
 
-	proposal := &Proposal{
-		ProposalID:       keeper.getNewProposalID(ctx),
-		Title:            msg.Title,
-		Description:      msg.Description,
-		ProposalType:     msg.ProposalType,
-		TotalDeposit:     initialDeposit.Amount,
-		Deposits:         []Deposit{initialDeposit},
-		SubmitBlock:      ctx.BlockHeight(),
-		VotingStartBlock: -1, // TODO: Make Time
-	}
+	proposal := keeper.NewProposal(ctx, msg.Title, msg.Description, msg.ProposalType, initialDeposit)
+	keeper.SetProposal(ctx, proposal)
 
+	keeper.setDeposit(ctx, proposal.ProposalID, msg.Proposer, initialDeposit)
 	if proposal.TotalDeposit.IsGTE(keeper.GetDepositProcedure().MinDeposit) {
 		keeper.activateVotingPeriod(ctx, proposal)
 	}
 
-	keeper.SetProposal(ctx, proposal)
-
 	tags := sdk.NewTags("action", []byte("submitProposal"), "proposer", msg.Proposer.Bytes(), "proposalId", []byte{byte(proposal.ProposalID)})
-
 	return sdk.Result{
 		Data: []byte{byte(proposal.ProposalID)},
 		Tags: tags,
@@ -81,7 +64,6 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 	}
 
 	proposal := keeper.GetProposal(ctx, msg.ProposalID)
-
 	if proposal == nil {
 		return ErrUnknownProposal(msg.ProposalID).Result()
 	}
@@ -99,14 +81,14 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 		Amount:    msg.Amount,
 	}
 
+	keeper.setDeposit(ctx, proposal.ProposalID, deposit.Depositer, deposit)
 	proposal.TotalDeposit = proposal.TotalDeposit.Plus(deposit.Amount)
-	proposal.Deposits = append(proposal.Deposits, deposit)
+
+	keeper.SetProposal(ctx, proposal)
 
 	if proposal.TotalDeposit.IsGTE(keeper.GetDepositProcedure().MinDeposit) {
 		keeper.activateVotingPeriod(ctx, proposal)
 	}
-
-	keeper.SetProposal(ctx, proposal)
 
 	tags := sdk.NewTags("action", []byte("deposit"), "depositer", msg.Depositer.Bytes(), "proposalId", []byte{byte(proposal.ProposalID)})
 	return sdk.Result{

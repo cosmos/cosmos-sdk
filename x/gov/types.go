@@ -2,6 +2,7 @@ package gov
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 var (
@@ -26,7 +27,6 @@ type Proposal struct {
 
 	SubmitBlock  int64     `json:"submit_block"`  //  Height of the block where TxGovSubmitProposal was included
 	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
-	Deposits     []Deposit `json:"deposits"`      //  Current deposit on this proposal. Initial value is set at InitialDeposit
 
 	VotingStartBlock int64 `json:"voting_start_block"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
 }
@@ -71,13 +71,12 @@ type Deposit struct {
 	Amount    sdk.Coins   `json:"amount"`    //  Deposit amount
 }
 
-// ValidatorGovInfo used for tallying
-type ValidatorGovInfo struct {
-	ProposalID      int64       //  Id of the Proposal this validator
-	ValidatorAddr   sdk.Address //  Address of the validator
-	InitVotingPower int64       //  Voting power of validator when proposal enters voting period
-	Minus           int64       //  Minus of validator, used to compute validator's voting power
-	LastVoteWeight  int64       //  Weight of the last vote by validator at time of casting, -1 if hasn't voted yet
+// validatorGovInfo used for tallying
+type validatorGovInfo struct {
+	ValidatorInfo stake.Validator //  Voting power of validator when proposal enters voting period
+	Minus         sdk.Rat         //  Minus of validator, used to compute validator's voting power
+	Vote          string          // Vote of the validator
+	Power         sdk.Rat         // Power of a Validator
 }
 
 // Current Active Proposals

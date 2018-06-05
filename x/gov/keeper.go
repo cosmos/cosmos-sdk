@@ -19,7 +19,7 @@ type Keeper struct {
 	sk stake.Keeper
 
 	// The (unexposed) keys used to access the stores from the Context.
-	proposalStoreKey sdk.StoreKey
+	storeKey sdk.StoreKey
 
 	// The wire codec for binary encoding/decoding.
 	cdc *wire.Codec
@@ -31,11 +31,11 @@ type Keeper struct {
 // NewGovernanceMapper returns a mapper that uses go-wire to (binary) encode and decode gov types.
 func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, ck bank.Keeper, sk stake.Keeper, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
-		proposalStoreKey: key,
-		ck:               ck,
-		sk:               sk,
-		cdc:              cdc,
-		codespace:        codespace,
+		storeKey:  key,
+		ck:        ck,
+		sk:        sk,
+		cdc:       cdc,
+		codespace: codespace,
 	}
 }
 
@@ -46,7 +46,7 @@ func (keeper Keeper) WireCodec() *wire.Codec {
 
 // Get Proposal from store by ProposalID
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) *Proposal {
-	store := ctx.KVStore(keeper.proposalStoreKey)
+	store := ctx.KVStore(keeper.storeKey)
 	key, _ := keeper.cdc.MarshalBinary(proposalID)
 	bz := store.Get(key)
 	if bz == nil {
@@ -64,7 +64,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) *Proposal {
 
 // Implements sdk.AccountMapper.
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal *Proposal) {
-	store := ctx.KVStore(keeper.proposalStoreKey)
+	store := ctx.KVStore(keeper.storeKey)
 
 	bz, err := keeper.cdc.MarshalBinary(proposal)
 	if err != nil {
@@ -77,7 +77,7 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal *Proposal) {
 }
 
 func (keeper Keeper) getNewProposalID(ctx sdk.Context) int64 {
-	store := ctx.KVStore(keeper.proposalStoreKey)
+	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get([]byte("newProposalID"))
 	if bz == nil {
 		return 0
@@ -130,14 +130,22 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal *Proposal) {
 }
 
 // Creates a NewProposal
-func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description string, proposalType string, initDeposit Deposit) (Proposal, sdk.Error) { // TODO: move to param store and allow for updating of this
-	return Proposal{}, nil
+func (keeper Keeper) NewProposal(ctx sdk.Context, title string, description string, proposalType string, initialDeposit Deposit) *Proposal {
+	return &Proposal{
+		ProposalID:       keeper.getNewProposalID(ctx),
+		Title:            title,
+		Description:      description,
+		ProposalType:     proposalType,
+		TotalDeposit:     initialDeposit.Amount,
+		SubmitBlock:      ctx.BlockHeight(),
+		VotingStartBlock: -1, // TODO: Make Time
+	}
 }
 
 // Gets the vote of a specific voter on a specific proposal
 func (keeper Keeper) GetVote(ctx sdk.Context, proposalID int64, voter sdk.Address) *Vote {
-	store := ctx.KVStore(keeper.proposalStoreKey)
-	bz := store.Get([]byte(fmt.Sprintf("%d", proposalID) + ":" + fmt.Sprintf("%s", voter)))
+	store := ctx.KVStore(keeper.storeKey)
+	bz := store.Get([]byte(fmt.Sprintf("%d", proposalID) + ":votes:" + fmt.Sprintf("%s", voter)))
 	if bz == nil {
 		return nil
 	}
@@ -148,17 +156,70 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID int64, voter sdk.Addres
 
 // Gets the vote of a specific voter on a specific proposal
 func (keeper Keeper) setVote(ctx sdk.Context, proposalID int64, voter sdk.Address, vote Vote) {
-	store := ctx.KVStore(keeper.proposalStoreKey)
+	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinary(vote)
-	key := []byte(fmt.Sprintf("%d", proposalID) + ":" + fmt.Sprintf("%s", voter))
+	key := []byte(fmt.Sprintf("%d", proposalID) + ":votes:" + fmt.Sprintf("%s", voter))
 	store.Set(key, bz)
+}
+
+// Gets the vote of a specific voter on a specific proposal
+func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID int64) sdk.Iterator {
+	store := ctx.KVStore(keeper.storeKey)
+	return sdk.KVStorePrefixIterator(store, []byte(fmt.Sprintf("%d", proposalID)+":votes:"))
+}
+
+// Gets the vote of a specific voter on a specific proposal
+func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID int64, depositer sdk.Address) *Deposit {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := store.Get([]byte(fmt.Sprintf("%d", proposalID) + ":deposits:" + fmt.Sprintf("%s", depositer)))
+	if bz == nil {
+		return nil
+	}
+	deposit := &Deposit{}
+	keeper.cdc.MustUnmarshalBinary(bz, deposit)
+	return deposit
+}
+
+// Gets the vote of a specific voter on a specific proposal
+func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID int64, depositer sdk.Address, deposit Deposit) {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := keeper.cdc.MustMarshalBinary(deposit)
+	key := []byte(fmt.Sprintf("%d", proposalID) + ":deposits:" + fmt.Sprintf("%s", depositer))
+	store.Set(key, bz)
+}
+
+// Gets the vote of a specific voter on a specific proposal
+func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID int64) sdk.Iterator {
+	store := ctx.KVStore(keeper.storeKey)
+	return sdk.KVStorePrefixIterator(store, []byte(fmt.Sprintf("%d", proposalID)+":deposits:"))
+}
+
+// Gets the vote of a specific voter on a specific proposal
+func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID int64) {
+	store := ctx.KVStore(keeper.storeKey)
+	depositsIterator := keeper.GetDeposits(ctx, proposalID)
+
+	for ; depositsIterator.Valid(); depositsIterator.Next() {
+		deposit := &Deposit{}
+		keeper.cdc.MustUnmarshalBinary(depositsIterator.Value(), deposit)
+
+		_, _, err := keeper.ck.AddCoins(ctx, deposit.Depositer, deposit.Amount)
+		if err != nil {
+			panic("should not happen")
+		}
+
+		store.Delete(depositsIterator.Key())
+	}
+
+	depositsIterator.Close()
+
 }
 
 // =====================================================
 // ProposalQueue
 
 func (keeper Keeper) getProposalQueue(ctx sdk.Context) ProposalQueue {
-	store := ctx.KVStore(keeper.proposalStoreKey)
+	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get([]byte("proposalQueue"))
 	if bz == nil {
 		return nil
@@ -174,7 +235,7 @@ func (keeper Keeper) getProposalQueue(ctx sdk.Context) ProposalQueue {
 }
 
 func (keeper Keeper) setProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
-	store := ctx.KVStore(keeper.proposalStoreKey)
+	store := ctx.KVStore(keeper.storeKey)
 
 	bz, err := keeper.cdc.MarshalBinary(proposalQueue) // TODO: switch to MarshalBinaryBare when new go-amino gets added
 	if err != nil {
@@ -206,7 +267,7 @@ func (keeper Keeper) ProposalQueuePop(ctx sdk.Context) *Proposal {
 
 // Add a proposalID to the back of the ProposalQueue
 func (keeper Keeper) ProposalQueuePush(ctx sdk.Context, proposal *Proposal) {
-	store := ctx.KVStore(keeper.proposalStoreKey)
+	store := ctx.KVStore(keeper.storeKey)
 	proposalQueue := append(keeper.getProposalQueue(ctx), proposal.ProposalID)
 	bz := keeper.cdc.MustMarshalBinary(proposalQueue)
 	store.Set([]byte("proposalQueue"), bz)

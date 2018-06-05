@@ -32,11 +32,11 @@ type DemocoinApp struct {
 	cdc *wire.Codec
 
 	// keys to access the substores
-	capKeyMainStore    		*sdk.KVStoreKey
-	capKeyAccountStore 		*sdk.KVStoreKey
-	capKeyPowStore     		*sdk.KVStoreKey
-	capKeyIBCStore			*sdk.KVStoreKey
-	capKeyStakingStore   	*sdk.KVStoreKey
+	capKeyMainStore    *sdk.KVStoreKey
+	capKeyAccountStore *sdk.KVStoreKey
+	capKeyPowStore     *sdk.KVStoreKey
+	capKeyIBCStore     *sdk.KVStoreKey
+	capKeyStakingStore *sdk.KVStoreKey
 
 	// keepers
 	feeCollectionKeeper auth.FeeCollectionKeeper
@@ -57,13 +57,13 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 
 	// Create your application object.
 	var app = &DemocoinApp{
-		BaseApp:            	bam.NewBaseApp(appName, cdc, logger, db),
-		cdc:                	cdc,
-		capKeyMainStore:    	sdk.NewKVStoreKey("main"),
-		capKeyAccountStore: 	sdk.NewKVStoreKey("acc"),
-		capKeyPowStore:     	sdk.NewKVStoreKey("pow"),
-		capKeyIBCStore:     	sdk.NewKVStoreKey("ibc"),
-		capKeyStakingStore: 	sdk.NewKVStoreKey("stake"),
+		BaseApp:            bam.NewBaseApp(appName, cdc, logger, db),
+		cdc:                cdc,
+		capKeyMainStore:    sdk.NewKVStoreKey("main"),
+		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
+		capKeyPowStore:     sdk.NewKVStoreKey("pow"),
+		capKeyIBCStore:     sdk.NewKVStoreKey("ibc"),
+		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
 	}
 
 	// Define the accountMapper.
@@ -85,7 +85,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 		AddRoute("pow", app.powKeeper.Handler).
 		AddRoute("sketchy", sketchy.NewHandler()).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
-		AddRoute("simplestake", simplestake.NewHandler(app.stakeKeeper))
+		AddRoute("stake", simplestake.NewHandler(app.stakeKeeper))
 	// Initialize BaseApp.
 	app.SetInitChainer(app.initChainerFn(app.coolKeeper, app.powKeeper))
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyPowStore, app.capKeyIBCStore, app.capKeyStakingStore)

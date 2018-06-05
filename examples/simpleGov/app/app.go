@@ -14,9 +14,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 
+	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
+	"github.com/cosmos/cosmos-sdk/examples/democoin/x/pow"
 	"github.com/cosmos/cosmos-sdk/examples/simpleGov/types"
-	"github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simplestake"
 	simpleGov "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simple_governance"
+	"github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simplestake"
 )
 
 const (
@@ -29,21 +31,22 @@ type SimpleGovApp struct {
 	cdc *wire.Codec
 
 	// keys to access the substores
-	capKeyMainStore    		*sdk.KVStoreKey
-	capKeyAccountStore 		*sdk.KVStoreKey
-	capKeyStakingStore   	*sdk.KVStoreKey
-	capKeySimpleGovStore 	*sdk.KVStoreKey
+	capKeyMainStore      *sdk.KVStoreKey
+	capKeyAccountStore   *sdk.KVStoreKey
+	capKeyStakingStore   *sdk.KVStoreKey
+	capKeySimpleGovStore *sdk.KVStoreKey
 
 	// keepers
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	coinKeeper          bank.Keeper
 	stakeKeeper         simplestake.Keeper
-	simpleGovKeeper 	simpleGov.Keeper 
+	simpleGovKeeper     simpleGov.Keeper
 
 	// Manage getting and setting accounts
 	accountMapper auth.AccountMapper
 }
 
+// NewSimpleGovApp creates a new SimpleGovApp instance
 func NewSimpleGovApp(logger log.Logger, db dbm.DB) *SimpleGovApp {
 
 	// Create app-level codec for txs and accounts.
@@ -51,12 +54,12 @@ func NewSimpleGovApp(logger log.Logger, db dbm.DB) *SimpleGovApp {
 
 	// Create your application object.
 	var app = &SimpleGovApp{
-		BaseApp:            	bam.NewBaseApp(appName, cdc, logger, db),
-		cdc:                	cdc,
-		capKeyMainStore:    	sdk.NewKVStoreKey("main"),
-		capKeyAccountStore: 	sdk.NewKVStoreKey("acc"),
-		capKeyStakingStore: 	sdk.NewKVStoreKey("stake"),
-		capKeySimpleGovStore:	sdk.NewKVStoreKey("simpleGov")
+		BaseApp:              bam.NewBaseApp(appName, cdc, logger, db),
+		cdc:                  cdc,
+		capKeyMainStore:      sdk.NewKVStoreKey("main"),
+		capKeyAccountStore:   sdk.NewKVStoreKey("acc"),
+		capKeyStakingStore:   sdk.NewKVStoreKey("stake"),
+		capKeySimpleGovStore: sdk.NewKVStoreKey("simpleGov"),
 	}
 
 	// Define the accountMapper.
@@ -99,7 +102,6 @@ func MakeCodec() *wire.Codec {
 	cdc.RegisterConcrete(&types.AppAccount{}, "simpleGov/Account", nil)
 	return cdc
 }
-
 
 // Custom logic for state export
 func (app *SimpleGovApp) ExportAppStateJSON() (appState json.RawMessage, err error) {

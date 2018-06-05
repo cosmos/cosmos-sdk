@@ -1,11 +1,13 @@
-package simple_governance
+package simpleGovernance
 
 import (
+	"encoding/json"
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stake "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simplestake"
-	"reflect"
 )
 
+// Proposal defines the basic propierties of a staking proposal
 type Proposal struct {
 	Title       string      `json:"title"`
 	Description string      `json:"description"`
@@ -19,7 +21,30 @@ type Proposal struct {
 	AbstainVotes int64 `json:"abstain_votes"`
 }
 
-type ProposalQueue []int64
+// NewProposal validates deposit and creates a new proposal with default block
+// limit equal to 1209600
+
+// NewProposal validates deposit and creates a new proposal
+func NewProposal(
+	title string,
+	description string,
+	submitter sdk.Address,
+	blockHeight int64,
+	votingWindow uint64, // defines a window of time measured in blocks to vote
+	deposit sdk.Coins) Proposal {
+	return Proposal{
+		Title:        title,
+		Description:  description,
+		Submitter:    submitter,
+		SubmitBlock:  blockHeight,
+		BlockLimit:   int64(votingWindow),
+		State:        "Open",
+		Deposit:      deposit,
+		YesVotes:     0,
+		NoVotes:      0,
+		AbstainVotes: 0,
+	}
+}
 
 func (p Proposal) updateTally(option string, amount int64) {
 	switch option {
@@ -32,13 +57,26 @@ func (p Proposal) updateTally(option string, amount int64) {
 	case "Abstain":
 		proposal.AbstainVotes += amount
 	default:
+		// TODO should return an SDK error
 		panic("Should not happen, update tally only takes option that comes from vote_msg, options should be checked in ValidateBasic()")
 	}
+}
+
+// ProposalQueue stores the proposals IDs
+type ProposalQueue []int64
+
+// IsEmpty checks if the ProposalQueue is empty
+func (pq ProposalQueue) IsEmpty() bool {
+	if len(pq) == 0 {
+		return true
+	}
+	return false
 }
 
 //--------------------------------------------------------
 //--------------------------------------------------------
 
+//SubmitProposalMsg defines a
 type SubmitProposalMsg struct {
 	Title       string
 	Description string
@@ -46,6 +84,7 @@ type SubmitProposalMsg struct {
 	Submitter   sdk.Address
 }
 
+// NewSubmitProposalMsg submits a message with a new proposal
 func NewSubmitProposalMsg(title string, description string, deposit sdk.Coins, submitter sdk.Address) SubmitProposalMsg {
 	return SubmitProposalMsg{
 		Title:       title,
@@ -57,7 +96,7 @@ func NewSubmitProposalMsg(title string, description string, deposit sdk.Coins, s
 
 // Implements Msg
 func (msg SubmitProposalMsg) Type() string {
-	return "simple_gov"
+	return "simpleGov"
 }
 
 // Implements Msg
@@ -84,21 +123,20 @@ func (msg SubmitProposalMsg) ValidateBasic() sdk.Error {
 	if len(msg.Submitter) == 0 {
 		return sdk.ErrUnrecognizedAddress(msg.Submitter).Trace("")
 	}
-
 	if len(msg.Title) <= 0 {
-		return sdk.ErrUnauthorized("").Trace("Title cannot be empty")
+		return ErrInvalidTitle()
 	}
 
 	if len(msg.Description) <= 0 {
-		return sdk.ErrUnauthorized("").Trace("Description cannot be empty")
+		return ErrInvalidDescription()
 	}
 
 	if !msg.Deposit.IsValid() {
-		return sdk.ErrUnauthorized("").Trace("Deposit is not valid")
+		return sdk.ErrInvalidCoins("Deposit is not valid")
 	}
 
 	if !msg.Deposit.IsPositive() {
-		return sdk.ErrUnauthorized("").Trace("Deposit cannot be negative")
+		return sdk.ErrInvalidCoins("Deposit cannot be negative")
 	}
 
 	return nil
@@ -111,13 +149,16 @@ func (msg SubmitProposalMsg) String() string {
 //--------------------------------------------------------
 //--------------------------------------------------------
 
+// VoteMsg defines the msg of a staker containing the vote option to an
+// specific proposal
 type VoteMsg struct {
 	ProposalID int64
 	Option     string
 	Voter      sdk.Address
 }
 
-func VoteMsg(proposalID int64, option string, voter sdk.Address) VoteMsg {
+// NewVoteMsg creates a VoteMsg instance
+func NewVoteMsg(proposalID int64, option string, voter sdk.Address) VoteMsg {
 	return VoteMsg{
 		ProposalID: proposalID,
 		Option:     option,
@@ -127,11 +168,12 @@ func VoteMsg(proposalID int64, option string, voter sdk.Address) VoteMsg {
 
 // Implements Msg
 func (msg VoteMsg) Type() string {
-	return "simple_gov"
+	return "simpleGov"
 }
 
 // Implements Msg
 func (msg VoteMsg) Get(key interface{}) (value interface{}) {
+	// TODO
 	return nil
 }
 
@@ -154,19 +196,18 @@ func (msg VoteMsg) ValidateBasic() sdk.Error {
 	if len(msg.Voter) == 0 {
 		return sdk.ErrUnrecognizedAddress(msg.Voter).Trace("")
 	}
-
 	if len(msg.ProposalID) <= 0 {
-		return sdk.ErrUnauthorized("").Trace("ProposalID cannot be negative")
+		return sdk.ErrInvalidProposalID("ProposalID cannot be negative")
 	}
-
+	//
 	if msg.Option != "Yes" || msg.Option != "No" || msg.Option != "Abstain" {
-		return ErrInvalidOption()
+		return ErrInvalidOption("Invalid voting option: " + msg.Option)
 	}
 
 	return nil
 }
 
+// Implements Msg
 func (msg VoteMsg) String() string {
-	return fmt.Sprintf("VoteMsg{%v, %v}", msg.Title, msg.Description)
+	return fmt.Sprintf("VoteMsg{%v, %v, %v}", msg.ProposalID, msg.Voter, msg.Option)
 }
-

@@ -1,12 +1,14 @@
-package simple_governance
+package simpleGovernance
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stake "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simplestake"
 	"reflect"
+
+	// stake "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simplestake"
+	stake "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simplestake"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Handle all "simple_gov" type messages.
+// NewHandler creates a new handler for all simple_gov type messages.
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
@@ -21,6 +23,7 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
+// NewBeginBlocker checks if the
 func NewBeginBlocker(k Keeper) sdk.BeginBlocker {
 	return func(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 		checkProposal(ctx, k)
@@ -28,14 +31,76 @@ func NewBeginBlocker(k Keeper) sdk.BeginBlocker {
 	}
 }
 
+// func checkProposal() {
+//
+// }
+// 	proposalID = ProposalProcessingQueue.Peek()
+// 	if (proposalID == nil)
+// 		return
+//
+// 	proposal = load(Proposals, proposalID)
+//
+// 	if (proposal.Votes.YesVotes/proposal.InitTotalVotingPower > 2/3)
+//
+// 		// proposal accepted early by super-majority
+// 		// no punishments; refund deposits
+//
+// 		ProposalProcessingQueue.pop()
+//
+// 		var newDeposits []Deposits
+//
+// 		// XXX: why do we need to reset deposits? cant we just clear it ?
+// 		for each (amount, depositer) in proposal.Deposits
+// 			newDeposits.append[{0, depositer}]
+// 			depositer.AtomBalance += amount
+//
+// 		proposal.Deposits = newDeposits
+// 		store(Proposals, proposalID, proposal)
+//
+// 		checkProposal()
+//
+// 	else if (CurrentBlock == proposal.VotingStartBlock + proposal.Procedure.VotingPeriod)
+//
+// 		ProposalProcessingQueue.pop()
+// 		activeProcedure = load(params, 'ActiveProcedure')
+//
+// 		for each validator in CurrentBondedValidators
+// 			validatorGovInfo = load(ValidatorGovInfos, <proposalID | validator.Address>)
+//
+// 			if (validatorGovInfo.InitVotingPower != nil)
+// 				// validator was bonded when vote started
+//
+// 				validatorOption = load(Options, <proposalID | validator.Address>)
+// 				if (validatorOption == nil)
+// 					// validator did not vote
+// 					slash validator by activeProcedure.GovernancePenalty
+//
+//
+// 		totalNonAbstain = proposal.Votes.YesVotes + proposal.Votes.NoVotes + proposal.Votes.NoWithVetoVotes
+// 		if( proposal.Votes.YesVotes/totalNonAbstain > 0.5 AND proposal.Votes.NoWithVetoVotes/totalNonAbstain  < 1/3)
+//
+// 			//  proposal was accepted at the end of the voting period
+// 			//  refund deposits (non-voters already punished)
+//
+// 			var newDeposits []Deposits
+//
+// 			for each (amount, depositer) in proposal.Deposits
+// 				newDeposits.append[{0, depositer}]
+// 				depositer.AtomBalance += amount
+//
+// 			proposal.Deposits = newDeposits
+// 			store(Proposals, proposalID, proposal)
+//
+// 			checkProposal()
+
 func checkProposal(ctx sdk.Context, k Keeper) {
-	proposal := k.ProposalQueuePeek(ctx)
+	proposal := k.ProposalQueueHead(ctx)
 	if proposal == nil {
-		return
+		return nil
 	}
 
 	// Proposal reached the end of the voting period
-	if ctx.BlockHeight() == proposal.SubmitBlock+1209600 {
+	if ctx.BlockHeight() == proposal.SubmitBlock+proposal.BlockLimit {
 		k.ProposalQueuePop(ctx)
 
 		nonAbstainTotal := proposal.Votes.YesVotes + proposal.Votes.NoVotes
@@ -44,28 +109,24 @@ func checkProposal(ctx sdk.Context, k Keeper) {
 			// Refund deposit
 			_, err := k.ck.AddCoins(ctx, proposal.Submitter, proposal.Deposit.AmountOf("Atom"))
 			if err != nil {
+				// TODO return proper error
 				panic("Should not be possible")
 			}
-
 			proposal.State = "Accepted"
-
 		} else {
-
 			proposal.State = "Rejected"
-
 		}
-
-		return checkProposal()
+		return checkProposal() // XXX where's this function defined ? why no params ?
 	}
 }
 
-const minDeposit = 100
+const minDeposit = 100 // How do you set the min deposit
 
 func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg sdk.Msg) sdk.Result {
 	_, err := k.ck.SubstractCoins(ctx, msg.Submitter, msg.Deposit)
 
 	if err != nil {
-		return err.Result()
+		return err.Result() // Code and Log of the error
 	}
 
 	if msg.Deposit.AmountOf("Atom") >= minDeposit {
@@ -79,13 +140,15 @@ func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg sdk.Msg) sdk.Result 
 			YesVotes:     0,
 			NoVotes:      0,
 			AbstainVotes: 0,
-		} 
+		}
 
 		k.SetProposal(ctx, k.NewProposalID, proposal)
 	}
 
 	return sdk.Result{} // return proper result
 }
+
+// TODO func proposal IsOpen()
 
 func handleVoteMsg(ctx sdk.Context, k Keeper, msg sdk.Msg) sdk.Result {
 	proposal := k.GetProposal(ctx, msg.ProposalID)
@@ -105,6 +168,8 @@ func handleVoteMsg(ctx sdk.Context, k Keeper, msg sdk.Msg) sdk.Result {
 
 	key := append(msg.ProposalID, msg.Voter...)
 	voterOption := k.GetOption(ctx, key)
+	// XXX could we define the nil obtion as an abstention by default ?
+	// Otherwise why would you send a voteMsg with no option
 	if voterOption == nil {
 		// voter has not voted yet
 

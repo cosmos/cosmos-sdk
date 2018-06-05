@@ -64,7 +64,13 @@ func NewGenesisAccount(aa *AppAccount) *GenesisAccount {
 	}
 }
 
-// convert GenesisAccount to AppAccount
+// ValidateBasic validates fields of the genesis account
+// func (ga *GenesisAccount) ValidateBasic() (err sdk.Error) {
+// 	if !ga.Coins.IsValid() {
+// 	}
+// }
+
+// ToAppAccount converts a GenesisAccount to an AppAccount
 func (ga *GenesisAccount) ToAppAccount() (acc *AppAccount, err error) {
 	baseAcc := auth.BaseAccount{
 		Address: ga.Address,

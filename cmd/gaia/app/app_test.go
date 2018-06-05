@@ -419,8 +419,8 @@ func TestStakeMsgs(t *testing.T) {
 
 	// Unbond
 
-	unbondMsg := stake.NewMsgUnbond(
-		addr2, addr1, "MAX",
+	unbondMsg := stake.NewMsgBeginUnbonding(
+		addr2, addr1, sdk.ZeroRat(), sdk.OneRat(), //100% unbonding
 	)
 	SignDeliver(t, gapp, unbondMsg, []int64{1}, true, priv2)
 

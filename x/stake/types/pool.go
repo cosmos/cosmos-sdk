@@ -24,9 +24,10 @@ type Pool struct {
 	PrevBondedShares sdk.Rat `json:"prev_bonded_shares"` // last recorded bonded shares - for fee calcualtions
 }
 
-func (p Pool) equal(p2 Pool) bool {
-	bz1 := msgCdc.MustMarshalBinary(&p)
-	bz2 := msgCdc.MustMarshalBinary(&p2)
+// nolint
+func (p Pool) Equal(p2 Pool) bool {
+	bz1 := MsgCdc.MustMarshalBinary(&p)
+	bz2 := MsgCdc.MustMarshalBinary(&p2)
 	return bytes.Equal(bz1, bz2)
 }
 
@@ -65,7 +66,7 @@ func (p Pool) BondedRatio() sdk.Rat {
 }
 
 // get the exchange rate of bonded token per issued share
-func (p Pool) bondedShareExRate() sdk.Rat {
+func (p Pool) BondedShareExRate() sdk.Rat {
 	if p.BondedShares.IsZero() {
 		return sdk.OneRat()
 	}
@@ -73,7 +74,7 @@ func (p Pool) bondedShareExRate() sdk.Rat {
 }
 
 // get the exchange rate of unbonding tokens held in validators per issued share
-func (p Pool) unbondingShareExRate() sdk.Rat {
+func (p Pool) UnbondingShareExRate() sdk.Rat {
 	if p.UnbondingShares.IsZero() {
 		return sdk.OneRat()
 	}
@@ -81,7 +82,7 @@ func (p Pool) unbondingShareExRate() sdk.Rat {
 }
 
 // get the exchange rate of unbonded tokens held in validators per issued share
-func (p Pool) unbondedShareExRate() sdk.Rat {
+func (p Pool) UnbondedShareExRate() sdk.Rat {
 	if p.UnbondedShares.IsZero() {
 		return sdk.OneRat()
 	}
@@ -91,42 +92,42 @@ func (p Pool) unbondedShareExRate() sdk.Rat {
 //_______________________________________________________________________
 
 func (p Pool) addTokensUnbonded(amount int64) (p2 Pool, issuedShares PoolShares) {
-	issuedSharesAmount := sdk.NewRat(amount).Quo(p.unbondedShareExRate()) // tokens * (shares/tokens)
+	issuedSharesAmount := sdk.NewRat(amount).Quo(p.UnbondedShareExRate()) // tokens * (shares/tokens)
 	p.UnbondedShares = p.UnbondedShares.Add(issuedSharesAmount)
 	p.UnbondedTokens += amount
 	return p, NewUnbondedShares(issuedSharesAmount)
 }
 
 func (p Pool) removeSharesUnbonded(shares sdk.Rat) (p2 Pool, removedTokens int64) {
-	removedTokens = p.unbondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
+	removedTokens = p.UnbondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	p.UnbondedShares = p.UnbondedShares.Sub(shares)
 	p.UnbondedTokens -= removedTokens
 	return p, removedTokens
 }
 
 func (p Pool) addTokensUnbonding(amount int64) (p2 Pool, issuedShares PoolShares) {
-	issuedSharesAmount := sdk.NewRat(amount).Quo(p.unbondingShareExRate()) // tokens * (shares/tokens)
+	issuedSharesAmount := sdk.NewRat(amount).Quo(p.UnbondingShareExRate()) // tokens * (shares/tokens)
 	p.UnbondingShares = p.UnbondingShares.Add(issuedSharesAmount)
 	p.UnbondingTokens += amount
 	return p, NewUnbondingShares(issuedSharesAmount)
 }
 
 func (p Pool) removeSharesUnbonding(shares sdk.Rat) (p2 Pool, removedTokens int64) {
-	removedTokens = p.unbondingShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
+	removedTokens = p.UnbondingShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	p.UnbondingShares = p.UnbondingShares.Sub(shares)
 	p.UnbondingTokens -= removedTokens
 	return p, removedTokens
 }
 
 func (p Pool) addTokensBonded(amount int64) (p2 Pool, issuedShares PoolShares) {
-	issuedSharesAmount := sdk.NewRat(amount).Quo(p.bondedShareExRate()) // tokens * (shares/tokens)
+	issuedSharesAmount := sdk.NewRat(amount).Quo(p.BondedShareExRate()) // tokens * (shares/tokens)
 	p.BondedShares = p.BondedShares.Add(issuedSharesAmount)
 	p.BondedTokens += amount
 	return p, NewBondedShares(issuedSharesAmount)
 }
 
 func (p Pool) removeSharesBonded(shares sdk.Rat) (p2 Pool, removedTokens int64) {
-	removedTokens = p.bondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
+	removedTokens = p.BondedShareExRate().Mul(shares).Evaluate() // (tokens/shares) * shares
 	p.BondedShares = p.BondedShares.Sub(shares)
 	p.BondedTokens -= removedTokens
 	return p, removedTokens

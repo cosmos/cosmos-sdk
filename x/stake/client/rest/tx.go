@@ -23,32 +23,33 @@ func registerTxRoutes(ctx context.CoreContext, r *mux.Router, cdc *wire.Codec, k
 	).Methods("POST")
 }
 
-type editDelegationsBody struct {
+// request body for edit delegations
+type EditDelegationsBody struct {
 	LocalAccountName string                    `json:"name"`
 	Password         string                    `json:"password"`
 	ChainID          string                    `json:"chain_id"`
 	Sequence         int64                     `json:"sequence"`
-	Delegate         []stake.MsgDelegate       `json:"delegate"`
-	Unbond           []stake.MsgBeginUnbonding `json:"unbond"` // XXXXXXXXXXXXXXXXXXXXXXXXXX XXX
+	Delegations      []stake.MsgDelegate       `json:"delegations"`
+	BeginUnbondings  []stake.MsgBeginUnbonding `json:"begin_unbondings"`
 }
 
 func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx context.CoreContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var m editDelegationsBody
+		var req EditDelegationsBody
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		err = json.Unmarshal(body, &m)
+		err = cdc.UnmarshalJSON(body, &req)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		info, err := kb.Get(m.LocalAccountName)
+		info, err := kb.Get(req.LocalAccountName)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))
@@ -56,9 +57,9 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 		}
 
 		// build messages
-		messages := make([]sdk.Msg, len(m.Delegate)+len(m.Unbond))
+		messages := make([]sdk.Msg, len(req.Delegations)+len(req.BeginUnbondings))
 		i := 0
-		for _, msg := range m.Delegate {
+		for _, msg := range req.Delegations {
 			if !bytes.Equal(info.Address(), msg.DelegatorAddr) {
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Write([]byte("Must use own delegator address"))
@@ -67,7 +68,7 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 			messages[i] = msg
 			i++
 		}
-		for _, msg := range m.Unbond {
+		for _, msg := range req.BeginUnbondings {
 			if !bytes.Equal(info.Address(), msg.DelegatorAddr) {
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Write([]byte("Must use own delegator address"))
@@ -81,10 +82,10 @@ func editDelegationsRequestHandlerFn(cdc *wire.Codec, kb keys.Keybase, ctx conte
 		signedTxs := make([][]byte, len(messages[:]))
 		for i, msg := range messages {
 			// increment sequence for each message
-			ctx = ctx.WithSequence(m.Sequence)
-			m.Sequence++
+			ctx = ctx.WithSequence(req.Sequence)
+			req.Sequence++
 
-			txBytes, err := ctx.SignAndBuild(m.LocalAccountName, m.Password, msg, cdc)
+			txBytes, err := ctx.SignAndBuild(req.LocalAccountName, req.Password, msg, cdc)
 			if err != nil {
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Write([]byte(err.Error()))

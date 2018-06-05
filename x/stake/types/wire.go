@@ -16,12 +16,12 @@ func RegisterWire(cdc *wire.Codec) {
 }
 
 // generic sealed codec to be used throughout sdk
-var msgCdc *wire.Codec
+var MsgCdc *wire.Codec
 
 func init() {
 	cdc := wire.NewCodec()
 	RegisterWire(cdc)
 	wire.RegisterCrypto(cdc)
-	msgCdc = cdc
+	MsgCdc = cdc
 	//MsgCdc = cdc.Seal() //TODO use when upgraded to go-amino 0.9.10
 }

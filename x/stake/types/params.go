@@ -17,9 +17,10 @@ type Params struct {
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
 }
 
-func (p Params) equal(p2 Params) bool {
-	bz1 := msgCdc.MustMarshalBinary(&p)
-	bz2 := msgCdc.MustMarshalBinary(&p2)
+// nolint
+func (p Params) Equal(p2 Params) bool {
+	bz1 := MsgCdc.MustMarshalBinary(&p)
+	bz2 := MsgCdc.MustMarshalBinary(&p2)
 	return bytes.Equal(bz1, bz2)
 }
 

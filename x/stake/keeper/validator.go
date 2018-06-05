@@ -462,6 +462,7 @@ func (k PrivlegedKeeper) bondValidator(ctx sdk.Context, store sdk.KVStore, valid
 	return validator
 }
 
+// remove the validator record and associated indexes
 func (k PrivlegedKeeper) RemoveValidator(ctx sdk.Context, address sdk.Address) {
 
 	// first retreive the old validator record

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	crypto "github.com/tendermint/go-crypto"
@@ -27,15 +28,15 @@ func TestMsgCreateValidator(t *testing.T) {
 		bond                                      sdk.Coin
 		expectPass                                bool
 	}{
-		{"basic good", "a", "b", "c", "d", addrs[0], pks[0], coinPos, true},
-		{"partial description", "", "", "c", "", addrs[0], pks[0], coinPos, true},
-		{"empty description", "", "", "", "", addrs[0], pks[0], coinPos, false},
-		{"empty address", "a", "b", "c", "d", emptyAddr, pks[0], coinPos, false},
-		{"empty pubkey", "a", "b", "c", "d", addrs[0], emptyPubkey, coinPos, true},
-		{"empty bond", "a", "b", "c", "d", addrs[0], pks[0], coinZero, false},
-		{"negative bond", "a", "b", "c", "d", addrs[0], pks[0], coinNeg, false},
-		{"negative bond", "a", "b", "c", "d", addrs[0], pks[0], coinNeg, false},
-		{"wrong staking token", "a", "b", "c", "d", addrs[0], pks[0], coinPosNotAtoms, false},
+		{"basic good", "a", "b", "c", "d", addr1, pk1, coinPos, true},
+		{"partial description", "", "", "c", "", addr1, pk1, coinPos, true},
+		{"empty description", "", "", "", "", addr1, pk1, coinPos, false},
+		{"empty address", "a", "b", "c", "d", emptyAddr, pk1, coinPos, false},
+		{"empty pubkey", "a", "b", "c", "d", addr1, emptyPubkey, coinPos, true},
+		{"empty bond", "a", "b", "c", "d", addr1, pk1, coinZero, false},
+		{"negative bond", "a", "b", "c", "d", addr1, pk1, coinNeg, false},
+		{"negative bond", "a", "b", "c", "d", addr1, pk1, coinNeg, false},
+		{"wrong staking token", "a", "b", "c", "d", addr1, pk1, coinPosNotAtoms, false},
 	}
 
 	for _, tc := range tests {
@@ -56,9 +57,9 @@ func TestMsgEditValidator(t *testing.T) {
 		validatorAddr                             sdk.Address
 		expectPass                                bool
 	}{
-		{"basic good", "a", "b", "c", "d", addrs[0], true},
-		{"partial description", "", "", "c", "", addrs[0], true},
-		{"empty description", "", "", "", "", addrs[0], false},
+		{"basic good", "a", "b", "c", "d", addr1, true},
+		{"partial description", "", "", "c", "", addr1, true},
+		{"empty description", "", "", "", "", addr1, false},
 		{"empty address", "a", "b", "c", "d", emptyAddr, false},
 	}
 
@@ -82,13 +83,13 @@ func TestMsgDelegate(t *testing.T) {
 		bond          sdk.Coin
 		expectPass    bool
 	}{
-		{"basic good", addrs[0], addrs[1], coinPos, true},
-		{"self bond", addrs[0], addrs[0], coinPos, true},
-		{"empty delegator", emptyAddr, addrs[0], coinPos, false},
-		{"empty validator", addrs[0], emptyAddr, coinPos, false},
-		{"empty bond", addrs[0], addrs[1], coinZero, false},
-		{"negative bond", addrs[0], addrs[1], coinNeg, false},
-		{"wrong staking token", addrs[0], addrs[1], coinPosNotAtoms, false},
+		{"basic good", addr1, addr2, coinPos, true},
+		{"self bond", addr1, addr1, coinPos, true},
+		{"empty delegator", emptyAddr, addr1, coinPos, false},
+		{"empty validator", addr1, emptyAddr, coinPos, false},
+		{"empty bond", addr1, addr2, coinZero, false},
+		{"negative bond", addr1, addr2, coinNeg, false},
+		{"wrong staking token", addr1, addr2, coinPosNotAtoms, false},
 	}
 
 	for _, tc := range tests {
@@ -102,29 +103,32 @@ func TestMsgDelegate(t *testing.T) {
 }
 
 // test ValidateBasic for MsgUnbond
-func TestMsgUnbond(t *testing.T) {
+func TestMsgBeginUnbonding(t *testing.T) {
 	tests := []struct {
 		name          string
 		delegatorAddr sdk.Address
 		validatorAddr sdk.Address
-		shares        string
+		sharesAmount  sdk.Rat
+		sharesPercent sdk.Rat
 		expectPass    bool
 	}{
-		{"max unbond", addrs[0], addrs[1], "MAX", true},
-		{"decimal unbond", addrs[0], addrs[1], "0.1", true},
-		{"negative decimal unbond", addrs[0], addrs[1], "-0.1", false},
-		{"zero unbond", addrs[0], addrs[1], "0.0", false},
-		{"invalid decimal", addrs[0], addrs[0], "sunny", false},
-		{"empty delegator", emptyAddr, addrs[0], "0.1", false},
-		{"empty validator", addrs[0], emptyAddr, "0.1", false},
+		{"100 percent unbond", addr1, addr2, sdk.ZeroRat(), sdk.OneRat(), true},
+		{"10 percent unbond", addr1, addr2, sdk.ZeroRat(), sdk.NewRat(1, 10), true},
+		{"-10 percent unbond", addr1, addr2, sdk.ZeroRat(), sdk.NewRat(-1, 10), false},
+		{"amount and percent unbond", addr1, addr2, sdk.OneRat(), sdk.OneRat(), false},
+		{"decimal unbond", addr1, addr2, sdk.NewRat(1, 10), sdk.ZeroRat(), true},
+		{"negative decimal unbond", addr1, addr2, sdk.NewRat(-1, 10), sdk.ZeroRat(), false},
+		{"zero unbond", addr1, addr2, sdk.ZeroRat(), sdk.ZeroRat(), false},
+		{"empty delegator", emptyAddr, addr1, sdk.NewRat(1, 10), sdk.ZeroRat(), false},
+		{"empty validator", addr1, emptyAddr, sdk.NewRat(1, 10), sdk.ZeroRat(), false},
 	}
 
 	for _, tc := range tests {
-		msg := NewMsgUnbond(tc.delegatorAddr, tc.validatorAddr, tc.shares)
+		msg := NewMsgBeginUnbonding(tc.delegatorAddr, tc.validatorAddr, tc.sharesAmount, tc.sharesPercent)
 		if tc.expectPass {
-			assert.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
-			assert.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		}
 	}
 }
@@ -139,10 +143,10 @@ func TestMsgUnbond(t *testing.T) {
 //tests := []struct {
 //tx sdk.Msg
 //}{
-//{NewMsgCreateValidator(addrs[0], pks[0], bond, Description{})},
-//{NewMsgEditValidator(addrs[0], Description{})},
-//{NewMsgDelegate(addrs[0], addrs[1], bond)},
-//{NewMsgUnbond(addrs[0], addrs[1], strconv.Itoa(bondAmt))},
+//{NewMsgCreateValidator(addr1, pk1, bond, Description{})},
+//{NewMsgEditValidator(addr1, Description{})},
+//{NewMsgDelegate(addr1, addr2, bond)},
+//{NewMsgUnbond(addr1, addr2, strconv.Itoa(bondAmt))},
 //}
 
 //for i, tc := range tests {

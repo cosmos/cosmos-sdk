@@ -20,6 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
+// TODO remove dependancies on staking (should only refer to validator set type from sdk)
+
 var (
 	addrs = []sdk.Address{
 		testAddr("A58856F0FD53BF058B4909A21AEC019107BA6160"),
@@ -44,7 +46,7 @@ func createTestCodec() *wire.Codec {
 	return cdc
 }
 
-func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keeper) {
+func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.PrivlegedKeeper, Keeper) {
 	keyAcc := sdk.NewKVStoreKey("acc")
 	keyStake := sdk.NewKVStoreKey("stake")
 	keySlashing := sdk.NewKVStoreKey("slashing")
@@ -59,10 +61,10 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, Keep
 	cdc := createTestCodec()
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, &auth.BaseAccount{})
 	ck := bank.NewKeeper(accountMapper)
-	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
+	sk := stake.NewPrivlegedKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
 	genesis.Pool.LooseUnbondedTokens = initCoins * int64(len(addrs))
-	stake.InitGenesis(ctx, sk, genesis)
+	sk.InitGenesis(ctx, genesis)
 	for _, addr := range addrs {
 		ck.AddCoins(ctx, addr, sdk.Coins{
 			{sk.GetParams(ctx).BondDenom, initCoins},

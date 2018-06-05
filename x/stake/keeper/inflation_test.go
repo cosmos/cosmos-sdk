@@ -4,20 +4,20 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake/types/types"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGetInflation(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 	params := keeper.GetParams(ctx)
 	hrsPerYrRat := sdk.NewRat(hrsPerYr)
 
 	// Governing Mechanism:
-	//    bondedRatio = BondedTokens / TotalSupply
-	//    inflationRateChangePerYear = (1- bondedRatio/ GoalBonded) * MaxInflationRateChange
+	//    BondedRatio = BondedTokens / TotalSupply
+	//    inflationRateChangePerYear = (1- BondedRatio/ GoalBonded) * MaxInflationRateChange
 
 	tests := []struct {
 		name                            string
@@ -50,9 +50,9 @@ func TestGetInflation(t *testing.T) {
 	for _, tc := range tests {
 		pool.BondedTokens, pool.LooseUnbondedTokens = tc.setBondedTokens, tc.setLooseTokens
 		pool.Inflation = tc.setInflation
-		keeper.setPool(ctx, pool)
+		keeper.SetPool(ctx, pool)
 
-		inflation := keeper.nextInflation(ctx)
+		inflation := keeper.NextInflation(ctx)
 		diffInflation := inflation.Sub(tc.setInflation)
 
 		assert.True(t, diffInflation.Equal(tc.expectedChange),
@@ -61,10 +61,10 @@ func TestGetInflation(t *testing.T) {
 }
 
 func TestProcessProvisions(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 0)
+	ctx, _, keeper := CreateTestInput(t, false, 0)
 	params := types.DefaultParams()
 	params.MaxValidators = 2
-	keeper.setParams(ctx, params)
+	keeper.SetParams(ctx, params)
 	pool := keeper.GetPool(ctx)
 
 	var tokenSupply int64 = 550000000
@@ -73,39 +73,39 @@ func TestProcessProvisions(t *testing.T) {
 
 	// create some validators some bonded, some unbonded
 	var validators [5]types.Validator
-	validators[0] = NewValidator(addrs[0], pks[0], Description{})
-	validators[0], pool, _ = validators[0].addTokensFromDel(pool, 150000000)
-	keeper.setPool(ctx, pool)
-	validators[0] = keeper.updateValidator(ctx, validators[0])
+	validators[0] = types.NewValidator(Addrs[0], PKs[0], types.Description{})
+	validators[0], pool, _ = validators[0].AddTokensFromDel(pool, 150000000)
+	keeper.SetPool(ctx, pool)
+	validators[0] = keeper.UpdateValidator(ctx, validators[0])
 	pool = keeper.GetPool(ctx)
 	require.Equal(t, bondedShares, pool.BondedTokens, "%v", pool)
 
-	validators[1] = NewValidator(addrs[1], pks[1], Description{})
-	validators[1], pool, _ = validators[1].addTokensFromDel(pool, 100000000)
-	keeper.setPool(ctx, pool)
-	validators[1] = keeper.updateValidator(ctx, validators[1])
-	validators[2] = NewValidator(addrs[2], pks[2], Description{})
-	validators[2], pool, _ = validators[2].addTokensFromDel(pool, 100000000)
-	keeper.setPool(ctx, pool)
-	validators[2] = keeper.updateValidator(ctx, validators[2])
-	validators[3] = NewValidator(addrs[3], pks[3], Description{})
-	validators[3], pool, _ = validators[3].addTokensFromDel(pool, 100000000)
-	keeper.setPool(ctx, pool)
-	validators[3] = keeper.updateValidator(ctx, validators[3])
-	validators[4] = NewValidator(addrs[4], pks[4], Description{})
-	validators[4], pool, _ = validators[4].addTokensFromDel(pool, 100000000)
-	keeper.setPool(ctx, pool)
-	validators[4] = keeper.updateValidator(ctx, validators[4])
+	validators[1] = types.NewValidator(Addrs[1], PKs[1], types.Description{})
+	validators[1], pool, _ = validators[1].AddTokensFromDel(pool, 100000000)
+	keeper.SetPool(ctx, pool)
+	validators[1] = keeper.UpdateValidator(ctx, validators[1])
+	validators[2] = types.NewValidator(Addrs[2], PKs[2], types.Description{})
+	validators[2], pool, _ = validators[2].AddTokensFromDel(pool, 100000000)
+	keeper.SetPool(ctx, pool)
+	validators[2] = keeper.UpdateValidator(ctx, validators[2])
+	validators[3] = types.NewValidator(Addrs[3], PKs[3], types.Description{})
+	validators[3], pool, _ = validators[3].AddTokensFromDel(pool, 100000000)
+	keeper.SetPool(ctx, pool)
+	validators[3] = keeper.UpdateValidator(ctx, validators[3])
+	validators[4] = types.NewValidator(Addrs[4], PKs[4], types.Description{})
+	validators[4], pool, _ = validators[4].AddTokensFromDel(pool, 100000000)
+	keeper.SetPool(ctx, pool)
+	validators[4] = keeper.UpdateValidator(ctx, validators[4])
 
 	assert.Equal(t, tokenSupply, pool.TokenSupply())
 	assert.Equal(t, bondedShares, pool.BondedTokens)
 	assert.Equal(t, unbondedShares, pool.UnbondedTokens)
 
 	// initial bonded ratio ~ 27%
-	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(bondedShares, tokenSupply)), "%v", pool.bondedRatio())
+	assert.True(t, pool.BondedRatio().Equal(sdk.NewRat(bondedShares, tokenSupply)), "%v", pool.BondedRatio())
 
 	// test the value of validator shares
-	assert.True(t, pool.bondedShareExRate().Equal(sdk.OneRat()), "%v", pool.bondedShareExRate())
+	assert.True(t, pool.BondedShareExRate().Equal(sdk.OneRat()), "%v", pool.BondedShareExRate())
 
 	initialSupply := pool.TokenSupply()
 	initialUnbonded := pool.TokenSupply() - pool.BondedTokens
@@ -113,12 +113,12 @@ func TestProcessProvisions(t *testing.T) {
 	// process the provisions a year
 	for hr := 0; hr < 8766; hr++ {
 		pool := keeper.GetPool(ctx)
-		expInflation := keeper.nextInflation(ctx).Round(1000000000)
+		expInflation := keeper.NextInflation(ctx).Round(1000000000)
 		expProvisions := (expInflation.Mul(sdk.NewRat(pool.TokenSupply())).Quo(hrsPerYrRat)).Evaluate()
 		startBondedTokens := pool.BondedTokens
 		startTotalSupply := pool.TokenSupply()
-		pool = keeper.processProvisions(ctx)
-		keeper.setPool(ctx, pool)
+		pool = keeper.ProcessProvisions(ctx)
+		keeper.SetPool(ctx, pool)
 		//fmt.Printf("hr %v, startBondedTokens %v, expProvisions %v, pool.BondedTokens %v\n", hr, startBondedTokens, expProvisions, pool.BondedTokens)
 		require.Equal(t, startBondedTokens+expProvisions, pool.BondedTokens, "hr %v", hr)
 		require.Equal(t, startTotalSupply+expProvisions, pool.TokenSupply())
@@ -129,7 +129,7 @@ func TestProcessProvisions(t *testing.T) {
 	//panic(fmt.Sprintf("debug total %v, bonded  %v, diff %v\n", p.TotalSupply, p.BondedTokens, pool.TokenSupply()-pool.BondedTokens))
 
 	// initial bonded ratio ~ from 27% to 40% increase for bonded holders ownership of total supply
-	assert.True(t, pool.bondedRatio().Equal(sdk.NewRat(211813022, 611813022)), "%v", pool.bondedRatio())
+	assert.True(t, pool.BondedRatio().Equal(sdk.NewRat(211813022, 611813022)), "%v", pool.BondedRatio())
 
 	// global supply
 	assert.Equal(t, int64(611813022), pool.TokenSupply())
@@ -137,5 +137,5 @@ func TestProcessProvisions(t *testing.T) {
 	assert.Equal(t, unbondedShares, pool.UnbondedTokens)
 
 	// test the value of validator shares
-	assert.True(t, pool.bondedShareExRate().Mul(sdk.NewRat(bondedShares)).Equal(sdk.NewRat(211813022)), "%v", pool.bondedShareExRate())
+	assert.True(t, pool.BondedShareExRate().Mul(sdk.NewRat(bondedShares)).Equal(sdk.NewRat(211813022)), "%v", pool.BondedShareExRate())
 }

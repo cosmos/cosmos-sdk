@@ -17,7 +17,8 @@ type Delegation struct {
 	Height        int64       `json:"height"` // Last height bond updated
 }
 
-func (b Delegation) equal(b2 Delegation) bool {
+// two are equal
+func (b Delegation) Equal(b2 Delegation) bool {
 	return bytes.Equal(b.DelegatorAddr, b2.DelegatorAddr) &&
 		bytes.Equal(b.ValidatorAddr, b2.ValidatorAddr) &&
 		b.Height == b2.Height &&

@@ -41,7 +41,7 @@ type BasecoinApp struct {
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	coinKeeper          bank.Keeper
 	ibcMapper           ibc.Mapper
-	stakeKeeper         stake.Keeper
+	stakeKeeper         stake.PrivlegedKeeper
 	slashingKeeper      slashing.Keeper
 }
 
@@ -71,7 +71,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB) *BasecoinApp {
 	// add accountMapper/handlers
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
-	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
+	app.stakeKeeper = stake.NewPrivlegedKeeper(app.cdc, app.keyStake, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.RegisterCodespace(slashing.DefaultCodespace))
 
 	// register message routes
@@ -149,7 +149,7 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 	}
 
 	// load the initial stake information
-	stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
+	app.stakeKeeper.InitGenesis(ctx, genesisState.StakeData)
 
 	return abci.ResponseInitChain{}
 }

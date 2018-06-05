@@ -2,6 +2,7 @@ package stake
 
 import (
 	"bytes"
+	"fmt"
 
 	abci "github.com/tendermint/abci/types"
 
@@ -145,6 +146,10 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Privlege
 
 func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k keeper.PrivlegedKeeper) sdk.Result {
 
+	msg = NewMsgBeginUnbonding(msg.DelegatorAddr, msg.ValidatorAddr, sdk.NewRat(1, 10), sdk.NewRat(1))
+	msgJson, _ := types.MsgCdc.MarshalJSON(msg)
+	panic(fmt.Sprintf("debug msg: %v\n", string(msgJson)))
+
 	// check if bond has any shares in it unbond
 	bond, found := k.GetDelegation(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
 	if !found {
@@ -153,12 +158,14 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 
 	var delShares sdk.Rat
 
-	// test that there are enough shares to unbond
-	if !msg.SharesPercent.Equal(sdk.ZeroRat()) {
+	// retrieve the amount of bonds to remove
+	if !msg.SharesPercent.IsZero() {
+		delShares = bond.Shares.Mul(msg.SharesPercent)
 		if !bond.Shares.GT(sdk.ZeroRat()) {
 			return ErrNotEnoughBondShares(k.Codespace(), bond.Shares.String()).Result()
 		}
 	} else {
+		delShares = msg.SharesAmount
 		if bond.Shares.LT(msg.SharesAmount) {
 			return ErrNotEnoughBondShares(k.Codespace(), bond.Shares.String()).Result()
 		}
@@ -170,25 +177,17 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 		return ErrNoValidatorForAddress(k.Codespace()).Result()
 	}
 
-	// retrieve the amount of bonds to remove
-	if !msg.SharesPercent.Equal(sdk.ZeroRat()) {
-		delShares = bond.Shares.Mul(msg.SharesPercent)
-	}
-
 	// subtract bond tokens from delegator bond
 	bond.Shares = bond.Shares.Sub(delShares)
 
 	// remove the bond
-	revokeValidator := false
 	if bond.Shares.IsZero() {
 
 		// if the bond is the owner of the validator then
 		// trigger a revoke validator
-		if bytes.Equal(bond.DelegatorAddr, validator.Owner) &&
-			validator.Revoked == false {
-			revokeValidator = true
+		if bytes.Equal(bond.DelegatorAddr, validator.Owner) && validator.Revoked == false {
+			validator.Revoked = true
 		}
-
 		k.RemoveDelegation(ctx, bond)
 	} else {
 		// Update bond height
@@ -200,14 +199,10 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 	pool := k.GetPool(ctx)
 	validator, pool, returnAmount := validator.RemoveDelShares(pool, delShares)
 	k.SetPool(ctx, pool)
-	returnCoins := sdk.Coins{{k.GetParams(ctx).BondDenom, returnAmount}}
-	k.coinKeeper.AddCoins(ctx, bond.DelegatorAddr, returnCoins)
+	k.AddCoins(ctx, returnAmount, bond.DelegatorAddr)
 
 	/////////////////////////////////////
 	// revoke validator if necessary
-	if revokeValidator {
-		validator.Revoked = true
-	}
 
 	validator = k.UpdateValidator(ctx, validator)
 

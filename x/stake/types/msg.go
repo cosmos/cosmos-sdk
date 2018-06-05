@@ -47,7 +47,7 @@ func (msg MsgCreateValidator) GetSigners() []sdk.Address {
 
 // get the bytes for the message signer to sign on
 func (msg MsgCreateValidator) GetSignBytes() []byte {
-	return msgCdc.MustMarshalBinary(msg)
+	return MsgCdc.MustMarshalBinary(msg)
 }
 
 // quick validity check
@@ -91,7 +91,7 @@ func (msg MsgEditValidator) GetSigners() []sdk.Address {
 
 // get the bytes for the message signer to sign on
 func (msg MsgEditValidator) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(msg)
+	b, err := MsgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -135,7 +135,7 @@ func (msg MsgDelegate) GetSigners() []sdk.Address {
 
 // get the bytes for the message signer to sign on
 func (msg MsgDelegate) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(msg)
+	b, err := MsgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -190,7 +190,7 @@ func (msg MsgBeginRedelegate) GetSigners() []sdk.Address {
 
 // get the bytes for the message signer to sign on
 func (msg MsgBeginRedelegate) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(msg)
+	b, err := MsgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -216,17 +216,16 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 }
 
 func testShares(sharesAmount, sharesPercent sdk.Rat) sdk.Error {
-	if !sharesAmount.Equal(sdk.ZeroRat()) && !sharesPercent.Equal(sdk.ZeroRat()) {
+	if !sharesAmount.IsZero() && !sharesPercent.IsZero() {
 		return ErrBothShareMsgsGiven(DefaultCodespace)
 	}
-	if sharesAmount.Equal(sdk.ZeroRat()) && sharesPercent.Equal(sdk.ZeroRat()) {
+	if sharesAmount.IsZero() && sharesPercent.IsZero() {
 		return ErrNeitherShareMsgsGiven(DefaultCodespace)
 	}
-	if !sharesAmount.Equal(sdk.ZeroRat()) && sharesAmount.LTE(sdk.ZeroRat()) {
+	if sharesPercent.IsZero() && !sharesAmount.IsZero() && sharesAmount.LTE(sdk.ZeroRat()) {
 		return ErrBadSharesAmount(DefaultCodespace)
 	}
-	if !sharesPercent.Equal(sdk.ZeroRat()) &&
-		(sharesPercent.LTE(sdk.ZeroRat()) || sharesPercent.LTE(sdk.OneRat())) {
+	if sharesAmount.IsZero() && (sharesPercent.LTE(sdk.ZeroRat()) || sharesPercent.GT(sdk.OneRat())) {
 		return ErrBadSharesPercent(DefaultCodespace)
 	}
 	return nil
@@ -257,7 +256,7 @@ func (msg MsgCompleteRedelegate) GetSigners() []sdk.Address {
 
 // get the bytes for the message signer to sign on
 func (msg MsgCompleteRedelegate) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(msg)
+	b, err := MsgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -303,7 +302,7 @@ func (msg MsgBeginUnbonding) GetSigners() []sdk.Address { return []sdk.Address{m
 
 // get the bytes for the message signer to sign on
 func (msg MsgBeginUnbonding) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(msg)
+	b, err := MsgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -344,7 +343,7 @@ func (msg MsgCompleteUnbonding) GetSigners() []sdk.Address { return []sdk.Addres
 
 // get the bytes for the message signer to sign on
 func (msg MsgCompleteUnbonding) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(msg)
+	b, err := MsgCdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}

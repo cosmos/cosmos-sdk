@@ -37,17 +37,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	stakerest "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 )
 
 var (
 	coinDenom  = "steak"
 	coinAmount = int64(10000000)
 
-	validatorAddr1 = ""
-	validatorAddr2 = ""
+	validatorAddr1    sdk.Address
+	validatorAddr2    sdk.Address
+	validatorAddrStr1 = ""
+	validatorAddrStr2 = ""
 
 	// XXX bad globals
 	name     = "test"
@@ -324,14 +328,14 @@ func TestValidatorsQuery(t *testing.T) {
 	// make sure all the validators were found (order unknown because sorted by owner addr)
 	foundVal1, foundVal2 := false, false
 	res1, res2 := hex.EncodeToString(validators[0].Owner), hex.EncodeToString(validators[1].Owner)
-	if res1 == validatorAddr1 || res2 == validatorAddr1 {
+	if res1 == validatorAddrStr1 || res2 == validatorAddrStr1 {
 		foundVal1 = true
 	}
-	if res1 == validatorAddr2 || res2 == validatorAddr2 {
+	if res1 == validatorAddrStr2 || res2 == validatorAddrStr2 {
 		foundVal2 = true
 	}
-	assert.True(t, foundVal1, "validatorAddr1 %v, res1 %v, res2 %v", validatorAddr1, res1, res2)
-	assert.True(t, foundVal2, "validatorAddr2 %v, res1 %v, res2 %v", validatorAddr2, res1, res2)
+	assert.True(t, foundVal1, "validatorAddrStr1 %v, res1 %v, res2 %v", validatorAddrStr1, res1, res2)
+	assert.True(t, foundVal2, "validatorAddrStr2 %v, res1 %v, res2 %v", validatorAddrStr2, res1, res2)
 }
 
 func TestBond(t *testing.T) {
@@ -350,7 +354,7 @@ func TestBond(t *testing.T) {
 	assert.Equal(t, int64(87), coins.AmountOf(coinDenom))
 
 	// query candidate
-	bond := getDelegation(t, sendAddr, validatorAddr1)
+	bond := getDelegation(t, sendAddr, validatorAddrStr1)
 	assert.Equal(t, "10/1", bond.Shares.String())
 }
 
@@ -370,7 +374,7 @@ func TestUnbond(t *testing.T) {
 	assert.Equal(t, int64(98), coins.AmountOf(coinDenom))
 
 	// query candidate
-	bond := getDelegation(t, sendAddr, validatorAddr1)
+	bond := getDelegation(t, sendAddr, validatorAddrStr1)
 	assert.Equal(t, "9/1", bond.Shares.String())
 }
 
@@ -418,8 +422,10 @@ func startTMAndLCD() (*nm.Node, net.Listener, error) {
 
 	pk1 := genDoc.Validators[0].PubKey
 	pk2 := genDoc.Validators[1].PubKey
-	validatorAddr1 = hex.EncodeToString(pk1.Address())
-	validatorAddr2 = hex.EncodeToString(pk2.Address())
+	validatorAddr1 = pk1.Address()
+	validatorAddr2 = pk2.Address()
+	validatorAddrStr1 = hex.EncodeToString(validatorAddr1)
+	validatorAddrStr2 = hex.EncodeToString(validatorAddr2)
 
 	// NOTE it's bad practice to reuse pk address for the owner address but doing in the
 	// test for simplicity
@@ -603,11 +609,11 @@ func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxC
 	sequence := acc.GetSequence()
 
 	// send
-	jsonStr := []byte(fmt.Sprintf(`{
+	jsonStr := fmt.Sprintf(`{
 		"name": "%s",
 		"password": "%s",
 		"sequence": %d,
-		"delegate": [
+		"delegations": [
 			{
 				"delegator_addr": "%x",
 				"validator_addr": "%s",
@@ -615,8 +621,8 @@ func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxC
 			}
 		],
 		"unbond": []
-	}`, name, password, sequence, acc.GetAddress(), validatorAddr1, coinDenom))
-	res, body := request(t, port, "POST", "/stake/delegations", jsonStr)
+	}`, name, password, sequence, acc.GetAddress(), validatorAddrStr1, coinDenom)
+	res, body := request(t, port, "POST", "/stake/delegations", []byte(jsonStr))
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit
@@ -627,30 +633,45 @@ func doBond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxC
 }
 
 func doUnbond(t *testing.T, port, seed string) (resultTx ctypes.ResultBroadcastTxCommit) {
-	// get the account to get the sequence
+
 	acc := getAccount(t, sendAddr)
-	sequence := acc.GetSequence()
 
 	// send
-	jsonStr := []byte(fmt.Sprintf(`{
-		"name": "%s",
-		"password": "%s",
-		"sequence": %d,
-		"bond": [],
-		"unbond": [
-			{
-				"delegator_addr": "%x",
-				"validator_addr": "%s",
-				"shares": "1"
-			}
-		]
-	}`, name, password, sequence, acc.GetAddress(), validatorAddr1))
-	res, body := request(t, port, "POST", "/stake/delegations", jsonStr)
+	//jsonStr := fmt.Sprintf(`{
+	//"name": "%s",
+	//"password": "%s",
+	//"sequence": %d,
+	//"bond": [],
+	//"unbond": [
+	//{
+	//"delegator_addr": "%x",
+	//"validator_addr": "%s",
+	//"shares_amount": "1/1",
+	//"shares_percent": "0/1"
+	//}
+	//]
+	//}`, name, password, sequence, acc.GetAddress(), validatorAddrStr1)
+	req := stakerest.EditDelegationsBody{
+		LocalAccountName: name,
+		Password:         password,
+		Sequence:         acc.GetSequence(),
+		//ChainID:        , //XXX
+		Delegations: []stake.MsgDelegate{},
+		BeginUnbondings: []stake.MsgBeginUnbonding{{
+			DelegatorAddr: acc.GetAddress(),
+			ValidatorAddr: validatorAddr1,
+			SharesAmount:  sdk.OneRat(),
+			SharesPercent: sdk.ZeroRat(),
+		}},
+	}
+	bz, err := cdc.MarshalJSON(req)
+	require.NoError(t, err)
+	res, body := request(t, port, "POST", "/stake/delegations", bz)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit
-	err := cdc.UnmarshalJSON([]byte(body), &results)
-	require.Nil(t, err)
+	err = cdc.UnmarshalJSON([]byte(body), &results)
+	require.NoError(t, err)
 
 	return results[0]
 }
@@ -659,7 +680,7 @@ func getValidators(t *testing.T) []stake.Validator {
 	// get the account to get the sequence
 	res, body := request(t, port, "GET", "/stake/validators", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var validators stake.Validators
+	var validators []stake.Validator
 	err := cdc.UnmarshalJSON([]byte(body), &validators)
 	require.Nil(t, err)
 	return validators

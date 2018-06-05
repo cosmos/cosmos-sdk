@@ -15,7 +15,7 @@
 # change this to a specific release or branch
 set BRANCH=master
 
-sudo pkg updatels
+sudo pkg update
 
 sudo pkg upgrade -y
 sudo pkg install -y gmake
